@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3hO8145498 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:43 -0500
+	p9SA3jtA145582 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:45 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8F7741CC6FC2
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47DC8203865
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:44 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	qdWbWAewkGWqJEkr for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:42 -0700 (PDT)
+	HFAqdjCgBaswtISm for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:44 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHq-00039V-4u
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:42 +0000
-Message-Id: <20111028100342.093316239@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:59 -0400
+	Linux)) id 1RJjHr-0003E9-Ne
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:43 +0000
+Message-Id: <20111028100343.681567769@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:55:08 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 36/45] xfs: remove log item from AIL in xfs_iflush after a
-	shutdown
+Subject: [PATCH 45/45] xfs: force the log in xfs_buf_wait_unpin
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-delete-inode-from-ail-earlier
+Content-Disposition: inline; filename=xfs_buf_wait_unpin-force-log
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,104 +34,138 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-If a filesystem has been forced shutdown we are never going to write inodes
-to disk, which means the dquot items will stay in the AIL until we free
-the inod. Currently that is not a problem, but a pending chance requires us
-to empty the AIL before shutting down the filesystem, in which case this
-behaviour is lethal.  Make sure to remove the log item from the AIL
-to allow emptying the AIL on shutdown filesystems.
+For the log if we are waiting for a buffered to be unpinned for writing
+it out.  Currently all synchronous callers already do this unless they
+might never encounter a pinned buffer, and non-blocking writes already
+have a check for the pincount.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_iget.c  |   17 +----------------
- fs/xfs/xfs_inode.c |   17 +++++++++--------
- 2 files changed, 10 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_buf.c   |    5 +++++
+ fs/xfs/xfs_dquot.c |    7 -------
+ fs/xfs/xfs_qm.c    |   16 ----------------
+ fs/xfs/xfs_sync.c  |   17 -----------------
+ 4 files changed, 5 insertions(+), 40 deletions(-)
 
-Index: xfs/fs/xfs/xfs_iget.c
+Index: xfs/fs/xfs/xfs_sync.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_iget.c	2011-10-27 22:39:59.605174201 +0200
-+++ xfs/fs/xfs/xfs_iget.c	2011-10-27 22:40:11.904690190 +0200
-@@ -124,23 +124,8 @@ xfs_inode_free(
- 		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+--- xfs.orig/fs/xfs/xfs_sync.c	2011-10-27 22:40:16.821171772 +0200
++++ xfs/fs/xfs/xfs_sync.c	2011-10-27 22:40:19.445176345 +0200
+@@ -268,17 +268,7 @@ xfs_sync_fsdata(
+ 	struct xfs_buf		*bp;
+ 	int			error;
  
- 	if (ip->i_itemp) {
--		/*
--		 * Only if we are shutting down the fs will we see an
--		 * inode still in the AIL. If it is there, we should remove
--		 * it to prevent a use-after-free from occurring.
--		 */
--		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
--		struct xfs_ail	*ailp = lip->li_ailp;
-+		ASSERT(!(ip->i_itemp->ili_item.li_flags & XFS_LI_IN_AIL));
- 
--		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
--				       XFS_FORCED_SHUTDOWN(ip->i_mount));
--		if (lip->li_flags & XFS_LI_IN_AIL) {
--			spin_lock(&ailp->xa_lock);
--			if (lip->li_flags & XFS_LI_IN_AIL)
--				xfs_trans_ail_delete(ailp, lip);
--			else
--				spin_unlock(&ailp->xa_lock);
--		}
- 		xfs_inode_item_destroy(ip);
- 		ip->i_itemp = NULL;
- 	}
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2011-10-27 22:39:59.613171175 +0200
-+++ xfs/fs/xfs/xfs_inode.c	2011-10-27 22:40:11.904690190 +0200
-@@ -2407,7 +2407,6 @@ xfs_iflush(
- 	xfs_inode_t		*ip,
- 	uint			flags)
- {
--	xfs_inode_log_item_t	*iip;
- 	xfs_buf_t		*bp;
- 	xfs_dinode_t		*dip;
- 	xfs_mount_t		*mp;
-@@ -2420,7 +2419,6 @@ xfs_iflush(
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
- 
--	iip = ip->i_itemp;
- 	mp = ip->i_mount;
- 
- 	/*
-@@ -2457,13 +2455,14 @@ xfs_iflush(
- 	/*
- 	 * This may have been unpinned because the filesystem is shutting
- 	 * down forcibly. If that's the case we must not write this inode
--	 * to disk, because the log record didn't make it to disk!
-+	 * to disk, because the log record didn't make it to disk.
-+	 *
-+	 * We also have to remove the log item from the AIL in this case,
-+	 * as we wait for an empty AIL as part of the unmount process.
- 	 */
- 	if (XFS_FORCED_SHUTDOWN(mp)) {
--		if (iip)
--			iip->ili_format.ilf_fields = 0;
--		xfs_ifunlock(ip);
--		return XFS_ERROR(EIO);
-+		error = XFS_ERROR(EIO);
-+		goto abort_out;
- 	}
- 
- 	/*
-@@ -2510,11 +2509,13 @@ corrupt_out:
+-	/*
+-	 * If the buffer is pinned then push on the log so we won't get stuck
+-	 * waiting in the write for someone, maybe ourselves, to flush the log.
+-	 *
+-	 * Even though we just pushed the log above, we did not have the
+-	 * superblock buffer locked at that point so it can become pinned in
+-	 * between there and here.
+-	 */
+ 	bp = xfs_getsb(mp, 0);
+-	if (xfs_buf_ispinned(bp))
+-		xfs_log_force(mp, 0);
+ 	error = xfs_bwrite(bp);
  	xfs_buf_relse(bp);
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- cluster_corrupt_out:
-+	error = XFS_ERROR(EFSCORRUPTED);
-+abort_out:
- 	/*
- 	 * Unlocks the flush lock
- 	 */
- 	xfs_iflush_abort(ip);
--	return XFS_ERROR(EFSCORRUPTED);
-+	return error;
+ 	return error;
+@@ -724,13 +714,6 @@ restart:
+ 		delay(2);
+ 		goto restart;
+ 	} else if (!error) {
+-		/*
+-		 * If the buffer is pinned then push on the log now so we
+-		 * won't get stuck waiting in the write for too long.
+-		 */
+-		if (xfs_buf_ispinned(bp))
+-			xfs_log_force(ip->i_mount, 0);
+-
+ 		error = xfs_bwrite(bp);
+ 		xfs_buf_relse(bp);
+ 	}
+Index: xfs/fs/xfs/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_buf.c	2011-10-27 22:40:16.210189457 +0200
++++ xfs/fs/xfs/xfs_buf.c	2011-10-27 22:40:19.445176345 +0200
+@@ -936,6 +936,11 @@ xfs_buf_wait_unpin(
+ 	if (atomic_read(&bp->b_pin_count) == 0)
+ 		return;
+ 
++	/*
++	 * Give the log a push so we don't wait here too long.
++	 */
++	xfs_log_force(bp->b_target->bt_mount, 0);
++
+ 	add_wait_queue(&bp->b_waiters, &wait);
+ 	for (;;) {
+ 		set_current_state(TASK_UNINTERRUPTIBLE);
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:18.049202868 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:19.449175026 +0200
+@@ -1143,13 +1143,6 @@ xfs_qm_dqpurge(
+ 		 */
+ 		error = xfs_qm_dqflush(dqp, &bp);
+ 		if (!error && bp) {
+-			/*
+-			 * If the buffer is pinned then push on the log so we
+-			 * won't get stuck waiting in the write for too long.
+-			 */
+-			if (xfs_buf_ispinned(bp))
+-				xfs_log_force(mp, 0);
+-
+ 			error = xfs_bwrite(bp);
+ 			xfs_buf_relse(bp);
+ 		}
+Index: xfs/fs/xfs/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:18.049202868 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:19.453172157 +0200
+@@ -388,7 +388,6 @@ xfs_qm_dqflush_all(
+ 	int			recl;
+ 	struct xfs_dquot	*dqp;
+ 	int			error = 0, error2;
+-	int			pinned = 0;
+ 	LIST_HEAD		(buffer_list);
+ 
+ 	if (!q)
+@@ -416,12 +415,6 @@ again:
+ 		mutex_unlock(&q->qi_dqlist_lock);
+ 		error = xfs_qm_dqflush(dqp, &bp);
+ 		if (!error && bp) {
+-			/*
+-			 * If the buffer is pinned then push on the log so we
+-			 * won't get stuck waiting in the write for too long.
+-			 */
+-			if (xfs_buf_ispinned(bp))
+-				pinned++;
+ 			xfs_buf_delwri_queue(bp, &buffer_list);
+ 			xfs_buf_relse(bp);
+ 		}
+@@ -439,8 +432,6 @@ again:
+ 
+ 	mutex_unlock(&q->qi_dqlist_lock);
+ out:
+-	if (pinned)
+-		xfs_log_force(mp, 0);
+ 	error2 = xfs_buf_delwri_submit(&buffer_list);
+ 	return error ? error : error2;
  }
- 
- 
+@@ -1659,13 +1650,6 @@ xfs_qm_dqreclaim_one(
+ 			mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 			error = xfs_qm_dqflush(dqp, &bp);
+ 			if (!error && bp) {
+-				/*
+-				 * If the buffer is pinned then push on the
+-				 * log so we won't get stuck waiting in the
+-				 * write for too long.
+-				 */
+-				if (xfs_buf_ispinned(bp))
+-					xfs_log_force(mp, 0);
+ 				xfs_buf_delwri_queue(bp, &buffer_list);
+ 				xfs_buf_relse(bp);
+ 			}
 
 _______________________________________________
 xfs mailing list
