@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3i4x145563 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:44 -0500
+	p9SA3foR145401 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:41 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8A72B1CC6FC2
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:43 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5AB40FCE479
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:39 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	8eS8I2RMo1ja65eF for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:43 -0700 (PDT)
+	l4tc1oOjtt3qvltz for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:39 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHr-0003C5-0R
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:43 +0000
-Message-Id: <20111028100342.967353667@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:55:04 -0400
+	Linux)) id 1RJjHn-00031f-E9
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:39 +0000
+Message-Id: <20111028100339.386583552@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:44 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 41/45] xfs: do not add buffers to the delwri queue until pushed
+Subject: [PATCH 21/45] xfs: cleanup xfs_qm_dqlookup
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-buf-item-write-later
+Content-Disposition: inline; filename=xfs-cleanup-xfs_qm_dqlookup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,72 +34,71 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Instead of adding buffers to the delwri list as soon as they are logged,
-even if they can't be written until commited because they are pinned
-defer adding them to the delwri list until xfsaild pushes them.  This
-makes the code more similar to other log items and prepares for writing
-buffers directly from xfsaild.
-
-The complication here is that we need to fail buffers that were added
-but not logged yet in xfs_buf_item_unpin, borrowing code from
-xfs_bioerror.
+Rearrange the code to avoid the conditional locking around the
+flist_locked variable.  This means we lose a (rather pointless)
+assert, and hold the freelist lock a bit longer for one corner
+case.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_buf_item.c  |   11 ++++++++---
- fs/xfs/xfs_trans_buf.c |    2 --
- 2 files changed, 8 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_dquot.c |   25 +++++--------------------
+ 1 file changed, 5 insertions(+), 20 deletions(-)
 
-Index: xfs/fs/xfs/xfs_buf_item.c
+Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_buf_item.c	2011-10-27 22:39:42.528674212 +0200
-+++ xfs/fs/xfs/xfs_buf_item.c	2011-10-27 22:40:15.630172342 +0200
-@@ -460,6 +460,12 @@ xfs_buf_item_unpin(
- 			ASSERT(bp->b_fspriv == NULL);
- 		}
- 		xfs_buf_relse(bp);
-+	} else if (freed && remove) {
-+		xfs_buf_lock(bp);
-+		xfs_buf_ioerror(bp, EIO);
-+		XFS_BUF_UNDONE(bp);
-+		xfs_buf_stale(bp);
-+		xfs_buf_ioend(bp, 0);
- 	}
- }
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:02.250173174 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:02.770171231 +0200
+@@ -710,12 +710,9 @@ xfs_qm_dqlookup(
+ 	xfs_dquot_t		**O_dqpp)
+ {
+ 	xfs_dquot_t		*dqp;
+-	uint			flist_locked;
  
-@@ -604,9 +610,7 @@ xfs_buf_item_committed(
- }
+ 	ASSERT(mutex_is_locked(&qh->qh_lock));
  
- /*
-- * The buffer is locked, but is not a delayed write buffer. This happens
-- * if we race with IO completion and hence we don't want to try to write it
-- * again. Just release the buffer.
-+ * The buffer is locked, but is not a delayed write buffer.
-  */
- STATIC void
- xfs_buf_item_push(
-@@ -620,6 +624,7 @@ xfs_buf_item_push(
- 
- 	trace_xfs_buf_item_push(bip);
- 
-+	xfs_buf_delwri_queue(bp);
- 	xfs_buf_relse(bp);
- }
- 
-Index: xfs/fs/xfs/xfs_trans_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_buf.c	2011-10-27 22:39:32.056672629 +0200
-+++ xfs/fs/xfs/xfs_trans_buf.c	2011-10-27 22:40:15.630172342 +0200
-@@ -649,8 +649,6 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
- 	bp->b_iodone = xfs_buf_iodone_callbacks;
- 	bip->bli_item.li_cb = xfs_buf_iodone;
- 
--	xfs_buf_delwri_queue(bp);
+-	flist_locked = B_FALSE;
 -
- 	trace_xfs_trans_log_buf(bip);
- 
  	/*
+ 	 * Traverse the hashchain looking for a match
+ 	 */
+@@ -750,31 +747,19 @@ xfs_qm_dqlookup(
+ 					xfs_dqlock(dqp);
+ 					dqp->dq_flags &= ~(XFS_DQ_WANT);
+ 				}
+-				flist_locked = B_TRUE;
+-			}
+-
+-			/*
+-			 * id couldn't have changed; we had the hashlock all
+-			 * along
+-			 */
+-			ASSERT(be32_to_cpu(dqp->q_core.d_id) == id);
+ 
+-			if (flist_locked) {
+-				if (dqp->q_nrefs != 0) {
+-					mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-					flist_locked = B_FALSE;
+-				} else {
++				if (dqp->q_nrefs == 0) {
+ 					/* take it off the freelist */
+ 					trace_xfs_dqlookup_freelist(dqp);
+ 					list_del_init(&dqp->q_freelist);
+ 					xfs_Gqm->qm_dqfrlist_cnt--;
+ 				}
++				XFS_DQHOLD(dqp);
++				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++			} else {
++				XFS_DQHOLD(dqp);
+ 			}
+ 
+-			XFS_DQHOLD(dqp);
+-
+-			if (flist_locked)
+-				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 			/*
+ 			 * move the dquot to the front of the hashchain
+ 			 */
 
 _______________________________________________
 xfs mailing list
