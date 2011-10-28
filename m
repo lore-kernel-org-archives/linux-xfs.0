@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3h1d145500 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:43 -0500
+	p9SA3iK8145539 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:44 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5CAE01CC6FBC
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2755C203865
 	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:42 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	PtULgits2mbO3S35 for <xfs@oss.sgi.com>;
+	tfCROLzB29BfxPpD for <xfs@oss.sgi.com>;
 	Fri, 28 Oct 2011 03:03:42 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHp-00038T-Pf
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:41 +0000
-Message-Id: <20111028100341.741093351@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:57 -0400
+	Linux)) id 1RJjHq-0003B3-L0
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:42 +0000
+Message-Id: <20111028100342.601864545@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:55:02 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 34/45] xfs: do flush inodes during asynchronous inode reclaim
+Subject: [PATCH 39/45] xfs: do not write the buffer from xfs_iflush
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline;
-	filename=xfs-do-not-write-inodes-from-async-reclaim
+Content-Disposition: inline; filename=xfs-iflush-dont-write-buffer
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,178 +34,210 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-We already push out the whole AIL when the shrinker is called, so do not
-try to flush inodes from asynchronous reclaim as well.
+Instead of writing the buffer directly from inside xfs_iflush return it to
+the caller and let the caller decide what to do with it.  While we're at
+it also remove the pincount check that all non-blocking callers already
+implement and the new now unused flags parameter.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_sync.c |  102 ++++++++++++++++++++++--------------------------------
- 1 file changed, 42 insertions(+), 60 deletions(-)
+ fs/xfs/xfs_inode.c      |   56 +++++++++++++++---------------------------------
+ fs/xfs/xfs_inode.h      |    2 -
+ fs/xfs/xfs_inode_item.c |   17 +++++++++++++-
+ fs/xfs/xfs_sync.c       |   12 +++++-----
+ 4 files changed, 41 insertions(+), 46 deletions(-)
 
-Index: xfs/fs/xfs/xfs_sync.c
+Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_sync.c	2011-10-27 22:40:01.246171848 +0200
-+++ xfs/fs/xfs/xfs_sync.c	2011-10-27 22:40:10.705172023 +0200
-@@ -702,11 +702,8 @@ xfs_reclaim_inode_grab(
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-10-27 22:40:11.904690190 +0200
++++ xfs/fs/xfs/xfs_inode.c	2011-10-27 22:40:13.673170747 +0200
+@@ -2394,22 +2394,24 @@ cluster_corrupt_out:
  }
  
  /*
-- * Inodes in different states need to be treated differently, and the return
-- * value of xfs_iflush is not sufficient to get this right. The following table
-- * lists the inode states and the reclaim actions necessary for non-blocking
-- * reclaim:
-- *
-+ * Inodes in different states need to be treated differently. The following
-+ * table lists the inode states and the reclaim actions necessary:
-  *
-  *	inode state	     iflush ret		required action
-  *      ---------------      ----------         ---------------
-@@ -716,9 +713,8 @@ xfs_reclaim_inode_grab(
-  *	stale, unpinned		0		reclaim
-  *	clean, pinned(*)	0		requeue
-  *	stale, pinned		EAGAIN		requeue
-- *	dirty, delwri ok	0		requeue
-- *	dirty, delwri blocked	EAGAIN		requeue
-- *	dirty, sync flush	0		reclaim
-+ *	dirty, async		-		requeue
-+ *	dirty, sync		0		reclaim
-  *
-  * (*) dgc: I don't think the clean, pinned state is possible but it gets
-  * handled anyway given the order of checks implemented.
-@@ -729,26 +725,23 @@ xfs_reclaim_inode_grab(
-  *
-  * Also, because we get the flush lock first, we know that any inode that has
-  * been flushed delwri has had the flush completed by the time we check that
-- * the inode is clean. The clean inode check needs to be done before flushing
-- * the inode delwri otherwise we would loop forever requeuing clean inodes as
-- * we cannot tell apart a successful delwri flush and a clean inode from the
-- * return value of xfs_iflush().
-- *
-- * Note that because the inode is flushed delayed write by background
-- * writeback, the flush lock may already be held here and waiting on it can
-- * result in very long latencies. Hence for sync reclaims, where we wait on the
-- * flush lock, the caller should push out delayed write inodes first before
-- * trying to reclaim them to minimise the amount of time spent waiting. For
-- * background relaim, we just requeue the inode for the next pass.
-+ * the inode is clean.
+- * xfs_iflush() will write a modified inode's changes out to the
+- * inode's on disk home.  The caller must have the inode lock held
+- * in at least shared mode and the inode flush completion must be
+- * active as well.  The inode lock will still be held upon return from
+- * the call and the caller is free to unlock it.
+- * The inode flush will be completed when the inode reaches the disk.
+- * The flags indicate how the inode's buffer should be written out.
++ * Format a modified inode's changes out to the backing buffer.
 + *
-+ * Note that because the inode is flushed delayed write by AIL pushing, the
-+ * flush lock may already be held here and waiting on it can result in very
-+ * long latencies.  Hence for sync reclaims, where we wait on the flush lock,
-+ * the caller should push the AIL first before trying to reclaim inodes to
-+ * minimise the amount of time spent waiting.  For background relaim, we only
-+ * bother to reclaim clean inodes anyway.
-  *
-  * Hence the order of actions after gaining the locks should be:
-  *	bad		=> reclaim
-  *	shutdown	=> unpin and reclaim
-- *	pinned, delwri	=> requeue
-+ *	pinned, async	=> requeue
-  *	pinned, sync	=> unpin
-  *	stale		=> reclaim
-  *	clean		=> reclaim
-- *	dirty, delwri	=> flush and requeue
-+ *	dirty, async	=> requeue
-  *	dirty, sync	=> flush, wait and reclaim
++ * The caller must have the inode lock (shared or exclusive) and inode flush
++ * lock held.  The inode lock will still be held upon return from the call
++ * and the caller is free to unlock it. The inode flush lock will be released
++ * when the inode reaches the disk.
++ *
++ * The caller must write out the buffer returned in *bpp and unlocked it using
++ * xfs_buf_relse.
   */
- STATIC int
-@@ -775,10 +768,8 @@ restart:
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip)) {
--		if (!(sync_mode & SYNC_WAIT)) {
--			xfs_ifunlock(ip);
--			goto out;
--		}
-+		if (!(sync_mode & SYNC_WAIT))
-+			goto out_ifunlock;
- 		xfs_iunpin_wait(ip);
- 	}
- 	if (xfs_iflags_test(ip, XFS_ISTALE))
-@@ -787,6 +778,13 @@ restart:
- 		goto reclaim;
+ int
+ xfs_iflush(
+-	xfs_inode_t		*ip,
+-	uint			flags)
++	struct xfs_inode	*ip,
++	struct xfs_buf		**bpp)
+ {
+-	xfs_buf_t		*bp;
+-	xfs_dinode_t		*dip;
+-	xfs_mount_t		*mp;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_buf		*bp;
++	struct xfs_dinode	*dip;
+ 	int			error;
+ 
+ 	XFS_STATS_INC(xs_iflush_count);
+@@ -2419,24 +2421,8 @@ xfs_iflush(
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
+ 
+-	mp = ip->i_mount;
++	*bpp = NULL;
+ 
+-	/*
+-	 * We can't flush the inode until it is unpinned, so wait for it if we
+-	 * are allowed to block.  We know no one new can pin it, because we are
+-	 * holding the inode lock shared and you need to hold it exclusively to
+-	 * pin the inode.
+-	 *
+-	 * If we are not allowed to block, force the log out asynchronously so
+-	 * that when we come back the inode will be unpinned. If other inodes
+-	 * in the same cluster are dirty, they will probably write the inode
+-	 * out for us if they occur after the log force completes.
+-	 */
+-	if (!(flags & SYNC_WAIT) && xfs_ipincount(ip)) {
+-		xfs_iunpin(ip);
+-		xfs_ifunlock(ip);
+-		return EAGAIN;
+-	}
+ 	xfs_iunpin_wait(ip);
  
  	/*
-+	 * Never flush out dirty data during non-blocking reclaim, as it would
-+	 * just contend with AIL pushing trying to do the same job.
-+	 */
-+	if (!(sync_mode & SYNC_WAIT))
-+		goto out_ifunlock;
-+
-+	/*
- 	 * Now we have an inode that needs flushing.
- 	 *
- 	 * We do a nonblocking flush here even if we are doing a SYNC_WAIT
-@@ -804,42 +802,13 @@ restart:
- 	 * pass through will see the stale flag set on the inode.
+@@ -2468,8 +2454,7 @@ xfs_iflush(
+ 	/*
+ 	 * Get the buffer containing the on-disk inode.
  	 */
- 	error = xfs_iflush(ip, SYNC_TRYLOCK | sync_mode);
--	if (sync_mode & SYNC_WAIT) {
--		if (error == EAGAIN) {
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			/* backoff longer than in xfs_ifree_cluster */
--			delay(2);
--			goto restart;
--		}
--		xfs_iflock(ip);
--		goto reclaim;
-+	if (error == EAGAIN) {
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		/* backoff longer than in xfs_ifree_cluster */
-+		delay(2);
-+		goto restart;
- 	}
+-	error = xfs_itobp(mp, NULL, ip, &dip, &bp,
+-				(flags & SYNC_TRYLOCK) ? XBF_TRYLOCK : XBF_LOCK);
++	error = xfs_itobp(mp, NULL, ip, &dip, &bp, XBF_TRYLOCK);
+ 	if (error || !bp) {
+ 		xfs_ifunlock(ip);
+ 		return error;
+@@ -2497,13 +2482,8 @@ xfs_iflush(
+ 	if (error)
+ 		goto cluster_corrupt_out;
+ 
+-	if (flags & SYNC_WAIT)
+-		error = xfs_bwrite(bp);
+-	else
+-		xfs_buf_delwri_queue(bp);
 -
--	/*
--	 * When we have to flush an inode but don't have SYNC_WAIT set, we
--	 * flush the inode out using a delwri buffer and wait for the next
--	 * call into reclaim to find it in a clean state instead of waiting for
--	 * it now. We also don't return errors here - if the error is transient
--	 * then the next reclaim pass will flush the inode, and if the error
--	 * is permanent then the next sync reclaim will reclaim the inode and
--	 * pass on the error.
--	 */
--	if (error && error != EAGAIN && !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
--		xfs_warn(ip->i_mount,
--			"inode 0x%llx background reclaim flush failed with %d",
--			(long long)ip->i_ino, error);
--	}
--out:
--	xfs_iflags_clear(ip, XFS_IRECLAIM);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	/*
--	 * We could return EAGAIN here to make reclaim rescan the inode tree in
--	 * a short while. However, this just burns CPU time scanning the tree
--	 * waiting for IO to complete and xfssyncd never goes back to the idle
--	 * state. Instead, return 0 to let the next scheduled background reclaim
--	 * attempt to reclaim the inode again.
--	 */
--	return 0;
-+	xfs_iflock(ip);
- 
- reclaim:
- 	xfs_ifunlock(ip);
-@@ -877,6 +846,19 @@ reclaim:
- 	xfs_inode_free(ip);
- 	return error;
- 
-+out_ifunlock:
-+	xfs_ifunlock(ip);
-+out:
-+	xfs_iflags_clear(ip, XFS_IRECLAIM);
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	/*
-+	 * We could return EAGAIN here to make reclaim rescan the inode tree in
-+	 * a short while. However, this just burns CPU time scanning the tree
-+	 * waiting for IO to complete and xfssyncd never goes back to the idle
-+	 * state. Instead, return 0 to let the next scheduled background reclaim
-+	 * attempt to reclaim the inode again.
-+	 */
+-	xfs_buf_relse(bp);
+-	return error;
++	*bpp = bp;
 +	return 0;
+ 
+ corrupt_out:
+ 	xfs_buf_relse(bp);
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-10-27 22:39:59.613171175 +0200
++++ xfs/fs/xfs/xfs_inode.h	2011-10-27 22:40:13.673170747 +0200
+@@ -530,7 +530,7 @@ int		xfs_iunlink(struct xfs_trans *, xfs
+ 
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ void		xfs_iunpin_wait(xfs_inode_t *);
+-int		xfs_iflush(xfs_inode_t *, uint);
++int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
+ 
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-10-27 22:39:59.621171049 +0200
++++ xfs/fs/xfs/xfs_inode_item.c	2011-10-27 22:40:13.681172022 +0200
+@@ -552,6 +552,15 @@ xfs_inode_item_trylock(
+ 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
+ 		return XFS_ITEM_LOCKED;
+ 
++	/*
++	 * Re-check the pincount now that we stabilized the value by
++	 * taking the ilock.
++	 */
++	if (xfs_ipincount(ip) > 0) {
++		xfs_iunlock(ip, XFS_ILOCK_SHARED);
++		return XFS_ITEM_PINNED;
++	}
++
+ 	if (!xfs_iflock_nowait(ip)) {
+ 		/*
+ 		 * inode has already been flushed to the backing buffer,
+@@ -716,6 +725,8 @@ xfs_inode_item_push(
+ {
+ 	struct xfs_inode_log_item *iip = INODE_ITEM(lip);
+ 	struct xfs_inode	*ip = iip->ili_inode;
++	struct xfs_buf		*bp = NULL;
++	int			error;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_SHARED));
+ 	ASSERT(xfs_isiflocked(ip));
+@@ -740,7 +751,11 @@ xfs_inode_item_push(
+ 	 * will pull the inode from the AIL, mark it clean and unlock the flush
+ 	 * lock.
+ 	 */
+-	(void) xfs_iflush(ip, SYNC_TRYLOCK);
++	error = xfs_iflush(ip, &bp);
++	if (!error) {
++		xfs_buf_delwri_queue(bp);
++		xfs_buf_relse(bp);
++	}
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
  }
  
- /*
+Index: xfs/fs/xfs/xfs_sync.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_sync.c	2011-10-27 22:40:12.489171652 +0200
++++ xfs/fs/xfs/xfs_sync.c	2011-10-27 22:40:13.685172888 +0200
+@@ -645,10 +645,6 @@ xfs_reclaim_inode_grab(
+  * (*) dgc: I don't think the clean, pinned state is possible but it gets
+  * handled anyway given the order of checks implemented.
+  *
+- * As can be seen from the table, the return value of xfs_iflush() is not
+- * sufficient to correctly decide the reclaim action here. The checks in
+- * xfs_iflush() might look like duplicates, but they are not.
+- *
+  * Also, because we get the flush lock first, we know that any inode that has
+  * been flushed delwri has had the flush completed by the time we check that
+  * the inode is clean.
+@@ -676,7 +672,8 @@ xfs_reclaim_inode(
+ 	struct xfs_perag	*pag,
+ 	int			sync_mode)
+ {
+-	int	error;
++	struct xfs_buf		*bp = NULL;
++	int			error;
+ 
+ restart:
+ 	error = 0;
+@@ -727,12 +724,15 @@ restart:
+ 	 * just unlock the inode, back off and try again. Hopefully the next
+ 	 * pass through will see the stale flag set on the inode.
+ 	 */
+-	error = xfs_iflush(ip, SYNC_TRYLOCK | sync_mode);
++	error = xfs_iflush(ip, &bp);
+ 	if (error == EAGAIN) {
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		/* backoff longer than in xfs_ifree_cluster */
+ 		delay(2);
+ 		goto restart;
++	} else if (!error) {
++		error = xfs_bwrite(bp);
++		xfs_buf_relse(bp);
+ 	}
+ 	xfs_iflock(ip);
+ 
 
 _______________________________________________
 xfs mailing list
