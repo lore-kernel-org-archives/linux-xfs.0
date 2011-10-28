@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3gib145431 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
+	p9SA3ed7145363 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:40 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 546461CC6FBC
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8947C203857
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:39 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	tHQ97zzhxfKEvMQl for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
+	BdKtADSuV6J6TvR6 for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:39 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHo-00035K-NJ
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
-Message-Id: <20111028100340.674710590@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:51 -0400
+	Linux)) id 1RJjHn-00030d-2o
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:39 +0000
+Message-Id: <20111028100339.043824550@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:42 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 28/45] xfs: kill xfs_qm_dqinit_core
+Subject: [PATCH 19/45] xfs: remove the sync_mode argument to xfs_qm_dqflush_all
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-kill-xfs_qm_dqinit_core
+Content-Disposition: inline; filename=xfs-remove-xfs_qm_dqflush_all-sync-mode
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,59 +34,46 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Merge into it's only caller, which also obsoletes the comments.
+It always is zero, and removing it will make future changes easier.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_dquot.c |   27 +++++++--------------------
- 1 file changed, 7 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_qm.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-Index: xfs/fs/xfs/xfs_dquot.c
+Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:05.872671537 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:06.408674693 +0200
-@@ -155,24 +155,6 @@ xfs_qm_dqdestroy(
- }
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:01.234172361 +0200
++++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:01.742172177 +0200
+@@ -415,8 +415,7 @@ xfs_qm_unmount_quotas(
+  */
+ STATIC int
+ xfs_qm_dqflush_all(
+-	struct xfs_mount	*mp,
+-	int			sync_mode)
++	struct xfs_mount	*mp)
+ {
+ 	struct xfs_quotainfo	*q = mp->m_quotainfo;
+ 	int			recl;
+@@ -451,7 +450,7 @@ again:
+ 		 * across a disk write.
+ 		 */
+ 		mutex_unlock(&q->qi_dqlist_lock);
+-		error = xfs_qm_dqflush(dqp, sync_mode);
++		error = xfs_qm_dqflush(dqp, 0);
+ 		xfs_dqunlock(dqp);
+ 		if (error)
+ 			return error;
+@@ -1566,7 +1565,7 @@ xfs_qm_quotacheck(
+ 	 * successfully.
+ 	 */
+ 	if (!error)
+-		error = xfs_qm_dqflush_all(mp, 0);
++		error = xfs_qm_dqflush_all(mp);
  
- /*
-- * This is what a 'fresh' dquot inside a dquot chunk looks like on disk.
-- */
--STATIC void
--xfs_qm_dqinit_core(
--	xfs_dqid_t	id,
--	uint		type,
--	xfs_dqblk_t	*d)
--{
--	/*
--	 * Caller has zero'd the entire dquot 'chunk' already.
--	 */
--	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
--	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
--	d->dd_diskdq.d_id = cpu_to_be32(id);
--	d->dd_diskdq.d_flags = type;
--}
--
--/*
-  * If default limits are in force, push them into the dquot now.
-  * We overwrite the dquot limits only if they are zero and this
-  * is not the root dquot.
-@@ -328,8 +310,13 @@ xfs_qm_init_dquot_blk(
- 	curid = id - (id % q->qi_dqperchunk);
- 	ASSERT(curid >= 0);
- 	memset(d, 0, BBTOB(q->qi_dqchunklen));
--	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++)
--		xfs_qm_dqinit_core(curid, type, d);
-+	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++) {
-+		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-+		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
-+		d->dd_diskdq.d_id = cpu_to_be32(curid);
-+		d->dd_diskdq.d_flags = type;
-+	}
-+
- 	xfs_trans_dquot_buf(tp, bp,
- 			    (type & XFS_DQ_USER ? XFS_BLF_UDQUOT_BUF :
- 			    ((type & XFS_DQ_PROJ) ? XFS_BLF_PDQUOT_BUF :
+ 	/*
+ 	 * We can get this error if we couldn't do a dquot allocation inside
 
 _______________________________________________
 xfs mailing list
