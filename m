@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SA3gkB145448 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:42 -0500
+	p9SA3dPd145330 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 05:03:39 -0500
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7495CFCE484
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C6E35203848
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 03:03:37 -0700 (PDT)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	CsAuHry7Sraw1FEj for <xfs@oss.sgi.com>;
-	Fri, 28 Oct 2011 03:03:41 -0700 (PDT)
+	IhmmEvDVFFgnFyBv for <xfs@oss.sgi.com>;
+	Fri, 28 Oct 2011 03:03:37 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RJjHo-00034l-I1
-	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:40 +0000
-Message-Id: <20111028100340.512340316@bombadil.infradead.org>
-Date: Fri, 28 Oct 2011 05:54:50 -0400
+	Linux)) id 1RJjHl-0002vJ-8z
+	for xfs@oss.sgi.com; Fri, 28 Oct 2011 10:03:37 +0000
+Message-Id: <20111028100337.229405718@bombadil.infradead.org>
+Date: Fri, 28 Oct 2011 05:54:32 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 27/45] xfs: add a xfs_dqhold helper
+Subject: [PATCH 09/45] xfs: remove the i_new_size field in struct xfs_inode
 References: <20111028095423.796574703@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-add-xfs_dqhold
+Content-Disposition: inline; filename=xfs-kill-i_new_size
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,178 +34,393 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Factor the common:
+Now that we use the VFS i_size field throughout XFS there is no need for the
+i_new_size field any more given that the VFS i_size field gets updated
+in ->write_end before unlocking the page, and thus is a) always uptodate when
+writeback could see a page.  Removing i_new_size also has the advantage that
+we will never have to trim back di_size during a failed buffered write,
+given that it never gets updated past i_size.
 
-	xfs_dqlock(dqp);
-	XFS_DQHOLD(dqp);
-	xfs_dqunlock(dqp);
+Note that currently the generic direct I/O code only updates i_size after
+calling our end_io handler, which requires a small workaround to make
+sure di_size actually makes it to disk.  I hope to fix this properly in
+the generic code.
 
-pattern into a new helper, and remove XFS_DQHOLD now that only two callers
-are left.
+A downside is that we lose the support for parallel non-overlapping O_DIRECT
+appending writes that recently was added.  I don't think keeping the complex
+and fragile i_new_size infrastructure for this is a good tradeoff - if we
+really care about parallel appending writers we should investigate turning
+the iolock into a range lock, which would also allow for parallel
+non-overlapping buffered writers.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_dquot.c |    2 +-
- fs/xfs/xfs_dquot.h |   10 ++++++++--
- fs/xfs/xfs_qm.c    |   50 +++++++++++++-------------------------------------
- 3 files changed, 22 insertions(+), 40 deletions(-)
+ fs/xfs/xfs_aops.c  |   28 +++++++++++---------
+ fs/xfs/xfs_file.c  |   72 +++++++----------------------------------------------
+ fs/xfs/xfs_iget.c  |    1 
+ fs/xfs/xfs_inode.h |    2 -
+ fs/xfs/xfs_trace.h |   18 ++-----------
+ 5 files changed, 29 insertions(+), 92 deletions(-)
 
-Index: xfs/fs/xfs/xfs_qm.c
+Index: xfs/fs/xfs/xfs_file.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:05.388673160 +0200
-+++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:05.868674047 +0200
-@@ -606,12 +606,9 @@ xfs_qm_dqattach_one(
- 		 */
- 		dqp = udqhint->q_gdquot;
- 		if (dqp && be32_to_cpu(dqp->q_core.d_id) == id) {
--			xfs_dqlock(dqp);
--			XFS_DQHOLD(dqp);
- 			ASSERT(*IO_idqpp == NULL);
--			*IO_idqpp = dqp;
- 
--			xfs_dqunlock(dqp);
-+			*IO_idqpp = xfs_qm_dqhold(dqp);
- 			xfs_dqunlock(udqhint);
- 			return 0;
- 		}
-@@ -670,11 +667,7 @@ xfs_qm_dqattach_grouphint(
- 		xfs_qm_dqrele(tmp);
- 	}
- 
--	xfs_dqlock(gdq);
--	XFS_DQHOLD(gdq);
--	xfs_dqunlock(gdq);
--
--	udq->q_gdquot = gdq;
-+	udq->q_gdquot = xfs_qm_dqhold(gdq);
- done:
- 	xfs_dqunlock(udq);
+--- xfs.orig/fs/xfs/xfs_file.c	2011-10-27 22:39:55.658175758 +0200
++++ xfs/fs/xfs/xfs_file.c	2011-10-27 22:39:56.068672482 +0200
+@@ -413,27 +413,6 @@ xfs_file_splice_read(
  }
-@@ -1939,10 +1932,7 @@ xfs_qm_vop_dqalloc(
- 			 * this to caller
- 			 */
- 			ASSERT(ip->i_udquot);
--			uq = ip->i_udquot;
--			xfs_dqlock(uq);
--			XFS_DQHOLD(uq);
--			xfs_dqunlock(uq);
-+			uq = xfs_qm_dqhold(ip->i_udquot);
+ 
+ /*
+- * If this was a direct or synchronous I/O that failed (such as ENOSPC) then
+- * part of the I/O may have been written to disk before the error occurred.  In
+- * this case the on-disk file size may have been adjusted beyond the in-memory
+- * file size and now needs to be truncated back.
+- */
+-STATIC void
+-xfs_aio_write_newsize_update(
+-	struct xfs_inode	*ip,
+-	xfs_fsize_t		new_size)
+-{
+-	if (new_size == ip->i_new_size) {
+-		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+-		if (new_size == ip->i_new_size)
+-			ip->i_new_size = 0;
+-		if (ip->i_d.di_size > i_size_read(VFS_I(ip)))
+-			ip->i_d.di_size = i_size_read(VFS_I(ip));
+-		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+-	}
+-}
+-
+-/*
+  * xfs_file_splice_write() does not use xfs_rw_ilock() because
+  * generic_file_splice_write() takes the i_mutex itself. This, in theory,
+  * couuld cause lock inversions between the aio_write path and the splice path
+@@ -451,7 +430,6 @@ xfs_file_splice_write(
+ {
+ 	struct inode		*inode = outfilp->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	xfs_fsize_t		new_size;
+ 	int			ioflags = 0;
+ 	ssize_t			ret;
+ 
+@@ -465,20 +443,12 @@ xfs_file_splice_write(
+ 
+ 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
+ 
+-	new_size = *ppos + count;
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	if (new_size > i_size_read(inode))
+-		ip->i_new_size = new_size;
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-
+ 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
+ 
+ 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
+ 	if (ret > 0)
+ 		XFS_STATS_ADD(xs_write_bytes, ret);
+ 
+-	xfs_aio_write_newsize_update(ip, new_size);
+ 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+ 	return ret;
+ }
+@@ -673,16 +643,13 @@ xfs_file_aio_write_checks(
+ 	struct file		*file,
+ 	loff_t			*pos,
+ 	size_t			*count,
+-	xfs_fsize_t		*new_sizep,
+ 	int			*iolock)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+-	xfs_fsize_t		new_size;
+ 	int			error = 0;
+ 
+ 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+-	*new_sizep = 0;
+ restart:
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+ 	if (error) {
+@@ -697,15 +664,13 @@ restart:
+ 	/*
+ 	 * If the offset is beyond the size of the file, we need to zero any
+ 	 * blocks that fall between the existing EOF and the start of this
+-	 * write. There is no need to issue zeroing if another in-flght IO ends
+-	 * at or before this one If zeronig is needed and we are currently
+-	 * holding the iolock shared, we need to update it to exclusive which
+-	 * involves dropping all locks and relocking to maintain correct locking
+-	 * order. If we do this, restart the function to ensure all checks and
+-	 * values are still valid.
++	 * write.  If zeroing is needed and we are currently holding the
++	 * iolock shared, we need to update it to exclusive which involves
++	 * dropping all locks and relocking to maintain correct locking order.
++	 * If we do this, restart the function to ensure all checks and values
++	 * are still valid.
+ 	 */
+-	if ((ip->i_new_size && *pos > ip->i_new_size) ||
+-	    (!ip->i_new_size && *pos > i_size_read(inode))) {
++	if (*pos > i_size_read(inode)) {
+ 		if (*iolock == XFS_IOLOCK_SHARED) {
+ 			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
+ 			*iolock = XFS_IOLOCK_EXCL;
+@@ -714,19 +679,6 @@ restart:
  		}
+ 		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
  	}
- 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
-@@ -1963,10 +1953,7 @@ xfs_qm_vop_dqalloc(
- 			xfs_ilock(ip, lockflags);
- 		} else {
- 			ASSERT(ip->i_gdquot);
--			gq = ip->i_gdquot;
--			xfs_dqlock(gq);
--			XFS_DQHOLD(gq);
--			xfs_dqunlock(gq);
-+			gq = xfs_qm_dqhold(ip->i_gdquot);
- 		}
- 	} else if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
- 		if (xfs_get_projid(ip) != prid) {
-@@ -1986,10 +1973,7 @@ xfs_qm_vop_dqalloc(
- 			xfs_ilock(ip, lockflags);
- 		} else {
- 			ASSERT(ip->i_gdquot);
--			gq = ip->i_gdquot;
--			xfs_dqlock(gq);
--			XFS_DQHOLD(gq);
--			xfs_dqunlock(gq);
-+			gq = xfs_qm_dqhold(ip->i_gdquot);
- 		}
+-
+-	/*
+-	 * If this IO extends beyond EOF, we may need to update ip->i_new_size.
+-	 * We have already zeroed space beyond EOF (if necessary).  Only update
+-	 * ip->i_new_size if this IO ends beyond any other in-flight writes.
+-	 */
+-	new_size = *pos + *count;
+-	if (new_size > i_size_read(inode)) {
+-		if (new_size > ip->i_new_size)
+-			ip->i_new_size = new_size;
+-		*new_sizep = new_size;
+-	}
+-
+ 	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+ 		return error;
+@@ -772,7 +724,6 @@ xfs_file_dio_aio_write(
+ 	unsigned long		nr_segs,
+ 	loff_t			pos,
+ 	size_t			ocount,
+-	xfs_fsize_t		*new_size,
+ 	int			*iolock)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -817,7 +768,7 @@ xfs_file_dio_aio_write(
+ 		xfs_rw_ilock(ip, *iolock);
  	}
- 	if (uq)
-@@ -2039,14 +2023,10 @@ xfs_qm_vop_chown(
- 	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
+ 
+-	ret = xfs_file_aio_write_checks(file, &pos, &count, new_size, iolock);
++	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -855,7 +806,6 @@ xfs_file_buffered_aio_write(
+ 	unsigned long		nr_segs,
+ 	loff_t			pos,
+ 	size_t			ocount,
+-	xfs_fsize_t		*new_size,
+ 	int			*iolock)
+ {
+ 	struct file		*file = iocb->ki_filp;
+@@ -869,7 +819,7 @@ xfs_file_buffered_aio_write(
+ 	*iolock = XFS_IOLOCK_EXCL;
+ 	xfs_rw_ilock(ip, *iolock);
+ 
+-	ret = xfs_file_aio_write_checks(file, &pos, &count, new_size, iolock);
++	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
+ 		return ret;
+ 
+@@ -909,7 +859,6 @@ xfs_file_aio_write(
+ 	ssize_t			ret;
+ 	int			iolock;
+ 	size_t			ocount = 0;
+-	xfs_fsize_t		new_size = 0;
+ 
+ 	XFS_STATS_INC(xs_write_calls);
+ 
+@@ -929,10 +878,10 @@ xfs_file_aio_write(
+ 
+ 	if (unlikely(file->f_flags & O_DIRECT))
+ 		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos,
+-						ocount, &new_size, &iolock);
++						ocount, &iolock);
+ 	else
+ 		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
+-						ocount, &new_size, &iolock);
++						ocount, &iolock);
+ 
+ 	if (ret <= 0)
+ 		goto out_unlock;
+@@ -953,7 +902,6 @@ xfs_file_aio_write(
+ 	}
+ 
+ out_unlock:
+-	xfs_aio_write_newsize_update(ip, new_size);
+ 	xfs_rw_iunlock(ip, iolock);
+ 	return ret;
+ }
+Index: xfs/fs/xfs/xfs_aops.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_aops.c	2011-10-27 22:39:55.654173048 +0200
++++ xfs/fs/xfs/xfs_aops.c	2011-10-27 22:39:56.068672482 +0200
+@@ -111,8 +111,7 @@ xfs_ioend_new_eof(
+ 	xfs_fsize_t		bsize;
+ 
+ 	bsize = ioend->io_offset + ioend->io_size;
+-	isize = MAX(i_size_read(VFS_I(ip)), ip->i_new_size);
+-	isize = MIN(isize, bsize);
++	isize = MIN(i_size_read(VFS_I(ip)), bsize);
+ 	return isize > ip->i_d.di_size ? isize : 0;
+ }
+ 
+@@ -126,11 +125,7 @@ static inline bool xfs_ioend_is_append(s
+ }
+ 
+ /*
+- * Update on-disk file size now that data has been written to disk.  The
+- * current in-memory file size is i_size.  If a write is beyond eof i_new_size
+- * will be the intended file size until i_size is updated.  If this write does
+- * not extend all the way to the valid file size then restrict this update to
+- * the end of the write.
++ * Update on-disk file size now that data has been written to disk.
+  *
+  * This function does not block as blocking on the inode lock in IO completion
+  * can lead to IO completion order dependency deadlocks.. If it can't get the
+@@ -1279,6 +1274,15 @@ xfs_end_io_direct_write(
+ 	struct xfs_ioend	*ioend = iocb->private;
  
  	/*
--	 * Take an extra reference, because the inode
--	 * is going to keep this dquot pointer even
--	 * after the trans_commit.
--	 */
--	xfs_dqlock(newdq);
--	XFS_DQHOLD(newdq);
--	xfs_dqunlock(newdq);
--	*IO_olddq = newdq;
-+	 * Take an extra reference, because the inode is going to keep
-+	 * this dquot pointer even after the trans_commit.
++	 * While the generic direct I/O code updates the inode size, it does
++	 * so only after the end_io handler is called, which means our
++	 * end_io handler things the on-disk size is outside the in-core
++	 * size.  To prevent this just update it a little bit earlier here.
 +	 */
-+	*IO_olddq = xfs_qm_dqhold(newdq);
- 
- 	return prevdq;
- }
-@@ -2178,25 +2158,21 @@ xfs_qm_vop_create_dqattach(
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
- 
- 	if (udqp) {
--		xfs_dqlock(udqp);
--		XFS_DQHOLD(udqp);
--		xfs_dqunlock(udqp);
- 		ASSERT(ip->i_udquot == NULL);
--		ip->i_udquot = udqp;
- 		ASSERT(XFS_IS_UQUOTA_ON(mp));
- 		ASSERT(ip->i_d.di_uid == be32_to_cpu(udqp->q_core.d_id));
++	if (offset + size > i_size_read(ioend->io_inode))
++		i_size_write(ioend->io_inode, offset + size);
 +
-+		ip->i_udquot = xfs_qm_dqhold(udqp);
- 		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
- 	}
- 	if (gdqp) {
--		xfs_dqlock(gdqp);
--		XFS_DQHOLD(gdqp);
--		xfs_dqunlock(gdqp);
- 		ASSERT(ip->i_gdquot == NULL);
--		ip->i_gdquot = gdqp;
- 		ASSERT(XFS_IS_OQUOTA_ON(mp));
- 		ASSERT((XFS_IS_GQUOTA_ON(mp) ?
- 			ip->i_d.di_gid : xfs_get_projid(ip)) ==
- 				be32_to_cpu(gdqp->q_core.d_id));
-+
-+		ip->i_gdquot = xfs_qm_dqhold(gdqp);
- 		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
- 	}
- }
-Index: xfs/fs/xfs/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:04.892672352 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:05.872671537 +0200
-@@ -734,7 +734,7 @@ xfs_qm_dqlookup(
- 			return -1;
- 		}
++	/*
+ 	 * blockdev_direct_IO can return an error even after the I/O
+ 	 * completion handler was called.  Thus we need to protect
+ 	 * against double-freeing.
+@@ -1340,12 +1344,10 @@ xfs_vm_write_failed(
  
--		XFS_DQHOLD(dqp);
-+		dqp->q_nrefs++;
- 
+ 	if (to > inode->i_size) {
  		/*
- 		 * move the dquot to the front of the hashchain
-Index: xfs/fs/xfs/xfs_dquot.h
+-		 * punch out the delalloc blocks we have already allocated. We
+-		 * don't call xfs_setattr() to do this as we may be in the
+-		 * middle of a multi-iovec write and so the vfs inode->i_size
+-		 * will not match the xfs ip->i_size and so it will zero too
+-		 * much. Hence we jus truncate the page cache to zero what is
+-		 * necessary and punch the delalloc blocks directly.
++		 * Punch out the delalloc blocks we have already allocated.
++		 *
++		 * Don't bother with xfs_setattr given that nothing can have
++		 * it do disk yet as the page is still locked at this point.
+ 		 */
+ 		struct xfs_inode	*ip = XFS_I(inode);
+ 		xfs_fileoff_t		start_fsb;
+Index: xfs/fs/xfs/xfs_iget.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.h	2011-10-27 22:40:04.376671215 +0200
-+++ xfs/fs/xfs/xfs_dquot.h	2011-10-27 22:40:05.876670670 +0200
-@@ -80,8 +80,6 @@ enum {
- 	XFS_QLOCK_NESTED,
- };
+--- xfs.orig/fs/xfs/xfs_iget.c	2011-10-27 22:39:55.686173105 +0200
++++ xfs/fs/xfs/xfs_iget.c	2011-10-27 22:39:56.072672805 +0200
+@@ -94,7 +94,6 @@ xfs_inode_alloc(
+ 	ip->i_update_core = 0;
+ 	ip->i_delayed_blks = 0;
+ 	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
+-	ip->i_new_size = 0;
  
--#define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
+ 	return ip;
+ }
+Index: xfs/fs/xfs/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trace.h	2011-10-27 22:39:55.670178173 +0200
++++ xfs/fs/xfs/xfs_trace.h	2011-10-27 22:39:56.076671196 +0200
+@@ -897,7 +897,6 @@ DECLARE_EVENT_CLASS(xfs_file_class,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(xfs_fsize_t, size)
+-		__field(xfs_fsize_t, new_size)
+ 		__field(loff_t, offset)
+ 		__field(size_t, count)
+ 		__field(int, flags)
+@@ -906,17 +905,15 @@ DECLARE_EVENT_CLASS(xfs_file_class,
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->size = ip->i_d.di_size;
+-		__entry->new_size = ip->i_new_size;
+ 		__entry->offset = offset;
+ 		__entry->count = count;
+ 		__entry->flags = flags;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
++	TP_printk("dev %d:%d ino 0x%llx size 0x%llx "
+ 		  "offset 0x%llx count 0x%zx ioflags %s",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->size,
+-		  __entry->new_size,
+ 		  __entry->offset,
+ 		  __entry->count,
+ 		  __print_flags(__entry->flags, "|", XFS_IO_FLAGS))
+@@ -984,7 +981,6 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, ino)
+ 		__field(loff_t, size)
+-		__field(loff_t, new_size)
+ 		__field(loff_t, offset)
+ 		__field(size_t, count)
+ 		__field(int, type)
+@@ -996,7 +992,6 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
+ 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+ 		__entry->ino = ip->i_ino;
+ 		__entry->size = ip->i_d.di_size;
+-		__entry->new_size = ip->i_new_size;
+ 		__entry->offset = offset;
+ 		__entry->count = count;
+ 		__entry->type = type;
+@@ -1004,13 +999,11 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
+ 		__entry->startblock = irec ? irec->br_startblock : 0;
+ 		__entry->blockcount = irec ? irec->br_blockcount : 0;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
+-		  "offset 0x%llx count %zd type %s "
+-		  "startoff 0x%llx startblock %lld blockcount 0x%llx",
++	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset 0x%llx count %zd "
++		  "type %s startoff 0x%llx startblock %lld blockcount 0x%llx",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->size,
+-		  __entry->new_size,
+ 		  __entry->offset,
+ 		  __entry->count,
+ 		  __print_symbolic(__entry->type, XFS_IO_TYPES),
+@@ -1037,7 +1030,6 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 		__field(xfs_ino_t, ino)
+ 		__field(loff_t, isize)
+ 		__field(loff_t, disize)
+-		__field(loff_t, new_size)
+ 		__field(loff_t, offset)
+ 		__field(size_t, count)
+ 	),
+@@ -1046,17 +1038,15 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
+ 		__entry->ino = ip->i_ino;
+ 		__entry->isize = VFS_I(ip)->i_size;
+ 		__entry->disize = ip->i_d.di_size;
+-		__entry->new_size = ip->i_new_size;
+ 		__entry->offset = offset;
+ 		__entry->count = count;
+ 	),
+-	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx new_size 0x%llx "
++	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx "
+ 		  "offset 0x%llx count %zd",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->ino,
+ 		  __entry->isize,
+ 		  __entry->disize,
+-		  __entry->new_size,
+ 		  __entry->offset,
+ 		  __entry->count)
+ );
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-10-27 22:39:55.704670968 +0200
++++ xfs/fs/xfs/xfs_inode.h	2011-10-27 22:39:56.080672114 +0200
+@@ -246,8 +246,6 @@ typedef struct xfs_inode {
+ 
+ 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
+ 
+-	xfs_fsize_t		i_new_size;	/* size when write completes */
 -
- /*
-  * Manage the q_flush completion queue embedded in the dquot.  This completion
-  * queue synchronizes processes attempting to flush the in-core dquot back to
-@@ -147,4 +145,12 @@ extern void		xfs_dqlock2(struct xfs_dquo
- extern void		xfs_dqunlock(struct xfs_dquot *);
- extern void		xfs_dqflock_pushbuf_wait(struct xfs_dquot *dqp);
- 
-+static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
-+{
-+	xfs_dqlock(dqp);
-+	dqp->q_nrefs++;
-+	xfs_dqunlock(dqp);
-+	return dqp;
-+}
-+
- #endif /* __XFS_DQUOT_H__ */
+ 	/* VFS inode */
+ 	struct inode		i_vnode;	/* embedded VFS inode */
+ } xfs_inode_t;
 
 _______________________________________________
 xfs mailing list
