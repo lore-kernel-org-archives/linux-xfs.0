@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9T0mYxe175079 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 19:48:34 -0500
+	p9T0mmuh175154 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 19:48:48 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 51AC9FD5357
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 46E8DFD5362
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:46 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id 6LXGvUBTJHvPDvam
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:32 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id YlgZbMBx15yCvrsS
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:46 -0700 (PDT)
 Received: by mail-bw0-f53.google.com with SMTP id zs8so1327051bkb.26
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:32 -0700 (PDT)
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:46 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 2/8] xfstests: add different logging option to fsstress
-Date: Sat, 29 Oct 2011 04:48:11 +0400
-Message-Id: <1319849297-3506-3-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 6/8] xfstests: add fiemap operation to fsstress
+Date: Sat, 29 Oct 2011 04:48:15 +0400
+Message-Id: <1319849297-3506-7-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
 References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,99 +32,128 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, hch@lst.de, xfs@oss.sgi.com
 
-Currently the only way to log fsstress's output is to redirect it's shared
-stdout to pipe which is very painfull because:
+Related bug: http://patchwork.ozlabs.org/patch/118863
 
-1) Pipe writers are serialized via i_mutex so we waste cpu-cores power on stupid
-   sinchronization for loging purpose, instead of hunting real race conditions,
-   and bugs inside file system.
-2) Usually output is corrupted due to luck of sychronization on shared stdout.
-
-Since fsstress's children operate on independend paths, let's just open didicated
-log file for each child and simply avoid useless sycnhronization.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- ltp/fsstress.c |   33 ++++++++++++++++++++++++++++++++-
- 1 files changed, 32 insertions(+), 1 deletions(-)
+ ltp/fsstress.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 76 insertions(+), 0 deletions(-)
 
 diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 51ecda2..c7001f3 100644
+index 9de59b6..759f7b3 100644
 --- a/ltp/fsstress.c
 +++ b/ltp/fsstress.c
-@@ -258,6 +258,8 @@ int main(int argc, char **argv)
- 	char		buf[10];
- 	int		c;
- 	char		*dirname = NULL;
-+	char		*logname = NULL;
-+	char		rpath[PATH_MAX];
- 	int		fd;
- 	int		i;
- 	int		j;
-@@ -273,7 +275,7 @@ int main(int argc, char **argv)
- 	nops = sizeof(ops) / sizeof(ops[0]);
- 	ops_end = &ops[nops];
- 	myprog = argv[0];
--	while ((c = getopt(argc, argv, "d:e:f:i:m:n:p:rs:vwzHS")) != -1) {
-+	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:vwzHS")) != -1) {
- 		switch (c) {
- 		case 'd':
- 			dirname = optarg;
-@@ -311,6 +313,10 @@ int main(int argc, char **argv)
- 		case 'n':
- 			operations = atoi(optarg);
- 			break;
-+		case 'o':
-+			logname = optarg;
-+			break;
+@@ -24,6 +24,9 @@
+ #ifdef HAVE_ATTR_ATTRIBUTES_H
+ #include <attr/attributes.h>
+ #endif
++#ifdef HAVE_LINUX_FIEMAP_H
++#include <linux/fiemap.h>
++#endif
+ #ifdef FALLOCATE
+ #include <linux/falloc.h>
+ #ifndef FALLOC_FL_PUNCH_HOLE
+@@ -65,6 +68,7 @@ typedef enum {
+ 	OP_DWRITE,
+ 	OP_FALLOCATE,
+ 	OP_FDATASYNC,
++	OP_FIEMAP,
+ 	OP_FREESP,
+ 	OP_FSYNC,
+ 	OP_GETATTR,
+@@ -149,6 +153,7 @@ void	dread_f(int, long);
+ void	dwrite_f(int, long);
+ void	fallocate_f(int, long);
+ void	fdatasync_f(int, long);
++void	fiemap_f(int, long);
+ void	freesp_f(int, long);
+ void	fsync_f(int, long);
+ void	getattr_f(int, long);
+@@ -184,6 +189,7 @@ opdesc_t	ops[] = {
+ 	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
+ 	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
+ 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
++	{ OP_FIEMAP, "fiemap", fiemap_f, 1, 1 },
+ 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
+ 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
+ 	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
+@@ -2117,6 +2123,76 @@ fdatasync_f(int opno, long r)
+ 	free_pathname(&f);
+ 	close(fd);
+ }
++void
++fiemap_f(int opno, long r)
++{
++#ifdef HAVE_LINUX_FIEMAP_H
++	int		e;
++	pathname_t	f;
++	int		fd;
++	__int64_t	lr;
++	off64_t		off;
++	struct stat64	stb;
++	int		v;
++	char		st[1024];
++	int blocks_to_map;
++	struct fiemap *fiemap;
 +
- 		case 'p':
- 			nproc = atoi(optarg);
- 			break;
-@@ -351,10 +357,26 @@ int main(int argc, char **argv)
-         }
++	init_pathname(&f);
++	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
++		if (v)
++			printf("%d/%d: fiemap - no filename\n", procid, opno);
++		free_pathname(&f);
++		return;
++	}
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++	if (fd < 0) {
++		if (v)
++			printf("%d/%d: fiemap - open %s failed %d\n",
++				procid, opno, f.path, e);
++		free_pathname(&f);
++		return;
++	}
++	if (fstat64(fd, &stb) < 0) {
++		if (v)
++			printf("%d/%d: fiemap - fstat64 %s failed %d\n",
++				procid, opno, f.path, errno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	inode_info(st, sizeof(st), &stb, v);
++	blocks_to_map = random() & 0xffff;
++	fiemap = (struct fiemap *)malloc(sizeof(struct fiemap) +
++			(blocks_to_map * sizeof(struct fiemap_extent)));
++	if (!fiemap) {
++		if (v)
++			printf("%d/%d: malloc failed \n", procid, opno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	lr = ((__int64_t)random() << 32) + random();
++	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
++	off %= maxfsize;
++	fiemap->fm_flags = random() & (FIEMAP_FLAGS_COMPAT | 0x10000);
++	fiemap->fm_extent_count = blocks_to_map;
++	fiemap->fm_mapped_extents = random() & 0xffff;
++	fiemap->fm_start = off;
++	fiemap->fm_length = ((__int64_t)random() << 32) + random();
++
++	e = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
++	if (v)
++		printf("%d/%d: ioctl(FIEMAP) %s%s %lld %lld %x %d\n",
++		       procid, opno, f.path, st, (long long)fiemap->fm_start,
++		       (long long) fiemap->fm_length, fiemap->fm_flags, e);
++	free(fiemap);
++	free_pathname(&f);
++	close(fd);
++#endif
++}
  
- 	(void)mkdir(dirname, 0777);
-+	if (logname && logname[0] != '/') {
-+		if (getcwd(rpath, sizeof(rpath)) < 0){
-+			perror("getcwd failed");
-+			exit(1);
-+		}
-+	} else {
-+		rpath[0] = '\0';
-+	}
- 	if (chdir(dirname) < 0) {
- 		perror(dirname);
- 		exit(1);
- 	}
-+	if (logname) {
-+		char path[PATH_MAX];
-+		snprintf(path, sizeof(path), "%s/%s", rpath, logname);
-+		if (freopen(path, "a", stdout) == NULL) {
-+			perror("freopen logfile failed");
-+			exit(1);
-+		}
-+	}
- 	sprintf(buf, "fss%x", (unsigned int)getpid());
- 	fd = creat(buf, 0666);
- 	if (lseek64(fd, (off64_t)(MAXFSIZE32 + 1ULL), SEEK_SET) < 0)
-@@ -409,6 +431,15 @@ int main(int argc, char **argv)
- 		close(fd);
- 	for (i = 0; i < nproc; i++) {
- 		if (fork() == 0) {
-+			if (logname) {
-+				char path[PATH_MAX];
-+				snprintf(path, sizeof(path), "%s/%s.%d",
-+					 rpath, logname, i);
-+				if (freopen(path, "a", stdout) == NULL) {
-+					perror("freopen logfile failed");
-+					exit(1);
-+				}
-+			}
- 			procid = i;
- 			doproc();
- 			return 0;
+ void
+ freesp_f(int opno, long r)
 -- 
 1.7.1
 
