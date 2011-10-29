@@ -1,29 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9SKe2sb168994 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 15:40:03 -0500
-Received: from mga03.intel.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BD0CAFD136C
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 13:40:01 -0700 (PDT)
-Received: from mga03.intel.com (mga03.intel.com [143.182.124.21]) by
-	cuda.sgi.com with ESMTP id iMnkvtT9vy11u9mT for
-	<xfs@oss.sgi.com>; Fri, 28 Oct 2011 13:40:01 -0700 (PDT)
-Date: Sat, 29 Oct 2011 04:39:44 +0800
-From: Wu Fengguang <fengguang.wu@intel.com>
-Subject: Re: [patch 3/5] mm: try to distribute dirty pages fairly across zones
-Message-ID: <20111028203944.GB20607@localhost>
-References: <1317367044-475-1-git-send-email-jweiner@redhat.com>
-	<1317367044-475-4-git-send-email-jweiner@redhat.com>
-	<20110930142805.GC869@tiehlicka.suse.cz>
-	<20111027155618.GA25524@localhost>
-	<20111027161359.GA1319@redhat.com>
-	<20111027204743.GA19343@localhost>
-	<20111027221258.GA22869@localhost>
-	<20111027231933.GB1319@redhat.com>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="ZGiS0Q5IWpPtfppv"
-Content-Disposition: inline
-In-Reply-To: <20111027231933.GB1319@redhat.com>
+	p9T0mprI175172 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 19:48:51 -0500
+Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A4B81FD5365
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:50 -0700 (PDT)
+Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id CVWq5rMEwoPHd16D
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:50 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id zs8so1327068bkb.26
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:49 -0700 (PDT)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: [PATCH 7/8] xfstests: add a new test that runs fsstress under ENOSPC
+	conditions
+Date: Sat, 29 Oct 2011 04:48:16 +0400
+Message-Id: <1319849297-3506-8-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
+References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,193 +25,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Johannes Weiner <jweiner@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Michal Hocko <mhocko@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, "Li, Shaohua" <shaohua.li@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
+To: linux-fsdevel@vger.kernel.org
+Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, hch@lst.de, xfs@oss.sgi.com
 
+During stress testing we want to cover as much code paths as possible
+fsstress is very good for this purpose. But it has expandable nature
+(disk usage almost continually grow). So once it goes in no ENOSPC
+condition it will be where till the end. But by running 'dd' writers
+in parallel we can regularly trigger ENOSPC but only for a limited
+periods of time because each time it opens the same file with O_TRUNC.
 
---ZGiS0Q5IWpPtfppv
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+---
+ 264     |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 264.out |    5 +++
+ group   |    1 +
+ 3 files changed, 92 insertions(+), 0 deletions(-)
+ create mode 100755 264
+ create mode 100644 264.out
 
-[restore CC list]
-
-> > I'm trying to understand where the performance gain comes from.
-> > 
-> > I noticed that in all cases, before/after patchset, nr_vmscan_write are all zero.
-> > 
-> > nr_vmscan_immediate_reclaim is significantly reduced though:
-> 
-> That's a good thing, it means we burn less CPU time on skipping
-> through dirty pages on the LRU.
-> 
-> Until a certain priority level, the dirty pages encountered on the LRU
-> list are marked PageReclaim and put back on the list, this is the
-> nr_vmscan_immediate_reclaim number.  And only below that priority, we
-> actually ask the FS to write them, which is nr_vmscan_write.
-
-Yes, it is.
-
-> I suspect this is where the performance improvement comes from: we
-> find clean pages for reclaim much faster.
-
-That explains how it could reduce CPU overheads. However the dd's are
-throttled anyway, so I still don't understand how the speedup of dd page
-allocations improve the _IO_ performance.
-
-> > $ ./compare.rb -g 1000M -e nr_vmscan_immediate_reclaim thresh*/*-ioless-full-nfs-wq5-next-20111014+ thresh*/*-ioless-full-per-zone-dirty-next-20111014+
-> > 3.1.0-rc9-ioless-full-nfs-wq5-next-20111014+  3.1.0-rc9-ioless-full-per-zone-dirty-next-20111014+  
-> > ------------------------  ------------------------  
-> >                560289.00       -98.5%      8145.00  thresh=1000M/btrfs-100dd-4k-8p-4096M-1000M:10-X
-> >                576882.00       -98.4%      9511.00  thresh=1000M/btrfs-10dd-4k-8p-4096M-1000M:10-X
-> >                651258.00       -98.8%      7963.00  thresh=1000M/btrfs-1dd-4k-8p-4096M-1000M:10-X
-> >               1963294.00       -85.4%    286815.00  thresh=1000M/ext3-100dd-4k-8p-4096M-1000M:10-X
-> >               2108028.00       -10.6%   1885114.00  thresh=1000M/ext3-10dd-4k-8p-4096M-1000M:10-X
-> >               2499456.00       -99.9%      2061.00  thresh=1000M/ext3-1dd-4k-8p-4096M-1000M:10-X
-> >               2534868.00       -78.5%    545815.00  thresh=1000M/ext4-100dd-4k-8p-4096M-1000M:10-X
-> >               2921668.00       -76.8%    677177.00  thresh=1000M/ext4-10dd-4k-8p-4096M-1000M:10-X
-> >               2841049.00      -100.0%       779.00  thresh=1000M/ext4-1dd-4k-8p-4096M-1000M:10-X
-> >               2481823.00       -86.3%    339342.00  thresh=1000M/xfs-100dd-4k-8p-4096M-1000M:10-X
-> >               2508629.00       -87.4%    316614.00  thresh=1000M/xfs-10dd-4k-8p-4096M-1000M:10-X
-> >               2656628.00      -100.0%       678.00  thresh=1000M/xfs-1dd-4k-8p-4096M-1000M:10-X
-> >              24303872.00       -83.2%   4080014.00  TOTAL nr_vmscan_immediate_reclaim
-> > 
-> > If you'd like to compare any other vmstat items before/after patch,
-> > let me know and I'll run the compare script to find them out.
-> 
-> I will come back to you on this, so tired right now.  But I find your
-> scripts interesting ;-) Are those released and available for download
-> somewhere?  I suspect every kernel hacker has their own collection of
-> scripts to process data like this, maybe we should pull them all
-> together and put them into a git tree!
-
-Thank you for the interest :-)
-
-I used to upload my writeback test scripts to kernel.org. However its
-file service is not restored yet. So I attach the compare script here.
-It's a bit hacky for now, which I hope can be improved over time to be
-useful to other projects as well.
-
-Thanks,
-Fengguang
-
---ZGiS0Q5IWpPtfppv
-Content-Type: application/x-ruby
-Content-Disposition: attachment; filename="compare.rb"
-Content-Transfer-Encoding: quoted-printable
-
-#!/usr/bin/ruby=0A=0Arequire 'optparse'=0Arequire 'ostruct'=0A=0ANFS_MNT=3D=
-"/fs/nfs"=0A=0A$cfield =3D "kernel"=0A$cfield_hash =3D Hash.new=0A$cfield_a=
-rray =3D Array.new=0A$cases =3D Hash.new=0A$sum =3D Array.new=0A$grep =3D /=
-/=0A$vgrep =3D /SOME IMPOSSIBLE PATTERN sdfghjkl:1234567890;/=0A=0A$evaluat=
-e =3D "write_bw"=0A=0A$nfs_nr_commits =3D 0=0A$nfs_nr_writes =3D 0=0A=0A$nf=
-s_write_total =3D 0=0A$nfs_commit_size =3D 0=0A$nfs_write_size =3D 0=0A=0A$=
-nfs_write_queue_time =3D 0=0A$nfs_write_rtt_time =3D 0=0A$nfs_write_execute=
-_time =3D 0=0A=0A$nfs_commit_queue_time =3D 0=0A$nfs_commit_rtt_time =3D 0=
-=0A$nfs_commit_execute_time =3D 0=0A=0Aopts =3D OptionParser.new do |opts|=
-=0A        opts.banner =3D "Usage: compare.rb [options] cases..."=0A=0A    =
-    opts.separator ""=0A        opts.separator "options:"=0A=0A        opts=
-=2Eon("-c FIELD", "--compare FIELD", "compare FIELD: fs/kernel/job/thresh/b=
-g_thresh") do |field|=0A                $cfield =3D field=0A		# puts "#{$cf=
-ield}\n"=0A        end=0A       =0A        opts.on("-e FIELD", "--evaluate =
-FIELD", "evaluate FIELD: write_bw/nfs_*") do |field|=0A                $eva=
-luate =3D field=0A        end=0A       =0A        opts.on("-g PATTERN", "--=
-grep PATTERN", "only compare cases that match PATTERN") do |pattern|=0A    =
-            $grep =3D Regexp.new(pattern)=0A        end=0A       =0A       =
- opts.on("-v PATTERN", "--reverse-grep PATTERN", "exclude cases that match =
-PATTERN") do |pattern|=0A                $vgrep =3D Regexp.new(pattern)=0A =
-       end=0A       =0A        opts.on_tail("-h", "--help", "Show this mess=
-age") do=0A                puts opts=0A                exit=0A        end=
-=0A=0Aend=0A=0Aopts.parse!(ARGV)=0A=0A# http://bits.stephan-brumme.com/roun=
-dUpToNextPowerOfTwo.html=0Adef roundUpToNextPowerOfTwo(x)=0A	x -=3D 1=0A	x =
-|=3D x >> 1;  # handle  2 bit numbers=0A	x |=3D x >> 2;  # handle  4 bit nu=
-mbers=0A	x |=3D x >> 4;  # handle  8 bit numbers=0A	x |=3D x >> 8;  # handl=
-e 16 bit numbers=0A	x |=3D x >> 16; # handle 32 bit numbers=0A	x +=3D 1=0A	=
-return x;=0Aend=0A=0Adef iostat_cpu(path)=0A	file =3D "#{path}/iostat-cpu"=
-=0A	eval "$#{$evaluate} =3D 0"=0A	vars=3D["user", "nice", "system", "iowait=
-", "steal", "idle"]=0A	vars.each { |var| eval "$cpu_#{var} =3D 0.0" }=0A	re=
-turn if not File.exist?(file)=0A	stat =3D File.new(file).readlines=0A	stat.=
-each_with_index do |line, i|=0A		next if i < 3=0A		vals =3D line.split=0A		=
-vars.each_with_index { |var, i| eval "$cpu_#{var} +=3D #{vals[i]}" }=0A	end=
-=0A	vars.each { |var| eval "$cpu_#{var} /=3D #{stat.size-3}" }=0Aend=0A=0Ad=
-ef vmstat(path)=0A	file =3D "#{path}/vmstat-end"=0A	eval "$#{$evaluate} =3D=
- 0"=0A	return if not File.exist?(file)=0A	=0A	stat =3D File.new(file).readl=
-ines=0A	stat.each do |line|=0A		var, val =3D line.split=0A		eval "$#{var} =
-=3D #{val}"=0A	end=0Aend=0A=0Adef nfs_stats(path)=0A	file =3D "#{path}/moun=
-tstats-end"=0A=0A	$nfs_nr_commits =3D 0=0A	$nfs_nr_writes =3D 0=0A=0A	$nfs_=
-write_mb =3D 0=0A	$nfs_nr_commits_per_mb =3D 0=0A	$nfs_nr_writes_per_mb =3D=
- 0=0A=0A	$nfs_write_queue_time =3D 0=0A	$nfs_write_rtt_time =3D 0=0A	$nfs_w=
-rite_execute_time =3D 0=0A=0A	$nfs_commit_queue_time =3D 0=0A	$nfs_commit_r=
-tt_time =3D 0=0A	$nfs_commit_execute_time =3D 0=0A=0A	return if not File.ex=
-ist?(file)=0A	=0A	stat =3D File.new(file).readlines=0A	nfsmnt =3D nil=0A	st=
-at.each do |line|=0A		if line.index("mounted on /")=0A			nfsmnt =3D line.in=
-dex("mounted on #{NFS_MNT}")=0A		end=0A		next unless nfsmnt=0A		if line.ind=
-ex("WRITE: ")=0A			n =3D line.split=0A			$nfs_nr_writes =3D n[1].to_i=0A			=
-next if $nfs_nr_writes =3D=3D 0=0A			$nfs_write_total =3D n[4].to_f=0A			$n=
-fs_write_size =3D $nfs_write_total / $nfs_nr_writes / (1<<20)=0A			$nfs_wri=
-te_queue_time   =3D n[6].to_f / $nfs_nr_writes=0A			$nfs_write_rtt_time    =
- =3D n[7].to_f / $nfs_nr_writes=0A			$nfs_write_execute_time =3D n[8].to_f =
-/ $nfs_nr_writes=0A			# puts line=0A			# puts $nfs_nr_writes=0A		end=0A		if=
- line.index("COMMIT: ")=0A			n =3D line.split=0A			$nfs_nr_commits =3D n[1]=
-=2Eto_i=0A			next if $nfs_nr_commits =3D=3D 0=0A			$nfs_commit_size =3D $nf=
-s_write_total / $nfs_nr_commits / (1<<20)=0A			$nfs_commit_queue_time   =3D=
- n[6].to_f / $nfs_nr_commits=0A			$nfs_commit_rtt_time     =3D n[7].to_f / =
-$nfs_nr_commits=0A			$nfs_commit_execute_time =3D n[8].to_f / $nfs_nr_commi=
-ts=0A		end=0A	end=0Aend=0A=0Adef write_bw(path)=0A	bw =3D 0 # MB/s=0A	file =
-=3D "#{path}/trace-global_dirty_state-flusher"=0A	cache =3D "#{path}/write-=
-bandwidth"=0A	if File.exist?(cache)=0A		cached_bw =3D File.new(cache).readl=
-ines=0A		return cached_bw[0].to_f=0A	end=0A	if File.exist?(file)=0A		state =
-=3D File.new(file).readlines=0A		n =3D [state.size / 10, 100].min=0A		retur=
-n 0 if n =3D=3D 0=0A		time0, dirty, writeback, unstable, bg_thresh, thresh,=
- limit, dirtied, written0 =3D state[0].split=0A		time, dirty, writeback, un=
-stable, bg_thresh, thresh, limit, dirtied, written =3D state[-n].split=0A		=
-bw =3D (written.to_i - written0.to_i) / (time.to_f - time0.to_f) / 256=0A		=
-File.open(cache, "w") { |f| f.puts "#{bw}" }=0A	end=0A	return bw=0Aend=0A=
-=0Adef add_dd(path)=0A	if $evaluate =3D=3D "write_bw"=0A		bw =3D write_bw(p=
-ath)=0A		return if bw =3D=3D 0 =0A	elsif $evaluate.index("nfs_") =3D=3D 0=
-=0A		nfs_stats(path)=0A		eval "bw =3D $#{$evaluate}"=0A	elsif $evaluate.ind=
-ex("cpu_") =3D=3D 0=0A		iostat_cpu(path)=0A		eval "bw =3D $#{$evaluate}"=0A=
-	else=0A		vmstat(path)=0A		eval "bw =3D $#{$evaluate}"=0A	end=0A	prefix =3D=
- ""=0A	if path =3D~ /(.*\/)(.*)/=0A		prefix =3D $1=0A		path =3D $2=0A	end=
-=0A	# nfs-10dd-1M-1p-32069M-20:10-3.1.0-rc4+=0A	path =3D~ /([a-z0-9]+)-([0-=
-9]+dd)-(\d+[kMg])-(\d+p)-(\d+M)-([0-9M]+):([0-9M]+)-(.*)/;=0A	all, fs, job,=
- bs, cpu, mem, thresh, bg_thresh, kernel =3D *$~=0A	if ! kernel=0A		path =
-=3D~ /([a-z0-9]+)-(fio_[a-z_0-9]+)-(\d+[kM])-(\d+p)-(\d+M)-([0-9M]+):([0-9M=
-]+)-(.*)/;=0A		all, fs, job, bs, cpu, mem, thresh, bg_thresh, kernel =3D *$=
-~=0A	end=0A	if ! kernel=0A		path =3D~ /([a-z0-9]+)-(fio_[a-z_0-9]+)-(\d+[kM=
-])-(\d+p)-(\d+M)-(.*)/;=0A		all, fs, job, bs, cpu, mem, kernel =3D *$~=0A		=
-thresh =3D "20"=0A		bg_thresh =3D "10"=0A	end=0A	m =3D roundUpToNextPowerOf=
-Two(mem.to_i)=0A	mem =3D "#{m}M"=0A	ckey =3D ""=0A=0A	prefix =3D "" if $cfi=
-eld =3D~ /thresh/=0A	eval "ckey =3D #{$cfield}; #{$cfield} =3D 'X'"=0A	if c=
-key and !$cfield_hash.has_key?(ckey)=0A		$cfield_array.push(ckey)=0A		$cfie=
-ld_hash[ckey] =3D 1=0A		$sum.push 0.0=0A	end=0A	# bs=3D"4k"=0A	key =3D "#{p=
-refix}#{fs}-#{job}-#{bs}-#{cpu}-#{mem}-#{thresh}:#{bg_thresh}-#{kernel}"=0A=
-	if !$cases.has_key?(key)=0A		$cases[key] =3D { ckey =3D> bw }=0A	else=0A		=
-$cases[key][ckey] =3D bw=0A	end=0A	# print "#{fs}-#{job}-#{mem}-#{bw}\n"=0A=
-end=0A=0AARGV.each { |path|=0A	if path =3D~ $grep and not path =3D~ $vgrep=
-=0A		add_dd path=0A	end=0A}=0A=0Aif $cfield =3D~ /thresh|mem/=0A	name =3D $=
-cfield + "=3D"=0Aelse=0A	name =3D ""=0Aend=0A$cfield_array.each { |ckey|=0A=
-	printf "%24s  ", name + ckey=0A}=0Aputs=0A$cfield_array.each {=0A	printf "=
-------------------------  "=0A}=0Aputs=0A$cases.sort.each { |key, value|=0A=
-	n =3D 0=0A	$cfield_hash.each_key { |ckey|=0A		n +=3D 1 if $cases[key][ckey=
-]=0A	}=0A	next if n < 2=0A	$cfield_array.each_index { |i|=0A		ckey =3D $cfi=
-eld_array[i]=0A		bw =3D $cases[key][ckey] || 0=0A		bw0 =3D $cases[key][$cfi=
-eld_array[0]] || 0=0A		if i =3D=3D 0 || bw =3D=3D 0 || bw0 =3D=3D 0=0A			pr=
-intf "%24.2f  ", bw=0A		else=0A			printf "%+10.1f%% %12.2f  ", 100.0 * (bw =
-- bw0) / bw0, bw=0A		end=0A		$sum[i] +=3D bw=0A	}=0A	printf "%s\n", key=0A}=
-=0A=0Abw0 =3D $sum[0]=0A$sum.each_with_index { |bw, i|=0A	if i =3D=3D 0=0A	=
-	printf "%24.2f  ", bw=0A	else=0A		printf "%+10.1f%% %12.2f  ", 100.0 * (bw=
- - bw0) / bw0, bw=0A	end=0A}=0Aputs "TOTAL #{$evaluate}"=0A
---ZGiS0Q5IWpPtfppv
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/264 b/264
+new file mode 100755
+index 0000000..fc6df23
+--- /dev/null
++++ b/264
+@@ -0,0 +1,86 @@
++#! /bin/bash
++# FSQA Test No. 264
++#
++# Run fsstress and ENSPC hitters in parallel, check fs consistency an the end
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=dmonakhov@openvz.org
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++# Disable all sync operations to get higher load
++FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0"
++_workout()
++{
++	echo ""
++	echo "Run fsstress"
++	echo ""
++	num_iterations=10
++	enospc_time=2
++	out=$SCRATCH_MNT/fsstress.$$
++	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
++	echo "fsstress $args" >> $here/$seq.full
++	$FSSTRESS_PROG $args > /dev/null 2>&1 &
++	pid=$!
++	echo "Run dd writers in parallel"
++	for ((i=0; i < num_iterations; i++))
++	do
++		# File will be opened with O_TRUNC each time
++		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M count=1 \
++			> /dev/null 2>&1
++		sleep $enospc_time
++	done
++	kill $pid
++	wait $pid
++}
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_need_to_be_root
++
++umount $SCRATCH_DEV 2>/dev/null
++_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
++_scratch_mount
++
++if ! _workout; then
++	umount $SCRATCH_DEV 2>/dev/null
++	exit
++fi
++
++if ! _scratch_unmount; then
++	echo "failed to umount"
++	status=1
++	exit
++fi
++_check_scratch_fs
++status=$?
++exit
+diff --git a/264.out b/264.out
+new file mode 100644
+index 0000000..81b50e5
+--- /dev/null
++++ b/264.out
+@@ -0,0 +1,5 @@
++QA output created by 264
++
++Run fsstress
++
++Run dd writers in parallel
+diff --git a/group b/group
+index 2a8970c..e79c29b 100644
+--- a/group
++++ b/group
+@@ -377,3 +377,4 @@ deprecated
+ 261 auto quick quota
+ 262 auto quick quota
+ 263 rw auto quick
++264 auto rw prealloc ioctl enospc
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---ZGiS0Q5IWpPtfppv--
