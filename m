@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9T0mprI175172 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 19:48:51 -0500
+	p9T0mfgj175119 for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 19:48:41 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A4B81FD5365
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:50 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 33072FD535C
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:39 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id CVWq5rMEwoPHd16D
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:50 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id zs8so1327068bkb.26
-	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:49 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id lbtOWELDhjgtH6jV
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:39 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id zs8so1327051bkb.26
+	for <xfs@oss.sgi.com>; Fri, 28 Oct 2011 17:48:39 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 7/8] xfstests: add a new test that runs fsstress under ENOSPC
-	conditions
-Date: Sat, 29 Oct 2011 04:48:16 +0400
-Message-Id: <1319849297-3506-8-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 4/8] xfstests: add fallocate support to fsstress
+Date: Sat, 29 Oct 2011 04:48:13 +0400
+Message-Id: <1319849297-3506-5-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
 References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,134 +32,211 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, hch@lst.de, xfs@oss.sgi.com
 
-During stress testing we want to cover as much code paths as possible
-fsstress is very good for this purpose. But it has expandable nature
-(disk usage almost continually grow). So once it goes in no ENOSPC
-condition it will be where till the end. But by running 'dd' writers
-in parallel we can regularly trigger ENOSPC but only for a limited
-periods of time because each time it opens the same file with O_TRUNC.
+Add tests for fallocate(2) syscall
+- fallocate: reserve the disk space
+- punch: de-allocates the disk space
+Since FALLOC_FL_PUNCH_HOLE is relatively new it's value defined
+explicitly if not yet defined. Later we may clear that define.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- 264     |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 264.out |    5 +++
- group   |    1 +
- 3 files changed, 92 insertions(+), 0 deletions(-)
- create mode 100755 264
- create mode 100644 264.out
+ ltp/fsstress.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 126 insertions(+), 1 deletions(-)
 
-diff --git a/264 b/264
-new file mode 100755
-index 0000000..fc6df23
---- /dev/null
-+++ b/264
-@@ -0,0 +1,86 @@
-+#! /bin/bash
-+# FSQA Test No. 264
-+#
-+# Run fsstress and ENSPC hitters in parallel, check fs consistency an the end
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=dmonakhov@openvz.org
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+# Disable all sync operations to get higher load
-+FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0"
-+_workout()
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 133a247..547bf30 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -24,7 +24,13 @@
+ #ifdef HAVE_ATTR_ATTRIBUTES_H
+ #include <attr/attributes.h>
+ #endif
+-
++#ifdef FALLOCATE
++#include <linux/falloc.h>
++#ifndef FALLOC_FL_PUNCH_HOLE
++/* Copy-paste from linux/falloc.h */
++#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
++#endif
++#endif
+ #ifndef HAVE_ATTR_LIST
+ #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
+ #endif
+@@ -48,6 +54,7 @@ typedef enum {
+ 	OP_CREAT,
+ 	OP_DREAD,
+ 	OP_DWRITE,
++	OP_FALLOCATE,
+ 	OP_FDATASYNC,
+ 	OP_FREESP,
+ 	OP_FSYNC,
+@@ -55,6 +62,7 @@ typedef enum {
+ 	OP_LINK,
+ 	OP_MKDIR,
+ 	OP_MKNOD,
++	OP_PUNCH,
+ 	OP_READ,
+ 	OP_READLINK,
+ 	OP_RENAME,
+@@ -128,6 +136,7 @@ void	chown_f(int, long);
+ void	creat_f(int, long);
+ void	dread_f(int, long);
+ void	dwrite_f(int, long);
++void	fallocate_f(int, long);
+ void	fdatasync_f(int, long);
+ void	freesp_f(int, long);
+ void	fsync_f(int, long);
+@@ -135,6 +144,7 @@ void	getdents_f(int, long);
+ void	link_f(int, long);
+ void	mkdir_f(int, long);
+ void	mknod_f(int, long);
++void	punch_f(int, long);
+ void	read_f(int, long);
+ void	readlink_f(int, long);
+ void	rename_f(int, long);
+@@ -159,6 +169,7 @@ opdesc_t	ops[] = {
+ 	{ OP_CREAT, "creat", creat_f, 4, 1 },
+ 	{ OP_DREAD, "dread", dread_f, 4, 0 },
+ 	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
++	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
+ 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
+ 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
+ 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
+@@ -166,6 +177,7 @@ opdesc_t	ops[] = {
+ 	{ OP_LINK, "link", link_f, 1, 1 },
+ 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
+ 	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
++	{ OP_PUNCH, "punch", punch_f, 1, 1 },
+ 	{ OP_READ, "read", read_f, 1, 0 },
+ 	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+ 	{ OP_RENAME, "rename", rename_f, 2, 1 },
+@@ -1998,6 +2010,63 @@ dwrite_f(int opno, long r)
+ }
+ 
+ void
++fallocate_f(int opno, long r)
 +{
-+	echo ""
-+	echo "Run fsstress"
-+	echo ""
-+	num_iterations=10
-+	enospc_time=2
-+	out=$SCRATCH_MNT/fsstress.$$
-+	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
-+	echo "fsstress $args" >> $here/$seq.full
-+	$FSSTRESS_PROG $args > /dev/null 2>&1 &
-+	pid=$!
-+	echo "Run dd writers in parallel"
-+	for ((i=0; i < num_iterations; i++))
-+	do
-+		# File will be opened with O_TRUNC each time
-+		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M count=1 \
-+			> /dev/null 2>&1
-+		sleep $enospc_time
-+	done
-+	kill $pid
-+	wait $pid
++#ifdef FALLOCATE
++	int		e;
++	pathname_t	f;
++	int		fd;
++	__int64_t	lr;
++	off64_t		off;
++	off64_t		len;
++	struct stat64	stb;
++	int		v;
++	char		st[1024];
++	int mode = 0;
++
++	init_pathname(&f);
++	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
++		if (v)
++			printf("%d/%d: fallocate - no filename\n", procid, opno);
++		free_pathname(&f);
++		return;
++	}
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++	if (fd < 0) {
++		if (v)
++			printf("%d/%d: fallocate - open %s failed %d\n",
++				procid, opno, f.path, e);
++		free_pathname(&f);
++		return;
++	}
++	if (fstat64(fd, &stb) < 0) {
++		if (v)
++			printf("%d/%d: fallocate - fstat64 %s failed %d\n",
++				procid, opno, f.path, errno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	inode_info(st, sizeof(st), &stb, v);
++	lr = ((__int64_t)random() << 32) + random();
++	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
++	off %= maxfsize;
++	len = (off64_t)(random() % (1024 * 1024));
++	mode |= FALLOC_FL_KEEP_SIZE & random();
++	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
++	if (v)
++		printf("%d/%d: fallocate(%d) %s %st %lld %lld %d\n",
++		       procid, opno, mode,
++		       f.path, st, (long long)off, (long long)len, e);
++	free_pathname(&f);
++	close(fd);
++#endif
 +}
 +
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+_need_to_be_root
 +
-+umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
-+_scratch_mount
++void
+ fdatasync_f(int opno, long r)
+ {
+ 	int		e;
+@@ -2270,6 +2339,62 @@ mknod_f(int opno, long r)
+ }
+ 
+ void
++punch_f(int opno, long r)
++{
++#ifdef FALLOCATE
++	int		e;
++	pathname_t	f;
++	int		fd;
++	__int64_t	lr;
++	off64_t		off;
++	off64_t		len;
++	struct stat64	stb;
++	int		v;
++	char		st[1024];
++	int mode = FALLOC_FL_PUNCH_HOLE;
 +
-+if ! _workout; then
-+	umount $SCRATCH_DEV 2>/dev/null
-+	exit
-+fi
++	init_pathname(&f);
++	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
++		if (v)
++			printf("%d/%d: punch hole - no filename\n", procid, opno);
++		free_pathname(&f);
++		return;
++	}
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++	if (fd < 0) {
++		if (v)
++			printf("%d/%d: punch hole - open %s failed %d\n",
++				procid, opno, f.path, e);
++		free_pathname(&f);
++		return;
++	}
++	if (fstat64(fd, &stb) < 0) {
++		if (v)
++			printf("%d/%d: punch hole - fstat64 %s failed %d\n",
++				procid, opno, f.path, errno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	inode_info(st, sizeof(st), &stb, v);
++	lr = ((__int64_t)random() << 32) + random();
++	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
++	off %= maxfsize;
++	len = (off64_t)(random() % (1024 * 1024));
++	mode |= FALLOC_FL_KEEP_SIZE & random();
++	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
++	if (v)
++		printf("%d/%d: punch hole(%d) %s %s %lld %lld %d\n",
++		       procid, opno, mode,
++		       f.path, st, (long long)off, (long long)len, e);
++	free_pathname(&f);
++	close(fd);
++#endif
++}
 +
-+if ! _scratch_unmount; then
-+	echo "failed to umount"
-+	status=1
-+	exit
-+fi
-+_check_scratch_fs
-+status=$?
-+exit
-diff --git a/264.out b/264.out
-new file mode 100644
-index 0000000..81b50e5
---- /dev/null
-+++ b/264.out
-@@ -0,0 +1,5 @@
-+QA output created by 264
-+
-+Run fsstress
-+
-+Run dd writers in parallel
-diff --git a/group b/group
-index 2a8970c..e79c29b 100644
---- a/group
-+++ b/group
-@@ -377,3 +377,4 @@ deprecated
- 261 auto quick quota
- 262 auto quick quota
- 263 rw auto quick
-+264 auto rw prealloc ioctl enospc
++void
+ read_f(int opno, long r)
+ {
+ 	char		*buf;
 -- 
 1.7.1
 
