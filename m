@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9U4j4Ng235433 for <xfs@oss.sgi.com>; Sat, 29 Oct 2011 23:45:06 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F290F20F6C3
-	for <xfs@oss.sgi.com>; Sat, 29 Oct 2011 21:45:01 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	tAswnYK5pzLHCMEm for <xfs@oss.sgi.com>;
-	Sat, 29 Oct 2011 21:45:01 -0700 (PDT)
-Date: Sun, 30 Oct 2011 00:45:00 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: 075 112 redirect stderr of fsx to /dev/null too
-Message-ID: <20111030044500.GA17679@infradead.org>
-References: <1319941555-4405-1-git-send-email-guaneryu@gmail.com>
+	p9V0VmFN009117 for <xfs@oss.sgi.com>; Sun, 30 Oct 2011 19:31:49 -0500
+Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A449F153B640
+	for <xfs@oss.sgi.com>; Sun, 30 Oct 2011 17:31:46 -0700 (PDT)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id DFDypbJpLy3Sxdzr for
+	<xfs@oss.sgi.com>; Sun, 30 Oct 2011 17:31:46 -0700 (PDT)
+Message-ID: <4EADEC33.3040107@cn.fujitsu.com>
+Date: Mon, 31 Oct 2011 08:30:43 +0800
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1319941555-4405-1-git-send-email-guaneryu@gmail.com>
+Subject: Re: Can you please create a git tree mirror on git.kernel.org?
+References: <4E9F8BE0.9010407@cn.fujitsu.com>
+	<20111028172217.GA32397@infradead.org>
+In-Reply-To: <20111028172217.GA32397@infradead.org>
+Reply-To: gaowanlong@cn.fujitsu.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,12 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com, aelder@sgi.com
 
-Looks good,
+On 10/29/2011 01:22 AM, Christoph Hellwig wrote:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> On Thu, Oct 20, 2011 at 10:48:00AM +0800, Wanlong Gao wrote:
+>> Hi Alex:
+>>
+>> 	I see that xfs,xfsprogs,xfstests,dmapi all have a mirror on
+>> 	git.kernel.org before kernel.org went down. Now, kernel.org goes on
+>> 	without the mirrors, so, can you create them now? I think someone
+>> 	will need them like me. Isn't it?
+> 
+> The repositories are now back in place, but not the primary repositories
+> for commits yet, although I have updated them with all commits from the
+> SGI repositories.
+> 
+> 
+
+
+Yeah, thanks a lot Christoph.
+
+-Wanlong Gao
 
 _______________________________________________
 xfs mailing list
