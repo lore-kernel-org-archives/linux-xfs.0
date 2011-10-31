@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9VF27qm042465 for <xfs@oss.sgi.com>; Mon, 31 Oct 2011 10:02:07 -0500
+	p9VF3sJP042523 for <xfs@oss.sgi.com>; Mon, 31 Oct 2011 10:03:54 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfstests: add test 264 for testing xfsdump -D
-Date: Mon, 31 Oct 2011 10:02:01 -0500
-Message-Id: <1320073321-27662-1-git-send-email-wkendall@sgi.com>
+Subject: [PATCH] xfstests: add 265 and 266 for multiple media files
+Date: Mon, 31 Oct 2011 10:03:49 -0500
+Message-Id: <1320073429-27865-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,35 +21,37 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add a test for xfsdump -D, which skips unchanged directories during
-an incremental backup. After doing an initial backup, a new file is
-added to one directory (to verify that changed directories are
-backed up) and several files are appended to. Then an incremental
-backup is done with -D set. The test verifies the original and
-restored filesystems match after applying the base and incremental
-backups, and that the incremental restore output indicates that only
-the one changed directory was backed up.
+This patch adds a couple of tests for xfsdump when multiple media files
+are used. 265 tests the case where a file is split across multiple media
+files, and 266 tests the case where a file ends on one media file and
+the next media file starts on another file. These tests use a small
+media file size (xfsdump -d) so that they don't rely on having to hit
+end-of-tape.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
- 264         |   74 +++++++++++++++++++++++++++++++++
- 264.out     |  133 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common.dump |    7 +--
- group       |    1 +
- 4 files changed, 210 insertions(+), 5 deletions(-)
- create mode 100755 264
- create mode 100644 264.out
+ 265         |   75 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 265.out     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 266         |   78 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 266.out     |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ common.dump |    6 ++--
+ group       |    2 +
+ 6 files changed, 332 insertions(+), 3 deletions(-)
+ create mode 100755 265
+ create mode 100644 265.out
+ create mode 100755 266
+ create mode 100644 266.out
 
-diff --git a/264 b/264
+diff --git a/265 b/265
 new file mode 100755
-index 0000000..9544a58
+index 0000000..65d773e
 --- /dev/null
-+++ b/264
-@@ -0,0 +1,74 @@
++++ b/265
+@@ -0,0 +1,75 @@
 +#! /bin/bash
-+# FS QA Test No. 264
++# FS QA Test No. 265
 +#
-+# Test incremental dumps with -D (skip unchanged dirs)
++# Test xfsdump with a file spanning multiple media files.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2011 SGI.  All Rights Reserved.
@@ -80,212 +82,344 @@ index 0000000..9544a58
 +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
 +#
-+# Add a new file and append a subset of the fill'ed files
-+# So we can see if just these get dumped on an incremental
++# create a 40 MiB file with an extended attr.
++# xfsdump writes file data in "extent groups", currently 16 MiB in size. After
++# writing an extent group or finishing a file, xfsdump will start a new media
++# file if it is over the suggested size. With a single 40 MiB file and using a
++# suggested media file size of 12 MiB below, this dump will be contained in 3
++# media files.
 +#
-+_add_and_append_dumpdir_fill()
++_create_files()
 +{
-+    cd $dump_dir
-+    echo 'New file' >> newfile
-+    _append_dumpdir_fill
++    cat <<End-of-File >$tmp.config
++# pathname	size            user    group    perm   name value namespace
++biggg		41943040	$nobody	$nobody  777    attr1 some_text1  root
++End-of-File
++
++    _wipe_fs
++    _do_create_dumpdir_fill
++    _stable_fs
 +}
 +
 +# get standard environment, filters and checks
 +. ./common.rc
 +. ./common.dump
++. ./common.attr
 +
 +# real QA test starts here
 +_supported_fs xfs
 +_supported_os Linux
 +
-+$XFSDUMP_PROG -h 2>&1 | grep -q -e -D
-+if [ $? -ne 0 ]; then
-+    _notrun "requires xfsdump -D"
-+fi
++_require_tape $TAPE_DEV
++_require_attrs
 +
-+_create_dumpdir_fill
-+# ensure file/dir timestamps precede dump timestamp
-+sleep 2
-+dump_file=$tmp.df.0
-+_do_dump_file
-+_add_and_append_dumpdir_fill
-+dump_file=$tmp.df.1
-+_do_dump_file -l 1 -D
-+dump_file=$tmp.df.0
-+_do_restore_file_cum -l 0
-+dump_file=$tmp.df.1
-+_do_restore_file_cum -l 1
++_create_files
++_erase_hard
++_do_dump -d 12
++_do_restore
 +_ls_compare_sub
 +_diff_compare
++_diff_compare_eas
 +
 +# success, all done
 +exit
-diff --git a/264.out b/264.out
+diff --git a/265.out b/265.out
 new file mode 100644
-index 0000000..b2c3c09
+index 0000000..863d6e6
 --- /dev/null
-+++ b/264.out
-@@ -0,0 +1,133 @@
-+QA output created by 264
++++ b/265.out
+@@ -0,0 +1,88 @@
++QA output created by 265
++Put scsi tape driver into variable block size mode
 +Creating directory system to dump using src/fill.
-+Setup ....................................
-+Dumping to file...
-+xfsdump  -f DUMP_FILE -M stress_tape_media -L stress_264 SCRATCH_MNT
-+xfsdump: using file dump (drive_simple) strategy
++Setup Attribute "attr1" set to a 10 byte value for biggg:
++some_text1
++.
++Erasing tape
++Dumping to tape...
++xfsdump  -d12 -f TAPE_DEV -M stress_tape_media -L stress_265 SCRATCH_MNT
++xfsdump: using scsi tape (drive_scsitape) strategy
 +xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
 +xfsdump: dump date: DATE
 +xfsdump: session id: ID
-+xfsdump: session label: "stress_264"
++xfsdump: session label: "stress_265"
 +xfsdump: ino map <PHASES>
 +xfsdump: ino map construction complete
 +xfsdump: estimated dump size: NUM bytes
 +xfsdump: /var/xfsdump/inventory created
++xfsdump: preparing drive
 +xfsdump: creating dump session media file 0 (media 0, file 0)
 +xfsdump: dumping ino map
 +xfsdump: dumping directories
 +xfsdump: dumping non-directory files
 +xfsdump: ending media file
 +xfsdump: media file size NUM bytes
-+xfsdump: dump size (non-dir files) : NUM bytes
-+xfsdump: dump complete: SECS seconds elapsed
-+xfsdump: Dump Status: SUCCESS
-+Dumping to file...
-+xfsdump  -l1 -D -f DUMP_FILE -M stress_tape_media -L stress_264 SCRATCH_MNT
-+xfsdump: using file dump (drive_simple) strategy
-+xfsdump: level 1 incremental dump of HOSTNAME:SCRATCH_MNT based on level 0 dump begun DATE
-+xfsdump: dump date: DATE
-+xfsdump: session id: ID
-+xfsdump: session label: "stress_264"
-+xfsdump: ino map <PHASES>
-+xfsdump: ino map construction complete
-+xfsdump: estimated dump size: NUM bytes
-+xfsdump: creating dump session media file 0 (media 0, file 0)
++xfsdump: creating dump session media file 1 (media 0, file 1)
 +xfsdump: dumping ino map
 +xfsdump: dumping directories
 +xfsdump: dumping non-directory files
 +xfsdump: ending media file
 +xfsdump: media file size NUM bytes
++xfsdump: creating dump session media file 2 (media 0, file 2)
++xfsdump: dumping ino map
++xfsdump: dumping directories
++xfsdump: dumping non-directory files
++xfsdump: ending media file
++xfsdump: media file size NUM bytes
++xfsdump: dumping session inventory
++xfsdump: beginning inventory media file
++xfsdump: media file 3 (media 0, file 3)
++xfsdump: ending inventory media file
++xfsdump: inventory media file size NUM bytes
++xfsdump: writing stream terminator
++xfsdump: beginning media stream terminator
++xfsdump: media file 4 (media 0, file 4)
++xfsdump: ending media stream terminator
++xfsdump: media stream terminator size BLOCKSZ bytes
 +xfsdump: dump size (non-dir files) : NUM bytes
 +xfsdump: dump complete: SECS seconds elapsed
 +xfsdump: Dump Status: SUCCESS
-+Restoring cumumlative from file...
-+xfsrestore  -f DUMP_FILE -r RESTORE_DIR
-+xfsrestore: using file dump (drive_simple) strategy
-+xfsrestore: searching media for dump
-+xfsrestore: examining media file 0
-+xfsrestore: dump description: 
-+xfsrestore: hostname: HOSTNAME
-+xfsrestore: mount point: SCRATCH_MNT
-+xfsrestore: volume: SCRATCH_DEV
-+xfsrestore: session time: TIME
-+xfsrestore: level: 0
-+xfsrestore: session label: "stress_264"
-+xfsrestore: media label: "stress_tape_media"
-+xfsrestore: file system ID: ID
-+xfsrestore: session id: ID
-+xfsrestore: media ID: ID
++Rewinding tape
++Restoring from tape...
++xfsrestore  -f TAPE_DEV  -L stress_265 RESTORE_DIR
++xfsrestore: using scsi tape (drive_scsitape) strategy
 +xfsrestore: using online session inventory
 +xfsrestore: searching media for directory dump
++xfsrestore: preparing drive
++xfsrestore: examining media file 0
 +xfsrestore: reading directories
-+xfsrestore: 3 directories and 38 entries processed
++xfsrestore: 2 directories and 2 entries processed
 +xfsrestore: directory post-processing
 +xfsrestore: restoring non-directory files
-+xfsrestore: restore complete: SECS seconds elapsed
-+xfsrestore: Restore Status: SUCCESS
-+Restoring cumumlative from file...
-+xfsrestore  -f DUMP_FILE -r RESTORE_DIR
-+xfsrestore: using file dump (drive_simple) strategy
-+xfsrestore: searching media for dump
-+xfsrestore: examining media file 0
-+xfsrestore: dump description: 
-+xfsrestore: hostname: HOSTNAME
-+xfsrestore: mount point: SCRATCH_MNT
-+xfsrestore: volume: SCRATCH_DEV
-+xfsrestore: session time: TIME
-+xfsrestore: level: 1
-+xfsrestore: session label: "stress_264"
-+xfsrestore: media label: "stress_tape_media"
-+xfsrestore: file system ID: ID
-+xfsrestore: session id: ID
-+xfsrestore: media ID: ID
-+xfsrestore: using online session inventory
-+xfsrestore: searching media for directory dump
-+xfsrestore: reading directories
-+xfsrestore: NOTE: dump is not self-contained, orphaned files expected if base dump(s) was not applied
-+xfsrestore: 1 directories and 4 entries processed
-+xfsrestore: directory post-processing
++xfsrestore: examining media file 1
++xfsrestore: seeking past media file directory dump
++xfsrestore: restoring non-directory files
++xfsrestore: examining media file 2
++xfsrestore: seeking past media file directory dump
 +xfsrestore: restoring non-directory files
 +xfsrestore: restore complete: SECS seconds elapsed
 +xfsrestore: Restore Status: SUCCESS
 +Comparing listing of dump directory with restore directory
 +Files TMP.dump_dir and TMP.restore_dir are identical
 +Comparing dump directory with restore directory
-+Files DUMP_DIR/big and RESTORE_DIR/DUMP_SUBDIR/big are identical
-+Files DUMP_DIR/newfile and RESTORE_DIR/DUMP_SUBDIR/newfile are identical
-+Files DUMP_DIR/small and RESTORE_DIR/DUMP_SUBDIR/small are identical
-+Files DUMP_DIR/sub/a and RESTORE_DIR/DUMP_SUBDIR/sub/a are identical
-+Files DUMP_DIR/sub/a00 and RESTORE_DIR/DUMP_SUBDIR/sub/a00 are identical
-+Files DUMP_DIR/sub/a000 and RESTORE_DIR/DUMP_SUBDIR/sub/a000 are identical
-+Files DUMP_DIR/sub/b and RESTORE_DIR/DUMP_SUBDIR/sub/b are identical
-+Files DUMP_DIR/sub/b00 and RESTORE_DIR/DUMP_SUBDIR/sub/b00 are identical
-+Files DUMP_DIR/sub/big and RESTORE_DIR/DUMP_SUBDIR/sub/big are identical
-+Files DUMP_DIR/sub/c and RESTORE_DIR/DUMP_SUBDIR/sub/c are identical
-+Files DUMP_DIR/sub/c00 and RESTORE_DIR/DUMP_SUBDIR/sub/c00 are identical
-+Files DUMP_DIR/sub/d and RESTORE_DIR/DUMP_SUBDIR/sub/d are identical
-+Files DUMP_DIR/sub/d00 and RESTORE_DIR/DUMP_SUBDIR/sub/d00 are identical
-+Files DUMP_DIR/sub/e and RESTORE_DIR/DUMP_SUBDIR/sub/e are identical
-+Files DUMP_DIR/sub/e00 and RESTORE_DIR/DUMP_SUBDIR/sub/e00 are identical
-+Files DUMP_DIR/sub/e000 and RESTORE_DIR/DUMP_SUBDIR/sub/e000 are identical
-+Files DUMP_DIR/sub/f and RESTORE_DIR/DUMP_SUBDIR/sub/f are identical
-+Files DUMP_DIR/sub/f00 and RESTORE_DIR/DUMP_SUBDIR/sub/f00 are identical
-+Files DUMP_DIR/sub/g and RESTORE_DIR/DUMP_SUBDIR/sub/g are identical
-+Files DUMP_DIR/sub/g00 and RESTORE_DIR/DUMP_SUBDIR/sub/g00 are identical
-+Files DUMP_DIR/sub/h and RESTORE_DIR/DUMP_SUBDIR/sub/h are identical
-+Files DUMP_DIR/sub/h00 and RESTORE_DIR/DUMP_SUBDIR/sub/h00 are identical
-+Files DUMP_DIR/sub/h000 and RESTORE_DIR/DUMP_SUBDIR/sub/h000 are identical
-+Files DUMP_DIR/sub/i and RESTORE_DIR/DUMP_SUBDIR/sub/i are identical
-+Files DUMP_DIR/sub/i00 and RESTORE_DIR/DUMP_SUBDIR/sub/i00 are identical
-+Files DUMP_DIR/sub/j and RESTORE_DIR/DUMP_SUBDIR/sub/j are identical
-+Files DUMP_DIR/sub/j00 and RESTORE_DIR/DUMP_SUBDIR/sub/j00 are identical
-+Files DUMP_DIR/sub/k and RESTORE_DIR/DUMP_SUBDIR/sub/k are identical
-+Files DUMP_DIR/sub/k00 and RESTORE_DIR/DUMP_SUBDIR/sub/k00 are identical
-+Files DUMP_DIR/sub/k000 and RESTORE_DIR/DUMP_SUBDIR/sub/k000 are identical
-+Files DUMP_DIR/sub/l and RESTORE_DIR/DUMP_SUBDIR/sub/l are identical
-+Files DUMP_DIR/sub/l00 and RESTORE_DIR/DUMP_SUBDIR/sub/l00 are identical
-+Files DUMP_DIR/sub/m and RESTORE_DIR/DUMP_SUBDIR/sub/m are identical
-+Files DUMP_DIR/sub/m00 and RESTORE_DIR/DUMP_SUBDIR/sub/m00 are identical
-+Files DUMP_DIR/sub/n and RESTORE_DIR/DUMP_SUBDIR/sub/n are identical
-+Files DUMP_DIR/sub/n00 and RESTORE_DIR/DUMP_SUBDIR/sub/n00 are identical
-+Files DUMP_DIR/sub/small and RESTORE_DIR/DUMP_SUBDIR/sub/small are identical
++Files DUMP_DIR/biggg and RESTORE_DIR/DUMP_SUBDIR/biggg are identical
 +Only in SCRATCH_MNT: RESTORE_SUBDIR
-+Only in RESTORE_DIR: xfsrestorehousekeepingdir
++Comparing dump directory with restore directory
++Looking at the extended attributes (EAs)
++EAs on dump
++User names
++Root names
++Attribute "attr1" had a 10 byte value for DUMP_DIR/biggg:
++some_text1
++EAs on restore
++User names
++Root names
++Attribute "attr1" had a 10 byte value for DUMP_DIR/biggg:
++some_text1
++Files 265.ea1 and 265.ea2 are identical
+diff --git a/266 b/266
+new file mode 100755
+index 0000000..46e40c4
+--- /dev/null
++++ b/266
+@@ -0,0 +1,78 @@
++#! /bin/bash
++# FS QA Test No. 266
++#
++# Test xfsdump with multiple media files where a file ends
++# at the end of the first media file (i.e., no file is split
++# across media files).
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=wkendall@sgi.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=0	# success is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++#
++# create two 12 MiB files with extended attrs.
++# xfsdump writes file data in "extent groups", currently 16 MiB in size. After
++# writing an extent group or finishing a file, xfsdump will start a new media
++# file if it is over the suggested size. A media file size of 8 MiB is used
++# below, so after dumping a 12 MiB file xfsdump will start a new media file and
++# no file will be split across a media file.
++#
++_create_files()
++{
++    cat <<End-of-File >$tmp.config
++# pathname	size            user    group    perm   name value namespace
++bigg1		12582912	$nobody	$nobody  777    attr1 some_text1  root
++bigg2		12582912	$nobody	$nobody  777    attr2 some_text2  user
++End-of-File
++
++    _wipe_fs
++    _do_create_dumpdir_fill
++    _stable_fs
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.dump
++. ./common.attr
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_tape $TAPE_DEV
++_require_attrs
++
++_create_files
++_erase_hard
++_do_dump -d 8
++_do_restore
++_ls_compare_sub
++_diff_compare
++_diff_compare_eas
++
++# success, all done
++exit
+diff --git a/266.out b/266.out
+new file mode 100644
+index 0000000..853dc96
+--- /dev/null
++++ b/266.out
+@@ -0,0 +1,86 @@
++QA output created by 266
++Put scsi tape driver into variable block size mode
++Creating directory system to dump using src/fill.
++Setup Attribute "attr1" set to a 10 byte value for bigg1:
++some_text1
++.Attribute "attr2" set to a 10 byte value for bigg2:
++some_text2
++.
++Erasing tape
++Dumping to tape...
++xfsdump  -d8 -f TAPE_DEV -M stress_tape_media -L stress_266 SCRATCH_MNT
++xfsdump: using scsi tape (drive_scsitape) strategy
++xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
++xfsdump: dump date: DATE
++xfsdump: session id: ID
++xfsdump: session label: "stress_266"
++xfsdump: ino map <PHASES>
++xfsdump: ino map construction complete
++xfsdump: estimated dump size: NUM bytes
++xfsdump: /var/xfsdump/inventory created
++xfsdump: preparing drive
++xfsdump: creating dump session media file 0 (media 0, file 0)
++xfsdump: dumping ino map
++xfsdump: dumping directories
++xfsdump: dumping non-directory files
++xfsdump: ending media file
++xfsdump: media file size NUM bytes
++xfsdump: creating dump session media file 1 (media 0, file 1)
++xfsdump: dumping ino map
++xfsdump: dumping directories
++xfsdump: dumping non-directory files
++xfsdump: ending media file
++xfsdump: media file size NUM bytes
++xfsdump: dumping session inventory
++xfsdump: beginning inventory media file
++xfsdump: media file 2 (media 0, file 2)
++xfsdump: ending inventory media file
++xfsdump: inventory media file size NUM bytes
++xfsdump: writing stream terminator
++xfsdump: beginning media stream terminator
++xfsdump: media file 3 (media 0, file 3)
++xfsdump: ending media stream terminator
++xfsdump: media stream terminator size BLOCKSZ bytes
++xfsdump: dump size (non-dir files) : NUM bytes
++xfsdump: dump complete: SECS seconds elapsed
++xfsdump: Dump Status: SUCCESS
++Rewinding tape
++Restoring from tape...
++xfsrestore  -f TAPE_DEV  -L stress_266 RESTORE_DIR
++xfsrestore: using scsi tape (drive_scsitape) strategy
++xfsrestore: using online session inventory
++xfsrestore: searching media for directory dump
++xfsrestore: preparing drive
++xfsrestore: examining media file 0
++xfsrestore: reading directories
++xfsrestore: 2 directories and 3 entries processed
++xfsrestore: directory post-processing
++xfsrestore: restoring non-directory files
++xfsrestore: examining media file 1
++xfsrestore: seeking past media file directory dump
++xfsrestore: restoring non-directory files
++xfsrestore: restore complete: SECS seconds elapsed
++xfsrestore: Restore Status: SUCCESS
++Comparing listing of dump directory with restore directory
++Files TMP.dump_dir and TMP.restore_dir are identical
++Comparing dump directory with restore directory
++Files DUMP_DIR/bigg1 and RESTORE_DIR/DUMP_SUBDIR/bigg1 are identical
++Files DUMP_DIR/bigg2 and RESTORE_DIR/DUMP_SUBDIR/bigg2 are identical
++Only in SCRATCH_MNT: RESTORE_SUBDIR
++Comparing dump directory with restore directory
++Looking at the extended attributes (EAs)
++EAs on dump
++User names
++Attribute "attr2" had a 10 byte value for DUMP_DIR/bigg2:
++some_text2
++Root names
++Attribute "attr1" had a 10 byte value for DUMP_DIR/bigg1:
++some_text1
++EAs on restore
++User names
++Attribute "attr2" had a 10 byte value for DUMP_DIR/bigg2:
++some_text2
++Root names
++Attribute "attr1" had a 10 byte value for DUMP_DIR/bigg1:
++some_text1
++Files 266.ea1 and 266.ea2 are identical
 diff --git a/common.dump b/common.dump
-index c1eb675..d9e6565 100644
+index d9e6565..3942e83 100644
 --- a/common.dump
 +++ b/common.dump
-@@ -896,11 +896,8 @@ _parse_args()
- 	    session_label=$2
+@@ -909,9 +909,9 @@ _parse_args()
+         -Q)
+             do_quota_check=false
+             ;;
+-        -l)
+-            [ -z "$2" ] && _fail "missing argument for -l"
+-	    dump_args="$dump_args -l$2"
++        -l|-d)
++            [ -z "$2" ] && _fail "missing argument for $1"
++	    dump_args="$dump_args $1$2"
  	    shift
              ;;
--	-o)
--	    dump_args="$dump_args -o"
--            ;;
--	-F)
--	    dump_args="$dump_args -F"
-+	-o|-D|-F)
-+	    dump_args="$dump_args $1"
-             ;;
- 	--multi)
- 	    multi=$2
+ 	*)
 diff --git a/group b/group
-index 2a8970c..70ea462 100644
+index 70ea462..8a23320 100644
 --- a/group
 +++ b/group
-@@ -377,3 +377,4 @@ deprecated
- 261 auto quick quota
+@@ -378,3 +378,5 @@ deprecated
  262 auto quick quota
  263 rw auto quick
-+264 dump ioctl auto quick
+ 264 dump ioctl auto quick
++265 dump ioctl tape
++266 dump ioctl tape
 -- 
 1.7.0.4
 
