@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA1JrcRP129331 for <xfs@oss.sgi.com>; Tue, 1 Nov 2011 14:53:38 -0500
+	pA1JriNM129346 for <xfs@oss.sgi.com>; Tue, 1 Nov 2011 14:53:44 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH 3/4] xfstests: allow dump file name to be passed as arg
-Date: Tue,  1 Nov 2011 14:53:06 -0500
-Message-Id: <1320177187-18871-4-git-send-email-wkendall@sgi.com>
+Subject: [PATCH 4/4] xfstests: refactor dump test argument parsing
+Date: Tue,  1 Nov 2011 14:53:07 -0500
+Message-Id: <1320177187-18871-5-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1320177187-18871-1-git-send-email-wkendall@sgi.com>
 References: <1320177187-18871-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,157 +23,263 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfsdump tests using tapes (rather than files) can pass the tape pathname
-to the dump/restore helper functions using the -f option. Change
-_parse_args() so that this can be done for file-based tests as well, so
-that they don't have to set the global 'dump_file' variable before doing
-the dump or restore.
+The dump and restore helper functions all call the same _parse_args()
+function. xfsdump and xfsrestore have some common options, but others
+have different meanings/syntaxes or only exist in one program or the
+other. Split _parse_args() into dump and restore variants.
+
+Further, a test cannot pass most options to xfsrestore because many of
+the parsed args are not used by the restore helper functions.  Change
+the helpers so that the parsed options are available (to be used in
+future tests).
+
+Also add a check for a missing --multi argument, and change a couple of
+callers to be consistent and use $* instead of "$@".
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
- 061         |    5 ++---
- 064         |    9 +++------
- 065         |    9 +++------
- 264         |   12 ++++--------
- common.dump |    3 +++
- 5 files changed, 15 insertions(+), 23 deletions(-)
+ common.dump |   95 ++++++++++++++++++++++++++++++++++++++++++++---------------
+ 1 files changed, 71 insertions(+), 24 deletions(-)
 
-diff --git a/061 b/061
-index 2b08e11..8f1d149 100755
---- a/061
-+++ b/061
-@@ -44,11 +44,10 @@ _supported_os IRIX Linux
- # _create_dumpdir_fill_perm (small dump)
- 
- _create_dumpdir_fill_perm
--dump_file=src/dumpfile # override dump_file to checked-in dumpfile
--session_label="stress_056"
-+# override dump_file to checked-in dumpfile
- # we have no quotas to restore
- # if we happen to run this on crackle then put the hostname back
--_do_restore_file --no-check-quota |
-+_do_restore_file --no-check-quota -f src/dumpfile -L stress_056 |
- sed -e 's/HOSTNAME/crackle/g' -e 's#SCRATCH_DEV#/dev/dsk/dks0d2s1#'
- _diff_compare_sub
- _ls_nodate_compare_sub
-diff --git a/064 b/064
-index bf8a7bc..8e9e694 100755
---- a/064
-+++ b/064
-@@ -78,8 +78,7 @@ while [ $i -le 9 ]; do
-        cat $tmp.dates.$i >>$seq.full
-     fi
- 
--    dump_file=$tmp.df.level$i
--    _do_dump_file -l $i
-+    _do_dump_file -f $tmp.df.level$i -l $i
-     let i=$i+1
- done
- 
-@@ -91,8 +90,7 @@ i=0
- while [ $i -le 9 ]; do
-     echo ""
-     echo "restoring from df.level$i"
--    dump_file=$tmp.df.level$i
--    _do_restore_toc
-+    _do_restore_toc -f $tmp.df.level$i
-     let i=$i+1
- done
- 
-@@ -100,10 +98,9 @@ echo "Do the cumulative restores"
- _prepare_restore_dir
- i=0
- while [ $i -le 9 ]; do
--    dump_file=$tmp.df.level$i
-     echo ""
-     echo "restoring from df.level$i"
--    _do_restore_file_cum
-+    _do_restore_file_cum -f $tmp.df.level$i
-     echo "ls -l restore_dir"
-     ls -lR $restore_dir | _ls_size_filter | _check_quota_file
-     let i=$i+1
-diff --git a/065 b/065
-index 2ebe1cc..c1dee5d 100755
---- a/065
-+++ b/065
-@@ -158,8 +158,7 @@ while [ $i -le $num_dumps ]; do
-     echo "Listing of what files we have at level $i:"
-     _list_dir $dump_dir	| tee $tmp.ls.$i
- 
--    dump_file=$tmp.df.level$i
--    _do_dump_file -l $i
-+    _do_dump_file -f $tmp.df.level$i -l $i
-     let i=$i+1
- done
- 
-@@ -168,8 +167,7 @@ i=0
- while [ $i -le $num_dumps ]; do
-     echo ""
-     echo "restoring from df.level$i"
--    dump_file=$tmp.df.level$i
--    _do_restore_toc
-+    _do_restore_toc -f $tmp.df.level$i
-     let i=$i+1
- done
- 
-@@ -177,10 +175,9 @@ echo "Do the cumulative restores"
- _prepare_restore_dir
- i=0
- while [ $i -le $num_dumps ]; do
--    dump_file=$tmp.df.level$i
-     echo ""
-     echo "restoring from df.level$i"
--    _do_restore_file_cum
-+    _do_restore_file_cum -f $tmp.df.level$i
-     echo "list restore_dir"
-     _list_dir $restore_dir | _check_quota_file | tee $tmp.restorals.$i
-     let i=$i+1
-diff --git a/264 b/264
-index 1caa15f..949e911 100755
---- a/264
-+++ b/264
-@@ -58,16 +58,12 @@ fi
- _create_dumpdir_fill
- # ensure file/dir timestamps precede dump timestamp
- sleep 2
--dump_file=$tmp.df.0
--_do_dump_file
-+_do_dump_file -f $tmp.df.0
- _add_and_append_dumpdir_fill
--dump_file=$tmp.df.1
--_do_dump_file -l 1 -D
-+_do_dump_file -f $tmp.df.1 -l 1 -D
- _prepare_restore_dir
--dump_file=$tmp.df.0
--_do_restore_file_cum
--dump_file=$tmp.df.1
--_do_restore_file_cum
-+_do_restore_file_cum -f $tmp.df.0
-+_do_restore_file_cum -f $tmp.df.1
- _ls_compare_sub
- _diff_compare
- 
 diff --git a/common.dump b/common.dump
-index 09f1a91..552085f 100644
+index 552085f..076517d 100644
 --- a/common.dump
 +++ b/common.dump
-@@ -889,6 +889,7 @@ _parse_args()
-         -f)
-             [ -z "$2" ] && _fail "missing argument for -f"
- 	    dumptape=$2
-+	    dump_file=$2
+@@ -876,9 +876,10 @@ _dir_filter()
+ }
+ 
+ #
++# Parse xfsdump arguments.
+ # Note: requires a space between option letter and argument
+ #
+-_parse_args()
++_parse_dump_args()
+ {
+     OPTIND=0
+     dump_args=""
+@@ -897,10 +898,8 @@ _parse_args()
+ 	    session_label=$2
  	    shift
              ;;
-         -L)
-@@ -1080,6 +1081,8 @@ _do_restore_file_cum()
+-	-o|-D|-F)
+-	    dump_args="$dump_args $1"
+-            ;;
+ 	--multi)
++            [ -z "$2" ] && _fail "missing argument for --multi"
+ 	    multi=$2
+ 	    shift
+ 	    ;;
+@@ -910,6 +909,9 @@ _parse_args()
+         --no-check-quota)
+             do_quota_check=false
+             ;;
++	-o|-D|-F)
++	    dump_args="$dump_args $1"
++            ;;
+         -l|-d)
+             [ -z "$2" ] && _fail "missing argument for $1"
+ 	    dump_args="$dump_args $1$2"
+@@ -923,13 +925,55 @@ _parse_args()
+     done
+ }
+ 
++#
++# Parse xfsrestore arguments.
++# Note: requires a space between option letter and argument
++#
++_parse_restore_args()
++{
++    OPTIND=0
++    restore_args=""
++    while [ $# -gt 0 ]
++    do
++        case $1
++        in
++        -f)
++            [ -z "$2" ] && _fail "missing argument for -f"
++	    dumptape=$2
++	    dump_file=$2
++	    shift
++            ;;
++        -L)
++            [ -z "$2" ] && _fail "missing argument for -L"
++	    session_label=$2
++	    shift
++            ;;
++	--multi)
++            [ -z "$2" ] && _fail "missing argument for --multi"
++	    multi=$2
++	    shift
++	    ;;
++        --check-quota)
++            do_quota_check=true
++            ;;
++        --no-check-quota)
++            do_quota_check=false
++            ;;
++	*)
++            _fail "invalid argument to common.dump function: $1"
++            ;;
++        esac
++	shift
++    done
++}
++
+ 
+ #
+ # Dump a subdir
+ #
+ _do_dump_sub()
+ {
+-    _parse_args $*
++    _parse_dump_args $*
+ 
+     echo "Dumping to tape..."
+     opts="$_dump_debug$dump_args -s $dump_sdir -f $dumptape -M $media_label -L $session_label $SCRATCH_MNT"
+@@ -942,7 +986,7 @@ _do_dump_sub()
+ #
+ _do_dump()
+ {
+-    _parse_args $*
++    _parse_dump_args $*
+ 
+     echo "Dumping to tape..."
+     opts="$_dump_debug$dump_args -f $dumptape -M $media_label -L $session_label $SCRATCH_MNT"
+@@ -956,7 +1000,7 @@ _do_dump()
+ #
+ _do_dump_min()
+ {
+-    _parse_args $*
++    _parse_dump_args $*
+ 
+     echo "Dumping to tape..."
+     onemeg=1048576
+@@ -971,7 +1015,7 @@ _do_dump_min()
+ #
+ _do_dump_file()
+ {
+-    _parse_args $*
++    _parse_dump_args $*
+ 
+     echo "Dumping to file..."
+     opts="$_dump_debug$dump_args -f $dump_file -M $media_label -L $session_label $SCRATCH_MNT"
+@@ -984,7 +1028,7 @@ _do_dump_file()
+ #
+ _do_dump_multi_file()
+ {
+-    _parse_args "$@"
++    _parse_dump_args $*
+ 
+     multi_args=""
+ 
+@@ -1025,12 +1069,11 @@ _prepare_restore()
+ #
+ _do_restore()
+ {
+-    _parse_args $*
++    _parse_restore_args $*
+     _prepare_restore
+ 
+-
+     echo "Restoring from tape..."
+-    opts="$_restore_debug -f $dumptape  -L $session_label $restore_dir"
++    opts="$_restore_debug$restore_args -f $dumptape  -L $session_label $restore_dir"
+     echo "xfsrestore $opts" | _dir_filter
+     $XFSRESTORE_PROG $opts 2>&1 | tee -a $here/$seq.full | _dump_filter
+ }
+@@ -1040,12 +1083,12 @@ _do_restore()
+ #
+ _do_restore_min()
+ {
+-    _parse_args $*
++    _parse_restore_args $*
+     _prepare_restore
+ 
+     echo "Restoring from tape..."
+     onemeg=1048576
+-    opts="$_restore_debug -m -b $onemeg -f $dumptape  -L $session_label $restore_dir"
++    opts="$_restore_debug$restore_args -m -b $onemeg -f $dumptape  -L $session_label $restore_dir"
+     echo "xfsrestore $opts" | _dir_filter
+     $XFSRESTORE_PROG $opts 2>&1 | tee -a $here/$seq.full | _dump_filter
+ }
+@@ -1055,11 +1098,11 @@ _do_restore_min()
+ #
+ _do_restore_file()
+ {
+-    _parse_args $*
++    _parse_restore_args $*
+     _prepare_restore_dir
+ 
+     echo "Restoring from file..."
+-    opts="$_restore_debug -f $dump_file  -L $session_label $restore_dir"
++    opts="$_restore_debug$restore_args -f $dump_file  -L $session_label $restore_dir"
+     echo "xfsrestore $opts" | _dir_filter
+     $XFSRESTORE_PROG $opts 2>&1 | tee -a $here/$seq.full | _dump_filter
+ }
+@@ -1071,20 +1114,20 @@ _do_restore_file()
+ #
+ _do_restore_file_cum()
+ {
+-    _parse_args $*
++    _parse_restore_args $*
+ 
+     echo "Restoring cumumlative from file..."
+-    opts="$_restore_debug -f $dump_file -r $restore_dir"
++    opts="$_restore_debug$restore_args -f $dump_file -r $restore_dir"
+     echo "xfsrestore $opts" | _dir_filter
+     $XFSRESTORE_PROG $opts 2>&1 | tee -a $here/$seq.full | _dump_filter
+ }
  
  _do_restore_toc()
  {
-+    _parse_args $*
-+
+-    _parse_args $*
++    _parse_restore_args $*
+ 
      echo "Contents of dump ..."
-     opts="$_restore_debug -f $dump_file -t"
+-    opts="$_restore_debug -f $dump_file -t"
++    opts="$_restore_debug$restore_args -f $dump_file -t"
      echo "xfsrestore $opts" | _dir_filter
+     cd $SCRATCH_MNT # for IRIX which needs xfs cwd
+     $XFSRESTORE_PROG $opts 2>&1 | tee -a $here/$seq.full | _dump_filter_main |\
+@@ -1103,7 +1146,7 @@ _do_restore_toc()
+ #
+ _do_restore_multi_file()
+ {
+-    _parse_args "$@"
++    _parse_restore_args $*
+     _prepare_restore_dir
+ 
+     multi_args=""
+@@ -1116,22 +1159,26 @@ _do_restore_multi_file()
+     done
+ 
+     echo "Restoring from file..."
+-    opts="$_restore_debug $multi_args -L $session_label $restore_dir"
++    opts="$_restore_debug$restore_args $multi_args -L $session_label $restore_dir"
+     echo "xfsrestore $opts" | _dir_filter
+     $XFSRESTORE_PROG $opts 2>&1 | tee -a $here/$seq.full | _dump_filter
+ }
+ 
+ #
+ # Do xfsdump piped into xfsrestore - xfsdump | xfsrestore
++# Pass dump options in $1 and restore options in $2, if required. e.g.:
++#     _do_dump_restore "-o -F" "-R"
++#     _do_dump_restore "" "-R"
+ #
+ # Use -s as we want to dump and restore to the same xfs partition
+ #
+ _do_dump_restore()
+ {
+-    _parse_args $*
++    _parse_dump_args $1
++    _parse_restore_args $2
+     _prepare_restore_dir
+     echo "xfsdump|xfsrestore ..."
+-    restore_opts="$_restore_debug - $restore_dir"
++    restore_opts="$_restore_debug$restore_args - $restore_dir"
+     dump_opts="$_dump_debug$dump_args -s $dump_sdir - $SCRATCH_MNT"
+     echo "xfsdump $dump_opts | xfsrestore $restore_opts" | _dir_filter
+     $XFSDUMP_PROG $dump_opts 2>$tmp.dump.mlog | $XFSRESTORE_PROG $restore_opts 2>&1 | tee -a $here/$seq.full | _dump_filter
 -- 
 1.7.0.4
 
