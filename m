@@ -1,11 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9VF3sJP042523 for <xfs@oss.sgi.com>; Mon, 31 Oct 2011 10:03:54 -0500
-From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfstests: add 265 and 266 for multiple media files
-Date: Mon, 31 Oct 2011 10:03:49 -0500
-Message-Id: <1320073429-27865-1-git-send-email-wkendall@sgi.com>
+	pA1AuUXI113668 for <xfs@oss.sgi.com>; Tue, 1 Nov 2011 05:56:30 -0500
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F2DB2214D7C
+	for <xfs@oss.sgi.com>; Tue,  1 Nov 2011 03:56:28 -0700 (PDT)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id WG07EIza2AwCCCkJ for
+	<xfs@oss.sgi.com>; Tue, 01 Nov 2011 03:56:28 -0700 (PDT)
+Date: Tue, 1 Nov 2011 11:55:53 +0100
+From: Johannes Weiner <jweiner@redhat.com>
+Subject: Re: [patch 3/5] mm: try to distribute dirty pages fairly across zones
+Message-ID: <20111101105553.GG5819@redhat.com>
+References: <1317367044-475-1-git-send-email-jweiner@redhat.com>
+	<1317367044-475-4-git-send-email-jweiner@redhat.com>
+	<20110930142805.GC869@tiehlicka.suse.cz>
+	<20111028201829.GA20607@localhost>
+	<20111031113321.GA30890@localhost>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111031113321.GA30890@localhost>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,414 +28,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Wu Fengguang <fengguang.wu@intel.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Rik van Riel <riel@redhat.com>, Jan Kara <jack@suse.cz>, "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Michal Hocko <mhocko@suse.cz>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Andreas Dilger <adilger.kernel@dilger.ca>, Mel Gorman <mgorman@suse.de>, "Li, Shaohua" <shaohua.li@intel.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>, Andrew Morton <akpm@linux-foundation.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Chris Mason <chris.mason@oracle.com>, Minchan Kim <minchan.kim@gmail.com>
 
-This patch adds a couple of tests for xfsdump when multiple media files
-are used. 265 tests the case where a file is split across multiple media
-files, and 266 tests the case where a file ends on one media file and
-the next media file starts on another file. These tests use a small
-media file size (xfsdump -d) so that they don't rely on having to hit
-end-of-tape.
+On Mon, Oct 31, 2011 at 07:33:21PM +0800, Wu Fengguang wrote:
+> > //regression
+> > 3) much increased cpu %user and %system for btrfs
+> 
+> Sorry I find out that the CPU time regressions for btrfs are caused by
+> some additional trace events enabled on btrfs (for debugging an
+> unrelated btrfs hang bug) which results in 7 times more trace event
+> lines:
+> 
+>  2701238 /export/writeback/thresh=1000M/btrfs-1dd-4k-8p-2941M-1000M:10-3.1.0-rc9-ioless-full-nfs-wq5-next-20111014+
+> 19054054 /export/writeback/thresh=1000M/btrfs-1dd-4k-8p-2941M-1000M:10-3.1.0-rc9-ioless-full-per-zone-dirty-next-20111014+
+> 
+> So no real regressions.
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
----
- 265         |   75 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 265.out     |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 266         |   78 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- 266.out     |   86 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- common.dump |    6 ++--
- group       |    2 +
- 6 files changed, 332 insertions(+), 3 deletions(-)
- create mode 100755 265
- create mode 100644 265.out
- create mode 100755 266
- create mode 100644 266.out
+Phew :-)
 
-diff --git a/265 b/265
-new file mode 100755
-index 0000000..65d773e
---- /dev/null
-+++ b/265
-@@ -0,0 +1,75 @@
-+#! /bin/bash
-+# FS QA Test No. 265
-+#
-+# Test xfsdump with a file spanning multiple media files.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=wkendall@sgi.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=0	# success is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+#
-+# create a 40 MiB file with an extended attr.
-+# xfsdump writes file data in "extent groups", currently 16 MiB in size. After
-+# writing an extent group or finishing a file, xfsdump will start a new media
-+# file if it is over the suggested size. With a single 40 MiB file and using a
-+# suggested media file size of 12 MiB below, this dump will be contained in 3
-+# media files.
-+#
-+_create_files()
-+{
-+    cat <<End-of-File >$tmp.config
-+# pathname	size            user    group    perm   name value namespace
-+biggg		41943040	$nobody	$nobody  777    attr1 some_text1  root
-+End-of-File
-+
-+    _wipe_fs
-+    _do_create_dumpdir_fill
-+    _stable_fs
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.dump
-+. ./common.attr
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_tape $TAPE_DEV
-+_require_attrs
-+
-+_create_files
-+_erase_hard
-+_do_dump -d 12
-+_do_restore
-+_ls_compare_sub
-+_diff_compare
-+_diff_compare_eas
-+
-+# success, all done
-+exit
-diff --git a/265.out b/265.out
-new file mode 100644
-index 0000000..863d6e6
---- /dev/null
-+++ b/265.out
-@@ -0,0 +1,88 @@
-+QA output created by 265
-+Put scsi tape driver into variable block size mode
-+Creating directory system to dump using src/fill.
-+Setup Attribute "attr1" set to a 10 byte value for biggg:
-+some_text1
-+.
-+Erasing tape
-+Dumping to tape...
-+xfsdump  -d12 -f TAPE_DEV -M stress_tape_media -L stress_265 SCRATCH_MNT
-+xfsdump: using scsi tape (drive_scsitape) strategy
-+xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-+xfsdump: dump date: DATE
-+xfsdump: session id: ID
-+xfsdump: session label: "stress_265"
-+xfsdump: ino map <PHASES>
-+xfsdump: ino map construction complete
-+xfsdump: estimated dump size: NUM bytes
-+xfsdump: /var/xfsdump/inventory created
-+xfsdump: preparing drive
-+xfsdump: creating dump session media file 0 (media 0, file 0)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: creating dump session media file 1 (media 0, file 1)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: creating dump session media file 2 (media 0, file 2)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: dumping session inventory
-+xfsdump: beginning inventory media file
-+xfsdump: media file 3 (media 0, file 3)
-+xfsdump: ending inventory media file
-+xfsdump: inventory media file size NUM bytes
-+xfsdump: writing stream terminator
-+xfsdump: beginning media stream terminator
-+xfsdump: media file 4 (media 0, file 4)
-+xfsdump: ending media stream terminator
-+xfsdump: media stream terminator size BLOCKSZ bytes
-+xfsdump: dump size (non-dir files) : NUM bytes
-+xfsdump: dump complete: SECS seconds elapsed
-+xfsdump: Dump Status: SUCCESS
-+Rewinding tape
-+Restoring from tape...
-+xfsrestore  -f TAPE_DEV  -L stress_265 RESTORE_DIR
-+xfsrestore: using scsi tape (drive_scsitape) strategy
-+xfsrestore: using online session inventory
-+xfsrestore: searching media for directory dump
-+xfsrestore: preparing drive
-+xfsrestore: examining media file 0
-+xfsrestore: reading directories
-+xfsrestore: 2 directories and 2 entries processed
-+xfsrestore: directory post-processing
-+xfsrestore: restoring non-directory files
-+xfsrestore: examining media file 1
-+xfsrestore: seeking past media file directory dump
-+xfsrestore: restoring non-directory files
-+xfsrestore: examining media file 2
-+xfsrestore: seeking past media file directory dump
-+xfsrestore: restoring non-directory files
-+xfsrestore: restore complete: SECS seconds elapsed
-+xfsrestore: Restore Status: SUCCESS
-+Comparing listing of dump directory with restore directory
-+Files TMP.dump_dir and TMP.restore_dir are identical
-+Comparing dump directory with restore directory
-+Files DUMP_DIR/biggg and RESTORE_DIR/DUMP_SUBDIR/biggg are identical
-+Only in SCRATCH_MNT: RESTORE_SUBDIR
-+Comparing dump directory with restore directory
-+Looking at the extended attributes (EAs)
-+EAs on dump
-+User names
-+Root names
-+Attribute "attr1" had a 10 byte value for DUMP_DIR/biggg:
-+some_text1
-+EAs on restore
-+User names
-+Root names
-+Attribute "attr1" had a 10 byte value for DUMP_DIR/biggg:
-+some_text1
-+Files 265.ea1 and 265.ea2 are identical
-diff --git a/266 b/266
-new file mode 100755
-index 0000000..46e40c4
---- /dev/null
-+++ b/266
-@@ -0,0 +1,78 @@
-+#! /bin/bash
-+# FS QA Test No. 266
-+#
-+# Test xfsdump with multiple media files where a file ends
-+# at the end of the first media file (i.e., no file is split
-+# across media files).
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=wkendall@sgi.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=0	# success is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+#
-+# create two 12 MiB files with extended attrs.
-+# xfsdump writes file data in "extent groups", currently 16 MiB in size. After
-+# writing an extent group or finishing a file, xfsdump will start a new media
-+# file if it is over the suggested size. A media file size of 8 MiB is used
-+# below, so after dumping a 12 MiB file xfsdump will start a new media file and
-+# no file will be split across a media file.
-+#
-+_create_files()
-+{
-+    cat <<End-of-File >$tmp.config
-+# pathname	size            user    group    perm   name value namespace
-+bigg1		12582912	$nobody	$nobody  777    attr1 some_text1  root
-+bigg2		12582912	$nobody	$nobody  777    attr2 some_text2  user
-+End-of-File
-+
-+    _wipe_fs
-+    _do_create_dumpdir_fill
-+    _stable_fs
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.dump
-+. ./common.attr
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_tape $TAPE_DEV
-+_require_attrs
-+
-+_create_files
-+_erase_hard
-+_do_dump -d 8
-+_do_restore
-+_ls_compare_sub
-+_diff_compare
-+_diff_compare_eas
-+
-+# success, all done
-+exit
-diff --git a/266.out b/266.out
-new file mode 100644
-index 0000000..853dc96
---- /dev/null
-+++ b/266.out
-@@ -0,0 +1,86 @@
-+QA output created by 266
-+Put scsi tape driver into variable block size mode
-+Creating directory system to dump using src/fill.
-+Setup Attribute "attr1" set to a 10 byte value for bigg1:
-+some_text1
-+.Attribute "attr2" set to a 10 byte value for bigg2:
-+some_text2
-+.
-+Erasing tape
-+Dumping to tape...
-+xfsdump  -d8 -f TAPE_DEV -M stress_tape_media -L stress_266 SCRATCH_MNT
-+xfsdump: using scsi tape (drive_scsitape) strategy
-+xfsdump: level 0 dump of HOSTNAME:SCRATCH_MNT
-+xfsdump: dump date: DATE
-+xfsdump: session id: ID
-+xfsdump: session label: "stress_266"
-+xfsdump: ino map <PHASES>
-+xfsdump: ino map construction complete
-+xfsdump: estimated dump size: NUM bytes
-+xfsdump: /var/xfsdump/inventory created
-+xfsdump: preparing drive
-+xfsdump: creating dump session media file 0 (media 0, file 0)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: creating dump session media file 1 (media 0, file 1)
-+xfsdump: dumping ino map
-+xfsdump: dumping directories
-+xfsdump: dumping non-directory files
-+xfsdump: ending media file
-+xfsdump: media file size NUM bytes
-+xfsdump: dumping session inventory
-+xfsdump: beginning inventory media file
-+xfsdump: media file 2 (media 0, file 2)
-+xfsdump: ending inventory media file
-+xfsdump: inventory media file size NUM bytes
-+xfsdump: writing stream terminator
-+xfsdump: beginning media stream terminator
-+xfsdump: media file 3 (media 0, file 3)
-+xfsdump: ending media stream terminator
-+xfsdump: media stream terminator size BLOCKSZ bytes
-+xfsdump: dump size (non-dir files) : NUM bytes
-+xfsdump: dump complete: SECS seconds elapsed
-+xfsdump: Dump Status: SUCCESS
-+Rewinding tape
-+Restoring from tape...
-+xfsrestore  -f TAPE_DEV  -L stress_266 RESTORE_DIR
-+xfsrestore: using scsi tape (drive_scsitape) strategy
-+xfsrestore: using online session inventory
-+xfsrestore: searching media for directory dump
-+xfsrestore: preparing drive
-+xfsrestore: examining media file 0
-+xfsrestore: reading directories
-+xfsrestore: 2 directories and 3 entries processed
-+xfsrestore: directory post-processing
-+xfsrestore: restoring non-directory files
-+xfsrestore: examining media file 1
-+xfsrestore: seeking past media file directory dump
-+xfsrestore: restoring non-directory files
-+xfsrestore: restore complete: SECS seconds elapsed
-+xfsrestore: Restore Status: SUCCESS
-+Comparing listing of dump directory with restore directory
-+Files TMP.dump_dir and TMP.restore_dir are identical
-+Comparing dump directory with restore directory
-+Files DUMP_DIR/bigg1 and RESTORE_DIR/DUMP_SUBDIR/bigg1 are identical
-+Files DUMP_DIR/bigg2 and RESTORE_DIR/DUMP_SUBDIR/bigg2 are identical
-+Only in SCRATCH_MNT: RESTORE_SUBDIR
-+Comparing dump directory with restore directory
-+Looking at the extended attributes (EAs)
-+EAs on dump
-+User names
-+Attribute "attr2" had a 10 byte value for DUMP_DIR/bigg2:
-+some_text2
-+Root names
-+Attribute "attr1" had a 10 byte value for DUMP_DIR/bigg1:
-+some_text1
-+EAs on restore
-+User names
-+Attribute "attr2" had a 10 byte value for DUMP_DIR/bigg2:
-+some_text2
-+Root names
-+Attribute "attr1" had a 10 byte value for DUMP_DIR/bigg1:
-+some_text1
-+Files 266.ea1 and 266.ea2 are identical
-diff --git a/common.dump b/common.dump
-index d9e6565..3942e83 100644
---- a/common.dump
-+++ b/common.dump
-@@ -909,9 +909,9 @@ _parse_args()
-         -Q)
-             do_quota_check=false
-             ;;
--        -l)
--            [ -z "$2" ] && _fail "missing argument for -l"
--	    dump_args="$dump_args -l$2"
-+        -l|-d)
-+            [ -z "$2" ] && _fail "missing argument for $1"
-+	    dump_args="$dump_args $1$2"
- 	    shift
-             ;;
- 	*)
-diff --git a/group b/group
-index 70ea462..8a23320 100644
---- a/group
-+++ b/group
-@@ -378,3 +378,5 @@ deprecated
- 262 auto quick quota
- 263 rw auto quick
- 264 dump ioctl auto quick
-+265 dump ioctl tape
-+266 dump ioctl tape
--- 
-1.7.0.4
+> Besides, the patchset also performs good on random writes:
+> 
+> 3.1.0-rc9-ioless-full-nfs-wq5-next-20111014+  3.1.0-rc9-ioless-full-per-zone-dirty-next-20111014+  
+> ------------------------  ------------------------  
+>                     1.65        -5.1%         1.57  MMAP-RANDWRITE-4K/btrfs-fio_fat_mmap_randwrite_4k-4k-8p-4096M-20:10-X
+>                    18.65        -6.4%        17.46  MMAP-RANDWRITE-4K/ext3-fio_fat_mmap_randwrite_4k-4k-8p-4096M-20:10-X
+>                     2.09        +1.2%         2.12  MMAP-RANDWRITE-4K/ext4-fio_fat_mmap_randwrite_4k-4k-8p-4096M-20:10-X
+>                     2.49        -0.3%         2.48  MMAP-RANDWRITE-4K/xfs-fio_fat_mmap_randwrite_4k-4k-8p-4096M-20:10-X
+>                    51.35        +0.0%        51.36  MMAP-RANDWRITE-64K/btrfs-fio_fat_mmap_randwrite_64k-64k-8p-4096M-20:10-X
+>                    45.20        +0.5%        45.43  MMAP-RANDWRITE-64K/ext3-fio_fat_mmap_randwrite_64k-64k-8p-4096M-20:10-X
+>                    44.77        +0.7%        45.10  MMAP-RANDWRITE-64K/ext4-fio_fat_mmap_randwrite_64k-64k-8p-4096M-20:10-X
+>                    45.11        +2.5%        46.23  MMAP-RANDWRITE-64K/xfs-fio_fat_mmap_randwrite_64k-64k-8p-4096M-20:10-X
+>                   211.31        +0.2%       211.74  TOTAL write_bw
+
+Hmm, mmapped IO page allocations are not annotated yet, so I expect
+this to be just runtime variations?
+
+> And writes to USB key:
+> 
+> 3.1.0-rc9-ioless-full-nfs-wq5-next-20111014+  3.1.0-rc9-ioless-full-per-zone-dirty-next-20111014+  
+> ------------------------  ------------------------  
+>                     5.94        +0.8%         5.99  UKEY-thresh=1G/btrfs-1dd-4k-8p-4096M-1024M:10-X
+>                     2.64        -0.8%         2.62  UKEY-thresh=1G/ext3-10dd-4k-8p-4096M-1024M:10-X
+>                     5.10        +0.3%         5.12  UKEY-thresh=1G/ext3-1dd-4k-8p-4096M-1024M:10-X
+>                     3.26        -0.8%         3.24  UKEY-thresh=1G/ext3-2dd-4k-8p-4096M-1024M:10-X
+>                     5.63        -0.5%         5.60  UKEY-thresh=1G/ext4-10dd-4k-8p-4096M-1024M:10-X
+>                     6.04        -0.1%         6.04  UKEY-thresh=1G/ext4-1dd-4k-8p-4096M-1024M:10-X
+>                     5.90        -0.2%         5.88  UKEY-thresh=1G/ext4-2dd-4k-8p-4096M-1024M:10-X
+>                     2.45       +22.6%         3.00  UKEY-thresh=1G/xfs-10dd-4k-8p-4096M-1024M:10-X
+>                     6.18        -0.4%         6.16  UKEY-thresh=1G/xfs-1dd-4k-8p-4096M-1024M:10-X
+>                     4.81        +0.0%         4.81  UKEY-thresh=1G/xfs-2dd-4k-8p-4096M-1024M:10-X
+>                    47.94        +1.1%        48.45  TOTAL write_bw
+> 
+> In summary, I see no problem at all in these trivial writeback tests.
+> 
+> Tested-by: Wu Fengguang <fengguang.wu@intel.com>
+
+Thanks!
 
 _______________________________________________
 xfs mailing list
