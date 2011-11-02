@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA2LBBXo200871 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:11 -0500
+	pA2LBFE0200925 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:16 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH 4/8] xfsdump: simplify qlock ordinal bitmap
-Date: Wed,  2 Nov 2011 16:10:50 -0500
-Message-Id: <1320268254-20583-5-git-send-email-wkendall@sgi.com>
+Subject: [PATCH 8/8] xfsdump: enable multiple streams
+Date: Wed,  2 Nov 2011 16:10:54 -0500
+Message-Id: <1320268254-20583-9-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,420 +23,706 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The qlock abstraction manages an array of ordinal bitmaps, one bitmap
-for each thread. The bitmap indicates which locks a thread is holding
-and is used to verify that the locks are obtained in the correct order.
+IRIX contained an environment referred to as "miniroot" where
+sproc threads were either not available, or at least not used
+in xfsdump. Throughout xfsdump there's a "miniroot" variable
+which indicates whether or not thread support is enabled. On
+Linux this variable has always been false in order to disable
+support for multiple streams.
 
-There is no need to use an array to store the bitmaps, and in fact
-adding entries to the array is broken because qlock_thrdcnt is not
-protected by a lock. A simpler approach is to create a per-thread bitmap
-using thread local storage.
+Now that the threading infracstructure has been converted over
+to pthreads, this patch removes the "miniroot" variable and
+enables the option of using multiple streams.
 
-With this change, there is no need for each new thread to register with
-the qlock abstraction, so qlock_thrdinit() goes away. Remove
-qlock_init() since it can be statically initialized, and that means
-there's no need for a flag (qlock_inited) indicating that the module has
-been initialized.  Also there's no longer a need to track or limit the
-number of threads that the qlock abstraction can handle.
+Note that another feature in xfsdump, using a ring buffer for
+I/O to tapes, also depends on thread support. I'm leaving that
+disabled for now until more testing has been done.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
- common/cldmgr.c |    4 -
- common/main.c   |    7 --
- common/qlock.c  |  195 ++++---------------------------------------------------
- common/qlock.h  |   11 +---
- 4 files changed, 14 insertions(+), 203 deletions(-)
+ common/drive.c          |   20 +------
+ common/drive.h          |    8 +--
+ common/drive_minrmt.c   |   15 +++---
+ common/drive_scsitape.c |   15 +++---
+ common/drive_simple.c   |    8 ++--
+ common/main.c           |  124 +++++-----------------------------------------
+ dump/content.c          |   35 ++++++-------
+ dump/getopt.h           |    4 +-
+ man/man8/xfsdump.8      |    8 +--
+ man/man8/xfsrestore.8   |    4 +-
+ restore/content.c       |   23 ++++-----
+ restore/getopt.h        |    4 +-
+ 12 files changed, 74 insertions(+), 194 deletions(-)
 
-diff --git a/common/cldmgr.c b/common/cldmgr.c
-index 7784a15..d327bab 100644
---- a/common/cldmgr.c
-+++ b/common/cldmgr.c
-@@ -213,12 +213,8 @@ cldmgr_entry( void *arg1 )
+diff --git a/common/drive.c b/common/drive.c
+index 227fecd..32a7191 100644
+--- a/common/drive.c
++++ b/common/drive.c
+@@ -81,7 +81,7 @@ static drive_strategy_t *strategypp[] = {
+  * specified on the command line.
+  */
+ bool_t
+-drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
++drive_init1( int argc, char *argv[ ] )
  {
- 	cld_t *cldp = ( cld_t * )arg1;
- 	pid_t pid = getpid( );
--	/* REFERENCED */
--	bool_t ok;
- 
- 	cldp->c_pid = pid;
--	ok = qlock_thrdinit( );
--	ASSERT( ok );
- 	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
- 		stream_register( pid, ( intgen_t )cldp->c_streamix );
+ 	intgen_t c;
+ 	ix_t driveix;
+@@ -103,18 +103,6 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
+ 		}
  	}
+ 
+-	/* validate drive count
+-	 */
+-	if ( singlethreaded && drivecnt > 1 ) {
+-		mlog( MLOG_NORMAL, _(
+-		      "too many -%c arguments: "
+-		      "maximum is %d when running in miniroot\n"),
+-		      GETOPT_DUMPDEST,
+-		      1 );
+-		usage( );
+-		return BOOL_FALSE;
+-	}
+-
+ 	/* allocate an array to hold ptrs to drive descriptors
+ 	 */
+ 	if (drivecnt > 0) {
+@@ -221,8 +209,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
+ 			intgen_t score;
+ 			score = ( * sp->ds_match )( argc,
+ 						    argv,
+-						    drivep,
+-						    singlethreaded );
++						    drivep );
+ 			if ( ! bestsp || score > bestscore ) {
+ 				bestsp = sp;
+ 				bestscore = score;
+@@ -237,8 +224,7 @@ drive_init1( int argc, char *argv[ ], bool_t singlethreaded )
+ 		      bestsp->ds_description );
+ 		ok = ( * bestsp->ds_instantiate )( argc,
+ 						   argv,
+-						   drivep,
+-						   singlethreaded );
++						   drivep );
+ 		if ( ! ok ) {
+ 			return BOOL_FALSE;
+ 		}
+diff --git a/common/drive.h b/common/drive.h
+index 4dc4270..f693976 100644
+--- a/common/drive.h
++++ b/common/drive.h
+@@ -140,15 +140,13 @@ struct drive_strategy {
+ 		     */
+ 	intgen_t ( * ds_match )( intgen_t argc,
+ 				 char *argv[ ],
+-				 struct drive *drivep,
+-				 bool_t singlethreaded );
++				 struct drive *drivep );
+ 		    /* returns degree of match. drivep has been pre-allocated
+ 		     * and initialized with generic info.
+ 		     */
+ 	bool_t ( * ds_instantiate )( intgen_t argc,
+ 				     char *argv[ ],
+-				     struct drive *drivep,
+-				     bool_t singlethreaded );
++				     struct drive *drivep );
+ 		    /* creates a drive manager instance, by filling in the
+ 		     * blanks of the pre-allocated drive descriptor
+ 		     * returns FALSE on failure.
+@@ -648,7 +646,7 @@ extern size_t partialmax;
+  *
+  * Returns FALSE if utility should be aborted.
+  */
+-extern bool_t drive_init1( int argc, char *argv[], bool_t singlethreaded );
++extern bool_t drive_init1( int argc, char *argv[] );
+ 
+ 
+ /* drive_init2 - allocate and initialize read and write hdr buffers,
+diff --git a/common/drive_minrmt.c b/common/drive_minrmt.c
+index 3ff4d0f..5f5f96c 100644
+--- a/common/drive_minrmt.c
++++ b/common/drive_minrmt.c
+@@ -257,8 +257,8 @@ extern int rmtwrite( int, const void *, uint);
+ 
+ /* strategy functions
+  */
+-static intgen_t ds_match( int, char *[], drive_t *, bool_t );
+-static intgen_t ds_instantiate( int, char *[], drive_t *, bool_t );
++static intgen_t ds_match( int, char *[], drive_t * );
++static intgen_t ds_instantiate( int, char *[], drive_t * );
+ 
+ /* manager operations
+  */
+@@ -404,7 +404,7 @@ static u_int32_t cmdlineblksize = 0;
+  */
+ /* ARGSUSED */
+ static intgen_t
+-ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
++ds_match( int argc, char *argv[], drive_t *drivep )
+ {
+ 	intgen_t fd;
+ 	intgen_t c;
+@@ -464,7 +464,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+  */
+ /*ARGSUSED*/
+ static bool_t
+-ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
++ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ {
+ 	drive_context_t *contextp;
+ 	intgen_t c;
+@@ -487,9 +487,10 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 	ASSERT( contextp );
+ 	memset( ( void * )contextp, 0, sizeof( *contextp ));
+ 
+-	/* transfer indication of singlethreadedness to context
++	/* do not enable a separate I/O thread,
++	 * more testing to be done first...
+ 	 */
+-	contextp->dc_singlethreadedpr = singlethreaded;
++	contextp->dc_singlethreadedpr = BOOL_TRUE;
+ 
+ 	/* scan the command line for the I/O buffer ring length
+ 	 * and record checksum request
+@@ -580,7 +581,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 	/* if threads not allowed, allocate a record buffer. otherwise
+ 	 * create a ring, from which buffers will be taken.
+ 	 */
+-	if ( singlethreaded ) {
++	if ( contextp->dc_singlethreadedpr ) {
+ 		contextp->dc_bufp = ( char * )memalign( PGSZ, STAPE_MAX_RECSZ );
+ 		ASSERT( contextp->dc_bufp );
+ 	} else {
+diff --git a/common/drive_scsitape.c b/common/drive_scsitape.c
+index f24d604..71b809f 100644
+--- a/common/drive_scsitape.c
++++ b/common/drive_scsitape.c
+@@ -299,8 +299,8 @@ extern int rmtwrite( int, const void *, uint);
+ 
+ /* strategy functions
+  */
+-static intgen_t ds_match( int, char *[], drive_t *, bool_t );
+-static intgen_t ds_instantiate( int, char *[], drive_t *, bool_t );
++static intgen_t ds_match( int, char *[], drive_t * );
++static intgen_t ds_instantiate( int, char *[], drive_t * );
+ 
+ /* manager operations
+  */
+@@ -506,7 +506,7 @@ is_scsi_driver(char *pathname)
+  */
+ /* ARGSUSED */
+ static intgen_t
+-ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
++ds_match( int argc, char *argv[], drive_t *drivep )
+ {
+ 	struct mtget mt_stat;
+ 	intgen_t fd;
+@@ -544,7 +544,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+  */
+ /*ARGSUSED*/
+ static bool_t
+-ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
++ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ {
+ 	drive_context_t *contextp;
+ 	intgen_t c;
+@@ -567,9 +567,10 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 	ASSERT( contextp );
+ 	memset( ( void * )contextp, 0, sizeof( *contextp ));
+ 
+-	/* transfer indication of singlethreadedness to context
++	/* do not enable a separate I/O thread,
++	 * more testing to be done first...
+ 	 */
+-	contextp->dc_singlethreadedpr = singlethreaded;
++	contextp->dc_singlethreadedpr = BOOL_TRUE;
+ 
+ 	/* scan the command line for the I/O buffer ring length
+ 	 * and record checksum request
+@@ -670,7 +671,7 @@ ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+ 	/* if threads not allowed, allocate a record buffer. otherwise
+ 	 * create a ring, from which buffers will be taken.
+ 	 */
+-	if ( singlethreaded ) {
++	if ( contextp->dc_singlethreadedpr ) {
+ 		contextp->dc_bufp = ( char * )memalign( PGSZ, STAPE_MAX_RECSZ );
+ 		ASSERT( contextp->dc_bufp );
+ 	} else {
+diff --git a/common/drive_simple.c b/common/drive_simple.c
+index cb88aa8..086d162 100644
+--- a/common/drive_simple.c
++++ b/common/drive_simple.c
+@@ -98,8 +98,8 @@ extern size_t pgsz;
+ 
+ /* strategy functions
+  */
+-static intgen_t ds_match( int, char *[], drive_t *, bool_t );
+-static intgen_t ds_instantiate( int, char *[], drive_t *, bool_t );
++static intgen_t ds_match( int, char *[], drive_t * );
++static intgen_t ds_instantiate( int, char *[], drive_t * );
+ 
+ /* declare manager operators
+  */
+@@ -178,7 +178,7 @@ static drive_ops_t drive_ops = {
+  */
+ /* ARGSUSED */
+ static intgen_t
+-ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
++ds_match( int argc, char *argv[], drive_t *drivep )
+ {
+ 	bool_t isrmtpr;
+ 	struct stat64 statbuf;
+@@ -221,7 +221,7 @@ ds_match( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
+  */
+ /*ARGSUSED*/
+ static bool_t
+-ds_instantiate( int argc, char *argv[], drive_t *drivep, bool_t singlethreaded )
++ds_instantiate( int argc, char *argv[], drive_t *drivep )
+ {
+ 	drive_context_t *contextp;
+ 
 diff --git a/common/main.c b/common/main.c
-index be8a921..25c0838 100644
+index 38b3889..5880723 100644
 --- a/common/main.c
 +++ b/common/main.c
-@@ -357,13 +357,6 @@ main( int argc, char *argv[] )
- 		miniroot = BOOL_TRUE;
+@@ -87,10 +87,6 @@ bool_t preemptchk( int );
+ static bool_t loadoptfile( int *argcp, char ***argvp );
+ static char * stripquotes( char *p );
+ static void shiftleftby1( char *p, char *endp );
+-static bool_t in_miniroot_heuristic( void );
+-#ifdef HIDDEN
+-static void mrh_sighandler( int );
+-#endif
+ static void sighandler( int );
+ static int childmain( void * );
+ static bool_t sigint_dialog( void );
+@@ -111,11 +107,6 @@ intgen_t version = 3;
+ intgen_t subversion = 0;
+ char *progname = 0;			/* used in all error output */
+ char *homedir = 0;			/* directory invoked from */
+-#ifdef HIDDEN
+-bool_t miniroot = BOOL_FALSE;
+-#else
+-bool_t miniroot = BOOL_TRUE;
+-#endif /* HIDDEN */
+ bool_t pipeline = BOOL_FALSE;
+ bool_t stdoutpiped = BOOL_FALSE;
+ pthread_t parenttid;
+@@ -215,16 +206,11 @@ main( int argc, char *argv[] )
+ 	if ( ! ok ) {
+ 		return mlog_exit(EXIT_ERROR, RV_INIT);
+ 	}
+-	/* scan the command line for the miniroot, info, progress
++	/* scan the command line for the info, progress
+ 	 * report options, and stacksz.
+ 	 */
+ 	minstacksz = MINSTACKSZ;
+ 	maxstacksz = MAXSTACKSZ;
+-#ifdef HIDDEN
+-	miniroot = BOOL_FALSE;
+-#else
+-	miniroot = BOOL_TRUE;
+-#endif /* HIDDEN */
+ 	infoonly = BOOL_FALSE;
+ 	progrpt_enabledpr = BOOL_FALSE;
+ 	optind = 1;
+@@ -275,9 +261,6 @@ main( int argc, char *argv[] )
+ 			}
+ 			maxstacksz = tmpstacksz;
+ 			break;
+-                case GETOPT_MINIROOT:
+-                        miniroot = BOOL_TRUE;
+-                        break;
+ 		case GETOPT_HELP:
+ 			infoonly = BOOL_TRUE;
+ 			mlog_exit_hint(RV_USAGE);
+@@ -349,13 +332,6 @@ main( int argc, char *argv[] )
+ 		return mlog_exit(EXIT_ERROR, RV_INIT);
  	}
  
--	/* initialize the spinlock allocator
+-	/* perform an experiment to determine if we are in the miniroot.
+-	 * various features will be disallowed if in miniroot.
 -	 */
--	ok = qlock_init( );
--	if ( ! ok ) {
--		return mlog_exit(EXIT_ERROR, RV_INIT);
+-	if ( ! miniroot && in_miniroot_heuristic( )) {
+-		miniroot = BOOL_TRUE;
 -	}
 -
  	/* initialize message logging (stage 2) - allocate the message lock
  	 */
  	ok = mlog_init2( );
-diff --git a/common/qlock.c b/common/qlock.c
-index 5b87b3b..67d1291 100644
---- a/common/qlock.c
-+++ b/common/qlock.c
-@@ -48,14 +48,6 @@ struct qsem {
- };
- typedef struct  qsem qsem_t;
+@@ -473,7 +449,7 @@ main( int argc, char *argv[] )
+ 	 * terribly time-consuming here. A second initialization pass
+ 	 * will be done shortly.
+ 	 */
+-	ok = drive_init1( argc, argv, miniroot );
++	ok = drive_init1( argc, argv );
+ 	if ( ! ok ) {
+ 		return mlog_exit(EXIT_ERROR, RV_INIT);
+ 	}
+@@ -503,11 +479,7 @@ main( int argc, char *argv[] )
+ 	      VERSION,
+ 	      version,
+ 	      subversion );
+-	if ( miniroot ) {
+-		mlog( MLOG_VERBOSE | MLOG_BARE, _(
+-		      " - "
+-		      "Running single-threaded\n") );
+-	} else if ( ! pipeline && ! stdoutpiped && sistr && dlog_allowed( )) {
++	if ( ! pipeline && ! stdoutpiped && sistr && dlog_allowed( )) {
+ 		mlog( MLOG_VERBOSE | MLOG_BARE, _(
+ 		      " - "
+ 		      "type %s for status and control\n"),
+@@ -531,11 +503,10 @@ main( int argc, char *argv[] )
+ 	 */
+ 	mlog_tell_streamcnt( drivecnt );
  
--#define QLOCK_THRDCNTMAX			256
--	/* arbitrary limit on number of threads supported
--	 */
--
--static size_t qlock_thrdcnt;
--	/* how many threads have checked in
--	 */
--
- typedef size_t ordmap_t;
- 	/* bitmap of ordinals. used to track what ordinals have
- 	 * been allocated.
-@@ -69,12 +61,7 @@ static ordmap_t qlock_ordalloced;
- 	/* to enforce allocation of only one lock to each ordinal value
+-	/* initialize the state of signal processing. if miniroot or
+-	 * pipeline, just want to exit when a signal is received. otherwise,
+-	 * hold signals so they don't interfere with sys calls; they will
+-	 * be released at pre-emption points and upon pausing in the main
+-	 * loop.
++	/* initialize the state of signal processing. if in a pipeline, just
++	 * want to exit when a signal is received. otherwise, hold signals so
++	 * they don't interfere with sys calls; they will be released at
++	 * pre-emption points and upon pausing in the main loop.
  	 */
  
--struct thrddesc {
--	pthread_t td_tid;
--	ordmap_t td_ordmap;
--};
--typedef struct thrddesc thrddesc_t;
--static thrddesc_t qlock_thrddesc[ QLOCK_THRDCNTMAX ];
-+static __thread ordmap_t thread_ordmap;
- 	/* holds the ordmap for each thread
- 	 */
+ 	sigfillset(&sa.sa_mask);
+@@ -551,7 +522,7 @@ main( int argc, char *argv[] )
+ 	sigaction( SIGPIPE, &sa, NULL );
+ 	sigaction( SIGCHLD, &sa, NULL );
  
-@@ -94,69 +81,12 @@ static thrddesc_t qlock_thrddesc[ QLOCK_THRDCNTMAX ];
- 	/* checks if any bits less than ord are set in the ordmap
- 	 */
+-	if ( ! miniroot && ! pipeline ) {
++	if ( ! pipeline ) {
+ 		sigset_t blocked_set;
  
--/* REFERENCED */
--static bool_t qlock_inited = BOOL_FALSE;
--	/* to sanity check initialization
--	 */
+ 		stop_in_progress = BOOL_FALSE;
+@@ -594,10 +565,9 @@ main( int argc, char *argv[] )
+ 		return mlog_exit(EXIT_ERROR, RV_INIT);
+ 	}
+ 
+-	/* if miniroot or a pipeline, go single-threaded
+-	 * with just one stream.
++	/* if in a pipeline, go single-threaded with just one stream.
+ 	 */
+-	if ( miniroot || pipeline ) {
++	if ( pipeline ) {
+ 		intgen_t exitcode;
+ 
+ 		sa.sa_handler = sighandler;
+@@ -977,9 +947,6 @@ usage( void )
+ 	ULO(_("(show verbosity in messages)"),		GETOPT_SHOWLOGLEVEL );
+ #endif /* REVEAL */
+ 	ULO(_("<I/O buffer ring length>"),		GETOPT_RINGLEN );
+-#ifdef REVEAL
+-	ULO(_("(miniroot restrictions)"),		GETOPT_MINIROOT );
+-#endif /* REVEAL */
+ 	ULN(_("- (stdout)") );
+ 	ULN(_("<source (mntpnt|device)>") );
+ #endif /* DUMP */
+@@ -1030,9 +997,6 @@ usage( void )
+ #endif /* REVEAL */
+ 	ULO(_("<excluded subtree> ..."),		GETOPT_NOSUBTREE );
+ 	ULO(_("<I/O buffer ring length>"),		GETOPT_RINGLEN );
+-#ifdef REVEAL
+-	ULO(_("(miniroot restrictions)"),		GETOPT_MINIROOT );
+-#endif /* REVEAL */
+ 	ULN(_("- (stdin)") );
+ 	ULN(_("<destination>") );
+ #endif /* RESTORE */
+@@ -1081,9 +1045,9 @@ preemptchk( int flg )
+ 		return BOOL_FALSE;
+ 	}
+ 
+-	/* signals not caught in these cases
++	/* signals not caught if in a pipeline
+ 	 */
+-	if ( miniroot || pipeline ) {
++	if ( pipeline ) {
+ 		return BOOL_FALSE;
+ 	}
+ 
+@@ -1400,66 +1364,6 @@ loadoptfile( intgen_t *argcp, char ***argvp )
+ 	return BOOL_TRUE;
+ }
+ 
+-#ifdef HIDDEN
+-static pid_t mrh_cid;
+-#endif
 -
--/* forward declarations
-- */
--static void qlock_ordmap_add( pthread_t tid );
--static ordmap_t *qlock_ordmapp_get( pthread_t tid );
--static ix_t qlock_thrdix_get( pthread_t tid );
--
--bool_t
--qlock_init( void )
+-static bool_t
+-in_miniroot_heuristic( void )
 -{
--	/* sanity checks
--	 */
--	ASSERT( ! qlock_inited );
+-	return BOOL_TRUE;
 -
--	/* initially no threads checked in
--	 */
--	qlock_thrdcnt = 0;
+-#ifdef HIDDEN
+-	SIG_PF prev_handler_hup;
+-	SIG_PF prev_handler_term;
+-	SIG_PF prev_handler_int;
+-	SIG_PF prev_handler_quit;
+-	SIG_PF prev_handler_cld;
+-	bool_t in_miniroot;
 -
--	/* initially no ordinals allocated
+-	/* attempt to call sproc.
 -	 */
--	qlock_ordalloced = 0;
--
--	/* now say we are initialized
--	 */
--	qlock_inited = BOOL_TRUE;
--
--	/* add the parent thread to the thread list
--	 */
--	if ( ! qlock_thrdinit( )) {
--		qlock_inited = BOOL_FALSE;
--		return BOOL_FALSE;
+-	prev_handler_hup = sigset( SIGHUP, SIG_IGN );
+-	prev_handler_term = sigset( SIGTERM, SIG_IGN );
+-	prev_handler_int = sigset( SIGINT, SIG_IGN );
+-	prev_handler_quit = sigset( SIGQUIT, SIG_IGN );
+-	prev_handler_cld = sigset( SIGCLD, mrh_sighandler );
+-	( void )sighold( SIGCLD );
+-	mrh_cid = ( pid_t )sproc( ( void ( * )( void * ))exit, PR_SALL, 0 );
+-	if ( mrh_cid < 0 ) {
+-		in_miniroot = BOOL_TRUE;
+-	} else {
+-		while ( mrh_cid >= 0 ) {
+-			( void )sigpause( SIGCLD );
+-		}
+-		in_miniroot = BOOL_FALSE;
 -	}
+-	( void )sigset( SIGHUP, prev_handler_hup );
+-	( void )sigset( SIGTERM, prev_handler_term );
+-	( void )sigset( SIGINT, prev_handler_int );
+-	( void )sigset( SIGQUIT, prev_handler_quit );
+-	( void )sigset( SIGCLD, prev_handler_cld );
 -
--	return BOOL_TRUE;
+-	return in_miniroot;
+-#endif /* HIDDEN */
 -}
 -
--bool_t
--qlock_thrdinit( void )
--{
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
--	/* add thread to ordmap list
--	 */
--	qlock_ordmap_add( pthread_self() );
--
--	return BOOL_TRUE;
--}
- 
- qlockh_t
- qlock_alloc( ix_t ord )
- {
- 	qlock_t *qlockp;
- 
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* verify the ordinal is not already taken, and mark as taken
- 	 */
- 	ASSERT( ! QLOCK_ORDMAP_GET( qlock_ordalloced, ord ));
-@@ -183,48 +113,34 @@ qlock_lock( qlockh_t qlockh )
- {
- 	qlock_t *qlockp = ( qlock_t * )qlockh;
- 	pthread_t tid;
--	ix_t thrdix;
--	ordmap_t *ordmapp;
- 	/* REFERENCED */
- 	intgen_t rval;
- 	
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
--	/* get the caller's tid and thread index
-+	/* get the caller's tid
- 	 */
- 	tid = pthread_self();
- 
--	thrdix = qlock_thrdix_get( tid );
--
--	/* get the ordmap for this thread
--	 */
--	ordmapp = qlock_ordmapp_get( tid );
--
- 	/* assert that this lock not already held by this thread
- 	 */
--	if ( QLOCK_ORDMAP_GET( *ordmapp, qlockp->ql_ord )) {
-+	if ( QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord )) {
- 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
--		      _("lock already held: thrd %d tid %lu ord %d map %x\n"),
--		      thrdix,
-+		      _("lock already held: tid %lu ord %d map %x\n"),
- 		      tid,
- 		      qlockp->ql_ord,
--		      *ordmapp );
-+		      thread_ordmap );
- 	}
--	ASSERT( ! QLOCK_ORDMAP_GET( *ordmapp, qlockp->ql_ord ));
-+	ASSERT( ! QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
- 
- 	/* assert that no locks with a lesser ordinal are held by this thread
- 	 */
--	if ( QLOCK_ORDMAP_CHK( *ordmapp, qlockp->ql_ord )) {
-+	if ( QLOCK_ORDMAP_CHK( thread_ordmap, qlockp->ql_ord )) {
- 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
--		      _("lock ordinal violation: thrd %d tid %lu ord %d map %x\n"),
--		      thrdix,
-+		      _("lock ordinal violation: tid %lu ord %d map %x\n"),
- 		      tid,
- 		      qlockp->ql_ord,
--		      *ordmapp );
-+		      thread_ordmap );
- 	}
--	ASSERT( ! QLOCK_ORDMAP_CHK( *ordmapp, qlockp->ql_ord ));
-+	ASSERT( ! QLOCK_ORDMAP_CHK( thread_ordmap, qlockp->ql_ord ));
- 
- 	/* acquire the lock
- 	 */
-@@ -233,32 +149,23 @@ qlock_lock( qlockh_t qlockh )
- 
- 	/* add ordinal to this threads ordmap
- 	 */
--	QLOCK_ORDMAP_SET( *ordmapp, qlockp->ql_ord );
-+	QLOCK_ORDMAP_SET( thread_ordmap, qlockp->ql_ord );
- }
- 
- void
- qlock_unlock( qlockh_t qlockh )
- {
- 	qlock_t *qlockp = ( qlock_t * )qlockh;
--	ordmap_t *ordmapp;
- 	/* REFERENCED */
- 	intgen_t rval;
- 	
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
--	/* get the ordmap for this thread
--	 */
--	ordmapp = qlock_ordmapp_get( pthread_self() );
--
- 	/* verify lock is held by this thread
- 	 */
--	ASSERT( QLOCK_ORDMAP_GET( *ordmapp, qlockp->ql_ord ));
-+	ASSERT( QLOCK_ORDMAP_GET( thread_ordmap, qlockp->ql_ord ));
- 
- 	/* clear lock's ord from thread's ord map
- 	 */
--	QLOCK_ORDMAP_CLR( *ordmapp, qlockp->ql_ord );
-+	QLOCK_ORDMAP_CLR( thread_ordmap, qlockp->ql_ord );
- 	
- 	/* release the lock
- 	 */
-@@ -271,10 +178,6 @@ qsem_alloc( ix_t cnt )
- {
- 	qsem_t *qsemp;
- 
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* allocate a semaphore
- 	 */
- 	qsemp = ( qsem_t * )calloc( 1, sizeof( qsem_t ));
-@@ -297,10 +200,6 @@ qsem_free( qsemh_t qsemh )
- {
- 	qsem_t *qsemp = ( qsem_t * )qsemh;
- 
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* destroy the mutex and condition
- 	 */
- 	pthread_mutex_destroy( &qsemp->qs_mutex );
-@@ -317,10 +216,6 @@ qsemP( qsemh_t qsemh )
- 	qsem_t *qsemp = ( qsem_t * )qsemh;
- 	intgen_t rval;
- 	
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* acquire the lock
- 	 */
- 	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-@@ -347,10 +242,6 @@ qsemV( qsemh_t qsemh )
- 	qsem_t *qsemp = ( qsem_t * )qsemh;
- 	intgen_t rval;
- 	
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* acquire the lock
- 	 */
- 	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-@@ -375,10 +266,6 @@ qsemPwouldblock( qsemh_t qsemh )
- 	ix_t count;
- 	intgen_t rval;
- 
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* acquire the lock
- 	 */
- 	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-@@ -403,10 +290,6 @@ qsemPavail( qsemh_t qsemh )
- 	ix_t count;
- 	intgen_t rval;
- 
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* acquire the lock
- 	 */
- 	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-@@ -431,10 +314,6 @@ qsemPblocked( qsemh_t qsemh )
- 	ix_t waiters;
- 	intgen_t rval;
- 
--	/* sanity checks
--	 */
--	ASSERT( qlock_inited );
--
- 	/* acquire the lock
- 	 */
- 	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-@@ -451,51 +330,3 @@ qsemPblocked( qsemh_t qsemh )
- 
- 	return waiters;
- }
--
--/* internal ordinal map abstraction
-- */
+-#ifdef HIDDEN
 -static void
--qlock_ordmap_add( pthread_t tid )
+-mrh_sighandler( int signo )
 -{
--	ASSERT( qlock_thrdcnt < QLOCK_THRDCNTMAX );
--	qlock_thrddesc[ qlock_thrdcnt ].td_tid = tid;
--	qlock_thrddesc[ qlock_thrdcnt ].td_ordmap = 0;
--	qlock_thrdcnt++;
--}
+-	if ( signo == SIGCLD ) {
+-		pid_t cid;
+-		intgen_t stat;
 -
--static thrddesc_t *
--qlock_thrddesc_get( pthread_t tid )
--{
--	thrddesc_t *p;
--	thrddesc_t *endp;
--
--	for ( p = &qlock_thrddesc[ 0 ],
--	      endp = &qlock_thrddesc[ qlock_thrdcnt ]
--	      ;
--	      p < endp
--	      ;
--	      p++ ) {
--		if ( pthread_equal( p->td_tid, tid ) ) {
--			return p;
+-		cid = wait( &stat );
+-		if ( cid == mrh_cid ) {
+-			mrh_cid = -1;
 -		}
 -	}
--
--	return 0;
 -}
+-#endif
 -
--static ordmap_t *
--qlock_ordmapp_get( pthread_t tid )
--{
--	thrddesc_t *p;
--	p = qlock_thrddesc_get( tid );
--	return &p->td_ordmap;
--}
--
--static ix_t
--qlock_thrdix_get( pthread_t tid )
--{
--	thrddesc_t *p;
--	p = qlock_thrddesc_get( tid );
--	ASSERT( p >= &qlock_thrddesc[ 0 ] );
--	return ( ix_t )( p - &qlock_thrddesc[ 0 ] );
--}
-diff --git a/common/qlock.h b/common/qlock.h
-index 5ac51bd..da2031c 100644
---- a/common/qlock.h
-+++ b/common/qlock.h
-@@ -21,7 +21,7 @@
- /* qlock - quick locks abstraction
-  *
-  * threads may allocate quick locks using qlock_alloc, and free them with
-- * qlock_free. the abstraction is initialized with qlock_init.
-+ * qlock_free.
-  *
-  * deadlock detection is accomplished by giving an ordinal number to each
-  * lock allocated, and record all locks held by each thread. locks may not
-@@ -48,15 +48,6 @@ typedef void *qlockh_t;
- 	/* opaque handle
- 	 */
+ /* parent and children share this handler. 
+  */
+ static void
+@@ -1470,9 +1374,9 @@ sighandler( int signo )
+ 	if ( dlog_sighandler( signo ) )
+ 		return;
  
--extern bool_t qlock_init( void );
--	/* called by main to initialize abstraction. returns FALSE if
--	 * utility should abort.
--	 */
--
--extern bool_t qlock_thrdinit( void );
--	/* called by each thread to prepare it for participation
--	 */
--
- extern qlockh_t qlock_alloc( ix_t ord );
- 	/* allocates a qlock with the specified ordinal. returns
- 	 * NULL if lock can't be allocated.
+-	/* if in miniroot, don't do anything risky. just quit.
++	/* if in pipeline, don't do anything risky. just quit.
+ 	 */
+-	if ( miniroot || pipeline ) {
++	if ( pipeline ) {
+ 		intgen_t rval;
+ 
+ 		mlog( MLOG_TRACE | MLOG_NOTE | MLOG_NOLOCK | MLOG_PROC,
+diff --git a/dump/content.c b/dump/content.c
+index 33f1166..3a7f508 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -244,7 +244,6 @@ typedef struct pds pds_t;
+ extern void usage( void );
+ extern bool_t preemptchk( int );
+ extern char *homedir;
+-extern bool_t miniroot;
+ extern bool_t pipeline;
+ extern bool_t stdoutpiped;
+ extern char *sistr;
+@@ -2352,7 +2351,7 @@ content_stream_dump( ix_t strmix )
+ 					     inomap_next_nondir,
+ 					     inomap_contextp,
+ 					     ( intgen_t * )&rv,
+-					     ( miniroot || pipeline ) ?
++					     pipeline ?
+ 					       (bool_t (*)(int))preemptchk : 0,
+ 					     bstatbufp,
+ 					     bstatbuflen );
+@@ -2586,24 +2585,22 @@ decision_more:
+ 	 * from all streams have been registered.
+ 	 */
+ 	if ( drivep->d_capabilities & DRIVE_CAP_FILES ) {
+-		if ( ! miniroot ) {
+-			if ( stream_cnt( ) > 1 ) {
+-				mlog( MLOG_VERBOSE, _(
+-				      "waiting for synchronized "
+-				      "session inventory dump\n") );
+-				sc_stat_pds[ strmix ].pds_phase = PDS_INVSYNC;
+-			}
++		if ( stream_cnt( ) > 1 ) {
++			mlog( MLOG_VERBOSE, _(
++			      "waiting for synchronized "
++			      "session inventory dump\n") );
++			sc_stat_pds[ strmix ].pds_phase = PDS_INVSYNC;
++		}
+ 
+-			/* first be sure all threads have begun
+-			 */
+-			while ( sc_thrdsarrivedcnt < drivecnt ) {
+-				sleep( 1 );
+-			}
+-			/* now wait for survivors to checkin
+-			 */
+-			while ( sc_thrdsdonecnt < stream_cnt( )) {
+-				sleep( 1 );
+-			}
++		/* first be sure all threads have begun
++		*/
++		while ( sc_thrdsarrivedcnt < drivecnt ) {
++			sleep( 1 );
++		}
++		/* now wait for survivors to checkin
++		*/
++		while ( sc_thrdsdonecnt < stream_cnt( )) {
++			sleep( 1 );
+ 		}
+ 		/* proceeed
+ 		 */
+diff --git a/dump/getopt.h b/dump/getopt.h
+index 8a55631..ba26c93 100644
+--- a/dump/getopt.h
++++ b/dump/getopt.h
+@@ -27,7 +27,7 @@
+  * facilitating easy changes.
+  */
+ 
+-#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JL:M:NO:PRSTUVWY:Z"
++#define GETOPT_CMDSTRING	"ab:c:d:ef:hl:mop:qs:t:v:z:AB:CDEFG:H:I:JL:M:NO:PRSTUVWY:"
+ 
+ #define GETOPT_DUMPASOFFLINE	'a'	/* dump DMF dualstate files as offline */
+ #define	GETOPT_BLOCKSIZE	'b'	/* blocksize for rmt */
+@@ -80,6 +80,6 @@
+ #define	GETOPT_SHOWLOGLEVEL	'W'	/* show level of log messages */
+ /*				'X'	*/
+ #define	GETOPT_RINGLEN		'Y'	/* specify I/O buffer ring length */
+-#define	GETOPT_MINIROOT		'Z'	/* apply miniroot restrictions */
++/*				'Z'	   used on irix for miniroot */
+ 
+ #endif /* GETOPT_H */
+diff --git a/man/man8/xfsdump.8 b/man/man8/xfsdump.8
+index 46e6bd5..5360378 100644
+--- a/man/man8/xfsdump.8
++++ b/man/man8/xfsdump.8
+@@ -66,10 +66,6 @@ option. Other techniques, such as making a second copy of the dump
+ image, provide more protection against media failures than multiple
+ media files will.
+ .P
+-However, the current implementation in Linux only supports one destination
+-and running single threaded. Therefore, the above comments
+-regarding multiple streams describe the possible future capabilities.
+-.P
+ .I xfsdump
+ maintains an online dump inventory in \f2/var/lib/xfsdump/inventory\f1.
+ The
+@@ -391,8 +387,8 @@ Specify I/O buffer ring length.
+ uses a ring of output buffers to achieve maximum throughput
+ when dumping to tape drives.
+ The default ring length is 3.
+-However, this is only supported when running multi-threaded
+-which has not been done for Linux yet - making this option benign.
++However, this is not currently enabled on
++Linux yet, making this option benign.
+ .TP 5
+ .B \-
+ A lone
+diff --git a/man/man8/xfsrestore.8 b/man/man8/xfsrestore.8
+index 8e33ee9..aad97fa 100644
+--- a/man/man8/xfsrestore.8
++++ b/man/man8/xfsrestore.8
+@@ -426,8 +426,8 @@ Specify I/O buffer ring length.
+ uses a ring of input buffers to achieve maximum throughput
+ when restoring from tape drives.
+ The default ring length is 3.
+-However, this is only supported when running multi-threaded
+-which has not been done for Linux yet - making this option benign.
++However, this is not currently enabled on
++Linux yet, making this option benign.
+ .TP 5
+ .B \-
+ A lone
+diff --git a/restore/content.c b/restore/content.c
+index 0108a40..a9e0b20 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -660,7 +660,6 @@ typedef struct tran tran_t;
+ extern void usage( void );
+ extern bool_t preemptchk( void );
+ extern char *homedir;
+-extern bool_t miniroot;
+ extern bool_t pipeline;
+ extern bool_t stdoutpiped;
+ extern char *sistr;
+@@ -2544,14 +2543,12 @@ content_stream_restore( ix_t thrdix )
+ 	}
+ 	tranp->t_sync5 = SYNC_BUSY;
+ 	unlock( );
+-	if ( ! miniroot ) {
+-		if ( drivecnt > 1 ) {
+-			mlog( MLOG_TRACE,
+-			      "waiting for other streams to exit\n" );
+-		}
+-		while ( cldmgr_otherstreamsremain( thrdix )) {
+-			sleep( 1 );
+-		}
++	if ( drivecnt > 1 ) {
++		mlog( MLOG_TRACE,
++		      "waiting for other streams to exit\n" );
++	}
++	while ( cldmgr_otherstreamsremain( thrdix )) {
++		sleep( 1 );
+ 	}
+ 
+ 	mlog( MLOG_DEBUG,
+@@ -3006,10 +3003,10 @@ applydirdump( drive_t *drivep,
+ 				return RV_INTR;
+ 			}
+ 
+-			/* if miniroot or pipeline , call preemptchk( ) to
++			/* if in a pipeline , call preemptchk( ) to
+ 			 * print status reports
+ 			 */
+-			if ( miniroot || pipeline )
++			if ( pipeline )
+ 			{
+ 				mlog( MLOG_DEBUG ,
+ 					"preemptchk( )\n");
+@@ -3543,10 +3540,10 @@ applynondirdump( drive_t *drivep,
+ 				       fhdrp->fh_offset );
+ 		}
+ 
+-		/* if miniroot or pipeline , call preemptchk( ) to
++		/* if in a pipeline , call preemptchk( ) to
+ 		 * print status reports
+ 		 */
+-		if ( miniroot || pipeline )
++		if ( pipeline )
+ 		{
+ 			mlog( MLOG_DEBUG ,
+ 				"preemptchk( )\n");
+diff --git a/restore/getopt.h b/restore/getopt.h
+index 4ee865d..63568de 100644
+--- a/restore/getopt.h
++++ b/restore/getopt.h
+@@ -26,7 +26,7 @@
+  * purpose is to contain that command string.
+  */
+ 
+-#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:Z"
++#define GETOPT_CMDSTRING	"a:b:c:def:himn:op:qrs:tv:wABCDEFG:H:I:JL:M:NO:PQRS:TUVWX:Y:"
+ 
+ #define GETOPT_WORKSPACE	'a'	/* workspace dir (content.c) */
+ #define GETOPT_BLOCKSIZE        'b'     /* blocksize for rmt */
+@@ -79,6 +79,6 @@
+ #define	GETOPT_SHOWLOGLEVEL	'W'	/* show level of log messages */
+ #define	GETOPT_NOSUBTREE	'X'	/* subtree to exclude */
+ #define	GETOPT_RINGLEN		'Y'	/* specify I/O buffer ring length */
+-#define	GETOPT_MINIROOT		'Z'	/* apply miniroot restrictions */
++/*				'Z'	   used on irix for miniroot */
+ 
+ #endif /* GETOPT_H */
 -- 
 1.7.0.4
 
