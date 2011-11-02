@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA2LB7mM200845 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:07 -0500
+	pA2LBEhH200912 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:14 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH 1/8] xfsdump: link with libpthread
-Date: Wed,  2 Nov 2011 16:10:47 -0500
-Message-Id: <1320268254-20583-2-git-send-email-wkendall@sgi.com>
+Subject: [PATCH 7/8] xfsdump: path lookup cache must be thread specific
+Date: Wed,  2 Nov 2011 16:10:53 -0500
+Message-Id: <1320268254-20583-8-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,110 +23,32 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This patch changes xfsdump/xfsrestore to link with libpthread in
-preparation for enabling multi-stream support. The libpthread checks
-are the same as those used in xfsprogs.
+The xfsrestore path lookup routine (maps an ino + generation number to a
+pathname) contains a cache for fast lookups of consecutive files in the
+same parent directory. This cache either needs to be protected by a lock
+or a cache is needed per thread. I took the latter approach since it
+doesn't add lock contention and it increases the cache hit rate (it's
+relatively unlikely that each stream is processing files in the same
+directory).
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
- configure.in          |    3 +++
- dump/Makefile         |    2 +-
- include/builddefs.in  |    1 +
- m4/Makefile           |    1 +
- m4/package_pthread.m4 |   19 +++++++++++++++++++
- restore/Makefile      |    2 +-
- 6 files changed, 26 insertions(+), 2 deletions(-)
- create mode 100644 m4/package_pthread.m4
+ restore/tree.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/configure.in b/configure.in
-index b7ea1eb..8d4a256 100644
---- a/configure.in
-+++ b/configure.in
-@@ -67,6 +67,9 @@ AC_MULTILIB($enable_lib64)
- AC_PACKAGE_NEED_UUID_H
- AC_PACKAGE_NEED_UUIDCOMPARE
- 
-+AC_PACKAGE_NEED_PTHREAD_H
-+AC_PACKAGE_NEED_PTHREADMUTEXINIT
-+
- AC_PACKAGE_NEED_NCURSES_H
- AC_PACKAGE_WANT_WORKING_LIBNCURSES
- 
-diff --git a/dump/Makefile b/dump/Makefile
-index ce964a0..d193f68 100644
---- a/dump/Makefile
-+++ b/dump/Makefile
-@@ -89,7 +89,7 @@ HFILES = $(LOCALINCL)
- LHFILES = $(COMMINCL) $(INVINCL)
- LINKS = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
- LDIRT = $(LINKS)
--LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT)
-+LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBRMT)
- 
- LCFLAGS = -DDUMP
-diff --git a/include/builddefs.in b/include/builddefs.in
-index f69c038..d5cc8d3 100644
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -16,6 +16,7 @@ CFLAGS = @CFLAGS@
- LIBRMT = $(TOPDIR)/librmt/librmt.la
- LIBXFS = @libxfs@
- LIBATTR = @libattr@
-+LIBPTHREAD = @libpthread@
- LIBUUID = @libuuid@
- LIBCURSES = @libcurses@
- LIBHANDLE = @libhdl@
-diff --git a/m4/Makefile b/m4/Makefile
-index 8ce63f8..9a35056 100644
---- a/m4/Makefile
-+++ b/m4/Makefile
-@@ -17,6 +17,7 @@ LSRCFILES = \
- 	package_attrdev.m4 \
- 	package_globals.m4 \
- 	package_ncurses.m4 \
-+	package_pthread.m4 \
- 	package_utilies.m4 \
- 	package_uuiddev.m4 \
- 	package_xfslibs.m4 \
-diff --git a/m4/package_pthread.m4 b/m4/package_pthread.m4
-new file mode 100644
-index 0000000..be21d29
---- /dev/null
-+++ b/m4/package_pthread.m4
-@@ -0,0 +1,19 @@
-+AC_DEFUN([AC_PACKAGE_NEED_PTHREAD_H],
-+  [ AC_CHECK_HEADERS(pthread.h)
-+    if test $ac_cv_header_pthread_h = no; then
-+	AC_CHECK_HEADERS(pthread.h,, [
-+	echo
-+	echo 'FATAL ERROR: could not find a valid pthread header.'
-+	exit 1])
-+    fi
-+  ])
-+
-+AC_DEFUN([AC_PACKAGE_NEED_PTHREADMUTEXINIT],
-+  [ AC_CHECK_LIB(pthread, pthread_mutex_init,, [
-+	echo
-+	echo 'FATAL ERROR: could not find a valid pthread library.'
-+	exit 1
-+    ])
-+    libpthread=-lpthread
-+    AC_SUBST(libpthread)
-+  ])
-diff --git a/restore/Makefile b/restore/Makefile
-index 003ea16..ce3d6b4 100644
---- a/restore/Makefile
-+++ b/restore/Makefile
-@@ -99,7 +99,7 @@ HFILES = $(LOCALINCL)
- LHFILES = $(COMMINCL) $(INVINCL)
- LINKS = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
- LDIRT = $(LINKS)
--LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT)
-+LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT) $(LIBPTHREAD)
- LTDEPENDENCIES = $(LIBRMT)
- 
- LCFLAGS = -DRESTORE
+diff --git a/restore/tree.c b/restore/tree.c
+index 7bddddf..9e4e83c 100644
+--- a/restore/tree.c
++++ b/restore/tree.c
+@@ -3441,7 +3441,7 @@ Node2path( nh_t nh, char *path, char *errmsg )
+ static intgen_t
+ Node2path_recurse( nh_t nh, char *buf, intgen_t bufsz, intgen_t level )
+ {
+-	static path_cache_t cache = { NH_NULL, 0, "" };
++	static __thread path_cache_t cache = { NH_NULL, 0, "" };
+ 	node_t *np;
+ 	nh_t parh;
+ 	xfs_ino_t ino;
 -- 
 1.7.0.4
 
