@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA2LBC7b200884 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:12 -0500
+	pA2LBB3h200877 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:12 -0500
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH 3/8] xfsdump: implement lock abstraction with pthreads
-Date: Wed,  2 Nov 2011 16:10:49 -0500
-Message-Id: <1320268254-20583-4-git-send-email-wkendall@sgi.com>
+Subject: [PATCH 2/8] xfsdump: remove multi-stream synchronous dir dump
+Date: Wed,  2 Nov 2011 16:10:48 -0500
+Message-Id: <1320268254-20583-3-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,802 +23,440 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This patch implements xfsdump's locking abstraction (qlock_t and qsem_t)
-using pthread locking primitives. The obsolete IRIX locking code has
-been removed.
+When doing multi-stream dumps, the directories are dumped by each
+stream in lock-step fashion. A stream backs up a given directory,
+then waits for all others to finish that directory, then they all
+move on to the next one. During restore a single stream is chosen to
+apply the directory dump.
 
-A few debug-level log calls had to be changed to use the "no lock"
-flag to prevent locks from being acquired out of order. This is
-used in various debug messages throughout xfsdump.
+This patch changes xfsdump so that only one stream dumps the
+directories. The other streams begin dumping files immediately.
+This results in a faster backup, which is presumably why multiple
+streams are being used in the first place.
+
+It also removes the barrier routines in qlock.c as they were only
+used by the "SYNCDIR" code.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 ---
- common/main.c     |    2 +-
- common/qlock.c    |  407 +++++++++++++++++++----------------------------------
- common/qlock.h    |   10 +-
- restore/content.c |   17 ++-
- 4 files changed, 158 insertions(+), 278 deletions(-)
+ common/qlock.c    |   37 ----------
+ common/qlock.h    |   11 ---
+ dump/content.c    |  193 ++++++++++++-----------------------------------------
+ restore/content.c |   33 +++++++++
+ 4 files changed, 75 insertions(+), 199 deletions(-)
 
-diff --git a/common/main.c b/common/main.c
-index 08be16e..be8a921 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -359,7 +359,7 @@ main( int argc, char *argv[] )
- 
- 	/* initialize the spinlock allocator
- 	 */
--	ok = qlock_init( miniroot );
-+	ok = qlock_init( );
- 	if ( ! ok ) {
- 		return mlog_exit(EXIT_ERROR, RV_INIT);
- 	}
 diff --git a/common/qlock.c b/common/qlock.c
-index 6c9ee16..5b87b3b 100644
+index fd0e98d..6c9ee16 100644
 --- a/common/qlock.c
 +++ b/common/qlock.c
-@@ -19,6 +19,8 @@
- #include <xfs/xfs.h>
- #include <xfs/jdm.h>
- 
-+#include <pthread.h>
-+
- #include "types.h"
- #include "qlock.h"
- #include "mlog.h"
-@@ -27,23 +29,24 @@ struct qlock {
- 	ix_t ql_ord;
- 		/* ordinal position of this lock
- 		 */
--	pid_t ql_owner;
--		/* who owns this lock
--		 */
--#ifdef HIDDEN
--	ulock_t ql_uslockh;
--		/* us lock handle
--		 */
--#endif /* HIDDEN */
-+	pthread_mutex_t ql_mutex;
- };
- 
- typedef struct  qlock qlock_t;
- 	/* internal qlock
- 	 */
- 
--#define QLOCK_SPINS			0x1000
--	/* how many times to spin on lock before sleeping for it
--	 */
-+struct qsem {
-+	ix_t qs_count;
-+		/* current count of this semaphore
-+		 */
-+	ix_t qs_waiters;
-+		/* number of threads waiting on semaphore
-+		 */
-+	pthread_mutex_t qs_mutex;
-+	pthread_cond_t qs_cond;
-+};
-+typedef struct  qsem qsem_t;
- 
- #define QLOCK_THRDCNTMAX			256
- 	/* arbitrary limit on number of threads supported
-@@ -67,15 +70,13 @@ static ordmap_t qlock_ordalloced;
- 	 */
- 
- struct thrddesc {
--	pid_t td_pid;
-+	pthread_t td_tid;
- 	ordmap_t td_ordmap;
- };
- typedef struct thrddesc thrddesc_t;
--#ifdef HIDDEN
- static thrddesc_t qlock_thrddesc[ QLOCK_THRDCNTMAX ];
- 	/* holds the ordmap for each thread
- 	 */
--#endif
- 
- #define QLOCK_ORDMAP_SET( ordmap, ord )	( ordmap |= 1U << ord )
- 	/* sets the ordinal bit in an ordmap
-@@ -93,21 +94,6 @@ static thrddesc_t qlock_thrddesc[ QLOCK_THRDCNTMAX ];
- 	/* checks if any bits less than ord are set in the ordmap
- 	 */
- 
--#ifdef HIDDEN
--static usptr_t *qlock_usp;
--#else
--static void *qlock_usp;
--#endif /* HIDDEN */
--
--	/* pointer to shared arena from which locks are allocated
--	 */
--
--#ifdef HIDDEN
--static char *qlock_arenaroot = "xfsrestoreqlockarena";
--	/* shared arena file name root
--	 */
--#endif
--
- /* REFERENCED */
- static bool_t qlock_inited = BOOL_FALSE;
- 	/* to sanity check initialization
-@@ -115,22 +101,13 @@ static bool_t qlock_inited = BOOL_FALSE;
- 
- /* forward declarations
-  */
--#ifdef HIDDEN
--static void qlock_ordmap_add( pid_t pid );
--static ordmap_t *qlock_ordmapp_get( pid_t pid );
--static ix_t qlock_thrdix_get( pid_t pid );
--#endif
-+static void qlock_ordmap_add( pthread_t tid );
-+static ordmap_t *qlock_ordmapp_get( pthread_t tid );
-+static ix_t qlock_thrdix_get( pthread_t tid );
- 
- bool_t
--qlock_init( bool_t miniroot )
-+qlock_init( void )
- {
--#ifdef HIDDEN
--	char arenaname[ 100 ];
--	/* REFERENCED */
--	intgen_t nwritten;
--	intgen_t rval;
--#endif
--
- 	/* sanity checks
- 	 */
- 	ASSERT( ! qlock_inited );
-@@ -143,44 +120,6 @@ qlock_init( bool_t miniroot )
- 	 */
- 	qlock_ordalloced = 0;
- 
--	/* if miniroot, fake it
--	 */
--	if ( miniroot ) {
--		qlock_inited = BOOL_TRUE;
--		qlock_usp = 0;
--		return BOOL_TRUE;
--	}
--#ifdef HIDDEN
--
--	/* generate the arena name
--	 */
--	nwritten = sprintf( arenaname,
--			    "/tmp/%s.%d",
--			    qlock_arenaroot,
--			    get_pid() );
--	ASSERT( nwritten > 0 );
--	ASSERT( ( size_t )nwritten < sizeof( arenaname ));
--
--	/* configure shared arenas to automatically unlink on last close
--	 */
--	rval = usconfig( CONF_ARENATYPE, ( u_intgen_t )US_SHAREDONLY );
--	if ( rval ) {
--		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
--		      _("unable to configure shared arena for auto unlink: %s\n"),
--		      strerror( errno ));
--		return BOOL_FALSE;
--	}
--
--	/* allocate a shared arena for the locks
--	 */
--	qlock_usp = usinit( arenaname );
--	if ( ! qlock_usp ) {
--		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
--		      _("unable to allocate shared arena for thread locks: %s\n"),
--		      strerror( errno ));
--		return BOOL_FALSE;
--	}
--
- 	/* now say we are initialized
- 	 */
- 	qlock_inited = BOOL_TRUE;
-@@ -191,7 +130,6 @@ qlock_init( bool_t miniroot )
- 		qlock_inited = BOOL_FALSE;
- 		return BOOL_FALSE;
- 	}
--#endif /* HIDDEN */
- 
- 	return BOOL_TRUE;
+@@ -568,43 +568,6 @@ return 0;
+ #endif /* HIDDEN */
  }
-@@ -199,28 +137,13 @@ qlock_init( bool_t miniroot )
- bool_t
- qlock_thrdinit( void )
- {
+ 
+-qbarrierh_t
+-qbarrier_alloc( void )
+-{
 -#ifdef HIDDEN
--	intgen_t rval;
+-	barrier_t *barrierp;
 -
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
+-	/* sanity checks
+-	 */
+-	ASSERT( qlock_inited );
 -	ASSERT( qlock_usp );
 -
--	/* add thread to shared arena
+-	/* allocate a us barrier
 -	 */
--	rval = usadd( qlock_usp );
--	if ( rval ) {
--		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
--		      _("unable to add thread to shared arena: %s\n"),
--		      strerror( errno ));
--		return BOOL_FALSE;
--	}
- 
- 	/* add thread to ordmap list
- 	 */
--	qlock_ordmap_add( get_pid() );
--#endif /* HIDDEN */
-+	qlock_ordmap_add( pthread_self() );
- 
- 	return BOOL_TRUE;
- }
-@@ -244,14 +167,9 @@ qlock_alloc( ix_t ord )
- 	qlockp = ( qlock_t * )calloc( 1, sizeof( qlock_t ));
- 	ASSERT( qlockp );
- 
--#ifdef HIDDEN
--	/* allocate a us lock: bypass if miniroot
-+	/* initialize the mutex
- 	 */
--	if ( qlock_usp ) {
--		qlockp->ql_uslockh = usnewlock( qlock_usp );
--		ASSERT( qlockp->ql_uslockh );
--	}
--#endif /* HIDDEN */
-+	pthread_mutex_init( &qlockp->ql_mutex, NULL );
- 
- 	/* assign the ordinal position
- 	 */
-@@ -263,44 +181,34 @@ qlock_alloc( ix_t ord )
- void
- qlock_lock( qlockh_t qlockh )
- {
--#ifdef HIDDEN
- 	qlock_t *qlockp = ( qlock_t * )qlockh;
--	pid_t pid;
-+	pthread_t tid;
- 	ix_t thrdix;
- 	ordmap_t *ordmapp;
- 	/* REFERENCED */
--	bool_t lockacquired;
--#endif
-+	intgen_t rval;
- 	
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
- 
--	/* bypass if miniroot
--	 */
--	if ( ! qlock_usp ) {
--		return;
--	}
+-	barrierp = new_barrier( qlock_usp );
+-	ASSERT( barrierp );
 -
--#ifdef HIDDEN
--
--	/* get the caller's pid and thread index
-+	/* get the caller's tid and thread index
- 	 */
--	pid = get_pid();
-+	tid = pthread_self();
- 
--	thrdix = qlock_thrdix_get( pid );
-+	thrdix = qlock_thrdix_get( tid );
- 
- 	/* get the ordmap for this thread
- 	 */
--	ordmapp = qlock_ordmapp_get( pid );
-+	ordmapp = qlock_ordmapp_get( tid );
- 
--	/* assert that this lock not already held
-+	/* assert that this lock not already held by this thread
- 	 */
- 	if ( QLOCK_ORDMAP_GET( *ordmapp, qlockp->ql_ord )) {
- 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
--		      _("lock already held: thrd %d pid %d ord %d map %x\n"),
-+		      _("lock already held: thrd %d tid %lu ord %d map %x\n"),
- 		      thrdix,
--		      pid,
-+		      tid,
- 		      qlockp->ql_ord,
- 		      *ordmapp );
- 	}
-@@ -310,278 +218,253 @@ qlock_lock( qlockh_t qlockh )
- 	 */
- 	if ( QLOCK_ORDMAP_CHK( *ordmapp, qlockp->ql_ord )) {
- 		mlog( MLOG_NORMAL | MLOG_WARNING | MLOG_NOLOCK,
--		      _("lock ordinal violation: thrd %d pid %d ord %d map %x\n"),
-+		      _("lock ordinal violation: thrd %d tid %lu ord %d map %x\n"),
- 		      thrdix,
--		      pid,
-+		      tid,
- 		      qlockp->ql_ord,
- 		      *ordmapp );
- 	}
- 	ASSERT( ! QLOCK_ORDMAP_CHK( *ordmapp, qlockp->ql_ord ));
- 
--	/* acquire the us lock
-+	/* acquire the lock
- 	 */
--	lockacquired = uswsetlock( qlockp->ql_uslockh, QLOCK_SPINS );
--	ASSERT( lockacquired );
--
--	/* verify lock is not already held
--	 */
--	ASSERT( ! qlockp->ql_owner );
-+	rval = pthread_mutex_lock( &qlockp->ql_mutex );
-+	ASSERT( !rval );
- 
- 	/* add ordinal to this threads ordmap
- 	 */
- 	QLOCK_ORDMAP_SET( *ordmapp, qlockp->ql_ord );
--
--	/* indicate the lock's owner
--	 */
--	qlockp->ql_owner = pid;
--#endif /* HIDDEN */
- }
- 
- void
- qlock_unlock( qlockh_t qlockh )
- {
--#ifdef HIDDEN
- 	qlock_t *qlockp = ( qlock_t * )qlockh;
--	pid_t pid;
- 	ordmap_t *ordmapp;
- 	/* REFERENCED */
- 	intgen_t rval;
--#endif
- 	
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
- 
--	/* bypass if miniroot
--	 */
--	if ( ! qlock_usp ) {
--		return;
--	}
--
--#ifdef HIDDEN
--	/* get the caller's pid
--	 */
--	pid = get_pid();
--
- 	/* get the ordmap for this thread
- 	 */
--	ordmapp = qlock_ordmapp_get( pid );
-+	ordmapp = qlock_ordmapp_get( pthread_self() );
- 
- 	/* verify lock is held by this thread
- 	 */
- 	ASSERT( QLOCK_ORDMAP_GET( *ordmapp, qlockp->ql_ord ));
--	ASSERT( qlockp->ql_owner == pid );
--
--	/* clear lock owner
--	 */
--	qlockp->ql_owner = 0;
- 
- 	/* clear lock's ord from thread's ord map
- 	 */
- 	QLOCK_ORDMAP_CLR( *ordmapp, qlockp->ql_ord );
- 	
--	/* release the us lock
-+	/* release the lock
- 	 */
--	rval = usunsetlock( qlockp->ql_uslockh );
-+	rval = pthread_mutex_unlock( &qlockp->ql_mutex );
- 	ASSERT( ! rval );
--#endif /* HIDDEN */
- }
- 
- qsemh_t
- qsem_alloc( ix_t cnt )
- {
--#ifdef HIDDEN
--	usema_t *usemap;
-+	qsem_t *qsemp;
- 
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
--	ASSERT( qlock_usp );
- 
--	/* allocate a us semaphore
-+	/* allocate a semaphore
- 	 */
--	usemap = usnewsema( qlock_usp, ( intgen_t )cnt );
--	ASSERT( usemap );
-+	qsemp = ( qsem_t * )calloc( 1, sizeof( qsem_t ));
-+	ASSERT( qsemp );
- 
--	return ( qsemh_t )usemap;
--#else
--	return 0;
--#endif /* HIDDEN */
-+	/* initialize the mutex and condition
-+	 */
-+	pthread_mutex_init(&qsemp->qs_mutex, NULL);
-+	pthread_cond_init(&qsemp->qs_cond, NULL);
-+
-+	/* assign the initial count
-+	 */
-+	qsemp->qs_count = cnt;
-+
-+	return ( qsemh_t )qsemp;
- }
- 
- void
- qsem_free( qsemh_t qsemh )
- {
--#ifdef HIDDEN
--	usema_t *usemap = ( usema_t * )qsemh;
-+	qsem_t *qsemp = ( qsem_t * )qsemh;
- 
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
--	ASSERT( qlock_usp );
- 
--	/* free the us semaphore
-+	/* destroy the mutex and condition
-+	 */
-+	pthread_mutex_destroy( &qsemp->qs_mutex );
-+	pthread_cond_destroy( &qsemp->qs_cond );
-+
-+	/* free the semaphore
- 	 */
--	usfreesema( usemap, qlock_usp );
--#endif /* HIDDEN */
-+	free( qsemp );
- }
- 
- void
- qsemP( qsemh_t qsemh )
- {
--#ifdef HIDDEN
--	usema_t *usemap = ( usema_t * )qsemh;
-+	qsem_t *qsemp = ( qsem_t * )qsemh;
- 	intgen_t rval;
- 	
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
--	ASSERT( qlock_usp );
-+
-+	/* acquire the lock
-+	 */
-+	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- 
- 	/* "P" the semaphore
- 	 */
--	rval = uspsema( usemap );
--	if ( rval != 1 ) {
--		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
--		      _("unable to \"P\" semaphore: "
--		      "rval == %d, errno == %d (%s)\n"),
--		      rval,
--		      errno,
--		      strerror( errno ));
-+	qsemp->qs_waiters++;
-+	while ( qsemp->qs_count == 0 ) {
-+		pthread_cond_wait( &qsemp->qs_cond, &qsemp->qs_mutex );
- 	}
--	ASSERT( rval == 1 );
--#endif /* HIDDEN */
-+	qsemp->qs_waiters--;
-+	qsemp->qs_count--;
-+
-+	/* release the lock
-+	 */
-+	rval = pthread_mutex_unlock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- }
- 
- void
- qsemV( qsemh_t qsemh )
- {
--#ifdef HIDDEN
--	usema_t *usemap = ( usema_t * )qsemh;
-+	qsem_t *qsemp = ( qsem_t * )qsemh;
- 	intgen_t rval;
- 	
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
--	ASSERT( qlock_usp );
-+
-+	/* acquire the lock
-+	 */
-+	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- 
- 	/* "V" the semaphore
- 	 */
--	rval = usvsema( usemap );
--	if ( rval != 0 ) {
--		mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_NOLOCK,
--		      _("unable to \"V\" semaphore: "
--		      "rval == %d, errno == %d (%s)\n"),
--		      rval,
--		      errno,
--		      strerror( errno ));
--	}
--	ASSERT( rval == 0 );
--#endif /* HIDDEN */
-+	qsemp->qs_count++;
-+	if ( qsemp->qs_waiters )
-+		pthread_cond_signal( &qsemp->qs_cond );
-+
-+	/* release the lock
-+	 */
-+	rval = pthread_mutex_unlock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- }
- 
- bool_t
- qsemPwouldblock( qsemh_t qsemh )
- {
--#ifdef HIDDEN
--	usema_t *usemap = ( usema_t * )qsemh;
-+	qsem_t *qsemp = ( qsem_t * )qsemh;
-+	ix_t count;
- 	intgen_t rval;
--	
-+
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
--	ASSERT( qlock_usp );
- 
--	/* check the semaphore
-+	/* acquire the lock
- 	 */
--	rval = ustestsema( usemap );
-+	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- 
--	/* if equal to zero, no tokens left. if less than zero, other thread(s)
--	 * currently waiting.
-+	/* check the count
- 	 */
--	if ( rval <= 0 ) {
--		return BOOL_TRUE;
--	} else {
--		return BOOL_FALSE;
--	}
--#else
--return BOOL_FALSE;
--#endif /* HIDDEN */
-+	count = qsemp->qs_count;
-+
-+	/* release the lock
-+	 */
-+	rval = pthread_mutex_unlock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
-+
-+	return count == 0 ? BOOL_TRUE : BOOL_FALSE;
- }
- 
- size_t
- qsemPavail( qsemh_t qsemh )
- {
--#ifdef HIDDEN
--	usema_t *usemap = ( usema_t * )qsemh;
-+	qsem_t *qsemp = ( qsem_t * )qsemh;
-+	ix_t count;
- 	intgen_t rval;
--	
-+
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
--	ASSERT( qlock_usp );
- 
--	/* check the semaphore
-+	/* acquire the lock
- 	 */
--	rval = ustestsema( usemap );
-+	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- 
--	/* if greater or equal to zero, no one is blocked and that is the number
--	 * of resources available. if less than zero, absolute value is the
--	 * number of blocked threads.
-+	/* check the count
- 	 */
--	if ( rval < 0 ) {
--		return 0;
--	} else {
--		return ( size_t )rval;
--	}
+-	return ( qbarrierh_t )barrierp;
 -#else
 -return 0;
 -#endif /* HIDDEN */
-+	count = qsemp->qs_count;
-+
-+	/* release the lock
-+	 */
-+	rval = pthread_mutex_unlock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
-+
-+	return count;
- }
- 
- size_t
- qsemPblocked( qsemh_t qsemh )
- {
+-}
+-
+-void
+-qbarrier( qbarrierh_t qbarrierh, size_t thrdcnt )
+-{
 -#ifdef HIDDEN
--	usema_t *usemap = ( usema_t * )qsemh;
-+	qsem_t *qsemp = ( qsem_t * )qsemh;
-+	ix_t waiters;
- 	intgen_t rval;
--	
-+
- 	/* sanity checks
- 	 */
- 	ASSERT( qlock_inited );
+-	barrier_t *barrierp = ( barrier_t * )qbarrierh;
+-
+-	/* sanity checks
+-	 */
+-	ASSERT( qlock_inited );
 -	ASSERT( qlock_usp );
- 
--	/* check the semaphore
-+	/* acquire the lock
- 	 */
--	rval = ustestsema( usemap );
-+	rval = pthread_mutex_lock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
- 
--	/* if greater or equal to zero, no one is blocked. if less than zero,
--	 * absolute value is the number of blocked threads.
-+	/* check the waiters
- 	 */
--	if ( rval < 0 ) {
--		return ( size_t )( 0 - rval );
--	} else {
--		return 0;
--	}
--#else
--return 0;
+-
+-	barrier( barrierp, thrdcnt );
 -#endif /* HIDDEN */
-+	waiters = qsemp->qs_waiters;
-+
-+	/* release the lock
-+	 */
-+	rval = pthread_mutex_unlock( &qsemp->qs_mutex );
-+	ASSERT( !rval );
-+
-+	return waiters;
- }
- 
+-}
+-
  /* internal ordinal map abstraction
   */
--#ifdef HIDDEN
- static void
--qlock_ordmap_add( pid_t pid )
-+qlock_ordmap_add( pthread_t tid )
- {
- 	ASSERT( qlock_thrdcnt < QLOCK_THRDCNTMAX );
--	qlock_thrddesc[ qlock_thrdcnt ].td_pid = pid;
-+	qlock_thrddesc[ qlock_thrdcnt ].td_tid = tid;
- 	qlock_thrddesc[ qlock_thrdcnt ].td_ordmap = 0;
- 	qlock_thrdcnt++;
- }
+ #ifdef HIDDEN
+diff --git a/common/qlock.h b/common/qlock.h
+index 54469ea..1880aff 100644
+--- a/common/qlock.h
++++ b/common/qlock.h
+@@ -102,15 +102,4 @@ extern size_t qsemPblocked( qsemh_t qsemh );
+ 	/* number of threads currently blocked on this semaphore
+ 	 */
  
- static thrddesc_t *
--qlock_thrddesc_get( pid_t pid )
-+qlock_thrddesc_get( pthread_t tid )
- {
- 	thrddesc_t *p;
- 	thrddesc_t *endp;
-@@ -592,29 +475,27 @@ qlock_thrddesc_get( pid_t pid )
- 	      p < endp
- 	      ;
- 	      p++ ) {
--		if ( p->td_pid == pid ) {
-+		if ( pthread_equal( p->td_tid, tid ) ) {
- 			return p;
+-typedef void *qbarrierh_t;
+-#define QBARRIERH_NULL	0
+-	/* opaque handle
+-	 */
+-extern qbarrierh_t qbarrier_alloc( void );
+-	/* allocates a rendezvous barrier
+-	 */
+-extern void qbarrier( qbarrierh_t barrierh, size_t thrdcnt );
+-	/* causes thrdcnt threads to rendezvous
+-	 */
+-
+ #endif /* QLOCK_H */
+diff --git a/dump/content.c b/dump/content.c
+index 54c97d1..64bfe54 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -64,9 +64,6 @@
+ #include "getdents.h"
+ #include "arch_xlate.h"
+ 
+-#undef SYNCDIR
+-#define SYNCDIR
+-
+ /* max "unsigned long long int"
+  */
+ #define ULONGLONG_MAX	18446744073709551615LLU
+@@ -231,7 +228,6 @@ typedef struct extent_group_context extent_group_context_t;
+ struct pds {
+ 	enum { PDS_NULL,		/* per-drive activity not begun */
+ 	       PDS_INOMAP,		/* dumping inomap */
+-	       PDS_DIRRENDEZVOUS,	/* waiting to dump dirs */
+ 	       PDS_DIRDUMP,		/* dumping dirs */
+ 	       PDS_NONDIR,		/* dumping nondirs */
+ 	       PDS_INVSYNC,		/* waiting for inventory */
+@@ -263,9 +259,6 @@ static rv_t dump_dirs( ix_t strmix,
+ 		       xfs_bstat_t *bstatbufp,
+ 		       size_t bstatbuflen,
+ 		       void *inomap_contextp );
+-#ifdef SYNCDIR
+-static rv_t dump_dirs_rendezvous( void );
+-#endif /* SYNCDIR */
+ static rv_t dump_dir( ix_t strmix,
+ 		      jdm_fshandle_t *,
+ 		      intgen_t,
+@@ -485,12 +478,6 @@ static bool_t sc_dumpextattrpr = BOOL_TRUE;
+ static bool_t sc_dumpasoffline = BOOL_FALSE;
+ 	/* dump dual-residency HSM files as offline
+ 	 */
+-#ifdef SYNCDIR
+-static size_t sc_thrdsdirdumpsynccnt = 0;
+-static size_t sc_thrdswaitingdirdumpsync1 = 0;
+-static size_t sc_thrdswaitingdirdumpsync2 = 0;
+-static qbarrierh_t sc_barrierh;
+-#endif /* SYNCDIR */
+ 
+ static bool_t sc_savequotas = BOOL_TRUE;
+ /* save quota information in dump
+@@ -1466,14 +1453,13 @@ baseuuidbypass:
+ 	var_skip( &fsid, inomap_skip );
+ 
+ 	/* fill in write header template content info. always produce
+-	 * an inomap and dir dump for each media file.
++	 * an inomap for each media file. the dirdump flag will be set
++	 * in content_stream_dump() for streams which dump the directories.
+ 	 */
+ 	ASSERT( sizeof( cwhdrtemplatep->ch_specific ) >= sizeof( *scwhdrtemplatep ));
+ 	scwhdrtemplatep->cih_mediafiletype = CIH_MEDIAFILETYPE_DATA;
+ 	scwhdrtemplatep->cih_level = ( int32_t )sc_level;
+-	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP
+-					|
+-					CIH_DUMPATTR_DIRDUMP;
++	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP;
+ 	if ( subtreecnt ) {
+ 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_SUBTREE;
+ 	}
+@@ -1714,22 +1700,6 @@ baseuuidbypass:
  		}
  	}
  
--	ASSERT( 0 );
- 	return 0;
+-#ifdef SYNCDIR
+-	/* allocate a barrier to synchronize directory dumping
+-	 */
+-	if ( drivecnt > 1 ) {
+-		sc_barrierh = qbarrier_alloc( );
+-	}
+-
+-	/* initialize the number of players in the synchronized dir dump.
+-	 * they drop out when last media file complete. MUST be modified
+-	 * under lock( ).
+-	 */
+-	sc_thrdsdirdumpsynccnt = drivecnt;
+-
+-#endif /* SYNCDIR */
+-
+-
+ 	return BOOL_TRUE;
  }
  
- static ordmap_t *
--qlock_ordmapp_get( pid_t pid )
-+qlock_ordmapp_get( pthread_t tid )
- {
- 	thrddesc_t *p;
--	p = qlock_thrddesc_get( pid );
-+	p = qlock_thrddesc_get( tid );
- 	return &p->td_ordmap;
- }
- 
- static ix_t
--qlock_thrdix_get( pid_t pid )
-+qlock_thrdix_get( pthread_t tid )
- {
- 	thrddesc_t *p;
--	p = qlock_thrddesc_get( pid );
-+	p = qlock_thrddesc_get( tid );
- 	ASSERT( p >= &qlock_thrddesc[ 0 ] );
- 	return ( ix_t )( p - &qlock_thrddesc[ 0 ] );
- }
--#endif
-diff --git a/common/qlock.h b/common/qlock.h
-index 1880aff..5ac51bd 100644
---- a/common/qlock.h
-+++ b/common/qlock.h
-@@ -21,19 +21,13 @@
- /* qlock - quick locks abstraction
-  *
-  * threads may allocate quick locks using qlock_alloc, and free them with
-- * qlock_free. the abstraction is initialized with qlock_init. the underlying
-- * mechanism is the IRIX us lock primitive. in order to use this, a temporary
-- * shared arena is created in /tmp. this will be automatically unlinked
-- * when the last thread exits.
-+ * qlock_free. the abstraction is initialized with qlock_init.
-  *
-  * deadlock detection is accomplished by giving an ordinal number to each
-  * lock allocated, and record all locks held by each thread. locks may not
-  * be acquired out of order. that is, subsequently acquired locks must have
-  * a lower ordinal than all locks currently held. for convenience, the ordinals
-  * of all locks to be allocated will be defined in this file.
-- *
-- * ADDITION: added counting semaphores. simpler to do here since same
-- * shared arena can be used.
-  */
- 
- #define QLOCK_ORD_CRIT	0
-@@ -54,7 +48,7 @@ typedef void *qlockh_t;
- 	/* opaque handle
- 	 */
- 
--extern bool_t qlock_init( bool_t miniroot );
-+extern bool_t qlock_init( void );
- 	/* called by main to initialize abstraction. returns FALSE if
- 	 * utility should abort.
- 	 */
-diff --git a/restore/content.c b/restore/content.c
-index 2228a7f..8dfa456 100644
---- a/restore/content.c
-+++ b/restore/content.c
-@@ -8911,7 +8911,8 @@ partial_reg( ix_t d_index,
- 
- 	/* If not found, find a free one, fill it in and return */
- 	if ( ! isptr ) {
--		mlog(MLOG_NITTY, "partial_reg: no entry found for %llu\n", ino);
-+		mlog(MLOG_NITTY | MLOG_NOLOCK,
-+			"partial_reg: no entry found for %llu\n", ino);
- 		/* find a free one */
- 		for (i=0; i < partialmax; i++ ) {
- 			if (persp->a.parrest[i].is_ino == 0) {
-@@ -8950,8 +8951,10 @@ found:
- 		/* no existing entry for this drive, fill in the values */
- 		bsptr->offset = offset;
- 		bsptr->endoffset = endoffset;
--		mlog(MLOG_NITTY, "partial_reg: update entry [%d]: "
--		     "<off = %lld, end = %lld>\n", d_index, offset, endoffset);
-+		mlog(MLOG_NITTY | MLOG_NOLOCK,
-+			"partial_reg: update entry [%d]: "
-+			"<off = %lld, end = %lld>\n",
-+			d_index, offset, endoffset);
- 	} else {
- 		bool_t ret;
- 
-@@ -8960,9 +8963,11 @@ found:
- 		 */
- 		bsptr->endoffset = endoffset;
- 		ret = partial_check2(isptr, fsize);
--		mlog(MLOG_NITTY, "partial_reg: extend entry [%d]: "
--		     "<end = %lld>\n", d_index, endoffset);
--		mlog(MLOG_NITTY, "partial_reg: partial_check returns: %d\n", ret);
-+		mlog(MLOG_NITTY | MLOG_NOLOCK,
-+			"partial_reg: extend entry [%d]: <end = %lld>\n",
-+			d_index, endoffset);
-+		mlog(MLOG_NITTY | MLOG_NOLOCK,
-+			"partial_reg: partial_check returns: %d\n", ret);
+@@ -1877,10 +1847,6 @@ content_statline( char **linespp[ ] )
+ 			strcat( statline[ statlinecnt ],
+ 				"dumping inomap" );
+ 			break;
+-		case PDS_DIRRENDEZVOUS:
+-			strcat( statline[ statlinecnt ],
+-				"waiting for synchronized directory dump" );
+-			break;
+ 		case PDS_DIRDUMP:
+ 			sprintf( &statline[ statlinecnt ]
+ 					  [ strlen( statline[ statlinecnt ] ) ],
+@@ -2157,6 +2123,11 @@ content_stream_dump( ix_t strmix )
+ 		scwhdrp->cih_endpt.sp_flags = STARTPT_FLAGS_END;
  	}
  
- 	pi_unlock();
++	// the first stream dumps the directories
++	if ( strmix == 0 ) {
++		scwhdrp->cih_dumpattr |= CIH_DUMPATTR_DIRDUMP;
++	}
++
+ 	/* fill in inomap fields of write hdr
+ 	 */
+ 	inomap_writehdr( scwhdrp );
+@@ -2322,39 +2293,41 @@ content_stream_dump( ix_t strmix )
+ 			return mlog_exit(EXIT_FAULT, rv);
+ 		}
+ 
+-		/* now dump the directories. use the bigstat iterator
+-		 * capability to call my dump_dir function
+-		 * for each directory in the bitmap.
++		/* now dump the directories, if this is a stream that dumps
++		 * directories. use the bigstat iterator capability to call
++		 * my dump_dir function for each directory in the bitmap.
+ 		 */
+-		sc_stat_pds[ strmix ].pds_dirdone = 0;
+-		rv = dump_dirs( strmix,
+-				bstatbufp,
+-				bstatbuflen,
+-				inomap_contextp );
+-		if ( rv == RV_INTR ) {
+-			stop_requested = BOOL_TRUE;
+-			goto decision_more;
+-		}
+-		if ( rv == RV_EOM ) {
+-			hit_eom = BOOL_TRUE;
+-			goto decision_more;
+-		}
+-		if ( rv == RV_DRIVE ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_NORMAL, rv);
+-		}
+-		if ( rv == RV_ERROR ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_ERROR, rv);
+-		}
+-		if ( rv == RV_CORE ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_FAULT, rv);
+-		}
+-		ASSERT( rv == RV_OK );
+-		if ( rv != RV_OK ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_FAULT, rv);
++		if ( scwhdrp->cih_dumpattr & CIH_DUMPATTR_DIRDUMP ) {
++			sc_stat_pds[ strmix ].pds_dirdone = 0;
++			rv = dump_dirs( strmix,
++					bstatbufp,
++					bstatbuflen,
++					inomap_contextp );
++			if ( rv == RV_INTR ) {
++				stop_requested = BOOL_TRUE;
++				goto decision_more;
++			}
++			if ( rv == RV_EOM ) {
++				hit_eom = BOOL_TRUE;
++				goto decision_more;
++			}
++			if ( rv == RV_DRIVE ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_NORMAL, rv);
++			}
++			if ( rv == RV_ERROR ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_ERROR, rv);
++			}
++			if ( rv == RV_CORE ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_FAULT, rv);
++			}
++			ASSERT( rv == RV_OK );
++			if ( rv != RV_OK ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_FAULT, rv);
++			}
+ 		}
+ 
+ 		/* finally, dump the non-directory files beginning with this
+@@ -2527,20 +2500,6 @@ decision_more:
+ 		 */
+ 		done = all_nondirs_committed;
+ 
+-#ifdef SYNCDIR
+-		/* drop out of the synchronous dump game if done
+-		 */
+-		if ( done ) {
+-			/* REFERENCED */
+-			size_t tmpthrdsdirdumpsynccnt;
+-			lock( );
+-			tmpthrdsdirdumpsynccnt = sc_thrdsdirdumpsynccnt;
+-			sc_thrdsdirdumpsynccnt--;
+-			unlock( );
+-			ASSERT( tmpthrdsdirdumpsynccnt > 0 );
+-		}
+-#endif /* SYNCDIR */
+-
+ 		/* tell the inventory about the media file
+ 		 */
+ 		if ( inv_stmt != INV_TOKEN_NULL ) {
+@@ -2833,22 +2792,6 @@ dump_dirs( ix_t strmix,
+ 		__s32 buflenout;
+ 		intgen_t rval;
+ 
+-#ifdef SYNCDIR
+-		/* have all threads rendezvous
+-		 */
+-		if ( sc_thrdsdirdumpsynccnt > 1 && stream_cnt( ) > 1 ) {
+-			rv_t rv;
+-			mlog( bulkstatcallcnt == 0 ? MLOG_VERBOSE : MLOG_NITTY,
+-			      _("waiting for synchronized directory dump\n") );
+-			sc_stat_pds[ strmix ].pds_phase = PDS_DIRRENDEZVOUS;
+-			rv = dump_dirs_rendezvous( );
+-			if ( rv == RV_INTR ) {
+-				return RV_INTR;
+-			}
+-			ASSERT( rv == RV_OK );
+-		}
+-#endif /* SYNCDIR */
+-
+ 		if ( bulkstatcallcnt == 0 ) {
+ 			mlog( MLOG_VERBOSE, _(
+ 			      "dumping directories\n") );
+@@ -2948,58 +2891,6 @@ dump_dirs( ix_t strmix,
+ 	/* NOTREACHED */
+ }
+ 
+-#ifdef SYNCDIR
+-static rv_t
+-dump_dirs_rendezvous( void )
+-{
+-	static size_t localsync1;
+-	static size_t localsync2;
+-
+-	sc_thrdswaitingdirdumpsync2 = 0;
+-	lock( );
+-	sc_thrdswaitingdirdumpsync1++;
+-	localsync1 = sc_thrdswaitingdirdumpsync1;
+-	localsync2 = sc_thrdswaitingdirdumpsync2;
+-	unlock( );
+-	while ( localsync2 == 0
+-		&&
+-		localsync1 < min( stream_cnt( ), sc_thrdsdirdumpsynccnt )) {
+-		sleep( 1 );
+-		if ( cldmgr_stop_requested( )) {
+-			lock( );
+-			sc_thrdswaitingdirdumpsync1--;
+-			unlock( );
+-			return RV_INTR;
+-		}
+-		lock( );
+-		localsync1 = sc_thrdswaitingdirdumpsync1;
+-		localsync2 = sc_thrdswaitingdirdumpsync2;
+-		unlock( );
+-	}
+-	lock( );
+-	sc_thrdswaitingdirdumpsync1--;
+-	sc_thrdswaitingdirdumpsync2++;
+-	localsync2 = sc_thrdswaitingdirdumpsync2;
+-	unlock( );
+-	while ( localsync2 < min( stream_cnt( ), sc_thrdsdirdumpsynccnt )) {
+-		sleep( 1 );
+-		if ( cldmgr_stop_requested( )) {
+-			return RV_INTR;
+-		}
+-		lock( );
+-		localsync2 = sc_thrdswaitingdirdumpsync2;
+-		unlock( );
+-	}
+-	if ( cldmgr_stop_requested( )) {
+-		return RV_INTR;
+-	}
+-	
+-	qbarrier( sc_barrierh, min( stream_cnt( ), sc_thrdsdirdumpsynccnt ));
+-
+-	return RV_OK;
+-}
+-#endif /* SYNCDIR */
+-
+ static rv_t
+ dump_dir( ix_t strmix,
+ 	  jdm_fshandle_t *fshandlep,
+diff --git a/restore/content.c b/restore/content.c
+index 34fc4a0..2228a7f 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -625,6 +625,9 @@ struct tran {
+ 	intgen_t t_persfd;
+ 		/* file descriptor of the persistent state file
+ 		 */
++	size64_t t_dirdumps;
++		/* bitset of streams which contain a directory dump
++		 */
+ 	sync_t t_sync1;
+ 		/* to single-thread attempt to validate command line
+ 		 * selection of dump with online inventory
+@@ -1184,6 +1187,12 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
+ 		return BOOL_FALSE;
+ 	}
+ 
++	/* assume all streams contain a directory dump. streams will remove
++	 * themselves from this bitset if they do not contain a directory dump.
++	 */
++	ASSERT( drivecnt <= sizeof(tranp->t_dirdumps) * NBBY );
++	tranp->t_dirdumps = ( 1ULL << drivecnt ) - 1;
++
+ 	/* the user may specify stdin as the restore source stream,
+ 	 * by a single dash ('-') with no option letter. This must
+ 	 * appear between the last lettered argument and the destination
+@@ -2237,6 +2246,30 @@ content_stream_restore( ix_t thrdix )
+ 			unlock( );
+ 			continue;
+ 		}
++		if ( !(scrhdrp->cih_dumpattr & CIH_DUMPATTR_DIRDUMP) ) {
++			/* if no streams have a directory dump, issue a
++			 * message and exit. first set SYNC_BUSY to prevent
++			 * other threads from coming through here and issuing
++			 * the same message.
++			 */
++			tranp->t_dirdumps &= ~(1ULL << thrdix);
++			if ( !tranp->t_dirdumps ) {
++				tranp->t_sync3 = SYNC_BUSY;
++			}
++			unlock( );
++			if ( !tranp->t_dirdumps ) {
++				mlog( MLOG_VERBOSE | MLOG_ERROR, _(
++					"no directory dump found\n") );
++				Media_end( Mediap );
++				return mlog_exit(EXIT_NORMAL, RV_ERROR);
++			}
++			sleep( 1 );
++			if ( cldmgr_stop_requested( )) {
++				Media_end( Mediap );
++				return mlog_exit(EXIT_NORMAL, RV_INTR);
++			}
++			continue;
++		}
+ 		tranp->t_sync3 = SYNC_BUSY;
+ 		unlock( );
+ 		if ( ! tranp->t_dirattrinitdonepr ) {
 -- 
 1.7.0.4
 
