@@ -1,25 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA2KajjR198718 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 15:36:45 -0500
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0959421A3AC
-	for <xfs@oss.sgi.com>; Wed,  2 Nov 2011 13:36:44 -0700 (PDT)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id WMMgg1hzfAZdf6XE
-	for <xfs@oss.sgi.com>; Wed, 02 Nov 2011 13:36:44 -0700 (PDT)
-Received: by bkbzs8 with SMTP id zs8so630856bkb.26
-	for <xfs@oss.sgi.com>; Wed, 02 Nov 2011 13:36:43 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: Re: [PATCH 7/8] xfstests: add a new test that runs fsstress under
-	ENOSPC conditions
-In-Reply-To: <20111102195357.GA22500@infradead.org>
-References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
-	<1319849297-3506-8-git-send-email-dmonakhov@openvz.org>
-	<20111102195357.GA22500@infradead.org>
-Date: Thu, 03 Nov 2011 00:36:36 +0400
-Message-ID: <8739e6z2gb.fsf@dmbot.sw.ru>
-MIME-Version: 1.0
+	pA2LB7mM200845 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 16:11:07 -0500
+From: Bill Kendall <wkendall@sgi.com>
+Subject: [PATCH 1/8] xfsdump: link with libpthread
+Date: Wed,  2 Nov 2011 16:10:47 -0500
+Message-Id: <1320268254-20583-2-git-send-email-wkendall@sgi.com>
+In-Reply-To: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
+References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +16,119 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de, aelder@sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 2 Nov 2011 15:53:58 -0400, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sat, Oct 29, 2011 at 04:48:16AM +0400, Dmitry Monakhov wrote:
-> > During stress testing we want to cover as much code paths as possible
-> > fsstress is very good for this purpose. But it has expandable nature
-> > (disk usage almost continually grow). So once it goes in no ENOSPC
-> > condition it will be where till the end. But by running 'dd' writers
-> > in parallel we can regularly trigger ENOSPC but only for a limited
-> > periods of time because each time it opens the same file with O_TRUNC.
-> 
-> This fails for me on XFS because the fsstress process has already
-> finished by the time you try to kill it:
-> 
-> --- 266.out	2011-11-02 19:46:27.000000000 +0000
-> +++ 266.out.bad	2011-11-02 19:48:33.000000000 +0000
-> @@ -3,3 +3,4 @@
->  Run fsstress
->   
->  Run dd writers in parallel
-> +./266: line 60: kill: (3403) - No such process
-Strange... this means that parent process died unexpectedly.
-Works fine fore me. In my case this happen once due to unknown
-options(new opt " -fsetattr=1" passed to fsstress explicitly) because i've
-forget to rebuilt fsstress via make. Can you please explicitly rebuild,
-and check one more time to be 100% sure.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevecalll" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This patch changes xfsdump/xfsrestore to link with libpthread in
+preparation for enabling multi-stream support. The libpthread checks
+are the same as those used in xfsprogs.
+
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
+---
+ configure.in          |    3 +++
+ dump/Makefile         |    2 +-
+ include/builddefs.in  |    1 +
+ m4/Makefile           |    1 +
+ m4/package_pthread.m4 |   19 +++++++++++++++++++
+ restore/Makefile      |    2 +-
+ 6 files changed, 26 insertions(+), 2 deletions(-)
+ create mode 100644 m4/package_pthread.m4
+
+diff --git a/configure.in b/configure.in
+index b7ea1eb..8d4a256 100644
+--- a/configure.in
++++ b/configure.in
+@@ -67,6 +67,9 @@ AC_MULTILIB($enable_lib64)
+ AC_PACKAGE_NEED_UUID_H
+ AC_PACKAGE_NEED_UUIDCOMPARE
+ 
++AC_PACKAGE_NEED_PTHREAD_H
++AC_PACKAGE_NEED_PTHREADMUTEXINIT
++
+ AC_PACKAGE_NEED_NCURSES_H
+ AC_PACKAGE_WANT_WORKING_LIBNCURSES
+ 
+diff --git a/dump/Makefile b/dump/Makefile
+index ce964a0..d193f68 100644
+--- a/dump/Makefile
++++ b/dump/Makefile
+@@ -89,7 +89,7 @@ HFILES = $(LOCALINCL)
+ LHFILES = $(COMMINCL) $(INVINCL)
+ LINKS = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+ LDIRT = $(LINKS)
+-LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT)
++LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBRMT)
+ 
+ LCFLAGS = -DDUMP
+diff --git a/include/builddefs.in b/include/builddefs.in
+index f69c038..d5cc8d3 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -16,6 +16,7 @@ CFLAGS = @CFLAGS@
+ LIBRMT = $(TOPDIR)/librmt/librmt.la
+ LIBXFS = @libxfs@
+ LIBATTR = @libattr@
++LIBPTHREAD = @libpthread@
+ LIBUUID = @libuuid@
+ LIBCURSES = @libcurses@
+ LIBHANDLE = @libhdl@
+diff --git a/m4/Makefile b/m4/Makefile
+index 8ce63f8..9a35056 100644
+--- a/m4/Makefile
++++ b/m4/Makefile
+@@ -17,6 +17,7 @@ LSRCFILES = \
+ 	package_attrdev.m4 \
+ 	package_globals.m4 \
+ 	package_ncurses.m4 \
++	package_pthread.m4 \
+ 	package_utilies.m4 \
+ 	package_uuiddev.m4 \
+ 	package_xfslibs.m4 \
+diff --git a/m4/package_pthread.m4 b/m4/package_pthread.m4
+new file mode 100644
+index 0000000..be21d29
+--- /dev/null
++++ b/m4/package_pthread.m4
+@@ -0,0 +1,19 @@
++AC_DEFUN([AC_PACKAGE_NEED_PTHREAD_H],
++  [ AC_CHECK_HEADERS(pthread.h)
++    if test $ac_cv_header_pthread_h = no; then
++	AC_CHECK_HEADERS(pthread.h,, [
++	echo
++	echo 'FATAL ERROR: could not find a valid pthread header.'
++	exit 1])
++    fi
++  ])
++
++AC_DEFUN([AC_PACKAGE_NEED_PTHREADMUTEXINIT],
++  [ AC_CHECK_LIB(pthread, pthread_mutex_init,, [
++	echo
++	echo 'FATAL ERROR: could not find a valid pthread library.'
++	exit 1
++    ])
++    libpthread=-lpthread
++    AC_SUBST(libpthread)
++  ])
+diff --git a/restore/Makefile b/restore/Makefile
+index 003ea16..ce3d6b4 100644
+--- a/restore/Makefile
++++ b/restore/Makefile
+@@ -99,7 +99,7 @@ HFILES = $(LOCALINCL)
+ LHFILES = $(COMMINCL) $(INVINCL)
+ LINKS = $(COMMINCL) $(COMMON) $(INVINCL) $(INVCOMMON)
+ LDIRT = $(LINKS)
+-LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT)
++LLDLIBS = $(LIBUUID) $(LIBHANDLE) $(LIBATTR) $(LIBRMT) $(LIBPTHREAD)
+ LTDEPENDENCIES = $(LIBRMT)
+ 
+ LCFLAGS = -DRESTORE
+-- 
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
