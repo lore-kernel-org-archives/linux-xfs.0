@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA2JjC7G196428 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 14:45:14 -0500
-Date: Wed, 2 Nov 2011 15:45:07 -0400
+	pA2Jtbjh196956 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 14:55:37 -0500
+Date: Wed, 2 Nov 2011 15:55:34 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Fix possible memory corruption in xfs_readlink
-Message-ID: <20111102194507.GA14429@infradead.org>
-References: <1320156842.30281.28.camel@deadeye>
-	<1320256339.3145.30.camel@doink>
+Subject: Re: [PATCH 6/8] xfstests: add fiemap operation to fsstress
+Message-ID: <20111102195534.GB22500@infradead.org>
+References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
+	<1319849297-3506-7-git-send-email-dmonakhov@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1320256339.3145.30.camel@doink>
+In-Reply-To: <1319849297-3506-7-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,15 +23,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: Ben Hutchings <ben@decadent.org.uk>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de, aelder@sgi.com
 
-We should validate that the value isn't negative in xfs_iformat_*,
-although we currently don't do that.  It already verified that it
-fits into the XFS_DFORK_DSIZE, which should take care of fitting
-into 32-bits.  Adding another explicit check probably won't hurt,
-given that XFS_DFORK_DSIZE is calculated dynamically based on the
-fork offset.
+On Sat, Oct 29, 2011 at 04:48:15AM +0400, Dmitry Monakhov wrote:
+> Related bug: http://patchwork.ozlabs.org/patch/118863
+> 
+> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+
+This causes a very weird XFS failure in test 117 for me.  While it
+obviously is an xfs bug that you uncovered (good!) I'm a bit worried
+about simply enabling operations in existing tests.
+
+Alex, Eric, Dave - should we add new tests with the new operations
+Dmitry added, or is adding new ops to the existing tests fine?
 
 _______________________________________________
 xfs mailing list
