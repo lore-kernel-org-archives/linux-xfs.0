@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3EPuet018075 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:56 -0500
+	pA3EPeDM017968 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:41 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D8D2412FF785
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 00DAC12FF497
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:39 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id RUJcl5WyTVkdi6GG
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:55 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id pSUjAs4dkCsSzCsn
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:39 -0700 (PDT)
 Received: by mail-bw0-f53.google.com with SMTP id zs8so1398030bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:55 -0700 (PDT)
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:39 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 08/12] xfstests: add fiemap operation to fsstress
-Date: Thu,  3 Nov 2011 18:24:57 +0400
-Message-Id: <1320330301-2682-9-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 04/12] xfstests: fsstress add command line style output for
+	show_opts
+Date: Thu,  3 Nov 2011 18:24:53 +0400
+Message-Id: <1320330301-2682-5-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 References: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,128 +33,105 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-Related bug: http://patchwork.ozlabs.org/patch/118863
+Once some combination of seed+fs_ops result in regression it is
+reasonable to document that combination. It is usefull to dump
+that configuration in command line style. Later this line may be
+simply hardcoded in to regression test.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- ltp/fsstress.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 76 insertions(+), 0 deletions(-)
+ 070            |    2 +-
+ 117            |    2 +-
+ ltp/fsstress.c |   22 ++++++++++++++++++----
+ 3 files changed, 20 insertions(+), 6 deletions(-)
 
+diff --git a/070 b/070
+index 4458011..f48c33c 100755
+--- a/070
++++ b/070
+@@ -62,7 +62,7 @@ $FSSTRESS_PROG \
+ 	-f unresvsp=0 \
+ 	-f attr_set=100 \
+ 	-f attr_remove=100 \
+-	-S -p 1 -n 10000 >$seq.full 2>&1
++        -p 1 -n 10000 -S c >$seq.full 2>&1
+ 
+ status=$?
+ exit
+diff --git a/117 b/117
+index fcf0485..edec157 100755
+--- a/117
++++ b/117
+@@ -85,7 +85,7 @@ while [ $i -lt $ITERATIONS ]; do
+ 	-f attr_set=100 \
+ 	-f attr_remove=100 \
+         -s $seed \
+-	-S -p 1 -n 1000 >>$seq.full 2>&1
++	-p 1 -n 1000 -S c >>$seq.full 2>&1
+ 
+     let i=$i+1
+ done
 diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 997f068..cddfe74 100644
+index 133a247..77e0682 100644
 --- a/ltp/fsstress.c
 +++ b/ltp/fsstress.c
-@@ -24,6 +24,9 @@
- #ifdef HAVE_ATTR_ATTRIBUTES_H
- #include <attr/attributes.h>
- #endif
-+#ifdef HAVE_LINUX_FIEMAP_H
-+#include <linux/fiemap.h>
-+#endif
- #ifdef FALLOCATE
- #include <linux/falloc.h>
- #ifndef FALLOC_FL_PUNCH_HOLE
-@@ -65,6 +68,7 @@ typedef enum {
- 	OP_DWRITE,
- 	OP_FALLOCATE,
- 	OP_FDATASYNC,
-+	OP_FIEMAP,
- 	OP_FREESP,
- 	OP_FSYNC,
- 	OP_GETATTR,
-@@ -149,6 +153,7 @@ void	dread_f(int, long);
- void	dwrite_f(int, long);
- void	fallocate_f(int, long);
- void	fdatasync_f(int, long);
-+void	fiemap_f(int, long);
- void	freesp_f(int, long);
- void	fsync_f(int, long);
- void	getattr_f(int, long);
-@@ -184,6 +189,7 @@ opdesc_t	ops[] = {
- 	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
- 	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
- 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
-+	{ OP_FIEMAP, "fiemap", fiemap_f, 1, 1 },
- 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
- 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
- 	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
-@@ -2131,6 +2137,76 @@ fdatasync_f(int opno, long r)
- 	free_pathname(&f);
- 	close(fd);
+@@ -284,7 +284,7 @@ int main(int argc, char **argv)
+ 	nops = sizeof(ops) / sizeof(ops[0]);
+ 	ops_end = &ops[nops];
+ 	myprog = argv[0];
+-	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:vwzHS")) != -1) {
++	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:S:vwzH")) != -1) {
+ 		switch (c) {
+ 		case 'd':
+ 			dirname = optarg;
+@@ -345,7 +345,10 @@ int main(int argc, char **argv)
+ 			zero_freq();
+ 			break;
+ 		case 'S':
+-			show_ops(0, NULL);
++			i = 0;
++			if (optarg[0] == 'c')
++				i = 1;
++			show_ops(1, NULL);
+ 			printf("\n");
+                         nousage=1;
+ 			break;
+@@ -1310,7 +1313,8 @@ show_ops(int flag, char *lead_str)
+                         x+=printf("%s ", p->name);
+                 }
+                 printf("\n");
+-        } else {
++        } else if (flag == 0) {
++		/* Table view style */
+ 	        int		f;
+ 	        for (f = 0, p = ops; p < ops_end; p++)
+ 		        f += p->freq;
+@@ -1327,6 +1331,16 @@ show_ops(int flag, char *lead_str)
+ 			        (p->iswrite == 0) ? " " : "write op");
+ 		        }
+                 }
++	} else {
++		/* Command line style */
++		if (lead_str != NULL)
++			printf("%s", lead_str);
++		printf ("-z -s %ld -m %d -n %d -p %d ", seed, idmodulo,
++			operations, nproc);
++	        for (p = ops; p < ops_end; p++)
++		        if (p->freq > 0)
++			        printf("-f%s=%d ",p->name, p->freq);
++		printf("\n");
+ 	}
  }
-+void
-+fiemap_f(int opno, long r)
-+{
-+#ifdef HAVE_LINUX_FIEMAP_H
-+	int		e;
-+	pathname_t	f;
-+	int		fd;
-+	__int64_t	lr;
-+	off64_t		off;
-+	struct stat64	stb;
-+	int		v;
-+	char		st[1024];
-+	int blocks_to_map;
-+	struct fiemap *fiemap;
-+
-+	init_pathname(&f);
-+	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
-+		if (v)
-+			printf("%d/%d: fiemap - no filename\n", procid, opno);
-+		free_pathname(&f);
-+		return;
-+	}
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
-+	if (fd < 0) {
-+		if (v)
-+			printf("%d/%d: fiemap - open %s failed %d\n",
-+				procid, opno, f.path, e);
-+		free_pathname(&f);
-+		return;
-+	}
-+	if (fstat64(fd, &stb) < 0) {
-+		if (v)
-+			printf("%d/%d: fiemap - fstat64 %s failed %d\n",
-+				procid, opno, f.path, errno);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+	inode_info(st, sizeof(st), &stb, v);
-+	blocks_to_map = random() & 0xffff;
-+	fiemap = (struct fiemap *)malloc(sizeof(struct fiemap) +
-+			(blocks_to_map * sizeof(struct fiemap_extent)));
-+	if (!fiemap) {
-+		if (v)
-+			printf("%d/%d: malloc failed \n", procid, opno);
-+		free_pathname(&f);
-+		close(fd);
-+		return;
-+	}
-+	lr = ((__int64_t)random() << 32) + random();
-+	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
-+	off %= maxfsize;
-+	fiemap->fm_flags = random() & (FIEMAP_FLAGS_COMPAT | 0x10000);
-+	fiemap->fm_extent_count = blocks_to_map;
-+	fiemap->fm_mapped_extents = random() & 0xffff;
-+	fiemap->fm_start = off;
-+	fiemap->fm_length = ((__int64_t)random() << 32) + random();
-+
-+	e = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
-+	if (v)
-+		printf("%d/%d: ioctl(FIEMAP) %s%s %lld %lld %x %d\n",
-+		       procid, opno, f.path, st, (long long)fiemap->fm_start,
-+		       (long long) fiemap->fm_length, fiemap->fm_flags, e);
-+	free(fiemap);
-+	free_pathname(&f);
-+	close(fd);
-+#endif
-+}
  
- void
- freesp_f(int opno, long r)
+@@ -1433,7 +1447,7 @@ usage(void)
+ 	printf("   -v               specifies verbose mode\n");
+ 	printf("   -w               zeros frequencies of non-write operations\n");
+ 	printf("   -z               zeros frequencies of all operations\n");
+-	printf("   -S               prints the table of operations (omitting zero frequency)\n");
++	printf("   -S [c,t]         prints the list of operations (omitting zero frequency) in command line or table style\n");
+ 	printf("   -H               prints usage and exits\n");
+ }
+ 
 -- 
 1.7.1
 
