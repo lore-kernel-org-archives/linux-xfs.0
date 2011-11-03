@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA38VCsd250508 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 03:31:13 -0500
-Date: Thu, 3 Nov 2011 04:31:11 -0400
+	pA38UErv250445 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 03:30:14 -0500
+Date: Thu, 3 Nov 2011 04:30:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/8] xfsdump: convert IRIX sproc threads to pthreads
-Message-ID: <20111103083111.GD11854@infradead.org>
+Subject: Re: [PATCH 4/8] xfsdump: simplify qlock ordinal bitmap
+Message-ID: <20111103083012.GC11854@infradead.org>
 References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
-	<1320268254-20583-6-git-send-email-wkendall@sgi.com>
+	<1320268254-20583-5-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1320268254-20583-6-git-send-email-wkendall@sgi.com>
+In-Reply-To: <1320268254-20583-5-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
