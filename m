@@ -1,11 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3CEXE3007653 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 07:14:33 -0500
-From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfstests: add 059 and 060 for multi-stream xfsdump
-Date: Thu,  3 Nov 2011 07:14:24 -0500
-Message-Id: <1320322464-6559-1-git-send-email-wkendall@sgi.com>
+	pA3BsW9A005568 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 06:54:33 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4EED816CD9F2
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 04:54:30 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	KEWrsN0AVU4T9hil for <xfs@oss.sgi.com>;
+	Thu, 03 Nov 2011 04:54:30 -0700 (PDT)
+Date: Thu, 3 Nov 2011 07:54:29 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs_repair fails with corrupt dinode 17491441757, extent total =
+	1, nblocks = 0.  This is a bug.
+Message-ID: <20111103115429.GA15726@infradead.org>
+References: <201110311156.20421.arekm@maven.pl>
+	<201111031140.46783.arekm@maven.pl>
+	<20111103104850.GA26259@infradead.org>
+	<201111031157.39179.arekm@maven.pl>
+	<20111103110306.GA8382@infradead.org>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="zYM0uCDKw75PZbzx"
+Content-Disposition: inline
+In-Reply-To: <20111103110306.GA8382@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,256 +32,233 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Implement the multi-stream placeholder tests 059 and 060. The comments
-imply that these tests existed on IRIX, but I was unable to find them.
 
-Test 059 does a simple 4-way dump and restore. Test 060 does a 4-way
-dump, then restores each dump file individually (in a cumulative
-fashion).
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-The tests are skipped if the installed xfsdump does not support
-multi-stream output.
+Can you give this patch a quick try on the image in that constrained
+setup?
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
----
- 059         |   23 ++++++++++++++---------
- 060         |   29 ++++++++++++++++++++---------
- common.dump |   40 ++++++++++++++++++++++++++++++++++++++--
- group       |    4 ++--
- 4 files changed, 74 insertions(+), 22 deletions(-)
 
-diff --git a/059 b/059
-index 6348f0e..1f3f8e3 100755
---- a/059
-+++ b/059
-@@ -1,10 +1,10 @@
- #! /bin/bash
- # FS QA Test No. 059
- #
--# place holder for IRIX 059 test for xfsdump/xfsrestore multi streams
-+# Test multi-stream xfsdump/xfsrestore.
- #
- #-----------------------------------------------------------------------
--# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
-+# Copyright (c) 2000-2001, 2011 SGI.  All Rights Reserved.
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public License as
-@@ -22,26 +22,31 @@
- #-----------------------------------------------------------------------
- #
- # creator
--owner=ivanr@sgi.com
-+owner=wkendall@sgi.com
- 
- seq=`basename $0`
- echo "QA output created by $seq"
- 
- here=`pwd`
- tmp=/tmp/$$
--status=1	# failure is the default!
-+status=0	# success is the default!
- trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
- 
- # get standard environment, filters and checks
- . ./common.rc
--. ./common.filter
--
--_notrun "Place holder for IRIX test 059"
-+. ./common.dump
- 
- # real QA test starts here
- _supported_fs xfs
--_supported_os IRIX
-+_supported_os Linux
-+
-+_require_multi_stream
-+
-+_create_dumpdir_fill_multi
-+_do_dump_multi_file --multi 4
-+_do_restore_multi_file --multi 4
-+_ls_compare_sub
-+_diff_compare
- 
- # success, all done
--status=0
- exit
-diff --git a/060 b/060
-index 6e58e5b..4adc00f 100755
---- a/060
-+++ b/060
-@@ -1,10 +1,10 @@
- #! /bin/bash
- # FS QA Test No. 060
- #
--# place holder for IRIX 060 test for xfsdump/xfsrestore multi streams
-+# Test multi-stream xfsdump and restoring one stream at a time.
- #
- #-----------------------------------------------------------------------
--# Copyright (c) 2000-2001 Silicon Graphics, Inc.  All Rights Reserved.
-+# Copyright (c) 2000-2001, 2011 SGI.  All Rights Reserved.
- #
- # This program is free software; you can redistribute it and/or
- # modify it under the terms of the GNU General Public License as
-@@ -22,26 +22,37 @@
- #-----------------------------------------------------------------------
- #
- # creator
--owner=ivanr@sgi.com
-+owner=wkendall@sgi.com
- 
- seq=`basename $0`
- echo "QA output created by $seq"
- 
- here=`pwd`
- tmp=/tmp/$$
--status=1	# failure is the default!
-+status=0	# success is the default!
- trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
- 
- # get standard environment, filters and checks
- . ./common.rc
--. ./common.filter
--
--_notrun "Place holder for IRIX test 060"
-+. ./common.dump
- 
- # real QA test starts here
- _supported_fs xfs
--_supported_os IRIX
-+_supported_os Linux
-+
-+_require_multi_stream
-+
-+_create_dumpdir_fill_multi
-+_do_dump_multi_file --multi 4
-+_prepare_restore_dir
-+base=$dump_file
-+opts=""
-+for x in 0 1 2 3; do
-+    _do_restore_file_cum -f $base.$x $opts
-+    opts=-R
-+done
-+_ls_compare_sub
-+_diff_compare
- 
- # success, all done
--status=0
- exit
-diff --git a/common.dump b/common.dump
-index 076517d..31a75c5 100644
---- a/common.dump
-+++ b/common.dump
-@@ -75,6 +75,14 @@ done
- have_mtvariable=false
- [ `uname` = "Linux" ] && have_mtvariable=true
- 
-+
-+_require_multi_stream()
-+{
-+    $XFSDUMP_PROG -JF -f /dev/null -f /dev/null 2> /dev/null |
-+    grep -q "too many -f arguments" &&
-+    _notrun "xfsdump multi-stream support required"
-+}
-+
- #
- # do a remote/local mt
- #
-@@ -536,6 +544,18 @@ _do_create_dumpdir_fill()
-     cd $here
+
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=libxfs-estimate-free-memory-better
+
+Index: xfsprogs-dev/libxfs/linux.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/linux.c	2011-11-03 12:01:14.213689743 +0100
++++ xfsprogs-dev/libxfs/linux.c	2011-11-03 12:46:56.928191650 +0100
+@@ -207,8 +207,13 @@ platform_nproc(void)
+ 	return sysconf(_SC_NPROCESSORS_ONLN);
  }
  
-+_mk_fillconfig_multi()
-+{
-+    _mk_fillconfig1
-+    cat <<End-of-File >>$tmp.config
-+# pathname	size in bytes
-+#
-+large000	8874368	$nobody	$nobody
-+large111	2582912	$nobody	$nobody
-+large222	7825792	$nobody	$nobody
-+End-of-File
-+}
-+
- _create_dumpdir_largefile()
++/*
++ * Return the memory that we can use freely.
++ *
++ * The return value is in kilobytes.
++ */
+ unsigned long
+-platform_physmem(void)
++platform_freemem(void)
  {
-     _wipe_fs
-@@ -580,6 +600,17 @@ _create_dumpdir_fill_ea()
-     _stable_fs
+ 	struct sysinfo  si;
+ 
+@@ -217,5 +222,14 @@ platform_physmem(void)
+ 			progname);
+ 		exit(1);
+ 	}
+-	return (si.totalram >> 10) * si.mem_unit;	/* kilobytes */
++
++	/*
++	 * Assume we can use memory that is marked free.  This is a very
++	 * conservative approximation given that there might be a lot of
++	 * pagecache that is easily reclaimable, but the only way to figure
++	 * out pagecache size is by parsing /proc/meminfo, and the format
++	 * of that file keeps changing.  This approach is still better than
++	 * guessing based on si.totalram which might be highly overestimated.
++	 */
++	return (si.freeram >> 10) * si.mem_unit;
+ }
+Index: xfsprogs-dev/include/libxfs.h
+===================================================================
+--- xfsprogs-dev.orig/include/libxfs.h	2011-11-03 12:29:02.001691672 +0100
++++ xfsprogs-dev/include/libxfs.h	2011-11-03 12:31:49.780691838 +0100
+@@ -475,7 +475,7 @@ enum ce { CE_DEBUG, CE_CONT, CE_NOTE, CE
+ 
+ #define LIBXFS_BBTOOFF64(bbs)	(((xfs_off_t)(bbs)) << BBSHIFT)
+ extern int		libxfs_nproc(void);
+-extern unsigned long	libxfs_physmem(void);	/* in kilobytes */
++extern unsigned long	libxfs_freemem(void);	/* in kilobytes */
+ 
+ #include <xfs/xfs_ialloc.h>
+ #include <xfs/xfs_rtalloc.h>
+Index: xfsprogs-dev/libxfs/darwin.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/darwin.c	2011-11-03 12:29:02.017691106 +0100
++++ xfsprogs-dev/libxfs/darwin.c	2011-11-03 12:40:10.720691752 +0100
+@@ -128,18 +128,27 @@ platform_nproc(void)
+ 	return ncpu;
  }
  
-+#
-+# Create enough files, and a few large enough files, so that
-+# some files are likely to be split across streams.
-+#
-+_create_dumpdir_fill_multi()
-+{
-+    _wipe_fs
-+    _mk_fillconfig_multi
-+    _do_create_dumpdir_fill
-+    _stable_fs
-+}
- 
- #
- # Append a subset of the fill'ed files
-@@ -802,9 +833,11 @@ _dump_filter_main()
-       -e 's/time:[ 	].*/time: TIME/'		\
-       -e 's/date:[ 	].*/date: DATE/'		\
-       -e 's/dump begun .*/dump begun DATE/'		\
-+      -e 's/previously begun .*/previously begun DATE/'	\
-       -e 's/[0-9][0-9]* seconds/SECS seconds/'		\
-       -e 's/restore.[0-9][0-9]*/restore.PID/'		\
--      -e 's/ino [0-9][0-9]*/ino INO/'			\
-+      -e 's/ino [0-9][0-9]*/ino INO/g'			\
-+      -e '/stream [0-9]:/s/offset [0-9][0-9]*/offset NUM/g'	\
-       -e '/: dump size/s/[0-9][0-9]*/NUM/'		\
-       -e '/dump size:/s/[0-9][0-9]*/NUM/'		\
-       -e '/dump size per stream:/s/[0-9][0-9]*/NUM/'	\
-@@ -862,7 +895,7 @@ _invutil_filter()
- _dir_filter()
++/*
++ * Return the memory that we can use freely.
++ *
++ * The return value is in kilobytes.
++ */
+ unsigned long
+-platform_physmem(void)
++platform_freemem(void)
  {
-   sed \
--    -e "s#$dump_file#DUMP_FILE#"      \
-+    -e "s#$dump_file#DUMP_FILE#g"      \
-     -e "s#$SCRATCH_DEV#SCRATCH_DEV#"        \
-     -e "s#$SCRATCH_RAWDEV#SCRATCH_DEV#"    \
-     -e "s#$dumptape#TAPE_DEV#"         \
-@@ -959,6 +992,9 @@ _parse_restore_args()
-         --no-check-quota)
-             do_quota_check=false
-             ;;
-+	-R)
-+	    restore_args="$restore_args $1"
-+            ;;
- 	*)
-             _fail "invalid argument to common.dump function: $1"
-             ;;
-diff --git a/group b/group
-index 8a23320..efeb977 100644
---- a/group
-+++ b/group
-@@ -169,8 +169,8 @@ deprecated
- 056 dump ioctl auto quick
- 057 acl auto
- 058 acl auto
--059 dump ioctl
--060 dump ioctl
-+059 dump ioctl auto quick
-+060 dump ioctl auto quick
- 061 dump ioctl auto quick
- 062 attr udf auto quick
- 063 dump attr auto quick
--- 
-1.7.0.4
+-	unsigned long	physmem;
+-	size_t		len = sizeof(physmem);
++	unsigned long	freemem;
++	size_t		len = sizeof(freemem);
+ 	static int	mib[2] = {CTL_HW, HW_PHYSMEM};
+ 
+-	if (sysctl(mib, 2, &physmem, &len, NULL, 0) < 0) {
++	if (sysctl(mib, 2, &freemem, &len, NULL, 0) < 0) {
+ 		fprintf(stderr, _("%s: can't determine memory size\n"),
+ 			progname);
+ 		exit(1);
+ 	}
+-	return physmem >> 10;
++
++ 	/*
++	 * Assume we can use approximately 3/4 of the physical memory.
++	 */
++	return (freemem >> (10 + 2)) * 3;
+ }
+ 
+Index: xfsprogs-dev/libxfs/freebsd.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/freebsd.c	2011-11-03 12:29:02.037693919 +0100
++++ xfsprogs-dev/libxfs/freebsd.c	2011-11-03 12:40:19.000190942 +0100
+@@ -187,17 +187,26 @@ platform_nproc(void)
+ 	return ncpu;
+ }
+ 
++/*
++ * Return the memory that we can use freely.
++ *
++ * The return value is in kilobytes.
++ */
+ unsigned long
+-platform_physmem(void)
++platform_freemem(void)
+ {
+-	unsigned long	physmem;
+-	size_t		len = sizeof(physmem);
++	unsigned long	freemem;
++	size_t		len = sizeof(freemem);
+ 	static int	mib[2] = {CTL_HW, HW_PHYSMEM};
+ 
+-	if (sysctl(mib, 2, &physmem, &len, NULL, 0) < 0) {
++	if (sysctl(mib, 2, &freemem, &len, NULL, 0) < 0) {
+ 		fprintf(stderr, _("%s: can't determine memory size\n"),
+ 			progname);
+ 		exit(1);
+ 	}
+-	return physmem >> 10;
++
++ 	/*
++	 * Assume we can use approximately 3/4 of the physical memory.
++	 */
++	return (freemem >> (10 + 2)) * 3;
+ }
+Index: xfsprogs-dev/libxfs/init.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/init.c	2011-11-03 12:29:02.057690208 +0100
++++ xfsprogs-dev/libxfs/init.c	2011-11-03 12:29:50.044192568 +0100
+@@ -862,7 +862,7 @@ libxfs_nproc(void)
+ }
+ 
+ unsigned long
+-libxfs_physmem(void)
++libxfs_freemem(void)
+ {
+-	return platform_physmem();
++	return platform_freemem();
+ }
+Index: xfsprogs-dev/libxfs/init.h
+===================================================================
+--- xfsprogs-dev.orig/libxfs/init.h	2011-11-03 12:29:02.077690698 +0100
++++ xfsprogs-dev/libxfs/init.h	2011-11-03 12:29:52.296691230 +0100
+@@ -32,7 +32,7 @@ extern char *platform_findblockpath (cha
+ extern int platform_direct_blockdev (void);
+ extern int platform_align_blockdev (void);
+ extern int platform_nproc(void);
+-extern unsigned long platform_physmem(void);	/* in kilobytes */
++extern unsigned long platform_freemem(void);	/* in kilobytes */
+ extern int platform_has_uuid;
+ 
+ #endif	/* LIBXFS_INIT_H */
+Index: xfsprogs-dev/libxfs/irix.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/irix.c	2011-11-03 12:29:02.097691363 +0100
++++ xfsprogs-dev/libxfs/irix.c	2011-11-03 12:42:59.724691783 +0100
+@@ -97,8 +97,13 @@ platform_nproc(void)
+ 	return sysmp(MP_NPROCS);
+ }
+ 
++/*
++ * Return the memory that we can use freely.
++ *
++ * The return value is in kilobytes.
++ */
+ unsigned long
+-platform_physmem(void)
++platform_freemem(void)
+ {
+ 	struct rminfo ri;
+ 
+@@ -107,5 +112,9 @@ platform_physmem(void)
+ 			progname);
+ 		exit(1);
+ 	}
+-	return (ri.physmem >> 10) * getpagesize();	/* kilobytes */
+-}
+\ No newline at end of file
++
++	/*
++	 * Assume we can use all free memory.
++	 */
++	return (ri.freemem >> 10) * getpagesize();	/* kilobytes */
++}
+Index: xfsprogs-dev/repair/xfs_repair.c
+===================================================================
+--- xfsprogs-dev.orig/repair/xfs_repair.c	2011-11-03 12:29:02.117690613 +0100
++++ xfsprogs-dev/repair/xfs_repair.c	2011-11-03 12:32:42.348190446 +0100
+@@ -631,8 +631,11 @@ main(int argc, char **argv)
+ 		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
+ 					(mp->m_sb.sb_dblocks >> (10 + 1)) +
+ 					50000;	/* rough estimate of 50MB overhead */
+-		max_mem = max_mem_specified ? max_mem_specified * 1024 :
+-						libxfs_physmem() * 3 / 4;
++
++		if (max_mem_specified)
++			max_mem = max_mem_specified * 1024;
++		else
++			max_mem = libxfs_freemem();
+ 
+ 		if (getrlimit(RLIMIT_AS, &rlim) != -1 &&
+ 					rlim.rlim_cur != RLIM_INFINITY) {
+
+--zYM0uCDKw75PZbzx
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--zYM0uCDKw75PZbzx--
