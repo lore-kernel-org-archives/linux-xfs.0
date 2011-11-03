@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3965PU253331 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 04:06:05 -0500
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 37ED31CDCBCD
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 02:06:02 -0700 (PDT)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id sRKMe4YLRaBMTvFu for
-	<xfs@oss.sgi.com>; Thu, 03 Nov 2011 02:06:02 -0700 (PDT)
-Message-ID: <4EB24B1B.2030304@cn.fujitsu.com>
-Date: Thu, 03 Nov 2011 16:04:43 +0800
-From: WuBo <wu.bo@cn.fujitsu.com>
+	pA3AJAO7259820 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:19:10 -0500
+Date: Thu, 3 Nov 2011 06:19:08 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/8] xfsdump: enable support for multiple streams
+Message-ID: <20111103101908.GA8572@infradead.org>
+References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfstests 264: add a copy and reserve test
-References: <4EB20505.7070005@cn.fujitsu.com> <4EB205C7.6010906@cn.fujitsu.com>
-	<20111103065525.GA6800@infradead.org>
-In-Reply-To: <20111103065525.GA6800@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +22,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 11/03/2011 02:55 PM, Christoph Hellwig wrote:
-> On Thu, Nov 03, 2011 at 11:08:55AM +0800, WuBo wrote:
->> This test is a stress test. It creates a set of threads for coping small files 
->> into disk. I use a 2G disk for test, the ENOSPC arises usually but the disk is 
->> not full under kenerl 3.0 with intel64.
+On Wed, Nov 02, 2011 at 04:10:46PM -0500, Bill Kendall wrote:
+> This series resurrects the IRIX multi-stream support for splitting a
+> backup among several output files/tapes. This offers some nice
+> performance improvements, particularly in xfsrestore where a single
+> stream often cannot keep the filesystem/disks busy. I've observed
+> a 1.7x improvement on a backup and a 5x improvement on restore.
 > 
-> It seems like you really want to use _scratch_mkfs_sized instead of the
-> btrfs-specific resize option and make the test generic.  Also we already
-OK, thanks for _scratch_mkfs_sized, It's will make these tests generic.
+> I have a couple of xfstests for this, and will submit those once
+> a few outstanding xfsdump test patches have been reviewed.
 
-> have used up these test numbers in the xfstests-dev repository, and I
-> will commit another batch of tests today.
-I will change my test numbers in next version.
+I've put both your two previous xfsdump patches and the all your
+xfstests changes into the kernel.org repositories.  They all look
+fine to me.
 
-thanks,
-wubo
+Btw, one thing I'd love to see is a script that uses the userspace
+iscsi target (tgt) infrastructure to emulate a tape, and thus allow to
+run the tape tests in any VM without requiring a real tape device.
 
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-btrfs" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Maybe there is someone on the list feels challenged by this?
 
 _______________________________________________
 xfs mailing list
