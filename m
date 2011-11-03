@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA339vNl223666 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 22:09:57 -0500
+	pA339qr8223641 for <xfs@oss.sgi.com>; Wed, 2 Nov 2011 22:09:52 -0500
 Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A148C1000B45
-	for <xfs@oss.sgi.com>; Wed,  2 Nov 2011 20:09:55 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BFA3F1000B40
+	for <xfs@oss.sgi.com>; Wed,  2 Nov 2011 20:09:50 -0700 (PDT)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id jgS0xS33c1hTzPIA for
-	<xfs@oss.sgi.com>; Wed, 02 Nov 2011 20:09:55 -0700 (PDT)
-Message-ID: <4EB205CC.6010509@cn.fujitsu.com>
-Date: Thu, 03 Nov 2011 11:09:00 +0800
+	cuda.sgi.com with ESMTP id kFEWbfJ8WUzAQZ9E for
+	<xfs@oss.sgi.com>; Wed, 02 Nov 2011 20:09:50 -0700 (PDT)
+Message-ID: <4EB205C7.6010906@cn.fujitsu.com>
+Date: Thu, 03 Nov 2011 11:08:55 +0800
 From: WuBo <wu.bo@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/3] xfstests 265: add a prealloc and reserve test
+Subject: [PATCH 1/3] xfstests 264: add a copy and reserve test
 References: <4EB20505.7070005@cn.fujitsu.com>
 In-Reply-To: <4EB20505.7070005@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,29 +29,29 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-This test is for preallocation test. If the disk is full, just with a prealloc
-file has some free space that prealloc early. We need to check whether the write
-to the free space is success or not.
+This test is a stress test. It creates a set of threads for coping small files 
+into disk. I use a 2G disk for test, the ENOSPC arises usually but the disk is 
+not full under kenerl 3.0 with intel64.
 
 Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
 ---
- 265     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 265.out |    5 +++
+ 264     |  158 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 264.out |    6 ++
  group   |    1 +
- 3 files changed, 113 insertions(+), 0 deletions(-)
- create mode 100755 265
- create mode 100644 265.out
+ 3 files changed, 165 insertions(+), 0 deletions(-)
+ create mode 100755 264
+ create mode 100644 264.out
 
-diff --git a/265 b/265
+diff --git a/264 b/264
 new file mode 100755
-index 0000000..13c3520
+index 0000000..8df56c2
 --- /dev/null
-+++ b/265
-@@ -0,0 +1,107 @@
++++ b/264
+@@ -0,0 +1,158 @@
 +#! /bin/bash
-+# FS QA Test No. 265
++# FS QA Test No. 264
 +#
-+# preallocation test
++# reservation test with heavy cp workload
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
@@ -79,12 +79,13 @@ index 0000000..13c3520
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=0    # success is the default!
++status=0	# success is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
-+	rm -f $TEST_DIR/* $tmp.*
++	cd /
++	rm -rf $TEST_DIR/* $tmp.*
 +	
 +	if [ $_resize -eq 1 ]
 +	then
@@ -97,6 +98,84 @@ index 0000000..13c3520
 +. ./common.rc
 +. ./common.filter
 +
++threads=0  # will be set later
++count=1
++
++_threads_set()
++{
++	_cpu_num=`cat /proc/cpuinfo | grep "processor" | wc -l`
++	threads=$(( $_cpu_num * 50 ))
++	if [ $threads -gt 200 ]
++	then
++		threads=200
++	fi
++
++	echo "create $threads threads to run..."
++}
++
++_file_create()
++{
++	_i=0
++
++	if ! mkdir $TEST_DIR/origin
++	then
++		echo "mkdir origin err"
++		status=1
++		exit
++	fi
++
++	cd $TEST_DIR/origin
++
++	_disksize=`df --block-size=1 | grep $TEST_DEV | awk '{print $2}'`
++	_disksize=$(( $_disksize / 3 ))
++	_num=$(( $_disksize / $count / $threads / 4096 ))
++	_count=$count
++	while [ $_i -lt $_num ]
++	do
++		dd if=/dev/zero of=file_$_i bs=4096 count=$_count > /dev/null 2>&1
++		_i=$(( $_i + 1 ))
++	done
++
++	cd $here
++}
++
++_porter()
++{
++	_suffix=$1
++
++	if ! mkdir $TEST_DIR/sub_$_suffix
++	then
++		echo "mkdir sub_xxx err"
++		status=1
++		exit
++	fi
++
++	cp -r $TEST_DIR/origin $TEST_DIR/sub_$_suffix
++
++	sync
++}
++
++_do_workload()
++{
++	_pid=1
++	
++	rm -rf $TEST_DIR/*
++
++	_threads_set
++	_file_create
++
++	_threads=$threads
++
++	while [ $_pid -lt $_threads ]
++	do
++		_porter $_pid &
++
++		_pid=$(( $_pid + 1 ))
++	done
++
++	wait
++}
++
 +# real QA test starts here
 +_supported_fs btrfs
 +_supported_os IRIX Linux
@@ -105,11 +184,11 @@ index 0000000..13c3520
 +_check_test_fs
 +
 +echo "------------------------------"
-+echo "preallocation test"
++echo "start the workload"
 +echo "------------------------------"
-+
++	
 +_resize=0
-+_new=$(( 1 * 1024 * 1024 * 1024 )) # 1G
++_new=$(( 2 * 1024 * 1024 * 1024 )) # 2G
 +_old=`df --block-size=1 | grep $TEST_DEV | awk '{print $2}'`
 +if [ $_new -lt $_old ]
 +then
@@ -123,58 +202,31 @@ index 0000000..13c3520
 +	_resize=1
 +fi
 +
-+rm -rf $TEST_DIR/*
-+cd $TEST_DIR
-+dd if=/dev/zero of=test bs=4K count=1 > /dev/null 2>&1
-+if [ $? -ne 0 ]
-+then
-+	echo "create file err"
-+	status=1
-+	exit
-+fi
-+
-+fallocate -n -o 4K -l 1M test > /dev/null 2>&1
-+if [ $? -ne 0 ]
-+then
-+	echo "fallocate file err"
-+	status=1
-+	exit
-+fi
-+
-+dd if=/dev/zero of=tmp1 bs=1M > /dev/null 2>&1
-+dd if=/dev/zero of=tmp2 bs=4K > /dev/null 2>&1
-+sync
-+
-+dd if=/dev/zero of=test seek=1 bs=4K count=2 conv=notrunc > /dev/null 2>&1
-+if [ $? -ne 0 ]
-+then
-+	echo "fill prealloc range err"
-+	status=1
-+	exit
-+fi
++_do_workload
 +
 +echo "done"
 +exit
-diff --git a/265.out b/265.out
+diff --git a/264.out b/264.out
 new file mode 100644
-index 0000000..202ca6a
+index 0000000..b218578
 --- /dev/null
-+++ b/265.out
-@@ -0,0 +1,5 @@
-+QA output created by 265
++++ b/264.out
+@@ -0,0 +1,6 @@
++QA output created by 264
 +------------------------------
-+preallocation test
++start the workload
 +------------------------------
++create 100 threads to run...
 +done
 diff --git a/group b/group
-index 301aaec..f76ab8c 100644
+index 2a8970c..301aaec 100644
 --- a/group
 +++ b/group
-@@ -378,3 +378,4 @@ deprecated
+@@ -377,3 +377,4 @@ deprecated
+ 261 auto quick quota
  262 auto quick quota
  263 rw auto quick
- 264 auto rw
-+265 auto rw
++264 auto rw
 -- 
 1.7.3.1
 
