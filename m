@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3CEEM8007624 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 07:14:14 -0500
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 759481CDE7E3
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 05:14:12 -0700 (PDT)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id ALQiYtx87AJ0grdl
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 05:14:12 -0700 (PDT)
-Received: by bkbzs8 with SMTP id zs8so1257539bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 05:14:12 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: Re: [PATCH 6/8] xfstests: add fiemap operation to fsstress
-In-Reply-To: <87zkgdy2fi.fsf@dmbot.sw.ru>
-References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
-	<1319849297-3506-7-git-send-email-dmonakhov@openvz.org>
-	<20111102195534.GB22500@infradead.org> <87zkgdy2fi.fsf@dmbot.sw.ru>
-Date: Thu, 03 Nov 2011 16:14:04 +0400
-Message-ID: <87ty6lxv1v.fsf@dmbot.sw.ru>
+	pA3CBjTL007414 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 07:11:46 -0500
+Message-ID: <4EB284FE.2040409@sgi.com>
+Date: Thu, 03 Nov 2011 07:11:42 -0500
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 0/8] xfsdump: enable support for multiple streams
+References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
+	<20111103101908.GA8572@infradead.org>
+In-Reply-To: <20111103101908.GA8572@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,45 +18,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de, aelder@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, 03 Nov 2011 13:34:41 +0400, Dmitry Monakhov <dmonakhov@openvz.org> wrote:
-> On Wed, 2 Nov 2011 15:55:34 -0400, Christoph Hellwig <hch@infradead.org> wrote:
-> > On Sat, Oct 29, 2011 at 04:48:15AM +0400, Dmitry Monakhov wrote:
-> > > Related bug: http://patchwork.ozlabs.org/patch/118863
-> > > 
-> > > Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-> > 
-> > This causes a very weird XFS failure in test 117 for me.  While it
-> > obviously is an xfs bug that you uncovered (good!) I'm a bit worried
-> > about simply enabling operations in existing tests.
-> Ohh. i've got what your are talking about. We can not add new ops
-> for tests there seed is passed explicitly. And yes i've braked this, but
-> this is because such frozen tests was written in not determined
-> way :). Good determined test should has not just seed opt, but also
-> explicit set of operations. All others (non determined) tests which use
-> fsstress may benefit from new ops. So I'll redo my patch queue like this:
-> 1) Add explicit option set for all frozen tests
-i've stuck immediately on first test ;(.
-on my kernel 107'th test always failed (commit: 73a57c642cdfa660
-"1.1.0 release"), is it expected? Which xfs-tree and commit should i use?
-> 2) Add new features to fssstress with non zero probability. 
-> > 
-> > Alex, Eric, Dave - should we add new tests with the new operations
-> > Dmitry added, or is adding new ops to the existing tests fine?
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 11/03/2011 05:19 AM, Christoph Hellwig wrote:
+> On Wed, Nov 02, 2011 at 04:10:46PM -0500, Bill Kendall wrote:
+>> This series resurrects the IRIX multi-stream support for splitting a
+>> backup among several output files/tapes. This offers some nice
+>> performance improvements, particularly in xfsrestore where a single
+>> stream often cannot keep the filesystem/disks busy. I've observed
+>> a 1.7x improvement on a backup and a 5x improvement on restore.
+>>
+>> I have a couple of xfstests for this, and will submit those once
+>> a few outstanding xfsdump test patches have been reviewed.
+>
+> I've put both your two previous xfsdump patches and the all your
+> xfstests changes into the kernel.org repositories.  They all look
+> fine to me.
+
+Thanks for the reviews. I'm going to be out of town for a few days
+but will look at your suggestion to use POSIX semaphores when I
+return.
+
+>
+> Btw, one thing I'd love to see is a script that uses the userspace
+> iscsi target (tgt) infrastructure to emulate a tape, and thus allow to
+> run the tape tests in any VM without requiring a real tape device.
+>
+> Maybe there is someone on the list feels challenged by this?
+
+I've been using an open source vtl to achieve the same goal, and have
+given some thought to integrating (or at a minimum documenting) how
+to use it with the xfsdump tests.
+
+https://github.com/markh794/mhvtl
+
+Bill
 
 _______________________________________________
 xfs mailing list
