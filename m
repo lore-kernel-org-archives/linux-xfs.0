@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3Aesm1261199 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:40:54 -0500
-Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5557B1CDE0BF
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 03:40:51 -0700 (PDT)
-Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
-	cuda.sgi.com with ESMTP id 2ekc5H7VpU2RwVFX for
-	<xfs@oss.sgi.com>; Thu, 03 Nov 2011 03:40:51 -0700 (PDT)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: xfs_repair fails with corrupt dinode 17491441757, extent total = 1,
-	nblocks = 0.  This is a bug.
-Date: Thu, 3 Nov 2011 11:40:46 +0100
-References: <201110311156.20421.arekm@maven.pl>
-	<20111103102609.GA12066@infradead.org>
-In-Reply-To: <20111103102609.GA12066@infradead.org>
+	pA3BJxqi002182 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 06:19:59 -0500
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D25351CDDC9B
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 04:19:53 -0700 (PDT)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id C65DZ4AXMSbjyKh3
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 04:19:53 -0700 (PDT)
+Received: by faai28 with SMTP id i28so1534881faa.26
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 04:19:53 -0700 (PDT)
 MIME-Version: 1.0
-Message-Id: <201111031140.46783.arekm@maven.pl>
+In-Reply-To: <20111103100647.GA1002@infradead.org>
+References: <CADDb1s0WUfvt8N+hMATboKxbMUZdk2N-R2e=KFH2JvGUjbigBg@mail.gmail.com>
+	<20111103070246.GA10579@infradead.org>
+	<CADDb1s3UN4HMKEA2kSEM0HsUCC7DE63B1oJAoL6QpqXBdDCEqQ@mail.gmail.com>
+	<20111103100647.GA1002@infradead.org>
+Date: Thu, 3 Nov 2011 16:49:53 +0530
+Message-ID: <CADDb1s2ZiPqHqkm01eG24jD+ytU9w3vJwKckXneMkL0wbUEb1Q@mail.gmail.com>
+Subject: Re: [Patch] xfs: serialise unaligned direct IOs
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,53 +28,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-T24gVGh1cnNkYXkgMDMgb2YgTm92ZW1iZXIgMjAxMSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6
-Cj4gT24gTW9uLCBPY3QgMzEsIDIwMTEgYXQgMTE6NTY6MjBBTSArMDEwMCwgQXJrYWRpdXN6IE1p
-Pz9raWV3aWN6IHdyb3RlOgo+ID4geGZzX3JlcGFpciB2ZXJzaW9uIDMuMS42Cj4gPiAKPiA+IGRp
-c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NCwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGRp
-c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NSwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGRp
-c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NiwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGRp
-c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NywgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGNv
-cnJ1cHQgZGlub2RlIDE3NDkxNDQxNzU3LCBleHRlbnQgdG90YWwgPSAxLCBuYmxvY2tzID0gMC4g
-IFRoaXMgaXMgYQo+ID4gYnVnLiBQbGVhc2UgY2FwdHVyZSB0aGUgZmlsZXN5c3RlbSBtZXRhZGF0
-YSB3aXRoIHhmc19tZXRhZHVtcCBhbmQKPiA+IHJlcG9ydCBpdCB0byB4ZnNAb3NzLnNnaS5jb20u
-Cj4gPiBjYWNoZV9ub2RlX3B1cmdlOiByZWZjb3VudCB3YXMgMSwgbm90IHplcm8gKG5vZGU9MHgy
-MTQ1MGM5MCkKPiA+IAo+ID4gZmF0YWwgZXJyb3IgLS0gMTE3IC0gY291bGRuJ3QgaWdldCBkaXNj
-b25uZWN0ZWQgaW5vZGUKPiA+IAo+ID4gMzBHQiBtZXRhZHVtcCBpbWFnZSwgNi4xR0IgY29tcHJl
-c3NlZCBvZiB+N1RCIHJlYWwgcGFydGl0aW9uCj4gPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9y
-Zy9+YXJla20vbHZfc3RvcmFnZTEubWV0YWR1bXAueHoKPiA+IAo+ID4gWW91IG5lZWQgfjgtMTJH
-QiBvZiBtZW1vcnkgZm9yIHhmc19yZXBhaXIgb24gdGhpcy4KPiA+IAo+ID4gSSBjYW4gYWxzbyBw
-cm92aWRlIHNzaCBhY2Nlc3MgdG8gdGhlIHN5c3RlbSB3aXRoIHRoaXMgaW1hZ2UgYW5kIGFsbAo+
-ID4gbmVlZGVkIHN0dWZmLCBzbyB5b3UgZG9uJ3QgbmVlZCB0byBkb3dubG9hZCBpdCBvciB3YXN0
-ZSBvd24gcmVzb3VyY2VzLgo+IAo+IEkgdGhpbmsgSSB1bmRlcnN0YW5kIHRoZSBwcm9ibGVtIC0g
-d2UgZm91bmQgYSBkaXNjb25uZWN0ZWQgaW5vZGUsCj4gd2hpY2ggd2UgdHJ5IHRvIG1vdmUgdG8g
-bG9zdCArIGZvdW5kLiAgRm9yIHNvbWUgcmVhc29uIHRoZSBpbm9kZQo+IGlzIGZvdW5kIHRvIGJl
-IGluY29ycmVjdCBieSB4ZnNfaWZvcm1hdCwgc28gaWdldCBiYWlsZHMgb3V0Lgo+IAo+IFRoZSBm
-aXggd2lsbCBiZSB0byBkbyBhIHBhc3Mgb3ZlciB0aGUgdGhlIGlub2RlcyB3ZSB3YW50IHRvIG1v
-dmUKPiB0byBjb3JyZWN0IHN1Y2ggaW5jb25zaXN0ZW5jaWVzIGFuZC9vciBqdW5rIHRoZW0uICBJ
-J2xsIHRyeSB0byBwcmVwYXJlCj4gYSBmaXggYXMgc29vbiBhcyBJIGdldCBzb21lIHRpbWUsIGJ1
-dCBJJ20gZmFpcmx5IGJ1c3kgYXQgdGhlIG1vbWVudC4KPiAKPiBCdHcsIHdoYXQgZGlkIHlvdSB0
-byB0byB0aGUgZnM/ICBIYXZpbmcgdGhlIHRvdGFsIGJsb2NrcyBvdXQgb2Ygc3luYwo+IHdpdGgg
-dGhlIG51bWJlcnMgaW4gdGhlIGRhdGEgYW5kIGF0dHJpYnV0ZSBmb3JrcyBzZWVtcyBsaWtlIGFu
-IGV4dHJlbWx5Cj4gdW51c2FsIGVycm9yIGNhc2UuCgpXZWxsLAoKVGhpcyBzZXJ3ZXIgaGFzIDE2
-IHZhcmlvdXMgU0FUQSBkaXNrIGNvbm5lY3RlZCB0byBhcnQtb2YtY3JhcCBjb250cm9sbGVyIC0g
-ClByb21pc2UgU3VwZXJUcmFrIEVYMTYzNTAuCgpUaGUgc3lzdGVtIGV4aGliaXRzIGZ1bm55IGlz
-c3VlcyB3aXRoIGludGVsX2lkbGUgZHJpdmVyIAooaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTEv
-MTAvMjgvMjcwKS4KCkl0IGhhcyBvbmx5IDhHQiBvZiByYW0gd2hpY2ggeGZzX3JlcGFpciBlYXRz
-IGZvciBicmVha2Zhc3QgY2F1c2luZyB3YXRjaGRvZyB0byAKcmVib290IG1hY2hpbmUgd2hpbGUg
-eGZzX3JlcGFpciB3YXMgaW4gcHJvZ3Jlc3MgKHdvdWxkIGJlIG5pY2UgaWYgcmVwYWlyIGNvdWxk
-IAplc3RpbWF0ZSBuZWVkZWQgcmFtIGJlZm9yZSBpdCBpcyB0b28gbGF0ZSkuCgpBbGwgdGhlc2Ug
-aXNzdWVzIGNvbWJpbmVkIGNhdXNlZCBmZXcgcmVib290cyBpbiB3aGljaCBzb21lIHdlcmUgaW4g
-bWlkZGxlIG9mIAp4ZnNfcmVwYWlyLiBNb3N0IGxpa2VseSBhbGwgdGhhdCBjYXVzZWQgc3VjaCBj
-b3JydXB0aW9uLgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRl
-YW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+After all modifications and running checkpatch.pl.
+
+Thanks & Regards,
+Amit Sahrawat
+
+xfs: serialise unaligned direct IOs
+
+[ This patch published in 2.6.38 kernel(Original reference
+http://oss.sgi.com/archives/xfs/2011-01/msg00013.html), but
+can not be applied to 2.6.35 kernel directly, because of the
+absence of required function, its reimplmented to resolve
+xfstest test 240 fail.]
+
+When two concurrent unaligned, non-overlapping direct IOs are issued
+to the same block, the direct Io layer will race to zero the block.
+The result is that one of the concurrent IOs will overwrite data
+written by the other IO with zeros. This is demonstrated by the
+xfsqa test 240.
+
+To avoid this problem, serialise all unaligned direct IOs to an
+inode with a big hammer. We need a big hammer approach as we need to
+serialise AIO as well, so we can't just block writes on locks.
+Hence, the big hammer is calling xfs_ioend_wait() while holding out
+other unaligned direct IOs from starting.
+
+We don't bother trying to serialised aligned vs unaligned IOs as
+they are overlapping IO and the result of concurrent overlapping IOs
+is undefined - the result of either IO is a valid result so we let
+them race. Hence we only penalise unaligned IO, which already has a
+major overhead compared to aligned IO so this isn't a major problem.
+
+Signed-off-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Signed-off-by: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+
+diff -Nurp linux-Orig/fs/xfs/linux-2.6/xfs_file.c
+linux-Updated/fs/xfs/linux-2.6/xfs_file.c
+--- linux-Orig/fs/xfs/linux-2.6/xfs_file.c	2011-11-02 12:10:52.000000000 +0=
+530
++++ linux-Updated/fs/xfs/linux-2.6/xfs_file.c	2011-11-03
+16:39:08.000000000 +0530
+@@ -587,6 +587,7 @@ xfs_file_aio_write(
+ 	xfs_fsize_t		isize, new_size;
+ 	int			iolock;
+ 	size_t			ocount =3D 0, count;
++	int			unaligned_io =3D 0;
+ 	int			need_i_mutex;
+
+ 	XFS_STATS_INC(xs_write_calls);
+@@ -640,8 +641,26 @@ start:
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+ 			return XFS_ERROR(-EINVAL);
+ 		}
++	/*
++	 * In most cases the direct IO writes will be done with IOLOCK_SHARED
++	 * allowing them to be done in parallel with reads and other direct IO
++	 * writes. However,if the IO is not aligned to filesystem blocks, the
++	 * direct IO layer needs to do sub-block zeroing and that requires
++	 * serialisation against other direct IOs to the same block. In this
++	 * case we need to serialise the submission of the unaligned IOs so
++	 * that we don't get racing block zeroing in the dio layer.
++	 * To avoid the problem with aio, we also need to wait for outstanding
++	 * IOs to complete so that unwritten extent conversion is completed
++	 * before we try to map the overlapping block. This is currently
++	 * implemented by hitting it with a big hammer (i.e. xfs_ioend_wait()).
++	 */
++
++		if ((pos & mp->m_blockmask) ||
++		   ((pos + count) & mp->m_blockmask))
++			unaligned_io =3D 1;
+
+-		if (!need_i_mutex && (mapping->nrpages || pos > ip->i_size)) {
++		if (!need_i_mutex &&
++		   (unaligned_io || mapping->nrpages || pos > ip->i_size)) {
+ 			xfs_iunlock(ip, XFS_ILOCK_EXCL|iolock);
+ 			iolock =3D XFS_IOLOCK_EXCL;
+ 			need_i_mutex =3D 1;
+@@ -700,12 +719,18 @@ start:
+ 		}
+
+ 		if (need_i_mutex) {
+-			/* demote the lock now the cached pages are gone */
+-			xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+-			mutex_unlock(&inode->i_mutex);
+-
+-			iolock =3D XFS_IOLOCK_SHARED;
+-			need_i_mutex =3D 0;
++			if (unaligned_io)
++				xfs_ioend_wait(ip);
++			else {
++				/*
++				 * demote the lock now the cached pages
++				 * are gone if we can
++				 */
++				xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
++				iolock =3D XFS_IOLOCK_SHARED;
++				mutex_unlock(&inode->i_mutex);
++				need_i_mutex =3D 0;
++			}
+ 		}
+
+ 		trace_xfs_file_direct_write(ip, count, iocb->ki_pos, ioflags);
+
+
+
+
+On Thu, Nov 3, 2011 at 3:36 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Nov 03, 2011 at 03:29:18PM +0530, Amit Sahrawat wrote:
+>> > You probably should keep the original Signoff and reviewed-by tags,
+>> > and add your editor note on the top into [ ] ?brackets.
+>> Ok, will do so in the final patch. Actually was unaware of information
+>> to keep in backported patches?
+>
+> The standard procedure is to keep patches basically as-is. =A0This doesn't
+> quite apply for your case, so I think just adding a comment in
+> [ ] brackets on the top is the best you can do.
+>
+>> > You also need to make the i_mutex unlock and need_i_mutex update
+>> > conditional here, otherwise you still serialize all O_DIRECT writes.
+>> >
+>> you mean, keeping need_i_mutex=3D0 and mutex_unlock as part of 'else' st=
+atement.
+>
+> Yes.
+>
+>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
