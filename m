@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3G6A0D027296 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 11:06:12 -0500
-Date: Thu, 3 Nov 2011 12:05:59 -0400
-From: "Ted Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH 6/8] xfstests: add fiemap operation to fsstress
-Message-ID: <20111103160559.GB15045@thunk.org>
-References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
-	<1319849297-3506-7-git-send-email-dmonakhov@openvz.org>
-	<20111102195534.GB22500@infradead.org>
-	<FA2EDC7F-92EC-449E-9FBC-B7955283DFAC@mit.edu>
-	<87wrbhxya6.fsf@dmbot.sw.ru>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87wrbhxya6.fsf@dmbot.sw.ru>
+	pA3HuEkA038397 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 12:56:14 -0500
+Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5048A568D91
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 10:56:12 -0700 (PDT)
+Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id mmtb3zU0Y9jtUI77
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:12 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id zs8so1634560bkb.26
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:12 -0700 (PDT)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: [PATCH 5/9] xfstests: add fiemap operation to fsstress
+Date: Thu,  3 Nov 2011 21:55:49 +0400
+Message-Id: <1320342953-7973-5-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
+References: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,42 +24,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de, aelder@sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-T24gVGh1LCBOb3YgMDMsIDIwMTEgYXQgMDM6MDQ6MTdQTSArMDQwMCwgRG1pdHJ5IE1vbmFraG92
-IHdyb3RlOgo+IE9uIFRodSwgMyBOb3YgMjAxMSAwNjo1NDoxNiAtMDQwMCwgVGhlb2RvcmUgVHNv
-IDx0eXRzb0BtaXQuZWR1PiB3cm90ZToKPiA+IAo+ID4gT24gTm92IDIsIDIwMTEsIGF0IDM6NTUg
-UE0sIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOgo+ID4gCj4gPiA+IEFsZXgsIEVyaWMsIERhdmUg
-LSBzaG91bGQgd2UgYWRkIG5ldyB0ZXN0cyB3aXRoIHRoZSBuZXcgb3BlcmF0aW9ucwo+ID4gPiBE
-bWl0cnkgYWRkZWQsIG9yIGlzIGFkZGluZyBuZXcgb3BzIHRvIHRoZSBleGlzdGluZyB0ZXN0cyBm
-aW5lPwo+ID4gCj4gPiBPbmUgYXJndW1lbnQgZm9yIGFkZGluZyBuZXcgb3BzIHRvIGV4aXN0aW5n
-IHRlc3RzIGlzIHRoYXQgaXQgbWFrZXMKPiA+IHRoZSBydW4gdGltZSBvZiB0aGUgZW50aXJlIHRl
-c3Qgc3VpdGUgdGFrZSBsb25nZXIuICBBIFFBIHBhc3MgaXMKPiA+IGFscmVhZHkgdGFraW5nIHF1
-aXRlIGEgd2hpbGUsIGFuZCBpdCB3b3VsZCBiZSBuaWNlIGlmIHdlIGNvdWxkCj4gPiBrZWVwIHhm
-c3Rlc3RzIGFzIGVmZmljaWVudCBhcyBwb3NzaWJsZSBpbiB0ZXJtcyBvZiB0aGUgbWF4aW11bQo+
-ID4gdGVzdGluZyBjb3ZlcmFnZSBwZXIgdGltZSBzcGVudCBydW5uaW5nIHRoZSB0ZXN0IHN1aXRl
-4oCmLgo+Cj4gWWVzLCBidXQgcmVncmVzc2lvbiB0ZXN0IHdpdGggZXhwbGljaXQgc2VlZCBvcHRp
-b24gc2hvdWxkIGJlCj4gcHJlc2VydmVkLiBOdW1iZXIgb2Ygc3VjaCB0ZXN0IGlzIG5vdCB0b28g
-YmlnLCBzbyBpdCBpcyByZWFzb25hYmxlIHRvCj4gaGFyZGNvZGUgc2V0IG9mIG9wZXJhdGlvbnMg
-aW4gc3VjaCB0ZXN0cyBhbmQgbGV0IGFsbCBvdGhlcnMgdXNlIG5ldyBmZWF0dXJlcy4KClRoYXQn
-cyBub3Qgd2hhdCBJIHdhcyB0YWxraW5nIGFib3V0LiAgT2YgY291cnNlIHRoZXJlIHNob3VsZCBi
-ZSBhIHdheQp0byBydW4gYSByZWdyZXNzaW9uIHRlc3Qgd2l0aCBhbiBleHBsaWNpdCBzZWVkIG9w
-dGlvbiAoYWx0aG91Z2ggaW4KZ2VuZXJhbCBJIHRoaW5rIGEgc3BlY2lmaWMgdGVzdCBpbiB4ZnN0
-ZXN0cyBzaG91bGQgYnkgZGVmYXVsdCB1c2UgYQpyYW5kb20gc2VlZCwgYW5kIGhhdmUgYSB3YXkg
-dG8gZWFzaWx5IHNwZWNpZnkgYW4gZXhwbGljaXQgc2VlZCB3aXRob3V0CmhhdmluZyB0byByZXZl
-cnNlIGVuZ2luZWVyIHRoZSB0ZXN0IGFuZCBydW5uaW5nIGZzc3RyZXNzIG1hbnVhbGx5KS4KCldo
-YXQgSSB3YXMgdGFsa2luZyBhYm91dCB3YXMgdGhlIGZhY3Qgd2UgYWxyZWFkeSBoYXZlIHNldmVy
-YWwgKGhhbGYgYQpkb3plbiBvciBzbywgaWYgbWVtb3J5IHNlcnZlcyBjb3JyZWN0bHkpIHhmc3Rl
-c3RzIHRoYXQgdXNlIGZzc3RyZXNzCndpdGggYSBkaWZmZXJlbnQgc2V0IG9mIGZzc3RyZXNzIG9w
-dGlvbnMuICBJbiBzb21lIGNhc2VzIGl0IG1ha2VzIHRvCmFkZCBhIG5ldyBudW1iZXJlZCB4ZnN0
-ZXN0IHN1YnRlc3QsIGJ1dCBJJ2QgcmF0aGVyIG5vdCBmaW5kIHRoYXQgd2UndmUKZG91YmxlZCB0
-aGUgbnVtYmVyIG9mIHRlc3RzIHVzaW5nIGZzc3RyZXNzIGluIHRoZSBmdXR1cmUsIGFuZCB3aXRo
-IGl0LApkb3VibGVkIHRoZSBydW4tdGltZSBvZiB0aGUgYXV0byBvciBxdWljayB4ZnN0ZXN0cyBn
-cm91cC4uLi4KCgkgICAgCSAgICAgCSAgICAJICAgIC0gVGVkCgpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+Related bug: http://patchwork.ozlabs.org/patch/118863
+
+Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+---
+ ltp/fsstress.c |   76 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 76 insertions(+), 0 deletions(-)
+
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index c258ee9..09c9529 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -24,6 +24,9 @@
+ #ifdef HAVE_ATTR_ATTRIBUTES_H
+ #include <attr/attributes.h>
+ #endif
++#ifdef HAVE_LINUX_FIEMAP_H
++#include <linux/fiemap.h>
++#endif
+ #ifdef FALLOCATE
+ #include <linux/falloc.h>
+ #ifndef FALLOC_FL_PUNCH_HOLE
+@@ -65,6 +68,7 @@ typedef enum {
+ 	OP_DWRITE,
+ 	OP_FALLOCATE,
+ 	OP_FDATASYNC,
++	OP_FIEMAP,
+ 	OP_FREESP,
+ 	OP_FSYNC,
+ 	OP_GETATTR,
+@@ -149,6 +153,7 @@ void	dread_f(int, long);
+ void	dwrite_f(int, long);
+ void	fallocate_f(int, long);
+ void	fdatasync_f(int, long);
++void	fiemap_f(int, long);
+ void	freesp_f(int, long);
+ void	fsync_f(int, long);
+ void	getattr_f(int, long);
+@@ -184,6 +189,7 @@ opdesc_t	ops[] = {
+ 	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
+ 	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
+ 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
++	{ OP_FIEMAP, "fiemap", fiemap_f, 1, 1 },
+ 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
+ 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
+ 	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
+@@ -2130,6 +2136,76 @@ fdatasync_f(int opno, long r)
+ 	free_pathname(&f);
+ 	close(fd);
+ }
++void
++fiemap_f(int opno, long r)
++{
++#ifdef HAVE_LINUX_FIEMAP_H
++	int		e;
++	pathname_t	f;
++	int		fd;
++	__int64_t	lr;
++	off64_t		off;
++	struct stat64	stb;
++	int		v;
++	char		st[1024];
++	int blocks_to_map;
++	struct fiemap *fiemap;
++
++	init_pathname(&f);
++	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
++		if (v)
++			printf("%d/%d: fiemap - no filename\n", procid, opno);
++		free_pathname(&f);
++		return;
++	}
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++	if (fd < 0) {
++		if (v)
++			printf("%d/%d: fiemap - open %s failed %d\n",
++				procid, opno, f.path, e);
++		free_pathname(&f);
++		return;
++	}
++	if (fstat64(fd, &stb) < 0) {
++		if (v)
++			printf("%d/%d: fiemap - fstat64 %s failed %d\n",
++				procid, opno, f.path, errno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	inode_info(st, sizeof(st), &stb, v);
++	blocks_to_map = random() & 0xffff;
++	fiemap = (struct fiemap *)malloc(sizeof(struct fiemap) +
++			(blocks_to_map * sizeof(struct fiemap_extent)));
++	if (!fiemap) {
++		if (v)
++			printf("%d/%d: malloc failed \n", procid, opno);
++		free_pathname(&f);
++		close(fd);
++		return;
++	}
++	lr = ((__int64_t)random() << 32) + random();
++	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
++	off %= maxfsize;
++	fiemap->fm_flags = random() & (FIEMAP_FLAGS_COMPAT | 0x10000);
++	fiemap->fm_extent_count = blocks_to_map;
++	fiemap->fm_mapped_extents = random() & 0xffff;
++	fiemap->fm_start = off;
++	fiemap->fm_length = ((__int64_t)random() << 32) + random();
++
++	e = ioctl(fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
++	if (v)
++		printf("%d/%d: ioctl(FIEMAP) %s%s %lld %lld %x %d\n",
++		       procid, opno, f.path, st, (long long)fiemap->fm_start,
++		       (long long) fiemap->fm_length, fiemap->fm_flags, e);
++	free(fiemap);
++	free_pathname(&f);
++	close(fd);
++#endif
++}
+ 
+ void
+ freesp_f(int opno, long r)
+-- 
+1.7.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
