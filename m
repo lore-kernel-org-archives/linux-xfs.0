@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3AQDJf260478 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:26:14 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A69311CDDE42
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 03:26:10 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	XIBmLVhk9E9nReUY for <xfs@oss.sgi.com>;
-	Thu, 03 Nov 2011 03:26:10 -0700 (PDT)
-Date: Thu, 3 Nov 2011 06:26:09 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_repair fails with corrupt dinode 17491441757, extent total =
-	1, nblocks = 0.  This is a bug.
-Message-ID: <20111103102609.GA12066@infradead.org>
+	pA3Aesm1261199 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:40:54 -0500
+Received: from smtp-relay.maven.pl (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5557B1CDE0BF
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 03:40:51 -0700 (PDT)
+Received: from smtp-relay.maven.pl (smtp-relay.maven.pl [193.239.45.138]) by
+	cuda.sgi.com with ESMTP id 2ekc5H7VpU2RwVFX for
+	<xfs@oss.sgi.com>; Thu, 03 Nov 2011 03:40:51 -0700 (PDT)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: xfs_repair fails with corrupt dinode 17491441757, extent total = 1,
+	nblocks = 0.  This is a bug.
+Date: Thu, 3 Nov 2011 11:40:46 +0100
 References: <201110311156.20421.arekm@maven.pl>
+	<20111103102609.GA12066@infradead.org>
+In-Reply-To: <20111103102609.GA12066@infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201110311156.20421.arekm@maven.pl>
+Message-Id: <201111031140.46783.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,49 +25,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Oct 31, 2011 at 11:56:20AM +0100, Arkadiusz Mi??kiewicz wrote:
-> 
-> xfs_repair version 3.1.6
-> 
-> disconnected inode 17491441754, moving to lost+found
-> disconnected inode 17491441755, moving to lost+found
-> disconnected inode 17491441756, moving to lost+found
-> disconnected inode 17491441757, moving to lost+found
-> corrupt dinode 17491441757, extent total = 1, nblocks = 0.  This is a bug.
-> Please capture the filesystem metadata with xfs_metadump and
-> report it to xfs@oss.sgi.com.
-> cache_node_purge: refcount was 1, not zero (node=0x21450c90)
-> 
-> fatal error -- 117 - couldn't iget disconnected inode
-> 
-> 30GB metadump image, 6.1GB compressed of ~7TB real partition
-> http://ixion.pld-linux.org/~arekm/lv_storage1.metadump.xz
-> 
-> You need ~8-12GB of memory for xfs_repair on this.
-> 
-> I can also provide ssh access to the system with this image and all needed 
-> stuff, so you don't need to download it or waste own resources.
-
-I think I understand the problem - we found a disconnected inode,
-which we try to move to lost + found.  For some reason the inode
-is found to be incorrect by xfs_iformat, so iget bailds out.
-
-The fix will be to do a pass over the the inodes we want to move
-to correct such inconsistencies and/or junk them.  I'll try to prepare
-a fix as soon as I get some time, but I'm fairly busy at the moment.
-
-Btw, what did you to to the fs?  Having the total blocks out of sync
-with the numbers in the data and attribute forks seems like an extremly
-unusal error case.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1cnNkYXkgMDMgb2YgTm92ZW1iZXIgMjAxMSwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6
+Cj4gT24gTW9uLCBPY3QgMzEsIDIwMTEgYXQgMTE6NTY6MjBBTSArMDEwMCwgQXJrYWRpdXN6IE1p
+Pz9raWV3aWN6IHdyb3RlOgo+ID4geGZzX3JlcGFpciB2ZXJzaW9uIDMuMS42Cj4gPiAKPiA+IGRp
+c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NCwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGRp
+c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NSwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGRp
+c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NiwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGRp
+c2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1NywgbW92aW5nIHRvIGxvc3QrZm91bmQKPiA+IGNv
+cnJ1cHQgZGlub2RlIDE3NDkxNDQxNzU3LCBleHRlbnQgdG90YWwgPSAxLCBuYmxvY2tzID0gMC4g
+IFRoaXMgaXMgYQo+ID4gYnVnLiBQbGVhc2UgY2FwdHVyZSB0aGUgZmlsZXN5c3RlbSBtZXRhZGF0
+YSB3aXRoIHhmc19tZXRhZHVtcCBhbmQKPiA+IHJlcG9ydCBpdCB0byB4ZnNAb3NzLnNnaS5jb20u
+Cj4gPiBjYWNoZV9ub2RlX3B1cmdlOiByZWZjb3VudCB3YXMgMSwgbm90IHplcm8gKG5vZGU9MHgy
+MTQ1MGM5MCkKPiA+IAo+ID4gZmF0YWwgZXJyb3IgLS0gMTE3IC0gY291bGRuJ3QgaWdldCBkaXNj
+b25uZWN0ZWQgaW5vZGUKPiA+IAo+ID4gMzBHQiBtZXRhZHVtcCBpbWFnZSwgNi4xR0IgY29tcHJl
+c3NlZCBvZiB+N1RCIHJlYWwgcGFydGl0aW9uCj4gPiBodHRwOi8vaXhpb24ucGxkLWxpbnV4Lm9y
+Zy9+YXJla20vbHZfc3RvcmFnZTEubWV0YWR1bXAueHoKPiA+IAo+ID4gWW91IG5lZWQgfjgtMTJH
+QiBvZiBtZW1vcnkgZm9yIHhmc19yZXBhaXIgb24gdGhpcy4KPiA+IAo+ID4gSSBjYW4gYWxzbyBw
+cm92aWRlIHNzaCBhY2Nlc3MgdG8gdGhlIHN5c3RlbSB3aXRoIHRoaXMgaW1hZ2UgYW5kIGFsbAo+
+ID4gbmVlZGVkIHN0dWZmLCBzbyB5b3UgZG9uJ3QgbmVlZCB0byBkb3dubG9hZCBpdCBvciB3YXN0
+ZSBvd24gcmVzb3VyY2VzLgo+IAo+IEkgdGhpbmsgSSB1bmRlcnN0YW5kIHRoZSBwcm9ibGVtIC0g
+d2UgZm91bmQgYSBkaXNjb25uZWN0ZWQgaW5vZGUsCj4gd2hpY2ggd2UgdHJ5IHRvIG1vdmUgdG8g
+bG9zdCArIGZvdW5kLiAgRm9yIHNvbWUgcmVhc29uIHRoZSBpbm9kZQo+IGlzIGZvdW5kIHRvIGJl
+IGluY29ycmVjdCBieSB4ZnNfaWZvcm1hdCwgc28gaWdldCBiYWlsZHMgb3V0Lgo+IAo+IFRoZSBm
+aXggd2lsbCBiZSB0byBkbyBhIHBhc3Mgb3ZlciB0aGUgdGhlIGlub2RlcyB3ZSB3YW50IHRvIG1v
+dmUKPiB0byBjb3JyZWN0IHN1Y2ggaW5jb25zaXN0ZW5jaWVzIGFuZC9vciBqdW5rIHRoZW0uICBJ
+J2xsIHRyeSB0byBwcmVwYXJlCj4gYSBmaXggYXMgc29vbiBhcyBJIGdldCBzb21lIHRpbWUsIGJ1
+dCBJJ20gZmFpcmx5IGJ1c3kgYXQgdGhlIG1vbWVudC4KPiAKPiBCdHcsIHdoYXQgZGlkIHlvdSB0
+byB0byB0aGUgZnM/ICBIYXZpbmcgdGhlIHRvdGFsIGJsb2NrcyBvdXQgb2Ygc3luYwo+IHdpdGgg
+dGhlIG51bWJlcnMgaW4gdGhlIGRhdGEgYW5kIGF0dHJpYnV0ZSBmb3JrcyBzZWVtcyBsaWtlIGFu
+IGV4dHJlbWx5Cj4gdW51c2FsIGVycm9yIGNhc2UuCgpXZWxsLAoKVGhpcyBzZXJ3ZXIgaGFzIDE2
+IHZhcmlvdXMgU0FUQSBkaXNrIGNvbm5lY3RlZCB0byBhcnQtb2YtY3JhcCBjb250cm9sbGVyIC0g
+ClByb21pc2UgU3VwZXJUcmFrIEVYMTYzNTAuCgpUaGUgc3lzdGVtIGV4aGliaXRzIGZ1bm55IGlz
+c3VlcyB3aXRoIGludGVsX2lkbGUgZHJpdmVyIAooaHR0cHM6Ly9sa21sLm9yZy9sa21sLzIwMTEv
+MTAvMjgvMjcwKS4KCkl0IGhhcyBvbmx5IDhHQiBvZiByYW0gd2hpY2ggeGZzX3JlcGFpciBlYXRz
+IGZvciBicmVha2Zhc3QgY2F1c2luZyB3YXRjaGRvZyB0byAKcmVib290IG1hY2hpbmUgd2hpbGUg
+eGZzX3JlcGFpciB3YXMgaW4gcHJvZ3Jlc3MgKHdvdWxkIGJlIG5pY2UgaWYgcmVwYWlyIGNvdWxk
+IAplc3RpbWF0ZSBuZWVkZWQgcmFtIGJlZm9yZSBpdCBpcyB0b28gbGF0ZSkuCgpBbGwgdGhlc2Ug
+aXNzdWVzIGNvbWJpbmVkIGNhdXNlZCBmZXcgcmVib290cyBpbiB3aGljaCBzb21lIHdlcmUgaW4g
+bWlkZGxlIG9mIAp4ZnNfcmVwYWlyLiBNb3N0IGxpa2VseSBhbGwgdGhhdCBjYXVzZWQgc3VjaCBj
+b3JydXB0aW9uLgoKLS0gCkFya2FkaXVzeiBNacWba2lld2ljeiAgICAgICAgUExEL0xpbnV4IFRl
+YW0KYXJla20gLyBtYXZlbi5wbCAgICAgICAgICAgIGh0dHA6Ly9mdHAucGxkLWxpbnV4Lm9yZy8K
+Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
+aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
+bmZvL3hmcwo=
