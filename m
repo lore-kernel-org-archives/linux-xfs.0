@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3EPXsL017913 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:33 -0500
+	pA3EPhSr017984 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:43 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D60F512FF48D
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:32 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F0E775683DE
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:42 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id 1921OvEOg0Gpjonm
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:32 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id zs8so1398030bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:32 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id V7DaKsaqGYbhAxZW
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:42 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id zs8so1398069bkb.26
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:42 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 02/12] xfstests: add different logging option to fsstress
-Date: Thu,  3 Nov 2011 18:24:51 +0400
-Message-Id: <1320330301-2682-3-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 10/12] xfstests: add a new quota test that runs fsstress under
+	ENOSPC conditions
+Date: Thu,  3 Nov 2011 18:24:59 +0400
+Message-Id: <1320330301-2682-11-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 References: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,99 +33,156 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-Currently the only way to log fsstress's output is to redirect it's shared
-stdout to pipe which is very painfull because:
+- Same as 264 but with quota enabled.
+- IO performed from $qa_user user
+- fsstress granted with CAP_CHOWN capability.
 
-1) Pipe writers are serialized via i_mutex so we waste cpu-cores power on stupid
-   sinchronization for loging purpose, instead of hunting real race conditions,
-   and bugs inside file system.
-2) Usually output is corrupted due to luck of sychronization on shared stdout.
-
-Since fsstress's children operate on independend paths, let's just open didicated
-log file for each child and simply avoid useless sycnhronization.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- ltp/fsstress.c |   33 ++++++++++++++++++++++++++++++++-
- 1 files changed, 32 insertions(+), 1 deletions(-)
+ 265     |  108 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 265.out |    8 +++++
+ group   |    1 +
+ 3 files changed, 117 insertions(+), 0 deletions(-)
+ create mode 100755 265
+ create mode 100644 265.out
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 51ecda2..c7001f3 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -258,6 +258,8 @@ int main(int argc, char **argv)
- 	char		buf[10];
- 	int		c;
- 	char		*dirname = NULL;
-+	char		*logname = NULL;
-+	char		rpath[PATH_MAX];
- 	int		fd;
- 	int		i;
- 	int		j;
-@@ -273,7 +275,7 @@ int main(int argc, char **argv)
- 	nops = sizeof(ops) / sizeof(ops[0]);
- 	ops_end = &ops[nops];
- 	myprog = argv[0];
--	while ((c = getopt(argc, argv, "d:e:f:i:m:n:p:rs:vwzHS")) != -1) {
-+	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:vwzHS")) != -1) {
- 		switch (c) {
- 		case 'd':
- 			dirname = optarg;
-@@ -311,6 +313,10 @@ int main(int argc, char **argv)
- 		case 'n':
- 			operations = atoi(optarg);
- 			break;
-+		case 'o':
-+			logname = optarg;
-+			break;
+diff --git a/265 b/265
+new file mode 100755
+index 0000000..b568fdd
+--- /dev/null
++++ b/265
+@@ -0,0 +1,108 @@
++#! /bin/bash
++# FSQA Test No. 265
++#
++# Run fsstress and ENSPC hitters in parallel, check quota and 
++# fs consistency an the end
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=dmonakhov@openvz.org
 +
- 		case 'p':
- 			nproc = atoi(optarg);
- 			break;
-@@ -351,10 +357,26 @@ int main(int argc, char **argv)
-         }
- 
- 	(void)mkdir(dirname, 0777);
-+	if (logname && logname[0] != '/') {
-+		if (getcwd(rpath, sizeof(rpath)) < 0){
-+			perror("getcwd failed");
-+			exit(1);
-+		}
-+	} else {
-+		rpath[0] = '\0';
-+	}
- 	if (chdir(dirname) < 0) {
- 		perror(dirname);
- 		exit(1);
- 	}
-+	if (logname) {
-+		char path[PATH_MAX];
-+		snprintf(path, sizeof(path), "%s/%s", rpath, logname);
-+		if (freopen(path, "a", stdout) == NULL) {
-+			perror("freopen logfile failed");
-+			exit(1);
-+		}
-+	}
- 	sprintf(buf, "fss%x", (unsigned int)getpid());
- 	fd = creat(buf, 0666);
- 	if (lseek64(fd, (off64_t)(MAXFSIZE32 + 1ULL), SEEK_SET) < 0)
-@@ -409,6 +431,15 @@ int main(int argc, char **argv)
- 		close(fd);
- 	for (i = 0; i < nproc; i++) {
- 		if (fork() == 0) {
-+			if (logname) {
-+				char path[PATH_MAX];
-+				snprintf(path, sizeof(path), "%s/%s.%d",
-+					 rpath, logname, i);
-+				if (freopen(path, "a", stdout) == NULL) {
-+					perror("freopen logfile failed");
-+					exit(1);
-+				}
-+			}
- 			procid = i;
- 			doproc();
- 			return 0;
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++# Disable all sync operations to get higher load
++FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0"
++_workout()
++{
++	echo ""
++	echo "Run fsstress"
++	echo ""
++	num_iterations=10
++	enospc_time=2
++	out=$SCRATCH_MNT/fsstress.$$
++	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
++	echo "fsstress $args" >> $here/$seq.full
++	# Grant chown capability 
++	cp $FSSTRESS_PROG  $tmp.fsstress.bin
++	setcap cap_chown=epi  $tmp.fsstress.bin
++
++	(su $qa_user -c "$tmp.fsstress.bin $args" &) > /dev/null 2>&1
++	pid=$!
++
++	echo "Run dd writers in parallel"
++	for ((i=0; i < num_iterations; i++))
++	do
++		# File will be opened with O_TRUNC each time
++		su $qa_user -c "dd if=/dev/zero \
++			of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M " \
++			> /dev/null 2>&1
++		sleep $enospc_time
++	done
++
++	killall $tmp.fsstress.bin
++	wait $pid
++}
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++_require_quota
++_require_user
++_need_to_be_root
++
++umount $SCRATCH_DEV 2>/dev/null
++_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
++_scratch_mount "-o usrquota,grpquota"
++chmod 777 $SCRATCH_MNT
++quotacheck -u -g $SCRATCH_MNT 2>/dev/null
++quotaon -u -g $SCRATCH_MNT 2>/dev/null
++
++if ! _workout; then
++	_scratch_unmount 2>/dev/null
++	exit
++fi
++
++if ! _check_quota_usage; then
++	_scratch_unmount 2>/dev/null
++	status=1
++	exit
++fi
++
++echo Comparing filesystem consistency
++if ! _scratch_unmount; then
++	echo "failed to umount"
++	status=1
++	exit
++fi
++_check_scratch_fs
++status=$?
++exit
+diff --git a/265.out b/265.out
+new file mode 100644
+index 0000000..7637291
+--- /dev/null
++++ b/265.out
+@@ -0,0 +1,8 @@
++QA output created by 265
++
++Run fsstress
++
++Run dd writers in parallel
++Comparing user usage
++Comparing group usage
++Comparing filesystem consistency
+diff --git a/group b/group
+index e79c29b..487051a 100644
+--- a/group
++++ b/group
+@@ -378,3 +378,4 @@ deprecated
+ 262 auto quick quota
+ 263 rw auto quick
+ 264 auto rw prealloc ioctl enospc
++265 auto quota rw prealloc ioctl enospc
 -- 
 1.7.1
 
