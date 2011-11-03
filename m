@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA37AvZp244154 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 02:10:57 -0500
-Date: Thu, 3 Nov 2011 03:10:54 -0400
+	pA36tT43242929 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 01:55:29 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id ACF361CDD227
+	for <xfs@oss.sgi.com>; Wed,  2 Nov 2011 23:55:28 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	PHJCrHHco6G74ofu for <xfs@oss.sgi.com>;
+	Wed, 02 Nov 2011 23:55:28 -0700 (PDT)
+Date: Thu, 3 Nov 2011 02:55:25 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] xfsdump: implement lock abstraction with pthreads
-Message-ID: <20111103071054.GB10579@infradead.org>
-References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
-	<1320268254-20583-4-git-send-email-wkendall@sgi.com>
+Subject: Re: [PATCH 1/3] xfstests 264: add a copy and reserve test
+Message-ID: <20111103065525.GA6800@infradead.org>
+References: <4EB20505.7070005@cn.fujitsu.com> <4EB205C7.6010906@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1320268254-20583-4-git-send-email-wkendall@sgi.com>
+In-Reply-To: <4EB205C7.6010906@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: WuBo <wu.bo@cn.fujitsu.com>
+Cc: linux-fsdevel@vger.kernel.org, Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-> +struct qsem {
-> +	ix_t qs_count;
-> +		/* current count of this semaphore
-> +		 */
-> +	ix_t qs_waiters;
-> +		/* number of threads waiting on semaphore
-> +		 */
-> +	pthread_mutex_t qs_mutex;
-> +	pthread_cond_t qs_cond;
-> +};
-> +typedef struct  qsem qsem_t;
+On Thu, Nov 03, 2011 at 11:08:55AM +0800, WuBo wrote:
+> This test is a stress test. It creates a set of threads for coping small files 
+> into disk. I use a 2G disk for test, the ENOSPC arises usually but the disk is 
+> not full under kenerl 3.0 with intel64.
 
-Can't you use Posix Semaphores directly?
-
-See http://www.csc.villanova.edu/~mdamian/threads/posixsem.html for
-a quick introduction.
+It seems like you really want to use _scratch_mkfs_sized instead of the
+btrfs-specific resize option and make the test generic.  Also we already
+have used up these test numbers in the xfstests-dev repository, and I
+will commit another batch of tests today.
 
 _______________________________________________
 xfs mailing list
