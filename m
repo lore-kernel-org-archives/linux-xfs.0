@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA39YnJ5255286 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 04:34:49 -0500
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4F98821C649
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 02:34:47 -0700 (PDT)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id vUgnUAMuzMNeQQdR
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 02:34:47 -0700 (PDT)
-Received: by bkbzs8 with SMTP id zs8so1117298bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 02:34:47 -0700 (PDT)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: Re: [PATCH 6/8] xfstests: add fiemap operation to fsstress
-In-Reply-To: <20111102195534.GB22500@infradead.org>
-References: <1319849297-3506-1-git-send-email-dmonakhov@openvz.org>
-	<1319849297-3506-7-git-send-email-dmonakhov@openvz.org>
-	<20111102195534.GB22500@infradead.org>
-Date: Thu, 03 Nov 2011 13:34:41 +0400
-Message-ID: <87zkgdy2fi.fsf@dmbot.sw.ru>
+	pA3Amq1w261717 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:48:52 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7501C21C576
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 03:48:51 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	Ov2wxFFmG90No41V for <xfs@oss.sgi.com>;
+	Thu, 03 Nov 2011 03:48:51 -0700 (PDT)
+Date: Thu, 3 Nov 2011 06:48:50 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs_repair fails with corrupt dinode 17491441757, extent total =
+	1, nblocks = 0.  This is a bug.
+Message-ID: <20111103104850.GA26259@infradead.org>
+References: <201110311156.20421.arekm@maven.pl>
+	<20111103102609.GA12066@infradead.org>
+	<201111031140.46783.arekm@maven.pl>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <201111031140.46783.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,33 +33,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, hch@lst.de, aelder@sgi.com
+To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, 2 Nov 2011 15:55:34 -0400, Christoph Hellwig <hch@infradead.org> wrote:
-> On Sat, Oct 29, 2011 at 04:48:15AM +0400, Dmitry Monakhov wrote:
-> > Related bug: http://patchwork.ozlabs.org/patch/118863
-> > 
-> > Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+On Thu, Nov 03, 2011 at 11:40:46AM +0100, Arkadiusz Mi??kiewicz wrote:
+> This serwer has 16 various SATA disk connected to art-of-crap controller - 
+> Promise SuperTrak EX16350.
 > 
-> This causes a very weird XFS failure in test 117 for me.  While it
-> obviously is an xfs bug that you uncovered (good!) I'm a bit worried
-> about simply enabling operations in existing tests.
-Ohh. i've got what your are talking about. We can not add new ops
-for tests there seed is passed explicitly. And yes i've braked this, but
-this is because such frozen tests was written in not determined
-way :). Good determined test should has not just seed opt, but also
-explicit set of operations. All others (non determined) tests which use
-fsstress may benefit from new ops. So I'll redo my patch queue like this:
-1) Add explicit option set for all frozen tests
-2) Add new features to fssstress with non zero probability. 
+> The system exhibits funny issues with intel_idle driver 
+> (https://lkml.org/lkml/2011/10/28/270).
 > 
-> Alex, Eric, Dave - should we add new tests with the new operations
-> Dmitry added, or is adding new ops to the existing tests fine?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> It has only 8GB of ram which xfs_repair eats for breakfast causing watchdog to 
+> reboot machine while xfs_repair was in progress (would be nice if repair could 
+> estimate needed ram before it is too late).
+
+Yes.  So far most of the issues are with the internal buffercache and I
+suspect we could do better sizing decisions there.  If you can provide
+some testing (xfs_repair -n should be enough) I'll happily send you
+some RFC patches as soon as I get time for it.
+
+In the meantime is there any chance you could send the output of
+
+	xfs_repair -n -vv -m 1
+
+for this filesystem?
 
 _______________________________________________
 xfs mailing list
