@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3HuBxV038379 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 12:56:11 -0500
+	pA3Hu4pr038343 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 12:56:04 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 251B8568D87
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 10:56:09 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A3231568D72
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 10:56:03 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id 8YGXR8ZsUCAgUvbp
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:09 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id tgmcLBWIUZKQeK94
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:03 -0700 (PDT)
 Received: by mail-bw0-f53.google.com with SMTP id zs8so1634560bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:09 -0700 (PDT)
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:03 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 4/9] xfstests: fsstress add FS_IOC_{SET,
-	GET}FLAGS operations v2
-Date: Thu,  3 Nov 2011 21:55:48 +0400
-Message-Id: <1320342953-7973-4-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 2/9] xfstests: freeze fsstress options for 117'th
+Date: Thu,  3 Nov 2011 21:55:46 +0400
+Message-Id: <1320342953-7973-2-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
 References: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,208 +32,73 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-Add two new operations:
-- getattr: ioctl(fd, FS_IOC_GETFLAGS, &fl)
-- setattr: ioctl(fd, FS_IOC_SETFLAGS, &random_flags)
-Attribute mask may be passed via -M opt, by default is (~0).
-By default FS_IOC_SETFLAGS has zero probability because
-it may produce inodes with APPEND or IMMUTABLE flags which
-are not deletable by default. Let's assumes that one who
-enable it knows how to delete such inodes.
-For example like follows:
-find $TEST_PATH -exec chattr -i -a {} \;
-rm -rf $TEST_PATH
+This is regression tescase for explicit combination of seed+fs_opts.
+Let's hardcode all options to prevent interactions with fsstress
+changes in future.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- aclocal.m4     |    4 +++
- configure.in   |    1 +
- ltp/fsstress.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 3 files changed, 72 insertions(+), 1 deletions(-)
+ 117 |   39 ++++++++++++++++++++++++++++-----------
+ 1 files changed, 28 insertions(+), 11 deletions(-)
 
-diff --git a/aclocal.m4 b/aclocal.m4
-index 5532606..5739004 100644
---- a/aclocal.m4
-+++ b/aclocal.m4
-@@ -21,6 +21,10 @@ AC_DEFUN([AC_PACKAGE_WANT_LINUX_PRCTL_H],
-     AC_SUBST(have_prctl)
-   ])
+diff --git a/117 b/117
+index edec157..2e3f658 100755
+--- a/117
++++ b/117
+@@ -33,8 +33,34 @@ tmp=/tmp/$$
+ status=1	# failure is the default!
+ trap "_cleanup; exit \$status" 0 1 2 3 15
  
-+AC_DEFUN([AC_PACKAGE_WANT_LINUX_FS_H],
-+  [ AC_CHECK_HEADER([linux/fs.h])
-+  ])
-+
- AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
-   [ AC_MSG_CHECKING([for fallocate])
-     AC_TRY_LINK([
-diff --git a/configure.in b/configure.in
-index 76d23e4..3b40e55 100644
---- a/configure.in
-+++ b/configure.in
-@@ -68,6 +68,7 @@ in
- 		AC_PACKAGE_WANT_LINUX_FIEMAP_H
- 		AC_PACKAGE_WANT_FALLOCATE
- 		AC_PACKAGE_WANT_LINUX_PRCTL_H
-+		AC_PACKAGE_WANT_LINUX_FS_H
- 		;;
- esac
+-# seed for fsstress known to cause curruptions
++# seed and options for fsstress known to cause curruptions
+ seed=1122413794
++fss_ops=" -z \
++    -f attr_remove=100 \
++    -f attr_set=100 \
++    -f chown=3 \
++    -f creat=4 \
++    -f dread=4 \
++    -f dwrite=4 \
++    -f fdatasync=1 \
++    -f fsync=1 \
++    -f getdents=1 \
++    -f link=1 \
++    -f mkdir=2 \
++    -f mknod=2 \
++    -f read=1 \
++    -f readlink=1 \
++    -f rename=2 \
++    -f rmdir=1 \
++    -f setxattr=1 \
++    -f stat=1 \
++    -f symlink=2 \
++    -f sync=1 \
++    -f truncate=2 \
++    -f unlink=1 \
++    -f write=4 \
++    -s $seed \
++    -m 31 -n 1000 -p 1"
  
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index e9e4e67..c258ee9 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -37,6 +37,15 @@
- #ifdef HAVE_SYS_PRCTL_H
- #include <sys/prctl.h>
- #endif
-+
-+#include <linux/fs.h>
-+#ifndef FS_IOC_GETFLAGS
-+#define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
-+#endif
-+#ifndef FS_IOC_SETFLAGS
-+#define FS_IOC_SETFLAGS                 _IOW('f', 2, long)
-+#endif
-+
- #include <math.h>
- #define XFS_ERRTAG_MAX		17
- #define XFS_IDMODULO_MAX	31	/* user/group IDs (1 << x)  */
-@@ -58,6 +67,7 @@ typedef enum {
- 	OP_FDATASYNC,
- 	OP_FREESP,
- 	OP_FSYNC,
-+	OP_GETATTR,
- 	OP_GETDENTS,
- 	OP_LINK,
- 	OP_MKDIR,
-@@ -68,6 +78,7 @@ typedef enum {
- 	OP_RENAME,
- 	OP_RESVSP,
- 	OP_RMDIR,
-+	OP_SETATTR,
- 	OP_SETXATTR,
- 	OP_STAT,
- 	OP_SYMLINK,
-@@ -140,6 +151,7 @@ void	fallocate_f(int, long);
- void	fdatasync_f(int, long);
- void	freesp_f(int, long);
- void	fsync_f(int, long);
-+void	getattr_f(int, long);
- void	getdents_f(int, long);
- void	link_f(int, long);
- void	mkdir_f(int, long);
-@@ -150,6 +162,7 @@ void	readlink_f(int, long);
- void	rename_f(int, long);
- void	resvsp_f(int, long);
- void	rmdir_f(int, long);
-+void	setattr_f(int, long);
- void	setxattr_f(int, long);
- void	stat_f(int, long);
- void	symlink_f(int, long);
-@@ -173,6 +186,7 @@ opdesc_t	ops[] = {
- 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
- 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
- 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
-+	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
- 	{ OP_GETDENTS, "getdents", getdents_f, 1, 0 },
- 	{ OP_LINK, "link", link_f, 1, 1 },
- 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
-@@ -183,6 +197,7 @@ opdesc_t	ops[] = {
- 	{ OP_RENAME, "rename", rename_f, 2, 1 },
- 	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
- 	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
-+	{ OP_SETATTR, "setattr", setattr_f, 0, 1 },
- 	{ OP_SETXATTR, "setxattr", setxattr_f, 1, 1 },
- 	{ OP_STAT, "stat", stat_f, 1, 0 },
- 	{ OP_SYMLINK, "symlink", symlink_f, 2, 1 },
-@@ -218,6 +233,7 @@ int		nops;
- int		nproc = 1;
- int		operations = 1;
- unsigned int	idmodulo = XFS_IDMODULO_MAX;
-+unsigned int	attr_mask = ~0;
- int		procid;
- int		rtpct;
- unsigned long	seed = 0;
-@@ -296,7 +312,7 @@ int main(int argc, char **argv)
- 	nops = sizeof(ops) / sizeof(ops[0]);
- 	ops_end = &ops[nops];
- 	myprog = argv[0];
--	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:S:vwzH")) != -1) {
-+	while ((c = getopt(argc, argv, "d:e:f:i:m:M:n:o:p:rs:S:vwzH")) != -1) {
- 		switch (c) {
- 		case 'd':
- 			dirname = optarg;
-@@ -356,6 +372,9 @@ int main(int argc, char **argv)
- 		case 'z':
- 			zero_freq();
- 			break;
-+		case 'M':
-+		  	attr_mask = strtoul(optarg, NULL, 0);
-+			break;
- 		case 'S':
- 			i = 0;
- 			if (optarg[0] == 'c')
-@@ -2198,6 +2217,29 @@ fsync_f(int opno, long r)
- }
+ ITERATIONS=10
  
- void
-+getattr_f(int opno, long r)
-+{
-+	int		fd;
-+	int		e;
-+	pathname_t	f;
-+	uint		fl;
-+	int		v;
-+
-+	init_pathname(&f);
-+	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
-+		append_pathname(&f, ".");
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
-+
-+	e = ioctl(fd, FS_IOC_GETFLAGS, &fl);
-+	if (v)
-+		printf("%d/%d: getattr %s %u %d\n", procid, opno, f.path, fl, e);
-+	free_pathname(&f);
-+	close(fd);
-+}
-+
-+void
- getdents_f(int opno, long r)
- {
- 	DIR		*dir;
-@@ -2643,6 +2685,30 @@ rmdir_f(int opno, long r)
- }
+@@ -76,16 +102,7 @@ while [ $i -lt $ITERATIONS ]; do
+     echo fsstress iteration: $i | tee -a $seq.full
+     $FSSTRESS_PROG \
+ 	-d $SCRATCH_MNT/fsstress \
+-	-f allocsp=0 \
+-	-f freesp=0 \
+-	-f bulkstat=0 \
+-	-f bulkstat1=0 \
+-	-f resvsp=0 \
+-	-f unresvsp=0 \
+-	-f attr_set=100 \
+-	-f attr_remove=100 \
+-        -s $seed \
+-	-p 1 -n 1000 -S c >>$seq.full 2>&1
++	$fss_ops -S c >>$seq.full 2>&1
  
- void
-+setattr_f(int opno, long r)
-+{
-+	int		fd;
-+	int		e;
-+	pathname_t	f;
-+	uint		fl;
-+	int		v;
-+
-+	init_pathname(&f);
-+	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
-+		append_pathname(&f, ".");
-+	fd = open_path(&f, O_RDWR);
-+	e = fd < 0 ? errno : 0;
-+	check_cwd();
-+
-+	fl = attr_mask & (uint)random();
-+	e = ioctl(fd, FS_IOC_SETFLAGS, &fl);
-+	if (v)
-+		printf("%d/%d: setattr %s %x %d\n", procid, opno, f.path, fl, e);
-+	free_pathname(&f);
-+	close(fd);
-+}
-+
-+void
- stat_f(int opno, long r)
- {
- 	int		e;
+     let i=$i+1
+ done
 -- 
 1.7.1
 
