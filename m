@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3Hu1bd038333 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 12:56:02 -0500
+	pA3HuBxV038379 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 12:56:11 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1DA59568D6E
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 10:56:00 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 251B8568D87
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 10:56:09 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id eCUJazPM2pAHfynV
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:00 -0700 (PDT)
-Received: by bkbzs8 with SMTP id zs8so1634560bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:55:59 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id 8YGXR8ZsUCAgUvbp
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:09 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id zs8so1634560bkb.26
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 10:56:09 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 1/9] xfstests: fsstress add command line style output for
-	show_opts
-Date: Thu,  3 Nov 2011 21:55:45 +0400
-Message-Id: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 4/9] xfstests: fsstress add FS_IOC_{SET,
+	GET}FLAGS operations v2
+Date: Thu,  3 Nov 2011 21:55:48 +0400
+Message-Id: <1320342953-7973-4-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
+References: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,104 +33,208 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-Once some combination of seed+fs_ops result in regression it is
-reasonable to document that combination. It is usefull to dump
-that configuration in command line style. Later this line may be
-simply hardcoded in to regression test.
+Add two new operations:
+- getattr: ioctl(fd, FS_IOC_GETFLAGS, &fl)
+- setattr: ioctl(fd, FS_IOC_SETFLAGS, &random_flags)
+Attribute mask may be passed via -M opt, by default is (~0).
+By default FS_IOC_SETFLAGS has zero probability because
+it may produce inodes with APPEND or IMMUTABLE flags which
+are not deletable by default. Let's assumes that one who
+enable it knows how to delete such inodes.
+For example like follows:
+find $TEST_PATH -exec chattr -i -a {} \;
+rm -rf $TEST_PATH
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- 070            |    2 +-
- 117            |    2 +-
- ltp/fsstress.c |   21 +++++++++++++++++----
- 3 files changed, 19 insertions(+), 6 deletions(-)
+ aclocal.m4     |    4 +++
+ configure.in   |    1 +
+ ltp/fsstress.c |   68 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 3 files changed, 72 insertions(+), 1 deletions(-)
 
-diff --git a/070 b/070
-index 4458011..f48c33c 100755
---- a/070
-+++ b/070
-@@ -62,7 +62,7 @@ $FSSTRESS_PROG \
- 	-f unresvsp=0 \
- 	-f attr_set=100 \
- 	-f attr_remove=100 \
--	-S -p 1 -n 10000 >$seq.full 2>&1
-+        -p 1 -n 10000 -S c >$seq.full 2>&1
+diff --git a/aclocal.m4 b/aclocal.m4
+index 5532606..5739004 100644
+--- a/aclocal.m4
++++ b/aclocal.m4
+@@ -21,6 +21,10 @@ AC_DEFUN([AC_PACKAGE_WANT_LINUX_PRCTL_H],
+     AC_SUBST(have_prctl)
+   ])
  
- status=$?
- exit
-diff --git a/117 b/117
-index fcf0485..edec157 100755
---- a/117
-+++ b/117
-@@ -85,7 +85,7 @@ while [ $i -lt $ITERATIONS ]; do
- 	-f attr_set=100 \
- 	-f attr_remove=100 \
-         -s $seed \
--	-S -p 1 -n 1000 >>$seq.full 2>&1
-+	-p 1 -n 1000 -S c >>$seq.full 2>&1
++AC_DEFUN([AC_PACKAGE_WANT_LINUX_FS_H],
++  [ AC_CHECK_HEADER([linux/fs.h])
++  ])
++
+ AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
+   [ AC_MSG_CHECKING([for fallocate])
+     AC_TRY_LINK([
+diff --git a/configure.in b/configure.in
+index 76d23e4..3b40e55 100644
+--- a/configure.in
++++ b/configure.in
+@@ -68,6 +68,7 @@ in
+ 		AC_PACKAGE_WANT_LINUX_FIEMAP_H
+ 		AC_PACKAGE_WANT_FALLOCATE
+ 		AC_PACKAGE_WANT_LINUX_PRCTL_H
++		AC_PACKAGE_WANT_LINUX_FS_H
+ 		;;
+ esac
  
-     let i=$i+1
- done
 diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 133a247..f9d7d6e 100644
+index e9e4e67..c258ee9 100644
 --- a/ltp/fsstress.c
 +++ b/ltp/fsstress.c
-@@ -284,7 +284,7 @@ int main(int argc, char **argv)
+@@ -37,6 +37,15 @@
+ #ifdef HAVE_SYS_PRCTL_H
+ #include <sys/prctl.h>
+ #endif
++
++#include <linux/fs.h>
++#ifndef FS_IOC_GETFLAGS
++#define FS_IOC_GETFLAGS                 _IOR('f', 1, long)
++#endif
++#ifndef FS_IOC_SETFLAGS
++#define FS_IOC_SETFLAGS                 _IOW('f', 2, long)
++#endif
++
+ #include <math.h>
+ #define XFS_ERRTAG_MAX		17
+ #define XFS_IDMODULO_MAX	31	/* user/group IDs (1 << x)  */
+@@ -58,6 +67,7 @@ typedef enum {
+ 	OP_FDATASYNC,
+ 	OP_FREESP,
+ 	OP_FSYNC,
++	OP_GETATTR,
+ 	OP_GETDENTS,
+ 	OP_LINK,
+ 	OP_MKDIR,
+@@ -68,6 +78,7 @@ typedef enum {
+ 	OP_RENAME,
+ 	OP_RESVSP,
+ 	OP_RMDIR,
++	OP_SETATTR,
+ 	OP_SETXATTR,
+ 	OP_STAT,
+ 	OP_SYMLINK,
+@@ -140,6 +151,7 @@ void	fallocate_f(int, long);
+ void	fdatasync_f(int, long);
+ void	freesp_f(int, long);
+ void	fsync_f(int, long);
++void	getattr_f(int, long);
+ void	getdents_f(int, long);
+ void	link_f(int, long);
+ void	mkdir_f(int, long);
+@@ -150,6 +162,7 @@ void	readlink_f(int, long);
+ void	rename_f(int, long);
+ void	resvsp_f(int, long);
+ void	rmdir_f(int, long);
++void	setattr_f(int, long);
+ void	setxattr_f(int, long);
+ void	stat_f(int, long);
+ void	symlink_f(int, long);
+@@ -173,6 +186,7 @@ opdesc_t	ops[] = {
+ 	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
+ 	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
+ 	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
++	{ OP_GETATTR, "getattr", getattr_f, 1, 0 },
+ 	{ OP_GETDENTS, "getdents", getdents_f, 1, 0 },
+ 	{ OP_LINK, "link", link_f, 1, 1 },
+ 	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
+@@ -183,6 +197,7 @@ opdesc_t	ops[] = {
+ 	{ OP_RENAME, "rename", rename_f, 2, 1 },
+ 	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
+ 	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
++	{ OP_SETATTR, "setattr", setattr_f, 0, 1 },
+ 	{ OP_SETXATTR, "setxattr", setxattr_f, 1, 1 },
+ 	{ OP_STAT, "stat", stat_f, 1, 0 },
+ 	{ OP_SYMLINK, "symlink", symlink_f, 2, 1 },
+@@ -218,6 +233,7 @@ int		nops;
+ int		nproc = 1;
+ int		operations = 1;
+ unsigned int	idmodulo = XFS_IDMODULO_MAX;
++unsigned int	attr_mask = ~0;
+ int		procid;
+ int		rtpct;
+ unsigned long	seed = 0;
+@@ -296,7 +312,7 @@ int main(int argc, char **argv)
  	nops = sizeof(ops) / sizeof(ops[0]);
  	ops_end = &ops[nops];
  	myprog = argv[0];
--	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:vwzHS")) != -1) {
-+	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:S:vwzH")) != -1) {
+-	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:S:vwzH")) != -1) {
++	while ((c = getopt(argc, argv, "d:e:f:i:m:M:n:o:p:rs:S:vwzH")) != -1) {
  		switch (c) {
  		case 'd':
  			dirname = optarg;
-@@ -345,7 +345,10 @@ int main(int argc, char **argv)
+@@ -356,6 +372,9 @@ int main(int argc, char **argv)
+ 		case 'z':
  			zero_freq();
  			break;
++		case 'M':
++		  	attr_mask = strtoul(optarg, NULL, 0);
++			break;
  		case 'S':
--			show_ops(0, NULL);
-+			i = 0;
-+			if (optarg[0] == 'c')
-+				i = 1;
-+			show_ops(1, NULL);
- 			printf("\n");
-                         nousage=1;
- 			break;
-@@ -1310,7 +1313,8 @@ show_ops(int flag, char *lead_str)
-                         x+=printf("%s ", p->name);
-                 }
-                 printf("\n");
--        } else {
-+        } else if (flag == 0) {
-+		/* Table view style */
- 	        int		f;
- 	        for (f = 0, p = ops; p < ops_end; p++)
- 		        f += p->freq;
-@@ -1327,6 +1331,15 @@ show_ops(int flag, char *lead_str)
- 			        (p->iswrite == 0) ? " " : "write op");
- 		        }
-                 }
-+	} else {
-+		/* Command line style */
-+		if (lead_str != NULL)
-+			printf("%s", lead_str);
-+		printf ("-z -s %ld -m %d -n %d -p %d \\\n", seed, idmodulo,
-+			operations, nproc);
-+	        for (p = ops; p < ops_end; p++)
-+		        if (p->freq > 0)
-+			        printf("-f %s=%d \\\n",p->name, p->freq);
- 	}
+ 			i = 0;
+ 			if (optarg[0] == 'c')
+@@ -2198,6 +2217,29 @@ fsync_f(int opno, long r)
  }
  
-@@ -1433,7 +1446,7 @@ usage(void)
- 	printf("   -v               specifies verbose mode\n");
- 	printf("   -w               zeros frequencies of non-write operations\n");
- 	printf("   -z               zeros frequencies of all operations\n");
--	printf("   -S               prints the table of operations (omitting zero frequency)\n");
-+	printf("   -S [c,t]         prints the list of operations (omitting zero frequency) in command line or table style\n");
- 	printf("   -H               prints usage and exits\n");
+ void
++getattr_f(int opno, long r)
++{
++	int		fd;
++	int		e;
++	pathname_t	f;
++	uint		fl;
++	int		v;
++
++	init_pathname(&f);
++	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
++		append_pathname(&f, ".");
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++
++	e = ioctl(fd, FS_IOC_GETFLAGS, &fl);
++	if (v)
++		printf("%d/%d: getattr %s %u %d\n", procid, opno, f.path, fl, e);
++	free_pathname(&f);
++	close(fd);
++}
++
++void
+ getdents_f(int opno, long r)
+ {
+ 	DIR		*dir;
+@@ -2643,6 +2685,30 @@ rmdir_f(int opno, long r)
  }
  
+ void
++setattr_f(int opno, long r)
++{
++	int		fd;
++	int		e;
++	pathname_t	f;
++	uint		fl;
++	int		v;
++
++	init_pathname(&f);
++	if (!get_fname(FT_ANYm, r, &f, NULL, NULL, &v))
++		append_pathname(&f, ".");
++	fd = open_path(&f, O_RDWR);
++	e = fd < 0 ? errno : 0;
++	check_cwd();
++
++	fl = attr_mask & (uint)random();
++	e = ioctl(fd, FS_IOC_SETFLAGS, &fl);
++	if (v)
++		printf("%d/%d: setattr %s %x %d\n", procid, opno, f.path, fl, e);
++	free_pathname(&f);
++	close(fd);
++}
++
++void
+ stat_f(int opno, long r)
+ {
+ 	int		e;
 -- 
 1.7.1
 
