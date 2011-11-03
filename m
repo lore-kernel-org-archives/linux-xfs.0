@@ -1,15 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3AJAO7259820 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:19:10 -0500
-Date: Thu, 3 Nov 2011 06:19:08 -0400
+	pA3A6rid258113 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 05:06:53 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C86E1CDD60A
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 03:06:52 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	EIOvYUexDh2CzGLP for <xfs@oss.sgi.com>;
+	Thu, 03 Nov 2011 03:06:52 -0700 (PDT)
+Date: Thu, 3 Nov 2011 06:06:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/8] xfsdump: enable support for multiple streams
-Message-ID: <20111103101908.GA8572@infradead.org>
-References: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
+Subject: Re: [Patch] xfs: serialise unaligned direct IOs
+Message-ID: <20111103100647.GA1002@infradead.org>
+References: <CADDb1s0WUfvt8N+hMATboKxbMUZdk2N-R2e=KFH2JvGUjbigBg@mail.gmail.com>
+	<20111103070246.GA10579@infradead.org>
+	<CADDb1s3UN4HMKEA2kSEM0HsUCC7DE63B1oJAoL6QpqXBdDCEqQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1320268254-20583-1-git-send-email-wkendall@sgi.com>
+In-Reply-To: <CADDb1s3UN4HMKEA2kSEM0HsUCC7DE63B1oJAoL6QpqXBdDCEqQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,28 +32,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Wed, Nov 02, 2011 at 04:10:46PM -0500, Bill Kendall wrote:
-> This series resurrects the IRIX multi-stream support for splitting a
-> backup among several output files/tapes. This offers some nice
-> performance improvements, particularly in xfsrestore where a single
-> stream often cannot keep the filesystem/disks busy. I've observed
-> a 1.7x improvement on a backup and a 5x improvement on restore.
-> 
-> I have a couple of xfstests for this, and will submit those once
-> a few outstanding xfsdump test patches have been reviewed.
+On Thu, Nov 03, 2011 at 03:29:18PM +0530, Amit Sahrawat wrote:
+> > You probably should keep the original Signoff and reviewed-by tags,
+> > and add your editor note on the top into [ ] ?brackets.
+> Ok, will do so in the final patch. Actually was unaware of information
+> to keep in backported patches?
 
-I've put both your two previous xfsdump patches and the all your
-xfstests changes into the kernel.org repositories.  They all look
-fine to me.
+The standard procedure is to keep patches basically as-is.  This doesn't
+quite apply for your case, so I think just adding a comment in 
+[ ] brackets on the top is the best you can do.
 
-Btw, one thing I'd love to see is a script that uses the userspace
-iscsi target (tgt) infrastructure to emulate a tape, and thus allow to
-run the tape tests in any VM without requiring a real tape device.
+> > You also need to make the i_mutex unlock and need_i_mutex update
+> > conditional here, otherwise you still serialize all O_DIRECT writes.
+> >
+> you mean, keeping need_i_mutex=0 and mutex_unlock as part of 'else' statement.
 
-Maybe there is someone on the list feels challenged by this?
+Yes.
 
 _______________________________________________
 xfs mailing list
