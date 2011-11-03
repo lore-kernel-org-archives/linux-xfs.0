@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3EPcQl017943 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:38 -0500
+	pA3EPjpx018014 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:45 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C4C05683D3
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:37 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CF53A12FF779
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:44 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id e3DMoxBlh16uI3dP
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:37 -0700 (PDT)
-Received: by mail-bw0-f53.google.com with SMTP id zs8so1398069bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:37 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id JmDFoDR6GmfDjvQO
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:44 -0700 (PDT)
+Received: by mail-bw0-f53.google.com with SMTP id zs8so1398030bkb.26
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:44 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 03/12] xfstests: fsstress should kill children tasks before
-	exit
-Date: Thu,  3 Nov 2011 18:24:52 +0400
-Message-Id: <1320330301-2682-4-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 11/12] xfstress: add regression testcase for d583fb87a3ff0
+Date: Thu,  3 Nov 2011 18:25:00 +0400
+Message-Id: <1320330301-2682-12-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 References: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,145 +32,151 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-It is very hard to predict runtime for fsstress. In many cases it
-is useful to give test to run a reasonable time, and then kill it.
-But currently there is no reliable way to kill test without leaving
-running children.
-This patch add sanity cleanup logic which looks follow:
- - On sigterm received by parent, it resend signal to it's children
- - Wait for each child to terminates
- - EXTRA_SANITY: Even if parent was killed by other signal, children
-   will be terminated with SIGKILL to preven staled children.
-
-So now one can simply run fsstress like this:
-./fsstress -p 1000 -n999999999 -d $TEST_DIR &
-PID=$!
-sleep 300
-kill $PID
-wait $PID
+Should be fixed by following patch http://patchwork.ozlabs.org/patch/120883/
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- aclocal.m4     |    5 +++++
- configure.in   |    1 +
- ltp/fsstress.c |   37 ++++++++++++++++++++++++++++++++++++-
- 3 files changed, 42 insertions(+), 1 deletions(-)
+ 266     |   69 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 266.out |   44 ++++++++++++++++++++++++++++++++++++++++
+ group   |    1 +
+ 3 files changed, 114 insertions(+), 0 deletions(-)
+ create mode 100755 266
+ create mode 100644 266.out
 
-diff --git a/aclocal.m4 b/aclocal.m4
-index 168eb59..5532606 100644
---- a/aclocal.m4
-+++ b/aclocal.m4
-@@ -16,6 +16,11 @@ AC_DEFUN([AC_PACKAGE_WANT_LINUX_FIEMAP_H],
-     AC_SUBST(have_fiemap)
-   ])
- 
-+AC_DEFUN([AC_PACKAGE_WANT_LINUX_PRCTL_H],
-+  [ AC_CHECK_HEADERS([sys/prctl.h], [ have_prctl=true ], [ have_prctl=false ])
-+    AC_SUBST(have_prctl)
-+  ])
+diff --git a/266 b/266
+new file mode 100755
+index 0000000..4209532
+--- /dev/null
++++ b/266
+@@ -0,0 +1,69 @@
++#! /bin/bash
++# FSQA Test No. 266
++#
++# Regression testcase for d583fb87a3ff0 (ext4 extent corruption)
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=dmonakhov@openvz.org
 +
- AC_DEFUN([AC_PACKAGE_WANT_FALLOCATE],
-   [ AC_MSG_CHECKING([for fallocate])
-     AC_TRY_LINK([
-diff --git a/configure.in b/configure.in
-index c697b4f..76d23e4 100644
---- a/configure.in
-+++ b/configure.in
-@@ -67,6 +67,7 @@ in
- 		AC_PACKAGE_WANT_DMAPI
- 		AC_PACKAGE_WANT_LINUX_FIEMAP_H
- 		AC_PACKAGE_WANT_FALLOCATE
-+		AC_PACKAGE_WANT_LINUX_PRCTL_H
- 		;;
- esac
- 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index c7001f3..133a247 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -28,7 +28,9 @@
- #ifndef HAVE_ATTR_LIST
- #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
- #endif
--
-+#ifdef HAVE_SYS_PRCTL_H
-+#include <sys/prctl.h>
-+#endif
- #include <math.h>
- #define XFS_ERRTAG_MAX		17
- #define XFS_IDMODULO_MAX	31	/* user/group IDs (1 << x)  */
-@@ -209,6 +211,7 @@ int		rtpct;
- unsigned long	seed = 0;
- ino_t		top_ino;
- int		verbose = 0;
-+sig_atomic_t	should_stop = 0;
- 
- void	add_to_flist(int, int, int);
- void	append_pathname(pathname_t *, char *);
-@@ -253,6 +256,11 @@ void	usage(void);
- void	write_freq(void);
- void	zero_freq(void);
- 
-+void sg_handler(int signum)
-+{
-+	should_stop = 1;
-+}
++seq=`basename $0`
++echo "QA output created by $seq"
 +
- int main(int argc, char **argv)
- {
- 	char		buf[10];
-@@ -269,6 +277,7 @@ int main(int argc, char **argv)
- 	ptrdiff_t	srval;
- 	int             nousage = 0;
- 	xfs_error_injection_t	        err_inj;
-+	struct sigaction action;
- 
- 	errrange = errtag = 0;
- 	umask(0);
-@@ -429,8 +438,27 @@ int main(int argc, char **argv)
- 		}
- 	} else
- 		close(fd);
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
-+	setpgid(0, 0);
-+	action.sa_handler = sg_handler;
-+	sigemptyset(&action.sa_mask);
-+	action.sa_flags = 0;
-+	if (sigaction(SIGTERM, &action, 0)) {
-+		perror("sigaction failed");
-+		exit(1);
-+	}
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
 +
- 	for (i = 0; i < nproc; i++) {
- 		if (fork() == 0) {
-+			action.sa_handler = SIG_DFL;
-+			sigemptyset(&action.sa_mask);
-+			if (sigaction(SIGTERM, &action, 0))
-+				return 1;
-+#ifdef HAVE_SYS_PRCTL_H
-+			prctl(PR_SET_PDEATHSIG, SIGKILL);
-+			if (getppid() == 1) /* parent died already? */
-+				return 0;
-+#endif
- 			if (logname) {
- 				char path[PATH_MAX];
- 				snprintf(path, sizeof(path), "%s/%s.%d",
-@@ -445,8 +473,15 @@ int main(int argc, char **argv)
- 			return 0;
- 		}
- 	}
-+	while (wait(&stat) > 0 && !should_stop) {
-+		continue;
-+	}
-+	action.sa_flags = SA_RESTART;
-+	sigaction(SIGTERM, &action, 0);
-+	kill(-getpid(), SIGTERM);
- 	while (wait(&stat) > 0)
- 		continue;
++# real QA test starts here
++_supported_fs ext4
++_supported_os Linux
++_require_scratch
++_need_to_be_root
 +
- 	if (errtag != 0) {
- 		err_inj.errtag = 0;
- 		err_inj.fd = fd;
++umount $SCRATCH_DEV 2>/dev/null
++_scratch_mkfs_sized $((128 * 1024 * 1024)) >> $seq.full 2>&1
++
++# -onoload and EXT4_SYNC_FL on file is important becase result in
++# metadata sync writes inside ext4_handle_dirty_metadata()
++_scratch_mount -onoload
++touch $SCRATCH_MNT/file
++chattr +S $SCRATCH_MNT/file
++# Create sparse file 
++for ((i = 0; i < 21; i++))
++do
++    dd if=/dev/zero of=$SCRATCH_MNT/file bs=4k count=1 seek=$((i*10))
++done
++# truncate last extent
++truncate $SCRATCH_MNT/file --size $((4096* 200))
++
++if ! _scratch_unmount; then
++	echo "failed to umount"
++	status=1
++	exit
++fi
++echo "Check filesystem"
++_check_scratch_fs
++status=$?
++exit
+diff --git a/266.out b/266.out
+new file mode 100644
+index 0000000..a248232
+--- /dev/null
++++ b/266.out
+@@ -0,0 +1,44 @@
++QA output created by 266
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++1+0 records in
++1+0 records out
++Check filesystem
+diff --git a/group b/group
+index 487051a..dfc6fa7 100644
+--- a/group
++++ b/group
+@@ -379,3 +379,4 @@ deprecated
+ 263 rw auto quick
+ 264 auto rw prealloc ioctl enospc
+ 265 auto quota rw prealloc ioctl enospc
++266 rw auto quick
 -- 
 1.7.1
 
