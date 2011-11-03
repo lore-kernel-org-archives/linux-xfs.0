@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA3EPhSr017984 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:43 -0500
+	pA3EPmdJ018037 for <xfs@oss.sgi.com>; Thu, 3 Nov 2011 09:25:48 -0500
 Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F0E775683DE
-	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:42 -0700 (PDT)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A59705683F4
+	for <xfs@oss.sgi.com>; Thu,  3 Nov 2011 07:25:47 -0700 (PDT)
 Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id V7DaKsaqGYbhAxZW
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:42 -0700 (PDT)
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id s5x1pKiYP8yWKBAW
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:47 -0700 (PDT)
 Received: by mail-bw0-f53.google.com with SMTP id zs8so1398069bkb.26
-	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:42 -0700 (PDT)
+	for <xfs@oss.sgi.com>; Thu, 03 Nov 2011 07:25:47 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 10/12] xfstests: add a new quota test that runs fsstress under
-	ENOSPC conditions
-Date: Thu,  3 Nov 2011 18:24:59 +0400
-Message-Id: <1320330301-2682-11-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 12/12] xfstress: Test data journaling flag switch for a single
+	file
+Date: Thu,  3 Nov 2011 18:25:01 +0400
+Message-Id: <1320330301-2682-13-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 References: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,30 +33,26 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
 
-- Same as 264 but with quota enabled.
-- IO performed from $qa_user user
-- fsstress granted with CAP_CHOWN capability.
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- 265     |  108 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 265.out |    8 +++++
+ 267     |  111 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 267.out |   37 +++++++++++++++++++++
  group   |    1 +
- 3 files changed, 117 insertions(+), 0 deletions(-)
- create mode 100755 265
- create mode 100644 265.out
+ 3 files changed, 149 insertions(+), 0 deletions(-)
+ create mode 100644 267
+ create mode 100644 267.out
 
-diff --git a/265 b/265
-new file mode 100755
-index 0000000..b568fdd
+diff --git a/267 b/267
+new file mode 100644
+index 0000000..e2ce347
 --- /dev/null
-+++ b/265
-@@ -0,0 +1,108 @@
++++ b/267
+@@ -0,0 +1,111 @@
 +#! /bin/bash
-+# FSQA Test No. 265
++# FSQA Test No. 267
 +#
-+# Run fsstress and ENSPC hitters in parallel, check quota and 
-+# fs consistency an the end
++# Test data journaling flag switch for a single file  
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
@@ -90,99 +86,132 @@ index 0000000..b568fdd
 +# get standard environment, filters and checks
 +. ./common.rc
 +. ./common.filter
-+. ./common.quota
-+
-+# Disable all sync operations to get higher load
-+FSSTRESS_AVOID="$FSSTRESS_AVOID -ffsync=0 -fsync=0 -ffdatasync=0"
 +_workout()
 +{
 +	echo ""
-+	echo "Run fsstress"
++	echo " Switch data journalling mode"
 +	echo ""
-+	num_iterations=10
-+	enospc_time=2
-+	out=$SCRATCH_MNT/fsstress.$$
-+	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
-+	echo "fsstress $args" >> $here/$seq.full
-+	# Grant chown capability 
-+	cp $FSSTRESS_PROG  $tmp.fsstress.bin
-+	setcap cap_chown=epi  $tmp.fsstress.bin
-+
-+	(su $qa_user -c "$tmp.fsstress.bin $args" &) > /dev/null 2>&1
-+	pid=$!
-+
-+	echo "Run dd writers in parallel"
-+	for ((i=0; i < num_iterations; i++))
++	write_opt_list="iflag=noatime conv=notrunc conv=fsync oflag=direct"
++	chattr_opt_list="+j -j +jS -j"
++	idx=0
++	#
++	for write_opt in $write_opt_list
 +	do
-+		# File will be opened with O_TRUNC each time
-+		su $qa_user -c "dd if=/dev/zero \
-+			of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M " \
-+			> /dev/null 2>&1
-+		sleep $enospc_time
++		idx=$((idx + 1))
++		for chattr_opt in $chattr_opt_list
++		do
++		    
++			echo "OP write_opt: $write_opt 4M, \
++chattr_opt: $chattr_opt"
++			dd if=/dev/zero of=$SCRATCH_MNT/file.$idx \
++				bs=1M count=4 $write_opt \
++				> /dev/null 2>&1 || exit
++			chattr $chattr_opt $SCRATCH_MNT/file.$idx \
++				|| exit
++		done
 +	done
++	sync
++	# Same as previous test, but for one file,
++	# and with ENOSPC triggering
++	for write_opt in $write_opt_list
++	do
++		idx=$((idx + 1))
++		for chattr_opt in $chattr_opt_list
++		do
 +
-+	killall $tmp.fsstress.bin
-+	wait $pid
++			echo "OP write_opt: $write_opt ENOSPC, \
++chattr_opt: $chattr_opt"
++			dd if=/dev/zero of=$SCRATCH_MNT/file.$idx \
++				bs=1M $write_opt > /dev/null 2>&1
++			chattr $chattr_opt $SCRATCH_MNT/file.$idx \
++				|| exit
++		done
++		sync
++		unlink $SCRATCH_MNT/file.$idx
++	done
 +}
 +
 +# real QA test starts here
-+_supported_fs generic
++_supported_fs ext3 ext4
 +_supported_os Linux
 +_require_scratch
-+_require_quota
-+_require_user
 +_need_to_be_root
 +
 +umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
-+_scratch_mount "-o usrquota,grpquota"
-+chmod 777 $SCRATCH_MNT
-+quotacheck -u -g $SCRATCH_MNT 2>/dev/null
-+quotaon -u -g $SCRATCH_MNT 2>/dev/null
++_scratch_mkfs_sized $((64 * 1024 * 1024)) >> $seq.full 2>&1
++
++# -onoload and EXT4_SYNC_FL on file is important becase result in
++# metadata sync writes inside ext4_handle_dirty_metadata()
++_scratch_mount
 +
 +if ! _workout; then
-+	_scratch_unmount 2>/dev/null
-+	exit
-+fi
-+
-+if ! _check_quota_usage; then
-+	_scratch_unmount 2>/dev/null
++	echo "workout failed"
++	_scratch_unmount
 +	status=1
 +	exit
 +fi
 +
-+echo Comparing filesystem consistency
 +if ! _scratch_unmount; then
 +	echo "failed to umount"
 +	status=1
 +	exit
 +fi
++echo "Check filesystem"
 +_check_scratch_fs
 +status=$?
 +exit
-diff --git a/265.out b/265.out
+diff --git a/267.out b/267.out
 new file mode 100644
-index 0000000..7637291
+index 0000000..d46b6f4
 --- /dev/null
-+++ b/265.out
-@@ -0,0 +1,8 @@
-+QA output created by 265
++++ b/267.out
+@@ -0,0 +1,37 @@
++QA output created by 267
 +
-+Run fsstress
++ Switch data journalling mode
 +
-+Run dd writers in parallel
-+Comparing user usage
-+Comparing group usage
-+Comparing filesystem consistency
++OP write_opt: iflag=noatime 4M, chattr_opt: +j
++OP write_opt: iflag=noatime 4M, chattr_opt: -j
++OP write_opt: iflag=noatime 4M, chattr_opt: +jS
++OP write_opt: iflag=noatime 4M, chattr_opt: -j
++OP write_opt: conv=notrunc 4M, chattr_opt: +j
++OP write_opt: conv=notrunc 4M, chattr_opt: -j
++OP write_opt: conv=notrunc 4M, chattr_opt: +jS
++OP write_opt: conv=notrunc 4M, chattr_opt: -j
++OP write_opt: conv=fsync 4M, chattr_opt: +j
++OP write_opt: conv=fsync 4M, chattr_opt: -j
++OP write_opt: conv=fsync 4M, chattr_opt: +jS
++OP write_opt: conv=fsync 4M, chattr_opt: -j
++OP write_opt: oflag=direct 4M, chattr_opt: +j
++OP write_opt: oflag=direct 4M, chattr_opt: -j
++OP write_opt: oflag=direct 4M, chattr_opt: +jS
++OP write_opt: oflag=direct 4M, chattr_opt: -j
++OP write_opt: iflag=noatime ENOSPC, chattr_opt: +j
++OP write_opt: iflag=noatime ENOSPC, chattr_opt: -j
++OP write_opt: iflag=noatime ENOSPC, chattr_opt: +jS
++OP write_opt: iflag=noatime ENOSPC, chattr_opt: -j
++OP write_opt: conv=notrunc ENOSPC, chattr_opt: +j
++OP write_opt: conv=notrunc ENOSPC, chattr_opt: -j
++OP write_opt: conv=notrunc ENOSPC, chattr_opt: +jS
++OP write_opt: conv=notrunc ENOSPC, chattr_opt: -j
++OP write_opt: conv=fsync ENOSPC, chattr_opt: +j
++OP write_opt: conv=fsync ENOSPC, chattr_opt: -j
++OP write_opt: conv=fsync ENOSPC, chattr_opt: +jS
++OP write_opt: conv=fsync ENOSPC, chattr_opt: -j
++OP write_opt: oflag=direct ENOSPC, chattr_opt: +j
++OP write_opt: oflag=direct ENOSPC, chattr_opt: -j
++OP write_opt: oflag=direct ENOSPC, chattr_opt: +jS
++OP write_opt: oflag=direct ENOSPC, chattr_opt: -j
++Check filesystem
 diff --git a/group b/group
-index e79c29b..487051a 100644
+index dfc6fa7..5efb43c 100644
 --- a/group
 +++ b/group
-@@ -378,3 +378,4 @@ deprecated
- 262 auto quick quota
- 263 rw auto quick
+@@ -380,3 +380,4 @@ deprecated
  264 auto rw prealloc ioctl enospc
-+265 auto quota rw prealloc ioctl enospc
+ 265 auto quota rw prealloc ioctl enospc
+ 266 rw auto quick
++267 rw auto quick
 -- 
 1.7.1
 
