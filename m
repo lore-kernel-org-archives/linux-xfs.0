@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA4FoAkp101660 for <xfs@oss.sgi.com>; Fri, 4 Nov 2011 10:50:10 -0500
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A27D4101895A
-	for <xfs@oss.sgi.com>; Fri,  4 Nov 2011 08:50:09 -0700 (PDT)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id eEyrKebTv6XJ8bT3 for <xfs@oss.sgi.com>;
-	Fri, 04 Nov 2011 08:50:09 -0700 (PDT)
-Message-ID: <4EB409B0.4050302@sandeen.net>
-Date: Fri, 04 Nov 2011 10:50:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	pA4L3ano116779 for <xfs@oss.sgi.com>; Fri, 4 Nov 2011 16:03:37 -0500
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9DD9422247D
+	for <xfs@oss.sgi.com>; Fri,  4 Nov 2011 14:03:26 -0700 (PDT)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	zAqa6iL8cYlOVkuC for <xfs@oss.sgi.com>;
+	Fri, 04 Nov 2011 14:03:26 -0700 (PDT)
+Date: Fri, 4 Nov 2011 17:03:24 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS read hangs in 3.1-rc10
+Message-ID: <20111104210324.GB14983@infradead.org>
+References: <20111020224214.GC22772@hostway.ca>
+	<20111021132240.GA24136@infradead.org>
+	<20111021202857.GB30100@hostway.ca>
+	<20111024082219.GA19941@infradead.org>
+	<20111025200748.GA25043@hostway.ca>
+	<20111026112521.GA10432@infradead.org>
 MIME-Version: 1.0
-Subject: Re: xfsp_repair segfault (3.1.4 & 3.1.6)
-References: <4EAAED63.9050804@otenet.gr>
-In-Reply-To: <4EAAED63.9050804@otenet.gr>
+Content-Disposition: inline
+In-Reply-To: <20111026112521.GA10432@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +35,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: nanashi <nanashi@otenet.gr>
-Cc: xfs@oss.sgi.com
+To: Simon Kirby <sim@hostway.ca>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 10/28/11 12:58 PM, nanashi wrote:
-> Hi,
-> 
-> I have a corrupted RAID5 xfs filesystem from an intel SS-4000 NAS storage.
-> I'm using slackware-current with 2.6.39.3-smp kernel (32bit & 64bit)
-> When i try xfs_repair I get
-> 
-> xfs_repair: dir2.c:2133: process_dir2: Assertion `(ino
-> !=mp->m_sb.sb_rootino && ino != *parent) || (ino ==
-> mp->m_sb.sb_rootino && (ino == *parent || need_root_dotdot == 1))'
-> 
-> I try both x86 and x86_64, I build 3.1.4 and 3.1.6 with DEBUG=-DNDEBUG and both continue but gave me a segfault
-> 
-> [23978.718305] xfs_repair[25800]: segfault at 7fffa1d81ff0 ip 00007f15c1852049 sp 00007fffa257f048 error 6 in libc-2.13.so[7f15c1715000+19b000]
-> 
-> I try xfs_metadump and I get segfault too.
-> 
-> The partition is 2.2TB and I don't have enough space to dd it to an image.
-> 
-> I attach the xfs_repair output before the segfault.
-> 
-> any help is appreciated.
-> 
+Sorry Simon,
 
-A corefile + debug binary would be helpful too...
-
-Argh, if metadump segfaults, that will make things tough.
-
-At least with a core + binary we could see just where it blew up.
-
--Eric
+I haven't really been able to get back to this as fast as I wanted to
+do.  Can you do another run and check if the patch still helps your
+issue even if you remove the xfs_log_force line?
 
 _______________________________________________
 xfs mailing list
