@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA59XKil148572 for <xfs@oss.sgi.com>; Sat, 5 Nov 2011 04:33:20 -0500
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8770C223485
-	for <xfs@oss.sgi.com>; Sat,  5 Nov 2011 02:33:19 -0700 (PDT)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	AtQbrrQFrZ6NyR4G for <xfs@oss.sgi.com>;
-	Sat, 05 Nov 2011 02:33:19 -0700 (PDT)
-Date: Sat, 5 Nov 2011 05:33:17 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfsprogs: fix various incorrect printf formats
-Message-ID: <20111105093317.GB5303@infradead.org>
-References: <20111025115233.GB22103@infradead.org>
-	<20111025155916.GA19818@stranger.qboosh.pl>
-	<20111102092012.GA3808@infradead.org>
-	<20111105090029.GA15258@stranger.qboosh.pl>
+	pA5K77dn180737 for <xfs@oss.sgi.com>; Sat, 5 Nov 2011 15:07:08 -0500
+Received: from mail-gx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34BE0222C84
+	for <xfs@oss.sgi.com>; Sat,  5 Nov 2011 13:07:06 -0700 (PDT)
+Received: from mail-gx0-f181.google.com (mail-gx0-f181.google.com
+	[209.85.161.181]) by cuda.sgi.com with ESMTP id
+	Y8VaLO6j3FxmuDq3 for <xfs@oss.sgi.com>;
+	Sat, 05 Nov 2011 13:07:06 -0700 (PDT)
+Received: by ggdk6 with SMTP id k6so920935ggd.26
+	for <xfs@oss.sgi.com>; Sat, 05 Nov 2011 13:07:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111105090029.GA15258@stranger.qboosh.pl>
+Date: Sat, 5 Nov 2011 21:07:05 +0100
+Message-ID: <CAMYYbY7=tRU1bmHkeBMesSC1jgXXz7J8-eUFm5VenVam3g1+nA@mail.gmail.com>
+Subject: Online TRIM/discard performance impact
+From: Martin Rusko <martin.rusko@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,37 +24,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-15"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jakub Bogusz <qboosh@pld-linux.org>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> >  			do_warn(
-> > -_("inode 0x%" PRIu64 "bmap block 0x%" PRIu64 " claimed, state is %d\n"),
-> > +_("inode 0x%" PRIu64 "bmap block 0x%" PRIx64 " claimed, state is %d\n"),
-> >  				ino, bno, state);
-> >  			break;
-> >  		case XR_E_MULT:
-> >  		case XR_E_INUSE_FS:
-> >  			set_bmap(agno, agbno, XR_E_MULT);
-> >  			do_warn(
-> > -_("inode 0x%" PRIu64 " bmap block 0x%" PRIu64 " claimed, state is %d\n"),
-> > +_("inode 0x%" PRIu64 " bmap block 0x%" PRIx64 " claimed, state is %d\n"),
-> >  				ino, bno, state);
-> >  			/*
-> >  			 * if we made it to here, this is probably a bmap block
-> 
-> These two entries still need fix in the first format strings of both
-> msgids...
-> 
-> I'm attaching my version of the whole patch.
+Hello,
 
-I've already put the previous version in.  I'll commit the updates
-attributed to you.
+I wanted to ask if following performance drop with online discard
+enabled for XFS is normal. I went through mailing list archives and
+read information from Luk=E1=A8's page
+(http://people.redhat.com/lczerner/discard/) so I was prepared for
+some performance penalty. But this big?
 
-Sorry for the mess, and thanks a lot for looking over this.
+--> Filesystem is mounted with noatime and discard options ...
+
+/dev/sdb2 on /mnt/test-xfs type xfs (rw,noatime,discard)
+
+--> Deleting freshly unpacked linux kernel sources ...
+
+# time rm -rf linux-3.0.8
+
+real	4m50.155s
+user	0m0.012s
+sys	0m0.940s
+
+=3D=3D> It took almost 5 minutes!
+
+--> Deleting same freshly unpacked linux kernel sources this time with
+filesystem mounted without 'discard' option ...
+
+/dev/sdb2 on /mnt/test-xfs type xfs (rw,noatime)
+
+# time rm -rf linux-3.0.8
+
+real	0m1.023s
+user	0m0.024s
+sys	0m0.896s
+
+=3D=3D> It took a second and something.
+
+SSD drive in question is one of the latest with SF-2281 chipset. I
+expected, that TRIM function will just schedule sectors for garbage
+collection, which happens some time later (during which drive can be
+potentially slower). Trying the same tests with ext4 filesystem, it
+got following numbers.
+
+--> ext4 with 'discard' option ...
+
+/dev/sdb3 on /mnt/test-ext4 type ext4 (rw,noatime,discard)
+
+# time rm -rf linux-3.0.8
+
+real	0m0.486s
+user	0m0.012s
+sys	0m0.468s
+
+--> ext4 without 'discard' option ...
+
+/dev/sdb3 on /mnt/test-ext4 type ext4 (rw,noatime)
+
+root@layla:/mnt/test-ext4# time rm -rf linux-3.0.8
+
+real	0m0.483s
+user	0m0.020s
+sys	0m0.460s
+
+Tests were repeated several times and it was consistent. Deleting
+files on XFS filesystem mounted with 'discard' option was painfully
+slow. Kernel version was ...
+
+   Linux layla 3.0.0-12-generic #20-Ubuntu SMP Fri Oct 7 14:56:25 UTC
+2011 x86_64 x86_64 x86_64 GNU/Linux
+
+Is this expected behavior?
+
+Best Regards,
+Martin
 
 _______________________________________________
 xfs mailing list
