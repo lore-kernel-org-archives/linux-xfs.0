@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA64kpd2206385 for <xfs@oss.sgi.com>; Sat, 5 Nov 2011 23:46:52 -0500
-Received: from smtp.gentoo.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BC17C12627DD
-	for <xfs@oss.sgi.com>; Sat,  5 Nov 2011 21:46:49 -0700 (PDT)
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id mIaGRnAN80XzSZwu for
-	<xfs@oss.sgi.com>; Sat, 05 Nov 2011 21:46:49 -0700 (PDT)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: [PATCH] path: fix 1 byte overflow with empty lists
-Date: Sun,  6 Nov 2011 00:46:57 -0400
-Message-Id: <1320554817-2594-1-git-send-email-vapier@gentoo.org>
+	pA6MJ7la012359 for <xfs@oss.sgi.com>; Sun, 6 Nov 2011 16:19:08 -0600
+Received: from mail-fx0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0143216217DC
+	for <xfs@oss.sgi.com>; Sun,  6 Nov 2011 14:19:03 -0800 (PST)
+Received: from mail-fx0-f53.google.com (mail-fx0-f53.google.com
+	[209.85.161.53]) by cuda.sgi.com with ESMTP id ZYKBMlipH4MbGpMU
+	for <xfs@oss.sgi.com>; Sun, 06 Nov 2011 14:19:03 -0800 (PST)
+Received: by faan15 with SMTP id n15so1778853faa.26
+	for <xfs@oss.sgi.com>; Sun, 06 Nov 2011 14:19:03 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: xfs_repair fails with corrupt dinode 17491441757, extent total = 1,
+	nblocks = 0.  This is a bug.
+Date: Sun, 6 Nov 2011 23:19:01 +0100
+References: <201110311156.20421.arekm@maven.pl>
+In-Reply-To: <201110311156.20421.arekm@maven.pl>
+MIME-Version: 1.0
+Message-Id: <201111062319.01375.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,39 +26,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: aelder@sgi.com
 
-If pap->pa_cnt is 0, then the local buffer is allocated as 1 byte,
-but the code then writes two bytes to it '/' and '\0'.
-
-Signed-off-by: Mike Frysinger <vapier@gentoo.org>
----
- common/path.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/common/path.c b/common/path.c
-index 66320de..ca24f6a 100644
---- a/common/path.c
-+++ b/common/path.c
-@@ -285,6 +285,8 @@ pa_gen( pa_t *pap )
- 	for ( i = 0 ; i < pap->pa_cnt ; i++ ) {
- 		sz += strlen( pap->pa_array[ i ] ) + 1;
- 	}
-+	if ( i == 0 )
-+		sz++;
- 	sz++;
- 
- 	retp = ( char * )malloc( sz );
--- 
-1.7.6.1
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uZGF5IDMxIG9mIE9jdG9iZXIgMjAxMSwgQXJrYWRpdXN6IE1pxZtraWV3aWN6IHdyb3Rl
+Ogo+IHhmc19yZXBhaXIgdmVyc2lvbiAzLjEuNgo+IAo+IGRpc2Nvbm5lY3RlZCBpbm9kZSAxNzQ5
+MTQ0MTc1NCwgbW92aW5nIHRvIGxvc3QrZm91bmQKPiBkaXNjb25uZWN0ZWQgaW5vZGUgMTc0OTE0
+NDE3NTUsIG1vdmluZyB0byBsb3N0K2ZvdW5kCj4gZGlzY29ubmVjdGVkIGlub2RlIDE3NDkxNDQx
+NzU2LCBtb3ZpbmcgdG8gbG9zdCtmb3VuZAo+IGRpc2Nvbm5lY3RlZCBpbm9kZSAxNzQ5MTQ0MTc1
+NywgbW92aW5nIHRvIGxvc3QrZm91bmQKPiBjb3JydXB0IGRpbm9kZSAxNzQ5MTQ0MTc1NywgZXh0
+ZW50IHRvdGFsID0gMSwgbmJsb2NrcyA9IDAuICBUaGlzIGlzIGEgYnVnLgo+IFBsZWFzZSBjYXB0
+dXJlIHRoZSBmaWxlc3lzdGVtIG1ldGFkYXRhIHdpdGggeGZzX21ldGFkdW1wIGFuZAo+IHJlcG9y
+dCBpdCB0byB4ZnNAb3NzLnNnaS5jb20uCj4gY2FjaGVfbm9kZV9wdXJnZTogcmVmY291bnQgd2Fz
+IDEsIG5vdCB6ZXJvIChub2RlPTB4MjE0NTBjOTApCj4gCj4gZmF0YWwgZXJyb3IgLS0gMTE3IC0g
+Y291bGRuJ3QgaWdldCBkaXNjb25uZWN0ZWQgaW5vZGUKCj4gSW4gbWVhbnRpbWUgSSdsbCBwcm9i
+YWJseSBtYWtlIHVnbHkgaGFjayBieSBtYWtpbmcgImNvdWxkbid0IGlnZXQKPiBkaXNjb25uZWN0
+ZWQgaW5vZGUiIG5vbiBmYXRhbCwgc28gcmVwYWlyIHdpbGwgYmUgYWJsZSB0byBmaW5pc2guCgpX
+aXRoIHRoaXMgb25lIHJlcGFpciBmaW5pc2hlZCBhbmQgdGhlbiB3aGlsZSByZXBhaXJpbmcgZm9y
+IHNlY29uZCB0aW1lCih0aGlzIHRpbWUgd2l0aG91dCBoYWNrKSBJIGdvdCBnbGliYyBjYXRjaGlu
+ZyBpbnZhbGlkIGZyZWU6CgpuYW1lIGNyZWF0ZSBmYWlsZWQgaW4gaW5vIDE3ODczOTk5NDU5ICgx
+MTcpLCBmaWxlc3lzdGVtIG1heSBiZSBvdXQgb2Ygc3BhY2UKYmFkIGhhc2ggdGFibGUgZm9yIGRp
+cmVjdG9yeSBpbm9kZSAxNzg3NTAyMzEzNyAoYnJhayB3cGlzdSBkYW55Y2gpOiBwcnplYnVkb3dh
+bm8KcmVidWlsZGluZyBkaXJlY3RvcnkgaW5vZGUgMTc4NzUwMjMxMzcKKioqIGdsaWJjIGRldGVj
+dGVkICoqKiAvc2Jpbi94ZnNfcmVwYWlyOiBmcmVlKCk6IGludmFsaWQgbmV4dCBzaXplIChub3Jt
+YWwpOiAweDAwMDA3ZjlmZmNkYzRjMDAgKioqCj09PT09PT0gQmFja3RyYWNlOiA9PT09PT09PT0K
+L2xpYjY0L2xpYmMuc28uNigrMHg3NThiNilbMHg3ZmExNDZhNmI4YjZdCi9saWI2NC9saWJ4ZnMu
+c28uMChsaWJ4ZnNfZ2V0YnVmcisweDgxKVsweDdmYTE0NzM4ZGU4MV0KL2xpYjY0L2xpYnhmcy5z
+by4wKGNhY2hlX25vZGVfZ2V0KzB4Y2EpWzB4N2ZhMTQ3MzhhMzlhXQovbGliNjQvbGlieGZzLnNv
+LjAobGlieGZzX2dldGJ1ZisweDI5KVsweDdmYTE0NzM4ZGZjOV0KL3NiaW4veGZzX3JlcGFpclsw
+eDQyNWNkMF0KL3NiaW4veGZzX3JlcGFpclsweDQyNmFhNl0KL2xpYjY0L2xpYnB0aHJlYWQuc28u
+MCgrMHg3ZWQ1KVsweDdmYTE0NmQ4Y2VkNV0KL2xpYjY0L2xpYmMuc28uNihjbG9uZSsweDZkKVsw
+eDdmYTE0NmFjZmU1ZF0KPT09PT09PSBNZW1vcnkgbWFwOiA9PT09PT09PQowMDQwMDAwMC0wMDQz
+ZTAwMCByLXhwIDAwMDAwMDAwIDA4OjEyIDEyNTg1NDA4MyAgICAgICAgICAgICAgICAgICAgICAg
+ICAgL3NiaW4veGZzX3JlcGFpcgowMDQzZjAwMC0wMDQ0MDAwMCByLS1wIDAwMDNlMDAwIDA4OjEy
+IDEyNTg1NDA4MyAgICAgICAgICAgICAgICAgICAgICAgICAgL3NiaW4veGZzX3JlcGFpcgowMDQ0
+MDAwMC0wMDQ0MTAwMCBydy1wIDAwMDNmMDAwIDA4OjEyIDEyNTg1NDA4MyAgICAgICAgICAgICAg
+ICAgICAgICAgICAgL3NiaW4veGZzX3JlcGFpcgowMDQ0MTAwMC0yYWEwNjAwMCBydy1wIDAwMDAw
+MDAwIDAwOjAwIDAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgW2hlYXBdCjdmOWYw
+MDAwMDAwMC03ZjlmMDExMjMwMDAgcnctcCAwMDAwMDAwMCAwMDowMCAwCjdmOWYwMTEyMzAwMC03
+ZjlmMDQwMDAwMDAgLS0tcCAwMDAwMDAwMCAwMDowMCAwCjdmOWYwNzdmZjAwMC03ZjlmMDc4MDAw
+MDAgLS0tcCAwMDAwMDAwMCAwMDowMCAwCjdmOWYwNzgwMDAwMC03ZjlmMDgwMDAwMDAgcnctcCAw
+MDAwMDAwMCAwMDowMCAwClsuLi5dCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6ICAgICAgICBQ
+TEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQt
+bGludXgub3JnLwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
