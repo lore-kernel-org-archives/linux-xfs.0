@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA7AUddN053651 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 04:30:40 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 362E4101E25B
-	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 02:30:37 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	OmHtYEpLHU7wAq9i for <xfs@oss.sgi.com>;
-	Mon, 07 Nov 2011 02:30:37 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RNMTN-0005MY-E9
-	for xfs@oss.sgi.com; Mon, 07 Nov 2011 10:30:37 +0000
-Date: Mon, 7 Nov 2011 05:30:37 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: xfs_getbmap assert
-Message-ID: <20111107103037.GA16213@infradead.org>
-MIME-Version: 1.0
+	pA7DPgWX059962 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 07:25:42 -0600
+Date: Mon, 7 Nov 2011 14:25:33 +0100
+From: David Sterba <dave@jikos.cz>
+Subject: Re: [PATCH 6/9] xfstests: add a new test that runs fsstress under
+	ENOSPC conditions
+Message-ID: <20111107132533.GP12759@twin.jikos.cz>
+References: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
+	<1320342953-7973-6-git-send-email-dmonakhov@openvz.org>
+Mime-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <1320342953-7973-6-git-send-email-dmonakhov@openvz.org>
+Reply-To: dave@jikos.cz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +25,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, tytso@mit.edu, hch@lst.de, aelder@sgi.com
 
-With Dmitris fsstress updates I can hit the following assert fairly
-regularly:
+Hi,
 
-[11904.943956] XFS: Assertion failed: ((iflags & BMV_IF_DELALLOC) != 0) ||
-(map[i].br_startblock != DELAYSTARTBLOCK), file:
-/home/hch/work/linux-2.6/fs/xfs/xfs_bmap.c, line: 5604
+I saw this while running the newly added tests on btrfs:
 
-which means we get an delalloc extent back from FIEMAP/GETBMAP despite
-asking for a flush beforehand.  While we hold the iolock over the call
-and thus exclude new buffered writers from appearing that doesn't
-prevent shared writeable mmaps from creating new delalloc extents.
+On Thu, Nov 03, 2011 at 09:55:50PM +0400, Dmitry Monakhov wrote:
+> --- /dev/null
+> +++ b/269
+> +_workout()
+> +{
+> +	echo ""
+> +	echo "Run fsstress"
+> +	echo ""
+> +	num_iterations=10
+> +	enospc_time=2
+> +	out=$SCRATCH_MNT/fsstress.$$
+> +	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
+> +	echo "fsstress $args" >> $here/$seq.full
+> +	$FSSTRESS_PROG $args > /dev/null 2>&1 &
+> +	pid=$!
+> +	echo "Run dd writers in parallel"
+> +	for ((i=0; i < num_iterations; i++))
+> +	do
+> +		# File will be opened with O_TRUNC each time
+> +		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M count=1 \
+> +			> /dev/null 2>&1
+> +		sleep $enospc_time
+> +	done
+> +	kill $pid
 
-I don't think this actually is a real issue, and a workaround would
-be extremly hard.  For now I've just remove the assert in my tree:
+269      [failed, exit status 1] - output mismatch (see 269.out.bad)
+--- 269.out     2011-11-07 13:26:23.000000000 +0100
++++ 269.out.bad 2011-11-07 14:07:44.000000000 +0100
+@@ -3,3 +3,4 @@
+ Run fsstress
+
+ Run dd writers in parallel
++./269: line 60: kill: (9754) - No such process
+
+> +	wait $pid
+> +}
+
+and the test is reported to fail. Seems that the dd commands finish in less 2
+seconds.
 
 
-Index: xfs/fs/xfs/xfs_bmap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_bmap.c	2011-11-05 09:02:24.410021945 +0100
-+++ xfs/fs/xfs/xfs_bmap.c	2011-11-05 09:03:54.036494235 +0100
-@@ -5600,8 +5600,6 @@ xfs_getbmap(
- 				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
- 			out[cur_ext].bmv_unused1 = 0;
- 			out[cur_ext].bmv_unused2 = 0;
--			ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
--			      (map[i].br_startblock != DELAYSTARTBLOCK));
-                         if (map[i].br_startblock == HOLESTARTBLOCK &&
- 			    whichfork == XFS_ATTR_FORK) {
- 				/* came to the end of attribute fork */
+david
 
 _______________________________________________
 xfs mailing list
