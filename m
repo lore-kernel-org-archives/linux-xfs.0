@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA7ALQsI053349 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 04:21:28 -0600
+	pA7AUddN053651 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 04:30:40 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 848B11CEA842
-	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 02:21:22 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 362E4101E25B
+	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 02:30:37 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	sJFcmeK8KbFyYZqr for <xfs@oss.sgi.com>;
-	Mon, 07 Nov 2011 02:21:22 -0800 (PST)
-Date: Mon, 7 Nov 2011 05:21:21 -0500
+	OmHtYEpLHU7wAq9i for <xfs@oss.sgi.com>;
+	Mon, 07 Nov 2011 02:30:37 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RNMTN-0005MY-E9
+	for xfs@oss.sgi.com; Mon, 07 Nov 2011 10:30:37 +0000
+Date: Mon, 7 Nov 2011 05:30:37 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Online TRIM/discard performance impact
-Message-ID: <20111107102121.GA2891@infradead.org>
-References: <CAMYYbY7=tRU1bmHkeBMesSC1jgXXz7J8-eUFm5VenVam3g1+nA@mail.gmail.com>
+Subject: xfs_getbmap assert
+Message-ID: <20111107103037.GA16213@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAMYYbY7=tRU1bmHkeBMesSC1jgXXz7J8-eUFm5VenVam3g1+nA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,27 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Rusko <martin.rusko@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Nov 05, 2011 at 09:07:05PM +0100, Martin Rusko wrote:
-> SSD drive in question is one of the latest with SF-2281 chipset. I
-> expected, that TRIM function will just schedule sectors for garbage
-> collection, which happens some time later (during which drive can be
-> potentially slower). Trying the same tests with ext4 filesystem, it
-> got following numbers.
+With Dmitris fsstress updates I can hit the following assert fairly
+regularly:
 
-That's unfortunately not how it works - the TRIM command always drains
-the whole queue of outstanding requests, and thus has a fairly severe
-impact on performance.  We could reduce it a bit by using vectored
-trims like Windows does, but the Linux blocklayer doesn't have the
-infrastructure for that yet.
+[11904.943956] XFS: Assertion failed: ((iflags & BMV_IF_DELALLOC) != 0) ||
+(map[i].br_startblock != DELAYSTARTBLOCK), file:
+/home/hch/work/linux-2.6/fs/xfs/xfs_bmap.c, line: 5604
 
-Your workload will remove a lot of inode clusters on XFS, while ext4
-never deletes inodes. Using the ikeep mount option for XFS (can't be
-set during remount) should speed the performance with discard for
-your workload up a lot.  I would still recommand to do a periodic
-fstrim run instead, though.
+which means we get an delalloc extent back from FIEMAP/GETBMAP despite
+asking for a flush beforehand.  While we hold the iolock over the call
+and thus exclude new buffered writers from appearing that doesn't
+prevent shared writeable mmaps from creating new delalloc extents.
+
+I don't think this actually is a real issue, and a workaround would
+be extremly hard.  For now I've just remove the assert in my tree:
+
+
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-11-05 09:02:24.410021945 +0100
++++ xfs/fs/xfs/xfs_bmap.c	2011-11-05 09:03:54.036494235 +0100
+@@ -5600,8 +5600,6 @@ xfs_getbmap(
+ 				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+ 			out[cur_ext].bmv_unused1 = 0;
+ 			out[cur_ext].bmv_unused2 = 0;
+-			ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
+-			      (map[i].br_startblock != DELAYSTARTBLOCK));
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
 
 _______________________________________________
 xfs mailing list
