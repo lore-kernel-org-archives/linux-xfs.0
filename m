@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA7KxiXO076060 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 14:59:44 -0600
+	pA7Kxhbh076051 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 14:59:44 -0600
 From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH v2 6/8] xfsdump: process thread exit status
-Date: Mon,  7 Nov 2011 14:58:29 -0600
-Message-Id: <1320699511-12281-7-git-send-email-wkendall@sgi.com>
+Subject: [PATCH v2 2/8] xfsdump: remove multi-stream synchronous dir dump
+Date: Mon,  7 Nov 2011 14:58:25 -0600
+Message-Id: <1320699511-12281-3-git-send-email-wkendall@sgi.com>
 In-Reply-To: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
 References: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -23,365 +23,441 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When IRIX sprocs were in use, the main thread was notified of a thread
-exit just as if a child process exited -- it received SIGCHLD. The main
-thread would grab the pid and exit status, then call cldmgr_died() to
-inform it that the child was gone so the slot in the child array could
-be freed up for reuse.
+When doing multi-stream dumps, the directories are dumped by each
+stream in lock-step fashion. A stream backs up a given directory,
+then waits for all others to finish that directory, then they all
+move on to the next one. During restore a single stream is chosen to
+apply the directory dump.
 
-This patch implements a similar mechanism for pthreads. The "c_busy"
-field in struct cld has been replaced with a "c_state" field that
-indicates whether the array slot is free (C_AVAIL), in use (C_ALIVE), or
-is waiting to be joined (C_EXITED). Additionally a "c_exit_code" field
-has been added to store the thread's exit value. Normally this is set
-when the thread entry function returns, but it is initialized to
-EXIT_INTERRUPT in case the thread is cancelled or calls pthread_exit()
-rather than returning (neither of which happens in the code today).
+This patch changes xfsdump so that only one stream dumps the
+directories. The other streams begin dumping files immediately.
+This results in a faster backup, which is presumably why multiple
+streams are being used in the first place.
 
-When the child thread starts, it registers a pthread cleanup handler
-which takes care of marking the child as C_EXITED and notifies the main
-thread that a child is gone. Doing this in a cleanup handler ensures
-that it's done regardless of how the thread exits. The main thread's
-loop is based around sigsuspsend(), so the notification is done by
-sending SIGUSR1. The main thread will then call cldmgr_join() to join
-all exited threads and obtain their exit status.
-
-Additional changes:
-* cldmgr_findbypid() has been removed, it's no longer referenced.
-* stream_dead() no longer grabs the lock(), because it's called
-  only from cldmgr_join() which already holds the lock().
+It also removes the barrier routines in qlock.c as they were only
+used by the "SYNCDIR" code.
 
 Signed-off-by: Bill Kendall <wkendall@sgi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- common/cldmgr.c |   88 +++++++++++++++++++++++++++++++++++-------------------
- common/cldmgr.h |    7 +++-
- common/main.c   |   33 +++++---------------
- common/stream.c |    3 +-
- common/stream.h |    1 +
- 5 files changed, 73 insertions(+), 59 deletions(-)
+ common/qlock.c    |   37 ----------
+ common/qlock.h    |   11 ---
+ dump/content.c    |  193 ++++++++++++-----------------------------------------
+ restore/content.c |   33 +++++++++
+ 4 files changed, 75 insertions(+), 199 deletions(-)
 
-diff --git a/common/cldmgr.c b/common/cldmgr.c
-index 4574834..be7de34 100644
---- a/common/cldmgr.c
-+++ b/common/cldmgr.c
-@@ -26,6 +26,7 @@
- #include <errno.h>
- #include <pthread.h>
+diff --git a/common/qlock.c b/common/qlock.c
+index fd0e98d..6c9ee16 100644
+--- a/common/qlock.c
++++ b/common/qlock.c
+@@ -568,43 +568,6 @@ return 0;
+ #endif /* HIDDEN */
+ }
  
-+#include "exit.h"
- #include "types.h"
- #include "lock.h"
- #include "qlock.h"
-@@ -36,8 +37,12 @@
- extern size_t pgsz;
+-qbarrierh_t
+-qbarrier_alloc( void )
+-{
+-#ifdef HIDDEN
+-	barrier_t *barrierp;
+-
+-	/* sanity checks
+-	 */
+-	ASSERT( qlock_inited );
+-	ASSERT( qlock_usp );
+-
+-	/* allocate a us barrier
+-	 */
+-	barrierp = new_barrier( qlock_usp );
+-	ASSERT( barrierp );
+-
+-	return ( qbarrierh_t )barrierp;
+-#else
+-return 0;
+-#endif /* HIDDEN */
+-}
+-
+-void
+-qbarrier( qbarrierh_t qbarrierh, size_t thrdcnt )
+-{
+-#ifdef HIDDEN
+-	barrier_t *barrierp = ( barrier_t * )qbarrierh;
+-
+-	/* sanity checks
+-	 */
+-	ASSERT( qlock_inited );
+-	ASSERT( qlock_usp );
+-
+-	barrier( barrierp, thrdcnt );
+-#endif /* HIDDEN */
+-}
+-
+ /* internal ordinal map abstraction
+  */
+ #ifdef HIDDEN
+diff --git a/common/qlock.h b/common/qlock.h
+index 54469ea..1880aff 100644
+--- a/common/qlock.h
++++ b/common/qlock.h
+@@ -102,15 +102,4 @@ extern size_t qsemPblocked( qsemh_t qsemh );
+ 	/* number of threads currently blocked on this semaphore
+ 	 */
  
- #define CLD_MAX	( STREAM_SIMMAX * 2 )
+-typedef void *qbarrierh_t;
+-#define QBARRIERH_NULL	0
+-	/* opaque handle
+-	 */
+-extern qbarrierh_t qbarrier_alloc( void );
+-	/* allocates a rendezvous barrier
+-	 */
+-extern void qbarrier( qbarrierh_t barrierh, size_t thrdcnt );
+-	/* causes thrdcnt threads to rendezvous
+-	 */
+-
+ #endif /* QLOCK_H */
+diff --git a/dump/content.c b/dump/content.c
+index 54c97d1..64bfe54 100644
+--- a/dump/content.c
++++ b/dump/content.c
+@@ -64,9 +64,6 @@
+ #include "getdents.h"
+ #include "arch_xlate.h"
+ 
+-#undef SYNCDIR
+-#define SYNCDIR
+-
+ /* max "unsigned long long int"
+  */
+ #define ULONGLONG_MAX	18446744073709551615LLU
+@@ -231,7 +228,6 @@ typedef struct extent_group_context extent_group_context_t;
+ struct pds {
+ 	enum { PDS_NULL,		/* per-drive activity not begun */
+ 	       PDS_INOMAP,		/* dumping inomap */
+-	       PDS_DIRRENDEZVOUS,	/* waiting to dump dirs */
+ 	       PDS_DIRDUMP,		/* dumping dirs */
+ 	       PDS_NONDIR,		/* dumping nondirs */
+ 	       PDS_INVSYNC,		/* waiting for inventory */
+@@ -263,9 +259,6 @@ static rv_t dump_dirs( ix_t strmix,
+ 		       xfs_bstat_t *bstatbufp,
+ 		       size_t bstatbuflen,
+ 		       void *inomap_contextp );
+-#ifdef SYNCDIR
+-static rv_t dump_dirs_rendezvous( void );
+-#endif /* SYNCDIR */
+ static rv_t dump_dir( ix_t strmix,
+ 		      jdm_fshandle_t *,
+ 		      intgen_t,
+@@ -485,12 +478,6 @@ static bool_t sc_dumpextattrpr = BOOL_TRUE;
+ static bool_t sc_dumpasoffline = BOOL_FALSE;
+ 	/* dump dual-residency HSM files as offline
+ 	 */
+-#ifdef SYNCDIR
+-static size_t sc_thrdsdirdumpsynccnt = 0;
+-static size_t sc_thrdswaitingdirdumpsync1 = 0;
+-static size_t sc_thrdswaitingdirdumpsync2 = 0;
+-static qbarrierh_t sc_barrierh;
+-#endif /* SYNCDIR */
+ 
+ static bool_t sc_savequotas = BOOL_TRUE;
+ /* save quota information in dump
+@@ -1466,14 +1453,13 @@ baseuuidbypass:
+ 	var_skip( &fsid, inomap_skip );
+ 
+ 	/* fill in write header template content info. always produce
+-	 * an inomap and dir dump for each media file.
++	 * an inomap for each media file. the dirdump flag will be set
++	 * in content_stream_dump() for streams which dump the directories.
+ 	 */
+ 	ASSERT( sizeof( cwhdrtemplatep->ch_specific ) >= sizeof( *scwhdrtemplatep ));
+ 	scwhdrtemplatep->cih_mediafiletype = CIH_MEDIAFILETYPE_DATA;
+ 	scwhdrtemplatep->cih_level = ( int32_t )sc_level;
+-	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP
+-					|
+-					CIH_DUMPATTR_DIRDUMP;
++	scwhdrtemplatep->cih_dumpattr = CIH_DUMPATTR_INOMAP;
+ 	if ( subtreecnt ) {
+ 		scwhdrtemplatep->cih_dumpattr |= CIH_DUMPATTR_SUBTREE;
+ 	}
+@@ -1714,22 +1700,6 @@ baseuuidbypass:
+ 		}
+ 	}
+ 
+-#ifdef SYNCDIR
+-	/* allocate a barrier to synchronize directory dumping
+-	 */
+-	if ( drivecnt > 1 ) {
+-		sc_barrierh = qbarrier_alloc( );
+-	}
+-
+-	/* initialize the number of players in the synchronized dir dump.
+-	 * they drop out when last media file complete. MUST be modified
+-	 * under lock( ).
+-	 */
+-	sc_thrdsdirdumpsynccnt = drivecnt;
+-
+-#endif /* SYNCDIR */
+-
+-
+ 	return BOOL_TRUE;
+ }
+ 
+@@ -1877,10 +1847,6 @@ content_statline( char **linespp[ ] )
+ 			strcat( statline[ statlinecnt ],
+ 				"dumping inomap" );
+ 			break;
+-		case PDS_DIRRENDEZVOUS:
+-			strcat( statline[ statlinecnt ],
+-				"waiting for synchronized directory dump" );
+-			break;
+ 		case PDS_DIRDUMP:
+ 			sprintf( &statline[ statlinecnt ]
+ 					  [ strlen( statline[ statlinecnt ] ) ],
+@@ -2157,6 +2123,11 @@ content_stream_dump( ix_t strmix )
+ 		scwhdrp->cih_endpt.sp_flags = STARTPT_FLAGS_END;
+ 	}
+ 
++	// the first stream dumps the directories
++	if ( strmix == 0 ) {
++		scwhdrp->cih_dumpattr |= CIH_DUMPATTR_DIRDUMP;
++	}
 +
-+typedef enum { C_AVAIL, C_ALIVE, C_EXITED } state_t;
-+
- struct cld {
--	bool_t c_busy;
-+	state_t c_state;
-+	intgen_t c_exit_code;
- 	pthread_t c_tid;
- 	ix_t c_streamix;
- 	int ( * c_entry )( void *arg1 );
-@@ -50,8 +55,8 @@ static cld_t cld[ CLD_MAX ];
- static bool_t cldmgr_stopflag;
+ 	/* fill in inomap fields of write hdr
+ 	 */
+ 	inomap_writehdr( scwhdrp );
+@@ -2322,39 +2293,41 @@ content_stream_dump( ix_t strmix )
+ 			return mlog_exit(EXIT_FAULT, rv);
+ 		}
  
- static cld_t *cldmgr_getcld( void );
--static cld_t * cldmgr_findbytid( pthread_t );
- static void *cldmgr_entry( void * );
-+static void cldmgr_cleanup( void * );
- /* REFERENCED */
- static pthread_t cldmgr_parenttid;
+-		/* now dump the directories. use the bigstat iterator
+-		 * capability to call my dump_dir function
+-		 * for each directory in the bitmap.
++		/* now dump the directories, if this is a stream that dumps
++		 * directories. use the bigstat iterator capability to call
++		 * my dump_dir function for each directory in the bitmap.
+ 		 */
+-		sc_stat_pds[ strmix ].pds_dirdone = 0;
+-		rv = dump_dirs( strmix,
+-				bstatbufp,
+-				bstatbuflen,
+-				inomap_contextp );
+-		if ( rv == RV_INTR ) {
+-			stop_requested = BOOL_TRUE;
+-			goto decision_more;
+-		}
+-		if ( rv == RV_EOM ) {
+-			hit_eom = BOOL_TRUE;
+-			goto decision_more;
+-		}
+-		if ( rv == RV_DRIVE ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_NORMAL, rv);
+-		}
+-		if ( rv == RV_ERROR ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_ERROR, rv);
+-		}
+-		if ( rv == RV_CORE ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_FAULT, rv);
+-		}
+-		ASSERT( rv == RV_OK );
+-		if ( rv != RV_OK ) {
+-			free( ( void * )bstatbufp );
+-			return mlog_exit(EXIT_FAULT, rv);
++		if ( scwhdrp->cih_dumpattr & CIH_DUMPATTR_DIRDUMP ) {
++			sc_stat_pds[ strmix ].pds_dirdone = 0;
++			rv = dump_dirs( strmix,
++					bstatbufp,
++					bstatbuflen,
++					inomap_contextp );
++			if ( rv == RV_INTR ) {
++				stop_requested = BOOL_TRUE;
++				goto decision_more;
++			}
++			if ( rv == RV_EOM ) {
++				hit_eom = BOOL_TRUE;
++				goto decision_more;
++			}
++			if ( rv == RV_DRIVE ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_NORMAL, rv);
++			}
++			if ( rv == RV_ERROR ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_ERROR, rv);
++			}
++			if ( rv == RV_CORE ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_FAULT, rv);
++			}
++			ASSERT( rv == RV_OK );
++			if ( rv != RV_OK ) {
++				free( ( void * )bstatbufp );
++				return mlog_exit(EXIT_FAULT, rv);
++			}
+ 		}
  
-@@ -87,6 +92,7 @@ cldmgr_create( int ( * entry )( void *arg1 ),
+ 		/* finally, dump the non-directory files beginning with this
+@@ -2527,20 +2500,6 @@ decision_more:
+ 		 */
+ 		done = all_nondirs_committed;
+ 
+-#ifdef SYNCDIR
+-		/* drop out of the synchronous dump game if done
+-		 */
+-		if ( done ) {
+-			/* REFERENCED */
+-			size_t tmpthrdsdirdumpsynccnt;
+-			lock( );
+-			tmpthrdsdirdumpsynccnt = sc_thrdsdirdumpsynccnt;
+-			sc_thrdsdirdumpsynccnt--;
+-			unlock( );
+-			ASSERT( tmpthrdsdirdumpsynccnt > 0 );
+-		}
+-#endif /* SYNCDIR */
+-
+ 		/* tell the inventory about the media file
+ 		 */
+ 		if ( inv_stmt != INV_TOKEN_NULL ) {
+@@ -2833,22 +2792,6 @@ dump_dirs( ix_t strmix,
+ 		__s32 buflenout;
+ 		intgen_t rval;
+ 
+-#ifdef SYNCDIR
+-		/* have all threads rendezvous
+-		 */
+-		if ( sc_thrdsdirdumpsynccnt > 1 && stream_cnt( ) > 1 ) {
+-			rv_t rv;
+-			mlog( bulkstatcallcnt == 0 ? MLOG_VERBOSE : MLOG_NITTY,
+-			      _("waiting for synchronized directory dump\n") );
+-			sc_stat_pds[ strmix ].pds_phase = PDS_DIRRENDEZVOUS;
+-			rv = dump_dirs_rendezvous( );
+-			if ( rv == RV_INTR ) {
+-				return RV_INTR;
+-			}
+-			ASSERT( rv == RV_OK );
+-		}
+-#endif /* SYNCDIR */
+-
+ 		if ( bulkstatcallcnt == 0 ) {
+ 			mlog( MLOG_VERBOSE, _(
+ 			      "dumping directories\n") );
+@@ -2948,58 +2891,6 @@ dump_dirs( ix_t strmix,
+ 	/* NOTREACHED */
+ }
+ 
+-#ifdef SYNCDIR
+-static rv_t
+-dump_dirs_rendezvous( void )
+-{
+-	static size_t localsync1;
+-	static size_t localsync2;
+-
+-	sc_thrdswaitingdirdumpsync2 = 0;
+-	lock( );
+-	sc_thrdswaitingdirdumpsync1++;
+-	localsync1 = sc_thrdswaitingdirdumpsync1;
+-	localsync2 = sc_thrdswaitingdirdumpsync2;
+-	unlock( );
+-	while ( localsync2 == 0
+-		&&
+-		localsync1 < min( stream_cnt( ), sc_thrdsdirdumpsynccnt )) {
+-		sleep( 1 );
+-		if ( cldmgr_stop_requested( )) {
+-			lock( );
+-			sc_thrdswaitingdirdumpsync1--;
+-			unlock( );
+-			return RV_INTR;
+-		}
+-		lock( );
+-		localsync1 = sc_thrdswaitingdirdumpsync1;
+-		localsync2 = sc_thrdswaitingdirdumpsync2;
+-		unlock( );
+-	}
+-	lock( );
+-	sc_thrdswaitingdirdumpsync1--;
+-	sc_thrdswaitingdirdumpsync2++;
+-	localsync2 = sc_thrdswaitingdirdumpsync2;
+-	unlock( );
+-	while ( localsync2 < min( stream_cnt( ), sc_thrdsdirdumpsynccnt )) {
+-		sleep( 1 );
+-		if ( cldmgr_stop_requested( )) {
+-			return RV_INTR;
+-		}
+-		lock( );
+-		localsync2 = sc_thrdswaitingdirdumpsync2;
+-		unlock( );
+-	}
+-	if ( cldmgr_stop_requested( )) {
+-		return RV_INTR;
+-	}
+-	
+-	qbarrier( sc_barrierh, min( stream_cnt( ), sc_thrdsdirdumpsynccnt ));
+-
+-	return RV_OK;
+-}
+-#endif /* SYNCDIR */
+-
+ static rv_t
+ dump_dir( ix_t strmix,
+ 	  jdm_fshandle_t *fshandlep,
+diff --git a/restore/content.c b/restore/content.c
+index 34fc4a0..2228a7f 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -625,6 +625,9 @@ struct tran {
+ 	intgen_t t_persfd;
+ 		/* file descriptor of the persistent state file
+ 		 */
++	size64_t t_dirdumps;
++		/* bitset of streams which contain a directory dump
++		 */
+ 	sync_t t_sync1;
+ 		/* to single-thread attempt to validate command line
+ 		 * selection of dump with online inventory
+@@ -1184,6 +1187,12 @@ content_init( intgen_t argc, char *argv[ ], size64_t vmsz )
  		return BOOL_FALSE;
  	}
  
-+	cldp->c_exit_code = EXIT_INTERRUPT;
- 	cldp->c_streamix = streamix;
- 	cldp->c_entry = entry;
- 	cldp->c_arg1 = arg1;
-@@ -117,18 +123,37 @@ cldmgr_stop( void )
- 	cldmgr_stopflag = BOOL_TRUE;
- }
- 
--void
--cldmgr_died( pthread_t tid )
-+intgen_t
-+cldmgr_join( void )
- {
--	cld_t *cldp = cldmgr_findbytid( tid );
-+	cld_t *p = cld;
-+	cld_t *ep = cld + sizeof( cld ) / sizeof( cld[ 0 ] );
-+	intgen_t xc = EXIT_NORMAL;
- 
--	if ( ! cldp ) {
--		return;
--	}
--	cldp->c_busy = BOOL_FALSE;
--	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
--		stream_dead( tid );
-+	lock();
-+	for ( ; p < ep ; p++ ) {
-+		if ( p->c_state == C_EXITED ) {
-+			if ( ( intgen_t )( p->c_streamix ) >= 0 ) {
-+				stream_dead( p->c_tid );
-+			}
-+			pthread_join( p->c_tid, NULL );
-+			if ( p->c_exit_code != EXIT_NORMAL && xc != EXIT_FAULT )
-+				xc = p->c_exit_code;
-+			if ( p->c_exit_code != EXIT_NORMAL ) {
-+				mlog( MLOG_DEBUG | MLOG_PROC | MLOG_NOLOCK,
-+					"child (thread %lu) requested stop: "
-+					"exit code %d (%s)\n",
-+					p->c_tid, p->c_exit_code,
-+					exit_codestring( p->c_exit_code ));
-+			}
++	/* assume all streams contain a directory dump. streams will remove
++	 * themselves from this bitset if they do not contain a directory dump.
++	 */
++	ASSERT( drivecnt <= sizeof(tranp->t_dirdumps) * NBBY );
++	tranp->t_dirdumps = ( 1ULL << drivecnt ) - 1;
 +
-+			// reinit this child for reuse
-+			memset( ( void * )p, 0, sizeof( cld_t ));
-+		}
- 	}
-+	unlock();
-+
-+	return xc;
- }
- 
- bool_t
-@@ -147,7 +172,7 @@ cldmgr_remainingcnt( void )
- 	cnt = 0;
- 	lock( );
- 	for ( ; p < ep ; p++ ) {
--		if ( p->c_busy ) {
-+		if ( p->c_state == C_ALIVE ) {
- 			cnt++;
- 		}
- 	}
-@@ -164,7 +189,7 @@ cldmgr_otherstreamsremain( ix_t streamix )
- 
- 	lock( );
- 	for ( ; p < ep ; p++ ) {
--		if ( p->c_busy && p->c_streamix != streamix ) {
-+		if ( p->c_state == C_ALIVE && p->c_streamix != streamix ) {
+ 	/* the user may specify stdin as the restore source stream,
+ 	 * by a single dash ('-') with no option letter. This must
+ 	 * appear between the last lettered argument and the destination
+@@ -2237,6 +2246,30 @@ content_stream_restore( ix_t thrdix )
  			unlock( );
- 			return BOOL_TRUE;
+ 			continue;
  		}
-@@ -182,8 +207,8 @@ cldmgr_getcld( void )
- 
- 	lock();
- 	for ( ; p < ep ; p++ ) {
--		if ( ! p->c_busy ) {
--			p->c_busy = BOOL_TRUE;
-+		if ( p->c_state == C_AVAIL ) {
-+			p->c_state = C_ALIVE;
- 			break;
- 		}
- 	}
-@@ -192,27 +217,14 @@ cldmgr_getcld( void )
- 	return ( p < ep ) ? p : 0;
- }
- 
--static cld_t *
--cldmgr_findbytid( pthread_t tid )
--{
--	cld_t *p = cld;
--	cld_t *ep = cld + sizeof( cld ) / sizeof( cld[ 0 ] );
--
--	for ( ; p < ep ; p++ ) {
--		if ( p->c_busy && pthread_equal( p->c_tid, tid )) {
--			break;
--		}
--	}
--
--	return ( p < ep ) ? p : 0;
--}
--
- static void *
- cldmgr_entry( void *arg1 )
- {
- 	cld_t *cldp = ( cld_t * )arg1;
- 	pthread_t tid = pthread_self( );
- 
-+	pthread_cleanup_push( cldmgr_cleanup, arg1 );
-+
- 	if ( ( intgen_t )( cldp->c_streamix ) >= 0 ) {
- 		stream_register( tid, ( intgen_t )cldp->c_streamix );
- 	}
-@@ -220,7 +232,21 @@ cldmgr_entry( void *arg1 )
- 	      "thread %lu created for stream %d\n",
- 	      tid,
- 	      cldp->c_streamix );
-+	cldp->c_exit_code = ( * cldp->c_entry )( cldp->c_arg1 );
-+
-+	pthread_cleanup_pop( 1 );
- 
--	( * cldp->c_entry )( cldp->c_arg1 );
- 	return NULL;
- }
-+
-+static void
-+cldmgr_cleanup( void *arg1 )
-+{
-+	cld_t *cldp = ( cld_t * )arg1;
-+
-+	lock();
-+	cldp->c_state = C_EXITED;
-+	// signal the main thread to look for exited threads
-+	kill( getpid( ), SIGUSR1 );
-+	unlock();
-+}
-diff --git a/common/cldmgr.h b/common/cldmgr.h
-index e393b82..1df0c0c 100644
---- a/common/cldmgr.h
-+++ b/common/cldmgr.h
-@@ -39,9 +39,12 @@ extern bool_t cldmgr_create( int ( * entry )( void *arg1 ),
-  */
- extern void cldmgr_stop( void );
- 
--/* cldmgr_died - tells the child manager that the child died
-+/* cldmgr_join - join child threads that have exited.
-+ * returns EXIT_NORMAL if all exited normally (or no threads have exited),
-+ * EXIT_FAULT if any threads requested a core dump, or another EXIT_*
-+ * value if any threads exited abnormally.
-  */
--extern void cldmgr_died( pthread_t tid );
-+extern intgen_t cldmgr_join( void );
- 
- /* cldmgr_stop_requested - returns TRUE if the child should gracefully
-  * terminate.
-diff --git a/common/main.c b/common/main.c
-index d4dbe28..38b3889 100644
---- a/common/main.c
-+++ b/common/main.c
-@@ -137,10 +137,6 @@ static bool_t sighup_received;
- static bool_t sigterm_received;
- static bool_t sigquit_received;
- static bool_t sigint_received;
--static size_t prbcld_cnt;
--static pid_t prbcld_pid;
--static intgen_t prbcld_xc;
--static intgen_t prbcld_signo;
- /* REFERENCED */
- static intgen_t sigstray_received;
- static bool_t progrpt_enabledpr;
-@@ -168,6 +164,8 @@ main( int argc, char *argv[] )
- 	intgen_t exitcode;
- 	rlim64_t tmpstacksz;
- 	struct sigaction sa;
-+	intgen_t prbcld_xc = EXIT_NORMAL;
-+	intgen_t xc;
- 	bool_t ok;
- 	/* REFERENCED */
- 	int rval;
-@@ -563,7 +561,6 @@ main( int argc, char *argv[] )
- 		sigint_received = BOOL_FALSE;
- 		sigquit_received = BOOL_FALSE;
- 		sigstray_received = BOOL_FALSE;
--		prbcld_cnt = 0;
- 
- 		alarm( 0 );
- 
-@@ -573,6 +570,7 @@ main( int argc, char *argv[] )
- 		sigaddset( &blocked_set, SIGTERM );
- 		sigaddset( &blocked_set, SIGQUIT );
- 		sigaddset( &blocked_set, SIGALRM );
-+		sigaddset( &blocked_set, SIGUSR1 );
- 		pthread_sigmask( SIG_SETMASK, &blocked_set, NULL );
- 
- 		sa.sa_handler = sighandler;
-@@ -581,6 +579,7 @@ main( int argc, char *argv[] )
- 		sigaction( SIGTERM, &sa, NULL );
- 		sigaction( SIGQUIT, &sa, NULL );
- 		sigaction( SIGALRM, &sa, NULL );
-+		sigaction( SIGUSR1, &sa, NULL );
- 	}
- 
- 	/* do content initialization.
-@@ -710,31 +709,16 @@ main( int argc, char *argv[] )
- 		 * stop. furthermore, note that core should be dumped if
- 		 * the child explicitly exited with EXIT_FAULT.
- 		 */
--		if ( prbcld_cnt ) {
--			if ( prbcld_xc == EXIT_FAULT || prbcld_signo != 0 ) {
-+		xc = cldmgr_join( );
-+		if ( xc ) {
-+			if ( xc == EXIT_FAULT ) {
- 				coredump_requested = BOOL_TRUE;
- 				stop_timeout = ABORT_TIMEOUT;
- 			} else {
- 				stop_timeout = STOP_TIMEOUT;
- 			}
-+			prbcld_xc = xc;
- 			stop_requested = BOOL_TRUE;
--			if ( prbcld_xc != EXIT_NORMAL ) {
--				mlog( MLOG_DEBUG | MLOG_PROC,
--				      "child (pid %d) requested stop: "
--				      "exit code %d (%s)\n",
--				      prbcld_pid,
--				      prbcld_xc,
--				      exit_codestring( prbcld_xc ));
--			} else if ( prbcld_signo ) {
--				ASSERT( prbcld_signo );
--				mlog( MLOG_NORMAL | MLOG_ERROR | MLOG_PROC,
--				      _("child (pid %d) faulted: "
--				      "signal number %d (%s)\n"),
--				      prbcld_pid,
--				      prbcld_signo,
--				      sig_numstring( prbcld_signo ));
--			}
--			prbcld_cnt = 0;
- 		}
- 			
- 		/* all children died normally. break out.
-@@ -1528,6 +1512,7 @@ sighandler( int signo )
- 		sigquit_received = BOOL_TRUE;
- 		break;
- 	case SIGALRM:
-+	case SIGUSR1:
- 		break;
- 	default:
- 		sigstray_received = signo;
-diff --git a/common/stream.c b/common/stream.c
-index 48e25ee..6704661 100644
---- a/common/stream.c
-+++ b/common/stream.c
-@@ -86,19 +86,18 @@ stream_register( pthread_t tid, intgen_t streamix )
- 	p->s_exit_hint = RV_NONE;
- }
- 
-+/* NOTE: lock() must be held when calling stream_dead() */
- void
- stream_dead( pthread_t tid )
- {
- 	spm_t *p = spm;
- 	spm_t *ep = spm + N(spm);
- 
--	lock();
- 	for ( ; p < ep ; p++ )
- 		if ( pthread_equal( p->s_tid, tid ) ) {
- 			p->s_state = S_ZOMBIE;
- 			break;
- 		}
--	unlock();
- 	ASSERT( p < ep );
- }
- 
-diff --git a/common/stream.h b/common/stream.h
-index 292792e..4b3799f 100644
---- a/common/stream.h
-+++ b/common/stream.h
-@@ -43,6 +43,7 @@ typedef enum { S_FREE, S_RUNNING, S_ZOMBIE } stream_state_t;
- 
- extern void stream_init( void );
- extern void stream_register( pthread_t tid, intgen_t streamix );
-+/* NOTE: lock() must be held when calling stream_dead */
- extern void stream_dead( pthread_t tid );
- extern void stream_free( pthread_t tid );
- extern int stream_find_all( stream_state_t states[],
++		if ( !(scrhdrp->cih_dumpattr & CIH_DUMPATTR_DIRDUMP) ) {
++			/* if no streams have a directory dump, issue a
++			 * message and exit. first set SYNC_BUSY to prevent
++			 * other threads from coming through here and issuing
++			 * the same message.
++			 */
++			tranp->t_dirdumps &= ~(1ULL << thrdix);
++			if ( !tranp->t_dirdumps ) {
++				tranp->t_sync3 = SYNC_BUSY;
++			}
++			unlock( );
++			if ( !tranp->t_dirdumps ) {
++				mlog( MLOG_VERBOSE | MLOG_ERROR, _(
++					"no directory dump found\n") );
++				Media_end( Mediap );
++				return mlog_exit(EXIT_NORMAL, RV_ERROR);
++			}
++			sleep( 1 );
++			if ( cldmgr_stop_requested( )) {
++				Media_end( Mediap );
++				return mlog_exit(EXIT_NORMAL, RV_INTR);
++			}
++			continue;
++		}
+ 		tranp->t_sync3 = SYNC_BUSY;
+ 		unlock( );
+ 		if ( ! tranp->t_dirattrinitdonepr ) {
 -- 
 1.7.0.4
 
