@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA83gOoP088944 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 21:42:25 -0600
+	pA83fHOa088887 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 21:41:17 -0600
 Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 40E5622A3BC
-	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 19:42:22 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E1AF22A342
+	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 19:41:13 -0800 (PST)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id aSyzZVGUf6LVsOFK for
-	<xfs@oss.sgi.com>; Mon, 07 Nov 2011 19:42:22 -0800 (PST)
-Message-ID: <4EB8A4F9.8060006@cn.fujitsu.com>
-Date: Tue, 08 Nov 2011 11:41:45 +0800
+	cuda.sgi.com with ESMTP id PZnW87eXAmOOEHpW for
+	<xfs@oss.sgi.com>; Mon, 07 Nov 2011 19:41:13 -0800 (PST)
+Message-ID: <4EB8A4B6.3030604@cn.fujitsu.com>
+Date: Tue, 08 Nov 2011 11:40:38 +0800
 From: WuBo <wu.bo@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 3/3] xfstests 275: add a write and reserve test
+Subject: [PATCH v2 1/3] xfstests 273: add a copy and reserve test
 References: <4EB8A441.7090506@cn.fujitsu.com>
 In-Reply-To: <4EB8A441.7090506@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,38 +29,29 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
 
-This test is for write-posix test. If writing a file when the disk is almost
-full, the posix wants the call to write as much as possible but not none.
-
-quote the POSIX:
-If a write() requests that more bytes be written than there is room for
-(for example, [XSI] [Option Start] the process' file size limit or
-[Option End] the physical end of a medium), only as many bytes as there
-is room for shall be written. For example, suppose there is space for 20
-bytes more in a file before reaching a limit. A write of 512 bytes will
-return 20. The next write of a non-zero number of bytes would give a
-failure return (except as noted below).
+This test is a stress test. It creates a set of threads for coping small files 
+into disk. I use a 2G disk for test, the ENOSPC arises usually but the disk is 
+not full under kenerl 3.0 with intel64.
 
 Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
 ---
- 275     |   89 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 275.out |    5 +++
+ 273     |  145 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 273.out |    4 ++
  group   |    1 +
- 3 files changed, 95 insertions(+), 0 deletions(-)
- create mode 100755 275
- create mode 100644 275.out
+ 3 files changed, 150 insertions(+), 0 deletions(-)
+ create mode 100755 273
+ create mode 100644 273.out
 
-diff --git a/275 b/275
+diff --git a/273 b/273
 new file mode 100755
-index 0000000..214262e
+index 0000000..2965132
 --- /dev/null
-+++ b/275
-@@ -0,0 +1,89 @@
++++ b/273
+@@ -0,0 +1,145 @@
 +#! /bin/bash
-+# FS QA Test No. 275
++# FS QA Test No. 273
 +#
-+# The posix write test. when write size is larger than disk free size,
-+# should write as more as possible
++# reservation test with heavy cp workload
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
@@ -88,18 +79,99 @@ index 0000000..214262e
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=0    # success is the default!
++status=0	# success is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
 +	cd /
-+	rm -f $SCRATCH_MNT/* $tmp.*
++	rm -rf $SCRATCH_MNT/* $tmp.*
 +	_scratch_unmount
 +}
 +
 +. ./common.rc
 +. ./common.filter
++
++threads=50
++count=1
++
++_threads_set()
++{
++	_cpu_num=`cat /proc/cpuinfo | grep "processor" | wc -l`
++	threads=$(($_cpu_num * 50))
++	if [ $threads -gt 200 ]
++	then
++		threads=200
++	fi
++}
++
++_file_create()
++{
++	_i=0
++
++	if ! mkdir $SCRATCH_MNT/origin
++	then
++		echo "mkdir origin err"
++		status=1
++		exit
++	fi
++
++	cd $SCRATCH_MNT/origin
++
++	_disksize=`df --block-size=1 | grep $SCRATCH_DEV | awk '{print $2}'`
++	_disksize=$(($_disksize / 3))
++	_num=$(($_disksize / $count / $threads / 4096))
++	_count=$count
++	while [ $_i -lt $_num ]
++	do
++		dd if=/dev/zero of=file_$_i bs=4096 count=$_count >/dev/null 2>&1
++		_i=$(($_i + 1))
++	done
++
++	cd $here
++}
++
++_porter()
++{
++	_suffix=$1
++
++	if ! mkdir $SCRATCH_MNT/sub_$_suffix
++	then
++		echo "mkdir sub_xxx err"
++		status=1
++		exit
++	fi
++
++	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
++	if [ $? -ne 0 ]
++	then
++		echo "_porter $_suffix not complete"
++	fi
++	
++	sync
++}
++
++_do_workload()
++{
++	_pids=""
++	_pid=1
++	
++	rm -rf $SCRATCH_MNT/*
++
++	_threads_set
++	_file_create
++
++	_threads=$threads
++
++	while [ $_pid -lt $_threads ]
++	do
++		_porter $_pid &
++		_pids="$_pids $!"
++		_pid=$(($_pid + 1))
++	done
++
++	wait $_pids
++}
 +
 +# real QA test starts here
 +_supported_fs generic
@@ -107,64 +179,39 @@ index 0000000..214262e
 +_require_scratch
 +
 +echo "------------------------------"
-+echo "write lack test"
++echo "start the workload"
 +echo "------------------------------"
 +
 +rm -f $seq.full
 +
 +umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
++_scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
 +_scratch_mount
 +
-+rm -rf $SCRATCH_MNT/*
-+cd $SCRATCH_MNT
++_do_workload
 +
-+dd if=/dev/zero of=tmp1 bs=4K count=1 >/dev/null 2>&1
-+if [ $? -ne 0 ]
-+then
-+	echo "create file err"
-+	status=1
-+	exit
-+fi
-+
-+dd if=/dev/zero of=tmp2 bs=1M >/dev/null 2>&1
-+dd if=/dev/zero of=tmp3 bs=4K >/dev/null 2>&1
-+sync
-+
-+rm -f tmp1
-+sync
-+
-+dd if=/dev/zero of=tmp1 bs=8K count=1 >/dev/null 2>&1
-+_filesize=`du tmp1 | awk '{print $1}'`
-+if [ $_filesize -ne 4 ]
-+then
-+	echo "write file err"
-+	status=1
-+	exit
-+fi
-+
-+echo "done"
++_check_scratch_fs
++status=$?
 +exit
-diff --git a/275.out b/275.out
+diff --git a/273.out b/273.out
 new file mode 100644
-index 0000000..30af43c
+index 0000000..146af43
 --- /dev/null
-+++ b/275.out
-@@ -0,0 +1,5 @@
-+QA output created by 275
++++ b/273.out
+@@ -0,0 +1,4 @@
++QA output created by 273
 +------------------------------
-+write lack test
++start the workload
 +------------------------------
-+done
 diff --git a/group b/group
-index 44a9999..8cdddd6 100644
+index 616cbdd..b8245bf 100644
 --- a/group
 +++ b/group
-@@ -388,3 +388,4 @@ deprecated
+@@ -386,3 +386,4 @@ deprecated
+ 270 auto quota rw prealloc ioctl enospc
+ 271 auto rw quick
  272 auto enospc rw
- 273 auto rw
- 274 auto rw
-+275 auto rw
++273 auto rw
 -- 
 1.7.3.1
 
