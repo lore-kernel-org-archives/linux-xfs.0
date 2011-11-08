@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA7LdBYd077662 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 15:39:11 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3954022903D
-	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 13:25:32 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	isJRHpVsLnEyeiiH for <xfs@oss.sgi.com>;
-	Mon, 07 Nov 2011 13:25:32 -0800 (PST)
-Date: Tue, 8 Nov 2011 08:25:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/12] xfstests: add a new test that runs fsstress under
-	ENOSPC conditions
-Message-ID: <20111107212530.GI5534@dastard>
-References: <1320330301-2682-1-git-send-email-dmonakhov@openvz.org>
-	<1320330301-2682-10-git-send-email-dmonakhov@openvz.org>
+	pA823ZSx085309 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 20:03:35 -0600
+Message-ID: <1320717814.3186.99.camel@doink>
+Subject: Re: [PATCH v2 8/8] xfsdump: enable multiple streams
+From: Alex Elder <aelder@sgi.com>
+Date: Mon, 7 Nov 2011 20:03:34 -0600
+In-Reply-To: <1320699511-12281-9-git-send-email-wkendall@sgi.com>
+References: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
+	<1320699511-12281-9-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1320330301-2682-10-git-send-email-dmonakhov@openvz.org>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,29 +23,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, aelder@sgi.com, tytso@mit.edu, hch@lst.de, xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 03, 2011 at 06:24:58PM +0400, Dmitry Monakhov wrote:
-> +# real QA test starts here
-> +_supported_fs generic
-> +_supported_os Linux
-> +_require_scratch
-> +_need_to_be_root
-> +
-> +umount $SCRATCH_DEV 2>/dev/null
-> +_scratch_mkfs_sized $((512 * 1024 * 1024)) >> $seq.full 2>&1
-> +_scratch_mount
+On Mon, 2011-11-07 at 14:58 -0600, Bill Kendall wrote:
+> IRIX contained an environment referred to as "miniroot" where
+> sproc threads were either not available, or at least not used
+> in xfsdump. Throughout xfsdump there's a "miniroot" variable
+> which indicates whether or not thread support is enabled. On
+> Linux this variable has always been false in order to disable
+> support for multiple streams.
+> 
+> Now that the threading infracstructure has been converted over
+> to pthreads, this patch removes the "miniroot" variable and
+> enables the option of using multiple streams.
+> 
+> Note that another feature in xfsdump, using a ring buffer for
+> I/O to tapes, also depends on thread support. I'm leaving that
+> disabled for now until more testing has been done.
+> 
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-_require_scratch unmounts the SCRATCH_DEV. no need to do it
-explicitly. Same for the next new test in the series, too.
+Really, really nice work Bill.
 
-Cheers,
+Reviewed-by: Alex Elder <aelder@sgi.com>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
