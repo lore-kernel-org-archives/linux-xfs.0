@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA83fHOa088887 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 21:41:17 -0600
+	pA83fdsE088914 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 21:41:39 -0600
 Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4E1AF22A342
-	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 19:41:13 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D2CB61623603
+	for <xfs@oss.sgi.com>; Mon,  7 Nov 2011 19:41:37 -0800 (PST)
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id PZnW87eXAmOOEHpW for
-	<xfs@oss.sgi.com>; Mon, 07 Nov 2011 19:41:13 -0800 (PST)
-Message-ID: <4EB8A4B6.3030604@cn.fujitsu.com>
-Date: Tue, 08 Nov 2011 11:40:38 +0800
+	cuda.sgi.com with ESMTP id nTZwQZ3M0MdMojQl for
+	<xfs@oss.sgi.com>; Mon, 07 Nov 2011 19:41:37 -0800 (PST)
+Message-ID: <4EB8A4D4.4000000@cn.fujitsu.com>
+Date: Tue, 08 Nov 2011 11:41:08 +0800
 From: WuBo <wu.bo@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 1/3] xfstests 273: add a copy and reserve test
+Subject: [PATCH v2 2/3] xfstests 274: add a prealloc and reserve test
 References: <4EB8A441.7090506@cn.fujitsu.com>
 In-Reply-To: <4EB8A441.7090506@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,29 +29,29 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>
 
-This test is a stress test. It creates a set of threads for coping small files 
-into disk. I use a 2G disk for test, the ENOSPC arises usually but the disk is 
-not full under kenerl 3.0 with intel64.
+This test is for preallocation test. If the disk is full, just with a prealloc
+file has some free space that prealloc early. We need to check whether the write
+to the free space is success or not.
 
 Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
 ---
- 273     |  145 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 273.out |    4 ++
+ 274     |   91 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 274.out |    5 +++
  group   |    1 +
- 3 files changed, 150 insertions(+), 0 deletions(-)
- create mode 100755 273
- create mode 100644 273.out
+ 3 files changed, 97 insertions(+), 0 deletions(-)
+ create mode 100755 274
+ create mode 100644 274.out
 
-diff --git a/273 b/273
+diff --git a/274 b/274
 new file mode 100755
-index 0000000..2965132
+index 0000000..b658004
 --- /dev/null
-+++ b/273
-@@ -0,0 +1,145 @@
++++ b/274
+@@ -0,0 +1,91 @@
 +#! /bin/bash
-+# FS QA Test No. 273
++# FS QA Test No. 274
 +#
-+# reservation test with heavy cp workload
++# preallocation test
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
@@ -79,99 +79,18 @@ index 0000000..2965132
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=0	# success is the default!
++status=0    # success is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +_cleanup()
 +{
 +	cd /
-+	rm -rf $SCRATCH_MNT/* $tmp.*
++	rm -f $SCRATCH_MNT/* $tmp.*
 +	_scratch_unmount
 +}
 +
 +. ./common.rc
 +. ./common.filter
-+
-+threads=50
-+count=1
-+
-+_threads_set()
-+{
-+	_cpu_num=`cat /proc/cpuinfo | grep "processor" | wc -l`
-+	threads=$(($_cpu_num * 50))
-+	if [ $threads -gt 200 ]
-+	then
-+		threads=200
-+	fi
-+}
-+
-+_file_create()
-+{
-+	_i=0
-+
-+	if ! mkdir $SCRATCH_MNT/origin
-+	then
-+		echo "mkdir origin err"
-+		status=1
-+		exit
-+	fi
-+
-+	cd $SCRATCH_MNT/origin
-+
-+	_disksize=`df --block-size=1 | grep $SCRATCH_DEV | awk '{print $2}'`
-+	_disksize=$(($_disksize / 3))
-+	_num=$(($_disksize / $count / $threads / 4096))
-+	_count=$count
-+	while [ $_i -lt $_num ]
-+	do
-+		dd if=/dev/zero of=file_$_i bs=4096 count=$_count >/dev/null 2>&1
-+		_i=$(($_i + 1))
-+	done
-+
-+	cd $here
-+}
-+
-+_porter()
-+{
-+	_suffix=$1
-+
-+	if ! mkdir $SCRATCH_MNT/sub_$_suffix
-+	then
-+		echo "mkdir sub_xxx err"
-+		status=1
-+		exit
-+	fi
-+
-+	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
-+	if [ $? -ne 0 ]
-+	then
-+		echo "_porter $_suffix not complete"
-+	fi
-+	
-+	sync
-+}
-+
-+_do_workload()
-+{
-+	_pids=""
-+	_pid=1
-+	
-+	rm -rf $SCRATCH_MNT/*
-+
-+	_threads_set
-+	_file_create
-+
-+	_threads=$threads
-+
-+	while [ $_pid -lt $_threads ]
-+	do
-+		_porter $_pid &
-+		_pids="$_pids $!"
-+		_pid=$(($_pid + 1))
-+	done
-+
-+	wait $_pids
-+}
 +
 +# real QA test starts here
 +_supported_fs generic
@@ -179,39 +98,67 @@ index 0000000..2965132
 +_require_scratch
 +
 +echo "------------------------------"
-+echo "start the workload"
++echo "preallocation test"
 +echo "------------------------------"
 +
 +rm -f $seq.full
 +
 +umount $SCRATCH_DEV 2>/dev/null
-+_scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
++_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
 +_scratch_mount
 +
-+_do_workload
++rm -rf $SCRATCH_MNT/*
++cd $SCRATCH_MNT
++dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
++if [ $? -ne 0 ]
++then
++	echo "create file err"
++	status=1
++	exit
++fi
 +
-+_check_scratch_fs
-+status=$?
++fallocate -n -o 4K -l 1M test >/dev/null 2>&1
++if [ $? -ne 0 ]
++then
++	echo "fallocate file err"
++	status=1
++	exit
++fi
++
++dd if=/dev/zero of=tmp1 bs=1M >/dev/null 2>&1
++dd if=/dev/zero of=tmp2 bs=4K >/dev/null 2>&1
++sync
++
++dd if=/dev/zero of=test seek=1 bs=4K count=2 conv=notrunc >/dev/null 2>&1
++if [ $? -ne 0 ]
++then
++	echo "fill prealloc range err"
++	status=1
++	exit
++fi
++
++echo "done"
 +exit
-diff --git a/273.out b/273.out
+diff --git a/274.out b/274.out
 new file mode 100644
-index 0000000..146af43
+index 0000000..edbf3cc
 --- /dev/null
-+++ b/273.out
-@@ -0,0 +1,4 @@
-+QA output created by 273
++++ b/274.out
+@@ -0,0 +1,5 @@
++QA output created by 274
 +------------------------------
-+start the workload
++preallocation test
 +------------------------------
++done
 diff --git a/group b/group
-index 616cbdd..b8245bf 100644
+index b8245bf..44a9999 100644
 --- a/group
 +++ b/group
-@@ -386,3 +386,4 @@ deprecated
- 270 auto quota rw prealloc ioctl enospc
+@@ -387,3 +387,4 @@ deprecated
  271 auto rw quick
  272 auto enospc rw
-+273 auto rw
+ 273 auto rw
++274 auto rw
 -- 
 1.7.3.1
 
