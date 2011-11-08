@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA8J77XF144643 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 13:07:07 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 408D11CEE7A1
-	for <xfs@oss.sgi.com>; Tue,  8 Nov 2011 11:07:01 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	SLuWDcnkw7UaiZG6 for <xfs@oss.sgi.com>;
-	Tue, 08 Nov 2011 11:07:01 -0800 (PST)
-Date: Tue, 8 Nov 2011 14:07:00 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs_repair: Properly set lost+found inode as used
-Message-ID: <20111108190700.GA7941@infradead.org>
-References: <1320777990-6556-1-git-send-email-cmaiolino@redhat.com>
-	<1320777990-6556-3-git-send-email-cmaiolino@redhat.com>
+	pA8IuLUq143856 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 12:56:21 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B04B722D2D3
+	for <xfs@oss.sgi.com>; Tue,  8 Nov 2011 10:56:20 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id pVWLgKzR3V4blZvq for <xfs@oss.sgi.com>;
+	Tue, 08 Nov 2011 10:56:20 -0800 (PST)
+Message-ID: <4EB97B53.7080600@sandeen.net>
+Date: Tue, 08 Nov 2011 12:56:19 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1320777990-6556-3-git-send-email-cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/2] xfs_repair: Add inline function to get avl tree node
+References: <1320777990-6556-1-git-send-email-cmaiolino@redhat.com>
+	<1320777990-6556-2-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1320777990-6556-2-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,55 +31,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 08, 2011 at 04:46:30PM -0200, Carlos Maiolino wrote:
-> This patch makes mk_orphanage() to properly set the inode link count of
-> the recently allocated inode in the AVL tree, avoiding the lost+found
-> directory to be bypass the link count check in phase7 and possibly leaving
-> lost+found directory with a wrong link count.
+On 11/8/11 12:46 PM, Carlos Maiolino wrote:
+> dd get_inode_offset() inline function, which will return the offset
+> of a specific node in the AVL tree avoiding the need to calculate the
+> the offset each time it needs to be used.
 
-Thanks a lot, this looks very good technically.
+might be good to find the open-coded instances of this, and
+make them use the helper too.
 
-Unfortunately I have a few style nipicks anyway:
+-Eric
 
-> @@ -875,6 +877,18 @@ mk_orphanage(xfs_mount_t *mp)
->  			ORPHANAGE, error);
->  	}
->  	ip->i_d.di_nlink++;		/* account for . */
-> +	ino = ip->i_ino;
+> ---
+>  repair/incore.h |    6 ++++++
+>  1 files changed, 6 insertions(+), 0 deletions(-)
+> 
+> diff --git a/repair/incore.h b/repair/incore.h
+> index ee0e86a..8e311c9 100644
+> --- a/repair/incore.h
+> +++ b/repair/incore.h
+> @@ -311,6 +311,12 @@ void		get_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno,
+>  			      ino_tree_node_t *ino_rec);
+>  
+>  extern avltree_desc_t     **inode_tree_ptrs;
 > +
-> +	irec = find_inode_rec(mp,
-> +			XFS_INO_TO_AGNO(mp, ino),
-> +			XFS_INO_TO_AGINO(mp,ino));
-
-Please always use whitespaces after the comma.
-
-> +	ino_offset = get_inode_offset(mp, ino, irec);
-> +
-> +	/* Set the inode allocated to lost+found as used in the AVL
-> + 	 * tree, so it is not bypassed in phase 7
-> + 	 */
-
-The canonical comment style would be:
-
-	/*
-	 * Mark the inode allocated to lost+found as used in the AVL tree
-	 * so it is not skipped in phase 7.
-	 */
-
-(also note the slight change in wording to make it easier to parse for
- me, but I'm no native speaker either)
-	 *
-
-> +	set_inode_used(irec,ino_offset);
-> +	add_inode_ref(irec,ino_offset);
-
-Same whitespace comment as above here.
-
-Feel free to add my:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-after these cosmetic fixups.
+> +static inline int
+> +get_inode_offset(struct xfs_mount *mp, xfs_ino_t ino, ino_tree_node_t *irec)
+> +{
+> +	return XFS_INO_TO_AGINO(mp, ino) - irec->ino_startnum;
+> +}
+>  static inline ino_tree_node_t *
+>  findfirst_inode_rec(xfs_agnumber_t agno)
+>  {
 
 _______________________________________________
 xfs mailing list
