@@ -1,14 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA822BY8085178 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 20:02:11 -0600
-Message-ID: <1320717726.3186.88.camel@doink>
-Subject: Re: [PATCH v2 2/8] xfsdump: remove multi-stream synchronous dir dump
+	pA825TMJ085357 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 20:05:29 -0600
+Message-ID: <1320717928.3186.100.camel@doink>
+Subject: Re: [PATCH] xfstests: ignore fsstress file count for 022
 From: Alex Elder <aelder@sgi.com>
-Date: Mon, 7 Nov 2011 20:02:06 -0600
-In-Reply-To: <1320699511-12281-3-git-send-email-wkendall@sgi.com>
-References: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
-	<1320699511-12281-3-git-send-email-wkendall@sgi.com>
+Date: Mon, 7 Nov 2011 20:05:28 -0600
+In-Reply-To: <1320699832-12693-1-git-send-email-wkendall@sgi.com>
+References: <1320699832-12693-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,25 +25,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-11-07 at 14:58 -0600, Bill Kendall wrote:
-> When doing multi-stream dumps, the directories are dumped by each
-> stream in lock-step fashion. A stream backs up a given directory,
-> then waits for all others to finish that directory, then they all
-> move on to the next one. During restore a single stream is chosen to
-> apply the directory dump.
+On Mon, 2011-11-07 at 15:03 -0600, Bill Kendall wrote:
+> The recently added fsstress operations result in a different
+> number of directories and files being created for xfsdump test
+> 022, which causes the test to fail since the expected xfsrestore
+> output records these numbers. Filter out the numbers to prevent
+> this from breaking in the future.
 > 
-> This patch changes xfsdump so that only one stream dumps the
-> directories. The other streams begin dumping files immediately.
-> This results in a faster backup, which is presumably why multiple
-> streams are being used in the first place.
-> 
-> It also removes the barrier routines in qlock.c as they were only
-> used by the "SYNCDIR" code.
+> Also increase the number of fsstress operations used to populate
+> the filesystem so that we get roughly the same number of
+> directories and files as we used to for this test.
 > 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Nice change.
+Looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
