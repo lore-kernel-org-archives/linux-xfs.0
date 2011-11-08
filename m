@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA8H27bR134270 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 11:02:08 -0600
-Date: Tue, 8 Nov 2011 18:01:48 +0100
-From: David Sterba <dave@jikos.cz>
-Subject: Re: [PATCH 6/9] xfstests: add a new test that runs fsstress under
-	ENOSPC conditions
-Message-ID: <20111108170146.GR12759@twin.jikos.cz>
-References: <1320342953-7973-1-git-send-email-dmonakhov@openvz.org>
-	<1320342953-7973-6-git-send-email-dmonakhov@openvz.org>
-	<20111107132533.GP12759@twin.jikos.cz> <87sjm0kqjk.fsf@dmbot.sw.ru>
-Mime-Version: 1.0
+	pA8H69Vg134746 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 11:06:09 -0600
+Date: Tue, 8 Nov 2011 12:06:07 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [BUG] assert in xfs_imap_to_bp, line 185
+Message-ID: <20111108170606.GA17457@infradead.org>
+References: <20111108163932.GA22095@sgi.com>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <87sjm0kqjk.fsf@dmbot.sw.ru>
-Reply-To: dave@jikos.cz
+In-Reply-To: <20111108163932.GA22095@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +22,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: tytso@mit.edu, xfs@oss.sgi.com, dave@jikos.cz, aelder@sgi.com, linux-fsdevel@vger.kernel.org, hch@lst.de
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 07, 2011 at 05:31:11PM +0400, Dmitry Monakhov wrote:
-> > 269      [failed, exit status 1] - output mismatch (see 269.out.bad)
-> > --- 269.out     2011-11-07 13:26:23.000000000 +0100
-> > +++ 269.out.bad 2011-11-07 14:07:44.000000000 +0100
-> > @@ -3,3 +3,4 @@
-> >  Run fsstress
-> > 
-> >  Run dd writers in parallel
-> > +./269: line 60: kill: (9754) - No such process
-> > 
-> > > +	wait $pid
-> > > +}
-> > 
-> > and the test is reported to fail. Seems that the dd commands finish in less 2
-> > seconds.
-> Have you recompile fsstress via make?
+On Tue, Nov 08, 2011 at 10:39:32AM -0600, Ben Myers wrote:
+> Hi XFS Folks,
+> 
+> I am able to hit this assert consistently when running test 111 on recent
+> (commit 9e4c109a) oss xfs bits:
 
-That was it, thanks.
+That's expected - the test must only be run on non-debug kernels.  It
+corrupt the inode, and then we read it.  A normal kernel shouldn't
+panic, but for the debug kernel we settled on an assert for it.
 
-david
+I'm not sure it's a smart idea, and WANT_CORRUPTED_GOTO might be
+better in the end.
 
 _______________________________________________
 xfs mailing list
