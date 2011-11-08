@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA88g3Kr101459 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 02:42:03 -0600
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8E791DBA4B2
-	for <xfs@oss.sgi.com>; Tue,  8 Nov 2011 00:42:02 -0800 (PST)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id hi0T6s3XttaFDQ5R
-	for <xfs@oss.sgi.com>; Tue, 08 Nov 2011 00:42:02 -0800 (PST)
-Received: by mail-bw0-f53.google.com with SMTP id q10so218577bka.26
-	for <xfs@oss.sgi.com>; Tue, 08 Nov 2011 00:42:02 -0800 (PST)
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 2/3] xfstests: fix typo in 260'th test
-Date: Tue,  8 Nov 2011 12:41:54 +0400
-Message-Id: <1320741715-32692-2-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1320741715-32692-1-git-send-email-dmonakhov@openvz.org>
-References: <1320741715-32692-1-git-send-email-dmonakhov@openvz.org>
+	pA88wlGk101954 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 02:58:48 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DB231DBA5B9
+	for <xfs@oss.sgi.com>; Tue,  8 Nov 2011 00:58:46 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	uPiPaXbu07iDfots for <xfs@oss.sgi.com>;
+	Tue, 08 Nov 2011 00:58:46 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RNhW1-0007Yy-TI
+	for xfs@oss.sgi.com; Tue, 08 Nov 2011 08:58:45 +0000
+Message-Id: <20111108085614.478431403@bombadil.infradead.org>
+Date: Tue, 08 Nov 2011 03:56:14 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 0/5] log all file size updates
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +30,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
-Cc: Dmitry Monakhov <dmonakhov@openvz.org>, hch@lst.de
+To: xfs@oss.sgi.com
 
-dd should not have count argument because it suposed to work untill ENOSPC.
-Also it is reasonable to log dd's output, do that for both 269'th and 270'th
-tests
+With more reports showing up that the VFS writeback code is not able
+to write back our size updates dirtied from the I/O completion handler
+in reasonable time I think it's time to move to logging all file size
+updates ASAP, that is for 3.2 and maybe after a reasonable testing
+period even -stable.
 
-Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
----
- 269 |    4 ++--
- 270 |    2 +-
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/269 b/269
-index 61e83ad..206492b 100755
---- a/269
-+++ b/269
-@@ -53,8 +53,8 @@ _workout()
- 	for ((i=0; i < num_iterations; i++))
- 	do
- 		# File will be opened with O_TRUNC each time
--		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M count=1 \
--			> /dev/null 2>&1
-+		dd if=/dev/zero of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M \
-+			>> $here/$seq.full 2>&1
- 		sleep $enospc_time
- 	done
- 	kill $pid
-diff --git a/270 b/270
-index ed1e31e..e45029f 100755
---- a/270
-+++ b/270
-@@ -63,7 +63,7 @@ _workout()
- 		# File will be opened with O_TRUNC each time
- 		su $qa_user -c "dd if=/dev/zero \
- 			of=$SCRATCH_MNT/SPACE_CONSUMER bs=1M " \
--			> /dev/null 2>&1
-+			>> $here/$seq.full 2>&1
- 		sleep $enospc_time
- 	done
- 
--- 
-1.7.1
+This series has been sent out a few times, and I've been doing QA on
+it for weeks.  Note that I haven't implemented the log space reservations
+from ->writepage - see the actual patch for the rationale.
 
 _______________________________________________
 xfs mailing list
