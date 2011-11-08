@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA8IuLUq143856 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 12:56:21 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B04B722D2D3
-	for <xfs@oss.sgi.com>; Tue,  8 Nov 2011 10:56:20 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id pVWLgKzR3V4blZvq for <xfs@oss.sgi.com>;
-	Tue, 08 Nov 2011 10:56:20 -0800 (PST)
-Message-ID: <4EB97B53.7080600@sandeen.net>
-Date: Tue, 08 Nov 2011 12:56:19 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	pA8MtISh160430 for <xfs@oss.sgi.com>; Tue, 8 Nov 2011 16:55:19 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 56C1C1CF68D5
+	for <xfs@oss.sgi.com>; Tue,  8 Nov 2011 14:55:16 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	psHyfcPLy4qxXGKK for <xfs@oss.sgi.com>;
+	Tue, 08 Nov 2011 14:55:16 -0800 (PST)
+Date: Wed, 9 Nov 2011 09:55:13 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: quota mismatch for NFS mount of XFS filesystem
+Message-ID: <20111108225513.GO5534@dastard>
+References: <CACXvBApxwWUyYNfRL9rS32t7f04XCDwafbR7fSFjmXg8fJRpTg@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs_repair: Add inline function to get avl tree node
-References: <1320777990-6556-1-git-send-email-cmaiolino@redhat.com>
-	<1320777990-6556-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1320777990-6556-2-git-send-email-cmaiolino@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <CACXvBApxwWUyYNfRL9rS32t7f04XCDwafbR7fSFjmXg8fJRpTg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,40 +29,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Liam Forbes <loforbes@alaska.edu>
 Cc: xfs@oss.sgi.com
 
-On 11/8/11 12:46 PM, Carlos Maiolino wrote:
-> dd get_inode_offset() inline function, which will return the offset
-> of a specific node in the AVL tree avoiding the need to calculate the
-> the offset each time it needs to be used.
-
-might be good to find the open-coded instances of this, and
-make them use the helper too.
-
--Eric
-
-> ---
->  repair/incore.h |    6 ++++++
->  1 files changed, 6 insertions(+), 0 deletions(-)
+On Tue, Nov 08, 2011 at 09:31:05AM -0900, Liam Forbes wrote:
+> I searched the archives, but didn't find anything about incorrect
+> quota information for an NFS mounted XFS filesystem.  I hope somebody
+> might have an idea.
 > 
-> diff --git a/repair/incore.h b/repair/incore.h
-> index ee0e86a..8e311c9 100644
-> --- a/repair/incore.h
-> +++ b/repair/incore.h
-> @@ -311,6 +311,12 @@ void		get_inode_rec(struct xfs_mount *mp, xfs_agnumber_t agno,
->  			      ino_tree_node_t *ino_rec);
->  
->  extern avltree_desc_t     **inode_tree_ptrs;
-> +
-> +static inline int
-> +get_inode_offset(struct xfs_mount *mp, xfs_ino_t ino, ino_tree_node_t *irec)
-> +{
-> +	return XFS_INO_TO_AGINO(mp, ino) - irec->ino_startnum;
-> +}
->  static inline ino_tree_node_t *
->  findfirst_inode_rec(xfs_agnumber_t agno)
->  {
+> We have a RHEL 5.7 server mounting a 15T XFS filesystem and exporting
+> it to RHEL 5.6 and 5.7 clients.  quota and xfs_quota on the server
+> show a user using ~5.8T, but quota on a client only shows ~1.8T.
+> 
+> Server:
+> nfs2:~$ cat /etc/redhat-release
+> Red Hat Enterprise Linux Server release 5.7 (Tikanga)
+> nfs2:~$ uname -a
+> Linux nfs2 2.6.18-274.3.1.el5 #1 SMP Fri Aug 26 18:49:02 EDT 2011 x86_64 x86_64
+> nfs2:~$ rpm -qa | grep xfsprogs
+> xfsprogs-2.9.4-1.el5.centos
+> nfs2:~$ sudo quota -s -v -u krieger
+> Disk quotas for user krieger (uid 3105):
+>      Filesystem  blocks   quota   limit   grace   files   quota   limit   grace
+> /dev/mapper/primaryfs_vg-primaryfs
+>                   5901G       0       0            310k       0       0
+> nfs2:~$ sudo /usr/sbin/xfs_quota
+> xfs_quota> quota -u -h krieger
+> Disk quotas for User krieger (3105)
+> Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
+> /dev/primaryfs_vg/primaryfs
+>                5.8T      0      0  00 [------] /export/wrkdir20
+> xfs_quota> quit
+> 
+> Client:
+> pacman1:~$ cat /etc/redhat-release
+> Red Hat Enterprise Linux Server release 5.6 (Tikanga)
+> pacman1:~$ uname -a
+> Linux pacman1 2.6.18-238.19.1.563g0000.el5 #1 SMP Fri Jul 15 20:26:36
+> EDT 2011 x86_64 x86_64 x86_64 GNU/Linux
+> pacman1:~$ sudo quota -s -v -u krieger
+> Disk quotas for user krieger (uid 3105):
+>      Filesystem  blocks   quota   limit   grace   files   quota   limit   grace
+> nfs2:/export/wrkdir20
+>                   1806G       0       0            310k       0       0
+
+That looks like a 32bit variable overflow. In 512 byte blocks
+(sectors), 2^32 sectors overflows at 2T. And 5.8T ~= 2T + 2T + 1.8T.
+
+This is most likely to be an NFS issue - I'm not familiar with the
+Linux NFS quota protocol implementation, so I can't really say much
+more than that.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
