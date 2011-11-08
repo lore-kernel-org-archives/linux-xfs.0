@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA825TMJ085357 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 20:05:29 -0600
-Message-ID: <1320717928.3186.100.camel@doink>
-Subject: Re: [PATCH] xfstests: ignore fsstress file count for 022
+	pA82BW1c085481 for <xfs@oss.sgi.com>; Mon, 7 Nov 2011 20:11:32 -0600
+Message-ID: <1320718291.3186.103.camel@doink>
+Subject: Re: [PATCH v2] xfstests: add 059 and 060 for multi-stream xfsdump
 From: Alex Elder <aelder@sgi.com>
-Date: Mon, 7 Nov 2011 20:05:28 -0600
-In-Reply-To: <1320699832-12693-1-git-send-email-wkendall@sgi.com>
-References: <1320699832-12693-1-git-send-email-wkendall@sgi.com>
+Date: Mon, 7 Nov 2011 20:11:31 -0600
+In-Reply-To: <1320686536-1399-1-git-send-email-wkendall@sgi.com>
+References: <1320686536-1399-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,20 +25,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Bill Kendall <wkendall@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, 2011-11-07 at 15:03 -0600, Bill Kendall wrote:
-> The recently added fsstress operations result in a different
-> number of directories and files being created for xfsdump test
-> 022, which causes the test to fail since the expected xfsrestore
-> output records these numbers. Filter out the numbers to prevent
-> this from breaking in the future.
+On Mon, 2011-11-07 at 11:22 -0600, Bill Kendall wrote:
+> Implement the multi-stream placeholder tests 059 and 060. The comments
+> imply that these tests existed on IRIX, but I was unable to find them.
 > 
-> Also increase the number of fsstress operations used to populate
-> the filesystem so that we get roughly the same number of
-> directories and files as we used to for this test.
+> Test 059 does a simple 4-way dump and restore. Test 060 does a 4-way
+> dump, then restores each dump file individually (in a cumulative
+> fashion).
+> 
+> The tests are skipped if the installed xfsdump does not support
+> multi-stream output.
 > 
 > Signed-off-by: Bill Kendall <wkendall@sgi.com>
 
-Looks good.
+I haven't run these yet, but this looks good.
 
 Reviewed-by: Alex Elder <aelder@sgi.com>
 
