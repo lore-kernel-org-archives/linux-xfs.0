@@ -1,21 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA9KHj3j250819 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 14:17:45 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id C926130404E
-	for <xfs@oss.sgi.com>; Wed,  9 Nov 2011 12:17:41 -0800 (PST)
-Received: from [134.15.95.101] (cf-vpn-hw-arenaud-4.corp.sgi.com
-	[134.15.95.101])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 9808470017D2
-	for <xfs@oss.sgi.com>; Wed,  9 Nov 2011 14:17:41 -0600 (CST)
-Message-ID: <4EBADFE8.9000805@sgi.com>
-Date: Wed, 09 Nov 2011 15:17:44 -0500
-From: Alain Renaud <arenaud@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfsprogs: add .ltdep to .gitignore
-References: <1320865438-27014-1-git-send-email-bpm@sgi.com>
-In-Reply-To: <1320865438-27014-1-git-send-email-bpm@sgi.com>
+	pA9MFsg0258926 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 16:15:54 -0600
+From: Bill Kendall <wkendall@sgi.com>
+Subject: [PATCH] xfsdump: handle Ctrl-D during prompts
+Date: Wed,  9 Nov 2011 16:15:46 -0600
+Message-Id: <1320876946-27643-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,52 +14,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The change look good
+xfsdump does not currently handle Ctrl-D well during a dialog
+prompt. If some text is entered followed by Ctrl-D, an assert
+will trip because xfsdump expects a new-line character at the
+end of the user's input (or if asserts are disabled, the last
+character the user entered will be dropped).
 
-Reviewed-by: Alain Renaud<arenaud@sgi.com>
+If Ctrl-D is entered without entering any response, some dialog
+callers (e.g., tree_subtree_inter()) will abort because they
+receive an unexpected response code.
 
+This patch changes xfsdump to treat Ctrl-D as if the user hit
+enter. User input (if any) will be passed back to the caller,
+and a new line will be echoed to the terminal.
 
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
+---
+ common/dlog.c |   17 +++++++++--------
+ 1 files changed, 9 insertions(+), 8 deletions(-)
 
-On 11-11-09 02:03 PM, Ben Myers wrote:
-> Make git ignore all .ltdep files which are created as part of the build
-> process.
->
-> ~/xfsprogs # find | grep ltdep
-> ./libxcmd/.ltdep
-> ./libxfs/.ltdep
-> ./libhandle/.ltdep
-> ./libdisk/.ltdep
-> ./libxlog/.ltdep
->
-> Signed-off-by: Ben Myers<bpm@sgi.com>
-> ---
->   .gitignore |    1 +
->   1 files changed, 1 insertions(+), 0 deletions(-)
->
-> diff --git a/.gitignore b/.gitignore
-> index aa6cd35..22b4f65 100644
-> --- a/.gitignore
-> +++ b/.gitignore
-> @@ -1,6 +1,7 @@
->   # object files
->   *.o
->   .dep
-> +.ltdep
->
->   # build system
->   .census
-
+diff --git a/common/dlog.c b/common/dlog.c
+index 51666cf..ddd5524 100644
+--- a/common/dlog.c
++++ b/common/dlog.c
+@@ -489,17 +489,18 @@ promptinput( char *buf,
+ 			*exceptionixp = sigquitix;
+ 		}
+ 		return BOOL_FALSE;
+-	} else if ( nread == 0 ) {
+-		*exceptionixp = timeoutix;
+-		if ( bufsz > 0 ) {
+-			buf[ 0 ] = 0;
+-		}
+-		return BOOL_FALSE;
+ 	} else {
+ 		ASSERT( dlog_signo_received == -1 );
+ 		ASSERT( ( size_t )nread < bufsz );
+-		ASSERT( buf[ nread - 1 ] == '\n' );
+-		buf[ nread - 1 ] = 0;
++		/* Eat the newline if there is one. If there isn't one
++		 * (e.g., Ctrl-D) echo one to keep the output readable.
++		 */
++		if ( !nread || buf[ nread - 1 ] != '\n' ) {
++			buf[ nread ] = 0;
++			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, "\n" );
++		} else {
++			buf[ nread - 1 ] = 0;
++		}
+ 		*exceptionixp = 0;
+ 		return BOOL_TRUE;
+ 	}
 -- 
-===============================================
-Alain Renaud     - Cluster File System Engineer
-arenaud@sgi.com  - SGI
-===============================================
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
