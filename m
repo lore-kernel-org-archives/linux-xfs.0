@@ -1,11 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA9MFsg0258926 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 16:15:54 -0600
-From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfsdump: handle Ctrl-D during prompts
-Date: Wed,  9 Nov 2011 16:15:46 -0600
-Message-Id: <1320876946-27643-1-git-send-email-wkendall@sgi.com>
+	pA9Mbdjn261316 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 16:37:39 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9E376232737
+	for <xfs@oss.sgi.com>; Wed,  9 Nov 2011 14:37:37 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	Oih0DJtPdJU1zmDj for <xfs@oss.sgi.com>;
+	Wed, 09 Nov 2011 14:37:37 -0800 (PST)
+Date: Thu, 10 Nov 2011 09:37:35 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: add .ltdep to .gitignore
+Message-ID: <20111109223735.GR5534@dastard>
+References: <1320865438-27014-1-git-send-email-bpm@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1320865438-27014-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,65 +25,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: aelder@sgi.com, arenaud@sgi.com, xfs@oss.sgi.com
 
-xfsdump does not currently handle Ctrl-D well during a dialog
-prompt. If some text is entered followed by Ctrl-D, an assert
-will trip because xfsdump expects a new-line character at the
-end of the user's input (or if asserts are disabled, the last
-character the user entered will be dropped).
+On Wed, Nov 09, 2011 at 01:03:58PM -0600, Ben Myers wrote:
+> Make git ignore all .ltdep files which are created as part of the build
+> process.
+> 
+> ~/xfsprogs # find | grep ltdep
+> ./libxcmd/.ltdep
+> ./libxfs/.ltdep
+> ./libhandle/.ltdep
+> ./libdisk/.ltdep
+> ./libxlog/.ltdep
+> 
+> Signed-off-by: Ben Myers <bpm@sgi.com>
 
-If Ctrl-D is entered without entering any response, some dialog
-callers (e.g., tree_subtree_inter()) will abort because they
-receive an unexpected response code.
+The same changes are needed for the xfstests and xfsdump packages,
+right? Regardless, this change is good.
 
-This patch changes xfsdump to treat Ctrl-D as if the user hit
-enter. User input (if any) will be passed back to the caller,
-and a new line will be echoed to the terminal.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
----
- common/dlog.c |   17 +++++++++--------
- 1 files changed, 9 insertions(+), 8 deletions(-)
+Cheers,
 
-diff --git a/common/dlog.c b/common/dlog.c
-index 51666cf..ddd5524 100644
---- a/common/dlog.c
-+++ b/common/dlog.c
-@@ -489,17 +489,18 @@ promptinput( char *buf,
- 			*exceptionixp = sigquitix;
- 		}
- 		return BOOL_FALSE;
--	} else if ( nread == 0 ) {
--		*exceptionixp = timeoutix;
--		if ( bufsz > 0 ) {
--			buf[ 0 ] = 0;
--		}
--		return BOOL_FALSE;
- 	} else {
- 		ASSERT( dlog_signo_received == -1 );
- 		ASSERT( ( size_t )nread < bufsz );
--		ASSERT( buf[ nread - 1 ] == '\n' );
--		buf[ nread - 1 ] = 0;
-+		/* Eat the newline if there is one. If there isn't one
-+		 * (e.g., Ctrl-D) echo one to keep the output readable.
-+		 */
-+		if ( !nread || buf[ nread - 1 ] != '\n' ) {
-+			buf[ nread ] = 0;
-+			mlog( MLOG_NORMAL | MLOG_NOLOCK | MLOG_BARE, "\n" );
-+		} else {
-+			buf[ nread - 1 ] = 0;
-+		}
- 		*exceptionixp = 0;
- 		return BOOL_TRUE;
- 	}
+Dave.
 -- 
-1.7.0.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
