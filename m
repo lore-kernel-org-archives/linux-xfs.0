@@ -1,19 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pA9GsCKA239055 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 10:54:12 -0600
-Received: from hades.usersys.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 7E090230BAE
-	for <xfs@oss.sgi.com>; Wed,  9 Nov 2011 08:54:11 -0800 (PST)
-Received: from hades.usersys.redhat.com ([187.60.101.4]) by cuda.sgi.com with
-	ESMTP id FnJvCiZDf46FJ1Zs for <xfs@oss.sgi.com>;
-	Wed, 09 Nov 2011 08:54:11 -0800 (PST)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/2] xfs_repair: Properly set lost+found inode as used
-Date: Wed,  9 Nov 2011 14:54:07 -0200
-Message-Id: <1320857647-25511-3-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1320857647-25511-1-git-send-email-cmaiolino@redhat.com>
-References: <1320857647-25511-1-git-send-email-cmaiolino@redhat.com>
+	pA9IpTjK245695 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 12:51:30 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH] xfsprogs: add .ltdep to .gitignore
+Date: Wed,  9 Nov 2011 13:03:58 -0600
+Message-Id: <1320865438-27014-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,74 +20,37 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: bpm@sgi.com, aelder@sgi.com, arenaud@sgi.com
 
-This patch makes mk_orphanage() to properly set the inode link count of
-the recently allocated inode in the AVL tree, avoiding the lost+found
-directory to be bypass the link count check in phase7 and possibly leaving
-lost+found directory with a wrong link count.
+Make git ignore all .ltdep files which are created as part of the build
+process.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+~/xfsprogs # find | grep ltdep
+./libxcmd/.ltdep
+./libxfs/.ltdep
+./libhandle/.ltdep
+./libdisk/.ltdep
+./libxlog/.ltdep
+
+Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- repair/phase6.c |   18 +++++++++++++++++-
- 1 files changed, 17 insertions(+), 1 deletions(-)
+ .gitignore |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index adad61d..d38e44f 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -823,6 +823,8 @@ mk_orphanage(xfs_mount_t *mp)
- 	xfs_inode_t	*ip;
- 	xfs_inode_t	*pip;
- 	xfs_fsblock_t	first;
-+	ino_tree_node_t	*irec;
-+	int		ino_offset = 0;
- 	int		i;
- 	int		committed;
- 	int		error;
-@@ -875,6 +877,19 @@ mk_orphanage(xfs_mount_t *mp)
- 			ORPHANAGE, error);
- 	}
- 	ip->i_d.di_nlink++;		/* account for . */
-+	ino = ip->i_ino;
-+
-+	irec = find_inode_rec(mp,
-+			XFS_INO_TO_AGNO(mp, ino),
-+			XFS_INO_TO_AGINO(mp, ino));
-+	ino_offset = get_inode_offset(mp, ino, irec);
-+
-+	/*
-+	 * Mark the inode allocated to lost+found as used in the AVL tree
-+ 	 * so it is not skipped in phase 7
-+ 	 */
-+	set_inode_used(irec, ino_offset);
-+	add_inode_ref(irec, ino_offset);
+diff --git a/.gitignore b/.gitignore
+index aa6cd35..22b4f65 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,6 +1,7 @@
+ # object files
+ *.o
+ .dep
++.ltdep
  
- 	/*
- 	 * now that we know the transaction will stay around,
-@@ -902,6 +917,7 @@ mk_orphanage(xfs_mount_t *mp)
- 				XFS_INO_TO_AGINO(mp, mp->m_sb.sb_rootino)), 0);
- 
- 
-+
- 	libxfs_trans_log_inode(tp, pip, XFS_ILOG_CORE);
- 	libxfs_dir_init(tp, ip, pip);
- 	libxfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-@@ -912,9 +928,9 @@ mk_orphanage(xfs_mount_t *mp)
- 			ORPHANAGE, error);
- 	}
- 
--	ino = ip->i_ino;
- 
- 	libxfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_SYNC);
-+	add_inode_reached(irec,ino_offset);
- 
- 	return(ino);
- }
+ # build system
+ .census
 -- 
-1.7.6.4
+1.7.8.rc0.46.g5ae0f
 
 _______________________________________________
 xfs mailing list
