@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAKZeIg126986 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:40 -0600
+	pAAKZi8i127029 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:44 -0600
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 2/8] xfsprogs: unconditionally drop used buffer reference
-Date: Thu, 10 Nov 2011 14:35:12 -0600
-Message-Id: <f4640a738a62150c745c843b92c5d143ad1cb155.1320955675.git.aelder@sgi.com>
+Subject: [PATCH 3/8] xfsprogs: xfs_repair: don't set the root inode pointer
+Date: Thu, 10 Nov 2011 14:35:13 -0600
+Message-Id: <6833e89ecf7daa3ba69676fb98a4538ee6c3a1b5.1320955675.git.aelder@sgi.com>
 In-Reply-To: <1320957318-16269-1-git-send-email-aelder@sgi.com>
 References: <1320957318-16269-1-git-send-email-aelder@sgi.com>
 In-Reply-To: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
@@ -24,42 +24,34 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Alex Elder <aelder@sgi.com>
+Cc: Kevan Rehm <kfr@sgi.com>, Alex Elder <aelder@sgi.com>
 
-In libxfs_mount(), after reading the last block in the log device,
-the buffer is released by a call to libxfs_putbuf().  But it's done
-only if bp is non-null.  It always will be non-null at this point,
-so just make the call unconditionally.
+From: Kevan Rehm <kfr@sgi.com>
 
-Also touch up a misleading indent.
+In phase 6, in mk_root_dir(), xfs_repair initializes the mount
+point's m_rootip pointer without accounting for that reference.
+This field never really used or needed in repair otherwise, and the
+assigned pointer doesn't really represent a real reference to an
+inode that needs to be cached.  So just kill off this assignment.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- libxfs/init.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ repair/phase6.c |    2 --
+ 1 files changed, 0 insertions(+), 2 deletions(-)
 
-diff --git a/libxfs/init.c b/libxfs/init.c
-index 08fc584..ba44c9b 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -743,15 +743,14 @@ libxfs_mount(
- 			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
- 				return NULL;
- 		}
--		if (bp)
--			libxfs_putbuf(bp);
-+		libxfs_putbuf(bp);
- 	}
+diff --git a/repair/phase6.c b/repair/phase6.c
+index 1c82cb1..81d7fe6 100644
+--- a/repair/phase6.c
++++ b/repair/phase6.c
+@@ -797,8 +797,6 @@ mk_root_dir(xfs_mount_t *mp)
+ 	ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
+ 	ip->i_df.if_u1.if_extents = NULL;
  
- 	/* Initialize realtime fields in the mount structure */
- 	if (rtmount_init(mp, flags)) {
- 		fprintf(stderr, _("%s: realtime device init failed\n"),
- 			progname);
--			return NULL;
-+		return NULL;
- 	}
- 
- 	error = libxfs_initialize_perag(mp, sbp->sb_agcount, &mp->m_maxagi);
+-	mp->m_rootip = ip;
+-
+ 	/*
+ 	 * initialize the directory
+ 	 */
 -- 
 1.7.6.4
 
