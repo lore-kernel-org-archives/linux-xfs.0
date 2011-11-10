@@ -1,15 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAKZe2I126994 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:40 -0600
-From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 5/8] xfsprogs: Drop root inode refrerence in libxfs_umount()
-Date: Thu, 10 Nov 2011 14:35:15 -0600
-Message-Id: <8634b2514c7642f4cbcfdaf3b6852e129417c372.1320955676.git.aelder@sgi.com>
-In-Reply-To: <1320957318-16269-1-git-send-email-aelder@sgi.com>
-References: <1320957318-16269-1-git-send-email-aelder@sgi.com>
-In-Reply-To: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
-References: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
+	pAALGu84131122 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 15:16:56 -0600
+Received: from e32.co.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CD115236E36
+	for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 13:16:55 -0800 (PST)
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id n1QBNZbqgBawpHLC for
+	<xfs@oss.sgi.com>; Thu, 10 Nov 2011 13:16:55 -0800 (PST)
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 10 Nov 2011 14:16:54 -0700
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay01.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	pAALGfDQ135014 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:16:42 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id pAALGaHF001929
+	for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:16:38 -0700
+Subject: Debug of xfstest 234 hang
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Thu, 10 Nov 2011 15:16:33 -0600
+Message-ID: <1320959794.2201.15.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,60 +34,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Kevan Rehm <kfr@sgi.com>, Alex Elder <aelder@sgi.com>
+To: Dave Chinner <david@fromorbit.com>, Alex Elder <aelder@sgi.com>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-From: Kevan Rehm <kfr@sgi.com>
+Hi Dave, Alex,
 
-Routine libxfs_umount() did not call libxfs_iput for the m_rootip
-inode, so updates made to that inode could be lost.  This adds the
-missing call, and re-initializes the m_rootip pointer to be null.
+Debugging using trace, crash and systemtap, I found that the hang
+happens when xfs_sync_worker() (thru kworker) gets stuck in xlog_wait()
+while reserving a transaction log buffer for the dummy log.
 
-Since the root inode reference is now dropped by libxfs_umount(), it
-should *not* be dropped in mkfs parseproto().
+I also found that even though xfsaild_push() keeps getting invoked, it
+doesn't do anything to push the log to the disk, since the
+ailp->xa_target has not been changed since it has been called from the
+process stack a while back.
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- libxfs/init.c |    4 ++++
- mkfs/proto.c  |    3 ++-
- 2 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/libxfs/init.c b/libxfs/init.c
-index ba44c9b..d34fd8c 100644
---- a/libxfs/init.c
-+++ b/libxfs/init.c
-@@ -816,6 +816,10 @@ libxfs_umount(xfs_mount_t *mp)
- 	int			agno;
- 
- 	libxfs_rtmount_destroy(mp);
-+	if (mp->m_rootip) {
-+		libxfs_iput(mp->m_rootip, 0);
-+		mp->m_rootip = NULL;
-+	}
- 	libxfs_icache_purge();
- 	libxfs_bcache_purge();
- 
-diff --git a/mkfs/proto.c b/mkfs/proto.c
-index 3021028..3f76862 100644
---- a/mkfs/proto.c
-+++ b/mkfs/proto.c
-@@ -571,7 +571,8 @@ parseproto(
- 				break;
- 			parseproto(mp, ip, fsxp, pp, name);
- 		}
--		libxfs_iput(ip, 0);
-+		if (!isroot)
-+			libxfs_iput(ip, 0);
- 		return;
+So, I thought, resetting the target to the max value would help nudge
+the flow of ail to the disk. So, I added the following code. 
+------------------
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index ed9252b..f59fd9f 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -534,6 +534,10 @@ out_done:
+ 		ailp->xa_last_pushed_lsn = 0;
  	}
- 	libxfs_trans_log_inode(tp, ip, flags);
--- 
-1.7.6.4
+ 
++	lsn = xfs_ail_max_lsn(ailp);
++	smp_wmb();
++	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &lsn);
++	smp_wmb();
+ 	return tout;
+ }
+--------------------
+
+and it seem to do the magic.
+
+With this change, test 234 runs fine.
+
+Is this a good fix, bad fix, overkill... ?
+
+Please let me know.
+
+regards
+
+chandra
+ 
+
 
 _______________________________________________
 xfs mailing list
