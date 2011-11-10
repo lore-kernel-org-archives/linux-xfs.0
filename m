@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAC75Z8080550 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 06:07:05 -0600
-Received: from mx1.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CFA662338D1
-	for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 04:07:03 -0800 (PST)
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ArkwlZO6ZVvYcoWO for
-	<xfs@oss.sgi.com>; Thu, 10 Nov 2011 04:07:03 -0800 (PST)
-Date: Thu, 10 Nov 2011 10:05:41 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 0/2] Set lost+found inode as used after its allocation
-Message-ID: <20111110120541.GC21214@andromeda.usersys.redhat.com>
-References: <1320857647-25511-1-git-send-email-cmaiolino@redhat.com>
-	<20111110111133.GA6525@infradead.org>
+	pAADq9lZ090353 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 07:52:10 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1336E104866F
+	for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 05:52:03 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	AqcYyXejnZkbp9iH for <xfs@oss.sgi.com>;
+	Thu, 10 Nov 2011 05:52:03 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1ROV2w-0007MS-Tl
+	for xfs@oss.sgi.com; Thu, 10 Nov 2011 13:52:02 +0000
+Date: Thu, 10 Nov 2011 08:52:02 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: userspace status
+Message-ID: <20111110135202.GA27838@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111110111133.GA6525@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,17 +31,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> I'd love to see followups to use the the get_inode_offset helper more
-> often, and to add a testcase for the bug if possible.
-
-Hi Chris, I added the xfstests test case creation to my todo list, 
-I should have this implemented soon.
-
--- 
---Carlos
+I think I have applied all pending reviewed userspace patches to the
+kernel.org repositories.  If anything is missing please ping me.
 
 _______________________________________________
 xfs mailing list
