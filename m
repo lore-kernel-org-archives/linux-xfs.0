@@ -1,27 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAMOTTn137063
-	for <linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 16:24:29 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 22975236EA5
-	for <linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:24:27 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	PinO4PWpZqFNcGfH for <linux-xfs@oss.sgi.com>;
-	Thu, 10 Nov 2011 14:24:27 -0800 (PST)
-Date: Fri, 11 Nov 2011 09:24:24 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS realtime O_DIRECT failures
-Message-ID: <20111110222424.GB2386@dastard>
+	pAAMd0k3138561
+	for <linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 16:39:00 -0600
+Received: from exprod7og114.obsmtp.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 84B32236F41
+	for <linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:38:58 -0800 (PST)
+Received: from exprod7og114.obsmtp.com (exprod7og114.obsmtp.com [64.18.2.215])
+	by cuda.sgi.com with SMTP id kqcqjt9ZUgVJyYy3 for
+	<linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:38:58 -0800 (PST)
+Received: by iaek3 with SMTP id k3so926452iae.28
+	for <linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:38:57 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111110222424.GB2386@dastard>
 References: <loom.20111108T180925-222@post.gmane.org>
 	<20111109080133.GB20604@infradead.org>
 	<CAGedfzmcmfLXhBEzm9yhpRQTf-7dnMenXqe0FABAzJgP0rxSUA@mail.gmail.com>
 	<20111109223314.GQ5534@dastard>
 	<CAGedfznrW4c9Bf3D-7+CEUUa-_u5iVzh+KskwFS9bom0s=C=gQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAGedfznrW4c9Bf3D-7+CEUUa-_u5iVzh+KskwFS9bom0s=C=gQ@mail.gmail.com>
+	<20111110222424.GB2386@dastard>
+Date: Thu, 10 Nov 2011 17:38:57 -0500
+Message-ID: <CAGedfznRyZAymqtw7i1GeN2u9C4uhHiT_bxqAqrE-m1TqbJ0GQ@mail.gmail.com>
+Subject: Re: XFS realtime O_DIRECT failures
+From: Alan Cook <acook@visionpointsystems.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,60 +31,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alan Cook <acook@visionpointsystems.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
 
-On Wed, Nov 09, 2011 at 05:52:15PM -0500, Alan Cook wrote:
-> On Wed, Nov 9, 2011 at 5:33 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > I'm not sure from that description just why the realtime volume adds
-> > any benefit to your workflow. Separation of data and metadata is
-> > does not provide you with data compression, so you must be doing
-> > something different with the real time device to acheive
-> > compression. Any details on that aspect of your setup?
-> 
-> The compression is done via hardware that sits between the block layer
-> and the actual storage device (in this case it is a solid state
-> drive).  Having both the data and meta data reside on the same device
-> creates a problem, as the block layer has no idea whether it has data
-> or meta data, and so will compress the meta data along with the
-> regular data, which is very bad.  Splitting the meta data to a
-> separate device eliminated that problem.
+On Thu, Nov 10, 2011 at 5:24 PM, Dave Chinner <david@fromorbit.com> wrote:
+> XFS metadata IO is tagged with REQ_META, so the block layer can
+> easily distinguish it from data IO. =A0Even if the version if XFS you
+> are using is not doing this, it's rather simple to add it to
+> _xfs_buf_ioapply().
+>
+> With that, your problem at the block layer goes away, and hence the
+> need to separate data from metadata at the filesystem layer goes
+> away, too.
 
-XFS metadata IO is tagged with REQ_META, so the block layer can
-easily distinguish it from data IO.  Even if the version if XFS you
-are using is not doing this, it's rather simple to add it to
-_xfs_buf_ioapply().
+Thanks.  I'll take a look into my particular version of XFS.  That tag
+may well solve my problems.
 
-With that, your problem at the block layer goes away, and hence the
-need to separate data from metadata at the filesystem layer goes
-away, too.
+> > Unfortunately they do not tell a lot. =A0Running xfs_check/xfs_repair -n
+> > prior to running the test reports no errors. =A0However, attempting to
+> > run it after the test fails results in an indefinite I/O block (state
+> > of D+ for the process). =A0In fact, if I run the test utility twice, it
+> > results in a hung system.
+>
+> That sounds like you have a problem with your block device or
+> underlying storage, not a filesystem problem....
 
-> > As to your current problem, it's got a NULL pointer dereference
-> > trying to lock the per-ag structure. That means the per-ag lookup
-> > failed, which implies that the RT freespace bitmap may be corrupt
-> > and it's tried to read a bitmap block that is apparently beyond the
-> > end of the filesystem.  What does xfs_check/xfs_repair -n tell you
-> > about the filesystem state?
-> 
-> Unfortunately they do not tell a lot.  Running xfs_check/xfs_repair -n
-> prior to running the test reports no errors.  However, attempting to
-> run it after the test fails results in an indefinite I/O block (state
-> of D+ for the process).  In fact, if I run the test utility twice, it
-> results in a hung system.
-
-That sounds like you have a problem with your block device or
-underlying storage, not a filesystem problem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I had the same thought at first, but I get the same behavior using
+only ramdisks.  This issue only occurs when using RT subvolumes.
+Using XFS without separating the data and meta data (e.g. all on one
+device) has no issues.
 
 _______________________________________________
 xfs mailing list
