@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAGMDA6104383 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 10:22:13 -0600
-Message-ID: <4EBBFA31.5040408@sgi.com>
-Date: Thu, 10 Nov 2011 10:22:09 -0600
+	pAAGdk7C105859 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 10:39:47 -0600
+Message-ID: <4EBBFE4E.6050900@sgi.com>
+Date: Thu, 10 Nov 2011 10:39:42 -0600
 From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 0/8] xfsdump: enable support for multiple streams
-References: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
-	<20111110110017.GA26747@infradead.org>
-In-Reply-To: <20111110110017.GA26747@infradead.org>
+Subject: Re: [PATCH] xfsdump: handle Ctrl-D during prompts
+References: <1320876946-27643-1-git-send-email-wkendall@sgi.com>
+	<20111110083113.GA10573@infradead.org>
+In-Reply-To: <20111110083113.GA10573@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,18 +26,32 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
 Christoph Hellwig wrote:
-> I've put these changes, and Mike's path.c fix in.  It seems like the
-> whole autoconf/aclocal foo needs to be regenerated to make the
-> libpthread substitution to work.
+> On Wed, Nov 09, 2011 at 04:15:46PM -0600, Bill Kendall wrote:
+>> xfsdump does not currently handle Ctrl-D well during a dialog
+>> prompt. If some text is entered followed by Ctrl-D, an assert
+>> will trip because xfsdump expects a new-line character at the
+>> end of the user's input (or if asserts are disabled, the last
+>> character the user entered will be dropped).
+>>
+>> If Ctrl-D is entered without entering any response, some dialog
+>> callers (e.g., tree_subtree_inter()) will abort because they
+>> receive an unexpected response code.
+>>
+>> This patch changes xfsdump to treat Ctrl-D as if the user hit
+>> enter. User input (if any) will be passed back to the caller,
+>> and a new line will be echoed to the terminal.
 > 
-> What is your schedule for turning on the tap ring buffer, and redoing
-> the stream split scan?  Should we wait for them or aim for a release
-> with the current improvements relatively quickly?
+> Shouldn't Ctrl+D cause us to ignore the input that was added
+> before?  That's what I would expect from command line applications.
 
-I haven't started working on any of that yet, and will be side tracked
-with other work for a while. It's probably best not to hold a release
-for those changes.
+Ctrl-C will behave the way you describe.
 
+I tried a some interactive programs (parted, python, sftp, bash,
+xfs_db), and Ctrl-D seems to be ignored if there's already some input.
+I'll rework the patch to behave this way unless I hear back from
+you.
+
+Thanks,
 Bill
 
 _______________________________________________
