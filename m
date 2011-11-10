@@ -1,11 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAKZbaZ126966 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:37 -0600
+	pAAKZe2I126994 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:40 -0600
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 0/8] xfsprogs: new resvsp db command, plus some fixes
-Date: Thu, 10 Nov 2011 14:35:10 -0600
-Message-Id: <1320957318-16269-1-git-send-email-aelder@sgi.com>
+Subject: [PATCH 5/8] xfsprogs: Drop root inode refrerence in libxfs_umount()
+Date: Thu, 10 Nov 2011 14:35:15 -0600
+Message-Id: <8634b2514c7642f4cbcfdaf3b6852e129417c372.1320955676.git.aelder@sgi.com>
+In-Reply-To: <1320957318-16269-1-git-send-email-aelder@sgi.com>
+References: <1320957318-16269-1-git-send-email-aelder@sgi.com>
+In-Reply-To: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
+References: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,20 +24,54 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Kevan Rehm <kfr@sgi.com>, Alex Elder <aelder@sgi.com>
 
-The original purpose for this series was to add a new
-"resvsp" command to xfs_db, to provide access to the
-xfsctl(3) XFS_IOC_RESVSP64 operation.  Kevan Rehm did
-this work, and along the way he found and fixed a few
-cases where things weren't getting flushed to disk
-properly.  I also looked things over and came up with
-a few other small fixes.
+From: Kevan Rehm <kfr@sgi.com>
 
-I'm submitting the resulting series on Kevan's behalf.
-I think we'll want to follow this up with at least one
-test in the xfstests suite to exercise this new command.
+Routine libxfs_umount() did not call libxfs_iput for the m_rootip
+inode, so updates made to that inode could be lost.  This adds the
+missing call, and re-initializes the m_rootip pointer to be null.
 
-					-Alex
+Since the root inode reference is now dropped by libxfs_umount(), it
+should *not* be dropped in mkfs parseproto().
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+---
+ libxfs/init.c |    4 ++++
+ mkfs/proto.c  |    3 ++-
+ 2 files changed, 6 insertions(+), 1 deletions(-)
+
+diff --git a/libxfs/init.c b/libxfs/init.c
+index ba44c9b..d34fd8c 100644
+--- a/libxfs/init.c
++++ b/libxfs/init.c
+@@ -816,6 +816,10 @@ libxfs_umount(xfs_mount_t *mp)
+ 	int			agno;
+ 
+ 	libxfs_rtmount_destroy(mp);
++	if (mp->m_rootip) {
++		libxfs_iput(mp->m_rootip, 0);
++		mp->m_rootip = NULL;
++	}
+ 	libxfs_icache_purge();
+ 	libxfs_bcache_purge();
+ 
+diff --git a/mkfs/proto.c b/mkfs/proto.c
+index 3021028..3f76862 100644
+--- a/mkfs/proto.c
++++ b/mkfs/proto.c
+@@ -571,7 +571,8 @@ parseproto(
+ 				break;
+ 			parseproto(mp, ip, fsxp, pp, name);
+ 		}
+-		libxfs_iput(ip, 0);
++		if (!isroot)
++			libxfs_iput(ip, 0);
+ 		return;
+ 	}
+ 	libxfs_trans_log_inode(tp, ip, flags);
+-- 
+1.7.6.4
 
 _______________________________________________
 xfs mailing list
