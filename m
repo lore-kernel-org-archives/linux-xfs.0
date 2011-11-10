@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAB0KbD074665 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 05:00:22 -0600
-Date: Thu, 10 Nov 2011 06:00:17 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 0/8] xfsdump: enable support for multiple streams
-Message-ID: <20111110110017.GA26747@infradead.org>
-References: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
+	pAAC75Z8080550 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 06:07:05 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CFA662338D1
+	for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 04:07:03 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ArkwlZO6ZVvYcoWO for
+	<xfs@oss.sgi.com>; Thu, 10 Nov 2011 04:07:03 -0800 (PST)
+Date: Thu, 10 Nov 2011 10:05:41 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 0/2] Set lost+found inode as used after its allocation
+Message-ID: <20111110120541.GC21214@andromeda.usersys.redhat.com>
+References: <1320857647-25511-1-git-send-email-cmaiolino@redhat.com>
+	<20111110111133.GA6525@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1320699511-12281-1-git-send-email-wkendall@sgi.com>
+In-Reply-To: <20111110111133.GA6525@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,16 +29,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bill Kendall <wkendall@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-I've put these changes, and Mike's path.c fix in.  It seems like the
-whole autoconf/aclocal foo needs to be regenerated to make the
-libpthread substitution to work.
+> I'd love to see followups to use the the get_inode_offset helper more
+> often, and to add a testcase for the bug if possible.
 
-What is your schedule for turning on the tap ring buffer, and redoing
-the stream split scan?  Should we wait for them or aim for a release
-with the current improvements relatively quickly?
+Hi Chris, I added the xfstests test case creation to my todo list, 
+I should have this implemented soon.
+
+-- 
+--Carlos
 
 _______________________________________________
 xfs mailing list
