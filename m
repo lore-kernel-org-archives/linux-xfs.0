@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAAKZi8i127029 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:44 -0600
+	pAAKZiud127039 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 14:35:44 -0600
 From: Alex Elder <aelder@sgi.com>
-Subject: [PATCH 3/8] xfsprogs: xfs_repair: don't set the root inode pointer
-Date: Thu, 10 Nov 2011 14:35:13 -0600
-Message-Id: <6833e89ecf7daa3ba69676fb98a4538ee6c3a1b5.1320955675.git.aelder@sgi.com>
+Subject: [PATCH 6/8] xfsprogs: xfs_db: unmount fs before exiting
+Date: Thu, 10 Nov 2011 14:35:16 -0600
+Message-Id: <f91d3489cdc9ad68b6dac8224cf761fb2c51ad1e.1320955676.git.aelder@sgi.com>
 In-Reply-To: <1320957318-16269-1-git-send-email-aelder@sgi.com>
 References: <1320957318-16269-1-git-send-email-aelder@sgi.com>
 In-Reply-To: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
@@ -28,30 +28,39 @@ Cc: Kevan Rehm <kfr@sgi.com>, Alex Elder <aelder@sgi.com>
 
 From: Kevan Rehm <kfr@sgi.com>
 
-In phase 6, in mk_root_dir(), xfs_repair initializes the mount
-point's m_rootip pointer without accounting for that reference.
-This field never really used or needed in repair otherwise, and the
-assigned pointer doesn't really represent a real reference to an
-inode that needs to be cached.  So just kill off this assignment.
+The main routine calls libxfs_mount() via init(), but never calls
+libxfs_umount() at the end of the program so there could be
+filesystem changes queued which never get flushed to disk.  This
+adds the missing libxfs_umount() call.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- repair/phase6.c |    2 --
- 1 files changed, 0 insertions(+), 2 deletions(-)
+ db/init.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 1c82cb1..81d7fe6 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -797,8 +797,6 @@ mk_root_dir(xfs_mount_t *mp)
- 	ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
- 	ip->i_df.if_u1.if_extents = NULL;
+diff --git a/db/init.c b/db/init.c
+index 2a5ef2b..5effaf9 100644
+--- a/db/init.c
++++ b/db/init.c
+@@ -170,7 +170,7 @@ main(
+ 	}
+ 	if (cmdline) {
+ 		xfree(cmdline);
+-		return exitcode;
++		goto end;
+ 	}
  
--	mp->m_rootip = ip;
--
- 	/*
- 	 * initialize the directory
- 	 */
+ 	while (!done) {
+@@ -181,5 +181,9 @@ main(
+ 			done = command(c, v);
+ 		doneline(input, v);
+ 	}
++
++end:
++	libxfs_umount(mp);
++
+ 	return exitcode;
+ }
 -- 
 1.7.6.4
 
