@@ -1,24 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAA08N4q008856 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 18:08:23 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4A25810416CD
-	for <xfs@oss.sgi.com>; Wed,  9 Nov 2011 16:08:21 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	1MMgrBPCfl1Yq7jY for <xfs@oss.sgi.com>;
-	Wed, 09 Nov 2011 16:08:21 -0800 (PST)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1ROIBn-0000mn-2V
-	for xfs@oss.sgi.com; Thu, 10 Nov 2011 11:08:19 +1100
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1ROIBm-0000rO-Pt
-	for xfs@oss.sgi.com; Thu, 10 Nov 2011 11:08:18 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfstests: fix logging on test 205
-Date: Thu, 10 Nov 2011 11:08:18 +1100
-Message-Id: <1320883698-3262-1-git-send-email-david@fromorbit.com>
+	pAA1Un9g015989 for <xfs@oss.sgi.com>; Wed, 9 Nov 2011 19:30:49 -0600
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Subject: [PATCH] [BUGFIX] xfs: use doalloc flag in xfs_qm_dqattach_one()
+Date: Thu, 10 Nov 2011 10:33:10 +0900
+Message-ID: <20111110013310.3408.41745.stgit@ltc219.sdl.hitachi.co.jp>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,54 +15,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@infradead.org>
+Cc: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+The doalloc arg in xfs_qm_dqattach_one() is a flag that indicates
+whether a new area to handle quota information will be allocated
+if needed. Originally, it was passed to xfs_qm_dqget(), but has
+been removed by the following commit (probably by mistake):
 
-Make the logging of operations in test 205 to the 205.full file work
-correctly. This prevents the overwrite of mkfs status, and leaves
-the 205.full file around for later analysis even on successful test
-runs.
+	commit 8e9b6e7fa4544ea8a0e030c8987b918509c8ff47
+	Author: Christoph Hellwig <hch@lst.de>
+	Date:   Sun Feb 8 21:51:42 2009 +0100
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+	xfs: remove the unused XFS_QMOPT_DQLOCK flag
+
+As the result, xfs_qm_dqget() called from xfs_qm_dqattach_one()
+never allocates the new area even if it is needed.
+
+This patch gives the doalloc arg to xfs_qm_dqget() in
+xfs_qm_dqattach_one() to fix this problem.
+
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>
 ---
- 205 |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/205 b/205
-index 35d6992..bd916a1 100755
---- a/205
-+++ b/205
-@@ -40,12 +40,14 @@ _supported_os Linux
+ fs/xfs/xfs_qm.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 9a0aa76..95ba6dc 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -674,7 +674,8 @@ xfs_qm_dqattach_one(
+ 	 * disk and we didn't ask it to allocate;
+ 	 * ESRCH if quotas got turned off suddenly.
+ 	 */
+-	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
++	error = xfs_qm_dqget(ip->i_mount, ip, id, type,
++			     doalloc | XFS_QMOPT_DOWARN, &dqp);
+ 	if (error)
+ 		return error;
  
- _require_scratch
- 
--_scratch_mkfs_xfs -d size=16m -b size=512 >/dev/null
-+rm -f $seq.full
-+
-+_scratch_mkfs_xfs -d size=16m -b size=512 >> $seq.full 2>&1
- _scratch_mount
- 
- # fix the reserve block pool to a known size so that the enospc calculations
- # work out correctly.
--_scratch_resvblks 1024 > $seq.full 2>&1
-+_scratch_resvblks 1024 >> $seq.full 2>&1
- 
- # on a 16MB filesystem, there's 32768x512byte blocks. used is:
- #	- 4944 in the log,
-@@ -79,5 +81,4 @@ dd if=/dev/zero of=$SCRATCH_MNT/fred bs=15 count=$[26745/15*512] 2>&1 | _filter_
- 
- # success, all done
- echo "*** done"
--rm -f $seq.full
- status=0
--- 
-1.7.5.4
 
 _______________________________________________
 xfs mailing list
