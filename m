@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAB6VsNt179958
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Nov 2011 00:31:54 -0600
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 251A91050B47
-	for <linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 22:31:51 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id 8vZW5YNYZ2T3zqvH for
-	<linux-xfs@oss.sgi.com>; Thu, 10 Nov 2011 22:31:51 -0800 (PST)
-Received: from tang.cn.fujitsu.com (tang.cn.fujitsu.com [10.167.250.3])
-	by song.cn.fujitsu.com (Postfix) with ESMTP id 818C71700BD
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Nov 2011 14:31:48 +0800 (CST)
-Received: from mailserver.fnst.cn.fujitsu.com (tang.cn.fujitsu.com [127.0.0.1])
-	by tang.cn.fujitsu.com (8.14.3/8.13.1) with ESMTP id pAB6VkC6011455
-	for <linux-xfs@oss.sgi.com>; Fri, 11 Nov 2011 14:31:47 +0800
-Message-ID: <4EBCC112.3020108@cn.fujitsu.com>
-Date: Fri, 11 Nov 2011 14:30:42 +0800
-From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+	pAB5pIZi174093 for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 23:51:19 -0600
+Received: from busoni.debian.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 219FA10507E0
+	for <xfs@oss.sgi.com>; Thu, 10 Nov 2011 21:51:16 -0800 (PST)
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id zkgAlt23iQErg971 for
+	<xfs@oss.sgi.com>; Thu, 10 Nov 2011 21:51:16 -0800 (PST)
 MIME-Version: 1.0
-Subject: xfstests/071 FAIL with XFS Assertion
-Reply-To: gaowanlong@cn.fujitsu.com
+From: owner@bugs.debian.org (Debian Bug Tracking System)
+Subject: Bug#553875: marked as done (replacing libreadline5-dev build
+	dependency with libreadline-dev)
+Message-ID: <handler.553875.D553875.132099044311074.ackdone@bugs.debian.org>
+References: <E1ROjxS-0007Tc-0c@franck.debian.org>
+	<200911020111.nA21BMV5011421@bolero.cs.tu-berlin.de>
+Date: Fri, 11 Nov 2011 05:51:12 +0000
+Content-Type: multipart/mixed; boundary="----------=_1320990672-12238-0"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,63 +25,236 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Nathan Scott <nathans@debian.org>
 
-v3.1.0-10325-g3155521
+This is a multi-part message in MIME format...
 
-[   39.315513] XFS: Assertion failed: XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0, file: fs/xfs/xfs_super.c, line: 799
-[   39.316613] ------------[ cut here ]------------
-[   39.317099] kernel BUG at fs/xfs/xfs_message.c:101!
-[   39.317554] invalid opcode: 0000 [#1] SMP 
-[   39.317554] CPU 1 
-[   39.317554] Modules linked in: xfs exportfs deflate zlib_deflate ctr camellia cast5 rmd160 crypto_null ccm serpent blowfish_generic blowfish_common twofish_x86_64 twofish_common ecb xcbc cbc sha256_generic sha512_generic des_generic cryptd aes_x86_64 aes_generic ah6 ah4 esp6 esp4 xfrm4_mode_beet xfrm4_tunnel tunnel4 xfrm4_mode_tunnel xfrm4_mode_transport xfrm6_mode_transport xfrm6_mode_ro xfrm6_mode_beet xfrm6_mode_tunnel ipcomp ipcomp6 xfrm_ipcomp xfrm6_tunnel tunnel6 af_key sunrpc ipv6 snd_hda_intel snd_hda_codec snd_hwdep snd_seq snd_seq_device snd_pcm snd_timer snd soundcore microcode i2c_piix4 snd_page_alloc virtio_net virtio_balloon i2c_core pcspkr joydev virtio_blk floppy virtio_pci virtio_ring virtio [last unloaded: speedstep_lib]
-[   39.317554] 
-[   39.317554] Pid: 2572, comm: umount Not tainted 3.1.0-10325-g3155521 #1 Red Hat KVM
-[   39.317554] RIP: 0010:[<ffffffffa02f52ea>]  [<ffffffffa02f52ea>] assfail+0x22/0x24 [xfs]
-[   39.317554] RSP: 0018:ffff88001d369d48  EFLAGS: 00010296
-[   39.317554] RAX: 000000000000008d RBX: ffff88001d658d90 RCX: 000000000000aaf7
-[   39.317554] RDX: 0000000000000000 RSI: 0000000000000092 RDI: 0000000000000246
-[   39.317554] RBP: ffff88001d369d48 R08: 0000000000000000 R09: ffff88001f00c000
-[   39.317554] R10: ffff88009d369be7 R11: 0000000000000000 R12: ffff88001d658c00
-[   39.317554] R13: ffffffffa0358c70 R14: ffff88001bc5d7c8 R15: 0000000000000000
-[   39.317554] FS:  00007f2c4f785760(0000) GS:ffff88001f680000(0000) knlGS:0000000000000000
-[   39.317554] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
-[   39.317554] CR2: 00000037e48d7250 CR3: 000000001c0a1000 CR4: 00000000000006e0
-[   39.317554] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[   39.317554] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
-[   39.317554] Process umount (pid: 2572, threadinfo ffff88001d368000, task ffff88001bf89720)
-[   39.317554] Stack:
-[   39.317554]  ffff88001d369d78 ffffffffa02f5f59 ffff88001d369d78 ffff88001d658d90
-[   39.317554]  ffff88001d658e88 ffffffffa0358c70 ffff88001d369d98 ffffffff81137d46
-[   39.317554]  ffff88001d658d90 ffff88001d658d90 ffff88001d369dc8 ffffffff81138230
-[   39.317554] Call Trace:
-[   39.317554]  [<ffffffffa02f5f59>] xfs_fs_destroy_inode+0xa6/0x122 [xfs]
-[   39.317554]  [<ffffffff81137d46>] destroy_inode+0x3e/0x58
-[   39.317554]  [<ffffffff81138230>] evict+0x144/0x14c
-[   39.317554]  [<ffffffff811383fe>] dispose_list+0x3e/0x4f
-[   39.317554]  [<ffffffff81138d24>] evict_inodes+0xdb/0xe8
-[   39.317554]  [<ffffffff81125af0>] generic_shutdown_super+0x4c/0xbb
-[   39.317554]  [<ffffffff81125b86>] kill_block_super+0x27/0x6a
-[   39.317554]  [<ffffffff81125eaa>] deactivate_locked_super+0x26/0x57
-[   39.317554]  [<ffffffff811266f4>] deactivate_super+0x3a/0x3f
-[   39.317554]  [<ffffffff8113bc88>] mntput_no_expire+0xd0/0xd5
-[   39.317554]  [<ffffffff8113c90a>] sys_umount+0x2dc/0x30a
-[   39.317554]  [<ffffffff8112cbb3>] ? path_put+0x22/0x26
-[   39.317554]  [<ffffffff814a3342>] system_call_fastpath+0x16/0x1b
-[   39.317554] Code: c4 68 5b 41 5c 41 5d c9 c3 55 48 89 e5 66 66 66 66 90 31 c0 48 89 f1 41 89 d0 48 c7 c6 9c e2 35 a0 48 89 fa 31 ff e8 a8 fc ff ff <0f> 0b 55 48 89 e5 48 83 ec 10 66 66 66 66 90 41 b8 01 00 00 00 
-[   39.317554] RIP  [<ffffffffa02f52ea>] assfail+0x22/0x24 [xfs]
-[   39.317554]  RSP <ffff88001d369d48>
-[   39.388697] ---[ end trace a372bd1f2ffe0ef4 ]---
+------------=_1320990672-12238-0
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+
+Your message dated Fri, 11 Nov 2011 05:47:22 +0000
+with message-id <E1ROjxS-0007Tc-0c@franck.debian.org>
+and subject line Bug#553875: fixed in xfsprogs 3.1.6
+has caused the Debian Bug report #553875,
+regarding replacing libreadline5-dev build dependency with libreadline-dev
+to be marked as done.
+
+This means that you claim that the problem has been dealt with.
+If this is not the case it is now your responsibility to reopen the
+Bug report if necessary, and/or fix the problem forthwith.
+
+(NB: If you are a system administrator and have no idea what this
+message is talking about, this may indicate a serious mail system
+misconfiguration somewhere. Please contact owner@bugs.debian.org
+immediately.)
 
 
-Thanks
--Wanlong Gao
+--=20
+553875: http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=3D553875
+Debian Bug Tracking System
+Contact owner@bugs.debian.org with problems
+
+------------=_1320990672-12238-0
+Content-Type: message/rfc822
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+Received: (at maintonly) by bugs.debian.org; 2 Nov 2009 01:19:24 +0000
+X-Spam-Checker-Version: SpamAssassin 3.2.3-bugs.debian.org_2005_01_02
+	(2007-08-08) on rietz.debian.org
+X-Spam-Level: 
+X-Spam-Bayes: score:0.0000 Tokens: new, 10; hammy, 94; neutral, 43; spammy, 0.
+	spammytokens: hammytokens:0.000-+--Usertags, 0.000-+--Severity,
+	0.000-+--usertags, 0.000-+--sk:lists.d, 0.000-+--severity
+X-Spam-Status: No, score=-9.3 required=4.0 tests=AWL,BAYES_00,HAS_PACKAGE,
+	RCVD_IN_DNSWL_MED autolearn=ham version=3.2.3-bugs.debian.org_2005_01_02
+Return-path: <doko@cs.tu-berlin.de>
+Received: from mail.cs.tu-berlin.de ([130.149.17.13])
+	by rietz.debian.org with esmtp (Exim 4.63)
+	(envelope-from <doko@cs.tu-berlin.de>)
+	id 1N4lZs-00065m-Ks
+	for maintonly@bugs.debian.org; Mon, 02 Nov 2009 01:19:24 +0000
+Received: from localhost (localhost [127.0.0.1])
+	by localhost-12225.cs.tu-berlin.de (Postfix) with ESMTP id 66CE62A5A4
+	for <maintonly@bugs.debian.org>; Mon,  2 Nov 2009 02:11:32 +0100 (MET)
+X-Virus-Scanned: amavisd-new at cs.tu-berlin.de (including SpamAssassin)
+Received: from mailhost.cs.tu-berlin.de ([127.0.0.1])
+	by localhost (mail.cs.tu-berlin.de [127.0.0.1]) (amavisd-new, port 12224)
+	with ESMTP id b+HXJT2HkfTf 06852-17 for <maintonly@bugs.debian.org>;
+	Mon,  2 Nov 2009 02:11:23 +0100 (MET) 16504
+Received: from bolero.cs.tu-berlin.de (bolero.cs.tu-berlin.de [130.149.19.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mailhost.cs.tu-berlin.de (Postfix) with ESMTPS
+	for <maintonly@bugs.debian.org>; Mon,  2 Nov 2009 02:11:23 +0100 (MET)
+Received: (from doko@localhost)
+	by bolero.cs.tu-berlin.de (8.13.8+Sun/8.13.3/Submit) id nA21BMV5011421
+	for maintonly@bugs.debian.org; Mon, 2 Nov 2009 02:11:22 +0100 (MET)
+Date: Mon, 2 Nov 2009 02:11:22 +0100 (MET)
+From: Matthias Klose <doko@cs.tu-berlin.de>
+Message-Id: <200911020111.nA21BMV5011421@bolero.cs.tu-berlin.de>
+To: maintonly@bugs.debian.org
+Subject: replacing libreadline5-dev build dependency with libreadline-dev
+Delivered-To: maintonly@bugs.debian.org
+
+Package: xfsprogs
+Version: 3.0.4
+Severity: important
+User: doko@debian.org
+Usertags: readline6
+
+Sent to http://lists.debian.org/debian-devel/2009/09/msg00549.html
+As a package maintainer you got this email directly as well.
+
+Both libreadline-dev (>= 6.0) and libreadline6-dev are now available
+in unstable and testing. If possible, please replace the libreadline5-dev
+build dependency with libreadline-dev, so that in future changes of the
+libreadline soname binNMU's can be used for this kind of update.
+
+
+
+------------=_1320990672-12238-0
+Content-Type: message/rfc822
+Content-Disposition: inline
+Content-Transfer-Encoding: 7bit
+
+Received: (at 553875-close) by bugs.debian.org; 11 Nov 2011 05:47:23 +0000
+X-Spam-Checker-Version: SpamAssassin 3.3.1-bugs.debian.org_2005_01_02
+	(2010-03-16) on busoni.debian.org
+X-Spam-Level: 
+X-Spam-Status: No, score=-12.7 required=4.0 tests=BAYES_00,FROMDEVELOPER,
+	FVGT_m_MULTI_ODD,HAS_BUG_NUMBER,IMPRONONCABLE_2,MURPHY_WRONG_WORD1,
+	MURPHY_WRONG_WORD2,PGPSIGNATURE autolearn=ham
+	version=3.3.1-bugs.debian.org_2005_01_02
+X-Spam-Bayes: score:0.0000 Tokens: new, 33; hammy, 151; neutral, 127; spammy,
+	0. spammytokens: hammytokens:0.000-+--HX-Debian:DAK,
+	0.000-+--H*rp:D*ftp-master.debian.org, 0.000-+--HX-DAK:process-upload,
+	0.000-+--H*RU:128.148.34.3, 0.000-+--HX-Spam-Relays-External:128.148.34.3
+Return-path: <envelope@ftp-master.debian.org>
+Received: from franck.debian.org ([128.148.34.3])
+	from C=NA,ST=NA,L=Ankh Morpork,O=Debian SMTP,OU=Debian SMTP CA,CN=franck.debian.org,EMAIL=hostmaster@franck.debian.org (verified)
+	by busoni.debian.org with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.72)
+	(envelope-from <envelope@ftp-master.debian.org>)
+	id 1ROjxT-0002sT-Ee
+	for 553875-close@bugs.debian.org; Fri, 11 Nov 2011 05:47:23 +0000
+Received: from dak by franck.debian.org with local (Exim 4.72)
+	(envelope-from <envelope@ftp-master.debian.org>)
+	id 1ROjxS-0007Tc-0c; Fri, 11 Nov 2011 05:47:22 +0000
+Date: Fri, 11 Nov 2011 05:47:22 +0000
+Message-Id: <E1ROjxS-0007Tc-0c@franck.debian.org>
+From: Nathan Scott <nathans@debian.org>
+To: 553875-close@bugs.debian.org
+X-DAK: dak process-upload
+X-Debian: DAK
+X-Debian-Package: xfsprogs
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Subject: Bug#553875: fixed in xfsprogs 3.1.6
+Sender: Archive Administrator <dak@franck.debian.org>
+
+Source: xfsprogs
+Source-Version: 3.1.6
+
+We believe that the bug you reported is fixed in the latest version of
+xfsprogs, which is due to be installed in the Debian FTP archive:
+
+xfslibs-dev_3.1.6_i386.deb
+  to main/x/xfsprogs/xfslibs-dev_3.1.6_i386.deb
+xfsprogs-udeb_3.1.6_i386.udeb
+  to main/x/xfsprogs/xfsprogs-udeb_3.1.6_i386.udeb
+xfsprogs_3.1.6.dsc
+  to main/x/xfsprogs/xfsprogs_3.1.6.dsc
+xfsprogs_3.1.6.tar.gz
+  to main/x/xfsprogs/xfsprogs_3.1.6.tar.gz
+xfsprogs_3.1.6_i386.deb
+  to main/x/xfsprogs/xfsprogs_3.1.6_i386.deb
+
+
+
+A summary of the changes between this version and the previous one is
+attached.
+
+Thank you for reporting the bug, which will now be closed.  If you
+have further comments please address them to 553875@bugs.debian.org,
+and the maintainer will reopen the bug report if appropriate.
+
+Debian distribution maintenance software
+pp.
+Nathan Scott <nathans@debian.org> (supplier of updated xfsprogs package)
+
+(This message was generated automatically at their request; if you
+believe that there is a problem with it please contact the archive
+administrators by mailing ftpmaster@debian.org)
+
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Format: 1.8
+Date: Wed, 11 Oct 2011 16:47:10 +1100
+Source: xfsprogs
+Binary: xfsprogs xfslibs-dev xfsprogs-udeb
+Architecture: source i386
+Version: 3.1.6
+Distribution: unstable
+Urgency: low
+Maintainer: XFS Development Team <xfs@oss.sgi.com>
+Changed-By: Nathan Scott <nathans@debian.org>
+Description: 
+ xfslibs-dev - XFS filesystem-specific static libraries and headers
+ xfsprogs   - Utilities for managing the XFS filesystem
+ xfsprogs-udeb - A stripped-down version of xfsprogs, for debian-installer (udeb)
+Closes: 553875
+Changes: 
+ xfsprogs (3.1.6) unstable; urgency=low
+ .
+   * New upstream release
+   * Handle upcoming libreadline5-dev removal (closes: #553875)
+Checksums-Sha1: 
+ e1070da20fbf627efca4046f0a82c497387c487e 1096 xfsprogs_3.1.6.dsc
+ 8f4c7382f831ec7e859891637b80e0aea712f38f 1396825 xfsprogs_3.1.6.tar.gz
+ 775e379f700c0a948a2207ad164d887763d2ed56 1540184 xfsprogs_3.1.6_i386.deb
+ cefbdc132ccb48a2b2fde783c55fdb713a0363bf 32116 xfslibs-dev_3.1.6_i386.deb
+ 33012c0d6e8a9a7258cb626b1dc20cc996e6aadf 138900 xfsprogs-udeb_3.1.6_i386.udeb
+Checksums-Sha256: 
+ 78ed9662b8a20614bd3b5852560fd0a0ad2fa855b6c20688d9fe47dd19123e17 1096 xfsprogs_3.1.6.dsc
+ 23cd7fc21c7b060e049c060d233260a1e3d47c5f1b2611b56210207b011d148e 1396825 xfsprogs_3.1.6.tar.gz
+ 768c4a7dfa63271071bd949b361c558821ac13bdbeeee96ad0cb82ac5d698fd7 1540184 xfsprogs_3.1.6_i386.deb
+ 18a40d519d85c0ee9577ed690926c20cf4146eec5e0f458c6188e50ed0d40c59 32116 xfslibs-dev_3.1.6_i386.deb
+ 948c8c0b8ef364975d955773f99b4a0e3458fb691f0b097030943333c29ac7b2 138900 xfsprogs-udeb_3.1.6_i386.udeb
+Files: 
+ f20785000c4ed79e504d4cbefeda4101 1096 admin optional xfsprogs_3.1.6.dsc
+ f8b42126ebb35dcd832d1d51931e4aef 1396825 admin optional xfsprogs_3.1.6.tar.gz
+ 4a7464d5f08bca49d2454b14bcaf4db1 1540184 admin optional xfsprogs_3.1.6_i386.deb
+ c51bcfb8378e8d071c419444cf98ff12 32116 libdevel extra xfslibs-dev_3.1.6_i386.deb
+ a1ab7c3b5000f5ed29e59d8d2d939a03 138900 debian-installer optional xfsprogs-udeb_3.1.6_i386.udeb
+Package-Type: udeb
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk68s6gACgkQm8fl3HSIa2P8AACeMwht68MBbiXrf2oAaVlBTaAw
+EXYAnAqYaH2qWOwy5Mfh5WWJ5gFGhRWJ
+=3oaG
+-----END PGP SIGNATURE-----
+
+
+
+------------=_1320990672-12238-0
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+------------=_1320990672-12238-0--
