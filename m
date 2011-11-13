@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pADC1Zn0110073 for <xfs@oss.sgi.com>; Sun, 13 Nov 2011 06:01:36 -0600
-Date: Sun, 13 Nov 2011 07:01:33 -0500
+	pADBxh63110004 for <xfs@oss.sgi.com>; Sun, 13 Nov 2011 05:59:43 -0600
+Date: Sun, 13 Nov 2011 06:59:40 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] xfsprogs: xfs_repair: don't set the root inode pointer
-Message-ID: <20111113120133.GC19435@infradead.org>
+Subject: Re: [PATCH 2/8] xfsprogs: unconditionally drop used buffer reference
+Message-ID: <20111113115940.GB19435@infradead.org>
 References: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
-	<6833e89ecf7daa3ba69676fb98a4538ee6c3a1b5.1320955675.git.aelder@sgi.com>
+	<f4640a738a62150c745c843b92c5d143ad1cb155.1320955675.git.aelder@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <6833e89ecf7daa3ba69676fb98a4538ee6c3a1b5.1320955675.git.aelder@sgi.com>
+In-Reply-To: <f4640a738a62150c745c843b92c5d143ad1cb155.1320955675.git.aelder@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,39 +24,36 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Alex Elder <aelder@sgi.com>
-Cc: Kevan Rehm <kfr@sgi.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 10, 2011 at 02:35:13PM -0600, Alex Elder wrote:
-> From: Kevan Rehm <kfr@sgi.com>
+On Thu, Nov 10, 2011 at 02:35:12PM -0600, Alex Elder wrote:
+> In libxfs_mount(), after reading the last block in the log device,
+> the buffer is released by a call to libxfs_putbuf().  But it's done
+> only if bp is non-null.  It always will be non-null at this point,
+> so just make the call unconditionally.
 > 
-> In phase 6, in mk_root_dir(), xfs_repair initializes the mount
-> point's m_rootip pointer without accounting for that reference.
-> This field never really used or needed in repair otherwise, and the
-> assigned pointer doesn't really represent a real reference to an
-> inode that needs to be cached.  So just kill off this assignment.
+> Also touch up a misleading indent.
 > 
 > Signed-off-by: Alex Elder <aelder@sgi.com>
-
-Shouldn't this also have Kevan's signoff?
-
 > ---
->  repair/phase6.c |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
+>  libxfs/init.c |    5 ++---
+>  1 files changed, 2 insertions(+), 3 deletions(-)
 > 
-> diff --git a/repair/phase6.c b/repair/phase6.c
-> index 1c82cb1..81d7fe6 100644
-> --- a/repair/phase6.c
-> +++ b/repair/phase6.c
-> @@ -797,8 +797,6 @@ mk_root_dir(xfs_mount_t *mp)
->  	ip->i_df.if_bytes = ip->i_df.if_real_bytes = 0;
->  	ip->i_df.if_u1.if_extents = NULL;
->  
-> -	mp->m_rootip = ip;
-> -
+> diff --git a/libxfs/init.c b/libxfs/init.c
+> index 08fc584..ba44c9b 100644
+> --- a/libxfs/init.c
+> +++ b/libxfs/init.c
+> @@ -743,15 +743,14 @@ libxfs_mount(
+>  			if (!(flags & LIBXFS_MOUNT_DEBUGGER))
+>  				return NULL;
+>  		}
+> -		if (bp)
+> -			libxfs_putbuf(bp);
+> +		libxfs_putbuf(bp);
+>  	}
 
-Looks good, but can we extent this a bit?  The only reference to
-mp->m_rootip in the userspace code is in libxfs_mount.  By making
-it a local variable there we can kill the field entirely.
+This one isn't correct.  If LIBXFS_MOUNT_DEBUGGER is set we still
+get through to here.
 
 _______________________________________________
 xfs mailing list
