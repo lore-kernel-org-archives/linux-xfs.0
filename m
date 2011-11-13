@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pABKTdIu222027 for <xfs@oss.sgi.com>; Fri, 11 Nov 2011 14:29:40 -0600
-Message-ID: <1321043375.8773.50.camel@doink>
-Subject: Re: [RFC PATCH 1/4] Define a new function xfs_this_quota_on()
-From: Alex Elder <aelder@sgi.com>
-Date: Fri, 11 Nov 2011 14:29:35 -0600
-In-Reply-To: <20111027220529.2638.41757.sendpatchset@chandra-lucid.austin.ibm.com>
-References: <20111027220523.2638.12351.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20111027220529.2638.41757.sendpatchset@chandra-lucid.austin.ibm.com>
+	pADBqUlU109876
+	for <linux-xfs@oss.sgi.com>; Sun, 13 Nov 2011 05:52:31 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 160481E99B09
+	for <linux-xfs@oss.sgi.com>; Sun, 13 Nov 2011 03:52:26 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	slNPL2unBpS575Bb for <linux-xfs@oss.sgi.com>;
+	Sun, 13 Nov 2011 03:52:26 -0800 (PST)
+Date: Sun, 13 Nov 2011 06:52:23 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfstests/071 FAIL with XFS Assertion
+Message-ID: <20111113115223.GA19435@infradead.org>
+References: <4EBCC112.3020108@cn.fujitsu.com>
 MIME-Version: 1.0
-Reply-To: aelder@sgi.com
+Content-Disposition: inline
+In-Reply-To: <4EBCC112.3020108@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,20 +31,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Thu, 2011-10-27 at 17:05 -0500, Chandra Seetharaman wrote:
-> Create a new function xfs_this_quota_on() that takes a xfs_mount
-> data srtucture and a disk quota type and returns true if the specified
-> type of quota is ON in the xfs_mount data structure.
-> 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+On Fri, Nov 11, 2011 at 02:30:42PM +0800, Wanlong Gao wrote:
+> v3.1.0-10325-g3155521
 
-Looks good.
-
-Reviewed-by: Alex Elder <aelder@sgi.com>
-
+Hmm, this a is a test not run in the auto group.  Do you have tested
+it on older kernels where it works, aka do you know if this is a
+regresion?
 
 _______________________________________________
 xfs mailing list
