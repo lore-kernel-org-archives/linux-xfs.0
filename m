@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAEG2J1N217516 for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 10:02:19 -0600
+	pAEG2J74217525 for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 10:02:19 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A88D1D082A2
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E41D41D082A1
 	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 08:02:17 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	1FFHAeASN8nIF8VZ for <xfs@oss.sgi.com>;
+	VZhV7qmeF4uwpkpF for <xfs@oss.sgi.com>;
 	Mon, 14 Nov 2011 08:02:17 -0800 (PST)
-Message-Id: <20111114160217.591812422@bombadil.infradead.org>
-Date: Mon, 14 Nov 2011 10:57:45 -0500
+Message-Id: <20111114160217.214716535@bombadil.infradead.org>
+Date: Mon, 14 Nov 2011 10:57:43 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfsprogs: allow linking against libtcmalloc
+Subject: [PATCH 1/3] repair: allocate and free inode records individually
 References: <20111114155742.285135418@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfsprogs-use-tcmalloc
+Content-Disposition: inline; filename=repair-free-inode-chunk-node
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +31,297 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Allow linking against the libtcmalloc library from Google's performance
-tools, which at least for repair reduces the memory usage dramatically.
+Instead of allocating inode records in chunks and keeping a freelist of them
+which never gets released to the system memory allocator use plain malloc
+and free for them.  The freelist just means adding a global lock instead
+of relying on malloc and free which could be implemented lockless, and the
+freelist is almost completely worthless as we are done allocating new
+inode records once we start freeing them in major quantities.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/configure.in
+Index: xfsprogs-dev/repair/incore_ino.c
 ===================================================================
---- xfsprogs-dev.orig/configure.in	2011-08-14 17:00:02.000000000 +0000
-+++ xfsprogs-dev/configure.in	2011-11-14 12:47:05.000000000 +0000
-@@ -31,6 +31,21 @@ AC_ARG_ENABLE(editline,
- AC_SUBST(libeditline)
- AC_SUBST(enable_editline)
+--- xfsprogs-dev.orig/repair/incore_ino.c	2011-11-09 18:52:15.041861085 +0000
++++ xfsprogs-dev/repair/incore_ino.c	2011-11-09 19:36:39.389806408 +0000
+@@ -25,7 +25,6 @@
+ #include "threads.h"
+ #include "err_protos.h"
  
-+AC_ARG_ENABLE(tcmalloc,
-+[ --enable-tcmalloc=[yes/no] Enable tcmalloc [default=no]],,
-+	enable_tcmalloc=no)
-+AC_SUBST(enable_tcmalloc)
-+
-+if test "$enable_tcmalloc" = "yes"; then
-+    AC_CHECK_LIB(tcmalloc, malloc,, [
-+	echo 'FATAL ERROR: could not find a valid tcmalloc library.'
-+	echo 'Install libtcmalloc or configure with --enable-tcmalloc=no.'
-+	exit 1])
-+
-+    libtcmalloc="-ltcmalloc"
-+    AC_SUBST(libtcmalloc)
-+fi
-+
- AC_ARG_ENABLE(termcap,
- [ --enable-termcap=[yes/no] Enable terminal capabilities library [default=no]],
- 	test $enable_termcap = yes && libtermcap="-ltermcap",)
-Index: xfsprogs-dev/include/builddefs.in
-===================================================================
---- xfsprogs-dev.orig/include/builddefs.in	2011-08-14 17:00:02.000000000 +0000
-+++ xfsprogs-dev/include/builddefs.in	2011-11-14 12:09:52.000000000 +0000
-@@ -22,7 +22,7 @@ _BUILDDEFS_INCLUDED_ = 1
+-static pthread_mutex_t	ino_flist_lock;
+ extern avlnode_t	*avl_firstino(avlnode_t *root);
  
- DEBUG = @debug_build@
- OPTIMIZER = @opt_build@
--MALLOCLIB = @malloc_lib@
-+MALLOCLIB = @malloc_lib@ @libtcmalloc@
- LOADERFLAGS = @LDFLAGS@
- LTLDFLAGS = @LDFLAGS@
- CFLAGS = @CFLAGS@
+ /*
+@@ -38,18 +37,6 @@
+  */
+ static avltree_desc_t	**inode_uncertain_tree_ptrs;
+ 
+-#define ALLOC_NUM_INOS		100
+-
+-/* free lists -- inode nodes and extent nodes */
+-
+-typedef struct ino_flist_s  {
+-	ino_tree_node_t		*list;
+-	ino_tree_node_t		*last;
+-	long long		cnt;
+-} ino_flist_t;
+-
+-static ino_flist_t ino_flist;	/* free list must be initialized before use */
+-
+ /* memory optimised nlink counting for all inodes */
+ 
+ static void nlink_grow_8_to_16(ino_tree_node_t *irec);
+@@ -238,102 +225,63 @@
+ }
+ 
+ /*
+- * next is the uncertain inode list -- a sorted (in ascending order)
++ * Next is the uncertain inode list -- a sorted (in ascending order)
+  * list of inode records sorted on the starting inode number.  There
+  * is one list per ag.
+  */
+ 
+ /*
+- * common code for creating inode records for use by trees and lists.
++ * Common code for creating inode records for use by trees and lists.
+  * called only from add_inodes and add_inodes_uncertain
+  *
+  * IMPORTANT:  all inodes (inode records) start off as free and
+  *		unconfirmed.
+  */
+-/* ARGSUSED */
+-static ino_tree_node_t *
+-mk_ino_tree_nodes(
++static struct ino_tree_node *
++alloc_ino_node(
+ 	xfs_agino_t		starting_ino)
+ {
+-	int 			i;
+-	ino_tree_node_t 	*ino_rec;
+-	avlnode_t 		*node;
+-
+-	pthread_mutex_lock(&ino_flist_lock);
+-	if (ino_flist.cnt == 0)  {
+-		ASSERT(ino_flist.list == NULL);
+-
+-		if ((ino_rec = malloc(sizeof(ino_tree_node_t[ALLOC_NUM_INOS])))
+-					== NULL)
+-			do_error(_("inode map malloc failed\n"));
+-
+-		for (i = 0; i < ALLOC_NUM_INOS; i++)  {
+-			ino_rec->avl_node.avl_nextino =
+-				(avlnode_t *) ino_flist.list;
+-			ino_flist.list = ino_rec;
+-			ino_flist.cnt++;
+-			ino_rec++;
+-		}
+-	}
++	struct ino_tree_node 	*irec;
+ 
+-	ASSERT(ino_flist.list != NULL);
+-
+-	ino_rec = ino_flist.list;
+-	ino_flist.list = (ino_tree_node_t *) ino_rec->avl_node.avl_nextino;
+-	ino_flist.cnt--;
+-	node = &ino_rec->avl_node;
+-	node->avl_nextino = node->avl_forw = node->avl_back = NULL;
+-	pthread_mutex_unlock(&ino_flist_lock);
+-
+-	/* initialize node */
+-
+-	ino_rec->ino_startnum = 0;
+-	ino_rec->ino_confirmed = 0;
+-	ino_rec->ino_isa_dir = 0;
+-	ino_rec->ir_free = (xfs_inofree_t) - 1;
+-	ino_rec->ino_un.ex_data = NULL;
+-	ino_rec->nlinkops = &nlinkops[0];
+-	ino_rec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
+-	if (ino_rec->disk_nlinks == NULL)
++	irec = malloc(sizeof(*irec));
++	if (!irec)
++		do_error(_("inode map malloc failed\n"));
++
++	irec->avl_node.avl_nextino = NULL;
++	irec->avl_node.avl_forw = NULL;
++	irec->avl_node.avl_back = NULL;
++
++	irec->ino_startnum = starting_ino;
++	irec->ino_confirmed = 0;
++	irec->ino_isa_dir = 0;
++	irec->ir_free = (xfs_inofree_t) - 1;
++	irec->ino_un.ex_data = NULL;
++	irec->nlinkops = &nlinkops[0];
++	irec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
++	if (!irec->disk_nlinks)
+ 		do_error(_("could not allocate nlink array\n"));
+-
+-	return(ino_rec);
++	return irec;
+ }
+ 
+-/*
+- * return inode record to free list, will be initialized when
+- * it gets pulled off list
+- */
+ static void
+-free_ino_tree_node(ino_tree_node_t *ino_rec)
++free_ino_tree_node(
++	struct ino_tree_node	*irec)
+ {
+-	ino_rec->avl_node.avl_nextino = NULL;
+-	ino_rec->avl_node.avl_forw = NULL;
+-	ino_rec->avl_node.avl_back = NULL;
+-
+-	pthread_mutex_lock(&ino_flist_lock);
+-	if (ino_flist.list != NULL)  {
+-		ASSERT(ino_flist.cnt > 0);
+-		ino_rec->avl_node.avl_nextino = (avlnode_t *) ino_flist.list;
+-	} else  {
+-		ASSERT(ino_flist.cnt == 0);
+-		ino_rec->avl_node.avl_nextino = NULL;
+-	}
++	irec->avl_node.avl_nextino = NULL;
++	irec->avl_node.avl_forw = NULL;
++	irec->avl_node.avl_back = NULL;
+ 
+-	ino_flist.list = ino_rec;
+-	ino_flist.cnt++;
+-
+-	free(ino_rec->disk_nlinks);
+-
+-	if (ino_rec->ino_un.ex_data != NULL)  {
++	free(irec->disk_nlinks);
++	if (irec->ino_un.ex_data != NULL)  {
+ 		if (full_ino_ex_data) {
+-			free(ino_rec->ino_un.ex_data->parents);
+-			free(ino_rec->ino_un.ex_data->counted_nlinks);
++			free(irec->ino_un.ex_data->parents);
++			free(irec->ino_un.ex_data->counted_nlinks);
+ 		}
+-		free(ino_rec->ino_un.ex_data);
++		free(irec->ino_un.ex_data);
+ 
+ 	}
+-	pthread_mutex_unlock(&ino_flist_lock);
++
++	free(irec);
+ }
+ 
+ /*
+@@ -379,17 +327,15 @@
+ 	 * check to see if record containing inode is already in the tree.
+ 	 * if not, add it
+ 	 */
+-	if ((ino_rec = (ino_tree_node_t *)
+-			avl_findrange(inode_uncertain_tree_ptrs[agno],
+-				s_ino)) == NULL)  {
+-		ino_rec = mk_ino_tree_nodes(s_ino);
+-		ino_rec->ino_startnum = s_ino;
+-
+-		if (avl_insert(inode_uncertain_tree_ptrs[agno],
+-				(avlnode_t *) ino_rec) == NULL)  {
+-			do_error(_("add_aginode_uncertain - "
+-				   "duplicate inode range\n"));
+-		}
++	ino_rec = (ino_tree_node_t *)
++		avl_findrange(inode_uncertain_tree_ptrs[agno], s_ino);
++	if (!ino_rec) {
++		ino_rec = alloc_ino_node(s_ino);
++
++		if (!avl_insert(inode_uncertain_tree_ptrs[agno],
++				&ino_rec->avl_node))
++			do_error(
++	_("add_aginode_uncertain - duplicate inode range\n"));
+ 	}
+ 
+ 	if (free)
+@@ -454,43 +400,38 @@
+ 
+ 
+ /*
+- * next comes the inode trees.  One per ag.  AVL trees
+- * of inode records, each inode record tracking 64 inodes
++ * Next comes the inode trees.  One per AG,  AVL trees of inode records, each
++ * inode record tracking 64 inodes
+  */
++
+ /*
+- * set up an inode tree record for a group of inodes that will
+- * include the requested inode.
+- *
+- * does NOT error-check for duplicate records.  Caller is
+- * responsible for checking that.
++ * Set up an inode tree record for a group of inodes that will include the
++ * requested inode.
+  *
+- * ino must be the start of an XFS_INODES_PER_CHUNK (64) inode chunk
++ * This does NOT do error-check for duplicate records.  The caller is
++ * responsible for checking that. Ino must be the start of an
++ * XFS_INODES_PER_CHUNK (64) inode chunk
+  *
+- * Each inode resides in a 64-inode chunk which can be part
+- * one or more chunks (MAX(64, inodes-per-block).  The fs allocates
+- * in chunks (as opposed to 1 chunk) when a block can hold more than
+- * one chunk (inodes per block > 64).  Allocating in one chunk pieces
+- * causes us problems when it takes more than one fs block to contain
+- * an inode chunk because the chunks can start on *any* block boundary.
+- * So we assume that the caller has a clue because at this level, we
+- * don't.
+- */
+-static ino_tree_node_t *
+-add_inode(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
++ * Each inode resides in a 64-inode chunk which can be part one or more chunks
++ * (MAX(64, inodes-per-block).  The fs allocates in chunks (as opposed to 1
++ * chunk) when a block can hold more than one chunk (inodes per block > 64).
++ * Allocating in one chunk pieces causes us problems when it takes more than
++ * one fs block to contain an inode chunk because the chunks can start on
++ * *any* block boundary. So we assume that the caller has a clue because at
++ * this level, we don't.
++ */
++static struct ino_tree_node *
++add_inode(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno,
++	xfs_agino_t		agino)
+ {
+-	ino_tree_node_t *ino_rec;
+-
+-	/* no record exists, make some and put them into the tree */
+-
+-	ino_rec = mk_ino_tree_nodes(ino);
+-	ino_rec->ino_startnum = ino;
++	struct ino_tree_node	*irec;
+ 
+-	if (avl_insert(inode_tree_ptrs[agno],
+-			(avlnode_t *) ino_rec) == NULL)  {
++	irec = alloc_ino_node(agino);
++	if (!avl_insert(inode_tree_ptrs[agno],	&irec->avl_node))
+ 		do_warn(_("add_inode - duplicate inode range\n"));
+-	}
+-
+-	return(ino_rec);
++	return irec;
+ }
+ 
+ /*
+@@ -816,7 +757,6 @@
+ 	int i;
+ 	int agcount = mp->m_sb.sb_agcount;
+ 
+-	pthread_mutex_init(&ino_flist_lock, NULL);
+ 	if ((inode_tree_ptrs = malloc(agcount *
+ 					sizeof(avltree_desc_t *))) == NULL)
+ 		do_error(_("couldn't malloc inode tree descriptor table\n"));
+@@ -839,9 +779,6 @@
+ 		avl_init_tree(inode_uncertain_tree_ptrs[i], &avl_ino_tree_ops);
+ 	}
+ 
+-	ino_flist.cnt = 0;
+-	ino_flist.list = NULL;
+-
+ 	if ((last_rec = malloc(sizeof(ino_tree_node_t *) * agcount)) == NULL)
+ 		do_error(_("couldn't malloc uncertain inode cache area\n"));
+ 
 
 _______________________________________________
 xfs mailing list
