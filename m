@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAEFLEdv215802 for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 09:21:14 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 539511E9BBDD
-	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 07:21:13 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	QnD4QZsI5h838Zf9 for <xfs@oss.sgi.com>;
-	Mon, 14 Nov 2011 07:21:13 -0800 (PST)
-Date: Mon, 14 Nov 2011 10:21:12 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] repair: update extent count after zapping duplicate blocks
-Message-ID: <20111114152112.GA26535@infradead.org>
+	pAEFDD6C215326 for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 09:13:13 -0600
+Received: from mail-vx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D19151D08535
+	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 07:13:11 -0800 (PST)
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	M0CfydVlGEjx7E6Y for <xfs@oss.sgi.com>;
+	Mon, 14 Nov 2011 07:13:11 -0800 (PST)
+Received: by vcbfk26 with SMTP id fk26so6588465vcb.26
+	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 07:13:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20111114102755.GA31043@infradead.org>
+References: <1320961003.2201.27.camel@chandra-lucid.austin.ibm.com>
+	<20111114102755.GA31043@infradead.org>
+Date: Mon, 14 Nov 2011 10:13:11 -0500
+Message-ID: <CACLa4psaXKWT0uQBdQFTkT6bzqLED1dZna5RhBK3-oZ=6LjDRw@mail.gmail.com>
+Subject: Re: Occasional memory fault in inode_has_perm() while running xfstest
+	234
+From: Eric Paris <eparis@parisplace.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,196 +28,178 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-security-module@vger.kernel.org, Chandra Seetharaman <sekharan@us.ibm.com>, XFS Mailing List <xfs@oss.sgi.com>
 
-When we find a duplicate extent in an extern format inode we do not zap
-the whole inode, but just truncate it to the point where the duplicate
-extent was found.  But the current code only updates di_nblocks for the
-new size, but no di_nextents/di_anextents.  In most cases this isn't noticed,
-but when moving such an inode to the lost+found directoy the consistency
-check in xfs_iformat trips over it.  Fix this by updating the on-disk
-extent count as part of the inode repair.
+The only way this can happen is if the filesystem is creating inodes
+and not calling security_inode_alloc() (which should be done in
+inode_init_always)
 
-Note that we zap btree format inodes with duplicate block completely
-at this point, so this fix doesn't apply to them.
+I can only guess (and believe me it is a complete wild guess after
+looking at grep for 5 seconds) it has something to do with the XFS
+__releases() function which does some weirdness in the case of a
+failed call to inode_init_always().
 
-Reported-by: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+The only other option is an FS somehow still uses an inode after
+__destroy_inode(), but I'd assume that would land you in other
+troubles.  In either case, I'm hard pressed to blame SELinux/LSM,
+since the VFS does appear to be hooked in the right places
+(inode_init_alwasys and __destroy_inode) to set and unset
+inode->i_security....
 
-Index: xfsprogs-dev/repair/dinode.c
-===================================================================
---- xfsprogs-dev.orig/repair/dinode.c	2011-11-08 12:15:40.000000000 +0000
-+++ xfsprogs-dev/repair/dinode.c	2011-11-14 12:09:54.000000000 +0000
-@@ -606,7 +606,7 @@ int
- process_bmbt_reclist_int(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-@@ -642,7 +642,7 @@ process_bmbt_reclist_int(
- 	else
- 		ftype = _("regular");
- 
--	for (i = 0; i < numrecs; i++) {
-+	for (i = 0; i < *numrecs; i++) {
- 		libxfs_bmbt_disk_get_all(rp + i, &irec);
- 		if (i == 0)
- 			*last_key = *first_key = irec.br_startoff;
-@@ -831,6 +831,13 @@ _("illegal state %d in block map %" PRIu
- done:
- 	if (locked_agno != -1)
- 		pthread_mutex_unlock(&ag_locks[locked_agno]);
-+
-+	if (i != *numrecs) {
-+		ASSERT(i < *numrecs);
-+		do_warn(_("correcting nextents for inode %" PRIu64 "\n"), ino);
-+		*numrecs = i;
-+	}
-+
- 	return error;
- }
- 
-@@ -842,7 +849,7 @@ int
- process_bmbt_reclist(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-@@ -863,7 +870,7 @@ int
- scan_bmbt_reclist(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-@@ -1356,23 +1363,29 @@ process_exinode(
- 	xfs_bmbt_rec_t		*rp;
- 	xfs_dfiloff_t		first_key;
- 	xfs_dfiloff_t		last_key;
-+	int			numrecs;
-+	int			ret;
- 
- 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
- 	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
- 	*tot = 0;
--	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
-+	numrecs = XFS_DFORK_NEXTENTS(dip, whichfork);
-+
- 	/*
- 	 * XXX - if we were going to fix up the btree record,
- 	 * we'd do it right here.  For now, if there's a problem,
- 	 * we'll bail out and presumably clear the inode.
- 	 */
- 	if (check_dups == 0)
--		return(process_bmbt_reclist(mp, rp, *nex, type, lino,
-+		ret = process_bmbt_reclist(mp, rp, &numrecs, type, lino,
- 					tot, blkmapp, &first_key, &last_key,
--					whichfork));
-+					whichfork);
- 	else
--		return(scan_bmbt_reclist(mp, rp, *nex, type, lino, tot,
--					whichfork));
-+		ret = scan_bmbt_reclist(mp, rp, &numrecs, type, lino, tot,
-+					whichfork);
-+
-+	*nex = numrecs;
-+	return ret;
- }
- 
- /*
-@@ -2003,6 +2016,12 @@ process_inode_blocks_and_extents(
- 	xfs_ino_t	lino,
- 	int		*dirty)
- {
-+	if (nblocks < nextents + anextents) {
-+		do_warn(
-+_("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblocks, lino);
-+		return 1;
-+	}
-+
- 	if (nblocks != be64_to_cpu(dino->di_nblocks))  {
- 		if (!no_modify)  {
- 			do_warn(
-@@ -2063,6 +2082,7 @@ _("bad anextents %d for inode %" PRIu64
- 				lino, anextents);
- 		}
- 	}
-+
- 	return 0;
- }
- 
-Index: xfsprogs-dev/repair/dinode.h
-===================================================================
---- xfsprogs-dev.orig/repair/dinode.h	2010-05-10 18:16:35.000000000 +0000
-+++ xfsprogs-dev/repair/dinode.h	2011-11-14 12:09:54.000000000 +0000
-@@ -42,7 +42,7 @@ convert_extent(
- int
- process_bmbt_reclist(xfs_mount_t	*mp,
- 		xfs_bmbt_rec_t		*rp,
--		int			numrecs,
-+		int			*numrecs,
- 		int			type,
- 		xfs_ino_t		ino,
- 		xfs_drfsbno_t		*tot,
-@@ -55,7 +55,7 @@ int
- scan_bmbt_reclist(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-Index: xfsprogs-dev/repair/scan.c
-===================================================================
---- xfsprogs-dev.orig/repair/scan.c	2011-11-10 11:23:47.000000000 +0000
-+++ xfsprogs-dev/repair/scan.c	2011-11-14 12:09:54.000000000 +0000
-@@ -351,12 +351,12 @@ _("inode %" PRIu64 " bad # of bmap recor
- 		 * we'll bail out and presumably clear the inode.
- 		 */
- 		if (check_dups == 0)  {
--			err = process_bmbt_reclist(mp, rp, numrecs,
--					type, ino, tot, blkmapp,
--					&first_key, &last_key,
--					whichfork);
-+			err = process_bmbt_reclist(mp, rp, &numrecs, type, ino,
-+						   tot, blkmapp, &first_key,
-+						   &last_key, whichfork);
- 			if (err)
--				return(1);
-+				return 1;
-+
- 			/*
- 			 * check that key ordering is monotonically increasing.
- 			 * if the last_key value in the cursor is set to
-@@ -380,10 +380,11 @@ _("out-of-order bmap key (file offset) i
- 			bm_cursor->level[level].first_key = first_key;
- 			bm_cursor->level[level].last_key = last_key;
- 
--			return(0);
--		} else
--			return(scan_bmbt_reclist(mp, rp, numrecs,
--						type, ino, tot, whichfork));
-+			return 0;
-+		} else {
-+			return scan_bmbt_reclist(mp, rp, &numrecs, type, ino,
-+						 tot, whichfork);
-+		}
- 	}
- 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
- 							mp->m_bmap_dmnr[1])) {
+-Eric
+
+On Mon, Nov 14, 2011 at 5:27 AM, Christoph Hellwig <hch@infradead.org> wrot=
+e:
+> This looks like a selinux issues. =A0Ccing the LSM list.
+>
+> On Thu, Nov 10, 2011 at 03:36:43PM -0600, Chandra Seetharaman wrote:
+>> Hi All,
+>>
+>> While debugging the xfstest case 234, I was occasionally hitting the
+>> following memory fault. Has anybody seen it ?
+>>
+>> -----------------
+>> IP: [<ffffffff811e57ff>] inode_has_perm+0x1f/0x40
+>> PGD 0
+>> Oops: 0000 [#1] SMP
+>> CPU 0
+>> Modules linked in: xfs exportfs ebtable_nat ebtables ipt_MASQUERADE ipta=
+ble_nat nf_nat iptable_mangle bridge stp llc autofs4 sunrpc cpufreq_ondeman=
+d acpi_cpufreq freq_table mperf ipt_REJECT nf_conntrack_ipv4 nf_defrag_ipv4=
+ iptable_filter ip_tables ip6t_REJECT nf_conntrack_ipv6 nf_defrag_ipv6 xt_s=
+tate nf_conntrack ip6table_filter ip6_tables ipv6 ext3 jbd dm_mirror dm_reg=
+ion_hash dm_log dm_mod vhost_net macvtap macvlan tun kvm_intel kvm cdc_ethe=
+r usbnet mii microcode serio_raw i2c_i801 i2c_core iTCO_wdt iTCO_vendor_sup=
+port shpchp ioatdma i7core_edac edac_core ses enclosure sg igb dca ext4 mbc=
+ache jbd2 sd_mod crc_t10dif ahci libahci megaraid_sas [last unloaded: scsi_=
+wait_scan]
+>>
+>> Pid: 32611, comm: setquota Not tainted 3.1.0-rc9.virgin+ #6 IBM =A0Syste=
+m x3630 M3 -[7377AC1]-/69Y1101
+>> RIP: 0010:[<ffffffff811e57ff>] =A0[<ffffffff811e57ff>] inode_has_perm+0x=
+1f/0x40
+>> RSP: 0018:ffff880642bcdb78 =A0EFLAGS: 00010246
+>> RAX: 0000000000800002 RBX: ffff88064f2205f8 RCX: 0000000000800000
+>> RDX: 0000000000800000 RSI: 0000000000000000 RDI: ffff880649e58480
+>> RBP: ffff880642bcdb78 R08: ffff880642bcdb88 R09: 0000000000000080
+>> R10: ffff880658ffff00 R11: ffff880642bcdb88 R12: 0000000000000081
+>> R13: ffff88064f2205f8 R14: ffff8806592b8100 R15: 0000000000000000
+>> FS: =A000007f56dfa3a700(0000) GS:ffff88067f200000(0000) knlGS:0000000000=
+000000
+>> CS: =A00010 DS: 0000 ES: 0000 CR0: 000000008005003b
+>> CR2: 0000000000000020 CR3: 0000000642b30000 CR4: 00000000000006f0
+>> DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+>> DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+>> Process setquota (pid: 32611, threadinfo ffff880642bcc000, task ffff8806=
+592b8100)
+>> Stack:
+>> ffff880642bcdc18 ffffffff811e5d79 0000000000000009 0000000000000000
+>> ffff88064f2205f8 0000000000000000 0000000000000000 0000000000000000
+>> 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+>> Call Trace:
+>> [<ffffffff811e5d79>] selinux_inode_permission+0xa9/0x100
+>> [<ffffffff811e323c>] security_inode_permission+0x1c/0x30
+>> [<ffffffff81162509>] inode_permission+0x49/0x100
+>> [<ffffffff81164b57>] link_path_walk+0x87/0x810
+>> [<ffffffff810fedfa>] ? unlock_page+0x2a/0x40
+>> [<ffffffff81165955>] path_lookupat+0x55/0x690
+>> [<ffffffff81125867>] ? handle_pte_fault+0xf7/0xb50
+>> [<ffffffff81165fc1>] do_path_lookup+0x31/0xc0
+>> [<ffffffff81162168>] ? getname_flags+0x1f8/0x280
+>> [<ffffffff81166df9>] user_path_at+0x59/0xa0
+>> [<ffffffff8112641b>] ? handle_mm_fault+0x15b/0x270
+>> [<ffffffff814af8c0>] ? do_page_fault+0x1e0/0x460
+>> [<ffffffff81146a62>] ? kmem_cache_alloc+0x152/0x190
+>> [<ffffffff8115b9c7>] vfs_fstatat+0x47/0x80
+>> [<ffffffff81077571>] ? do_sigaction+0x91/0x1d0
+>> [<ffffffff8115badb>] vfs_stat+0x1b/0x20
+>> [<ffffffff8115bb04>] sys_newstat+0x24/0x50
+>> [<ffffffff810c3c4f>] ? audit_syscall_entry+0x1bf/0x1f0
+>> [<ffffffff814b29c2>] system_call_fastpath+0x16/0x1b
+>> Code: 66 66 66 2e 0f 1f 84 00 00 00 00 00 55 48 89 e5 66 66 66 66 90 f6 =
+46 0d 02 75 23 48 8b 76 38 48 8b 7f 68 45 89 c1 49 89 c8 89 d1 <0f> b7 46 2=
+0 8b 7f 04 8b 76 1c 89 c2 e8 a0 f9 ff ff c9 c3 31 c0
+>> RIP =A0[<ffffffff811e57ff>] inode_has_perm+0x1f/0x40
+>> RSP <ffff880642bcdb78>
+>> CR2: 0000000000000020
+>> ---[ end trace 5d054c892d311b3f ]---
+>> ----------------------------
+>>
+>> I made some code changes and found that inode->i_security is the data
+>> structure that is NULL.
+>>
+>> I added the following code
+>> ------------------
+>> diff --git a/security/selinux/hooks.c b/security/selinux/hooks.c
+>> index 266a229..43870ec 100644
+>> --- a/security/selinux/hooks.c
+>> +++ b/security/selinux/hooks.c
+>> @@ -1466,6 +1466,7 @@ static int task_has_system(struct task_struct *tsk,
+>> =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 SECCLASS_SYSTEM, per=
+ms, NULL);
+>> =A0}
+>>
+>> +u64 isec_yes;
+>> =A0/* Check whether a task has a particular permission to an inode.
+>> =A0 =A0 The 'adp' parameter is optional and allows other audit
+>> =A0 =A0 data to be passed (e.g. the dentry). */
+>> @@ -1486,6 +1487,13 @@ static int inode_has_perm(const struct cred *cred,
+>> =A0 =A0 =A0 sid =3D cred_sid(cred);
+>> =A0 =A0 =A0 isec =3D inode->i_security;
+>>
+>> + =A0 =A0 if (isec)
+>> + =A0 =A0 =A0 =A0 =A0 =A0 isec_yes++;
+>> + =A0 =A0 else {
+>> + =A0 =A0 =A0 =A0 =A0 =A0 printk("isec NULL; isec_yes %llu\n", isec_yes);
+>> + =A0 =A0 =A0 =A0 =A0 =A0 return -EACCES;
+>> + =A0 =A0 }
+>> +
+>> =A0 =A0 =A0 return avc_has_perm_flags(sid, isec->sid, isec->sclass, perm=
+s, adp, flags);
+>> =A0}
+>>
+>> --------------------------------
+>>
+>> and this is what I see in /var/log/messages
+>> -----------------------------
+>> isec NULL; isec_yes 14345860
+>> isec NULL; isec_yes 102846678
+>> isec NULL; isec_yes 107203361
+>> isec NULL; isec_yes 136859591
+>> isec NULL; isec_yes 140941549
+>> isec NULL; isec_yes 168163633
+>> isec NULL; isec_yes 222030886
+>> isec NULL; isec_yes 238835570
+>> isec NULL; isec_yes 263587444
+>> isec NULL; isec_yes 280912141
+>> ------------------------------
+>>
+>> Can somebody throw some light on it ?
+>>
+>> I am using xfs.sgi.com with commit 9e4c109ac822395e0aae650e4e3c9e4903f66=
+02f
+>> at the top.
+>>
+>> Regards,
+>>
+>> Chandra
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> ---end quoted text---
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-security-=
+module" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
 
 _______________________________________________
 xfs mailing list
