@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAEEasuT213873 for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 08:36:54 -0600
-Received: from mail-gy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EFEAC1E9BA8B
-	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 06:36:52 -0800 (PST)
-Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	4EqpYZtHgzmTDULM for <xfs@oss.sgi.com>;
-	Mon, 14 Nov 2011 06:36:52 -0800 (PST)
-Received: by gyd10 with SMTP id 10so6669169gyd.26
-	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 06:36:52 -0800 (PST)
+	pAEFLEdv215802 for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 09:21:14 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 539511E9BBDD
+	for <xfs@oss.sgi.com>; Mon, 14 Nov 2011 07:21:13 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	QnD4QZsI5h838Zf9 for <xfs@oss.sgi.com>;
+	Mon, 14 Nov 2011 07:21:13 -0800 (PST)
+Date: Mon, 14 Nov 2011 10:21:12 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] repair: update extent count after zapping duplicate blocks
+Message-ID: <20111114152112.GA26535@infradead.org>
 MIME-Version: 1.0
-Date: Mon, 14 Nov 2011 15:36:51 +0100
-Message-ID: <CAFhwj5=N_yLUxthheD8+3bYO8UTxJgHujZJLe73NFJZqtWqU1A@mail.gmail.com>
-Subject: XFS with project quota support in Kernel 2.6.28(.9)
-From: Maarten Vergouwe <Maarten.Vergouwe@tass.be>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,164 +24,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3458291112211966871=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============3458291112211966871==
-Content-Type: multipart/alternative; boundary=f46d04190c6c35061d04b1b2cd6f
+When we find a duplicate extent in an extern format inode we do not zap
+the whole inode, but just truncate it to the point where the duplicate
+extent was found.  But the current code only updates di_nblocks for the
+new size, but no di_nextents/di_anextents.  In most cases this isn't noticed,
+but when moving such an inode to the lost+found directoy the consistency
+check in xfs_iformat trips over it.  Fix this by updating the on-disk
+extent count as part of the inode repair.
 
---f46d04190c6c35061d04b1b2cd6f
-Content-Type: text/plain; charset=ISO-8859-1
+Note that we zap btree format inodes with duplicate block completely
+at this point, so this fix doesn't apply to them.
 
-Hi
+Reported-by: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I have problems in writes that hang for more than 7 seconds because of the
-the kthreadd daemon keeping a mutex locked for too long.
-Is there someone who might be able to help me with that?
-I saw that a lot of changes were done on the XFS quota support in later
-kernels, but the patch list is too long between my kernel and the changed
-quota system.
-
-process 411 ([khubd], kthreadd)
-  pid = 411, tgid = 411, parent = 2, real parent = 2
-  baduaddr = 0x00000000, badvaddr = 0x00000000, state = 2, flags =
-0x80208040
-  policy = 0, prio = 115, static prio = 115, normal prio = 115, rt prio = 0
-  pc = vmlinux_flash.elf/context_switch+0x3ac (kernel/sched.c:2668)
-                schedule (kernel/sched.c:4496)
-  kernel stack
-    vmlinux_flash.elf/schedule_timeout+0x24 (kernel/timer.c:1264)
-    vmlinux_flash.elf/do_wait_for_common+0xd8 (kernel/sched.c:4715)
-                wait_for_common (kernel/sched.c:4732)
-    vmlinux_flash.elf/xfs_qm_sync+0x110 (fs/xfs/quota/xfs_qm.c:1076)
-    vmlinux_flash.elf/xfs_sync+0x1c (fs/xfs/xfs_vfsops.c:255)
-    vmlinux_flash.elf/xfs_fs_sync_super+0x3c
-(fs/xfs/linux-2.6/xfs_super.c:1202)
-    vmlinux_flash.elf/fsync_super+0xc (fs/super.c:270)
-
-
-process 1082 *(this one takes too long and my watchdog doesn't like that)*
-  pid = 1082, tgid = 230, parent = 228, real parent = 228
-  baduaddr = 0x00000000, badvaddr = 0x00000000, state = 2, flags =
-0x00422140
-  policy = 0, prio = 120, static prio = 120, normal prio = 120, rt prio = 0
-  pc = vmlinux_flash.elf/context_switch+0x3ac (kernel/sched.c:2668)
-                schedule (kernel/sched.c:4496)
-  kernel stack
-    vmlinux_flash.elf/__mutex_lock_common+0x108 (kernel/mutex.c:182)
-                __mutex_lock_slowpath (kernel/mutex.c:321)
-    vmlinux_flash.elf/xfs_trans_dqresv+0x50
-(fs/xfs/quota/xfs_trans_dquot.c:628)
-    vmlinux_flash.elf/xfs_trans_reserve_quota_bydquots+0xc0
-(fs/xfs/quota/xfs_trans_dquot.c:792)
-    vmlinux_flash.elf/xfs_trans_reserve_quota_nblks+0x40
-(fs/xfs/quota/xfs_trans_dquot.c:847)
-    vmlinux_flash.elf/xfs_iomap_write_direct+0x36c (fs/xfs/xfs_iomap.c:486)
-    vmlinux_flash.elf/xfs_iomap+0x250 (fs/xfs/xfs_iomap.c:247)
-    vmlinux_flash.elf/__xfs_get_blocks+0xb8
-(fs/xfs/linux-2.6/xfs_aops.c:1345)
-    vmlinux_flash.elf/xfs_get_blocks_direct+0x14
-(fs/xfs/linux-2.6/xfs_aops.c:1426)
-    vmlinux_flash.elf/get_more_blocks+0x54c (fs/direct-io.c:535)
-                do_direct_IO (fs/direct-io.c:816)
-                direct_io_worker (fs/direct-io.c:998)
-                __blockdev_direct_IO (fs/direct-io.c:1209)
-    vmlinux_flash.elf/blockdev_direct_IO_no_locking+0xf0
-(include/linux/fs.h:2010)
-                xfs_vm_direct_IO (fs/xfs/linux-2.6/xfs_aops.c:1506)
-    vmlinux_flash.elf/generic_file_direct_write+0x148 (mm/filemap.c:2102)
-    vmlinux_flash.elf/xfs_write+0x460 (fs/xfs/linux-2.6/xfs_lrw.c:745)
-    vmlinux_flash.elf/do_sync_write+0xc8 (fs/read_write.c:305)
-    vmlinux_flash.elf/sys_write+0x50 (fs/read_write.c:386)
-    vmlinux_flash.elf/stack_done+0xdc (arch/mips/kernel/scall32-o32.S:59)
-
-
-Best regards
-
-Maarten Vergouwe
-TASS Belgium
-
---f46d04190c6c35061d04b1b2cd6f
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div>Hi</div><div><br></div><div>I have problems in writes that hang for mo=
-re than 7 seconds because of the the kthreadd daemon keeping a mutex locked=
- for too long.</div><div>Is there someone who might be able to help me with=
- that?</div>
-<div>I saw that a lot of changes were done on the XFS quota support in late=
-r kernels, but the patch list is too long between my kernel and the changed=
- quota system.</div><div><br></div><div>process 411 ([khubd], kthreadd)</di=
-v>
-<div>=A0 pid =3D 411, tgid =3D 411, parent =3D 2, real parent =3D 2</div><d=
-iv>=A0 baduaddr =3D 0x00000000, badvaddr =3D 0x00000000, state =3D 2, flags=
- =3D 0x80208040</div><div>=A0 policy =3D 0, prio =3D 115, static prio =3D 1=
-15, normal prio =3D 115, rt prio =3D 0</div>
-<div>=A0 pc =3D vmlinux_flash.elf/context_switch+0x3ac (kernel/sched.c:2668=
-)</div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule (kernel/sched.c:4496)<=
-/div><div>=A0 kernel stack</div><div>=A0 =A0 vmlinux_flash.elf/schedule_tim=
-eout+0x24 (kernel/timer.c:1264)</div>
-<div>=A0 =A0 vmlinux_flash.elf/do_wait_for_common+0xd8 (kernel/sched.c:4715=
-)</div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 wait_for_common (kernel/sched.c=
-:4732)</div><div>=A0 =A0 vmlinux_flash.elf/xfs_qm_sync+0x110 (fs/xfs/quota/=
-xfs_qm.c:1076)</div>
-<div>=A0 =A0 vmlinux_flash.elf/xfs_sync+0x1c (fs/xfs/xfs_vfsops.c:255)</div=
-><div>=A0 =A0 vmlinux_flash.elf/xfs_fs_sync_super+0x3c (fs/xfs/linux-2.6/xf=
-s_super.c:1202)</div><div>=A0 =A0 vmlinux_flash.elf/fsync_super+0xc (fs/sup=
-er.c:270)</div>
-<div><br></div><div><br></div><div><div>process 1082 <b>(this one takes too=
- long and my watchdog doesn&#39;t like that)</b></div><div>=A0 pid =3D 1082=
-, tgid =3D 230, parent =3D 228, real parent =3D 228</div><div>=A0 baduaddr =
-=3D 0x00000000, badvaddr =3D 0x00000000, state =3D 2, flags =3D 0x00422140<=
-/div>
-<div>=A0 policy =3D 0, prio =3D 120, static prio =3D 120, normal prio =3D 1=
-20, rt prio =3D 0</div><div>=A0 pc =3D vmlinux_flash.elf/context_switch+0x3=
-ac (kernel/sched.c:2668)</div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 schedule=
- (kernel/sched.c:4496)</div>
-<div>=A0 kernel stack</div><div>=A0 =A0 vmlinux_flash.elf/__mutex_lock_comm=
-on+0x108 (kernel/mutex.c:182)</div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 __m=
-utex_lock_slowpath (kernel/mutex.c:321)</div><div>=A0 =A0 vmlinux_flash.elf=
-/xfs_trans_dqresv+0x50 (fs/xfs/quota/xfs_trans_dquot.c:628)</div>
-<div>=A0 =A0 vmlinux_flash.elf/xfs_trans_reserve_quota_bydquots+0xc0 (fs/xf=
-s/quota/xfs_trans_dquot.c:792)</div><div>=A0 =A0 vmlinux_flash.elf/xfs_tran=
-s_reserve_quota_nblks+0x40 (fs/xfs/quota/xfs_trans_dquot.c:847)</div><div>=
-=A0 =A0 vmlinux_flash.elf/xfs_iomap_write_direct+0x36c (fs/xfs/xfs_iomap.c:=
-486)</div>
-<div>=A0 =A0 vmlinux_flash.elf/xfs_iomap+0x250 (fs/xfs/xfs_iomap.c:247)</di=
-v><div>=A0 =A0 vmlinux_flash.elf/__xfs_get_blocks+0xb8 (fs/xfs/linux-2.6/xf=
-s_aops.c:1345)</div><div>=A0 =A0 vmlinux_flash.elf/xfs_get_blocks_direct+0x=
-14 (fs/xfs/linux-2.6/xfs_aops.c:1426)</div>
-<div>=A0 =A0 vmlinux_flash.elf/get_more_blocks+0x54c (fs/direct-io.c:535)</=
-div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 do_direct_IO (fs/direct-io.c:816)<=
-/div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 direct_io_worker (fs/direct-io.c:=
-998)</div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 __blockdev_direct_IO (fs/dir=
-ect-io.c:1209)</div>
-<div>=A0 =A0 vmlinux_flash.elf/blockdev_direct_IO_no_locking+0xf0 (include/=
-linux/fs.h:2010)</div><div>=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 xfs_vm_direct_IO=
- (fs/xfs/linux-2.6/xfs_aops.c:1506)</div><div>=A0 =A0 vmlinux_flash.elf/gen=
-eric_file_direct_write+0x148 (mm/filemap.c:2102)</div>
-<div>=A0 =A0 vmlinux_flash.elf/xfs_write+0x460 (fs/xfs/linux-2.6/xfs_lrw.c:=
-745)</div><div>=A0 =A0 vmlinux_flash.elf/do_sync_write+0xc8 (fs/read_write.=
-c:305)</div><div>=A0 =A0 vmlinux_flash.elf/sys_write+0x50 (fs/read_write.c:=
-386)</div>
-<div>=A0 =A0 vmlinux_flash.elf/stack_done+0xdc (arch/mips/kernel/scall32-o3=
-2.S:59)</div></div><div><br></div><div><br></div><div>Best regards</div><di=
-v><br></div><div>Maarten Vergouwe</div><div>TASS Belgium</div>
-
---f46d04190c6c35061d04b1b2cd6f--
-
-
---===============3458291112211966871==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Index: xfsprogs-dev/repair/dinode.c
+===================================================================
+--- xfsprogs-dev.orig/repair/dinode.c	2011-11-08 12:15:40.000000000 +0000
++++ xfsprogs-dev/repair/dinode.c	2011-11-14 12:09:54.000000000 +0000
+@@ -606,7 +606,7 @@ int
+ process_bmbt_reclist_int(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+@@ -642,7 +642,7 @@ process_bmbt_reclist_int(
+ 	else
+ 		ftype = _("regular");
+ 
+-	for (i = 0; i < numrecs; i++) {
++	for (i = 0; i < *numrecs; i++) {
+ 		libxfs_bmbt_disk_get_all(rp + i, &irec);
+ 		if (i == 0)
+ 			*last_key = *first_key = irec.br_startoff;
+@@ -831,6 +831,13 @@ _("illegal state %d in block map %" PRIu
+ done:
+ 	if (locked_agno != -1)
+ 		pthread_mutex_unlock(&ag_locks[locked_agno]);
++
++	if (i != *numrecs) {
++		ASSERT(i < *numrecs);
++		do_warn(_("correcting nextents for inode %" PRIu64 "\n"), ino);
++		*numrecs = i;
++	}
++
+ 	return error;
+ }
+ 
+@@ -842,7 +849,7 @@ int
+ process_bmbt_reclist(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+@@ -863,7 +870,7 @@ int
+ scan_bmbt_reclist(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+@@ -1356,23 +1363,29 @@ process_exinode(
+ 	xfs_bmbt_rec_t		*rp;
+ 	xfs_dfiloff_t		first_key;
+ 	xfs_dfiloff_t		last_key;
++	int			numrecs;
++	int			ret;
+ 
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+ 	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
+ 	*tot = 0;
+-	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
++	numrecs = XFS_DFORK_NEXTENTS(dip, whichfork);
++
+ 	/*
+ 	 * XXX - if we were going to fix up the btree record,
+ 	 * we'd do it right here.  For now, if there's a problem,
+ 	 * we'll bail out and presumably clear the inode.
+ 	 */
+ 	if (check_dups == 0)
+-		return(process_bmbt_reclist(mp, rp, *nex, type, lino,
++		ret = process_bmbt_reclist(mp, rp, &numrecs, type, lino,
+ 					tot, blkmapp, &first_key, &last_key,
+-					whichfork));
++					whichfork);
+ 	else
+-		return(scan_bmbt_reclist(mp, rp, *nex, type, lino, tot,
+-					whichfork));
++		ret = scan_bmbt_reclist(mp, rp, &numrecs, type, lino, tot,
++					whichfork);
++
++	*nex = numrecs;
++	return ret;
+ }
+ 
+ /*
+@@ -2003,6 +2016,12 @@ process_inode_blocks_and_extents(
+ 	xfs_ino_t	lino,
+ 	int		*dirty)
+ {
++	if (nblocks < nextents + anextents) {
++		do_warn(
++_("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblocks, lino);
++		return 1;
++	}
++
+ 	if (nblocks != be64_to_cpu(dino->di_nblocks))  {
+ 		if (!no_modify)  {
+ 			do_warn(
+@@ -2063,6 +2082,7 @@ _("bad anextents %d for inode %" PRIu64
+ 				lino, anextents);
+ 		}
+ 	}
++
+ 	return 0;
+ }
+ 
+Index: xfsprogs-dev/repair/dinode.h
+===================================================================
+--- xfsprogs-dev.orig/repair/dinode.h	2010-05-10 18:16:35.000000000 +0000
++++ xfsprogs-dev/repair/dinode.h	2011-11-14 12:09:54.000000000 +0000
+@@ -42,7 +42,7 @@ convert_extent(
+ int
+ process_bmbt_reclist(xfs_mount_t	*mp,
+ 		xfs_bmbt_rec_t		*rp,
+-		int			numrecs,
++		int			*numrecs,
+ 		int			type,
+ 		xfs_ino_t		ino,
+ 		xfs_drfsbno_t		*tot,
+@@ -55,7 +55,7 @@ int
+ scan_bmbt_reclist(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+Index: xfsprogs-dev/repair/scan.c
+===================================================================
+--- xfsprogs-dev.orig/repair/scan.c	2011-11-10 11:23:47.000000000 +0000
++++ xfsprogs-dev/repair/scan.c	2011-11-14 12:09:54.000000000 +0000
+@@ -351,12 +351,12 @@ _("inode %" PRIu64 " bad # of bmap recor
+ 		 * we'll bail out and presumably clear the inode.
+ 		 */
+ 		if (check_dups == 0)  {
+-			err = process_bmbt_reclist(mp, rp, numrecs,
+-					type, ino, tot, blkmapp,
+-					&first_key, &last_key,
+-					whichfork);
++			err = process_bmbt_reclist(mp, rp, &numrecs, type, ino,
++						   tot, blkmapp, &first_key,
++						   &last_key, whichfork);
+ 			if (err)
+-				return(1);
++				return 1;
++
+ 			/*
+ 			 * check that key ordering is monotonically increasing.
+ 			 * if the last_key value in the cursor is set to
+@@ -380,10 +380,11 @@ _("out-of-order bmap key (file offset) i
+ 			bm_cursor->level[level].first_key = first_key;
+ 			bm_cursor->level[level].last_key = last_key;
+ 
+-			return(0);
+-		} else
+-			return(scan_bmbt_reclist(mp, rp, numrecs,
+-						type, ino, tot, whichfork));
++			return 0;
++		} else {
++			return scan_bmbt_reclist(mp, rp, &numrecs, type, ino,
++						 tot, whichfork);
++		}
+ 	}
+ 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
+ 							mp->m_bmap_dmnr[1])) {
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3458291112211966871==--
