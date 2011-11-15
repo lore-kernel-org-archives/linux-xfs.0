@@ -1,36 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAF9ddhU040180 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 03:39:40 -0600
-Received: from kenny.its.monash.edu.au (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 85D491D9C776
-	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 01:39:38 -0800 (PST)
-Received: from kenny.its.monash.edu.au (kenny.its.monash.edu.au
-	[130.194.13.164]) by cuda.sgi.com with ESMTP id
-	Gvcv0BRuTvYh6QHW for <xfs@oss.sgi.com>;
-	Tue, 15 Nov 2011 01:39:38 -0800 (PST)
-Received: from chapman.its.monash.edu.au ([130.194.13.89])
-	by kenny.its.monash.edu.au
-	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
-	with ESMTP id <0LUP00HFF4606B80@kenny.its.monash.edu.au> for
-	xfs@oss.sgi.com; Tue, 15 Nov 2011 20:39:36 +1100 (EST)
-Received: from chapman.its.monash.edu.au (localhost.localdomain [127.0.0.1])
-	by localhost (Postfix) with SMTP id DCD567E6149	for <xfs@oss.sgi.com>;
-	Tue, 15 Nov 2011 20:39:35 +1100 (EST)
-Received: from mail-yw0-f54.google.com
-	(mail-yw0-f54.google.com [209.85.213.54])
-	(using TLSv1 with cipher RC4-SHA (128/128 bits))
-	(No client certificate requested)	by chapman.its.monash.edu.au
-	(Postfix) with ESMTPS id 05F5A7E6178	for <xfs@oss.sgi.com>; Tue,
-	15 Nov 2011 20:39:34 +1100 (EST)
-Received: by mail-yw0-f54.google.com with SMTP id 9so4146755ywe.41 for
-	<xfs@oss.sgi.com>; Tue, 15 Nov 2011 01:39:34 -0800 (PST)
-Date: Tue, 15 Nov 2011 20:39:33 +1100
+	pAF9UFDp039966 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 03:30:15 -0600
+Received: from busoni.debian.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 635AF1E9CA4A
+	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 01:30:13 -0800 (PST)
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id jDjAn3eH16FE0sK0 for
+	<xfs@oss.sgi.com>; Tue, 15 Nov 2011 01:30:13 -0800 (PST)
+Subject: Bug#553875: fixed in xfsprogs 3.1.6
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.553875.B553875.132134926030910@bugs.debian.org>
+Date: Tue, 15 Nov 2011 20:27:29 +1100
 From: Nathan Scott <nathans@debian.org>
-Subject: [patch] xfsprogs - workaround debian build daemon dependency
-	resolution
-Message-id: <CAAp5ZgPntg0f+edJQFU8n0npBT1+46NqwwiUEtLXZPJoLwVL1g@mail.gmail.com>
+In-reply-to: <20111115061822.GA6219@hall.aurel32.net>
+Message-id: <CAAp5ZgMrzSdNdMRszvoCUs_AG3dy3QQrHMRL-EhcW31g0rAdrg@mail.gmail.com>
 MIME-version: 1.0
+References: <E1ROjxS-0007Tc-0c@franck.debian.org>
+	<20111114214850.GA16572@volta.aurel32.net>
+	<CAAp5ZgNLZHEJaHU3J+kspf0B6BbAtp=6hhwWbo3_NRLjVxO3=A@mail.gmail.com>
+	<20111115061822.GA6219@hall.aurel32.net>
+Reply-To: Nathan Scott <nathans@debian.org>, 553875@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,75 +29,104 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0114555294732228947=="
+Content-Type: multipart/mixed; boundary="===============0666505794719879871=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Aurelien Jarno <aurelien@aurel32.net>
+Cc: 553875@bugs.debian.org
 
---===============0114555294732228947==
-Content-type: multipart/alternative; boundary=bcaec520e681d361fc04b1c2c32c
+--===============0666505794719879871==
+Content-type: multipart/alternative; boundary=bcaec53af244ada2a304b1c2988f
 
---bcaec520e681d361fc04b1c2c32c
+--bcaec53af244ada2a304b1c2988f
 Content-Type: text/plain; charset=ISO-8859-1
 
-Workaround the Debian buildd dependency handling for libreadline5 library
-handling
+Hi,
 
-Evidently the buildd daemons process depenencies differently to local
-builds, and
-expect the first of optional dependencies to be resolved.  Flip the
-ordering to match
-this dependency.
+On 15 November 2011 17:18, Aurelien Jarno <aurelien@aurel32.net> wrote:
 
-Signed-off-by: Nathan Scott <nathans@debian.org>
+> On Tue, Nov 15, 2011 at 12:00:50PM +1100, Nathan Scott wrote:
+> > Hi Aurelien,
+> >
+> > On 15 November 2011 08:48, Aurelien Jarno <aurelien@aurel32.net> wrote:
+> >
+> > >
+> > > This new version basically replaced the build-depends on
+> > >  libreadline-gplv2-dev
+> > > by a build-depends on
+> > >  libreadline5-dev | libreadline-gplv2-dev
+> > >
+> > > Given libreadline5-dev is not in the archive, the package can't be
+> > > built,
+> >
+> >
+> > It seems to work as expected for me (iow, if either of the two are
+> > installed, it proceeds with using the installed package).  I tested both
+> > variants on latest unstable, so I'm at a loss to explain the failure
+> you're
+> > seeing - can you forward the build output showing the issue?
+>
+> The buildd daemons require that the first package of an alternative
+> exists in the archive, which is not the case there.
 
 
-diff --git a/debian/control b/debian/control
-index f813a43..89f8c6e 100644
---- a/debian/control
-+++ b/debian/control
-@@ -4,6 +4,7 @@ Priority: optional
- Maintainer: XFS Development Team <xfs@oss.sgi.com>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <
-anibal@debian.org>
- Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool,
-libreadline5-dev | libreadline-gplv2-dev, libblkid-dev (>= 2.17)
-+Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool,
-libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17)
- Standards-Version: 3.9.1
- Homepage: http://oss.sgi.com/projects/xfs/
+*nod* - right you are - I look after another package which (by sheer good
+luck) got these the other the way around, correctly, and its building fine.
+ I'll get a patch out for review, and get a new release uploaded soon.
 
---bcaec520e681d361fc04b1c2c32c
+Thanks for the tip, Aurelien!
+
+cheers.
+
+--
+Nathan
+
+--bcaec53af244ada2a304b1c2988f
 Content-Type: text/html; charset=ISO-8859-1
 Content-Transfer-Encoding: quoted-printable
 
-<div>Workaround the Debian buildd dependency handling for libreadline5 libr=
-ary handling</div><div><br></div><div>Evidently the buildd daemons process =
-depenencies differently to local builds, and</div><div>expect the first of =
-optional dependencies to be resolved. =A0Flip the ordering to match</div>
-<div>this dependency.</div><div><br></div><div>Signed-off-by: Nathan Scott =
-&lt;<a href=3D"mailto:nathans@debian.org">nathans@debian.org</a>&gt;</div><=
-div><div><br></div><div><br></div><div>diff --git a/debian/control b/debian=
-/control</div>
-<div>index f813a43..89f8c6e 100644</div><div>--- a/debian/control</div><div=
->+++ b/debian/control</div><div>@@ -4,6 +4,7 @@ Priority: optional</div><di=
-v>=A0Maintainer: XFS Development Team &lt;<a href=3D"mailto:xfs@oss.sgi.com=
-">xfs@oss.sgi.com</a>&gt;</div>
-<div>=A0Uploaders: Nathan Scott &lt;<a href=3D"mailto:nathans@debian.org">n=
-athans@debian.org</a>&gt;, Anibal Monsalve Salazar &lt;<a href=3D"mailto:an=
-ibal@debian.org">anibal@debian.org</a>&gt;</div><div>=A0Build-Depends: uuid=
--dev, autoconf, debhelper (&gt;=3D 5), gettext, libtool, libreadline5-dev |=
- libreadline-gplv2-dev, libblkid-dev (&gt;=3D 2.17)</div>
-<div>+Build-Depends: uuid-dev, autoconf, debhelper (&gt;=3D 5), gettext, li=
-btool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (&gt;=3D 2.17=
-)</div><div>=A0Standards-Version: 3.9.1</div><div>=A0Homepage: <a href=3D"h=
-ttp://oss.sgi.com/projects/xfs/">http://oss.sgi.com/projects/xfs/</a></div>
-</div><div><br></div><div><br></div>
+Hi,<br><br><div class=3D"gmail_quote">On 15 November 2011 17:18, Aurelien J=
+arno <span dir=3D"ltr">&lt;<a href=3D"mailto:aurelien@aurel32.net">aurelien=
+@aurel32.net</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" sty=
+le=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex;">
+On Tue, Nov 15, 2011 at 12:00:50PM +1100, Nathan Scott wrote:<br>
+&gt; Hi Aurelien,<br>
+&gt;<br>
+&gt; On 15 November 2011 08:48, Aurelien Jarno &lt;<a href=3D"mailto:aureli=
+en@aurel32.net">aurelien@aurel32.net</a>&gt; wrote:<br>
+&gt;<br>
+&gt; &gt;<br>
+&gt; &gt; This new version basically replaced the build-depends on<br>
+&gt; &gt; =A0libreadline-gplv2-dev<br>
+&gt; &gt; by a build-depends on<br>
+&gt; &gt; =A0libreadline5-dev | libreadline-gplv2-dev<br>
+&gt; &gt;<br>
+&gt; &gt; Given libreadline5-dev is not in the archive, the package can&#39=
+;t be<br>
+&gt; &gt; built,<br>
+&gt;<br>
+&gt;<br>
+&gt; It seems to work as expected for me (iow, if either of the two are<br>
+&gt; installed, it proceeds with using the installed package). =A0I tested =
+both<br>
+&gt; variants on latest unstable, so I&#39;m at a loss to explain the failu=
+re you&#39;re<br>
+&gt; seeing - can you forward the build output showing the issue?<br>
+<br>
+The buildd daemons require that the first package of an alternative<br>
+exists in the archive, which is not the case there.</blockquote><div><br></=
+div><div>*nod* - right you are - I look after another package which (by she=
+er good luck) got these the other the way around, correctly, and its buildi=
+ng fine. =A0I&#39;ll get a patch out for review, and get a new release uplo=
+aded soon.</div>
+<div><br></div><div>Thanks for the tip, Aurelien!</div><div><br></div><div>=
+cheers.</div><div><br></div><div>--</div><div>Nathan</div></div>
 
---bcaec520e681d361fc04b1c2c32c--
+--bcaec53af244ada2a304b1c2988f--
 
 
---===============0114555294732228947==
+
+--===============0666505794719879871==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -118,4 +137,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============0114555294732228947==--
+--===============0666505794719879871==--
