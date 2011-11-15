@@ -1,24 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAFKESkc067874 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 14:14:29 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4452524FCAB
-	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 12:14:26 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	bkYmzt9uGHpfVKuP for <xfs@oss.sgi.com>;
-	Tue, 15 Nov 2011 12:14:26 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RQPOk-0007RK-Hb
-	for xfs@oss.sgi.com; Tue, 15 Nov 2011 20:14:26 +0000
-Message-Id: <20111115201426.498870090@bombadil.infradead.org>
-Date: Tue, 15 Nov 2011 15:14:08 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/5] [PATCH] xfs: fix attr2 vs large data fork assert
-References: <20111115201407.038216766@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-fix-attr-oops
+Date: Tue, 15 Nov 2011 14:23:14 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] [BUGFIX] xfs: use doalloc flag in xfs_qm_dqattach_one()
+Message-ID: <20111115202314.GE29840@sgi.com>
+References: <20111110013310.3408.41745.stgit@ltc219.sdl.hitachi.co.jp>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111110013310.3408.41745.stgit@ltc219.sdl.hitachi.co.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,113 +15,71 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Alex Elder <aelder@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
 
-With Dmitry fsstress updates I've seen very reproducible crashes in
-xfs_attr_shortform_remove because xfs_attr_shortform_bytesfit claims that
-the attributes would not fit inline into the inode after removing an
-attribute.  It turns out that we were operating on an inode with lots
-of delalloc extents, and thus an if_bytes values for the data fork that
-is larger than biggest possible on-disk storage for it which utterly
-confuses the code near the end of xfs_attr_shortform_bytesfit.
+On Thu, Nov 10, 2011 at 10:33:10AM +0900, Mitsuo Hayasaka wrote:
+> The doalloc arg in xfs_qm_dqattach_one() is a flag that indicates
+> whether a new area to handle quota information will be allocated
+> if needed. Originally, it was passed to xfs_qm_dqget(), but has
+> been removed by the following commit (probably by mistake):
+> 
+> 	commit 8e9b6e7fa4544ea8a0e030c8987b918509c8ff47
+> 	Author: Christoph Hellwig <hch@lst.de>
+> 	Date:   Sun Feb 8 21:51:42 2009 +0100
+> 
+> 	xfs: remove the unused XFS_QMOPT_DQLOCK flag
+> 
+> As the result, xfs_qm_dqget() called from xfs_qm_dqattach_one()
+> never allocates the new area even if it is needed.
+> 
+> This patch gives the doalloc arg to xfs_qm_dqget() in
+> xfs_qm_dqattach_one() to fix this problem.
+> 
+> Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+> Cc: Alex Elder <aelder@sgi.com>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> ---
+> 
+>  fs/xfs/xfs_qm.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index 9a0aa76..95ba6dc 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -674,7 +674,8 @@ xfs_qm_dqattach_one(
+>  	 * disk and we didn't ask it to allocate;
+>  	 * ESRCH if quotas got turned off suddenly.
+>  	 */
+> -	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
+> +	error = xfs_qm_dqget(ip->i_mount, ip, id, type,
+> +			     doalloc | XFS_QMOPT_DOWARN, &dqp);
+>  	if (error)
+>  		return error;
+>  
 
-Fix this by always allowing the current attribute fork, like we already
-do for the attr1 format, given that delalloc conversion will take care
-for moving either the data or attribute area out of line if it doesn't
-fit at that point - or making the point moot by merging extents at this
-point.
+Looks like the only caller of xfs_qm_dqattach_one with XFS_QMOPT_DOALLOC
+possibly set is xfs_qm_dqattach_locked, which does so based upon its
+argument 'flags'.  AFAICS the only caller of xfs_qm_dqattach_locked that
+sets this flag is xfs_qm_vop_dqalloc, which is called by
+xfs_ioctl_setattr, xfs_setattr_nonsize, xfs_create, and xfs_symlink.
 
-Also document the function better, and clean up some lose bits.
+xfs_ioctl_setattr|xfs_setattr_nonsize|xfs_create|xfs_symlink
+  xfs_qm_vop_dqalloc
+    xfs_qm_dqattach_locked(ip, XFS_QMOPT_DQALLOC
+      xfs_qm_dqattach_one
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I tried a few things to see if I could hit a problem without the patch
+but no luck.
 
-Index: linux-2.6/fs/xfs/xfs_attr_leaf.c
-===================================================================
---- linux-2.6.orig/fs/xfs/xfs_attr_leaf.c	2011-11-04 13:46:59.481655134 +0100
-+++ linux-2.6/fs/xfs/xfs_attr_leaf.c	2011-11-04 15:58:06.480155275 +0100
-@@ -110,6 +110,7 @@ xfs_attr_namesp_match(int arg_flags, int
- /*
-  * Query whether the requested number of additional bytes of extended
-  * attribute space will be able to fit inline.
-+ *
-  * Returns zero if not, else the di_forkoff fork offset to be used in the
-  * literal area for attribute data once the new bytes have been added.
-  *
-@@ -136,11 +137,26 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 		return (offset >= minforkoff) ? minforkoff : 0;
- 	}
- 
--	if (!(mp->m_flags & XFS_MOUNT_ATTR2)) {
--		if (bytes <= XFS_IFORK_ASIZE(dp))
--			return dp->i_d.di_forkoff;
-+	/*
-+	 * If the requested numbers of bytes is smaller or equal to the
-+	 * current attribute fork size we can always proceed.
-+	 *
-+	 * Note that if_bytes in the data fork might actually be larger than
-+	 * the current data fork size is due to delalloc extents. In that
-+	 * case either the extent count will go down when they are converted
-+	 * to ral extents, or the delalloc conversion will take care of the
-+	 * literal area rebalancing.
-+	 */
-+	if (bytes <= XFS_IFORK_ASIZE(dp))
-+		return dp->i_d.di_forkoff;
-+
-+	/*
-+	 * For attr2 we can try to move the forkoff if there is space in the
-+	 * literal area, but for the old format we are done if there is no
-+	 * space in the fixes attribute fork.
-+	 */
-+	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
- 		return 0;
--	}
- 
- 	dsize = dp->i_df.if_bytes;
- 	
-@@ -157,10 +173,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 		    xfs_default_attroffset(dp))
- 			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
- 		break;
--		
- 	case XFS_DINODE_FMT_BTREE:
- 		/*
--		 * If have data btree then keep forkoff if we have one,
-+		 * If have a data btree then keep forkoff if we have one,
- 		 * otherwise we are adding a new attr, so then we set 
- 		 * minforkoff to where the btree root can finish so we have 
- 		 * plenty of room for attrs
-@@ -168,10 +183,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 		if (dp->i_d.di_forkoff) {
- 			if (offset < dp->i_d.di_forkoff) 
- 				return 0;
--			else 
--				return dp->i_d.di_forkoff;
--		} else
--			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
-+			return dp->i_d.di_forkoff;
-+		}
-+		dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
- 		break;
- 	}
- 	
-@@ -186,10 +200,10 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
- 	maxforkoff = maxforkoff >> 3;	/* rounded down */
- 
--	if (offset >= minforkoff && offset < maxforkoff)
--		return offset;
- 	if (offset >= maxforkoff)
- 		return maxforkoff;
-+	if (offset >= minforkoff)
-+		return offset;
- 	return 0;
- }
- 
+Anyway... Looks good.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
