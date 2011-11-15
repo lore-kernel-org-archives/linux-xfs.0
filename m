@@ -1,24 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAF87IjU037527 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 02:07:18 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBFF11D0BF5D
-	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 00:07:15 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	X772knkL73hIFkR1 for <xfs@oss.sgi.com>;
-	Tue, 15 Nov 2011 00:07:15 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RQE31-0007Km-1E
-	for xfs@oss.sgi.com; Tue, 15 Nov 2011 08:07:15 +0000
-Date: Tue, 15 Nov 2011 03:07:15 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] repair: validate acl count before reading it
-Message-ID: <20111115080714.GA24931@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	pAF9ddhU040180 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 03:39:40 -0600
+Received: from kenny.its.monash.edu.au (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 85D491D9C776
+	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 01:39:38 -0800 (PST)
+Received: from kenny.its.monash.edu.au (kenny.its.monash.edu.au
+	[130.194.13.164]) by cuda.sgi.com with ESMTP id
+	Gvcv0BRuTvYh6QHW for <xfs@oss.sgi.com>;
+	Tue, 15 Nov 2011 01:39:38 -0800 (PST)
+Received: from chapman.its.monash.edu.au ([130.194.13.89])
+	by kenny.its.monash.edu.au
+	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
+	with ESMTP id <0LUP00HFF4606B80@kenny.its.monash.edu.au> for
+	xfs@oss.sgi.com; Tue, 15 Nov 2011 20:39:36 +1100 (EST)
+Received: from chapman.its.monash.edu.au (localhost.localdomain [127.0.0.1])
+	by localhost (Postfix) with SMTP id DCD567E6149	for <xfs@oss.sgi.com>;
+	Tue, 15 Nov 2011 20:39:35 +1100 (EST)
+Received: from mail-yw0-f54.google.com
+	(mail-yw0-f54.google.com [209.85.213.54])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)	by chapman.its.monash.edu.au
+	(Postfix) with ESMTPS id 05F5A7E6178	for <xfs@oss.sgi.com>; Tue,
+	15 Nov 2011 20:39:34 +1100 (EST)
+Received: by mail-yw0-f54.google.com with SMTP id 9so4146755ywe.41 for
+	<xfs@oss.sgi.com>; Tue, 15 Nov 2011 01:39:34 -0800 (PST)
+Date: Tue, 15 Nov 2011 20:39:33 +1100
+From: Nathan Scott <nathans@debian.org>
+Subject: [patch] xfsprogs - workaround debian build daemon dependency
+	resolution
+Message-id: <CAAp5ZgPntg0f+edJQFU8n0npBT1+46NqwwiUEtLXZPJoLwVL1g@mail.gmail.com>
+MIME-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,92 +39,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0114555294732228947=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This prevents a segfault on a filesystem so badly corrupted by the RAID
-controller that it could be considered fuzzed.
+--===============0114555294732228947==
+Content-type: multipart/alternative; boundary=bcaec520e681d361fc04b1c2c32c
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+--bcaec520e681d361fc04b1c2c32c
+Content-Type: text/plain; charset=ISO-8859-1
 
-Index: xfsprogs-dev/repair/attr_repair.c
-===================================================================
---- xfsprogs-dev.orig/repair/attr_repair.c	2011-11-14 20:03:27.000000000 +0000
-+++ xfsprogs-dev/repair/attr_repair.c	2011-11-14 20:20:55.000000000 +0000
-@@ -931,8 +931,8 @@ process_longform_attr(
- }
- 
- 
--static xfs_acl_t *
--xfs_acl_from_disk(xfs_acl_disk_t *dacl)
-+static int
-+xfs_acl_from_disk(struct xfs_acl **aclp, struct xfs_acl_disk *dacl)
- {
- 	int			count;
- 	xfs_acl_t		*acl;
-@@ -940,10 +940,22 @@ xfs_acl_from_disk(xfs_acl_disk_t *dacl)
- 	xfs_acl_entry_disk_t	*dace, *end;
- 
- 	count = be32_to_cpu(dacl->acl_cnt);
-+	if (count > XFS_ACL_MAX_ENTRIES) {
-+		do_warn(_("to larget ACL, size %d"), count);
-+		*aclp = NULL;
-+		return EINVAL;
-+	}
-+
-+
- 	end = &dacl->acl_entry[0] + count;
- 	acl = malloc((int)((char *)end - (char *)dacl));
--	if (!acl)
--		return NULL;
-+	if (!acl) {
-+		do_warn(_("cannot malloc enough for ACL attribute\n"));
-+		do_warn(_("SKIPPING this ACL\n"));
-+		*aclp = NULL;
-+		return ENOMEM;
-+	}
-+
- 	acl->acl_cnt = count;
- 	ace = &acl->acl_entry[0];
- 	for (dace = &dacl->acl_entry[0]; dace < end; ace++, dace++) {
-@@ -951,7 +963,9 @@ xfs_acl_from_disk(xfs_acl_disk_t *dacl)
- 		ace->ae_id = be32_to_cpu(dace->ae_id);
- 		ace->ae_perm = be16_to_cpu(dace->ae_perm);
- 	}
--	return acl;
-+
-+	*aclp = acl;
-+	return 0;
- }
- 
- /*
-@@ -1004,15 +1018,14 @@ xfs_acl_valid(xfs_acl_disk_t *daclp)
- 	if (daclp == NULL)
- 		goto acl_invalid;
- 
--	aclp = xfs_acl_from_disk(daclp);
--	if (aclp == NULL) {
--		do_warn(_("cannot malloc enough for ACL attribute\n"));
--		do_warn(_("SKIPPING this ACL\n"));
-+	switch (xfs_acl_from_disk(&aclp, daclp)) {
-+	case ENOMEM:
- 		return 0;
--	}
--
--	if (aclp->acl_cnt > XFS_ACL_MAX_ENTRIES)
-+	case EINVAL:
- 		goto acl_invalid;
-+	default:
-+		break;
-+	}
- 
- 	for (i = 0; i < aclp->acl_cnt; i++) {
- 		entry = &aclp->acl_entry[i];
+Workaround the Debian buildd dependency handling for libreadline5 library
+handling
+
+Evidently the buildd daemons process depenencies differently to local
+builds, and
+expect the first of optional dependencies to be resolved.  Flip the
+ordering to match
+this dependency.
+
+Signed-off-by: Nathan Scott <nathans@debian.org>
+
+
+diff --git a/debian/control b/debian/control
+index f813a43..89f8c6e 100644
+--- a/debian/control
++++ b/debian/control
+@@ -4,6 +4,7 @@ Priority: optional
+ Maintainer: XFS Development Team <xfs@oss.sgi.com>
+ Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <
+anibal@debian.org>
+ Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool,
+libreadline5-dev | libreadline-gplv2-dev, libblkid-dev (>= 2.17)
++Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool,
+libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17)
+ Standards-Version: 3.9.1
+ Homepage: http://oss.sgi.com/projects/xfs/
+
+--bcaec520e681d361fc04b1c2c32c
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+<div>Workaround the Debian buildd dependency handling for libreadline5 libr=
+ary handling</div><div><br></div><div>Evidently the buildd daemons process =
+depenencies differently to local builds, and</div><div>expect the first of =
+optional dependencies to be resolved. =A0Flip the ordering to match</div>
+<div>this dependency.</div><div><br></div><div>Signed-off-by: Nathan Scott =
+&lt;<a href=3D"mailto:nathans@debian.org">nathans@debian.org</a>&gt;</div><=
+div><div><br></div><div><br></div><div>diff --git a/debian/control b/debian=
+/control</div>
+<div>index f813a43..89f8c6e 100644</div><div>--- a/debian/control</div><div=
+>+++ b/debian/control</div><div>@@ -4,6 +4,7 @@ Priority: optional</div><di=
+v>=A0Maintainer: XFS Development Team &lt;<a href=3D"mailto:xfs@oss.sgi.com=
+">xfs@oss.sgi.com</a>&gt;</div>
+<div>=A0Uploaders: Nathan Scott &lt;<a href=3D"mailto:nathans@debian.org">n=
+athans@debian.org</a>&gt;, Anibal Monsalve Salazar &lt;<a href=3D"mailto:an=
+ibal@debian.org">anibal@debian.org</a>&gt;</div><div>=A0Build-Depends: uuid=
+-dev, autoconf, debhelper (&gt;=3D 5), gettext, libtool, libreadline5-dev |=
+ libreadline-gplv2-dev, libblkid-dev (&gt;=3D 2.17)</div>
+<div>+Build-Depends: uuid-dev, autoconf, debhelper (&gt;=3D 5), gettext, li=
+btool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (&gt;=3D 2.17=
+)</div><div>=A0Standards-Version: 3.9.1</div><div>=A0Homepage: <a href=3D"h=
+ttp://oss.sgi.com/projects/xfs/">http://oss.sgi.com/projects/xfs/</a></div>
+</div><div><br></div><div><br></div>
+
+--bcaec520e681d361fc04b1c2c32c--
+
+
+--===============0114555294732228947==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0114555294732228947==--
