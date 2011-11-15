@@ -1,12 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Date: Tue, 15 Nov 2011 14:23:14 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] [BUGFIX] xfs: use doalloc flag in xfs_qm_dqattach_one()
-Message-ID: <20111115202314.GE29840@sgi.com>
-References: <20111110013310.3408.41745.stgit@ltc219.sdl.hitachi.co.jp>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111110013310.3408.41745.stgit@ltc219.sdl.hitachi.co.jp>
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	pAFKuhE9073771 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 14:56:43 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 216081D0E855
+	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 12:56:41 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	hnL9taxT1m65qZrS for <xfs@oss.sgi.com>;
+	Tue, 15 Nov 2011 12:56:41 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1RQQ3a-0007aZ-Hq
+	for xfs@oss.sgi.com; Wed, 16 Nov 2011 07:56:38 +1100
+Received: from dave by disappointment with local (Exim 4.76)
+	(envelope-from <dave@disappointment.disaster>) id 1RQQ3Z-0002PI-VW
+	for xfs@oss.sgi.com; Wed, 16 Nov 2011 07:56:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfstests: detect gdbm library correctly
+Date: Wed, 16 Nov 2011 07:56:37 +1100
+Message-Id: <1321390597-9222-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -15,71 +27,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Cc: Alex Elder <aelder@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
+To: xfs@oss.sgi.com
 
-On Thu, Nov 10, 2011 at 10:33:10AM +0900, Mitsuo Hayasaka wrote:
-> The doalloc arg in xfs_qm_dqattach_one() is a flag that indicates
-> whether a new area to handle quota information will be allocated
-> if needed. Originally, it was passed to xfs_qm_dqget(), but has
-> been removed by the following commit (probably by mistake):
-> 
-> 	commit 8e9b6e7fa4544ea8a0e030c8987b918509c8ff47
-> 	Author: Christoph Hellwig <hch@lst.de>
-> 	Date:   Sun Feb 8 21:51:42 2009 +0100
-> 
-> 	xfs: remove the unused XFS_QMOPT_DQLOCK flag
-> 
-> As the result, xfs_qm_dqget() called from xfs_qm_dqattach_one()
-> never allocates the new area even if it is needed.
-> 
-> This patch gives the doalloc arg to xfs_qm_dqget() in
-> xfs_qm_dqattach_one() to fix this problem.
-> 
-> Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-> Cc: Alex Elder <aelder@sgi.com>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> ---
-> 
->  fs/xfs/xfs_qm.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 9a0aa76..95ba6dc 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -674,7 +674,8 @@ xfs_qm_dqattach_one(
->  	 * disk and we didn't ask it to allocate;
->  	 * ESRCH if quotas got turned off suddenly.
->  	 */
-> -	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
-> +	error = xfs_qm_dqget(ip->i_mount, ip, id, type,
-> +			     doalloc | XFS_QMOPT_DOWARN, &dqp);
->  	if (error)
->  		return error;
->  
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks like the only caller of xfs_qm_dqattach_one with XFS_QMOPT_DOALLOC
-possibly set is xfs_qm_dqattach_locked, which does so based upon its
-argument 'flags'.  AFAICS the only caller of xfs_qm_dqattach_locked that
-sets this flag is xfs_qm_vop_dqalloc, which is called by
-xfs_ioctl_setattr, xfs_setattr_nonsize, xfs_create, and xfs_symlink.
+Debian unstable has move the location of the gdbm libraries as part
+of it's multi-arch conversion. The libraries are now only found by
+the configured library search path in /etc/ld.conf.d, so change the
+autoconf macros to test and find the libraries by link tests rather
+than hard coding library paths when a header is found.
 
-xfs_ioctl_setattr|xfs_setattr_nonsize|xfs_create|xfs_symlink
-  xfs_qm_vop_dqalloc
-    xfs_qm_dqattach_locked(ip, XFS_QMOPT_DQALLOC
-      xfs_qm_dqattach_one
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ m4/package_gdbmdev.m4 |   41 ++++++++++++++++++++++++++++++++++++-----
+ 1 files changed, 36 insertions(+), 5 deletions(-)
 
-I tried a few things to see if I could hit a problem without the patch
-but no luck.
-
-Anyway... Looks good.
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
+diff --git a/m4/package_gdbmdev.m4 b/m4/package_gdbmdev.m4
+index 6580fba..c07f75d 100644
+--- a/m4/package_gdbmdev.m4
++++ b/m4/package_gdbmdev.m4
+@@ -1,19 +1,50 @@
+ AC_DEFUN([AC_PACKAGE_WANT_NDBM],
+   [ AC_CHECK_HEADERS(ndbm.h, [ have_db=true ], [ have_db=false ])
++    found=false
+     libgdbm=""
++
++    if test $have_db = true; then
++      AC_CHECK_LIB(ndbm,dbm_open,found=true,found=false)
++      AC_CHECK_LIB(ndbm,dbm_fetch,,found=false)
++      AC_CHECK_LIB(ndbm,dbm_store,,found=false)
++      AC_CHECK_LIB(ndbm,dbm_close,,found=false)
++
++      if test $found = true; then
++        libgdbm="$ndbm"
++      fi
++    fi
++
+     AC_SUBST(libgdbm)
+     AC_SUBST(have_db)
+   ])
+ 
+ AC_DEFUN([AC_PACKAGE_WANT_GDBM],
+   [ AC_CHECK_HEADERS([gdbm/ndbm.h, gdbm-ndbm.h], [ have_db=true ], [ have_db=false ])
++    found=false
+     libgdbm=""
+-    if test $have_db = true -a -f ${libexecdir}${libdirsuffix}/libgdbm_compat.a; then
+-	libgdbm="${libexecdir}${libdirsuffix}/libgdbm_compat.a"
+-    fi
+-    if test $have_db = true -a -f ${libexecdir}${libdirsuffix}/libgdbm.a; then
+-	libgdbm="${libgdbm} ${libexecdir}${libdirsuffix}/libgdbm.a"
++
++    if test $have_db = true; then
++      AC_CHECK_LIB(gdbm,dbm_open,found=true,found=false)
++      AC_CHECK_LIB(gdbm,dbm_fetch,,found=false)
++      AC_CHECK_LIB(gdbm,dbm_store,,found=false)
++      AC_CHECK_LIB(gdbm,dbm_close,,found=false)
++
++      if test $found = true; then
++        libgdbm="${libgdbm} -lgdbm"
++      fi
++
++      found="no"
++      AC_CHECK_LIB(gdbm_compat,dbm_open,found=true,found=false)
++      AC_CHECK_LIB(gdbm_compat,dbm_fetch,,found=false)
++      AC_CHECK_LIB(gdbm_compat,dbm_store,,found=false)
++      AC_CHECK_LIB(gdbm_compat,dbm_close,,found="no")
++
++      if test $found = true ; then
++        libgdbm="${libgdbm} -lgdbm_compat"
++      fi
+     fi
++
+     AC_SUBST(libgdbm)
+     AC_SUBST(have_db)
+   ])
++
+-- 
+1.7.5.4
 
 _______________________________________________
 xfs mailing list
