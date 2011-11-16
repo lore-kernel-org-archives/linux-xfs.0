@@ -1,11 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAGMQDcg229687 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 16:26:13 -0600
-From: Bill Kendall <wkendall@sgi.com>
-Subject: [PATCH] xfsdump: obsolete excluding files by extended attr
-Date: Wed, 16 Nov 2011 16:26:06 -0600
-Message-Id: <1321482366-6161-1-git-send-email-wkendall@sgi.com>
+	pAGNFNdR234380 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 17:15:23 -0600
+Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 751381D12F33
+	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 15:15:21 -0800 (PST)
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	6BgETgrAdcFDAEPF for <xfs@oss.sgi.com>;
+	Wed, 16 Nov 2011 15:15:21 -0800 (PST)
+Date: Thu, 17 Nov 2011 10:15:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/5] [PATCH] xfs: fix attr2 vs large data fork assert
+Message-ID: <20111116231517.GA7046@dastard>
+References: <20111115201407.038216766@bombadil.infradead.org>
+	<20111115201426.498870090@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111115201426.498870090@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,92 +26,146 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-xfsdump supports excluding files by setting the "no-dump" flag using
-chattr, or by adding an extended attribute named "SGI_XFSDUMP_SKIP_FILE".
-The former is the preferred method, and a deprecation warning has been
-issued for 5+ years if the latter method is used. This patch removes
-support for the "SGI_XFSDUMP_SKIP_FILE" attribute.
+On Tue, Nov 15, 2011 at 03:14:08PM -0500, Christoph Hellwig wrote:
+> With Dmitry fsstress updates I've seen very reproducible crashes in
+> xfs_attr_shortform_remove because xfs_attr_shortform_bytesfit claims that
+> the attributes would not fit inline into the inode after removing an
+> attribute.  It turns out that we were operating on an inode with lots
+> of delalloc extents, and thus an if_bytes values for the data fork that
+> is larger than biggest possible on-disk storage for it which utterly
+> confuses the code near the end of xfs_attr_shortform_bytesfit.
 
-Signed-off-by: Bill Kendall <wkendall@sgi.com>
----
- dump/inomap.c      |   38 --------------------------------------
- man/man8/xfsdump.8 |    5 +----
- 2 files changed, 1 insertions(+), 42 deletions(-)
+We have a test that stresses allocated extents vs attributes in the
+xfs_fsr swapext test (227), but that does not take into account
+delalloc extents. It sounds like it would be relatively easy to
+write a regression test for this particular case - create a file
+with a bunch of attributes, then create a number of delalloc data
+extents, then remove the attributes to trigger the condition in
+xfs_attr_shortform_remove()....
 
-diff --git a/dump/inomap.c b/dump/inomap.c
-index a3b1220..aa4f59d 100644
---- a/dump/inomap.c
-+++ b/dump/inomap.c
-@@ -595,44 +595,6 @@ cb_add( void *arg1,
- 					    MAP_NDR_NOCHNG );
- 				inomap_exclude_skipattr++;
- 				return 0;
--			} else if (allowexcludefiles_pr &&
--					(statp->bs_xflags & XFS_XFLAG_HASATTR)) {
--				int rval;
--				attr_multiop_t attrop;
--				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";
--				static int deprecated_msg_issued = 0;
--
--				attrop.am_attrname  = skip_attr_name;
--				attrop.am_attrvalue = NULL;
--				attrop.am_length    = 0;
--				attrop.am_error     = 0;
--				attrop.am_flags     = 0;
--				attrop.am_opcode    = ATTR_OP_GET;
--                                
--				rval = jdm_attr_multi( fshandlep,
--						       statp,
--						       (char *)&attrop,
--						       1,
--						       0 );
--				if ( !rval && (!attrop.am_error || attrop.am_error == E2BIG || attrop.am_error == ERANGE) ) {
--					mlog( MLOG_DEBUG | MLOG_EXCLFILES,
--					      "pruned ino %llu, owner %u, estimated size %llu: skip attribute set\n",
--					      statp->bs_ino,
--					      statp->bs_uid,
--					      estimated_size );
--					if ( !deprecated_msg_issued ) {
--						deprecated_msg_issued = 1;
--						mlog( MLOG_SILENT | MLOG_WARNING,
--						      "excluding files using %s attribute is deprecated\n",
--						      skip_attr_name );
--					}
--					inomap_add( cb_inomap_contextp,
--						    ino,
--						    (gen_t)statp->bs_gen,
--						    MAP_NDR_NOCHNG );
--					inomap_exclude_skipattr++;
--					return 0;
--				}
- 			}
- 
- 			inomap_add( cb_inomap_contextp,
-diff --git a/man/man8/xfsdump.8 b/man/man8/xfsdump.8
-index 5360378..fb47f7b 100644
---- a/man/man8/xfsdump.8
-+++ b/man/man8/xfsdump.8
-@@ -112,10 +112,7 @@ xfsdump cannot fit a media file onto a single tape.
- Allow files to be excluded from the dump.  This will cause xfsdump to 
- skip files which have the "no dump" file attribute set. See the
- "Excluding individual files" section below for details on setting
--this file attribute. Files with an extended attribute named
--"SGI_XFSDUMP_SKIP_FILE" will also be skipped, however this method
--is deprecated and xfsdump will stop checking for it in a future
--version.
-+this file attribute.
- .TP 5
- \f3\-f\f1 \f2dest\f1 [ \f3\-f\f1 \f2dest\f1 ... ]
- Specifies a dump destination.
+
+> Fix this by always allowing the current attribute fork, like we already
+> do for the attr1 format, given that delalloc conversion will take care
+> for moving either the data or attribute area out of line if it doesn't
+> fit at that point - or making the point moot by merging extents at this
+> point.
+> 
+> Also document the function better, and clean up some lose bits.
+
+While you are touching that function, can you fix all the whitespace
+damage as well? (lots of trailing whitespace). There's a couple of
+typos I noticed in your changes (below), but otherwise looks good.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/fs/xfs/xfs_attr_leaf.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_attr_leaf.c	2011-11-04 13:46:59.481655134 +0100
+> +++ linux-2.6/fs/xfs/xfs_attr_leaf.c	2011-11-04 15:58:06.480155275 +0100
+> @@ -110,6 +110,7 @@ xfs_attr_namesp_match(int arg_flags, int
+>  /*
+>   * Query whether the requested number of additional bytes of extended
+>   * attribute space will be able to fit inline.
+> + *
+>   * Returns zero if not, else the di_forkoff fork offset to be used in the
+>   * literal area for attribute data once the new bytes have been added.
+>   *
+> @@ -136,11 +137,26 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+>  		return (offset >= minforkoff) ? minforkoff : 0;
+>  	}
+>  
+> -	if (!(mp->m_flags & XFS_MOUNT_ATTR2)) {
+> -		if (bytes <= XFS_IFORK_ASIZE(dp))
+> -			return dp->i_d.di_forkoff;
+> +	/*
+> +	 * If the requested numbers of bytes is smaller or equal to the
+> +	 * current attribute fork size we can always proceed.
+> +	 *
+> +	 * Note that if_bytes in the data fork might actually be larger than
+> +	 * the current data fork size is due to delalloc extents. In that
+> +	 * case either the extent count will go down when they are converted
+> +	 * to ral extents, or the delalloc conversion will take care of the
+
+              real
+
+> +	 * literal area rebalancing.
+> +	 */
+> +	if (bytes <= XFS_IFORK_ASIZE(dp))
+> +		return dp->i_d.di_forkoff;
+> +
+> +	/*
+> +	 * For attr2 we can try to move the forkoff if there is space in the
+> +	 * literal area, but for the old format we are done if there is no
+> +	 * space in the fixes attribute fork.
+> +	 */
+> +	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
+>  		return 0;
+> -	}
+>  
+>  	dsize = dp->i_df.if_bytes;
+>  	
+> @@ -157,10 +173,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+>  		    xfs_default_attroffset(dp))
+>  			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+>  		break;
+> -		
+>  	case XFS_DINODE_FMT_BTREE:
+>  		/*
+> -		 * If have data btree then keep forkoff if we have one,
+> +		 * If have a data btree then keep forkoff if we have one,
+
+	           If we have
+
+>  		 * otherwise we are adding a new attr, so then we set 
+>  		 * minforkoff to where the btree root can finish so we have 
+>  		 * plenty of room for attrs
+> @@ -168,10 +183,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+>  		if (dp->i_d.di_forkoff) {
+>  			if (offset < dp->i_d.di_forkoff) 
+>  				return 0;
+> -			else 
+> -				return dp->i_d.di_forkoff;
+> -		} else
+> -			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
+> +			return dp->i_d.di_forkoff;
+> +		}
+> +		dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
+>  		break;
+>  	}
+>  	
+> @@ -186,10 +200,10 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+>  	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
+>  	maxforkoff = maxforkoff >> 3;	/* rounded down */
+>  
+> -	if (offset >= minforkoff && offset < maxforkoff)
+> -		return offset;
+>  	if (offset >= maxforkoff)
+>  		return maxforkoff;
+> +	if (offset >= minforkoff)
+> +		return offset;
+>  	return 0;
+>  }
+>  
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
 -- 
-1.7.0.4
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
