@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAGMFtOW228900 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 16:15:56 -0600
-Received: from ogre.sisk.pl (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8E9D81D12F8F
-	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 14:15:53 -0800 (PST)
-Received: from ogre.sisk.pl (ogre.sisk.pl [217.79.144.158]) by cuda.sgi.com
-	with ESMTP id SSbuWoSPBX3NJu4s for <xfs@oss.sgi.com>;
-	Wed, 16 Nov 2011 14:15:53 -0800 (PST)
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: [PATCH] PM / Freezer: Freeze filesystems while freezing processes
-	(v2)
-Date: Wed, 16 Nov 2011 22:50:41 +0100
-References: <4E1C70AD.1010101@u-club.de> <201110222335.29573.rjw@sisk.pl>
-	<874ny4jhy4.fsf@tac.ki.iif.hu>
-In-Reply-To: <874ny4jhy4.fsf@tac.ki.iif.hu>
-MIME-Version: 1.0
-Message-Id: <201111162250.42080.rjw@sisk.pl>
+	pAGMQDcg229687 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 16:26:13 -0600
+From: Bill Kendall <wkendall@sgi.com>
+Subject: [PATCH] xfsdump: obsolete excluding files by extended attr
+Date: Wed, 16 Nov 2011 16:26:06 -0600
+Message-Id: <1321482366-6161-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,75 +14,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ferenc Wagner <wferi@niif.hu>
-Cc: Christoph <cr2005@u-club.de>, Theodore Ts'o <tytso@mit.edu>, Linux PM list <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Pavel Machek <pavel@ucw.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Wednesday, November 16, 2011, Ferenc Wagner wrote:
-> "Rafael J. Wysocki" <rjw@sisk.pl> writes:
-> 
-> > On Saturday, October 22, 2011, Christoph wrote:
-> >
-> >>> PM / Freezer: Freeze filesystems while freezing processes (v2)
-> >>> 
-> >>> On Sunday, August 07, 2011, Dave Chinner wrote:
-> >>>
-> >>>> On Sat, Aug 06, 2011 at 11:17:18PM +0200, Rafael J. Wysocki wrote:
-> >>>>
-> >>>>> From: Rafael J. Wysocki <rjw@sisk.pl>
-> >>>>> 
-> >>>>> Freeze all filesystems during the freezing of tasks by calling 
-> >>>>> freeze_bdev() for each of them and thaw them during the thawing of
-> >>>>> tasks with the help of thaw_bdev().
-> >>>>> 
-> >>>>> This is needed by hibernation, because some filesystems (e.g. XFS) 
-> >>>>> deadlock with the preallocation of memory used by it if the memory 
-> >>>>> pressure caused by it is too heavy.
-> >>>
-> >>> Below is an alternative fix, the changelog pretty much explains the
-> >>> idea.
-> >>> 
-> >>> I've tested it on Toshiba Portege R500, but I don't have an XFS
-> >>> partition to verify that it really helps, so I'd appreciate it if
-> >>> someone able to reproduce the original issue could test it and report
-> >>> back.
-> >> 
-> >> Well, the kernel bugtracker is still down and I just like to post my
-> >> experience with kernel (x64) v3.1-rc8/9 + patches. My machine is a
-> >> MacBookPro, doomed with 4GB RAM running debian.
-> >> 
-> >> Bug #1
-> >> 
-> >> on the way to hibernate, machine hangs on
-> >> 
-> >> "PM: Preallocating image memory..."
-> >> 
-> >> this patch worked for me now for weeks:
-> >> "[PATCH] PM / Freezer: Freeze filesystems while freezing processes (v2)"
-> >> https://lkml.org/lkml/2011/9/24/77
-> >
-> > This patch is going to be merged into 3.2.
-> 
-> Hi,
-> 
-> I was the original reporter of the Bugzilla issue, just didn't know
-> about this thread until recently.  Anyway, I'm running 3.2-rc1 now,
-> which contains the alternative fix, and I can confirm that it indeed
-> works: hibernation does not deadlock on my XFS rooted system anymore
-> during memory preallocation.  Thanks everybody for his or her work on
-> the issue!
-> 
-> To add something still, preallocation now ends with a couple of seconds
-> of heavy disk activity, but with several seconds of total inactivity
-> beforehand.  Is this warranted by some CPU intensive task at that stage?
+xfsdump supports excluding files by setting the "no-dump" flag using
+chattr, or by adding an extended attribute named "SGI_XFSDUMP_SKIP_FILE".
+The former is the preferred method, and a deprecation warning has been
+issued for 5+ years if the latter method is used. This patch removes
+support for the "SGI_XFSDUMP_SKIP_FILE" attribute.
 
-Quilte frankly, I have no idea.
+Signed-off-by: Bill Kendall <wkendall@sgi.com>
+---
+ dump/inomap.c      |   38 --------------------------------------
+ man/man8/xfsdump.8 |    5 +----
+ 2 files changed, 1 insertions(+), 42 deletions(-)
 
-Thanks,
-Rafael
+diff --git a/dump/inomap.c b/dump/inomap.c
+index a3b1220..aa4f59d 100644
+--- a/dump/inomap.c
++++ b/dump/inomap.c
+@@ -595,44 +595,6 @@ cb_add( void *arg1,
+ 					    MAP_NDR_NOCHNG );
+ 				inomap_exclude_skipattr++;
+ 				return 0;
+-			} else if (allowexcludefiles_pr &&
+-					(statp->bs_xflags & XFS_XFLAG_HASATTR)) {
+-				int rval;
+-				attr_multiop_t attrop;
+-				static char *skip_attr_name = "SGI_XFSDUMP_SKIP_FILE";
+-				static int deprecated_msg_issued = 0;
+-
+-				attrop.am_attrname  = skip_attr_name;
+-				attrop.am_attrvalue = NULL;
+-				attrop.am_length    = 0;
+-				attrop.am_error     = 0;
+-				attrop.am_flags     = 0;
+-				attrop.am_opcode    = ATTR_OP_GET;
+-                                
+-				rval = jdm_attr_multi( fshandlep,
+-						       statp,
+-						       (char *)&attrop,
+-						       1,
+-						       0 );
+-				if ( !rval && (!attrop.am_error || attrop.am_error == E2BIG || attrop.am_error == ERANGE) ) {
+-					mlog( MLOG_DEBUG | MLOG_EXCLFILES,
+-					      "pruned ino %llu, owner %u, estimated size %llu: skip attribute set\n",
+-					      statp->bs_ino,
+-					      statp->bs_uid,
+-					      estimated_size );
+-					if ( !deprecated_msg_issued ) {
+-						deprecated_msg_issued = 1;
+-						mlog( MLOG_SILENT | MLOG_WARNING,
+-						      "excluding files using %s attribute is deprecated\n",
+-						      skip_attr_name );
+-					}
+-					inomap_add( cb_inomap_contextp,
+-						    ino,
+-						    (gen_t)statp->bs_gen,
+-						    MAP_NDR_NOCHNG );
+-					inomap_exclude_skipattr++;
+-					return 0;
+-				}
+ 			}
+ 
+ 			inomap_add( cb_inomap_contextp,
+diff --git a/man/man8/xfsdump.8 b/man/man8/xfsdump.8
+index 5360378..fb47f7b 100644
+--- a/man/man8/xfsdump.8
++++ b/man/man8/xfsdump.8
+@@ -112,10 +112,7 @@ xfsdump cannot fit a media file onto a single tape.
+ Allow files to be excluded from the dump.  This will cause xfsdump to 
+ skip files which have the "no dump" file attribute set. See the
+ "Excluding individual files" section below for details on setting
+-this file attribute. Files with an extended attribute named
+-"SGI_XFSDUMP_SKIP_FILE" will also be skipped, however this method
+-is deprecated and xfsdump will stop checking for it in a future
+-version.
++this file attribute.
+ .TP 5
+ \f3\-f\f1 \f2dest\f1 [ \f3\-f\f1 \f2dest\f1 ... ]
+ Specifies a dump destination.
+-- 
+1.7.0.4
 
 _______________________________________________
 xfs mailing list
