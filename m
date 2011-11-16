@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAGI8uCx197718 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 12:08:56 -0600
-Date: Wed, 16 Nov 2011 12:09:12 -0600
+	pAGJ16di204383 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 13:01:07 -0600
+Date: Wed, 16 Nov 2011 13:01:20 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 3/5] xfs: do not require an ioend for new EOF calculation
-Message-ID: <20111116180912.GF29840@sgi.com>
+Subject: Re: [PATCH 2/5] xfs: use per-filesystem I/O completion workqueues
+Message-ID: <20111116190120.GG29840@sgi.com>
 References: <20111115201407.038216766@bombadil.infradead.org>
-	<20111115201426.862605739@bombadil.infradead.org>
+	<20111115201426.686729205@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111115201426.862605739@bombadil.infradead.org>
+In-Reply-To: <20111115201426.686729205@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,112 +26,89 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 15, 2011 at 03:14:10PM -0500, Christoph Hellwig wrote:
-> Replace xfs_ioend_new_eof with a new inline xfs_new_eof helper that
-> doesn't require and ioend, and is available also outside of xfs_aops.c.
+On Tue, Nov 15, 2011 at 03:14:09PM -0500, Christoph Hellwig wrote:
+> commit 77d7a0c "xfs: Non-blocking inode locking in IO completion" introduced
+> a trylocked and defer scheme in xfs_setfilesize to avoid deadlocks when on
+> XFS filesystem is used ontop of another using the loop device, and we
+> fsync in the loop filesystem.
 > 
-> Also make the code a bit more clear by using a normal if statement
-> instead of a slightly misleading MIN().
+> Now that we have the cheap enough concurrency managed workqueues, we can
+> create per-filesystem instead of global workqueues and remove this scheme
+> again, given that it has the potential of delaying size updates and is not
+> helpful once we start to log the inode size.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-This looks good to me.  Getting rid of that MIN is much clearer.
+...
+
+>  /*
+> @@ -168,10 +161,12 @@ xfs_finish_ioend(
+>  	struct xfs_ioend	*ioend)
+>  {
+>  	if (atomic_dec_and_test(&ioend->io_remaining)) {
+> +		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
+> +
+>  		if (ioend->io_type == IO_UNWRITTEN)
+> -			queue_work(xfsconvertd_workqueue, &ioend->io_work);
+> +			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
+>  		else if (xfs_ioend_is_append(ioend))
+
+I wonder if we could skip size updates due to the 'fast and loose'
+nature of xfs_ioend_is_append, and end up destroying the ioend below,
+without updating the file size.  It's not strictly related to your patch
+though.
+
+> -			queue_work(xfsdatad_workqueue, &ioend->io_work);
+> +			queue_work(mp->m_data_workqueue, &ioend->io_work);
+>  		else
+>  			xfs_destroy_ioend(ioend);
+>  	}
+
+...
+
+> Index: linux-2.6/fs/xfs/xfs_super.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_super.c	2011-11-10 16:50:40.771795378 +0100
+> +++ linux-2.6/fs/xfs/xfs_super.c	2011-11-15 09:17:13.763315819 +0100
+> @@ -769,6 +769,42 @@ xfs_setup_devices(
+>  	return 0;
+>  }
+>  
+> +STATIC int
+> +xfs_init_mount_workqueues(
+> +	struct xfs_mount	*mp)
+> +{
+> +	snprintf(mp->m_data_workqueue_name, XFS_WQ_NAME_LEN,
+> +		 "xfs-data/%s", mp->m_fsname);
+> +	mp->m_data_workqueue =
+> +		alloc_workqueue(mp->m_data_workqueue_name, WQ_MEM_RECLAIM, 1);
+> +	if (!mp->m_data_workqueue)
+> +		goto out;
+> +
+> +	snprintf(mp->m_unwritten_workqueue_name, XFS_WQ_NAME_LEN,
+> +		 "xfs-conv/%s", mp->m_fsname);
+> +	mp->m_unwritten_workqueue =
+> +		alloc_workqueue(mp->m_unwritten_workqueue_name,
+> +				WQ_MEM_RECLAIM, 1);
+
+Hrm... mp->m_fsname can be MAXNAMELEN (256 in xfs), and XFS_WQ_NAME_LEN
+you chose is 512.  As it stands there really isn't a problem here.
+
+And, it sounds like you are wanting to replace this once Tejun improves
+the interface...  maybe that was worth pointing out.
+
+> +	if (!mp->m_unwritten_workqueue)
+> +		goto out_destroy_data_iodone_queue;
+> +
+> +	return 0;
+> +
+> +out_destroy_data_iodone_queue:
+> +	destroy_workqueue(mp->m_data_workqueue);
+> +out:
+> +	return -ENOMEM;
+> +#undef XFS_WQ_NAME_LEN
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
-
-> ---
->  fs/xfs/xfs_aops.c  |   26 +++++---------------------
->  fs/xfs/xfs_inode.h |   14 ++++++++++++++
->  2 files changed, 19 insertions(+), 21 deletions(-)
-> 
-> Index: linux-2.6/fs/xfs/xfs_aops.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_aops.c	2011-11-08 08:11:44.891887054 +0100
-> +++ linux-2.6/fs/xfs/xfs_aops.c	2011-11-08 08:12:31.586400976 +0100
-> @@ -99,24 +99,6 @@ xfs_destroy_ioend(
->  }
->  
->  /*
-> - * If the end of the current ioend is beyond the current EOF,
-> - * return the new EOF value, otherwise zero.
-> - */
-> -STATIC xfs_fsize_t
-> -xfs_ioend_new_eof(
-> -	xfs_ioend_t		*ioend)
-> -{
-> -	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
-> -	xfs_fsize_t		isize;
-> -	xfs_fsize_t		bsize;
-> -
-> -	bsize = ioend->io_offset + ioend->io_size;
-> -	isize = MAX(ip->i_size, ip->i_new_size);
-> -	isize = MIN(isize, bsize);
-> -	return isize > ip->i_d.di_size ? isize : 0;
-> -}
-> -
-> -/*
->   * Fast and loose check if this write could update the on-disk inode size.
->   */
->  static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
-> @@ -140,7 +122,7 @@ xfs_setfilesize(
->  	xfs_fsize_t		isize;
->  
->  	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	isize = xfs_ioend_new_eof(ioend);
-> +	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
->  	if (isize) {
->  		trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
->  		ip->i_d.di_size = isize;
-> @@ -362,6 +344,8 @@ xfs_submit_ioend_bio(
->  	xfs_ioend_t		*ioend,
->  	struct bio		*bio)
->  {
-> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
-> +
->  	atomic_inc(&ioend->io_remaining);
->  	bio->bi_private = ioend;
->  	bio->bi_end_io = xfs_end_bio;
-> @@ -370,8 +354,8 @@ xfs_submit_ioend_bio(
->  	 * If the I/O is beyond EOF we mark the inode dirty immediately
->  	 * but don't update the inode size until I/O completion.
->  	 */
-> -	if (xfs_ioend_new_eof(ioend))
-> -		xfs_mark_inode_dirty(XFS_I(ioend->io_inode));
-> +	if (xfs_new_eof(ip, ioend->io_offset + ioend->io_size))
-> +		xfs_mark_inode_dirty(ip);
->  
->  	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE, bio);
->  }
-> Index: linux-2.6/fs/xfs/xfs_inode.h
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_inode.h	2011-11-08 08:02:50.000000000 +0100
-> +++ linux-2.6/fs/xfs/xfs_inode.h	2011-11-08 08:13:01.290386996 +0100
-> @@ -278,6 +278,20 @@ static inline struct inode *VFS_I(struct
->  }
->  
->  /*
-> + * If this I/O goes past the on-disk inode size update it unless it would
-> + * be past the current in-core or write in-progress inode size.
-> + */
-> +static inline xfs_fsize_t
-> +xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
-> +{
-> +	xfs_fsize_t i_size = max(ip->i_size, ip->i_new_size);
-> +
-> +	if (new_size > i_size)
-> +		new_size = i_size;
-> +	return new_size > ip->i_d.di_size ? new_size : 0;
-> +}
-> +
-> +/*
->   * i_flags helper functions
->   */
->  static inline void
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
