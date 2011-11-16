@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAGNFNdR234380 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 17:15:23 -0600
+	pAGNOYJK235634 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 17:24:34 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 751381D12F33
-	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 15:15:21 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B11E5256EB9
+	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 15:24:32 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	6BgETgrAdcFDAEPF for <xfs@oss.sgi.com>;
-	Wed, 16 Nov 2011 15:15:21 -0800 (PST)
-Date: Thu, 17 Nov 2011 10:15:17 +1100
+	ZDJ1WDqT2g00Qwth for <xfs@oss.sgi.com>;
+	Wed, 16 Nov 2011 15:24:32 -0800 (PST)
+Date: Thu, 17 Nov 2011 10:24:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] [PATCH] xfs: fix attr2 vs large data fork assert
-Message-ID: <20111116231517.GA7046@dastard>
+Subject: Re: [PATCH 2/5] xfs: use per-filesystem I/O completion workqueues
+Message-ID: <20111116232430.GB7046@dastard>
 References: <20111115201407.038216766@bombadil.infradead.org>
-	<20111115201426.498870090@bombadil.infradead.org>
+	<20111115201426.686729205@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111115201426.498870090@bombadil.infradead.org>
+In-Reply-To: <20111115201426.686729205@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,136 +33,80 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Nov 15, 2011 at 03:14:08PM -0500, Christoph Hellwig wrote:
-> With Dmitry fsstress updates I've seen very reproducible crashes in
-> xfs_attr_shortform_remove because xfs_attr_shortform_bytesfit claims that
-> the attributes would not fit inline into the inode after removing an
-> attribute.  It turns out that we were operating on an inode with lots
-> of delalloc extents, and thus an if_bytes values for the data fork that
-> is larger than biggest possible on-disk storage for it which utterly
-> confuses the code near the end of xfs_attr_shortform_bytesfit.
-
-We have a test that stresses allocated extents vs attributes in the
-xfs_fsr swapext test (227), but that does not take into account
-delalloc extents. It sounds like it would be relatively easy to
-write a regression test for this particular case - create a file
-with a bunch of attributes, then create a number of delalloc data
-extents, then remove the attributes to trigger the condition in
-xfs_attr_shortform_remove()....
-
-
-> Fix this by always allowing the current attribute fork, like we already
-> do for the attr1 format, given that delalloc conversion will take care
-> for moving either the data or attribute area out of line if it doesn't
-> fit at that point - or making the point moot by merging extents at this
-> point.
+On Tue, Nov 15, 2011 at 03:14:09PM -0500, Christoph Hellwig wrote:
+> commit 77d7a0c "xfs: Non-blocking inode locking in IO completion" introduced
+> a trylocked and defer scheme in xfs_setfilesize to avoid deadlocks when on
+> XFS filesystem is used ontop of another using the loop device, and we
+> fsync in the loop filesystem.
 > 
-> Also document the function better, and clean up some lose bits.
+> Now that we have the cheap enough concurrency managed workqueues, we can
+> create per-filesystem instead of global workqueues and remove this scheme
+> again, given that it has the potential of delaying size updates and is not
+> helpful once we start to log the inode size.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-While you are touching that function, can you fix all the whitespace
-damage as well? (lots of trailing whitespace). There's a couple of
-typos I noticed in your changes (below), but otherwise looks good.
+....
+
+>  
+> +STATIC int
+> +xfs_init_mount_workqueues(
+> +	struct xfs_mount	*mp)
+> +{
+> +	snprintf(mp->m_data_workqueue_name, XFS_WQ_NAME_LEN,
+> +		 "xfs-data/%s", mp->m_fsname);
+> +	mp->m_data_workqueue =
+> +		alloc_workqueue(mp->m_data_workqueue_name, WQ_MEM_RECLAIM, 1);
+> +	if (!mp->m_data_workqueue)
+> +		goto out;
+> +
+> +	snprintf(mp->m_unwritten_workqueue_name, XFS_WQ_NAME_LEN,
+> +		 "xfs-conv/%s", mp->m_fsname);
+> +	mp->m_unwritten_workqueue =
+> +		alloc_workqueue(mp->m_unwritten_workqueue_name,
+> +				WQ_MEM_RECLAIM, 1);
+> +	if (!mp->m_unwritten_workqueue)
+> +		goto out_destroy_data_iodone_queue;
+> +
+> +	return 0;
+> +
+> +out_destroy_data_iodone_queue:
+> +	destroy_workqueue(mp->m_data_workqueue);
+> +out:
+> +	return -ENOMEM;
+> +#undef XFS_WQ_NAME_LEN
+
+Don't need the undef here anymore as the #define is in the header
+file and not local to the function.
+
+> Index: linux-2.6/fs/xfs/xfs_mount.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_mount.h	2011-11-10 16:50:40.787796774 +0100
+> +++ linux-2.6/fs/xfs/xfs_mount.h	2011-11-15 09:15:25.053316473 +0100
+> @@ -211,6 +211,12 @@ typedef struct xfs_mount {
+>  	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
+>  	int64_t			m_low_space[XFS_LOWSP_MAX];
+>  						/* low free space thresholds */
+> +
+> +	struct workqueue_struct	*m_data_workqueue;
+> +	struct workqueue_struct	*m_unwritten_workqueue;
+> +#define XFS_WQ_NAME_LEN		512
+> +	char			m_data_workqueue_name[XFS_WQ_NAME_LEN];
+> +	char			m_unwritten_workqueue_name[XFS_WQ_NAME_LEN];
+>  } xfs_mount_t;
+
+Can't say I'm a great fan of this - making the workqueue code use
+kstrdup() would be a much better better solution, IMO, just like was
+done a while for the SLAB cache names to solve exactly the same
+problem....
+
+Regardless,
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: linux-2.6/fs/xfs/xfs_attr_leaf.c
-> ===================================================================
-> --- linux-2.6.orig/fs/xfs/xfs_attr_leaf.c	2011-11-04 13:46:59.481655134 +0100
-> +++ linux-2.6/fs/xfs/xfs_attr_leaf.c	2011-11-04 15:58:06.480155275 +0100
-> @@ -110,6 +110,7 @@ xfs_attr_namesp_match(int arg_flags, int
->  /*
->   * Query whether the requested number of additional bytes of extended
->   * attribute space will be able to fit inline.
-> + *
->   * Returns zero if not, else the di_forkoff fork offset to be used in the
->   * literal area for attribute data once the new bytes have been added.
->   *
-> @@ -136,11 +137,26 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
->  		return (offset >= minforkoff) ? minforkoff : 0;
->  	}
->  
-> -	if (!(mp->m_flags & XFS_MOUNT_ATTR2)) {
-> -		if (bytes <= XFS_IFORK_ASIZE(dp))
-> -			return dp->i_d.di_forkoff;
-> +	/*
-> +	 * If the requested numbers of bytes is smaller or equal to the
-> +	 * current attribute fork size we can always proceed.
-> +	 *
-> +	 * Note that if_bytes in the data fork might actually be larger than
-> +	 * the current data fork size is due to delalloc extents. In that
-> +	 * case either the extent count will go down when they are converted
-> +	 * to ral extents, or the delalloc conversion will take care of the
+Cheers,
 
-              real
-
-> +	 * literal area rebalancing.
-> +	 */
-> +	if (bytes <= XFS_IFORK_ASIZE(dp))
-> +		return dp->i_d.di_forkoff;
-> +
-> +	/*
-> +	 * For attr2 we can try to move the forkoff if there is space in the
-> +	 * literal area, but for the old format we are done if there is no
-> +	 * space in the fixes attribute fork.
-> +	 */
-> +	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
->  		return 0;
-> -	}
->  
->  	dsize = dp->i_df.if_bytes;
->  	
-> @@ -157,10 +173,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
->  		    xfs_default_attroffset(dp))
->  			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
->  		break;
-> -		
->  	case XFS_DINODE_FMT_BTREE:
->  		/*
-> -		 * If have data btree then keep forkoff if we have one,
-> +		 * If have a data btree then keep forkoff if we have one,
-
-	           If we have
-
->  		 * otherwise we are adding a new attr, so then we set 
->  		 * minforkoff to where the btree root can finish so we have 
->  		 * plenty of room for attrs
-> @@ -168,10 +183,9 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
->  		if (dp->i_d.di_forkoff) {
->  			if (offset < dp->i_d.di_forkoff) 
->  				return 0;
-> -			else 
-> -				return dp->i_d.di_forkoff;
-> -		} else
-> -			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
-> +			return dp->i_d.di_forkoff;
-> +		}
-> +		dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
->  		break;
->  	}
->  	
-> @@ -186,10 +200,10 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
->  	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
->  	maxforkoff = maxforkoff >> 3;	/* rounded down */
->  
-> -	if (offset >= minforkoff && offset < maxforkoff)
-> -		return offset;
->  	if (offset >= maxforkoff)
->  		return maxforkoff;
-> +	if (offset >= minforkoff)
-> +		return offset;
->  	return 0;
->  }
->  
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
