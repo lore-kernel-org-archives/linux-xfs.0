@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAG1UTEC102950 for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 19:30:30 -0600
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id F2C768D0B29
-	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 17:30:28 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id Pt0T6DSFhY7Gmg9D for
-	<xfs@oss.sgi.com>; Tue, 15 Nov 2011 17:30:28 -0800 (PST)
-Message-ID: <4EC31238.3080102@cn.fujitsu.com>
-Date: Wed, 16 Nov 2011 09:30:32 +0800
-From: WuBo <wu.bo@cn.fujitsu.com>
+	pAG7wbUJ148259 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 01:58:37 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 861362526F9
+	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 23:58:32 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	wpJljZ0wcXPhGIXZ for <xfs@oss.sgi.com>;
+	Tue, 15 Nov 2011 23:58:32 -0800 (PST)
+Date: Wed, 16 Nov 2011 02:58:29 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] repair: validate acl count before reading it
+Message-ID: <20111116075829.GA15620@infradead.org>
+References: <20111115080714.GA24931@infradead.org>
+	<20111116002323.GW5534@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfstests 265: add a prealloc and reserve test
-References: <4EB20505.7070005@cn.fujitsu.com> <4EB205CC.6010509@cn.fujitsu.com>
-	<20111115182113.GD29840@sgi.com>
-	<20111115190821.GA15331@infradead.org>
-In-Reply-To: <20111115190821.GA15331@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20111116002323.GW5534@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,40 +31,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, Ben Myers <bpm@sgi.com>, Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 11/16/2011 03:08 AM, Christoph Hellwig wrote:
-> On Tue, Nov 15, 2011 at 12:21:13PM -0600, Ben Myers wrote:
->> Hi Wu Bo,
->>
->> On Thu, Nov 03, 2011 at 11:09:00AM +0800, WuBo wrote:
->>> This test is for preallocation test. If the disk is full, just with a prealloc
->>> file has some free space that prealloc early. We need to check whether the write
->>> to the free space is success or not.
->>>
->>> Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
->>
->> This test is failing for me because I don't have fallocate installed.  I
->> suggest the test could to be changed to check for binaries it uses,
->> possibly the version of those binaries, and then not run unless the
->> right ones are installed.  But the best I can do right now is make a
->> note of it.
+On Wed, Nov 16, 2011 at 11:23:23AM +1100, Dave Chinner wrote:
+> >  	count = be32_to_cpu(dacl->acl_cnt);
+> > +	if (count > XFS_ACL_MAX_ENTRIES) {
+> > +		do_warn(_("to larget ACL, size %d"), count);
 > 
-> It might be even better to just use the xfs_io falloc command as we
-> generally expect an uptodate xfs_io for use with xfstests.
+>                            "Too many ACL entries, count %d\n" 
 
-Got it.
+Ok.
 
-thanks,
-wubo
-
+> > +		*aclp = NULL;
+> > +		return EINVAL;
+> > +	}
+> > +
+> > +
+> >  	end = &dacl->acl_entry[0] + count;
+> >  	acl = malloc((int)((char *)end - (char *)dacl));
+> > -	if (!acl)
+> > -		return NULL;
+> > +	if (!acl) {
+> > +		do_warn(_("cannot malloc enough for ACL attribute\n"));
+> > +		do_warn(_("SKIPPING this ACL\n"));
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-fsdevel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> Should you put that same "Skipping" message for all the error cases?
+
+For the ENOMEM case we indeed skip the ACL.  For other errors we will
+just remove this attribute.  Given how enomem really should not just
+happen for that small ACL I wonder how special casing it makes any
+sense - but that code has been there for a while.
 
 _______________________________________________
 xfs mailing list
