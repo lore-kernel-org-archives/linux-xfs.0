@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAG7wbUJ148259 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 01:58:37 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 861362526F9
-	for <xfs@oss.sgi.com>; Tue, 15 Nov 2011 23:58:32 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wpJljZ0wcXPhGIXZ for <xfs@oss.sgi.com>;
-	Tue, 15 Nov 2011 23:58:32 -0800 (PST)
-Date: Wed, 16 Nov 2011 02:58:29 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] repair: validate acl count before reading it
-Message-ID: <20111116075829.GA15620@infradead.org>
-References: <20111115080714.GA24931@infradead.org>
-	<20111116002323.GW5534@dastard>
+	pAGDo0RI179485 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 07:50:01 -0600
+Received: from tac.ki.iif.hu (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 07D6F1D0FF0D
+	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 05:49:32 -0800 (PST)
+Received: from tac.ki.iif.hu (tac.ki.iif.hu [193.6.222.43]) by cuda.sgi.com
+	with ESMTP id rbnzFXUONL3Y48DS for <xfs@oss.sgi.com>;
+	Wed, 16 Nov 2011 05:49:32 -0800 (PST)
+From: Ferenc Wagner <wferi@niif.hu>
+Subject: Re: [PATCH] PM / Freezer: Freeze filesystems while freezing processes
+	(v2)
+References: <4E1C70AD.1010101@u-club.de> <201109260010.50649.rjw@sisk.pl>
+	<4EA2DDD3.8080306@u-club.de> <201110222335.29573.rjw@sisk.pl>
+Date: Wed, 16 Nov 2011 14:49:23 +0100
+In-Reply-To: <201110222335.29573.rjw@sisk.pl> (Rafael J. Wysocki's message of
+	"Sat, 22 Oct 2011 23:35:29 +0200")
+Message-ID: <874ny4jhy4.fsf@tac.ki.iif.hu>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111116002323.GW5534@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,37 +30,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: "Rafael J. Wysocki" <rjw@sisk.pl>
+Cc: Christoph <cr2005@u-club.de>, Theodore Ts'o <tytso@mit.edu>, Linux PM list <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Pavel Machek <pavel@ucw.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Wed, Nov 16, 2011 at 11:23:23AM +1100, Dave Chinner wrote:
-> >  	count = be32_to_cpu(dacl->acl_cnt);
-> > +	if (count > XFS_ACL_MAX_ENTRIES) {
-> > +		do_warn(_("to larget ACL, size %d"), count);
-> 
->                            "Too many ACL entries, count %d\n" 
+"Rafael J. Wysocki" <rjw@sisk.pl> writes:
 
-Ok.
+> On Saturday, October 22, 2011, Christoph wrote:
+>
+>>> PM / Freezer: Freeze filesystems while freezing processes (v2)
+>>> 
+>>> On Sunday, August 07, 2011, Dave Chinner wrote:
+>>>
+>>>> On Sat, Aug 06, 2011 at 11:17:18PM +0200, Rafael J. Wysocki wrote:
+>>>>
+>>>>> From: Rafael J. Wysocki <rjw@sisk.pl>
+>>>>> 
+>>>>> Freeze all filesystems during the freezing of tasks by calling 
+>>>>> freeze_bdev() for each of them and thaw them during the thawing of
+>>>>> tasks with the help of thaw_bdev().
+>>>>> 
+>>>>> This is needed by hibernation, because some filesystems (e.g. XFS) 
+>>>>> deadlock with the preallocation of memory used by it if the memory 
+>>>>> pressure caused by it is too heavy.
+>>>
+>>> Below is an alternative fix, the changelog pretty much explains the
+>>> idea.
+>>> 
+>>> I've tested it on Toshiba Portege R500, but I don't have an XFS
+>>> partition to verify that it really helps, so I'd appreciate it if
+>>> someone able to reproduce the original issue could test it and report
+>>> back.
+>> 
+>> Well, the kernel bugtracker is still down and I just like to post my
+>> experience with kernel (x64) v3.1-rc8/9 + patches. My machine is a
+>> MacBookPro, doomed with 4GB RAM running debian.
+>> 
+>> Bug #1
+>> 
+>> on the way to hibernate, machine hangs on
+>> 
+>> "PM: Preallocating image memory..."
+>> 
+>> this patch worked for me now for weeks:
+>> "[PATCH] PM / Freezer: Freeze filesystems while freezing processes (v2)"
+>> https://lkml.org/lkml/2011/9/24/77
+>
+> This patch is going to be merged into 3.2.
 
-> > +		*aclp = NULL;
-> > +		return EINVAL;
-> > +	}
-> > +
-> > +
-> >  	end = &dacl->acl_entry[0] + count;
-> >  	acl = malloc((int)((char *)end - (char *)dacl));
-> > -	if (!acl)
-> > -		return NULL;
-> > +	if (!acl) {
-> > +		do_warn(_("cannot malloc enough for ACL attribute\n"));
-> > +		do_warn(_("SKIPPING this ACL\n"));
-> 
-> Should you put that same "Skipping" message for all the error cases?
+Hi,
 
-For the ENOMEM case we indeed skip the ACL.  For other errors we will
-just remove this attribute.  Given how enomem really should not just
-happen for that small ACL I wonder how special casing it makes any
-sense - but that code has been there for a while.
+I was the original reporter of the Bugzilla issue, just didn't know
+about this thread until recently.  Anyway, I'm running 3.2-rc1 now,
+which contains the alternative fix, and I can confirm that it indeed
+works: hibernation does not deadlock on my XFS rooted system anymore
+during memory preallocation.  Thanks everybody for his or her work on
+the issue!
+
+To add something still, preallocation now ends with a couple of seconds
+of heavy disk activity, but with several seconds of total inactivity
+beforehand.  Is this warranted by some CPU intensive task at that stage?
+-- 
+Thanks,
+Feri.
 
 _______________________________________________
 xfs mailing list
