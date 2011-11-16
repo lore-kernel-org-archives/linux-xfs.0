@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAGDo0RI179485 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 07:50:01 -0600
-Received: from tac.ki.iif.hu (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07D6F1D0FF0D
-	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 05:49:32 -0800 (PST)
-Received: from tac.ki.iif.hu (tac.ki.iif.hu [193.6.222.43]) by cuda.sgi.com
-	with ESMTP id rbnzFXUONL3Y48DS for <xfs@oss.sgi.com>;
-	Wed, 16 Nov 2011 05:49:32 -0800 (PST)
-From: Ferenc Wagner <wferi@niif.hu>
-Subject: Re: [PATCH] PM / Freezer: Freeze filesystems while freezing processes
-	(v2)
-References: <4E1C70AD.1010101@u-club.de> <201109260010.50649.rjw@sisk.pl>
-	<4EA2DDD3.8080306@u-club.de> <201110222335.29573.rjw@sisk.pl>
-Date: Wed, 16 Nov 2011 14:49:23 +0100
-In-Reply-To: <201110222335.29573.rjw@sisk.pl> (Rafael J. Wysocki's message of
-	"Sat, 22 Oct 2011 23:35:29 +0200")
-Message-ID: <874ny4jhy4.fsf@tac.ki.iif.hu>
+	pAGI8uCx197718 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 12:08:56 -0600
+Date: Wed, 16 Nov 2011 12:09:12 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 3/5] xfs: do not require an ioend for new EOF calculation
+Message-ID: <20111116180912.GF29840@sgi.com>
+References: <20111115201407.038216766@bombadil.infradead.org>
+	<20111115201426.862605739@bombadil.infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111115201426.862605739@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,68 +23,115 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Rafael J. Wysocki" <rjw@sisk.pl>
-Cc: Christoph <cr2005@u-club.de>, Theodore Ts'o <tytso@mit.edu>, Linux PM list <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Nigel Cunningham <nigel@tuxonice.net>, Pavel Machek <pavel@ucw.cz>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-"Rafael J. Wysocki" <rjw@sisk.pl> writes:
+On Tue, Nov 15, 2011 at 03:14:10PM -0500, Christoph Hellwig wrote:
+> Replace xfs_ioend_new_eof with a new inline xfs_new_eof helper that
+> doesn't require and ioend, and is available also outside of xfs_aops.c.
+> 
+> Also make the code a bit more clear by using a normal if statement
+> instead of a slightly misleading MIN().
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> On Saturday, October 22, 2011, Christoph wrote:
->
->>> PM / Freezer: Freeze filesystems while freezing processes (v2)
->>> 
->>> On Sunday, August 07, 2011, Dave Chinner wrote:
->>>
->>>> On Sat, Aug 06, 2011 at 11:17:18PM +0200, Rafael J. Wysocki wrote:
->>>>
->>>>> From: Rafael J. Wysocki <rjw@sisk.pl>
->>>>> 
->>>>> Freeze all filesystems during the freezing of tasks by calling 
->>>>> freeze_bdev() for each of them and thaw them during the thawing of
->>>>> tasks with the help of thaw_bdev().
->>>>> 
->>>>> This is needed by hibernation, because some filesystems (e.g. XFS) 
->>>>> deadlock with the preallocation of memory used by it if the memory 
->>>>> pressure caused by it is too heavy.
->>>
->>> Below is an alternative fix, the changelog pretty much explains the
->>> idea.
->>> 
->>> I've tested it on Toshiba Portege R500, but I don't have an XFS
->>> partition to verify that it really helps, so I'd appreciate it if
->>> someone able to reproduce the original issue could test it and report
->>> back.
->> 
->> Well, the kernel bugtracker is still down and I just like to post my
->> experience with kernel (x64) v3.1-rc8/9 + patches. My machine is a
->> MacBookPro, doomed with 4GB RAM running debian.
->> 
->> Bug #1
->> 
->> on the way to hibernate, machine hangs on
->> 
->> "PM: Preallocating image memory..."
->> 
->> this patch worked for me now for weeks:
->> "[PATCH] PM / Freezer: Freeze filesystems while freezing processes (v2)"
->> https://lkml.org/lkml/2011/9/24/77
->
-> This patch is going to be merged into 3.2.
+This looks good to me.  Getting rid of that MIN is much clearer.
 
-Hi,
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-I was the original reporter of the Bugzilla issue, just didn't know
-about this thread until recently.  Anyway, I'm running 3.2-rc1 now,
-which contains the alternative fix, and I can confirm that it indeed
-works: hibernation does not deadlock on my XFS rooted system anymore
-during memory preallocation.  Thanks everybody for his or her work on
-the issue!
-
-To add something still, preallocation now ends with a couple of seconds
-of heavy disk activity, but with several seconds of total inactivity
-beforehand.  Is this warranted by some CPU intensive task at that stage?
--- 
-Thanks,
-Feri.
+> ---
+>  fs/xfs/xfs_aops.c  |   26 +++++---------------------
+>  fs/xfs/xfs_inode.h |   14 ++++++++++++++
+>  2 files changed, 19 insertions(+), 21 deletions(-)
+> 
+> Index: linux-2.6/fs/xfs/xfs_aops.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_aops.c	2011-11-08 08:11:44.891887054 +0100
+> +++ linux-2.6/fs/xfs/xfs_aops.c	2011-11-08 08:12:31.586400976 +0100
+> @@ -99,24 +99,6 @@ xfs_destroy_ioend(
+>  }
+>  
+>  /*
+> - * If the end of the current ioend is beyond the current EOF,
+> - * return the new EOF value, otherwise zero.
+> - */
+> -STATIC xfs_fsize_t
+> -xfs_ioend_new_eof(
+> -	xfs_ioend_t		*ioend)
+> -{
+> -	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
+> -	xfs_fsize_t		isize;
+> -	xfs_fsize_t		bsize;
+> -
+> -	bsize = ioend->io_offset + ioend->io_size;
+> -	isize = MAX(ip->i_size, ip->i_new_size);
+> -	isize = MIN(isize, bsize);
+> -	return isize > ip->i_d.di_size ? isize : 0;
+> -}
+> -
+> -/*
+>   * Fast and loose check if this write could update the on-disk inode size.
+>   */
+>  static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
+> @@ -140,7 +122,7 @@ xfs_setfilesize(
+>  	xfs_fsize_t		isize;
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	isize = xfs_ioend_new_eof(ioend);
+> +	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
+>  	if (isize) {
+>  		trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
+>  		ip->i_d.di_size = isize;
+> @@ -362,6 +344,8 @@ xfs_submit_ioend_bio(
+>  	xfs_ioend_t		*ioend,
+>  	struct bio		*bio)
+>  {
+> +	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+> +
+>  	atomic_inc(&ioend->io_remaining);
+>  	bio->bi_private = ioend;
+>  	bio->bi_end_io = xfs_end_bio;
+> @@ -370,8 +354,8 @@ xfs_submit_ioend_bio(
+>  	 * If the I/O is beyond EOF we mark the inode dirty immediately
+>  	 * but don't update the inode size until I/O completion.
+>  	 */
+> -	if (xfs_ioend_new_eof(ioend))
+> -		xfs_mark_inode_dirty(XFS_I(ioend->io_inode));
+> +	if (xfs_new_eof(ip, ioend->io_offset + ioend->io_size))
+> +		xfs_mark_inode_dirty(ip);
+>  
+>  	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE, bio);
+>  }
+> Index: linux-2.6/fs/xfs/xfs_inode.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_inode.h	2011-11-08 08:02:50.000000000 +0100
+> +++ linux-2.6/fs/xfs/xfs_inode.h	2011-11-08 08:13:01.290386996 +0100
+> @@ -278,6 +278,20 @@ static inline struct inode *VFS_I(struct
+>  }
+>  
+>  /*
+> + * If this I/O goes past the on-disk inode size update it unless it would
+> + * be past the current in-core or write in-progress inode size.
+> + */
+> +static inline xfs_fsize_t
+> +xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
+> +{
+> +	xfs_fsize_t i_size = max(ip->i_size, ip->i_new_size);
+> +
+> +	if (new_size > i_size)
+> +		new_size = i_size;
+> +	return new_size > ip->i_d.di_size ? new_size : 0;
+> +}
+> +
+> +/*
+>   * i_flags helper functions
+>   */
+>  static inline void
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
