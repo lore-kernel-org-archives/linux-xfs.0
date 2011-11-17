@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAHKccVG071677 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 14:38:38 -0600
-Date: Thu, 17 Nov 2011 14:38:55 -0600
+	pAHKoHN9071958 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 14:50:17 -0600
+Date: Thu, 17 Nov 2011 14:50:33 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [patch] xfsprogs - workaround debian build daemon dependency
-	resolution
-Message-ID: <20111117203855.GJ29840@sgi.com>
-References: <CAAp5ZgPntg0f+edJQFU8n0npBT1+46NqwwiUEtLXZPJoLwVL1g@mail.gmail.com>
-	<1321558138.3015.4.camel@doink> <1321558944.3015.6.camel@doink>
+Subject: Re: [PATCH] change fallocate to xfs_io falloc
+Message-ID: <20111117205033.GK29840@sgi.com>
+References: <4EB20505.7070005@cn.fujitsu.com> <4EC4989D.9080107@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1321558944.3015.6.camel@doink>
+In-Reply-To: <4EC4989D.9080107@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,51 +22,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@debian.org>
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>
+To: WuBo <wu.bo@cn.fujitsu.com>
+Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi Nathan,
+Hey Wu Bo,
 
-On Thu, Nov 17, 2011 at 01:42:24PM -0600, Alex Elder wrote:
-> On Thu, 2011-11-17 at 13:28 -0600, Alex Elder wrote:
-> > On Tue, 2011-11-15 at 20:39 +1100, Nathan Scott wrote:
-> > > Workaround the Debian buildd dependency handling for libreadline5 library
-> > > handling
-> > > 
-> > > Evidently the buildd daemons process depenencies differently to local
-> > > builds, and
-> > > expect the first of optional dependencies to be resolved.  Flip the
-> > > ordering to match
-> > > this dependency.
-> > > 
-> > > Signed-off-by: Nathan Scott <nathans@debian.org>
-> > 
-> > Looks fine to me.
-> > 
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
-> > 
+On Thu, Nov 17, 2011 at 01:16:13PM +0800, WuBo wrote:
+> Thanks to Ben for pointing it that the fallocate maybe uninstall 
+> without checking it, and change fallocate to xfs_io as Christoph
+> suggested.
 > 
-> Actually, it *looked* fine superficially, but it's crap.
+> Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
 
-Is this what you're after?
+Nice!  It works great for me.  ;)
 
-diff --git a/debian/control b/debian/control
-index f813a43..ca517ad 100644
---- a/debian/control
-+++ b/debian/control
-@@ -3,7 +3,7 @@ Section: admin
- Priority: optional
- Maintainer: XFS Development Team <xfs@oss.sgi.com>
- Uploaders: Nathan Scott <nathans@debian.org>, Anibal Monsalve Salazar <anibal@debian.org>
--Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline5-dev | libreadline-gplv2-dev, libblkid-dev (>= 2.17)
-+Build-Depends: uuid-dev, autoconf, debhelper (>= 5), gettext, libtool, libreadline-gplv2-dev | libreadline5-dev, libblkid-dev (>= 2.17)
- Standards-Version: 3.9.1
- Homepage: http://oss.sgi.com/projects/xfs/
-
-
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 Thanks,
 	Ben
+
+> ---
+>  274 |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
+> 
+> diff --git a/274 b/274
+> index b658004..bcf5a11 100755
+> --- a/274
+> +++ b/274
+> @@ -46,6 +46,7 @@ _cleanup()
+>  _supported_fs generic
+>  _supported_os IRIX Linux
+>  _require_scratch
+> +_require_xfs_io_falloc
+>  
+>  echo "------------------------------"
+>  echo "preallocation test"
+> @@ -67,7 +68,7 @@ then
+>  	exit
+>  fi
+>  
+> -fallocate -n -o 4K -l 1M test >/dev/null 2>&1
+> +$XFS_IO_PROG -F -f -c 'falloc 4096 1m' test >/dev/null
+>  if [ $? -ne 0 ]
+>  then
+>  	echo "fallocate file err"
+> -- 
+> 1.7.3.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
