@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAH4Pqci004015 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 22:25:53 -0600
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 900492587C3
-	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 20:25:50 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	AqUxStdMGBSXNKiO for <xfs@oss.sgi.com>;
-	Wed, 16 Nov 2011 20:25:50 -0800 (PST)
-Date: Thu, 17 Nov 2011 15:25:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] repair: avoid ABBA deadlocks on prefetched buffers
-Message-ID: <20111117042543.GF7046@dastard>
-References: <20111115210953.GA6670@infradead.org>
+	pAH5G751008268 for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 23:16:07 -0600
+Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 51030154D26F
+	for <xfs@oss.sgi.com>; Wed, 16 Nov 2011 21:16:04 -0800 (PST)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id 267qcEXvyraMIHte for
+	<xfs@oss.sgi.com>; Wed, 16 Nov 2011 21:16:04 -0800 (PST)
+Message-ID: <4EC4989D.9080107@cn.fujitsu.com>
+Date: Thu, 17 Nov 2011 13:16:13 +0800
+From: WuBo <wu.bo@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111115210953.GA6670@infradead.org>
+Subject: [PATCH] change fallocate to xfs_io falloc
+References: <4EB20505.7070005@cn.fujitsu.com>
+In-Reply-To: <4EB20505.7070005@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +27,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>
 
-On Tue, Nov 15, 2011 at 04:09:53PM -0500, Christoph Hellwig wrote:
-> Both the prefetch threads and actual repair processing threads can have
-> multiple buffers at a time locked, but they do no use a common locker
-> order, which can lead to ABBA deadlocks while trying to lock the buffers.
-> 
-> Switch the prefetch code to do a trylock and skip buffers that have
-> already been locked to avoid this deadlock.
-> 
-> Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Thanks to Ben for pointing it that the fallocate maybe uninstall 
+without checking it, and change fallocate to xfs_io as Christoph
+suggested.
 
-Looks sane to me.
+Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
+---
+ 274 |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+diff --git a/274 b/274
+index b658004..bcf5a11 100755
+--- a/274
++++ b/274
+@@ -46,6 +46,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os IRIX Linux
+ _require_scratch
++_require_xfs_io_falloc
+ 
+ echo "------------------------------"
+ echo "preallocation test"
+@@ -67,7 +68,7 @@ then
+ 	exit
+ fi
+ 
+-fallocate -n -o 4K -l 1M test >/dev/null 2>&1
++$XFS_IO_PROG -F -f -c 'falloc 4096 1m' test >/dev/null
+ if [ $? -ne 0 ]
+ then
+ 	echo "fallocate file err"
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.3.1
 
 _______________________________________________
 xfs mailing list
