@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAH7e57D024786 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 01:40:05 -0600
-Date: Thu, 17 Nov 2011 02:40:03 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/5] xfs: use per-filesystem I/O completion workqueues
-Message-ID: <20111117074003.GC3733@infradead.org>
-References: <20111115201407.038216766@bombadil.infradead.org>
-	<20111115201426.686729205@bombadil.infradead.org>
-	<20111116190120.GG29840@sgi.com>
+	pAHJT2uo069242 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 13:29:02 -0600
+Message-ID: <1321558138.3015.4.camel@doink>
+Subject: Re: [patch] xfsprogs - workaround debian build daemon dependency
+	resolution
+From: Alex Elder <aelder@sgi.com>
+Date: Thu, 17 Nov 2011 13:28:58 -0600
+In-Reply-To: <CAAp5ZgPntg0f+edJQFU8n0npBT1+46NqwwiUEtLXZPJoLwVL1g@mail.gmail.com>
+References: <CAAp5ZgPntg0f+edJQFU8n0npBT1+46NqwwiUEtLXZPJoLwVL1g@mail.gmail.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111116190120.GG29840@sgi.com>
+Reply-To: aelder@sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,47 +23,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Nathan Scott <nathans@debian.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Nov 16, 2011 at 01:01:20PM -0600, Ben Myers wrote:
-> On Tue, Nov 15, 2011 at 03:14:09PM -0500, Christoph Hellwig wrote:
-> > commit 77d7a0c "xfs: Non-blocking inode locking in IO completion" introduced
-> > a trylocked and defer scheme in xfs_setfilesize to avoid deadlocks when on
-> > XFS filesystem is used ontop of another using the loop device, and we
-> > fsync in the loop filesystem.
-> > 
-> > Now that we have the cheap enough concurrency managed workqueues, we can
-> > create per-filesystem instead of global workqueues and remove this scheme
-> > again, given that it has the potential of delaying size updates and is not
-> > helpful once we start to log the inode size.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, 2011-11-15 at 20:39 +1100, Nathan Scott wrote:
+> Workaround the Debian buildd dependency handling for libreadline5 library
+> handling
 > 
-> ...
+> Evidently the buildd daemons process depenencies differently to local
+> builds, and
+> expect the first of optional dependencies to be resolved.  Flip the
+> ordering to match
+> this dependency.
 > 
-> >  /*
-> > @@ -168,10 +161,12 @@ xfs_finish_ioend(
-> >  	struct xfs_ioend	*ioend)
-> >  {
-> >  	if (atomic_dec_and_test(&ioend->io_remaining)) {
-> > +		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-> > +
-> >  		if (ioend->io_type == IO_UNWRITTEN)
-> > -			queue_work(xfsconvertd_workqueue, &ioend->io_work);
-> > +			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
-> >  		else if (xfs_ioend_is_append(ioend))
-> 
-> I wonder if we could skip size updates due to the 'fast and loose'
-> nature of xfs_ioend_is_append, and end up destroying the ioend below,
-> without updating the file size.  It's not strictly related to your patch
-> though.
+> Signed-off-by: Nathan Scott <nathans@debian.org>
 
-No - xfs_ioend_is_append check that the offset is beyond the on-disk
-inode size.  The loose part is that we don't bother with the in-core
-i_size and i_new_size which could change due to I/O errors.  di_size
-on the other hand will only go downwards during truncate, and we make
-sure all outstanding buffered I/Os have finished first.
+Looks fine to me.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
