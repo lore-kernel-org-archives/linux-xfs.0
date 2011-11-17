@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAHKoHN9071958 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 14:50:17 -0600
-Date: Thu, 17 Nov 2011 14:50:33 -0600
+	pAHNVNBt076877 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 17:31:23 -0600
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 4485D8F8039
+	for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 15:31:20 -0800 (PST)
+Date: Thu, 17 Nov 2011 17:31:39 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] change fallocate to xfs_io falloc
-Message-ID: <20111117205033.GK29840@sgi.com>
-References: <4EB20505.7070005@cn.fujitsu.com> <4EC4989D.9080107@cn.fujitsu.com>
+Subject: [ANNOUNCE] xfsprogs v3.1.7
+Message-ID: <20111117233139.GL29840@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4EC4989D.9080107@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,57 +24,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: WuBo <wu.bo@cn.fujitsu.com>
-Cc: linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hey Wu Bo,
+Version 3.1.7 of xfsprogs has been released.
 
-On Thu, Nov 17, 2011 at 01:16:13PM +0800, WuBo wrote:
-> Thanks to Ben for pointing it that the fallocate maybe uninstall 
-> without checking it, and change fallocate to xfs_io as Christoph
-> suggested.
-> 
-> Signed-off-by: Wu Bo <Wu.Bo@cn.fujitsu.com>
+The source code can be accessed via git using this URL:
 
-Nice!  It works great for me.  ;)
+    git://oss.sgi.com/xfs/cmds/xfsprogs.git
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+A gzipped-tar archive of the source code is available here:
 
-Thanks,
-	Ben
+    ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsprogs-3.1.7.tar.gz
 
-> ---
->  274 |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/274 b/274
-> index b658004..bcf5a11 100755
-> --- a/274
-> +++ b/274
-> @@ -46,6 +46,7 @@ _cleanup()
->  _supported_fs generic
->  _supported_os IRIX Linux
->  _require_scratch
-> +_require_xfs_io_falloc
->  
->  echo "------------------------------"
->  echo "preallocation test"
-> @@ -67,7 +68,7 @@ then
->  	exit
->  fi
->  
-> -fallocate -n -o 4K -l 1M test >/dev/null 2>&1
-> +$XFS_IO_PROG -F -f -c 'falloc 4096 1m' test >/dev/null
->  if [ $? -ne 0 ]
->  then
->  	echo "fallocate file err"
-> -- 
-> 1.7.3.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+The development tree for this code (not available at
+the moment) is normally published here as well:
+
+    git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+Below is a summary (from the doc/CHANGES file) of changes
+since release 3.1.6:
+
+xfsprogs-3.1.7 (16 November 2011)
+	- Pull in fix for debian/control
+	- Polish translation update, thanks to Jakub Bogusz
+	- Fix xfs_repair link count on lost+found, thanks to Carlos Maiolino
+	- Fix various incorrect printf formats
 
 _______________________________________________
 xfs mailing list
