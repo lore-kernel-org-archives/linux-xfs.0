@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAI8iHqK111398 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 02:44:17 -0600
-Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E8C58120A78A
-	for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 00:44:13 -0800 (PST)
-Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id M8IGI0KT4qiAsvfZ
-	for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 00:44:13 -0800 (PST)
-Received: by bkaq10 with SMTP id q10so3413008bka.26
-	for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 00:44:12 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: [PATCH] repair: avoid ABBA deadlocks on prefetched buffers
-Date: Fri, 18 Nov 2011 09:44:09 +0100
-References: <20111115210953.GA6670@infradead.org>
-In-Reply-To: <20111115210953.GA6670@infradead.org>
+	pAI8g1hT111038 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 02:42:02 -0600
+Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 02549260486
+	for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 00:41:59 -0800 (PST)
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id GFP3Cnlzk4ukWjD1 for
+	<xfs@oss.sgi.com>; Fri, 18 Nov 2011 00:41:59 -0800 (PST)
+Message-ID: <4EC61AC3.6010806@cn.fujitsu.com>
+Date: Fri, 18 Nov 2011 16:43:47 +0800
+From: Li Zefan <lizf@cn.fujitsu.com>
 MIME-Version: 1.0
-Message-Id: <201111180944.10048.arekm@maven.pl>
+Subject: [PATCH] 254: disable space cache
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,98 +21,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-T24gVHVlc2RheSAxNSBvZiBOb3ZlbWJlciAyMDExLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToK
-PiBCb3RoIHRoZSBwcmVmZXRjaCB0aHJlYWRzIGFuZCBhY3R1YWwgcmVwYWlyIHByb2Nlc3Npbmcg
-dGhyZWFkcyBjYW4gaGF2ZQo+IG11bHRpcGxlIGJ1ZmZlcnMgYXQgYSB0aW1lIGxvY2tlZCwgYnV0
-IHRoZXkgZG8gbm8gdXNlIGEgY29tbW9uIGxvY2tlcgo+IG9yZGVyLCB3aGljaCBjYW4gbGVhZCB0
-byBBQkJBIGRlYWRsb2NrcyB3aGlsZSB0cnlpbmcgdG8gbG9jayB0aGUgYnVmZmVycy4KClRoZXJl
-IGlzIHN0aWxsIHNvbWUgaXNzdWUgd2l0aCBkZWFkbG9ja2luZy4KClRoZSBsYXN0IHByaW50ZWQg
-bWVzc2FnZXM6CmLFgsSZZG5hIGxpY3piYSBtYWdpY3puYSAweDQxNDI1NDQzIHcgYmxva3UgaW5v
-YnQgMi8xNDM4MDk5CmLFgsSZZG5hIGxpY3piYSBtYWdpY3puYSAweDQxNDI1NDQzIHcgYmxva3Ug
-aW5vYnQgMi8xNDM4MTk2CmLFgsSZZG5hIGxpY3piYSBtYWdpY3puYSAweDQxNDI1NDQzIHcgYmxv
-a3UgaW5vYnQgMi8xNDM4NzMyCihpbnZhbGlkIG1hZ2ljIG51bWJlciAuLi4gaW4gYmxvY2sgaW5v
-YnQgLi4uKQoKCiMgZ2RiIC4veGZzX3JlcGFpcl90Y21hbGxvYyBgcGlkb2YgeGZzX3JlcGFpcl90
-Y21hbGxvY2AKR05VIGdkYiAoR0RCKSA3LjMuMS0xIChQTEQgTGludXgpCkNvcHlyaWdodCAoQykg
-MjAxMSBGcmVlIFNvZnR3YXJlIEZvdW5kYXRpb24sIEluYy4KTGljZW5zZSBHUEx2Mys6IEdOVSBH
-UEwgdmVyc2lvbiAzIG9yIGxhdGVyIDxodHRwOi8vZ251Lm9yZy9saWNlbnNlcy9ncGwuaHRtbD4K
-VGhpcyBpcyBmcmVlIHNvZnR3YXJlOiB5b3UgYXJlIGZyZWUgdG8gY2hhbmdlIGFuZCByZWRpc3Ry
-aWJ1dGUgaXQuClRoZXJlIGlzIE5PIFdBUlJBTlRZLCB0byB0aGUgZXh0ZW50IHBlcm1pdHRlZCBi
-eSBsYXcuICBUeXBlICJzaG93IGNvcHlpbmciCmFuZCAic2hvdyB3YXJyYW50eSIgZm9yIGRldGFp
-bHMuClRoaXMgR0RCIHdhcyBjb25maWd1cmVkIGFzICJ4ODZfNjQtcGxkLWxpbnV4Ii4KRm9yIGJ1
-ZyByZXBvcnRpbmcgaW5zdHJ1Y3Rpb25zLCBwbGVhc2Ugc2VlOgo8aHR0cDovL3d3dy5nbnUub3Jn
-L3NvZnR3YXJlL2dkYi9idWdzLz4uLi4KUmVhZGluZyBzeW1ib2xzIGZyb20gL3Jvb3QveGZzX3Jl
-cGFpcl90Y21hbGxvYy4uLmRvbmUuCkF0dGFjaGluZyB0byBwcm9ncmFtOiAvcm9vdC94ZnNfcmVw
-YWlyX3RjbWFsbG9jLCBwcm9jZXNzIDIxNDQwClJlYWRpbmcgc3ltYm9scyBmcm9tIC9saWI2NC9s
-aWJ1dWlkLnNvLjEuLi4obm8gZGVidWdnaW5nIHN5bWJvbHMgZm91bmQpLi4uZG9uZS4KTG9hZGVk
-IHN5bWJvbHMgZm9yIC9saWI2NC9saWJ1dWlkLnNvLjEKUmVhZGluZyBzeW1ib2xzIGZyb20gL2xp
-YjY0L2xpYnJ0LnNvLjEuLi4obm8gZGVidWdnaW5nIHN5bWJvbHMgZm91bmQpLi4uZG9uZS4KTG9h
-ZGVkIHN5bWJvbHMgZm9yIC9saWI2NC9saWJydC5zby4xClJlYWRpbmcgc3ltYm9scyBmcm9tIC9s
-aWI2NC9saWJ0Y21hbGxvY19taW5pbWFsLnNvLjAuLi4obm8gZGVidWdnaW5nIHN5bWJvbHMgZm91
-bmQpLi4uZG9uZS4KTG9hZGVkIHN5bWJvbHMgZm9yIC9saWI2NC9saWJ0Y21hbGxvY19taW5pbWFs
-LnNvLjAKUmVhZGluZyBzeW1ib2xzIGZyb20gL2xpYjY0L2xpYnB0aHJlYWQuc28uMC4uLihubyBk
-ZWJ1Z2dpbmcgc3ltYm9scyBmb3VuZCkuLi5kb25lLgpbVGhyZWFkIGRlYnVnZ2luZyB1c2luZyBs
-aWJ0aHJlYWRfZGIgZW5hYmxlZF0KW05ldyBUaHJlYWQgMHg3ZmRmOTNhNzM3MDAgKExXUCAyMTQ2
-MildCkxvYWRlZCBzeW1ib2xzIGZvciAvbGliNjQvbGlicHRocmVhZC5zby4wClJlYWRpbmcgc3lt
-Ym9scyBmcm9tIC91c3IvbGliNjQvbGlic3RkYysrLnNvLjYuLi4obm8gZGVidWdnaW5nIHN5bWJv
-bHMgZm91bmQpLi4uZG9uZS4KTG9hZGVkIHN5bWJvbHMgZm9yIC91c3IvbGliNjQvbGlic3RkYysr
-LnNvLjYKUmVhZGluZyBzeW1ib2xzIGZyb20gL2xpYjY0L2xpYm0uc28uNi4uLihubyBkZWJ1Z2dp
-bmcgc3ltYm9scyBmb3VuZCkuLi5kb25lLgpMb2FkZWQgc3ltYm9scyBmb3IgL2xpYjY0L2xpYm0u
-c28uNgpSZWFkaW5nIHN5bWJvbHMgZnJvbSAvbGliNjQvbGliYy5zby42Li4uKG5vIGRlYnVnZ2lu
-ZyBzeW1ib2xzIGZvdW5kKS4uLmRvbmUuCkxvYWRlZCBzeW1ib2xzIGZvciAvbGliNjQvbGliYy5z
-by42ClJlYWRpbmcgc3ltYm9scyBmcm9tIC9saWI2NC9sZC1saW51eC14ODYtNjQuc28uMi4uLihu
-byBkZWJ1Z2dpbmcgc3ltYm9scyBmb3VuZCkuLi5kb25lLgpMb2FkZWQgc3ltYm9scyBmb3IgL2xp
-YjY0L2xkLWxpbnV4LXg4Ni02NC5zby4yClJlYWRpbmcgc3ltYm9scyBmcm9tIC9saWI2NC9saWJn
-Y2Nfcy5zby4xLi4uKG5vIGRlYnVnZ2luZyBzeW1ib2xzIGZvdW5kKS4uLmRvbmUuCkxvYWRlZCBz
-eW1ib2xzIGZvciAvbGliNjQvbGliZ2NjX3Muc28uMQoweDAwMDA3ZmRmOWMyYzIxYmYgaW4gcHRo
-cmVhZF9qb2luICgpIGZyb20gL2xpYjY0L2xpYnB0aHJlYWQuc28uMAooZ2RiKSBidAojMCAgMHgw
-MDAwN2ZkZjljMmMyMWJmIGluIHB0aHJlYWRfam9pbiAoKSBmcm9tIC9saWI2NC9saWJwdGhyZWFk
-LnNvLjAKIzEgIDB4MDAwMDAwMDAwMDQyZGQ4ZiBpbiBkZXN0cm95X3dvcmtfcXVldWUgKHdxPTB4
-N2ZmZjYyNjU5MTgwKSBhdCB0aHJlYWRzLmM6MTQ2CiMyICAweDAwMDAwMDAwMDA0MmQ4OWYgaW4g
-c2Nhbl9hZ3MgKG1wPTB4N2ZmZjYyNjU5MzAwLCBzY2FuX3RocmVhZHM9PG9wdGltaXplZCBvdXQ+
-KSBhdCBzY2FuLmM6MTM1MwojMyAgMHgwMDAwMDAwMDAwNDFiNjhlIGluIHBoYXNlMiAobXA9MHg3
-ZmZmNjI2NTkzMDAsIHNjYW5fdGhyZWFkcz0zMikgYXQgcGhhc2UyLmM6MTQyCiM0ICAweDAwMDAw
-MDAwMDA0MDJiZDYgaW4gbWFpbiAoYXJnYz08b3B0aW1pemVkIG91dD4sIGFyZ3Y9PG9wdGltaXpl
-ZCBvdXQ+KSBhdCB4ZnNfcmVwYWlyLmM6NzQ3CihnZGIpIGluZm8gdGhyZWFkcwogIElkICAgVGFy
-Z2V0IElkICAgICAgICAgRnJhbWUKICAyICAgIFRocmVhZCAweDdmZGY5M2E3MzcwMCAoTFdQIDIx
-NDYyKSAieGZzX3JlcGFpcl90Y21hIiAweDAwMDA3ZmRmOWMyYzc4ZTQgaW4gX19sbGxfbG9ja193
-YWl0ICgpIGZyb20gL2xpYjY0L2xpYnB0aHJlYWQuc28uMAoqIDEgICAgVGhyZWFkIDB4N2ZkZjlj
-YmJhNzYwIChMV1AgMjE0NDApICJ4ZnNfcmVwYWlyX3RjbWEiIDB4MDAwMDdmZGY5YzJjMjFiZiBp
-biBwdGhyZWFkX2pvaW4gKCkgZnJvbSAvbGliNjQvbGlicHRocmVhZC5zby4wCihnZGIpIHRocmVh
-ZCAyCltTd2l0Y2hpbmcgdG8gdGhyZWFkIDIgKFRocmVhZCAweDdmZGY5M2E3MzcwMCAoTFdQIDIx
-NDYyKSldCiMwICAweDAwMDA3ZmRmOWMyYzc4ZTQgaW4gX19sbGxfbG9ja193YWl0ICgpIGZyb20g
-L2xpYjY0L2xpYnB0aHJlYWQuc28uMAooZ2RiKSBidAojMCAgMHgwMDAwN2ZkZjljMmM3OGU0IGlu
-IF9fbGxsX2xvY2tfd2FpdCAoKSBmcm9tIC9saWI2NC9saWJwdGhyZWFkLnNvLjAKIzEgIDB4MDAw
-MDdmZGY5YzJjMzFiNSBpbiBfTF9sb2NrXzg4MyAoKSBmcm9tIC9saWI2NC9saWJwdGhyZWFkLnNv
-LjAKIzIgIDB4MDAwMDdmZGY5YzJjMzAwYSBpbiBwdGhyZWFkX211dGV4X2xvY2sgKCkgZnJvbSAv
-bGliNjQvbGlicHRocmVhZC5zby4wCiMzICAweDAwMDAwMDAwMDA0MzM0YmEgaW4gbGlieGZzX2dl
-dGJ1Zl9mbGFncyAoZGV2aWNlPTxvcHRpbWl6ZWQgb3V0PiwgYmxrbm89PG9wdGltaXplZCBvdXQ+
-LCBsZW49PG9wdGltaXplZCBvdXQ+LCBmbGFncz08b3B0aW1pemVkIG91dD4pIGF0IHJkd3IuYzo0
-MjMKIzQgIDB4MDAwMDAwMDAwMDQzMzcwZSBpbiBsaWJ4ZnNfcmVhZGJ1ZiAoZGV2PTY1MDI0LCBi
-bGtubz00Mjk0OTY3MzQ0LCBsZW49OCwgZmxhZ3M9MCkgYXQgcmR3ci5jOjUzMAojNSAgMHgwMDAw
-MDAwMDAwNDJiNDRmIGluIHNjYW5fc2J0cmVlIChyb290PTgsIG5sZXZlbHM9MjUxNjA1ODgsIGFn
-bm89Miwgc3VzcGVjdD0xLCBmdW5jPTB4NDJjNWQwIDxzY2FuZnVuY19pbm8+LCBpc3Jvb3Q9PG9w
-dGltaXplZCBvdXQ+LCBwcml2PTB4NzE0M2YwKQogICAgYXQgc2Nhbi5jOjkwCiM2ICAweDAwMDAw
-MDAwMDA0MmNjZGQgaW4gc2NhbmZ1bmNfaW5vIChibG9jaz08b3B0aW1pemVkIG91dD4sIGxldmVs
-PTI1MTYwNTg4LCBibm89PG9wdGltaXplZCBvdXQ+LCBhZ25vPTIsIHN1c3BlY3Q9MSwgaXNyb290
-PTEsIHByaXY9MHg3MTQzZjApCiAgICBhdCBzY2FuLmM6MTAzNwojNyAgMHgwMDAwMDAwMDAwNDJi
-NDc2IGluIHNjYW5fc2J0cmVlIChyb290PTgsIG5sZXZlbHM9MjUxNjA1ODksIGFnbm89Miwgc3Vz
-cGVjdD0wLCBmdW5jPTB4NDJjNWQwIDxzY2FuZnVuY19pbm8+LCBpc3Jvb3Q9PG9wdGltaXplZCBv
-dXQ+LCBwcml2PTB4NzE0M2YwKQogICAgYXQgc2Nhbi5jOjk2CiM4ICAweDAwMDAwMDAwMDA0MmMz
-YTggaW4gdmFsaWRhdGVfYWdpIChhZ2NudHM9MHg3MTQzZjAsIGFnbm89MiwgYWdpPTB4NzgzYTAw
-KSBhdCBzY2FuLmM6MTE1MQojOSAgc2Nhbl9hZyAod3E9PG9wdGltaXplZCBvdXQ+LCBhZ25vPTIs
-IGFyZz0weDcxNDNmMCkgYXQgc2Nhbi5jOjEyOTMKIzEwIDB4MDAwMDAwMDAwMDQyZGE0YSBpbiB3
-b3JrZXJfdGhyZWFkIChhcmc9MHg3ZmZmNjI2NTkxODApIGF0IHRocmVhZHMuYzo0NgojMTEgMHgw
-MDAwN2ZkZjljMmMwZWQ1IGluIHN0YXJ0X3RocmVhZCAoKSBmcm9tIC9saWI2NC9saWJwdGhyZWFk
-LnNvLjAKIzEyIDB4MDAwMDdmZGY5YmE3ZGU1ZCBpbiBjbG9uZSAoKSBmcm9tIC9saWI2NC9saWJj
-LnNvLjYKIzEzIDB4MDAwMDAwMDAwMDAwMDAwMCBpbiA/PyAoKQooZ2RiKQoKCi0tIApBcmthZGl1
-c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwgICAg
-ICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5vcmcvCgpfX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
-bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+I can't pass 254, and below is the output:
+
+254 3s ... - output mismatch (see 254.out.bad)
+...
+ ID 256 top level 5 path snap
+-ID 257 top level 5 path subvol
++ID 258 top level 5 path subvol
+
+When space cache is enabled (and now mkfs.btrfs always enables it),
+there will be some space cache inodes in the root tree, and they
+consume some IDs, and that's why "subvol" has the ID 258 but not 257.
+
+Just disable space cache for this test case.
+
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+---
+ 254 |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/254 b/254
+index 5216120..1cd4832 100755
+--- a/254
++++ b/254
+@@ -48,7 +48,7 @@ _supported_os Linux
+ _require_scratch
+ 
+ _scratch_mkfs > /dev/null 2>&1
+-_scratch_mount
++_scratch_mount -o nospace_cache
+ 
+ # First test basic snapshotting
+ echo "Creating file foo in root dir"
+-- 
+1.7.3.1
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
