@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAI3Orpb089079 for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 21:24:54 -0600
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7B931D1743D
-	for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 19:24:48 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id mAlkhtiolZk3483y for
-	<xfs@oss.sgi.com>; Thu, 17 Nov 2011 19:24:48 -0800 (PST)
-Message-ID: <4EC5D05A.4000503@cn.fujitsu.com>
-Date: Fri, 18 Nov 2011 11:26:18 +0800
-From: Li Zefan <lizf@cn.fujitsu.com>
+	pAI74DsX104238 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 01:04:13 -0600
+Received: from mail-bw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E44112722E9
+	for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 23:04:09 -0800 (PST)
+Received: from mail-bw0-f53.google.com (mail-bw0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id S7bBDVjRMIeyo5Rr
+	for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 23:04:09 -0800 (PST)
+Received: by bkaq10 with SMTP id q10so3318932bka.26
+	for <xfs@oss.sgi.com>; Thu, 17 Nov 2011 23:04:09 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH 3/3] xfsprogs: allow linking against libtcmalloc
+Date: Fri, 18 Nov 2011 08:04:06 +0100
+References: <20111114155742.285135418@bombadil.infradead.org>
+	<20111114160217.591812422@bombadil.infradead.org>
+In-Reply-To: <20111114160217.591812422@bombadil.infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH] 254: fix to pass subvolid=0 to set default btrfs subvolme
+Message-Id: <201111180804.06413.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,50 +26,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-The usage is 'btrfs subvolume set-default <id> <path>', not
-'<path> <path>'.
-
-The code happens to work because strotoull(path) returns 0, but it
-will fail if in the future we check the argument more strict in
-btrfs-progs.
-
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
----
- 254 |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/254 b/254
-index 6320291..5216120 100755
---- a/254
-+++ b/254
-@@ -78,7 +78,7 @@ ls $SCRATCH_MNT/subvol
- echo "Creating file bar in subvol"
- dd if=/dev/zero of=$SCRATCH_MNT/subvol/bar bs=1M count=1 &> /dev/null
- echo "Setting subvol to the default"
--btrfs subvolume set-default $SCRATCH_MNT/subvol $SCRATCH_MNT/subvol | _filter_scratch
-+btrfs subvolume set-default 0 $SCRATCH_MNT/subvol | _filter_scratch
- _scratch_remount
- echo "List root dir which is now subvol"
- ls $SCRATCH_MNT
-@@ -88,7 +88,7 @@ _scratch_mount "-o subvolid=0"
- echo "List root dir"
- ls $SCRATCH_MNT
- echo "Setting the root dir as the default again"
--btrfs subvolume set-default $SCRATCH_MNT $SCRATCH_MNT | _filter_scratch
-+btrfs subvolume set-default 0 $SCRATCH_MNT | _filter_scratch
- _scratch_remount
- echo "List root dir"
- ls $SCRATCH_MNT
--- 1.7.3.1 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uZGF5IDE0IG9mIE5vdmVtYmVyIDIwMTEsIENocmlzdG9waCBIZWxsd2lnIHdyb3RlOgo+
+IEFsbG93IGxpbmtpbmcgYWdhaW5zdCB0aGUgbGlidGNtYWxsb2MgbGlicmFyeSBmcm9tIEdvb2ds
+ZSdzIHBlcmZvcm1hbmNlCj4gdG9vbHMsIHdoaWNoIGF0IGxlYXN0IGZvciByZXBhaXIgcmVkdWNl
+cyB0aGUgbWVtb3J5IHVzYWdlIGRyYW1hdGljYWxseS4KClNob3VsZCAtZm5vLWJ1aWx0aW4tbWFs
+bG9jIGJlIGFsc28gdXNlZD8KCi0tLSB4ZnNwcm9ncy0zLjEuNy9jb25maWd1cmUuaW4ub3JnCTIw
+MTEtMTEtMTggMDc6NTg6NDkuODE1NDM5Njk5ICswMTAwCisrKyB4ZnNwcm9ncy0zLjEuNy9jb25m
+aWd1cmUuaW4JMjAxMS0xMS0xOCAwNzo1OTo0OS4zNjAwOTMwMDEgKzAxMDAKQEAgLTMxLDYgKzMx
+LDI2IEBACiBBQ19TVUJTVChsaWJlZGl0bGluZSkKIEFDX1NVQlNUKGVuYWJsZV9lZGl0bGluZSkK
+IAorQUNfQVJHX0VOQUJMRSh0Y21hbGxvYywKK1sgLS1lbmFibGUtdGNtYWxsb2M9W3llcy9ub10g
+RW5hYmxlIHRjbWFsbG9jIFtkZWZhdWx0PW5vXV0sLAorCWVuYWJsZV90Y21hbGxvYz1jaGVjaykK
+KworaWYgdGVzdCB4JGVuYWJsZV90Y21hbGxvYyAhPSB4bm87IHRoZW4KKyAgICBzYXZlZF9DUFBG
+TEFHUz0iJENQUEZMQUdTIgorICAgIENQUEZMQUdTPSIkQ1BQRkxBR1MgLWZuby1idWlsdGluLW1h
+bGxvYyIKKyAgICBBQ19DSEVDS19MSUIoW3RjbWFsbG9jX21pbmltYWxdLCBbbWFsbG9jXSwgW2xp
+YnRjbWFsbG9jPSItbHRjbWFsbG9jX21pbmltYWwiXSwKKyAgICAgIFtBQ19DSEVDS19MSUIoW3Rj
+bWFsbG9jXSwgW21hbGxvY10sIFtsaWJ0Y21hbGxvYz0iLWx0Y21hbGxvYyJdLCBbCisJaWYgdGVz
+dCB4JGVuYWJsZV90Y21hbGxvYyA9IHh5ZXM7IHRoZW4KKwkJQUNfTVNHX0VSUk9SKFtsaWJ0Y21h
+bGxvY19taW5pbWFsIG9yIGxpYnRjbWFsbG9jIGxpYnJhcnkgbm90IGZvdW5kXSwgMSkKKwlmaV0K
+KyAgICAgICldCisgICAgKQorICAgIGlmIHRlc3QgeCRsaWJ0Y21hbGxvYyA9IHg7IHRoZW4KKwlD
+UFBGTEFHUz0iJHNhdmVkX0NQUEZMQUdTIgorICAgIGZpCitmaQorQUNfU1VCU1QobGlidGNtYWxs
+b2MpCisKIEFDX0FSR19FTkFCTEUodGVybWNhcCwKIFsgLS1lbmFibGUtdGVybWNhcD1beWVzL25v
+XSBFbmFibGUgdGVybWluYWwgY2FwYWJpbGl0aWVzIGxpYnJhcnkgW2RlZmF1bHQ9bm9dXSwKIAl0
+ZXN0ICRlbmFibGVfdGVybWNhcCA9IHllcyAmJiBsaWJ0ZXJtY2FwPSItbHRlcm1jYXAiLCkKSW5k
+ZXg6IHhmc3Byb2dzLWRldi9pbmNsdWRlL2J1aWxkZGVmcy5pbgo9PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09Ci0tLSB4ZnNw
+cm9ncy1kZXYub3JpZy9pbmNsdWRlL2J1aWxkZGVmcy5pbgkyMDExLTA4LTE0IDE3OjAwOjAyLjAw
+MDAwMDAwMCArMDAwMAorKysgeGZzcHJvZ3MtZGV2L2luY2x1ZGUvYnVpbGRkZWZzLmluCTIwMTEt
+MTEtMTQgMTI6MDk6NTIuMDAwMDAwMDAwICswMDAwCkBAIC0yMiw3ICsyMiw3IEBAIF9CVUlMRERF
+RlNfSU5DTFVERURfID0gMQogCiBERUJVRyA9IEBkZWJ1Z19idWlsZEAKIE9QVElNSVpFUiA9IEBv
+cHRfYnVpbGRACi1NQUxMT0NMSUIgPSBAbWFsbG9jX2xpYkAKK01BTExPQ0xJQiA9IEBtYWxsb2Nf
+bGliQCBAbGlidGNtYWxsb2NACiBMT0FERVJGTEFHUyA9IEBMREZMQUdTQAogTFRMREZMQUdTID0g
+QExERkxBR1NACiBDRkxBR1MgPSBAQ0ZMQUdTQAoKCgotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6
+ICAgICAgICBQTEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAgaHR0cDov
+L2Z0cC5wbGQtbGludXgub3JnLwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
