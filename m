@@ -1,13 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAIKkBOh203878 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 14:46:11 -0600
-Date: Fri, 18 Nov 2011 14:46:27 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: [GIT PULL] XFS update for 3.2-rc3
-Message-ID: <20111118204627.GQ749@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
+	pAIMVTOO210811 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 16:31:29 -0600
+Received: from franck.debian.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBE5B263529
+	for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 14:31:28 -0800 (PST)
+Received: from franck.debian.org (franck.debian.org [128.148.34.3]) by
+	cuda.sgi.com with ESMTP id t7kTldg25jQuh8RY for
+	<xfs@oss.sgi.com>; Fri, 18 Nov 2011 14:31:28 -0800 (PST)
+Received: from dak by franck.debian.org with local (Exim 4.72)
+	(envelope-from <dak@franck.debian.org>) id 1RRWxz-0005zR-Lk
+	for xfs@oss.sgi.com; Fri, 18 Nov 2011 22:31:27 +0000
+Message-Id: <E1RRWxz-0005zR-Lk@franck.debian.org>
+From: Debian FTP Masters <ftpmaster@ftp-master.debian.org>
+Subject: Processing of xfsprogs_3.1.7_i386.changes
+Date: Fri, 18 Nov 2011 22:31:27 +0000
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,38 +23,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Linus, please pull the following changes for XFS for 3.2-rc3.  
+xfsprogs_3.1.7_i386.changes uploaded successfully to localhost
+along with the files:
+  xfsprogs_3.1.7.dsc
+  xfsprogs_3.1.7.tar.gz
+  xfsprogs_3.1.7_i386.deb
+  xfslibs-dev_3.1.7_i386.deb
+  xfsprogs-udeb_3.1.7_i386.udeb
 
-One is a bugfix for a regression related to quotas, and the other adds
-me to the MAINTAINERS list for XFS.
+Greetings,
 
-Thanks much!
--Ben
-
-The following changes since commit b6844523839779030430ff28f036f83e2a3f43e6:
-  Linus Torvalds (1):
-        Merge branch 'stable/for-linus-fixes-3.2' of git://git.kernel.org/.../konrad/xen
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Alex Elder (1):
-      MAINTAINERS: update XFS maintainer entry
-
-Mitsuo Hayasaka (1):
-      xfs: use doalloc flag in xfs_qm_dqattach_one()
-
- MAINTAINERS     |    3 ++-
- fs/xfs/xfs_qm.c |    3 ++-
- 2 files changed, 4 insertions(+), 2 deletions(-)
+	Your Debian queue daemon (running on host franck.debian.org)
 
 _______________________________________________
 xfs mailing list
