@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAIHQEp9189743 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 11:26:14 -0600
-Date: Fri, 18 Nov 2011 11:26:34 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] MAINTAINERS: update XFS maintainer entry
-Message-ID: <20111118172634.GM29840@sgi.com>
-References: <201111181721.pAIHL5VU002315@stout.americas.sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201111181721.pAIHL5VU002315@stout.americas.sgi.com>
+	pAIHXKuU190789 for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 11:33:21 -0600
+Received: from nm20-vm0.bullet.mail.sp2.yahoo.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id 1678C16DB3E3
+	for <xfs@oss.sgi.com>; Fri, 18 Nov 2011 09:33:19 -0800 (PST)
+Received: from nm20-vm0.bullet.mail.sp2.yahoo.com
+	(nm20-vm0.bullet.mail.sp2.yahoo.com [98.139.91.218]) by
+	cuda.sgi.com with SMTP id ymCYjt5EisPQOPiv for
+	<xfs@oss.sgi.com>; Fri, 18 Nov 2011 09:33:19 -0800 (PST)
+From: Peter Kimball <peterakimball@yahoo.com>
+Subject: inode64 readiness testing
+Date: Fri, 18 Nov 2011 12:33:16 -0500
+Message-Id: <501A7AEB-6708-4181-AAE2-D145DC23B938@yahoo.com>
+Mime-Version: 1.0 (Apple Message framework v1244.3)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,46 +26,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <aelder@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Nov 18, 2011 at 11:21:05AM -0600, Alex Elder wrote:
-> I will no longer be maintaining XFS for SGI.  Ben Myers
-> (bpm@sgi.com) has agreed to be the primary maintainer
-> for XFS in my place.  I will continue to be able to push
-> commits to the SGI XFS tree if required.  As such I will
-> continue to be a designated XFS maintainer, but plan to
-> serve in more of a backup role.
-> 
-> Signed-off-by: Alex Elder <aelder@sgi.com>
+Hi folks,
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+We've got some large XFS volumes that should probably be using the inode64 mount option, but aren't yet.  Before I go making irrevocable changes, I wanted to run my testing procedure by you to make sure I've actually tested what I think I tested.  These volumes will be shared via NFS, which is not your problem but seems to be a troublemaker.
 
-> ---
->  MAINTAINERS |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 4808256..227cd7c 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -7425,7 +7425,8 @@ F:	drivers/xen/*swiotlb*
->  
->  XFS FILESYSTEM
->  P:	Silicon Graphics Inc
-> -M:	Alex Elder <aelder@sgi.com>
-> +M:	Ben Myers <bpm@sgi.com>
-> +M:	Alex Elder <elder@kernel.org>
->  M:	xfs-masters@oss.sgi.com
->  L:	xfs@oss.sgi.com
->  W:	http://oss.sgi.com/projects/xfs
-> -- 
-> 1.7.6.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I created a blank 1GB disk image, created an XFS filesystem on that image, and mounted it on a loopback device using the ino64 flag.  
+
+I wrote a bunch of data to the filesystem (lots of small files), approximately 600MB.
+
+At this point, I think I have a filesystem in which inodes use 64-bit addresses, even if the actual address value would fit in 32 bits.  I would expect any program that can't handle 64-bit addresses to barf when trying to access any data on the filesystem.
+
+I then unmounted the filesystem and re-mounted it using the inode64 flag, just like it would be mounted in production.
+
+I then verified that the programs I cared about (mostly NFS clients) could read all of the data I had written.  I also made sure they could write to the filesystem.
+
+Since I haven't seen any read/write failures at this point, I feel I'm ready to sign off that we're ready to start using the inode64 flag.  Did I properly create files using 64-bit inodes?  Did I read from the filesystem in such a way that I would know if my readers were unable to handle 64-bit inodes?  Is there anything I should test that I haven't?
+
+Thanks for all your hard work on this most useful project!
+Peter
+
+
+
+ps: not sure it makes a difference, this is on Centos 5.3 (2.6.18-128.el5), so I'm not entirely certain which XFS bugs/features have been folded in by the maintainers...
 
 _______________________________________________
 xfs mailing list
