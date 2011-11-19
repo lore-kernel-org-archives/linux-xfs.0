@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJDuY6R044228 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 07:56:35 -0600
-Received: from mail-ww0-f51.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A965F1D1E50A
-	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 05:56:32 -0800 (PST)
-Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id kAiAG26QHiKfjYBa
-	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 05:56:32 -0800 (PST)
-Received: by wwe6 with SMTP id 6so5129877wwe.32
-	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 05:56:32 -0800 (PST)
+	pAJHiYlX068767 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 11:44:35 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E319C1DA1312
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 09:44:30 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	275VyK0hEkfbbcmK for <xfs@oss.sgi.com>;
+	Sat, 19 Nov 2011 09:44:30 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RRoxq-0008PO-B3
+	for xfs@oss.sgi.com; Sat, 19 Nov 2011 17:44:30 +0000
+Date: Sat, 19 Nov 2011 12:44:30 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v2] xfs: fix attr2 vs large data fork assert
+Message-ID: <20111119174430.GA32320@infradead.org>
+References: <20111115201407.038216766@bombadil.infradead.org>
+	<20111115201426.498870090@bombadil.infradead.org>
 MIME-Version: 1.0
-In-Reply-To: <1321691055-1927-1-git-send-email-eguan@redhat.com>
-References: <1321691055-1927-1-git-send-email-eguan@redhat.com>
-From: Eryu Guan <guaneryu@gmail.com>
-Date: Sat, 19 Nov 2011 21:56:10 +0800
-Message-ID: <CA+dCu89-P1+4zr5KNn2s08Z3__ZYNgpy3NYNeNGYhnQ1eDQzDw@mail.gmail.com>
-Subject: Re: [PATCH] xfstests: 276 test time before epoch is correct when
-	re-read in from disk
-Reply-To: guaneryu@gmail.com
+Content-Disposition: inline
+In-Reply-To: <20111115201426.498870090@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,160 +30,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: Christoph Hellwig <chellwig@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Nov 19, 2011 at 4:24 PM, Eryu Guan <eguan@redhat.com> wrote:
-> This is a regression test case for commit
->
-> 4d7bf11d649c72621ca31b8ea12b9c94af380e63
-> ext2/3/4: fix file date underflow on ext2 3 filesystems on 64 bit systems
+With Dmitry fsstress updates I've seen very reproducible crashes in
+xfs_attr_shortform_remove because xfs_attr_shortform_bytesfit claims that
+the attributes would not fit inline into the inode after removing an
+attribute.  It turns out that we were operating on an inode with lots
+of delalloc extents, and thus an if_bytes values for the data fork that
+is larger than biggest possible on-disk storage for it which utterly
+confuses the code near the end of xfs_attr_shortform_bytesfit.
 
-xfstests 258 tests exactly the same, sorry for the noise.
+Fix this by always allowing the current attribute fork, like we already
+do for the attr1 format, given that delalloc conversion will take care
+for moving either the data or attribute area out of line if it doesn't
+fit at that point - or making the point moot by merging extents at this
+point.
 
-Eryu Guan
->
-> On 64bit systems, unpatched extX doesn't sign-extend time values read
-> in from disk. This results in times which should be before the epoch
-> jumping forward in time. =A0For example:
->
-> At creation, inode information still in memory.
-> [root@cluster1 ~]# touch -t 196001010101 test.txt
-> [root@cluster1 ~]# ls -l test.txt
-> -rw-r--r-- 1 root root 0 Jan =A01 =A01960 test.txt
->
-> After remount/reboot to force the values to be read in from disk:
-> [root@cluster1 ~]# ls -l test.txt
-> -rw-r--r-- 1 root root 0 Feb =A06 =A02096 test.txt
->
-> When the time value was read in from disk, it wasn't sign extended so
-> became a large, positive time value. =A0This doesn't occur on 32bit
-> systems since the time is stored as 32bits on disk and thus doesn't
-> need to be extended in size.
->
-> Cc: Christoph Hellwig <chellwig@redhat.com>
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
-> ---
-> =A0276 =A0 =A0 | =A0 74 +++++++++++++++++++++++++++++++++++++++++++++++++=
-++++++++++++++
-> =A0276.out | =A0 =A05 ++++
-> =A0group =A0 | =A0 =A01 +
-> =A03 files changed, 80 insertions(+), 0 deletions(-)
-> =A0create mode 100755 276
-> =A0create mode 100644 276.out
->
-> diff --git a/276 b/276
-> new file mode 100755
-> index 0000000..7570977
-> --- /dev/null
-> +++ b/276
-> @@ -0,0 +1,74 @@
-> +#! /bin/bash
-> +# FS QA Test No. 276
-> +#
-> +# Test time before epoch is correct when re-read in from disk.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2011 Red Hat, Inc. =A0All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. =A0See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc., =A051 Franklin St, Fifth Floor, Boston, MA =A002110-1301 =A0USA
-> +#-----------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=3Deguan@redhat.com
-> +
-> +seq=3D`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +status=3D1 =A0 =A0 =A0 # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> + =A0 =A0 =A0 cd /
-> + =A0 =A0 =A0 rm -f $testfile
-> + =A0 =A0 =A0 _scratch_unmount
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +
-> +# real QA test starts here
-> +
-> +# Modify as appropriate.
-> +_supported_fs generic
-> +_supported_os Linux
-> +
-> +_require_scratch
-> +_scratch_mkfs &>/dev/null
-> +_scratch_mount
-> +
-> +testfile=3D$SCRATCH_MNT/testfile
-> +
-> +# set timestamp 1 second before epoch
-> +touch -d @-1 $testfile
-> +atime_1=3D`stat --format=3D%X $testfile`
-> +mtime_1=3D`stat --format=3D%Y $testfile`
-> +echo "atime after touch $atime_1"
-> +echo "mtime after touch $mtime_1"
-> +
-> +# remount fs to force re-read in timestamp from disk
-> +_scratch_remount
-> +
-> +atime_2=3D`stat --format=3D%X $testfile`
-> +mtime_2=3D`stat --format=3D%Y $testfile`
-> +echo "atime after remount $atime_2"
-> +echo "mtime after remount $mtime_2"
-> +
-> +if [ "$atime_1" =3D "$atime_2" -a "$mtime_1" =3D "$mtime_2" ];then
-> + =A0 =A0 =A0 status=3D0
-> +fi
-> +
-> +exit
-> diff --git a/276.out b/276.out
-> new file mode 100644
-> index 0000000..6e544ee
-> --- /dev/null
-> +++ b/276.out
-> @@ -0,0 +1,5 @@
-> +QA output created by 276
-> +atime after touch -1
-> +mtime after touch -1
-> +atime after remount -1
-> +mtime after remount -1
-> diff --git a/group b/group
-> index 08d999a..be4bd9b 100644
-> --- a/group
-> +++ b/group
-> @@ -389,3 +389,4 @@ deprecated
-> =A0273 auto rw
-> =A0274 auto rw
-> =A0275 auto rw
-> +276 auto quick
-> --
-> 1.7.7.1
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+Also document the function better, and clean up some lose bits.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+---
+ fs/xfs/xfs_attr_leaf.c |   64 +++++++++++++++++++++++++++++--------------------
+ 1 file changed, 39 insertions(+), 25 deletions(-)
+
+Index: linux-2.6/fs/xfs/xfs_attr_leaf.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/xfs_attr_leaf.c	2011-11-17 08:29:53.874168153 +0100
++++ linux-2.6/fs/xfs/xfs_attr_leaf.c	2011-11-17 08:33:24.790833563 +0100
+@@ -110,6 +110,7 @@ xfs_attr_namesp_match(int arg_flags, int
+ /*
+  * Query whether the requested number of additional bytes of extended
+  * attribute space will be able to fit inline.
++ *
+  * Returns zero if not, else the di_forkoff fork offset to be used in the
+  * literal area for attribute data once the new bytes have been added.
+  *
+@@ -122,7 +123,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+ 	int offset;
+ 	int minforkoff;	/* lower limit on valid forkoff locations */
+ 	int maxforkoff;	/* upper limit on valid forkoff locations */
+-	int dsize;	
++	int dsize;
+ 	xfs_mount_t *mp = dp->i_mount;
+ 
+ 	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
+@@ -136,47 +137,60 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+ 		return (offset >= minforkoff) ? minforkoff : 0;
+ 	}
+ 
+-	if (!(mp->m_flags & XFS_MOUNT_ATTR2)) {
+-		if (bytes <= XFS_IFORK_ASIZE(dp))
+-			return dp->i_d.di_forkoff;
++	/*
++	 * If the requested numbers of bytes is smaller or equal to the
++	 * current attribute fork size we can always proceed.
++	 *
++	 * Note that if_bytes in the data fork might actually be larger than
++	 * the current data fork size is due to delalloc extents. In that
++	 * case either the extent count will go down when they are converted
++	 * to real extents, or the delalloc conversion will take care of the
++	 * literal area rebalancing.
++	 */
++	if (bytes <= XFS_IFORK_ASIZE(dp))
++		return dp->i_d.di_forkoff;
++
++	/*
++	 * For attr2 we can try to move the forkoff if there is space in the
++	 * literal area, but for the old format we are done if there is no
++	 * space in the fixes attribute fork.
++	 */
++	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
+ 		return 0;
+-	}
+ 
+ 	dsize = dp->i_df.if_bytes;
+-	
++
+ 	switch (dp->i_d.di_format) {
+ 	case XFS_DINODE_FMT_EXTENTS:
+-		/* 
++		/*
+ 		 * If there is no attr fork and the data fork is extents, 
+-		 * determine if creating the default attr fork will result 
+-		 * in the extents form migrating to btree. If so, the 
+-		 * minimum offset only needs to be the space required for 
++		 * determine if creating the default attr fork will result
++		 * in the extents form migrating to btree. If so, the
++		 * minimum offset only needs to be the space required for
+ 		 * the btree root.
+-		 */ 
++		 */
+ 		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes >
+ 		    xfs_default_attroffset(dp))
+ 			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
+ 		break;
+-		
+ 	case XFS_DINODE_FMT_BTREE:
+ 		/*
+-		 * If have data btree then keep forkoff if we have one,
+-		 * otherwise we are adding a new attr, so then we set 
+-		 * minforkoff to where the btree root can finish so we have 
++		 * If we have a data btree then keep forkoff if we have one,
++		 * otherwise we are adding a new attr, so then we set
++		 * minforkoff to where the btree root can finish so we have
+ 		 * plenty of room for attrs
+ 		 */
+ 		if (dp->i_d.di_forkoff) {
+-			if (offset < dp->i_d.di_forkoff) 
++			if (offset < dp->i_d.di_forkoff)
+ 				return 0;
+-			else 
+-				return dp->i_d.di_forkoff;
+-		} else
+-			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
++			return dp->i_d.di_forkoff;
++		}
++		dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
+ 		break;
+ 	}
+-	
+-	/* 
+-	 * A data fork btree root must have space for at least 
++
++	/*
++	 * A data fork btree root must have space for at least
+ 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 	 */
+ 	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+@@ -186,10 +200,10 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
+ 	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
+ 	maxforkoff = maxforkoff >> 3;	/* rounded down */
+ 
+-	if (offset >= minforkoff && offset < maxforkoff)
+-		return offset;
+ 	if (offset >= maxforkoff)
+ 		return maxforkoff;
++	if (offset >= minforkoff)
++		return offset;
+ 	return 0;
+ }
+ 
 
 _______________________________________________
 xfs mailing list
