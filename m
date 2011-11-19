@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJIFjDI072051 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:45 -0600
-Message-Id: <20111119181543.605305176@bombadil.infradead.org>
-Date: Sat, 19 Nov 2011 13:13:38 -0500
+	pAJIFkKc072089 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:47 -0600
+Message-Id: <20111119181545.235475776@bombadil.infradead.org>
+Date: Sat, 19 Nov 2011 13:13:44 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/9] [PATCH 2/9] xfs: fix xfs_mark_inode_dirty during umount
+Subject: [PATCH 8/9] [PATCH 8/9] xfs: Fix possible memory corruption in
+	xfs_readlink
 References: <20111119181336.964593075@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0002-xfs-fix-xfs_mark_inode_dirty-during-umount.patch
+	filename=0008-xfs-Fix-possible-memory-corruption-in-xfs_readlink.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,71 +24,68 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: Alex Elder <aelder@sgi.com>, xfs@oss.sgi.com
+Cc: Alex Elder <aelder@sgi.com>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-During umount we do not add a dirty inode to the lru and wait for it to
-become clean first, but force writeback of data and metadata with
-I_WILL_FREE set.  Currently there is no way for XFS to detect that the
-inode has been redirtied for metadata operations, as we skip the
-mark_inode_dirty call during teardown.  Fix this by setting i_update_core
-nanually in that case, so that the inode gets flushed during inode reclaim.
+Fixes a possible memory corruption when the link is larger than
+MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
+S_ISLNK assert, since the inode mode is checked previously in
+xfs_readlink_by_handle() and via VFS.
 
-Alternatively we could enable calling mark_inode_dirty for inodes in
-I_WILL_FREE state, and let the VFS dirty tracking handle this.  I decided
-against this as we will get better I/O patterns from reclaim compared to
-the synchronous writeout in write_inode_now, and always marking the inode
-dirty in some way from xfs_mark_inode_dirty is a better safetly net in
-either case.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Alex Elder <aelder@sgi.com>
-(cherry picked from commit da6742a5a4cc844a9982fdd936ddb537c0747856)
+Updated to address concerns raised by Ben Hutchings about the loose
+attention paid to 32- vs 64-bit values, and the lack of handling a
+potentially negative pathlen value:
+ - Changed type of "pathlen" to be xfs_fsize_t, to match that of
+   ip->i_d.di_size
+ - Added checking for a negative pathlen to the too-long pathlen
+   test, and generalized the message that gets reported in that case
+   to reflect the change
+As a result, if a negative pathlen were encountered, this function
+would return EFSCORRUPTED (and would fail an assertion for a debug
+build)--just as would a too-long pathlen.
 
 Signed-off-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_iops.c |   14 +++++++++++---
- 1 files changed, 11 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_vnodeops.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index d44d92c..a9b3e1e 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -69,9 +69,8 @@ xfs_synchronize_times(
- }
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 6197207..6cc4d41 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -535,7 +535,7 @@ xfs_readlink(
+ 	char		*link)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	int		pathlen;
++	xfs_fsize_t	pathlen;
+ 	int		error = 0;
  
- /*
-- * If the linux inode is valid, mark it dirty.
-- * Used when committing a dirty inode into a transaction so that
-- * the inode will get written back by the linux code
-+ * If the linux inode is valid, mark it dirty, else mark the dirty state
-+ * in the XFS inode to make sure we pick it up when reclaiming the inode.
-  */
- void
- xfs_mark_inode_dirty_sync(
-@@ -81,6 +80,10 @@ xfs_mark_inode_dirty_sync(
+ 	trace_xfs_readlink(ip);
+@@ -545,13 +545,19 @@ xfs_readlink(
  
- 	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
- 		mark_inode_dirty_sync(inode);
-+	else {
-+		barrier();
-+		ip->i_update_core = 1;
-+	}
- }
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
  
- void
-@@ -91,6 +94,11 @@ xfs_mark_inode_dirty(
+-	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFLNK);
+-	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
+-
+ 	pathlen = ip->i_d.di_size;
+ 	if (!pathlen)
+ 		goto out;
  
- 	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
- 		mark_inode_dirty(inode);
-+	else {
-+		barrier();
-+		ip->i_update_core = 1;
++	if (pathlen < 0 || pathlen > MAXPATHLEN) {
++		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
++			 __func__, (unsigned long long) ip->i_ino,
++			 (long long) pathlen);
++		ASSERT(0);
++		return XFS_ERROR(EFSCORRUPTED);
 +	}
 +
- }
- 
- /*
++
+ 	if (ip->i_df.if_flags & XFS_IFINLINE) {
+ 		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
+ 		link[pathlen] = '\0';
 -- 
 1.7.7
 
