@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJIjAji074699 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:45:13 -0600
+	pAJImWPi075053 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:48:32 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0EFDA1DBE975
-	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 10:45:08 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B1B4E1DBED8A
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 10:48:31 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	cdwkGE4ZrM3TznMg for <xfs@oss.sgi.com>;
-	Sat, 19 Nov 2011 10:45:08 -0800 (PST)
-Date: Sat, 19 Nov 2011 13:45:07 -0500
+	iiJKv07dhA4uzdZj for <xfs@oss.sgi.com>;
+	Sat, 19 Nov 2011 10:48:31 -0800 (PST)
+Date: Sat, 19 Nov 2011 13:48:30 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfsprogs: allow linking against libtcmalloc
-Message-ID: <20111119184507.GA11208@infradead.org>
-References: <20111114155742.285135418@bombadil.infradead.org>
-	<20111114160217.591812422@bombadil.infradead.org>
-	<201111180804.06413.arekm@maven.pl>
+Subject: Re: XFS with project quota support in Kernel 2.6.28(.9)
+Message-ID: <20111119184830.GA14564@infradead.org>
+References: <CAFhwj5=N_yLUxthheD8+3bYO8UTxJgHujZJLe73NFJZqtWqU1A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201111180804.06413.arekm@maven.pl>
+In-Reply-To: <CAFhwj5=N_yLUxthheD8+3bYO8UTxJgHujZJLe73NFJZqtWqU1A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,19 +30,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+To: Maarten Vergouwe <Maarten.Vergouwe@tass.be>
 Cc: xfs@oss.sgi.com
 
-On Fri, Nov 18, 2011 at 08:04:06AM +0100, Arkadiusz Mi??kiewicz wrote:
-> On Monday 14 of November 2011, Christoph Hellwig wrote:
-> > Allow linking against the libtcmalloc library from Google's performance
-> > tools, which at least for repair reduces the memory usage dramatically.
+On Mon, Nov 14, 2011 at 03:36:51PM +0100, Maarten Vergouwe wrote:
+> Hi
 > 
-> Should -fno-builtin-malloc be also used?
+> I have problems in writes that hang for more than 7 seconds because of the
+> the kthreadd daemon keeping a mutex locked for too long.
+> Is there someone who might be able to help me with that?
+> I saw that a lot of changes were done on the XFS quota support in later
+> kernels, but the patch list is too long between my kernel and the changed
+> quota system.
 
-The documentation suggests that it's not strictly required, but probably
-a good idea.  I'll fold this into the next version, together with your
-autoconf updates from irc.
+Did you manage to check if you can reproduce the issue with a recent
+kernel?
 
 _______________________________________________
 xfs mailing list
