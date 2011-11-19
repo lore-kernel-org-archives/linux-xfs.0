@@ -1,14 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJIFmh2072108 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:48 -0600
-Message-Id: <20111119181544.706389934@bombadil.infradead.org>
-Date: Sat, 19 Nov 2011 13:13:42 -0500
+	pAJIFiC7072043 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:44 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id CBF1256F15A
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 10:15:43 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	LS7MSw7zqptc7EuC for <xfs@oss.sgi.com>;
+	Sat, 19 Nov 2011 10:15:43 -0800 (PST)
+Message-Id: <20111119181336.964593075@bombadil.infradead.org>
+Date: Sat, 19 Nov 2011 13:13:36 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 6/9] [PATCH 6/9] xfs: Return -EIO when xfs_vn_getattr() failed
-References: <20111119181336.964593075@bombadil.infradead.org>
-Content-Disposition: inline;
-	filename=0006-xfs-Return-EIO-when-xfs_vn_getattr-failed.patch
+Subject: [PATCH 0/9] XFS update for 3.0-stable
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +28,24 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-An attribute of inode can be fetched via xfs_vn_getattr() in XFS.
-Currently it returns EIO, not negative value, when it failed.  As a
-result, the system call returns not negative value even though an
-error occured. The stat(2), ls and mv commands cannot handle this
-error and do not work correctly.
+This is the series of XFS fixes from current mainline which is important
+enough for 3.0-stable.  All but the first three would also be needed
+for 3.1-stable, but given the limited resources I plan to concentrate
+on 3.0-stable.  If anyone wants to take care for 3.1 by building a kernel
+with the remaining patches and run QA on them you are more welcome to
+help out with that tree.
 
-This patch fixes this bug, and returns -EIO, not EIO when an error
-is detected in xfs_vn_getattr().
+Note that while the description of
 
-Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Alex Elder <aelder@sgi.com>
----
- fs/xfs/linux-2.6/xfs_iops.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+        xfs: don't serialise direct IO reads on page cache checks
 
-diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
-index a9b3e1e..f5b697b 100644
---- a/fs/xfs/linux-2.6/xfs_iops.c
-+++ b/fs/xfs/linux-2.6/xfs_iops.c
-@@ -464,7 +464,7 @@ xfs_vn_getattr(
- 	trace_xfs_getattr(ip);
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
--		return XFS_ERROR(EIO);
-+		return -XFS_ERROR(EIO);
- 
- 	stat->size = XFS_ISIZE(ip);
- 	stat->dev = inode->i_sb->s_dev;
--- 
-1.7.7
+doesn't mention that is is a regression fix we later noticed that a
+large part of the speedups wasn't in fact new, but fixed a performance
+regression introduced in Linux 2.6.38 with commit:
 
+	xfs: introduce xfs_rw_lock() helpers for locking the inode
 
 _______________________________________________
 xfs mailing list
