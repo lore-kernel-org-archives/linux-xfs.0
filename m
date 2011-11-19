@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJIFkKc072089 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:47 -0600
-Message-Id: <20111119181545.235475776@bombadil.infradead.org>
-Date: Sat, 19 Nov 2011 13:13:44 -0500
+	pAJIFms5072107 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:48 -0600
+Message-Id: <20111119181545.413417685@bombadil.infradead.org>
+Date: Sat, 19 Nov 2011 13:13:45 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 8/9] [PATCH 8/9] xfs: Fix possible memory corruption in
-	xfs_readlink
+Subject: [PATCH 9/9] [PATCH 9/9] xfs: use doalloc flag in xfs_qm_dqattach_one()
 References: <20111119181336.964593075@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0008-xfs-Fix-possible-memory-corruption-in-xfs_readlink.patch
+	filename=0009-xfs-use-doalloc-flag-in-xfs_qm_dqattach_one.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,68 +23,48 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: Alex Elder <aelder@sgi.com>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
 
-Fixes a possible memory corruption when the link is larger than
-MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
-S_ISLNK assert, since the inode mode is checked previously in
-xfs_readlink_by_handle() and via VFS.
+The doalloc arg in xfs_qm_dqattach_one() is a flag that indicates
+whether a new area to handle quota information will be allocated
+if needed. Originally, it was passed to xfs_qm_dqget(), but has
+been removed by the following commit (probably by mistake):
 
-Updated to address concerns raised by Ben Hutchings about the loose
-attention paid to 32- vs 64-bit values, and the lack of handling a
-potentially negative pathlen value:
- - Changed type of "pathlen" to be xfs_fsize_t, to match that of
-   ip->i_d.di_size
- - Added checking for a negative pathlen to the too-long pathlen
-   test, and generalized the message that gets reported in that case
-   to reflect the change
-As a result, if a negative pathlen were encountered, this function
-would return EFSCORRUPTED (and would fail an assertion for a debug
-build)--just as would a too-long pathlen.
+	commit 8e9b6e7fa4544ea8a0e030c8987b918509c8ff47
+	Author: Christoph Hellwig <hch@lst.de>
+	Date:   Sun Feb 8 21:51:42 2009 +0100
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+	xfs: remove the unused XFS_QMOPT_DQLOCK flag
+
+As the result, xfs_qm_dqget() called from xfs_qm_dqattach_one()
+never allocates the new area even if it is needed.
+
+This patch gives the doalloc arg to xfs_qm_dqget() in
+xfs_qm_dqattach_one() to fix this problem.
+
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_vnodeops.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/quota/xfs_qm.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 6197207..6cc4d41 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -535,7 +535,7 @@ xfs_readlink(
- 	char		*link)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
--	int		pathlen;
-+	xfs_fsize_t	pathlen;
- 	int		error = 0;
+diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
+index b94dace..e70c7fc 100644
+--- a/fs/xfs/quota/xfs_qm.c
++++ b/fs/xfs/quota/xfs_qm.c
+@@ -714,7 +714,8 @@ xfs_qm_dqattach_one(
+ 	 * disk and we didn't ask it to allocate;
+ 	 * ESRCH if quotas got turned off suddenly.
+ 	 */
+-	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
++	error = xfs_qm_dqget(ip->i_mount, ip, id, type,
++			     doalloc | XFS_QMOPT_DOWARN, &dqp);
+ 	if (error)
+ 		return error;
  
- 	trace_xfs_readlink(ip);
-@@ -545,13 +545,19 @@ xfs_readlink(
- 
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 
--	ASSERT((ip->i_d.di_mode & S_IFMT) == S_IFLNK);
--	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
--
- 	pathlen = ip->i_d.di_size;
- 	if (!pathlen)
- 		goto out;
- 
-+	if (pathlen < 0 || pathlen > MAXPATHLEN) {
-+		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
-+			 __func__, (unsigned long long) ip->i_ino,
-+			 (long long) pathlen);
-+		ASSERT(0);
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+
- 	if (ip->i_df.if_flags & XFS_IFINLINE) {
- 		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
- 		link[pathlen] = '\0';
 -- 
 1.7.7
 
