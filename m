@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJJBfYZ077131 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 13:11:42 -0600
-Date: Sat, 19 Nov 2011 14:11:38 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V1
-Message-ID: <20111119191138.GA24444@infradead.org>
-References: <4E887D7F.2010306@oracle.com>
-	<20111114102444.GA27791@infradead.org>
-	<4EC10DE8.6030607@oracle.com> <20111114125044.GA9802@infradead.org>
-	<4EC768F5.4050904@oracle.com> <4EC76AB9.9030604@oracle.com>
+	pAJJ6Vib076699 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 13:06:31 -0600
+Received: from out2.smtp.messagingengine.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47AD826527A
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 11:06:29 -0800 (PST)
+Received: from out2.smtp.messagingengine.com (out2.smtp.messagingengine.com
+	[66.111.4.26]) by cuda.sgi.com with ESMTP id v6xyB1XOSbDZJOyO
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 11:06:29 -0800 (PST)
+Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 41872204E1
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 14:06:29 -0500 (EST)
+Date: Sat, 19 Nov 2011 10:59:19 -0800
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH 0/9] XFS update for 3.0-stable
+Message-ID: <20111119185919.GA30186@kroah.com>
+References: <20111119181336.964593075@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4EC76AB9.9030604@oracle.com>
+In-Reply-To: <20111119181336.964593075@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,136 +31,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, aelder@sgi.com, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Nov 19, 2011 at 04:37:13PM +0800, Jeff Liu wrote:
+On Sat, Nov 19, 2011 at 01:13:36PM -0500, Christoph Hellwig wrote:
+> This is the series of XFS fixes from current mainline which is important
+> enough for 3.0-stable.  All but the first three would also be needed
+> for 3.1-stable, but given the limited resources I plan to concentrate
+> on 3.0-stable.  If anyone wants to take care for 3.1 by building a kernel
+> with the remaining patches and run QA on them you are more welcome to
+> help out with that tree.
 > 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> Note that while the description of
+> 
+>         xfs: don't serialise direct IO reads on page cache checks
+> 
+> doesn't mention that is is a regression fix we later noticed that a
+> large part of the speedups wasn't in fact new, but fixed a performance
+> regression introduced in Linux 2.6.38 with commit:
+> 
+> 	xfs: introduce xfs_rw_lock() helpers for locking the inode
 
-Thanks a lot Jeff.  A few comments below:
+Thanks for the series of patches, I'll queue them up after this latest
+3.0 release happens on Monday.
 
-> +int
-> +xfs_seek_data_hole(
-> +	struct xfs_inode	*ip,
-> +	loff_t			*start,
-> +	u32			type)
-> +{
-> +	xfs_mount_t		*mp = ip->i_mount;
-
-please use
-
-	struct xfs_mount	*mp = ip->i_mount;
-
-for all new code.
-
-> +	if (xfs_get_extsz_hint(ip) ||
-> +	    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
-> +		filelen = XFS_MAXIOFFSET(mp);
-> +	} else {
-> +		filelen = ip->i_size;
-> +	}
-
-I don't understand this.  XFS_MAXIOFFSET is the maximum possible file
-size in an XFS filesystem - using it with an extent size hint or
-the prealloc or appen only flags doesn't make sense to me.
-
-> +	if (type == SEEK_DATA) {
-
-xfs_seek_data_hole shares almost no common code between the SEEK_DATA
-and SEEK_HOLE cases, which suggests it probably should be two different
-routines.
-
-
-> +STATIC loff_t
-> +xfs_file_llseek(
-> +	struct file *file,
-> +	loff_t offset,
-> +	int origin)
-> +{
-> +	struct inode *inode = file->f_mapping->host;
-> +	int ret;
-> +
-> +	if (origin != SEEK_DATA && origin != SEEK_HOLE)
-> +		return generic_file_llseek(file, offset, origin);
-> +
-> +	mutex_lock(&inode->i_mutex);
-> +	switch (origin) {
-> +	case SEEK_DATA:
-> +	case SEEK_HOLE:
-
-Having the if above and then the switch here seems like and odd style.
-I'd do either an if, or a switch statement for all possible variants,
-but not both.
-
-> +		if (offset >= i_size_read(inode)) {
-> +			ret = -ENXIO;
-> +			goto error;
-> +		}
-> +
-> +		ret = xfs_find_desired_extent(inode, &offset, origin);
-> +		if (ret)
-> +			goto error;
-> +	}
-> +
-> +	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET)) {
-> +		ret = -EINVAL;
-> +		goto error;
-> +	}
-
-I don't think this could ever happen on XFS.
-
-> +	if (offset > inode->i_sb->s_maxbytes) {
-> +		ret = -EINVAL;
-> +		goto error;
-> +	}
-
-This also shouldn't happen if the low-level code does the right
-thing.
-
-> +	if (offset != file->f_pos) {
-> +		file->f_pos = offset;
-> +		file->f_version = 0;
-> +	}
-
-XFS never uses f_version, no need to update it.
-
-> +int
-> +xfs_find_desired_extent(
-> +	struct inode		*inode,
-> +	loff_t			*start,
-> +	u32			type)
-
-I think this would better be merged with the code currenly in
-xfs_file_llseek.  Maybe move all the SEEK_DATA/SEEK_HOLE specific
-code from there to this function?
-
-Also please move this routine to be next to xfs_file_llseek in xfs_file.c,
-which also means that it can be marked static.
-
-> +{
-> +	xfs_inode_t		*ip = XFS_I(inode);
-> +	xfs_mount_t		*mp = ip->i_mount;
-
-Just as above please use the struct versions for new code.
-
-> +	/*
-> +	 * Flush the delay alloc blocks. Even after flushing the inode,
-> +	 * there can still be delalloc blocks on the inode beyond EOF
-> +	 * due to speculative preallocation. These are not removed until
-> +	 * the release function is called or the inode is inactivated.
-> +	 * Hence we cannot assert here that ip->i_delayed_blks == 0.
-> +	 */
-> +	if (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size) {
-> +		error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
-> +		if (error)
-> +			goto out_unlock_iolock;
-> +	}
-
-For the final version we should get rid of this flush and instead look
-for pages having dirty unwritten extents in the pagecache and adjust
-the result based on it.  I'm fine with delaying this until all other
-issues are sorted out.
+greg k-h
 
 _______________________________________________
 xfs mailing list
