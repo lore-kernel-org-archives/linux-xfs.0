@@ -1,19 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJIFiC7072043 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:44 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CBF1256F15A
-	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 10:15:43 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	LS7MSw7zqptc7EuC for <xfs@oss.sgi.com>;
-	Sat, 19 Nov 2011 10:15:43 -0800 (PST)
-Message-Id: <20111119181336.964593075@bombadil.infradead.org>
-Date: Sat, 19 Nov 2011 13:13:36 -0500
+	pAJIFjDI072051 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:45 -0600
+Message-Id: <20111119181543.605305176@bombadil.infradead.org>
+Date: Sat, 19 Nov 2011 13:13:38 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/9] XFS update for 3.0-stable
+Subject: [PATCH 2/9] [PATCH 2/9] xfs: fix xfs_mark_inode_dirty during umount
+References: <20111119181336.964593075@bombadil.infradead.org>
+Content-Disposition: inline;
+	filename=0002-xfs-fix-xfs_mark_inode_dirty-during-umount.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +23,74 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: xfs@oss.sgi.com
+Cc: Alex Elder <aelder@sgi.com>, xfs@oss.sgi.com
 
-This is the series of XFS fixes from current mainline which is important
-enough for 3.0-stable.  All but the first three would also be needed
-for 3.1-stable, but given the limited resources I plan to concentrate
-on 3.0-stable.  If anyone wants to take care for 3.1 by building a kernel
-with the remaining patches and run QA on them you are more welcome to
-help out with that tree.
+During umount we do not add a dirty inode to the lru and wait for it to
+become clean first, but force writeback of data and metadata with
+I_WILL_FREE set.  Currently there is no way for XFS to detect that the
+inode has been redirtied for metadata operations, as we skip the
+mark_inode_dirty call during teardown.  Fix this by setting i_update_core
+nanually in that case, so that the inode gets flushed during inode reclaim.
 
-Note that while the description of
+Alternatively we could enable calling mark_inode_dirty for inodes in
+I_WILL_FREE state, and let the VFS dirty tracking handle this.  I decided
+against this as we will get better I/O patterns from reclaim compared to
+the synchronous writeout in write_inode_now, and always marking the inode
+dirty in some way from xfs_mark_inode_dirty is a better safetly net in
+either case.
 
-        xfs: don't serialise direct IO reads on page cache checks
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
+(cherry picked from commit da6742a5a4cc844a9982fdd936ddb537c0747856)
 
-doesn't mention that is is a regression fix we later noticed that a
-large part of the speedups wasn't in fact new, but fixed a performance
-regression introduced in Linux 2.6.38 with commit:
+Signed-off-by: Alex Elder <aelder@sgi.com>
+---
+ fs/xfs/linux-2.6/xfs_iops.c |   14 +++++++++++---
+ 1 files changed, 11 insertions(+), 3 deletions(-)
 
-	xfs: introduce xfs_rw_lock() helpers for locking the inode
+diff --git a/fs/xfs/linux-2.6/xfs_iops.c b/fs/xfs/linux-2.6/xfs_iops.c
+index d44d92c..a9b3e1e 100644
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -69,9 +69,8 @@ xfs_synchronize_times(
+ }
+ 
+ /*
+- * If the linux inode is valid, mark it dirty.
+- * Used when committing a dirty inode into a transaction so that
+- * the inode will get written back by the linux code
++ * If the linux inode is valid, mark it dirty, else mark the dirty state
++ * in the XFS inode to make sure we pick it up when reclaiming the inode.
+  */
+ void
+ xfs_mark_inode_dirty_sync(
+@@ -81,6 +80,10 @@ xfs_mark_inode_dirty_sync(
+ 
+ 	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
+ 		mark_inode_dirty_sync(inode);
++	else {
++		barrier();
++		ip->i_update_core = 1;
++	}
+ }
+ 
+ void
+@@ -91,6 +94,11 @@ xfs_mark_inode_dirty(
+ 
+ 	if (!(inode->i_state & (I_WILL_FREE|I_FREEING)))
+ 		mark_inode_dirty(inode);
++	else {
++		barrier();
++		ip->i_update_core = 1;
++	}
++
+ }
+ 
+ /*
+-- 
+1.7.7
+
 
 _______________________________________________
 xfs mailing list
