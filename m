@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJ8ULL2009302 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 02:30:21 -0600
-Message-ID: <4EC768F5.4050904@oracle.com>
-Date: Sat, 19 Nov 2011 16:29:41 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: XFS SEEK_DATA/SEEK_HOLE support V1
-References: <4E887D7F.2010306@oracle.com>	<20111114102444.GA27791@infradead.org>	<4EC10DE8.6030607@oracle.com>
-	<20111114125044.GA9802@infradead.org>
-In-Reply-To: <20111114125044.GA9802@infradead.org>
-Reply-To: jeff.liu@oracle.com
+	pAJ8NVeu008592 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 02:23:32 -0600
+Received: from mx1.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C92CC1627DFC
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 00:23:30 -0800 (PST)
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5IEkWf33vmZJbQpo for
+	<xfs@oss.sgi.com>; Sat, 19 Nov 2011 00:23:30 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id pAJ8NTUU010114
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 03:23:29 -0500
+From: Eryu Guan <eguan@redhat.com>
+Subject: [PATCH] xfstests: 276 test time before epoch is correct when re-read
+	in from disk
+Date: Sat, 19 Nov 2011 16:24:15 +0800
+Message-Id: <1321691055-1927-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,285 +26,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, aelder@sgi.com
+Cc: Christoph Hellwig <chellwig@redhat.com>, Eryu Guan <eguan@redhat.com>
 
-Hello,
+This is a regression test case for commit
 
-Sorry for the delay! I have worked on another high priority task these days.
+4d7bf11d649c72621ca31b8ea12b9c94af380e63
+ext2/3/4: fix file date underflow on ext2 3 filesystems on 64 bit systems
 
-So the below patch is the first try to add SEEK_DATA/SEEK_HOLE to XFS, I have tested it through seek_test.c from Sunil, looks all works to me.
-http://oss.oracle.com/~smushran/seek_data/seek_test.c
+On 64bit systems, unpatched extX doesn't sign-extend time values read
+in from disk. This results in times which should be before the epoch
+jumping forward in time.  For example:
 
-Any feedback are welcome, thank you!
+At creation, inode information still in memory.
+[root@cluster1 ~]# touch -t 196001010101 test.txt
+[root@cluster1 ~]# ls -l test.txt
+-rw-r--r-- 1 root root 0 Jan  1  1960 test.txt
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+After remount/reboot to force the values to be read in from disk:
+[root@cluster1 ~]# ls -l test.txt
+-rw-r--r-- 1 root root 0 Feb  6  2096 test.txt
 
+When the time value was read in from disk, it wasn't sign extended so
+became a large, positive time value.  This doesn't occur on 32bit
+systems since the time is stored as 32bits on disk and thus doesn't
+need to be extended in size.
+
+Cc: Christoph Hellwig <chellwig@redhat.com>
+Signed-off-by: Eryu Guan <eguan@redhat.com>
 ---
- fs/xfs/xfs_bmap.c |   81 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap.h |    1 +
- fs/xfs/xfs_file.c |   51 ++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_iops.c |   64 +++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_iops.h |    3 ++
- 5 files changed, 199 insertions(+), 1 deletions(-)
+ 276     |   74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 276.out |    5 ++++
+ group   |    1 +
+ 3 files changed, 80 insertions(+), 0 deletions(-)
+ create mode 100755 276
+ create mode 100644 276.out
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index c68baeb..04c3930 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -6133,3 +6133,84 @@ next_block:
- 
- 	return error;
- }
+diff --git a/276 b/276
+new file mode 100755
+index 0000000..7570977
+--- /dev/null
++++ b/276
+@@ -0,0 +1,74 @@
++#! /bin/bash
++# FS QA Test No. 276
++#
++# Test time before epoch is correct when re-read in from disk.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=eguan@redhat.com
 +
++seq=`basename $0`
++echo "QA output created by $seq"
 +
-+int
-+xfs_seek_data_hole(
-+	struct xfs_inode	*ip,
-+	loff_t			*start,
-+	u32			type)
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
 +{
-+	xfs_mount_t		*mp = ip->i_mount;
-+	xfs_fileoff_t		seekoff = *start;
-+	xfs_fileoff_t		filelen;
-+	xfs_extnum_t		lastx;
-+	xfs_ifork_t		*ifp;
-+	struct xfs_bmbt_irec	got;
-+	struct xfs_bmbt_irec	prev;
-+	u64			extoff;
-+	u64			extlen;
-+	int			eof;
-+
-+	if (xfs_get_extsz_hint(ip) ||
-+	    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
-+		filelen = XFS_MAXIOFFSET(mp);
-+	} else {
-+		filelen = ip->i_size;
-+	}
-+
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-+	xfs_bmap_search_extents(ip, XFS_BB_TO_FSBT(mp, BTOBB(*start)),
-+				XFS_DATA_FORK, &eof, &lastx, &got, &prev);
-+
-+	if (type == SEEK_DATA) {
-+		extoff = BBTOB(XFS_FSB_TO_BB(mp, got.br_startoff));
-+		extlen = BBTOB(XFS_FSB_TO_BB(mp, got.br_blockcount));
-+
-+		if (eof) {
-+			if (seekoff < extoff + extlen)
-+				*start = seekoff;
-+			else {
-+				/*
-+				 * There is no more data region past the
-+				 * supplied offset.
-+				 */
-+				return XFS_ERROR(ENXIO);
-+			}
-+		}
-+
-+		*start = seekoff < extoff ? extoff : seekoff;
-+	} else {
-+		for (;;) {
-+			extoff = BBTOB(XFS_FSB_TO_BB(mp, got.br_startoff));
-+			extlen = BBTOB(XFS_FSB_TO_BB(mp, got.br_blockcount));
-+			if (eof) {
-+				/*
-+				 * There might be a hole at the end of the
-+				 * file, adjust to the file size.
-+				 */
-+				if (seekoff >= extoff) {
-+					*start = min_t(xfs_fileoff_t, filelen,
-+							(extoff + extlen));
-+				}
-+				break;
-+			}
-+
-+			/* A hole found */
-+			if (seekoff < extoff) {
-+				*start = seekoff;
-+				break;
-+			}
-+
-+			/* Fetch the next extent */
-+			seekoff = extoff + extlen;
-+			if (++lastx < ifp->if_bytes / sizeof(xfs_bmbt_rec_t))
-+				xfs_bmbt_get_all(xfs_iext_get_ext(ifp, lastx),
-+						 &got);
-+			else
-+				eof = 1;
-+		}
-+	}
-+
-+	return 0;
-+}
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 89ee672..964e29b 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -196,6 +196,7 @@ int	xfs_bunmapi(struct xfs_trans *tp, struct xfs_inode *ip,
- int	xfs_check_nostate_extents(struct xfs_ifork *ifp, xfs_extnum_t idx,
- 		xfs_extnum_t num);
- uint	xfs_default_attroffset(struct xfs_inode *ip);
-+int	xfs_seek_data_hole(struct xfs_inode *ip, loff_t *start, u32 type);
- 
- #ifdef __KERNEL__
- /* bmap to userspace formatter - copy to user & advance pointer */
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 753ed9b..bf5471b 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1141,8 +1141,57 @@ xfs_vm_page_mkwrite(
- 	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
- }
- 
-+STATIC loff_t
-+xfs_file_llseek(
-+	struct file *file,
-+	loff_t offset,
-+	int origin)
-+{
-+	struct inode *inode = file->f_mapping->host;
-+	int ret;
-+
-+	if (origin != SEEK_DATA && origin != SEEK_HOLE)
-+		return generic_file_llseek(file, offset, origin);
-+
-+	mutex_lock(&inode->i_mutex);
-+	switch (origin) {
-+	case SEEK_DATA:
-+	case SEEK_HOLE:
-+		if (offset >= i_size_read(inode)) {
-+			ret = -ENXIO;
-+			goto error;
-+		}
-+
-+		ret = xfs_find_desired_extent(inode, &offset, origin);
-+		if (ret)
-+			goto error;
-+	}
-+
-+	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET)) {
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
-+	if (offset > inode->i_sb->s_maxbytes) {
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
-+	if (offset != file->f_pos) {
-+		file->f_pos = offset;
-+		file->f_version = 0;
-+	}
-+
-+	mutex_unlock(&inode->i_mutex);
-+	return offset;
-+
-+error:
-+	mutex_unlock(&inode->i_mutex);
-+	return ret;
++	cd /
++	rm -f $testfile
++	_scratch_unmount
 +}
 +
- const struct file_operations xfs_file_operations = {
--	.llseek		= generic_file_llseek,
-+	.llseek		= xfs_file_llseek,
- 	.read		= do_sync_read,
- 	.write		= do_sync_write,
- 	.aio_read	= xfs_file_aio_read,
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 23ce927..482c1ff 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1030,6 +1030,70 @@ xfs_vn_fiemap(
- 	return 0;
- }
- 
-+int
-+xfs_find_desired_extent(
-+	struct inode		*inode,
-+	loff_t			*start,
-+	u32			type)
-+{
-+	xfs_inode_t		*ip = XFS_I(inode);
-+	xfs_mount_t		*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp;
-+	int			lock;
-+	int			error;
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
 +
-+	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
-+	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
-+	    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-+		return XFS_ERROR(EINVAL);
++# real QA test starts here
 +
-+	xfs_ilock(ip, XFS_IOLOCK_SHARED);
++# Modify as appropriate.
++_supported_fs generic
++_supported_os Linux
 +
-+	/*
-+	 * Flush the delay alloc blocks. Even after flushing the inode,
-+	 * there can still be delalloc blocks on the inode beyond EOF
-+	 * due to speculative preallocation. These are not removed until
-+	 * the release function is called or the inode is inactivated.
-+	 * Hence we cannot assert here that ip->i_delayed_blks == 0.
-+	 */
-+	if (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size) {
-+		error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
-+		if (error)
-+			goto out_unlock_iolock;
-+	}
++_require_scratch
++_scratch_mkfs &>/dev/null
++_scratch_mount
 +
-+	lock = xfs_ilock_map_shared(ip);
++testfile=$SCRATCH_MNT/testfile
 +
-+	if (XFS_FORCED_SHUTDOWN(mp)) {
-+		error = EIO;
-+		goto out_unlock_ilock;
-+	}
++# set timestamp 1 second before epoch
++touch -d @-1 $testfile
++atime_1=`stat --format=%X $testfile`
++mtime_1=`stat --format=%Y $testfile`
++echo "atime after touch $atime_1"
++echo "mtime after touch $mtime_1"
 +
-+	XFS_STATS_INC(xs_blk_mapr);
-+	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++# remount fs to force re-read in timestamp from disk
++_scratch_remount
 +
-+	ASSERT(ifp->if_ext_max ==
-+	      XFS_IFORK_SIZE(ip, XFS_DATA_FORK) / (uint)sizeof(xfs_bmbt_rec_t));
++atime_2=`stat --format=%X $testfile`
++mtime_2=`stat --format=%Y $testfile`
++echo "atime after remount $atime_2"
++echo "mtime after remount $mtime_2"
 +
-+	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-+		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+		if (error)
-+			goto out_unlock_ilock;
-+	}
++if [ "$atime_1" = "$atime_2" -a "$mtime_1" = "$mtime_2" ];then
++	status=0
++fi
 +
-+	error = xfs_seek_data_hole(ip, start, type);
-+
-+out_unlock_ilock:
-+	xfs_iunlock_map_shared(ip, lock);
-+out_unlock_iolock:
-+	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
-+
-+	if (error)
-+		return -error;
-+
-+	return 0;
-+}
-+
- static const struct inode_operations xfs_inode_operations = {
- 	.get_acl		= xfs_get_acl,
- 	.getattr		= xfs_vn_getattr,
-diff --git a/fs/xfs/xfs_iops.h b/fs/xfs/xfs_iops.h
-index ef41c92..ea47abd 100644
---- a/fs/xfs/xfs_iops.h
-+++ b/fs/xfs/xfs_iops.h
-@@ -27,4 +27,7 @@ extern ssize_t xfs_vn_listxattr(struct dentry *, char *data, size_t size);
- 
- extern void xfs_setup_inode(struct xfs_inode *);
- 
-+extern int xfs_find_desired_extent(struct inode *inode, loff_t *start,
-+				   u32 type);
-+
- #endif /* __XFS_IOPS_H__ */
++exit
+diff --git a/276.out b/276.out
+new file mode 100644
+index 0000000..6e544ee
+--- /dev/null
++++ b/276.out
+@@ -0,0 +1,5 @@
++QA output created by 276
++atime after touch -1
++mtime after touch -1
++atime after remount -1
++mtime after remount -1
+diff --git a/group b/group
+index 08d999a..be4bd9b 100644
+--- a/group
++++ b/group
+@@ -389,3 +389,4 @@ deprecated
+ 273 auto rw
+ 274 auto rw
+ 275 auto rw
++276 auto quick
 -- 
-1.7.4.1
+1.7.7.1
 
 _______________________________________________
 xfs mailing list
