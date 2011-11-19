@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAJIFms5072107 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:48 -0600
-Message-Id: <20111119181545.413417685@bombadil.infradead.org>
-Date: Sat, 19 Nov 2011 13:13:45 -0500
+	pAJIFjPo072054 for <xfs@oss.sgi.com>; Sat, 19 Nov 2011 12:15:45 -0600
+Message-Id: <20111119181543.361506649@bombadil.infradead.org>
+Date: Sat, 19 Nov 2011 13:13:37 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 9/9] [PATCH 9/9] xfs: use doalloc flag in xfs_qm_dqattach_one()
+Subject: [PATCH 1/9] [PATCH 1/9] "xfs: fix error handling for synchronous
+	writes"
 References: <20111119181336.964593075@bombadil.infradead.org>
 Content-Disposition: inline;
-	filename=0009-xfs-use-doalloc-flag-in-xfs_qm_dqattach_one.patch
+	filename=0001-xfs-fix-error-handling-for-synchronous-writes-revisi.patch
+	revisited
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,48 +25,43 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
+Cc: Alex Elder <aelder@sgi.com>, Ajeet Yadav <ajeet.yadav.77@gmail.com>, xfs@oss.sgi.com
 
-The doalloc arg in xfs_qm_dqattach_one() is a flag that indicates
-whether a new area to handle quota information will be allocated
-if needed. Originally, it was passed to xfs_qm_dqget(), but has
-been removed by the following commit (probably by mistake):
+xfs: fix for hang during synchronous buffer write error
 
-	commit 8e9b6e7fa4544ea8a0e030c8987b918509c8ff47
-	Author: Christoph Hellwig <hch@lst.de>
-	Date:   Sun Feb 8 21:51:42 2009 +0100
+If removed storage while synchronous buffer write underway,
+"xfslogd" hangs.
 
-	xfs: remove the unused XFS_QMOPT_DQLOCK flag
+Detailed log http://oss.sgi.com/archives/xfs/2011-07/msg00740.html
 
-As the result, xfs_qm_dqget() called from xfs_qm_dqattach_one()
-never allocates the new area even if it is needed.
+Related work bfc60177f8ab509bc225becbb58f7e53a0e33e81
+"xfs: fix error handling for synchronous writes"
 
-This patch gives the doalloc arg to xfs_qm_dqget() in
-xfs_qm_dqattach_one() to fix this problem.
+Given that xfs_bwrite actually does the shutdown already after
+waiting for the b_iodone completion and given that we actually
+found that calling xfs_force_shutdown from inside
+xfs_buf_iodone_callbacks was a major contributor the problem
+it better to drop this call.
 
-Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Cc: Alex Elder <aelder@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/quota/xfs_qm.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_buf_item.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index b94dace..e70c7fc 100644
---- a/fs/xfs/quota/xfs_qm.c
-+++ b/fs/xfs/quota/xfs_qm.c
-@@ -714,7 +714,8 @@ xfs_qm_dqattach_one(
- 	 * disk and we didn't ask it to allocate;
- 	 * ESRCH if quotas got turned off suddenly.
- 	 */
--	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
-+	error = xfs_qm_dqget(ip->i_mount, ip, id, type,
-+			     doalloc | XFS_QMOPT_DOWARN, &dqp);
- 	if (error)
- 		return error;
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index a7342e8..7888a75 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -1023,7 +1023,6 @@ xfs_buf_iodone_callbacks(
+ 	XFS_BUF_UNDELAYWRITE(bp);
  
+ 	trace_xfs_buf_error_relse(bp, _RET_IP_);
+-	xfs_force_shutdown(mp, SHUTDOWN_META_IO_ERROR);
+ 
+ do_callbacks:
+ 	xfs_buf_do_callbacks(bp);
 -- 
 1.7.7
 
