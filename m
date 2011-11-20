@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAKIWPsS172217 for <xfs@oss.sgi.com>; Sun, 20 Nov 2011 12:32:26 -0600
+	pAKJAqnu173985 for <xfs@oss.sgi.com>; Sun, 20 Nov 2011 13:10:53 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3AE4B1D1FB3A
-	for <xfs@oss.sgi.com>; Sun, 20 Nov 2011 10:32:24 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1A1C916291F9
+	for <xfs@oss.sgi.com>; Sun, 20 Nov 2011 11:10:50 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	S1JDz4HynNjiQFjA for <xfs@oss.sgi.com>;
-	Sun, 20 Nov 2011 10:32:24 -0800 (PST)
-Date: Sun, 20 Nov 2011 13:32:23 -0500
+	N0kesKfWZFvghhvS for <xfs@oss.sgi.com>;
+	Sun, 20 Nov 2011 11:10:50 -0800 (PST)
+Date: Sun, 20 Nov 2011 14:10:50 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS / xfssyncd lock-ups on 2.6.38-8
-Message-ID: <20111120183223.GA19572@infradead.org>
-References: <A734D23E-8544-4261-A699-90B689887F46@instagram.com>
+Subject: Re: inode64 readiness testing
+Message-ID: <20111120191050.GB11957@infradead.org>
+References: <501A7AEB-6708-4181-AAE2-D145DC23B938@yahoo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <A734D23E-8544-4261-A699-90B689887F46@instagram.com>
+In-Reply-To: <501A7AEB-6708-4181-AAE2-D145DC23B938@yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,19 +30,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Krieger <mikeyk@instagram.com>
+To: Peter Kimball <peterakimball@yahoo.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Nov 20, 2011 at 08:34:02AM -0800, Mike Krieger wrote:
-> Would appreciate any thoughts/pointers to fixes or workarounds if this is a known issue.
+On Fri, Nov 18, 2011 at 12:33:16PM -0500, Peter Kimball wrote:
+> I created a blank 1GB disk image, created an XFS filesystem on that image, and mounted it on a loopback device using the ino64 flag.  
+> 
+> I wrote a bunch of data to the filesystem (lots of small files), approximately 600MB.
+> 
+> At this point, I think I have a filesystem in which inodes use 64-bit addresses, even if the actual address value would fit in 32 bits.  I would expect any program that can't handle 64-bit addresses to barf when trying to access any data on the filesystem.
 
-This was fixed by:
-
-	xfs: force the log if we encounter pinned buffers in .iop_pushbuf
-
-in Linux 3.1.  I've also backported it to the 3.0-stable issues.  I
-would recommend to upgrade to the latest Linux 3.0-stable release, as
-I'll plan to backport all important XFS fixes to it.
+You will never not see 64-bit inodes on a filesystem that small ever.
+Try to create a (sparse) 10TB loop image, and create some deep
+directories in it.  This should create some larger inodes number for
+you if you had it mounted with the inode64 flag.  You can verify that
+by checking that the inode number returned from the stat systsem call
+or from ls -i is larger than 32 bits.
 
 _______________________________________________
 xfs mailing list
