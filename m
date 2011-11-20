@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAKDFPKR157024 for <xfs@oss.sgi.com>; Sun, 20 Nov 2011 07:15:25 -0600
-Message-ID: <4EC8FD55.6060902@oracle.com>
-Date: Sun, 20 Nov 2011 21:15:01 +0800
+	pAKDxsUt158977 for <xfs@oss.sgi.com>; Sun, 20 Nov 2011 07:59:54 -0600
+Message-ID: <4EC907C3.7020901@oracle.com>
+Date: Sun, 20 Nov 2011 21:59:31 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V1
-References: <4E887D7F.2010306@oracle.com>
-	<20111114102444.GA27791@infradead.org>
-	<4EC10DE8.6030607@oracle.com> <20111114125044.GA9802@infradead.org>
-	<4EC768F5.4050904@oracle.com> <4EC76AB9.9030604@oracle.com>
-	<20111119191138.GA24444@infradead.org>
-In-Reply-To: <20111119191138.GA24444@infradead.org>
+References: <4E887D7F.2010306@oracle.com>	<20111114102444.GA27791@infradead.org>	<4EC10DE8.6030607@oracle.com>
+	<20111114125044.GA9802@infradead.org>	<4EC768F5.4050904@oracle.com>
+	<4EC76AB9.9030604@oracle.com> <20111120003031.GM7046@dastard>
+In-Reply-To: <20111120003031.GM7046@dastard>
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,61 +24,143 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: aelder@sgi.com, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com, Chris Mason <chris.mason@oracle.com>, aelder@sgi.com
 
-Hi Christoph,
+Hi Dave,
 
-Thanks for your quick response!
-On 11/20/2011 03:11 AM, Christoph Hellwig wrote:
+Thanks for your further comments!
+
+On 11/20/2011 08:30 AM, Dave Chinner wrote:
 
 > On Sat, Nov 19, 2011 at 04:37:13PM +0800, Jeff Liu wrote:
 >>
 >> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 > 
-> Thanks a lot Jeff.  A few comments below:
+> Christoph has commented on the code-related aspects of the patch, so
+> I won't repeat that. I'll comment on structural/design issues
+> instead.
 > 
->> +int
->> +xfs_seek_data_hole(
->> +	struct xfs_inode	*ip,
->> +	loff_t			*start,
->> +	u32			type)
->> +{
->> +	xfs_mount_t		*mp = ip->i_mount;
-> 
-> please use
-> 
-> 	struct xfs_mount	*mp = ip->i_mount;
-> 
-> for all new code.
+> Firstly, the patch splits the functionality arbitrarily over three
+> different files, and I don't think that is necessary. There really
+> is no reason at all for xfs_bmap.c to know anything aout
+> SEEK_HOLE/SEEK_DATA semantics - that file is for extent manipulation
+> and search functions. SEEK semantics should be entirely encoded into
+> the function that deals with the seeking.
+
+Yes, I should merge and isolate those functions in xfs_file.c.
 
 > 
->> +	if (xfs_get_extsz_hint(ip) ||
->> +	    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
->> +		filelen = XFS_MAXIOFFSET(mp);
->> +	} else {
->> +		filelen = ip->i_size;
->> +	}
-> 
-> I don't understand this.  XFS_MAXIOFFSET is the maximum possible file
-> size in an XFS filesystem - using it with an extent size hint or
-> the prealloc or appen only flags doesn't make sense to me.
+> Secondly, xfs_find_desired_extent() and xfs_seek_hole_data() should
+> be one function, and named something like xfs_file_seek_extent().
 
-Sorry, I forgot why I using it to retrieve the file size before. :( but
-it definitely don't needed here.
+Definitely!  and sorry for my poor english, xfs_file_seek_extent() is distinct in this case.
 
 > 
->> +	if (type == SEEK_DATA) {
+> Finally, don't think using low level extent search functions like
+> xfs_bmap_search_extents() is the right level to implement this
+> functionality (see my comments about SEEK_HOLE/SEEK_DATA semantics
+> in xfs-bmap.c above), especially as we already have functions for
+> looking up holes and extents at given offsets.
 > 
-> xfs_seek_data_hole shares almost no common code between the SEEK_DATA
-> and SEEK_HOLE cases, which suggests it probably should be two different
-> routines.
+> That is, to find the next hole at or after after a given offset, we
+> already have xfs_bmap_first_unused(). Indeed, this function already
+> has the exact semantics that SEEK_HOLE requires. Simply put:
+> 
+> 	case SEEK_HOLE:
+> 		fsb = XFS_B_TO_FSBT(mp, start_offset);
+> 		error = xfs_bmap_first_unused(NULL, ip, 1, &fsb,
+> 						XFS_DATA_FORK);
+> 		if (error)
+> 			return -error;
+> 
+> 		if (fsb <= XFS_B_TO_FSBT(mp, start_offset))
+> 			return start_offset;
+> 		return XFS_FSB_TO_B(mp, fsb);
 
-Yes, it's better to split SEEK_DATA/SEEK_HOLE into two different functions.
+Thanks for pointing it out, I even don't know XFS has this convenient routine at that time. :(
 
 > 
 > 
->> +STATIC loff_t
+> As to the data extent search, I'd prefer you to use xfs_bmapi_read()
+> rather than xfs_bmap_search_extents() directly. I'd prefer that we
+> return unwritten extents as holes rather than data from the initial
+> implementation, and using the low level xfs_bmap_search_extents()
+> makes that quite complex. However, we already have a function for
+> handling that complexity: xfs_bmapi_read().
+> 
+> That is, xfs_bmapi_read() needs to be passed an array of two maps,
+> one for the current offset, and one for the next extent type. This
+> makes one call sufficient for most transitions. Done in a simple
+> loop it will handle all conditions of hole->unwritten->hole....
+> until it finds a data extent of EOF.
+> 
+> 
+> 	start_fsbno = XFS_B_TO_FSBT(mp, start_offset);
+> 	while (1) {
+> 		struct xfs_bmbt_irec	maps[2];
+> 		int			nmaps = 2;
+> 
+> 		count_fsb = XFS_B_TO_FSB(mp, XFS_MAXIOFFSET(mp));
+> 		error = xfs_bmapi_read(ip, fsbno, count_fsb,
+> 					&maps, &nmaps, XFS_BMAPI_ENTIRE);
+> 
+> 		if (error)
+> 			return -error;
+> 		if (!nmaps) {
+> 			/* no extents at given offset, must be beyond EOF */
+> 			return -ENXIO;
+> 		}
+> 
+> 		switch (map[0].br_startblock) {
+> 		case DELAYSTARTBLOCK:
+> 			/* landed in an in-memory data extent */
+> 			return map[0].br_startoff;
+> 
+> 		default:
+> 			/* landed in an allocated extent */
+> 			if (map[0].br_state == XFS_EXT_NORM) {
+> 				/* a real data extent */
+> 				return map[0].br_startoff;
+> 			}
+> 			/* Fall through to hole handling for unwritten extents */
+> 
+> 		case HOLESTARTBLOCK:
+> 			/*
+> 			 * landed in a hole. If the next extent is a data
+> 			 * extent, then return the start of it, otherwise
+> 			 * we need to move the start offset and map more
+> 			 * blocks.
+> 			 */
+> 			if (map[1].br_startblock == DELAYSTARTBLOCK ||
+> 			   ((map[1].br_startblock != HOLESTARTBLOCK &&
+> 			     map[1].br_state == XFS_EXT_NORM)))
+> 				return map[1].br_startoff;
+> 
+> 			start_fsbno = map[1].br_startoff + map[1].br_blockcount;
+> 			break;
+> 		}
+> 
+> 		if (XFS_FSB_TO_B(mp, start_fsbno) > ip->i_size) {
+> 			/* Beyond EOF now */
+> 			return -ENXIO;
+> 		}
+> 	}
+> 
+> This can pretty much all be done in
+> fs/xfs/xfs_file.c::xfs_file_seek_extent() because all the functions
+> used by the above code are exported from xfs_bmap.c for external use
+> - that solves the scattering problem and uses interfaces that we
+> already know work in the intended manner.... ;)
+
+Thanks again for the detailed info!
+At first, I have spent a few hours to think it over using xfs_bmap_search_extents() or xfs_bmapi_read().
+Indeed, it will be more complex to deal with the unwritten extents later if using xfs_bmap_search_extents().
+This change will reflected in my next post.
+
+> 
+> BTW:
+> 
 >> +xfs_file_llseek(
 >> +	struct file *file,
 >> +	loff_t offset,
@@ -94,53 +174,13 @@ Yes, it's better to split SEEK_DATA/SEEK_HOLE into two different functions.
 >> +
 >> +	mutex_lock(&inode->i_mutex);
 >> +	switch (origin) {
->> +	case SEEK_DATA:
->> +	case SEEK_HOLE:
 > 
-> Having the if above and then the switch here seems like and odd style.
-> I'd do either an if, or a switch statement for all possible variants,
-> but not both.
+> We don't need the i_mutex to be held here. We only need to hold the
+> ilock in shared mode for this operation to protect against extent
+> list modifications (like unwritten extent conversion and
+> truncation).
 
-I'll fix it with switch statement then. :-)
-
-> 
->> +		if (offset >= i_size_read(inode)) {
->> +			ret = -ENXIO;
->> +			goto error;
->> +		}
->> +
->> +		ret = xfs_find_desired_extent(inode, &offset, origin);
->> +		if (ret)
->> +			goto error;
->> +	}
->> +
->> +	if (offset < 0 && !(file->f_mode & FMODE_UNSIGNED_OFFSET)) {
->> +		ret = -EINVAL;
->> +		goto error;
->> +	}
-> 
-> I don't think this could ever happen on XFS.
-> 
->> +	if (offset > inode->i_sb->s_maxbytes) {
->> +		ret = -EINVAL;
->> +		goto error;
->> +	}
-> 
-> This also shouldn't happen if the low-level code does the right
-> thing.
-
-> 
->> +	if (offset != file->f_pos) {
->> +		file->f_pos = offset;
->> +		file->f_version = 0;
->> +	}
-> 
-> XFS never uses f_version, no need to update it.
-
-
-Thanks for pointing out my mistakes for above three issues,
-I have not think carefully about them, just copy && paste the code block
-from btrfs instead, they will be fixed in the next post.
+looks we only need to hold the ilock in shared mode in xfs_file_seek_extent().
 
 > 
 >> +int
@@ -148,24 +188,20 @@ from btrfs instead, they will be fixed in the next post.
 >> +	struct inode		*inode,
 >> +	loff_t			*start,
 >> +	u32			type)
-> 
-> I think this would better be merged with the code currenly in
-> xfs_file_llseek.  Maybe move all the SEEK_DATA/SEEK_HOLE specific
-> code from there to this function?
-> 
-> Also please move this routine to be next to xfs_file_llseek in xfs_file.c,
-> which also means that it can be marked static.
-
-ok, I'll merge both find_desired_extent() and seek_data_hole() to a
-single routine and place it there.
-
-> 
 >> +{
 >> +	xfs_inode_t		*ip = XFS_I(inode);
 >> +	xfs_mount_t		*mp = ip->i_mount;
-> 
-> Just as above please use the struct versions for new code.
-> 
+>> +	struct xfs_ifork	*ifp;
+>> +	int			lock;
+>> +	int			error;
+>> +
+>> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+>> +	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+>> +	    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+>> +		return XFS_ERROR(EINVAL);
+>> +
+>> +	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+>> +
 >> +	/*
 >> +	 * Flush the delay alloc blocks. Even after flushing the inode,
 >> +	 * there can still be delalloc blocks on the inode beyond EOF
@@ -179,19 +215,23 @@ single routine and place it there.
 >> +			goto out_unlock_iolock;
 >> +	}
 > 
-> For the final version we should get rid of this flush and instead look
-> for pages having dirty unwritten extents in the pagecache and adjust
-> the result based on it.  I'm fine with delaying this until all other
-> issues are sorted out.
+> i.e. this IOLOCK and flush is completely unnecessary because we'll
+> find delayed allocation extents in the extent lookup and can handle
+> them just like real allocated extents....
+> 
+>> +	lock = xfs_ilock_map_shared(ip);
+> 
+> i.e. this is the only lock we need to take.
 
-Per Dave's comments, we would get ride of pages flush if using
-xfs_bmapi_read() to retrieve the delayed extents info from the initial
-implementation.
+Yes, if we get rid of the the flush pages here, xfs_ilock() can be removed safely.
 
 Thanks,
 -Jeff
 
 > 
+> Cheers,
+> 
+> Dave.
 
 
 _______________________________________________
