@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pALFeMbx007150 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 09:40:22 -0600
-Date: Mon, 21 Nov 2011 09:40:40 -0600
+	pALG5Fsg008185 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 10:05:15 -0600
+Date: Mon, 21 Nov 2011 10:05:31 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [ANNOUNCE] xfsprogs v3.1.7
-Message-ID: <20111121154040.GU749@sgi.com>
-References: <20111117233139.GL29840@sgi.com>
-	<20111119175102.GA3334@infradead.org>
+Subject: Re: [PATCH 0/9] XFS update for 3.0-stable
+Message-ID: <20111121160531.GN29840@sgi.com>
+References: <20111119181336.964593075@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111119175102.GA3334@infradead.org>
+In-Reply-To: <20111119181336.964593075@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,31 +23,22 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
 Hey Christoph,
 
-On Sat, Nov 19, 2011 at 12:51:02PM -0500, Christoph Hellwig wrote:
-> On Thu, Nov 17, 2011 at 05:31:39PM -0600, Ben Myers wrote:
-> > Version 3.1.7 of xfsprogs has been released.
-> 
-> Can we please avoid totally uncoordinated and rushed release in
-> the future?
+On Sat, Nov 19, 2011 at 01:13:36PM -0500, Christoph Hellwig wrote:
+> This is the series of XFS fixes from current mainline which is important
+> enough for 3.0-stable.  All but the first three would also be needed
+> for 3.1-stable, but given the limited resources I plan to concentrate
+> on 3.0-stable.  If anyone wants to take care for 3.1 by building a kernel
+> with the remaining patches and run QA on them you are more welcome to
+> help out with that tree.
 
-That sounds like a good idea.  Do you have a date in mind?  Lets get it
-on the calendar.
+I'll work on 3.1...
 
 Thanks,
-	Ben
-
-> You personally had quetions about the lost+found
-> nlink issues that still haven't been resolved, and there's tons
-> of repair fixes that should have made it int othe next release.
-> 
-> If we only have a tiny debian specific fixup we should have a
-> Debian-specific branch with just that one liner.  Real releases
-> with actual changes need QA and coordination.
-> 
+-Ben
 
 _______________________________________________
 xfs mailing list
