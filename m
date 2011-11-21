@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pALBVjkk255448 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 05:31:45 -0600
+	pALBVnxs255508 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 05:31:49 -0600
 Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 925B456F9F2
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 03:31:43 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 695E056FA43
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 03:31:47 -0800 (PST)
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	PEmNSiYqntYk9Yfx for <xfs@oss.sgi.com>;
-	Mon, 21 Nov 2011 03:31:43 -0800 (PST)
+	wRFDn9gXejCb4Z8M for <xfs@oss.sgi.com>;
+	Mon, 21 Nov 2011 03:31:47 -0800 (PST)
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/8] xfstests: add --largefs check option
-Date: Mon, 21 Nov 2011 22:31:21 +1100
-Message-Id: <1321875088-30801-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 8/8] xfstests: enable large fs testing on ext4
+Date: Mon, 21 Nov 2011 22:31:28 +1100
+Message-Id: <1321875088-30801-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1321875088-30801-1-git-send-email-david@fromorbit.com>
 References: <1321875088-30801-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,105 +33,127 @@ Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Make it easier to check large filesystems quickly by adding a
---large-fs option to check to turn on shortcuts for large scratch
-device filesystem testing.
+Now that setting up large filesystem testing on sparse loopback
+devices uses a generic method for filling the filesystem, extent
+support to ext4 filesystems.
 
-Also, reject invalid command line options with a usage message.
+ext4 is slightly more complex to fill as it does not support files
+larger than 16TB. Hence a slightly more complex method of using
+multiple smaller files to fill the space is necessary.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- common |   63 +++++++++++++++++++++++++++++++++++++++------------------------
- 1 files changed, 39 insertions(+), 24 deletions(-)
+ common.rc |   90 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 90 insertions(+), 0 deletions(-)
 
-diff --git a/common b/common
-index 0723224..7d13078 100644
---- a/common
-+++ b/common
-@@ -27,6 +27,35 @@ _setenvironment()
-     export MSGVERB
+diff --git a/common.rc b/common.rc
+index 9b9041f..7bb8f50 100644
+--- a/common.rc
++++ b/common.rc
+@@ -366,6 +366,93 @@ _scratch_mkfs_xfs()
+     return $mkfs_status
  }
  
-+usage()
++_setup_large_ext4_fs()
 +{
-+    echo "Usage: $0 [options] [testlist]"'
++	fs_size=$1
++	local tmp_dir=/tmp/
 +
-+common options
-+    -v			verbose
++	[ "$LARGE_SCRATCH_DEV" != yes ] && return 0
++	[ -z "$SCRATCH_DEV_EMPTY_SPACE" ] && SCRATCH_DEV_EMPTY_SPACE=0
++	[ $SCRATCH_DEV_EMPTY_SPACE -ge $fs_size ] && return 0
 +
-+check options
-+    -xfs                test XFS (default)
-+    -udf                test UDF
-+    -nfs                test NFS
-+    -l			line mode diff
-+    -xdiff		graphical mode diff
-+    -udiff		show unified diff (default)
-+    -n			show me, do not run tests
-+    -q			quick [deprecated]
-+    -T			output timestamps
-+    -r			randomize test order
-+    --large-fs		optimise scratch device for large filesystems
++	# Default free space in the FS is 50GB, but you can specify more via
++	# SCRATCH_DEV_EMPTY_SPACE
++	space_to_consume=$(($fs_size - 50*1024*1024*1024 - $SCRATCH_DEV_EMPTY_SPACE))
 +
-+testlist options
-+    -g group[,group...]	include tests from these groups
-+    -x group[,group...]	exclude tests from these groups
-+    NNN			include test NNN
-+    NNN-NNN		include test range (eg. 012-021)
-+'
-+	    exit 0
++	# mount the filesystem and create 16TB - 4KB files until we consume
++	# all the necessary space.
++	_scratch_mount 2>&1 >$tmp_dir/mnt.err
++	local status=$?
++	if [ $status -ne 0 ]; then
++		echo "mount failed"
++		cat $tmp_dir/mnt.err >&2
++		rm -f $tmp_dir/mnt.err
++		return $status
++	fi
++	rm -f $tmp_dir/mnt.err
++
++	file_size=$((16*1024*1024*1024*1024 - 4096))
++	nfiles=0
++	while [ $space_to_consume -gt $file_size ]; do
++
++		xfs_io -F -f \
++			-c "truncate $file_size" \
++			-c "falloc -k 0 $file_size" \
++			$SCRATCH_MNT/.use_space.$nfiles 2>&1
++		status=$?
++		if [ $status -ne 0 ]; then
++			break;
++		fi
++
++		space_to_consume=$(( $space_to_consume - $file_size ))
++		nfiles=$(($nfiles + 1))
++	done
++
++	# consume the remaining space.
++	if [ $space_to_consume -gt 0 ]; then
++		xfs_io -F -f \
++			-c "truncate $space_to_consume" \
++			-c "falloc -k 0 $space_to_consume" \
++			$SCRATCH_MNT/.use_space.$nfiles 2>&1
++		status=$?
++	fi
++
++	umount $SCRATCH_MNT
++	if [ $status -ne 0 ]; then
++		echo "large file prealloc failed"
++		cat $tmp_dir/mnt.err >&2
++		return $status
++	fi
++	return 0
++}
++_scratch_mkfs_ext4()
++{
++	local tmp_dir=/tmp/
++
++	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV \
++			2>$tmp_dir.mkfserr 1>$tmp_dir.mkfsstd
++	local mkfs_status=$?
++
++	if [ $mkfs_status -eq 0 -a "$LARGE_SCRATCH_DEV" = yes ]; then
++		# manually parse the mkfs output to get the fs size in bytes
++		fs_size=`cat $tmp_dir.mkfsstd | awk ' \
++			/^Block size/ { split($2, a, "="); bs = a[2] ; } \
++			/ inodes, / { blks = $3 } \
++			/reserved for the super user/ { resv = $1 } \
++			END { fssize = bs * blks - resv; print fssize }'`
++
++		_setup_large_ext4_fs $fs_size
++		mkfs_status=$?
++	fi
++
++	# output stored mkfs output
++	cat $tmp_dir.mkfserr >&2
++	cat $tmp_dir.mkfsstd
++	rm -f $tmp_dir.mkfserr $tmp_dir.mkfsstd
++
++	return $mkfs_status
 +}
 +
- here=`pwd`
- rm -f $here/$iam.out
- _setenvironment
-@@ -117,30 +146,7 @@ s/ .*//p
-     in
- 
- 	-\? | -h | --help)	# usage
--	    echo "Usage: $0 [options] [testlist]"'
--
--common options
--    -v			verbose
--
--check options
--    -xfs                test XFS (default)
--    -udf                test UDF
--    -nfs                test NFS
--    -l			line mode diff
--    -xdiff		graphical mode diff
--    -udiff		show unified diff (default)
--    -n			show me, do not run tests
--    -q			quick [deprecated]
--    -T			output timestamps
--    -r 			randomize test order
--    
--testlist options
--    -g group[,group...]	include tests from these groups
--    -x group[,group...]	exclude tests from these groups
--    NNN			include test NNN
--    NNN-NNN		include test range (eg. 012-021)
--'
--	    exit 0
-+	    usage
- 	    ;;
- 
- 	-udf)	# -udf ... set FSTYP to udf
-@@ -232,6 +238,15 @@ testlist options
- 	    fi
- 	    ;;
- 
-+	--large-fs)
-+	    export USE_BIG_LOOPFS=yes
-+	    xpand=false
-+	    ;;
-+
-+	-*)
-+	    usage
-+	    ;;
-+
- 	*)
- 	    start=$r
- 	    end=$r
+ _scratch_mkfs()
+ {
+     case $FSTYP in
+@@ -381,6 +468,9 @@ _scratch_mkfs()
+     btrfs)
+         $MKFS_BTRFS_PROG $MKFS_OPTIONS $* $SCRATCH_DEV > /dev/null
+ 	;;
++    ext4)
++	_scratch_mkfs_ext4 $*
++	;;
+     *)
+ 	/sbin/mkfs -t $FSTYP -- $MKFS_OPTIONS $* $SCRATCH_DEV
+ 	;;
 -- 
 1.7.5.4
 
