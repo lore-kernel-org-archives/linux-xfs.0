@@ -1,21 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pALI6MNi013677 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 12:06:22 -0600
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A7B441D23D5C
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 10:06:21 -0800 (PST)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	sI2iHQinLwYOj9ej for <xfs@oss.sgi.com>;
-	Mon, 21 Nov 2011 10:06:21 -0800 (PST)
-Received: by iaen33 with SMTP id n33so8919931iae.26
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 10:06:21 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 21 Nov 2011 10:06:20 -0800
-Message-ID: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
-Subject: EFSCORRUPTED on mount?
-From: Gregory Farnum <gregory.farnum@dreamhost.com>
+	pALJHqtd016416 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 13:17:53 -0600
+Received: from e6.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 13DE72681DD
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 11:17:51 -0800 (PST)
+Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146]) by
+	cuda.sgi.com with ESMTP id NhmQu0lVu4gTeW5A for
+	<xfs@oss.sgi.com>; Mon, 21 Nov 2011 11:17:51 -0800 (PST)
+Received: from /spool/local
+	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Mon, 21 Nov 2011 14:17:49 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	pALJGf3V232342 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 14:16:41 -0500
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id pALJFXN4015002
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 12:16:31 -0700
+Subject: Re: [PATCH] xfs: Remove the entries from the queue while waking
+	them up.
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20111119181929.GA25739@infradead.org>
+References: <1321644054.2201.80.camel@chandra-lucid.austin.ibm.com>
+	<20111119181929.GA25739@infradead.org>
+Date: Mon, 21 Nov 2011 13:11:41 -0600
+Message-ID: <1321902701.2201.141.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,116 +42,519 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: XFS Mailing List <xfs@oss.sgi.com>
 
-While working with a Ceph node running XFS we somehow managed to
-corrupt our filesystem. I don't think there were any hard powercycles
-on this node, but while starting up after a kernel upgrade (it's
-running 3.1) the daemon was performing its usual startup sequence (a
-lot of file truncates, mostly) when it got an error out of the
-filesystem:
+On Sat, 2011-11-19 at 13:19 -0500, Christoph Hellwig wrote:
 
-2011-11-17 16:00:37.294876 7f83f3eef720 filestore(/mnt/osd.17)
-truncate meta/pginfo_12.7c8/0 size 0
-2011-11-17 16:00:37.483407 7f83f3eef720 filestore(/mnt/osd.17)
-truncate meta/pginfo_12.7c8/0 size 0 = -117
-2011-11-17 16:00:37.483476 7f83f3eef720 filestore(/mnt/osd.17)  error
-error 117: Structure needs cleaning not handled
+Hi Christoph,
 
-When I tried to look at the filesystem, it failed with EIO. When I
-tried to mount the filesystem after a remount, it gave me an internal
-error:
+Thanks for your review and response.... see my comments below.
 
-root@cephstore6358:~# mount /dev/sdg1 /mnt/osd.17
-2011 Nov 18 14:52:47 cephstore6358 [82374.729383] XFS: Internal error
-XFS_WANT_CORRUPTED_GOTO at line 1664 of file fs/xfs/xfs_alloc.c.
-Caller 0xffffffff811d6b71
-2011 Nov 18 14:52:47 cephstore6358 [82374.729386]
-2011 Nov 18 14:52:47 cephstore6358 [82374.758262] XFS (sdg1): Internal
-error xfs_trans_cancel at line 1928 of file fs/xfs/xfs_trans.c.
-Caller 0xffffffff811fa463
-2011 Nov 18 14:52:47 cephstore6358 [82374.758265]
-2011 Nov 18 14:52:47 cephstore6358 [82374.758352] XFS (sdg1):
-Corruption of in-memory data detected.  Shutting down filesystem
-2011 Nov 18 14:52:47 cephstore6358 [82374.758356] XFS (sdg1): Please
-umount the filesystem and rectify the problem(s)
-2011 Nov 18 14:52:47 cephstore6358 [82374.758364] XFS (sdg1): Failed
-to recover EFIs
-mount: Structure needs cleaning
+> Thanks a lot for tracking this issue down!
+> 
+> Unfortunately I don't think the fix is entirely safe.  If we remove
+> the ticket from the list before the wakeup we have to assume no one
+> else ever wakes up a process waiting for log space.  In Linux that
 
-dmesg had a little more output:
+The code does not assume that it got the space when it wakes up. After
+every wake up it does check for free bytes available and compares to
+required bytes before granting the bytes to itself. (IOW, after waking
+up it behaves the same way as the lock-less case)
 
-dmesg says:
-[82373.779312] XFS (sdg1): Mounting Filesystem
-[82373.930531] XFS (sdg1): Starting recovery (logdev: internal)
-[82374.729383] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line
-1664 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffff811d6b71
-[82374.729386]
-[82374.741959] Pid: 30648, comm: mount Not tainted
-3.1.0-dho-00004-g1ffcb5c-dirty #1
-[82374.749543] Call Trace:
-[82374.751994]  [<ffffffff811d606e>] ? xfs_free_ag_extent+0x4e3/0x698
-[82374.758157]  [<ffffffff811ce1f8>] ? xfs_setup_devices+0x84/0x84
-[82374.758163]  [<ffffffff811ce1f8>] ? xfs_setup_devices+0x84/0x84
-[82374.758167]  [<ffffffff811d6b71>] ? xfs_free_extent+0xb6/0xf9
-[82374.758171]  [<ffffffff811d3034>] ? kmem_zone_alloc+0x58/0x9e
-[82374.758179]  [<ffffffff812095f9>] ? xfs_trans_get_efd+0x21/0x2a
-[82374.758185]  [<ffffffff811fa413>] ? xlog_recover_process_efi+0x113/0x172
-[82374.758190]  [<ffffffff811fa54b>] ? xlog_recover_process_efis+0x4e/0x8e
-[82374.758194]  [<ffffffff811faa53>] ? xlog_recover_finish+0x14/0x88
-[82374.758199]  [<ffffffff8120088e>] ? xfs_mountfs+0x46c/0x56a
-[82374.758204]  [<ffffffff811ce365>] ? xfs_fs_fill_super+0x16d/0x244
-[82374.758213]  [<ffffffff810d5dcf>] ? mount_bdev+0x13d/0x198
-[82374.758218]  [<ffffffff810d4a42>] ? mount_fs+0xc/0xa6
-[82374.758225]  [<ffffffff810eb274>] ? vfs_kern_mount+0x61/0x97
-[82374.758230]  [<ffffffff810eb316>] ? do_kern_mount+0x49/0xd6
-[82374.758234]  [<ffffffff810eba99>] ? do_mount+0x6f6/0x75d
-[82374.758241]  [<ffffffff810b4429>] ? memdup_user+0x3a/0x56
-[82374.758246]  [<ffffffff810ebb88>] ? sys_mount+0x88/0xc4
-[82374.758254]  [<ffffffff8166c07b>] ? system_call_fastpath+0x16/0x1b
-[82374.758262] XFS (sdg1): Internal error xfs_trans_cancel at line
-1928 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff811fa463
+As Dave pointed, I can see only the signal case to be effecting this
+scenario. With that case in mind, I can see one change required to my
+patch: Add the ticket to the list the second time (in a function) only
+if the t_queue is not empty.
 
-[82374.758265]
-[82374.758268] Pid: 30648, comm: mount Not tainted
-3.1.0-dho-00004-g1ffcb5c-dirty #1
-[82374.758270] Call Trace:
-[82374.758275]  [<ffffffff81201ecd>] ? xfs_trans_cancel+0x56/0xcf
-[82374.758279]  [<ffffffff811fa463>] ? xlog_recover_process_efi+0x163/0x172
-[82374.758284]  [<ffffffff811fa54b>] ? xlog_recover_process_efis+0x4e/0x8e
-[82374.758288]  [<ffffffff811faa53>] ? xlog_recover_finish+0x14/0x88
-[82374.758293]  [<ffffffff8120088e>] ? xfs_mountfs+0x46c/0x56a
-[82374.758298]  [<ffffffff811ce365>] ? xfs_fs_fill_super+0x16d/0x244
-[82374.758303]  [<ffffffff810d5dcf>] ? mount_bdev+0x13d/0x198
-[82374.758307]  [<ffffffff810d4a42>] ? mount_fs+0xc/0xa6
-[82374.758312]  [<ffffffff810eb274>] ? vfs_kern_mount+0x61/0x97
-[82374.758317]  [<ffffffff810eb316>] ? do_kern_mount+0x49/0xd6
-[82374.758321]  [<ffffffff810eba99>] ? do_mount+0x6f6/0x75d
-[82374.758325]  [<ffffffff810b4429>] ? memdup_user+0x3a/0x56
-[82374.758330]  [<ffffffff810ebb88>] ? sys_mount+0x88/0xc4
-[82374.758335]  [<ffffffff8166c07b>] ? system_call_fastpath+0x16/0x1b
-[82374.758341] XFS (sdg1): xfs_do_force_shutdown(0x8) called from line
-1929 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff81201ee6
-[82374.758352] XFS (sdg1): Corruption of in-memory data detected.
-Shutting down filesystem
-[82374.758356] XFS (sdg1): Please umount the filesystem and rectify
-the problem(s)
-[82374.758364] XFS (sdg1): Failed to recover EFIs
-[82374.758367] XFS (sdg1): log mount finish failed
+> generally isn't a safe assumption - e.g. higher level code could have
+> added itself to another waitqueue before calling into this code (
+> possibly even outside the XFS code) and now getting a wake up, or
+> other bits of the kernel could have all kinds of reasons to wake
+> this process up.
+> 
+> Below is patch I hacked up on the airplane today - it makes sure
+> we always wake other waiters on the log space queues first before
+> adding a new process and should have the same effect.  Can you
+> test if this also fixes the 234 hang for you?
 
-xfs_check doesn't give me much either, since I assume the errors above
-are involved in log replay:
-root@cephstore6358:~# xfs_check -v /dev/sdg1
-ERROR: The filesystem has valuable metadata changes in a log which needs to
-be replayed.  Mount the filesystem to replay the log, and unmount it before
-re-running xfs_check.  If you are unable to mount the filesystem, then use
-the xfs_repair -L option to destroy the log and attempt a repair.
-Note that destroying the log may cause corruption -- please attempt a mount
-of the filesystem before doing this.
+> 
+> ---
+> From: Christoph Hellwig <hch@lst.de>
+> Subject: xfs: fix and cleanup logspace waiter lists
+> 
+> Apply the scheme used in log_regrant_write_log_space to wake up any
+> other threads waiting for log space before the newly added one to
+> log_regrant_write_log_space as well, and factor the code into
+> readable helpers.  For each of the queues we have:
+> 
+>  - one helper to wake up all waiting threads, and return if we
+>    succeeded into doing that.  These helpers will also be usable
+>    by xfs_log_move_tail once we remove the current opportunistic
+>    wakeups in it.
+>  - one helper to sleep on t_wait until enough log space is available,
+>    which is modelled after the Linux waitqueue model.
+> 
+> and rewrite log_regrant_write_log_space and log_regrant_write_log_space
+> around these helpers, including comments documenting what is going on.
+> These two function now use one and the same algorithm for waiting
+> on log space instead of subtly different ones before.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> ---
+>  fs/xfs/linux-2.6/xfs_trace.h |   12 -
+>  fs/xfs/xfs_log.c             |  329 +++++++++++++++++++++----------------------
+>  2 files changed, 170 insertions(+), 171 deletions(-)
+> 
+> Index: linux-2.6/fs/xfs/xfs_log.c
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/xfs_log.c	2011-11-19 15:51:55.689999172 +0100
+> +++ linux-2.6/fs/xfs/xfs_log.c	2011-11-19 16:57:07.226659537 +0100
+> @@ -670,6 +670,52 @@ xfs_log_write(
+>  	return error;
+>  }
+> 
+> +STATIC bool
+> +xlog_wake_writeq(
+> +	struct log		*log,
+> +	int			free_bytes)
+> +{
+> +	struct xlog_ticket	*tic;
+> +
+> +	list_for_each_entry(tic, &log->l_writeq, t_queue) {
+> +		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
+> +
+> +		if (free_bytes < tic->t_unit_res)
+> +			return false;
+> +		free_bytes -= tic->t_unit_res;
+> +
+> +		trace_xfs_log_regrant_write_wake_up(log, tic);
+> +		wake_up(&tic->t_wait);
+> +	}
+> +
+> +	return true;
+> +}
+> +
+> +STATIC bool
+> +xlog_wake_reserveq(
+> +	struct log		*log,
+> +	int			free_bytes)
+> +{
+> +	struct xlog_ticket	*tic;
+> +	int			need_bytes;
+> +
+> +	list_for_each_entry(tic, &log->l_reserveq, t_queue) {
+> +		if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+> +			need_bytes = tic->t_unit_res*tic->t_cnt;
+> +		else
+> +			need_bytes = tic->t_unit_res;
+> +
+> +		if (free_bytes < need_bytes)
+> +			return false;
+> +		free_bytes -= tic->t_unit_res;
+> +
+> +		trace_xfs_log_grant_wake_up(log, tic);
+> +		wake_up(&tic->t_wait);
+> +	}
+> +
+> +	return true;
+> +}
+> +
+>  void
+>  xfs_log_move_tail(xfs_mount_t	*mp,
+>  		  xfs_lsn_t	tail_lsn)
+> @@ -2492,11 +2538,42 @@ restart:
+>  	return 0;
+>  }	/* xlog_state_get_iclog_space */
+> 
+> +STATIC int
+> +xlog_reserveq_wait(
+> +	struct log		*log,
+> +	struct xlog_ticket	*tic,
+> +	int			need_bytes)
+> +{
+> +	list_add_tail(&tic->t_queue, &log->l_reserveq);
+> +
+> +	do {
+> +		if (XLOG_FORCED_SHUTDOWN(log))
+> +			goto shutdown;
+> +		xlog_grant_push_ail(log, need_bytes);
+> +
+> +		XFS_STATS_INC(xs_sleep_logspace);
+> +		trace_xfs_log_grant_sleep(log, tic);
+> +
+> +		xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
+> +		trace_xfs_log_grant_wake(log, tic);
+> +
+> +		spin_lock(&log->l_grant_reserve_lock);
+> +		if (XLOG_FORCED_SHUTDOWN(log))
+> +			goto shutdown;
+> +	} while (xlog_space_left(log, &log->l_grant_reserve_head) < need_bytes);
+> +
+> +	list_del_init(&tic->t_queue);
+> +	return 0;
+> +shutdown:
+> +	list_del_init(&tic->t_queue);
+> +	return XFS_ERROR(EIO);
+> +}
+> +
+>  /*
+>   * Atomically get the log space required for a log ticket.
+>   *
+> - * Once a ticket gets put onto the reserveq, it will only return after
+> - * the needed reservation is satisfied.
+> + * Once a ticket gets put onto the reserveq, it will only return after the
+> + * needed reservation is satisfied.
+>   *
+>   * This function is structured so that it has a lock free fast path. This is
+>   * necessary because every new transaction reservation will come through this
+> @@ -2504,113 +2581,94 @@ restart:
+>   * every pass.
+>   *
+>   * As tickets are only ever moved on and off the reserveq under the
+> - * l_grant_reserve_lock, we only need to take that lock if we are going
+> - * to add the ticket to the queue and sleep. We can avoid taking the lock if the
+> - * ticket was never added to the reserveq because the t_queue list head will be
+> - * empty and we hold the only reference to it so it can safely be checked
+> - * unlocked.
+> + * l_grant_reserve_lock, we only need to take that lock if we are going to add
+> + * the ticket to the queue and sleep. We can avoid taking the lock if the ticket
+> + * was never added to the reserveq because the t_queue list head will be empty
+> + * and we hold the only reference to it so it can safely be checked unlocked.
+>   */
+>  STATIC int
+> -xlog_grant_log_space(xlog_t	   *log,
+> -		     xlog_ticket_t *tic)
+> +xlog_grant_log_space(
+> +	struct log		*log,
+> +	struct xlog_ticket	*tic)
+>  {
+> -	int		 free_bytes;
+> -	int		 need_bytes;
+> +	int			free_bytes, need_bytes;
+> +	int			error = 0;
+> 
+> -#ifdef DEBUG
+> -	if (log->l_flags & XLOG_ACTIVE_RECOVERY)
+> -		panic("grant Recovery problem");
+> -#endif
+> +	ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
+> 
+>  	trace_xfs_log_grant_enter(log, tic);
+> 
+> +	/*
+> +	 * If there are other waiters on the queue then give them a chance at
+> +	 * logspace before us.  Wake up the first waiters, if we do not wake
+> +	 * up all the waiters then go to sleep waiting for more free space,
+> +	 * otherwise try to get some space for this transaction.
+> +	 */
+>  	need_bytes = tic->t_unit_res;
+>  	if (tic->t_flags & XFS_LOG_PERM_RESERV)
+>  		need_bytes *= tic->t_ocnt;
+> -
+> -	/* something is already sleeping; insert new transaction at end */
+> -	if (!list_empty_careful(&log->l_reserveq)) {
+> -		spin_lock(&log->l_grant_reserve_lock);
+> -		/* recheck the queue now we are locked */
+> -		if (list_empty(&log->l_reserveq)) {
+> -			spin_unlock(&log->l_grant_reserve_lock);
+> -			goto redo;
+> -		}
+> -		list_add_tail(&tic->t_queue, &log->l_reserveq);
+> -
+> -		trace_xfs_log_grant_sleep1(log, tic);
+> -
+> -		/*
+> -		 * Gotta check this before going to sleep, while we're
+> -		 * holding the grant lock.
+> -		 */
+> -		if (XLOG_FORCED_SHUTDOWN(log))
+> -			goto error_return;
+> -
+> -		XFS_STATS_INC(xs_sleep_logspace);
+> -		xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
+> -
+> -		/*
+> -		 * If we got an error, and the filesystem is shutting down,
+> -		 * we'll catch it down below. So just continue...
+> -		 */
+> -		trace_xfs_log_grant_wake1(log, tic);
+> -	}
+> -
+> -redo:
+> -	if (XLOG_FORCED_SHUTDOWN(log))
+> -		goto error_return_unlocked;
+> -
+>  	free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
+> -	if (free_bytes < need_bytes) {
+> +	if (!list_empty_careful(&log->l_reserveq)) {
+>  		spin_lock(&log->l_grant_reserve_lock);
+> -		if (list_empty(&tic->t_queue))
+> -			list_add_tail(&tic->t_queue, &log->l_reserveq);
+> -
+> -		trace_xfs_log_grant_sleep2(log, tic);
+> -
+> -		if (XLOG_FORCED_SHUTDOWN(log))
+> -			goto error_return;
+> -
+> -		xlog_grant_push_ail(log, need_bytes);
+> -
+> -		XFS_STATS_INC(xs_sleep_logspace);
+> -		xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
+> -
+> -		trace_xfs_log_grant_wake2(log, tic);
+> -		goto redo;
+> -	}
+> -
+> -	if (!list_empty(&tic->t_queue)) {
+> +		if (!xlog_wake_reserveq(log, free_bytes))
+> +			error = xlog_reserveq_wait(log, tic, need_bytes);
+> +		spin_unlock(&log->l_grant_reserve_lock);
+> +	} else if (free_bytes < need_bytes) {
+>  		spin_lock(&log->l_grant_reserve_lock);
+> -		list_del_init(&tic->t_queue);
+> +		error = xlog_reserveq_wait(log, tic, need_bytes);
+>  		spin_unlock(&log->l_grant_reserve_lock);
+>  	}
+> 
+> -	/* we've got enough space */
+> +	if (error)
+> +		goto error0;
+> +
+>  	xlog_grant_add_space(log, &log->l_grant_reserve_head, need_bytes);
+>  	xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
+>  	trace_xfs_log_grant_exit(log, tic);
+>  	xlog_verify_grant_tail(log);
+>  	return 0;
+> 
+> -error_return_unlocked:
+> -	spin_lock(&log->l_grant_reserve_lock);
+> -error_return:
+> -	list_del_init(&tic->t_queue);
+> -	spin_unlock(&log->l_grant_reserve_lock);
+> -	trace_xfs_log_grant_error(log, tic);
+> -
+> +error0:
+>  	/*
+> -	 * If we are failing, make sure the ticket doesn't have any
+> -	 * current reservations. We don't want to add this back when
+> -	 * the ticket/transaction gets cancelled.
+> +	 * If we are failing, make sure the ticket doesn't have any current
+> +	 * reservations.  We don't want to add this back when the ticket/
+> +	 * transaction gets cancelled.
+>  	 */
+>  	tic->t_curr_res = 0;
+>  	tic->t_cnt = 0; /* ungrant will give back unit_res * t_cnt. */
+> -	return XFS_ERROR(EIO);
+> -}	/* xlog_grant_log_space */
+> +	return error;
+> +}
+> +
+> +STATIC int
+> +xlog_writeq_wait(
+> +	struct log		*log,
+> +	struct xlog_ticket	*tic,
+> +	int			need_bytes)
+> +{
+> +	list_add_tail(&tic->t_queue, &log->l_writeq);
+> +
+> +	do {
+> +		if (XLOG_FORCED_SHUTDOWN(log))
+> +			goto shutdown;
+> +		xlog_grant_push_ail(log, need_bytes);
+> +
+> +		XFS_STATS_INC(xs_sleep_logspace);
+> +		trace_xfs_log_regrant_write_sleep(log, tic);
+> +
+> +		xlog_wait(&tic->t_wait, &log->l_grant_write_lock);
+> +		trace_xfs_log_regrant_write_wake(log, tic);
+> +
+> +		spin_lock(&log->l_grant_write_lock);
+> +		if (XLOG_FORCED_SHUTDOWN(log))
+> +			goto shutdown;
+> +	} while (xlog_space_left(log, &log->l_grant_write_head) < need_bytes);
+> 
+> +	list_del_init(&tic->t_queue);
+> +	return 0;
+> +shutdown:
+> +	list_del_init(&tic->t_queue);
+> +	return XFS_ERROR(EIO);
+> +}
+> 
+>  /*
+>   * Replenish the byte reservation required by moving the grant write head.
+> @@ -2619,10 +2677,12 @@ error_return:
+>   * free fast path.
+>   */
+>  STATIC int
+> -xlog_regrant_write_log_space(xlog_t	   *log,
+> -			     xlog_ticket_t *tic)
+> +xlog_regrant_write_log_space(
+> +	struct log		*log,
+> +	struct xlog_ticket	*tic)
+>  {
+> -	int		free_bytes, need_bytes;
+> +	int			free_bytes, need_bytes;
+> +	int			error = 0;
+> 
+>  	tic->t_curr_res = tic->t_unit_res;
+>  	xlog_tic_reset_res(tic);
+> @@ -2630,104 +2690,47 @@ xlog_regrant_write_log_space(xlog_t	   *
+>  	if (tic->t_cnt > 0)
+>  		return 0;
+> 
+> -#ifdef DEBUG
+> -	if (log->l_flags & XLOG_ACTIVE_RECOVERY)
+> -		panic("regrant Recovery problem");
+> -#endif
+> +	ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
+> 
+>  	trace_xfs_log_regrant_write_enter(log, tic);
+> -	if (XLOG_FORCED_SHUTDOWN(log))
+> -		goto error_return_unlocked;
+> 
+> -	/* If there are other waiters on the queue then give them a
+> -	 * chance at logspace before us. Wake up the first waiters,
+> -	 * if we do not wake up all the waiters then go to sleep waiting
+> -	 * for more free space, otherwise try to get some space for
+> -	 * this transaction.
+> +	/*
+> +	 * If there are other waiters on the queue then give them a chance at
+> +	 * logspace before us.  Wake up the first waiters, if we do not wake
+> +	 * up all the waiters then go to sleep waiting for more free space,
+> +	 * otherwise try to get some space for this transaction.
+>  	 */
+>  	need_bytes = tic->t_unit_res;
+> -	if (!list_empty_careful(&log->l_writeq)) {
+> -		struct xlog_ticket *ntic;
+> -
+> -		spin_lock(&log->l_grant_write_lock);
+> -		free_bytes = xlog_space_left(log, &log->l_grant_write_head);
+> -		list_for_each_entry(ntic, &log->l_writeq, t_queue) {
+> -			ASSERT(ntic->t_flags & XLOG_TIC_PERM_RESERV);
+> -
+> -			if (free_bytes < ntic->t_unit_res)
+> -				break;
+> -			free_bytes -= ntic->t_unit_res;
+> -			wake_up(&ntic->t_wait);
+> -		}
+> -
+> -		if (ntic != list_first_entry(&log->l_writeq,
+> -						struct xlog_ticket, t_queue)) {
+> -			if (list_empty(&tic->t_queue))
+> -				list_add_tail(&tic->t_queue, &log->l_writeq);
+> -			trace_xfs_log_regrant_write_sleep1(log, tic);
+> -
+> -			xlog_grant_push_ail(log, need_bytes);
+> -
+> -			XFS_STATS_INC(xs_sleep_logspace);
+> -			xlog_wait(&tic->t_wait, &log->l_grant_write_lock);
+> -			trace_xfs_log_regrant_write_wake1(log, tic);
+> -		} else
+> -			spin_unlock(&log->l_grant_write_lock);
+> -	}
+> -
+> -redo:
+> -	if (XLOG_FORCED_SHUTDOWN(log))
+> -		goto error_return_unlocked;
+> -
+>  	free_bytes = xlog_space_left(log, &log->l_grant_write_head);
+> -	if (free_bytes < need_bytes) {
+> +	if (!list_empty_careful(&log->l_writeq)) {
+>  		spin_lock(&log->l_grant_write_lock);
+> -		if (list_empty(&tic->t_queue))
+> -			list_add_tail(&tic->t_queue, &log->l_writeq);
+> -
+> -		if (XLOG_FORCED_SHUTDOWN(log))
+> -			goto error_return;
+> -
+> -		xlog_grant_push_ail(log, need_bytes);
+> -
+> -		XFS_STATS_INC(xs_sleep_logspace);
+> -		trace_xfs_log_regrant_write_sleep2(log, tic);
+> -		xlog_wait(&tic->t_wait, &log->l_grant_write_lock);
+> -
+> -		trace_xfs_log_regrant_write_wake2(log, tic);
+> -		goto redo;
+> -	}
+> -
+> -	if (!list_empty(&tic->t_queue)) {
+> +		if (!xlog_wake_writeq(log, free_bytes))
+> +			error = xlog_writeq_wait(log, tic, need_bytes);
+> +		spin_unlock(&log->l_grant_write_lock);
+> +	} else if (free_bytes < need_bytes) {
+>  		spin_lock(&log->l_grant_write_lock);
+> -		list_del_init(&tic->t_queue);
+> +		error = xlog_writeq_wait(log, tic, need_bytes);
+>  		spin_unlock(&log->l_grant_write_lock);
+>  	}
+> 
+> -	/* we've got enough space */
+> +	if (error)
+> +		goto error0;
+> +
+>  	xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
+>  	trace_xfs_log_regrant_write_exit(log, tic);
+>  	xlog_verify_grant_tail(log);
+>  	return 0;
+> 
+> -
+> - error_return_unlocked:
+> -	spin_lock(&log->l_grant_write_lock);
+> - error_return:
+> -	list_del_init(&tic->t_queue);
+> -	spin_unlock(&log->l_grant_write_lock);
+> -	trace_xfs_log_regrant_write_error(log, tic);
+> -
+> +error0:
+>  	/*
+> -	 * If we are failing, make sure the ticket doesn't have any
+> -	 * current reservations. We don't want to add this back when
+> -	 * the ticket/transaction gets cancelled.
+> +	 * If we are failing, make sure the ticket doesn't have any current
+> +	 * reservations. We don't want to add this back when the ticket/
+> +	 * transaction gets cancelled.
+>  	 */
+>  	tic->t_curr_res = 0;
+>  	tic->t_cnt = 0; /* ungrant will give back unit_res * t_cnt. */
+> -	return XFS_ERROR(EIO);
+> -}	/* xlog_regrant_write_log_space */
+> -
+> +	return error;
+> +}
+> 
+>  /* The first cnt-1 times through here we don't need to
+>   * move the grant write head because the permanent
+> Index: linux-2.6/fs/xfs/linux-2.6/xfs_trace.h
+> ===================================================================
+> --- linux-2.6.orig/fs/xfs/linux-2.6/xfs_trace.h	2011-11-19 16:36:00.493329401 +0100
+> +++ linux-2.6/fs/xfs/linux-2.6/xfs_trace.h	2011-11-19 16:39:53.303332382 +0100
+> @@ -833,18 +833,14 @@ DEFINE_LOGGRANT_EVENT(xfs_log_umount_wri
+>  DEFINE_LOGGRANT_EVENT(xfs_log_grant_enter);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_grant_exit);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_grant_error);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_grant_sleep1);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake1);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_grant_sleep2);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake2);
+> +DEFINE_LOGGRANT_EVENT(xfs_log_grant_sleep);
+> +DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake_up);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_enter);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_exit);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_error);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_sleep1);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake1);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_sleep2);
+> -DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake2);
+> +DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_sleep);
+> +DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake_up);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_enter);
+>  DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_exit);
+> 
 
-Is there something useful I can do about this? Data I can provide to
-help track down what broke?
--Greg
 
 _______________________________________________
 xfs mailing list
