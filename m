@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pALAkRi3253559
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 04:46:27 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D2514162ACF7
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 02:46:26 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	sdAxFXwsKi54keKr for <linux-xfs@oss.sgi.com>;
-	Mon, 21 Nov 2011 02:46:26 -0800 (PST)
-Date: Mon, 21 Nov 2011 05:46:25 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests/071 FAIL with XFS Assertion
-Message-ID: <20111121104625.GA17921@infradead.org>
-References: <4EBCC112.3020108@cn.fujitsu.com>
-	<20111113115223.GA19435@infradead.org>
-	<4EC05F9C.7030106@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4EC05F9C.7030106@cn.fujitsu.com>
+	pALBVnwm255507 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 05:31:49 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 47BD01D1B4E4
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 03:31:47 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	AZ8y25oFLZwz5NBo for <xfs@oss.sgi.com>;
+	Mon, 21 Nov 2011 03:31:47 -0800 (PST)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/8] xfstest: enable xfs_repair for large filesystem testing
+Date: Mon, 21 Nov 2011 22:31:26 +1100
+Message-Id: <1321875088-30801-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1321875088-30801-1-git-send-email-david@fromorbit.com>
+References: <1321875088-30801-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +23,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Mon, Nov 14, 2011 at 08:23:56AM +0800, Wanlong Gao wrote:
-> On 11/13/2011 07:52 PM, Christoph Hellwig wrote:
-> 
-> > On Fri, Nov 11, 2011 at 02:30:42PM +0800, Wanlong Gao wrote:
-> >> v3.1.0-10325-g3155521
-> > 
-> > Hmm, this a is a test not run in the auto group.  Do you have tested
-> > it on older kernels where it works, aka do you know if this is a
-> > regresion?
-> > 
-> 
-> No, have not. I'll do it later.
+From: Dave Chinner <dchinner@redhat.com>
 
-I can't reproduce it on any of my test setups.  It actually fails on
-the 32-bit setups because the large offset writes succeed but the
-testcase doesn't expect it, but it doesn't crash the system.
+Now that large filesystem testing does not play free space games to
+fill the space without IO, we can enable xfs_repair when running in
+this mode. xfs_repair has had it's scalability problems solved, too,
+so this is a safe thing to do.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ common.rc |    7 +++----
+ 1 files changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/common.rc b/common.rc
+index 34467ec..12bd349 100644
+--- a/common.rc
++++ b/common.rc
+@@ -1200,12 +1200,12 @@ _check_xfs_filesystem()
+     extra_mount_options=""
+     device=$1
+     if [ "$2" != "none" ]; then
+-       	extra_log_options="-l$2"
++	extra_log_options="-l$2"
+         extra_mount_options="-ologdev=$2"
+     fi
+ 
+     if [ "$3" != "none" ]; then
+-       	extra_rt_options="-r$3"
++	extra_rt_options="-r$3"
+         extra_mount_options=$extra_mount_options" -ortdev=$3"
+     fi
+     extra_mount_options=$extra_mount_options" $MOUNT_OPTIONS"
+@@ -1250,8 +1250,7 @@ _check_xfs_filesystem()
+ 
+         ok=0
+     fi
+-    # repair doesn't scale massively at this stage, optionally skip it for now
+-    [ "$LARGE_SCRATCH_DEV" = yes ] || \
++
+     $XFS_REPAIR_PROG -n $extra_log_options $extra_rt_options $device >$tmp.repair 2>&1
+     if [ $? -ne 0 ]
+     then
+-- 
+1.7.5.4
 
 _______________________________________________
 xfs mailing list
