@@ -1,26 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAMANbBR136003 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 04:23:38 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9F7D91393DBE
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 02:23:34 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	dWtrRCQKtIeF9L1K for <xfs@oss.sgi.com>;
-	Tue, 22 Nov 2011 02:23:34 -0800 (PST)
-Date: Tue, 22 Nov 2011 05:23:31 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Remove the entries from the queue while waking them
-	up.
-Message-ID: <20111122102331.GA32485@infradead.org>
-References: <1321644054.2201.80.camel@chandra-lucid.austin.ibm.com>
-	<20111119181929.GA25739@infradead.org>
-	<1321902701.2201.141.camel@chandra-lucid.austin.ibm.com>
+	pAMEUxJb147867 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 08:30:59 -0600
+Message-ID: <4ECBB21E.9040205@sgi.com>
+Date: Tue, 22 Nov 2011 08:30:54 -0600
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1321902701.2201.141.camel@chandra-lucid.austin.ibm.com>
+Subject: Re: Interrupted xfsdump Resume Behaviour for Regular Dump File
+References: <1321794858.60631.YahooMailClassic@web190714.mail.sg3.yahoo.com>
+In-Reply-To: <1321794858.60631.YahooMailClassic@web190714.mail.sg3.yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,31 +17,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, XFS Mailing List <xfs@oss.sgi.com>
+To: Gim Leong Chin <chingimleong@yahoo.com.sg>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 21, 2011 at 01:11:41PM -0600, Chandra Seetharaman wrote:
-> The code does not assume that it got the space when it wakes up. After
-> every wake up it does check for free bytes available and compares to
-> required bytes before granting the bytes to itself. (IOW, after waking
-> up it behaves the same way as the lock-less case)
+If you look at the inventory after an interrupted backup, it
+will indicate the stream (and media file) start and end points.
+If the end point is "ino 0 offset 0", then a resumed restore
+will end up backing up everything again.
+
+If you can, please try this with the top-of-tree code from
+the git tree on kernel.org. I did a quick test and it seems
+to be working there.
+
+Note that if you're backing up to stdout, xfsdump cannot
+determine when the output is safely on media, so a resumed
+backup will always be a full backup.
+
+Bill
+
+Gim Leong Chin wrote:
+> Hi,
 > 
-> As Dave pointed, I can see only the signal case to be effecting this
-> scenario. With that case in mind, I can see one change required to my
-> patch: Add the ticket to the list the second time (in a function) only
-> if the t_queue is not empty.
-
-You can still leak with the process added to the queue if you get a
-wakeup and there is space available.  And your second patch now has
-to re-add conditional add to queue band aids that the first one so
-nicely removed.  My version of that patch has the big advantage of
-actually making the whole scheme mirror that of a wait queue.  In fact
-we could use workqueues and the helpers for it later (except for the
-waker side, which is special).
+> I have observed this since some time back.  I have just done an experiment.
+> 
+> 1) Using xfsdump 3.0.6, I first did a full dump to regular file and restore, checked that every thing is correct.
+> 
+> 2) I then did the same dump again, but interrupted it.  Then I resumed the dump.  I noted that the resumed dump file is the exact same size as the full dump file.
+> 
+> 3) First I did a cumulative restore, with the interrupted dump file, followed by the resumed dump file.  I checked that the restore is correct.
+> 
+> 4) I then did a non-cumulative restore, using only resumed dump file.  The resume is successful, and I checked that the restore is correct.
+> 
+> The logs are attached.
+> 
+> The conclusion is that the so-called resume of an interrupted dump session to regular file produces a full dump file, that is sufficient by itself to do the full restore.
+> 
+> Are my observations of the behaviour of xfsdump correct?
+> 
+> 
+> Everything was done on openSUSE 11.4 x86_64.
+> 
+> 
+> GL
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
