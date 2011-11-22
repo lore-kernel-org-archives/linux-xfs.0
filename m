@@ -1,15 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM8VJkb128867 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 02:31:19 -0600
-Message-ID: <4ECB5DBD.30000@oracle.com>
-Date: Tue, 22 Nov 2011 16:30:53 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	pAM9jBgv133054 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 03:45:11 -0600
+Received: from fgwmail5.fujitsu.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9779215822D1
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 01:45:10 -0800 (PST)
+Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
+	by cuda.sgi.com with ESMTP id 1rTBGOdC6aOylVQd for
+	<xfs@oss.sgi.com>; Tue, 22 Nov 2011 01:45:10 -0800 (PST)
+Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
+	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 5A9F73EE0C0
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
+Received: from smail (m1 [127.0.0.1])
+	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 43D1145DE59
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
+	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 2B68B45DE58
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
+Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 1D5881DB8042
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
+Received: from m107.s.css.fujitsu.com (m107.s.css.fujitsu.com [10.240.81.147])
+	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id DE7FB1DB8046
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:07 +0900 (JST)
+Message-ID: <4ECB6F16.5090002@jp.fujitsu.com>
+Date: Tue, 22 Nov 2011 18:44:54 +0900
+From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE to XFS V2
-References: <4ECB5B21.7080508@oracle.com>
-In-Reply-To: <4ECB5B21.7080508@oracle.com>
-Reply-To: jeff.liu@oracle.com
+Subject: Re: [PATCH] 198, 240: check presence of aiodio_sparce2
+References: <4ECB3DCA.5000509@jp.fujitsu.com> <20111122093316.GB8098@dastard>
+In-Reply-To: <20111122093316.GB8098@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,242 +42,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, aelder@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-CC to Dave.
+(2011/11/22 18:33), Dave Chinner wrote:
+> Good idea, but given this check is now repeated in multiple places,
+> wrapping it in a "_require_aiodio" helper function is probably in
+> order.
+
+Good point.
+OK, I'll make a patch to implement the "_require_aiodio" helper.
 
 Thanks,
--Jeff
-
-On 11/22/2011 04:19 PM, Jeff Liu wrote:
-
-> Hello,
-> 
-> This is the V2 attempt to add SEEK_DATA/SEEK_HOLE to XFS.
-> 
-> Changes:
-> ========
-> 1. Merge xfs_find_desired_extent() and xfs_seek_data_hole() into xfs_seek_extent(), and place it at xfs_file.c.
-> 2. Using two different routines xfs_seek_data()/xfs_seek_hole() to handle SEEK_DATA/SEEK_HOLE requests respectively.
-> 3. Remove some worthless result checking code from xfs_file_llseek().
-> 4. s/xfs_mount_t/struct xfs_mount/g.
-> 
-> Tests:
-> ======
-> In addition to the seek_test.c I have used previously, I have also done a large sparse file copy tests, it works to me.
-> 
-> Hope I have not made obvious stupid mistakes this time. :-P.
-> Any comments are appreciated!
-> 
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> 
-> ---
->  fs/xfs/xfs_file.c |  188 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 files changed, 187 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 753ed9b..bb2be00 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1141,8 +1141,194 @@ xfs_vm_page_mkwrite(
->  	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
->  }
->  
-> +STATIC int
-> +xfs_seek_data(
-> +	struct xfs_inode *ip,
-> +	loff_t *start)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_ifork	*ifp;
-> +	xfs_fileoff_t		fsbno;
-> +	xfs_filblks_t		len;
-> +	loff_t			startoff = *start;
-> +	int			error = 0;
-> +
-> +	fsbno = XFS_B_TO_FSBT(mp, *start);
-> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +	len = XFS_B_TO_FSB(mp, ip->i_size);
-> +
-> +	for (;;) {
-> +		struct xfs_bmbt_irec	map[2];
-> +		int			nmap = 2;
-> +		loff_t			seekoff;
-> +
-> +		error = xfs_bmapi_read(ip, fsbno, len - fsbno, map, &nmap,
-> +				       XFS_BMAPI_ENTIRE);
-> +		if (error)
-> +			break;
-> +
-> +		/* No extents at given offset, must be beyond EOF */
-> +		if (!nmap) {
-> +			error = ENXIO;
-> +			break;
-> +		}
-> +
-> +		seekoff = XFS_FSB_TO_B(mp, fsbno);
-> +
-> +		/*
-> +		 * Hole handling for unwritten extents landed in a hole.
-> +		 * If the next extent is a data  extent, then return the
-> +		 * start of it, otherwise we need to move the start offset
-> +		 * and map more blocks.
-> +		 */
-> +		if (map[0].br_startblock == HOLESTARTBLOCK) {
-> +			if (map[1].br_startblock == HOLESTARTBLOCK) {
-> +				fsbno = map[1].br_startoff +
-> +					map[1].br_blockcount;
-> +			} else {
-> +				*start = max_t(loff_t, seekoff,
-> +				       XFS_FSB_TO_B(mp, map[1].br_startoff));
-> +				break;
-> +			}
-> +		}
-> +
-> +		/*
-> +		 * Landed in an in-memory data extent or in an allocated
-> +		 * extent.
-> +		 */
-> +		if (map[0].br_startoff == DELAYSTARTBLOCK ||
-> +		    map[0].br_state == XFS_EXT_NORM) {
-> +			*start = max_t(loff_t, seekoff,
-> +				       XFS_FSB_TO_B(mp, map[0].br_startoff));
-> +			break;
-> +		}
-> +
-> +		/* return ENXIO if beyond eof */
-> +		if (XFS_FSB_TO_B(mp, fsbno) > ip->i_size) {
-> +			error = ENXIO;
-> +			break;
-> +		}
-> +	}
-> +
-> +	if (*start < startoff)
-> +		*start = startoff;
-> +
-> +	return error;
-> +}
-> +
-> +STATIC int
-> +xfs_seek_hole(
-> +	struct xfs_inode *ip,
-> +	loff_t *start)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	int			error = 0;
-> +	loff_t			seekoff = *start;
-> +	loff_t			holeoff;
-> +	xfs_fileoff_t		fsbno;
-> +
-> +	fsbno = XFS_B_TO_FSBT(mp, *start);
-> +	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
-> +	if (error)
-> +		return error;
-> +
-> +	holeoff = XFS_FSB_TO_B(mp, fsbno);
-> +	if (holeoff <= seekoff)
-> +		*start = seekoff;
-> +	else
-> +		*start = min_t(loff_t, holeoff, ip->i_size);
-> +
-> +	return error;
-> +}
-> +
-> +STATIC int
-> +xfs_seek_extent(
-> +	struct inode		*inode,
-> +	loff_t			*start,
-> +	u32			type)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_ifork	*ifp;
-> +	int			lock;
-> +	int			error = 0;
-> +
-> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
-> +	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
-> +	    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-> +		return XFS_ERROR(EINVAL);
-> +
-> +	lock = xfs_ilock_map_shared(ip);
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp)) {
-> +		error = EIO;
-> +		goto out_lock;
-> +	}
-> +
-> +	XFS_STATS_INC(xs_blk_mapr);
-> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +
-> +	ASSERT(ifp->if_ext_max ==
-> +	      XFS_IFORK_SIZE(ip, XFS_DATA_FORK) / (uint)sizeof(xfs_bmbt_rec_t));
-> +
-> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			goto out_lock;
-> +	}
-> +
-> +	if (type == SEEK_HOLE)
-> +		error = xfs_seek_hole(ip, start);
-> +	else
-> +		error = xfs_seek_data(ip, start);
-> +
-> +out_lock:
-> +	xfs_iunlock_map_shared(ip, lock);
-> +
-> +	if (error)
-> +		return -error;
-> +
-> +	return 0;
-> +}
-> +
-> +STATIC loff_t
-> +xfs_file_llseek(
-> +	struct file *file,
-> +	loff_t offset,
-> +	int origin)
-> +{
-> +	struct inode *inode = file->f_mapping->host;
-> +	int ret;
-> +
-> +	switch (origin) {
-> +	case SEEK_END:
-> +	case SEEK_CUR:
-> +		offset = generic_file_llseek(file, offset, origin);
-> +		goto out;
-> +	case SEEK_DATA:
-> +	case SEEK_HOLE:
-> +		if (offset >= i_size_read(inode)) {
-> +			ret = -ENXIO;
-> +			goto error;
-> +		}
-> +
-> +		ret = xfs_seek_extent(inode, &offset, origin);
-> +		if (ret)
-> +			goto error;
-> +	}
-> +
-> +	if (offset != file->f_pos)
-> +		file->f_pos = offset;
-> +
-> +out:
-> +	return offset;
-> +
-> +error:
-> +	return ret;
-> +}
-> +
->  const struct file_operations xfs_file_operations = {
-> -	.llseek		= generic_file_llseek,
-> +	.llseek		= xfs_file_llseek,
->  	.read		= do_sync_read,
->  	.write		= do_sync_write,
->  	.aio_read	= xfs_file_aio_read,
-
+H.Seto
 
 _______________________________________________
 xfs mailing list
