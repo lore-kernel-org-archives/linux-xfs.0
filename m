@@ -1,27 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAMMZrqK175875 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:35:53 -0600
-Received: from out2.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B3E8516DC8A0
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:35:52 -0800 (PST)
-Received: from out2.smtp.messagingengine.com (out2.smtp.messagingengine.com
-	[66.111.4.26]) by cuda.sgi.com with ESMTP id SHcj616YI8fnLAfb
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:35:52 -0800 (PST)
-Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id ED9C620C10
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 17:35:51 -0500 (EST)
-Date: Tue, 22 Nov 2011 13:35:44 -0800
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 4/9] [PATCH 4/9] xfs: dont serialise direct IO reads on
-	page cache
-Message-ID: <20111122213544.GB29127@kroah.com>
-References: <20111119181336.964593075@bombadil.infradead.org>
-	<20111119181544.111984285@bombadil.infradead.org>
-	<20111122213425.GA29127@kroah.com>
+	pAMMte2s176754 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:55:40 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B4BD21D2A5E5
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:55:39 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	yDWgNka07LdfIWY9 for <xfs@oss.sgi.com>;
+	Tue, 22 Nov 2011 14:55:39 -0800 (PST)
+Date: Tue, 22 Nov 2011 17:55:37 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: EFSCORRUPTED on mount?
+Message-ID: <20111122225537.GA25530@infradead.org>
+References: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
+	<CAF3hT9AurrVi7xosauVmhQcsbqJgLsxkNYm6dWDNCpB+GR69=w@mail.gmail.com>
+	<20111122014114.GJ2386@dastard>
+	<CAF3hT9Cu+56WJqzHVu+fMgquddwoMsfW-WC8CvRRBtC4PA3uHw@mail.gmail.com>
+	<4ECBEF83.5020607@sandeen.net>
+	<CAF3hT9CA23aDfYTF__mVEM7jRq=ZEgqhfX49hK9kcBqM_+h0CQ@mail.gmail.com>
+	<4ECC19C3.5070905@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111122213425.GA29127@kroah.com>
+In-Reply-To: <4ECC19C3.5070905@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,38 +36,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Alex Elder <aelder@sgi.com>, Dave Chinner <dchinner@redhat.com>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Gregory Farnum <gregory.farnum@dreamhost.com>, xfs@oss.sgi.com
 
-On Tue, Nov 22, 2011 at 01:34:25PM -0800, Greg KH wrote:
-> On Sat, Nov 19, 2011 at 01:13:40PM -0500, Christoph Hellwig wrote:
-> > There is no need to grab the i_mutex of the IO lock in exclusive
-> > mode if we don't need to invalidate the page cache. Taking these
-> > locks on every direct IO effective serialises them as taking the IO
-> > lock in exclusive mode has to wait for all shared holders to drop
-> > the lock. That only happens when IO is complete, so effective it
-> > prevents dispatch of concurrent direct IO reads to the same inode.
-> > 
-> > Fix this by taking the IO lock shared to check the page cache state,
-> > and only then drop it and take the IO lock exclusively if there is
-> > work to be done. Hence for the normal direct IO case, no exclusive
-> > locking will occur.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Tested-by: Joern Engel <joern@logfs.org>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
+On Tue, Nov 22, 2011 at 03:53:07PM -0600, Eric Sandeen wrote:
+> > Ending recovery (logdev: internal)
+> > ...
 > 
-> What is the git commit id that matches this patch in Linus's tree?
+> All that recovery a result of the icky shutdown procedure I guess....
+> 
+> > Nov 17 16:01:01 cephstore6358 kernel: [  214.214688] XFS: Internal
+> > error XFS_WANT_CORRUPTED_GOTO at line 1664 of file fs/xfs/xfs_alloc.c.
+> >  Caller 0xffffffff811d6b71
+> 
+> And this was the first indication of trouble.
 
-Nevermind, I found it, 0c38a2512df272b14ef4238b476a2e4f70da1479, right?
+allocation btree corruption - we try to free a block, which had already
+been inserted into the by-size allocation btree.  This very much looks
+like a cache failure to me.
 
-Next time, please include the git commit id of the patch in Linus's tree
-so I don't have to dig it out like I did for this series.
+> > Nov 17 16:01:01 cephstore6358 kernel: [  214.302172]
+> > [<ffffffff810d2b11>] ? sys_truncate+0x171/0x173
+> > Nov 17 16:01:01 cephstore6358 kernel: [  214.307846]
+> > [<ffffffff8166c07b>] ? system_call_fastpath+0x16/0x1b
+> > Nov 17 16:01:01 cephstore6358 kernel: [  214.314031] XFS (sdg1):
+> > xfs_do_force_shutdown(0x8) called from line 3864 of file
+> > fs/xfs/xfs_bmap.c.  Return address = 0xffffffff811e2046
+> 
+> by here it had shut down, and you were just riding along when
+> it went kablooey.  Any non-xfs error just before this point?
 
-thanks,
+And this was the caller of xfs_free_extent, now shuting the fs down
+because of the above error.
 
-greg k-h
+> > Nov 17 16:01:01 cephstore6358 kernel: [  214.340451] XFS (sdg1):
+> > Corruption of in-memory data detected.  Shutting down filesystem
+> > Nov 17 16:01:01 cephstore6358 kernel: [  214.348518] XFS (sdg1):
+> > Please umount the filesystem and rectify the problem(s)
+> > Nov 17 16:01:01 cephstore6358 kernel: [  227.789285] XFS (sdg1):
+> > xfs_log_force: error 5 returned.
+> > Nov 17 16:01:01 cephstore6358 kernel: [  229.820255] XFS (sdg1):
+> > xfs_log_force: error 5 returned.
+> 
+> To be honest I'm not sure offhand if this error 5 (EIO) is a
+> result of the shutdown, or the cause of it.
+
+It is.  One the filesystem has been shut down xfs_log_force will
+always return EIO.  The printk for is rather useless, though.
 
 _______________________________________________
 xfs mailing list
