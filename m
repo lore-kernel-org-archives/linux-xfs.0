@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM3MIMc114803
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:22:18 -0600
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9327926AF95
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:22:16 -0800 (PST)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	ViFwfx3YjVxrwtVw for <linux-xfs@oss.sgi.com>;
-	Mon, 21 Nov 2011 19:22:16 -0800 (PST)
-Received: by iaen33 with SMTP id n33so9478930iae.26
-	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:22:16 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20111122014609.GK2386@dastard>
-References: <CAJNJY8Q--O2Z3K6KFxVKOivwaABk+oRtC1y0eQ0nS1WdPNMwsQ@mail.gmail.com>
-	<20111121170459.GA1327@infradead.org>
-	<CAJNJY8Ty+bQpzGL9wq7Qv3ozcKUPwmTyYUeb2wQqZ326K4JeWw@mail.gmail.com>
-	<20111122014609.GK2386@dastard>
-Date: Tue, 22 Nov 2011 11:22:15 +0800
-Message-ID: <CAJNJY8S2FOJisp8-wm5FCMSaBYoMO-ePT1sSXfZ+K1LAyxW=og@mail.gmail.com>
-Subject: Re: stale NFS file handle problem on XFS inode64
-From: hank peng <pengxihan@gmail.com>
+	pAM3uv8f116132 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:56:57 -0600
+Received: from p3nlsmtp08.shr.prod.phx3.secureserver.net (localhost
+	[127.0.0.1]) by cuda.sgi.com (Spam Firewall) with SMTP id D53AF26ADEA
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:56:55 -0800 (PST)
+Received: from p3nlsmtp08.shr.prod.phx3.secureserver.net
+	(p3nlsmtp08.shr.prod.phx3.secureserver.net [72.167.234.233]) by
+	cuda.sgi.com with SMTP id cOwag9zkc6qIiIit for
+	<xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:56:55 -0800 (PST)
+Received: from p3nw3sh056.shr.prod.phx3.secureserver.net (HELO
+	P3NW3SH056.phx3.gdhosting.gdg) ([72.167.232.206])
+	(envelope-sender <support@eyespyclassifieds.com>)
+	by p3nlsmtp08.shr.prod.phx3.secureserver.net (qmail-ldap-1.03) with
+	SMTP for <xfs@oss.sgi.com>; 22 Nov 2011 03:56:54 -0000
+From: <support@eyespyclassifieds.com>
+Subject: Get your Guaranteed $8,736 Commissions Direct Paypal!!!
+Date: Mon, 21 Nov 2011 20:56:53 -0700
+Message-ID: <P3NW3SH056eAJIpBeSv00527e0d@P3NW3SH056.phx3.gdhosting.gdg>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +26,147 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============7296906810689119585=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
+To: Friend <xfs@oss.sgi.com>
 
-MjAxMS8xMS8yMiBEYXZlIENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+Ogo+IE9uIFR1ZSwg
-Tm92IDIyLCAyMDExIGF0IDA4OjE5OjE1QU0gKzA4MDAsIGhhbmsgcGVuZyB3cm90ZToKPj4gMjAx
-MS8xMS8yMiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+Ogo+PiA+IE9uIE1v
-biwgTm92IDIxLCAyMDExIGF0IDA5OjAwOjU3UE0gKzA4MDAsIGhhbmsgcGVuZyB3cm90ZToKPj4g
-Pj4gSGk6Cj4+ID4+IEkgaGF2ZSBhIDRUQiBYRlMgZmlsZXN5c3RlbSBtb3VudGVkIHdpdGggImlu
-b2RlNjQiIG9wdGlvbiwgYW5kIEkKPj4gPj4gZXhwb3J0ZWQgaXQgdXNpbmcgTkZTIHYzLCBvbiBO
-RlMgY2xpZW50LCBJIGVudGVyZWQgYSBzdWJkaXJlY3RvcnkgYW5kCj4+ID4+IGdvdCAic3RhbGUg
-TkZTIGZpbGUgaGFuZGxlIiBlcnJvci4KPj4gPj4gbHMgLWlsIHNob3dlZCB0aGF0IGl0cyBpbm9k
-ZSBudW1iZXIgZXhjZWVkIDMyIGJpdCBsaW1pdC4KPj4gPj4gTkZTIHNlcnZlcjoga2VybmVsIHZl
-cnNpb24gaXMgMi42LjM1LjYKPj4gPj4gTkZTIGNsaWVudDoga2VybmVsIHZlcnNpb24gaXMgMi42
-LjE4Cj4+ID4KPj4gPiBEbyB5b3UgZXhwb3J0IHRoZSByb290IGRpcmVjdG9yeSBvZiB0aGUgWEZT
-IGZpbGVzeXN0ZW0sIG9yIGEKPj4gPiBzdWJkaXJlY3RvcnkgaW4gaXQ/IMKgSWYgaXQncyB0aGUg
-Zm9ybWVyIGl0IHNob3VsZCB3b3JrIGluIHRoZW9yeSwKPj4gPiBhbHRocm91Z2ggSSdtIG5vdCBz
-dXJlIGhvdyB3ZWxsIDY0LWJpdCBpbm9kZSBudW1iZXJzIHdvcmsgd2l0aCBhIGNsaWVudAo+PiA+
-IHRoYXQgb2xkLCBpZiBpdCdzIHRoZSBsYXR0ZXIgaXQgbmVlZHMgYSBmZXcgdHdlYWtzIHRvIHdv
-cmssIHNlZQo+PiA+Cj4+IFRoZSBmb2xsb3dpbmcgaXMgd2hhdCBJIGRpZDoKPj4gMS4gbWtmcy54
-ZnMgL2Rldi9zZGIgwqAgKHdob2xlIGRpc2spCj4+IDIuIGNyZWF0ZSBhIG1vdW50IHBvaW50IGlu
-IG15IHJvb3QgZmlsZXN5c3RlbToKPj4gbWtkaXIgL21udC9teW1vdW50Cj4+IDMuIG1vbnV0IHhm
-cyB3aXRoIGlub2RlNjQKPj4gbW91bnQgL2Rldi9zZGIgL21udC9teW1vdW50IC1vIGlub2RlNjQK
-Pj4gNC4gZXhwb3J0IGl0IGluIE5GUyAvZXRjL2V4cG9ydHMKPj4gL21udC9teW1vdW50IMKgICoo
-cncsIG5vX3Jvb3Qsc3F1YXNoLCBzeW5jKQo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgIF5eXl5eXl5eXl5eXl5eIG5vX3Jvb3Rfc3F1YXNoCj4+CnNvcnJ5LCBpdCBpcyBteSB0eXBl
-IG1pc3Rha2UsIGl0IGlzIG5vX3Jvb3Rfc3F1YXNoLgoKSSB0aGluayBJIGhhdmUgYWxyZWFkeSBl
-eHBvcnRlZCB0aGUgcm9vdCBvZiBteSBYRlMgZmlsZXN5c3RlbSwgYW0gSSByaWdodD8KCgo+PiBz
-bywgaXMgdGhlcmUgYW55IHByb2JsZW0gaGVyZT8KPj4KPj4gPiDCoCDCoCDCoCDCoGh0dHA6Ly94
-ZnMub3JnL2luZGV4LnBocC9YRlNfRkFRI1E6X1doeV9kb2Vzbi4yN3RfTkZTLWV4cG9ydGluZ19z
-dWJkaXJlY3Rvcmllc19vZl9pbm9kZTY0LW1vdW50ZWRfZmlsZXN5c3RlbV93b3JrLjNGCj4KPiBJ
-dCdzIGluIHRoZSBGQVEgZW50cnkgY2hyaXN0b3BoIHBvaW50ZWQgeW91IHRvOgo+Cj4gIkhvd2V2
-ZXIsIGV4cG9ydGluZyB0aGUgcm9vdCBvZiB0aGUgZmlsZXN5c3RlbSB3b3JrcyIKPgo+IENoZWVy
-cywKPgo+IERhdmUuCj4gLS0KPiBEYXZlIENoaW5uZXIKPiBkYXZpZEBmcm9tb3JiaXQuY29tCj4K
-CgoKLS0gClRoZSBzaW1wbGVzdCBpcyBub3QgYWxsIGJlc3QgYnV0IHRoZSBiZXN0IGlzIHN1cmVs
-eSB0aGUgc2ltcGxlc3QhCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
-b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+--===============7296906810689119585==
+Content-Type: text/plain
+
+PARTIME JOB MONTHLY INCOME TROUGH PAYPAL
+
+Hello Friend,
+
+Get Larger ClickBank Affiliate Commissions in Just a Few Minutes!
+
+"These Message Sets, Just For ClickBank Affiliates, Creates Attentive and 
+Receptive
+Readers Ready To Click and Buy and Puts Your Marketing On 
+Autotrafficavalanche. In
+Just a Few Minutes They Are Ready To Generate More Commissions For You 
+Automatically!"
+
+OPPORTUNITY TO: Get your Guaranteed $8,736 Commissions Direct Paypal!!!
+
+So remember, I’m taking all the risk out of this investment –if 
+you’re not 100%
+thrilled with Auto Traffic Avalanche, I’ll personally see to it that 
+your money
+is returned to you – all of it. What's more if you don't get any results 
+with it,
+I'll also take $100 out of my own wallet and put it in your pocket.
+There really is nothing to lose here.
+
+We've Register New 32 Members Everyday Start Nov- 15-to- 22 -/2011 weekly
+Cycle. 32 x 7-days =224 total members every week in YOUR TEAM ...
+IMPORTANT: Nov -22 /2011 is the Cut-Off day to lock in your
+position then faster you act the higher commission you  will earn!!!
+
+Go Here To Secure not less than $8,736 commission Now and it still growing
+as  many people joining under you. if you secure your position right away:
+
+The $8,736 commission Arrive Through your Paypal or Credit Card on 
+Nov-30/2011
+next week.Hurry'this limited time, 3 remaining Positions are available 
+Now.
+
+You can access $8,736 Straight To Your Paypal Account when You Are In 
+Position ...
+
+If The Link Is Error Copy And Paste Into Your Browser To Get Commission...
+
+All It Takes Is 13 Clicks==>> http://oril.biz/2ve
+
+Here's Proof Of What A Total Beginner Can Do And Earn $8,736 Every Month..
+
+TYPE   DATE & TIME --------- NEW MEMBERS ----------- COUNTRY'S
+
+P -- NOV.20  @ 2:38  AM-----Karen----- Brown-------- United States
+P -- NOV.20  @ 2:53  AM-----Marie------Davis ------- United Kingdom
+P -- NOV.20  @ 2:56  AM-----Marice --- Bekker------- Germany
+M -- NOV.20  @ 4:19  AM-----Cristian---Hanes-------- Hungary
+P -- NOV.20  @ 4:28  AM-----Charol-----Howard------- Italy
+M -- NOV.20  @ 6:01  AM-----Ailene---- Enrequez----- Australia
+P -- NOV.20  @ 7:11  AM-----Robert---- Takker------- Canada
+P -- NOV.20  @ 7:39  AM-----Cris------ Atlas-------- United States
+P -- NOV.20  @ 9:42  AM-----Tina------ SWasington--- California
+M -- NOV.20  @ 9:58  PM-----George-----Molloch------ Singapore
+P -- NOV.20  @ 2:38  AM-----James----- Jordan------- United States
+P -- NOV.20  @ 2:53  AM-----JOan------ Jackson ----- United Kingdom
+P -- NOV.20  @ 2:56  AM-----Mandene -- Jecob-------- Germany
+M -- NOV.20  @ 4:19  AM-----Cristy---- Nores-------- Hungary
+P -- NOV.20  @ 4:28  AM-----Carlo----- Wonder------- Italy
+M -- NOV.20  @ 6:01  AM-----lalaine--- Anderson----- Australia
+P -- NOV.20  @ 7:11  AM-----Rebecca--- Baker-------- Canada
+P -- NOV.20  @ 7:39  AM-----Jericho--- Morales------ Mexico
+P -- NOV.20  @ 9:42  AM-----Thomas---- Stephen------ California
+M -- NOV.20  @ 9:58  PM-----Grace----- Taylor------- Singapore
+P -- NOV.20  @ 10:21 PM-----Gina------ Henry-------- New Zealand
+P -- NOV.20  @ 11:24 PM-----Jenefer--- Lopez ------- United States
+M -- NOV.20  @ 11:33 PM-----Tracia---- Furlong------ Puerto Rico
+P -- NOV.20  @ 11:41 PM-----Jane------ Mckay-------- Russia
+P -- NOV.20  @ 9:42  AM-----Steve----- Scott ------- Netherlands
+M -- NOV.20  @ 9:58  PM-----Greg------ Stanley------ Denmark
+P -- NOV.20  @ 10:21 PM-----Jack------ Perkins------ Amsterdam
+P -- NOV.20  @ 11:24 PM-----Arlene---- Ross -------- United States
+M -- NOV.20  @ 11:33 PM-----Andy------ Hopekins----- New York
+P -- NOV.20  @ 11:41 PM-----Jhon------ Robinson----- United States
+M -- NOV.20  @ 2:34  AM --- Kevin----- Hunt -------- Sweden
+P -- NOV.20  @ 12:34 AM --- Delia----- Scott ------- United States
+
+Therefore, you have a GUARANTEED $8,736 CommissionS  every 30 of the month 
+!.
+
+Earn $39 Per Process!Each $39 x 224 = $8,736 Commission  will be yours...!
+
+Be Sure to Copy the link below & Paste into your browser and press enter:
+To Secure your $8,736 commission!
+
+If The Link Is Error Copy And Paste Into Your Browser To See Commission...
+
+All It Takes Is 13 Clicks==>> http://oril.biz/2ve
+
+Just one simple payment of $39. and you could have earn $8,736 
+Commission,And
+you recieved on November 30-2011 Directly to Your Paypal or Credit Card.
+
+You must UPGRADE right away or before others do....
+
+Caring for Your Success, Michelle Miller
+
+
+
+
+
+
+
+
+
+
+
+
+
+This is where you can type a brief description of your site.
+
+Email sent by: earncash@gmail.com (Michelle Miller)
+
+
+Powered by Eye Spy Classifieds
+
+
+
+
+--===============7296906810689119585==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7296906810689119585==--
