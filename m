@@ -1,23 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM5Rt3a119024 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 23:27:55 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id AB2CB12792F2
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:27:54 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	xMxIVhlpg6AFFVrl for <xfs@oss.sgi.com>;
-	Mon, 21 Nov 2011 21:27:54 -0800 (PST)
-Date: Tue, 22 Nov 2011 16:27:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs_repair is recommended over xfs_check.
-Message-ID: <20111122052751.GM2386@dastard>
-References: <4ECAC84C.1070000@sauce.co.nz> <20111122002306.GI2386@dastard>
-	<4ECB25C7.8070801@sandeen.net>
+	pAM6F2no122803 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 00:15:02 -0600
+Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 369EB26AEF7
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 22:15:00 -0800 (PST)
+Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
+	by cuda.sgi.com with ESMTP id HTSWWwEX7UlWXOPH for
+	<xfs@oss.sgi.com>; Mon, 21 Nov 2011 22:15:00 -0800 (PST)
+Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
+	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id D87A03EE0B6
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
+Received: from smail (m3 [127.0.0.1])
+	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id BA75745DEB4
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
+	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id A11D145DEB3
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
+Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 942DF1DB8038
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
+Received: from m105.s.css.fujitsu.com (m105.s.css.fujitsu.com [10.240.81.145])
+	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 59C2A1DB8046
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
+Message-ID: <4ECB3DCA.5000509@jp.fujitsu.com>
+Date: Tue, 22 Nov 2011 15:14:34 +0900
+From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ECB25C7.8070801@sandeen.net>
+Subject: [PATCH] 198, 240: check presence of aiodio_sparce2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,44 +40,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Richard Scobie <richard@sauce.co.nz>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Nov 21, 2011 at 10:32:07PM -0600, Eric Sandeen wrote:
-> On 11/21/11 6:23 PM, Dave Chinner wrote:
-> > On Tue, Nov 22, 2011 at 10:53:16AM +1300, Richard Scobie wrote:
-> >> Is there currently now any situation where xfs_check would be used
-> >> in preference to xfs_repair?
-> >>
-> >> If not, perhaps xfs_check could be deprecated.
-> > 
-> > xfs_check is one of the ways we test that xfs_repair is doing the
-> > right thing. Having two implementation that you can use to compare
-> > results is a good thing.....
-> 
-> What about for end users though?  I'm not sure there's much need
-> for end users to be comparing xfs_check against xfs_repair in general,
-> anyway ...
+Use same trick with:
+  commit 4e9072472fbc56b9d4c8ee8094cc62ce793df9b7
+  Gracefully fail aio tests if they weren't built
 
-Right, but that doesn't mean it needs deprecating as that implies
-complete removal at some point in the future. I'd prefer to keep it
-around as we get most of what it does for free as it uses the xfs_db
-infrastructure to do all it's work.
+Signed-off-by: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+---
+ 198 |    5 ++++-
+ 240 |    5 ++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
-> Often enough I see users using xfs_check just because it's there,
-> and running into trouble... it seems reasonable to warn the
-> casual user against it, or at least recommend xfs_repair -n
-> instead.  What do you think?
-
-The patch to modify the man page to advise use of xfs_repair is
-sufficient, I think. 
-
-Cheers,
-
-Dave.
+diff --git a/198 b/198
+index e46ec8d..60db6dc 100755
+--- a/198
++++ b/198
+@@ -45,13 +45,16 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++AIO_TEST=src/aio-dio-regress/aiodio_sparse2
++[ -x $here/$AIO_TEST ] || _notrun "$AIO_TEST not built"
++
+ echo "Silence is golden."
+ 
+ # real QA test starts here
+ rm -f $seq.full
+ 
+ rm -f "$TEST_DIR/aiodio_sparse*"
+-$here/src/aio-dio-regress/aiodio_sparse2 "$TEST_DIR/aiodio_sparse"
++$here/$AIO_TEST "$TEST_DIR/aiodio_sparse"
+ 
+ status=$?
+ exit
+diff --git a/240 b/240
+index 563449e..22c1756 100755
+--- a/240
++++ b/240
+@@ -53,6 +53,9 @@ _supported_os Linux
+ 
+ _require_sparse_files
+ 
++AIO_TEST=src/aio-dio-regress/aiodio_sparse2
++[ -x $here/$AIO_TEST ] || _notrun "$AIO_TEST not built"
++
+ echo "Silence is golden."
+ 
+ # real QA test starts here
+@@ -69,7 +72,7 @@ fi
+ 
+ # 2 threads, fs block sized writes, 64k filesize, stride through file by
+ # fs block size, start at logical block size offset
+-$here/src/aio-dio-regress/aiodio_sparse2 -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
++$here/$AIO_TEST -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
+ 
+ status=$?
+ exit
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.3
+
 
 _______________________________________________
 xfs mailing list
