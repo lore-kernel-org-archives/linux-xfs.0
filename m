@@ -1,33 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM6F2no122803 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 00:15:02 -0600
-Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 369EB26AEF7
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 22:15:00 -0800 (PST)
-Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
-	by cuda.sgi.com with ESMTP id HTSWWwEX7UlWXOPH for
-	<xfs@oss.sgi.com>; Mon, 21 Nov 2011 22:15:00 -0800 (PST)
-Received: from m3.gw.fujitsu.co.jp (unknown [10.0.50.73])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id D87A03EE0B6
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
-Received: from smail (m3 [127.0.0.1])
-	by outgoing.m3.gw.fujitsu.co.jp (Postfix) with ESMTP id BA75745DEB4
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (s3.gw.fujitsu.co.jp [10.0.50.93])
-	by m3.gw.fujitsu.co.jp (Postfix) with ESMTP id A11D145DEB3
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
-Received: from s3.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 942DF1DB8038
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
-Received: from m105.s.css.fujitsu.com (m105.s.css.fujitsu.com [10.240.81.145])
-	by s3.gw.fujitsu.co.jp (Postfix) with ESMTP id 59C2A1DB8046
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 15:14:58 +0900 (JST)
-Message-ID: <4ECB3DCA.5000509@jp.fujitsu.com>
-Date: Tue, 22 Nov 2011 15:14:34 +0900
-From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+	pAM7EG17125060
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Nov 2011 01:14:16 -0600
+Received: from mail-gx0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E55AC12796D9
+	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 23:14:15 -0800 (PST)
+Received: from mail-gx0-f181.google.com (mail-gx0-f181.google.com
+	[209.85.161.181]) by cuda.sgi.com with ESMTP id
+	qVtTQt3f2Sum1ZCf for <linux-xfs@oss.sgi.com>;
+	Mon, 21 Nov 2011 23:14:15 -0800 (PST)
+Received: by ggnr1 with SMTP id r1so22184ggn.26
+	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 23:14:15 -0800 (PST)
 MIME-Version: 1.0
-Subject: [PATCH] 198, 240: check presence of aiodio_sparce2
+In-Reply-To: <20111121164309.4b18a6ca@harpe.intellique.com>
+References: <CAJNJY8Q--O2Z3K6KFxVKOivwaABk+oRtC1y0eQ0nS1WdPNMwsQ@mail.gmail.com>
+	<20111121150158.5f8b2512@harpe.intellique.com>
+	<CAJNJY8SoNvqQB0WNJq5SVUhkLSJROoMkVEkOHrESVR0iMB4JDA@mail.gmail.com>
+	<20111121162155.0bfa0342@harpe.intellique.com>
+	<CAJNJY8QciPX_MPsgPo3SfSuheFHGSZVsiL=ibNf1S3spyKFAig@mail.gmail.com>
+	<20111121164309.4b18a6ca@harpe.intellique.com>
+Date: Tue, 22 Nov 2011 15:14:14 +0800
+Message-ID: <CAJNJY8R7yScE0-uCsidfRxV6g5V4E9h_6P4Qp=Q3AA4YtA40=A@mail.gmail.com>
+Subject: Re: stale NFS file handle problem on XFS inode64
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,73 +32,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: linux-xfs@oss.sgi.com
 
-Use same trick with:
-  commit 4e9072472fbc56b9d4c8ee8094cc62ce793df9b7
-  Gracefully fail aio tests if they weren't built
-
-Signed-off-by: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
----
- 198 |    5 ++++-
- 240 |    5 ++++-
- 2 files changed, 8 insertions(+), 2 deletions(-)
-
-diff --git a/198 b/198
-index e46ec8d..60db6dc 100755
---- a/198
-+++ b/198
-@@ -45,13 +45,16 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
-+AIO_TEST=src/aio-dio-regress/aiodio_sparse2
-+[ -x $here/$AIO_TEST ] || _notrun "$AIO_TEST not built"
-+
- echo "Silence is golden."
- 
- # real QA test starts here
- rm -f $seq.full
- 
- rm -f "$TEST_DIR/aiodio_sparse*"
--$here/src/aio-dio-regress/aiodio_sparse2 "$TEST_DIR/aiodio_sparse"
-+$here/$AIO_TEST "$TEST_DIR/aiodio_sparse"
- 
- status=$?
- exit
-diff --git a/240 b/240
-index 563449e..22c1756 100755
---- a/240
-+++ b/240
-@@ -53,6 +53,9 @@ _supported_os Linux
- 
- _require_sparse_files
- 
-+AIO_TEST=src/aio-dio-regress/aiodio_sparse2
-+[ -x $here/$AIO_TEST ] || _notrun "$AIO_TEST not built"
-+
- echo "Silence is golden."
- 
- # real QA test starts here
-@@ -69,7 +72,7 @@ fi
- 
- # 2 threads, fs block sized writes, 64k filesize, stride through file by
- # fs block size, start at logical block size offset
--$here/src/aio-dio-regress/aiodio_sparse2 -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
-+$here/$AIO_TEST -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
- 
- status=$?
- exit
--- 
-1.7.7.3
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+dW5mb3J0dW5hdGVseSwgc2V0aW5nIG5mcy5lbmFibGVfaW5vNjQgZGlkbid0IHdvcmsgYWx0aG91
+Z2ggaXQgZ2F2ZSBtZQozMiBiaXQgaW5vZGUgbnVtYmVyIGluZGVlZCwgSSB0aGluayB0aGVyZSBt
+dXN0IGJlIHNvbWV0aGluZyBlbHNlCndyb25nLgoKCjIwMTEvMTEvMjEgRW1tYW51ZWwgRmxvcmFj
+IDxlZmxvcmFjQGludGVsbGlxdWUuY29tPjoKPiBMZSBNb24sIDIxIE5vdiAyMDExIDIzOjI4OjIz
+ICswODAwCj4gaGFuayBwZW5nIDxwZW5neGloYW5AZ21haWwuY29tPiDDqWNyaXZhaXQ6Cj4KPj4g
+SSBub3RpY2VkIHRoYXQgdGhlcmUgaXMgYSBrZXJuZWwgcGFyYW1ldGVyIDoKPj4gbmZzLmVuYWJs
+ZV9pbm82ND0KPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgW05GU10gZW5hYmxl
+IDY0LWJpdCBpbm9kZSBudW1iZXJzLgo+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBJZiB6ZXJvLCB0aGUgTkZTIGNsaWVudCB3aWxsIGZha2UgdXAgYSAzMi1iaXQKPj4gaW5vZGUg
+bnVtYmVyIGZvciB0aGUgcmVhZGRpcigpIGFuZCBzdGF0KCkgc3lzY2FsbHMgaW5zdGVhZAo+PiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBvZiByZXR1cm5pbmcgdGhlIGZ1bGwgNjQt
+Yml0IG51bWJlci4KPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgVGhlIGRlZmF1
+bHQgaXMgdG8gcmV0dXJuIDY0LWJpdCBpbm9kZSBudW1iZXJzLgo+Pgo+PiBjYW4gSSBzZXQgaXQg
+dG8gemVybywgc28gTkZTIGNsaWVudCBjYW4gZ2V0IGNvbnZlcnRlZCAzMmJpdCBpbm9kZSA/Cj4K
+PiBXZWxsIHlvdSBtdXN0IHRyeSBpdCBhbmQgaG9wZSBmb3IgdGhlIGJlc3QhCj4KPiAtLQo+IC0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQo+IEVtbWFudWVsIEZsb3JhYyDCoCDCoCB8IMKgIERpcmVjdGlvbiB0ZWNo
+bmlxdWUKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgSW50ZWxsaXF1ZQo+IMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgfCDCoCA8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4K
+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHwgwqAgKzMzIDEgNzggOTQgODQgMDIKPiAt
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0KPgoKCgotLSAKVGhlIHNpbXBsZXN0IGlzIG5vdCBhbGwgYmVzdCBidXQg
+dGhlIGJlc3QgaXMgc3VyZWx5IHRoZSBzaW1wbGVzdCEKCl9fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
+Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
