@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAMMBtA9174697 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:11:56 -0600
+	pAMMGBx5174819
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:16:12 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1495D1D2A4E3
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:11:51 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 58C8B26F513
+	for <linux-xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:16:10 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	HbdV34Sni8X9bLqy for <xfs@oss.sgi.com>;
-	Tue, 22 Nov 2011 14:11:51 -0800 (PST)
-Date: Tue, 22 Nov 2011 17:11:50 -0500
+	qKgM9lno1o4WaNaM for <linux-xfs@oss.sgi.com>;
+	Tue, 22 Nov 2011 14:16:10 -0800 (PST)
+Date: Tue, 22 Nov 2011 17:16:09 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: EFSCORRUPTED on mount?
-Message-ID: <20111122221150.GA21028@infradead.org>
-References: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
-	<CAF3hT9AurrVi7xosauVmhQcsbqJgLsxkNYm6dWDNCpB+GR69=w@mail.gmail.com>
-	<20111122014114.GJ2386@dastard>
-	<CAF3hT9Cu+56WJqzHVu+fMgquddwoMsfW-WC8CvRRBtC4PA3uHw@mail.gmail.com>
+Subject: Re: stale NFS file handle problem on XFS inode64
+Message-ID: <20111122221609.GB29540@infradead.org>
+References: <CAJNJY8Q--O2Z3K6KFxVKOivwaABk+oRtC1y0eQ0nS1WdPNMwsQ@mail.gmail.com>
+	<20111121170459.GA1327@infradead.org>
+	<CAJNJY8Ty+bQpzGL9wq7Qv3ozcKUPwmTyYUeb2wQqZ326K4JeWw@mail.gmail.com>
+	<20111122014609.GK2386@dastard>
+	<CAJNJY8S2FOJisp8-wm5FCMSaBYoMO-ePT1sSXfZ+K1LAyxW=og@mail.gmail.com>
+	<20111122213548.28715073@galadriel.home>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAF3hT9Cu+56WJqzHVu+fMgquddwoMsfW-WC8CvRRBtC4PA3uHw@mail.gmail.com>
+In-Reply-To: <20111122213548.28715073@galadriel.home>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +36,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gregory Farnum <gregory.farnum@dreamhost.com>
-Cc: sandeen@sandeen.net, xfs@oss.sgi.com
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: linux-xfs@oss.sgi.com, hank peng <pengxihan@gmail.com>
 
-On Tue, Nov 22, 2011 at 10:47:24AM -0800, Gregory Farnum wrote:
-> Barriers on (at least, nobody turned them off); the RAID card is
-> battery-backed; here are megacli dumps:
-> http://pastebin.com/yTskgzWG
-> http://pastebin.com/ekhczycy
+On Tue, Nov 22, 2011 at 09:35:48PM +0100, Emmanuel Florac wrote:
+> Le Tue, 22 Nov 2011 11:22:15 +0800 vous ??criviez:
+> 
+> > I think I have already exported the root of my XFS filesystem, am I
+> > right?
+> 
+> Yes, and the fsid stuff only relates to NFS v4, and as you aren't
+> providing any fsid, you must be running NFS 3. Now maybe you could use
+> NFS 4 instead of NFS 3?
 
-I had a lot of of issues with megaraid cards and their unsafe caching
-settings, up to the point that I'd recommend staying away from them
-now.  Can you check in the megacli config if the _disk_ write caches
-are enabled?  megaraid adapters used to do that a lot, and given that
-the disk cache isn't batter backed it's fairly fatal.
-
-I think in your dump this one might be the culprit given that SATA
-disks outside of a few niches come with a writeback cache policy:
-
-Disk Cache Policy: Disk's Default
-
-try changing that to an explicit writethrough mode - and maybe try
-running a crash data integrity test like
-
-	http://www.complang.tuwien.ac.at/anton/hdtest/
-
-on this controller.
+The fsid option is in no way related to NFSv4.  It just overrides the
+default fsid taken from the st_dev field of the mounted filesystem.
 
 _______________________________________________
 xfs mailing list
