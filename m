@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAMKa7Sd170453
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:36:08 -0600
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 475C4162E736
-	for <linux-xfs@oss.sgi.com>; Tue, 22 Nov 2011 12:36:03 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id HYHC5pHpYw4jgjSZ for
-	<linux-xfs@oss.sgi.com>; Tue, 22 Nov 2011 12:36:03 -0800 (PST)
-Date: Tue, 22 Nov 2011 21:35:48 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: stale NFS file handle problem on XFS inode64
-Message-ID: <20111122213548.28715073@galadriel.home>
-In-Reply-To: <CAJNJY8S2FOJisp8-wm5FCMSaBYoMO-ePT1sSXfZ+K1LAyxW=og@mail.gmail.com>
-References: <CAJNJY8Q--O2Z3K6KFxVKOivwaABk+oRtC1y0eQ0nS1WdPNMwsQ@mail.gmail.com>
-	<20111121170459.GA1327@infradead.org>
-	<CAJNJY8Ty+bQpzGL9wq7Qv3ozcKUPwmTyYUeb2wQqZ326K4JeWw@mail.gmail.com>
-	<20111122014609.GK2386@dastard>
-	<CAJNJY8S2FOJisp8-wm5FCMSaBYoMO-ePT1sSXfZ+K1LAyxW=og@mail.gmail.com>
-Mime-Version: 1.0
+	pAMKrXGe171299 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 14:53:34 -0600
+Received: from p3nlsmtp05.shr.prod.phx3.secureserver.net (localhost
+	[127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with SMTP id E571610539D5
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 12:53:31 -0800 (PST)
+Received: from p3nlsmtp05.shr.prod.phx3.secureserver.net
+	(p3nlsmtp05.shr.prod.phx3.secureserver.net [72.167.234.229]) by
+	cuda.sgi.com with SMTP id qTFvxIaduRGKaIDf for
+	<xfs@oss.sgi.com>; Tue, 22 Nov 2011 12:53:31 -0800 (PST)
+Received: from unknown (HELO P3NW3SH056.phx3.gdhosting.gdg) ([72.167.232.206])
+	(envelope-sender <support@eyespyclassifieds.com>)
+	by p3nlsmtp05.shr.prod.phx3.secureserver.net (qmail-ldap-1.03) with
+	SMTP for <xfs@oss.sgi.com>; 22 Nov 2011 20:53:29 -0000
+From: <support@eyespyclassifieds.com>
+Subject: EARN EASY WRIGHT NOW!!
+Date: Tue, 22 Nov 2011 13:53:29 -0700
+Message-ID: <P3NW3SH056utSgcOrBL005fa246@P3NW3SH056.phx3.gdhosting.gdg>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,23 +26,100 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Friend <xfs@oss.sgi.com>
 
-TGUgVHVlLCAyMiBOb3YgMjAxMSAxMToyMjoxNSArMDgwMCB2b3VzIMOpY3JpdmllejoKCj4gSSB0
-aGluayBJIGhhdmUgYWxyZWFkeSBleHBvcnRlZCB0aGUgcm9vdCBvZiBteSBYRlMgZmlsZXN5c3Rl
-bSwgYW0gSQo+IHJpZ2h0PwoKWWVzLCBhbmQgdGhlIGZzaWQgc3R1ZmYgb25seSByZWxhdGVzIHRv
-IE5GUyB2NCwgYW5kIGFzIHlvdSBhcmVuJ3QKcHJvdmlkaW5nIGFueSBmc2lkLCB5b3UgbXVzdCBi
-ZSBydW5uaW5nIE5GUyAzLiBOb3cgbWF5YmUgeW91IGNvdWxkIHVzZQpORlMgNCBpbnN0ZWFkIG9m
-IE5GUyAzPwoKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJl
-Y3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAg
-ICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAg
-ICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+EARN EASY WRIGHT NOW!!
+
+Hello Friend,
+
+Inviting your friends online in your spare time is a very easy
+way to make some extra money. Our members are earning more than
+$5,850 or more by joining this website..
+
+Earn money by referring others to join this website.
+You will get $39 for each referral. Suppose if
+someone joins under your referral link and  you will
+get a commission of $39 USD in each..
+
+Is Very Easy To make 5 referrals per day,5 x $39 =$195 earn everyday)So in
+one month? $195 x 30 days=$5,850 /month for just referring others.
+This is Different to Other Work at Home Opportunities..
+
+IMPORTANT:  NOVEMBER,- 24 -2011 is the Cut-Off Date to lock in your 
+position!
+Be sure to JOIN NOW to secure ALL the commission before they go to someone
+else! You will be paid on Nov 30/2011 Big Company and Click Bank
+pay you Direct Paypal Credit Card Or no limit of your income.
+
+CLICK HERE: bellow And  Hits The $5,850 Before Others Can Do...
+
+==>> http://worldurl.webs.com/autotrafficavalanche.html
+
+Big Companies Are Ready to Pay You Right Now for Your Time
+
+[All You Have To Do Is Join the Auto Traffic Avalnche Step-By-Step 
+Process]
+
+1 - Login to the Auto Traffic Avalnche exclusive member's area
+2 - Watch the videos
+3 - Register with the companies you choose
+4 - Start posting your ads
+5 - Add some of the other cash boosting techniques you'll find in the 
+guide,
+    when you're ready
+6 - Just sit back and watch the money come in!
+
+How to promote your referral link on internet?
+
+1. By Placing advertisements in various classified website
+2. By sending email to all of your friends in your email address book.
+3. By Posting your referral link in various discussion forums
+4. By posting link in  http://www.answers.yahoo.com
+5. By posting the link in http://www.gmail.com
+6. By using Yahoo chat, Yahoo groups, Google groups etc
+
+CLICK HERE: bellow And  Hits The $5,850 Before Others Can Do...
+
+==>> http://worldurl.webs.com/autotrafficavalanche.html
+
+
+Start making money now by this program. So refer more and earn more.
+
+To your success,
+Shelly Ryans
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+This is where you can type a brief description of your site.
+
+Email sent by: bestincome@gmail.com (Shelly Ryans)
+
+
+Powered by Eye Spy Classifieds
+
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
