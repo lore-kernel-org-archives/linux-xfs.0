@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM5HvtE118745 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 23:17:58 -0600
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0F99F26B674
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:17:55 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id GKAA0exzQAbGnCFT for
-	<xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:17:55 -0800 (PST)
-Message-ID: <4ECB30EB.7010109@cn.fujitsu.com>
-Date: Tue, 22 Nov 2011 13:19:39 +0800
-From: Li Zefan <lizf@cn.fujitsu.com>
+	pAM5Rt3a119024 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 23:27:55 -0600
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id AB2CB12792F2
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:27:54 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	xMxIVhlpg6AFFVrl for <xfs@oss.sgi.com>;
+	Mon, 21 Nov 2011 21:27:54 -0800 (PST)
+Date: Tue, 22 Nov 2011 16:27:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs_repair is recommended over xfs_check.
+Message-ID: <20111122052751.GM2386@dastard>
+References: <4ECAC84C.1070000@sauce.co.nz> <20111122002306.GI2386@dastard>
+	<4ECB25C7.8070801@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH v2] 254: avoid output mismatch due to space cache
+Content-Disposition: inline
+In-Reply-To: <4ECB25C7.8070801@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,61 +30,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Richard Scobie <richard@sauce.co.nz>, xfs@oss.sgi.com
 
-This reverts commit a0c92a5871082c0aa6a7caae496e67a6e57bb0b6 (disable
-space cache), as option nospace_cache was newly introduced in linux-3.2,
-so we'll fail to mount btrfs in older kernels.
+On Mon, Nov 21, 2011 at 10:32:07PM -0600, Eric Sandeen wrote:
+> On 11/21/11 6:23 PM, Dave Chinner wrote:
+> > On Tue, Nov 22, 2011 at 10:53:16AM +1300, Richard Scobie wrote:
+> >> Is there currently now any situation where xfs_check would be used
+> >> in preference to xfs_repair?
+> >>
+> >> If not, perhaps xfs_check could be deprecated.
+> > 
+> > xfs_check is one of the ways we test that xfs_repair is doing the
+> > right thing. Having two implementation that you can use to compare
+> > results is a good thing.....
+> 
+> What about for end users though?  I'm not sure there's much need
+> for end users to be comparing xfs_check against xfs_repair in general,
+> anyway ...
 
-As an alternative fix, we just list subvolme names, don't assume
-what ID numbers those subvolumes will have.
+Right, but that doesn't mean it needs deprecating as that implies
+complete removal at some point in the future. I'd prefer to keep it
+around as we get most of what it does for free as it uses the xfs_db
+infrastructure to do all it's work.
 
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
----
- 254     |    4 ++--
- 254.out |    4 ++--
- 2 files changed, 4 insertions(+), 4 deletions(-)
+> Often enough I see users using xfs_check just because it's there,
+> and running into trouble... it seems reasonable to warn the
+> casual user against it, or at least recommend xfs_repair -n
+> instead.  What do you think?
 
-diff --git a/254 b/254
-index 1cd4832..7b74a02 100755
---- a/254
-+++ b/254
-@@ -48,7 +48,7 @@ _supported_os Linux
- _require_scratch
- 
- _scratch_mkfs > /dev/null 2>&1
--_scratch_mount -o nospace_cache
-+_scratch_mount
- 
- # First test basic snapshotting
- echo "Creating file foo in root dir"
-@@ -95,7 +95,7 @@ ls $SCRATCH_MNT
- 
- # Test listing the subvolumes
- echo "Listing subvolumes"
--btrfs subvolume list $SCRATCH_MNT | _filter_scratch
-+btrfs subvolume list $SCRATCH_MNT | awk '{ print $NF }'
- 
- # Delete the snapshot
- btrfs subvolume delete $SCRATCH_MNT/snap | _filter_scratch
-diff --git a/254.out b/254.out
-index 582357a..d4b5346 100644
---- a/254.out
-+++ b/254.out
-@@ -31,8 +31,8 @@ List root dir
- snap
- subvol
- Listing subvolumes
--ID 256 top level 5 path snap
--ID 257 top level 5 path subvol
-+snap
-+subvol
- Delete subvolume 'SCRATCH_MNT/snap'
- List root dir
- subvol
+The patch to modify the man page to advise use of xfs_repair is
+sufficient, I think. 
+
+Cheers,
+
+Dave.
 -- 
-1.7.3.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
