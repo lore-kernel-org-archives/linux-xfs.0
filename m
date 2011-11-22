@@ -1,35 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM9jBgv133054 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 03:45:11 -0600
-Received: from fgwmail5.fujitsu.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9779215822D1
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 01:45:10 -0800 (PST)
-Received: from fgwmail5.fujitsu.co.jp (fgwmail5.fujitsu.co.jp [192.51.44.35])
-	by cuda.sgi.com with ESMTP id 1rTBGOdC6aOylVQd for
-	<xfs@oss.sgi.com>; Tue, 22 Nov 2011 01:45:10 -0800 (PST)
-Received: from m1.gw.fujitsu.co.jp (unknown [10.0.50.71])
-	by fgwmail5.fujitsu.co.jp (Postfix) with ESMTP id 5A9F73EE0C0
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
-Received: from smail (m1 [127.0.0.1])
-	by outgoing.m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 43D1145DE59
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (s1.gw.fujitsu.co.jp [10.0.50.91])
-	by m1.gw.fujitsu.co.jp (Postfix) with ESMTP id 2B68B45DE58
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
-Received: from s1.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id 1D5881DB8042
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:08 +0900 (JST)
-Received: from m107.s.css.fujitsu.com (m107.s.css.fujitsu.com [10.240.81.147])
-	by s1.gw.fujitsu.co.jp (Postfix) with ESMTP id DE7FB1DB8046
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:45:07 +0900 (JST)
-Message-ID: <4ECB6F16.5090002@jp.fujitsu.com>
-Date: Tue, 22 Nov 2011 18:44:54 +0900
-From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
-MIME-Version: 1.0
+	pAM9XJpp132404 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 03:33:20 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 53492162CE04
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 01:33:18 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	16o0WhpCdgWiGEOU for <xfs@oss.sgi.com>;
+	Tue, 22 Nov 2011 01:33:18 -0800 (PST)
+Date: Tue, 22 Nov 2011 20:33:16 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] 198, 240: check presence of aiodio_sparce2
-References: <4ECB3DCA.5000509@jp.fujitsu.com> <20111122093316.GB8098@dastard>
-In-Reply-To: <20111122093316.GB8098@dastard>
+Message-ID: <20111122093316.GB8098@dastard>
+References: <4ECB3DCA.5000509@jp.fujitsu.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4ECB3DCA.5000509@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,19 +29,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-(2011/11/22 18:33), Dave Chinner wrote:
-> Good idea, but given this check is now repeated in multiple places,
-> wrapping it in a "_require_aiodio" helper function is probably in
-> order.
+On Tue, Nov 22, 2011 at 03:14:34PM +0900, Hidetoshi Seto wrote:
+> Use same trick with:
+>   commit 4e9072472fbc56b9d4c8ee8094cc62ce793df9b7
+>   Gracefully fail aio tests if they weren't built
 
-Good point.
-OK, I'll make a patch to implement the "_require_aiodio" helper.
+Good idea, but given this check is now repeated in multiple places,
+wrapping it in a "_require_aiodio" helper function is probably in
+order.
 
-Thanks,
-H.Seto
+It might also be useful to define AIODIO_SPARSE and AIODIO_SPARSE2
+variables (similar to, say, XFS_IO_PROG) so that it doesn't have to
+be open coded in all the tests....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
