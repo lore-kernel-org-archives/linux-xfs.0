@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM1fNg8031187 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:41:24 -0600
+	pAM1kEHL031381
+	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:46:14 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 632641491EB9
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 17:41:17 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4CBE026ADCD
+	for <linux-xfs@oss.sgi.com>; Mon, 21 Nov 2011 17:46:12 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4K5qVkMJrHGTJhJZ for <xfs@oss.sgi.com>;
-	Mon, 21 Nov 2011 17:41:17 -0800 (PST)
-Date: Tue, 22 Nov 2011 12:41:14 +1100
+	QfJwHnNB43XD61m3 for <linux-xfs@oss.sgi.com>;
+	Mon, 21 Nov 2011 17:46:12 -0800 (PST)
+Date: Tue, 22 Nov 2011 12:46:09 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: EFSCORRUPTED on mount?
-Message-ID: <20111122014114.GJ2386@dastard>
-References: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
-	<CAF3hT9AurrVi7xosauVmhQcsbqJgLsxkNYm6dWDNCpB+GR69=w@mail.gmail.com>
+Subject: Re: stale NFS file handle problem on XFS inode64
+Message-ID: <20111122014609.GK2386@dastard>
+References: <CAJNJY8Q--O2Z3K6KFxVKOivwaABk+oRtC1y0eQ0nS1WdPNMwsQ@mail.gmail.com>
+	<20111121170459.GA1327@infradead.org>
+	<CAJNJY8Ty+bQpzGL9wq7Qv3ozcKUPwmTyYUeb2wQqZ326K4JeWw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAF3hT9AurrVi7xosauVmhQcsbqJgLsxkNYm6dWDNCpB+GR69=w@mail.gmail.com>
+In-Reply-To: <CAJNJY8Ty+bQpzGL9wq7Qv3ozcKUPwmTyYUeb2wQqZ326K4JeWw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,58 +28,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gregory Farnum <gregory.farnum@dreamhost.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: hank peng <pengxihan@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com
 
-T24gTW9uLCBOb3YgMjEsIDIwMTEgYXQgMDQ6MjE6MzBQTSAtMDgwMCwgR3JlZ29yeSBGYXJudW0g
-d3JvdGU6Cj4gSSBsaWVkIGEgbGl0dGxlIGJpdCDigJQgdHVybnMgb3V0IGFuIGFkbWluIHJlc3Rh
-cnRlZCB0aGUgbm9kZSB3aXRoCj4gcmVib290IC1mbi4KRldJVywgdGhhdCByZWJvb3QgY29tbWFu
-ZCBkb2VzIHRoaXM6CgotbiAgICAgRG9uJ3Qgc3luYyBiZWZvcmUgcmVib290IG9yIGhhbHQuIE5v
-dGUgdGhhdCB0aGUga2VybmVsIGFuZApzdG9yYWdlIGRyaXZlcnMgbWF5IHN0aWxsIHN5bmMuCgot
-ZiAgICAgRm9yY2UgaGFsdCBvciByZWJvb3QsIGRvbid0IGNhbGwgc2h1dGRvd24oOCkuCgpJbiBv
-dGhlciB3b3JkcywgeW91ciBhZG1pbiBiYXNpY2FsbHkgdG9sZCB0aGUgc3lzdGVtIHRvIHNodXRk
-b3duCndpdGhvdXQgc3luY2luZyB0aGUgZGF0YSBvciBydW5uaW5nIHNodXRkb3duIHNjcmlwdHMg
-dGhhdCBzeW5jIGRhdGEuCmkuZS4gaXQgZm9yY2VzIGFuIGltbWVkaWF0ZSByZWJvb3Qgd2hpbGUg
-dGhlIHN5c3RlbSBpcyBzdGlsbCBhY3RpdmUsCmNhdXNpbmcgYW4gdW5jbGVhbiBzaHV0ZG93biBh
-bmQgZ3VhcmFudGVlZCBkYXRhIGxvc3MuCgo+IEJ1dCBJJ3ZlIGJlZW4gYXNzdXJlZCB0aGlzIHNo
-b3VsZG4ndCBoYXZlIGJlZW4gYWJsZSB0bwo+IGNvcnJ1cHQgdGhlIGZpbGVzeXN0ZW0sIHNvIHRy
-b3VibGVzaG9vdGluZyBjb250aW51ZXMuCgpUaGF0IGRlcGVuZHMgZW50aXJlbHkgb24geW91ciBo
-YXJkd2FyZS4gQXJlIHlvdSBydW5uaW5nIHdpdGgKYmFycmllcnMgZW5hYmxlZD8gIElmIHlvdSBk
-b24ndCBoYXZlIGJhcnJpZXJzIGFjdGl2ZSwgdGhlbiBtZXRhZGF0YQpjb3JydXB0aW9uIGlzIGVu
-dGlyZWx5IHBvc3NpYmxlIGluIHRoaXMgc2NlbmFyaW9uLCBlc3BlY2lhbGx5IGlmIHRoZQpoYXJk
-d2FyZSBkb2VzIGEgZHJpdmUgcmVzZXQgb3IgcG93ZXIgY3ljbGUgZHVyaW5nIHRoZSByZWJvb3QK
-cHJvY2VkdXJlLiBFdmVuIHdpdGggYmFycmllcnMsIHRoZXJlIGFyZSBSQUlEIGNvbnRyb2xsZXJz
-IHRoYXQKZW5hYmxlIGJhY2sgZW5kIGRyaXZlIGNhY2hlcyBhbmQgdGhleSBmYWlsIHRvIGdldCBm
-bHVzaGVkIGFuZCBoZW5jZQpjYW4gY2F1c2UgY29ycnVwdGlvbiBvbiB1bmNsZWFuIHNodXRkb3du
-cy4KCklPV3MsIEknZCBiZSBsb29raW5nIGF0IGhvdyB5b3VyIHN0b3JhZ2UgaXMgY29uZmlndXJl
-ZCBhbmQKcnVsaW5nIHRoYXQgb3V0IGFzIGEgY2F1c2UgYmVmb3JlIGV2ZW4gdHJ5aW5nIHRvIGxv
-b2sgYXQgdGhlCmZpbGVzeXN0ZW0uLi4KCj4gT24gTW9uLCBOb3YgMjEsIDIwMTEgYXQgMjoxMyBQ
-TSwgQmVuIE15ZXJzIDxicG1Ac2dpLmNvbT4gd3JvdGU6Cj4gPiBIZXkgR3JlZywKPiA+Cj4gPiBJ
-dCBtaWdodCBiZSB1c2VmdWwgaWYgeW91IGNhbiBwcm92aWRlIGFuIHhmc19tZXRhZHVtcCBvZiB0
-aGUgZmlsZXN5c3RlbS4KPiA+Cj4gPiB4ZnNfbWV0YWR1bXAgL2Rldi9mb28gLSB8IGJ6aXAyID4g
-L3RtcC9mb28uYnoyCj4gU3VyZS4gSSBwb3N0ZWQgaXQgYXQgY2VwaC5uZXdkcmVhbS5uZXQvc2Rn
-MS5iejIKPiBUaGFua3MhCj4gCj4gT24gTW9uLCBOb3YgMjEsIDIwMTEgYXQgMTo1MiBQTSwgRW1t
-YW51ZWwgRmxvcmFjIDxlZmxvcmFjQGludGVsbGlxdWUuY29tPiB3cm90ZToKPiA+IHhmc19jaGVj
-ayBpcyBtb3N0bHkgdXNlbGVzcyBub3dhZGF5cywgdXNlICJ4ZnNfcmVwYWlyIC1uIiBpbnN0ZWFk
-LiBBdAo+ID4gdGhpcyBzdGFnZSwgdGhlcmUncyBwcm9iYWJseSBub3QgbXVjaCB5b3UgY2FuIGRv
-IGJ1dCBhbiAieGZzX3JlcGFpciAtTCIKPiA+IHRvIHplcm8gdGhlIGxvZy4gSG9wZSBmb3IgdGhl
-IGJldHRlci4KPiAKPiBvb3RAY2VwaHN0b3JlNjM1ODp+IyB4ZnNfcmVwYWlyIC1uIC9kZXYvc2Rn
-MQo+IFBoYXNlIDEgLSBmaW5kIGFuZCB2ZXJpZnkgc3VwZXJibG9jay4uLgo+IFBoYXNlIDIgLSB1
-c2luZyBpbnRlcm5hbCBsb2cKPiAgICAgICAgIC0gc2NhbiBmaWxlc3lzdGVtIGZyZWVzcGFjZSBh
-bmQgaW5vZGUgbWFwcy4uLgo+IGJsb2NrICgxLDc4MDAwNDAtNzgwMDA0MCkgbXVsdGlwbHkgY2xh
-aW1lZCBieSBjbnQgc3BhY2UgdHJlZSwgc3RhdGUgLSAyCj4gYWdmX2ZyZWVibGtzIDgwNjcyNDQz
-LCBjb3VudGVkIDgwNjcyNDEwIGluIGFnIDEKPiBzYl9pY291bnQgNjQsIGNvdW50ZWQgMjUxODQw
-Cj4gc2JfaWZyZWUgNjEsIGNvdW50ZWQgNjYKPiBzYl9mZGJsb2NrcyA0NjI4OTgzMjUsIGNvdW50
-ZWQgMzU4NDk0NzMxCi4uLi4uCgpBbGwgdGhlc2UgZXJyb3JzIGFyZSBsaWtlbHkgdG8gYmUgY2F1
-c2VkIGJ5IHRoZSBmYWN0IGxvZyByZXBsYXkgaGFzCm5vdCBjb21wbGV0ZWQuIFRoZSBvbmx5IG9u
-ZSB0aGF0IGlzIHN1c3BlY3QgaXMgdGhlIGZpcnN0IG9uZToKCj4gYmxvY2sgKDEsNzgwMDA0MC03
-ODAwMDQwKSBtdWx0aXBseSBjbGFpbWVkIGJ5IGNudCBzcGFjZSB0cmVlLCBzdGF0ZSAtIDIKCkJ1
-dCB0aGVyZSdzIG5vIHdheSB0aGUgY2F1c2Ugb2YgdGhhdCBjYW4gYmUgZGV0ZXJtaW5lZCBhZnRl
-ciB0aGUKZmFjdCBmcm9tIGEgbWV0YWR1bXAuLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBD
-aGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
-Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Tue, Nov 22, 2011 at 08:19:15AM +0800, hank peng wrote:
+> 2011/11/22 Christoph Hellwig <hch@infradead.org>:
+> > On Mon, Nov 21, 2011 at 09:00:57PM +0800, hank peng wrote:
+> >> Hi:
+> >> I have a 4TB XFS filesystem mounted with "inode64" option, and I
+> >> exported it using NFS v3, on NFS client, I entered a subdirectory and
+> >> got "stale NFS file handle" error.
+> >> ls -il showed that its inode number exceed 32 bit limit.
+> >> NFS server: kernel version is 2.6.35.6
+> >> NFS client: kernel version is 2.6.18
+> >
+> > Do you export the root directory of the XFS filesystem, or a
+> > subdirectory in it? =A0If it's the former it should work in theory,
+> > althrough I'm not sure how well 64-bit inode numbers work with a client
+> > that old, if it's the latter it needs a few tweaks to work, see
+> >
+> The following is what I did:
+> 1. mkfs.xfs /dev/sdb   (whole disk)
+> 2. create a mount point in my root filesystem:
+> mkdir /mnt/mymount
+> 3. monut xfs with inode64
+> mount /dev/sdb /mnt/mymount -o inode64
+> 4. export it in NFS /etc/exports
+> /mnt/mymount   *(rw, no_root,squash, sync)
+                       ^^^^^^^^^^^^^^ no_root_squash
+> =
+
+> so, is there any problem here?
+> =
+
+> > =A0 =A0 =A0 =A0http://xfs.org/index.php/XFS_FAQ#Q:_Why_doesn.27t_NFS-ex=
+porting_subdirectories_of_inode64-mounted_filesystem_work.3F
+
+It's in the FAQ entry christoph pointed you to:
+
+"However, exporting the root of the filesystem works"
+
+Cheers,
+
+Dave.
+-- =
+
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
