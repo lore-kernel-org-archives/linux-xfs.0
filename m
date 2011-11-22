@@ -1,14 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAMEUxJb147867 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 08:30:59 -0600
-Message-ID: <4ECBB21E.9040205@sgi.com>
-Date: Tue, 22 Nov 2011 08:30:54 -0600
-From: Bill Kendall <wkendall@sgi.com>
+	pAMF6DDF149524 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 09:06:13 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E18A61D27FC4
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 07:06:10 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id rcH6BnPZdBvDGAD5 for <xfs@oss.sgi.com>;
+	Tue, 22 Nov 2011 07:06:10 -0800 (PST)
+Message-ID: <4ECBBA61.4050704@sandeen.net>
+Date: Tue, 22 Nov 2011 09:06:09 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Interrupted xfsdump Resume Behaviour for Regular Dump File
-References: <1321794858.60631.YahooMailClassic@web190714.mail.sg3.yahoo.com>
-In-Reply-To: <1321794858.60631.YahooMailClassic@web190714.mail.sg3.yahoo.com>
+Subject: Re: EFSCORRUPTED on mount?
+References: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
+In-Reply-To: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,60 +23,135 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gim Leong Chin <chingimleong@yahoo.com.sg>
+To: Gregory Farnum <gregory.farnum@dreamhost.com>
 Cc: xfs@oss.sgi.com
 
-If you look at the inventory after an interrupted backup, it
-will indicate the stream (and media file) start and end points.
-If the end point is "ino 0 offset 0", then a resumed restore
-will end up backing up everything again.
+On 11/21/11 12:06 PM, Gregory Farnum wrote:
+> While working with a Ceph node running XFS we somehow managed to
+> corrupt our filesystem. I don't think there were any hard powercycles
+> on this node, but while starting up after a kernel upgrade (it's
+> running 3.1) the daemon was performing its usual startup sequence (a
+> lot of file truncates, mostly) when it got an error out of the
+> filesystem:
 
-If you can, please try this with the top-of-tree code from
-the git tree on kernel.org. I did a quick test and it seems
-to be working there.
+Others have had good comments but also:
 
-Note that if you're backing up to stdout, xfsdump cannot
-determine when the output is safely on media, so a resumed
-backup will always be a full backup.
+> 2011-11-17 16:00:37.294876 7f83f3eef720 filestore(/mnt/osd.17)
+> truncate meta/pginfo_12.7c8/0 size 0
+> 2011-11-17 16:00:37.483407 7f83f3eef720 filestore(/mnt/osd.17)
+> truncate meta/pginfo_12.7c8/0 size 0 = -117
+> 2011-11-17 16:00:37.483476 7f83f3eef720 filestore(/mnt/osd.17)  error
+> error 117: Structure needs cleaning not handled
 
-Bill
+was there anything in dmesg/system logs right at this point?  XFS should
+have said something about this original error.
 
-Gim Leong Chin wrote:
-> Hi,
+-Eric
+
+> When I tried to look at the filesystem, it failed with EIO. When I
+> tried to mount the filesystem after a remount, it gave me an internal
+> error:
 > 
-> I have observed this since some time back.  I have just done an experiment.
+> root@cephstore6358:~# mount /dev/sdg1 /mnt/osd.17
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.729383] XFS: Internal error
+> XFS_WANT_CORRUPTED_GOTO at line 1664 of file fs/xfs/xfs_alloc.c.
+> Caller 0xffffffff811d6b71
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.729386]
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.758262] XFS (sdg1): Internal
+> error xfs_trans_cancel at line 1928 of file fs/xfs/xfs_trans.c.
+> Caller 0xffffffff811fa463
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.758265]
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.758352] XFS (sdg1):
+> Corruption of in-memory data detected.  Shutting down filesystem
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.758356] XFS (sdg1): Please
+> umount the filesystem and rectify the problem(s)
+> 2011 Nov 18 14:52:47 cephstore6358 [82374.758364] XFS (sdg1): Failed
+> to recover EFIs
+> mount: Structure needs cleaning
 > 
-> 1) Using xfsdump 3.0.6, I first did a full dump to regular file and restore, checked that every thing is correct.
+> dmesg had a little more output:
 > 
-> 2) I then did the same dump again, but interrupted it.  Then I resumed the dump.  I noted that the resumed dump file is the exact same size as the full dump file.
+> dmesg says:
+> [82373.779312] XFS (sdg1): Mounting Filesystem
+> [82373.930531] XFS (sdg1): Starting recovery (logdev: internal)
+> [82374.729383] XFS: Internal error XFS_WANT_CORRUPTED_GOTO at line
+> 1664 of file fs/xfs/xfs_alloc.c.  Caller 0xffffffff811d6b71
+> [82374.729386]
+> [82374.741959] Pid: 30648, comm: mount Not tainted
+> 3.1.0-dho-00004-g1ffcb5c-dirty #1
+> [82374.749543] Call Trace:
+> [82374.751994]  [<ffffffff811d606e>] ? xfs_free_ag_extent+0x4e3/0x698
+> [82374.758157]  [<ffffffff811ce1f8>] ? xfs_setup_devices+0x84/0x84
+> [82374.758163]  [<ffffffff811ce1f8>] ? xfs_setup_devices+0x84/0x84
+> [82374.758167]  [<ffffffff811d6b71>] ? xfs_free_extent+0xb6/0xf9
+> [82374.758171]  [<ffffffff811d3034>] ? kmem_zone_alloc+0x58/0x9e
+> [82374.758179]  [<ffffffff812095f9>] ? xfs_trans_get_efd+0x21/0x2a
+> [82374.758185]  [<ffffffff811fa413>] ? xlog_recover_process_efi+0x113/0x172
+> [82374.758190]  [<ffffffff811fa54b>] ? xlog_recover_process_efis+0x4e/0x8e
+> [82374.758194]  [<ffffffff811faa53>] ? xlog_recover_finish+0x14/0x88
+> [82374.758199]  [<ffffffff8120088e>] ? xfs_mountfs+0x46c/0x56a
+> [82374.758204]  [<ffffffff811ce365>] ? xfs_fs_fill_super+0x16d/0x244
+> [82374.758213]  [<ffffffff810d5dcf>] ? mount_bdev+0x13d/0x198
+> [82374.758218]  [<ffffffff810d4a42>] ? mount_fs+0xc/0xa6
+> [82374.758225]  [<ffffffff810eb274>] ? vfs_kern_mount+0x61/0x97
+> [82374.758230]  [<ffffffff810eb316>] ? do_kern_mount+0x49/0xd6
+> [82374.758234]  [<ffffffff810eba99>] ? do_mount+0x6f6/0x75d
+> [82374.758241]  [<ffffffff810b4429>] ? memdup_user+0x3a/0x56
+> [82374.758246]  [<ffffffff810ebb88>] ? sys_mount+0x88/0xc4
+> [82374.758254]  [<ffffffff8166c07b>] ? system_call_fastpath+0x16/0x1b
+> [82374.758262] XFS (sdg1): Internal error xfs_trans_cancel at line
+> 1928 of file fs/xfs/xfs_trans.c.  Caller 0xffffffff811fa463
 > 
-> 3) First I did a cumulative restore, with the interrupted dump file, followed by the resumed dump file.  I checked that the restore is correct.
+> [82374.758265]
+> [82374.758268] Pid: 30648, comm: mount Not tainted
+> 3.1.0-dho-00004-g1ffcb5c-dirty #1
+> [82374.758270] Call Trace:
+> [82374.758275]  [<ffffffff81201ecd>] ? xfs_trans_cancel+0x56/0xcf
+> [82374.758279]  [<ffffffff811fa463>] ? xlog_recover_process_efi+0x163/0x172
+> [82374.758284]  [<ffffffff811fa54b>] ? xlog_recover_process_efis+0x4e/0x8e
+> [82374.758288]  [<ffffffff811faa53>] ? xlog_recover_finish+0x14/0x88
+> [82374.758293]  [<ffffffff8120088e>] ? xfs_mountfs+0x46c/0x56a
+> [82374.758298]  [<ffffffff811ce365>] ? xfs_fs_fill_super+0x16d/0x244
+> [82374.758303]  [<ffffffff810d5dcf>] ? mount_bdev+0x13d/0x198
+> [82374.758307]  [<ffffffff810d4a42>] ? mount_fs+0xc/0xa6
+> [82374.758312]  [<ffffffff810eb274>] ? vfs_kern_mount+0x61/0x97
+> [82374.758317]  [<ffffffff810eb316>] ? do_kern_mount+0x49/0xd6
+> [82374.758321]  [<ffffffff810eba99>] ? do_mount+0x6f6/0x75d
+> [82374.758325]  [<ffffffff810b4429>] ? memdup_user+0x3a/0x56
+> [82374.758330]  [<ffffffff810ebb88>] ? sys_mount+0x88/0xc4
+> [82374.758335]  [<ffffffff8166c07b>] ? system_call_fastpath+0x16/0x1b
+> [82374.758341] XFS (sdg1): xfs_do_force_shutdown(0x8) called from line
+> 1929 of file fs/xfs/xfs_trans.c.  Return address = 0xffffffff81201ee6
+> [82374.758352] XFS (sdg1): Corruption of in-memory data detected.
+> Shutting down filesystem
+> [82374.758356] XFS (sdg1): Please umount the filesystem and rectify
+> the problem(s)
+> [82374.758364] XFS (sdg1): Failed to recover EFIs
+> [82374.758367] XFS (sdg1): log mount finish failed
 > 
-> 4) I then did a non-cumulative restore, using only resumed dump file.  The resume is successful, and I checked that the restore is correct.
+> xfs_check doesn't give me much either, since I assume the errors above
+> are involved in log replay:
+> root@cephstore6358:~# xfs_check -v /dev/sdg1
+> ERROR: The filesystem has valuable metadata changes in a log which needs to
+> be replayed.  Mount the filesystem to replay the log, and unmount it before
+> re-running xfs_check.  If you are unable to mount the filesystem, then use
+> the xfs_repair -L option to destroy the log and attempt a repair.
+> Note that destroying the log may cause corruption -- please attempt a mount
+> of the filesystem before doing this.
 > 
-> The logs are attached.
-> 
-> The conclusion is that the so-called resume of an interrupted dump session to regular file produces a full dump file, that is sufficient by itself to do the full restore.
-> 
-> Are my observations of the behaviour of xfsdump correct?
-> 
-> 
-> Everything was done on openSUSE 11.4 x86_64.
-> 
-> 
-> GL
-> 
-> 
-> ------------------------------------------------------------------------
+> Is there something useful I can do about this? Data I can provide to
+> help track down what broke?
+> -Greg
 > 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
