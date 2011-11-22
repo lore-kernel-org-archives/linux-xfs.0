@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAM3uv8f116132 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 21:56:57 -0600
-Received: from p3nlsmtp08.shr.prod.phx3.secureserver.net (localhost
-	[127.0.0.1]) by cuda.sgi.com (Spam Firewall) with SMTP id D53AF26ADEA
-	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:56:55 -0800 (PST)
-Received: from p3nlsmtp08.shr.prod.phx3.secureserver.net
-	(p3nlsmtp08.shr.prod.phx3.secureserver.net [72.167.234.233]) by
-	cuda.sgi.com with SMTP id cOwag9zkc6qIiIit for
-	<xfs@oss.sgi.com>; Mon, 21 Nov 2011 19:56:55 -0800 (PST)
-Received: from p3nw3sh056.shr.prod.phx3.secureserver.net (HELO
-	P3NW3SH056.phx3.gdhosting.gdg) ([72.167.232.206])
-	(envelope-sender <support@eyespyclassifieds.com>)
-	by p3nlsmtp08.shr.prod.phx3.secureserver.net (qmail-ldap-1.03) with
-	SMTP for <xfs@oss.sgi.com>; 22 Nov 2011 03:56:54 -0000
-From: <support@eyespyclassifieds.com>
-Subject: Get your Guaranteed $8,736 Commissions Direct Paypal!!!
-Date: Mon, 21 Nov 2011 20:56:53 -0700
-Message-ID: <P3NW3SH056eAJIpBeSv00527e0d@P3NW3SH056.phx3.gdhosting.gdg>
+	pAM4cKJk117548 for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 22:38:20 -0600
+Received: from mail.sandeen.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 470D926A9AB
+	for <xfs@oss.sgi.com>; Mon, 21 Nov 2011 20:38:17 -0800 (PST)
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id JxD0k5UVZwvVv9LD for <xfs@oss.sgi.com>;
+	Mon, 21 Nov 2011 20:38:17 -0800 (PST)
+Message-ID: <4ECB2735.3040500@sandeen.net>
+Date: Mon, 21 Nov 2011 22:38:13 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: inode64 readiness testing
+References: <501A7AEB-6708-4181-AAE2-D145DC23B938@yahoo.com>
+In-Reply-To: <501A7AEB-6708-4181-AAE2-D145DC23B938@yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,147 +23,66 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============7296906810689119585=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Friend <xfs@oss.sgi.com>
+To: Peter Kimball <peterakimball@yahoo.com>
+Cc: xfs@oss.sgi.com
 
---===============7296906810689119585==
-Content-Type: text/plain
+On 11/18/11 11:33 AM, Peter Kimball wrote:
+> Hi folks,
+> 
+> We've got some large XFS volumes that should probably be using the
+> inode64 mount option, but aren't yet.  Before I go making irrevocable
+> changes, I wanted to run my testing procedure by you to make sure
+> I've actually tested what I think I tested.  These volumes will be
+> shared via NFS, which is not your problem but seems to be a
+> troublemaker.
+> 
+> I created a blank 1GB disk image, created an XFS filesystem on that
+> image, and mounted it on a loopback device using the ino64 flag.
+> 
+> I wrote a bunch of data to the filesystem (lots of small files),
+> approximately 600MB.
+> 
+> At this point, I think I have a filesystem in which inodes use 64-bit
+> addresses, even if the actual address value would fit in 32 bits.  I
+> would expect any program that can't handle 64-bit addresses to barf
+> when trying to access any data on the filesystem.
+> 
+> I then unmounted the filesystem and re-mounted it using the inode64
+> flag, just like it would be mounted in production.
+> 
+> I then verified that the programs I cared about (mostly NFS clients)
+> could read all of the data I had written.  I also made sure they
+> could write to the filesystem.
+> 
+> Since I haven't seen any read/write failures at this point, I feel
+> I'm ready to sign off that we're ready to start using the inode64
+> flag.  Did I properly create files using 64-bit inodes?  Did I read
+> from the filesystem in such a way that I would know if my readers
+> were unable to handle 64-bit inodes?  Is there anything I should test
+> that I haven't?
 
-PARTIME JOB MONTHLY INCOME TROUGH PAYPAL
+You might also take a look at the script at http://sandeen.net/wordpress/?p=9,
+which can look at binaries and check them for 32-bit stat() syscalls.
 
-Hello Friend,
+-Eric
 
-Get Larger ClickBank Affiliate Commissions in Just a Few Minutes!
-
-"These Message Sets, Just For ClickBank Affiliates, Creates Attentive and 
-Receptive
-Readers Ready To Click and Buy and Puts Your Marketing On 
-Autotrafficavalanche. In
-Just a Few Minutes They Are Ready To Generate More Commissions For You 
-Automatically!"
-
-OPPORTUNITY TO: Get your Guaranteed $8,736 Commissions Direct Paypal!!!
-
-So remember, I’m taking all the risk out of this investment –if 
-you’re not 100%
-thrilled with Auto Traffic Avalanche, I’ll personally see to it that 
-your money
-is returned to you – all of it. What's more if you don't get any results 
-with it,
-I'll also take $100 out of my own wallet and put it in your pocket.
-There really is nothing to lose here.
-
-We've Register New 32 Members Everyday Start Nov- 15-to- 22 -/2011 weekly
-Cycle. 32 x 7-days =224 total members every week in YOUR TEAM ...
-IMPORTANT: Nov -22 /2011 is the Cut-Off day to lock in your
-position then faster you act the higher commission you  will earn!!!
-
-Go Here To Secure not less than $8,736 commission Now and it still growing
-as  many people joining under you. if you secure your position right away:
-
-The $8,736 commission Arrive Through your Paypal or Credit Card on 
-Nov-30/2011
-next week.Hurry'this limited time, 3 remaining Positions are available 
-Now.
-
-You can access $8,736 Straight To Your Paypal Account when You Are In 
-Position ...
-
-If The Link Is Error Copy And Paste Into Your Browser To Get Commission...
-
-All It Takes Is 13 Clicks==>> http://oril.biz/2ve
-
-Here's Proof Of What A Total Beginner Can Do And Earn $8,736 Every Month..
-
-TYPE   DATE & TIME --------- NEW MEMBERS ----------- COUNTRY'S
-
-P -- NOV.20  @ 2:38  AM-----Karen----- Brown-------- United States
-P -- NOV.20  @ 2:53  AM-----Marie------Davis ------- United Kingdom
-P -- NOV.20  @ 2:56  AM-----Marice --- Bekker------- Germany
-M -- NOV.20  @ 4:19  AM-----Cristian---Hanes-------- Hungary
-P -- NOV.20  @ 4:28  AM-----Charol-----Howard------- Italy
-M -- NOV.20  @ 6:01  AM-----Ailene---- Enrequez----- Australia
-P -- NOV.20  @ 7:11  AM-----Robert---- Takker------- Canada
-P -- NOV.20  @ 7:39  AM-----Cris------ Atlas-------- United States
-P -- NOV.20  @ 9:42  AM-----Tina------ SWasington--- California
-M -- NOV.20  @ 9:58  PM-----George-----Molloch------ Singapore
-P -- NOV.20  @ 2:38  AM-----James----- Jordan------- United States
-P -- NOV.20  @ 2:53  AM-----JOan------ Jackson ----- United Kingdom
-P -- NOV.20  @ 2:56  AM-----Mandene -- Jecob-------- Germany
-M -- NOV.20  @ 4:19  AM-----Cristy---- Nores-------- Hungary
-P -- NOV.20  @ 4:28  AM-----Carlo----- Wonder------- Italy
-M -- NOV.20  @ 6:01  AM-----lalaine--- Anderson----- Australia
-P -- NOV.20  @ 7:11  AM-----Rebecca--- Baker-------- Canada
-P -- NOV.20  @ 7:39  AM-----Jericho--- Morales------ Mexico
-P -- NOV.20  @ 9:42  AM-----Thomas---- Stephen------ California
-M -- NOV.20  @ 9:58  PM-----Grace----- Taylor------- Singapore
-P -- NOV.20  @ 10:21 PM-----Gina------ Henry-------- New Zealand
-P -- NOV.20  @ 11:24 PM-----Jenefer--- Lopez ------- United States
-M -- NOV.20  @ 11:33 PM-----Tracia---- Furlong------ Puerto Rico
-P -- NOV.20  @ 11:41 PM-----Jane------ Mckay-------- Russia
-P -- NOV.20  @ 9:42  AM-----Steve----- Scott ------- Netherlands
-M -- NOV.20  @ 9:58  PM-----Greg------ Stanley------ Denmark
-P -- NOV.20  @ 10:21 PM-----Jack------ Perkins------ Amsterdam
-P -- NOV.20  @ 11:24 PM-----Arlene---- Ross -------- United States
-M -- NOV.20  @ 11:33 PM-----Andy------ Hopekins----- New York
-P -- NOV.20  @ 11:41 PM-----Jhon------ Robinson----- United States
-M -- NOV.20  @ 2:34  AM --- Kevin----- Hunt -------- Sweden
-P -- NOV.20  @ 12:34 AM --- Delia----- Scott ------- United States
-
-Therefore, you have a GUARANTEED $8,736 CommissionS  every 30 of the month 
-!.
-
-Earn $39 Per Process!Each $39 x 224 = $8,736 Commission  will be yours...!
-
-Be Sure to Copy the link below & Paste into your browser and press enter:
-To Secure your $8,736 commission!
-
-If The Link Is Error Copy And Paste Into Your Browser To See Commission...
-
-All It Takes Is 13 Clicks==>> http://oril.biz/2ve
-
-Just one simple payment of $39. and you could have earn $8,736 
-Commission,And
-you recieved on November 30-2011 Directly to Your Paypal or Credit Card.
-
-You must UPGRADE right away or before others do....
-
-Caring for Your Success, Michelle Miller
-
-
-
-
-
-
-
-
-
-
-
-
-
-This is where you can type a brief description of your site.
-
-Email sent by: earncash@gmail.com (Michelle Miller)
-
-
-Powered by Eye Spy Classifieds
-
-
-
-
---===============7296906810689119585==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> Thanks for all your hard work on this most useful project! Peter
+> 
+> 
+> 
+> ps: not sure it makes a difference, this is on Centos 5.3
+> (2.6.18-128.el5), so I'm not entirely certain which XFS bugs/features
+> have been folded in by the maintainers...
+> 
+> _______________________________________________ xfs mailing list 
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7296906810689119585==--
