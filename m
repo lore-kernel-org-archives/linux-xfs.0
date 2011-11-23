@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pANLPsa7236304 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 15:25:54 -0600
+	pANLPxjm236335 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 15:25:59 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 3/6] xfs: Return -EIO when xfs_vn_getattr() failed
-Date: Wed, 23 Nov 2011 15:38:10 -0600
-Message-Id: <1322084293-23557-4-git-send-email-bpm@sgi.com>
+Subject: [PATCH 6/6] xfs: use doalloc flag in xfs_qm_dqattach_one()
+Date: Wed, 23 Nov 2011 15:38:13 -0600
+Message-Id: <1322084293-23557-7-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322084293-23557-1-git-send-email-bpm@sgi.com>
 References: <1322084293-23557-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,41 +22,52 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
 
 From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 
->From 65ed79f5114ca0bad494e5b858f47615c337c492
+>From bc957c9c7fd2e2c7bc2f3a9d3d2785e27984f01c
 
-An attribute of inode can be fetched via xfs_vn_getattr() in XFS.
-Currently it returns EIO, not negative value, when it failed.  As a
-result, the system call returns not negative value even though an
-error occured. The stat(2), ls and mv commands cannot handle this
-error and do not work correctly.
+The doalloc arg in xfs_qm_dqattach_one() is a flag that indicates
+whether a new area to handle quota information will be allocated
+if needed. Originally, it was passed to xfs_qm_dqget(), but has
+been removed by the following commit (probably by mistake):
 
-This patch fixes this bug, and returns -EIO, not EIO when an error
-is detected in xfs_vn_getattr().
+	commit 8e9b6e7fa4544ea8a0e030c8987b918509c8ff47
+	Author: Christoph Hellwig <hch@lst.de>
+	Date:   Sun Feb 8 21:51:42 2009 +0100
+
+	xfs: remove the unused XFS_QMOPT_DQLOCK flag
+
+As the result, xfs_qm_dqget() called from xfs_qm_dqattach_one()
+never allocates the new area even if it is needed.
+
+This patch gives the doalloc arg to xfs_qm_dqget() in
+xfs_qm_dqattach_one() to fix this problem.
 
 Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Alex Elder <aelder@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_iops.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_qm.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 673704f..474920b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -465,7 +465,7 @@ xfs_vn_getattr(
- 	trace_xfs_getattr(ip);
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 9a0aa76..95ba6dc 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -674,7 +674,8 @@ xfs_qm_dqattach_one(
+ 	 * disk and we didn't ask it to allocate;
+ 	 * ESRCH if quotas got turned off suddenly.
+ 	 */
+-	error = xfs_qm_dqget(ip->i_mount, ip, id, type, XFS_QMOPT_DOWARN, &dqp);
++	error = xfs_qm_dqget(ip->i_mount, ip, id, type,
++			     doalloc | XFS_QMOPT_DOWARN, &dqp);
+ 	if (error)
+ 		return error;
  
- 	if (XFS_FORCED_SHUTDOWN(mp))
--		return XFS_ERROR(EIO);
-+		return -XFS_ERROR(EIO);
- 
- 	stat->size = XFS_ISIZE(ip);
- 	stat->dev = inode->i_sb->s_dev;
 -- 
 1.7.8.rc0.46.g5ae0f
 
