@@ -1,23 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAN9ertV206981 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 03:40:54 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DCA31551684
-	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 01:40:50 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	WUsKCpg7qnE9cSTm for <xfs@oss.sgi.com>;
-	Wed, 23 Nov 2011 01:40:50 -0800 (PST)
-Date: Wed, 23 Nov 2011 04:40:49 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE to XFS V2
-Message-ID: <20111123094049.GA5465@infradead.org>
-References: <4ECB5B21.7080508@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ECB5B21.7080508@oracle.com>
+	pANDFBaX215877
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Nov 2011 07:15:15 -0600
+Received: from lo.gmane.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 914774F8CF0
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Nov 2011 05:15:09 -0800 (PST)
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id wtFCr92acK21YxJS for <linux-xfs@oss.sgi.com>;
+	Wed, 23 Nov 2011 05:15:09 -0800 (PST)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RTCfJ-0007wn-79
+	for linux-xfs@oss.sgi.com; Wed, 23 Nov 2011 14:15:05 +0100
+Received: from 202.96.96.18 ([202.96.96.18])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Nov 2011 14:15:05 +0100
+Received: from ygq51 by 202.96.96.18 with local (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 23 Nov 2011 14:15:05 +0100
+From: Guoquan Yang <ygq51@hotmail.com>
+Subject: Re: xfs: validate inode numbers in file handles correctly
+Date: Wed, 23 Nov 2011 13:04:58 +0000 (UTC)
+Message-ID: <loom.20111123T134243-580@post.gmane.org>
+References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,186 +37,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Tue, Nov 22, 2011 at 04:19:45PM +0800, Jeff Liu wrote:
-> Hello,
+Dave Chinner <david <at> fromorbit.com> writes:
+
 > 
-> This is the V2 attempt to add SEEK_DATA/SEEK_HOLE to XFS.
+> This series closes a recently discovered problem in XFS filehandle 
+conversion.
+> On systems where inodes are dynamically deleted, XFS does not adequately 
+verify
+> the inode numbers in the filehandles, which results in reading stale inodes
+> from disk and potentially returning them as valid files. Because these 
+unlinked
+> inodes were never zeroed out when the chunk was deallocated, some inodes in 
+the
+> chunk can still appear to have to data extents attached to them. This can 
+lead
+> to stale data exposure, exposure of active data and potentially overwriting 
+of
+> active data if the stale extents referenced in the unlinked inodes have been
+> re-allocated.
+> 
+> Both NFS filehandles and local filehandles provided through libhandle have 
+this
+> same problem. libhandle requires root permissions to use the interface, so it
+> is not exposing information that you can't get more easily with other means
+> (e.g. xfs_db or reading directly form the block device), so there isn't 
+really
+> an issue here.
+> 
+> For NFS, we may incorrectly accept stale file handles for unlinked inodes 
+after
+> a server reboot if the unlinked inodes have not been overwritten leading to 
+the
+> above issues being triggered if multiple NFS clients are accessing the some
+> files.
+> 
+> Christoph's make-bulkstat-coherent patch is the basis for this series as
+> bulkstat can also expose unlinked inodes and information about them back to
+> userspace because it makes the same assumptions about inode lookups as the 
+file
+> handle interfaces.
+> 
+> As a result, the first two patches of the series make up the real bug fix. 
+The
+> last two patches make it clear we are looking up untrusted inode numbers and
+> remove a shortcut that these interfaces used that we do not want used any
+> more. Hence for backports to other kernels, only the first two patches are
+> necessary.
+> 
+> More information and the test program that demonstrates the issue via the
+> open_by_handle interface can be found here:
+> 
+> http://oss.sgi.com/archives/xfs/2010-06/msg00191.html
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs <at> oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> 
 
-Thanks Jeff, this looks pretty good for "simple" implementation,
-I only have a few rather cosmetic comments.
+I meet with a problem when using 64bit XFS and NFS,
 
-Do you plan on updating Josef's old xfstests support patch for
-SEEK_DATA/SEEK_HOLE?  Also it would be nice to do the pagecache
-probing for dirty unwritten extents next to get a better quality
-of implementation.
+When I access a directory from the NFS client,I get Stale NFS file Handle 
+error.But it is ok when accessing on the server without NFS.
 
->+STATIC int
->+xfs_seek_data(
->+	struct xfs_inode *ip,
->+	loff_t *start)
->+{
+And I have checked that the inode num in the NFS file handle is the same as 
+inode num on the server, Using ls -il.
 
-In the XFS code we generally tab-aling the paramter names, just like
-you already did for the local variables:
+I found that XFS_IGET_UNTRUSTED in xfs_imap() filtered the function 
+xfs_imap_lookup(),It fails in xfs_imap_lookup() when access from NFS 
+client.local access does not go into xfs_imap_lookup().
 
-STATIC int
-xfs_seek_data(
-	struct xfs_inode	*ip,
-	loff_t			*start)
+My kernel is Linux2.6.35.6 from kernel.org. please help me to find out this 
+problem!
 
-(that also applies for a few other functions)
+Thanks!
 
-> +		/*
-> +		 * Hole handling for unwritten extents landed in a hole.
-> +		 * If the next extent is a data  extent, then return the
-> +		 * start of it, otherwise we need to move the start offset
-> +		 * and map more blocks.
-> +		 */
 
-I don't think this comment is quite correct.  We don't just end up here
-for unwritten extents.  I'd recommend something like:
-
-		/*
-		 * We landed in a hole.  Skip to the next extent.
-		 */
-
-> +		if (map[0].br_startblock == HOLESTARTBLOCK) {
-> +			if (map[1].br_startblock == HOLESTARTBLOCK) {
-> +				fsbno = map[1].br_startoff +
-> +					map[1].br_blockcount;
-
-I don't think this code is reachable - xfs_bmapi will never produce
-multiple consecutive HOLESTARTBLOCK extents.  If you want to ensure
-that feel free to add an assert, e.g.
-
-		if (map[0].br_startblock == HOLESTARTBLOCK) {
-			ASSERT(map[1].br_startblock != HOLESTARTBLOCK);
-
-			*start = max_t(loff_t, seekoff,
-			       XFS_FSB_TO_B(mp, map[1].br_startoff));
-			break;
-		}
-
-This also means that we never have to loop here until we add dirty
-unwritten probing - if the second extent doesn't contain data there
-won't be any other data extent in this file beyound our offset.
-
-> +
-> +		/*
-> +		 * Landed in an in-memory data extent or in an allocated
-> +		 * extent.
-> +		 */
-
-> +		if (map[0].br_startoff == DELAYSTARTBLOCK ||
-> +		    map[0].br_state == XFS_EXT_NORM) {
-
-I think just checking for br_state == XFS_EXT_NORM should be fine here,
-as unwritten extents can be delayed allocated.  But until we add probing
-for dirty unwritten extents is added we have to treat unwritten extents
-as data anyway to avoid data loss.
-
-Note that once unwrittent extent probing also needs to cover the hole
-case above and not just this case.
-
-> +STATIC int
-> +xfs_seek_extent(
-> +	struct inode		*inode,
-> +	loff_t			*start,
-> +	u32			type)
-> +{
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_ifork	*ifp;
-> +	int			lock;
-> +	int			error = 0;
-> +
-> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
-> +	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
-> +	    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-> +		return XFS_ERROR(EINVAL);
-
-I'd recommend moving this check into xfs_file_llseek and even do it
-for the normal lseek requests - it's another sanity check for corrupted
-filesystems which makes sense everywhere.  I also think the return value
-should be EFSCORRUPTED.
-
-Also XFS_DINODE_FMT_LOCAL isn't valid for regular files (yet) so it
-shouldn't be tested for.
-
-> +
-> +	lock = xfs_ilock_map_shared(ip);
-> +
-> +	if (XFS_FORCED_SHUTDOWN(mp)) {
-> +		error = EIO;
-> +		goto out_lock;
-> +	}
-
-The shutdown check probably should go into the common lseek code and
-done for all cases.
-
-> +
-> +	XFS_STATS_INC(xs_blk_mapr);
-
-I don't think this counter should be incremented here.
-
-> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> +
-> +	ASSERT(ifp->if_ext_max ==
-> +	      XFS_IFORK_SIZE(ip, XFS_DATA_FORK) / (uint)sizeof(xfs_bmbt_rec_t));
-
-Please just drop this assert.  if_ext_max is pretty useless, and I have
-a patch to remove it pending.  No adding another use of it in your patch
-will make merging a bit easier.
-
-> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> +		if (error)
-> +			goto out_lock;
-> +	}
-> +
-> +	if (type == SEEK_HOLE)
-> +		error = xfs_seek_hole(ip, start);
-> +	else
-> +		error = xfs_seek_data(ip, start);
-
-Now that just the locking and the xfs_iread_extents call is left in
-this function I'd suggest to remove it and instead add duplicates
-of the locking and xfs_iread_extents into xfs_seek_hole and
-xfs_seek_data.
-
-> +	switch (origin) {
-> +	case SEEK_END:
-> +	case SEEK_CUR:
-> +		offset = generic_file_llseek(file, offset, origin);
-> +		goto out;
-
-instead of the goto out just return the generic_file_llseek return
-value directly here.
-
-> +	case SEEK_DATA:
-> +	case SEEK_HOLE:
-> +		if (offset >= i_size_read(inode)) {
-> +			ret = -ENXIO;
-> +			goto error;
-> +		}
-> +
-> +		ret = xfs_seek_extent(inode, &offset, origin);
-> +		if (ret)
-> +			goto error;
-> +	}
-> +
-> +	if (offset != file->f_pos)
-> +		file->f_pos = offset;
-
-doing the offset update outside the case scrope doesn't make much sense.
-
-I'd probably just move the offset check and offset update into the
-low-level xfs_seek_data/xfs_seek_hole helpers - it's a tiny bit of
-duplication, but it keeps the functions self-contained and the
-top-level llseek method just dispatcher into the different routines.
 
 _______________________________________________
 xfs mailing list
