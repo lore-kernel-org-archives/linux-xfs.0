@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pANLPunj236316 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 15:25:56 -0600
+	pANLPqpf236284 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 15:25:52 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 4/6] xfs: fix buffer flushing during unmount
-Date: Wed, 23 Nov 2011 15:38:11 -0600
-Message-Id: <1322084293-23557-5-git-send-email-bpm@sgi.com>
+Subject: [PATCH 2/6] xfs: avoid direct I/O write vs buffered I/O race
+Date: Wed, 23 Nov 2011 15:38:09 -0600
+Message-Id: <1322084293-23557-3-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322084293-23557-1-git-send-email-bpm@sgi.com>
 References: <1322084293-23557-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -26,102 +26,69 @@ Cc: Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>, Christop
 
 From: Christoph Hellwig <hch@infradead.org>
 
->From a063aff275e3c514da54b293e0f86c7c9c5b3ec2
+>From 1d443d87fbda3b1e01d3dba07008ad0064fd8c59
 
-The code to flush buffers in the umount code is a bit iffy: we first
-flush all delwri buffers out, but then might be able to queue up a
-new one when logging the sb counts.  On a normal shutdown that one
-would get flushed out when doing the synchronous superblock write in
-xfs_unmountfs_writesb, but we skip that one if the filesystem has
-been shut down.
-
-Fix this by moving the delwri list flushing until just before unmounting
-the log, and while we're at it also remove the superflous delwri list
-and buffer lru flusing for the rt and log device that can never have
-cached or delwri buffers.
+Currently a buffered reader or writer can add pages to the pagecache
+while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
+this by re-checking mapping->nrpages after we got the iolock, and if
+nessecary upgrade the lock to exclusive mode.  To simplify this a bit
+only take the ilock inside of xfs_file_aio_write_checks.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Tested-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_buf.h   |    1 -
- fs/xfs/xfs_mount.c |   29 ++++++++++-------------------
- 2 files changed, 10 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_file.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 620972b..8e8b06b 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -320,7 +320,6 @@ extern struct list_head *xfs_get_buftarg_list(void);
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8fd4a07..b7e75c6 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -677,6 +677,7 @@ xfs_file_aio_write_checks(
+ 	xfs_fsize_t		new_size;
+ 	int			error = 0;
  
--#define xfs_binval(buftarg)		xfs_flush_buftarg(buftarg, 1)
- #define XFS_bflush(buftarg)		xfs_flush_buftarg(buftarg, 1)
++	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+ 	if (error) {
+ 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
+@@ -768,14 +769,24 @@ xfs_file_dio_aio_write(
+ 		*iolock = XFS_IOLOCK_EXCL;
+ 	else
+ 		*iolock = XFS_IOLOCK_SHARED;
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++	xfs_rw_ilock(ip, *iolock);
  
- #endif	/* __XFS_BUF_H__ */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 0081657..d4d5775 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -44,9 +44,6 @@
- #include "xfs_trace.h"
+ 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
+ 		return ret;
  
- 
--STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
--
--
- #ifdef HAVE_PERCPU_SB
- STATIC void	xfs_icsb_balance_counter(xfs_mount_t *, xfs_sb_field_t,
- 						int);
-@@ -1496,11 +1493,6 @@ xfs_unmountfs(
- 	 */
- 	xfs_log_force(mp, XFS_LOG_SYNC);
- 
--	xfs_binval(mp->m_ddev_targp);
--	if (mp->m_rtdev_targp) {
--		xfs_binval(mp->m_rtdev_targp);
--	}
--
- 	/*
- 	 * Unreserve any blocks we have so that when we unmount we don't account
- 	 * the reserved free space as used. This is really only necessary for
-@@ -1526,7 +1518,16 @@ xfs_unmountfs(
- 		xfs_warn(mp, "Unable to update superblock counters. "
- 				"Freespace may not be correct on next mount.");
- 	xfs_unmountfs_writesb(mp);
--	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
-+
 +	/*
-+	 * Make sure all buffers have been flushed and completed before
-+	 * unmounting the log.
++	 * Recheck if there are cached pages that need invalidate after we got
++	 * the iolock to protect against other threads adding new pages while
++	 * we were waiting for the iolock.
 +	 */
-+	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
-+	if (error)
-+		xfs_warn(mp, "%d busy buffers during unmount.", error);
-+	xfs_wait_buftarg(mp->m_ddev_targp);
++	if (mapping->nrpages && *iolock == XFS_IOLOCK_SHARED) {
++		xfs_rw_iunlock(ip, *iolock);
++		*iolock = XFS_IOLOCK_EXCL;
++		xfs_rw_ilock(ip, *iolock);
++	}
 +
- 	xfs_log_unmount_write(mp);
- 	xfs_log_unmount(mp);
- 	xfs_uuid_unmount(mp);
-@@ -1537,16 +1538,6 @@ xfs_unmountfs(
- 	xfs_free_perag(mp);
- }
+ 	if (mapping->nrpages) {
+-		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
+ 		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
+ 							FI_REMAPF_LOCKED);
+ 		if (ret)
+@@ -820,7 +831,7 @@ xfs_file_buffered_aio_write(
+ 	size_t			count = ocount;
  
--STATIC void
--xfs_unmountfs_wait(xfs_mount_t *mp)
--{
--	if (mp->m_logdev_targp != mp->m_ddev_targp)
--		xfs_wait_buftarg(mp->m_logdev_targp);
--	if (mp->m_rtdev_targp)
--		xfs_wait_buftarg(mp->m_rtdev_targp);
--	xfs_wait_buftarg(mp->m_ddev_targp);
--}
--
- int
- xfs_fs_writable(xfs_mount_t *mp)
- {
+ 	*iolock = XFS_IOLOCK_EXCL;
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++	xfs_rw_ilock(ip, *iolock);
+ 
+ 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
 -- 
 1.7.8.rc0.46.g5ae0f
 
