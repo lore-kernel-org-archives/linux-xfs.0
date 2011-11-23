@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pANLPqpf236284 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 15:25:52 -0600
+	pANLPv9m236327 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 15:25:58 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 2/6] xfs: avoid direct I/O write vs buffered I/O race
-Date: Wed, 23 Nov 2011 15:38:09 -0600
-Message-Id: <1322084293-23557-3-git-send-email-bpm@sgi.com>
+Subject: [PATCH 5/6] xfs: Fix possible memory corruption in xfs_readlink
+Date: Wed, 23 Nov 2011 15:38:12 -0600
+Message-Id: <1322084293-23557-6-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322084293-23557-1-git-send-email-bpm@sgi.com>
 References: <1322084293-23557-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,73 +22,72 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+Cc: Alex Elder <aelder@sgi.com>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
->From 1d443d87fbda3b1e01d3dba07008ad0064fd8c59
+>From 13072258732bcf349649caa162f34c8d37b4f134
 
-Currently a buffered reader or writer can add pages to the pagecache
-while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
-this by re-checking mapping->nrpages after we got the iolock, and if
-nessecary upgrade the lock to exclusive mode.  To simplify this a bit
-only take the ilock inside of xfs_file_aio_write_checks.
+Fixes a possible memory corruption when the link is larger than
+MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
+S_ISLNK assert, since the inode mode is checked previously in
+xfs_readlink_by_handle() and via VFS.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Updated to address concerns raised by Ben Hutchings about the loose
+attention paid to 32- vs 64-bit values, and the lack of handling a
+potentially negative pathlen value:
+ - Changed type of "pathlen" to be xfs_fsize_t, to match that of
+   ip->i_d.di_size
+ - Added checking for a negative pathlen to the too-long pathlen
+   test, and generalized the message that gets reported in that case
+   to reflect the change
+As a result, if a negative pathlen were encountered, this function
+would return EFSCORRUPTED (and would fail an assertion for a debug
+build)--just as would a too-long pathlen.
+
 Signed-off-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_file.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_vnodeops.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 8fd4a07..b7e75c6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -677,6 +677,7 @@ xfs_file_aio_write_checks(
- 	xfs_fsize_t		new_size;
- 	int			error = 0;
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 51fc429..b9e2873 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -113,7 +113,7 @@ xfs_readlink(
+ 	char		*link)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	int		pathlen;
++	xfs_fsize_t	pathlen;
+ 	int		error = 0;
  
-+	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
- 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- 	if (error) {
- 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
-@@ -768,14 +769,24 @@ xfs_file_dio_aio_write(
- 		*iolock = XFS_IOLOCK_EXCL;
- 	else
- 		*iolock = XFS_IOLOCK_SHARED;
--	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
-+	xfs_rw_ilock(ip, *iolock);
+ 	trace_xfs_readlink(ip);
+@@ -123,13 +123,19 @@ xfs_readlink(
  
- 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
- 		return ret;
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
  
-+	/*
-+	 * Recheck if there are cached pages that need invalidate after we got
-+	 * the iolock to protect against other threads adding new pages while
-+	 * we were waiting for the iolock.
-+	 */
-+	if (mapping->nrpages && *iolock == XFS_IOLOCK_SHARED) {
-+		xfs_rw_iunlock(ip, *iolock);
-+		*iolock = XFS_IOLOCK_EXCL;
-+		xfs_rw_ilock(ip, *iolock);
+-	ASSERT(S_ISLNK(ip->i_d.di_mode));
+-	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
+-
+ 	pathlen = ip->i_d.di_size;
+ 	if (!pathlen)
+ 		goto out;
+ 
++	if (pathlen < 0 || pathlen > MAXPATHLEN) {
++		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
++			 __func__, (unsigned long long) ip->i_ino,
++			 (long long) pathlen);
++		ASSERT(0);
++		return XFS_ERROR(EFSCORRUPTED);
 +	}
 +
- 	if (mapping->nrpages) {
--		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
- 		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
- 							FI_REMAPF_LOCKED);
- 		if (ret)
-@@ -820,7 +831,7 @@ xfs_file_buffered_aio_write(
- 	size_t			count = ocount;
- 
- 	*iolock = XFS_IOLOCK_EXCL;
--	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
-+	xfs_rw_ilock(ip, *iolock);
- 
- 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
++
+ 	if (ip->i_df.if_flags & XFS_IFINLINE) {
+ 		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
+ 		link[pathlen] = '\0';
 -- 
 1.7.8.rc0.46.g5ae0f
 
