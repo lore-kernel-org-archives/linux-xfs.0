@@ -1,25 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pANEUlpo218739
-	for <linux-xfs@oss.sgi.com>; Wed, 23 Nov 2011 08:30:48 -0600
+	pANFpVTf222233 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 09:51:31 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 07D1E571B56
-	for <linux-xfs@oss.sgi.com>; Wed, 23 Nov 2011 06:30:46 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 37BAA5721FC
+	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 07:51:29 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DZqfopvX0OTtdBO9 for <linux-xfs@oss.sgi.com>;
-	Wed, 23 Nov 2011 06:30:46 -0800 (PST)
-Date: Wed, 23 Nov 2011 09:30:45 -0500
+	oZAJ3VQ5hczDDiDL for <xfs@oss.sgi.com>;
+	Wed, 23 Nov 2011 07:51:29 -0800 (PST)
+Date: Wed, 23 Nov 2011 10:51:29 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: validate inode numbers in file handles correctly
-Message-ID: <20111123143045.GA20892@infradead.org>
-References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
-	<loom.20111123T134243-580@post.gmane.org>
+Subject: Re: EFSCORRUPTED on mount?
+Message-ID: <20111123155128.GA16436@infradead.org>
+References: <CAF3hT9B8-ou-4RhfCkfFWTwwB_tb7nWSP-5pgP3G6oTE+1gAvA@mail.gmail.com>
+	<CAF3hT9AurrVi7xosauVmhQcsbqJgLsxkNYm6dWDNCpB+GR69=w@mail.gmail.com>
+	<20111122014114.GJ2386@dastard>
+	<CAF3hT9Cu+56WJqzHVu+fMgquddwoMsfW-WC8CvRRBtC4PA3uHw@mail.gmail.com>
+	<4ECBEF83.5020607@sandeen.net>
+	<CAF3hT9CA23aDfYTF__mVEM7jRq=ZEgqhfX49hK9kcBqM_+h0CQ@mail.gmail.com>
+	<4ECC19C3.5070905@sandeen.net>
+	<CAF3hT9D1hGh0sj-v4S5tjZBAiztO3OwddSK2dgt8QVLkcWP77A@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <loom.20111123T134243-580@post.gmane.org>
+In-Reply-To: <CAF3hT9D1hGh0sj-v4S5tjZBAiztO3OwddSK2dgt8QVLkcWP77A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +37,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Guoquan Yang <ygq51@hotmail.com>
-Cc: linux-xfs@oss.sgi.com, hank peng <pengxihan@gmail.com>
+To: Gregory Farnum <gregory.farnum@dreamhost.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Wed, Nov 23, 2011 at 01:04:58PM +0000, Guoquan Yang wrote:
-> I meet with a problem when using 64bit XFS and NFS,
-> 
-> When I access a directory from the NFS client,I get Stale NFS file Handle 
-> error.But it is ok when accessing on the server without NFS.
-> 
-> And I have checked that the inode num in the NFS file handle is the same as 
-> inode num on the server, Using ls -il.
-> 
-> I found that XFS_IGET_UNTRUSTED in xfs_imap() filtered the function 
-> xfs_imap_lookup(),It fails in xfs_imap_lookup() when access from NFS 
-> client.local access does not go into xfs_imap_lookup().
-> 
-> My kernel is Linux2.6.35.6 from kernel.org. please help me to find out this 
-> problem!
+On Tue, Nov 22, 2011 at 04:03:15PM -0800, Gregory Farnum wrote:
+> We're going to look into this in more detail very shortly. Right now
+> all I can tell you is that none of the drives ever actually lost
+> power, so unless something is explicitly telling them to clear their
+> caches I don't know how the drives could have lost their cache to
+> cause a problem like this.
+> But for now I'll just see what I can get by zeroing out the log, and
+> we'll get back to you again if we manage to reproduce this in a
+> situation where we can tell you more definitively about the caching
+> and barriers.
 
-It seems like you hit the same issue hank peng reported recently, and
-in facr your are on the same kernel for the serve as he is.
+I would be very interested in that.  The situation you have is fairly
+easy to pinpoint down - we do log recovery and find and EFI record
+in the log - that is one that logs the intent to free extents.
 
->From a closer look it seems like the changes you mentioned above indeed
-had a bug in Linux 2.6.35, which was later fixed with the following
-commit
-
-mmit 4536f2ad8b330453d7ebec0746c4374eadd649b1
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Aug 24 11:42:30 2010 +1000
-
-    xfs: fix untrusted inode number lookup
-
-which should be included in Linux 2.6.35.6.  Can you make sure you
-really have the commit?  Can you also verify that a recent kernel
-like Linux 3.0-stable shows the same behaviour?
+We haven't found the corresponing EFD record, which cancels it out
+as part of the transaction doing the actual freeing.  I'd love to
+see a log dump of a fs iff this can be reproduced as that would
+shows us if we had some sort of bug in recovery.
 
 _______________________________________________
 xfs mailing list
