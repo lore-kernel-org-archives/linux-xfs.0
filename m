@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAN0gOrO183014 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:42:24 -0600
+	pAN0ga9Z183098 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:42:36 -0600
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2850F162EC5C
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:42:22 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1037126FBA7
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:42:35 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 6BwXBUPP3ecaAuwq for <xfs@oss.sgi.com>;
-	Tue, 22 Nov 2011 16:42:22 -0800 (PST)
-Message-Id: <20111123002409.095325764@clark.kroah.org>
-Date: Tue, 22 Nov 2011 16:23:55 -0800
+	with ESMTP id H4EbrmrW3qCTZAyp for <xfs@oss.sgi.com>;
+	Tue, 22 Nov 2011 16:42:35 -0800 (PST)
+Message-Id: <20111123002409.367744238@clark.kroah.org>
+Date: Tue, 22 Nov 2011 16:23:58 -0800
 From: Greg KH <gregkh@suse.de>
-Subject: [48/53] xfs: fix buffer flushing during unmount
+Subject: [51/53] xfs: fix ->write_inode return values
 In-Reply-To: <20111123002419.GA8531@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -35,99 +35,90 @@ Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, tor
 
 From: Christoph Hellwig <hch@infradead.org>
 
-commit 87c7bec7fc3377b3873eb3a0f4b603981ea16ebb upstream.
+patch 58d84c4ee0389ddeb86238d5d8359a982c9f7a5b upstream.
 
-The code to flush buffers in the umount code is a bit iffy: we first
-flush all delwri buffers out, but then might be able to queue up a
-new one when logging the sb counts.  On a normal shutdown that one
-would get flushed out when doing the synchronous superblock write in
-xfs_unmountfs_writesb, but we skip that one if the filesystem has
-been shut down.
-
-Fix this by moving the delwri list flushing until just before unmounting
-the log, and while we're at it also remove the superflous delwri list
-and buffer lru flusing for the rt and log device that can never have
-cached or delwri buffers.
+Currently we always redirty an inode that was attempted to be written out
+synchronously but has been cleaned by an AIL pushed internall, which is
+rather bogus.  Fix that by doing the i_update_core check early on and
+return 0 for it.  Also include async calls for it, as doing any work for
+those is just as pointless.  While we're at it also fix the sign for the
+EIO return in case of a filesystem shutdown, and fix the completely
+non-sensical locking around xfs_log_inode.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Tested-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 ---
- fs/xfs/linux-2.6/xfs_buf.h |    1 -
- fs/xfs/xfs_mount.c         |   29 ++++++++++-------------------
- 2 files changed, 10 insertions(+), 20 deletions(-)
+ fs/xfs/linux-2.6/xfs_super.c |   34 +++++++++-------------------------
+ 1 file changed, 9 insertions(+), 25 deletions(-)
 
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -346,7 +346,6 @@ extern struct list_head *xfs_get_buftarg
- #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
- #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -878,33 +878,17 @@ xfs_log_inode(
+ 	struct xfs_trans	*tp;
+ 	int			error;
  
--#define xfs_binval(buftarg)		xfs_flush_buftarg(buftarg, 1)
- #define XFS_bflush(buftarg)		xfs_flush_buftarg(buftarg, 1)
- 
- #endif	/* __XFS_BUF_H__ */
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -44,9 +44,6 @@
- #include "xfs_trace.h"
- 
- 
--STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
+ 	error = xfs_trans_reserve(tp, 0, XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
 -
--
- #ifdef HAVE_PERCPU_SB
- STATIC void	xfs_icsb_balance_counter(xfs_mount_t *, xfs_sb_field_t,
- 						int);
-@@ -1507,11 +1504,6 @@ xfs_unmountfs(
- 	 */
- 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 	if (error) {
+ 		xfs_trans_cancel(tp, 0);
+-		/* we need to return with the lock hold shared */
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 		return error;
+ 	}
  
--	xfs_binval(mp->m_ddev_targp);
--	if (mp->m_rtdev_targp) {
--		xfs_binval(mp->m_rtdev_targp);
--	}
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
 -
- 	/*
- 	 * Unreserve any blocks we have so that when we unmount we don't account
- 	 * the reserved free space as used. This is really only necessary for
-@@ -1537,7 +1529,16 @@ xfs_unmountfs(
- 		xfs_warn(mp, "Unable to update superblock counters. "
- 				"Freespace may not be correct on next mount.");
- 	xfs_unmountfs_writesb(mp);
--	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
-+
-+	/*
-+	 * Make sure all buffers have been flushed and completed before
-+	 * unmounting the log.
-+	 */
-+	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
-+	if (error)
-+		xfs_warn(mp, "%d busy buffers during unmount.", error);
-+	xfs_wait_buftarg(mp->m_ddev_targp);
-+
- 	xfs_log_unmount_write(mp);
- 	xfs_log_unmount(mp);
- 	xfs_uuid_unmount(mp);
-@@ -1548,16 +1549,6 @@ xfs_unmountfs(
- 	xfs_free_perag(mp);
+-	/*
+-	 * Note - it's possible that we might have pushed ourselves out of the
+-	 * way during trans_reserve which would flush the inode.  But there's
+-	 * no guarantee that the inode buffer has actually gone out yet (it's
+-	 * delwri).  Plus the buffer could be pinned anyway if it's part of
+-	 * an inode in another recent transaction.  So we play it safe and
+-	 * fire off the transaction anyway.
+-	 */
+-	xfs_trans_ijoin(tp, ip);
++	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	error = xfs_trans_commit(tp, 0);
+-	xfs_ilock_demote(ip, XFS_ILOCK_EXCL);
+-
+-	return error;
++	return xfs_trans_commit(tp, 0);
  }
  
--STATIC void
--xfs_unmountfs_wait(xfs_mount_t *mp)
--{
--	if (mp->m_logdev_targp != mp->m_ddev_targp)
--		xfs_wait_buftarg(mp->m_logdev_targp);
--	if (mp->m_rtdev_targp)
--		xfs_wait_buftarg(mp->m_rtdev_targp);
--	xfs_wait_buftarg(mp->m_ddev_targp);
--}
--
- int
- xfs_fs_writable(xfs_mount_t *mp)
- {
+ STATIC int
+@@ -919,7 +903,9 @@ xfs_fs_write_inode(
+ 	trace_xfs_write_inode(ip);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
++		return -XFS_ERROR(EIO);
++	if (!ip->i_update_core)
++		return 0;
+ 
+ 	if (wbc->sync_mode == WB_SYNC_ALL) {
+ 		/*
+@@ -930,12 +916,10 @@ xfs_fs_write_inode(
+ 		 * of synchronous log foces dramatically.
+ 		 */
+ 		xfs_ioend_wait(ip);
+-		xfs_ilock(ip, XFS_ILOCK_SHARED);
+-		if (ip->i_update_core) {
+-			error = xfs_log_inode(ip);
+-			if (error)
+-				goto out_unlock;
+-		}
++		error = xfs_log_inode(ip);
++		if (error)
++			goto out;
++		return 0;
+ 	} else {
+ 		/*
+ 		 * We make this non-blocking if the inode is contended, return
 
 
 _______________________________________________
