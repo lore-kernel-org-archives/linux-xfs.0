@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAN0gGEv182977 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:42:17 -0600
+	pAN0gOqL183018 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:42:24 -0600
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 176791D2B4FA
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:42:15 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 54600162ED81
+	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 16:42:19 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id ZnLoWGmdaLDOEjeK for <xfs@oss.sgi.com>;
-	Tue, 22 Nov 2011 16:42:15 -0800 (PST)
-Message-Id: <20111123002408.908319178@clark.kroah.org>
-Date: Tue, 22 Nov 2011 16:23:53 -0800
+	with ESMTP id 5PLjZGi48dOlooM3 for <xfs@oss.sgi.com>;
+	Tue, 22 Nov 2011 16:42:19 -0800 (PST)
+Message-Id: <20111123002409.001515351@clark.kroah.org>
+Date: Tue, 22 Nov 2011 16:23:54 -0800
 From: Greg KH <gregkh@suse.de>
-Subject: [46/53] xfs: avoid direct I/O write vs buffered I/O race
+Subject: [47/53] xfs: Return -EIO when xfs_vn_getattr() failed
 In-Reply-To: <20111123002419.GA8531@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,77 +27,44 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, Christoph Hellwig <hch@lst.de>, alan@lxorguk.ukuu.org.uk
+Cc: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, alan@lxorguk.ukuu.org.uk
 
 3.0-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 
-commit c58cb165bd44de8aaee9755a144136ae743be116 upstream.
+commit ed32201e65e15f3e6955cb84cbb544b08f81e5a5 upstream.
 
-Currently a buffered reader or writer can add pages to the pagecache
-while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
-this by re-checking mapping->nrpages after we got the iolock, and if
-nessecary upgrade the lock to exclusive mode.  To simplify this a bit
-only take the ilock inside of xfs_file_aio_write_checks.
+An attribute of inode can be fetched via xfs_vn_getattr() in XFS.
+Currently it returns EIO, not negative value, when it failed.  As a
+result, the system call returns not negative value even though an
+error occured. The stat(2), ls and mv commands cannot handle this
+error and do not work correctly.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+This patch fixes this bug, and returns -EIO, not EIO when an error
+is detected in xfs_vn_getattr().
+
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
 ---
- fs/xfs/linux-2.6/xfs_file.c |   17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
+ fs/xfs/linux-2.6/xfs_iops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -669,6 +669,7 @@ xfs_file_aio_write_checks(
- 	xfs_fsize_t		new_size;
- 	int			error = 0;
+--- a/fs/xfs/linux-2.6/xfs_iops.c
++++ b/fs/xfs/linux-2.6/xfs_iops.c
+@@ -464,7 +464,7 @@ xfs_vn_getattr(
+ 	trace_xfs_getattr(ip);
  
-+	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
- 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- 	if (error) {
- 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
-@@ -760,14 +761,24 @@ xfs_file_dio_aio_write(
- 		*iolock = XFS_IOLOCK_EXCL;
- 	else
- 		*iolock = XFS_IOLOCK_SHARED;
--	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
-+	xfs_rw_ilock(ip, *iolock);
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
++		return -XFS_ERROR(EIO);
  
- 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * Recheck if there are cached pages that need invalidate after we got
-+	 * the iolock to protect against other threads adding new pages while
-+	 * we were waiting for the iolock.
-+	 */
-+	if (mapping->nrpages && *iolock == XFS_IOLOCK_SHARED) {
-+		xfs_rw_iunlock(ip, *iolock);
-+		*iolock = XFS_IOLOCK_EXCL;
-+		xfs_rw_ilock(ip, *iolock);
-+	}
-+
- 	if (mapping->nrpages) {
--		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
- 		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
- 							FI_REMAPF_LOCKED);
- 		if (ret)
-@@ -812,7 +823,7 @@ xfs_file_buffered_aio_write(
- 	size_t			count = ocount;
- 
- 	*iolock = XFS_IOLOCK_EXCL;
--	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
-+	xfs_rw_ilock(ip, *iolock);
- 
- 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
+ 	stat->size = XFS_ISIZE(ip);
+ 	stat->dev = inode->i_sb->s_dev;
 
 
 _______________________________________________
