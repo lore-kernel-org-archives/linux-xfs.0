@@ -1,33 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAN2e6WS189946 for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 20:40:06 -0600
-Received: from fgwmail6.fujitsu.co.jp (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BAADF1D2B224
-	for <xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:40:03 -0800 (PST)
-Received: from fgwmail6.fujitsu.co.jp (fgwmail6.fujitsu.co.jp [192.51.44.36])
-	by cuda.sgi.com with ESMTP id UnQXoxYASFzmo0ww for
-	<xfs@oss.sgi.com>; Tue, 22 Nov 2011 18:40:03 -0800 (PST)
-Received: from m4.gw.fujitsu.co.jp (unknown [10.0.50.74])
-	by fgwmail6.fujitsu.co.jp (Postfix) with ESMTP id 8047F3EE0B6
-	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 11:40:01 +0900 (JST)
-Received: from smail (m4 [127.0.0.1])
-	by outgoing.m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 6963245DE4E
-	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 11:40:01 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (s4.gw.fujitsu.co.jp [10.0.50.94])
-	by m4.gw.fujitsu.co.jp (Postfix) with ESMTP id 2004045DE54
-	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 11:40:01 +0900 (JST)
-Received: from s4.gw.fujitsu.co.jp (localhost.localdomain [127.0.0.1])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id 0B2D21DB802F
-	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 11:40:01 +0900 (JST)
-Received: from m105.s.css.fujitsu.com (m105.s.css.fujitsu.com [10.240.81.145])
-	by s4.gw.fujitsu.co.jp (Postfix) with ESMTP id C21E8E08002
-	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 11:40:00 +0900 (JST)
-Message-ID: <4ECC5CCC.1090004@jp.fujitsu.com>
-Date: Wed, 23 Nov 2011 11:39:08 +0900
-From: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
+	pAN9ertV206981 for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 03:40:54 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0DCA31551684
+	for <xfs@oss.sgi.com>; Wed, 23 Nov 2011 01:40:50 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	WUsKCpg7qnE9cSTm for <xfs@oss.sgi.com>;
+	Wed, 23 Nov 2011 01:40:50 -0800 (PST)
+Date: Wed, 23 Nov 2011 04:40:49 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE to XFS V2
+Message-ID: <20111123094049.GA5465@infradead.org>
+References: <4ECB5B21.7080508@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: add aiodio helper functions
+Content-Disposition: inline
+In-Reply-To: <4ECB5B21.7080508@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,238 +30,186 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-For 198, 239 and 240, use _require_aiodio to fail gracefully if
-required program was not built.
+On Tue, Nov 22, 2011 at 04:19:45PM +0800, Jeff Liu wrote:
+> Hello,
+> 
+> This is the V2 attempt to add SEEK_DATA/SEEK_HOLE to XFS.
 
-For 207-212, use _run_aiodio that includes _require_aiodio and
-kicks specified aio-dio program, to make code expressly simple.
+Thanks Jeff, this looks pretty good for "simple" implementation,
+I only have a few rather cosmetic comments.
 
-Signed-off-by: Hidetoshi Seto <seto.hidetoshi@jp.fujitsu.com>
----
- 198       |    3 ++-
- 207       |    7 +------
- 208       |    7 +------
- 209       |    7 +------
- 210       |    7 +------
- 211       |    7 +------
- 212       |    7 +------
- 239       |    4 +---
- 240       |    3 ++-
- common.rc |   36 ++++++++++++++++++++++++++++++++++++
- 10 files changed, 47 insertions(+), 41 deletions(-)
+Do you plan on updating Josef's old xfstests support patch for
+SEEK_DATA/SEEK_HOLE?  Also it would be nice to do the pagecache
+probing for dirty unwritten extents next to get a better quality
+of implementation.
 
-diff --git a/198 b/198
-index e46ec8d..2c72677 100755
---- a/198
-+++ b/198
-@@ -44,6 +44,7 @@ _cleanup()
- 
- _supported_fs generic
- _supported_os Linux
-+_require_aiodio aiodio_sparse2
- 
- echo "Silence is golden."
- 
-@@ -51,7 +52,7 @@ echo "Silence is golden."
- rm -f $seq.full
- 
- rm -f "$TEST_DIR/aiodio_sparse*"
--$here/src/aio-dio-regress/aiodio_sparse2 "$TEST_DIR/aiodio_sparse"
-+$AIO_TEST "$TEST_DIR/aiodio_sparse"
- 
- status=$?
- exit
-diff --git a/207 b/207
-index 32e6299..6fff833 100755
---- a/207
-+++ b/207
-@@ -46,11 +46,6 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
--rm -f $TEST_DIR/aio-testfile
--AIO_TEST=src/aio-dio-regress/aio-dio-extend-stat
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
--$AIO_TEST $TEST_DIR/aio-testfile 2>&1
--status=$?
--rm -f $TEST_DIR/aio-testfile
-+_run_aiodio aio-dio-extend-stat
- 
- exit $status
-diff --git a/208 b/208
-index e1fdaa1..ca01558 100755
---- a/208
-+++ b/208
-@@ -46,11 +46,6 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
--rm -f $TEST_DIR/aio-testfile
--AIO_TEST=src/aio-dio-regress/aio-dio-invalidate-failure
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
--$AIO_TEST $TEST_DIR/aio-testfile 2>&1
--status=$?
--rm -f $TEST_DIR/aio-testfile
-+_run_aiodio aio-dio-invalidate-failure
- 
- exit $status
-diff --git a/209 b/209
-index 06f10ae..650e300 100755
---- a/209
-+++ b/209
-@@ -46,11 +46,6 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
--rm -f $TEST_DIR/aio-testfile
--AIO_TEST=src/aio-dio-regress/aio-dio-invalidate-readahead
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
--$AIO_TEST $TEST_DIR/aio-testfile 2>&1
--status=$?
--rm -f $TEST_DIR/aio-testfile
-+_run_aiodio aio-dio-invalidate-readahead
- 
- exit $status
-diff --git a/210 b/210
-index e093079..a0873f8 100755
---- a/210
-+++ b/210
-@@ -46,11 +46,6 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
--rm -f $TEST_DIR/aio-testfile
--AIO_TEST=src/aio-dio-regress/aio-dio-subblock-eof-read
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
--$AIO_TEST $TEST_DIR/aio-testfile 2>&1
--status=$?
--rm -f $TEST_DIR/aio-testfile
-+_run_aiodio aio-dio-subblock-eof-read
- 
- exit $status
-diff --git a/211 b/211
-index 9428320..bb8d2aa 100755
---- a/211
-+++ b/211
-@@ -46,11 +46,6 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
--rm -f $TEST_DIR/aio-testfile
--AIO_TEST=src/aio-dio-regress/aio-free-ring-with-bogus-nr-pages
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
--$AIO_TEST $TEST_DIR/aio-testfile 2>&1
--status=$?
--rm -f $TEST_DIR/aio-testfile
-+_run_aiodio aio-free-ring-with-bogus-nr-pages
- 
- exit $status
-diff --git a/212 b/212
-index 627a431..1b4bb8a 100755
---- a/212
-+++ b/212
-@@ -47,11 +47,6 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
--rm -f $TEST_DIR/aio-testfile
--AIO_TEST=src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
--$AIO_TEST $TEST_DIR/aio-testfile 2>&1
--status=$?
--rm -f $TEST_DIR/aio-testfile
-+_run_aiodio aio-io-setup-with-nonwritable-context-pointer
- 
- exit $status
-diff --git a/239 b/239
-index 88ff776..6457c46 100755
---- a/239
-+++ b/239
-@@ -46,9 +46,7 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_sparse_files
--
--AIO_TEST=src/aio-dio-regress/aio-dio-hole-filling-race
--[ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
-+_require_aiodio aio-dio-hole-filling-race
- 
- echo "Silence is golden"
- 
-diff --git a/240 b/240
-index 563449e..dafcef3 100755
---- a/240
-+++ b/240
-@@ -52,6 +52,7 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_sparse_files
-+_require_aiodio aiodio_sparse2
- 
- echo "Silence is golden."
- 
-@@ -69,7 +70,7 @@ fi
- 
- # 2 threads, fs block sized writes, 64k filesize, stride through file by
- # fs block size, start at logical block size offset
--$here/src/aio-dio-regress/aiodio_sparse2 -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
-+$AIO_TEST -i 2 -w $fs_block_size -s 64k -n $fs_block_size -o $logical_block_size "$TEST_DIR/aiodio_sparse"
- 
- status=$?
- exit
-diff --git a/common.rc b/common.rc
-index cab0b64..bb3645f 100644
---- a/common.rc
-+++ b/common.rc
-@@ -864,6 +864,42 @@ _require_nonexternal()
- 	_notrun "External device testing in progress, skipped this test"
- }
- 
-+# this test requires that a (specified) aio-dio executable exists
-+# $1 - command (optional)
-+#
-+_require_aiodio()
-+{
-+    if [ -z "$1" ]
-+    then
-+        AIO_TEST=src/aio-dio-regress/aiodio_sparse2
-+        [ -x $AIO_TEST ] || _notrun "aio-dio utilities required"
-+    else
-+        AIO_TEST=src/aio-dio-regress/$1
-+        [ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
-+    fi
-+}
-+
-+# run an aio-dio program
-+# $1 - command
-+_run_aiodio()
-+{
-+    if [ -z "$1" ]
-+    then
-+        echo "usage: _run_aiodio command_name" 2>&1
-+        status=1; exit 1
-+    fi
-+
-+    _require_aiodio $1
-+
-+    local testtemp=$TEST_DIR/aio-testfile
-+    rm -f $testtemp
-+    $AIO_TEST $testtemp 2>&1
-+    status=$?
-+    rm -f $testtemp
-+
-+    return $status
-+}
-+
- # indicate whether YP/NIS is active or not
- #
- _yp_active()
--- 
-1.7.7.3
+>+STATIC int
+>+xfs_seek_data(
+>+	struct xfs_inode *ip,
+>+	loff_t *start)
+>+{
 
+In the XFS code we generally tab-aling the paramter names, just like
+you already did for the local variables:
+
+STATIC int
+xfs_seek_data(
+	struct xfs_inode	*ip,
+	loff_t			*start)
+
+(that also applies for a few other functions)
+
+> +		/*
+> +		 * Hole handling for unwritten extents landed in a hole.
+> +		 * If the next extent is a data  extent, then return the
+> +		 * start of it, otherwise we need to move the start offset
+> +		 * and map more blocks.
+> +		 */
+
+I don't think this comment is quite correct.  We don't just end up here
+for unwritten extents.  I'd recommend something like:
+
+		/*
+		 * We landed in a hole.  Skip to the next extent.
+		 */
+
+> +		if (map[0].br_startblock == HOLESTARTBLOCK) {
+> +			if (map[1].br_startblock == HOLESTARTBLOCK) {
+> +				fsbno = map[1].br_startoff +
+> +					map[1].br_blockcount;
+
+I don't think this code is reachable - xfs_bmapi will never produce
+multiple consecutive HOLESTARTBLOCK extents.  If you want to ensure
+that feel free to add an assert, e.g.
+
+		if (map[0].br_startblock == HOLESTARTBLOCK) {
+			ASSERT(map[1].br_startblock != HOLESTARTBLOCK);
+
+			*start = max_t(loff_t, seekoff,
+			       XFS_FSB_TO_B(mp, map[1].br_startoff));
+			break;
+		}
+
+This also means that we never have to loop here until we add dirty
+unwritten probing - if the second extent doesn't contain data there
+won't be any other data extent in this file beyound our offset.
+
+> +
+> +		/*
+> +		 * Landed in an in-memory data extent or in an allocated
+> +		 * extent.
+> +		 */
+
+> +		if (map[0].br_startoff == DELAYSTARTBLOCK ||
+> +		    map[0].br_state == XFS_EXT_NORM) {
+
+I think just checking for br_state == XFS_EXT_NORM should be fine here,
+as unwritten extents can be delayed allocated.  But until we add probing
+for dirty unwritten extents is added we have to treat unwritten extents
+as data anyway to avoid data loss.
+
+Note that once unwrittent extent probing also needs to cover the hole
+case above and not just this case.
+
+> +STATIC int
+> +xfs_seek_extent(
+> +	struct inode		*inode,
+> +	loff_t			*start,
+> +	u32			type)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct xfs_ifork	*ifp;
+> +	int			lock;
+> +	int			error = 0;
+> +
+> +	if (ip->i_d.di_format != XFS_DINODE_FMT_EXTENTS &&
+> +	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE &&
+> +	    ip->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+> +		return XFS_ERROR(EINVAL);
+
+I'd recommend moving this check into xfs_file_llseek and even do it
+for the normal lseek requests - it's another sanity check for corrupted
+filesystems which makes sense everywhere.  I also think the return value
+should be EFSCORRUPTED.
+
+Also XFS_DINODE_FMT_LOCAL isn't valid for regular files (yet) so it
+shouldn't be tested for.
+
+> +
+> +	lock = xfs_ilock_map_shared(ip);
+> +
+> +	if (XFS_FORCED_SHUTDOWN(mp)) {
+> +		error = EIO;
+> +		goto out_lock;
+> +	}
+
+The shutdown check probably should go into the common lseek code and
+done for all cases.
+
+> +
+> +	XFS_STATS_INC(xs_blk_mapr);
+
+I don't think this counter should be incremented here.
+
+> +	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> +
+> +	ASSERT(ifp->if_ext_max ==
+> +	      XFS_IFORK_SIZE(ip, XFS_DATA_FORK) / (uint)sizeof(xfs_bmbt_rec_t));
+
+Please just drop this assert.  if_ext_max is pretty useless, and I have
+a patch to remove it pending.  No adding another use of it in your patch
+will make merging a bit easier.
+
+> +	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> +		error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> +		if (error)
+> +			goto out_lock;
+> +	}
+> +
+> +	if (type == SEEK_HOLE)
+> +		error = xfs_seek_hole(ip, start);
+> +	else
+> +		error = xfs_seek_data(ip, start);
+
+Now that just the locking and the xfs_iread_extents call is left in
+this function I'd suggest to remove it and instead add duplicates
+of the locking and xfs_iread_extents into xfs_seek_hole and
+xfs_seek_data.
+
+> +	switch (origin) {
+> +	case SEEK_END:
+> +	case SEEK_CUR:
+> +		offset = generic_file_llseek(file, offset, origin);
+> +		goto out;
+
+instead of the goto out just return the generic_file_llseek return
+value directly here.
+
+> +	case SEEK_DATA:
+> +	case SEEK_HOLE:
+> +		if (offset >= i_size_read(inode)) {
+> +			ret = -ENXIO;
+> +			goto error;
+> +		}
+> +
+> +		ret = xfs_seek_extent(inode, &offset, origin);
+> +		if (ret)
+> +			goto error;
+> +	}
+> +
+> +	if (offset != file->f_pos)
+> +		file->f_pos = offset;
+
+doing the offset update outside the case scrope doesn't make much sense.
+
+I'd probably just move the offset check and offset update into the
+low-level xfs_seek_data/xfs_seek_hole helpers - it's a tiny bit of
+duplication, but it keeps the functions self-contained and the
+top-level llseek method just dispatcher into the different routines.
 
 _______________________________________________
 xfs mailing list
