@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAOCr1Rv019571
-	for <linux-xfs@oss.sgi.com>; Thu, 24 Nov 2011 06:53:01 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 8BD0D16DEAA8
-	for <linux-xfs@oss.sgi.com>; Thu, 24 Nov 2011 04:52:55 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	xrAY8wM3iFBRqZ3i for <linux-xfs@oss.sgi.com>;
-	Thu, 24 Nov 2011 04:52:55 -0800 (PST)
-Date: Thu, 24 Nov 2011 07:52:53 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: validate inode numbers in file handles correctly
-Message-ID: <20111124125253.GA26183@infradead.org>
-References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
-	<loom.20111123T134243-580@post.gmane.org>
-	<20111123143045.GA20892@infradead.org>
-	<SNT135-W7F5C64C2A3F67B48EFF3AA4CE0@phx.gbl>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <SNT135-W7F5C64C2A3F67B48EFF3AA4CE0@phx.gbl>
+	pAOJKuSS036452 for <xfs@oss.sgi.com>; Thu, 24 Nov 2011 13:20:56 -0600
+Received: from hades.usersys.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 368F81E9DC3D
+	for <xfs@oss.sgi.com>; Thu, 24 Nov 2011 11:20:54 -0800 (PST)
+Received: from hades.usersys.redhat.com (186.215.132.159.static.gvt.net.br
+	[186.215.132.159]) by cuda.sgi.com with ESMTP id
+	TTYAITenB4NW2ZvD for <xfs@oss.sgi.com>;
+	Thu, 24 Nov 2011 11:20:54 -0800 (PST)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] libxfs: Get Physical Sector Size instead of Logical Sector
+	size
+Date: Thu, 24 Nov 2011 17:20:51 -0200
+Message-Id: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +22,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: yangguoquan <ygq51@hotmail.com>
-Cc: hch@infradead.org, linux-xfs@oss.sgi.com, pengxihan@gmail.com
+To: xfs@oss.sgi.com
+Cc: Carlos Maiolino <cmaiolino@redhat.com>
 
-On Thu, Nov 24, 2011 at 06:29:18PM +0800, yangguoquan wrote:
-> 
-> I have checked that Linux2.6.35.6 is up-to-date with the issue "xfs: fix untrusted inode number lookup"(you had mentioned in the former reply).
-> What can I do.
-> Look forward to your reply.
+xfsprogs (mainly mkfs) is using the logical sector size of a volume to initialize
+the filesystem, which, even in devices using Advanced Format, it can get a 512
+bytes sector size if it is set as the logical sector size.
+This patch changes the ioctl to get the physical sector size, independent of the
+logical size.
 
-Can you please try a recent kernel (3.0-stable or 3.1)?  2.6.35 is so
-old that we can't easily support it except for looking over the
-list of commits.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ libxfs/linux.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
+
+diff --git a/libxfs/linux.c b/libxfs/linux.c
+index 2e07d54..0bc49dd 100644
+--- a/libxfs/linux.c
++++ b/libxfs/linux.c
+@@ -39,6 +39,9 @@ static int max_block_alignment;
+ #ifndef BLKSSZGET
+ # define BLKSSZGET	_IO(0x12,104)
+ #endif
++#ifndef BLKPBSZGET
++# define BLKPBSZGET _IO(0x12,123)
++#endif
+ 
+ #ifndef RAMDISK_MAJOR
+ #define RAMDISK_MAJOR	1	/* ramdisk major number */
+@@ -165,7 +168,7 @@ platform_findsizes(char *path, int fd, long long *sz, int *bsz)
+ 		*sz = (long long)tmpsize;
+ 	}
+ 
+-	if (ioctl(fd, BLKSSZGET, bsz) < 0) {
++	if (ioctl(fd, BLKPBSZGET, bsz) < 0) {
+ 		fprintf(stderr, _("%s: warning - cannot get sector size "
+ 				"from block device %s: %s\n"),
+ 			progname, path, strerror(errno));
+-- 
+1.7.6.4
 
 _______________________________________________
 xfs mailing list
