@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAQF1t7J133140 for <xfs@oss.sgi.com>; Sat, 26 Nov 2011 09:01:55 -0600
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 472538F8033
-	for <xfs@oss.sgi.com>; Sat, 26 Nov 2011 07:01:52 -0800 (PST)
-Received: from arenaud-laptop (cf-vpn-hw-arenaud-5.corp.sgi.com
-	[134.15.95.102])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 11A3A7000753
-	for <xfs@oss.sgi.com>; Sat, 26 Nov 2011 09:01:52 -0600 (CST)
-From: Alain Renaud <arenaud@sgi.com>
-Date: Sat, 26 Nov 2011 09:15:25 -0500
-Subject: [PATCH] xfstest: Change test output to specify 4TB not 2TB
-Message-Id: <20111126150149.42E549F79B@arenaud-laptop>
+	pAR16nUU151457 for <xfs@oss.sgi.com>; Sat, 26 Nov 2011 19:06:50 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B17B919D1B66
+	for <xfs@oss.sgi.com>; Sat, 26 Nov 2011 17:06:47 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	xjq77MrS6xA4vLkH for <xfs@oss.sgi.com>;
+	Sat, 26 Nov 2011 17:06:47 -0800 (PST)
+Date: Sun, 27 Nov 2011 12:06:43 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical
+	Sector size
+Message-ID: <20111127010643.GU2386@dastard>
+References: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
+	<20111124195042.GA3671@andromeda.usersys.redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111124195042.GA3671@andromeda.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,56 +27,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
- This is a simple modification to the test 259. The script test 4TB
- Filesystem but state that it is testing 2TB filesystem. This
- modification simply change the the output message.
+On Thu, Nov 24, 2011 at 05:50:42PM -0200, Carlos Maiolino wrote:
+> On Thu, Nov 24, 2011 at 05:20:51PM -0200, Carlos Maiolino wrote:
+> > xfsprogs (mainly mkfs) is using the logical sector size of a volume to initialize
+> > the filesystem, which, even in devices using Advanced Format, it can get a 512
+> > bytes sector size if it is set as the logical sector size.
+> > This patch changes the ioctl to get the physical sector size, independent of the
+> > logical size.
+> > 
+> 
+> Just as information, this patch proposal does not change the behaviour of mkfs in case the 
+> user is using libblkid, which in case, mkfs will take advantage of libblkid to retrieve disk
+> topology and information.
+> I'm not sure if libblkid is the best way to retrieve the device sector's size here, since 
+> this does not provide a way to retrive the physical sector size, only the logical size, but 
+> I can be very wrong.
 
-Signed-off-by: Alain Renaud <arenaud@sgi.com>
----
- 259     |    2 +-
- 259.out |   12 ++++++------
- 2 files changed, 7 insertions(+), 7 deletions(-)
+If libblkid exports the PBS (physical block size) as exposed in
+/sys/block/<dev>/queue/physical_block_size, then we should be able
+to get it.
 
-diff --git a/259 b/259
-index 02938a5..d260b79 100755
---- a/259
-+++ b/259
-@@ -51,7 +51,7 @@ testfile=$TEST_DIR/259.image
- four_TB=$(_math "2^42")
- for del in 1 512 1024 1025 2048 4096; do
- 	ddseek=$(_math "$four_TB - $del")
--	echo "Trying to make (2 TB - $del) B long xfs fs image"
-+	echo "Trying to make (4 TB - $del) B long xfs fs image"
- 	rm -f "$testfile"
- 	dd if=/dev/zero "of=$testfile" bs=1 count=0 seek=$ddseek \
- 					>/dev/null 2>&1 || echo "dd failed"
-diff --git a/259.out b/259.out
-index 4620082..263bb1b 100644
---- a/259.out
-+++ b/259.out
-@@ -1,7 +1,7 @@
- QA output created by 259
--Trying to make (2 TB - 1) B long xfs fs image
--Trying to make (2 TB - 512) B long xfs fs image
--Trying to make (2 TB - 1024) B long xfs fs image
--Trying to make (2 TB - 1025) B long xfs fs image
--Trying to make (2 TB - 2048) B long xfs fs image
--Trying to make (2 TB - 4096) B long xfs fs image
-+Trying to make (4 TB - 1) B long xfs fs image
-+Trying to make (4 TB - 512) B long xfs fs image
-+Trying to make (4 TB - 1024) B long xfs fs image
-+Trying to make (4 TB - 1025) B long xfs fs image
-+Trying to make (4 TB - 2048) B long xfs fs image
-+Trying to make (4 TB - 4096) B long xfs fs image
+However, the issue in my mind is not whether it is supported, but
+what is the effect of making this change? The filesystem relies on
+the fact that the minimum guaranteed unit of atomic IO is a sector,
+not the PBS of the underlying disk. What guarantees do we have when
+do a PBS sized IO is doesn't get torn into sector sized IOs by the
+drive and hence only partitially completed on failure?  Indeed, if
+the filesystem is sector unaligned, it is -guaranteed- to have PBS
+sized IOs torn apart by the hardware....
+
+i.e. do we have any guarantee at all that a PBS sized IO will either
+wholly complete or wholly fail when PBS != sector size? And if not,
+why is this a change we should make given it appears to me to
+violate a fundamental assumption of the filesystem design?
+
+Cheers,
+
+Dave.
 -- 
-1.7.4.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
