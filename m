@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pASL0xxF255231 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 15:00:59 -0600
-Date: Mon, 28 Nov 2011 15:01:18 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: XFS read hangs in 3.1-rc10
-Message-ID: <20111128210118.GT29840@sgi.com>
-References: <20111021132240.GA24136@infradead.org>
-	<20111021202857.GB30100@hostway.ca>
-	<20111024082219.GA19941@infradead.org>
-	<20111025200748.GA25043@hostway.ca>
-	<20111026112521.GA10432@infradead.org>
-	<20111104210324.GB14983@infradead.org>
-	<20111116195643.GF24411@hostway.ca>
-	<20111120153241.GA23511@infradead.org>
-	<20111128190554.GA31168@hostway.ca>
-	<20111128195505.GA3759@infradead.org>
+	pASLViPp256353 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 15:31:44 -0600
+Received: from mail-yw0-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 72A1C27D54C
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 13:31:43 -0800 (PST)
+Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id PlGyU1fxKBihgbkE
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 13:31:43 -0800 (PST)
+Received: by ywm19 with SMTP id 19so6422440ywm.26
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 13:31:42 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111128195505.GA3759@infradead.org>
+Date: Mon, 28 Nov 2011 16:31:42 -0500
+Message-ID: <CAOO4vO5ub0rQtJ_OF3E6fyNT2CcxiPNzO_6afBxhXLdHwbf2qQ@mail.gmail.com>
+Subject: best stable recent kernel?
+From: Paul Anderson <pha@umich.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +27,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Simon Kirby <sim@hostway.ca>, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hey Christoph,
+I need to start deploying some large XFS based fileservers servers and
+wish to try a kernel newer than what we've been using (2.6.38.5 from
+kernel.org).
 
-On Mon, Nov 28, 2011 at 02:55:05PM -0500, Christoph Hellwig wrote:
-> On Mon, Nov 28, 2011 at 11:05:54AM -0800, Simon Kirby wrote:
-> > On Sun, Nov 20, 2011 at 10:32:41AM -0500, Christoph Hellwig wrote:
-> > 
-> > > On Wed, Nov 16, 2011 at 11:56:43AM -0800, Simon Kirby wrote:
-> > > > Sorry for the delay in testing.
-> > > > 
-> > > > Yes, everything looks fine even with the xfs_log_force line from your
-> > > > patch commented out. So, the changes in xfs_reclaim_inode() are just the
-> > > > set_bit(XBT_FORCE_FLUSH) and wake_up_process(), relative to 3.1.
-> > > 
-> > > Dave pointed out that we can do better than the big hammer, and the
-> > > patch below should fix your issue, too.  Can you test it?
-> > 
-> > Yes, seems to be fine. No hung task warnings, tested for ~5 days.
-> 
-> Thanks a lot for the testing Simon.
-> 
-> Ben, can you add a:
-> 
-> Tested-by: Simon Kirby <sim@hostway.ca>
-> 
-> to the patch when applying it?
+We've stayed at 2.6.38.5 for awhile, but have had metadata loss on
+many shutdowns, clean or not.  We've found 0 length files where the
+files had been written and closed long before the crash - in some
+cases we were careful sync by hand, wait for quiescent drives, then
+clean reboot, etc.  This sounds related to a series of commits that
+indicates some workarounds and fixes in the time frame of 2.6.38.5 to
+3.0 (how completely this particular problem was fixed, I don't know).
 
-Yep, I will add Simon's Tested-by:
+Several past threads here on this list have described these servers,
+but they are 126 2TB drive RAID 60 used for mostly genetic sequencing
+data.
 
-Thanks Simon!  ;)
+Christoph recently suggested here in another xfs developer list thread:
 
--Ben
+"I've also backported it to the 3.0-stable issues.  I would recommend
+to upgrade to the latest Linux 3.0-stable release, as I'll plan to
+backport all important XFS fixes to it."
+
+Is this a decent target for us to try?  We're looking for the best XFS
+and NFS stability that is practical.
+
+Thanks,
+
+Paul Anderson
+University of Michigan
 
 _______________________________________________
 xfs mailing list
