@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAS8Sctx225875 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:28:38 -0600
+	pASB2UWe232937 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:02:30 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E41174FAB45
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:28:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 48A4E9439A3
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 03:02:29 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Nq8kLp39iI1JurSd for <xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 00:28:37 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RUwZp-0000w4-9k
-	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:28:37 +0000
-Message-Id: <20111128082837.263453373@bombadil.infradead.org>
-Date: Mon, 28 Nov 2011 03:27:28 -0500
+	WxFwH5izpnw52luU for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 03:02:29 -0800 (PST)
+Date: Mon, 28 Nov 2011 06:02:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 06/16] xfs: cleanup xfs_qm_dqlookup
-References: <20111128082722.604873274@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_qm_dqlookup
+Subject: Re: [PATCH] xfstests: mount other filesystems with selinux context
+	as well
+Message-ID: <20111128110228.GC13766@infradead.org>
+References: <4ECD3262.105@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4ECD3262.105@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +27,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Rearrange the code to avoid the conditional locking around the flist_locked
-variable.  This means we lose a (rather pointless) assert, and hold the
-freelist lock a bit longer for one corner case.
+On Wed, Nov 23, 2011 at 11:50:26AM -0600, Eric Sandeen wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
+> 
+> For some reason, non-xfs filesystems aren't getting mounted with
+> the selinux context; perhaps because none of the xattr tests used
+> to work on anything but xfs?
+> 
+> Anyway, 062 fails for extN unless we mount with the fs-wide
+> context.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> - ---
+> 
+> diff --git a/common.rc b/common.rc
+> index cab0b64..5998ff2 100644
+> - --- a/common.rc
+> +++ b/common.rc
+> @@ -86,14 +86,17 @@ _mount_opts()
+>  	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
+>  	;;
+>      ext2|ext3|ext4|ext4dev)
+> - -	# acls & xattrs aren't turned on by default on ext$FOO
+> +	export SELINUX_MOUNT_OPTIONS
+> +	# acls & xattrs aren't turned on by default on ext$FOO in old kernels
+>  	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
+>  	;;
+>      reiserfs)
+> +	export SELINUX_MOUNT_OPTIONS
+>  	# acls & xattrs aren't turned on by default on reiserfs
+>  	export MOUNT_OPTIONS="-o acl,user_xattr $REISERFS_MOUNT_OPTIONS"
+>  	;;
+>      gfs2)
+> +	export SELINUX_MOUNT_OPTIONS
+>  	# acls aren't turned on by default on gfs2
+>  	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
+>  	;;
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
----
- fs/xfs/xfs_dquot.c |   25 +++++--------------------
- 1 file changed, 5 insertions(+), 20 deletions(-)
-
-Index: xfs/fs/xfs/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:02.250173174 +0200
-+++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:02.770171231 +0200
-@@ -710,12 +710,9 @@ xfs_qm_dqlookup(
- 	xfs_dquot_t		**O_dqpp)
- {
- 	xfs_dquot_t		*dqp;
--	uint			flist_locked;
- 
- 	ASSERT(mutex_is_locked(&qh->qh_lock));
- 
--	flist_locked = B_FALSE;
--
- 	/*
- 	 * Traverse the hashchain looking for a match
- 	 */
-@@ -750,31 +747,19 @@ xfs_qm_dqlookup(
- 					xfs_dqlock(dqp);
- 					dqp->dq_flags &= ~(XFS_DQ_WANT);
- 				}
--				flist_locked = B_TRUE;
--			}
--
--			/*
--			 * id couldn't have changed; we had the hashlock all
--			 * along
--			 */
--			ASSERT(be32_to_cpu(dqp->q_core.d_id) == id);
- 
--			if (flist_locked) {
--				if (dqp->q_nrefs != 0) {
--					mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
--					flist_locked = B_FALSE;
--				} else {
-+				if (dqp->q_nrefs == 0) {
- 					/* take it off the freelist */
- 					trace_xfs_dqlookup_freelist(dqp);
- 					list_del_init(&dqp->q_freelist);
- 					xfs_Gqm->qm_dqfrlist_cnt--;
- 				}
-+				XFS_DQHOLD(dqp);
-+				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+			} else {
-+				XFS_DQHOLD(dqp);
- 			}
- 
--			XFS_DQHOLD(dqp);
--
--			if (flist_locked)
--				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
- 			/*
- 			 * move the dquot to the front of the hashchain
- 			 */
+shouldn't the "export SELINUX_MOUNT_OPTIONS" simply move to common code?
 
 _______________________________________________
 xfs mailing list
