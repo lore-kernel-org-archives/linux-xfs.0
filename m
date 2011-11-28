@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAS8JQWb225223 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:19:26 -0600
+	pAS7una1224394 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 01:56:49 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2ACF04FADD6
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:19:26 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 34A6D27B1C2
+	for <xfs@oss.sgi.com>; Sun, 27 Nov 2011 23:56:48 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	AZ8xDXEr7RvFFQlF for <xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 00:19:26 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RUwQv-00077c-Ln
-	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:19:25 +0000
-Message-Id: <20111128081925.630748714@bombadil.infradead.org>
-Date: Mon, 28 Nov 2011 03:17:34 -0500
+	n7uEP2RgVXZLVAI4 for <xfs@oss.sgi.com>;
+	Sun, 27 Nov 2011 23:56:48 -0800 (PST)
+Date: Mon, 28 Nov 2011 02:56:47 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/4] xfs: validate acl count
-References: <20111128081732.350228200@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-validate-acls
+Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical
+	Sector size
+Message-ID: <20111128075646.GB6000@infradead.org>
+References: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
+	<20111124195042.GA3671@andromeda.usersys.redhat.com>
+	<20111127010643.GU2386@dastard> <4ED2C233.8010104@sandeen.net>
+	<20111127235051.GX2386@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111127235051.GX2386@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,31 +30,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-This prevents in-memory corruption and possible panics if the on-disk
-ACL is badly corrupted.
+On Mon, Nov 28, 2011 at 10:50:51AM +1100, Dave Chinner wrote:
+> > I had the expectation that physical block size WAS the fundamental/atomic
+> > IO size for the disk, and anything smaller required read/modify/write.
+> > So I made this suggestion (and I think hch concurred) so that we weren't
+> > doing log IOs which required RMW & translation.
+> 
+> A RMW cycle does not mean the IO is not atomic. The write to disk
+> will still be atomic, regardless of the read that ovvurred before.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+I would not trust ATA disk to get this right generally.
 
-Index: xfs/fs/xfs/xfs_acl.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_acl.c	2011-11-20 12:49:11.181244706 +0100
-+++ xfs/fs/xfs/xfs_acl.c	2011-11-20 12:49:50.637697619 +0100
-@@ -42,6 +42,8 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
- 	int count, i;
- 
- 	count = be32_to_cpu(aclp->acl_cnt);
-+	if (count > XFS_ACL_MAX_ENTRIES)
-+		return ERR_PTR(-EFSCORRUPTED);
- 
- 	acl = posix_acl_alloc(count, GFP_KERNEL);
- 	if (!acl)
+> > Ok, if we have mismanaged the alignment and aligned to logical, not
+> > physical, then I guess there would be an issue... but at that point
+> > we've already messed up (though not catastrophically I guess)...
+> 
+> That's where I'm concerned - if alignment is screwed because the FS
+> is 512B sector aligned (because something read the logical sector size),
+> then using a 4k sector will result in torn writes because every 4k
+> sector write is potentially made up of 2 4k write IOs, not 1.
+
+Disks that implement the ATA level required to tell us about the
+physical blocksize also have the alignment offset information in the
+IDENTIFY data to tell us about aligned shifts.  But I haven't seen a
+single one with a non-zero aligned offset in the wild.
 
 _______________________________________________
 xfs mailing list
