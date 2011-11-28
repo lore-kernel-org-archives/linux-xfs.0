@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAS8Scsu225872 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:28:38 -0600
+	pAS8SdCD225906 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:28:39 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 872954FAB1A
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:28:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 98EAB4FAB49
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:28:38 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	eN3HEb62AAP2YeJv for <xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 00:28:37 -0800 (PST)
+	whv8nVDnDBtHbfco for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 00:28:38 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RUwZo-0000v2-TF
-	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:28:36 +0000
-Message-Id: <20111128082836.852396783@bombadil.infradead.org>
-Date: Mon, 28 Nov 2011 03:27:26 -0500
+	Linux)) id 1RUwZq-0000y9-10
+	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:28:38 +0000
+Message-Id: <20111128082837.977396280@bombadil.infradead.org>
+Date: Mon, 28 Nov 2011 03:27:32 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 04/16] xfs: remove the sync_mode argument to xfs_qm_dqflush_all
+Subject: [PATCH 10/16] xfs: nest qm_dqfrlist_lock insise the dquot qlock
 References: <20111128082722.604873274@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-remove-xfs_qm_dqflush_all-sync-mode
+Content-Disposition: inline; filename=xfs-change-quota-freelist-lock-order
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,46 +34,169 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-It always is zero, and removing it will make future changes easier.
+Allow xfs_qm_dqput to work without trylock loops by nesting the freelist lock
+inside the dquot qlock.  In turn that requires trylocks in the reclaim path
+instead, but given it's a classic tradeoff between fast and slow path, and
+we follow the model of the inode and dentry caches.
+
+Document our new lock order now that it has settled.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_qm.c |    7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_dquot.c |   98 +++++++++++++++++++++--------------------------------
+ fs/xfs/xfs_qm.c    |    4 +-
+ 2 files changed, 42 insertions(+), 60 deletions(-)
 
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-11-25 11:45:53.348630228 +0100
++++ xfs/fs/xfs/xfs_dquot.c	2011-11-25 11:56:08.655296826 +0100
+@@ -39,20 +39,19 @@
+ #include "xfs_qm.h"
+ #include "xfs_trace.h"
+ 
+-
+ /*
+-   LOCK ORDER
+-
+-   inode lock		    (ilock)
+-   dquot hash-chain lock    (hashlock)
+-   xqm dquot freelist lock  (freelistlock
+-   mount's dquot list lock  (mplistlock)
+-   user dquot lock - lock ordering among dquots is based on the uid or gid
+-   group dquot lock - similar to udquots. Between the two dquots, the udquot
+-		      has to be locked first.
+-   pin lock - the dquot lock must be held to take this lock.
+-   flush lock - ditto.
+-*/
++ * Lock order:
++ *
++ * ip->i_lock
++ *   qh->qh_lock
++ *     qi->qi_dqlist_lock
++ *       dquot->q_qlock
++ *         dquot->q_flush
++ *         xfs_Gqm->qm_dqfrlist_lock
++ *
++ * If two dquots need to be locked the order is user before group/project,
++ * otherwise by the lowest id first, see xfs_dqlock2.
++ */
+ 
+ #ifdef DEBUG
+ xfs_buftarg_t *xfs_dqerror_target;
+@@ -984,69 +983,49 @@ restart:
+  */
+ void
+ xfs_qm_dqput(
+-	xfs_dquot_t	*dqp)
++	struct xfs_dquot	*dqp)
+ {
+-	xfs_dquot_t	*gdqp;
++	struct xfs_dquot	*gdqp;
+ 
+ 	ASSERT(dqp->q_nrefs > 0);
+ 	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+ 
+ 	trace_xfs_dqput(dqp);
+ 
+-	if (dqp->q_nrefs != 1) {
+-		dqp->q_nrefs--;
++recurse:
++	if (--dqp->q_nrefs > 0) {
+ 		xfs_dqunlock(dqp);
+ 		return;
+ 	}
+ 
+-	/*
+-	 * drop the dqlock and acquire the freelist and dqlock
+-	 * in the right order; but try to get it out-of-order first
+-	 */
+-	if (!mutex_trylock(&xfs_Gqm->qm_dqfrlist_lock)) {
+-		trace_xfs_dqput_wait(dqp);
+-		xfs_dqunlock(dqp);
+-		mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-		xfs_dqlock(dqp);
+-	}
+-
+-	while (1) {
+-		gdqp = NULL;
++	trace_xfs_dqput_free(dqp);
+ 
+-		/* We can't depend on nrefs being == 1 here */
+-		if (--dqp->q_nrefs == 0) {
+-			trace_xfs_dqput_free(dqp);
+-
+-			if (list_empty(&dqp->q_freelist)) {
+-				list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
+-				xfs_Gqm->qm_dqfrlist_cnt++;
+-			}
++	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
++	if (list_empty(&dqp->q_freelist)) {
++		list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
++		xfs_Gqm->qm_dqfrlist_cnt++;
++	}
++	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 
+-			/*
+-			 * If we just added a udquot to the freelist, then
+-			 * we want to release the gdquot reference that
+-			 * it (probably) has. Otherwise it'll keep the
+-			 * gdquot from getting reclaimed.
+-			 */
+-			if ((gdqp = dqp->q_gdquot)) {
+-				/*
+-				 * Avoid a recursive dqput call
+-				 */
+-				xfs_dqlock(gdqp);
+-				dqp->q_gdquot = NULL;
+-			}
+-		}
+-		xfs_dqunlock(dqp);
++	/*
++	 * If we just added a udquot to the freelist, then we want to release
++	 * the gdquot reference that it (probably) has. Otherwise it'll keep
++	 * the gdquot from getting reclaimed.
++	 */
++	gdqp = dqp->q_gdquot;
++	if (gdqp) {
++		xfs_dqlock(gdqp);
++		dqp->q_gdquot = NULL;
++	}
++	xfs_dqunlock(dqp);
+ 
+-		/*
+-		 * If we had a group quota inside the user quota as a hint,
+-		 * release it now.
+-		 */
+-		if (! gdqp)
+-			break;
++	/*
++	 * If we had a group quota hint, release it now.
++	 */
++	if (gdqp) {
+ 		dqp = gdqp;
++		goto recurse;
+ 	}
+-	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ }
+ 
+ /*
 Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-11-25 11:45:37.468716258 +0100
-+++ xfs/fs/xfs/xfs_qm.c	2011-11-25 11:45:39.375372594 +0100
-@@ -415,8 +415,7 @@ xfs_qm_unmount_quotas(
-  */
- STATIC int
- xfs_qm_dqflush_all(
--	struct xfs_mount	*mp,
--	int			sync_mode)
-+	struct xfs_mount	*mp)
- {
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
- 	int			recl;
-@@ -451,7 +450,7 @@ again:
- 		 * across a disk write.
- 		 */
- 		mutex_unlock(&q->qi_dqlist_lock);
--		error = xfs_qm_dqflush(dqp, sync_mode);
-+		error = xfs_qm_dqflush(dqp, 0);
- 		xfs_dqunlock(dqp);
- 		if (error)
- 			return error;
-@@ -1567,7 +1566,7 @@ xfs_qm_quotacheck(
- 	 * successfully.
- 	 */
- 	if (!error)
--		error = xfs_qm_dqflush_all(mp, 0);
-+		error = xfs_qm_dqflush_all(mp);
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-11-25 11:45:53.351963543 +0100
++++ xfs/fs/xfs/xfs_qm.c	2011-11-25 11:55:41.538777061 +0100
+@@ -1669,7 +1669,9 @@ xfs_qm_dqreclaim_one(void)
+ restart:
+ 	list_for_each_entry(dqp, &xfs_Gqm->qm_dqfrlist, q_freelist) {
+ 		struct xfs_mount *mp = dqp->q_mount;
+-		xfs_dqlock(dqp);
++
++		if (!xfs_dqlock_nowait(dqp))
++			continue;
  
- 	/*
- 	 * We can get this error if we couldn't do a dquot allocation inside
+ 		/*
+ 		 * This dquot has already been grabbed by dqlookup.
 
 _______________________________________________
 xfs mailing list
