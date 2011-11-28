@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pASB9h4h233103
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:09:43 -0600
+	pASB20Rn232915 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:02:01 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 03F2916E1E35
-	for <linux-xfs@oss.sgi.com>; Mon, 28 Nov 2011 03:09:42 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3395F943993
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 03:01:59 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	j9PFc7eBkOCefKAq for <linux-xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 03:09:42 -0800 (PST)
-Date: Mon, 28 Nov 2011 06:09:41 -0500
+	xdaJew4qGTfrRUex for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 03:01:59 -0800 (PST)
+Date: Mon, 28 Nov 2011 06:01:58 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: stale NFS file handle problem on XFS inode64
-Message-ID: <20111128110941.GE13766@infradead.org>
-References: <CAJNJY8Q--O2Z3K6KFxVKOivwaABk+oRtC1y0eQ0nS1WdPNMwsQ@mail.gmail.com>
-	<20111121170459.GA1327@infradead.org>
-	<CAJNJY8Ty+bQpzGL9wq7Qv3ozcKUPwmTyYUeb2wQqZ326K4JeWw@mail.gmail.com>
-	<20111122221515.GA29540@infradead.org>
-	<CAJNJY8Q3u6zZYHVdxnka160f+EC21JxoBe4EyKk=vDQgH4T19w@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: make xattr test 020 generic
+Message-ID: <20111128110158.GB13766@infradead.org>
+References: <4ECD4579.4080706@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAJNJY8Q3u6zZYHVdxnka160f+EC21JxoBe4EyKk=vDQgH4T19w@mail.gmail.com>
+In-Reply-To: <4ECD4579.4080706@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,26 +30,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Nov 23, 2011 at 09:19:26AM +0800, hank peng wrote:
-> yes, I have already done that. I mount the expoted NFS directory in
-> same machine(kernel version is 2.6.35.6), but it still didn't work.
-
-Ok, sounds like this is a server side issue.
-
+On Wed, Nov 23, 2011 at 01:11:53PM -0600, Eric Sandeen wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 > 
-> Then, I used fsid=$(my exported filesystem ID) option in /etc/exports
-> and tried again, it still gave me back "stale NFS file handle" when
-> entering a specific subdirectory.
-> I noticed that from NFS client(in same machine with NFS server) side,
-> the inode number of this subdirectory was changed to be within 32
-> limit, but  still "stale NFS file handle" came back.
+> 020 can be made generic by limiting the total attribute space
+> used in the tests as appropriate.  Unless we know we have a
+> large-xattr-capable fs, limit total space to a bit under one
+> fs block.
+> 
+> Now passes for me on ext3, ext4, btrfs, as well as xfs.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> - ---
+> 
+> incidentally the test used to send a 100k xattr value to
+> the attr command on xfs; it wrote only 64k but did not complain.
+> Feature or bug?
+> 
+> diff --git a/020 b/020
+> index 56b9c3c..d196318 100755
+> - --- a/020
+> +++ b/020
+> @@ -80,7 +80,7 @@ _attr_list()
+>  
+>  
+>  # real QA test starts here
+> - -_supported_fs xfs udf
+> +_supported_fs generic
+>  _supported_os Linux
+>  
+>  _require_attrs
+> @@ -119,9 +119,19 @@ _attr_list $testfile
+>  
+>  echo "*** add lots of attributes"
+>  v=0
+> - -while [ $v -lt 1000 ]
+> +
+> +# set maximum total attr space based on fs type
+> +if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" ]; then
+> +	NUMATTRS=1000
+> +else # Assume max ~1 block of attrs
+> +	BLOCK_SIZE=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
+> +	# user.attribute_XXX="value.XXX" is about 32 bytes; leave some overhead
+> +	let NUMATTRS=$BLOCK_SIZE/40
+> +fi
 
-Do you mean the NFS mount displayed a 32-bit inode number, but it was still
-64-bit on the XFS filesystem directly?  Can you post the inode numbers
-(e.g. from ls -i) for both sides?
+I'd prefer if we define the limits in common.rc - we shouldn't have to
+spread too much fs knowledege over individual tests.
+
+> +if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" -o "$FSTYP" == "btrfs" ]; then
+> +	ATTRVAL_SIZE=64
+> +else # Assume max ~1 block of attrs
+> +	BLOCK_SIZE=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
+> +	# leave a little overhead
+> +	let ATTRVAL_SIZE=$BLOCK_SIZE-256
+> +fi
+
+same for this one.
+
+Except for that these changes looks fine to me.
 
 _______________________________________________
 xfs mailing list
