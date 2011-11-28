@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAS8SeeQ225919 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:28:40 -0600
+	pAS8PxcO225721 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:25:59 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 068F04FAB52
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:28:38 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id DC9201D331E1
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:25:57 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DdUVTq4EtS9nidHo for <xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 00:28:38 -0800 (PST)
+	J2QcoTzpsipeFw92 for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 00:25:57 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RUwZq-0000zi-Hl
-	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:28:38 +0000
-Message-Id: <20111128082838.499215551@bombadil.infradead.org>
-Date: Mon, 28 Nov 2011 03:27:35 -0500
+	Linux)) id 1RUwXF-0000hi-AO
+	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:25:57 +0000
+Message-Id: <20111128082557.282856287@bombadil.infradead.org>
+Date: Mon, 28 Nov 2011 03:25:25 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 13/16] xfs: add a xfs_dqhold helper
-References: <20111128082722.604873274@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-add-xfs_dqhold
+Subject: [PATCH 3/3] xfs: remove the lid_size field in struct log_item_desc
+References: <20111128082522.224645690@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-kill-lid_size
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,177 +34,111 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Factor the common pattern of:
-
-	xfs_dqlock(dqp);
-	XFS_DQHOLD(dqp);
-	xfs_dqunlock(dqp);
-
-into a new helper, and remove XFS_DQHOLD now that only two callers are left.
+Outside the now removed nodelaylog code this field is only used for
+asserts and can be safely removed now.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_dquot.c |    2 +-
- fs/xfs/xfs_dquot.h |   10 ++++++++--
- fs/xfs/xfs_qm.c    |   50 +++++++++++++-------------------------------------
- 3 files changed, 22 insertions(+), 40 deletions(-)
+ fs/xfs/xfs_dquot_item.c |    1 -
+ fs/xfs/xfs_inode_item.c |    2 --
+ fs/xfs/xfs_log_cil.c    |    9 +++++----
+ fs/xfs/xfs_trans.c      |    1 -
+ fs/xfs/xfs_trans.h      |    3 +--
+ 5 files changed, 6 insertions(+), 10 deletions(-)
 
-Index: xfs/fs/xfs/xfs_qm.c
+Index: xfs/fs/xfs/xfs_dquot_item.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-11-25 11:56:35.841816211 +0100
-+++ xfs/fs/xfs/xfs_qm.c	2011-11-25 11:56:36.905143783 +0100
-@@ -594,12 +594,9 @@ xfs_qm_dqattach_one(
- 		 */
- 		dqp = udqhint->q_gdquot;
- 		if (dqp && be32_to_cpu(dqp->q_core.d_id) == id) {
--			xfs_dqlock(dqp);
--			XFS_DQHOLD(dqp);
- 			ASSERT(*IO_idqpp == NULL);
--			*IO_idqpp = dqp;
+--- xfs.orig/fs/xfs/xfs_dquot_item.c	2011-11-28 09:21:33.172090810 +0100
++++ xfs/fs/xfs/xfs_dquot_item.c	2011-11-28 09:21:40.595383928 +0100
+@@ -73,7 +73,6 @@ xfs_qm_dquot_logitem_format(
+ 	logvec->i_len  = sizeof(xfs_disk_dquot_t);
+ 	logvec->i_type = XLOG_REG_TYPE_DQUOT;
  
--			xfs_dqunlock(dqp);
-+			*IO_idqpp = xfs_qm_dqhold(dqp);
- 			xfs_dqunlock(udqhint);
- 			return 0;
- 		}
-@@ -659,11 +656,7 @@ xfs_qm_dqattach_grouphint(
- 		xfs_qm_dqrele(tmp);
- 	}
+-	ASSERT(2 == lip->li_desc->lid_size);
+ 	qlip->qli_format.qlf_size = 2;
  
--	xfs_dqlock(gdq);
--	XFS_DQHOLD(gdq);
--	xfs_dqunlock(gdq);
--
--	udq->q_gdquot = gdq;
-+	udq->q_gdquot = xfs_qm_dqhold(gdq);
- done:
- 	xfs_dqunlock(udq);
  }
-@@ -1928,10 +1921,7 @@ xfs_qm_vop_dqalloc(
- 			 * this to caller
- 			 */
- 			ASSERT(ip->i_udquot);
--			uq = ip->i_udquot;
--			xfs_dqlock(uq);
--			XFS_DQHOLD(uq);
--			xfs_dqunlock(uq);
-+			uq = xfs_qm_dqhold(ip->i_udquot);
- 		}
- 	}
- 	if ((flags & XFS_QMOPT_GQUOTA) && XFS_IS_GQUOTA_ON(mp)) {
-@@ -1952,10 +1942,7 @@ xfs_qm_vop_dqalloc(
- 			xfs_ilock(ip, lockflags);
- 		} else {
- 			ASSERT(ip->i_gdquot);
--			gq = ip->i_gdquot;
--			xfs_dqlock(gq);
--			XFS_DQHOLD(gq);
--			xfs_dqunlock(gq);
-+			gq = xfs_qm_dqhold(ip->i_gdquot);
- 		}
- 	} else if ((flags & XFS_QMOPT_PQUOTA) && XFS_IS_PQUOTA_ON(mp)) {
- 		if (xfs_get_projid(ip) != prid) {
-@@ -1975,10 +1962,7 @@ xfs_qm_vop_dqalloc(
- 			xfs_ilock(ip, lockflags);
- 		} else {
- 			ASSERT(ip->i_gdquot);
--			gq = ip->i_gdquot;
--			xfs_dqlock(gq);
--			XFS_DQHOLD(gq);
--			xfs_dqunlock(gq);
-+			gq = xfs_qm_dqhold(ip->i_gdquot);
- 		}
- 	}
- 	if (uq)
-@@ -2028,14 +2012,10 @@ xfs_qm_vop_chown(
- 	xfs_trans_mod_dquot(tp, newdq, XFS_TRANS_DQ_ICOUNT, 1);
- 
- 	/*
--	 * Take an extra reference, because the inode
--	 * is going to keep this dquot pointer even
--	 * after the trans_commit.
--	 */
--	xfs_dqlock(newdq);
--	XFS_DQHOLD(newdq);
--	xfs_dqunlock(newdq);
--	*IO_olddq = newdq;
-+	 * Take an extra reference, because the inode is going to keep
-+	 * this dquot pointer even after the trans_commit.
-+	 */
-+	*IO_olddq = xfs_qm_dqhold(newdq);
- 
- 	return prevdq;
- }
-@@ -2167,25 +2147,21 @@ xfs_qm_vop_create_dqattach(
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
- 
- 	if (udqp) {
--		xfs_dqlock(udqp);
--		XFS_DQHOLD(udqp);
--		xfs_dqunlock(udqp);
- 		ASSERT(ip->i_udquot == NULL);
--		ip->i_udquot = udqp;
- 		ASSERT(XFS_IS_UQUOTA_ON(mp));
- 		ASSERT(ip->i_d.di_uid == be32_to_cpu(udqp->q_core.d_id));
-+
-+		ip->i_udquot = xfs_qm_dqhold(udqp);
- 		xfs_trans_mod_dquot(tp, udqp, XFS_TRANS_DQ_ICOUNT, 1);
- 	}
- 	if (gdqp) {
--		xfs_dqlock(gdqp);
--		XFS_DQHOLD(gdqp);
--		xfs_dqunlock(gdqp);
- 		ASSERT(ip->i_gdquot == NULL);
--		ip->i_gdquot = gdqp;
- 		ASSERT(XFS_IS_OQUOTA_ON(mp));
- 		ASSERT((XFS_IS_GQUOTA_ON(mp) ?
- 			ip->i_d.di_gid : xfs_get_projid(ip)) ==
- 				be32_to_cpu(gdqp->q_core.d_id));
-+
-+		ip->i_gdquot = xfs_qm_dqhold(gdqp);
- 		xfs_trans_mod_dquot(tp, gdqp, XFS_TRANS_DQ_ICOUNT, 1);
- 	}
- }
-Index: xfs/fs/xfs/xfs_dquot.c
+Index: xfs/fs/xfs/xfs_inode_item.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-11-25 11:56:08.655296826 +0100
-+++ xfs/fs/xfs/xfs_dquot.c	2011-11-25 11:56:36.905143783 +0100
-@@ -733,7 +733,7 @@ xfs_qm_dqlookup(
- 			return -1;
- 		}
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-11-28 09:21:33.182090756 +0100
++++ xfs/fs/xfs/xfs_inode_item.c	2011-11-28 09:21:40.595383928 +0100
+@@ -437,7 +437,6 @@ xfs_inode_item_format(
+ 	 * Assert that no attribute-related log flags are set.
+ 	 */
+ 	if (!XFS_IFORK_Q(ip)) {
+-		ASSERT(nvecs == lip->li_desc->lid_size);
+ 		iip->ili_format.ilf_size = nvecs;
+ 		ASSERT(!(iip->ili_format.ilf_fields &
+ 			 (XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AEXT)));
+@@ -521,7 +520,6 @@ xfs_inode_item_format(
+ 		break;
+ 	}
  
--		XFS_DQHOLD(dqp);
-+		dqp->q_nrefs++;
+-	ASSERT(nvecs == lip->li_desc->lid_size);
+ 	iip->ili_format.ilf_size = nvecs;
+ }
  
- 		/*
- 		 * move the dquot to the front of the hashchain
-Index: xfs/fs/xfs/xfs_dquot.h
+Index: xfs/fs/xfs/xfs_log_cil.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.h	2011-11-25 11:55:40.368783400 +0100
-+++ xfs/fs/xfs/xfs_dquot.h	2011-11-25 11:56:36.905143783 +0100
-@@ -80,8 +80,6 @@ enum {
- 	XFS_QLOCK_NESTED,
+--- xfs.orig/fs/xfs/xfs_log_cil.c	2011-11-28 09:21:33.195424016 +0100
++++ xfs/fs/xfs/xfs_log_cil.c	2011-11-28 09:21:40.595383928 +0100
+@@ -185,23 +185,24 @@ xlog_cil_prepare_log_vecs(
+ 		void	*ptr;
+ 		int	index;
+ 		int	len = 0;
++		uint	niovecs;
+ 
+ 		/* Skip items which aren't dirty in this transaction. */
+ 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
+ 			continue;
+ 
+ 		/* Skip items that do not have any vectors for writing */
+-		lidp->lid_size = IOP_SIZE(lidp->lid_item);
+-		if (!lidp->lid_size)
++		niovecs = IOP_SIZE(lidp->lid_item);
++		if (!niovecs)
+ 			continue;
+ 
+ 		new_lv = kmem_zalloc(sizeof(*new_lv) +
+-				lidp->lid_size * sizeof(struct xfs_log_iovec),
++				niovecs * sizeof(struct xfs_log_iovec),
+ 				KM_SLEEP);
+ 
+ 		/* The allocated iovec region lies beyond the log vector. */
+ 		new_lv->lv_iovecp = (struct xfs_log_iovec *)&new_lv[1];
+-		new_lv->lv_niovecs = lidp->lid_size;
++		new_lv->lv_niovecs = niovecs;
+ 		new_lv->lv_item = lidp->lid_item;
+ 
+ 		/* build the vector array and calculate it's length */
+Index: xfs/fs/xfs/xfs_trans.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.c	2011-11-28 09:21:33.205423962 +0100
++++ xfs/fs/xfs/xfs_trans.c	2011-11-28 09:21:40.598717244 +0100
+@@ -1158,7 +1158,6 @@ xfs_trans_add_item(
+ 
+ 	lidp->lid_item = lip;
+ 	lidp->lid_flags = 0;
+-	lidp->lid_size = 0;
+ 	list_add_tail(&lidp->lid_trans, &tp->t_items);
+ 
+ 	lip->li_desc = lidp;
+Index: xfs/fs/xfs/xfs_trans.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans.h	2011-11-28 09:21:33.222090538 +0100
++++ xfs/fs/xfs/xfs_trans.h	2011-11-28 09:21:40.598717244 +0100
+@@ -163,9 +163,8 @@ typedef struct xfs_trans_header {
+  */
+ struct xfs_log_item_desc {
+ 	struct xfs_log_item	*lid_item;
+-	ushort			lid_size;
+-	unsigned char		lid_flags;
+ 	struct list_head	lid_trans;
++	unsigned char		lid_flags;
  };
  
--#define XFS_DQHOLD(dqp)		((dqp)->q_nrefs++)
--
- /*
-  * Manage the q_flush completion queue embedded in the dquot.  This completion
-  * queue synchronizes processes attempting to flush the in-core dquot back to
-@@ -147,4 +145,12 @@ extern void		xfs_dqlock2(struct xfs_dquo
- extern void		xfs_dqunlock(struct xfs_dquot *);
- extern void		xfs_dqflock_pushbuf_wait(struct xfs_dquot *dqp);
- 
-+static inline struct xfs_dquot *xfs_qm_dqhold(struct xfs_dquot *dqp)
-+{
-+	xfs_dqlock(dqp);
-+	dqp->q_nrefs++;
-+	xfs_dqunlock(dqp);
-+	return dqp;
-+}
-+
- #endif /* __XFS_DQUOT_H__ */
+ #define XFS_LID_DIRTY		0x1
 
 _______________________________________________
 xfs mailing list
