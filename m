@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pARNox3m200574 for <xfs@oss.sgi.com>; Sun, 27 Nov 2011 17:50:59 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 52FA61D32D9A
-	for <xfs@oss.sgi.com>; Sun, 27 Nov 2011 15:50:55 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	w5j2iuvfr1EypX6n for <xfs@oss.sgi.com>;
-	Sun, 27 Nov 2011 15:50:55 -0800 (PST)
-Date: Mon, 28 Nov 2011 10:50:51 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical
-	Sector size
-Message-ID: <20111127235051.GX2386@dastard>
-References: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
-	<20111124195042.GA3671@andromeda.usersys.redhat.com>
-	<20111127010643.GU2386@dastard> <4ED2C233.8010104@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ED2C233.8010104@sandeen.net>
+	pAS8JQWb225223 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:19:26 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2ACF04FADD6
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:19:26 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	AZ8xDXEr7RvFFQlF for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 00:19:26 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RUwQv-00077c-Ln
+	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:19:25 +0000
+Message-Id: <20111128081925.630748714@bombadil.infradead.org>
+Date: Mon, 28 Nov 2011 03:17:34 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 2/4] xfs: validate acl count
+References: <20111128081732.350228200@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-validate-acls
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,80 +27,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Nov 27, 2011 at 05:05:23PM -0600, Eric Sandeen wrote:
-> On 11/26/11 7:06 PM, Dave Chinner wrote:
-> > On Thu, Nov 24, 2011 at 05:50:42PM -0200, Carlos Maiolino wrote:
-> >> On Thu, Nov 24, 2011 at 05:20:51PM -0200, Carlos Maiolino wrote:
-> >>> xfsprogs (mainly mkfs) is using the logical sector size of a volume to initialize
-> >>> the filesystem, which, even in devices using Advanced Format, it can get a 512
-> >>> bytes sector size if it is set as the logical sector size.
-> >>> This patch changes the ioctl to get the physical sector size, independent of the
-> >>> logical size.
-> >>>
-> >>
-> >> Just as information, this patch proposal does not change the behaviour of mkfs in case the 
-> >> user is using libblkid, which in case, mkfs will take advantage of libblkid to retrieve disk
-> >> topology and information.
-> >> I'm not sure if libblkid is the best way to retrieve the device sector's size here, since 
-> >> this does not provide a way to retrive the physical sector size, only the logical size, but 
-> >> I can be very wrong.
-> > 
-> > If libblkid exports the PBS (physical block size) as exposed in
-> > /sys/block/<dev>/queue/physical_block_size, then we should be able
-> > to get it.
-> > 
-> > However, the issue in my mind is not whether it is supported, but
-> > what is the effect of making this change? The filesystem relies on
-> > the fact that the minimum guaranteed unit of atomic IO is a sector,
-> > not the PBS of the underlying disk. What guarantees do we have when
-> > do a PBS sized IO is doesn't get torn into sector sized IOs by the
-> > drive and hence only partitially completed on failure?  Indeed, if
-> > the filesystem is sector unaligned, it is -guaranteed- to have PBS
-> > sized IOs torn apart by the hardware....
-> > 
-> > i.e. do we have any guarantee at all that a PBS sized IO will either
-> > wholly complete or wholly fail when PBS != sector size? And if not,
-> > why is this a change we should make given it appears to me to
-> > violate a fundamental assumption of the filesystem design?
-> 
-> I had the expectation that physical block size WAS the fundamental/atomic
-> IO size for the disk, and anything smaller required read/modify/write.
-> So I made this suggestion (and I think hch concurred) so that we weren't
-> doing log IOs which required RMW & translation.
+This prevents in-memory corruption and possible panics if the on-disk
+ACL is badly corrupted.
 
-A RMW cycle does not mean the IO is not atomic. The write to disk
-will still be atomic, regardless of the read that ovvurred before.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> i.e. for a 4k physical / 512 logical disk - wouldn't we want to choose
-> 4k sectors?
-> 
-> Ok, if we have mismanaged the alignment and aligned to logical, not
-> physical, then I guess there would be an issue... but at that point
-> we've already messed up (though not catastrophically I guess)...
-
-That's where I'm concerned - if alignment is screwed because the FS
-is 512B sector aligned (because something read the logical sector size),
-then using a 4k sector will result in torn writes because every 4k
-sector write is potentially made up of 2 4k write IOs, not 1.
-
-That's my concern - using the logical 512b sector size is -always-
-safe, but using the 4k physical block size is only safe if
-everything under the filesystem has detected and used the physical
-block size of the disk for alignment and sector sizes...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Index: xfs/fs/xfs/xfs_acl.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_acl.c	2011-11-20 12:49:11.181244706 +0100
++++ xfs/fs/xfs/xfs_acl.c	2011-11-20 12:49:50.637697619 +0100
+@@ -42,6 +42,8 @@ xfs_acl_from_disk(struct xfs_acl *aclp)
+ 	int count, i;
+ 
+ 	count = be32_to_cpu(aclp->acl_cnt);
++	if (count > XFS_ACL_MAX_ENTRIES)
++		return ERR_PTR(-EFSCORRUPTED);
+ 
+ 	acl = posix_acl_alloc(count, GFP_KERNEL);
+ 	if (!acl)
 
 _______________________________________________
 xfs mailing list
