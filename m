@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAS8PxcO225721 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:25:59 -0600
+	pAS8Sctx225875 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 02:28:38 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id DC9201D331E1
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:25:57 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E41174FAB45
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 00:28:37 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	J2QcoTzpsipeFw92 for <xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 00:25:57 -0800 (PST)
+	Nq8kLp39iI1JurSd for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 00:28:37 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RUwXF-0000hi-AO
-	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:25:57 +0000
-Message-Id: <20111128082557.282856287@bombadil.infradead.org>
-Date: Mon, 28 Nov 2011 03:25:25 -0500
+	Linux)) id 1RUwZp-0000w4-9k
+	for xfs@oss.sgi.com; Mon, 28 Nov 2011 08:28:37 +0000
+Message-Id: <20111128082837.263453373@bombadil.infradead.org>
+Date: Mon, 28 Nov 2011 03:27:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfs: remove the lid_size field in struct log_item_desc
-References: <20111128082522.224645690@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-lid_size
+Subject: [PATCH 06/16] xfs: cleanup xfs_qm_dqlookup
+References: <20111128082722.604873274@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-cleanup-xfs_qm_dqlookup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,111 +34,70 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Outside the now removed nodelaylog code this field is only used for
-asserts and can be safely removed now.
+Rearrange the code to avoid the conditional locking around the flist_locked
+variable.  This means we lose a (rather pointless) assert, and hold the
+freelist lock a bit longer for one corner case.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_dquot_item.c |    1 -
- fs/xfs/xfs_inode_item.c |    2 --
- fs/xfs/xfs_log_cil.c    |    9 +++++----
- fs/xfs/xfs_trans.c      |    1 -
- fs/xfs/xfs_trans.h      |    3 +--
- 5 files changed, 6 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_dquot.c |   25 +++++--------------------
+ 1 file changed, 5 insertions(+), 20 deletions(-)
 
-Index: xfs/fs/xfs/xfs_dquot_item.c
+Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot_item.c	2011-11-28 09:21:33.172090810 +0100
-+++ xfs/fs/xfs/xfs_dquot_item.c	2011-11-28 09:21:40.595383928 +0100
-@@ -73,7 +73,6 @@ xfs_qm_dquot_logitem_format(
- 	logvec->i_len  = sizeof(xfs_disk_dquot_t);
- 	logvec->i_type = XLOG_REG_TYPE_DQUOT;
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-10-27 22:40:02.250173174 +0200
++++ xfs/fs/xfs/xfs_dquot.c	2011-10-27 22:40:02.770171231 +0200
+@@ -710,12 +710,9 @@ xfs_qm_dqlookup(
+ 	xfs_dquot_t		**O_dqpp)
+ {
+ 	xfs_dquot_t		*dqp;
+-	uint			flist_locked;
  
--	ASSERT(2 == lip->li_desc->lid_size);
- 	qlip->qli_format.qlf_size = 2;
+ 	ASSERT(mutex_is_locked(&qh->qh_lock));
  
- }
-Index: xfs/fs/xfs/xfs_inode_item.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2011-11-28 09:21:33.182090756 +0100
-+++ xfs/fs/xfs/xfs_inode_item.c	2011-11-28 09:21:40.595383928 +0100
-@@ -437,7 +437,6 @@ xfs_inode_item_format(
- 	 * Assert that no attribute-related log flags are set.
+-	flist_locked = B_FALSE;
+-
+ 	/*
+ 	 * Traverse the hashchain looking for a match
  	 */
- 	if (!XFS_IFORK_Q(ip)) {
--		ASSERT(nvecs == lip->li_desc->lid_size);
- 		iip->ili_format.ilf_size = nvecs;
- 		ASSERT(!(iip->ili_format.ilf_fields &
- 			 (XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AEXT)));
-@@ -521,7 +520,6 @@ xfs_inode_item_format(
- 		break;
- 	}
+@@ -750,31 +747,19 @@ xfs_qm_dqlookup(
+ 					xfs_dqlock(dqp);
+ 					dqp->dq_flags &= ~(XFS_DQ_WANT);
+ 				}
+-				flist_locked = B_TRUE;
+-			}
+-
+-			/*
+-			 * id couldn't have changed; we had the hashlock all
+-			 * along
+-			 */
+-			ASSERT(be32_to_cpu(dqp->q_core.d_id) == id);
  
--	ASSERT(nvecs == lip->li_desc->lid_size);
- 	iip->ili_format.ilf_size = nvecs;
- }
+-			if (flist_locked) {
+-				if (dqp->q_nrefs != 0) {
+-					mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+-					flist_locked = B_FALSE;
+-				} else {
++				if (dqp->q_nrefs == 0) {
+ 					/* take it off the freelist */
+ 					trace_xfs_dqlookup_freelist(dqp);
+ 					list_del_init(&dqp->q_freelist);
+ 					xfs_Gqm->qm_dqfrlist_cnt--;
+ 				}
++				XFS_DQHOLD(dqp);
++				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++			} else {
++				XFS_DQHOLD(dqp);
+ 			}
  
-Index: xfs/fs/xfs/xfs_log_cil.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log_cil.c	2011-11-28 09:21:33.195424016 +0100
-+++ xfs/fs/xfs/xfs_log_cil.c	2011-11-28 09:21:40.595383928 +0100
-@@ -185,23 +185,24 @@ xlog_cil_prepare_log_vecs(
- 		void	*ptr;
- 		int	index;
- 		int	len = 0;
-+		uint	niovecs;
- 
- 		/* Skip items which aren't dirty in this transaction. */
- 		if (!(lidp->lid_flags & XFS_LID_DIRTY))
- 			continue;
- 
- 		/* Skip items that do not have any vectors for writing */
--		lidp->lid_size = IOP_SIZE(lidp->lid_item);
--		if (!lidp->lid_size)
-+		niovecs = IOP_SIZE(lidp->lid_item);
-+		if (!niovecs)
- 			continue;
- 
- 		new_lv = kmem_zalloc(sizeof(*new_lv) +
--				lidp->lid_size * sizeof(struct xfs_log_iovec),
-+				niovecs * sizeof(struct xfs_log_iovec),
- 				KM_SLEEP);
- 
- 		/* The allocated iovec region lies beyond the log vector. */
- 		new_lv->lv_iovecp = (struct xfs_log_iovec *)&new_lv[1];
--		new_lv->lv_niovecs = lidp->lid_size;
-+		new_lv->lv_niovecs = niovecs;
- 		new_lv->lv_item = lidp->lid_item;
- 
- 		/* build the vector array and calculate it's length */
-Index: xfs/fs/xfs/xfs_trans.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.c	2011-11-28 09:21:33.205423962 +0100
-+++ xfs/fs/xfs/xfs_trans.c	2011-11-28 09:21:40.598717244 +0100
-@@ -1158,7 +1158,6 @@ xfs_trans_add_item(
- 
- 	lidp->lid_item = lip;
- 	lidp->lid_flags = 0;
--	lidp->lid_size = 0;
- 	list_add_tail(&lidp->lid_trans, &tp->t_items);
- 
- 	lip->li_desc = lidp;
-Index: xfs/fs/xfs/xfs_trans.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans.h	2011-11-28 09:21:33.222090538 +0100
-+++ xfs/fs/xfs/xfs_trans.h	2011-11-28 09:21:40.598717244 +0100
-@@ -163,9 +163,8 @@ typedef struct xfs_trans_header {
-  */
- struct xfs_log_item_desc {
- 	struct xfs_log_item	*lid_item;
--	ushort			lid_size;
--	unsigned char		lid_flags;
- 	struct list_head	lid_trans;
-+	unsigned char		lid_flags;
- };
- 
- #define XFS_LID_DIRTY		0x1
+-			XFS_DQHOLD(dqp);
+-
+-			if (flist_locked)
+-				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 			/*
+ 			 * move the dquot to the front of the hashchain
+ 			 */
 
 _______________________________________________
 xfs mailing list
