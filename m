@@ -1,25 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pASGN6s7242160 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 10:23:07 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B783319D6436
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 08:11:41 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id 8TF7S09x0VgEw94C for <xfs@oss.sgi.com>;
-	Mon, 28 Nov 2011 08:11:41 -0800 (PST)
-Message-ID: <4ED3B2BC.1060609@sandeen.net>
-Date: Mon, 28 Nov 2011 10:11:40 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	pASH7V0R244434 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 11:07:31 -0600
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id BBD5A1D340EF
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 08:56:48 -0800 (PST)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	9J1ljXsYgBVILFul for <xfs@oss.sgi.com>;
+	Mon, 28 Nov 2011 08:56:48 -0800 (PST)
+Received: by iaen33 with SMTP id n33so11391840iae.26
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 08:56:48 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical Sector
-	size
+In-Reply-To: <yq1vcq4grgi.fsf@sermon.lab.mkp.net>
 References: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
 	<20111124195042.GA3671@andromeda.usersys.redhat.com>
-	<20111127010643.GU2386@dastard> <4ED2C233.8010104@sandeen.net>
-	<20111127235051.GX2386@dastard>
+	<20111127010643.GU2386@dastard>
+	<4ED2C233.8010104@sandeen.net> <20111127235051.GX2386@dastard>
 	<yq1vcq4grgi.fsf@sermon.lab.mkp.net>
-In-Reply-To: <yq1vcq4grgi.fsf@sermon.lab.mkp.net>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Date: Mon, 28 Nov 2011 11:56:17 -0500
+Message-ID: <CAGpXXZKOzZyj5POd5-GmZxt3Szw8uk=XL8dOSs4Yn0eTuM3guw@mail.gmail.com>
+Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical
+	Sector size
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,50 +36,25 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-On 11/28/11 10:08 AM, Martin K. Petersen wrote:
->>>>>> "Dave" == Dave Chinner <david@fromorbit.com> writes:
-> 
->>> Ok, if we have mismanaged the alignment and aligned to logical, not
->>> physical, then I guess there would be an issue... but at that point
->>> we've already messed up (though not catastrophically I guess)...
-> 
-> Dave> That's where I'm concerned - if alignment is screwed because the
-> Dave> FS is 512B sector aligned (because something read the logical
-> Dave> sector size), then using a 4k sector will result in torn writes
-> Dave> because every 4k sector write is potentially made up of 2 4k write
-> Dave> IOs, not 1.
-> 
-> There's another inherent failure scenario with 512b logical / 4096b
-> physical. If you write in 512-byte multiples and experience a medium
-> error you can lose the sibling logical blocks within that physical
-> block. You'll get an I/O error back but there are no means to
-> communicate that you have also lost blocks that were not part of your
-> write request. So if you use 512-byte entries in the journal and get a
-> write error you should at the very minimum consider adjacent entries
-> inside a 4KB window suspect.
-> 
-> 
-> Dave> That's my concern - using the logical 512b sector size is -always-
-> Dave> safe, but using the 4k physical block size is only safe if
-> Dave> everything under the filesystem has detected and used the physical
-> Dave> block size of the disk for alignment and sector sizes...
-> 
-> You should always take alignment into account.
-> 
+On Mon, Nov 28, 2011 at 11:08 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
 > And while Christoph is right that (thankfully) nobody ended up shipping
 > drives with 1-alignment by default, most 512e drives have the alignment
 > jumper and some people actually use it.
 
-It seems that we should be checking for any alignment offsets in libxfs
-then, too; if there IS an offset, then perhaps 4k is the wrong answer,
-(perhaps there is no right answer) but if there is NO offset, 4k should
-be the right choice, yes?
+I've seen at least one of my clients use the jumper.  It was my first
+realization that jumper actually "moves" stuff on the disk.
 
-And if the drive is broken then c'est la vie?
+I realize its a virtual move, but data read from sector 63 with the
+jumper in place is not the same data that is read from sector 63 with
+the jumper removed.
 
--Eric
+It caught me off guard.  The fix in this case was just to re-install
+the jumper like the client had it originally.
+
+Greg
 
 _______________________________________________
 xfs mailing list
