@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pASDmjhZ236990 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 07:48:46 -0600
-Received: from out2.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2E5804FB6FF
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:48:44 -0800 (PST)
-Received: from out2.smtp.messagingengine.com (out2.smtp.messagingengine.com
-	[66.111.4.26]) by cuda.sgi.com with ESMTP id vfr0sQgsCTdDELTE
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:48:44 -0800 (PST)
-Received: from compute5.internal (compute5.nyi.mail.srv.osa [10.202.2.45])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 4A6A420468
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 08:48:44 -0500 (EST)
-Date: Mon, 28 Nov 2011 22:48:29 +0900
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/6] XFS update for 3.1-stable
-Message-ID: <20111128134829.GC21041@kroah.com>
-References: <1322084293-23557-1-git-send-email-bpm@sgi.com>
-	<20111128110043.GA13766@infradead.org>
+	pASDtKIA237212 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 07:55:20 -0600
+Received: from campbell-lange.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 652164FB24B
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:55:19 -0800 (PST)
+Received: from campbell-lange.net (campbell-lange.net [93.191.37.68]) by
+	cuda.sgi.com with ESMTP id DBDUzb48tkIwlB55 for
+	<xfs@oss.sgi.com>; Mon, 28 Nov 2011 05:55:19 -0800 (PST)
+Date: Mon, 28 Nov 2011 13:55:18 +0000
+From: Jon Marshall <jon@campbell-lange.net>
+Subject: XFS on CoRAID errors with SMB
+Message-ID: <20111128135518.GA1232@campbell-lange.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111128110043.GA13766@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,26 +26,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Myers <bpm@sgi.com>, stable@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Rory Campbell-Lange <rory@campbell-lange.net>, support@campbell-lange.net
 
-On Mon, Nov 28, 2011 at 06:00:43AM -0500, Christoph Hellwig wrote:
-> On Wed, Nov 23, 2011 at 03:38:07PM -0600, Ben Myers wrote:
-> > This is a series of XFS fixes from current mainline which is important for
-> > 3.1-stable.  Note that it is the same patch set that Christoph submitted for
-> > 3.0-stable, minus the first three patches which are already included in 3.1.
-> > 
-> > My QA came out ok with these six patches atop 3.1.y.  Apologies to those who
-> > got this mail twice. 
-> 
-> The updates looks good to me.
+Hi,
 
-I never saw this series once, can someone please resend them as I don't
-see them anywhere.
+We have recently experienced what appear to be XFS filesystem errors on
+a samba share. The actual filesystem resides on a network attached
+storage device, a Coraid. The attached server locked up totally, and we
+forced to hard reset it.
 
-confused,
+I have the following trace from the kernel logs:
 
-greg k-h
+[6128798.051868] smbd: page allocation failure. order:4, mode:0xc0d0
+[6128798.051872] Pid: 16908, comm: smbd Not tainted 2.6.32-5-amd64 #1
+[6128798.051874] Call Trace:
+[6128798.051882]  [<ffffffff810ba5d6>] ? __alloc_pages_nodemask+0x592/0x5f4
+[6128798.051885]  [<ffffffff810b959c>] ? __get_free_pages+0x9/0x46
+[6128798.051889]  [<ffffffff810e7ea1>] ? __kmalloc+0x3f/0x141
+[6128798.051893]  [<ffffffff8110672c>] ? getxattr+0x89/0x117
+[6128798.051896]  [<ffffffff810e5b65>] ? virt_to_head_page+0x9/0x2a
+[6128798.051899]  [<ffffffff810f9bc4>] ? user_path_at+0x52/0x79
+[6128798.051919]  [<ffffffffa0297b17>] ? xfs_xattr_put_listent+0x0/0xe5 [xfs]
+[6128798.051922]  [<ffffffff810e5b65>] ? virt_to_head_page+0x9/0x2a
+[6128798.051925]  [<ffffffff8118ddcb>] ? _atomic_dec_and_lock+0x33/0x50
+[6128798.051928]  [<ffffffff811068b4>] ? sys_getxattr+0x45/0x60
+[6128798.051931]  [<ffffffff81010b42>] ? system_call_fastpath+0x16/0x1b
+
+smbd seems to throw these errors for about 15 minutes, then sshd starts
+throwing errors and shortly after the system became unresponsive.
+
+Just wondering if anyone had any experience of similar results, with XFS
+on a CoRAID device or XFS SMB shares?
+
+Thanks
+Jon
+
+-- 
+Jon Marshall
+Technical Officer
+jon@campbell-lange.net
+.
+Campbell-Lange Workshop
+www.campbell-lange.net
+0207 6311 555
+3 Tottenham Street London W1T 2AF
+Registered in England No. 04551928
 
 _______________________________________________
 xfs mailing list
