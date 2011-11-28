@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pASLViPp256353 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 15:31:44 -0600
-Received: from mail-yw0-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 72A1C27D54C
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 13:31:43 -0800 (PST)
-Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
-	[209.85.213.53]) by cuda.sgi.com with ESMTP id PlGyU1fxKBihgbkE
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 13:31:43 -0800 (PST)
-Received: by ywm19 with SMTP id 19so6422440ywm.26
-	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 13:31:42 -0800 (PST)
-MIME-Version: 1.0
-Date: Mon, 28 Nov 2011 16:31:42 -0500
-Message-ID: <CAOO4vO5ub0rQtJ_OF3E6fyNT2CcxiPNzO_6afBxhXLdHwbf2qQ@mail.gmail.com>
-Subject: best stable recent kernel?
-From: Paul Anderson <pha@umich.edu>
+	pASM9LYL257712 for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 16:09:21 -0600
+Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 079351558B6E
+	for <xfs@oss.sgi.com>; Mon, 28 Nov 2011 14:09:17 -0800 (PST)
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id hjz6Y3MaFgyfczcp for
+	<xfs@oss.sgi.com>; Mon, 28 Nov 2011 14:09:17 -0800 (PST)
+Date: Mon, 28 Nov 2011 23:09:05 +0100
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: best stable recent kernel?
+Message-ID: <20111128230905.214de2bf@galadriel.home>
+In-Reply-To: <CAOO4vO5ub0rQtJ_OF3E6fyNT2CcxiPNzO_6afBxhXLdHwbf2qQ@mail.gmail.com>
+References: <CAOO4vO5ub0rQtJ_OF3E6fyNT2CcxiPNzO_6afBxhXLdHwbf2qQ@mail.gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,43 +23,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Paul Anderson <pha@umich.edu>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-I need to start deploying some large XFS based fileservers servers and
-wish to try a kernel newer than what we've been using (2.6.38.5 from
-kernel.org).
-
-We've stayed at 2.6.38.5 for awhile, but have had metadata loss on
-many shutdowns, clean or not.  We've found 0 length files where the
-files had been written and closed long before the crash - in some
-cases we were careful sync by hand, wait for quiescent drives, then
-clean reboot, etc.  This sounds related to a series of commits that
-indicates some workarounds and fixes in the time frame of 2.6.38.5 to
-3.0 (how completely this particular problem was fixed, I don't know).
-
-Several past threads here on this list have described these servers,
-but they are 126 2TB drive RAID 60 used for mostly genetic sequencing
-data.
-
-Christoph recently suggested here in another xfs developer list thread:
-
-"I've also backported it to the 3.0-stable issues.  I would recommend
-to upgrade to the latest Linux 3.0-stable release, as I'll plan to
-backport all important XFS fixes to it."
-
-Is this a decent target for us to try?  We're looking for the best XFS
-and NFS stability that is practical.
-
-Thanks,
-
-Paul Anderson
-University of Michigan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgTW9uLCAyOCBOb3YgMjAxMSAxNjozMTo0MiAtMDUwMCB2b3VzIMOpY3JpdmllejoKCj4gSSBu
+ZWVkIHRvIHN0YXJ0IGRlcGxveWluZyBzb21lIGxhcmdlIFhGUyBiYXNlZCBmaWxlc2VydmVycyBz
+ZXJ2ZXJzIGFuZAo+IHdpc2ggdG8gdHJ5IGEga2VybmVsIG5ld2VyIHRoYW4gd2hhdCB3ZSd2ZSBi
+ZWVuIHVzaW5nICgyLjYuMzguNSBmcm9tCj4ga2VybmVsLm9yZykuCgpJJ20gaGFwcHkgd2l0aCB0
+aGUgMy4wIHNlcmllcy4gUmlnaHQgbm93IEknbSBzdGlsbCBtb3N0bHkgcnVubmluZwozLjAuNCwg
+YW5kIEkgaGFkIG5vIHRyb3VibGUgYXQgYWxsIChtYWNoaW5lcyBmcm9tIDMwIHRvIDEyMCBUQiBt
+b3N0bHkpLgoyLjYuMjggbmV2ZXIgY3V0IGl0IGZvciBtZSwgd2VudCBmcm9tIDIuNi4zNSB0byAz
+LjAuIFJpZ2h0IG5vdyAzLjEKc2VlbXMgT0sgYnV0IGl0J3MgY2VydGFpbmx5IGEgYml0IHRvbyBm
+cmVzaC4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1tYW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0
+aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAgICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAg
+ICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxpcXVlLmNvbT4KICAgICAgICAgICAgICAgICAg
+ICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCgpfX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
+c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
