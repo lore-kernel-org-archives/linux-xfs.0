@@ -1,28 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAU0Jx5m119186 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 18:20:00 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1944C19EFDBA
-	for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 16:19:30 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	xC8H0o4zhENgBeOL for <xfs@oss.sgi.com>;
-	Tue, 29 Nov 2011 16:19:30 -0800 (PST)
-Date: Wed, 30 Nov 2011 11:19:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical
-	Sector size
-Message-ID: <20111130001927.GU7046@dastard>
-References: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
-	<20111124195042.GA3671@andromeda.usersys.redhat.com>
-	<20111127010643.GU2386@dastard> <4ED2C233.8010104@sandeen.net>
-	<20111127235051.GX2386@dastard>
-	<yq1vcq4grgi.fsf@sermon.lab.mkp.net> <4ED3B2BC.1060609@sandeen.net>
-	<yq1r50qhmte.fsf@sermon.lab.mkp.net> <4ED51899.7000706@sandeen.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4ED51899.7000706@sandeen.net>
+	pATGdJPQ075747 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 10:39:19 -0600
+Received: from powell.debian.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A007E4FBB88
+	for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 08:39:17 -0800 (PST)
+Received: from powell.debian.org (powell.debian.org [87.106.64.223]) by
+	cuda.sgi.com with ESMTP id EXRiaT3iZVLFkBMN for
+	<xfs@oss.sgi.com>; Tue, 29 Nov 2011 08:39:17 -0800 (PST)
+Received: from franck.debian.org ([128.148.34.3])
+	from C=NA, ST=NA, L=Ankh Morpork, O=Debian SMTP, OU=Debian SMTP CA,
+	CN=franck.debian.org, EMAIL=hostmaster@franck.debian.org (verified)
+	by powell.debian.org with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
+	(Exim 4.69) (envelope-from <noreply@release.debian.org>)
+	id 1RVQiW-0002BS-To
+	for xfsprogs@packages.debian.org; Tue, 29 Nov 2011 16:39:37 +0000
+Date: Tue, 29 Nov 2011 16:39:14 +0000
+Message-Id: <E1RVQiA-00019o-Hf@franck.debian.org>
+From: Debian testing watch <noreply@release.debian.org>
+Subject: xfsprogs 3.1.7 MIGRATED to testing
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,41 +27,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, xfs@oss.sgi.com
+To: xfsprogs@packages.debian.org
 
-On Tue, Nov 29, 2011 at 11:38:33AM -0600, Eric Sandeen wrote:
-> On 11/29/11 11:15 AM, Martin K. Petersen wrote:
-> >>>>>> "Eric" == Eric Sandeen <sandeen@sandeen.net> writes:
-> > 
-> > Eric> It seems that we should be checking for any alignment offsets in
-> > Eric> libxfs then, too; if there IS an offset, then perhaps 4k is the
-> > Eric> wrong answer, (perhaps there is no right answer) but if there is
-> > Eric> NO offset, 4k should be the right choice, yes?
-> > 
-> > In most cases the partitioning/DM tools should give you a 0 offset. But
-> > it would a good idea to at least print a warning if lbs != pbs and
-> > offset > 0.
-> 
-> Right, Dave's concern was for when the partitioning tools didn't do the
-> job, we don't want to break fs consistency guarantees...
-> 
-> Dave, does checking for an offset before choosing 4k sectors seem
-> sufficient to you?
+FYI: The status of the xfsprogs source package
+in Debian's testing distribution has changed.
 
-Yes, especially if combined with Christoph's comments about ensure
-the "-f" flag is needed to make a filesystem on an unaligned config.
+  Previous version: 3.1.5+nmu1
+  Current version:  3.1.7
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+This email is automatically generated once a day.  As the installation of
+new packages into testing happens multiple times a day you will receive
+later changes on the next day.
+See http://release.debian.org/testing-watch/ for more information.
 
 _______________________________________________
 xfs mailing list
