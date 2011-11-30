@@ -1,13 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAUHwoSW208146 for <xfs@oss.sgi.com>; Wed, 30 Nov 2011 11:58:50 -0600
+	pAUHwrMw208164 for <xfs@oss.sgi.com>; Wed, 30 Nov 2011 11:58:53 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: XFS update for 3.1-stable (resent)
-Date: Wed, 30 Nov 2011 12:10:54 -0600
-Message-Id: <1322676660-22945-1-git-send-email-bpm@sgi.com>
-In-Reply-To: <20111128214018.GB1650@kroah.com>
+Subject: [PATCH 2/6] xfs: avoid direct I/O write vs buffered I/O race
+Date: Wed, 30 Nov 2011 12:10:56 -0600
+Message-Id: <1322676660-22945-3-git-send-email-bpm@sgi.com>
+In-Reply-To: <1322676660-22945-1-git-send-email-bpm@sgi.com>
 References: <20111128214018.GB1650@kroah.com>
+	<1322676660-22945-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,33 +23,75 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: greg@kroah.com, stable@vger.kernel.org
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-Hey Greg,
+From: Christoph Hellwig <hch@infradead.org>
 
-The last mailing of this patch set went AWOL.  Here's another whirl.
+commit c58cb165bd44de8aaee9755a144136ae743be116 upstream.
 
-Greg K-H wrote:
-> Was stable@vger.kernel.org on the to: line?   If so, I should have seen them
-> through that, but I don't, which is worrysome to me.
+Currently a buffered reader or writer can add pages to the pagecache
+while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
+this by re-checking mapping->nrpages after we got the iolock, and if
+nessecary upgrade the lock to exclusive mode.  To simplify this a bit
+only take the ilock inside of xfs_file_aio_write_checks.
 
-I thought so.
-
-> The 3.0 series is already in the last 3.0.11 release, so I don't need them, I
-> think I need the 3.1 patches, right? 
-
-Affirmative.  You only need the 3.1 patches, here they are:
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
+ fs/xfs/xfs_file.c |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-This is a series of XFS fixes from current mainline which are important for
-3.1-stable.  Note that it is the same patch set that Christoph submitted for
-3.0-stable, minus the first three patches which are already included in 3.1.
-
-My QA came out ok with these six patches atop 3.1.y.
-
-Thanks!
-Ben
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8fd4a07..b7e75c6 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -677,6 +677,7 @@ xfs_file_aio_write_checks(
+ 	xfs_fsize_t		new_size;
+ 	int			error = 0;
+ 
++	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+ 	if (error) {
+ 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
+@@ -768,14 +769,24 @@ xfs_file_dio_aio_write(
+ 		*iolock = XFS_IOLOCK_EXCL;
+ 	else
+ 		*iolock = XFS_IOLOCK_SHARED;
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++	xfs_rw_ilock(ip, *iolock);
+ 
+ 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
+ 		return ret;
+ 
++	/*
++	 * Recheck if there are cached pages that need invalidate after we got
++	 * the iolock to protect against other threads adding new pages while
++	 * we were waiting for the iolock.
++	 */
++	if (mapping->nrpages && *iolock == XFS_IOLOCK_SHARED) {
++		xfs_rw_iunlock(ip, *iolock);
++		*iolock = XFS_IOLOCK_EXCL;
++		xfs_rw_ilock(ip, *iolock);
++	}
++
+ 	if (mapping->nrpages) {
+-		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
+ 		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
+ 							FI_REMAPF_LOCKED);
+ 		if (ret)
+@@ -820,7 +831,7 @@ xfs_file_buffered_aio_write(
+ 	size_t			count = ocount;
+ 
+ 	*iolock = XFS_IOLOCK_EXCL;
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++	xfs_rw_ilock(ip, *iolock);
+ 
+ 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
+-- 
+1.7.8.rc0.46.g5ae0f
 
 _______________________________________________
 xfs mailing list
