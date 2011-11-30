@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pAUHwrMw208164 for <xfs@oss.sgi.com>; Wed, 30 Nov 2011 11:58:53 -0600
+	pAUHwsOk208168 for <xfs@oss.sgi.com>; Wed, 30 Nov 2011 11:58:54 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 2/6] xfs: avoid direct I/O write vs buffered I/O race
-Date: Wed, 30 Nov 2011 12:10:56 -0600
-Message-Id: <1322676660-22945-3-git-send-email-bpm@sgi.com>
+Subject: [PATCH 3/6] xfs: Return -EIO when xfs_vn_getattr() failed
+Date: Wed, 30 Nov 2011 12:10:57 -0600
+Message-Id: <1322676660-22945-4-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322676660-22945-1-git-send-email-bpm@sgi.com>
 References: <20111128214018.GB1650@kroah.com>
 	<1322676660-22945-1-git-send-email-bpm@sgi.com>
@@ -23,73 +23,41 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: greg@kroah.com, stable@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+Cc: bpm@sgi.com, Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 
-commit c58cb165bd44de8aaee9755a144136ae743be116 upstream.
+commit ed32201e65e15f3e6955cb84cbb544b08f81e5a5 upstream.
 
-Currently a buffered reader or writer can add pages to the pagecache
-while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
-this by re-checking mapping->nrpages after we got the iolock, and if
-nessecary upgrade the lock to exclusive mode.  To simplify this a bit
-only take the ilock inside of xfs_file_aio_write_checks.
+An attribute of inode can be fetched via xfs_vn_getattr() in XFS.
+Currently it returns EIO, not negative value, when it failed.  As a
+result, the system call returns not negative value even though an
+error occured. The stat(2), ls and mv commands cannot handle this
+error and do not work correctly.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+This patch fixes this bug, and returns -EIO, not EIO when an error
+is detected in xfs_vn_getattr().
+
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_file.c |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_iops.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 8fd4a07..b7e75c6 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -677,6 +677,7 @@ xfs_file_aio_write_checks(
- 	xfs_fsize_t		new_size;
- 	int			error = 0;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 673704f..474920b 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -465,7 +465,7 @@ xfs_vn_getattr(
+ 	trace_xfs_getattr(ip);
  
-+	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
- 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- 	if (error) {
- 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
-@@ -768,14 +769,24 @@ xfs_file_dio_aio_write(
- 		*iolock = XFS_IOLOCK_EXCL;
- 	else
- 		*iolock = XFS_IOLOCK_SHARED;
--	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
-+	xfs_rw_ilock(ip, *iolock);
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
++		return -XFS_ERROR(EIO);
  
- 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
- 		return ret;
- 
-+	/*
-+	 * Recheck if there are cached pages that need invalidate after we got
-+	 * the iolock to protect against other threads adding new pages while
-+	 * we were waiting for the iolock.
-+	 */
-+	if (mapping->nrpages && *iolock == XFS_IOLOCK_SHARED) {
-+		xfs_rw_iunlock(ip, *iolock);
-+		*iolock = XFS_IOLOCK_EXCL;
-+		xfs_rw_ilock(ip, *iolock);
-+	}
-+
- 	if (mapping->nrpages) {
--		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
- 		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
- 							FI_REMAPF_LOCKED);
- 		if (ret)
-@@ -820,7 +831,7 @@ xfs_file_buffered_aio_write(
- 	size_t			count = ocount;
- 
- 	*iolock = XFS_IOLOCK_EXCL;
--	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
-+	xfs_rw_ilock(ip, *iolock);
- 
- 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
+ 	stat->size = XFS_ISIZE(ip);
+ 	stat->dev = inode->i_sb->s_dev;
 -- 
 1.7.8.rc0.46.g5ae0f
 
