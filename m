@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pATGdJPQ075747 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 10:39:19 -0600
-Received: from powell.debian.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A007E4FBB88
-	for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 08:39:17 -0800 (PST)
-Received: from powell.debian.org (powell.debian.org [87.106.64.223]) by
-	cuda.sgi.com with ESMTP id EXRiaT3iZVLFkBMN for
-	<xfs@oss.sgi.com>; Tue, 29 Nov 2011 08:39:17 -0800 (PST)
-Received: from franck.debian.org ([128.148.34.3])
-	from C=NA, ST=NA, L=Ankh Morpork, O=Debian SMTP, OU=Debian SMTP CA,
-	CN=franck.debian.org, EMAIL=hostmaster@franck.debian.org (verified)
-	by powell.debian.org with esmtps (TLS1.0:RSA_AES_256_CBC_SHA1:32)
-	(Exim 4.69) (envelope-from <noreply@release.debian.org>)
-	id 1RVQiW-0002BS-To
-	for xfsprogs@packages.debian.org; Tue, 29 Nov 2011 16:39:37 +0000
-Date: Tue, 29 Nov 2011 16:39:14 +0000
-Message-Id: <E1RVQiA-00019o-Hf@franck.debian.org>
-From: Debian testing watch <noreply@release.debian.org>
-Subject: xfsprogs 3.1.7 MIGRATED to testing
+	pAU8sBgn175358 for <xfs@oss.sgi.com>; Wed, 30 Nov 2011 02:54:11 -0600
+Date: Wed, 30 Nov 2011 03:54:07 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 0/4] xfs fixes for Linux 3.2-rc3
+Message-ID: <20111130085406.GA19064@infradead.org>
+References: <20111128081732.350228200@bombadil.infradead.org>
+	<20111129192300.GW29840@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111129192300.GW29840@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,24 +19,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfsprogs@packages.debian.org
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-FYI: The status of the xfsprogs source package
-in Debian's testing distribution has changed.
+On Tue, Nov 29, 2011 at 01:23:00PM -0600, Ben Myers wrote:
+> > The last one is the biggest and fixes the log space hang
+> > first reported by Alex and then debugged by Chandra.
+> 
+> This last one is pretty big.  Could it wait for 3.3?
 
-  Previous version: 3.1.5+nmu1
-  Current version:  3.1.7
-
--- 
-This email is automatically generated once a day.  As the installation of
-new packages into testing happens multiple times a day you will receive
-later changes on the next day.
-See http://release.debian.org/testing-watch/ for more information.
+It's not that big, and if we manage to push it out ASAP it's not even
+that late in the cycle.  Given that people are getting fast hardware
+managing to hit all kinds of weird AIL and log reservation hangs that
+had been hidden forever I'd much prefer to get it out into the field
+ASAP.  That also includes a -stable backport, btw.
 
 _______________________________________________
 xfs mailing list
