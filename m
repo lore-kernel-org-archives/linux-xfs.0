@@ -1,34 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pATNOWsX115268 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 17:24:33 -0600
-Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 085B04D43BF
-	for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 15:24:31 -0800 (PST)
-Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by
-	cuda.sgi.com with ESMTP id hKvPc6SHYKmEmSTP for
-	<xfs@oss.sgi.com>; Tue, 29 Nov 2011 15:24:31 -0800 (PST)
-Received: from /spool/local
-	by e3.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Tue, 29 Nov 2011 18:24:30 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	pATNOS1T311054 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 18:24:28 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	pATNOSbu008982 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 21:24:28 -0200
-Subject: Re: [PATCH v2] xfs: Remove the entries from the queue while waking
-	them up
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20111129153850.GU29840@sgi.com>
-References: <1321918880.7115.5.camel@chandra-lucid.austin.ibm.com>
-	<20111129153850.GU29840@sgi.com>
-Date: Tue, 29 Nov 2011 17:24:25 -0600
-Message-ID: <1322609065.7115.1541.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	pAU0Jx5m119186 for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 18:20:00 -0600
+Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1944C19EFDBA
+	for <xfs@oss.sgi.com>; Tue, 29 Nov 2011 16:19:30 -0800 (PST)
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	xC8H0o4zhENgBeOL for <xfs@oss.sgi.com>;
+	Tue, 29 Nov 2011 16:19:30 -0800 (PST)
+Date: Wed, 30 Nov 2011 11:19:27 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] libxfs: Get Physical Sector Size instead of Logical
+	Sector size
+Message-ID: <20111130001927.GU7046@dastard>
+References: <1322162451-17036-1-git-send-email-cmaiolino@redhat.com>
+	<20111124195042.GA3671@andromeda.usersys.redhat.com>
+	<20111127010643.GU2386@dastard> <4ED2C233.8010104@sandeen.net>
+	<20111127235051.GX2386@dastard>
+	<yq1vcq4grgi.fsf@sermon.lab.mkp.net> <4ED3B2BC.1060609@sandeen.net>
+	<yq1r50qhmte.fsf@sermon.lab.mkp.net> <4ED51899.7000706@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4ED51899.7000706@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,45 +35,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>
-Cc: XFS Mailing List <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, xfs@oss.sgi.com
 
-On Tue, 2011-11-29 at 09:38 -0600, Ben Myers wrote:
-> Hey Chandra,
-> 
-> On Mon, Nov 21, 2011 at 05:41:20PM -0600, Chandra Seetharaman wrote:
-> > Changes from Verion 1:
+On Tue, Nov 29, 2011 at 11:38:33AM -0600, Eric Sandeen wrote:
+> On 11/29/11 11:15 AM, Martin K. Petersen wrote:
+> >>>>>> "Eric" == Eric Sandeen <sandeen@sandeen.net> writes:
 > > 
-> > - Added additional comments as per Dave's suggestion
-> > - Use next instead of tmp
-> > - change typedef xlog_ticket_t to struct xlog_ticket
-> > - Check t_queue before adding it to the list (the second time)
-> >   to accomodate system events (based on Christoph's comments)
+> > Eric> It seems that we should be checking for any alignment offsets in
+> > Eric> libxfs then, too; if there IS an offset, then perhaps 4k is the
+> > Eric> wrong answer, (perhaps there is no right answer) but if there is
+> > Eric> NO offset, 4k should be the right choice, yes?
+> > 
+> > In most cases the partitioning/DM tools should give you a 0 offset. But
+> > it would a good idea to at least print a warning if lbs != pbs and
+> > offset > 0.
 > 
-> FWIW, I reproduced a log hang yesterday in xfstest 273 while testing
-
-I didn't have test case 273 in my test directory (old copy). Ran the
-tests and did see hang and some list corruption. I haven't gone further.
-
-> this patch.  We'll have to see if Christoph's revision fares any better
-> today.
-
-I tried testcase 273 with Christoph patches and they are running fine
-for few runs now.
-
-I will run test cases 273 and 234 overnight with Christoph's patches and
-report it tomorrow.
-
+> Right, Dave's concern was for when the partitioning tools didn't do the
+> job, we don't want to break fs consistency guarantees...
 > 
-> Thanks,
-> 	Ben
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> Dave, does checking for an offset before choosing 4k sectors seem
+> sufficient to you?
 
+Yes, especially if combined with Christoph's comments about ensure
+the "-f" flag is needed to make a filesystem on an unaligned config.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
