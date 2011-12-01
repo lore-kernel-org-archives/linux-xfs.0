@@ -1,18 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB1Jp7Th021487 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 13:51:07 -0600
-Date: Thu, 1 Dec 2011 13:51:28 -0600
-From: Ben Myers <bpm@sgi.com>
+	pB1Khiow023485 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 14:43:44 -0600
+Received: from e7.ny.us.ibm.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E13291287729
+	for <xfs@oss.sgi.com>; Thu,  1 Dec 2011 12:43:42 -0800 (PST)
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id p4PIhc2TW4u4ybJv for
+	<xfs@oss.sgi.com>; Thu, 01 Dec 2011 12:43:42 -0800 (PST)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 1 Dec 2011 15:43:41 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	pB1KhdMC321288 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 15:43:39 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	pB1Khcns030935 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 18:43:39 -0200
 Subject: Re: [PATCH 4/4] xfs: fix the logspace waiting algorithm
-Message-ID: <20111201195128.GZ29840@sgi.com>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20111201183233.GY29840@sgi.com>
 References: <20111128081732.350228200@bombadil.infradead.org>
 	<20111128081925.981681380@bombadil.infradead.org>
-	<20111130235641.GX29840@sgi.com>
-	<20111201072149.GA1319@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111201072149.GA1319@infradead.org>
+	<20111201183233.GY29840@sgi.com>
+Date: Thu, 01 Dec 2011 14:43:36 -0600
+Message-ID: <1322772216.7115.1552.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,86 +41,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, Dec 01, 2011 at 02:21:49AM -0500, Christoph Hellwig wrote:
-> On Wed, Nov 30, 2011 at 05:56:41PM -0600, Ben Myers wrote:
-> > Christoph,
-> > 
-> > I feel that the ordering of the accesses to l_grant_head and the writeq
-> > list may be important in the lockless path, and notice that they used to
-> > be in opposite order.  It could use a comment explaining why (if) it is
-> > ok.
+Ben,
+
+Yes, that is the race I found thru debugging.
+
+Chandra
+On Thu, 2011-12-01 at 12:32 -0600, Ben Myers wrote:
+> Hi,
 > 
-> Do you mean moving the xlog_space_left after the first
-> list_empty_careful check in xlog_grant_log_space?
+> On Mon, Nov 28, 2011 at 03:17:36AM -0500, Christoph Hellwig wrote:
+> > Apply the scheme used in log_regrant_write_log_space to wake up any other
+> > threads waiting for log space before the newly added one to
+> > log_regrant_write_log_space as well, and factor the code into readable
+> > helpers.  For each of the queues we have add two helpers:
+> > 
+> >  - one to try to wake up all waiting threads.  This helper will also be
+> >    usable by xfs_log_move_tail once we remove the current opportunistic
+> >    wakeups in it.
+> >  - one to sleep on t_wait until enough log space is available, loosely
+> >    modelled after Linux waitqueues.
+> >  
+> > And use them to reimplement the guts of log_regrant_write_log_space and
+> > log_regrant_write_log_space.  These two function now use one and the same
+> > algorithm for waiting on log space instead of subtly different ones before,
+> > with an option to completely unify them in the near future.
+> > 
+> > Also move the filesystem shutdown handling to the common caller given
+> > that we had to touch it anyway.
+> > 
+> > Based on hard debugging and an earlier patch from
+> > Chandra Seetharaman <sekharan@us.ibm.com>.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> I'd like to make sure that I understand the race that Chandra
+> debugged and reported.
+> 
+> 2499 STATIC int
+> 2500 xlog_grant_log_space(xlog_t        *log,
+> 2501                      xlog_ticket_t *tic)
+> 2502 {
+> 2503         int              free_bytes;
+> 2504         int              need_bytes;
+> ...
+> 2517         /* something is already sleeping; insert new transaction at end */
+> 2518         if (!list_empty_careful(&log->l_reserveq)) {
+> 2519                 spin_lock(&log->l_grant_reserve_lock);
+> 2520                 /* recheck the queue now we are locked */
+> 2521                 if (list_empty(&log->l_reserveq)) {
+> 2522                         spin_unlock(&log->l_grant_reserve_lock);
+> 2523                         goto redo;
+> 2524                 }
+> 2525                 list_add_tail(&tic->t_queue, &log->l_reserveq);
+> 2526 
+> 2527                 trace_xfs_log_grant_sleep1(log, tic);
+> 2528 
+> 2529                 /*
+> 2530                  * Gotta check this before going to sleep, while we're
+> 2531                  * holding the grant lock.
+> 2532                  */
+> 2533                 if (XLOG_FORCED_SHUTDOWN(log))
+> 2534                         goto error_return;
+> 2535 
+> 2536                 XFS_STATS_INC(xs_sleep_logspace);
+> 2537                 xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
+> 2538 
+> 2539                 /*
+> 2540                  * If we got an error, and the filesystem is shutting down,
+> 2541                  * we'll catch it down below. So just continue...
+> 2542                  */
+> 2543                 trace_xfs_log_grant_wake1(log, tic);
+> 2544         }
+> 2545 
+> 2546 redo:
+> 2547         if (XLOG_FORCED_SHUTDOWN(log))
+> 2548                 goto error_return_unlocked;
+> 2549 
+> 2550         free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
+> 2551         if (free_bytes < need_bytes) {
+> 2552                 spin_lock(&log->l_grant_reserve_lock);
+> 2553                 if (list_empty(&tic->t_queue))
+> 2554                         list_add_tail(&tic->t_queue, &log->l_reserveq);
+> 2555    
+> 2556                 trace_xfs_log_grant_sleep2(log, tic);
+> 2557 
+> 2558                 if (XLOG_FORCED_SHUTDOWN(log))
+> 2559                         goto error_return;
+> 2560 
+> 2561                 xlog_grant_push_ail(log, need_bytes);
+> 2562 
+> 2563                 XFS_STATS_INC(xs_sleep_logspace);
+> 2564                 xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
+> 2565 
+> 2566                 trace_xfs_log_grant_wake2(log, tic);
+> 2567                 goto redo;
+> 2568         }
+> 2569 
+> 2570         if (!list_empty(&tic->t_queue)) {
+> 2571                 spin_lock(&log->l_grant_reserve_lock);
+> 2572                 list_del_init(&tic->t_queue);
+> 2573                 spin_unlock(&log->l_grant_reserve_lock);
+> 2574         }
+> 
+> So the race that we're looking at here is:
+> 
+> process A was added to the reserve queue at either 2525 or 2554 and, pushes the AIL at 2561,
+> xfsaild frees up enough log space for process A (possibly B?), eventually xfs_log_move_tail is called to wake process A,
+> process A wakes at line 2564, and he is on the reserveq already,
+> process B sees that there are tickets on the queue at 2518 and gets the grant reserve lock at 2519,
+> process A spins at 2571 waiting for the grant reserve lock,
+> process B adds itself to the queue at 2525, 
+> process B drops the grant reserve lock and goes to sleep at 2537
+> process A takes the grant reserve lock at 2571 and removes it's ticket from the list.
+> 
+> ...and there is nothing to wake process B until the ail is pushed by
+> some other process.
+> 
+> Is that about right?
+> 
+> Thanks,
+> Ben
+> 
 
-That's what I mean, but I'm not sure I was correct.
-
-> It doesn't matter
-> given that we re-check the available space after each wakeup.
-
-2620 STATIC int
-2621 xlog_grant_log_space(
-2622         struct log              *log,
-2623         struct xlog_ticket      *tic)
-2624 {
-2625         int                     free_bytes, need_bytes;
-2626         int                     error = 0;
-2627 
-2628         ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
-2629 
-2630         trace_xfs_log_grant_enter(log, tic);
-2631 
-2632         /*
-2633          * If there are other waiters on the queue then give them a chance at
-2634          * logspace before us.  Wake up the first waiters, if we do not wake
-2635          * up all the waiters then go to sleep waiting for more free space,
-2636          * otherwise try to get some space for this transaction.
-2637          */
-2638         need_bytes = tic->t_unit_res;
-2639         if (tic->t_flags & XFS_LOG_PERM_RESERV)
-2640                 need_bytes *= tic->t_ocnt;
-2641         free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
-2642         if (!list_empty_careful(&log->l_reserveq)) {
-2643                 spin_lock(&log->l_grant_reserve_lock);
-2644                 if (!xlog_reserveq_wake(log, &free_bytes) ||
-2645                     free_bytes < need_bytes)
-2646                         error = xlog_reserveq_wait(log, tic, need_bytes);
-2647                 spin_unlock(&log->l_grant_reserve_lock);
-2648         } else if (free_bytes < need_bytes) {
-2649                 spin_lock(&log->l_grant_reserve_lock);
-2650                 error = xlog_reserveq_wait(log, tic, need_bytes);
-2651                 spin_unlock(&log->l_grant_reserve_lock);
-2652         }
-2653         if (error)
-2654                 return error;
-2655 
-2656         xlog_grant_add_space(log, &log->l_grant_reserve_head, need_bytes);
-2657         xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
-2658         trace_xfs_log_grant_exit(log, tic);
-2659         xlog_verify_grant_tail(log);
-2660         return 0;
-2661 }
-
-Process A reads from the grant reserve head at 2641 (and there currently is enough space)
-Process B wakes at either 2646 or 2650, in xlog_reserveq_wait, locks, and reads from the grant reserve head (and currently there is enough space)
-Process B removes itself from the list 
-Process A reads from the reservq list and finds it to be empty
-Process A finds that there was enough space at 2646
-Process B returns from xlog_reserveq_wait, unlocks, grants space at 2656, returns
-Process A grants log space at 2656, and returns
-
-AFAICS there is nothing that prevents these guys from granting the same
-space when you approach free_bytes >= need_bytes concurrently. 
-
-This lockless stuff is always a mind job for me.  I'll take another look at
-some of the other aspects of the patch.  Even if it doesn't resolve my
-question about the lockless issue, it seems to resolve Chandra's race.
-
-Thanks,
-Ben
 
 _______________________________________________
 xfs mailing list
