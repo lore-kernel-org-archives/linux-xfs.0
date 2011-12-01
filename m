@@ -1,24 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB1NXBJa034125 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 17:33:12 -0600
-Received: from out4.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 43DCE29221A
-	for <xfs@oss.sgi.com>; Thu,  1 Dec 2011 15:33:11 -0800 (PST)
-Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com
-	[66.111.4.28]) by cuda.sgi.com with ESMTP id bbuhXqaJ2YegUwtn
-	for <xfs@oss.sgi.com>; Thu, 01 Dec 2011 15:33:11 -0800 (PST)
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id AA80E21AFE
-	for <xfs@oss.sgi.com>; Thu,  1 Dec 2011 18:33:10 -0500 (EST)
-Date: Thu, 1 Dec 2011 15:33:02 -0800
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/6] XFS update for 3.1-stable (again)
-Message-ID: <20111201233302.GA5573@kroah.com>
-References: <1322782064-1723-1-git-send-email-bpm@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
+	pB1NRwD9033809 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 17:27:59 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH 5/6] xfs: Fix possible memory corruption in xfs_readlink
+Date: Thu,  1 Dec 2011 17:27:43 -0600
+Message-Id: <1322782064-1723-6-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322782064-1723-1-git-send-email-bpm@sgi.com>
+References: <1322782064-1723-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,26 +16,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: stable@vger.kernel.org, greg@kroah.com
+Cc: bpm@sgi.com, Alex Elder <aelder@sgi.com>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-On Thu, Dec 01, 2011 at 05:27:38PM -0600, Ben Myers wrote:
-> This is a series of XFS fixes from current mainline which is important for
-> 3.1-stable.  Note that it is the same patch set that Christoph submitted for
-> 3.0-stable, minus the first three patches which are already included in 3.1.
-> 
-> My QA came out ok with these six patches atop 3.1.y.  I've been having trouble
-> getting mail out to stable@vger, but it seems to be working now.  Apologies to
-> those who are getting this mail yet again.
+From: Carlos Maiolino <cmaiolino@redhat.com>
 
-Nice, I got all of these, thanks.  I'll queue them up in a few days when
-I get caught up on the stable patch queue.
+commit b52a360b2aa1c59ba9970fb0f52bbb093fcc7a24 upstream.
 
-greg k-h
+Fixes a possible memory corruption when the link is larger than
+MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
+S_ISLNK assert, since the inode mode is checked previously in
+xfs_readlink_by_handle() and via VFS.
+
+Updated to address concerns raised by Ben Hutchings about the loose
+attention paid to 32- vs 64-bit values, and the lack of handling a
+potentially negative pathlen value:
+ - Changed type of "pathlen" to be xfs_fsize_t, to match that of
+   ip->i_d.di_size
+ - Added checking for a negative pathlen to the too-long pathlen
+   test, and generalized the message that gets reported in that case
+   to reflect the change
+As a result, if a negative pathlen were encountered, this function
+would return EFSCORRUPTED (and would fail an assertion for a debug
+build)--just as would a too-long pathlen.
+
+Signed-off-by: Alex Elder <aelder@sgi.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_vnodeops.c |   14 ++++++++++----
+ 1 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 51fc429..b9e2873 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -113,7 +113,7 @@ xfs_readlink(
+ 	char		*link)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+-	int		pathlen;
++	xfs_fsize_t	pathlen;
+ 	int		error = 0;
+ 
+ 	trace_xfs_readlink(ip);
+@@ -123,13 +123,19 @@ xfs_readlink(
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+ 
+-	ASSERT(S_ISLNK(ip->i_d.di_mode));
+-	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
+-
+ 	pathlen = ip->i_d.di_size;
+ 	if (!pathlen)
+ 		goto out;
+ 
++	if (pathlen < 0 || pathlen > MAXPATHLEN) {
++		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
++			 __func__, (unsigned long long) ip->i_ino,
++			 (long long) pathlen);
++		ASSERT(0);
++		return XFS_ERROR(EFSCORRUPTED);
++	}
++
++
+ 	if (ip->i_df.if_flags & XFS_IFINLINE) {
+ 		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
+ 		link[pathlen] = '\0';
+-- 
+1.7.8.rc4
 
 _______________________________________________
 xfs mailing list
