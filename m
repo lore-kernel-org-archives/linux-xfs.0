@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB1NRwD9033809 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 17:27:59 -0600
+	pB1NS15f033852 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 17:28:01 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 5/6] xfs: Fix possible memory corruption in xfs_readlink
-Date: Thu,  1 Dec 2011 17:27:43 -0600
-Message-Id: <1322782064-1723-6-git-send-email-bpm@sgi.com>
+Subject: [PATCH 3/6] xfs: Return -EIO when xfs_vn_getattr() failed
+Date: Thu,  1 Dec 2011 17:27:41 -0600
+Message-Id: <1322782064-1723-4-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322782064-1723-1-git-send-email-bpm@sgi.com>
 References: <1322782064-1723-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,72 +22,41 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org, greg@kroah.com
-Cc: bpm@sgi.com, Alex Elder <aelder@sgi.com>, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+Cc: bpm@sgi.com, Alex Elder <aelder@sgi.com>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, xfs@oss.sgi.com
 
-From: Carlos Maiolino <cmaiolino@redhat.com>
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 
-commit b52a360b2aa1c59ba9970fb0f52bbb093fcc7a24 upstream.
+commit ed32201e65e15f3e6955cb84cbb544b08f81e5a5 upstream.
 
-Fixes a possible memory corruption when the link is larger than
-MAXPATHLEN and XFS_DEBUG is not enabled. This also remove the
-S_ISLNK assert, since the inode mode is checked previously in
-xfs_readlink_by_handle() and via VFS.
+An attribute of inode can be fetched via xfs_vn_getattr() in XFS.
+Currently it returns EIO, not negative value, when it failed.  As a
+result, the system call returns not negative value even though an
+error occured. The stat(2), ls and mv commands cannot handle this
+error and do not work correctly.
 
-Updated to address concerns raised by Ben Hutchings about the loose
-attention paid to 32- vs 64-bit values, and the lack of handling a
-potentially negative pathlen value:
- - Changed type of "pathlen" to be xfs_fsize_t, to match that of
-   ip->i_d.di_size
- - Added checking for a negative pathlen to the too-long pathlen
-   test, and generalized the message that gets reported in that case
-   to reflect the change
-As a result, if a negative pathlen were encountered, this function
-would return EFSCORRUPTED (and would fail an assertion for a debug
-build)--just as would a too-long pathlen.
+This patch fixes this bug, and returns -EIO, not EIO when an error
+is detected in xfs_vn_getattr().
 
-Signed-off-by: Alex Elder <aelder@sgi.com>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/xfs_vnodeops.c |   14 ++++++++++----
- 1 files changed, 10 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_iops.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 51fc429..b9e2873 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -113,7 +113,7 @@ xfs_readlink(
- 	char		*link)
- {
- 	xfs_mount_t	*mp = ip->i_mount;
--	int		pathlen;
-+	xfs_fsize_t	pathlen;
- 	int		error = 0;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 673704f..474920b 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -465,7 +465,7 @@ xfs_vn_getattr(
+ 	trace_xfs_getattr(ip);
  
- 	trace_xfs_readlink(ip);
-@@ -123,13 +123,19 @@ xfs_readlink(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+-		return XFS_ERROR(EIO);
++		return -XFS_ERROR(EIO);
  
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
- 
--	ASSERT(S_ISLNK(ip->i_d.di_mode));
--	ASSERT(ip->i_d.di_size <= MAXPATHLEN);
--
- 	pathlen = ip->i_d.di_size;
- 	if (!pathlen)
- 		goto out;
- 
-+	if (pathlen < 0 || pathlen > MAXPATHLEN) {
-+		xfs_alert(mp, "%s: inode (%llu) bad symlink length (%lld)",
-+			 __func__, (unsigned long long) ip->i_ino,
-+			 (long long) pathlen);
-+		ASSERT(0);
-+		return XFS_ERROR(EFSCORRUPTED);
-+	}
-+
-+
- 	if (ip->i_df.if_flags & XFS_IFINLINE) {
- 		memcpy(link, ip->i_df.if_u1.if_data, pathlen);
- 		link[pathlen] = '\0';
+ 	stat->size = XFS_ISIZE(ip);
+ 	stat->dev = inode->i_sb->s_dev;
 -- 
 1.7.8.rc4
 
