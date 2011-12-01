@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB1NRuSX033794 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 17:27:57 -0600
+	pB1NRxIA033818 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 17:27:59 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: [PATCH 1/6] xfs: don't serialise direct IO reads on page cache checks
-Date: Thu,  1 Dec 2011 17:27:39 -0600
-Message-Id: <1322782064-1723-2-git-send-email-bpm@sgi.com>
+Subject: [PATCH 2/6] xfs: avoid direct I/O write vs buffered I/O race
+Date: Thu,  1 Dec 2011 17:27:40 -0600
+Message-Id: <1322782064-1723-3-git-send-email-bpm@sgi.com>
 In-Reply-To: <1322782064-1723-1-git-send-email-bpm@sgi.com>
 References: <1322782064-1723-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -22,67 +22,73 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org, greg@kroah.com
-Cc: Alex Elder <aelder@sgi.com>, bpm@sgi.com, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 
-commit 0c38a2512df272b14ef4238b476a2e4f70da1479 upstream.
+commit c58cb165bd44de8aaee9755a144136ae743be116 upstream.
 
-There is no need to grab the i_mutex of the IO lock in exclusive
-mode if we don't need to invalidate the page cache. Taking these
-locks on every direct IO effective serialises them as taking the IO
-lock in exclusive mode has to wait for all shared holders to drop
-the lock. That only happens when IO is complete, so effective it
-prevents dispatch of concurrent direct IO reads to the same inode.
+Currently a buffered reader or writer can add pages to the pagecache
+while we are waiting for the iolock in xfs_file_dio_aio_write.  Prevent
+this by re-checking mapping->nrpages after we got the iolock, and if
+nessecary upgrade the lock to exclusive mode.  To simplify this a bit
+only take the ilock inside of xfs_file_aio_write_checks.
 
-Fix this by taking the IO lock shared to check the page cache state,
-and only then drop it and take the IO lock exclusively if there is
-work to be done. Hence for the normal direct IO case, no exclusive
-locking will occur.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Tested-by: Joern Engel <joern@logfs.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
  fs/xfs/xfs_file.c |   17 ++++++++++++++---
  1 files changed, 14 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7f7b424..8fd4a07 100644
+index 8fd4a07..b7e75c6 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -317,7 +317,19 @@ xfs_file_aio_read(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
+@@ -677,6 +677,7 @@ xfs_file_aio_write_checks(
+ 	xfs_fsize_t		new_size;
+ 	int			error = 0;
  
--	if (unlikely(ioflags & IO_ISDIRECT)) {
++	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+ 	if (error) {
+ 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
+@@ -768,14 +769,24 @@ xfs_file_dio_aio_write(
+ 		*iolock = XFS_IOLOCK_EXCL;
+ 	else
+ 		*iolock = XFS_IOLOCK_SHARED;
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++	xfs_rw_ilock(ip, *iolock);
+ 
+ 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
+ 		return ret;
+ 
 +	/*
-+	 * Locking is a bit tricky here. If we take an exclusive lock
-+	 * for direct IO, we effectively serialise all new concurrent
-+	 * read IO to this file and block it behind IO that is currently in
-+	 * progress because IO in progress holds the IO lock shared. We only
-+	 * need to hold the lock exclusive to blow away the page cache, so
-+	 * only take lock exclusively if the page cache needs invalidation.
-+	 * This allows the normal direct IO case of no page cache pages to
-+	 * proceeed concurrently without serialisation.
++	 * Recheck if there are cached pages that need invalidate after we got
++	 * the iolock to protect against other threads adding new pages while
++	 * we were waiting for the iolock.
 +	 */
-+	xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
-+	if ((ioflags & IO_ISDIRECT) && inode->i_mapping->nrpages) {
-+		xfs_rw_iunlock(ip, XFS_IOLOCK_SHARED);
- 		xfs_rw_ilock(ip, XFS_IOLOCK_EXCL);
- 
- 		if (inode->i_mapping->nrpages) {
-@@ -330,8 +342,7 @@ xfs_file_aio_read(
- 			}
- 		}
- 		xfs_rw_ilock_demote(ip, XFS_IOLOCK_EXCL);
--	} else
--		xfs_rw_ilock(ip, XFS_IOLOCK_SHARED);
++	if (mapping->nrpages && *iolock == XFS_IOLOCK_SHARED) {
++		xfs_rw_iunlock(ip, *iolock);
++		*iolock = XFS_IOLOCK_EXCL;
++		xfs_rw_ilock(ip, *iolock);
 +	}
++
+ 	if (mapping->nrpages) {
+-		WARN_ON(*iolock != XFS_IOLOCK_EXCL);
+ 		ret = -xfs_flushinval_pages(ip, (pos & PAGE_CACHE_MASK), -1,
+ 							FI_REMAPF_LOCKED);
+ 		if (ret)
+@@ -820,7 +831,7 @@ xfs_file_buffered_aio_write(
+ 	size_t			count = ocount;
  
- 	trace_xfs_file_read(ip, size, iocb->ki_pos, ioflags);
+ 	*iolock = XFS_IOLOCK_EXCL;
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++	xfs_rw_ilock(ip, *iolock);
  
+ 	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
+ 	if (ret)
 -- 
 1.7.8.rc4
 
