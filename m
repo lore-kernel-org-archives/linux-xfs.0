@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB1BTTh0261291 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 05:29:30 -0600
-Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 92A4A162F678
-	for <xfs@oss.sgi.com>; Thu,  1 Dec 2011 03:29:27 -0800 (PST)
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Iz35GpL63tmieDat for <xfs@oss.sgi.com>;
-	Thu, 01 Dec 2011 03:29:27 -0800 (PST)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1RW4kX-0007G3-2c
-	for xfs@oss.sgi.com; Thu, 01 Dec 2011 22:24:21 +1100
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1RW4kW-00086C-Ho
-	for xfs@oss.sgi.com; Thu, 01 Dec 2011 22:24:20 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix allocation length overflow in xfs_bmapi_write()
-Date: Thu,  1 Dec 2011 22:24:20 +1100
-Message-Id: <1322738660-31102-1-git-send-email-david@fromorbit.com>
+	pB1CiVV9002135 for <xfs@oss.sgi.com>; Thu, 1 Dec 2011 06:44:32 -0600
+Received: from hades.usersys.redhat.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3BF9F290E3B
+	for <xfs@oss.sgi.com>; Thu,  1 Dec 2011 04:44:28 -0800 (PST)
+Received: from hades.usersys.redhat.com (186.215.132.159.static.gvt.net.br
+	[186.215.132.159]) by cuda.sgi.com with ESMTP id
+	UgeupsTAu4wHVIDc for <xfs@oss.sgi.com>;
+	Thu, 01 Dec 2011 04:44:28 -0800 (PST)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] mkfs: Refuse to initialize a misaligned device if not forced
+	using libblkid
+Date: Thu,  1 Dec 2011 10:44:25 -0200
+Message-Id: <1322743465-17175-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,88 +28,96 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Carlos Maiolino <cmaiolino@redhat.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+This is the first patch proposal to fix the problem about the usage of
+4k sector devices when the device is not properly aligned
 
-When testing the new xfstests --large-fs option that does very large
-file preallocations, this assert was tripped deep in
-xfs_alloc_vextent():
+The patch make mkfs to refuse to initialize a xfs filesystem if the -f
+option is not passed at the command line, and forces a 512b sector size
+if the user opt to force the device initialization
 
-XFS: Assertion failed: args->minlen <= args->maxlen, file: fs/xfs/xfs_alloc.c, line: 2239
-
-The allocation was trying to allocate a zero length extent because
-the lower 32 bits of the allocation length was zero. The remaining
-length of the allocation to be done was an exact multiple of 2^32 -
-the first case I saw was at 496TB remaining to be allocated.
-
-This turns out to be an overflow when converting the allocation
-length (a 64 bit quantity) into the extent length to allocate (a 32
-bit quantity), and it requires the length to be allocated an exact
-multiple of 2^32 blocks to trip the assert.
-
-Fix it by limiting the extent lenth to allocate to MAXEXTLEN.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_bmap.c |   20 +++++++++++++++++++-
- 1 files changed, 19 insertions(+), 1 deletions(-)
+ mkfs/xfs_mkfs.c |   24 ++++++++++++++++++------
+ 1 files changed, 18 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index c68baeb..8d93823 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -2383,6 +2383,8 @@ xfs_bmap_btalloc(
- 	int		tryagain;
- 	int		error;
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index f527f3d..495c70d 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -369,8 +369,14 @@ out:
+ 	return ret;
+ }
  
-+	ASSERT(ap->length);
+-static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
++static void blkid_get_topology(
++	const char *device,
++	int *sunit,
++	int *swidth,
++	int *sectorsize,
++	int force_overwrite)
+ {
 +
- 	mp = ap->ip->i_mount;
- 	align = ap->userdata ? xfs_get_extsz_hint(ap->ip) : 0;
- 	if (unlikely(align)) {
-@@ -4629,6 +4631,8 @@ xfs_bmapi_allocate(
- 	int			error;
- 	int			rt;
- 
-+	ASSERT(bma->length > 0);
+ 	blkid_topology tp;
+ 	blkid_probe pr;
+ 	unsigned long val;
+@@ -409,6 +415,12 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int
+ 		fprintf(stderr,
+ 			_("warning: device is not properly aligned %s\n"),
+ 			device);
 +
- 	rt = (whichfork == XFS_DATA_FORK) && XFS_IS_REALTIME_INODE(bma->ip);
++		if(!force_overwrite){
++			fprintf(stderr, _("Use -f to force usage of a misaligned device\n"));
++			exit(EXIT_FAILURE);
++		}
++	*sectorsize = BBSIZE;  /* Force a 512b sector size if the device is misaligned*/
+ 	}
  
- 	/*
-@@ -4849,6 +4853,7 @@ xfs_bmapi_write(
- 	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
- 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
- 	ASSERT(tp != NULL);
-+	ASSERT(len > 0);
+ 	blkid_free_probe(pr);
+@@ -421,19 +433,19 @@ out_free_probe:
+ 		device);
+ }
  
- 	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
- 		XFS_ATTR_FORK : XFS_DATA_FORK;
-@@ -4918,9 +4923,22 @@ xfs_bmapi_write(
- 			bma.eof = eof;
- 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
--			bma.length = len;
- 			bma.offset = bno;
+-static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
++static void get_topology(libxfs_init_t *xi, struct fs_topology *ft, int force_overwrite)
+ {
+ 	if (!xi->disfile) {
+ 		const char *dfile = xi->volname ? xi->volname : xi->dname;
  
-+			/*
-+			 * There's a 32/64 bit type mismatch between the
-+			 * allocation length request (which can be 64 bits in
-+			 * length) and the bma length request, which is
-+			 * xfs_extlen_t and therefore 32 bits. Hence we have to
-+			 * check for 32-bit overflows and handle them here. 
-+			 */
-+			if (len > (xfs_filblks_t)MAXEXTLEN)
-+				bma.length = MAXEXTLEN;
-+			else
-+				bma.length = len;
-+
-+			ASSERT(len > 0);
-+			ASSERT(bma.length > 0);
- 			error = xfs_bmapi_allocate(&bma, flags);
- 			if (error)
- 				goto error0;
+ 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
+-				   &ft->sectorsize);
++				   &ft->sectorsize, force_overwrite);
+ 	}
+ 
+ 	if (xi->rtname && !xi->risfile) {
+ 		int dummy;
+ 
+-		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
++		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy, force_overwrite);
+ 	}
+ }
+ #else /* ENABLE_BLKID */
+@@ -460,7 +472,7 @@ check_overwrite(
+ 	return 0;
+ }
+ 
+-static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
++static void get_topology(libxfs_init_t *xi, struct fs_topology *ft, int force_overwrite)
+ {
+ 	char *dfile = xi->volname ? xi->volname : xi->dname;
+ 	int bsz = BBSIZE;
+@@ -1625,7 +1637,7 @@ main(
+ 	}
+ 
+ 	memset(&ft, 0, sizeof(ft));
+-	get_topology(&xi, &ft);
++	get_topology(&xi, &ft, force_overwrite);
+ 
+ 	if (ft.sectoralign) {
+ 		/*
 -- 
-1.7.5.4
+1.7.6.4
 
 _______________________________________________
 xfs mailing list
