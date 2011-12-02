@@ -1,25 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2NMc1e109441 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 17:22:38 -0600
-Received: from out4.smtp.messagingengine.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 963221F40230
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 15:22:37 -0800 (PST)
-Received: from out4.smtp.messagingengine.com (out4.smtp.messagingengine.com
-	[66.111.4.28]) by cuda.sgi.com with ESMTP id IXxARhcRCHFTNFuD
-	for <xfs@oss.sgi.com>; Fri, 02 Dec 2011 15:22:37 -0800 (PST)
-Received: from compute3.internal (compute3.nyi.mail.srv.osa [10.202.2.43])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id CC3CD2112D
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 18:22:36 -0500 (EST)
-Date: Fri, 2 Dec 2011 15:12:19 -0800
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH 0/6] XFS update for 3.1-stable (again)
-Message-ID: <20111202231219.GA6016@kroah.com>
-References: <1322782064-1723-1-git-send-email-bpm@sgi.com>
-	<20111201233302.GA5573@kroah.com>
+	pB2NSHbd109604 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 17:28:18 -0600
+Date: Fri, 2 Dec 2011 15:28:16 -0800
+From: Phil White <pwhite@sgi.com>
+Subject: Re: [4/8] xfstests: add fallocate support to fsstress
+Message-ID: <20111202232816.GC28903@caliban.corp.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111201233302.GA5573@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,28 +20,221 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Dec 01, 2011 at 03:33:02PM -0800, Greg KH wrote:
-> On Thu, Dec 01, 2011 at 05:27:38PM -0600, Ben Myers wrote:
-> > This is a series of XFS fixes from current mainline which is important for
-> > 3.1-stable.  Note that it is the same patch set that Christoph submitted for
-> > 3.0-stable, minus the first three patches which are already included in 3.1.
-> > 
-> > My QA came out ok with these six patches atop 3.1.y.  I've been having trouble
-> > getting mail out to stable@vger, but it seems to be working now.  Apologies to
-> > those who are getting this mail yet again.
+On Sat, Oct 29, 2011 at 12:48:13AM -0000, Dmitry Monakhov wrote:
+> Add tests for fallocate(2) syscall
+> - fallocate: reserve the disk space
+> - punch: de-allocates the disk space
+> Since FALLOC_FL_PUNCH_HOLE is relatively new it's value defined
+> explicitly if not yet defined. Later we may clear that define.
 > 
-> Nice, I got all of these, thanks.  I'll queue them up in a few days when
-> I get caught up on the stable patch queue.
+> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> 
+> ---
+> ltp/fsstress.c |  127 +++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 files changed, 126 insertions(+), 1 deletions(-)
+> 
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index 133a247..547bf30 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+> @@ -24,7 +24,13 @@
+>  #ifdef HAVE_ATTR_ATTRIBUTES_H
+>  #include <attr/attributes.h>
+>  #endif
+> -
+> +#ifdef FALLOCATE
+> +#include <linux/falloc.h>
+> +#ifndef FALLOC_FL_PUNCH_HOLE
+> +/* Copy-paste from linux/falloc.h */
+> +#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
+> +#endif
+> +#endif
+>  #ifndef HAVE_ATTR_LIST
+>  #define attr_list(path, buf, size, flags, cursor) (errno = -ENOSYS, -1)
+>  #endif
+> @@ -48,6 +54,7 @@ typedef enum {
+>  	OP_CREAT,
+>  	OP_DREAD,
+>  	OP_DWRITE,
+> +	OP_FALLOCATE,
+>  	OP_FDATASYNC,
+>  	OP_FREESP,
+>  	OP_FSYNC,
+> @@ -55,6 +62,7 @@ typedef enum {
+>  	OP_LINK,
+>  	OP_MKDIR,
+>  	OP_MKNOD,
+> +	OP_PUNCH,
+>  	OP_READ,
+>  	OP_READLINK,
+>  	OP_RENAME,
+> @@ -128,6 +136,7 @@ void	chown_f(int, long);
+>  void	creat_f(int, long);
+>  void	dread_f(int, long);
+>  void	dwrite_f(int, long);
+> +void	fallocate_f(int, long);
+>  void	fdatasync_f(int, long);
+>  void	freesp_f(int, long);
+>  void	fsync_f(int, long);
+> @@ -135,6 +144,7 @@ void	getdents_f(int, long);
+>  void	link_f(int, long);
+>  void	mkdir_f(int, long);
+>  void	mknod_f(int, long);
+> +void	punch_f(int, long);
+>  void	read_f(int, long);
+>  void	readlink_f(int, long);
+>  void	rename_f(int, long);
+> @@ -159,6 +169,7 @@ opdesc_t	ops[] = {
+>  	{ OP_CREAT, "creat", creat_f, 4, 1 },
+>  	{ OP_DREAD, "dread", dread_f, 4, 0 },
+>  	{ OP_DWRITE, "dwrite", dwrite_f, 4, 1 },
+> +	{ OP_FALLOCATE, "fallocate", fallocate_f, 1, 1 },
+>  	{ OP_FDATASYNC, "fdatasync", fdatasync_f, 1, 1 },
+>  	{ OP_FREESP, "freesp", freesp_f, 1, 1 },
+>  	{ OP_FSYNC, "fsync", fsync_f, 1, 1 },
+> @@ -166,6 +177,7 @@ opdesc_t	ops[] = {
+>  	{ OP_LINK, "link", link_f, 1, 1 },
+>  	{ OP_MKDIR, "mkdir", mkdir_f, 2, 1 },
+>  	{ OP_MKNOD, "mknod", mknod_f, 2, 1 },
+> +	{ OP_PUNCH, "punch", punch_f, 1, 1 },
+>  	{ OP_READ, "read", read_f, 1, 0 },
+>  	{ OP_READLINK, "readlink", readlink_f, 1, 0 },
+>  	{ OP_RENAME, "rename", rename_f, 2, 1 },
+> @@ -1998,6 +2010,63 @@ dwrite_f(int opno, long r)
+>  }
+>  
+>  void
+> +fallocate_f(int opno, long r)
+> +{
+> +#ifdef FALLOCATE
+> +	int		e;
+> +	pathname_t	f;
+> +	int		fd;
+> +	__int64_t	lr;
+> +	off64_t		off;
+> +	off64_t		len;
+> +	struct stat64	stb;
+> +	int		v;
+> +	char		st[1024];
+> +	int mode = 0;
+> +
+> +	init_pathname(&f);
+> +	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
+> +		if (v)
+> +			printf("%d/%d: fallocate - no filename\n", procid, opno);
+> +		free_pathname(&f);
+> +		return;
+> +	}
+> +	fd = open_path(&f, O_RDWR);
+> +	e = fd < 0 ? errno : 0;
+> +	check_cwd();
+> +	if (fd < 0) {
+> +		if (v)
+> +			printf("%d/%d: fallocate - open %s failed %d\n",
+> +				procid, opno, f.path, e);
+> +		free_pathname(&f);
+> +		return;
+> +	}
+> +	if (fstat64(fd, &stb) < 0) {
+> +		if (v)
+> +			printf("%d/%d: fallocate - fstat64 %s failed %d\n",
+> +				procid, opno, f.path, errno);
+> +		free_pathname(&f);
+> +		close(fd);
+> +		return;
+> +	}
+> +	inode_info(st, sizeof(st), &stb, v);
+> +	lr = ((__int64_t)random() << 32) + random();
+> +	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
+> +	off %= maxfsize;
+> +	len = (off64_t)(random() % (1024 * 1024));
+> +	mode |= FALLOC_FL_KEEP_SIZE & random();
+> +	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
+> +	if (v)
+> +		printf("%d/%d: fallocate(%d) %s %st %lld %lld %d\n",
+> +		       procid, opno, mode,
+> +		       f.path, st, (long long)off, (long long)len, e);
+> +	free_pathname(&f);
+> +	close(fd);
+> +#endif
+> +}
+> +
+> +
+> +void
+>  fdatasync_f(int opno, long r)
+>  {
+>  	int		e;
+> @@ -2270,6 +2339,62 @@ mknod_f(int opno, long r)
+>  }
+>  
+>  void
+> +punch_f(int opno, long r)
+> +{
+> +#ifdef FALLOCATE
+> +	int		e;
+> +	pathname_t	f;
+> +	int		fd;
+> +	__int64_t	lr;
+> +	off64_t		off;
+> +	off64_t		len;
+> +	struct stat64	stb;
+> +	int		v;
+> +	char		st[1024];
+> +	int mode = FALLOC_FL_PUNCH_HOLE;
+> +
+> +	init_pathname(&f);
+> +	if (!get_fname(FT_REGFILE, r, &f, NULL, NULL, &v)) {
+> +		if (v)
+> +			printf("%d/%d: punch hole - no filename\n", procid, opno);
+> +		free_pathname(&f);
+> +		return;
+> +	}
+> +	fd = open_path(&f, O_RDWR);
+> +	e = fd < 0 ? errno : 0;
+> +	check_cwd();
+> +	if (fd < 0) {
+> +		if (v)
+> +			printf("%d/%d: punch hole - open %s failed %d\n",
+> +				procid, opno, f.path, e);
+> +		free_pathname(&f);
+> +		return;
+> +	}
+> +	if (fstat64(fd, &stb) < 0) {
+> +		if (v)
+> +			printf("%d/%d: punch hole - fstat64 %s failed %d\n",
+> +				procid, opno, f.path, errno);
+> +		free_pathname(&f);
+> +		close(fd);
+> +		return;
+> +	}
+> +	inode_info(st, sizeof(st), &stb, v);
+> +	lr = ((__int64_t)random() << 32) + random();
+> +	off = (off64_t)(lr % MIN(stb.st_size + (1024 * 1024), MAXFSIZE));
+> +	off %= maxfsize;
+> +	len = (off64_t)(random() % (1024 * 1024));
+> +	mode |= FALLOC_FL_KEEP_SIZE & random();
+> +	e = fallocate(fd, mode, (loff_t)off, (loff_t)len) < 0 ? errno : 0;
+> +	if (v)
+> +		printf("%d/%d: punch hole(%d) %s %s %lld %lld %d\n",
+> +		       procid, opno, mode,
+> +		       f.path, st, (long long)off, (long long)len, e);
+> +	free_pathname(&f);
+> +	close(fd);
+> +#endif
+> +}
+> +
+> +void
+>  read_f(int opno, long r)
+>  {
+>  	char		*buf;
 
-All applied.
+Looks good to me.
 
-Any reason why you only signed off on the last patch, and not the others
-you sent me?  Just curious.
-
-greg k-h
+Reviewed-By: Phil White <pwhite@sgi.com>
+Tested-By: Phil White <pwhite@sgi.com>
 
 _______________________________________________
 xfs mailing list
