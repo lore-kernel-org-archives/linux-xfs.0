@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2Hlhq0092672 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:47:44 -0600
+	pB2Hqicn093146 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:52:44 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E84D14D4EE0
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:42 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5B71349F3EC
+	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:52:42 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	hBilcSWWCtEq2PKG for <xfs@oss.sgi.com>;
-	Fri, 02 Dec 2011 09:47:42 -0800 (PST)
+	6bgXpApsyMqt1rmX for <xfs@oss.sgi.com>;
+	Fri, 02 Dec 2011 09:52:42 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RWXD3-0000kC-Uh
-	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:42 +0000
-Message-Id: <20111202174741.904845954@bombadil.infradead.org>
-Date: Fri, 02 Dec 2011 12:46:24 -0500
+	Linux)) id 1RWXD3-0000i8-4y
+	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:41 +0000
+Message-Id: <20111202174741.091561992@bombadil.infradead.org>
+Date: Fri, 02 Dec 2011 12:46:20 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 05/12] repair: update extent count after zapping duplicate
-	blocks
+Subject: [PATCH 01/12] repair: do not walk the unlinked inode list
 References: <20111202174619.179530033@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-fix-duplicate-block-handling
+Content-Disposition: inline; filename=repair-skip-unlinked
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,191 +34,173 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-When we find a duplicate extent in an extern format inode we do not zap
-the whole inode, but just truncate it to the point where the duplicate
-extent was found.  But the current code only updates di_nblocks for the
-new size, but no di_nextents/di_anextents.  In most cases this isn't noticed,
-but when moving such an inode to the lost+found directoy the consistency
-check in xfs_iformat trips over it.  Fix this by updating the on-disk
-extent count as part of the inode repair.
+Stefan Pfetzing reported a bug where xfs_repair got stuck eating 100% CPU in
+phase3.  We track it down to a loop in the unlinked inode list, apparently
+caused by memory corruption on an iSCSI target.
 
-Note that we zap btree format inodes with duplicate block completely
-at this point, so this fix doesn't apply to them.
+I looked into tracking if we already saw a given unlinked inode, but given
+that we keep walking even for inodes where we can't find an allocation btree
+record that seems infeasible.  On the other hand these inodes had their
+final unlink and thus were dead even before the system went down.  There
+really is no point in adding them to the uncertain list and looking for
+references to them later.
 
-Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
-Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+So the simplest fix seems to be to simply remove the unlinked inode list
+walk and just clear it - when we rebuild the inode allocation btrees these
+will simply be marked free.
+
+Reported-by: Stefan Pfetzing <stefan.pfetzing@1und1.de>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/dinode.c
+Index: xfsprogs-dev/repair/phase3.c
 ===================================================================
---- xfsprogs-dev.orig/repair/dinode.c	2011-11-08 12:15:40.000000000 +0000
-+++ xfsprogs-dev/repair/dinode.c	2011-11-14 12:09:54.000000000 +0000
-@@ -606,7 +606,7 @@ int
- process_bmbt_reclist_int(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-@@ -642,7 +642,7 @@ process_bmbt_reclist_int(
- 	else
- 		ftype = _("regular");
+--- xfsprogs-dev.orig/repair/phase3.c	2011-11-09 08:59:35.313604606 +0100
++++ xfsprogs-dev/repair/phase3.c	2011-11-09 09:03:44.800605237 +0100
+@@ -28,80 +28,15 @@
+ #include "progress.h"
+ #include "prefetch.h"
  
--	for (i = 0; i < numrecs; i++) {
-+	for (i = 0; i < *numrecs; i++) {
- 		libxfs_bmbt_disk_get_all(rp + i, &irec);
- 		if (i == 0)
- 			*last_key = *first_key = irec.br_startoff;
-@@ -831,6 +831,13 @@ _("illegal state %d in block map %" PRIu
- done:
- 	if (locked_agno != -1)
- 		pthread_mutex_unlock(&ag_locks[locked_agno]);
-+
-+	if (i != *numrecs) {
-+		ASSERT(i < *numrecs);
-+		do_warn(_("correcting nextents for inode %" PRIu64 "\n"), ino);
-+		*numrecs = i;
-+	}
-+
- 	return error;
- }
- 
-@@ -842,7 +849,7 @@ int
- process_bmbt_reclist(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-@@ -863,7 +870,7 @@ int
- scan_bmbt_reclist(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-@@ -1356,23 +1363,29 @@ process_exinode(
- 	xfs_bmbt_rec_t		*rp;
- 	xfs_dfiloff_t		first_key;
- 	xfs_dfiloff_t		last_key;
-+	int			numrecs;
-+	int			ret;
- 
- 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
- 	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
- 	*tot = 0;
--	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
-+	numrecs = XFS_DFORK_NEXTENTS(dip, whichfork);
-+
- 	/*
- 	 * XXX - if we were going to fix up the btree record,
- 	 * we'd do it right here.  For now, if there's a problem,
- 	 * we'll bail out and presumably clear the inode.
- 	 */
- 	if (check_dups == 0)
--		return(process_bmbt_reclist(mp, rp, *nex, type, lino,
-+		ret = process_bmbt_reclist(mp, rp, &numrecs, type, lino,
- 					tot, blkmapp, &first_key, &last_key,
--					whichfork));
-+					whichfork);
- 	else
--		return(scan_bmbt_reclist(mp, rp, *nex, type, lino, tot,
--					whichfork));
-+		ret = scan_bmbt_reclist(mp, rp, &numrecs, type, lino, tot,
-+					whichfork);
-+
-+	*nex = numrecs;
-+	return ret;
- }
- 
- /*
-@@ -2003,6 +2016,12 @@ process_inode_blocks_and_extents(
- 	xfs_ino_t	lino,
- 	int		*dirty)
+-/*
+- * walks an unlinked list, returns 1 on an error (bogus pointer) or
+- * I/O error
+- */
+-int
+-walk_unlinked_list(xfs_mount_t *mp, xfs_agnumber_t agno, xfs_agino_t start_ino)
+-{
+-	xfs_buf_t *bp;
+-	xfs_dinode_t *dip;
+-	xfs_agino_t current_ino = start_ino;
+-	xfs_agblock_t agbno;
+-	int state;
+-
+-	while (current_ino != NULLAGINO)  {
+-		if (verify_aginum(mp, agno, current_ino))
+-			return(1);
+-		if ((bp = get_agino_buf(mp, agno, current_ino, &dip)) == NULL)
+-			return(1);
+-		/*
+-		 * if this looks like a decent inode, then continue
+-		 * following the unlinked pointers.  If not, bail.
+-		 */
+-		if (verify_dinode(mp, dip, agno, current_ino) == 0)  {
+-			/*
+-			 * check if the unlinked list points to an unknown
+-			 * inode.  if so, put it on the uncertain inode list
+-			 * and set block map appropriately.
+-			 */
+-			if (find_inode_rec(mp, agno, current_ino) == NULL)  {
+-				add_aginode_uncertain(agno, current_ino, 1);
+-				agbno = XFS_AGINO_TO_AGBNO(mp, current_ino);
+-
+-				pthread_mutex_lock(&ag_locks[agno]);
+-				state = get_bmap(agno, agbno);
+-				switch (state) {
+-				case XR_E_BAD_STATE:
+-					do_error(_(
+-						"bad state in block map %d\n"),
+-						state);
+-					break;
+-				default:
+-					/*
+-					 * the block looks like inodes
+-					 * so be conservative and try
+-					 * to scavenge what's in there.
+-					 * if what's there is completely
+-					 * bogus, it'll show up later
+-					 * and the inode will be trashed
+-					 * anyway, hopefully without
+-					 * losing too much other data
+-					 */
+-					set_bmap(agno, agbno, XR_E_INO);
+-					break;
+-				}
+-				pthread_mutex_unlock(&ag_locks[agno]);
+-			}
+-			current_ino = be32_to_cpu(dip->di_next_unlinked);
+-		} else  {
+-			current_ino = NULLAGINO;;
+-		}
+-		libxfs_putbuf(bp);
+-	}
+-
+-	return(0);
+-}
+-
+-void
+-process_agi_unlinked(xfs_mount_t *mp, xfs_agnumber_t agno)
++static void
++process_agi_unlinked(
++	struct xfs_mount	*mp,
++	xfs_agnumber_t		agno)
  {
-+	if (nblocks < nextents + anextents) {
-+		do_warn(
-+_("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblocks, lino);
-+		return 1;
-+	}
-+
- 	if (nblocks != be64_to_cpu(dino->di_nblocks))  {
- 		if (!no_modify)  {
- 			do_warn(
-@@ -2063,6 +2082,7 @@ _("bad anextents %d for inode %" PRIu64
- 				lino, anextents);
+-	xfs_agnumber_t i;
+-	xfs_buf_t *bp;
+-	xfs_agi_t *agip;
+-	int err = 0;
+-	int agi_dirty = 0;
++	struct xfs_buf		*bp;
++	struct xfs_agi		*agip;
++	xfs_agnumber_t		i;
++	int			agi_dirty = 0;
+ 
+ 	bp = libxfs_readbuf(mp->m_dev,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+@@ -112,28 +47,16 @@ process_agi_unlinked(xfs_mount_t *mp, xf
+ 
+ 	agip = XFS_BUF_TO_AGI(bp);
+ 
+-	ASSERT(no_modify || be32_to_cpu(agip->agi_seqno) == agno);
++	ASSERT(be32_to_cpu(agip->agi_seqno) == agno);
+ 
+ 	for (i = 0; i < XFS_AGI_UNLINKED_BUCKETS; i++)  {
+-		if (be32_to_cpu(agip->agi_unlinked[i]) != NULLAGINO)  {
+-			err += walk_unlinked_list(mp, agno,
+-					be32_to_cpu(agip->agi_unlinked[i]));
+-			/*
+-			 * clear the list
+-			 */
+-			if (!no_modify)  {
+-				agip->agi_unlinked[i] = cpu_to_be32(NULLAGINO);
+-				agi_dirty = 1;
+-			}
++		if (agip->agi_unlinked[i] != cpu_to_be32(NULLAGINO)) {
++			agip->agi_unlinked[i] = cpu_to_be32(NULLAGINO);
++			agi_dirty = 1;
  		}
  	}
-+
- 	return 0;
- }
  
-Index: xfsprogs-dev/repair/dinode.h
-===================================================================
---- xfsprogs-dev.orig/repair/dinode.h	2010-05-10 18:16:35.000000000 +0000
-+++ xfsprogs-dev/repair/dinode.h	2011-11-14 12:09:54.000000000 +0000
-@@ -42,7 +42,7 @@ convert_extent(
- int
- process_bmbt_reclist(xfs_mount_t	*mp,
- 		xfs_bmbt_rec_t		*rp,
--		int			numrecs,
-+		int			*numrecs,
- 		int			type,
- 		xfs_ino_t		ino,
- 		xfs_drfsbno_t		*tot,
-@@ -55,7 +55,7 @@ int
- scan_bmbt_reclist(
- 	xfs_mount_t		*mp,
- 	xfs_bmbt_rec_t		*rp,
--	int			numrecs,
-+	int			*numrecs,
- 	int			type,
- 	xfs_ino_t		ino,
- 	xfs_drfsbno_t		*tot,
-Index: xfsprogs-dev/repair/scan.c
-===================================================================
---- xfsprogs-dev.orig/repair/scan.c	2011-11-10 11:23:47.000000000 +0000
-+++ xfsprogs-dev/repair/scan.c	2011-11-14 12:09:54.000000000 +0000
-@@ -351,12 +351,12 @@ _("inode %" PRIu64 " bad # of bmap recor
- 		 * we'll bail out and presumably clear the inode.
- 		 */
- 		if (check_dups == 0)  {
--			err = process_bmbt_reclist(mp, rp, numrecs,
--					type, ino, tot, blkmapp,
--					&first_key, &last_key,
--					whichfork);
-+			err = process_bmbt_reclist(mp, rp, &numrecs, type, ino,
-+						   tot, blkmapp, &first_key,
-+						   &last_key, whichfork);
- 			if (err)
--				return(1);
-+				return 1;
-+
- 			/*
- 			 * check that key ordering is monotonically increasing.
- 			 * if the last_key value in the cursor is set to
-@@ -380,10 +380,11 @@ _("out-of-order bmap key (file offset) i
- 			bm_cursor->level[level].first_key = first_key;
- 			bm_cursor->level[level].last_key = last_key;
+-	if (err)
+-		do_warn(_("error following ag %d unlinked list\n"), agno);
+-
+-	ASSERT(agi_dirty == 0 || (agi_dirty && !no_modify));
+-
+-	if (agi_dirty && !no_modify)
++	if (agi_dirty)
+ 		libxfs_writebuf(bp, 0);
+ 	else
+ 		libxfs_putbuf(bp);
+@@ -209,14 +132,14 @@ phase3(xfs_mount_t *mp)
  
--			return(0);
--		} else
--			return(scan_bmbt_reclist(mp, rp, numrecs,
--						type, ino, tot, whichfork));
-+			return 0;
-+		} else {
-+			return scan_bmbt_reclist(mp, rp, &numrecs, type, ino,
-+						 tot, whichfork);
-+		}
+ 	set_progress_msg(PROG_FMT_AGI_UNLINKED, (__uint64_t) glob_agcount);
+ 
+-	/*
+-	 * first, let's look at the possibly bogus inodes
+-	 */
++	/* first clear the agi unlinked AGI list */
++	if (!no_modify) {
++		for (i = 0; i < mp->m_sb.sb_agcount; i++)
++			process_agi_unlinked(mp, i);
++	}
++
++	/* now look at possibly bogus inodes */
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+-		/*
+-		 * walk unlinked list to add more potential inodes to list
+-		 */
+-		process_agi_unlinked(mp, i);
+ 		check_uncertain_aginodes(mp, i);
+ 		PROG_RPT_INC(prog_rpt_done[i], 1);
  	}
- 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
- 							mp->m_bmap_dmnr[1])) {
 
 _______________________________________________
 xfs mailing list
