@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2CEx7m071541 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 06:14:59 -0600
-Received: from hades.usersys.redhat.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 44B48293F41
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 04:14:57 -0800 (PST)
-Received: from hades.usersys.redhat.com (186.215.132.159.static.gvt.net.br
-	[186.215.132.159]) by cuda.sgi.com with ESMTP id
-	wrWrpfp5X38VfSkG for <xfs@oss.sgi.com>;
-	Fri, 02 Dec 2011 04:14:57 -0800 (PST)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] mkfs: Refuse to initialize a misaligned device if not forced
-	using libblkid
-Date: Fri,  2 Dec 2011 10:14:55 -0200
-Message-Id: <1322828095-10939-1-git-send-email-cmaiolino@redhat.com>
+	pB2G6pM3086559 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 10:06:51 -0600
+Date: Fri, 2 Dec 2011 10:07:12 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 5/4] xfs: fix nfs export of 64-bit inodes numbers on
+	32-bit kernels
+Message-ID: <20111202160712.GO29840@sgi.com>
+References: <20111128081732.350228200@bombadil.infradead.org>
+	<20111130085817.GA22471@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111130085817.GA22471@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,113 +20,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Carlos Maiolino <cmaiolino@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-The patch fix the problem about the usage of 4k sector devices when the
-device is not properly aligned. It makes mkfs to refuse to initialize a
-xfs filesystem if the -f option is not passed at the command line, and
-forces a 512b sector size if the user chooses to force the device
-initialization.
+Hey Christoph,
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- mkfs/xfs_mkfs.c |   35 +++++++++++++++++++++++++++++------
- 1 files changed, 29 insertions(+), 6 deletions(-)
+On Wed, Nov 30, 2011 at 03:58:18AM -0500, Christoph Hellwig wrote:
+> The i_ino field in the VFS inode is of type unsigned long and thus can't
+> hold the full 64-bit inode number on 32-bit kernels.  We have the full
+> inode number in the XFS inode, so use that one for nfs exports.  Note
+> that I've also switched the 32-bit file handles types to it, just to make
+> the code more consistent and copy & paste errors less likely to happen.
+> 
+> Reported-by: Guoquan Yang <ygq51@hotmail.com>
+> Reported-by: Hank Peng <pengxihan@gmail.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f527f3d..159bf60 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -369,8 +369,14 @@ out:
- 	return ret;
- }
- 
--static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
-+static void blkid_get_topology(
-+	const char *device,
-+	int *sunit,
-+	int *swidth,
-+	int *sectorsize,
-+	int force_overwrite)
- {
-+
- 	blkid_topology tp;
- 	blkid_probe pr;
- 	unsigned long val;
-@@ -409,6 +415,15 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int
- 		fprintf(stderr,
- 			_("warning: device is not properly aligned %s\n"),
- 			device);
-+
-+		if(!force_overwrite) {
-+			fprintf(stderr,
-+			_("Use -f to force usage of a misaligned device\n"));
-+
-+			exit(EXIT_FAILURE);
-+		}
-+	/* Force a 512b sector size if the device is misaligned*/
-+	*sectorsize = BBSIZE;
- 	}
- 
- 	blkid_free_probe(pr);
-@@ -421,19 +436,23 @@ out_free_probe:
- 		device);
- }
- 
--static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
-+static void get_topology(
-+	libxfs_init_t *xi,
-+	struct fs_topology *ft,
-+	int force_overwrite)
- {
- 	if (!xi->disfile) {
- 		const char *dfile = xi->volname ? xi->volname : xi->dname;
- 
- 		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
--				   &ft->sectorsize);
-+				   &ft->sectorsize, force_overwrite);
- 	}
- 
- 	if (xi->rtname && !xi->risfile) {
- 		int dummy;
- 
--		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
-+		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth,
-+				   &dummy, force_overwrite);
- 	}
- }
- #else /* ENABLE_BLKID */
-@@ -460,8 +479,12 @@ check_overwrite(
- 	return 0;
- }
- 
--static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
-+static void get_topology(
-+	libxfs_init_t *xi,
-+	struct fs_topology *ft,
-+	int force_overwrite)
- {
-+
- 	char *dfile = xi->volname ? xi->volname : xi->dname;
- 	int bsz = BBSIZE;
- 
-@@ -1625,7 +1648,7 @@ main(
- 	}
- 
- 	memset(&ft, 0, sizeof(ft));
--	get_topology(&xi, &ft);
-+	get_topology(&xi, &ft, force_overwrite);
- 
- 	if (ft.sectoralign) {
- 		/*
--- 
-1.7.6.4
+To what extent did you test this one?  Anything in particular I should
+look for when I test it?
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
