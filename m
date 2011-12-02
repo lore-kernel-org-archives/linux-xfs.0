@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2HljcZ092699 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:47:45 -0600
+	pB2Hopr6092936 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:50:51 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E160984865
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:41 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 9777D1F3F477
+	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:44 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	gOnEAm4DuVqQ1Ylx for <xfs@oss.sgi.com>;
-	Fri, 02 Dec 2011 09:47:41 -0800 (PST)
+	0IeiFHzPkVxWukjT for <xfs@oss.sgi.com>;
+	Fri, 02 Dec 2011 09:47:44 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RWXD3-0000ie-BL
-	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:41 +0000
-Message-Id: <20111202174741.284403190@bombadil.infradead.org>
-Date: Fri, 02 Dec 2011 12:46:21 -0500
+	Linux)) id 1RWXD5-0000nf-Ij
+	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:43 +0000
+Message-Id: <20111202174743.523970893@bombadil.infradead.org>
+Date: Fri, 02 Dec 2011 12:46:30 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 02/12] repair: allocate and free inode records individually
+Subject: [PATCH 11/12] repair: move extern declarations to headers
 References: <20111202174619.179530033@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-free-inode-chunk-node
+Content-Disposition: inline; filename=repair-cleanup-externs
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,297 +34,196 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Instead of allocating inode records in chunks and keeping a freelist of them
-which never gets released to the system memory allocator use plain malloc
-and free for them.  The freelist just means adding a global lock instead
-of relying on malloc and free which could be implemented lockless, and the
-freelist is almost completely worthless as we are done allocating new
-inode records once we start freeing them in major quantities.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Index: xfsprogs-dev/repair/avl.h
+===================================================================
+--- xfsprogs-dev.orig/repair/avl.h	2011-12-01 16:17:07.000000000 +0000
++++ xfsprogs-dev/repair/avl.h	2011-12-01 16:18:33.000000000 +0000
+@@ -134,6 +134,15 @@ avl_findranges(
+ 	avlnode_t	        **startp,
+ 	avlnode_t		**endp);
+ 
++avlnode_t *
++avl_firstino(
++	avlnode_t		*root);
++
++avlnode_t *
++avl_lastino(
++	avlnode_t		*root);
++
++
+ #define AVL_PRECEED	0x1
+ #define AVL_SUCCEED	0x2
+ 
+Index: xfsprogs-dev/repair/bmap.h
+===================================================================
+--- xfsprogs-dev.orig/repair/bmap.h	2011-12-01 16:17:07.000000000 +0000
++++ xfsprogs-dev/repair/bmap.h	2011-12-01 16:18:33.000000000 +0000
+@@ -53,6 +53,9 @@ typedef	struct blkmap {
+ #define BLKMAP_NEXTS_MAX	INT_MAX
+ #endif
+ 
++extern pthread_key_t dblkmap_key;
++extern pthread_key_t ablkmap_key;
++
+ blkmap_t	*blkmap_alloc(xfs_extnum_t nex, int whichfork);
+ void		blkmap_free(blkmap_t *blkmap);
+ 
+Index: xfsprogs-dev/repair/incore.h
+===================================================================
+--- xfsprogs-dev.orig/repair/incore.h	2011-12-01 16:17:07.000000000 +0000
++++ xfsprogs-dev/repair/incore.h	2011-12-01 16:18:33.000000000 +0000
+@@ -209,9 +209,12 @@ void		incore_ext_init(xfs_mount_t *);
+  * the nodes.
+  */
+ void		incore_ext_teardown(xfs_mount_t *mp);
+-
+ void		incore_ino_init(xfs_mount_t *);
+ 
++int		count_bno_extents(xfs_agnumber_t);
++int		count_bno_extents_blocks(xfs_agnumber_t, uint *);
++int		count_bcnt_extents(xfs_agnumber_t);
++
+ /*
+  * inode definitions
+  */
+Index: xfsprogs-dev/repair/incore_ext.c
+===================================================================
+--- xfsprogs-dev.orig/repair/incore_ext.c	2011-12-01 16:17:31.000000000 +0000
++++ xfsprogs-dev/repair/incore_ext.c	2011-12-01 16:18:33.000000000 +0000
+@@ -386,8 +386,6 @@ findfirst_bcnt_extent(xfs_agnumber_t agn
+ extent_tree_node_t *
+ findbiggest_bcnt_extent(xfs_agnumber_t agno)
+ {
+-	extern avlnode_t *avl_lastino(avlnode_t *root);
+-
+ 	ASSERT(extent_bcnt_ptrs != NULL);
+ 	ASSERT(extent_bcnt_ptrs[agno] != NULL);
+ 
 Index: xfsprogs-dev/repair/incore_ino.c
 ===================================================================
---- xfsprogs-dev.orig/repair/incore_ino.c	2011-11-09 18:52:15.041861085 +0000
-+++ xfsprogs-dev/repair/incore_ino.c	2011-11-09 19:36:39.389806408 +0000
-@@ -25,7 +25,6 @@
+--- xfsprogs-dev.orig/repair/incore_ino.c	2011-12-01 16:17:31.000000000 +0000
++++ xfsprogs-dev/repair/incore_ino.c	2011-12-01 16:18:51.000000000 +0000
+@@ -25,8 +25,6 @@
  #include "threads.h"
  #include "err_protos.h"
  
--static pthread_mutex_t	ino_flist_lock;
- extern avlnode_t	*avl_firstino(avlnode_t *root);
- 
+-extern avlnode_t	*avl_firstino(avlnode_t *root);
+-
  /*
-@@ -38,18 +37,6 @@
+  * array of inode tree ptrs, one per ag
   */
- static avltree_desc_t	**inode_uncertain_tree_ptrs;
+Index: xfsprogs-dev/repair/init.c
+===================================================================
+--- xfsprogs-dev.orig/repair/init.c	2011-12-01 16:17:07.000000000 +0000
++++ xfsprogs-dev/repair/init.c	2011-12-01 16:18:33.000000000 +0000
+@@ -34,9 +34,6 @@ static pthread_key_t dirbuf_key;
+ static pthread_key_t dir_freemap_key;
+ static pthread_key_t attr_freemap_key;
  
--#define ALLOC_NUM_INOS		100
+-extern pthread_key_t dblkmap_key;
+-extern pthread_key_t ablkmap_key;
 -
--/* free lists -- inode nodes and extent nodes */
--
--typedef struct ino_flist_s  {
--	ino_tree_node_t		*list;
--	ino_tree_node_t		*last;
--	long long		cnt;
--} ino_flist_t;
--
--static ino_flist_t ino_flist;	/* free list must be initialized before use */
--
- /* memory optimised nlink counting for all inodes */
- 
- static void nlink_grow_8_to_16(ino_tree_node_t *irec);
-@@ -238,102 +225,63 @@
- }
- 
- /*
-- * next is the uncertain inode list -- a sorted (in ascending order)
-+ * Next is the uncertain inode list -- a sorted (in ascending order)
-  * list of inode records sorted on the starting inode number.  There
-  * is one list per ag.
-  */
- 
- /*
-- * common code for creating inode records for use by trees and lists.
-+ * Common code for creating inode records for use by trees and lists.
-  * called only from add_inodes and add_inodes_uncertain
-  *
-  * IMPORTANT:  all inodes (inode records) start off as free and
-  *		unconfirmed.
-  */
--/* ARGSUSED */
--static ino_tree_node_t *
--mk_ino_tree_nodes(
-+static struct ino_tree_node *
-+alloc_ino_node(
- 	xfs_agino_t		starting_ino)
- {
--	int 			i;
--	ino_tree_node_t 	*ino_rec;
--	avlnode_t 		*node;
--
--	pthread_mutex_lock(&ino_flist_lock);
--	if (ino_flist.cnt == 0)  {
--		ASSERT(ino_flist.list == NULL);
--
--		if ((ino_rec = malloc(sizeof(ino_tree_node_t[ALLOC_NUM_INOS])))
--					== NULL)
--			do_error(_("inode map malloc failed\n"));
--
--		for (i = 0; i < ALLOC_NUM_INOS; i++)  {
--			ino_rec->avl_node.avl_nextino =
--				(avlnode_t *) ino_flist.list;
--			ino_flist.list = ino_rec;
--			ino_flist.cnt++;
--			ino_rec++;
--		}
--	}
-+	struct ino_tree_node 	*irec;
- 
--	ASSERT(ino_flist.list != NULL);
--
--	ino_rec = ino_flist.list;
--	ino_flist.list = (ino_tree_node_t *) ino_rec->avl_node.avl_nextino;
--	ino_flist.cnt--;
--	node = &ino_rec->avl_node;
--	node->avl_nextino = node->avl_forw = node->avl_back = NULL;
--	pthread_mutex_unlock(&ino_flist_lock);
--
--	/* initialize node */
--
--	ino_rec->ino_startnum = 0;
--	ino_rec->ino_confirmed = 0;
--	ino_rec->ino_isa_dir = 0;
--	ino_rec->ir_free = (xfs_inofree_t) - 1;
--	ino_rec->ino_un.ex_data = NULL;
--	ino_rec->nlinkops = &nlinkops[0];
--	ino_rec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
--	if (ino_rec->disk_nlinks == NULL)
-+	irec = malloc(sizeof(*irec));
-+	if (!irec)
-+		do_error(_("inode map malloc failed\n"));
-+
-+	irec->avl_node.avl_nextino = NULL;
-+	irec->avl_node.avl_forw = NULL;
-+	irec->avl_node.avl_back = NULL;
-+
-+	irec->ino_startnum = starting_ino;
-+	irec->ino_confirmed = 0;
-+	irec->ino_isa_dir = 0;
-+	irec->ir_free = (xfs_inofree_t) - 1;
-+	irec->ino_un.ex_data = NULL;
-+	irec->nlinkops = &nlinkops[0];
-+	irec->disk_nlinks = calloc(1, nlinkops[0].nlink_size);
-+	if (!irec->disk_nlinks)
- 		do_error(_("could not allocate nlink array\n"));
--
--	return(ino_rec);
-+	return irec;
- }
- 
--/*
-- * return inode record to free list, will be initialized when
-- * it gets pulled off list
-- */
  static void
--free_ino_tree_node(ino_tree_node_t *ino_rec)
-+free_ino_tree_node(
-+	struct ino_tree_node	*irec)
+ ts_alloc(pthread_key_t key, unsigned n, size_t size)
  {
--	ino_rec->avl_node.avl_nextino = NULL;
--	ino_rec->avl_node.avl_forw = NULL;
--	ino_rec->avl_node.avl_back = NULL;
--
--	pthread_mutex_lock(&ino_flist_lock);
--	if (ino_flist.list != NULL)  {
--		ASSERT(ino_flist.cnt > 0);
--		ino_rec->avl_node.avl_nextino = (avlnode_t *) ino_flist.list;
--	} else  {
--		ASSERT(ino_flist.cnt == 0);
--		ino_rec->avl_node.avl_nextino = NULL;
--	}
-+	irec->avl_node.avl_nextino = NULL;
-+	irec->avl_node.avl_forw = NULL;
-+	irec->avl_node.avl_back = NULL;
+Index: xfsprogs-dev/repair/phase4.c
+===================================================================
+--- xfsprogs-dev.orig/repair/phase4.c	2011-12-01 16:18:23.000000000 +0000
++++ xfsprogs-dev/repair/phase4.c	2011-12-01 16:18:33.000000000 +0000
+@@ -196,8 +196,6 @@ phase4(xfs_mount_t *mp)
+ 	int			ag_hdr_len = 4 * mp->m_sb.sb_sectsize;
+ 	int			ag_hdr_block;
+ 	int			bstate;
+-	int			count_bcnt_extents(xfs_agnumber_t agno);
+-	int			count_bno_extents(xfs_agnumber_t agno);
  
--	ino_flist.list = ino_rec;
--	ino_flist.cnt++;
--
--	free(ino_rec->disk_nlinks);
--
--	if (ino_rec->ino_un.ex_data != NULL)  {
-+	free(irec->disk_nlinks);
-+	if (irec->ino_un.ex_data != NULL)  {
- 		if (full_ino_ex_data) {
--			free(ino_rec->ino_un.ex_data->parents);
--			free(ino_rec->ino_un.ex_data->counted_nlinks);
-+			free(irec->ino_un.ex_data->parents);
-+			free(irec->ino_un.ex_data->counted_nlinks);
- 		}
--		free(ino_rec->ino_un.ex_data);
-+		free(irec->ino_un.ex_data);
+ 	ag_hdr_block = howmany(ag_hdr_len, mp->m_sb.sb_blocksize);
  
- 	}
--	pthread_mutex_unlock(&ino_flist_lock);
+Index: xfsprogs-dev/repair/phase5.c
+===================================================================
+--- xfsprogs-dev.orig/repair/phase5.c	2011-12-01 16:18:23.000000000 +0000
++++ xfsprogs-dev/repair/phase5.c	2011-12-01 16:18:33.000000000 +0000
+@@ -1404,11 +1404,6 @@ phase5_func(
+ 	xfs_extlen_t	freeblks2;
+ #endif
+ 	xfs_agblock_t	num_extents;
+-	extern int	count_bno_extents(xfs_agnumber_t);
+-	extern int	count_bno_extents_blocks(xfs_agnumber_t, uint *);
+-#ifdef XR_BLD_FREE_TRACE
+-	extern int	count_bcnt_extents(xfs_agnumber_t);
+-#endif
+ 
+ 	if (verbose)
+ 		do_log(_("        - agno = %d\n"), agno);
+Index: xfsprogs-dev/repair/protos.h
+===================================================================
+--- xfsprogs-dev.orig/repair/protos.h	2011-12-01 16:17:07.000000000 +0000
++++ xfsprogs-dev/repair/protos.h	2011-12-01 16:18:33.000000000 +0000
+@@ -39,11 +39,23 @@ void	get_sb_geometry(struct fs_geometry
+ char	*alloc_ag_buf(int size);
+ 
+ void	print_inode_list(xfs_agnumber_t i);
+-char *	err_string(int err_code);
++char	*err_string(int err_code);
+ 
+-extern void *ts_attr_freemap(void);
+-extern void *ts_dir_freemap(void);
+-extern void *ts_dirbuf(void);
+-extern void ts_init(void);
+-extern void thread_init(void);
++void	*ts_attr_freemap(void);
++void	*ts_dir_freemap(void);
++void	*ts_dirbuf(void);
++void	ts_init(void);
++void	thread_init(void);
 +
-+	free(irec);
- }
- 
- /*
-@@ -379,17 +327,15 @@
- 	 * check to see if record containing inode is already in the tree.
- 	 * if not, add it
- 	 */
--	if ((ino_rec = (ino_tree_node_t *)
--			avl_findrange(inode_uncertain_tree_ptrs[agno],
--				s_ino)) == NULL)  {
--		ino_rec = mk_ino_tree_nodes(s_ino);
--		ino_rec->ino_startnum = s_ino;
--
--		if (avl_insert(inode_uncertain_tree_ptrs[agno],
--				(avlnode_t *) ino_rec) == NULL)  {
--			do_error(_("add_aginode_uncertain - "
--				   "duplicate inode range\n"));
--		}
-+	ino_rec = (ino_tree_node_t *)
-+		avl_findrange(inode_uncertain_tree_ptrs[agno], s_ino);
-+	if (!ino_rec) {
-+		ino_rec = alloc_ino_node(s_ino);
++void	phase1(struct xfs_mount *);
++void	phase2(struct xfs_mount *, int);
++void	phase3(struct xfs_mount *);
++void	phase4(struct xfs_mount *);
++void	phase5(struct xfs_mount *);
++void	phase6(struct xfs_mount *);
++void	phase7(struct xfs_mount *);
 +
-+		if (!avl_insert(inode_uncertain_tree_ptrs[agno],
-+				&ino_rec->avl_node))
-+			do_error(
-+	_("add_aginode_uncertain - duplicate inode range\n"));
- 	}
++int	verify_set_agheader(struct xfs_mount *, struct xfs_buf *,
++		struct xfs_sb *, struct xfs_agf *, struct xfs_agi *,
++		xfs_agnumber_t);
  
- 	if (free)
-@@ -454,43 +400,38 @@
+Index: xfsprogs-dev/repair/scan.c
+===================================================================
+--- xfsprogs-dev.orig/repair/scan.c	2011-12-01 16:18:23.000000000 +0000
++++ xfsprogs-dev/repair/scan.c	2011-12-01 16:18:33.000000000 +0000
+@@ -30,9 +30,6 @@
+ #include "progress.h"
+ #include "threads.h"
  
+-extern int verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
+-		xfs_agf_t *agf, xfs_agi_t *agi, xfs_agnumber_t i);
+-
+ static xfs_mount_t	*mp = NULL;
  
  /*
-- * next comes the inode trees.  One per ag.  AVL trees
-- * of inode records, each inode record tracking 64 inodes
-+ * Next comes the inode trees.  One per AG,  AVL trees of inode records, each
-+ * inode record tracking 64 inodes
-  */
-+
- /*
-- * set up an inode tree record for a group of inodes that will
-- * include the requested inode.
-- *
-- * does NOT error-check for duplicate records.  Caller is
-- * responsible for checking that.
-+ * Set up an inode tree record for a group of inodes that will include the
-+ * requested inode.
-  *
-- * ino must be the start of an XFS_INODES_PER_CHUNK (64) inode chunk
-+ * This does NOT do error-check for duplicate records.  The caller is
-+ * responsible for checking that. Ino must be the start of an
-+ * XFS_INODES_PER_CHUNK (64) inode chunk
-  *
-- * Each inode resides in a 64-inode chunk which can be part
-- * one or more chunks (MAX(64, inodes-per-block).  The fs allocates
-- * in chunks (as opposed to 1 chunk) when a block can hold more than
-- * one chunk (inodes per block > 64).  Allocating in one chunk pieces
-- * causes us problems when it takes more than one fs block to contain
-- * an inode chunk because the chunks can start on *any* block boundary.
-- * So we assume that the caller has a clue because at this level, we
-- * don't.
-- */
--static ino_tree_node_t *
--add_inode(struct xfs_mount *mp, xfs_agnumber_t agno, xfs_agino_t ino)
-+ * Each inode resides in a 64-inode chunk which can be part one or more chunks
-+ * (MAX(64, inodes-per-block).  The fs allocates in chunks (as opposed to 1
-+ * chunk) when a block can hold more than one chunk (inodes per block > 64).
-+ * Allocating in one chunk pieces causes us problems when it takes more than
-+ * one fs block to contain an inode chunk because the chunks can start on
-+ * *any* block boundary. So we assume that the caller has a clue because at
-+ * this level, we don't.
-+ */
-+static struct ino_tree_node *
-+add_inode(
-+	struct xfs_mount	*mp,
-+	xfs_agnumber_t		agno,
-+	xfs_agino_t		agino)
- {
--	ino_tree_node_t *ino_rec;
--
--	/* no record exists, make some and put them into the tree */
--
--	ino_rec = mk_ino_tree_nodes(ino);
--	ino_rec->ino_startnum = ino;
-+	struct ino_tree_node	*irec;
+Index: xfsprogs-dev/repair/xfs_repair.c
+===================================================================
+--- xfsprogs-dev.orig/repair/xfs_repair.c	2011-12-01 16:18:23.000000000 +0000
++++ xfsprogs-dev/repair/xfs_repair.c	2011-12-01 16:18:33.000000000 +0000
+@@ -32,14 +32,6 @@
  
--	if (avl_insert(inode_tree_ptrs[agno],
--			(avlnode_t *) ino_rec) == NULL)  {
-+	irec = alloc_ino_node(agino);
-+	if (!avl_insert(inode_tree_ptrs[agno],	&irec->avl_node))
- 		do_warn(_("add_inode - duplicate inode range\n"));
--	}
+ #define	rounddown(x, y)	(((x)/(y))*(y))
+ 
+-extern void	phase1(xfs_mount_t *);
+-extern void	phase2(xfs_mount_t *, int);
+-extern void	phase3(xfs_mount_t *);
+-extern void	phase4(xfs_mount_t *);
+-extern void	phase5(xfs_mount_t *);
+-extern void	phase6(xfs_mount_t *);
+-extern void	phase7(xfs_mount_t *);
 -
--	return(ino_rec);
-+	return irec;
- }
+ #define		XR_MAX_SECT_SIZE	(64 * 1024)
  
  /*
-@@ -816,7 +757,6 @@
- 	int i;
- 	int agcount = mp->m_sb.sb_agcount;
- 
--	pthread_mutex_init(&ino_flist_lock, NULL);
- 	if ((inode_tree_ptrs = malloc(agcount *
- 					sizeof(avltree_desc_t *))) == NULL)
- 		do_error(_("couldn't malloc inode tree descriptor table\n"));
-@@ -839,9 +779,6 @@
- 		avl_init_tree(inode_uncertain_tree_ptrs[i], &avl_ino_tree_ops);
- 	}
- 
--	ino_flist.cnt = 0;
--	ino_flist.list = NULL;
--
- 	if ((last_rec = malloc(sizeof(ino_tree_node_t *) * agcount)) == NULL)
- 		do_error(_("couldn't malloc uncertain inode cache area\n"));
- 
 
 _______________________________________________
 xfs mailing list
