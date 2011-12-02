@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2Hli8m092694 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:47:45 -0600
+	pB2ICNPX094657 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 12:12:23 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 45116984864
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 531831F3F475
 	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:42 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	QlKb1P8UOeuZkZ6A for <xfs@oss.sgi.com>;
+	L9DCZUzdCpFpHCCc for <xfs@oss.sgi.com>;
 	Fri, 02 Dec 2011 09:47:42 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RWXD3-0000jA-Hl
-	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:41 +0000
-Message-Id: <20111202174741.504430987@bombadil.infradead.org>
-Date: Fri, 02 Dec 2011 12:46:22 -0500
+	Linux)) id 1RWXD4-0000kj-4t
+	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:42 +0000
+Message-Id: <20111202174742.106589485@bombadil.infradead.org>
+Date: Fri, 02 Dec 2011 12:46:25 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/12] repair: allocate and free extent records individually
+Subject: [PATCH 06/12] repair: use recursive buffer locking
 References: <20111202174619.179530033@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-free-extent-chunk-node
+Content-Disposition: inline; filename=repair-fix-recursion-deadlocks
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,268 +34,103 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Instead of allocating inode records in chunks and keeping a freelist of them
-which gets released to the system memory allocator in one go use plain malloc
-and free for them.  The freelist just means adding a global lock instead
-of relying on malloc and free which could be implemented lockless.  In
-addition smart allocators like tcmalloc have far less overhead than our
-chunk and linked list.
+On a sufficiently corrupt filesystem walking the btree nodes might hit the
+same node node again, which currently will deadlock.  Use a recursion
+counter to avoid the direct deadlock and let them normal loop detection
+(two bad nodes and out) do its work.  This is how repair behaved before
+we added the lock when implementing buffer prefetching.
 
+Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/incore_ext.c
+Index: xfsprogs-dev/include/libxfs.h
 ===================================================================
---- xfsprogs-dev.orig/repair/incore_ext.c	2011-11-10 14:01:04.905470023 +0000
-+++ xfsprogs-dev/repair/incore_ext.c	2011-11-14 10:14:57.696692843 +0000
-@@ -26,20 +26,6 @@
- #include "err_protos.h"
- #include "avl64.h"
- #include "threads.h"
--#define ALLOC_NUM_EXTS		100
--
--/*
-- * paranoia -- account for any weird padding, 64/32-bit alignment, etc.
-- */
--typedef struct extent_alloc_rec  {
--	struct list_head	list;
--	extent_tree_node_t	extents[ALLOC_NUM_EXTS];
--} extent_alloc_rec_t;
--
--typedef struct rt_extent_alloc_rec  {
--	struct list_head	list;
--	rt_extent_tree_node_t	extents[ALLOC_NUM_EXTS];
--} rt_extent_alloc_rec_t;
- 
- /*
-  * note:  there are 4 sets of incore things handled here:
-@@ -57,21 +43,9 @@
-  * phase 5.  The uncertain inode list goes away at the end of
-  * phase 3.  The inode tree and bno/bnct trees go away after phase 5.
-  */
--typedef struct ext_flist_s  {
--	extent_tree_node_t	*list;
--	int			cnt;
--} ext_flist_t;
--
--static ext_flist_t ext_flist;
--
--typedef struct rt_ext_flist_s  {
--	rt_extent_tree_node_t	*list;
--	int			cnt;
--} rt_ext_flist_t;
--
--static rt_ext_flist_t rt_ext_flist;
- 
- static avl64tree_desc_t	*rt_ext_tree_ptr;	/* dup extent tree for rt */
-+static pthread_mutex_t	rt_ext_tree_lock;
- 
- static struct btree_root **dup_extent_trees;	/* per ag dup extent trees */
- static pthread_mutex_t *dup_extent_tree_locks;
-@@ -89,19 +63,6 @@
- 						 */
- 
- /*
-- * list of allocated "blocks" for easy freeing later
-- */
--static struct list_head	ba_list;
--static struct list_head	rt_ba_list;
--
--/*
-- * locks.
-- */
--static pthread_mutex_t	ext_flist_lock;
--static pthread_mutex_t	rt_ext_tree_lock;
--static pthread_mutex_t	rt_ext_flist_lock;
--
--/*
-  * duplicate extent tree functions
-  */
- 
-@@ -167,60 +128,26 @@
- mk_extent_tree_nodes(xfs_agblock_t new_startblock,
- 	xfs_extlen_t new_blockcount, extent_state_t new_state)
- {
--	int i;
- 	extent_tree_node_t *new;
--	extent_alloc_rec_t *rec;
--
--	pthread_mutex_lock(&ext_flist_lock);
--	if (ext_flist.cnt == 0)  {
--		ASSERT(ext_flist.list == NULL);
--
--		if ((rec = malloc(sizeof(extent_alloc_rec_t))) == NULL)
--			do_error(
--			_("couldn't allocate new extent descriptors.\n"));
--
--		list_add(&rec->list, &ba_list);
--
--		new = &rec->extents[0];
- 
--		for (i = 0; i < ALLOC_NUM_EXTS; i++)  {
--			new->avl_node.avl_nextino = (avlnode_t *)
--							ext_flist.list;
--			ext_flist.list = new;
--			ext_flist.cnt++;
--			new++;
--		}
--	}
--
--	ASSERT(ext_flist.list != NULL);
-+	new = malloc(sizeof(*new));
-+	if (!new)
-+		do_error(_("couldn't allocate new extent descriptor.\n"));
- 
--	new = ext_flist.list;
--	ext_flist.list = (extent_tree_node_t *) new->avl_node.avl_nextino;
--	ext_flist.cnt--;
- 	new->avl_node.avl_nextino = NULL;
--	pthread_mutex_unlock(&ext_flist_lock);
--
--	/* initialize node */
--
- 	new->ex_startblock = new_startblock;
- 	new->ex_blockcount = new_blockcount;
- 	new->ex_state = new_state;
- 	new->next = NULL;
- 	new->last = NULL;
- 
--	return(new);
-+	return new;
+--- xfsprogs-dev.orig/include/libxfs.h	2011-11-22 22:28:23.000000000 +0000
++++ xfsprogs-dev/include/libxfs.h	2011-11-22 22:34:27.000000000 +0000
+@@ -226,6 +226,8 @@ typedef struct xfs_buf {
+ 	unsigned		b_bcount;
+ 	dev_t			b_dev;
+ 	pthread_mutex_t		b_lock;
++	pthread_t		b_holder;
++	unsigned int		b_recur;
+ 	void			*b_fsprivate;
+ 	void			*b_fsprivate2;
+ 	void			*b_fsprivate3;
+Index: xfsprogs-dev/libxfs/rdwr.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/rdwr.c	2011-11-22 22:28:23.000000000 +0000
++++ xfsprogs-dev/libxfs/rdwr.c	2011-11-22 22:40:01.000000000 +0000
+@@ -342,6 +342,8 @@ libxfs_initbuf(xfs_buf_t *bp, dev_t devi
+ 	list_head_init(&bp->b_lock_list);
+ #endif
+ 	pthread_mutex_init(&bp->b_lock, NULL);
++	bp->b_holder = 0;
++	bp->b_recur = 0;
  }
  
- void
- release_extent_tree_node(extent_tree_node_t *node)
- {
--	pthread_mutex_lock(&ext_flist_lock);
--	node->avl_node.avl_nextino = (avlnode_t *) ext_flist.list;
--	ext_flist.list = node;
--	ext_flist.cnt++;
--	pthread_mutex_unlock(&ext_flist_lock);
--
--	return;
-+	free(node);
+ xfs_buf_t *
+@@ -410,18 +412,24 @@ libxfs_getbuf_flags(dev_t device, xfs_da
+ 		return NULL;
+ 
+ 	if (use_xfs_buf_lock) {
+-		if (flags & LIBXFS_GETBUF_TRYLOCK) {
+-			int ret;
++		int ret;
+ 
+-			ret = pthread_mutex_trylock(&bp->b_lock);
+-			if (ret) {
+-				ASSERT(ret == EAGAIN);
+-				cache_node_put(libxfs_bcache, (struct cache_node *)bp);
+-				return NULL;
++		ret = pthread_mutex_trylock(&bp->b_lock);
++		if (ret) {
++			ASSERT(ret == EAGAIN);
++			if (flags & LIBXFS_GETBUF_TRYLOCK)
++				goto out_put;
++
++			if (pthread_equal(bp->b_holder, pthread_self())) {
++				fprintf(stderr,
++	_("recursive buffer locking detected\n"));
++				bp->b_recur++;
++			} else {
++				pthread_mutex_lock(&bp->b_lock);
+ 			}
+-		} else {
+-			pthread_mutex_lock(&bp->b_lock);
+ 		}
++
++		bp->b_holder = pthread_self();
+ 	}
+ 
+ 	cache_node_set_priority(libxfs_bcache, (struct cache_node *)bp,
+@@ -440,6 +448,9 @@ libxfs_getbuf_flags(dev_t device, xfs_da
+ #endif
+ 
+ 	return bp;
++out_put:
++	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
++	return NULL;
  }
  
- /*
-@@ -630,57 +557,24 @@
- mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
- 	xfs_extlen_t new_blockcount, extent_state_t new_state)
- {
--	int i;
- 	rt_extent_tree_node_t *new;
--	rt_extent_alloc_rec_t *rec;
- 
--	pthread_mutex_lock(&rt_ext_flist_lock);
--	if (rt_ext_flist.cnt == 0)  {
--		ASSERT(rt_ext_flist.list == NULL);
--
--		if ((rec = malloc(sizeof(rt_extent_alloc_rec_t))) == NULL)
--			do_error(
--			_("couldn't allocate new extent descriptors.\n"));
-+	new = malloc(sizeof(*new));
-+	if (!new)
-+		do_error(_("couldn't allocate new extent descriptor.\n"));
- 
--		list_add(&rec->list, &rt_ba_list);
--
--		new = &rec->extents[0];
--
--		for (i = 0; i < ALLOC_NUM_EXTS; i++)  {
--			new->avl_node.avl_nextino = (avlnode_t *)
--							rt_ext_flist.list;
--			rt_ext_flist.list = new;
--			rt_ext_flist.cnt++;
--			new++;
--		}
--	}
--
--	ASSERT(rt_ext_flist.list != NULL);
--
--	new = rt_ext_flist.list;
--	rt_ext_flist.list = (rt_extent_tree_node_t *) new->avl_node.avl_nextino;
--	rt_ext_flist.cnt--;
- 	new->avl_node.avl_nextino = NULL;
--	pthread_mutex_unlock(&rt_ext_flist_lock);
--
--	/* initialize node */
--
- 	new->rt_startblock = new_startblock;
- 	new->rt_blockcount = new_blockcount;
- 	new->rt_state = new_state;
--
--	return(new);
-+	return new;
+ struct xfs_buf *
+@@ -458,8 +469,14 @@ libxfs_putbuf(xfs_buf_t *bp)
+ 	list_del_init(&bp->b_lock_list);
+ 	pthread_mutex_unlock(&libxfs_bcache->c_mutex);
+ #endif
+-	if (use_xfs_buf_lock)
+-		pthread_mutex_unlock(&bp->b_lock);
++	if (use_xfs_buf_lock) {
++		if (bp->b_recur) {
++			bp->b_recur--;
++		} else {
++			bp->b_holder = 0;
++			pthread_mutex_unlock(&bp->b_lock);
++		}
++	}
+ 	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
  }
  
- #if 0
- void
- release_rt_extent_tree_node(rt_extent_tree_node_t *node)
- {
--	node->avl_node.avl_nextino = (avlnode_t *) rt_ext_flist.list;
--	rt_ext_flist.list = node;
--	rt_ext_flist.cnt++;
--
--	return;
-+	free(node);
- }
- 
- void
-@@ -719,18 +613,9 @@
- void
- free_rt_dup_extent_tree(xfs_mount_t *mp)
- {
--	rt_extent_alloc_rec_t *cur, *tmp;
--
- 	ASSERT(mp->m_sb.sb_rblocks != 0);
--
--	list_for_each_entry_safe(cur, tmp, &rt_ba_list, list)
--		free(cur);
--
- 	free(rt_ext_tree_ptr);
--
- 	rt_ext_tree_ptr = NULL;
--
--	return;
- }
- 
- /*
-@@ -862,11 +747,7 @@
- 	int i;
- 	xfs_agnumber_t agcount = mp->m_sb.sb_agcount;
- 
--	list_head_init(&ba_list);
--	list_head_init(&rt_ba_list);
--	pthread_mutex_init(&ext_flist_lock, NULL);
- 	pthread_mutex_init(&rt_ext_tree_lock, NULL);
--	pthread_mutex_init(&rt_ext_flist_lock, NULL);
- 
- 	dup_extent_trees = calloc(agcount, sizeof(struct btree_root *));
- 	if (!dup_extent_trees)
-@@ -908,11 +789,6 @@
- 		do_error(_("couldn't malloc dup rt extent tree descriptor\n"));
- 
- 	avl64_init_tree(rt_ext_tree_ptr, &avl64_extent_tree_ops);
--
--	ext_flist.cnt = 0;
--	ext_flist.list = NULL;
--
--	return;
- }
- 
- /*
-@@ -921,12 +797,8 @@
- void
- incore_ext_teardown(xfs_mount_t *mp)
- {
--	extent_alloc_rec_t *cur, *tmp;
- 	xfs_agnumber_t i;
- 
--	list_for_each_entry_safe(cur, tmp, &ba_list, list)
--		free(cur);
--
- 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
- 		btree_destroy(dup_extent_trees[i]);
- 		free(extent_bno_ptrs[i]);
 
 _______________________________________________
 xfs mailing list
