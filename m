@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2Hopr6092936 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:50:51 -0600
+	pB2Hli8m092694 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:47:45 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9777D1F3F477
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:44 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 45116984864
+	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:42 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	0IeiFHzPkVxWukjT for <xfs@oss.sgi.com>;
-	Fri, 02 Dec 2011 09:47:44 -0800 (PST)
+	QlKb1P8UOeuZkZ6A for <xfs@oss.sgi.com>;
+	Fri, 02 Dec 2011 09:47:42 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RWXD5-0000nf-Ij
-	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:43 +0000
-Message-Id: <20111202174743.523970893@bombadil.infradead.org>
-Date: Fri, 02 Dec 2011 12:46:30 -0500
+	Linux)) id 1RWXD3-0000jA-Hl
+	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:41 +0000
+Message-Id: <20111202174741.504430987@bombadil.infradead.org>
+Date: Fri, 02 Dec 2011 12:46:22 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 11/12] repair: move extern declarations to headers
+Subject: [PATCH 03/12] repair: allocate and free extent records individually
 References: <20111202174619.179530033@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-cleanup-externs
+Content-Disposition: inline; filename=repair-free-extent-chunk-node
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,196 +34,268 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Instead of allocating inode records in chunks and keeping a freelist of them
+which gets released to the system memory allocator in one go use plain malloc
+and free for them.  The freelist just means adding a global lock instead
+of relying on malloc and free which could be implemented lockless.  In
+addition smart allocators like tcmalloc have far less overhead than our
+chunk and linked list.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/avl.h
-===================================================================
---- xfsprogs-dev.orig/repair/avl.h	2011-12-01 16:17:07.000000000 +0000
-+++ xfsprogs-dev/repair/avl.h	2011-12-01 16:18:33.000000000 +0000
-@@ -134,6 +134,15 @@ avl_findranges(
- 	avlnode_t	        **startp,
- 	avlnode_t		**endp);
- 
-+avlnode_t *
-+avl_firstino(
-+	avlnode_t		*root);
-+
-+avlnode_t *
-+avl_lastino(
-+	avlnode_t		*root);
-+
-+
- #define AVL_PRECEED	0x1
- #define AVL_SUCCEED	0x2
- 
-Index: xfsprogs-dev/repair/bmap.h
-===================================================================
---- xfsprogs-dev.orig/repair/bmap.h	2011-12-01 16:17:07.000000000 +0000
-+++ xfsprogs-dev/repair/bmap.h	2011-12-01 16:18:33.000000000 +0000
-@@ -53,6 +53,9 @@ typedef	struct blkmap {
- #define BLKMAP_NEXTS_MAX	INT_MAX
- #endif
- 
-+extern pthread_key_t dblkmap_key;
-+extern pthread_key_t ablkmap_key;
-+
- blkmap_t	*blkmap_alloc(xfs_extnum_t nex, int whichfork);
- void		blkmap_free(blkmap_t *blkmap);
- 
-Index: xfsprogs-dev/repair/incore.h
-===================================================================
---- xfsprogs-dev.orig/repair/incore.h	2011-12-01 16:17:07.000000000 +0000
-+++ xfsprogs-dev/repair/incore.h	2011-12-01 16:18:33.000000000 +0000
-@@ -209,9 +209,12 @@ void		incore_ext_init(xfs_mount_t *);
-  * the nodes.
-  */
- void		incore_ext_teardown(xfs_mount_t *mp);
--
- void		incore_ino_init(xfs_mount_t *);
- 
-+int		count_bno_extents(xfs_agnumber_t);
-+int		count_bno_extents_blocks(xfs_agnumber_t, uint *);
-+int		count_bcnt_extents(xfs_agnumber_t);
-+
- /*
-  * inode definitions
-  */
 Index: xfsprogs-dev/repair/incore_ext.c
 ===================================================================
---- xfsprogs-dev.orig/repair/incore_ext.c	2011-12-01 16:17:31.000000000 +0000
-+++ xfsprogs-dev/repair/incore_ext.c	2011-12-01 16:18:33.000000000 +0000
-@@ -386,8 +386,6 @@ findfirst_bcnt_extent(xfs_agnumber_t agn
- extent_tree_node_t *
- findbiggest_bcnt_extent(xfs_agnumber_t agno)
- {
--	extern avlnode_t *avl_lastino(avlnode_t *root);
--
- 	ASSERT(extent_bcnt_ptrs != NULL);
- 	ASSERT(extent_bcnt_ptrs[agno] != NULL);
- 
-Index: xfsprogs-dev/repair/incore_ino.c
-===================================================================
---- xfsprogs-dev.orig/repair/incore_ino.c	2011-12-01 16:17:31.000000000 +0000
-+++ xfsprogs-dev/repair/incore_ino.c	2011-12-01 16:18:51.000000000 +0000
-@@ -25,8 +25,6 @@
- #include "threads.h"
+--- xfsprogs-dev.orig/repair/incore_ext.c	2011-11-10 14:01:04.905470023 +0000
++++ xfsprogs-dev/repair/incore_ext.c	2011-11-14 10:14:57.696692843 +0000
+@@ -26,20 +26,6 @@
  #include "err_protos.h"
- 
--extern avlnode_t	*avl_firstino(avlnode_t *root);
--
- /*
-  * array of inode tree ptrs, one per ag
-  */
-Index: xfsprogs-dev/repair/init.c
-===================================================================
---- xfsprogs-dev.orig/repair/init.c	2011-12-01 16:17:07.000000000 +0000
-+++ xfsprogs-dev/repair/init.c	2011-12-01 16:18:33.000000000 +0000
-@@ -34,9 +34,6 @@ static pthread_key_t dirbuf_key;
- static pthread_key_t dir_freemap_key;
- static pthread_key_t attr_freemap_key;
- 
--extern pthread_key_t dblkmap_key;
--extern pthread_key_t ablkmap_key;
--
- static void
- ts_alloc(pthread_key_t key, unsigned n, size_t size)
- {
-Index: xfsprogs-dev/repair/phase4.c
-===================================================================
---- xfsprogs-dev.orig/repair/phase4.c	2011-12-01 16:18:23.000000000 +0000
-+++ xfsprogs-dev/repair/phase4.c	2011-12-01 16:18:33.000000000 +0000
-@@ -196,8 +196,6 @@ phase4(xfs_mount_t *mp)
- 	int			ag_hdr_len = 4 * mp->m_sb.sb_sectsize;
- 	int			ag_hdr_block;
- 	int			bstate;
--	int			count_bcnt_extents(xfs_agnumber_t agno);
--	int			count_bno_extents(xfs_agnumber_t agno);
- 
- 	ag_hdr_block = howmany(ag_hdr_len, mp->m_sb.sb_blocksize);
- 
-Index: xfsprogs-dev/repair/phase5.c
-===================================================================
---- xfsprogs-dev.orig/repair/phase5.c	2011-12-01 16:18:23.000000000 +0000
-+++ xfsprogs-dev/repair/phase5.c	2011-12-01 16:18:33.000000000 +0000
-@@ -1404,11 +1404,6 @@ phase5_func(
- 	xfs_extlen_t	freeblks2;
- #endif
- 	xfs_agblock_t	num_extents;
--	extern int	count_bno_extents(xfs_agnumber_t);
--	extern int	count_bno_extents_blocks(xfs_agnumber_t, uint *);
--#ifdef XR_BLD_FREE_TRACE
--	extern int	count_bcnt_extents(xfs_agnumber_t);
--#endif
- 
- 	if (verbose)
- 		do_log(_("        - agno = %d\n"), agno);
-Index: xfsprogs-dev/repair/protos.h
-===================================================================
---- xfsprogs-dev.orig/repair/protos.h	2011-12-01 16:17:07.000000000 +0000
-+++ xfsprogs-dev/repair/protos.h	2011-12-01 16:18:33.000000000 +0000
-@@ -39,11 +39,23 @@ void	get_sb_geometry(struct fs_geometry
- char	*alloc_ag_buf(int size);
- 
- void	print_inode_list(xfs_agnumber_t i);
--char *	err_string(int err_code);
-+char	*err_string(int err_code);
- 
--extern void *ts_attr_freemap(void);
--extern void *ts_dir_freemap(void);
--extern void *ts_dirbuf(void);
--extern void ts_init(void);
--extern void thread_init(void);
-+void	*ts_attr_freemap(void);
-+void	*ts_dir_freemap(void);
-+void	*ts_dirbuf(void);
-+void	ts_init(void);
-+void	thread_init(void);
-+
-+void	phase1(struct xfs_mount *);
-+void	phase2(struct xfs_mount *, int);
-+void	phase3(struct xfs_mount *);
-+void	phase4(struct xfs_mount *);
-+void	phase5(struct xfs_mount *);
-+void	phase6(struct xfs_mount *);
-+void	phase7(struct xfs_mount *);
-+
-+int	verify_set_agheader(struct xfs_mount *, struct xfs_buf *,
-+		struct xfs_sb *, struct xfs_agf *, struct xfs_agi *,
-+		xfs_agnumber_t);
- 
-Index: xfsprogs-dev/repair/scan.c
-===================================================================
---- xfsprogs-dev.orig/repair/scan.c	2011-12-01 16:18:23.000000000 +0000
-+++ xfsprogs-dev/repair/scan.c	2011-12-01 16:18:33.000000000 +0000
-@@ -30,9 +30,6 @@
- #include "progress.h"
+ #include "avl64.h"
  #include "threads.h"
- 
--extern int verify_set_agheader(xfs_mount_t *mp, xfs_buf_t *sbuf, xfs_sb_t *sb,
--		xfs_agf_t *agf, xfs_agi_t *agi, xfs_agnumber_t i);
+-#define ALLOC_NUM_EXTS		100
 -
- static xfs_mount_t	*mp = NULL;
+-/*
+- * paranoia -- account for any weird padding, 64/32-bit alignment, etc.
+- */
+-typedef struct extent_alloc_rec  {
+-	struct list_head	list;
+-	extent_tree_node_t	extents[ALLOC_NUM_EXTS];
+-} extent_alloc_rec_t;
+-
+-typedef struct rt_extent_alloc_rec  {
+-	struct list_head	list;
+-	rt_extent_tree_node_t	extents[ALLOC_NUM_EXTS];
+-} rt_extent_alloc_rec_t;
  
  /*
-Index: xfsprogs-dev/repair/xfs_repair.c
-===================================================================
---- xfsprogs-dev.orig/repair/xfs_repair.c	2011-12-01 16:18:23.000000000 +0000
-+++ xfsprogs-dev/repair/xfs_repair.c	2011-12-01 16:18:33.000000000 +0000
-@@ -32,14 +32,6 @@
- 
- #define	rounddown(x, y)	(((x)/(y))*(y))
- 
--extern void	phase1(xfs_mount_t *);
--extern void	phase2(xfs_mount_t *, int);
--extern void	phase3(xfs_mount_t *);
--extern void	phase4(xfs_mount_t *);
--extern void	phase5(xfs_mount_t *);
--extern void	phase6(xfs_mount_t *);
--extern void	phase7(xfs_mount_t *);
+  * note:  there are 4 sets of incore things handled here:
+@@ -57,21 +43,9 @@
+  * phase 5.  The uncertain inode list goes away at the end of
+  * phase 3.  The inode tree and bno/bnct trees go away after phase 5.
+  */
+-typedef struct ext_flist_s  {
+-	extent_tree_node_t	*list;
+-	int			cnt;
+-} ext_flist_t;
 -
- #define		XR_MAX_SECT_SIZE	(64 * 1024)
+-static ext_flist_t ext_flist;
+-
+-typedef struct rt_ext_flist_s  {
+-	rt_extent_tree_node_t	*list;
+-	int			cnt;
+-} rt_ext_flist_t;
+-
+-static rt_ext_flist_t rt_ext_flist;
+ 
+ static avl64tree_desc_t	*rt_ext_tree_ptr;	/* dup extent tree for rt */
++static pthread_mutex_t	rt_ext_tree_lock;
+ 
+ static struct btree_root **dup_extent_trees;	/* per ag dup extent trees */
+ static pthread_mutex_t *dup_extent_tree_locks;
+@@ -89,19 +63,6 @@
+ 						 */
  
  /*
+- * list of allocated "blocks" for easy freeing later
+- */
+-static struct list_head	ba_list;
+-static struct list_head	rt_ba_list;
+-
+-/*
+- * locks.
+- */
+-static pthread_mutex_t	ext_flist_lock;
+-static pthread_mutex_t	rt_ext_tree_lock;
+-static pthread_mutex_t	rt_ext_flist_lock;
+-
+-/*
+  * duplicate extent tree functions
+  */
+ 
+@@ -167,60 +128,26 @@
+ mk_extent_tree_nodes(xfs_agblock_t new_startblock,
+ 	xfs_extlen_t new_blockcount, extent_state_t new_state)
+ {
+-	int i;
+ 	extent_tree_node_t *new;
+-	extent_alloc_rec_t *rec;
+-
+-	pthread_mutex_lock(&ext_flist_lock);
+-	if (ext_flist.cnt == 0)  {
+-		ASSERT(ext_flist.list == NULL);
+-
+-		if ((rec = malloc(sizeof(extent_alloc_rec_t))) == NULL)
+-			do_error(
+-			_("couldn't allocate new extent descriptors.\n"));
+-
+-		list_add(&rec->list, &ba_list);
+-
+-		new = &rec->extents[0];
+ 
+-		for (i = 0; i < ALLOC_NUM_EXTS; i++)  {
+-			new->avl_node.avl_nextino = (avlnode_t *)
+-							ext_flist.list;
+-			ext_flist.list = new;
+-			ext_flist.cnt++;
+-			new++;
+-		}
+-	}
+-
+-	ASSERT(ext_flist.list != NULL);
++	new = malloc(sizeof(*new));
++	if (!new)
++		do_error(_("couldn't allocate new extent descriptor.\n"));
+ 
+-	new = ext_flist.list;
+-	ext_flist.list = (extent_tree_node_t *) new->avl_node.avl_nextino;
+-	ext_flist.cnt--;
+ 	new->avl_node.avl_nextino = NULL;
+-	pthread_mutex_unlock(&ext_flist_lock);
+-
+-	/* initialize node */
+-
+ 	new->ex_startblock = new_startblock;
+ 	new->ex_blockcount = new_blockcount;
+ 	new->ex_state = new_state;
+ 	new->next = NULL;
+ 	new->last = NULL;
+ 
+-	return(new);
++	return new;
+ }
+ 
+ void
+ release_extent_tree_node(extent_tree_node_t *node)
+ {
+-	pthread_mutex_lock(&ext_flist_lock);
+-	node->avl_node.avl_nextino = (avlnode_t *) ext_flist.list;
+-	ext_flist.list = node;
+-	ext_flist.cnt++;
+-	pthread_mutex_unlock(&ext_flist_lock);
+-
+-	return;
++	free(node);
+ }
+ 
+ /*
+@@ -630,57 +557,24 @@
+ mk_rt_extent_tree_nodes(xfs_drtbno_t new_startblock,
+ 	xfs_extlen_t new_blockcount, extent_state_t new_state)
+ {
+-	int i;
+ 	rt_extent_tree_node_t *new;
+-	rt_extent_alloc_rec_t *rec;
+ 
+-	pthread_mutex_lock(&rt_ext_flist_lock);
+-	if (rt_ext_flist.cnt == 0)  {
+-		ASSERT(rt_ext_flist.list == NULL);
+-
+-		if ((rec = malloc(sizeof(rt_extent_alloc_rec_t))) == NULL)
+-			do_error(
+-			_("couldn't allocate new extent descriptors.\n"));
++	new = malloc(sizeof(*new));
++	if (!new)
++		do_error(_("couldn't allocate new extent descriptor.\n"));
+ 
+-		list_add(&rec->list, &rt_ba_list);
+-
+-		new = &rec->extents[0];
+-
+-		for (i = 0; i < ALLOC_NUM_EXTS; i++)  {
+-			new->avl_node.avl_nextino = (avlnode_t *)
+-							rt_ext_flist.list;
+-			rt_ext_flist.list = new;
+-			rt_ext_flist.cnt++;
+-			new++;
+-		}
+-	}
+-
+-	ASSERT(rt_ext_flist.list != NULL);
+-
+-	new = rt_ext_flist.list;
+-	rt_ext_flist.list = (rt_extent_tree_node_t *) new->avl_node.avl_nextino;
+-	rt_ext_flist.cnt--;
+ 	new->avl_node.avl_nextino = NULL;
+-	pthread_mutex_unlock(&rt_ext_flist_lock);
+-
+-	/* initialize node */
+-
+ 	new->rt_startblock = new_startblock;
+ 	new->rt_blockcount = new_blockcount;
+ 	new->rt_state = new_state;
+-
+-	return(new);
++	return new;
+ }
+ 
+ #if 0
+ void
+ release_rt_extent_tree_node(rt_extent_tree_node_t *node)
+ {
+-	node->avl_node.avl_nextino = (avlnode_t *) rt_ext_flist.list;
+-	rt_ext_flist.list = node;
+-	rt_ext_flist.cnt++;
+-
+-	return;
++	free(node);
+ }
+ 
+ void
+@@ -719,18 +613,9 @@
+ void
+ free_rt_dup_extent_tree(xfs_mount_t *mp)
+ {
+-	rt_extent_alloc_rec_t *cur, *tmp;
+-
+ 	ASSERT(mp->m_sb.sb_rblocks != 0);
+-
+-	list_for_each_entry_safe(cur, tmp, &rt_ba_list, list)
+-		free(cur);
+-
+ 	free(rt_ext_tree_ptr);
+-
+ 	rt_ext_tree_ptr = NULL;
+-
+-	return;
+ }
+ 
+ /*
+@@ -862,11 +747,7 @@
+ 	int i;
+ 	xfs_agnumber_t agcount = mp->m_sb.sb_agcount;
+ 
+-	list_head_init(&ba_list);
+-	list_head_init(&rt_ba_list);
+-	pthread_mutex_init(&ext_flist_lock, NULL);
+ 	pthread_mutex_init(&rt_ext_tree_lock, NULL);
+-	pthread_mutex_init(&rt_ext_flist_lock, NULL);
+ 
+ 	dup_extent_trees = calloc(agcount, sizeof(struct btree_root *));
+ 	if (!dup_extent_trees)
+@@ -908,11 +789,6 @@
+ 		do_error(_("couldn't malloc dup rt extent tree descriptor\n"));
+ 
+ 	avl64_init_tree(rt_ext_tree_ptr, &avl64_extent_tree_ops);
+-
+-	ext_flist.cnt = 0;
+-	ext_flist.list = NULL;
+-
+-	return;
+ }
+ 
+ /*
+@@ -921,12 +797,8 @@
+ void
+ incore_ext_teardown(xfs_mount_t *mp)
+ {
+-	extent_alloc_rec_t *cur, *tmp;
+ 	xfs_agnumber_t i;
+ 
+-	list_for_each_entry_safe(cur, tmp, &ba_list, list)
+-		free(cur);
+-
+ 	for (i = 0; i < mp->m_sb.sb_agcount; i++)  {
+ 		btree_destroy(dup_extent_trees[i]);
+ 		free(extent_bno_ptrs[i]);
 
 _______________________________________________
 xfs mailing list
