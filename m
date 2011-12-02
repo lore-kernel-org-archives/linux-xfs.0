@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2Hpd4u093067 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:51:40 -0600
+	pB2Hlhq0092672 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 11:47:44 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A605C1F3F476
-	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:43 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E84D14D4EE0
+	for <xfs@oss.sgi.com>; Fri,  2 Dec 2011 09:47:42 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	SdG910pZauekD7H7 for <xfs@oss.sgi.com>;
-	Fri, 02 Dec 2011 09:47:43 -0800 (PST)
+	hBilcSWWCtEq2PKG for <xfs@oss.sgi.com>;
+	Fri, 02 Dec 2011 09:47:42 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RWXD4-0000lo-IW
+	Linux)) id 1RWXD3-0000kC-Uh
 	for xfs@oss.sgi.com; Fri, 02 Dec 2011 17:47:42 +0000
-Message-Id: <20111202174742.515301323@bombadil.infradead.org>
-Date: Fri, 02 Dec 2011 12:46:27 -0500
+Message-Id: <20111202174741.904845954@bombadil.infradead.org>
+Date: Fri, 02 Dec 2011 12:46:24 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 08/12] repair: handle filesystems with the log in allocation
-	group 0
+Subject: [PATCH 05/12] repair: update extent count after zapping duplicate
+	blocks
 References: <20111202174619.179530033@bombadil.infradead.org>
-Content-Disposition: inline; filename=repair-fix-geomety-detection
+Content-Disposition: inline; filename=repair-fix-duplicate-block-handling
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,41 +35,191 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Sindre Skogen reported that repair chokes on a very small filesystem created
-by mkfs.xfs from xfsprogs 2.9.4.  It turned out that for some reason this
-filesystem had the log in allocation group 0 and thus repairs validation
-of the root inode number was off.  Fix this by adding the log blocks if
-the log is allocated in allocation group 0.
+When we find a duplicate extent in an extern format inode we do not zap
+the whole inode, but just truncate it to the point where the duplicate
+extent was found.  But the current code only updates di_nblocks for the
+new size, but no di_nextents/di_anextents.  In most cases this isn't noticed,
+but when moving such an inode to the lost+found directoy the consistency
+check in xfs_iformat trips over it.  Fix this by updating the on-disk
+extent count as part of the inode repair.
 
-Reported-by: Sindre Skogen <sindre@workzone.no>
+Note that we zap btree format inodes with duplicate block completely
+at this point, so this fix doesn't apply to them.
+
+Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/xfs_repair.c
+Index: xfsprogs-dev/repair/dinode.c
 ===================================================================
---- xfsprogs-dev.orig/repair/xfs_repair.c	2011-12-01 16:17:07.000000000 +0000
-+++ xfsprogs-dev/repair/xfs_repair.c	2011-12-01 16:17:58.000000000 +0000
-@@ -417,12 +417,16 @@ calc_mkfs(xfs_mount_t *mp)
- 	fino_bno = inobt_root + XFS_MIN_FREELIST_RAW(1, 1, mp) + 1;
+--- xfsprogs-dev.orig/repair/dinode.c	2011-11-08 12:15:40.000000000 +0000
++++ xfsprogs-dev/repair/dinode.c	2011-11-14 12:09:54.000000000 +0000
+@@ -606,7 +606,7 @@ int
+ process_bmbt_reclist_int(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+@@ -642,7 +642,7 @@ process_bmbt_reclist_int(
+ 	else
+ 		ftype = _("regular");
  
- 	/*
--	 * If we only have a single allocation group the log is also allocated
--	 * in the first allocation group and we need to add the number of
--	 * blocks used by the log to the above calculation.
--	 * All this of course doesn't apply if we have an external log.
-+	 * If the log is allocated in the first allocation group we need to
-+	 * add the number of blocks used by the log to the above calculation.
-+	 *
-+	 * This can happens with filesystems that only have a single
-+	 * allocation group, or very odd geometries created by old mkfs
-+	 * versions on very small filesystems.
- 	 */
--	if (mp->m_sb.sb_agcount == 1 && mp->m_sb.sb_logstart) {
-+	if (mp->m_sb.sb_logstart &&
-+	    XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart) == 0) {
+-	for (i = 0; i < numrecs; i++) {
++	for (i = 0; i < *numrecs; i++) {
+ 		libxfs_bmbt_disk_get_all(rp + i, &irec);
+ 		if (i == 0)
+ 			*last_key = *first_key = irec.br_startoff;
+@@ -831,6 +831,13 @@ _("illegal state %d in block map %" PRIu
+ done:
+ 	if (locked_agno != -1)
+ 		pthread_mutex_unlock(&ag_locks[locked_agno]);
 +
- 		/*
- 		 * XXX(hch): verify that sb_logstart makes sense?
++	if (i != *numrecs) {
++		ASSERT(i < *numrecs);
++		do_warn(_("correcting nextents for inode %" PRIu64 "\n"), ino);
++		*numrecs = i;
++	}
++
+ 	return error;
+ }
+ 
+@@ -842,7 +849,7 @@ int
+ process_bmbt_reclist(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+@@ -863,7 +870,7 @@ int
+ scan_bmbt_reclist(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+@@ -1356,23 +1363,29 @@ process_exinode(
+ 	xfs_bmbt_rec_t		*rp;
+ 	xfs_dfiloff_t		first_key;
+ 	xfs_dfiloff_t		last_key;
++	int			numrecs;
++	int			ret;
+ 
+ 	lino = XFS_AGINO_TO_INO(mp, agno, ino);
+ 	rp = (xfs_bmbt_rec_t *)XFS_DFORK_PTR(dip, whichfork);
+ 	*tot = 0;
+-	*nex = XFS_DFORK_NEXTENTS(dip, whichfork);
++	numrecs = XFS_DFORK_NEXTENTS(dip, whichfork);
++
+ 	/*
+ 	 * XXX - if we were going to fix up the btree record,
+ 	 * we'd do it right here.  For now, if there's a problem,
+ 	 * we'll bail out and presumably clear the inode.
+ 	 */
+ 	if (check_dups == 0)
+-		return(process_bmbt_reclist(mp, rp, *nex, type, lino,
++		ret = process_bmbt_reclist(mp, rp, &numrecs, type, lino,
+ 					tot, blkmapp, &first_key, &last_key,
+-					whichfork));
++					whichfork);
+ 	else
+-		return(scan_bmbt_reclist(mp, rp, *nex, type, lino, tot,
+-					whichfork));
++		ret = scan_bmbt_reclist(mp, rp, &numrecs, type, lino, tot,
++					whichfork);
++
++	*nex = numrecs;
++	return ret;
+ }
+ 
+ /*
+@@ -2003,6 +2016,12 @@ process_inode_blocks_and_extents(
+ 	xfs_ino_t	lino,
+ 	int		*dirty)
+ {
++	if (nblocks < nextents + anextents) {
++		do_warn(
++_("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblocks, lino);
++		return 1;
++	}
++
+ 	if (nblocks != be64_to_cpu(dino->di_nblocks))  {
+ 		if (!no_modify)  {
+ 			do_warn(
+@@ -2063,6 +2082,7 @@ _("bad anextents %d for inode %" PRIu64
+ 				lino, anextents);
+ 		}
+ 	}
++
+ 	return 0;
+ }
+ 
+Index: xfsprogs-dev/repair/dinode.h
+===================================================================
+--- xfsprogs-dev.orig/repair/dinode.h	2010-05-10 18:16:35.000000000 +0000
++++ xfsprogs-dev/repair/dinode.h	2011-11-14 12:09:54.000000000 +0000
+@@ -42,7 +42,7 @@ convert_extent(
+ int
+ process_bmbt_reclist(xfs_mount_t	*mp,
+ 		xfs_bmbt_rec_t		*rp,
+-		int			numrecs,
++		int			*numrecs,
+ 		int			type,
+ 		xfs_ino_t		ino,
+ 		xfs_drfsbno_t		*tot,
+@@ -55,7 +55,7 @@ int
+ scan_bmbt_reclist(
+ 	xfs_mount_t		*mp,
+ 	xfs_bmbt_rec_t		*rp,
+-	int			numrecs,
++	int			*numrecs,
+ 	int			type,
+ 	xfs_ino_t		ino,
+ 	xfs_drfsbno_t		*tot,
+Index: xfsprogs-dev/repair/scan.c
+===================================================================
+--- xfsprogs-dev.orig/repair/scan.c	2011-11-10 11:23:47.000000000 +0000
++++ xfsprogs-dev/repair/scan.c	2011-11-14 12:09:54.000000000 +0000
+@@ -351,12 +351,12 @@ _("inode %" PRIu64 " bad # of bmap recor
+ 		 * we'll bail out and presumably clear the inode.
  		 */
+ 		if (check_dups == 0)  {
+-			err = process_bmbt_reclist(mp, rp, numrecs,
+-					type, ino, tot, blkmapp,
+-					&first_key, &last_key,
+-					whichfork);
++			err = process_bmbt_reclist(mp, rp, &numrecs, type, ino,
++						   tot, blkmapp, &first_key,
++						   &last_key, whichfork);
+ 			if (err)
+-				return(1);
++				return 1;
++
+ 			/*
+ 			 * check that key ordering is monotonically increasing.
+ 			 * if the last_key value in the cursor is set to
+@@ -380,10 +380,11 @@ _("out-of-order bmap key (file offset) i
+ 			bm_cursor->level[level].first_key = first_key;
+ 			bm_cursor->level[level].last_key = last_key;
+ 
+-			return(0);
+-		} else
+-			return(scan_bmbt_reclist(mp, rp, numrecs,
+-						type, ino, tot, whichfork));
++			return 0;
++		} else {
++			return scan_bmbt_reclist(mp, rp, &numrecs, type, ino,
++						 tot, whichfork);
++		}
+ 	}
+ 	if (numrecs > mp->m_bmap_dmxr[1] || (isroot == 0 && numrecs <
+ 							mp->m_bmap_dmnr[1])) {
 
 _______________________________________________
 xfs mailing list
