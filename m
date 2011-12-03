@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB38Reua133618
-	for <linux-xfs@oss.sgi.com>; Sat, 3 Dec 2011 02:27:41 -0600
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 038311A19F4B
-	for <linux-xfs@oss.sgi.com>; Sat,  3 Dec 2011 00:27:39 -0800 (PST)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	hsSKNCg6W5AAj0qr for <linux-xfs@oss.sgi.com>;
-	Sat, 03 Dec 2011 00:27:39 -0800 (PST)
-Received: by iakk12 with SMTP id k12so5715551iak.26
-	for <linux-xfs@oss.sgi.com>; Sat, 03 Dec 2011 00:27:39 -0800 (PST)
-MIME-Version: 1.0
+	pB39uM7r135609
+	for <linux-xfs@oss.sgi.com>; Sat, 3 Dec 2011 03:56:22 -0600
+Received: from snt0-omc1-s1.snt0.hotmail.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 00F381DC1082
+	for <linux-xfs@oss.sgi.com>; Sat,  3 Dec 2011 01:56:20 -0800 (PST)
+Received: from snt0-omc1-s1.snt0.hotmail.com (snt0-omc1-s1.snt0.hotmail.com
+	[65.55.90.12]) by cuda.sgi.com with ESMTP id TZowEhhqSSxN1Bla
+	for <linux-xfs@oss.sgi.com>; Sat, 03 Dec 2011 01:56:20 -0800 (PST)
+Message-ID: <SNT135-W2217EB3D3B80A8433A1FA4A4B70@phx.gbl>
+From: yangguoquan <ygq51@hotmail.com>
+Subject: RE: xfs: validate inode numbers in file handles correctly
+Date: Sat, 3 Dec 2011 17:56:20 +0800
 In-Reply-To: <20111128111947.GA26454@infradead.org>
-References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
-	<loom.20111123T134243-580@post.gmane.org>
-	<20111123143045.GA20892@infradead.org>
+References: <1276846374-23916-1-git-send-email-david@fromorbit.com>,
+	<loom.20111123T134243-580@post.gmane.org>,
+	<20111123143045.GA20892@infradead.org>,
 	<20111128111947.GA26454@infradead.org>
-Date: Sat, 3 Dec 2011 16:27:39 +0800
-Message-ID: <CAJNJY8RSOX2XsbM+0riNNPGxaLGm+OWkHexTVM4v5+rhkchuAw@mail.gmail.com>
-Subject: Re: xfs: validate inode numbers in file handles correctly
-From: hank peng <pengxihan@gmail.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,64 +27,128 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: multipart/mixed; boundary="===============7069028250435374666=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@oss.sgi.com, Guoquan Yang <ygq51@hotmail.com>
+To: hch@infradead.org
+Cc: linux-xfs@oss.sgi.com, pengxihan@gmail.com
 
-MjAxMS8xMS8yOCBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+Ogo+IEd1b3F1
-YW4gYW5kIGhhbmssCj4KPiBhcmUgeW91IHVzaW5nIDMyLWJpdCBvciA2NC1iaXQga2VybmVscz8g
-wqBJIGp1c3Qgbm90aWNlZCB3ZSBoYXZlIGEKPiBwcm9ibGVtIHdpdGggZXhwb3J0aW5nIDY0LWJp
-dCBpbm9kZXMgb24gMzItYml0IGtlcm5lbCBiZWNhdXNlIHRoZQo+IFZGUyBpX2lubyBmaWVsZCBp
-cyBqdXN0IDMyLWJpdHMgbG9uZy4gwqBUaGUgcGF0Y2ggYmVsb3cgd291bGQgZml4Cj4gdGhhdCBp
-c3N1ZS4KPgp5ZXMsIHdlIHVzZSBpbm9kZTY0IG9uIDMyLWJpdCBrZXJuZWwuCgoKPiAtLS0geGZz
-Lm9yaWcvZnMveGZzL2xpbnV4LTIuNi94ZnNfZXhwb3J0LmMgwqAgwqAgwqAyMDExLTExLTI4IDEy
-OjExOjA4LjkyMzYzMDY5NyArMDEwMAo+ICsrKyB4ZnMvZnMveGZzL2xpbnV4LTIuNi94ZnNfZXhw
-b3J0LmMgwqAgMjAxMS0xMS0yOCAxMjoxMzoyMS43NjYyNDQzNjAgKzAxMDAKPiBAQCAtNjEsNiAr
-NjEsOCBAQCB4ZnNfZnNfZW5jb2RlX2ZoKAo+IMKgIMKgIMKgIMKgc3RydWN0IGZpZCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCpmaWQgPSAoc3RydWN0IGZpZCAqKWZoOwo+IMKgIMKgIMKgIMKgc3RydWN0
-IHhmc19maWQ2NCDCoCDCoCDCoCDCoCpmaWQ2NCA9IChzdHJ1Y3QgeGZzX2ZpZDY0ICopZmg7Cj4g
-wqAgwqAgwqAgwqBzdHJ1Y3QgaW5vZGUgwqAgwqAgwqAgwqAgwqAgwqAqaW5vZGUgPSBkZW50cnkt
-PmRfaW5vZGU7Cj4gKyDCoCDCoCDCoCBzdHJ1Y3QgaW5vZGUgwqAgwqAgwqAgwqAgwqAgwqAqcGFy
-ZW50Owo+ICsgwqAgwqAgwqAgc3RydWN0IHhmc19pbm9kZSDCoCDCoCDCoCDCoCppcCA9IFhGU19J
-KGlub2RlKTsKPiDCoCDCoCDCoCDCoGludCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBm
-aWxlaWRfdHlwZTsKPiDCoCDCoCDCoCDCoGludCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCBsZW47Cj4KPiBAQCAtOTgsMjIgKzEwMCwyNCBAQCB4ZnNfZnNfZW5jb2RlX2ZoKAo+IMKgIMKg
-IMKgIMKgc3dpdGNoIChmaWxlaWRfdHlwZSkgewo+IMKgIMKgIMKgIMKgY2FzZSBGSUxFSURfSU5P
-MzJfR0VOX1BBUkVOVDoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNwaW5fbG9jaygmZGVudHJ5
-LT5kX2xvY2spOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgZmlkLT5pMzIucGFyZW50X2lubyA9
-IGRlbnRyeS0+ZF9wYXJlbnQtPmRfaW5vZGUtPmlfaW5vOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgZmlkLT5pMzIucGFyZW50X2dlbiA9IGRlbnRyeS0+ZF9wYXJlbnQtPmRfaW5vZGUtPmlfZ2Vu
-ZXJhdGlvbjsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBhcmVudCA9IGRlbnRyeS0+ZF9wYXJl
-bnQtPmRfaW5vZGU7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkzMi5wYXJlbnRfaW5v
-ID0gWEZTX0kocGFyZW50KS0+aV9pbm87Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkz
-Mi5wYXJlbnRfZ2VuID0gcGFyZW50LT5pX2dlbmVyYXRpb247Cj4gwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqBzcGluX3VubG9jaygmZGVudHJ5LT5kX2xvY2spOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
-IMKgLypGQUxMVEhSVSovCj4gwqAgwqAgwqAgwqBjYXNlIEZJTEVJRF9JTk8zMl9HRU46Cj4gLSDC
-oCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkzMi5pbm8gPSBpbm9kZS0+aV9pbm87Cj4gKyDCoCDC
-oCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkzMi5pbm8gPSBpcC0+aV9pbm87Cj4gwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqBmaWQtPmkzMi5nZW4gPSBpbm9kZS0+aV9nZW5lcmF0aW9uOwo+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgYnJlYWs7Cj4gwqAgwqAgwqAgwqBjYXNlIEZJTEVJRF9JTk8zMl9HRU5f
-UEFSRU5UIHwgWEZTX0ZJTEVJRF9UWVBFXzY0RkxBRzoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oHNwaW5fbG9jaygmZGVudHJ5LT5kX2xvY2spOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgZmlk
-NjQtPnBhcmVudF9pbm8gPSBkZW50cnktPmRfcGFyZW50LT5kX2lub2RlLT5pX2lubzsKPiAtIMKg
-IMKgIMKgIMKgIMKgIMKgIMKgIGZpZDY0LT5wYXJlbnRfZ2VuID0gZGVudHJ5LT5kX3BhcmVudC0+
-ZF9pbm9kZS0+aV9nZW5lcmF0aW9uOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcGFyZW50ID0g
-ZGVudHJ5LT5kX3BhcmVudC0+ZF9pbm9kZTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZpZDY0
-LT5wYXJlbnRfaW5vID0gWEZTX0kocGFyZW50KS0+aV9pbm87Cj4gKyDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCBmaWQ2NC0+cGFyZW50X2dlbiA9IHBhcmVudC0+aV9nZW5lcmF0aW9uOwo+IMKgIMKgIMKg
-IMKgIMKgIMKgIMKgIMKgc3Bpbl91bmxvY2soJmRlbnRyeS0+ZF9sb2NrKTsKPiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoC8qRkFMTFRIUlUqLwo+IMKgIMKgIMKgIMKgY2FzZSBGSUxFSURfSU5PMzJf
-R0VOIHwgWEZTX0ZJTEVJRF9UWVBFXzY0RkxBRzoKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZp
-ZDY0LT5pbm8gPSBpbm9kZS0+aV9pbm87Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQ2NC0+
-aW5vID0gaXAtPmlfaW5vOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZmlkNjQtPmdlbiA9IGlu
-b2RlLT5pX2dlbmVyYXRpb247Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBicmVhazsKPiDCoCDC
-oCDCoCDCoH0KCkkgaGF2ZW4ndCB0ZXN0ZWQgdGhpcyBwYXRjaCwgYnV0IEkgaGF2ZSBhIHF1ZXN0
-aW9uIG5vdzogYWx0aG91Z2ggSSB1c2UKaW5vZGU2NCBvcHRpb24gd2hlbiBtb3VudGluZywgbXkg
-ZmlsZXN5c3RlbSBkaWQgbm90IGV4Y2VlZCAyVCBsaW1pdCwKc28sIDMyLWJpdCBpbm9kZSB3b3Vs
-ZCBiZSBubyBwcm9ibGVtLCByaWdodD8KCi0tIApUaGUgc2ltcGxlc3QgaXMgbm90IGFsbCBiZXN0
-IGJ1dCB0aGUgYmVzdCBpcyBzdXJlbHkgdGhlIHNpbXBsZXN0IQpfX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
-LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+--===============7069028250435374666==
+Content-Type: multipart/alternative;
+	boundary="_e3468a2b-b822-49b5-8ffc-5bc5da83b11e_"
+
+--_e3468a2b-b822-49b5-8ffc-5bc5da83b11e_
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: 8bit
+
+
+I have tried this patch, And problem resolved!
+Thank you for your help!
+
+ 
+
+> Date: Mon, 28 Nov 2011 06:19:47 -0500
+> From: hch@infradead.org
+> To: ygq51@hotmail.com
+> Subject: Re: xfs: validate inode numbers in file handles correctly
+> CC: linux-xfs@oss.sgi.com; pengxihan@gmail.com
+> 
+> Guoquan and hank,
+> 
+> are you using 32-bit or 64-bit kernels? I just noticed we have a
+> problem with exporting 64-bit inodes on 32-bit kernel because the
+> VFS i_ino field is just 32-bits long. The patch below would fix
+> that issue.
+> 
+> --- xfs.orig/fs/xfs/linux-2.6/xfs_export.c 2011-11-28 12:11:08.923630697 +0100
+> +++ xfs/fs/xfs/linux-2.6/xfs_export.c 2011-11-28 12:13:21.766244360 +0100
+> @@ -61,6 +61,8 @@ xfs_fs_encode_fh(
+> struct fid *fid = (struct fid *)fh;
+> struct xfs_fid64 *fid64 = (struct xfs_fid64 *)fh;
+> struct inode *inode = dentry->d_inode;
+> + struct inode *parent;
+> + struct xfs_inode *ip = XFS_I(inode);
+> int fileid_type;
+> int len;
+> 
+> @@ -98,22 +100,24 @@ xfs_fs_encode_fh(
+> switch (fileid_type) {
+> case FILEID_INO32_GEN_PARENT:
+> spin_lock(&dentry->d_lock);
+> - fid->i32.parent_ino = dentry->d_parent->d_inode->i_ino;
+> - fid->i32.parent_gen = dentry->d_parent->d_inode->i_generation;
+> + parent = dentry->d_parent->d_inode;
+> + fid->i32.parent_ino = XFS_I(parent)->i_ino;
+> + fid->i32.parent_gen = parent->i_generation;
+> spin_unlock(&dentry->d_lock);
+> /*FALLTHRU*/
+> case FILEID_INO32_GEN:
+> - fid->i32.ino = inode->i_ino;
+> + fid->i32.ino = ip->i_ino;
+> fid->i32.gen = inode->i_generation;
+> break;
+> case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
+> spin_lock(&dentry->d_lock);
+> - fid64->parent_ino = dentry->d_parent->d_inode->i_ino;
+> - fid64->parent_gen = dentry->d_parent->d_inode->i_generation;
+> + parent = dentry->d_parent->d_inode;
+> + fid64->parent_ino = XFS_I(parent)->i_ino;
+> + fid64->parent_gen = parent->i_generation;
+> spin_unlock(&dentry->d_lock);
+> /*FALLTHRU*/
+> case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:
+> - fid64->ino = inode->i_ino;
+> + fid64->ino = ip->i_ino;
+> fid64->gen = inode->i_generation;
+> break;
+> }
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+ 		 	   		  
+--_e3468a2b-b822-49b5-8ffc-5bc5da83b11e_
+Content-Type: text/html; charset="gb2312"
+Content-Transfer-Encoding: 8bit
+
+<html>
+<head>
+<style><!--
+.hmmessage P
+{
+margin:0px;
+padding:0px
+}
+body.hmmessage
+{
+font-size: 10pt;
+font-family:Î¢ÈíÑÅºÚ
+}
+--></style>
+</head>
+<body class='hmmessage'><div dir='ltr'>
+I have tried this patch, And problem resolved!<BR>
+Thank you for your help!<BR>
+<BR>&nbsp;<BR>
+<DIV>
+&gt; Date: Mon, 28 Nov 2011 06:19:47 -0500<BR>&gt; From: hch@infradead.org<BR>&gt; To: ygq51@hotmail.com<BR>&gt; Subject: Re: xfs: validate inode numbers in file handles correctly<BR>&gt; CC: linux-xfs@oss.sgi.com; pengxihan@gmail.com<BR>&gt; <BR>&gt; Guoquan and hank,<BR>&gt; <BR>&gt; are you using 32-bit or 64-bit kernels? I just noticed we have a<BR>&gt; problem with exporting 64-bit inodes on 32-bit kernel because the<BR>&gt; VFS i_ino field is just 32-bits long. The patch below would fix<BR>&gt; that issue.<BR>&gt; <BR>&gt; --- xfs.orig/fs/xfs/linux-2.6/xfs_export.c 2011-11-28 12:11:08.923630697 +0100<BR>&gt; +++ xfs/fs/xfs/linux-2.6/xfs_export.c 2011-11-28 12:13:21.766244360 +0100<BR>&gt; @@ -61,6 +61,8 @@ xfs_fs_encode_fh(<BR>&gt; struct fid *fid = (struct fid *)fh;<BR>&gt; struct xfs_fid64 *fid64 = (struct xfs_fid64 *)fh;<BR>&gt; struct inode *inode = dentry-&gt;d_inode;<BR>&gt; + struct inode *parent;<BR>&gt; + struct xfs_inode *ip = XFS_I(inode);<BR>&gt; int fileid_
+ type;<BR>&gt; int len;<BR>&gt; <BR>&gt; @@ -98,22 +100,24 @@ xfs_fs_encode_fh(<BR>&gt; switch (fileid_type) {<BR>&gt; case FILEID_INO32_GEN_PARENT:<BR>&gt; spin_lock(&amp;dentry-&gt;d_lock);<BR>&gt; - fid-&gt;i32.parent_ino = dentry-&gt;d_parent-&gt;d_inode-&gt;i_ino;<BR>&gt; - fid-&gt;i32.parent_gen = dentry-&gt;d_parent-&gt;d_inode-&gt;i_generation;<BR>&gt; + parent = dentry-&gt;d_parent-&gt;d_inode;<BR>&gt; + fid-&gt;i32.parent_ino = XFS_I(parent)-&gt;i_ino;<BR>&gt; + fid-&gt;i32.parent_gen = parent-&gt;i_generation;<BR>&gt; spin_unlock(&amp;dentry-&gt;d_lock);<BR>&gt; /*FALLTHRU*/<BR>&gt; case FILEID_INO32_GEN:<BR>&gt; - fid-&gt;i32.ino = inode-&gt;i_ino;<BR>&gt; + fid-&gt;i32.ino = ip-&gt;i_ino;<BR>&gt; fid-&gt;i32.gen = inode-&gt;i_generation;<BR>&gt; break;<BR>&gt; case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:<BR>&gt; spin_lock(&amp;dentry-&gt;d_lock);<BR>&gt; - fid64-&gt;parent_ino = dentry-&gt;d_parent-&gt;d_inode-&gt;i_ino;<BR>&gt; - fid64-&gt;parent_gen =
+  
+ dentry-&gt;d_parent-&gt;d_inode-&gt;i_generation;<BR>&gt; + parent = dentry-&gt;d_parent-&gt;d_inode;<BR>&gt; + fid64-&gt;parent_ino = XFS_I(parent)-&gt;i_ino;<BR>&gt; + fid64-&gt;parent_gen = parent-&gt;i_generation;<BR>&gt; spin_unlock(&amp;dentry-&gt;d_lock);<BR>&gt; /*FALLTHRU*/<BR>&gt; case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:<BR>&gt; - fid64-&gt;ino = inode-&gt;i_ino;<BR>&gt; + fid64-&gt;ino = ip-&gt;i_ino;<BR>&gt; fid64-&gt;gen = inode-&gt;i_generation;<BR>&gt; break;<BR>&gt; }<BR>&gt; <BR>&gt; _______________________________________________<BR>&gt; xfs mailing list<BR>&gt; xfs@oss.sgi.com<BR>&gt; http://oss.sgi.com/mailman/listinfo/xfs<BR></DIV> 		 	   		  </div></body>
+</html>
+--_e3468a2b-b822-49b5-8ffc-5bc5da83b11e_--
+
+
+--===============7069028250435374666==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7069028250435374666==--
