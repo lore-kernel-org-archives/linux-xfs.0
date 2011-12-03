@@ -1,13 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB2NRwme109585 for <xfs@oss.sgi.com>; Fri, 2 Dec 2011 17:27:58 -0600
-Date: Fri, 2 Dec 2011 15:27:57 -0800
-From: Phil White <pwhite@sgi.com>
-Subject: Re: [2/8] xfstests: add different logging option to fsstress
-Message-ID: <20111202232757.GB28903@caliban.corp.sgi.com>
+	pB38Reua133618
+	for <linux-xfs@oss.sgi.com>; Sat, 3 Dec 2011 02:27:41 -0600
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 038311A19F4B
+	for <linux-xfs@oss.sgi.com>; Sat,  3 Dec 2011 00:27:39 -0800 (PST)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	hsSKNCg6W5AAj0qr for <linux-xfs@oss.sgi.com>;
+	Sat, 03 Dec 2011 00:27:39 -0800 (PST)
+Received: by iakk12 with SMTP id k12so5715551iak.26
+	for <linux-xfs@oss.sgi.com>; Sat, 03 Dec 2011 00:27:39 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20111128111947.GA26454@infradead.org>
+References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
+	<loom.20111123T134243-580@post.gmane.org>
+	<20111123143045.GA20892@infradead.org>
+	<20111128111947.GA26454@infradead.org>
+Date: Sat, 3 Dec 2011 16:27:39 +0800
+Message-ID: <CAJNJY8RSOX2XsbM+0riNNPGxaLGm+OWkHexTVM4v5+rhkchuAw@mail.gmail.com>
+Subject: Re: xfs: validate inode numbers in file handles correctly
+From: hank peng <pengxihan@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,115 +30,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@oss.sgi.com, Guoquan Yang <ygq51@hotmail.com>
 
-On Sat, Oct 29, 2011 at 12:48:11AM -0000, Dmitry Monakhov wrote:
-> Currently the only way to log fsstress's output is to redirect it's shared
-> stdout to pipe which is very painfull because:
-> 
-> 1) Pipe writers are serialized via i_mutex so we waste cpu-cores power on stupid
->    sinchronization for loging purpose, instead of hunting real race conditions,
->    and bugs inside file system.
-> 2) Usually output is corrupted due to luck of sychronization on shared stdout.
-> 
-> Since fsstress's children operate on independend paths, let's just open didicated
-> log file for each child and simply avoid useless sycnhronization.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
-> 
-> ---
-> ltp/fsstress.c |   33 ++++++++++++++++++++++++++++++++-
->  1 files changed, 32 insertions(+), 1 deletions(-)
-> 
-> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-> index 51ecda2..c7001f3 100644
-> --- a/ltp/fsstress.c
-> +++ b/ltp/fsstress.c
-> @@ -258,6 +258,8 @@ int main(int argc, char **argv)
->  	char		buf[10];
->  	int		c;
->  	char		*dirname = NULL;
-> +	char		*logname = NULL;
-> +	char		rpath[PATH_MAX];
->  	int		fd;
->  	int		i;
->  	int		j;
-> @@ -273,7 +275,7 @@ int main(int argc, char **argv)
->  	nops = sizeof(ops) / sizeof(ops[0]);
->  	ops_end = &ops[nops];
->  	myprog = argv[0];
-> -	while ((c = getopt(argc, argv, "d:e:f:i:m:n:p:rs:vwzHS")) != -1) {
-> +	while ((c = getopt(argc, argv, "d:e:f:i:m:n:o:p:rs:vwzHS")) != -1) {
->  		switch (c) {
->  		case 'd':
->  			dirname = optarg;
-> @@ -311,6 +313,10 @@ int main(int argc, char **argv)
->  		case 'n':
->  			operations = atoi(optarg);
->  			break;
-> +		case 'o':
-> +			logname = optarg;
-> +			break;
-> +
->  		case 'p':
->  			nproc = atoi(optarg);
->  			break;
-> @@ -351,10 +357,26 @@ int main(int argc, char **argv)
->          }
->  
->  	(void)mkdir(dirname, 0777);
-> +	if (logname && logname[0] != '/') {
-> +		if (getcwd(rpath, sizeof(rpath)) < 0){
-> +			perror("getcwd failed");
-> +			exit(1);
-> +		}
-> +	} else {
-> +		rpath[0] = '\0';
-> +	}
->  	if (chdir(dirname) < 0) {
->  		perror(dirname);
->  		exit(1);
->  	}
-> +	if (logname) {
-> +		char path[PATH_MAX];
-> +		snprintf(path, sizeof(path), "%s/%s", rpath, logname);
-> +		if (freopen(path, "a", stdout) == NULL) {
-> +			perror("freopen logfile failed");
-> +			exit(1);
-> +		}
-> +	}
->  	sprintf(buf, "fss%x", (unsigned int)getpid());
->  	fd = creat(buf, 0666);
->  	if (lseek64(fd, (off64_t)(MAXFSIZE32 + 1ULL), SEEK_SET) < 0)
-> @@ -409,6 +431,15 @@ int main(int argc, char **argv)
->  		close(fd);
->  	for (i = 0; i < nproc; i++) {
->  		if (fork() == 0) {
-> +			if (logname) {
-> +				char path[PATH_MAX];
-> +				snprintf(path, sizeof(path), "%s/%s.%d",
-> +					 rpath, logname, i);
-> +				if (freopen(path, "a", stdout) == NULL) {
-> +					perror("freopen logfile failed");
-> +					exit(1);
-> +				}
-> +			}
->  			procid = i;
->  			doproc();
->  			return 0;
-
-Looks good to me.
-
-Reviewed-By: Phil White <pwhite@sgi.com>
-Tested-By: Phil White <pwhite@sgi.com>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+MjAxMS8xMS8yOCBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGluZnJhZGVhZC5vcmc+Ogo+IEd1b3F1
+YW4gYW5kIGhhbmssCj4KPiBhcmUgeW91IHVzaW5nIDMyLWJpdCBvciA2NC1iaXQga2VybmVscz8g
+wqBJIGp1c3Qgbm90aWNlZCB3ZSBoYXZlIGEKPiBwcm9ibGVtIHdpdGggZXhwb3J0aW5nIDY0LWJp
+dCBpbm9kZXMgb24gMzItYml0IGtlcm5lbCBiZWNhdXNlIHRoZQo+IFZGUyBpX2lubyBmaWVsZCBp
+cyBqdXN0IDMyLWJpdHMgbG9uZy4gwqBUaGUgcGF0Y2ggYmVsb3cgd291bGQgZml4Cj4gdGhhdCBp
+c3N1ZS4KPgp5ZXMsIHdlIHVzZSBpbm9kZTY0IG9uIDMyLWJpdCBrZXJuZWwuCgoKPiAtLS0geGZz
+Lm9yaWcvZnMveGZzL2xpbnV4LTIuNi94ZnNfZXhwb3J0LmMgwqAgwqAgwqAyMDExLTExLTI4IDEy
+OjExOjA4LjkyMzYzMDY5NyArMDEwMAo+ICsrKyB4ZnMvZnMveGZzL2xpbnV4LTIuNi94ZnNfZXhw
+b3J0LmMgwqAgMjAxMS0xMS0yOCAxMjoxMzoyMS43NjYyNDQzNjAgKzAxMDAKPiBAQCAtNjEsNiAr
+NjEsOCBAQCB4ZnNfZnNfZW5jb2RlX2ZoKAo+IMKgIMKgIMKgIMKgc3RydWN0IGZpZCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoCpmaWQgPSAoc3RydWN0IGZpZCAqKWZoOwo+IMKgIMKgIMKgIMKgc3RydWN0
+IHhmc19maWQ2NCDCoCDCoCDCoCDCoCpmaWQ2NCA9IChzdHJ1Y3QgeGZzX2ZpZDY0ICopZmg7Cj4g
+wqAgwqAgwqAgwqBzdHJ1Y3QgaW5vZGUgwqAgwqAgwqAgwqAgwqAgwqAqaW5vZGUgPSBkZW50cnkt
+PmRfaW5vZGU7Cj4gKyDCoCDCoCDCoCBzdHJ1Y3QgaW5vZGUgwqAgwqAgwqAgwqAgwqAgwqAqcGFy
+ZW50Owo+ICsgwqAgwqAgwqAgc3RydWN0IHhmc19pbm9kZSDCoCDCoCDCoCDCoCppcCA9IFhGU19J
+KGlub2RlKTsKPiDCoCDCoCDCoCDCoGludCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCBm
+aWxlaWRfdHlwZTsKPiDCoCDCoCDCoCDCoGludCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oCBsZW47Cj4KPiBAQCAtOTgsMjIgKzEwMCwyNCBAQCB4ZnNfZnNfZW5jb2RlX2ZoKAo+IMKgIMKg
+IMKgIMKgc3dpdGNoIChmaWxlaWRfdHlwZSkgewo+IMKgIMKgIMKgIMKgY2FzZSBGSUxFSURfSU5P
+MzJfR0VOX1BBUkVOVDoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoHNwaW5fbG9jaygmZGVudHJ5
+LT5kX2xvY2spOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgZmlkLT5pMzIucGFyZW50X2lubyA9
+IGRlbnRyeS0+ZF9wYXJlbnQtPmRfaW5vZGUtPmlfaW5vOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgZmlkLT5pMzIucGFyZW50X2dlbiA9IGRlbnRyeS0+ZF9wYXJlbnQtPmRfaW5vZGUtPmlfZ2Vu
+ZXJhdGlvbjsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIHBhcmVudCA9IGRlbnRyeS0+ZF9wYXJl
+bnQtPmRfaW5vZGU7Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkzMi5wYXJlbnRfaW5v
+ID0gWEZTX0kocGFyZW50KS0+aV9pbm87Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkz
+Mi5wYXJlbnRfZ2VuID0gcGFyZW50LT5pX2dlbmVyYXRpb247Cj4gwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqBzcGluX3VubG9jaygmZGVudHJ5LT5kX2xvY2spOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKg
+IMKgLypGQUxMVEhSVSovCj4gwqAgwqAgwqAgwqBjYXNlIEZJTEVJRF9JTk8zMl9HRU46Cj4gLSDC
+oCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkzMi5pbm8gPSBpbm9kZS0+aV9pbm87Cj4gKyDCoCDC
+oCDCoCDCoCDCoCDCoCDCoCBmaWQtPmkzMi5pbm8gPSBpcC0+aV9pbm87Cj4gwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqBmaWQtPmkzMi5nZW4gPSBpbm9kZS0+aV9nZW5lcmF0aW9uOwo+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgYnJlYWs7Cj4gwqAgwqAgwqAgwqBjYXNlIEZJTEVJRF9JTk8zMl9HRU5f
+UEFSRU5UIHwgWEZTX0ZJTEVJRF9UWVBFXzY0RkxBRzoKPiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
+oHNwaW5fbG9jaygmZGVudHJ5LT5kX2xvY2spOwo+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgZmlk
+NjQtPnBhcmVudF9pbm8gPSBkZW50cnktPmRfcGFyZW50LT5kX2lub2RlLT5pX2lubzsKPiAtIMKg
+IMKgIMKgIMKgIMKgIMKgIMKgIGZpZDY0LT5wYXJlbnRfZ2VuID0gZGVudHJ5LT5kX3BhcmVudC0+
+ZF9pbm9kZS0+aV9nZW5lcmF0aW9uOwo+ICsgwqAgwqAgwqAgwqAgwqAgwqAgwqAgcGFyZW50ID0g
+ZGVudHJ5LT5kX3BhcmVudC0+ZF9pbm9kZTsKPiArIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZpZDY0
+LT5wYXJlbnRfaW5vID0gWEZTX0kocGFyZW50KS0+aV9pbm87Cj4gKyDCoCDCoCDCoCDCoCDCoCDC
+oCDCoCBmaWQ2NC0+cGFyZW50X2dlbiA9IHBhcmVudC0+aV9nZW5lcmF0aW9uOwo+IMKgIMKgIMKg
+IMKgIMKgIMKgIMKgIMKgc3Bpbl91bmxvY2soJmRlbnRyeS0+ZF9sb2NrKTsKPiDCoCDCoCDCoCDC
+oCDCoCDCoCDCoCDCoC8qRkFMTFRIUlUqLwo+IMKgIMKgIMKgIMKgY2FzZSBGSUxFSURfSU5PMzJf
+R0VOIHwgWEZTX0ZJTEVJRF9UWVBFXzY0RkxBRzoKPiAtIMKgIMKgIMKgIMKgIMKgIMKgIMKgIGZp
+ZDY0LT5pbm8gPSBpbm9kZS0+aV9pbm87Cj4gKyDCoCDCoCDCoCDCoCDCoCDCoCDCoCBmaWQ2NC0+
+aW5vID0gaXAtPmlfaW5vOwo+IMKgIMKgIMKgIMKgIMKgIMKgIMKgIMKgZmlkNjQtPmdlbiA9IGlu
+b2RlLT5pX2dlbmVyYXRpb247Cj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqBicmVhazsKPiDCoCDC
+oCDCoCDCoH0KCkkgaGF2ZW4ndCB0ZXN0ZWQgdGhpcyBwYXRjaCwgYnV0IEkgaGF2ZSBhIHF1ZXN0
+aW9uIG5vdzogYWx0aG91Z2ggSSB1c2UKaW5vZGU2NCBvcHRpb24gd2hlbiBtb3VudGluZywgbXkg
+ZmlsZXN5c3RlbSBkaWQgbm90IGV4Y2VlZCAyVCBsaW1pdCwKc28sIDMyLWJpdCBpbm9kZSB3b3Vs
+ZCBiZSBubyBwcm9ibGVtLCByaWdodD8KCi0tIApUaGUgc2ltcGxlc3QgaXMgbm90IGFsbCBiZXN0
+IGJ1dCB0aGUgYmVzdCBpcyBzdXJlbHkgdGhlIHNpbXBsZXN0IQpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
