@@ -1,25 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB58ZfAq122562 for <xfs@oss.sgi.com>; Mon, 5 Dec 2011 02:35:41 -0600
+	pB58biT7122636 for <xfs@oss.sgi.com>; Mon, 5 Dec 2011 02:37:44 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5A9DE1F418FA
-	for <xfs@oss.sgi.com>; Mon,  5 Dec 2011 00:35:37 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 960FA107D91D
+	for <xfs@oss.sgi.com>; Mon,  5 Dec 2011 00:37:42 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	bYAJ47QmUxz3eAgh for <xfs@oss.sgi.com>;
-	Mon, 05 Dec 2011 00:35:37 -0800 (PST)
-Date: Mon, 5 Dec 2011 03:35:34 -0500
+	u2k4kqF85J9yDW3q for <xfs@oss.sgi.com>;
+	Mon, 05 Dec 2011 00:37:42 -0800 (PST)
+Date: Mon, 5 Dec 2011 03:37:41 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/3] xfs: cleanup the transaction commit path a bit
-Message-ID: <20111205083534.GA29401@infradead.org>
-References: <20111128082522.224645690@bombadil.infradead.org>
-	<20111128082557.082085349@bombadil.infradead.org>
-	<20111205035516.GF7046@dastard>
+Subject: Re: [PATCH 07/16] xfs: remove XFS_DQ_INACTIVE
+Message-ID: <20111205083741.GB29401@infradead.org>
+References: <20111128082722.604873274@bombadil.infradead.org>
+	<20111128082837.441012540@bombadil.infradead.org>
+	<20111205042351.GN7046@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111205035516.GF7046@dastard>
+In-Reply-To: <20111205042351.GN7046@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,22 +35,24 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Dec 05, 2011 at 02:55:16PM +1100, Dave Chinner wrote:
-> > + *
-> > + * Note that this format differs from the old log vector format in that there
-> > + * is no transaction header in these log vectors.
+On Mon, Dec 05, 2011 at 03:23:51PM +1100, Dave Chinner wrote:
+> > +	xfs_qm_dqdestroy(dqp);
+> >  	return (0);
+> >  }
 > 
-> Do we even need this comment given the old itransaction commit code
-> that did this is now gone?
+> While there, you may as well make that a "return 0;"
 
-We could probably drop this, yes.
+Indeed.
 
-> Would it make sense to have IOP_FORMAT return the length of the
-> vectors (calculated as itis built) rather than having to add them up
-> after the fact? That would avoid an extra pass across the vector
-> array. Regardless, it can be done as a future patch...
+> > -	mutex_unlock(&xqm->qm_dqfrlist_lock);
+> > -	mutex_destroy(&xqm->qm_dqfrlist_lock);
+> >  	kmem_free(xqm);
+> >  }
+> 
+> Don't we still need that mutex_destroy() call there?
 
-I have a WIP patch for that, but it's not quite ready yet.
+We never needed it - Linux does an implicit mutex_destory when freeing
+memory containing a mutex.
 
 _______________________________________________
 xfs mailing list
