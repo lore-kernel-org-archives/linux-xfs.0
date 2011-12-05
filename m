@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB595kpJ124181 for <xfs@oss.sgi.com>; Mon, 5 Dec 2011 03:05:46 -0600
-Date: Mon, 5 Dec 2011 04:05:44 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] xfs: fix the logspace waiting algorithm
-Message-ID: <20111205090543.GA18658@infradead.org>
-References: <20111128081732.350228200@bombadil.infradead.org>
-	<20111128081925.981681380@bombadil.infradead.org>
-	<20111130235641.GX29840@sgi.com>
-	<20111201072149.GA1319@infradead.org>
-	<20111201195128.GZ29840@sgi.com>
-	<20111202115141.GA21643@infradead.org>
-	<20111205025316.GD7046@dastard>
+	pB59Z2cn125558 for <xfs@oss.sgi.com>; Mon, 5 Dec 2011 03:35:03 -0600
+Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 8C8811F41ADF
+	for <xfs@oss.sgi.com>; Mon,  5 Dec 2011 01:34:59 -0800 (PST)
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	AKePKMkCTtp230QY for <xfs@oss.sgi.com>;
+	Mon, 05 Dec 2011 01:34:59 -0800 (PST)
+Date: Mon, 5 Dec 2011 20:34:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 09/16] xfs: flatten the dquot lock ordering
+Message-ID: <20111205093437.GA28326@dastard>
+References: <20111128082722.604873274@bombadil.infradead.org>
+	<20111128082837.808570926@bombadil.infradead.org>
+	<20111205050428.GP7046@dastard>
+	<20111205091121.GA22018@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111205025316.GD7046@dastard>
+In-Reply-To: <20111205091121.GA22018@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +32,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Dec 05, 2011 at 01:53:16PM +1100, Dave Chinner wrote:
-> Actually, it's quite simple to fix simply by having the free space
-> check return the grant head value at the time of the check and then
-> using that as the old value in the cmpxchg loop for updating the
-> grant head. That is:
+On Mon, Dec 05, 2011 at 04:11:21AM -0500, Christoph Hellwig wrote:
+> On Mon, Dec 05, 2011 at 04:04:28PM +1100, Dave Chinner wrote:
+> > > @@ -509,46 +518,27 @@ xfs_qm_dqpurge_int(
+> > >  	 */
+> > >  	xfs_qm_detach_gdquots(mp);
+> > >  
+> > > -      again:
+> > > -	nmisses = 0;
+> > 
+> > I don't think that nmisses is initialised to zero correctly anymore.
+> 
+> We do a
+> 
+>         int                     nmisses = 0;
+> 
+> at the top of the function.  Now that there are no retry loops that's
+> sufficient.
 
-I;ll give it a go for 3.3.
+Hmmmm. My unmodified tree just has the declaration without
+initialisation, and I didn't find any place where the initialisation
+was added in the preceding patches. I'll go back and have another
+look.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
