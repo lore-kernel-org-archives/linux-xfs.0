@@ -1,28 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6FHe1s233495
-	for <linux-xfs@oss.sgi.com>; Tue, 6 Dec 2011 09:17:40 -0600
+	pB6FIBIB233529 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 09:18:12 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 9DF0716EB760
-	for <linux-xfs@oss.sgi.com>; Tue,  6 Dec 2011 07:17:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3E8241A31D5A
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 07:18:11 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	pujCYeDdXr1n6LZS for <linux-xfs@oss.sgi.com>;
-	Tue, 06 Dec 2011 07:17:39 -0800 (PST)
-Date: Tue, 6 Dec 2011 10:17:38 -0500
+	AahPYCE9xNXuMmEY for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 07:18:11 -0800 (PST)
+Date: Tue, 6 Dec 2011 10:18:09 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: validate inode numbers in file handles correctly
-Message-ID: <20111206151738.GC11874@infradead.org>
-References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
-	<loom.20111123T134243-580@post.gmane.org>
-	<20111123143045.GA20892@infradead.org>
-	<20111128111947.GA26454@infradead.org>
-	<CAJNJY8RSOX2XsbM+0riNNPGxaLGm+OWkHexTVM4v5+rhkchuAw@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: check if qa user can execute commands
+Message-ID: <20111206151809.GA15526@infradead.org>
+References: <1323165389-5419-1-git-send-email-list.btrfs@jan-o-sch.net>
+	<20111206151300.GA11874@infradead.org>
+	<4EDE31DD.3000401@jan-o-sch.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAJNJY8RSOX2XsbM+0riNNPGxaLGm+OWkHexTVM4v5+rhkchuAw@mail.gmail.com>
+In-Reply-To: <4EDE31DD.3000401@jan-o-sch.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,16 +32,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hank peng <pengxihan@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com, Guoquan Yang <ygq51@hotmail.com>
+To: Jan Schmidt <mail@jan-o-sch.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, Jan Schmidt <list.btrfs@jan-o-sch.net>, xfs@oss.sgi.com
 
-On Sat, Dec 03, 2011 at 04:27:39PM +0800, hank peng wrote:
-> I haven't tested this patch, but I have a question now: although I use
-> inode64 option when mounting, my filesystem did not exceed 2T limit,
-> so, 32-bit inode would be no problem, right?
+On Tue, Dec 06, 2011 at 04:16:45PM +0100, Jan Schmidt wrote:
+> I agree. I saw this and thought I'd adapt the (sometimes strange)
+> predominant bash programming style:
 
-In the normal configuration > 32bit inode numbers kick in at 1TB
-filesystem sizes.
+Maybe the IRIX su command didn't support -c.  I'll put your patch in
+as-is.
 
 _______________________________________________
 xfs mailing list
