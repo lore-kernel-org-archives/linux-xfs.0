@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6Lwu6A003950 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 15:58:56 -0600
+	pB6LwuXs003965 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 15:58:56 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 448E02A0221
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 13:58:54 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A395E2A022A
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 13:58:55 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ok3DIpeuTlctsY2z for <xfs@oss.sgi.com>;
-	Tue, 06 Dec 2011 13:58:54 -0800 (PST)
+	lXLV7wWQHGvEDaLr for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 13:58:55 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RY32M-0006Qf-Jg
-	for xfs@oss.sgi.com; Tue, 06 Dec 2011 21:58:54 +0000
-Message-Id: <20111206215854.567573800@bombadil.infradead.org>
-Date: Tue, 06 Dec 2011 16:58:17 -0500
+	Linux)) id 1RY32N-0006SD-5t
+	for xfs@oss.sgi.com; Tue, 06 Dec 2011 21:58:55 +0000
+Message-Id: <20111206215855.133477972@bombadil.infradead.org>
+Date: Tue, 06 Dec 2011 16:58:20 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 11/19] xfs: implement lazy removal for the dquot freelist
+Subject: [patch 14/19] xfs: simplify xfs_qm_dqattach_grouphint
 References: <20111206215806.844405397@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-lazy-lru
+Content-Disposition: inline;
+	filename=xfs-quota-cleanup-xfs_qm_dqattach_grouphint
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,190 +35,112 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Do not remove dquots from the freelist when we grab a reference to them in
-xfs_qm_dqlookup, but leave them on the freelist util scanning notices that
-they have a reference.  This speeds up the lookup fastpath, and greatly
-simplifies the lock ordering constraints.  Note that the same scheme is
-used by the VFS inode and dentry caches.
+No need to play games with the qlock now that the freelist lock nests inside
+it.  Also clean up various outdated comments.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 ---
- fs/xfs/xfs_dquot.c |   65 +++++++++++++----------------------------------------
- fs/xfs/xfs_qm.c    |   22 ++++++++---------
- fs/xfs/xfs_quota.h |    4 ---
- fs/xfs/xfs_trace.h |    2 -
- 4 files changed, 29 insertions(+), 64 deletions(-)
+ fs/xfs/xfs_qm.c |   64 ++++++++++++++------------------------------------------
+ 1 file changed, 16 insertions(+), 48 deletions(-)
 
-Index: xfs/fs/xfs/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-11-25 11:45:44.232012950 +0100
-+++ xfs/fs/xfs/xfs_dquot.c	2011-11-25 11:45:50.205313924 +0100
-@@ -722,58 +722,25 @@ xfs_qm_dqlookup(
- 		 * dqlock to look at the id field of the dquot, since the
- 		 * id can't be modified without the hashlock anyway.
- 		 */
--		if (be32_to_cpu(dqp->q_core.d_id) == id && dqp->q_mount == mp) {
--			trace_xfs_dqlookup_found(dqp);
-+		if (be32_to_cpu(dqp->q_core.d_id) != id || dqp->q_mount != mp)
-+			continue;
- 
--			/*
--			 * All in core dquots must be on the dqlist of mp
--			 */
--			ASSERT(!list_empty(&dqp->q_mplist));
-+		trace_xfs_dqlookup_found(dqp);
- 
--			xfs_dqlock(dqp);
--			if (dqp->q_nrefs == 0) {
--				ASSERT(!list_empty(&dqp->q_freelist));
--				if (!mutex_trylock(&xfs_Gqm->qm_dqfrlist_lock)) {
--					trace_xfs_dqlookup_want(dqp);
--
--					/*
--					 * We may have raced with dqreclaim_one()
--					 * (and lost). So, flag that we don't
--					 * want the dquot to be reclaimed.
--					 */
--					dqp->dq_flags |= XFS_DQ_WANT;
--					xfs_dqunlock(dqp);
--					mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--					xfs_dqlock(dqp);
--					dqp->dq_flags &= ~(XFS_DQ_WANT);
--				}
--
--				if (dqp->q_nrefs == 0) {
--					/* take it off the freelist */
--					trace_xfs_dqlookup_freelist(dqp);
--					list_del_init(&dqp->q_freelist);
--					xfs_Gqm->qm_dqfrlist_cnt--;
--				}
--				XFS_DQHOLD(dqp);
--				mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
--			} else {
--				XFS_DQHOLD(dqp);
--			}
-+		xfs_dqlock(dqp);
-+		XFS_DQHOLD(dqp);
- 
--			/*
--			 * move the dquot to the front of the hashchain
--			 */
--			ASSERT(mutex_is_locked(&qh->qh_lock));
--			list_move(&dqp->q_hashlist, &qh->qh_list);
--			trace_xfs_dqlookup_done(dqp);
--			*O_dqpp = dqp;
--			return 0;
--		}
-+		/*
-+		 * move the dquot to the front of the hashchain
-+		 */
-+		list_move(&dqp->q_hashlist, &qh->qh_list);
-+		trace_xfs_dqlookup_done(dqp);
-+		*O_dqpp = dqp;
-+		return 0;
- 	}
- 
- 	*O_dqpp = NULL;
--	ASSERT(mutex_is_locked(&qh->qh_lock));
--	return (1);
-+	return 1;
- }
- 
- /*
-@@ -1033,8 +1000,10 @@ xfs_qm_dqput(
- 		if (--dqp->q_nrefs == 0) {
- 			trace_xfs_dqput_free(dqp);
- 
--			list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
--			xfs_Gqm->qm_dqfrlist_cnt++;
-+			if (list_empty(&dqp->q_freelist)) {
-+				list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
-+				xfs_Gqm->qm_dqfrlist_cnt++;
-+			}
- 
- 			/*
- 			 * If we just added a udquot to the freelist, then
-Index: xfs/fs/xfs/xfs_trace.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trace.h	2011-11-24 13:44:18.568522508 +0100
-+++ xfs/fs/xfs/xfs_trace.h	2011-11-25 11:45:46.102002820 +0100
-@@ -743,8 +743,6 @@ DEFINE_DQUOT_EVENT(xfs_dqtobp_read);
- DEFINE_DQUOT_EVENT(xfs_dqread);
- DEFINE_DQUOT_EVENT(xfs_dqread_fail);
- DEFINE_DQUOT_EVENT(xfs_dqlookup_found);
--DEFINE_DQUOT_EVENT(xfs_dqlookup_want);
--DEFINE_DQUOT_EVENT(xfs_dqlookup_freelist);
- DEFINE_DQUOT_EVENT(xfs_dqlookup_done);
- DEFINE_DQUOT_EVENT(xfs_dqget_hit);
- DEFINE_DQUOT_EVENT(xfs_dqget_miss);
 Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2011-11-25 11:45:44.235346266 +0100
-+++ xfs/fs/xfs/xfs_qm.c	2011-11-25 11:45:50.215313871 +0100
-@@ -517,13 +517,12 @@ xfs_qm_dqpurge_int(
- 	 * get them off mplist and hashlist, but leave them on freelist.
- 	 */
- 	list_for_each_entry_safe(dqp, n, &q->qi_dqlist, q_mplist) {
--		/*
--		 * It's OK to look at the type without taking dqlock here.
--		 * We're holding the mplist lock here, and that's needed for
--		 * a dqreclaim.
--		 */
--		if ((dqp->dq_flags & dqtype) == 0)
-+		xfs_dqlock(dqp);
-+		if ((dqp->dq_flags & dqtype) == 0) {
-+			xfs_dqunlock(dqp);
- 			continue;
-+		}
-+		xfs_dqunlock(dqp);
- 
- 		if (!mutex_trylock(&dqp->q_hash->qh_lock)) {
- 			nrecl = q->qi_dqreclaims;
-@@ -1692,14 +1691,15 @@ again:
- 		xfs_dqlock(dqp);
- 
- 		/*
--		 * We are racing with dqlookup here. Naturally we don't
--		 * want to reclaim a dquot that lookup wants. We release the
--		 * freelist lock and start over, so that lookup will grab
--		 * both the dquot and the freelistlock.
-+		 * This dquot has already been grabbed by dqlookup.
-+		 * Remove it from the freelist and try again.
- 		 */
--		if (dqp->dq_flags & XFS_DQ_WANT) {
-+		if (dqp->q_nrefs) {
- 			trace_xfs_dqreclaim_want(dqp);
- 			XQM_STATS_INC(xqmstats.xs_qm_dqwants);
-+
-+			list_del_init(&dqp->q_freelist);
-+			xfs_Gqm->qm_dqfrlist_cnt--;
- 			restarts++;
- 			startagain = 1;
- 			goto dqunlock;
-Index: xfs/fs/xfs/xfs_quota.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_quota.h	2011-11-25 11:45:44.235346266 +0100
-+++ xfs/fs/xfs/xfs_quota.h	2011-11-25 11:45:50.228647131 +0100
-@@ -87,7 +87,6 @@ typedef struct xfs_dqblk {
- #define XFS_DQ_PROJ		0x0002		/* project quota */
- #define XFS_DQ_GROUP		0x0004		/* a group quota */
- #define XFS_DQ_DIRTY		0x0008		/* dquot is dirty */
--#define XFS_DQ_WANT		0x0010		/* for lookup/reclaim race */
- 
- #define XFS_DQ_ALLTYPES		(XFS_DQ_USER|XFS_DQ_PROJ|XFS_DQ_GROUP)
- 
-@@ -95,8 +94,7 @@ typedef struct xfs_dqblk {
- 	{ XFS_DQ_USER,		"USER" }, \
- 	{ XFS_DQ_PROJ,		"PROJ" }, \
- 	{ XFS_DQ_GROUP,		"GROUP" }, \
--	{ XFS_DQ_DIRTY,		"DIRTY" }, \
--	{ XFS_DQ_WANT,		"WANT" }
-+	{ XFS_DQ_DIRTY,		"DIRTY" }
+--- xfs.orig/fs/xfs/xfs_qm.c	2011-12-06 15:49:31.303693024 +0100
++++ xfs/fs/xfs/xfs_qm.c	2011-12-06 15:51:39.467028734 +0100
+@@ -650,11 +650,7 @@ xfs_qm_dqattach_one(
  
  /*
-  * In the worst case, when both user and group quotas are on,
+  * Given a udquot and gdquot, attach a ptr to the group dquot in the
+- * udquot as a hint for future lookups. The idea sounds simple, but the
+- * execution isn't, because the udquot might have a group dquot attached
+- * already and getting rid of that gets us into lock ordering constraints.
+- * The process is complicated more by the fact that the dquots may or may not
+- * be locked on entry.
++ * udquot as a hint for future lookups.
+  */
+ STATIC void
+ xfs_qm_dqattach_grouphint(
+@@ -665,45 +661,21 @@ xfs_qm_dqattach_grouphint(
+ 
+ 	xfs_dqlock(udq);
+ 
+-	if ((tmp = udq->q_gdquot)) {
+-		if (tmp == gdq) {
+-			xfs_dqunlock(udq);
+-			return;
+-		}
++	tmp = udq->q_gdquot;
++	if (tmp) {
++		if (tmp == gdq)
++			goto done;
+ 
+ 		udq->q_gdquot = NULL;
+-		/*
+-		 * We can't keep any dqlocks when calling dqrele,
+-		 * because the freelist lock comes before dqlocks.
+-		 */
+-		xfs_dqunlock(udq);
+-		/*
+-		 * we took a hard reference once upon a time in dqget,
+-		 * so give it back when the udquot no longer points at it
+-		 * dqput() does the unlocking of the dquot.
+-		 */
+ 		xfs_qm_dqrele(tmp);
+-
+-		xfs_dqlock(udq);
+-		xfs_dqlock(gdq);
+-
+-	} else {
+-		ASSERT(XFS_DQ_IS_LOCKED(udq));
+-		xfs_dqlock(gdq);
+-	}
+-
+-	ASSERT(XFS_DQ_IS_LOCKED(udq));
+-	ASSERT(XFS_DQ_IS_LOCKED(gdq));
+-	/*
+-	 * Somebody could have attached a gdquot here,
+-	 * when we dropped the uqlock. If so, just do nothing.
+-	 */
+-	if (udq->q_gdquot == NULL) {
+-		XFS_DQHOLD(gdq);
+-		udq->q_gdquot = gdq;
+ 	}
+ 
++	xfs_dqlock(gdq);
++	XFS_DQHOLD(gdq);
+ 	xfs_dqunlock(gdq);
++
++	udq->q_gdquot = gdq;
++done:
+ 	xfs_dqunlock(udq);
+ }
+ 
+@@ -770,17 +742,13 @@ xfs_qm_dqattach_locked(
+ 		ASSERT(ip->i_gdquot);
+ 
+ 		/*
+-		 * We may or may not have the i_udquot locked at this point,
+-		 * but this check is OK since we don't depend on the i_gdquot to
+-		 * be accurate 100% all the time. It is just a hint, and this
+-		 * will succeed in general.
+-		 */
+-		if (ip->i_udquot->q_gdquot == ip->i_gdquot)
+-			goto done;
+-		/*
+-		 * Attach i_gdquot to the gdquot hint inside the i_udquot.
++		 * We do not have i_udquot locked at this point, but this check
++		 * is OK since we don't depend on the i_gdquot to be accurate
++		 * 100% all the time. It is just a hint, and this will
++		 * succeed in general.
+ 		 */
+-		xfs_qm_dqattach_grouphint(ip->i_udquot, ip->i_gdquot);
++		if (ip->i_udquot->q_gdquot != ip->i_gdquot)
++			xfs_qm_dqattach_grouphint(ip->i_udquot, ip->i_gdquot);
+ 	}
+ 
+  done:
 
 _______________________________________________
 xfs mailing list
