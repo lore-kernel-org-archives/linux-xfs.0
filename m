@@ -1,35 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6Jo7Ns256832 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 13:50:08 -0600
-Received: from e6.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 71DDC29F9CC
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 11:50:05 -0800 (PST)
-Received: from e6.ny.us.ibm.com (e6.ny.us.ibm.com [32.97.182.146]) by
-	cuda.sgi.com with ESMTP id Nb4qZQrf91OUBCx6 for
-	<xfs@oss.sgi.com>; Tue, 06 Dec 2011 11:50:05 -0800 (PST)
-Received: from /spool/local
-	by e6.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zohar@linux.vnet.ibm.com>;
-	Tue, 6 Dec 2011 14:50:04 -0500
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay03.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	pB6Jmb77294236 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 14:48:37 -0500
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	pB6JmZTu014539 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 14:48:36 -0500
-Subject: Re: [PATCH] security: Delay freeing inode->i_security till the end
-	of RCU grace period
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Date: Tue, 06 Dec 2011 14:45:53 -0500
-In-Reply-To: <1323191093.31919.1475.camel@chandra-lucid.austin.ibm.com>
-References: <1323110541.31919.1451.camel@chandra-lucid.austin.ibm.com>
-	<20111206151429.GB11874@infradead.org>
-	<1323189102.2165.39.camel@falcor>
-	<1323191093.31919.1475.camel@chandra-lucid.austin.ibm.com>
-Message-ID: <1323200753.2165.69.camel@falcor>
-Mime-Version: 1.0
+	pB6KYdWa259957 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 14:34:40 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B60181A3536F
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 12:34:37 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	zGSkHhfkHs0lC6FY for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 12:34:37 -0800 (PST)
+Date: Wed, 7 Dec 2011 07:34:32 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 07/16] xfs: remove XFS_DQ_INACTIVE
+Message-ID: <20111206203432.GE28326@dastard>
+References: <20111128082722.604873274@bombadil.infradead.org>
+	<20111128082837.441012540@bombadil.infradead.org>
+	<20111205042351.GN7046@dastard>
+	<20111205083741.GB29401@infradead.org>
+	<20111206144350.GA16767@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111206144350.GA16767@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,45 +33,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sekharan@us.ibm.com
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Paris <eparis@parisplace.org>, linux-security-module@vger.kernel.org, sekharan@linux.vnet.ibm.com, XFS Mailing List <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, 2011-12-06 at 11:04 -0600, Chandra Seetharaman wrote:
-> On Tue, 2011-12-06 at 11:30 -0500, Mimi Zohar wrote:
-> > On Tue, 2011-12-06 at 10:14 -0500, Christoph Hellwig wrote:
-> > > On Mon, Dec 05, 2011 at 12:42:21PM -0600, Chandra Seetharaman wrote:
-> > > > while running test case 234 from xfstests test suite, I was getting an
-> > > > occational memory fault in inode_has_perm() with the following stack
+On Tue, Dec 06, 2011 at 09:43:50AM -0500, Christoph Hellwig wrote:
+> On Mon, Dec 05, 2011 at 03:37:41AM -0500, Christoph Hellwig wrote:
+> > On Mon, Dec 05, 2011 at 03:23:51PM +1100, Dave Chinner wrote:
+> > > > +	xfs_qm_dqdestroy(dqp);
+> > > >  	return (0);
+> > > >  }
 > > > 
-> > > Interesting.  Given that have no good way to free other data with the
-> > > normal inode callback it looks like we indeed need to do this
-> > > separately.
-> > > 
-> > > What about IMA or similar monsters?  Posix ACLs already are covered at
-> > > least.
+> > > While there, you may as well make that a "return 0;"
 > > 
-> > Looks like a similar problem exists with the 'iint'.
+> > Indeed.
+> > 
+> > > > -	mutex_unlock(&xqm->qm_dqfrlist_lock);
+> > > > -	mutex_destroy(&xqm->qm_dqfrlist_lock);
+> > > >  	kmem_free(xqm);
+> > > >  }
+> > > 
+> > > Don't we still need that mutex_destroy() call there?
+> > 
+> > We never needed it - Linux does an implicit mutex_destory when freeing
+> > memory containing a mutex.
 > 
-> I walked thru the code and saw integrity_iint_find() is the one that
-> would be used to see if a iint data structure is associated. And, all
-> all the invocations of integrity_iint_find() check for NULL and handle
-> it properly.
-> 
-> I might be wrong since I am not familiar with the code. Can you please
-> double check and let me know if I am wrong. 
-> 
-> Chandra
+> Does this count as a revied-by now?
 
-The assumption up to this point has been that the iint will be freed
-only after the last call to ima_file_free(). The lack of an iint's
-existence indicates that the file is not in the measurement policy.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-As the iint is being freed, updating the iint flag is unnecessary for
-base IMA.  However, in addition to updating the iint flags, the
-IMA-appraisal patches (yet to be upstreamed) update the 'security.ima'
-xattr.  Without an iint, the xattr will not be updated.
-
-Mimi
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
