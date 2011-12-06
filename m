@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6LwvQF004000 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 15:58:57 -0600
+	pB6LwuKm003971 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 15:58:57 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5EFD02A022F
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 13:58:56 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 237B11F45C0D
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 13:58:55 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	qyXKhPoNScOME0vm for <xfs@oss.sgi.com>;
-	Tue, 06 Dec 2011 13:58:56 -0800 (PST)
+	FbSXtSMiGhSXQCGE for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 13:58:55 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RY32N-0006UH-QY
+	Linux)) id 1RY32N-0006Tl-Lm
 	for xfs@oss.sgi.com; Tue, 06 Dec 2011 21:58:55 +0000
-Message-Id: <20111206215855.775568812@bombadil.infradead.org>
-Date: Tue, 06 Dec 2011 16:58:24 -0500
+Message-Id: <20111206215855.635965028@bombadil.infradead.org>
+Date: Tue, 06 Dec 2011 16:58:23 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 18/19] xfs: kill xfs_qm_idtodq
+Subject: [patch 17/19] xfs: merge xfs_qm_dqinit_core into the only caller
 References: <20111206215806.844405397@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-quota-read
+Content-Disposition: inline; filename=xfs-quota-kill-xfs_qm_dqinit_core
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,205 +34,58 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This function doesn't help the code flow, so merge the dquot allocation and
-transaction handling into xfs_qm_dqread.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 ---
- fs/xfs/xfs_dquot.c |  137 +++++++++++++++++++----------------------------------
- 1 file changed, 50 insertions(+), 87 deletions(-)
+ fs/xfs/xfs_dquot.c |   27 +++++++--------------------
+ 1 file changed, 7 insertions(+), 20 deletions(-)
 
 Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2011-12-06 15:53:53.153697880 +0100
-+++ xfs/fs/xfs/xfs_dquot.c	2011-12-06 15:56:37.910367600 +0100
-@@ -550,36 +550,62 @@ xfs_qm_dqtobp(
-  * Read in the ondisk dquot using dqtobp() then copy it to an incore version,
-  * and release the buffer immediately.
-  *
-+ * If XFS_QMOPT_DQALLOC is set, allocate a dquot on disk if it needed.
-  */
--/* ARGSUSED */
- STATIC int
- xfs_qm_dqread(
--	xfs_trans_t	**tpp,
--	xfs_dqid_t	id,
--	xfs_dquot_t	*dqp,	/* dquot to get filled in */
--	uint		flags)
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		id,
-+	uint			type,
-+	uint			flags,
-+	struct xfs_dquot	**O_dqpp)
- {
--	xfs_disk_dquot_t *ddqp;
--	xfs_buf_t	 *bp;
--	int		 error;
--	xfs_trans_t	 *tp;
-+	struct xfs_dquot	*dqp;
-+	struct xfs_disk_dquot	*ddqp;
-+	struct xfs_buf		*bp;
-+	struct xfs_trans	*tp = NULL;
-+	int			error;
-+	int			cancelflags = 0;
- 
--	ASSERT(tpp);
-+	dqp = xfs_qm_dqinit(mp, id, type);
- 
- 	trace_xfs_dqread(dqp);
- 
-+	if (flags & XFS_QMOPT_DQALLOC) {
-+		tp = xfs_trans_alloc(mp, XFS_TRANS_QM_DQALLOC);
-+		error = xfs_trans_reserve(tp, XFS_QM_DQALLOC_SPACE_RES(mp),
-+				XFS_WRITE_LOG_RES(mp) +
-+				/*
-+				 * Round the chunklen up to the next multiple
-+				 * of 128 (buf log item chunk size)).
-+				 */
-+				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 + 128,
-+				0,
-+				XFS_TRANS_PERM_LOG_RES,
-+				XFS_WRITE_LOG_COUNT);
-+		if (error)
-+			goto error1;
-+		cancelflags = XFS_TRANS_RELEASE_LOG_RES;
-+	}
-+
- 	/*
- 	 * get a pointer to the on-disk dquot and the buffer containing it
- 	 * dqp already knows its own type (GROUP/USER).
- 	 */
--	if ((error = xfs_qm_dqtobp(tpp, dqp, &ddqp, &bp, flags))) {
--		return (error);
-+	error = xfs_qm_dqtobp(&tp, dqp, &ddqp, &bp, flags);
-+	if (error) {
-+		/*
-+		 * This can happen if quotas got turned off (ESRCH),
-+		 * or if the dquot didn't exist on disk and we ask to
-+		 * allocate (ENOENT).
-+		 */
-+		trace_xfs_dqread_fail(dqp);
-+		cancelflags |= XFS_TRANS_ABORT;
-+		goto error1;
- 	}
--	tp = *tpp;
- 
- 	/* copy everything from disk dquot to the incore dquot */
- 	memcpy(&dqp->q_core, ddqp, sizeof(xfs_disk_dquot_t));
--	ASSERT(be32_to_cpu(dqp->q_core.d_id) == id);
- 	xfs_qm_dquot_logitem_init(dqp);
- 
- 	/*
-@@ -608,77 +634,22 @@ xfs_qm_dqread(
- 	ASSERT(xfs_buf_islocked(bp));
- 	xfs_trans_brelse(tp, bp);
- 
--	return (error);
--}
--
--
--/*
-- * allocate an incore dquot from the kernel heap,
-- * and fill its core with quota information kept on disk.
-- * If XFS_QMOPT_DQALLOC is set, it'll allocate a dquot on disk
-- * if it wasn't already allocated.
-- */
--STATIC int
--xfs_qm_idtodq(
--	xfs_mount_t	*mp,
--	xfs_dqid_t	id,	 /* gid or uid, depending on type */
--	uint		type,	 /* UDQUOT or GDQUOT */
--	uint		flags,	 /* DQALLOC, DQREPAIR */
--	xfs_dquot_t	**O_dqpp)/* OUT : incore dquot, not locked */
--{
--	xfs_dquot_t	*dqp;
--	int		error;
--	xfs_trans_t	*tp;
--	int		cancelflags=0;
--
--	dqp = xfs_qm_dqinit(mp, id, type);
--	tp = NULL;
--	if (flags & XFS_QMOPT_DQALLOC) {
--		tp = xfs_trans_alloc(mp, XFS_TRANS_QM_DQALLOC);
--		error = xfs_trans_reserve(tp, XFS_QM_DQALLOC_SPACE_RES(mp),
--				XFS_WRITE_LOG_RES(mp) +
--				BBTOB(mp->m_quotainfo->qi_dqchunklen) - 1 +
--				128,
--				0,
--				XFS_TRANS_PERM_LOG_RES,
--				XFS_WRITE_LOG_COUNT);
--		if (error) {
--			cancelflags = 0;
--			goto error0;
--		}
--		cancelflags = XFS_TRANS_RELEASE_LOG_RES;
--	}
--
--	/*
--	 * Read it from disk; xfs_dqread() takes care of
--	 * all the necessary initialization of dquot's fields (locks, etc)
--	 */
--	if ((error = xfs_qm_dqread(&tp, id, dqp, flags))) {
--		/*
--		 * This can happen if quotas got turned off (ESRCH),
--		 * or if the dquot didn't exist on disk and we ask to
--		 * allocate (ENOENT).
--		 */
--		trace_xfs_dqread_fail(dqp);
--		cancelflags |= XFS_TRANS_ABORT;
--		goto error0;
--	}
- 	if (tp) {
--		if ((error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES)))
--			goto error1;
-+		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
-+		if (error)
-+			goto error0;
- 	}
- 
- 	*O_dqpp = dqp;
--	return (0);
-+	return error;
- 
-- error0:
--	ASSERT(error);
-+error1:
- 	if (tp)
- 		xfs_trans_cancel(tp, cancelflags);
-- error1:
-+error0:
- 	xfs_qm_dqdestroy(dqp);
- 	*O_dqpp = NULL;
--	return (error);
-+	return error;
+--- xfs.orig/fs/xfs/xfs_dquot.c	2011-11-25 11:56:36.905143783 +0100
++++ xfs/fs/xfs/xfs_dquot.c	2011-11-25 11:56:40.861789014 +0100
+@@ -154,24 +154,6 @@ xfs_qm_dqdestroy(
  }
  
  /*
-@@ -832,19 +803,11 @@ restart:
- 	version = h->qh_version;
- 	mutex_unlock(&h->qh_lock);
- 
+- * This is what a 'fresh' dquot inside a dquot chunk looks like on disk.
+- */
+-STATIC void
+-xfs_qm_dqinit_core(
+-	xfs_dqid_t	id,
+-	uint		type,
+-	xfs_dqblk_t	*d)
+-{
 -	/*
--	 * Allocate the dquot on the kernel heap, and read the ondisk
--	 * portion off the disk. Also, do all the necessary initialization
--	 * This can return ENOENT if dquot didn't exist on disk and we didn't
--	 * ask it to allocate; ESRCH if quotas got turned off suddenly.
+-	 * Caller has zero'd the entire dquot 'chunk' already.
 -	 */
--	if ((error = xfs_qm_idtodq(mp, id, type,
--				  flags & (XFS_QMOPT_DQALLOC|XFS_QMOPT_DQREPAIR|
--					   XFS_QMOPT_DOWARN),
--				  &dqp))) {
-+	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
-+	if (error) {
- 		if (ip)
- 			xfs_ilock(ip, XFS_ILOCK_EXCL);
--		return (error);
-+		return error;
- 	}
- 
- 	/*
+-	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+-	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+-	d->dd_diskdq.d_id = cpu_to_be32(id);
+-	d->dd_diskdq.d_flags = type;
+-}
+-
+-/*
+  * If default limits are in force, push them into the dquot now.
+  * We overwrite the dquot limits only if they are zero and this
+  * is not the root dquot.
+@@ -327,8 +309,13 @@ xfs_qm_init_dquot_blk(
+ 	curid = id - (id % q->qi_dqperchunk);
+ 	ASSERT(curid >= 0);
+ 	memset(d, 0, BBTOB(q->qi_dqchunklen));
+-	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++)
+-		xfs_qm_dqinit_core(curid, type, d);
++	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++) {
++		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
++		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
++		d->dd_diskdq.d_id = cpu_to_be32(curid);
++		d->dd_diskdq.d_flags = type;
++	}
++
+ 	xfs_trans_dquot_buf(tp, bp,
+ 			    (type & XFS_DQ_USER ? XFS_BLF_UDQUOT_BUF :
+ 			    ((type & XFS_DQ_PROJ) ? XFS_BLF_PDQUOT_BUF :
 
 _______________________________________________
 xfs mailing list
