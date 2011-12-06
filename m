@@ -1,34 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6GZ758241047 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 10:35:08 -0600
-Received: from e3.ny.us.ibm.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1F0D929ED86
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 08:35:06 -0800 (PST)
-Received: from e3.ny.us.ibm.com (e3.ny.us.ibm.com [32.97.182.143]) by
-	cuda.sgi.com with ESMTP id 7BN1q83xKT3vBQN8 for
-	<xfs@oss.sgi.com>; Tue, 06 Dec 2011 08:35:06 -0800 (PST)
-Received: from /spool/local
-	by e3.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <zohar@linux.vnet.ibm.com>;
-	Tue, 6 Dec 2011 11:35:03 -0500
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	pB6GYajD084756 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 11:34:36 -0500
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id pB6GYOgP030828
-	for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 09:34:24 -0700
-Subject: Re: [PATCH] security: Delay freeing inode->i_security till the end
-	of RCU grace period
-From: Mimi Zohar <zohar@linux.vnet.ibm.com>
-Date: Tue, 06 Dec 2011 11:30:36 -0500
-In-Reply-To: <20111206151429.GB11874@infradead.org>
-References: <1323110541.31919.1451.camel@chandra-lucid.austin.ibm.com>
-	<20111206151429.GB11874@infradead.org>
-Message-ID: <1323189102.2165.39.camel@falcor>
-Mime-Version: 1.0
+	pB6H5Tff243855 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 11:05:29 -0600
+Date: Tue, 6 Dec 2011 11:05:51 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/6] XFS update for 3.1-stable (again)
+Message-ID: <20111206170551.GQ29840@sgi.com>
+References: <1322782064-1723-1-git-send-email-bpm@sgi.com>
+	<20111201233302.GA5573@kroah.com> <20111202231219.GA6016@kroah.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111202231219.GA6016@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,24 +23,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Paris <eparis@parisplace.org>, linux-security-module@vger.kernel.org, Eric@oss.sgi.com, sekharan@linux.vnet.ibm.com, XFS Mailing List <xfs@oss.sgi.com>
+To: Greg KH <greg@kroah.com>
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, 2011-12-06 at 10:14 -0500, Christoph Hellwig wrote:
-> On Mon, Dec 05, 2011 at 12:42:21PM -0600, Chandra Seetharaman wrote:
-> > while running test case 234 from xfstests test suite, I was getting an
-> > occational memory fault in inode_has_perm() with the following stack
+Hey Greg,
+
+On Fri, Dec 02, 2011 at 03:12:19PM -0800, Greg KH wrote:
+> On Thu, Dec 01, 2011 at 03:33:02PM -0800, Greg KH wrote:
+> > On Thu, Dec 01, 2011 at 05:27:38PM -0600, Ben Myers wrote:
+> > > This is a series of XFS fixes from current mainline which is important for
+> > > 3.1-stable.  Note that it is the same patch set that Christoph submitted for
+> > > 3.0-stable, minus the first three patches which are already included in 3.1.
+> > > 
+> > > My QA came out ok with these six patches atop 3.1.y.  I've been having trouble
+> > > getting mail out to stable@vger, but it seems to be working now.  Apologies to
+> > > those who are getting this mail yet again.
+> > 
+> > Nice, I got all of these, thanks.  I'll queue them up in a few days when
+> > I get caught up on the stable patch queue.
 > 
-> Interesting.  Given that have no good way to free other data with the
-> normal inode callback it looks like we indeed need to do this
-> separately.
-> 
-> What about IMA or similar monsters?  Posix ACLs already are covered at
-> least.
+> All applied.
 
-Looks like a similar problem exists with the 'iint'.
+Great!  ;)
 
-Mimi
+> Any reason why you only signed off on the last patch, and not the others
+> you sent me?  Just curious.
+
+I forgot to sign off on the rest.  I'll remember next time.
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
