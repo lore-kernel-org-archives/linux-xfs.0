@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6LLVZc001066 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 15:21:31 -0600
+	pB6LLH9E001030 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 15:21:17 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BCEC11D36CF2
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 13:21:30 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 36EBD162F5A7
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 13:21:15 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	lBJMlgIjJOUWfzM7 for <xfs@oss.sgi.com>;
-	Tue, 06 Dec 2011 13:21:30 -0800 (PST)
-Date: Tue, 6 Dec 2011 16:21:30 -0500
+	jRHNKFUHLENmaVov for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 13:21:15 -0800 (PST)
+Date: Tue, 6 Dec 2011 16:21:15 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/3] xfs: fix attr2 vs large data fork assert
-Message-ID: <20111206212130.GC28459@infradead.org>
+Subject: [PATCH 2/3] xfs: force buffer writeback before blocking on the ilock
+	in inode reclaim
+Message-ID: <20111206212115.GB28459@infradead.org>
 References: <20111206212056.GA24640@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -33,147 +34,91 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org
 Cc: xfs@oss.sgi.com
 
-commit 4c393a6059f8442a70512a48ce4639b882b6f6ad upstream.
+commit 4dd2cb4a28b7ab1f37163a4eba280926a13a8749 upstream.
 
-With Dmitry fsstress updates I've seen very reproducible crashes in
-xfs_attr_shortform_remove because xfs_attr_shortform_bytesfit claims that
-the attributes would not fit inline into the inode after removing an
-attribute.  It turns out that we were operating on an inode with lots
-of delalloc extents, and thus an if_bytes values for the data fork that
-is larger than biggest possible on-disk storage for it which utterly
-confuses the code near the end of xfs_attr_shortform_bytesfit.
+If we are doing synchronous inode reclaim we block the VM from making
+progress in memory reclaim.  So if we encouter a flush locked inode
+promote it in the delwri list and wake up xfsbufd to write it out now.
+Without this we can get hangs of up to 30 seconds during workloads hitting
+synchronous inode reclaim.
 
-Fix this by always allowing the current attribute fork, like we already
-do for the attr1 format, given that delalloc conversion will take care
-for moving either the data or attribute area out of line if it doesn't
-fit at that point - or making the point moot by merging extents at this
-point.
+The scheme is copied from what we do for dquot reclaims.
 
-Also document the function better, and clean up some loose bits.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reported-by: Simon Kirby <sim@hostway.ca>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Simon Kirby <sim@hostway.ca>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_attr_leaf.c |   64 +++++++++++++++++++++++++++++------------------
- 1 files changed, 39 insertions(+), 25 deletions(-)
+ fs/xfs/linux-2.6/xfs_sync.c |   11 +++++++++++
+ fs/xfs/xfs_inode.c          |   21 +++++++++++++++++++++
+ fs/xfs/xfs_inode.h          |    1 +
+ 3 files changed, 33 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 71e90dc2..f49ecf2 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -110,6 +110,7 @@ xfs_attr_namesp_match(int arg_flags, int ondisk_flags)
- /*
-  * Query whether the requested number of additional bytes of extended
-  * attribute space will be able to fit inline.
-+ *
-  * Returns zero if not, else the di_forkoff fork offset to be used in the
-  * literal area for attribute data once the new bytes have been added.
-  *
-@@ -122,7 +123,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
- 	int offset;
- 	int minforkoff;	/* lower limit on valid forkoff locations */
- 	int maxforkoff;	/* upper limit on valid forkoff locations */
--	int dsize;	
-+	int dsize;
- 	xfs_mount_t *mp = dp->i_mount;
- 
- 	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
-@@ -136,47 +137,60 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
- 		return (offset >= minforkoff) ? minforkoff : 0;
- 	}
- 
--	if (!(mp->m_flags & XFS_MOUNT_ATTR2)) {
--		if (bytes <= XFS_IFORK_ASIZE(dp))
--			return dp->i_d.di_forkoff;
-+	/*
-+	 * If the requested numbers of bytes is smaller or equal to the
-+	 * current attribute fork size we can always proceed.
-+	 *
-+	 * Note that if_bytes in the data fork might actually be larger than
-+	 * the current data fork size is due to delalloc extents. In that
-+	 * case either the extent count will go down when they are converted
-+	 * to real extents, or the delalloc conversion will take care of the
-+	 * literal area rebalancing.
-+	 */
-+	if (bytes <= XFS_IFORK_ASIZE(dp))
-+		return dp->i_d.di_forkoff;
+diff --git a/fs/xfs/linux-2.6/xfs_sync.c b/fs/xfs/linux-2.6/xfs_sync.c
+index 8ecad5f..b69688d 100644
+--- a/fs/xfs/linux-2.6/xfs_sync.c
++++ b/fs/xfs/linux-2.6/xfs_sync.c
+@@ -772,6 +772,17 @@ restart:
+ 	if (!xfs_iflock_nowait(ip)) {
+ 		if (!(sync_mode & SYNC_WAIT))
+ 			goto out;
 +
-+	/*
-+	 * For attr2 we can try to move the forkoff if there is space in the
-+	 * literal area, but for the old format we are done if there is no
-+	 * space in the fixed attribute fork.
-+	 */
-+	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
- 		return 0;
--	}
- 
- 	dsize = dp->i_df.if_bytes;
--	
-+
- 	switch (dp->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
--		/* 
 +		/*
- 		 * If there is no attr fork and the data fork is extents, 
--		 * determine if creating the default attr fork will result 
--		 * in the extents form migrating to btree. If so, the 
--		 * minimum offset only needs to be the space required for 
-+		 * determine if creating the default attr fork will result
-+		 * in the extents form migrating to btree. If so, the
-+		 * minimum offset only needs to be the space required for
- 		 * the btree root.
--		 */ 
++		 * If we only have a single dirty inode in a cluster there is
++		 * a fair chance that the AIL push may have pushed it into
++		 * the buffer, but xfsbufd won't touch it until 30 seconds
++		 * from now, and thus we will lock up here.
++		 *
++		 * Promote the inode buffer to the front of the delwri list
++		 * and wake up xfsbufd now.
 +		 */
- 		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes >
- 		    xfs_default_attroffset(dp))
- 			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
- 		break;
--		
- 	case XFS_DINODE_FMT_BTREE:
- 		/*
--		 * If have data btree then keep forkoff if we have one,
--		 * otherwise we are adding a new attr, so then we set 
--		 * minforkoff to where the btree root can finish so we have 
-+		 * If we have a data btree then keep forkoff if we have one,
-+		 * otherwise we are adding a new attr, so then we set
-+		 * minforkoff to where the btree root can finish so we have
- 		 * plenty of room for attrs
- 		 */
- 		if (dp->i_d.di_forkoff) {
--			if (offset < dp->i_d.di_forkoff) 
-+			if (offset < dp->i_d.di_forkoff)
- 				return 0;
--			else 
--				return dp->i_d.di_forkoff;
--		} else
--			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
-+			return dp->i_d.di_forkoff;
-+		}
-+		dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
- 		break;
++		xfs_promote_inode(ip);
+ 		xfs_iflock(ip);
  	}
--	
--	/* 
--	 * A data fork btree root must have space for at least 
-+
-+	/*
-+	 * A data fork btree root must have space for at least
- 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
- 	 */
- 	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
-@@ -186,10 +200,10 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
- 	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
- 	maxforkoff = maxforkoff >> 3;	/* rounded down */
  
--	if (offset >= minforkoff && offset < maxforkoff)
--		return offset;
- 	if (offset >= maxforkoff)
- 		return maxforkoff;
-+	if (offset >= minforkoff)
-+		return offset;
- 	return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index a098a20..c6888a4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3099,6 +3099,27 @@ corrupt_out:
+ 	return XFS_ERROR(EFSCORRUPTED);
  }
+ 
++void
++xfs_promote_inode(
++	struct xfs_inode	*ip)
++{
++	struct xfs_buf		*bp;
++
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
++
++	bp = xfs_incore(ip->i_mount->m_ddev_targp, ip->i_imap.im_blkno,
++			ip->i_imap.im_len, XBF_TRYLOCK);
++	if (!bp)
++		return;
++
++	if (XFS_BUF_ISDELAYWRITE(bp)) {
++		xfs_buf_delwri_promote(bp);
++		wake_up_process(ip->i_mount->m_ddev_targp->bt_task);
++	}
++
++	xfs_buf_relse(bp);
++}
++
+ /*
+  * Return a pointer to the extent record at file index idx.
+  */
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 964cfea..28b3596 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -509,6 +509,7 @@ int		xfs_iunlink(struct xfs_trans *, xfs_inode_t *);
+ void		xfs_iext_realloc(xfs_inode_t *, int, int);
+ void		xfs_iunpin_wait(xfs_inode_t *);
+ int		xfs_iflush(xfs_inode_t *, uint);
++void		xfs_promote_inode(struct xfs_inode *);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
  
 -- 
 1.7.7.3
