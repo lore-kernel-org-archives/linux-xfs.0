@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB6FEZQf233270 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 09:14:35 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id BBA8B29EAEC
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 07:14:34 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	a2QqFaTEQXugtjfC for <xfs@oss.sgi.com>;
-	Tue, 06 Dec 2011 07:14:34 -0800 (PST)
-Date: Tue, 6 Dec 2011 10:14:29 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] security: Delay freeing inode->i_security till the end
-	of RCU grace period
-Message-ID: <20111206151429.GB11874@infradead.org>
-References: <1323110541.31919.1451.camel@chandra-lucid.austin.ibm.com>
+	pB6FGlkG233434 for <xfs@oss.sgi.com>; Tue, 6 Dec 2011 09:16:47 -0600
+Received: from mail.in8.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E89D229EB0F
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 07:16:46 -0800 (PST)
+Received: from mail.in8.de (brockman.in8.de [85.214.220.56]) by cuda.sgi.com
+	with ESMTP id HUBuRhSzxfinaD5Q for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 07:16:46 -0800 (PST)
+Message-ID: <4EDE31DD.3000401@jan-o-sch.net>
+Date: Tue, 06 Dec 2011 16:16:45 +0100
+From: Jan Schmidt <mail@jan-o-sch.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1323110541.31919.1451.camel@chandra-lucid.austin.ibm.com>
+Subject: Re: [PATCH] xfstests: check if qa user can execute commands
+References: <1323165389-5419-1-git-send-email-list.btrfs@jan-o-sch.net>
+	<20111206151300.GA11874@infradead.org>
+In-Reply-To: <20111206151300.GA11874@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,19 +28,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: Eric Paris <eparis@parisplace.org>, linux-security-module@vger.kernel.org, XFS Mailing List <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-btrfs@vger.kernel.org, Jan Schmidt <list.btrfs@jan-o-sch.net>, xfs@oss.sgi.com
 
-On Mon, Dec 05, 2011 at 12:42:21PM -0600, Chandra Seetharaman wrote:
-> while running test case 234 from xfstests test suite, I was getting an
-> occational memory fault in inode_has_perm() with the following stack
+On 06.12.2011 16:13, Christoph Hellwig wrote:
+> On Tue, Dec 06, 2011 at 10:56:29AM +0100, Jan Schmidt wrote:
+>> _require_user only checks if the qa user exists in /etc/passwd. It may exist
+>> though still not be able to execute anything (e.g. with a /bin/false shell).
+>>
+>> _user_do cannot determine failure to execute the given command, as it uses
+>> _user_do_filter for post-processing which succeeds even if the command
+>> fails. Thus, the check should be performed by _require_user.
+> 
+> Looks good.  Wouldn't
+> 
+> 	su $qa_user -c /bin/true
+> 
+> be the more normal way to write that test?
 
-Interesting.  Given that have no good way to free other data with the
-normal inode callback it looks like we indeed need to do this
-separately.
+I agree. I saw this and thought I'd adapt the (sometimes strange)
+predominant bash programming style:
 
-What about IMA or similar monsters?  Posix ACLs already are covered at
-least.
+ 921 _user_do()
+ 922 {
+ 923     if [ "$HOSTOS" == "IRIX" ]
+ 924         then
+ 925         echo $1 | /bin/bash "su $qa_user 2>&1" | _filter_user_do
+ 926     else
+ 927         echo $1 | su $qa_user 2>&1 | _filter_user_do
+ 928     fi
+ 929 }
+
+-Jan
 
 _______________________________________________
 xfs mailing list
