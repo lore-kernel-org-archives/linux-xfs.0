@@ -1,16 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB7LiVW6115477 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 15:44:32 -0600
-Date: Wed, 7 Dec 2011 15:44:53 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [patch 01/19] xfs: remove the deprecated nodelaylog option
-Message-ID: <20111207214453.GR29840@sgi.com>
-References: <20111206215806.844405397@bombadil.infradead.org>
-	<20111206215852.699758135@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111206215852.699758135@bombadil.infradead.org>
+	pB7N7uNv118337 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 17:07:56 -0600
+Subject: [GIT PULL] XFS update for 3.2
+Message-Id: <20111207230819.37403426DA7@whiskey.americas.sgi.com>
+Date: Wed,  7 Dec 2011 17:08:19 -0600 (CST)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,41 +14,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Dec 06, 2011 at 04:58:07PM -0500, Christoph Hellwig wrote:
-> The delaylog mode has been the default for a long time, and the nodelaylog
-> option has been scheduled for removal in Linux 3.3.  Remove it and code
-> only used by it now that we have opened the 3.3 window.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Hi Linus,
 
-Looks good, one comment below.
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Please pull the following fixes for XFS for 3.2.
 
-> Index: xfs/fs/xfs/xfs_log_cil.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_log_cil.c	2011-11-28 09:13:10.684813018 +0100
-> +++ xfs/fs/xfs/xfs_log_cil.c	2011-11-28 09:17:38.320029780 +0100
-> @@ -44,10 +44,6 @@ xlog_cil_init(
+a99ebf4 fixes an overflow when converting allocation length to extent length,
 
->  	struct xfs_cil	*cil;
->  	struct xfs_cil_ctx *ctx;
->  
-> -	log->l_cilp = NULL;
-> -	if (!(log->l_mp->m_flags & XFS_MOUNT_DELAYLOG))
-> -		return 0;
-> -
+c29f7d4 fixes export of 64 bit inode numbers on 32 bit kernels, and
 
-There is a section of comment above xlog_cil_init that only applies if
-we could still switch the CIL off.  It should be removed with this
-patch.
+9f9c19e fixes a log hang due to a race when granting log space.  It was
+debugged and tested thoroughly by Chandra Seetharaman <sekharan@us.ibm.com>.
+
+Thanks,
+	Ben
+
+The following changes since commit 77a7300abad7fe01891b400e88d746f97307ee5a:
+  Anton Vorontsov (1):
+        of/irq: Get rid of NO_IRQ usage
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (2):
+      xfs: fix nfs export of 64-bit inodes numbers on 32-bit kernels
+      xfs: fix the logspace waiting algorithm
+
+Dave Chinner (1):
+      xfs: fix allocation length overflow in xfs_bmapi_write()
+
+ fs/xfs/xfs_bmap.c   |   20 +++-
+ fs/xfs/xfs_export.c |    8 +-
+ fs/xfs/xfs_log.c    |  348 +++++++++++++++++++++++++--------------------------
+ fs/xfs/xfs_trace.h  |   12 +--
+ 4 files changed, 200 insertions(+), 188 deletions(-)
 
 _______________________________________________
 xfs mailing list
