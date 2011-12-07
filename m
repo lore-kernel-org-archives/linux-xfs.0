@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB7GJM1L100710 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 10:19:22 -0600
+	pB7GMZi0101028 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 10:22:35 -0600
 Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 923C716EC500
-	for <xfs@oss.sgi.com>; Wed,  7 Dec 2011 08:19:20 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id C770A1F47552
+	for <xfs@oss.sgi.com>; Wed,  7 Dec 2011 08:22:34 -0800 (PST)
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id B00uTt1aH03IaIjL for <xfs@oss.sgi.com>;
-	Wed, 07 Dec 2011 08:19:20 -0800 (PST)
-Message-Id: <20111207160828.403515055@clark.kroah.org>
-Date: Wed, 07 Dec 2011 08:07:31 -0800
+	with ESMTP id NSHrxCEKA8Lt18hD for <xfs@oss.sgi.com>;
+	Wed, 07 Dec 2011 08:22:34 -0800 (PST)
+Message-Id: <20111207161218.815684105@clark.kroah.org>
+Date: Wed, 07 Dec 2011 08:11:51 -0800
 From: Greg KH <gregkh@suse.de>
-Subject: [71/80] xfs: fix attr2 vs large data fork assert
-In-Reply-To: <20111207161256.GA7736@kroah.com>
+Subject: [049/104] xfs: fix buffer flushing during unmount
+In-Reply-To: <20111207161246.GA10995@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,158 +26,110 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, Christoph Hellwig <hch@lst.de>, alan@lxorguk.ukuu.org.uk
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, greg@kroah.com
+Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, bpm@sgi.com, Alex Elder <aelder@sgi.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, Christoph Hellwig <hch@lst.de>, alan@lxorguk.ukuu.org.uk
 
-3.0-stable review patch.  If anyone has any objections, please let me know.
+3.1-stable review patch.  If anyone has any objections, please let me know.
 
 ------------------
 
+
 From: Christoph Hellwig <hch@infradead.org>
 
-commit 4c393a6059f8442a70512a48ce4639b882b6f6ad upstream.
+commit 87c7bec7fc3377b3873eb3a0f4b603981ea16ebb upstream.
 
-With Dmitry fsstress updates I've seen very reproducible crashes in
-xfs_attr_shortform_remove because xfs_attr_shortform_bytesfit claims that
-the attributes would not fit inline into the inode after removing an
-attribute.  It turns out that we were operating on an inode with lots
-of delalloc extents, and thus an if_bytes values for the data fork that
-is larger than biggest possible on-disk storage for it which utterly
-confuses the code near the end of xfs_attr_shortform_bytesfit.
+The code to flush buffers in the umount code is a bit iffy: we first
+flush all delwri buffers out, but then might be able to queue up a
+new one when logging the sb counts.  On a normal shutdown that one
+would get flushed out when doing the synchronous superblock write in
+xfs_unmountfs_writesb, but we skip that one if the filesystem has
+been shut down.
 
-Fix this by always allowing the current attribute fork, like we already
-do for the attr1 format, given that delalloc conversion will take care
-for moving either the data or attribute area out of line if it doesn't
-fit at that point - or making the point moot by merging extents at this
-point.
+Fix this by moving the delwri list flushing until just before unmounting
+the log, and while we're at it also remove the superflous delwri list
+and buffer lru flusing for the rt and log device that can never have
+cached or delwri buffers.
 
-Also document the function better, and clean up some loose bits.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
-Acked-by: Dave Chinner <dchinner@redhat.com>
+Reported-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Tested-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
+Cc: Ben Myers <bpm@sgi.com>
 Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
-
 ---
- fs/xfs/xfs_attr_leaf.c |   64 +++++++++++++++++++++++++++++--------------------
- 1 file changed, 39 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_buf.h   |    1 -
+ fs/xfs/xfs_mount.c |   29 ++++++++++-------------------
+ 2 files changed, 10 insertions(+), 20 deletions(-)
 
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -110,6 +110,7 @@ xfs_attr_namesp_match(int arg_flags, int
- /*
-  * Query whether the requested number of additional bytes of extended
-  * attribute space will be able to fit inline.
-+ *
-  * Returns zero if not, else the di_forkoff fork offset to be used in the
-  * literal area for attribute data once the new bytes have been added.
-  *
-@@ -122,7 +123,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 	int offset;
- 	int minforkoff;	/* lower limit on valid forkoff locations */
- 	int maxforkoff;	/* upper limit on valid forkoff locations */
--	int dsize;	
-+	int dsize;
- 	xfs_mount_t *mp = dp->i_mount;
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -320,7 +320,6 @@ extern struct list_head *xfs_get_buftarg
+ #define xfs_getsize_buftarg(buftarg)	block_size((buftarg)->bt_bdev)
+ #define xfs_readonly_buftarg(buftarg)	bdev_read_only((buftarg)->bt_bdev)
  
- 	offset = (XFS_LITINO(mp) - bytes) >> 3; /* rounded down */
-@@ -136,47 +137,60 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 		return (offset >= minforkoff) ? minforkoff : 0;
- 	}
+-#define xfs_binval(buftarg)		xfs_flush_buftarg(buftarg, 1)
+ #define XFS_bflush(buftarg)		xfs_flush_buftarg(buftarg, 1)
  
--	if (!(mp->m_flags & XFS_MOUNT_ATTR2)) {
--		if (bytes <= XFS_IFORK_ASIZE(dp))
--			return dp->i_d.di_forkoff;
-+	/*
-+	 * If the requested numbers of bytes is smaller or equal to the
-+	 * current attribute fork size we can always proceed.
-+	 *
-+	 * Note that if_bytes in the data fork might actually be larger than
-+	 * the current data fork size is due to delalloc extents. In that
-+	 * case either the extent count will go down when they are converted
-+	 * to real extents, or the delalloc conversion will take care of the
-+	 * literal area rebalancing.
-+	 */
-+	if (bytes <= XFS_IFORK_ASIZE(dp))
-+		return dp->i_d.di_forkoff;
-+
-+	/*
-+	 * For attr2 we can try to move the forkoff if there is space in the
-+	 * literal area, but for the old format we are done if there is no
-+	 * space in the fixed attribute fork.
-+	 */
-+	if (!(mp->m_flags & XFS_MOUNT_ATTR2))
- 		return 0;
--	}
+ #endif	/* __XFS_BUF_H__ */
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -44,9 +44,6 @@
+ #include "xfs_trace.h"
  
- 	dsize = dp->i_df.if_bytes;
--	
-+
- 	switch (dp->i_d.di_format) {
- 	case XFS_DINODE_FMT_EXTENTS:
--		/* 
-+		/*
- 		 * If there is no attr fork and the data fork is extents, 
--		 * determine if creating the default attr fork will result 
--		 * in the extents form migrating to btree. If so, the 
--		 * minimum offset only needs to be the space required for 
-+		 * determine if creating the default attr fork will result
-+		 * in the extents form migrating to btree. If so, the
-+		 * minimum offset only needs to be the space required for
- 		 * the btree root.
--		 */ 
-+		 */
- 		if (!dp->i_d.di_forkoff && dp->i_df.if_bytes >
- 		    xfs_default_attroffset(dp))
- 			dsize = XFS_BMDR_SPACE_CALC(MINDBTPTRS);
- 		break;
--		
- 	case XFS_DINODE_FMT_BTREE:
- 		/*
--		 * If have data btree then keep forkoff if we have one,
--		 * otherwise we are adding a new attr, so then we set 
--		 * minforkoff to where the btree root can finish so we have 
-+		 * If we have a data btree then keep forkoff if we have one,
-+		 * otherwise we are adding a new attr, so then we set
-+		 * minforkoff to where the btree root can finish so we have
- 		 * plenty of room for attrs
- 		 */
- 		if (dp->i_d.di_forkoff) {
--			if (offset < dp->i_d.di_forkoff) 
-+			if (offset < dp->i_d.di_forkoff)
- 				return 0;
--			else 
--				return dp->i_d.di_forkoff;
--		} else
--			dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
-+			return dp->i_d.di_forkoff;
-+		}
-+		dsize = XFS_BMAP_BROOT_SPACE(dp->i_df.if_broot);
- 		break;
- 	}
--	
--	/* 
--	 * A data fork btree root must have space for at least 
-+
-+	/*
-+	 * A data fork btree root must have space for at least
- 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 
+-STATIC void	xfs_unmountfs_wait(xfs_mount_t *);
+-
+-
+ #ifdef HAVE_PERCPU_SB
+ STATIC void	xfs_icsb_balance_counter(xfs_mount_t *, xfs_sb_field_t,
+ 						int);
+@@ -1496,11 +1493,6 @@ xfs_unmountfs(
  	 */
- 	minforkoff = MAX(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
-@@ -186,10 +200,10 @@ xfs_attr_shortform_bytesfit(xfs_inode_t
- 	maxforkoff = XFS_LITINO(mp) - XFS_BMDR_SPACE_CALC(MINABTPTRS);
- 	maxforkoff = maxforkoff >> 3;	/* rounded down */
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
  
--	if (offset >= minforkoff && offset < maxforkoff)
--		return offset;
- 	if (offset >= maxforkoff)
- 		return maxforkoff;
-+	if (offset >= minforkoff)
-+		return offset;
- 	return 0;
+-	xfs_binval(mp->m_ddev_targp);
+-	if (mp->m_rtdev_targp) {
+-		xfs_binval(mp->m_rtdev_targp);
+-	}
+-
+ 	/*
+ 	 * Unreserve any blocks we have so that when we unmount we don't account
+ 	 * the reserved free space as used. This is really only necessary for
+@@ -1526,7 +1518,16 @@ xfs_unmountfs(
+ 		xfs_warn(mp, "Unable to update superblock counters. "
+ 				"Freespace may not be correct on next mount.");
+ 	xfs_unmountfs_writesb(mp);
+-	xfs_unmountfs_wait(mp); 		/* wait for async bufs */
++
++	/*
++	 * Make sure all buffers have been flushed and completed before
++	 * unmounting the log.
++	 */
++	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
++	if (error)
++		xfs_warn(mp, "%d busy buffers during unmount.", error);
++	xfs_wait_buftarg(mp->m_ddev_targp);
++
+ 	xfs_log_unmount_write(mp);
+ 	xfs_log_unmount(mp);
+ 	xfs_uuid_unmount(mp);
+@@ -1537,16 +1538,6 @@ xfs_unmountfs(
+ 	xfs_free_perag(mp);
  }
  
+-STATIC void
+-xfs_unmountfs_wait(xfs_mount_t *mp)
+-{
+-	if (mp->m_logdev_targp != mp->m_ddev_targp)
+-		xfs_wait_buftarg(mp->m_logdev_targp);
+-	if (mp->m_rtdev_targp)
+-		xfs_wait_buftarg(mp->m_rtdev_targp);
+-	xfs_wait_buftarg(mp->m_ddev_targp);
+-}
+-
+ int
+ xfs_fs_writable(xfs_mount_t *mp)
+ {
 
 
 _______________________________________________
