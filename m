@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB76Ix0h046625 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 00:18:59 -0600
+	pB76J5hf046688 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 00:19:06 -0600
 Received: from ipmail05.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 414392A1EAD
-	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 22:18:51 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 976AD1305D47
+	for <xfs@oss.sgi.com>; Tue,  6 Dec 2011 22:19:03 -0800 (PST)
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	TDHQN8PQdppcQCRq for <xfs@oss.sgi.com>;
-	Tue, 06 Dec 2011 22:18:51 -0800 (PST)
+	huYAuikRBpOEoXbi for <xfs@oss.sgi.com>;
+	Tue, 06 Dec 2011 22:19:03 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1RYAq4-0003nu-PK
-	for xfs@oss.sgi.com; Wed, 07 Dec 2011 17:18:44 +1100
+	(envelope-from <dave@fromorbit.com>) id 1RYAq5-0003o9-0o
+	for xfs@oss.sgi.com; Wed, 07 Dec 2011 17:18:45 +1100
 Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1RYApz-0003Ub-Ap
+	(envelope-from <dave@disappointment.disaster>) id 1RYApz-0003Uj-Hn
 	for xfs@oss.sgi.com; Wed, 07 Dec 2011 17:18:39 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/12] xfs: introduce a compound buffer construct
-Date: Wed,  7 Dec 2011 17:18:14 +1100
-Message-Id: <1323238703-13198-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/12] xfs: add irec interfaces to xfs_trans_buf_get/read
+Date: Wed,  7 Dec 2011 17:18:16 +1100
+Message-Id: <1323238703-13198-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1323238703-13198-1-git-send-email-david@fromorbit.com>
 References: <1323238703-13198-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,218 +38,306 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The first step to replacing the dabuf infrastructure is to introduce
-a buffer construct that can support multiple block ranges in a
-single mapping.
+Add an irec interface to the transaction buffer API so that we can
+connect up the xfs_dabuf code to the new compound buffer API. Only
+support a single map at this point to simplify the implementation.
 
-Directory buffers back be made up of multiple extents, but are
-currently formed by creating individual buffers and them copying the
-data out of them into a dabuf structure. All dabuf operations then
-require walking all the underlying buffers to change the state of
-the underlying buffers, and once a dabuf is modified the contents
-need to be copied back to the underlying buffers before they are
-logged.
-
-All of these operations can be done on a normal xfs_buf, but the
-normal xfs_buf does not support multiple disk block ranges or doing
-multiple disjoint I/Os to read or write a buffer. Supporting
-multiple disk block ranges is not difficult - we simply need to
-attach an iovec-like array to the buffer rather than just using a
-single block number and length.
-
-Splitting the buffer up into multiple IOs for read and write is not
-difficult, either. We already track the number of IO remaining to
-complete an IO, so this can be used to wait for the multiple IO
-dispatched to complete (for both read and write).
-
-The only interesting twist to this is logging the changes. We can
-treat the compound buffer as a single buffer for most purposes
-except for formatting the changes into the log. When formatting, we
-need to split the changes into a format item per underlying region
-so that recovery does not need to know about compound buffers and
-can recover each segment of a directory block indivdually as it does
-now. The fact that recovery will replay all or none of the
-transaction nesures this process is still atomic from a change
-recovery point of view.
-
-This new sort of buffer will be known as a "compound buffer", and
-will be tagged with a flag to indicate it is such. Compound buffers
-will be indexed and cached by the block number of their initial
-segment and the length of the entire buffer.
-
-Introduce the compound buffer flags and the block vector
-infrastructure needed to replace the existing block number indexing.
-Further patches will introduce the real compound buffer
-functionality.
+Also, just duplicate the existing code to minimise the impact of the
+change.  This will be refactored later to remove all the duplicated
+code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c   |   19 +++++++++++++------
- fs/xfs/xfs_buf.h   |   17 ++++++++++++++---
- fs/xfs/xfs_trace.h |    8 ++++----
- 3 files changed, 31 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_trans.h     |    7 ++
+ fs/xfs/xfs_trans_buf.c |  250 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 257 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 44cf63c..152e855 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -201,7 +201,12 @@ xfs_buf_alloc(
- 	bp->b_flags = flags;
- 
- 	/* XXX: we have the block number. Why don't we just set it here? */
--	bp->b_bn = XFS_BUF_DADDR_NULL;
-+	/* initialise the buffer IO vector array appropriately */
-+	bp->b_vec_count = 1;
-+	bp->b_vec = &bp->b_vec_array[0];
-+	bp->b_vec[0].bv_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_vec[0].bv_len = bp->b_buffer_length;
+diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
+index 3ae713c..cc0aeae1 100644
+--- a/fs/xfs/xfs_trans.h
++++ b/fs/xfs/xfs_trans.h
+@@ -458,6 +458,13 @@ struct xfs_buf	*xfs_trans_get_buf(xfs_trans_t *, struct xfs_buftarg *, xfs_daddr
+ int		xfs_trans_read_buf(struct xfs_mount *, xfs_trans_t *,
+ 				   struct xfs_buftarg *, xfs_daddr_t, int, uint,
+ 				   struct xfs_buf **);
++struct xfs_buf	*xfs_trans_get_buf_irec(struct xfs_trans *, struct xfs_buftarg *,
++				        struct xfs_bmbt_irec *, int, uint);
++int		xfs_trans_read_buf_irec(struct xfs_mount *, struct xfs_trans *,
++					struct xfs_buftarg *,
++					struct xfs_bmbt_irec *, int, uint,
++					struct xfs_buf **);
 +
- 	atomic_set(&bp->b_pin_count, 0);
- 	init_waitqueue_head(&bp->b_waiters);
+ struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
  
-@@ -564,7 +569,8 @@ xfs_buf_get(
- 	 * Now we have a workable buffer, fill in the block number so
- 	 * that we can do IO on it.
- 	 */
--	bp->b_bn = blkno;
-+	bp->b_vec[0].bv_bn = blkno;
-+	bp->b_vec[0].bv_len = bp->b_buffer_length;
- 	bp->b_count_desired = bp->b_buffer_length;
- 
- found:
-@@ -596,7 +602,7 @@ _xfs_buf_read(
- 	int			status;
- 
- 	ASSERT(!(flags & (XBF_DELWRI|XBF_WRITE)));
--	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
-+	ASSERT(bp->b_vec[0].bv_bn != XFS_BUF_DADDR_NULL);
- 
- 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_DELWRI | XBF_READ_AHEAD);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
-@@ -711,7 +717,8 @@ xfs_buf_set_empty(
- 	bp->b_addr = NULL;
- 	bp->b_file_offset = 0;
- 	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
--	bp->b_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_vec[0].bv_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_vec[0].bv_len = bp->b_buffer_length;
- 	bp->b_flags &= ~XBF_MAPPED;
+ void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 475a4de..8463f2d 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -202,6 +202,82 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
+ 	return (bp);
  }
  
-@@ -1185,7 +1192,7 @@ _xfs_buf_ioapply(
- 	struct bio		*bio;
- 	int			offset = bp->b_offset;
- 	int			size = bp->b_count_desired;
--	sector_t		sector = bp->b_bn;
-+	sector_t		sector = bp->b_vec[0].bv_bn;
- 
- 	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
-@@ -1678,7 +1685,7 @@ xfs_buf_cmp(
- 	struct xfs_buf	*bp = container_of(b, struct xfs_buf, b_list);
- 	xfs_daddr_t		diff;
- 
--	diff = ap->b_bn - bp->b_bn;
-+	diff = ap->b_vec[0].bv_bn - bp->b_vec[0].bv_bn;
- 	if (diff < 0)
- 		return -1;
- 	if (diff > 0)
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index a1c078d..1a3367e 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -67,6 +67,7 @@ typedef enum {
- #define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
- #define _XBF_KMEM	(1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	(1 << 22)/* buffer on delwri queue */
-+#define _XBF_COMPOUND	(1 << 23)/* compound buffer */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -121,6 +122,12 @@ typedef void (*xfs_buf_iodone_t)(struct xfs_buf *);
- 
- #define XB_PAGES	2
- 
-+struct xfs_buf_vec {
-+	xfs_daddr_t		bv_bn;	/* block number for I/O */
-+	size_t			bv_len;	/* size of I/O */
-+};
-+#define XB_VECS		2
++struct xfs_buf *
++xfs_trans_get_buf_irec(
++	struct xfs_trans	*tp,
++	struct xfs_buftarg	*target_dev,
++	struct xfs_bmbt_irec	*map,
++	int			nmaps,
++	uint			flags)
++{
++	struct xfs_buf		*bp;
++	struct xfs_buf_log_item	*bip;
 +
- typedef struct xfs_buf {
- 	/*
- 	 * first cacheline holds all the fields needed for an uncontended cache
-@@ -142,7 +149,6 @@ typedef struct xfs_buf {
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
--	xfs_daddr_t		b_bn;		/* block number for I/O */
- 	size_t			b_count_desired;/* desired transfer size */
- 	void			*b_addr;	/* virtual address of buffer */
- 	struct work_struct	b_iodone_work;
-@@ -158,6 +164,11 @@ typedef struct xfs_buf {
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	unsigned short		b_error;	/* error code on I/O */
++	ASSERT_ALWAYS(nmaps == 1);
 +
-+	struct xfs_buf_vec	*b_vec;		/* compound buffer vector */
-+	struct xfs_buf_vec	b_vec_array[XB_VECS]; /* inline vectors */
-+	int			b_vec_count;	/* size of vector array */
++	if (flags == 0)
++		flags = XBF_LOCK | XBF_MAPPED;
 +
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
- #endif
-@@ -260,8 +271,8 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
- #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
++	/*
++	 * Default to a normal get_buf() call if the tp is NULL.
++	 */
++	if (tp == NULL)
++		return xfs_buf_get_irec(target_dev, map, nmaps,
++				   flags | XBF_DONT_BLOCK);
++
++	/*
++	 * If we find the buffer in the cache with this transaction
++	 * pointer in its b_fsprivate2 field, then we know we already
++	 * have it locked.  In this case we just increment the lock
++	 * recursion count and return the buffer to the caller.
++	 */
++	bp = xfs_trans_buf_item_match(tp, target_dev,
++			XFS_FSB_TO_DADDR(tp->t_mountp, map[0].br_startblock),
++			XFS_FSB_TO_BB(tp->t_mountp, map[0].br_blockcount));
++	if (bp != NULL) {
++		ASSERT(xfs_buf_islocked(bp));
++		if (XFS_FORCED_SHUTDOWN(tp->t_mountp)) {
++			xfs_buf_stale(bp);
++			XFS_BUF_DONE(bp);
++		}
++
++		/*
++		 * If the buffer is stale then it was binval'ed
++		 * since last read.  This doesn't matter since the
++		 * caller isn't allowed to use the data anyway.
++		 */
++		else if (XFS_BUF_ISSTALE(bp))
++			ASSERT(!XFS_BUF_ISDELAYWRITE(bp));
++
++		ASSERT(bp->b_transp == tp);
++		bip = bp->b_fspriv;
++		ASSERT(bip != NULL);
++		ASSERT(atomic_read(&bip->bli_refcount) > 0);
++		bip->bli_recur++;
++		trace_xfs_trans_get_buf_recur(bip);
++		return (bp);
++	}
++
++	/*
++	 * We always specify the XBF_DONT_BLOCK flag within a transaction
++	 * so that get_buf does not try to push out a delayed write buffer
++	 * which might cause another transaction to take place (if the
++	 * buffer was delayed alloc).  Such recursive transactions can
++	 * easily deadlock with our current transaction as well as cause
++	 * us to run out of stack space.
++	 */
++	bp = xfs_buf_get_irec(target_dev, map, nmaps, flags | XBF_DONT_BLOCK);
++	if (bp == NULL) {
++		return NULL;
++	}
++
++	ASSERT(!bp->b_error);
++
++	_xfs_trans_bjoin(tp, bp, 1);
++	trace_xfs_trans_get_buf(bp->b_fspriv);
++	return (bp);
++}
++
+ /*
+  * Get and lock the superblock buffer of this file system for the
+  * given transaction.
+@@ -438,6 +514,180 @@ shutdown_abort:
+ }
  
--#define XFS_BUF_ADDR(bp)		((bp)->b_bn)
--#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
-+#define XFS_BUF_ADDR(bp)		((bp)->b_vec[0].bv_bn)
-+#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_vec[0].bv_bn = (xfs_daddr_t)(bno))
- #define XFS_BUF_OFFSET(bp)		((bp)->b_file_offset)
- #define XFS_BUF_SET_OFFSET(bp, off)	((bp)->b_file_offset = (off))
- #define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index f1d2802..40d1f9c 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -290,7 +290,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
- 	),
- 	TP_fast_assign(
- 		__entry->dev = bp->b_target->bt_dev;
--		__entry->bno = bp->b_bn;
-+		__entry->bno = bp->b_vec[0].bv_bn;
- 		__entry->buffer_length = bp->b_buffer_length;
- 		__entry->hold = atomic_read(&bp->b_hold);
- 		__entry->pincount = atomic_read(&bp->b_pin_count);
-@@ -361,7 +361,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
- 	),
- 	TP_fast_assign(
- 		__entry->dev = bp->b_target->bt_dev;
--		__entry->bno = bp->b_bn;
-+		__entry->bno = bp->b_vec[0].bv_bn;
- 		__entry->buffer_length = bp->b_buffer_length;
- 		__entry->flags = flags;
- 		__entry->hold = atomic_read(&bp->b_hold);
-@@ -405,7 +405,7 @@ TRACE_EVENT(xfs_buf_ioerror,
- 	),
- 	TP_fast_assign(
- 		__entry->dev = bp->b_target->bt_dev;
--		__entry->bno = bp->b_bn;
-+		__entry->bno = bp->b_vec[0].bv_bn;
- 		__entry->buffer_length = bp->b_buffer_length;
- 		__entry->hold = atomic_read(&bp->b_hold);
- 		__entry->pincount = atomic_read(&bp->b_pin_count);
-@@ -449,7 +449,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
- 		__entry->bli_flags = bip->bli_flags;
- 		__entry->bli_recur = bip->bli_recur;
- 		__entry->bli_refcount = atomic_read(&bip->bli_refcount);
--		__entry->buf_bno = bip->bli_buf->b_bn;
-+		__entry->buf_bno = bip->bli_buf->b_vec[0].bv_bn;
- 		__entry->buf_len = bip->bli_buf->b_buffer_length;
- 		__entry->buf_flags = bip->bli_buf->b_flags;
- 		__entry->buf_hold = atomic_read(&bip->bli_buf->b_hold);
+ 
++int
++xfs_trans_read_buf_irec(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_buftarg	*target,
++	struct xfs_bmbt_irec	*map,
++	int			nmaps,
++	uint			flags,
++	struct xfs_buf		**bpp)
++{
++	xfs_buf_t		*bp;
++	xfs_buf_log_item_t	*bip;
++	int			error;
++
++	ASSERT_ALWAYS(nmaps == 1);
++
++	if (flags == 0)
++		flags = XBF_LOCK | XBF_MAPPED;
++
++	/*
++	 * Default to a normal get_buf() call if the tp is NULL.
++	 */
++	if (tp == NULL) {
++		bp = xfs_buf_read_irec(target, map, nmaps,
++				       flags | XBF_DONT_BLOCK);
++		if (!bp)
++			return (flags & XBF_TRYLOCK) ?
++					EAGAIN : XFS_ERROR(ENOMEM);
++
++		if (bp->b_error) {
++			error = bp->b_error;
++			xfs_buf_ioerror_alert(bp, __func__);
++			xfs_buf_relse(bp);
++			return error;
++		}
++#ifdef DEBUG
++		if (xfs_do_error) {
++			if (xfs_error_target == target) {
++				if (((xfs_req_num++) % xfs_error_mod) == 0) {
++					xfs_buf_relse(bp);
++					xfs_debug(mp, "Returning error!");
++					return XFS_ERROR(EIO);
++				}
++			}
++		}
++#endif
++		if (XFS_FORCED_SHUTDOWN(mp))
++			goto shutdown_abort;
++		*bpp = bp;
++		return 0;
++	}
++
++	/*
++	 * If we find the buffer in the cache with this transaction
++	 * pointer in its b_fsprivate2 field, then we know we already
++	 * have it locked.  If it is already read in we just increment
++	 * the lock recursion count and return the buffer to the caller.
++	 * If the buffer is not yet read in, then we read it in, increment
++	 * the lock recursion count, and return it to the caller.
++	 */
++	bp = xfs_trans_buf_item_match(tp, target,
++				XFS_FSB_TO_DADDR(mp, map[0].br_startblock),
++				XFS_FSB_TO_BB(mp, map[0].br_blockcount));
++	if (bp != NULL) {
++		ASSERT(xfs_buf_islocked(bp));
++		ASSERT(bp->b_transp == tp);
++		ASSERT(bp->b_fspriv != NULL);
++		ASSERT(!bp->b_error);
++		if (!(XFS_BUF_ISDONE(bp))) {
++			trace_xfs_trans_read_buf_io(bp, _RET_IP_);
++			ASSERT(!XFS_BUF_ISASYNC(bp));
++			XFS_BUF_READ(bp);
++			xfsbdstrat(tp->t_mountp, bp);
++			error = xfs_buf_iowait(bp);
++			if (error) {
++				xfs_buf_ioerror_alert(bp, __func__);
++				xfs_buf_relse(bp);
++				/*
++				 * We can gracefully recover from most read
++				 * errors. Ones we can't are those that happen
++				 * after the transaction's already dirty.
++				 */
++				if (tp->t_flags & XFS_TRANS_DIRTY)
++					xfs_force_shutdown(tp->t_mountp,
++							SHUTDOWN_META_IO_ERROR);
++				return error;
++			}
++		}
++		/*
++		 * We never locked this buf ourselves, so we shouldn't
++		 * brelse it either. Just get out.
++		 */
++		if (XFS_FORCED_SHUTDOWN(mp)) {
++			trace_xfs_trans_read_buf_shut(bp, _RET_IP_);
++			*bpp = NULL;
++			return XFS_ERROR(EIO);
++		}
++
++
++		bip = bp->b_fspriv;
++		bip->bli_recur++;
++
++		ASSERT(atomic_read(&bip->bli_refcount) > 0);
++		trace_xfs_trans_read_buf_recur(bip);
++		*bpp = bp;
++		return 0;
++	}
++
++	/*
++	 * We always specify the XBF_DONT_BLOCK flag within a transaction
++	 * so that get_buf does not try to push out a delayed write buffer
++	 * which might cause another transaction to take place (if the
++	 * buffer was delayed alloc).  Such recursive transactions can
++	 * easily deadlock with our current transaction as well as cause
++	 * us to run out of stack space.
++	 */
++	bp = xfs_buf_read_irec(target, map, nmaps, flags | XBF_DONT_BLOCK);
++	if (bp == NULL) {
++		*bpp = NULL;
++		return (flags & XBF_TRYLOCK) ?
++					0 : XFS_ERROR(ENOMEM);
++	}
++	if (bp->b_error) {
++		error = bp->b_error;
++		xfs_buf_stale(bp);
++		XFS_BUF_DONE(bp);
++		xfs_buf_ioerror_alert(bp, __func__);
++		if (tp->t_flags & XFS_TRANS_DIRTY)
++			xfs_force_shutdown(tp->t_mountp, SHUTDOWN_META_IO_ERROR);
++		xfs_buf_relse(bp);
++		return error;
++	}
++#ifdef DEBUG
++	if (xfs_do_error && !(tp->t_flags & XFS_TRANS_DIRTY)) {
++		if (xfs_error_target == target) {
++			if (((xfs_req_num++) % xfs_error_mod) == 0) {
++				xfs_force_shutdown(tp->t_mountp,
++						   SHUTDOWN_META_IO_ERROR);
++				xfs_buf_relse(bp);
++				xfs_debug(mp, "Returning trans error!");
++				return XFS_ERROR(EIO);
++			}
++		}
++	}
++#endif
++	if (XFS_FORCED_SHUTDOWN(mp))
++		goto shutdown_abort;
++
++	_xfs_trans_bjoin(tp, bp, 1);
++	trace_xfs_trans_read_buf(bp->b_fspriv);
++
++	*bpp = bp;
++	return 0;
++
++shutdown_abort:
++	/*
++	 * the theory here is that buffer is good but we're
++	 * bailing out because the filesystem is being forcibly
++	 * shut down.  So we should leave the b_flags alone since
++	 * the buffer's not staled and just get out.
++	 */
++#if defined(DEBUG)
++	if (XFS_BUF_ISSTALE(bp) && XFS_BUF_ISDELAYWRITE(bp))
++		xfs_notice(mp, "about to pop assert, bp == 0x%p", bp);
++#endif
++	ASSERT((bp->b_flags & (XBF_STALE|XBF_DELWRI)) !=
++				     (XBF_STALE|XBF_DELWRI));
++
++	trace_xfs_trans_read_buf_shut(bp, _RET_IP_);
++	xfs_buf_relse(bp);
++	*bpp = NULL;
++	return XFS_ERROR(EIO);
++}
++
+ /*
+  * Release the buffer bp which was previously acquired with one of the
+  * xfs_trans_... buffer allocation routines if the buffer has not
 -- 
 1.7.5.4
 
