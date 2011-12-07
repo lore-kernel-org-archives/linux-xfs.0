@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB7A7tWq066345 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 04:07:56 -0600
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D43DD15673D8
-	for <xfs@oss.sgi.com>; Wed,  7 Dec 2011 02:07:54 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	oOGxxR48pl7fHICW for <xfs@oss.sgi.com>;
-	Wed, 07 Dec 2011 02:07:54 -0800 (PST)
-Date: Wed, 7 Dec 2011 21:07:48 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests/071 FAIL with pwrite64: Invalid argument
-Message-ID: <20111207100748.GB14273@dastard>
-References: <4EDD8F16.4050402@cn.fujitsu.com> <20111206110533.GD28326@dastard>
-	<4EDF2133.7030702@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4EDF2133.7030702@cn.fujitsu.com>
+	pB7DXvaI085269 for <xfs@oss.sgi.com>; Wed, 7 Dec 2011 07:33:58 -0600
+Received: from mort.rzone.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EECF16EBDE5
+	for <xfs@oss.sgi.com>; Wed,  7 Dec 2011 05:33:55 -0800 (PST)
+Received: from mort.rzone.de (mort.rzone.de [81.169.144.234]) by cuda.sgi.com
+	with ESMTP id EbGVL2RnLaAfcuCI for <xfs@oss.sgi.com>;
+	Wed, 07 Dec 2011 05:33:55 -0800 (PST)
+From: Jan Schmidt <list.btrfs@jan-o-sch.net>
+Subject: [PATCH] xfstests: new check 276 to ensure btrfs backref integrity
+Date: Wed,  7 Dec 2011 14:33:53 +0100
+Message-Id: <1323264833-11075-1-git-send-email-list.btrfs@jan-o-sch.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,69 +20,300 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peng Haitao <penght@cn.fujitsu.com>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-btrfs@vger.kernel.org
 
-On Wed, Dec 07, 2011 at 04:17:55PM +0800, Peng Haitao wrote:
-> Hi, 
-> 
-> Dave Chinner said the following on 2011-12-6 19:05:
-> >> When offset + length is overflow of xfs_io builtin pread and pwrite in linux,
-> >> the error message should be "Invalid argument".
-> > 
-> > Fixing this just requires an additional filter. The write outpu is
-> > already passed through 2 filters to remove ariable numbers from the
-> > output, so one more to standardise the error isn't a problem.
-> > 
-> > Further, filtering of the error stream on the reads to only appear
-> > in $seq.full solves the extra error output on reads as well.
-> > 
-> 
-> Thanks for your comments.
-> 
-> When offset + length is overflow, the case expect:
->   - pwrite output error messages: pwrite64: File too large
->   - pread output right message:   read 0/512 bytes at offset <OFFSET>
-> 
-> but in linux, the actual results:
->   - pwrite output error messages: pwrite64: Invalid argument
->   - pread output right message:   pread64: Invalid argument
-> 
-> I can add an additional filter to remove variable messages, 
-> but if I remove variable messages, the 071.out will remain echo content:
-> Writing 512 bytes, offset is +0 (direct=false)
-> Reading 512 bytes (direct=false)
-> ...
+This is a btrfs specific scratch test checking the backref walker. It
+creates a file system with compressed and uncompressed data extents, picks
+files randomly and uses filefrag to get their extents. It then asks the
+btrfs utility (inspect-internal) to do the backref resolving from fs-logical
+address (the one filefrag calls "physical") back to the inode number and
+file-logical offset, verifying the result.
 
-I think you misunderstand what I was saying - I was not suggesting
-removing the error messages at all, just filtering them with sed to
-ensure the output is always constant for the error different
-messages different platforms dump out.
+Signed-off-by: Jan Schmidt <list.btrfs@jan-o-sch.net>
+---
+ 276           |  230 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 276.out       |    4 +
+ common.config |    1 +
+ group         |    1 +
+ 4 files changed, 236 insertions(+), 0 deletions(-)
+ create mode 100755 276
+ create mode 100644 276.out
 
-Have a look at the patch I sent earlier today for test 103 ([PATCH
-2/2] xfstests: ln failure output has changed again) as an example of
-error message filtering for multi-platform (Irix and Linux are
-different) and multiple-version (coreutils v < 6 output is different
-to 6 <= v < 8 and the current 8.x is different again) support with a
-single golden image.
-
-That is, the output in the golden image does not change, instead we
-use a filter to convert the known different error messages to match
-the error in the golden image. If the error message is different to
-what the filter catches or does not appear, then the test still
-fails as desired. Essentially the output filter encodes all the
-variants of the valid error messages for the given test....
-
-Cheers,
-
-Dave.
+diff --git a/276 b/276
+new file mode 100755
+index 0000000..f22d089
+--- /dev/null
++++ b/276
+@@ -0,0 +1,230 @@
++#! /bin/bash
++
++# creator
++owner=list.btrfs@jan-o-sch.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++# 1=production, 0=avoid touching the scratch dev (no mount/umount, no writes)
++fresh=1
++tmp=/tmp/$$
++status=1
++FSTYP=btrfs
++
++_cleanup()
++{
++	if [ $fresh -ne 0 ]; then
++		echo "*** unmount" 
++		umount $SCRATCH_MNT 2>/dev/null
++	fi
++	rm -f $tmp.*
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs btrfs
++_supported_os Linux
++
++if [ $fresh -ne 0 ]; then
++	_require_scratch
++fi
++
++_require_nobigloopfs
++
++[ -n "$BTRFS_UTIL_PROG" ] || _notrun "btrfs executable not found"
++$BTRFS_UTIL_PROG inspect-internal --help >/dev/null 2>&1
++[ $? -eq 0 ] || _notrun "btrfs executable too old"
++which filefrag >/dev/null 2>&1
++[ $? -eq 0 ] || _notrun "filefrag missing"
++
++
++rm -f $seq.full
++
++FILEFRAG_FILTER='if (/, blocksize (\d+)/) {$blocksize = $1; next} ($ext, '\
++'$logical, $physical, $expected, $length, $flags) = (/^\s*(\d+)\s+(\d+)'\
++'\s+(\d+)\s+(?:(\d+)\s+)?(\d+)\s+(.*)/) or next; $flags =~ '\
++'/(?:^|,)inline(?:,|$)/ and next; print $physical * $blocksize, "#", '\
++'$length * $blocksize, "#", $logical * $blocksize, " "'
++
++_filter_extents()
++{
++	tee -a $seq.full | $PERL_PROG -ne "$FILEFRAG_FILTER"
++}
++
++_check_file_extents()
++{
++	cmd="filefrag -vx $1"
++	echo "# $cmd" >> $seq.full
++	out=`$cmd | _filter_extents`
++	if [ -z "$out" ]; then
++		return 1
++	fi
++	echo "after filter: $out" >> $seq.full
++	echo $out
++	return 0
++}
++
++_btrfs_inspect_addr()
++{
++	mp=$1
++	addr=$2
++	expect_addr=$3
++	expect_inum=$4
++	file=$5
++	cmd="$BTRFS_UTIL_PROG inspect-internal logical-resolve -P $addr $mp"
++	echo "# $cmd" >> $seq.full
++	out=`$cmd`
++	echo "$out" >> $seq.full
++	grep_expr="inode $expect_inum offset $expect_addr root"
++	echo "$out" | grep "^$grep_expr 5$" >/dev/null
++	ret=$?
++	if [ $ret -eq 0 ]; then
++		# look for a root number that is not 5
++		echo "$out" | grep "^$grep_expr \([0-46-9][0-9]*\|5[0-9]\+\)$" \
++			>/dev/null
++		ret=$?
++	fi
++	if [ $ret -eq 0 ]; then
++		return 0
++	fi
++	echo "unexpected output from"
++	echo "	$cmd"
++	echo "expected inum: $expect_inum, expected address: $expect_addr,"\
++		"file: $file, got:"
++	echo "$out"
++	return 1
++}
++
++_btrfs_inspect_inum()
++{
++	file=$1
++	inum=$2
++	snap_name=$3
++	mp="$SCRATCH_MNT/$snap_name"
++	cmd="$BTRFS_UTIL_PROG inspect-internal inode-resolve $inum $mp"
++	echo "# $cmd" >> $seq.full
++	out=`$cmd`
++	echo "$out" >> $seq.full
++	grep_expr="^$file$"
++	cnt=`echo "$out" | grep "$grep_expr" | wc -l`
++	if [ $cnt -ge "1" ]; then
++		return 0
++	fi
++	echo "unexpected output from"
++	echo "	$cmd"
++	echo "expected path: $file, got:"
++	echo "$out"
++	return 1
++}
++
++_btrfs_inspect_check()
++{
++	file=$1
++	physical=$2
++	length=$3
++	logical=$4
++	snap_name=$5
++	cmd="stat -c %i $file"
++	echo "# $cmd" >> $seq.full
++	inum=`$cmd`
++	echo "$inum" >> $seq.full
++	_btrfs_inspect_addr "$SCRATCH_MNT/$snap_name" $physical $logical $inum\
++			$file
++	ret=$?
++	if [ $ret -eq 0 ]; then
++		_btrfs_inspect_inum $file $inum $snap_name
++		ret=$?
++	fi
++	return $?
++}
++
++run_check()
++{
++	echo "# $@" >> $seq.full 2>&1
++	"$@" >> $seq.full 2>&1 || _fail "failed: '$@'"
++}
++
++workout()
++{
++	fsz=$1
++	nfiles=$2
++	procs=$3
++	snap_name=$4
++
++	if [ $fresh -ne 0 ]; then
++		umount $SCRATCH_DEV >/dev/null 2>&1
++		echo "*** mkfs -dsize=$fsz"    >>$seq.full
++		echo ""                                     >>$seq.full
++		_scratch_mkfs_sized $fsz >>$seq.full 2>&1 \
++			|| _fail "size=$fsz mkfs failed"
++		_scratch_mount                              >>$seq.full 2>&1 \
++			|| _fail "mount failed"
++		# -w ensures that the only ops are ones which cause write I/O
++		run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n 1000 \
++			$FSSTRESS_AVOID
++
++		run_check $BTRFS_UTIL_PROG subvol snap $SCRATCH_MNT \
++			$SCRATCH_MNT/$snap_name
++
++		run_check umount $SCRATCH_DEV >/dev/null 2>&1
++		run_check _scratch_mount "-o compress=lzo"
++
++		# -w ensures that the only ops are ones which cause write I/O
++		run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n 2000 \
++			$FSSTRESS_AVOID
++	else
++		echo "*** skipping mkfs part"	>>$seq.full
++	fi
++
++	cnt=0
++	errcnt=0
++	dir="$SCRATCH_MNT/$snap_name/"
++	for file in `find $dir -name f\* -size +0 | sort -R`; do
++		extents=`_check_file_extents $file`
++		ret=$?
++		if [ $ret -ne 0 ]; then
++			continue;
++		fi
++		for i in $extents; do
++			physical=$i
++			length=$i
++			logical=$i
++			physical=`echo $physical | sed -e 's/#.*//'`
++			length=`echo $length | sed -e 's/[^#]+#//'`
++			length=`echo $length | sed -e 's/#.*//'`
++			logical=`echo $logical | sed -e 's/.*#//'`
++			_btrfs_inspect_check $file $physical $length $logical \
++						$snap_name
++			ret=$?
++			if [ $ret -ne 0 ]; then
++				errcnt=`expr $errcnt + 1`
++			fi
++		done
++		cnt=`expr $cnt + 1`
++		if [ $cnt -ge $nfiles ]; then
++			break
++		fi
++	done
++	if [ $errcnt -gt 0 ]; then
++		echo "test failed: $errcnt error(s)"
++	fi
++}
++
++echo "*** test backref walking"
++
++snap_name="snap1"
++filesize=`expr 2000 \* 1024 \* 1024`
++nfiles=4
++numprocs=1
++
++workout $filesize $nfiles $numprocs $snap_name
++
++echo "*** done"
++status=0
++exit
+diff --git a/276.out b/276.out
+new file mode 100644
+index 0000000..2032dea
+--- /dev/null
++++ b/276.out
+@@ -0,0 +1,4 @@
++QA output created by 276
++*** test backref walking
++*** done
++*** unmount
+diff --git a/common.config b/common.config
+index 1df2bbd..7bed1c5 100644
+--- a/common.config
++++ b/common.config
+@@ -185,6 +185,7 @@ case "$HOSTOS" in
+         export MKFS_XFS_PROG="`set_prog_path mkfs.xfs`"
+         export MKFS_UDF_PROG="`set_prog_path mkudffs`"
+         export MKFS_BTRFS_PROG="`set_prog_path mkfs.btrfs`"
++        export BTRFS_UTIL_PROG="`set_prog_path btrfs`"
+         export XFS_FSR_PROG="`set_prog_path xfs_fsr`"
+         export MKFS_NFS_PROG="false"
+         ;;
+diff --git a/group b/group
+index 08d999a..dd9f00d 100644
+--- a/group
++++ b/group
+@@ -389,3 +389,4 @@ deprecated
+ 273 auto rw
+ 274 auto rw
+ 275 auto rw
++276 auto rw metadata
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.2.2
 
 _______________________________________________
 xfs mailing list
