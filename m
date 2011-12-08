@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB8IFN39157087 for <xfs@oss.sgi.com>; Thu, 8 Dec 2011 12:15:23 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2F0A21F47AFF
-	for <xfs@oss.sgi.com>; Thu,  8 Dec 2011 08:57:52 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	9WtOkKHGJNRDlbMJ for <xfs@oss.sgi.com>;
-	Thu, 08 Dec 2011 08:57:52 -0800 (PST)
-Date: Thu, 8 Dec 2011 11:57:51 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Polish translation update for xfsprogs 3.1.7
-Message-ID: <20111208165751.GA4521@infradead.org>
-References: <20111123191153.GE14429@stranger.qboosh.pl>
+	pB8IZOQV157944 for <xfs@oss.sgi.com>; Thu, 8 Dec 2011 12:35:24 -0600
+Date: Thu, 8 Dec 2011 12:35:47 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch 03/19] xfs: remove the lid_size field in struct
+	log_item_desc
+Message-ID: <20111208183547.GT29840@sgi.com>
+References: <20111206215806.844405397@bombadil.infradead.org>
+	<20111206215853.103470363@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111123191153.GE14429@stranger.qboosh.pl>
+In-Reply-To: <20111206215853.103470363@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +24,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jakub Bogusz <qboosh@pld-linux.org>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 23, 2011 at 08:11:54PM +0100, Jakub Bogusz wrote:
-> Hello,
+On Tue, Dec 06, 2011 at 04:58:09PM -0500, Christoph Hellwig wrote:
+> Outside the now removed nodelaylog code this field is only used for
+> asserts and can be safely removed now.
 > 
-> I've just updated pl.po file for xfsprogs 3.1.7.
-> It's available at http://qboosh.pl/pl.po/xfsprogs-3.1.7.pl.po
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Thanks a lot - I've put it in and did the string changes you suggested.
+Looks good.
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+> Index: xfs/fs/xfs/xfs_inode_item.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_inode_item.c	2011-12-06 15:26:35.150334172 +0100
+> +++ xfs/fs/xfs/xfs_inode_item.c	2011-12-06 15:36:07.963678127 +0100
+> @@ -437,7 +437,6 @@ xfs_inode_item_format(
+>  	 * Assert that no attribute-related log flags are set.
+>  	 */
+>  	if (!XFS_IFORK_Q(ip)) {
+> -		ASSERT(nvecs == lip->li_desc->lid_size);
+>  		iip->ili_format.ilf_size = nvecs;
+>  		ASSERT(!(iip->ili_format.ilf_fields &
+>  			 (XFS_ILOG_ADATA | XFS_ILOG_ABROOT | XFS_ILOG_AEXT)));
+> @@ -521,7 +520,6 @@ xfs_inode_item_format(
+>  		break;
+>  	}
+>  
+> -	ASSERT(nvecs == lip->li_desc->lid_size);
+
+These two look like they might have been useful.
 
 _______________________________________________
 xfs mailing list
