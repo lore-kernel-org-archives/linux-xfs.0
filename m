@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB8FxJCO150194 for <xfs@oss.sgi.com>; Thu, 8 Dec 2011 09:59:19 -0600
+	pB8FxKKP150215 for <xfs@oss.sgi.com>; Thu, 8 Dec 2011 09:59:20 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D78732A8A06
-	for <xfs@oss.sgi.com>; Thu,  8 Dec 2011 07:59:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7B9A816ECC77
+	for <xfs@oss.sgi.com>; Thu,  8 Dec 2011 07:59:19 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	g8CaBTbh4B0v6jZk for <xfs@oss.sgi.com>;
-	Thu, 08 Dec 2011 07:59:18 -0800 (PST)
+	FvFj5KknwDfOjglX for <xfs@oss.sgi.com>;
+	Thu, 08 Dec 2011 07:59:19 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RYgNS-0006oC-1J
+	Linux)) id 1RYgNS-0006qG-Mp
 	for xfs@oss.sgi.com; Thu, 08 Dec 2011 15:59:18 +0000
-Message-Id: <20111208155917.995886067@bombadil.infradead.org>
-Date: Thu, 08 Dec 2011 10:57:58 -0500
+Message-Id: <20111208155918.662107724@bombadil.infradead.org>
+Date: Thu, 08 Dec 2011 10:58:02 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 03/11] xfs: remove the unused dm_attrs structure
+Subject: [PATCH 07/11] xfs: replace i_pin_wait with a bit waitqueue
 References: <20111208155755.323930705@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-remove-dm_attrs
+Content-Disposition: inline; filename=xfs-kill-i_ipin_wait
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,41 +34,123 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-.. and the just as dead bhv_desc forward declaration while we're at it.
+Replace i_pin_wait, which is only used during synchronous inode flushing
+with a bit waitqueue.  This trades off a much smaller inode against
+slightly slower wakeup performance, and saves 12 (32-bit) or 20 (64-bit)
+bytes in the XFS inode.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Alex Elder <aelder@sgi.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 ---
- fs/xfs/xfs_inode.h |    7 -------
- 1 file changed, 7 deletions(-)
+ fs/xfs/xfs_inode.c      |   27 +++++++++++++++++++++------
+ fs/xfs/xfs_inode.h      |    3 ++-
+ fs/xfs/xfs_inode_item.c |    2 +-
+ fs/xfs/xfs_super.c      |    1 -
+ 4 files changed, 24 insertions(+), 9 deletions(-)
 
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-11-30 12:59:08.843047205 +0100
++++ xfs/fs/xfs/xfs_inode.c	2011-11-30 12:59:10.296372665 +0100
+@@ -2037,7 +2037,7 @@ xfs_idestroy_fork(
+  * once someone is waiting for it to be unpinned.
+  */
+ static void
+-xfs_iunpin_nowait(
++xfs_iunpin(
+ 	struct xfs_inode	*ip)
+ {
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+@@ -2049,14 +2049,29 @@ xfs_iunpin_nowait(
+ 
+ }
+ 
++static void
++__xfs_iunpin_wait(
++	struct xfs_inode	*ip)
++{
++	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IPINNED_BIT);
++	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_IPINNED_BIT);
++
++	xfs_iunpin(ip);
++
++	do {
++		prepare_to_wait(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
++		if (xfs_ipincount(ip))
++			io_schedule();
++	} while (xfs_ipincount(ip));
++	finish_wait(wq, &wait.wait);
++}
++
+ void
+ xfs_iunpin_wait(
+ 	struct xfs_inode	*ip)
+ {
+-	if (xfs_ipincount(ip)) {
+-		xfs_iunpin_nowait(ip);
+-		wait_event(ip->i_ipin_wait, (xfs_ipincount(ip) == 0));
+-	}
++	if (xfs_ipincount(ip))
++		__xfs_iunpin_wait(ip);
+ }
+ 
+ /*
+@@ -2415,7 +2430,7 @@ xfs_iflush(
+ 	 * out for us if they occur after the log force completes.
+ 	 */
+ 	if (!(flags & SYNC_WAIT) && xfs_ipincount(ip)) {
+-		xfs_iunpin_nowait(ip);
++		xfs_iunpin(ip);
+ 		xfs_ifunlock(ip);
+ 		return EAGAIN;
+ 	}
 Index: xfs/fs/xfs/xfs_inode.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 10:56:57.396098395 +0100
-+++ xfs/fs/xfs/xfs_inode.h	2011-11-30 10:57:46.375833051 +0100
-@@ -211,7 +211,6 @@ typedef struct xfs_icdinode {
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 12:59:08.846380520 +0100
++++ xfs/fs/xfs/xfs_inode.h	2011-11-30 12:59:10.296372665 +0100
+@@ -238,7 +238,6 @@ typedef struct xfs_inode {
+ 	mrlock_t		i_lock;		/* inode lock */
+ 	mrlock_t		i_iolock;	/* inode IO lock */
+ 	atomic_t		i_pincount;	/* inode pin count */
+-	wait_queue_head_t	i_ipin_wait;	/* inode pinning wait queue */
+ 	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+ 	/* Miscellaneous state. */
+ 	unsigned long		i_flags;	/* see defined flags below */
+@@ -367,6 +366,8 @@ xfs_set_projid(struct xfs_inode *ip,
+ #define XFS_IDIRTY_RELEASE	(1 << 6) /* dirty release already seen */
+ #define __XFS_IFLOCK_BIT	7	 /* inode is being flushed right now */
+ #define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
++#define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
++#define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
  
- #ifdef __KERNEL__
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-11-30 12:59:08.846380520 +0100
++++ xfs/fs/xfs/xfs_inode_item.c	2011-11-30 12:59:10.296372665 +0100
+@@ -555,7 +555,7 @@ xfs_inode_item_unpin(
+ 	trace_xfs_inode_unpin(ip, _RET_IP_);
+ 	ASSERT(atomic_read(&ip->i_pincount) > 0);
+ 	if (atomic_dec_and_test(&ip->i_pincount))
+-		wake_up(&ip->i_ipin_wait);
++		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
+ }
  
--struct bhv_desc;
- struct xfs_buf;
- struct xfs_bmap_free;
- struct xfs_bmbt_irec;
-@@ -220,12 +219,6 @@ struct xfs_mount;
- struct xfs_trans;
- struct xfs_dquot;
+ /*
+Index: xfs/fs/xfs/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_super.c	2011-11-30 12:59:08.846380520 +0100
++++ xfs/fs/xfs/xfs_super.c	2011-11-30 12:59:10.296372665 +0100
+@@ -828,7 +828,6 @@ xfs_fs_inode_init_once(
+ 	/* xfs inode */
+ 	atomic_set(&ip->i_pincount, 0);
+ 	spin_lock_init(&ip->i_flags_lock);
+-	init_waitqueue_head(&ip->i_ipin_wait);
  
--typedef struct dm_attrs_s {
--	__uint32_t	da_dmevmask;	/* DMIG event mask */
--	__uint16_t	da_dmstate;	/* DMIG state info */
--	__uint16_t	da_pad;		/* DMIG extra padding */
--} dm_attrs_t;
--
- typedef struct xfs_inode {
- 	/* Inode linking and identification information. */
- 	struct xfs_mount	*i_mount;	/* fs mount struct ptr */
+ 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+ 		     "xfsino", ip->i_ino);
 
 _______________________________________________
 xfs mailing list
