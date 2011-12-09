@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pB97MJIA193343 for <xfs@oss.sgi.com>; Fri, 9 Dec 2011 01:22:20 -0600
-Received: from ipmail06.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A317B1D38B6A
-	for <xfs@oss.sgi.com>; Thu,  8 Dec 2011 23:17:03 -0800 (PST)
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	9MfACu1I6i5mx455 for <xfs@oss.sgi.com>;
-	Thu, 08 Dec 2011 23:17:03 -0800 (PST)
-Date: Fri, 9 Dec 2011 18:17:00 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: 277 new test to check freeze/unfreeze works
-	well or not under heavy load.
-Message-ID: <20111209071700.GD14273@dastard>
-References: <20111209145231.5A5F.61FB500B@jp.fujitsu.com>
+	pB9BxYiW208080 for <xfs@oss.sgi.com>; Fri, 9 Dec 2011 05:59:34 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 93EEF1EA7B90
+	for <xfs@oss.sgi.com>; Fri,  9 Dec 2011 03:59:33 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	281V2TXhpmrGFqEC for <xfs@oss.sgi.com>;
+	Fri, 09 Dec 2011 03:59:33 -0800 (PST)
+Date: Fri, 9 Dec 2011 06:56:23 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Filesystem Structure publican XML available?
+Message-ID: <20111209115623.GA27169@infradead.org>
+References: <CAGfuzXTZXexJ3fOuV7iB19_P3Tdx+pwffd9c=_Dn3GT2HcJ9Fw@mail.gmail.com>
+	<20111208153456.GA6291@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111209145231.5A5F.61FB500B@jp.fujitsu.com>
+In-Reply-To: <20111208153456.GA6291@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +31,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Masayoshi MIZUMA <m.mizuma@jp.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Motohiro Kanda <kanda.motohiro@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Dec 09, 2011 at 02:52:31PM +0900, Masayoshi MIZUMA wrote:
-> Hi,
+On Thu, Dec 08, 2011 at 10:34:56AM -0500, Christoph Hellwig wrote:
+> On Thu, Dec 08, 2011 at 09:49:14PM +0900, Motohiro Kanda wrote:
+> > Hi,
+> > I would like to translate "XFS Filesystem Structure" doc published at
+> > http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/index.html
+> > into Japanese language.
+> > But the link
+> > http://git.kernel.org/?p=fs/xfs/xfsdocs-xml-dev.git;a=summary
+> > is broken and I cannot get publican xml files for the doc from kernel.org.
 > 
-> unfreeze function, thaw_super(), sometimes hangs up if flush kernel
-> thread does writeback to the same filesystem concurrently.
-> (the problem is reported at
->  http://marc.info/?l=linux-ext4&m=132339590004560&w=2)
-> 
-> This test runs freeze/unfreeze under heavy load. If the problem is
-> reproduced, this test will hang up...
+> I forgot to reupload it when after kernel.org was newly set up.  I'll
+> make sure to get it back up ASAP.
 
-This is effectively a duplicate of test 068, which is currently
-described as an XFS only test. It is actually generic now that
-xfs_freeze works on other filesytsems, so please update 068
-appropriately rather that introducing a new test.
-
-Cheers,
-
-Dave
-
--- 
-Dave Chinner
-david@fromorbit.com
+The repository is back now.  We'd love to add a link to your translated
+version once you are done, so please post a link to the list.
 
 _______________________________________________
 xfs mailing list
