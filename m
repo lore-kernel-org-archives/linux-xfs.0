@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBBNdeRh061014 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:39:40 -0600
+	pBBNrcdC061388 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:53:38 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3A08D1EA91EB
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 15:39:39 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 5C2281B426AD
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 15:53:36 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	IownoxT4UApLtQYG for <xfs@oss.sgi.com>;
-	Sun, 11 Dec 2011 15:39:39 -0800 (PST)
-Date: Mon, 12 Dec 2011 10:39:29 +1100
+	qBPKhWxa6CcxRxMX for <xfs@oss.sgi.com>;
+	Sun, 11 Dec 2011 15:53:36 -0800 (PST)
+Date: Mon, 12 Dec 2011 10:53:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-Message-ID: <20111211233929.GI14273@dastard>
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+Subject: Re: Data corruption, md5 changes on every mount
+Message-ID: <20111211235334.GJ14273@dastard>
+References: <4EE4AE61.6000306@yahoo.co.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+In-Reply-To: <4EE4AE61.6000306@yahoo.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,55 +29,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Xupeng Yun <xupeng@xupeng.me>
-Cc: XFS group <xfs@oss.sgi.com>
+To: Dmitry Panov <dmitry.panov@yahoo.co.uk>
+Cc: xfs@oss.sgi.com
 
-On Sun, Dec 11, 2011 at 08:45:14PM +0800, Xupeng Yun wrote:
-> Hi,
+On Sun, Dec 11, 2011 at 01:21:37PM +0000, Dmitry Panov wrote:
+> Hi guys,
 > 
-> I am using XFS + 2.6.29 on my MySQL servers, they perform great.
-> 
-> I am testing XFS on SSD these days, due to the fact that FITRIM support of
-> XFS was
-> shipped with Linux kernel 2.6.38 or newer, I tested XFS + 2.6.38 and XFS +
-> 2.6.39, but
-> it surprises me that the performance of XFS with these two versions of
-> kernel drops so
-> much.
-> 
-> Here are the results of my tests with fio, all these two tests were taken
-> on the same hardware
-> with same testing environment (except for different kernel version).
-> 
-> ====== XFS + 2.6.29 ======
+> I have a 2TiB XFS which is about 60% full. Recently I've noticed
+> that the daily inc. backup reports file contents change for files
+> that are not supposed to change.
 
-Read 21GB @ 11k iops, 210MB/s, av latency of 1.3ms/IO
-Wrote 2.3GB @ 1250 iops, 20MB/s, av latency of 0.27ms/IO
-Total 1.5m IOs, 95% @ <= 2ms
+What kernel/platform? What version of xfsprogs? What kind of
+storage?
 
-> ====== XFS + 2.6.39 ======
+> I've created an LVM snapshot and ran xfs_check/xfs_repair. xfs_check
+> did report a few problems (unknown node type). After that I ran a
+> simple test: mount, calculate md5 of the problematic files, report
+> if it changed, umount, sleep 10 sec. That script reported that md5
+> sum of at least one file was changing on every cycle.
 
-Read 6.5GB @ 3.5k iops, 55MB/s, av latency of 4.5ms/IO
-Wrote 700MB @ 386 iops, 6MB/s, av latency of 0.39ms/IO
-Total 460k IOs, 95% @ <= 10ms, 4ms > 50% < 10ms
+That sounds like you've got a dodgy drive.
 
-Looking at the IO stats there, this doesn't look to me like an XFS
-problem. The IO times are much, much longer on 2.6.39, so that's the
-first thing to understand. If the two tests are doing identical IO
-patterns, then I'd be looking at validating raw device performance
-first.
+> Analyzing the differences I found that a 4k block that should
+> contain all zeros sometimes contains random garbage (luckily most of
+> the files are pcm wavs, so it's easy to verify). However I did not
+> analyze every occurrence so this may be not 100% true. The files do
+> not look as they are sparse according to du. Interestingly one of
+> them appears to occupy one block more than necessary.
 
-> I tried different XFS format options and different mount options, but
-> it did not help.
+XFS can allocate blocks beyond EOF - it's completely valid to do so.
 
-It won't if the problem is inthe layers below XFS.
+> Then I did cp -a file newfile, mv newfile file and re-ran the test.
+> No problems reported since.
 
-e.g. IO scheduler behavioural changes could be the cause (esp. if
-you are using CFQ), the SSD could be in different states or running
-garbage collection intermittently and slowing things down, the
-filesystem could be in different states (did you use a fresh
-filesystem for each of these tests?), etc, recent mkfs.xfs will trim
-the entire device if the kernel supports it, etc.
+So the file is now in a different physical location on disk.
+Defintely sounds like a dodgy disk to me.
+
+> As there were a few unclean umounts I think most likely it is a
+> filesystem corruption that went unspotted by xfs_repair. It would
+> not surprise me too much because xfs_repair took just 3.5 min.
+
+The run time of xfs_repair is determined by how much IO it needs to
+do to read all the metadata. Your filesystem is not all that densely
+populated with metadata, so it doesn't take very long to run. The
+short runtime does not mean it hasn't checked you filesystem
+properly.
+
+Think about scale or a minute - take your filesystem and scale it
+linearly in all dimensions - a repair rate of 1.5m per TB means
+2.5hrs for a 100TB filesystem or a day for a PB sized filesystem. The
+speed you are seeing doesn't seem quite so fast now, does it?
+
+> Any ideas? I could just copy the files and pretend noting happened
+> but is there a guarantee that doing so won't corrupt other data?
+
+I'd start by replacing hardware....
 
 Cheers,
 
