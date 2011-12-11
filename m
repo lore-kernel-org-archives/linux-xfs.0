@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBBMRmU4059143 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 16:27:48 -0600
-Received: from smtp3-g21.free.fr (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CADE2B2F28
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 14:27:45 -0800 (PST)
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id RViTxEEHOZaB3crq for
-	<xfs@oss.sgi.com>; Sun, 11 Dec 2011 14:27:45 -0800 (PST)
-Date: Sun, 11 Dec 2011 23:27:36 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: xfs_repair gets stuck on phase3
-Message-ID: <20111211232736.075ccd21@galadriel.home>
-In-Reply-To: <CAENWQX0FgOrTiDVaictZkNfnpBR40DWrHsWrysPHDvdoqvcw5A@mail.gmail.com>
-References: <CAENWQX0FgOrTiDVaictZkNfnpBR40DWrHsWrysPHDvdoqvcw5A@mail.gmail.com>
-Mime-Version: 1.0
+	pBBN5Hos060158 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:05:17 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id EA6571B426D6
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 15:05:15 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	XH04iXf2UGSdhAZx for <xfs@oss.sgi.com>;
+	Sun, 11 Dec 2011 15:05:15 -0800 (PST)
+Date: Mon, 12 Dec 2011 10:05:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS causing stack overflow
+Message-ID: <20111211230511.GH14273@dastard>
+References: <CAAnfqPAm559m-Bv8LkHARm7iBW5Kfs7NmjTFidmg-idhcOq4sQ@mail.gmail.com>
+	<20111209115513.GA19994@infradead.org>
+	<20111209221956.GE14273__25752.826271537$1323469420$gmane$org@dastard>
+	<m262hop5kc.fsf@firstfloor.org> <20111210221345.GG14273@dastard>
+	<20111211000036.GH24062@one.firstfloor.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111211000036.GH24062@one.firstfloor.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,23 +29,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Pavol Zibrita <pavol.zibrita@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, "Ryan C. England" <ryan.england@corvidtec.com>, xfs@oss.sgi.com
 
-TGUgU3VuLCAxMSBEZWMgMjAxMSAyMToyMDoxNCArMDAwMCB2b3VzIMOpY3JpdmllejoKCj4gICAg
-QWZ0ZXIgb25lIGhhcmQgcmVzZXQsIHRoZSB4ZnMgc3RhcnRlZCB0byByZXBhaXIgdGhlIHBhcnRp
-dGlvbiBhbmQKPiBpdCB3YXNuJ3QgYWJsZSB0byBlbmQuCj4gKEkgbGV0IGl0IHJ1bm5pbmcgZm9y
-IHR3byB3ZWVrcy4uLikuCj4gCgpXaGF0IGtlcm5lbCBhcmUgeW91IHJ1bm5uaW5nPyBIb3cgbXVj
-aCBSQU0gZG8geW91IGhhdmU/CgotLSAKLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkVtbWFudWVsIEZsb3JhYyAg
-ICAgfCAgIERpcmVjdGlvbiB0ZWNobmlxdWUKICAgICAgICAgICAgICAgICAgICB8ICAgSW50ZWxs
-aXF1ZQogICAgICAgICAgICAgICAgICAgIHwJPGVmbG9yYWNAaW50ZWxsaXF1ZS5jb20+CiAgICAg
-ICAgICAgICAgICAgICAgfCAgICszMyAxIDc4IDk0IDg0IDAyCi0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On Sun, Dec 11, 2011 at 01:00:36AM +0100, Andi Kleen wrote:
+> > Where does the x86-64 do the interrupt stack switch?
+> 
+> in entry_64.S
+> 
+> > 
+> > I know the x86 32 bit interrupt handler switches to an irq/softirq
+> > context stack, but the 64 bit one doesn't appear to. Indeed,
+> > arch/x86/kernel/irq_{32,64}.c are very different, and only the 32
+> > bit irq handler switches to another stack to process the
+> > interrupts...
+> 
+> x86-64 always used interrupt stacks and has used softirq stacks
+> for a long time. 32bit got to it much later (the only good 
+> thing left from that 4k stack "experiment")
+
+Oh, it's hidden in the "SAVE_ARGS_IRQ" macro. 
+
+But that happens before do_IRQ is called, so what is the do_IRQ call
+chain doing on this stack given that we've already supposed to have
+switched to the interrupt stack before do_IRQ is called?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
