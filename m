@@ -1,26 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBC211qZ064953 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 20:01:01 -0600
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 78E142B3F6F
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:00:59 -0800 (PST)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	ju2P2jRtEzRRQCtO for <xfs@oss.sgi.com>;
-	Sun, 11 Dec 2011 18:00:59 -0800 (PST)
-Received: by iaoo28 with SMTP id o28so8043495iao.26
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:00:59 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20111212010053.GM14273@dastard>
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
-	<20111211233929.GI14273@dastard>
-	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
-	<20111212010053.GM14273@dastard>
-From: Xupeng Yun <xupeng@xupeng.me>
-Date: Mon, 12 Dec 2011 10:00:18 +0800
-Message-ID: <CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
+	pBC2Vahm065706 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 20:31:38 -0600
+Received: from one.firstfloor.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 0A217156D8B4
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:31:33 -0800 (PST)
+Received: from one.firstfloor.org (one.firstfloor.org [213.235.205.2]) by
+	cuda.sgi.com with ESMTP id xkbs0meZSRklnLg1 for
+	<xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:31:33 -0800 (PST)
+Date: Mon, 12 Dec 2011 03:31:30 +0100
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: XFS causing stack overflow
+Message-ID: <20111212023130.GI24062@one.firstfloor.org>
+References: <CAAnfqPAm559m-Bv8LkHARm7iBW5Kfs7NmjTFidmg-idhcOq4sQ@mail.gmail.com>
+	<20111209115513.GA19994@infradead.org>
+	<20111209221956.GE14273__25752.826271537$1323469420$gmane$org@dastard>
+	<m262hop5kc.fsf@firstfloor.org> <20111210221345.GG14273@dastard>
+	<20111211000036.GH24062@one.firstfloor.org>
+	<20111211230511.GH14273@dastard>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111211230511.GH14273@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,60 +29,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1923837880804181731=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: XFS group <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, "Ryan C. England" <ryan.england@corvidtec.com>, Andi Kleen <andi@firstfloor.org>, xfs@oss.sgi.com
 
---===============1923837880804181731==
-Content-Type: multipart/alternative; boundary=90e6ba6e87ac87215904b3db814d
+> But that happens before do_IRQ is called, so what is the do_IRQ call
+> chain doing on this stack given that we've already supposed to have
+> switched to the interrupt stack before do_IRQ is called?
 
---90e6ba6e87ac87215904b3db814d
-Content-Type: text/plain; charset=UTF-8
+Not sure I understand the question.
 
-On Mon, Dec 12, 2011 at 09:00, Dave Chinner <david@fromorbit.com> wrote:
+The pt_regs are on the original stack (but they are quite small), all the rest 
+is on the new stack. ISTs are not used for interrupts, only for 
+some special exceptions. do_IRQ doesn't switch any stacks on 64bit.
 
-> Oh, of course, now I remember what the problem is - it's a locking
-> issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
->
-
-Got it, thanks.
+-Andi
 
 -- 
-Xupeng Yun
-http://about.me/xupeng
-
---90e6ba6e87ac87215904b3db814d
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-
-<br><br><div class=3D"gmail_quote">On Mon, Dec 12, 2011 at 09:00, Dave Chin=
-ner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com">david@from=
-orbit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
-=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-
-<div id=3D":2o">Oh, of course, now I remember what the problem is - it&#39;=
-s a locking<br>
-issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.</div></blockquote></div>=
-<br>Got it, thanks.<br clear=3D"all"><div><br></div>-- <br><div>Xupeng Yun<=
-/div><a href=3D"http://about.me/xupeng" target=3D"_blank">http://about.me/x=
-upeng</a><br>
-
-
-
---90e6ba6e87ac87215904b3db814d--
-
-
---===============1923837880804181731==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+ak@linux.intel.com -- Speaking for myself only.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1923837880804181731==--
