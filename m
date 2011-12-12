@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCFBQd2106066 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 09:11:26 -0600
-Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id B0E3716EF424
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:56:28 -0800 (PST)
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	850HoR1ZVeDqklYW for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 06:56:28 -0800 (PST)
-Date: Mon, 12 Dec 2011 09:56:27 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS status update for November 2011
-Message-ID: <20111212145627.GA32011@infradead.org>
-References: <20111212144938.GA25014@infradead.org>
-	<CA+icZUX4Owo1M5iR++cnNm99NUBsqgoRC7s68RBHweuVNM3Ctw@mail.gmail.com>
+	pBCIP0Ur115008 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 12:25:00 -0600
+Date: Mon, 12 Dec 2011 12:25:24 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch 06/19] xfs: remove xfs_qm_sync
+Message-ID: <20111212182524.GW29840@sgi.com>
+References: <20111206215806.844405397@bombadil.infradead.org>
+	<20111206215853.654837504@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+icZUX4Owo1M5iR++cnNm99NUBsqgoRC7s68RBHweuVNM3Ctw@mail.gmail.com>
+In-Reply-To: <20111206215853.654837504@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,13 +23,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sedat.dilek@gmail.com
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Dec 12, 2011 at 03:52:17PM +0100, Sedat Dilek wrote:
-> November or December?
+On Tue, Dec 06, 2011 at 04:58:12PM -0500, Christoph Hellwig wrote:
+> Now that we can't have any dirty dquots around that aren't in the AIL we
+> can get rid of the explicit dquot syncing from xfssyncd and xfs_fs_sync_fs
+> and instead rely on AIL pushing to write out any quota updates.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-It covers November.  I'll send out the December status in early January.
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
