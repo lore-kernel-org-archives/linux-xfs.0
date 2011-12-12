@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCEEZqp101934 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:37 -0600
+	pBCEEZUP101935 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:36 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D83ED2B5CDF
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A560D1EAB17C
 	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:34 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	HCedwF10THBpHcNA for <xfs@oss.sgi.com>;
+	7uMjeZBaWa1UxPCh for <xfs@oss.sgi.com>;
 	Mon, 12 Dec 2011 06:14:34 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Ra6eI-0007th-AI
+	Linux)) id 1Ra6eI-0007tB-3p
 	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:34 +0000
-Message-Id: <20111212141434.276389127@bombadil.infradead.org>
-Date: Mon, 12 Dec 2011 09:13:52 -0500
+Message-Id: <20111212141434.065702206@bombadil.infradead.org>
+Date: Mon, 12 Dec 2011 09:13:51 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 05/12] xfs: remove log space waitqueues
+Subject: [patch 04/12] xfs: cleanup xfs_log_space_wake
 References: <20111212141346.986825692@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-log-wakeup-processes
+Content-Disposition: inline; filename=xfs-cleanup-xfs_log_space_wake
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,116 +34,126 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The tic->t_wait waitqueues can never have more than a single waiter
-on them, so we can easily replace them with a task_struct pointer
-and wake_up_process.
+Remove the now unused opportunistic parameter, and use the the
+xlog_writeq_wake and xlog_reserveq_wake helpers now that we don't have
+to care about the opportunistic wakeups.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_log.c      |   24 +++++++++++++++---------
- fs/xfs/xfs_log_priv.h |    2 +-
- 2 files changed, 16 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_log.c       |   35 +++++------------------------------
+ fs/xfs/xfs_log.h       |    3 +--
+ fs/xfs/xfs_trans_ail.c |    4 ++--
+ 3 files changed, 8 insertions(+), 34 deletions(-)
 
 Index: xfs/fs/xfs/xfs_log.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 20:15:38.095176497 +0100
-+++ xfs/fs/xfs/xfs_log.c	2011-12-11 21:28:53.101366703 +0100
-@@ -169,7 +169,7 @@ xlog_reserveq_wake(
- 		*free_bytes -= need_bytes;
+--- xfs.orig/fs/xfs/xfs_log.c	2011-11-29 08:42:35.235496706 +0100
++++ xfs/fs/xfs/xfs_log.c	2011-11-29 08:44:52.854751157 +0100
+@@ -762,18 +762,13 @@ xfs_log_item_init(
  
- 		trace_xfs_log_grant_wake_up(log, tic);
--		wake_up(&tic->t_wait);
-+		wake_up_process(tic->t_task);
- 	}
+ /*
+  * Wake up processes waiting for log space after we have moved the log tail.
+- *
+- * If opportunistic is set wake up one waiter even if we do not have enough
+- * free space by our strict accounting.
+  */
+ void
+ xfs_log_space_wake(
+-	struct xfs_mount	*mp,
+-	bool			opportunistic)
++	struct xfs_mount	*mp)
+ {
+-	struct xlog_ticket	*tic;
+ 	struct log		*log = mp->m_log;
+-	int			need_bytes, free_bytes;
++	int			free_bytes;
  
- 	return true;
-@@ -193,7 +193,7 @@ xlog_writeq_wake(
- 		*free_bytes -= need_bytes;
- 
- 		trace_xfs_log_regrant_write_wake_up(log, tic);
--		wake_up(&tic->t_wait);
-+		wake_up_process(tic->t_task);
- 	}
- 
- 	return true;
-@@ -212,10 +212,13 @@ xlog_reserveq_wait(
- 			goto shutdown;
- 		xlog_grant_push_ail(log, need_bytes);
- 
-+		__set_current_state(TASK_UNINTERRUPTIBLE);
-+		spin_unlock(&log->l_grant_reserve_lock);
-+
- 		XFS_STATS_INC(xs_sleep_logspace);
--		trace_xfs_log_grant_sleep(log, tic);
- 
--		xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
-+		trace_xfs_log_grant_sleep(log, tic);
-+		schedule();
- 		trace_xfs_log_grant_wake(log, tic);
- 
- 		spin_lock(&log->l_grant_reserve_lock);
-@@ -243,10 +246,13 @@ xlog_writeq_wait(
- 			goto shutdown;
- 		xlog_grant_push_ail(log, need_bytes);
- 
-+		__set_current_state(TASK_UNINTERRUPTIBLE);
-+		spin_unlock(&log->l_grant_write_lock);
-+
- 		XFS_STATS_INC(xs_sleep_logspace);
--		trace_xfs_log_regrant_write_sleep(log, tic);
- 
--		xlog_wait(&tic->t_wait, &log->l_grant_write_lock);
-+		trace_xfs_log_regrant_write_sleep(log, tic);
-+		schedule();
- 		trace_xfs_log_regrant_write_wake(log, tic);
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+@@ -783,16 +778,7 @@ xfs_log_space_wake(
  
  		spin_lock(&log->l_grant_write_lock);
-@@ -3276,6 +3282,7 @@ xlog_ticket_alloc(
-         }
+ 		free_bytes = xlog_space_left(log, &log->l_grant_write_head);
+-		list_for_each_entry(tic, &log->l_writeq, t_queue) {
+-			ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
+-
+-			if (free_bytes < tic->t_unit_res && !opportunistic)
+-				break;
+-			opportunistic = false;
+-			free_bytes -= tic->t_unit_res;
+-			trace_xfs_log_regrant_write_wake_up(log, tic);
+-			wake_up(&tic->t_wait);
+-		}
++		xlog_writeq_wake(log, &free_bytes);
+ 		spin_unlock(&log->l_grant_write_lock);
+ 	}
  
- 	atomic_set(&tic->t_ref, 1);
-+	tic->t_task		= current;
- 	INIT_LIST_HEAD(&tic->t_queue);
- 	tic->t_unit_res		= unit_bytes;
- 	tic->t_curr_res		= unit_bytes;
-@@ -3287,7 +3294,6 @@ xlog_ticket_alloc(
- 	tic->t_trans_type	= 0;
- 	if (xflags & XFS_LOG_PERM_RESERV)
- 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
--	init_waitqueue_head(&tic->t_wait);
+@@ -801,18 +787,7 @@ xfs_log_space_wake(
  
- 	xlog_tic_reset_res(tic);
+ 		spin_lock(&log->l_grant_reserve_lock);
+ 		free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
+-		list_for_each_entry(tic, &log->l_reserveq, t_queue) {
+-			if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+-				need_bytes = tic->t_unit_res*tic->t_cnt;
+-			else
+-				need_bytes = tic->t_unit_res;
+-			if (free_bytes < need_bytes && !opportunistic)
+-				break;
+-			opportunistic = false;
+-			free_bytes -= need_bytes;
+-			trace_xfs_log_grant_wake_up(log, tic);
+-			wake_up(&tic->t_wait);
+-		}
++		xlog_reserveq_wake(log, &free_bytes);
+ 		spin_unlock(&log->l_grant_reserve_lock);
+ 	}
+ }
+@@ -2748,7 +2723,7 @@ xlog_ungrant_log_space(xlog_t	     *log,
  
-@@ -3615,12 +3621,12 @@ xfs_log_force_umount(
- 	 */
- 	spin_lock(&log->l_grant_reserve_lock);
- 	list_for_each_entry(tic, &log->l_reserveq, t_queue)
--		wake_up(&tic->t_wait);
-+		wake_up_process(tic->t_task);
- 	spin_unlock(&log->l_grant_reserve_lock);
+ 	trace_xfs_log_ungrant_exit(log, ticket);
  
- 	spin_lock(&log->l_grant_write_lock);
- 	list_for_each_entry(tic, &log->l_writeq, t_queue)
--		wake_up(&tic->t_wait);
-+		wake_up_process(tic->t_task);
- 	spin_unlock(&log->l_grant_write_lock);
+-	xfs_log_space_wake(log->l_mp, false);
++	xfs_log_space_wake(log->l_mp);
+ }
  
- 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
-Index: xfs/fs/xfs/xfs_log_priv.h
+ /*
+Index: xfs/fs/xfs/xfs_log.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log_priv.h	2011-12-11 20:15:35.918521622 +0100
-+++ xfs/fs/xfs/xfs_log_priv.h	2011-12-11 21:28:53.114699966 +0100
-@@ -239,8 +239,8 @@ typedef struct xlog_res {
- } xlog_res_t;
+--- xfs.orig/fs/xfs/xfs_log.h	2011-11-29 08:42:35.255496597 +0100
++++ xfs/fs/xfs/xfs_log.h	2011-11-29 08:42:52.682068856 +0100
+@@ -161,8 +161,7 @@ int	  xfs_log_mount(struct xfs_mount	*mp
+ 			int		 	num_bblocks);
+ int	  xfs_log_mount_finish(struct xfs_mount *mp);
+ xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
+-void	  xfs_log_space_wake(struct xfs_mount	*mp,
+-			     bool		opportunistic);
++void	  xfs_log_space_wake(struct xfs_mount *mp);
+ int	  xfs_log_notify(struct xfs_mount	*mp,
+ 			 struct xlog_in_core	*iclog,
+ 			 xfs_log_callback_t	*callback_entry);
+Index: xfs/fs/xfs/xfs_trans_ail.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trans_ail.c	2011-11-29 08:42:35.275496489 +0100
++++ xfs/fs/xfs/xfs_trans_ail.c	2011-11-29 08:42:44.325447461 +0100
+@@ -671,7 +671,7 @@ xfs_trans_ail_update_bulk(
  
- typedef struct xlog_ticket {
--	wait_queue_head_t  t_wait;	 /* ticket wait queue */
- 	struct list_head   t_queue;	 /* reserve/write queue */
-+	struct task_struct *t_task;	 /* task that owns this ticket */
- 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
- 	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
- 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
+ 	if (mlip_changed && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
+ 		xlog_assign_tail_lsn(ailp->xa_mount);
+-		xfs_log_space_wake(ailp->xa_mount, false);
++		xfs_log_space_wake(ailp->xa_mount);
+ 	}
+ }
+ 
+@@ -733,7 +733,7 @@ xfs_trans_ail_delete_bulk(
+ 
+ 	if (mlip_changed && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
+ 		xlog_assign_tail_lsn(ailp->xa_mount);
+-		xfs_log_space_wake(ailp->xa_mount, false);
++		xfs_log_space_wake(ailp->xa_mount);
+ 	}
+ }
+ 
 
 _______________________________________________
 xfs mailing list
