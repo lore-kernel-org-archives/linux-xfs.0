@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCMgUV5126065 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 16:42:30 -0600
-Received: from newverein.lst.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 5E93916F0224
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 14:42:29 -0800 (PST)
-Received: from newverein.lst.de (verein.lst.de [213.95.11.211]) by
-	cuda.sgi.com with ESMTP id bn2FZItXzUNIDWoX for
-	<xfs@oss.sgi.com>; Mon, 12 Dec 2011 14:42:29 -0800 (PST)
-Date: Mon, 12 Dec 2011 23:42:27 +0100
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] xfs: fix acl count validation in xfs_acl_from_disk()
-Message-ID: <20111212224227.GA17461@lst.de>
-References: <1323726952-22963-1-git-send-email-xi.wang@gmail.com>
+	pBCMX1c0125716 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 16:33:01 -0600
+Date: Mon, 12 Dec 2011 16:33:26 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch 07/19] xfs: remove the sync_mode argument to
+	xfs_qm_dqflush_all
+Message-ID: <20111212223326.GY29840@sgi.com>
+References: <20111206215806.844405397@bombadil.infradead.org>
+	<20111206215853.809602126@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1323726952-22963-1-git-send-email-xi.wang@gmail.com>
+In-Reply-To: <20111206215853.809602126@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,16 +24,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Xi Wang <xi.wang@gmail.com>
-Cc: linux-kernel@vger.kernel.org, Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@lst.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Dec 12, 2011 at 04:55:52PM -0500, Xi Wang wrote:
-> Commit fa8b18ed didn't prevent the integer overflow and possible
-> memory corruption.  "count" can go negative and bypass the check.
+On Tue, Dec 06, 2011 at 04:58:13PM -0500, Christoph Hellwig wrote:
+> It always is zero, and removing it will make future changes easier.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Thanks, this looks good to me.
+Looks good
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_qm.c |    7 +++----
+>  1 file changed, 3 insertions(+), 4 deletions(-)
+> 
+> Index: xfs/fs/xfs/xfs_qm.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_qm.c	2011-11-25 11:45:37.468716258 +0100
+> +++ xfs/fs/xfs/xfs_qm.c	2011-11-25 11:45:39.375372594 +0100
+> @@ -415,8 +415,7 @@ xfs_qm_unmount_quotas(
+>   */
+>  STATIC int
+>  xfs_qm_dqflush_all(
+> -	struct xfs_mount	*mp,
+> -	int			sync_mode)
+> +	struct xfs_mount	*mp)
+>  {
+>  	struct xfs_quotainfo	*q = mp->m_quotainfo;
+>  	int			recl;
+> @@ -451,7 +450,7 @@ again:
+>  		 * across a disk write.
+>  		 */
+>  		mutex_unlock(&q->qi_dqlist_lock);
+> -		error = xfs_qm_dqflush(dqp, sync_mode);
+> +		error = xfs_qm_dqflush(dqp, 0);
+>  		xfs_dqunlock(dqp);
+>  		if (error)
+>  			return error;
+> @@ -1567,7 +1566,7 @@ xfs_qm_quotacheck(
+>  	 * successfully.
+>  	 */
+>  	if (!error)
+> -		error = xfs_qm_dqflush_all(mp, 0);
+> +		error = xfs_qm_dqflush_all(mp);
+>  
+>  	/*
+>  	 * We can get this error if we couldn't do a dquot allocation inside
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
