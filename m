@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBC0Dhkx061899 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:13:44 -0600
-Received: from itoolabs.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 538651EA936C
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 16:13:42 -0800 (PST)
-Received: from itoolabs.net (be01.de01.itoolabs.net [188.40.74.239]) by
-	cuda.sgi.com with ESMTP id VvII1LvyvdBTHGmF for
-	<xfs@oss.sgi.com>; Sun, 11 Dec 2011 16:13:42 -0800 (PST)
-Message-ID: <4EE54734.8050603@yahoo.co.uk>
-Date: Mon, 12 Dec 2011 00:13:40 +0000
-From: Dmitry Panov <dmitry.panov@yahoo.co.uk>
+	pBC0jNkR063020 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:45:23 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 628FA16EE491
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 16:45:21 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	xTF93nTbLskH9gxa for <xfs@oss.sgi.com>;
+	Sun, 11 Dec 2011 16:45:21 -0800 (PST)
+Date: Mon, 12 Dec 2011 11:45:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair gets stuck on phase3
+Message-ID: <20111212004518.GK14273@dastard>
+References: <CAENWQX0FgOrTiDVaictZkNfnpBR40DWrHsWrysPHDvdoqvcw5A@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: Data corruption, md5 changes on every mount
-References: <4EE4AE61.6000306@yahoo.co.uk> <20111211235334.GJ14273@dastard>
-In-Reply-To: <20111211235334.GJ14273@dastard>
+Content-Disposition: inline
+In-Reply-To: <CAENWQX0FgOrTiDVaictZkNfnpBR40DWrHsWrysPHDvdoqvcw5A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,49 +25,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Pavol Zibrita <pavol.zibrita@gmail.com>
 Cc: xfs@oss.sgi.com
 
-Hi Dave,
+On Sun, Dec 11, 2011 at 09:20:14PM +0000, Pavol Zibrita wrote:
+> Hi there!
+> 
+>    After one hard reset, the xfs started to repair the partition and it
+> wasn't able to end.
+> (I let it running for two weeks...).
+> 
+> There was info about the log (and -L option), so the partition could not be
+> mounted. I tried to do check and repair,
+> but it was not working.
+> 
+> The setup is -> two radi5 raids, lvm, one volume group, one logical volume
+> formated as xfs (4TB). Around
+> 3,5TB full.
+> 
+> I tried various option for xfs_repair, but when in phase 3, it just
+> calculates and calculates and does nothing.
+> CPU is used around 97%.
 
-On 11/12/2011 23:53, Dave Chinner wrote:
-> On Sun, Dec 11, 2011 at 01:21:37PM +0000, Dmitry Panov wrote:
->> Hi guys,
->>
->> I have a 2TiB XFS which is about 60% full. Recently I've noticed
->> that the daily inc. backup reports file contents change for files
->> that are not supposed to change.
-> What kernel/platform? What version of xfsprogs? What kind of
-> storage?
-It's linux kernel 3.0.0 at the moment, however it used to run different 
-versions and I can't tell for sure when the problem started. xfsprogs 
-version is 3.1.2.
+It appears to be stuck processing an unlinked list (probably
+circular due to corruption).
 
-The storage is a 2 node cluster with hardware RAID1+0 and drbd.
->> I've created an LVM snapshot and ran xfs_check/xfs_repair. xfs_check
->> did report a few problems (unknown node type). After that I ran a
->> simple test: mount, calculate md5 of the problematic files, report
->> if it changed, umount, sleep 10 sec. That script reported that md5
->> sum of at least one file was changing on every cycle.
-> That sounds like you've got a dodgy drive.
+ISTR a patch recently to detect and handle this sort of loop.
+Ah, in Christoph'sto-be-reivewed queue:
 
-That would be my guess too, however the problem occurs on both nodes 
-(i.e. it doesn't go away when the other node becomes active) and the 
-same files affected which makes hard drives or RAID controller or RAM 
-failure very unlikely.
+http://oss.sgi.com/archives/xfs/2011-12/msg00035.html
 
+Specifically:
 
-Is there any way to perform a more thorough check, than xfs_check does?
+http://oss.sgi.com/archives/xfs/2011-12/msg00042.html
 
+> Examining the system with knoppix live cd.
 
-Best regards,
+Which has what version of xfs_repair on it?
 
+Cheers,
+
+Dave.
 -- 
-Dmitry Panov
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
