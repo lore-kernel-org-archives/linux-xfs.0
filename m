@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCDvgog101164 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 07:57:43 -0600
+	pBCEEZqp101934 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:37 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B9A22B58E8
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 05:57:41 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id D83ED2B5CDF
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:34 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	CnxNxGAD4ujSU2tH for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 05:57:41 -0800 (PST)
-Date: Mon, 12 Dec 2011 08:57:37 -0500
+	HCedwF10THBpHcNA for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 06:14:34 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1Ra6eI-0007th-AI
+	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:34 +0000
+Message-Id: <20111212141434.276389127@bombadil.infradead.org>
+Date: Mon, 12 Dec 2011 09:13:52 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-Message-ID: <20111212135737.GA16264@infradead.org>
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
-	<20111211233929.GI14273@dastard>
-	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
-	<20111212010053.GM14273@dastard>
-	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
+Subject: [patch 05/12] xfs: remove log space waitqueues
+References: <20111212141346.986825692@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-log-wakeup-processes
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,24 +27,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Xupeng Yun <xupeng@xupeng.me>
-Cc: XFS group <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, Dec 12, 2011 at 10:00:18AM +0800, Xupeng Yun wrote:
-> On Mon, Dec 12, 2011 at 09:00, Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > Oh, of course, now I remember what the problem is - it's a locking
-> > issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
-> >
-> 
-> Got it, thanks.
+The tic->t_wait waitqueues can never have more than a single waiter
+on them, so we can easily replace them with a task_struct pointer
+and wake_up_process.
 
-Btw, I'd recommend to stay on Linux 3.0-stable instead of 2.6.38 or
-2.6.39 as it will actively get all bugfixes backported for a while.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+---
+ fs/xfs/xfs_log.c      |   24 +++++++++++++++---------
+ fs/xfs/xfs_log_priv.h |    2 +-
+ 2 files changed, 16 insertions(+), 10 deletions(-)
+
+Index: xfs/fs/xfs/xfs_log.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 20:15:38.095176497 +0100
++++ xfs/fs/xfs/xfs_log.c	2011-12-11 21:28:53.101366703 +0100
+@@ -169,7 +169,7 @@ xlog_reserveq_wake(
+ 		*free_bytes -= need_bytes;
+ 
+ 		trace_xfs_log_grant_wake_up(log, tic);
+-		wake_up(&tic->t_wait);
++		wake_up_process(tic->t_task);
+ 	}
+ 
+ 	return true;
+@@ -193,7 +193,7 @@ xlog_writeq_wake(
+ 		*free_bytes -= need_bytes;
+ 
+ 		trace_xfs_log_regrant_write_wake_up(log, tic);
+-		wake_up(&tic->t_wait);
++		wake_up_process(tic->t_task);
+ 	}
+ 
+ 	return true;
+@@ -212,10 +212,13 @@ xlog_reserveq_wait(
+ 			goto shutdown;
+ 		xlog_grant_push_ail(log, need_bytes);
+ 
++		__set_current_state(TASK_UNINTERRUPTIBLE);
++		spin_unlock(&log->l_grant_reserve_lock);
++
+ 		XFS_STATS_INC(xs_sleep_logspace);
+-		trace_xfs_log_grant_sleep(log, tic);
+ 
+-		xlog_wait(&tic->t_wait, &log->l_grant_reserve_lock);
++		trace_xfs_log_grant_sleep(log, tic);
++		schedule();
+ 		trace_xfs_log_grant_wake(log, tic);
+ 
+ 		spin_lock(&log->l_grant_reserve_lock);
+@@ -243,10 +246,13 @@ xlog_writeq_wait(
+ 			goto shutdown;
+ 		xlog_grant_push_ail(log, need_bytes);
+ 
++		__set_current_state(TASK_UNINTERRUPTIBLE);
++		spin_unlock(&log->l_grant_write_lock);
++
+ 		XFS_STATS_INC(xs_sleep_logspace);
+-		trace_xfs_log_regrant_write_sleep(log, tic);
+ 
+-		xlog_wait(&tic->t_wait, &log->l_grant_write_lock);
++		trace_xfs_log_regrant_write_sleep(log, tic);
++		schedule();
+ 		trace_xfs_log_regrant_write_wake(log, tic);
+ 
+ 		spin_lock(&log->l_grant_write_lock);
+@@ -3276,6 +3282,7 @@ xlog_ticket_alloc(
+         }
+ 
+ 	atomic_set(&tic->t_ref, 1);
++	tic->t_task		= current;
+ 	INIT_LIST_HEAD(&tic->t_queue);
+ 	tic->t_unit_res		= unit_bytes;
+ 	tic->t_curr_res		= unit_bytes;
+@@ -3287,7 +3294,6 @@ xlog_ticket_alloc(
+ 	tic->t_trans_type	= 0;
+ 	if (xflags & XFS_LOG_PERM_RESERV)
+ 		tic->t_flags |= XLOG_TIC_PERM_RESERV;
+-	init_waitqueue_head(&tic->t_wait);
+ 
+ 	xlog_tic_reset_res(tic);
+ 
+@@ -3615,12 +3621,12 @@ xfs_log_force_umount(
+ 	 */
+ 	spin_lock(&log->l_grant_reserve_lock);
+ 	list_for_each_entry(tic, &log->l_reserveq, t_queue)
+-		wake_up(&tic->t_wait);
++		wake_up_process(tic->t_task);
+ 	spin_unlock(&log->l_grant_reserve_lock);
+ 
+ 	spin_lock(&log->l_grant_write_lock);
+ 	list_for_each_entry(tic, &log->l_writeq, t_queue)
+-		wake_up(&tic->t_wait);
++		wake_up_process(tic->t_task);
+ 	spin_unlock(&log->l_grant_write_lock);
+ 
+ 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
+Index: xfs/fs/xfs/xfs_log_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_priv.h	2011-12-11 20:15:35.918521622 +0100
++++ xfs/fs/xfs/xfs_log_priv.h	2011-12-11 21:28:53.114699966 +0100
+@@ -239,8 +239,8 @@ typedef struct xlog_res {
+ } xlog_res_t;
+ 
+ typedef struct xlog_ticket {
+-	wait_queue_head_t  t_wait;	 /* ticket wait queue */
+ 	struct list_head   t_queue;	 /* reserve/write queue */
++	struct task_struct *t_task;	 /* task that owns this ticket */
+ 	xlog_tid_t	   t_tid;	 /* transaction identifier	 : 4  */
+ 	atomic_t	   t_ref;	 /* ticket reference count       : 4  */
+ 	int		   t_curr_res;	 /* current reservation in bytes : 4  */
 
 _______________________________________________
 xfs mailing list
