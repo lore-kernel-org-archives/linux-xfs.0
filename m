@@ -1,24 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCEEZq6101938 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:37 -0600
+	pBCDvgog101164 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 07:57:43 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 3B4772B5CE0
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:35 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 1B9A22B58E8
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 05:57:41 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	yIVNP477U2YyNKLt for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 06:14:35 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Ra6eI-0007uj-Nq
-	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:34 +0000
-Message-Id: <20111212141434.689066888@bombadil.infradead.org>
-Date: Mon, 12 Dec 2011 09:13:54 -0500
+	CnxNxGAD4ujSU2tH for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 05:57:41 -0800 (PST)
+Date: Mon, 12 Dec 2011 08:57:37 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 07/12] xfs: add xlog_grant_head_init
-References: <20111212141346.986825692@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-add-xlog_grant_head_init
+Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
+Message-ID: <20111212135737.GA16264@infradead.org>
+References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+	<20111211233929.GI14273@dastard>
+	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+	<20111212010053.GM14273@dastard>
+	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +30,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Xupeng Yun <xupeng@xupeng.me>
+Cc: XFS group <xfs@oss.sgi.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Mon, Dec 12, 2011 at 10:00:18AM +0800, Xupeng Yun wrote:
+> On Mon, Dec 12, 2011 at 09:00, Dave Chinner <david@fromorbit.com> wrote:
+> 
+> > Oh, of course, now I remember what the problem is - it's a locking
+> > issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
+> >
+> 
+> Got it, thanks.
 
----
- fs/xfs/xfs_log.c |   18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
-
-Index: xfs/fs/xfs/xfs_log.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 21:24:39.502740565 +0100
-+++ xfs/fs/xfs/xfs_log.c	2011-12-11 21:28:15.334904636 +0100
-@@ -150,6 +150,15 @@ xlog_grant_add_space(
- 	} while (head_val != old);
- }
- 
-+STATIC void
-+xlog_grant_head_init(
-+	struct xlog_grant_head	*head)
-+{
-+	xlog_assign_grant_head(&head->grant, 1, 0);
-+	INIT_LIST_HEAD(&head->waiters);
-+	spin_lock_init(&head->lock);
-+}
-+
- STATIC bool
- xlog_reserveq_wake(
- 	struct log		*log,
-@@ -1070,12 +1079,9 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	xlog_assign_atomic_lsn(&log->l_tail_lsn, 1, 0);
- 	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
- 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
--	xlog_assign_grant_head(&log->l_reserve_head.grant, 1, 0);
--	xlog_assign_grant_head(&log->l_write_head.grant, 1, 0);
--	INIT_LIST_HEAD(&log->l_reserve_head.waiters);
--	INIT_LIST_HEAD(&log->l_write_head.waiters);
--	spin_lock_init(&log->l_reserve_head.lock);
--	spin_lock_init(&log->l_write_head.lock);
-+
-+	xlog_grant_head_init(&log->l_reserve_head);
-+	xlog_grant_head_init(&log->l_write_head);
- 
- 	error = EFSCORRUPTED;
- 	if (xfs_sb_version_hassector(&mp->m_sb)) {
+Btw, I'd recommend to stay on Linux 3.0-stable instead of 2.6.38 or
+2.6.39 as it will actively get all bugfixes backported for a while.
 
 _______________________________________________
 xfs mailing list
