@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCEEaiN101948 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:36 -0600
+	pBCEEbHH101969 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:37 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E51F52B5CE0
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:35 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 12F2B1EAB17D
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:34 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DBxOy4x4zfbLPHsT for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 06:14:35 -0800 (PST)
+	g7VWq9vyne1WNKNl for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 06:14:34 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Ra6eJ-0007wH-BP
-	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:35 +0000
-Message-Id: <20111212141435.299712663@bombadil.infradead.org>
-Date: Mon, 12 Dec 2011 09:13:57 -0500
+	Linux)) id 1Ra6eI-0007uD-Gr
+	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:34 +0000
+Message-Id: <20111212141434.475114637@bombadil.infradead.org>
+Date: Mon, 12 Dec 2011 09:13:53 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 10/12] xfs: shared code for grant head wakeups
+Subject: [patch 06/12] xfs: add the xlog_grant_head structure
 References: <20111212141346.986825692@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-factor-xlog_grant_head_wake
+Content-Disposition: inline; filename=xfs-add-xlog_grant_head
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,131 +34,387 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+Add a new data structure to allow sharing code between the log grant and
+regrant code.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_log.c   |   50 ++++++++++++++++++++------------------------------
- fs/xfs/xfs_trace.h |    1 -
- 2 files changed, 20 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_log.c         |  112 +++++++++++++++++++++++------------------------
+ fs/xfs/xfs_log_priv.h    |   23 +++++----
+ fs/xfs/xfs_log_recover.c |    4 -
+ fs/xfs/xfs_trace.h       |    8 +--
+ 4 files changed, 74 insertions(+), 73 deletions(-)
 
 Index: xfs/fs/xfs/xfs_log.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 21:31:10.580621915 +0100
-+++ xfs/fs/xfs/xfs_log.c	2011-12-11 21:32:08.763640044 +0100
-@@ -171,49 +171,39 @@ xlog_grant_head_wake_all(
- 	spin_unlock(&head->lock);
- }
- 
--STATIC bool
--xlog_reserveq_wake(
-+static inline int
-+xlog_ticket_reservation(
- 	struct log		*log,
--	int			*free_bytes)
-+	struct xlog_grant_head	*head,
-+	struct xlog_ticket	*tic)
- {
--	struct xlog_ticket	*tic;
--	int			need_bytes;
--
--	list_for_each_entry(tic, &log->l_reserve_head.waiters, t_queue) {
-+	if (head == &log->l_write_head) {
-+		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
-+		return tic->t_unit_res;
-+	} else {
- 		if (tic->t_flags & XLOG_TIC_PERM_RESERV)
--			need_bytes = tic->t_unit_res * tic->t_cnt;
-+			return tic->t_unit_res * tic->t_cnt;
- 		else
--			need_bytes = tic->t_unit_res;
--
--		if (*free_bytes < need_bytes)
--			return false;
--		*free_bytes -= need_bytes;
--
--		trace_xfs_log_grant_wake_up(log, tic);
--		wake_up_process(tic->t_task);
-+			return tic->t_unit_res;
- 	}
--
--	return true;
- }
- 
- STATIC bool
--xlog_writeq_wake(
-+xlog_grant_head_wake(
- 	struct log		*log,
-+	struct xlog_grant_head	*head,
- 	int			*free_bytes)
- {
+--- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 21:24:36.599422960 +0100
++++ xfs/fs/xfs/xfs_log.c	2011-12-11 21:28:49.874717517 +0100
+@@ -158,7 +158,7 @@ xlog_reserveq_wake(
  	struct xlog_ticket	*tic;
  	int			need_bytes;
  
--	list_for_each_entry(tic, &log->l_write_head.waiters, t_queue) {
--		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
--
--		need_bytes = tic->t_unit_res;
--
-+	list_for_each_entry(tic, &head->waiters, t_queue) {
-+		need_bytes = xlog_ticket_reservation(log, head, tic);
- 		if (*free_bytes < need_bytes)
- 			return false;
--		*free_bytes -= need_bytes;
+-	list_for_each_entry(tic, &log->l_reserveq, t_queue) {
++	list_for_each_entry(tic, &log->l_reserve_head.waiters, t_queue) {
+ 		if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+ 			need_bytes = tic->t_unit_res * tic->t_cnt;
+ 		else
+@@ -183,7 +183,7 @@ xlog_writeq_wake(
+ 	struct xlog_ticket	*tic;
+ 	int			need_bytes;
  
--		trace_xfs_log_regrant_write_wake_up(log, tic);
-+		*free_bytes -= need_bytes;
-+		trace_xfs_log_grant_wake_up(log, tic);
- 		wake_up_process(tic->t_task);
+-	list_for_each_entry(tic, &log->l_writeq, t_queue) {
++	list_for_each_entry(tic, &log->l_write_head.waiters, t_queue) {
+ 		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
+ 
+ 		need_bytes = tic->t_unit_res;
+@@ -205,7 +205,7 @@ xlog_reserveq_wait(
+ 	struct xlog_ticket	*tic,
+ 	int			need_bytes)
+ {
+-	list_add_tail(&tic->t_queue, &log->l_reserveq);
++	list_add_tail(&tic->t_queue, &log->l_reserve_head.waiters);
+ 
+ 	do {
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+@@ -213,7 +213,7 @@ xlog_reserveq_wait(
+ 		xlog_grant_push_ail(log, need_bytes);
+ 
+ 		__set_current_state(TASK_UNINTERRUPTIBLE);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 
+@@ -221,10 +221,10 @@ xlog_reserveq_wait(
+ 		schedule();
+ 		trace_xfs_log_grant_wake(log, tic);
+ 
+-		spin_lock(&log->l_grant_reserve_lock);
++		spin_lock(&log->l_reserve_head.lock);
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+ 			goto shutdown;
+-	} while (xlog_space_left(log, &log->l_grant_reserve_head) < need_bytes);
++	} while (xlog_space_left(log, &log->l_reserve_head.grant) < need_bytes);
+ 
+ 	list_del_init(&tic->t_queue);
+ 	return 0;
+@@ -239,7 +239,7 @@ xlog_writeq_wait(
+ 	struct xlog_ticket	*tic,
+ 	int			need_bytes)
+ {
+-	list_add_tail(&tic->t_queue, &log->l_writeq);
++	list_add_tail(&tic->t_queue, &log->l_write_head.waiters);
+ 
+ 	do {
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+@@ -247,7 +247,7 @@ xlog_writeq_wait(
+ 		xlog_grant_push_ail(log, need_bytes);
+ 
+ 		__set_current_state(TASK_UNINTERRUPTIBLE);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 
+@@ -255,10 +255,10 @@ xlog_writeq_wait(
+ 		schedule();
+ 		trace_xfs_log_regrant_write_wake(log, tic);
+ 
+-		spin_lock(&log->l_grant_write_lock);
++		spin_lock(&log->l_write_head.lock);
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+ 			goto shutdown;
+-	} while (xlog_space_left(log, &log->l_grant_write_head) < need_bytes);
++	} while (xlog_space_left(log, &log->l_write_head.grant) < need_bytes);
+ 
+ 	list_del_init(&tic->t_queue);
+ 	return 0;
+@@ -779,22 +779,22 @@ xfs_log_space_wake(
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+ 
+-	if (!list_empty_careful(&log->l_writeq)) {
++	if (!list_empty_careful(&log->l_write_head.waiters)) {
+ 		ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
+ 
+-		spin_lock(&log->l_grant_write_lock);
+-		free_bytes = xlog_space_left(log, &log->l_grant_write_head);
++		spin_lock(&log->l_write_head.lock);
++		free_bytes = xlog_space_left(log, &log->l_write_head.grant);
+ 		xlog_writeq_wake(log, &free_bytes);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
  	}
  
-@@ -772,7 +762,7 @@ xfs_log_space_wake(
+-	if (!list_empty_careful(&log->l_reserveq)) {
++	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
+ 		ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
  
- 		spin_lock(&log->l_write_head.lock);
- 		free_bytes = xlog_space_left(log, &log->l_write_head.grant);
--		xlog_writeq_wake(log, &free_bytes);
-+		xlog_grant_head_wake(log, &log->l_write_head, &free_bytes);
- 		spin_unlock(&log->l_write_head.lock);
- 	}
- 
-@@ -781,7 +771,7 @@ xfs_log_space_wake(
- 
- 		spin_lock(&log->l_reserve_head.lock);
- 		free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
--		xlog_reserveq_wake(log, &free_bytes);
-+		xlog_grant_head_wake(log, &log->l_reserve_head, &free_bytes);
- 		spin_unlock(&log->l_reserve_head.lock);
+-		spin_lock(&log->l_grant_reserve_lock);
+-		free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
++		spin_lock(&log->l_reserve_head.lock);
++		free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+ 		xlog_reserveq_wake(log, &free_bytes);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
  	}
  }
-@@ -2562,7 +2552,7 @@ xlog_grant_log_space(
- 	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
- 	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
- 		spin_lock(&log->l_reserve_head.lock);
--		if (!xlog_reserveq_wake(log, &free_bytes) ||
-+		if (!xlog_grant_head_wake(log, &log->l_reserve_head, &free_bytes) ||
- 		    free_bytes < need_bytes) {
- 			error = xlog_grant_head_wait(log, &log->l_reserve_head,
- 						     tic, need_bytes);
-@@ -2618,7 +2608,7 @@ xlog_regrant_write_log_space(
- 	free_bytes = xlog_space_left(log, &log->l_write_head.grant);
- 	if (!list_empty_careful(&log->l_write_head.waiters)) {
- 		spin_lock(&log->l_write_head.lock);
--		if (!xlog_writeq_wake(log, &free_bytes) ||
-+		if (!xlog_grant_head_wake(log, &log->l_write_head, &free_bytes) ||
- 		    free_bytes < need_bytes) {
- 			error = xlog_grant_head_wait(log, &log->l_write_head,
- 						     tic, need_bytes);
+ 
+@@ -1070,12 +1070,12 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	xlog_assign_atomic_lsn(&log->l_tail_lsn, 1, 0);
+ 	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
+ 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
+-	xlog_assign_grant_head(&log->l_grant_reserve_head, 1, 0);
+-	xlog_assign_grant_head(&log->l_grant_write_head, 1, 0);
+-	INIT_LIST_HEAD(&log->l_reserveq);
+-	INIT_LIST_HEAD(&log->l_writeq);
+-	spin_lock_init(&log->l_grant_reserve_lock);
+-	spin_lock_init(&log->l_grant_write_lock);
++	xlog_assign_grant_head(&log->l_reserve_head.grant, 1, 0);
++	xlog_assign_grant_head(&log->l_write_head.grant, 1, 0);
++	INIT_LIST_HEAD(&log->l_reserve_head.waiters);
++	INIT_LIST_HEAD(&log->l_write_head.waiters);
++	spin_lock_init(&log->l_reserve_head.lock);
++	spin_lock_init(&log->l_write_head.lock);
+ 
+ 	error = EFSCORRUPTED;
+ 	if (xfs_sb_version_hassector(&mp->m_sb)) {
+@@ -1250,7 +1250,7 @@ xlog_grant_push_ail(
+ 
+ 	ASSERT(BTOBB(need_bytes) < log->l_logBBsize);
+ 
+-	free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
++	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+ 	free_blocks = BTOBBT(free_bytes);
+ 
+ 	/*
+@@ -1382,8 +1382,8 @@ xlog_sync(xlog_t		*log,
+ 		 roundoff < BBTOB(1)));
+ 
+ 	/* move grant heads by roundoff in sync */
+-	xlog_grant_add_space(log, &log->l_grant_reserve_head, roundoff);
+-	xlog_grant_add_space(log, &log->l_grant_write_head, roundoff);
++	xlog_grant_add_space(log, &log->l_reserve_head.grant, roundoff);
++	xlog_grant_add_space(log, &log->l_write_head.grant, roundoff);
+ 
+ 	/* put cycle number in every block */
+ 	xlog_pack_data(log, iclog, roundoff); 
+@@ -2547,8 +2547,8 @@ restart:
+  * path. Hence any lock will be globally hot if we take it unconditionally on
+  * every pass.
+  *
+- * As tickets are only ever moved on and off the reserveq under the
+- * l_grant_reserve_lock, we only need to take that lock if we are going to add
++ * As tickets are only ever moved on and off the l_reserve.waiters under the
++ * l_reserve.lock, we only need to take that lock if we are going to add
+  * the ticket to the queue and sleep. We can avoid taking the lock if the ticket
+  * was never added to the reserveq because the t_queue list head will be empty
+  * and we hold the only reference to it so it can safely be checked unlocked.
+@@ -2574,23 +2574,23 @@ xlog_grant_log_space(
+ 	need_bytes = tic->t_unit_res;
+ 	if (tic->t_flags & XFS_LOG_PERM_RESERV)
+ 		need_bytes *= tic->t_ocnt;
+-	free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
+-	if (!list_empty_careful(&log->l_reserveq)) {
+-		spin_lock(&log->l_grant_reserve_lock);
++	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
++	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
++		spin_lock(&log->l_reserve_head.lock);
+ 		if (!xlog_reserveq_wake(log, &free_bytes) ||
+ 		    free_bytes < need_bytes)
+ 			error = xlog_reserveq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 	} else if (free_bytes < need_bytes) {
+-		spin_lock(&log->l_grant_reserve_lock);
++		spin_lock(&log->l_reserve_head.lock);
+ 		error = xlog_reserveq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 	}
+ 	if (error)
+ 		return error;
+ 
+-	xlog_grant_add_space(log, &log->l_grant_reserve_head, need_bytes);
+-	xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
++	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
++	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
+ 	trace_xfs_log_grant_exit(log, tic);
+ 	xlog_verify_grant_tail(log);
+ 	return 0;
+@@ -2627,23 +2627,23 @@ xlog_regrant_write_log_space(
+ 	 * otherwise try to get some space for this transaction.
+ 	 */
+ 	need_bytes = tic->t_unit_res;
+-	free_bytes = xlog_space_left(log, &log->l_grant_write_head);
+-	if (!list_empty_careful(&log->l_writeq)) {
+-		spin_lock(&log->l_grant_write_lock);
++	free_bytes = xlog_space_left(log, &log->l_write_head.grant);
++	if (!list_empty_careful(&log->l_write_head.waiters)) {
++		spin_lock(&log->l_write_head.lock);
+ 		if (!xlog_writeq_wake(log, &free_bytes) ||
+ 		    free_bytes < need_bytes)
+ 			error = xlog_writeq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 	} else if (free_bytes < need_bytes) {
+-		spin_lock(&log->l_grant_write_lock);
++		spin_lock(&log->l_write_head.lock);
+ 		error = xlog_writeq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 	}
+ 
+ 	if (error)
+ 		return error;
+ 
+-	xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
++	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
+ 	trace_xfs_log_regrant_write_exit(log, tic);
+ 	xlog_verify_grant_tail(log);
+ 	return 0;
+@@ -2665,9 +2665,9 @@ xlog_regrant_reserve_log_space(xlog_t
+ 	if (ticket->t_cnt > 0)
+ 		ticket->t_cnt--;
+ 
+-	xlog_grant_sub_space(log, &log->l_grant_reserve_head,
++	xlog_grant_sub_space(log, &log->l_reserve_head.grant,
+ 					ticket->t_curr_res);
+-	xlog_grant_sub_space(log, &log->l_grant_write_head,
++	xlog_grant_sub_space(log, &log->l_write_head.grant,
+ 					ticket->t_curr_res);
+ 	ticket->t_curr_res = ticket->t_unit_res;
+ 	xlog_tic_reset_res(ticket);
+@@ -2678,7 +2678,7 @@ xlog_regrant_reserve_log_space(xlog_t
+ 	if (ticket->t_cnt > 0)
+ 		return;
+ 
+-	xlog_grant_add_space(log, &log->l_grant_reserve_head,
++	xlog_grant_add_space(log, &log->l_reserve_head.grant,
+ 					ticket->t_unit_res);
+ 
+ 	trace_xfs_log_regrant_reserve_exit(log, ticket);
+@@ -2724,8 +2724,8 @@ xlog_ungrant_log_space(xlog_t	     *log,
+ 		bytes += ticket->t_unit_res*ticket->t_cnt;
+ 	}
+ 
+-	xlog_grant_sub_space(log, &log->l_grant_reserve_head, bytes);
+-	xlog_grant_sub_space(log, &log->l_grant_write_head, bytes);
++	xlog_grant_sub_space(log, &log->l_reserve_head.grant, bytes);
++	xlog_grant_sub_space(log, &log->l_write_head.grant, bytes);
+ 
+ 	trace_xfs_log_ungrant_exit(log, ticket);
+ 
+@@ -3349,7 +3349,7 @@ xlog_verify_grant_tail(
+ 	int		tail_cycle, tail_blocks;
+ 	int		cycle, space;
+ 
+-	xlog_crack_grant_head(&log->l_grant_write_head, &cycle, &space);
++	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &space);
+ 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
+ 	if (tail_cycle != cycle) {
+ 		if (cycle - 1 != tail_cycle &&
+@@ -3619,15 +3619,15 @@ xfs_log_force_umount(
+ 	 * we don't enqueue anything once the SHUTDOWN flag is set, and this
+ 	 * action is protected by the grant locks.
+ 	 */
+-	spin_lock(&log->l_grant_reserve_lock);
+-	list_for_each_entry(tic, &log->l_reserveq, t_queue)
++	spin_lock(&log->l_reserve_head.lock);
++	list_for_each_entry(tic, &log->l_reserve_head.waiters, t_queue)
+ 		wake_up_process(tic->t_task);
+-	spin_unlock(&log->l_grant_reserve_lock);
++	spin_unlock(&log->l_reserve_head.lock);
+ 
+-	spin_lock(&log->l_grant_write_lock);
+-	list_for_each_entry(tic, &log->l_writeq, t_queue)
++	spin_lock(&log->l_write_head.lock);
++	list_for_each_entry(tic, &log->l_write_head.waiters, t_queue)
+ 		wake_up_process(tic->t_task);
+-	spin_unlock(&log->l_grant_write_lock);
++	spin_unlock(&log->l_write_head.lock);
+ 
+ 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
+ 		ASSERT(!logerror);
+Index: xfs/fs/xfs/xfs_log_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_priv.h	2011-12-11 21:24:36.606089592 +0100
++++ xfs/fs/xfs/xfs_log_priv.h	2011-12-11 21:24:39.502740565 +0100
+@@ -470,6 +470,16 @@ struct xfs_cil {
+ #define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
+ 
+ /*
++ * ticket grant locks, queues and accounting have their own cachlines
++ * as these are quite hot and can be operated on concurrently.
++ */
++struct xlog_grant_head {
++	spinlock_t		lock ____cacheline_aligned_in_smp;
++	struct list_head	waiters;
++	atomic64_t		grant;
++};
++
++/*
+  * The reservation head lsn is not made up of a cycle number and block number.
+  * Instead, it uses a cycle number and byte number.  Logs don't expect to
+  * overflow 31 bits worth of byte offset, so using a byte number will mean
+@@ -520,17 +530,8 @@ typedef struct log {
+ 	/* lsn of 1st LR with unflushed * buffers */
+ 	atomic64_t		l_tail_lsn ____cacheline_aligned_in_smp;
+ 
+-	/*
+-	 * ticket grant locks, queues and accounting have their own cachlines
+-	 * as these are quite hot and can be operated on concurrently.
+-	 */
+-	spinlock_t		l_grant_reserve_lock ____cacheline_aligned_in_smp;
+-	struct list_head	l_reserveq;
+-	atomic64_t		l_grant_reserve_head;
+-
+-	spinlock_t		l_grant_write_lock ____cacheline_aligned_in_smp;
+-	struct list_head	l_writeq;
+-	atomic64_t		l_grant_write_head;
++	struct xlog_grant_head	l_reserve_head;
++	struct xlog_grant_head	l_write_head;
+ 
+ 	/* The following field are used for debugging; need to hold icloglock */
+ #ifdef DEBUG
+Index: xfs/fs/xfs/xfs_log_recover.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_log_recover.c	2011-12-11 21:24:36.616089538 +0100
++++ xfs/fs/xfs/xfs_log_recover.c	2011-12-11 21:24:39.506073880 +0100
+@@ -965,9 +965,9 @@ xlog_find_tail(
+ 		log->l_curr_cycle++;
+ 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
+ 	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+-	xlog_assign_grant_head(&log->l_grant_reserve_head, log->l_curr_cycle,
++	xlog_assign_grant_head(&log->l_reserve_head.grant, log->l_curr_cycle,
+ 					BBTOB(log->l_curr_block));
+-	xlog_assign_grant_head(&log->l_grant_write_head, log->l_curr_cycle,
++	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
+ 					BBTOB(log->l_curr_block));
+ 
+ 	/*
 Index: xfs/fs/xfs/xfs_trace.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trace.h	2011-12-11 21:31:41.697120010 +0100
-+++ xfs/fs/xfs/xfs_trace.h	2011-12-11 21:32:42.520123835 +0100
-@@ -838,7 +838,6 @@ DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake
- DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_enter);
- DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_exit);
- DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_error);
--DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake_up);
- DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_enter);
- DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_exit);
- DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_sub);
+--- xfs.orig/fs/xfs/xfs_trace.h	2011-12-11 21:24:36.632756113 +0100
++++ xfs/fs/xfs/xfs_trace.h	2011-12-11 21:27:37.558442622 +0100
+@@ -783,12 +783,12 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+ 		__entry->curr_res = tic->t_curr_res;
+ 		__entry->unit_res = tic->t_unit_res;
+ 		__entry->flags = tic->t_flags;
+-		__entry->reserveq = list_empty(&log->l_reserveq);
+-		__entry->writeq = list_empty(&log->l_writeq);
+-		xlog_crack_grant_head(&log->l_grant_reserve_head,
++		__entry->reserveq = list_empty(&log->l_reserve_head.waiters);
++		__entry->writeq = list_empty(&log->l_write_head.waiters);
++		xlog_crack_grant_head(&log->l_reserve_head.grant,
+ 				&__entry->grant_reserve_cycle,
+ 				&__entry->grant_reserve_bytes);
+-		xlog_crack_grant_head(&log->l_grant_write_head,
++		xlog_crack_grant_head(&log->l_write_head.grant,
+ 				&__entry->grant_write_cycle,
+ 				&__entry->grant_write_bytes);
+ 		__entry->curr_cycle = log->l_curr_cycle;
 
 _______________________________________________
 xfs mailing list
