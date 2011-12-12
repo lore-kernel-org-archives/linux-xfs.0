@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCEEa51101943 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:36 -0600
+	pBCEEaiN101948 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:14:36 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 79BFF16EEFCA
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:34 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id E51F52B5CE0
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:14:35 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ZEX9WGiu0b5roUgv for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 06:14:34 -0800 (PST)
+	DBxOy4x4zfbLPHsT for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 06:14:35 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Ra6eH-0007s9-OZ
-	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:33 +0000
-Message-Id: <20111212141433.714245384@bombadil.infradead.org>
-Date: Mon, 12 Dec 2011 09:13:49 -0500
+	Linux)) id 1Ra6eJ-0007wH-BP
+	for xfs@oss.sgi.com; Mon, 12 Dec 2011 14:14:35 +0000
+Message-Id: <20111212141435.299712663@bombadil.infradead.org>
+Date: Mon, 12 Dec 2011 09:13:57 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [patch 02/12] xfs: do exact log space wakeups in
-	xlog_ungrant_log_space
+Subject: [patch 10/12] xfs: shared code for grant head wakeups
 References: <20111212141346.986825692@bombadil.infradead.org>
-Content-Disposition: inline;
-	filename=xfs-exact-wakeups-in-xlog_ungrant_log_space
+Content-Disposition: inline; filename=xfs-factor-xlog_grant_head_wake
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,30 +34,131 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The only reason that xfs_log_space_wake had to do opportunistic wakeups
-was that the old xfs_log_move_tail calling convention didn't allow for
-exact wakeups when not updating the log tail LSN.  Since this issue has
-been fixed we can do exact wakeups now.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_log.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_log.c   |   50 ++++++++++++++++++++------------------------------
+ fs/xfs/xfs_trace.h |    1 -
+ 2 files changed, 20 insertions(+), 31 deletions(-)
 
 Index: xfs/fs/xfs/xfs_log.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 15:30:49.977750776 +0100
-+++ xfs/fs/xfs/xfs_log.c	2011-12-11 17:49:00.692836117 +0100
-@@ -2748,7 +2748,7 @@ xlog_ungrant_log_space(xlog_t	     *log,
- 
- 	trace_xfs_log_ungrant_exit(log, ticket);
- 
--	xfs_log_space_wake(log->l_mp, true);
-+	xfs_log_space_wake(log->l_mp, false);
+--- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 21:31:10.580621915 +0100
++++ xfs/fs/xfs/xfs_log.c	2011-12-11 21:32:08.763640044 +0100
+@@ -171,49 +171,39 @@ xlog_grant_head_wake_all(
+ 	spin_unlock(&head->lock);
  }
  
- /*
+-STATIC bool
+-xlog_reserveq_wake(
++static inline int
++xlog_ticket_reservation(
+ 	struct log		*log,
+-	int			*free_bytes)
++	struct xlog_grant_head	*head,
++	struct xlog_ticket	*tic)
+ {
+-	struct xlog_ticket	*tic;
+-	int			need_bytes;
+-
+-	list_for_each_entry(tic, &log->l_reserve_head.waiters, t_queue) {
++	if (head == &log->l_write_head) {
++		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
++		return tic->t_unit_res;
++	} else {
+ 		if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+-			need_bytes = tic->t_unit_res * tic->t_cnt;
++			return tic->t_unit_res * tic->t_cnt;
+ 		else
+-			need_bytes = tic->t_unit_res;
+-
+-		if (*free_bytes < need_bytes)
+-			return false;
+-		*free_bytes -= need_bytes;
+-
+-		trace_xfs_log_grant_wake_up(log, tic);
+-		wake_up_process(tic->t_task);
++			return tic->t_unit_res;
+ 	}
+-
+-	return true;
+ }
+ 
+ STATIC bool
+-xlog_writeq_wake(
++xlog_grant_head_wake(
+ 	struct log		*log,
++	struct xlog_grant_head	*head,
+ 	int			*free_bytes)
+ {
+ 	struct xlog_ticket	*tic;
+ 	int			need_bytes;
+ 
+-	list_for_each_entry(tic, &log->l_write_head.waiters, t_queue) {
+-		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
+-
+-		need_bytes = tic->t_unit_res;
+-
++	list_for_each_entry(tic, &head->waiters, t_queue) {
++		need_bytes = xlog_ticket_reservation(log, head, tic);
+ 		if (*free_bytes < need_bytes)
+ 			return false;
+-		*free_bytes -= need_bytes;
+ 
+-		trace_xfs_log_regrant_write_wake_up(log, tic);
++		*free_bytes -= need_bytes;
++		trace_xfs_log_grant_wake_up(log, tic);
+ 		wake_up_process(tic->t_task);
+ 	}
+ 
+@@ -772,7 +762,7 @@ xfs_log_space_wake(
+ 
+ 		spin_lock(&log->l_write_head.lock);
+ 		free_bytes = xlog_space_left(log, &log->l_write_head.grant);
+-		xlog_writeq_wake(log, &free_bytes);
++		xlog_grant_head_wake(log, &log->l_write_head, &free_bytes);
+ 		spin_unlock(&log->l_write_head.lock);
+ 	}
+ 
+@@ -781,7 +771,7 @@ xfs_log_space_wake(
+ 
+ 		spin_lock(&log->l_reserve_head.lock);
+ 		free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+-		xlog_reserveq_wake(log, &free_bytes);
++		xlog_grant_head_wake(log, &log->l_reserve_head, &free_bytes);
+ 		spin_unlock(&log->l_reserve_head.lock);
+ 	}
+ }
+@@ -2562,7 +2552,7 @@ xlog_grant_log_space(
+ 	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+ 	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
+ 		spin_lock(&log->l_reserve_head.lock);
+-		if (!xlog_reserveq_wake(log, &free_bytes) ||
++		if (!xlog_grant_head_wake(log, &log->l_reserve_head, &free_bytes) ||
+ 		    free_bytes < need_bytes) {
+ 			error = xlog_grant_head_wait(log, &log->l_reserve_head,
+ 						     tic, need_bytes);
+@@ -2618,7 +2608,7 @@ xlog_regrant_write_log_space(
+ 	free_bytes = xlog_space_left(log, &log->l_write_head.grant);
+ 	if (!list_empty_careful(&log->l_write_head.waiters)) {
+ 		spin_lock(&log->l_write_head.lock);
+-		if (!xlog_writeq_wake(log, &free_bytes) ||
++		if (!xlog_grant_head_wake(log, &log->l_write_head, &free_bytes) ||
+ 		    free_bytes < need_bytes) {
+ 			error = xlog_grant_head_wait(log, &log->l_write_head,
+ 						     tic, need_bytes);
+Index: xfs/fs/xfs/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trace.h	2011-12-11 21:31:41.697120010 +0100
++++ xfs/fs/xfs/xfs_trace.h	2011-12-11 21:32:42.520123835 +0100
+@@ -838,7 +838,6 @@ DEFINE_LOGGRANT_EVENT(xfs_log_grant_wake
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_error);
+-DEFINE_LOGGRANT_EVENT(xfs_log_regrant_write_wake_up);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_enter);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_exit);
+ DEFINE_LOGGRANT_EVENT(xfs_log_regrant_reserve_sub);
 
 _______________________________________________
 xfs mailing list
