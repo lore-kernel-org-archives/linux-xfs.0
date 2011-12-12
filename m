@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBC4F76o069160 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 22:15:07 -0600
+	pBC4b6aP071328 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 22:37:07 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id EB38E2B40F8
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 20:15:04 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 3CA022B4366
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 20:37:05 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	IutwW8LQqyLPj5mL for <xfs@oss.sgi.com>;
-	Sun, 11 Dec 2011 20:15:04 -0800 (PST)
-Date: Mon, 12 Dec 2011 15:15:02 +1100
+	4BG6GDiG4EsWZBDD for <xfs@oss.sgi.com>;
+	Sun, 11 Dec 2011 20:37:05 -0800 (PST)
+Date: Mon, 12 Dec 2011 15:36:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Data corruption, md5 changes on every mount
-Message-ID: <20111212041502.GN14273@dastard>
-References: <4EE4AE61.6000306@yahoo.co.uk> <20111211235334.GJ14273@dastard>
-	<4EE54734.8050603@yahoo.co.uk>
+Subject: Re: XFS causing stack overflow
+Message-ID: <20111212043657.GO14273@dastard>
+References: <CAAnfqPAm559m-Bv8LkHARm7iBW5Kfs7NmjTFidmg-idhcOq4sQ@mail.gmail.com>
+	<20111209115513.GA19994@infradead.org>
+	<20111209221956.GE14273__25752.826271537$1323469420$gmane$org@dastard>
+	<m262hop5kc.fsf@firstfloor.org> <20111210221345.GG14273@dastard>
+	<20111211000036.GH24062@one.firstfloor.org>
+	<20111211230511.GH14273@dastard>
+	<20111212023130.GI24062@one.firstfloor.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4EE54734.8050603@yahoo.co.uk>
+In-Reply-To: <20111212023130.GI24062@one.firstfloor.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,64 +35,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Panov <dmitry.panov@yahoo.co.uk>
-Cc: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, "Ryan C. England" <ryan.england@corvidtec.com>, xfs@oss.sgi.com
 
-On Mon, Dec 12, 2011 at 12:13:40AM +0000, Dmitry Panov wrote:
-> Hi Dave,
+On Mon, Dec 12, 2011 at 03:31:30AM +0100, Andi Kleen wrote:
+> > But that happens before do_IRQ is called, so what is the do_IRQ call
+> > chain doing on this stack given that we've already supposed to have
+> > switched to the interrupt stack before do_IRQ is called?
 > 
-> On 11/12/2011 23:53, Dave Chinner wrote:
-> >On Sun, Dec 11, 2011 at 01:21:37PM +0000, Dmitry Panov wrote:
-> >>Hi guys,
-> >>
-> >>I have a 2TiB XFS which is about 60% full. Recently I've noticed
-> >>that the daily inc. backup reports file contents change for files
-> >>that are not supposed to change.
-> >What kernel/platform? What version of xfsprogs? What kind of
-> >storage?
-> It's linux kernel 3.0.0 at the moment, however it used to run
-> different versions and I can't tell for sure when the problem
-> started. xfsprogs version is 3.1.2.
+> Not sure I understand the question.
 > 
-> The storage is a 2 node cluster with hardware RAID1+0 and drbd.
+> The pt_regs are on the original stack (but they are quite small), all the rest 
 
-Hmmmm. HA, remote replication, network paths in the storage stack.
-Not a particularly common setup, so I'd be looking at validating
-your drbd setup before looking at XFS.....
+It's ~180 bytes, so it's not really that small.
 
-> >>I've created an LVM snapshot and ran xfs_check/xfs_repair. xfs_check
-> >>did report a few problems (unknown node type). After that I ran a
-> >>simple test: mount, calculate md5 of the problematic files, report
-> >>if it changed, umount, sleep 10 sec. That script reported that md5
-> >>sum of at least one file was changing on every cycle.
-> >That sounds like you've got a dodgy drive.
-> 
-> That would be my guess too, however the problem occurs on both nodes
-> (i.e. it doesn't go away when the other node becomes active) and the
-> same files affected which makes hard drives or RAID controller or
-> RAM failure very unlikely.
+> is on the new stack. ISTs are not used for interrupts, only for 
+> some special exceptions.
 
-Which simply means the corruption has been replicated.
+IST = ???
 
-Given that drbd is in the picture and that has a history of causing
-filesystem and/or data corruptions, I'd suggest you validate that
-drbd is not causing problems first. If you can reproduce the data
-corruption on a storage stack that doesn't have drbd in it, then
-it's probably a filesystem problem.  However, you need to rule out
-the lower storage layers as the cause first.  i.e. once you've
-validated that your block device is good, then we can start to look
-at whether the filesystem is the cause.
+> do_IRQ doesn't switch any stacks on 64bit.
 
-In general, you need a reliable reproducer to do this, so if you can
-reproduce the problem anymore, there's little that can be done about
-it...
+No, but it appears that it's caller does:
 
-> Is there any way to perform a more thorough check, than xfs_check does?
+/* 0(%rsp): ~(interrupt number) */
+        .macro interrupt func
+        /* reserve pt_regs for scratch regs and rbp */
+        subq $ORIG_RAX-RBP, %rsp
+        CFI_ADJUST_CFA_OFFSET ORIG_RAX-RBP
+        SAVE_ARGS_IRQ
+        call \func
+        .endm
 
-xfs_repair -n is more thorough than xfs_check. But remember, both
-xfs_check and xfs_repair are only chekcing the filesystem structure,
-not the contents of your files. The contents of your files are yours
-to check....
+and the SAVE_ARGS_IRQ macro switches to the per cpu interrupt stack.
+The only caller does this:
+
+common_interrupt:
+        XCPT_FRAME
+        addq $-0x80,(%rsp)              /* Adjust vector to [-256,-1] range */
+        interrupt do_IRQ
+
+So, why do we get this:
+
+Dec  6 20:27:55 localhost kernel: <IRQ>  [<ffffffff81067097>] ?  warn_slowpath_common+0x87/0xc0
+Dec  6 20:27:55 localhost kernel: [<ffffffff8106f6da>] ?  __do_softirq+0x11a/0x1d0
+Dec  6 20:27:55 localhost kernel: [<ffffffff81067186>] ?  warn_slowpath_fmt+0x46/0x50
+Dec  6 20:27:55 localhost kernel: [<ffffffff8100c2cc>] ?  call_softirq+0x1c/0x30
+Dec  6 20:27:55 localhost kernel: [<ffffffff8100dfcf>] ?  handle_irq+0x8f/0xa0
+Dec  6 20:27:55 localhost kernel: [<ffffffff814e310c>] ? do_IRQ+0x6c/0xf0
+Dec  6 20:27:55 localhost kernel: [<ffffffff8100bad3>] ?  ret_from_intr+0x0/0x11
+Dec  6 20:27:55 localhost kernel: <EOI>  [<ffffffff8115b80f>] ?  kmem_cache_free+0xbf/0x2b0
+
+at the top of the stack frame? Is the stack unwinder walking back
+across the interrupt stack to the previous task stack?
 
 Cheers,
 
