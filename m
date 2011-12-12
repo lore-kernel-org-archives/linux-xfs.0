@@ -1,27 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBCEYMlG103559 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 08:34:22 -0600
+	pBCFBQd2106066 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 09:11:26 -0600
 Received: from bombadil.infradead.org (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E2F711EAB36E
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:34:21 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id B0E3716EF424
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 06:56:28 -0800 (PST)
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	VqTDx4ecp724IK7y for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 06:34:21 -0800 (PST)
-Date: Mon, 12 Dec 2011 09:34:21 -0500
+	850HoR1ZVeDqklYW for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 06:56:28 -0800 (PST)
+Date: Mon, 12 Dec 2011 09:56:27 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [Patch] xfs: serialise unaligned direct IOs
-Message-ID: <20111212143421.GA13223@infradead.org>
-References: <CADDb1s0WUfvt8N+hMATboKxbMUZdk2N-R2e=KFH2JvGUjbigBg@mail.gmail.com>
-	<20111103070246.GA10579@infradead.org>
-	<CADDb1s3UN4HMKEA2kSEM0HsUCC7DE63B1oJAoL6QpqXBdDCEqQ@mail.gmail.com>
-	<20111103100647.GA1002@infradead.org>
-	<CADDb1s2ZiPqHqkm01eG24jD+ytU9w3vJwKckXneMkL0wbUEb1Q@mail.gmail.com>
+Subject: Re: XFS status update for November 2011
+Message-ID: <20111212145627.GA32011@infradead.org>
+References: <20111212144938.GA25014@infradead.org>
+	<CA+icZUX4Owo1M5iR++cnNm99NUBsqgoRC7s68RBHweuVNM3Ctw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CADDb1s2ZiPqHqkm01eG24jD+ytU9w3vJwKckXneMkL0wbUEb1Q@mail.gmail.com>
+In-Reply-To: <CA+icZUX4Owo1M5iR++cnNm99NUBsqgoRC7s68RBHweuVNM3Ctw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,10 +31,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: sedat.dilek@gmail.com
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Did you manage to submit this on for the 2.6.35 longterm releases?
+On Mon, Dec 12, 2011 at 03:52:17PM +0100, Sedat Dilek wrote:
+> November or December?
+
+It covers November.  I'll send out the December status in early January.
 
 _______________________________________________
 xfs mailing list
