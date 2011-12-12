@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBC1uWX6064835 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 19:56:33 -0600
-Received: from itoolabs.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A8A8B1EA945F
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:56:31 -0800 (PST)
-Received: from itoolabs.net (be02.de01.itoolabs.net [188.40.74.249]) by
-	cuda.sgi.com with ESMTP id eHl9TGCfIWGydBQm for
-	<xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:56:31 -0800 (PST)
-Message-ID: <4EE55F4D.5060608@yahoo.co.uk>
-Date: Mon, 12 Dec 2011 01:56:29 +0000
-From: Dmitry Panov <dmitry.panov@yahoo.co.uk>
+	pBC211qZ064953 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 20:01:01 -0600
+Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 78E142B3F6F
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:00:59 -0800 (PST)
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	ju2P2jRtEzRRQCtO for <xfs@oss.sgi.com>;
+	Sun, 11 Dec 2011 18:00:59 -0800 (PST)
+Received: by iaoo28 with SMTP id o28so8043495iao.26
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 18:00:59 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: Data corruption, md5 changes on every mount
-References: <4EE4AE61.6000306@yahoo.co.uk> <20111211235334.GJ14273@dastard>
-In-Reply-To: <20111211235334.GJ14273@dastard>
+In-Reply-To: <20111212010053.GM14273@dastard>
+References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+	<20111211233929.GI14273@dastard>
+	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+	<20111212010053.GM14273@dastard>
+From: Xupeng Yun <xupeng@xupeng.me>
+Date: Mon, 12 Dec 2011 10:00:18 +0800
+Message-ID: <CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
+Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,80 +29,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============1923837880804181731=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: XFS group <xfs@oss.sgi.com>
 
-Hi Dave,
+--===============1923837880804181731==
+Content-Type: multipart/alternative; boundary=90e6ba6e87ac87215904b3db814d
 
-I've found xfs_bmap and did a few experiments with dd. It looks to me as 
-though it's RAID1 sync problem -- I've got 2 different versions of the 
-data during continuous reads from the device with cache drops inbetween.
+--90e6ba6e87ac87215904b3db814d
+Content-Type: text/plain; charset=UTF-8
 
-So, although the cause of the problem is still unclear, it's definitely 
-not XFS. Thanks for the hint!
+On Mon, Dec 12, 2011 at 09:00, Dave Chinner <david@fromorbit.com> wrote:
 
+> Oh, of course, now I remember what the problem is - it's a locking
+> issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
+>
 
-On 11/12/2011 23:53, Dave Chinner wrote:
-> On Sun, Dec 11, 2011 at 01:21:37PM +0000, Dmitry Panov wrote:
->> Hi guys,
->>
->> I have a 2TiB XFS which is about 60% full. Recently I've noticed
->> that the daily inc. backup reports file contents change for files
->> that are not supposed to change.
-> What kernel/platform? What version of xfsprogs? What kind of
-> storage?
->
->> I've created an LVM snapshot and ran xfs_check/xfs_repair. xfs_check
->> did report a few problems (unknown node type). After that I ran a
->> simple test: mount, calculate md5 of the problematic files, report
->> if it changed, umount, sleep 10 sec. That script reported that md5
->> sum of at least one file was changing on every cycle.
-> That sounds like you've got a dodgy drive.
->
->> Analyzing the differences I found that a 4k block that should
->> contain all zeros sometimes contains random garbage (luckily most of
->> the files are pcm wavs, so it's easy to verify). However I did not
->> analyze every occurrence so this may be not 100% true. The files do
->> not look as they are sparse according to du. Interestingly one of
->> them appears to occupy one block more than necessary.
-> XFS can allocate blocks beyond EOF - it's completely valid to do so.
->
->> Then I did cp -a file newfile, mv newfile file and re-ran the test.
->> No problems reported since.
-> So the file is now in a different physical location on disk.
-> Defintely sounds like a dodgy disk to me.
->
->> As there were a few unclean umounts I think most likely it is a
->> filesystem corruption that went unspotted by xfs_repair. It would
->> not surprise me too much because xfs_repair took just 3.5 min.
-> The run time of xfs_repair is determined by how much IO it needs to
-> do to read all the metadata. Your filesystem is not all that densely
-> populated with metadata, so it doesn't take very long to run. The
-> short runtime does not mean it hasn't checked you filesystem
-> properly.
->
-> Think about scale or a minute - take your filesystem and scale it
-> linearly in all dimensions - a repair rate of 1.5m per TB means
-> 2.5hrs for a 100TB filesystem or a day for a PB sized filesystem. The
-> speed you are seeing doesn't seem quite so fast now, does it?
->
->> Any ideas? I could just copy the files and pretend noting happened
->> but is there a guarantee that doing so won't corrupt other data?
-> I'd start by replacing hardware....
->
-> Cheers,
->
-> Dave.
-
+Got it, thanks.
 
 -- 
-Dmitry Panov
+Xupeng Yun
+http://about.me/xupeng
+
+--90e6ba6e87ac87215904b3db814d
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+
+<br><br><div class=3D"gmail_quote">On Mon, Dec 12, 2011 at 09:00, Dave Chin=
+ner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com">david@from=
+orbit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=
+=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
+
+<div id=3D":2o">Oh, of course, now I remember what the problem is - it&#39;=
+s a locking<br>
+issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.</div></blockquote></div>=
+<br>Got it, thanks.<br clear=3D"all"><div><br></div>-- <br><div>Xupeng Yun<=
+/div><a href=3D"http://about.me/xupeng" target=3D"_blank">http://about.me/x=
+upeng</a><br>
+
+
+
+--90e6ba6e87ac87215904b3db814d--
+
+
+--===============1923837880804181731==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============1923837880804181731==--
