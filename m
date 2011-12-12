@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBC10vXF063378 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 19:00:57 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id D05BC1B421AB
-	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:00:55 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	x1lani7KFgodSc7x for <xfs@oss.sgi.com>;
-	Sun, 11 Dec 2011 17:00:55 -0800 (PST)
-Date: Mon, 12 Dec 2011 12:00:53 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-Message-ID: <20111212010053.GM14273@dastard>
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
-	<20111211233929.GI14273@dastard>
-	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+	pBC1uWX6064835 for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 19:56:33 -0600
+Received: from itoolabs.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A8A8B1EA945F
+	for <xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:56:31 -0800 (PST)
+Received: from itoolabs.net (be02.de01.itoolabs.net [188.40.74.249]) by
+	cuda.sgi.com with ESMTP id eHl9TGCfIWGydBQm for
+	<xfs@oss.sgi.com>; Sun, 11 Dec 2011 17:56:31 -0800 (PST)
+Message-ID: <4EE55F4D.5060608@yahoo.co.uk>
+Date: Mon, 12 Dec 2011 01:56:29 +0000
+From: Dmitry Panov <dmitry.panov@yahoo.co.uk>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+Subject: Re: Data corruption, md5 changes on every mount
+References: <4EE4AE61.6000306@yahoo.co.uk> <20111211235334.GJ14273@dastard>
+In-Reply-To: <20111211235334.GJ14273@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,88 +23,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Xupeng Yun <xupeng@xupeng.me>
-Cc: XFS group <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Dec 12, 2011 at 08:40:15AM +0800, Xupeng Yun wrote:
-> On Mon, Dec 12, 2011 at 07:39, Dave Chinner <david@fromorbit.com> wrote:
-> >
-> > > ====== XFS + 2.6.29 ======
-> >
-> > Read 21GB @ 11k iops, 210MB/s, av latency of 1.3ms/IO
-> > Wrote 2.3GB @ 1250 iops, 20MB/s, av latency of 0.27ms/IO
-> > Total 1.5m IOs, 95% @ <= 2ms
-> >
-> > > ====== XFS + 2.6.39 ======
-> >
-> > Read 6.5GB @ 3.5k iops, 55MB/s, av latency of 4.5ms/IO
-> > Wrote 700MB @ 386 iops, 6MB/s, av latency of 0.39ms/IO
-> > Total 460k IOs, 95% @ <= 10ms, 4ms > 50% < 10ms
-> >
-> > Looking at the IO stats there, this doesn't look to me like an XFS
-> > problem. The IO times are much, much longer on 2.6.39, so that's the
-> > first thing to understand. If the two tests are doing identical IO
-> > patterns, then I'd be looking at validating raw device performance
-> > first.
-> >
-> 
-> Thank you Dave.
-> 
-> I also did raw device and ext4 performance test with 2.6.39, all these
-> tests are
-> doing identical IO patterns(non-buffered IO, 16 IO threads, 16KB block size,
-> mixed random read and write, r:w=9:1):
-> ====== raw device + 2.6.39 ======
-> Read 21.7GB @ 11.6k IOPS , 185MB/s, av latency of 1.37 ms/IO
-> Wrote 2.4GB @ 1.3k IOPS, 20MB/s, av latency of 0.095 ms/IO
-> Total 1.5M IOs, @ 96% <= 2ms
-> 
-> ====== ext4 + 2.6.39 ======
-> Read 21.7GB @ 11.6k IOPS , 185MB/s, av latency of 1.37 ms/IO
-> Wrote 2.4GB @ 1.3k IOPS, 20MB/s, av latency of 0.1 ms/IO
-> Total 1.5M IOs, @ 96% <= 2ms
-> 
-> ====== XFS + 2.6.39 ======
-> Read 6.5GB @ 3.5k iops, 55MB/s, av latency of 4.5ms/IO
-> Wrote 700MB @ 386 iops, 6MB/s, av latency of 0.39ms/IO
-> Total 460k IOs, @ 95% <= 10ms, 4ms > 50% < 10ms
+Hi Dave,
 
-Oh, of course, now I remember what the problem is - it's a locking
-issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
+I've found xfs_bmap and did a few experiments with dd. It looks to me as 
+though it's RAID1 sync problem -- I've got 2 different versions of the 
+data during continuous reads from the device with cache drops inbetween.
 
-commit 0c38a2512df272b14ef4238b476a2e4f70da1479
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Thu Aug 25 07:17:01 2011 +0000
+So, although the cause of the problem is still unclear, it's definitely 
+not XFS. Thanks for the hint!
 
-    xfs: don't serialise direct IO reads on page cache checks
-    
-    There is no need to grab the i_mutex of the IO lock in exclusive
-    mode if we don't need to invalidate the page cache. Taking these
-    locks on every direct IO effective serialises them as taking the IO
-    lock in exclusive mode has to wait for all shared holders to drop
-    the lock. That only happens when IO is complete, so effective it
-    prevents dispatch of concurrent direct IO reads to the same inode.
-    
-    Fix this by taking the IO lock shared to check the page cache state,
-    and only then drop it and take the IO lock exclusively if there is
-    work to be done. Hence for the normal direct IO case, no exclusive
-    locking will occur.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Tested-by: Joern Engel <joern@logfs.org>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Signed-off-by: Alex Elder <aelder@sgi.com>
 
-Cheers,
+On 11/12/2011 23:53, Dave Chinner wrote:
+> On Sun, Dec 11, 2011 at 01:21:37PM +0000, Dmitry Panov wrote:
+>> Hi guys,
+>>
+>> I have a 2TiB XFS which is about 60% full. Recently I've noticed
+>> that the daily inc. backup reports file contents change for files
+>> that are not supposed to change.
+> What kernel/platform? What version of xfsprogs? What kind of
+> storage?
+>
+>> I've created an LVM snapshot and ran xfs_check/xfs_repair. xfs_check
+>> did report a few problems (unknown node type). After that I ran a
+>> simple test: mount, calculate md5 of the problematic files, report
+>> if it changed, umount, sleep 10 sec. That script reported that md5
+>> sum of at least one file was changing on every cycle.
+> That sounds like you've got a dodgy drive.
+>
+>> Analyzing the differences I found that a 4k block that should
+>> contain all zeros sometimes contains random garbage (luckily most of
+>> the files are pcm wavs, so it's easy to verify). However I did not
+>> analyze every occurrence so this may be not 100% true. The files do
+>> not look as they are sparse according to du. Interestingly one of
+>> them appears to occupy one block more than necessary.
+> XFS can allocate blocks beyond EOF - it's completely valid to do so.
+>
+>> Then I did cp -a file newfile, mv newfile file and re-ran the test.
+>> No problems reported since.
+> So the file is now in a different physical location on disk.
+> Defintely sounds like a dodgy disk to me.
+>
+>> As there were a few unclean umounts I think most likely it is a
+>> filesystem corruption that went unspotted by xfs_repair. It would
+>> not surprise me too much because xfs_repair took just 3.5 min.
+> The run time of xfs_repair is determined by how much IO it needs to
+> do to read all the metadata. Your filesystem is not all that densely
+> populated with metadata, so it doesn't take very long to run. The
+> short runtime does not mean it hasn't checked you filesystem
+> properly.
+>
+> Think about scale or a minute - take your filesystem and scale it
+> linearly in all dimensions - a repair rate of 1.5m per TB means
+> 2.5hrs for a 100TB filesystem or a day for a PB sized filesystem. The
+> speed you are seeing doesn't seem quite so fast now, does it?
+>
+>> Any ideas? I could just copy the files and pretend noting happened
+>> but is there a guarantee that doing so won't corrupt other data?
+> I'd start by replacing hardware....
+>
+> Cheers,
+>
+> Dave.
 
-Dave.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Dmitry Panov
 
 _______________________________________________
 xfs mailing list
