@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBD2laJC134057 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 20:47:36 -0600
+	pBD2ZIrL133619 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 20:35:18 -0600
 Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id CABB21B451F0
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 18:36:55 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id A00E82BA1F5
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 18:35:16 -0800 (PST)
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	FOJra66KkGKLzj2c for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 18:36:55 -0800 (PST)
-Date: Tue, 13 Dec 2011 13:36:48 +1100
+	feMscZo4RR3FGIdW for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 18:35:16 -0800 (PST)
+Date: Tue, 13 Dec 2011 13:35:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 08/12] repair: handle filesystems with the log in
-	allocation group 0
-Message-ID: <20111213023648.GB14273@dastard>
+Subject: Re: [PATCH 07/12] repair: fix another ABBA deadlock in inode
+	prefetching
+Message-ID: <20111213023514.GA14273@dastard>
 References: <20111202174619.179530033@bombadil.infradead.org>
-	<20111202174742.515301323@bombadil.infradead.org>
+	<20111202174742.307774458@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111202174742.515301323@bombadil.infradead.org>
+In-Reply-To: <20111202174742.307774458@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,18 +34,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Dec 02, 2011 at 12:46:27PM -0500, Christoph Hellwig wrote:
-> Sindre Skogen reported that repair chokes on a very small filesystem created
-> by mkfs.xfs from xfsprogs 2.9.4.  It turned out that for some reason this
-> filesystem had the log in allocation group 0 and thus repairs validation
-> of the root inode number was off.  Fix this by adding the log blocks if
-> the log is allocated in allocation group 0.
+On Fri, Dec 02, 2011 at 12:46:26PM -0500, Christoph Hellwig wrote:
+> The inode prefetching code has a fixed limit of inodes that might are
+> submitted at a time.  Unfortunately the buffers for them get locked
+> once the prefetching starts.  That way the threads processing the inode
+> might get stuck on buffer locked, but not submitted for reading yet.
 > 
-> Reported-by: Sindre Skogen <sindre@workzone.no>
+> Fix this by kicking the queue as soon as we would have to wait on the
+> ra_count semaphore.
+> 
+> Reported-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+> Tested-by: Arkadiusz Mi??kiewicz <arekm@maven.pl>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good - handling all occurrences of the log in AG 0 is much
-nicer.
+Looks safe - I can't think up a scenario that would deadlock on
+the second sem_wait call...
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
