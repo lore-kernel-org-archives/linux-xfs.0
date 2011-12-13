@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBDMJKqG177037 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 16:19:21 -0600
+	pBDM02nS175915 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 16:00:02 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 2A80D15718BD
-	for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 14:19:19 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 6EDCA156F242
+	for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 14:00:00 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	n9zgE50sUwlsrqc4 for <xfs@oss.sgi.com>;
-	Tue, 13 Dec 2011 14:19:19 -0800 (PST)
-Date: Wed, 14 Dec 2011 09:19:17 +1100
+	Eb5BSNeHqb99vQV6 for <xfs@oss.sgi.com>;
+	Tue, 13 Dec 2011 14:00:00 -0800 (PST)
+Date: Wed, 14 Dec 2011 08:59:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 06/11] xfs: replace i_flock with a sleeping bitlock
-Message-ID: <20111213221917.GD3179@dastard>
+Subject: Re: [PATCH 04/11] xfs: remove the if_ext_max field in struct xfs_ifork
+Message-ID: <20111213215958.GC3179@dastard>
 References: <20111208155755.323930705@bombadil.infradead.org>
-	<20111208155918.493178782@bombadil.infradead.org>
+	<20111208155918.162879660@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111208155918.493178782@bombadil.infradead.org>
+In-Reply-To: <20111208155918.162879660@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,43 +33,105 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Dec 08, 2011 at 10:58:01AM -0500, Christoph Hellwig wrote:
-> We almost never block on i_flock, the exception is synchronous inode
-> flushing.  Instead of bloating the inode with a 16/24-byte completion
-> that we abuse as a semaphore just implement it as a bitlock that uses
-> a bit waitqueue for the rare sleeping path.  This primarily is a
-> tradeoff between a much smaller inode and a faster non-blocking
-> path vs faster wakeups, and we are much better off with the former.
-> 
-> A small downside is that we will lose lockdep checking for i_flock, but
-> given that it's always taken inside the ilock that should be acceptable.
+On Thu, Dec 08, 2011 at 10:57:59AM -0500, Christoph Hellwig wrote:
+> We spent a lot of effort to maintain this field, but it always equalts to the
+> fork size divided by the constant size of an extent.  The prime use of it is
+> to assert that the two stay in sync.  Just divide the fork size by the extent
+> size in the few places that we actually use it and remove the overhead
+> of maintaining it.
 
-I didn't think we had lockdep checking on the i_flock because it
-uses completions rather than real lock primitives. Either way, I'm
-not concerned about this aspect of the change - lockdep doesn't pick
-up the typical sort of holdoff problems that i_flock vs delwri
-trigger...
+Ok, so you are trading off the overhead of initialising once with
+runtime overhead of a read, against a runtime overhead read and a
+integer division. Some platforms have slow integer division, so at
+face value this migh tbe a bit slower.
 
-> Note that for example the inode writeback locking is implemented in a
-> very similar way.
+However, sizeof(struct xfs_bmbt_rec) == 16, which is determined at
+compile time so the compiler can optimise that to a shift, which has
+basically no overhead compared to a division on platforms where
+division is slow.
 
-....
+>From taht perspective, this seems like a good tradeoff to make -
+very little additional runtime overhead, much simpler code.
 
+> Also introduce a few helpers to consolidate the places
+> where we actually care about the value.
+
+The helpers are a vast improvement.
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Couple of small formatting comments below, but otherwise consider it
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+> Index: xfs/fs/xfs/xfs_dfrag.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_dfrag.c	2011-12-02 19:39:31.437161062 +0100
+> +++ xfs/fs/xfs/xfs_dfrag.c	2011-12-07 11:17:02.342984256 +0100
+> @@ -163,12 +163,14 @@ xfs_swap_extents_check_format(
+>  
+>  	/* Check temp in extent form to max in target */
+>  	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+> -	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
+> +	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
+> +	    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+>  		return EINVAL;
+
+I'd indent the XFS_IFORK_MAXEXT() so it's obvious it's part of a
+conditional and not a new conditional expression. Maybe something
+like:
+
++	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
++			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+
+Otherwise it's not exactly obvious how the logic flows here.
+
+>  
+>  	/* Check target in extent form to max in temp */
+>  	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+> -	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
+> +	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
+> +	    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+>  		return EINVAL;
+
+Same here.
+
+>  
+>  	/*
+> @@ -180,18 +182,25 @@ xfs_swap_extents_check_format(
+>  	 * (a common defrag case) which will occur when the temp inode is in
+>  	 * extent format...
+>  	 */
+> -	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+> -	    ((XFS_IFORK_BOFF(ip) &&
+> -	      tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip)) ||
+> -	     XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <= ip->i_df.if_ext_max))
+> +	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+> +		if (XFS_IFORK_BOFF(ip) &&
+> +		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
+> +			return EINVAL;
+> +		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
+> +		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+>  		return EINVAL;
+                ^ needs another indent.
+> +	}
+>  
+>  	/* Reciprocal target->temp btree format checks */
+> -	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+> -	    ((XFS_IFORK_BOFF(tip) &&
+> -	      ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip)) ||
+> -	     XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <= tip->i_df.if_ext_max))
+> +	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+> +		if (XFS_IFORK_BOFF(tip) &&
+> +		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
+> +			return EINVAL;
 > +
-> +static inline void xfs_ifunlock(struct xfs_inode *ip)
-> +{
-> +	xfs_iflags_clear(ip, XFS_IFLOCK);
-> +	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
-> +}
+> +		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
+> +		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+>  		return EINVAL;
 
-Should the wakeup be done whilst the ip->i_flags_lock is still held?
-The VFS code does the __I_SYNC wakeup while still holding the
-inode->i_lock so that the clear and wakeup are atomic, similarly the
-__I_NEW bit....
+Same here.
 
-Cheers,
-
-Dave.
 
 -- 
 Dave Chinner
