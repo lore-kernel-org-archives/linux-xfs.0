@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBD51CoT138615 for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 23:01:12 -0600
-Received: from mail.sandeen.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id E96F51BC7507
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 21:01:10 -0800 (PST)
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id EPShzvxJYZxDe4zt for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 21:01:10 -0800 (PST)
-Message-ID: <4EE6DC15.2080203@sandeen.net>
-Date: Mon, 12 Dec 2011 23:01:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	pBD6WHd0144033 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 00:32:18 -0600
+Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4214C2BB0BD
+	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 22:32:16 -0800 (PST)
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	EzCRyCMfOTTaotZe for <xfs@oss.sgi.com>;
+	Mon, 12 Dec 2011 22:32:16 -0800 (PST)
+Date: Tue, 13 Dec 2011 17:32:12 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] update 068 to reproduce an unfreeze hanging up problem
+Message-ID: <20111213063212.GC14273@dastard>
+References: <20111213094245.4004.61FB500B@jp.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs: Refuse to initialize a misaligned device if not
-	forced using libblkid
-References: <1322828095-10939-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1322828095-10939-1-git-send-email-cmaiolino@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20111213094245.4004.61FB500B@jp.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,141 +29,108 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Masayoshi MIZUMA <m.mizuma@jp.fujitsu.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 12/2/11 6:14 AM, Carlos Maiolino wrote:
-> The patch fix the problem about the usage of 4k sector devices when the
-> device is not properly aligned. It makes mkfs to refuse to initialize a
-> xfs filesystem if the -f option is not passed at the command line, and
-> forces a 512b sector size if the user chooses to force the device
-> initialization.
+On Tue, Dec 13, 2011 at 09:42:46AM +0900, Masayoshi MIZUMA wrote:
+> update 068 to reproduce an unfreeze hanging up problem which is unfreeze
+> function, thaw_super(), sometimes hangs up if flush kernel thread does
+> writeback to the same filesystem concurrently.
 
-[editor]
+That's not exactly what I asked to be done when I reviewed the
+original patch -  I asked you to "make 068 generic" because it
+already exercises freeze/thaw under a stressful workload. What I
+expected was a change to "supported_fs" and the scratch mkfs
+command so it will run on all filesystems.
 
-In mkfs, ensure that the partition is aligned to the device's
-physical sector size, so that we do not break atomic IO guarantees
-due to read modify write for IOs that span physical blocks.
+test 068 will catch problems like the one your specific test
+catches, but maybe not every time. Test 068 will catch problems your
+test case won't, though - it's a trade-off between having lots of
+tests that are similar but slightly different (difficult to
+maintain, increases runtime, etc), and having one test that
+exercises the functionality in a simple manner likely to detect
+problems.
 
-If an override is forced, set the sector size to the device's
-logical sector size as a next-best backup plan.
+Test 068 is likely to detect problems because it:
 
-[/editor]
+	a) allows fsstress to try to do stuff while the filesystem
+	is frozen by waiting a short time before thawing, hence load
+	processes can get stuck either during the freeze of once the
+	freeze is complete. Without that window, we are much less
+	likely to test opeations on a frozen filesystem.
 
-I think that reads better?  (And I think it is correct?)
+	b) allows more dirty data/metadata to build up between
+	thaw/freeze commands, rather than running them as quickly as
+	possible. This means freeze has more work to do, extenting
+	the different phases of the freeze, making it more likely we
+	have processes hit in different phases and hence test
+	different parts of the freeze process.
 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  mkfs/xfs_mkfs.c |   35 +++++++++++++++++++++++++++++------
->  1 files changed, 29 insertions(+), 6 deletions(-)
+IOWs, test 068 gives good coverage across most aspects of
+freezing/thawing filesystems under load - and a lot of that woul dbe
+lost by changing the test to mimic the ext4 specific test case you
+have. It will still be able to trigger the problem you are trying to
+expose, but it also has a much better chance of triggering problems
+at different points of the freeze/thaw lifecycle that your specific
+test....
+
+> The problem occurs on ext4 and ext3. They are reported at
+> ext4:
+> http://marc.info/?l=linux-ext4&m=132339590004560&w=2
+> ext3:
+> http://marc.info/?l=linux-ext4&m=131536612113658&w=2
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index f527f3d..159bf60 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -369,8 +369,14 @@ out:
->  	return ret;
->  }
->  
-> -static void blkid_get_topology(const char *device, int *sunit, int *swidth, int *sectorsize)
-> +static void blkid_get_topology(
-> +	const char *device,
-> +	int *sunit,
-> +	int *swidth,
-> +	int *sectorsize,
-> +	int force_overwrite)
->  {
-> +
->  	blkid_topology tp;
->  	blkid_probe pr;
->  	unsigned long val;
-> @@ -409,6 +415,15 @@ static void blkid_get_topology(const char *device, int *sunit, int *swidth, int
->  		fprintf(stderr,
->  			_("warning: device is not properly aligned %s\n"),
->  			device);
-> +
-> +		if(!force_overwrite) {
-> +			fprintf(stderr,
-> +			_("Use -f to force usage of a misaligned device\n"));
-> +
-> +			exit(EXIT_FAILURE);
-> +		}
+> This test runs freeze/unfreeze under heavy load. If the problem is
+> reproduced, this test will hang up because "xfs_freeze -u" hangs up...
 
-I think it might be better to send in *offset rather than force_overwrite;
-that way the _caller_ can decide what to do with a misaligned partition.
-I suppose by that token maybe the warning should be moved out too.
+> -ITERATIONS=10
+> +ITERATIONS=50
 
-> +	/* Force a 512b sector size if the device is misaligned*/
+....
 
-space before "*/" - but perhaps the caller should do this.
-This function should just get the topology, not handle commandline
-switches, exits, etc IMHO.
+> -    procs=2
+> -    nops=200
+> +    procs=100
+> +    nops=1000
 
-> +	*sectorsize = BBSIZE;
->  	}
->  
->  	blkid_free_probe(pr);
-> @@ -421,19 +436,23 @@ out_free_probe:
->  		device);
->  }
->  
-> -static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
-> +static void get_topology(
-> +	libxfs_init_t *xi,
-> +	struct fs_topology *ft,
-> +	int force_overwrite)
->  {
->  	if (!xi->disfile) {
->  		const char *dfile = xi->volname ? xi->volname : xi->dname;
->  
->  		blkid_get_topology(dfile, &ft->dsunit, &ft->dswidth,
-> -				   &ft->sectorsize);
-> +				   &ft->sectorsize, force_overwrite);
->  	}
->  
->  	if (xi->rtname && !xi->risfile) {
->  		int dummy;
->  
-> -		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth, &dummy);
-> +		blkid_get_topology(xi->rtname, &dummy, &ft->rtswidth,
-> +				   &dummy, force_overwrite);
->  	}
+>      while [ -f "$tmp.running" ]
+> -      do
+> -      #	-w ensures that the only ops are ones which cause write I/O
+> -      $FSSTRESS_PROG -d $STRESS_DIR -w -p $procs -n $nops $FSSTRESS_AVOID \
+> +    do
+> +      $FSSTRESS_PROG -d $STRESS_DIR -p $procs -n $nops $FSSTRESS_AVOID \
+>  	  > /dev/null 2>&1
 
-so here I'd check alignment, and decide what to do, i.e. something like:
+And this is one of those cases - it is the write operations
+that are the ones that cause trouble for freeze/thaw, so changing
+the test to use read operations simply reduces the stress that is
+being put on the filesytem freeze...
 
-if (!force && (data_offset || rt_offset)) {
-	sprintf(" ... bad alignment!\n");
-	sprintf("use -f to force this geometry\n");
-	exit(EXIT_FAILURE);
-}
+Also, you don't need lots of processes and ops to keep the filesystems
+busy while freeze/thaw cycles are going on - if fsstress completes,
+it simply gets started again. Hence it doesn't need to be configured
+to run for a long time by ramping up processes and opcount. Yes, the
+proc count could probably be increased a bit to increase the freeze
+load, but i don't think that will improve the test all that much...
 
--Eric
+> @@ -99,13 +98,11 @@ do
+>  	xfs_freeze -f "$SCRATCH_MNT" | tee -a $seq.full
+>  	[ $? != 0 ] && echo xfs_freeze -f "$SCRATCH_MNT" failed | \
+>  	    tee -a $seq.full
+> -	sleep 2
 
->  }
->  #else /* ENABLE_BLKID */
-> @@ -460,8 +479,12 @@ check_overwrite(
->  	return 0;
->  }
->  
-> -static void get_topology(libxfs_init_t *xi, struct fs_topology *ft)
-> +static void get_topology(
-> +	libxfs_init_t *xi,
-> +	struct fs_topology *ft,
-> +	int force_overwrite)
->  {
-> +
->  	char *dfile = xi->volname ? xi->volname : xi->dname;
->  	int bsz = BBSIZE;
->  
-> @@ -1625,7 +1648,7 @@ main(
->  	}
->  
->  	memset(&ft, 0, sizeof(ft));
-> -	get_topology(&xi, &ft);
-> +	get_topology(&xi, &ft, force_overwrite);
->  
->  	if (ft.sectoralign) {
->  		/*
+And this simulates typical freeze/do something/thaw cycles. It also
+allows fsstress to execute operations while the filesytem is frozen
+and potentially try to grab things like the superblock lock because
+fsstress issued a sync() system call. Dropping the sleep makes the
+test less likely to find problems....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
