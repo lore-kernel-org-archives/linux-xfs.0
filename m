@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBD6WHd0144033 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 00:32:18 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 4214C2BB0BD
-	for <xfs@oss.sgi.com>; Mon, 12 Dec 2011 22:32:16 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	EzCRyCMfOTTaotZe for <xfs@oss.sgi.com>;
-	Mon, 12 Dec 2011 22:32:16 -0800 (PST)
-Date: Tue, 13 Dec 2011 17:32:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] update 068 to reproduce an unfreeze hanging up problem
-Message-ID: <20111213063212.GC14273@dastard>
-References: <20111213094245.4004.61FB500B@jp.fujitsu.com>
+	pBDF3Sm6159139 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 09:03:29 -0600
+Received: from acsinet15.oracle.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 7F8589FBAAC
+	for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 07:03:27 -0800 (PST)
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id KQ37XFzxfVGWdtdN for
+	<xfs@oss.sgi.com>; Tue, 13 Dec 2011 07:03:27 -0800 (PST)
+Message-ID: <4EE7691D.6040807@oracle.com>
+Date: Tue, 13 Dec 2011 23:02:53 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111213094245.4004.61FB500B@jp.fujitsu.com>
+Subject: [PATCH] Introduce SEEK_DATA/SEEK_HOLE  to XFS V3
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,108 +26,371 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Masayoshi MIZUMA <m.mizuma@jp.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>
 
-On Tue, Dec 13, 2011 at 09:42:46AM +0900, Masayoshi MIZUMA wrote:
-> update 068 to reproduce an unfreeze hanging up problem which is unfreeze
-> function, thaw_super(), sometimes hangs up if flush kernel thread does
-> writeback to the same filesystem concurrently.
+Hello,
 
-That's not exactly what I asked to be done when I reviewed the
-original patch -  I asked you to "make 068 generic" because it
-already exercises freeze/thaw under a stressful workload. What I
-expected was a change to "supported_fs" and the scratch mkfs
-command so it will run on all filesystems.
+Now the V3 was coming out.
 
-test 068 will catch problems like the one your specific test
-catches, but maybe not every time. Test 068 will catch problems your
-test case won't, though - it's a trade-off between having lots of
-tests that are similar but slightly different (difficult to
-maintain, increases runtime, etc), and having one test that
-exercises the functionality in a simple manner likely to detect
-problems.
+Major changes:
+==============
+1. Isolate SEEK_DATA/SEEK_HOLE to individual functions, call them directly from
+xfs_llseek().
+2. Probing page cache for unwritten extents.
 
-Test 068 is likely to detect problems because it:
+Tests:
+======
+1. General tests I have mentioned before.
+2. Cover look up DIRTY pages through fallocate(2).
 
-	a) allows fsstress to try to do stuff while the filesystem
-	is frozen by waiting a short time before thawing, hence load
-	processes can get stuck either during the freeze of once the
-	freeze is complete. Without that window, we are much less
-	likely to test opeations on a frozen filesystem.
+The issue is I have not yet successfully worked out a test case can cover look up WRITEBACK pages easily,
+I'll continue to try out some other methods in this case.
+In the meantime, I'd like to post the revised patch for your guys review, to make sure that there is no
+obvious mistake in my current implementation, especially for the page cache look up approach.
 
-	b) allows more dirty data/metadata to build up between
-	thaw/freeze commands, rather than running them as quickly as
-	possible. This means freeze has more work to do, extenting
-	the different phases of the freeze, making it more likely we
-	have processes hit in different phases and hence test
-	different parts of the freeze process.
+Also, I took care of the function parameters and variables in TAB-align code style this time, for variables
+defined at conditions code blocks(i.e, "{}"), I also adhere to this rule, but not sure if it is properly, since I
+found some code snippets in xfs_file.c does not defined in this way.
 
-IOWs, test 068 gives good coverage across most aspects of
-freezing/thawing filesystems under load - and a lot of that woul dbe
-lost by changing the test to mimic the ext4 specific test case you
-have. It will still be able to trigger the problem you are trying to
-expose, but it also has a much better chance of triggering problems
-at different points of the freeze/thaw lifecycle that your specific
-test....
+Thank you!
+-Jeff
 
-> The problem occurs on ext4 and ext3. They are reported at
-> ext4:
-> http://marc.info/?l=linux-ext4&m=132339590004560&w=2
-> ext3:
-> http://marc.info/?l=linux-ext4&m=131536612113658&w=2
-> 
-> This test runs freeze/unfreeze under heavy load. If the problem is
-> reproduced, this test will hang up because "xfs_freeze -u" hangs up...
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-> -ITERATIONS=10
-> +ITERATIONS=50
+---
+ fs/xfs/xfs_file.c |  308 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 files changed, 307 insertions(+), 1 deletions(-)
 
-....
-
-> -    procs=2
-> -    nops=200
-> +    procs=100
-> +    nops=1000
-
->      while [ -f "$tmp.running" ]
-> -      do
-> -      #	-w ensures that the only ops are ones which cause write I/O
-> -      $FSSTRESS_PROG -d $STRESS_DIR -w -p $procs -n $nops $FSSTRESS_AVOID \
-> +    do
-> +      $FSSTRESS_PROG -d $STRESS_DIR -p $procs -n $nops $FSSTRESS_AVOID \
->  	  > /dev/null 2>&1
-
-And this is one of those cases - it is the write operations
-that are the ones that cause trouble for freeze/thaw, so changing
-the test to use read operations simply reduces the stress that is
-being put on the filesytem freeze...
-
-Also, you don't need lots of processes and ops to keep the filesystems
-busy while freeze/thaw cycles are going on - if fsstress completes,
-it simply gets started again. Hence it doesn't need to be configured
-to run for a long time by ramping up processes and opcount. Yes, the
-proc count could probably be increased a bit to increase the freeze
-load, but i don't think that will improve the test all that much...
-
-> @@ -99,13 +98,11 @@ do
->  	xfs_freeze -f "$SCRATCH_MNT" | tee -a $seq.full
->  	[ $? != 0 ] && echo xfs_freeze -f "$SCRATCH_MNT" failed | \
->  	    tee -a $seq.full
-> -	sleep 2
-
-And this simulates typical freeze/do something/thaw cycles. It also
-allows fsstress to execute operations while the filesytem is frozen
-and potentially try to grab things like the superblock lock because
-fsstress issued a sync() system call. Dropping the sleep makes the
-test less likely to find problems....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 753ed9b..1e9d6be 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -38,6 +38,7 @@
+ 
+ #include <linux/dcache.h>
+ #include <linux/falloc.h>
++#include <linux/pagevec.h>
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops;
+ 
+@@ -1141,8 +1142,313 @@ xfs_vm_page_mkwrite(
+ 	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
+ }
+ 
++/*
++ * Try to find out the data buffer offset in page cache for unwritten
++ * extents. Firstly, try to probe the DIRTY pages in current extent range,
++ * and iterate each page to lookup all theirs data buffers, if a buffer
++ * head status is unwritten, return its offset. If there is no DIRTY pages
++ * found or lookup done, we need to lookup the WRITEBACK pages again and
++ * perform the same operation as previously to avoid data loss.
++ */
++STATIC loff_t
++xfs_probe_unwritten_buffer(
++	struct inode		*inode,
++	struct xfs_bmbt_irec	*map,
++	int			*found)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	struct pagevec		pvec;
++	pgoff_t			index;
++	pgoff_t			end;
++	loff_t			offset = 0;
++	int			tag = PAGECACHE_TAG_DIRTY;
++
++	pagevec_init(&pvec, 0);
++
++probe_writeback_pages:
++	index = XFS_FSB_TO_B(mp, map->br_startoff) >> PAGE_CACHE_SHIFT;
++	end = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount)
++			   >> PAGE_CACHE_SHIFT;
++
++	do {
++		unsigned	nr_pages;
++		unsigned int	i;
++		int		want = min_t(pgoff_t, end - index,
++					     PAGEVEC_SIZE - 1) + 1;
++		nr_pages = pagevec_lookup_tag(&pvec, inode->i_mapping,
++					      &index, tag, want);
++		if (nr_pages == 0) {
++			/*
++			 * No dirty pages returns for this extent, try
++			 * to lookup the writeback pages again.
++			 * FIXME: If this is the first time for probing
++			 * DIRTY pages but nothing returned, we need to
++			 * search the WRITEBACK pages from the extent
++			 * beginning offset, but if we have found out
++			 * some DIRTY pages before, maybe we should
++			 * continue to probe the WRITEBACK pages from
++			 * the current page index rather than beginning?
++			 */
++			if (tag == PAGECACHE_TAG_DIRTY) {
++				tag = PAGECACHE_TAG_WRITEBACK;
++				goto probe_writeback_pages;
++			}
++			break;
++		}
++
++		for (i = 0; i < nr_pages; i++) {
++			struct page		*page = pvec.pages[i];
++			struct buffer_head	*bh;
++			struct buffer_head	*head;
++			xfs_fileoff_t		last;
++
++			if (!page_has_buffers(page))
++				goto out;
++
++			last = XFS_B_TO_FSBT(mp,
++					     page->index << PAGE_CACHE_SHIFT);
++			bh = head = page_buffers(page);
++			do {
++				/*
++				 * In XFS, if an extent in XFS_EXT_UNWRITTEN
++				 * state, that means the disk blocks were
++				 * already mapped for it, but the data is
++				 * still lived at page caches. For buffers
++				 * resides at DIRTY pages, their BH state
++				 * should be in (dirty && mapped && unwritten
++				 * && uptodate) status. For buffers resides
++				 * at WRITEBACK pages, their BH state should
++				 * be in (mapped && unwritten && uptodate)
++				 * status. So we only need to check unwritten
++				 * buffer status here.
++				 */
++				if (buffer_unwritten(bh)) {
++					offset = XFS_FSB_TO_B(mp, last);
++					*found = 1;
++					goto out;
++				}
++				last++;
++			} while ((bh = bh->b_this_page) != head);
++		}
++
++		index = pvec.pages[i]->index + 1;
++		pagevec_release(&pvec);
++	} while (index < end);
++
++out:
++	pagevec_release(&pvec);
++	return offset;
++}
++
++STATIC loff_t
++xfs_seek_data(
++	struct file		*file,
++	loff_t			start,
++	u32			type)
++{
++	struct inode		*inode = file->f_mapping->host;
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fsize_t		isize = i_size_read(inode);
++	loff_t			offset = 0;
++	struct xfs_ifork	*ifp;
++	xfs_fileoff_t		fsbno;
++	xfs_filblks_t		len;
++	int			lock;
++	int			error;
++
++	if (start >= isize)
++		return -ENXIO;
++
++	lock = xfs_ilock_map_shared(ip);
++
++	fsbno = XFS_B_TO_FSBT(mp, start);
++	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	len = XFS_B_TO_FSB(mp, isize);
++
++	for (;;) {
++		struct xfs_bmbt_irec	map[2];
++		int			nmap = 2;
++		int			found = 0;
++		loff_t			seekoff;
++
++		error = xfs_bmapi_read(ip, fsbno, len - fsbno, map, &nmap,
++				       XFS_BMAPI_ENTIRE);
++		if (error)
++			goto out_lock;
++
++		/* No extents at given offset, must be beyond EOF */
++		if (!nmap) {
++			error = ENXIO;
++			goto out_lock;
++		}
++
++		seekoff = XFS_FSB_TO_B(mp, fsbno);
++		/*
++		 * Landed in a hole, skip to check the next extent.
++		 * If the next extent landed in an in-memory data extent,
++		 * or it is a normal extent, its fine to return.
++		 * If the next extent landed in a hole extent, calculate
++		 * the start file system block number for next bmapi read.
++		 * If the next extent landed in an unwritten extent, we
++		 * need to probe the page cache to find out the data buffer
++		 * offset, if nothing found, treat it as a hole extent too.
++		 */
++		if (map[0].br_startblock == HOLESTARTBLOCK) {
++			if (map[1].br_startblock == HOLESTARTBLOCK) {
++				fsbno = map[1].br_startoff +
++					map[1].br_blockcount;
++			} else if (map[1].br_state == XFS_EXT_UNWRITTEN) {
++				offset = xfs_probe_unwritten_buffer(inode,
++								    &map[1],
++								    &found);
++				if (found) {
++					offset = max_t(loff_t, seekoff, offset);
++					break;
++				}
++				/*
++				 * No data buffer found in pagecache, treate it
++				 * as a hole.
++				 */
++				fsbno = map[1].br_startoff +
++					map[1].br_blockcount;
++			} else {
++				offset = max_t(loff_t, seekoff,
++					XFS_FSB_TO_B(mp, map[1].br_startoff));
++				break;
++			}
++		}
++
++		/*
++		 * Landed in an unwritten extent, try to find out the data
++		 * buffer offset from page cache firstly. if nothing was
++		 * found, treat it as a hole, and skip to check the next
++		 * extent, something just like above.
++		 */
++		if (map[0].br_state == XFS_EXT_UNWRITTEN) {
++			offset = xfs_probe_unwritten_buffer(inode, &map[0],
++							    &found);
++			if (found) {
++				offset = max_t(loff_t, seekoff, offset);
++				break;
++			}
++			if (map[1].br_startblock == HOLESTARTBLOCK) {
++				fsbno = map[1].br_startoff +
++					map[1].br_blockcount;
++			} else if (map[1].br_state == XFS_EXT_UNWRITTEN) {
++				offset = xfs_probe_unwritten_buffer(inode,
++								    &map[1],
++								    &found);
++				if (found) {
++					offset = max_t(loff_t, seekoff,
++						       offset);
++					break;
++				}
++				fsbno = map[1].br_startoff +
++					map[1].br_blockcount;
++			} else {
++				offset = max_t(loff_t, seekoff,
++					XFS_FSB_TO_B(mp, map[1].br_startoff));
++				break;
++			}
++		}
++
++		/* Landed in a delay allocated extent or a read data extent */
++		if (map[0].br_startblock == DELAYSTARTBLOCK ||
++		    map[0].br_state == XFS_EXT_NORM) {
++			offset = max_t(loff_t, seekoff,
++				       XFS_FSB_TO_B(mp, map[0].br_startoff));
++			break;
++		}
++
++		/* return ENXIO if beyond eof */
++		if (XFS_FSB_TO_B(mp, fsbno) > isize) {
++			error = ENXIO;
++			goto out_lock;
++		}
++	}
++
++	if (offset < start)
++		offset = start;
++
++	if (offset != file->f_pos)
++		file->f_pos = offset;
++
++out_lock:
++	xfs_iunlock_map_shared(ip, lock);
++
++	if (error)
++		return -error;
++
++	return offset;
++}
++
++STATIC loff_t
++xfs_seek_hole(
++	struct file		*file,
++	loff_t			start,
++	u32			type)
++{
++	struct inode		*inode = file->f_mapping->host;
++	struct xfs_inode	*ip = XFS_I(inode);
++	struct xfs_mount	*mp = ip->i_mount;
++	xfs_fsize_t		isize = i_size_read(inode);
++	xfs_fileoff_t		fsbno;
++	loff_t			holeoff;
++	loff_t			offset = 0;
++	int			lock;
++	int			error;
++
++	if (start >= isize)
++		return -ENXIO;
++
++	lock = xfs_ilock_map_shared(ip);
++
++	fsbno = XFS_B_TO_FSBT(mp, start);
++	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
++	if (error)
++		goto out_lock;
++
++	holeoff = XFS_FSB_TO_B(mp, fsbno);
++	if (holeoff <= start)
++		offset = start;
++	else
++		offset = min_t(loff_t, holeoff, isize);
++
++	if (offset != file->f_pos)
++		file->f_pos = offset;
++
++out_lock:
++	xfs_iunlock_map_shared(ip, lock);
++
++	if (error)
++		return -error;
++	return offset;
++}
++
++STATIC loff_t
++xfs_file_llseek(
++	struct file	*file,
++	loff_t		offset,
++	int		origin)
++{
++	switch (origin) {
++	case SEEK_END:
++	case SEEK_CUR:
++	case SEEK_SET:
++		return generic_file_llseek(file, offset, origin);
++	case SEEK_DATA:
++		return xfs_seek_data(file, offset, origin);
++	case SEEK_HOLE:
++		return xfs_seek_hole(file, offset, origin);
++	default:
++		return -EOPNOTSUPP;
++	}
++}
++
+ const struct file_operations xfs_file_operations = {
+-	.llseek		= generic_file_llseek,
++	.llseek		= xfs_file_llseek,
+ 	.read		= do_sync_read,
+ 	.write		= do_sync_write,
+ 	.aio_read	= xfs_file_aio_read,
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.4.1
 
 _______________________________________________
 xfs mailing list
