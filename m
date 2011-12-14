@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBEKWnnq228850 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 14:32:50 -0600
-Received: from ipmail04.adl6.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 804271F4C9B0
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 12:32:46 -0800 (PST)
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4PXImx7HyFcQEIIz for <xfs@oss.sgi.com>;
-	Wed, 14 Dec 2011 12:32:46 -0800 (PST)
-Date: Thu, 15 Dec 2011 07:32:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs-trace-ilock-more
-Message-ID: <20111214203243.GN3179@dastard>
-References: <20111214024040.GA17780@infradead.org>
-	<20111214182750.GH11114@wotan.suse.de> <4EE8F7F0.7070207@suse.com>
+	pBEMHtqS233122 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 16:17:55 -0600
+Date: Wed, 14 Dec 2011 16:18:20 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch 12/19] xfs: flatten the dquot lock ordering
+Message-ID: <20111214221820.GE29840@sgi.com>
+References: <20111206215806.844405397@bombadil.infradead.org>
+	<20111206215854.769664827@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4EE8F7F0.7070207@suse.com>
+In-Reply-To: <20111206215854.769664827@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,49 +23,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Mahoney <jeffm@suse.com>
-Cc: Mark Fasheh <mfasheh@suse.de>, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 14, 2011 at 02:24:32PM -0500, Jeff Mahoney wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Tue, Dec 06, 2011 at 04:58:18PM -0500, Christoph Hellwig wrote:
+> Introduce a new XFS_DQ_FREEING flag that tells lookup and mplist walks
+> to skip a dquot that is beeing freed, and use this avoid the trylock
+> on the hash and mplist locks in xfs_qm_dqreclaim_one.  Also simplify
+> xfs_dqpurge by moving the inodes to a dispose list after marking them
+> XFS_DQ_FREEING and avoid the locker ordering constraints.
 > 
-> On 12/14/2011 01:27 PM, Mark Fasheh wrote:
-> > Hey Christoph,
-> > 
-> > On Tue, Dec 13, 2011 at 09:40:40PM -0500, Christoph Hellwig wrote:
-> >> Can you explain the story behid this patch in SLES11SP1?
-> > 
-> > We were looking at some performance issues and needed a bit more
-> > information on the amount of time spent in ilock. I can give you
-> > more specifics if you want, I just have to dig up the e-mails (it's
-> > been a while).
-> 
-> That's pretty much the explanation. With heavy reader load, buffered
-> writes were stalling for 80 ms and sometimes longer. I suspected it
-> was contention on the ilock and the tracing with that patch
-> demonstrated a delay there. Since we were chasing a similar issue at
-> another site, it seemed worthwhile to just keep it around. We're still
-> tracking down the cause. I'm not sure if more recent kernels have the
-> same issue as there's been quite a lot of churn.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I'm not surprised - there's nothing really guaranteeing bound shared
-vs exclusive access to the ilock. It's all down to the read/write
-bias of the rwsem - readers will hold off the writer for some time.
-Still, it would be nice to see a trace from such a holdoff to
-confirm this is actually the case...
+Wow.  That was a tough review.
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-FWIW, if you have an app that requires concurrent, low latency reads
-and writes to the same file, that's what the XFS Direct IO was
-designed for - in most cases the iolock is taken in shared mode for
-both read and write, and so such hold-offs don't generally happen...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Index: xfs/fs/xfs/xfs_qm.c
+> ===================================================================
+...  
+> @@ -1737,57 +1716,42 @@ again:
+>  			}
+>  			goto dqunlock;
+>  		}
+> +		xfs_dqfunlock(dqp);
+>  
+>  		/*
+> -		 * We're trying to get the hashlock out of order. This races
+> -		 * with dqlookup; so, we giveup and goto the next dquot if
+> -		 * we couldn't get the hashlock. This way, we won't starve
+> -		 * a dqlookup process that holds the hashlock that is
+> -		 * waiting for the freelist lock.
+> +		 * Prevent lookup now that we are going to reclaim the dquot.
+> +		 * Once XFS_DQ_FREEING is set lookup won't touch the inode,
+								     dquot
 
 _______________________________________________
 xfs mailing list
