@@ -1,27 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBE8vSsP198821 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 02:57:28 -0600
-Received: from mail-lpp01m010-f53.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 11734A133E4
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 00:57:26 -0800 (PST)
-Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
-	[209.85.215.53]) by cuda.sgi.com with ESMTP id x30qjWeOxhAGjqUY
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 00:57:26 -0800 (PST)
-Received: by lagr15 with SMTP id r15so245872lag.26
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 00:57:25 -0800 (PST)
+	pBEDvZli211636 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 07:57:35 -0600
+Received: from bombadil.infradead.org (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id F2B7B1EAD433
+	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 05:30:16 -0800 (PST)
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	u7lK3dHIiKR6KoHL for <xfs@oss.sgi.com>;
+	Wed, 14 Dec 2011 05:30:16 -0800 (PST)
+Date: Wed, 14 Dec 2011 08:30:16 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 09/11] xfs: remove the i_new_size field in struct xfs_inode
+Message-ID: <20111214133016.GB30603@infradead.org>
+References: <20111208155755.323930705@bombadil.infradead.org>
+	<20111208155919.025710280@bombadil.infradead.org>
+	<20111213231611.GG3179@dastard>
 MIME-Version: 1.0
-In-Reply-To: <20111212143421.GA13223@infradead.org>
-References: <CADDb1s0WUfvt8N+hMATboKxbMUZdk2N-R2e=KFH2JvGUjbigBg@mail.gmail.com>
-	<20111103070246.GA10579@infradead.org>
-	<CADDb1s3UN4HMKEA2kSEM0HsUCC7DE63B1oJAoL6QpqXBdDCEqQ@mail.gmail.com>
-	<20111103100647.GA1002@infradead.org>
-	<CADDb1s2ZiPqHqkm01eG24jD+ytU9w3vJwKckXneMkL0wbUEb1Q@mail.gmail.com>
-	<20111212143421.GA13223@infradead.org>
-Date: Wed, 14 Dec 2011 14:27:25 +0530
-Message-ID: <CADDb1s3v0N0h+zcrQe_7vrxn2Oyx4k0EsXYR3M4S5w=YA2riWA@mail.gmail.com>
-Subject: Re: [Patch] xfs: serialise unaligned direct IOs
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20111213231611.GG3179@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,22 +32,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi Christoph,
+On Wed, Dec 14, 2011 at 10:16:11AM +1100, Dave Chinner wrote:
+> > Note that currently the generic direct I/O code only updates i_size after
+> > calling our end_io handler, which requires a small workaround to make
+> > sure di_size actually makes it to disk.  I hope to fix this properly in
+> > the generic code.
+> 
+> I think there's a couple of issues with the work around - the
+> generic code marks the inode dirty when it updates the inode size.
+> With your early setting of the size, it will no longer do this
+> because it doesn't see that it needs to update the inode size.
+> This may not be a problem if we mark the inode dirty elsewhere, but
+> I'm not sure we do in the direct IO path.
 
-I thought the last mail regarding this patch, actually was patch submission :)
-Shall I submit this in some other way? Please reply
-
-Sorry for the late reply, this mail skipped my inbox.
-
-Thanks & Regards,
-Amit Sahrawat
-
-On Mon, Dec 12, 2011 at 8:04 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> Did you manage to submit this on for the 2.6.35 longterm releases?
->
+We do from I/O completion, once we actually update the on-disk inode
+size that actually gets logged.  Before the on-disk inode size has
+been updated ->write_inode is a no-op as far as size updates are
+concerned, so marking the inode dirty earlier doesn't buy us anything.
 
 _______________________________________________
 xfs mailing list
