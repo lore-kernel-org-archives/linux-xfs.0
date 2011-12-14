@@ -1,19 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBE7ognN196322 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 01:50:42 -0600
-Received: from song.cn.fujitsu.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id A8E8F1218D61
-	for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 23:36:16 -0800 (PST)
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id 5fc1FYuiupxUBAQr for
-	<xfs@oss.sgi.com>; Tue, 13 Dec 2011 23:36:16 -0800 (PST)
-Message-ID: <4EE851B8.8010505@cn.fujitsu.com>
-Date: Wed, 14 Dec 2011 15:35:20 +0800
-From: Miao Xie <miaox@cn.fujitsu.com>
+	pBE8vSsP198821 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 02:57:28 -0600
+Received: from mail-lpp01m010-f53.google.com (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 11734A133E4
+	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 00:57:26 -0800 (PST)
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id x30qjWeOxhAGjqUY
+	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 00:57:26 -0800 (PST)
+Received: by lagr15 with SMTP id r15so245872lag.26
+	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 00:57:25 -0800 (PST)
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: open btrfsck to check the btrfs filesystem
-Reply-To: miaox@cn.fujitsu.com
+In-Reply-To: <20111212143421.GA13223@infradead.org>
+References: <CADDb1s0WUfvt8N+hMATboKxbMUZdk2N-R2e=KFH2JvGUjbigBg@mail.gmail.com>
+	<20111103070246.GA10579@infradead.org>
+	<CADDb1s3UN4HMKEA2kSEM0HsUCC7DE63B1oJAoL6QpqXBdDCEqQ@mail.gmail.com>
+	<20111103100647.GA1002@infradead.org>
+	<CADDb1s2ZiPqHqkm01eG24jD+ytU9w3vJwKckXneMkL0wbUEb1Q@mail.gmail.com>
+	<20111212143421.GA13223@infradead.org>
+Date: Wed, 14 Dec 2011 14:27:25 +0530
+Message-ID: <CADDb1s3v0N0h+zcrQe_7vrxn2Oyx4k0EsXYR3M4S5w=YA2riWA@mail.gmail.com>
+Subject: Re: [Patch] xfs: serialise unaligned direct IOs
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,101 +35,21 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-We failed to get fsck program to check the btrfs file system, it is
-because btrfs uses its independent check tool which is named btrfsck
-to check the file system, so the common checker -- fsck -- could not
-find it, and reported there is no checker.
+Hi Christoph,
 
-This patch fix it by using btrfsck directly. 
+I thought the last mail regarding this patch, actually was patch submission :)
+Shall I submit this in some other way? Please reply
 
-Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
----
- common.rc |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 files changed, 54 insertions(+), 0 deletions(-)
+Sorry for the late reply, this mail skipped my inbox.
 
-diff --git a/common.rc b/common.rc
-index cab0b64..b42e46d 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1299,6 +1299,54 @@ _check_xfs_test_fs()
-     fi
- }
- 
-+_check_btrfs_filesystem()
-+{
-+    device=$1
-+
-+    # If type is set, we're mounted
-+    type=`_fs_type $device`
-+    ok=1
-+
-+    if [ "$type" = "$FSTYP" ]
-+    then
-+        # mounted ...
-+        mountpoint=`_umount_or_remount_ro $device`
-+    fi
-+
-+    btrfsck $device >$tmp.fsck 2>&1
-+    if [ $? -ne 0 ]
-+    then
-+        echo "_check_btrfs_filesystem: filesystem on $device is inconsistent (see $seq.full)"
-+
-+        echo "_check_btrfs_filesystem: filesystem on $device is inconsistent" >>$here/$seq.full
-+        echo "*** fsck.$FSTYP output ***"                     >>$here/$seq.full
-+        cat $tmp.fsck                                         >>$here/$seq.full
-+        echo "*** end fsck.$FSTYP output"                     >>$here/$seq.full
-+
-+        ok=0
-+    fi
-+    rm -f $tmp.fsck
-+
-+    if [ $ok -eq 0 ]
-+    then
-+        echo "*** mount output ***"                             >>$here/$seq.full
-+        _mount                                                  >>$here/$seq.full
-+        echo "*** end mount output"                             >>$here/$seq.full
-+    elif [ "$type" = "$FSTYP" ]
-+    then
-+	# was mounted ...
-+	_mount_or_remount_rw "$MOUNT_OPTIONS" $device $mountpoint
-+	ok=$?
-+    fi
-+
-+    if [ $ok -eq 0 ]; then
-+	status=1
-+	exit 1
-+    fi
-+
-+    return 0
-+}
-+
- _check_test_fs()
- {
-     case $FSTYP in
-@@ -1311,6 +1359,9 @@ _check_test_fs()
-     udf)
- 	# do nothing for now
- 	;;
-+    btrfs)
-+	_check_btrfs_filesystem $TEST_DEV
-+	;;
-     *)
- 	_check_generic_filesystem $TEST_DEV
- 	;;
-@@ -1337,6 +1388,9 @@ _check_scratch_fs()
-     nfs*)
- 	# Don't know how to check an NFS filesystem, yet.
- 	;;
-+    btrfs)
-+	_check_btrfs_filesystem $SCRATCH_DEV
-+	;;
-     *)
- 	_check_generic_filesystem $SCRATCH_DEV
- 	;;
--- 
-1.7.6.4
+Thanks & Regards,
+Amit Sahrawat
+
+On Mon, Dec 12, 2011 at 8:04 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> Did you manage to submit this on for the 2.6.35 longterm releases?
+>
 
 _______________________________________________
 xfs mailing list
