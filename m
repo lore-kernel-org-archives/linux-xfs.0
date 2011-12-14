@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBDNKJaK178684 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 17:20:20 -0600
+	pBE0uYKc181073 for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 18:56:35 -0600
 Received: from ipmail07.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 46FD2156F9EF
-	for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 15:20:18 -0800 (PST)
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 2D0B315723F6
+	for <xfs@oss.sgi.com>; Tue, 13 Dec 2011 16:56:31 -0800 (PST)
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	gFnxrUs09Aciu0JY for <xfs@oss.sgi.com>;
-	Tue, 13 Dec 2011 15:20:18 -0800 (PST)
-Date: Wed, 14 Dec 2011 10:20:17 +1100
+	LkQHQMh8hUKaF5sg for <xfs@oss.sgi.com>;
+	Tue, 13 Dec 2011 16:56:31 -0800 (PST)
+Date: Wed, 14 Dec 2011 11:56:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 10/11] xfs: always return with the iolock held from
-	xfs_file_aio_write_checks
-Message-ID: <20111213232017.GH3179@dastard>
-References: <20111208155755.323930705@bombadil.infradead.org>
-	<20111208155919.215723395@bombadil.infradead.org>
+Subject: Re: [PATCH] xfs: remove unused XBT_FORCE_SLEEP bit
+Message-ID: <20111214005629.GK3179@dastard>
+References: <4EE7DBED.8090600@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111208155919.215723395@bombadil.infradead.org>
+In-Reply-To: <4EE7DBED.8090600@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +29,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Dec 08, 2011 at 10:58:05AM -0500, Christoph Hellwig wrote:
-> While xfs_iunlock is fine with 0 lockflags the calling conventions are much
-> cleaner if xfs_file_aio_write_checks never returns without the iolock held.
+On Tue, Dec 13, 2011 at 05:12:45PM -0600, Eric Sandeen wrote:
+> XBT_FORCE_SLEEP is no longer ever tested; it is only set
+> and cleared.  Remove it.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> ---
+> 
+> p.s. I left bt_flags as a bitfield even with only one bit defined now... OK?
 
-I'm not sure this makes sense by itself. maybe combine it with the
-next patch? Regardless:
+Fine by me. The plan is to remove the xfsbufd completely (by doing
+all metadata writeback from the AIL), anyway, so leaving it as a bit
+field for the moment is not a problem...
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
