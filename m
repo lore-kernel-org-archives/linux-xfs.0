@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBFGgo8c014817 for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 10:42:50 -0600
-Date: Thu, 15 Dec 2011 10:43:14 -0600
+	pBFGxuT3015461 for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 10:59:56 -0600
+Date: Thu, 15 Dec 2011 11:00:21 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [patch 15/19] xfs: simplify xfs_qm_detach_gdquots
-Message-ID: <20111215164314.GI29840@sgi.com>
+Subject: Re: [patch 17/19] xfs: merge xfs_qm_dqinit_core into the only caller
+Message-ID: <20111215170021.GK29840@sgi.com>
 References: <20111206215806.844405397@bombadil.infradead.org>
-	<20111206215855.306880439@bombadil.infradead.org>
+	<20111206215855.635965028@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111206215855.306880439@bombadil.infradead.org>
+In-Reply-To: <20111206215855.635965028@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,68 +26,62 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Dec 06, 2011 at 04:58:21PM -0500, Christoph Hellwig wrote:
-> There is no reason to drop qi_dqlist_lock around calls to xfs_qm_dqrele
-> because the free list lock now nests inside qi_dqlist_lock and the
-> dquot lock.
-> 
+On Tue, Dec 06, 2011 at 04:58:23PM -0500, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
+
+Looks good.
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
 > ---
->  fs/xfs/xfs_qm.c |   22 +++++-----------------
->  1 file changed, 5 insertions(+), 17 deletions(-)
+>  fs/xfs/xfs_dquot.c |   27 +++++++--------------------
+>  1 file changed, 7 insertions(+), 20 deletions(-)
 > 
-> Index: xfs/fs/xfs/xfs_qm.c
+> Index: xfs/fs/xfs/xfs_dquot.c
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:07.538179215 +0200
-> +++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:08.124671538 +0200
-> @@ -449,7 +449,6 @@ xfs_qm_detach_gdquots(
->  {
->  	struct xfs_quotainfo	*q = mp->m_quotainfo;
->  	struct xfs_dquot	*dqp, *gdqp;
-> -	int			nrecl;
->  
->   again:
->  	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
-> @@ -462,25 +461,14 @@ xfs_qm_detach_gdquots(
->  			mutex_lock(&q->qi_dqlist_lock);
->  			goto again;
->  		}
-> -		if ((gdqp = dqp->q_gdquot)) {
-> -			xfs_dqlock(gdqp);
-
-Why don't we need to take the dqlock on gdqp here before dropping the
-lock on dqp?
-
-> +
-> +		gdqp = dqp->q_gdquot;
-> +		if (gdqp)
->  			dqp->q_gdquot = NULL;
-> -		}
->  		xfs_dqunlock(dqp);
->  
-> -		if (gdqp) {
-> -			/*
-> -			 * Can't hold the mplist lock across a dqput.
-> -			 * XXXmust convert to marker based iterations here.
-> -			 */
-> -			nrecl = q->qi_dqreclaims;
-> -			mutex_unlock(&q->qi_dqlist_lock);
-> -			xfs_qm_dqput(gdqp);
-> -
-> -			mutex_lock(&q->qi_dqlist_lock);
-> -			if (nrecl != q->qi_dqreclaims)
-
-Why is it ok to ignore di_dqreclaims now?
-
-> -				goto again;
-> -		}
-> +		if (gdqp)
-> +			xfs_qm_dqrele(gdqp);
->  	}
+> --- xfs.orig/fs/xfs/xfs_dquot.c	2011-11-25 11:56:36.905143783 +0100
+> +++ xfs/fs/xfs/xfs_dquot.c	2011-11-25 11:56:40.861789014 +0100
+> @@ -154,24 +154,6 @@ xfs_qm_dqdestroy(
 >  }
 >  
+>  /*
+> - * This is what a 'fresh' dquot inside a dquot chunk looks like on disk.
+> - */
+> -STATIC void
+> -xfs_qm_dqinit_core(
+> -	xfs_dqid_t	id,
+> -	uint		type,
+> -	xfs_dqblk_t	*d)
+> -{
+> -	/*
+> -	 * Caller has zero'd the entire dquot 'chunk' already.
+> -	 */
+> -	d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> -	d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+> -	d->dd_diskdq.d_id = cpu_to_be32(id);
+> -	d->dd_diskdq.d_flags = type;
+> -}
+> -
+> -/*
+>   * If default limits are in force, push them into the dquot now.
+>   * We overwrite the dquot limits only if they are zero and this
+>   * is not the root dquot.
+> @@ -327,8 +309,13 @@ xfs_qm_init_dquot_blk(
+>  	curid = id - (id % q->qi_dqperchunk);
+>  	ASSERT(curid >= 0);
+>  	memset(d, 0, BBTOB(q->qi_dqchunklen));
+> -	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++)
+> -		xfs_qm_dqinit_core(curid, type, d);
+> +	for (i = 0; i < q->qi_dqperchunk; i++, d++, curid++) {
+> +		d->dd_diskdq.d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
+> +		d->dd_diskdq.d_version = XFS_DQUOT_VERSION;
+> +		d->dd_diskdq.d_id = cpu_to_be32(curid);
+> +		d->dd_diskdq.d_flags = type;
+> +	}
+> +
+>  	xfs_trans_dquot_buf(tp, bp,
+>  			    (type & XFS_DQ_USER ? XFS_BLF_UDQUOT_BUF :
+>  			    ((type & XFS_DQ_PROJ) ? XFS_BLF_PDQUOT_BUF :
 > 
 > _______________________________________________
 > xfs mailing list
