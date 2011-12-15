@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBF2EjKS242755 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 20:14:46 -0600
-Received: from mail-iy0-f181.google.com (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 74F8F15747B8
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 18:14:43 -0800 (PST)
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	JxRQmO1fL4vHgOWv for <xfs@oss.sgi.com>;
-	Wed, 14 Dec 2011 18:14:43 -0800 (PST)
-Received: by iakk12 with SMTP id k12so287202iak.26
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 18:14:43 -0800 (PST)
+	pBF3D5UN244893 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 21:13:05 -0600
+Date: Wed, 14 Dec 2011 21:13:33 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch 12/19] xfs: flatten the dquot lock ordering
+Message-ID: <20111215031333.GG29840@sgi.com>
+References: <20111206215806.844405397@bombadil.infradead.org>
+	<20111206215854.769664827@bombadil.infradead.org>
 MIME-Version: 1.0
-From: Andrei Purdea <andrei@purdea.ro>
-Date: Thu, 15 Dec 2011 04:14:28 +0200
-Message-ID: <CA+mMEgf+k6focwqB8_pZoCMF8=e=_czrrRe-6R8i4bNP614g2Q@mail.gmail.com>
-Subject: trim performance on xfs (also reply to: Online TRIM/discard
-	performance impact)
+Content-Disposition: inline
+In-Reply-To: <20111206215854.769664827@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,49 +19,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-I also recently met with an issue that has been described in a
-previous email(http://oss.sgi.com/archives/xfs/2011-11/msg00108.html).
-I have an OCZ Agility 3 (also a SandForce 2281 controller),and a
-Corsair Performance Pro (non-SandForce controller,with good
-non-compressible data speeds)
-Removing a linux-3.2-rc5 tree took more then 6 minutes with online
-discard,and ext4 was very speedy (less then a second), but only on the
-SandForce controller!!For the Corsair performance was good on both
-filesystems.
-So I decided to debug what is happening.I also noticed that fstrim was
-slower on the OCZ(30-40 seconds, vs. 3 seconds on the Corsair)So I had
-a hunch that the performance difference comes from the number
-ofsectors that are discarded in a single TRIM command.
-So i compiled a kernel where I inserted a printk into
-blkdev_issue_discard(),to see how many sectors each call asks for.
-Results:
-Total number of sectors discarded:=A0 =A0ext4: 1032864 =A0 XFS: 1043112
-(about the same)Number of calls to blkdev_issue_discard():=A0 =A0ext4: 24
- =A0 =A0 =A0 =A0 =A0XFS: 39395Average number of sectors discarded per call:
-ext4: 43036 (21 MiB) =A0 XFS: 26.48 =A0(13.2 KiB)
-I made some TRIM performance measurements (see image on
-http://purdea.ro/projects/trim_perf/)with a small tool i wrote.
-(warning, destructive to data)
-It looks like the OCZ needs a really high amount of time to
-executeeven the smallest TRIM command.
-I made a small post about this here: http://purdea.ro/projects/trim_perf/
-Can this be fixed in XFS?
-I am curious, do all SandForce controllers exhibit this slow TRIM issue?
-Andrew
--- =
+On Tue, Dec 06, 2011 at 04:58:18PM -0500, Christoph Hellwig wrote:
+> Index: xfs/fs/xfs/xfs_dquot.c
+> ===================================================================
+> @@ -781,11 +787,7 @@ xfs_qm_dqget(
+>  			return (EIO);
+>  		}
+>  	}
+> -#endif
+>  
+> - again:
+> -
+> -#ifdef DEBUG
 
-Purdea Andrei
-http://purdea.ro
-student at the =93Politehnica=94 University of Timisoara
-Faculty of Automation and Computers (AC)
-Master's Degree Program - Computer Engineering (MCE)
-2nd year
+Meant to say... moving the goto tag below doesn't look like it was
+strictly necessary, but it didn't look like it was possible to get here
+without the ilock held anyway.
 
 _______________________________________________
 xfs mailing list
