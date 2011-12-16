@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBG0moI2029310 for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 18:48:50 -0600
-Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 499032C8736
-	for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 16:48:48 -0800 (PST)
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6lO56Mh4Hrtbdo2h for <xfs@oss.sgi.com>;
-	Thu, 15 Dec 2011 16:48:48 -0800 (PST)
-Date: Fri, 16 Dec 2011 11:48:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 15/19] xfs: simplify xfs_qm_detach_gdquots
-Message-ID: <20111216004845.GB23662@dastard>
-References: <20111206215806.844405397@bombadil.infradead.org>
-	<20111206215855.306880439@bombadil.infradead.org>
-	<20111215164314.GI29840@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111215164314.GI29840@sgi.com>
+	pBGJqZmu066461 for <xfs@oss.sgi.com>; Fri, 16 Dec 2011 13:52:35 -0600
+Received: from mx2.suse.de (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 4B7F616F42BB
+	for <xfs@oss.sgi.com>; Fri, 16 Dec 2011 11:52:32 -0800 (PST)
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id OYIo7yXB7DRldMeJ for <xfs@oss.sgi.com>;
+	Fri, 16 Dec 2011 11:52:32 -0800 (PST)
+Message-Id: <20111216194211.843986725@clark.kroah.org>
+Date: Fri, 16 Dec 2011 11:40:38 -0800
+From: Greg KH <gregkh@suse.de>
+Subject: [31/45] xfs: fix nfs export of 64-bit inodes numbers on 32-bit kernels
+In-Reply-To: <20111216194603.GA15028@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,91 +21,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, akpm@linux-foundation.org, torvalds@linux-foundation.org, Christoph Hellwig <hch@lst.de>, alan@lxorguk.ukuu.org.uk
 
-On Thu, Dec 15, 2011 at 10:43:14AM -0600, Ben Myers wrote:
-> On Tue, Dec 06, 2011 at 04:58:21PM -0500, Christoph Hellwig wrote:
-> > There is no reason to drop qi_dqlist_lock around calls to xfs_qm_dqrele
-> > because the free list lock now nests inside qi_dqlist_lock and the
-> > dquot lock.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > 
-> > ---
-> >  fs/xfs/xfs_qm.c |   22 +++++-----------------
-> >  1 file changed, 5 insertions(+), 17 deletions(-)
-> > 
-> > Index: xfs/fs/xfs/xfs_qm.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:07.538179215 +0200
-> > +++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:08.124671538 +0200
-> > @@ -449,7 +449,6 @@ xfs_qm_detach_gdquots(
-> >  {
-> >  	struct xfs_quotainfo	*q = mp->m_quotainfo;
-> >  	struct xfs_dquot	*dqp, *gdqp;
-> > -	int			nrecl;
-> >  
-> >   again:
-> >  	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
-> > @@ -462,25 +461,14 @@ xfs_qm_detach_gdquots(
-> >  			mutex_lock(&q->qi_dqlist_lock);
-> >  			goto again;
-> >  		}
-> > -		if ((gdqp = dqp->q_gdquot)) {
-> > -			xfs_dqlock(gdqp);
-> 
-> Why don't we need to take the dqlock on gdqp here before dropping the
-> lock on dqp?
+3.0-stable review patch.  If anyone has any objections, please let me know.
 
-Because we have an active reference on it, it's guaranteed not to go
-away from under us. Hence we don't need to lock it before we unlock
-the dqp which holds that reference. As it is, the subsequent
-xfs_qm_dqrele() takes the lock before dropping the reference we
-currently hold.
+------------------
 
-> 
-> > +
-> > +		gdqp = dqp->q_gdquot;
-> > +		if (gdqp)
-> >  			dqp->q_gdquot = NULL;
-> > -		}
-> >  		xfs_dqunlock(dqp);
-> >  
-> > -		if (gdqp) {
-> > -			/*
-> > -			 * Can't hold the mplist lock across a dqput.
-> > -			 * XXXmust convert to marker based iterations here.
-> > -			 */
-> > -			nrecl = q->qi_dqreclaims;
-> > -			mutex_unlock(&q->qi_dqlist_lock);
-> > -			xfs_qm_dqput(gdqp);
-> > -
-> > -			mutex_lock(&q->qi_dqlist_lock);
-> > -			if (nrecl != q->qi_dqreclaims)
-> 
-> Why is it ok to ignore di_dqreclaims now?
+From: Christoph Hellwig <hch@infradead.org>
 
-That was there to tell us if the list we are traversing was modified
-or not while we had the lock dropped. If is was, then out list next
-pointer may not be valid, so we have to restart the traversal from
-the start.
+commit c29f7d457ac63311feb11928a866efd2fe153d74 upstream.
 
-We don't drop the lock any more, so we know that the list cannot be
-modified when we drop the current reference on the gdqp. Hence we
-don't need the check anymore.
+The i_ino field in the VFS inode is of type unsigned long and thus can't
+hold the full 64-bit inode number on 32-bit kernels.  We have the full
+inode number in the XFS inode, so use that one for nfs exports.  Note
+that I've also switched the 32-bit file handles types to it, just to make
+the code more consistent and copy & paste errors less likely to happen.
 
-Cheers,
+Reported-by: Guoquan Yang <ygq51@hotmail.com>
+Reported-by: Hank Peng <pengxihan@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+---
+ fs/xfs/linux-2.6/xfs_export.c |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/fs/xfs/linux-2.6/xfs_export.c
++++ b/fs/xfs/linux-2.6/xfs_export.c
+@@ -98,22 +98,22 @@ xfs_fs_encode_fh(
+ 	switch (fileid_type) {
+ 	case FILEID_INO32_GEN_PARENT:
+ 		spin_lock(&dentry->d_lock);
+-		fid->i32.parent_ino = dentry->d_parent->d_inode->i_ino;
++		fid->i32.parent_ino = XFS_I(dentry->d_parent->d_inode)->i_ino;
+ 		fid->i32.parent_gen = dentry->d_parent->d_inode->i_generation;
+ 		spin_unlock(&dentry->d_lock);
+ 		/*FALLTHRU*/
+ 	case FILEID_INO32_GEN:
+-		fid->i32.ino = inode->i_ino;
++		fid->i32.ino = XFS_I(inode)->i_ino;
+ 		fid->i32.gen = inode->i_generation;
+ 		break;
+ 	case FILEID_INO32_GEN_PARENT | XFS_FILEID_TYPE_64FLAG:
+ 		spin_lock(&dentry->d_lock);
+-		fid64->parent_ino = dentry->d_parent->d_inode->i_ino;
++		fid64->parent_ino = XFS_I(dentry->d_parent->d_inode)->i_ino;
+ 		fid64->parent_gen = dentry->d_parent->d_inode->i_generation;
+ 		spin_unlock(&dentry->d_lock);
+ 		/*FALLTHRU*/
+ 	case FILEID_INO32_GEN | XFS_FILEID_TYPE_64FLAG:
+-		fid64->ino = inode->i_ino;
++		fid64->ino = XFS_I(inode)->i_ino;
+ 		fid64->gen = inode->i_generation;
+ 		break;
+ 	}
+
 
 _______________________________________________
 xfs mailing list
