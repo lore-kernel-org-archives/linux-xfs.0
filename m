@@ -1,15 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBFN5fg5026638 for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 17:05:42 -0600
-Date: Thu, 15 Dec 2011 17:06:05 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: remove unused XBT_FORCE_SLEEP bit
-Message-ID: <20111215230605.GN29840@sgi.com>
-References: <4EE7DBED.8090600@sandeen.net>
+	pBG0moI2029310 for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 18:48:50 -0600
+Received: from ipmail06.adl2.internode.on.net (localhost [127.0.0.1])
+	by cuda.sgi.com (Spam Firewall) with ESMTP id 499032C8736
+	for <xfs@oss.sgi.com>; Thu, 15 Dec 2011 16:48:48 -0800 (PST)
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	6lO56Mh4Hrtbdo2h for <xfs@oss.sgi.com>;
+	Thu, 15 Dec 2011 16:48:48 -0800 (PST)
+Date: Fri, 16 Dec 2011 11:48:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch 15/19] xfs: simplify xfs_qm_detach_gdquots
+Message-ID: <20111216004845.GB23662@dastard>
+References: <20111206215806.844405397@bombadil.infradead.org>
+	<20111206215855.306880439@bombadil.infradead.org>
+	<20111215164314.GI29840@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4EE7DBED.8090600@sandeen.net>
+In-Reply-To: <20111215164314.GI29840@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,60 +31,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Dec 13, 2011 at 05:12:45PM -0600, Eric Sandeen wrote:
-> XBT_FORCE_SLEEP is no longer ever tested; it is only set
-> and cleared.  Remove it.
+On Thu, Dec 15, 2011 at 10:43:14AM -0600, Ben Myers wrote:
+> On Tue, Dec 06, 2011 at 04:58:21PM -0500, Christoph Hellwig wrote:
+> > There is no reason to drop qi_dqlist_lock around calls to xfs_qm_dqrele
+> > because the free list lock now nests inside qi_dqlist_lock and the
+> > dquot lock.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > ---
+> >  fs/xfs/xfs_qm.c |   22 +++++-----------------
+> >  1 file changed, 5 insertions(+), 17 deletions(-)
+> > 
+> > Index: xfs/fs/xfs/xfs_qm.c
+> > ===================================================================
+> > --- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:07.538179215 +0200
+> > +++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:08.124671538 +0200
+> > @@ -449,7 +449,6 @@ xfs_qm_detach_gdquots(
+> >  {
+> >  	struct xfs_quotainfo	*q = mp->m_quotainfo;
+> >  	struct xfs_dquot	*dqp, *gdqp;
+> > -	int			nrecl;
+> >  
+> >   again:
+> >  	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
+> > @@ -462,25 +461,14 @@ xfs_qm_detach_gdquots(
+> >  			mutex_lock(&q->qi_dqlist_lock);
+> >  			goto again;
+> >  		}
+> > -		if ((gdqp = dqp->q_gdquot)) {
+> > -			xfs_dqlock(gdqp);
 > 
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+> Why don't we need to take the dqlock on gdqp here before dropping the
+> lock on dqp?
 
-Yep... looks like XBT_FORCE_SLEEP is never tested.
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Because we have an active reference on it, it's guaranteed not to go
+away from under us. Hence we don't need to lock it before we unlock
+the dqp which holds that reference. As it is, the subsequent
+xfs_qm_dqrele() takes the lock before dropping the reference we
+currently hold.
 
-> ---
 > 
-> p.s. I left bt_flags as a bitfield even with only one bit defined now... OK?
+> > +
+> > +		gdqp = dqp->q_gdquot;
+> > +		if (gdqp)
+> >  			dqp->q_gdquot = NULL;
+> > -		}
+> >  		xfs_dqunlock(dqp);
+> >  
+> > -		if (gdqp) {
+> > -			/*
+> > -			 * Can't hold the mplist lock across a dqput.
+> > -			 * XXXmust convert to marker based iterations here.
+> > -			 */
+> > -			nrecl = q->qi_dqreclaims;
+> > -			mutex_unlock(&q->qi_dqlist_lock);
+> > -			xfs_qm_dqput(gdqp);
+> > -
+> > -			mutex_lock(&q->qi_dqlist_lock);
+> > -			if (nrecl != q->qi_dqreclaims)
 > 
-> diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-> index 5e68099..f7830c3 100644
-> --- a/fs/xfs/linux-2.6/xfs_buf.c
-> +++ b/fs/xfs/linux-2.6/xfs_buf.c
-> @@ -1762,12 +1762,8 @@ xfsbufd(
->  		struct list_head tmp;
->  		struct blk_plug plug;
->  
-> -		if (unlikely(freezing(current))) {
-> -			set_bit(XBT_FORCE_SLEEP, &target->bt_flags);
-> +		if (unlikely(freezing(current)))
->  			refrigerator();
-> -		} else {
-> -			clear_bit(XBT_FORCE_SLEEP, &target->bt_flags);
-> -		}
->  
->  		/* sleep for a long time if there is nothing to do. */
->  		if (list_empty(&target->bt_delwrite_queue))
-> diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-> index 50a7d5f..1b4aec1 100644
-> --- a/fs/xfs/linux-2.6/xfs_buf.h
-> +++ b/fs/xfs/linux-2.6/xfs_buf.h
-> @@ -87,8 +87,7 @@ typedef unsigned int xfs_buf_flags_t;
->  	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
->  
->  typedef enum {
-> -	XBT_FORCE_SLEEP = 0,
-> -	XBT_FORCE_FLUSH = 1,
-> +	XBT_FORCE_FLUSH = 0,
->  } xfs_buftarg_flags_t;
->  
->  typedef struct xfs_bufhash {
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Why is it ok to ignore di_dqreclaims now?
+
+That was there to tell us if the list we are traversing was modified
+or not while we had the lock dropped. If is was, then out list next
+pointer may not be valid, so we have to restart the traversal from
+the start.
+
+We don't drop the lock any more, so we know that the list cannot be
+modified when we drop the current reference on the gdqp. Hence we
+don't need the check anymore.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
