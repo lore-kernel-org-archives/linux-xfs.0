@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBGLXHhq069455 for <xfs@oss.sgi.com>; Fri, 16 Dec 2011 15:33:17 -0600
-Date: Fri, 16 Dec 2011 15:33:41 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [patch 15/19] xfs: simplify xfs_qm_detach_gdquots
-Message-ID: <20111216213341.GP29840@sgi.com>
-References: <20111206215806.844405397@bombadil.infradead.org>
-	<20111206215855.306880439@bombadil.infradead.org>
-	<20111215164314.GI29840@sgi.com> <20111216004845.GB23662@dastard>
+	pBHHMkss120719 for <xfs@oss.sgi.com>; Sat, 17 Dec 2011 11:22:47 -0600
+Received: from mail-ww0-f51.google.com (mail-ww0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id Tr1xT54TlzWHzkUP
+	for <xfs@oss.sgi.com>; Sat, 17 Dec 2011 09:22:45 -0800 (PST)
+Received: by wgbdr1 with SMTP id dr1so6153904wgb.32
+	for <xfs@oss.sgi.com>; Sat, 17 Dec 2011 09:22:44 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111216004845.GB23662@dastard>
+Date: Sat, 17 Dec 2011 12:22:44 -0500
+Message-ID: <CAEt9JqzmcRT2g6z1k3t5eFM7e1rvrrHQRf_enpvJx+HXgwOERA@mail.gmail.com>
+Subject: xfsdump
+From: William Moss <bill.m.moss@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,91 +20,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5544942886145771455=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Dec 16, 2011 at 11:48:45AM +1100, Dave Chinner wrote:
-> On Thu, Dec 15, 2011 at 10:43:14AM -0600, Ben Myers wrote:
-> > On Tue, Dec 06, 2011 at 04:58:21PM -0500, Christoph Hellwig wrote:
-> > > There is no reason to drop qi_dqlist_lock around calls to xfs_qm_dqrele
-> > > because the free list lock now nests inside qi_dqlist_lock and the
-> > > dquot lock.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > ---
-> > >  fs/xfs/xfs_qm.c |   22 +++++-----------------
-> > >  1 file changed, 5 insertions(+), 17 deletions(-)
-> > > 
-> > > Index: xfs/fs/xfs/xfs_qm.c
-> > > ===================================================================
-> > > --- xfs.orig/fs/xfs/xfs_qm.c	2011-10-27 22:40:07.538179215 +0200
-> > > +++ xfs/fs/xfs/xfs_qm.c	2011-10-27 22:40:08.124671538 +0200
-> > > @@ -449,7 +449,6 @@ xfs_qm_detach_gdquots(
-> > >  {
-> > >  	struct xfs_quotainfo	*q = mp->m_quotainfo;
-> > >  	struct xfs_dquot	*dqp, *gdqp;
-> > > -	int			nrecl;
-> > >  
-> > >   again:
-> > >  	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
-> > > @@ -462,25 +461,14 @@ xfs_qm_detach_gdquots(
-> > >  			mutex_lock(&q->qi_dqlist_lock);
-> > >  			goto again;
-> > >  		}
-> > > -		if ((gdqp = dqp->q_gdquot)) {
-> > > -			xfs_dqlock(gdqp);
-> > 
-> > Why don't we need to take the dqlock on gdqp here before dropping the
-> > lock on dqp?
-> 
-> Because we have an active reference on it, it's guaranteed not to go
-> away from under us. Hence we don't need to lock it before we unlock
-> the dqp which holds that reference. As it is, the subsequent
-> xfs_qm_dqrele() takes the lock before dropping the reference we
-> currently hold.
-> 
-> > 
-> > > +
-> > > +		gdqp = dqp->q_gdquot;
-> > > +		if (gdqp)
-> > >  			dqp->q_gdquot = NULL;
-> > > -		}
-> > >  		xfs_dqunlock(dqp);
-> > >  
-> > > -		if (gdqp) {
-> > > -			/*
-> > > -			 * Can't hold the mplist lock across a dqput.
-> > > -			 * XXXmust convert to marker based iterations here.
-> > > -			 */
-> > > -			nrecl = q->qi_dqreclaims;
-> > > -			mutex_unlock(&q->qi_dqlist_lock);
-> > > -			xfs_qm_dqput(gdqp);
-> > > -
-> > > -			mutex_lock(&q->qi_dqlist_lock);
-> > > -			if (nrecl != q->qi_dqreclaims)
-> > 
-> > Why is it ok to ignore di_dqreclaims now?
-> 
-> That was there to tell us if the list we are traversing was modified
-> or not while we had the lock dropped. If is was, then out list next
-> pointer may not be valid, so we have to restart the traversal from
-> the start.
-> 
-> We don't drop the lock any more, so we know that the list cannot be
-> modified when we drop the current reference on the gdqp. Hence we
-> don't need the check anymore.
+--===============5544942886145771455==
+Content-Type: multipart/alternative; boundary=f46d0442833231a63904b44cf79a
 
-Thanks Dave.
+--f46d0442833231a63904b44cf79a
+Content-Type: text/plain; charset=ISO-8859-1
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Since approx. kernel 2.6.35 (kernel.org) I have been having a problem with
+xfsdump(8) with my custom compiled kernels but not with the one that comes
+with openSUSE. During a differential dump (1..9) it will lock up, become a
+kernel stuck process that cannot be killed, while determining the files
+that need to be dumped. This has not occurred with dump level zero nor with
+the kernel as supplied from openSUSE. I have played with the kernel options
+that seem relevant to xfs (a find for xfs as well as ACPI, etc.) and
+nothing seems to effect the problem. Other than this, everything works fine
+and the kernel has better performance and support in the areas that I
+compile it for with respect to my hardware. I was hoping that you could
+inform me as to what options for the kernel might cause this problem. Note
+that a reboot or even an 'init 0 --- init 3' will clear the problem for at
+least one more differential dump.
+
+openSUSE: 11.4
+CPU : AMD 64 AM2 socket
+RAM: 4GB DDR2
+Drives: SATA/3 Boot is a 650GB WD, /usr/local is a 1.5TB WD
+
+Kernel: 3.1.4
+I compile the kernel with the AMD64 optimization turned on.
+
+Thank you!
+
+--f46d0442833231a63904b44cf79a
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+Since approx. kernel 2.6.35 (<a href=3D"http://kernel.org">kernel.org</a>) =
+I have been having a problem with xfsdump(8) with my custom compiled kernel=
+s but not with the one that comes with openSUSE. During a differential dump=
+ (1..9) it will lock up, become a kernel stuck process that cannot be kille=
+d, while determining the files that need to be dumped. This has not occurre=
+d with dump level zero nor with the kernel as supplied from openSUSE. I hav=
+e played with the kernel options that seem relevant to xfs (a find for xfs =
+as well as ACPI, etc.) and nothing seems to effect the problem. Other than =
+this, everything works fine and the kernel has better performance and suppo=
+rt in the areas that I compile it for with respect to my hardware. I was ho=
+ping that you could inform me as to what options for the kernel might cause=
+ this problem. Note that a reboot or even an &#39;init 0 --- init 3&#39; wi=
+ll clear the problem for at least one more differential dump.<br>
+<br>openSUSE: 11.4<br>CPU : AMD 64 AM2 socket<br>RAM: 4GB DDR2<br>Drives: S=
+ATA/3 Boot is a 650GB WD, /usr/local is a 1.5TB WD<br><br>Kernel: 3.1.4<br>=
+I compile the kernel with the AMD64 optimization turned on. <br><br>Thank y=
+ou!<br>
+
+--f46d0442833231a63904b44cf79a--
+
+
+--===============5544942886145771455==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5544942886145771455==--
