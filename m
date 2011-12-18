@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBIK1Yj8241093 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 14:01:35 -0600
+	pBIK1XaV241050 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 14:01:33 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	BhaJnR8BUd3NrrCu for <xfs@oss.sgi.com>;
-	Sun, 18 Dec 2011 12:01:32 -0800 (PST)
+	eXAb0gz4bWuhecYH for <xfs@oss.sgi.com>;
+	Sun, 18 Dec 2011 12:01:31 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RcMvM-0000yZ-B3
-	for xfs@oss.sgi.com; Sun, 18 Dec 2011 20:01:32 +0000
-Message-Id: <20111218200132.299481659@bombadil.infradead.org>
-Date: Sun, 18 Dec 2011 15:00:12 -0500
+	Linux)) id 1RcMvL-0000vz-Bd
+	for xfs@oss.sgi.com; Sun, 18 Dec 2011 20:01:31 +0000
+Message-Id: <20111218200131.321997628@bombadil.infradead.org>
+Date: Sun, 18 Dec 2011 15:00:07 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 09/11] xfs: remove the i_new_size field in struct xfs_inode
+Subject: [PATCH 04/11] xfs: remove the if_ext_max field in struct xfs_ifork
 References: <20111218200003.557507716@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-kill-i_new_size
+Content-Disposition: inline; filename=xfs-kill-ifp-if_ext_max
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,393 +31,567 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that we use the VFS i_size field throughout XFS there is no need for the
-i_new_size field any more given that the VFS i_size field gets updated
-in ->write_end before unlocking the page, and thus is a) always uptodate when
-writeback could see a page.  Removing i_new_size also has the advantage that
-we will never have to trim back di_size during a failed buffered write,
-given that it never gets updated past i_size.
-
-Note that currently the generic direct I/O code only updates i_size after
-calling our end_io handler, which requires a small workaround to make
-sure di_size actually makes it to disk.  I hope to fix this properly in
-the generic code.
-
-A downside is that we lose the support for parallel non-overlapping O_DIRECT
-appending writes that recently was added.  I don't think keeping the complex
-and fragile i_new_size infrastructure for this is a good tradeoff - if we
-really care about parallel appending writers we should investigate turning
-the iolock into a range lock, which would also allow for parallel
-non-overlapping buffered writers.
+We spent a lot of effort to maintain this field, but it always equalts to the
+fork size divided by the constant size of an extent.  The prime use of it is
+to assert that the two stay in sync.  Just divide the fork size by the extent
+size in the few places that we actually use it and remove the overhead
+of maintaining it.  Also introduce a few helpers to consolidate the places
+where we actually care about the value.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 ---
- fs/xfs/xfs_aops.c  |   28 +++++++++++---------
- fs/xfs/xfs_file.c  |   72 +++++++----------------------------------------------
- fs/xfs/xfs_iget.c  |    1 
- fs/xfs/xfs_inode.h |    2 -
- fs/xfs/xfs_trace.h |   18 ++-----------
- 5 files changed, 29 insertions(+), 92 deletions(-)
+ fs/xfs/xfs_attr_leaf.c  |    9 ----
+ fs/xfs/xfs_bmap.c       |  101 +++++++++++++++++++++---------------------------
+ fs/xfs/xfs_dfrag.c      |   39 +++++++++---------
+ fs/xfs/xfs_iget.c       |    2 
+ fs/xfs/xfs_inode.c      |   30 ++++----------
+ fs/xfs/xfs_inode.h      |    4 -
+ fs/xfs/xfs_inode_item.c |    2 
+ fs/xfs/xfs_trace.h      |    5 --
+ 8 files changed, 78 insertions(+), 114 deletions(-)
 
-Index: xfs/fs/xfs/xfs_file.c
+Index: xfs/fs/xfs/xfs_attr_leaf.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_file.c	2011-11-30 12:59:11.669698558 +0100
-+++ xfs/fs/xfs/xfs_file.c	2011-11-30 12:59:13.533021797 +0100
-@@ -413,27 +413,6 @@ xfs_file_splice_read(
+--- xfs.orig/fs/xfs/xfs_attr_leaf.c	2011-12-12 10:33:55.735363609 -0800
++++ xfs/fs/xfs/xfs_attr_leaf.c	2011-12-14 05:15:20.609040372 -0800
+@@ -271,10 +271,6 @@ xfs_attr_shortform_add(xfs_da_args_t *ar
+ 	dp = args->dp;
+ 	mp = dp->i_mount;
+ 	dp->i_d.di_forkoff = forkoff;
+-	dp->i_df.if_ext_max =
+-		XFS_IFORK_DSIZE(dp) / (uint)sizeof(xfs_bmbt_rec_t);
+-	dp->i_afp->if_ext_max =
+-		XFS_IFORK_ASIZE(dp) / (uint)sizeof(xfs_bmbt_rec_t);
+ 
+ 	ifp = dp->i_afp;
+ 	ASSERT(ifp->if_flags & XFS_IFINLINE);
+@@ -326,7 +322,6 @@ xfs_attr_fork_reset(
+ 	ASSERT(ip->i_d.di_anextents == 0);
+ 	ASSERT(ip->i_afp == NULL);
+ 
+-	ip->i_df.if_ext_max = XFS_IFORK_DSIZE(ip) / sizeof(xfs_bmbt_rec_t);
+ 	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+ }
+ 
+@@ -389,10 +384,6 @@ xfs_attr_shortform_remove(xfs_da_args_t
+ 				(args->op_flags & XFS_DA_OP_ADDNAME) ||
+ 				!(mp->m_flags & XFS_MOUNT_ATTR2) ||
+ 				dp->i_d.di_format == XFS_DINODE_FMT_BTREE);
+-		dp->i_afp->if_ext_max =
+-			XFS_IFORK_ASIZE(dp) / (uint)sizeof(xfs_bmbt_rec_t);
+-		dp->i_df.if_ext_max =
+-			XFS_IFORK_DSIZE(dp) / (uint)sizeof(xfs_bmbt_rec_t);
+ 		xfs_trans_log_inode(args->trans, dp,
+ 					XFS_ILOG_CORE | XFS_ILOG_ADATA);
+ 	}
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c	2011-12-12 10:33:55.748696870 -0800
++++ xfs/fs/xfs/xfs_bmap.c	2011-12-14 05:15:20.612373687 -0800
+@@ -249,7 +249,27 @@ xfs_bmbt_lookup_ge(
  }
  
  /*
-- * If this was a direct or synchronous I/O that failed (such as ENOSPC) then
-- * part of the I/O may have been written to disk before the error occurred.  In
-- * this case the on-disk file size may have been adjusted beyond the in-memory
-- * file size and now needs to be truncated back.
-- */
--STATIC void
--xfs_aio_write_newsize_update(
--	struct xfs_inode	*ip,
--	xfs_fsize_t		new_size)
--{
--	if (new_size == ip->i_new_size) {
--		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
--		if (new_size == ip->i_new_size)
--			ip->i_new_size = 0;
--		if (ip->i_d.di_size > i_size_read(VFS_I(ip)))
--			ip->i_d.di_size = i_size_read(VFS_I(ip));
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--	}
--}
--
--/*
-  * xfs_file_splice_write() does not use xfs_rw_ilock() because
-  * generic_file_splice_write() takes the i_mutex itself. This, in theory,
-  * couuld cause lock inversions between the aio_write path and the splice path
-@@ -451,7 +430,6 @@ xfs_file_splice_write(
- {
- 	struct inode		*inode = outfilp->f_mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	xfs_fsize_t		new_size;
- 	int			ioflags = 0;
- 	ssize_t			ret;
- 
-@@ -465,20 +443,12 @@ xfs_file_splice_write(
- 
- 	xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 
--	new_size = *ppos + count;
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (new_size > i_size_read(inode))
--		ip->i_new_size = new_size;
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
- 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
- 
- 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
- 	if (ret > 0)
- 		XFS_STATS_ADD(xs_write_bytes, ret);
- 
--	xfs_aio_write_newsize_update(ip, new_size);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return ret;
- }
-@@ -673,16 +643,13 @@ xfs_file_aio_write_checks(
- 	struct file		*file,
- 	loff_t			*pos,
- 	size_t			*count,
--	xfs_fsize_t		*new_sizep,
- 	int			*iolock)
- {
- 	struct inode		*inode = file->f_mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
--	xfs_fsize_t		new_size;
- 	int			error = 0;
- 
- 	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
--	*new_sizep = 0;
- restart:
- 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- 	if (error) {
-@@ -697,15 +664,13 @@ restart:
- 	/*
- 	 * If the offset is beyond the size of the file, we need to zero any
- 	 * blocks that fall between the existing EOF and the start of this
--	 * write. There is no need to issue zeroing if another in-flght IO ends
--	 * at or before this one If zeronig is needed and we are currently
--	 * holding the iolock shared, we need to update it to exclusive which
--	 * involves dropping all locks and relocking to maintain correct locking
--	 * order. If we do this, restart the function to ensure all checks and
--	 * values are still valid.
-+	 * write.  If zeroing is needed and we are currently holding the
-+	 * iolock shared, we need to update it to exclusive which involves
-+	 * dropping all locks and relocking to maintain correct locking order.
-+	 * If we do this, restart the function to ensure all checks and values
-+	 * are still valid.
- 	 */
--	if ((ip->i_new_size && *pos > ip->i_new_size) ||
--	    (!ip->i_new_size && *pos > i_size_read(inode))) {
-+	if (*pos > i_size_read(inode)) {
- 		if (*iolock == XFS_IOLOCK_SHARED) {
- 			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
- 			*iolock = XFS_IOLOCK_EXCL;
-@@ -714,19 +679,6 @@ restart:
+-* Update the record referred to by cur to the value given
++ * Check if the inode needs to be converted to btree format.
++ */
++static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
++{
++	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
++		XFS_IFORK_NEXTENTS(ip, whichfork) >
++			XFS_IFORK_MAXEXT(ip, whichfork);
++}
++
++/*
++ * Check if the inode should be converted to extent format.
++ */
++static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
++{
++	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
++		XFS_IFORK_NEXTENTS(ip, whichfork) <=
++			XFS_IFORK_MAXEXT(ip, whichfork);
++}
++
++/*
++ * Update the record referred to by cur to the value given
+  * by [off, bno, len, state].
+  * This either works (return 0) or gets an EFSCORRUPTED error.
+  */
+@@ -683,8 +703,8 @@ xfs_bmap_add_extent_delay_real(
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
  		}
- 		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
+-		if (bma->ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-		    bma->ip->i_d.di_nextents > bma->ip->i_df.if_ext_max) {
++
++		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
+ 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 					bma->firstblock, bma->flist,
+ 					&bma->cur, 1, &tmp_rval, XFS_DATA_FORK);
+@@ -767,8 +787,8 @@ xfs_bmap_add_extent_delay_real(
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
+ 		}
+-		if (bma->ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-		    bma->ip->i_d.di_nextents > bma->ip->i_df.if_ext_max) {
++
++		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
+ 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 				bma->firstblock, bma->flist, &bma->cur, 1,
+ 				&tmp_rval, XFS_DATA_FORK);
+@@ -836,8 +856,8 @@ xfs_bmap_add_extent_delay_real(
+ 				goto done;
+ 			XFS_WANT_CORRUPTED_GOTO(i == 1, done);
+ 		}
+-		if (bma->ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-		    bma->ip->i_d.di_nextents > bma->ip->i_df.if_ext_max) {
++
++		if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
+ 			error = xfs_bmap_extents_to_btree(bma->tp, bma->ip,
+ 					bma->firstblock, bma->flist, &bma->cur,
+ 					1, &tmp_rval, XFS_DATA_FORK);
+@@ -884,8 +904,7 @@ xfs_bmap_add_extent_delay_real(
  	}
+ 
+ 	/* convert to a btree if necessary */
+-	if (XFS_IFORK_FORMAT(bma->ip, XFS_DATA_FORK) == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(bma->ip, XFS_DATA_FORK) > ifp->if_ext_max) {
++	if (xfs_bmap_needs_btree(bma->ip, XFS_DATA_FORK)) {
+ 		int	tmp_logflags;	/* partial log flag return val */
+ 
+ 		ASSERT(bma->cur == NULL);
+@@ -1421,8 +1440,7 @@ xfs_bmap_add_extent_unwritten_real(
+ 	}
+ 
+ 	/* convert to a btree if necessary */
+-	if (XFS_IFORK_FORMAT(ip, XFS_DATA_FORK) == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > ifp->if_ext_max) {
++	if (xfs_bmap_needs_btree(ip, XFS_DATA_FORK)) {
+ 		int	tmp_logflags;	/* partial log flag return val */
+ 
+ 		ASSERT(cur == NULL);
+@@ -1812,8 +1830,7 @@ xfs_bmap_add_extent_hole_real(
+ 	}
+ 
+ 	/* convert to a btree if necessary */
+-	if (XFS_IFORK_FORMAT(bma->ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(bma->ip, whichfork) > ifp->if_ext_max) {
++	if (xfs_bmap_needs_btree(bma->ip, whichfork)) {
+ 		int	tmp_logflags;	/* partial log flag return val */
+ 
+ 		ASSERT(bma->cur == NULL);
+@@ -3037,8 +3054,7 @@ xfs_bmap_extents_to_btree(
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS);
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
++
+ 	/*
+ 	 * Make space in the inode incore.
+ 	 */
+@@ -3184,13 +3200,8 @@ xfs_bmap_forkoff_reset(
+ 	    ip->i_d.di_format != XFS_DINODE_FMT_BTREE) {
+ 		uint	dfl_forkoff = xfs_default_attroffset(ip) >> 3;
+ 
+-		if (dfl_forkoff > ip->i_d.di_forkoff) {
++		if (dfl_forkoff > ip->i_d.di_forkoff)
+ 			ip->i_d.di_forkoff = dfl_forkoff;
+-			ip->i_df.if_ext_max =
+-				XFS_IFORK_DSIZE(ip) / sizeof(xfs_bmbt_rec_t);
+-			ip->i_afp->if_ext_max =
+-				XFS_IFORK_ASIZE(ip) / sizeof(xfs_bmbt_rec_t);
+-		}
+ 	}
+ }
+ 
+@@ -3430,8 +3441,6 @@ xfs_bmap_add_attrfork(
+ 	int			error;		/* error return value */
+ 
+ 	ASSERT(XFS_IFORK_Q(ip) == 0);
+-	ASSERT(ip->i_df.if_ext_max ==
+-	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+ 
+ 	mp = ip->i_mount;
+ 	ASSERT(!XFS_NOT_DQATTACHED(mp, ip));
+@@ -3486,12 +3495,9 @@ xfs_bmap_add_attrfork(
+ 		error = XFS_ERROR(EINVAL);
+ 		goto error1;
+ 	}
+-	ip->i_df.if_ext_max =
+-		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
++
+ 	ASSERT(ip->i_afp == NULL);
+ 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP);
+-	ip->i_afp->if_ext_max =
+-		XFS_IFORK_ASIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+ 	ip->i_afp->if_flags = XFS_IFEXTENTS;
+ 	logflags = 0;
+ 	xfs_bmap_init(&flist, &firstblock);
+@@ -3535,20 +3541,17 @@ xfs_bmap_add_attrfork(
+ 		} else
+ 			spin_unlock(&mp->m_sb_lock);
+ 	}
+-	if ((error = xfs_bmap_finish(&tp, &flist, &committed)))
++
++	error = xfs_bmap_finish(&tp, &flist, &committed);
++	if (error)
+ 		goto error2;
+-	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-	ASSERT(ip->i_df.if_ext_max ==
+-	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+-	return error;
++	return xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+ error2:
+ 	xfs_bmap_cancel(&flist);
+ error1:
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ error0:
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES|XFS_TRANS_ABORT);
+-	ASSERT(ip->i_df.if_ext_max ==
+-	       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+ 	return error;
+ }
+ 
+@@ -4379,8 +4382,6 @@ xfs_bmapi_read(
+ 	XFS_STATS_INC(xs_blk_mapr);
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
+ 
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+ 		error = xfs_iread_extents(NULL, ip, whichfork);
+@@ -4871,8 +4872,6 @@ xfs_bmapi_write(
+ 		return XFS_ERROR(EIO);
+ 
+ 	ifp = XFS_IFORK_PTR(ip, whichfork);
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
+ 
+ 	XFS_STATS_INC(xs_blk_mapw);
+ 
+@@ -4981,8 +4980,7 @@ xfs_bmapi_write(
+ 	/*
+ 	 * Transform from btree to extents, give it cur.
+ 	 */
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
+-	    XFS_IFORK_NEXTENTS(ip, whichfork) <= ifp->if_ext_max) {
++	if (xfs_bmap_wants_extents(ip, whichfork)) {
+ 		int		tmp_logflags = 0;
+ 
+ 		ASSERT(bma.cur);
+@@ -4992,10 +4990,10 @@ xfs_bmapi_write(
+ 		if (error)
+ 			goto error0;
+ 	}
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
++
+ 	ASSERT(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE ||
+-	       XFS_IFORK_NEXTENTS(ip, whichfork) > ifp->if_ext_max);
++	       XFS_IFORK_NEXTENTS(ip, whichfork) >
++		XFS_IFORK_MAXEXT(ip, whichfork));
+ 	error = 0;
+ error0:
+ 	/*
+@@ -5095,8 +5093,7 @@ xfs_bunmapi(
+ 
+ 	ASSERT(len > 0);
+ 	ASSERT(nexts >= 0);
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
++
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS) &&
+ 	    (error = xfs_iread_extents(tp, ip, whichfork)))
+ 		return error;
+@@ -5321,8 +5318,7 @@ xfs_bunmapi(
+ 		 * will be dirty.
+ 		 */
+ 		if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
+-		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+-		    XFS_IFORK_NEXTENTS(ip, whichfork) >= ifp->if_ext_max &&
++		    xfs_bmap_needs_btree(ip, whichfork) &&
+ 		    del.br_startoff > got.br_startoff &&
+ 		    del.br_startoff + del.br_blockcount <
+ 		    got.br_startoff + got.br_blockcount) {
+@@ -5353,13 +5349,11 @@ nodelete:
+ 		}
+ 	}
+ 	*done = bno == (xfs_fileoff_t)-1 || bno < start || lastx < 0;
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
++
+ 	/*
+ 	 * Convert to a btree if necessary.
+ 	 */
+-	if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(ip, whichfork) > ifp->if_ext_max) {
++	if (xfs_bmap_needs_btree(ip, whichfork)) {
+ 		ASSERT(cur == NULL);
+ 		error = xfs_bmap_extents_to_btree(tp, ip, firstblock, flist,
+ 			&cur, 0, &tmp_logflags, whichfork);
+@@ -5370,8 +5364,7 @@ nodelete:
+ 	/*
+ 	 * transform from btree to extents, give it cur
+ 	 */
+-	else if (XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
+-		 XFS_IFORK_NEXTENTS(ip, whichfork) <= ifp->if_ext_max) {
++	else if (xfs_bmap_wants_extents(ip, whichfork)) {
+ 		ASSERT(cur != NULL);
+ 		error = xfs_bmap_btree_to_extents(tp, ip, cur, &tmp_logflags,
+ 			whichfork);
+@@ -5382,8 +5375,6 @@ nodelete:
+ 	/*
+ 	 * transform from extents to local?
+ 	 */
+-	ASSERT(ifp->if_ext_max ==
+-	       XFS_IFORK_SIZE(ip, whichfork) / (uint)sizeof(xfs_bmbt_rec_t));
+ 	error = 0;
+ error0:
+ 	/*
+Index: xfs/fs/xfs/xfs_dfrag.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dfrag.c	2011-12-12 10:33:55.758696817 -0800
++++ xfs/fs/xfs/xfs_dfrag.c	2011-12-14 05:16:50.911884493 -0800
+@@ -163,12 +163,14 @@ xfs_swap_extents_check_format(
+ 
+ 	/* Check temp in extent form to max in target */
+ 	if (tip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) > ip->i_df.if_ext_max)
++	    XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) >
++			XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+ 		return EINVAL;
+ 
+ 	/* Check target in extent form to max in temp */
+ 	if (ip->i_d.di_format == XFS_DINODE_FMT_EXTENTS &&
+-	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) > tip->i_df.if_ext_max)
++	    XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) >
++			XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+ 		return EINVAL;
+ 
+ 	/*
+@@ -180,18 +182,25 @@ xfs_swap_extents_check_format(
+ 	 * (a common defrag case) which will occur when the temp inode is in
+ 	 * extent format...
+ 	 */
+-	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+-	    ((XFS_IFORK_BOFF(ip) &&
+-	      tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip)) ||
+-	     XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <= ip->i_df.if_ext_max))
+-		return EINVAL;
++	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
++		if (XFS_IFORK_BOFF(ip) &&
++		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
++			return EINVAL;
++		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
++		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
++			return EINVAL;
++	}
+ 
+ 	/* Reciprocal target->temp btree format checks */
+-	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE &&
+-	    ((XFS_IFORK_BOFF(tip) &&
+-	      ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip)) ||
+-	     XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <= tip->i_df.if_ext_max))
+-		return EINVAL;
++	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
++		if (XFS_IFORK_BOFF(tip) &&
++		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
++			return EINVAL;
++
++		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
++		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
++			return EINVAL;
++	}
+ 
+ 	return 0;
+ }
+@@ -349,16 +358,6 @@ xfs_swap_extents(
+ 	*tifp = *tempifp;	/* struct copy */
+ 
+ 	/*
+-	 * Fix the in-memory data fork values that are dependent on the fork
+-	 * offset in the inode. We can't assume they remain the same as attr2
+-	 * has dynamic fork offsets.
+-	 */
+-	ifp->if_ext_max = XFS_IFORK_SIZE(ip, XFS_DATA_FORK) /
+-					(uint)sizeof(xfs_bmbt_rec_t);
+-	tifp->if_ext_max = XFS_IFORK_SIZE(tip, XFS_DATA_FORK) /
+-					(uint)sizeof(xfs_bmbt_rec_t);
 -
 -	/*
--	 * If this IO extends beyond EOF, we may need to update ip->i_new_size.
--	 * We have already zeroed space beyond EOF (if necessary).  Only update
--	 * ip->i_new_size if this IO ends beyond any other in-flight writes.
--	 */
--	new_size = *pos + *count;
--	if (new_size > i_size_read(inode)) {
--		if (new_size > ip->i_new_size)
--			ip->i_new_size = new_size;
--		*new_sizep = new_size;
--	}
--
- 	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error)
- 		return error;
-@@ -772,7 +724,6 @@ xfs_file_dio_aio_write(
- 	unsigned long		nr_segs,
- 	loff_t			pos,
- 	size_t			ocount,
--	xfs_fsize_t		*new_size,
- 	int			*iolock)
- {
- 	struct file		*file = iocb->ki_filp;
-@@ -817,7 +768,7 @@ xfs_file_dio_aio_write(
- 		xfs_rw_ilock(ip, *iolock);
- 	}
- 
--	ret = xfs_file_aio_write_checks(file, &pos, &count, new_size, iolock);
-+	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
- 		return ret;
- 
-@@ -855,7 +806,6 @@ xfs_file_buffered_aio_write(
- 	unsigned long		nr_segs,
- 	loff_t			pos,
- 	size_t			ocount,
--	xfs_fsize_t		*new_size,
- 	int			*iolock)
- {
- 	struct file		*file = iocb->ki_filp;
-@@ -869,7 +819,7 @@ xfs_file_buffered_aio_write(
- 	*iolock = XFS_IOLOCK_EXCL;
- 	xfs_rw_ilock(ip, *iolock);
- 
--	ret = xfs_file_aio_write_checks(file, &pos, &count, new_size, iolock);
-+	ret = xfs_file_aio_write_checks(file, &pos, &count, iolock);
- 	if (ret)
- 		return ret;
- 
-@@ -909,7 +859,6 @@ xfs_file_aio_write(
- 	ssize_t			ret;
- 	int			iolock;
- 	size_t			ocount = 0;
--	xfs_fsize_t		new_size = 0;
- 
- 	XFS_STATS_INC(xs_write_calls);
- 
-@@ -929,10 +878,10 @@ xfs_file_aio_write(
- 
- 	if (unlikely(file->f_flags & O_DIRECT))
- 		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos,
--						ocount, &new_size, &iolock);
-+						ocount, &iolock);
- 	else
- 		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
--						ocount, &new_size, &iolock);
-+						ocount, &iolock);
- 
- 	if (ret <= 0)
- 		goto out_unlock;
-@@ -953,7 +902,6 @@ xfs_file_aio_write(
- 	}
- 
- out_unlock:
--	xfs_aio_write_newsize_update(ip, new_size);
- 	xfs_rw_iunlock(ip, iolock);
- 	return ret;
- }
-Index: xfs/fs/xfs/xfs_aops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2011-11-30 12:59:11.669698558 +0100
-+++ xfs/fs/xfs/xfs_aops.c	2011-12-01 08:12:10.946664057 +0100
-@@ -111,8 +111,7 @@ xfs_ioend_new_eof(
- 	xfs_fsize_t		bsize;
- 
- 	bsize = ioend->io_offset + ioend->io_size;
--	isize = MAX(i_size_read(VFS_I(ip)), ip->i_new_size);
--	isize = MIN(isize, bsize);
-+	isize = MIN(i_size_read(VFS_I(ip)), bsize);
- 	return isize > ip->i_d.di_size ? isize : 0;
- }
- 
-@@ -126,11 +125,7 @@ static inline bool xfs_ioend_is_append(s
- }
- 
- /*
-- * Update on-disk file size now that data has been written to disk.  The
-- * current in-memory file size is i_size.  If a write is beyond eof i_new_size
-- * will be the intended file size until i_size is updated.  If this write does
-- * not extend all the way to the valid file size then restrict this update to
-- * the end of the write.
-+ * Update on-disk file size now that data has been written to disk.
-  *
-  * This function does not block as blocking on the inode lock in IO completion
-  * can lead to IO completion order dependency deadlocks.. If it can't get the
-@@ -1279,6 +1274,15 @@ xfs_end_io_direct_write(
- 	struct xfs_ioend	*ioend = iocb->private;
- 
- 	/*
-+	 * While the generic direct I/O code updates the inode size, it does
-+	 * so only after the end_io handler is called, which means our
-+	 * end_io handler thinks the on-disk size is outside the in-core
-+	 * size.  To prevent this just update it a little bit earlier here.
-+	 */
-+	if (offset + size > i_size_read(ioend->io_inode))
-+		i_size_write(ioend->io_inode, offset + size);
-+
-+	/*
- 	 * blockdev_direct_IO can return an error even after the I/O
- 	 * completion handler was called.  Thus we need to protect
- 	 * against double-freeing.
-@@ -1340,12 +1344,10 @@ xfs_vm_write_failed(
- 
- 	if (to > inode->i_size) {
- 		/*
--		 * punch out the delalloc blocks we have already allocated. We
--		 * don't call xfs_setattr() to do this as we may be in the
--		 * middle of a multi-iovec write and so the vfs inode->i_size
--		 * will not match the xfs ip->i_size and so it will zero too
--		 * much. Hence we jus truncate the page cache to zero what is
--		 * necessary and punch the delalloc blocks directly.
-+		 * Punch out the delalloc blocks we have already allocated.
-+		 *
-+		 * Don't bother with xfs_setattr given that nothing can have
-+		 * it do disk yet as the page is still locked at this point.
- 		 */
- 		struct xfs_inode	*ip = XFS_I(inode);
- 		xfs_fileoff_t		start_fsb;
+ 	 * Fix the on-disk inode values
+ 	 */
+ 	tmp = (__uint64_t)ip->i_d.di_nblocks;
 Index: xfs/fs/xfs/xfs_iget.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_iget.c	2011-11-30 12:59:11.676365190 +0100
-+++ xfs/fs/xfs/xfs_iget.c	2011-11-30 12:59:13.533021797 +0100
-@@ -94,7 +94,6 @@ xfs_inode_alloc(
- 	ip->i_update_core = 0;
- 	ip->i_delayed_blks = 0;
- 	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
--	ip->i_new_size = 0;
+--- xfs.orig/fs/xfs/xfs_iget.c	2011-12-12 10:33:55.772030077 -0800
++++ xfs/fs/xfs/xfs_iget.c	2011-12-14 05:15:20.612373687 -0800
+@@ -451,8 +451,6 @@ again:
  
- 	return ip;
- }
+ 	*ipp = ip;
+ 
+-	ASSERT(ip->i_df.if_ext_max ==
+-	       XFS_IFORK_DSIZE(ip) / sizeof(xfs_bmbt_rec_t));
+ 	/*
+ 	 * If we have a real type for an on-disk inode, we can set ops(&unlock)
+ 	 * now.	 If it's a new inode being created, xfs_ialloc will handle it.
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-12-14 05:14:09.522758812 -0800
++++ xfs/fs/xfs/xfs_inode.c	2011-12-14 05:15:20.612373687 -0800
+@@ -299,11 +299,8 @@ xfs_iformat(
+ {
+ 	xfs_attr_shortform_t	*atp;
+ 	int			size;
+-	int			error;
++	int			error = 0;
+ 	xfs_fsize_t             di_size;
+-	ip->i_df.if_ext_max =
+-		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+-	error = 0;
+ 
+ 	if (unlikely(be32_to_cpu(dip->di_nextents) +
+ 		     be16_to_cpu(dip->di_anextents) >
+@@ -409,10 +406,10 @@ xfs_iformat(
+ 	}
+ 	if (!XFS_DFORK_Q(dip))
+ 		return 0;
++
+ 	ASSERT(ip->i_afp == NULL);
+ 	ip->i_afp = kmem_zone_zalloc(xfs_ifork_zone, KM_SLEEP | KM_NOFS);
+-	ip->i_afp->if_ext_max =
+-		XFS_IFORK_ASIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
++
+ 	switch (dip->di_aformat) {
+ 	case XFS_DINODE_FMT_LOCAL:
+ 		atp = (xfs_attr_shortform_t *)XFS_DFORK_APTR(dip);
+@@ -604,10 +601,11 @@ xfs_iformat_btree(
+ 	 * or the number of extents is greater than the number of
+ 	 * blocks.
+ 	 */
+-	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <= ifp->if_ext_max
+-	    || XFS_BMDR_SPACE_CALC(nrecs) >
+-			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork)
+-	    || XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
++	if (unlikely(XFS_IFORK_NEXTENTS(ip, whichfork) <=
++			XFS_IFORK_MAXEXT(ip, whichfork) ||
++		     XFS_BMDR_SPACE_CALC(nrecs) >
++			XFS_DFORK_SIZE(dip, ip->i_mount, whichfork) ||
++		     XFS_IFORK_NEXTENTS(ip, whichfork) > ip->i_d.di_nblocks)) {
+ 		xfs_warn(ip->i_mount, "corrupt inode %Lu (btree).",
+ 			(unsigned long long) ip->i_ino);
+ 		XFS_CORRUPTION_ERROR("xfs_iformat_btree", XFS_ERRLEVEL_LOW,
+@@ -835,12 +833,6 @@ xfs_iread(
+ 		 * with the uninitialized part of it.
+ 		 */
+ 		ip->i_d.di_mode = 0;
+-		/*
+-		 * Initialize the per-fork minima and maxima for a new
+-		 * inode here.  xfs_iformat will do it for old inodes.
+-		 */
+-		ip->i_df.if_ext_max =
+-			XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+ 	}
+ 
+ 	/*
+@@ -1740,8 +1732,6 @@ xfs_ifree(
+ 	ip->i_d.di_flags = 0;
+ 	ip->i_d.di_dmevmask = 0;
+ 	ip->i_d.di_forkoff = 0;		/* mark the attr fork not in use */
+-	ip->i_df.if_ext_max =
+-		XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t);
+ 	ip->i_d.di_format = XFS_DINODE_FMT_EXTENTS;
+ 	ip->i_d.di_aformat = XFS_DINODE_FMT_EXTENTS;
+ 	/*
+@@ -2408,7 +2398,7 @@ xfs_iflush(
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(!completion_done(&ip->i_flush));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+-	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
++	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+ 
+ 	iip = ip->i_itemp;
+ 	mp = ip->i_mount;
+@@ -2524,7 +2514,7 @@ xfs_iflush_int(
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+ 	ASSERT(!completion_done(&ip->i_flush));
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+-	       ip->i_d.di_nextents > ip->i_df.if_ext_max);
++	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+ 
+ 	iip = ip->i_itemp;
+ 	mp = ip->i_mount;
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-12-12 10:33:55.795363284 -0800
++++ xfs/fs/xfs/xfs_inode_item.c	2011-12-14 05:15:20.615707002 -0800
+@@ -79,8 +79,6 @@ xfs_inode_item_size(
+ 		break;
+ 
+ 	case XFS_DINODE_FMT_BTREE:
+-		ASSERT(ip->i_df.if_ext_max ==
+-		       XFS_IFORK_DSIZE(ip) / (uint)sizeof(xfs_bmbt_rec_t));
+ 		iip->ili_format.ilf_fields &=
+ 			~(XFS_ILOG_DDATA | XFS_ILOG_DEXT |
+ 			  XFS_ILOG_DEV | XFS_ILOG_UUID);
 Index: xfs/fs/xfs/xfs_trace.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trace.h	2011-11-30 12:59:11.673031874 +0100
-+++ xfs/fs/xfs/xfs_trace.h	2011-11-30 12:59:13.536355113 +0100
-@@ -891,7 +891,6 @@ DECLARE_EVENT_CLASS(xfs_file_class,
- 		__field(dev_t, dev)
+--- xfs.orig/fs/xfs/xfs_trace.h	2011-12-14 05:14:09.526092127 -0800
++++ xfs/fs/xfs/xfs_trace.h	2011-12-14 05:15:20.615707002 -0800
+@@ -1568,7 +1568,6 @@ DECLARE_EVENT_CLASS(xfs_swap_extent_clas
  		__field(xfs_ino_t, ino)
- 		__field(xfs_fsize_t, size)
--		__field(xfs_fsize_t, new_size)
- 		__field(loff_t, offset)
- 		__field(size_t, count)
- 		__field(int, flags)
-@@ -900,17 +899,15 @@ DECLARE_EVENT_CLASS(xfs_file_class,
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
- 		__entry->size = ip->i_d.di_size;
--		__entry->new_size = ip->i_new_size;
- 		__entry->offset = offset;
- 		__entry->count = count;
- 		__entry->flags = flags;
+ 		__field(int, format)
+ 		__field(int, nex)
+-		__field(int, max_nex)
+ 		__field(int, broot_size)
+ 		__field(int, fork_off)
  	),
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx "
- 		  "offset 0x%llx count 0x%zx ioflags %s",
+@@ -1578,18 +1577,16 @@ DECLARE_EVENT_CLASS(xfs_swap_extent_clas
+ 		__entry->ino = ip->i_ino;
+ 		__entry->format = ip->i_d.di_format;
+ 		__entry->nex = ip->i_d.di_nextents;
+-		__entry->max_nex = ip->i_df.if_ext_max;
+ 		__entry->broot_size = ip->i_df.if_broot_bytes;
+ 		__entry->fork_off = XFS_IFORK_BOFF(ip);
+ 	),
+ 	TP_printk("dev %d:%d ino 0x%llx (%s), %s format, num_extents %d, "
+-		  "Max in-fork extents %d, broot size %d, fork offset %d",
++		  "broot size %d, fork offset %d",
  		  MAJOR(__entry->dev), MINOR(__entry->dev),
  		  __entry->ino,
- 		  __entry->size,
--		  __entry->new_size,
- 		  __entry->offset,
- 		  __entry->count,
- 		  __print_flags(__entry->flags, "|", XFS_IO_FLAGS))
-@@ -978,7 +975,6 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
- 		__field(dev_t, dev)
- 		__field(xfs_ino_t, ino)
- 		__field(loff_t, size)
--		__field(loff_t, new_size)
- 		__field(loff_t, offset)
- 		__field(size_t, count)
- 		__field(int, type)
-@@ -990,7 +986,6 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
- 		__entry->dev = VFS_I(ip)->i_sb->s_dev;
- 		__entry->ino = ip->i_ino;
- 		__entry->size = ip->i_d.di_size;
--		__entry->new_size = ip->i_new_size;
- 		__entry->offset = offset;
- 		__entry->count = count;
- 		__entry->type = type;
-@@ -998,13 +993,11 @@ DECLARE_EVENT_CLASS(xfs_imap_class,
- 		__entry->startblock = irec ? irec->br_startblock : 0;
- 		__entry->blockcount = irec ? irec->br_blockcount : 0;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx size 0x%llx new_size 0x%llx "
--		  "offset 0x%llx count %zd type %s "
--		  "startoff 0x%llx startblock %lld blockcount 0x%llx",
-+	TP_printk("dev %d:%d ino 0x%llx size 0x%llx offset 0x%llx count %zd "
-+		  "type %s startoff 0x%llx startblock %lld blockcount 0x%llx",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->size,
--		  __entry->new_size,
- 		  __entry->offset,
- 		  __entry->count,
- 		  __print_symbolic(__entry->type, XFS_IO_TYPES),
-@@ -1031,7 +1024,6 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
- 		__field(xfs_ino_t, ino)
- 		__field(loff_t, isize)
- 		__field(loff_t, disize)
--		__field(loff_t, new_size)
- 		__field(loff_t, offset)
- 		__field(size_t, count)
- 	),
-@@ -1040,17 +1032,15 @@ DECLARE_EVENT_CLASS(xfs_simple_io_class,
- 		__entry->ino = ip->i_ino;
- 		__entry->isize = VFS_I(ip)->i_size;
- 		__entry->disize = ip->i_d.di_size;
--		__entry->new_size = ip->i_new_size;
- 		__entry->offset = offset;
- 		__entry->count = count;
- 	),
--	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx new_size 0x%llx "
-+	TP_printk("dev %d:%d ino 0x%llx isize 0x%llx disize 0x%llx "
- 		  "offset 0x%llx count %zd",
- 		  MAJOR(__entry->dev), MINOR(__entry->dev),
- 		  __entry->ino,
- 		  __entry->isize,
- 		  __entry->disize,
--		  __entry->new_size,
- 		  __entry->offset,
- 		  __entry->count)
- );
+ 		  __print_symbolic(__entry->which, XFS_SWAPEXT_INODES),
+ 		  __print_symbolic(__entry->format, XFS_INODE_FORMAT_STR),
+ 		  __entry->nex,
+-		  __entry->max_nex,
+ 		  __entry->broot_size,
+ 		  __entry->fork_off)
+ )
 Index: xfs/fs/xfs/xfs_inode.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 12:59:11.679698505 +0100
-+++ xfs/fs/xfs/xfs_inode.h	2011-12-01 08:12:10.839997391 +0100
-@@ -246,8 +246,6 @@ typedef struct xfs_inode {
- 
- 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
- 
--	xfs_fsize_t		i_new_size;	/* size when write completes */
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-12-14 05:15:18.779050287 -0800
++++ xfs/fs/xfs/xfs_inode.h	2011-12-14 05:15:20.615707002 -0800
+@@ -66,7 +66,6 @@ typedef struct xfs_ifork {
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+ 	short			if_broot_bytes;	/* bytes allocated for root */
+ 	unsigned char		if_flags;	/* per-fork flags */
+-	unsigned char		if_ext_max;	/* max # of extent records */
+ 	union {
+ 		xfs_bmbt_rec_host_t *if_extents;/* linear map file exts */
+ 		xfs_ext_irec_t	*if_ext_irec;	/* irec map file exts */
+@@ -206,7 +205,8 @@ typedef struct xfs_icdinode {
+ 	((w) == XFS_DATA_FORK ? \
+ 		((ip)->i_d.di_nextents = (n)) : \
+ 		((ip)->i_d.di_anextents = (n)))
 -
- 	/* VFS inode */
- 	struct inode		i_vnode;	/* embedded VFS inode */
- } xfs_inode_t;
++#define XFS_IFORK_MAXEXT(ip, w) \
++	(XFS_IFORK_SIZE(ip, w) / sizeof(xfs_bmbt_rec_t))
+ 
+ 
+ #ifdef __KERNEL__
 
 _______________________________________________
 xfs mailing list
