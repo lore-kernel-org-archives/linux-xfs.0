@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBIK1XXK241056 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 14:01:34 -0600
+	pBIK1Yv5241073 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 14:01:34 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	PQEblBTtJsxPxGso for <xfs@oss.sgi.com>;
+	S9OaR57iaxNRA4tw for <xfs@oss.sgi.com>;
 	Sun, 18 Dec 2011 12:01:31 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RcMvK-0000tr-LV
-	for xfs@oss.sgi.com; Sun, 18 Dec 2011 20:01:30 +0000
-Message-Id: <20111218200003.557507716@bombadil.infradead.org>
-Date: Sun, 18 Dec 2011 15:00:03 -0500
+	Linux)) id 1RcMvL-0000ux-0X
+	for xfs@oss.sgi.com; Sun, 18 Dec 2011 20:01:31 +0000
+Message-Id: <20111218200130.970786897@bombadil.infradead.org>
+Date: Sun, 18 Dec 2011 15:00:05 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 00/11] inode shrink and misc updates V2
+Subject: [PATCH 02/11] xfs: cleanup xfs_iomap_eof_align_last_fsb
+References: <20111218200003.557507716@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-cleanup-xfs_iomap_eof_align_last_fsb
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,14 +31,65 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This series contains the inode shrink patches and a few related cleanups.
-Most notably the file write path is a lot leaner now that we could get rid
-of all the magic for the xfs_inode i_size and i_new_size menipulations.
+Replace the nasty if, else if, elseif condition with more natural C flow
+that expressed the logic we want here better.
 
- 31 files changed, 388 insertions(+), 559 deletions(-)
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Changes from V1:
-  - update commit messages based on Daves feedback
+---
+ fs/xfs/xfs_iomap.c |   36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
+
+Index: xfs/fs/xfs/xfs_iomap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_iomap.c	2011-11-17 12:07:52.580802800 +0100
++++ xfs/fs/xfs/xfs_iomap.c	2011-11-30 10:57:35.649224495 +0100
+@@ -57,26 +57,26 @@ xfs_iomap_eof_align_last_fsb(
+ 	xfs_fileoff_t	*last_fsb)
+ {
+ 	xfs_fileoff_t	new_last_fsb = 0;
+-	xfs_extlen_t	align;
++	xfs_extlen_t	align = 0;
+ 	int		eof, error;
+ 
+-	if (XFS_IS_REALTIME_INODE(ip))
+-		;
+-	/*
+-	 * If mounted with the "-o swalloc" option, roundup the allocation
+-	 * request to a stripe width boundary if the file size is >=
+-	 * stripe width and we are allocating past the allocation eof.
+-	 */
+-	else if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC) &&
+-	        (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_swidth)))
+-		new_last_fsb = roundup_64(*last_fsb, mp->m_swidth);
+-	/*
+-	 * Roundup the allocation request to a stripe unit (m_dalign) boundary
+-	 * if the file size is >= stripe unit size, and we are allocating past
+-	 * the allocation eof.
+-	 */
+-	else if (mp->m_dalign && (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_dalign)))
+-		new_last_fsb = roundup_64(*last_fsb, mp->m_dalign);
++	if (!XFS_IS_REALTIME_INODE(ip)) {
++		/*
++		 * Round up the allocation request to a stripe unit
++		 * (m_dalign) boundary if the file size is >= stripe unit
++		 * size, and we are allocating past the allocation eof.
++		 *
++		 * If mounted with the "-o swalloc" option the alignment is
++		 * increased from the strip unit size to the stripe width.
++		 */
++		if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC))
++			align = mp->m_swidth;
++		else if (mp->m_dalign)
++			align = mp->m_dalign;
++
++		if (align && ip->i_size >= XFS_FSB_TO_B(mp, align))
++			new_last_fsb = roundup_64(*last_fsb, align);
++	}
+ 
+ 	/*
+ 	 * Always round up the allocation request to an extent boundary
 
 _______________________________________________
 xfs mailing list
