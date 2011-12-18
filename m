@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBIK1XWb241052 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 14:01:33 -0600
+	pBIK1Xxh241054 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 14:01:34 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DY9f6exZNaPXgg2U for <xfs@oss.sgi.com>;
+	k48mQyUVTb6lJAmL for <xfs@oss.sgi.com>;
 	Sun, 18 Dec 2011 12:01:32 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RcMvM-0000z5-HJ
+	Linux)) id 1RcMvL-0000xX-Ve
 	for xfs@oss.sgi.com; Sun, 18 Dec 2011 20:01:32 +0000
-Message-Id: <20111218200132.483776880@bombadil.infradead.org>
-Date: Sun, 18 Dec 2011 15:00:13 -0500
+Message-Id: <20111218200131.916691346@bombadil.infradead.org>
+Date: Sun, 18 Dec 2011 15:00:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 10/11] xfs: always return with the iolock held from
-	xfs_file_aio_write_checks
+Subject: [PATCH 07/11] xfs: replace i_pin_wait with a bit waitqueue
 References: <20111218200003.557507716@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-cleanup-xfs_file_aio_write_checks
+Content-Disposition: inline; filename=xfs-kill-i_ipin_wait
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,41 +31,124 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-While xfs_iunlock is fine with 0 lockflags the calling conventions are much
-cleaner if xfs_file_aio_write_checks never returns without the iolock held.
+Replace i_pin_wait, which is only used during synchronous inode flushing
+with a bit waitqueue.  This trades off a much smaller inode against
+slightly slower wakeup performance, and saves 12 (32-bit) or 20 (64-bit)
+bytes in the XFS inode.
 
+Reviewed-by: Alex Elder <aelder@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_file.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_inode.c      |   27 +++++++++++++++++++++------
+ fs/xfs/xfs_inode.h      |    3 ++-
+ fs/xfs/xfs_inode_item.c |    2 +-
+ fs/xfs/xfs_super.c      |    1 -
+ 4 files changed, 24 insertions(+), 9 deletions(-)
 
-Index: xfs/fs/xfs/xfs_file.c
+Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_file.c	2011-12-07 12:46:31.343897882 +0100
-+++ xfs/fs/xfs/xfs_file.c	2011-12-07 12:48:33.309903801 +0100
-@@ -636,7 +636,9 @@ out_lock:
- /*
-  * Common pre-write limit and setup checks.
-  *
-- * Returns with iolock held according to @iolock.
-+ * Called with the iolocked held either shared and exclusive according to
-+ * @iolock, and returns with it held.  Might upgrade the iolock to exclusive
-+ * if called for a direct write beyond i_size.
+--- xfs.orig/fs/xfs/xfs_inode.c	2011-11-30 12:59:08.843047205 +0100
++++ xfs/fs/xfs/xfs_inode.c	2011-11-30 12:59:10.296372665 +0100
+@@ -2037,7 +2037,7 @@ xfs_idestroy_fork(
+  * once someone is waiting for it to be unpinned.
   */
- STATIC ssize_t
- xfs_file_aio_write_checks(
-@@ -653,8 +655,7 @@ xfs_file_aio_write_checks(
- restart:
- 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- 	if (error) {
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
--		*iolock = 0;
-+		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
- 		return error;
- 	}
+ static void
+-xfs_iunpin_nowait(
++xfs_iunpin(
+ 	struct xfs_inode	*ip)
+ {
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_ILOCK_SHARED));
+@@ -2049,14 +2049,29 @@ xfs_iunpin_nowait(
  
+ }
+ 
++static void
++__xfs_iunpin_wait(
++	struct xfs_inode	*ip)
++{
++	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IPINNED_BIT);
++	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_IPINNED_BIT);
++
++	xfs_iunpin(ip);
++
++	do {
++		prepare_to_wait(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
++		if (xfs_ipincount(ip))
++			io_schedule();
++	} while (xfs_ipincount(ip));
++	finish_wait(wq, &wait.wait);
++}
++
+ void
+ xfs_iunpin_wait(
+ 	struct xfs_inode	*ip)
+ {
+-	if (xfs_ipincount(ip)) {
+-		xfs_iunpin_nowait(ip);
+-		wait_event(ip->i_ipin_wait, (xfs_ipincount(ip) == 0));
+-	}
++	if (xfs_ipincount(ip))
++		__xfs_iunpin_wait(ip);
+ }
+ 
+ /*
+@@ -2415,7 +2430,7 @@ xfs_iflush(
+ 	 * out for us if they occur after the log force completes.
+ 	 */
+ 	if (!(flags & SYNC_WAIT) && xfs_ipincount(ip)) {
+-		xfs_iunpin_nowait(ip);
++		xfs_iunpin(ip);
+ 		xfs_ifunlock(ip);
+ 		return EAGAIN;
+ 	}
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 12:59:08.846380520 +0100
++++ xfs/fs/xfs/xfs_inode.h	2011-11-30 12:59:10.296372665 +0100
+@@ -238,7 +238,6 @@ typedef struct xfs_inode {
+ 	mrlock_t		i_lock;		/* inode lock */
+ 	mrlock_t		i_iolock;	/* inode IO lock */
+ 	atomic_t		i_pincount;	/* inode pin count */
+-	wait_queue_head_t	i_ipin_wait;	/* inode pinning wait queue */
+ 	spinlock_t		i_flags_lock;	/* inode i_flags lock */
+ 	/* Miscellaneous state. */
+ 	unsigned long		i_flags;	/* see defined flags below */
+@@ -367,6 +366,8 @@ xfs_set_projid(struct xfs_inode *ip,
+ #define XFS_IDIRTY_RELEASE	(1 << 6) /* dirty release already seen */
+ #define __XFS_IFLOCK_BIT	7	 /* inode is being flushed right now */
+ #define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
++#define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
++#define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
+ 
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+Index: xfs/fs/xfs/xfs_inode_item.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2011-11-30 12:59:08.846380520 +0100
++++ xfs/fs/xfs/xfs_inode_item.c	2011-11-30 12:59:10.296372665 +0100
+@@ -555,7 +555,7 @@ xfs_inode_item_unpin(
+ 	trace_xfs_inode_unpin(ip, _RET_IP_);
+ 	ASSERT(atomic_read(&ip->i_pincount) > 0);
+ 	if (atomic_dec_and_test(&ip->i_pincount))
+-		wake_up(&ip->i_ipin_wait);
++		wake_up_bit(&ip->i_flags, __XFS_IPINNED_BIT);
+ }
+ 
+ /*
+Index: xfs/fs/xfs/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_super.c	2011-11-30 12:59:08.846380520 +0100
++++ xfs/fs/xfs/xfs_super.c	2011-11-30 12:59:10.296372665 +0100
+@@ -828,7 +828,6 @@ xfs_fs_inode_init_once(
+ 	/* xfs inode */
+ 	atomic_set(&ip->i_pincount, 0);
+ 	spin_lock_init(&ip->i_flags_lock);
+-	init_waitqueue_head(&ip->i_ipin_wait);
+ 
+ 	mrlock_init(&ip->i_lock, MRLOCK_ALLOW_EQUAL_PRI|MRLOCK_BARRIER,
+ 		     "xfsino", ip->i_ino);
 
 _______________________________________________
 xfs mailing list
