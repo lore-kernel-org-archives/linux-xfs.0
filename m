@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBHNWeUG133239 for <xfs@oss.sgi.com>; Sat, 17 Dec 2011 17:32:40 -0600
+	pBIFo0mN215233 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 09:50:00 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	z3gOO58HFIenB1ql for <xfs@oss.sgi.com>;
-	Sat, 17 Dec 2011 15:32:39 -0800 (PST)
-Date: Sat, 17 Dec 2011 18:32:38 -0500
+	rpj3fRWoCUNrtlOv for <xfs@oss.sgi.com>;
+	Sun, 18 Dec 2011 07:49:56 -0800 (PST)
+Date: Sun, 18 Dec 2011 10:49:55 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 12/12] xfs: remove duplication in transaction buffer
-	operations
-Message-ID: <20111217233238.GD2383@infradead.org>
-References: <1323238703-13198-1-git-send-email-david@fromorbit.com>
-	<1323238703-13198-13-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/1] xfs: log the inode in ->write_inode calls for kupdate
+Message-ID: <20111218154955.GB17626@infradead.org>
+References: <20111218154936.GA17626@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1323238703-13198-13-git-send-email-david@fromorbit.com>
+In-Reply-To: <20111218154936.GA17626@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,27 +27,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>
 
-> @@ -213,8 +147,6 @@ xfs_trans_get_buf_irec(
->  	struct xfs_buf		*bp;
->  	struct xfs_buf_log_item	*bip;
->  
-> -	ASSERT_ALWAYS(nmaps == 1);
-> -
+If the writeback code writes back an inode because it has expired we currently
+use the non-blockin ->write_inode path.  This means any inode that is pinned
+is skipped.  With delayed logging and a workload that has very little log
+traffic otherwise it is very likely that an inode that gets constantly
+written to is always pinned, and thus we keep refusing to write it.  The VM
+writeback code at that point redirties it and doesn't try to write it again
+for another 30 seconds.  This means under certain scenarious time based
+metadata writeback never happens.
 
-Shouldn't this have been removed as soon as actual multiple buffer
-support was introduced?
+Fix this by calling into xfs_log_inode for kupdate in addition to data
+integrity syncs, and thus transfer the inode to the log ASAP.
 
-> @@ -528,8 +303,6 @@ xfs_trans_read_buf_irec(
->  	xfs_buf_log_item_t	*bip;
->  	int			error;
->  
-> -	ASSERT_ALWAYS(nmaps == 1);
-> -
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Same here.
+Index: xfs/fs/xfs/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_super.c	2011-12-14 05:33:07.193262189 -0800
++++ xfs/fs/xfs/xfs_super.c	2011-12-14 05:38:56.108038623 -0800
+@@ -905,7 +884,7 @@ xfs_fs_write_inode(
+ 	if (!ip->i_update_core)
+ 		return 0;
+ 
+-	if (wbc->sync_mode == WB_SYNC_ALL) {
++	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
+ 		/*
+ 		 * Make sure the inode has made it it into the log.  Instead
+ 		 * of forcing it all the way to stable storage using a
 
 _______________________________________________
 xfs mailing list
