@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBIMslBF257270 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 16:54:47 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	0AwGdzGBeuPofRe0 for <xfs@oss.sgi.com>;
-	Sun, 18 Dec 2011 14:54:46 -0800 (PST)
-Date: Sun, 18 Dec 2011 17:54:45 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 06/12] repair: use recursive buffer locking
-Message-ID: <20111218225445.GB20578@infradead.org>
-References: <20111202174619.179530033@bombadil.infradead.org>
-	<20111202174742.106589485@bombadil.infradead.org>
-	<20111213022208.GZ14273@dastard>
+	pBIN18iW258007 for <xfs@oss.sgi.com>; Sun, 18 Dec 2011 17:01:08 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	zrtssgLkYwVGoLqG for <xfs@oss.sgi.com>;
+	Sun, 18 Dec 2011 15:01:07 -0800 (PST)
+Date: Mon, 19 Dec 2011 10:01:03 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC, PATCH 0/12] xfs: compound buffers for directory blocks
+Message-ID: <20111218230103.GI23662@dastard>
+References: <1323238703-13198-1-git-send-email-david@fromorbit.com>
+	<20111214183314.GA18724@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111213022208.GZ14273@dastard>
+In-Reply-To: <20111214183314.GA18724@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +27,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Dec 13, 2011 at 01:22:08PM +1100, Dave Chinner wrote:
-> >  	if (use_xfs_buf_lock) {
-> > -		if (flags & LIBXFS_GETBUF_TRYLOCK) {
-> > -			int ret;
-> > +		int ret;
-> >  
-> > -			ret = pthread_mutex_trylock(&bp->b_lock);
-> > -			if (ret) {
-> > -				ASSERT(ret == EAGAIN);
-> > -				cache_node_put(libxfs_bcache, (struct cache_node *)bp);
-> > -				return NULL;
-> > +		ret = pthread_mutex_trylock(&bp->b_lock);
-> > +		if (ret) {
-> > +			ASSERT(ret == EAGAIN);
-> > +			if (flags & LIBXFS_GETBUF_TRYLOCK)
-> > +				goto out_put;
-> > +
-> > +			if (pthread_equal(bp->b_holder, pthread_self())) {
-> > +				fprintf(stderr,
-> > +	_("recursive buffer locking detected\n"));
+On Wed, Dec 14, 2011 at 01:33:14PM -0500, Christoph Hellwig wrote:
+> I've been really busy the last days and only managed to look over this
+> a bit while waiting for compiles and benchmarks.
 > 
-> "Warning: recursive buffer locking @ bno %lld detected"
+> The only really major comment I have is that I start to really dislike
+> the way struct xfs_bmbt_irec is used in the compound buffers.  The
+> XFS_EXT_DADDR flag basically gives the data types in there a totally
+> different meaning and is really confusing for anyone reading the code:
+> either we're using a "normal" one passes in from the directory code,
+> or an artificial one used internally, which uses different units.
 > 
-> might be more informative, especially to do with the severity of the
-> issue.
+> I suspect we'd really be much better off introducing a new, smaller type
+> here, especially as it's only seen inside the buffer code:
+> 
+> struct xfs_buf_map {
+> 	sector_t	bm_bno;
+> 	size_t		bm_len;
+> };
+> 
+> any use it consistently, that is also use it to replace
+> b_file_offset/b_buffer_length and b_bn.    This will also make my number
+> two suggestion a lot cleaner, that is make sure the new abstraction can
+> be implemented for reading/writing log buffers that wrap around, and
+> allow to kill off xfs_buf_associate_memory entirely.
 
-Ok, I'll make it print the block number.
+Yeah, I was a bit unsure of the best way to do this. I started with
+the bmbt_irec code because it already existed and was easy to pass
+in from the directory code. It wasn't until I realised the sector
+addressing issue later on that the XFS_EXT_DADDR came about. That
+was a simple way of making it work, rather than rewriting the
+patches again...
 
-> 
-> > +				bp->b_recur++;
-> > +			} else {
-> > +				pthread_mutex_lock(&bp->b_lock);
-> >  			}
-> > -		} else {
-> > -			pthread_mutex_lock(&bp->b_lock);
-> >  		}
-> > +
-> > +		bp->b_holder = pthread_self();
-> 
-> That should probably only be written in the branch where the lock is
-> taken not every time through here.
+Ok, I'll go back and rewrite them to use a xfs_buf_map/vec and try
+to address all your other points as well. Stay tuned.
 
-We actually should return the buffer just after incrementing the
-recursion count, else we might add it to the global list of buffers
-twice.
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
