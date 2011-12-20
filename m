@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBKKit4o180394 for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 14:44:55 -0600
-Date: Tue, 20 Dec 2011 15:44:49 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfsprogs patches pw 2883, 2986-2997
-Message-ID: <20111220204449.GA27919@infradead.org>
-References: <4EEFC18F.4020705@sgi.com>
- <20111220023343.GU23662@dastard>
+	pBKLJBHr183757 for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 15:19:11 -0600
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	57Ed5fci3FZ84pK5 for <xfs@oss.sgi.com>;
+	Tue, 20 Dec 2011 13:19:09 -0800 (PST)
+Date: Wed, 21 Dec 2011 08:19:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/1] xfs: log the inode in ->write_inode calls for kupdate
+Message-ID: <20111220211907.GX23662@dastard>
+References: <20111218154936.GA17626@infradead.org>
+	<20111218154955.GB17626@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111220023343.GU23662@dastard>
+In-Reply-To: <20111218154955.GB17626@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,22 +27,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: hch@infradead.org, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>, xfs@oss.sgi.com
 
-On Tue, Dec 20, 2011 at 01:33:43PM +1100, Dave Chinner wrote:
-> > Dave Chinner had feedback requests on a couple items.
+On Sun, Dec 18, 2011 at 10:49:55AM -0500, Christoph Hellwig wrote:
+> If the writeback code writes back an inode because it has expired we currently
+> use the non-blockin ->write_inode path.  This means any inode that is pinned
+> is skipped.  With delayed logging and a workload that has very little log
+> traffic otherwise it is very likely that an inode that gets constantly
+> written to is always pinned, and thus we keep refusing to write it.  The VM
+> writeback code at that point redirties it and doesn't try to write it again
+> for another 30 seconds.  This means under certain scenarious time based
+> metadata writeback never happens.
 > 
-> Yes, but Christoph has already replied so all I'm waiting on is a
-> repost of the series from him addressing those comments. He did say
-> it might take a while as he had other more critical stuff to do.
+> Fix this by calling into xfs_log_inode for kupdate in addition to data
+> integrity syncs, and thus transfer the inode to the log ASAP.
 
-I'll plan to commit the patches that got an uncodintional positive
-review this week, and then try to find time to implement more
-complicated feedback
+Makes sense.
 
-And nod to the mail format comments - please try to reply in-line or
-just irc for quick questions.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
