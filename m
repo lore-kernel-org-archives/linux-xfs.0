@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBL08HMe199503 for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 18:08:17 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	1ssktBuao3m6hw4f for <xfs@oss.sgi.com>;
-	Tue, 20 Dec 2011 16:08:15 -0800 (PST)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Rd9it-0000QP-RQ
-	for xfs@oss.sgi.com; Wed, 21 Dec 2011 11:07:55 +1100
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1Rd9ij-0005bY-NQ
-	for xfs@oss.sgi.com; Wed, 21 Dec 2011 11:07:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: clean up minor sparse warnings
-Date: Wed, 21 Dec 2011 11:07:41 +1100
-Message-Id: <1324426062-21505-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1324426062-21505-1-git-send-email-david@fromorbit.com>
-References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
+	pBL0JQgj200260 for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 18:19:27 -0600
+Received: from p3smtphosting01-01.prod.phx3.secureserver.net
+	(p3smtphosting01-01.prod.phx3.secureserver.net [208.109.80.23])
+	by cuda.sgi.com with SMTP id TRqgVP0vXIx8mMlc for
+	<xfs@oss.sgi.com>; Tue, 20 Dec 2011 16:19:22 -0800 (PST)
+Received: from p3swh202.shr.phx3.secureserver.net (HELO p3swh202)
+	([208.109.181.14]) (envelope-sender <noreply@onlineserver.cc>)
+	by p3smtphosting01-01.prod.phx3.secureserver.net (qmail-ldap-1.03) with
+	SMTP for <xfs@oss.sgi.com>; 21 Dec 2011 00:19:21 -0000
+Date: Tue, 20 Dec 2011 17:18:58 -0700
+Subject: A recommendation from Diana Black
+From: firestormseo@rocketmail.com
+Message-Id: <20111221001926.ABE121F5B729@cuda.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,101 +29,1025 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dir2_block.c |    1 +
- fs/xfs/xfs_ioctl.c      |   10 ++++------
- fs/xfs/xfs_ioctl32.c    |    2 +-
- fs/xfs/xfs_iops.c       |   13 ++++++++-----
- 4 files changed, 14 insertions(+), 12 deletions(-)
+Hello,
 
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 9245e02..d3b63ae 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -29,6 +29,7 @@
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
-+#include "xfs_dir2.h"
- #include "xfs_dir2_format.h"
- #include "xfs_dir2_priv.h"
- #include "xfs_error.h"
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d99a905..2f3f56a 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -230,24 +230,22 @@ xfs_open_by_handle(
+							
+Hi Friend,
+
+I am going to cut to the chase... go watch this video NOW:
+
+http://themanicmarketer.com/specialreports/firestormseo/?e=dollar2012
+
+Sean has just given away the farm here, no joke. He has just
+shown the world how to tap into Billion dollar industries and
+how to fly under the radar, getting free traffic in the most
+competative markets.
+
+Just watch the video and you will see what I mean...
+
+http://themanicmarketer.com/specialreports/firestormseo/?e=dollar2012
+
+He is doing this for 2 reasons. First, it's his big birthday
+giveaway that he does every year...
+
+Secondly, he is gearing up for what could be a major game
+changer in terms of SEO.... FIRESTORM SEO
+
+Anyway, the main thing is that this stratgey he is showing
+in this video could literally change the way you do marketing
+online... so go get your copy of this video before it vanishes!
+
+http://themanicmarketer.com/specialreports/firestormseo/?e=dollar2012
+
+All the best
+
+Diana Black
+
+P.S. You can tell Sean has a new video studio setup, some cool stuff
+going on there as you will see...
+
+http://themanicmarketer.com/specialreports/firestormseo/?e=dollar2012
+
  
- 	/* Put open permission in namei format. */
- 	permflag = hreq->oflags;
--	if ((permflag+1) & O_ACCMODE)
--		permflag++;
- 	if (permflag & O_TRUNC)
--		permflag |= 2;
-+		permflag |= O_RDWR;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                             
+
+Click below to view the webpage that your friend has recommended:
+
+
+Diana Black wants you to check this page.
+
+We look forward to your visit!
+
+
+Thanks & Best Regards,
  
- 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
--	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
-+	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
- 		error = -XFS_ERROR(EPERM);
- 		goto out_dput;
- 	}
- 
--	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-+	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
- 		error = -XFS_ERROR(EACCES);
- 		goto out_dput;
- 	}
- 
- 	/* Can't write directories. */
--	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
-+	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
- 		error = -XFS_ERROR(EISDIR);
- 		goto out_dput;
- 	}
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 54e623b..ce332af 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -293,7 +293,7 @@ xfs_compat_ioc_bulkstat(
- 		int res;
- 
- 		error = xfs_bulkstat_one_compat(mp, inlast, bulkreq.ubuffer,
--				sizeof(compat_xfs_bstat_t), 0, &res);
-+				sizeof(compat_xfs_bstat_t), NULL, &res);
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_32) {
- 		error = xfs_bulkstat(mp, &inlast, &count,
- 			xfs_bulkstat_one_compat, sizeof(compat_xfs_bstat_t),
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 23ce927..a5a9772 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -103,12 +103,15 @@ xfs_mark_inode_dirty(
- }
- 
- 
--int xfs_initxattrs(struct inode *inode, const struct xattr *xattr_array,
--		   void *fs_info)
-+static int
-+xfs_initxattrs(
-+	struct inode		*inode,
-+	const struct xattr	*xattr_array,
-+	void			*fs_info)
- {
--	const struct xattr *xattr;
--	struct xfs_inode *ip = XFS_I(inode);
--	int error = 0;
-+	const struct xattr	*xattr;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	int			error = 0;
- 
- 	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
- 		error = xfs_attr_set(ip, xattr->name, xattr->value,
--- 
-1.7.5.4
+Engineering & Industrial Review Magazine
+web: http://www.eironline.com
 
 _______________________________________________
 xfs mailing list
