@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBLFAHWa025728 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 09:10:18 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id zq5T9a0QE9ePwbE6
-	for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 07:10:16 -0800 (PST)
-Message-ID: <4EF1F6DD.8020603@hardwarefreak.com>
-Date: Wed, 21 Dec 2011 09:10:21 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	pBLFQ7bh027079 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 09:26:07 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	zhGJLcTgBC1iy1GE for <xfs@oss.sgi.com>;
+	Wed, 21 Dec 2011 07:26:04 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RdO3Q-0000Lp-6f
+	for xfs@oss.sgi.com; Wed, 21 Dec 2011 15:26:04 +0000
+Date: Wed, 21 Dec 2011 10:26:04 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [CFP] Linux Storage, Filesystem & Memory Management Summit 2012
+	(April 1-2)
+Message-ID: <20111221152604.GA30506@infradead.org>
 MIME-Version: 1.0
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
-	<20111211233929.GI14273@dastard>
-	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
-	<20111212010053.GM14273@dastard>
-	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-	<4EF1A224.2070508@univ-nantes.fr>
-In-Reply-To: <4EF1A224.2070508@univ-nantes.fr>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,93 +25,103 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 12/21/2011 3:08 AM, Yann Dupont wrote:
-> Le 12/12/2011 03:00, Xupeng Yun a =E9crit :
->>
->>
->> On Mon, Dec 12, 2011 at 09:00, Dave Chinner <david@fromorbit.com
->> <mailto:david@fromorbit.com>> wrote:
->>
->>     Oh, of course, now I remember what the problem is - it's a locking
->>     issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
->>
->>
->> Got it, thanks.
->>
->> -- =
+The annual Linux Storage, Filesystem and Memory Management Summit for
+2012 will be held on the 2 days preceding the Linux Foundation
+Collaboration Summit at Hotel Nikko in San Francisco, CA:
 
->> Xupeng Yun
->> http://about.me/xupeng
->>
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
-> =
+	https://events.linuxfoundation.org/events/lsfmm-summit
+	https://events.linuxfoundation.org/events/collaboration-summit/
 
-> I'm seeing more or less the same here.
-> =
+We'd therefore like to issue a call for agenda proposals that are
+suitable for cross-track discussion as well as more technical subjects
+for discussion in the breakout sessions.
 
-> Generally speaking XFS code in recent kernels seems to decrease CPU
-> usage and be faster, which is a very good thing (good works, guy). But...
-> =
+1) Suggestions for agenda topics should be sent before February 5th
+2012 to:
 
-> On two particular server, with recent kernels, I experience a much
-> higher load than expected, but it's very hard to tell what's wrong. The
-> system seems more in I/O wait. Older kernels (2.6.32.xx and 2.6.26.xx)
-> gives better results.
-> =
+lsf-pc@lists.linux-foundation.org
 
-> Following this thread, I thought I have the same problems, but it's
-> probably not the case, as I have tested 2.6.38.xx, 3.0.13, 3.1.5 with
-> same results.
-> =
+and optionally cc the Linux list which would be most interested in it:
 
-> Thoses servers are mail (dovecot) servers, with lots of simultaneous
-> imap clients (5000+) an lots of simultaneous message delivery.
-> =
+SCSI: linux-scsi@vger.kernel.org
+FS: linux-fsdevel@vger.kernel.org
+MM: linux-mm@kvack.org
 
-> These are linux-vservers, on top of LVM volumes. The storage is SAN with
-> 15k RPM SAS drives (and battery backup).
-> =
+Please remember to tag your subject with [LSF/MM TOPIC] to make it
+easier to track. Agenda topics and attendees will be selected by the
+programme committee, but the final agenda will be formed by consensus
+of the attendees on the day.
 
-> I know barriers were disabled in older kernels, so with recents kernels,
-> XFS volumes were mounted with nobarrier.
-> =
+We'll try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
 
-> As those servers are critical for us, I can't really test, hardly give
-> you more precise numbers, and I don't know how to accurately reproduce
-> this platform to test what's wrong. I know this is NOT a precise bug
-> report and it won't help much.
-> =
+2) Requests to attend should be sent to:
 
-> All I can say IS :
-> =
+lsf-pc@lists.linux-foundation.org
 
-> - read operations seems no slower with recent kernels, backups take
-> approximatively the same time ;
-> - I'd say (but I have no proof) that delivery of new mails takes more
-> time and is more synchronous than before, like nobarrier have no effect.
-> =
+please summarize what expertise you will bring to the meeting, and what
+you'd like to discuss.  please also tag your email with [ATTEND] so
+there's less chance of it getting lost in the large mail pile.
 
-> Does this ring a bell to some of you ?
+Presentations are allowed to guide discussion, but are strongly
+discouraged.  There will be no recording or audio bridge, however
+written minutes will be published as in previous years:
 
-1.  What mailbox format are you using?  Is this a constant or variable?
-2.  Is the Dovecot rev and config the same everywhere, before/after?
-3.  Are Dovecot instances using NFS to access the XFS volumes?
-4.  Is this a  Dovecot 2.x cluster with director and NFS storage?
+2011:
 
--- =
+http://lwn.net/Articles/436871/
+http://lwn.net/Articles/437066/
 
-Stan
+2010:
+http://lwn.net/Articles/399148/
+http://lwn.net/Articles/399313/
+http://lwn.net/Articles/400589/
+
+2009:
+http://lwn.net/Articles/327601/
+http://lwn.net/Articles/327740/
+http://lwn.net/Articles/328347/
+
+Prior years:
+http://www.usenix.org/events/lsf08/tech/lsf08sums.pdf
+http://www.usenix.org/publications/login/2007-06/openpdfs/lsf07sums.pdf
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the Program Committee:
+
+Storage
+
+Jens Axboe
+James Bottomley
+Vivek Goyal
+Dan Williams
+
+Filesystems
+
+Trond Myklebust
+Chris Mason
+Christoph Hellwig
+Theodore Ts'o
+Mingming Cao
+Jan Kara
+Joel Becker
+
+MM
+
+Andrea Arcangeli
+Hugh Dickins
+Mel Gorman
 
 _______________________________________________
 xfs mailing list
