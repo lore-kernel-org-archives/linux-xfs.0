@@ -1,20 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBL9dBjY250959
-	for <linux-xfs@oss.sgi.com>; Wed, 21 Dec 2011 03:39:11 -0600
-Received: from mailserver1.dk (mailserver1.dk [195.140.133.7]) by cuda.sgi.com
-	with ESMTP id vEGsS0edVRdvpp1x for <linux-xfs@oss.sgi.com>;
-	Wed, 21 Dec 2011 01:39:10 -0800 (PST)
-Received: from tserver ([203.193.196.149])
-	by mailserver1.dk (mailserver1.dk - Hostingcenter Aarhus) with ASMTP id
-	EVI65607 for <linux-xfs@oss.sgi.com>; Wed, 21 Dec 2011 10:39:07 +0100
-From: "Safiya Gaddafi" <saffarkas@gmail.com>
-Subject: Your response is important.
+	pBL9BFeL248429 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 03:11:15 -0600
+Received: from smtp-tls.univ-nantes.fr (smtp-tls1.univ-nantes.fr
+	[193.52.101.145]) by cuda.sgi.com with ESMTP id
+	XOcFSnZ4Ot8nUy5P for <xfs@oss.sgi.com>;
+	Wed, 21 Dec 2011 01:11:12 -0800 (PST)
+Received: from localhost (debian [127.0.0.1])
+	by smtp-tls.univ-nantes.fr (Postfix) with ESMTP id 388EB94DB4
+	for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 10:11:11 +0100 (CET)
+Received: from smtp-tls.univ-nantes.fr ([127.0.0.1])
+	by localhost (smtp-tls1.d101.univ-nantes.fr [127.0.0.1]) (amavisd-new,
+	port 10024) with LMTP id Q9TVtUguLF59 for <xfs@oss.sgi.com>;
+	Wed, 21 Dec 2011 10:11:11 +0100 (CET)
+Received: from [172.20.13.9] (tomintoul.cri.univ-nantes.prive [172.20.13.9])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp-tls.univ-nantes.fr (Postfix) with ESMTPSA id 1EF0594DB3
+	for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 10:11:11 +0100 (CET)
+Message-ID: <4EF1A224.2070508@univ-nantes.fr>
+Date: Wed, 21 Dec 2011 10:08:52 +0100
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
 MIME-Version: 1.0
-Date: Wed, 21 Dec 2011 20:39:07 +1100
-Message-Id: <20111221093911.970FB58A662@cuda.sgi.com>
-Reply-To: safarkas@blumail.org
+Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
+References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+	<20111211233929.GI14273@dastard>
+	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+	<20111212010053.GM14273@dastard>
+	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
+In-Reply-To: <CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,113 +37,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============9031454091427746059=="
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-This is a multi-part message in MIME format
+Le 12/12/2011 03:00, Xupeng Yun a =E9crit :
+>
+>
+> On Mon, Dec 12, 2011 at 09:00, Dave Chinner <david@fromorbit.com
+> <mailto:david@fromorbit.com>> wrote:
+>
+>     Oh, of course, now I remember what the problem is - it's a locking
+>     issue that was fixed in 3.0.11, 3.1.5 and 3.2-rc1.
+>
+>
+> Got it, thanks.
+>
+> --
+> Xupeng Yun
+> http://about.me/xupeng
+>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
---===============9031454091427746059==
-Content-Type: multipart/alternative; boundary="CZl68pVZcoV7RahXjn=_MCO8o2sEWlGy7n0"
+I'm seeing more or less the same here.
 
-This is a multi-part message in MIME format
+Generally speaking XFS code in recent kernels seems to decrease CPU =
 
---CZl68pVZcoV7RahXjn=_MCO8o2sEWlGy7n0
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+usage and be faster, which is a very good thing (good works, guy). But...
 
- - This mail is in HTML. Some elements may be ommited in plain text. -
+On two particular server, with recent kernels, I experience a much =
 
-Assalamu alaikum!
+higher load than expected, but it's very hard to tell what's wrong. The =
 
-I am Safiya Farkash, Late Gaddafi's wife. Libyans are celebrating the =
-fall of my husband?s regime, his rights and rule of law. It?s heart br=
-eaking that he died fighting. The grisly public displayed his decompos=
-ing bodies in a Misrata meat locker. What an insult for a 42years lead=
-er and a major contributor of Africa's growth and wealth. My heart ble=
-eds so much on this matter.
+system seems more in I/O wait. Older kernels (2.6.32.xx and 2.6.26.xx) =
 
-My sons got killed in this same fight and others captured. Those caugh=
-t are right now they are facing the international criminal court. The =
-western military power, NATO, the BRITISH and AMERICANS can now have p=
-eace and steal the oil they have been eyeing since.
+gives better results.
 
-My family is now being tortured. We are bent on getting all we could l=
-ay our hands on to make sure that our future wherever we go to is bein=
-g protected. The international community wants everything confiscated =
-but we have these few funds in some security companies in four differe=
-nt locations that were deposited without the family?s name. This is wh=
-ere we want to partner with you. We are so scared of who to trust and =
-who to talk to on this matter.
+Following this thread, I thought I have the same problems, but it's =
 
-We can negotiate what your take home will be but we are proposing 20% =
-in each transaction performed. This is risk free and proceedings outli=
-nes perfectly. If you don't want to assist us, please keep this email =
-with you only. It took us a lot of time to even get in touch with you.
+probably not the case, as I have tested 2.6.38.xx, 3.0.13, 3.1.5 with =
 
-Get back to me for further clarification.
+same results.
 
-Safiya Gaddafi
+Thoses servers are mail (dovecot) servers, with lots of simultaneous =
 
---CZl68pVZcoV7RahXjn=_MCO8o2sEWlGy7n0
-Content-Type: text/html
-Content-Transfer-Encoding: quoted-printable
+imap clients (5000+) an lots of simultaneous message delivery.
 
-<HTML><HEAD></HEAD>
-<BODY>
-<DIV id=3Dmessage1840170081 class=3D"undoreset clearfix" role=3Dmain>
-<DIV id=3Dyiv11924437>
-<DIV>
-<DIV style=3D"BACKGROUND-COLOR: #fff; FONT-FAMILY: lucida console, san=
-s-serif; COLOR: #000; FONT-SIZE: 10pt">
-<DIV class=3Dyiv11924437MsoNoSpacing>Assalamu alaikum!</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>&nbsp;</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>I am Safiya Farkash, Late Gaddafi=
-'s wife. Libyans are celebrating the fall of my husband=92s regime, hi=
-s rights and rule of law. It=92s heart breaking that he died fighting.=
- The grisly public displayed his decomposing bodies in a Misrata meat =
-locker. What an insult for a 42years leader and a major contributor of=
- Africa's growth and wealth. My heart bleeds so much on this matter.<S=
-PAN>&nbsp; </SPAN>My sons got killed in this same fight and others cap=
-tured. Those caught are right now they are facing the international cr=
-iminal court. The western military power, NATO, the BRITISH and AMERIC=
-ANS can now have peace and steal the oil they have been eyeing since.<=
-/DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>&nbsp;</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>My family is now being tortured. =
-We are bent on getting all we could lay our hands on to make sure that=
- our future wherever we go to is being protected. The international co=
-mmunity wants everything confiscated but we have these few funds in so=
-me security companies in four different locations that were deposited =
-without the family=92s name. This is where we want to partner with you=
-. We are so scared of who to trust and who to talk to on this matter.=
-</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>&nbsp;</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>We can negotiate what your take h=
-ome will be but we are proposing 20% in each transaction performed. Th=
-is is risk free and proceedings outlines perfectly. If you don't want =
-to assist us, please keep this email with you only. It took us a lot o=
-f time to even get in touch with you. </DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>&nbsp;</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>Get back to me for further clarif=
-ication.</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>&nbsp;</DIV>
-<DIV class=3Dyiv11924437MsoNoSpacing>Safiya Gaddafi</DIV></DIV></DIV><=
-/DIV></DIV></BODY></HTML>
+These are linux-vservers, on top of LVM volumes. The storage is SAN with =
 
---CZl68pVZcoV7RahXjn=_MCO8o2sEWlGy7n0--
+15k RPM SAS drives (and battery backup).
 
+I know barriers were disabled in older kernels, so with recents kernels, =
 
---===============9031454091427746059==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+XFS volumes were mounted with nobarrier.
+
+As those servers are critical for us, I can't really test, hardly give =
+
+you more precise numbers, and I don't know how to accurately reproduce =
+
+this platform to test what's wrong. I know this is NOT a precise bug =
+
+report and it won't help much.
+
+All I can say IS :
+
+- read operations seems no slower with recent kernels, backups take =
+
+approximatively the same time ;
+- I'd say (but I have no proof) that delivery of new mails takes more =
+
+time and is more synchronous than before, like nobarrier have no effect.
+
+Does this ring a bell to some of you ?
+
+Thanks,
+-- =
+
+Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
+Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============9031454091427746059==--
