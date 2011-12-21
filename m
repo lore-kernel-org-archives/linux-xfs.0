@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBL08FFm199486 for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 18:08:16 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	nkUTBUKyDy38resR for <xfs@oss.sgi.com>;
-	Tue, 20 Dec 2011 16:08:10 -0800 (PST)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1Rd9ij-0000QR-U6
-	for xfs@oss.sgi.com; Wed, 21 Dec 2011 11:07:45 +1100
-Received: from dave by disappointment with local (Exim 4.76)
-	(envelope-from <dave@disappointment.disaster>) id 1Rd9ij-0005bb-PX
-	for xfs@oss.sgi.com; Wed, 21 Dec 2011 11:07:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: fix endian conversion issue in discard code
-Date: Wed, 21 Dec 2011 11:07:42 +1100
-Message-Id: <1324426062-21505-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1324426062-21505-1-git-send-email-david@fromorbit.com>
-References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
+	pBL3eGRe211137 for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 21:40:16 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id Cfr72RJV2FKGTvrK
+	for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 19:40:14 -0800 (PST)
+Received: by lagr15 with SMTP id r15so3473683lag.26
+	for <xfs@oss.sgi.com>; Tue, 20 Dec 2011 19:40:13 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20111220220433.GZ23662@dastard>
+References: <CADDb1s1cSM0vS3gnO369hwHwe5dJ0Afaf_6wNVDf0eT-jTvKCg@mail.gmail.com>
+	<20111220220433.GZ23662@dastard>
+Date: Wed, 21 Dec 2011 09:10:13 +0530
+Message-ID: <CADDb1s3E7Lq_e9pS2r7sNR_qsHr5zR54F1Wtmf15XyJvDVVG1Q@mail.gmail.com>
+Subject: Re: XFS: attempt to access beyond end of device
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,49 +23,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Dec 21, 2011 at 3:34 AM, Dave Chinner <david@fromorbit.com> wrote:
+> On Tue, Dec 20, 2011 at 07:18:15PM +0530, Amit Sahrawat wrote:
+>> Hi,
+>>
+>> While trying to open a file with a large number of extents in append
+>> mode =96 it resulted in the below error logs continually.
+>> I was trying to open the file in append mode, but it showed error, so
+>> I checked for the extents =96 it has around 2238 extents. Although, it
+>
+> The first question you have to get to the bottom of is if there are
+> only 2238 extents in the file, why is the xfs_bmap output showing
+> more than that?
+Actually the output got mismatched, 2238 was the number when I checked
+the issue, while xfs_bmap results were for the last traces observed.
+Sorry for the confusion.
+>
+>> is not repetitive, when I try on next mount and write =96 it is working
+>> fine at times.
+>> Also, the system does not seem to be corrupted. Since, running
+>> xfs_repair after umount does not show any errors.
+>
+> Which implies memory corruption. Have you turned on memory poisoning
+> and the memory leak detection to see if it detects any problems?
+>
+> What about running with CONFIG_XFS_DEBUG=3Dy? Does that trip any
+> problems sooner than the corruption is detected?
+I will try with CONFIG_XFS_DEBUG.
 
-When finding the longest extent in an AG, we read the value directly
-out of the AGF buffer without endian conversion. This will give an
-incorrect length, resulting in FITRIM operations potentially not
-trimming everything that it should.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_discard.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 8a24f0c..286a051 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -68,7 +68,7 @@ xfs_trim_extents(
- 	 * Look up the longest btree in the AGF and start with it.
- 	 */
- 	error = xfs_alloc_lookup_le(cur, 0,
--				    XFS_BUF_TO_AGF(agbp)->agf_longest, &i);
-+			    be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest), &i);
- 	if (error)
- 		goto out_del_cursor;
- 
-@@ -84,7 +84,7 @@ xfs_trim_extents(
- 		if (error)
- 			goto out_del_cursor;
- 		XFS_WANT_CORRUPTED_GOTO(i == 1, out_del_cursor);
--		ASSERT(flen <= XFS_BUF_TO_AGF(agbp)->agf_longest);
-+		ASSERT(flen <= be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest));
- 
- 		/*
- 		 * Too small?  Give up.
--- 
-1.7.5.4
+Thanks & Regards,
+Amit Sahrawat
+>
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
