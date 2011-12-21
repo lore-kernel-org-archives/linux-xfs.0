@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBLMQT3M072043 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 16:26:29 -0600
+	pBLNx9DJ078478 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 17:59:09 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ViXPQkGtw7bGG1Lh for <xfs@oss.sgi.com>;
-	Wed, 21 Dec 2011 14:26:27 -0800 (PST)
-Date: Thu, 22 Dec 2011 09:26:23 +1100
+	W5FGKGDP3DjM8Sjw for <xfs@oss.sgi.com>;
+	Wed, 21 Dec 2011 15:59:06 -0800 (PST)
+Date: Thu, 22 Dec 2011 10:59:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-Message-ID: <20111221222623.GF23662@dastard>
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
-	<20111211233929.GI14273@dastard>
-	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
-	<20111212010053.GM14273@dastard>
-	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-	<4EF1A224.2070508@univ-nantes.fr>
-	<4EF1F6DD.8020603@hardwarefreak.com>
-	<4EF21DD2.3060004@univ-nantes.fr>
+Subject: Re: [PATCH 1/2] xfs: clean up minor sparse warnings
+Message-ID: <20111221235904.GH23662@dastard>
+References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
+	<1324426062-21505-2-git-send-email-david@fromorbit.com>
+	<20111221161349.GB7001@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4EF21DD2.3060004@univ-nantes.fr>
+In-Reply-To: <20111221161349.GB7001@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,48 +24,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Dec 21, 2011 at 06:56:34PM +0100, Yann Dupont wrote:
-> Le 21/12/2011 16:10, Stan Hoeppner a =E9crit :
-> =
+On Wed, Dec 21, 2011 at 11:13:50AM -0500, Christoph Hellwig wrote:
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index d99a905..2f3f56a 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -230,24 +230,22 @@ xfs_open_by_handle(
+> >  
+> >  	/* Put open permission in namei format. */
+> >  	permflag = hreq->oflags;
+> > -	if ((permflag+1) & O_ACCMODE)
+> > -		permflag++;
+> >  	if (permflag & O_TRUNC)
+> > -		permflag |= 2;
+> > +		permflag |= O_RDWR;
+> >  
+> >  	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
+> > -	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
+> > +	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
+> >  		error = -XFS_ERROR(EPERM);
+> >  		goto out_dput;
+> >  	}
+> >  
+> > -	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+> > +	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+> >  		error = -XFS_ERROR(EACCES);
+> >  		goto out_dput;
+> >  	}
+> >  
+> >  	/* Can't write directories. */
+> > -	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
+> > +	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
+> >  		error = -XFS_ERROR(EISDIR);
+> >  		goto out_dput;
+> >  	}
+> 
+> I think this one is complicated enough that is deserves a separate
+> patch and a better description.
 
-> =
-
-> >1.  What mailbox format are you using?  Is this a constant or variable?
-> =
-
-> Maildir++
-
-Which is what?
-
-> >2.  Is the Dovecot rev and config the same everywhere, before/after?
-> Yes
-> >3.  Are Dovecot instances using NFS to access the XFS volumes?
-> NO. direct LVM volumes from SAN
-> >4.  Is this a  Dovecot 2.x cluster with director and NFS storage?
-> >
-> NO. This is dovecot plain & simple.
-> =
-
-> When I go back to older kernels, the load go down. With newer
-> kernel, all is working well too, but load (as reported by uptime) is
-> higher.
-
-Can you run a block trace on both kernels (for say five minutes)
-when the load differential is showing up and provide that to us so
-we can see how the IO patterns are differing?
+Ok, I've also just found a problem with it(*) so I'll separate it
+and resend when I've fixed it.
 
 Cheers,
 
 Dave.
--- =
 
+(*) did you know we actually have a test (079) that verifies this
+logic? I didn't until a little while ago....
+
+-- 
 Dave Chinner
 david@fromorbit.com
 
