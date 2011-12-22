@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBM3qvel105806 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 21:52:57 -0600
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id 7jJZ3YCW8SHvByjl for
-	<xfs@oss.sgi.com>; Wed, 21 Dec 2011 19:52:55 -0800 (PST)
-Message-ID: <4EF2AA17.40400@cn.fujitsu.com>
-Date: Thu, 22 Dec 2011 11:55:03 +0800
-From: Li Zefan <lizf@cn.fujitsu.com>
+	pBM9QFcL143695 for <xfs@oss.sgi.com>; Thu, 22 Dec 2011 03:26:16 -0600
+Received: from smtp-tls.univ-nantes.fr (smtp-tls1.univ-nantes.fr
+	[193.52.101.145]) by cuda.sgi.com with ESMTP id
+	pnRUvM8EalEwbygV for <xfs@oss.sgi.com>;
+	Thu, 22 Dec 2011 01:26:14 -0800 (PST)
+Message-ID: <4EF2F702.4050902@univ-nantes.fr>
+Date: Thu, 22 Dec 2011 10:23:14 +0100
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: add a new test to verify on disk ctime update for
-	chattr
+Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
+References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+	<20111211233929.GI14273@dastard>
+	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+	<20111212010053.GM14273@dastard>
+	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
+	<4EF1A224.2070508@univ-nantes.fr>
+	<4EF1F6DD.8020603@hardwarefreak.com>
+	<4EF21DD2.3060004@univ-nantes.fr> <20111221222623.GF23662@dastard>
+In-Reply-To: <20111221222623.GF23662@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,119 +28,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
 
-We had a bug in btrfs which can be triggered by this test.
+Le 21/12/2011 23:26, Dave Chinner a =E9crit :
+> On Wed, Dec 21, 2011 at 06:56:34PM +0100, Yann Dupont wrote:
+>> Le 21/12/2011 16:10, Stan Hoeppner a =E9crit :
+>>
+>>
+>>> 1.  What mailbox format are you using?  Is this a constant or variable?
+>>
+>> Maildir++
+>
+> Which is what?
 
-Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
----
- 277     |   71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 277.out |    1 +
- group   |    1 +
- 3 files changed, 73 insertions(+), 0 deletions(-)
- create mode 100755 277
- create mode 100644 277.out
+Each message is saved as an individual files. With loaded mailboxex, you =
 
-diff --git a/277 b/277
-new file mode 100755
-index 0000000..8021214
---- /dev/null
-+++ b/277
-@@ -0,0 +1,71 @@
-+#! /bin/bash
-+# FS QA Test No. 277
-+#
-+# Check if ctime update caused by chattr is written to disk
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2011 Fujitsu.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=lizf@cn.fujitsu.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+status=1	# failure is the default!
-+
-+_cleanup()
-+{
-+    rm -f $SCRATCH_MNT/tmp*
-+}
-+
-+trap "_cleanup ; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs generic
-+_supported_os Linux
-+_require_scratch
-+
-+_scratch_mkfs > /dev/null 2>&1
-+_scratch_mount
-+
-+touch $SCRATCH_MNT/tmp
-+_scratch_remount
-+ctime1=`stat -c %z $SCRATCH_MNT/tmp`
-+
-+sleep 1
-+chattr +A $SCRATCH_MNT/tmp
-+chattr -A $SCRATCH_MNT/tmp
-+ctime2=`stat -c %z $SCRATCH_MNT/tmp`
-+
-+_scratch_remount
-+ctime3=`stat -c %z $SCRATCH_MNT/tmp`
-+
-+if [ "$ctime1" == "$ctime2" ]; then
-+	echo "error: ctime not updated after chattr"
-+elif [ "$ctime1" == "$ctime3" ]; then
-+	echo "error: on disk ctime not updated"
-+else
-+	status=0
-+fi
-+
-+exit
-diff --git a/277.out b/277.out
-new file mode 100644
-index 0000000..9614b16
---- /dev/null
-+++ b/277.out
-@@ -0,0 +1 @@
-+QA output created by 277
-diff --git a/group b/group
-index dd9f00d..99592d3 100644
---- a/group
-+++ b/group
-@@ -390,3 +390,4 @@ deprecated
- 274 auto rw
- 275 auto rw
- 276 auto rw metadata
-+277 auto ioctl quick metadata
--- 
-1.7.3.1
+can end with thousands of files under one directory.
+
+>
+> Can you run a block trace on both kernels (for say five minutes)
+> when the load differential is showing up and provide that to us so
+> we can see how the IO patterns are differing?
+>
+
+Yes. Keep in mind that I can have very different load in 5 minutes distance.
+I have 2 options here :
+
+Case 1 : For server 1, running with kernel 2.6.26, blktrace it, reboot =
+
+in 3.1.5, blktrace it. OR
+
+Case 2 : Server 1 running 2.6.26 and Server 2 running 3.1.5
+
+in Case 1 you have the same set of users and the same config garantied.
+
+in case 2, you don't have the same set of users, but the load can be =
+
+quite symetric (think of mailing list)
+
+
+I will go for case 2 I think.
+
+Last question :
+
+The volumes are on top of lvm2 (sitting on top of multipath dm)
+
+
+I'll try to blktrace the volume itself, but I can end blktracing the =
+
+scsi primary path (don't know if it make a difference)
+
+Is there any option you want in blktrace ???
+
+Thanks,
+
+
+-- =
+
+Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
+Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
