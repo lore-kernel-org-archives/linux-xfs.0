@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBLNx9DJ078478 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 17:59:09 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	W5FGKGDP3DjM8Sjw for <xfs@oss.sgi.com>;
-	Wed, 21 Dec 2011 15:59:06 -0800 (PST)
-Date: Thu, 22 Dec 2011 10:59:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: clean up minor sparse warnings
-Message-ID: <20111221235904.GH23662@dastard>
-References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
-	<1324426062-21505-2-git-send-email-david@fromorbit.com>
-	<20111221161349.GB7001@infradead.org>
+	pBM3qvel105806 for <xfs@oss.sgi.com>; Wed, 21 Dec 2011 21:52:57 -0600
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id 7jJZ3YCW8SHvByjl for
+	<xfs@oss.sgi.com>; Wed, 21 Dec 2011 19:52:55 -0800 (PST)
+Message-ID: <4EF2AA17.40400@cn.fujitsu.com>
+Date: Thu, 22 Dec 2011 11:55:03 +0800
+From: Li Zefan <lizf@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111221161349.GB7001@infradead.org>
+Subject: [PATCH] xfstests: add a new test to verify on disk ctime update for
+	chattr
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,59 +24,114 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 
-On Wed, Dec 21, 2011 at 11:13:50AM -0500, Christoph Hellwig wrote:
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index d99a905..2f3f56a 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -230,24 +230,22 @@ xfs_open_by_handle(
-> >  
-> >  	/* Put open permission in namei format. */
-> >  	permflag = hreq->oflags;
-> > -	if ((permflag+1) & O_ACCMODE)
-> > -		permflag++;
-> >  	if (permflag & O_TRUNC)
-> > -		permflag |= 2;
-> > +		permflag |= O_RDWR;
-> >  
-> >  	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
-> > -	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
-> > +	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
-> >  		error = -XFS_ERROR(EPERM);
-> >  		goto out_dput;
-> >  	}
-> >  
-> > -	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-> > +	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-> >  		error = -XFS_ERROR(EACCES);
-> >  		goto out_dput;
-> >  	}
-> >  
-> >  	/* Can't write directories. */
-> > -	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
-> > +	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
-> >  		error = -XFS_ERROR(EISDIR);
-> >  		goto out_dput;
-> >  	}
-> 
-> I think this one is complicated enough that is deserves a separate
-> patch and a better description.
+We had a bug in btrfs which can be triggered by this test.
 
-Ok, I've also just found a problem with it(*) so I'll separate it
-and resend when I've fixed it.
+Signed-off-by: Li Zefan <lizf@cn.fujitsu.com>
+---
+ 277     |   71 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 277.out |    1 +
+ group   |    1 +
+ 3 files changed, 73 insertions(+), 0 deletions(-)
+ create mode 100755 277
+ create mode 100644 277.out
 
-Cheers,
-
-Dave.
-
-(*) did you know we actually have a test (079) that verifies this
-logic? I didn't until a little while ago....
-
+diff --git a/277 b/277
+new file mode 100755
+index 0000000..8021214
+--- /dev/null
++++ b/277
+@@ -0,0 +1,71 @@
++#! /bin/bash
++# FS QA Test No. 277
++#
++# Check if ctime update caused by chattr is written to disk
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Fujitsu.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=lizf@cn.fujitsu.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++status=1	# failure is the default!
++
++_cleanup()
++{
++    rm -f $SCRATCH_MNT/tmp*
++}
++
++trap "_cleanup ; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs generic
++_supported_os Linux
++_require_scratch
++
++_scratch_mkfs > /dev/null 2>&1
++_scratch_mount
++
++touch $SCRATCH_MNT/tmp
++_scratch_remount
++ctime1=`stat -c %z $SCRATCH_MNT/tmp`
++
++sleep 1
++chattr +A $SCRATCH_MNT/tmp
++chattr -A $SCRATCH_MNT/tmp
++ctime2=`stat -c %z $SCRATCH_MNT/tmp`
++
++_scratch_remount
++ctime3=`stat -c %z $SCRATCH_MNT/tmp`
++
++if [ "$ctime1" == "$ctime2" ]; then
++	echo "error: ctime not updated after chattr"
++elif [ "$ctime1" == "$ctime3" ]; then
++	echo "error: on disk ctime not updated"
++else
++	status=0
++fi
++
++exit
+diff --git a/277.out b/277.out
+new file mode 100644
+index 0000000..9614b16
+--- /dev/null
++++ b/277.out
+@@ -0,0 +1 @@
++QA output created by 277
+diff --git a/group b/group
+index dd9f00d..99592d3 100644
+--- a/group
++++ b/group
+@@ -390,3 +390,4 @@ deprecated
+ 274 auto rw
+ 275 auto rw
+ 276 auto rw metadata
++277 auto ioctl quick metadata
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.3.1
 
 _______________________________________________
 xfs mailing list
