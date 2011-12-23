@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBNFtRmp229699 for <xfs@oss.sgi.com>; Fri, 23 Dec 2011 09:55:27 -0600
-Message-ID: <4EF4A46E.6070407@sgi.com>
-Date: Fri, 23 Dec 2011 09:55:26 -0600
+	pBNFtCv8229679 for <xfs@oss.sgi.com>; Fri, 23 Dec 2011 09:55:12 -0600
+Message-ID: <4EF4A45A.9090601@sgi.com>
+Date: Fri, 23 Dec 2011 09:55:06 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2 v2] xfs: log all dirty inodes in xfs_fs_sync_fs
-References: <20111218154936.GA17626@infradead.org>	<20111218155015.GC17626@infradead.org>
-	<20111220200841.GA2788@infradead.org>
-In-Reply-To: <20111220200841.GA2788@infradead.org>
+Subject: Re: [PATCH 1/1] xfs: log the inode in ->write_inode calls for kupdate
+References: <20111218154936.GA17626@infradead.org>
+	<20111218154955.GB17626@infradead.org>
+In-Reply-To: <20111218154955.GB17626@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
