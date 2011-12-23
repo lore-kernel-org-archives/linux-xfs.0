@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBMIFLFV177564 for <xfs@oss.sgi.com>; Thu, 22 Dec 2011 12:15:21 -0600
-Date: Thu, 22 Dec 2011 12:15:47 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/2] xfs: clean up minor sparse warnings
-Message-ID: <20111222181547.GS29840@sgi.com>
-References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
-	<1324426062-21505-2-git-send-email-david@fromorbit.com>
-	<20111221161349.GB7001@infradead.org>
-	<20111221235904.GH23662@dastard>
+	pBN6nf16205485 for <xfs@oss.sgi.com>; Fri, 23 Dec 2011 00:49:42 -0600
+Received: from DB3EHSOBE006.bigfish.com (db3ehsobe006.messaging.microsoft.com
+	[213.199.154.144]) by cuda.sgi.com with ESMTP id
+	VpvUuhg7JDlpPr0Z for <xfs@oss.sgi.com>;
+	Thu, 22 Dec 2011 22:49:39 -0800 (PST)
+Received: from mail78-db3 (localhost [127.0.0.1])	by mail78-db3-R.bigfish.com
+	(Postfix) with ESMTP id C95FA6A006D	for <xfs@oss.sgi.com>;
+	Fri, 23 Dec 2011 06:50:05 +0000 (UTC)
+Received: from DB3EHSMHS015.bigfish.com (unknown [10.3.81.246])	by
+	mail78-db3.bigfish.com (Postfix) with ESMTP id B008C540058	for
+	<xfs@oss.sgi.com>; Fri, 23 Dec 2011 06:50:05 +0000 (UTC)
+From: <b19537@freescale.com>
+Subject: [PATCH] xfsprogs: use uid/gid instead of actual name to fix install
+	issue
+Date: Fri, 23 Dec 2011 14:52:53 +0800
+Message-ID: <1324623173-32707-1-git-send-email-b19537@freescale.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111221235904.GH23662@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Zhenhua Luo <b19537@freescale.com>
 
-Hey Dave,
+From: Zhenhua Luo <b19537@freescale.com>
 
-On Thu, Dec 22, 2011 at 10:59:04AM +1100, Dave Chinner wrote:
-> On Wed, Dec 21, 2011 at 11:13:50AM -0500, Christoph Hellwig wrote:
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index d99a905..2f3f56a 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -230,24 +230,22 @@ xfs_open_by_handle(
-> > >  
-> > >  	/* Put open permission in namei format. */
-> > >  	permflag = hreq->oflags;
-> > > -	if ((permflag+1) & O_ACCMODE)
-> > > -		permflag++;
-> > >  	if (permflag & O_TRUNC)
-> > > -		permflag |= 2;
-> > > +		permflag |= O_RDWR;
-> > >  
-> > >  	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
-> > > -	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
-> > > +	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
-> > >  		error = -XFS_ERROR(EPERM);
-> > >  		goto out_dput;
-> > >  	}
-> > >  
-> > > -	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-> > > +	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-> > >  		error = -XFS_ERROR(EACCES);
-> > >  		goto out_dput;
-> > >  	}
-> > >  
-> > >  	/* Can't write directories. */
-> > > -	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
-> > > +	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
-> > >  		error = -XFS_ERROR(EISDIR);
-> > >  		goto out_dput;
-> > >  	}
-> > 
-> > I think this one is complicated enough that is deserves a separate
-> > patch and a better description.
-> 
-> Ok, I've also just found a problem with it(*) so I'll separate it
-> and resend when I've fixed it.
+    > when running install-sh during the install process, following
+      error might appear:
+	> ../../install-sh -o bj -g bj -m 644 -T so_dot_version libhandle.lai /lib; ../../install-sh -o bj -g bj -T so_dot_current libhandle.lai /lib
+	> chown: invalid user: `bj:bj'
+	> chown: invalid user: `bj:bj'
+	> Installing libdisk-install
+	> make[1]: Nothing to be done for `install'.
+	> Installing copy-install
+	> ../install-sh -o bj -g bj -m 755 -d /usr/sbin
+	> chown: invalid user: `bj:bj'
+	> make[1]: *** [install] Error 1
+	> make: *** [copy-install] Error 2
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Zhenhua Luo <b19537@freescale.com>
+---
+ include/install-sh |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-D'oh, I just reviewed this and didn't find the problem.  Looking forward
-to your next rev to see what it is.
+diff --git a/include/install-sh b/include/install-sh
+index 18c051f..9d8ff06 100755
+--- a/include/install-sh
++++ b/include/install-sh
+@@ -105,10 +105,10 @@ do
+    c)
+ 	;;
+    g)
+-	GROUP=$OPTARG
++	GROUP=`id -g $OPTARG`
+ 	;;
+    o)
+-	OWNER=$OPTARG
++	OWNER=`id -u $OPTARG`
+ 	;;
+    m)
+ 	DIRMODE=`expr $OPTARG`
+-- 
+1.7.0.4
 
--Ben
 
 _______________________________________________
 xfs mailing list
