@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBNHvmxc243268 for <xfs@oss.sgi.com>; Fri, 23 Dec 2011 11:57:48 -0600
-Date: Fri, 23 Dec 2011 11:58:15 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/1] xfs: log the inode in ->write_inode calls for kupdate
-Message-ID: <20111223175815.GU29840@sgi.com>
-References: <20111218154936.GA17626@infradead.org>
-	<20111218154955.GB17626@infradead.org>
+	pBNL8j06002729 for <xfs@oss.sgi.com>; Fri, 23 Dec 2011 15:08:45 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	HCfISXnjMePgDK3N for <xfs@oss.sgi.com>;
+	Fri, 23 Dec 2011 13:08:43 -0800 (PST)
+Date: Sat, 24 Dec 2011 08:08:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfsprogs: use uid/gid instead of actual name to fix
+	install issue
+Message-ID: <20111223210826.GD12731@dastard>
+References: <1324623173-32707-1-git-send-email-b19537@freescale.com>
+	<20111223100135.GA12731@dastard>
+	<CA452391058F6D4E9715FB2C29D9312A010BC015@039-SN2MPN1-023.039d.mgd.msft.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111218154955.GB17626@infradead.org>
+In-Reply-To: <CA452391058F6D4E9715FB2C29D9312A010BC015@039-SN2MPN1-023.039d.mgd.msft.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,57 +29,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>, xfs@oss.sgi.com
+To: Luo Zhenhua-B19537 <B19537@freescale.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sun, Dec 18, 2011 at 10:49:55AM -0500, Christoph Hellwig wrote:
-> If the writeback code writes back an inode because it has expired we currently
-> use the non-blockin ->write_inode path.  This means any inode that is pinned
-> is skipped.  With delayed logging and a workload that has very little log
-> traffic otherwise it is very likely that an inode that gets constantly
-> written to is always pinned, and thus we keep refusing to write it.  The VM
-> writeback code at that point redirties it and doesn't try to write it again
-> for another 30 seconds.  This means under certain scenarious time based
-> metadata writeback never happens.
-> 
-> Fix this by calling into xfs_log_inode for kupdate in addition to data
-> integrity syncs, and thus transfer the inode to the log ASAP.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Index: xfs/fs/xfs/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_super.c	2011-12-14 05:33:07.193262189 -0800
-> +++ xfs/fs/xfs/xfs_super.c	2011-12-14 05:38:56.108038623 -0800
-> @@ -905,7 +884,7 @@ xfs_fs_write_inode(
+On Fri, Dec 23, 2011 at 02:20:24PM +0000, Luo Zhenhua-B19537 wrote:
+> If the specified user/group is invalid, I think this should be an
+> usage error instead of script error.
 
-I could not reproduce a situation where this was called with for_kupdate
-set and the inode was pinned for very long.  I'm curious if there was an
-easy workload to reproduce this.
+Hold on - how are you getting an invalid uid/gid? Those values are
+set by the configure script to the uid/gid of the builder process,
+and so should -never- be invalid.
 
->  	if (!ip->i_update_core)
->  		return 0;
->  
-> -	if (wbc->sync_mode == WB_SYNC_ALL) {
-> +	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
+Are you building on one machine, rsyncing to another machine with
+different user/groups and then running make install?  If so, you are
+using make install incorrectly. make install is designed to install
+the binaries on the host that they were built, not some other random
+machine. If you are going to install binaries on a different machine
+to where they were built, you are supposed to build a tarball, a
+.deb or .rpm package and install that. Those targets are macine
+independent and won't have install problems.
 
-It looks to me that this is the relevant codepath:
+> Current the problem I met is that, even if I specified a valid
+> user/group of my host, "chown user:group file" failed, after
+> switching to corresponding uid/gid, the script can be executed
+> successfully during the install process. 
 
-       bdi_writeback_thread .or. bdi_forker_thread
-         wb_do_writeback
-           wb_check_old_data_flush
-             wb_writeback
-               writeback_sb_inodes
-                 writeback_single_inode
-                   write_inode
-                     .write_inode
-                       xfs_fs_write_inode
+I had to manually change the include/builddefs file to have an
+invalid PKG_USER/PKG_GROUP variables to get chown to fail because
+all my build/test machines have consistent uid/gid entries, so even
+build/rsync/install works without fail....
 
-AFAICS the only place that for_kupdate is set is in
-wb_check_old_data_flush.
+And if you look at what your change actually does, the script still
+executes and installs -some- stuff, it just doesn't run the chown
+because _chown() is now not passed the correct number of parameters.
+IOWs, the script now fails with a partial install with no indication
+of what was installed or not.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Reviewed-by: Ben Myers <bpm@sgi.com>
+If you are going to check whether uid/gid exist, you need to exit
+immediately if they don't exist, not allow the script to continue.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
