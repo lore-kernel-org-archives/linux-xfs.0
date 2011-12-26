@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBNLka76006856 for <xfs@oss.sgi.com>; Fri, 23 Dec 2011 15:46:36 -0600
-Date: Fri, 23 Dec 2011 15:47:03 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/2 v2] xfs: log all dirty inodes in xfs_fs_sync_fs
-Message-ID: <20111223214703.GW29840@sgi.com>
-References: <20111218154936.GA17626@infradead.org>
-	<20111218155015.GC17626@infradead.org>
-	<20111220200841.GA2788@infradead.org>
+	pBQ3dESF217148 for <xfs@oss.sgi.com>; Sun, 25 Dec 2011 21:39:14 -0600
+Received: from ch1outboundpool.messaging.microsoft.com
+	(ch1ehsobe002.messaging.microsoft.com [216.32.181.182]) by
+	cuda.sgi.com with ESMTP id 2RGZGqP4feCiMORU for
+	<xfs@oss.sgi.com>; Sun, 25 Dec 2011 19:39:12 -0800 (PST)
+From: Luo Zhenhua-B19537 <B19537@freescale.com>
+Subject: RE: [PATCH] xfsprogs: use uid/gid instead of actual name to fix
+	install issue
+Date: Mon, 26 Dec 2011 03:39:07 +0000
+Message-ID: <CA452391058F6D4E9715FB2C29D9312A010BC557@039-SN2MPN1-023.039d.mgd.msft.net>
+References: <1324623173-32707-1-git-send-email-b19537@freescale.com>
+	<20111223100135.GA12731@dastard>
+	<CA452391058F6D4E9715FB2C29D9312A010BC015@039-SN2MPN1-023.039d.mgd.msft.net>
+	<20111223210826.GD12731@dastard>
+In-Reply-To: <20111223210826.GD12731@dastard>
+Content-Language: en-US
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111220200841.GA2788@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,61 +30,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hey Christoph,
-
-On Tue, Dec 20, 2011 at 03:08:41PM -0500, Christoph Hellwig wrote:
-> Since Linux 2.6.36 the writeback code has introduces various measures for
-> live lock prevention during sync().  Unfortunately some of these are
-> actively harmful for the XFS model, where the inode gets marked dirty for
-> metadata from the data I/O handler.
+> -----Original Message-----
+> From: Dave Chinner [mailto:david@fromorbit.com]
+> Sent: Saturday, December 24, 2011 5:08 AM
+> > If the specified user/group is invalid, I think this should be an
+> > usage error instead of script error.
 > 
-> The older_than_this checks that are now more strictly enforced since
+> Hold on - how are you getting an invalid uid/gid? Those values are set by the
+> configure script to the uid/gid of the builder process, and so should -never- be
+> invalid.
+[Luo Zhenhua-B19537] The username/group are set by configure script and valid value are used during my install process. 
+
+> Are you building on one machine, rsyncing to another machine with different
+> user/groups and then running make install?  If so, you are using make install
+> incorrectly. make install is designed to install the binaries on the host that
+> they were built, not some other random machine. If you are going to install
+> binaries on a different machine to where they were built, you are supposed to
+> build a tarball, a .deb or .rpm package and install that. Those targets are
+> macine independent and won't have install problems.
+[Luo Zhenhua-B19537] I built it only on a host, no other machine is involved. What surprised me is I can run the chmod command successfully, but the same command failed in the install script. After using uid/gid, it can run correctly both in manual way and in the script. The purpose of my patch is to resolve this issue. 
+
+> > Current the problem I met is that, even if I specified a valid
+> > user/group of my host, "chown user:group file" failed, after switching
+> > to corresponding uid/gid, the script can be executed successfully
+> > during the install process.
 > 
->     writeback: avoid livelocking WB_SYNC_ALL writeback
+> I had to manually change the include/builddefs file to have an invalid
+> PKG_USER/PKG_GROUP variables to get chown to fail because all my build/test
+> machines have consistent uid/gid entries, so even build/rsync/install works
+> without fail....
 > 
-> by only calling into __writeback_inodes_sb and thus only sampling the
+> And if you look at what your change actually does, the script still executes and
+> installs -some- stuff, it just doesn't run the chown because _chown() is now not
+> passed the correct number of parameters.
+> IOWs, the script now fails with a partial install with no indication of what was
+> installed or not.
+> 
+> If you are going to check whether uid/gid exist, you need to exit immediately if
+> they don't exist, not allow the script to continue.
+[Luo Zhenhua-B19537] Makes sense. 
 
-Do you mean __writeback_inodes_wb, or perhaps writeback_sb_inodes?
 
-So far I'm not seeing the connection with the commit you've referenced
-above, which seems to be related to nr_to_write.  It looks like you're
-referring to older fs/fs-writeback.c..
+Best Regards,
 
-This one seems like it might be relevant:
-
-commit 7624ee7
-mm: avoid resetting wb_start after each writeback round
-
-Anyway.. in the 3.2-rcX code it appears that older_than_this is only set
-at the start of wb_writeback (excluding for_kupdate being set)...
-
-> current cut off time once.  But on a slow enough devices the previous
-> asynchronous sync pass might not have fully completed yet, and thus XFS
-> might mark metadata dirty only after that sampling of the cut off time for
-> the blocking pass already happened. 
-
-Are you referring to sync_filesystem() calling
-__sync_filesystem(sb, 0)
-and then
-__sync_filesystem(sb, 1 /* wait */)?
-
-Ah... and with that I think I understand what you're after here:  After
-__sync_filesystem calls sync_inodes_sb and waits for completion... which
-will dirty more inodes in completion handlers... you have the
-opportunity to clean up those dirty inodes in .sync_fs.  If that's what
-you intend:  I'd say this looks good.
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
-Mark also reviewed this.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-
-THanks,
-	Ben
+Zhenhua
 
 _______________________________________________
 xfs mailing list
