@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBQ3dESF217148 for <xfs@oss.sgi.com>; Sun, 25 Dec 2011 21:39:14 -0600
-Received: from ch1outboundpool.messaging.microsoft.com
-	(ch1ehsobe002.messaging.microsoft.com [216.32.181.182]) by
-	cuda.sgi.com with ESMTP id 2RGZGqP4feCiMORU for
-	<xfs@oss.sgi.com>; Sun, 25 Dec 2011 19:39:12 -0800 (PST)
-From: Luo Zhenhua-B19537 <B19537@freescale.com>
-Subject: RE: [PATCH] xfsprogs: use uid/gid instead of actual name to fix
-	install issue
-Date: Mon, 26 Dec 2011 03:39:07 +0000
-Message-ID: <CA452391058F6D4E9715FB2C29D9312A010BC557@039-SN2MPN1-023.039d.mgd.msft.net>
-References: <1324623173-32707-1-git-send-email-b19537@freescale.com>
-	<20111223100135.GA12731@dastard>
-	<CA452391058F6D4E9715FB2C29D9312A010BC015@039-SN2MPN1-023.039d.mgd.msft.net>
-	<20111223210826.GD12731@dastard>
-In-Reply-To: <20111223210826.GD12731@dastard>
-Content-Language: en-US
+	pBQCD883239779 for <xfs@oss.sgi.com>; Mon, 26 Dec 2011 06:13:09 -0600
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	WlWnqO3rIhrXJsS7 for <xfs@oss.sgi.com>;
+	Mon, 26 Dec 2011 04:13:05 -0800 (PST)
+Date: Mon, 26 Dec 2011 23:13:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2 v2] xfs: log all dirty inodes in xfs_fs_sync_fs
+Message-ID: <20111226121302.GE12731@dastard>
+References: <20111218154936.GA17626@infradead.org>
+	<20111218155015.GC17626@infradead.org>
+	<20111220200841.GA2788@infradead.org>
+	<20111223214703.GW29840@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111223214703.GW29840@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,53 +29,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-> -----Original Message-----
-> From: Dave Chinner [mailto:david@fromorbit.com]
-> Sent: Saturday, December 24, 2011 5:08 AM
-> > If the specified user/group is invalid, I think this should be an
-> > usage error instead of script error.
+On Fri, Dec 23, 2011 at 03:47:03PM -0600, Ben Myers wrote:
 > 
-> Hold on - how are you getting an invalid uid/gid? Those values are set by the
-> configure script to the uid/gid of the builder process, and so should -never- be
-> invalid.
-[Luo Zhenhua-B19537] The username/group are set by configure script and valid value are used during my install process. 
-
-> Are you building on one machine, rsyncing to another machine with different
-> user/groups and then running make install?  If so, you are using make install
-> incorrectly. make install is designed to install the binaries on the host that
-> they were built, not some other random machine. If you are going to install
-> binaries on a different machine to where they were built, you are supposed to
-> build a tarball, a .deb or .rpm package and install that. Those targets are
-> macine independent and won't have install problems.
-[Luo Zhenhua-B19537] I built it only on a host, no other machine is involved. What surprised me is I can run the chmod command successfully, but the same command failed in the install script. After using uid/gid, it can run correctly both in manual way and in the script. The purpose of my patch is to resolve this issue. 
-
-> > Current the problem I met is that, even if I specified a valid
-> > user/group of my host, "chown user:group file" failed, after switching
-> > to corresponding uid/gid, the script can be executed successfully
-> > during the install process.
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 > 
-> I had to manually change the include/builddefs file to have an invalid
-> PKG_USER/PKG_GROUP variables to get chown to fail because all my build/test
-> machines have consistent uid/gid entries, so even build/rsync/install works
-> without fail....
+> Mark also reviewed this.
 > 
-> And if you look at what your change actually does, the script still executes and
-> installs -some- stuff, it just doesn't run the chown because _chown() is now not
-> passed the correct number of parameters.
-> IOWs, the script now fails with a partial install with no indication of what was
-> installed or not.
-> 
-> If you are going to check whether uid/gid exist, you need to exit immediately if
-> they don't exist, not allow the script to continue.
-[Luo Zhenhua-B19537] Makes sense. 
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
+Just a process note here: if Mark reviewed the code and is happy
+with it, then he needs to send his reviewed-by tag himself. If he's
+got concerns, then he needs to discuss them on the list with the
+patch author, not just in private with you. If a person's questions
+are not posted to the mailing list or posted by proxy and they
+didn't aprticipate in discussions on the list, then there is no
+evidence that the person ever reviewed the patch. Hence the tag has
+no value because it is not verifiable.
 
-Best Regards,
+More importantly, tags are a semi-formal statement that a set of
+actions has been taken by that person - see
+Documentation/SubmittingPatches for the actions different tags
+imply. Hence it is important the actions they imply are verifiable,
+and it also reinforces the fact that they only have value when they
+are issued by the email address (or a known alias) in the tag....
 
-Zhenhua
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
