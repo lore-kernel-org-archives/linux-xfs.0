@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBQCD883239779 for <xfs@oss.sgi.com>; Mon, 26 Dec 2011 06:13:09 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	WlWnqO3rIhrXJsS7 for <xfs@oss.sgi.com>;
-	Mon, 26 Dec 2011 04:13:05 -0800 (PST)
-Date: Mon, 26 Dec 2011 23:13:02 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2 v2] xfs: log all dirty inodes in xfs_fs_sync_fs
-Message-ID: <20111226121302.GE12731@dastard>
-References: <20111218154936.GA17626@infradead.org>
-	<20111218155015.GC17626@infradead.org>
-	<20111220200841.GA2788@infradead.org>
-	<20111223214703.GW29840@sgi.com>
+	pBQKJ26B259642 for <xfs@oss.sgi.com>; Mon, 26 Dec 2011 14:19:03 -0600
+Received: from out2.smtp.messagingengine.com (out2.smtp.messagingengine.com
+	[66.111.4.26]) by cuda.sgi.com with ESMTP id daElgIPw2m9GSwaP
+	for <xfs@oss.sgi.com>; Mon, 26 Dec 2011 12:19:00 -0800 (PST)
+Received: from compute4.internal (compute4.nyi.mail.srv.osa [10.202.2.44])
+	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 580752092E
+	for <xfs@oss.sgi.com>; Mon, 26 Dec 2011 15:18:59 -0500 (EST)
+Received: from davidb.org (dweb.davidb.org [173.255.246.16])
+	by mail.messagingengine.com (Postfix) with ESMTPSA id F18EA4827CB
+	for <xfs@oss.sgi.com>; Mon, 26 Dec 2011 15:18:58 -0500 (EST)
+Date: Mon, 26 Dec 2011 12:18:56 -0800
+From: David Brown <davidb@davidb.org>
+Subject: xfsrestore: incorrect restore if file becomes a dir
+Message-ID: <20111226201856.GA3909@davidb.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111223214703.GW29840@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,43 +25,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Dec 23, 2011 at 03:47:03PM -0600, Ben Myers wrote:
-> 
-> Reviewed-by: Ben Myers <bpm@sgi.com>
-> 
-> Mark also reviewed this.
-> 
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+http://oss.sgi.com/bugzilla/show_bug.cgi?id=915
 
-Just a process note here: if Mark reviewed the code and is happy
-with it, then he needs to send his reviewed-by tag himself. If he's
-got concerns, then he needs to discuss them on the list with the
-patch author, not just in private with you. If a person's questions
-are not posted to the mailing list or posted by proxy and they
-didn't aprticipate in discussions on the list, then there is no
-evidence that the person ever reviewed the patch. Hence the tag has
-no value because it is not verifiable.
+I've had this happen again.  It appears to be the case if between
+incremental dumps, a file is deleted and a directory is created that
+gets the same inode number.  The restore leaves a file in place of the
+directory.  If the new directory has any contents, xfsrestore prints a
+warning, and doesn't restore the subdirectory contents.
 
-More importantly, tags are a semi-formal statement that a set of
-actions has been taken by that person - see
-Documentation/SubmittingPatches for the actions different tags
-imply. Hence it is important the actions they imply are verifiable,
-and it also reinforces the fact that they only have value when they
-are issued by the email address (or a known alias) in the tag....
+Given the sparseness of inodes, this doesn't seem to occur all that
+frequently, but I do have a couple of backups that exhibit the
+behavior.  If no one has any ideas, I'll start digging through
+xfsrestore to see if I can figure out what is happening.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+David Brown
 
 _______________________________________________
 xfs mailing list
