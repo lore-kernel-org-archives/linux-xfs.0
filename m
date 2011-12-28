@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBSHGmqS201965
-	for <linux-xfs@oss.sgi.com>; Wed, 28 Dec 2011 11:16:49 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Uh5dSShiFAxeu6JA for <linux-xfs@oss.sgi.com>;
-	Wed, 28 Dec 2011 09:16:43 -0800 (PST)
-Date: Wed, 28 Dec 2011 12:16:43 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: bug in fs/xfs/xfs_aops.c:959! (kernel 3.1.5)
-Message-ID: <20111228171643.GA18895@infradead.org>
-References: <jcn0ip$hsk$1@dough.gmane.org>
+	pBSLaB1H225619 for <xfs@oss.sgi.com>; Wed, 28 Dec 2011 15:36:12 -0600
+Received: from moutng.kundenserver.de (moutng.kundenserver.de
+	[212.227.126.186]) by cuda.sgi.com with ESMTP id
+	MNNOE8AeE77fXV3r for <xfs@oss.sgi.com>;
+	Wed, 28 Dec 2011 13:36:08 -0800 (PST)
+From: "Hans-Peter Jansen" <hpj@urpla.net>
+Subject: Re: [PATCH 1/1] xfs: log the inode in ->write_inode calls for kupdate
+Date: Wed, 28 Dec 2011 22:35:56 +0100
+References: <20111218154936.GA17626@infradead.org>
+	<20111218154955.GB17626@infradead.org>
+In-Reply-To: <20111218154955.GB17626@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <jcn0ip$hsk$1@dough.gmane.org>
+Message-Id: <201112282235.57645.hpj@urpla.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +27,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeremy Sanders <jeremy@jeremysanders.net>
-Cc: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>
 
-On Mon, Dec 19, 2011 at 09:36:24AM +0000, Jeremy Sanders wrote:
-> Hello - this was just produced in kernel 3.1.5 (Fedora 16, x86-64, 
-> kernel-3.1.5-1.fc16.x86_64).
+On Sunday 18 December 2011, 16:49:55 Christoph Hellwig wrote:
+> If the writeback code writes back an inode because it has expired we
+> currently use the non-blockin ->write_inode path.  This means any
+> inode that is pinned is skipped.  With delayed logging and a workload
+> that has very little log traffic otherwise it is very likely that an
+> inode that gets constantly written to is always pinned, and thus we
+> keep refusing to write it.  The VM writeback code at that point
+> redirties it and doesn't try to write it again for another 30
+> seconds.  This means under certain scenarious time based metadata
+> writeback never happens.
 
-Line 959 in 3.1.5 is this:
+Wouldn't this qualify as STABLE material then?
 
-        bh = head = page_buffers(page);
-
-page_buffers expands to:
-
-#define page_buffers(page)                                      \
-	({                                                      \
-		BUG_ON(!PagePrivate(page));			\
-		((struct buffer_head *)page_private(page));     \
-	})
-
-so what we got here is a page without buffers.  Very odd.
-
-
-[<ffffffff8111dec7>]  __writepage+0x17/0x40
-[<ffffffff8111e32d>]  write_cache_pages+0x20d/0x460
-[<ffffffff8111e5ca>]  generic_writepages+0x4a/0x70
-[<ffffffffa02eb8fd>]  xfs_vm_writepages+0x4d/0x60 [xfs]
-[<ffffffff8111f8d1>]  do_writepages+0x21/0x40
-[<ffffffff81198af9>]  writeback_single_inode+0x149/0x3e0
-[<ffffffff81198f30>]  writeback_sb_inodes+0x1a0/0x240
-[<ffffffff8119906e>]  __writeback_inodes_wb+0x9e/0xd0
-[<ffffffff8119a25b>]  wb_writeback+0x25b/0x340
-[<ffffffff8119a7b3>]  wb_do_writeback+0x1c3/0x200
-[<ffffffff8119a873>]  bdi_writeback_thread+0x83/0x2a0
-[<ffffffff8108ddbc>]  kthread+0x8c/0xa0
-[<ffffffff815d9974>]  kernel_thread_helper+0x4/0x10
-
-And this looks like an entirely normal callchain for the flusher thread.
-
-Something must have set the page dirty without going through the normal
-XFS codepath.  Did you use any interesting virtualization things, or
-utrace / systemtap or anything odd?
+> Fix this by calling into xfs_log_inode for kupdate in addition to
+> data integrity syncs, and thus transfer the inode to the log ASAP.
+>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+>
+> Index: xfs/fs/xfs/xfs_super.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_super.c	2011-12-14 05:33:07.193262189 -0800
+> +++ xfs/fs/xfs/xfs_super.c	2011-12-14 05:38:56.108038623 -0800
+> @@ -905,7 +884,7 @@ xfs_fs_write_inode(
+>  	if (!ip->i_update_core)
+>  		return 0;
+>
+> -	if (wbc->sync_mode == WB_SYNC_ALL) {
+> +	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
+>  		/*
+>  		 * Make sure the inode has made it it into the log.  Instead
+>  		 * of forcing it all the way to stable storage using a
+>
 
 _______________________________________________
 xfs mailing list
