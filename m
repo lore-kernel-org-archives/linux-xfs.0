@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBTLj33W028462 for <xfs@oss.sgi.com>; Thu, 29 Dec 2011 15:45:03 -0600
+	pBTLsGQo028997 for <xfs@oss.sgi.com>; Thu, 29 Dec 2011 15:54:16 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	BReniQ9AZq2kjKco for <xfs@oss.sgi.com>;
-	Thu, 29 Dec 2011 13:45:00 -0800 (PST)
-Date: Fri, 30 Dec 2011 08:44:41 +1100
+	wCz8xX0N8stt1pRB for <xfs@oss.sgi.com>;
+	Thu, 29 Dec 2011 13:54:15 -0800 (PST)
+Date: Fri, 30 Dec 2011 08:54:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2 v2] xfs: log all dirty inodes in xfs_fs_sync_fs
-Message-ID: <20111229214441.GI12731@dastard>
-References: <20111218154936.GA17626@infradead.org>
-	<20111218155015.GC17626@infradead.org>
-	<20111220200841.GA2788@infradead.org>
-	<20111223214703.GW29840@sgi.com> <20111226121302.GE12731@dastard>
-	<20111229154207.GK21646@sgi.com>
+Subject: Re: Conversion Routine Help
+Message-ID: <20111229215412.GM23662@dastard>
+References: <CAJ61zBCgsy8=Ty9swem_TsWeVh-7iHrRfy1tMwvB4UePRj3c=w@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111229154207.GK21646@sgi.com>
+In-Reply-To: <CAJ61zBCgsy8=Ty9swem_TsWeVh-7iHrRfy1tMwvB4UePRj3c=w@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,85 +22,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Paul Anderson <pha@umich.edu>, Sean Thomas Caron <scaron@umich.edu>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Vijay Chauhan <kernel.vijay@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Dec 29, 2011 at 09:42:07AM -0600, Ben Myers wrote:
-> Hi Dave,
-> 
-> On Mon, Dec 26, 2011 at 11:13:02PM +1100, Dave Chinner wrote:
-> > On Fri, Dec 23, 2011 at 03:47:03PM -0600, Ben Myers wrote:
-> > > 
-> > > Reviewed-by: Ben Myers <bpm@sgi.com>
-> > > 
-> > > Mark also reviewed this.
-> > > 
-> > > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> > 
-> > Just a process note here: if Mark reviewed the code and is happy
-> > with it, then he needs to send his reviewed-by tag himself. If he's
-> > got concerns, then he needs to discuss them on the list with the
-> > patch author, not just in private with you. If a person's questions
-> > are not posted to the mailing list or posted by proxy and they
-> > didn't aprticipate in discussions on the list, then there is no
-> > evidence that the person ever reviewed the patch. Hence the tag has
-> > no value because it is not verifiable.
-> 
-> I tend to agree that it is important to discuss things openly on the
-> list.  Will make an effort to do more of this.
-> 
-> > More importantly, tags are a semi-formal statement that a set of
-> > actions has been taken by that person - see
-> > Documentation/SubmittingPatches for the actions different tags
-> > imply. Hence it is important the actions they imply are verifiable,
-> > and it also reinforces the fact that they only have value when they
-> > are issued by the email address (or a known alias) in the tag....
-> 
-> I don't see anything in SubmittingPatches that says the address on the
-> From line not matching a tag is a dealbreaker, and I think that we
-> should give credit where it is due.  Mark did some work to review and
-> understand this code in addition to his testing.
+On Thu, Dec 29, 2011 at 07:42:31PM +0530, Vijay Chauhan wrote:
+> Hi list,
+> =
 
-But credit is not what the Reviewed-by tag means - it's a statement
-of fact about actions performed by the reviewer. A partial review or
-partaking in part of a review does not mean a person can put a
-"reviewed-by" tag on a commit. An Acked-by my be appropriate in that
-case (though I see them a worthless by their very nature), but
-reviewed-by tags are not for "giving credit" to other people that
-may have helped you.
+> Can anyone please provide me links about the basic explanations of XFS
+> basic blocks and filesystem logical block mapping and conversion
+> routines?
+> =
 
-Further, keep in mind that I've only ever seen 2 emails from Mark,
-so I have no idea who he is or what his capabilities are, so I do
-not yet know how much to trust his reviews or testing. Until I've
-spend some time interacting with him directly, I won't be able to
-form those opinions, and so such tags start at the lower end of
-value. They have even less value when they don't come from him and
-he hasn't commented where I can see it.
+> I tried to understand from code but its not clear to me:
+> #define XFS_FSB_TO_BB(mp,fsbno) ((fsbno) << (mp)->m_blkbb_log)
 
-> I have him a call and
-> asked him if I could add a 'Reviewed-by' to his 'Tested-by' because I
-> was suprised he didn't... Next time I'll ask him to send it himself.
+Convert FileSystem Blocks to Basic Blocks
 
-So, perhaps he didn't consider what he did met all the criteria of a
-reviewed-by tag? See what I mean about tags being worthless when sent
-by proxy?
+FSBs are defined at mkfs time, BBs are always 512 bytes.
 
-> I'd like to point out that plenty of the conversation surrounding this
-> pair of patches seems not to have made it to the list either.   
+> #define XFS_BB_TO_FSB(mp,bb) =A0 =A0\
+> =A0 =A0 =A0 =A0(((bb) + (XFS_FSB_TO_BB(mp,1) - 1)) >> (mp)->m_blkbb_log)
 
-Happens all the time, especially on #xfs. The difference is, though,
-that such conversations are not "reviews" or result in one person
-sending reviewed-by tags for all the participants in the
-conversation....
+Convert BB to FSB, rounding up to the next FSB
+
+> #define XFS_BB_TO_FSBT(mp,bb) =A0 ((bb) >> (mp)->m_blkbb_log)
+
+Convert BB to FSB, rounding down to the FSB containing the BB
+
+> #define XFS_BB_FSB_OFFSET(mp,bb) ((bb) & ((mp)->m_bsize - 1))
+
+Offset of the give BB within a FSB. e.g. if FSB =3D 4k =3D 8BB, then
+"bb =3D 5" would return 5, "bb =3D 63" would return 7...
+
+> lets consider the last one:
+> #define XFS_BB_FSB_OFFSET(mp,bb) ((bb) & ((mp)->m_bsize - 1))
+> =
+
+> if basic block (512 byte size) number is 7 and m_bsize is 12
+
+m_bsize is the FSB in BB, which will always be a power of 2.
+
+> (considering FS block size 4096), then this will return 3 [e.g. ( 7 &
+
+in that case, m_bsize =3D 8.
+
+> 11) ]. then what does 3 means here? what offset value it is denoting?
+
+It's the offset of the BB within the first partial FSB in the range
+given. This was once used for sub-block zeroing needed by direct IO,
+but is now stale code as the generic DIO layer does this zeroing.
+Care to submit a patch to remove that macro?
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
