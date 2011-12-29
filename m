@@ -1,13 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBTHVCNU019991 for <xfs@oss.sgi.com>; Thu, 29 Dec 2011 11:31:12 -0600
-Date: Thu, 29 Dec 2011 11:31:39 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: [GIT PULL] XFS update for 3.2
-Message-ID: <20111229173139.GL21646@sgi.com>
+	pBTKvpvn026458 for <xfs@oss.sgi.com>; Thu, 29 Dec 2011 14:57:51 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	XxvUDpjnHe5FyDeq for <xfs@oss.sgi.com>;
+	Thu, 29 Dec 2011 12:57:48 -0800 (PST)
+Date: Fri, 30 Dec 2011 07:57:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Preallocation with direct IO?
+Message-ID: <20111229205745.GH12731@dastard>
+References: <4efc665b.d139e30a.2f32.fffff97a@mx.google.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <4efc665b.d139e30a.2f32.fffff97a@mx.google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,41 +26,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: "amit.sahrawat83@gmail.com" <amit.sahrawat83@gmail.com>
+Cc: "hch@infradead.org" <hch@infradead.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Linus,
+On Thu, Dec 29, 2011 at 01:10:49PM +0000, amit.sahrawat83@gmail.com wrote:
+> Hi, I am using a test setup which is doing write using multiple
+> threads using direct IO. The buffer size which is used to write is
+> 512KB.  After continously running this for long duration - i
+> observe that number of extents in each file is getting
+> huge(2K..4K..). I observed that each extent is of 512KB(aligned to
+> write buffer size). I wish to have low number of extents(i.e,
+> reduce fragmentation)... In case of buffered IO- preallocation
+> works good alongwith the mount option 'allocsize'. Is there
+> anything which can be done for Direct IO?  Please advice for
+> reducing fragmentation with direct IO.
 
-Please pull the following fixes for 3.2.  Quoting Christoph Hellwig:
-"These two small fixes fix issues with periodic metadata writeback and
-sync not being able [to] write file size updates to disk in some cases."
-These have not gone through -next because we have 3.3 work in the
-oss/master branch right now, but they merged and built cleanly on
-3.2-rc7.  They have been tested thoroughly by Mark Tinguely and myself.
-It is late in the cycle and I will submit them later for 3.2-stable if
-you prefer.
+Direct IO does not do any implicit preallocation. The filesystem
+simply gets out of the way of direct IO as it is assumed you know
+what you are doing.
 
-Have a happy New Year!
+i.e. you know how to use the fallocate() or ioctl(XFS_IOC_RESVSP64)
+calls to preallocate space or to set up extent size hints to use
+larger allocations than the IO being done during syscalls...
 
-Thanks,
-       Ben
+Cheers,
 
-The following changes since commit 371de6e4e0042adf4f9b54c414154f57414ddd37:
-  Keith Packard (1):
-        drm/i915: Disable RC6 on Sandybridge by default
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (2):
-      xfs: log the inode in ->write_inode calls for kupdate
-      xfs: log all dirty inodes in xfs_fs_sync_fs
-
- fs/xfs/xfs_super.c |   30 +++++-------------------------
- fs/xfs/xfs_sync.c  |   36 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sync.h  |    2 ++
- 3 files changed, 43 insertions(+), 25 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
