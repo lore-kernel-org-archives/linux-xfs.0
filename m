@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q02A9XiM152238 for <xfs@oss.sgi.com>; Mon, 2 Jan 2012 04:09:33 -0600
-Received: from smtp-tls.univ-nantes.fr (smtp-tls1.univ-nantes.fr
-	[193.52.101.145]) by cuda.sgi.com with ESMTP id
-	HL5Xr9Zfwj3w3pDH for <xfs@oss.sgi.com>;
-	Mon, 02 Jan 2012 02:09:31 -0800 (PST)
-Message-ID: <4F0181A2.5010505@univ-nantes.fr>
-Date: Mon, 02 Jan 2012 11:06:26 +0100
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+	q02F25aN194153
+	for <linux-xfs@oss.sgi.com>; Mon, 2 Jan 2012 09:02:07 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	I6CfhVgDn7H5HEQJ for <linux-xfs@oss.sgi.com>;
+	Mon, 02 Jan 2012 07:02:02 -0800 (PST)
+Date: Mon, 2 Jan 2012 10:02:01 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: xfs: validate inode numbers in file handles correctly--NFS Stale
+	File Handle Again
+Message-ID: <20120102150201.GB31110@infradead.org>
+References: <1276846374-23916-1-git-send-email-david@fromorbit.com>
+	<loom.20111123T134243-580@post.gmane.org>
+	<20111123143045.GA20892@infradead.org>
+	<20111128111947.GA26454@infradead.org>
+	<SNT135-W2217EB3D3B80A8433A1FA4A4B70@phx.gbl>
+	<SNT135-W13E443B8D7BE73D5955314A4AD0@phx.gbl>
 MIME-Version: 1.0
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
-	<20111211233929.GI14273@dastard>
-	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
-	<20111212010053.GM14273@dastard>
-	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-	<4EF1A224.2070508@univ-nantes.fr>
-	<4EF1F6DD.8020603@hardwarefreak.com>
-	<4EF21DD2.3060004@univ-nantes.fr> <20111221222623.GF23662@dastard>
-	<4EF2F702.4050902@univ-nantes.fr> <4EF30E5D.7060608@univ-nantes.fr>
-In-Reply-To: <4EF30E5D.7060608@univ-nantes.fr>
+Content-Disposition: inline
+In-Reply-To: <SNT135-W13E443B8D7BE73D5955314A4AD0@phx.gbl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,45 +30,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+To: yangguoquan <ygq51@hotmail.com>
+Cc: hch@infradead.org, linux-xfs@oss.sgi.com, pengxihan@gmail.com
 
-Le 22/12/2011 12:02, Yann Dupont a =E9crit :
-> Le 22/12/2011 10:23, Yann Dupont a =E9crit :
->>
->>> Can you run a block trace on both kernels (for say five minutes)
->>> when the load differential is showing up and provide that to us so
->>> we can see how the IO patterns are differing?
->
->
-> here we go.
->
+On Thu, Dec 29, 2011 at 05:19:55PM +0800, yangguoquan wrote:
+> 
+> NFS Stale File Handle Again, But this happens when mount operation not during accessing file or directory.
+>  
+> My /etc/exports file:
+>  
+> /mnt/storage_pool/testnfs00     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs01     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs02     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs03     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs04     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs05     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs06     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs07     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs08     *(rw,sync,no_root_squash)
+> /mnt/storage_pool/testnfs09     *(rw,sync,no_root_squash)
 
-Hello, happy new year everybody ,
+Are these mount points?  If not take a look at
 
-Did someone had time to examine the 2 blktrace ? (and, by chance, can =
-
-see the root cause of the increased load ?)
-
-One of my server is still running 3.1.6. In the coming days I'll see a =
-
-very important load increase (today is still calm). Is there anything I =
-
-can do to go further  ?
-
-Thanks,
-
-
-
-
--- =
-
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
+	http://xfs.org/index.php/XFS_FAQ#Q:_Why_doesn.27t_NFS-exporting_subdirectories_of_inode64-mounted_filesystem_work.3F
 
 _______________________________________________
 xfs mailing list
