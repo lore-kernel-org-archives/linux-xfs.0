@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	pBEMgjSE234406 for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 16:42:45 -0600
-Received: from mx2.suse.de (localhost [127.0.0.1])
-	by cuda.sgi.com (Spam Firewall) with ESMTP id 090FB2C32B7
-	for <xfs@oss.sgi.com>; Wed, 14 Dec 2011 14:42:43 -0800 (PST)
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id E1evCNpSDJCrJg2Q for <xfs@oss.sgi.com>;
-	Wed, 14 Dec 2011 14:42:43 -0800 (PST)
-Message-ID: <4EE9265F.7030801@suse.com>
-Date: Wed, 14 Dec 2011 17:42:39 -0500
-From: Jeff Mahoney <jeffm@suse.com>
+	q02A9XiM152238 for <xfs@oss.sgi.com>; Mon, 2 Jan 2012 04:09:33 -0600
+Received: from smtp-tls.univ-nantes.fr (smtp-tls1.univ-nantes.fr
+	[193.52.101.145]) by cuda.sgi.com with ESMTP id
+	HL5Xr9Zfwj3w3pDH for <xfs@oss.sgi.com>;
+	Mon, 02 Jan 2012 02:09:31 -0800 (PST)
+Message-ID: <4F0181A2.5010505@univ-nantes.fr>
+Date: Mon, 02 Jan 2012 11:06:26 +0100
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
 MIME-Version: 1.0
-Subject: Re: xfs-trace-ilock-more
-References: <20111214024040.GA17780@infradead.org>
-	<20111214182750.GH11114@wotan.suse.de>
-	<4EE8F7F0.7070207@suse.com> <20111214203243.GN3179@dastard>
-In-Reply-To: <20111214203243.GN3179@dastard>
+Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
+References: <CACaf2aYZ=k=x8sPFJs4f-4vQxs+qNyoO1EUi8X=iBjWjRhy99Q@mail.gmail.com>
+	<20111211233929.GI14273@dastard>
+	<CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
+	<20111212010053.GM14273@dastard>
+	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
+	<4EF1A224.2070508@univ-nantes.fr>
+	<4EF1F6DD.8020603@hardwarefreak.com>
+	<4EF21DD2.3060004@univ-nantes.fr> <20111221222623.GF23662@dastard>
+	<4EF2F702.4050902@univ-nantes.fr> <4EF30E5D.7060608@univ-nantes.fr>
+In-Reply-To: <4EF30E5D.7060608@univ-nantes.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,81 +29,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Fasheh <mfasheh@suse.de>, Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+Le 22/12/2011 12:02, Yann Dupont a =E9crit :
+> Le 22/12/2011 10:23, Yann Dupont a =E9crit :
+>>
+>>> Can you run a block trace on both kernels (for say five minutes)
+>>> when the load differential is showing up and provide that to us so
+>>> we can see how the IO patterns are differing?
+>
+>
+> here we go.
+>
 
-On 12/14/2011 03:32 PM, Dave Chinner wrote:
-> On Wed, Dec 14, 2011 at 02:24:32PM -0500, Jeff Mahoney wrote:
->> -----BEGIN PGP SIGNED MESSAGE----- Hash: SHA1
->> 
->> On 12/14/2011 01:27 PM, Mark Fasheh wrote:
->>> Hey Christoph,
->>> 
->>> On Tue, Dec 13, 2011 at 09:40:40PM -0500, Christoph Hellwig
->>> wrote:
->>>> Can you explain the story behid this patch in SLES11SP1?
->>> 
->>> We were looking at some performance issues and needed a bit
->>> more information on the amount of time spent in ilock. I can
->>> give you more specifics if you want, I just have to dig up the
->>> e-mails (it's been a while).
->> 
->> That's pretty much the explanation. With heavy reader load,
->> buffered writes were stalling for 80 ms and sometimes longer. I
->> suspected it was contention on the ilock and the tracing with
->> that patch demonstrated a delay there. Since we were chasing a
->> similar issue at another site, it seemed worthwhile to just keep
->> it around. We're still tracking down the cause. I'm not sure if
->> more recent kernels have the same issue as there's been quite a
->> lot of churn.
-> 
-> I'm not surprised - there's nothing really guaranteeing bound
-> shared vs exclusive access to the ilock. It's all down to the
-> read/write bias of the rwsem - readers will hold off the writer for
-> some time. Still, it would be nice to see a trace from such a
-> holdoff to confirm this is actually the case...
+Hello, happy new year everybody ,
 
-Sure, let me dig it up. We do actually have real results from this
-workload with the trace running.
+Did someone had time to examine the 2 blktrace ? (and, by chance, can =
 
-> FWIW, if you have an app that requires concurrent, low latency
-> reads and writes to the same file, that's what the XFS Direct IO
-> was designed for - in most cases the iolock is taken in shared mode
-> for both read and write, and so such hold-offs don't generally
-> happen...
+see the root cause of the increased load ?)
 
-You don't need to convince me. I agree with you. :)
+One of my server is still running 3.1.6. In the coming days I'll see a =
 
-- -Jeff
+very important load increase (today is still calm). Is there anything I =
 
-- -- 
-Jeff Mahoney
-SUSE Labs
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+can do to go further  ?
 
-iQIcBAEBAgAGBQJO6SZeAAoJEB57S2MheeWyzfgP/3gbX++mlm3pY8iRlWkqEcy4
-77OBJyMn0jxUqQkLw3nmrCcIMVJxKREJhtBoNl93mBdN8HZvx1X7nTUst769Ksf/
-NsjQd3NMyv/pymjuJBB81APnyc2diM/fz/t5f1gh4xHljKG9rUJS8ogRQ65QBbMG
-kDbwtgaXYMZpUpf/GAF7Q0jxefNZbs82BfSsGqDH6e+fdymqD9/GWewyIFCl3tVR
-yOk80v4izDwlgtwtm/anq18nqePZl8M3ktwtucpAR/cxZ79nOryGxuqaD5r7GOam
-bo/29A5x0UKptsxHKnEvf6JIlznVWR6RzheyV/A6d3gPFkMa8550NBFMmWObjh7h
-DA/fcsZFhzD1LZI9BXU58ib6nT3kmtQMHmdsuwPsX5XPLzdymMNFD/yUDP7vhMWC
-OR1kkLPBSGeCFK7m0IeScO+jCnVsadhzkeS3rMjbUYCSw3+4OGf21sAJnfsMasPb
-Z2ZbbSZdUGItb8bK1lx7WEwST8KC5UYe2n3LIoH8CJ8qH+FrzX0pQKx+Gm2SVoMK
-nZZKDbtwN9+ZWRs2p3tEuT34sb/XGFV1XnEBPAv272XAjZKvjwBD8JZF92fQxl8a
-e2yjy7+EsqmZXNguTcs+KhLJ69QkKkg6J0rozPgUNHmA+KGhSDCgRI2kMCPDL3MO
-uKZ2umow6YYTofS6mBp8
-=zmC1
------END PGP SIGNATURE-----
+Thanks,
+
+
+
+
+-- =
+
+Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
+Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
