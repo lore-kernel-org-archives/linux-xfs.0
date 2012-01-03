@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q038NDDp009896 for <xfs@oss.sgi.com>; Tue, 3 Jan 2012 02:23:13 -0600
-Received: from smtp-tls.univ-nantes.fr (smtp-tls2.univ-nantes.fr
-	[193.52.101.146]) by cuda.sgi.com with ESMTP id
-	4SeeuX4Fv9DDXMw7 for <xfs@oss.sgi.com>;
-	Tue, 03 Jan 2012 00:23:10 -0800 (PST)
-Message-ID: <4F02BA35.9040909@univ-nantes.fr>
-Date: Tue, 03 Jan 2012 09:20:05 +0100
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+	q03FmvCG034841 for <xfs@oss.sgi.com>; Tue, 3 Jan 2012 09:48:57 -0600
+Message-ID: <4F032365.30500@sgi.com>
+Date: Tue, 03 Jan 2012 09:48:53 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-References: <CACaf2aYTsxOBXEJEbQu7gwAminBc3R2usDHvypJW0AqOfnz0Pg@mail.gmail.com>
-	<20111212010053.GM14273@dastard>
-	<CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-	<4EF1A224.2070508@univ-nantes.fr>
-	<4EF1F6DD.8020603@hardwarefreak.com>
-	<4EF21DD2.3060004@univ-nantes.fr> <20111221222623.GF23662@dastard>
-	<4EF2F702.4050902@univ-nantes.fr> <4EF30E5D.7060608@univ-nantes.fr>
-	<4F0181A2.5010505@univ-nantes.fr> <20120102203543.GP23662@dastard>
-In-Reply-To: <20120102203543.GP23662@dastard>
+Subject: Re: [PATCH 2/2 v2] xfs: log all dirty inodes in xfs_fs_sync_fs
+References: <20111218154936.GA17626@infradead.org>	<20111218155015.GC17626@infradead.org>	<20111220200841.GA2788@infradead.org>	<20111223214703.GW29840@sgi.com>
+	<20111226121302.GE12731@dastard>	<20111229154207.GK21646@sgi.com>
+	<20111229214441.GI12731@dastard>
+In-Reply-To: <20111229214441.GI12731@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,77 +19,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Paul Anderson <pha@umich.edu>, Ben Myers <bpm@sgi.com>, Sean Thomas Caron <scaron@umich.edu>, xfs@oss.sgi.com
 
-Le 02/01/2012 21:35, Dave Chinner a =E9crit :
-> On Mon, Jan 02, 2012 at 11:06:26AM +0100, Yann Dupont wrote:
-
->> Hello, happy new year everybody ,
+On 12/29/11 15:44, Dave Chinner wrote:
+> On Thu, Dec 29, 2011 at 09:42:07AM -0600, Ben Myers wrote:
+>> Hi Dave,
 >>
->> Did someone had time to examine the 2 blktrace ? (and, by chance,
->> can see the root cause of the increased load ?)
+>> On Mon, Dec 26, 2011 at 11:13:02PM +1100, Dave Chinner wrote:
+>>> On Fri, Dec 23, 2011 at 03:47:03PM -0600, Ben Myers wrote:
+>>>>
+>>>> Reviewed-by: Ben Myers<bpm@sgi.com>
+>>>>
+>>>> Mark also reviewed this.
+>>>>
+>>>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+>>>
+>>> Just a process note here: if Mark reviewed the code and is happy
+>>> with it, then he needs to send his reviewed-by tag himself. If he's
+>>> got concerns, then he needs to discuss them on the list with the
+>>> patch author, not just in private with you. If a person's questions
+>>> are not posted to the mailing list or posted by proxy and they
+>>> didn't aprticipate in discussions on the list, then there is no
+>>> evidence that the person ever reviewed the patch. Hence the tag has
+>>> no value because it is not verifiable.
+>>
+>> I tend to agree that it is important to discuss things openly on the
+>> list.  Will make an effort to do more of this.
+>>
+>>> More importantly, tags are a semi-formal statement that a set of
+>>> actions has been taken by that person - see
+>>> Documentation/SubmittingPatches for the actions different tags
+>>> imply. Hence it is important the actions they imply are verifiable,
+>>> and it also reinforces the fact that they only have value when they
+>>> are issued by the email address (or a known alias) in the tag....
+>>
+>> I don't see anything in SubmittingPatches that says the address on the
+>>  From line not matching a tag is a dealbreaker, and I think that we
+>> should give credit where it is due.  Mark did some work to review and
+>> understand this code in addition to his testing.
 >
-> I've had a bit of a look, but most peopl ehave been on holidays.
-
-yep, of course, I was too :)
-
+> But credit is not what the Reviewed-by tag means - it's a statement
+> of fact about actions performed by the reviewer. A partial review or
+> partaking in part of a review does not mean a person can put a
+> "reviewed-by" tag on a commit. An Acked-by my be appropriate in that
+> case (though I see them a worthless by their very nature), but
+> reviewed-by tags are not for "giving credit" to other people that
+> may have helped you.
 >
-> As it is, I can't see any material difference between the traces.
-> both reads and writes are taking the same amount of time to service,
-> so I don't think there's any problem here.
-
-ok,
+> Further, keep in mind that I've only ever seen 2 emails from Mark,
+> so I have no idea who he is or what his capabilities are, so I do
+> not yet know how much to trust his reviews or testing. Until I've
+> spend some time interacting with him directly, I won't be able to
+> form those opinions, and so such tags start at the lower end of
+> value. They have even less value when they don't come from him and
+> he hasn't commented where I can see it.
 >
-> I do recall that some years ago that we changed one of the ways we
-
-Do you recall exactly what some years ago means ? Is this post 2.6.26 era ?
-
-> slept in XFS which meant those blocked IOs contributed to load
-> average (as tehy are supposed to). That meant that more IO
-> contributed to the load average (it might have been read related),
-> so load averages were then higher for exactly the same workloads.
+>> I have him a call and
+>> asked him if I could add a 'Reviewed-by' to his 'Tested-by' because I
+>> was suprised he didn't... Next time I'll ask him to send it himself.
 >
-
-> Indeed:
+> So, perhaps he didn't consider what he did met all the criteria of a
+> reviewed-by tag? See what I mean about tags being worthless when sent
+> by proxy?
 >
-> load average: 0.64, 0.15, 0.09
+>> I'd like to point out that plenty of the conversation surrounding this
+>> pair of patches seems not to have made it to the list either.
 >
-> (start 40 concurrent directory traversals w/ unlinks)
+> Happens all the time, especially on #xfs. The difference is, though,
+> that such conversations are not "reviews" or result in one person
+> sending reviewed-by tags for all the participants in the
+> conversation....
 >
-> (wait a bit)
+> Cheers,
 >
-> load average: 39.96, 23.75, 10.06
->
-> Yup, that is spot on - 40 processes doing blocking IO.....
->
-> So absent any measurable performance problem, I don't think the
-> change in load average is something to be concerned about.
+> Dave.
 
-You're probably right : I have a graph on cacti showing load average =
+Thank-you for the feedback. There are several good points made in this 
+thread.
 
-usage and detailed load usage (System/User/Nice,Wait, etc...). The load =
-
-average is much higher now with 3.1.6 , but the detailed load seems not =
-
-different than before.
-
-And for the moment, in real world usage (that is, storing mail in =
-
-folders and serving imap) the server seems no slower than before.
-
-I'll keep an eye on it during high load.
-
-Thanks for your answer,
-Cheers,
--- =
-
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
+--Mark Tinguely.
 
 _______________________________________________
 xfs mailing list
