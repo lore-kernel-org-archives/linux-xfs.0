@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q04Gdqj8157798 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 10:39:53 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	1tbESS7YYIM9YDqV for <xfs@oss.sgi.com>;
-	Wed, 04 Jan 2012 08:39:48 -0800 (PST)
-Date: Wed, 4 Jan 2012 11:39:46 -0500
-From: Christoph Hellwig <hch@infradead.org>
+	q04H4uts159707 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 11:04:56 -0600
+Received: from mail.in8.de (brockman.in8.de [85.214.220.56]) by cuda.sgi.com
+	with ESMTP id DbeYkEuDU8B8DCKv for <xfs@oss.sgi.com>;
+	Wed, 04 Jan 2012 09:04:53 -0800 (PST)
+Message-ID: <4F0486B3.8010301@jan-o-sch.net>
+Date: Wed, 04 Jan 2012 18:04:51 +0100
+From: Jan Schmidt <mail@jan-o-sch.net>
+MIME-Version: 1.0
 Subject: Re: [PATCH v2] xfstests: new check 278 to ensure btrfs backref
 	integrity
-Message-ID: <20120104163946.GA8153@infradead.org>
 References: <1324552138-30584-1-git-send-email-list.btrfs@jan-o-sch.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1324552138-30584-1-git-send-email-list.btrfs@jan-o-sch.net>
+	<20120104163946.GA8153@infradead.org>
+	<4F0485FE.8000405@sandeen.net>
+In-Reply-To: <4F0485FE.8000405@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,34 +27,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Schmidt <list.btrfs@jan-o-sch.net>
-Cc: sandeen@sandeen.net, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, Jan Schmidt <list.btrfs@jan-o-sch.net>, xfs@oss.sgi.com
 
-On Thu, Dec 22, 2011 at 12:08:58PM +0100, Jan Schmidt wrote:
-> This is a btrfs specific scratch test checking the backref walker. It
-> creates a file system with compressed and uncompressed data extents, picks
-> files randomly and uses filefrag to get their extents. It then asks the
-> btrfs utility (inspect-internal) to do the backref resolving from fs-logical
-> address (the one filefrag calls "physical") back to the inode number and
-> file-logical offset, verifying the result.
+On 04.01.2012 18:01, Eric Sandeen wrote:
+> 276 got merged on Dec 28 before my requests for fixup, I guess?  And it
+> explicitly sets FSTYP=btrfs which is why it fails.
+> 
+> the 278 patch v2 in this thread works ok for me.
+> 
+> so munging the 278 patch here into the existing 276 should be the
+> right approach.
 
-I was about to apply this, but for some reason it fails for me when
-running xfstest on xfs:
+Yeah we figured that out on irc some minutes ago :-)
 
-276	 [failed, exit status 1] - output mismatch (see 276.out.bad)
---- 276.out	2012-01-04 16:14:36.000000000 +0000
-+++ 276.out.bad	2012-01-04 16:32:26.000000000 +0000
-@@ -1,4 +1,5 @@
-QA output created by 276
--*** test backref walking
--*** done
-+common.rc: Error: $TEST_DEV (/dev/vdb1) is not a MOUNTED btrfs
-filesystem
-+Filesystem    Type   1K-blocks      Used Available Use% Mounted on
-+/dev/vdb1      xfs    39042944     32928  39010016   1% /mnt/test
- *** unmount
+I'm currently building v2 as an incremental patch to 276 (without rename
+to 278) and send it as
 
-which is a bit confusing
+   [PATCH] xfstests: fixup check 276
+
+soon.
+
+-Jan
 
 _______________________________________________
 xfs mailing list
