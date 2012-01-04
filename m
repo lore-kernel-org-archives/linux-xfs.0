@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q04Encsu147091 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 08:49:38 -0600
-Message-Id: <20120104144934.040072910@bombadil.infradead.org>
-Date: Wed, 04 Jan 2012 09:48:35 -0500
+	q04EncXt147093 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 08:49:38 -0600
+Message-Id: <20120104144934.435560100@bombadil.infradead.org>
+Date: Wed, 04 Jan 2012 09:48:36 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/2] xfs: log the inode in ->write_inode calls for kupdate
+Subject: [PATCH 2/2] xfs: log all dirty inodes in xfs_fs_sync_fs
 References: <20120104144834.869111452@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-fix-kupdate
+Content-Disposition: inline; filename=xfs-fix-sync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,19 +24,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: stable@vger.kernel.org, xfs@oss.sgi.com
 Cc: Ben Myers <bpm@sgi.com>
 
-Commit 0b8fd3033c308e4088760aa1d38ce77197b4e074 upstream.
+Commit be4f1ac828776bbc7868a68b465cd8eedb733cfd upstream.
 
-If the writeback code writes back an inode because it has expired we currently
-use the non-blockin ->write_inode path.  This means any inode that is pinned
-is skipped.  With delayed logging and a workload that has very little log
-traffic otherwise it is very likely that an inode that gets constantly
-written to is always pinned, and thus we keep refusing to write it.  The VM
-writeback code at that point redirties it and doesn't try to write it again
-for another 30 seconds.  This means under certain scenarious time based
-metadata writeback never happens.
+Since Linux 2.6.36 the writeback code has introduces various measures for
+live lock prevention during sync().  Unfortunately some of these are
+actively harmful for the XFS model, where the inode gets marked dirty for
+metadata from the data I/O handler.
 
-Fix this by calling into xfs_log_inode for kupdate in addition to data
-integrity syncs, and thus transfer the inode to the log ASAP.
+The older_than_this checks that are now more strictly enforced since
+
+    writeback: avoid livelocking WB_SYNC_ALL writeback
+
+by only calling into __writeback_inodes_sb and thus only sampling the
+current cut off time once.  But on a slow enough devices the previous
+asynchronous sync pass might not have fully completed yet, and thus XFS
+might mark metadata dirty only after that sampling of the cut off time for
+the blocking pass already happened.  I have not myself reproduced this
+myself on a real system, but by introducing artificial delay into the
+XFS I/O completion workqueues it can be reproduced easily.
+
+Fix this by iterating over all XFS inodes in ->sync_fs and log all that
+are dirty.  This might log inode that only got redirtied after the
+previous pass, but given how cheap delayed logging of inodes is it
+isn't a major concern for performance.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
@@ -44,66 +54,74 @@ Tested-by: Mark Tinguely <tinguely@sgi.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.c
 ===================================================================
---- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c	2012-01-04 10:27:56.789986299 +0100
-+++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c	2012-01-04 13:32:13.843253565 +0100
-@@ -871,27 +871,6 @@ xfs_fs_dirty_inode(
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.c	2012-01-04 10:27:56.000000000 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.c	2012-01-04 13:34:25.169919457 +0100
+@@ -336,6 +336,32 @@ xfs_sync_fsdata(
+ 	return xfs_bwrite(mp, bp);
  }
  
- STATIC int
--xfs_log_inode(
--	struct xfs_inode	*ip)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_trans	*tp;
--	int			error;
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
--	error = xfs_trans_reserve(tp, 0, XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
--	if (error) {
--		xfs_trans_cancel(tp, 0);
--		return error;
--	}
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	return xfs_trans_commit(tp, 0);
--}
--
--STATIC int
- xfs_fs_write_inode(
- 	struct inode		*inode,
- 	struct writeback_control *wbc)
-@@ -904,10 +883,8 @@ xfs_fs_write_inode(
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -XFS_ERROR(EIO);
--	if (!ip->i_update_core)
--		return 0;
- 
--	if (wbc->sync_mode == WB_SYNC_ALL) {
-+	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
- 		/*
- 		 * Make sure the inode has made it it into the log.  Instead
- 		 * of forcing it all the way to stable storage using a
-@@ -916,11 +893,14 @@ xfs_fs_write_inode(
- 		 * of synchronous log foces dramatically.
- 		 */
- 		xfs_ioend_wait(ip);
--		error = xfs_log_inode(ip);
-+		error = xfs_log_dirty_inode(ip, NULL, 0);
- 		if (error)
- 			goto out;
- 		return 0;
- 	} else {
-+		if (!ip->i_update_core)
-+			return 0;
++int
++xfs_log_dirty_inode(
++	struct xfs_inode	*ip,
++	struct xfs_perag	*pag,
++	int			flags)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
++	int			error;
 +
- 		/*
- 		 * We make this non-blocking if the inode is contended, return
- 		 * EAGAIN to indicate to the caller that they did not succeed.
++	if (!ip->i_update_core)
++		return 0;
++
++	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
++	error = xfs_trans_reserve(tp, 0, XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
++	if (error) {
++		xfs_trans_cancel(tp, 0);
++		return error;
++	}
++
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	return xfs_trans_commit(tp, 0);
++}
++
+ /*
+  * When remounting a filesystem read-only or freezing the filesystem, we have
+  * two phases to execute. This first phase is syncing the data before we
+@@ -365,6 +391,17 @@ xfs_quiesce_data(
+ 
+ 	/* push and block till complete */
+ 	xfs_sync_data(mp, SYNC_WAIT);
++
++	/*
++	 * Log all pending size and timestamp updates.  The vfs writeback
++	 * code is supposed to do this, but due to its overagressive
++	 * livelock detection it will skip inodes where appending writes
++	 * were written out in the first non-blocking sync phase if their
++	 * completion took long enough that it happened after taking the
++	 * timestamp for the cut-off in the blocking phase.
++	 */
++	xfs_inode_ag_iterator(mp, xfs_log_dirty_inode, 0);
++
+ 	xfs_qm_sync(mp, SYNC_WAIT);
+ 
+ 	/* write superblock and hoover up shutdown errors */
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_sync.h
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_sync.h	2012-01-04 10:27:56.000000000 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_sync.h	2012-01-04 13:31:33.866587151 +0100
+@@ -42,6 +42,8 @@ void xfs_quiesce_attr(struct xfs_mount *
+ 
+ void xfs_flush_inodes(struct xfs_inode *ip);
+ 
++int xfs_log_dirty_inode(struct xfs_inode *ip, struct xfs_perag *pag, int flags);
++
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
 
 _______________________________________________
 xfs mailing list
