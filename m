@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q042KZl5108285
-	for <linux-xfs@oss.sgi.com>; Tue, 3 Jan 2012 20:20:35 -0600
-Received: from snt0-omc1-s22.snt0.hotmail.com (snt0-omc1-s22.snt0.hotmail.com
-	[65.55.90.33]) by cuda.sgi.com with ESMTP id CZv8SWZ9g3Xcoyeo
-	for <linux-xfs@oss.sgi.com>; Tue, 03 Jan 2012 18:20:33 -0800 (PST)
-Message-ID: <SNT135-W48F0EBD0BBCFF1CAFBF2BEA4970@phx.gbl>
-From: yangguoquan <ygq51@hotmail.com>
-Subject: RE: xfs: validate inode numbers in file handles correctly--NFS
-	Stale File Handle Again
-Date: Wed, 4 Jan 2012 10:20:31 +0800
-In-Reply-To: <20120102150201.GB31110@infradead.org>
-References: <1276846374-23916-1-git-send-email-david@fromorbit.com>,
-	<loom.20111123T134243-580@post.gmane.org>,
-	<20111123143045.GA20892@infradead.org>,
-	<20111128111947.GA26454@infradead.org>,
-	<SNT135-W2217EB3D3B80A8433A1FA4A4B70@phx.gbl>,
-	<SNT135-W13E443B8D7BE73D5955314A4AD0@phx.gbl>,
-	<20120102150201.GB31110@infradead.org>
+	q047uAuW122125 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 01:56:10 -0600
+Received: from mail-tul01m020-f181.google.com (mail-tul01m020-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	iPg7cx04j68IOToA for <xfs@oss.sgi.com>;
+	Tue, 03 Jan 2012 23:56:09 -0800 (PST)
+Received: by obbup6 with SMTP id up6so15709130obb.26
+	for <xfs@oss.sgi.com>; Tue, 03 Jan 2012 23:56:09 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <20111229215412.GM23662@dastard>
+References: <CAJ61zBCgsy8=Ty9swem_TsWeVh-7iHrRfy1tMwvB4UePRj3c=w@mail.gmail.com>
+	<20111229215412.GM23662@dastard>
+Date: Wed, 4 Jan 2012 13:26:09 +0530
+Message-ID: <CAJ61zBCBT7-vr0SCyt4teXTA9JezpEtPRuuPkH9NSrZdx8Pb8Q@mail.gmail.com>
+Subject: Re: Conversion Routine Help
+From: Vijay Chauhan <kernel.vijay@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,114 +24,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1428686061589492608=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hch@infradead.org
-Cc: linux-xfs@oss.sgi.com, pengxihan@gmail.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
---===============1428686061589492608==
-Content-Type: multipart/alternative;
-	boundary="_476c5d42-f273-4573-bc02-865d7a977ed1_"
-
---_476c5d42-f273-4573-bc02-865d7a977ed1_
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: 8bit
+Hi,
 
 
-Yes, They are mount points.
- 
-/dev/mapper/storage_pool-testnfs00 on /mnt/storage_pool/testnfs00 type xfs (rw)
-/dev/mapper/storage_pool-testnfs01 on /mnt/storage_pool/testnfs01 type xfs (rw)
-/dev/mapper/storage_pool-testnfs02 on /mnt/storage_pool/testnfs02 type xfs (rw)
-/dev/mapper/storage_pool-testnfs03 on /mnt/storage_pool/testnfs03 type xfs (rw)
-/dev/mapper/storage_pool-testnfs04 on /mnt/storage_pool/testnfs04 type xfs (rw)
-/dev/mapper/storage_pool-testnfs05 on /mnt/storage_pool/testnfs05 type xfs (rw)
-/dev/mapper/storage_pool-testnfs06 on /mnt/storage_pool/testnfs06 type xfs (rw)
-/dev/mapper/storage_pool-testnfs07 on /mnt/storage_pool/testnfs07 type xfs (rw)
-/dev/mapper/storage_pool-testnfs08 on /mnt/storage_pool/testnfs08 type xfs (rw)
-/dev/mapper/storage_pool-testnfs09 on /mnt/storage_pool/testnfs09 type xfs (rw)
- 
+>>
+>> Can anyone please provide me links about the basic explanations of XFS
+>> basic blocks and filesystem logical block mapping and conversion
+>> routines?
+>>
+>> I tried to understand from code but its not clear to me:
+>> #define XFS_FSB_TO_BB(mp,fsbno) ((fsbno) << (mp)->m_blkbb_log)
+>
+> Convert FileSystem Blocks to Basic Blocks
+>
+> FSBs are defined at mkfs time, BBs are always 512 bytes.
+>
+>> #define XFS_BB_TO_FSB(mp,bb) =A0 =A0\
+>> =A0 =A0 =A0 =A0(((bb) + (XFS_FSB_TO_BB(mp,1) - 1)) >> (mp)->m_blkbb_log)
+>
+> Convert BB to FSB, rounding up to the next FSB
+>
+>> #define XFS_BB_TO_FSBT(mp,bb) =A0 ((bb) >> (mp)->m_blkbb_log)
+>
+> Convert BB to FSB, rounding down to the FSB containing the BB
+>
+>> #define XFS_BB_FSB_OFFSET(mp,bb) ((bb) & ((mp)->m_bsize - 1))
+>
+> Offset of the give BB within a FSB. e.g. if FSB =3D 4k =3D 8BB, then
+> "bb =3D 5" would return 5, "bb =3D 63" would return 7...
+>
+>> lets consider the last one:
+>> #define XFS_BB_FSB_OFFSET(mp,bb) ((bb) & ((mp)->m_bsize - 1))
+>>
+>> if basic block (512 byte size) number is 7 and m_bsize is 12
+>
+> m_bsize is the FSB in BB, which will always be a power of 2.
+>
+>> (considering FS block size 4096), then this will return 3 [e.g. ( 7 &
+>
+> in that case, m_bsize =3D 8.
+>
+>> 11) ]. then what does 3 means here? what offset value it is denoting?
+>
+> It's the offset of the BB within the first partial FSB in the range
+> given. This was once used for sub-block zeroing needed by direct IO,
+> but is now stale code as the generic DIO layer does this zeroing.
+> Care to submit a patch to remove that macro?
+>
 
-> Date: Mon, 2 Jan 2012 10:02:01 -0500
-> From: hch@infradead.org
-> To: ygq51@hotmail.com
-> Subject: Re: xfs: validate inode numbers in file handles correctly--NFS Stale File Handle Again
-> CC: hch@infradead.org; linux-xfs@oss.sgi.com; pengxihan@gmail.com
-> 
-> On Thu, Dec 29, 2011 at 05:19:55PM +0800, yangguoquan wrote:
-> > 
-> > NFS Stale File Handle Again, But this happens when mount operation not during accessing file or directory.
-> > 
-> > My /etc/exports file:
-> > 
-> > /mnt/storage_pool/testnfs00 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs01 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs02 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs03 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs04 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs05 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs06 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs07 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs08 *(rw,sync,no_root_squash)
-> > /mnt/storage_pool/testnfs09 *(rw,sync,no_root_squash)
-> 
-> Are these mount points? If not take a look at
-> 
-> http://xfs.org/index.php/XFS_FAQ#Q:_Why_doesn.27t_NFS-exporting_subdirectories_of_inode64-mounted_filesystem_work.3F
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
- 		 	   		  
---_476c5d42-f273-4573-bc02-865d7a977ed1_
-Content-Type: text/html; charset="gb2312"
-Content-Transfer-Encoding: 8bit
+Thanks Dave. I understand.
 
-<html>
-<head>
-<style><!--
-.hmmessage P
-{
-margin:0px;
-padding:0px
-}
-body.hmmessage
-{
-font-size: 10pt;
-font-family:Î¢ÈíÑÅºÚ
-}
---></style></head>
-<body class='hmmessage'><div dir='ltr'>
-Yes, They are mount points.<BR>
-&nbsp;<BR>
-/dev/mapper/storage_pool-testnfs00 on /mnt/storage_pool/testnfs00 type xfs (rw)<BR>/dev/mapper/storage_pool-testnfs01 on /mnt/storage_pool/testnfs01 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs02 on /mnt/storage_pool/testnfs02 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs03 on /mnt/storage_pool/testnfs03 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs04 on /mnt/storage_pool/testnfs04 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs05 on /mnt/storage_pool/testnfs05 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs06 on /mnt/storage_pool/testnfs06 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs07 on /mnt/storage_pool/testnfs07 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs08 on /mnt/storage_pool/testnfs08 type xfs (rw)<BR>
-/dev/mapper/storage_pool-testnfs09 on /mnt/storage_pool/testnfs09 type xfs (rw)<BR>
-&nbsp;<BR>
-<DIV>
-<DIV id=SkyDrivePlaceholder></DIV>&gt; Date: Mon, 2 Jan 2012 10:02:01 -0500<BR>&gt; From: hch@infradead.org<BR>&gt; To: ygq51@hotmail.com<BR>&gt; Subject: Re: xfs: validate inode numbers in file handles correctly--NFS Stale File Handle Again<BR>&gt; CC: hch@infradead.org; linux-xfs@oss.sgi.com; pengxihan@gmail.com<BR>&gt; <BR>&gt; On Thu, Dec 29, 2011 at 05:19:55PM +0800, yangguoquan wrote:<BR>&gt; &gt; <BR>&gt; &gt; NFS Stale File Handle Again, But this happens when mount operation not during accessing file or directory.<BR>&gt; &gt; <BR>&gt; &gt; My /etc/exports file:<BR>&gt; &gt; <BR>&gt; &gt; /mnt/storage_pool/testnfs00 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs01 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs02 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs03 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs04 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs05 *(rw,sync,no_root_squas
- h)<BR>&gt; &gt; /mnt/storage_pool/testnfs06 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs07 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs08 *(rw,sync,no_root_squash)<BR>&gt; &gt; /mnt/storage_pool/testnfs09 *(rw,sync,no_root_squash)<BR>&gt; <BR>&gt; Are these mount points? If not take a look at<BR>&gt; <BR>&gt; http://xfs.org/index.php/XFS_FAQ#Q:_Why_doesn.27t_NFS-exporting_subdirectories_of_inode64-mounted_filesystem_work.3F<BR>&gt; <BR>&gt; _______________________________________________<BR>&gt; xfs mailing list<BR>&gt; xfs@oss.sgi.com<BR>&gt; http://oss.sgi.com/mailman/listinfo/xfs<BR></DIV> 		 	   		  </div></body>
-</html>
---_476c5d42-f273-4573-bc02-865d7a977ed1_--
+I am newbie and learning. Sure, i'll create the patch but before let
+me try out further in the code.
 
-
---===============1428686061589492608==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1428686061589492608==--
