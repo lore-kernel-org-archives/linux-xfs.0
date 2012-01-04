@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q04GrnM0159262 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 10:53:49 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	tW1urTNteapk2vJE for <xfs@oss.sgi.com>;
-	Wed, 04 Jan 2012 08:53:48 -0800 (PST)
-Date: Wed, 4 Jan 2012 11:53:41 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests/071 FAIL with pwrite64: Invalid argument
-Message-ID: <20120104165341.GA21075@infradead.org>
-References: <4EDD8F16.4050402@cn.fujitsu.com> <20111206110533.GD28326@dastard>
-	<4EDF2133.7030702@cn.fujitsu.com> <20111207100748.GB14273@dastard>
-	<4EE02022.5000403@cn.fujitsu.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4EE02022.5000403@cn.fujitsu.com>
+	q04HIFlf160109 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 11:18:16 -0600
+Received: from mail.hq.newdream.net (mail.hq.newdream.net [66.33.206.127]) by
+	cuda.sgi.com with ESMTP id 7nRyhQ2tC3imKTal for
+	<xfs@oss.sgi.com>; Wed, 04 Jan 2012 09:18:14 -0800 (PST)
+Message-ID: <1325697491.3346.18.camel@doink>
+Subject: Re: [LSF/MM TOPIC] [ATTEND] xfstests: what do we need to do to make
+	it better?
+From: Alex Elder <elder@dreamhost.com>
+Date: Wed, 04 Jan 2012 11:18:11 -0600
+In-Reply-To: <20120103234455.GU23662@dastard>
+References: <20120103234455.GU23662@dastard>
+Mime-Version: 1.0
+Reply-To: elder@dreamhost.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,39 +26,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peng Haitao <penght@cn.fujitsu.com>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, xfs@oss.sgi.com
 
-On Thu, Dec 08, 2011 at 10:25:38AM +0800, Peng Haitao wrote:
+On Wed, 2012-01-04 at 10:44 +1100, Dave Chinner wrote:
+> Given that more people are using xfstests and developing tests, we
+> need to consider how to make it friendlier to hack on. The current
+> structure of the tree is difficult to work with, the way tests are
+> organised and numbered make it difficult to co-ordinate new tests
+> and results in patch conflicts, etc.
+
+Coordination of numbers is not a big deal, the test names/numbers
+can be easily fixed up at commit time.  I also thought that the
+numbers--though meaningless on their own--also avoided having to
+decide where a particular test belongs.  I.e., a test that exercises
+several categories of things (maybe preallocation, quota, and ENOSPC)
+won't be hidden in any sort of "enospc" test directory.
+
+I do think the growing number of tests is making it a bit unwieldy
+though, so I think some sort of reorganization is a good plan.
+
+> We also see problems arising from people not really understanding how
+> the xfstests harness is designed and how it really is supposed to
+> work, so an overview of the underlying principles of operation would
+> probably be helpful to a lot of people. It will also save
+> review and rework time if we can avoid having people make the same
+> mistakes the first time they submit tests....
+
+This is very important.  And the gist of it ought to be
+captured somewhere if it is not already.
+
+> I'd also like to discuss some potential infrastructure changes to
+> make it easier to add new tests without conflicts with others
+> developing new tests. Some of the ideas Christoph and I have
+> previously tossed around include:
 > 
-> Dave Chinner said the following on 2011-12-7 18:07:
-> > 
-> > I think you misunderstand what I was saying - I was not suggesting
-> > removing the error messages at all, just filtering them with sed to
-> > ensure the output is always constant for the error different
-> > messages different platforms dump out.
-> > 
+> 	- break tests up into groups in their own subdirectories.
+> 	  e.g. generic tests, xfs/ext4/btrfs specific tests, stress
+> 	  tests, performance tests, large FS tests, etc
+> 	- change the way we define groups of tests so we don't have
+> 	  a single registry of tests and their groups
+> 	- allow different naming of tests, such as desciptive text
+> 	  names rather than just plain numbers
+> 	- allow duplicate test names in different groups
+
+Despite what I said above, I don't disagree with any of this.
+Perhaps the tests can be buried in one or more subdirectories,
+but each FSTYP defines its own groups file to drive testing.
+
+> I'm sure that other users of xfstests will have some ideas on how to
+> improve it for the way they run it, so I'd like to gather and
+> incorporate these ideas into any structural change we make to
+> xfstests.
+
+Should be a good discussion.  It might be useful to have a
+proposal or two to work with as a starting point, or maybe
+an outline of the types of changes (naming, directory
+structure, etc.), to help keep things focused.
+
+					-Alex
+
+> Cheers,
 > 
-> Thanks for your reply.
-> Sorry for misunderstanding your comments.
-> 
-> I make a new patch, please review, thanks.
+> Dave.
 
-This still fails in my 32-bit test VM:
 
---- 071.out	2009-05-10 16:48:46.000000000 +0000
-+++ 071.out.bad	2012-01-04 16:47:05.000000000 +0000
-@@ -40,14 +40,14 @@
- 
-  
- Writing 512 bytes, offset is +0 (direct=false)
--pwrite64: File too large
-+wrote 512/512 bytes at offset <OFFSET>
- Reading 512 bytes (direct=false)
--read 0/512 bytes at offset <OFFSET>
-+read 512/512 bytes at offset <OFFSET>
-
-and so on
 
 _______________________________________________
 xfs mailing list
