@@ -1,25 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q04D9KYf137014 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 07:09:21 -0600
-Received: from smtp-tls.univ-nantes.fr (smtp-tls2.univ-nantes.fr
-	[193.52.101.146]) by cuda.sgi.com with ESMTP id
-	Z4sLW5hYPTFgBD6o for <xfs@oss.sgi.com>;
-	Wed, 04 Jan 2012 05:09:19 -0800 (PST)
-Message-ID: <4F044EC7.3030203@univ-nantes.fr>
-Date: Wed, 04 Jan 2012 14:06:15 +0100
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-MIME-Version: 1.0
-Subject: Re: Bad performance with XFS + 2.6.38 / 2.6.39
-References: <CACaf2ab-YjXAFm767MmRU5iuOmvkqQW3ZTfQewD5SGvF-opgYQ@mail.gmail.com>
-	<4EF1A224.2070508@univ-nantes.fr>
-	<4EF1F6DD.8020603@hardwarefreak.com>
-	<4EF21DD2.3060004@univ-nantes.fr> <20111221222623.GF23662@dastard>
-	<4EF2F702.4050902@univ-nantes.fr> <4EF30E5D.7060608@univ-nantes.fr>
-	<4F0181A2.5010505@univ-nantes.fr> <20120102203543.GP23662@dastard>
-	<4F02BA35.9040909@univ-nantes.fr>
-	<20120104123331.GA12204@infradead.org>
-In-Reply-To: <20120104123331.GA12204@infradead.org>
+	q04Encsu147091 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 08:49:38 -0600
+Message-Id: <20120104144934.040072910@bombadil.infradead.org>
+Date: Wed, 04 Jan 2012 09:48:35 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/2] xfs: log the inode in ->write_inode calls for kupdate
+References: <20120104144834.869111452@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-fix-kupdate
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,46 +16,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+To: stable@vger.kernel.org, xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>
 
-On 04/01/2012 13:33, Christoph Hellwig wrote:
-> On Tue, Jan 03, 2012 at 09:20:05AM +0100, Yann Dupont wrote:
->>> As it is, I can't see any material difference between the traces.
->>> both reads and writes are taking the same amount of time to service,
->>> so I don't think there's any problem here.
->>
->> ok,
->>>
->>> I do recall that some years ago that we changed one of the ways we
->>
->> Do you recall exactly what some years ago means ? Is this post 2.6.26 er=
-a ?
->
-> The only thing that I remember is Jens switching xfs_buf_wait_unpin from
-> schedule to io_schedule in "block: remove per-queue plugging", which
-> went into Linux 2.6.39.  With this processed that wait for buffers to
-> be unpinned now count towards the load average.
->
+Commit 0b8fd3033c308e4088760aa1d38ce77197b4e074 upstream.
 
-Ok, that's probably the root cause. As I already said, I don't =
+If the writeback code writes back an inode because it has expired we currently
+use the non-blockin ->write_inode path.  This means any inode that is pinned
+is skipped.  With delayed logging and a workload that has very little log
+traffic otherwise it is very likely that an inode that gets constantly
+written to is always pinned, and thus we keep refusing to write it.  The VM
+writeback code at that point redirties it and doesn't try to write it again
+for another 30 seconds.  This means under certain scenarious time based
+metadata writeback never happens.
 
-experience performance regression right now.
+Fix this by calling into xfs_log_inode for kupdate in addition to data
+integrity syncs, and thus transfer the inode to the log ASAP.
 
-Thanks a lot for the explaination.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Tested-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Cheers,
-
-
-
--- =
-
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
+Index: linux-2.6/fs/xfs/linux-2.6/xfs_super.c
+===================================================================
+--- linux-2.6.orig/fs/xfs/linux-2.6/xfs_super.c	2012-01-04 10:27:56.789986299 +0100
++++ linux-2.6/fs/xfs/linux-2.6/xfs_super.c	2012-01-04 13:32:13.843253565 +0100
+@@ -871,27 +871,6 @@ xfs_fs_dirty_inode(
+ }
+ 
+ STATIC int
+-xfs_log_inode(
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_trans	*tp;
+-	int			error;
+-
+-	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
+-	error = xfs_trans_reserve(tp, 0, XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
+-	if (error) {
+-		xfs_trans_cancel(tp, 0);
+-		return error;
+-	}
+-
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
+-	return xfs_trans_commit(tp, 0);
+-}
+-
+-STATIC int
+ xfs_fs_write_inode(
+ 	struct inode		*inode,
+ 	struct writeback_control *wbc)
+@@ -904,10 +883,8 @@ xfs_fs_write_inode(
+ 
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -XFS_ERROR(EIO);
+-	if (!ip->i_update_core)
+-		return 0;
+ 
+-	if (wbc->sync_mode == WB_SYNC_ALL) {
++	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
+ 		/*
+ 		 * Make sure the inode has made it it into the log.  Instead
+ 		 * of forcing it all the way to stable storage using a
+@@ -916,11 +893,14 @@ xfs_fs_write_inode(
+ 		 * of synchronous log foces dramatically.
+ 		 */
+ 		xfs_ioend_wait(ip);
+-		error = xfs_log_inode(ip);
++		error = xfs_log_dirty_inode(ip, NULL, 0);
+ 		if (error)
+ 			goto out;
+ 		return 0;
+ 	} else {
++		if (!ip->i_update_core)
++			return 0;
++
+ 		/*
+ 		 * We make this non-blocking if the inode is contended, return
+ 		 * EAGAIN to indicate to the caller that they did not succeed.
 
 _______________________________________________
 xfs mailing list
