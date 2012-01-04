@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q049RWh3124919 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 03:27:34 -0600
-Date: Wed, 4 Jan 2012 04:27:28 -0500
+	q049V7DH125055 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 03:31:07 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	gI60zhZuqUrJgee5 for <xfs@oss.sgi.com>;
+	Wed, 04 Jan 2012 01:31:05 -0800 (PST)
+Message-Id: <20120104093104.971865222@bombadil.infradead.org>
+Date: Wed, 04 Jan 2012 04:30:16 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/11] xfs: remove xfs_itruncate_data
-Message-ID: <20120104092728.GA27447@infradead.org>
-References: <20111218200003.557507716@bombadil.infradead.org>
-	<20111218200130.784802192@bombadil.infradead.org>
-	<20120103215345.GA6390@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120103215345.GA6390@sgi.com>
+Subject: [PATCH 1/2] xfs: log the inode in ->write_inode calls for kupdate
+References: <20120104093015.056917499@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-fix-kupdate
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,59 +21,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: stable@vger.kernel.org, xfs@oss.sgi.com
 
-> You've tossed xfs_isize_check in the round filer, but you didn't mention
-> that in your commit message.  Isn't this still useful code?
+If the writeback code writes back an inode because it has expired we currently
+use the non-blockin ->write_inode path.  This means any inode that is pinned
+is skipped.  With delayed logging and a workload that has very little log
+traffic otherwise it is very likely that an inode that gets constantly
+written to is always pinned, and thus we keep refusing to write it.  The VM
+writeback code at that point redirties it and doesn't try to write it again
+for another 30 seconds.  This means under certain scenarious time based
+metadata writeback never happens.
 
-It falls under the removal of a few asserts in the debug build.  I don't
-think it's a useful check.
+Fix this by calling into xfs_log_inode for kupdate in addition to data
+integrity syncs, and thus transfer the inode to the log ASAP.
 
-> > -	if (ip->i_size != new_size) {
-> > -		ip->i_d.di_size = new_size;
-> > -		ip->i_size = new_size;
-> > -	}
-> > -
-> > -	ASSERT(new_size != 0 || ip->i_delayed_blks == 0);
-> 
-> You didn't pull this assert along with 
-> 
-> > -	ASSERT(new_size != 0 || ip->i_d.di_nextents == 0);
-> 
-> this one into xfs_qm_scall_trunc_qfile.  Was that intentional?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-
-We never have delayed blocks on the quota files, so there's not much
-of a point to have this assert.
-
-> > -	error = xfs_itruncate_data(&tp, ip, 0);
-> > +	ip->i_d.di_size = 0;
-> > +	ip->i_size = 0;
-> > +	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> > +
-> > +	error = xfs_itruncate_extents(&tp, ip, XFS_DATA_FORK, 0);
-> 
-> It it worth a comment that you log the size here because of the
-> possibility of another file being allocated these extents in the face of
-> a crash?
-
-I don't think there's a point in duplicating that comment.  Eventually
-I'll see if we can simply use the existing truncate code for the quota
-files anyway.
-
-> > -		error = xfs_itruncate_data(&tp, ip, 0);
-> > +		ip->i_d.di_size = 0;
-> > +		ip->i_size = 0;
-> > +		xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-> 
-> Maybe a comment here too?
-
-We log inodes in tons of places without adding a comment ever time.
+Index: xfs/fs/xfs/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_super.c	2011-12-14 05:33:07.193262189 -0800
++++ xfs/fs/xfs/xfs_super.c	2011-12-14 05:38:56.108038623 -0800
+@@ -905,7 +884,7 @@ xfs_fs_write_inode(
+ 	if (!ip->i_update_core)
+ 		return 0;
+ 
+-	if (wbc->sync_mode == WB_SYNC_ALL) {
++	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
+ 		/*
+ 		 * Make sure the inode has made it it into the log.  Instead
+ 		 * of forcing it all the way to stable storage using a
 
 _______________________________________________
 xfs mailing list
