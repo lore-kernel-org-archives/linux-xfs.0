@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q04H1qLm159613 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 11:01:52 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id ufrZSjQhKaF6Uhgu for <xfs@oss.sgi.com>;
-	Wed, 04 Jan 2012 09:01:51 -0800 (PST)
-Message-ID: <4F0485FE.8000405@sandeen.net>
-Date: Wed, 04 Jan 2012 11:01:50 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q04GrnM0159262 for <xfs@oss.sgi.com>; Wed, 4 Jan 2012 10:53:49 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	tW1urTNteapk2vJE for <xfs@oss.sgi.com>;
+	Wed, 04 Jan 2012 08:53:48 -0800 (PST)
+Date: Wed, 4 Jan 2012 11:53:41 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests/071 FAIL with pwrite64: Invalid argument
+Message-ID: <20120104165341.GA21075@infradead.org>
+References: <4EDD8F16.4050402@cn.fujitsu.com> <20111206110533.GD28326@dastard>
+	<4EDF2133.7030702@cn.fujitsu.com> <20111207100748.GB14273@dastard>
+	<4EE02022.5000403@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: new check 278 to ensure btrfs backref
-	integrity
-References: <1324552138-30584-1-git-send-email-list.btrfs@jan-o-sch.net>
-	<20120104163946.GA8153@infradead.org>
-In-Reply-To: <20120104163946.GA8153@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <4EE02022.5000403@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,46 +29,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-btrfs@vger.kernel.org, Jan Schmidt <list.btrfs@jan-o-sch.net>, xfs@oss.sgi.com
+To: Peng Haitao <penght@cn.fujitsu.com>
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-On 1/4/12 10:39 AM, Christoph Hellwig wrote:
-> On Thu, Dec 22, 2011 at 12:08:58PM +0100, Jan Schmidt wrote:
->> This is a btrfs specific scratch test checking the backref walker. It
->> creates a file system with compressed and uncompressed data extents, picks
->> files randomly and uses filefrag to get their extents. It then asks the
->> btrfs utility (inspect-internal) to do the backref resolving from fs-logical
->> address (the one filefrag calls "physical") back to the inode number and
->> file-logical offset, verifying the result.
+On Thu, Dec 08, 2011 at 10:25:38AM +0800, Peng Haitao wrote:
 > 
-> I was about to apply this, but for some reason it fails for me when
-> running xfstest on xfs:
+> Dave Chinner said the following on 2011-12-7 18:07:
+> > 
+> > I think you misunderstand what I was saying - I was not suggesting
+> > removing the error messages at all, just filtering them with sed to
+> > ensure the output is always constant for the error different
+> > messages different platforms dump out.
+> > 
 > 
-> 276	 [failed, exit status 1] - output mismatch (see 276.out.bad)
-> --- 276.out	2012-01-04 16:14:36.000000000 +0000
-> +++ 276.out.bad	2012-01-04 16:32:26.000000000 +0000
-> @@ -1,4 +1,5 @@
-> QA output created by 276
-> -*** test backref walking
-> -*** done
-> +common.rc: Error: $TEST_DEV (/dev/vdb1) is not a MOUNTED btrfs
-> filesystem
-> +Filesystem    Type   1K-blocks      Used Available Use% Mounted on
-> +/dev/vdb1      xfs    39042944     32928  39010016   1% /mnt/test
->  *** unmount
+> Thanks for your reply.
+> Sorry for misunderstanding your comments.
 > 
-> which is a bit confusing
-> 
+> I make a new patch, please review, thanks.
 
-276 got merged on Dec 28 before my requests for fixup, I guess?  And it
-explicitly sets FSTYP=btrfs which is why it fails.
+This still fails in my 32-bit test VM:
 
-the 278 patch v2 in this thread works ok for me.
+--- 071.out	2009-05-10 16:48:46.000000000 +0000
++++ 071.out.bad	2012-01-04 16:47:05.000000000 +0000
+@@ -40,14 +40,14 @@
+ 
+  
+ Writing 512 bytes, offset is +0 (direct=false)
+-pwrite64: File too large
++wrote 512/512 bytes at offset <OFFSET>
+ Reading 512 bytes (direct=false)
+-read 0/512 bytes at offset <OFFSET>
++read 512/512 bytes at offset <OFFSET>
 
-so munging the 278 patch here into the existing 276 should be the
-right approach.
-
--Eric
+and so on
 
 _______________________________________________
 xfs mailing list
