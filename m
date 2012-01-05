@@ -1,18 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0562IRf188644 for <xfs@oss.sgi.com>; Thu, 5 Jan 2012 00:02:18 -0600
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id pKTsEfPruRdjAsMv for
-	<xfs@oss.sgi.com>; Wed, 04 Jan 2012 22:02:16 -0800 (PST)
-Message-ID: <4F053CDC.6030007@oracle.com>
-Date: Thu, 05 Jan 2012 14:02:04 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V4
-References: <4EFB1B23.7050008@oracle.com> <20120104205255.GA1012@infradead.org>
-In-Reply-To: <20120104205255.GA1012@infradead.org>
-Reply-To: jeff.liu@oracle.com
+	q05IeLcH218099 for <xfs@oss.sgi.com>; Thu, 5 Jan 2012 12:40:21 -0600
+Subject: [GIT PULL] XFS update for 3.3-rc1
+Message-Id: <20120105184017.089CB426DA7@whiskey.americas.sgi.com>
+Date: Thu,  5 Jan 2012 12:40:17 -0600 (CST)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,103 +14,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Christoph,
+Hi Linus,
 
-On 01/05/2012 04:52 AM, Christoph Hellwig wrote:
+   Please pull the following changes for 3.3-rc1.  There is
+   a merge conflict between
 
-> Hi Jeff,
-> 
-> thanks a lot for the patch, it looks good to except for some more
-> nitpicks around the unwritten extent probing.
-> 
-> The other issue is the patch description format - the version changelog
-> should go below the  --- line.
+   be4f1ac - xfs: log all dirty inodes in xfs_fs_sync_fs
+   and
+   34625c6 - xfs: remove xfs_qm_sync
 
-ok. :-P.
-
-> 
->> +	do {
->> +		unsigned int	i;
->> +		unsigned	nr_pages;
->> +		int		want = min_t(pgoff_t, end - index,
->> +					     (pgoff_t)PAGEVEC_SIZE - 1) + 1;
->> +		nr_pages = pagevec_lookup_tag(&pvec, inode->i_mapping,
->> +					      &index, tag, want);
->> +		if (nr_pages == 0) {
->> +			/*
->> +			 * Try to lookup pages in writeback mode from the
->> +			 * beginning if no more dirty page can be probed.
->> +			 */
->> +probe_done:
->> +			if (tag == PAGECACHE_TAG_DIRTY) {
->> +				tag = PAGECACHE_TAG_WRITEBACK;
->> +				goto again;
->> +			}
->> +			break;
-> 
-> The code flow here looks very confusing.  Why not pass the tag as an
-> argument to the function, then calling it twice and use the minimum?
-
-> (that probably also wants a helper instead of duplication)
-
-That's just because I was inclined to implement a helper rather than duplicating the probe function twice.
-I have gone through the page lookup stuff, looks we can introduce a helper to wrap something like
-radix_tree_gang_lookup_tag_slot()(maybe name it as radix_tree_gang_lookup_tags_slot()),
-it can accept a tags array argument(dirty/unwritten), return those intertwined pages in ascending order based on offset.
-
-Even that, I was still wondering if we can tweak the pages probing function a bit more generic to be a helper too.
-Per Dave's comments in our another discussion, the reason why we can not do that is due to the different lock mechanism among FS(ext4, btrfs),
-but looks those lock stuff are safe, i.e,
-To probing pages, FS using mutex lock, will be something like:
-mutex_lock(&inode->i_mutex);
----seek_data_or_hole()
--------probe_unwritten_buffer()
-mutex_unlock(&inode->i_mutex);
-
-For XFS, still using the shared lock.
-
-For now, how about just calling it twice and use the minimum, and make the code tested more stable, then try to introduce a helper?
-
-> 
-> 
->> +				 * dirty data in the page cache it can be
->> +				 * identified by having BH_Unwritten set in
->> +				 * each buffer. Also, the buffer head state
->> +				 * might be in BH_Uptodate if the buffer
->> +				 * writeback procedure was fired, we need to
->> +				 * examine it too.
->> +				 */
->> +				if (buffer_unwritten(bh) ||
->> +				    buffer_uptodate(bh)) {
->> +					found = true;
->> +					if (get_offset)
->> +						*offset = XFS_FSB_TO_B(
->> +								mp, last);
-> 
-> Currently seek hole doesn't set get_offset we skip the whole extent.
-> This seems a bit inconsistent - shouldn't we also return that offset
-> for the hole case? if the dirty data only starts past the start block
-> of the map the first blocks of it still are a hole.
-
-Indeed, we can get a hole offset a bit more accurate than before in this way.
-
+   which I have resolved in the for-linus-merged branch for
+   your convenience.
 
 Thanks,
--Jeff
+	Ben
 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+The following changes since commit 805a6af8dba5dfdd35ec35dc52ec0122400b2610:
+  Linus Torvalds (1):
+        Linux 3.2
 
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (20):
+      xfs: remove the deprecated nodelaylog option
+      xfs: cleanup the transaction commit path a bit
+      xfs: remove the lid_size field in struct log_item_desc
+      xfs: untangle SYNC_WAIT and SYNC_TRYLOCK meanings for xfs_qm_dqflush
+      xfs: make sure to really flush all dquots in xfs_qm_quotacheck
+      xfs: remove xfs_qm_sync
+      xfs: remove the sync_mode argument to xfs_qm_dqflush_all
+      xfs: cleanup dquot locking helpers
+      xfs: cleanup xfs_qm_dqlookup
+      xfs: remove XFS_DQ_INACTIVE
+      xfs: implement lazy removal for the dquot freelist
+      xfs: flatten the dquot lock ordering
+      xfs: nest qm_dqfrlist_lock inside the dquot qlock
+      xfs: simplify xfs_qm_dqattach_grouphint
+      xfs: add a xfs_dqhold helper
+      xfs: merge xfs_qm_dqinit_core into the only caller
+      xfs: kill xfs_qm_idtodq
+      xfs: remove XFS_QMOPT_DQSUSER
+      xfs: simplify xfs_qm_detach_gdquots
+      xfs: mark the xfssyncd workqueue as non-reentrant
+
+Eric Sandeen (1):
+      xfs: remove unused XBT_FORCE_SLEEP bit
+
+Xi Wang (1):
+      xfs: fix acl count validation in xfs_acl_from_disk()
+
+ fs/xfs/xfs_acl.c        |    2 +-
+ fs/xfs/xfs_buf.c        |    6 +-
+ fs/xfs/xfs_buf.h        |    3 +-
+ fs/xfs/xfs_dquot.c      |  500 ++++++++++++++++-------------------------------
+ fs/xfs/xfs_dquot.h      |   39 +++-
+ fs/xfs/xfs_dquot_item.c |    5 +-
+ fs/xfs/xfs_inode_item.c |    2 -
+ fs/xfs/xfs_log.c        |   79 ++------
+ fs/xfs/xfs_log.h        |    8 +-
+ fs/xfs/xfs_log_cil.c    |   96 ++++++----
+ fs/xfs/xfs_mount.h      |    1 -
+ fs/xfs/xfs_qm.c         |  464 ++++++++++---------------------------------
+ fs/xfs/xfs_qm.h         |    6 -
+ fs/xfs/xfs_quota.h      |   12 +-
+ fs/xfs/xfs_super.c      |   36 +---
+ fs/xfs/xfs_sync.c       |    6 +-
+ fs/xfs/xfs_trace.h      |    2 -
+ fs/xfs/xfs_trans.c      |  475 +--------------------------------------------
+ fs/xfs/xfs_trans.h      |    3 +-
+ 19 files changed, 412 insertions(+), 1333 deletions(-)
 
 _______________________________________________
 xfs mailing list
