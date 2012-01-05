@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q05Ml9s4225130 for <xfs@oss.sgi.com>; Thu, 5 Jan 2012 16:47:10 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id O07pSalAFBLUdaxp for <xfs@oss.sgi.com>;
-	Thu, 05 Jan 2012 14:47:07 -0800 (PST)
-Message-Id: <20120105224402.717841604@clark.kroah.org>
-Date: Thu, 05 Jan 2012 14:44:52 -0800
-From: Greg KH <gregkh@suse.de>
-Subject: [67/73] xfs: log the inode in ->write_inode calls for kupdate
-In-Reply-To: <20120105224632.GA14659@kroah.com>
+	q05NsDeF227710 for <xfs@oss.sgi.com>; Thu, 5 Jan 2012 17:54:13 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	crJdoIk1rbu6c93V for <xfs@oss.sgi.com>;
+	Thu, 05 Jan 2012 15:54:09 -0800 (PST)
+Date: Fri, 6 Jan 2012 10:54:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs-trace-ilock-more
+Message-ID: <20120105235406.GH24466@dastard>
+References: <20111214024040.GA17780@infradead.org>
+	<20111214182750.GH11114@wotan.suse.de>
+	<20111218202734.GB20799@infradead.org>
+	<20120105223859.GJ11114@wotan.suse.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120105223859.GJ11114@wotan.suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,106 +25,87 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org, xfs@oss.sgi.com
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, Ben Myers <bpm@sgi.com>, alan@lxorguk.ukuu.org.uk, Christoph Hellwig <hch@lst.de>
+To: Mark Fasheh <mfasheh@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Mahoney <jeffm@suse.com>, xfs@oss.sgi.com
 
-3.0-stable review patch.  If anyone has any objections, please let me know.
+On Thu, Jan 05, 2012 at 02:38:59PM -0800, Mark Fasheh wrote:
+> On Sun, Dec 18, 2011 at 03:27:34PM -0500, Christoph Hellwig wrote:
+> > Given that the patch is fairly clean can you send it to us for
+> > inclusion?
+> 
+> Here goes. I updated the patch for 3.2 and of course gave it a quick test.
+> 	--Mark
+> 
+> --
+> Mark Fasheh
+> 
+> From: Mark Fasheh <mfasheh@suse.com>
+> 
+> [PATCH] xfs: add more ilock tracing
+> 
+> Let's get a trace of the amount of time spent in xfs_ilock(). This has
+> helped us (SUSE) in investigating read/write performance issues in the past
+> when ilock() contention has come up as a possibile issue.
+> 
+> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
 
-------------------
-Content-Length: 2680
-Lines: 86
+....
 
-From: Christoph Hellwig <hch@infradead.org>
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -507,32 +507,35 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
+>  
+>  DECLARE_EVENT_CLASS(xfs_lock_class,
+>  	TP_PROTO(struct xfs_inode *ip, unsigned lock_flags,
+> -		 unsigned long caller_ip),
+> -	TP_ARGS(ip,  lock_flags, caller_ip),
+> +		 unsigned long start, unsigned long caller_ip),
+> +	TP_ARGS(ip,lock_flags, start, caller_ip),
+>  	TP_STRUCT__entry(
+>  		__field(dev_t, dev)
+>  		__field(xfs_ino_t, ino)
+>  		__field(int, lock_flags)
+> +		__field(unsigned long, start)
+>  		__field(unsigned long, caller_ip)
+>  	),
+>  	TP_fast_assign(
+>  		__entry->dev = VFS_I(ip)->i_sb->s_dev;
+>  		__entry->ino = ip->i_ino;
+>  		__entry->lock_flags = lock_flags;
+> +		__entry->start = start;
+>  		__entry->caller_ip = caller_ip;
+>  	),
+> -	TP_printk("dev %d:%d ino 0x%llx flags %s caller %pf",
+> +	TP_printk("dev %d:%d ino 0x%llx flags %s wait %lu caller %pf",
+>  		  MAJOR(__entry->dev), MINOR(__entry->dev),
+>  		  __entry->ino,
+>  		  __print_flags(__entry->lock_flags, "|", XFS_LOCK_FLAGS),
+> +		  (jiffies - __entry->start),
 
-Commit 0b8fd3033c308e4088760aa1d38ce77197b4e074 upstream.
+I'm not sure this is valid - the printk format can be used by tools
+outside the kernel at a later time (e.g. they read from the kernel
+in binary format). If you want this to be done, the it needs to be
+calculated in the TP_fast_assign() macro.
 
-If the writeback code writes back an inode because it has expired we currently
-use the non-blockin ->write_inode path.  This means any inode that is pinned
-is skipped.  With delayed logging and a workload that has very little log
-traffic otherwise it is very likely that an inode that gets constantly
-written to is always pinned, and thus we keep refusing to write it.  The VM
-writeback code at that point redirties it and doesn't try to write it again
-for another 30 seconds.  This means under certain scenarious time based
-metadata writeback never happens.
+Indeed, you are printing is the time delta between the start of
+the operation and the completion. in that case, the delta should be
+what is recorded in the trace point, not calculated implicitly
+inside the format string of the trace point. i.e callers do:
 
-Fix this by calling into xfs_log_inode for kupdate in addition to data
-integrity syncs, and thus transfer the inode to the log ASAP.
+	trace_xfs_iunlock(ip, lock_flags, jiffies - start, _RET_IP_);
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Tested-by: Mark Tinguely <tinguely@sgi.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Ben Myers <bpm@sgi.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@suse.de>
+to pass an explicit delta value to the trace point...
 
----
- fs/xfs/linux-2.6/xfs_super.c |   30 +++++-------------------------
- 1 file changed, 5 insertions(+), 25 deletions(-)
+Cheers,
 
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -871,27 +871,6 @@ xfs_fs_dirty_inode(
- }
- 
- STATIC int
--xfs_log_inode(
--	struct xfs_inode	*ip)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_trans	*tp;
--	int			error;
--
--	tp = xfs_trans_alloc(mp, XFS_TRANS_FSYNC_TS);
--	error = xfs_trans_reserve(tp, 0, XFS_FSYNC_TS_LOG_RES(mp), 0, 0, 0);
--	if (error) {
--		xfs_trans_cancel(tp, 0);
--		return error;
--	}
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin_ref(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--	return xfs_trans_commit(tp, 0);
--}
--
--STATIC int
- xfs_fs_write_inode(
- 	struct inode		*inode,
- 	struct writeback_control *wbc)
-@@ -904,10 +883,8 @@ xfs_fs_write_inode(
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -XFS_ERROR(EIO);
--	if (!ip->i_update_core)
--		return 0;
- 
--	if (wbc->sync_mode == WB_SYNC_ALL) {
-+	if (wbc->sync_mode == WB_SYNC_ALL || wbc->for_kupdate) {
- 		/*
- 		 * Make sure the inode has made it it into the log.  Instead
- 		 * of forcing it all the way to stable storage using a
-@@ -916,11 +893,14 @@ xfs_fs_write_inode(
- 		 * of synchronous log foces dramatically.
- 		 */
- 		xfs_ioend_wait(ip);
--		error = xfs_log_inode(ip);
-+		error = xfs_log_dirty_inode(ip, NULL, 0);
- 		if (error)
- 			goto out;
- 		return 0;
- 	} else {
-+		if (!ip->i_update_core)
-+			return 0;
-+
- 		/*
- 		 * We make this non-blocking if the inode is contended, return
- 		 * EAGAIN to indicate to the caller that they did not succeed.
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
