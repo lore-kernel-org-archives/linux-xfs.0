@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q05NsDeF227710 for <xfs@oss.sgi.com>; Thu, 5 Jan 2012 17:54:13 -0600
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	crJdoIk1rbu6c93V for <xfs@oss.sgi.com>;
-	Thu, 05 Jan 2012 15:54:09 -0800 (PST)
-Date: Fri, 6 Jan 2012 10:54:06 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs-trace-ilock-more
-Message-ID: <20120105235406.GH24466@dastard>
-References: <20111214024040.GA17780@infradead.org>
-	<20111214182750.GH11114@wotan.suse.de>
-	<20111218202734.GB20799@infradead.org>
-	<20120105223859.GJ11114@wotan.suse.de>
+	q063s8G0246316 for <xfs@oss.sgi.com>; Thu, 5 Jan 2012 21:54:08 -0600
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id Ry5hwXqsWX0a1Ml0 for
+	<xfs@oss.sgi.com>; Thu, 05 Jan 2012 19:54:06 -0800 (PST)
+Message-ID: <4F067052.8080905@cn.fujitsu.com>
+Date: Fri, 06 Jan 2012 11:53:54 +0800
+From: Peng Haitao <penght@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120105223859.GJ11114@wotan.suse.de>
+Subject: Re: [PATCH] xfstests/071 FAIL with pwrite64: Invalid argument
+References: <4EDD8F16.4050402@cn.fujitsu.com> <20111206110533.GD28326@dastard>
+	<4EDF2133.7030702@cn.fujitsu.com> <20111207100748.GB14273@dastard>
+	<4EE02022.5000403@cn.fujitsu.com>
+	<20120104165341.GA21075@infradead.org>
+In-Reply-To: <20120104165341.GA21075@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,83 +27,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Fasheh <mfasheh@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Mahoney <jeffm@suse.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jan 05, 2012 at 02:38:59PM -0800, Mark Fasheh wrote:
-> On Sun, Dec 18, 2011 at 03:27:34PM -0500, Christoph Hellwig wrote:
-> > Given that the patch is fairly clean can you send it to us for
-> > inclusion?
+
+Christoph Hellwig said the following on 2012-1-5 0:53:
+> This still fails in my 32-bit test VM:
 > 
-> Here goes. I updated the patch for 3.2 and of course gave it a quick test.
-> 	--Mark
-> 
-> --
-> Mark Fasheh
-> 
-> From: Mark Fasheh <mfasheh@suse.com>
-> 
-> [PATCH] xfs: add more ilock tracing
-> 
-> Let's get a trace of the amount of time spent in xfs_ilock(). This has
-> helped us (SUSE) in investigating read/write performance issues in the past
-> when ilock() contention has come up as a possibile issue.
-> 
-> Signed-off-by: Mark Fasheh <mfasheh@suse.de>
 
-....
+yeah:(
 
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -507,32 +507,35 @@ DEFINE_BUF_ITEM_EVENT(xfs_trans_binval);
->  
->  DECLARE_EVENT_CLASS(xfs_lock_class,
->  	TP_PROTO(struct xfs_inode *ip, unsigned lock_flags,
-> -		 unsigned long caller_ip),
-> -	TP_ARGS(ip,  lock_flags, caller_ip),
-> +		 unsigned long start, unsigned long caller_ip),
-> +	TP_ARGS(ip,lock_flags, start, caller_ip),
->  	TP_STRUCT__entry(
->  		__field(dev_t, dev)
->  		__field(xfs_ino_t, ino)
->  		__field(int, lock_flags)
-> +		__field(unsigned long, start)
->  		__field(unsigned long, caller_ip)
->  	),
->  	TP_fast_assign(
->  		__entry->dev = VFS_I(ip)->i_sb->s_dev;
->  		__entry->ino = ip->i_ino;
->  		__entry->lock_flags = lock_flags;
-> +		__entry->start = start;
->  		__entry->caller_ip = caller_ip;
->  	),
-> -	TP_printk("dev %d:%d ino 0x%llx flags %s caller %pf",
-> +	TP_printk("dev %d:%d ino 0x%llx flags %s wait %lu caller %pf",
->  		  MAJOR(__entry->dev), MINOR(__entry->dev),
->  		  __entry->ino,
->  		  __print_flags(__entry->lock_flags, "|", XFS_LOCK_FLAGS),
-> +		  (jiffies - __entry->start),
+This case will exercise IO at large file with as following condition:
+  - below upperbound
+  - upperbound
+  - above upperbound
+But in 32-bit, the case cannot satisfy the condition unless upperbound=16.
+When upperbound=16, the case will hung.
 
-I'm not sure this is valid - the printk format can be used by tools
-outside the kernel at a later time (e.g. they read from the kernel
-in binary format). If you want this to be done, the it needs to be
-calculated in the TP_fast_assign() macro.
+The following steps will hung.
+# uname -a
+Linux Fedora-16-x86 3.1.0-7.fc16.i686.PAE #1 SMP Tue Nov 1 20:53:45 UTC 2011 i686 i686 i386 GNU/Linux
+# rpm -q xfsprogs
+xfsprogs-3.1.5-1.fc16.i686
+# mount /dev/sda10 /sda10/
+# xfs_info /dev/sda10
+meta-data=/dev/sda10             isize=256    agcount=4, agsize=305088 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=1220352, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=2560, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+# cd /sda10/
+# xfs_io -f -c "pwrite 17592186040320 512" tmp
+wrote 512/512 bytes at offset 17592186040320
+512.000000 bytes, 1 ops; 0.0000 sec (12.850 MiB/sec and 26315.7895 ops/sec)
+# xfs_bmap -v tmp
 
-Indeed, you are printing is the time delta between the start of
-the operation and the completion. in that case, the delta should be
-what is recorded in the trace point, not calculated implicitly
-inside the format string of the trace point. i.e callers do:
+This will hung:( 
+What is wrong with the steps or xfs wrong?
 
-	trace_xfs_iunlock(ip, lock_flags, jiffies - start, _RET_IP_);
-
-to pass an explicit delta value to the trace point...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Best Regards,
+Peng
+
+> --- 071.out	2009-05-10 16:48:46.000000000 +0000
+> +++ 071.out.bad	2012-01-04 16:47:05.000000000 +0000
+> @@ -40,14 +40,14 @@
+>  
+>   
+>  Writing 512 bytes, offset is +0 (direct=false)
+> -pwrite64: File too large
+> +wrote 512/512 bytes at offset <OFFSET>
+>  Reading 512 bytes (direct=false)
+> -read 0/512 bytes at offset <OFFSET>
+> +read 512/512 bytes at offset <OFFSET>
+> 
+> and so on
+> 
+> 
 
 _______________________________________________
 xfs mailing list
