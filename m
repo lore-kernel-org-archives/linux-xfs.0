@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q096qZpd237340 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 00:52:35 -0600
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	P3BbtWCoTexR6sdv for <xfs@oss.sgi.com>;
-	Sun, 08 Jan 2012 22:52:33 -0800 (PST)
-Received: by iakk12 with SMTP id k12so7120079iak.26
-	for <xfs@oss.sgi.com>; Sun, 08 Jan 2012 22:52:33 -0800 (PST)
+	q097MV9q240062 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 01:22:31 -0600
+Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	TYqYEweWjz8XEFwz for <xfs@oss.sgi.com>;
+	Sun, 08 Jan 2012 23:22:30 -0800 (PST)
+Received: by vcbfk26 with SMTP id fk26so3131998vcb.26
+	for <xfs@oss.sgi.com>; Sun, 08 Jan 2012 23:22:30 -0800 (PST)
 MIME-Version: 1.0
-Date: Mon, 9 Jan 2012 12:22:33 +0530
-Message-ID: <CANBXnM=Ec4zp-5AR3JY00taUR+W-G6+ZKJKhDj94uhpeVsp2tw@mail.gmail.com>
-Subject: Cyclic Code?
-From: Adil Mujeeb <mujeeb.adil@gmail.com>
+In-Reply-To: <BAB94DBB0E89D8409949BC28AC95914C6875A2@USMAExch1.tad.internal.tilera.com>
+References: <AQHMGZPV5VwDWzpPGkmBdYCEZM2g7JYAfYLwgAAGIHA=>
+	<BAB94DBB0E89D8409949BC28AC95914C6875A2@USMAExch1.tad.internal.tilera.com>
+Date: Mon, 9 Jan 2012 12:52:30 +0530
+Message-ID: <CAB4K4y7SmGKG1yVvxu5jSberYS8ayYiGHOGe81CNZHmOHi7ssg@mail.gmail.com>
+Subject: Re: XFS: bad clientid on recovery on MIPS (VIPT cache)
+From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,88 +24,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4780641182796247039=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Tony Lu <zlu@tilera.com>, xfs@oss.sgi.com
 
---===============4780641182796247039==
-Content-Type: multipart/alternative; boundary=bcaec52e6013d66cd204b612d7f4
-
---bcaec52e6013d66cd204b612d7f4
-Content-Type: text/plain; charset=ISO-8859-1
-
-Hi list,
-
-i am new to XFS.
-
-I was going through XFS code (2.4 based) for study purpose. Its old but
-assuming its bit simple as compare to latest one. Moreover the XFS code /
-design structure documents available on the internet is 2.4 based.
-
-The following code snippet is not clear to me (seems cyclic):
-
----------
-...
-...
-#define XFS_IFORK_NEXTENTS(ip,w)        xfs_ifork_nextents(ip,w)
-...
-xfs_ifork_nextents(xfs_inode_t *ip, int w)
-{
-        return XFS_IFORK_NEXTENTS(ip, w);
-}
-...
-...
-#define XFS_IFORK_NEXTENTS(ip,w)        XFS_CFORK_NEXTENTS(&ip->i_d, w)
-...
-#define XFS_CFORK_NEXTENTS(dcp,w)            xfs_cfork_nextents(dcp,w)
-...
-int
-xfs_cfork_nextents(xfs_dinode_core_t *dcp, int w)
-{
-        return XFS_CFORK_NEXTENTS(dcp, w);
-}
-----
-
-Am i missing something?
-Thanks,
-Adil
-
---bcaec52e6013d66cd204b612d7f4
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div>Hi list,</div><div><br></div><div>i am new to XFS.</div><div><br></div=
-><div>I was going through XFS code (2.4 based) for study purpose. Its old b=
-ut assuming its bit simple as compare to latest one. Moreover the XFS code =
-/ design structure documents available on the internet is 2.4 based.</div>
-<div><br></div><div>The following code snippet is not clear to me (seems cy=
-clic):</div><div><br></div><div>---------</div><div>...</div><div>...</div>=
-<div>#define XFS_IFORK_NEXTENTS(ip,w) =A0 =A0 =A0 =A0xfs_ifork_nextents(ip,=
-w)</div>
-<div>...</div><div>xfs_ifork_nextents(xfs_inode_t *ip, int w)</div><div>{</=
-div><div>=A0=A0 =A0 =A0 =A0return XFS_IFORK_NEXTENTS(ip, w);</div><div>}</d=
-iv><div>...</div><div>...</div><div>#define XFS_IFORK_NEXTENTS(ip,w) =A0 =
-=A0 =A0 =A0XFS_CFORK_NEXTENTS(&amp;ip-&gt;i_d, w)</div>
-<div>...</div><div>#define XFS_CFORK_NEXTENTS(dcp,w) =A0 =A0 =A0 =A0 =A0 =
-=A0xfs_cfork_nextents(dcp,w)</div><div>...</div><div>int=A0</div><div>xfs_c=
-fork_nextents(xfs_dinode_core_t *dcp, int w)</div><div>{</div><div>=A0=A0 =
-=A0 =A0 =A0return XFS_CFORK_NEXTENTS(dcp, w);</div>
-<div>}</div><div>----</div><div><br></div><div>Am i missing something?=A0</=
-div><div>Thanks,</div><div>Adil</div>
-
---bcaec52e6013d66cd204b612d7f4--
-
-
---===============4780641182796247039==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4780641182796247039==--
+SGksCllvdSBhcmUgdXNpbmcgd2hpY2gga2VybmVsIHZlcnNpb24gPyBiZWNhdXNlIHRoaXMgaXMg
+Zml4ZWQgaW4gWEZTIGluCmtlcm5lbCAyLjYuMzQKaHR0cDovL2dpdC5rZXJuZWwub3JnLz9wPWxp
+bnV4L2tlcm5lbC9naXQvc3RhYmxlL2xpbnV4LXN0YWJsZS5naXQ7YT1jb21taXQ7aD03M2M3N2Uy
+Y2NjMTQ0MTNjMjMyYzNlMGIzYWE0M2EwYzRiNzJlYzcwCgpidXQgZm9yIHRoaXMgcGF0Y2ggdG8g
+d29yayBjb3JyZWN0bHksIHllciB5b3UgbmVlZCB0byBwcm92aWRlIHRoZQphcmNoaXRlY3R1cmUg
+ZGVwZW5kZW50IGRlZmluaXRpb24gb2YgaW52YWxpZGF0ZV9rZXJuZWxfdm1hcF9yYW5nZSgpIC8K
+Zmx1c2hfa2VybmVsX3ZtYXBfcmFuZ2UoKSBhbmQgQVJDSF9IQVNfRkxVU0hfS0VSTkVMX0RDQUNI
+RV9QQUdFLApzaW1pbGFyIHRvIHRoaXMgcGF0Y2gKCmh0dHA6Ly9naXQua2VybmVsLm9yZy8/cD1s
+aW51eC9rZXJuZWwvZ2l0L3N0YWJsZS9saW51eC1zdGFibGUuZ2l0O2E9Y29tbWl0O2g9MjUyYTlh
+ZmZmNzYwOTc2Njc0MjliNTgzZThiNWIxNzBiNDc2NjVhNApodHRwOi8vZ2l0Lmtlcm5lbC5vcmcv
+P3A9bGludXgva2VybmVsL2dpdC9zdGFibGUvbGludXgtc3RhYmxlLmdpdDthPWNvbW1pdDtoPTcz
+YmUxNTkxNTc5MDg0YTgxMDNhNzAwNWRkMzE3MmYzZTlkZDczNjIKCk5vdGU6IGluY2x1ZGUvbGlu
+dXgvaGlnaG1lbS5oIHByb3ZpZGUgZHVtbXkgZGVmaW5pdGlvbnMgaWYKYXJjaGl0ZWN0dXJlIGRv
+ZXMgbm90IGRlZmluZSB0aGVtCgojaWZuZGVmIEFSQ0hfSEFTX0ZMVVNIX0tFUk5FTF9EQ0FDSEVf
+UEFHRQpzdGF0aWMgaW5saW5lIHZvaWQgZmx1c2hfa2VybmVsX2RjYWNoZV9wYWdlKHN0cnVjdCBw
+YWdlICpwYWdlKQp7Cn0Kc3RhdGljIGlubGluZSB2b2lkIGZsdXNoX2tlcm5lbF92bWFwX3Jhbmdl
+KHZvaWQgKnZhZGRyLCBpbnQgc2l6ZSkKewp9CnN0YXRpYyBpbmxpbmUgdm9pZCBpbnZhbGlkYXRl
+X2tlcm5lbF92bWFwX3JhbmdlKHZvaWQgKnZhZGRyLCBpbnQgc2l6ZSkKewp9CiNlbmRpCgoKCgpP
+biBGcmksIEphbiA2LCAyMDEyIGF0IDM6NDQgUE0sIFRvbnkgTHUgPHpsdUB0aWxlcmEuY29tPiB3
+cm90ZToKPiBIaSwgQWplZXQKPgo+IFNvcnJ5IHRvIGJvdGhlciB5b3UuIEJ5IGdvb2dsaW5nLCBJ
+IGZvdW5kIHRoYXQgSSBhbSBlbmNvdW50ZXJpbmcgdGhlIHNhbWUgWEZTIHVtb3VudCBpc3N1ZSBv
+biBUSUxFIGFyY2hpdGVjdHVyZS4gQW5kIEkgbm90aWNlZCB0aGF0IHNvbWVib2R5IHN1Z2dlc3Rl
+ZCB0aGF0IG90aGVyIGFyY2hpdGVjdHVyZXMgbGlrZSBBUk0sIE1JUFMgbmVlZCB0byBpbXBsZW1l
+bnQgdGhlIGZvbGxvd2luZyBmdW5jdGlvbnMgdG8gZml4IHRoaXMgaXNzdWUuCj4KPiBmbHVzaF9r
+ZXJuZWxfZGNhY2hlX3BhZ2UoKQo+IGZsdXNoX2tlcm5lbF92bWFwX3JhbmdlKCkKPiB2b2lkIGlu
+dmFsaWRhdGVfa2VybmVsX3ZtYXBfcmFuZ2UoKQo+Cj4gSSBhbSBub3Qgc3VyZSBpZiB0aGVzZSBm
+dW5jdGlvbnMgY2FuIHJlYWxseSBmaXggdGhpcyBpc3N1ZSwgc2luY2UgSSBpbXBsZW1lbnRlZCB0
+aGVzZSBmdW5jdGlvbnMgZm9yIFRJTEUgYXJjaGl0ZWN0dXJlLCBidXQgZGlkIG5vdCBmaXggaXQu
+Cj4KPiBTbyBJIHJlYWxseSB3YW50IHRvIGtub3cgdGhhdCBpZiB5b3UgaW1wbGVtZW50ZWQgdGhl
+c2UgZnVuY3Rpb25zIGZvciBNSVBTIHRvIGZpeCB0aGlzIGlzc3VlLiBPciBpcyB0aGVyZSBvdGhl
+ciBtZXRob2QgdG8gZml4IHRoaXMgaXNzdWU/Cj4KPiBJIHdvdWxkIGJlIHZlcnkgYXBwcmVjaWF0
+ZWQgZm9yIGFueSBmZWVkYmFjayBmcm9tIHlvdS4KPgo+IFRoYW5rcwo+IC1Ub255Cj4KPj5EZWFy
+IG1lbWJlciwKPj5JZiBJIHJlbW92ZSBVU0IgZmxhc2ggc3RvcmFnZSBmcm9tIFBDL0FSTS9NSVBT
+IHRhcmdldCAoaS5lIHdpdGhvdXQgdW1vdW50KSB3aGlsZSA+Y29weWluZyBmaWxlIHRvIFhGUyBw
+YXJ0aXRpb24gYW5kIGNvbm5lY3QgaXQgdG8gTUlQUyB0YXJnZXQgSSBhbHdheXMgZ2V0Cj4+WEZT
+OiB4bG9nX3JlY292ZXJfcHJvY2Vzc19kYXRhOiBiYWQgY2xpZW50aWQKPj5YRlM6IGxvZyBtb3Vu
+dC9yZWNvdmVyeSBmYWlsZWQ6IGVycm9yIDUKPj5YRlM6IGxvZyBtb3VudCBmYWlsZWQKPj5UaGlz
+IHByb2JsZW0gZG9lcyBub3Qgb2NjdXIsIGlmIEkgY29ubmVjdCB0aGUgc2FtZSBVU0IgZmxhc2gg
+dG8gUEMvQVJNIHRhcmdldC4KPj5JIGhhdmUgdGVzdGVkIHRoaXMgb24gMi42LjMwIC0gMi42LjM0
+IChJdCBldmVyeXdoZXJlIHdoZW4gY29uY2VyZW5kIHdpdGggTUlQUykKPj4KPj5JIGhhZCB0d28g
+d29ya2Fyb3VuZCB0byBhdm9pZCB0aGlzIHByb2JsZW0gb24gTUlQUywgYnV0IEkgd2lzaCB0byBr
+bm93IHRoZSBleGFjdCA+cmVhc29uIG9mIHRoaXMgcHJvYmxtZSBvbiBNSVBTLgo+PkkgYW0gcmVh
+bGx5IHRpcmVkIGFuZCBnaXZpbmcgdXAsIHNvIGZpbmFsbHkgdGhvdWdodCBvZiB0YWtpbmcgeW91
+ciBoZWxwLCB5b3VyID5ndWlkZW5jZSBjYW4gaGVscCBtZS4KPj4KPj4xLiBfX2ZsdXNoX2NhY2hl
+X2FsbCgpIGF0IHRoZSBiZWdpbmluZyBvZiBlYWNoIGl0ZXJhdGlvbiBvZiB3aGlsZSBsb29wIGlu
+ID5mdW5jdGlvbiB4bG9nX3JlY292ZXJfcHJvY2Vzc19kYXRhKCkuCj4+Cj4+IMKgIMKgIHdoaWxl
+ICgoZHAgPCBscCkgJiYgbnVtX2xvZ29wcykgewo+PisgwqAgwqAgwqAgX19mbHVzaF9jYWNoZV9h
+bGwoKSA7Cj4+IMKgIMKgIMKgIMKgIEFTU0VSVChkcCArIHNpemVvZih4bG9nX29wX2hlYWRlcl90
+KSA8PSBscCk7Cj4+IMKgIMKgIMKgIMKgIG9oZWFkID0gKHhsb2dfb3BfaGVhZGVyX3QgKilkcDsK
+Pj4gwqAgwqAgwqAgwqAgZHAgKz0gc2l6ZW9mKHhsb2dfb3BfaGVhZGVyX3QpOwo+PiDCoCDCoCDC
+oCDCoCBpZiAob2hlYWQtPm9oX2NsaWVudGlkICE9IFhGU19UUkFOU0FDVElPTiAmJgo+PiDCoCDC
+oCDCoCDCoCDCoCDCoCBvaGVhZC0+b2hfY2xpZW50aWQgIT0gWEZTX0xPRykgewo+PiDCoCDCoCDC
+oCDCoCDCoCDCoCB4bG9nX3dhcm4oCj4+IMKgIMKgIMKgIMKgIMKgIMKgICJYRlM6IHhsb2dfcmVj
+b3Zlcl9wcm9jZXNzX2RhdGE6IGJhZCBjbGllbnRpZCIpCj4+Cj4+T1IKPj4KPj4yLiBQcm92aWRl
+IG5ldyBidWZmZXIgaW4gZWFjaCBjYWxsIHRvIHhsb2dfYnJlYWQgaW4gZnVuY3Rpb24gPnhsb2df
+ZG9fcmVjb3ZlcnlfcGFzcygpLgo+Pgo+PiDCoCDCoCDCoCDCoCDCoGlmIChlcnJvcikKPj4gwqAg
+wqAgwqAgwqAgwqAgwqAgwqBnb3RvIGJyZWFkX2VycjI7Cj4+IMKgIMKgIMKgIMKgIMKgLyogYmxv
+Y2tzIGluIGRhdGEgc2VjdGlvbiAqLwo+PiDCoCDCoCDCoCDCoCDCoGJibGtzID0gKGludClCVE9C
+QihiZTMyX3RvX2NwdShyaGVhZC0+aF9sZW4pKTsKPj4rIMKgIMKgIMKgIMKgeGxvZ19wdXRfYnAo
+ZGJwKTsKPj4rIMKgIMKgIMKgIMKgZGJwID0geGxvZ19nZXRfYnAobG9nLCBCVE9CQihoX3NpemUp
+KTsKPj4gwqAgwqAgwqAgwqAgwqBlcnJvciA9IHhsb2dfYnJlYWQobG9nLCBibGtfbm8gKyBoYmxr
+cywgYmJsa3MsIGRicCwKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
+wqAgwqAgwqAgwqAgwqAgJm9mZnNldCk7Cj4+IMKgIMKgIMKgIMKgIMKgaWYgKGVycm9yKQo+PiDC
+oCDCoCDCoCDCoCDCoCDCoCDCoGdvdG8gYnJlYWRfZXJyMjsKPj4KPj5XSXRoIFJlZ2FyZHMKPj5B
+amVldCBZYWRhdgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
