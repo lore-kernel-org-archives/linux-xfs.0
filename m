@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q097SOv9240408 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 01:28:24 -0600
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	oSl9EQ0ggHp7ybmW for <xfs@oss.sgi.com>;
-	Sun, 08 Jan 2012 23:28:22 -0800 (PST)
-Received: by vcbfk26 with SMTP id fk26so3134534vcb.26
-	for <xfs@oss.sgi.com>; Sun, 08 Jan 2012 23:28:22 -0800 (PST)
+	q09E1SAV011099 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 08:01:28 -0600
+Message-ID: <4F0AF335.5070905@sgi.com>
+Date: Mon, 09 Jan 2012 08:01:25 -0600
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <CAB4K4y7SmGKG1yVvxu5jSberYS8ayYiGHOGe81CNZHmOHi7ssg@mail.gmail.com>
-References: <BAB94DBB0E89D8409949BC28AC95914C6875A2@USMAExch1.tad.internal.tilera.com>
-	<CAB4K4y7SmGKG1yVvxu5jSberYS8ayYiGHOGe81CNZHmOHi7ssg@mail.gmail.com>
-Date: Mon, 9 Jan 2012 12:58:22 +0530
-Message-ID: <CAB4K4y5W0o8mJ2koKgEZtRRB4k=UNjr3Ha1zq_ic+0LjFw-LpQ@mail.gmail.com>
-Subject: Re: XFS: bad clientid on recovery on MIPS (VIPT cache)
-From: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Subject: Re: [PATCH] xfsdump: use the full 32-bit generation number
+References: <1325880565-20934-1-git-send-email-wkendall@sgi.com>
+	<20120108005822.GA32313@davidb.org>
+In-Reply-To: <20120108005822.GA32313@davidb.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,81 +18,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tony Lu <zlu@tilera.com>, xfs@oss.sgi.com
+To: David Brown <davidb@davidb.org>
+Cc: xfs@oss.sgi.com
 
-WWVzIEkgaW1wbGVtZW50ZWQgdGhlc2UgZGVmaW5pdGlvbnMgZm9yIE1JUFMsIHdpdGhvdXQgdGhl
-bSB0aGlzCnByb2JsZW0gd2lsbCBjb250aW51ZSB0byBvY2N1ci4KCk9uIE1vbiwgSmFuIDksIDIw
-MTIgYXQgMTI6NTIgUE0sIEFqZWV0IFlhZGF2IDxhamVldC55YWRhdi43N0BnbWFpbC5jb20+IHdy
-b3RlOgo+IEhpLAo+IFlvdSBhcmUgdXNpbmcgd2hpY2gga2VybmVsIHZlcnNpb24gPyBiZWNhdXNl
-IHRoaXMgaXMgZml4ZWQgaW4gWEZTIGluCj4ga2VybmVsIDIuNi4zNAo+IGh0dHA6Ly9naXQua2Vy
-bmVsLm9yZy8/cD1saW51eC9rZXJuZWwvZ2l0L3N0YWJsZS9saW51eC1zdGFibGUuZ2l0O2E9Y29t
-bWl0O2g9NzNjNzdlMmNjYzE0NDEzYzIzMmMzZTBiM2FhNDNhMGM0YjcyZWM3MAo+Cj4gYnV0IGZv
-ciB0aGlzIHBhdGNoIHRvIHdvcmsgY29ycmVjdGx5LCB5ZXIgeW91IG5lZWQgdG8gcHJvdmlkZSB0
-aGUKPiBhcmNoaXRlY3R1cmUgZGVwZW5kZW50IGRlZmluaXRpb24gb2YgaW52YWxpZGF0ZV9rZXJu
-ZWxfdm1hcF9yYW5nZSgpIC8KPiBmbHVzaF9rZXJuZWxfdm1hcF9yYW5nZSgpIGFuZCBBUkNIX0hB
-U19GTFVTSF9LRVJORUxfRENBQ0hFX1BBR0UsCj4gc2ltaWxhciB0byB0aGlzIHBhdGNoCj4KPiBo
-dHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9zdGFibGUvbGludXgtc3Rh
-YmxlLmdpdDthPWNvbW1pdDtoPTI1MmE5YWZmZjc2MDk3NjY3NDI5YjU4M2U4YjViMTcwYjQ3NjY1
-YTQKPiBodHRwOi8vZ2l0Lmtlcm5lbC5vcmcvP3A9bGludXgva2VybmVsL2dpdC9zdGFibGUvbGlu
-dXgtc3RhYmxlLmdpdDthPWNvbW1pdDtoPTczYmUxNTkxNTc5MDg0YTgxMDNhNzAwNWRkMzE3MmYz
-ZTlkZDczNjIKPgo+IE5vdGU6IGluY2x1ZGUvbGludXgvaGlnaG1lbS5oIHByb3ZpZGUgZHVtbXkg
-ZGVmaW5pdGlvbnMgaWYKPiBhcmNoaXRlY3R1cmUgZG9lcyBub3QgZGVmaW5lIHRoZW0KPgo+ICNp
-Zm5kZWYgQVJDSF9IQVNfRkxVU0hfS0VSTkVMX0RDQUNIRV9QQUdFCj4gc3RhdGljIGlubGluZSB2
-b2lkIGZsdXNoX2tlcm5lbF9kY2FjaGVfcGFnZShzdHJ1Y3QgcGFnZSAqcGFnZSkKPiB7Cj4gfQo+
-IHN0YXRpYyBpbmxpbmUgdm9pZCBmbHVzaF9rZXJuZWxfdm1hcF9yYW5nZSh2b2lkICp2YWRkciwg
-aW50IHNpemUpCj4gewo+IH0KPiBzdGF0aWMgaW5saW5lIHZvaWQgaW52YWxpZGF0ZV9rZXJuZWxf
-dm1hcF9yYW5nZSh2b2lkICp2YWRkciwgaW50IHNpemUpCj4gewo+IH0KPiAjZW5kaQo+Cj4KPgo+
-Cj4gT24gRnJpLCBKYW4gNiwgMjAxMiBhdCAzOjQ0IFBNLCBUb255IEx1IDx6bHVAdGlsZXJhLmNv
-bT4gd3JvdGU6Cj4+IEhpLCBBamVldAo+Pgo+PiBTb3JyeSB0byBib3RoZXIgeW91LiBCeSBnb29n
-bGluZywgSSBmb3VuZCB0aGF0IEkgYW0gZW5jb3VudGVyaW5nIHRoZSBzYW1lIFhGUyB1bW91bnQg
-aXNzdWUgb24gVElMRSBhcmNoaXRlY3R1cmUuIEFuZCBJIG5vdGljZWQgdGhhdCBzb21lYm9keSBz
-dWdnZXN0ZWQgdGhhdCBvdGhlciBhcmNoaXRlY3R1cmVzIGxpa2UgQVJNLCBNSVBTIG5lZWQgdG8g
-aW1wbGVtZW50IHRoZSBmb2xsb3dpbmcgZnVuY3Rpb25zIHRvIGZpeCB0aGlzIGlzc3VlLgo+Pgo+
-PiBmbHVzaF9rZXJuZWxfZGNhY2hlX3BhZ2UoKQo+PiBmbHVzaF9rZXJuZWxfdm1hcF9yYW5nZSgp
-Cj4+IHZvaWQgaW52YWxpZGF0ZV9rZXJuZWxfdm1hcF9yYW5nZSgpCj4+Cj4+IEkgYW0gbm90IHN1
-cmUgaWYgdGhlc2UgZnVuY3Rpb25zIGNhbiByZWFsbHkgZml4IHRoaXMgaXNzdWUsIHNpbmNlIEkg
-aW1wbGVtZW50ZWQgdGhlc2UgZnVuY3Rpb25zIGZvciBUSUxFIGFyY2hpdGVjdHVyZSwgYnV0IGRp
-ZCBub3QgZml4IGl0Lgo+Pgo+PiBTbyBJIHJlYWxseSB3YW50IHRvIGtub3cgdGhhdCBpZiB5b3Ug
-aW1wbGVtZW50ZWQgdGhlc2UgZnVuY3Rpb25zIGZvciBNSVBTIHRvIGZpeCB0aGlzIGlzc3VlLiBP
-ciBpcyB0aGVyZSBvdGhlciBtZXRob2QgdG8gZml4IHRoaXMgaXNzdWU/Cj4+Cj4+IEkgd291bGQg
-YmUgdmVyeSBhcHByZWNpYXRlZCBmb3IgYW55IGZlZWRiYWNrIGZyb20geW91Lgo+Pgo+PiBUaGFu
-a3MKPj4gLVRvbnkKPj4KPj4+RGVhciBtZW1iZXIsCj4+PklmIEkgcmVtb3ZlIFVTQiBmbGFzaCBz
-dG9yYWdlIGZyb20gUEMvQVJNL01JUFMgdGFyZ2V0IChpLmUgd2l0aG91dCB1bW91bnQpIHdoaWxl
-ID5jb3B5aW5nIGZpbGUgdG8gWEZTIHBhcnRpdGlvbiBhbmQgY29ubmVjdCBpdCB0byBNSVBTIHRh
-cmdldCBJIGFsd2F5cyBnZXQKPj4+WEZTOiB4bG9nX3JlY292ZXJfcHJvY2Vzc19kYXRhOiBiYWQg
-Y2xpZW50aWQKPj4+WEZTOiBsb2cgbW91bnQvcmVjb3ZlcnkgZmFpbGVkOiBlcnJvciA1Cj4+PlhG
-UzogbG9nIG1vdW50IGZhaWxlZAo+Pj5UaGlzIHByb2JsZW0gZG9lcyBub3Qgb2NjdXIsIGlmIEkg
-Y29ubmVjdCB0aGUgc2FtZSBVU0IgZmxhc2ggdG8gUEMvQVJNIHRhcmdldC4KPj4+SSBoYXZlIHRl
-c3RlZCB0aGlzIG9uIDIuNi4zMCAtIDIuNi4zNCAoSXQgZXZlcnl3aGVyZSB3aGVuIGNvbmNlcmVu
-ZCB3aXRoIE1JUFMpCj4+Pgo+Pj5JIGhhZCB0d28gd29ya2Fyb3VuZCB0byBhdm9pZCB0aGlzIHBy
-b2JsZW0gb24gTUlQUywgYnV0IEkgd2lzaCB0byBrbm93IHRoZSBleGFjdCA+cmVhc29uIG9mIHRo
-aXMgcHJvYmxtZSBvbiBNSVBTLgo+Pj5JIGFtIHJlYWxseSB0aXJlZCBhbmQgZ2l2aW5nIHVwLCBz
-byBmaW5hbGx5IHRob3VnaHQgb2YgdGFraW5nIHlvdXIgaGVscCwgeW91ciA+Z3VpZGVuY2UgY2Fu
-IGhlbHAgbWUuCj4+Pgo+Pj4xLiBfX2ZsdXNoX2NhY2hlX2FsbCgpIGF0IHRoZSBiZWdpbmluZyBv
-ZiBlYWNoIGl0ZXJhdGlvbiBvZiB3aGlsZSBsb29wIGluID5mdW5jdGlvbiB4bG9nX3JlY292ZXJf
-cHJvY2Vzc19kYXRhKCkuCj4+Pgo+Pj4gwqAgwqAgd2hpbGUgKChkcCA8IGxwKSAmJiBudW1fbG9n
-b3BzKSB7Cj4+PisgwqAgwqAgwqAgX19mbHVzaF9jYWNoZV9hbGwoKSA7Cj4+PiDCoCDCoCDCoCDC
-oCBBU1NFUlQoZHAgKyBzaXplb2YoeGxvZ19vcF9oZWFkZXJfdCkgPD0gbHApOwo+Pj4gwqAgwqAg
-wqAgwqAgb2hlYWQgPSAoeGxvZ19vcF9oZWFkZXJfdCAqKWRwOwo+Pj4gwqAgwqAgwqAgwqAgZHAg
-Kz0gc2l6ZW9mKHhsb2dfb3BfaGVhZGVyX3QpOwo+Pj4gwqAgwqAgwqAgwqAgaWYgKG9oZWFkLT5v
-aF9jbGllbnRpZCAhPSBYRlNfVFJBTlNBQ1RJT04gJiYKPj4+IMKgIMKgIMKgIMKgIMKgIMKgIG9o
-ZWFkLT5vaF9jbGllbnRpZCAhPSBYRlNfTE9HKSB7Cj4+PiDCoCDCoCDCoCDCoCDCoCDCoCB4bG9n
-X3dhcm4oCj4+PiDCoCDCoCDCoCDCoCDCoCDCoCAiWEZTOiB4bG9nX3JlY292ZXJfcHJvY2Vzc19k
-YXRhOiBiYWQgY2xpZW50aWQiKQo+Pj4KPj4+T1IKPj4+Cj4+PjIuIFByb3ZpZGUgbmV3IGJ1ZmZl
-ciBpbiBlYWNoIGNhbGwgdG8geGxvZ19icmVhZCBpbiBmdW5jdGlvbiA+eGxvZ19kb19yZWNvdmVy
-eV9wYXNzKCkuCj4+Pgo+Pj4gwqAgwqAgwqAgwqAgwqBpZiAoZXJyb3IpCj4+PiDCoCDCoCDCoCDC
-oCDCoCDCoCDCoGdvdG8gYnJlYWRfZXJyMjsKPj4+IMKgIMKgIMKgIMKgIMKgLyogYmxvY2tzIGlu
-IGRhdGEgc2VjdGlvbiAqLwo+Pj4gwqAgwqAgwqAgwqAgwqBiYmxrcyA9IChpbnQpQlRPQkIoYmUz
-Ml90b19jcHUocmhlYWQtPmhfbGVuKSk7Cj4+PisgwqAgwqAgwqAgwqB4bG9nX3B1dF9icChkYnAp
-Owo+Pj4rIMKgIMKgIMKgIMKgZGJwID0geGxvZ19nZXRfYnAobG9nLCBCVE9CQihoX3NpemUpKTsK
-Pj4+IMKgIMKgIMKgIMKgIMKgZXJyb3IgPSB4bG9nX2JyZWFkKGxvZywgYmxrX25vICsgaGJsa3Ms
-IGJibGtzLCBkYnAsCj4+PiDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDCoCDC
-oCDCoCDCoCDCoCDCoCAmb2Zmc2V0KTsKPj4+IMKgIMKgIMKgIMKgIMKgaWYgKGVycm9yKQo+Pj4g
-wqAgwqAgwqAgwqAgwqAgwqAgwqBnb3RvIGJyZWFkX2VycjI7Cj4+Pgo+Pj5XSXRoIFJlZ2FyZHMK
-Pj4+QWplZXQgWWFkYXYKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
-bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 01/07/2012 06:58 PM, David Brown wrote:
+> On Fri, Jan 06, 2012 at 02:09:25PM -0600, Bill Kendall wrote:
+>
+>> This patch changes xfsdump to use the full 32-bit inode generation
+>> number.
+>> A change to part of the dump format (direnthdr_t) was required, so the
+>> dump format version has been bumped to 3. xfsdump also required
+>> changes to
+>> its inode-to-generation cache. This map is not persistent though, so no
+>> compatibility or version changes were required there.
+>
+> I suspect that this does fix the problem. Since the fix is in the
+> dump, not just restore, I guess I'll just have to start with a fresh
+> level 0 and see if the failure ever happens again upon restore.
+
+That's right. If you need to recover files from the backup that has
+issues, try applying only your level 1 backup and select just the
+files that failed to restore.
+
+Bill
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
