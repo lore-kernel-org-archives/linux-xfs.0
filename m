@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q09LkYS8042221 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 15:46:34 -0600
+	q09LdorU041949 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 15:39:50 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	FzglTzk1D5iEg7jt for <xfs@oss.sgi.com>;
-	Mon, 09 Jan 2012 13:46:32 -0800 (PST)
-Date: Tue, 10 Jan 2012 08:46:30 +1100
+	52HnsqJefHWgP1tI for <xfs@oss.sgi.com>;
+	Mon, 09 Jan 2012 13:39:47 -0800 (PST)
+Date: Tue, 10 Jan 2012 08:39:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Get file using a specific sector number
-Message-ID: <20120109214630.GG4198@dastard>
-References: <CAPPqfY1DOesJGfpZfnukr6PGo-KsGQ3u3tnF8UdVTZgWn2=HKA@mail.gmail.com>
+Subject: Re: Cyclic Code?
+Message-ID: <20120109213925.GF4198@dastard>
+References: <CANBXnM=Ec4zp-5AR3JY00taUR+W-G6+ZKJKhDj94uhpeVsp2tw@mail.gmail.com>
+	<CADDb1s38ts-NAhzqyt2ZiN8m6mBVzS97uACb0XVKEKrKmV=YJA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAPPqfY1DOesJGfpZfnukr6PGo-KsGQ3u3tnF8UdVTZgWn2=HKA@mail.gmail.com>
+In-Reply-To: <CADDb1s38ts-NAhzqyt2ZiN8m6mBVzS97uACb0XVKEKrKmV=YJA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,53 +23,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: olivier@ajeux.com
-Cc: xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Adil Mujeeb <mujeeb.adil@gmail.com>, xfs@oss.sgi.com
 
-On Mon, Jan 09, 2012 at 07:14:23PM +0100, Olivier Doucet wrote:
-> Hello everyone,
-> 
-> I'm actually using xfsprogs quite heavily and I'm stuck with one problem :
-> 
-> I have a sector number and I want to know which file is using it. xfs_bmap
-> does exactly the opposite (give sector number for a specific file), but I
-> cannot find how to do it the other way.
-> I made several attempts with xfs_db but cannot find how to do it properly.
-> Moreover, I need to do it on a mounted filesystem (RW), and xfs_db does not
-> seem very friendly about that ...
-> 
-> Any help would be much appreciated.
+On Mon, Jan 09, 2012 at 11:10:30PM +0530, Amit Sahrawat wrote:
+> On Mon, Jan 9, 2012 at 12:22 PM, Adil Mujeeb <mujeeb.adil@gmail.com> wrot=
+e:
+> > Hi list,
+> >
+> > i am new to XFS.
+> >
+> > I was going through XFS code (2.4 based) for study purpose. Its old but
+> > assuming its bit simple as compare to latest one. Moreover the XFS code=
+ /
+> > design structure documents available on the internet is 2.4 based.
+> May be if you switch to a version around 2.6.20 nearabout - it will
+> make it easier to understand the code. Prior to that the complete XFS
+> source code seemed like traversing through a lot of macros... I
+> started with 2.6.18 and it was really hard to understand from that
+> version...
 
-There is no easy way to do it, because XFS does not have a reverse
-map btree to tell you the owner of any given block. The only way to
-find this is to walk the entire metadata tree to find the owner of
-the block.
+I'd recommend starting with the current top of tree code - it is
+much, much cleaner that the code base even from 2.6.20. Remember, 2.6.20
+was released almost 5 years ago (Feb 4 2007), and there's been a
+*lot* of cleanup work done since then....
 
-You can't do that reliably just by walking the directory heirarchy
-and running xfs_bmap and xfs_bmap -a on every file and directory,
-because the sector you are after may be in metadata that you can't
-expose via this method. e.g. it might be a block in the extent tree
-that xfs_bmap walks, in the free space or inode btrees, etc.
+> > The following code snippet is not clear to me (seems cyclic):
+> >
+> > ---------
+> > ...
+> > ...
+> > #define XFS_IFORK_NEXTENTS(ip,w) =A0 =A0 =A0 =A0xfs_ifork_nextents(ip,w)
+> > ...
+> > xfs_ifork_nextents(xfs_inode_t *ip, int w)
+> > {
+> > =A0=A0 =A0 =A0 =A0return XFS_IFORK_NEXTENTS(ip, w);
+> > }
+> I guess you missed something while reading the code.... I tried to
+> look at the repositry.. this is how the code looks...
+> #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_IFORK_NEXTENTS)	=
 
-xfs_db is really the only way you can do this right now, using the
-blockget command. You can run xfs_db on a RW filesystem (run it in
-read-only mode), but xfs_db is not coherent with active filesystem
-changes and hence is likely to crash randomly as the filesytem
-changes under it. Also, blockget takes blocks in FSB format, so you
-need to convert your sector (daddr) to FSB units using the convert
-command first.
+>  int xfs_ifork_nextents(xfs_inode_t *ip, int w);	=
 
-FWIW, you could always freeze the filesystem while you run the xfs_db
-command, but that may cause other problems for your applications...
+>  #define XFS_IFORK_NEXTENTS(ip,w)        xfs_ifork_nextents(ip,w)	=
+
+>  #else	=
+
+>  #define XFS_IFORK_NEXTENTS(ip,w)        XFS_CFORK_NEXTENTS(&ip->i_d, w)	=
+
+>  #endif
+> ....
+> #define XFS_CFORK_NEXTENTS(dcp,w) \
+> 	((w) =3D=3D XFS_DATA_FORK ? (dcp)->di_nextents : (dcp)->di_anextents)
+
+Yup, that XFS_WANT_FUNCS crap was for debugging the macros because
+they were too complex to debug in line. That went long ago.
+
+FYI, macros were very popular in Irix code - desite SGI having an
+awesome compiler, the SGI kernel engineers believed that function
+calls were just too expensive to call and so macros that expanded
+out to 300 lines of code were common. Hence the need to have some
+way of debugging them.
+
+Hell, I know one engineer used to compile the code and then
+disassemble in the debugger on the running machine because that was
+the *simplest way* to work out what code the macros actually
+compiled in. :-O
+
+I'm glad we've got rid of most of the macro-instead-of-function
+usage now...
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
