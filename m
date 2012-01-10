@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0AMASBw100561 for <xfs@oss.sgi.com>; Tue, 10 Jan 2012 16:10:28 -0600
+	q0AM2xGR100020 for <xfs@oss.sgi.com>; Tue, 10 Jan 2012 16:02:59 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ApTijHskfxF8AGi9 for <xfs@oss.sgi.com>;
-	Tue, 10 Jan 2012 14:10:26 -0800 (PST)
-Date: Wed, 11 Jan 2012 09:10:24 +1100
+	fEDksgByFhPbZcgG for <xfs@oss.sgi.com>;
+	Tue, 10 Jan 2012 14:02:45 -0800 (PST)
+Date: Wed, 11 Jan 2012 09:02:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Empty dir can't be removed ... because it's not empty?
-Message-ID: <20120110221024.GC24410@dastard>
-References: <201201102126.35268.rafagriman@gmail.com>
+Subject: Re: [PATCH] xfstests 273: Create lost+found to pass _check_scratch_fs
+Message-ID: <20120110220242.GB24410@dastard>
+References: <1326213469-22687-1-git-send-email-guaneryu@gmail.com>
+	<1326213469-22687-2-git-send-email-guaneryu@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201201102126.35268.rafagriman@gmail.com>
+In-Reply-To: <1326213469-22687-2-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,58 +23,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Rafa =?iso-8859-1?Q?Grim=E1n?= <rafagriman@gmail.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jan 10, 2012 at 09:26:35PM +0100, Rafa Grim=E1n wrote:
-> Hi all :)
-> =
+On Wed, Jan 11, 2012 at 12:37:49AM +0800, Eryu Guan wrote:
+> fsck.extN will complain lost+found is missing and fail 273.
+> So create lost+found explicitly after removing everything in
+> $SCRATCH_MNT.
 
-> My /home is on an XFS partition all to it's own. The other day the lights=
- went =
+I'd consider that a bug in e2fsck. Other filesystems handle missing
+lost+found directories without failing, but then again it's only
+these new tests that do this so fixing the tests is probably the
+right thing to do here.
 
-> out and when I rebooted, there's an empty directory that can't be erased.=
- This =
+> Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+> ---
+>  273 |    2 ++
+>  1 files changed, 2 insertions(+), 0 deletions(-)
+> 
+> diff --git a/273 b/273
+> index 2965132..9ecb2d3 100755
+> --- a/273
+> +++ b/273
+> @@ -36,6 +36,7 @@ _cleanup()
+>  {
+>  	cd /
+>  	rm -rf $SCRATCH_MNT/* $tmp.*
+> +	mkdir -p $SCRATCH_MNT/lost+found
+>  	_scratch_unmount
+>  }
 
-> directory is a subdirectory in ~/.kde4/
+We shouldn't be removing files from the scratch device  in the
+_cleanup function - if the test exits or fails, we need the corpse
+to be intact for debugging. Remving $SCRATCH_MNT/* from the rm
+command is what should be done here.
 
-Is your system using barriers (i.e. mounting with nobarrier option,
-or hardware that doesn't support FUA)? Directory corruption like
-this on power failure is a classic sign of a voltile drive cache
-being lost on power failure.
+>  
+> @@ -107,6 +108,7 @@ _do_workload()
+>  	_pid=1
+>  	
+>  	rm -rf $SCRATCH_MNT/*
+> +	mkdir -p $SCRATCH_MNT/lost+found
 
-The output of dmesg from a system boot will tell us what hardware
-you have...
+And rather than doing this, the test should put all it's files in a
+known location on the $SCRATCH_MNT and just remove that. e.g:
 
-> The funny thing about this is that I can rename the directory, but I can'=
-t =
+WORK_DIR="$SCRATCH_MNT/$seq"
 
-> delete it:
-> =
+....
 
-> [root@mine albumcovers]# ls
-> .  ..  cache
-> =
+	rm -rf $WORKDIR
 
-> [root@mine albumcovers]# ls -lah cache/
-> total 0
-> drwx------ 1 rafa users  6 Jan 10 02:23 .
-> drwx------ 3 rafa users 18 Jan 10 02:23 ..
-            ^^^
+....
 
-It's link count is 3, meaning that it thinks that there is an entry
-in the directory. You need to run xfs_repair to fix it (and whatever
-else is broken).
+The same fixes are required for 274 and 275 as well.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
