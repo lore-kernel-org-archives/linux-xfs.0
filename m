@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q09LdorU041949 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 15:39:50 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	52HnsqJefHWgP1tI for <xfs@oss.sgi.com>;
-	Mon, 09 Jan 2012 13:39:47 -0800 (PST)
-Date: Tue, 10 Jan 2012 08:39:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Cyclic Code?
-Message-ID: <20120109213925.GF4198@dastard>
-References: <CANBXnM=Ec4zp-5AR3JY00taUR+W-G6+ZKJKhDj94uhpeVsp2tw@mail.gmail.com>
-	<CADDb1s38ts-NAhzqyt2ZiN8m6mBVzS97uACb0XVKEKrKmV=YJA@mail.gmail.com>
+	q0A2gDbj052195 for <xfs@oss.sgi.com>; Mon, 9 Jan 2012 20:42:14 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id hYCT0a0sphg02RMy
+	for <xfs@oss.sgi.com>; Mon, 09 Jan 2012 18:42:12 -0800 (PST)
+Received: by lagr15 with SMTP id r15so2111801lag.26
+	for <xfs@oss.sgi.com>; Mon, 09 Jan 2012 18:42:11 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CADDb1s38ts-NAhzqyt2ZiN8m6mBVzS97uACb0XVKEKrKmV=YJA@mail.gmail.com>
+Date: Tue, 10 Jan 2012 10:42:09 +0800
+Message-ID: <CAGdb-8fyseE+ARMUWaQYcx1VCnmph=xL7XeTBUXg2wSSdF_7hw@mail.gmail.com>
+Subject: xfsdump 3.0.6, ERROR: xfs_quota failed with exit status: -1
+From: Tommy Wu <wu.tommy@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,87 +20,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Adil Mujeeb <mujeeb.adil@gmail.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Jan 09, 2012 at 11:10:30PM +0530, Amit Sahrawat wrote:
-> On Mon, Jan 9, 2012 at 12:22 PM, Adil Mujeeb <mujeeb.adil@gmail.com> wrot=
-e:
-> > Hi list,
-> >
-> > i am new to XFS.
-> >
-> > I was going through XFS code (2.4 based) for study purpose. Its old but
-> > assuming its bit simple as compare to latest one. Moreover the XFS code=
- /
-> > design structure documents available on the internet is 2.4 based.
-> May be if you switch to a version around 2.6.20 nearabout - it will
-> make it easier to understand the code. Prior to that the complete XFS
-> source code seemed like traversing through a lot of macros... I
-> started with 2.6.18 and it was really hard to understand from that
-> version...
+Hi!
 
-I'd recommend starting with the current top of tree code - it is
-much, much cleaner that the code base even from 2.6.20. Remember, 2.6.20
-was released almost 5 years ago (Feb 4 2007), and there's been a
-*lot* of cleanup work done since then....
+when I use xfsdump 3.0.6, it always got ERROR for xfs_quota like this:
 
-> > The following code snippet is not clear to me (seems cyclic):
-> >
-> > ---------
-> > ...
-> > ...
-> > #define XFS_IFORK_NEXTENTS(ip,w) =A0 =A0 =A0 =A0xfs_ifork_nextents(ip,w)
-> > ...
-> > xfs_ifork_nextents(xfs_inode_t *ip, int w)
-> > {
-> > =A0=A0 =A0 =A0 =A0return XFS_IFORK_NEXTENTS(ip, w);
-> > }
-> I guess you missed something while reading the code.... I tried to
-> look at the repositry.. this is how the code looks...
-> #if XFS_WANT_FUNCS || (XFS_WANT_SPACE && XFSSO_XFS_IFORK_NEXTENTS)	=
+/sbin/xfsdump: using file dump (drive_simple) strategy
+/sbin/xfsdump: version 3.0.6 (dump format 3.0) - Running single-threaded
+/sbin/xfsdump: saving user quota information for: /var/www
+/sbin/xfsdump: ERROR: xfs_quota failed with exit status: -1
+/sbin/xfsdump: ERROR: failed to save user quota information, continuing
+/sbin/xfsdump: level 0 dump of fw1.teatime.com.tw:/var/www
+/sbin/xfsdump: dump date: Tue Jan 10 10:34:24 2012
 
->  int xfs_ifork_nextents(xfs_inode_t *ip, int w);	=
+downgrade to 3.0.5, same command (also same xfsprogs 3.1.7), no any error:
 
->  #define XFS_IFORK_NEXTENTS(ip,w)        xfs_ifork_nextents(ip,w)	=
+/sbin/xfsdump: using file dump (drive_simple) strategy
+/sbin/xfsdump: version 3.0.5 (dump format 3.0) - Running single-threaded
+/sbin/xfsdump: saving user quota information for: /var/www
+/sbin/xfsdump: level 0 dump of fw1.teatime.com.tw:/var/www
+/sbin/xfsdump: dump date: Tue Jan 10 10:30:36 2012
 
->  #else	=
+But even it got error for xfs_quota, the xfsdump_quotas file was
+created successful, I check the command used in xfsdump, the same
+xfs_quota command work fine without any error in shell script (I also
+write a simple C program to use system() to execute it, also no error
+for such command).
 
->  #define XFS_IFORK_NEXTENTS(ip,w)        XFS_CFORK_NEXTENTS(&ip->i_d, w)	=
+-- 
 
->  #endif
-> ....
-> #define XFS_CFORK_NEXTENTS(dcp,w) \
-> 	((w) =3D=3D XFS_DATA_FORK ? (dcp)->di_nextents : (dcp)->di_anextents)
-
-Yup, that XFS_WANT_FUNCS crap was for debugging the macros because
-they were too complex to debug in line. That went long ago.
-
-FYI, macros were very popular in Irix code - desite SGI having an
-awesome compiler, the SGI kernel engineers believed that function
-calls were just too expensive to call and so macros that expanded
-out to 300 lines of code were common. Hence the need to have some
-way of debugging them.
-
-Hell, I know one engineer used to compile the code and then
-disassemble in the debugger on the running machine because that was
-the *simplest way* to work out what code the macros actually
-compiled in. :-O
-
-I'm glad we've got rid of most of the macro-instead-of-function
-usage now...
-
-Cheers,
-
-Dave.
--- =
-
-Dave Chinner
-david@fromorbit.com
+Tommy Wu
 
 _______________________________________________
 xfs mailing list
