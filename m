@@ -1,14 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0ABeMxE076081 for <xfs@oss.sgi.com>; Tue, 10 Jan 2012 05:40:22 -0600
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id 9avqFI04VSjPJDYe for
-	<xfs@oss.sgi.com>; Tue, 10 Jan 2012 03:40:18 -0800 (PST)
-From: Liu Bo <liubo2009@cn.fujitsu.com>
-Subject: [PATCH] xfstests: fix 251's cp -axT problem
-Date: Tue, 10 Jan 2012 19:39:20 +0800
-Message-Id: <1326195560-4434-1-git-send-email-liubo2009@cn.fujitsu.com>
+	q0AGcANa087940 for <xfs@oss.sgi.com>; Tue, 10 Jan 2012 10:38:10 -0600
+Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id nxdm08F7OlsfSyNp
+	for <xfs@oss.sgi.com>; Tue, 10 Jan 2012 08:38:08 -0800 (PST)
+Received: by yhpp34 with SMTP id p34so1610580yhp.26
+	for <xfs@oss.sgi.com>; Tue, 10 Jan 2012 08:38:08 -0800 (PST)
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: [PATCH] xfstests 271: use xfs_io to truncate file instead of
+	truncate(1)
+Date: Wed, 11 Jan 2012 00:37:48 +0800
+Message-Id: <1326213469-22687-1-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,34 +25,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eryu Guan <guaneryu@gmail.com>
 
-When I ran xfstests, 251 got failed cause "cp -axT" did not work as wish:
-cp: cannot overwrite directory `/mnt/scratch/1' with non-directory
+Distros(eg. RHEL5) with older version of coreutils have no truncate(1)
+command. Use xfs_io instead to avoid "command not found" failures.
 
-With this patch, 251 has passed.
-
-Signed-off-by: Liu Bo <liubo2009@cn.fujitsu.com>
+Signed-off-by: Eryu Guan <guaneryu@gmail.com>
 ---
- 251 |    2 +-
+ 271 |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/251 b/251
-index fa3d74a..b54e4c3 100755
---- a/251
-+++ b/251
-@@ -130,7 +130,7 @@ function run_process() {
+diff --git a/271 b/271
+index 58a7f91..b96d702 100755
+--- a/271
++++ b/271
+@@ -55,7 +55,7 @@ do
+     dd if=/dev/zero of=$SCRATCH_MNT/file bs=4k count=1 seek=$((i*10))
+ done
+ # truncate last extent
+-truncate $SCRATCH_MNT/file --size $((4096* 200))
++$XFS_IO_PROG -F -f -c "truncate $((4096*200))" $SCRATCH_MNT/file
  
- 		# Copy content -> partition.
- 		mkdir $SCRATCH_MNT/$p
--		cp -axT $content $SCRATCH_MNT/$p
-+		cp -axT $content/ $SCRATCH_MNT/$p/
- 		export chpid=$! && wait $chpid &> /dev/null
- 
- 		check_sums
+ if ! _scratch_unmount; then
+ 	echo "failed to umount"
 -- 
-1.6.5.2
+1.7.8.2
 
 _______________________________________________
 xfs mailing list
