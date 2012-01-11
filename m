@@ -1,9 +1,9 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BLC0vv190184 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 15:12:00 -0600
-Message-ID: <4F0DFB20.7030704@sgi.com>
-Date: Wed, 11 Jan 2012 15:12:00 -0600
+	q0BL7S6Y189981 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 15:07:29 -0600
+Message-ID: <4F0DFA11.7030305@sgi.com>
+Date: Wed, 11 Jan 2012 15:07:29 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
@@ -25,14 +25,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: jeff.liu@oracle.com
 Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-xfs_has_unwritten_buffer() always returns the offset of the first
-dirty unwritten page. This can cause xfs_seek_data() and xfs_seek_hole()
-to give the wrong results in certain circumstances.
 
-
-In xfs_seek_data(), every page past first dirty/unwritten page in the
-unwritten extent will be reported as data.
-
+xfs_bmapi_read() returns the br_state == XFS_EXT_NORM for a hole.
+There are a couple places that a hole can trigger a data test.
+BTW, I could not generate a large enough hole that xfs_bmapi_read()
+would return as more than one hole entry, so I will ignore those
+situations and just list the couple places that a hole may be match
+a data rule:
 
 in xfs_seek_data():
 +		/*
@@ -51,49 +50,53 @@ in xfs_seek_data():
 +				offset = max_t(loff_t, seekoff, offset);
 +				break;
 +			}
++
++			/* No data extent at the given offset */
++			if (nmap == 1) {
++				error = ENXIO;
++				break;
++			}
++
++			if (map[1].br_state == XFS_EXT_NORM ||
+			^^^ could be a hole and not data^^^
 
-Since the xfs_has_unwritten_buffer() returns the offset of the first
-dirty/unwritten page (the first page in this example), the max_t()
-comparison will say that every page after the first dirty page has
-data.
+I think you need to add back the br_startblock test:
 
-		-----
++			if ((map[1].br_state == XFS_EXT_NORM &&
++			     map[1].br_startblock != HOLESTARTBLOCK) ||
 
-xfs_seek_hole() can only find a hole if it precedes the first dirty
-page.
 
 in xfs_seek_hole():
 +		/*
-+		 * Landed in an unwritten extent, try to lookup the page
-+		 * cache to find out if there is dirty data or not. If
-+		 * nothing was found, treate it as a hole. If there has
-+		 * dirty data and its offset starts past both the start
-+		 * block of the map and the current seek offset, it should
-+		 * be treated as hole too. Otherwise, go through the next
-+		 * extent to fetch holes.
++		 * Landed in a delay allocated extent or a real data extent,
++		 * if the next extent is landed in a hole or in an unwritten
++		 * extent but without data committed in the page cache, return
++		 * its offset. If the next extent has dirty data in page cache,
++		 * but its offset starts past both the start block of the map
++		 * and the seek offset, it still be a hole.
 +		 */
-+		if (map[0].br_state == XFS_EXT_UNWRITTEN) {
-+			if (xfs_has_unwritten_buffer(inode, &map[0],
-+						     PAGECACHE_TAG_DIRTY,
-+						     &offset) ||
-+			    xfs_has_unwritten_buffer(inode, &map[0],
-+						     PAGECACHE_TAG_WRITEBACK,
-+						     &offset)) {
-+				if (offset > max_t(loff_t, seekoff,
-+						   XFS_FSB_TO_B(mp,
-+						   map[0].br_startoff))) {
-+					offset = max_t(loff_t, seekoff,
-+						       XFS_FSB_TO_B(mp,
-+						       map[0].br_startoff));
-+					break;
-+				}
-+			} else {
-+				offset = max_t(loff_t, seekoff,
-+					XFS_FSB_TO_B(mp, map[0].br_startoff));
-+				break;
-+			}
++		if (map[0].br_startblock == DELAYSTARTBLOCK ||
++		    map[0].br_state == XFS_EXT_NORM) {
+			^^^ could be a hole ^^^
 
---Mark Tinguely.
+    and this only matters because this test is checked before the next test:
+		
++
++		/* Landed in a hole, its fine to return */
++		if (map[0].br_startblock == HOLESTARTBLOCK) {
++			offset = max_t(loff_t, seekoff,
++				       XFS_FSB_TO_B(mp, map[0].br_startoff));
++			break;
++		}
+
+
+
+Switching the order of these two tests would return the immediate offset
+starting a hole seek at the offset of a hole.
+
+
+None of these conditions will result in data corruption, only earlier
+detection of a hole.
 
 _______________________________________________
 xfs mailing list
