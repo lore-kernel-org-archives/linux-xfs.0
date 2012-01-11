@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BATpeU156043
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Jan 2012 04:29:51 -0600
+	q0BBhcsl162174 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:43:38 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	2YqsXZz5GYXanBjp for <linux-xfs@oss.sgi.com>;
-	Wed, 11 Jan 2012 02:29:50 -0800 (PST)
-Date: Wed, 11 Jan 2012 05:29:49 -0500
+	wxeu9y4GccclYAtY for <xfs@oss.sgi.com>;
+	Wed, 11 Jan 2012 03:43:37 -0800 (PST)
+Date: Wed, 11 Jan 2012 06:43:35 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Why does xfsdump encounter "WARNING: could not get list of
-	non-root attributes for nondir ino nnnn: Cannot allocate memory (12)"?
-Message-ID: <20120111102949.GA22652@infradead.org>
-References: <jdo01m$62j$1@dough.gmane.org> <20120102213706.GQ23662@dastard>
-	<20120111095513.GA26958@infradead.org>
-	<20120111100316.GH24410@dastard>
-	<20120111100412.GA1538@infradead.org>
-	<20120111101426.GI24410@dastard>
+Subject: Re: XFS: bad clientid on recovery on MIPS (VIPT cache)
+Message-ID: <20120111114335.GD14423@infradead.org>
+References: <BAB94DBB0E89D8409949BC28AC95914C6875A2@USMAExch1.tad.internal.tilera.com>
+	<CAB4K4y7SmGKG1yVvxu5jSberYS8ayYiGHOGe81CNZHmOHi7ssg@mail.gmail.com>
+	<CAB4K4y5W0o8mJ2koKgEZtRRB4k=UNjr3Ha1zq_ic+0LjFw-LpQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120111101426.GI24410@dastard>
+In-Reply-To: <CAB4K4y5W0o8mJ2koKgEZtRRB4k=UNjr3Ha1zq_ic+0LjFw-LpQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,23 +29,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com, Michael Lueck <mlueck@lueckdatasystems.com>
+To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
+Cc: Tony Lu <zlu@tilera.com>, xfs@oss.sgi.com
 
-On Wed, Jan 11, 2012 at 09:14:27PM +1100, Dave Chinner wrote:
-> Which has lead to several implementations of duplicated
-> functionality like:
-> 
-> 	- ext4_kvmalloc/ext4_kvfree
-> 	- drm_malloc_ab/drm_calloc_large/drm_free_large
-> 	- ceph_buffer_new/ceph_buffer_release
-> 	- gfs2_alloc_sort_buffer/gfs2_free_sort_buffer
-> 	- __ntfs_malloc/ntfs_free
-> 
-> I don't think adding another two sets of identical wrappers (or open
-> coding it) is the right thing given that it is a repeating pattern.
+On Mon, Jan 09, 2012 at 12:58:22PM +0530, Ajeet Yadav wrote:
+> Yes I implemented these definitions for MIPS, without them this
+> problem will continue to occur.
 
-Give it a try, I'm not against it myself.
+Btw, Linux 3.2 finally has a version of the helpers in mainline.
 
 _______________________________________________
 xfs mailing list
