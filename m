@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BAEUPA153815
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Jan 2012 04:14:31 -0600
+	q0BA3Kho153117
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Jan 2012 04:03:20 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	mpnfCrTUek70jGNs for <linux-xfs@oss.sgi.com>;
-	Wed, 11 Jan 2012 02:14:29 -0800 (PST)
-Date: Wed, 11 Jan 2012 21:14:27 +1100
+	dZ12GDtKWysVl5ce for <linux-xfs@oss.sgi.com>;
+	Wed, 11 Jan 2012 02:03:18 -0800 (PST)
+Date: Wed, 11 Jan 2012 21:03:16 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Why does xfsdump encounter "WARNING: could not get list of
 	non-root attributes for nondir ino nnnn: Cannot allocate memory (12)"?
-Message-ID: <20120111101426.GI24410@dastard>
+Message-ID: <20120111100316.GH24410@dastard>
 References: <jdo01m$62j$1@dough.gmane.org> <20120102213706.GQ23662@dastard>
 	<20120111095513.GA26958@infradead.org>
-	<20120111100316.GH24410@dastard>
-	<20120111100412.GA1538@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120111100412.GA1538@infradead.org>
+In-Reply-To: <20120111095513.GA26958@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,25 +32,27 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@oss.sgi.com, Michael Lueck <mlueck@lueckdatasystems.com>
 
-On Wed, Jan 11, 2012 at 05:04:12AM -0500, Christoph Hellwig wrote:
-> On Wed, Jan 11, 2012 at 09:03:16PM +1100, Dave Chinner wrote:
-> > Sounds like a generic kvmalloc()/kvfree() call pair is the answer
-> > then. i.e. if kmalloc fails, then use vmalloc()...
+On Wed, Jan 11, 2012 at 04:55:14AM -0500, Christoph Hellwig wrote:
+> On Tue, Jan 03, 2012 at 08:37:06AM +1100, Dave Chinner wrote:
+> > xfs: handle kmalloc failure when reading attrs
+> > 
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfsdump uses for a large buffer for extended attributes, which has a
+> > kmalloc'd shadow buffer in the kernel. This can fail after the
+> > system has been running for some time as it is a high order
+> > allocation. Convert this to a vmalloc so that it doesn't require
+> > contiguous memory and so won't randomly fail while xfsdump is
+> > running.
 > 
-> If my memory serves me right that's been discussed and rejected a few
-> times before.
+> I think this should use kmalloc for allocation smaller than a page to
+> avoid the vmalloc overhead for the usual case of small attributes.
+> 
+> Also the fs/xattr.c code for the normal xattr system calls needs the
+> same treatment.
 
-Which has lead to several implementations of duplicated
-functionality like:
-
-	- ext4_kvmalloc/ext4_kvfree
-	- drm_malloc_ab/drm_calloc_large/drm_free_large
-	- ceph_buffer_new/ceph_buffer_release
-	- gfs2_alloc_sort_buffer/gfs2_free_sort_buffer
-	- __ntfs_malloc/ntfs_free
-
-I don't think adding another two sets of identical wrappers (or open
-coding it) is the right thing given that it is a repeating pattern.
+Sounds like a generic kvmalloc()/kvfree() call pair is the answer
+then. i.e. if kmalloc fails, then use vmalloc()...
 
 Cheers,
 
