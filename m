@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BBYVUb161426 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:34:31 -0600
-Date: Wed, 11 Jan 2012 06:34:28 -0500
+	q0BBjmgq162433 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:45:48 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	us0YkOahE8IbcZVP for <xfs@oss.sgi.com>;
+	Wed, 11 Jan 2012 03:45:47 -0800 (PST)
+Date: Wed, 11 Jan 2012 06:45:44 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] xfs: serialise unaligned direct IOs
-Message-ID: <20120111113428.GA14423@infradead.org>
-References: <1325845990-5664-1-git-send-email-amit.sahrawat83@gmail.com>
+Subject: Re: [PATCH] xfstests: fix 251's cp -axT problem
+Message-ID: <20120111114544.GE14423@infradead.org>
+References: <1326195560-4434-1-git-send-email-liubo2009@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1325845990-5664-1-git-send-email-amit.sahrawat83@gmail.com>
+In-Reply-To: <1326195560-4434-1-git-send-email-liubo2009@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,31 +27,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs masters <xfs-masters@oss.sgi.com>, xfs <xfs@oss.sgi.com>, linux kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
+To: Liu Bo <liubo2009@cn.fujitsu.com>
+Cc: Lukas Czerner <lczerner@redhat.com>, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-> +	/*
-> +	 * In most cases the direct IO writes will be done with IOLOCK_SHARED
-> +	 * allowing them to be done in parallel with reads and other direct IO
-> +	 * writes. However,if the IO is not aligned to filesystem blocks, the
-> +	 * direct IO layer needs to do sub-block zeroing and that requires
-> +	 * serialisation against other direct IOs to the same block. In this
-> +	 * case we need to serialise the submission of the unaligned IOs so
-> +	 * that we don't get racing block zeroing in the dio layer.
-> +	 * To avoid the problem with aio, we also need to wait for outstanding
-> +	 * IOs to complete so that unwritten extent conversion is completed
-> +	 * before we try to map the overlapping block. This is currently
-> +	 * implemented by hitting it with a big hammer (i.e. xfs_ioend_wait()).
-> +	 */
-> +
+On Tue, Jan 10, 2012 at 07:39:20PM +0800, Liu Bo wrote:
+> When I ran xfstests, 251 got failed cause "cp -axT" did not work as wish:
+> cp: cannot overwrite directory `/mnt/scratch/1' with non-directory
+> 
+> With this patch, 251 has passed.
 
-This comment is lacking one level of indentation, that's because the old
-kernel is missing the split of xfs_file_aio_write that reduces one level
-of indentation.
+Why would cp give that message with a missing /?
 
-Otherwise the backport looks fine, please send it to
-stable@vger.kernel.org, with a [PATCH 0/0] coverletter stating it's for
-2.6.35-stable.
+I'm not against putting this in, but I'd like to understand what's going
+on.
+
+Lukas, any idea?
 
 _______________________________________________
 xfs mailing list
