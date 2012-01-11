@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BKdkWc188964 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 14:39:46 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	HAZg4NCTDBFf5q9u for <xfs@oss.sgi.com>;
-	Wed, 11 Jan 2012 12:39:44 -0800 (PST)
-Date: Thu, 12 Jan 2012 07:39:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Fix missing xfs_iunlock() on error recovery path in
-	xfs_readlink()
-Message-ID: <20120111203941.GJ24410@dastard>
-References: <1326307930-21251-1-git-send-email-jack@suse.cz>
+	q0BL6COY189930 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 15:06:12 -0600
+Message-ID: <4F0DF9C1.2060302@sgi.com>
+Date: Wed, 11 Jan 2012 15:06:09 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1326307930-21251-1-git-send-email-jack@suse.cz>
+Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
+References: <4F06F71A.2010301@oracle.com> <20120110171855.GX6390@sgi.com>
+	<4F0D21E5.7010908@oracle.com>
+In-Reply-To: <4F0D21E5.7010908@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,45 +18,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, stable@kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: jeff.liu@oracle.com
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-On Wed, Jan 11, 2012 at 07:52:10PM +0100, Jan Kara wrote:
-> Commit b52a360b forgot to call xfs_iunlock() when it detected corrupted
-> symplink and bailed out. Fix it by jumping to 'out' instead of doing return.
-> 
-> CC: stable@kernel.org
-> CC: Carlos Maiolino <cmaiolino@redhat.com>
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/xfs_vnodeops.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-> index f2fea86..6156cd6 100644
-> --- a/fs/xfs/xfs_vnodeops.c
-> +++ b/fs/xfs/xfs_vnodeops.c
-> @@ -131,7 +131,8 @@ xfs_readlink(
->  			 __func__, (unsigned long long) ip->i_ino,
->  			 (long long) pathlen);
->  		ASSERT(0);
-> -		return XFS_ERROR(EFSCORRUPTED);
-> +		error = XFS_ERROR(EFSCORRUPTED);
-> +		goto out;
->  	}
 
-Heh, you beat me to it. I was testing an identical patch yesterday
-for this problem which was tripped over by RH QA....
+Good work.  I know this is an important addition.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+The test in the for loop of the xfs_seek_data() and xfs_seek_hole() 
+routines,
+are independent of each other except in order of them being called.
 
--- 
-Dave Chinner
-david@fromorbit.com
+One could add a "continue" statement after computing the offset for the next
+iteration of the loop.
+
+This allows the addition of an error condition if no conditions are matched.
+
+
+Rough patch relative to your patch of the idea.
+
+--- fs/xfs/xfs_file.c.orig	2012-01-11 08:50:50.000000000 -0600
++++ fs/xfs/xfs_file.c	2012-01-11 09:12:47.000000000 -0600
+@@ -1265,7 +1265,7 @@ xfs_seek_data(
+  	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+  	len = XFS_B_TO_FSB(mp, isize);
+
+-	for (;;) {
++	do {
+  		struct xfs_bmbt_irec	map[2];
+  		int			nmap = 2;
+  		loff_t			seekoff;
+@@ -1323,6 +1323,7 @@ xfs_seek_data(
+  			}
+
+  			fsbno = map[1].br_startoff + map[1].br_blockcount;
++			continue;
+  		}
+
+  		/*
+@@ -1366,6 +1367,7 @@ xfs_seek_data(
+  			}
+
+  			fsbno = map[1].br_startoff + map[1].br_blockcount;
++			continue;
+  		}
+
+  		/* Landed in a delay allocated extent or a real data extent */
+@@ -1376,11 +1378,14 @@ xfs_seek_data(
+  			break;
+  		}
+
++		error = ENXIO;
++		goto out_lock;
++	} while (XFS_FSB_TO_B(mp, fsbno) < isize);
++
+  		/* Return ENXIO if beyond eof */
+-		if (XFS_FSB_TO_B(mp, fsbno) > isize) {
+-			error = ENXIO;
+-			goto out_lock;
+-		}
++	 if (XFS_FSB_TO_B(mp, fsbno) > isize) {
++		error = ENXIO;
++		goto out_lock;
+  	}
+
+  	if (offset < start)
+@@ -1424,7 +1429,7 @@ xfs_seek_hole(
+  	ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+  	len = XFS_B_TO_FSB(mp, isize);
+
+-	for (;;) {
++	do {
+  		struct xfs_bmbt_irec	map[2];
+  		int			nmap = 2;
+  		loff_t			seekoff;
+@@ -1507,6 +1512,7 @@ xfs_seek_hole(
+  			}
+
+  			fsbno = map[1].br_startoff + map[1].br_blockcount;
++			continue;
+  		}
+
+  		/*
+@@ -1555,6 +1561,7 @@ xfs_seek_hole(
+  			}
+
+  			fsbno = map[1].br_startoff + map[1].br_blockcount;
++			continue;
+  		}
+
+  		/* Landed in a hole, its fine to return */
+@@ -1564,11 +1571,14 @@ xfs_seek_hole(
+  			break;
+  		}
+
++		error = ENXIO;
++		goto out_lock;
++	} while (XFS_FSB_TO_B(mp, fsbno) < isize);
++
+  		/* Return ENXIO if beyond eof */
+-		if (XFS_FSB_TO_B(mp, fsbno) > isize) {
+-			error = ENXIO;
+-			goto out_lock;
+-		}
++	if (XFS_FSB_TO_B(mp, fsbno) > isize) {
++		error = ENXIO;
++		goto out_lock;
+  	}
+
+  	if (offset < start)
+
+
+--Mark Tinguely
 
 _______________________________________________
 xfs mailing list
