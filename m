@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BBhcsl162174 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:43:38 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wxeu9y4GccclYAtY for <xfs@oss.sgi.com>;
-	Wed, 11 Jan 2012 03:43:37 -0800 (PST)
-Date: Wed, 11 Jan 2012 06:43:35 -0500
+	q0BBYVUb161426 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:34:31 -0600
+Date: Wed, 11 Jan 2012 06:34:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS: bad clientid on recovery on MIPS (VIPT cache)
-Message-ID: <20120111114335.GD14423@infradead.org>
-References: <BAB94DBB0E89D8409949BC28AC95914C6875A2@USMAExch1.tad.internal.tilera.com>
-	<CAB4K4y7SmGKG1yVvxu5jSberYS8ayYiGHOGe81CNZHmOHi7ssg@mail.gmail.com>
-	<CAB4K4y5W0o8mJ2koKgEZtRRB4k=UNjr3Ha1zq_ic+0LjFw-LpQ@mail.gmail.com>
+Subject: Re: [PATCH 1/1] xfs: serialise unaligned direct IOs
+Message-ID: <20120111113428.GA14423@infradead.org>
+References: <1325845990-5664-1-git-send-email-amit.sahrawat83@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAB4K4y5W0o8mJ2koKgEZtRRB4k=UNjr3Ha1zq_ic+0LjFw-LpQ@mail.gmail.com>
+In-Reply-To: <1325845990-5664-1-git-send-email-amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,14 +22,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ajeet Yadav <ajeet.yadav.77@gmail.com>
-Cc: Tony Lu <zlu@tilera.com>, xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs masters <xfs-masters@oss.sgi.com>, xfs <xfs@oss.sgi.com>, linux kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
 
-On Mon, Jan 09, 2012 at 12:58:22PM +0530, Ajeet Yadav wrote:
-> Yes I implemented these definitions for MIPS, without them this
-> problem will continue to occur.
+> +	/*
+> +	 * In most cases the direct IO writes will be done with IOLOCK_SHARED
+> +	 * allowing them to be done in parallel with reads and other direct IO
+> +	 * writes. However,if the IO is not aligned to filesystem blocks, the
+> +	 * direct IO layer needs to do sub-block zeroing and that requires
+> +	 * serialisation against other direct IOs to the same block. In this
+> +	 * case we need to serialise the submission of the unaligned IOs so
+> +	 * that we don't get racing block zeroing in the dio layer.
+> +	 * To avoid the problem with aio, we also need to wait for outstanding
+> +	 * IOs to complete so that unwritten extent conversion is completed
+> +	 * before we try to map the overlapping block. This is currently
+> +	 * implemented by hitting it with a big hammer (i.e. xfs_ioend_wait()).
+> +	 */
+> +
 
-Btw, Linux 3.2 finally has a version of the helpers in mainline.
+This comment is lacking one level of indentation, that's because the old
+kernel is missing the split of xfs_file_aio_write that reduces one level
+of indentation.
+
+Otherwise the backport looks fine, please send it to
+stable@vger.kernel.org, with a [PATCH 0/0] coverletter stating it's for
+2.6.35-stable.
 
 _______________________________________________
 xfs mailing list
