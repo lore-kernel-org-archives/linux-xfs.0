@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BBZ8d9161486 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:35:09 -0600
-Date: Wed, 11 Jan 2012 06:35:07 -0500
+	q0BBgicL162058 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 05:42:44 -0600
+Date: Wed, 11 Jan 2012 06:42:43 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: cleanup XFS_BB_FSB_OFFSET
-Message-ID: <20120111113507.GB14423@infradead.org>
-References: <1325848338-6063-1-git-send-email-amit.sahrawat83@gmail.com>
+Subject: Re: [PATCH] xfsdump: fix restore of ext attrs on root directory
+Message-ID: <20120111114243.GC14423@infradead.org>
+References: <1325883116-21990-1-git-send-email-wkendall@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1325848338-6063-1-git-send-email-amit.sahrawat83@gmail.com>
+In-Reply-To: <1325883116-21990-1-git-send-email-wkendall@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,20 +22,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: linux kernel <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>, xfs masters <xfs-masters@oss.sgi.com>, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jan 06, 2012 at 04:42:18PM +0530, Amit Sahrawat wrote:
-> Removing the macro, as this is no more needed in the code. 
-> Tried to find the reference when it was last used - but the usage 
-> for this seemed to have been dropped long time ago.
+On Fri, Jan 06, 2012 at 02:51:56PM -0600, Bill Kendall wrote:
+> xfsrestore fails to restore extended attributes on the root directory
+> because Node2path(), which returns a pathname relative to the restore
+> root, returns an empty string instead of ".".
 > 
-> Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+> Signed-off-by: Bill Kendall <wkendall@sgi.com>
+> ---
+>  restore/tree.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 
-This looks good, but the subject should be something like:
-
-"xfs: kill the unused XFS_BB_FSB_OFFSET macro"
-
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
