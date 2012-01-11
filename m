@@ -1,24 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BA4E7q153179
-	for <linux-xfs@oss.sgi.com>; Wed, 11 Jan 2012 04:04:14 -0600
+	q0BATpeU156043
+	for <linux-xfs@oss.sgi.com>; Wed, 11 Jan 2012 04:29:51 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	jViJOorAajQSRn0N for <linux-xfs@oss.sgi.com>;
-	Wed, 11 Jan 2012 02:04:13 -0800 (PST)
-Date: Wed, 11 Jan 2012 05:04:12 -0500
+	2YqsXZz5GYXanBjp for <linux-xfs@oss.sgi.com>;
+	Wed, 11 Jan 2012 02:29:50 -0800 (PST)
+Date: Wed, 11 Jan 2012 05:29:49 -0500
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: Why does xfsdump encounter "WARNING: could not get list of
 	non-root attributes for nondir ino nnnn: Cannot allocate memory (12)"?
-Message-ID: <20120111100412.GA1538@infradead.org>
+Message-ID: <20120111102949.GA22652@infradead.org>
 References: <jdo01m$62j$1@dough.gmane.org> <20120102213706.GQ23662@dastard>
 	<20120111095513.GA26958@infradead.org>
 	<20120111100316.GH24410@dastard>
+	<20120111100412.GA1538@infradead.org>
+	<20120111101426.GI24410@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120111100316.GH24410@dastard>
+In-Reply-To: <20120111101426.GI24410@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,12 +36,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@oss.sgi.com, Michael Lueck <mlueck@lueckdatasystems.com>
 
-On Wed, Jan 11, 2012 at 09:03:16PM +1100, Dave Chinner wrote:
-> Sounds like a generic kvmalloc()/kvfree() call pair is the answer
-> then. i.e. if kmalloc fails, then use vmalloc()...
+On Wed, Jan 11, 2012 at 09:14:27PM +1100, Dave Chinner wrote:
+> Which has lead to several implementations of duplicated
+> functionality like:
+> 
+> 	- ext4_kvmalloc/ext4_kvfree
+> 	- drm_malloc_ab/drm_calloc_large/drm_free_large
+> 	- ceph_buffer_new/ceph_buffer_release
+> 	- gfs2_alloc_sort_buffer/gfs2_free_sort_buffer
+> 	- __ntfs_malloc/ntfs_free
+> 
+> I don't think adding another two sets of identical wrappers (or open
+> coding it) is the right thing given that it is a repeating pattern.
 
-If my memory serves me right that's been discussed and rejected a few
-times before.
+Give it a try, I'm not against it myself.
 
 _______________________________________________
 xfs mailing list
