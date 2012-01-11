@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0BMSIJZ194954 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 16:28:18 -0600
-Date: Wed, 11 Jan 2012 16:28:16 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
-Message-ID: <20120111222816.GA6519@sgi.com>
-References: <4F06F71A.2010301@oracle.com> <20120111154318.GY6390@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120111154318.GY6390@sgi.com>
+	q0C04FP6198119 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 18:04:15 -0600
+Received: from mail.hq.newdream.net (mail.hq.newdream.net [66.33.206.127]) by
+	cuda.sgi.com with ESMTP id EH4aXGx7S9p08ZpK for
+	<xfs@oss.sgi.com>; Wed, 11 Jan 2012 16:04:14 -0800 (PST)
+Message-ID: <1326313823.6789.5.camel@doink>
+Subject: Re: [PATCH] xfs: Fix missing xfs_iunlock() on error recovery path
+	in xfs_readlink()
+From: Alex Elder <elder@dreamhost.com>
+In-Reply-To: <1326307930-21251-1-git-send-email-jack@suse.cz>
+References: <1326307930-21251-1-git-send-email-jack@suse.cz>
+Date: Wed, 11 Jan 2012 12:30:23 -0800
+Mime-Version: 1.0
+Reply-To: elder@dreamhost.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,183 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, stable@kernel.org, Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
-Hey Jeff,
+On Wed, 2012-01-11 at 19:52 +0100, Jan Kara wrote:
+> Commit b52a360b forgot to call xfs_iunlock() when it detected corrupted
+> symplink and bailed out. Fix it by jumping to 'out' instead of doing return.
 
-On Wed, Jan 11, 2012 at 09:43:18AM -0600, Ben Myers wrote:
-> Here are a few additional minor comments from yesterday.
+Whoops.  Sorry I didn't catch that.  Your fix looks good.
+
+Reviewed-by: Alex Elder <elder@kernel.org>
+
+> CC: stable@kernel.org
+> CC: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/xfs/xfs_vnodeops.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 > 
-> I'm looking forward to seeing your next version, and I'm still working
-> through this one.
+> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> index f2fea86..6156cd6 100644
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -131,7 +131,8 @@ xfs_readlink(
+>  			 __func__, (unsigned long long) ip->i_ino,
+>  			 (long long) pathlen);
+>  		ASSERT(0);
+> -		return XFS_ERROR(EFSCORRUPTED);
+> +		error = XFS_ERROR(EFSCORRUPTED);
+> +		goto out;
+>  	}
+>  
 > 
-> I would like to suggest that you split this into two patches.  The first
-> patch should be the 'simple' implementation that that you began with
-> that only looks at extents, and assumes that unwritten extents contain
-> data.  The second patch can remove the assumption that unwritten extents
-> contain data, and go over pages over the extent to determine if it is
-> clean.  I feel we have a better chance of coming to consensus that the
-> first patch is correct in the near term, and then we can move on to the
-> more complicated matter of whether the unwritten extent can be treated
-> as a hole safe in the knowledge that the initial implementation was
-> awesome.
 
-Ok, since I'm the jackass who is asking you to do the extra work I'll
-try to be of assistance.  Understand that at this point I'm trying to
-make sure that I understand your code fully.  I'm not trying to give you
-a hard time or make your life miserable.
 
-Here I am assuming that we'll treat unwritten extents as containing data
-and leaving the enhancement of probing unwritten extents for later.
-
-This is a table of some of the results from xfs_bmapi_read, and what
-should be done in each situation.
-
-SEEK_DATA:
-
-Where nmap = 0:
-return ENXIO. 	* maybe not possible, unless len = 0?
-
-Where nmap = 1:
-map[0]
-written				data @ offset
-delay				data @ offset
-unwritten			data @ offset
-hole				return ENXIO?	* empty file?
-
-Where nmap = 2:
-map[0]		map[1]
-written		written		data @ offset
-written		delay		data @ offset
-written		unwritten	data @ offset
-written		hole		data @ offset
-delay		written		data @ offset
-delay		delay		data @ offset	* maybe not possible?
-delay		unwritten	data @ offset
-delay		hole		data @ offset
-unwritten	written		data @ offset
-unwritten	delay		data @ offset
-unwritten	unwritten	data @ offset
-unwritten	hole		data @ offset
-hole		written		data @ map[1].br_startoff
-hole		delay		data @ map[1].br_startoff
-hole		unwritten	data @ map[1].br_startoff
-hole		hole		* not possible
-
-(DELAYSTARTBLOCK and HOLESTARTBLOCK are both 'isnullstartblock')
-
-written:
-(!isnullstartblock(map.br_startblock) && map.br_state == XFS_EXT_NORMAL)	
-delay:
-map.br_startblock == DELAYSTARTBLOCK
-
-unwritten:
-map.br_state == XFS_EXT_UNWRITTEN
-
-hole:
-map.br_startblock == HOLESTARTBLOCK
-
-xfs_seek_data(file, startoff)
-{
-	loff_t	offset;
-	int	error;
-
-	take ilock
-
-	isize = i_size_read
-
-	start_fsb = XFS_B_TO_FSBT(startoff)
-	end_fsb = XFS_B_TO_FSB(i_size)	# inode size
-
-	error = xfs_bmapi_read(map, &nmap)
-	if (error) 
-		goto out_unlock;
-
-	if (nmap == 0) {
-		/*
-		 * return an error.  I'm not sure that this necessarily
-		 * means we're reading after EOF, since it looks like
-		 * xfs_bmapi_read would return one hole in that case.
-		 */
-
-		error = ERROR /* EIO? */
-		goto out_unlock
-	}
-
-	/* check map[0] first */
-	if (map[0].br_state == XFS_EXT_NORMAL &&
-	    !isnullstartblock(map[0].br_startblock) {
-		/*
-		 * startoff is already within data.  remember
-		 * that it can anywhere within start_fsb
-		 */
-		offset = startoff
-	} else if (map[0].br_startblock == DELAYSTARTBLOCK) {
-		offset = startoff
-	} else if (map[0].br_state == XFS_EXT_UNWRITTEN) {
-		offset = startoff;
-	} else if (map[0].br_startblock == HOLESTARTBLOCK) {
-		if (nmap == 1) {
-			/*
-			 * finding a hole in map[0] and nothing in
-			 * map[1] probably means that we are reading
-			 * after eof
-			 */
-			ASSERT(startoff >= isize)
-			error = ENXIO
-			goto out_unlock
-		}
-
-		/*
-		 * we have two mappings, and need to check map[1] to see
-		 * if there is data.
-		 */
-		if (map[1].br_state == XFS_EXT_NORMAL &&
-		    !isnullstartblock(map[1].br_startblock)) {
-			offset = XFS_FSB_TO_B(map[1].br_startoff);
-		} else if (map[1].br_startblock == DELAYSTARTBLOCK) {
-			offset = XFS_FSB_TO_B(map[1].br_startoff);
-		} else if (map[1].br_state == XFS_EXT_UNWRITTEN) {
-			offset = XFS_FSB_TO_B(map[1].br_startoff);
-		} else if (map[1].br_startblock == HOLESTARTBLOCK) {
-			/*
-			 * this should never happen, but we could
-			 */
-			ASSERT(startoff >= isize);
-			error = ENXIO
-			/* BUG(); */
-		} else {
-			offset = startoff
-			/* BUG(); */
-		}
-	} else {
-		offset = startoff
-		/* BUG(); */
-	}
-out_unlock:
-	drop ilock
-	if (error)
-		return -error;
-
-	return offset;
-}
-
-I think that is sufficiently straightforward that even I can understand
-it, or am I off my rocker?  IMO it's not that bad that we have to write
-the if/else to determine extent type twice and that there is some
-duplication when setting the offset.  When you come back to enhance it
-further by probing unwritten extents I think a goto would probably be
-more readable than trying to shoehorn this into a for/do, but that's
-just me.
-
-Jeff, I hope that doesn't ruffle any feathers.  I know I came to the
-party a bit late.  After a break I am going to go look at your code for
-xfs_seek_data again.  I think I'll understand it better now.  After that
-I am going to look into SEEK_HOLE... 
-
-Regards,
-Ben
 
 _______________________________________________
 xfs mailing list
