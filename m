@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CHOKNX008438 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 11:24:20 -0600
-Received: from mail-vw0-f53.google.com (mail-vw0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id 0kbv5cd4s5a4SH8l
-	for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 09:24:18 -0800 (PST)
-Received: by vbbez10 with SMTP id ez10so623515vbb.26
-	for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 09:24:18 -0800 (PST)
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: [PATCH] xfstests 273 274 275: do test in dedicated dir and leave test
-	files in it
-Date: Fri, 13 Jan 2012 01:20:15 +0800
-Message-Id: <1326388815-21181-1-git-send-email-guaneryu@gmail.com>
+	q0CJ2N0p013150 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 13:02:24 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	M4YkZs3JAA6I6b7i for <xfs@oss.sgi.com>;
+	Thu, 12 Jan 2012 11:02:22 -0800 (PST)
+Date: Thu, 12 Jan 2012 14:02:21 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: XFS status update for December 2011
+Message-ID: <20120112190221.GA3108@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,158 +21,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Do all testings in dedicated dir($SCRATCH_MNT/$seq) instead of
-$SCRATCH_MNT and don't remove test files in _cleanup() for debug
-purpose.
+December saw further stabilization of the Linux 3.2 release candidates.
+For XFS that meant two important fixes for sync() data integrity, to
+work around issues introduced in the VFS sync code in the past few
+kernel releases.  These fixes have also been backported to the 3.0-stable
+release.
 
-Signed-off-by: Eryu Guan <guaneryu@gmail.com>
----
- 273 |   14 ++++++++------
- 274 |    9 ++++++---
- 275 |    9 ++++++---
- 3 files changed, 20 insertions(+), 12 deletions(-)
+Development for the next merge windows continue in fast pace, although
+only a relatively small amount of patches was merged into the development
+tree for the Linux 3.3 window.  The most interesting topic in December
+probably was further development of the SEEK_DATA /  SEEK_HOLE support,
+including defining the exact semantics in presence of unwritten extents
+and proper test coverage.
 
-diff --git a/273 b/273
-index 2965132..a7f14c1 100755
---- a/273
-+++ b/273
-@@ -35,7 +35,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
- 	cd /
--	rm -rf $SCRATCH_MNT/* $tmp.*
-+	rm -rf $tmp.*
- 	_scratch_unmount
- }
- 
-@@ -44,6 +44,7 @@ _cleanup()
- 
- threads=50
- count=1
-+WORK_DIR="$SCRATCH_MNT/$seq"
- 
- _threads_set()
- {
-@@ -59,14 +60,14 @@ _file_create()
- {
- 	_i=0
- 
--	if ! mkdir $SCRATCH_MNT/origin
-+	if ! mkdir $WORK_DIR/origin
- 	then
- 		echo "mkdir origin err"
- 		status=1
- 		exit
- 	fi
- 
--	cd $SCRATCH_MNT/origin
-+	cd $WORK_DIR/origin
- 
- 	_disksize=`df --block-size=1 | grep $SCRATCH_DEV | awk '{print $2}'`
- 	_disksize=$(($_disksize / 3))
-@@ -85,14 +86,14 @@ _porter()
- {
- 	_suffix=$1
- 
--	if ! mkdir $SCRATCH_MNT/sub_$_suffix
-+	if ! mkdir $WORK_DIR/sub_$_suffix
- 	then
- 		echo "mkdir sub_xxx err"
- 		status=1
- 		exit
- 	fi
- 
--	cp -r $SCRATCH_MNT/origin $SCRATCH_MNT/sub_$_suffix >$seq.full 2>&1
-+	cp -r $WORK_DIR/origin $WORK_DIR/sub_$_suffix >$seq.full 2>&1
- 	if [ $? -ne 0 ]
- 	then
- 		echo "_porter $_suffix not complete"
-@@ -106,7 +107,8 @@ _do_workload()
- 	_pids=""
- 	_pid=1
- 	
--	rm -rf $SCRATCH_MNT/*
-+	rm -rf $WORK_DIR
-+	mkdir -p $WORK_DIR
- 
- 	_threads_set
- 	_file_create
-diff --git a/274 b/274
-index b658004..c351c40 100755
---- a/274
-+++ b/274
-@@ -35,13 +35,15 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
- 	cd /
--	rm -f $SCRATCH_MNT/* $tmp.*
-+	rm -f $tmp.*
- 	_scratch_unmount
- }
- 
- . ./common.rc
- . ./common.filter
- 
-+WORK_DIR="$SCRATCH_MNT/$seq"
-+
- # real QA test starts here
- _supported_fs generic
- _supported_os IRIX Linux
-@@ -57,8 +59,9 @@ umount $SCRATCH_DEV 2>/dev/null
- _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
- _scratch_mount
- 
--rm -rf $SCRATCH_MNT/*
--cd $SCRATCH_MNT
-+rm -rf $WORK_DIR
-+mkdir -p $WORK_DIR
-+cd $WORK_DIR
- dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
- if [ $? -ne 0 ]
- then
-diff --git a/275 b/275
-index 214262e..7a4d414 100755
---- a/275
-+++ b/275
-@@ -36,13 +36,15 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
- 	cd /
--	rm -f $SCRATCH_MNT/* $tmp.*
-+	rm -f $tmp.*
- 	_scratch_unmount
- }
- 
- . ./common.rc
- . ./common.filter
- 
-+WORK_DIR="$SCRATCH_MNT/$seq"
-+
- # real QA test starts here
- _supported_fs generic
- _supported_os IRIX Linux
-@@ -58,8 +60,9 @@ umount $SCRATCH_DEV 2>/dev/null
- _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
- _scratch_mount
- 
--rm -rf $SCRATCH_MNT/*
--cd $SCRATCH_MNT
-+rm -rf $WORK_DIR
-+mkdir -p $WORK_DIR
-+cd $WORK_DIR
- 
- dd if=/dev/zero of=tmp1 bs=4K count=1 >/dev/null 2>&1
- if [ $? -ne 0 ]
--- 
-1.7.8.3
+On the user space side December was fairly quite, with about a handful
+fixes commit to xfsprogs, two new test cases and a couple of fixes in
+xfstests, and no activity in xfsdump.
 
 _______________________________________________
 xfs mailing list
