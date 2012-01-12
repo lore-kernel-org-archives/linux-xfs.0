@@ -1,19 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0C2mlXq209885 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 20:48:47 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ER1cpCUME2dI6cbY for <xfs@oss.sgi.com>;
-	Wed, 11 Jan 2012 18:48:44 -0800 (PST)
-Date: Thu, 12 Jan 2012 13:48:41 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/4] Fix filesystem freezing
-Message-ID: <20120112024841.GB2806@dastard>
-References: <1326331253-6497-1-git-send-email-jack@suse.cz>
+	q0C2fkbE209481 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 20:41:46 -0600
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Subject: [RFC PATCH] xfs: show uuid when mount fails due to duplicate uuid
+Date: Thu, 12 Jan 2012 11:47:20 +0900
+Message-ID: <20120112024720.3952.73517.stgit@ltc219.sdl.hitachi.co.jp>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1326331253-6497-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,36 +19,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>
+Cc: Alex Elder <elder@kernel.org>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
 
-On Thu, Jan 12, 2012 at 02:20:49AM +0100, Jan Kara wrote:
-> 
->   Hello,
-> 
->   filesystem freezing is currently racy and thus we can end up with dirty data
-> on frozen filesystem (see changelog of the first patch for detailed race
-> description and proposed fix). This patch series aims at fixing this.
+When a system tries to mount a filesystem (FS) using UUID, the xfs
+returns -EINVAL and shows a message if a FS with the same UUID has
+been already mounted. It is useful to output the duplicate UUID
+with it.
 
-It only fixes the dirty data race (i.e. SB_FREEZE_WRITE). The same
-race conditions exist for SB_FREEZE_TRANS on XFS, and so need the
-same fix. That race has had one previous attempt at fixing it in
-XFS but that's not possible:
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
+---
 
-b2ce397 Revert "xfs: fix filesystsem freeze race in xfs_trans_alloc"
-7a249cf xfs: fix filesystsem freeze race in xfs_trans_alloc
+ fs/xfs/xfs_mount.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletions(-)
 
-It was looking at that problem earlier today that lead to the
-solution Eric proposed. Essentially the method in these patches
-needs to replace the xfs specifc m_active_trans counter and delay
-during ->fs_freeze to prevent that race condition....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index d06afbc..6b96d6e 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -158,7 +158,10 @@ xfs_uuid_mount(
+ 
+  out_duplicate:
+ 	mutex_unlock(&xfs_uuid_table_mutex);
+-	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
++	xfs_warn(mp,
++		"Filesystem has duplicate UUID - can't mount: uuid = %pU",
++		uuid);
++
+ 	return XFS_ERROR(EINVAL);
+ }
+ 
 
 _______________________________________________
 xfs mailing list
