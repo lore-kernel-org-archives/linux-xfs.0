@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CGEFA9005000 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 10:14:15 -0600
-Date: Thu, 12 Jan 2012 11:14:10 -0500
+	q0CGMDkI005473 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 10:22:13 -0600
+Date: Thu, 12 Jan 2012 11:22:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC PATCH] xfs: show uuid when mount fails due to duplicate uuid
-Message-ID: <20120112161410.GA3810@infradead.org>
-References: <20120112024720.3952.73517.stgit@ltc219.sdl.hitachi.co.jp>
+Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
+Message-ID: <20120112162210.GA3925@infradead.org>
+References: <4F06F71A.2010301@oracle.com> <20120110171855.GX6390@sgi.com>
+	<4F0D21E5.7010908@oracle.com> <4F0DF9C1.2060302@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120112024720.3952.73517.stgit@ltc219.sdl.hitachi.co.jp>
+In-Reply-To: <4F0DF9C1.2060302@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,28 +23,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Cc: Alex Elder <elder@kernel.org>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: jeff.liu@oracle.com, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-On Thu, Jan 12, 2012 at 11:47:20AM +0900, Mitsuo Hayasaka wrote:
-> When a system tries to mount a filesystem (FS) using UUID, the xfs
-> returns -EINVAL and shows a message if a FS with the same UUID has
-> been already mounted. It is useful to output the duplicate UUID
-> with it.
+With all the complications that we got compared to the initial version,
+namely multiple hole extents, dirty unwritten extent detection and
+so on I think it's time to stop using xfs_bmapi_read against Dave's
+initial suggestion, and switch to using xfs_bmap_search_extents
+directly.
 
-Looks good to me,
+The rationale for that is that
 
+  a) using xfs_bmapi_read makes hole detection more complex, given
+     that it has to fill potentially multiple xfs_bmbt_irec structures
+     instead of skipping over them
+  b) reading two extents at a time means we have to duplicate all the
+     detection code.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-> -	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
-> +	xfs_warn(mp,
-> +		"Filesystem has duplicate UUID - can't mount: uuid = %pU",
-> +		uuid);
-
-Maybe we could write this a bit nicer as:
-
-	xfs_warn(mp, "Filesystem has duplicate UUID %p - can't mount", uuid);
+if we use xfs_bmap_search_extents we need a bit of boilerplate code,
+but xfs_seek_data becomes really simple - we just loop over
+xfs_bmap_search_extents until we either find an extent or EOF.
+If we find an extent and it's unwritten we might have to probe for
+dirty areas from one single point, or just skip it but the code is
+still simple.  xfs_seek_hole is just as simple - if
+xfs_bmap_search_extents fits the condition for a hole as written
+down in xfs_bmapi_read we've found it, if not we might again have
+to do the unwritten extent probing, but just from a single place
+instead of duplicating it twice.
 
 _______________________________________________
 xfs mailing list
