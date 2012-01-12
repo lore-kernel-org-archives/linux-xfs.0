@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CKBNiR016960 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 14:11:24 -0600
+	q0CK7vDK016746 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 14:07:57 -0600
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id wUWYqACLjqStwv6W for <xfs@oss.sgi.com>;
-	Thu, 12 Jan 2012 12:11:22 -0800 (PST)
-Date: Thu, 12 Jan 2012 21:11:21 +0100
+	with ESMTP id klaesSs6bpH5CeqM for <xfs@oss.sgi.com>;
+	Thu, 12 Jan 2012 12:07:55 -0800 (PST)
+Date: Thu, 12 Jan 2012 21:07:53 +0100
 From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 2/4] vfs: Protect write paths by sb_start_write -
-	sb_end_write
-Message-ID: <20120112201121.GD8778@quack.suse.cz>
+Subject: Re: [PATCH 1/4] fs: Improve filesystem freezing handling
+Message-ID: <20120112200753.GC8778@quack.suse.cz>
 References: <1326331253-6497-1-git-send-email-jack@suse.cz>
-	<1326331253-6497-3-git-send-email-jack@suse.cz>
-	<FA7A1011-4312-4050-8AD5-C6060CFF3A55@dilger.ca>
+	<1326331253-6497-2-git-send-email-jack@suse.cz>
+	<DB1320A4-7621-44D2-B339-78CB38FAC186@dilger.ca>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <FA7A1011-4312-4050-8AD5-C6060CFF3A55@dilger.ca>
+In-Reply-To: <DB1320A4-7621-44D2-B339-78CB38FAC186@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +30,38 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Andreas Dilger <adilger@dilger.ca>
 Cc: Jan Kara <jack@suse.cz>, Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Thu 12-01-12 12:56:01, Andreas Dilger wrote:
+On Thu 12-01-12 12:53:35, Andreas Dilger wrote:
 > On 2012-01-11, at 6:20 PM, Jan Kara wrote:
-> > There are three entry points which dirty pages in a filesystem.  mmap (handled
-> > by block_page_mkwrite()), buffered write (handled by
-> > __generic_file_aio_write()), and truncate (it can dirty last partial page -
-> > handled by do_truncate()). Protect these places with sb_start_write() and
-> > sb_end_write().
-> > 
-> > Signed-off-by: Jan Kara <jack@suse.cz>
-> > ---
-> > fs/buffer.c  |   18 ++----------------
-> > fs/open.c    |    6 ++++++
-> > mm/filemap.c |    3 ++-
-> > 3 files changed, 10 insertions(+), 17 deletions(-)
-> > 
-> > diff --git a/fs/buffer.c b/fs/buffer.c
-> > index 19d8eb7..8519405 100644
-> > --- a/fs/buffer.c
-> > +++ b/fs/buffer.c
-> > @@ -2371,18 +2371,7 @@ int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+> > /**
+> > + * sb_start_write - drop write access to a superblock
+> > + * @sb: the super we wrote to
+> > + *
+> > + * Decrement number of writers to the filesystem and wake up possible
+> > + * waiters wanting to freeze the filesystem.
+> > + */
+> > +void sb_end_write(struct super_block *sb)
+> > +{
+> > +#ifdef CONFIG_SMP
+> > +	this_cpu_dec(sb->s_writers);
+> > +#else
+> > +	preempt_disable();
+> > +	sb->s_writers--;
+> > +	preempt_enable();
+> > +#endif
+> > +	/*
+> > +	 * Make sure s_writers are updated before we wake up waiters in
+> > +	 * freeze_super().
+> > +	 */
+> > +	smp_mb();
+> > +	if (waitqueue_active(&sb->s_writers_wait))
+> > +		wake_up(&sb->s_writers_wait);
+> > +	rwsem_release(&sb->s_writers_lock_map, 1, _RET_IP_);
+> > +}
 > 
-> The comment for __block_page_mkwrite() needs to be updated to reference
-> sb_start_write() and sb_end_write() instead of vfs_check_frozen().
-  Thanks. Fixed.
+> Since this function is needed for calling __block_page_mkwrite(), which is
+> EXPORT_SYMBOL(), both sb_start_write() and sb_end_write() themselves need
+> to be EXPORT_SYMBOL().
+  Good point. Fixed. Thanks.
 
 								Honza
 -- 
