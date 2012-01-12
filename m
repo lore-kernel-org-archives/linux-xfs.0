@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CJ2N0p013150 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 13:02:24 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	M4YkZs3JAA6I6b7i for <xfs@oss.sgi.com>;
-	Thu, 12 Jan 2012 11:02:22 -0800 (PST)
-Date: Thu, 12 Jan 2012 14:02:21 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for December 2011
-Message-ID: <20120112190221.GA3108@infradead.org>
+	q0CJU75F014699 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 13:30:07 -0600
+Message-ID: <4F0F34BE.2040001@sgi.com>
+Date: Thu, 12 Jan 2012 13:30:06 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH 01/12] repair: do not walk the unlinked inode list
+References: <20111202174619.179530033@bombadil.infradead.org>
+	<20111202174741.091561992@bombadil.infradead.org>
+In-Reply-To: <20111202174741.091561992@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,29 +18,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-December saw further stabilization of the Linux 3.2 release candidates.
-For XFS that meant two important fixes for sync() data integrity, to
-work around issues introduced in the VFS sync code in the past few
-kernel releases.  These fixes have also been backported to the 3.0-stable
-release.
+On 01/-10/63 13:59, Christoph Hellwig wrote:
+> Stefan Pfetzing reported a bug where xfs_repair got stuck eating 100% CPU in
+> phase3.  We track it down to a loop in the unlinked inode list, apparently
+> caused by memory corruption on an iSCSI target.
+>
+> I looked into tracking if we already saw a given unlinked inode, but given
+> that we keep walking even for inodes where we can't find an allocation btree
+> record that seems infeasible.  On the other hand these inodes had their
+> final unlink and thus were dead even before the system went down.  There
+> really is no point in adding them to the uncertain list and looking for
+> references to them later.
+>
+> So the simplest fix seems to be to simply remove the unlinked inode list
+> walk and just clear it - when we rebuild the inode allocation btrees these
+> will simply be marked free.
 
-Development for the next merge windows continue in fast pace, although
-only a relatively small amount of patches was merged into the development
-tree for the Linux 3.3 window.  The most interesting topic in December
-probably was further development of the SEEK_DATA /  SEEK_HOLE support,
-including defining the exact semantics in presence of unwritten extents
-and proper test coverage.
 
-On the user space side December was fairly quite, with about a handful
-fixes commit to xfsprogs, two new test cases and a couple of fixes in
-xfstests, and no activity in xfsdump.
+Makes sense to me.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
