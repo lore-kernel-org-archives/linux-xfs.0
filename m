@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CGMDkI005473 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 10:22:13 -0600
-Date: Thu, 12 Jan 2012 11:22:10 -0500
+	q0CGdjiw006186 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 10:39:45 -0600
+Date: Thu, 12 Jan 2012 11:39:43 -0500
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
-Message-ID: <20120112162210.GA3925@infradead.org>
+Message-ID: <20120112163943.GA22223@infradead.org>
 References: <4F06F71A.2010301@oracle.com> <20120110171855.GX6390@sgi.com>
-	<4F0D21E5.7010908@oracle.com> <4F0DF9C1.2060302@sgi.com>
+	<4F0D21E5.7010908@oracle.com> <4F0DFA11.7030305@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F0DF9C1.2060302@sgi.com>
+In-Reply-To: <4F0DFA11.7030305@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,32 +24,20 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
-Cc: jeff.liu@oracle.com, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, jeff.liu@oracle.com, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-With all the complications that we got compared to the initial version,
-namely multiple hole extents, dirty unwritten extent detection and
-so on I think it's time to stop using xfs_bmapi_read against Dave's
-initial suggestion, and switch to using xfs_bmap_search_extents
-directly.
+On Wed, Jan 11, 2012 at 03:07:29PM -0600, Mark Tinguely wrote:
+> 
+> xfs_bmapi_read() returns the br_state == XFS_EXT_NORM for a hole.
+> There are a couple places that a hole can trigger a data test.
+> BTW, I could not generate a large enough hole that xfs_bmapi_read()
+> would return as more than one hole entry, so I will ignore those
+> situations and just list the couple places that a hole may be match
+> a data rule:
 
-The rationale for that is that
-
-  a) using xfs_bmapi_read makes hole detection more complex, given
-     that it has to fill potentially multiple xfs_bmbt_irec structures
-     instead of skipping over them
-  b) reading two extents at a time means we have to duplicate all the
-     detection code.
-
-if we use xfs_bmap_search_extents we need a bit of boilerplate code,
-but xfs_seek_data becomes really simple - we just loop over
-xfs_bmap_search_extents until we either find an extent or EOF.
-If we find an extent and it's unwritten we might have to probe for
-dirty areas from one single point, or just skip it but the code is
-still simple.  xfs_seek_hole is just as simple - if
-xfs_bmap_search_extents fits the condition for a hole as written
-down in xfs_bmapi_read we've found it, if not we might again have
-to do the unwritten extent probing, but just from a single place
-instead of duplicating it twice.
+We've been through this before, you need to overflow the 32-bit extent
+length counter to get there.  Jeff, did you manage to create a test
+case for that particular scenario?
 
 _______________________________________________
 xfs mailing list
