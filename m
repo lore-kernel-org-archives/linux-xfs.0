@@ -1,12 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0C2fkbE209481 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 20:41:46 -0600
-From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Subject: [RFC PATCH] xfs: show uuid when mount fails due to duplicate uuid
-Date: Thu, 12 Jan 2012 11:47:20 +0900
-Message-ID: <20120112024720.3952.73517.stgit@ltc219.sdl.hitachi.co.jp>
+	q0C4FqKo215804 for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 22:15:52 -0600
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id wia3B0JPlegjxGci
+	for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 20:15:51 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 9AE826C129
+	for <xfs@oss.sgi.com>; Wed, 11 Jan 2012 22:15:50 -0600 (CST)
+Message-ID: <4F0E5E73.9070308@hardwarefreak.com>
+Date: Wed, 11 Jan 2012 22:15:47 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
+Subject: sunit/swidth for HP P4500 Lefthand Networks storage arrays
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,38 +26,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>
-Cc: Alex Elder <elder@kernel.org>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
+To: xfs@oss.sgi.com
 
-When a system tries to mount a filesystem (FS) using UUID, the xfs
-returns -EINVAL and shows a message if a FS with the same UUID has
-been already mounted. It is useful to output the duplicate UUID
-with it.
 
-Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Cc: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>
----
+The Linux host will be Debian Squeeze with a very recent BPO kernel, but
+running as a guest inside a VMware cluster.  The storage platform is a
+dozen clustered HP P4500/Lefthand Networks "self load balancing" iSCSI
+arrays.  The application is Dovecot IMAP using the mdbox mailbox storage
+format, which is basically a hybrid mbox/maildir+dedup format.  Files
+will be 32-64MB or so, each containing multiple emails, with multiple
+files per mailbox directory.  Mail indexes are internal to the files.
 
- fs/xfs/xfs_mount.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+What is the best mkfs.xfs configuration for this scenario?
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index d06afbc..6b96d6e 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -158,7 +158,10 @@ xfs_uuid_mount(
- 
-  out_duplicate:
- 	mutex_unlock(&xfs_uuid_table_mutex);
--	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
-+	xfs_warn(mp,
-+		"Filesystem has duplicate UUID - can't mount: uuid = %pU",
-+		uuid);
-+
- 	return XFS_ERROR(EINVAL);
- }
- 
+I'm guessing it would be best to simply use mostly, if not completely,
+the defaults, due to the way iSCSI packets are redirected on the fly to
+any storage node depending on load, by the Lefthand special sauce.
+
+What about mount options?
+
+Should I use barriers with the P4500s or disable them?
+TTBOMK the internal PCIe RAID controllers have BBWC, but the ~6GB of RAM
+on the P4500 mobos isn't battery backed, but for the typical external
+UPS.  In this setup, from a physical hardware standpoint, iSCSI packets
+will be making at least 2 ethernet switch hops between the ESX nodes and
+the P4500s, with redundant links between everything, if that's a factor
+at all.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
