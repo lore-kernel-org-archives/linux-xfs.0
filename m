@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CHPL66008500 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 11:25:21 -0600
-Received: from ustc.edu.cn (smtp2.ustc.edu.cn [202.38.64.46]) by cuda.sgi.com
-	with SMTP id WQHGBbtdZNBfJ5Na for <xfs@oss.sgi.com>;
-	Thu, 12 Jan 2012 09:25:18 -0800 (PST)
-Date: Fri, 13 Jan 2012 01:30:28 +0800
-From: JiSheng Zhang <jszhang3@mail.ustc.edu.cn>
-Subject: [PATCH] xfs: remove unecessary AIL push wakeups
-Message-ID: <20120113013028.6802d878@ustc>
-Mime-Version: 1.0
+	q0CHe2ZH009038 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 11:40:03 -0600
+Date: Thu, 12 Jan 2012 11:39:59 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
+Message-ID: <20120112173959.GU20739@sgi.com>
+References: <4F06F71A.2010301@oracle.com> <20120110171855.GX6390@sgi.com>
+	<4F0D21E5.7010908@oracle.com> <4F0DFB20.7030704@sgi.com>
+	<4F0EE5B6.2040408@oracle.com> <4F0EF5DC.1070207@sgi.com>
+	<20120112164148.GB22223@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120112164148.GB22223@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,37 +25,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, elder@kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: jeff.liu@oracle.com, Mark Tinguely <tinguely@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
+On Thu, Jan 12, 2012 at 11:41:48AM -0500, Christoph Hellwig wrote:
+> On Thu, Jan 12, 2012 at 09:01:48AM -0600, Mark Tinguely wrote:
+> > >Sorry, am was well understood your opinions in this point for now.
+> > >IMHO, we can only find and return the data buffer offset at a dirty or
+> > >unwritten page once the first page was probed.
+> > >
+> > 
+> > From my tests, xfs_bmapi_read() can only find holes if they cross or
+> > start on a 64KB boundary. It would be nice if unwritten extents were
+> > at least that good at finding holes.
+> 
+> Are you testing on ia64 with 64k blocks? :)  xfs_bmapi_read will
+> find holes down to block granularity, that's how it's implemented.
+> However recent XFS does fairly aggressive preallocation, so you probably
+						^^^^
+					       
+it is speculative delay in this case, I think.
 
-In commit 0030807c66("xfs: revert to using a kthread for AIL pushing"),
-AIL pushing is revert back to use a kthread. But unfortunately, it
-introduced a regression: there are unnecessary AIL push wakeups during
-idle, ~20 wakeups/s. This change remove the wakeups by reverting a bit
-more: set "tout" value as zero during idle.
+-Ben
 
-Signed-off-by: JiSheng Zhang <jszhang3@mail.ustc.edu.cn>
----
- fs/xfs/xfs_trans_ail.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index ed9252b..2014387 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -508,7 +508,7 @@ out_done:
- 		ailp->xa_last_pushed_lsn = 0;
- 		ailp->xa_log_flush = 0;
- 
--		tout = 50;
-+		tout = 0;
- 	} else if (XFS_LSN_CMP(lsn, target) >= 0) {
- 		/*
- 		 * We reached the target so wait a bit longer for I/O to
--- 
-1.7.8.3
-
+> won't find small holes unless you explicitly punch them out using
+> XFS_IOC_UNRESVSP or fallocate with the hole punch flag.
 
 _______________________________________________
 xfs mailing list
