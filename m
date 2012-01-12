@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CDrBR5259222 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 07:53:11 -0600
-Message-ID: <4F0EE5B6.2040408@oracle.com>
-Date: Thu, 12 Jan 2012 21:52:54 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
-References: <4F06F71A.2010301@oracle.com>
-	<20120110171855.GX6390@sgi.com>	<4F0D21E5.7010908@oracle.com>
-	<4F0DFB20.7030704@sgi.com>
-In-Reply-To: <4F0DFB20.7030704@sgi.com>
-Reply-To: jeff.liu@oracle.com
+	q0CE6WO8259830 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 08:06:33 -0600
+Received: from hades.usersys.redhat.com (186.215.132.159.static.gvt.net.br
+	[186.215.132.159]) by cuda.sgi.com with ESMTP id
+	HwWzGhlgZEdC9Ad6 for <xfs@oss.sgi.com>;
+	Thu, 12 Jan 2012 06:06:30 -0800 (PST)
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfstests 278: Ensure lost+found is not created with wrong
+	link count (V4)
+Date: Thu, 12 Jan 2012 12:06:27 -0200
+Message-Id: <1326377187-27344-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,126 +19,140 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Carlos Maiolino <cmaiolino@redhat.com>
 
-Hi Mark,
+xfs_repair was leaving lost+found directory with a wrong link count when a
+cleaned inode was re-used to create lost+found. This test case confirm that,
+after xfs_repair is executed, the lost+found inode is left in a consistent
+state.
 
-On 01/12/2012 05:12 AM, Mark Tinguely wrote:
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ 278     |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 278.out |    2 +
+ group   |    1 +
+ 3 files changed, 90 insertions(+), 0 deletions(-)
+ create mode 100755 278
+ create mode 100644 278.out
 
-> xfs_has_unwritten_buffer() always returns the offset of the first
-> dirty unwritten page. This can cause xfs_seek_data() and xfs_seek_hole()
-> to give the wrong results in certain circumstances.
-
-Sorry, am was well understood your opinions in this point for now.
-IMHO, we can only find and return the data buffer offset at a dirty or
-unwritten page once the first page was probed.
-
-> 
-> 
-> In xfs_seek_data(), every page past first dirty/unwritten page in the
-> unwritten extent will be reported as data.
-
-Hmm, consider the user level utility that make use of SEEK_XXX stuff to
-copy data from an offset in source file:
-
-Generally, it will call xfs_seek_data() firstly,
-if we read an unwritten extent and there is data buffer was probed in
-xfs_seek_data(), it only means we can read file data starting from the
-returned offset of xfs_has_unwritten_buffer().
-
-Then it will call xfs_seek_hole() to calculate this extent length.
-next, a couple of read()/write() will be called in a loop depending on
-the extent length.
-
-[  page 1  ] | [  page 2  ] | [  page 3  ] | .... [  page N  ]
-                 |data offset at page 2|
-
-If we got the data offset from page2, and there is no data at page 3,
-the user utility call read(2) will returns ZERO, and it will break
-immediately.
-
-
-> 
-> 
-> in xfs_seek_data():
-> +        /*
-> +         * Landed in an unwritten extent, try to find out the data
-> +         * buffer offset from page cache firstly. If nothing was
-> +         * found, treat it as a hole, and skip to check the next
-> +         * extent, something just like above.
-> +         */
-> +        if (map[0].br_state == XFS_EXT_UNWRITTEN) {
-> +            if (xfs_has_unwritten_buffer(inode, &map[0],
-> +                             PAGECACHE_TAG_DIRTY,
-> +                             &offset) ||
-> +                xfs_has_unwritten_buffer(inode, &map[0],
-> +                             PAGECACHE_TAG_WRITEBACK,
-> +                             &offset)) {
-> +                offset = max_t(loff_t, seekoff, offset);
-> +                break;
-> +            }
-> 
-> Since the xfs_has_unwritten_buffer() returns the offset of the first
-> dirty/unwritten page (the first page in this example), the max_t()
-> comparison will say that every page after the first dirty page has
-> data.
-> 
->         -----
-> 
-> xfs_seek_hole() can only find a hole if it precedes the first dirty
-> page.
-
-Yes, for my current implementation, it is the case.
-Anyway, I need a careful consideration for probing unwritten extent. :-)
-
-
-Thanks,
--Jeff
-
-> 
-> in xfs_seek_hole():
-> +        /*
-> +         * Landed in an unwritten extent, try to lookup the page
-> +         * cache to find out if there is dirty data or not. If
-> +         * nothing was found, treate it as a hole. If there has
-> +         * dirty data and its offset starts past both the start
-> +         * block of the map and the current seek offset, it should
-> +         * be treated as hole too. Otherwise, go through the next
-> +         * extent to fetch holes.
-> +         */
-> +        if (map[0].br_state == XFS_EXT_UNWRITTEN) {
-> +            if (xfs_has_unwritten_buffer(inode, &map[0],
-> +                             PAGECACHE_TAG_DIRTY,
-> +                             &offset) ||
-> +                xfs_has_unwritten_buffer(inode, &map[0],
-> +                             PAGECACHE_TAG_WRITEBACK,
-> +                             &offset)) {
-> +                if (offset > max_t(loff_t, seekoff,
-> +                           XFS_FSB_TO_B(mp,
-> +                           map[0].br_startoff))) {
-> +                    offset = max_t(loff_t, seekoff,
-> +                               XFS_FSB_TO_B(mp,
-> +                               map[0].br_startoff));
-> +                    break;
-> +                }
-> +            } else {
-> +                offset = max_t(loff_t, seekoff,
-> +                    XFS_FSB_TO_B(mp, map[0].br_startoff));
-> +                break;
-> +            }
-> 
-> --Mark Tinguely.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+diff --git a/278 b/278
+new file mode 100755
+index 0000000..89cae35
+--- /dev/null
++++ b/278
+@@ -0,0 +1,87 @@
++#! /bin/bash
++# FS QA Test No. 278
++#
++# Test xfs_repair to ensure it fixes the lost+found link count
++# at the first run. See also commit 198b747f255346bca64408875763b6ca0ed3d57d
++# from xfsprogs tree.
++#
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2011 Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=cmaiolino@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
++mkdir -p $SCRATCH_MNT/dir/subdir
++
++#get inodes to be changed
++DIR_INO=`ls -i $SCRATCH_MNT |awk '{print $1}'`
++SUBDIR_INO=`ls -i $SCRATCH_MNT/dir |awk '{print $1}'`
++
++_scratch_unmount
++
++echo "Silence is goodness..."
++
++# Corrupt DIR
++xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].inumber.i4 0" $SCRATCH_DEV >> $seq.full
++xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].name 0" $SCRATCH_DEV >> $seq.full
++xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].offset 0" $SCRATCH_DEV >> $seq.full
++xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].namelen 0" $SCRATCH_DEV >> $seq.full
++xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.hdr.parent.i4 0" $SCRATCH_DEV >> $seq.full
++xfs_db -x -c "inode $DIR_INO" -c "write core.nlinkv2 0" $SCRATCH_DEV >> $seq.full
++
++# Corrupt SUBDIR
++xfs_db -x -c "inode $SUBDIR_INO" -c "write u.sfdir2.hdr.parent.i4 0" $SCRATCH_DEV >> $seq.full
++xfs_db -x -c "inode $SUBDIR_INO" -c "write core.nlinkv2 0" $SCRATCH_DEV >> $seq.full
++
++echo "===== BEGIN of xfs_repair =====" >> $seq.full
++echo "" >>$seq.full
++
++xfs_repair  $SCRATCH_DEV >> $seq.full 2>&1
++echo "===== END of xfs_repair =====" >> $seq.full
++
++if _check_scratch_fs; then
++	status=0
++else
++	status=1
++fi
++exit
+diff --git a/278.out b/278.out
+new file mode 100644
+index 0000000..2acd770
+--- /dev/null
++++ b/278.out
+@@ -0,0 +1,2 @@
++QA output created by 278
++Silence is goodness...
+diff --git a/group b/group
+index 99592d3..6f2d748 100644
+--- a/group
++++ b/group
+@@ -391,3 +391,4 @@ deprecated
+ 275 auto rw
+ 276 auto rw metadata
+ 277 auto ioctl quick metadata
++278 repair auto
+-- 
+1.7.6.4
 
 _______________________________________________
 xfs mailing list
