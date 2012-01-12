@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CJu4VD016113 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 13:56:04 -0600
-Received: from idcmail-mo2no.shaw.ca (idcmail-mo2no.shaw.ca [64.59.134.9]) by
-	cuda.sgi.com with ESMTP id XXnU4Q9FjeRxN3k6 for
-	<xfs@oss.sgi.com>; Thu, 12 Jan 2012 11:56:03 -0800 (PST)
-Subject: Re: [PATCH 2/4] vfs: Protect write paths by sb_start_write -
-	sb_end_write
+	q0CJrcp1015955 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 13:53:39 -0600
+Received: from idcmail-mo1so.shaw.ca (idcmail-mo1so.shaw.ca [24.71.223.10]) by
+	cuda.sgi.com with ESMTP id VAUO2XCUXElAfD84 for
+	<xfs@oss.sgi.com>; Thu, 12 Jan 2012 11:53:36 -0800 (PST)
+Subject: Re: [PATCH 1/4] fs: Improve filesystem freezing handling
 Mime-Version: 1.0 (Apple Message framework v1084)
 From: Andreas Dilger <adilger@dilger.ca>
-In-Reply-To: <1326331253-6497-3-git-send-email-jack@suse.cz>
-Date: Thu, 12 Jan 2012 12:56:01 -0700
-Message-Id: <FA7A1011-4312-4050-8AD5-C6060CFF3A55@dilger.ca>
+In-Reply-To: <1326331253-6497-2-git-send-email-jack@suse.cz>
+Date: Thu, 12 Jan 2012 12:53:35 -0700
+Message-Id: <DB1320A4-7621-44D2-B339-78CB38FAC186@dilger.ca>
 References: <1326331253-6497-1-git-send-email-jack@suse.cz>
-	<1326331253-6497-3-git-send-email-jack@suse.cz>
+	<1326331253-6497-2-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,102 +29,262 @@ To: Jan Kara <jack@suse.cz>
 Cc: Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
 On 2012-01-11, at 6:20 PM, Jan Kara wrote:
-> There are three entry points which dirty pages in a filesystem.  mmap (handled
-> by block_page_mkwrite()), buffered write (handled by
-> __generic_file_aio_write()), and truncate (it can dirty last partial page -
-> handled by do_truncate()). Protect these places with sb_start_write() and
-> sb_end_write().
+> Currently, exclusion between ->page_mkwrite() and filesystem freezing has been
+> handled by setting page dirty and then verifying s_frozen. This guaranteed that
+> either the freezing code sees the faulted page, writes it, and writeprotects it
+> again or we see s_frozen set and bail out of page fault. This works to protect
+> from page being marked writeable while filesystem freezing is running but has
+> an unpleasant artefact of leaving dirty (although unmodified and
+> writeprotected) pages on frozen filesystem. This artefact then requires
+> workarounds in writeback code and other places.
+> 
+> Also generally vfs_check_frozen() tests are racy since the filesystem can be
+> frozen just after the test is performed. Thus in other write paths we can
+> end up marking some pages or inodes dirty even though filesystem is already
+> frozen. Again this creates problems with flusher thread hanging on frozen
+> filesystem.
+> 
+> This patch aims at providing exclusion between write paths which dirty data (we
+> don't have to worry about metadata since that is handled by filesystems in
+> ->freeze_fs) and filesystem freezing. We implement a writer-freeze read-write
+> semaphore in the superblock. Write paths which dirty data such as
+> ->block_page_mkwrite() implementations, or ->aio_write() implementations hold
+> reader side of the semaphore.  Filesystem freezing code holds the writer side.
+> Only that we don't really want to bounce cachelines of the semaphore between
+> CPUs for each write happening. So we implement the reader side of the semaphore
+> as a per-cpu counter and the writer side is implemented using s_frozen
+> superblock field.
 > 
 > Signed-off-by: Jan Kara <jack@suse.cz>
 > ---
-> fs/buffer.c  |   18 ++----------------
-> fs/open.c    |    6 ++++++
-> mm/filemap.c |    3 ++-
-> 3 files changed, 10 insertions(+), 17 deletions(-)
+> fs/super.c         |  121 +++++++++++++++++++++++++++++++++++++++++++++++++++-
+> include/linux/fs.h |   14 ++++++
+> 2 files changed, 134 insertions(+), 1 deletions(-)
 > 
-> diff --git a/fs/buffer.c b/fs/buffer.c
-> index 19d8eb7..8519405 100644
-> --- a/fs/buffer.c
-> +++ b/fs/buffer.c
-> @@ -2371,18 +2371,7 @@ int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-
-The comment for __block_page_mkwrite() needs to be updated to reference
-sb_start_write() and sb_end_write() instead of vfs_check_frozen().
-
-Cheers, Andreas
-
-> 	if (unlikely(ret < 0))
-> 		goto out_unlock;
-> -	/*
-> -	 * Freezing in progress? We check after the page is marked dirty and
-> -	 * with page lock held so if the test here fails, we are sure freezing
-> -	 * code will wait during syncing until the page fault is done - at that
-> -	 * point page will be dirty and unlocked so freezing code will write it
-> -	 * and writeprotect it again.
-> -	 */
-> 	set_page_dirty(page);
-> -	if (inode->i_sb->s_frozen != SB_UNFROZEN) {
-> -		ret = -EAGAIN;
-> -		goto out_unlock;
-> -	}
-> 	wait_on_page_writeback(page);
-> 	return 0;
-> out_unlock:
-> @@ -2397,12 +2386,9 @@ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
-> 	int ret;
-> 	struct super_block *sb = vma->vm_file->f_path.dentry->d_inode->i_sb;
+> diff --git a/fs/super.c b/fs/super.c
+> index afd0f1a..c85c64c 100644
+> --- a/fs/super.c
+> +++ b/fs/super.c
+> @@ -32,12 +32,15 @@
+> #include <linux/backing-dev.h>
+> #include <linux/rculist_bl.h>
+> #include <linux/cleancache.h>
+> +#include <linux/lockdep.h>
+> #include "internal.h"
 > 
-> -	/*
-> -	 * This check is racy but catches the common case. The check in
-> -	 * __block_page_mkwrite() is reliable.
-> -	 */
-> -	vfs_check_frozen(sb, SB_FREEZE_WRITE);
-> +	sb_start_write(sb);
-> 	ret = __block_page_mkwrite(vma, vmf, get_block);
-> +	sb_end_write(sb);
-> 	return block_page_mkwrite_return(ret);
-> }
-> EXPORT_SYMBOL(block_page_mkwrite);
-> diff --git a/fs/open.c b/fs/open.c
-> index 22c41b5..ee17c90 100644
-> --- a/fs/open.c
-> +++ b/fs/open.c
-> @@ -55,8 +55,14 @@ int do_truncate(struct dentry *dentry, loff_t length, unsigned int time_attrs,
-> 	if (ret)
-> 		newattrs.ia_valid |= ret | ATTR_FORCE;
 > 
-> +	/*
-> +	 * Truncate can dirty last partial page so we need protection against
-> +	 * filesystem freezing.
-> +	 */
-> 	mutex_lock(&dentry->d_inode->i_mutex);
-> +	sb_start_write(dentry->d_sb);
-> 	ret = notify_change(dentry, &newattrs);
-> +	sb_end_write(dentry->d_sb);
-> 	mutex_unlock(&dentry->d_inode->i_mutex);
-> 	return ret;
-> }
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index c0018f2..6566c73 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -2529,7 +2529,7 @@ ssize_t __generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
-> 	count = ocount;
-> 	pos = *ppos;
+> LIST_HEAD(super_blocks);
+> DEFINE_SPINLOCK(sb_lock);
 > 
-> -	vfs_check_frozen(inode->i_sb, SB_FREEZE_WRITE);
-> +	sb_start_write(inode->i_sb);
-> 
-> 	/* We can write back this queue in page reclaim */
-> 	current->backing_dev_info = mapping->backing_dev_info;
-> @@ -2601,6 +2601,7 @@ ssize_t __generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
-> 				pos, ppos, count, written);
+> +static struct lock_class_key sb_writers_key;
+> +
+> /*
+>  * One thing we have to be careful of with a per-sb shrinker is that we don't
+>  * drop the last active reference to the superblock from within the shrinker.
+> @@ -183,6 +186,13 @@ static struct super_block *alloc_super(struct file_system_type *type)
+> 		s->s_shrink.seeks = DEFAULT_SEEKS;
+> 		s->s_shrink.shrink = prune_super;
+> 		s->s_shrink.batch = 1024;
+> +
+> +		init_waitqueue_head(&s->s_writers_wait);
+> +#ifdef CONFIG_SMP
+> +		s->s_page_faults = alloc_percpu(int);
+> +#endif
+> +		lockdep_init_map(&s->s_writers_lock_map, "sb_writers",
+> +				 &sb_writers_key, 0);
 > 	}
 > out:
-> +	sb_end_write(inode->i_sb);
-> 	current->backing_dev_info = NULL;
-> 	return written ? written : err;
+> 	return s;
+> @@ -1126,6 +1136,84 @@ out:
 > }
+> 
+> /**
+> + * sb_start_write - drop write access to a superblock
+> + * @sb: the super we wrote to
+> + *
+> + * Decrement number of writers to the filesystem and wake up possible
+> + * waiters wanting to freeze the filesystem.
+> + */
+> +void sb_end_write(struct super_block *sb)
+> +{
+> +#ifdef CONFIG_SMP
+> +	this_cpu_dec(sb->s_writers);
+> +#else
+> +	preempt_disable();
+> +	sb->s_writers--;
+> +	preempt_enable();
+> +#endif
+> +	/*
+> +	 * Make sure s_writers are updated before we wake up waiters in
+> +	 * freeze_super().
+> +	 */
+> +	smp_mb();
+> +	if (waitqueue_active(&sb->s_writers_wait))
+> +		wake_up(&sb->s_writers_wait);
+> +	rwsem_release(&sb->s_writers_lock_map, 1, _RET_IP_);
+> +}
+
+Since this function is needed for calling __block_page_mkwrite(), which is
+EXPORT_SYMBOL(), both sb_start_write() and sb_end_write() themselves need
+to be EXPORT_SYMBOL().
+
+> +/**
+> + * sb_start_write - get write access to a superblock
+> + * @sb: the super we write to
+> + *
+> + * When a process wants to write data to a filesystem (i.e. dirty a page),
+> + * it should embed the operation in a sb_start_write() - sb_end_write() pair
+> + * to get exclusion against filesystem freezing. This function increments
+> + * number of writers to the filesystem and waits if filesystem is frozen until
+> + * it is thawed.
+> + */
+> +void sb_start_write(struct super_block *sb)
+> +{
+> +retry:
+> +	rwsem_acquire_read(&sb->s_writers_lock_map, 0, 0, _RET_IP_);
+> +	vfs_check_frozen(sb, SB_FREEZE_WRITE);
+> +#ifdef CONFIG_SMP
+> +	this_cpu_inc(sb->s_writers);
+> +#else
+> +	preempt_disable();
+> +	sb->s_writers++;
+> +	preempt_enable();
+> +#endif
+> +	/*
+> +	 * Make sure s_writers are updated before we check s_frozen.
+> +	 * freeze_super() first sets s_frozen and then checks s_writers.
+> +	 */
+> +	smp_mb();
+> +	if (sb->s_frozen != SB_UNFROZEN) {
+> +		sb_end_write(sb);
+> +		goto retry;
+> +	}
+> +}
+> +
+> +/*
+> + * Get number of writers to the superblock
+> + */
+> +static int get_writers_count(struct super_block *sb)
+> +{
+> +	int writers;
+> +#ifdef CONFIG_SMP
+> +	int cpu;
+> +
+> +	writers = 0;
+> +	for_each_possible_cpu(cpu) {
+> +		writers += *per_cpu_ptr(sb->s_writers, cpu);
+> +	}
+> +#else
+> +	writers = sb->s_writers;
+> +#endif
+> +	return writers;
+> +}
+> +
+> +/**
+>  * freeze_super - lock the filesystem and force it into a consistent state
+>  * @sb: the super to lock
+>  *
+> @@ -1136,6 +1224,7 @@ out:
+> int freeze_super(struct super_block *sb)
+> {
+> 	int ret;
+> +	int writers;
+> 
+> 	atomic_inc(&sb->s_active);
+> 	down_write(&sb->s_umount);
+> @@ -1151,8 +1240,36 @@ int freeze_super(struct super_block *sb)
+> 		return 0;
+> 	}
+> 
+> +	rwsem_acquire(&sb->s_writers_lock_map, 0, 0, _THIS_IP_);
+> 	sb->s_frozen = SB_FREEZE_WRITE;
+> -	smp_wmb();
+> +	/*
+> +	 * Now wait for all page faults to finish. ->page_mkwrite()
+> +	 * implementations must call vfs_check_frozen() before starting
+> +	 * a fault so that we cannot livelock here. Because of that we
+> +	 * are guaranteed that from this moment on new ->page_mkwrite()
+> +	 * calls will block and we just have to wait for s_page_faults
+> +	 * to drop to zero (in a sum).
+> +	 */
+> +	do {
+> +		DEFINE_WAIT(wait);
+> +
+> +		/*
+> +		 * We use a barrier in prepare_to_wait() to separate setting
+> +		 * of s_frozen and checking of s_writers
+> +		 */
+> +		prepare_to_wait(&sb->s_writers_wait, &wait,
+> +				TASK_UNINTERRUPTIBLE);
+> +		/*
+> +		 * We must iterate over all (even offline) CPUs because of CPU
+> + 		 * hotplug their entries could still be non-zero. This is slow
+> +		 * when lots of CPUs are configured but hey, filesystem freezing
+> +		 * isn't exactly cheap anyway.
+> +		 */
+> +		writers = get_writers_count(sb);
+> +		if (writers)
+> +			schedule();
+> +		finish_wait(&sb->s_writers_wait, &wait);
+> +	} while (writers);
+> 
+> 	sync_filesystem(sb);
+> 
+> @@ -1165,6 +1282,7 @@ int freeze_super(struct super_block *sb)
+> 		if (ret) {
+> 			printk(KERN_ERR
+> 				"VFS:Filesystem freeze failed\n");
+> +			rwsem_release(&sb->s_writers_lock_map, 1, _THIS_IP_);
+> 			sb->s_frozen = SB_UNFROZEN;
+> 			deactivate_locked_super(sb);
+> 			return ret;
+> @@ -1206,6 +1324,7 @@ int thaw_super(struct super_block *sb)
+> 	}
+> 
+> out:
+> +	rwsem_release(&sb->s_writers_lock_map, 1, _THIS_IP_);
+> 	sb->s_frozen = SB_UNFROZEN;
+> 	smp_wmb();
+> 	wake_up(&sb->s_wait_unfrozen);
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index e313022..297b263 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -10,6 +10,7 @@
+> #include <linux/ioctl.h>
+> #include <linux/blk_types.h>
+> #include <linux/types.h>
+> +#include <linux/lockdep.h>
+> 
+> /*
+>  * It's silly to have NR_OPEN bigger than NR_FILE, but you can change
+> @@ -1445,6 +1446,16 @@ struct super_block {
+> 
+> 	int			s_frozen;
+> 	wait_queue_head_t	s_wait_unfrozen;
+> +#ifdef CONFIG_SMP
+> +	int __percpu 		*s_writers;	/* counter of running writes */
+> +#else
+> +	int			s_writers;	/* counter of running writes */
+> +#endif
+> +	wait_queue_head_t	s_writers_wait;	/* queue for waiting for
+> +						   writers to finish */
+> +#ifdef CONFIG_DEBUG_LOCK_ALLOC
+> +	struct lockdep_map	s_writers_lock_map;
+> +#endif
+> 
+> 	char s_id[32];				/* Informational name */
+> 	u8 s_uuid[16];				/* UUID */
+> @@ -1501,6 +1512,9 @@ enum {
+> #define vfs_check_frozen(sb, level) \
+> 	wait_event((sb)->s_wait_unfrozen, ((sb)->s_frozen < (level)))
+> 
+> +void sb_end_write(struct super_block *sb);
+> +void sb_start_write(struct super_block *sb);
+> +
+> /*
+>  * until VFS tracks user namespaces for inodes, just make all files
+>  * belong to init_user_ns
 > -- 
 > 1.7.1
 > 
@@ -133,6 +292,12 @@ Cheers, Andreas
 > To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
+Cheers, Andreas
+
+
+
 
 
 _______________________________________________
