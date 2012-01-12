@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0CGCVpu004910 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 10:12:31 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	GZgCp3vFN0iaw8Uy for <xfs@oss.sgi.com>;
-	Thu, 12 Jan 2012 08:12:28 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RlNGN-0000rL-Ts
-	for xfs@oss.sgi.com; Thu, 12 Jan 2012 16:12:27 +0000
-Date: Thu, 12 Jan 2012 11:12:27 -0500
+	q0CGEFA9005000 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 10:14:15 -0600
+Date: Thu, 12 Jan 2012 11:14:10 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: time for userspace releases?
-Message-ID: <20120112161227.GA3225@infradead.org>
+Subject: Re: [RFC PATCH] xfs: show uuid when mount fails due to duplicate uuid
+Message-ID: <20120112161410.GA3810@infradead.org>
+References: <20120112024720.3952.73517.stgit@ltc219.sdl.hitachi.co.jp>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20120112024720.3952.73517.stgit@ltc219.sdl.hitachi.co.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,14 +22,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Alex Elder <elder@kernel.org>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>
 
-[looks like the list manager ate this mail the first time, sorry if
- anyone gets it twice]
+On Thu, Jan 12, 2012 at 11:47:20AM +0900, Mitsuo Hayasaka wrote:
+> When a system tries to mount a filesystem (FS) using UUID, the xfs
+> returns -EINVAL and shows a message if a FS with the same UUID has
+> been already mounted. It is useful to output the duplicate UUID
+> with it.
 
-We have some important repair fixes pending, as well as major changes
-in xfsdump.  Maybe it's time to schedule releases in about two weeks
-and get any outstanding changes in?
+Looks good to me,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+> -	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
+> +	xfs_warn(mp,
+> +		"Filesystem has duplicate UUID - can't mount: uuid = %pU",
+> +		uuid);
+
+Maybe we could write this a bit nicer as:
+
+	xfs_warn(mp, "Filesystem has duplicate UUID %p - can't mount", uuid);
 
 _______________________________________________
 xfs mailing list
