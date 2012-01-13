@@ -1,30 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0DKox3F160083 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 14:51:00 -0600
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149]) by
-	cuda.sgi.com with ESMTP id fhB6SKirgHcHB876 for
-	<xfs@oss.sgi.com>; Fri, 13 Jan 2012 12:50:58 -0800 (PST)
-Received: from /spool/local
-	by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <achender@linux.vnet.ibm.com>;
-	Fri, 13 Jan 2012 13:50:58 -0700
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q0DKosoN158196 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 13:50:54 -0700
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id q0DKosBW019530
-	for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 13:50:54 -0700
-Message-ID: <4F10992C.3070303@linux.vnet.ibm.com>
-Date: Fri, 13 Jan 2012 13:50:52 -0700
-From: Allison Henderson <achender@linux.vnet.ibm.com>
+	q0DLnh1R162907 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 15:49:43 -0600
+Date: Fri, 13 Jan 2012 15:49:41 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 06/11] xfs: replace i_flock with a sleeping bitlock
+Message-ID: <20120113214941.GA16386@sgi.com>
+References: <20111218200003.557507716@bombadil.infradead.org>
+	<20111218200131.745039484@bombadil.infradead.org>
 MIME-Version: 1.0
-Subject: Re: working on extent locks for i_mutex
-References: <4F0F9E97.1090403@linux.vnet.ibm.com>
-	<20120113043411.GH2806@dastard>
-In-Reply-To: <20120113043411.GH2806@dastard>
+Content-Disposition: inline
+In-Reply-To: <20111218200131.745039484@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,49 +19,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Lukas Czerner <lczerner@redhat.com>, Ext4 Developers List <linux-ext4@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 01/12/2012 09:34 PM, Dave Chinner wrote:
-> On Thu, Jan 12, 2012 at 08:01:43PM -0700, Allison Henderson wrote:
->> Hi All,
->>
->> I know this is an old topic, but I am poking it again because I've
->> had some work items wrap up, and Im planning on picking up on this
->> one again.  I am thinking about implementing extent locks to replace
->> i_mutex.  So I just wanted to touch base with folks and see what
->> people are working on because I know there were some folks out there
->> that were thing about doing similar solutions.
->
-> What locking API are you looking at? If you are looking at an
-> something like:
->
-> read_range_{try}lock(lock, off, len)
-> read_range_unlock(lock, off, len)
-> write_range_{try}lock(lock, off, len)
-> write_range_unlock(lock, off, len)
->
-> and implementing with an rbtree or a btree for tracking, then I
-> definitely have a use for it in XFS - replacing the current rwsem
-> that is used for the iolock. Range locks like this are the only
-> thing we need to allow concurrent buffered writes to the same file
-> to maintain the per-write exclusion that posix requires.
->
-> Cheers,
->
-> Dave.
+On Sun, Dec 18, 2011 at 03:00:09PM -0500, Christoph Hellwig wrote:
+> Index: xfs/fs/xfs/xfs_inode.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_inode.c	2011-12-18 08:05:01.469974560 -0800
+> +++ xfs/fs/xfs/xfs_inode.c	2011-12-18 08:06:23.266640737 -0800
 
-Yes that is generally the idea I was thinking about doing, but at the 
-time, I was not thinking outside the scope of ext4.  You are thinking 
-maybe it should be in vfs layer so that it's something that all the 
-filesystems will use?  That seems to be the impression I'm getting from 
-folks.  Thx!
+...
 
-Allison Henderson
+> -/*
+>   * In-core inode flags.
+>   */
+> -#define XFS_IRECLAIM		0x0001  /* started reclaiming this inode */
+> -#define XFS_ISTALE		0x0002	/* inode has been staled */
+> -#define XFS_IRECLAIMABLE	0x0004	/* inode can be reclaimed */
+> -#define XFS_INEW		0x0008	/* inode has just been allocated */
+> -#define XFS_IFILESTREAM		0x0010	/* inode is in a filestream directory */
+> -#define XFS_ITRUNCATED		0x0020	/* truncated down so flush-on-close */
+> -#define XFS_IDIRTY_RELEASE	0x0040	/* dirty release already seen */
+> +#define XFS_IRECLAIM		(1 << 0) /* started reclaiming this inode */
+> +#define XFS_ISTALE		(1 << 1) /* inode has been staled */
+> +#define XFS_IRECLAIMABLE	(1 << 2) /* inode can be reclaimed */
+> +#define XFS_INEW		(1 << 3) /* inode has just been allocated */
+> +#define XFS_IFILESTREAM		(1 << 4) /* inode is in a filestream dir. */
+> +#define XFS_ITRUNCATED		(1 << 5) /* truncated down so flush-on-close */
+> +#define XFS_IDIRTY_RELEASE	(1 << 6) /* dirty release already seen */
+> +#define __XFS_IFLOCK_BIT	7	 /* inode is being flushed right now */
+> +#define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
+
+Nice.
+
+> +static inline void xfs_iflock(struct xfs_inode *ip)
+> +{
+> +	if (!xfs_iflock_nowait(ip))
+> +		__xfs_iflock(ip);
+> +}
+
+Going after the iflock nowait first seems a little silly, but I'm
+guessing that you're trying to avoid touching the zone wait_table in
+bit_waitqueue if you can avoid it, along with the rest of the overhead
+related to seeting up the wait queue in __xfs_iflock.
+
+> +
+> +static inline void xfs_ifunlock(struct xfs_inode *ip)
+> +{
+> +	xfs_iflags_clear(ip, XFS_IFLOCK);
+> +	wake_up_bit(&ip->i_flags, __XFS_IFLOCK_BIT);
+> +}
+
+I was going to suggest this:
+
+	spin_lock(&ip->i_flags_lock); 
+	ip->i_flags &= ~XFS_IFLOCK;
+	wake_up_bit(... 
+	spin_unlock(&ip->i_flags_lock);
+
+After some study I believe what you have is ok:
+
+Say this is process A.  If process B got the lock after A cleared IFLOCK
+and before A wake_up_bit wakes process C.  C will just go back to sleep
+in __xfs_iflock until B calls xfs_ifunlock to wake C again.  
+
+Looks good.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
