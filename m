@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0DGljcV148673 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 10:47:45 -0600
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id LLhENNnPYIPKN7zj for
-	<xfs@oss.sgi.com>; Fri, 13 Jan 2012 08:47:41 -0800 (PST)
-Received: from harpe.intellique.com (unknown [82.225.196.72])
-	by smtp4-g21.free.fr (Postfix) with ESMTP id 8A5474C843D
-	for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 17:47:37 +0100 (CET)
-Date: Fri, 13 Jan 2012 17:47:39 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: xfs version and kernels
-Message-ID: <20120113174739.26ae0c07@harpe.intellique.com>
-Mime-Version: 1.0
+	q0DHI55E150552 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 11:18:05 -0600
+Message-ID: <4F10674B.7030904@sgi.com>
+Date: Fri, 13 Jan 2012 11:18:03 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 05/12] repair: update extent count after zapping duplicate
+	blocks
+References: <20111202174619.179530033@bombadil.infradead.org>
+	<20111202174741.904845954@bombadil.infradead.org>
+In-Reply-To: <20111202174741.904845954@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,49 +19,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
+On 01/-10/63 13:59, Christoph Hellwig wrote:
+> When we find a duplicate extent in an extern format inode we do not zap
+> the whole inode, but just truncate it to the point where the duplicate
+> extent was found.  But the current code only updates di_nblocks for the
+> new size, but no di_nextents/di_anextents.  In most cases this isn't noticed,
+> but when moving such an inode to the lost+found directoy the consistency
+> check in xfs_iformat trips over it.  Fix this by updating the on-disk
+> extent count as part of the inode repair.
+>
+> Note that we zap btree format inodes with duplicate block completely
+> at this point, so this fix doesn't apply to them.
+>
+> Reported-by: Arkadiusz Mi??kiewicz<arekm@maven.pl>
+> Tested-by: Arkadiusz Mi??kiewicz<arekm@maven.pl>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>
+> Index: xfsprogs-dev/repair/dinode.c
+> ===================================================================
+> --- xfsprogs-dev.orig/repair/dinode.c	2011-11-08 12:15:40.000000000 +0000
+> +++ xfsprogs-dev/repair/dinode.c	2011-11-14 12:09:54.000000000 +0000
 
-Today, for the second time in a couple of weeks I had an XFS filesystem
-that was set up (and filled up) running some kernel that I was unable
-to mount on a machine running an older kernel.
+> @@ -2003,6 +2016,12 @@ process_inode_blocks_and_extents(
+>   	xfs_ino_t	lino,
+>   	int		*dirty)
+>   {
+> +	if (nblocks<  nextents + anextents) {
+> +		do_warn(
+> +_("nblocks (%" PRIu64 ") smaller than nextents for inode %" PRIu64 "\n"), nblocks, lino);
+> +		return 1;
+> +	}
+> +
 
-The first time, it was a volume mkfs'd on some recent OpenSuse (kernel
-version unknown), that couldn't mount on a RedHat 5.3 (antediluvian
-kernel 2.6.18-128.el5 ).
+I agree with David on an inserted comment and relocation. I would not 
+have figured out this test without David's observation.
 
-running xfs_db version gave this:
-
-versionnum [0xb4a4+0xa] =
-V4,NLINK,ALIGN,DALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT
-
-
-Today, a volume mkfs'd running 2.6.35 couldn't mount on 2.6.20. I
-fortunately was able to update the running kernel to 2.6.32, and that
-worked fine from there.
-
-This FS had this version flags :
-versionnum [0xb5a4+0xa] =
-V4,NLINK,ALIGN,DALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT
-
-The native xfs tools would create an XFS with these flags instead:
-versionnum [0x3094+0x0] = V4,ATTR,ALIGN,DIRV2,EXTFLG
-
-Is there some way out of a kernel upgrade, to mount a recent XFS volume
-on an older system? Particularly on these goddamned RHEL 5.x systems
-which are both so very common and very out of date?
-
--- 
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
