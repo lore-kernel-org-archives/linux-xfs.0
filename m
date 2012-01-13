@@ -1,12 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0D5r4UJ077673 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 23:53:04 -0600
-From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Subject: [PATCH] xfs: show uuid when mount fails due to duplicate uuid
-Date: Fri, 13 Jan 2012 14:58:39 +0900
-Message-ID: <20120113055839.12919.98763.stgit@ltc219.sdl.hitachi.co.jp>
+	q0D7F0KH086884 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 01:15:01 -0600
+Received: from oproxy9.bluehost.com (oproxy9.bluehost.com [69.89.24.6]) by
+	cuda.sgi.com with SMTP id oRkbF01AnPup4bis for
+	<xfs@oss.sgi.com>; Thu, 12 Jan 2012 23:14:58 -0800 (PST)
+Message-ID: <4F0FD9EB.5050707@tao.ma>
+Date: Fri, 13 Jan 2012 15:14:51 +0800
+From: Tao Ma <tm@tao.ma>
 MIME-Version: 1.0
+Subject: Re: working on extent locks for i_mutex
+References: <4F0F9E97.1090403@linux.vnet.ibm.com>
+	<20120113043411.GH2806@dastard>
+In-Reply-To: <20120113043411.GH2806@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,37 +25,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
-Cc: Alex Elder <elder@kernel.org>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com, Ext4 Developers List <linux-ext4@vger.kernel.org>, Allison Henderson <achender@linux.vnet.ibm.com>
 
-When a system tries to mount a filesystem (FS) using UUID, the xfs
-returns -EINVAL and shows a message if a FS with the same UUID has
-been already mounted. It is useful to output the duplicate UUID
-with it.
+On 01/13/2012 12:34 PM, Dave Chinner wrote:
+> On Thu, Jan 12, 2012 at 08:01:43PM -0700, Allison Henderson wrote:
+>> Hi All,
+>>
+>> I know this is an old topic, but I am poking it again because I've
+>> had some work items wrap up, and Im planning on picking up on this
+>> one again.  I am thinking about implementing extent locks to replace
+>> i_mutex.  So I just wanted to touch base with folks and see what
+>> people are working on because I know there were some folks out there
+>> that were thing about doing similar solutions.
+> 
+> What locking API are you looking at? If you are looking at an
+> something like:
+> 
+> read_range_{try}lock(lock, off, len)
+> read_range_unlock(lock, off, len)
+> write_range_{try}lock(lock, off, len)
+> write_range_unlock(lock, off, len)
+> 
+> and implementing with an rbtree or a btree for tracking, then I
+> definitely have a use for it in XFS - replacing the current rwsem
+> that is used for the iolock. Range locks like this are the only
+> thing we need to allow concurrent buffered writes to the same file
+> to maintain the per-write exclusion that posix requires.
+Interesting, so xfs already have these range lock, right? If yes, any
+possibility that the code can be reused in ext4 since we have the same
+thing in mind but don't have any resource to work on it by now.
 
-Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Ben Myers <bpm@sgi.com>
-Cc: Alex Elder <elder@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>
----
+btw, IIRC flock(2) uses a list to indicate the range lock, so if we can
+make these pieces of codes common, at least there are 3 places that can
+benefit from it. ;)
 
- fs/xfs/xfs_mount.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index d06afbc..e07f852 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -158,7 +158,7 @@ xfs_uuid_mount(
- 
-  out_duplicate:
- 	mutex_unlock(&xfs_uuid_table_mutex);
--	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
-+	xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount", uuid);
- 	return XFS_ERROR(EINVAL);
- }
- 
+Thanks
+Tao
 
 _______________________________________________
 xfs mailing list
