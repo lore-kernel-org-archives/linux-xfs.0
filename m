@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0DJ7Iar155625 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 13:07:19 -0600
-Date: Fri, 13 Jan 2012 13:07:16 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 05/11] xfs: make i_flags an unsigned long
-Message-ID: <20120113190716.GA6271@sgi.com>
-References: <20111208155755.323930705@bombadil.infradead.org>
-	<20111208155918.348628833@bombadil.infradead.org>
+	q0DKAj9i158235 for <xfs@oss.sgi.com>; Fri, 13 Jan 2012 14:10:46 -0600
+Message-ID: <4F108FC6.60901@sgi.com>
+Date: Fri, 13 Jan 2012 14:10:46 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111208155918.348628833@bombadil.infradead.org>
+Subject: Re: Re: [PATCH 06/12] repair: use recursive buffer locking
+References: <20111202174619.179530033@bombadil.infradead.org>
+	<20111202174742.106589485@bombadil.infradead.org>
+	<20111213022208.GZ14273@dastard>
+	<20111218225445.GB20578@infradead.org>
+In-Reply-To: <20111218225445.GB20578@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,53 +20,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Dec 08, 2011 at 10:58:00AM -0500, Christoph Hellwig wrote:
-> To be used for bit wakeup i_flags needs to be an unsigned long or we'll
-> run into trouble on big endian systems.  Beause of the 1-byte i_update
-					   Because
-> field right after it this actually causes a fairly large size increase
-> on its own (4 or 8 bytes), but that increase will be more than offset
-> by the next two patches.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Alex Elder <aelder@sgi.com>
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+On 01/-10/63 13:59, Christoph Hellwig wrote:
+> On Tue, Dec 13, 2011 at 01:22:08PM +1100, Dave Chinner wrote:
+>>>   	if (use_xfs_buf_lock) {
+>>> -		if (flags&  LIBXFS_GETBUF_TRYLOCK) {
+>>> -			int ret;
+>>> +		int ret;
+>>>
+>>> -			ret = pthread_mutex_trylock(&bp->b_lock);
+>>> -			if (ret) {
+>>> -				ASSERT(ret == EAGAIN);
+>>> -				cache_node_put(libxfs_bcache, (struct cache_node *)bp);
+>>> -				return NULL;
+>>> +		ret = pthread_mutex_trylock(&bp->b_lock);
+>>> +		if (ret) {
+>>> +			ASSERT(ret == EAGAIN);
+>>> +			if (flags&  LIBXFS_GETBUF_TRYLOCK)
+>>> +				goto out_put;
+>>> +
+>>> +			if (pthread_equal(bp->b_holder, pthread_self())) {
+>>> +				fprintf(stderr,
+>>> +	_("recursive buffer locking detected\n"));
+>>
+>> "Warning: recursive buffer locking @ bno %lld detected"
+>>
+>> might be more informative, especially to do with the severity of the
+>> issue.
+>
+> Ok, I'll make it print the block number.
+>
+>>
+>>> +				bp->b_recur++;
+>>> +			} else {
+>>> +				pthread_mutex_lock(&bp->b_lock);
+>>>   			}
+>>> -		} else {
+>>> -			pthread_mutex_lock(&bp->b_lock);
+>>>   		}
+>>> +
+>>> +		bp->b_holder = pthread_self();
+>>
+>> That should probably only be written in the branch where the lock is
+>> taken not every time through here.
+>
+> We actually should return the buffer just after incrementing the
+> recursion count, else we might add it to the global list of buffers
+> twice.
+>
+>
 
-Looks good to me.  But I could go for a thorough explanation of 'trouble
-on big endian systems'.
+I liked the patch the way it was.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+I thought the placement of the setting of b_holder is correct because it 
+covers the pthread_mutex_trylock and the pthread_mutex_lock attempts.
 
-> 
-> ---
->  fs/xfs/xfs_inode.h |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: xfs/fs/xfs/xfs_inode.h
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 12:58:58.449770178 +0100
-> +++ xfs/fs/xfs/xfs_inode.h	2011-11-30 12:59:05.013067955 +0100
-> @@ -242,7 +242,7 @@ typedef struct xfs_inode {
->  	wait_queue_head_t	i_ipin_wait;	/* inode pinning wait queue */
->  	spinlock_t		i_flags_lock;	/* inode i_flags lock */
->  	/* Miscellaneous state. */
-> -	unsigned short		i_flags;	/* see defined flags below */
-> +	unsigned long		i_flags;	/* see defined flags below */
->  	unsigned char		i_update_core;	/* timestamps/size is dirty */
->  	unsigned int		i_delayed_blks;	/* count of delay alloc blks */
->  
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I did not see anything in cache_node_get_priority() nor
+cache_node_set_priority() that would add this to a list.
+
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+
+
 
 _______________________________________________
 xfs mailing list
