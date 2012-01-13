@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0D1QmtY053974 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 19:26:48 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	mzdIFNjobERUVKoB for <xfs@oss.sgi.com>;
-	Thu, 12 Jan 2012 17:26:46 -0800 (PST)
-Date: Fri, 13 Jan 2012 12:26:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/4] fs: Improve filesystem freezing handling
-Message-ID: <20120113012643.GF2806@dastard>
-References: <1326331253-6497-1-git-send-email-jack@suse.cz>
-	<1326331253-6497-2-git-send-email-jack@suse.cz>
+	q0D2FAVV057584 for <xfs@oss.sgi.com>; Thu, 12 Jan 2012 20:15:10 -0600
+Message-ID: <4F0F93A1.7040307@oracle.com>
+Date: Fri, 13 Jan 2012 10:14:57 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1326331253-6497-2-git-send-email-jack@suse.cz>
+Subject: Re: Introduce SEEK_DATA/SEEK_HOLE to XFS V5
+References: <4F06F71A.2010301@oracle.com>
+	<20120110171855.GX6390@sgi.com>	<4F0D21E5.7010908@oracle.com>
+	<4F0DFA11.7030305@sgi.com> <20120112163943.GA22223@infradead.org>
+In-Reply-To: <20120112163943.GA22223@infradead.org>
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +24,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-On Thu, Jan 12, 2012 at 02:20:50AM +0100, Jan Kara wrote:
-> + *
-> + * Decrement number of writers to the filesystem and wake up possible
-> + * waiters wanting to freeze the filesystem.
-> + */
-> +void sb_end_write(struct super_block *sb)
-> +{
-> +#ifdef CONFIG_SMP
-> +	this_cpu_dec(sb->s_writers);
-> +#else
-> +	preempt_disable();
-> +	sb->s_writers--;
-> +	preempt_enable();
-> +#endif
+On 01/13/2012 12:39 AM, Christoph Hellwig wrote:
 
-I really dislike this type of open coded per-cpu counter
-implementation. I can't see that there is no good reason to use it
-over percpu_counters here which abstract all this mess away.
+> On Wed, Jan 11, 2012 at 03:07:29PM -0600, Mark Tinguely wrote:
+>>
+>> xfs_bmapi_read() returns the br_state == XFS_EXT_NORM for a hole.
+>> There are a couple places that a hole can trigger a data test.
+>> BTW, I could not generate a large enough hole that xfs_bmapi_read()
+>> would return as more than one hole entry, so I will ignore those
+>> situations and just list the couple places that a hole may be match
+>> a data rule:
+> 
+> We've been through this before, you need to overflow the 32-bit extent
+> length counter to get there.  Jeff, did you manage to create a test
+> case for that particular scenario?
 
-i.e. it is relatively rare that the per-cpu count will nest
-greater than the percpu_counter batch size (needs more than 32
-concurrent blocked active writes per CPU), so there is no
-significant overhead to using the percpu_counters here.
+Ok, I'll try it out.
 
-Indeed, if there are that many blocked writes per CPU, then the
-overhead of an occasional global counter update is going to be lost
-in the noise of everything else that is going on.
+Thanks,
+-Jeff
 
-Cheers,
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
