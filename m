@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p97M84gg087778 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 17:08:04 -0500
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id CqO7xCGECXfFgdPE for
-	<xfs@oss.sgi.com>; Mon, 16 Jan 2012 02:23:31 -0800 (PST)
-From: Liu Bo <liubo2009@cn.fujitsu.com>
-Subject: [PATCH] Xfstest: make 218 support btrfs
-Date: Mon, 16 Jan 2012 18:21:56 +0800
-Message-Id: <1326709316-30419-1-git-send-email-liubo2009@cn.fujitsu.com>
+	p9803W59091397 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 19:03:33 -0500
+MIME-Version: 1.0
+In-Reply-To: <20120111113507.GB14423@infradead.org>
+References: <1325848338-6063-1-git-send-email-amit.sahrawat83@gmail.com>
+	<20120111113507.GB14423@infradead.org>
+Date: Mon, 16 Jan 2012 17:49:00 +0530
+Message-ID: <CADDb1s110TS6STfV9f6t+W4h5Bo21PXLu=nhHgDojkGhT03Kag@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs: cleanup XFS_BB_FSB_OFFSET
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,51 +18,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-btrfs@vger.kernel.org
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs masters <xfs-masters@oss.sgi.com>, Ben Myers <bpm@sgi.com>, xfs <xfs@oss.sgi.com>, linux kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
 
-Btrfs progs has a defragment tool, so we can test 218 on btrfs now.
+thanks Christoph,
 
-Signed-off-by: Liu Bo <liubo2009@cn.fujitsu.com>
----
- 218           |    2 +-
- common.defrag |    3 +++
- 2 files changed, 4 insertions(+), 1 deletions(-)
+Resent the patch after the subject change.
 
-diff --git a/218 b/218
-index 53d0b61..77782c6 100755
---- a/218
-+++ b/218
-@@ -44,7 +44,7 @@ _cleanup()
- . ./common.defrag
- 
- # real QA test starts here
--_supported_fs xfs ext4
-+_supported_fs xfs ext4 btrfs
- _supported_os Linux
- 
- _setup_testdir
-diff --git a/common.defrag b/common.defrag
-index 4850803..ea6c14c 100644
---- a/common.defrag
-+++ b/common.defrag
-@@ -29,6 +29,9 @@ _require_defrag()
-     ext4|ext4dev)
-         DEFRAG_PROG=/usr/bin/e4defrag
- 	;;
-+    btrfs)
-+	DEFRAG_PROG="$BTRFS_UTIL_PROG filesystem defragment"
-+	;;
-     *)
-         _notrun "defragmentation not supported for fstype \"$FSTYP\""
- 	;;
--- 
-1.6.5.2
+Regards,
+Amit Sahrawat
+
+On Wed, Jan 11, 2012 at 5:05 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Fri, Jan 06, 2012 at 04:42:18PM +0530, Amit Sahrawat wrote:
+>> Removing the macro, as this is no more needed in the code.
+>> Tried to find the reference when it was last used - but the usage
+>> for this seemed to have been dropped long time ago.
+>>
+>> Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+>
+> This looks good, but the subject should be something like:
+>
+> "xfs: kill the unused XFS_BB_FSB_OFFSET macro"
+>
+>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
