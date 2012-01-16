@@ -1,15 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	p9803W59091397 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 19:03:33 -0500
-MIME-Version: 1.0
-In-Reply-To: <20120111113507.GB14423@infradead.org>
-References: <1325848338-6063-1-git-send-email-amit.sahrawat83@gmail.com>
-	<20120111113507.GB14423@infradead.org>
-Date: Mon, 16 Jan 2012 17:49:00 +0530
-Message-ID: <CADDb1s110TS6STfV9f6t+W4h5Bo21PXLu=nhHgDojkGhT03Kag@mail.gmail.com>
-Subject: Re: [PATCH 2/2] xfs: cleanup XFS_BB_FSB_OFFSET
+	p9802RJU091316 for <xfs@oss.sgi.com>; Fri, 7 Oct 2011 19:02:27 -0500
 From: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Subject: [PATCH 1/1] xfs: kill the unused XFS_BB_FSB_OFFSET macro
+Date: Mon, 16 Jan 2012 17:54:36 +0530
+Message-Id: <1326716676-11842-1-git-send-email-amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,34 +14,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs masters <xfs-masters@oss.sgi.com>, Ben Myers <bpm@sgi.com>, xfs <xfs@oss.sgi.com>, linux kernel <linux-kernel@vger.kernel.org>, Alex Elder <aelder@sgi.com>
+To: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Christoph Hellwig <hch@lst.de>
+Cc: xfs-masters@oss.sgi.com, Amit Sahrawat <amit.sahrawat83@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-thanks Christoph,
+Removing the macro, as this is no more needed in the code.
+Tried to find the reference when it was last used - but the usage
+for this seemed to have been dropped long time ago.
 
-Resent the patch after the subject change.
+Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_sb.h |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
 
-Regards,
-Amit Sahrawat
-
-On Wed, Jan 11, 2012 at 5:05 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Jan 06, 2012 at 04:42:18PM +0530, Amit Sahrawat wrote:
->> Removing the macro, as this is no more needed in the code.
->> Tried to find the reference when it was last used - but the usage
->> for this seemed to have been dropped long time ago.
->>
->> Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
->
-> This looks good, but the subject should be something like:
->
-> "xfs: kill the unused XFS_BB_FSB_OFFSET macro"
->
->
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index cb6ae71..f429d9d 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -529,7 +529,6 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+ #define	XFS_BB_TO_FSB(mp,bb)	\
+ 	(((bb) + (XFS_FSB_TO_BB(mp,1) - 1)) >> (mp)->m_blkbb_log)
+ #define	XFS_BB_TO_FSBT(mp,bb)	((bb) >> (mp)->m_blkbb_log)
+-#define	XFS_BB_FSB_OFFSET(mp,bb) ((bb) & ((mp)->m_bsize - 1))
+ 
+ /*
+  * File system block to byte conversions.
+-- 
+1.7.2.3
 
 _______________________________________________
 xfs mailing list
