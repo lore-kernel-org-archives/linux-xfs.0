@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0GMjSx7117965 for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 16:45:28 -0600
-Date: Mon, 16 Jan 2012 16:45:27 -0600
+	q0GMfm6b117775 for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 16:41:48 -0600
+Date: Mon, 16 Jan 2012 16:41:47 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 04/11] xfs: remove the if_ext_max field in struct xfs_ifork
-Message-ID: <20120116224527.GD16581@sgi.com>
+Subject: Re: [PATCH 09/11] xfs: remove the i_new_size field in struct xfs_inode
+Message-ID: <20120116224147.GC16581@sgi.com>
 References: <20111218200003.557507716@bombadil.infradead.org>
-	<20111218200131.321997628@bombadil.infradead.org>
-	<20120106165818.GD6390@sgi.com>
+	<20111218200132.299481659@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120106165818.GD6390@sgi.com>
+In-Reply-To: <20111218200132.299481659@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,84 +26,92 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Hey Christoph,
+On Sun, Dec 18, 2011 at 03:00:12PM -0500, Christoph Hellwig wrote:
+> Now that we use the VFS i_size field throughout XFS there is no need for the
+> i_new_size field any more given that the VFS i_size field gets updated
+> in ->write_end before unlocking the page, and thus is a) always uptodate when
+> writeback could see a page.  Removing i_new_size also has the advantage that
+> we will never have to trim back di_size during a failed buffered write,
+> given that it never gets updated past i_size.
+> 
+> Note that currently the generic direct I/O code only updates i_size after
+> calling our end_io handler, which requires a small workaround to make
+> sure di_size actually makes it to disk.  I hope to fix this properly in
+> the generic code.
+> 
+> A downside is that we lose the support for parallel non-overlapping O_DIRECT
+> appending writes that recently was added.  I don't think keeping the complex
+> and fragile i_new_size infrastructure for this is a good tradeoff - if we
+> really care about parallel appending writers we should investigate turning
+> the iolock into a range lock, which would also allow for parallel
+> non-overlapping buffered writers.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> ---
+>  fs/xfs/xfs_aops.c  |   28 +++++++++++---------
+>  fs/xfs/xfs_file.c  |   72 +++++++----------------------------------------------
+>  fs/xfs/xfs_iget.c  |    1 
+>  fs/xfs/xfs_inode.h |    2 -
+>  fs/xfs/xfs_trace.h |   18 ++-----------
+>  5 files changed, 29 insertions(+), 92 deletions(-)
+> 
+> Index: xfs/fs/xfs/xfs_file.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_file.c	2011-11-30 12:59:11.669698558 +0100
+> +++ xfs/fs/xfs/xfs_file.c	2011-11-30 12:59:13.533021797 +0100
+> @@ -413,27 +413,6 @@ xfs_file_splice_read(
+>  }
+>  
+>  /*
+> - * If this was a direct or synchronous I/O that failed (such as ENOSPC) then
+> - * part of the I/O may have been written to disk before the error occurred.  In
+> - * this case the on-disk file size may have been adjusted beyond the in-memory
+> - * file size and now needs to be truncated back.
+> - */
+> -STATIC void
+> -xfs_aio_write_newsize_update(
+> -	struct xfs_inode	*ip,
+> -	xfs_fsize_t		new_size)
+> -{
+> -	if (new_size == ip->i_new_size) {
 
-On Fri, Jan 06, 2012 at 10:58:18AM -0600, Ben Myers wrote:
-> On Sun, Dec 18, 2011 at 03:00:07PM -0500, Christoph Hellwig wrote:
-> > We spent a lot of effort to maintain this field, but it always equalts to the
-> 								 equals the
-> > fork size divided by the constant size of an extent.  The prime use of it is
-> > to assert that the two stay in sync.  Just divide the fork size by the extent
-> > size in the few places that we actually use it and remove the overhead
-> > of maintaining it.  Also introduce a few helpers to consolidate the places
-> > where we actually care about the value.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> After reviewing this patch it's not crystal clear to me why we were
-> putting all that effort into keeping this counter uptodate on the inode
-> instead of using helpers like you've implemented.  Maybe a question of
-> integer division as Dave suggested.  This is a nice improvement.
-> 
-> > Index: xfs/fs/xfs/xfs_bmap.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_bmap.c	2011-12-12 10:33:55.748696870 -0800
-> > +++ xfs/fs/xfs/xfs_bmap.c	2011-12-14 05:15:20.612373687 -0800
-> > @@ -249,7 +249,27 @@ xfs_bmbt_lookup_ge(
-> >  }
-> >  
-> >  /*
-> > -* Update the record referred to by cur to the value given
-> > + * Check if the inode needs to be converted to btree format.
-> > + */
-> > +static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
-> > +{
-> > +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
-> > +		XFS_IFORK_NEXTENTS(ip, whichfork) >
-> > +			XFS_IFORK_MAXEXT(ip, whichfork);
-> > +}
-> > +
-> > +/*
-> > + * Check if the inode should be converted to extent format.
-> > + */
-> > +static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
-> > +{
-> > +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
-> > +		XFS_IFORK_NEXTENTS(ip, whichfork) <=
-> > +			XFS_IFORK_MAXEXT(ip, whichfork);
-> > +}
-> 
-> The logic in these two appears to be equivalent to the code you've
-> replaced in all but one case...
-> 
-> ...
-> 
-> > @@ -5321,8 +5318,7 @@ xfs_bunmapi(
-> >  		 * will be dirty.
-> >  		 */
-> >  		if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
-> > -		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
-> > -		    XFS_IFORK_NEXTENTS(ip, whichfork) >= ifp->if_ext_max &&
-> 						      ^^ 
-> All other tests for this were:
-> XFS_IFORK_NEXTENTS(ip, whichfork) > ifp->if_ext_max
-> 
-> Did you just fix a lurking off-by-one or insert one?
-> 
-> xfs_bmap_needs_btree needs ip->i_d.di_nextents to have been incremented 
-> already in order to detect that we need to convert to btree format.  In
-> this case we haven't done that yet and are checking to see if doing so
-> would require conversion to btree format... 
-> 
-> Looks to me like we can't use xfs_bmap_needs_btree here and should use
-> the old logic.  Right?
+Ouch.  If I'm reading this right the behavior prior to this patch is a
+little messed up...
 
-HCH, I have a question for you here that I feel needs to be resolved.
-Can you take a look?
+xfs_file_aio_write
+  new_size = 0
+  xfs_file_buffered_aio_write(&new_size
+    xfs_file_aio_write_checks - for a non-extending write it won't touch
+    				*new_sizep
+  generic_file_buffered_write - ...
+  xfs_aio_write_isize_update - doesn't touch new_size
+  xfs_aio_write_newsize_update:
+
+STATIC void     
+xfs_aio_write_newsize_update(
+        struct xfs_inode        *ip, 
+        xfs_fsize_t             new_size)
+{                                               
+        if (new_size == ip->i_new_size) {	 <--- 0 == 0 
+                xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+                if (new_size == ip->i_new_size) 
+                        ip->i_new_size = 0;
+                if (ip->i_d.di_size > ip->i_size)
+                        ip->i_d.di_size = ip->i_size;
+                xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+        }       
+}
+
+AFAICT even for non-extending writes we are taking the ilock exclusive
+to test (ip->i_d.di_size > ip->i_size).  That does not seem necessary,
+correct?
+
+This is not an issue with your patch... I just want to make sure I
+understand. 
 
 Thanks,
-	Ben
+Ben
 
 _______________________________________________
 xfs mailing list
