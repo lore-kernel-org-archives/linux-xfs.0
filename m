@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0GMfm6b117775 for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 16:41:48 -0600
-Date: Mon, 16 Jan 2012 16:41:47 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 09/11] xfs: remove the i_new_size field in struct xfs_inode
-Message-ID: <20120116224147.GC16581@sgi.com>
-References: <20111218200003.557507716@bombadil.infradead.org>
-	<20111218200132.299481659@bombadil.infradead.org>
+	q0GNPrOO119274 for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 17:25:53 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	YWvKUC34xO4vCQL6 for <xfs@oss.sgi.com>;
+	Mon, 16 Jan 2012 15:25:51 -0800 (PST)
+Date: Tue, 17 Jan 2012 10:25:49 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: concurrent direct IO write in xfs
+Message-ID: <20120116232549.GC6922@dastard>
+References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111218200132.299481659@bombadil.infradead.org>
+In-Reply-To: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,95 +26,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Zheng Da <zhengda1936@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Dec 18, 2011 at 03:00:12PM -0500, Christoph Hellwig wrote:
-> Now that we use the VFS i_size field throughout XFS there is no need for the
-> i_new_size field any more given that the VFS i_size field gets updated
-> in ->write_end before unlocking the page, and thus is a) always uptodate when
-> writeback could see a page.  Removing i_new_size also has the advantage that
-> we will never have to trim back di_size during a failed buffered write,
-> given that it never gets updated past i_size.
+On Sun, Jan 15, 2012 at 07:01:42PM -0500, Zheng Da wrote:
+> Hello,
 > 
-> Note that currently the generic direct I/O code only updates i_size after
-> calling our end_io handler, which requires a small workaround to make
-> sure di_size actually makes it to disk.  I hope to fix this properly in
-> the generic code.
+> I surprisedly found that writing data to a file (no appending) with direct
+
+I'm not so sure.
+
+> And systemtap shows me that xfs_inode.i_lock is locked exclusively in the
+> following functions.
+> 0xffffffff81289235 : xfs_file_aio_write_checks+0x45/0x1d0 [kernel]
+
+Always taken, short time period.
+
+>  0xffffffff81288b6a : xfs_aio_write_newsize_update+0x3a/0x90 [kernel]
+
+Only ever taken when doing appending writes. Are you -sure- you are
+not doing appending writes?
+
+>  0xffffffff812829f4 : __xfs_get_blocks+0x94/0x4a0 [kernel]
+
+And for direct IO writes, this will be the block mapping lookup so
+always hit.
+
+
+What this says to me is that you are probably doing is lots of very
+small concurrent write IOs, but I'm only guessing.  Can you provide
+your test case and a description of your test hardware so we can try
+to reproduce the problem?
+
+>  0xffffffff8129590a : xfs_log_dirty_inode+0x7a/0xe0 [kernel]
+> xfs_log_dirty_inode is only invoked 3 times when I write 4G data to the
+> file, so we can completely ignore it. But I'm not sure which of them is the
+> major cause of the bad write performance or whether they are the cause of
+> the bad performance. But it seems none of them are the main operations in
+> direct io write.
 > 
-> A downside is that we lose the support for parallel non-overlapping O_DIRECT
-> appending writes that recently was added.  I don't think keeping the complex
-> and fragile i_new_size infrastructure for this is a good tradeoff - if we
-> really care about parallel appending writers we should investigate turning
-> the iolock into a range lock, which would also allow for parallel
-> non-overlapping buffered writers.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> ---
->  fs/xfs/xfs_aops.c  |   28 +++++++++++---------
->  fs/xfs/xfs_file.c  |   72 +++++++----------------------------------------------
->  fs/xfs/xfs_iget.c  |    1 
->  fs/xfs/xfs_inode.h |    2 -
->  fs/xfs/xfs_trace.h |   18 ++-----------
->  5 files changed, 29 insertions(+), 92 deletions(-)
-> 
-> Index: xfs/fs/xfs/xfs_file.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_file.c	2011-11-30 12:59:11.669698558 +0100
-> +++ xfs/fs/xfs/xfs_file.c	2011-11-30 12:59:13.533021797 +0100
-> @@ -413,27 +413,6 @@ xfs_file_splice_read(
->  }
->  
->  /*
-> - * If this was a direct or synchronous I/O that failed (such as ENOSPC) then
-> - * part of the I/O may have been written to disk before the error occurred.  In
-> - * this case the on-disk file size may have been adjusted beyond the in-memory
-> - * file size and now needs to be truncated back.
-> - */
-> -STATIC void
-> -xfs_aio_write_newsize_update(
-> -	struct xfs_inode	*ip,
-> -	xfs_fsize_t		new_size)
-> -{
-> -	if (new_size == ip->i_new_size) {
+> It seems to me that the lock might not be necessary for my case. It'll be
 
-Ouch.  If I'm reading this right the behavior prior to this patch is a
-little messed up...
+The locking is definitely necessary. We might be able to optimise it
+to reduce the serialisation for the overwrite case if that really is
+the problem, but there is a limit to how much concurrent IO you can
+currently do to a single file. We really need a test case to be able
+to make and test such optimisations, though.
 
-xfs_file_aio_write
-  new_size = 0
-  xfs_file_buffered_aio_write(&new_size
-    xfs_file_aio_write_checks - for a non-extending write it won't touch
-    				*new_sizep
-  generic_file_buffered_write - ...
-  xfs_aio_write_isize_update - doesn't touch new_size
-  xfs_aio_write_newsize_update:
+> nice if I can disable the lock. Or is there any suggestion of achieving
+> better write performance with multiple threads in XFS?
+> I tried ext4 and it doesn't perform better than XFS. Does the problem exist
+> in all FS?
 
-STATIC void     
-xfs_aio_write_newsize_update(
-        struct xfs_inode        *ip, 
-        xfs_fsize_t             new_size)
-{                                               
-        if (new_size == ip->i_new_size) {	 <--- 0 == 0 
-                xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
-                if (new_size == ip->i_new_size) 
-                        ip->i_new_size = 0;
-                if (ip->i_d.di_size > ip->i_size)
-                        ip->i_d.di_size = ip->i_size;
-                xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
-        }       
-}
+I think you'll find XFS performs the best of the lot for this sort
+of concurrent DIO write workload.
 
-AFAICT even for non-extending writes we are taking the ilock exclusive
-to test (ip->i_d.di_size > ip->i_size).  That does not seem necessary,
-correct?
+Cheers,
 
-This is not an issue with your patch... I just want to make sure I
-understand. 
-
-Thanks,
-Ben
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
