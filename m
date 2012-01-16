@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0GJiWb1110034 for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 13:44:32 -0600
-Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	a6zWk0NyRg1UHKnZ for <xfs@oss.sgi.com>;
-	Mon, 16 Jan 2012 11:44:30 -0800 (PST)
-Received: by ghbf15 with SMTP id f15so1839988ghb.26
-	for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 11:44:30 -0800 (PST)
+	q0GMjSx7117965 for <xfs@oss.sgi.com>; Mon, 16 Jan 2012 16:45:28 -0600
+Date: Mon, 16 Jan 2012 16:45:27 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 04/11] xfs: remove the if_ext_max field in struct xfs_ifork
+Message-ID: <20120116224527.GD16581@sgi.com>
+References: <20111218200003.557507716@bombadil.infradead.org>
+	<20111218200131.321997628@bombadil.infradead.org>
+	<20120106165818.GD6390@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <20120116174819.GA19417@infradead.org>
-References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
-	<20120116174819.GA19417@infradead.org>
-Date: Mon, 16 Jan 2012 14:44:30 -0500
-Message-ID: <CAFLer81ZGuE-C-ypmFk=cKgwExhx-u809uK-f4=ZyixObi-LJg@mail.gmail.com>
-Subject: Re: concurrent direct IO write in xfs
-From: Zheng Da <zhengda1936@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120106165818.GD6390@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,100 +20,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1415822306336103386=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
---===============1415822306336103386==
-Content-Type: multipart/alternative; boundary=001636cd75126d3cea04b6aa71c8
+Hey Christoph,
 
---001636cd75126d3cea04b6aa71c8
-Content-Type: text/plain; charset=ISO-8859-1
+On Fri, Jan 06, 2012 at 10:58:18AM -0600, Ben Myers wrote:
+> On Sun, Dec 18, 2011 at 03:00:07PM -0500, Christoph Hellwig wrote:
+> > We spent a lot of effort to maintain this field, but it always equalts to the
+> 								 equals the
+> > fork size divided by the constant size of an extent.  The prime use of it is
+> > to assert that the two stay in sync.  Just divide the fork size by the extent
+> > size in the few places that we actually use it and remove the overhead
+> > of maintaining it.  Also introduce a few helpers to consolidate the places
+> > where we actually care about the value.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> After reviewing this patch it's not crystal clear to me why we were
+> putting all that effort into keeping this counter uptodate on the inode
+> instead of using helpers like you've implemented.  Maybe a question of
+> integer division as Dave suggested.  This is a nice improvement.
+> 
+> > Index: xfs/fs/xfs/xfs_bmap.c
+> > ===================================================================
+> > --- xfs.orig/fs/xfs/xfs_bmap.c	2011-12-12 10:33:55.748696870 -0800
+> > +++ xfs/fs/xfs/xfs_bmap.c	2011-12-14 05:15:20.612373687 -0800
+> > @@ -249,7 +249,27 @@ xfs_bmbt_lookup_ge(
+> >  }
+> >  
+> >  /*
+> > -* Update the record referred to by cur to the value given
+> > + * Check if the inode needs to be converted to btree format.
+> > + */
+> > +static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
+> > +{
+> > +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+> > +		XFS_IFORK_NEXTENTS(ip, whichfork) >
+> > +			XFS_IFORK_MAXEXT(ip, whichfork);
+> > +}
+> > +
+> > +/*
+> > + * Check if the inode should be converted to extent format.
+> > + */
+> > +static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+> > +{
+> > +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
+> > +		XFS_IFORK_NEXTENTS(ip, whichfork) <=
+> > +			XFS_IFORK_MAXEXT(ip, whichfork);
+> > +}
+> 
+> The logic in these two appears to be equivalent to the code you've
+> replaced in all but one case...
+> 
+> ...
+> 
+> > @@ -5321,8 +5318,7 @@ xfs_bunmapi(
+> >  		 * will be dirty.
+> >  		 */
+> >  		if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
+> > -		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+> > -		    XFS_IFORK_NEXTENTS(ip, whichfork) >= ifp->if_ext_max &&
+> 						      ^^ 
+> All other tests for this were:
+> XFS_IFORK_NEXTENTS(ip, whichfork) > ifp->if_ext_max
+> 
+> Did you just fix a lurking off-by-one or insert one?
+> 
+> xfs_bmap_needs_btree needs ip->i_d.di_nextents to have been incremented 
+> already in order to detect that we need to convert to btree format.  In
+> this case we haven't done that yet and are checking to see if doing so
+> would require conversion to btree format... 
+> 
+> Looks to me like we can't use xfs_bmap_needs_btree here and should use
+> the old logic.  Right?
 
-Hello Christoph,
-
-Right now I'm using kernel 3.2.
-My test program writes 4G of data to a file that has been preallocated and
-each time it writes a page of data randomly to the file. It's always
-overwriting, and no appending. The offset of each write is always aligned
-to the page size. There is no overlapping between writes as I said before.
-I also tried mixing reads and writes and got the similar result.
-Can you write data to a file with multiple threads and the performance can
-scale up with more threads?
+HCH, I have a question for you here that I feel needs to be resolved.
+Can you take a look?
 
 Thanks,
-Da
-
-On Mon, Jan 16, 2012 at 12:48 PM, Christoph Hellwig <hch@infradead.org>wrote:
-
-> On Sun, Jan 15, 2012 at 07:01:42PM -0500, Zheng Da wrote:
-> > Hello,
-> >
-> > I surprisedly found that writing data to a file (no appending) with
-> direct
-> > IO and with multiple threads has the same performance as a single thread.
-> > Actually, it seems there is only one core is working at a time. In my
-> case,
-> > each time I write a page to a file and the offset is always aligned to
-> the
-> > page size, so there is no overlapping between writes.
->
-> What kernel version are you using?  Also, what is the exact I/O
-> pattern?
->
->
-
---001636cd75126d3cea04b6aa71c8
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hello Christoph,<div><br></div><div>Right now I&#39;m using kernel 3.2.=A0<=
-/div><div>My test program writes 4G of data to a file that has been preallo=
-cated and each time it writes a page of data randomly to the file. It&#39;s=
- always overwriting, and no appending. The offset of each write is always a=
-ligned to the page size. There is no overlapping between writes as I said b=
-efore.=A0</div>
-<div>I also tried mixing reads and writes and got the similar result.</div>=
-<div>Can you write data to a file with multiple threads and the performance=
- can scale up with more threads?</div><div><br></div><div>Thanks,</div>
-<div>Da<br><br><div class=3D"gmail_quote">On Mon, Jan 16, 2012 at 12:48 PM,=
- Christoph Hellwig <span dir=3D"ltr">&lt;<a href=3D"mailto:hch@infradead.or=
-g">hch@infradead.org</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_qu=
-ote" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex=
-">
-<div class=3D"im">On Sun, Jan 15, 2012 at 07:01:42PM -0500, Zheng Da wrote:=
-<br>
-&gt; Hello,<br>
-&gt;<br>
-&gt; I surprisedly found that writing data to a file (no appending) with di=
-rect<br>
-&gt; IO and with multiple threads has the same performance as a single thre=
-ad.<br>
-&gt; Actually, it seems there is only one core is working at a time. In my =
-case,<br>
-&gt; each time I write a page to a file and the offset is always aligned to=
- the<br>
-&gt; page size, so there is no overlapping between writes.<br>
-<br>
-</div>What kernel version are you using? =A0Also, what is the exact I/O<br>
-pattern?<br>
-<br>
-</blockquote></div><br></div>
-
---001636cd75126d3cea04b6aa71c8--
-
-
---===============1415822306336103386==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+	Ben
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1415822306336103386==--
