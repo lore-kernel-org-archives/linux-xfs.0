@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0HBYUi7152641 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 05:34:30 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id wZFG1SktBG0GUs5a
-	for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 03:34:29 -0800 (PST)
-Message-ID: <4F155CC2.3050201@hardwarefreak.com>
-Date: Tue, 17 Jan 2012 05:34:26 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q0HFGfW9162570 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 09:16:41 -0600
+Date: Tue, 17 Jan 2012 09:16:39 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 04/11] xfs: remove the if_ext_max field in struct xfs_ifork
+Message-ID: <20120117151639.GE16581@sgi.com>
+References: <20111218200003.557507716@bombadil.infradead.org>
+	<20111218200131.321997628@bombadil.infradead.org>
+	<20120106165818.GD6390@sgi.com> <20120116224527.GD16581@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Optimal XFS formatting options?
-References: <33140169.post@talk.nabble.com> <20120116231121.GB6922@dastard>
-	<4F14EBAF.10808@hardwarefreak.com> <201201171019.58714@zmi.at>
-In-Reply-To: <201201171019.58714@zmi.at>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20120116224527.GD16581@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,47 +24,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On 1/17/2012 3:19 AM, Michael Monnerie wrote:
-> On Dienstag, 17. Januar 2012 Stan Hoeppner wrote:
->> Thanks for the correction/reminder Dave.  So in this case the first
->> sector of the first partition would need to reside at LBA1280 in this
->> array (655360 byte stripe width, 1280 sectors/stripe), as the
->> partition table itself is going to occupy some sectors at the
->> beginning of the first stripe.  By creating the partition at LBA1280
->> we make sure the first sector of the XFS filesystem is aligned with
->> the first sector of the 2nd stripe.
+On Mon, Jan 16, 2012 at 04:45:27PM -0600, Ben Myers wrote:
+> Hey Christoph,
 > 
-> There's one big problem with that: Many people will sooner or later 
-> expand and existing array. If you add one drive, all your nice stripe 
-> width alignment becomes bogus, and suddenly your performance will drop.
+> On Fri, Jan 06, 2012 at 10:58:18AM -0600, Ben Myers wrote:
+> > On Sun, Dec 18, 2011 at 03:00:07PM -0500, Christoph Hellwig wrote:
+> > > We spent a lot of effort to maintain this field, but it always equalts to the
+> > 								 equals the
+> > > fork size divided by the constant size of an extent.  The prime use of it is
+> > > to assert that the two stay in sync.  Just divide the fork size by the extent
+> > > size in the few places that we actually use it and remove the overhead
+> > > of maintaining it.  Also introduce a few helpers to consolidate the places
+> > > where we actually care about the value.
+> > > 
+> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > 
+> > After reviewing this patch it's not crystal clear to me why we were
+> > putting all that effort into keeping this counter uptodate on the inode
+> > instead of using helpers like you've implemented.  Maybe a question of
+> > integer division as Dave suggested.  This is a nice improvement.
+> > 
+> > > Index: xfs/fs/xfs/xfs_bmap.c
+> > > ===================================================================
+> > > --- xfs.orig/fs/xfs/xfs_bmap.c	2011-12-12 10:33:55.748696870 -0800
+> > > +++ xfs/fs/xfs/xfs_bmap.c	2011-12-14 05:15:20.612373687 -0800
+> > > @@ -249,7 +249,27 @@ xfs_bmbt_lookup_ge(
+> > >  }
+> > >  
+> > >  /*
+> > > -* Update the record referred to by cur to the value given
+> > > + * Check if the inode needs to be converted to btree format.
+> > > + */
+> > > +static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
+> > > +{
+> > > +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+> > > +		XFS_IFORK_NEXTENTS(ip, whichfork) >
+> > > +			XFS_IFORK_MAXEXT(ip, whichfork);
+> > > +}
+> > > +
+> > > +/*
+> > > + * Check if the inode should be converted to extent format.
+> > > + */
+> > > +static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+> > > +{
+> > > +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
+> > > +		XFS_IFORK_NEXTENTS(ip, whichfork) <=
+> > > +			XFS_IFORK_MAXEXT(ip, whichfork);
+> > > +}
+> > 
+> > The logic in these two appears to be equivalent to the code you've
+> > replaced in all but one case...
+> > 
+> > ...
+> > 
+> > > @@ -5321,8 +5318,7 @@ xfs_bunmapi(
+> > >  		 * will be dirty.
+> > >  		 */
+> > >  		if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
+> > > -		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+> > > -		    XFS_IFORK_NEXTENTS(ip, whichfork) >= ifp->if_ext_max &&
+> > 						      ^^ 
+> > All other tests for this were:
+> > XFS_IFORK_NEXTENTS(ip, whichfork) > ifp->if_ext_max
+> > 
+> > Did you just fix a lurking off-by-one or insert one?
+> > 
+> > xfs_bmap_needs_btree needs ip->i_d.di_nextents to have been incremented 
+> > already in order to detect that we need to convert to btree format.  In
+> > this case we haven't done that yet and are checking to see if doing so
+> > would require conversion to btree format... 
+> > 
+> > Looks to me like we can't use xfs_bmap_needs_btree here and should use
+> > the old logic.  Right?
+> 
+> HCH, I have a question for you here that I feel needs to be resolved.
+> Can you take a look?
 
-So to be clear, your issue with the above isn't with my partition
-alignment math WRT the OP's P2000 array, but is with using XFS stripe
-alignment in general, correct?
+Here is what I propose to use here:
 
-> There's no real way out of that, but three solutions come to my mind:
-> - backup before expand/restore after expand with new alignment
-> - leave existing data, just change mount options so after expansion at 
-> least new files are going to be aligned to the new stripe width. 
-> - expand array by factors of two. So if you have 10 data drives, add 10 
-> data drives. But that creates other problems (probability of single 
-> drive failure + time to recover a single broken disk)
+@@ -5322,7 +5319,8 @@ xfs_bunmapi(
+                 */
+                if (!wasdel && xfs_trans_get_block_res(tp) == 0 &&
+                    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS &&
+-                   XFS_IFORK_NEXTENTS(ip, whichfork) >= ifp->if_ext_max &&
++                   XFS_IFORK_NEXTENTS(ip, whichfork) >= /* Note the >= */
++                       XFS_IFORK_MAXEXT(ip, whichfork) &&
+                    del.br_startoff > got.br_startoff &&
+                    del.br_startoff + del.br_blockcount <
+                    got.br_startoff + got.br_blockcount) {
 
-There is one really simple way around this issue you describe: don't add
-drives to an existing array.  Simply create another array with new
-disks, create a new aligned XFS on the array, and mount the filesystem
-in an appropriate location.  There is no 11th Commandment stating one
-must have a single massive XFS atop all of one's disks. ;)
-
-There is little to no application software today that can't be
-configured to store its data files across multiple directories.  So
-there's no need to box oneself into the corner you describe above.
-
--- 
-Stan
+-Ben
 
 _______________________________________________
 xfs mailing list
