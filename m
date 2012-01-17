@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0HH4jDr167427 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 11:04:45 -0600
-Message-ID: <4F15AA2C.5070506@sgi.com>
-Date: Tue, 17 Jan 2012 11:04:44 -0600
+	q0HImBUK171683 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 12:48:11 -0600
+Message-ID: <4F15C26A.30408@sgi.com>
+Date: Tue, 17 Jan 2012 12:48:10 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/11] xfs: remove the if_ext_max field in struct	xfs_ifork
-References: <20111218200003.557507716@bombadil.infradead.org>
-	<20111218200131.321997628@bombadil.infradead.org>
-	<20120106165818.GD6390@sgi.com> <20120116224527.GD16581@sgi.com>
-	<20120117151639.GE16581@sgi.com>
-In-Reply-To: <20120117151639.GE16581@sgi.com>
+Subject: Re: [patch 01/12] xfs: split tail_lsn assignments from log space
+	wakeups
+References: <20111212141346.986825692@bombadil.infradead.org>
+	<20111212141433.542846138@bombadil.infradead.org>
+In-Reply-To: <20111212141433.542846138@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,135 +23,64 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 01/17/12 09:16, Ben Myers wrote:
-> On Mon, Jan 16, 2012 at 04:45:27PM -0600, Ben Myers wrote:
->> Hey Christoph,
->>
->> On Fri, Jan 06, 2012 at 10:58:18AM -0600, Ben Myers wrote:
->>> On Sun, Dec 18, 2011 at 03:00:07PM -0500, Christoph Hellwig wrote:
->>>> We spent a lot of effort to maintain this field, but it always equalts to the
->>> 								equals the
->>>> fork size divided by the constant size of an extent.  The prime use of it is
->>>> to assert that the two stay in sync.  Just divide the fork size by the extent
->>>> size in the few places that we actually use it and remove the overhead
->>>> of maintaining it.  Also introduce a few helpers to consolidate the places
->>>> where we actually care about the value.
->>>>
->>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
->>>> Reviewed-by: Dave Chinner<dchinner@redhat.com>
->>>
->>> After reviewing this patch it's not crystal clear to me why we were
->>> putting all that effort into keeping this counter uptodate on the inode
->>> instead of using helpers like you've implemented.  Maybe a question of
->>> integer division as Dave suggested.  This is a nice improvement.
->>>
->>>> Index: xfs/fs/xfs/xfs_bmap.c
->>>> ===================================================================
->>>> --- xfs.orig/fs/xfs/xfs_bmap.c	2011-12-12 10:33:55.748696870 -0800
->>>> +++ xfs/fs/xfs/xfs_bmap.c	2011-12-14 05:15:20.612373687 -0800
->>>> @@ -249,7 +249,27 @@ xfs_bmbt_lookup_ge(
->>>>   }
->>>>
->>>>   /*
->>>> -* Update the record referred to by cur to the value given
->>>> + * Check if the inode needs to be converted to btree format.
->>>> + */
->>>> +static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
->>>> +{
->>>> +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS&&
->>>> +		XFS_IFORK_NEXTENTS(ip, whichfork)>
->>>> +			XFS_IFORK_MAXEXT(ip, whichfork);
->>>> +}
->>>> +
->>>> +/*
->>>> + * Check if the inode should be converted to extent format.
->>>> + */
->>>> +static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
->>>> +{
->>>> +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE&&
->>>> +		XFS_IFORK_NEXTENTS(ip, whichfork)<=
->>>> +			XFS_IFORK_MAXEXT(ip, whichfork);
->>>> +}
->>>
->>> The logic in these two appears to be equivalent to the code you've
->>> replaced in all but one case...
->>>
+On 01/-10/63 13:59, Christoph Hellwig wrote:
+> Currently xfs_log_move_tail has a tail_lsn argument that is horribly
+> overloaded: it may contain either an actual lsn to assign to the log tail,
+> 0 as a special case to use the last sync LSN, or 1 to indicate that no tail
+> LSN assignment should be performed, and we should opportunisticly wake up
+> at least one task waiting for log space.
 
+I read the code as opportunistically waking at MOST one task per call.
 
-I am coming late into this review party, and I know this is time 
-sensitive. I am looking at this from the big picture and you can ignore me.
-
-Looking at the INTENTION of the tests, IMO, we are asking: "is it time 
-to change format?" IMO, you do not want to flip between format without 
-data count change - in other words, the two tests should NOT overlap.
-
-/*
-  * Check if the inode should be converted to extent format.
-  */
-static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int 
-whichfork)
-{
-	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
--		XFS_IFORK_NEXTENTS(ip, whichfork) <=
-+		XFS_IFORK_NEXTENTS(ip, whichfork) <  /* less */
-			XFS_IFORK_MAXEXT(ip, whichfork);
-}
-
-
->>> ...
->>>
->>>> @@ -5321,8 +5318,7 @@ xfs_bunmapi(
->>>>   		 * will be dirty.
->>>>   		 */
->>>>   		if (!wasdel&&  xfs_trans_get_block_res(tp) == 0&&
->>>> -		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS&&
->>>> -		    XFS_IFORK_NEXTENTS(ip, whichfork)>= ifp->if_ext_max&&
->>> 						^^
->>> All other tests for this were:
->>> XFS_IFORK_NEXTENTS(ip, whichfork)>  ifp->if_ext_max
->>>
->>> Did you just fix a lurking off-by-one or insert one?
->>>
->>> xfs_bmap_needs_btree needs ip->i_d.di_nextents to have been incremented
->>> already in order to detect that we need to convert to btree format.  In
->>> this case we haven't done that yet and are checking to see if doing so
->>> would require conversion to btree format...
->>>
->>> Looks to me like we can't use xfs_bmap_needs_btree here and should use
->>> the old logic.  Right?
->>
->> HCH, I have a question for you here that I feel needs to be resolved.
->> Can you take a look?
+> Remove the tail lsn assigned from xfs_log_move_tail and make the two callers
+> use xlog_assign_tail_lsn instead of the current variant of partially using
+> the code in xfs_log_move_tail and partially opencoding it.  Note that means
+> we grow an addition lock roundtrip on the AIL lock for each bulk update
+> or delete, which is still far less than what we had before introducing the
+> bulk operations.  If this proves to be a problem we can still add a variant
+> of xlog_assign_tail_lsn that expects the lock to be held already.
 >
-> Here is what I propose to use here:
+
+Just looking at it the additional unlock/lock sequence did not appear 
+too major.
+
+> Also rename the remainder of xfs_log_move_tail to xfs_log_space_wake as
+> that name describes its functionality much better.
 >
-> @@ -5322,7 +5319,8 @@ xfs_bunmapi(
->                   */
->                  if (!wasdel&&  xfs_trans_get_block_res(tp) == 0&&
->                      XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS&&
-> -                   XFS_IFORK_NEXTENTS(ip, whichfork)>= ifp->if_ext_max&&
-> +                   XFS_IFORK_NEXTENTS(ip, whichfork)>= /* Note the>= */
-> +                       XFS_IFORK_MAXEXT(ip, whichfork)&&
->                      del.br_startoff>  got.br_startoff&&
->                      del.br_startoff + del.br_blockcount<
->                      got.br_startoff + got.br_blockcount) {
+
+...
+
+> Index: xfs/fs/xfs/xfs_trans_ail.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_trans_ail.c	2011-11-29 08:38:46.870067201 +0100
+> +++ xfs/fs/xfs/xfs_trans_ail.c	2011-11-29 08:38:48.580057936 +0100
+> @@ -643,15 +643,15 @@ xfs_trans_unlocked_item(
+>   	 * at the tail, it doesn't matter what result we get back.  This
+>   	 * is slightly racy because since we were just unlocked, we could
+>   	 * go to sleep between the call to xfs_ail_min and the call to
+> -	 * xfs_log_move_tail, have someone else lock us, commit to us disk,
+> +	 * xfs_log_space_wake, have someone else lock us, commit to us disk,
+>   	 * move us out of the tail of the AIL, and then we wake up.  However,
+> -	 * the call to xfs_log_move_tail() doesn't do anything if there's
+> +	 * the call to xfs_log_space_wake() doesn't do anything if there's
+>   	 * not enough free space to wake people up so we're safe calling it.
+>   	 */
+>   	min_lip = xfs_ail_min(ailp);
 >
-> -Ben
+>   	if (min_lip == lip)
+> -		xfs_log_move_tail(ailp->xa_mount, 1);
+> +		xfs_log_space_wake(ailp->xa_mount, 1);
+>   }	/* xfs_trans_unlocked_item */
+
+Looks great. Just to be consistent, you could call the above as:
+
++		xfs_log_space_wake(ailp->xa_mount, true);
 
 
-The original "XFS_IFORK_NEXTENTS(ip, whichfork)>= ifp->if_ext_max" is 
-important because the removal of the blocks in xfs_bmap_del_extent() 
-will create a hole that requires an insertion.
-
-
---Mark Tinguely
-   tinguely@sgi.com
-
-
---Mark Tinguely.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
