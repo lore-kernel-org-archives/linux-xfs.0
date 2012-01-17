@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0HGXLAY165528 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 10:33:21 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id zfNraUq0SbKKLsh9 for <xfs@oss.sgi.com>;
-	Tue, 17 Jan 2012 08:33:19 -0800 (PST)
-Message-ID: <4F15A2D0.2090900@sandeen.net>
-Date: Tue, 17 Jan 2012 10:33:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q0HH4jDr167427 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 11:04:45 -0600
+Message-ID: <4F15AA2C.5070506@sgi.com>
+Date: Tue, 17 Jan 2012 11:04:44 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: make 275 pass
-References: <4F04A6E6.1090304@redhat.com> <4F04BC81.1000207@redhat.com>
-	<20120104231725.GB24466@dastard> <4F04DEDC.6020807@redhat.com>
-	<20120105003928.GC24466@dastard>
-In-Reply-To: <20120105003928.GC24466@dastard>
+Subject: Re: [PATCH 04/11] xfs: remove the if_ext_max field in struct	xfs_ifork
+References: <20111218200003.557507716@bombadil.infradead.org>
+	<20111218200131.321997628@bombadil.infradead.org>
+	<20120106165818.GD6390@sgi.com> <20120116224527.GD16581@sgi.com>
+	<20120117151639.GE16581@sgi.com>
+In-Reply-To: <20120117151639.GE16581@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,72 +20,139 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 1/4/12 6:39 PM, Dave Chinner wrote:
-> On Wed, Jan 04, 2012 at 05:21:00PM -0600, Eric Sandeen wrote:
->> On 1/4/12 5:17 PM, Dave Chinner wrote:
->>> On Wed, Jan 04, 2012 at 02:54:25PM -0600, Eric Sandeen wrote:
->>>> Ok, this is a significant rework of 275, which made too many
->>>> assumptions about details of space usage and failed on several
->>>> filesystems (it passed on xfs, but only by accident).
->>>>
->>>> This new version tries to leave about 256k free, then tries
->>>> a single 1M IO, and fails only if 0 bytes are written.
->>>>
->>>> It also sends a lot more to $seq.full for debugging on failure
->>>> and fixes a few other stylistic things.
->>>>
->>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->>>
->>> I just had another thought about this, Eric....
->>>
->>>> +# And at least some of it should succeed.
->>>> +_filesize=`du $SCRATCH_MNT/tmp1 | awk '{print $1}'`
->>>> +[ $_filesize -eq 0 ] && _fail "write file err: Partial write until enospc failed; wrote 0 bytes."
->>>
->>> The question that just came to mind was this assumes that allocation
->>> succeeded so therefore the partial write succeeded. But that's not
->>> necessary the case. The partial write might not succeed leaving the
->>> file size as zero, but the underlying FS might not remove all the
->>> blocks it allocated (nothing says that it has to). Hence to
->>> determine if a partial write succeeded, we also need to check that
->>> the file size itself is greater than zero....
+On 01/17/12 09:16, Ben Myers wrote:
+> On Mon, Jan 16, 2012 at 04:45:27PM -0600, Ben Myers wrote:
+>> Hey Christoph,
 >>
->> Probably need to read up on what posix says it should do.  I think
->> what you're saying is that it might leave blocks allocated past EOF?
->> That'd be surprising to me, but maybe I misunderstand?
-> 
-> There's no guarantee that du is even reporting blocks on disk. e.g
-> for XFS du will also report reserved (in-memory) delalloc space on
-> the inode and that includes speculative allocation beyond EOF. We
-> don't have to remove specultive delalloc ranges when a partial write
-> occurs, so effectively checking du output to see if a partial write
-> succeeded is not a sufficient test to determine if the partial write
-> succeeded or not.
-> 
-> However, if the partial write did succeed then the file size *must*
-> change to reflect what was written. Hence I suspect all we actually
-> need here is a file size check...
+>> On Fri, Jan 06, 2012 at 10:58:18AM -0600, Ben Myers wrote:
+>>> On Sun, Dec 18, 2011 at 03:00:07PM -0500, Christoph Hellwig wrote:
+>>>> We spent a lot of effort to maintain this field, but it always equalts to the
+>>> 								equals the
+>>>> fork size divided by the constant size of an extent.  The prime use of it is
+>>>> to assert that the two stay in sync.  Just divide the fork size by the extent
+>>>> size in the few places that we actually use it and remove the overhead
+>>>> of maintaining it.  Also introduce a few helpers to consolidate the places
+>>>> where we actually care about the value.
+>>>>
+>>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>>>> Reviewed-by: Dave Chinner<dchinner@redhat.com>
+>>>
+>>> After reviewing this patch it's not crystal clear to me why we were
+>>> putting all that effort into keeping this counter uptodate on the inode
+>>> instead of using helpers like you've implemented.  Maybe a question of
+>>> integer division as Dave suggested.  This is a nice improvement.
+>>>
+>>>> Index: xfs/fs/xfs/xfs_bmap.c
+>>>> ===================================================================
+>>>> --- xfs.orig/fs/xfs/xfs_bmap.c	2011-12-12 10:33:55.748696870 -0800
+>>>> +++ xfs/fs/xfs/xfs_bmap.c	2011-12-14 05:15:20.612373687 -0800
+>>>> @@ -249,7 +249,27 @@ xfs_bmbt_lookup_ge(
+>>>>   }
+>>>>
+>>>>   /*
+>>>> -* Update the record referred to by cur to the value given
+>>>> + * Check if the inode needs to be converted to btree format.
+>>>> + */
+>>>> +static inline bool xfs_bmap_needs_btree(struct xfs_inode *ip, int whichfork)
+>>>> +{
+>>>> +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS&&
+>>>> +		XFS_IFORK_NEXTENTS(ip, whichfork)>
+>>>> +			XFS_IFORK_MAXEXT(ip, whichfork);
+>>>> +}
+>>>> +
+>>>> +/*
+>>>> + * Check if the inode should be converted to extent format.
+>>>> + */
+>>>> +static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int whichfork)
+>>>> +{
+>>>> +	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE&&
+>>>> +		XFS_IFORK_NEXTENTS(ip, whichfork)<=
+>>>> +			XFS_IFORK_MAXEXT(ip, whichfork);
+>>>> +}
+>>>
+>>> The logic in these two appears to be equivalent to the code you've
+>>> replaced in all but one case...
+>>>
 
-Ok; so would you be happy with just this?
 
-# And at least some of it should succeed.
-_filesize=`ls -l $SCRATCH_MNT/tmp1 | awk '{print $5}'`
-[ $_filesize -eq 0 ] && _fail "write file err: Partial write until enospc failed; wrote 0 bytes."
+I am coming late into this review party, and I know this is time 
+sensitive. I am looking at this from the big picture and you can ignore me.
 
-If so I'll put your reviewed-by on it and get this pushed, ok?
+Looking at the INTENTION of the tests, IMO, we are asking: "is it time 
+to change format?" IMO, you do not want to flip between format without 
+data count change - in other words, the two tests should NOT overlap.
 
--Eric
+/*
+  * Check if the inode should be converted to extent format.
+  */
+static inline bool xfs_bmap_wants_extents(struct xfs_inode *ip, int 
+whichfork)
+{
+	return XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_BTREE &&
+-		XFS_IFORK_NEXTENTS(ip, whichfork) <=
++		XFS_IFORK_NEXTENTS(ip, whichfork) <  /* less */
+			XFS_IFORK_MAXEXT(ip, whichfork);
+}
 
-> Cheers,
-> 
-> Dave.
+
+>>> ...
+>>>
+>>>> @@ -5321,8 +5318,7 @@ xfs_bunmapi(
+>>>>   		 * will be dirty.
+>>>>   		 */
+>>>>   		if (!wasdel&&  xfs_trans_get_block_res(tp) == 0&&
+>>>> -		    XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS&&
+>>>> -		    XFS_IFORK_NEXTENTS(ip, whichfork)>= ifp->if_ext_max&&
+>>> 						^^
+>>> All other tests for this were:
+>>> XFS_IFORK_NEXTENTS(ip, whichfork)>  ifp->if_ext_max
+>>>
+>>> Did you just fix a lurking off-by-one or insert one?
+>>>
+>>> xfs_bmap_needs_btree needs ip->i_d.di_nextents to have been incremented
+>>> already in order to detect that we need to convert to btree format.  In
+>>> this case we haven't done that yet and are checking to see if doing so
+>>> would require conversion to btree format...
+>>>
+>>> Looks to me like we can't use xfs_bmap_needs_btree here and should use
+>>> the old logic.  Right?
+>>
+>> HCH, I have a question for you here that I feel needs to be resolved.
+>> Can you take a look?
+>
+> Here is what I propose to use here:
+>
+> @@ -5322,7 +5319,8 @@ xfs_bunmapi(
+>                   */
+>                  if (!wasdel&&  xfs_trans_get_block_res(tp) == 0&&
+>                      XFS_IFORK_FORMAT(ip, whichfork) == XFS_DINODE_FMT_EXTENTS&&
+> -                   XFS_IFORK_NEXTENTS(ip, whichfork)>= ifp->if_ext_max&&
+> +                   XFS_IFORK_NEXTENTS(ip, whichfork)>= /* Note the>= */
+> +                       XFS_IFORK_MAXEXT(ip, whichfork)&&
+>                      del.br_startoff>  got.br_startoff&&
+>                      del.br_startoff + del.br_blockcount<
+>                      got.br_startoff + got.br_blockcount) {
+>
+> -Ben
+
+
+The original "XFS_IFORK_NEXTENTS(ip, whichfork)>= ifp->if_ext_max" is 
+important because the removal of the blocks in xfs_bmap_del_extent() 
+will create a hole that requires an insertion.
+
+
+--Mark Tinguely
+   tinguely@sgi.com
+
+
+--Mark Tinguely.
 
 _______________________________________________
 xfs mailing list
