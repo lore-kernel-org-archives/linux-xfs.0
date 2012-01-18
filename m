@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0HMgZME181613 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 16:42:35 -0600
-Message-ID: <4F15F959.4000405@sgi.com>
-Date: Tue, 17 Jan 2012 16:42:33 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	q0I2i9mC188669 for <xfs@oss.sgi.com>; Tue, 17 Jan 2012 20:44:10 -0600
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id gXzT1ygBkD1pCXdD for
+	<xfs@oss.sgi.com>; Tue, 17 Jan 2012 18:44:07 -0800 (PST)
+Message-ID: <4F16318E.9080106@cn.fujitsu.com>
+Date: Wed, 18 Jan 2012 10:42:22 +0800
+From: Liu Bo <liubo2009@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: [patch 02/12] xfs: do exact log space wakeups in
-	xlog_ungrant_log_space
-References: <20111212141346.986825692@bombadil.infradead.org>
-	<20111212141433.714245384@bombadil.infradead.org>
-In-Reply-To: <20111212141433.714245384@bombadil.infradead.org>
+Subject: Re: [PATCH V2] xfstests: make 275 pass
+References: <4F04A6E6.1090304@redhat.com> <4F04BC81.1000207@redhat.com>
+In-Reply-To: <4F04BC81.1000207@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,44 +20,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 01/-10/63 13:59, Christoph Hellwig wrote:
-> The only reason that xfs_log_space_wake had to do opportunistic wakeups
-> was that the old xfs_log_move_tail calling convention didn't allow for
-> exact wakeups when not updating the log tail LSN.  Since this issue has
-> been fixed we can do exact wakeups now.
->
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
->
+On 01/05/2012 04:54 AM, Eric Sandeen wrote:
+> Ok, this is a significant rework of 275, which made too many
+> assumptions about details of space usage and failed on several
+> filesystems (it passed on xfs, but only by accident).
+> 
+> This new version tries to leave about 256k free, then tries
+> a single 1M IO, and fails only if 0 bytes are written.
+> 
+> It also sends a lot more to $seq.full for debugging on failure
+> and fixes a few other stylistic things.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->   fs/xfs/xfs_log.c |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
->
-> Index: xfs/fs/xfs/xfs_log.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_log.c	2011-12-11 15:30:49.977750776 +0100
-> +++ xfs/fs/xfs/xfs_log.c	2011-12-11 17:49:00.692836117 +0100
-> @@ -2748,7 +2748,7 @@ xlog_ungrant_log_space(xlog_t	     *log,
->
->   	trace_xfs_log_ungrant_exit(log, ticket);
->
-> -	xfs_log_space_wake(log->l_mp, true);
-> +	xfs_log_space_wake(log->l_mp, false);
->   }
->
->   /*
->
+> 
+> diff --git a/275 b/275
+> index 214262e..8f521f8 100755
+> --- a/275
+> +++ b/275
+> @@ -1,8 +1,8 @@
+>  #! /bin/bash
+>  # FS QA Test No. 275
+>  #
+> -# The posix write test. when write size is larger than disk free size,
+> -# should write as more as possible
+> +# The posix write test.  When write size is larger than disk free size,
+> +# should write as much as possible until ENOSPC.
+>  #
+>  #-----------------------------------------------------------------------
+>  # Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
+> @@ -30,13 +30,12 @@ echo "QA output created by $seq"
+>  
+>  here=`pwd`
+>  tmp=/tmp/$$
+> -status=0    # success is the default!
+> +status=1    # failure is the default!
+>  trap "_cleanup; exit \$status" 0 1 2 3 15
+>  
+>  _cleanup()
+>  {
+>  	cd /
+> -	rm -f $SCRATCH_MNT/* $tmp.*
+>  	_scratch_unmount
+>  }
+>  
+> @@ -49,7 +48,7 @@ _supported_os IRIX Linux
+>  _require_scratch
+>  
+>  echo "------------------------------"
+> -echo "write lack test"
+> +echo "write until ENOSPC test"
+>  echo "------------------------------"
+>  
+>  rm -f $seq.full
+> @@ -59,31 +58,38 @@ _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>  _scratch_mount
+>  
+>  rm -rf $SCRATCH_MNT/*
+> -cd $SCRATCH_MNT
+>  
+> -dd if=/dev/zero of=tmp1 bs=4K count=1 >/dev/null 2>&1
+> -if [ $? -ne 0 ]
+> -then
+> -	echo "create file err"
+> -	status=1
+> -	exit
+> -fi
+> +dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=256K count=1 >>$seq.full 2>&1
+> +[ $? -ne 0 ] && _fail "Error creating file"
+>  
+> -dd if=/dev/zero of=tmp2 bs=1M >/dev/null 2>&1
+> -dd if=/dev/zero of=tmp3 bs=4K >/dev/null 2>&1
+> +# Attempt to completely fill fs
+> +dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=1M >>$seq.full 2>&1
+>  sync
+> +dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K >>$seq.full 2>&1
+> +sync
+> +# Last effort, use O_SYNC
+> +dd if=/dev/zero of=$SCRATCH_MNT/tmp4 bs=4K oflag=sync >>$seq.full 2>&1
+> +# Save space usage info to the full file
+> +echo "Pre rm space:" >> $seq.full
+> +df $SCRATCH_MNT >>$seq.full 2>&1
+>  
+> -rm -f tmp1
+> +# Should leave approx 256k free
+> +rm -f $SCRATCH_MNT/tmp1
+>  sync
+> +echo "Post rm space:" >> $seq.full
+> +df $SCRATCH_MNT >>$seq.full 2>&1
+> +_freespace=`df -k $SCRATCH_MNT | tail -n 1 | awk '{print $4}'`
+> +[ $_freespace -gt 1024 ] && _fail "could not sufficiently fill filesystem"
+> +
 
-It make sense that xlog_ungrant_log_space() does not need to do 
-opportunistic wakeup.
+I doubt this cause btrfs has a mixed data+meta mode, which means data and metadata can
+share space, but this mode is only enabled when the filesystem size is less than 1G.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+We can apply the below to avoid it:
+-_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
++_scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+
+
+> +# Try a write larger than available space
+> +dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M count=1 >>$seq.full 2>&1
+> +echo "Bytes written until ENOSPC:" >>$seq.full
+> +du $SCRATCH_MNT/tmp1 >>$seq.full
+>  
+> -dd if=/dev/zero of=tmp1 bs=8K count=1 >/dev/null 2>&1
+> -_filesize=`du tmp1 | awk '{print $1}'`
+> -if [ $_filesize -ne 4 ]
+> -then
+> -	echo "write file err"
+> -	status=1
+> -	exit
+> -fi
+> +# And at least some of it should succeed.
+> +_filesize=`du $SCRATCH_MNT/tmp1 | awk '{print $1}'`
+> +[ $_filesize -eq 0 ] && _fail "write file err: Partial write until enospc failed; wrote 0 bytes."
+>  
+
+And btrfs will check free space first and then decide if it should allocate blocks, so a partial write
+will fail anyway.
+
+
+Other parts looks good to me :)
+
+thanks,
+liubo
+
+>  echo "done"
+> +status=0
+>  exit
+> diff --git a/275.out b/275.out
+> index 30af43c..69b9d52 100644
+> --- a/275.out
+> +++ b/275.out
+> @@ -1,5 +1,5 @@
+>  QA output created by 275
+>  ------------------------------
+> -write lack test
+> +write until ENOSPC test
+>  ------------------------------
+>  done
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
 _______________________________________________
 xfs mailing list
