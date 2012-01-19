@@ -1,18 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0JIbnUE032603 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 12:37:50 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id fA7BG7KBHUSgYvrU for <xfs@oss.sgi.com>;
-	Thu, 19 Jan 2012 10:37:49 -0800 (PST)
-Message-ID: <4F1862FC.1050401@sandeen.net>
-Date: Thu, 19 Jan 2012 12:37:48 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q0JJdmIQ037452 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 13:39:48 -0600
+Date: Thu, 19 Jan 2012 13:39:47 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: [LSF/MM TOPIC] [ATTEND] HSM, DMAPI, and external media filesystems
+Message-ID: <20120119193947.GA6688@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: mount other filesystems with selinux context
-	as well
-References: <4ECD3262.105@redhat.com> <20111128110228.GC13766@infradead.org>
-In-Reply-To: <20111128110228.GC13766@infradead.org>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,53 +20,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On 11/28/11 5:02 AM, Christoph Hellwig wrote:
-> On Wed, Nov 23, 2011 at 11:50:26AM -0600, Eric Sandeen wrote:
->> -----BEGIN PGP SIGNED MESSAGE-----
->> Hash: SHA1
->>
->> For some reason, non-xfs filesystems aren't getting mounted with
->> the selinux context; perhaps because none of the xattr tests used
->> to work on anything but xfs?
->>
->> Anyway, 062 fails for extN unless we mount with the fs-wide
->> context.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> - ---
->>
->> diff --git a/common.rc b/common.rc
->> index cab0b64..5998ff2 100644
->> - --- a/common.rc
->> +++ b/common.rc
->> @@ -86,14 +86,17 @@ _mount_opts()
->>  	export MOUNT_OPTIONS=$NFS_MOUNT_OPTIONS
->>  	;;
->>      ext2|ext3|ext4|ext4dev)
->> - -	# acls & xattrs aren't turned on by default on ext$FOO
->> +	export SELINUX_MOUNT_OPTIONS
->> +	# acls & xattrs aren't turned on by default on ext$FOO in old kernels
->>  	export MOUNT_OPTIONS="-o acl,user_xattr $EXT_MOUNT_OPTIONS"
->>  	;;
->>      reiserfs)
->> +	export SELINUX_MOUNT_OPTIONS
->>  	# acls & xattrs aren't turned on by default on reiserfs
->>  	export MOUNT_OPTIONS="-o acl,user_xattr $REISERFS_MOUNT_OPTIONS"
->>  	;;
->>      gfs2)
->> +	export SELINUX_MOUNT_OPTIONS
->>  	# acls aren't turned on by default on gfs2
->>  	export MOUNT_OPTIONS="-o acl $GFS2_MOUNT_OPTIONS"
->>  	;;
-> 
-> shouldn't the "export SELINUX_MOUNT_OPTIONS" simply move to common code?
+I would like to discuss how to get DMAPI accepted into the mainline
+kernel.  DMAPI is or was supported by a number of filesystems which are
+included in linux (including XFS) and also is supported by a number of
+proprietary filesystems.  However, the DMAPI implementation has not yet
+been accepted into the main line.
 
-I wasn't sure if nfs would grok it.
+- What are the barriers to inclusion and how can they be resolved?
 
--Eric
+- What FOSS HSM projects are available to use the interface?
+	* xfstests/dmapi/sample_hsm
+	* openhsm (opensms)
+	* tinyhsm (unfinished, unreleased)
+
+- Who are the interested parties (if any), and how could we split up the
+  work?
+
+In the end I'd like to come up with a plan that seems reasonable toward
+getting DMAPI included mainline.  I know that Alex Elder and others have
+done work in this area and I would like to see it bear fruit.
+
+---
+
+Secondly, I'd enjoy a discussion of an old idea from back in the day
+when I worked as a sysadmin and became a storage software hobbyist.
+Having recently lost a great deal of data due to disk failure and failed
+backups, I struck upon the idea of turning the backup paradigm on it's
+head:
+
+I'd rather have the authoritative copy of my data on an external medium
+and only cache it on spinning rust.  The filesystem would log every
+transaction (WORM style) to removable media and the set of discs or
+tapes would be replayable onto new hard disks when I had a failure.
+Checkpoints would ensure that the number of discs/tapes necessary to
+replay the filesystem remained manageable, and the write performance
+problem would be mitigated by maintaining a temporary log on spinning
+disk to spool up enough data to keep the tape from having to rewind.
+One could choose to recycle media from before a checkpoint, or save it
+off for posterity.
+
+My choice of medium at the time was cd-rom since I couldn't afford a
+tape drive.  I went about trying to implement such a thing using DMAPI,
+which isn't suitable (you can't set an event mask on a file quickly
+enough to log the first writes).  Then I tried a stacking filesystem,
+fuse, got a job, and lost interest.
+
+This is almost certainly not a new idea.  If there is already something
+like this implemented, I'd like to hear about it.  If there isn't, maybe
+we could come up with a rough design on a cocktail napkin and pique
+enough interest to make a start.
+
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
