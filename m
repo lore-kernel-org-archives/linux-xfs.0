@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0JKCGJC039667 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 14:12:16 -0600
+	q0JLGE0G046353 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 15:16:14 -0600
 Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
 	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	DBCYybgEzW1nhhtH for <xfs@oss.sgi.com>;
-	Thu, 19 Jan 2012 12:12:15 -0800 (PST)
-Received: by iagz35 with SMTP id z35so368114iag.26
-	for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 12:12:15 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120119193947.GA6688@sgi.com>
-References: <20120119193947.GA6688@sgi.com>
-From: Greg Freemyer <greg.freemyer@gmail.com>
-Date: Thu, 19 Jan 2012 15:11:43 -0500
-Message-ID: <CAGpXXZLcyM5Jhp87Sb0vi1cgSucG53TB++mHKHNjhq=vy-_jWQ@mail.gmail.com>
-Subject: Re: [LSF/MM TOPIC] [ATTEND] HSM, DMAPI, and external media filesystems
+	8slP5UUjmlMWEiDE for <xfs@oss.sgi.com>;
+	Thu, 19 Jan 2012 13:16:13 -0800 (PST)
+Received: by iagz35 with SMTP id z35so441965iag.26
+	for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 13:16:13 -0800 (PST)
+Subject: Re: working on extent locks for i_mutex
+From: Frank Mayhar <fmayhar@google.com>
+In-Reply-To: <20120118120223.GA4322@gmail.com>
+References: <4F0F9E97.1090403@linux.vnet.ibm.com>
+	<20120113043411.GH2806@dastard> <4F10992C.3070303@linux.vnet.ibm.com>
+	<20120115235747.GA6922@dastard> <4F146275.8090304@linux.vnet.ibm.com>
+	<20120118120223.GA4322@gmail.com>
+Date: Thu, 19 Jan 2012 13:16:10 -0800
+Message-ID: <1327007770.5899.66.camel@peace.lax.corp.google.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,24 +26,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-fsdevel@vger.kernel.org, lsf-pc@lists.linux-foundation.org, xfs@oss.sgi.com
+To: Zheng Liu <gnehzuil.liu@gmail.com>
+Cc: xfs@oss.sgi.com, Allison Henderson <achender@linux.vnet.ibm.com>, Lukas Czerner <lczerner@redhat.com>, Tao Ma <tm@tao.ma>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-On Thu, Jan 19, 2012 at 2:39 PM, Ben Myers <bpm@sgi.com> wrote:
-> - What FOSS HSM projects are available to use the interface?
-> =A0 =A0 =A0 =A0* xfstests/dmapi/sample_hsm
-> =A0 =A0 =A0 =A0* openhsm (opensms)
-> =A0 =A0 =A0 =A0* tinyhsm (unfinished, unreleased)
+On Wed, 2012-01-18 at 20:02 +0800, Zheng Liu wrote:
+> For this project, do you have a schedule? Would you like to share to me? This
+> lock contention heavily impacts the performance of direct IO in our production
+> environment. So we hope to improve it ASAP.
+> 
+> I have done some direct IO benchmarks to compare ext4 with xfs using fio
+> in Intel SSD. The result shows that, in direct IO, xfs outperforms ext4 and
+> ext4 with dioread_nolock.
+> 
+> To understand the effect of lock contention, I define a new function called 
+> ext4_file_aio_write() that calls __generic_file_aio_write() without acquiring 
+> i_mutex lock. Meanwhile, I remove DIO_LOCKING flag when __blockdev_direct_IO() 
+> is called and do the similar benchmarks. The result shows that the performance 
+> in ext4 is almost the same to the xfs. Thus, it proves that the i_mutex heavily
+> impacts the performance. Hopefully the result is useful for you. :-)
 
-* ohsm (unfinished, unreleased) (I think)
-http://code.google.com/p/fscops/
-Presented at OLS 2009
+For the record, I have a patchset that, while not affecting i_mutex (or
+locking in general), does allow AIO append writes to actually be done
+asynchronously.  (Currently they're forced to be done synchronously.)
+It makes a big difference in performance for that particular case, even
+for spinning media.  Performance roughly doubled when testing with fio
+against a regular two-terabyte drive; the performance improvement
+against SSD would have to be much greater.
 
-Greg
+One day soon I'll accumulate enough spare time to port the patchset
+forward to the latest kernel and submit it here.
+-- 
+Frank Mayhar
+fmayhar@google.com
 
 _______________________________________________
 xfs mailing list
