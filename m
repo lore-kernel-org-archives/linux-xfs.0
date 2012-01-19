@@ -1,12 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Date: Wed, 18 Jan 2012 16:36:02 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/1] xfs: kill the unused XFS_BB_FSB_OFFSET macro
-Message-ID: <20120118223602.GA30741@sgi.com>
-References: <1326716676-11842-1-git-send-email-amit.sahrawat83@gmail.com>
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	q0JIb78w032550 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 12:37:08 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id FjRBcvpuOcgIhF9J for <xfs@oss.sgi.com>;
+	Thu, 19 Jan 2012 10:37:05 -0800 (PST)
+Message-ID: <4F1862D0.1060708@sandeen.net>
+Date: Thu, 19 Jan 2012 12:37:04 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1326716676-11842-1-git-send-email-amit.sahrawat83@gmail.com>
+Subject: Re: Trouble activating xfs pquotas
+References: <4F170A53.9070202@jdlawrie.co.uk>
+In-Reply-To: <4F170A53.9070202@jdlawrie.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,19 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: xfs-masters@oss.sgi.com, xfs@oss.sgi.com, Alex Elder <elder@kernel.org>, Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org
+To: James Lawrie <james@jdlawrie.co.uk>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jan 16, 2012 at 05:54:36PM +0530, Amit Sahrawat wrote:
-> Removing the macro, as this is no more needed in the code.
-> Tried to find the reference when it was last used - but the usage
-> for this seemed to have been dropped long time ago.
+On 1/18/12 12:07 PM, James Lawrie wrote:
+> Hi,
 > 
-> Signed-off-by: Amit Sahrawat <amit.sahrawat83@gmail.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> I'm unable to activate project quotas on a partition which used to
+> have it enabled - I just get "Function not implemented". The
+> partition is mounted with pquota, and I can't seem to find any other
+> reason this would happen.
+> 
+> Please see more information and output at
+> http://serverfault.com/questions/351137/unable-to-re-implement-xfs-project-quotas-function-not-implemented
+> - I'd really appreciate any advice.
+> 
+> Thank you,
+> 
+> James Lawrie
 
-Looks good.
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Based on IRC conversations, the fs was never(?) properly mounted with quota in the first place; an actual remount w/ quota forced by a reboot seems to have resolved this.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
