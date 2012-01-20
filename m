@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0K2N0iM068099 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 20:23:00 -0600
-Received: from mail-tul01m020-f181.google.com (mail-tul01m020-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	JSKl7JOChRkyhZBk for <xfs@oss.sgi.com>;
-	Thu, 19 Jan 2012 18:22:59 -0800 (PST)
-Received: by obbup10 with SMTP id up10so165718obb.26
-	for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 18:22:59 -0800 (PST)
-Date: Fri, 20 Jan 2012 10:26:49 +0800
+	q0K3pJ4r073630 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 21:51:20 -0600
+Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
+	[209.85.210.181]) by cuda.sgi.com with ESMTP id
+	xdBPZqiWebQP4H6M for <xfs@oss.sgi.com>;
+	Thu, 19 Jan 2012 19:51:18 -0800 (PST)
+Received: by iagz35 with SMTP id z35so283971iag.26
+	for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 19:51:18 -0800 (PST)
+Date: Fri, 20 Jan 2012 11:55:08 +0800
 From: Zheng Liu <gnehzuil.liu@gmail.com>
-Subject: Re: working on extent locks for i_mutex
-Message-ID: <20120120022649.GA12463@gmail.com>
-References: <4F0F9E97.1090403@linux.vnet.ibm.com>
-	<20120113043411.GH2806@dastard>
-	<4F10992C.3070303@linux.vnet.ibm.com>
-	<20120115235747.GA6922@dastard>
-	<4F146275.8090304@linux.vnet.ibm.com>
-	<20120118120223.GA4322@gmail.com>
-	<1327007770.5899.66.camel@peace.lax.corp.google.com>
+Subject: The question about parallel direct IO in xfs
+Message-ID: <20120120035508.GA12703@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1327007770.5899.66.camel@peace.lax.corp.google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,38 +26,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Frank Mayhar <fmayhar@google.com>
-Cc: xfs@oss.sgi.com, Allison Henderson <achender@linux.vnet.ibm.com>, Lukas Czerner <lczerner@redhat.com>, Tao Ma <tm@tao.ma>, Ext4 Developers List <linux-ext4@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-On Thu, Jan 19, 2012 at 01:16:10PM -0800, Frank Mayhar wrote:
-> On Wed, 2012-01-18 at 20:02 +0800, Zheng Liu wrote:
-> > For this project, do you have a schedule? Would you like to share to me? This
-> > lock contention heavily impacts the performance of direct IO in our production
-> > environment. So we hope to improve it ASAP.
-> > 
-> > I have done some direct IO benchmarks to compare ext4 with xfs using fio
-> > in Intel SSD. The result shows that, in direct IO, xfs outperforms ext4 and
-> > ext4 with dioread_nolock.
-> > 
-> > To understand the effect of lock contention, I define a new function called 
-> > ext4_file_aio_write() that calls __generic_file_aio_write() without acquiring 
-> > i_mutex lock. Meanwhile, I remove DIO_LOCKING flag when __blockdev_direct_IO() 
-> > is called and do the similar benchmarks. The result shows that the performance 
-> > in ext4 is almost the same to the xfs. Thus, it proves that the i_mutex heavily
-> > impacts the performance. Hopefully the result is useful for you. :-)
-> 
-> For the record, I have a patchset that, while not affecting i_mutex (or
-> locking in general), does allow AIO append writes to actually be done
-> asynchronously.  (Currently they're forced to be done synchronously.)
-> It makes a big difference in performance for that particular case, even
-> for spinning media.  Performance roughly doubled when testing with fio
-> against a regular two-terabyte drive; the performance improvement
-> against SSD would have to be much greater.
-> 
-> One day soon I'll accumulate enough spare time to port the patchset
-> forward to the latest kernel and submit it here.
-Interesting. I think it might help us to improve this issue. So could
-you please post your test case and result in detail? Thank you. :-)
+Hi all,
+
+Recently we encounter an issue in ext4. The issue is that, when we do a direct
+IO, ext4 will acquire inode->i_mutex in generic_file_aio_write(). It declines
+the performance. Here is the detailed conversation.
+http://www.spinics.net/lists/linux-ext4/msg30058.html
+
+I know that in xfs it uses i_iolock, which is a rw_semaphore, to make parallel
+operations in direct IO. But I have a question. As we do some read/write
+operations in direct IO, it seems that there has a window to cause data
+inconsistency. For example, One thread does a write operation to overlay some
+data at a offset. Meanwhile another thread does a read operation at the same
+offset. We assume that write is earlier than read. Hence, we should read new
+data. Although it is diffculty to occur, it is possible that read is issued to
+the disk firstly and we read old data. I don't know whether it exists or not in
+xfs. Thank you.
+
+Sorry, I don't subscribe this mailing list. Please CC to me
+<gnehzuil.liu@gmail.com>. Thank you.
 
 Regards,
 Zheng
