@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0KKZ4n3125612 for <xfs@oss.sgi.com>; Fri, 20 Jan 2012 14:35:04 -0600
+	q0KKZ0Lq125566 for <xfs@oss.sgi.com>; Fri, 20 Jan 2012 14:35:00 -0600
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id k6aZw7WDGySCGirq for <xfs@oss.sgi.com>;
-	Fri, 20 Jan 2012 12:35:03 -0800 (PST)
+	with ESMTP id Gl3tu550kD3o3OKk for <xfs@oss.sgi.com>;
+	Fri, 20 Jan 2012 12:34:58 -0800 (PST)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 8/8] vfs: Document s_frozen state through freeze_super
-Date: Fri, 20 Jan 2012 21:34:46 +0100
-Message-Id: <1327091686-23177-9-git-send-email-jack@suse.cz>
+Subject: [PATCH 2/8] vfs: Protect write paths by sb_start_write - sb_end_write
+Date: Fri, 20 Jan 2012 21:34:40 +0100
+Message-Id: <1327091686-23177-3-git-send-email-jack@suse.cz>
 In-Reply-To: <1327091686-23177-1-git-send-email-jack@suse.cz>
 References: <1327091686-23177-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -25,50 +25,91 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>, Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-ext4@vger.kernel.org, Valerie Aurora <val@vaaconsulting.com>
+Cc: Jan Kara <jack@suse.cz>, Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-ext4@vger.kernel.org
 
-From: Valerie Aurora <val@vaaconsulting.com>
+There are three entry points which dirty pages in a filesystem.  mmap (handled
+by block_page_mkwrite()), buffered write (handled by
+__generic_file_aio_write()), and truncate (it can dirty last partial page -
+handled inside each filesystem separately). Protect these places with
+sb_start_write() and sb_end_write().
 
-[kamal@canonical.com: patch restructure]
-[jack@suse.cz: updated comments to reflect new situation]
-
-Signed-off-by: Valerie Aurora <val@vaaconsulting.com>
-Tested-by: Peter M. Petrakis <peter.petrakis@canonical.com>
-Signed-off-by: Kamal Mostafa <kamal@canonical.com>
+Acked-by: "Theodore Ts'o" <tytso@mit.edu>
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/super.c |   18 ++++++++++++++++++
- 1 files changed, 18 insertions(+), 0 deletions(-)
+ fs/buffer.c  |   22 ++++------------------
+ mm/filemap.c |    3 ++-
+ 2 files changed, 6 insertions(+), 19 deletions(-)
 
-diff --git a/fs/super.c b/fs/super.c
-index 4aaad7e..557a4ef 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -1312,6 +1312,24 @@ static void sb_freeze_to_level(struct super_block *sb, int level)
-  * Syncs the super to make sure the filesystem is consistent and calls the fs's
-  * freeze_fs.  Subsequent calls to this without first thawing the fs will return
-  * -EBUSY.
-+ *
-+ * During this function, sb->s_frozen goes through these values:
-+ *
-+ * SB_UNFROZEN: File system is normal, all writes progress as usual.
-+ *
-+ * SB_FREEZE_WRITE: The file system is in the process of being frozen.
-+ * New writes should be blocked, we wait for in-progress writes (using
-+ * s_writers[SB_FREEZE_WRITE-1]) and then sync the file system.
-+ *
-+ * SB_FREEZE_TRANS: The file system is frozen. We wait for all metadata writes
-+ * to finish using s_writers[SB_FREEZE_TRANS-1] and after that call ->freeze_fs
-+ * to finish filesystem freezing. After ->freeze_fs is done nothing should be
-+ * dirty and all modifications are blocked until the file system is thawed.
-+ *
-+ * sb->s_frozen is protected by sb->s_umount.  Additionally,
-+ * SB_FREEZE_WRITE is only temporarily set during freeze/thaw while
-+ * holding sb->s_umount for writing, so any other callers holding
-+ * sb->s_umount will never see this state.
+diff --git a/fs/buffer.c b/fs/buffer.c
+index 19d8eb7..550714d 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2338,8 +2338,8 @@ EXPORT_SYMBOL(block_commit_write);
+  * beyond EOF, then the page is guaranteed safe against truncation until we
+  * unlock the page.
+  *
+- * Direct callers of this function should call vfs_check_frozen() so that page
+- * fault does not busyloop until the fs is thawed.
++ * Direct callers of this function should protect against filesystem freezing
++ * using sb_start_write() - sb_end_write() functions.
   */
- int freeze_super(struct super_block *sb)
- {
+ int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 			 get_block_t get_block)
+@@ -2371,18 +2371,7 @@ int __block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 
+ 	if (unlikely(ret < 0))
+ 		goto out_unlock;
+-	/*
+-	 * Freezing in progress? We check after the page is marked dirty and
+-	 * with page lock held so if the test here fails, we are sure freezing
+-	 * code will wait during syncing until the page fault is done - at that
+-	 * point page will be dirty and unlocked so freezing code will write it
+-	 * and writeprotect it again.
+-	 */
+ 	set_page_dirty(page);
+-	if (inode->i_sb->s_frozen != SB_UNFROZEN) {
+-		ret = -EAGAIN;
+-		goto out_unlock;
+-	}
+ 	wait_on_page_writeback(page);
+ 	return 0;
+ out_unlock:
+@@ -2397,12 +2386,9 @@ int block_page_mkwrite(struct vm_area_struct *vma, struct vm_fault *vmf,
+ 	int ret;
+ 	struct super_block *sb = vma->vm_file->f_path.dentry->d_inode->i_sb;
+ 
+-	/*
+-	 * This check is racy but catches the common case. The check in
+-	 * __block_page_mkwrite() is reliable.
+-	 */
+-	vfs_check_frozen(sb, SB_FREEZE_WRITE);
++	sb_start_write(sb, SB_FREEZE_WRITE);
+ 	ret = __block_page_mkwrite(vma, vmf, get_block);
++	sb_end_write(sb, SB_FREEZE_WRITE);
+ 	return block_page_mkwrite_return(ret);
+ }
+ EXPORT_SYMBOL(block_page_mkwrite);
+diff --git a/mm/filemap.c b/mm/filemap.c
+index c0018f2..471b9ae 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2529,7 +2529,7 @@ ssize_t __generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
+ 	count = ocount;
+ 	pos = *ppos;
+ 
+-	vfs_check_frozen(inode->i_sb, SB_FREEZE_WRITE);
++	sb_start_write(inode->i_sb, SB_FREEZE_WRITE);
+ 
+ 	/* We can write back this queue in page reclaim */
+ 	current->backing_dev_info = mapping->backing_dev_info;
+@@ -2601,6 +2601,7 @@ ssize_t __generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
+ 				pos, ppos, count, written);
+ 	}
+ out:
++	sb_end_write(inode->i_sb, SB_FREEZE_WRITE);
+ 	current->backing_dev_info = NULL;
+ 	return written ? written : err;
+ }
 -- 
 1.7.1
 
