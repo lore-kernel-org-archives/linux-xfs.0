@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0JLGE0G046353 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 15:16:14 -0600
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	8slP5UUjmlMWEiDE for <xfs@oss.sgi.com>;
-	Thu, 19 Jan 2012 13:16:13 -0800 (PST)
-Received: by iagz35 with SMTP id z35so441965iag.26
-	for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 13:16:13 -0800 (PST)
+	q0K2N0iM068099 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 20:23:00 -0600
+Received: from mail-tul01m020-f181.google.com (mail-tul01m020-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	JSKl7JOChRkyhZBk for <xfs@oss.sgi.com>;
+	Thu, 19 Jan 2012 18:22:59 -0800 (PST)
+Received: by obbup10 with SMTP id up10so165718obb.26
+	for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 18:22:59 -0800 (PST)
+Date: Fri, 20 Jan 2012 10:26:49 +0800
+From: Zheng Liu <gnehzuil.liu@gmail.com>
 Subject: Re: working on extent locks for i_mutex
-From: Frank Mayhar <fmayhar@google.com>
-In-Reply-To: <20120118120223.GA4322@gmail.com>
+Message-ID: <20120120022649.GA12463@gmail.com>
 References: <4F0F9E97.1090403@linux.vnet.ibm.com>
-	<20120113043411.GH2806@dastard> <4F10992C.3070303@linux.vnet.ibm.com>
-	<20120115235747.GA6922@dastard> <4F146275.8090304@linux.vnet.ibm.com>
+	<20120113043411.GH2806@dastard>
+	<4F10992C.3070303@linux.vnet.ibm.com>
+	<20120115235747.GA6922@dastard>
+	<4F146275.8090304@linux.vnet.ibm.com>
 	<20120118120223.GA4322@gmail.com>
-Date: Thu, 19 Jan 2012 13:16:10 -0800
-Message-ID: <1327007770.5899.66.camel@peace.lax.corp.google.com>
-Mime-Version: 1.0
+	<1327007770.5899.66.camel@peace.lax.corp.google.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1327007770.5899.66.camel@peace.lax.corp.google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,38 +34,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
+To: Frank Mayhar <fmayhar@google.com>
 Cc: xfs@oss.sgi.com, Allison Henderson <achender@linux.vnet.ibm.com>, Lukas Czerner <lczerner@redhat.com>, Tao Ma <tm@tao.ma>, Ext4 Developers List <linux-ext4@vger.kernel.org>
 
-On Wed, 2012-01-18 at 20:02 +0800, Zheng Liu wrote:
-> For this project, do you have a schedule? Would you like to share to me? This
-> lock contention heavily impacts the performance of direct IO in our production
-> environment. So we hope to improve it ASAP.
+On Thu, Jan 19, 2012 at 01:16:10PM -0800, Frank Mayhar wrote:
+> On Wed, 2012-01-18 at 20:02 +0800, Zheng Liu wrote:
+> > For this project, do you have a schedule? Would you like to share to me? This
+> > lock contention heavily impacts the performance of direct IO in our production
+> > environment. So we hope to improve it ASAP.
+> > 
+> > I have done some direct IO benchmarks to compare ext4 with xfs using fio
+> > in Intel SSD. The result shows that, in direct IO, xfs outperforms ext4 and
+> > ext4 with dioread_nolock.
+> > 
+> > To understand the effect of lock contention, I define a new function called 
+> > ext4_file_aio_write() that calls __generic_file_aio_write() without acquiring 
+> > i_mutex lock. Meanwhile, I remove DIO_LOCKING flag when __blockdev_direct_IO() 
+> > is called and do the similar benchmarks. The result shows that the performance 
+> > in ext4 is almost the same to the xfs. Thus, it proves that the i_mutex heavily
+> > impacts the performance. Hopefully the result is useful for you. :-)
 > 
-> I have done some direct IO benchmarks to compare ext4 with xfs using fio
-> in Intel SSD. The result shows that, in direct IO, xfs outperforms ext4 and
-> ext4 with dioread_nolock.
+> For the record, I have a patchset that, while not affecting i_mutex (or
+> locking in general), does allow AIO append writes to actually be done
+> asynchronously.  (Currently they're forced to be done synchronously.)
+> It makes a big difference in performance for that particular case, even
+> for spinning media.  Performance roughly doubled when testing with fio
+> against a regular two-terabyte drive; the performance improvement
+> against SSD would have to be much greater.
 > 
-> To understand the effect of lock contention, I define a new function called 
-> ext4_file_aio_write() that calls __generic_file_aio_write() without acquiring 
-> i_mutex lock. Meanwhile, I remove DIO_LOCKING flag when __blockdev_direct_IO() 
-> is called and do the similar benchmarks. The result shows that the performance 
-> in ext4 is almost the same to the xfs. Thus, it proves that the i_mutex heavily
-> impacts the performance. Hopefully the result is useful for you. :-)
+> One day soon I'll accumulate enough spare time to port the patchset
+> forward to the latest kernel and submit it here.
+Interesting. I think it might help us to improve this issue. So could
+you please post your test case and result in detail? Thank you. :-)
 
-For the record, I have a patchset that, while not affecting i_mutex (or
-locking in general), does allow AIO append writes to actually be done
-asynchronously.  (Currently they're forced to be done synchronously.)
-It makes a big difference in performance for that particular case, even
-for spinning media.  Performance roughly doubled when testing with fio
-against a regular two-terabyte drive; the performance improvement
-against SSD would have to be much greater.
-
-One day soon I'll accumulate enough spare time to port the patchset
-forward to the latest kernel and submit it here.
--- 
-Frank Mayhar
-fmayhar@google.com
+Regards,
+Zheng
 
 _______________________________________________
 xfs mailing list
