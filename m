@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0K5DAQU077595 for <xfs@oss.sgi.com>; Thu, 19 Jan 2012 23:13:11 -0600
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Yr3f4RvaSoAmyZ4U for <xfs@oss.sgi.com>;
-	Thu, 19 Jan 2012 21:13:07 -0800 (PST)
-Date: Fri, 20 Jan 2012 16:13:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: The question about parallel direct IO in xfs
-Message-ID: <20120120051304.GB15102@dastard>
-References: <20120120035508.GA12703@gmail.com>
+	q0K8ramw093659
+	for <linux-xfs@oss.sgi.com>; Fri, 20 Jan 2012 02:53:36 -0600
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id 4UveIOijSnnyNMnz for
+	<linux-xfs@oss.sgi.com>; Fri, 20 Jan 2012 00:53:35 -0800 (PST)
+Message-ID: <4F192B8C.1050406@tlinx.org>
+Date: Fri, 20 Jan 2012 00:53:32 -0800
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120120035508.GA12703@gmail.com>
+Subject: Re: concurrent direct IO write in xfs
+References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>	<20120116232549.GC6922@dastard>
+	<CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
+In-Reply-To: <CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,57 +22,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Zheng Da <zhengda1936@gmail.com>, Linux-Xfs <linux-xfs@oss.sgi.com>
 
-On Fri, Jan 20, 2012 at 11:55:08AM +0800, Zheng Liu wrote:
-> Hi all,
+
+
+Zheng Da wrote:
 > 
-> Recently we encounter an issue in ext4. The issue is that, when we do a direct
-> IO, ext4 will acquire inode->i_mutex in generic_file_aio_write(). It declines
-> the performance. Here is the detailed conversation.
-> http://www.spinics.net/lists/linux-ext4/msg30058.html
-> 
-> I know that in xfs it uses i_iolock, which is a rw_semaphore, to make parallel
-> operations in direct IO. But I have a question. As we do some read/write
-> operations in direct IO, it seems that there has a window to cause data
-> inconsistency.
+> I create a file of 4GB in XFS (the ramdisk has 5GB of space). My test 
+> program overwrites 4G of data to the file  
+----
+	It sounds like you are asking why multiple threads don't
+move memory from one point to another point in memory at a faster rate
+than one thread alone.
 
-Yes, there is. That's a feature, not a bug.
+I.e. if you had 2 processes doing an assembly instruction, memmov to move
+a chunk of memory from 1 area to another, would you expect to do the move
+any faster if you had 2 processors doing the move vs. 1??
 
-> For example, One thread does a write operation to overlay some
-> data at a offset. Meanwhile another thread does a read operation at the same
-> offset. We assume that write is earlier than read.
+I think the limiting factor (unless you have a slow processor and some
+REALLY fast memory, but stock x86-64 parts, today have memory running about
+2-4 times slower than the processor -- so the memory is usually the bottleneck.
 
-Your assumption is wrong.
+Two processes wouldn't do it any faster, and might actually do it slower due to
+resource contention issues -- I would *think*... but I really don't know the
+details of how writing from mem2mem and having the target be in the format of
+and xfs file system, would cause cpu-bound delays that would be significant to
+change the fact that m2m operations are usually mem-bandwidth limited...?
 
-> Hence, we should read new
-> data. Although it is diffculty to occur, it is possible that read is issued to
-> the disk firstly and we read old data. I don't know whether it exists or not in
-> xfs. Thank you.
+(I don't know the answers, just clarifying what you are asking)...
 
-Fundamentally, the result of concurrent read and write direct IO
-operations to the same offset is undefined because the filesystem
-has no control of IO reordering in lower layers of the storage
-stack. IOWs, we give no guarantees for IO ordering or coherency of
-concurrent direct IO to the same offset.
 
-If your application requires this sort of coherency, then you either
-need to use buffered IO or provide these coherency guarantees
-yourself because direct IO doesn't provide them. File range locking
-is an example of how your application can coordinate it's IO to
-avoid this problem.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
