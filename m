@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0KMio96132592 for <xfs@oss.sgi.com>; Fri, 20 Jan 2012 16:44:50 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id FuzmTNHm70JZ89nF
-	for <xfs@oss.sgi.com>; Fri, 20 Jan 2012 14:44:49 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id DD8076C0B9
-	for <xfs@oss.sgi.com>; Fri, 20 Jan 2012 16:44:48 -0600 (CST)
-Message-ID: <4F19EE5E.8030508@hardwarefreak.com>
-Date: Fri, 20 Jan 2012 16:44:46 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: Optimal XFS formatting options?
-References: <33140169.post@talk.nabble.com> <201201171019.58714@zmi.at>
-	<4F155CC2.3050201@hardwarefreak.com> <201201201652.10193@zmi.at>
-In-Reply-To: <201201201652.10193@zmi.at>
-Reply-To: stan@hardwarefreak.com
+	q0LA3q2v162149 for <xfs@oss.sgi.com>; Sat, 21 Jan 2012 04:03:53 -0600
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	eerYNywcDz9pGLn2 for <xfs@oss.sgi.com>;
+	Sat, 21 Jan 2012 02:03:42 -0800 (PST)
+Received: by eaal1 with SMTP id l1so680373eaa.26
+	for <xfs@oss.sgi.com>; Sat, 21 Jan 2012 02:03:41 -0800 (PST)
+From: Christian Kildau <lists@unixhosts.org>
+Subject: How to fix bad superblock or xfs_repair: error - read only 0 of 512
+	bytes
+Date: Sat, 21 Jan 2012 11:03:39 +0100
+Message-Id: <A7348842-BA7C-474A-B2E1-04345761AB25@unixhosts.org>
+Mime-Version: 1.0 (Apple Message framework v1251.1)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,44 +22,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 1/20/2012 9:52 AM, Michael Monnerie wrote:
-> On Dienstag, 17. Januar 2012 Stan Hoeppner wrote:
->> So to be clear, your issue with the above isn't with my partition
->> alignment math WRT the OP's P2000 array, but is with using XFS stripe
->> alignment in general, correct?
-> 
-> Yes. I just wanted to document this as people often expand RAIDs and 
-> forget to apply the changes to stripe width.
->  
->> There is one really simple way around this issue you describe: don't
->> add drives to an existing array.  Simply create another array with
->> new disks, create a new aligned XFS on the array, and mount the
->> filesystem in an appropriate location.  There is no 11th Commandment
->> stating one must have a single massive XFS atop all of one's disks.
->> ;)
->>
->> There is little to no application software today that can't be
->> configured to store its data files across multiple directories.  So
->> there's no need to box oneself into the corner you describe above.
-> 
-> It's a management burden to do that. I've learned that systems usually 
-> are strictly structured in their configuration, so it's often better to 
-> extend a RAID and to keep the config, as this is cheaper in the end. At 
-> least for the salaries of good admins here in Europe ;-)
+Hello,
 
-If ease (or cost) of filesystem administration is of that much greater
-priority than performance, then why are you using XFS in the first place
-instead of EXT?
+I'm having some very serious issues with XFS after upgrading from a Linux D=
+istro running Ubuntu 2.6.32 to 3.2.
 
--- 
-Stan
+It seems like my filesystems are damaged after attaching them to a Linux 3.=
+2 server. I am also no longer able to mount the hdd on the old server that =
+is still running 2.6.32!
 
+'test disk' does find the filesystem as XFS 4 and i created a 1.5TB dump of=
+ it to another hdd.
+
+(I created the xfs filesystem on the entire hdd, not on a partition, so /de=
+v/sdd is not a typo)
+
+$ sudo mount -t xfs /dev/sdd /media/
+mount: /dev/sdd: can't read superblock
+(dmesg)
+[236659.912663] attempt to access beyond end of device
+[236659.912667] sdd: rw=3D32, want=3D2930277168, limit=3D2930275055
+[236659.912670] XFS (sdd): last sector read failed
+
+$ sudo xfs_check /dev/sdd
+xfs_check: error - read only 0 of 512 bytes
+
+$ sudo xfs_repair /dev/sdd
+Phase 1 - find and verify superblock...
+xfs_repair: error - read only 0 of 512 bytes
+
+
+'testdisk' does find the filesystem as XFS 4 and i created a 1.5TB dump of =
+it to another hdd.
+
+Is there any way I can fix this? - Except restroring from backup? Because t=
+his IS my backup!
+see ubuntuforums.org/showthread.php?t=3D1910962 for more details=85
+
+
+Any help is appreciated!
+
+Thanks in advance
+Chris
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
