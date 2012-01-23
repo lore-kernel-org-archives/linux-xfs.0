@@ -1,31 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0NHY9MZ123131 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 11:34:09 -0600
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
-	cuda.sgi.com with ESMTP id dBYztzW8DqijUc2G for
-	<xfs@oss.sgi.com>; Mon, 23 Jan 2012 09:34:08 -0800 (PST)
+	q0NHXVQG123058 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 11:33:31 -0600
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158]) by
+	cuda.sgi.com with ESMTP id OywvaQqyHYLrF4dH for
+	<xfs@oss.sgi.com>; Mon, 23 Jan 2012 09:33:30 -0800 (PST)
 Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Mon, 23 Jan 2012 10:34:06 -0700
-Received: from d01relay01.pok.ibm.com (d01relay01.pok.ibm.com [9.56.227.233])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id 5BE201FF0049
-	for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 10:33:12 -0700 (MST)
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay01.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q0NHXBiW266794 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 12:33:11 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	q0NHXBn0028292 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 15:33:11 -0200
+	Mon, 23 Jan 2012 10:33:30 -0700
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id 52BC83E40048
+	for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 10:33:27 -0700 (MST)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q0NHX9P0114954 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 10:33:19 -0700
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id q0NHX5eA015169
+	for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 10:33:05 -0700
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Mon, 23 Jan 2012 11:33:10 -0600
-Message-Id: <20120123173310.31735.28918.sendpatchset@chandra-lucid.austin.ibm.com>
+Date: Mon, 23 Jan 2012 11:33:04 -0600
+Message-Id: <20120123173304.31735.10706.sendpatchset@chandra-lucid.austin.ibm.com>
 In-Reply-To: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
 References: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
-Subject: [PATCH 4/4] xfsprogs: Add support to mkfs to add pquotino by adding a
-	new option.
+Subject: [PATCH 3/4] xfsprogs: Add qs_pquota to the fs_quota
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,124 +43,65 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
->From 77152735d6bc893b3a724d7a6ff4bb747fb23aec Mon Sep 17 00:00:00 2001
+>From 9de21fc22372c3ba65a38e259aa023a74d1cae36 Mon Sep 17 00:00:00 2001
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Tue, 13 Dec 2011 16:10:07 -0600
-Subject: [PATCH 4/4] Add support to mkfs to have a separate inode field for project quota.
+Date: Tue, 13 Dec 2011 16:08:19 -0600
+Subject: [PATCH 3/4] Add a new field qs_pquota to the data structure fs_quota_stat and also
+ define a new version for the same.
+
+Inform the kernel that the data structure is newer one and on return
+from kernel check the version and act accordingly.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- mkfs/xfs_mkfs.c |   22 +++++++++++++++++-----
- mkfs/xfs_mkfs.h |    3 ++-
- 2 files changed, 19 insertions(+), 6 deletions(-)
+ include/xqm.h |    2 ++
+ quota/state.c |    6 +++++-
+ 2 files changed, 7 insertions(+), 1 deletions(-)
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index f527f3d..872a304 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -90,6 +90,8 @@ char	*dopts[] = {
- 	"projinherit",
- #define D_EXTSZINHERIT	14
- 	"extszinherit",
-+#define D_NO_OQUOTA	15
-+	"seppquota",
- 	NULL
- };
+diff --git a/include/xqm.h b/include/xqm.h
+index 47f58a0..24e1ea0 100644
+--- a/include/xqm.h
++++ b/include/xqm.h
+@@ -124,6 +124,7 @@ typedef struct fs_disk_quota {
+  * incore.
+  */
+ #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
++#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
  
-@@ -922,6 +924,7 @@ main(
- 	libxfs_init_t		xi;
- 	struct fs_topology	ft;
- 	int			lazy_sb_counters;
-+	int			seppquota;
+ /*
+  * Some basic information about 'quota files'.
+@@ -146,6 +147,7 @@ typedef struct fs_quota_stat {
+ 	__s32		qs_rtbtimelimit;/* limit for rt blks timer */
+ 	__u16		qs_bwarnlimit;	/* limit for num warnings */
+ 	__u16		qs_iwarnlimit;	/* limit for num warnings */
++	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
+ } fs_quota_stat_t;
  
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -930,6 +933,7 @@ main(
+ #endif	/* __XQM_H__ */
+diff --git a/quota/state.c b/quota/state.c
+index 42bffc0..678699f 100644
+--- a/quota/state.c
++++ b/quota/state.c
+@@ -152,6 +152,8 @@ state_quotafile_mount(
+ 	fs_quota_stat_t	s;
+ 	char		*dev = mount->fs_name;
  
- 	attrversion = 2;
- 	projid32bit = 0;
-+	seppquota = 1;
- 	blflag = bsflag = slflag = ssflag = lslflag = lssflag = 0;
- 	blocklog = blocksize = 0;
- 	sectorlog = lsectorlog = XFS_MIN_SECTORSIZE_LOG;
-@@ -1178,6 +1182,14 @@ main(
- 					fsx.fsx_xflags |= \
- 						XFS_DIFLAG_EXTSZINHERIT;
- 					break;
-+				case D_NO_OQUOTA:
-+					if (!value)
-+						value = "0";
-+					c = atoi(value);
-+					if (c < 0 || c > 1)
-+						illegal(value, "d seppquota");
-+					seppquota = c;
-+					break;
- 				default:
- 					unknown('d', value);
- 				}
-@@ -2278,7 +2290,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	if (!qflag || Nflag) {
- 		printf(_(
- 		   "meta-data=%-22s isize=%-6d agcount=%lld, agsize=%lld blks\n"
--		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
-+		   "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u, seppquota=%d\n"
- 		   "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 		   "         =%-22s sunit=%-6u swidth=%u blks\n"
- 		   "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
-@@ -2286,7 +2298,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 		   "         =%-22s sectsz=%-5u sunit=%d blks, lazy-count=%d\n"
- 		   "realtime =%-22s extsz=%-6d blocks=%lld, rtextents=%lld\n"),
- 			dfile, isize, (long long)agcount, (long long)agsize,
--			"", sectorsize, attrversion, projid32bit,
-+			"", sectorsize, attrversion, projid32bit, seppquota,
- 			"", blocksize, (long long)dblocks, imaxpct,
- 			"", dsunit, dswidth,
- 			dirversion, dirblocksize, nci,
-@@ -2330,7 +2342,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 	sbp->sb_fdblocks = dblocks - agcount * XFS_PREALLOC_BLOCKS(mp) -
- 		(loginternal ? logblocks : 0);
- 	sbp->sb_frextents = 0;	/* will do a free later */
--	sbp->sb_uquotino = sbp->sb_gquotino = 0;
-+	sbp->sb_uquotino = sbp->sb_gquotino = sbp->sb_pquotino = 0;
- 	sbp->sb_qflags = 0;
- 	sbp->sb_unit = dsunit;
- 	sbp->sb_width = dswidth;
-@@ -2353,7 +2365,7 @@ an AG size that is one stripe unit smaller, for example %llu.\n"),
- 		sbp->sb_logsectsize = 0;
- 	}
- 	sbp->sb_features2 = XFS_SB_VERSION2_MKFS(lazy_sb_counters,
--					attrversion == 2, projid32bit == 1, 0);
-+					attrversion == 2, projid32bit == 1, 0, seppquota);
- 	sbp->sb_versionnum = XFS_SB_VERSION_MKFS(iaflag, dsunit != 0,
- 					logversion == 2, attrversion == 1,
- 					(sectorsize != BBSIZE ||
-@@ -2821,7 +2833,7 @@ usage( void )
- /* blocksize */		[-b log=n|size=num]\n\
- /* data subvol */	[-d agcount=n,agsize=n,file,name=xxx,size=num,\n\
- 			    (sunit=value,swidth=value|su=num,sw=num),\n\
--			    sectlog=n|sectsize=num\n\
-+			    sectlog=n|sectsize=num,seppquota=0|1\n\
- /* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
- 			    projid32bit=0|1]\n\
- /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
-diff --git a/mkfs/xfs_mkfs.h b/mkfs/xfs_mkfs.h
-index f25a7f3..d597bb3 100644
---- a/mkfs/xfs_mkfs.h
-+++ b/mkfs/xfs_mkfs.h
-@@ -36,11 +36,12 @@
- 	        XFS_DFL_SB_VERSION_BITS |                               \
- 	0 ) : XFS_SB_VERSION_1 )
++	bzero(&s, sizeof(struct fs_quota_stat));
++	s.qs_version = FS_QSTAT_VERSION_2;
+ 	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
+ 		if (flags & VERBOSE_FLAG)
+ 			fprintf(fp, _("%s quota are not enabled on %s\n"),
+@@ -168,7 +170,9 @@ state_quotafile_mount(
+ 				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
+ 				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
+ 	if (type & XFS_PROJ_QUOTA)
+-		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
++		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, 
++				(s.qs_version >= FS_QSTAT_VERSION_2) ?
++				&s.qs_pquota : &s.qs_gquota,
+ 				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
+ 				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
  
--#define XFS_SB_VERSION2_MKFS(lazycount, attr2, projid32bit, parent) (\
-+#define XFS_SB_VERSION2_MKFS(lazycount, attr2, projid32bit, parent, seppquota) (\
- 	((lazycount) ? XFS_SB_VERSION2_LAZYSBCOUNTBIT : 0) |		\
- 	((attr2) ? XFS_SB_VERSION2_ATTR2BIT : 0) |			\
- 	((projid32bit) ? XFS_SB_VERSION2_PROJID32BIT : 0) |		\
- 	((parent) ? XFS_SB_VERSION2_PARENTBIT : 0) |			\
-+	((seppquota) ? XFS_SB_VERSION2_NO_OQUOTA : 0) |			\
- 	0 )
- 
- #define	XFS_DFL_BLOCKSIZE_LOG	12		/* 4096 byte blocks */
 -- 
 1.7.1
 
