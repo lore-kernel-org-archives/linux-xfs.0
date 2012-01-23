@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0N03dBf028915 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 18:03:39 -0600
-Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com
-	[66.111.4.27]) by cuda.sgi.com with ESMTP id ADIiO1BkJp2DYkrl
-	for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 16:03:38 -0800 (PST)
-Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 57D1520F58
-	for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 19:03:37 -0500 (EST)
-Date: Sun, 22 Jan 2012 14:13:40 -0700
-From: Greg KH <greg@kroah.com>
-Subject: Re: XFS update for 3.2-stable
-Message-ID: <20120122211340.GC3224@kroah.com>
-References: <1326919305-2753-1-git-send-email-bpm@sgi.com>
+	q0N3duBl048264 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 21:39:56 -0600
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Subject: [PATCH 3/3] xfs: cleanup quota check on disk blocks and inodes
+	reservations
+Date: Mon, 23 Jan 2012 12:45:43 +0900
+Message-ID: <20120123034543.3339.56848.stgit@ltc219.sdl.hitachi.co.jp>
+In-Reply-To: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
+References: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1326919305-2753-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +22,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
+Cc: Alex Elder <elder@kernel.org>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
 
-On Wed, Jan 18, 2012 at 02:41:44PM -0600, bpm@sgi.com wrote:
-> Here's a fix for 3.2-stable related to trim support in xfs.
+This patch is a cleanup of quota check on disk blocks and inodes
+reservations.
 
-Applied, thanks.  Is it also needed for the 3.0-stable tree?
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+---
 
-greg k-h
+ fs/xfs/xfs_trans_dquot.c |   17 +++++++----------
+ 1 files changed, 7 insertions(+), 10 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index c4ba366..5e6cd1c 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -605,7 +605,7 @@ xfs_trans_dqresv(
+ 	time_t		timer;
+ 	xfs_qwarncnt_t	warns;
+ 	xfs_qwarncnt_t	warnlimit;
+-	xfs_qcnt_t	count;
++	xfs_qcnt_t	tcount;
+ 	xfs_qcnt_t	*resbcountp;
+ 	xfs_quotainfo_t	*q = mp->m_quotainfo;
+ 
+@@ -648,13 +648,12 @@ xfs_trans_dqresv(
+ 			 * hardlimit or exceed the timelimit if we allocate
+ 			 * nblks.
+ 			 */
+-			if (hardlimit > 0ULL &&
+-			    hardlimit < nblks + *resbcountp) {
++			tcount = *resbcountp + nblks;
++			if (hardlimit > 0ULL && tcount > hardlimit) {
+ 				xfs_quota_warn(mp, dqp, QUOTA_NL_BHARDWARN);
+ 				goto error_return;
+ 			}
+-			if (softlimit > 0ULL &&
+-			    softlimit < nblks + *resbcountp) {
++			if (softlimit > 0ULL && tcount > softlimit) {
+ 				if ((timer != 0 && get_seconds() > timer) ||
+ 				    (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
+@@ -666,7 +665,7 @@ xfs_trans_dqresv(
+ 			}
+ 		}
+ 		if (ninos > 0) {
+-			count = be64_to_cpu(dqp->q_core.d_icount);
++			tcount = be64_to_cpu(dqp->q_core.d_icount) + ninos;
+ 			timer = be32_to_cpu(dqp->q_core.d_itimer);
+ 			warns = be16_to_cpu(dqp->q_core.d_iwarns);
+ 			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
+@@ -677,13 +676,11 @@ xfs_trans_dqresv(
+ 			if (!softlimit)
+ 				softlimit = q->qi_isoftlimit;
+ 
+-			if (hardlimit > 0ULL &&
+-			    hardlimit < ninos + count) {
++			if (hardlimit > 0ULL && tcount > hardlimit) {
+ 				xfs_quota_warn(mp, dqp, QUOTA_NL_IHARDWARN);
+ 				goto error_return;
+ 			}
+-			if (softlimit > 0ULL &&
+-			    softlimit < ninos + count) {
++			if (softlimit > 0ULL && tcount > softlimit) {
+ 				if  ((timer != 0 && get_seconds() > timer) ||
+ 				     (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
 
 _______________________________________________
 xfs mailing list
