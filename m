@@ -1,11 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0N3dWAq048139 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 21:39:32 -0600
+	q0N3deQE048173 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 21:39:40 -0600
 From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Subject: [PATCH 0/3] xfs: change available ranges in quota check
-Date: Mon, 23 Jan 2012 12:45:14 +0900
-Message-ID: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
+Subject: [PATCH 1/3] xfs: consider new reservation for quota check on inode
+	reservation
+Date: Mon, 23 Jan 2012 12:45:25 +0900
+Message-ID: <20120123034525.3339.79163.stgit@ltc219.sdl.hitachi.co.jp>
+In-Reply-To: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
+References: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -20,42 +23,43 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
-Cc: xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+Cc: Alex Elder <elder@kernel.org>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
 
-Hi,
+The xfs checks quota when reserving disk blocks and inodes. In the block
+reservation it checks if the total number of blocks including current
+usage and new reservation reach quota. However, in the inode reservation
+it checks using the total number of inodes including only current usage
+without new reservation. It should include the new one, as well.
 
-This patch series changes available ranges of softlimit and
-hardlimit in quota check, as follows.
-
-(1) Consider new reservation for quota check
-    The disk block reservation checks if (current usage + new
-    reservation) reach the quota limit although the inode reservation
-    does not use the new reservation for quota check. It should
-    consider it, as well. This is mandatory for (2).
-
-(2) Change available ranges of softlimit and hardlimit in quota check
-    Currently xfs quota allows us to use disk blocks and inodes
-    up to lower than quota limits. They should be used up to
-    not greater than the limits.
-
-Thanks,
-
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
 ---
 
-Mitsuo Hayasaka (3):
-      xfs: cleanup quota check on disk blocks and inodes reservations
-      xfs: change available ranges of softlimit and hardlimit in quota check
-      xfs: consider new reservation for quota check on inode reservation
+ fs/xfs/xfs_trans_dquot.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-
- fs/xfs/xfs_dquot.c       |   24 ++++++++++++------------
- fs/xfs/xfs_log_recover.c |    6 +++---
- fs/xfs/xfs_qm_syscalls.c |    4 ++--
- fs/xfs/xfs_trans_dquot.c |   15 +++++++--------
- 4 files changed, 24 insertions(+), 25 deletions(-)
-
--- 
-Mitsuo Hayasaka (mitsuo.hayasaka.hu@hitachi.com)
+diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+index 4d00ee6..eb29fe1 100644
+--- a/fs/xfs/xfs_trans_dquot.c
++++ b/fs/xfs/xfs_trans_dquot.c
+@@ -677,11 +677,13 @@ xfs_trans_dqresv(
+ 			if (!softlimit)
+ 				softlimit = q->qi_isoftlimit;
+ 
+-			if (hardlimit > 0ULL && count >= hardlimit) {
++			if (hardlimit > 0ULL &&
++			    hardlimit <= ninos + count) {
+ 				xfs_quota_warn(mp, dqp, QUOTA_NL_IHARDWARN);
+ 				goto error_return;
+ 			}
+-			if (softlimit > 0ULL && count >= softlimit) {
++			if (softlimit > 0ULL &&
++			    softlimit <= ninos + count) {
+ 				if  ((timer != 0 && get_seconds() > timer) ||
+ 				     (warns != 0 && warns >= warnlimit)) {
+ 					xfs_quota_warn(mp, dqp,
 
 _______________________________________________
 xfs mailing list
