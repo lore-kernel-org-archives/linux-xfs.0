@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0N4LXYB051902 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 22:21:33 -0600
+	q0N5BxvY054865 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 23:11:59 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Zg9OpcTJA5KI5I4q for <xfs@oss.sgi.com>;
-	Sun, 22 Jan 2012 20:21:31 -0800 (PST)
-Date: Mon, 23 Jan 2012 15:21:28 +1100
+	D5ygXCw4jANKwvKF for <xfs@oss.sgi.com>;
+	Sun, 22 Jan 2012 21:11:57 -0800 (PST)
+Date: Mon, 23 Jan 2012 16:11:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Optimal XFS formatting options?
-Message-ID: <20120123042128.GG15102@dastard>
-References: <33140169.post@talk.nabble.com>
-	<20242.10382.19330.275280@tree.ty.sabi.co.UK>
-	<4F192DEC.4030400@tlinx.org>
-	<20249.22727.359884.733592@tree.ty.sabi.co.UK>
+Subject: Re: concurrent direct IO write in xfs
+Message-ID: <20120123051155.GI15102@dastard>
+References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
+	<20120116232549.GC6922@dastard>
+	<CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20249.22727.359884.733592@tree.ty.sabi.co.UK>
+In-Reply-To: <CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,58 +28,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Zheng Da <zhengda1936@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jan 20, 2012 at 12:06:31PM +0000, Peter Grandi wrote:
-> [ ... ]
-> >> * XFS has several limitations on 32b kernels. Just make sure
-> >>   you have a 64b kernel.
-> [ ... ]
-> > I was unaware that the block size was larger on 64b kernels.
-> > Is that what you are referring to ? (would be nice)...
+On Tue, Jan 17, 2012 at 02:19:52PM -0500, Zheng Da wrote:
+> Hello,
 > 
-> Not as such, the maximum block size is limited by the Linux page
-> cache, that is hw page size, which is for IA32 and AMD64
-> architectures the same at 4KiB. However other architectures
-> which are natively 64b allow bigger page sizes (notably IA64
-> [aka Itanium]), so the page cache and thus XFS can do larger
-> blocks sizes.
-> 
-> The limitations of XFS on 32b kernels come from limitations of
-> XFS itself in 32b mode, limitations of Linux in 32b mode, and
-> combined limitations. For example:
-> 
->   * There be 32b inode numbers, which limit inodes to the first
->     1TB of a filetree if sector size is 512B.
+> On Mon, Jan 16, 2012 at 6:25 PM, Dave Chinner <david@fromorbit.com> wrote:
+> >
+> > >  0xffffffff81288b6a : xfs_aio_write_newsize_update+0x3a/0x90 [kernel]
+> >
+> > Only ever taken when doing appending writes. Are you -sure- you are
+> > not doing appending writes?
+> >
+> This is weird. Yes, I'm sure. I use pwrite() to write data to a 4G file,
+> and I check the offset of each write and they are always smaller than 4G.
+> I instrument the code with systemtap and it shows me that ip->i_new_size
+> and new_size in xfs_aio_write_newsize_update are both 0.
+> Since in my case there is only overwrite, ip->i_new_size will always be 0
+> (the only place that updates ip->i_new_size is xfs_file_aio_write_checks).
+> Because of the same reason, new_size returned by xfs_file_aio_write_checks
+> is always 0.
+> Is it what you expected?
 
-Internally XFS still uses 64 bit inode numbers - the on-disk format
-does not change just because the CPU arch has changed. If you use
-the stat64() style interfaces, even on 32 bit machines you can
-access the full 64 bit inode numbers.
+No idea. I don't know what the problem you are seeing is yet, or if
+indeed there even is a problem as I don't really understand what you
+are trying to do or what results you are expecting to see...
 
->   * The 32b block IO subsystems limits partition sizes to 16TiB.
+Indeed, have you run the test on something other than a RAM disk and
+confirmed that the problem exists on a block device that has real IO
+latency? If your IO takes close to zero time, then there isn't any
+IO level concurrency you can extract from single file direct IO; it
+will all just serialise on the extent tree lookups.
 
-The sector_t is a 64 bit number even on 32 bit systems. The
-problem is that the page cache cannot index past offsets of 16TB.
-Given that XFS no longer uses the page cache for it's metadata
-indexing, we could remove this limit in the kernel code if we
-wanted to. And given that the userpsace tools use direct IO, the
-page cache limitation doesn't cause problems there, either, because
-we bypass it.
+> > >  0xffffffff812829f4 : __xfs_get_blocks+0x94/0x4a0 [kernel]
+> >
+> > And for direct IO writes, this will be the block mapping lookup so
+> > always hit.
+> >
+> >
+> > What this says to me is that you are probably doing is lots of very
+> > small concurrent write IOs, but I'm only guessing.  Can you provide
+> > your test case and a description of your test hardware so we can try
+> > to reproduce the problem?
+> >
+> I build XFS on the top of ramdisk. So yes, there is a lot of small
+> concurrent writes in a second.
+> I create a file of 4GB in XFS (the ramdisk has 5GB of space). My test
+> program overwrites 4G of data to the file and each time writes a page of
+> data randomly to the file. It's always overwriting, and no appending. The
+> offset of each write is always aligned to the page size. There is no
+> overlapping between writes.
 
-So in theory we could lift this limit, but there really isn't much
-demand for >16TB filesystems on 32 bit, because....
+Why are you using XFS for this? tmpfs was designed to do this sort
+of stuff as efficiently as possible....
 
->   * XFS tools scanning a large filesystem, usually for repair,
->     can run out of the available 32b address space (by default
->     around 2GiB).
+> So the test case is pretty simple and I think it's easy to reproduce it.
+> It'll be great if you can try the test case.
 
-.... you need 64 bit systems to handle the userspace memory
-requirements tools like xfs_check and xfs_repair require to run.  If
-the filesystem is large enough that you can't run repair because it
-needs more than 2GB of RAM, then you shouldn't be using a 32 bit
-systems.
+Can you post your test code so I know what I test is exactly what
+you are running?
 
 Cheers,
 
