@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0NKpqQa140099 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 14:51:52 -0600
-Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
-	[209.85.213.53]) by cuda.sgi.com with ESMTP id pkY0ObesXoF8qPVp
-	for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 12:51:50 -0800 (PST)
-Received: by yhjj56 with SMTP id j56so2035887yhj.26
-	for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 12:51:49 -0800 (PST)
+	q0NLw7d0147345 for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 15:58:07 -0600
+Message-ID: <4F1DD7EF.4060205@sgi.com>
+Date: Mon, 23 Jan 2012 15:58:07 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <CAFLer82QxfgXEx7ofzOHOK2YKiA+ab+_Aizd10SWHvnC-mVUHg@mail.gmail.com>
-References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
-	<20120116232549.GC6922@dastard>
-	<CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
-	<20120123051155.GI15102@dastard>
-	<CAFLer82QxfgXEx7ofzOHOK2YKiA+ab+_Aizd10SWHvnC-mVUHg@mail.gmail.com>
-Date: Mon, 23 Jan 2012 15:51:43 -0500
-Message-ID: <CAFLer81GWSCCCMppU=2dE+5KKqD-hYVKAA0hz9n-CBbxAs_xfw@mail.gmail.com>
-Subject: Re: concurrent direct IO write in xfs
-From: Zheng Da <zhengda1936@gmail.com>
-Content-Type: multipart/mixed; boundary=20cf303bfd22b7fcea04b73832e2
+Subject: Re: [patch 05/12] xfs: remove log space waitqueues
+References: <20111212141346.986825692@bombadil.infradead.org>
+	<20111212141434.276389127@bombadil.infradead.org>
+In-Reply-To: <20111212141434.276389127@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,285 +18,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
---20cf303bfd22b7fcea04b73832e2
-Content-Type: multipart/alternative; boundary=20cf303bfd22b7fce504b73832e0
-
---20cf303bfd22b7fce504b73832e0
-Content-Type: text/plain; charset=ISO-8859-1
-
-Hello
-
-On Mon, Jan 23, 2012 at 2:34 PM, Zheng Da <zhengda1936@gmail.com> wrote:
+On 01/-10/63 13:59, Christoph Hellwig wrote:
+> The tic->t_wait waitqueues can never have more than a single waiter
+> on them, so we can easily replace them with a task_struct pointer
+> and wake_up_process.
 >
-> > I build XFS on the top of ramdisk. So yes, there is a lot of small
->> > concurrent writes in a second.
->> > I create a file of 4GB in XFS (the ramdisk has 5GB of space). My test
->> > program overwrites 4G of data to the file and each time writes a page of
->> > data randomly to the file. It's always overwriting, and no appending.
->> The
->> > offset of each write is always aligned to the page size. There is no
->> > overlapping between writes.
->>
->> Why are you using XFS for this? tmpfs was designed to do this sort
->> of stuff as efficiently as possible....
->>
-> OK, I can try that.
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
 >
-tmpfs doesn't support direct IO.
+> ---
 
->
->> > So the test case is pretty simple and I think it's easy to reproduce it.
->> > It'll be great if you can try the test case.
->>
->> Can you post your test code so I know what I test is exactly what
->> you are running?
->>
-> I can do that. My test code gets very complicated now. I need to simplify
-> it.
->
-Here is the code. It's still a bit long. I hope it's OK.
-You can run the code like "rand-read file option=direct pages=1048576
-threads=8 access=write/read".
+Looks good.
 
-Thanks,
-Da
-
---20cf303bfd22b7fce504b73832e0
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hello<br><br><div class=3D"gmail_quote">On Mon, Jan 23, 2012 at 2:34 PM, Zh=
-eng Da <span dir=3D"ltr">&lt;<a href=3D"mailto:zhengda1936@gmail.com">zheng=
-da1936@gmail.com</a>&gt;</span> wrote:<blockquote class=3D"gmail_quote" sty=
-le=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"gmail_quote"><div class=3D"im"><blockquote class=3D"gmail_quo=
-te" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"=
-><div>
-&gt; I build XFS on the top of ramdisk. So yes, there is a lot of small<br>
-&gt; concurrent writes in a second.<br>
-&gt; I create a file of 4GB in XFS (the ramdisk has 5GB of space). My test<=
-br>
-&gt; program overwrites 4G of data to the file and each time writes a page =
-of<br>
-&gt; data randomly to the file. It&#39;s always overwriting, and no appendi=
-ng. The<br>
-&gt; offset of each write is always aligned to the page size. There is no<b=
-r>
-&gt; overlapping between writes.<br>
-<br>
-</div>Why are you using XFS for this? tmpfs was designed to do this sort<br=
->
-of stuff as efficiently as possible....<br></blockquote></div><div>OK, I ca=
-n try that.=A0</div></div></blockquote><div>tmpfs doesn&#39;t support direc=
-t IO.=A0</div><blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;=
-border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"gmail_quote"><div class=3D"im"><blockquote class=3D"gmail_quo=
-te" style=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"=
->
-<div><br>
-&gt; So the test case is pretty simple and I think it&#39;s easy to reprodu=
-ce it.<br>
-&gt; It&#39;ll be great if you can try the test case.<br>
-<br>
-</div>Can you post your test code so I know what I test is exactly what<br>
-you are running?<br></blockquote></div><div>I can do that. My test code get=
-s very complicated now. I need to simplify it.</div></div></blockquote><div=
->Here is the code. It&#39;s still a bit long. I hope it&#39;s OK.</div>
-<div>You can run the code like &quot;rand-read file option=3Ddirect pages=
-=3D1048576 threads=3D8 access=3Dwrite/read&quot;.</div><div><br></div></div=
->Thanks,<div>Da</div>
-
---20cf303bfd22b7fce504b73832e0--
-
---20cf303bfd22b7fcea04b73832e2
-Content-Type: text/x-c++src; charset=US-ASCII; name="simple-rand-read.cc"
-Content-Disposition: attachment; filename="simple-rand-read.cc"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_gxryr8a60
-
-I2luY2x1ZGUgPHN0ZGlvLmg+CiNpbmNsdWRlIDx1bmlzdGQuaD4KI2luY2x1ZGUgPHN5cy90eXBl
-cy5oPgojaW5jbHVkZSA8c3lzL3dhaXQuaD4KI2luY2x1ZGUgPHN5cy9zdGF0Lmg+CiNpbmNsdWRl
-IDxmY250bC5oPgojaW5jbHVkZSA8c3lzL3RpbWUuaD4KI2luY2x1ZGUgPHN0ZGxpYi5oPgojaW5j
-bHVkZSA8c3lzL3Jlc291cmNlLmg+CiNpbmNsdWRlIDxzeXMvbW1hbi5oPgojaW5jbHVkZSA8c3Ry
-aW5nLmg+CiNpbmNsdWRlIDxlcnJuby5oPgojaW5jbHVkZSA8cHRocmVhZC5oPgojaW5jbHVkZSA8
-YXNzZXJ0Lmg+CiNpbmNsdWRlIDxnb29nbGUvcHJvZmlsZXIuaD4KCiNpbmNsdWRlIDxpb3N0cmVh
-bT4KI2luY2x1ZGUgPHN0cmluZz4KI2luY2x1ZGUgPGRlcXVlPgoKI2RlZmluZSBQQUdFX1NJWkUg
-NDA5NgojZGVmaW5lIFJPVU5EX1BBR0Uob2ZmKSAoKChsb25nKSBvZmYpICYgKH4oUEFHRV9TSVpF
-IC0gMSkpKQoKI2RlZmluZSBOVU1fUEFHRVMgMTYzODQKI2RlZmluZSBOVU1fVEhSRUFEUyAzMgoK
-ZW51bSB7CglSRUFELAoJV1JJVEUKfTsKCmludCBucGFnZXM7CmludCBudGhyZWFkcyA9IDE7CnN0
-cnVjdCB0aW1ldmFsIGdsb2JhbF9zdGFydDsKY2hhciBzdGF0aWNfYnVmW1BBR0VfU0laRSAqIDhd
-IF9fYXR0cmlidXRlX18oKGFsaWduZWQoUEFHRV9TSVpFKSkpOwp2b2xhdGlsZSBpbnQgZmlyc3Rb
-TlVNX1RIUkVBRFNdOwppbnQgYWNjZXNzX21ldGhvZCA9IFJFQUQ7CgpjbGFzcyB3b3JrbG9hZF9n
-ZW4KewpwdWJsaWM6Cgl2aXJ0dWFsIG9mZl90IG5leHRfb2Zmc2V0KCkgPSAwOwoJdmlydHVhbCBi
-b29sIGhhc19uZXh0KCkgPSAwOwp9OwoKY2xhc3MgcmFuZF9wZXJtdXRlCnsKCW9mZl90ICpvZmZz
-ZXQ7Cglsb25nIG51bTsKcHVibGljOgoJcmFuZF9wZXJtdXRlKGxvbmcgbnVtLCBpbnQgc3RyaWRl
-KSB7CgkJb2Zmc2V0ID0gKG9mZl90ICopIHZhbGxvYyhudW0gKiBzaXplb2Yob2ZmX3QpKTsKCQlm
-b3IgKGludCBpID0gMDsgaSA8IG51bTsgaSsrKSB7CgkJCW9mZnNldFtpXSA9ICgob2ZmX3QpIGkp
-ICogc3RyaWRlOwoJCX0KCgkJZm9yIChpbnQgaSA9IG51bSAtIDE7IGkgPj0gMTsgaS0tKSB7CgkJ
-CWludCBqID0gcmFuZG9tKCkgJSBpOwoJCQlvZmZfdCB0bXAgPSBvZmZzZXRbal07CgkJCW9mZnNl
-dFtqXSA9IG9mZnNldFtpXTsKCQkJb2Zmc2V0W2ldID0gdG1wOwoJCX0KCX0KCgl+cmFuZF9wZXJt
-dXRlKCkgewoJCWZyZWUob2Zmc2V0KTsKCX0KCglvZmZfdCBnZXRfb2Zmc2V0KGxvbmcgaWR4KSBj
-b25zdCB7CgkJcmV0dXJuIG9mZnNldFtpZHhdOwoJfQp9OwoKY2xhc3MgbG9jYWxfcmFuZF9wZXJt
-dXRlX3dvcmtsb2FkOiBwdWJsaWMgd29ya2xvYWRfZ2VuCnsKCWxvbmcgc3RhcnQ7Cglsb25nIGVu
-ZDsKCXN0YXRpYyBjb25zdCByYW5kX3Blcm11dGUgKnBlcm11dGU7CnB1YmxpYzoKCWxvY2FsX3Jh
-bmRfcGVybXV0ZV93b3JrbG9hZChsb25nIG51bSwgaW50IHN0cmlkZSwgbG9uZyBzdGFydCwgbG9u
-ZyBlbmQpIHsKCQlpZiAocGVybXV0ZSA9PSBOVUxMKSB7CgkJCXBlcm11dGUgPSBuZXcgcmFuZF9w
-ZXJtdXRlKG51bSwgc3RyaWRlKTsKCQl9CgkJdGhpcy0+c3RhcnQgPSBzdGFydDsKCQl0aGlzLT5l
-bmQgPSBlbmQ7Cgl9CgoJfmxvY2FsX3JhbmRfcGVybXV0ZV93b3JrbG9hZCgpIHsKCQlpZiAocGVy
-bXV0ZSkgewoJCQlkZWxldGUgcGVybXV0ZTsKCQkJcGVybXV0ZSA9IE5VTEw7CgkJfQoJfQoKCW9m
-Zl90IG5leHRfb2Zmc2V0KCkgewoJCWlmIChzdGFydCA+PSBlbmQpCgkJCXJldHVybiAtMTsKCQly
-ZXR1cm4gcGVybXV0ZS0+Z2V0X29mZnNldChzdGFydCsrKTsKCX0KCglib29sIGhhc19uZXh0KCkg
-ewoJCXJldHVybiBzdGFydCA8IGVuZDsKCX0KfTsKCmZsb2F0IHRpbWVfZGlmZihzdHJ1Y3QgdGlt
-ZXZhbCB0aW1lMSwgc3RydWN0IHRpbWV2YWwgdGltZTIpCnsKCXJldHVybiB0aW1lMi50dl9zZWMg
-LSB0aW1lMS50dl9zZWMKCQkJKyAoKGZsb2F0KSh0aW1lMi50dl91c2VjIC0gdGltZTEudHZfdXNl
-YykpLzEwMDAwMDA7Cn0KCmNsYXNzIHJhbmRfYnVmCnsKCS8qIHdoZXJlIHRoZSBkYXRhIHJlYWQg
-ZnJvbSB0aGUgZGlzayBpcyBzdG9yZWQgKi8KCWNoYXIgKmJ1ZjsKCS8qIHNob3dzIHRoZSBsb2Nh
-dGlvbnMgaW4gdGhlIGFycmF5IHdoZXJlIGRhdGEgaGFzIGJlIHRvIHN0b3JlZC4qLwoJcmFuZF9w
-ZXJtdXRlIGJ1Zl9vZmZzZXQ7CglpbnQgZW50cnlfc2l6ZTsKCWludCBudW1fZW50cmllczsKCglp
-bnQgY3VycmVudDsKcHVibGljOgoJcmFuZF9idWYoaW50IGJ1Zl9zaXplLCBpbnQgZW50cnlfc2l6
-ZSk6IGJ1Zl9vZmZzZXQoYnVmX3NpemUgLyBlbnRyeV9zaXplLCBlbnRyeV9zaXplKSB7CgkJdGhp
-cy0+ZW50cnlfc2l6ZSA9IGVudHJ5X3NpemU7CgkJbnVtX2VudHJpZXMgPSBidWZfc2l6ZSAvIGVu
-dHJ5X3NpemU7CgkJYnVmID0gKGNoYXIgKikgdmFsbG9jKGJ1Zl9zaXplKTsKCgkJaWYgKGJ1ZiA9
-PSBOVUxMKXsKCQkJZnByaW50ZihzdGRlcnIsICJjYW4ndCBhbGxvY2F0ZSBidWZmZXJcbiIpOwoJ
-CQlleGl0KDEpOwoJCX0KCQkvKiB0cmlnZ2VyIHBhZ2UgZmF1bHRzIGFuZCBicmluZyBwYWdlcyB0
-byBtZW1vcnkuICovCgkJZm9yIChpbnQgaSA9IDA7IGkgPCBidWZfc2l6ZSAvIFBBR0VfU0laRTsg
-aSsrKQoJCQlidWZbaSAqIFBBR0VfU0laRV0gPSAwOwoKCQljdXJyZW50ID0gMDsKCX0KCgl+cmFu
-ZF9idWYoKSB7CgkJZnJlZShidWYpOwoJfQoKCWNoYXIgKm5leHRfZW50cnkoKSB7CgkJaW50IG9m
-ZiA9IGJ1Zl9vZmZzZXQuZ2V0X29mZnNldChjdXJyZW50KTsKCQljdXJyZW50ID0gKGN1cnJlbnQg
-KyAxKSAlIG51bV9lbnRyaWVzOzsKCQlyZXR1cm4gJmJ1ZltvZmZdOwoJfQoKCWludCBnZXRfZW50
-cnlfc2l6ZSgpIHsKCQlyZXR1cm4gZW50cnlfc2l6ZTsKCX0KfTsKCi8qIHRoaXMgZGF0YSBzdHJ1
-Y3R1cmUgc3RvcmVzIHRoZSB0aHJlYWQtcHJpdmF0ZSBpbmZvLiAqLwpjbGFzcyB0aHJlYWRfcHJp
-dmF0ZQp7CnB1YmxpYzoKCXB0aHJlYWRfdCBpZDsKCS8qIHRoZSBsb2NhdGlvbiBpbiB0aGUgdGhy
-ZWFkIGRlc2NyaXB0b3IgYXJyYXkuICovCglpbnQgaWR4OwoJcmFuZF9idWYgYnVmOwoJd29ya2xv
-YWRfZ2VuICpnZW47Cglzc2l6ZV90IHJlYWRfYnl0ZXM7CglzdHJ1Y3QgdGltZXZhbCBzdGFydF90
-aW1lOwoJc3RydWN0IHRpbWV2YWwgZW5kX3RpbWU7CgoJdmlydHVhbCBzc2l6ZV90IGFjY2Vzcyhj
-aGFyICosIG9mZl90LCBzc2l6ZV90LCBpbnQpID0gMDsKCXZpcnR1YWwgaW50IHRocmVhZF9pbml0
-KCkgPSAwOwoKCXRocmVhZF9wcml2YXRlKGludCBpZHgsIGludCBlbnRyeV9zaXplKTogYnVmKE5V
-TV9QQUdFUyAvIG50aHJlYWRzICogUEFHRV9TSVpFLCBlbnRyeV9zaXplKSB7CgkJdGhpcy0+aWR4
-ID0gaWR4OwoJCXJlYWRfYnl0ZXMgPSAwOwoJfQoKfTsKCmNsYXNzIHJlYWRfcHJpdmF0ZTogcHVi
-bGljIHRocmVhZF9wcml2YXRlCnsKCWNvbnN0IGNoYXIgKmZpbGVfbmFtZTsKCWludCBmZDsKCWlu
-dCBmbGFnczsKcHJvdGVjdGVkOgoJaW50IGdldF9mZCgpIHsKCQlyZXR1cm4gZmQ7Cgl9CgpwdWJs
-aWM6CglyZWFkX3ByaXZhdGUoY29uc3QgY2hhciAqbmFtZSwgaW50IGlkeCwgaW50IGVudHJ5X3Np
-emUsCgkJCWludCBmbGFncyA9IE9fUkRXUik6IHRocmVhZF9wcml2YXRlKGlkeCwgZW50cnlfc2l6
-ZSksIGZpbGVfbmFtZShuYW1lKSB7CgkJdGhpcy0+ZmxhZ3MgPSBmbGFnczsKCX0KCglpbnQgdGhy
-ZWFkX2luaXQoKSB7CgkJaW50IHJldDsKCgkJZmQgPSBvcGVuKGZpbGVfbmFtZSwgZmxhZ3MpOwoJ
-CWlmIChmZCA8IDApIHsKCQkJcGVycm9yKCJvcGVuIik7CgkJCWV4aXQgKDEpOwoJCX0KCQlyZXQg
-PSBwb3NpeF9mYWR2aXNlKGZkLCAwLCAwLCBQT1NJWF9GQURWX1JBTkRPTSk7CgkJaWYgKHJldCA8
-IDApIHsKCQkJcGVycm9yKCJwb3NpeF9mYWR2aXNlIik7CgkJCWV4aXQoMSk7CgkJfQoJCXJldHVy
-biAwOwoJfQoKCXNzaXplX3QgYWNjZXNzKGNoYXIgKmJ1Ziwgb2ZmX3Qgb2Zmc2V0LCBzc2l6ZV90
-IHNpemUsIGludCBhY2Nlc3NfbWV0aG9kKSB7CgkJYXNzZXJ0KG9mZnNldCA8IDB4MTAwMDAwMDAw
-TCk7CgkJc3NpemVfdCByZXQ7CgkJaWYgKGFjY2Vzc19tZXRob2QgPT0gV1JJVEUpCgkJCXJldCA9
-IHB3cml0ZShmZCwgYnVmLCBzaXplLCBvZmZzZXQpOwoJCWVsc2UKCQkJcmV0ID0gcHJlYWQoZmQs
-IGJ1Ziwgc2l6ZSwgb2Zmc2V0KTsKCQlyZXR1cm4gcmV0OwoJfQp9OwoKY2xhc3MgZGlyZWN0X3By
-aXZhdGU6IHB1YmxpYyByZWFkX3ByaXZhdGUKewoJY2hhciAqcGFnZXM7CglpbnQgYnVmX2lkeDsK
-cHVibGljOgoJZGlyZWN0X3ByaXZhdGUoY29uc3QgY2hhciAqbmFtZSwgaW50IGlkeCwgaW50IGVu
-dHJ5X3NpemUpOiByZWFkX3ByaXZhdGUobmFtZSwgaWR4LAoJCQllbnRyeV9zaXplLCBPX0RJUkVD
-VCB8IE9fUkRXUikgewoJCXBhZ2VzID0gKGNoYXIgKikgdmFsbG9jKFBBR0VfU0laRSAqIDQwOTYp
-OwoJCWJ1Zl9pZHggPSAwOwoJfQoKCXNzaXplX3QgYWNjZXNzKGNoYXIgKmJ1Ziwgb2ZmX3Qgb2Zm
-c2V0LCBzc2l6ZV90IHNpemUsIGludCBhY2Nlc3NfbWV0aG9kKSB7CgkJc3NpemVfdCByZXQ7CgkJ
-LyogZm9yIHNpbXBsaWNpdHksIEkgYXNzdW1lIGFsbCByZXF1ZXN0IHNpemVzIGFyZSBzbWFsbGVy
-IHRoYW4gYSBwYWdlIHNpemUgKi8KCQlhc3NlcnQoc2l6ZSA8PSBQQUdFX1NJWkUpOwoJCWlmIChS
-T1VORF9QQUdFKG9mZnNldCkgPT0gb2Zmc2V0CgkJCQkmJiAobG9uZykgYnVmID09IFJPVU5EX1BB
-R0UoYnVmKQoJCQkJJiYgc2l6ZSA9PSBQQUdFX1NJWkUpIHsKCQkJcmV0ID0gcmVhZF9wcml2YXRl
-OjphY2Nlc3MoYnVmLCBvZmZzZXQsIHNpemUsIGFjY2Vzc19tZXRob2QpOwoJCX0KCQllbHNlIHsK
-CQkJYXNzZXJ0KGFjY2Vzc19tZXRob2QgPT0gUkVBRCk7CgkJCWJ1Zl9pZHgrKzsKCQkJaWYgKGJ1
-Zl9pZHggPT0gNDA5NikKCQkJCWJ1Zl9pZHggPSAwOwoJCQljaGFyICpwYWdlID0gcGFnZXMgKyBi
-dWZfaWR4ICogUEFHRV9TSVpFOwoJCQlyZXQgPSByZWFkX3ByaXZhdGU6OmFjY2VzcyhwYWdlLCBS
-T1VORF9QQUdFKG9mZnNldCksIFBBR0VfU0laRSwgYWNjZXNzX21ldGhvZCk7CgkJCWlmIChyZXQg
-PCAwKQoJCQkJcmV0dXJuIHJldDsKCQkJZWxzZQoJCQkJbWVtY3B5KGJ1ZiwgcGFnZSArIChvZmZz
-ZXQgLSBST1VORF9QQUdFKG9mZnNldCkpLCBzaXplKTsKCQkJcmV0ID0gc2l6ZTsKCQl9CgkJcmV0
-dXJuIHJldDsKCX0KfTsKCnRocmVhZF9wcml2YXRlICp0aHJlYWRzW05VTV9USFJFQURTXTsKCnZv
-aWQgKnJhbmRfcmVhZCh2b2lkICphcmcpCnsKCXNzaXplX3QgcmV0ID0gLTE7Cgl0aHJlYWRfcHJp
-dmF0ZSAqcHJpdiA9IHRocmVhZHNbKGxvbmcpIGFyZ107CglyYW5kX2J1ZiAqYnVmOwoKCXByaXYt
-PnRocmVhZF9pbml0KCk7CglidWYgPSAmcHJpdi0+YnVmOwoKCWdldHRpbWVvZmRheSgmcHJpdi0+
-c3RhcnRfdGltZSwgTlVMTCk7Cgl3aGlsZSAocHJpdi0+Z2VuLT5oYXNfbmV4dCgpKSB7CgkJY2hh
-ciAqZW50cnkgPSBidWYtPm5leHRfZW50cnkoKTsKCQlvZmZfdCBvZmYgPSBwcml2LT5nZW4tPm5l
-eHRfb2Zmc2V0KCk7CgoJCXJldCA9IHByaXYtPmFjY2VzcyhlbnRyeSwgb2ZmLCBidWYtPmdldF9l
-bnRyeV9zaXplKCksIGFjY2Vzc19tZXRob2QpOwoJCWlmIChyZXQgPiAwKSB7CgkJCWFzc2VydChy
-ZXQgPT0gYnVmLT5nZXRfZW50cnlfc2l6ZSgpKTsKCQkJaWYgKHJldCA+IDApCgkJCQlwcml2LT5y
-ZWFkX2J5dGVzICs9IHJldDsKCQkJZWxzZQoJCQkJYnJlYWs7CgkJfQoJCWlmIChyZXQgPCAwKSB7
-CgkJCXBlcnJvcigiYWNjZXNzIik7CgkJCWV4aXQoMSk7CgkJfQoJfQoJaWYgKHJldCA8IDApIHsK
-CQlwZXJyb3IoInJlYWQiKTsKCQlleGl0KDEpOwoJfQoJZ2V0dGltZW9mZGF5KCZwcml2LT5lbmRf
-dGltZSwgTlVMTCk7CgkKCXB0aHJlYWRfZXhpdCgodm9pZCAqKSBwcml2LT5yZWFkX2J5dGVzKTsK
-fQoKbG9uZyBzdHIyc2l6ZShzdGQ6OnN0cmluZyBzdHIpCnsKCWludCBsZW4gPSBzdHIubGVuZ3Ro
-KCk7Cglsb25nIG11bHRpcGx5ID0gMTsKCWlmIChzdHJbbGVuIC0gMV0gPT0gJ00nIHx8IHN0clts
-ZW4gLSAxXSA9PSAnbScpIHsKCQltdWx0aXBseSAqPSAxMDI0ICogMTAyNDsKCQlzdHJbbGVuIC0g
-MV0gPSAwOwoJfQoJZWxzZSBpZiAoc3RyW2xlbiAtIDFdID09ICdLJyB8fCBzdHJbbGVuIC0gMV0g
-PT0gJ2snKSB7CgkJbXVsdGlwbHkgKj0gMTAyNDsKCQlzdHJbbGVuIC0gMV0gPSAwOwoJfQoJZWxz
-ZSBpZiAoc3RyW2xlbiAtIDFdID09ICdHJyB8fCBzdHJbbGVuIC0gMV0gPT0gJ2cnKSB7CgkJbXVs
-dGlwbHkgKj0gMTAyNCAqIDEwMjQgKiAxMDI0OwoJCXN0cltsZW4gLSAxXSA9IDA7Cgl9CglyZXR1
-cm4gYXRvbChzdHIuY19zdHIoKSkgKiBtdWx0aXBseTsKfQoKaW50IG1haW4oaW50IGFyZ2MsIGNo
-YXIgKmFyZ3ZbXSkKewoJaW50IGVudHJ5X3NpemUgPSA0MDk2OwoJc3RkOjpzdHJpbmcgYWNjZXNz
-X29wdGlvbjsKCWludCByZXQ7CglpbnQgaSwgajsKCXN0cnVjdCB0aW1ldmFsIHN0YXJ0X3RpbWUs
-IGVuZF90aW1lOwoJc3NpemVfdCByZWFkX2J5dGVzID0gMDsKCWludCBudW1fZmlsZXMgPSAwOwoJ
-c3RkOjpzdHJpbmcgZmlsZV9uYW1lc1tOVU1fVEhSRUFEU107CgoJaWYgKGFyZ2MgPCA1KSB7CgkJ
-ZnByaW50ZihzdGRlcnIsICJ0aGVyZSBhcmUgJWQgYXJnbWVudHNcbiIsIGFyZ2MpOwoJCWZwcmlu
-dGYoc3RkZXJyLCAicmVhZCBmaWxlcyBvcHRpb24gcGFnZXMgdGhyZWFkc1xuIik7CgkJZXhpdCgx
-KTsKCX0KCglmb3IgKGludCBpID0gMTsgaSA8IGFyZ2M7IGkrKykgewoJCXN0ZDo6c3RyaW5nIHN0
-ciA9IGFyZ3ZbaV07CgkJc2l6ZV90IGZvdW5kID0gc3RyLmZpbmQoIj0iKTsKCQkvKiBpZiB0aGVy
-ZSBpc24ndCBgPScsIEkgYXNzdW1lIGl0J3MgYSBmaWxlIG5hbWUqLwoJCWlmIChmb3VuZCA9PSBz
-dGQ6OnN0cmluZzo6bnBvcykgewoJCQlmaWxlX25hbWVzW251bV9maWxlcysrXSA9IHN0cjsKCQkJ
-Y29udGludWU7CgkJfQoKCQlzdGQ6OnN0cmluZyB2YWx1ZSA9IHN0ci5zdWJzdHIoZm91bmQgKyAx
-KTsKCQlzdGQ6OnN0cmluZyBrZXkgPSBzdHIuc3Vic3RyKDAsIGZvdW5kKTsKCQlpZiAoa2V5LmNv
-bXBhcmUoIm9wdGlvbiIpID09IDApIHsKCQkJYWNjZXNzX29wdGlvbiA9IHZhbHVlOwoJCX0KCQll
-bHNlIGlmKGtleS5jb21wYXJlKCJwYWdlcyIpID09IDApIHsKCQkJbnBhZ2VzID0gYXRvaSh2YWx1
-ZS5jX3N0cigpKTsKCQl9CgkJZWxzZSBpZihrZXkuY29tcGFyZSgidGhyZWFkcyIpID09IDApIHsK
-CQkJbnRocmVhZHMgPSBhdG9pKHZhbHVlLmNfc3RyKCkpOwoJCX0KCQllbHNlIGlmKGtleS5jb21w
-YXJlKCJhY2Nlc3MiKSA9PSAwKSB7CgkJCWlmKHZhbHVlLmNvbXBhcmUoInJlYWQiKSA9PSAwKQoJ
-CQkJYWNjZXNzX21ldGhvZCA9IFJFQUQ7CgkJCWVsc2UgaWYodmFsdWUuY29tcGFyZSgid3JpdGUi
-KSA9PSAwKQoJCQkJYWNjZXNzX21ldGhvZCA9IFdSSVRFOwoJCQllbHNlIHsKCQkJCWZwcmludGYo
-c3RkZXJyLCAid3JvbmcgYWNjZXNzIG1ldGhvZFxuIik7CgkJCQlleGl0KDEpOwoJCQl9CgkJfQoJ
-CWVsc2UgewoJCQlmcHJpbnRmKHN0ZGVyciwgIndyb25nIG9wdGlvblxuIik7CgkJCWV4aXQoMSk7
-CgkJfQoJfQoKCWludCBudW1fZW50cmllcyA9IG5wYWdlcyAqIChQQUdFX1NJWkUgLyBlbnRyeV9z
-aXplKTsKCglpZiAobnRocmVhZHMgPiBOVU1fVEhSRUFEUykgewoJCWZwcmludGYoc3RkZXJyLCAi
-dG9vIG1hbnkgdGhyZWFkc1xuIik7CgkJZXhpdCgxKTsKCX0KCWlmIChudW1fZmlsZXMgPiAxICYm
-IG51bV9maWxlcyAhPSBudGhyZWFkcykgewoJCWZwcmludGYoc3RkZXJyLCAiaWYgdGhlcmUgYXJl
-IG11bHRpcGxlIGZpbGVzLCBcCgkJCQl0aGUgbnVtYmVyIG9mIGZpbGVzIG11c3QgYmUgdGhlIHNh
-bWUgYXMgdGhlIG51bWJlciBvZiB0aHJlYWRzXG4iKTsKCQlleGl0KDEpOwoJfQoKCS8qIGluaXRp
-YWxpemUgdGhlIHRocmVhZHMnIHByaXZhdGUgZGF0YS4gKi8KCWZvciAoaiA9IDA7IGogPCBudGhy
-ZWFkczsgaisrKSB7CgkJY29uc3QgY2hhciAqZmlsZV9uYW1lOwoJCWlmIChudW1fZmlsZXMgPiAx
-KSB7CgkJCWZpbGVfbmFtZSA9IGZpbGVfbmFtZXNbal0uY19zdHIoKTsKCQl9CgkJZWxzZSB7CgkJ
-CWZpbGVfbmFtZSA9IGZpbGVfbmFtZXNbMF0uY19zdHIoKTsKCQl9CgkJaWYgKGFjY2Vzc19vcHRp
-b24uY29tcGFyZSgibm9ybWFsIikgPT0gMCkKCQkJdGhyZWFkc1tqXSA9IG5ldyByZWFkX3ByaXZh
-dGUoZmlsZV9uYW1lLCBqLCBlbnRyeV9zaXplKTsKCQllbHNlIGlmIChhY2Nlc3Nfb3B0aW9uLmNv
-bXBhcmUoImRpcmVjdCIpID09IDApCgkJCXRocmVhZHNbal0gPSBuZXcgZGlyZWN0X3ByaXZhdGUo
-ZmlsZV9uYW1lLCBqLCBlbnRyeV9zaXplKTsKCQllbHNlIHsKCQkJZnByaW50ZihzdGRlcnIsICJ3
-cm9uZyBhY2Nlc3Mgb3B0aW9uXG4iKTsKCQkJZXhpdCgxKTsKCQl9CgkJCgkJbG9uZyBzdGFydCwg
-ZW5kOwoJCWlmIChudW1fZmlsZXMgPiAxKSB7CgkJCXN0YXJ0ID0gMDsKCQkJZW5kID0gbnBhZ2Vz
-ICogUEFHRV9TSVpFIC8gZW50cnlfc2l6ZTsKCQl9CgkJZWxzZSB7CgkJCXN0YXJ0ID0gKGxvbmcp
-IG5wYWdlcyAvIG50aHJlYWRzICogUEFHRV9TSVpFIC8gZW50cnlfc2l6ZSAqIGo7CgkJCWVuZCA9
-IHN0YXJ0ICsgKGxvbmcpIG5wYWdlcyAvIG50aHJlYWRzICogUEFHRV9TSVpFIC8gZW50cnlfc2l6
-ZTsKCQl9CgkJcHJpbnRmKCJ0aHJlYWQgJWQgc3RhcnRzICVsZCBlbmRzICVsZFxuIiwgaiwgc3Rh
-cnQsIGVuZCk7CgkJdGhyZWFkc1tqXS0+Z2VuID0gbmV3IGxvY2FsX3JhbmRfcGVybXV0ZV93b3Jr
-bG9hZChudW1fZW50cmllcywKCQkJCQkJZW50cnlfc2l6ZSwgc3RhcnQsIGVuZCk7Cgl9CgoJcmV0
-ID0gc2V0cHJpb3JpdHkoUFJJT19QUk9DRVNTLCBnZXRwaWQoKSwgLTIwKTsKCWlmIChyZXQgPCAw
-KSB7CgkJcGVycm9yKCJzZXRwcmlvcml0eSIpOwoJCWV4aXQoMSk7Cgl9CgoJZ2V0dGltZW9mZGF5
-KCZzdGFydF90aW1lLCBOVUxMKTsKCWdsb2JhbF9zdGFydCA9IHN0YXJ0X3RpbWU7Cglmb3IgKGkg
-PSAwOyBpIDwgbnRocmVhZHM7IGkrKykgewoJCXJldCA9IHB0aHJlYWRfY3JlYXRlKCZ0aHJlYWRz
-W2ldLT5pZCwgTlVMTCwgcmFuZF9yZWFkLCAodm9pZCAqKSBpKTsKCQlpZiAocmV0KSB7CgkJCXBl
-cnJvcigicHRocmVhZF9jcmVhdGUiKTsKCQkJZXhpdCgxKTsKCQl9Cgl9CgoJZm9yIChpID0gMDsg
-aSA8IG50aHJlYWRzOyBpKyspIHsKCQlzc2l6ZV90IHNpemU7CgkJcmV0ID0gcHRocmVhZF9qb2lu
-KHRocmVhZHNbaV0tPmlkLCAodm9pZCAqKikgJnNpemUpOwoJCWlmIChyZXQpIHsKCQkJcGVycm9y
-KCJwdGhyZWFkX2pvaW4iKTsKCQkJZXhpdCgxKTsKCQl9CgkJcmVhZF9ieXRlcyArPSBzaXplOwoJ
-fQoJZ2V0dGltZW9mZGF5KCZlbmRfdGltZSwgTlVMTCk7CglwcmludGYoInJlYWQgJWxkIGJ5dGVz
-LCB0YWtlcyAlZiBzZWNvbmRzXG4iLAoJCQlyZWFkX2J5dGVzLCBlbmRfdGltZS50dl9zZWMgLSBz
-dGFydF90aW1lLnR2X3NlYwoJCQkrICgoZmxvYXQpKGVuZF90aW1lLnR2X3VzZWMgLSBzdGFydF90
-aW1lLnR2X3VzZWMpKS8xMDAwMDAwKTsKfQoKY29uc3QgcmFuZF9wZXJtdXRlICpsb2NhbF9yYW5k
-X3Blcm11dGVfd29ya2xvYWQ6OnBlcm11dGU7Cg==
---20cf303bfd22b7fcea04b73832e2
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---20cf303bfd22b7fcea04b73832e2--
