@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0N3duBl048264 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 21:39:56 -0600
+	q0N3dom6048223 for <xfs@oss.sgi.com>; Sun, 22 Jan 2012 21:39:50 -0600
 From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Subject: [PATCH 3/3] xfs: cleanup quota check on disk blocks and inodes
-	reservations
-Date: Mon, 23 Jan 2012 12:45:43 +0900
-Message-ID: <20120123034543.3339.56848.stgit@ltc219.sdl.hitachi.co.jp>
+Subject: [PATCH 2/3] xfs: change available ranges of softlimit and hardlimit
+	in quota check
+Date: Mon, 23 Jan 2012 12:45:35 +0900
+Message-ID: <20120123034535.3339.86017.stgit@ltc219.sdl.hitachi.co.jp>
 In-Reply-To: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
 References: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
 MIME-Version: 1.0
@@ -25,8 +25,10 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
 Cc: Alex Elder <elder@kernel.org>, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, yrl.pp-manager.tt@hitachi.com
 
-This patch is a cleanup of quota check on disk blocks and inodes
-reservations.
+In general, quota allows us to use disk blocks and inodes to each limit,
+that is, they are available if they don't exceed their limitations.
+Current xfs sets their available ranges to lower than them. So, this
+patch changes the ranges to not greater than them.
 
 Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 Cc: Ben Myers <bpm@sgi.com>
@@ -34,61 +36,174 @@ Cc: Alex Elder <elder@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>
 ---
 
- fs/xfs/xfs_trans_dquot.c |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_dquot.c       |   24 ++++++++++++------------
+ fs/xfs/xfs_log_recover.c |    6 +++---
+ fs/xfs/xfs_qm_syscalls.c |    4 ++--
+ fs/xfs/xfs_trans_dquot.c |    8 ++++----
+ 4 files changed, 21 insertions(+), 21 deletions(-)
 
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index b4ff40b..307e4a3 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -215,10 +215,10 @@ xfs_qm_adjust_dqtimers(
+ 
+ 	if (!d->d_btimer) {
+ 		if ((d->d_blk_softlimit &&
+-		     (be64_to_cpu(d->d_bcount) >=
++		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_softlimit))) ||
+ 		    (d->d_blk_hardlimit &&
+-		     (be64_to_cpu(d->d_bcount) >=
++		     (be64_to_cpu(d->d_bcount) >
+ 		      be64_to_cpu(d->d_blk_hardlimit)))) {
+ 			d->d_btimer = cpu_to_be32(get_seconds() +
+ 					mp->m_quotainfo->qi_btimelimit);
+@@ -227,10 +227,10 @@ xfs_qm_adjust_dqtimers(
+ 		}
+ 	} else {
+ 		if ((!d->d_blk_softlimit ||
+-		     (be64_to_cpu(d->d_bcount) <
++		     (be64_to_cpu(d->d_bcount) <=
+ 		      be64_to_cpu(d->d_blk_softlimit))) &&
+ 		    (!d->d_blk_hardlimit ||
+-		    (be64_to_cpu(d->d_bcount) <
++		    (be64_to_cpu(d->d_bcount) <=
+ 		     be64_to_cpu(d->d_blk_hardlimit)))) {
+ 			d->d_btimer = 0;
+ 		}
+@@ -238,10 +238,10 @@ xfs_qm_adjust_dqtimers(
+ 
+ 	if (!d->d_itimer) {
+ 		if ((d->d_ino_softlimit &&
+-		     (be64_to_cpu(d->d_icount) >=
++		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_softlimit))) ||
+ 		    (d->d_ino_hardlimit &&
+-		     (be64_to_cpu(d->d_icount) >=
++		     (be64_to_cpu(d->d_icount) >
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+ 			d->d_itimer = cpu_to_be32(get_seconds() +
+ 					mp->m_quotainfo->qi_itimelimit);
+@@ -250,10 +250,10 @@ xfs_qm_adjust_dqtimers(
+ 		}
+ 	} else {
+ 		if ((!d->d_ino_softlimit ||
+-		     (be64_to_cpu(d->d_icount) <
++		     (be64_to_cpu(d->d_icount) <=
+ 		      be64_to_cpu(d->d_ino_softlimit)))  &&
+ 		    (!d->d_ino_hardlimit ||
+-		     (be64_to_cpu(d->d_icount) <
++		     (be64_to_cpu(d->d_icount) <=
+ 		      be64_to_cpu(d->d_ino_hardlimit)))) {
+ 			d->d_itimer = 0;
+ 		}
+@@ -261,10 +261,10 @@ xfs_qm_adjust_dqtimers(
+ 
+ 	if (!d->d_rtbtimer) {
+ 		if ((d->d_rtb_softlimit &&
+-		     (be64_to_cpu(d->d_rtbcount) >=
++		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_softlimit))) ||
+ 		    (d->d_rtb_hardlimit &&
+-		     (be64_to_cpu(d->d_rtbcount) >=
++		     (be64_to_cpu(d->d_rtbcount) >
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+ 			d->d_rtbtimer = cpu_to_be32(get_seconds() +
+ 					mp->m_quotainfo->qi_rtbtimelimit);
+@@ -273,10 +273,10 @@ xfs_qm_adjust_dqtimers(
+ 		}
+ 	} else {
+ 		if ((!d->d_rtb_softlimit ||
+-		     (be64_to_cpu(d->d_rtbcount) <
++		     (be64_to_cpu(d->d_rtbcount) <=
+ 		      be64_to_cpu(d->d_rtb_softlimit))) &&
+ 		    (!d->d_rtb_hardlimit ||
+-		     (be64_to_cpu(d->d_rtbcount) <
++		     (be64_to_cpu(d->d_rtbcount) <=
+ 		      be64_to_cpu(d->d_rtb_hardlimit)))) {
+ 			d->d_rtbtimer = 0;
+ 		}
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 541a508..d3ce9ad 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -1981,7 +1981,7 @@ xfs_qm_dqcheck(
+ 
+ 	if (!errs && ddq->d_id) {
+ 		if (ddq->d_blk_softlimit &&
+-		    be64_to_cpu(ddq->d_bcount) >=
++		    be64_to_cpu(ddq->d_bcount) >
+ 				be64_to_cpu(ddq->d_blk_softlimit)) {
+ 			if (!ddq->d_btimer) {
+ 				if (flags & XFS_QMOPT_DOWARN)
+@@ -1992,7 +1992,7 @@ xfs_qm_dqcheck(
+ 			}
+ 		}
+ 		if (ddq->d_ino_softlimit &&
+-		    be64_to_cpu(ddq->d_icount) >=
++		    be64_to_cpu(ddq->d_icount) >
+ 				be64_to_cpu(ddq->d_ino_softlimit)) {
+ 			if (!ddq->d_itimer) {
+ 				if (flags & XFS_QMOPT_DOWARN)
+@@ -2003,7 +2003,7 @@ xfs_qm_dqcheck(
+ 			}
+ 		}
+ 		if (ddq->d_rtb_softlimit &&
+-		    be64_to_cpu(ddq->d_rtbcount) >=
++		    be64_to_cpu(ddq->d_rtbcount) >
+ 				be64_to_cpu(ddq->d_rtb_softlimit)) {
+ 			if (!ddq->d_rtbtimer) {
+ 				if (flags & XFS_QMOPT_DOWARN)
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index eafbcff..711a86e 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -813,11 +813,11 @@ xfs_qm_export_dquot(
+ 	     (XFS_IS_OQUOTA_ENFORCED(mp) &&
+ 			(dst->d_flags & (FS_PROJ_QUOTA | FS_GROUP_QUOTA)))) &&
+ 	    dst->d_id != 0) {
+-		if (((int) dst->d_bcount >= (int) dst->d_blk_softlimit) &&
++		if (((int) dst->d_bcount > (int) dst->d_blk_softlimit) &&
+ 		    (dst->d_blk_softlimit > 0)) {
+ 			ASSERT(dst->d_btimer != 0);
+ 		}
+-		if (((int) dst->d_icount >= (int) dst->d_ino_softlimit) &&
++		if (((int) dst->d_icount > (int) dst->d_ino_softlimit) &&
+ 		    (dst->d_ino_softlimit > 0)) {
+ 			ASSERT(dst->d_itimer != 0);
+ 		}
 diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-index c4ba366..5e6cd1c 100644
+index eb29fe1..c4ba366 100644
 --- a/fs/xfs/xfs_trans_dquot.c
 +++ b/fs/xfs/xfs_trans_dquot.c
-@@ -605,7 +605,7 @@ xfs_trans_dqresv(
- 	time_t		timer;
- 	xfs_qwarncnt_t	warns;
- 	xfs_qwarncnt_t	warnlimit;
--	xfs_qcnt_t	count;
-+	xfs_qcnt_t	tcount;
- 	xfs_qcnt_t	*resbcountp;
- 	xfs_quotainfo_t	*q = mp->m_quotainfo;
- 
-@@ -648,13 +648,12 @@ xfs_trans_dqresv(
- 			 * hardlimit or exceed the timelimit if we allocate
+@@ -649,12 +649,12 @@ xfs_trans_dqresv(
  			 * nblks.
  			 */
--			if (hardlimit > 0ULL &&
--			    hardlimit < nblks + *resbcountp) {
-+			tcount = *resbcountp + nblks;
-+			if (hardlimit > 0ULL && tcount > hardlimit) {
+ 			if (hardlimit > 0ULL &&
+-			    hardlimit <= nblks + *resbcountp) {
++			    hardlimit < nblks + *resbcountp) {
  				xfs_quota_warn(mp, dqp, QUOTA_NL_BHARDWARN);
  				goto error_return;
  			}
--			if (softlimit > 0ULL &&
--			    softlimit < nblks + *resbcountp) {
-+			if (softlimit > 0ULL && tcount > softlimit) {
+ 			if (softlimit > 0ULL &&
+-			    softlimit <= nblks + *resbcountp) {
++			    softlimit < nblks + *resbcountp) {
  				if ((timer != 0 && get_seconds() > timer) ||
  				    (warns != 0 && warns >= warnlimit)) {
  					xfs_quota_warn(mp, dqp,
-@@ -666,7 +665,7 @@ xfs_trans_dqresv(
- 			}
- 		}
- 		if (ninos > 0) {
--			count = be64_to_cpu(dqp->q_core.d_icount);
-+			tcount = be64_to_cpu(dqp->q_core.d_icount) + ninos;
- 			timer = be32_to_cpu(dqp->q_core.d_itimer);
- 			warns = be16_to_cpu(dqp->q_core.d_iwarns);
- 			warnlimit = dqp->q_mount->m_quotainfo->qi_iwarnlimit;
-@@ -677,13 +676,11 @@ xfs_trans_dqresv(
- 			if (!softlimit)
+@@ -678,12 +678,12 @@ xfs_trans_dqresv(
  				softlimit = q->qi_isoftlimit;
  
--			if (hardlimit > 0ULL &&
--			    hardlimit < ninos + count) {
-+			if (hardlimit > 0ULL && tcount > hardlimit) {
+ 			if (hardlimit > 0ULL &&
+-			    hardlimit <= ninos + count) {
++			    hardlimit < ninos + count) {
  				xfs_quota_warn(mp, dqp, QUOTA_NL_IHARDWARN);
  				goto error_return;
  			}
--			if (softlimit > 0ULL &&
--			    softlimit < ninos + count) {
-+			if (softlimit > 0ULL && tcount > softlimit) {
+ 			if (softlimit > 0ULL &&
+-			    softlimit <= ninos + count) {
++			    softlimit < ninos + count) {
  				if  ((timer != 0 && get_seconds() > timer) ||
  				     (warns != 0 && warns >= warnlimit)) {
  					xfs_quota_warn(mp, dqp,
