@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0O6Lcep212968
-	for <linux-xfs@oss.sgi.com>; Tue, 24 Jan 2012 00:21:39 -0600
-Received: from leopard.uninet.com.br (www.samba-choro.com.br [200.220.14.11])
-	by cuda.sgi.com with ESMTP id 4OfmSJPbBLSTLL7m for
-	<linux-xfs@oss.sgi.com>; Mon, 23 Jan 2012 22:21:36 -0800 (PST)
-Received: from leopard.uninet.com.br (localhost [127.0.0.1])
-	by leopard.uninet.com.br (Postfix) with ESMTP id 334BA17E8C
-	for <linux-xfs@oss.sgi.com>; Tue, 24 Jan 2012 04:21:34 -0200 (BRST)
+	q0O6xnOw218172 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 00:59:50 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	1colHjBhWUEFt5M0 for <xfs@oss.sgi.com>;
+	Mon, 23 Jan 2012 22:59:48 -0800 (PST)
+Date: Tue, 24 Jan 2012 17:59:45 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/8] xfs: Move ilock before transaction start in
+	xfs_setattr_size()
+Message-ID: <20120124065945.GL15102@dastard>
+References: <1327091686-23177-1-git-send-email-jack@suse.cz>
+	<1327091686-23177-5-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
-Subject: =?iso-8859-1?q?Sua_mensagem_para_a_lista_Tribuna_aguarda_aprova?=
-	=?iso-8859-1?q?=E7=E3o?=
-From: tribuna-bounces@samba-choro.com.br
-Message-ID: <mailman.3691.1327386092.3525.tribuna@samba-choro.com.br>
-Date: Tue, 24 Jan 2012 04:21:32 -0200
+Content-Disposition: inline
+In-Reply-To: <1327091686-23177-5-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,28 +24,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Alex Elder <elder@kernel.org>, Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-Your mail to 'Tribuna' with the subject
+On Fri, Jan 20, 2012 at 09:34:42PM +0100, Jan Kara wrote:
+> In xfs we first take ilock and start transaction afterwards.
 
-    (sem assunto)
+The correct order is to allocate the transaction, reserve the space
+for it and then take the ilock.  We cannot hold the ilock over the
+transaction reservation because that can deadlock the journal.
 
-Is being held until the list moderator can review it for approval.
+That is, to make space for the new transaction reservation, we may
+need to take the ilock to flush the inode and allow the journal tail
+to move forwards to make space for the new transaction.  If we
+already hold the ilock, then it can't be flushed, we can't make
+space available in the journal and hence deadlock.
 
-The reason it is being held:
+Maybe you confused the ilock vs the iolock.  We can hold the iolock
+over the trans alloc/reserve because that lock is not required to
+move the tail of the journal, so the deadlock doesn't exist.
 
-    Postagem por n=E3o membro para uma lista somente de membros
+> We should obey
+> this order in all places because otherwise we can create the following deadlock
+> with filesystem freezing: One process holds ilock and blocks on s_frozen ==
+> SB_FREEZE_TRANS in xfs_trans_alloc(), another process has a transaction started
+> (thus blocking freezing) and blocks on ilock. So we have to take ilock earlier
+> in xfs_setattr_size().
 
-Either the message will get posted to the list, or you will receive
-notification of the moderator's decision.  If you would like to cancel
-this posting, please visit the following URL:
+Where are we taking the ilock and then calling xfs_trans_alloc()?
+That's the caller needs to be fixed, not the 40-odd that do the
+right thing by taking the ilock -after- the trans alloc/reserve
+calls.
 
-    http://www.samba-choro.com.br/cgi-bin/mailman/confirm/tribuna/9e9fd1aa1=
-6cf4bb890be1f1c8491e6ebeff1a2ef
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
