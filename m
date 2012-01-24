@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0O85GNw222207 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 02:05:16 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	McQSQ9wpyUH9VSb2 for <xfs@oss.sgi.com>;
-	Tue, 24 Jan 2012 00:05:13 -0800 (PST)
-Date: Tue, 24 Jan 2012 19:05:11 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/8] xfs: Use generic writers counter instead of
-	m_active_trans counter
-Message-ID: <20120124080511.GN15102@dastard>
-References: <1327091686-23177-1-git-send-email-jack@suse.cz>
-	<1327091686-23177-7-git-send-email-jack@suse.cz>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1327091686-23177-7-git-send-email-jack@suse.cz>
+	q0OADsbv233998 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 04:13:54 -0600
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	ON6W6jXKEcoNruJs (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 24 Jan 2012 02:13:52 -0800 (PST)
+Received: by eaal1 with SMTP id l1so2142756eaa.26
+	for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 02:13:51 -0800 (PST)
+Subject: Re: How to fix bad superblock or xfs_repair: error - read only 0 of
+	512 bytes
+Mime-Version: 1.0 (Apple Message framework v1251.1)
+From: Christian Kildau <lists@unixhosts.org>
+In-Reply-To: <4F1E3BD0.7080604@sandeen.net>
+Date: Tue, 24 Jan 2012 11:13:48 +0100
+Message-Id: <B1F1FDAB-0D48-48FE-8FFC-F0567780E052@unixhosts.org>
+References: <CALx8gnT9tdPRGfVR0puoSVYz_MDDs4FtWtodST5x29GDnL3A_w@mail.gmail.com>
+	<20120123043117.GH15102@dastard>
+	<92CDAC52-1BA1-43A8-8470-0E2DCD916610@unixhosts.org>
+	<4F1E3BD0.7080604@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,214 +32,122 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jan 20, 2012 at 09:34:44PM +0100, Jan Kara wrote:
-> m_active_trans counter is racy wrt filesystem freezing. The patch replaces it
-> with generic counter of running transactions which is properly synchronized
-> with filesystem freezing. Things are a bit more complex because we need to log
-> a dummy transaction and free block counters after the filesystem is frozen so
-> we need to pass information to _xfs_trans_alloc() whether the transaction is
-> part of filesystem freezing or not.
+Top posting... sorry.
+
+I have now found dozens of other users with a similar issue! e.g.
+http://www.linuxquestions.org/questions/linux-general-1/cannot-mount-hard-disk-block-count-exceeds-size-of-device-bad-partition-table-880149/
+
+To make it short all of these users were running ext4 and a fs resize to the new geometry fixed their problems! Sadly XFS doesn't support shrinking the fs(?).
+
+
+
+On Jan 24, 2012, at 6:04 AM, Eric Sandeen wrote:
+
+> On 1/23/12 3:23 AM, Christian Kildau wrote:
+>> On Jan 23, 2012, at 5:31 AM, Dave Chinner wrote:
+>> 
+>>> On Sat, Jan 21, 2012 at 11:29:15AM +0100, Christian Kildau wrote:
+>>>> Sorry if this message appears twice!
+>>>> 
 > 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/xfs_fsops.c |    5 +++--
->  fs/xfs/xfs_fsops.h |    2 +-
->  fs/xfs/xfs_iomap.c |    4 ++--
->  fs/xfs/xfs_mount.c |    2 +-
->  fs/xfs/xfs_mount.h |    2 --
->  fs/xfs/xfs_super.c |    3 +--
->  fs/xfs/xfs_sync.c  |   13 +++----------
->  fs/xfs/xfs_trans.c |   19 ++++++++++++-------
->  fs/xfs/xfs_trans.h |    3 ++-
->  9 files changed, 25 insertions(+), 28 deletions(-)
+> Argh.  ;)
 > 
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index 1c6fdeb..503fdfa 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -645,12 +645,13 @@ out:
->   */
->  int
->  xfs_fs_log_dummy(
-> -	xfs_mount_t	*mp)
-> +	xfs_mount_t	*mp,
-> +	bool		for_freeze)
-
-What does "for_freeze" mean? If it is true, does it mean we are in a
-freeze or not in a freeze? I can't really tell from the code,
-because it just passed true or false, and in one case the code
-always passes false even though the code can be called after
-SB_FREEZE_WRITE is set (xfs_quiesce_data() via sync_filesystem())
-
->  #endif	/* __XFS_FSOPS_H__ */
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 9afa282..fd47f6e 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -679,8 +679,8 @@ xfs_iomap_write_unwritten(
->  		 * the same inode that we complete here and might deadlock
->  		 * on the iolock.
->  		 */
-> -		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-> -		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
-> +		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE,
-> +				KM_NOFS, false);
-
-This is a documentation regression - the code was clearly self
-documenting w.r.t. frozen filesystem behaviour. It isn't anymore.
-
-I'd suggest that we need:
-
-#define XFS_WAIT_FOR_FREEZE	false
-#define XFS_IGNORE_FROZEN_SB	true
-
-as the parameters here to makeit extremely clear when reading the
-code exactly what that last parameter means. i.e. it is self
-documenting. That will help clear up a lot of the confusion on what
-these magic boolean parameters are supposed to mean....
-
-> @@ -312,7 +311,6 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
->  #define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
->  
->  #define xfs_test_for_freeze(mp)		((mp)->m_super->s_frozen)
-
-I'd remove this, too, and just open code it.
-
-> diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-> index aa3dc1a..24f4d7c 100644
-> --- a/fs/xfs/xfs_sync.c
-> +++ b/fs/xfs/xfs_sync.c
-> @@ -373,7 +373,7 @@ xfs_quiesce_data(
->  
->  	/* mark the log as covered if needed */
->  	if (xfs_log_need_covered(mp))
-> -		error2 = xfs_fs_log_dummy(mp);
-> +		error2 = xfs_fs_log_dummy(mp, false);
-
-This is the call that can occur inside SB_FREEZE_WRITE context as
-well as outside it.
-
->  
->  	/* flush data-only devices */
->  	if (mp->m_rtdev_targp)
-> @@ -421,18 +421,11 @@ xfs_quiesce_attr(
->  	int	error = 0;
->  
->  	/* wait for all modifications to complete */
-> -	while (atomic_read(&mp->m_active_trans) > 0)
-> -		delay(100);
-> +	sb_wait_write(mp->m_super, SB_FREEZE_TRANS);
->  
->  	/* flush inodes and push all remaining buffers out to disk */
->  	xfs_quiesce_fs(mp);
->  
-> -	/*
-> -	 * Just warn here till VFS can correctly support
-> -	 * read-only remount without racing.
-> -	 */
-> -	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
-> -
-
-Now there's an interesting question. Does this break read-only
-remount?
-
-/me checks the sb_wait_write() code
-
-No, it looks like it should be fine.
-
->  	/* Push the superblock and write an unmount record */
->  	error = xfs_log_sbcount(mp);
->  	if (error)
-> @@ -467,7 +460,7 @@ xfs_sync_worker(
->  		/* dgc: errors ignored here */
->  		if (mp->m_super->s_frozen == SB_UNFROZEN &&
->  		    xfs_log_need_covered(mp))
-> -			error = xfs_fs_log_dummy(mp);
-> +			error = xfs_fs_log_dummy(mp, false);
->  		else
->  			xfs_log_force(mp, 0);
->  		error = xfs_qm_sync(mp, SYNC_TRYLOCK);
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 1f35b2f..e97014b 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -577,24 +577,28 @@ xfs_trans_alloc(
->  	xfs_mount_t	*mp,
->  	uint		type)
->  {
-> -	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-> -	return _xfs_trans_alloc(mp, type, KM_SLEEP);
-> +	return _xfs_trans_alloc(mp, type, KM_SLEEP, false);
->  }
->  
->  xfs_trans_t *
->  _xfs_trans_alloc(
->  	xfs_mount_t	*mp,
->  	uint		type,
-> -	uint		memflags)
-> +	uint		memflags,
-> +	bool		freezing)
->  {
->  	xfs_trans_t	*tp;
->  
-> -	atomic_inc(&mp->m_active_trans);
-> -
-> +	if (!freezing)
-> +		sb_start_write(mp->m_super, SB_FREEZE_TRANS);
-> +	else
-> +		WARN_ON(xfs_test_for_freeze(mp) != SB_FREEZE_TRANS);
-
-Just open code xfs_test_for_freeze() and add a line of whitespace
-after this.
-
->  	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
->  	tp->t_magic = XFS_TRANS_MAGIC;
->  	tp->t_type = type;
->  	tp->t_mountp = mp;
-> +	if (freezing)
-> +		tp->t_flags |= XFS_TRANS_FREEZING;
-
-Simply assign the value - tp->t_flags is guaranteed to be 0 right
-now.
-
->  	INIT_LIST_HEAD(&tp->t_items);
->  	INIT_LIST_HEAD(&tp->t_busy);
->  	return tp;
-> @@ -611,7 +615,8 @@ xfs_trans_free(
->  	xfs_alloc_busy_sort(&tp->t_busy);
->  	xfs_alloc_busy_clear(tp->t_mountp, &tp->t_busy, false);
->  
-> -	atomic_dec(&tp->t_mountp->m_active_trans);
-> +	if (!(tp->t_flags & XFS_TRANS_FREEZING))
-> +		sb_end_write(tp->t_mountp->m_super, SB_FREEZE_TRANS);
->  	xfs_trans_free_dqinfo(tp);
->  	kmem_zone_free(xfs_trans_zone, tp);
->  }
-> @@ -654,7 +659,7 @@ xfs_trans_dup(
->  
->  	xfs_trans_dup_dqinfo(tp, ntp);
->  
-> -	atomic_inc(&tp->t_mountp->m_active_trans);
-> +	sb_dup_write(tp->t_mountp->m_super, SB_FREEZE_TRANS);
-
-That's strangly named. Isn't the normal thing to do here use a "__"
-prefix for operations that just need an extra reference because they
-already have one (i.e. __sb_start_write())?
-
-This also looks broken with repsect to the new XFS_TRANS_FREEZING
-flag. If it is set on the parent, it needs to be set on the
-duplicated transaction. And if it is set, then no extra reference
-should be taken.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>>>> 
+>>>> Hello,
+>>>> 
+>>>> I'm having some very serious issues with XFS after upgrading from a
+>>>> Linux Distro running Ubuntu 2.6.32 to 3.2.
+>>>> 
+>>>> It seems like my filesystems are damaged after attaching them to a
+>>>> Linux 3.2 server. I am also no longer able to mount the hdd on the old
+>>>> server that is still running 2.6.32!
+>>> 
+>>> I take it that you are using external storage of some kind? Can you
+>>> describe it?
+>> 
+>> This hdd is connected via e-sata, but it doesn't make any difference if I directly connect it internally via sata.
+>> Also it doesn't make any difference if I connect it back to the 'old' server
+>> 
+>>> 
+>>>> (I created the xfs filesystem on the entire hdd, not on a partition,
+>>>> so /dev/sdd is not a typo)
+> 
+> I wonder if your installer helpfully scribbled something on it since it
+> had no partitions (which should be safe, but there are dumb apps out there).
+> 
+>>>> $ sudo mount -t xfs /dev/sdd /media/
+>>>> mount: /dev/sdd: can't read superblock
+>>>> (dmesg)
+>>>> [236659.912663] attempt to access beyond end of device
+>>>> [236659.912667] sdd: rw=32, want=2930277168, limit=2930275055
+>>>> [236659.912670] XFS (sdd): last sector read failed
+>>> 
+>>> So XFS has asked to read 2113 sectors beyond the size of the device
+>>> that the kernel is reporting. What is the output of
+>>> /proc/partitions?
+>> 
+>> $ grep sdd /proc/partitions 
+>>   8       64 1465137527 sdd
+> 
+> so 1465137527*1024 = 1500300827648 bytes
+> 
+> From the strace repair is trying to read at:
+> 
+> pread(4, "", 512, 1500301909504)        = 0
+> 
+> which is about 1 meg past the end of the device.
+> 
+>>> 
+>>>> $ sudo xfs_check /dev/sdd
+>>>> xfs_check: error - read only 0 of 512 bytes
+>>>> 
+>>>> $ sudo xfs_repair /dev/sdd
+>>>> Phase 1 - find and verify superblock...
+>>>> xfs_repair: error - read only 0 of 512 bytes
+>>> 
+>>> So both buffered and direct IO to the first block in the block
+>>> device are failing. I'd say your problems have nothing to do with
+>>> XFS. However, can you strace them and find out what the error that
+>>> is occuring actually is?
+>> 
+>> Strace is giving me:
+>> wait4(-1, xfs_check: /dev/sdd is not a valid XFS filesystem (unexpected SB magic number 0x00000000)
+> 
+> now that is something else...
+> 
+>> xfs_check: WARNING - filesystem uses v1 dirs,limited functionality provided.
+>> xfs_check: read failed: Invalid argument
+>> cache_node_purge: refcount was 1, not zero (node=0x21ecef0)
+>> xfs_check: cannot read root inode (22)
+>> bad superblock magic number 0, giving up
+> 
+> those are different failures than first reported....
+> 
+> xfs_db -c "sb 0" -c "p" /dev/sdd still might be interesting.
+> 
+> -Eric
+> 
+>> I attached the entire strace logs to this email.
+>> 
+>> 
+>> 
+>> 
+>> 
+>> Do you have any idea what has caused this or how to fix it?
+>> 
+>> Thanks in advance!
+>> Chris
+>> 
+>> 
+>> 
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
