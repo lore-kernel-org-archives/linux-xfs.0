@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0OLdi2b077937 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 15:39:44 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	ynIIgvfxBloNt5qV (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jan 2012 13:39:38 -0800 (PST)
-Date: Tue, 24 Jan 2012 16:39:36 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS problem
-Message-ID: <20120124213936.GA1505@infradead.org>
-References: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
+	q0OMwgNJ097598 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 16:58:43 -0600
+Received: from mailrelay.mcs.anl.gov (newman-1.mcs.anl.gov [140.221.6.6]) by
+	cuda.sgi.com with ESMTP id oZQf0E2BzBKvcSEk for
+	<xfs@oss.sgi.com>; Tue, 24 Jan 2012 14:58:41 -0800 (PST)
+Date: Tue, 24 Jan 2012 16:58:40 -0600
+From: John Valdes <valdes@anl.gov>
+Subject: Re: log recovery fails at mount
+Message-ID: <20120124225840.GA20222@starfish.mcs.anl.gov>
+References: <20120124024340.GA6689@starfish.mcs.anl.gov>
+	<4F1E3C71.1020303@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
+In-Reply-To: <4F1E3C71.1020303@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,157 +26,197 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kelbel Junior <jymmyjr@gmail.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jan 20, 2012 at 03:55:18PM -0200, Kelbel Junior wrote:
-> Hello again ...
+On Mon, Jan 23, 2012 at 11:06:57PM -0600, Eric Sandeen wrote:
+> try:
 > 
-> So ... after changing the memory allocator SLUB to SLAB in the Linux
-> kernel and apply the patch mentioned below, the system was stable for
-> 3 days and today it happened again delay to deliver content on the
-> disc.
+> # xfs_metadump /dev/md4 md4.metadump
+> # xfs_mdrestore md4.metadump md4.img
+> # xfs_repair -L md4.img
 > 
-> When I went to see if there was something wrong in /var/log/messages
-> appear several times this block:
+> that'll repair a metadata image and you can see how much it runs into.
 
-Can you try the patch below to make the extent indirection array
-reallocation more efficient?  It's still working around the symptoms,
-though.
+Good suggestion.  Here's the result; looks innocuous:
 
-What kind of workload are you running to get this extremely high number
-of extents?
+  prompt# xfs_repair -v -L md4.img
+  Phase 1 - find and verify superblock...
+          - block cache size set to 1242264 entries
+  Phase 2 - using internal log
+          - zero log...
+  zero_log: head block 123697 tail block 123687
+  ALERT: The filesystem has valuable metadata changes in a log which is being
+  destroyed because the -L option was used.
+          - scan filesystem freespace and inode maps...
+          - found root inode chunk
+  Phase 3 - for each AG...
+          - scan and clear agi unlinked lists...
+          - process known inodes and perform inode discovery...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+          - agno = 4
+          - agno = 5
+          - agno = 6
+          - agno = 7
+          - agno = 8
+          - agno = 9
+          - agno = 10
+          - agno = 11
+          - agno = 12
+          - agno = 13
+          - agno = 14
+          - agno = 15
+          - agno = 16
+          - agno = 17
+          - agno = 18
+          - agno = 19
+          - agno = 20
+          - agno = 21
+          - agno = 22
+          - agno = 23
+          - agno = 24
+          - agno = 25
+          - agno = 26
+          - agno = 27
+          - agno = 28
+          - agno = 29
+          - agno = 30
+          - agno = 31
+          - process newly discovered inodes...
+  Phase 4 - check for duplicate blocks...
+          - setting up duplicate extent list...
+          - check for inodes claiming duplicate blocks...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+          - agno = 5
+          - agno = 6
+          - agno = 7
+          - agno = 8
+          - agno = 9
+          - agno = 10
+          - agno = 11
+          - agno = 12
+          - agno = 13
+          - agno = 14
+          - agno = 15
+          - agno = 16
+          - agno = 17
+          - agno = 18
+          - agno = 19
+          - agno = 20
+          - agno = 21
+          - agno = 22
+          - agno = 23
+          - agno = 24
+          - agno = 26
+          - agno = 27
+          - agno = 28
+          - agno = 29
+          - agno = 30
+          - agno = 31
+          - agno = 25
+          - agno = 4
+  Phase 5 - rebuild AG headers and trees...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+          - agno = 4
+          - agno = 5
+          - agno = 6
+          - agno = 7
+          - agno = 8
+          - agno = 9
+          - agno = 10
+          - agno = 11
+          - agno = 12
+          - agno = 13
+          - agno = 14
+          - agno = 15
+          - agno = 16
+          - agno = 17
+          - agno = 18
+          - agno = 19
+          - agno = 20
+          - agno = 21
+          - agno = 22
+          - agno = 23
+          - agno = 24
+          - agno = 25
+          - agno = 26
+          - agno = 27
+          - agno = 28
+          - agno = 29
+          - agno = 30
+          - agno = 31
+          - reset superblock...
+  Phase 6 - check inode connectivity...
+          - resetting contents of realtime bitmap and summary inodes
+          - traversing filesystem ...
+          - agno = 0
+          - agno = 1
+          - agno = 2
+          - agno = 3
+          - agno = 4
+          - agno = 5
+          - agno = 6
+          - agno = 7
+          - agno = 8
+          - agno = 9
+          - agno = 10
+          - agno = 11
+          - agno = 12
+          - agno = 13
+          - agno = 14
+          - agno = 15
+          - agno = 16
+          - agno = 17
+          - agno = 18
+          - agno = 19
+          - agno = 20
+          - agno = 21
+          - agno = 22
+          - agno = 23
+          - agno = 24
+          - agno = 25
+          - agno = 26
+          - agno = 27
+          - agno = 28
+          - agno = 29
+          - agno = 30
+          - agno = 31
+          - traversal finished ...
+          - moving disconnected inodes to lost+found ...
+  Phase 7 - verify and correct link counts...
 
-Index: xfs/fs/xfs/kmem.c
-===================================================================
---- xfs.orig/fs/xfs/kmem.c	2011-10-17 09:28:57.159149025 +0200
-+++ xfs/fs/xfs/kmem.c	2012-01-24 21:04:50.405954910 +0100
-@@ -86,19 +86,22 @@ kmem_free(const void *ptr)
- }
- 
- void *
--kmem_realloc(const void *ptr, size_t newsize, size_t oldsize,
--	     unsigned int __nocast flags)
-+kmem_realloc(const void *old, size_t newsize, unsigned int __nocast flags)
- {
-+	gfp_t	lflags = kmem_flags_convert(flags);
-+	int	retries = 0;
- 	void	*new;
- 
--	new = kmem_alloc(newsize, flags);
--	if (ptr) {
--		if (new)
--			memcpy(new, ptr,
--				((oldsize < newsize) ? oldsize : newsize));
--		kmem_free(ptr);
--	}
--	return new;
-+	do {
-+		new = krealloc(old, newsize, lflags);
-+		if (new || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-+			return new;
-+		if (!(++retries % 100))
-+			xfs_err(NULL,
-+		"possible memory allocation deadlock in %s (mode:0x%x)",
-+					__func__, lflags);
-+		congestion_wait(BLK_RW_ASYNC, HZ/50);
-+	} while (1);
- }
- 
- void *
-Index: xfs/fs/xfs/kmem.h
-===================================================================
---- xfs.orig/fs/xfs/kmem.h	2011-12-18 23:35:30.893167926 +0100
-+++ xfs/fs/xfs/kmem.h	2012-01-24 21:00:07.865956600 +0100
-@@ -56,7 +56,7 @@ kmem_flags_convert(unsigned int __nocast
- 
- extern void *kmem_alloc(size_t, unsigned int __nocast);
- extern void *kmem_zalloc(size_t, unsigned int __nocast);
--extern void *kmem_realloc(const void *, size_t, size_t, unsigned int __nocast);
-+extern void *kmem_realloc(const void *, size_t, unsigned int __nocast);
- extern void  kmem_free(const void *);
- 
- static inline void *kmem_zalloc_large(size_t size)
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2012-01-24 20:57:27.079290895 +0100
-+++ xfs/fs/xfs/xfs_inode.c	2012-01-24 21:02:48.145955643 +0100
-@@ -1826,7 +1826,6 @@ xfs_iroot_realloc(
- 		new_max = cur_max + rec_diff;
- 		new_size = (size_t)XFS_BMAP_BROOT_SPACE_CALC(new_max);
- 		ifp->if_broot = kmem_realloc(ifp->if_broot, new_size,
--				(size_t)XFS_BMAP_BROOT_SPACE_CALC(cur_max), /* old size */
- 				KM_SLEEP | KM_NOFS);
- 		op = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
- 						     ifp->if_broot_bytes);
-@@ -1968,7 +1967,6 @@ xfs_idata_realloc(
- 				ifp->if_u1.if_data =
- 					kmem_realloc(ifp->if_u1.if_data,
- 							real_size,
--							ifp->if_real_bytes,
- 							KM_SLEEP | KM_NOFS);
- 			}
- 		} else {
-@@ -3254,8 +3252,7 @@ xfs_iext_realloc_direct(
- 		if (rnew_size != ifp->if_real_bytes) {
- 			ifp->if_u1.if_extents =
- 				kmem_realloc(ifp->if_u1.if_extents,
--						rnew_size,
--						ifp->if_real_bytes, KM_NOFS);
-+						rnew_size, KM_NOFS);
- 		}
- 		if (rnew_size > ifp->if_real_bytes) {
- 			memset(&ifp->if_u1.if_extents[ifp->if_bytes /
-@@ -3333,20 +3330,15 @@ xfs_iext_realloc_indirect(
- 	xfs_ifork_t	*ifp,		/* inode fork pointer */
- 	int		new_size)	/* new indirection array size */
- {
--	int		nlists;		/* number of irec's (ex lists) */
--	int		size;		/* current indirection array size */
--
- 	ASSERT(ifp->if_flags & XFS_IFEXTIREC);
--	nlists = ifp->if_real_bytes / XFS_IEXT_BUFSZ;
--	size = nlists * sizeof(xfs_ext_irec_t);
- 	ASSERT(ifp->if_real_bytes);
--	ASSERT((new_size >= 0) && (new_size != size));
-+	ASSERT(new_size >= 0);
-+
- 	if (new_size == 0) {
- 		xfs_iext_destroy(ifp);
- 	} else {
--		ifp->if_u1.if_ext_irec = (xfs_ext_irec_t *)
--			kmem_realloc(ifp->if_u1.if_ext_irec,
--				new_size, size, KM_NOFS);
-+		ifp->if_u1.if_ext_irec =
-+			kmem_realloc(ifp->if_u1.if_ext_irec, new_size, KM_NOFS);
- 	}
- }
- 
-Index: xfs/fs/xfs/xfs_log_recover.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_log_recover.c	2011-12-18 23:35:30.906501259 +0100
-+++ xfs/fs/xfs/xfs_log_recover.c	2012-01-24 21:02:20.352622478 +0100
-@@ -1489,7 +1489,7 @@ xlog_recover_add_to_cont_trans(
- 	old_ptr = item->ri_buf[item->ri_cnt-1].i_addr;
- 	old_len = item->ri_buf[item->ri_cnt-1].i_len;
- 
--	ptr = kmem_realloc(old_ptr, len+old_len, old_len, 0u);
-+	ptr = kmem_realloc(old_ptr, len+old_len, KM_SLEEP);
- 	memcpy(&ptr[old_len], dp, len); /* d, s, l */
- 	item->ri_buf[item->ri_cnt-1].i_len += len;
- 	item->ri_buf[item->ri_cnt-1].i_addr = ptr;
-Index: xfs/fs/xfs/xfs_mount.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_mount.c	2011-12-18 23:35:30.906501259 +0100
-+++ xfs/fs/xfs/xfs_mount.c	2012-01-24 21:05:29.699288013 +0100
-@@ -147,7 +147,6 @@ xfs_uuid_mount(
- 	if (hole < 0) {
- 		xfs_uuid_table = kmem_realloc(xfs_uuid_table,
- 			(xfs_uuid_table_size + 1) * sizeof(*xfs_uuid_table),
--			xfs_uuid_table_size  * sizeof(*xfs_uuid_table),
- 			KM_SLEEP);
- 		hole = xfs_uuid_table_size++;
- 	}
+          XFS_REPAIR Summary    Tue Jan 24 13:49:49 2012
+
+  Phase           Start           End             Duration
+  Phase 1:        01/24 13:49:12  01/24 13:49:13  1 second
+  Phase 2:        01/24 13:49:13  01/24 13:49:18  5 seconds
+  Phase 3:        01/24 13:49:18  01/24 13:49:24  6 seconds
+  Phase 4:        01/24 :        01/24 13:49:49  01/24 13:49:49
+
+  Total run time: 37 seconds
+  done
+
+However, if I loopback mount the img file, the file/directory names in
+the mounted fs are mostly corrupted; that may be expected though since
+it's just a metadata dump/restore?
+
+  prompt# mount -r -t xfs -o loop md4.img /mnt
+  prompt# ls /mnt
+  ??5?z+o??%F_4(?R?.wrhE*]  data  K?ckw?  T?o??n2o?,?0-|K#\o Z?w?9=ol\?7j??1T
+
+Any other suggestions or comments before I let loose xfs_repair -L on
+the real filesystem?
+
+John
 
 _______________________________________________
 xfs mailing list
