@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0O78SLK218614 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 01:08:28 -0600
-Received: from mail-ee0-f53.google.com (mail-ee0-f53.google.com
-	[74.125.83.53]) by cuda.sgi.com with ESMTP id Xd1y5CMH1wJ7dSuh
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 23 Jan 2012 23:08:26 -0800 (PST)
-Received: by eeke51 with SMTP id e51so2054010eek.26
-	for <xfs@oss.sgi.com>; Mon, 23 Jan 2012 23:08:24 -0800 (PST)
-Subject: Re: How to fix bad superblock or xfs_repair: error - read only 0 of
-	512 bytes
-Mime-Version: 1.0 (Apple Message framework v1251.1)
-From: Christian Kildau <lists@unixhosts.org>
-In-Reply-To: <4F1E3BD0.7080604@sandeen.net>
-Date: Tue, 24 Jan 2012 08:08:20 +0100
-Message-Id: <F1F87F14-90F2-4A62-85F4-5A70822F91EE@unixhosts.org>
-References: <CALx8gnT9tdPRGfVR0puoSVYz_MDDs4FtWtodST5x29GDnL3A_w@mail.gmail.com>
-	<20120123043117.GH15102@dastard>
-	<92CDAC52-1BA1-43A8-8470-0E2DCD916610@unixhosts.org>
-	<4F1E3BD0.7080604@sandeen.net>
+	q0O7JVVB219311 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 01:19:31 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	2YR2Ck2uyWwCCxM7 for <xfs@oss.sgi.com>;
+	Mon, 23 Jan 2012 23:19:29 -0800 (PST)
+Date: Tue, 24 Jan 2012 18:19:26 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/8] xfs: Protect xfs_file_aio_write() &
+	xfs_setattr_size() with sb_start_write - sb_end_write
+Message-ID: <20120124071926.GM15102@dastard>
+References: <1327091686-23177-1-git-send-email-jack@suse.cz>
+	<1327091686-23177-6-git-send-email-jack@suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1327091686-23177-6-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,198 +24,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Alex Elder <elder@kernel.org>, Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, Eric Sandeen <sandeen@sandeen.net>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Jan 24, 2012, at 6:04 AM, Eric Sandeen wrote:
+On Fri, Jan 20, 2012 at 09:34:43PM +0100, Jan Kara wrote:
+> Replace racy xfs_wait_for_freeze() check in xfs_file_aio_write() with
+> a reliable sb_start_write() - sb_end_write() locking. Due to lock ranking
+> dictated by the page fault code we have to call sb_start_write() after we
+> acquire ilock.
 
-> On 1/23/12 3:23 AM, Christian Kildau wrote:
->> On Jan 23, 2012, at 5:31 AM, Dave Chinner wrote:
->> =
+It appears to me that you have indeed confused the ilock with the
+iolock.
 
->>> On Sat, Jan 21, 2012 at 11:29:15AM +0100, Christian Kildau wrote:
->>>> Sorry if this message appears twice!
->>>> =
+> Similarly we have to protect xfs_setattr_size() because it can modify last
+> page of truncated file. Because ilock is dropped in xfs_setattr_size() we
+> have to drop and retake write access as well to avoid deadlocks.
 
-> =
+> 
+> CC: Ben Myers <bpm@sgi.com>
+> CC: Alex Elder <elder@kernel.org>
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/xfs/xfs_file.c |    6 ++++--
+>  fs/xfs/xfs_iops.c |    6 ++++++
+>  2 files changed, 10 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 753ed9b..9efd153 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -862,9 +862,11 @@ xfs_file_dio_aio_write(
+>  		*iolock = XFS_IOLOCK_SHARED;
+>  	}
+>  
+> +	sb_start_write(inode->i_sb, SB_FREEZE_WRITE);
+>  	trace_xfs_file_direct_write(ip, count, iocb->ki_pos, 0);
+>  	ret = generic_file_direct_write(iocb, iovp,
+>  			&nr_segs, pos, &iocb->ki_pos, count, ocount);
+> +	sb_end_write(inode->i_sb, SB_FREEZE_WRITE);
 
-> Argh.  ;)
-> =
+That's inside the iolock, not the ilock. Either way, it is
+incorrect. This accounting should be outside the iolock - because
+xfs_trans_alloc() can be called with the iolock held. Therefore the
+freeze/lock order needs to be
 
->>>> =
+	sb_start_write(SB_FREEZE_WRITE)
+	  XFS(ip)->i_iolock
+	    XFS(ip)->i_ilock
+	sb_end_write(SB_FREEZE_WRITE)
 
->>>> Hello,
->>>> =
+Which matches the current freeze/lock order.
 
->>>> I'm having some very serious issues with XFS after upgrading from a
->>>> Linux Distro running Ubuntu 2.6.32 to 3.2.
->>>> =
+> @@ -945,8 +949,6 @@ xfs_file_aio_write(
+>  	if (ocount == 0)
+>  		return 0;
+>  
+> -	xfs_wait_for_freeze(ip->i_mount, SB_FREEZE_WRITE);
+> -
 
->>>> It seems like my filesystems are damaged after attaching them to a
->>>> Linux 3.2 server. I am also no longer able to mount the hdd on the old
->>>> server that is still running 2.6.32!
->>> =
+that's where sb_start_write() needs to be, and the sb-end_write()
+call needs to below the generic_write_sync() calls that will trigger
+IO on O_SYNC writes. Otherwise it is not covering all the IO path
+correctly.
 
->>> I take it that you are using external storage of some kind? Can you
->>> describe it?
->> =
+>  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+>  		return -EIO;
+>  
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 3579bc8..798b9c6 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -793,6 +793,7 @@ xfs_setattr_size(
+>  		return xfs_setattr_nonsize(ip, iattr, 0);
+>  	}
+>  
+> +	sb_start_write(inode->i_sb, SB_FREEZE_WRITE);
+>  	/*
+>  	 * Make sure that the dquots are attached to the inode.
+>  	 */
+> @@ -849,10 +850,14 @@ xfs_setattr_size(
+>  				     xfs_get_blocks);
+>  	if (error)
+>  		goto out_unlock;
+> +	/* Drop the write access to avoid lock inversion with ilock */
+> +	sb_end_write(inode->i_sb, SB_FREEZE_WRITE);
+>  
+>  	xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  	lock_flags |= XFS_ILOCK_EXCL;
+>  
+> +	sb_start_write(inode->i_sb, SB_FREEZE_WRITE);
+> +
 
->> This hdd is connected via e-sata, but it doesn't make any difference if =
-I directly connect it internally via sata.
->> Also it doesn't make any difference if I connect it back to the 'old' se=
-rver
->> =
+This is caused by the previous problems I pointed out. You should
+not need to drop the freeze reference here at all.
 
->>> =
+Cheers,
 
->>>> (I created the xfs filesystem on the entire hdd, not on a partition,
->>>> so /dev/sdd is not a typo)
-> =
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
-> I wonder if your installer helpfully scribbled something on it since it
-> had no partitions (which should be safe, but there are dumb apps out ther=
-e).
-
-This is a new system. I connected the hdd waaay after the installation. So =
-the installer has never seen it. ;)
-
-> =
-
->>>> $ sudo mount -t xfs /dev/sdd /media/
->>>> mount: /dev/sdd: can't read superblock
->>>> (dmesg)
->>>> [236659.912663] attempt to access beyond end of device
->>>> [236659.912667] sdd: rw=3D32, want=3D2930277168, limit=3D2930275055
->>>> [236659.912670] XFS (sdd): last sector read failed
->>> =
-
->>> So XFS has asked to read 2113 sectors beyond the size of the device
->>> that the kernel is reporting. What is the output of
->>> /proc/partitions?
->> =
-
->> $ grep sdd /proc/partitions =
-
->>   8       64 1465137527 sdd
-> =
-
-> so 1465137527*1024 =3D 1500300827648 bytes
-> =
-
-> From the strace repair is trying to read at:
-> =
-
-> pread(4, "", 512, 1500301909504)        =3D 0
-> =
-
-> which is about 1 meg past the end of the device.
-
-That's weird! Any chance left I can fix this?
-
-
-> =
-
->>> =
-
->>>> $ sudo xfs_check /dev/sdd
->>>> xfs_check: error - read only 0 of 512 bytes
->>>> =
-
->>>> $ sudo xfs_repair /dev/sdd
->>>> Phase 1 - find and verify superblock...
->>>> xfs_repair: error - read only 0 of 512 bytes
->>> =
-
->>> So both buffered and direct IO to the first block in the block
->>> device are failing. I'd say your problems have nothing to do with
->>> XFS. However, can you strace them and find out what the error that
->>> is occuring actually is?
->> =
-
->> Strace is giving me:
->> wait4(-1, xfs_check: /dev/sdd is not a valid XFS filesystem (unexpected =
-SB magic number 0x00000000)
-> =
-
-> now that is something else=85
-
-Yes, sorry. that was my fault. Wrong hdd. see my other message for the corr=
-ect straces.
-
-> =
-
->> xfs_check: WARNING - filesystem uses v1 dirs,limited functionality provi=
-ded.
->> xfs_check: read failed: Invalid argument
->> cache_node_purge: refcount was 1, not zero (node=3D0x21ecef0)
->> xfs_check: cannot read root inode (22)
->> bad superblock magic number 0, giving up
-> =
-
-> those are different failures than first reported....
-> =
-
-> xfs_db -c "sb 0" -c "p" /dev/sdd still might be interesting.
-> =
-
-
-xfs_db: error - read only 0 of 512 bytes
-magicnum =3D 0x58465342
-blocksize =3D 4096
-dblocks =3D 366284646
-rblocks =3D 0
-rextents =3D 0
-uuid =3D 65b7d940-6577-4384-b7ba-f051300f2d56
-logstart =3D 268435460
-rootino =3D 128
-rbmino =3D 129
-rsumino =3D 130
-rextsize =3D 1
-agblocks =3D 91571162
-agcount =3D 4
-rbmblocks =3D 0
-logblocks =3D 32768
-versionnum =3D 0xb4a4
-sectsize =3D 512
-inodesize =3D 256
-inopblock =3D 16
-fname =3D "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog =3D 12
-sectlog =3D 9
-inodelog =3D 8
-inopblog =3D 4
-agblklog =3D 27
-rextslog =3D 0
-inprogress =3D 0
-imax_pct =3D 5
-icount =3D 5184
-ifree =3D 16
-fdblocks =3D 54646459
-frextents =3D 0
-uquotino =3D 0
-gquotino =3D 0
-qflags =3D 0
-flags =3D 0
-shared_vn =3D 0
-inoalignmt =3D 2
-unit =3D 0
-width =3D 0
-dirblklog =3D 0
-logsectlog =3D 0
-logsectsize =3D 0
-logsunit =3D 1
-features2 =3D 0x8
-bad_features2 =3D 0x8
-
-I don't get anything useful from that information ;)
-
-
-Thanks in advance!
-Chris
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
