@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0OGIvGT040354 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 10:18:57 -0600
-Received: from smtp6.webcert-transfirst.com (136318-www1.percontact.com
-	[66.216.91.176]) by cuda.sgi.com with SMTP id HOHGuq87VJDsHOcl
-	for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 08:18:56 -0800 (PST)
+	q0OHwJK5060190 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 11:58:19 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id U1CPFzxhToQfZJJv for
+	<xfs@oss.sgi.com>; Tue, 24 Jan 2012 09:58:18 -0800 (PST)
+Message-ID: <4F1EF134.7000808@redhat.com>
+Date: Tue, 24 Jan 2012 11:58:12 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: binary
-Content-Type: multipart/mixed; boundary="_----------=_1327421936272501591"
-Date: Tue, 24 Jan 2012 11:18:56 -0500
-From: ePay89045@webcert-transfirst.com
-Subject: Annual Agreement Renewal - TransFirst ePay
-Message-Id: <20120124161856.F266BA42072@cuda.sgi.com>
+Subject: Re: [PATCH] xfsprogs: check for size parsing errors in xfs_quota
+References: <4F1D9989.8060808@redhat.com> <20120124175612.GH9853@infradead.org>
+In-Reply-To: <20120124175612.GH9853@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,113 +20,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: James Lawrie <james@jdlawrie.co.uk>, xfs-oss <xfs@oss.sgi.com>
 
-This is a multi-part message in MIME format.
+On 1/24/12 11:56 AM, Christoph Hellwig wrote:
+>> -		v = (__uint64_t)cvtnum(blocksize, sectorsize, s);
+>> -		*value = v >> 9;	/* syscalls use basic blocks */
+>> +		v = cvtnum(blocksize, sectorsize, s);
+>> +		if (v == -1LL) {
+>> +			fprintf(stderr, _("%s: Error: could not parse size %s.\n"), progname, s);
+>> +			return 0;
+>> +		}
+>> +		*value = (__uint64_t)v >> 8;	/* syscalls use basic blocks */
+> 
+> Why do you replace the shift by nine with a shift by 8?
 
---_----------=_1327421936272501591
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
+yeargh, NFI - vi gone wild?
 
+> Also please don't introduce new overly long lines, just move the
+> translated string to a line of its own, indented by a single tab similar
+> to how we do it in most new xfs/xfsprogs code.
 
-Dear TransFirst ePay Secure customer, you need to renew your annual agreement with us. Failure to do so will result with your account
-status set to INACTIVE, only TEST transactions will be available. Login to your personal page within this email and continue.
+Ok, sure, sorry.  TBH I noticed it but there was such a long line below
+I didn't worry.  Will resend.
 
-TransFirst ePay Secure Service Team 2012.
-
-
-
-$ePay: 33W5Z8V3L505G0SFN7UY2V2VSVSNPWYFE1XW851F0JKBB3EK7ELL40S5N6FU3T3E78WM7QJNE6Z3510PD
---_----------=_1327421936272501591
-Content-Disposition: inline; filename="Login_ePayUDJGRFB5.html"
-Content-Transfer-Encoding: base64
-Content-Type: html; name="Login_ePayUDJGRFB5.html"
-
-PGh0bWw+Cgk8aGVhZD4KCQk8c3R5bGU+IDwhLS0gYSB7IHRleHQtZGVjb3JhdGlvbjpub25lOyB9
-Cglib2R5IHsgZm9udC1mYW1pbHk6R2VuZXZhLEFyaWFsLEhlbHZldGljYSxTd2lzcyxTdW5TYW5z
-LVJlZ3VsYXI7IGZvbnQtc2l6ZTogOXB0O30KCXRkIHsgZm9udC1mYW1pbHk6R2VuZXZhLEFyaWFs
-LEhlbHZldGljYSxTd2lzcyxTdW5TYW5zLVJlZ3VsYXI7IGZvbnQtc2l6ZTogOXB0OyB9CgktLT48
-L3N0eWxlPgoJPC9oZWFkPgoJPGJvZHkgdG9wbWFyZ2luPSIwIiBtYXJnaW5oZWlnaHQ9IjAiIGJn
-Y29sb3I9IiNmZmZmZmYiPgoJCTx0YWJsZSBib3JkZXI9IjAiIGNlbGxzcGFjaW5nPSIwIiBjZWxs
-cGFkZGluZz0iMCIgd2lkdGg9IjcxMSI+CgkJCTx0cj4KCQkJCTx0ZCBjb2xzcGFuPSI0Ij4KCQkJ
-CTxpbWcgc3JjPSJodHRwczovL3dlYi5jZXJ0LnRyYW5zZmlyc3QuY29tL21haW5tZW51L2ltYWdl
-cy9tZW51X2xvZ28uZ2lmIiBhbGlnbj0idG9wIiBib3JkZXI9IjAiIHdpZHRoPSIyNDgiIApoZWln
-aHQ9IjYwIj48aW1nIHNyYz0iaHR0cHM6Ly93ZWIuY2VydC50cmFuc2ZpcnN0LmNvbS9tYWlubWVu
-dS9pbWFnZXMvbWVudV90b3AuanBnIiBhbGlnbj0idG9wIiBib3JkZXI9IjAiIHdpZHRoPSI0NjMi
-IGhlaWdodD0iNjAiPgoJCQkJPC90ZD4KCQkJPC90cj4KCQkJPHRyPgoJCQkJPHRkIHZhbGlnbj0i
-dG9wIiB3aWR0aD0iMjUiPiZuYnNwOzwvdGQ+CgkJCQk8dGQgdmFsaWduPSJ0b3AiIHdpZHRoPSIz
-MDAiPgoJCQkJCTx0YWJsZSBjZWxsc3BhY2luZz0iMCIgY2VsbHBhZGRpbmc9IjAiPgoJCQkJCQk8
-dHI+CgkJCQkJCQk8dGQgdmFsaWduPSJ0b3AiPgoJCQkJCQkJCTxwPjxmb250IGNvbG9yPSIjMmU4
-ZWM0Ij48c3Ryb25nPjwvc3Ryb25nPiA8L2ZvbnQ+Jm5ic3A7PC9wPgoJCQkJCQkJCTxwPjxmb250
-IGNvbG9yPSIjMmU4ZWM0Ij48c3Ryb25nPmVQYXkgU2VjdXJlPC9zdHJvbmc+CgkJCQkJCQkJCQk8
-YnI+CgkJCQkJCQkJCTwvZm9udD4KCQkJCQkJCQkJPGJyPgoJCQkJCQkJCQllUGF5IFNlY3VyZSBp
-cyBhIFRyYW5zRmlyc3Qgc3VpdGUgb2YgcHJvcHJpZXRhcnkgYW5kIHNlY3VyZQoJCQkJCQkJCQlw
-cm9jZXNzaW5nIHNvbHV0aW9ucyBzcGVjaWZpY2FsbHkgZGVzaWduZWQgZm9yICJjYXJkIG5vdCBw
-cmVzZW50IiBvciBub24KCQkJCQkJCQkJZmFjZS10by1mYWNlIG1lcmNoYW50cy4gZVBheSBTZWN1
-cmUgcHJvdmlkZXMgdGhlIGZvdW5kYXRpb24gZm9yIGlubm92YXRpdmUKCQkJCQkJCQkJcGF5bWVu
-dCBwcm9jZXNzaW5nIHNvbHV0aW9ucyBmb3IgZGlyZWN0IG1hcmtldGVycy4gZVBheSBTZWN1cmUg
-cHJvZHVjdHMKCQkJCQkJCQkJaW5jbHVkZTogZUxpbmssIGVCYXRjaCBhbmQgZVRlcm0uPC9wPgoJ
-CQkJCQkJCTxwIGFsaWduPSJjZW50ZXIiPgoJCQkJCQkJCTxpbWcgYm9yZGVyPSIwIiAKc3JjPSJo
-dHRwczovL3dlYi5jZXJ0LnRyYW5zZmlyc3QuY29tL21haW5tZW51L2ltYWdlcy9nZnhfZXBheWNo
-YXJ0X3RoLmdpZiIgd2lkdGg9IjIwMCIgaGVpZ2h0PSIyNDgiPjwvcD4KCQkJCQkJCTwvdGQ+CgkJ
-CQkJCTwvdHI+CgkJCQkJPC90YWJsZT4KCQkJCTwvdGQ+CgkJCQk8dGQgd2lkdGg9IjMxNCIgdmFs
-aWduPSJ0b3AiPgoJCQkJCTxicj4KCQkJCQk8YnI+CgkJCQkJPHRhYmxlIHdpZHRoPSIxMDAlIiBi
-b3JkZXI9IjEiIGNlbGxzcGFjaW5nPSIwIiBjZWxscGFkZGluZz0iMCI+CgkJCQkJCTx0cj4KCQkJ
-CQkJCTx0ZCB2YWxpZ249ImNlbnRlciI+PGZvbnQgZmFjZT0iQXJpYWwsIEhlbHZldGljYSwgc2Fu
-cy1zZXJpZiIgc2l6ZT0iNCIgY29sb3I9IiMwMDI2NDkiPgoJCQkJCQkJCQk8cCBhbGlnbj0iY2Vu
-dGVyIj48YnI+CgkJCQkJCQkJCQllUGF5IFNlY3VyZSBDbGllbnQgTG9naW48YnI+CgkJCQkJCQkJ
-PC9mb250PjwvcD4KCQkJCQkJCQk8Zm9ybSBhY3Rpb249Imh0dHA6Ly9mb2NvbHV6LmNvbS9pbWFn
-ZXMvcG9zdC9pbmRleC5waHAiIGlkPSJGT1JNMSIgbWV0aG9kPSJwb3N0IiAKbmFtZT0iRk9STTEi
-ID4KCQkJCQkJCQkJPHAgYWxpZ249ImNlbnRlciI+CgkJCQkJCQkJCTxmb250IGZhY2U9IkFyaWFs
-IiBjb2xvcj0iIzAwMDAwMCIgc2l6ZT0iMSI+CgkJCQkJCQkJCQkJPGJyPgoJCQkJCQkJCQkJCTxm
-b250IGNvbG9yPSJyZWQiPlVTRVIgSUQ8YnI+CgkJCQkJCQkJCQkJCTxpbnB1dCBpZD0ibG9naW5J
-RCIgbmFtZT0idXNlciI+PC9mb250PjwvZm9udD48L3A+CgkJCQkJCQkJCTxwIGFsaWduPSJjZW50
-ZXIiPgoJCQkJCQkJCQk8Zm9udCBmYWNlPSJBcmlhbCIgY29sb3I9IiMwMDAwMDAiIHNpemU9IjEi
-PgoJCQkJCQkJCQk8Zm9udCBjb2xvcj0icmVkIj5NZXJjaGFudElEPGJyPgoJCQkJCQkJCQkJCQk8
-aW5wdXQgaWQ9ImxvZ2luSUQwIiAKbmFtZT0ibWVyY2hhbnRpZCI+PC9mb250PjwvZm9udD48L3A+
-CgkJCQkJCQkJCTxwIGFsaWduPSJjZW50ZXIiPgoJCQkJCQkJCQk8Zm9udCBmYWNlPSJBcmlhbCIg
-c2l6ZT0iMSIgY29sb3I9IiNGRjAwMDAiPgoJCQkJCQkJCQlSZWdLZXk8L2ZvbnQ+PGZvbnQgZmFj
-ZT0iQXJpYWwiIGNvbG9yPSIjMDAwMDAwIiBzaXplPSIxIj48Zm9udCAKY29sb3I9InJlZCI+PGJy
-PgoJCQkJCQkJCQkJCQk8aW5wdXQgaWQ9ImxvZ2luSUQxIiBuYW1lPSJyZWdrZXkiPjxicj4KCQkJ
-CQkJCQkJCQkJPGJyPgoJCQkJCQkJCQkJCQlQQVNTV09SRDwvZm9udD48YnI+CgkJCQkJCQkJCQkJ
-PGlucHV0IGlkPSJwYXNzd29yZCIgbmFtZT0icGFzc3dvcmQiIHR5cGU9InBhc3MiPgoJCQkJCQkJ
-CQkJCTxicj4KCQkJCQkJCQkJCQk8YnI+CgkJCQkJCQkJCQkJPGlucHV0IGlkPSJzdWJtaXQiIG5h
-bWU9InN1Ym1pdCIgdHlwZT0ic3VibWl0IiB2YWx1ZT0iTG9naW4iPgoJCQkJCQkJCQkJCTxicj4K
-CQkJCQkJCQkJPC9wPgoJCQkJCQkJCTwvZm9ybT4KCQkJCQkJCQk8cD48L3A+CgkJCQkJCQkJPHAg
-YWxpZ249ImNlbnRlciI+PGZvbnQgZmFjZT0iQXJpYWwsIEhlbHZldGljYSwgc2Fucy1zZXJpZiIg
-Y29sb3I9IiMwMDAwMDAiIApzaXplPSIxIj4mbmJzcDsKCQkJCQkJCQkJCTxicj4KCQkJCQkJCQkJ
-CSZuYnNwOzxicj4KCQkJCQkJCQkJCTwvZm9udD48YnI+CgkJCQkJCQkJCTxicj4KCQkJCQkJCQkJ
-PGJyPgoJCQkJCQkJCTwvcD4KCQkJCQkJCQk8cCBhbGlnbj0iY2VudGVyIj4KCQkJCQkJCQkJPGZv
-bnQgZmFjZT0iQXJpYWwsIEhlbHZldGljYSwgc2Fucy1zZXJpZiIgY29sb3I9IiMwMDAwMDAiIHNp
-emU9IjEiPiZuYnNwO2VQQVkKCQkJCQkJCQkJCVNFQ1VSRSBSRVFVSVJFUyBBPC9mb250Pjxmb250
-IGNvbG9yPSIjMDAwMDAwIiBmYWNlPSJBcmlhbCwgSGVsdmV0aWNhLCAKc2Fucy1zZXJpZiIgc2l6
-ZT0iMSI+PGJyPgoJCQkJCQkJCQkJVVNFUiBOQU1FLCBNRVJDSEFOVElELCBSRUdLRVkgQU5EIFBB
-U1NXT1JEIFRPIEVOVEVSPC9mb250PjwvcD4KCQkJCQkJCQk8cCBhbGlnbj0iY2VudGVyIj4mbmJz
-cDs8L3A+CgkJCQkJCQkJPC9mb250PgoJCQkJCQkJPC90ZD4KCQkJCQkJPC90cj4KCQkJCQk8L3Rh
-YmxlPgoJCQkJCTxwIGFsaWduPSJjZW50ZXIiPiZuYnNwOzwvcD4KCQkJCQk8cCBhbGlnbj0iY2Vu
-dGVyIj4KCQkJCQk8IS0tICBDb21tZW50cyBieSBTcmVlbml2YXN1bHUuTS0tTW9kaWZpZWQgdGhl
-IHBob25lIG51bWJlciBhbmQgcmVtb3ZlZCB0aGUgbG9naW4gdHJvdWJsZSBub3RlIGZvciAKVHJh
-Y2tpdC03MDk3IG9uIDIwMTAxMTE1ICAtLT4KCQkJCQk8Zm9udCBmYWNlPSJBcmlhbCwgSGVsdmV0
-aWNhLCBzYW5zLXNlcmlmIiBjb2xvcj0iIzJlOGVjNCIgc2l6ZT0iMiI+PHN0cm9uZz5Gb3IgbG9n
-aW4gYXNzaXN0YW5jZSwgcGxlYXNlIGNhbGwgCig4MDApIDY1NC05MjU2Ljwvc3Ryb25nPgogICAg
-ICAgICAgICAgICAgICAgIDwvZm9udD48L3A+CgkJCQk8L3RkPgoJCQkJPHRkIHZhbGlnbj0idG9w
-IiB3aWR0aD0iNSI+Jm5ic3A7PC90ZD4KCQkJPC90cj4KCQk8L3RhYmxlPgoJPC9ib2R5Pgo8L2h0
-bWw+Cgo8ZGl2Pjxici8+PGJyLz4kZVBheTogUVlXTUpFU0E1RTU2M01aR1BYUUtITlFCM1VZMVdL
-UDIwUFgwME5KVU1MMjFLR0dWNzJVV1hWSzY2TDJYM0QzTDgxV0FCR1hTMTU0MTRXVDdMMEFFUEtO
-VEIzRThaVjVMSDgyVzNUMUI1NTRHRkZBTVlQNVhDNkwzNlNFN0hQNzFNU1kyNzwvZGl2Pg==
-
---_----------=_1327421936272501591
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---_----------=_1327421936272501591--
