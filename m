@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0OHj3IW059202 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 11:45:04 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Z2SUgmD7LQ4b2Jho (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jan 2012 09:45:02 -0800 (PST)
-Date: Tue, 24 Jan 2012 12:45:00 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: mount other filesystems with selinux context
-	as well
-Message-ID: <20120124174500.GB9853@infradead.org>
-References: <4ECD3262.105@redhat.com> <20111128110228.GC13766@infradead.org>
-	<4F1862FC.1050401@sandeen.net>
+	q0OHiTuM059101 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 11:44:29 -0600
+Date: Tue, 24 Jan 2012 11:44:28 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: XFS update for 3.2-stable
+Message-ID: <20120124174428.GR8262@sgi.com>
+References: <1326919305-2753-1-git-send-email-bpm@sgi.com>
+	<20120122211340.GC3224@kroah.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F1862FC.1050401@sandeen.net>
+In-Reply-To: <20120122211340.GC3224@kroah.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +23,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Greg KH <greg@kroah.com>
+Cc: stable@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jan 19, 2012 at 12:37:48PM -0600, Eric Sandeen wrote:
-> > shouldn't the "export SELINUX_MOUNT_OPTIONS" simply move to common code?
+Hey Greg,
+
+On Sun, Jan 22, 2012 at 02:13:40PM -0700, Greg KH wrote:
+> On Wed, Jan 18, 2012 at 02:41:44PM -0600, bpm@sgi.com wrote:
+> > Here's a fix for 3.2-stable related to trim support in xfs.
 > 
-> I wasn't sure if nfs would grok it.
+> Applied, thanks.  Is it also needed for the 3.0-stable tree?
 
-I don't think it does - selinux needs special handling for filesystems
-that do not support xattrs.
+Looks like it.  I'll submit it for 3.0...
+
+-Ben
 
 _______________________________________________
 xfs mailing list
