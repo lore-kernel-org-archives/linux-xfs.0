@@ -1,13 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0PHCj4p023493 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 11:12:45 -0600
-Date: Wed, 25 Jan 2012 11:12:44 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: XFS for-next branch
-Message-ID: <20120125171244.GX8262@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
+	q0PI6JUr035986 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 12:06:19 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id yDNvuQZPLkTrvasu
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 25 Jan 2012 10:06:18 -0800 (PST)
+Received: by lahd3 with SMTP id d3so2280333lah.26
+	for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 10:06:16 -0800 (PST)
+References: <CADDb1s2w9ZwMXn38n8TcxhFNrUsXN1Gnxq-suAP2-M+R7YhFsg@mail.gmail.com>
+	<4F202F2E.9000608@redhat.com>
+In-Reply-To: <4F202F2E.9000608@redhat.com>
+Mime-Version: 1.0 (1.0)
+Message-Id: <D5446EEA-D3AF-43BB-B862-6C9A741B0DC9@gmail.com>
+From: Andreas Dilger <aedilger@gmail.com>
+Subject: Re: Does Ext4 support parallel write similar to XFS?
+Date: Wed, 25 Jan 2012 11:06:29 -0700
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,25 +24,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-next@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, LKML <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ChristophHellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
 
-Hey Stephen,
-
-Could you pull XFS updates from
-
-git://oss.sgi.com/xfs/xfs.git for-next
-
-instead of from the oss/master branch for 3.3?
-
-Thanks,
-	Ben
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMjAxMi0wMS0yNSwgYXQgOTozNCwgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+
+IHdyb3RlOgo+IE9uIDEvMjQvMTIgMTE6MTkgUE0sIEFtaXQgU2FocmF3YXQgd3JvdGU6Cj4+IElu
+IFhGUyB3ZSBjYW4gd3JpdGUgcGFyYWxsZWwgKGkuLGUgd2UgY2FuIG1ha2UgdXNlIG9mIGFsbG9j
+YXRpb24KPj4gZ3JvdXBzIGZvciB3cml0aW5nIHByb2Nlc3MpLiBJZiB0aGUgZmlsZXMgYXJlIGtl
+cHQgaW4gaW5kaXZpZHVhbAo+PiBkaXJlY3RvcmllcywgdGhlcmUgaXMgYSBwb3NzaWJpbGl0eSB0
+aGF0IGZpcnN0IHRoZSBibG9ja3MgZm9yIHRoYXQKPj4gZmlsZXMgYmUgdXNlZCBmcm9tIGluZGl2
+aWR1YWwgYWxsb2NhdGlvbiBncm91cHMuIElmIEkgc3RhcnQg4oCYNOKAmQo+PiB3cml0aW5nIHBy
+b2Nlc3MoY3AgMTAwTUJfZmlsZSAvPGRpcm51bT4vKSDigJMgYWZ0ZXIgd3JpdGluZyBpcyBmaW5p
+c2hlZAo+PiDigJMgaWYgSSBjaGVjayB0aGUgYm1hcCDigJMgaXQgZG9lcyBzaG93cyB0aGF0IGlu
+aXRpYWwgYWxsb2NhdGlvbiB3YXMgZnJvbQo+PiBpbmRpdmlkdWFsIGFsbG9jYXRpb24gZ3JvdXBz
+Lgo+PiBFdmVuIHRob3VnaCBpbiBFeHQ0IGFsc28gd2UgZG8gaGF2ZSBncm91cHMg4oCTIGJ1dCBJ
+IGFtIG5vdCBhYmxlIHRvIGdldAo+PiBiZWhhdmlvciBzaW1pbGFyIHRvIFhGUy4KPj4gSWYgSSBj
+aGVjayB0aGUgZmlsZSBleHRlbnRzIOKAkyB0aGUgZXh0ZW50cyBhcmUgaW4gbWl4ZWQgZm9ybSwg
+dGhlCj4+IGFsbG9jYXRpb24gcGF0dGVybiBpcyBhbHNvIHZlcnkgZnJhZ21lbnRlZC4KPj4gCj4+
+IFBsZWFzZSBzaGFyZSBtb3JlIG9uIHRoaXMuIEFsc28sIGlmIHRoZXJlIGlzIGEgcG9zc2libGUg
+ZXhhY3QgdGVzdAo+PiBjYXNlIHRvIGNoZWNrIGZvciBwYXJhbGxlbCB3cml0ZXMgc3VwcG9ydC4K
+PiAKPiBJdCBzZWVtcyB0aGF0IHlvdSBhcmUgYXNraW5nIG1vcmUgYWJvdXQgYWxsb2NhdGlvbiBw
+b2xpY3kgdGhhbiBwYXJhbGxlbGlzbQo+IGluIGdlbmVyYWw/ICBXaXRoIGVpdGhlciBmaWxlc3lz
+dGVtLCB5b3UgY291bGQgdXNlIHByZWFsbG9jYXRpb24gdG8gd2luZAo+IHVwIHdpdGggbW9yZSBj
+b250aWd1b3VzIGZpbGVzIHdoZW4geW91IHdyaXRlIHRoZW0gaW4gcGFyYWxsZWwsIHRob3VnaAo+
+IHRoYXQgcmVxdWlyZXMgc29tZSBpZGVhIG9mIHRoZSBmaWxlIHNpemUgYWhlYWQgb2YgdGltZS4K
+PiAKPiBleHQ0IGRvZXNuJ3QgaGF2ZSB0aGF0IGV4YWN0IGRpcjo6Z3JvdXAgaGV1cmlzdGljIHRo
+YXQgeGZzIHVzZXMsCj4gYnV0IGl0IGRvZXMgaGF2ZSBvdGhlciBtZWNoYW5pc21zIGFuZCBoZXVy
+aXN0aWNzIHRvIHRyeSB0byBnZXQgZ29vZAo+IGZpbGUgYW5kIGRpcmVjdG9yeSBsYXlvdXQuCj4g
+Cj4gSW4gZ2VuZXJhbCwgZXh0NCB0cmllcyB0byBwdXQgbmV3IHJvb3QgZGlyZWN0b3JpZXMgaW50
+byBuZXcgZ3JvdXBzLCBzZWUKPiBjb21tZW50cyBhYm92ZSBmaW5kX2dyb3VwX29ybG92KCkuICBP
+dGhlciBkaXJlY3RvcmllcyB0ZW5kIHRvIHN0YXkgbmVhcgo+IHRoZWlyIHBhcmVudCBkaXJlY3Rv
+cnkuICBTbyBpdCdzIHJlYWxseSB0aGUgcm9vdHMgb2YgZGlyIHRyZWVzIHRoYXQKPiBnZXQgc3By
+ZWFkIGFjcm9zcyB0aGUgZGlzayBpbiBnZW5lcmFsLiAgTmV3IG5vbi1kaXIgaW5vZGVzIGFsc28g
+dGVuZCB0bwo+IHN0YXkgY2xvc2UgdG8gdGhlaXIgcGFyZW50LiAgKEkgdGhpbmsgSSBoYXZlIHRo
+YXQgYWxsIHJpZ2h0IC4uLikKCk5vdGUgdGhhdCB0aGlzIHBvbGljeSBvZiBuZXcgc3ViZGlyZWN0
+b3J5IHBsYWNlbWVudCAoYW5kIGluZGlyZWN0bHkgdGhlIHBsYWNlbWVudCBvZiBmaWxlcyBjcmVh
+dGVkIHRoZXJlaW4pIGNhbiBiZSB0dW5lZCBieSB1c2Vyc3BhY2UgYnkgc2V0dGluZyB0aGUgInRv
+cGRpciIgZmxhZyB2aWEgc2V0YXR0ciBvbiB0aGUgcGFyZW50IGRpcmVjdG9yeS4gCgpUaGlzIHdp
+bGwgcHVzaCBuZXcgc3ViZGlycyBjcmVhdGVkIGluIHRoYXQgZGlyIHRvIGEgbmV3IGdyb3VwLCB3
+aGljaCB3b3VsZCBJbiB0dXJuIGFsbG93IHRoZSBmaWxlcyB0byBhbGxvY2F0ZSBmcm9tIHRoYXQg
+Z3JvdXAuIEl0IGlzIGludGVuZGVkIHRvIGJlIHNldCBvbiBkaXJlY3RvcmllcyBsaWtlIC9ob21l
+IHdoZXJlIGZpbGVzIHdpdGhpbiB0aGUgc3ViZGlycyBhcmUgdW5yZWxhdGVkLgoKV2hldGhlciB0
+aGF0IGlzIGVub3VnaCBmb3IgeW91ciB1c2FnZSBpcyB1bmNsZWFyLiAKCj4gVGhlIHRlc3QgeW91
+IGRlc2NyaWJlIGFib3ZlIGRvZXMgcmVzdWx0IGluIG1vcmUgY29udGlndW91cyBhbGxvY2F0aW9u
+IG9uCj4geGZzIHRoYW4gb24gZXh0NCwgdGhvdWdoIC0gYSBxdWljayBjaGVjayBvbiBrZXJuZWwg
+My4yIHlpZWxkZWQgMi0zCj4gZXh0ZW50cyBwZXIgZmlsZSBvbiBleHQ0LCAxIGV4dGVudCBwZXIg
+ZmlsZSBmb3IgeGZzLgo+IAo+IC1FcmljCj4gCj4+IFRoYW5rcyAmIFJlZ2FyZHMsCj4+IEFtaXQg
+U2FocmF3YXQKPj4gLS0KPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhl
+IGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LWV4dDQiIGluCj4+IHRoZSBib2R5IG9mIGEgbWVzc2Fn
+ZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
+IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo+IAo+IC0tCj4gVG8g
+dW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxp
+bnV4LWV4dDQiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtl
+cm5lbC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3Jn
+L21ham9yZG9tby1pbmZvLmh0bWwKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
+c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
