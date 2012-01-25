@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0ONYP9B117825 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 17:34:26 -0600
-Received: from mailrelay.mcs.anl.gov (newman-1.mcs.anl.gov [140.221.6.6]) by
-	cuda.sgi.com with ESMTP id i3G2gLLGAYjXTQpU for
-	<xfs@oss.sgi.com>; Tue, 24 Jan 2012 15:34:24 -0800 (PST)
-Date: Tue, 24 Jan 2012 17:34:24 -0600
-From: John Valdes <valdes@anl.gov>
-Subject: Re: log recovery fails at mount
-Message-ID: <20120124233424.GB20222@starfish.mcs.anl.gov>
-References: <20120124024340.GA6689@starfish.mcs.anl.gov>
-	<4F1E3C71.1020303@sandeen.net>
-	<20120124225840.GA20222@starfish.mcs.anl.gov>
-	<4F1F38C3.9090409@sandeen.net>
+	q0P0nwqt123735 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 18:49:59 -0600
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	UEIFiaCOpA3NimLJ for <xfs@oss.sgi.com>;
+	Tue, 24 Jan 2012 16:49:56 -0800 (PST)
+Date: Wed, 25 Jan 2012 11:49:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Partially corrupted raid array beneath xfs
+Message-ID: <20120125004954.GQ15102@dastard>
+References: <CAO4DVWoqgswvcSWii9uy6zuFyczVGQXFJjbgPi4XiMx+5cw2cA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F1F38C3.9090409@sandeen.net>
+In-Reply-To: <CAO4DVWoqgswvcSWii9uy6zuFyczVGQXFJjbgPi4XiMx+5cw2cA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,29 +26,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Christopher Evans <christophere@luma-pictures.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Jan 24, 2012 at 05:03:31PM -0600, Eric Sandeen wrote:
-> On 1/24/12 4:58 PM, John Valdes wrote:
-> 
-> > [...] if I loopback mount the img file, the file/directory names in
-> > the mounted fs are mostly corrupted;
-> 
-> that's because metadump obfuscates filenames by default.  There's an option
-> to keep them in the clear, and then you won't see all that garbage.
+On Tue, Jan 24, 2012 at 09:59:09AM -0800, Christopher Evans wrote:
+> I made a mistake by recreating a raid 6 array, instead of taking the proper
+> steps to rebuild it. Is there a way I can get find out which directories,
+> files are/might be corrupted if 64k blocks of data offset every 21 times
+> for an unknown count. Unfortunetly I've already mounted the raid array and
+> have gotten xfs errors because of the corrupted data beneath it.
 
-Ah, OK.  A bit unexpected, but if I repeat the process using the '-o'
-option w/ xfs_metadump, the loopback mounted fs now looks as expected:
+Write a script that walks the filesystem run xfs_bmap on every file
+and directory and work out which one have extents that fall into the
+bad range. If you walk into a corrupted directory, then you're
+likely to see errors in dmesg, too.
 
-  prompt# ls -F /mnt
-  backup/  data/  pvfs2-server.log  pvfs2-server.log.0 pvfs2-server.log-crashed
+In future we'll have a reverse mapping tree that will enable use to
+avoid the tree walk to find the owners of corrupted regions like
+this. I wrote half the code for it while I was at LCA last week ;)
 
-I'll run xfs_repair -L on the real filesystem now.
+Cheers,
 
-Many thanks for the help!
-
-John
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
