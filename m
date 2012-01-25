@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0PI6JUr035986 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 12:06:19 -0600
-Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
-	[209.85.215.53]) by cuda.sgi.com with ESMTP id yDNvuQZPLkTrvasu
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 25 Jan 2012 10:06:18 -0800 (PST)
-Received: by lahd3 with SMTP id d3so2280333lah.26
-	for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 10:06:16 -0800 (PST)
-References: <CADDb1s2w9ZwMXn38n8TcxhFNrUsXN1Gnxq-suAP2-M+R7YhFsg@mail.gmail.com>
-	<4F202F2E.9000608@redhat.com>
-In-Reply-To: <4F202F2E.9000608@redhat.com>
-Mime-Version: 1.0 (1.0)
-Message-Id: <D5446EEA-D3AF-43BB-B862-6C9A741B0DC9@gmail.com>
-From: Andreas Dilger <aedilger@gmail.com>
-Subject: Re: Does Ext4 support parallel write similar to XFS?
-Date: Wed, 25 Jan 2012 11:06:29 -0700
+	q0PJ9DwK048953 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 13:09:13 -0600
+Message-ID: <4F205358.5070702@sgi.com>
+Date: Wed, 25 Jan 2012 13:09:12 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [patch 04/12] xfs: cleanup xfs_log_space_wake
+References: <20111212141346.986825692@bombadil.infradead.org>	<20111212141434.065702206@bombadil.infradead.org>	<4F1DB36E.3060207@sgi.com>
+	<20120125161041.GB8360@infradead.org>
+In-Reply-To: <20120125161041.GB8360@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +18,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, LKML <linux-kernel@vger.kernel.org>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ChristophHellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gMjAxMi0wMS0yNSwgYXQgOTozNCwgRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+
-IHdyb3RlOgo+IE9uIDEvMjQvMTIgMTE6MTkgUE0sIEFtaXQgU2FocmF3YXQgd3JvdGU6Cj4+IElu
-IFhGUyB3ZSBjYW4gd3JpdGUgcGFyYWxsZWwgKGkuLGUgd2UgY2FuIG1ha2UgdXNlIG9mIGFsbG9j
-YXRpb24KPj4gZ3JvdXBzIGZvciB3cml0aW5nIHByb2Nlc3MpLiBJZiB0aGUgZmlsZXMgYXJlIGtl
-cHQgaW4gaW5kaXZpZHVhbAo+PiBkaXJlY3RvcmllcywgdGhlcmUgaXMgYSBwb3NzaWJpbGl0eSB0
-aGF0IGZpcnN0IHRoZSBibG9ja3MgZm9yIHRoYXQKPj4gZmlsZXMgYmUgdXNlZCBmcm9tIGluZGl2
-aWR1YWwgYWxsb2NhdGlvbiBncm91cHMuIElmIEkgc3RhcnQg4oCYNOKAmQo+PiB3cml0aW5nIHBy
-b2Nlc3MoY3AgMTAwTUJfZmlsZSAvPGRpcm51bT4vKSDigJMgYWZ0ZXIgd3JpdGluZyBpcyBmaW5p
-c2hlZAo+PiDigJMgaWYgSSBjaGVjayB0aGUgYm1hcCDigJMgaXQgZG9lcyBzaG93cyB0aGF0IGlu
-aXRpYWwgYWxsb2NhdGlvbiB3YXMgZnJvbQo+PiBpbmRpdmlkdWFsIGFsbG9jYXRpb24gZ3JvdXBz
-Lgo+PiBFdmVuIHRob3VnaCBpbiBFeHQ0IGFsc28gd2UgZG8gaGF2ZSBncm91cHMg4oCTIGJ1dCBJ
-IGFtIG5vdCBhYmxlIHRvIGdldAo+PiBiZWhhdmlvciBzaW1pbGFyIHRvIFhGUy4KPj4gSWYgSSBj
-aGVjayB0aGUgZmlsZSBleHRlbnRzIOKAkyB0aGUgZXh0ZW50cyBhcmUgaW4gbWl4ZWQgZm9ybSwg
-dGhlCj4+IGFsbG9jYXRpb24gcGF0dGVybiBpcyBhbHNvIHZlcnkgZnJhZ21lbnRlZC4KPj4gCj4+
-IFBsZWFzZSBzaGFyZSBtb3JlIG9uIHRoaXMuIEFsc28sIGlmIHRoZXJlIGlzIGEgcG9zc2libGUg
-ZXhhY3QgdGVzdAo+PiBjYXNlIHRvIGNoZWNrIGZvciBwYXJhbGxlbCB3cml0ZXMgc3VwcG9ydC4K
-PiAKPiBJdCBzZWVtcyB0aGF0IHlvdSBhcmUgYXNraW5nIG1vcmUgYWJvdXQgYWxsb2NhdGlvbiBw
-b2xpY3kgdGhhbiBwYXJhbGxlbGlzbQo+IGluIGdlbmVyYWw/ICBXaXRoIGVpdGhlciBmaWxlc3lz
-dGVtLCB5b3UgY291bGQgdXNlIHByZWFsbG9jYXRpb24gdG8gd2luZAo+IHVwIHdpdGggbW9yZSBj
-b250aWd1b3VzIGZpbGVzIHdoZW4geW91IHdyaXRlIHRoZW0gaW4gcGFyYWxsZWwsIHRob3VnaAo+
-IHRoYXQgcmVxdWlyZXMgc29tZSBpZGVhIG9mIHRoZSBmaWxlIHNpemUgYWhlYWQgb2YgdGltZS4K
-PiAKPiBleHQ0IGRvZXNuJ3QgaGF2ZSB0aGF0IGV4YWN0IGRpcjo6Z3JvdXAgaGV1cmlzdGljIHRo
-YXQgeGZzIHVzZXMsCj4gYnV0IGl0IGRvZXMgaGF2ZSBvdGhlciBtZWNoYW5pc21zIGFuZCBoZXVy
-aXN0aWNzIHRvIHRyeSB0byBnZXQgZ29vZAo+IGZpbGUgYW5kIGRpcmVjdG9yeSBsYXlvdXQuCj4g
-Cj4gSW4gZ2VuZXJhbCwgZXh0NCB0cmllcyB0byBwdXQgbmV3IHJvb3QgZGlyZWN0b3JpZXMgaW50
-byBuZXcgZ3JvdXBzLCBzZWUKPiBjb21tZW50cyBhYm92ZSBmaW5kX2dyb3VwX29ybG92KCkuICBP
-dGhlciBkaXJlY3RvcmllcyB0ZW5kIHRvIHN0YXkgbmVhcgo+IHRoZWlyIHBhcmVudCBkaXJlY3Rv
-cnkuICBTbyBpdCdzIHJlYWxseSB0aGUgcm9vdHMgb2YgZGlyIHRyZWVzIHRoYXQKPiBnZXQgc3By
-ZWFkIGFjcm9zcyB0aGUgZGlzayBpbiBnZW5lcmFsLiAgTmV3IG5vbi1kaXIgaW5vZGVzIGFsc28g
-dGVuZCB0bwo+IHN0YXkgY2xvc2UgdG8gdGhlaXIgcGFyZW50LiAgKEkgdGhpbmsgSSBoYXZlIHRo
-YXQgYWxsIHJpZ2h0IC4uLikKCk5vdGUgdGhhdCB0aGlzIHBvbGljeSBvZiBuZXcgc3ViZGlyZWN0
-b3J5IHBsYWNlbWVudCAoYW5kIGluZGlyZWN0bHkgdGhlIHBsYWNlbWVudCBvZiBmaWxlcyBjcmVh
-dGVkIHRoZXJlaW4pIGNhbiBiZSB0dW5lZCBieSB1c2Vyc3BhY2UgYnkgc2V0dGluZyB0aGUgInRv
-cGRpciIgZmxhZyB2aWEgc2V0YXR0ciBvbiB0aGUgcGFyZW50IGRpcmVjdG9yeS4gCgpUaGlzIHdp
-bGwgcHVzaCBuZXcgc3ViZGlycyBjcmVhdGVkIGluIHRoYXQgZGlyIHRvIGEgbmV3IGdyb3VwLCB3
-aGljaCB3b3VsZCBJbiB0dXJuIGFsbG93IHRoZSBmaWxlcyB0byBhbGxvY2F0ZSBmcm9tIHRoYXQg
-Z3JvdXAuIEl0IGlzIGludGVuZGVkIHRvIGJlIHNldCBvbiBkaXJlY3RvcmllcyBsaWtlIC9ob21l
-IHdoZXJlIGZpbGVzIHdpdGhpbiB0aGUgc3ViZGlycyBhcmUgdW5yZWxhdGVkLgoKV2hldGhlciB0
-aGF0IGlzIGVub3VnaCBmb3IgeW91ciB1c2FnZSBpcyB1bmNsZWFyLiAKCj4gVGhlIHRlc3QgeW91
-IGRlc2NyaWJlIGFib3ZlIGRvZXMgcmVzdWx0IGluIG1vcmUgY29udGlndW91cyBhbGxvY2F0aW9u
-IG9uCj4geGZzIHRoYW4gb24gZXh0NCwgdGhvdWdoIC0gYSBxdWljayBjaGVjayBvbiBrZXJuZWwg
-My4yIHlpZWxkZWQgMi0zCj4gZXh0ZW50cyBwZXIgZmlsZSBvbiBleHQ0LCAxIGV4dGVudCBwZXIg
-ZmlsZSBmb3IgeGZzLgo+IAo+IC1FcmljCj4gCj4+IFRoYW5rcyAmIFJlZ2FyZHMsCj4+IEFtaXQg
-U2FocmF3YXQKPj4gLS0KPj4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhl
-IGxpbmUgInVuc3Vic2NyaWJlIGxpbnV4LWV4dDQiIGluCj4+IHRoZSBib2R5IG9mIGEgbWVzc2Fn
-ZSB0byBtYWpvcmRvbW9Admdlci5rZXJuZWwub3JnCj4+IE1vcmUgbWFqb3Jkb21vIGluZm8gYXQg
-IGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRtbAo+IAo+IC0tCj4gVG8g
-dW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxp
-bnV4LWV4dDQiIGluCj4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1ham9yZG9tb0B2Z2VyLmtl
-cm5lbC5vcmcKPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRwOi8vdmdlci5rZXJuZWwub3Jn
-L21ham9yZG9tby1pbmZvLmh0bWwKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Mu
-c2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 01/25/12 10:10, Christoph Hellwig wrote:
+> On Mon, Jan 23, 2012 at 01:22:22PM -0600, Mark Tinguely wrote:
+>> On 01/-10/63 13:59, Christoph Hellwig wrote:
+>>> Remove the now unused opportunistic parameter, and use the the
+>>> xlog_writeq_wake and xlog_reserveq_wake helpers now that we don't have
+>>> to care about the opportunistic wakeups.
+>>>
+>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>>
+>> Looks good. My only concern is the way that xlog_grant_push_ail()
+>> tries to kick start the writing of the log. It seems to me that a
+>> combination of very large log requests could plug the log until the
+>> next sync.
+>
+> How exactly?
+>
+
+Thanks for giving me enough rope to hang myself :)
+
+I looked at it again and it could plug for a while, but not necessarily 
+until the next sync.
+
+I was looking at the fact that when the log is full, 
+xlog_grant_push_ail() will overlap cleaning threshold lsn for a bunch of 
+requests come in. This is because xlog_grant_push_ail() uses the current 
+tail when calculating cleaning threshold. This cleaning overlap will 
+happen until xfs_ail_push() cleans the space and the moves the log tail.
+
+If a (unrealistically) big request sized greater than MAX(log size/4, 
+256) follows some other requests then the big request determines the 
+amount cleaned out of the queue. When the space is cleaned out, the 
+earlier processes waiting for the log are awoken and use up the cleaned 
+space, and there will not be enough space for the big request. Future 
+requests will clean up to MAX(their request size, log size/4, 256). This 
+will not be enough to satisfy the big request at the front of the 
+request queue. We will have to wait another cleaning cycle for the tail 
+to move and another log space request but even this big request would 
+eventually get satisfied.
+
+
+
+
+--Mark Tinguely
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
