@@ -1,15 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0PJ9DwK048953 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 13:09:13 -0600
-Message-ID: <4F205358.5070702@sgi.com>
-Date: Wed, 25 Jan 2012 13:09:12 -0600
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [patch 04/12] xfs: cleanup xfs_log_space_wake
-References: <20111212141346.986825692@bombadil.infradead.org>	<20111212141434.065702206@bombadil.infradead.org>	<4F1DB36E.3060207@sgi.com>
-	<20120125161041.GB8360@infradead.org>
-In-Reply-To: <20120125161041.GB8360@infradead.org>
+	q0PKPKbt069037 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 14:25:20 -0600
+Subject: [GIT PULL] XFS update for 3.3-rc1
+Message-Id: <20120125202519.907DB426DA7@whiskey.americas.sgi.com>
+Date: Wed, 25 Jan 2012 14:25:19 -0600 (CST)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,56 +14,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 01/25/12 10:10, Christoph Hellwig wrote:
-> On Mon, Jan 23, 2012 at 01:22:22PM -0600, Mark Tinguely wrote:
->> On 01/-10/63 13:59, Christoph Hellwig wrote:
->>> Remove the now unused opportunistic parameter, and use the the
->>> xlog_writeq_wake and xlog_reserveq_wake helpers now that we don't have
->>> to care about the opportunistic wakeups.
->>>
->>> Signed-off-by: Christoph Hellwig<hch@lst.de>
->>
->> Looks good. My only concern is the way that xlog_grant_push_ail()
->> tries to kick start the writing of the log. It seems to me that a
->> combination of very large log requests could plug the log until the
->> next sync.
->
-> How exactly?
->
+Hi Linus,
 
-Thanks for giving me enough rope to hang myself :)
+   Please pull in the following bugfix for xfs.  We forgot to drop a lock on
+   error in xfs_readlink.  It hasn't been through -next yet, but there is no
+   -next tree tomorrow.  The fix is clear so I'm sending this request today.
 
-I looked at it again and it could plug for a while, but not necessarily 
-until the next sync.
+Thanks,
+	Ben
 
-I was looking at the fact that when the log is full, 
-xlog_grant_push_ail() will overlap cleaning threshold lsn for a bunch of 
-requests come in. This is because xlog_grant_push_ail() uses the current 
-tail when calculating cleaning threshold. This cleaning overlap will 
-happen until xfs_ail_push() cleans the space and the moves the log tail.
+The following changes since commit dcd6c92267155e70a94b3927bce681ce74b80d1f:
+  Linus Torvalds (1):
+        Linux 3.3-rc1
 
-If a (unrealistically) big request sized greater than MAX(log size/4, 
-256) follows some other requests then the big request determines the 
-amount cleaned out of the queue. When the space is cleaned out, the 
-earlier processes waiting for the log are awoken and use up the cleaned 
-space, and there will not be enough space for the big request. Future 
-requests will clean up to MAX(their request size, log size/4, 256). This 
-will not be enough to satisfy the big request at the front of the 
-request queue. We will have to wait another cleaning cycle for the tail 
-to move and another log space request but even this big request would 
-eventually get satisfied.
+are available in the git repository at:
 
+  git://oss.sgi.com/xfs/xfs.git for-linus
 
+Jan Kara (1):
+      xfs: Fix missing xfs_iunlock() on error recovery path in xfs_readlink()
 
-
---Mark Tinguely
+ fs/xfs/xfs_vnodeops.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
 _______________________________________________
 xfs mailing list
