@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0P0nwqt123735 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 18:49:59 -0600
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	UEIFiaCOpA3NimLJ for <xfs@oss.sgi.com>;
-	Tue, 24 Jan 2012 16:49:56 -0800 (PST)
-Date: Wed, 25 Jan 2012 11:49:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Partially corrupted raid array beneath xfs
-Message-ID: <20120125004954.GQ15102@dastard>
-References: <CAO4DVWoqgswvcSWii9uy6zuFyczVGQXFJjbgPi4XiMx+5cw2cA@mail.gmail.com>
+	q0P5K5tl168187 for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 23:20:05 -0600
+Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
+	[74.125.82.181]) by cuda.sgi.com with ESMTP id sop77SxwdXlcHDCn
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 24 Jan 2012 21:20:00 -0800 (PST)
+Received: by werb10 with SMTP id b10so4098134wer.26
+	for <xfs@oss.sgi.com>; Tue, 24 Jan 2012 21:19:59 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAO4DVWoqgswvcSWii9uy6zuFyczVGQXFJjbgPi4XiMx+5cw2cA@mail.gmail.com>
+Date: Wed, 25 Jan 2012 10:49:59 +0530
+Message-ID: <CADDb1s2w9ZwMXn38n8TcxhFNrUsXN1Gnxq-suAP2-M+R7YhFsg@mail.gmail.com>
+Subject: Does Ext4 support parallel write similar to XFS?
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,35 +21,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christopher Evans <christophere@luma-pictures.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
 
-On Tue, Jan 24, 2012 at 09:59:09AM -0800, Christopher Evans wrote:
-> I made a mistake by recreating a raid 6 array, instead of taking the proper
-> steps to rebuild it. Is there a way I can get find out which directories,
-> files are/might be corrupted if 64k blocks of data offset every 21 times
-> for an unknown count. Unfortunetly I've already mounted the raid array and
-> have gotten xfs errors because of the corrupted data beneath it.
+In XFS we can write parallel (i.,e we can make use of allocation
+groups for writing process). If the files are kept in individual
+directories, there is a possibility that first the blocks for that
+files be used from individual allocation groups. If I start =914=92
+writing process(cp 100MB_file /<dirnum>/) =96 after writing is finished
+=96 if I check the bmap =96 it does shows that initial allocation was from
+individual allocation groups.
+Even though in Ext4 also we do have groups =96 but I am not able to get
+behavior similar to XFS.
+If I check the file extents =96 the extents are in mixed form, the
+allocation pattern is also very fragmented.
 
-Write a script that walks the filesystem run xfs_bmap on every file
-and directory and work out which one have extents that fall into the
-bad range. If you walk into a corrupted directory, then you're
-likely to see errors in dmesg, too.
+Please share more on this. Also, if there is a possible exact test
+case to check for parallel writes support.
 
-In future we'll have a reverse mapping tree that will enable use to
-avoid the tree walk to find the owners of corrupted regions like
-this. I wrote half the code for it while I was at LCA last week ;)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks & Regards,
+Amit Sahrawat
 
 _______________________________________________
 xfs mailing list
