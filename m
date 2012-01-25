@@ -1,18 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0PLDW8D071878 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 15:13:32 -0600
+	q0PLcuB6074994 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 15:38:57 -0600
 Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id ACYjb0FBpeQaEGKI for <xfs@oss.sgi.com>;
-	Wed, 25 Jan 2012 13:13:30 -0800 (PST)
-Message-ID: <4F207079.6050401@sandeen.net>
-Date: Wed, 25 Jan 2012 15:13:29 -0600
+	with ESMTP id yR4CO18O8O5huxPk for <xfs@oss.sgi.com>;
+	Wed, 25 Jan 2012 13:38:54 -0800 (PST)
+Message-ID: <4F20766E.9040902@sandeen.net>
+Date: Wed, 25 Jan 2012 15:38:54 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V3] xfstests: make 275 pass
-References: <4F04A6E6.1090304@redhat.com> <4F04BC81.1000207@redhat.com>
-	<20120104231725.GB24466@dastard>
-In-Reply-To: <20120104231725.GB24466@dastard>
+Subject: [PATCH V2] xfstests: Sort recursive getfattr output in 062
+References: <4EC10664.1080501@tuxadero.com>
+	<CAO47_-9nfO32nwOAQMVdqw6iWGWK+FWb+MD=WeOz_vr4YrrKmw@mail.gmail.com>
+	<20111115142246.GA7516@thunk.org>
+	<246EA1CC-3C33-4D41-80C0-2331C426EBB0@whamcloud.com>
+	<4ECA4282.5020908@whamcloud.com>
+	<401CC4FF-8955-4D5F-B620-5C39AF566123@mit.edu>
+	<4ECB2ADE.3010007@redhat.com> <4ECD28D1.1080800@redhat.com>
+In-Reply-To: <4ECD28D1.1080800@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,137 +30,240 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Andreas Dilger <adilger@whamcloud.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Theodore Tso <tytso@MIT.EDU>, Yu Jian <yujian@whamcloud.com>, xfs-oss <xfs@oss.sgi.com>
 
-Ok, this is a significant rework of 275, which made too many
-assumptions about details of space usage and failed on several
-filesystems (it passed on xfs, but only by accident).
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-This new version tries to leave about 256k free, then tries
-a single 1M IO, and fails only if 0 bytes are written.
+Test 062 was made "generic" a while back, but it fails on any filesystem
+which returns getfattr -R results (aka readdir results) in something
+other than inode-order.
 
-It also sends a lot more to $seq.full for debugging on failure
-and fixes a few other stylistic things.
+With a little awk-fu we can sort the records from getfattr -R so that
+the output is the same for xfs as well as ext4, etc.
+
+Also filter out lost+found which extN creates at mkfs time, but
+some other filesystems do not.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+- ---
 
-V2: bunch of fixups from V1 ;)
-V3: use ls for size check, and 2g fs size
+V2: move sorting function into common.attr
 
-diff --git a/275 b/275
-index 214262e..69b2895 100755
---- a/275
-+++ b/275
-@@ -1,8 +1,8 @@
- #! /bin/bash
- # FS QA Test No. 275
- #
--# The posix write test. when write size is larger than disk free size,
--# should write as more as possible
-+# The posix write test.  When write size is larger than disk free size,
-+# should write as much as possible until ENOSPC.
- #
- #-----------------------------------------------------------------------
- # Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
-@@ -30,13 +30,12 @@ echo "QA output created by $seq"
- 
- here=`pwd`
- tmp=/tmp/$$
--status=0    # success is the default!
-+status=1    # failure is the default!
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
- _cleanup()
- {
- 	cd /
--	rm -f $SCRATCH_MNT/* $tmp.*
- 	_scratch_unmount
+diff --git a/062 b/062
+index f666e1b..9800e33 100755
+- --- a/062
++++ b/062
+@@ -67,7 +67,7 @@ _create_test_bed()
+ 	mknod $SCRATCH_MNT/dev/c c 0 0
+ 	mknod $SCRATCH_MNT/dev/p p
+ 	# sanity check
+- -	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch
++	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch | grep -v "lost+found"
  }
  
-@@ -49,41 +48,48 @@ _supported_os IRIX Linux
- _require_scratch
+ # real QA test starts here
+@@ -160,18 +160,18 @@ _extend_test_bed()
+ 	# whack a symlink in the middle, just to be difficult
+ 	ln -s $SCRATCH_MNT/here/up $SCRATCH_MNT/descend/and
+ 	# dump out our new starting point
+- -	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch
++	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch | grep -v "lost+found"
+ }
  
- echo "------------------------------"
--echo "write lack test"
-+echo "write until ENOSPC test"
- echo "------------------------------"
+ _extend_test_bed
  
- rm -f $seq.full
+ echo
+ echo "*** directory descent with us following symlinks"
+- -getfattr -h -L -R -m '.' -e hex $SCRATCH_MNT
++getfattr -h -L -R -m '.' -e hex $SCRATCH_MNT | _sort_getfattr_output
  
- umount $SCRATCH_DEV 2>/dev/null
--_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
-+_scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
- _scratch_mount
+ echo
+ echo "*** directory descent without following symlinks"
+- -getfattr -h -P -R -m '.' -e hex $SCRATCH_MNT
++getfattr -h -P -R -m '.' -e hex $SCRATCH_MNT | _sort_getfattr_output
  
- rm -rf $SCRATCH_MNT/*
--cd $SCRATCH_MNT
  
--dd if=/dev/zero of=tmp1 bs=4K count=1 >/dev/null 2>&1
--if [ $? -ne 0 ]
--then
--	echo "create file err"
--	status=1
--	exit
--fi
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=256K count=1 >>$seq.full 2>&1
-+[ $? -ne 0 ] && _fail "Error creating file"
+ # 
+diff --git a/062.out b/062.out
+index 699254a..8cc3c65 100644
+- --- a/062.out
++++ b/062.out
+@@ -508,21 +508,21 @@ SCRATCH_MNT/lnk
+ SCRATCH_MNT/reg
  
--dd if=/dev/zero of=tmp2 bs=1M >/dev/null 2>&1
--dd if=/dev/zero of=tmp3 bs=4K >/dev/null 2>&1
-+# Attempt to completely fill fs
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=1M >>$seq.full 2>&1
- sync
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K >>$seq.full 2>&1
-+sync
-+# Last effort, use O_SYNC
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp4 bs=4K oflag=sync >>$seq.full 2>&1
-+# Save space usage info to the full file
-+echo "Pre rm space:" >> $seq.full
-+df $SCRATCH_MNT >>$seq.full 2>&1
+ *** directory descent with us following symlinks
+- -# file: SCRATCH_MNT/reg
+- -trusted.name=0xbabe
+- -trusted.name3=0xdeface
+- -user.name=0xbabe
+- -user.name3=0xdeface
++# file: SCRATCH_MNT/descend
++user.1=0x3233
++user.x=0x797a
  
--rm -f tmp1
-+# Should leave approx 256k free
-+rm -f $SCRATCH_MNT/tmp1
- sync
-+echo "Post rm space:" >> $seq.full
-+df $SCRATCH_MNT >>$seq.full 2>&1
-+_freespace=`df -k $SCRATCH_MNT | tail -n 1 | awk '{print $4}'`
-+[ $_freespace -gt 1024 ] && _fail "could not sufficiently fill filesystem"
+- -# file: SCRATCH_MNT/dir
+- -trusted.name=0xbabe
+- -trusted.name3=0xdeface
+- -user.name=0xbabe
+- -user.name3=0xdeface
++# file: SCRATCH_MNT/descend/and/ascend
++trusted.9=0x3837
++trusted.a=0x6263
+ 
+- -# file: SCRATCH_MNT/lnk
+- -trusted.name=0xbabe
+- -trusted.name3=0xdeface
++# file: SCRATCH_MNT/descend/down
++user.1=0x3233
++user.x=0x797a
 +
-+# Try a write larger than available space
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M count=1 >>$seq.full 2>&1
-+echo "Bytes written until ENOSPC:" >>$seq.full
-+du $SCRATCH_MNT/tmp1 >>$seq.full
++# file: SCRATCH_MNT/descend/down/here
++user.1=0x3233
++user.x=0x797a
  
--dd if=/dev/zero of=tmp1 bs=8K count=1 >/dev/null 2>&1
--_filesize=`du tmp1 | awk '{print $1}'`
--if [ $_filesize -ne 4 ]
--then
--	echo "write file err"
--	status=1
--	exit
--fi
-+# And at least some of it should succeed.
-+_filesize=`ls -l $SCRATCH_MNT/tmp1 | awk '{print $5}'`
-+[ $_filesize -eq 0 ] && _fail "write file err: Partial write until enospc failed; wrote 0 bytes."
+ # file: SCRATCH_MNT/dev/b
+ trusted.name=0xbabe
+@@ -536,6 +536,12 @@ trusted.name3=0xdeface
+ trusted.name=0xbabe
+ trusted.name3=0xdeface
  
- echo "done"
-+status=0
- exit
-diff --git a/275.out b/275.out
-index 30af43c..69b9d52 100644
---- a/275.out
-+++ b/275.out
-@@ -1,5 +1,5 @@
- QA output created by 275
- ------------------------------
--write lack test
-+write until ENOSPC test
- ------------------------------
- done
++# file: SCRATCH_MNT/dir
++trusted.name=0xbabe
++trusted.name3=0xdeface
++user.name=0xbabe
++user.name3=0xdeface
++
+ # file: SCRATCH_MNT/here
+ trusted.9=0x3837
+ trusted.a=0x6263
+@@ -548,6 +554,18 @@ trusted.a=0x6263
+ trusted.9=0x3837
+ trusted.a=0x6263
+ 
++# file: SCRATCH_MNT/lnk
++trusted.name=0xbabe
++trusted.name3=0xdeface
++
++# file: SCRATCH_MNT/reg
++trusted.name=0xbabe
++trusted.name3=0xdeface
++user.name=0xbabe
++user.name3=0xdeface
++
++
++*** directory descent without following symlinks
+ # file: SCRATCH_MNT/descend
+ user.1=0x3233
+ user.x=0x797a
+@@ -560,28 +578,6 @@ user.x=0x797a
+ user.1=0x3233
+ user.x=0x797a
+ 
+- -# file: SCRATCH_MNT/descend/and/ascend
+- -trusted.9=0x3837
+- -trusted.a=0x6263
+- -
+- -
+- -*** directory descent without following symlinks
+- -# file: SCRATCH_MNT/reg
+- -trusted.name=0xbabe
+- -trusted.name3=0xdeface
+- -user.name=0xbabe
+- -user.name3=0xdeface
+- -
+- -# file: SCRATCH_MNT/dir
+- -trusted.name=0xbabe
+- -trusted.name3=0xdeface
+- -user.name=0xbabe
+- -user.name3=0xdeface
+- -
+- -# file: SCRATCH_MNT/lnk
+- -trusted.name=0xbabe
+- -trusted.name3=0xdeface
+- -
+ # file: SCRATCH_MNT/dev/b
+ trusted.name=0xbabe
+ trusted.name3=0xdeface
+@@ -594,6 +590,12 @@ trusted.name3=0xdeface
+ trusted.name=0xbabe
+ trusted.name3=0xdeface
+ 
++# file: SCRATCH_MNT/dir
++trusted.name=0xbabe
++trusted.name3=0xdeface
++user.name=0xbabe
++user.name3=0xdeface
++
+ # file: SCRATCH_MNT/here
+ trusted.9=0x3837
+ trusted.a=0x6263
+@@ -606,17 +608,15 @@ trusted.a=0x6263
+ trusted.9=0x3837
+ trusted.a=0x6263
+ 
+- -# file: SCRATCH_MNT/descend
+- -user.1=0x3233
+- -user.x=0x797a
+- -
+- -# file: SCRATCH_MNT/descend/down
+- -user.1=0x3233
+- -user.x=0x797a
++# file: SCRATCH_MNT/lnk
++trusted.name=0xbabe
++trusted.name3=0xdeface
+ 
+- -# file: SCRATCH_MNT/descend/down/here
+- -user.1=0x3233
+- -user.x=0x797a
++# file: SCRATCH_MNT/reg
++trusted.name=0xbabe
++trusted.name3=0xdeface
++user.name=0xbabe
++user.name3=0xdeface
+ 
+ 
+ 
+diff --git a/common.attr b/common.attr
+index 3e2ba85..b49d990 100644
+- --- a/common.attr
++++ b/common.attr
+@@ -176,6 +176,13 @@ _require_attrs()
+     rm -f $TEST_DIR/syscalltest.out
+ }
+ 
++# getfattr -R returns info in readdir order which varies from fs to fs.
++# This sorts the output by filename
++_sort_getfattr_output()
++{
++	awk '{a[FNR]=$0}END{n = asort(a); for(i=1; i <= n; i++) print a[i]"\n"}' RS=''
++}
++
+ # set maximum total attr space based on fs type
+ if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" ]; then
+ 	MAX_ATTRS=1000
 
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
+Comment: GPGTools - http://gpgtools.org
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iQIcBAEBAgAGBQJPIHZtAAoJECCuFpLhPd7g2yMP/1VU2RhD8gdfpJIQKGvZjurP
+XGmv2tLY/3eDWTwbpm3E5m3EmXIAZpq+ahUYT9C+I8afw0oLv4zggAQ3M6P20JlM
+dM/M7imNHYfafIMr7wIw0+Iv0pt/tpDv3cm2kxJDJq+yW88Y+tRG/ifU8uSjREyX
+WBSqKjo3mJ0CJ03Chh9xWDK7AV4reYW3cxlCNMMzUrRPho7hWIrZN58GhDO4esqa
+x11eFp4qk6I5ApExfpa5PJIGTT7xepCsQsDSaf2HNKzSEg3c5fzV43nHUFl+qRNH
+FQ0CPx10VMhxtr3RZI7laN01yHk5qWjMFB9ufldot6Xv/CFwU++zBVH21IwKAgvR
+D/tihuxUf8Sllpa0+DuMTuobg2cZuvlyshkWeU4YGAbyFfxirPNVjqEcnfnIMnoA
++C3Sc/8DTd70C8WG9M5ON9sMmGtJr/s93OAZMwiLHGvBC1GZf51BvAI+l7ln3Ug3
+jws77r4x1P01da6ciUsESNibCrilCiw3Q2XcYJU/VfbxpFZ0ro0ib3wA4O654vqN
+V38zh7BOipn7ukWIn8KRc09d9X/PqsqeFNVaLJA+tMsxH021J8uluG4nTmn3a+jM
+t79YFK0JccMk8t0ShCTUjhnhHXwdrVVs8MCCghc9QoYg2/HEQrcDPKft69hM9UTL
+OrK3+QKMf3JATAYdgXSg
+=w2HJ
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
