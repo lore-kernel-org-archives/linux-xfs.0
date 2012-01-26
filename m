@@ -1,28 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0Q50gYE149076
-	for <linux-xfs@oss.sgi.com>; Wed, 25 Jan 2012 23:00:45 -0600
-Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
-	ESMTP id USMcz96FEIahyj61 for <linux-xfs@oss.sgi.com>;
-	Wed, 25 Jan 2012 21:00:40 -0800 (PST)
-Received: from list by lo.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RqHRu-0002c1-9V
-	for linux-xfs@oss.sgi.com; Thu, 26 Jan 2012 06:00:38 +0100
-Received: from wombat.san-francisco.ca.us ([75.101.60.64])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 26 Jan 2012 06:00:38 +0100
-Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 26 Jan 2012 06:00:38 +0100
-From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Subject: Re: help with deciphering kernel dmesg
-Date: Wed, 25 Jan 2012 20:57:20 -0800
-Message-ID: <g237v8xm99.ln2@goaway.wombat.san-francisco.ca.us>
-References: <a9g4v8xkfp.ln2@goaway.wombat.san-francisco.ca.us>
-	<20120125064225.GR15102@dastard>
-Mime-Version: 1.0
+	q0QGD34Z252991 for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 10:13:03 -0600
+Message-ID: <4F217B8E.60601@sgi.com>
+Date: Thu, 26 Jan 2012 10:13:02 -0600
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [patch 04/12] xfs: cleanup xfs_log_space_wake
+References: <20111212141346.986825692@bombadil.infradead.org>	<20111212141434.065702206@bombadil.infradead.org>	<4F1DB36E.3060207@sgi.com>
+	<20120125161041.GB8360@infradead.org> <4F205358.5070702@sgi.com>
+In-Reply-To: <4F205358.5070702@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,81 +18,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 2012-01-25, Dave Chinner <david@fromorbit.com> wrote:
+On 01/25/12 13:09, Mark Tinguely wrote:
+> On 01/25/12 10:10, Christoph Hellwig wrote:
+>> On Mon, Jan 23, 2012 at 01:22:22PM -0600, Mark Tinguely wrote:
+>>> On 01/-10/63 13:59, Christoph Hellwig wrote:
+>>>> Remove the now unused opportunistic parameter, and use the the
+>>>> xlog_writeq_wake and xlog_reserveq_wake helpers now that we don't have
+>>>> to care about the opportunistic wakeups.
+>>>>
+>>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>>>
+>>> Looks good. My only concern is the way that xlog_grant_push_ail()
+>>> tries to kick start the writing of the log. It seems to me that a
+>>> combination of very large log requests could plug the log until the
+>>> next sync.
+>>
+>> How exactly?
+>>
 >
-> the xfs_info output would be really handy for determining what path
-> through the directory code XFS was taking whenteh crash occurred.
-
-No problem, here it is.  The device is an LVM volume.  Unfortunately
-I've mounted and umounted the drive a few times since the reboot, so I
-don't know how helpful this will actually be.  I can attempt to repeat
-the symptoms then try an xfs_info before attempting anything else.  (I
-ended up killing the xfs_repair -n to get this sooner, so I still do
-not have any information from that.  So far it's on phase 4, which is
-taking a very long time; I think the reshape is stealing IO cycles, 
-which it's not really supposed to.  It hasn't reported any errors so
-far.)
-
-meta-data=/dev/XXXXXXXX isize=256    agcount=57, agsize=61034784 blks
-         =                       sectsz=512   attr=0
-data     =                       bsize=4096   blocks=3417949184, imaxpct=25
-         =                       sunit=0      swidth=0 blks, unwritten=1
-naming   =version 2              bsize=4096  
-log      =internal               bsize=4096   blocks=32768, version=1
-         =                       sectsz=512   sunit=0 blks, lazy-count=0
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-> I'd be worried about those IO errors - i don't think that they were
-> the cause of the oops, but it implies that the underlying device is
-> bad in some way. That may have something to do with the reshape in
-> progress which make me worry that the reshape is actually keeping
-> your data safe....
-
-Yes, that was my worry as well.  Fortunately this is a backup that can
-be recreated, but I'd hate to lose my primary store then find out the
-backup is hosed.
-
-> As it is, the kernel crashed reading a directory buffer. It's hard
-> to say what went wrong - can you take the kernel image and run:
+> Thanks for giving me enough rope to hang myself :)
 >
-> $ gdb <path/to/kernel>
-> (gdb) l *(xfs_da_do_buf+0x43e)
+> I looked at it again and it could plug for a while, but not necessarily
+> until the next sync.
 >
-> And post the output so we can see what line number in the code the
-> crash occurred at? That might provide a bit more of a clue to what
-> the problem is.
+> I was looking at the fact that when the log is full,
+> xlog_grant_push_ail() will overlap cleaning threshold lsn for a bunch of
+> requests come in. This is because xlog_grant_push_ail() uses the current
+> tail when calculating cleaning threshold. This cleaning overlap will
+> happen until xfs_ail_push() cleans the space and the moves the log tail.
+>
+> If a (unrealistically) big request sized greater than MAX(log size/4,
+> 256) follows some other requests then the big request determines the
+> amount cleaned out of the queue. When the space is cleaned out, the
+> earlier processes waiting for the log are awoken and use up the cleaned
+> space, and there will not be enough space for the big request. Future
+> requests will clean up to MAX(their request size, log size/4, 256). This
+> will not be enough to satisfy the big request at the front of the
+> request queue. We will have to wait another cleaning cycle for the tail
+> to move and another log space request but even this big request would
+> eventually get satisfied.
+>
+>
+>
+>
+> --Mark Tinguely
 
-Does my kernel need debugging symbols compiled in?  Because my kernel
-doesn't seem to want to cooperate with gdb:
 
-# gdb /boot/vmlinuz-2.6.39-4.el5.elrepo 
-GNU gdb (GDB) Red Hat Enterprise Linux (7.0.1-37.el5_7.1)
-[snip]
-This GDB was configured as "x86_64-redhat-linux-gnu".
-For bug reporting instructions, please see:
-<http://www.gnu.org/software/gdb/bugs/>...
-"/boot/vmlinuz-2.6.39-4.el5.elrepo": not in executable format: File format not recognized
-(gdb) l *(xfs_da_do_buf+0x43e)
-No symbol table is loaded.  Use the "file" command.
+Would it be out of line to kick start the cleaning process when we know 
+there are more processes sleeping but there is not enough available 
+space to wake them?
 
-My compiling skills are generally confined to ./configure;make;make
-install, so I'm not sure where to go next.  If debugging is needed to be
-compiled into the kernel, that may be problematic--it looks like ELrepo
-doesn't provide the same kernel with debug options, so I'd have to build
-one myself to get that.  (Wow, I haven't built a kernel in over five
-years!)
+This would eliminate all my "plugging" concerns and does not require 
+changes elsewhere.
 
---keith
+STATIC bool
+xlog_grant_head_wake(
+         struct log              *log,
+         struct xlog_grant_head  *head,
+         int                     *free_bytes)
+{
+         struct xlog_ticket      *tic;
+         int                     need_bytes;
 
--- 
-kkeller@wombat.san-francisco.ca.us
+         list_for_each_entry(tic, &head->waiters, t_queue) {
+                 need_bytes = xlog_ticket_reservation(log, head, tic);
+-               if (*free_bytes < need_bytes)
++               if (*free_bytes < need_bytes) {
++                       xlog_grant_push_ail(log, need_bytes);
+                         return false;
++               }
 
+                 *free_bytes -= need_bytes;
+                 trace_xfs_log_grant_wake_up(log, tic);
+                 wake_up_process(tic->t_task);
+         }
+
+         return true;
+}
 
 _______________________________________________
 xfs mailing list
