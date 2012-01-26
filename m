@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0PMtdpT082016 for <xfs@oss.sgi.com>; Wed, 25 Jan 2012 16:55:39 -0600
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	pGfeAhsE7cyAIU1V for <xfs@oss.sgi.com>;
-	Wed, 25 Jan 2012 14:55:37 -0800 (PST)
-Date: Thu, 26 Jan 2012 09:55:35 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Does Ext4 support parallel write similar to XFS?
-Message-ID: <20120125225535.GU15102@dastard>
-References: <CADDb1s2w9ZwMXn38n8TcxhFNrUsXN1Gnxq-suAP2-M+R7YhFsg@mail.gmail.com>
-	<4F202F2E.9000608@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F202F2E.9000608@redhat.com>
+	q0Q50gYE149076
+	for <linux-xfs@oss.sgi.com>; Wed, 25 Jan 2012 23:00:45 -0600
+Received: from lo.gmane.org (lo.gmane.org [80.91.229.12]) by cuda.sgi.com with
+	ESMTP id USMcz96FEIahyj61 for <linux-xfs@oss.sgi.com>;
+	Wed, 25 Jan 2012 21:00:40 -0800 (PST)
+Received: from list by lo.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RqHRu-0002c1-9V
+	for linux-xfs@oss.sgi.com; Thu, 26 Jan 2012 06:00:38 +0100
+Received: from wombat.san-francisco.ca.us ([75.101.60.64])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Jan 2012 06:00:38 +0100
+Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Jan 2012 06:00:38 +0100
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: help with deciphering kernel dmesg
+Date: Wed, 25 Jan 2012 20:57:20 -0800
+Message-ID: <g237v8xm99.ln2@goaway.wombat.san-francisco.ca.us>
+References: <a9g4v8xkfp.ln2@goaway.wombat.san-francisco.ca.us>
+	<20120125064225.GR15102@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +31,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Amit Sahrawat <amit.sahrawat83@gmail.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: linux-xfs@oss.sgi.com
 
-T24gV2VkLCBKYW4gMjUsIDIwMTIgYXQgMTA6MzQ6NTRBTSAtMDYwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IE9uIDEvMjQvMTIgMTE6MTkgUE0sIEFtaXQgU2FocmF3YXQgd3JvdGU6Cj4gPiBJbiBY
-RlMgd2UgY2FuIHdyaXRlIHBhcmFsbGVsIChpLixlIHdlIGNhbiBtYWtlIHVzZSBvZiBhbGxvY2F0
-aW9uCj4gPiBncm91cHMgZm9yIHdyaXRpbmcgcHJvY2VzcykuIElmIHRoZSBmaWxlcyBhcmUga2Vw
-dCBpbiBpbmRpdmlkdWFsCj4gPiBkaXJlY3RvcmllcywgdGhlcmUgaXMgYSBwb3NzaWJpbGl0eSB0
-aGF0IGZpcnN0IHRoZSBibG9ja3MgZm9yIHRoYXQKPiA+IGZpbGVzIGJlIHVzZWQgZnJvbSBpbmRp
-dmlkdWFsIGFsbG9jYXRpb24gZ3JvdXBzLiBJZiBJIHN0YXJ0IOKAmDTigJkKPiA+IHdyaXRpbmcg
-cHJvY2VzcyhjcCAxMDBNQl9maWxlIC88ZGlybnVtPi8pIOKAkyBhZnRlciB3cml0aW5nIGlzIGZp
-bmlzaGVkCj4gPiDigJMgaWYgSSBjaGVjayB0aGUgYm1hcCDigJMgaXQgZG9lcyBzaG93cyB0aGF0
-IGluaXRpYWwgYWxsb2NhdGlvbiB3YXMgZnJvbQo+ID4gaW5kaXZpZHVhbCBhbGxvY2F0aW9uIGdy
-b3Vwcy4KPiA+IEV2ZW4gdGhvdWdoIGluIEV4dDQgYWxzbyB3ZSBkbyBoYXZlIGdyb3VwcyDigJMg
-YnV0IEkgYW0gbm90IGFibGUgdG8gZ2V0Cj4gPiBiZWhhdmlvciBzaW1pbGFyIHRvIFhGUy4KPiA+
-IElmIEkgY2hlY2sgdGhlIGZpbGUgZXh0ZW50cyDigJMgdGhlIGV4dGVudHMgYXJlIGluIG1peGVk
-IGZvcm0sIHRoZQo+ID4gYWxsb2NhdGlvbiBwYXR0ZXJuIGlzIGFsc28gdmVyeSBmcmFnbWVudGVk
-Lgo+ID4gCj4gPiBQbGVhc2Ugc2hhcmUgbW9yZSBvbiB0aGlzLiBBbHNvLCBpZiB0aGVyZSBpcyBh
-IHBvc3NpYmxlIGV4YWN0IHRlc3QKPiA+IGNhc2UgdG8gY2hlY2sgZm9yIHBhcmFsbGVsIHdyaXRl
-cyBzdXBwb3J0Lgo+IAo+IEl0IHNlZW1zIHRoYXQgeW91IGFyZSBhc2tpbmcgbW9yZSBhYm91dCBh
-bGxvY2F0aW9uIHBvbGljeSB0aGFuIHBhcmFsbGVsaXNtCj4gaW4gZ2VuZXJhbD8gIFdpdGggZWl0
-aGVyIGZpbGVzeXN0ZW0sIHlvdSBjb3VsZCB1c2UgcHJlYWxsb2NhdGlvbiB0byB3aW5kCj4gdXAg
-d2l0aCBtb3JlIGNvbnRpZ3VvdXMgZmlsZXMgd2hlbiB5b3Ugd3JpdGUgdGhlbSBpbiBwYXJhbGxl
-bCwgdGhvdWdoCj4gdGhhdCByZXF1aXJlcyBzb21lIGlkZWEgb2YgdGhlIGZpbGUgc2l6ZSBhaGVh
-ZCBvZiB0aW1lLgo+IAo+IGV4dDQgZG9lc24ndCBoYXZlIHRoYXQgZXhhY3QgZGlyOjpncm91cCBo
-ZXVyaXN0aWMgdGhhdCB4ZnMgdXNlcywKPiBidXQgaXQgZG9lcyBoYXZlIG90aGVyIG1lY2hhbmlz
-bXMgYW5kIGhldXJpc3RpY3MgdG8gdHJ5IHRvIGdldCBnb29kCj4gZmlsZSBhbmQgZGlyZWN0b3J5
-IGxheW91dC4KClhGcyBoYXMgZGlmZmVyZW50IGFsbG9jYXRpb24gcG9saWNpZXMgYWNjb3JkaW5n
-IHRvIG1vdW50IG9wdGlvbnMKdXNlZC4gIGlub2RlMzIgKGRlZmF1bHQgZm9yID4gMVRCKSwgaW5v
-ZGU2NCAoZGVmYXVsdCBmb3IgPDFUQikgYW5kCmZpbGVzdHJlYW1zLiBFYWNoIHdpbGwgZ2l2ZSB5
-b3UgZGlmZmVyZW50IGxheW91dHMgZm9yIHRoZSBzYW1lIHRlc3QKZGVwZW5kaW5nIG9uIHRoZSBz
-aXplIG9mIHlvdXIgZmlsZXN5c3RlbSBhbmQgdGhlIGFtb3VudCBvZiBmcmVlCnNwYWNlIHlvdSBo
-YXZlIGF2YWlsYWJsZSBpbiBpdC4KCklmIFhGUyBkb2VzIHdoYXQgeW91IHdhbnQsIHRoZW4gdXNl
-IGl0LiBUaGVyZSBpcyBubyBnb29kIHJlYXNvbiBmb3IKdHJ5aW5nIHRvIG1ha2UgZXh0NCBkbyBl
-dmVyeXRoaW5nIFhGUyBkb2VzIGJlY2F1c2UgaXQgc2ltcGx5IGNhbid0LgpFc3BlY2lhbGx5IHdo
-ZW4gaXQgY29tZXMgdG8gYWxsb2NhdGlvbiBzdHJhdGVnaWVzIGFuZCBwb2xpY2llcy4uLgoKQ2hl
-ZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
-Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 2012-01-25, Dave Chinner <david@fromorbit.com> wrote:
+>
+> the xfs_info output would be really handy for determining what path
+> through the directory code XFS was taking whenteh crash occurred.
+
+No problem, here it is.  The device is an LVM volume.  Unfortunately
+I've mounted and umounted the drive a few times since the reboot, so I
+don't know how helpful this will actually be.  I can attempt to repeat
+the symptoms then try an xfs_info before attempting anything else.  (I
+ended up killing the xfs_repair -n to get this sooner, so I still do
+not have any information from that.  So far it's on phase 4, which is
+taking a very long time; I think the reshape is stealing IO cycles, 
+which it's not really supposed to.  It hasn't reported any errors so
+far.)
+
+meta-data=/dev/XXXXXXXX isize=256    agcount=57, agsize=61034784 blks
+         =                       sectsz=512   attr=0
+data     =                       bsize=4096   blocks=3417949184, imaxpct=25
+         =                       sunit=0      swidth=0 blks, unwritten=1
+naming   =version 2              bsize=4096  
+log      =internal               bsize=4096   blocks=32768, version=1
+         =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+> I'd be worried about those IO errors - i don't think that they were
+> the cause of the oops, but it implies that the underlying device is
+> bad in some way. That may have something to do with the reshape in
+> progress which make me worry that the reshape is actually keeping
+> your data safe....
+
+Yes, that was my worry as well.  Fortunately this is a backup that can
+be recreated, but I'd hate to lose my primary store then find out the
+backup is hosed.
+
+> As it is, the kernel crashed reading a directory buffer. It's hard
+> to say what went wrong - can you take the kernel image and run:
+>
+> $ gdb <path/to/kernel>
+> (gdb) l *(xfs_da_do_buf+0x43e)
+>
+> And post the output so we can see what line number in the code the
+> crash occurred at? That might provide a bit more of a clue to what
+> the problem is.
+
+Does my kernel need debugging symbols compiled in?  Because my kernel
+doesn't seem to want to cooperate with gdb:
+
+# gdb /boot/vmlinuz-2.6.39-4.el5.elrepo 
+GNU gdb (GDB) Red Hat Enterprise Linux (7.0.1-37.el5_7.1)
+[snip]
+This GDB was configured as "x86_64-redhat-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+"/boot/vmlinuz-2.6.39-4.el5.elrepo": not in executable format: File format not recognized
+(gdb) l *(xfs_da_do_buf+0x43e)
+No symbol table is loaded.  Use the "file" command.
+
+My compiling skills are generally confined to ./configure;make;make
+install, so I'm not sure where to go next.  If debugging is needed to be
+compiled into the kernel, that may be problematic--it looks like ELrepo
+doesn't provide the same kernel with debug options, so I'd have to build
+one myself to get that.  (Wow, I haven't built a kernel in over five
+years!)
+
+--keith
+
+-- 
+kkeller@wombat.san-francisco.ca.us
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
