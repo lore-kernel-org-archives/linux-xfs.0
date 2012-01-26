@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0QGD34Z252991 for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 10:13:03 -0600
-Message-ID: <4F217B8E.60601@sgi.com>
-Date: Thu, 26 Jan 2012 10:13:02 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	q0QFvbCv244925 for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 09:57:37 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id 8SMrEXSkCked1kxI
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 26 Jan 2012 07:57:35 -0800 (PST)
+Received: by lahd3 with SMTP id d3so446996lah.26
+	for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 07:57:34 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [patch 04/12] xfs: cleanup xfs_log_space_wake
-References: <20111212141346.986825692@bombadil.infradead.org>	<20111212141434.065702206@bombadil.infradead.org>	<4F1DB36E.3060207@sgi.com>
-	<20120125161041.GB8360@infradead.org> <4F205358.5070702@sgi.com>
-In-Reply-To: <4F205358.5070702@sgi.com>
+In-Reply-To: <20120124213936.GA1505@infradead.org>
+References: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
+	<20120124213936.GA1505@infradead.org>
+Date: Thu, 26 Jan 2012 13:57:34 -0200
+Message-ID: <CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
+Subject: Re: XFS problem
+From: Kelbel Junior <jymmyjr@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,90 +24,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 01/25/12 13:09, Mark Tinguely wrote:
-> On 01/25/12 10:10, Christoph Hellwig wrote:
->> On Mon, Jan 23, 2012 at 01:22:22PM -0600, Mark Tinguely wrote:
->>> On 01/-10/63 13:59, Christoph Hellwig wrote:
->>>> Remove the now unused opportunistic parameter, and use the the
->>>> xlog_writeq_wake and xlog_reserveq_wake helpers now that we don't have
->>>> to care about the opportunistic wakeups.
->>>>
->>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
->>>
->>> Looks good. My only concern is the way that xlog_grant_push_ail()
->>> tries to kick start the writing of the log. It seems to me that a
->>> combination of very large log requests could plug the log until the
->>> next sync.
->>
->> How exactly?
->>
->
-> Thanks for giving me enough rope to hang myself :)
->
-> I looked at it again and it could plug for a while, but not necessarily
-> until the next sync.
->
-> I was looking at the fact that when the log is full,
-> xlog_grant_push_ail() will overlap cleaning threshold lsn for a bunch of
-> requests come in. This is because xlog_grant_push_ail() uses the current
-> tail when calculating cleaning threshold. This cleaning overlap will
-> happen until xfs_ail_push() cleans the space and the moves the log tail.
->
-> If a (unrealistically) big request sized greater than MAX(log size/4,
-> 256) follows some other requests then the big request determines the
-> amount cleaned out of the queue. When the space is cleaned out, the
-> earlier processes waiting for the log are awoken and use up the cleaned
-> space, and there will not be enough space for the big request. Future
-> requests will clean up to MAX(their request size, log size/4, 256). This
-> will not be enough to satisfy the big request at the front of the
-> request queue. We will have to wait another cleaning cycle for the tail
-> to move and another log space request but even this big request would
-> eventually get satisfied.
->
->
->
->
-> --Mark Tinguely
+Well, in 24/01 i upgrade to the kernel 3.2.1 in one server and forgot
+read my emails...until now it's running without problems.
+Then, yesterday i put kernel 3.2.1 on another server and this morning
+a several same messages "server013 kernel: XFS: possible memory
+allocation deadlock in kmem_alloc (mode:0x250)" and delays.
+
+(without call trace because i forgot to apply that patch with dump_stack)
+
+Now i applied the dump_stack and the latest patches that you sent.
+I'm trying to discover what triggers this bug, to help in a
+solution... I tell you any news
 
 
-Would it be out of line to kick start the cleaning process when we know 
-there are more processes sleeping but there is not enough available 
-space to wake them?
+*** Some useful information:
 
-This would eliminate all my "plugging" concerns and does not require 
-changes elsewhere.
+# mount
+/dev/sdb1 on MOUNTPOINT type xfs (rw,noatime)
 
-STATIC bool
-xlog_grant_head_wake(
-         struct log              *log,
-         struct xlog_grant_head  *head,
-         int                     *free_bytes)
-{
-         struct xlog_ticket      *tic;
-         int                     need_bytes;
+But in some cases i use RAID and mount the partition with the
+following settings (and happen the same problem):
+/dev/mapper/server012_vg-server012_vol on MOUNTPOINT type xfs
+(rw,noatime,nodiratime,inode64,nobarrier)
 
-         list_for_each_entry(tic, &head->waiters, t_queue) {
-                 need_bytes = xlog_ticket_reservation(log, head, tic);
--               if (*free_bytes < need_bytes)
-+               if (*free_bytes < need_bytes) {
-+                       xlog_grant_push_ail(log, need_bytes);
-                         return false;
-+               }
+HD model:
+Seagate ST31000528AS -- Barracuda 7200.12 SATA 3Gb/s 1TB Hard Drive
 
-                 *free_bytes -= need_bytes;
-                 trace_xfs_log_grant_wake_up(log, tic);
-                 wake_up_process(tic->t_task);
-         }
+I work in a cache solution company, so I/O performance is very
+important in our context.
 
-         return true;
-}
+
+Thanks.
+Kelbel Junior
 
 _______________________________________________
 xfs mailing list
