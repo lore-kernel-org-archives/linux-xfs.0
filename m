@@ -1,21 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0QFvbCv244925 for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 09:57:37 -0600
-Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
-	[209.85.215.53]) by cuda.sgi.com with ESMTP id 8SMrEXSkCked1kxI
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Jan 2012 07:57:35 -0800 (PST)
-Received: by lahd3 with SMTP id d3so446996lah.26
-	for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 07:57:34 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20120124213936.GA1505@infradead.org>
-References: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
-	<20120124213936.GA1505@infradead.org>
-Date: Thu, 26 Jan 2012 13:57:34 -0200
-Message-ID: <CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
-Subject: Re: XFS problem
-From: Kelbel Junior <jymmyjr@gmail.com>
+	q0QJlvs7014739 for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 13:47:57 -0600
+From: bpm@sgi.com
+Subject: [PATCH] xfs: fix endian conversion issue in discard code
+Date: Thu, 26 Jan 2012 13:47:42 -0600
+Message-Id: <1327607262-3500-2-git-send-email-bpm@sgi.com>
+In-Reply-To: <1327607262-3500-1-git-send-email-bpm@sgi.com>
+References: <1327607262-3500-1-git-send-email-bpm@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,45 +16,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: stable@vger.kernel.org, xfs@oss.sgi.com, bpm@sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Well, in 24/01 i upgrade to the kernel 3.2.1 in one server and forgot
-read my emails...until now it's running without problems.
-Then, yesterday i put kernel 3.2.1 on another server and this morning
-a several same messages "server013 kernel: XFS: possible memory
-allocation deadlock in kmem_alloc (mode:0x250)" and delays.
+From: Dave Chinner <dchinner@redhat.com>
 
-(without call trace because i forgot to apply that patch with dump_stack)
+commit b1c770c273a4787069306fc82aab245e9ac72e9d upstream
 
-Now i applied the dump_stack and the latest patches that you sent.
-I'm trying to discover what triggers this bug, to help in a
-solution... I tell you any news
+When finding the longest extent in an AG, we read the value directly
+out of the AGF buffer without endian conversion. This will give an
+incorrect length, resulting in FITRIM operations potentially not
+trimming everything that it should.
 
+Note, for 3.0-stable this has been modified to apply to
+fs/xfs/linux-2.6/xfs_discard.c instead of fs/xfs/xfs_discard.c.  -bpm
 
-*** Some useful information:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+---
+ fs/xfs/linux-2.6/xfs_discard.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-# mount
-/dev/sdb1 on MOUNTPOINT type xfs (rw,noatime)
-
-But in some cases i use RAID and mount the partition with the
-following settings (and happen the same problem):
-/dev/mapper/server012_vg-server012_vol on MOUNTPOINT type xfs
-(rw,noatime,nodiratime,inode64,nobarrier)
-
-HD model:
-Seagate ST31000528AS -- Barracuda 7200.12 SATA 3Gb/s 1TB Hard Drive
-
-I work in a cache solution company, so I/O performance is very
-important in our context.
-
-
-Thanks.
-Kelbel Junior
+diff --git a/fs/xfs/linux-2.6/xfs_discard.c b/fs/xfs/linux-2.6/xfs_discard.c
+index 244e797..572494f 100644
+--- a/fs/xfs/linux-2.6/xfs_discard.c
++++ b/fs/xfs/linux-2.6/xfs_discard.c
+@@ -68,7 +68,7 @@ xfs_trim_extents(
+ 	 * Look up the longest btree in the AGF and start with it.
+ 	 */
+ 	error = xfs_alloc_lookup_le(cur, 0,
+-				    XFS_BUF_TO_AGF(agbp)->agf_longest, &i);
++			    be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest), &i);
+ 	if (error)
+ 		goto out_del_cursor;
+ 
+@@ -84,7 +84,7 @@ xfs_trim_extents(
+ 		if (error)
+ 			goto out_del_cursor;
+ 		XFS_WANT_CORRUPTED_GOTO(i == 1, out_del_cursor);
+-		ASSERT(flen <= XFS_BUF_TO_AGF(agbp)->agf_longest);
++		ASSERT(flen <= be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest));
+ 
+ 		/*
+ 		 * Too small?  Give up.
+-- 
+1.7.8.rc4
 
 _______________________________________________
 xfs mailing list
