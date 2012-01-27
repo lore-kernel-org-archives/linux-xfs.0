@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RArotL163183 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 04:53:51 -0600
+	q0RAx1Vn163474 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 04:59:01 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	GWEe6zS5XjpvJ2YC (version=TLSv1 cipher=AES256-SHA bits=256
+	00zl39dcsWf7MU7e (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Jan 2012 02:53:49 -0800 (PST)
-Date: Fri, 27 Jan 2012 05:53:45 -0500
+	Fri, 27 Jan 2012 02:59:00 -0800 (PST)
+Date: Fri, 27 Jan 2012 05:58:59 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] xfstests: Sort recursive getfattr output in 062
-Message-ID: <20120127105344.GB23335@infradead.org>
-References: <4EC10664.1080501@tuxadero.com>
-	<CAO47_-9nfO32nwOAQMVdqw6iWGWK+FWb+MD=WeOz_vr4YrrKmw@mail.gmail.com>
-	<20111115142246.GA7516@thunk.org>
-	<246EA1CC-3C33-4D41-80C0-2331C426EBB0@whamcloud.com>
-	<4ECA4282.5020908@whamcloud.com>
-	<401CC4FF-8955-4D5F-B620-5C39AF566123@mit.edu>
-	<4ECB2ADE.3010007@redhat.com> <4ECD28D1.1080800@redhat.com>
-	<4F20766E.9040902@sandeen.net>
+Subject: Re: XFS problem
+Message-ID: <20120127105859.GC23335@infradead.org>
+References: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
+	<20120124213936.GA1505@infradead.org>
+	<CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F20766E.9040902@sandeen.net>
+In-Reply-To: <CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,31 +30,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, Yu Jian <yujian@whamcloud.com>, Theodore Tso <tytso@MIT.EDU>, xfs-oss <xfs@oss.sgi.com>, Andreas Dilger <adilger@whamcloud.com>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>
+To: Kelbel Junior <jymmyjr@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Jan 25, 2012 at 03:38:54PM -0600, Eric Sandeen wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Thu, Jan 26, 2012 at 01:57:34PM -0200, Kelbel Junior wrote:
+> Well, in 24/01 i upgrade to the kernel 3.2.1 in one server and forgot
+> read my emails...until now it's running without problems.
+> Then, yesterday i put kernel 3.2.1 on another server and this morning
+> a several same messages "server013 kernel: XFS: possible memory
+> allocation deadlock in kmem_alloc (mode:0x250)" and delays.
 > 
-> Test 062 was made "generic" a while back, but it fails on any filesystem
-> which returns getfattr -R results (aka readdir results) in something
-> other than inode-order.
-> 
-> With a little awk-fu we can sort the records from getfattr -R so that
-> the output is the same for xfs as well as ext4, etc.
-> 
-> Also filter out lost+found which extN creates at mkfs time, but
-> some other filesystems do not.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> - ---
-> 
-> V2: move sorting function into common.attr
+> (without call trace because i forgot to apply that patch with dump_stack)
 
-Looks good,
+Not a problem, we know where it comes from now.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> I work in a cache solution company, so I/O performance is very
+> important in our context.
+
+What I'm really curious about is what kind of workloads you have.  We
+should only run into problems here if we have a huge extent indirection
+array, which points to a massively fragmented file.  Right now the
+handling of that isn't optimal, and we need to improve on that.  But
+you'd probably get better results by avoiding that massive fragmentaion
+in the first place, e.g. try to preallocate or set extent size hints
+if you do random writes to a sparse file.
 
 _______________________________________________
 xfs mailing list
