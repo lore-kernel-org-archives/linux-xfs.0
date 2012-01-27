@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RLFunW253311 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 15:15:56 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hHUETfsBiOZyNWse for
-	<xfs@oss.sgi.com>; Fri, 27 Jan 2012 13:15:55 -0800 (PST)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH 3/3] filemap: don't call generic_write_sync for -EIOCBQUEUED
-Date: Fri, 27 Jan 2012 16:15:49 -0500
-Message-Id: <1327698949-12616-4-git-send-email-jmoyer@redhat.com>
-In-Reply-To: <1327698949-12616-1-git-send-email-jmoyer@redhat.com>
-References: <1327698949-12616-1-git-send-email-jmoyer@redhat.com>
+	q0RLGLc9253361 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 15:16:21 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 5V671mgKd6mgS4Rz for <xfs@oss.sgi.com>;
+	Fri, 27 Jan 2012 13:16:20 -0800 (PST)
+Message-ID: <4F231423.8050900@sandeen.net>
+Date: Fri, 27 Jan 2012 15:16:19 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [PATCH] xfstests 273 274 275: do test in dedicated dir and leave
+	test files in it
+References: <1326388815-21181-1-git-send-email-guaneryu@gmail.com>
+In-Reply-To: <1326388815-21181-1-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,46 +21,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-ext4@vger.kernel.org, xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
-Cc: Jeff Moyer <jmoyer@redhat.com>
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On 1/12/12 11:20 AM, Eryu Guan wrote:
+> Do all testings in dedicated dir($SCRATCH_MNT/$seq) instead of
+> $SCRATCH_MNT and don't remove test files in _cleanup() for debug
+> purpose.
+> 
+> Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+> ---
+...
 
-As it stands, generic_file_aio_write will call into generic_write_sync
-when -EIOCBQUEUED is returned from __generic_file_aio_write.  EIOCBQUEUED
-indicates that an I/O was submitted but NOT completed.  Thus, we will
-flush the disk cache, potentially before the write(s) even make it to
-the disk!  Up until now, this has been the best we could do, as file
-systems didn't bother to flush the disk cache after an O_SYNC AIO+DIO
-write.  After applying the prior two patches to xfs and ext4, at least
-the major two file systems do the right thing.  So, let's go ahead and
-fix this backwards logic.
 
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- mm/filemap.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+> @@ -58,8 +60,9 @@ umount $SCRATCH_DEV 2>/dev/null
+>  _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>  _scratch_mount
+>  
+> -rm -rf $SCRATCH_MNT/*
+> -cd $SCRATCH_MNT
+> +rm -rf $WORK_DIR
+> +mkdir -p $WORK_DIR
 
-diff --git a/mm/filemap.c b/mm/filemap.c
-index c4ee2e9..004442f 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2634,7 +2634,7 @@ ssize_t generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
- 	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
- 	mutex_unlock(&inode->i_mutex);
- 
--	if (ret > 0 || ret == -EIOCBQUEUED) {
-+	if (ret > 0) {
- 		ssize_t err;
- 
- 		err = generic_write_sync(file, pos, ret);
--- 
-1.7.1
+Seems like the simplest solution is to just not rm -rf _anything_ immediately
+after the mkfs.  Why bother?  All it does is remove lost+found/ ... wouldn't
+it be simpler to just remove that one line?
+
+-Eric
+
+> +cd $WORK_DIR
+>  
+>  dd if=/dev/zero of=tmp1 bs=4K count=1 >/dev/null 2>&1
+>  if [ $? -ne 0 ]
 
 _______________________________________________
 xfs mailing list
