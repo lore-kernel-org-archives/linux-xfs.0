@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0R0mek1069184 for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 18:48:40 -0600
-Received: from out3-smtp.messagingengine.com (out3-smtp.messagingengine.com
-	[66.111.4.27]) by cuda.sgi.com with ESMTP id H7tCEzQdBTkM64Et
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 26 Jan 2012 16:48:39 -0800 (PST)
-Received: from compute2.internal (compute2.nyi.mail.srv.osa [10.202.2.42])
-	by gateway1.nyi.mail.srv.osa (Postfix) with ESMTP id 20988208C6
-	for <xfs@oss.sgi.com>; Thu, 26 Jan 2012 19:48:39 -0500 (EST)
-Date: Thu, 26 Jan 2012 16:47:05 -0800
-From: Greg KH <greg@kroah.com>
-Subject: Re: XFS update for 3.0-stable
-Message-ID: <20120127004705.GA19469@kroah.com>
-References: <1327607262-3500-1-git-send-email-bpm@sgi.com>
+	q0R6LCu4114782 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 00:21:12 -0600
+Message-ID: <4F22424E.8070407@hitachi.com>
+Date: Fri, 27 Jan 2012 15:21:02 +0900
+From: HAYASAKA Mitsuo <mitsuo.hayasaka.hu@hitachi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1327607262-3500-1-git-send-email-bpm@sgi.com>
+Subject: Re: [PATCH 0/3] xfs: change available ranges in quota check
+References: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
+	<20120124174612.GC9853@infradead.org>
+In-Reply-To: <20120124174612.GC9853@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,15 +22,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
-Cc: stable@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Jan 26, 2012 at 01:47:41PM -0600, bpm@sgi.com wrote:
-> Here's a fix for 3.0-stable related to trim support in xfs.
+Hi Christoph,
 
-Applied, thanks.
+(2012/01/25 2:46), Christoph Hellwig wrote:
+> On Mon, Jan 23, 2012 at 12:45:14PM +0900, Mitsuo Hayasaka wrote:
+>> Hi,
+>>
+>> This patch series changes available ranges of softlimit and
+>> hardlimit in quota check, as follows.
+>>
+>> (1) Consider new reservation for quota check
+>>     The disk block reservation checks if (current usage + new
+>>     reservation) reach the quota limit although the inode reservation
+>>     does not use the new reservation for quota check. It should
+>>     consider it, as well. This is mandatory for (2).
+> 
+> Can you send a testcase that reproduces issues with the old behaviour?
+> 
 
-greg k-h
+Regarding (1) related to inode reservation, current xfs works well
+because inode is reserved one by one if required.
+
+For example, when an new inode tries to be reserved in xfs_trans_dqresv(),
+it checks quota as follows.
+
+if (ninos > 0) {	// ninos: # of new inodes expected to be allocated.
+	if (cur_usage >= limit)
+		goto error;
+
+	cur_usage += ninos;
+}
+
+It checks only current usage, but this code works well since the caller
+always set the argument ninos to 1 or 0 in current xfs. So, inode can be
+used up to the limits due to the one by one reservation.
+
+To make it more general, this check should be the same way as the new
+block quota check introduced in the PATCH 2/3 where the disk block can
+be used up to the block quota limits.
+
+So, this part is a kind of cleanup patch. I'm going to split the part
+into another patch, and to send a new patch series.
+
+Thanks.
 
 _______________________________________________
 xfs mailing list
