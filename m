@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RIYVcx225080 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 12:34:31 -0600
+	q0RJ2UAH227019 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 13:02:30 -0600
 Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id 0HOGXblorpqUJrgB for <xfs@oss.sgi.com>;
-	Fri, 27 Jan 2012 10:34:29 -0800 (PST)
-Message-ID: <4F22EE37.6080306@sandeen.net>
-Date: Fri, 27 Jan 2012 12:34:31 -0600
+	with ESMTP id vtcwGIOHHhfWDsuP for <xfs@oss.sgi.com>;
+	Fri, 27 Jan 2012 11:02:28 -0800 (PST)
+Message-ID: <4F22F4C6.5030509@sandeen.net>
+Date: Fri, 27 Jan 2012 13:02:30 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests: 020: make this xattr test generic
-References: <4ECD4579.4080706@redhat.com>
-	<20111128110158.GB13766@infradead.org>
-In-Reply-To: <20111128110158.GB13766@infradead.org>
+Subject: Re: [PATCH] xfstests 278: Ensure lost+found is not created with wrong
+	link count (V4)
+References: <1326377187-27344-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1326377187-27344-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,132 +25,151 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-020 can be made generic by limiting the total attribute space
-used in the tests as appropriate.  Unless we know we have a
-large-xattr-capable fs, limit total space to a bit under one
-fs block.
+On 1/12/12 8:06 AM, Carlos Maiolino wrote:
+> xfs_repair was leaving lost+found directory with a wrong link count when a
+> cleaned inode was re-used to create lost+found. This test case confirm that,
+> after xfs_repair is executed, the lost+found inode is left in a consistent
+> state.
+> 
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Now passes for me on ext3, ext4, btrfs, as well as xfs.
+A couple minor comments below just to consider next time, but I think it's ok.
+I'll merge it to xfstests-dev with my signoff and Mark's review.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+-Eric
 
-V2: Move max attr definitions to common.attr, and change
-their names a bit.
+> ---
+>  278     |   87 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  278.out |    2 +
+>  group   |    1 +
+>  3 files changed, 90 insertions(+), 0 deletions(-)
+>  create mode 100755 278
+>  create mode 100644 278.out
+> 
+> diff --git a/278 b/278
+> new file mode 100755
+> index 0000000..89cae35
+> --- /dev/null
+> +++ b/278
+> @@ -0,0 +1,87 @@
+> +#! /bin/bash
+> +# FS QA Test No. 278
+> +#
+> +# Test xfs_repair to ensure it fixes the lost+found link count
+> +# at the first run. See also commit 198b747f255346bca64408875763b6ca0ed3d57d
+> +# from xfsprogs tree.
+> +#
+> +#
+> +#-----------------------------------------------------------------------
+> +# Copyright (c) 2011 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# This program is free software; you can redistribute it and/or
+> +# modify it under the terms of the GNU General Public License as
+> +# published by the Free Software Foundation.
+> +#
+> +# This program is distributed in the hope that it would be useful,
+> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
+> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> +# GNU General Public License for more details.
+> +#
+> +# You should have received a copy of the GNU General Public License
+> +# along with this program; if not, write the Free Software Foundation,
+> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+> +#-----------------------------------------------------------------------
+> +#
+> +# creator
+> +owner=cmaiolino@redhat.com
+> +
+> +seq=`basename $0`
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_scratch
+> +_scratch_mkfs >/dev/null 2>&1
 
-diff --git a/020 b/020
-index 56b9c3c..8b8db30 100755
---- a/020
-+++ b/020
-@@ -80,7 +80,7 @@ _attr_list()
- 
- 
- # real QA test starts here
--_supported_fs xfs udf
-+_supported_fs generic
- _supported_os Linux
- 
- _require_attrs
-@@ -119,9 +119,10 @@ _attr_list $testfile
- 
- echo "*** add lots of attributes"
- v=0
--while [ $v -lt 1000 ]
-+
-+while [ $v -lt $MAX_ATTRS ]
- do
--    echo "value_$v" | attr -s "attribute_$v" $testfile >>$seq.full
-+    echo -n "value_$v" | attr -s "attribute_$v" $testfile >>$seq.full
-     if [ $? -ne 0 ]
-     then
-         echo "!!! failed to add \"attribute_$v\""
-@@ -139,11 +140,12 @@ getfattr --absolute-names $testfile \
-     	/^#/ { next }
- 	/^[ 	]*$/ { next }
-         { l++ } 
--	END {print "   *** " (l - 1) " attribute(s)" }'
-+	END {print "   *** " (l - 1) " attribute(s)" }' \
-+    | sed s/$MAX_ATTRS/MAX_ATTRS/
- 
- echo "*** remove lots of attributes"
- v=0
--while [ $v -lt 1000 ]
-+while [ $v -lt $MAX_ATTRS ]
- do
-     if ! $ATTR_PROG -r "attribute_$v" $testfile >>$seq.full
-     then
-@@ -157,10 +159,11 @@ done
- _attr_list $testfile
- 
- echo "*** really long value"
--dd if=/dev/zero bs=1024 count=100 2>/dev/null \
-+dd if=/dev/zero bs=1 count=$MAX_ATTRVAL_SIZE 2>/dev/null \
-     | _attr -s "long_attr" $testfile >/dev/null
--    
--_attr -g "long_attr" $testfile | tail -n +2 | od -t x1
-+
-+OCTAL_SIZE=`echo "obase=8; $MAX_ATTRVAL_SIZE" | bc`
-+_attr -q -g "long_attr" $testfile | od -t x1 | sed -e "s/^0*$OCTAL_SIZE$/ATTRSIZE/"    
- _attr -r "long_attr" $testfile >/dev/null
- 
- 
-diff --git a/020.out b/020.out
-index 3e444be..7e3e65b 100644
---- a/020.out
-+++ b/020.out
-@@ -40,7 +40,7 @@ user.snrub="fish2\012"
- 
- *** add lots of attributes
- *** check
--   *** 1000 attribute(s)
-+   *** MAX_ATTRS attribute(s)
- *** remove lots of attributes
-    *** print attributes
- # file: <TESTFILE>
-@@ -49,8 +49,7 @@ user.snrub="fish2\012"
- *** really long value
- 0000000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
- *
--0200000 0a
--0200001
-+ATTRSIZE
- *** set/get/remove really long names (expect failure)
- attr_set: Invalid argument
- Could not set "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX" for <TESTFILE>
-diff --git a/common.attr b/common.attr
-index 37d0927..3e2ba85 100644
---- a/common.attr
-+++ b/common.attr
-@@ -176,5 +176,26 @@ _require_attrs()
-     rm -f $TEST_DIR/syscalltest.out
- }
- 
-+# set maximum total attr space based on fs type
-+if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" ]; then
-+	MAX_ATTRS=1000
-+else # Assume max ~1 block of attrs
-+	BLOCK_SIZE=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-+	# user.attribute_XXX="value.XXX" is about 32 bytes; leave some overhead
-+	let MAX_ATTRS=$BLOCK_SIZE/40
-+fi
-+
-+export MAX_ATTRS
-+
-+# Set max attr value size based on fs type
-+if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" -o "$FSTYP" == "btrfs" ]; then
-+	MAX_ATTRVAL_SIZE=64
-+else # Assume max ~1 block of attrs
-+	BLOCK_SIZE=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-+	# leave a little overhead
-+	let MAX_ATTRVAL_SIZE=$BLOCK_SIZE-256
-+fi
-+
-+export MAX_ATTRVAL_SIZE
- # make sure this script returns success
- /bin/true
+I suppose I'd prefer this go to $seq.full since we have it,
+but no big deal, lots of tests don't.
+
+> +_scratch_mount
+> +
+> +mkdir -p $SCRATCH_MNT/dir/subdir
+> +
+> +#get inodes to be changed
+> +DIR_INO=`ls -i $SCRATCH_MNT |awk '{print $1}'`
+> +SUBDIR_INO=`ls -i $SCRATCH_MNT/dir |awk '{print $1}'`
+
+I wonder if these should be more explicit; how about:
+
++DIR_INO=`ls -id $SCRATCH_MNT/dir |awk '{print $1}'`
++SUBDIR_INO=`ls -id $SCRATCH_MNT/dir/subdir |awk '{print $1}'`
+
+it's probably fine as is.
+
+> +_scratch_unmount
+> +
+> +echo "Silence is goodness..."
+> +
+> +# Corrupt DIR
+> +xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].inumber.i4 0" $SCRATCH_DEV >> $seq.full
+> +xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].name 0" $SCRATCH_DEV >> $seq.full
+> +xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].offset 0" $SCRATCH_DEV >> $seq.full
+> +xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.list[0].namelen 0" $SCRATCH_DEV >> $seq.full
+> +xfs_db -x -c "inode $DIR_INO" -c "write u.sfdir2.hdr.parent.i4 0" $SCRATCH_DEV >> $seq.full
+> +xfs_db -x -c "inode $DIR_INO" -c "write core.nlinkv2 0" $SCRATCH_DEV >> $seq.full
+> +
+> +# Corrupt SUBDIR
+> +xfs_db -x -c "inode $SUBDIR_INO" -c "write u.sfdir2.hdr.parent.i4 0" $SCRATCH_DEV >> $seq.full
+> +xfs_db -x -c "inode $SUBDIR_INO" -c "write core.nlinkv2 0" $SCRATCH_DEV >> $seq.full
+> +
+> +echo "===== BEGIN of xfs_repair =====" >> $seq.full
+> +echo "" >>$seq.full
+> +
+> +xfs_repair  $SCRATCH_DEV >> $seq.full 2>&1
+> +echo "===== END of xfs_repair =====" >> $seq.full
+> +
+> +if _check_scratch_fs; then
+> +	status=0
+> +else
+> +	status=1
+> +fi
+> +exit
+> diff --git a/278.out b/278.out
+> new file mode 100644
+> index 0000000..2acd770
+> --- /dev/null
+> +++ b/278.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 278
+> +Silence is goodness...
+> diff --git a/group b/group
+> index 99592d3..6f2d748 100644
+> --- a/group
+> +++ b/group
+> @@ -391,3 +391,4 @@ deprecated
+>  275 auto rw
+>  276 auto rw metadata
+>  277 auto ioctl quick metadata
+> +278 repair auto
 
 _______________________________________________
 xfs mailing list
