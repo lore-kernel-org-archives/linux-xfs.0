@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RJFbCE228415 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 13:15:38 -0600
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	lRi95sHzPXHQiJxn (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Jan 2012 11:15:36 -0800 (PST)
-Received: by iakl21 with SMTP id l21so2884616iak.26
-	for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 11:15:36 -0800 (PST)
+	q0RKgrf6249323 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 14:42:53 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id IazW9526j1OzgBqd for <xfs@oss.sgi.com>;
+	Fri, 27 Jan 2012 12:42:52 -0800 (PST)
+Message-ID: <4F230C4B.2010200@sandeen.net>
+Date: Fri, 27 Jan 2012 14:42:51 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20120127104413.GA12347@infradead.org>
-References: <CAEBWcAT2zfDskgDjFr0KcnfsT2A65r04AM1cv2-TfnNJTB1__Q@mail.gmail.com>
-	<20120127104413.GA12347@infradead.org>
-Date: Fri, 27 Jan 2012 20:15:36 +0100
-Message-ID: <CAEBWcATUgSKaeFG=siAFOAnKCTagHZUD=_1SB-hWe=u06Xhd1Q@mail.gmail.com>
-Subject: Re: Insane file system overhead on large volume
-From: Manny <dermaniac@gmail.com>
+Subject: Re: [PATCH] xfstests 273 274 275: do test in dedicated dir and leave
+	test files in it
+References: <1326388815-21181-1-git-send-email-guaneryu@gmail.com>
+In-Reply-To: <1326388815-21181-1-git-send-email-guaneryu@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,16 +25,109 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Eryu Guan <guaneryu@gmail.com>
 Cc: xfs@oss.sgi.com
 
-> Where did you get the sizes for the raw volume and the filesystem usage
-> from?
+On 1/12/12 11:20 AM, Eryu Guan wrote:
+> Do all testings in dedicated dir($SCRATCH_MNT/$seq) instead of
+> $SCRATCH_MNT and don't remove test files in _cleanup() for debug
+> purpose.
+> 
+> Signed-off-by: Eryu Guan <guaneryu@gmail.com>
+> ---
+...
 
-Oh my god, you are so right. The raw volume was actually just 24TB. My
-Raid controller decided to leave 6TB on the VDisk for a Snap pool.
+> diff --git a/274 b/274
+> index b658004..c351c40 100755
+> --- a/274
+> +++ b/274
+> @@ -35,13 +35,15 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+>  _cleanup()
+>  {
+>  	cd /
+> -	rm -f $SCRATCH_MNT/* $tmp.*
+> +	rm -f $tmp.*
+>  	_scratch_unmount
+>  }
+>  
+>  . ./common.rc
+>  . ./common.filter
+>  
+> +WORK_DIR="$SCRATCH_MNT/$seq"
+> +
+>  # real QA test starts here
+>  _supported_fs generic
+>  _supported_os IRIX Linux
+> @@ -57,8 +59,9 @@ umount $SCRATCH_DEV 2>/dev/null
+>  _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>  _scratch_mount
+>  
+> -rm -rf $SCRATCH_MNT/*
+> -cd $SCRATCH_MNT
+> +rm -rf $WORK_DIR
+> +mkdir -p $WORK_DIR
+> +cd $WORK_DIR
 
-Thanks for the hint, and sorry to bother you
+I think this test could use more work; for one, I don't like cd-ing into
+the dir, because then if you send output to $seq.full it doesn't go
+where you expect it.  I'd rather not cd, and:
+
+>  dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
+
+dd if=/dev/zero of=$WORK_DIR/test bs=4K count=1 >/dev/null 2>&1
+
+then specify the full path to the files instead.
+
+TBH I'm still trying to work out what exactly 274 is supposed to test;
+there are no comments about the behavior other than:
+
+# preallocation test
+
+As a general plea to those writing tests, _please_ include a concise
+but descriptive comment at the top so that the user knows just what
+the test tests, and how it tests it.  Inline comments help too;
+bash isn't always so easy to read.
+
+I'm thinking that an overhaul for 273 and 274 like I did for
+275 might be in order...
+
+-Eric
+
+>  if [ $? -ne 0 ]
+>  then
+> diff --git a/275 b/275
+> index 214262e..7a4d414 100755
+> --- a/275
+> +++ b/275
+> @@ -36,13 +36,15 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+>  _cleanup()
+>  {
+>  	cd /
+> -	rm -f $SCRATCH_MNT/* $tmp.*
+> +	rm -f $tmp.*
+>  	_scratch_unmount
+>  }
+>  
+>  . ./common.rc
+>  . ./common.filter
+>  
+> +WORK_DIR="$SCRATCH_MNT/$seq"
+> +
+>  # real QA test starts here
+>  _supported_fs generic
+>  _supported_os IRIX Linux
+> @@ -58,8 +60,9 @@ umount $SCRATCH_DEV 2>/dev/null
+>  _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>  _scratch_mount
+>  
+> -rm -rf $SCRATCH_MNT/*
+> -cd $SCRATCH_MNT
+> +rm -rf $WORK_DIR
+> +mkdir -p $WORK_DIR
+> +cd $WORK_DIR
+>  
+>  dd if=/dev/zero of=tmp1 bs=4K count=1 >/dev/null 2>&1
+>  if [ $? -ne 0 ]
 
 _______________________________________________
 xfs mailing list
