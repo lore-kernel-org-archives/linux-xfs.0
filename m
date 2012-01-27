@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RAx1Vn163474 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 04:59:01 -0600
+	q0RB0TQd163572 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 05:00:29 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	00zl39dcsWf7MU7e (version=TLSv1 cipher=AES256-SHA bits=256
+	UmgJaCWRGLYe0xzg (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Jan 2012 02:59:00 -0800 (PST)
-Date: Fri, 27 Jan 2012 05:58:59 -0500
+	Fri, 27 Jan 2012 03:00:28 -0800 (PST)
+Date: Fri, 27 Jan 2012 06:00:27 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS problem
-Message-ID: <20120127105859.GC23335@infradead.org>
-References: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
-	<20120124213936.GA1505@infradead.org>
-	<CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
+Subject: Re: [PATCH V2] xfstests: mount other filesystems with selinux
+	context as well
+Message-ID: <20120127110027.GD23335@infradead.org>
+References: <4ECD3262.105@redhat.com> <20111128110228.GC13766@infradead.org>
+	<4F1862FC.1050401@sandeen.net>
+	<20120124174500.GB9853@infradead.org>
+	<4F20700B.8060307@sandeen.net>
+	<20120125211438.GA11821@infradead.org> <4F2073EC.80208@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
+In-Reply-To: <4F2073EC.80208@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,30 +33,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kelbel Junior <jymmyjr@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Jan 26, 2012 at 01:57:34PM -0200, Kelbel Junior wrote:
-> Well, in 24/01 i upgrade to the kernel 3.2.1 in one server and forgot
-> read my emails...until now it's running without problems.
-> Then, yesterday i put kernel 3.2.1 on another server and this morning
-> a several same messages "server013 kernel: XFS: possible memory
-> allocation deadlock in kmem_alloc (mode:0x250)" and delays.
-> 
-> (without call trace because i forgot to apply that patch with dump_stack)
+In that case the update patch is fine with me,
 
-Not a problem, we know where it comes from now.
-
-> I work in a cache solution company, so I/O performance is very
-> important in our context.
-
-What I'm really curious about is what kind of workloads you have.  We
-should only run into problems here if we have a huge extent indirection
-array, which points to a massively fragmented file.  Right now the
-handling of that isn't optimal, and we need to improve on that.  But
-you'd probably get better results by avoiding that massive fragmentaion
-in the first place, e.g. try to preallocate or set extent size hints
-if you do random writes to a sparse file.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
