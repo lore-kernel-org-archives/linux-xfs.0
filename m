@@ -1,26 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RB0TQd163572 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 05:00:29 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	UmgJaCWRGLYe0xzg (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Jan 2012 03:00:28 -0800 (PST)
-Date: Fri, 27 Jan 2012 06:00:27 -0500
+	q0RB2sPo163936 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 05:02:54 -0600
+Date: Fri, 27 Jan 2012 06:02:38 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] xfstests: mount other filesystems with selinux
-	context as well
-Message-ID: <20120127110027.GD23335@infradead.org>
-References: <4ECD3262.105@redhat.com> <20111128110228.GC13766@infradead.org>
-	<4F1862FC.1050401@sandeen.net>
-	<20120124174500.GB9853@infradead.org>
-	<4F20700B.8060307@sandeen.net>
-	<20120125211438.GA11821@infradead.org> <4F2073EC.80208@sandeen.net>
+Subject: Re: [PATCH 0/3] xfs: change available ranges in quota check
+Message-ID: <20120127110238.GB31093@infradead.org>
+References: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
+	<20120124174612.GC9853@infradead.org>
+	<4F22424E.8070407@hitachi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F2073EC.80208@sandeen.net>
+In-Reply-To: <4F22424E.8070407@hitachi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,12 +24,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: HAYASAKA Mitsuo <mitsuo.hayasaka.hu@hitachi.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
 
-In that case the update patch is fine with me,
+On Fri, Jan 27, 2012 at 03:21:02PM +0900, HAYASAKA Mitsuo wrote:
+> > Can you send a testcase that reproduces issues with the old behaviour?
+> > 
+> 
+> Regarding (1) related to inode reservation, current xfs works well
+> because inode is reserved one by one if required.
+> 
+> For example, when an new inode tries to be reserved in xfs_trans_dqresv(),
+> it checks quota as follows.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I'm just curious what the intent behdind the patches was.  They look
+good to me, but I wonder why we need to change it at all.
+
+> To make it more general, this check should be the same way as the new
+> block quota check introduced in the PATCH 2/3 where the disk block can
+> be used up to the block quota limits.
+
+So I guess that's the part we'd want a test case for if possible.
 
 _______________________________________________
 xfs mailing list
