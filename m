@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0RJ8RgQ227449 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 13:08:27 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id sABFk20FZEIKHgjz
-	for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 11:08:26 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id B059C6C11A
-	for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 13:08:25 -0600 (CST)
-Message-ID: <4F22F62B.2090506@hardwarefreak.com>
-Date: Fri, 27 Jan 2012 13:08:27 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q0RJJjNi229112 for <xfs@oss.sgi.com>; Fri, 27 Jan 2012 13:19:46 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id r2DDNpKMWwRDCyrE for <xfs@oss.sgi.com>;
+	Fri, 27 Jan 2012 11:19:44 -0800 (PST)
+Message-ID: <4F22F8D2.7060305@sandeen.net>
+Date: Fri, 27 Jan 2012 13:19:46 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Insane file system overhead on large volume
-References: <CAEBWcAT2zfDskgDjFr0KcnfsT2A65r04AM1cv2-TfnNJTB1__Q@mail.gmail.com>
-In-Reply-To: <CAEBWcAT2zfDskgDjFr0KcnfsT2A65r04AM1cv2-TfnNJTB1__Q@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [ANNOUNCE] XFS Developers meeting in San Francisco, April 3rd
+References: <20120127170920.GA31465@infradead.org>
+In-Reply-To: <20120127170920.GA31465@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,33 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 1/27/2012 1:50 AM, Manny wrote:
-> Hi there,
+On 1/27/12 11:09 AM, Christoph Hellwig wrote:
+> I'd like to invite any current, past or future XFS developer to the
+> XFS developers meeting, which is happening as part of the 6th Annual Linux
+> Foundation Collaboration Summit in San Francisco on April, 3rd 2012.
 > 
-> I'm not sure if this is intended behavior, but I was a bit stumped
-> when I formatted a 30TB volume (12x3TB minus 2x3TB for parity in RAID
-> 6) with XFS and noticed that there were only 22 TB left. I just called
-> mkfs.xfs with default parameters - except for swith and sunit which
-> match the RAID setup.
+> All attendees should request an invitation from the Linux Foundation.
+> Attendees of the Linux Storage, Filesystem & MM Summit, which happens the
+> two days before the Collaboration Summit and the XFS Developers meeting
+> will automatically be invited to the Collaboration Summit.
 > 
-> Is it normal that I lost 8TB just for the file system? That's almost
-> 30% of the volume. Should I set the block size higher? Or should I
-> increase the number of allocation groups? Would that make a
-> difference? Whats the preferred method for handling such large
-> volumes?
+> Please reply to this mail on the xfs@oss.sgi.com list if you want to attend so
+> that I can keep track of the attendees, although you may join any time
+> available space permitting.
 
-Maybe you simply assigned 2 spares and forgot, so you actually only have
-10 RAID6 disks with 8 disks worth of stripe, equaling 24 TB, or 21.8
-TiB.  21.8 TiB matches up pretty closely with your 22 TB, so this
-scenario seems pretty plausible, dare I say likely.
+Yes, I hope to be there (and at the ext4 mtg prior) ;)  If I get an LSF
+invite it'll be a no-brainer, if not I will still try to get out for
+collab summit.
 
-If this is the case you'll want to reformat the 10 disk RAID6 with the
-proper sunit/swidth values.
-
--- 
-Stan
+-Eric
 
 _______________________________________________
 xfs mailing list
