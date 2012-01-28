@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0SExduq142089 for <xfs@oss.sgi.com>; Sat, 28 Jan 2012 08:59:40 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	p8TPiYscdw2qZQeL (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Jan 2012 06:59:36 -0800 (PST)
-Date: Sat, 28 Jan 2012 09:59:33 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: honor the O_SYNC flag for aysnchronous direct
-	I/O requests
-Message-ID: <20120128145933.GA10931@infradead.org>
-References: <1327698949-12616-1-git-send-email-jmoyer@redhat.com>
-	<1327698949-12616-2-git-send-email-jmoyer@redhat.com>
+	q0SEtPXo141337 for <xfs@oss.sgi.com>; Sat, 28 Jan 2012 08:55:25 -0600
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id AwE4UyTbjsHaNsuP for
+	<xfs@oss.sgi.com>; Sat, 28 Jan 2012 06:55:23 -0800 (PST)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Insane file system overhead on large volume
+Date: Sat, 28 Jan 2012 15:55:21 +0100
+References: <CAEBWcAT2zfDskgDjFr0KcnfsT2A65r04AM1cv2-TfnNJTB1__Q@mail.gmail.com>
+	<4F22EB3C.6020106@sandeen.net>
+	(sfid-20120127_225414_630806_3564B30F)
+In-Reply-To: <4F22EB3C.6020106@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1327698949-12616-2-git-send-email-jmoyer@redhat.com>
+Message-Id: <201201281555.22179.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,77 +22,81 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Manny <dermaniac@gmail.com>, Eric Sandeen <sandeen@sandeen.net>
 
-This looks pretty good.  Did this past xfstests?  I'd also like to add
-tests actually executing this code path just, to be sure.  E.g. variants
-of aio-stress actually using O_SYNC.  We can't easily test data really
-made it to disk that way, although at least we make sure the code
-doesn't break.
-
-On Fri, Jan 27, 2012 at 04:15:47PM -0500, Jeff Moyer wrote:
-> Hi,
-> 
-> If a file is opened with O_SYNC|O_DIRECT, the drive cache does not get
-> flushed after the write completion.  Instead, it's flushed *before* the
-> I/O is sent to the disk (in __generic_file_aio_write).
-
-XFS doesn't actually use __generic_file_aio_write, so this sentence
-isn't correct for XFS.
-
-> +	} else if (xfs_ioend_needs_cache_flush(ioend)) {
-> +		struct xfs_inode *ip = XFS_I(ioend->io_inode);
-> +		struct xfs_mount *mp = ip->i_mount;
-> +		int	err;
-> +		int	log_flushed = 0;
-> +
-> +		/*
-> +		 * Check to see if we only need to sync data.  If so,
-> +		 * we can skip the log flush.
-> +		 */
-> +		if (IS_SYNC(ioend->io_inode) ||
-> +		    (ioend->io_iocb->ki_filp->f_flags & __O_SYNC)) {
-
-> +			err = _xfs_log_force(mp, XFS_LOG_SYNC, &log_flushed);
-
-Can you add a TODO comment that this actually is synchronous and thus
-will block the I/O completion work queue?
-
-Also you can use _xfs_log_force_lsn here as don't need to flush the
-whole log, just up to the last lsn that touched the inode.  Copy, or
-better factor the code from xfs_dir_fsync for that.
-
-Last but not least this won't catch timestamp updates.  Given that I'm
-about to send a series making timestamp updates transaction I would not
-recommend you to bother with that, but if you want to take a look
-at how xfs_file_fsync deals with them.  Given that this series touches
-the same area I'd also like to take your xfs patch in through the xfs tree
-to avoid conflicts.
-
-> @@ -47,6 +47,7 @@ STATIC int xfsbufd(void *);
->  static struct workqueue_struct *xfslogd_workqueue;
->  struct workqueue_struct *xfsdatad_workqueue;
->  struct workqueue_struct *xfsconvertd_workqueue;
-> +struct workqueue_struct *xfsflushd_workqueue;
->  
->  #ifdef XFS_BUF_LOCK_TRACKING
->  # define XB_SET_OWNER(bp)	((bp)->b_last_holder = current->pid)
-> @@ -1802,8 +1803,15 @@ xfs_buf_init(void)
->  	if (!xfsconvertd_workqueue)
->  		goto out_destroy_xfsdatad_workqueue;
->  
-> +	xfsflushd_workqueue = alloc_workqueue("xfsflushd",
-> +					      WQ_MEM_RECLAIM, 1);
-
-This should allow a higher concurrently level, it's probably a good
-idea to pass 0 and use the default.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gRnJlaXRhZywgMjcuIEphbnVhciAyMDEyIHNjaHJpZWIgRXJpYyBTYW5kZWVuOgo+IE9uIDEv
+MjcvMTIgMTo1MCBBTSwgTWFubnkgd3JvdGU6Cj4gPiBIaSB0aGVyZSwKPiA+IAo+ID4gSSdtIG5v
+dCBzdXJlIGlmIHRoaXMgaXMgaW50ZW5kZWQgYmVoYXZpb3IsIGJ1dCBJIHdhcyBhIGJpdCBzdHVt
+cGVkCj4gPiB3aGVuIEkgZm9ybWF0dGVkIGEgMzBUQiB2b2x1bWUgKDEyeDNUQiBtaW51cyAyeDNU
+QiBmb3IgcGFyaXR5IGluIFJBSUQKPiA+IDYpIHdpdGggWEZTIGFuZCBub3RpY2VkIHRoYXQgdGhl
+cmUgd2VyZSBvbmx5IDIyIFRCIGxlZnQuIEkganVzdAo+ID4gY2FsbGVkIG1rZnMueGZzIHdpdGgg
+ZGVmYXVsdCBwYXJhbWV0ZXJzIC0gZXhjZXB0IGZvciBzd2l0aCBhbmQgc3VuaXQKPiA+IHdoaWNo
+IG1hdGNoIHRoZSBSQUlEIHNldHVwLgo+ID4gCj4gPiBJcyBpdCBub3JtYWwgdGhhdCBJIGxvc3Qg
+OFRCIGp1c3QgZm9yIHRoZSBmaWxlIHN5c3RlbT8gVGhhdCdzIGFsbW9zdAo+ID4gMzAlIG9mIHRo
+ZSB2b2x1bWUuIFNob3VsZCBJIHNldCB0aGUgYmxvY2sgc2l6ZSBoaWdoZXI/IE9yIHNob3VsZCBJ
+Cj4gPiBpbmNyZWFzZSB0aGUgbnVtYmVyIG9mIGFsbG9jYXRpb24gZ3JvdXBzPyBXb3VsZCB0aGF0
+IG1ha2UgYQo+ID4gZGlmZmVyZW5jZT8gV2hhdHMgdGhlIHByZWZlcnJlZCBtZXRob2QgZm9yIGhh
+bmRsaW5nIHN1Y2ggbGFyZ2UKPiA+IHZvbHVtZXM/Cj4gCj4gSWYgaXQgd2FzIDEyeDNUQiBJIGlt
+YWdpbmUgeW91J3JlIGNvbmZ1c2luZyBUQiB3aXRoIFRpQiwgc28KPiBwZXJoYXBzIHlvdXIgMzBU
+IGlzIHJlYWxseSBvbmx5IDI3VGlCIHRvIHN0YXJ0IHdpdGguCj4gCj4gQW55d2F5LCBmcyBtZXRh
+ZGF0YSBzaG91bGQgbm90IGVhdCBtdWNoIHNwYWNlOgo+IAo+ICMgbWtmcy54ZnMgLWRmaWxlLG5h
+bWU9ZnNmaWxlLHNpemU9MzB0Cj4gIyBscyAtbGggZnNmaWxlCj4gLXJ3LXItLXItLSAxIHJvb3Qg
+cm9vdCAzMFQgSmFuIDI3IDEyOjE4IGZzZmlsZQo+ICMgbW91bnQgLW8gbG9vcCBmc2ZpbGUgIG1u
+dC8KPiAjIGRmIC1oIG1udAo+IEZpbGVzeXN0ZW0gICAgICAgICAgICBTaXplICBVc2VkIEF2YWls
+IFVzZSUgTW91bnRlZCBvbgo+IC90bXAvZnNmaWxlICAgICAgICAgICAgMzBUICA1LjBNICAgMzBU
+ICAgMSUgL3RtcC9tbnQKPiAKPiBTbyBDaHJpc3RvcGgncyBxdWVzdGlvbiB3YXMgYSBnb29kIG9u
+ZTsgd2hlcmUgYXJlIHlvdSBnZXR0aW5nCj4geW91ciBzaXplcz8KCkFuIGFjYWRlbWljIHF1ZXN0
+aW9uOgoKV2h5IGlzIGl0IHRoYXQgSSBnZXQKCm1lcmthYmE6L3RtcD4gbWtmcy54ZnMgLWRmaWxl
+LG5hbWU9ZnNmaWxlLHNpemU9MzB0Cm1ldGEtZGF0YT1mc2ZpbGUgICAgICAgICAgICAgICAgIGlz
+aXplPTI1NiAgICBhZ2NvdW50PTMwLCBhZ3NpemU9MjY4NDM1NDU1IApibGtzCiAgICAgICAgID0g
+ICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBhdHRyPTIsIHByb2ppZDMyYml0PTAK
+ZGF0YSAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgYnNpemU9NDA5NiAgIGJsb2Nrcz04MDUz
+MDYzNjUwLCBpbWF4cGN0PTUKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc3VuaXQ9
+MCAgICAgIHN3aWR0aD0wIGJsa3MKbmFtaW5nICAgPXZlcnNpb24gMiAgICAgICAgICAgICAgYnNp
+emU9NDA5NiAgIGFzY2lpLWNpPTAKbG9nICAgICAgPUludGVybmVzIFByb3Rva29sbCAgICAgYnNp
+emU9NDA5NiAgIGJsb2Nrcz01MjE3MjgsIHZlcnNpb249MgogICAgICAgICA9ICAgICAgICAgICAg
+ICAgICAgICAgICBzZWN0c3o9NTEyICAgc3VuaXQ9MCBibGtzLCBsYXp5LWNvdW50PTEKcmVhbHRp
+bWUgPWtlaW5lICAgICAgICAgICAgICAgICAgZXh0c3o9NDA5NiAgIGJsb2Nrcz0wLCBydGV4dGVu
+dHM9MAoKbWVya2FiYTovdG1wPiBtb3VudCAtbyBsb29wIGZzZmlsZSAvbW50L3plaXQKbWVya2Fi
+YTovdG1wPiBkZiAtaFQgL21udC96ZWl0CkRhdGVpc3lzdGVtICAgIFR5cCAgR3LDtsOfZSBCZW51
+dHp0IFZlcmYuIFZlcnclIEVpbmdlaMOkbmd0IGF1ZgovZGV2L2xvb3AwICAgICB4ZnMgICAgMzBU
+ICAgICAzM00gICAzMFQgICAgMSUgL21udC96ZWl0Cm1lcmthYmE6L3RtcD4gTEFORz1DIGRmIC1o
+VCAvbW50L3plaXQKRmlsZXN5c3RlbSAgICAgVHlwZSAgU2l6ZSAgVXNlZCBBdmFpbCBVc2UlIE1v
+dW50ZWQgb24KL2Rldi9sb29wMCAgICAgeGZzICAgIDMwVCAgIDMzTSAgIDMwVCAgIDElIC9tbnQv
+emVpdAoKCjMzTWlCIHVzZWQgb24gZmlyc3QgbW91bnQgaW5zdGVhZCBvZiA1PwoKbWVya2FiYTov
+dG1wPiBjYXQgL3Byb2MvdmVyc2lvbgpMaW51eCB2ZXJzaW9uIDMuMi4wLTEtYW1kNjQgKERlYmlh
+biAzLjIuMS0yKSAoW+KApl0pIChnY2MgdmVyc2lvbiA0LjYuMiAKKERlYmlhbiA0LjYuMi0xMikg
+KSAjMSBTTVAgVHVlIEphbiAyNCAwNTowMTo0NSBVVEMgMjAxMgptZXJrYWJhOi90bXA+IG1rZnMu
+eGZzIC1WICAgICAgCm1rZnMueGZzIFZlcnNpb24gMy4xLjcKCk1heWJlIGl0cyBkdWUgdG8gbWUg
+dXNpbmcgYSB0bXBmcyBmb3IgL3RtcDoKCm1lcmthYmE6L3RtcD4gTEFORz1DIGRmIC1oVCAuCkZp
+bGVzeXN0ZW0gICAgIFR5cGUgICBTaXplICBVc2VkIEF2YWlsIFVzZSUgTW91bnRlZCBvbgp0bXBm
+cyAgICAgICAgICB0bXBmcyAgMi4wRyAgMi4wRyAgNi42TSAxMDAlIC90bXAKCgpIbW1tLCBidXQg
+Y3JlYXRpbmcgdGhlIGZpbGUgb24gRXh0NCBkb2VzIG5vdCB3b3JrOgoKbWVya2FiYTovaG9tZT4g
+TEFORz1DIGRmIC1oVCAuICAgICAgICAgICAgICAgICAgICAgCkZpbGVzeXN0ZW0gICAgICAgICAg
+ICAgICBUeXBlICBTaXplICBVc2VkIEF2YWlsIFVzZSUgTW91bnRlZCBvbgovZGV2L21hcHBlci9t
+ZXJrYWJhLWhvbWUgZXh0NCAgMjI0RyAgMjAyRyAgIDIwRyAgOTIlIC9ob21lCm1lcmthYmE6L2hv
+bWU+IExBTkc9QyBta2ZzLnhmcyAtZGZpbGUsbmFtZT1mc2ZpbGUsc2l6ZT0zMHQKbWV0YS1kYXRh
+PWZzZmlsZSAgICAgICAgICAgICAgICAgaXNpemU9MjU2ICAgIGFnY291bnQ9MzAsIGFnc2l6ZT0y
+Njg0MzU0NTUgCmJsa3MKICAgICAgICAgPSAgICAgICAgICAgICAgICAgICAgICAgc2VjdHN6PTUx
+MiAgIGF0dHI9MiwgcHJvamlkMzJiaXQ9MApkYXRhICAgICA9ICAgICAgICAgICAgICAgICAgICAg
+ICBic2l6ZT00MDk2ICAgYmxvY2tzPTgwNTMwNjM2NTAsIGltYXhwY3Q9NQogICAgICAgICA9ICAg
+ICAgICAgICAgICAgICAgICAgICBzdW5pdD0wICAgICAgc3dpZHRoPTAgYmxrcwpuYW1pbmcgICA9
+dmVyc2lvbiAyICAgICAgICAgICAgICBic2l6ZT00MDk2ICAgYXNjaWktY2k9MApsb2cgICAgICA9
+aW50ZXJuYWwgbG9nICAgICAgICAgICBic2l6ZT00MDk2ICAgYmxvY2tzPTUyMTcyOCwgdmVyc2lv
+bj0yCiAgICAgICAgID0gICAgICAgICAgICAgICAgICAgICAgIHNlY3Rzej01MTIgICBzdW5pdD0w
+IGJsa3MsIGxhenktY291bnQ9MQpyZWFsdGltZSA9bm9uZSAgICAgICAgICAgICAgICAgICBleHRz
+ej00MDk2ICAgYmxvY2tzPTAsIHJ0ZXh0ZW50cz0wCm1rZnMueGZzOiBHcm93aW5nIHRoZSBkYXRh
+IHNlY3Rpb24gZmFpbGVkCgpmYWxsb2NhdGUgaW5zdGVhZCBvZiBzcGFyc2UgZmlsZT8KCgpBbmQg
+b24gQlRSRlMgYXMgd2VsbCBhcyBYRlMgaXQgYXBwZWFycyB0byB0cnkgdG8gY3JlYXRlIGEgMzBU
+IGZpbGUgZm9yIApyZWFsLCBpLmUuIGJ5IHdyaXRpbmcgZGF0YSAtIEkgc3RvcHBlZCBpdCBiZWZv
+cmUgaXQgY291bGQgZG8gdG9vIG11Y2ggCmhhcm0uCgpXaGVyZSBkaWQgeW91IGNyZWF0ZSB0aGF0
+IGh1Z2lzaCBYRlMgZmlsZT8KCkNpYW8sCi0tIApNYXJ0aW4gJ0hlbGlvcycgU3RlaWdlcndhbGQg
+LSBodHRwOi8vd3d3LkxpY2h0dm9sbC5kZQpHUEc6IDAzQjAgMEQ2QyAwMDQwIDA3MTAgNEFGQSAg
+QjgyRiA5OTFCIEVBQUMgQTU5OSA4NEM3CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8v
+b3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
