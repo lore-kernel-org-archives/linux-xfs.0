@@ -1,27 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0TCo6Dn050451
-	for <linux-xfs@oss.sgi.com>; Sun, 29 Jan 2012 06:50:08 -0600
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id alE9hl9VrfvVxgDs (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Sun, 29 Jan 2012 04:50:05 -0800 (PST)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RrUCo-0002AC-VE
-	for linux-xfs@oss.sgi.com; Sun, 29 Jan 2012 13:50:03 +0100
-Received: from bd206cc2.virtua.com.br ([bd206cc2.virtua.com.br])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Sun, 29 Jan 2012 13:50:02 +0100
-Received: from marcosfrm by bd206cc2.virtua.com.br with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Sun, 29 Jan 2012 13:50:02 +0100
-From: Marcos Mello <marcosfrm@gmail.com>
-Subject: Placing the root partition on an XFS filesystem is not supported
-Date: Sun, 29 Jan 2012 12:46:42 +0000 (UTC)
-Message-ID: <loom.20120129T133929-288@post.gmane.org>
-Mime-Version: 1.0
+	q0TMKoY5150764 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 16:20:50 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	F1BPNRjAcrfOpvA5 for <xfs@oss.sgi.com>;
+	Sun, 29 Jan 2012 14:20:48 -0800 (PST)
+Date: Mon, 30 Jan 2012 09:20:47 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: reserved blocks pool default size
+Message-ID: <20120129222046.GG15102@dastard>
+References: <4F22843E.4050804@open-e.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F22843E.4050804@open-e.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +22,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: =?utf-8?B?xYF1a2FzeiBPbGXFmw==?= <lukasz.oles@open-e.com>
+Cc: xfs@oss.sgi.com
 
-http://git.fedorahosted.org/git/?p=anaconda.git;a=commit;h=b3e19d43840f6c4015fab75411853003fcf26a63
-
-Does someone knows why? I'm trying to get rid of EXT* partitions on my new
-CentOS 6.2 installs but apparently it will not be possible.
-
-Marcos
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBKYW4gMjcsIDIwMTIgYXQgMTI6MDI6MjJQTSArMDEwMCwgxYF1a2FzeiBPbGXFmyB3
+cm90ZToKPiBIaSwKPiAKPiBJIHVwZGF0ZWQga2VybmVsIGZyb20gMi42LjI3IHRvIDIuNi4zNSBh
+bmQgbm90aWNlZCB0aGF0IGZyZWUgc2l6ZSBvbgo+IG15IHhmcyB2b2x1bWUgY2hhbmdlZC4gQmVm
+b3JlIHVwZGF0ZSB0aGVyZSB3YXMgN01CIGZyZWUgc3BhY2UsIG5vdwo+IHRoZXJlIGlzIG5vbmUu
+Cj4gCj4gQWZ0ZXIgc29tZSBpbnZlc3RpZ2F0aW9uIEkgZm91bmQgdGhhdCBkZWZhdWx0IHNpemUg
+Zm9yIHJlc2VydmVkCj4gYmxvY2sgcG9vbCBjaGFuZ2VkIFsxXS4KPiBPbiB0aGlzIHZvbHVtZSBJ
+IGhhdmUgb25lIHZlcnkgYmlnIGZpbGUgd2hpY2ggaXMgZXhwb3J0ZWQgYXMgaVNDU0kKPiBkaXNr
+IHZpYSBTQ1NUIGFuZCBvbmUgc21hbGwgY29uZmlndXJhdGlvbiBmaWxlLiBUaGUgYmlnIGZpbGUg
+c2l6ZQo+IHdpbGwgbmV2ZXIgY2hhbmdlLiBTbWFsbCBmaWxlIHNpemUgY2FuIGNoYW5nZSBvbmx5
+IGJ5IHNvbWUgS0IuCj4gCj4gV2l0aCB0aGlzIGFzc3VtcHRpb25zLCBjYW4gSSByZXZlcnQgdGhp
+cyBjaGFuZ2UgYW5kIHNldCByZXNlcnZlZAo+IGJsb2NrcyBwb29sIHNpemUgdG8gMTAyNCBibG9j
+a3M/Cgp4ZnNfaW8gLWMgInJlc2Jsa3MgMTAyNCIgPG1udHB0L29uZS12ZXJ5LWJpZy1maWxlPgoK
+YWZ0ZXIgdGhlIGZpbGVzeXN0ZW0gaXMgbW91bnRlZCB3aWxsIHNldCB0aGUgcmVzZXJ2ZSBibG9j
+ayBwb29sIGJhY2sKdG8gdGhlIDEwMjQgYmxvY2tzIHlvdSBoYWQgYmVmb3JlLgoKQ2hlZXJzLAoK
+RGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bv
+c3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
