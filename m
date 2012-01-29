@@ -1,13 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0T8a5RU005378 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 02:36:05 -0600
-Message-ID: <4F2504DD.5020503@oracle.com>
-Date: Sun, 29 Jan 2012 16:35:41 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V6
-Reply-To: jeff.liu@oracle.com
+	q0TCo6Dn050451
+	for <linux-xfs@oss.sgi.com>; Sun, 29 Jan 2012 06:50:08 -0600
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id alE9hl9VrfvVxgDs (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Sun, 29 Jan 2012 04:50:05 -0800 (PST)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RrUCo-0002AC-VE
+	for linux-xfs@oss.sgi.com; Sun, 29 Jan 2012 13:50:03 +0100
+Received: from bd206cc2.virtua.com.br ([bd206cc2.virtua.com.br])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Sun, 29 Jan 2012 13:50:02 +0100
+Received: from marcosfrm by bd206cc2.virtua.com.br with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Sun, 29 Jan 2012 13:50:02 +0100
+From: Marcos Mello <marcosfrm@gmail.com>
+Subject: Placing the root partition on an XFS filesystem is not supported
+Date: Sun, 29 Jan 2012 12:46:42 +0000 (UTC)
+Message-ID: <loom.20120129T133929-288@post.gmane.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,227 +34,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Chris Mason <chris.mason@oracle.com>
+To: linux-xfs@oss.sgi.com
 
-Hello,
+http://git.fedorahosted.org/git/?p=anaconda.git;a=commit;h=b3e19d43840f6c4015fab75411853003fcf26a63
 
-Sorry for the delay!! I just got back from vacation.
+Does someone knows why? I'm trying to get rid of EXT* partitions on my new
+CentOS 6.2 installs but apparently it will not be possible.
 
-This is the V6 to introduce SEEK_DATA/SEEK_HOLE support to XFS.
-As we have discussed previously, I have removed the dirty data probing stuff and just treating unwritten extents as data in this post.
-
-Changes to V6:
---------------
-* remove xfs_has_unwritten_buffer() for now.
-* xfs_bmapi_read() returns the br_state == XFS_EXT_NORM for a hole, so we need to check its startblock is not a "nullstartblock" in this case.
-* call i_size_read() after taking the ilock shared, otherwise, isize could be stale.
-* remove "ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK)" from xfs_seek_data() since it will not used.
-* in xfs_file_llseek(), return -EINVAL rather than -EOPNOTSUPP if whence is not valid according to http://linux.die.net/man/2/lseek.
-* s/int lock/uint lock/ in both xfs_seek_data() and xfs_seek_hole().
-* s/out_lock/out_unlock/ in both functions too.
-
-Tests:
-------
-* seek_sanity_tester:
-http://permalink.gmane.org/gmane.comp.file-systems.xfs.general/42514
-
-*seek_copy_tester:
-http://permalink.gmane.org/gmane.comp.file-systems.xfs.general/42522
-
-
-Thank you!
--Jeff
-
-
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-
----
- fs/xfs/xfs_file.c |  168 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
- 1 files changed, 167 insertions(+), 1 deletions(-)
-
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 753ed9b..41a045f 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1141,8 +1141,174 @@ xfs_vm_page_mkwrite(
- 	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
- }
- 
-+STATIC loff_t
-+xfs_seek_data(
-+	struct file		*file,
-+	loff_t			start,
-+	u32			type)
-+{
-+	struct inode		*inode = file->f_mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	loff_t			uninitialized_var(offset);
-+	xfs_fsize_t		isize;
-+	xfs_fileoff_t		fsbno;
-+	xfs_filblks_t		len;
-+	uint			lock;
-+	int			error;
-+
-+	lock = xfs_ilock_map_shared(ip);
-+
-+	isize = i_size_read(inode);
-+	if (start >= isize) {
-+		error = ENXIO;
-+		goto out_unlock;
-+	}
-+
-+	fsbno = XFS_B_TO_FSBT(mp, start);
-+	len = XFS_B_TO_FSB(mp, isize);
-+	for (;;) {
-+		struct xfs_bmbt_irec	map[2];
-+		int			nmap = 2;
-+		loff_t			seekoff;
-+
-+		error = xfs_bmapi_read(ip, fsbno, len - fsbno, map, &nmap,
-+				       XFS_BMAPI_ENTIRE);
-+		if (error)
-+			goto out_unlock;
-+
-+		/* No extents at given offset, must be beyond EOF */
-+		if (nmap == 0) {
-+			error = ENXIO;
-+			goto out_unlock;
-+		}
-+
-+		seekoff = XFS_FSB_TO_B(mp, fsbno);
-+
-+		if ((map[0].br_state == XFS_EXT_NORM &&
-+		     !isnullstartblock(map[0].br_startblock)) ||
-+		    map[0].br_startblock == DELAYSTARTBLOCK) {
-+			offset = max_t(loff_t, seekoff,
-+				       XFS_FSB_TO_B(mp, map[0].br_startoff));
-+			break;
-+		} else if (map[0].br_state == XFS_EXT_UNWRITTEN) {
-+			offset = max_t(loff_t, seekoff,
-+				       XFS_FSB_TO_B(mp, map[0].br_startoff));
-+			break;
-+		} else if (map[0].br_startblock == HOLESTARTBLOCK) {
-+			if (nmap == 1) {
-+				error = ENXIO;
-+				goto out_unlock;
-+			}
-+
-+			if ((map[1].br_state == XFS_EXT_NORM &&
-+			     !isnullstartblock(map[1].br_startblock)) ||
-+			    map[1].br_startblock == DELAYSTARTBLOCK) {
-+				offset = max_t(loff_t, seekoff,
-+					XFS_FSB_TO_B(mp, map[1].br_startoff));
-+				break;
-+			} else if (map[1].br_state == XFS_EXT_UNWRITTEN) {
-+				offset = max_t(loff_t, seekoff,
-+					XFS_FSB_TO_B(mp, map[1].br_startoff));
-+				break;
-+			} else if (map[1].br_startblock == HOLESTARTBLOCK) {
-+				fsbno = map[1].br_startoff +
-+					map[1].br_blockcount;
-+			} else {
-+				BUG();
-+			}
-+		} else {
-+			BUG();
-+		}
-+
-+		if (XFS_FSB_TO_B(mp, fsbno) > isize) {
-+			error = ENXIO;
-+			goto out_unlock;
-+		}
-+	}
-+
-+	if (offset < start)
-+		offset = start;
-+
-+	if (offset != file->f_pos)
-+		file->f_pos = offset;
-+
-+out_unlock:
-+	xfs_iunlock_map_shared(ip, lock);
-+
-+	if (error)
-+		return -error;
-+	return offset;
-+}
-+
-+STATIC loff_t
-+xfs_seek_hole(
-+	struct file		*file,
-+	loff_t			start,
-+	u32			type)
-+{
-+	struct inode		*inode = file->f_mapping->host;
-+	struct xfs_inode	*ip = XFS_I(inode);
-+	struct xfs_mount	*mp = ip->i_mount;
-+	loff_t			uninitialized_var(offset);
-+	loff_t			holeoff;
-+	xfs_fsize_t		isize;
-+	xfs_fileoff_t		fsbno;
-+	uint			lock;
-+	int			error;
-+
-+	lock = xfs_ilock_map_shared(ip);
-+
-+	isize = i_size_read(inode);
-+	if (start >= isize) {
-+		error = ENXIO;
-+		goto out_unlock;
-+	}
-+
-+	fsbno = XFS_B_TO_FSBT(mp, start);
-+	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
-+	if (error)
-+		goto out_unlock;
-+
-+	holeoff = XFS_FSB_TO_B(mp, fsbno);
-+	if (holeoff <= start)
-+		offset = start;
-+	else
-+		offset = min_t(loff_t, holeoff, isize);
-+
-+	if (offset != file->f_pos)
-+		file->f_pos = offset;
-+
-+out_unlock:
-+	xfs_iunlock_map_shared(ip, lock);
-+
-+	if (error)
-+		return -error;
-+	return offset;
-+}
-+
-+STATIC loff_t
-+xfs_file_llseek(
-+	struct file	*file,
-+	loff_t		offset,
-+	int		origin)
-+{
-+	switch (origin) {
-+	case SEEK_END:
-+	case SEEK_CUR:
-+	case SEEK_SET:
-+		return generic_file_llseek(file, offset, origin);
-+	case SEEK_DATA:
-+		return xfs_seek_data(file, offset, origin);
-+	case SEEK_HOLE:
-+		return xfs_seek_hole(file, offset, origin);
-+	default:
-+		return -EINVAL;
-+	}
-+}
-+
- const struct file_operations xfs_file_operations = {
--	.llseek		= generic_file_llseek,
-+	.llseek		= xfs_file_llseek,
- 	.read		= do_sync_read,
- 	.write		= do_sync_write,
- 	.aio_read	= xfs_file_aio_read,
--- 
-1.7.4.1
+Marcos
 
 _______________________________________________
 xfs mailing list
