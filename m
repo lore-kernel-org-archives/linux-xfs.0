@@ -1,29 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0UBJtvu013980
-	for <linux-xfs@oss.sgi.com>; Mon, 30 Jan 2012 05:19:57 -0600
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id izh5UM8Hh4wZfJdi (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Mon, 30 Jan 2012 03:19:53 -0800 (PST)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RrpH2-0005Fi-Qe
-	for linux-xfs@oss.sgi.com; Mon, 30 Jan 2012 12:19:51 +0100
-Received: from bd206cc2.virtua.com.br ([bd206cc2.virtua.com.br])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 30 Jan 2012 12:19:48 +0100
-Received: from marcosfrm by bd206cc2.virtua.com.br with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 30 Jan 2012 12:19:48 +0100
-From: Marcos Mello <marcosfrm@gmail.com>
-Subject: Re: Placing the root partition on an XFS filesystem is not supported
-Date: Mon, 30 Jan 2012 11:19:39 +0000 (UTC)
-Message-ID: <loom.20120130T120943-158@post.gmane.org>
-References: <loom.20120129T133929-288@post.gmane.org>
-	<4F265EE3.6020908@hardwarefreak.com>
-Mime-Version: 1.0
+	q0UBoVDc036845 for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 05:50:31 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	Ywy6lw4eh9IrKeQD (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 30 Jan 2012 03:50:26 -0800 (PST)
+Date: Mon, 30 Jan 2012 06:50:24 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs_quota: remove calls to XFS_QSYNC
+Message-ID: <20120130115024.GA884@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,32 +26,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: nathans@aconex.com
 
-Stan Hoeppner <stan <at> hardwarefreak.com> writes:
+In 2005 commit master-melb:xfs-cmds:23840a from Nathan added calls to
+XFS_QSYNC/Q_XQUOTASYNC to xfs_quota, with the following rather sparse
+description:
 
-> 
-> On 1/29/2012 6:46 AM, Marcos Mello wrote:
-> >
-http://git.fedorahosted.org/git/?p=anaconda.git;a=commit;h=b3e19d43840f6c4015fab75411853003fcf26a63
-> > 
-> > Does someone knows why? I'm trying to get rid of EXT* partitions on my new
-> > CentOS 6.2 installs but apparently it will not be possible.
-> 
-> I'm unsure what this Fedora commit is all about, but in the general
-> Linux case you can put root on XFS, with a minor caveat.  See:
-> 
-> http://www.xfs.org/index.php/XFS_FAQ#Q:_Can_XFS_be_used_for_a_root_filesystem.3F
-> 
+ "Issue a quote sync before reporting quota, resolving issue with delayed
+  allocation."
 
-Yeah, some time ago I run XFS as my / on Arch. But Anaconda doesn't allow it
-now. So we're still forced to have an EXT partition for the root filesystem in
-the Red Hat land.
+I can't really see a reason for this - we do quota accounting by the time
+we reserve space for the delayed allocation, and while converting the
+reservations might change the quota accounting minimally due to the amount
+of btree blocks used for the bmap btree on large files in generally this
+makes little sense, and on today's large system has a large performance
+impact.  Also only xfs_quota ever did these calls, the generic quota tool
+never did any kind of sync, and of course removing it does not cause
+any regressions in xfstests.
 
-Found this
-http://pastebin.com/gHqGGkSp
+Nathan, I've cced you in case you still remember anything about this,
+although it's fairly unlikely after 6.5 years.  Also if anyone at SGI
+can find anything about the above commits in BugWorks additional feedback
+would be welcome.
 
-Marcos
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfsprogs-dev/quota/free.c
+===================================================================
+--- xfsprogs-dev.orig/quota/free.c	2012-01-27 11:10:34.000000000 +0000
++++ xfsprogs-dev/quota/free.c	2012-01-27 11:10:42.000000000 +0000
+@@ -167,7 +167,6 @@ projects_free_space_data(
+ 		return 0;
+ 	}
+ 
+-	xfsquotactl(XFS_QSYNC, dev, type, fsx.fsx_projid, NULL);
+ 	if (xfsquotactl(XFS_GETQUOTA, dev, type, fsx.fsx_projid, &d) < 0) {
+ 		perror("XFS_GETQUOTA");
+ 		close(fd);
+Index: xfsprogs-dev/quota/irix.c
+===================================================================
+--- xfsprogs-dev.orig/quota/irix.c	2012-01-27 11:10:52.000000000 +0000
++++ xfsprogs-dev/quota/irix.c	2012-01-27 11:10:59.000000000 +0000
+@@ -45,8 +45,6 @@ xcommand_to_qcommand(
+ 		return Q_XGETQSTAT;
+ 	case XFS_QUOTARM:
+ 		return Q_XQUOTARM;
+-	case XFS_QSYNC:
+-		return Q_SYNC;
+ 	}
+ 	return 0;
+ }
+Index: xfsprogs-dev/quota/linux.c
+===================================================================
+--- xfsprogs-dev.orig/quota/linux.c	2012-01-27 11:11:02.000000000 +0000
++++ xfsprogs-dev/quota/linux.c	2012-01-27 11:11:05.000000000 +0000
+@@ -55,8 +55,6 @@ xcommand_to_qcommand(
+ 		return Q_XGETQSTAT;
+ 	case XFS_QUOTARM:
+ 		return Q_XQUOTARM;
+-	case XFS_QSYNC:
+-		return Q_XQUOTASYNC;
+ 	}
+ 	return 0;
+ }
+Index: xfsprogs-dev/quota/quota.c
+===================================================================
+--- xfsprogs-dev.orig/quota/quota.c	2012-01-27 11:10:24.000000000 +0000
++++ xfsprogs-dev/quota/quota.c	2012-01-27 11:10:29.000000000 +0000
+@@ -64,7 +64,6 @@ quota_mount(
+ 	uint		qflags;
+ 	int		count;
+ 
+-	xfsquotactl(XFS_QSYNC, dev, type, 0, NULL);
+ 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
+ 		return 0;
+ 
+Index: xfsprogs-dev/quota/quota.h
+===================================================================
+--- xfsprogs-dev.orig/quota/quota.h	2012-01-27 11:11:10.000000000 +0000
++++ xfsprogs-dev/quota/quota.h	2012-01-27 11:11:20.000000000 +0000
+@@ -41,7 +41,6 @@ enum {
+ 	XFS_SETQLIM,	/* set disk limits */
+ 	XFS_GETQSTAT,	/* get quota subsystem status */
+ 	XFS_QUOTARM,	/* free disk space used by dquots */
+-	XFS_QSYNC,	/* flush delayed allocate space */
+ };
+ 
+ /*
+Index: xfsprogs-dev/quota/report.c
+===================================================================
+--- xfsprogs-dev.orig/quota/report.c	2012-01-27 11:09:41.000000000 +0000
++++ xfsprogs-dev/quota/report.c	2012-01-27 11:10:19.000000000 +0000
+@@ -520,10 +520,6 @@ report_any_type(
+ 	if (type & XFS_USER_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
+-			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+-						XFS_USER_QUOTA, 0, NULL) < 0
+-					&& errno != ENOENT && errno != ENOSYS)
+-				perror("XFS_QSYNC user quota");
+ 			report_user_mount(fp, form, mount,
+ 						lower, upper, flags);
+ 		}
+@@ -531,10 +527,6 @@ report_any_type(
+ 	if (type & XFS_GROUP_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
+-			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+-						XFS_GROUP_QUOTA, 0, NULL) < 0
+-					&& errno != ENOENT && errno != ENOSYS)
+-				perror("XFS_QSYNC group quota");
+ 			report_group_mount(fp, form, mount,
+ 						lower, upper, flags);
+ 		}
+@@ -542,10 +534,6 @@ report_any_type(
+ 	if (type & XFS_PROJ_QUOTA) {
+ 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
+ 		while ((mount = fs_cursor_next_entry(&cursor))) {
+-			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
+-						XFS_PROJ_QUOTA, 0, NULL) < 0
+-					&& errno != ENOENT && errno != ENOSYS)
+-				perror("XFS_QSYNC proj quota");
+ 			report_project_mount(fp, form, mount,
+ 						lower, upper, flags);
+ 		}
 
 _______________________________________________
 xfs mailing list
