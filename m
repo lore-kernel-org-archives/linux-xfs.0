@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0U2ep7I189284 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 20:40:52 -0600
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id PsGKjKC4glqRRINj for
-	<xfs@oss.sgi.com>; Sun, 29 Jan 2012 18:40:49 -0800 (PST)
-Message-ID: <4F2603CC.9080807@cn.fujitsu.com>
-Date: Mon, 30 Jan 2012 10:43:24 +0800
-From: WuBo <wu.bo@cn.fujitsu.com>
+	q0U3iinK208325 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 21:44:45 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	PHPrixyXKv8eP3iO for <xfs@oss.sgi.com>;
+	Sun, 29 Jan 2012 19:44:42 -0800 (PST)
+Date: Mon, 30 Jan 2012 14:44:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Dave's presentation at Linux.Conf.Au 2012
+Message-ID: <20120130034440.GA9090@dastard>
+References: <4F24949E.2090108@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: Question on xfstest 274
-References: <4F230E62.8020004@sandeen.net>
-In-Reply-To: <4F230E62.8020004@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <4F24949E.2090108@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,51 +26,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-On 01/28/2012 04:51 AM, Eric Sandeen wrote:
-> Hi, I was wondering if you could describe your intent for 274 just a little more.
+On Sat, Jan 28, 2012 at 06:36:46PM -0600, Stan Hoeppner wrote:
+> http://www.phoronix.com/scan.php?page=news_item&px=MTA0NzM
+> (I don't care for the Phoronix title or summary)
 > 
-> The test says:
-> 
-> # preallocation test
-> 
-> but that is the only comment other than copyright.  ;)
+> I really enjoyed your presentation Dave.  It's also nice to finally put
+> a face and voice to a name.
 
-Maybe the comment is too simple :)
+BTW, presentation slides are now available from:
 
-> 
-> I see that it does:
-> 
-> # Make a 1G fs
-> # Create a single 4k file
-> # Allocate 1M past the EOF on that file
-> # Completely fill remaining space, using 2 other files
-> # Write 8k past EOF on the original file which has blocks past EOF
-> 
-> but I am not certain what you are testing.  I presume that
-> you are testing the fact that the 1M past EOF should be truncated,
-> freeing up space, and allowing the 8k write to succeed?
-> Is that right?
+http://xfs.org/index.php/XFS_Papers_and_Documentation
 
-Actually I write 8K at the end of 4K(seek=1), and what I want to test
-is the 8K-write should be succeed because the preallocation 1M. At the
-mean while, the file should not be truncated.
+Cheers,
 
-Thanks,
-wubo
-
-> 
-> However, at least on ext4 I noticed that the "fill the fs"
-> stage does not succeed; perhaps that should be tested as well.
-> 
-> I can do some similar work on this like I did for 275, but I need
-> to be sure I understand your original intent for the test, first.
-> 
-> Thanks,
-> -Eric
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
