@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0UBoVDc036845 for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 05:50:31 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Ywy6lw4eh9IrKeQD (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Jan 2012 03:50:26 -0800 (PST)
-Date: Mon, 30 Jan 2012 06:50:24 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs_quota: remove calls to XFS_QSYNC
-Message-ID: <20120130115024.GA884@infradead.org>
+	q0UEVd2V057718 for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 08:31:39 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id xVLFhD6zP6bBEzcz
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 30 Jan 2012 06:31:38 -0800 (PST)
+Received: by lahd3 with SMTP id d3so2675741lah.26
+	for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 06:31:36 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
+In-Reply-To: <20120127191532.GA25529@infradead.org>
+References: <CAAA8XhOXuszcyCaMOcVWb-erGAJQdhBHCX-gsJ4KpH+Td7+bPQ@mail.gmail.com>
+	<20120124213936.GA1505@infradead.org>
+	<CAAA8XhMf9BhZP5csLfGVVbQxN7Uqh-+R6aqCLfezdiTECaRRjg@mail.gmail.com>
+	<20120127105859.GC23335@infradead.org>
+	<CAAA8XhOoF_AN_-1PsYQ+hp7adc08YuYqvA_3Bv9nqtuOzO1kOg@mail.gmail.com>
+	<20120127191532.GA25529@infradead.org>
+Date: Mon, 30 Jan 2012 12:31:36 -0200
+Message-ID: <CAAA8XhMJeoUSMmcCizHqoFLrymbs7Hz216+7d445u6tV+ZC=fg@mail.gmail.com>
+Subject: Re: XFS problem
+From: Kelbel Junior <jymmyjr@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,131 +32,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: nathans@aconex.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-In 2005 commit master-melb:xfs-cmds:23840a from Nathan added calls to
-XFS_QSYNC/Q_XQUOTASYNC to xfs_quota, with the following rather sparse
-description:
+Hi, Christoph.
 
- "Issue a quote sync before reporting quota, resolving issue with delayed
-  allocation."
+Yes, we work on 1TB file, doing lots of random I/O over a single file.
+We are using 'pwrite' ofr each write operation.
 
-I can't really see a reason for this - we do quota accounting by the time
-we reserve space for the delayed allocation, and while converting the
-reservations might change the quota accounting minimally due to the amount
-of btree blocks used for the bmap btree on large files in generally this
-makes little sense, and on today's large system has a large performance
-impact.  Also only xfs_quota ever did these calls, the generic quota tool
-never did any kind of sync, and of course removing it does not cause
-any regressions in xfstests.
+Output of 'filefrag' in this file:
+file: 1364 extents found
 
-Nathan, I've cced you in case you still remember anything about this,
-although it's fairly unlikely after 6.5 years.  Also if anyone at SGI
-can find anything about the above commits in BugWorks additional feedback
-would be welcome.
+The 'mount' options are the same as mentioned earlier.
+About RAID, we use RAID 0.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+In a file with this size and this extents amount could happen the
+problem that we're seeing?
 
-Index: xfsprogs-dev/quota/free.c
-===================================================================
---- xfsprogs-dev.orig/quota/free.c	2012-01-27 11:10:34.000000000 +0000
-+++ xfsprogs-dev/quota/free.c	2012-01-27 11:10:42.000000000 +0000
-@@ -167,7 +167,6 @@ projects_free_space_data(
- 		return 0;
- 	}
- 
--	xfsquotactl(XFS_QSYNC, dev, type, fsx.fsx_projid, NULL);
- 	if (xfsquotactl(XFS_GETQUOTA, dev, type, fsx.fsx_projid, &d) < 0) {
- 		perror("XFS_GETQUOTA");
- 		close(fd);
-Index: xfsprogs-dev/quota/irix.c
-===================================================================
---- xfsprogs-dev.orig/quota/irix.c	2012-01-27 11:10:52.000000000 +0000
-+++ xfsprogs-dev/quota/irix.c	2012-01-27 11:10:59.000000000 +0000
-@@ -45,8 +45,6 @@ xcommand_to_qcommand(
- 		return Q_XGETQSTAT;
- 	case XFS_QUOTARM:
- 		return Q_XQUOTARM;
--	case XFS_QSYNC:
--		return Q_SYNC;
- 	}
- 	return 0;
- }
-Index: xfsprogs-dev/quota/linux.c
-===================================================================
---- xfsprogs-dev.orig/quota/linux.c	2012-01-27 11:11:02.000000000 +0000
-+++ xfsprogs-dev/quota/linux.c	2012-01-27 11:11:05.000000000 +0000
-@@ -55,8 +55,6 @@ xcommand_to_qcommand(
- 		return Q_XGETQSTAT;
- 	case XFS_QUOTARM:
- 		return Q_XQUOTARM;
--	case XFS_QSYNC:
--		return Q_XQUOTASYNC;
- 	}
- 	return 0;
- }
-Index: xfsprogs-dev/quota/quota.c
-===================================================================
---- xfsprogs-dev.orig/quota/quota.c	2012-01-27 11:10:24.000000000 +0000
-+++ xfsprogs-dev/quota/quota.c	2012-01-27 11:10:29.000000000 +0000
-@@ -64,7 +64,6 @@ quota_mount(
- 	uint		qflags;
- 	int		count;
- 
--	xfsquotactl(XFS_QSYNC, dev, type, 0, NULL);
- 	if (xfsquotactl(XFS_GETQUOTA, dev, type, id, (void *)&d) < 0)
- 		return 0;
- 
-Index: xfsprogs-dev/quota/quota.h
-===================================================================
---- xfsprogs-dev.orig/quota/quota.h	2012-01-27 11:11:10.000000000 +0000
-+++ xfsprogs-dev/quota/quota.h	2012-01-27 11:11:20.000000000 +0000
-@@ -41,7 +41,6 @@ enum {
- 	XFS_SETQLIM,	/* set disk limits */
- 	XFS_GETQSTAT,	/* get quota subsystem status */
- 	XFS_QUOTARM,	/* free disk space used by dquots */
--	XFS_QSYNC,	/* flush delayed allocate space */
- };
- 
- /*
-Index: xfsprogs-dev/quota/report.c
-===================================================================
---- xfsprogs-dev.orig/quota/report.c	2012-01-27 11:09:41.000000000 +0000
-+++ xfsprogs-dev/quota/report.c	2012-01-27 11:10:19.000000000 +0000
-@@ -520,10 +520,6 @@ report_any_type(
- 	if (type & XFS_USER_QUOTA) {
- 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
- 		while ((mount = fs_cursor_next_entry(&cursor))) {
--			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
--						XFS_USER_QUOTA, 0, NULL) < 0
--					&& errno != ENOENT && errno != ENOSYS)
--				perror("XFS_QSYNC user quota");
- 			report_user_mount(fp, form, mount,
- 						lower, upper, flags);
- 		}
-@@ -531,10 +527,6 @@ report_any_type(
- 	if (type & XFS_GROUP_QUOTA) {
- 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
- 		while ((mount = fs_cursor_next_entry(&cursor))) {
--			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
--						XFS_GROUP_QUOTA, 0, NULL) < 0
--					&& errno != ENOENT && errno != ENOSYS)
--				perror("XFS_QSYNC group quota");
- 			report_group_mount(fp, form, mount,
- 						lower, upper, flags);
- 		}
-@@ -542,10 +534,6 @@ report_any_type(
- 	if (type & XFS_PROJ_QUOTA) {
- 		fs_cursor_initialise(dir, FS_MOUNT_POINT, &cursor);
- 		while ((mount = fs_cursor_next_entry(&cursor))) {
--			if (xfsquotactl(XFS_QSYNC, mount->fs_name,
--						XFS_PROJ_QUOTA, 0, NULL) < 0
--					&& errno != ENOENT && errno != ENOSYS)
--				perror("XFS_QSYNC proj quota");
- 			report_project_mount(fp, form, mount,
- 						lower, upper, flags);
- 		}
+
+Thanks.
+Kelbel Junior
 
 _______________________________________________
 xfs mailing list
