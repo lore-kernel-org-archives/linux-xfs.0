@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0UHNucW091551 for <xfs@OSS.SGI.com>; Mon, 30 Jan 2012 11:23:56 -0600
-Received: from woodbine.london.02.net (woodbine.london.02.net
-	[87.194.255.145]) by cuda.sgi.com with ESMTP id
-	AjvbSLyaqBB6jDl9 for <xfs@OSS.SGI.com>;
-	Mon, 30 Jan 2012 09:23:54 -0800 (PST)
-Received: from ty.sabi.co.UK (87.194.99.40) by woodbine.london.02.net (8.5.140)
-	id 4EEB647400C5C402 for xfs@OSS.SGI.com; Mon, 30 Jan 2012 17:23:52 +0000
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1RruxI-0003Mh-4k
-	for <xfs@OSS.SGI.com>; Mon, 30 Jan 2012 17:23:48 +0000
+Date: Mon, 30 Jan 2012 12:27:17 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: XFS for-next branch
+Message-ID: <20120130182717.GE7762@sgi.com>
+References: <20120125171244.GX8262@sgi.com>
+	<20120127110533.10304c6a33b83ac8e778915c@canb.auug.org.au>
+	<20120127160137.GJ8262@sgi.com>
+	<20120128081709.e7b0df733e5d35fe625eeea0@canb.auug.org.au>
 MIME-Version: 1.0
-Message-ID: <20262.53793.852781.185079@tree.ty.sabi.co.UK>
-Date: Mon, 30 Jan 2012 17:23:45 +0000
-Subject: Re: File system remain unresponsive until the system is rebooted.
-In-Reply-To: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
-References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+In-Reply-To: <20120128081709.e7b0df733e5d35fe625eeea0@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +22,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: xfs-masters@oss.sgi.com, linux-next@vger.kernel.org, xfs@oss.sgi.com
 
-> We are using RAID-0 volumes as PV's in our LVM stack and XFS
-> as the filesystem.
+Hi Stephen,
 
-LVM is in general a bad idea, and I have found that it
-occasionally interacts not so well with XFS and other
-filesystems under resource pressure.
+On Sat, Jan 28, 2012 at 08:17:09AM +1100, Stephen Rothwell wrote:
+> On Fri, 27 Jan 2012 10:01:37 -0600 Ben Myers <bpm@sgi.com> wrote:
+> >
+> > On Fri, Jan 27, 2012 at 11:05:33AM +1100, Stephen Rothwell wrote:
+> > > On Wed, 25 Jan 2012 11:12:44 -0600 Ben Myers <bpm@sgi.com> wrote:
+> > > >
+> > > > Could you pull XFS updates from
+> > > > 
+> > > > git://oss.sgi.com/xfs/xfs.git for-next
+> > > > 
+> > > > instead of from the oss/master branch for 3.3?
+> > > 
+> > > OK, currently I fetch the "master" branch of that tree.  And you want em
+> > > to switch to the "for-next" branch, right?  (Those two branches currently
+> > > point to the same commit, so I have not changed yet.)
+> > 
+> > Yep, please switch to oss/for-next instead of oss/master.  I'll keep
+> > them in sync normally, it's just that I'd like to have a little
+> > flexability WRT what is in for-next.
+> 
+> Just to be crystal clear:  there are no branches in that tree called
+> "oss/for-next" or "oss/master" - I assume that you are referring to the
+> branches called "for-next" and "master", right?
 
-It also seems from one of the backtraces that you are
-complicating all this further by running under Xen,
-perhaps on sparsely allocated virtual disks.
+I am referring to for-next and master branches, at
+git://oss.sgi.com/xfs/xfs.git.  Sorry I wasn't very clear.
 
-> [ ... ] The files system remained unresponsive until we
-> rebooted the system and again increased the size of the
-> filesystem. [ ... ]
-
-Good luck. I know some people who also went the whole VM/LVM/XFS
-stack way and had lots of problems. It is what I call the
-"syntactic" approach: expecting that every syntactically valid
-combination of features is going to work, and work well. Sure it
-should :-).
-
-Most of the hangs seem to happen during resource allocation,
-and at least one is triggered by the flusher:
-
-> Jan 26 03:05:47 ip-10-0-1-153 kernel: [241565.550853] [<ffffffff8111241b>] bdi_writeback_task+0x4b/0xe0
-> Jan 26 03:05:47 ip-10-0-1-153 kernel: [241565.550858] [<ffffffff810c72f0>] ? bdi_start_fn+0x0/0x110
-> Jan 26 03:05:47 ip-10-0-1-153 kernel: [241565.550861] [<ffffffff810c7371>] bdi_start_fn+0x81/0x110
-> Jan 26 03:05:47 ip-10-0-1-153 kernel: [241565.550863] [<ffffffff810c72f0>] ? bdi_start_fn+0x0/0x110
-
-It could be that there is intense pressure on kernel memory,
-often due to excessively loose flusher parameters.
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
