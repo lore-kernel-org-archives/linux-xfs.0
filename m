@@ -1,15 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Date: Mon, 30 Jan 2012 12:27:17 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: XFS for-next branch
-Message-ID: <20120130182717.GE7762@sgi.com>
-References: <20120125171244.GX8262@sgi.com>
-	<20120127110533.10304c6a33b83ac8e778915c@canb.auug.org.au>
-	<20120127160137.GJ8262@sgi.com>
-	<20120128081709.e7b0df733e5d35fe625eeea0@canb.auug.org.au>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120128081709.e7b0df733e5d35fe625eeea0@canb.auug.org.au>
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	q0UJvCMm113632 for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 13:57:12 -0600
+Received: from cartman.its.monash.edu.au (cartman.its.monash.edu.au
+	[130.194.13.166]) by cuda.sgi.com with ESMTP id
+	21iws2BGq5jyXpzF for <xfs@oss.sgi.com>;
+	Mon, 30 Jan 2012 11:57:10 -0800 (PST)
+Received: from chapman.its.monash.edu.au ([130.194.13.89])
+	by cartman.its.monash.edu.au
+	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
+	with ESMTP id <0LYM00IYZNF8NR10@cartman.its.monash.edu.au> for
+	xfs@oss.sgi.com; Tue, 31 Jan 2012 06:57:08 +1100 (EST)
+Received: from chapman.its.monash.edu.au (localhost.localdomain [127.0.0.1])
+	by localhost (Postfix) with SMTP id 571737E6105	for <xfs@oss.sgi.com>;
+	Tue, 31 Jan 2012 06:57:08 +1100 (EST)
+Received: from mail-pz0-f54.google.com
+	(mail-pz0-f54.google.com [209.85.210.54])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)	by chapman.its.monash.edu.au
+	(Postfix) with ESMTPS id D62137E6117	for <xfs@oss.sgi.com>; Tue,
+	31 Jan 2012 06:57:07 +1100 (EST)
+Received: by dadw1 with SMTP id w1so4590313dad.41 for <xfs@oss.sgi.com>; Mon,
+	30 Jan 2012 11:57:04 -0800 (PST)
+Date: Tue, 31 Jan 2012 06:57:04 +1100
+From: Nathan Scott <nathans@debian.org>
+Subject: Re: [PATCH] xfs_quota: remove calls to XFS_QSYNC
+In-reply-to: <20120130115024.GA884@infradead.org>
+Message-id: <CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
+MIME-version: 1.0
+References: <20120130115024.GA884@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,44 +37,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: xfs-masters@oss.sgi.com, linux-next@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hi Stephen,
+On 30 January 2012 22:50, Christoph Hellwig <hch@infradead.org> wrote:
+> ...
+> Nathan, I've cced you in case you still remember anything about this,
+> although it's fairly unlikely after 6.5 years. =A0Also if anyone at SGI
+> can find anything about the above commits in BugWorks additional feedback
+> would be welcome.
 
-On Sat, Jan 28, 2012 at 08:17:09AM +1100, Stephen Rothwell wrote:
-> On Fri, 27 Jan 2012 10:01:37 -0600 Ben Myers <bpm@sgi.com> wrote:
-> >
-> > On Fri, Jan 27, 2012 at 11:05:33AM +1100, Stephen Rothwell wrote:
-> > > On Wed, 25 Jan 2012 11:12:44 -0600 Ben Myers <bpm@sgi.com> wrote:
-> > > >
-> > > > Could you pull XFS updates from
-> > > > 
-> > > > git://oss.sgi.com/xfs/xfs.git for-next
-> > > > 
-> > > > instead of from the oss/master branch for 3.3?
-> > > 
-> > > OK, currently I fetch the "master" branch of that tree.  And you want em
-> > > to switch to the "for-next" branch, right?  (Those two branches currently
-> > > point to the same commit, so I have not changed yet.)
-> > 
-> > Yep, please switch to oss/for-next instead of oss/master.  I'll keep
-> > them in sync normally, it's just that I'd like to have a little
-> > flexability WRT what is in for-next.
-> 
-> Just to be crystal clear:  there are no branches in that tree called
-> "oss/for-next" or "oss/master" - I assume that you are referring to the
-> branches called "for-next" and "master", right?
+I can't recall - but usually there was greater detail in the bugworks entry,
+I think thats your best source now.
 
-I am referring to for-next and master branches, at
-git://oss.sgi.com/xfs/xfs.git.  Sorry I wasn't very clear.
+Patch looks OK to me FWIW, assuming nothing comes of the bugworks
+archeology exercise.
 
-Thanks,
-	Ben
+cheers.
+
+--
+Nathan
 
 _______________________________________________
 xfs mailing list
