@@ -1,15 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0UMRqte139652 for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 16:27:52 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id 56MeF9vYnY3fNA8e for <xfs@oss.sgi.com>;
-	Mon, 30 Jan 2012 14:27:51 -0800 (PST)
-Message-ID: <4F271967.10308@sandeen.net>
-Date: Mon, 30 Jan 2012 16:27:51 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q0UMZiFw140060 for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 16:35:44 -0600
+Received: from smtp-2.hut.fi (smtp-2.hut.fi [130.233.228.92]) by cuda.sgi.com
+	with ESMTP id CLbhv7WhXID97ehs (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 30 Jan 2012 14:35:42 -0800 (PST)
+Received: from localhost (katosiko.hut.fi [130.233.228.115])
+	by smtp-2.hut.fi (8.13.6/8.12.10) with ESMTP id q0UMZe7j019017
+	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 00:35:40 +0200
+Received: from smtp-2.hut.fi ([130.233.228.92])
+	by localhost (katosiko.hut.fi [130.233.228.115]) (amavisd-new,
+	port 10024) with LMTP id 12706-697 for <xfs@oss.sgi.com>;
+	Tue, 31 Jan 2012 00:35:39 +0200 (EET)
+Received: from kosh.localdomain (kosh.hut.fi [130.233.228.12])
+	by smtp-2.hut.fi (8.13.6/8.12.10) with ESMTP id q0UMZTqf019010
+	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 00:35:29 +0200
+Date: Tue, 31 Jan 2012 00:35:28 +0200
+From: Sami Liedes <sami.liedes@iki.fi>
+Subject: Re: xfs task blocked for more than 120 seconds
+Message-ID: <20120130223527.GH10174@sli.dy.fi>
+References: <20120130002026.GG10174@sli.dy.fi> <20120130010530.GI15102@dastard>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: several 274 fixups
+Content-Disposition: inline
+In-Reply-To: <20120130010530.GI15102@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,109 +36,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, WuBo <wu.bo@cn.fujitsu.com>
+To: xfs@oss.sgi.com
 
-This changes quite a few things about 274 to make it more robust
-and useful.
+On Mon, Jan 30, 2012 at 12:05:30PM +1100, Dave Chinner wrote:
+> > * The computer is a Core i7 2600 3.4 GHz with 4 cores and HT
+> >   (therefore shows as 8 cores) with 8 GiB main memory. AES-NI
+> >   instructions are supported and disk crypto generally (with ext4)
+> >   works at transparent speeds.
+> 
+> That's not to say that ext4 doesn't have long IO hold-offs - it just
+> doesn't trigger the hang-check code.
 
-* More comments
-* Use xfs_io for falloc (not all systems have /usr/bin/fallocate)
-* use _require_xfs_io_falloc to be sure system & fs support preallocation
-* Do not remove all of the files in $SCRATCH_MNT/ post-mkfs
-* Do not remove all of the files in $SCRATCH_MNT/ on completion
-  (this breaks e2fsck when lost+found/ goes missing)
-* Don't cd into $SCRATCH_MNT
-* Try harder to completely fill the fs
-* Use a larger preallocated space, and write into all of it (hopefully
-  avoid just accidentally succeeding by writing into fs reserved
-  space that may be there)
-* Save more output in $seq.full instead of /dev/null
+Hmm, maybe. Yet 120 seconds of a blocking syscall somehow sounds quite
+long to me. With ext3 I remember seeing those every now and then with
+dm-crypt.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> It is definitely a possibility that dm-crypt is not keeping up with
+> the IO that XFS is sending it and the way XFS blocks waiting for it
+> to complete triggers the hang-check code. However, it is possible
+> that XFS is stalling due to long IO completion latencies. Do the
+> workloads actually complete, or does the system hang? Also, does the
+> IO to the disk appear to stop for long periods, or is the disk 100%
+> busy the whole time? If the disk goes idle, can you get a dump of
+> the stalled processes via "echo w > /proc/sysrq-trigger" and post
+> that?
 
-diff --git a/274 b/274
-index b658004..acf4543 100755
---- a/274
-+++ b/274
-@@ -1,7 +1,9 @@
- #! /bin/bash
- # FS QA Test No. 274
- #
--# preallocation test
-+# preallocation test:
-+# Preallocate space to a file, and fill the rest of the fs to 100%.
-+# Then test a write into that preallocated space, which should succeed.
- #
- #-----------------------------------------------------------------------
- # Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
-@@ -35,7 +37,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
- 	cd /
--	rm -f $SCRATCH_MNT/* $tmp.*
-+	rm -f $tmp.*
- 	_scratch_unmount
- }
- 
-@@ -46,6 +48,7 @@ _cleanup()
- _supported_fs generic
- _supported_os IRIX Linux
- _require_scratch
-+_require_xfs_io_falloc
- 
- echo "------------------------------"
- echo "preallocation test"
-@@ -57,32 +60,39 @@ umount $SCRATCH_DEV 2>/dev/null
- _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
- _scratch_mount
- 
--rm -rf $SCRATCH_MNT/*
--cd $SCRATCH_MNT
--dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
-+# Create a 4k file
-+dd if=/dev/zero of=$SCRATCH_MNT/test bs=4K count=1 >>$seq.full 2>&1
- if [ $? -ne 0 ]
- then
--	echo "create file err"
-+	echo "create file error"
- 	status=1
- 	exit
- fi
- 
--fallocate -n -o 4K -l 1M test >/dev/null 2>&1
-+# Allocate 4M past EOF on that file
-+xfs_io -F -c "falloc -k 4k 4m" $SCRATCH_MNT/test >>$seq.full 2>&1
- if [ $? -ne 0 ]
- then
--	echo "fallocate file err"
-+	echo "fallocate file error"
- 	status=1
- 	exit
- fi
- 
--dd if=/dev/zero of=tmp1 bs=1M >/dev/null 2>&1
--dd if=/dev/zero of=tmp2 bs=4K >/dev/null 2>&1
-+# Fill the rest of the fs completely
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M >>$seq.full 2>&1
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=4K >>$seq.full 2>&1
- sync
-+# Last effort, use O_SYNC
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K oflag=sync >>$seq.full 2>&1
-+# Save space usage info
-+echo "Post-fill space:" >> $seq.full
-+df $SCRATCH_MNT >>$seq.full 2>&1
- 
--dd if=/dev/zero of=test seek=1 bs=4K count=2 conv=notrunc >/dev/null 2>&1
-+# Now attempt a write into all of the preallocated space 
-+dd if=/dev/zero of=$SCRATCH_MNT/test seek=1 bs=4K count=1024 conv=notrunc >>$seq.full 2>&1
- if [ $? -ne 0 ]
- then
--	echo "fill prealloc range err"
-+	echo "fill prealloc range error"
- 	status=1
- 	exit
- fi
+The workloads do eventually complete. I tried the tar extraction again
+but this time extracting the tar from a different disk and saw no such
+warnings (and the time taken seems reasonable at 96 minutes).
+
+The blocked syscalls during BackupPC backupping seems weirder to me. I
+don't think the ext4 partition was even mounted at that point, and if
+it was, there certainly was no activity, i.e. the XFS partition was
+the only partition on that disk that saw any I/O. I'll see if I can
+figure out some way to repeat that and to figure out if the disk goes
+idle.
+
+	Sami
 
 _______________________________________________
 xfs mailing list
