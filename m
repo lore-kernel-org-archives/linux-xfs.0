@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0U3iinK208325 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 21:44:45 -0600
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	PHPrixyXKv8eP3iO for <xfs@oss.sgi.com>;
-	Sun, 29 Jan 2012 19:44:42 -0800 (PST)
-Date: Mon, 30 Jan 2012 14:44:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Dave's presentation at Linux.Conf.Au 2012
-Message-ID: <20120130034440.GA9090@dastard>
-References: <4F24949E.2090108@hardwarefreak.com>
+	q0U9C2BR001359
+	for <linux-xfs@oss.sgi.com>; Mon, 30 Jan 2012 03:12:03 -0600
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id Dmj7ddlRuqJpJb5H
+	for <linux-xfs@oss.sgi.com>; Mon, 30 Jan 2012 01:12:01 -0800 (PST)
+Message-ID: <4F265EE3.6020908@hardwarefreak.com>
+Date: Mon, 30 Jan 2012 03:12:03 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F24949E.2090108@hardwarefreak.com>
+Subject: Re: Placing the root partition on an XFS filesystem is not supported
+References: <loom.20120129T133929-288@post.gmane.org>
+In-Reply-To: <loom.20120129T133929-288@post.gmane.org>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +26,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Marcos Mello <marcosfrm@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Sat, Jan 28, 2012 at 06:36:46PM -0600, Stan Hoeppner wrote:
-> http://www.phoronix.com/scan.php?page=news_item&px=MTA0NzM
-> (I don't care for the Phoronix title or summary)
+On 1/29/2012 6:46 AM, Marcos Mello wrote:
+> http://git.fedorahosted.org/git/?p=anaconda.git;a=commit;h=b3e19d43840f6c4015fab75411853003fcf26a63
 > 
-> I really enjoyed your presentation Dave.  It's also nice to finally put
-> a face and voice to a name.
+> Does someone knows why? I'm trying to get rid of EXT* partitions on my new
+> CentOS 6.2 installs but apparently it will not be possible.
 
-BTW, presentation slides are now available from:
+I'm unsure what this Fedora commit is all about, but in the general
+Linux case you can put root on XFS, with a minor caveat.  See:
 
-http://xfs.org/index.php/XFS_Papers_and_Documentation
+http://www.xfs.org/index.php/XFS_FAQ#Q:_Can_XFS_be_used_for_a_root_filesystem.3F
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
