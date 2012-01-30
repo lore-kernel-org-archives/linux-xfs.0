@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0TMI8xT150566 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 16:18:09 -0600
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ogxGlEflrMrdudSK for <xfs@oss.sgi.com>;
-	Sun, 29 Jan 2012 14:18:06 -0800 (PST)
-Date: Mon, 30 Jan 2012 09:18:03 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Insane file system overhead on large volume
-Message-ID: <20120129221803.GF15102@dastard>
-References: <CAEBWcAT2zfDskgDjFr0KcnfsT2A65r04AM1cv2-TfnNJTB1__Q@mail.gmail.com>
-	<201201281555.22179.Martin@lichtvoll.de>
-	<4F2415B2.3080605@sandeen.net>
-	<201201281723.42786.Martin@lichtvoll.de>
+	q0U0KYSW177143 for <xfs@oss.sgi.com>; Sun, 29 Jan 2012 18:20:35 -0600
+Received: from smtp-3.hut.fi (smtp-3.hut.fi [130.233.228.93]) by cuda.sgi.com
+	with ESMTP id W3HHnf2cAF4oryWO (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 29 Jan 2012 16:20:31 -0800 (PST)
+Received: from localhost (katosiko.hut.fi [130.233.228.115])
+	by smtp-3.hut.fi (8.13.6/8.12.10) with ESMTP id q0U0KTum022995
+	for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 02:20:29 +0200
+Received: from smtp-3.hut.fi ([130.233.228.93])
+	by localhost (katosiko.hut.fi [130.233.228.115]) (amavisd-new,
+	port 10024) with LMTP id 06953-386 for <xfs@oss.sgi.com>;
+	Mon, 30 Jan 2012 02:20:29 +0200 (EET)
+Received: from kosh.localdomain (kosh.hut.fi [130.233.228.12])
+	by smtp-3.hut.fi (8.13.6/8.12.10) with ESMTP id q0U0KQVA022979
+	for <xfs@oss.sgi.com>; Mon, 30 Jan 2012 02:20:26 +0200
+Date: Mon, 30 Jan 2012 02:20:26 +0200
+From: Sami Liedes <sami.liedes@iki.fi>
+Subject: xfs task blocked for more than 120 seconds
+Message-ID: <20120130002026.GG10174@sli.dy.fi>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201201281723.42786.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +30,274 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: Manny <dermaniac@gmail.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gU2F0LCBKYW4gMjgsIDIwMTIgYXQgMDU6MjM6NDJQTSArMDEwMCwgTWFydGluIFN0ZWlnZXJ3
-YWxkIHdyb3RlOgo+IEFtIFNhbXN0YWcsIDI4LiBKYW51YXIgMjAxMiBzY2hyaWViIEVyaWMgU2Fu
-ZGVlbjoKPiA+IE9uIDEvMjgvMTIgODo1NSBBTSwgTWFydGluIFN0ZWlnZXJ3YWxkIHdyb3RlOgo+
-IEZvciB0aGUgZ29yeSBkZXRhaWxzOgo+IAo+ID4gPiBXaHkgaXMgaXQgdGhhdCBJIGdldAo+IFvi
-gKZdCj4gPiA+IG1lcmthYmE6L3RtcD4gTEFORz1DIGRmIC1oVCAvbW50L3plaXQKPiA+ID4gRmls
-ZXN5c3RlbSAgICAgVHlwZSAgU2l6ZSAgVXNlZCBBdmFpbCBVc2UlIE1vdW50ZWQgb24KPiA+ID4g
-L2Rldi9sb29wMCAgICAgeGZzICAgIDMwVCAgIDMzTSAgIDMwVCAgIDElIC9tbnQvemVpdAo+ID4g
-PiAKPiA+ID4gCj4gPiA+IDMzTWlCIHVzZWQgb24gZmlyc3QgbW91bnQgaW5zdGVhZCBvZiA1Pwo+
-ID4gCj4gPiBOb3Qgc3VyZSBvZmZoYW5kLCBkaWZmZXJlbmNlcyBpbiB4ZnNwcm9ncyB2ZXJzaW9u
-IG1rZnMgZGVmYXVsdHMKPiA+IHBlcmhhcHMuCj4gCj4gT2theSwgdGhhdHMgZmluZSB3aXRoIG1l
-LiBJIHdhcyBqdXN0IGN1cmlvdXMuIEl0IGRvZXNuwrR0IG1hdHRlciBtdWNoLgoKTW9yZSBsaWtl
-bHkgdGhlIGtlcm5lbC4gT2xkZXIga2VybmVscyBvbmx5IHVzZSAxMDI0IGJsb2NrcyBmb3IKdGhl
-IHJlc2VydmUgYmxvY2sgcG9vbCwgd2hpbGUgbW9yZSByZWNlbnQgb25lcyB1c2UgODE5MiBibG9j
-a3MuCgokIGdsIC1uIDEgOGJhYmQ4YQpjb21taXQgOGJhYmQ4YTJlNzVjY2NmZjMxNjdhNjExNzZj
-MmEzZTk3N2UxMzc5OQpBdXRob3I6IERhdmUgQ2hpbm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4K
-RGF0ZTogICBUaHUgTWFyIDQgMDE6NDY6MjUgMjAxMCArMDAwMAoKICAgIHhmczogSW5jcmVhc2Ug
-dGhlIGRlZmF1bHQgc2l6ZSBvZiB0aGUgcmVzZXJ2ZWQgYmxvY2tzIHBvb2wKCiAgICBUaGUgY3Vy
-cmVudCBkZWZhdWx0IHNpemUgb2YgdGhlIHJlc2VydmVkIGJsb2NrcyBwb29sIGlzIGVhc3kgdG8g
-ZGVwbGV0ZQogICAgd2l0aCBjZXJ0YWluIHdvcmtsb2FkcywgaW4gcGFydGljdWxhciB3b3JrbG9h
-ZHMgdGhhdCBkbyBsb3RzIG9mIGNvbmN1cnJlbnQKICAgIGRlbGF5ZWQgYWxsb2NhdGlvbiBleHRl
-bnQgY29udmVyc2lvbnMuICBJZiBlbm91Z2ggdHJhbnNhY3Rpb25zIGFyZSBydW5uaW5nCiAgICBp
-biBwYXJhbGxlbCBhbmQgdGhlIGVudGlyZSBwb29sIGlzIGNvbnN1bWVkIHRoZW4gc3Vic2VxdWVu
-dCBjYWxscyB0bwogICAgeGZzX3RyYW5zX3Jlc2VydmUoKSB3aWxsIGZhaWwgd2l0aCBFTk9TUEMu
-ICBBbHNvIGFkZCBhIHJhdGUgbGltaXRlZAogICAgd2FybmluZyBzbyB3ZSBrbm93IGlmIHRoaXMg
-c3RhcnRzIGhhcHBlbmluZyBhZ2Fpbi4KCiAgICBUaGlzIGlzIGFuIHVwZGF0ZWQgdmVyc2lvbiBv
-ZiBhbiBvbGQgcGF0Y2ggZnJvbSBMYWNobGFuIE1jSWxyb3kuCgogICAgU2lnbmVkLW9mZi1ieTog
-RGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPgogICAgU2lnbmVkLW9mZi1ieTogQWxl
-eCBFbGRlciA8YWVsZGVyQHNnaS5jb20+Cgo+IEJ1dCB3aGVuIEkgcmV2aWV3IGl0LCBjcmVhdGlu
-ZyBhIDMwVEIgWEZTIGZpbGVzeXN0ZW0gc2hvdWxkIGludm9sdmUgd3JpdGluZwo+IHNvbWUgbWV0
-YWRhdGEgYXQgZGlmZmVyZW50IHBsYWNlcyBvZiB0aGUgZmlsZS4KPiAKPiBJIGdldDoKPiAKPiBt
-ZXJrYWJhOi9tbnQvemVpdD4gTEFORz1DIHhmc19ibWFwIGZzZmlsZQo+IGZzZmlsZToKPiAgICAg
-ICAgIDA6IFswLi4yNTVdOiA5Ni4uMzUxCj4gICAgICAgICAxOiBbMjU2Li4yMTQ3NDgzNjM5XTog
-aG9sZQo+ICAgICAgICAgMjogWzIxNDc0ODM2NDAuLjIxNDc0ODM2NzFdOiAzNDAwMDMyLi4zNDAw
-MDYzCj4gICAgICAgICAzOiBbMjE0NzQ4MzY3Mi4uNDI5NDk2NzI3OV06IGhvbGUKPiAgICAgICAg
-IDQ6IFs0Mjk0OTY3MjgwLi40Mjk0OTY3MzExXTogMzQwMDA2NC4uMzQwMDA5NQo+ICAgICAgICAg
-NTogWzQyOTQ5NjczMTIuLjY0NDI0NTA5MTldOiBob2xlCj4gICAgICAgICA2OiBbNjQ0MjQ1MDky
-MC4uNjQ0MjQ1MDk1MV06IDM0MDAwOTYuLjM0MDAxMjcKPiAgICAgICAgIDc6IFs2NDQyNDUwOTUy
-Li44NTg5OTM0NTU5XTogaG9sZQoKLi4uLi4KClllYWgsIHRoYXQncyBhbGwgdGhlIEFHIGhlYWRl
-cnMuCgo+IE9rYXksIGl0IG5lZWRlZCB0byB3cml0ZSAyIEdCOgo+IAo+IG1lcmthYmE6L21udC96
-ZWl0PiBkdSAtaCBmc2ZpbGUgCj4gMiwwRyAgICBmc2ZpbGUKPiBtZXJrYWJhOi9tbnQvemVpdD4g
-ZHUgLS1hcHBhcmVudC1zaXplIC1oIGZzZmlsZQo+IDMwVCAgICAgZnNmaWxlCj4gbWVya2FiYTov
-bW50L3plaXQ+Cj4gCj4gSSBkaWRuwrR0IGV4cGVjdCBta2ZzLnhmcyB0byB3cml0ZSAyIEdCLCBi
-dXQgd2hlbiB0aGlua2luZyB0aHJvdWdoIGl0Cj4gZm9yIGEgMzAgVEIgZmlsZXN5c3RlbSBJIGZp
-bmQgdGhpcyByZWFzb25hYmxlLgoKSXQgemVyb2VkIHRoZSBsb2csIHdoaWNoIHdpbGwgYmUganVz
-dCB1bmRlciAyR0IgaW4gc2l6ZSBmb3IgYQpmaWxlc3lzdGVtIHRoYXQgbGFyZ2UuIFplcm9pbmcg
-dGhlIGxvZyBhY2NvdW50cyBmb3IgPjk5JSBvZiB0aGUgSU8KdGhhdCBta2ZzIGRvZXMgZm9yIG1v
-c3Qgbm9ybWFsIGNhc2VzLgoKQ2hlZXJzLAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBm
-cm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20v
-bWFpbG1hbi9saXN0aW5mby94ZnMK
+Hi!
+
+Following the LWN coverage of LCA talk on XFS, I decided to give XFS a
+try again. So I decided to try XFS on my backup partition.
+
+My setup is as follows:
+
+* The relevant disk, containing both the ext4 partition
+  (/media/backup) and the xfs partition (/media/xfstest) are on the
+  same 2 TB disk, which is a Western Digital Caviar Green SATA3 drive
+  (SMART reports the device model to be WDC WD20EARX-00PASB0). The
+  spindle speed of the model is reported to be "closer to 5400 than
+  7200 rpm".
+
+* The ext4 partition is roughly 1 TB in size and the xfs partition
+  roughly 800 GB
+
+* I'm using LVM; the logical volumes are /dev/rootvg/backup and
+  /dev/rootvg/xfstest
+
+* These LVs are both LUKS (dm-crypt) partitions, encrypted with
+  cbc-essiv:sha256
+
+* The computer is a Core i7 2600 3.4 GHz with 4 cores and HT
+  (therefore shows as 8 cores) with 8 GiB main memory. AES-NI
+  instructions are supported and disk crypto generally (with ext4)
+  works at transparent speeds.
+
+* I'm running Debian unstable amd64 with vanilla (non-Debian) 3.2.2
+  kernel
+
+* I believe both the disk and the main memory are in good health;
+  particularly with ext4 there hasn't been any problems
+
+* The backup data is generated by BackupPC. It generally consists of a
+  large pool of files named by sha-1 hashes (~105 GB of files), plus
+  lots of trees of hardlinks to these in a structure not unlike
+  typical home directories and / and /usr trees. I *think* the hard
+  links may be a red herring and I suspect the problem has something
+  to do with xfs--dm-crypt interaction, but I'm not sure.
+
+So, to copy the contents of the backup partition -- BackupPC data --
+to the XFS drive, I did the following (the tar line is from shell
+history, the lines before it are from my memory and might be slightly
+wrong):
+
+# cryptsetup luksFormat /dev/rootvg/xfstest
+# cryptsetup luksOpen /dev/rootvg/xfstest rootvg-xfstest_crypt
+# mkfs.xfs /dev/mapper/rootvg-xfstest_crypt
+# mount /dev/mapper/rootvg-xfstest_crypt /media/xfstest
+# cd /media/backup
+# tar cf - backuppc/ | (cd ../xfstest && tar xf -)
+
+During this operation, I got the following two warning messages in
+dmesg:
+
+------------------------------------------------------------
+[    0.000000] Linux version 3.2.2 (sliedes@lh) (gcc version 4.6.2 (Debian 4.6.2-12) ) #1 SMP Thu Jan 26 03:51:41 EET 2012
+[...]
+[19419.407855] XFS (dm-7): Mounting Filesystem
+[19419.726935] XFS (dm-7): Ending clean mount
+[...]
+[35380.253189] INFO: task tar:3312 blocked for more than 120 seconds.
+[35380.253192] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[35380.253194] tar             D ffff880220adc678     0  3312   3311 0x00000000
+[35380.253198]  ffff880107a1d778 0000000000000082 0000000000000000 ffff8800c552be30
+[35380.253202]  ffff880220adc2f0 ffff880107a1dfd8 ffff880107a1dfd8 ffff880107a1dfd8
+[35380.253206]  ffff880223d01650 ffff880220adc2f0 0000000000000000 ffffffff00000000
+[35380.253210] Call Trace:
+[35380.253217]  [<ffffffff813ed17a>] schedule+0x3a/0x50
+[35380.253220]  [<ffffffff813ed6a5>] schedule_timeout+0x1c5/0x300
+[35380.253237]  [<ffffffffa0a85ea5>] ? _xfs_buf_find+0xb5/0x240 [xfs]
+[35380.253240]  [<ffffffff813ee257>] __down_common+0x95/0xe5
+[35380.253249]  [<ffffffffa0a85ebe>] ? _xfs_buf_find+0xce/0x240 [xfs]
+[35380.253252]  [<ffffffff813ee306>] __down+0x18/0x1a
+[35380.253255]  [<ffffffff8107214c>] down+0x3c/0x50
+[35380.253263]  [<ffffffffa0a85d24>] xfs_buf_lock+0x44/0x110 [xfs]
+[35380.253272]  [<ffffffffa0a85ebe>] _xfs_buf_find+0xce/0x240 [xfs]
+[35380.253280]  [<ffffffffa0a8629f>] xfs_buf_get+0x2f/0x1d0 [xfs]
+[35380.253289]  [<ffffffffa0a86b38>] xfs_buf_read+0x28/0x120 [xfs]
+[35380.253303]  [<ffffffffa0ae0f87>] xfs_trans_read_buf+0x187/0x470 [xfs]
+[35380.253316]  [<ffffffffa0ae1345>] ? xfs_trans_brelse+0xd5/0x160 [xfs]
+[35380.253329]  [<ffffffffa0ac9732>] xfs_imap_to_bp.isra.9+0x42/0x120 [xfs]
+[35380.253341]  [<ffffffffa0acd441>] xfs_iread+0x81/0x1c0 [xfs]
+[35380.253352]  [<ffffffffa0a9bfc7>] ? kmem_zone_alloc+0x67/0xe0 [xfs]
+[35380.253362]  [<ffffffffa0a8d043>] xfs_iget+0x2a3/0x820 [xfs]
+[35380.253371]  [<ffffffffa0a8cd1c>] ? xfs_iunlock+0xbc/0x130 [xfs]
+[35380.253382]  [<ffffffffa0a99f96>] xfs_lookup+0xb6/0x130 [xfs]
+[35380.253392]  [<ffffffffa0a90c89>] xfs_vn_lookup+0x49/0x90 [xfs]
+[35380.253395]  [<ffffffff811362b4>] ? d_alloc+0x24/0x70
+[35380.253399]  [<ffffffff81129d90>] d_alloc_and_lookup+0x40/0x80
+[35380.253401]  [<ffffffff81136670>] ? d_lookup+0x30/0x50
+[35380.253403]  [<ffffffff8112c0ad>] do_lookup+0x2bd/0x3c0
+[35380.253406]  [<ffffffff8112d1d4>] path_lookupat+0x114/0x740
+[35380.253408]  [<ffffffff8112d82c>] do_path_lookup+0x2c/0xc0
+[35380.253410]  [<ffffffff8112ebc4>] user_path_at_empty+0x54/0xa0
+[35380.253414]  [<ffffffff8113c63f>] ? mntput_no_expire+0x1f/0x100
+[35380.253416]  [<ffffffff8112ec1c>] user_path_at+0xc/0x10
+[35380.253418]  [<ffffffff8112f249>] sys_linkat+0x59/0x150
+[35380.253421]  [<ffffffff8111fc35>] ? sys_read+0x45/0x90
+[35380.253425]  [<ffffffff813f6812>] system_call_fastpath+0x16/0x1b
+[36339.636777] INFO: task tar:3312 blocked for more than 120 seconds.
+[36339.636779] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[36339.636782] tar             D ffff880220adc678     0  3312   3311 0x00000000
+[36339.636786]  ffff880107a1d6f8 0000000000000082 ffff880107a1d6d8 ffffffff8100177a
+[36339.636790]  ffff880220adc2f0 ffff880107a1dfd8 ffff880107a1dfd8 ffff880107a1dfd8
+[36339.636793]  ffff88021e222ca0 ffff880220adc2f0 ffff88021d8a7380 ffff88022040fa80
+[36339.636797] Call Trace:
+[36339.636803]  [<ffffffff8100177a>] ? __switch_to+0x1ea/0x310
+[36339.636808]  [<ffffffff813ed17a>] schedule+0x3a/0x50
+[36339.636811]  [<ffffffff813ed6a5>] schedule_timeout+0x1c5/0x300
+[36339.636813]  [<ffffffff813ed17a>] ? schedule+0x3a/0x50
+[36339.636816]  [<ffffffff813ee257>] __down_common+0x95/0xe5
+[36339.636832]  [<ffffffffa0a85ebe>] ? _xfs_buf_find+0xce/0x240 [xfs]
+[36339.636835]  [<ffffffff813ee306>] __down+0x18/0x1a
+[36339.636838]  [<ffffffff8107214c>] down+0x3c/0x50
+[36339.636847]  [<ffffffffa0a85d24>] xfs_buf_lock+0x44/0x110 [xfs]
+[36339.636856]  [<ffffffffa0a85ebe>] _xfs_buf_find+0xce/0x240 [xfs]
+[36339.636865]  [<ffffffffa0a8629f>] xfs_buf_get+0x2f/0x1d0 [xfs]
+[36339.636874]  [<ffffffffa0a86b38>] xfs_buf_read+0x28/0x120 [xfs]
+[36339.636889]  [<ffffffffa0ae0f87>] xfs_trans_read_buf+0x187/0x470 [xfs]
+[36339.636901]  [<ffffffffa0abaf9e>] xfs_da_do_buf+0x24e/0x620 [xfs]
+[36339.636904]  [<ffffffff8107218d>] ? up+0x2d/0x50
+[36339.636916]  [<ffffffffa0abb3cc>] xfs_da_read_buf+0x1c/0x20 [xfs]
+[36339.636918]  [<ffffffff8106ccd9>] ? wake_up_bit+0x29/0x40
+[36339.636931]  [<ffffffffa0ac158b>] xfs_dir2_leaf_lookup_int+0x5b/0x2d0 [xfs]
+[36339.636942]  [<ffffffffa0aa8d5e>] ? xfs_bmap_last_extent.constprop.23+0x6e/0xb0 [xfs]
+[36339.636953]  [<ffffffffa0ac1cc4>] xfs_dir2_leaf_lookup+0x34/0x110 [xfs]
+[36339.636965]  [<ffffffffa0abd7c1>] ? xfs_dir2_isleaf+0x21/0x60 [xfs]
+[36339.636976]  [<ffffffffa0abdd3a>] xfs_dir_lookup+0x14a/0x160 [xfs]
+[36339.636987]  [<ffffffffa0a99f5f>] xfs_lookup+0x7f/0x130 [xfs]
+[36339.636997]  [<ffffffffa0a90c89>] xfs_vn_lookup+0x49/0x90 [xfs]
+[36339.637000]  [<ffffffff811362b4>] ? d_alloc+0x24/0x70
+[36339.637003]  [<ffffffff81129d90>] d_alloc_and_lookup+0x40/0x80
+[36339.637006]  [<ffffffff81136670>] ? d_lookup+0x30/0x50
+[36339.637008]  [<ffffffff8112a7cf>] __lookup_hash.part.28+0xbf/0xe0
+[36339.637012]  [<ffffffff811a7847>] ? security_inode_permission+0x17/0x20
+[36339.637014]  [<ffffffff8112ab88>] lookup_hash+0x48/0x60
+[36339.637016]  [<ffffffff8112da03>] kern_path_create+0x83/0x120
+[36339.637019]  [<ffffffff811deabc>] ? strncpy_from_user+0x2c/0x40
+[36339.637022]  [<ffffffff8112a310>] ? getname_flags+0x140/0x260
+[36339.637024]  [<ffffffff8112dae5>] user_path_create+0x45/0x70
+[36339.637027]  [<ffffffff8112f279>] sys_linkat+0x89/0x150
+[36339.637029]  [<ffffffff8111fc35>] ? sys_read+0x45/0x90
+[36339.637033]  [<ffffffff813f6812>] system_call_fastpath+0x16/0x1b
+------------------------------------------------------------
+
+Afterwards when BackupPC was doing a backup, I got these additional
+warnings:
+
+------------------------------------------------------------
+[91863.941820] INFO: task kworker/0:5:19584 blocked for more than 120 seconds.
+[91863.941823] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[91863.941825] kworker/0:5     D ffff8802205699d8     0 19584      2 0x00000000
+[91863.941829]  ffff88005fe9bb70 0000000000000046 ffff88005fe9bb00 0000000000000086
+[91863.941833]  ffff880220569650 ffff88005fe9bfd8 ffff88005fe9bfd8 ffff88005fe9bfd8
+[91863.941837]  ffff88021e4c8000 ffff880220569650 ffff88005fe9bb80 ffffffff81044ecd
+[91863.941840] Call Trace:
+[91863.941847]  [<ffffffff81044ecd>] ? try_to_wake_up+0x22d/0x290
+[91863.941852]  [<ffffffff813ed17a>] schedule+0x3a/0x50
+[91863.941855]  [<ffffffff813ed6a5>] schedule_timeout+0x1c5/0x300
+[91863.941858]  [<ffffffff81115124>] ? kmem_cache_free+0x104/0x110
+[91863.941863]  [<ffffffff810d7172>] ? mempool_free_slab+0x12/0x20
+[91863.941866]  [<ffffffff813ee257>] __down_common+0x95/0xe5
+[91863.941886]  [<ffffffffa0ad4e07>] ? xfs_getsb+0x37/0x60 [xfs]
+[91863.941889]  [<ffffffff813ee306>] __down+0x18/0x1a
+[91863.941892]  [<ffffffff8107214c>] down+0x3c/0x50
+[91863.941902]  [<ffffffffa0a85d24>] xfs_buf_lock+0x44/0x110 [xfs]
+[91863.941915]  [<ffffffffa0ad4e07>] xfs_getsb+0x37/0x60 [xfs]
+[91863.941929]  [<ffffffffa0ae0d03>] xfs_trans_getsb+0x43/0x140 [xfs]
+[91863.941942]  [<ffffffffa0ad4b36>] xfs_mod_sb+0x46/0xc0 [xfs]
+[91863.941952]  [<ffffffffa0a96320>] ? xfs_sync_inode_attr+0xf0/0xf0 [xfs]
+[91863.941962]  [<ffffffffa0a8c29f>] xfs_fs_log_dummy+0x4f/0x90 [xfs]
+[91863.941975]  [<ffffffffa0adad03>] ? xfs_log_need_covered+0x83/0xb0 [xfs]
+[91863.941985]  [<ffffffffa0a963a4>] xfs_sync_worker+0x84/0x90 [xfs]
+[91863.941988]  [<ffffffff81066ec8>] process_one_work+0x118/0x470
+[91863.941991]  [<ffffffff81067dee>] worker_thread+0x15e/0x350
+[91863.941994]  [<ffffffff81067c90>] ? manage_workers.isra.29+0x220/0x220
+[91863.941996]  [<ffffffff8106c7a7>] kthread+0x87/0x90
+[91863.941999]  [<ffffffff813f8974>] kernel_thread_helper+0x4/0x10
+[91863.942002]  [<ffffffff8106c720>] ? kthread_worker_fn+0x190/0x190
+[91863.942004]  [<ffffffff813f8970>] ? gs_change+0x13/0x13
+[92103.787573] INFO: task cp:18226 blocked for more than 120 seconds.
+[92103.787576] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[92103.787578] cp              D ffff8802078e19d8     0 18226  28931 0x00000000
+[92103.787582]  ffff880100f116f8 0000000000000082 ffff880100f116d8 ffffffff8100177a
+[92103.787586]  ffff8802078e1650 ffff880100f11fd8 ffff880100f11fd8 ffff880100f11fd8
+[92103.787590]  ffff880103439650 ffff8802078e1650 ffff880220c06c80 ffff88021f968000
+[92103.787593] Call Trace:
+[92103.787599]  [<ffffffff8100177a>] ? __switch_to+0x1ea/0x310
+[92103.787604]  [<ffffffff813ed17a>] schedule+0x3a/0x50
+[92103.787607]  [<ffffffff813ed6a5>] schedule_timeout+0x1c5/0x300
+[92103.787623]  [<ffffffffa0a85c38>] ? xfs_buf_trylock+0x28/0xd0 [xfs]
+[92103.787626]  [<ffffffff813ed17a>] ? schedule+0x3a/0x50
+[92103.787629]  [<ffffffff813ee257>] __down_common+0x95/0xe5
+[92103.787637]  [<ffffffffa0a85ebe>] ? _xfs_buf_find+0xce/0x240 [xfs]
+[92103.787640]  [<ffffffff813ee306>] __down+0x18/0x1a
+[92103.787643]  [<ffffffff8107214c>] down+0x3c/0x50
+[92103.787652]  [<ffffffffa0a85d24>] xfs_buf_lock+0x44/0x110 [xfs]
+[92103.787661]  [<ffffffffa0a85ebe>] _xfs_buf_find+0xce/0x240 [xfs]
+[92103.787670]  [<ffffffffa0a8629f>] xfs_buf_get+0x2f/0x1d0 [xfs]
+[92103.787678]  [<ffffffffa0a86b38>] xfs_buf_read+0x28/0x120 [xfs]
+[92103.787693]  [<ffffffffa0ae0f87>] xfs_trans_read_buf+0x187/0x470 [xfs]
+[92103.787706]  [<ffffffffa0abaf9e>] xfs_da_do_buf+0x24e/0x620 [xfs]
+[92103.787709]  [<ffffffff8107218d>] ? up+0x2d/0x50
+[92103.787720]  [<ffffffffa0abb3cc>] xfs_da_read_buf+0x1c/0x20 [xfs]
+[92103.787723]  [<ffffffff8106ccd9>] ? wake_up_bit+0x29/0x40
+[92103.787735]  [<ffffffffa0ac158b>] xfs_dir2_leaf_lookup_int+0x5b/0x2d0 [xfs]
+[92103.787746]  [<ffffffffa0aa8d5e>] ? xfs_bmap_last_extent.constprop.23+0x6e/0xb0 [xfs]
+[92103.787758]  [<ffffffffa0ac1cc4>] xfs_dir2_leaf_lookup+0x34/0x110 [xfs]
+[92103.787770]  [<ffffffffa0abd7c1>] ? xfs_dir2_isleaf+0x21/0x60 [xfs]
+[92103.787781]  [<ffffffffa0abdd3a>] xfs_dir_lookup+0x14a/0x160 [xfs]
+[92103.787791]  [<ffffffffa0a99f5f>] xfs_lookup+0x7f/0x130 [xfs]
+[92103.787801]  [<ffffffffa0a90c89>] xfs_vn_lookup+0x49/0x90 [xfs]
+[92103.787804]  [<ffffffff811362b4>] ? d_alloc+0x24/0x70
+[92103.787808]  [<ffffffff81129d90>] d_alloc_and_lookup+0x40/0x80
+[92103.787810]  [<ffffffff81136670>] ? d_lookup+0x30/0x50
+[92103.787813]  [<ffffffff8112a7cf>] __lookup_hash.part.28+0xbf/0xe0
+[92103.787817]  [<ffffffff811a7847>] ? security_inode_permission+0x17/0x20
+[92103.787819]  [<ffffffff8112ab88>] lookup_hash+0x48/0x60
+[92103.787822]  [<ffffffff8112da03>] kern_path_create+0x83/0x120
+[92103.787825]  [<ffffffff811deabc>] ? strncpy_from_user+0x2c/0x40
+[92103.787828]  [<ffffffff8112a310>] ? getname_flags+0x140/0x260
+[92103.787830]  [<ffffffff8112dae5>] user_path_create+0x45/0x70
+[92103.787832]  [<ffffffff8112f279>] sys_linkat+0x89/0x150
+[92103.787836]  [<ffffffff813f6812>] system_call_fastpath+0x16/0x1b
+[92103.787842] INFO: task kworker/0:1:19995 blocked for more than 120 seconds.
+[92103.787844] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[92103.787845] kworker/0:1     D ffff88021a6719d8     0 19995      2 0x00000000
+[92103.787848]  ffff8800bfbd1b70 0000000000000046 ffff8800bfbd1b10 ffffffff811d2106
+[92103.787852]  ffff88021a671650 ffff8800bfbd1fd8 ffff8800bfbd1fd8 ffff8800bfbd1fd8
+[92103.787855]  ffff880226185940 ffff88021a671650 ffff8800bfbd1d90 ffff8800bfbd1e2c
+[92103.787858] Call Trace:
+[92103.787863]  [<ffffffff811d2106>] ? cpumask_next_and+0x36/0x50
+[92103.787866]  [<ffffffff813ed17a>] schedule+0x3a/0x50
+[92103.787868]  [<ffffffff813ed6a5>] schedule_timeout+0x1c5/0x300
+[92103.787872]  [<ffffffffa09fd200>] ? cpufreq_stat_notifier_trans+0xa0/0xc0 [cpufreq_stats]
+[92103.787875]  [<ffffffff813f289d>] ? notifier_call_chain+0x4d/0x70
+[92103.787879]  [<ffffffff813ee257>] __down_common+0x95/0xe5
+[92103.787892]  [<ffffffffa0ad4e07>] ? xfs_getsb+0x37/0x60 [xfs]
+[92103.787895]  [<ffffffff813ee306>] __down+0x18/0x1a
+[92103.787897]  [<ffffffff8107214c>] down+0x3c/0x50
+[92103.787906]  [<ffffffffa0a85d24>] xfs_buf_lock+0x44/0x110 [xfs]
+[92103.787918]  [<ffffffffa0ad4e07>] xfs_getsb+0x37/0x60 [xfs]
+[92103.787931]  [<ffffffffa0ae0d03>] xfs_trans_getsb+0x43/0x140 [xfs]
+[92103.787944]  [<ffffffffa0ad4b36>] xfs_mod_sb+0x46/0xc0 [xfs]
+[92103.787954]  [<ffffffffa0a96320>] ? xfs_sync_inode_attr+0xf0/0xf0 [xfs]
+[92103.787964]  [<ffffffffa0a8c29f>] xfs_fs_log_dummy+0x4f/0x90 [xfs]
+[92103.787977]  [<ffffffffa0adad03>] ? xfs_log_need_covered+0x83/0xb0 [xfs]
+[92103.787987]  [<ffffffffa0a963a4>] xfs_sync_worker+0x84/0x90 [xfs]
+[92103.787991]  [<ffffffff81066ec8>] process_one_work+0x118/0x470
+[92103.787994]  [<ffffffff81067dee>] worker_thread+0x15e/0x350
+[92103.787996]  [<ffffffff81067c90>] ? manage_workers.isra.29+0x220/0x220
+[92103.787999]  [<ffffffff8106c7a7>] kthread+0x87/0x90
+[92103.788002]  [<ffffffff813f8974>] kernel_thread_helper+0x4/0x10
+[92103.788004]  [<ffffffff8106c720>] ? kthread_worker_fn+0x190/0x190
+[92103.788007]  [<ffffffff813f8970>] ? gs_change+0x13/0x13
+------------------------------------------------------------
+
+	Sami
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
