@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0VGQGjj056764 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 10:26:17 -0600
-Date: Tue, 31 Jan 2012 10:26:17 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs_quota: remove calls to XFS_QSYNC
-Message-ID: <20120131162617.GF7762@sgi.com>
-References: <20120130115024.GA884@infradead.org>
-	<CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
+	q0VHDeTJ058888 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 11:13:40 -0600
+Received: from mail-yw0-f46.google.com (mail-yw0-f46.google.com
+	[209.85.213.46]) by cuda.sgi.com with ESMTP id 0BOToP18Opsw4vcc
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 31 Jan 2012 09:13:38 -0800 (PST)
+Received: by yhoo21 with SMTP id o21so149463yho.5
+	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 09:13:37 -0800 (PST)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
+Date: Tue, 31 Jan 2012 09:13:36 -0800
+Message-ID: <CAM=3LEd2yu6rgSCg=6-Mop7wgKK5FnVKx6E=H2NapzJQ9ahSeg@mail.gmail.com>
+Subject: Identify patches for superblock changes for Crossmeta
+From: sam supramani <suprasam@crossmeta.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,54 +21,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Jan 31, 2012 at 06:57:04AM +1100, Nathan Scott wrote:
-> On 30 January 2012 22:50, Christoph Hellwig <hch@infradead.org> wrote:
-> > ...
-> > Nathan, I've cced you in case you still remember anything about this,
-> > although it's fairly unlikely after 6.5 years. =A0Also if anyone at SGI
-> > can find anything about the above commits in BugWorks additional feedba=
-ck
-> > would be welcome.
-> =
+Hi,
 
-> I can't recall - but usually there was greater detail in the bugworks ent=
-ry,
-> I think thats your best source now.
-> =
+I am trying to get Crossmeta that includes windows port of XFS file
+system, to recognize newer ondisk format changes seen with the newer
+linux kernels.(RHEL6)
+The crossmeta-xfs port in https://github.com/crossmeta/sgi is quite
+old based on XFS 1.1 release with log v2 patches added later.
 
-> Patch looks OK to me FWIW, assuming nothing comes of the bugworks
-> archeology exercise.
+I am interested in knowing submittal ID for the following changes;
+attr=2 lazy-count=1.  Getting crossmeta to work with latest sources
+would be a bigger task, compared to selectively pulling the patch
+diffs.
 
-I'm not a ptools expert so I had to ask around.  This turned out to be
+If file system was made with attr=0 it works fine.
 
-PV942815 - XFS quota reporting interacts badly with delalloc
-
-"We get a constant trickle of confused people who've found that the used
-space reported by repquota/quota does not get immediately updated after
-creating new files / extending existing ones.  The problem is a result
-of buffered IO in XFS doing delayed allocation - if we have not done an
-allocation, the quota accounting has not been updated, so we end up with
-effectively stale data being reported.
-
-This affects CXFS too, of course.  After discussion a few weeks back on
-the XFS conf. call, it was decided to not change CXFS (too expensive to
-do a flush on all nodes) but that we can make some simple XFS changes to
-make this less of a problem - i.e. flushing delalloc data just before we
-extract quota information." -Nathan
+The program  is free to use and is available at http://www.crossmeta.org/redmine
 
 
-Patch looks good to me.
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
--Ben
+Thanks,
+Sam.
 
 _______________________________________________
 xfs mailing list
