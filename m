@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0VLZPDs101061 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 15:35:25 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id WDZqcZslqjKpNuNE for
-	<xfs@oss.sgi.com>; Tue, 31 Jan 2012 13:35:24 -0800 (PST)
-Date: Tue, 31 Jan 2012 21:35:22 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Performance problem - reads slower than writes
-Message-ID: <20120131213522.GA47420@nsrc.org>
-References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
-	<20120131103126.GA46170@nsrc.org> <20120131200635.GI9090@dastard>
+	q0VM4pOR103789 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 16:04:51 -0600
+Received: from caliban.corp.sgi.com ([10.202.8.38])
+	by cthulhu.engr.sgi.com (8.12.10/8.12.10/SuSE Linux 0.7) with ESMTP id
+	q0VM4pPo022644 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 14:04:51 -0800
+Date: Tue, 31 Jan 2012 14:04:56 -0800
+From: Phil White <pwhite@sgi.com>
+Subject: [NOTES] [patch] xfs: remove an unneeded NULL check
+Message-ID: <20120131220456.GG2569@caliban.corp.sgi.com>
+References: <20120128105501.GB25092@elgon.mountain>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120131200635.GI9090@dastard>
+In-Reply-To: <20120128105501.GB25092@elgon.mountain>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,33 +25,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Feb 01, 2012 at 07:06:35AM +1100, Dave Chinner wrote:
-> The number of IOs does not equal the number of seeks. Two adjacent,
-> sequential IOs issued serially will show up as two IOs, even though
-> there was no seek in between. Especially if the files are large
-> enough that readahead tops out (500-800k is large enough for this as
-> readahead maximum is 128k by default).  So it might be taking 3-4
-> IOs just to read the file data.
+#pwhite: We can safely remove this check because the one call to
+#xfs_log_commit_cil() comes from xfs_trans_commit() and passes a pointer to a
+#local variable.
 
-Ah. And if the IOs are not stacked up, then the platter has to rotate nearly
-a whole turn to perform the next one.
+Smatch complains because we check "commit_lsn" for NULL inconsistently.
+fs/xfs/xfs_log_cil.c +705 xfs_log_commit_cil(43) error: we previously
+	assumed 'commit_lsn' could be null (see line 688)
+xfs_log_commit_cil() is only called from one place, and "commit_lsn" is
+a valid pointer, so I've removed the NULL check.
 
-> > So the next thing I'd have to do is to try to get a trace of the I/O
-> > operations being performed, and I don't know how to do that.
-> 
-> blktrace/blkparse or seekwatcher.
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Reviewed-by: Phil White <pwhite@sgi.com>
 
-Excellent, just what I wanted. I've made a start with this and will report
-back.
-
-Many thanks for the help and pointers you have provided.
-
-Regards,
-
-Brian.
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index d4fadbe..d9c4652 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -685,8 +685,7 @@ xfs_log_commit_cil(
+ 
+ 	/* lock out background commit */
+ 	down_read(&log->l_cilp->xc_ctx_lock);
+-	if (commit_lsn)
+-		*commit_lsn = log->l_cilp->xc_ctx->sequence;
++	*commit_lsn = log->l_cilp->xc_ctx->sequence;
+ 
+ 	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
 
 _______________________________________________
 xfs mailing list
