@@ -1,44 +1,44 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0VNBNdC130590 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 17:11:23 -0600
+	q0VN7F5F128936 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 17:07:16 -0600
 Received: from postoffice2.aconex.com (mail.aconex.com [203.166.49.3]) by
-	cuda.sgi.com with ESMTP id d26njuFQDFQLnRiF for
-	<xfs@oss.sgi.com>; Tue, 31 Jan 2012 15:11:20 -0800 (PST)
+	cuda.sgi.com with ESMTP id 1BeKEtokBbopMcer for
+	<xfs@oss.sgi.com>; Tue, 31 Jan 2012 15:07:13 -0800 (PST)
 Received: from postoffice.aconex.com (postoffice.yarra.acx [192.168.35.100])
-	by postoffice2.aconex.com with ESMTP id RWyX1mxFajaGpIlf for
-	<xfs@oss.sgi.com>; Wed, 01 Feb 2012 10:11:17 +1100 (EST)
+	by postoffice2.aconex.com with ESMTP id ODZKVXFjUUl0Zamp for
+	<xfs@oss.sgi.com>; Wed, 01 Feb 2012 10:07:11 +1100 (EST)
 Received: from gatekeeper.aconex.com (gatekeeper.yarra.acx [192.168.35.102])
-	by postoffice.aconex.com (Postfix) with ESMTP id 820A43CE00C5
-	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:11:01 +1100 (EST)
+	by postoffice.aconex.com (Postfix) with ESMTP id 73DBC3CE00B5
+	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:06:55 +1100 (EST)
 Received: from localhost (localhost.localdomain [127.0.0.1])
-	by gatekeeper.aconex.com (Postfix) with ESMTP id 9B9059E0002
-	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:11:17 +1100 (EST)
+	by gatekeeper.aconex.com (Postfix) with ESMTP id 8F0379E0002
+	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:07:11 +1100 (EST)
 Received: from gatekeeper.aconex.com ([127.0.0.1])
 	by localhost (gatekeeper.aconex.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id bDPA+luNA1dv for <xfs@oss.sgi.com>;
-	Wed,  1 Feb 2012 10:11:17 +1100 (EST)
+	port 10024) with ESMTP id gLMO2l+aimoa for <xfs@oss.sgi.com>;
+	Wed,  1 Feb 2012 10:07:09 +1100 (EST)
 Received: from acxmail-au2.aconex.com (acxmail-au2.aconex.com [192.168.35.104])
-	by gatekeeper.aconex.com (Postfix) with ESMTP id 1D47D9E0001
-	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:11:17 +1100 (EST)
+	by gatekeeper.aconex.com (Postfix) with ESMTP id 2010B9E0001
+	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:07:09 +1100 (EST)
 Received: from localhost (localhost.localdomain [127.0.0.1])
-	by acxmail-au2.aconex.com (Postfix) with ESMTP id 14D2A3B20003
-	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:11:17 +1100 (EST)
+	by acxmail-au2.aconex.com (Postfix) with ESMTP id 1C0AA3B20003
+	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:07:09 +1100 (EST)
 Received: from acxmail-au2.aconex.com ([127.0.0.1])
 	by localhost (acxmail-au2.aconex.com [127.0.0.1]) (amavisd-new,
-	port 10024) with ESMTP id Vr2Zz2bhPHnZ for <xfs@oss.sgi.com>;
-	Wed,  1 Feb 2012 10:11:16 +1100 (EST)
-Received: from acxmail-au2.aconex.com (acxmail-au2.aconex.com [192.168.35.104])
-	by acxmail-au2.aconex.com (Postfix) with ESMTP id D4CAF3B20001
-	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:11:16 +1100 (EST)
-Date: Wed, 1 Feb 2012 10:11:16 +1100 (EST)
+	port 10024) with ESMTP id Vkv7SPUxkPHd for <xfs@oss.sgi.com>;
+	Wed,  1 Feb 2012 10:07:08 +1100 (EST)
+Received: from acxmail-au2.aconex.com (localhost.localdomain [127.0.0.1])
+	by acxmail-au2.aconex.com (Postfix) with ESMTP id E776A3B20001
+	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 10:07:08 +1100 (EST)
+Date: Wed, 1 Feb 2012 10:07:08 +1100 (EST)
 From: Nathan Scott <nathans@debian.org>
-Message-ID: <1247398017.69749.1328051476851.JavaMail.root@acxmail-au2.aconex.com>
-In-Reply-To: <519369070.69746.1328051417713.JavaMail.root@acxmail-au2.aconex.com>
-Subject: [patch] xfsprogs: extend fiemap configure check
+Message-ID: <419906537.69741.1328051228836.JavaMail.root@acxmail-au2.aconex.com>
+In-Reply-To: <1317955640.69734.1328051152460.JavaMail.root@acxmail-au2.aconex.com>
+Subject: [patch] xfsprogs: add debian linux-libc-dev build dependency
 MIME-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_Part_69748_1420656309.1328051476850"
+	boundary="----=_Part_69740_686805766.1328051228834"
 Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -52,35 +52,35 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-------=_Part_69748_1420656309.1328051476850
+------=_Part_69740_686805766.1328051228834
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 
-Make the fiemap configure check consistent with the other
-libc interface checks - perform a compile and link with a
-complete set of symbols, macros and interfaces needed, as
-opposed to a build with just the headers.
+Add a build dependency on linux-libc-dev, to ensure we build
+packages with have_fiemap set to true if the headers support
+it.  Noticed by Dave, some package builds didn't enable this
+when they should have.
 
 Signed-off-by: Nathan Scott <nathans@debian.org>
-------=_Part_69748_1420656309.1328051476850
-Content-Type: text/x-patch; name=fiemap.patch
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename=fiemap.patch
 
-ZGlmZiAtLWdpdCBhL200L3BhY2thZ2VfbGliY2Rldi5tNCBiL200L3BhY2thZ2VfbGliY2Rldi5t
-NAppbmRleCA4MTkyMTgxLi4xZTJjMjU2IDEwMDY0NAotLS0gYS9tNC9wYWNrYWdlX2xpYmNkZXYu
-bTQKKysrIGIvbTQvcGFja2FnZV9saWJjZGV2Lm00CkBAIC0xMjEsNiArMTIxLDE3IEBAIEFDX0RF
-RlVOKFtBQ19IQVZFX0ZBTExPQ0FURV0sCiAjIENoZWNrIGlmIHdlIGhhdmUgdGhlIGZpZW1hcCBp
-b2N0bCAoTGludXgpCiAjCiBBQ19ERUZVTihbQUNfSEFWRV9GSUVNQVBdLAotICBbIEFDX0NIRUNL
-X0hFQURFUlMoW2xpbnV4L2ZpZW1hcC5oXSwgWyBoYXZlX2ZpZW1hcD15ZXMgXSwgWyBoYXZlX2Zp
-ZW1hcD1ubyBdKQorICBbIEFDX01TR19DSEVDS0lORyhbZm9yIGZpZW1hcF0pCisgICAgQUNfVFJZ
-X0xJTksoWworI2RlZmluZSBfR05VX1NPVVJDRQorI2RlZmluZSBfRklMRV9PRkZTRVRfQklUUyA2
-NAorI2luY2x1ZGUgPGxpbnV4L2ZzLmg+CisjaW5jbHVkZSA8bGludXgvZmllbWFwLmg+CisgICAg
-XSwgWworICAgICAgICAgc3RydWN0IGZpZW1hcCAqZmllbWFwOworICAgICAgICAgaW9jdGwoMCwg
-RlNfSU9DX0ZJRU1BUCwgKHVuc2lnbmVkIGxvbmcpZmllbWFwKTsKKyAgICBdLCBoYXZlX2ZpZW1h
-cD15ZXMKKyAgICAgICBBQ19NU0dfUkVTVUxUKHllcyksCisgICAgICAgQUNfTVNHX1JFU1VMVChu
-bykpCiAgICAgQUNfU1VCU1QoaGF2ZV9maWVtYXApCiAgIF0pCg==
-------=_Part_69748_1420656309.1328051476850
+------=_Part_69740_686805766.1328051228834
+Content-Type: text/x-patch; name=debiandeps.patch
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename=debiandeps.patch
+
+ZGlmZiAtLWdpdCBhL2RlYmlhbi9jb250cm9sIGIvZGViaWFuL2NvbnRyb2wKaW5kZXggY2E1MTdh
+ZC4uNTAyYjQ4YiAxMDA2NDQKLS0tIGEvZGViaWFuL2NvbnRyb2wKKysrIGIvZGViaWFuL2NvbnRy
+b2wKQEAgLTMsNyArMyw3IEBAIFNlY3Rpb246IGFkbWluCiBQcmlvcml0eTogb3B0aW9uYWwKIE1h
+aW50YWluZXI6IFhGUyBEZXZlbG9wbWVudCBUZWFtIDx4ZnNAb3NzLnNnaS5jb20+CiBVcGxvYWRl
+cnM6IE5hdGhhbiBTY290dCA8bmF0aGFuc0BkZWJpYW4ub3JnPiwgQW5pYmFsIE1vbnNhbHZlIFNh
+bGF6YXIgPGFuaWJhbEBkZWJpYW4ub3JnPgotQnVpbGQtRGVwZW5kczogdXVpZC1kZXYsIGF1dG9j
+b25mLCBkZWJoZWxwZXIgKD49IDUpLCBnZXR0ZXh0LCBsaWJ0b29sLCBsaWJyZWFkbGluZS1ncGx2
+Mi1kZXYgfCBsaWJyZWFkbGluZTUtZGV2LCBsaWJibGtpZC1kZXYgKD49IDIuMTcpCitCdWlsZC1E
+ZXBlbmRzOiB1dWlkLWRldiwgYXV0b2NvbmYsIGRlYmhlbHBlciAoPj0gNSksIGdldHRleHQsIGxp
+YnRvb2wsIGxpYnJlYWRsaW5lLWdwbHYyLWRldiB8IGxpYnJlYWRsaW5lNS1kZXYsIGxpYmJsa2lk
+LWRldiAoPj0gMi4xNyksIGxpbnV4LWxpYmMtZGV2CiBTdGFuZGFyZHMtVmVyc2lvbjogMy45LjEK
+IEhvbWVwYWdlOiBodHRwOi8vb3NzLnNnaS5jb20vcHJvamVjdHMveGZzLwogCg==
+------=_Part_69740_686805766.1328051228834
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -91,4 +91,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
-------=_Part_69748_1420656309.1328051476850--
+------=_Part_69740_686805766.1328051228834--
