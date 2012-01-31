@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q0VEqJWr021375 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 08:52:19 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	BonLJw8V5UWoUuE2 (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 31 Jan 2012 06:52:17 -0800 (PST)
-Date: Tue, 31 Jan 2012 09:52:05 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Performance problem - reads slower than writes
-Message-ID: <20120131145205.GA6607@infradead.org>
-References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
-	<20120131103126.GA46170@nsrc.org>
+	q0VGQGjj056764 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 10:26:17 -0600
+Date: Tue, 31 Jan 2012 10:26:17 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs_quota: remove calls to XFS_QSYNC
+Message-ID: <20120131162617.GF7762@sgi.com>
+References: <20120130115024.GA884@infradead.org>
+	<CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120131103126.GA46170@nsrc.org>
+In-Reply-To: <CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,36 +19,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Candler <B.Candler@pobox.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com
 
-On Tue, Jan 31, 2012 at 10:31:26AM +0000, Brian Candler wrote:
-> - seek to inode (if the inode block isn't already in cache)
-> - seek to extents table (if all extents don't fit in the inode)
-> - seek(s) to the file contents, depending on how they're fragmented.
-> 
-> I am currently seeing somewhere between 7 and 8 seeks per file read, and
-> this just doesn't seem right to me.
+On Tue, Jan 31, 2012 at 06:57:04AM +1100, Nathan Scott wrote:
+> On 30 January 2012 22:50, Christoph Hellwig <hch@infradead.org> wrote:
+> > ...
+> > Nathan, I've cced you in case you still remember anything about this,
+> > although it's fairly unlikely after 6.5 years. =A0Also if anyone at SGI
+> > can find anything about the above commits in BugWorks additional feedba=
+ck
+> > would be welcome.
+> =
 
-You don't just read a single file at a time but multiple ones, don't
-you?
+> I can't recall - but usually there was greater detail in the bugworks ent=
+ry,
+> I think thats your best source now.
+> =
 
-Try playing with the following tweaks to get larger I/O to the disk:
+> Patch looks OK to me FWIW, assuming nothing comes of the bugworks
+> archeology exercise.
 
- a) make sure you use the noop or deadline elevators
- b) increase /sys/block/sdX/queue/max_sectors_kb from its low default
- c) dramatically increase /sys/devices/virtual/bdi/<major>:<minor>/read_ahead_kb
+I'm not a ptools expert so I had to ask around.  This turned out to be
 
-> OK. I saw "df -i" reporting a stupid number of available inodes, over 500
-> million, so I decided to reduce it to 100 million.  But df -k didn't show
-> any corresponding increase in disk space, so I'm guessing in xfs these are
-> allocated on-demand, and the inode limit doesn't really matter?
+PV942815 - XFS quota reporting interacts badly with delalloc
 
-Exactly, the number displayed is the upper bound.
+"We get a constant trickle of confused people who've found that the used
+space reported by repquota/quota does not get immediately updated after
+creating new files / extending existing ones.  The problem is a result
+of buffered IO in XFS doing delayed allocation - if we have not done an
+allocation, the quota accounting has not been updated, so we end up with
+effectively stale data being reported.
+
+This affects CXFS too, of course.  After discussion a few weeks back on
+the XFS conf. call, it was decided to not change CXFS (too expensive to
+do a flush on all nodes) but that we can make some simple XFS changes to
+make this less of a problem - i.e. flushing delalloc data just before we
+extract quota information." -Nathan
+
+
+Patch looks good to me.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+-Ben
 
 _______________________________________________
 xfs mailing list
