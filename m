@@ -1,12 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Date: Tue, 31 Jan 2012 13:19:28 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: show uuid when mount fails due to duplicate uuid
-Message-ID: <20120131191928.GH7762@sgi.com>
-References: <20120113055839.12919.98763.stgit@ltc219.sdl.hitachi.co.jp>
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	q0VJi9UD094192 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 13:44:09 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	tDiUF0tbgGbfHqbC for <xfs@oss.sgi.com>;
+	Tue, 31 Jan 2012 11:44:07 -0800 (PST)
+Date: Wed, 1 Feb 2012 06:44:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: File system remain unresponsive until the system is rebooted.
+Message-ID: <20120131194404.GH9090@dastard>
+References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
+	<20120131013124.GE9090@dastard>
+	<CANs4eSBgmvJCR7vfFa1W5h8tUYFQi=LRPWDPQ1exB29D1o_RjA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120113055839.12919.98763.stgit@ltc219.sdl.hitachi.co.jp>
+In-Reply-To: <CANs4eSBgmvJCR7vfFa1W5h8tUYFQi=LRPWDPQ1exB29D1o_RjA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,24 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Cc: Alex Elder <elder@kernel.org>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
+To: Supratik Goswami <supratiksekhar@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jan 13, 2012 at 02:58:39PM +0900, Mitsuo Hayasaka wrote:
-> When a system tries to mount a filesystem (FS) using UUID, the xfs
-> returns -EINVAL and shows a message if a FS with the same UUID has
-> been already mounted. It is useful to output the duplicate UUID
-> with it.
+On Tue, Jan 31, 2012 at 10:34:10AM +0530, Supratik Goswami wrote:
+> We are using Amazon EC2 instances.
 > 
-> Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Cc: Ben Myers <bpm@sgi.com>
-> Cc: Alex Elder <elder@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
+> ubuntu@ip-10-0-0-10:~$ uname -aLinux ip-10-0-0-10 2.6.32-318-ec2
+> #38-Ubuntu SMP Thu Sep 1 18:09:30 UTC 2011 x86_64 GNU/Linux
 
-Looks good.
+The growfs hang problem was fixed in 2.6.34.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+On earlier kernels, if you do a grow while the system is under
+allocation load it could deadlock. growing on a mostly idle
+filesystem was generally OK, but under heavy load problems could
+occur. This hang is what xfstests 104 exercises...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
