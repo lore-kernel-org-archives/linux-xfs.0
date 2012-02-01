@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q117TW09230203 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 01:29:33 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id JluxSH7BaNPkWXcg
-	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 23:29:31 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 13CAD6C1A4
-	for <xfs@oss.sgi.com>; Wed,  1 Feb 2012 01:29:30 -0600 (CST)
-Message-ID: <4F28E9DA.8030407@hardwarefreak.com>
-Date: Wed, 01 Feb 2012 01:29:30 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q11AOleG238808 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 04:24:47 -0600
+Date: Wed, 1 Feb 2012 05:24:36 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_quota: remove calls to XFS_QSYNC
+Message-ID: <20120201102436.GB26638@infradead.org>
+References: <20120130115024.GA884@infradead.org>
+	<CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
+	<20120131162617.GF7762@sgi.com> <20120131210110.GN9090@dastard>
 MIME-Version: 1.0
-Subject: Re: Performance problem - reads slower than writes
-References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
-	<20120131103126.GA46170@nsrc.org> <20120131141604.GB46571@nsrc.org>
-	<20120131202526.GJ9090@dastard>
-In-Reply-To: <20120131202526.GJ9090@dastard>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20120131210110.GN9090@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +24,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com
 
-On 1/31/2012 2:25 PM, Dave Chinner wrote:
-> On Tue, Jan 31, 2012 at 02:16:04PM +0000, Brian Candler wrote:
-
->> Here we appear to be limited by real seeks. 225 seeks/sec is still very good
+On Wed, Feb 01, 2012 at 08:01:10AM +1100, Dave Chinner wrote:
+> So effectively what that says to me is that quota only exports the
+> real block usage, even though it internally tracks delalloc
+> reservations. Perhaps an additionaly change to make in this case is
+> to fold the reserved blocks into what is reported to the quota
+> utilities?
 > 
-> That number indicates 225 IOs/s, not 225 seeks/s.
+> Indeed, what is exported to userspace via xfs_qm_export_dquot() is
+> the information in the dquot core - the on-disk information - so
+> perhaps all we need to do is export dqp->q_res_bcount (the count of
+> real + reserved blocks) instead of the on-disk info?
 
-Yeah, the voice coil actuator and spindle rotation limits the peak
-random seek rate of good 7.2k drive/controller combos to about 150/s.
-15k drives do about 250-300 seeks/s max.  Simple tool to test max random
-seeks/sec for a device:
-
-32bit binary:  http://www.hardwarefreak.com/seekerb
-source:        http://www.hardwarefreak.com/seeker_baryluk.c
-
-I'm not the author.  The original seeker program is single threaded.
-Baryluk did the thread hacking.  Background info:
-http://www.linuxinsight.com/how_fast_is_your_disk.html
-
-Usage:   ./seekerb device [threads]
-
-Results for a single WD 7.2K drive, no NCQ, deadline elevator:
-
-  1 threads Results: 64 seeks/second, 15.416 ms random access time
- 16 threads Results: 97 seeks/second, 10.285 ms random access time
-128 threads Results: 121 seeks/second, 8.208 ms random access time
-
-Actual output:
-$ seekerb /dev/sda 128
-Seeker v3.0, 2009-06-17,
-http://www.linuxinsight.com/how_fast_is_your_disk.html
-Benchmarking /dev/sda [976773168 blocks, 500107862016 bytes, 465 GB,
-476940 MB, 500 GiB, 500107 MiB]
-[512 logical sector size, 512 physical sector size]
-[128 threads]
-Wait 30 seconds.............................
-Results: 121 seeks/second, 8.208 ms random access time (52614775 <
-offsets < 499769984475)
-
-Targeting array devices (mdraid or hardware, or FC SAN LUN) with lots of
-spindles, and/or SSDs should yield some interesting results.
-
--- 
-Stan
+That seems like a good idea, given that enforcement takes the
+reservation into account.  To retain compatbility for the case of new
+userspace and an old kernel I'd have to disable Q_XQUOTASYNC in the
+kernel intead of in the tool, though.
 
 _______________________________________________
 xfs mailing list
