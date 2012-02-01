@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q11IXe1X003396 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 12:33:40 -0600
-Date: Wed, 1 Feb 2012 12:33:40 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/2] xfs: clean up minor sparse warnings
-Message-ID: <20120201183340.GG13095@sgi.com>
-References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
-	<1324426062-21505-2-git-send-email-david@fromorbit.com>
-	<20111221161349.GB7001@infradead.org>
-	<20111221235904.GH23662@dastard>
+	q11JOo0x005337 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 13:24:50 -0600
+Message-ID: <4F299182.7010606@sgi.com>
+Date: Wed, 01 Feb 2012 13:24:50 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111221235904.GH23662@dastard>
+Subject: Re: [PATCH] xfstests: Introduce a new SEEK_DATA/SEEK_HOLE tester
+References: <4EFC6BC6.6020405@oracle.com>
+In-Reply-To: <4EFC6BC6.6020405@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,61 +17,158 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: jeff.liu@oracle.com
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hey Dave,
+On 01/-10/63 13:59, Jeff Liu wrote:
+> Hello,
+>
+> This is another SEEK_DATA/SEEK_HOLE tester which is intended to cover multiple extents checking.
+> I have ran it against btrfs to ensure the tester works, and ran it against XFS to ensure the SEEK_DATA/SEEK_HOLE patch works too.
+>
 
-On Thu, Dec 22, 2011 at 10:59:04AM +1100, Dave Chinner wrote:
-> On Wed, Dec 21, 2011 at 11:13:50AM -0500, Christoph Hellwig wrote:
-> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > index d99a905..2f3f56a 100644
-> > > --- a/fs/xfs/xfs_ioctl.c
-> > > +++ b/fs/xfs/xfs_ioctl.c
-> > > @@ -230,24 +230,22 @@ xfs_open_by_handle(
-> > >  
-> > >  	/* Put open permission in namei format. */
-> > >  	permflag = hreq->oflags;
-> > > -	if ((permflag+1) & O_ACCMODE)
-> > > -		permflag++;
-> > >  	if (permflag & O_TRUNC)
-> > > -		permflag |= 2;
-> > > +		permflag |= O_RDWR;
-> > >  
-> > >  	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
-> > > -	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
-> > > +	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
-> > >  		error = -XFS_ERROR(EPERM);
-> > >  		goto out_dput;
-> > >  	}
-> > >  
-> > > -	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-> > > +	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-> > >  		error = -XFS_ERROR(EACCES);
-> > >  		goto out_dput;
-> > >  	}
-> > >  
-> > >  	/* Can't write directories. */
-> > > -	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
-> > > +	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
-> > >  		error = -XFS_ERROR(EISDIR);
-> > >  		goto out_dput;
-> > >  	}
-> > 
-> > I think this one is complicated enough that is deserves a separate
-> > patch and a better description.
-> 
-> Ok, I've also just found a problem with it(*) so I'll separate it
-> and resend when I've fixed it.
+> diff --git a/src/seek_copy_tester.c b/src/seek_copy_tester.c
+> new file mode 100755
+> index 0000000..4971f34
+> --- /dev/null
+> +++ b/src/seek_copy_tester.c
+> @@ -0,0 +1,674 @@
 
-Did you resend this?
+Do you want to add Author/Copyright and description?
 
-Thanks,
-Ben
+> +#include<stdio.h>
+> +#include<stdlib.h>
+> +#include<stdint.h>
+> +#include<stdarg.h>
+
+...
+
+> +int
+> +full_write(int fd, const void *buf, size_t count)
+> +{
+> +	int ret = 0;
+> +	const char *ptr = (const char *) buf;
+> +
+> +	while (count>  0) {
+> +		ssize_t n = write(fd, ptr, count);
+> +		if (n<  0) {
+> +			if (errno == EINTR)
+> +				continue;
+> +			error("full_write failed as %s", strerror(errno));
+> +			ret = -1;
+> +			break;
+> +		}
+> +
+> +		if (n == 0)
+> +			break;
+
+Callers of this routine expect the count number of bytes to be written.
+Write a message if leaving this routine early? An error?
+
+> +
+> +		ptr += n;
+> +		count -= n;
+> +	}
+> +
+> +	return ret;
+> +}
+
+...
+
+
+> +int
+> +create_data_and_holes(int fd, size_t nr_total_bytes, off_t start_offset,
+> +		      uint64_t nr_skip_bytes, uint64_t nr_data_bytes,
+> +		      int wrote_hole_at_eof)
+> +{
+> +	int ret = 0;
+> +	off_t total = nr_total_bytes;
+> +	off_t data_len = nr_data_bytes;
+> +	off_t off = start_offset;
+> +	char buf[4096];
+> +
+> +	memset(buf, 'A', sizeof(buf));
+> +
+> +	total -= start_offset;
+> +	while (total>  0) {
+> +		do {
+
+You can actually write more than total byte on the last data write.
+If writing exact total is important, then give do_pwrite() the count:
+cnt = MIN(total, sizeof(buf))
+
+> +			ssize_t nr_write = do_pwrite(fd, buf, sizeof(buf), off);
+> +			if (nr_write<  0) {
+> +				error("do_pwrite() failed as %s", strerror(errno));
+> +				ret = -1;
+> +				goto out;
+> +			}
+> +			if (nr_write == 0)
+> +				break;
+> +
+do_pwrite will return 0 if not an error.
+> +			off += nr_write;
+> +			data_len -= nr_write;
+These are probably sizeof(buf0 or my cnt not nr_write
+> +		} while (data_len>  0);
+> +
+> +		off += (nr_skip_bytes + nr_data_bytes);
+> +		total -= off;
+
+...
+
+> +
+> +/*
+> + * Copy a data extent from source file to dest file.
+> + * @data_off: data offset
+> + * @hole_off: hole offset
+> + * The length of this extent is (hole_off - data_off).
+> + */
+> +int
+> +do_extent_copy(int src_fd, int dest_fd, off_t data_off, off_t hole_off)
+> +{
+> +	uint64_t len = (uint64_t)(hole_off - data_off);
+> +	char buf[BUF_SIZE];
+> +	int ret;
+> +
+> +	/* Seek to data_off for data reading */
+> +	ret = lseek(src_fd, data_off, SEEK_SET);
+> +	if (ret<  0) {
+> +		error("seek source file to %llu failed as %s",
+> +		       (uint64_t)data_off, strerror(errno));
+> +		return ret;
+> +	}
+> +
+> +	/* Seek to data_off for data writing, make holes as well */
+> +	ret = lseek(dest_fd, data_off, SEEK_SET);
+> +	if (ret<  0) {
+> +		error("seek dest file to %llu failed as %s",
+> +		       (uint64_t)data_off, strerror(errno));
+> +		return ret;
+> +	}
+> +
+> +	while (len>  0) {
+> +		memset(buf, 0, sizeof(buf));
+> +		ssize_t n_read = read(src_fd, buf, BUF_SIZE);
+> +		if (n_read<  0) {
+> +			if (errno == EINTR)
+> +				continue;
+> +
+> +			error("read source file extent failed as %s",
+> +			      strerror(errno));	
+> +			return n_read;
+> +		}
+> +
+> +		if (n_read == 0)
+> +			break;
+
+Message? Error?
+
+--Mark Tinguely
 
 _______________________________________________
 xfs mailing list
