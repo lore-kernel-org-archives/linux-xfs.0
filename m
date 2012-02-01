@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q11E0g9H253121 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 08:00:43 -0600
+	q11E0hH9253124 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 08:00:43 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	7PMD9sfWk6hJy2CL (version=TLSv1 cipher=AES256-SHA bits=256
+	4nPiDJd7CGXiYr8s (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
 	Wed, 01 Feb 2012 06:00:40 -0800 (PST)
-Message-Id: <20120201140039.011990931@bombadil.infradead.org>
-Date: Wed, 01 Feb 2012 08:57:20 -0500
+Message-Id: <20120201140039.890810863@bombadil.infradead.org>
+Date: Wed, 01 Feb 2012 08:57:22 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/7] xfs: use a normal shrinker for the dquot freelist
+Subject: [PATCH 3/7] xfs: use per-filesystem radix trees for dquot lookup
 References: <20120201135719.202171828@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-fix-shrinker
+Content-Disposition: inline; filename=xfs-quota-radix-tree
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,602 +29,578 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Stop reusing dquots from the freelist when allocating new ones directly, and
-implement a shrinker that actually follows the specifications for the
-interface.  The shrinker implementation is still highly suboptimal at this
-point, but we can gradually work on it.
-
-This also fixes an bug in the previous lock ordering, where we would take
-the hash and dqlist locks inside of the freelist lock against the normal
-lock ordering.  This is only solvable by introducing the dispose list,
-and thus not when using direct reclaim of unused dquots for new allocations.
-
-As a side-effect the quota upper bound and used to free ratio values in
-/proc/fs/xfs/xqm are set to 0 as these values don't make any sense in the
-new world order.
+Replace the global hash tables for looking up in-memory dquot structures
+with per-filesystem radix trees to allow scaling to a large number of
+in-memory dquot structures.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/kmem.h         |    6 -
- fs/xfs/xfs_dquot.c    |  103 ++++-------------
- fs/xfs/xfs_qm.c       |  293 +++++++++++++++++++-------------------------------
- fs/xfs/xfs_qm.h       |   14 --
- fs/xfs/xfs_qm_stats.c |    4 
- fs/xfs/xfs_trace.h    |    5 
- 6 files changed, 142 insertions(+), 283 deletions(-)
 
-Index: xfs/fs/xfs/kmem.h
-===================================================================
---- xfs.orig/fs/xfs/kmem.h	2012-02-01 12:05:12.530712997 +0100
-+++ xfs/fs/xfs/kmem.h	2012-02-01 12:06:55.620154512 +0100
-@@ -110,10 +110,4 @@ kmem_zone_destroy(kmem_zone_t *zone)
- extern void *kmem_zone_alloc(kmem_zone_t *, unsigned int __nocast);
- extern void *kmem_zone_zalloc(kmem_zone_t *, unsigned int __nocast);
- 
--static inline int
--kmem_shake_allow(gfp_t gfp_mask)
--{
--	return ((gfp_mask & __GFP_WAIT) && (gfp_mask & __GFP_FS));
--}
--
- #endif /* __XFS_SUPPORT_KMEM_H__ */
+---
+ fs/xfs/xfs_dquot.c      |  175 ++++++++++--------------------------------------
+ fs/xfs/xfs_dquot.h      |   12 ---
+ fs/xfs/xfs_qm.c         |   95 ++------------------------
+ fs/xfs/xfs_qm.h         |   19 ++---
+ fs/xfs/xfs_quota_priv.h |   11 ---
+ fs/xfs/xfs_trace.h      |    4 -
+ 6 files changed, 58 insertions(+), 258 deletions(-)
+
 Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2012-02-01 12:05:12.540712942 +0100
-+++ xfs/fs/xfs/xfs_qm.c	2012-02-01 12:22:08.051878113 +0100
-@@ -50,7 +50,6 @@
-  */
- struct mutex	xfs_Gqm_lock;
- struct xfs_qm	*xfs_Gqm;
--uint		ndquot;
- 
+--- xfs.orig/fs/xfs/xfs_qm.c	2012-02-01 12:24:27.234457429 +0100
++++ xfs/fs/xfs/xfs_qm.c	2012-02-01 12:25:23.134154595 +0100
+@@ -54,9 +54,6 @@ struct xfs_qm	*xfs_Gqm;
  kmem_zone_t	*qm_dqzone;
  kmem_zone_t	*qm_dqtrxzone;
-@@ -93,7 +92,6 @@ xfs_Gqm_init(void)
- 		goto out_free_udqhash;
  
- 	hsize /= sizeof(xfs_dqhash_t);
--	ndquot = hsize << 8;
+-STATIC void	xfs_qm_list_init(xfs_dqlist_t *, char *, int);
+-STATIC void	xfs_qm_list_destroy(xfs_dqlist_t *);
+-
+ STATIC int	xfs_qm_init_quotainos(xfs_mount_t *);
+ STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
+ STATIC int	xfs_qm_shake(struct shrinker *, struct shrink_control *);
+@@ -68,37 +65,9 @@ STATIC int	xfs_qm_shake(struct shrinker
+ STATIC struct xfs_qm *
+ xfs_Gqm_init(void)
+ {
+-	xfs_dqhash_t	*udqhash, *gdqhash;
+ 	xfs_qm_t	*xqm;
+-	size_t		hsize;
+-	uint		i;
+-
+-	/*
+-	 * Initialize the dquot hash tables.
+-	 */
+-	udqhash = kmem_zalloc_greedy(&hsize,
+-				     XFS_QM_HASHSIZE_LOW * sizeof(xfs_dqhash_t),
+-				     XFS_QM_HASHSIZE_HIGH * sizeof(xfs_dqhash_t));
+-	if (!udqhash)
+-		goto out;
+-
+-	gdqhash = kmem_zalloc_large(hsize);
+-	if (!gdqhash)
+-		goto out_free_udqhash;
+-
+-	hsize /= sizeof(xfs_dqhash_t);
  
  	xqm = kmem_zalloc(sizeof(xfs_qm_t), KM_SLEEP);
- 	xqm->qm_dqhashmask = hsize - 1;
-@@ -137,7 +135,6 @@ xfs_Gqm_init(void)
- 		xqm->qm_dqtrxzone = qm_dqtrxzone;
+-	xqm->qm_dqhashmask = hsize - 1;
+-	xqm->qm_usr_dqhtable = udqhash;
+-	xqm->qm_grp_dqhtable = gdqhash;
+-	ASSERT(xqm->qm_usr_dqhtable != NULL);
+-	ASSERT(xqm->qm_grp_dqhtable != NULL);
+-
+-	for (i = 0; i < hsize; i++) {
+-		xfs_qm_list_init(&(xqm->qm_usr_dqhtable[i]), "uxdqh", i);
+-		xfs_qm_list_init(&(xqm->qm_grp_dqhtable[i]), "gxdqh", i);
+-	}
  
+ 	/*
+ 	 * dquot zone. we register our own low-memory callback.
+@@ -123,11 +92,6 @@ xfs_Gqm_init(void)
  	atomic_set(&xqm->qm_totaldquots, 0);
--	xqm->qm_dqfree_ratio = XFS_QM_DQFREE_RATIO;
  	xqm->qm_nrefs = 0;
  	return xqm;
- 
-@@ -1600,216 +1597,150 @@ xfs_qm_init_quotainos(
- 	return 0;
- }
- 
-+STATIC void
-+xfs_qm_dqfree_one(
-+	struct xfs_dquot	*dqp)
-+{
-+	struct xfs_mount	*mp = dqp->q_mount;
-+	struct xfs_quotainfo	*qi = mp->m_quotainfo;
- 
-+	mutex_lock(&dqp->q_hash->qh_lock);
-+	list_del_init(&dqp->q_hashlist);
-+	dqp->q_hash->qh_version++;
-+	mutex_unlock(&dqp->q_hash->qh_lock);
-+
-+	mutex_lock(&qi->qi_dqlist_lock);
-+	list_del_init(&dqp->q_mplist);
-+	qi->qi_dquots--;
-+	qi->qi_dqreclaims++;
-+	mutex_unlock(&qi->qi_dqlist_lock);
- 
--/*
-- * Pop the least recently used dquot off the freelist and recycle it.
-- */
--STATIC struct xfs_dquot *
--xfs_qm_dqreclaim_one(void)
-+	xfs_qm_dqdestroy(dqp);
-+}
-+
-+STATIC void
-+xfs_qm_dqreclaim_one(
-+	struct xfs_dquot	*dqp,
-+	struct list_head	*dispose_list)
- {
--	struct xfs_dquot	*dqp;
--	int			restarts = 0;
-+	struct xfs_mount	*mp = dqp->q_mount;
-+	int			error;
- 
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--restart:
--	list_for_each_entry(dqp, &xfs_Gqm->qm_dqfrlist, q_freelist) {
--		struct xfs_mount *mp = dqp->q_mount;
-+	if (!xfs_dqlock_nowait(dqp))
-+		goto out_busy;
- 
--		if (!xfs_dqlock_nowait(dqp))
--			continue;
-+	/*
-+	 * This dquot has acquired a reference in the meantime remove it from
-+	 * the freelist and try again.
-+	 */
-+	if (dqp->q_nrefs) {
-+		xfs_dqunlock(dqp);
- 
--		/*
--		 * This dquot has already been grabbed by dqlookup.
--		 * Remove it from the freelist and try again.
--		 */
--		if (dqp->q_nrefs) {
--			trace_xfs_dqreclaim_want(dqp);
--			XQM_STATS_INC(xqmstats.xs_qm_dqwants);
 -
--			list_del_init(&dqp->q_freelist);
--			xfs_Gqm->qm_dqfrlist_cnt--;
--			restarts++;
--			goto dqunlock;
--		}
-+		trace_xfs_dqreclaim_want(dqp);
-+		XQM_STATS_INC(xqmstats.xs_qm_dqwants);
- 
--		ASSERT(dqp->q_hash);
--		ASSERT(!list_empty(&dqp->q_mplist));
-+		list_del_init(&dqp->q_freelist);
-+		xfs_Gqm->qm_dqfrlist_cnt--;
-+		return;
-+	}
- 
--		/*
--		 * Try to grab the flush lock. If this dquot is in the process
--		 * of getting flushed to disk, we don't want to reclaim it.
--		 */
--		if (!xfs_dqflock_nowait(dqp))
--			goto dqunlock;
-+	ASSERT(dqp->q_hash);
-+	ASSERT(!list_empty(&dqp->q_mplist));
- 
--		/*
--		 * We have the flush lock so we know that this is not in the
--		 * process of being flushed. So, if this is dirty, flush it
--		 * DELWRI so that we don't get a freelist infested with
--		 * dirty dquots.
--		 */
--		if (XFS_DQ_IS_DIRTY(dqp)) {
--			int	error;
-+	/*
-+	 * Try to grab the flush lock. If this dquot is in the process of
-+	 * getting flushed to disk, we don't want to reclaim it.
-+	 */
-+	if (!xfs_dqflock_nowait(dqp))
-+		goto out_busy;
- 
--			trace_xfs_dqreclaim_dirty(dqp);
-+	/*
-+	 * We have the flush lock so we know that this is not in the
-+	 * process of being flushed. So, if this is dirty, flush it
-+	 * DELWRI so that we don't get a freelist infested with
-+	 * dirty dquots.
-+	 */
-+	if (XFS_DQ_IS_DIRTY(dqp)) {
-+		trace_xfs_dqreclaim_dirty(dqp);
- 
--			/*
--			 * We flush it delayed write, so don't bother
--			 * releasing the freelist lock.
--			 */
--			error = xfs_qm_dqflush(dqp, SYNC_TRYLOCK);
--			if (error) {
--				xfs_warn(mp, "%s: dquot %p flush failed",
--					__func__, dqp);
--			}
--			goto dqunlock;
-+		/*
-+		 * We flush it delayed write, so don't bother releasing the
-+		 * freelist lock.
-+		 */
-+		error = xfs_qm_dqflush(dqp, 0);
-+		if (error) {
-+			xfs_warn(mp, "%s: dquot %p flush failed",
-+				 __func__, dqp);
- 		}
--		xfs_dqfunlock(dqp);
- 
- 		/*
--		 * Prevent lookup now that we are going to reclaim the dquot.
--		 * Once XFS_DQ_FREEING is set lookup won't touch the dquot,
--		 * thus we can drop the lock now.
-+		 * Give the dquot another try on the freelist, as the
-+		 * flushing will take some time.
- 		 */
--		dqp->dq_flags |= XFS_DQ_FREEING;
--		xfs_dqunlock(dqp);
--
--		mutex_lock(&dqp->q_hash->qh_lock);
--		list_del_init(&dqp->q_hashlist);
--		dqp->q_hash->qh_version++;
--		mutex_unlock(&dqp->q_hash->qh_lock);
--
--		mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
--		list_del_init(&dqp->q_mplist);
--		mp->m_quotainfo->qi_dquots--;
--		mp->m_quotainfo->qi_dqreclaims++;
--		mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
--
--		ASSERT(dqp->q_nrefs == 0);
--		list_del_init(&dqp->q_freelist);
--		xfs_Gqm->qm_dqfrlist_cnt--;
--
--		mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
--		return dqp;
--dqunlock:
--		xfs_dqunlock(dqp);
--		if (restarts >= XFS_QM_RECLAIM_MAX_RESTARTS)
--			break;
--		goto restart;
-+		goto out_busy;
- 	}
-+	xfs_dqfunlock(dqp);
- 
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+- out_free_udqhash:
+-	kmem_free_large(udqhash);
+- out:
 -	return NULL;
--}
-+	/*
-+	 * Prevent lookups now that we are past the point of no return.
-+	 */
-+	dqp->dq_flags |= XFS_DQ_FREEING;
-+	xfs_dqunlock(dqp);
- 
--/*
-- * Traverse the freelist of dquots and attempt to reclaim a maximum of
-- * 'howmany' dquots. This operation races with dqlookup(), and attempts to
-- * favor the lookup function ...
-- */
--STATIC int
--xfs_qm_shake_freelist(
--	int	howmany)
--{
--	int		nreclaimed = 0;
--	xfs_dquot_t	*dqp;
-+	ASSERT(dqp->q_nrefs == 0);
-+	list_move_tail(&dqp->q_freelist, dispose_list);
-+	xfs_Gqm->qm_dqfrlist_cnt--;
-+
-+	trace_xfs_dqreclaim_done(dqp);
-+	XQM_STATS_INC(xqmstats.xs_qm_dqreclaims);
-+	return;
- 
--	if (howmany <= 0)
--		return 0;
-+out_busy:
-+	xfs_dqunlock(dqp);
- 
--	while (nreclaimed < howmany) {
--		dqp = xfs_qm_dqreclaim_one();
--		if (!dqp)
--			return nreclaimed;
--		xfs_qm_dqdestroy(dqp);
--		nreclaimed++;
--	}
--	return nreclaimed;
-+	/*
-+	 * Move the dquot to the tail of the list so that we don't spin on it.
-+	 */
-+	list_move_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
-+
-+	trace_xfs_dqreclaim_busy(dqp);
-+	XQM_STATS_INC(xqmstats.xs_qm_dqreclaim_misses);
  }
  
--/*
-- * The kmem_shake interface is invoked when memory is running low.
-- */
--/* ARGSUSED */
- STATIC int
- xfs_qm_shake(
--	struct shrinker	*shrink,
--	struct shrink_control *sc)
-+	struct shrinker		*shrink,
-+	struct shrink_control	*sc)
+ /*
+@@ -137,22 +101,9 @@ STATIC void
+ xfs_qm_destroy(
+ 	struct xfs_qm	*xqm)
  {
--	int	ndqused, nfree, n;
--	gfp_t gfp_mask = sc->gfp_mask;
+-	int		hsize, i;
 -
--	if (!kmem_shake_allow(gfp_mask))
--		return 0;
--	if (!xfs_Gqm)
--		return 0;
--
--	nfree = xfs_Gqm->qm_dqfrlist_cnt; /* free dquots */
--	/* incore dquots in all f/s's */
--	ndqused = atomic_read(&xfs_Gqm->qm_totaldquots) - nfree;
--
--	ASSERT(ndqused >= 0);
-+	int			nr_to_scan = sc->nr_to_scan;
-+	LIST_HEAD		(dispose_list);
-+	struct xfs_dquot	*dqp;
+ 	ASSERT(xqm != NULL);
+ 	ASSERT(xqm->qm_nrefs == 0);
  
--	if (nfree <= ndqused && nfree < ndquot)
-+	if ((sc->gfp_mask & (__GFP_FS|__GFP_WAIT)) != (__GFP_FS|__GFP_WAIT))
- 		return 0;
-+	if (!nr_to_scan)
-+		goto out;
+-	hsize = xqm->qm_dqhashmask + 1;
+-	for (i = 0; i < hsize; i++) {
+-		xfs_qm_list_destroy(&(xqm->qm_usr_dqhtable[i]));
+-		xfs_qm_list_destroy(&(xqm->qm_grp_dqhtable[i]));
+-	}
+-	kmem_free_large(xqm->qm_usr_dqhtable);
+-	kmem_free_large(xqm->qm_grp_dqhtable);
+-	xqm->qm_usr_dqhtable = NULL;
+-	xqm->qm_grp_dqhtable = NULL;
+-	xqm->qm_dqhashmask = 0;
+-
+ 	kmem_free(xqm);
+ }
  
--	ndqused *= xfs_Gqm->qm_dqfree_ratio;	/* target # of free dquots */
--	n = nfree - ndqused - ndquot;		/* # over target */
--
--	return xfs_qm_shake_freelist(MAX(nfree, n));
--}
--
--
--/*------------------------------------------------------------------*/
+@@ -763,14 +714,6 @@ xfs_qm_dqdetach(
+ }
+ 
+ /*
+- * The hash chains and the mplist use the same xfs_dqhash structure as
+- * their list head, but we can take the mplist qh_lock and one of the
+- * hash qh_locks at the same time without any problem as they aren't
+- * related.
+- */
+-static struct lock_class_key xfs_quota_mplist_class;
 -
 -/*
-- * Return a new incore dquot. Depending on the number of
-- * dquots in the system, we either allocate a new one on the kernel heap,
-- * or reclaim a free one.
-- * Return value is B_TRUE if we allocated a new dquot, B_FALSE if we managed
-- * to reclaim an existing one from the freelist.
-- */
--boolean_t
--xfs_qm_dqalloc_incore(
--	xfs_dquot_t **O_dqpp)
--{
--	xfs_dquot_t	*dqp;
--
--	/*
--	 * Check against high water mark to see if we want to pop
--	 * a nincompoop dquot off the freelist.
--	 */
--	if (atomic_read(&xfs_Gqm->qm_totaldquots) >= ndquot) {
--		/*
--		 * Try to recycle a dquot from the freelist.
--		 */
--		if ((dqp = xfs_qm_dqreclaim_one())) {
--			XQM_STATS_INC(xqmstats.xs_qm_dqreclaims);
--			/*
--			 * Just zero the core here. The rest will get
--			 * reinitialized by caller. XXX we shouldn't even
--			 * do this zero ...
--			 */
--			memset(&dqp->q_core, 0, sizeof(dqp->q_core));
--			*O_dqpp = dqp;
--			return B_FALSE;
--		}
--		XQM_STATS_INC(xqmstats.xs_qm_dqreclaim_misses);
-+	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
-+	while (!list_empty(&xfs_Gqm->qm_dqfrlist)) {
-+		if (nr_to_scan-- <= 0)
-+			break;
-+		dqp = list_first_entry(&xfs_Gqm->qm_dqfrlist, struct xfs_dquot,
-+				       q_freelist);
-+		xfs_qm_dqreclaim_one(dqp, &dispose_list);
+  * This initializes all the quota information that's kept in the
+  * mount structure
+  */
+@@ -803,9 +746,12 @@ xfs_qm_init_quotainfo(
+ 		return error;
  	}
-+	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
  
--	/*
--	 * Allocate a brand new dquot on the kernel heap and return it
--	 * to the caller to initialize.
--	 */
--	ASSERT(xfs_Gqm->qm_dqzone != NULL);
--	*O_dqpp = kmem_zone_zalloc(xfs_Gqm->qm_dqzone, KM_SLEEP);
--	atomic_inc(&xfs_Gqm->qm_totaldquots);
--
--	return B_TRUE;
-+	while (!list_empty(&dispose_list)) {
-+		dqp = list_first_entry(&dispose_list, struct xfs_dquot,
-+				       q_freelist);
-+		list_del_init(&dqp->q_freelist);
-+		xfs_qm_dqfree_one(dqp);
-+	}
-+out:
-+	return (xfs_Gqm->qm_dqfrlist_cnt / 100) * sysctl_vfs_cache_pressure;
++	INIT_RADIX_TREE(&qinf->qi_uquota_tree, GFP_NOFS);
++	INIT_RADIX_TREE(&qinf->qi_gquota_tree, GFP_NOFS);
++	mutex_init(&qinf->qi_tree_lock);
++
+ 	INIT_LIST_HEAD(&qinf->qi_dqlist);
+ 	mutex_init(&qinf->qi_dqlist_lock);
+-	lockdep_set_class(&qinf->qi_dqlist_lock, &xfs_quota_mplist_class);
+ 
+ 	INIT_LIST_HEAD(&qinf->qi_lru_list);
+ 	qinf->qi_lru_count = 0;
+@@ -925,30 +871,6 @@ xfs_qm_destroy_quotainfo(
+ 	mp->m_quotainfo = NULL;
  }
  
 -
- /*
-  * Start a transaction and write the incore superblock changes to
-  * disk. flags parameter indicates which fields have changed.
-Index: xfs/fs/xfs/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2012-02-01 12:05:12.554046204 +0100
-+++ xfs/fs/xfs/xfs_dquot.c	2012-02-01 12:22:02.135243499 +0100
-@@ -63,82 +63,6 @@ int xfs_dqerror_mod = 33;
- static struct lock_class_key xfs_dquot_other_class;
- 
- /*
-- * Allocate and initialize a dquot. We don't always allocate fresh memory;
-- * we try to reclaim a free dquot if the number of incore dquots are above
-- * a threshold.
-- * The only field inside the core that gets initialized at this point
-- * is the d_id field. The idea is to fill in the entire q_core
-- * when we read in the on disk dquot.
-- */
--STATIC xfs_dquot_t *
--xfs_qm_dqinit(
--	xfs_mount_t  *mp,
--	xfs_dqid_t   id,
--	uint	     type)
+-
+-/* ------------------- PRIVATE STATIC FUNCTIONS ----------------------- */
+-
+-/* ARGSUSED */
+-STATIC void
+-xfs_qm_list_init(
+-	xfs_dqlist_t	*list,
+-	char		*str,
+-	int		n)
 -{
--	xfs_dquot_t	*dqp;
--	boolean_t	brandnewdquot;
--
--	brandnewdquot = xfs_qm_dqalloc_incore(&dqp);
--	dqp->dq_flags = type;
--	dqp->q_core.d_id = cpu_to_be32(id);
--	dqp->q_mount = mp;
--
--	/*
--	 * No need to re-initialize these if this is a reclaimed dquot.
--	 */
--	if (brandnewdquot) {
--		INIT_LIST_HEAD(&dqp->q_freelist);
--		mutex_init(&dqp->q_qlock);
--		init_waitqueue_head(&dqp->q_pinwait);
--
--		/*
--		 * Because we want to use a counting completion, complete
--		 * the flush completion once to allow a single access to
--		 * the flush completion without blocking.
--		 */
--		init_completion(&dqp->q_flush);
--		complete(&dqp->q_flush);
--
--		trace_xfs_dqinit(dqp);
--	} else {
--		/*
--		 * Only the q_core portion was zeroed in dqreclaim_one().
--		 * So, we need to reset others.
--		 */
--		dqp->q_nrefs = 0;
--		dqp->q_blkno = 0;
--		INIT_LIST_HEAD(&dqp->q_mplist);
--		INIT_LIST_HEAD(&dqp->q_hashlist);
--		dqp->q_bufoffset = 0;
--		dqp->q_fileoffset = 0;
--		dqp->q_transp = NULL;
--		dqp->q_gdquot = NULL;
--		dqp->q_res_bcount = 0;
--		dqp->q_res_icount = 0;
--		dqp->q_res_rtbcount = 0;
--		atomic_set(&dqp->q_pincount, 0);
--		dqp->q_hash = NULL;
--		ASSERT(list_empty(&dqp->q_freelist));
--
--		trace_xfs_dqreuse(dqp);
--	}
--
--	/*
--	 * In either case we need to make sure group quotas have a different
--	 * lock class than user quotas, to make sure lockdep knows we can
--	 * locks of one of each at the same time.
--	 */
--	if (!(type & XFS_DQ_USER))
--		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
--
--	/*
--	 * log item gets initialized later
--	 */
--	return (dqp);
+-	mutex_init(&list->qh_lock);
+-	INIT_LIST_HEAD(&list->qh_list);
+-	list->qh_version = 0;
+-	list->qh_nelems = 0;
 -}
 -
--/*
-  * This is called to free all the memory associated with a dquot
-  */
- void
-@@ -567,7 +491,32 @@ xfs_qm_dqread(
- 	int			error;
- 	int			cancelflags = 0;
+-STATIC void
+-xfs_qm_list_destroy(
+-	xfs_dqlist_t	*list)
+-{
+-	mutex_destroy(&(list->qh_lock));
+-}
+-
+ /*
+  * Create an inode and return with a reference already taken, but unlocked
+  * This is how we create quota inodes
+@@ -1593,10 +1515,10 @@ xfs_qm_dqfree_one(
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
  
--	dqp = xfs_qm_dqinit(mp, id, type);
-+
-+	dqp = kmem_zone_zalloc(xfs_Gqm->qm_dqzone, KM_SLEEP);
-+
-+	dqp->dq_flags = type;
-+	dqp->q_core.d_id = cpu_to_be32(id);
-+	dqp->q_mount = mp;
-+	INIT_LIST_HEAD(&dqp->q_freelist);
-+	mutex_init(&dqp->q_qlock);
-+	init_waitqueue_head(&dqp->q_pinwait);
-+
-+	/*
-+	 * Because we want to use a counting completion, complete
-+	 * the flush completion once to allow a single access to
-+	 * the flush completion without blocking.
-+	 */
-+	init_completion(&dqp->q_flush);
-+	complete(&dqp->q_flush);
-+
-+	/*
-+	 * Make sure group quotas have a different lock class than user
-+	 * quotas.
-+	 */
-+	if (!(type & XFS_DQ_USER))
-+		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
-+
-+	atomic_inc(&xfs_Gqm->qm_totaldquots);
+-	mutex_lock(&dqp->q_hash->qh_lock);
+-	list_del_init(&dqp->q_hashlist);
+-	dqp->q_hash->qh_version++;
+-	mutex_unlock(&dqp->q_hash->qh_lock);
++	mutex_lock(&mp->m_quotainfo->qi_tree_lock);
++	radix_tree_delete(XFS_DQUOT_TREE(mp, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id));
++	mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
  
- 	trace_xfs_dqread(dqp);
+ 	mutex_lock(&qi->qi_dqlist_lock);
+ 	list_del_init(&dqp->q_mplist);
+@@ -1634,7 +1556,6 @@ xfs_qm_dqreclaim_one(
+ 		return;
+ 	}
  
+-	ASSERT(dqp->q_hash);
+ 	ASSERT(!list_empty(&dqp->q_mplist));
+ 
+ 	/*
 Index: xfs/fs/xfs/xfs_qm.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.h	2012-02-01 12:05:12.564046150 +0100
-+++ xfs/fs/xfs/xfs_qm.h	2012-02-01 12:22:02.171909967 +0100
-@@ -26,24 +26,12 @@
- struct xfs_qm;
- struct xfs_inode;
- 
--extern uint		ndquot;
- extern struct mutex	xfs_Gqm_lock;
- extern struct xfs_qm	*xfs_Gqm;
- extern kmem_zone_t	*qm_dqzone;
+--- xfs.orig/fs/xfs/xfs_qm.h	2012-02-01 12:22:12.345188187 +0100
++++ xfs/fs/xfs/xfs_qm.h	2012-02-01 12:24:50.577664301 +0100
+@@ -32,12 +32,6 @@ extern kmem_zone_t	*qm_dqzone;
  extern kmem_zone_t	*qm_dqtrxzone;
  
  /*
-- * Ditto, for xfs_qm_dqreclaim_one.
+- * Dquot hashtable constants/threshold values.
 - */
--#define XFS_QM_RECLAIM_MAX_RESTARTS	4
+-#define XFS_QM_HASHSIZE_LOW		(PAGE_SIZE / sizeof(xfs_dqhash_t))
+-#define XFS_QM_HASHSIZE_HIGH		((PAGE_SIZE * 4) / sizeof(xfs_dqhash_t))
 -
 -/*
-- * Ideal ratio of free to in use dquots. Quota manager makes an attempt
-- * to keep this balance.
-- */
--#define XFS_QM_DQFREE_RATIO		2
--
--/*
-  * Dquot hashtable constants/threshold values.
+  * This defines the unit of allocation of dquots.
+  * Currently, it is just one file system block, and a 4K blk contains 30
+  * (136 * 30 = 4080) dquots. It's probably not worth trying to make
+@@ -48,15 +42,10 @@ extern kmem_zone_t	*qm_dqtrxzone;
   */
- #define XFS_QM_HASHSIZE_LOW		(PAGE_SIZE / sizeof(xfs_dqhash_t))
-@@ -74,7 +62,6 @@ typedef struct xfs_qm {
- 	int		 qm_dqfrlist_cnt;
+ #define XFS_DQUOT_CLUSTER_SIZE_FSB	(xfs_filblks_t)1
+ 
+-typedef xfs_dqhash_t	xfs_dqlist_t;
+-
+ /*
+  * Quota Manager (global) structure. Lives only in core.
+  */
+ typedef struct xfs_qm {
+-	xfs_dqlist_t	*qm_usr_dqhtable;/* udquot hash table */
+-	xfs_dqlist_t	*qm_grp_dqhtable;/* gdquot hash table */
+-	uint		 qm_dqhashmask;	 /* # buckets in dq hashtab - 1 */
  	atomic_t	 qm_totaldquots; /* total incore dquots */
  	uint		 qm_nrefs;	 /* file systems with quota on */
--	int		 qm_dqfree_ratio;/* ratio of free to inuse dquots */
  	kmem_zone_t	*qm_dqzone;	 /* dquot mem-alloc zone */
- 	kmem_zone_t	*qm_dqtrxzone;	 /* t_dqinfo of transactions */
- } xfs_qm_t;
-@@ -143,7 +130,6 @@ extern int		xfs_qm_quotacheck(xfs_mount_
- extern int		xfs_qm_write_sb_changes(xfs_mount_t *, __int64_t);
+@@ -68,6 +57,9 @@ typedef struct xfs_qm {
+  * The mount structure keeps a pointer to this.
+  */
+ typedef struct xfs_quotainfo {
++	struct radix_tree_root qi_uquota_tree;
++	struct radix_tree_root qi_gquota_tree;
++	struct mutex qi_tree_lock;
+ 	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
+ 	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
+ 	struct list_head qi_lru_list;
+@@ -96,6 +88,11 @@ typedef struct xfs_quotainfo {
+ 	struct shrinker  qi_shrinker;
+ } xfs_quotainfo_t;
  
- /* dquot stuff */
--extern boolean_t	xfs_qm_dqalloc_incore(xfs_dquot_t **);
- extern int		xfs_qm_dqpurge_all(xfs_mount_t *, uint);
- extern void		xfs_qm_dqrele_all_inodes(xfs_mount_t *, uint);
++#define XFS_DQUOT_TREE(mp, type) \
++	((type & XFS_DQ_USER) ? \
++	 &((mp)->m_quotainfo->qi_uquota_tree) : \
++	 &((mp)->m_quotainfo->qi_gquota_tree))
++
  
+ extern void	xfs_trans_mod_dquot(xfs_trans_t *, xfs_dquot_t *, uint, long);
+ extern int	xfs_trans_reserve_quota_bydquots(xfs_trans_t *, xfs_mount_t *,
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2012-02-01 12:22:12.341854872 +0100
++++ xfs/fs/xfs/xfs_dquot.c	2012-02-01 12:24:50.577664301 +0100
+@@ -43,7 +43,7 @@
+  * Lock order:
+  *
+  * ip->i_lock
+- *   qh->qh_lock
++ *   qi->qi_tree_lock
+  *     qi->qi_dqlist_lock
+  *       dquot->q_qlock (xfs_dqlock() and friends)
+  *         dquot->q_flush (xfs_dqflock() and friends)
+@@ -602,60 +602,6 @@ error0:
+ }
+ 
+ /*
+- * Lookup a dquot in the incore dquot hashtable. We keep two separate
+- * hashtables for user and group dquots; and, these are global tables
+- * inside the XQM, not per-filesystem tables.
+- * The hash chain must be locked by caller, and it is left locked
+- * on return. Returning dquot is locked.
+- */
+-STATIC int
+-xfs_qm_dqlookup(
+-	xfs_mount_t		*mp,
+-	xfs_dqid_t		id,
+-	xfs_dqhash_t		*qh,
+-	xfs_dquot_t		**O_dqpp)
+-{
+-	xfs_dquot_t		*dqp;
+-
+-	ASSERT(mutex_is_locked(&qh->qh_lock));
+-
+-	/*
+-	 * Traverse the hashchain looking for a match
+-	 */
+-	list_for_each_entry(dqp, &qh->qh_list, q_hashlist) {
+-		/*
+-		 * We already have the hashlock. We don't need the
+-		 * dqlock to look at the id field of the dquot, since the
+-		 * id can't be modified without the hashlock anyway.
+-		 */
+-		if (be32_to_cpu(dqp->q_core.d_id) != id || dqp->q_mount != mp)
+-			continue;
+-
+-		trace_xfs_dqlookup_found(dqp);
+-
+-		xfs_dqlock(dqp);
+-		if (dqp->dq_flags & XFS_DQ_FREEING) {
+-			*O_dqpp = NULL;
+-			xfs_dqunlock(dqp);
+-			return -1;
+-		}
+-
+-		dqp->q_nrefs++;
+-
+-		/*
+-		 * move the dquot to the front of the hashchain
+-		 */
+-		list_move(&dqp->q_hashlist, &qh->qh_list);
+-		trace_xfs_dqlookup_done(dqp);
+-		*O_dqpp = dqp;
+-		return 0;
+-	}
+-
+-	*O_dqpp = NULL;
+-	return 1;
+-}
+-
+-/*
+  * Given the file system, inode OR id, and type (UDQUOT/GDQUOT), return a
+  * a locked dquot, doing an allocation (if requested) as needed.
+  * When both an inode and an id are given, the inode's id takes precedence.
+@@ -672,9 +618,8 @@ xfs_qm_dqget(
+ 	uint		flags,	  /* DQALLOC, DQSUSER, DQREPAIR, DOWARN */
+ 	xfs_dquot_t	**O_dqpp) /* OUT : locked incore dquot */
+ {
++	struct radix_tree_root *tree = XFS_DQUOT_TREE(mp, type);
+ 	xfs_dquot_t	*dqp;
+-	xfs_dqhash_t	*h;
+-	uint		version;
+ 	int		error;
+ 
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+@@ -683,7 +628,6 @@ xfs_qm_dqget(
+ 	    (! XFS_IS_GQUOTA_ON(mp) && type == XFS_DQ_GROUP)) {
+ 		return (ESRCH);
+ 	}
+-	h = XFS_DQ_HASH(mp, id, type);
+ 
+ #ifdef DEBUG
+ 	if (xfs_do_dqerror) {
+@@ -707,34 +651,29 @@ xfs_qm_dqget(
+ #endif
+ 
+ restart:
+-	mutex_lock(&h->qh_lock);
++	mutex_lock(&mp->m_quotainfo->qi_tree_lock);
++	dqp = radix_tree_lookup(tree, id);
++	if (dqp) {
++		xfs_dqlock(dqp);
++		if (dqp->dq_flags & XFS_DQ_FREEING) {
++			xfs_dqunlock(dqp);
++			mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
++			trace_xfs_dqget_freeing(dqp);
++			delay(1);
++			goto restart;
++		}
+ 
+-	/*
+-	 * Look in the cache (hashtable).
+-	 * The chain is kept locked during lookup.
+-	 */
+-	switch (xfs_qm_dqlookup(mp, id, h, O_dqpp)) {
+-	case -1:
+-		XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
+-		mutex_unlock(&h->qh_lock);
+-		delay(1);
+-		goto restart;
+-	case 0:
++		dqp->q_nrefs++;
++		mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
++
++		trace_xfs_dqget_hit(dqp);
+ 		XQM_STATS_INC(xqmstats.xs_qm_dqcachehits);
+-		/*
+-		 * The dquot was found, moved to the front of the chain,
+-		 * taken off the freelist if it was on it, and locked
+-		 * at this point. Just unlock the hashchain and return.
+-		 */
+-		ASSERT(*O_dqpp);
+-		ASSERT(XFS_DQ_IS_LOCKED(*O_dqpp));
+-		mutex_unlock(&h->qh_lock);
+-		trace_xfs_dqget_hit(*O_dqpp);
+-		return 0;	/* success */
+-	default:
+-		XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
+-		break;
++		*O_dqpp = dqp;
++		return 0;
+ 	}
++	mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
++
++	XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
+ 
+ 	/*
+ 	 * Dquot cache miss. We don't want to keep the inode lock across
+@@ -745,12 +684,6 @@ restart:
+ 	 */
+ 	if (ip)
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-	/*
+-	 * Save the hashchain version stamp, and unlock the chain, so that
+-	 * we don't keep the lock across a disk read
+-	 */
+-	version = h->qh_version;
+-	mutex_unlock(&h->qh_lock);
+ 
+ 	error = xfs_qm_dqread(mp, id, type, flags, &dqp);
+ 
+@@ -760,9 +693,6 @@ restart:
+ 	if (error)
+ 		return error;
+ 
+-	/*
+-	 * Dquot lock comes after hashlock in the lock ordering
+-	 */
+ 	if (ip) {
+ 		/*
+ 		 * A dquot could be attached to this inode by now, since
+@@ -795,46 +725,21 @@ restart:
+ 		}
+ 	}
+ 
+-	/*
+-	 * Hashlock comes after ilock in lock order
+-	 */
+-	mutex_lock(&h->qh_lock);
+-	if (version != h->qh_version) {
+-		xfs_dquot_t *tmpdqp;
++	mutex_lock(&mp->m_quotainfo->qi_tree_lock);
++	error = -radix_tree_insert(tree, id, dqp);
++	if (unlikely(error)) {
++		WARN_ON(error != EEXIST);
++
+ 		/*
+-		 * Now, see if somebody else put the dquot in the
+-		 * hashtable before us. This can happen because we didn't
+-		 * keep the hashchain lock. We don't have to worry about
+-		 * lock order between the two dquots here since dqp isn't
+-		 * on any findable lists yet.
++		 * Duplicate found. Just throw away the new dquot and start
++		 * over.
+ 		 */
+-		switch (xfs_qm_dqlookup(mp, id, h, &tmpdqp)) {
+-		case 0:
+-		case -1:
+-			/*
+-			 * Duplicate found, either in cache or on its way out.
+-			 * Just throw away the new dquot and start over.
+-			 */
+-			if (tmpdqp)
+-				xfs_qm_dqput(tmpdqp);
+-			mutex_unlock(&h->qh_lock);
+-			xfs_qm_dqdestroy(dqp);
+-			XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
+-			goto restart;
+-		default:
+-			break;
+-		}
++		mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
++		trace_xfs_dqget_dup(dqp);
++		xfs_qm_dqdestroy(dqp);
++		XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
++		goto restart;
+ 	}
+-
+-	/*
+-	 * Put the dquot at the beginning of the hash-chain and mp's list
+-	 * LOCK ORDER: hashlock, freelistlock, mplistlock, udqlock, gdqlock ..
+-	 */
+-	ASSERT(mutex_is_locked(&h->qh_lock));
+-	dqp->q_hash = h;
+-	list_add(&dqp->q_hashlist, &h->qh_list);
+-	h->qh_version++;
+-
+ 	/*
+ 	 * Attach this dquot to this filesystem's list of all dquots,
+ 	 * kept inside the mount structure in m_quotainfo field
+@@ -850,7 +755,8 @@ restart:
+ 	list_add(&dqp->q_mplist, &mp->m_quotainfo->qi_dqlist);
+ 	mp->m_quotainfo->qi_dquots++;
+ 	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
+-	mutex_unlock(&h->qh_lock);
++	mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
++
+  dqret:
+ 	ASSERT((ip == NULL) || xfs_isilocked(ip, XFS_ILOCK_EXCL));
+ 	trace_xfs_dqget_miss(dqp);
+@@ -1139,7 +1045,6 @@ xfs_qm_dqpurge(
+ 	struct xfs_dquot	*dqp)
+ {
+ 	struct xfs_mount	*mp = dqp->q_mount;
+-	struct xfs_dqhash	*qh = dqp->q_hash;
+ 	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 
+ 	xfs_dqlock(dqp);
+@@ -1186,10 +1091,10 @@ xfs_qm_dqpurge(
+ 	xfs_dqfunlock(dqp);
+ 	xfs_dqunlock(dqp);
+ 
+-	mutex_lock(&qh->qh_lock);
+-	list_del_init(&dqp->q_hashlist);
+-	qh->qh_version++;
+-	mutex_unlock(&qh->qh_lock);
++	mutex_lock(&mp->m_quotainfo->qi_tree_lock);
++	radix_tree_delete(XFS_DQUOT_TREE(mp, dqp->q_core.d_flags),
++			  be32_to_cpu(dqp->q_core.d_id));
++	mutex_unlock(&mp->m_quotainfo->qi_tree_lock);
+ 
+ 	mutex_lock(&qi->qi_dqlist_lock);
+ 	list_del_init(&dqp->q_mplist);
+Index: xfs/fs/xfs/xfs_dquot.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.h	2012-02-01 12:22:12.341854872 +0100
++++ xfs/fs/xfs/xfs_dquot.h	2012-02-01 12:24:50.577664301 +0100
+@@ -29,16 +29,6 @@
+  * when quotas are off.
+  */
+ 
+-/*
+- * The hash chain headers (hash buckets)
+- */
+-typedef struct xfs_dqhash {
+-	struct list_head  qh_list;
+-	struct mutex	  qh_lock;
+-	uint		  qh_version;	/* ever increasing version */
+-	uint		  qh_nelems;	/* number of dquots on the list */
+-} xfs_dqhash_t;
+-
+ struct xfs_mount;
+ struct xfs_trans;
+ 
+@@ -49,8 +39,6 @@ typedef struct xfs_dquot {
+ 	uint		 dq_flags;	/* various flags (XFS_DQ_*) */
+ 	struct list_head q_lru;		/* global free list of dquots */
+ 	struct list_head q_mplist;	/* mount's list of dquots */
+-	struct list_head q_hashlist;	/* gloabl hash list of dquots */
+-	xfs_dqhash_t	*q_hash;	/* the hashchain header */
+ 	struct xfs_mount*q_mount;	/* filesystem this relates to */
+ 	struct xfs_trans*q_transp;	/* trans this belongs to currently */
+ 	uint		 q_nrefs;	/* # active refs from inodes */
+Index: xfs/fs/xfs/xfs_quota_priv.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_quota_priv.h	2012-02-01 12:05:07.000000000 +0100
++++ xfs/fs/xfs/xfs_quota_priv.h	2012-02-01 12:24:50.577664301 +0100
+@@ -24,17 +24,6 @@
+  */
+ #define XFS_DQITER_MAP_SIZE	10
+ 
+-/*
+- * Hash into a bucket in the dquot hash table, based on <mp, id>.
+- */
+-#define XFS_DQ_HASHVAL(mp, id) (((__psunsigned_t)(mp) + \
+-				 (__psunsigned_t)(id)) & \
+-				(xfs_Gqm->qm_dqhashmask - 1))
+-#define XFS_DQ_HASH(mp, id, type)   (type == XFS_DQ_USER ? \
+-				     (xfs_Gqm->qm_usr_dqhtable + \
+-				      XFS_DQ_HASHVAL(mp, id)) : \
+-				     (xfs_Gqm->qm_grp_dqhtable + \
+-				      XFS_DQ_HASHVAL(mp, id)))
+ #define XFS_IS_DQUOT_UNINITIALIZED(dqp) ( \
+ 	!dqp->q_core.d_blk_hardlimit && \
+ 	!dqp->q_core.d_blk_softlimit && \
 Index: xfs/fs/xfs/xfs_trace.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trace.h	2012-02-01 12:05:12.577379410 +0100
-+++ xfs/fs/xfs/xfs_trace.h	2012-02-01 12:06:55.623487828 +0100
-@@ -733,11 +733,10 @@ DEFINE_EVENT(xfs_dquot_class, name, \
- DEFINE_DQUOT_EVENT(xfs_dqadjust);
- DEFINE_DQUOT_EVENT(xfs_dqreclaim_want);
- DEFINE_DQUOT_EVENT(xfs_dqreclaim_dirty);
--DEFINE_DQUOT_EVENT(xfs_dqreclaim_unlink);
-+DEFINE_DQUOT_EVENT(xfs_dqreclaim_busy);
-+DEFINE_DQUOT_EVENT(xfs_dqreclaim_done);
- DEFINE_DQUOT_EVENT(xfs_dqattach_found);
- DEFINE_DQUOT_EVENT(xfs_dqattach_get);
--DEFINE_DQUOT_EVENT(xfs_dqinit);
--DEFINE_DQUOT_EVENT(xfs_dqreuse);
- DEFINE_DQUOT_EVENT(xfs_dqalloc);
+--- xfs.orig/fs/xfs/xfs_trace.h	2012-02-01 12:06:55.000000000 +0100
++++ xfs/fs/xfs/xfs_trace.h	2012-02-01 12:24:50.580997617 +0100
+@@ -741,10 +741,10 @@ DEFINE_DQUOT_EVENT(xfs_dqalloc);
  DEFINE_DQUOT_EVENT(xfs_dqtobp_read);
  DEFINE_DQUOT_EVENT(xfs_dqread);
-Index: xfs/fs/xfs/xfs_qm_stats.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm_stats.c	2012-02-01 12:05:12.590712672 +0100
-+++ xfs/fs/xfs/xfs_qm_stats.c	2012-02-01 12:22:02.185243229 +0100
-@@ -42,9 +42,9 @@ static int xqm_proc_show(struct seq_file
- {
- 	/* maximum; incore; ratio free to inuse; freelist */
- 	seq_printf(m, "%d\t%d\t%d\t%u\n",
--			ndquot,
-+			0,
- 			xfs_Gqm? atomic_read(&xfs_Gqm->qm_totaldquots) : 0,
--			xfs_Gqm? xfs_Gqm->qm_dqfree_ratio : 0,
-+			0,
- 			xfs_Gqm? xfs_Gqm->qm_dqfrlist_cnt : 0);
- 	return 0;
- }
+ DEFINE_DQUOT_EVENT(xfs_dqread_fail);
+-DEFINE_DQUOT_EVENT(xfs_dqlookup_found);
+-DEFINE_DQUOT_EVENT(xfs_dqlookup_done);
+ DEFINE_DQUOT_EVENT(xfs_dqget_hit);
+ DEFINE_DQUOT_EVENT(xfs_dqget_miss);
++DEFINE_DQUOT_EVENT(xfs_dqget_freeing);
++DEFINE_DQUOT_EVENT(xfs_dqget_dup);
+ DEFINE_DQUOT_EVENT(xfs_dqput);
+ DEFINE_DQUOT_EVENT(xfs_dqput_wait);
+ DEFINE_DQUOT_EVENT(xfs_dqput_free);
 
 _______________________________________________
 xfs mailing list
