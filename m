@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q110KpW8145252 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 18:20:51 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id uiyR4OQG4Ab6Ve33
-	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 16:20:50 -0800 (PST)
-Message-ID: <4F288561.5040803@hardwarefreak.com>
-Date: Tue, 31 Jan 2012 18:20:49 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q110p8PT146532 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 18:51:08 -0600
+Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
+	[209.85.210.53]) by cuda.sgi.com with ESMTP id pxXz1Gj7ldTUG2zX
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 31 Jan 2012 16:51:05 -0800 (PST)
+Received: by dady25 with SMTP id y25so483824dad.26
+	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 16:51:05 -0800 (PST)
+Date: Wed, 1 Feb 2012 06:20:57 +0530
+From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
+Subject: Re: Performance problem - reads slower than writes
+Message-ID: <20120201005057.GA44385@Xye>
+References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
+	<20120131103126.GA46170@nsrc.org>
+	<20120131145205.GA6607@infradead.org>
+	<20120131215210.GB47420@soundmouse.com>
 MIME-Version: 1.0
-Subject: Re: File system remain unresponsive until the system is rebooted.
-References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
-	<20120131013124.GE9090@dastard>
-	<CANs4eSBgmvJCR7vfFa1W5h8tUYFQi=LRPWDPQ1exB29D1o_RjA@mail.gmail.com>
-	<4F27AE92.9060003@hardwarefreak.com>
-	<20120131205014.GM9090@dastard>
-In-Reply-To: <20120131205014.GM9090@dastard>
-Reply-To: stan@hardwarefreak.com
+In-Reply-To: <20120131215210.GB47420@soundmouse.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +26,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============6013598893346923655=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Brian Candler <brian@soundmouse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 1/31/2012 2:50 PM, Dave Chinner wrote:
-> On Tue, Jan 31, 2012 at 03:04:18AM -0600, Stan Hoeppner wrote:
->> On 1/30/2012 11:04 PM, Supratik Goswami wrote:
->>> We are using Amazon EC2 instances.
+
+--===============6013598893346923655==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
+Content-Disposition: inline
+
+
+--/9DWx/yDrRhgMJTb
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+Hi,
+
+
+* On Tue, Jan 31, 2012 at 09:52:10PM +0000, Brian Candler <brian@soundmouse=
+=2Ecom> wrote:
+>On Tue, Jan 31, 2012 at 09:52:05AM -0500, Christoph Hellwig wrote:
+>> You don't just read a single file at a time but multiple ones, don't
+>> you?
+>
+>It's sequential at the moment, although I'll do further tests with the -c
+>(concurrency) option to bonnie++
+>
+>> Try playing with the following tweaks to get larger I/O to the disk:
 >>
->>                ^^^^^^^^^^
->> I'd have never thought I would see those words on this list, except
->> maybe as a joke, or as an example of one of the the worst possible
->> platforms for XFS.
-> 
-> I don't agree with you there. If the workload works best on XFs, it
-> doesn't matter what the underlying storage device is. e.g. if it's a
-> fsync heavy workload, it will still perform better on XFS on EC2
-> than btrfs on EC2...
-> 
->> I wish EC2 had been asked about during the QA session after Dave's
->> presentation.  I'm guessing some laughter would have been involved. ;)
-> 
-> You'd be wrong about that. There are as many good uses of cloud
-> services as there are bad ones, yet the same decisions about storage
-> need to be made even when services are remotely hosted....
+>>  a) make sure you use the noop or deadline elevators
+>>  b) increase /sys/block/sdX/queue/max_sectors_kb from its low default
+>>  c) dramatically increase /sys/devices/virtual/bdi/<major>:<minor>/read_=
+ahead_kb
+>
+>Thank you very much: I will do further tests with these.
+>
+>Is the read_ahead_kb knob aware of file boundaries? That is, is there any
+>risk that if I set it too large it would read useless blocks past the end =
+of
+>the file?
 
-Maybe I should have elaborated a bit.  My thinking is that workloads
-that would require XFS, or benefit most from it, are probably going to
-need more guarantees WRT bandwidth and IOPS being available
-consistently, vs sharing said resources with other systems in the cloud
-infrastructure.  Additionally, you have driven the point home many times
-WRT tuning XFS to the underlying hardware, specifically stripe
-alignment.  I'd bet alignment would be a bit tricky to achieve in a
-cloud environment such as EC2.
+     The read_ahead_kb knob is used the by memory subsystem=20
+     readahead code to set the initial readahead to scale from (it=20
+     uses a dynamic scaling window). It is set by default based on=20
+     device readahead value (probably obtained in a way similar to=20
+     hdparm -I).=20
+    =20
+     Setting it higher will be beneficial for sequential workloads=20
+     and the risk you mentioned is not there since it file=20
+     boundary aware -- check=20
+     http://lxr.linux.no/linux+*/mm/readahead.c#L151 for more=20
+     details.
+>
+>Regards,
+>
+>Brian.
+>
+>_______________________________________________
+>xfs mailing list
+>xfs@oss.sgi.com
+>http://oss.sgi.com/mailman/listinfo/xfs
 
-In summary, I wasn't saying XFS is bad on EC2.  I was simply saying EC2
-is probably bad for the typical workloads where XFS best flexes its muscles.
 
--- 
-Stan
+Regards,
+--=20
+Raghavendra Prabhu
+GPG Id : 0xD72BE977
+Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
+www: wnohang.net
+
+--/9DWx/yDrRhgMJTb
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPKIxxAAoJEKYW3KHXK+l3kygH/RjCzgDrUKKkxIthJt8NgPlq
+GOq6OpCLdYg7aCDFd5CkUAQgTLnb/dD5yM0qlEBkka144BFu2CQqEKBWDZyawM90
+eNjNVycYS3E8z62n1FRSMmoja0ehqzJU7BEJaXvf8i1b4vW82UvQ0kcQ2q/uxxIT
+0aLrV8Yy3vvNnyThXE1pQNIxYwz1+UR8vMvJuXGopyd72tr4VOmv2dnHhOeCRuum
+EB//6glR+gyMZjvgLFbveYeW8aAaGGSDnrapBTVqQxSfXpbZjuX1xTEGVxTUhb0B
+xv1UKI8dxnEJhkEXXZwxpbtxHFuQi7x/nAlsv7Defeg1Ct5kve8y1mZ4OhRL5O8=
+=9TqE
+-----END PGP SIGNATURE-----
+
+--/9DWx/yDrRhgMJTb--
+
+
+--===============6013598893346923655==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============6013598893346923655==--
