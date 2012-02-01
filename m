@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q11AOleG238808 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 04:24:47 -0600
-Date: Wed, 1 Feb 2012 05:24:36 -0500
+	q11Aj6Ct239807 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 04:45:07 -0600
+Date: Wed, 1 Feb 2012 05:45:01 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_quota: remove calls to XFS_QSYNC
-Message-ID: <20120201102436.GB26638@infradead.org>
-References: <20120130115024.GA884@infradead.org>
-	<CAAp5ZgNKsY-OrWyDNU70KUKYCZUX_EvzngAvBsBTgrgkK6KyMA@mail.gmail.com>
-	<20120131162617.GF7762@sgi.com> <20120131210110.GN9090@dastard>
+Subject: Re: [patch] xfs: remove an unneeded NULL check
+Message-ID: <20120201104500.GA13672@infradead.org>
+References: <20120128105501.GB25092@elgon.mountain>
+	<20120131225601.GQ9090@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120131210110.GN9090@dastard>
+In-Reply-To: <20120131225601.GQ9090@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,24 +24,22 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Nathan Scott <nathans@debian.org>, xfs@oss.sgi.com
+Cc: Alex Elder <elder@kernel.org>, kernel-janitors@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Dan Carpenter <dan.carpenter@oracle.com>
 
-On Wed, Feb 01, 2012 at 08:01:10AM +1100, Dave Chinner wrote:
-> So effectively what that says to me is that quota only exports the
-> real block usage, even though it internally tracks delalloc
-> reservations. Perhaps an additionaly change to make in this case is
-> to fold the reserved blocks into what is reported to the quota
-> utilities?
+On Wed, Feb 01, 2012 at 09:56:01AM +1100, Dave Chinner wrote:
+> >  	/* lock out background commit */
+> >  	down_read(&log->l_cilp->xc_ctx_lock);
+> > -	if (commit_lsn)
+> > -		*commit_lsn = log->l_cilp->xc_ctx->sequence;
+> > +	*commit_lsn = log->l_cilp->xc_ctx->sequence;
+> >  
+> >  	xlog_cil_insert_items(log, log_vector, tp->t_ticket);
 > 
-> Indeed, what is exported to userspace via xfs_qm_export_dquot() is
-> the information in the dquot core - the on-disk information - so
-> perhaps all we need to do is export dqp->q_res_bcount (the count of
-> real + reserved blocks) instead of the on-disk info?
+> There's a set of reviewed patches (for 3.3) that change all this
+> code. The null check might still be there, but that needs to be
+> checked.
 
-That seems like a good idea, given that enforcement takes the
-reservation into account.  To retain compatbility for the case of new
-userspace and an old kernel I'd have to disable Q_XQUOTASYNC in the
-kernel intead of in the tool, though.
+Which series is that?  I mut have to admit I've lost track by now.
 
 _______________________________________________
 xfs mailing list
