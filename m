@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q11EV6l2254693 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 08:31:08 -0600
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id ye1kreNPeIDCAub8 for
-	<xfs@oss.sgi.com>; Wed, 01 Feb 2012 06:31:04 -0800 (PST)
-Date: Wed, 1 Feb 2012 15:31:00 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: File system remain unresponsive until the system is rebooted.
-Message-ID: <20120201153100.41d1586d@harpe.intellique.com>
-In-Reply-To: <20265.12473.715630.925704@tree.ty.sabi.co.UK>
-References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
-	<20120131013124.GE9090@dastard>
-	<CANs4eSBgmvJCR7vfFa1W5h8tUYFQi=LRPWDPQ1exB29D1o_RjA@mail.gmail.com>
-	<4F27AE92.9060003@hardwarefreak.com>
-	<20120131120859.1f1d6a17@harpe.intellique.com>
-	<20265.12473.715630.925704@tree.ty.sabi.co.UK>
-Mime-Version: 1.0
+	q11IXe1X003396 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 12:33:40 -0600
+Date: Wed, 1 Feb 2012 12:33:40 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/2] xfs: clean up minor sparse warnings
+Message-ID: <20120201183340.GG13095@sgi.com>
+References: <1324426062-21505-1-git-send-email-david@fromorbit.com>
+	<1324426062-21505-2-git-send-email-david@fromorbit.com>
+	<20111221161349.GB7001@infradead.org>
+	<20111221235904.GH23662@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111221235904.GH23662@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,46 +21,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Le Wed, 1 Feb 2012 12:31:53 +0000
-pg_xf2@xf2.for.sabi.co.UK (Peter Grandi) =E9crivait:
+Hey Dave,
 
-> In that case I eliminated all but the root filetree VM disks and
-> replaced them with filetrees exported via NFS from XFS on the
-> underlying VM host itself (that is not over the network).
-> =
+On Thu, Dec 22, 2011 at 10:59:04AM +1100, Dave Chinner wrote:
+> On Wed, Dec 21, 2011 at 11:13:50AM -0500, Christoph Hellwig wrote:
+> > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > > index d99a905..2f3f56a 100644
+> > > --- a/fs/xfs/xfs_ioctl.c
+> > > +++ b/fs/xfs/xfs_ioctl.c
+> > > @@ -230,24 +230,22 @@ xfs_open_by_handle(
+> > >  
+> > >  	/* Put open permission in namei format. */
+> > >  	permflag = hreq->oflags;
+> > > -	if ((permflag+1) & O_ACCMODE)
+> > > -		permflag++;
+> > >  	if (permflag & O_TRUNC)
+> > > -		permflag |= 2;
+> > > +		permflag |= O_RDWR;
+> > >  
+> > >  	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
+> > > -	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
+> > > +	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
+> > >  		error = -XFS_ERROR(EPERM);
+> > >  		goto out_dput;
+> > >  	}
+> > >  
+> > > -	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+> > > +	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+> > >  		error = -XFS_ERROR(EACCES);
+> > >  		goto out_dput;
+> > >  	}
+> > >  
+> > >  	/* Can't write directories. */
+> > > -	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
+> > > +	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
+> > >  		error = -XFS_ERROR(EISDIR);
+> > >  		goto out_dput;
+> > >  	}
+> > 
+> > I think this one is complicated enough that is deserves a separate
+> > patch and a better description.
+> 
+> Ok, I've also just found a problem with it(*) so I'll separate it
+> and resend when I've fixed it.
 
-> This improved performance tremendously (in part because in most VM
-> layers virtual NICs are more efficient than virtual disk adapters)
-> but in particular much faster check/repair and much reduced crazy
-> latencies during backups, because I could run check/repair and the
-> backups *on the real machine*, where XFS performed a lot better
-> without the VM overheads and "skewed" latencies.
-> =
+Did you resend this?
 
-
-Thank you for all the good info. To add a last note, I use iSCSI to
-export lvm LVs to VMs from the host, and it works fine. Exporting
-files living on an XFS works well enough, too, though slightly slower.
-
-It can be useful particularly for windows VM, because many windows app
-really behave poorly with network shares (or refuse to use them
-altogether).
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
