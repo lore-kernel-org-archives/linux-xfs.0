@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q110p8PT146532 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 18:51:08 -0600
-Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
-	[209.85.210.53]) by cuda.sgi.com with ESMTP id pxXz1Gj7ldTUG2zX
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 31 Jan 2012 16:51:05 -0800 (PST)
-Received: by dady25 with SMTP id y25so483824dad.26
-	for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 16:51:05 -0800 (PST)
-Date: Wed, 1 Feb 2012 06:20:57 +0530
-From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
-Subject: Re: Performance problem - reads slower than writes
-Message-ID: <20120201005057.GA44385@Xye>
-References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
-	<20120131103126.GA46170@nsrc.org>
-	<20120131145205.GA6607@infradead.org>
-	<20120131215210.GB47420@soundmouse.com>
+	q112RxKu161957 for <xfs@oss.sgi.com>; Tue, 31 Jan 2012 20:27:59 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 1ILtiOJXZ35Slf5v for <xfs@oss.sgi.com>;
+	Tue, 31 Jan 2012 18:27:57 -0800 (PST)
+Message-ID: <4F28A32C.9030706@sandeen.net>
+Date: Tue, 31 Jan 2012 20:27:56 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20120131215210.GB47420@soundmouse.com>
+Subject: Re: [PATCH] xfstests: several 274 fixups
+References: <4F271967.10308@sandeen.net> <20120131224152.GP9090@dastard>
+In-Reply-To: <20120131224152.GP9090@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,106 +20,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6013598893346923655=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Candler <brian@soundmouse.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: WuBo <wu.bo@cn.fujitsu.com>, xfs-oss <xfs@oss.sgi.com>
 
-
---===============6013598893346923655==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/9DWx/yDrRhgMJTb"
-Content-Disposition: inline
-
-
---/9DWx/yDrRhgMJTb
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-
-* On Tue, Jan 31, 2012 at 09:52:10PM +0000, Brian Candler <brian@soundmouse=
-=2Ecom> wrote:
->On Tue, Jan 31, 2012 at 09:52:05AM -0500, Christoph Hellwig wrote:
->> You don't just read a single file at a time but multiple ones, don't
->> you?
->
->It's sequential at the moment, although I'll do further tests with the -c
->(concurrency) option to bonnie++
->
->> Try playing with the following tweaks to get larger I/O to the disk:
+On 1/31/12 4:41 PM, Dave Chinner wrote:
+> On Mon, Jan 30, 2012 at 04:27:51PM -0600, Eric Sandeen wrote:
+>> This changes quite a few things about 274 to make it more robust
+>> and useful.
 >>
->>  a) make sure you use the noop or deadline elevators
->>  b) increase /sys/block/sdX/queue/max_sectors_kb from its low default
->>  c) dramatically increase /sys/devices/virtual/bdi/<major>:<minor>/read_=
-ahead_kb
->
->Thank you very much: I will do further tests with these.
->
->Is the read_ahead_kb knob aware of file boundaries? That is, is there any
->risk that if I set it too large it would read useless blocks past the end =
-of
->the file?
+>> * More comments
+>> * Use xfs_io for falloc (not all systems have /usr/bin/fallocate)
+>> * use _require_xfs_io_falloc to be sure system & fs support preallocation
+>> * Do not remove all of the files in $SCRATCH_MNT/ post-mkfs
+>> * Do not remove all of the files in $SCRATCH_MNT/ on completion
+>>   (this breaks e2fsck when lost+found/ goes missing)
+> 
+> FWIW, can't e2fsck be fixed to handle this case?
 
-     The read_ahead_kb knob is used the by memory subsystem=20
-     readahead code to set the initial readahead to scale from (it=20
-     uses a dynamic scaling window). It is set by default based on=20
-     device readahead value (probably obtained in a way similar to=20
-     hdparm -I).=20
-    =20
-     Setting it higher will be beneficial for sequential workloads=20
-     and the risk you mentioned is not there since it file=20
-     boundary aware -- check=20
-     http://lxr.linux.no/linux+*/mm/readahead.c#L151 for more=20
-     details.
->
->Regards,
->
->Brian.
->
->_______________________________________________
->xfs mailing list
->xfs@oss.sgi.com
->http://oss.sgi.com/mailman/listinfo/xfs
+perhaps some day.
 
+but it'd return "modified" if it adds lost+found ...
 
-Regards,
---=20
-Raghavendra Prabhu
-GPG Id : 0xD72BE977
-Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
-www: wnohang.net
+I suppose it could just be left missing unless otherwise needed.
 
---/9DWx/yDrRhgMJTb
-Content-Type: application/pgp-signature
+> ......
+>>  _cleanup()
+>>  {
+>>  	cd /
+>> -	rm -f $SCRATCH_MNT/* $tmp.*
+>> +	rm -f $tmp.*
+>>  	_scratch_unmount
+>>  }
+>>  
+>> @@ -46,6 +48,7 @@ _cleanup()
+>>  _supported_fs generic
+>>  _supported_os IRIX Linux
+>>  _require_scratch
+>> +_require_xfs_io_falloc
+>>  
+>>  echo "------------------------------"
+>>  echo "preallocation test"
+>> @@ -57,32 +60,39 @@ umount $SCRATCH_DEV 2>/dev/null
+>>  _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>>  _scratch_mount
+>>  
+>> -rm -rf $SCRATCH_MNT/*
+>> -cd $SCRATCH_MNT
+>> -dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
+>> +# Create a 4k file
+>> +dd if=/dev/zero of=$SCRATCH_MNT/test bs=4K count=1 >>$seq.full 2>&1
+>>  if [ $? -ne 0 ]
+>>  then
+>> -	echo "create file err"
+>> +	echo "create file error"
+>>  	status=1
+>>  	exit
+>>  fi
+>>  
+>> -fallocate -n -o 4K -l 1M test >/dev/null 2>&1
+>> +# Allocate 4M past EOF on that file
+>> +xfs_io -F -c "falloc -k 4k 4m" $SCRATCH_MNT/test >>$seq.full 2>&1
+>>  if [ $? -ne 0 ]
+>>  then
+>> -	echo "fallocate file err"
+>> +	echo "fallocate file error"
+>>  	status=1
+>>  	exit
+>>  fi
+> 
+> That whole create and falloc step can be done with one command:
+> 
+> xfs_io -F -c "write 0 4k" -c "falloc -k 4k 4m" $SCRATCH_MNT/test
+> 
+> The output of xfs_io will tell us what failed if it does.
+> 
+> Also, failure handling is as simple as appending:
+> 
+> 	|| _fail "failure string"
+> 
+> to the command. It handles setting status appropriately, tees the
+> failure string to $seq.full, and tells the user to go look at
+> $seq.full for why the test failed. hence that 16 lines of script can
+> be simply replaced with these 2 lines:
+> 
+> xfs_io -F -c "write 0 4k" -c "falloc -k 4k 4m" $SCRATCH_MNT/test \
+> 	>>$seq.full 2>&1 || _fail "failed to create test file"
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
+Ok, that's fine.
 
-iQEcBAEBAgAGBQJPKIxxAAoJEKYW3KHXK+l3kygH/RjCzgDrUKKkxIthJt8NgPlq
-GOq6OpCLdYg7aCDFd5CkUAQgTLnb/dD5yM0qlEBkka144BFu2CQqEKBWDZyawM90
-eNjNVycYS3E8z62n1FRSMmoja0ehqzJU7BEJaXvf8i1b4vW82UvQ0kcQ2q/uxxIT
-0aLrV8Yy3vvNnyThXE1pQNIxYwz1+UR8vMvJuXGopyd72tr4VOmv2dnHhOeCRuum
-EB//6glR+gyMZjvgLFbveYeW8aAaGGSDnrapBTVqQxSfXpbZjuX1xTEGVxTUhb0B
-xv1UKI8dxnEJhkEXXZwxpbtxHFuQi7x/nAlsv7Defeg1Ct5kve8y1mZ4OhRL5O8=
-=9TqE
------END PGP SIGNATURE-----
+>> -dd if=/dev/zero of=tmp1 bs=1M >/dev/null 2>&1
+>> -dd if=/dev/zero of=tmp2 bs=4K >/dev/null 2>&1
+>> +# Fill the rest of the fs completely
+>> +dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M >>$seq.full 2>&1
+>> +dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=4K >>$seq.full 2>&1
+>>  sync
+>> +# Last effort, use O_SYNC
+>> +dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K oflag=sync >>$seq.full 2>&1
+>> +# Save space usage info
+>> +echo "Post-fill space:" >> $seq.full
+>> +df $SCRATCH_MNT >>$seq.full 2>&1
+>>  
+>> -dd if=/dev/zero of=test seek=1 bs=4K count=2 conv=notrunc >/dev/null 2>&1
+>> +# Now attempt a write into all of the preallocated space 
+>> +dd if=/dev/zero of=$SCRATCH_MNT/test seek=1 bs=4K count=1024 conv=notrunc >>$seq.full 2>&1
+>>  if [ $? -ne 0 ]
+>>  then
+>> -	echo "fill prealloc range err"
+>> +	echo "fill prealloc range error"
+>>  	status=1
+>>  	exit
+>>  fi
+> 
+> I'd still like to see this write attempt to trigger nasty behaviours
+> like needing to allocate a metadata block for the extent list. I
+> suggested randholes, but perhaps this would be easier:
+> 
+> for i in `seq 1 2 1023`; do
+> 	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
+> 		>>$seq.full 2>&1 || _fail "failed to write test file"
+> done
+> 
+> which will write every second block and so only convert every second
+> block from unwritten to written and hence blow out the size of the
+> extent list and require extent map block allocation and potentially
+> trigger ENOSPC that way....
 
---/9DWx/yDrRhgMJTb--
+but will also only write half the actual preallocated space.  I guess it
+depends on what we are trying to test - reservations for metadata or proper
+accounting of prealloc'd space itself...?
 
+(and really, what is the proper amount of preallocated metadata space; if
+I subbed 2G for 4M, would anything survive the test above?)
 
---===============6013598893346923655==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Eric
+
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6013598893346923655==--
