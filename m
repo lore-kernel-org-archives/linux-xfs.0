@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q12LeM5I076169
-	for <linux-xfs@oss.sgi.com>; Thu, 2 Feb 2012 15:40:23 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id F8hqi6hW0JvIypqv for <linux-xfs@oss.sgi.com>;
-	Thu, 02 Feb 2012 13:40:21 -0800 (PST)
-Message-ID: <4F2B02C4.8070903@sandeen.net>
-Date: Thu, 02 Feb 2012 15:40:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q12Mr0I7078530 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 16:53:00 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	e8P2LKpWFNlzE8s7 for <xfs@oss.sgi.com>;
+	Thu, 02 Feb 2012 14:52:58 -0800 (PST)
+Date: Fri, 3 Feb 2012 09:52:56 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch] xfsprogs: extend fiemap configure check
+Message-ID: <20120202225256.GA9090@dastard>
+References: <519369070.69746.1328051417713.JavaMail.root@acxmail-au2.aconex.com>
+	<1247398017.69749.1328051476851.JavaMail.root@acxmail-au2.aconex.com>
 MIME-Version: 1.0
-Subject: Re: Placing the root partition on an XFS filesystem is not supported
-References: <loom.20120129T133929-288@post.gmane.org>
-In-Reply-To: <loom.20120129T133929-288@post.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1247398017.69749.1328051476851.JavaMail.root@acxmail-au2.aconex.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,31 +27,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcos Mello <marcosfrm@gmail.com>
-Cc: linux-xfs@oss.sgi.com
+To: Nathan Scott <nathans@debian.org>
+Cc: xfs@oss.sgi.com
 
-On 1/29/12 6:46 AM, Marcos Mello wrote:
-> http://git.fedorahosted.org/git/?p=anaconda.git;a=commit;h=b3e19d43840f6c4015fab75411853003fcf26a63
+On Wed, Feb 01, 2012 at 10:11:16AM +1100, Nathan Scott wrote:
+> Make the fiemap configure check consistent with the other
+> libc interface checks - perform a compile and link with a
+> complete set of symbols, macros and interfaces needed, as
+> opposed to a build with just the headers.
 > 
-> Does someone knows why? I'm trying to get rid of EXT* partitions on my new
-> CentOS 6.2 installs but apparently it will not be possible.
+> Signed-off-by: Nathan Scott <nathans@debian.org>
 
-Was done for RHEL, AFAIK.
+Definitely a good idea. 
 
-In general there is no problem with xfs on a root partition.  However, the installer
-may not make it easy or available for you.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-(I never use xfs for /boot though, I don't trust grub enough for that honestly).
-
--Eric
-
-> Marcos
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
