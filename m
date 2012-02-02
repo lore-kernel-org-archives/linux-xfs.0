@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q12GQURl062154 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 10:26:30 -0600
-Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
-	[209.85.216.53]) by cuda.sgi.com with ESMTP id KyAc4hWChOIBasmr
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 02 Feb 2012 08:26:29 -0800 (PST)
-Received: by qafk1 with SMTP id k1so1966543qaf.5
-	for <xfs@oss.sgi.com>; Thu, 02 Feb 2012 08:26:28 -0800 (PST)
+	q12G7YGg061171 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 10:07:36 -0600
+Date: Thu, 2 Feb 2012 11:07:26 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] xfs: cleanup quota check on disk blocks and inodes
+	reservations
+Message-ID: <20120202160726.GA10568@infradead.org>
+References: <20120123034513.3339.97432.stgit@ltc219.sdl.hitachi.co.jp>
+	<20120123034543.3339.56848.stgit@ltc219.sdl.hitachi.co.jp>
 MIME-Version: 1.0
-In-Reply-To: <20120202091330.GA31203@infradead.org>
-References: <CAC=U0a1huHVULfMObyH_XNcQi5aTZtrbpcciNhw=92PE96f4cg@mail.gmail.com>
-	<20120202091330.GA31203@infradead.org>
-Date: Thu, 2 Feb 2012 11:26:28 -0500
-Message-ID: <CAC=U0a11udmsGAKg5Sp+X2uxRTKS8gq37CK9OAZKhLOPKbWHKQ@mail.gmail.com>
-Subject: Re: Inode lockdep problem observed on 2.6.37.6 xfs with RT subvolume
-From: Kamal Dasu <kdasu.kdev@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120123034543.3339.56848.stgit@ltc219.sdl.hitachi.co.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,56 +20,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: cernekee@gmail.com, xfs@oss.sgi.com
+To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: Alex Elder <elder@kernel.org>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Feb 2, 2012 at 4:13 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Wed, Feb 01, 2012 at 07:44:13PM -0500, Kamal Dasu wrote:
->> Need some help understanding the state of xfs with rt subvolume
->> support on 2.6.37.
->>
->> When using xfs rt subvolume on a harddisk partition with kernel
->> 2.6.37.6,and normal r/w/delete file operations? causes deadlock
->> like hangs .? Failure? symptoms are lockups and mount failure on reboot.
->>
->> On further investigation it was found that one of the changes could be
->> the cause.
->> The same tests seem to pass with xfs in 2.6.31 kernel.
->>
->> xfs: simplify xfs_trans_iget? : aa72a5cf00001d0b952c7c755be404b9118ceb2e
->> http://git.kernel.org/?p=3Dlinux/kernel/git/stable/linux-stable.git;a=3D=
-commitdiff;h=3Daa72a5cf00001d0b952c7c755be404b9118ceb2e
->>
->> Reverting the change and forward porting to the xfs_trans_inode() seems =
-to
->> get rid of the deadlock and mount issues .
->>
->> Below is the change
->
-> Please just upgrade to Linux 2.6.39 or better Linux 3.0 which is the
-> long term support release. RT subvolume support has been fixed in 2.6.39
-> by the following changes:
->
-> =A0xfs: only lock the rt bitmap inode once per allocation
-> =A0xfs: fix xfs_get_extsz_hint for a zero extent size hint
-> =A0xfs: add lockdep annotations for the rt inodes
->
-> But in general the RT subvolume code is not regularly tested and only
-> fixed when issues arise.
+On Mon, Jan 23, 2012 at 12:45:43PM +0900, Mitsuo Hayasaka wrote:
+> This patch is a cleanup of quota check on disk blocks and inodes
+> reservations.
+> 
+> Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+> Cc: Ben Myers <bpm@sgi.com>
+> Cc: Alex Elder <elder@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> ---
+> 
+>  fs/xfs/xfs_trans_dquot.c |   17 +++++++----------
+>  1 files changed, 7 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
+> index c4ba366..5e6cd1c 100644
+> --- a/fs/xfs/xfs_trans_dquot.c
+> +++ b/fs/xfs/xfs_trans_dquot.c
+> @@ -605,7 +605,7 @@ xfs_trans_dqresv(
+>  	time_t		timer;
+>  	xfs_qwarncnt_t	warns;
+>  	xfs_qwarncnt_t	warnlimit;
+> -	xfs_qcnt_t	count;
+> +	xfs_qcnt_t	tcount;
 
+Can you call this variable total_count to make it a bit more obvious?
 
-Thanks for quick reply and clarifying this, if upgrading the kernel is
-not an option, should I be
-considering backporting  changes to 2.6.37,  should I  use the entire
-2.6.39 or 3.0
-xfs implementation as is of cherry pick the above three changes ?.
+> +			tcount = *resbcountp + nblks;
+> +			if (hardlimit > 0ULL && tcount > hardlimit) {
 
-Regards
-Kamal
+Given that xfs_qcnt_t is unsigned what about transforming this into the
+more readable:
+
+			if (hardlimit && total_count > hardlimit)
+
+and similar for the others?
 
 _______________________________________________
 xfs mailing list
