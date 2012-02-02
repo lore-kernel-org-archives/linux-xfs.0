@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1212bh9021557 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 19:02:37 -0600
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id mcSp1QDK15DM3hor (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Feb 2012 17:02:36 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1Rsl4N-00075f-CW
-	for xfs@oss.sgi.com; Wed, 01 Feb 2012 17:02:35 -0800
-Message-ID: <33246061.post@talk.nabble.com>
-Date: Wed, 1 Feb 2012 17:02:35 -0800 (PST)
-From: kdasu <kdasu.kdev@gmail.com>
-Subject: Inode lockdep problem observed on 2.6.37.6 xfs with RT subvolume
+	q123cUpX027414 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 21:38:30 -0600
+Message-ID: <4F2A051D.7050608@oracle.com>
+Date: Thu, 02 Feb 2012 11:38:05 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V6
+References: <4F2504DD.5020503@oracle.com> <4F283F71.1020606@sgi.com>
+In-Reply-To: <4F283F71.1020606@sgi.com>
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,82 +22,102 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+
+On 02/01/2012 03:22 AM, Mark Tinguely wrote:
+
+> On 01/29/12 02:35, Jeff Liu wrote:
+>> Hello,
+>>
+>> Sorry for the delay!! I just got back from vacation.
+>>
+>> This is the V6 to introduce SEEK_DATA/SEEK_HOLE support to XFS.
+>> As we have discussed previously, I have removed the dirty data probing
+>> stuff and just treating unwritten extents as data in this post.
+>>
+>> Changes to V6:
+>> --------------
+>> * remove xfs_has_unwritten_buffer() for now.
+>> * xfs_bmapi_read() returns the br_state == XFS_EXT_NORM for a hole, so
+>> we need to check its startblock is not a "nullstartblock" in this case.
+>> * call i_size_read() after taking the ilock shared, otherwise, isize
+>> could be stale.
+>> * remove "ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK)" from xfs_seek_data()
+>> since it will not used.
+>> * in xfs_file_llseek(), return -EINVAL rather than -EOPNOTSUPP if
+>> whence is not valid according to http://linux.die.net/man/2/lseek.
+>> * s/int lock/uint lock/ in both xfs_seek_data() and xfs_seek_hole().
+>> * s/out_lock/out_unlock/ in both functions too.
+>>
+>> Tests:
+>> ------
+>> * seek_sanity_tester:
+>> http://permalink.gmane.org/gmane.comp.file-systems.xfs.general/42514
+>>
+>> *seek_copy_tester:
+>> http://permalink.gmane.org/gmane.comp.file-systems.xfs.general/42522
+>>
+>>
+>> Thank you!
+>> -Jeff
+>>
+>>
+>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>>
+>> ---
+>>   fs/xfs/xfs_file.c |  168
+>> ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>>   1 files changed, 167 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>> index 753ed9b..41a045f 100644
+>> --- a/fs/xfs/xfs_file.c
+>> +++ b/fs/xfs/xfs_file.c
+>> +STATIC loff_t
+>> +xfs_seek_data(
+> <deleted>
+>> +        error = xfs_bmapi_read(ip, fsbno, len - fsbno, map,&nmap,
+>> +                       XFS_BMAPI_ENTIRE);
+>> +        if (error)
+>> +            goto out_unlock;
+> 
+> 
+>> +STATIC loff_t
+>> +xfs_seek_hole(
+> <deleted>
+>> +    error = xfs_bmap_first_unused(NULL, ip, 1,&fsbno, XFS_DATA_FORK);
+>> +    if (error)
+>> +        goto out_unlock;
+> 
+> The code looks good for the reduced problem. It test correctly. I am
+> still finding holes only if they start on a 16KB boundary which we
+> discussed before. I mention it in case more advanced test cases are
+> generated.
+
+> 
+> Question:
+> If the routines that are looking for extents/hole return an error (I see
+> EFSCORRUPTED, EAGAIN, ENOMEM, EIO as possible errors in these routines),
+> should you convert them to an error such as EIO? There is no specific
+> error mention in the lseek manual page.
+
+Thanks for your review!
+The 'errno' should be convert to -ENXIO in those cases(this is the way I
+observed from Btrfs and OCFS2), I'll take care of it in next post.
 
 
-Need some help understanding the state of xfs with rt subvolume
-support on 2.6.37.
+Thanks,
+-Jeff
 
-When using xfs rt subvolume on a harddisk partition with kernel
-2.6.37.6,and normal r/w/delete file operations  causes deadlock
-like hangs .  Failure  symptoms are lockups and mount failure on reboot.
+> 
+> --Mark Tinguely.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-On further investigation it was found that one of the changes could be
-the cause.
-The same tests seem to pass with xfs in 2.6.31 kernel.
-
-xfs: simplify xfs_trans_iget  : 
-http://git.kernel.org/?p=linux/kernel/git/stable/linux-stable.git;a=commitdiff;h=aa72a5cf00001d0b952c7c755be404b9118ceb2e
-aa72a5cf00001d0b952c7c755be404b9118ceb2e 
-
-Reverting the change and forward porting to the xfs_trans_iget() seems to
-get rid of the deadlock and mount issues .
-
-Below is the change
-
-Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
----
- linux-2.6.37/fs/xfs/xfs_trans_inode.c |   21 +++++++++++++++++++++
- 1 files changed, 21 insertions(+), 0 deletions(-)
-
-diff --git a/linux-2.6.37/fs/xfs/xfs_trans_inode.c
-b/linux-2.6.37/fs/xfs/xfs_trans_inode.c
-index ccb3453..c2861d5 100644
---- a/stblinux-2.6.37/fs/xfs/xfs_trans_inode.c
-+++ b/stblinux-2.6.37/fs/xfs/xfs_trans_inode.c
-@@ -56,6 +56,27 @@ xfs_trans_iget(
-        xfs_inode_t     **ipp)
- {
-        int                     error;
-+       xfs_inode_t     *ip = NULL;
-+       xfs_perag_t     *pag = NULL;
-+
-+       /*
-+       * If we find the inode in core with this transaction
-+       * pointer in its i_transp field, then we know we already
-+       * have it locked.
-+       */
-+       if(tp != NULL) {
-+               pag = xfs_perag_get(mp,  XFS_INO_TO_AGNO(mp, ino));
-+               read_lock(&pag->pag_ici_lock);
-+               ip = radix_tree_lookup(&pag->pag_ici_root,
-XFS_INO_TO_AGNO(mp, ino));
-+               read_unlock(&pag->pag_ici_lock);
-+               xfs_perag_put(pag);
-+       }
-+
-+       /* the returned inode must match the transaction */
-+       if (ip && (ip->i_transp == tp)) {
-+               *ipp = ip;
-+               return 0;
-+       }
-
-        error = xfs_iget(mp, tp, ino, flags, lock_flags, ipp);
-        if (!error && tp) {
-
---
-1.7.6
-
-I have also attached the xfs_logprint text output when the mount fails.
-http://old.nabble.com/file/p33246061/xfslog-2.6.37.6-mount-fail.txt
-xfslog-2.6.37.6-mount-fail.txt 
-
-
-Regards
-Kamal
--- 
-View this message in context: http://old.nabble.com/Inode-lockdep-problem-observed-on-2.6.37.6-xfs-with-RT-subvolume-tp33246061p33246061.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
