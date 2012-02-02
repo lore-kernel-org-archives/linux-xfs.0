@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q12GGWWQ061708 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 10:16:32 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	nxYkb2z1mpmys6or (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 Feb 2012 08:16:31 -0800 (PST)
-Message-Id: <20120202161629.084820708@bombadil.infradead.org>
-Date: Thu, 02 Feb 2012 11:14:10 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/3] xfs: merge xfs_qm_export_dquot into xfs_qm_scall_getquota
-References: <20120202161409.303465214@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-kill-xfs_qm_export_dquot
+	q12GQURl062154 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 10:26:30 -0600
+Received: from mail-qw0-f53.google.com (mail-qw0-f53.google.com
+	[209.85.216.53]) by cuda.sgi.com with ESMTP id KyAc4hWChOIBasmr
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 02 Feb 2012 08:26:29 -0800 (PST)
+Received: by qafk1 with SMTP id k1so1966543qaf.5
+	for <xfs@oss.sgi.com>; Thu, 02 Feb 2012 08:26:28 -0800 (PST)
+MIME-Version: 1.0
+In-Reply-To: <20120202091330.GA31203@infradead.org>
+References: <CAC=U0a1huHVULfMObyH_XNcQi5aTZtrbpcciNhw=92PE96f4cg@mail.gmail.com>
+	<20120202091330.GA31203@infradead.org>
+Date: Thu, 2 Feb 2012 11:26:28 -0500
+Message-ID: <CAC=U0a11udmsGAKg5Sp+X2uxRTKS8gq37CK9OAZKhLOPKbWHKQ@mail.gmail.com>
+Subject: Re: Inode lockdep problem observed on 2.6.37.6 xfs with RT subvolume
+From: Kamal Dasu <kdasu.kdev@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,184 +24,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: jack@suse.cz
+To: Christoph Hellwig <hch@infradead.org>
+Cc: cernekee@gmail.com, xfs@oss.sgi.com
 
-The is no good reason to have these two separate, and for the next change
-I'd need the full struct xfs_dquot in xfs_qm_export_dquot, so better just
-fold the code now instead of changing it around.
+On Thu, Feb 2, 2012 at 4:13 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Wed, Feb 01, 2012 at 07:44:13PM -0500, Kamal Dasu wrote:
+>> Need some help understanding the state of xfs with rt subvolume
+>> support on 2.6.37.
+>>
+>> When using xfs rt subvolume on a harddisk partition with kernel
+>> 2.6.37.6,and normal r/w/delete file operations? causes deadlock
+>> like hangs .? Failure? symptoms are lockups and mount failure on reboot.
+>>
+>> On further investigation it was found that one of the changes could be
+>> the cause.
+>> The same tests seem to pass with xfs in 2.6.31 kernel.
+>>
+>> xfs: simplify xfs_trans_iget? : aa72a5cf00001d0b952c7c755be404b9118ceb2e
+>> http://git.kernel.org/?p=3Dlinux/kernel/git/stable/linux-stable.git;a=3D=
+commitdiff;h=3Daa72a5cf00001d0b952c7c755be404b9118ceb2e
+>>
+>> Reverting the change and forward porting to the xfs_trans_inode() seems =
+to
+>> get rid of the deadlock and mount issues .
+>>
+>> Below is the change
+>
+> Please just upgrade to Linux 2.6.39 or better Linux 3.0 which is the
+> long term support release. RT subvolume support has been fixed in 2.6.39
+> by the following changes:
+>
+> =A0xfs: only lock the rt bitmap inode once per allocation
+> =A0xfs: fix xfs_get_extsz_hint for a zero extent size hint
+> =A0xfs: add lockdep annotations for the rt inodes
+>
+> But in general the RT subvolume code is not regularly tested and only
+> fixed when issues arise.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfs/fs/xfs/xfs_qm_syscalls.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm_syscalls.c	2012-02-02 13:11:38.368396372 +0100
-+++ xfs/fs/xfs/xfs_qm_syscalls.c	2012-02-02 13:17:04.139964850 +0100
-@@ -47,9 +47,6 @@ STATIC int	xfs_qm_log_quotaoff_end(xfs_m
- 					uint);
- STATIC uint	xfs_qm_export_flags(uint);
- STATIC uint	xfs_qm_export_qtype_flags(uint);
--STATIC void	xfs_qm_export_dquot(xfs_mount_t *, xfs_disk_dquot_t *,
--					fs_disk_quota_t *);
--
- 
- /*
-  * Turn off quota accounting and/or enforcement for all udquots and/or
-@@ -635,42 +632,6 @@ xfs_qm_scall_setqlim(
- 	return error;
- }
- 
--int
--xfs_qm_scall_getquota(
--	xfs_mount_t	*mp,
--	xfs_dqid_t	id,
--	uint		type,
--	fs_disk_quota_t *out)
--{
--	xfs_dquot_t	*dqp;
--	int		error;
--
--	/*
--	 * Try to get the dquot. We don't want it allocated on disk, so
--	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
--	 * exist, we'll get ENOENT back.
--	 */
--	if ((error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp))) {
--		return (error);
--	}
--
--	/*
--	 * If everything's NULL, this dquot doesn't quite exist as far as
--	 * our utility programs are concerned.
--	 */
--	if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
--		xfs_qm_dqput(dqp);
--		return XFS_ERROR(ENOENT);
--	}
--	/*
--	 * Convert the disk dquot to the exportable format
--	 */
--	xfs_qm_export_dquot(mp, &dqp->q_core, out);
--	xfs_qm_dqput(dqp);
--	return (error ? XFS_ERROR(EFAULT) : 0);
--}
--
--
- STATIC int
- xfs_qm_log_quotaoff_end(
- 	xfs_mount_t		*mp,
-@@ -759,50 +720,66 @@ error0:
- }
- 
- 
--/*
-- * Translate an internal style on-disk-dquot to the exportable format.
-- * The main differences are that the counters/limits are all in Basic
-- * Blocks (BBs) instead of the internal FSBs, and all on-disk data has
-- * to be converted to the native endianness.
-- */
--STATIC void
--xfs_qm_export_dquot(
--	xfs_mount_t		*mp,
--	xfs_disk_dquot_t	*src,
-+int
-+xfs_qm_scall_getquota(
-+	struct xfs_mount	*mp,
-+	xfs_dqid_t		id,
-+	uint			type,
- 	struct fs_disk_quota	*dst)
- {
-+	struct xfs_dquot	*dqp;
-+	int			error;
-+
-+	/*
-+	 * Try to get the dquot. We don't want it allocated on disk, so
-+	 * we aren't passing the XFS_QMOPT_DOALLOC flag. If it doesn't
-+	 * exist, we'll get ENOENT back.
-+	 */
-+	error = xfs_qm_dqget(mp, NULL, id, type, 0, &dqp);
-+	if (error)
-+		return error;
-+
-+	/*
-+	 * If everything's NULL, this dquot doesn't quite exist as far as
-+	 * our utility programs are concerned.
-+	 */
-+	if (XFS_IS_DQUOT_UNINITIALIZED(dqp)) {
-+		error = XFS_ERROR(ENOENT);
-+		goto out_put;
-+	}
-+
- 	memset(dst, 0, sizeof(*dst));
--	dst->d_version = FS_DQUOT_VERSION;  /* different from src->d_version */
--	dst->d_flags = xfs_qm_export_qtype_flags(src->d_flags);
--	dst->d_id = be32_to_cpu(src->d_id);
-+	dst->d_version = FS_DQUOT_VERSION;
-+	dst->d_flags = xfs_qm_export_qtype_flags(dqp->q_core.d_flags);
-+	dst->d_id = be32_to_cpu(dqp->q_core.d_id);
- 	dst->d_blk_hardlimit =
--		XFS_FSB_TO_BB(mp, be64_to_cpu(src->d_blk_hardlimit));
-+		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_blk_hardlimit));
- 	dst->d_blk_softlimit =
--		XFS_FSB_TO_BB(mp, be64_to_cpu(src->d_blk_softlimit));
--	dst->d_ino_hardlimit = be64_to_cpu(src->d_ino_hardlimit);
--	dst->d_ino_softlimit = be64_to_cpu(src->d_ino_softlimit);
--	dst->d_bcount = XFS_FSB_TO_BB(mp, be64_to_cpu(src->d_bcount));
--	dst->d_icount = be64_to_cpu(src->d_icount);
--	dst->d_btimer = be32_to_cpu(src->d_btimer);
--	dst->d_itimer = be32_to_cpu(src->d_itimer);
--	dst->d_iwarns = be16_to_cpu(src->d_iwarns);
--	dst->d_bwarns = be16_to_cpu(src->d_bwarns);
-+		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_blk_softlimit));
-+	dst->d_ino_hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
-+	dst->d_ino_softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
-+	dst->d_bcount = XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_bcount));
-+	dst->d_icount = be64_to_cpu(dqp->q_core.d_icount);
-+	dst->d_btimer = be32_to_cpu(dqp->q_core.d_btimer);
-+	dst->d_itimer = be32_to_cpu(dqp->q_core.d_itimer);
-+	dst->d_iwarns = be16_to_cpu(dqp->q_core.d_iwarns);
-+	dst->d_bwarns = be16_to_cpu(dqp->q_core.d_bwarns);
- 	dst->d_rtb_hardlimit =
--		XFS_FSB_TO_BB(mp, be64_to_cpu(src->d_rtb_hardlimit));
-+		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtb_hardlimit));
- 	dst->d_rtb_softlimit =
--		XFS_FSB_TO_BB(mp, be64_to_cpu(src->d_rtb_softlimit));
--	dst->d_rtbcount = XFS_FSB_TO_BB(mp, be64_to_cpu(src->d_rtbcount));
--	dst->d_rtbtimer = be32_to_cpu(src->d_rtbtimer);
--	dst->d_rtbwarns = be16_to_cpu(src->d_rtbwarns);
-+		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtb_softlimit));
-+	dst->d_rtbcount = XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtbcount));
-+	dst->d_rtbtimer = be32_to_cpu(dqp->q_core.d_rtbtimer);
-+	dst->d_rtbwarns = be16_to_cpu(dqp->q_core.d_rtbwarns);
- 
- 	/*
- 	 * Internally, we don't reset all the timers when quota enforcement
- 	 * gets turned off. No need to confuse the user level code,
- 	 * so return zeroes in that case.
- 	 */
--	if ((!XFS_IS_UQUOTA_ENFORCED(mp) && src->d_flags == XFS_DQ_USER) ||
-+	if ((!XFS_IS_UQUOTA_ENFORCED(mp) && dqp->q_core.d_flags == XFS_DQ_USER) ||
- 	    (!XFS_IS_OQUOTA_ENFORCED(mp) &&
--			(src->d_flags & (XFS_DQ_PROJ | XFS_DQ_GROUP)))) {
-+			(dqp->q_core.d_flags & (XFS_DQ_PROJ | XFS_DQ_GROUP)))) {
- 		dst->d_btimer = 0;
- 		dst->d_itimer = 0;
- 		dst->d_rtbtimer = 0;
-@@ -823,6 +800,9 @@ xfs_qm_export_dquot(
- 		}
- 	}
- #endif
-+out_put:
-+	xfs_qm_dqput(dqp);
-+	return error;
- }
- 
- STATIC uint
+Thanks for quick reply and clarifying this, if upgrading the kernel is
+not an option, should I be
+considering backporting  changes to 2.6.37,  should I  use the entire
+2.6.39 or 3.0
+xfs implementation as is of cherry pick the above three changes ?.
+
+Regards
+Kamal
 
 _______________________________________________
 xfs mailing list
