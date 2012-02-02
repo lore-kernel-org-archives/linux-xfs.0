@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q11NtAq7018044 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 17:55:10 -0600
+	q120QCZX020014 for <xfs@oss.sgi.com>; Wed, 1 Feb 2012 18:26:12 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	AHXgIJ59GJ3PsNIO for <xfs@oss.sgi.com>;
-	Wed, 01 Feb 2012 15:55:08 -0800 (PST)
-Date: Thu, 2 Feb 2012 10:55:01 +1100
+	OfxkbhGHn2dA0CBj for <xfs@oss.sgi.com>;
+	Wed, 01 Feb 2012 16:26:10 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1RskV6-0001lH-6m
+	for xfs@oss.sgi.com; Thu, 02 Feb 2012 11:26:08 +1100
+Date: Thu, 2 Feb 2012 11:26:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: File system remain unresponsive until the system is rebooted.
-Message-ID: <20120201235501.GX9090@dastard>
-References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
-	<20120131013124.GE9090@dastard>
-	<CANs4eSBgmvJCR7vfFa1W5h8tUYFQi=LRPWDPQ1exB29D1o_RjA@mail.gmail.com>
-	<4F27AE92.9060003@hardwarefreak.com>
-	<20120131205014.GM9090@dastard>
-	<4F288561.5040803@hardwarefreak.com>
-	<20265.9379.139218.148520@tree.ty.sabi.co.UK>
+Subject: Re: xfs task blocked for more than 120 seconds
+Message-ID: <20120202002608.GY9090@dastard>
+References: <20120130002026.GG10174@sli.dy.fi> <20120130010530.GI15102@dastard>
+	<2504_1327964557_4F27218D_2504_92_2_20120130223527.GH10174@sli.dy.fi>
+	<20120131233034.GK10174@sli.dy.fi>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20265.9379.139218.148520@tree.ty.sabi.co.UK>
+In-Reply-To: <20120131233034.GK10174@sli.dy.fi>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,62 +27,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.to.sabi.co.UK>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Feb 01, 2012 at 11:40:19AM +0000, Peter Grandi wrote:
-> [ ... ]
-> =
+On Wed, Feb 01, 2012 at 01:30:34AM +0200, Sami Liedes wrote:
+> On Tue, Jan 31, 2012 at 12:35:28AM +0200, Sami Liedes wrote:
+> > The workloads do eventually complete. I tried the tar extraction again
+> > but this time extracting the tar from a different disk and saw no such
+> > warnings (and the time taken seems reasonable at 96 minutes).
+> 
+> Extracting a 105 GB tar that resides on the same (target) XFS
+> partition on an otherwise idle disk does trigger warnings, but only
+> for kworker, not the tar process. The time taken to extract was a
+> reasonable-sounding 140 minutes, so maybe these are just harmless
+> warnings.
 
-> >>> We are using Amazon EC2 instances.
-> =
+It is indicating that superblock IO is taking more than 120s to
+complete. That's an indication that the IO subsystem is not
+throttling the IO queue (and so queuing up minutes worth of IO) or
+not processing the IO queue in a fair/timely manner. IO should never
+take more than a couple of seconds to complete unless there is
+something wrong, so the warnings are quite valid at the default
+timeout of 120s....
 
-> >>> [ ... ]  one of the the worst possible platforms for XFS.
-> =
+I'd suggest reporting the problem to the dm-crypt folks and see if
+they have any ideas on why IO completion is taking so long.
 
-> >> I don't agree with you there. If the workload works best on
-> >> XFs, it doesn't matter what the underlying storage device is.
-> >> e.g. if it's a fsync heavy workload, it will still perform
-> >> better on XFS on EC2 than btrfs on EC2...
-> =
+> Perhaps something should/could be done to silence them in
+> that case?
 
-> There are special cases, but =ABfsync heavy=BB is a bit of bad
-> example.
+You can turn the hangcheck timer off or adjust it's timeout yourself
+via these proc files:
 
-It's actually a really good example of where XFS will be better
-than other filesystems.  Why? Because XFS does less log IO due to
-aggregation of log writes during concurrent fsyncs. The more latency
-there is on a log write, the more aggregation that occurs.  On a
-platform where the IO subsystem is going to give you unpredictable
-IO latencies, that's exactly what want.
-
-Sure, it was designed to optimise spinning rust performance, but
-that same design is also optimal for virtual devices with
-unpredictable IO latency...
-
-> In general file system designs are not at all independent of the
-> expected storage platform, and some designs are far better than
-> others for specific storage platforms, and viceversa.
-
-Sure, but filesystems also have inherent capabilities that are
-independent of the underlying storage. In these cases, the
-underlying storage really doesn't matter if the filesystem can't do
-what the application needs.  Allocation parallelism, CPU
-parallelism, minimal concurrent fsync latency, etc are all
-characteristics of filesystems that are independent of the
-underlying storage. If you need those characteristics in your
-remotely hosted VMs, then XFS is what you want regardless of how
-much storage capability you buy for those VMs....
+$ ls /proc/sys/kernel/ |grep hung
+hung_task_check_count
+hung_task_panic
+hung_task_timeout_secs
+hung_task_warnings
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
