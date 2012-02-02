@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q12I6Tfd067964 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 12:06:29 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id Dpp7CNT85hIRGaFV (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 Feb 2012 10:06:28 -0800 (PST)
-Date: Thu, 2 Feb 2012 19:06:26 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 3/3] quota: make Q_XQUOTASYNC a noop
-Message-ID: <20120202180626.GA7494@quack.suse.cz>
-References: <20120202161409.303465214@bombadil.infradead.org>
-	<20120202161629.559449485@bombadil.infradead.org>
+	q12LeM5I076169
+	for <linux-xfs@oss.sgi.com>; Thu, 2 Feb 2012 15:40:23 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id F8hqi6hW0JvIypqv for <linux-xfs@oss.sgi.com>;
+	Thu, 02 Feb 2012 13:40:21 -0800 (PST)
+Message-ID: <4F2B02C4.8070903@sandeen.net>
+Date: Thu, 02 Feb 2012 15:40:20 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120202161629.559449485@bombadil.infradead.org>
+Subject: Re: Placing the root partition on an XFS filesystem is not supported
+References: <loom.20120129T133929-288@post.gmane.org>
+In-Reply-To: <loom.20120129T133929-288@post.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +25,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: jack@suse.cz, xfs@oss.sgi.com
+To: Marcos Mello <marcosfrm@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-On Thu 02-02-12 11:14:12, Christoph Hellwig wrote:
-> Now that XFS takes quota reservations into account there is no need to flush
-> anything before reporting quotas - in addition to beeing fully transactional
-> all quota information is also 100% coherent with the rest of the filesystem
-> now.
-  Looks fine. You can add:
-Acked-by: Jan Kara <jack@suse.cz>
+On 1/29/12 6:46 AM, Marcos Mello wrote:
+> http://git.fedorahosted.org/git/?p=anaconda.git;a=commit;h=b3e19d43840f6c4015fab75411853003fcf26a63
+> 
+> Does someone knows why? I'm trying to get rid of EXT* partitions on my new
+> CentOS 6.2 installs but apparently it will not be possible.
 
-								Honza
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Was done for RHEL, AFAIK.
+
+In general there is no problem with xfs on a root partition.  However, the installer
+may not make it easy or available for you.
+
+(I never use xfs for /boot though, I don't trust grub enough for that honestly).
+
+-Eric
+
+> Marcos
 > 
-> Index: xfs/fs/quota/quota.c
-> ===================================================================
-> --- xfs.orig/fs/quota/quota.c	2012-02-02 13:06:30.693396524 +0100
-> +++ xfs/fs/quota/quota.c	2012-02-02 13:23:23.181244741 +0100
-> @@ -282,10 +282,9 @@ static int do_quotactl(struct super_bloc
->  	case Q_XGETQUOTA:
->  		return quota_getxquota(sb, type, id, addr);
->  	case Q_XQUOTASYNC:
-> -		/* caller already holds s_umount */
->  		if (sb->s_flags & MS_RDONLY)
->  			return -EROFS;
-> -		writeback_inodes_sb(sb, WB_REASON_SYNC);
-> +		/* XFS quotas are fully coherent now, making this call a noop */
->  		return 0;
->  	default:
->  		return -EINVAL;
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
