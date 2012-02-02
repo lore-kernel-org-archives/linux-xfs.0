@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q12DAosq052908 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 07:10:50 -0600
-Message-ID: <4F2A8B33.5090105@oracle.com>
-Date: Thu, 02 Feb 2012 21:10:11 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q12E9oYc055443 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 08:09:50 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	95O52Zfc9kkdMGbi (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 02 Feb 2012 06:09:48 -0800 (PST)
+Date: Thu, 2 Feb 2012 09:09:47 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Trailing garbage in event tracing output
+Message-ID: <20120202140947.GA16244@infradead.org>
+References: <20120202115211.GA1259@nsrc.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Introduce a new SEEK_DATA/SEEK_HOLE tester
-References: <4EFC6BC6.6020405@oracle.com> <4F299182.7010606@sgi.com>
-In-Reply-To: <4F299182.7010606@sgi.com>
-Reply-To: jeff.liu@oracle.com
+Content-Type: multipart/mixed; boundary="VbJkn9YxBvnuCH5J"
+Content-Disposition: inline
+In-Reply-To: <20120202115211.GA1259@nsrc.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,207 +25,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
-
-Hi Mark,
-
-Thanks for your review! My response is inline below.
-
-On 02/02/2012 03:24 AM, Mark Tinguely wrote:
-
-> On 01/-10/63 13:59, Jeff Liu wrote:
->> Hello,
->>
->> This is another SEEK_DATA/SEEK_HOLE tester which is intended to cover
->> multiple extents checking.
->> I have ran it against btrfs to ensure the tester works, and ran it
->> against XFS to ensure the SEEK_DATA/SEEK_HOLE patch works too.
->>
-> 
->> diff --git a/src/seek_copy_tester.c b/src/seek_copy_tester.c
->> new file mode 100755
->> index 0000000..4971f34
->> --- /dev/null
->> +++ b/src/seek_copy_tester.c
->> @@ -0,0 +1,674 @@
-> 
-> Do you want to add Author/Copyright and description?
-
-Sure. :)
-
-> 
->> +#include<stdio.h>
->> +#include<stdlib.h>
->> +#include<stdint.h>
->> +#include<stdarg.h>
-> 
-> ...
-> 
->> +int
->> +full_write(int fd, const void *buf, size_t count)
->> +{
->> +    int ret = 0;
->> +    const char *ptr = (const char *) buf;
->> +
->> +    while (count>  0) {
->> +        ssize_t n = write(fd, ptr, count);
->> +        if (n<  0) {
->> +            if (errno == EINTR)
->> +                continue;
->> +            error("full_write failed as %s", strerror(errno));
->> +            ret = -1;
->> +            break;
->> +        }
->> +
->> +        if (n == 0)
->> +            break;
-> 
-> Callers of this routine expect the count number of bytes to be written.
-> Write a message if leaving this routine early? An error?
-
-It's prone to be an error if nothing was written, an it's better to
-print out an error message here.
-
-Also, I am prefer to revise full_write() to return the number of bytes
-actually wrote done. i.e, size_t full_write().
-The caller can simply comparing the return value for each write by:
-if (full_write(fd, buf, count) != count) {
-	error();
-	...
-}
-
-> 
->> +
->> +        ptr += n;
->> +        count -= n;
->> +    }
->> +
->> +    return ret;
->> +}
-> 
-> ...
-> 
-> 
->> +int
->> +create_data_and_holes(int fd, size_t nr_total_bytes, off_t start_offset,
->> +              uint64_t nr_skip_bytes, uint64_t nr_data_bytes,
->> +              int wrote_hole_at_eof)
->> +{
->> +    int ret = 0;
->> +    off_t total = nr_total_bytes;
->> +    off_t data_len = nr_data_bytes;
->> +    off_t off = start_offset;
->> +    char buf[4096];
->> +
->> +    memset(buf, 'A', sizeof(buf));
->> +
->> +    total -= start_offset;
->> +    while (total>  0) {
->> +        do {
-> 
-> You can actually write more than total byte on the last data write.
-> If writing exact total is important, then give do_pwrite() the count:
-> cnt = MIN(total, sizeof(buf))
-> 
->> +            ssize_t nr_write = do_pwrite(fd, buf, sizeof(buf), off);
->> +            if (nr_write<  0) {
->> +                error("do_pwrite() failed as %s", strerror(errno));
->> +                ret = -1;
->> +                goto out;
->> +            }
->> +            if (nr_write == 0)
->> +                break;
->> +
-> do_pwrite will return 0 if not an error.
-
-To simplify error checking, I'd like to change "ssize_t do_pwrite()" to
-"size_t full_pwrite()"; let it return the number of wrote bytes same as
-full_write(), and print out an error message if the return value is not
-equal to the desired(sizeof(buf)).
-
->> +            off += nr_write;
->>             data_len -= nr_write;
-> These are probably sizeof(buf0 or my cnt not nr_write
-
-With above modification, nr_write can be replaced by sizeof(buf).
-Ah, I just realized that I should use BUF_SIZE macro here.
-
->> +        } while (data_len>  0);
->> +
->> +        off += (nr_skip_bytes + nr_data_bytes);
->> +        total -= off;
-> 
-> ...
-> 
->> +
->> +/*
->> + * Copy a data extent from source file to dest file.
->> + * @data_off: data offset
->> + * @hole_off: hole offset
->> + * The length of this extent is (hole_off - data_off).
->> + */
->> +int
->> +do_extent_copy(int src_fd, int dest_fd, off_t data_off, off_t hole_off)
->> +{
->> +    uint64_t len = (uint64_t)(hole_off - data_off);
->> +    char buf[BUF_SIZE];
->> +    int ret;
->> +
->> +    /* Seek to data_off for data reading */
->> +    ret = lseek(src_fd, data_off, SEEK_SET);
->> +    if (ret<  0) {
->> +        error("seek source file to %llu failed as %s",
->> +               (uint64_t)data_off, strerror(errno));
->> +        return ret;
->> +    }
->> +
->> +    /* Seek to data_off for data writing, make holes as well */
->> +    ret = lseek(dest_fd, data_off, SEEK_SET);
->> +    if (ret<  0) {
->> +        error("seek dest file to %llu failed as %s",
->> +               (uint64_t)data_off, strerror(errno));
->> +        return ret;
->> +    }
->> +
->> +    while (len>  0) {
->> +        memset(buf, 0, sizeof(buf));
->> +        ssize_t n_read = read(src_fd, buf, BUF_SIZE);
->> +        if (n_read<  0) {
->> +            if (errno == EINTR)
->> +                continue;
->> +
->> +            error("read source file extent failed as %s",
->> +                  strerror(errno));   
->> +            return n_read;
->> +        }
->> +
->> +        if (n_read == 0)
->> +            break;
-> 
-> Message? Error?
-
-Hmm, not an error. maybe drop a message when read hit EOF is useful for
-debugging purpose.
+To: Brian Candler <B.Candler@pobox.com>
+Cc: xfs@oss.sgi.com
 
 
-Thanks,
--Jeff
+--VbJkn9YxBvnuCH5J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-> 
-> --Mark Tinguely
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+On Thu, Feb 02, 2012 at 11:52:11AM +0000, Brian Candler wrote:
+> Just a minor issue, but when I did some XFS tracing using the instructions
+> at http://lwn.net/Articles/341899/ I found that there was trailing garbage
+> in the filenames logged in xfs_lookup.  Example:
 
+> (where I think the real filename was "000000295aSl688"). I would guess the
+> logger is expecting null-terminated strings but they aren't.
+
+That's indeed the case.  See the attched patch to fix the issue.  To
+apply it against the 3.0 kernel you'll probably have to edit it to
+remove "linux-2.6/" directory in the filenames.
+
+
+--VbJkn9YxBvnuCH5J
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename=xfs-fix-filename-tracing
+
+From: Christoph Hellwig <hch@lst.de>
+Subject: xfs: trace xfs_name strings correctly 
+
+Strings store in an xfs_name structure are often not NUL terminated,
+print them using the correct printf specifiers that make use of the
+string length store in the xfs_name structure.
+
+Reported-by: Brian Candler <B.Candler@pobox.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Index: xfs/fs/xfs/xfs_trace.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_trace.h	2012-02-02 13:11:38.355063111 +0100
++++ xfs/fs/xfs/xfs_trace.h	2012-02-02 14:58:45.800242652 +0100
+@@ -627,16 +627,19 @@ DECLARE_EVENT_CLASS(xfs_namespace_class,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, dp_ino)
++		__field(int, namelen)
+ 		__dynamic_array(char, name, name->len)
+ 	),
+ 	TP_fast_assign(
+ 		__entry->dev = VFS_I(dp)->i_sb->s_dev;
+ 		__entry->dp_ino = dp->i_ino;
++		__entry->namelen = name->len;
+ 		memcpy(__get_str(name), name->name, name->len);
+ 	),
+-	TP_printk("dev %d:%d dp ino 0x%llx name %s",
++	TP_printk("dev %d:%d dp ino 0x%llx name %.*s",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->dp_ino,
++		  __entry->namelen,
+ 		  __get_str(name))
+ )
+ 
+@@ -658,6 +661,8 @@ TRACE_EVENT(xfs_rename,
+ 		__field(dev_t, dev)
+ 		__field(xfs_ino_t, src_dp_ino)
+ 		__field(xfs_ino_t, target_dp_ino)
++		__field(int, src_namelen)
++		__field(int, target_namelen)
+ 		__dynamic_array(char, src_name, src_name->len)
+ 		__dynamic_array(char, target_name, target_name->len)
+ 	),
+@@ -665,15 +670,20 @@ TRACE_EVENT(xfs_rename,
+ 		__entry->dev = VFS_I(src_dp)->i_sb->s_dev;
+ 		__entry->src_dp_ino = src_dp->i_ino;
+ 		__entry->target_dp_ino = target_dp->i_ino;
++		__entry->src_namelen = src_name->len;
++		__entry->target_namelen = target_name->len;
+ 		memcpy(__get_str(src_name), src_name->name, src_name->len);
+-		memcpy(__get_str(target_name), target_name->name, target_name->len);
++		memcpy(__get_str(target_name), target_name->name,
++			target_name->len);
+ 	),
+ 	TP_printk("dev %d:%d src dp ino 0x%llx target dp ino 0x%llx"
+-		  " src name %s target name %s",
++		  " src name %.*s target name %.*s",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  __entry->src_dp_ino,
+ 		  __entry->target_dp_ino,
++		  __entry->src_namelen,
+ 		  __get_str(src_name),
++		  __entry->target_namelen,
+ 		  __get_str(target_name))
+ )
+ 
+
+--VbJkn9YxBvnuCH5J
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--VbJkn9YxBvnuCH5J--
