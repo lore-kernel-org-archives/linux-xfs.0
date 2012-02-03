@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13LVRCo161603
-	for <linux-xfs@oss.sgi.com>; Fri, 3 Feb 2012 15:31:28 -0600
-Received: from crunch.scalableinformatics.com
-	(173-10-54-97-Michigan.hfc.comcastbusiness.net [173.10.54.97])
-	by cuda.sgi.com with ESMTP id U4GrtAuzY9xTosGc (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 03 Feb 2012 13:31:22 -0800 (PST)
-Message-ID: <4F2C5224.4080902@scalableinformatics.com>
-Date: Fri, 03 Feb 2012 16:31:16 -0500
-From: Joe Landman <landman@scalableinformatics.com>
+	q13MAIQx163808 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 16:10:19 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id GiDSC34qSTjVyXq8 for
+	<xfs@oss.sgi.com>; Fri, 03 Feb 2012 14:10:17 -0800 (PST)
+Date: Fri, 3 Feb 2012 22:10:15 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Performance problem - reads slower than writes
+Message-ID: <20120203221015.GA2675@nsrc.org>
+References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
+	<20120131103126.GA46170@nsrc.org>
+	<20120131145205.GA6607@infradead.org>
+	<20120203115434.GA649@nsrc.org> <4F2C38BE.2010002@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: A corruption that seems to span a few kernels
-References: <4F2C3D46.1010509@scalableinformatics.com>
-	<20120203212724.GA22100@infradead.org>
-In-Reply-To: <20120203212724.GA22100@infradead.org>
-Reply-To: landman@scalableinformatics.com
+Content-Disposition: inline
+In-Reply-To: <4F2C38BE.2010002@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +24,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 02/03/2012 04:27 PM, Christoph Hellwig wrote:
-> On Fri, Feb 03, 2012 at 03:02:14PM -0500, Joe Landman wrote:
->> XFS file system, built using a 2.6.32.41 kernel.  External journals.
->>
->> repair the file system, mount, turn on gluster (3.2.5), do a find,
->> and get a corruption.  Actually it looks like xfs_repair doesn't fix
->> the problem.
->>
->> Rinse repeat, reproduce.  Works (procedure to generate the
->> corruption) in 2.6.32.41.scalable, 2.6.39.1, 3.2.2
->
-> [PATCH v2] repair: update extent count after zapping duplicate blocks
->
-> which was sent to the list yesterday should make xfs_repair handle this
-> case.
->
-> How do you reproduce the corruption?  Just start gluster on a fresh fs
-> an do a find?  Any chance you could share command lines used?
+On Fri, Feb 03, 2012 at 01:42:54PM -0600, Stan Hoeppner wrote:
+> You've hit the peak read rate of these Hitachi drives.  As others
+> pointed out, if you need more read performance than the dozen of these
+> you plan to RAID stripe, then you'll need to swap them for units with a
+> faster spindle:
+> 
+> 7.2k 	 1.21x
+>  10k	 1.68x
+>  15k	 2.53x
+> 
+> or with SSDs, which will yield an order of magnitude increase.  Your
+> stated need is 20M 500-800KB files, or 20GB if my math is correct.
 
-It looks like the corruption was just never repaired by xfs_repair. I 
-just followed the notes here: 
-http://xfs.org/index.php/XFS_FAQ#Q:_How_to_get_around_a_bad_inode_repair_is_unable_to_clean_up 
-and got it operational again.  I first blockget -n -i ###  to figure out 
-the mapping and let the user know.
+Thanks for your suggestion, but unfortunately your maths isn't correct: 20M
+x 0.65MB = 13TB.  And that's just one of many possible datasets like this.
 
-I'll grab the patch and apply it.  If this comes up again, I'll report.
+I'm aware that I'm working with low-performance drives. This is intentional:
+we need low power consumption so we can get lots in a rack, and large
+capacity at low cost.
 
-To summarize, this was a corruption that xfs_repair didn't fix, so 
-fixing it by hand (and rerunning xfs_repair) did.
+Fortunately our workload will also parallelise easily, and throwing it
+across 24 spindles will be fine.  But obviously I want to squeeze the most
+performance out of each spindle we have first.  I'm very happy to have found
+the bottleneck that was troubling me :-)
 
-Thanks!
+Regards,
 
-Joe
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+Brian.
 
 _______________________________________________
 xfs mailing list
