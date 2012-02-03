@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q12MsKMH078578 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 16:54:20 -0600
-Received: from woodbine.london.02.net (woodbine.london.02.net
-	[87.194.255.145]) by cuda.sgi.com with ESMTP id
-	ulZzpyTl5EA9wWs2 for <xfs@oss.sgi.com>;
-	Thu, 02 Feb 2012 14:54:16 -0800 (PST)
-Received: from ty.sabi.co.UK (87.194.99.40) by woodbine.london.02.net (8.5.140)
-	id 4EEB647400D51A13 for xfs@oss.sgi.com; Thu, 2 Feb 2012 22:54:14 +0000
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1Rt5Xd-00024s-7v
-	for <xfs@oss.sgi.com>; Thu, 02 Feb 2012 22:54:09 +0000
-MIME-Version: 1.0
-Message-ID: <20267.5137.85650.499331@tree.ty.sabi.co.UK>
-Date: Thu, 2 Feb 2012 22:54:09 +0000
+	q131WxL4088299 for <xfs@oss.sgi.com>; Thu, 2 Feb 2012 19:33:00 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	1qQECYJP7HNms3zH for <xfs@oss.sgi.com>;
+	Thu, 02 Feb 2012 17:32:56 -0800 (PST)
+Date: Fri, 3 Feb 2012 12:32:53 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: File system remain unresponsive until the system is rebooted.
-In-Reply-To: <20265.9379.139218.148520@tree.ty.sabi.co.UK>
+Message-ID: <20120203013253.GB9090@dastard>
 References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
 	<20120131013124.GE9090@dastard>
 	<CANs4eSBgmvJCR7vfFa1W5h8tUYFQi=LRPWDPQ1exB29D1o_RjA@mail.gmail.com>
@@ -23,7 +17,10 @@ References: <CANs4eSBWLc4HxAbPZ8kOVOdJ7RKiA+-ai3Q2J+FAyuzHtUqfdg@mail.gmail.com>
 	<20120131205014.GM9090@dastard>
 	<4F288561.5040803@hardwarefreak.com>
 	<20265.9379.139218.148520@tree.ty.sabi.co.UK>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+	<20267.5137.85650.499331@tree.ty.sabi.co.UK>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20267.5137.85650.499331@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,202 +33,218 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-[ ... ]
+On Thu, Feb 02, 2012 at 10:54:09PM +0000, Peter Grandi wrote:
+> [ ... ]
+> =
 
->>>>> We are using Amazon EC2 instances.
+> >>>>> We are using Amazon EC2 instances.
+> =
 
->>>>> [ ... ]  one of the the worst possible platforms for XFS.
+> >>>>> [ ... ]  one of the the worst possible platforms for XFS.
+> =
 
->>>> I don't agree with you there. If the workload works best on
->>>> XFs, it doesn't matter what the underlying storage device
->>>> is.  e.g. if it's a fsync heavy workload, it will still
->>>> perform better on XFS on EC2 than btrfs on EC2...
+> >>>> I don't agree with you there. If the workload works best on
+> >>>> XFs, it doesn't matter what the underlying storage device
+> >>>> is.  e.g. if it's a fsync heavy workload, it will still
+> >>>> perform better on XFS on EC2 than btrfs on EC2...
+> =
 
->> There are special cases, but =ABfsync heavy=BB is a bit of bad
->> example.
+> >> There are special cases, but =ABfsync heavy=BB is a bit of bad
+> >> example.
+> =
 
-> It's actually a really good example of where XFS will be
-> better than other filesystems.
+> > It's actually a really good example of where XFS will be
+> > better than other filesystems.
+> =
 
-But this is better at being less bad. Because we are talking here
-about =ABfsync heavy=BB workloads on a VM, and these should not be
-run on a VM if performance matters. That's why I wrote about a
-=ABbad example=BB on which to discuss XFS for a VM.
+> But this is better at being less bad. Because we are talking here
+> about =ABfsync heavy=BB workloads on a VM, and these should not be
+> run on a VM if performance matters. That's why I wrote about a
+> =ABbad example=BB on which to discuss XFS for a VM.
 
-But even with =ABfsync heavy=BB workloads in general your argument is
-not exactly appropriate:
+Whether or not you should put a workload that does fsyncs in a VM is
+a completely different argument altogether. It's not a meaningful
+argument to make when we are talking about how filesystems deal with
+unpredictable storage latencies or what filesystem to use in a
+virtualised environment.
 
-> Why? Because XFS does less log IO due to aggregation of log
-> writes during concurrent fsyncs.
+> But even with =ABfsync heavy=BB workloads in general your argument is
+> not exactly appropriate:
+> =
 
-But =ABfsync heavy=BB does not necessarily means =ABconcurrent fsyncs=BB,
-for me it typically means logging or database apps where every
-'write' is 'fsync'ed, even if there is a single thread. But let's
-imagine for a moment we were talking about the special case where
-=ABfsync heavy=BB involves a high degree of concurrency.
+> > Why? Because XFS does less log IO due to aggregation of log
+> > writes during concurrent fsyncs.
+> =
 
-> The more latency there is on a log write, the more aggregation
-> that occurs.
+> But =ABfsync heavy=BB does not necessarily means =ABconcurrent fsyncs=BB,
+> for me it typically means logging or database apps where every
+> 'write' is 'fsync'ed, even if there is a single thread.
 
-This seems to describe hardcoding in XFS a decision to trade
-worse latency for better throughput, understandable as XFS was
-after all quite clearly aimed at high throughput (or isochronous
-throughput), rather than low latency (except for metadata, and
-that has been "fixed" with 'delaylog').
+Doesn't matter if there's concurrent fsyncs - XFS will aggregreate all
+transactions while there is one fsync or anything else that triggers
+log forces in progress. It's a generic solution to the "we're doing
+too many synchronous transactions really close together" problem.
 
-Unless you mean that if the latency is low, then aggregation does
-not take place, but then it is hard for me to see how that can be
-*predicted*. I am assuming that in the above you refer to:
+> But let's
+> imagine for a moment we were talking about the special case where
+> =ABfsync heavy=BB involves a high degree of concurrency.
+> =
 
-https://lwn.net/Articles/476267/
-  the XFS transaction subsystem is that most transactions are
-  asynchronous. That is, they don't commit to disk until either a
-  log buffer is filled (a log buffer can hold multiple transactions)
-  or a synchronous operation forces the log buffers holding the
-  transactions to disk. This means that XFS is doing aggregation of
-  transactions in memory - batching them, if you like - to minimise
-  the impact of the log IO on transaction throughput.
-http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Performan=
-ce_Tuning_Guide/ch07s04s02.html
-  The delaylog mount option also improves sustained metadata
-  modification performance by reducing the number of changes to the
-  log. It achieves this by aggregating individual changes in memory
-  before writing them to the log: frequently modified metadata is
-  written to the log periodically instead of on every modification.
-  This option increases the memory usage of tracking dirty metadata
-  and increases the potential lost operations when a crash occurs,
-  but can improve metadata modification speed and scalability by an
-  order of magnitude or more. Use of this option does not reduce
-  data or metadata integrity when fsync, fdatasync or sync are used
-  to ensure data and metadata is written to disk.
+> > The more latency there is on a log write, the more aggregation
+> > that occurs.
+> =
 
-BTW curious note in the latter:
+> This seems to describe hardcoding in XFS a decision to trade
+> worse latency for better throughput,
 
-  However, under fsync-heavy workloads, small log buffers can be
-  noticeably faster than large buffers with a large stripe unit
-  alignment.
+Except it doesn't. XFS's mechanism is well known to -minimise-
+journal latency without increasing individual or maximum latencies
+as load increases. This then translates directly into higher
+sustained throughputs because less time is spent by applications
+waiting for IO completions because there is less IO being done.
 
-> On a platform where the IO subsystem is going to give you
-> unpredictable IO latencies, that's exactly what want.
+Yes, you can trade off latency for throughput - that's easy to do -
+but a well designed system acheives high throughput by minimising
+the impact unavoidable latencies. That's what the XFS journal does.
+And quite frankly, it does't matter what the source of the latency
+is or whether it is unpredictable. If you can't avoid it, you have
+to design to minimise the impact.
 
-This then the argument that on platforms with bad latency that
-decision works still works well because then you might as well go
-for throughput.
+> understandable as XFS was
+> after all quite clearly aimed at high throughput (or isochronous
+> throughput), rather than low latency (except for metadata, and
+> that has been "fixed" with 'delaylog').
 
-But if someone really aims to run some kind of =ABfsync heavy=BB
-workload on a high-latency and highly-variable latency VM,
-usually their aim is to *minimize* the additional latency the
-filesystem imposes, because =ABfsync heavy=BB workloads tend to be
-transactional, and persisting data without delay is part of their
-goal.
+I like how you say "fixed" in a way that implies you don't beleive
+that it is fixed...
 
-> Sure, it was designed to optimise spinning rust performance,
-> but that same design is also optimal for virtual devices with
-> unpredictable IO latency...
+> Unless you mean that if the latency is low, then aggregation does
+> not take place,
 
-Ahhhh, now the =ABbad example=BB has become a worse one :-).
+That's exactly what I'm saying.
 
-The argument you are making here is one for crass layering
-violation: that the filesystem code should embed storage-layer
-specific optimizations within it, and then one might get lucky
-with other storage layers of similar profile. Tsk tsk :-). At
-least it is not as breathtakingly inane as putting plug/unplug
-block io subsystem.
+> but then it is hard for me to see how that can be
+> *predicted*.
 
-But even on spinning rust, and on real host, and even forgiving
-the layering violation, I question the aim to get better
-throughput at the expense of worse latency for =ABfsync heavy=BB
-loads, and even for the type of workloads for which this tradeoff
-is good.
+That's because it doesn't need to be predicted.  We *know* if a
+journal write is currently in progress or not and we can wait on it
+to complete. It doesn't matter how long it takes to complete - if it
+is instantenous, then aggregation does not occur simply due to the
+very short wait time.  If the IO takes a long time to complete, then
+lots of aggregation of transaction commits will occur before we
+submit the next IO.
 
-Because *my* argument is that how often 'fsync' "happens" should
-be a decision by the application programmer; if they want higher
-throughput at the cost of higher latency, they should issue it
-less frequently, as 'fsync' should be executed with as low a
-latency as possible.
+Smarter people than me designed this stuff - I've just learnt from
+what they've done and built on top of it....
 
-Your underlying argument for XFS and its handling of =ABfsync
-heavy=BB workloads (and it is the same argument for 'delaylog' I
-guess) seems to me that applications issue 'fsync' too often, and
-thus we can briefly hold them back to bunch them up, and people
-like the extra throughput more than they dislike the extra latency.
+> I am assuming that in the above you refer to:
+> =
 
-Which reminds me of a discussions I had some time ago with some
-misguided person who argued that 'fsync' and Linux barriers only
-require ordering constraints, and don't imply any actual writing
-to persistent storage, or within any specific timeframe, where
-instead I was persuaded that their main purpose (no matter what
-POSIX says :->) is to commit to persistent storage as quickly as
+> https://lwn.net/Articles/476267/
+
+Documentation/filesystems/xfs-delayed-logging-design.txt is a better
+reference to use.
+
+> the XFS transaction subsystem is
+> that most transactions are asynchronous. That is, they don't
+> commit to disk until either a log buffer is filled (a log buffer
+> can hold multiple transactions) or a synchronous operation forces
+> the log buffers holding the transactions to disk. This means that
+> XFS is doing aggregation of transactions in memory - batching
+> them, if you like - to minimise the impact of the log IO on
+> transaction throughput.
+
+That's part of it. This describes the pre-delaylog method of
+aggregation, but even delaylog relies on this mechanism because
+checkpoints are a journalled transaction just like all transactions
+were pre-delaylog.
+
+The point about fsync is that it is just an asynchronous transaction
+as well. It is made synchronous by then pushing the log buffer to
+disk. But it will only do that immeidately if the previous log
+buffer is idle. If the previous log buffer is under IO, then it will
+wait to start the IO on the current log buffer, allowing further
+aggregation to occur.
+
+> BTW curious note in the latter:
+> =
+
+>   However, under fsync-heavy workloads, small log buffers can be
+>   noticeably faster than large buffers with a large stripe unit
+>   alignment.
+
+Because setting a log stripe unit (LSU) mean the size of the log IO is
+padded. A 32k LSU means the minimum log IO size is 32k, while an
+fsync transaciton is usually only a couple of hundred bytes. Without
+an LSU, than means a solitary fsync transaction being written to disk
+will be 512 bytes vs 32kB with a LSU and that means the non LSU-log will
+complete IO faster. Same goes for LSU=3D32k vs LSU=3D256k.
+
+> > On a platform where the IO subsystem is going to give you
+> > unpredictable IO latencies, that's exactly what want.
+> =
+
+> This then the argument that on platforms with bad latency that
+> decision works still works well because then you might as well go
+> for throughput.
+
+If one fsync takes X, and you can make 10 concurrent fsyncs take X,
+why wouldn't you optimise to enable the latter case? It doesn't
+matter if X is 10us, 1ms or even 1s - having an algorithm that works
+independently of the magnitude of the storage latency will result in
+good throughput no matter the storage characteristics. That's what
+users want - something that just works without needing to tweak it
+differently to perform optimally on all their different systems...
+
+> But if someone really aims to run some kind of =ABfsync heavy=BB
+> workload on a high-latency and highly-variable latency VM, usually
+> their aim is to *minimize* the additional latency the filesystem
+> imposes, because =ABfsync heavy=BB workloads tend to be transactional,
+> and persisting data without delay is part of their goal.
+
+I still don't understand what part of "use XFS for this workload"
+you are saying is wrong?
+
+> > Sure, it was designed to optimise spinning rust performance, but
+> > that same design is also optimal for virtual devices with
+> > unpredictable IO latency...
+> =
+
+> Ahhhh, now the =ABbad example=BB has become a worse one :-).
+> =
+
+> The argument you are making here is one for crass layering
+> violation: that the filesystem code should embed storage-layer
+> specific optimizations within it, and then one might get lucky
+> with other storage layers of similar profile. Tsk tsk :-). At
+> least it is not as breathtakingly inane as putting plug/unplug
+> block io subsystem.
+
+Filesystems are nothing but a dense concentration algorithms that
+are optimal for as wide a range of known storage behaviours as
 possible.
 
-It looks like that XFS has gone more the way of something like
-his position, because admittedly in practice keeping commits a
-bit looser does deliver better throughput (hints of O_PONIES
-here).
+> XFS comes close, like JFS and OCFS2, but it does have, as you have
+> pointed out above, workload-specific (which can turn into
+> storage-friendly) tradeoffs. And since Red Hat's acquisition of
+> GlusterFS I guess (or at least I hope) that XFS will be even more
+> central to their strategy.
 
-But again, that's not what should be happening. Perhaps POSIX
-should have provided :-) two barrier operations, a purely
-ordering one, and a commit-now one. And application writers would
-use them at the right times. And ponies for everybody :-).
+http://docs.redhat.com/docs/en-US/Red_Hat_Storage_Software_Appliance/3.2/ht=
+ml-single/User_Guide/index.html#sect-User_Guide-gssa_prepare-chec_min_req
 
->> In general file system designs are not at all independent of
->> the expected storage platform, and some designs are far better
->> than others for specific storage platforms, and viceversa.
+"File System Requirements
 
-> Sure, but filesystems also have inherent capabilities that are
-> independent of the underlying storage.
+Red Hat recommends XFS when formatting the disk sub-system. ..."
 
-But the example you make is not a =ABcapability=BB, it is the
-hardcoded assumption that it is better to trade worse latency for
-better throughput, which only makes sense for workloads that
-don't want tight latency, or else storage layers that don't
-support it.
 
-> In these cases, the underlying storage really doesn't matter if
-> the filesystem can't do what the application needs.  Allocation
-> parallelism, CPU parallelism, minimal concurrent fsync latency,
+-- =
 
-But you seemed to be describing above that XFS good at "maximal
-concurrent fsync throughput" by disregarding =ABminimal concurrent
-fsync latency=BB (as in =ABless log IO due to aggregation of log
-writes during concurrent fsyncs. The more latency there is on a
-log write, the more aggregation=BB).
-
-> etc are all characteristics of filesystems that are independent
-> of the underlying storage.
-
-Ahhhh, but this is a totally different argument from embedding
-specific latency/throughput tradeoffs in the storage layer.
-
-This is an argument that a well designed filesystem that does
-have bottlenecks on any aspect of the performance envelope is a
-good general purpose one. Well, you can try to design one :-).
-
-XFS comes close, like JFS and OCFS2, but it does have, as you
-have pointed out above, workload-specific (which can turn into
-storage-friendly) tradeoffs. And since Red Hat's acquisition of
-GlusterFS I guess (or at least I hope) that XFS will be even more
-central to their strategy.
-
-BTW as to that, did a brief search and found this amusing
-article, yet another proof that reality surpasses imagination:
-
-  http://bioteam.net/2010/07/playing-with-nfs-glusterfs-on-amazon-cc1-4xlar=
-ge-ec2-instance-types/
-
-Ah I was totally unaware of the AWS Compute Cluster service.
-
-> If you need those characteristics in your remotely hosted VMs,
-> then XFS is what you want regardless of how much storage
-> capability you buy for those VMs....
-
-Possibly, but from also a practical viewpoint that is again a
-moderately bizarre argument, because workloads requiring high
-levels of =ABAllocation parallelism, CPU parallelism, minimal
-concurrent fsync latency=BB beg to be run on an Altix, or similar,
-not on a bunch of random EC2 shared hosts running Xen VMs.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
