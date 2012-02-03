@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13HGqRf147519 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 11:16:53 -0600
-Date: Fri, 3 Feb 2012 11:16:53 -0600
+	q13H23MI145398 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 11:02:03 -0600
+Date: Fri, 3 Feb 2012 11:02:05 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC PATCH 4/4] Define new macro XFS_ALL_QUOTA_ACTIVE and
-	simply some usage
-Message-ID: <20120203171653.GK13095@sgi.com>
+Subject: Re: [RFC PATCH 3/4] Change xfs_sb_from_disk() interface to take a
+	mount pointer
+Message-ID: <20120203170205.GJ13095@sgi.com>
 References: <20120123173118.31546.3353.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173143.31546.29558.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120123173137.31546.33777.sendpatchset@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120123173143.31546.29558.sendpatchset@chandra-lucid.austin.ibm.com>
+In-Reply-To: <20120123173137.31546.33777.sendpatchset@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,13 +27,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 23, 2012 at 11:31:43AM -0600, Chandra Seetharaman wrote:
-> Define new macro XFS_ALL_QUOTA_ACTIVE and simply some usage
-> of quota macros.
+On Mon, Jan 23, 2012 at 11:31:37AM -0600, Chandra Seetharaman wrote:
+> Change xfs_sb_from_disk() interface to take a mount pointer
+> instead of a superblock pointer.
+> 
+> This is to print mount point specific error messages in future
+> fixes.
 > 
 > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Looks good.
+Looking good!
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
