@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13GLWtZ141092 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 10:21:32 -0600
-Date: Fri, 3 Feb 2012 10:21:34 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC PATCH 2/4] Define a new function xfs_inode_dquot()
-Message-ID: <20120203162134.GI13095@sgi.com>
-References: <20120123173118.31546.3353.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173130.31546.80744.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120124174850.GE9853@infradead.org>
-	<1327434096.2213.18.camel@chandra-lucid.austin.ibm.com>
+	q13GAkVq140299 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 10:10:47 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zGZbP8N92wymCmyD for
+	<xfs@oss.sgi.com>; Fri, 03 Feb 2012 08:10:45 -0800 (PST)
+Message-ID: <4F2C0700.2030306@redhat.com>
+Date: Fri, 03 Feb 2012 10:10:40 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1327434096.2213.18.camel@chandra-lucid.austin.ibm.com>
+Subject: Re: [PATCH] xfs_io: deprecate the "-F" foreign flag
+References: <4F2AC948.1050909@redhat.com>
+	<20120203150443.GA28301@infradead.org>
+In-Reply-To: <20120203150443.GA28301@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,46 +25,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hey Chandra,
-
-On Tue, Jan 24, 2012 at 01:41:36PM -0600, Chandra Seetharaman wrote:
-> On Tue, 2012-01-24 at 12:48 -0500, Christoph Hellwig wrote:
-> > On Mon, Jan 23, 2012 at 11:31:30AM -0600, Chandra Seetharaman wrote:
-> > > Define a new function xfs_inode_dquot() that takes a inode pointer
-> > > and a disk quota type and returns the quota pointer for the specified
-> > > quota type.
-> > > 
-> > > This simplifies the xfs_qm_dqget() error path significantly.
-> > 
-> > Looks good,
-> > 
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> >
-> > > +static inline xfs_dquot_t *xfs_inode_dquot(struct xfs_inode *ip, int type)
-> > > +{
-> > > +	type &= XFS_DQ_ALLTYPES;
-> > > +	switch(type) {
-> > 
-> > Same style nitpick as for the last patch.
-> > 
-> > Btw, instead of masking out XFS_DQ_ALLTYPES first this would be more
-> > readable as:
-> > 
-> > 	switch (type & XFS_DQ_ALLTYPES) {
-> > 
-> > (that also applies to the previous patch).
-> > 
+On 2/3/12 9:04 AM, Christoph Hellwig wrote:
+> On Thu, Feb 02, 2012 at 11:35:04AM -0600, Eric Sandeen wrote:
+>> There's no real reason to force the user to specify "-F" for non-xfs
+>> files, when we can just test for that after it's opened.
+>>
+>> * Remove the -F flag from usage() & man pages, but still accept it.
+>> * Set IO_FOREIGN when we open the file, if the fd tests as non-xfs.
 > 
-> Will fix both of these in the next version.
+> Looks good. We probably should kill the IO_FOREIGN eventually too, but
+> let's do the user facing part first.
 
-I'll fix them up.  No need to post again.  I also twiddled the order of
-USER/GROUP/PROJ in xfs_inode_dquot to match xfs_this_quota_on.
+How would you want to handle non-xfs filesystems in the xfs-specific
+commands?  Do the fd test each time?
+ 
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-Looks good.
-Reviewed-by: Ben Myers <bpm@sgi.com>
+
+Thanks, I'll merge it.
 
 _______________________________________________
 xfs mailing list
