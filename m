@@ -1,29 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13Ee7tR136366
-	for <linux-xfs@oss.sgi.com>; Fri, 3 Feb 2012 08:40:08 -0600
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id g97GYmnBk0eswsAV (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Fri, 03 Feb 2012 06:40:05 -0800 (PST)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RtKJ1-0001rM-Eb
-	for linux-xfs@oss.sgi.com; Fri, 03 Feb 2012 15:40:04 +0100
-Received: from bd206cc2.virtua.com.br ([bd206cc2.virtua.com.br])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 03 Feb 2012 15:40:03 +0100
-Received: from marcosfrm by bd206cc2.virtua.com.br with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Fri, 03 Feb 2012 15:40:03 +0100
-From: Marcos Mello <marcosfrm@gmail.com>
-Subject: Re: Placing the root partition on an XFS filesystem is not supported
-Date: Fri, 3 Feb 2012 14:39:55 +0000 (UTC)
-Message-ID: <loom.20120203T152753-631@post.gmane.org>
-References: <loom.20120129T133929-288@post.gmane.org>
-	<4F2B02C4.8070903@sandeen.net>
-Mime-Version: 1.0
+	q13FJvMT138221 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 09:19:57 -0600
+Date: Fri, 3 Feb 2012 09:19:58 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [RFC PATCH 1/4] Define a new function xfs_this_quota_on()
+Message-ID: <20120203151958.GH13095@sgi.com>
+References: <20120123173118.31546.3353.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120123173125.31546.2342.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120124174712.GD9853@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120124174712.GD9853@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,26 +24,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-Eric Sandeen <sandeen <at> sandeen.net> writes:
-
+On Tue, Jan 24, 2012 at 12:47:12PM -0500, Christoph Hellwig wrote:
+> On Mon, Jan 23, 2012 at 11:31:25AM -0600, Chandra Seetharaman wrote:
+> > Create a new function xfs_this_quota_on() that takes a xfs_mount
+> > data srtucture and a disk quota type and returns true if the specified
+> > type of quota is ON in the xfs_mount data structure.
+> > 
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 > 
-> In general there is no problem with xfs on a root partition.  However, the
-installer
-> may not make it easy or available for you.
+> Looks good except for a tiny style nitpick.
 > 
-> (I never use xfs for /boot though, I don't trust grub enough for that
-honestly).
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> -Eric
+> > +	switch(type) {
+> 
+> This should have a whitespace after the opening brace.
 
-Same thing on Fedora 16. Let's hope some day Anaconda will change that.
+I've added the space.
 
-About GRUB with a XFS /boot the problem was with GRUB Lagacy, wasn't it?
-Or GRUB2 is still buggy?
+This patch looks good.
 
-Marcos
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
