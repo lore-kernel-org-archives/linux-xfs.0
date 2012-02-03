@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13GAkVq140299 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 10:10:47 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zGZbP8N92wymCmyD for
-	<xfs@oss.sgi.com>; Fri, 03 Feb 2012 08:10:45 -0800 (PST)
-Message-ID: <4F2C0700.2030306@redhat.com>
-Date: Fri, 03 Feb 2012 10:10:40 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	q13HGqRf147519 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 11:16:53 -0600
+Date: Fri, 3 Feb 2012 11:16:53 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [RFC PATCH 4/4] Define new macro XFS_ALL_QUOTA_ACTIVE and
+	simply some usage
+Message-ID: <20120203171653.GK13095@sgi.com>
+References: <20120123173118.31546.3353.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120123173143.31546.29558.sendpatchset@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: deprecate the "-F" foreign flag
-References: <4F2AC948.1050909@redhat.com>
-	<20120203150443.GA28301@infradead.org>
-In-Reply-To: <20120203150443.GA28301@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20120123173143.31546.29558.sendpatchset@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,28 +24,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: xfs@oss.sgi.com
 
-On 2/3/12 9:04 AM, Christoph Hellwig wrote:
-> On Thu, Feb 02, 2012 at 11:35:04AM -0600, Eric Sandeen wrote:
->> There's no real reason to force the user to specify "-F" for non-xfs
->> files, when we can just test for that after it's opened.
->>
->> * Remove the -F flag from usage() & man pages, but still accept it.
->> * Set IO_FOREIGN when we open the file, if the fd tests as non-xfs.
+On Mon, Jan 23, 2012 at 11:31:43AM -0600, Chandra Seetharaman wrote:
+> Define new macro XFS_ALL_QUOTA_ACTIVE and simply some usage
+> of quota macros.
 > 
-> Looks good. We probably should kill the IO_FOREIGN eventually too, but
-> let's do the user facing part first.
+> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 
-How would you want to handle non-xfs filesystems in the xfs-specific
-commands?  Do the fd test each time?
- 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-
-Thanks, I'll merge it.
+Looks good.
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
