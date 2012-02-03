@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13K2Ro5157161
-	for <linux-xfs@oss.sgi.com>; Fri, 3 Feb 2012 14:02:31 -0600
-Received: from crunch.scalableinformatics.com
-	(173-10-54-97-Michigan.hfc.comcastbusiness.net [173.10.54.97])
-	by cuda.sgi.com with ESMTP id GhmCFlrEtacJBaiU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 03 Feb 2012 12:02:20 -0800 (PST)
-Received: from crunch.scalableinformatics.com (localhost [127.0.0.1])
-	by crunch.scalableinformatics.com (Postfix) with ESMTP id 8245980ABED3
-	for <linux-xfs@oss.sgi.com>; Fri,  3 Feb 2012 15:02:22 -0500 (EST)
-Received: from [192.168.5.53] (eng [70.88.96.213])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by crunch.scalableinformatics.com (Postfix) with ESMTPSA id
-	54928805A118
-	for <linux-xfs@oss.sgi.com>; Fri,  3 Feb 2012 15:02:22 -0500 (EST)
-Message-ID: <4F2C3D46.1010509@scalableinformatics.com>
-Date: Fri, 03 Feb 2012 15:02:14 -0500
-From: Joe Landman <landman@scalableinformatics.com>
+	q13L1LOE160207 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 15:01:21 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id IzTjCnr06MBwnYCE for
+	<xfs@oss.sgi.com>; Fri, 03 Feb 2012 13:01:19 -0800 (PST)
+Date: Fri, 3 Feb 2012 21:01:14 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Performance problem - reads slower than writes
+Message-ID: <20120203210114.GD2479@nsrc.org>
+References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
+	<20120131103126.GA46170@nsrc.org> <20120131141604.GB46571@nsrc.org>
+	<20120131202526.GJ9090@dastard> <20120203184723.GA2261@nsrc.org>
+	<20120203190304.GA11809@infradead.org>
 MIME-Version: 1.0
-Subject: A corruption that seems to span a few kernels
-Reply-To: landman@scalableinformatics.com
+Content-Disposition: inline
+In-Reply-To: <20120203190304.GA11809@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,943 +24,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-XFS file system, built using a 2.6.32.41 kernel.  External journals.
+On Fri, Feb 03, 2012 at 02:03:04PM -0500, Christoph Hellwig wrote:
+> > With defaults, the files in one directory are spread all over the
+> > filesystem.  But with -i size=1024, the files in a directory are stored
+> > adjacent to each other. Hence reading all the files in one directory
+> > requires far less seeking across the disk, and runs about 3 times faster.
+> 
+> Not sure if you mentioned it somewhere before, but:
+> 
+>  a) how large is the filesystem?
 
-repair the file system, mount, turn on gluster (3.2.5), do a find, and 
-get a corruption.  Actually it looks like xfs_repair doesn't fix the 
-problem.
+3TB.
 
-Rinse repeat, reproduce.  Works (procedure to generate the corruption) 
-in 2.6.32.41.scalable, 2.6.39.1, 3.2.2
+>  b) do use the inode64 mount option
 
-[  428.457044] XFS (sdc2): corrupt dinode 54105173, extent total = 1, 
-nblocks = 0.
-[  428.464596] ffff880bde999500: 49 4e 81 a4 01 02 00 01 00 00 04 65 00 
-00 07 df  IN.........e....
-[  428.473587] XFS (sdc2): Internal error xfs_iformat(1) at line 319 of 
-file fs/xfs/xfs_inode.c.  Caller 0xffffffff8127b738
-[  428.473589]
-[  428.486388] Pid: 7562, comm: glusterfsd Not tainted 3.2.2.scalable #1
-[  428.493014] Call Trace:
-[  428.495544]  [<ffffffff812361aa>] xfs_error_report+0x3a/0x40
-[  428.501391]  [<ffffffff8127b738>] ? xfs_iread+0x118/0x1a0
-[  428.506894]  [<ffffffff81236208>] xfs_corruption_error+0x58/0x80
-[  428.513027]  [<ffffffff8127b4b1>] xfs_iformat+0x401/0x570
-[  428.518491]  [<ffffffff8127b738>] ? xfs_iread+0x118/0x1a0
-[  428.524003]  [<ffffffff8127b738>] xfs_iread+0x118/0x1a0
-[  428.529292]  [<ffffffff8123aba3>] xfs_iget+0x2d3/0x8b0
-[  428.534537]  [<ffffffff8123a252>] ? xfs_iunlock+0x92/0x130
-[  428.540122]  [<ffffffff81246c68>] xfs_lookup+0xb8/0x140
-[  428.545413]  [<ffffffff8123fc59>] xfs_vn_lookup+0x59/0xa0
-[  428.550922]  [<ffffffff8113f545>] ? d_alloc+0x75/0x90
-[  428.556034]  [<ffffffff81134d14>] d_alloc_and_lookup+0x44/0x80
-[  428.561976]  [<ffffffff81135213>] do_lookup+0x243/0x350
-[  428.567326]  [<ffffffff8113867a>] path_lookupat+0xea/0x740
-[  428.572942]  [<ffffffff8124fea2>] ? xfs_attr_get+0xb2/0xc0
-[  428.578489]  [<ffffffff81138d00>] do_path_lookup+0x30/0xc0
-[  428.584089]  [<ffffffff81139974>] user_path_at_empty+0x54/0xa0
-[  428.589984]  [<ffffffff8111cf42>] ? kmem_cache_free+0x22/0x120
-[  428.595932]  [<ffffffff81137901>] ? putname+0x31/0x50
-[  428.601091]  [<ffffffff8113997f>] ? user_path_at_empty+0x5f/0xa0
-[  428.607190]  [<ffffffff811399cc>] user_path_at+0xc/0x10
-[  428.612586]  [<ffffffff8112ef46>] vfs_fstatat+0x46/0x80
-[  428.617868]  [<ffffffff8112efe9>] vfs_lstat+0x19/0x20
-[  428.623068]  [<ffffffff8112f00f>] sys_newlstat+0x1f/0x50
-[  428.628626]  [<ffffffff8109e2bd>] ? audit_syscall_entry+0x16d/0x1d0
-[  428.635009]  [<ffffffff8153f752>] system_call_fastpath+0x16/0x1b
-[  428.641352] XFS (sdc2): Corruption detected. Unmount and run xfs_repair
+No: the only mount options I've given are noatime,nodiratime.
 
-[root@jr4-3 ~]# /etc/init.d/glusterd stop
-Stopping glusterd:                                         [  OK  ]
-[root@jr4-3 ~]# umount /data/brick-sdc2
-[root@jr4-3 ~]# nohup xfs_repair -vvv -l /dev/md1 /dev/sdc2 > 
-/tmp/out2.sdc 2>&1 &
-[1] 7689
+>  c) can you see the same good behaviour when using inode64 and small
+>     inodes (not that inode64 can NOT be set using remount)
 
-xfs_repair runs.  File system becomes normal.  Can reboot or remain in 
-the same system.  Select any of the kernels.  Mount the file system.
+I created a fresh filesystem (/dev/sdh), default parameters, but mounted it
+with inode64.  Then I tar'd across my corpus of 100K files.  Result: files
+are located close to the directories they belong to, and read performance
+zooms.
 
-I haven't checked whether this only happens with Gluster yet or not, 
-working on it next ... will do the find w/o gluster on the backing 
-store.  See if it croaks.
+So I conclude that XFS *does* try to keep file extents close to the
+enclosing directory, but was being thwarted by the limitations of 32-bit
+inodes.
 
-Currently booted into 3.2.2, can boot into something else.
+There is a comment "performance sucks" at:
+http://xfs.org/index.php/XFS_FAQ#Q:_What_is_the_inode64_mount_option_for.3F
 
-Any hints?  I can reproduce it quite well, and xfs_repair seems to work 
-... (repeated passes don't seem to help).
+However, there it talks about files [extents?] being located close to their
+inodes, rather than file extents being located close to their parent
+directory.
 
-[root@jr4-3 ~]# grep "corrupt dinode 54105173" /var/log/messages
-Feb  2 23:08:46 jr4-3 kernel: [ 1548.511502] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  2 23:13:32 jr4-3 kernel: [ 1834.627251] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  2 23:37:44 jr4-3 kernel: [ 3286.598877] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 00:07:43 jr4-3 kernel: [ 5085.429344] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 00:37:44 jr4-3 kernel: [ 6886.552328] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 01:07:43 jr4-3 kernel: [ 8686.384728] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 01:37:47 jr4-3 kernel: [10490.113301] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 02:07:46 jr4-3 kernel: [12289.248980] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 02:37:43 jr4-3 kernel: [14086.210521] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 03:07:45 jr4-3 kernel: [15888.798065] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 03:37:43 jr4-3 kernel: [17686.388882] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 04:04:06 jr4-3 kernel: [19269.902522] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 04:08:04 jr4-3 kernel: [19507.447343] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 04:38:11 jr4-3 kernel: [21314.248443] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 05:07:43 jr4-3 kernel: [23086.714157] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 05:37:43 jr4-3 kernel: [24886.444238] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 06:07:43 jr4-3 kernel: [26686.740589] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 06:37:45 jr4-3 kernel: [28488.946147] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 07:07:42 jr4-3 kernel: [30286.417803] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 07:37:42 jr4-3 kernel: [32085.847705] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 08:08:01 jr4-3 kernel: [33904.979795] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 08:37:46 jr4-3 kernel: [35690.043019] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 08:47:19 jr4-3 kernel: [36263.597170] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 09:07:42 jr4-3 kernel: [37486.293617] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 09:37:42 jr4-3 kernel: [39285.987621] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 10:07:42 jr4-3 kernel: [41086.440845] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 10:37:55 jr4-3 kernel: [42899.537075] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 11:08:24 jr4-3 kernel: [  988.628970] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 13:08:20 jr4-3 kernel: [ 2531.085884] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 13:10:13 jr4-3 kernel: [ 2643.954262] Filesystem "sdc2": corrupt 
-dinode 54105173, extent total = 1, nblocks = 0.  Unmount and run xfs_repair.
-Feb  3 08:38:20 jr4-3 kernel: [  428.457044] XFS (sdc2): corrupt dinode 
-54105173, extent total = 1, nblocks = 0.
+Regards,
+
+Brian.
 
 
-Any clues/hints/suggestions?  Zero out that dinode (and if so, how?) 
-Let me know if you want any additional information from this system.
-
-Its a large RAID6, with battery backed ECC cache.  No disk events reported.
-
-This appeared after finishing the xfs_repair
-
-[root@jr4-3 ~]# [ 1102.898890] scsi_verify_blk_ioctl: 56 callbacks 
-suppressed
-[ 1102.904486] xfs_repair: sending ioctl 1261 to a partition!
-[ 1102.910286] xfs_repair: sending ioctl 1261 to a partition!
-
-
-Output from xfs_repair below.  Notes are in phase 3 and 4
-
-phase 3:
-data fork in regular inode 54105173 claims used block 6745835296
-
-phase 4:
-data fork in regular inode 54105173 claims used block 6745835296
-
-xfs_repair doesn't seem to fix this, as a second pass through still 
-indicates a problem.
-
-First pass:
-
-[root@jr4-3 ~]# cat !$
-cat /tmp/out2.sdc
-Phase 1 - find and verify superblock...
-         - max_mem = 37094007, icount = 5448960, imem = 21285, dblock = 
-4391112384, dmem = 2144097
-         - block cache size set to 4359824 entries
-Phase 2 - using external log on /dev/md1
-         - zero log...
-zero_log: head block 48836 tail block 48836
-         - scan filesystem freespace and inode maps...
-         - found root inode chunk
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 3278
-Active entries = 3278
-Hash table size = 544978
-Hits = 0
-Misses = 3278
-Hit ratio =  0.00
-MRU 0 entries =   3278 (100%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      0 (  0%)
-MRU 4 entries =      0 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =      0 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      0 (  0%)
-MRU 12 entries =      0 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 541912 (  0%)
-Hash buckets with   1 entries   2903 ( 88%)
-Hash buckets with   2 entries    129 (  7%)
-Hash buckets with   3 entries     21 (  1%)
-Hash buckets with   4 entries     11 (  1%)
-Hash buckets with   5 entries      2 (  0%)
-Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
-         - process known inodes and perform inode discovery...
-         - agno = 0
-data fork in regular inode 54105173 claims used block 6745835296
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - process newly discovered inodes...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052814
-Active entries = 1052814
-Hash table size = 544978
-Hits = 302945
-Misses = 1052814
-Hit ratio = 22.35
-MRU 0 entries = 851716 ( 80%)
-MRU 1 entries =   6724 (  0%)
-MRU 2 entries =  68352 (  6%)
-MRU 3 entries = 108276 ( 10%)
-MRU 4 entries =   5278 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =  12339 (  1%)
-MRU 7 entries =     16 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      3 (  0%)
-MRU 12 entries =    110 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206656 (  0%)
-Hash buckets with   1 entries  86130 (  8%)
-Hash buckets with   2 entries  71589 ( 13%)
-Hash buckets with   3 entries  20312 (  5%)
-Hash buckets with   4 entries  99262 ( 37%)
-Hash buckets with   5 entries  25665 ( 12%)
-Hash buckets with   6 entries  21611 ( 12%)
-Hash buckets with   7 entries   3104 (  2%)
-Hash buckets with   8 entries  10077 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 4 - check for duplicate blocks...
-         - setting up duplicate extent list...
-         - check for inodes claiming duplicate blocks...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 14
-         - agno = 15
-         - agno = 18
-         - agno = 16
-         - agno = 20
-         - agno = 22
-         - agno = 19
-         - agno = 25
-         - agno = 26
-         - agno = 21
-         - agno = 29
-         - agno = 24
-         - agno = 31
-         - agno = 17
-         - agno = 27
-         - agno = 28
-         - agno = 23
-         - agno = 30
-         - agno = 13
-data fork in regular inode 54105173 claims used block 6745835296
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052814
-Active entries = 1052814
-Hash table size = 544978
-Hits = 646498
-Misses = 1052814
-Hit ratio = 38.04
-MRU 0 entries = 1052701 ( 99%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      0 (  0%)
-MRU 4 entries =      0 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =      0 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      3 (  0%)
-MRU 12 entries =    110 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206656 (  0%)
-Hash buckets with   1 entries  86130 (  8%)
-Hash buckets with   2 entries  71589 ( 13%)
-Hash buckets with   3 entries  20312 (  5%)
-Hash buckets with   4 entries  99262 ( 37%)
-Hash buckets with   5 entries  25665 ( 12%)
-Hash buckets with   6 entries  21611 ( 12%)
-Hash buckets with   7 entries   3104 (  2%)
-Hash buckets with   8 entries  10077 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 5 - rebuild AG headers and trees...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - reset superblock...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052814
-Active entries = 1052814
-Hash table size = 544978
-Hits = 649707
-Misses = 1052814
-Hit ratio = 38.16
-MRU 0 entries = 1052701 ( 99%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      0 (  0%)
-MRU 4 entries =      0 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =      0 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      3 (  0%)
-MRU 12 entries =    110 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206656 (  0%)
-Hash buckets with   1 entries  86130 (  8%)
-Hash buckets with   2 entries  71589 ( 13%)
-Hash buckets with   3 entries  20312 (  5%)
-Hash buckets with   4 entries  99262 ( 37%)
-Hash buckets with   5 entries  25665 ( 12%)
-Hash buckets with   6 entries  21611 ( 12%)
-Hash buckets with   7 entries   3104 (  2%)
-Hash buckets with   8 entries  10077 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 6 - check inode connectivity...
-         - resetting contents of realtime bitmap and summary inodes
-         - traversing filesystem ...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - traversal finished ...
-         - moving disconnected inodes to lost+found ...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052845
-Active entries = 1052845
-Hash table size = 544978
-Hits = 1854913
-Misses = 1052845
-Hit ratio = 63.79
-MRU 0 entries = 1016092 ( 96%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      3 (  0%)
-MRU 4 entries =    141 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =  11363 (  1%)
-MRU 8 entries =  25246 (  2%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      0 (  0%)
-MRU 12 entries =      0 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206646 (  0%)
-Hash buckets with   1 entries  86134 (  8%)
-Hash buckets with   2 entries  71593 ( 13%)
-Hash buckets with   3 entries  20312 (  5%)
-Hash buckets with   4 entries  99256 ( 37%)
-Hash buckets with   5 entries  25670 ( 12%)
-Hash buckets with   6 entries  21614 ( 12%)
-Hash buckets with   7 entries   3104 (  2%)
-Hash buckets with   8 entries  10077 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 7 - verify and correct link counts...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052845
-Active entries = 1052845
-Hash table size = 544978
-Hits = 1854913
-Misses = 1052845
-Hit ratio = 63.79
-MRU 0 entries = 1016092 ( 96%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      3 (  0%)
-MRU 4 entries =    141 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =  11363 (  1%)
-MRU 8 entries =  25246 (  2%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      0 (  0%)
-MRU 12 entries =      0 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206646 (  0%)
-Hash buckets with   1 entries  86134 (  8%)
-Hash buckets with   2 entries  71593 ( 13%)
-Hash buckets with   3 entries  20312 (  5%)
-Hash buckets with   4 entries  99256 ( 37%)
-Hash buckets with   5 entries  25670 ( 12%)
-Hash buckets with   6 entries  21614 ( 12%)
-Hash buckets with   7 entries   3104 (  2%)
-Hash buckets with   8 entries  10077 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-
-         XFS_REPAIR Summary    Fri Feb  3 08:49:34 2012
-
-Phase		Start		End		Duration
-Phase 1:	02/03 08:43:06	02/03 08:43:06	
-Phase 2:	02/03 08:43:06	02/03 08:43:11	5 seconds
-Phase 3:	02/03 08:43:11	02/03 08:48:48	5 minutes, 37 seconds
-Phase 4:	02/03 08:48:48	02/03 08:49:26	38 seconds
-Phase 5:	02/03 08:49:26	02/03 08:49:27	1 second
-Phase 6:	02/03 08:49:27	02/03 08:49:33	6 seconds
-Phase 7:	02/03 08:49:33	02/03 08:49:33	
-
-Total run time: 6 minutes, 27 seconds
-done
-
-
-Second pass:
-
-[root@jr4-3 ~]# cat /tmp/out3.sdc
-Phase 1 - find and verify superblock...
-         - max_mem = 37094007, icount = 5448960, imem = 21285, dblock = 
-4391112384, dmem = 2144097
-         - block cache size set to 4359824 entries
-Phase 2 - using external log on /dev/md1
-         - zero log...
-zero_log: head block 2 tail block 2
-         - scan filesystem freespace and inode maps...
-         - found root inode chunk
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 3240
-Active entries = 3240
-Hash table size = 544978
-Hits = 0
-Misses = 3240
-Hit ratio =  0.00
-MRU 0 entries =   3240 (100%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      0 (  0%)
-MRU 4 entries =      0 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =      0 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      0 (  0%)
-MRU 12 entries =      0 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 541938 (  0%)
-Hash buckets with   1 entries   2881 ( 88%)
-Hash buckets with   2 entries    127 (  7%)
-Hash buckets with   3 entries     23 (  2%)
-Hash buckets with   4 entries      9 (  1%)
-Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
-         - process known inodes and perform inode discovery...
-         - agno = 0
-data fork in regular inode 54105173 claims used block 6745835296
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - process newly discovered inodes...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052776
-Active entries = 1052776
-Hash table size = 544978
-Hits = 302945
-Misses = 1052776
-Hit ratio = 22.35
-MRU 0 entries = 851678 ( 80%)
-MRU 1 entries =   6724 (  0%)
-MRU 2 entries =  68352 (  6%)
-MRU 3 entries = 107924 ( 10%)
-MRU 4 entries =   5314 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =  12655 (  1%)
-MRU 7 entries =     16 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      3 (  0%)
-MRU 12 entries =    110 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206666 (  0%)
-Hash buckets with   1 entries  86129 (  8%)
-Hash buckets with   2 entries  71585 ( 13%)
-Hash buckets with   3 entries  20311 (  5%)
-Hash buckets with   4 entries  99263 ( 37%)
-Hash buckets with   5 entries  25662 ( 12%)
-Hash buckets with   6 entries  21611 ( 12%)
-Hash buckets with   7 entries   3103 (  2%)
-Hash buckets with   8 entries  10076 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 4 - check for duplicate blocks...
-         - setting up duplicate extent list...
-         - check for inodes claiming duplicate blocks...
-         - agno = 0
-         - agno = 2
-         - agno = 5
-         - agno = 7
-         - agno = 1
-         - agno = 3
-         - agno = 4
-         - agno = 11
-         - agno = 8
-         - agno = 14
-         - agno = 15
-         - agno = 9
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 10
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 6
-         - agno = 12
-         - agno = 25
-         - agno = 27
-         - agno = 26
-         - agno = 20
-         - agno = 28
-         - agno = 16
-         - agno = 31
-         - agno = 13
-         - agno = 29
-         - agno = 30
-data fork in regular inode 54105173 claims used block 6745835296
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052776
-Active entries = 1052776
-Hash table size = 544978
-Hits = 646498
-Misses = 1052776
-Hit ratio = 38.05
-MRU 0 entries = 1052663 ( 99%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      0 (  0%)
-MRU 4 entries =      0 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =      0 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      3 (  0%)
-MRU 12 entries =    110 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206666 (  0%)
-Hash buckets with   1 entries  86129 (  8%)
-Hash buckets with   2 entries  71585 ( 13%)
-Hash buckets with   3 entries  20311 (  5%)
-Hash buckets with   4 entries  99263 ( 37%)
-Hash buckets with   5 entries  25662 ( 12%)
-Hash buckets with   6 entries  21611 ( 12%)
-Hash buckets with   7 entries   3103 (  2%)
-Hash buckets with   8 entries  10076 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 5 - rebuild AG headers and trees...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - reset superblock...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052776
-Active entries = 1052776
-Hash table size = 544978
-Hits = 649707
-Misses = 1052776
-Hit ratio = 38.16
-MRU 0 entries = 1052663 ( 99%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      0 (  0%)
-MRU 4 entries =      0 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =      0 (  0%)
-MRU 8 entries =      0 (  0%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      3 (  0%)
-MRU 12 entries =    110 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206666 (  0%)
-Hash buckets with   1 entries  86129 (  8%)
-Hash buckets with   2 entries  71585 ( 13%)
-Hash buckets with   3 entries  20311 (  5%)
-Hash buckets with   4 entries  99263 ( 37%)
-Hash buckets with   5 entries  25662 ( 12%)
-Hash buckets with   6 entries  21611 ( 12%)
-Hash buckets with   7 entries   3103 (  2%)
-Hash buckets with   8 entries  10076 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 6 - check inode connectivity...
-         - resetting contents of realtime bitmap and summary inodes
-         - traversing filesystem ...
-         - agno = 0
-         - agno = 1
-         - agno = 2
-         - agno = 3
-         - agno = 4
-         - agno = 5
-         - agno = 6
-         - agno = 7
-         - agno = 8
-         - agno = 9
-         - agno = 10
-         - agno = 11
-         - agno = 12
-         - agno = 13
-         - agno = 14
-         - agno = 15
-         - agno = 16
-         - agno = 17
-         - agno = 18
-         - agno = 19
-         - agno = 20
-         - agno = 21
-         - agno = 22
-         - agno = 23
-         - agno = 24
-         - agno = 25
-         - agno = 26
-         - agno = 27
-         - agno = 28
-         - agno = 29
-         - agno = 30
-         - agno = 31
-         - traversal finished ...
-         - moving disconnected inodes to lost+found ...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052807
-Active entries = 1052807
-Hash table size = 544978
-Hits = 1854913
-Misses = 1052807
-Hit ratio = 63.79
-MRU 0 entries = 1016054 ( 96%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      3 (  0%)
-MRU 4 entries =    141 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =  11363 (  1%)
-MRU 8 entries =  25246 (  2%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      0 (  0%)
-MRU 12 entries =      0 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206656 (  0%)
-Hash buckets with   1 entries  86133 (  8%)
-Hash buckets with   2 entries  71589 ( 13%)
-Hash buckets with   3 entries  20311 (  5%)
-Hash buckets with   4 entries  99257 ( 37%)
-Hash buckets with   5 entries  25667 ( 12%)
-Hash buckets with   6 entries  21614 ( 12%)
-Hash buckets with   7 entries   3103 (  2%)
-Hash buckets with   8 entries  10076 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-Phase 7 - verify and correct link counts...
-libxfs_bcache: 0x6814c0
-Max supported entries = 4359824
-Max utilized entries = 1052807
-Active entries = 1052807
-Hash table size = 544978
-Hits = 1854913
-Misses = 1052807
-Hit ratio = 63.79
-MRU 0 entries = 1016054 ( 96%)
-MRU 1 entries =      0 (  0%)
-MRU 2 entries =      0 (  0%)
-MRU 3 entries =      3 (  0%)
-MRU 4 entries =    141 (  0%)
-MRU 5 entries =      0 (  0%)
-MRU 6 entries =      0 (  0%)
-MRU 7 entries =  11363 (  1%)
-MRU 8 entries =  25246 (  2%)
-MRU 9 entries =      0 (  0%)
-MRU 10 entries =      0 (  0%)
-MRU 11 entries =      0 (  0%)
-MRU 12 entries =      0 (  0%)
-MRU 13 entries =      0 (  0%)
-MRU 14 entries =      0 (  0%)
-MRU 15 entries =      0 (  0%)
-Hash buckets with   0 entries 206656 (  0%)
-Hash buckets with   1 entries  86133 (  8%)
-Hash buckets with   2 entries  71589 ( 13%)
-Hash buckets with   3 entries  20311 (  5%)
-Hash buckets with   4 entries  99257 ( 37%)
-Hash buckets with   5 entries  25667 ( 12%)
-Hash buckets with   6 entries  21614 ( 12%)
-Hash buckets with   7 entries   3103 (  2%)
-Hash buckets with   8 entries  10076 (  7%)
-Hash buckets with   9 entries    535 (  0%)
-Hash buckets with  10 entries     35 (  0%)
-Hash buckets with  11 entries      2 (  0%)
-
-         XFS_REPAIR Summary    Fri Feb  3 09:00:02 2012
-
-Phase		Start		End		Duration
-Phase 1:	02/03 08:53:37	02/03 08:53:37	
-Phase 2:	02/03 08:53:37	02/03 08:53:38	1 second
-Phase 3:	02/03 08:53:38	02/03 08:59:16	5 minutes, 38 seconds
-Phase 4:	02/03 08:59:16	02/03 08:59:54	38 seconds
-Phase 5:	02/03 08:59:54	02/03 08:59:55	1 second
-Phase 6:	02/03 08:59:55	02/03 09:00:01	6 seconds
-Phase 7:	02/03 09:00:01	02/03 09:00:01	
-
-Total run time: 6 minutes, 24 seconds
-done
-
-
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
+root@storage1:~# find /data/sdh | head -50 | xargs xfs_bmap 
+/data/sdh: no extents
+/data/sdh/Bonnie.26384: no extents
+/data/sdh/Bonnie.26384/00000:
+	0: [0..7]: 1465133488..1465133495
+/data/sdh/Bonnie.26384/00000/0icoeTRPHKX0000000000:
+	0: [0..1015]: 1465134032..1465135047
+/data/sdh/Bonnie.26384/00000/Q0000000001:
+	0: [0..1543]: 1465135048..1465136591
+/data/sdh/Bonnie.26384/00000/JFXQyeq6diG0000000002:
+	0: [0..1295]: 1465136592..1465137887
+/data/sdh/Bonnie.26384/00000/TK7ciXkkj0000000003:
+	0: [0..1519]: 1465137888..1465139407
+/data/sdh/Bonnie.26384/00000/0000000004:
+	0: [0..1207]: 1465139408..1465140615
+/data/sdh/Bonnie.26384/00000/acJKZWAwEnu0000000005:
+	0: [0..1223]: 1465140616..1465141839
+/data/sdh/Bonnie.26384/00000/9wIgxPKeI4B0000000006:
+	0: [0..1319]: 1465141840..1465143159
+/data/sdh/Bonnie.26384/00000/C6QLFdND0000000007:
+	0: [0..1111]: 1465143160..1465144271
+/data/sdh/Bonnie.26384/00000/6xc1Wydh0000000008:
+	0: [0..1223]: 1465144272..1465145495
+/data/sdh/Bonnie.26384/00000/0000000009:
+	0: [0..1167]: 1465145496..1465146663
+/data/sdh/Bonnie.26384/00000/HdlN0000000000a:
+	0: [0..1535]: 1465146664..1465148199
+/data/sdh/Bonnie.26384/00000/52IabyC5pvis000000000b:
+	0: [0..1287]: 1465148200..1465149487
+/data/sdh/Bonnie.26384/00000/LvDhxcdLf000000000c:
+	0: [0..1583]: 1465149488..1465151071
+/data/sdh/Bonnie.26384/00000/08P3JAR000000000d:
+	0: [0..1255]: 1465151072..1465152327
+/data/sdh/Bonnie.26384/00000/000000000e:
+	0: [0..1095]: 1465152328..1465153423
+/data/sdh/Bonnie.26384/00000/s0gtPGPecXu000000000f:
+	0: [0..1319]: 1465153424..1465154743
+/data/sdh/Bonnie.26384/00000/HFLOcN0000000010:
+	0: [0..1503]: 1465154744..1465156247
+/data/sdh/Bonnie.26384/00000/LQZly0000000011:
+	0: [0..1591]: 1465156248..1465157839
+/data/sdh/Bonnie.26384/00000/Cgx2O3Km9db0000000012:
+	0: [0..1463]: 1465157840..1465159303
+/data/sdh/Bonnie.26384/00000/QdqMvy30000000013:
+	0: [0..1063]: 1465159304..1465160367
+/data/sdh/Bonnie.26384/00000/kraVgKMdTiS60000000014:
+	0: [0..1263]: 1465160368..1465161631
+/data/sdh/Bonnie.26384/00000/qYaHGnrJm30000000015:
+	0: [0..1575]: 1465161760..1465163335
+/data/sdh/Bonnie.26384/00000/oJu9fLAncA0000000016:
+	0: [0..1023]: 1465163336..1465164359
+/data/sdh/Bonnie.26384/00000/gsTjmbcIoq0000000017:
+	0: [0..1535]: 1465164360..1465165895
+/data/sdh/Bonnie.26384/00000/0000000018:
+	0: [0..1271]: 1465165896..1465167167
+/data/sdh/Bonnie.26384/00000/Xu0000000019:
+	0: [0..1199]: 1465167168..1465168367
+/data/sdh/Bonnie.26384/00000/mbAF9Ow000000001a:
+	0: [0..1479]: 1465168368..1465169847
+/data/sdh/Bonnie.26384/00000/x2CVDC4MIM000000001b:
+	0: [0..1319]: 1465169848..1465171167
+/data/sdh/Bonnie.26384/00000/SYFSGTgs000000001c:
+	0: [0..1239]: 1465171168..1465172407
+/data/sdh/Bonnie.26384/00000/dA3oCdRjRmbm000000001d:
+	0: [0..1551]: 1465172408..1465173959
+/data/sdh/Bonnie.26384/00000/B000000001e:
+	0: [0..1319]: 1465173960..1465175279
+/data/sdh/Bonnie.26384/00000/p000000001f:
+	0: [0..1559]: 1465175280..1465176839
+/data/sdh/Bonnie.26384/00000/CaUyF0000000020:
+	0: [0..1199]: 1465176840..1465178039
+/data/sdh/Bonnie.26384/00000/xsCb0000000021:
+	0: [0..1319]: 1465178040..1465179359
+/data/sdh/Bonnie.26384/00000/IupKUGW4JNE80000000022:
+	0: [0..1471]: 1465179360..1465180831
+/data/sdh/Bonnie.26384/00000/DKBmSRy2Rt0000000023:
+	0: [0..1399]: 1465180832..1465182231
+/data/sdh/Bonnie.26384/00000/4dmLGnWw50000000024:
+	0: [0..1247]: 1465182232..1465183479
+/data/sdh/Bonnie.26384/00000/0000000025:
+	0: [0..1495]: 1465183480..1465184975
+/data/sdh/Bonnie.26384/00000/yPcS6O0000000026:
+	0: [0..1223]: 1465184976..1465186199
+/data/sdh/Bonnie.26384/00000/eNhPxu0000000027:
+	0: [0..1471]: 1465186200..1465187671
+/data/sdh/Bonnie.26384/00000/oGidZ0000000028:
+	0: [0..1063]: 1465187672..1465188735
+/data/sdh/Bonnie.26384/00000/5blq0000000029:
+	0: [0..1151]: 1465188736..1465189887
+/data/sdh/Bonnie.26384/00000/wlbSsioikgEY000000002a:
+	0: [0..1159]: 1465189888..1465191047
+/data/sdh/Bonnie.26384/00000/HKG6hYj000000002b:
+	0: [0..1039]: 1465191048..1465192087
+/data/sdh/Bonnie.26384/00000/FruCoPDzes000000002c:
+	0: [0..1407]: 1465192088..1465193495
+/data/sdh/Bonnie.26384/00000/puA70OD8U000000002d:
+	0: [0..1247]: 1465193496..1465194743
+/data/sdh/Bonnie.26384/00000/53Vpi1ueADH000000002e:
+	0: [0..1063]: 1465194744..1465195807
 
 _______________________________________________
 xfs mailing list
