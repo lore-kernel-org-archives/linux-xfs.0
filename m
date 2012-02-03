@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13FJvMT138221 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 09:19:57 -0600
-Date: Fri, 3 Feb 2012 09:19:58 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC PATCH 1/4] Define a new function xfs_this_quota_on()
-Message-ID: <20120203151958.GH13095@sgi.com>
-References: <20120123173118.31546.3353.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173125.31546.2342.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120124174712.GD9853@infradead.org>
+	q13F4jPr137608 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 09:04:46 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	0qci0FySKjz9029B (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 03 Feb 2012 07:04:44 -0800 (PST)
+Date: Fri, 3 Feb 2012 10:04:43 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_io: deprecate the "-F" foreign flag
+Message-ID: <20120203150443.GA28301@infradead.org>
+References: <4F2AC948.1050909@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120124174712.GD9853@infradead.org>
+In-Reply-To: <4F2AC948.1050909@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,30 +28,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jan 24, 2012 at 12:47:12PM -0500, Christoph Hellwig wrote:
-> On Mon, Jan 23, 2012 at 11:31:25AM -0600, Chandra Seetharaman wrote:
-> > Create a new function xfs_this_quota_on() that takes a xfs_mount
-> > data srtucture and a disk quota type and returns true if the specified
-> > type of quota is ON in the xfs_mount data structure.
-> > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+On Thu, Feb 02, 2012 at 11:35:04AM -0600, Eric Sandeen wrote:
+> There's no real reason to force the user to specify "-F" for non-xfs
+> files, when we can just test for that after it's opened.
 > 
-> Looks good except for a tiny style nitpick.
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> > +	switch(type) {
-> 
-> This should have a whitespace after the opening brace.
+> * Remove the -F flag from usage() & man pages, but still accept it.
+> * Set IO_FOREIGN when we open the file, if the fd tests as non-xfs.
 
-I've added the space.
+Looks good. We probably should kill the IO_FOREIGN eventually too, but
+let's do the user facing part first.
 
-This patch looks good.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
