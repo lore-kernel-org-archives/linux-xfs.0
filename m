@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q13HfBN0149550 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 11:41:11 -0600
-Message-ID: <4F2C1C37.60001@sgi.com>
-Date: Fri, 03 Feb 2012 11:41:11 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	q13IoJdr153860
+	for <linux-xfs@oss.sgi.com>; Fri, 3 Feb 2012 12:50:19 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id ljpMdCxAAsQ6i6qs for <linux-xfs@oss.sgi.com>;
+	Fri, 03 Feb 2012 10:50:18 -0800 (PST)
+Message-ID: <4F2C2C69.5020103@sandeen.net>
+Date: Fri, 03 Feb 2012 12:50:17 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfsprogs: check for size parsing errors in xfs_quota
-References: <4F1D9989.8060808@redhat.com> <20120124175612.GH9853@infradead.org>
-	<4F22FA5B.4030500@sandeen.net>
-In-Reply-To: <4F22FA5B.4030500@sandeen.net>
+Subject: Re: Placing the root partition on an XFS filesystem is not supported
+References: <loom.20120129T133929-288@post.gmane.org>
+	<4F2B02C4.8070903@sandeen.net>
+	<loom.20120203T152753-631@post.gmane.org>
+In-Reply-To: <loom.20120203T152753-631@post.gmane.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,31 +23,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: James Lawrie <james@jdlawrie.co.uk>, xfs-oss <xfs@oss.sgi.com>
+To: Marcos Mello <marcosfrm@gmail.com>
+Cc: linux-xfs@oss.sgi.com
 
-On 01/27/12 13:26, Eric Sandeen wrote:
-> Doing something like
->
-> # xfs_quota -x -c 'limit -u bhard=1.2g ...
->
-> will cause cvtnum to fail and return a value of -1LL (because it
-> cannot parse the decimal), but the quota caller doesn't check
-> for this error value, casts it to U64, shifts right, and we end
-> up with an answer of 16 petabytes rather than erroring out.
-> Fix this.
->
-> Reported-by: James Lawrie<james@jdlawrie.co.uk>
-> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> ---
+On 2/3/12 8:39 AM, Marcos Mello wrote:
+> Eric Sandeen <sandeen <at> sandeen.net> writes:
+> 
+>>
+>> In general there is no problem with xfs on a root partition.  However, the
+> installer
+>> may not make it easy or available for you.
+>>
+>> (I never use xfs for /boot though, I don't trust grub enough for that
+> honestly).
+>>
+>> -Eric
+> 
+> Same thing on Fedora 16. Let's hope some day Anaconda will change that.
 
-Looks and works great.
+F16 prevents it?  I didn't see it in the upstream tree.  That should
+not be so.  :/
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> About GRUB with a XFS /boot the problem was with GRUB Lagacy, wasn't it?
+> Or GRUB2 is still buggy?
+
+I have no idea, actually.  I delved into grub a bit, it was disturbing
+enough that I have not tried to look at grub2.  :)
+
+-Eric
+
+> Marcos
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
