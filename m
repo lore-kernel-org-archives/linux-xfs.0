@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q14HFXSK228529 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 11:15:33 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id QrkA2GOCffXdEdAT for <xfs@oss.sgi.com>;
-	Sat, 04 Feb 2012 09:15:32 -0800 (PST)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 3F33E496334E
-	for <xfs@oss.sgi.com>; Sat,  4 Feb 2012 11:15:32 -0600 (CST)
-Message-ID: <4F2D67B3.4050800@sandeen.net>
-Date: Sat, 04 Feb 2012 11:15:31 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q14KHX0L239546 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 14:17:34 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9OnUvT1jbNt52tlW for
+	<xfs@oss.sgi.com>; Sat, 04 Feb 2012 12:17:32 -0800 (PST)
+Message-ID: <4F2D925A.1070702@redhat.com>
+Date: Sat, 04 Feb 2012 14:17:30 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fsstress - make sync a write op
+Subject: Re: sparsify - utility to punch out blocks of 0s in a file
+References: <4F2D8F30.3090802@redhat.com> <4F2D90B6.4070008@redhat.com>
+In-Reply-To: <4F2D90B6.4070008@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,38 +24,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-I was running 068 to test freeze changes, and realized that
-"sync" is not in the op list when "-w" (write ops) is specified,
-although fsync & fdatasync are.  It seems to me that sync should
-be a default write op as well.
+On 2/4/12 2:10 PM, Eric Sandeen wrote:
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+> Hm but something is weird, right after the punch-out xfs says
+> it uses 84K:
+> 
+> [root@inode sparsify]# du -hc fsfile
+> 84K	fsfile
+> 84K	total
+> 
+> but then after an xfs_repair it looks saner:
+> # du -hc fsfile
+> 4.8M	fsfile
+> 4.8M	total
+> 
+> something to look into I guess... weird.
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 9b3af17..738843d 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -178,6 +178,7 @@ void	unresvsp_f(int, long);
- void	write_f(int, long);
- 
- opdesc_t	ops[] = {
-+     /* { OP_ENUM, "name", function, freq, iswrite }, */
- 	{ OP_ALLOCSP, "allocsp", allocsp_f, 1, 1 },
- 	{ OP_ATTR_REMOVE, "attr_remove", attr_remove_f, /* 1 */ 0, 1 },
- 	{ OP_ATTR_SET, "attr_set", attr_set_f, /* 2 */ 0, 1 },
-@@ -207,7 +208,7 @@ opdesc_t	ops[] = {
- 	{ OP_SETXATTR, "setxattr", setxattr_f, 1, 1 },
- 	{ OP_STAT, "stat", stat_f, 1, 0 },
- 	{ OP_SYMLINK, "symlink", symlink_f, 2, 1 },
--	{ OP_SYNC, "sync", sync_f, 1, 0 },
-+	{ OP_SYNC, "sync", sync_f, 1, 1 },
- 	{ OP_TRUNCATE, "truncate", truncate_f, 2, 1 },
- 	{ OP_UNLINK, "unlink", unlink_f, 1, 1 },
- 	{ OP_UNRESVSP, "unresvsp", unresvsp_f, 1, 1 },
+nvm that's just xfs_repair zeroing the log & reinstating the blocks.
+Sorry for the noise - Ok, back to my Saturday.
 
+-Eric
 
 _______________________________________________
 xfs mailing list
