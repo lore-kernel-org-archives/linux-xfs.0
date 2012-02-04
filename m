@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q14K45wF237323 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 14:04:05 -0600
+	q14KAYhw238435 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 14:10:35 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id mvirDc9k3LcybLw4 for
-	<xfs@oss.sgi.com>; Sat, 04 Feb 2012 12:04:03 -0800 (PST)
-Message-ID: <4F2D8F30.3090802@redhat.com>
-Date: Sat, 04 Feb 2012 14:04:00 -0600
+	cuda.sgi.com with ESMTP id szFCycXjMZAFEmIK for
+	<xfs@oss.sgi.com>; Sat, 04 Feb 2012 12:10:33 -0800 (PST)
+Message-ID: <4F2D90B6.4070008@redhat.com>
+Date: Sat, 04 Feb 2012 14:10:30 -0600
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: sparsify - utility to punch out blocks of 0s in a file
+Subject: Re: sparsify - utility to punch out blocks of 0s in a file
+References: <4F2D8F30.3090802@redhat.com>
+In-Reply-To: <4F2D8F30.3090802@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,43 +26,38 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-Now that ext4, xfs, & ocfs2 can support punch hole, a tool to
-"re-sparsify" a file by punching out ranges of 0s might be in order.
+On 2/4/12 2:04 PM, Eric Sandeen wrote:
+> Now that ext4, xfs, & ocfs2 can support punch hole, a tool to
+> "re-sparsify" a file by punching out ranges of 0s might be in order.
 
-I whipped this up fast, it probably has bugs & off-by-ones but thought
-I'd send it out.  It's not terribly efficient doing 4k reads by default
-I suppose.
+Gah, of course I sent the version with the actual hole punch commented out ;)
+Try this one.
 
-I'll see if util-linux wants it after it gets beat into shape.
-(or did a tool like this already exist and I missed it?)
-
-(Another mode which does a file copy, possibly from stdin
-might be good, like e2fsprogs/contrib/make-sparse.c ?  Although
-that can be hacked up with cp already).
-
-It works like this:
-
-[root@inode sparsify]# ./sparsify  -h
-Usage: sparsify [-m min hole size] [-o offset] [-l length] filename
-
-[root@inode sparsify]# dd if=/dev/zero of=fsfile bs=1M count=512
-[root@inode sparsify]# mkfs.xfs fsfile >/dev/null
-[root@inode sparsify]# du -hc fsfile
-512M	fsfile
-512M	total
-[root@inode sparsify]# ./sparsify fsfile
+[root@inode sparsify]# ./sparsify -v fsfile
+blocksize is 4096
+orig start/end 0/536870912/0
+new start/end/min 0/536870912/4096
 punching out holes of minimum size 4096 in range 0-536870912
+punching at 16384 len 16384
+punching at 49152 len 134168576
+punching at 134234112 len 134201344
+punching at 268455936 len 134197248
+punching at 402669568 len 134201344
+[root@inode sparsify]#
+
+Hm but something is weird, right after the punch-out xfs says
+it uses 84K:
+
 [root@inode sparsify]# du -hc fsfile
-129M	fsfile
-129M	total
-[root@inode sparsify]# xfs_repair fsfile
-Phase 1 - find and verify superblock...
-<snip>
-Phase 7 - verify and correct link counts...
-done
-[root@inode sparsify]# echo $?
-0
-[root@inode sparsify]# 
+84K	fsfile
+84K	total
+
+but then after an xfs_repair it looks saner:
+# du -hc fsfile
+4.8M	fsfile
+4.8M	total
+
+something to look into I guess... weird.
 
 /*
  * sparsify - utility to punch out blocks of 0s in a file
@@ -158,8 +155,8 @@ int punch_hole(int fd, off_t offset, off_t len)
 
 	if (debug)
 		printf("punching at %lld len %lld\n", offset, len);
-	//error = fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE,
-	//		  offset, len);
+	error = fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE,
+			  offset, len);
 	if (error < 0) {
 		perror("punch failed");
 		exit(EXIT_FAILURE);
@@ -346,6 +343,8 @@ int main(int argc, char **argv)
 	close(fd);
 	return 0;
 }
+
+
 
 _______________________________________________
 xfs mailing list
