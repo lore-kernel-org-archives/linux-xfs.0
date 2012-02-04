@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q144p5Nt186330 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 22:51:05 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id JDarTTsSt6wJrOUK for
-	<xfs@oss.sgi.com>; Fri, 03 Feb 2012 20:51:03 -0800 (PST)
-Message-ID: <4F2CB928.7030001@redhat.com>
-Date: Fri, 03 Feb 2012 22:50:48 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	q149x69u202908 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 03:59:06 -0600
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id Gnet1msl3gPfJEzl
+	for <xfs@oss.sgi.com>; Sat, 04 Feb 2012 01:59:05 -0800 (PST)
+Message-ID: <4F2D016C.9020406@hardwarefreak.com>
+Date: Sat, 04 Feb 2012 03:59:08 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/8] xfs: Protect xfs_file_aio_write() & xfs_setattr_size()
-	with sb_start_write - sb_end_write
-References: <1327091686-23177-1-git-send-email-jack@suse.cz>
-	<1327091686-23177-6-git-send-email-jack@suse.cz>
-	<4F2CB44D.4060006@sandeen.net>
-In-Reply-To: <4F2CB44D.4060006@sandeen.net>
+Subject: Re: Performance problem - reads slower than writes
+References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
+	<20120131103126.GA46170@nsrc.org>
+	<20120131145205.GA6607@infradead.org>
+	<20120203115434.GA649@nsrc.org>
+	<4F2C38BE.2010002@hardwarefreak.com>
+	<20120203221015.GA2675@nsrc.org>
+In-Reply-To: <20120203221015.GA2675@nsrc.org>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,85 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Brian Candler <B.Candler@pobox.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 2/3/12 10:30 PM, Eric Sandeen wrote:
-> On 1/20/12 2:34 PM, Jan Kara wrote:
->> Replace racy xfs_wait_for_freeze() check in xfs_file_aio_write() with
->> a reliable sb_start_write() - sb_end_write() locking.
+On 2/3/2012 4:10 PM, Brian Candler wrote:
+> On Fri, Feb 03, 2012 at 01:42:54PM -0600, Stan Hoeppner wrote:
+>> You've hit the peak read rate of these Hitachi drives.  As others
+>> pointed out, if you need more read performance than the dozen of these
+>> you plan to RAID stripe, then you'll need to swap them for units with a
+>> faster spindle:
+>>
+>> 7.2k 	 1.21x
+>>  10k	 1.68x
+>>  15k	 2.53x
+>>
+>> or with SSDs, which will yield an order of magnitude increase.  Your
+>> stated need is 20M 500-800KB files, or 20GB if my math is correct.
 > 
-> Here's what I'm running with now.  With this and my modified
-> patch6, I can pass xfstests 068 on xfs.
+> Thanks for your suggestion, but unfortunately your maths isn't correct: 20M
+> x 0.65MB = 13TB.  And that's just one of many possible datasets like this.
 
-(and I dropped patch 4, with the lock rearrangement, FWIW - so
-the only xfs patches I'm running are the 2 I resent).
+Wow, you're right.  How did I miss so many zeros?  Got in hurry I guess.
 
--Eric
+> I'm aware that I'm working with low-performance drives. This is intentional:
+> we need low power consumption so we can get lots in a rack, and large
+> capacity at low cost.
 
-> -Eric
-> 
-> 
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 7e5bc87..f1cacdc 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -874,11 +874,11 @@ xfs_file_aio_write(
->  	if (ocount == 0)
->  		return 0;
->  
-> -	xfs_wait_for_freeze(ip->i_mount, SB_FREEZE_WRITE);
-> -
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
->  		return -EIO;
->  
-> +	sb_start_write(inode->i_sb, SB_FREEZE_WRITE);
-> +
->  	if (unlikely(file->f_flags & O_DIRECT))
->  		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
->  	else
-> @@ -895,6 +895,7 @@ xfs_file_aio_write(
->  		if (err < 0)
->  			ret = err;
->  	}
-> +	sb_end_write(inode->i_sb, SB_FREEZE_WRITE);
->  
->  	return ret;
->  }
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index ab30253..7f3fa17 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -773,6 +773,7 @@ xfs_setattr_size(
->  			ATTR_MTIME_SET|ATTR_KILL_SUID|ATTR_KILL_SGID|
->  			ATTR_KILL_PRIV|ATTR_TIMES_SET)) == 0);
->  
-> +	sb_start_write(inode->i_sb, SB_FREEZE_WRITE);
->  	lock_flags = XFS_ILOCK_EXCL;
->  	if (!(flags & XFS_ATTR_NOLOCK))
->  		lock_flags |= XFS_IOLOCK_EXCL;
-> @@ -792,6 +793,7 @@ xfs_setattr_size(
->  		 * Use the regular setattr path to update the timestamps.
->  		 */
->  		xfs_iunlock(ip, lock_flags);
-> +		sb_end_write(inode->i_sb, SB_FREEZE_WRITE);
->  		iattr->ia_valid &= ~ATTR_SIZE;
->  		return xfs_setattr_nonsize(ip, iattr, 0);
->  	}
-> @@ -938,6 +940,7 @@ xfs_setattr_size(
->  out_unlock:
->  	if (lock_flags)
->  		xfs_iunlock(ip, lock_flags);
-> +	sb_end_write(inode->i_sb, SB_FREEZE_WRITE);
->  	return error;
->  
->  out_trans_abort:
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SSDs would fulfill criteria 1/2 but obviously not 3/4.
+
+> Fortunately our workload will also parallelise easily, and throwing it
+> across 24 spindles will be fine.  But obviously I want to squeeze the most
+> performance out of each spindle we have first.  I'm very happy to have found
+> the bottleneck that was troubling me :-)
+
+Will you be using mdraid or hardware RAID across those 24 spindles?
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
