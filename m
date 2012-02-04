@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1433Mrq181192 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 21:03:22 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id IHoEXZmW533fDAZU for <xfs@oss.sgi.com>;
-	Fri, 03 Feb 2012 19:03:21 -0800 (PST)
-Message-ID: <4F2C9FF8.2010207@sandeen.net>
-Date: Fri, 03 Feb 2012 21:03:20 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 1/8] fs: Improve filesystem freezing handling
-References: <1327091686-23177-1-git-send-email-jack@suse.cz>
-	<1327091686-23177-2-git-send-email-jack@suse.cz>
-In-Reply-To: <1327091686-23177-2-git-send-email-jack@suse.cz>
+	q1448qIt184482 for <xfs@oss.sgi.com>; Fri, 3 Feb 2012 22:08:53 -0600
+Received: from smtp4.clear.net.nz (smtp4.clear.net.nz [203.97.37.64]) by
+	cuda.sgi.com with ESMTP id A5xa9KJp8JXMFO64 for
+	<xfs@oss.sgi.com>; Fri, 03 Feb 2012 20:08:50 -0800 (PST)
+Received: from [210.246.20.55] (210-246-20-55.paradise.net.nz [210.246.20.55])
+	by smtp4.clear.net.nz (CLEAR Net Mail)
+	with ESMTP id <0LYU00EOAOUN6F00@smtp4.clear.net.nz> for xfs@oss.sgi.com;
+	Sat, 04 Feb 2012 17:08:49 +1300 (NZDT)
+Date: Sat, 04 Feb 2012 17:17:38 +1300
+From: Richard Scobie <r.scobie@clear.net.nz>
+Subject: Re: Placing the root partition on an XFS filesystem is not supported
+Message-id: <4F2CB162.7090700@clear.net.nz>
+MIME-version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,76 +22,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Surbhi Palande <csurbhi@gmail.com>, Kamal Mostafa <kamal@canonical.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On 1/20/12 2:34 PM, Jan Kara wrote:
-> vfs_check_frozen() tests are racy since the filesystem can be frozen just after
-> the test is performed. Thus in write paths we can end up marking some pages or
-> inodes dirty even though filesystem is already frozen. This creates problems
-> with flusher thread hanging on frozen filesystem.
-> 
-> Another problem is that exclusion between ->page_mkwrite() and filesystem
-> freezing has been handled by setting page dirty and then verifying s_frozen.
-> This guaranteed that either the freezing code sees the faulted page, writes it,
-> and writeprotects it again or we see s_frozen set and bail out of page fault.
-> This works to protect from page being marked writeable while filesystem
-> freezing is running but has an unpleasant artefact of leaving dirty (although
-> unmodified and writeprotected) pages on frozen filesystem resulting in similar
-> problems with flusher thread as the first problem.
-> 
-> This patch aims at providing exclusion between write paths and filesystem
-> freezing. We implement a writer-freeze read-write semaphores in the superblock
-> for each freezing level (currently there are two - SB_FREEZE_WRITE for data and
-> SB_FREEZE_TRANS for metadata). Write paths which should block freezing on given
-> level (e.g. ->block_page_mkwrite(), ->aio_write() for SB_FREEZE_WRITE level;
-> transaction lifetime for SB_FREEZE_TRANS level) hold reader side of the
-> semaphore. Code freezing the filesystem to a given level takes the writer side.
-> 
-> Only that we don't really want to bounce cachelines of the semaphore between
-> CPUs for each write happening. So we implement the reader side of the semaphore
-> as a per-cpu counter and the writer side is implemented using s_frozen
-> superblock field.
-> 
-> Acked-by: "Theodore Ts'o" <tytso@mit.edu>
-> Signed-off-by: Jan Kara <jack@suse.cz>
+Eric Sandeen wrote:
 
-...
+ > F16 prevents it?  I didn't see it in the upstream tree.  That should
+ > not be so.  :/
 
-> @@ -135,6 +157,11 @@ static struct super_block *alloc_super(struct file_system_type *type)
->  #else
->  		INIT_LIST_HEAD(&s->s_files);
->  #endif
-> +		if (init_sb_writers(s, SB_FREEZE_WRITE, "sb_writers_write"))
-> +			goto err_out;
-> +		if (init_sb_writers(s, SB_FREEZE_TRANS, "sb_writers_trans"))
-> +			goto err_out;
-> +
->  		s->s_bdi = &default_backing_dev_info;
->  		INIT_LIST_HEAD(&s->s_instances);
->  		INIT_HLIST_BL_HEAD(&s->s_anon);
-> @@ -186,6 +213,17 @@ static struct super_block *alloc_super(struct file_system_type *type)
->  	}
->  out:
->  	return s;
-> +err_out:
-> +	security_sb_free(s);
-> +#ifdef CONFIG_SMP
-> +	if (s->s_files)
-> +		free_percpu(s->s_files);
-> +#endif
-> +	destroy_sb_writers(s, SB_FREEZE_WRITE);
-> +	destroy_sb_writers(s, SB_FREEZE_TRANS);
+Indeed not. I completed an F16 install 4 days ago, using XFS as the / 
+filesystem.
 
-You probably ran into this already but the writer percpu vars need
-to be torn down in destroy_super() as well.
+Regards,
 
--Eric
-
+Richard
 
 _______________________________________________
 xfs mailing list
