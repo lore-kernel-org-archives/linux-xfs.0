@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q14KAYhw238435 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 14:10:35 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id szFCycXjMZAFEmIK for
-	<xfs@oss.sgi.com>; Sat, 04 Feb 2012 12:10:33 -0800 (PST)
-Message-ID: <4F2D90B6.4070008@redhat.com>
-Date: Sat, 04 Feb 2012 14:10:30 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	q14K4LPh237382 for <xfs@oss.sgi.com>; Sat, 4 Feb 2012 14:04:21 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id ozhagcqAOKWORhzo for
+	<xfs@oss.sgi.com>; Sat, 04 Feb 2012 12:04:20 -0800 (PST)
+Date: Sat, 4 Feb 2012 20:04:17 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Performance problem - reads slower than writes
+Message-ID: <20120204200417.GA3362@nsrc.org>
+References: <20120130220019.GA45782@nsrc.org> <20120131020508.GF9090@dastard>
+	<20120131103126.GA46170@nsrc.org>
+	<20120131145205.GA6607@infradead.org>
+	<20120203115434.GA649@nsrc.org> <4F2C38BE.2010002@hardwarefreak.com>
+	<20120203221015.GA2675@nsrc.org> <4F2D016C.9020406@hardwarefreak.com>
+	<20120204112436.GA3167@nsrc.org> <4F2D2953.2020906@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: sparsify - utility to punch out blocks of 0s in a file
-References: <4F2D8F30.3090802@redhat.com>
-In-Reply-To: <4F2D8F30.3090802@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <4F2D2953.2020906@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,327 +30,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 2/4/12 2:04 PM, Eric Sandeen wrote:
-> Now that ext4, xfs, & ocfs2 can support punch hole, a tool to
-> "re-sparsify" a file by punching out ranges of 0s might be in order.
+On Sat, Feb 04, 2012 at 06:49:23AM -0600, Stan Hoeppner wrote:
+> Apparently you've read of a different GlusterFS.  The one I know of is
+> for aggregating multiple storage hosts into a cloud storage resource.
+> It is not designed to replace striping or concatenation of disks within
+> a single host.
 
-Gah, of course I sent the version with the actual hole punch commented out ;)
-Try this one.
+Sure it can. A gluster volume consists of "bricks". Each brick is served by
+a glusterd process listening on a different TCP port. Those bricks can be on
+the same server or on different servers.
 
-[root@inode sparsify]# ./sparsify -v fsfile
-blocksize is 4096
-orig start/end 0/536870912/0
-new start/end/min 0/536870912/4096
-punching out holes of minimum size 4096 in range 0-536870912
-punching at 16384 len 16384
-punching at 49152 len 134168576
-punching at 134234112 len 134201344
-punching at 268455936 len 134197248
-punching at 402669568 len 134201344
-[root@inode sparsify]#
+> Even if what you describe can be done with Gluster, the performance will
+> likely be significantly less than a properly setup mdraid or hardware
+> raid.  Again, if it can be done, I'd test it head-to-head against RAID.
 
-Hm but something is weird, right after the punch-out xfs says
-it uses 84K:
+I'd expect similar throughput but higher latency. Given that I'm using low
+RPM drives which already have high latency, I'm hoping the additional
+latency will be insignificant.  Anyway, I'll know more once I've done the
+measurements.
 
-[root@inode sparsify]# du -hc fsfile
-84K	fsfile
-84K	total
+> I've never been a fan of parity RAID, let alone double parity RAID.
 
-but then after an xfs_repair it looks saner:
-# du -hc fsfile
-4.8M	fsfile
-4.8M	total
+I'm with you on that one.
 
-something to look into I guess... weird.
+The attractions of gluster are:
+- being able to scale a volume across many nodes, transparently to
+  the clients
+- being able to take a whole node out of service, while clients
+  automatically flip over to the other
 
-/*
- * sparsify - utility to punch out blocks of 0s in a file
- *
- * Copyright (C) 2011 Red Hat, Inc. All rights reserved.
- * Written by Eric Sandeen <sandeen@redhat.com>
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it would be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software Foundation,
- * Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+Regards,
 
-#include <sys/stat.h>
-#include <sys/statvfs.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <string.h>
-
-#include <linux/falloc.h>
-
-#ifndef FALLOC_FL_PUNCH_HOLE
-#define FALLOC_FL_PUNCH_HOLE    0x02 /* de-allocates range */
-#endif
-
-void usage(void)
-{
-	printf("Usage: sparsify [-m min hole size] [-o offset] [-l length] filename\n");
-	exit(EXIT_FAILURE);
-}
-
-#define EXABYTES(x)     ((long long)(x) << 60)
-#define PETABYTES(x)    ((long long)(x) << 50)
-#define TERABYTES(x)    ((long long)(x) << 40)
-#define GIGABYTES(x)    ((long long)(x) << 30)
-#define MEGABYTES(x)    ((long long)(x) << 20)
-#define KILOBYTES(x)    ((long long)(x) << 10)
-
-#define __round_mask(x, y) ((__typeof__(x))((y)-1))
-#define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
-#define round_down(x, y) ((x) & ~__round_mask(x, y))
-
-int debug;
-
-long long
-cvtnum(char *s)
-{
-	long long	i;
-	char		*sp;
-	int		c;
-
-	i = strtoll(s, &sp, 0);
-	if (i == 0 && sp == s)
-		return -1LL;
-	if (*sp == '\0')
-		return i;
-	if (sp[1] != '\0')
-		return -1LL;
-
-	c = tolower(*sp);
-	switch (c) {
-	case 'k':
-		return KILOBYTES(i);
-	case 'm':
-		return MEGABYTES(i);
-	case 'g':
-		return GIGABYTES(i);
-	case 't':
-		return TERABYTES(i);
-	case 'p':
-		return PETABYTES(i);
-	case 'e':
-		return  EXABYTES(i);
-	}
-
-	return -1LL;
-}
-
-int punch_hole(int fd, off_t offset, off_t len)
-{
-	int error = 0;
-
-	if (debug)
-		printf("punching at %lld len %lld\n", offset, len);
-	error = fallocate(fd, FALLOC_FL_PUNCH_HOLE|FALLOC_FL_KEEP_SIZE,
-			  offset, len);
-	if (error < 0) {
-		perror("punch failed");
-		exit(EXIT_FAILURE);
-	}
-}
-
-int main(int argc, char **argv)
-{
-	int	fd;
-	char	*fname;
-	int	opt;
-	loff_t	min_hole = 0;
-	loff_t	punch_range_start = 0;
-	loff_t	punch_range_len = 0;
-	loff_t	punch_range_end = 0;
-	loff_t	cur_offset = 0;
-	unsigned long blocksize;
-	struct statvfs statvfsbuf;
-	struct stat statbuf;
-	ssize_t	ret;
-	off_t	punch_offset, punch_len;
-	char	*readbuf, *zerobuf;
-
-	while ((opt = getopt(argc, argv, "m:l:o:vh")) != -1) {
-		switch(opt) {
-		case 'm':
-			min_hole = cvtnum(optarg);
-			break;
-		case 'o':
-			punch_range_start = cvtnum(optarg);
-			break;
-		case 'l':
-			punch_range_len = cvtnum(optarg);
-			break;
-		case 'v':
-			debug++;
-			break;
-		case 'h':
-		default:
-			usage();
-		}
-	}
-
-	if (min_hole < 0) {
-		printf("Error: invalid min hole value specified\n");
-		usage();
-	}
-
-	if (punch_range_len < 0) {
-		printf("Error: invalid length value specified\n");
-		usage();
-	}
-
-	if (punch_range_start < 0) {
-		printf("Error: invalid offset value specified\n");
-		usage();
-	}
-
-	if (optind == argc) {
-		printf("Error: no filename specified\n");
-		usage();
-	}
-
-	fname = argv[optind++];
-
-	fd = open(fname, O_RDWR);
-	if (fd < 0) {
-		perror("Error opening file");
-		exit(EXIT_FAILURE);
-	}
-
-	if (fstat(fd, &statbuf) < 0) {
-		perror("Error stat-ing file");
-		exit(EXIT_FAILURE);
-	}
-
-	if (fstatvfs(fd, &statvfsbuf) < 0) {
-		perror("Error stat-ing fs");
-		exit(EXIT_FAILURE);
-	}
-
-	blocksize = statvfsbuf.f_bsize;
-	if (debug)
-		printf("blocksize is %lu\n", blocksize);
-
-	/* default range end is end of file */
-	if (!punch_range_len)
-		punch_range_end = statbuf.st_size;
-	else
-		punch_range_end = punch_range_start + punch_range_len;
-
-	if (punch_range_end > statbuf.st_size) {
-		printf("Error: range extends past EOF\n");
-		exit(EXIT_FAILURE);
-	}
-
-	if (debug)
-		printf("orig start/end %lld/%lld/%lld\n", punch_range_start, punch_range_end, min_hole);
-
-	/*
-	 * Normalize to blocksize-aligned range:
-	 * round start down, round end up - get all blocks including the range specified
-	 */
-
-	punch_range_start = round_down(punch_range_start, blocksize);
-	punch_range_end = round_up(punch_range_end, blocksize);
-	min_hole = round_up(min_hole, blocksize);
-	if (!min_hole)
-		min_hole = blocksize;
-
-	if (debug)
-		printf("new start/end/min %lld/%lld/%lld\n", punch_range_start, punch_range_end, min_hole);
-
-	if (punch_range_end <= punch_range_start) {
-		printf("Range too small, nothing to do\n");
-		exit(0);
-	}
-
-	readbuf = malloc(min_hole);
-	zerobuf = malloc(min_hole);
-
-	if (!readbuf || !zerobuf) {
-		perror("buffer allocation failed");
-		exit(EXIT_FAILURE);
-	}
-
-	memset(zerobuf, 0, min_hole);
-
-	punch_offset = -1;
-	punch_len = 0;
-
-	/* Move to the start of our requested range */
-	if (punch_range_start)
-		lseek(fd, punch_range_start, SEEK_SET);
-	cur_offset = punch_range_start;
-
-	printf("punching out holes of minimum size %lld in range %lld-%lld\n",
-		min_hole, punch_range_start, punch_range_end);
-
-	/*
-	 * Read through the file, finding block-aligned regions of 0s.
-	 * If the region is at least min_hole, punch it out.
-	 * This should be starting at a block-aligned offset
-	 */
-
-	while ((ret = read(fd, readbuf, min_hole)) > 0) {
-
-		if (!memcmp(readbuf, zerobuf, min_hole)) {
-			/* Block of zeros, so extend punch range */
-			if (punch_offset < 0)
-				punch_offset = cur_offset;
-			punch_len += min_hole;
-			if (debug > 1)
-				printf("found zeros at %lld, hole len now %lld\n", cur_offset, punch_len);
-		} else if (punch_offset > 0) {
-			/* Found nonzero byte; punch accumulated hole if it's big enough */
- 			if (punch_len >= min_hole)
-				punch_hole(fd, punch_offset, punch_len);
-			else if (debug > 1)
-				printf("skipping hole of insufficient size %lld\n", punch_len);
-
-			/* reset punch range */
-			punch_offset = -1;
-			punch_len = 0;
-		}
-
-		cur_offset += ret;
-		/* Quit if we've moved beyond the specified range to punch */
-		if (cur_offset >= punch_range_end) {
-			/* punch out last hole in range if needed */
-			if (punch_offset > 0 && punch_len >= min_hole)
-				punch_hole(fd, punch_offset, punch_len);
-			break;
-		}
-	}
-
-	if (ret < 0) {
-		perror("read failed");
-		exit(EXIT_FAILURE);
-	}
-
-	free(readbuf);
-	free(zerobuf);
-	close(fd);
-	return 0;
-}
-
-
+Brian.
 
 _______________________________________________
 xfs mailing list
