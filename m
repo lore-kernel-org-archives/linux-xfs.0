@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q170XoOM178265 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 18:33:50 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id ACgWIsMqtaxPGOOX
-	for <xfs@oss.sgi.com>; Sun, 05 Feb 2012 19:29:37 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 28B646C058
-	for <xfs@oss.sgi.com>; Sun,  5 Feb 2012 21:29:37 -0600 (CST)
-Message-ID: <4F2F4925.5020406@hardwarefreak.com>
-Date: Sun, 05 Feb 2012 21:29:41 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	q170m5Rc179244
+	for <linux-xfs@oss.sgi.com>; Mon, 6 Feb 2012 18:48:06 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 0Mc8t4eALdOA3q4P for <linux-xfs@oss.sgi.com>;
+	Sat, 04 Feb 2012 16:47:09 -0800 (PST)
+References: <4F2CB162.7090700@clear.net.nz>
+	<loom.20120204T152354-163@post.gmane.org>
+In-Reply-To: <loom.20120204T152354-163@post.gmane.org>
+Mime-Version: 1.0 (1.0)
+From: Eric Sandeen <sandeen@sandeen.net>
 Subject: Re: Placing the root partition on an XFS filesystem is not supported
-References: <loom.20120129T133929-288@post.gmane.org>
-	<4F2B02C4.8070903@sandeen.net>
-	<loom.20120203T152753-631@post.gmane.org>
-	<4F2C2C69.5020103@sandeen.net> <20120206001123.GJ6922@dastard>
-	<4F2F1B28.3060308@sandeen.net> <20120206015430.GK6922@dastard>
-	<4F2F33A8.1050403@sandeen.net>
-In-Reply-To: <4F2F33A8.1050403@sandeen.net>
-Reply-To: stan@hardwarefreak.com
+Date: Sat, 4 Feb 2012 18:47:05 -0600
+Message-Id: <20120207004805.79CBDA42060@cuda.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,31 +26,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Marcos Mello <marcosfrm@gmail.com>
+Cc: "linux-xfs@oss.sgi.com" <linux-xfs@oss.sgi.com>
 
-On 2/5/2012 7:58 PM, Eric Sandeen wrote:
-> On 2/5/12 7:54 PM, Dave Chinner wrote:
+On Feb 4, 2012, at 8:29 AM, Marcos Mello <marcosfrm@gmail.com> wrote:
 
->> Oh, grub2 does worse things than that - grub_probe mounts any device
->> that appears to have a valid superblock so it can find out what
->> devices it needs to list in it's boot menu. I found this out when I
->> built a big DM stripe out of disks that used to have filesystems on
->> them.  grub-probe mounted every single device -inside- the stripe
->> and ran log recovery on them, corrupting the new filesystem and
->> quite a bit of data on the DM stripe they were part of....
+> Richard Scobie <r.scobie <at> clear.net.nz> writes:
 > 
-> Ok, your horror story wins from a pain POV ;)
+>> 
+>> Eric Sandeen wrote:
+>> 
+>>> F16 prevents it?  I didn't see it in the upstream tree.  That should
+>>> not be so.  :/
+>> 
+>> Indeed not. I completed an F16 install 4 days ago, using XFS as the / 
+>> filesystem.
+>> 
+> 
+> :-| Well, I'm amlost sure I got the same message when intalling F16 minimal ISO
+> last week. Will try again, maybe was just a confusion from my part.
+> 
+Note, the livecd cannot do an xfs install because it just transfers the (ext4) livecd root to the hard drive.  The non-livecd installer should work though.
 
-What's the default bootloader of RHEL/Fedora?  I'm not asking
-rhetorically.  I've never used either, and I'm curios if Red Hat went
-the grub/grub2 route like SuSE and many/most other distros.
+-Eric
 
-I use strictly Debian/LILO myself.  I was quite relieved when they
-decided not to throw LILO out of the distro.  Apparently it had been
-abandoned upstream.  Luckily another dev took ownership at the last minute.
-
--- 
-Stan
+> Thanks,
+> 
+> Marcos
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
