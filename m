@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q15HLUEZ056442 for <xfs@oss.sgi.com>; Sun, 5 Feb 2012 11:21:30 -0600
+	q15HNOTN056566 for <xfs@oss.sgi.com>; Sun, 5 Feb 2012 11:23:24 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id C6tvqmDB4wx2LHys for
-	<xfs@oss.sgi.com>; Sun, 05 Feb 2012 09:21:28 -0800 (PST)
-Message-ID: <4F2EBA96.2070603@redhat.com>
-Date: Sun, 05 Feb 2012 11:21:26 -0600
+	cuda.sgi.com with ESMTP id ezF3LhGmxDWnwbEU for
+	<xfs@oss.sgi.com>; Sun, 05 Feb 2012 09:23:23 -0800 (PST)
+Message-ID: <4F2EBB09.6080905@redhat.com>
+Date: Sun, 05 Feb 2012 11:23:21 -0600
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
 Subject: Re: sparsify - utility to punch out blocks of 0s in a file
 References: <4F2D8F30.3090802@redhat.com>
 	<201202050933.q159XQpB026380@helium.internal.tigress.co.uk>
 	<4F2EB017.5090006@redhat.com>
-	<201202051719.q15HJJme010040@helium.internal.tigress.co.uk>
-In-Reply-To: <201202051719.q15HJJme010040@helium.internal.tigress.co.uk>
+	<9C5B5C07-B0E4-4D13-BCFE-7F35162DF5E8@dilger.ca>
+In-Reply-To: <9C5B5C07-B0E4-4D13-BCFE-7F35162DF5E8@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +27,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ron Yorston <rmy@tigress.co.uk>
-Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Ron Yorston <rmy@tigress.co.uk>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 2/5/12 11:19 AM, Ron Yorston wrote:
-> OK, I tried it out for my use case of flinging VM filesystem images around
-> on ext4 and it seems to do the job.  I don't have any 64-bit systems
-> here at home so I used my feeble 32-bit netbook.  Since sizeof(off_t) !=
-> sizeof(long long) the debug output was all wrong:
+On 2/5/12 10:55 AM, Andreas Dilger wrote:
+> On 2012-02-05, at 9:36, Eric Sandeen <sandeen@redhat.com> wrote:
+>> On 2/5/12 3:33 AM, Ron Yorston wrote:
+>>> Eric Sandeen wrote:
+>>>> Now that ext4, xfs, & ocfs2 can support punch hole, a tool to
+>>>> "re-sparsify" a file by punching out ranges of 0s might be in order.
+>>>>
+>>>> I'll see if util-linux wants it after it gets beat into shape.
+>>>> (or did a tool like this already exist and I missed it?)
+>>
+>> Matthias' suggestion of adding SEEK_HOLE/SEEK_DATA makes very good sense too.
 > 
->    punching at 8989607068975104 len -4635819229210214401
+> I thought about this, but if SEEK_HOLE/SEEK_DATA (or FIEMAP) worked,
+> then the file would already be sparse, so I don't think that will
+> help in this case...
 
-whoops, I'll fix that thanks.
+But only if other tools originally used them, and there will probably be plenty
+of cases where they don't, or legacy files, or ....
 
-This is the problem when I start something as a hack and then expose it
-to the light of day.  ;)
+>> I should also untie the read/zero buffer size from the minimum hole size,
+>> we should do optimal IO sizes regardless of the minimum hole size desired...
+> 
+> Definitely. 4kB IO is a killer for large files.
+
+yeah, it was a quick hack, I'll try to fix that up.
+
+(OTOH for large files you man not want a 4k hole granularity either)
 
 -Eric
 
-> but the image file and the host filesystem both survived the ordeal.
-> 
-> Ron
+> Cheers, Andreas
 
 _______________________________________________
 xfs mailing list
