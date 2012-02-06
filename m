@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q15NimM1085523 for <xfs@oss.sgi.com>; Sun, 5 Feb 2012 17:44:48 -0600
-Received: from isrv.corpit.ru (isrv.corpit.ru [86.62.121.231]) by cuda.sgi.com
-	with ESMTP id 2qEFNwUrPI3wwy5C for <xfs@oss.sgi.com>;
-	Sun, 05 Feb 2012 15:44:46 -0800 (PST)
-Message-ID: <4F2F146B.6050003@msgid.tls.msk.ru>
-Date: Mon, 06 Feb 2012 03:44:43 +0400
-From: Michael Tokarev <mjt@tls.msk.ru>
+	q160DVPj087208
+	for <linux-xfs@oss.sgi.com>; Sun, 5 Feb 2012 18:13:31 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id setEGh78hoRa0fxn for <linux-xfs@oss.sgi.com>;
+	Sun, 05 Feb 2012 16:13:29 -0800 (PST)
+Message-ID: <4F2F1B28.3060308@sandeen.net>
+Date: Sun, 05 Feb 2012 18:13:28 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: sparsify - utility to punch out blocks of 0s in a file
-References: <4F2D8F30.3090802@redhat.com> <4F2D90B6.4070008@redhat.com>
-In-Reply-To: <4F2D90B6.4070008@redhat.com>
+Subject: Re: Placing the root partition on an XFS filesystem is not supported
+References: <loom.20120129T133929-288@post.gmane.org>
+	<4F2B02C4.8070903@sandeen.net>
+	<loom.20120203T152753-631@post.gmane.org>
+	<4F2C2C69.5020103@sandeen.net> <20120206001123.GJ6922@dastard>
+In-Reply-To: <20120206001123.GJ6922@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +28,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@oss.sgi.com, Marcos Mello <marcosfrm@gmail.com>
 
-On 05.02.2012 00:10, Eric Sandeen wrote:
-[]
-
-Just a very quick look:
-
->  * sparsify - utility to punch out blocks of 0s in a file
-> int main(int argc, char **argv)
-> {
-[]
-> 	if (optind == argc) {
-> 		printf("Error: no filename specified\n");
-> 		usage();
-> 	}
+On 2/5/12 6:11 PM, Dave Chinner wrote:
+> On Fri, Feb 03, 2012 at 12:50:17PM -0600, Eric Sandeen wrote:
+>> On 2/3/12 8:39 AM, Marcos Mello wrote:
+>>> Eric Sandeen <sandeen <at> sandeen.net> writes:
+>>>
+>>>>
+>>>> In general there is no problem with xfs on a root partition.  However, the
+>>> installer
+>>>> may not make it easy or available for you.
+>>>>
+>>>> (I never use xfs for /boot though, I don't trust grub enough for that
+>>> honestly).
+>>>>
+>>>> -Eric
+>>>
+>>> Same thing on Fedora 16. Let's hope some day Anaconda will change that.
+>>
+>> F16 prevents it?  I didn't see it in the upstream tree.  That should
+>> not be so.  :/
+>>
+>>> About GRUB with a XFS /boot the problem was with GRUB Lagacy, wasn't it?
+>>> Or GRUB2 is still buggy?
+>>
+>> I have no idea, actually.  I delved into grub a bit, it was disturbing
+>> enough that I have not tried to look at grub2.  :)
 > 
-> 	fname = argv[optind++];
+> Certainly the problem exists with legacy grub - it assumes that it
+> can write to the first sector or any disk or partition which
+> overwrites the XFS superblock...
 
-There's no handling of the case when there are more than one file
-specified on the command line.
+well, it was worse than that.  I can work around the grub-on-a-partition
+problem, but what I ran into was grub reading & writing to/from the block
+device under a mounted filesystem - corruption and hilarity ensued.
 
+-Eric
 
-> 	/*
-> 	 * Normalize to blocksize-aligned range:
-> 	 * round start down, round end up - get all blocks including the range specified
-> 	 */
+> The grub2 manual:
 > 
-> 	punch_range_start = round_down(punch_range_start, blocksize);
-> 	punch_range_end = round_up(punch_range_end, blocksize);
-> 	min_hole = round_up(min_hole, blocksize);
-> 	if (!min_hole)
-> 		min_hole = blocksize;
-
-I think this deserves some bold warning if punch_range_start
-or punch_hole_end is not a multiple of blocksize.
-
-[]
-> 	/*
-> 	 * Read through the file, finding block-aligned regions of 0s.
-> 	 * If the region is at least min_hole, punch it out.
-> 	 * This should be starting at a block-aligned offset
-> 	 */
+> http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation
 > 
-> 	while ((ret = read(fd, readbuf, min_hole)) > 0) {
+> indicates that if you are using BIOS/MBR based booting, then grub2
+> still writes to the first sector of the partition that contains the
+> grub directory to install the stage 1.5 loader.  Indeed:
 > 
-> 		if (!memcmp(readbuf, zerobuf, min_hole)) {
-
-Now this is interesting.  Can ret be < min_hole?  Can a read
-in a middle of a file be shorter than specified?
-
-How it will work together with some other operation being done
-at the same file -- ftruncate anyone?
-
-Thanks!
-
-/mjt
+> "boot.img
+> 
+> On PC BIOS systems, this image is the first part of GRUB to start.
+> It is written to a master boot record (MBR) or to the boot sector of
+> a partition. Because a PC boot sector is 512 bytes, the size of this
+> image is exactly 512 bytes. 
+> 
+> The sole function of boot.img is to read the first sector of the
+> core image from a local disk and jump to it. Because of the size
+> restriction, boot.img cannot understand any file system structure,
+> so grub-setup hardcodes the location of the first sector of the core
+> image into boot.img when installing GRUB. "
+> 
+> IOWs, you have to treat grub2 identically to legacy grub in that it
+> thinks it owns the first sector of any partition on the disk.
+> Therefore, you need a separate /boot partition that is not formated
+> with XFS to be safe.
+> 
+> There's a reason I went back to using LILO....
+> 
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
