@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16AeX0Z122812 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 04:40:33 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id lmTvRoj7gyBNXZY2 for
-	<xfs@oss.sgi.com>; Mon, 06 Feb 2012 02:40:31 -0800 (PST)
-Date: Mon, 6 Feb 2012 10:40:24 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Performance problem - reads slower than writes
-Message-ID: <20120206104024.GA4975@nsrc.org>
-References: <20120131103126.GA46170@nsrc.org>
-	<20120131145205.GA6607@infradead.org> <20120203115434.GA649@nsrc.org>
-	<4F2C38BE.2010002@hardwarefreak.com> <20120203221015.GA2675@nsrc.org>
-	<4F2D016C.9020406@hardwarefreak.com> <20120204112436.GA3167@nsrc.org>
-	<4F2D2953.2020906@hardwarefreak.com> <20120204200417.GA3362@nsrc.org>
-	<4F2D98A9.4090709@scalableinformatics.com>
+	q16BJQmX125545 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 05:19:26 -0600
+Received: from gse-mta-17.emailfiltering.com (ixe-mta-17-tx.emailfiltering.com
+	[194.116.198.149]) by cuda.sgi.com with ESMTP id
+	B5tbUlfoX00KuHSy (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Feb 2012 03:19:24 -0800 (PST)
+Message-ID: <4F2FB72B.9010209@rhul.ac.uk>
+Date: Mon, 6 Feb 2012 11:19:07 +0000
+From: Tom Crane <T.Crane@rhul.ac.uk>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F2D98A9.4090709@scalableinformatics.com>
+Subject: Re: xfs_repair segfaults with ag_stride option
+References: <4F293FCC.7010101@rhul.ac.uk>
+	<20120202124248.GA12107@infradead.org>
+	<4F2F23F3.9000402@rhul.ac.uk> <4F2F6C00.5050108@sandeen.net>
+In-Reply-To: <4F2F6C00.5050108@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,80 +24,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Landman <landman@scalableinformatics.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, T.Crane@rhul.ac.uk, xfs@oss.sgi.com
 
-On Sat, Feb 04, 2012 at 03:44:25PM -0500, Joe Landman wrote:
-> >Sure it can. A gluster volume consists of "bricks". Each brick is served by
-> >a glusterd process listening on a different TCP port. Those bricks can be on
-> >the same server or on different servers.
-> 
-> I seem to remember that the Gluster folks abandoned this model
-> (using their code versus MD raid) on single servers due to
-> performance issues.  We did play with this a few times, and the
-> performance wasn't that good.  Basically limited by single disk
-> seek/write speed.
+Eric Sandeen wrote:
+> On 2/5/12 6:50 PM, Tom Crane wrote:
+>   
+>> Hi Christoph,
+>> Many thanks for the quick response and the patch. It was a big help.
+>> I was able to repair our 60TB FS in about 30 hours. I have a couple
+>> of questions;
+>>
+>> (1) The steps in the progress report seem a little strange. See the
+>> attachment. Is this expected?
+>>
+>> (2) This may be a little out of band but I have heard second hand
+>> reports from another sysadmin that the xfs tools which come with SLC5
+>> (our current Linux distro) should not be relied upon and that SLC6
+>> should be used. Our 60TB FS is significantly fragmented (~40%) and I
+>> would very much like to run xfs_fsr on it. Given that I have built
+>> the latest xfsprogs, is there any reason I should be afraid of
+>> running xfs_fsr, on the FS which comes with SLC5? Unfortunately I
+>> don't have ~60TB spare storage space elsewhere to backup the FS
+>> before defragging. What would you advise?> 
+>> Many thanks
+>>     
+>
+> Newer tools are fine to use on older filesystems, there should be no
+>   
 
-I did raise the same question on the gluster-users list recently and there
-seemed to be no clear-cut answer; some people were using Gluster to
-aggregate RAID nodes, and some were using it to mirror individual disks
-between nodes.
+Good!
 
-I do like the idea of having individual filesystems per disk, making data
-recovery much more straightforward and allowing for efficient
-parallelisation.
+> issue there.
+>
+> running fsr can cause an awful lot of IO, and a lot of file reorganization.
+> (meaning, they will get moved to new locations on disk, etc).
+>
+> How bad is it, really?  How did you arrive at the 40% number?  Unless
+>   
 
-However I also like the idea of low-level RAID which lets you pop out and
-replace a disk invisibly to the higher levels, and is perhaps better
-battle-tested than gluster file-level replication.
+xfs_db -c frag -r <block device>
 
-> RAID in this case can protect you from some of these issues (single
-> disk failure issues, being replaced by RAID issues), but unless you
-> are building mirror pairs of bricks on separate units, this magical
-> "automatic" isn't quite so.
+Some users on our compute farm with large jobs (lots of I/O) find they take 
+longer than with some of our other scratch arrays hosted on other machines.  We also typically find many 
+nfsd tasks in an uninterruptible wait state (sync_page), waiting for data to be copied in from the FS. 
 
-That was the idea: having mirror bricks on different nodes.
 
-server1:/brick1 <-> server2:/brick1
-server2:/brick2 <-> server2:/brick2 etc
+> you see perf problems which you know you can attribute to fragmentation,
+> I might not worry about it.
+>
+> You can also check the fragmentation of individual files with the
+> xfs_bmap tool.
+>
+> -Eric
+>   
 
-> Moreover, last I checked, Gluster made no guarantees as to the
-> ordering of the layout for mirrors.  So if you have more than one
-> brick per node, and build mirror pairs with the "replicate" option,
-> you have to check the actual hashing to make sure it did what you
-> expect.  Or build up the mirror pairs more carefully.
+Thanks for your advice.
+Cheers
+Tom.
 
-AFAICS it does guarantee the ordering:
-http://download.gluster.com/pub/gluster/glusterfs/3.2/Documentation/AG/html/sect-Administration_Guide--Setting_Volumes-Distributed_Replicated.html
-
-"Note: The number of bricks should be a multiple of the replica count for a
-distributed replicated volume. Also, the order in which bricks are specified
-has a great effect on data protection. Each replica_count consecutive bricks
-in the list you give will form a replica set, with all replica sets combined
-into a volume-wide distribute set. To make sure that replica-set members are
-not placed on the same node, list the first brick on every server, then the
-second brick on every server in the same order, and so on."
-
-> At this point, it sounds like there is a gluster side of this
-> discussion that I'd recommend you take to the gluster list.  There
-> is an xfs portion as well which is fine here.
-
-Understood. Whatever the final solution looks like, I'm totally sold on XFS.
-
-> Disclosure:  we build/sell/support gluster (and other) based systems
-> atop xfs based RAID units (both hardware and software RAID;
-> 1,10,6,60,...) so we have inherent biases.
-
-You have also inherent experience, and that is extremely valuable as I try
-to pick the best storage model which will work for us going forward.
-
-Regards,
-
-Brian.
+>   
+>> Tom.
+>>
+>> Christoph Hellwig wrote:
+>>     
+>>> Hi Tom,
+>>>
+>>> On Wed, Feb 01, 2012 at 01:36:12PM +0000, Tom Crane wrote:
+>>>  
+>>>       
+>>>> Dear XFS Support,
+>>>>    I am attempting to use xfs_repair to fix a damaged FS but always
+>>>> get a segfault if and only if -o ag_stride is specified. I have
+>>>> tried ag_stride=2,8,16 & 32.  The FS is approx 60T. I can't find
+>>>> reports of this particular problem on the mailing list archive.
+>>>> Further details are;
+>>>>
+>>>> xfs_repair version 3.1.7, recently downloaded via git repository.
+>>>> uname -a
+>>>> Linux store3 2.6.18-274.17.1.el5 #1 SMP Wed Jan 11 11:10:32 CET 2012
+>>>> x86_64 x86_64 x86_64 GNU/Linux
+>>>>     
+>>>>         
+>>> Thanks for the detailed bug report.
+>>>
+>>> Can you please try the attached patch?
+>>>
+>>>   
+>>>       
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>     
+>
+>   
 
 _______________________________________________
 xfs mailing list
