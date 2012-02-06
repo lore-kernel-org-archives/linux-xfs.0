@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q165wR0B103557 for <xfs@oss.sgi.com>; Sun, 5 Feb 2012 23:58:27 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id nOR36PD9ofZK5VvV for <xfs@oss.sgi.com>;
-	Sun, 05 Feb 2012 21:58:25 -0800 (PST)
-Message-ID: <4F2F6C00.5050108@sandeen.net>
-Date: Sun, 05 Feb 2012 23:58:24 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q166NO39107224 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 00:23:24 -0600
+Date: Mon, 6 Feb 2012 17:23:19 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH][RFC] XFS: Fix mem leak and possible NULL deref in
+	xfs_setattr_nonsize()
+Message-ID: <20120206062319.GB12836@dastard>
+References: <alpine.LNX.2.00.1202052220390.32529@swampdragon.chaosbits.net>
 MIME-Version: 1.0
-Subject: Re: xfs_repair segfaults with ag_stride option
-References: <4F293FCC.7010101@rhul.ac.uk>
-	<20120202124248.GA12107@infradead.org>
-	<4F2F23F3.9000402@rhul.ac.uk>
-In-Reply-To: <4F2F23F3.9000402@rhul.ac.uk>
+Content-Disposition: inline
+In-Reply-To: <alpine.LNX.2.00.1202052220390.32529@swampdragon.chaosbits.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,75 +23,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tom Crane <T.Crane@rhul.ac.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 2/5/12 6:50 PM, Tom Crane wrote:
-> Hi Christoph,
-> Many thanks for the quick response and the patch. It was a big help.
-> I was able to repair our 60TB FS in about 30 hours. I have a couple
-> of questions;
+On Sun, Feb 05, 2012 at 10:23:44PM +0100, Jesper Juhl wrote:
+> In xfs_setattr_nonsize(), xfs_trans_alloc() gets its memory from
+> _xfs_trans_alloc() which gets it from kmem_zone_zalloc() which may
+> fail and return NULL. So this:
 > 
-> (1) The steps in the progress report seem a little strange. See the
-> attachment. Is this expected?
+> 	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
 > 
-> (2) This may be a little out of band but I have heard second hand
-> reports from another sysadmin that the xfs tools which come with SLC5
-> (our current Linux distro) should not be relied upon and that SLC6
-> should be used. Our 60TB FS is significantly fragmented (~40%) and I
-> would very much like to run xfs_fsr on it. Given that I have built
-> the latest xfsprogs, is there any reason I should be afraid of
-> running xfs_fsr, on the FS which comes with SLC5? Unfortunately I
-> don't have ~60TB spare storage space elsewhere to backup the FS
-> before defragging. What would you advise?> 
-> Many thanks
-
-Newer tools are fine to use on older filesystems, there should be no
-issue there.
-
-running fsr can cause an awful lot of IO, and a lot of file reorganization.
-(meaning, they will get moved to new locations on disk, etc).
-
-How bad is it, really?  How did you arrive at the 40% number?  Unless
-you see perf problems which you know you can attribute to fragmentation,
-I might not worry about it.
-
-You can also check the fragmentation of individual files with the
-xfs_bmap tool.
-
--Eric
-
-> Tom.
+> may result in a NULL 'tp'.
+> If it does, then the call:
 > 
-> Christoph Hellwig wrote:
->> Hi Tom,
->>
->> On Wed, Feb 01, 2012 at 01:36:12PM +0000, Tom Crane wrote:
->>  
->>> Dear XFS Support,
->>>    I am attempting to use xfs_repair to fix a damaged FS but always
->>> get a segfault if and only if -o ag_stride is specified. I have
->>> tried ag_stride=2,8,16 & 32.  The FS is approx 60T. I can't find
->>> reports of this particular problem on the mailing list archive.
->>> Further details are;
->>>
->>> xfs_repair version 3.1.7, recently downloaded via git repository.
->>> uname -a
->>> Linux store3 2.6.18-274.17.1.el5 #1 SMP Wed Jan 11 11:10:32 CET 2012
->>> x86_64 x86_64 x86_64 GNU/Linux
->>>     
->>
->> Thanks for the detailed bug report.
->>
->> Can you please try the attached patch?
->>
->>   
+> 	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
 > 
+> with a NULL 'tp' will explode, since xfs_trans_reserve() dereferences
+> its first argument unconditionally.
+
+xfs_trans_alloc() can't fail. It will sleep forever until the memory
+allocation succeeds.
+
+There's 35 other places in XFS where this xfs_trans_alloc/
+xfs_trans_reserve pattern occurs - none of them check whether tp is
+null, either.
+
+> And if the memory allocation for 'tp' goes well (and thus
+> xfs_trans_reserve() does not explode) then we may leak the memory
+> allocated to 'tp' if xfs_trans_reserve() returns error.
+
+yes, that's a problem, though will only happen if a filesystem
+shutdown occurs between the start of the function and that check.
+
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> I believe this patch should fix both issues, but I'm not intimate with
+> the XFS code at all, so there can easily be something I overlooked or
+> something that should be done differently than what I did.
+
+Only need to fix the leak of tp.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
