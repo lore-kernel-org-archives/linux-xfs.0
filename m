@@ -1,33 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16AiRRd123010
-	for <linux-xfs@oss.sgi.com>; Mon, 6 Feb 2012 04:44:29 -0600
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id AHL2vnipifo4f5aP (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Mon, 06 Feb 2012 02:44:25 -0800 (PST)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RuM3Y-0000h4-5w
-	for linux-xfs@oss.sgi.com; Mon, 06 Feb 2012 11:44:20 +0100
-Received: from bd206cc2.virtua.com.br ([bd206cc2.virtua.com.br])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 06 Feb 2012 11:44:20 +0100
-Received: from marcosfrm by bd206cc2.virtua.com.br with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 06 Feb 2012 11:44:20 +0100
-From: Marcos Mello <marcosfrm@gmail.com>
-Subject: Re: Placing the root partition on an XFS filesystem is not supported
-Date: Mon, 6 Feb 2012 10:44:07 +0000 (UTC)
-Message-ID: <loom.20120206T112757-532@post.gmane.org>
-References: <loom.20120129T133929-288@post.gmane.org>
-	<4F2B02C4.8070903@sandeen.net>
-	<loom.20120203T152753-631@post.gmane.org>
-	<4F2C2C69.5020103@sandeen.net> <20120206001123.GJ6922@dastard>
-	<4F2F1B28.3060308@sandeen.net> <20120206015430.GK6922@dastard>
-	<4F2F33A8.1050403@sandeen.net>
-Mime-Version: 1.0
+	q16AeX0Z122812 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 04:40:33 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id lmTvRoj7gyBNXZY2 for
+	<xfs@oss.sgi.com>; Mon, 06 Feb 2012 02:40:31 -0800 (PST)
+Date: Mon, 6 Feb 2012 10:40:24 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Performance problem - reads slower than writes
+Message-ID: <20120206104024.GA4975@nsrc.org>
+References: <20120131103126.GA46170@nsrc.org>
+	<20120131145205.GA6607@infradead.org> <20120203115434.GA649@nsrc.org>
+	<4F2C38BE.2010002@hardwarefreak.com> <20120203221015.GA2675@nsrc.org>
+	<4F2D016C.9020406@hardwarefreak.com> <20120204112436.GA3167@nsrc.org>
+	<4F2D2953.2020906@hardwarefreak.com> <20120204200417.GA3362@nsrc.org>
+	<4F2D98A9.4090709@scalableinformatics.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F2D98A9.4090709@scalableinformatics.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -40,44 +30,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Joe Landman <landman@scalableinformatics.com>
+Cc: xfs@oss.sgi.com
 
-Eric Sandeen <sandeen <at> sandeen.net> writes:
-
-> On 2/5/12 7:54 PM, Dave Chinner wrote:
-> > On Sun, Feb 05, 2012 at 06:13:28PM -0600, Eric Sandeen wrote:
-> >> On 2/5/12 6:11 PM, Dave Chinner wrote:
-<snip>
-> >>
-> >> well, it was worse than that.  I can work around the grub-on-a-partition
-> >> problem, but what I ran into was grub reading & writing to/from the block
-> >> device under a mounted filesystem - corruption and hilarity ensued.
-> > 
-> > Oh, grub2 does worse things than that - grub_probe mounts any device
-> > that appears to have a valid superblock so it can find out what
-> > devices it needs to list in it's boot menu. I found this out when I
-> > built a big DM stripe out of disks that used to have filesystems on
-> > them.  grub-probe mounted every single device -inside- the stripe
-> > and ran log recovery on them, corrupting the new filesystem and
-> > quite a bit of data on the DM stripe they were part of....
+On Sat, Feb 04, 2012 at 03:44:25PM -0500, Joe Landman wrote:
+> >Sure it can. A gluster volume consists of "bricks". Each brick is served by
+> >a glusterd process listening on a different TCP port. Those bricks can be on
+> >the same server or on different servers.
 > 
-> Ok, your horror story wins from a pain POV ;)
-> 
-> but sounds like someone should have zeroed out a bit more disk
-> when setting up the dm stripes :(
-> 
-> I've always thought maybe we needed a libzero.so to zap every known signature
-> on disk....
-> 
+> I seem to remember that the Gluster folks abandoned this model
+> (using their code versus MD raid) on single servers due to
+> performance issues.  We did play with this a few times, and the
+> performance wasn't that good.  Basically limited by single disk
+> seek/write speed.
 
-Thanks a lot for the explanation folks! It would be nice have this documented on
-the XFS FAQ
-http://xfs.org/index.php/XFS_FAQ#Q:_Does_GRUB_work_with_XFS.3F
+I did raise the same question on the gluster-users list recently and there
+seemed to be no clear-cut answer; some people were using Gluster to
+aggregate RAID nodes, and some were using it to mirror individual disks
+between nodes.
 
-Eric, landed recently in util-linux's libblkid a function for that AFAIK
-http://git.kernel.org/?p=utils/util-linux/util-linux.git;a=commitdiff;h=2b89be6c802bdbdf6830dbd060c96e33f179b135
+I do like the idea of having individual filesystems per disk, making data
+recovery much more straightforward and allowing for efficient
+parallelisation.
 
-Marcos
+However I also like the idea of low-level RAID which lets you pop out and
+replace a disk invisibly to the higher levels, and is perhaps better
+battle-tested than gluster file-level replication.
+
+> RAID in this case can protect you from some of these issues (single
+> disk failure issues, being replaced by RAID issues), but unless you
+> are building mirror pairs of bricks on separate units, this magical
+> "automatic" isn't quite so.
+
+That was the idea: having mirror bricks on different nodes.
+
+server1:/brick1 <-> server2:/brick1
+server2:/brick2 <-> server2:/brick2 etc
+
+> Moreover, last I checked, Gluster made no guarantees as to the
+> ordering of the layout for mirrors.  So if you have more than one
+> brick per node, and build mirror pairs with the "replicate" option,
+> you have to check the actual hashing to make sure it did what you
+> expect.  Or build up the mirror pairs more carefully.
+
+AFAICS it does guarantee the ordering:
+http://download.gluster.com/pub/gluster/glusterfs/3.2/Documentation/AG/html/sect-Administration_Guide--Setting_Volumes-Distributed_Replicated.html
+
+"Note: The number of bricks should be a multiple of the replica count for a
+distributed replicated volume. Also, the order in which bricks are specified
+has a great effect on data protection. Each replica_count consecutive bricks
+in the list you give will form a replica set, with all replica sets combined
+into a volume-wide distribute set. To make sure that replica-set members are
+not placed on the same node, list the first brick on every server, then the
+second brick on every server in the same order, and so on."
+
+> At this point, it sounds like there is a gluster side of this
+> discussion that I'd recommend you take to the gluster list.  There
+> is an xfs portion as well which is fine here.
+
+Understood. Whatever the final solution looks like, I'm totally sold on XFS.
+
+> Disclosure:  we build/sell/support gluster (and other) based systems
+> atop xfs based RAID units (both hardware and software RAID;
+> 1,10,6,60,...) so we have inherent biases.
+
+You have also inherent experience, and that is extremely valuable as I try
+to pick the best storage model which will work for us going forward.
+
+Regards,
+
+Brian.
 
 _______________________________________________
 xfs mailing list
