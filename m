@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16EVNBi139363 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 08:31:23 -0600
-Message-ID: <4F2FE40A.6050108@oracle.com>
-Date: Mon, 06 Feb 2012 22:30:34 +0800
+	q16EVXW0139400 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 08:31:33 -0600
+Message-ID: <4F2FE410.2040508@oracle.com>
+Date: Mon, 06 Feb 2012 22:30:40 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v2 1/2] xfstests: introduce 279 for SEEK_DATA/SEEK_HOLE sanity
+Subject: [PATCH v2 2/2] xfstests: introduce 280 for SEEK_DATA/SEEK_HOLE copy
 	check
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -24,37 +24,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>
 
-Introduce 279 for SEEK_DATA/SEEK_HOLE sanity check.
+Introduce 280 for SEEK_DATA/SEEK_HOLE copy check.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
----
- 279                      |   63 +++++
- 279.out                  |  116 ++++++++
- group                    |    1 +
- src/Makefile             |    2 +-
- src/seek_sanity_tester.c |  683 ++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 864 insertions(+), 1 deletions(-)
- create mode 100755 279
- create mode 100644 279.out
- create mode 100644 src/seek_sanity_tester.c
 
-diff --git a/279 b/279
+---
+ 280                    |  148 ++++++++++
+ 280.out                |    1 +
+ group                  |    1 +
+ src/Makefile           |    3 +-
+ src/seek_copy_tester.c |  709 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 5 files changed, 861 insertions(+), 1 deletions(-)
+ create mode 100755 280
+ create mode 100644 280.out
+ create mode 100644 src/seek_copy_tester.c
+
+diff --git a/280 b/280
 new file mode 100755
-index 0000000..afdf864
+index 0000000..33efaaa
 --- /dev/null
-+++ b/279
-@@ -0,0 +1,63 @@
++++ b/280
+@@ -0,0 +1,148 @@
 +#! /bin/bash
-+# FS QA Test No. 279
++# FS QA Test No. 280
 +#
-+# SEEK_DATA/SEEK_HOLE sanity checker.
-+#
-+# Improved by Jeff.liu@oracle.com
-+# Creater: josef@redhat.com
++# SEEK_DATA/SEEK_HOLE tester.
++# Create a sparse file with a couple of holes and data extents.
++# Simulates the copy process to verify SEEK_DATA/SEEK_HOLE stuff works
++# as expected.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2011 Oracle Inc.  All Rights Reserved.
-+# Copyright (c) 2011 Red Hat.  All Rights Reserved.
 +#
 +# This program is free software; you can redistribute it and/or
 +# modify it under the terms of the GNU General Public License as
@@ -68,16 +68,17 @@ index 0000000..afdf864
 +# You should have received a copy of the GNU General Public License
 +# along with this program; if not, write the Free Software Foundation,
 +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
 +#-----------------------------------------------------------------------
 +#
 +# creator
-+owner=josef@redhat.com
++owner=jeff.liu@oracle.com
 +
 +seq=`basename $0`
 +echo "QA output created by $seq"
 +
 +here=`pwd`
-+status=0	# success is the default!
++status=1	# failure is the default!
 +trap "_cleanup; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
@@ -85,181 +86,151 @@ index 0000000..afdf864
 +. ./common.filter
 +
 +# real QA test starts here
-+
-+# Modify as appropriate.
-+# FIXME: _supported_os should include Solaris too.
 +_supported_fs generic
 +_supported_os Linux Solaris
 +
-+base_test_path=$TEST_DIR/seek_sanity_testfile
++src=$TEST_DIR/seek_copy_testfile
++dest=$TEST_DIR/seek_copy_testfile.dest
 +
-+[ -x $here/src/seek_sanity_tester ] || _notrun "seek_sanitfy_tester not built"
++[ -x $here/src/seek_copy_tester ] || _notrun "seek_copy_tester not built"
 +
 +_cleanup()
 +{
-+	rm -f $base_test_path.*
++	rm -f $src $dest
 +}
 +
-+rm -rf $seq.out
-+echo "QA output created by $seq" > $seq.out
-+$here/src/seek_sanity_tester $base_test_path 2>&1 | tee -a $seq.out
++# seek_copy_test_01()
++# create a 100Mytes file in preallocation mode.
++# fallocate offset start from 0.
++# the first data extent offset start from 80991, write 4Kbytes,
++# and then skip 195001 bytes for next write.
++# this is intended to test data buffer lookup for DIRTY pages.
++# verify results:
++# 1. file size is identical.
++# 2. perform cmp(1) to compare SRC and DEST file byte by byte.
++test01()
++{
++	rm -f $src $dest
 +
-+# success, all done
++	$here/src/seek_copy_tester -P -O 0 -L 100m -s 80991 -k 195001 -l 4k $src $dest
++
++	test $(stat --printf "%s" $src) = $(stat --printf "%s" $dest) ||
++		echo "TEST01: file size check failed" >> $seq.out
++
++	cmp $src $dest						      ||
++		echo "TEST01: file bytes check failed" >> $seq.out
++}
++
++# seek_copy_test_02()
++# create a 100Mytes file in preallocation mode.
++# fallocate offset start from 0.
++# the first data extent offset start from 0, write 16Kbytes,
++# and then skip 8Mbytes for next write.
++# Try flushing DIRTY pages to WRITEBACK mode, this is intended to
++# test data buffer lookup in WRITEBACK pages.
++# verify results:
++# 1. file size is identical.
++# 2. perform cmp(1) to compare SRC and DEST file byte by byte.
++test02()
++{
++	rm -rf $src $dest
++
++	$here/src/seek_copy_tester -S -P -O 0 -L 100m -s 0 -k 8m -l 16k $src $dest
++
++	test $(stat --printf "%s" $src) = $(stat --printf "%s" $dest) ||
++		echo "TEST02: file size check failed" >> $seq.out
++
++	cmp $src $dest						      ||
++		echo "TEST02: file bytes check failed" >>$seq.out
++}
++
++# seek_copy_test_03
++# create a 100Mytes sparse file.
++# the first data extent offset start from 512, write 4Kbytes,
++# and then skip 1Mbytes for next write.
++# don't make holes at the end of file.
++# verify results:
++# 1. file size is identical.
++# 2. perform cmp(1) to compare SRC and DEST file byte by byte.
++test03()
++{
++	rm -f $src $dest
++
++	$here/src/seek_copy_tester -M 100m -s 512 -k 1m -l 4k $src $dest
++
++	test $(stat --printf "%s" $src) = $(stat --printf "%s" $dest) ||
++		echo "FAIL_TEST03: file size no equal" >> $seq.out
++
++	cmp $src $dest						      ||
++		echo "FAIL_TEST03: file compare failed" >>$seq.out
++}
++
++# seek_copy_test_04
++# create a 1Gbytes sparse file.
++# the first data extent offset start from 512, write 4Kbytes,
++# and then skip 1Mbytes for next write.
++# make holes at the end of file.
++# verify results:
++# 1. file size is identical.
++# 2. perform cmp(1) to compare SRC and DEST file byte by byte.
++test04()
++{
++	rm -f $src $dest
++
++	$here/src/seek_copy_tester -M 1g -s 512 -k 1m -l 4k -E $src $dest
++
++	test $(stat --printf "%s" $src) = $(stat --printf "%s" $dest) ||
++		echo "FAIL_TEST04: file size no equal" >> $seq.out
++	cmp $src $dest						      ||
++		echo "FAIL_TEST04: file compare failed" >>$seq.out
++}
++
++echo "QA output created by $seq" >> $seq.out
++test01
++test02
++test03
++test04
++
 +status=0
 +exit
-diff --git a/279.out b/279.out
+diff --git a/280.out b/280.out
 new file mode 100644
-index 0000000..571c9d1
+index 0000000..fb29270
 --- /dev/null
-+++ b/279.out
-@@ -0,0 +1,116 @@
-+QA output created by 279
-+File system supports the default behavior.
-+File system magic#: 0x58465342
-+Allocation size: 4096
-+
-+01. Test empty file
-+01.01 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+01.02 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+01.03 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+
-+02. Test a tiny full file
-+02.01 SEEK_HOLE expected 8 or 8, got 8.                           succ
-+02.02 SEEK_DATA expected 0 or 0, got 0.                           succ
-+02.03 SEEK_DATA expected 1 or 1, got 1.                           succ
-+02.04 SEEK_HOLE expected 8 or 8, got 8.                           succ
-+02.05 SEEK_DATA expected 7 or 7, got 7.                           succ
-+02.06 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+02.07 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+02.08 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+02.09 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+
-+03. Test a larger full file
-+03.01 SEEK_HOLE expected 8292 or 8292, got 8292.                  succ
-+03.02 SEEK_HOLE expected 8292 or 8292, got 8292.                  succ
-+03.03 SEEK_DATA expected 0 or 0, got 0.                           succ
-+03.04 SEEK_DATA expected 1 or 1, got 1.                           succ
-+03.05 SEEK_HOLE expected 8292 or 8292, got 8292.                  succ
-+03.06 SEEK_DATA expected 8291 or 8291, got 8291.                  succ
-+03.07 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+03.08 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+03.09 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+03.10 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+
-+04. Test file hole at beg, data at end
-+04.01 SEEK_HOLE expected 0 or 8200, got 0.                        succ
-+04.02 SEEK_HOLE expected 1 or 8200, got 1.                        succ
-+04.03 SEEK_DATA expected 8192 or 0, got 8192.                     succ
-+04.04 SEEK_DATA expected 8192 or 1, got 8192.                     succ
-+04.05 SEEK_HOLE expected 8191 or 8200, got 8191.                  succ
-+04.06 SEEK_DATA expected 8192 or 8191, got 8192.                  succ
-+04.07 SEEK_HOLE expected 8200 or 8200, got 8200.                  succ
-+04.08 SEEK_DATA expected 8192 or 8192, got 8192.                  succ
-+04.09 SEEK_HOLE expected 8200 or 8200, got 8200.                  succ
-+04.10 SEEK_DATA expected 8193 or 8193, got 8193.                  succ
-+04.11 SEEK_HOLE expected 8200 or 8200, got 8200.                  succ
-+04.12 SEEK_DATA expected 8199 or 8199, got 8199.                  succ
-+04.13 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+04.14 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+04.15 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+04.16 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+
-+05. Test file data at beg, hole at end
-+05.01 SEEK_HOLE expected 4096 or 16384, got 4096.                 succ
-+05.02 SEEK_HOLE expected 4096 or 16384, got 4096.                 succ
-+05.03 SEEK_DATA expected 0 or 0, got 0.                           succ
-+05.04 SEEK_DATA expected 1 or 1, got 1.                           succ
-+05.05 SEEK_HOLE expected 4096 or 16384, got 4096.                 succ
-+05.06 SEEK_DATA expected 4095 or 4095, got 4095.                  succ
-+05.07 SEEK_HOLE expected 4096 or 16384, got 4096.                 succ
-+05.08 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+05.09 SEEK_HOLE expected 4097 or 16384, got 4097.                 succ
-+05.10 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+05.11 SEEK_HOLE expected 16383 or 16384, got 16383.               succ
-+05.12 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+05.13 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+05.14 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+05.15 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+05.16 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+
-+06. Test file hole data hole data
-+06.01 SEEK_HOLE expected 0 or 16384, got 0.                       succ
-+06.02 SEEK_HOLE expected 1 or 16384, got 1.                       succ
-+06.03 SEEK_DATA expected 4096 or 0, got 4096.                     succ
-+06.04 SEEK_DATA expected 4096 or 1, got 4096.                     succ
-+06.05 SEEK_HOLE expected 4095 or 16384, got 4095.                 succ
-+06.06 SEEK_DATA expected 4096 or 4095, got 4096.                  succ
-+06.07 SEEK_HOLE expected 8192 or 16384, got 16384.                succ
-+06.08 SEEK_DATA expected 4096 or 4096, got 4096.                  succ
-+06.09 SEEK_HOLE expected 8192 or 16384, got 16384.                succ
-+06.10 SEEK_DATA expected 4097 or 4097, got 4097.                  succ
-+06.11 SEEK_HOLE expected 8192 or 16384, got 16384.                succ
-+06.12 SEEK_DATA expected 8191 or 8191, got 8191.                  succ
-+06.13 SEEK_HOLE expected 8192 or 16384, got 16384.                succ
-+06.14 SEEK_DATA expected 12288 or 8192, got 8192.                 succ
-+06.15 SEEK_HOLE expected 8193 or 16384, got 16384.                succ
-+06.16 SEEK_DATA expected 12288 or 8193, got 8193.                 succ
-+06.17 SEEK_HOLE expected 12287 or 16384, got 16384.               succ
-+06.18 SEEK_DATA expected 12288 or 12287, got 12287.               succ
-+06.19 SEEK_HOLE expected 16384 or 16384, got 16384.               succ
-+06.20 SEEK_DATA expected 12288 or 12288, got 12288.               succ
-+06.21 SEEK_HOLE expected 16384 or 16384, got 16384.               succ
-+06.22 SEEK_DATA expected 12289 or 12289, got 12289.               succ
-+06.23 SEEK_HOLE expected 16384 or 16384, got 16384.               succ
-+06.24 SEEK_DATA expected 16383 or 16383, got 16383.               succ
-+06.25 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+06.26 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+06.27 SEEK_HOLE expected -1 with errno -6, got -6.                succ
-+06.28 SEEK_DATA expected -1 with errno -6, got -6.                succ
-+
-+07. Test file with unwritten extents, only have dirty pages
-+07.01 SEEK_HOLE expected 0 or 4194304, got 4194304.               succ
-+07.02 SEEK_HOLE expected 1 or 4194304, got 4194304.               succ
-+07.03 SEEK_DATA expected 40960 or 0, got 0.                       succ
-+07.04 SEEK_DATA expected 40960 or 1, got 1.                       succ
-+
-+08. Test file with unwritten extents, only have unwritten pages
-+08.01 SEEK_HOLE expected 0 or 4194304, got 4194304.               succ
-+08.02 SEEK_HOLE expected 1 or 4194304, got 4194304.               succ
-+08.03 SEEK_DATA expected 40960 or 0, got 0.                       succ
-+08.04 SEEK_DATA expected 40960 or 1, got 1.                       succ
-+
-+09. Test file with unwritten extents, have both dirty && unwritten pages
-+09.01 SEEK_HOLE expected 0 or 8388608, got 8388608.               succ
-+09.02 SEEK_HOLE expected 1 or 8388608, got 8388608.               succ
-+09.03 SEEK_DATA expected 40960 or 0, got 0.                       succ
-+09.04 SEEK_DATA expected 40960 or 1, got 1.                       succ
++++ b/280.out
+@@ -0,0 +1 @@
++QA output created by 280
 diff --git a/group b/group
-index 08d999a..02c6743 100644
+index 02c6743..b5a0578 100644
 --- a/group
 +++ b/group
-@@ -389,3 +389,4 @@ deprecated
- 273 auto rw
+@@ -390,3 +390,4 @@ deprecated
  274 auto rw
  275 auto rw
-+279 auto rw
+ 279 auto rw
++280 auto rw
 diff --git a/src/Makefile b/src/Makefile
-index 67250ee..6797064 100644
+index 6797064..4a24d3c 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -17,7 +17,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+@@ -17,7 +17,8 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
  	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable \
--	stale_handle pwrite_mmap_blocked fstrim t_dir_offset2
-+	stale_handle pwrite_mmap_blocked fstrim t_dir_offset2 seek_sanity_tester
+-	stale_handle pwrite_mmap_blocked fstrim t_dir_offset2 seek_sanity_tester
++	stale_handle pwrite_mmap_blocked fstrim t_dir_offset2 seek_sanity_tester \
++	seek_copy_tester
  
  SUBDIRS =
  
-diff --git a/src/seek_sanity_tester.c b/src/seek_sanity_tester.c
+diff --git a/src/seek_copy_tester.c b/src/seek_copy_tester.c
 new file mode 100644
-index 0000000..8f36dee
+index 0000000..ddf683f
 --- /dev/null
-+++ b/src/seek_sanity_tester.c
-@@ -0,0 +1,683 @@
++++ b/src/seek_copy_tester.c
+@@ -0,0 +1,709 @@
 +/*
 + * Copyright (C) 2011 Oracle.  All rights reserved.
-+ * Copyright (C) 2011 Red Hat.  All rights reserved.
 + *
 + * This program is free software; you can redistribute it and/or
 + * modify it under the terms of the GNU General Public
@@ -275,669 +246,696 @@ index 0000000..8f36dee
 + * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 + * Boston, MA 021110-1307, USA.
 + */
-+
 +#define _XOPEN_SOURCE 500
-+#include <sys/types.h>
-+#include <sys/stat.h>
-+#include <sys/vfs.h>
-+#include <errno.h>
-+#include <fcntl.h>
 +#include <stdio.h>
-+#include <string.h>
-+#include <unistd.h>
 +#include <stdlib.h>
++#include <stdint.h>
++#include <stdarg.h>
++#include <string.h>
++#include <getopt.h>
++#include <sys/stat.h>
++#include <sys/syscall.h>
++#include <sys/types.h>
++#include <fcntl.h>
++#include <unistd.h>
++#include <ctype.h>
++#include <errno.h>
++#include <limits.h>
 +#include <assert.h>
++#include <linux/falloc.h>
 +
 +#ifndef SEEK_DATA
-+#define SEEK_DATA      3
-+#define SEEK_HOLE      4
++#define SEEK_DATA	3
++#define SEEK_HOLE	4
 +#endif
 +
-+static blksize_t alloc_size;
-+int default_behavior = 0;
-+char *base_file_path;
++#define BUF_SIZE	4096
++#ifndef MIN
++#define MIN(a,b) ((a)<(b)?(a):(b))
++#endif
 +
-+static void get_file_system(int fd)
++/* True if the arithmetic type T is signed, borrowed from Coreutils */
++#define TYPE_SIGNED(t) (! ((t)0 < (t)-1))
++#define TYPE_MAXIMUM(t)								\
++	((t) (! TYPE_SIGNED(t)							\
++		? (t) -1							\
++		: ((((t) 1 << (sizeof(t) * CHAR_BIT - 2)) - 1) * 2 + 1)))
++
++#ifndef OFF_T_MAX
++# define OFF_T_MAX TYPE_MAXIMUM (off_t)
++#endif
++
++static void
++error(const char *fmt, ...)
 +{
-+	struct statfs buf;
++	char buf[256];
++	va_list args;
++	va_start(args, fmt);
++	vsprintf(buf, fmt, args);
++	va_end(args);
 +
-+	if (!fstatfs(fd, &buf))
-+		fprintf(stdout, "File system magic#: 0x%x\n", buf.f_type);
++	fprintf(stderr, "ERROR: [%s:%d] %s\n", __func__, __LINE__, buf);
 +}
 +
-+static int get_io_sizes(int fd)
++/* Borrowed from btrfs progs */
++static uint64_t
++parse_size(char *s)
 +{
-+       struct stat buf;
-+       int ret;
++	int len = strlen(s);
++	char c;
++	uint64_t mult = 1;
 +
-+       ret = fstat(fd, &buf);
-+       if (ret)
-+               fprintf(stderr, "  ERROR %d: Failed to find io blocksize\n",
-+                       errno);
++	if (!isdigit(s[len - 1])) {
++		c = tolower(s[len - 1]);
++		switch (c) {
++		case 'g':
++			mult <<= 30;
++			break;
++		case 'm':
++			mult <<= 20;
++			break;
++		case 'k':
++			mult <<= 10;
++			break;
++		case 'b':
++			break;
++		default:
++			error("unknown size descriptor %c", c);
++			exit(1);
++		}
++		s[len - 1] = '\0';
++	}
 +
-+       /* st_blksize is typically also the allocation size */
-+       alloc_size = buf.st_blksize;
-+       fprintf(stdout, "Allocation size: %ld\n", alloc_size);
-+
-+       return ret;
++	return atoll(s) * mult;
 +}
 +
-+#define do_free(x)     do { if(x) free(x); } while(0);
-+
-+static void *do_malloc(size_t size)
++static size_t
++full_write(int fd, const void *buf, size_t count)
 +{
-+       void *buf;
++	size_t total = 0;
++	const char *ptr = (const char *) buf;
 +
-+       buf = malloc(size);
-+       if (!buf)
-+               fprintf(stderr, "  ERROR: Unable to allocate %ld bytes\n",
-+                       (long)size);
++	while (count > 0) {
++		ssize_t n = write(fd, ptr, count);
++		if (n < 0) {
++			if (errno == EINTR)
++				continue;
++			error("full_write() failed as %s", strerror(errno));
++			break;
++		}
 +
-+       return buf;
++		if (n == 0) {
++			error("full_write() ZERO bytes transferred");
++			break;
++		}
++
++		total += n;
++		ptr += n;
++		count -= n;
++	}
++
++	return total;
 +}
 +
-+static int do_truncate(int fd, off_t length)
++static size_t
++get_block_size(int fd)
 +{
-+       int ret;
-+
-+       ret = ftruncate(fd, length);
-+       if (ret)
-+               fprintf(stderr, "  ERROR %d: Failed to extend file "
-+                       "to %ld bytes\n", errno, (long)length);
-+       return ret;
++	struct stat st;
++	return (fstat(fd, &st) < 0) ? -1 : st.st_blksize;
 +}
 +
-+static int do_fallocate(int fd, off_t offset, off_t length, int mode)
++/*
++ * Write out of all dirty pages in the specified range which are
++ * not presently submitted write-out.
++ * @offset: the starting byte of the file range to be synchronized.
++ * @nbytes: specifies the length of the range to be synchronized, in bytes;
++ *	    if nbytes is zero, then all bytes from offset through to the end
++ *	    of file are synchronized.
++ * @flags:  by default, SYNC_FILE_RANGE_WRITE will be used.
++ */
++static int
++writeout_dirty_pages(int fd, off_t offset, off_t nbytes,
++		     unsigned int flags)
 +{
-+	int ret;
++	if (sync_file_range(fd, offset, nbytes, flags) < 0) {
++		error("sync file range failed as %s", strerror(errno));
++		return -1;
++	}
 +
-+	ret = fallocate(fd, mode, offset, length);
-+	if (ret)
-+		fprintf(stderr, "  ERROR %d: Failed to preallocate "
-+			"space to %ld bytes\n", errno, (long) length);
++	return 0;
++}
 +
++static size_t
++full_pwrite(int fd, const void *buf, size_t count, off_t offset)
++{
++	size_t total = 0;
++	size_t  written = 0;
++
++	while (written < count) {
++		ssize_t n = pwrite(fd, buf + written, count - written,
++				   offset + written);
++		if (n < 0) {
++			error("full_pwrite() failed as %s", strerror(errno));
++			break;
++		}
++
++		if (n == 0) {
++			error("full_pwrite(): ZERO byte transferred");
++			break;
++		}
++
++		written += n;
++		total += n;
++	}
++
++	return total;
++}
++
++/*
++ * Write N_BYTES zero bytes to file descriptor FD.
++ * Return true if successful. Upon write failure, set
++ * errno and return false. Borrowed from cp(1).
++ */
++static int
++write_zeros(int fd, uint64_t n_bytes)
++{
++	static char *zeros;
++	static size_t nz = BUF_SIZE;
++
++	/*
++	 * Attempt to use a relatively large calloc'd source buffer for
++	 * efficiency, but if that allocation fails, resort to a smaller
++	 * statically allocated one.
++	 */
++	if (zeros == NULL) {
++		static char fallback[1024];
++		zeros = calloc(nz, 1);
++		if (zeros == NULL) {
++			zeros = fallback;
++			nz = sizeof(fallback);
++		}
++	}
++
++	while (n_bytes) {
++		uint64_t n = MIN(nz, n_bytes);
++		if ((full_write(fd, zeros, n)) != n)
++			return -1;
++		n_bytes -= n;
++	}
++
++	return 0;
++}
++
++/*
++ * Produce a sparse file with data extents and holes.
++ * @len:		the maximum length of the produced file.
++ * @start_offset:	seek to here first to write data.
++ * @skip_bytes:		for the next lseek(2) operation, we need to
++ *			skip the number of bytes to create holes.
++ * @data_len:		how many bytes for each write(2).
++ */
++static int
++create_data_and_holes(int fd, size_t nr_total_bytes, off_t start_offset,
++		      uint64_t nr_skip_bytes, uint64_t nr_data_bytes,
++		      int wrote_hole_at_eof)
++{
++	int ret = 0;
++	off_t total = nr_total_bytes;
++	off_t data_len = nr_data_bytes;
++	off_t off = start_offset;
++	char buf[BUF_SIZE];
++
++	memset(buf, 'A', sizeof(buf));
++
++	total -= start_offset;
++	while (total > 0) {
++		do {
++			size_t nr_write = MIN(total, BUF_SIZE);
++			if (full_pwrite(fd, buf, nr_write, off) != nr_write) {
++				error("full_pwrite() failed as %s", strerror(errno));
++				ret = -1;
++				goto out;
++			}
++
++			off += nr_write;
++			data_len -= nr_write;
++		} while (data_len > 0);
++
++		off += (nr_skip_bytes + nr_data_bytes);
++		total -= off;
++	}
++
++	if (off < nr_total_bytes) {
++		if (wrote_hole_at_eof) {
++			ret = ftruncate(fd, nr_total_bytes);
++			if (ret < 0) {
++				error("truncate source file to %lld bytes failed as %s",
++				       (long long)nr_total_bytes, strerror(errno));
++			}
++		}
++
++		ret = write_zeros(fd, nr_total_bytes - off);
++		if (ret < 0) {
++			error("write_zeros to end of file failed as %s",
++			       strerror(errno));
++		}
++	}
++
++out:
 +	return ret;
 +}
 +
 +/*
-+ * Synchnorize all dirty pages in the file range starting from
-+ * offset to nbytes length.
++ * Copy a data extent from source file to dest file.
++ * @data_off: data offset
++ * @hole_off: hole offset
++ * The length of this extent is (hole_off - data_off).
 + */
-+static int do_sync_dirty_pages(int fd, off64_t offset, off64_t nbytes)
++static int
++do_extent_copy(int src_fd, int dest_fd, off_t data_off, off_t hole_off)
 +{
++	uint64_t len = (uint64_t)(hole_off - data_off);
++	char buf[BUF_SIZE];
 +	int ret;
 +
-+	ret = sync_file_range(fd, offset, nbytes, SYNC_FILE_RANGE_WRITE);
-+	if (ret)
-+		fprintf(stderr, "  ERROR %d: Failed to sync out dirty "
-+			"pages\n", errno);
-+
-+	return ret;
-+}
-+
-+static ssize_t do_pwrite(int fd, const void *buf, size_t count, off_t offset)
-+{
-+       ssize_t ret, written = 0;
-+
-+       while (count > written) {
-+               ret = pwrite(fd, buf + written, count - written, offset + written);
-+               if (ret < 0) {
-+                       fprintf(stderr, "  ERROR %d: Failed to write %ld "
-+                               "bytes\n", errno, (long)count);
-+                       return ret;
-+               }
-+               written += ret;
-+       }
-+
-+       return 0;
-+}
-+
-+#define do_close(x)	do { if ((x) > -1) close(x); } while(0);
-+
-+static int do_create(const char *filename)
-+{
-+	int fd;
-+
-+	fd = open(filename, O_RDWR|O_CREAT|O_TRUNC, 0644);
-+	if (fd < 0)
-+		fprintf(stderr, " ERROR %d: Failed to create file '%s'\n",
-+			errno, filename);
-+
-+	return fd;
-+}
-+
-+static int do_lseek(int testnum, int subtest, int fd, int filsz, int origin,
-+		    off_t set, off_t exp)
-+{
-+	off_t pos, exp2;
-+	int x, ret;
-+
-+	assert(!(origin != SEEK_HOLE && origin != SEEK_DATA));
-+
-+	/*
-+	 * The file pointer can be set to different values depending
-+	 * on the implementation. For SEEK_HOLE, EOF could be a valid
-+	 * value. For SEEK_DATA, supplied offset could be the valid
-+	 * value.
-+	 */
-+	exp2 = exp;
-+	if (origin == SEEK_HOLE && exp2 != -1)
-+		exp2 = filsz;
-+	if (origin == SEEK_DATA && default_behavior && set < filsz)
-+		exp2 = set;
-+
-+	pos = lseek(fd, set, origin);
-+
-+	if (pos == -1 && exp == -1) {
-+		x = fprintf(stdout, "%02d.%02d %s expected -1 with errno %d, got %d. ",
-+			    testnum, subtest,
-+			    (origin == SEEK_HOLE) ? "SEEK_HOLE" : "SEEK_DATA",
-+			    -ENXIO, -errno);
-+		ret = !(errno == ENXIO);
-+	} else {
-+
-+		x = fprintf(stdout, "%02d.%02d %s expected %ld or %ld, got %ld. ",
-+			    testnum, subtest,
-+			    (origin == SEEK_HOLE) ? "SEEK_HOLE" : "SEEK_DATA",
-+			    (long)exp, (long)exp2, (long)pos);
-+		ret = !(pos == exp || pos == exp2);
-+	}
-+
-+	fprintf(stdout, "%*s\n", (70 - x), ret ? "FAIL" : "succ");
-+
-+	return ret;
-+}
-+
-+/*
-+ * test file with unwritten extents, have both dirty and
-+ * writeback pages in page cache.
-+ */
-+static int test09(int fd, int testnum)
-+{
-+	int ret = 0;
-+	char *buf = NULL;
-+	int bufsz = alloc_size;
-+	int filsz = 8 << 20;
-+
-+	/*
-+	 * HOLE - unwritten DATA in dirty page - HOLE -
-+	 * unwritten DATA in writeback page
-+	 */
-+
-+	/* Each unit is bufsz */
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+	memset(buf, 'a', bufsz);
-+
-+	/* preallocate 8M space to file */
-+	ret = do_fallocate(fd, 0, filsz, 0);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = do_pwrite(fd, buf, bufsz, bufsz * 10);
-+	if (!ret) {
-+		ret = do_pwrite(fd, buf, bufsz, bufsz * 100);
-+		if (ret)
-+			goto out;
-+	}
-+
-+	/*
-+	 * Sync out dirty pages from bufsz * 100, this will convert
-+	 * the dirty page to writeback.
-+	 */
-+	ret = do_sync_dirty_pages(fd, bufsz * 100, 0);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, 0);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, 1);
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, bufsz * 10);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, bufsz * 10);
-+
-+out:
-+	do_free(buf);
-+	return ret;
-+}
-+
-+/* test file with unwritten extent, only have writeback page */
-+static int test08(int fd, int testnum)
-+{
-+	int ret = 0;
-+	char *buf = NULL;
-+	int bufsz = alloc_size;
-+	int filsz = 4 << 20;
-+
-+	/* HOLE - unwritten DATA in writeback page */
-+	/* Each unit is bufsz */
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+	memset(buf, 'a', bufsz);
-+
-+	/* preallocate 4M space to file */
-+	ret = do_fallocate(fd, 0, filsz, 0);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = do_pwrite(fd, buf, bufsz, bufsz * 10);
-+	if (ret)
-+		goto out;
-+
-+	/* Sync out all file */
-+	ret = do_sync_dirty_pages(fd, 0, 0);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, 0);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, 1);
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, bufsz * 10);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, bufsz * 10);
-+
-+out:
-+	do_free(buf);
-+	return ret;
-+}
-+
-+/*
-+ * test file with unwritten extents, only have dirty pages
-+ * in page cache.
-+ */
-+static int test07(int fd, int testnum)
-+{
-+	int ret = 0;
-+	char *buf = NULL;
-+	int bufsz = alloc_size;
-+	int filsz = 4 << 20;
-+
-+	/* HOLE - unwritten DATA in dirty page */
-+	/* Each unit is bufsz */
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+	memset(buf, 'a', bufsz);
-+
-+	/* preallocate 4M space to file */
-+	ret = do_fallocate(fd, 0, filsz, 0);
-+	if (ret < 0)
-+		goto out;
-+
-+	ret = do_pwrite(fd, buf, bufsz, bufsz * 10);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, 0);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, 1);
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, bufsz * 10);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, bufsz * 10);
-+
-+out:
-+	do_free(buf);
-+	return ret;
-+}
-+
-+/* test hole data hole data */
-+static int test06(int fd, int testnum)
-+{
-+	int ret = -1;
-+	char *buf = NULL;
-+	int bufsz = alloc_size;
-+	int filsz = bufsz * 4;
-+	int off;
-+
-+	/* HOLE - DATA - HOLE - DATA */
-+	/* Each unit is bufsz */
-+
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+
-+	memset(buf, 'a', bufsz);
-+
-+	ret = do_pwrite(fd, buf, bufsz, bufsz);
-+	if (!ret)
-+		do_pwrite(fd, buf, bufsz, bufsz * 3);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, 0);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, 1);
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, bufsz);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, bufsz);
-+
-+	/* offset around first hole-data boundary */
-+	off = bufsz;
-+	ret += do_lseek(testnum,  5, fd, filsz, SEEK_HOLE, off - 1, off - 1);
-+	ret += do_lseek(testnum,  6, fd, filsz, SEEK_DATA, off - 1, off);
-+	ret += do_lseek(testnum,  7, fd, filsz, SEEK_HOLE, off,     bufsz * 2);
-+	ret += do_lseek(testnum,  8, fd, filsz, SEEK_DATA, off,     off);
-+	ret += do_lseek(testnum,  9, fd, filsz, SEEK_HOLE, off + 1, bufsz * 2);
-+	ret += do_lseek(testnum, 10, fd, filsz, SEEK_DATA, off + 1, off + 1);
-+
-+	/* offset around data-hole boundary */
-+	off = bufsz * 2;
-+	ret += do_lseek(testnum, 11, fd, filsz, SEEK_HOLE, off - 1, off);
-+	ret += do_lseek(testnum, 12, fd, filsz, SEEK_DATA, off - 1, off - 1);
-+	ret += do_lseek(testnum, 13, fd, filsz, SEEK_HOLE, off,     off);
-+	ret += do_lseek(testnum, 14, fd, filsz, SEEK_DATA, off,     bufsz * 3);
-+	ret += do_lseek(testnum, 15, fd, filsz, SEEK_HOLE, off + 1, off + 1);
-+	ret += do_lseek(testnum, 16, fd, filsz, SEEK_DATA, off + 1, bufsz * 3);
-+
-+	/* offset around second hole-data boundary */
-+	off = bufsz * 3;
-+	ret += do_lseek(testnum, 17, fd, filsz, SEEK_HOLE, off - 1, off - 1);
-+	ret += do_lseek(testnum, 18, fd, filsz, SEEK_DATA, off - 1, off);
-+	ret += do_lseek(testnum, 19, fd, filsz, SEEK_HOLE, off,     filsz);
-+	ret += do_lseek(testnum, 20, fd, filsz, SEEK_DATA, off,     off);
-+	ret += do_lseek(testnum, 21, fd, filsz, SEEK_HOLE, off + 1, filsz);
-+	ret += do_lseek(testnum, 22, fd, filsz, SEEK_DATA, off + 1, off + 1);
-+
-+	/* offset around the end of file */
-+	off = filsz;
-+	ret += do_lseek(testnum, 23, fd, filsz, SEEK_HOLE, off - 1, filsz);
-+	ret += do_lseek(testnum, 24, fd, filsz, SEEK_DATA, off - 1, filsz - 1);
-+	ret += do_lseek(testnum, 25, fd, filsz, SEEK_HOLE, off, -1);
-+	ret += do_lseek(testnum, 26, fd, filsz, SEEK_DATA, off, -1);
-+	ret += do_lseek(testnum, 27, fd, filsz, SEEK_HOLE, off + 1, -1);
-+	ret += do_lseek(testnum, 28, fd, filsz, SEEK_DATA, off + 1, -1);
-+
-+out:
-+	do_free(buf);
-+	return ret;
-+}
-+
-+/* test file with data at the beginning and a hole at the end */
-+static int test05(int fd, int testnum)
-+{
-+	int ret = -1;
-+	char *buf = NULL;
-+	int bufsz = alloc_size;
-+	int filsz = bufsz * 4;
-+
-+	/* |- DATA -|- HOLE -|- HOLE -|- HOLE -| */
-+
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+	memset(buf, 'a', bufsz);
-+
-+	ret = do_truncate(fd, filsz);
-+	if (!ret)
-+		ret = do_pwrite(fd, buf, bufsz, 0);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, bufsz);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, bufsz);
-+
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, 0);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, 1);
-+
-+	/* offset around data-hole boundary */
-+	ret += do_lseek(testnum,  5, fd, filsz, SEEK_HOLE, bufsz - 1, bufsz);
-+	ret += do_lseek(testnum,  6, fd, filsz, SEEK_DATA, bufsz - 1, bufsz - 1);
-+
-+	ret += do_lseek(testnum,  7, fd, filsz, SEEK_HOLE, bufsz,     bufsz);
-+	ret += do_lseek(testnum,  8, fd, filsz, SEEK_DATA, bufsz,     -1);
-+	ret += do_lseek(testnum,  9, fd, filsz, SEEK_HOLE, bufsz + 1, bufsz + 1);
-+	ret += do_lseek(testnum, 10, fd, filsz, SEEK_DATA, bufsz + 1, -1);
-+
-+	/* offset around eof */
-+	ret += do_lseek(testnum, 11, fd, filsz, SEEK_HOLE, filsz - 1, filsz - 1);
-+	ret += do_lseek(testnum, 12, fd, filsz, SEEK_DATA, filsz - 1, -1);
-+	ret += do_lseek(testnum, 13, fd, filsz, SEEK_HOLE, filsz,     -1);
-+	ret += do_lseek(testnum, 14, fd, filsz, SEEK_DATA, filsz,     -1);
-+	ret += do_lseek(testnum, 15, fd, filsz, SEEK_HOLE, filsz + 1, -1);
-+	ret += do_lseek(testnum, 16, fd, filsz, SEEK_DATA, filsz + 1, -1);
-+out:
-+	do_free(buf);
-+	return ret;
-+}
-+/* test hole begin and data end */
-+static int test04(int fd, int testnum)
-+{
-+	int ret;
-+	char *buf = "ABCDEFGH";
-+	int bufsz, holsz, filsz;
-+
-+	bufsz = strlen(buf);
-+	holsz = alloc_size * 2;
-+	filsz = holsz + bufsz;
-+
-+	/* |- HOLE -|- HOLE -|- DATA -| */
-+
-+	ret = do_pwrite(fd, buf, bufsz, holsz);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, 0);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, 1);
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, holsz);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, holsz);
-+	/* offset around hole-data boundary */
-+	ret += do_lseek(testnum,  5, fd, filsz, SEEK_HOLE, holsz - 1, holsz - 1);
-+	ret += do_lseek(testnum,  6, fd, filsz, SEEK_DATA, holsz - 1, holsz);
-+	ret += do_lseek(testnum,  7, fd, filsz, SEEK_HOLE, holsz,     filsz);
-+	ret += do_lseek(testnum,  8, fd, filsz, SEEK_DATA, holsz,     holsz);
-+	ret += do_lseek(testnum,  9, fd, filsz, SEEK_HOLE, holsz + 1, filsz);
-+	ret += do_lseek(testnum, 10, fd, filsz, SEEK_DATA, holsz + 1, holsz + 1);
-+
-+	/* offset around eof */
-+	ret += do_lseek(testnum, 11, fd, filsz, SEEK_HOLE, filsz - 1, filsz);
-+	ret += do_lseek(testnum, 12, fd, filsz, SEEK_DATA, filsz - 1, filsz - 1);
-+	ret += do_lseek(testnum, 13, fd, filsz, SEEK_HOLE, filsz,     -1);
-+	ret += do_lseek(testnum, 14, fd, filsz, SEEK_DATA, filsz,     -1);
-+	ret += do_lseek(testnum, 15, fd, filsz, SEEK_HOLE, filsz + 1, -1);
-+	ret += do_lseek(testnum, 16, fd, filsz, SEEK_DATA, filsz + 1, -1);
-+out:
-+	return ret;
-+}
-+
-+/* test a larger full file */
-+static int test03(int fd, int testnum)
-+{
-+	char *buf = NULL;
-+	int bufsz = alloc_size * 2 + 100;
-+	int filsz = bufsz;
-+	int ret = -1;
-+
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+	memset(buf, 'a', bufsz);
-+
-+	ret = do_pwrite(fd, buf, bufsz, 0);
-+	if (ret)
-+		goto out;
-+
-+	/* offset at the beginning */
-+	ret += do_lseek(testnum,  1, fd, filsz, SEEK_HOLE, 0, bufsz);
-+	ret += do_lseek(testnum,  2, fd, filsz, SEEK_HOLE, 1, bufsz);
-+	ret += do_lseek(testnum,  3, fd, filsz, SEEK_DATA, 0, 0);
-+	ret += do_lseek(testnum,  4, fd, filsz, SEEK_DATA, 1, 1);
-+
-+	/* offset around eof */
-+	ret += do_lseek(testnum,  5, fd, filsz, SEEK_HOLE, bufsz - 1, bufsz);
-+	ret += do_lseek(testnum,  6, fd, filsz, SEEK_DATA, bufsz - 1, bufsz - 1);
-+	ret += do_lseek(testnum,  7, fd, filsz, SEEK_HOLE, bufsz,     -1);
-+	ret += do_lseek(testnum,  8, fd, filsz, SEEK_DATA, bufsz,     -1);
-+	ret += do_lseek(testnum,  9, fd, filsz, SEEK_HOLE, bufsz + 1, -1);
-+	ret += do_lseek(testnum, 10, fd, filsz, SEEK_DATA, bufsz + 1, -1);
-+
-+out:
-+	do_free(buf);
-+	return ret;
-+}
-+
-+/* test tiny full file */
-+static int test02(int fd, int testnum)
-+{
-+	int ret;
-+	char buf[] = "ABCDEFGH";
-+	int bufsz, filsz;
-+
-+	bufsz = strlen(buf);
-+	filsz = bufsz;
-+
-+	/* |- DATA -| */
-+
-+	ret = do_pwrite(fd, buf, bufsz, 0);
-+	if (ret)
-+		goto out;
-+
-+	ret += do_lseek(testnum, 1, fd, filsz, SEEK_HOLE, 0, filsz);
-+	ret += do_lseek(testnum, 2, fd, filsz, SEEK_DATA, 0, 0);
-+	ret += do_lseek(testnum, 3, fd, filsz, SEEK_DATA, 1, 1);
-+	ret += do_lseek(testnum, 4, fd, filsz, SEEK_HOLE, bufsz - 1, filsz);
-+	ret += do_lseek(testnum, 5, fd, filsz, SEEK_DATA, bufsz - 1, bufsz - 1);
-+	ret += do_lseek(testnum, 6, fd, filsz, SEEK_HOLE, bufsz,     -1);
-+	ret += do_lseek(testnum, 7, fd, filsz, SEEK_DATA, bufsz,     -1);
-+	ret += do_lseek(testnum, 8, fd, filsz, SEEK_HOLE, bufsz + 1, -1);
-+	ret += do_lseek(testnum, 9, fd, filsz, SEEK_DATA, bufsz + 1, -1);
-+
-+out:
-+	return ret;
-+}
-+
-+/* test empty file */
-+static int test01(int fd, int testnum)
-+{
-+	int ret = 0;
-+
-+	ret += do_lseek(testnum, 1, fd, 0, SEEK_DATA, 0, -1);
-+	ret += do_lseek(testnum, 2, fd, 0, SEEK_HOLE, 0, -1);
-+	ret += do_lseek(testnum, 3, fd, 0, SEEK_HOLE, 1, -1);
-+
-+	return ret;
-+}
-+
-+struct testrec {
-+       int     test_num;
-+       int     (*test_func)(int fd, int testnum);
-+       char    *test_desc;
-+};
-+
-+struct testrec seek_tests[] = {
-+       {  1, test01, "Test empty file" },
-+       {  2, test02, "Test a tiny full file" },
-+       {  3, test03, "Test a larger full file" },
-+       {  4, test04, "Test file hole at beg, data at end" },
-+       {  5, test05, "Test file data at beg, hole at end" },
-+       {  6, test06, "Test file hole data hole data" },
-+       {  7, test07, "Test file with unwritten extents, only have dirty pages" },
-+       {  8, test08, "Test file with unwritten extents, only have unwritten pages" },
-+       {  9, test09, "Test file with unwritten extents, have both dirty && unwritten pages" },
-+};
-+
-+static int run_test(struct testrec *tr)
-+{
-+	int ret = 0, fd = -1;
-+	char filename[255];
-+
-+	snprintf(filename, sizeof(filename), "%s%02d", base_file_path, tr->test_num);
-+
-+	fd = do_create(filename);
-+	if (fd > -1) {
-+		printf("%02d. %-50s\n", tr->test_num, tr->test_desc);
-+		ret = tr->test_func(fd, tr->test_num);
-+		printf("\n");
-+	}
-+
-+	do_close(fd);
-+	return ret;
-+}
-+
-+static int test_basic_support(void)
-+{
-+	int ret = -1, fd;
-+	off_t pos;
-+	char *buf = NULL;
-+	int bufsz, filsz;
-+
-+	fd = do_create(base_file_path);
-+	if (fd == -1)
-+		goto out;
-+
-+	get_file_system(fd);
-+
-+	ret = get_io_sizes(fd);
-+	if (ret)
-+		goto out;
-+
-+	bufsz = alloc_size * 2;
-+	filsz = bufsz * 2;
-+
-+	buf = do_malloc(bufsz);
-+	if (!buf)
-+		goto out;
-+	memset(buf, 'a', bufsz);
-+
-+	/* File with 2 allocated blocks.... */
-+	ret = do_pwrite(fd, buf, bufsz, 0);
-+	if (ret)
-+		goto out;
-+
-+	/* followed by a hole... */
-+	ret = do_truncate(fd, filsz);
-+	if (ret)
-+		goto out;
-+
-+	/* Is SEEK_DATA and SEEK_HOLE supported in the kernel? */
-+	pos = lseek(fd, 0, SEEK_DATA);
-+	if (pos != -1)
-+		pos = lseek(fd, 0, SEEK_HOLE);
-+	if (pos == -1) {
-+		fprintf(stderr, "Kernel does not support llseek(2) extensions "
-+			"SEEK_HOLE and/or SEEK_DATA. Aborting.\n");
-+		ret = -1;
-+		goto out;
-+	}
-+
-+	if (pos == filsz) {
-+		default_behavior = 1;
-+		fprintf(stderr, "File system supports the default behavior.\n");
-+	}
-+
-+	printf("\n");
-+
-+out:
-+	do_free(buf);
-+	do_close(fd);
-+	return ret;
-+}
-+
-+int main(int argc, char **argv)
-+{
-+	int ret = -1;
-+	int i = 0;
-+	int numtests = sizeof(seek_tests) / sizeof(struct testrec);
-+
-+	if (argc != 2) {
-+		fprintf(stdout, "Usage: %s base_file_path\n", argv[0]);
++	/* Seek to data_off for data reading */
++	ret = lseek(src_fd, data_off, SEEK_SET);
++	if (ret < 0) {
++		error("seek source file to %llu failed as %s",
++		       (uint64_t)data_off, strerror(errno));
 +		return ret;
 +	}
 +
-+	base_file_path = (char *)strdup(argv[1]);
-+
-+	ret = test_basic_support();
-+	if (ret)
-+		goto out;
-+
-+	for (i = 0; i < numtests; ++i) {
-+		if (ret)
-+			goto out;
-+		run_test(&seek_tests[i]);
++	/* Seek to data_off for data writing, make holes as well */
++	ret = lseek(dest_fd, data_off, SEEK_SET);
++	if (ret < 0) {
++		error("seek dest file to %llu failed as %s",
++		       (uint64_t)data_off, strerror(errno));
++		return ret;
 +	}
 +
++	while (len > 0) {
++		memset(buf, 0, sizeof(buf));
++		ssize_t nr_read = read(src_fd, buf, BUF_SIZE);
++		if (nr_read < 0) {
++			if (errno == EINTR)
++				continue;
++			error("read source file extent failed as %s",
++			      strerror(errno));
++			ret = -1;
++			break;
++		}
++
++		if (nr_read == 0) {
++			error("do_extent_copy() read reached EOF");
++			break;
++		}
++
++		if (full_write(dest_fd, buf, nr_read) != nr_read) {
++			error("write data to dest file failed as %s",
++			       strerror(errno));
++			ret = -1;
++			break;
++		}
++
++		len -= nr_read;
++	}
++
++	return ret;
++}
++
++/*
++ * If lseek(2) failed and the errno is set to ENXIO, for
++ * SEEK_DATA there are no more data regions past the supplied
++ * offset.  For SEEK_HOLE, there are no more holes past the
++ * supplied offset.  Set scan->hit_final_extent to true for
++ * either case.
++ */
++static int
++copy_extents(int src_fd, int dest_fd, off_t src_total_size)
++{
++	int ret = 0;
++	unsigned int i = 0;
++	off_t seek_start = 0;
++	off_t dest_pos = 0;
++	off_t data_pos, hole_pos;
++
++	do {
++		data_pos = lseek(src_fd, seek_start, SEEK_DATA);
++		if (data_pos < 0) {
++			if (errno == ENXIO)
++				ret = 0;
++			else {
++				error("SEEK_DATA failed due to %s",
++				       strerror(errno));
++				ret = -1;
++			}
++			break;
++		}
++
++		hole_pos = lseek(src_fd, data_pos, SEEK_HOLE);
++		if (hole_pos < 0) {
++			if (errno == ENXIO)
++				ret = 0;
++			else {
++				error("SEEK_HOLE failed due to %s\n",
++				       strerror(errno));
++				ret = -1;
++			}
++			break;
++		}
++
++		/* do extent copy */
++		ret = do_extent_copy(src_fd, dest_fd, data_pos, hole_pos);
++		if (ret < 0) {
++			error("copy extent failed");
++			break;
++		}
++
++		dest_pos += (hole_pos - data_pos);
++		++i;
++		seek_start = hole_pos;
++	} while (seek_start < src_total_size);
++
++	if (dest_pos < src_total_size) {
++		ret = ftruncate(dest_fd, src_total_size);
++		if (ret < 0) {
++			error("truncate dest file to %lld bytes failed as %s",
++			      (long long)src_total_size, strerror(errno));
++		}
++	}
++
++	return ret;
++}
++
++static struct option const longopts[] = {
++	{"fallocate", no_argument, NULL, 'P'},
++	{"falloc-offset", required_argument, NULL, 'O'},
++	{"falloc-length", required_argument, NULL, 'L'},
++	{"falloc-keep-size", no_argument, NULL, 'N'},
++	{"max-file-size", required_argument, NULL, 'M'},
++	{"write-start-offset", required_argument, NULL, 's'},
++	{"write-skip-bytes", required_argument, NULL, 'k'},
++	{"write-bytes", required_argument, NULL, 'l'},
++	{"sync-dirty-pages", no_argument, NULL, 'S'},
++	{"sync-page-offset", required_argument, NULL, 'p'},
++	{"sync-page-bytes", required_argument, NULL, 'b'},
++	{"sync-page-flags", required_argument, NULL, 'f'},
++	{"wrote-hole-at-eof", no_argument, NULL, 'E'},
++	{NULL, 0, NULL, 0}
++};
++
++static void
++usage(const char *progname)
++{
++	fprintf(stdout, "Usage: %s [OPTION]... SOURCE DEST\n"
++		"	    [-P] [-O falloc-offset] [-L falloc-length] [-N]\n"
++		"	    [-M max-file-size]\n"
++		"	    [-s write-start-offset] [-k write-skip-bytes] [-l write-bytes]\n"
++		"	    [-S] [-p sync-page-offset] [-b sync-page-bytes] [-f sync-page-flags]\n"
++		"	    [-E wrote-hole-at-eof]\n"
++		"	-L, --falloc-length=LENGTH	fallocate length\n"
++		"	-O, --falloc-offset=OFFSET	fallocate offset\n"
++		"	-M, --max-file-size=LENGTH	maximum size of file, don't required in\n"
++		"					preallocation mode\n"
++		"	-s, --write-start-offset=OFFSET	make holes at the begnning of source file\n"
++		"	-k, --write-skip-bytes=BYTES	skip a range of bytes for next write\n"
++		"	-l, --write-bytes=BYTES		create data extent in number of bytes\n"
++		"	-p, --sync-page-offset=OFFSET   sync dirty pages from where\n"
++		"	-b, --sync-page-bytes=BYTES	sync dirty pages for a number of bytes\n"
++		"	-f, --sync-page-flags=FLAGS	sync dirty pages in which mode\n"
++		"	-P				preallocate space for source file\n"
++		"	-N				fallocate(2) in keep size mode\n"
++		"	-S				sync out dirty pages\n"
++		"	-E				make hole at the end of source file in\n"
++		"					non-preallocate mode\n",
++		progname);
++
++	exit(1);
++}
++
++int
++main(int argc, char **argv)
++{
++	int opt;
++	int src_fd;
++	int dest_fd;
++	int ret = 0;
++	int do_falloc = 0;
++	int falloc_mode = 0;
++	int do_sync_dirty_pages = 0;
++	int wrote_hole_at_eof = 0;
++	uint32_t sync_page_flags = 0;
++	size_t src_total_size;
++	size_t max_file_size = 0;
++	off_t falloc_length = 0;
++	off_t falloc_offset = 0;
++	off_t seek_start_offset = 0;
++	off_t seek_skip_bytes = 0;
++	off_t sync_page_offset = 0;
++	off_t sync_page_bytes = 0;
++	uint64_t seek_write_bytes = 0;
++	char *src_file = NULL;
++	char *dest_file = NULL;
++	struct stat st;
++
++	while ((opt = getopt_long(argc, argv, "PO:L:NM:s:k:l:Sp:b:f:E",
++				  longopts, NULL)) != -1) {
++		switch(opt) {
++		case 'P':
++			do_falloc = 1;
++			break;
++		case 'O':
++			/* Preallocate disk space from where */
++			falloc_offset = parse_size(optarg);
++			assert(falloc_offset <= OFF_T_MAX);
++			break;
++		case 'L':
++			/* Preallocate disk space length */
++			falloc_length = parse_size(optarg);
++			assert(falloc_offset <= OFF_T_MAX);
++			break;
++		case 'N':
++			/* Preallocation in KEEP_FILE_SIZE mode */
++			falloc_mode = FALLOC_FL_KEEP_SIZE;
++			break;
++		case 'M':
++			/*
++			 * The maximum length of source file, only valid
++			 * if the source file created in non-preallocation
++			 * mode. Otherwise, it will be set to falloc_length.
++			 */
++			max_file_size = parse_size(optarg);
++		case 's':
++			/*
++			 * Seek to where for the first write. It will create
++			 * a hole at the beginning of the source file if this
++			 * option was specified. It can be ignored if you don't
++			 * want that.
++			 */
++			seek_start_offset = parse_size(optarg);
++			assert(seek_start_offset <= OFF_T_MAX);
++			break;
++		case 'k':
++			/*
++			 * Skip the number of bytes for the next data write.
++			 * It is used to create holes in the middle of file.
++			 * If this option was not specified, using blocksize
++			 * instead.
++			 */
++			seek_skip_bytes = parse_size(optarg);
++			assert(seek_start_offset <= OFF_T_MAX);
++			break;
++		case 'l':
++			/*
++			 * Write the number of bytes after seeking, we
++			 * we can make the disk fragmented as much as
++			 * possbile by tweaking up this value.
++			 */
++			seek_write_bytes = parse_size(optarg);
++			break;
++		case 'S':
++			/*
++			 * Call sync_file_range(2) to writeout dirty
++			 * pages. It can be used to test WRITEBACK pages
++			 * probing branch.
++			 */
++			do_sync_dirty_pages = 1;
++			break;
++		case 'p':
++			/*
++			 * Sync out dirty pages starting from where, sync
++			 * from 0 if it was not specified.
++			 */
++			sync_page_offset = parse_size(optarg);
++			break;
++		case 'b':
++			/*
++			 * If it was not specified, sync out pages from
++			 * above offset to the end of file.
++			 */
++			sync_page_bytes = parse_size(optarg);
++			break;
++		case 'f':
++			/*
++			 * By default, SYNC_FILE_RANGE_WRITE will be used if
++			 * this option was not specified.
++			 */
++			sync_page_flags = (uint32_t)atol(optarg);
++			break;
++		case 'E':
++			wrote_hole_at_eof = 1;
++			break;
++		default:
++			usage(argv[0]);
++		}
++	}
++
++	if (argc - optind < 2) {
++		usage(argv[0]);
++		return 1;
++	}
++
++	src_file = strdup(argv[argc - 2]);
++	if (!src_file) {
++		usage(argv[0]);
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	dest_file = strdup(argv[argc - 1]);
++	if (!dest_file) {
++		usage(argv[0]);
++		ret = -ENOMEM;
++		goto out;
++	}
++
++	if (!do_falloc && (falloc_length || falloc_offset)) {
++		error("Invalid arguments, missing -F or --fallocate option "
++		      "for fallocation tests");
++		usage(argv[0]);
++		goto out;
++	}
++
++	if (do_falloc && !falloc_length) {
++		error("Invalid arguments, fallocate length must be specified "
++		      "for fallocation tests");
++		usage(argv[0]);
++		goto out;
++	}
++
++	if (!do_falloc && !max_file_size) {
++		error("Invalid arguments, missing -M or --max-file-size option "
++		      "in none-fallocate mode");
++		usage(argv[0]);
++		goto out;
++	}
++
++	if (falloc_length && max_file_size) {
++		error("Invalid arguments, don't combine -M with -F options");
++		usage(argv[0]);
++		goto out;
++	}
++
++	if (!do_sync_dirty_pages && (sync_page_offset ||
++				     sync_page_bytes  ||
++				     sync_page_flags)) {
++		error("Invalid argument, missing -S or --sync-pages option "
++		      "for sync file range tests");
++		usage(argv[0]);
++		return 1;
++	}
++
++	if (do_sync_dirty_pages && !sync_page_flags)
++		sync_page_flags = SYNC_FILE_RANGE_WRITE;
++
++	src_fd = open(src_file, O_RDWR|O_CREAT|O_TRUNC, 0644);
++	if (src_fd < 0) {
++		error("create %s failed as %s", src_file, strerror(errno));
++		goto out;
++	}
++
++	dest_fd = open(dest_file, O_RDWR|O_CREAT|O_TRUNC, 0644);
++	if (dest_fd < 0) {
++		error("create %s failed as %s", dest_file, strerror(errno));
++		close(src_fd);
++		goto close_src_fd;
++	}
++
++	if (do_falloc) {
++		/* Preallocate space for source file */
++		ret = fallocate(src_fd, falloc_mode,
++				falloc_offset, falloc_length);
++		if (ret < 0) {
++			error("fallocate file %s failed as %s",
++			       src_file, strerror(errno));
++			goto close_dest_fd;
++		}
++		max_file_size = falloc_length;
++	}
++
++	/*
++	 * If seek_write_bytes was not specified, fill up data extent
++	 * to st.st_blksize for each write.
++	 */
++	if (!seek_write_bytes) {
++		seek_write_bytes = get_block_size(src_fd);
++		if (seek_write_bytes < 0) {
++			error("get %s block size failed as %s",
++			       src_file, strerror(errno));
++			goto close_dest_fd;
++		}
++	}
++
++	/*
++	 * Seek to seek_offset, write seek_write_len to dest file,
++	 * skip seek_skip_len for next write.
++	 */
++	ret = create_data_and_holes(src_fd, max_file_size,
++				    seek_start_offset,
++				    seek_skip_bytes,
++				    seek_write_bytes,
++				    wrote_hole_at_eof);
++	if (ret < 0) {
++		error("seek write to %s failed", src_file);
++		goto close_dest_fd;
++	}
++
++	if (do_sync_dirty_pages) {
++		ret = writeout_dirty_pages(src_fd, sync_page_offset,
++					   sync_page_bytes, sync_page_flags);
++		if (ret < 0) {
++			error("write out dirty pages failed as %s",
++			      strerror(errno));
++			goto close_dest_fd;
++		}
++	}
++
++	/*
++	 * Note that if the source file created in non-fallocte mode,
++	 * the source file size might less than the max_file_size.
++	 */
++	ret = fstat(src_fd, &st);
++	if (ret < 0) {
++		error("get file %s staticis failed as %s",
++		       src_file, strerror(errno));
++		goto close_dest_fd;
++	}
++
++	src_total_size = st.st_size;
++	ret = copy_extents(src_fd, dest_fd, src_total_size);
++	if (ret < 0)
++		error("extents copy failed");
++
++close_dest_fd:
++	close(dest_fd);
++close_src_fd:
++	close(src_fd);
 +out:
-+	free(base_file_path);
++	if (src_file)
++		free(src_file);
++	if (dest_file)
++		free(dest_file);
 +	return ret;
 +}
 -- 
