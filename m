@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16JtrJ0161341 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 13:55:53 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	jbi0PW28tAROkLhw (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Feb 2012 11:55:50 -0800 (PST)
-Date: Mon, 6 Feb 2012 14:55:47 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] filemap: don't call generic_write_sync for
-	-EIOCBQUEUED
-Message-ID: <20120206195546.GA22640@infradead.org>
-References: <1327698949-12616-1-git-send-email-jmoyer@redhat.com>
-	<1327698949-12616-4-git-send-email-jmoyer@redhat.com>
-	<20120202175219.GB6640@quack.suse.cz>
-	<x497gzzrkfa.fsf@segfault.boston.devel.redhat.com>
+	q16KiHcf163889 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 14:44:18 -0600
+Date: Mon, 6 Feb 2012 21:44:45 +0100 (CET)
+From: Jesper Juhl <jj@chaosbits.net>
+Subject: Re: [PATCH][RFC] XFS: Fix mem leak and possible NULL deref in
+	xfs_setattr_nonsize()
+In-Reply-To: <20120206062319.GB12836@dastard>
+Message-ID: <alpine.LNX.2.00.1202062132410.20117@swampdragon.chaosbits.net>
+References: <alpine.LNX.2.00.1202052220390.32529@swampdragon.chaosbits.net>
+	<20120206062319.GB12836@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <x497gzzrkfa.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,32 +23,88 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
 
-On Mon, Feb 06, 2012 at 11:33:29AM -0500, Jeff Moyer wrote:
-> > code, right? Before that we'd drain the IO queue when cache flush is issued
-> > and thus effectively wait for IO completion...
+On Mon, 6 Feb 2012, Dave Chinner wrote:
+
+> On Sun, Feb 05, 2012 at 10:23:44PM +0100, Jesper Juhl wrote:
+> > In xfs_setattr_nonsize(), xfs_trans_alloc() gets its memory from
+> > _xfs_trans_alloc() which gets it from kmem_zone_zalloc() which may
+> > fail and return NULL. So this:
+> > 
+> > 	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+> > 
+> > may result in a NULL 'tp'.
+> > If it does, then the call:
+> > 
+> > 	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+> > 
+> > with a NULL 'tp' will explode, since xfs_trans_reserve() dereferences
+> > its first argument unconditionally.
 > 
-> Right, though hch seems to think even then the problem existed.
-
-I was wrong, using -o barrier it didn't.  That was however not something
-people using O_SYNC heavy production loads would do, they'd use disabled
-caches and nobarrier.
-
-> > Also I was thinking whether we couldn't implement the fix in VFS. Basically
-> > it would be the same like the fix for ext4. Like having a per-sb workqueue
-> > and queue work calling generic_write_sync() from end_io handler when the
-> > file is O_SYNC? That would solve the issue for all filesystems...
+> xfs_trans_alloc() can't fail. It will sleep forever until the memory
+> allocation succeeds.
 > 
-> Well, that would require buy-in from the other file system developers.
-> What do the XFS folks think?
+> There's 35 other places in XFS where this xfs_trans_alloc/
+> xfs_trans_reserve pattern occurs - none of them check whether tp is
+> null, either.
+> 
+> > And if the memory allocation for 'tp' goes well (and thus
+> > xfs_trans_reserve() does not explode) then we may leak the memory
+> > allocated to 'tp' if xfs_trans_reserve() returns error.
+> 
+> yes, that's a problem, though will only happen if a filesystem
+> shutdown occurs between the start of the function and that check.
+> 
+> > 
+> > I believe this patch should fix both issues, but I'm not intimate with
+> > the XFS code at all, so there can easily be something I overlooked or
+> > something that should be done differently than what I did.
+> 
+> Only need to fix the leak of tp.
+> 
+Ok.
+Thank you for the detailed explanation.
+I believe the patch below should do the trick.
 
-I don't think using that code for XFS makes sene.  But just like
-generic_write_sync there's no reason it can't be added to generic code,
-just make sure only generic_file_aio_write/__generic_file_aio_write use
-it, but generic_file_buffered_write and generic_file_direct_write stay
-clear of it.
+
+From: Jesper Juhl <jj@chaosbits.net>
+Date: Sun, 5 Feb 2012 22:11:30 +0100
+Subject: [PATCH] XFS: Fix mem leak in xfs_setattr_nonsize()
+
+If the memory allocation for 'tp' goes well then we will leak the
+memory allocated to 'tp' if xfs_trans_reserve() returns error.
+
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+---
+ fs/xfs/xfs_iops.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
+
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index ab30253..2fc1600 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -576,8 +576,10 @@ xfs_setattr_nonsize(
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
+ 	error = xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
+-	if (error)
++	if (error) {
++		xfs_trans_cancel(tp, 0);
+ 		goto out_dqrele;
++	}
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 
+-- 
+1.7.9
+
+
+-- 
+Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
+Don't top-post http://www.catb.org/jargon/html/T/top-post.html
+Plain text mails only, please.
 
 _______________________________________________
 xfs mailing list
