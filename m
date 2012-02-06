@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16LlglV167712 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 15:47:42 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uHQ83UHBhvgMThuq for
-	<xfs@oss.sgi.com>; Mon, 06 Feb 2012 13:47:41 -0800 (PST)
-Message-ID: <4F304A79.8050004@redhat.com>
-Date: Mon, 06 Feb 2012 15:47:37 -0600
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
+	q16LfkL2167449 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 15:41:48 -0600
+Received: from test.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id 8olFDNGtG3uwsdqi (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Feb 2012 13:41:45 -0800 (PST)
+Date: Mon, 6 Feb 2012 16:41:32 -0500
+From: "Ted Ts'o" <tytso@mit.edu>
 Subject: Re: sparsify - utility to punch out blocks of 0s in a file
-References: <4F2D8F30.3090802@redhat.com> <20120206214132.GA22019@thunk.org>
-In-Reply-To: <20120206214132.GA22019@thunk.org>
+Message-ID: <20120206214132.GA22019@thunk.org>
+References: <4F2D8F30.3090802@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F2D8F30.3090802@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,21 +26,15 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ted Ts'o <tytso@mit.edu>
+To: Eric Sandeen <sandeen@redhat.com>
 Cc: ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
 
-On 2/6/12 3:41 PM, Ted Ts'o wrote:
-> Cool!  I assume you're going to try to get this into util-linux-ng?
-> 
-> I'm tempted to drop it in e2fsprogs's contrib directxory for now, but
-> I think the best home for it is util-linux-ng.
-> 
-> 							- Ted
+Cool!  I assume you're going to try to get this into util-linux-ng?
 
-Yep, I will do that, though it could use a fair bit of cleanup first.
-kzak seemed amenable to taking it in.
+I'm tempted to drop it in e2fsprogs's contrib directxory for now, but
+I think the best home for it is util-linux-ng.
 
--Eric
+							- Ted
 
 _______________________________________________
 xfs mailing list
