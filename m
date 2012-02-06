@@ -1,23 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16E4YjP137750 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 08:04:34 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	c7YroGNP5Z0k8Ppe (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Feb 2012 06:04:31 -0800 (PST)
-Date: Mon, 6 Feb 2012 09:04:29 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs_repair segfaults with ag_stride option
-Message-ID: <20120206140429.GA10395@infradead.org>
-References: <4F293FCC.7010101@rhul.ac.uk>
-	<20120202124248.GA12107@infradead.org>
-	<4F2F23F3.9000402@rhul.ac.uk>
+	q16EUjS3139322 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 08:30:45 -0600
+Message-ID: <4F2FE3F6.8040808@oracle.com>
+Date: Mon, 06 Feb 2012 22:30:14 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F2F23F3.9000402@rhul.ac.uk>
+Subject: [PATCH v2 0/2] Add two SEEK_DATA/SEEK_HOLE tests
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +20,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tom Crane <T.Crane@rhul.ac.uk>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>
 
-On Mon, Feb 06, 2012 at 12:50:59AM +0000, Tom Crane wrote:
-> Hi Christoph,
->    Many thanks for the quick response and the patch.  It was a big
-> help.  I was able to repair our 60TB FS in about 30 hours. I have a
-> couple of questions;
-> 
-> (1) The steps in the progress report seem a little strange.  See the
-> attachment. Is this expected?
+Hello,
 
-Do you mean the out of order agno progress reports?  That's an artefact
-of the ag_stride option which parallelizes processing of different
-AGs, and expected.  It's not very nice but I don't have a smart idea
-how to do much better either.
+This patch series add two tests to verify SEEK_DATA/SEEK_HOLE feature works fine on supported
+file systems(Btrfs/OCFS2) and XFS which is in progress.
+
+
+V2 changes in seek_sanity_tester:
+* change test index number from 276 to 279 since I observed that 276~278 have already been used by other tests.
+
+v2 changes in seek_copy_tester:
+* change test index number to 280 accordingly.
+* s/do_pwrite/full_pwrite/
+* add more debug info when writing ZERO byte to dest file.
+* fix a bug at create_data_and_holes() to avoid write more bytes exceeding total file size, thank Mark. :)
+* mark all function as static, maybe it's better to consolidate some common functions at sanity check and copy tester to a lib file in future.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
