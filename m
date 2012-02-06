@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q16IfQ33156267 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 12:41:27 -0600
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id NMqAIedVI3WI1WKo (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 06 Feb 2012 10:41:25 -0800 (PST)
-Message-ID: <4F301E8B.7050909@oracle.com>
-Date: Mon, 06 Feb 2012 10:40:11 -0800
-From: Sunil Mushran <sunil.mushran@oracle.com>
+	q16JtrJ0161341 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 13:55:53 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	jbi0PW28tAROkLhw (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 06 Feb 2012 11:55:50 -0800 (PST)
+Date: Mon, 6 Feb 2012 14:55:47 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 3/3] filemap: don't call generic_write_sync for
+	-EIOCBQUEUED
+Message-ID: <20120206195546.GA22640@infradead.org>
+References: <1327698949-12616-1-git-send-email-jmoyer@redhat.com>
+	<1327698949-12616-4-git-send-email-jmoyer@redhat.com>
+	<20120202175219.GB6640@quack.suse.cz>
+	<x497gzzrkfa.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Subject: Re: sparsify - utility to punch out blocks of 0s in a file
-References: <4F2D8F30.3090802@redhat.com>
-In-Reply-To: <4F2D8F30.3090802@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <x497gzzrkfa.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,49 +28,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>, ocfs2-devel@oss.oracle.com, xfs-oss <xfs@oss.sgi.com>
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-On 02/04/2012 12:04 PM, Eric Sandeen wrote:
-> Now that ext4, xfs,&  ocfs2 can support punch hole, a tool to
-> "re-sparsify" a file by punching out ranges of 0s might be in order.
->
-> I whipped this up fast, it probably has bugs&  off-by-ones but thought
-> I'd send it out.  It's not terribly efficient doing 4k reads by default
-> I suppose.
->
-> I'll see if util-linux wants it after it gets beat into shape.
-> (or did a tool like this already exist and I missed it?)
->
-> (Another mode which does a file copy, possibly from stdin
-> might be good, like e2fsprogs/contrib/make-sparse.c ?  Although
-> that can be hacked up with cp already).
->
-> It works like this:
->
-> [root@inode sparsify]# ./sparsify  -h
-> Usage: sparsify [-m min hole size] [-o offset] [-l length] filename
+On Mon, Feb 06, 2012 at 11:33:29AM -0500, Jeff Moyer wrote:
+> > code, right? Before that we'd drain the IO queue when cache flush is issued
+> > and thus effectively wait for IO completion...
+> 
+> Right, though hch seems to think even then the problem existed.
 
+I was wrong, using -o barrier it didn't.  That was however not something
+people using O_SYNC heavy production loads would do, they'd use disabled
+caches and nobarrier.
 
-So I have a similar tool queued up in ocfs2-tools. Named puncher.
-http://oss.oracle.com/git/?p=ocfs2-tools.git;a=shortlog;h=puncher
+> > Also I was thinking whether we couldn't implement the fix in VFS. Basically
+> > it would be the same like the fix for ext4. Like having a per-sb workqueue
+> > and queue work calling generic_write_sync() from end_io handler when the
+> > file is O_SYNC? That would solve the issue for all filesystems...
+> 
+> Well, that would require buy-in from the other file system developers.
+> What do the XFS folks think?
 
-I'll pull it out if we get something in util-linux. But maybe you can 
-extract something useful from it.
-
-Like.... maybe doing dry-run as default. It is an inplace modification
-after all. Also using a large hole size as default (1MB). Over using 
-hole punching will negatively affect read performance. We should make 
-the sane choice for the user.
-
-On a related note, it may make sense for ext4 to populate the cluster 
-size (bigalloc) in stat.st_blksize.
-
-2 cents...
+I don't think using that code for XFS makes sene.  But just like
+generic_write_sync there's no reason it can't be added to generic code,
+just make sure only generic_file_aio_write/__generic_file_aio_write use
+it, but generic_file_buffered_write and generic_file_direct_write stay
+clear of it.
 
 _______________________________________________
 xfs mailing list
