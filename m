@@ -1,15 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q169BAon117114 for <xfs@oss.sgi.com>; Mon, 6 Feb 2012 03:11:10 -0600
-Date: Mon, 6 Feb 2012 14:41:00 +0530
-From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
-Subject: Re: [PATCH][RFC] XFS: Fix mem leak and possible NULL deref in
-	xfs_setattr_nonsize()
-Message-ID: <20120206091100.GA4350@Xye>
-References: <alpine.LNX.2.00.1202052220390.32529@swampdragon.chaosbits.net>
-MIME-Version: 1.0
-In-Reply-To: <alpine.LNX.2.00.1202052220390.32529@swampdragon.chaosbits.net>
+	q16AiRRd123010
+	for <linux-xfs@oss.sgi.com>; Mon, 6 Feb 2012 04:44:29 -0600
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id AHL2vnipifo4f5aP (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Mon, 06 Feb 2012 02:44:25 -0800 (PST)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1RuM3Y-0000h4-5w
+	for linux-xfs@oss.sgi.com; Mon, 06 Feb 2012 11:44:20 +0100
+Received: from bd206cc2.virtua.com.br ([bd206cc2.virtua.com.br])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Mon, 06 Feb 2012 11:44:20 +0100
+Received: from marcosfrm by bd206cc2.virtua.com.br with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Mon, 06 Feb 2012 11:44:20 +0100
+From: Marcos Mello <marcosfrm@gmail.com>
+Subject: Re: Placing the root partition on an XFS filesystem is not supported
+Date: Mon, 6 Feb 2012 10:44:07 +0000 (UTC)
+Message-ID: <loom.20120206T112757-532@post.gmane.org>
+References: <loom.20120129T133929-288@post.gmane.org>
+	<4F2B02C4.8070903@sandeen.net>
+	<loom.20120203T152753-631@post.gmane.org>
+	<4F2C2C69.5020103@sandeen.net> <20120206001123.GJ6922@dastard>
+	<4F2F1B28.3060308@sandeen.net> <20120206015430.GK6922@dastard>
+	<4F2F33A8.1050403@sandeen.net>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,164 +36,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1711330231478756467=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
+Eric Sandeen <sandeen <at> sandeen.net> writes:
 
---===============1711330231478756467==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="HcAYCG3uE/tztfnV"
-Content-Disposition: inline
+> On 2/5/12 7:54 PM, Dave Chinner wrote:
+> > On Sun, Feb 05, 2012 at 06:13:28PM -0600, Eric Sandeen wrote:
+> >> On 2/5/12 6:11 PM, Dave Chinner wrote:
+<snip>
+> >>
+> >> well, it was worse than that.  I can work around the grub-on-a-partition
+> >> problem, but what I ran into was grub reading & writing to/from the block
+> >> device under a mounted filesystem - corruption and hilarity ensued.
+> > 
+> > Oh, grub2 does worse things than that - grub_probe mounts any device
+> > that appears to have a valid superblock so it can find out what
+> > devices it needs to list in it's boot menu. I found this out when I
+> > built a big DM stripe out of disks that used to have filesystems on
+> > them.  grub-probe mounted every single device -inside- the stripe
+> > and ran log recovery on them, corrupting the new filesystem and
+> > quite a bit of data on the DM stripe they were part of....
+> 
+> Ok, your horror story wins from a pain POV ;)
+> 
+> but sounds like someone should have zeroed out a bit more disk
+> when setting up the dm stripes :(
+> 
+> I've always thought maybe we needed a libzero.so to zap every known signature
+> on disk....
+> 
 
+Thanks a lot for the explanation folks! It would be nice have this documented on
+the XFS FAQ
+http://xfs.org/index.php/XFS_FAQ#Q:_Does_GRUB_work_with_XFS.3F
 
---HcAYCG3uE/tztfnV
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Eric, landed recently in util-linux's libblkid a function for that AFAIK
+http://git.kernel.org/?p=utils/util-linux/util-linux.git;a=commitdiff;h=2b89be6c802bdbdf6830dbd060c96e33f179b135
 
-Hi,
-=20
-
-* On Sun, Feb 05, 2012 at 10:23:44PM +0100, Jesper Juhl <jj@chaosbits.net> =
-wrote:
->In xfs_setattr_nonsize(), xfs_trans_alloc() gets its memory from
->_xfs_trans_alloc() which gets it from kmem_zone_zalloc() which may
->fail and return NULL. So this:
->
->	tp =3D xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
->
->may result in a NULL 'tp'.
->If it does, then the call:
->
->	error =3D xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
->
->with a NULL 'tp' will explode, since xfs_trans_reserve() dereferences
->its first argument unconditionally.
->
->And if the memory allocation for 'tp' goes well (and thus
->xfs_trans_reserve() does not explode) then we may leak the memory
->allocated to 'tp' if xfs_trans_reserve() returns error.
->
->I believe this patch should fix both issues, but I'm not intimate with
->the XFS code at all, so there can easily be something I overlooked or
->something that should be done differently than what I did.
->
->Signed-off-by: Jesper Juhl <jj@chaosbits.net>
->---
-> fs/xfs/xfs_iops.c |    7 ++++++-
-> 1 files changed, 6 insertions(+), 1 deletions(-)
->
-> Note:
->  Please review carefully before applying.
->  Especially since I don't currently have any XFS filesystems to test
->  this on, nor any clear idea of a good way to actually test this if I
->  had. So this patch is compile tested only on my end.
->
->diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
->index ab30253..194c9d7 100644
->--- a/fs/xfs/xfs_iops.c
->+++ b/fs/xfs/xfs_iops.c
->@@ -575,9 +575,14 @@ xfs_setattr_nonsize(
-> 	}
->
-> 	tp =3D xfs_trans_alloc(mp, XFS_TRANS_SETATTR_NOT_SIZE);
->+	if (!tp)
->+		goto out_dqrele;
->+
-> 	error =3D xfs_trans_reserve(tp, 0, XFS_ICHANGE_LOG_RES(mp), 0, 0, 0);
->-	if (error)
->+	if (error) {
->+		xfs_trans_cancel(tp, 0);
-> 		goto out_dqrele;
->+	}
->
-> 	xfs_ilock(ip, XFS_ILOCK_EXCL);
->
->--=20
->1.7.9
->
->
->Please CC me on replies.
->
->--=20
->Jesper Juhl <jj@chaosbits.net>       http://www.chaosbits.net/
->Don't top-post http://www.catb.org/jargon/html/T/top-post.html
->Plain text mails only, please.
->
->_______________________________________________
->xfs mailing list
->xfs@oss.sgi.com
->http://oss.sgi.com/mailman/listinfo/xfs
-
-The first one won't be triggered because kmem_zone_alloc (the=20
-last one in call chain) checks for=20
-
-     if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-
-whereas xfs_trans_alloc  calls _xfs_trans_alloc with KM_SLEEP,=20
-also all other callers of _xfs_trans_alloc call it with KM_SLEEP=20
-(except one which calls with KM_NOFS), so it looks like we are=20
-safe there, it keeps spinning till it finds mem.
-
-
-As far as second one is concerned, looks fine, though this one=20
-should also do the same.
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index ab30253..d331f5b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -730,9 +730,9 @@ xfs_setattr_nonsize(
-         return 0;
-
-out_trans_cancel:
--       xfs_trans_cancel(tp, 0);
-         xfs_iunlock(ip, XFS_ILOCK_EXCL);
-out_dqrele:
-+       xfs_trans_cancel(tp, 0);
-         xfs_qm_dqrele(udqp);
-         xfs_qm_dqrele(gdqp);
-         return error;
-
-
-
-Regards,
---=20
-Raghavendra Prabhu
-GPG Id : 0xD72BE977
-Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
-www: wnohang.net
-
---HcAYCG3uE/tztfnV
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPL5kkAAoJEKYW3KHXK+l3yjEH/01m6573on8Hc54IpbzsJYA/
-WQ3wDy9fL2ZF5tqXc5aDyOPKkvAdVJZibkSmOhfPpiRYVubrJPD+6Ws0ck/MOeY5
-jFPwWW7u6fhy7CZ2+fOI3iulEnVFXQYpRBFdbLIZHo1Z0Q+y0bNhQlfopHi/vFqw
-/dz/ut9OAxR3ccTkVhY5MztAo93qiLdccQBWJkJy5Jxflr8QaYpGFUZEY6QZTh88
-eLZw7UQKBOpb10/hMRxTG5dw02mB5uSLMDrXQ3QWhTcnNm05mxG2YCVQIO7YFMpe
-nYsU2ba1twc6UPVB6zJAn1cbcrqii94OzIM20PL1SGnCnfyDbURt57edqqDHhRo=
-=IWUX
------END PGP SIGNATURE-----
-
---HcAYCG3uE/tztfnV--
-
-
---===============1711330231478756467==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Marcos
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1711330231478756467==--
