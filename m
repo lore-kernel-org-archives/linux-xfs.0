@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q160DVPj087208
-	for <linux-xfs@oss.sgi.com>; Sun, 5 Feb 2012 18:13:31 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id setEGh78hoRa0fxn for <linux-xfs@oss.sgi.com>;
-	Sun, 05 Feb 2012 16:13:29 -0800 (PST)
-Message-ID: <4F2F1B28.3060308@sandeen.net>
-Date: Sun, 05 Feb 2012 18:13:28 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	q160BSb5087093
+	for <linux-xfs@oss.sgi.com>; Sun, 5 Feb 2012 18:11:28 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	quboVgjKKgKEVEfF for <linux-xfs@oss.sgi.com>;
+	Sun, 05 Feb 2012 16:11:26 -0800 (PST)
+Date: Mon, 6 Feb 2012 11:11:23 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Placing the root partition on an XFS filesystem is not supported
+Message-ID: <20120206001123.GJ6922@dastard>
 References: <loom.20120129T133929-288@post.gmane.org>
 	<4F2B02C4.8070903@sandeen.net>
 	<loom.20120203T152753-631@post.gmane.org>
-	<4F2C2C69.5020103@sandeen.net> <20120206001123.GJ6922@dastard>
-In-Reply-To: <20120206001123.GJ6922@dastard>
+	<4F2C2C69.5020103@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F2C2C69.5020103@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,76 +30,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: linux-xfs@oss.sgi.com, Marcos Mello <marcosfrm@gmail.com>
 
-On 2/5/12 6:11 PM, Dave Chinner wrote:
-> On Fri, Feb 03, 2012 at 12:50:17PM -0600, Eric Sandeen wrote:
->> On 2/3/12 8:39 AM, Marcos Mello wrote:
->>> Eric Sandeen <sandeen <at> sandeen.net> writes:
->>>
->>>>
->>>> In general there is no problem with xfs on a root partition.  However, the
->>> installer
->>>> may not make it easy or available for you.
->>>>
->>>> (I never use xfs for /boot though, I don't trust grub enough for that
->>> honestly).
->>>>
->>>> -Eric
->>>
->>> Same thing on Fedora 16. Let's hope some day Anaconda will change that.
->>
->> F16 prevents it?  I didn't see it in the upstream tree.  That should
->> not be so.  :/
->>
->>> About GRUB with a XFS /boot the problem was with GRUB Lagacy, wasn't it?
->>> Or GRUB2 is still buggy?
->>
->> I have no idea, actually.  I delved into grub a bit, it was disturbing
->> enough that I have not tried to look at grub2.  :)
+On Fri, Feb 03, 2012 at 12:50:17PM -0600, Eric Sandeen wrote:
+> On 2/3/12 8:39 AM, Marcos Mello wrote:
+> > Eric Sandeen <sandeen <at> sandeen.net> writes:
+> > 
+> >>
+> >> In general there is no problem with xfs on a root partition.  However, the
+> > installer
+> >> may not make it easy or available for you.
+> >>
+> >> (I never use xfs for /boot though, I don't trust grub enough for that
+> > honestly).
+> >>
+> >> -Eric
+> > 
+> > Same thing on Fedora 16. Let's hope some day Anaconda will change that.
 > 
-> Certainly the problem exists with legacy grub - it assumes that it
-> can write to the first sector or any disk or partition which
-> overwrites the XFS superblock...
+> F16 prevents it?  I didn't see it in the upstream tree.  That should
+> not be so.  :/
+> 
+> > About GRUB with a XFS /boot the problem was with GRUB Lagacy, wasn't it?
+> > Or GRUB2 is still buggy?
+> 
+> I have no idea, actually.  I delved into grub a bit, it was disturbing
+> enough that I have not tried to look at grub2.  :)
 
-well, it was worse than that.  I can work around the grub-on-a-partition
-problem, but what I ran into was grub reading & writing to/from the block
-device under a mounted filesystem - corruption and hilarity ensued.
+Certainly the problem exists with legacy grub - it assumes that it
+can write to the first sector or any disk or partition which
+overwrites the XFS superblock...
 
--Eric
+The grub2 manual:
 
-> The grub2 manual:
-> 
-> http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation
-> 
-> indicates that if you are using BIOS/MBR based booting, then grub2
-> still writes to the first sector of the partition that contains the
-> grub directory to install the stage 1.5 loader.  Indeed:
-> 
-> "boot.img
-> 
-> On PC BIOS systems, this image is the first part of GRUB to start.
-> It is written to a master boot record (MBR) or to the boot sector of
-> a partition. Because a PC boot sector is 512 bytes, the size of this
-> image is exactly 512 bytes. 
-> 
-> The sole function of boot.img is to read the first sector of the
-> core image from a local disk and jump to it. Because of the size
-> restriction, boot.img cannot understand any file system structure,
-> so grub-setup hardcodes the location of the first sector of the core
-> image into boot.img when installing GRUB. "
-> 
-> IOWs, you have to treat grub2 identically to legacy grub in that it
-> thinks it owns the first sector of any partition on the disk.
-> Therefore, you need a separate /boot partition that is not formated
-> with XFS to be safe.
-> 
-> There's a reason I went back to using LILO....
-> 
-> Cheers,
-> 
-> Dave.
+http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation
+
+indicates that if you are using BIOS/MBR based booting, then grub2
+still writes to the first sector of the partition that contains the
+grub directory to install the stage 1.5 loader.  Indeed:
+
+"boot.img
+
+On PC BIOS systems, this image is the first part of GRUB to start.
+It is written to a master boot record (MBR) or to the boot sector of
+a partition. Because a PC boot sector is 512 bytes, the size of this
+image is exactly 512 bytes. 
+
+The sole function of boot.img is to read the first sector of the
+core image from a local disk and jump to it. Because of the size
+restriction, boot.img cannot understand any file system structure,
+so grub-setup hardcodes the location of the first sector of the core
+image into boot.img when installing GRUB. "
+
+IOWs, you have to treat grub2 identically to legacy grub in that it
+thinks it owns the first sector of any partition on the disk.
+Therefore, you need a separate /boot partition that is not formated
+with XFS to be safe.
+
+There's a reason I went back to using LILO....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
