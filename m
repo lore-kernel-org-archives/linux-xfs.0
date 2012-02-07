@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q17KqhFJ002040 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 14:52:43 -0600
-Message-ID: <4F318F17.4010504@sgi.com>
-Date: Tue, 07 Feb 2012 14:52:39 -0600
-From: Bill Kendall <wkendall@sgi.com>
+	q17Lka7v005328 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 15:46:36 -0600
+Message-ID: <4F319BB8.7020808@sgi.com>
+Date: Tue, 07 Feb 2012 15:46:32 -0600
+From: Kevan Rehm <kfr@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump: use the full 32-bit generation number
-References: <1325880565-20934-1-git-send-email-wkendall@sgi.com>
-	<20120205133648.GA27225@infradead.org> <4F301079.9010505@sgi.com>
-	<20120206174140.GA10315@infradead.org>
-In-Reply-To: <20120206174140.GA10315@infradead.org>
+Subject: Re: [PATCH 3/8] xfsprogs: xfs_repair: don't set the root inode pointer
+References: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
+	<6833e89ecf7daa3ba69676fb98a4538ee6c3a1b5.1320955675.git.aelder@sgi.com>
+	<20111113120133.GC19435@infradead.org>
+	<20120207183830.GA31143@infradead.org> <4F3188BF.4030403@sgi.com>
+In-Reply-To: <4F3188BF.4030403@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,21 +27,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Christoph Hellwig wrote:
-> On Mon, Feb 06, 2012 at 11:40:09AM -0600, Bill Kendall wrote:
->> You were referring to an xfsdump option. What use case did you
->> have in mind? Compatibility with an old restore?
+Signed-off-by: Kevan Rehm<kfr@sgi.com>
+
+I guess this is the proper way, sorry.
+
+Kevan
+
+On 02/07/2012 02:25 PM, Kevan Rehm wrote:
+> On 02/07/2012 12:38 PM, Christoph Hellwig wrote:
+>> On Sun, Nov 13, 2011 at 07:01:33AM -0500, Christoph Hellwig wrote:
+>>> On Thu, Nov 10, 2011 at 02:35:13PM -0600, Alex Elder wrote:
+>>>> From: Kevan Rehm<kfr@sgi.com>
+>>>>
+>>>> In phase 6, in mk_root_dir(), xfs_repair initializes the mount
+>>>> point's m_rootip pointer without accounting for that reference.
+>>>> This field never really used or needed in repair otherwise, and the
+>>>> assigned pointer doesn't really represent a real reference to an
+>>>> inode that needs to be cached.  So just kill off this assignment.
+>>>>
+>>>> Signed-off-by: Alex Elder<aelder@sgi.com>
+>>> Shouldn't this also have Kevan's signoff?
+>> Kevan, can you give me a signoff for this patch, I'd like to put it in?
+>>
+> Fine by me.
 >
-> Yes.
-
-Ok, I can see the value in that if a filesystem is being moved
-to another system which has an older xfsrestore.
-
-I'll repost with that change as well as with an option for
-xfsrestore to truncate all generation numbers down to 12-bits
-as mentioned in my last mail.
-
-Bill
+> Kevan
 
 _______________________________________________
 xfs mailing list
