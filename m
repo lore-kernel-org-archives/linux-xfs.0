@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q17Hs33P248932 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 11:54:04 -0600
+	q17IMTJB251229 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 12:22:30 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	t4tPJjPPyhr8UCrz (version=TLSv1 cipher=AES256-SHA bits=256
+	ep775X18yzTrCY0I (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 07 Feb 2012 09:54:01 -0800 (PST)
+	Tue, 07 Feb 2012 10:22:28 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RupEu-0006K0-Lr
-	for xfs@oss.sgi.com; Tue, 07 Feb 2012 17:54:00 +0000
-Date: Tue, 7 Feb 2012 12:54:00 -0500
+	Linux)) id 1RupgS-0004ti-91
+	for xfs@oss.sgi.com; Tue, 07 Feb 2012 18:22:28 +0000
+Date: Tue, 7 Feb 2012 13:22:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] repair: fix incorrect use of thread local data in dir and
-	attr code
-Message-ID: <20120207175400.GA24301@infradead.org>
+Subject: [PATCH] libxfs: stop caching inode structures
+Message-ID: <20120207182228.GA18801@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -32,362 +31,310 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The attribute and dirv1 code use pthread thread local data incorrectly in
-a few places, which will make them fail in horrible ways when using the
-ag_stride options.
+Currently libxfs has a cache for xfs_inode structures.  Unlike in kernelspace
+where the inode cache, and the associated page cache for file data is used
+for all filesystem operations the libxfs inode cache is only used in few
+places:
 
-Replace the use of thread local data with simple local allocations given
-that there is no needed to micro-optimize these allocations as much
-as e.g. the extent map.  The added benefit is that we have to allocate
-less memory, and can free it quickly.
+ - the libxfs init code reads the root and realtime inodes when called from
+   xfs_db using a special flag, but these inode structure are never referenced
+   again
+ - mkfs uses namespace and bmap routines that take the xfs_inode structure
+   to create the root and realtime inodes, as well as any additional files
+   specified in the proto file
+ - the xfs_db attr code uses xfs_inode-based attr routines in the attrset
+   and attrget commands
+ - phase6 of xfs_repair uses xfs_inode-based routines for rebuilding
+   directories and moving files to the lost+found directory.
+ - phase7 of xfs_repair uses struct xfs_inode to modify the nlink count
+   of inodes.
 
-Reported-by: Tom Crane <T.Crane@rhul.ac.uk>
-Tested-by: Tom Crane <T.Crane@rhul.ac.uk>
+So except in repair we never ever reuse a cached inode, and in repair we can
+easily read the information from the more compact cached buffers (or even
+better rewrite phase7 to operate on the raw on-disk inodes).  Given these
+facts stop caching the inodes to reduce memory usage especially in xfs_repair.
+
+With this we probably could increase the memory available to the buffer
+cache in xfs_repair, but trying to do so I got a bit lost - the current
+formula seems to magic to me to make any sense, and simply doubling the
+buffer cache size causes us to run out of memory given that the data cached
+in the buffer cache (typically lots of 8k inode buffers and few 4k other
+metadata buffers) are much bigger than the inodes cached in the inode
+cache.  We probably need a sizing scheme that takes the actual amount
+of memory allocated to the buffer cache into account to solve this better.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Index: xfsprogs-dev/repair/attr_repair.c
+Index: xfsprogs-dev/include/libxfs.h
 ===================================================================
---- xfsprogs-dev.orig/repair/attr_repair.c	2012-02-02 09:25:50.000000000 +0000
-+++ xfsprogs-dev/repair/attr_repair.c	2012-02-02 11:14:06.000000000 +0000
-@@ -363,12 +363,6 @@ rmtval_get(xfs_mount_t *mp, xfs_ino_t in
- 	return (clearit);
- }
+--- xfsprogs-dev.orig/include/libxfs.h	2012-02-06 15:22:51.000000000 +0000
++++ xfsprogs-dev/include/libxfs.h	2012-02-06 15:31:05.000000000 +0000
+@@ -207,7 +207,6 @@ typedef struct xfs_mount {
+ #define LIBXFS_MOUNT_COMPAT_ATTR	0x0010
+ #define LIBXFS_MOUNT_ATTR2		0x0020
  
--/*
-- * freespace map for directory and attribute leaf blocks (1 bit per byte)
-- * 1 == used, 0 == free
-- */
--size_t ts_attr_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
+-#define LIBXFS_IHASHSIZE(sbp)		(1<<10)
+ #define LIBXFS_BHASHSIZE(sbp) 		(1<<10)
+ 
+ extern xfs_mount_t	*libxfs_mount (xfs_mount_t *, xfs_sb_t *,
+@@ -335,7 +334,6 @@ extern int	libxfs_writebuf_int(xfs_buf_t
+ extern int	libxfs_readbufr(dev_t, xfs_daddr_t, xfs_buf_t *, int, int);
+ 
+ extern int libxfs_bhash_size;
+-extern int libxfs_ihash_size;
+ 
+ #define LIBXFS_BREAD	0x1
+ #define LIBXFS_BWRITE	0x2
+@@ -455,9 +453,6 @@ extern int	libxfs_iread (xfs_mount_t *,
+ 				xfs_inode_t *, xfs_daddr_t);
+ 
+ /* Inode Cache Interfaces */
+-extern struct cache	*libxfs_icache;
+-extern struct cache_operations	libxfs_icache_operations;
+-extern void	libxfs_icache_purge (void);
+ extern int	libxfs_iget (xfs_mount_t *, xfs_trans_t *, xfs_ino_t,
+ 				uint, xfs_inode_t **, xfs_daddr_t);
+ extern void	libxfs_iput (xfs_inode_t *, uint);
+Index: xfsprogs-dev/libxfs/init.c
+===================================================================
+--- xfsprogs-dev.orig/libxfs/init.c	2012-02-06 15:22:51.000000000 +0000
++++ xfsprogs-dev/libxfs/init.c	2012-02-06 15:30:51.000000000 +0000
+@@ -22,9 +22,6 @@
+ 
+ char *progname = "libxfs";	/* default, changed by each tool */
+ 
+-struct cache *libxfs_icache;	/* global inode cache */
+-int libxfs_ihash_size;		/* #buckets in icache */
 -
- /* The block is read in. The magic number and forward / backward
-  * links are checked by the caller process_leaf_attr.
-  * If any problems occur the routine returns with non-zero. In
-@@ -503,7 +497,7 @@ process_leaf_attr_block(
+ struct cache *libxfs_bcache;	/* global buffer cache */
+ int libxfs_bhash_size;		/* #buckets in bcache */
+ 
+@@ -333,9 +330,6 @@ libxfs_init(libxfs_init_t *a)
+ 	}
+ 	if (needcd)
+ 		chdir(curdir);
+-	if (!libxfs_ihash_size)
+-		libxfs_ihash_size = LIBXFS_IHASHSIZE(sbp);
+-	libxfs_icache = cache_init(libxfs_ihash_size, &libxfs_icache_operations);
+ 	if (!libxfs_bhash_size)
+ 		libxfs_bhash_size = LIBXFS_BHASHSIZE(sbp);
+ 	libxfs_bcache = cache_init(libxfs_bhash_size, &libxfs_bcache_operations);
+@@ -817,7 +811,6 @@ libxfs_umount(xfs_mount_t *mp)
+ 	int			agno;
+ 
+ 	libxfs_rtmount_destroy(mp);
+-	libxfs_icache_purge();
+ 	libxfs_bcache_purge();
+ 
+ 	for (agno = 0; agno < mp->m_maxagi; agno++) {
+@@ -833,7 +826,6 @@ void
+ libxfs_destroy(void)
  {
- 	xfs_attr_leaf_entry_t *entry;
- 	int  i, start, stop, clearit, usedbs, firstb, thissize;
--	da_freemap_t *attr_freemap = ts_attr_freemap();
-+	da_freemap_t *attr_freemap;
- 
- 	clearit = usedbs = 0;
- 	*repair = 0;
-@@ -519,7 +513,7 @@ process_leaf_attr_block(
- 		return (1);
- 	}
- 
--	init_da_freemap(attr_freemap);
-+	attr_freemap = alloc_da_freemap(mp);
- 	(void) set_da_freemap(mp, attr_freemap, 0, stop);
- 
- 	/* go thru each entry checking for problems */
-@@ -636,6 +630,8 @@ process_leaf_attr_block(
- 		* we can add it then.
- 		*/
- 	}
-+
-+	free(attr_freemap);
- 	return (clearit);  /* and repair */
+ 	manage_zones(1);
+-	cache_destroy(libxfs_icache);
+ 	cache_destroy(libxfs_bcache);
  }
  
-Index: xfsprogs-dev/repair/dir.c
+@@ -849,7 +841,6 @@ libxfs_report(FILE *fp)
+ 	time_t t;
+ 	char *c;
+ 
+-	cache_report(fp, "libxfs_icache", libxfs_icache);
+ 	cache_report(fp, "libxfs_bcache", libxfs_bcache);
+ 
+ 	t = time(NULL);
+Index: xfsprogs-dev/libxfs/rdwr.c
 ===================================================================
---- xfsprogs-dev.orig/repair/dir.c	2012-02-02 09:25:50.000000000 +0000
-+++ xfsprogs-dev/repair/dir.c	2012-02-02 11:17:20.000000000 +0000
-@@ -495,23 +495,19 @@ process_shortform_dir(
- }
+--- xfsprogs-dev.orig/libxfs/rdwr.c	2012-02-06 15:22:07.000000000 +0000
++++ xfsprogs-dev/libxfs/rdwr.c	2012-02-06 15:29:03.000000000 +0000
+@@ -710,58 +710,29 @@ struct cache_operations libxfs_bcache_op
+ 
  
  /*
-- * freespace map for directory leaf blocks (1 bit per byte)
-- * 1 == used, 0 == free
-+ * Allocate a freespace map for directory or attr leaf blocks (1 bit per byte)
-+ * 1 == used, 0 == free.
+- * Inode cache interfaces
++ * Inode cache stubs.
   */
--size_t ts_dir_freemap_size = sizeof(da_freemap_t) * DA_BMAP_SIZE;
--
--void
--init_da_freemap(da_freemap_t *dir_freemap)
-+da_freemap_t *
-+alloc_da_freemap(struct xfs_mount *mp)
- {
--	memset(dir_freemap, 0, sizeof(da_freemap_t) * DA_BMAP_SIZE);
-+	return calloc(1, mp->m_sb.sb_blocksize / NBBY);
- }
  
- /*
-- * sets directory freemap, returns 1 if there is a conflict
-- * returns 0 if everything's good.  the range [start, stop) is set.
-- * right now, we just use the static array since only one directory
-- * block will be processed at once even though the interface allows
-- * you to pass in arbitrary da_freemap_t array's.
-+ * Set the he range [start, stop) in the directory freemap.
-+ *
-+ * Returns 1 if there is a conflict or 0 if everything's good.
-  *
-  * Within a char, the lowest bit of the char represents the byte with
-  * the smallest address
-@@ -728,28 +724,6 @@ _("- derived hole (base %d, size %d) in
- 	return(res);
- }
+ extern kmem_zone_t	*xfs_ili_zone;
+ extern kmem_zone_t	*xfs_inode_zone;
  
--#if 0
--void
--test(xfs_mount_t *mp)
+-static unsigned int
+-libxfs_ihash(cache_key_t key, unsigned int hashsize)
 -{
--	int i = 0;
--	da_hole_map_t	holemap;
--
--	init_da_freemap(dir_freemap);
--	memset(&holemap, 0, sizeof(da_hole_map_t));
--
--	set_da_freemap(mp, dir_freemap, 0, 50);
--	set_da_freemap(mp, dir_freemap, 100, 126);
--	set_da_freemap(mp, dir_freemap, 126, 129);
--	set_da_freemap(mp, dir_freemap, 130, 131);
--	set_da_freemap(mp, dir_freemap, 150, 160);
--	process_da_freemap(mp, dir_freemap, &holemap);
--
--	return;
+-	return ((unsigned int)*(xfs_ino_t *)key) % hashsize;
 -}
--#endif
 -
+-static int
+-libxfs_icompare(struct cache_node *node, cache_key_t key)
+-{
+-	xfs_inode_t	*ip = (xfs_inode_t *)node;
 -
- /*
-  * walk tree from root to the left-most leaf block reading in
-  * blocks and setting up cursor.  passes back file block number of the
-@@ -1366,8 +1340,6 @@ verify_da_path(xfs_mount_t	*mp,
- 	return(0);
- }
- 
--size_t ts_dirbuf_size = 64*1024;
+-	return (ip->i_ino == *(xfs_ino_t *)key);
+-}
 -
- /*
-  * called by both node dir and leaf dir processing routines
-  * validates all contents *but* the sibling pointers (forw/back)
-@@ -1441,7 +1413,7 @@ process_leaf_dir_block(
- 	char				fname[MAXNAMELEN + 1];
- 	da_hole_map_t			holemap;
- 	da_hole_map_t			bholemap;
--	unsigned char			*dir_freemap = ts_dir_freemap();
-+	da_freemap_t			*dir_freemap;
- 
- #ifdef XR_DIR_TRACE
- 	fprintf(stderr, "\tprocess_leaf_dir_block - ino %" PRIu64 "\n", ino);
-@@ -1450,7 +1422,7 @@ process_leaf_dir_block(
- 	/*
- 	 * clear static dir block freespace bitmap
- 	 */
--	init_da_freemap(dir_freemap);
-+	dir_freemap = alloc_da_freemap(mp);
- 
- 	*buf_dirty = 0;
- 	first_used = mp->m_sb.sb_blocksize;
-@@ -1462,7 +1434,8 @@ process_leaf_dir_block(
- 		do_warn(
- _("directory block header conflicts with used space in directory inode %" PRIu64 "\n"),
- 			ino);
--		return(1);
-+		res = 1;
-+		goto out;
- 	}
- 
- 	/*
-@@ -1778,8 +1751,8 @@ _("entry references free inode %" PRIu64
- 			do_warn(
- _("bad size, entry #%d in dir inode %" PRIu64 ", block %u -- entry overflows block\n"),
- 				i, ino, da_bno);
--
--			return(1);
-+			res = 1;
-+			goto out;
- 		}
- 
- 		start = (__psint_t)&leaf->entries[i] - (__psint_t)leaf;;
-@@ -1789,7 +1762,8 @@ _("bad size, entry #%d in dir inode %" P
- 			do_warn(
- _("dir entry slot %d in block %u conflicts with used space in dir inode %" PRIu64 "\n"),
- 				i, da_bno, ino);
--			return(1);
-+			res = 1;
-+			goto out;
- 		}
- 
- 		/*
-@@ -2183,7 +2157,7 @@ _("- existing hole info for block %d, di
- 			_("- compacting block %u in dir inode %" PRIu64 "\n"),
- 					da_bno, ino);
- 
--			new_leaf = (xfs_dir_leafblock_t *) ts_dirbuf();
-+			new_leaf = malloc(mp->m_sb.sb_blocksize);
- 
- 			/*
- 			 * copy leaf block header
-@@ -2223,6 +2197,7 @@ _("- existing hole info for block %d, di
- 					do_warn(
- 	_("not enough space in block %u of dir inode %" PRIu64 " for all entries\n"),
- 						da_bno, ino);
-+					free(new_leaf);
- 					break;
- 				}
- 
-@@ -2284,6 +2259,7 @@ _("- existing hole info for block %d, di
- 			 * final step, copy block back
- 			 */
- 			memmove(leaf, new_leaf, mp->m_sb.sb_blocksize);
-+			free(new_leaf);
- 
- 			*buf_dirty = 1;
- 		} else  {
-@@ -2302,10 +2278,13 @@ _("- existing hole info for block %d, di
- 		junk_zerolen_dir_leaf_entries(mp, leaf, ino, buf_dirty);
- 	}
- #endif
-+
-+out:
-+	free(dir_freemap);
- #ifdef XR_DIR_TRACE
- 	fprintf(stderr, "process_leaf_dir_block returns %d\n", res);
- #endif
--	return((res > 0) ? 1 : 0);
-+	return res > 0 ? 1 : 0;
- }
- 
- /*
-Index: xfsprogs-dev/repair/dir.h
-===================================================================
---- xfsprogs-dev.orig/repair/dir.h	2012-02-02 09:28:58.000000000 +0000
-+++ xfsprogs-dev/repair/dir.h	2012-02-02 11:09:41.000000000 +0000
-@@ -21,9 +21,6 @@
- 
- struct blkmap;
- 
--/* 1 bit per byte, max XFS blocksize == 64K bits / NBBY */
--#define DA_BMAP_SIZE		8192
--
- typedef unsigned char	da_freemap_t;
- 
- /*
-@@ -81,9 +78,9 @@ get_first_dblock_fsbno(
- 	xfs_ino_t	ino,
- 	xfs_dinode_t	*dino);
- 
--void
--init_da_freemap(
--	da_freemap_t *dir_freemap);
-+da_freemap_t *
-+alloc_da_freemap(
-+	xfs_mount_t	*mp);
- 
  int
- namecheck(
-Index: xfsprogs-dev/repair/globals.h
-===================================================================
---- xfsprogs-dev.orig/repair/globals.h	2012-02-02 09:33:29.000000000 +0000
-+++ xfsprogs-dev/repair/globals.h	2012-02-02 09:34:49.000000000 +0000
-@@ -185,10 +185,6 @@ EXTERN xfs_extlen_t	sb_inoalignmt;
- EXTERN __uint32_t	sb_unit;
- EXTERN __uint32_t	sb_width;
+ libxfs_iget(xfs_mount_t *mp, xfs_trans_t *tp, xfs_ino_t ino, uint lock_flags,
+ 		xfs_inode_t **ipp, xfs_daddr_t bno)
+ {
+-	xfs_inode_t	*ip;
+ 	int		error = 0;
  
--extern size_t 		ts_dirbuf_size;
--extern size_t 		ts_dir_freemap_size;
--extern size_t 		ts_attr_freemap_size;
--
- EXTERN pthread_mutex_t	*ag_locks;
- 
- EXTERN int 		report_interval;
-Index: xfsprogs-dev/repair/init.c
-===================================================================
---- xfsprogs-dev.orig/repair/init.c	2012-02-02 09:25:50.000000000 +0000
-+++ xfsprogs-dev/repair/init.c	2012-02-02 09:37:02.000000000 +0000
-@@ -29,67 +29,16 @@
- #include "prefetch.h"
- #include <sys/resource.h>
- 
--/* TODO: dirbuf/freemap key usage is completely b0rked - only used for dirv1 */
--static pthread_key_t dirbuf_key;
--static pthread_key_t dir_freemap_key;
--static pthread_key_t attr_freemap_key;
--
- extern pthread_key_t dblkmap_key;
- extern pthread_key_t ablkmap_key;
- 
- static void
--ts_alloc(pthread_key_t key, unsigned n, size_t size)
--{
--	void *voidp;
--	voidp = calloc(n, size);
--	if (voidp == NULL) {
--		do_error(_("ts_alloc: cannot allocate thread specific storage\n"));
--		/* NO RETURN */
--		return;
--	}
--	pthread_setspecific(key,  voidp);
+-	if (cache_node_get(libxfs_icache, &ino, (struct cache_node **)&ip)) {
+-#ifdef INO_DEBUG
+-		fprintf(stderr, "%s: allocated inode, ino=%llu(%llu), %p\n",
+-			__FUNCTION__, (unsigned long long)ino, bno, ip);
+-#endif
+-		if ((error = libxfs_iread(mp, tp, ino, ip, bno))) {
+-			cache_node_purge(libxfs_icache, &ino,
+-					(struct cache_node *)ip);
+-			ip = NULL;
+-		}
++	*ipp = kmem_zone_zalloc(xfs_inode_zone, 0);
++	if (!*ipp)
++		return ENOMEM;
++
++	error = libxfs_iread(mp, tp, ino, *ipp, bno);
++	if (error) {
++		kmem_zone_free(xfs_inode_zone, *ipp);
++		*ipp = NULL;
+ 	}
+-	*ipp = ip;
+-	return error;
 -}
 -
--static void
- ts_create(void)
- {
--	/* create thread specific keys */
--	pthread_key_create(&dirbuf_key, NULL);
--	pthread_key_create(&dir_freemap_key, NULL);
--	pthread_key_create(&attr_freemap_key, NULL);
--
- 	pthread_key_create(&dblkmap_key, NULL);
- 	pthread_key_create(&ablkmap_key, NULL);
- }
- 
 -void
--ts_init(void)
+-libxfs_iput(xfs_inode_t *ip, uint lock_flags)
 -{
--
--	/* allocate thread specific storage */
--	ts_alloc(dirbuf_key, 1, ts_dirbuf_size);
--	ts_alloc(dir_freemap_key, 1, ts_dir_freemap_size);
--	ts_alloc(attr_freemap_key, 1, ts_attr_freemap_size);
+-	cache_node_put(libxfs_icache, (struct cache_node *)ip);
 -}
--
--void *
--ts_dirbuf(void)
--{
--	return pthread_getspecific(dirbuf_key);
--}
--
--void *
--ts_dir_freemap(void)
--{
--	return pthread_getspecific(dir_freemap_key);
--}
--
--void *
--ts_attr_freemap(void)
--{
--	return pthread_getspecific(attr_freemap_key);
--}
--
- static void
- increase_rlimit(void)
- {
-@@ -156,7 +105,6 @@ xfs_init(libxfs_init_t *args)
- 		do_error(_("couldn't initialize XFS library\n"));
  
- 	ts_create();
--	ts_init();
- 	increase_rlimit();
- 	pftrace_init();
+-static struct cache_node *
+-libxfs_ialloc(cache_key_t key)
+-{
+-	return kmem_zone_zalloc(xfs_inode_zone, 0);
++	return error;
  }
-Index: xfsprogs-dev/repair/protos.h
+ 
+ static void
+@@ -778,32 +749,12 @@ libxfs_idestroy(xfs_inode_t *ip)
+ 		libxfs_idestroy_fork(ip, XFS_ATTR_FORK);
+ }
+ 
+-static void
+-libxfs_irelse(struct cache_node *node)
+-{
+-	xfs_inode_t	*ip = (xfs_inode_t *)node;
+-
+-	if (ip != NULL) {
+-		if (ip->i_itemp)
+-			kmem_zone_free(xfs_ili_zone, ip->i_itemp);
+-		ip->i_itemp = NULL;
+-		libxfs_idestroy(ip);
+-		kmem_zone_free(xfs_inode_zone, ip);
+-		ip = NULL;
+-	}
+-}
+-
+ void
+-libxfs_icache_purge(void)
++libxfs_iput(xfs_inode_t *ip, uint lock_flags)
+ {
+-	cache_purge(libxfs_icache);
++	if (ip->i_itemp)
++		kmem_zone_free(xfs_ili_zone, ip->i_itemp);
++	ip->i_itemp = NULL;
++	libxfs_idestroy(ip);
++	kmem_zone_free(xfs_inode_zone, ip);
+ }
+-
+-struct cache_operations libxfs_icache_operations = {
+-	/* .hash */	libxfs_ihash,
+-	/* .alloc */	libxfs_ialloc,
+-	/* .flush */	NULL,
+-	/* .relse */	libxfs_irelse,
+-	/* .compare */	libxfs_icompare,
+-	/* .bulkrelse */ NULL
+-};
+Index: xfsprogs-dev/mkfs/xfs_mkfs.c
 ===================================================================
---- xfsprogs-dev.orig/repair/protos.h	2012-02-02 09:33:29.000000000 +0000
-+++ xfsprogs-dev/repair/protos.h	2012-02-02 09:36:42.000000000 +0000
-@@ -41,9 +41,5 @@ char	*alloc_ag_buf(int size);
- void	print_inode_list(xfs_agnumber_t i);
- char *	err_string(int err_code);
+--- xfsprogs-dev.orig/mkfs/xfs_mkfs.c	2012-02-06 15:22:51.000000000 +0000
++++ xfsprogs-dev/mkfs/xfs_mkfs.c	2012-02-06 15:22:59.000000000 +0000
+@@ -2698,7 +2698,6 @@ an AG size that is one stripe unit small
+ 	 * Need to drop references to inodes we still hold, first.
+ 	 */
+ 	libxfs_rtmount_destroy(mp);
+-	libxfs_icache_purge();
+ 	libxfs_bcache_purge();
  
--extern void *ts_attr_freemap(void);
--extern void *ts_dir_freemap(void);
--extern void *ts_dirbuf(void);
--extern void ts_init(void);
- extern void thread_init(void);
+ 	/*
+Index: xfsprogs-dev/repair/xfs_repair.c
+===================================================================
+--- xfsprogs-dev.orig/repair/xfs_repair.c	2012-02-06 15:22:51.000000000 +0000
++++ xfsprogs-dev/repair/xfs_repair.c	2012-02-06 15:38:25.000000000 +0000
+@@ -69,7 +69,6 @@ static char *c_opts[] = {
+ };
  
+ 
+-static int	ihash_option_used;
+ static int	bhash_option_used;
+ static long	max_mem_specified;	/* in megabytes */
+ static int	phase2_threads = 32;
+@@ -239,13 +238,13 @@ process_args(int argc, char **argv)
+ 					pre_65_beta = 1;
+ 					break;
+ 				case IHASH_SIZE:
+-					libxfs_ihash_size = (int)strtol(val, NULL, 0);
+-					ihash_option_used = 1;
++					do_warn(
++		_("-o ihash option has been removed and will be ignored\n"));
+ 					break;
+ 				case BHASH_SIZE:
+ 					if (max_mem_specified)
+ 						do_abort(
+-			_("-o bhash option cannot be used with -m option\n"));
++		_("-o bhash option cannot be used with -m option\n"));
+ 					libxfs_bhash_size = (int)strtol(val, NULL, 0);
+ 					bhash_option_used = 1;
+ 					break;
+@@ -646,9 +645,7 @@ main(int argc, char **argv)
+ 		unsigned long	max_mem;
+ 		struct rlimit	rlim;
+ 
+-		libxfs_icache_purge();
+ 		libxfs_bcache_purge();
+-		cache_destroy(libxfs_icache);
+ 		cache_destroy(libxfs_bcache);
+ 
+ 		mem_used = (mp->m_sb.sb_icount >> (10 - 2)) +
+@@ -707,11 +704,6 @@ main(int argc, char **argv)
+ 			do_log(_("        - block cache size set to %d entries\n"),
+ 				libxfs_bhash_size * HASH_CACHE_RATIO);
+ 
+-		if (!ihash_option_used)
+-			libxfs_ihash_size = libxfs_bhash_size;
+-
+-		libxfs_icache = cache_init(libxfs_ihash_size,
+-						&libxfs_icache_operations);
+ 		libxfs_bcache = cache_init(libxfs_bhash_size,
+ 						&libxfs_bcache_operations);
+ 	}
+Index: xfsprogs-dev/man/man8/xfs_repair.8
+===================================================================
+--- xfsprogs-dev.orig/man/man8/xfs_repair.8	2012-02-06 15:32:57.000000000 +0000
++++ xfsprogs-dev/man/man8/xfs_repair.8	2012-02-06 15:33:08.000000000 +0000
+@@ -130,12 +130,6 @@ The
+ supported are:
+ .RS 1.0i
+ .TP
+-.BI ihash= ihashsize
+-overrides the default inode cache hash size. The total number of
+-inode cache entries are limited to 8 times this amount. The default
+-.I ihashsize
+-is 1024 (for a total of 8192 entries).
+-.TP
+ .BI bhash= bhashsize
+ overrides the default buffer cache hash size. The total number of
+ buffer cache entries are limited to 8 times this amount. The default
 
 _______________________________________________
 xfs mailing list
