@@ -1,14 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q17EJOHO232567 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 08:19:24 -0600
-Message-ID: <4F3132EC.8010903@sgi.com>
-Date: Tue, 07 Feb 2012 08:19:24 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	q17FNb3a236315 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 09:23:37 -0600
+Date: Tue, 7 Feb 2012 09:23:38 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/7] better dquot caching
+Message-ID: <20120207152338.GE8262@sgi.com>
+References: <20120201135719.202171828@bombadil.infradead.org>
+	<20120207073009.GM13095@sgi.com>
+	<20120207132452.GA1692@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V7
-References: <4F2FE66C.80303@oracle.com>
-In-Reply-To: <4F2FE66C.80303@oracle.com>
+Content-Disposition: inline
+In-Reply-To: <20120207132452.GA1692@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,38 +20,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: jeff.liu@oracle.com
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 02/06/12 08:40, Jeff Liu wrote:
-> Hello,
->
-> There is one bug fix in this version, in xfs_seek_data()/xfs_seek_hole(), call xfs_bmapi_read() or
-> xfs_bmap_first_unused() maybe failed, they should return ENXIO in this case.
-> Thanks Mark for pointing this out!
->
->
-> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
->
-> ---
->   fs/xfs/xfs_file.c |  172 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
->   1 files changed, 171 insertions(+), 1 deletions(-)
->
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 753ed9b..3822b15 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1141,8 +1141,178 @@ xfs_vm_page_mkwrite(
->   	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
+On Tue, Feb 07, 2012 at 08:24:52AM -0500, Christoph Hellwig wrote:
+> On Tue, Feb 07, 2012 at 01:30:09AM -0600, Ben Myers wrote:
+> > These conflict with Chandra's project quota patches.  I've started
+> > looking at them again, but I am a little uncomfortable with the change
+> > to the superblock...  could I get your opinion of that while I take a
+> > look at these?
+> 
+> Can you review patch 1 for now as that's a 3.3 candidate.  I'll rebase
+> the rest on top his changes later.
 
-
-Looks good.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Sounds reasonable.
 
 _______________________________________________
 xfs mailing list
