@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q17IcXe6252899 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 12:38:33 -0600
-Date: Tue, 7 Feb 2012 13:38:30 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/8] xfsprogs: xfs_repair: don't set the root inode pointer
-Message-ID: <20120207183830.GA31143@infradead.org>
-References: <3ed89446f6dc1231ec1de712f242522052952b7e.1320955675.git.aelder@sgi.com>
-	<6833e89ecf7daa3ba69676fb98a4538ee6c3a1b5.1320955675.git.aelder@sgi.com>
-	<20111113120133.GC19435@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20111113120133.GC19435@infradead.org>
+	q17JGARF255412 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 13:16:10 -0600
+Received: from mail-yw0-f73.google.com (mail-yw0-f73.google.com
+	[209.85.213.73]) by cuda.sgi.com with ESMTP id A3cgoBN7YzBXj0eD
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 07 Feb 2012 11:16:09 -0800 (PST)
+Received: by yhpp61 with SMTP id p61so796855yhp.2
+	for <xfs@oss.sgi.com>; Tue, 07 Feb 2012 11:16:08 -0800 (PST)
+From: Curt Wohlgemuth <curtw@google.com>
+Subject: [PATCH] xfstests: fix msync() call in fsx.c:domapwrite()
+Date: Tue,  7 Feb 2012 11:16:06 -0800
+Message-Id: <1328642166-389-1-git-send-email-curtw@google.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,27 +20,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kevan Rehm <kfr@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-ext4@vger.kernel.org, Curt Wohlgemuth <curtw@google.com>
 
-On Sun, Nov 13, 2011 at 07:01:33AM -0500, Christoph Hellwig wrote:
-> On Thu, Nov 10, 2011 at 02:35:13PM -0600, Alex Elder wrote:
-> > From: Kevan Rehm <kfr@sgi.com>
-> > 
-> > In phase 6, in mk_root_dir(), xfs_repair initializes the mount
-> > point's m_rootip pointer without accounting for that reference.
-> > This field never really used or needed in repair otherwise, and the
-> > assigned pointer doesn't really represent a real reference to an
-> > inode that needs to be cached.  So just kill off this assignment.
-> > 
-> > Signed-off-by: Alex Elder <aelder@sgi.com>
-> 
-> Shouldn't this also have Kevan's signoff?
+This explicitly sends MS_SYNC as the flag to msync() in
+fsx.c, in domapwrite().  Without this flag, the memory
+written to the mmap'ed region will not be flushed to disk;
+in fact, on Linux, calling msync() with a '0' or MS_ASYNC
+flag is a no-op.
 
-Kevan, can you give me a signoff for this patch, I'd like to put it in?
+Signed-off-by: Curt Wohlgemuth <curtw@google.com>
+---
+ ltp/fsx.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/ltp/fsx.c b/ltp/fsx.c
+index b36c201..2f1e3e8 100644
+--- a/ltp/fsx.c
++++ b/ltp/fsx.c
+@@ -779,7 +779,7 @@ domapwrite(unsigned offset, unsigned size)
+ 		report_failure(202);
+ 	}
+ 	memcpy(p + pg_offset, good_buf + offset, size);
+-	if (msync(p, map_size, 0) != 0) {
++	if (msync(p, map_size, MS_SYNC) != 0) {
+ 		prterr("domapwrite: msync");
+ 		report_failure(203);
+ 	}
+-- 
+1.7.7.3
 
 _______________________________________________
 xfs mailing list
