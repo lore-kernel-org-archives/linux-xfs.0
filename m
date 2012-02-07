@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q17HUOoI247219 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 11:30:24 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id A4Woipac9xDCrk0x for
-	<xfs@oss.sgi.com>; Tue, 07 Feb 2012 09:30:22 -0800 (PST)
-Date: Tue, 7 Feb 2012 17:30:20 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Performance problem - reads slower than writes
-Message-ID: <20120207173020.GA7381@nsrc.org>
-References: <20120131103126.GA46170@nsrc.org>
-	<20120131145205.GA6607@infradead.org> <20120203115434.GA649@nsrc.org>
-	<4F2C38BE.2010002@hardwarefreak.com> <20120203221015.GA2675@nsrc.org>
-	<4F2D016C.9020406@hardwarefreak.com> <20120204112436.GA3167@nsrc.org>
-	<4F2D2953.2020906@hardwarefreak.com> <20120204200417.GA3362@nsrc.org>
-	<4F2D98A9.4090709@scalableinformatics.com>
+	q17I0Oo9249423 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 12:00:24 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id SIbDZALeY6Ccxw8t for <xfs@oss.sgi.com>;
+	Tue, 07 Feb 2012 10:00:22 -0800 (PST)
+Message-ID: <4F3166B4.7050006@sandeen.net>
+Date: Tue, 07 Feb 2012 12:00:20 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F2D98A9.4090709@scalableinformatics.com>
+Subject: Re: xfs_repair segfaults with ag_stride option
+References: <4F293FCC.7010101@rhul.ac.uk>
+	<20120202124248.GA12107@infradead.org>
+	<4F2F23F3.9000402@rhul.ac.uk> <4F2F6C00.5050108@sandeen.net>
+	<4F2FB72B.9010209@rhul.ac.uk> <4F2FD3DC.3030301@sandeen.net>
+	<4F316236.7050607@rhul.ac.uk>
+In-Reply-To: <4F316236.7050607@rhul.ac.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,103 +28,129 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Landman <landman@scalableinformatics.com>
-Cc: xfs@oss.sgi.com
+To: Tom Crane <T.Crane@rhul.ac.uk>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sat, Feb 04, 2012 at 03:44:25PM -0500, Joe Landman wrote:
-> >Sure it can. A gluster volume consists of "bricks". Each brick is served by
-> >a glusterd process listening on a different TCP port. Those bricks can be on
-> >the same server or on different servers.
+On 2/7/12 11:41 AM, Tom Crane wrote:
+> Eric Sandeen wrote:
+>> On 2/6/12 5:19 AM, Tom Crane wrote:
+>>  
+>>> Eric Sandeen wrote:
+>>>     
+>>
+>> ...
+>>
+>>  
+>>>> Newer tools are fine to use on older filesystems, there should be no
+>>>>         
+>>> Good!
+>>>
+>>>    
+>>>> issue there.
+>>>>
+>>>> running fsr can cause an awful lot of IO, and a lot of file reorganization.
+>>>> (meaning, they will get moved to new locations on disk, etc).
+>>>>
+>>>> How bad is it, really?  How did you arrive at the 40% number?  Unless
+>>>>         
+>>> xfs_db -c frag -r <block device>
+>>>     
+>>
+>> which does:
+>>
+>>                 answer = (double)(extcount_actual - extcount_ideal) * 100.0 /
+>>                          (double)extcount_actual;
+>>
+>> If you work it out, if every file was split into only 2 extents, you'd have
+>> "50%" - and really, that's not bad.  40% is even less bad.
+>>   
 > 
-> I seem to remember that the Gluster folks abandoned this model
-> (using their code versus MD raid) on single servers due to
-> performance issues.  We did play with this a few times, and the
-> performance wasn't that good.  Basically limited by single disk
-> seek/write speed.
+> Here is a list of some of the more fragmented files, produced using,
+> xfs_db -r /dev/mapper/vg0-lvol0 -c "frag -v" | head -1000000 | sort -k4,4 -g | tail -100
+> 
+>> inode 1323681 actual 12496 ideal 2
 
-It does appear to scale up, although not as linearly as I'd like.
+ok, so that's a fair number of extents, although I don't know how big the file is.
 
-Here are some performance stats [1][2].
-#p = number of concurrent client processes; files read first in sequence
-and then randomly.
+I think "Frag" takes into account sparseness, so that doesn't account for it.
+(i.e. frag on a sparse file w/ 5 filled in regions yields "actual 5, ideal 5")
 
-With a 12-brick distributed replicated volume (6 bricks each on 2 servers),
-the servers connected by 10GE and the gluster volume mounted locally on one
-of the servers:
+> The following for some of the larger, more fragmented files was produced by parsing/summarising the output of bmap -l
+> 
+>> (nos-extents size-of-smallest-extent size-of-largest-extent size-of-average-extent)
+>> 20996 8 38232 370.678986473614
 
- #p  files/sec  dd_args
-  1      95.77  bs=1024k 
-  1      24.42  bs=1024k [random]
-  2     126.03  bs=1024k 
-  2      43.53  bs=1024k [random]
-  5     284.35  bs=1024k 
-  5      82.23  bs=1024k [random]
- 10     280.75  bs=1024k 
- 10     146.47  bs=1024k [random]
- 20     316.31  bs=1024k 
- 20     209.67  bs=1024k [random]
- 30     381.11  bs=1024k 
- 30     241.55  bs=1024k [random]
+So about a 3G file in 20996 extents.  Not great (unless it's sparse?)
 
-With a 12-drive md raid10 "far" array, exported as a single brick and
-accessed using glusterfs over 10GE:
+> How bad does this look?
 
- #p  files/sec  dd_args
-  1     114.60  bs=1024k 
-  1      38.58  bs=1024k [random]
-  2     169.88  bs=1024k 
-  2      70.68  bs=1024k [random]
-  5     181.94  bs=1024k 
-  5     141.74  bs=1024k [random]
- 10     250.96  bs=1024k 
- 10     209.76  bs=1024k [random]
- 20     315.51  bs=1024k 
- 20     277.99  bs=1024k [random]
- 30     343.84  bs=1024k 
- 30     316.24  bs=1024k [random]
+Ok... not great?  :)  If it is really scattered around the disk that might impact how quickly you can read them after all.
 
-This is a rather unfair comparison because the RAID10 "far" configuration
-allows it to find all data on the first half of each drive, reducing the
-seek times and giving faster read throughput.  Unsurprisingly, it wins on
-all the random reads.
+How are the files created, you might want to try to fix it up on that end, as well.
 
-For sequential reads with 5+ concurrent clients, the gluster distribution
-wins (because of the locality of files to their directory)
+-Eric
 
-In the limiting case, because the filesystems are independent you can read
-off them separately and concurrently:
-
-# for i in /brick{1..6}; do find $i | time cpio -o >/dev/null & done
-
-This completed in 127 seconds for the entire corpus of 100,352 files (65GB
-of data), i.e.  790 files/sec or 513MB/sec.  If your main use case was to be
-able to copy or process all the files at once, this would win hands-down.
-
-In fact, since the data is duplicated, we can read half the directories
-from each disk in the pair.
-
-root@storage1:~# for i in /brick{1..6}; do find $i | egrep '/[0-9]{4}[02468]/' | time cpio -o >/dev/null & done
-root@storage2:~# for i in /brick{1..6}; do find $i | egrep '/[0-9]{4}[13579]/' | time cpio -o >/dev/null & done
-
-This read the whole corpus in 69 seconds: i.e. 1454 files/sec or 945MB/s. 
-Clearly you have to jump through some hoops to get this, but actually
-reading through all the files (in any order) is an important use case for
-us.
-
-Maybe the RAID10 array could score better if I used a really big stripe size
-- I'm using 1MB at the moment.
-
-Regards,
-
-Brian.
-
-[1] Test script shown at
-http://gluster.org/pipermail/gluster-users/2012-February/009585.html
-
-[2] Tuned by:
-gluster volume set <volname> performance.io-thread-count 32
-and with the patch at
-http://gluster.org/pipermail/gluster-users/2012-February/009590.html
+> Cheers
+> Tom.
+> 
+> 
+>>> Some users on our compute farm with large jobs (lots of I/O) find they take longer than with some of our other scratch arrays hosted on other machines.  We also typically find many nfsd tasks in an uninterruptible wait state (sync_page), waiting for data to be copied in from the FS.
+>>>     
+>>
+>> So fragmentation may not be the problem...
+>> -Eric
+>>
+>>  
+>>>> you see perf problems which you know you can attribute to fragmentation,
+>>>> I might not worry about it.
+>>>>
+>>>> You can also check the fragmentation of individual files with the
+>>>> xfs_bmap tool.
+>>>>
+>>>> -Eric
+>>>>         
+>>> Thanks for your advice.
+>>> Cheers
+>>> Tom.
+>>>
+>>>    
+>>>>  
+>>>>      
+>>>>> Tom.
+>>>>>
+>>>>> Christoph Hellwig wrote:
+>>>>>           
+>>>>>> Hi Tom,
+>>>>>>
+>>>>>> On Wed, Feb 01, 2012 at 01:36:12PM +0000, Tom Crane wrote:
+>>>>>>  
+>>>>>>               
+>>>>>>> Dear XFS Support,
+>>>>>>>    I am attempting to use xfs_repair to fix a damaged FS but always
+>>>>>>> get a segfault if and only if -o ag_stride is specified. I have
+>>>>>>> tried ag_stride=2,8,16 & 32.  The FS is approx 60T. I can't find
+>>>>>>> reports of this particular problem on the mailing list archive.
+>>>>>>> Further details are;
+>>>>>>>
+>>>>>>> xfs_repair version 3.1.7, recently downloaded via git repository.
+>>>>>>> uname -a
+>>>>>>> Linux store3 2.6.18-274.17.1.el5 #1 SMP Wed Jan 11 11:10:32 CET 2012
+>>>>>>> x86_64 x86_64 x86_64 GNU/Linux
+>>>>>>>                         
+>>>>>> Thanks for the detailed bug report.
+>>>>>>
+>>>>>> Can you please try the attached patch?
+>>>>>>
+>>>>>>                   
+>>>>> _______________________________________________
+>>>>> xfs mailing list
+>>>>> xfs@oss.sgi.com
+>>>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>>>             
+>>>>         
+>>
+>>   
+> 
 
 _______________________________________________
 xfs mailing list
