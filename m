@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q17DOuKB227838 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 07:24:57 -0600
-Date: Tue, 7 Feb 2012 08:24:52 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/7] better dquot caching
-Message-ID: <20120207132452.GA1692@infradead.org>
-References: <20120201135719.202171828@bombadil.infradead.org>
-	<20120207073009.GM13095@sgi.com>
+	q17EHCXa232415 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 08:17:12 -0600
+Message-ID: <4F313265.10904@sgi.com>
+Date: Tue, 07 Feb 2012 08:17:09 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120207073009.GM13095@sgi.com>
+Subject: Re: [PATCH v2 2/2] xfstests: introduce 280 for SEEK_DATA/SEEK_HOLE
+	copy check
+References: <4F2FE410.2040508@oracle.com> <4F305472.8070509@sgi.com>
+	<4F30D563.8030807@oracle.com>
+In-Reply-To: <4F30D563.8030807@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,21 +19,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: jeff.liu@oracle.com
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Feb 07, 2012 at 01:30:09AM -0600, Ben Myers wrote:
-> These conflict with Chandra's project quota patches.  I've started
-> looking at them again, but I am a little uncomfortable with the change
-> to the superblock...  could I get your opinion of that while I take a
-> look at these?
+On 02/07/12 01:40, Jeff Liu wrote:
+> Hi Mark,
+>
+> On 02/07/2012 06:30 AM, Mark Tinguely wrote:
+>
+>> On 02/06/12 08:30, Jeff Liu wrote:
+>>> Introduce 280 for SEEK_DATA/SEEK_HOLE copy check.
+>>>
+>>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>>>
+>>> ---
+>>
+>>>
+>>> diff --git a/src/seek_copy_tester.c b/src/seek_copy_tester.c
+>>> new file mode 100644
+>>> index 0000000..ddf683f
+>>> --- /dev/null
+>>> +++ b/src/seek_copy_tester.c
+>>
+>>> +static size_t
+>>> +full_write(int fd, const void *buf, size_t count)
+>>> +{
+>>> +    size_t total = 0;
+>>> +    const char *ptr = (const char *) buf;
+>>> +
+>>> +    while (count>   0) {
+>>> +        ssize_t n = write(fd, ptr, count);
+>>> +        if (n<   0) {
+>>> +            if (errno == EINTR)
+>>> +                continue;
+>>
+>> Wouldn't you want to stop the write loop if interrupted?
+>
+> As this routine was called "full_write" which means it is expect to write as much as it can.
+> So I would keep retrying if the process was interrupted by EINTR.
+> Would you please give some opinions whether this approach is not suitable in this circumstance?
 
-Can you review patch 1 for now as that's a 3.3 candidate.  I'll rebase
-the rest on top his changes later.
+Maybe I was thinking wrong. I was thinking if someone had killed the 
+test and the write was interrupted by the signal, then you would give up 
+the write loop.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
