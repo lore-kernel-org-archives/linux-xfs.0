@@ -1,19 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q184Ehfd033358 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 22:14:43 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	aomz3q4xxt1gJTDT for <xfs@oss.sgi.com>;
-	Tue, 07 Feb 2012 20:14:41 -0800 (PST)
-Date: Wed, 8 Feb 2012 15:14:40 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: 068: run fsstress in read/write mode
-Message-ID: <20120208041440.GD20305@dastard>
-References: <4F315F88.3020200@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F315F88.3020200@redhat.com>
+	q184uauF035460
+	for <linux-xfs@oss.sgi.com>; Tue, 7 Feb 2012 22:56:36 -0600
+Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
+	with ESMTP id FBVSt6YAACXYJLe5 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
+	Tue, 07 Feb 2012 20:56:35 -0800 (PST)
+Received: from list by plane.gmane.org with local (Exim 4.69)
+	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1Ruza6-0002Ga-6a
+	for linux-xfs@oss.sgi.com; Wed, 08 Feb 2012 05:56:34 +0100
+Received: from wombat.san-francisco.ca.us ([75.101.60.64])
+	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+	id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 08 Feb 2012 05:56:34 +0100
+Received: from kkeller by wombat.san-francisco.ca.us with local (Gmexim 0.1
+	(Debian)) id 1AlnuQ-0007hv-00
+	for <linux-xfs@oss.sgi.com>; Wed, 08 Feb 2012 05:56:34 +0100
+From: Keith Keller <kkeller@wombat.san-francisco.ca.us>
+Subject: Re: xfs_repair, xfs_metadump trouble with fs
+Date: Tue, 07 Feb 2012 20:54:35 -0800
+Message-ID: <bpb909x2jm.ln2@goaway.wombat.san-francisco.ca.us>
+References: <nsa809x68g.ln2@goaway.wombat.san-francisco.ca.us>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,23 +35,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, xfs-oss <xfs@oss.sgi.com>
+To: linux-xfs@oss.sgi.com
 
-On Tue, Feb 07, 2012 at 11:29:44AM -0600, Eric Sandeen wrote:
-> Jan Kara was testing filesystem freeze, and was consistently locking
-> up, although my tests of 068 were passing.  He pointed out that
-> he was running in read/write mode, and it was atime updates causing
-> the trouble.  Sure enough, dropping "-w" from fsstress locked me up
-> too.  Change this so we get better (and more realistic) coverage.
+Hello again all,
 
-Good idea.
+On 2012-02-07, Keith Keller <kkeller@wombat.san-francisco.ca.us> wrote:
+>
+> So far, it has reported a large number of errors, but consistently gets
+> stuck during phase 3.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+I am not at all clear on what happened, but xfs_repair is no longer
+stuck.  The downside is, it's finding a huge number of problems on the
+filesystem.  What are the odds that the fs is actually usable when the
+repair completes?  It's hard to imagine a repair that generates ~2GB of
+output on stderr could be good news (so far; granted I did use -v).
+
+--keith
+
+
 
 -- 
-Dave Chinner
-david@fromorbit.com
+kkeller@wombat.san-francisco.ca.us
+
 
 _______________________________________________
 xfs mailing list
