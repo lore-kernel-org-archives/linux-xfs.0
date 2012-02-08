@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q18E7Jd6077005 for <xfs@oss.sgi.com>; Wed, 8 Feb 2012 08:07:19 -0600
-Message-ID: <4F328163.8020800@oracle.com>
-Date: Wed, 08 Feb 2012 22:06:27 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q18FBopE082010 for <xfs@oss.sgi.com>; Wed, 8 Feb 2012 09:11:50 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id e3B79xARYIUfUW4s for
+	<xfs@oss.sgi.com>; Wed, 08 Feb 2012 07:11:49 -0800 (PST)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH 2/3] ext4: honor the O_SYNC flag for aysnchronous direct
+	I/O requests
+References: <1327698949-12616-1-git-send-email-jmoyer@redhat.com>
+	<1327698949-12616-3-git-send-email-jmoyer@redhat.com>
+	<20120202173120.GA6640@quack.suse.cz>
+Date: Wed, 08 Feb 2012 10:11:47 -0500
+In-Reply-To: <20120202173120.GA6640@quack.suse.cz> (Jan Kara's message of
+	"Thu, 2 Feb 2012 18:31:20 +0100")
+Message-ID: <x491uq51hsc.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/2] xfstests: introduce 280 for SEEK_DATA/SEEK_HOLE
-	copy check
-References: <4F2FE410.2040508@oracle.com> <20120208085557.GI20305@dastard>
-In-Reply-To: <20120208085557.GI20305@dastard>
-Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,165 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 02/08/2012 04:55 PM, Dave Chinner wrote:
+Jan Kara <jack@suse.cz> writes:
 
-> On Mon, Feb 06, 2012 at 10:30:40PM +0800, Jeff Liu wrote:
->> Introduce 280 for SEEK_DATA/SEEK_HOLE copy check.
->>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> 
-> This has the same problems with $seq.out as 279, so I won't repeat
-> them here.
-> 
-> .....
->> +_cleanup()
->> +{
->> +	rm -f $src $dest
->> +}
->> +
->> +# seek_copy_test_01()
->> +# create a 100Mytes file in preallocation mode.
->> +# fallocate offset start from 0.
->> +# the first data extent offset start from 80991, write 4Kbytes,
->> +# and then skip 195001 bytes for next write.
-> 
-> Oh, man, you didn't write a program to do this, do you?
+>   Look at what ext4_sync_file() does. It's more efficient than this.
+> You need something like:
+> 	commit_tid = file->f_flags & __O_SYNC ? EXT4_I(inode)->i_sync_tid :
+> 						EXT4_I(inode)->i_datasync_tid;
+> 	if (journal->j_flags & JBD2_BARRIER &&
+> 	    !jbd2_trans_will_send_data_barrier(journal, commit_tid))
+> 		needs_barrier = true;
+> 	jbd2_log_start_commit(journal, commit_tid);
+> 	jbd2_log_wait_commit(journal, commit_tid);
+> 	if (needs_barrier)
+> 		blkdev_issue_flush(inode->i_sb->s_bdev, GFP_NOIO, NULL);
 
-Unfortunately, I have already included file creation at seek_copy_tester :(
+If the transaction won't send a data barrier, wouldn't you want to issue
+the flush on the data device prior to commiting the transaction, not
+after it?
 
-> This is what
-> xfs_io is for - to create arbitary file configurations as quickly as
-> you can type them.  Then all you need is a simple program that
-> copies the extents, and the test can check everything else.
-
-Yes, xfs_io is pretty cool, and it really convenient for file creation for XFS.
-I wrote it(create_data_and_holes()) in seek_copy_tester since I'd make it as a general SEEK_DATA/SEEK_HOLE tester
-for other file systems without this utility too.
-
-> 
->> +# this is intended to test data buffer lookup for DIRTY pages.
->> +# verify results:
->> +# 1. file size is identical.
->> +# 2. perform cmp(1) to compare SRC and DEST file byte by byte.
->> +test01()
->> +{
->> +	rm -f $src $dest
->> +
->> +	$here/src/seek_copy_tester -P -O 0 -L 100m -s 80991 -k 195001 -l 4k $src $dest
->> +
->> +	test $(stat --printf "%s" $src) = $(stat --printf "%s" $dest) ||
->> +		echo "TEST01: file size check failed" >> $seq.out
->> +
->> +	cmp $src $dest						      ||
->> +		echo "TEST01: file bytes check failed" >> $seq.out
-> 
-> A quick hack (untested) to replace this file creation with xfs_io
-> would be:
-> 
-> test01()
-> {
-> 	write_cmd="-c \"truncate 0\" -c \"falloc 0 100m\""
-> 	for i in `seq 0 1 100`; do
-> 		offset=$((80991 + $i * 195001))
-> 		write_cmd="$write_cmd -c \"pwrite $offset 4k\""
-> 	done
-> 	xfs_io -F -f $write_cmd $src
-> 
-> 	$here/scr/sparse_cp $src $dst
-> 	stat --printf "%s\n" $src $dst
-> 	cmp $src $dst >> $seq.out || _fail "file bytes check failed"
-> }
-
-Thanks for this detailed info :).
-
-> 
-> 
->> +}
->> +
->> +# seek_copy_test_02()
->> +# create a 100Mytes file in preallocation mode.
->> +# fallocate offset start from 0.
->> +# the first data extent offset start from 0, write 16Kbytes,
->> +# and then skip 8Mbytes for next write.
->> +# Try flushing DIRTY pages to WRITEBACK mode, this is intended to
->> +# test data buffer lookup in WRITEBACK pages.
-> 
-> There's no guarantee that that the seeks will occur while the pages
-> are in the writeback. It's entirely dependent on IO latency -
-> writing 16k of data to a disk cache will take less time than it
-> takes to go back up into userspace and start the sparse copy.
-> Indeed, i suspect that the 16x16k IOs that this tes does will fit
-> all into that category even on basic SATA configs....
-> 
-> Also, you could the fadvise command in xfs_io to do this, as
-> POSIX_FADV_DONTNEED will trigger async writeback -it will then skip
-> invalidation of pages under writeback so they will remain in the
-> cache. i.e. '-c "fadvise -d 0 100m"'
-> 
-> Ideally, we should add all the different sync methods to an xfs_io
-> command...
-
-Thanks again for the detained info.
-It's definitely depending on the IO latency to test cover those page status conversion.
-I have verified the old patch with page probe routine on my laptop SATA disk controller,
-but not tried against other faster controllers.  If we agree to make it as a general tester, maybe I can
-try to implement it by referring to xfs_io fadvise, I guess it use posix_fadvise(2), will check it later.
-
-> 
->> +# the first data extent offset start from 512, write 4Kbytes,
->> +# and then skip 1Mbytes for next write.
->> +# don't make holes at the end of file.
-> 
-> I'm not sure what this means - you always write zeros at the end of
-> file, and the only difference is that "make holes at EOF" does an
-> ftruncate to the total size before writing zeros up to it. It
-> appears to me like you end up with the same file size and shape
-> either way....
-
-Oops! this is a code bug. I want to create a hole at EOF if possible when "-E(wrote_hole_at_eof)" option was specified.
-It can be fixed as below FIXME:
-
-if (off < nr_total_bytes) {
-	if (wrote_hole_at_eof) {
-		ret = ftruncate(fd, nr_total_bytes);
-                if (ret < 0) {
-                	error("truncate source file to %zu bytes failed as %s",
-                               nr_total_bytes, strerror(errno));
-                }
-                goto out;  *FIXME, break here *
-        }
-
-	ret = write_zeros(fd, nr_total_bytes - off);
-	if (ret < 0) {
-		error("write_zeros to end of file failed as %s",
-			strerror(errno));
-                }
-        }
-}
-
-> 
->> --- /dev/null
->> +++ b/280.out
->> @@ -0,0 +1 @@
->> +QA output created by 280
-> 
-> Normally we echo "silence is golden" to the output
-> file in this case of no real output to indicate that this empty
-> output file is intentional.
-
-Ok.
-
-Thanks,
 -Jeff
-
-> 
-> Cheers,
-> 
-> Dave.
-
 
 _______________________________________________
 xfs mailing list
