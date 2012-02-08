@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1851Yva035944 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 23:01:34 -0600
+	q185gk22038145 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 23:42:46 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	95IBO4kUG3c5RksN for <xfs@oss.sgi.com>;
-	Tue, 07 Feb 2012 21:01:32 -0800 (PST)
-Date: Wed, 8 Feb 2012 16:01:29 +1100
+	YO9AdqDTmDEsag1U for <xfs@oss.sgi.com>;
+	Tue, 07 Feb 2012 21:42:44 -0800 (PST)
+Date: Wed, 8 Feb 2012 16:42:42 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V7
-Message-ID: <20120208050129.GE20305@dastard>
-References: <4F2FE66C.80303@oracle.com>
+Subject: Re: [PATCH v2 1/2] xfstests: introduce 279 for SEEK_DATA/SEEK_HOLE
+	sanity check
+Message-ID: <20120208054241.GH20305@dastard>
+References: <4F2FE40A.6050108@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F2FE66C.80303@oracle.com>
+In-Reply-To: <4F2FE40A.6050108@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,280 +28,129 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On Mon, Feb 06, 2012 at 10:40:44PM +0800, Jeff Liu wrote:
-> Hello,
-> 
-> There is one bug fix in this version, in xfs_seek_data()/xfs_seek_hole(), call xfs_bmapi_read() or
-> xfs_bmap_first_unused() maybe failed, they should return ENXIO in this case.
-> Thanks Mark for pointing this out!
-> 
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+On Mon, Feb 06, 2012 at 10:30:34PM +0800, Jeff Liu wrote:
+> Introduce 279 for SEEK_DATA/SEEK_HOLE sanity check.
+.....
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +status=0	# success is the default!
 
-Can you post a final version with the real commit message attached?
+Why? failure should be the default, and it is in the new test
+template...
 
-The normal way of making comments like this about a patch posting is
-to put the comments after the first "---" line, like the diffstat is
-below....
+$ grep failure new
+status=1        # failure is the default!
 
-As it is,my comments are mainly about error handling and putting in
-some comments to explain exactly why the code ended up this way....
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
 
-> ---
->  fs/xfs/xfs_file.c |  172 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
->  1 files changed, 171 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 753ed9b..3822b15 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1141,8 +1141,178 @@ xfs_vm_page_mkwrite(
->  	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
->  }
->  
-> +STATIC loff_t
-> +xfs_seek_data(
-> +	struct file		*file,
-> +	loff_t			start,
-> +	u32			type)
+Indeed, we want the test to fail if it is interrupted.
+
+> +
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +# FIXME: _supported_os should include Solaris too.
+> +_supported_fs generic
+> +_supported_os Linux Solaris
+
+What is the FIXME for?
+
+> +base_test_path=$TEST_DIR/seek_sanity_testfile
+> +
+> +[ -x $here/src/seek_sanity_tester ] || _notrun "seek_sanitfy_tester not built"
+> +
+> +_cleanup()
 > +{
-> +	struct inode		*inode = file->f_mapping->host;
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	loff_t			uninitialized_var(offset);
-> +	xfs_fsize_t		isize;
-> +	xfs_fileoff_t		fsbno;
-> +	xfs_filblks_t		len;
-> +	uint			lock;
-> +	int			error;
-> +
-> +	lock = xfs_ilock_map_shared(ip);
-> +
-> +	isize = i_size_read(inode);
-> +	if (start >= isize) {
-> +		error = ENXIO;
-> +		goto out_unlock;
-> +	}
-> +
-> +	fsbno = XFS_B_TO_FSBT(mp, start);
-> +	len = XFS_B_TO_FSB(mp, isize);
-
-It's not entirely obvious why len is based on isize rather than the
-(isize - start), the range being mapped. A comment might be in order
-so we don't make silly mistakes reading the code in a couple of
-years time.
-
-> +	for (;;) {
-> +		struct xfs_bmbt_irec	map[2];
-> +		int			nmap = 2;
-> +		loff_t			seekoff;
-> +
-> +		error = xfs_bmapi_read(ip, fsbno, len - fsbno, map, &nmap,
-> +				       XFS_BMAPI_ENTIRE);
-> +		if (error) {
-> +			error = ENXIO;
-> +			goto out_unlock;
-> +		}
-
-I don't think that is correct. ENXIO means "offset beyond EOF", and
-this will typically only return errors due to extent tree corruption
-or filesystem shutdown. I'd just return the error as it stands.
-
-> +		/* No extents at given offset, must be beyond EOF */
-> +		if (nmap == 0) {
-> +			error = ENXIO;
-> +			goto out_unlock;
-> +		}
-
-But we can't be beyond EOF - we've already checked that. Hence we
-should *always* get a mapping back. To fail to get one back is a
-sign of extent tree corruption, I think, so this should probably be
-a XFS_WANT_CORRUPTED_GOTO() case....
-
-> +		seekoff = XFS_FSB_TO_B(mp, fsbno);
-> +
-> +		if ((map[0].br_state == XFS_EXT_NORM &&
-> +		     !isnullstartblock(map[0].br_startblock)) ||
-> +		    map[0].br_startblock == DELAYSTARTBLOCK) {
-
-So this skips holes and unwritten regions.
-
-> +			offset = max_t(loff_t, seekoff,
-> +				       XFS_FSB_TO_B(mp, map[0].br_startoff));
-> +			break;
-> +		} else if (map[0].br_state == XFS_EXT_UNWRITTEN) {
-> +			offset = max_t(loff_t, seekoff,
-> +				       XFS_FSB_TO_B(mp, map[0].br_startoff));
-> +			break;
-
-But unwritten regions have an identical offset caclulation to
-delayed and written regions. So that entire piece of logic becomes:
-
-		if (map[0].br_startblock != HOLESTARTBLOCK)) {
-			offset = max_t(loff_t, seekoff,
-				       XFS_FSB_TO_B(mp, map[0].br_startoff));
-			break;
-		} else {
-
-A comment might be in order there, too, indicating why we are
-handling unwritten regions as data, just like written and delalloc
-regions....
-
-> +		} else if (map[0].br_startblock == HOLESTARTBLOCK) {
-> +			if (nmap == 1) {
-> +				error = ENXIO;
-> +				goto out_unlock;
-> +			}
-> +
-> +			if ((map[1].br_state == XFS_EXT_NORM &&
-> +			     !isnullstartblock(map[1].br_startblock)) ||
-> +			    map[1].br_startblock == DELAYSTARTBLOCK) {
-> +				offset = max_t(loff_t, seekoff,
-> +					XFS_FSB_TO_B(mp, map[1].br_startoff));
-> +				break;
-> +			} else if (map[1].br_state == XFS_EXT_UNWRITTEN) {
-> +				offset = max_t(loff_t, seekoff,
-> +					XFS_FSB_TO_B(mp, map[1].br_startoff));
-> +				break;
-> +			} else if (map[1].br_startblock == HOLESTARTBLOCK) {
-> +				fsbno = map[1].br_startoff +
-> +					map[1].br_blockcount;
-
-Same again:
-			if (map[1].br_startblock != HOLESTARTBLOCK) {
-				offset = max_t(loff_t, seekoff
-					XFS_FSB_TO_B(mp, map[1].br_startoff));
-				break;
-			} else {
-				fsbno = map[1].br_startoff +
-					map[1].br_blockcount;
-			}
-
-> +			} else {
-> +				BUG();
-> +			}
-> +		} else {
-> +			BUG();
-> +		}
-
-Panicing the machine just because the filesystem might be corrupted
-in not a very nice way to handle the error. Given that we don't even
-need to handle wierd map states here (because the xfs_bmapi_read()
-will have found any corruption during the lookup) i don't think this
-is at all necessary.
-
-> +
-> +		if (XFS_FSB_TO_B(mp, fsbno) > isize) {
-> +			error = ENXIO;
-> +			goto out_unlock;
-> +		}
-> +	}
-> +
-> +	if (offset < start)
-> +		offset = start;
-> +
-> +	if (offset != file->f_pos)
-> +		file->f_pos = offset;
-> +
-> +out_unlock:
-> +	xfs_iunlock_map_shared(ip, lock);
-> +
-> +	if (error)
-> +		return -error;
-> +	return offset;
+> +	rm -f $base_test_path.*
 > +}
 > +
-> +STATIC loff_t
-> +xfs_seek_hole(
-> +	struct file		*file,
-> +	loff_t			start,
-> +	u32			type)
-> +{
-> +	struct inode		*inode = file->f_mapping->host;
-> +	struct xfs_inode	*ip = XFS_I(inode);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	loff_t			uninitialized_var(offset);
-> +	loff_t			holeoff;
-> +	xfs_fsize_t		isize;
-> +	xfs_fileoff_t		fsbno;
-> +	uint			lock;
-> +	int			error;
-> +
-> +	lock = xfs_ilock_map_shared(ip);
-> +
-> +	isize = i_size_read(inode);
-> +	if (start >= isize) {
-> +		error = ENXIO;
-> +		goto out_unlock;
-> +	}
-> +
-> +	fsbno = XFS_B_TO_FSBT(mp, start);
-> +	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
-> +	if (error) {
-> +		error = ENXIO;
-> +		goto out_unlock;
-> +	}
+> +rm -rf $seq.out
+> +echo "QA output created by $seq" > $seq.out
 
-Same comment here about error handling. xfs_bmap_first_unused()
-failing usually indicates a corruption, not a "offset beyond EOF",
-so we should be returning the error that the filesystem has returned
-rather than ENXIO.
+Anything output on stdout automatically gets put into $seq.out by
+the test harness. The $seq.out file is truncated before the test, so
+this is not necessary. Indeed, doing this is probably why the tee
+command below only results in a single copy of the output in
+$seq.out.
 
-> +
-> +	holeoff = XFS_FSB_TO_B(mp, fsbno);
-> +	if (holeoff <= start)
-> +		offset = start;
-> +	else
-> +		offset = min_t(loff_t, holeoff, isize);
-> +
-> +	if (offset != file->f_pos)
-> +		file->f_pos = offset;
-> +
-> +out_unlock:
-> +	xfs_iunlock_map_shared(ip, lock);
-> +
-> +	if (error)
-> +		return -error;
-> +	return offset;
-> +}
-> +
-> +STATIC loff_t
-> +xfs_file_llseek(
-> +	struct file	*file,
-> +	loff_t		offset,
-> +	int		origin)
-> +{
-> +	switch (origin) {
-> +	case SEEK_END:
-> +	case SEEK_CUR:
-> +	case SEEK_SET:
-> +		return generic_file_llseek(file, offset, origin);
-> +	case SEEK_DATA:
-> +		return xfs_seek_data(file, offset, origin);
-> +	case SEEK_HOLE:
-> +		return xfs_seek_hole(file, offset, origin);
-> +	default:
-> +		return -EINVAL;
-> +	}
-> +}
-> +
->  const struct file_operations xfs_file_operations = {
-> -	.llseek		= generic_file_llseek,
-> +	.llseek		= xfs_file_llseek,
->  	.read		= do_sync_read,
->  	.write		= do_sync_write,
->  	.aio_read	= xfs_file_aio_read,
-> -- 
-> 1.7.9
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> +$here/src/seek_sanity_tester $base_test_path 2>&1 | tee -a $seq.out
 
+This only needs to be:
+
+$here/src/seek_sanity_tester $base_test_path 2>&1
+
+to redirect both stdout and stderr to $seq.out.
+
+> --- /dev/null
+> +++ b/279.out
+> @@ -0,0 +1,116 @@
+> +QA output created by 279
+> +File system supports the default behavior.
+> +File system magic#: 0x58465342
+
+You can't put the filesystem magic number in the output. It is
+different for XFS, ext4, ext3, etc. Either it needs to be removed or
+filtered.
+
+> +Allocation size: 4096
+
+That's no good, either, as filesystems can easily return return
+something other than 4k there as well.
+
+> +01. Test empty file
+> +01.01 SEEK_DATA expected -1 with errno -6, got -6.                succ
+> +01.02 SEEK_HOLE expected -1 with errno -6, got -6.                succ
+> +01.03 SEEK_HOLE expected -1 with errno -6, got -6.                succ
+> +
+> +02. Test a tiny full file
+> +02.01 SEEK_HOLE expected 8 or 8, got 8.                           succ
+> +02.02 SEEK_DATA expected 0 or 0, got 0.                           succ
+> +02.03 SEEK_DATA expected 1 or 1, got 1.                           succ
+> +02.04 SEEK_HOLE expected 8 or 8, got 8.                           succ
+> +02.05 SEEK_DATA expected 7 or 7, got 7.                           succ
+> +02.06 SEEK_HOLE expected -1 with errno -6, got -6.                succ
+> +02.07 SEEK_DATA expected -1 with errno -6, got -6.                succ
+> +02.08 SEEK_HOLE expected -1 with errno -6, got -6.                succ
+> +02.09 SEEK_DATA expected -1 with errno -6, got -6.                succ
+> +
+> +03. Test a larger full file
+> +03.01 SEEK_HOLE expected 8292 or 8292, got 8292.                  succ
+> +03.02 SEEK_HOLE expected 8292 or 8292, got 8292.                  succ
+> +03.03 SEEK_DATA expected 0 or 0, got 0.                           succ
+> +03.04 SEEK_DATA expected 1 or 1, got 1.                           succ
+> +03.05 SEEK_HOLE expected 8292 or 8292, got 8292.                  succ
+> +03.06 SEEK_DATA expected 8291 or 8291, got 8291.                  succ
+
+Hmmm, these are all numbers that are based on an allocation size of
+4k. So this test is guaranteed to fail on configurations that don't
+report a 4k block size from fstat().
+
+I'd suggest that what you need to do here is have the test exit with
+a 1 or 0 to indicate success, and test for that in the 279 script,
+and pipe all this output to $seq.full so it can be used for
+debugging when a failure occurs.
+
+Basically, if numbers can change between different test configs,
+then they either need to be filtered out of the golden output or
+directed to the $seq.full and the test does something like:
+
+status=1 # failure is the default
+rm -f $seq.full
+....
+run_test >> $seq.full 2>&1 || _fail "run_test failed!"
+status=0
+exit
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
