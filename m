@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q185KTsS037001
-	for <linux-xfs@oss.sgi.com>; Tue, 7 Feb 2012 23:20:30 -0600
+	q185BUwX036498 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 23:11:30 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	VvPGfELLHQ6rnjD6 for <linux-xfs@oss.sgi.com>;
-	Tue, 07 Feb 2012 21:20:27 -0800 (PST)
-Date: Wed, 8 Feb 2012 16:20:25 +1100
+	EYgYaPQ4K2hfFYD8 for <xfs@oss.sgi.com>;
+	Tue, 07 Feb 2012 21:11:28 -0800 (PST)
+Date: Wed, 8 Feb 2012 16:11:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair, xfs_metadump trouble with fs
-Message-ID: <20120208052025.GG20305@dastard>
+Subject: Re: [PATCH] libxfs: stop caching inode structures
+Message-ID: <20120208051126.GF20305@dastard>
+References: <20120207182228.GA18801@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <bpb909x2jm.ln2@goaway.wombat.san-francisco.ca.us>
-	<nsa809x68g.ln2@goaway.wombat.san-francisco.ca.us>
+In-Reply-To: <20120207182228.GA18801@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,72 +26,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Keith Keller <kkeller@wombat.san-francisco.ca.us>
-Cc: linux-xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 07, 2012 at 11:33:11AM -0800, Keith Keller wrote:
-> Hi XFS list,
+On Tue, Feb 07, 2012 at 01:22:28PM -0500, Christoph Hellwig wrote:
+> Currently libxfs has a cache for xfs_inode structures.  Unlike in kernelspace
+> where the inode cache, and the associated page cache for file data is used
+> for all filesystem operations the libxfs inode cache is only used in few
+> places:
 > 
-> I'm having some strange trouble with xfs_repair and xfs_metadump, which
-> I am hoping you can help with.  I have an xfs filesystem which is backed
-> by an mdraid/LVM combination.  Recently two drives failed in the RAID6,
-> then during the rebuild another disk failed.  I was able to salvage the
-> array by using ddrescue to copy the failed drive to a new drive (only
-> 8k were lost).  Once I did that, I turned to xfs_repair to check that
-> the filesystem was okay.
+>  - the libxfs init code reads the root and realtime inodes when called from
+>    xfs_db using a special flag, but these inode structure are never referenced
+>    again
+>  - mkfs uses namespace and bmap routines that take the xfs_inode structure
+>    to create the root and realtime inodes, as well as any additional files
+>    specified in the proto file
+>  - the xfs_db attr code uses xfs_inode-based attr routines in the attrset
+>    and attrget commands
+>  - phase6 of xfs_repair uses xfs_inode-based routines for rebuilding
+>    directories and moving files to the lost+found directory.
+>  - phase7 of xfs_repair uses struct xfs_inode to modify the nlink count
+>    of inodes.
 > 
-> So far, it has reported a large number of errors, but consistently gets
-> stuck during phase 3.  I have used xfsprogs 3.1.7 as well as the latest
-> clone from git, and have also used -P and not used -P, with no luck.  I
-> have saved stderr, but it is extremely large.  Nothing obvious
-> distinguishes the last stderr messages from previous messages, where it
-> might indicate why xfs_repair has stalled.  (I can post stderr or make
-> it available by HTTP if it helps.)
+> So except in repair we never ever reuse a cached inode, and in repair we can
+> easily read the information from the more compact cached buffers (or even
+> better rewrite phase7 to operate on the raw on-disk inodes).  Given these
+> facts stop caching the inodes to reduce memory usage especially in xfs_repair.
 
-.....
-> On 2012-02-07, Keith Keller <kkeller@wombat.san-francisco.ca.us> wrote:
-> >
-> > So far, it has reported a large number of errors, but consistently gets
-> > stuck during phase 3.
-> 
-> I am not at all clear on what happened, but xfs_repair is no longer
-> stuck.
+Ok, so what does it do to the speed of phase6 and phase7 of repair?
+How much CPU overhead does this add to every inode lookup done in
+these phases?
 
-That sounds like you've got dodgy storage to me (e.g. losing an IO),
-or that it just took a long time to process something.
+Indeed, there are cases where individual inode caching is much more
+memory efficient than keeping the buffers around (think sparse inode
+chunks on disk where only a few of the 64 inodes are actually
+allocated). Tracking them in buffers (esp. if the inode size is
+large) could use a lot more memory than just caching the active
+inodes in a struct xfs_inode. Hence I'm not so sure this is clear
+cut win for memory usage.
 
-> The downside is, it's finding a huge number of problems on the
-> filesystem.  What are the odds that the fs is actually usable when the
-> repair completes?  It's hard to imagine a repair that generates ~2GB of
-> output on stderr could be good news (so far; granted I did use -v).
+Do you have any numbers for memory usage or performance?
 
-Not good if there are lots of problems. Indeed, even losing 8k can
-cause serious problems if that 8k is in siginificant indexes and
-they are too damaged to be recovered.  That has cascade effects and
-usually results in lots of stuff in lost+found.  Without knowing
-what the corruption is or seeing the output, that's the best I can
-say....
+The code changes are simple enough, so if it is actually a win then
+I see no problems with doing this. But that's what I need more
+information about to be convinced on....
+
+> With this we probably could increase the memory available to the buffer
+> cache in xfs_repair, but trying to do so I got a bit lost - the current
+> formula seems to magic to me to make any sense, and simply doubling the
+> buffer cache size causes us to run out of memory given that the data cached
+
+IIRC, that's because the current formula sets the buffer cache size
+to 75% of physical RAM on the machine. Doubling it will definitely
+cause problems ;)
 
 Cheers,
 
 Dave.
-
-> 
-> --keith
-> 
-> 
-> 
-> -- 
-> kkeller@wombat.san-francisco.ca.us
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
-
 -- 
 Dave Chinner
 david@fromorbit.com
