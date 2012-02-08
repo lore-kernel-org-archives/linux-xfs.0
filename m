@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q185BUwX036498 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 23:11:30 -0600
+	q1851Yva035944 for <xfs@oss.sgi.com>; Tue, 7 Feb 2012 23:01:34 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	EYgYaPQ4K2hfFYD8 for <xfs@oss.sgi.com>;
-	Tue, 07 Feb 2012 21:11:28 -0800 (PST)
-Date: Wed, 8 Feb 2012 16:11:26 +1100
+	95IBO4kUG3c5RksN for <xfs@oss.sgi.com>;
+	Tue, 07 Feb 2012 21:01:32 -0800 (PST)
+Date: Wed, 8 Feb 2012 16:01:29 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] libxfs: stop caching inode structures
-Message-ID: <20120208051126.GF20305@dastard>
-References: <20120207182228.GA18801@infradead.org>
+Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support to XFS V7
+Message-ID: <20120208050129.GE20305@dastard>
+References: <4F2FE66C.80303@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120207182228.GA18801@infradead.org>
+In-Reply-To: <4F2FE66C.80303@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,63 +26,281 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-On Tue, Feb 07, 2012 at 01:22:28PM -0500, Christoph Hellwig wrote:
-> Currently libxfs has a cache for xfs_inode structures.  Unlike in kernelspace
-> where the inode cache, and the associated page cache for file data is used
-> for all filesystem operations the libxfs inode cache is only used in few
-> places:
+On Mon, Feb 06, 2012 at 10:40:44PM +0800, Jeff Liu wrote:
+> Hello,
 > 
->  - the libxfs init code reads the root and realtime inodes when called from
->    xfs_db using a special flag, but these inode structure are never referenced
->    again
->  - mkfs uses namespace and bmap routines that take the xfs_inode structure
->    to create the root and realtime inodes, as well as any additional files
->    specified in the proto file
->  - the xfs_db attr code uses xfs_inode-based attr routines in the attrset
->    and attrget commands
->  - phase6 of xfs_repair uses xfs_inode-based routines for rebuilding
->    directories and moving files to the lost+found directory.
->  - phase7 of xfs_repair uses struct xfs_inode to modify the nlink count
->    of inodes.
+> There is one bug fix in this version, in xfs_seek_data()/xfs_seek_hole(), call xfs_bmapi_read() or
+> xfs_bmap_first_unused() maybe failed, they should return ENXIO in this case.
+> Thanks Mark for pointing this out!
 > 
-> So except in repair we never ever reuse a cached inode, and in repair we can
-> easily read the information from the more compact cached buffers (or even
-> better rewrite phase7 to operate on the raw on-disk inodes).  Given these
-> facts stop caching the inodes to reduce memory usage especially in xfs_repair.
+> 
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-Ok, so what does it do to the speed of phase6 and phase7 of repair?
-How much CPU overhead does this add to every inode lookup done in
-these phases?
+Can you post a final version with the real commit message attached?
 
-Indeed, there are cases where individual inode caching is much more
-memory efficient than keeping the buffers around (think sparse inode
-chunks on disk where only a few of the 64 inodes are actually
-allocated). Tracking them in buffers (esp. if the inode size is
-large) could use a lot more memory than just caching the active
-inodes in a struct xfs_inode. Hence I'm not so sure this is clear
-cut win for memory usage.
+The normal way of making comments like this about a patch posting is
+to put the comments after the first "---" line, like the diffstat is
+below....
 
-Do you have any numbers for memory usage or performance?
+As it is,my comments are mainly about error handling and putting in
+some comments to explain exactly why the code ended up this way....
 
-The code changes are simple enough, so if it is actually a win then
-I see no problems with doing this. But that's what I need more
-information about to be convinced on....
+> ---
+>  fs/xfs/xfs_file.c |  172 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+>  1 files changed, 171 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 753ed9b..3822b15 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -1141,8 +1141,178 @@ xfs_vm_page_mkwrite(
+>  	return block_page_mkwrite(vma, vmf, xfs_get_blocks);
+>  }
+>  
+> +STATIC loff_t
+> +xfs_seek_data(
+> +	struct file		*file,
+> +	loff_t			start,
+> +	u32			type)
+> +{
+> +	struct inode		*inode = file->f_mapping->host;
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	loff_t			uninitialized_var(offset);
+> +	xfs_fsize_t		isize;
+> +	xfs_fileoff_t		fsbno;
+> +	xfs_filblks_t		len;
+> +	uint			lock;
+> +	int			error;
+> +
+> +	lock = xfs_ilock_map_shared(ip);
+> +
+> +	isize = i_size_read(inode);
+> +	if (start >= isize) {
+> +		error = ENXIO;
+> +		goto out_unlock;
+> +	}
+> +
+> +	fsbno = XFS_B_TO_FSBT(mp, start);
+> +	len = XFS_B_TO_FSB(mp, isize);
 
-> With this we probably could increase the memory available to the buffer
-> cache in xfs_repair, but trying to do so I got a bit lost - the current
-> formula seems to magic to me to make any sense, and simply doubling the
-> buffer cache size causes us to run out of memory given that the data cached
+It's not entirely obvious why len is based on isize rather than the
+(isize - start), the range being mapped. A comment might be in order
+so we don't make silly mistakes reading the code in a couple of
+years time.
 
-IIRC, that's because the current formula sets the buffer cache size
-to 75% of physical RAM on the machine. Doubling it will definitely
-cause problems ;)
+> +	for (;;) {
+> +		struct xfs_bmbt_irec	map[2];
+> +		int			nmap = 2;
+> +		loff_t			seekoff;
+> +
+> +		error = xfs_bmapi_read(ip, fsbno, len - fsbno, map, &nmap,
+> +				       XFS_BMAPI_ENTIRE);
+> +		if (error) {
+> +			error = ENXIO;
+> +			goto out_unlock;
+> +		}
 
-Cheers,
+I don't think that is correct. ENXIO means "offset beyond EOF", and
+this will typically only return errors due to extent tree corruption
+or filesystem shutdown. I'd just return the error as it stands.
 
-Dave.
+> +		/* No extents at given offset, must be beyond EOF */
+> +		if (nmap == 0) {
+> +			error = ENXIO;
+> +			goto out_unlock;
+> +		}
+
+But we can't be beyond EOF - we've already checked that. Hence we
+should *always* get a mapping back. To fail to get one back is a
+sign of extent tree corruption, I think, so this should probably be
+a XFS_WANT_CORRUPTED_GOTO() case....
+
+> +		seekoff = XFS_FSB_TO_B(mp, fsbno);
+> +
+> +		if ((map[0].br_state == XFS_EXT_NORM &&
+> +		     !isnullstartblock(map[0].br_startblock)) ||
+> +		    map[0].br_startblock == DELAYSTARTBLOCK) {
+
+So this skips holes and unwritten regions.
+
+> +			offset = max_t(loff_t, seekoff,
+> +				       XFS_FSB_TO_B(mp, map[0].br_startoff));
+> +			break;
+> +		} else if (map[0].br_state == XFS_EXT_UNWRITTEN) {
+> +			offset = max_t(loff_t, seekoff,
+> +				       XFS_FSB_TO_B(mp, map[0].br_startoff));
+> +			break;
+
+But unwritten regions have an identical offset caclulation to
+delayed and written regions. So that entire piece of logic becomes:
+
+		if (map[0].br_startblock != HOLESTARTBLOCK)) {
+			offset = max_t(loff_t, seekoff,
+				       XFS_FSB_TO_B(mp, map[0].br_startoff));
+			break;
+		} else {
+
+A comment might be in order there, too, indicating why we are
+handling unwritten regions as data, just like written and delalloc
+regions....
+
+> +		} else if (map[0].br_startblock == HOLESTARTBLOCK) {
+> +			if (nmap == 1) {
+> +				error = ENXIO;
+> +				goto out_unlock;
+> +			}
+> +
+> +			if ((map[1].br_state == XFS_EXT_NORM &&
+> +			     !isnullstartblock(map[1].br_startblock)) ||
+> +			    map[1].br_startblock == DELAYSTARTBLOCK) {
+> +				offset = max_t(loff_t, seekoff,
+> +					XFS_FSB_TO_B(mp, map[1].br_startoff));
+> +				break;
+> +			} else if (map[1].br_state == XFS_EXT_UNWRITTEN) {
+> +				offset = max_t(loff_t, seekoff,
+> +					XFS_FSB_TO_B(mp, map[1].br_startoff));
+> +				break;
+> +			} else if (map[1].br_startblock == HOLESTARTBLOCK) {
+> +				fsbno = map[1].br_startoff +
+> +					map[1].br_blockcount;
+
+Same again:
+			if (map[1].br_startblock != HOLESTARTBLOCK) {
+				offset = max_t(loff_t, seekoff
+					XFS_FSB_TO_B(mp, map[1].br_startoff));
+				break;
+			} else {
+				fsbno = map[1].br_startoff +
+					map[1].br_blockcount;
+			}
+
+> +			} else {
+> +				BUG();
+> +			}
+> +		} else {
+> +			BUG();
+> +		}
+
+Panicing the machine just because the filesystem might be corrupted
+in not a very nice way to handle the error. Given that we don't even
+need to handle wierd map states here (because the xfs_bmapi_read()
+will have found any corruption during the lookup) i don't think this
+is at all necessary.
+
+> +
+> +		if (XFS_FSB_TO_B(mp, fsbno) > isize) {
+> +			error = ENXIO;
+> +			goto out_unlock;
+> +		}
+> +	}
+> +
+> +	if (offset < start)
+> +		offset = start;
+> +
+> +	if (offset != file->f_pos)
+> +		file->f_pos = offset;
+> +
+> +out_unlock:
+> +	xfs_iunlock_map_shared(ip, lock);
+> +
+> +	if (error)
+> +		return -error;
+> +	return offset;
+> +}
+> +
+> +STATIC loff_t
+> +xfs_seek_hole(
+> +	struct file		*file,
+> +	loff_t			start,
+> +	u32			type)
+> +{
+> +	struct inode		*inode = file->f_mapping->host;
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	loff_t			uninitialized_var(offset);
+> +	loff_t			holeoff;
+> +	xfs_fsize_t		isize;
+> +	xfs_fileoff_t		fsbno;
+> +	uint			lock;
+> +	int			error;
+> +
+> +	lock = xfs_ilock_map_shared(ip);
+> +
+> +	isize = i_size_read(inode);
+> +	if (start >= isize) {
+> +		error = ENXIO;
+> +		goto out_unlock;
+> +	}
+> +
+> +	fsbno = XFS_B_TO_FSBT(mp, start);
+> +	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
+> +	if (error) {
+> +		error = ENXIO;
+> +		goto out_unlock;
+> +	}
+
+Same comment here about error handling. xfs_bmap_first_unused()
+failing usually indicates a corruption, not a "offset beyond EOF",
+so we should be returning the error that the filesystem has returned
+rather than ENXIO.
+
+> +
+> +	holeoff = XFS_FSB_TO_B(mp, fsbno);
+> +	if (holeoff <= start)
+> +		offset = start;
+> +	else
+> +		offset = min_t(loff_t, holeoff, isize);
+> +
+> +	if (offset != file->f_pos)
+> +		file->f_pos = offset;
+> +
+> +out_unlock:
+> +	xfs_iunlock_map_shared(ip, lock);
+> +
+> +	if (error)
+> +		return -error;
+> +	return offset;
+> +}
+> +
+> +STATIC loff_t
+> +xfs_file_llseek(
+> +	struct file	*file,
+> +	loff_t		offset,
+> +	int		origin)
+> +{
+> +	switch (origin) {
+> +	case SEEK_END:
+> +	case SEEK_CUR:
+> +	case SEEK_SET:
+> +		return generic_file_llseek(file, offset, origin);
+> +	case SEEK_DATA:
+> +		return xfs_seek_data(file, offset, origin);
+> +	case SEEK_HOLE:
+> +		return xfs_seek_hole(file, offset, origin);
+> +	default:
+> +		return -EINVAL;
+> +	}
+> +}
+> +
+>  const struct file_operations xfs_file_operations = {
+> -	.llseek		= generic_file_llseek,
+> +	.llseek		= xfs_file_llseek,
+>  	.read		= do_sync_read,
+>  	.write		= do_sync_write,
+>  	.aio_read	= xfs_file_aio_read,
+> -- 
+> 1.7.9
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
 -- 
 Dave Chinner
 david@fromorbit.com
