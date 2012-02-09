@@ -1,14 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q195fs1o138931 for <xfs@oss.sgi.com>; Wed, 8 Feb 2012 23:41:55 -0600
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id ZlndIgF84mgfT0I1 for
-	<xfs@oss.sgi.com>; Wed, 08 Feb 2012 21:41:51 -0800 (PST)
-From: Liu Bo <liubo2009@cn.fujitsu.com>
-Subject: [PATCH 3/3 v2] xfstests: add btrfs online defragments QA test
-Date: Thu, 9 Feb 2012 13:40:34 +0800
-Message-Id: <1328766034-1324-1-git-send-email-liubo2009@cn.fujitsu.com>
+	q1969QAr142962 for <xfs@oss.sgi.com>; Thu, 9 Feb 2012 00:09:26 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	Y584OxcsSloDGBEo for <xfs@oss.sgi.com>;
+	Wed, 08 Feb 2012 22:09:23 -0800 (PST)
+Date: Thu, 9 Feb 2012 17:09:20 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: concurrent direct IO write in xfs
+Message-ID: <20120209060920.GF7479@dastard>
+References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
+	<20120116232549.GC6922@dastard>
+	<CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
+	<20120123051155.GI15102@dastard>
+	<CAFLer82QxfgXEx7ofzOHOK2YKiA+ab+_Aizd10SWHvnC-mVUHg@mail.gmail.com>
+	<CAFLer81GWSCCCMppU=2dE+5KKqD-hYVKAA0hz9n-CBbxAs_xfw@mail.gmail.com>
+	<20120124035431.GD6922@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120124035431.GD6922@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,399 +28,333 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: hch@infradead.org, linux-btrfs@vger.kernel.org
+To: Zheng Da <zhengda1936@gmail.com>
+Cc: xfs@oss.sgi.com
 
-As the title shows, we port btrfs online defragments QA test into xfstests.
+On Tue, Jan 24, 2012 at 02:54:31PM +1100, Dave Chinner wrote:
+> On Mon, Jan 23, 2012 at 03:51:43PM -0500, Zheng Da wrote:
+> > Hello
+> > 
+> > On Mon, Jan 23, 2012 at 2:34 PM, Zheng Da <zhengda1936@gmail.com> wrote:
+> > >> > So the test case is pretty simple and I think it's easy to reproduce it.
+> > >> > It'll be great if you can try the test case.
+> > >>
+> > >> Can you post your test code so I know what I test is exactly what
+> > >> you are running?
+> > >>
+> > > I can do that. My test code gets very complicated now. I need to simplify
+> > > it.
+> > >
+> > Here is the code. It's still a bit long. I hope it's OK.
+> > You can run the code like "rand-read file option=direct pages=1048576
+> > threads=8 access=write/read".
+> 
+> With 262144 pages on a 2Gb ramdisk, the results I get on 3.2.0 are
+> 
+> Threads		Read	Write
+>     1		0.92s	1.49s
+>     2		0.51s	1.20s
+>     4		0.31s	1.34s
+>     8		0.22s	1.59s
+>    16		0.23s	2.24s
+> 
+> the contention is on the ip->i_ilock, and the newsize update is one
+> of the offenders It probably needs this change to
+> xfs_aio_write_newsize_update():
+> 
+> -        if (new_size == ip->i_new_size) {
+> +        if (new_size && new_size == ip->i_new_size) {
+> 
+> to avoid the lock being taken here.
+> 
+> But all that newsize crap is gone in the current git Linus tree,
+> so how much would that gains us:
+> 
+> Threads		Read	Write
+>     1		0.88s	0.85s
+>     2		0.54s	1.20s
+>     4		0.31s	1.23s
+>     8		0.27s	1.40s
+>    16		0.25s	2.36s
+> 
+> Pretty much nothing. IOWs, it's just like I suspected - you are
+> doing so many write IOs that you are serialising on the extent
+> lookup and write checks which use exclusive locking..
+> 
+> Given that it is 2 lock traversals per write IO, we're limiting at
+> about 4-500,000 exclusive lock grabs per second and decreasing as
+> contention goes up.
+> 
+> For reads, we are doing 2 shared (nested) lookups per read IO, we
+> appear to be limiting at around 2,000,000 shared lock grabs per
+> second. Ahmdals law is kicking in here, but it means if we could
+> make the writes to use a shared lock, it would at least scale like
+> the reads for this "no metadata modification except for mtime"
+> overwrite case.
+> 
+> I don't think that the generic write checks absolutely need
+> exclusive locking - we probably could get away with a shared lock
+> and only fall back to exclusive when we need to do EOF zeroing.
+> Similarly, for the block mapping code if we don't need to do
+> allocation, a shared lock is all we need. So maybe in that case for
+> direct IO when create == 1, we can do a read lookup first and only
+> grab the lock exclusively if that falls in a hole and requires
+> allocation.....
 
-v1->v2:
-- place the real tests inside testcases.
+So, I have a proof of concept patch that gets rid of the exclusive
+locking for the overwrite case.
 
-Signed-off-by: Liu Bo <liubo2009@cn.fujitsu.com>
----
- 278      |  247 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 278.args |   18 +++++
- 278.out  |   75 +++++++++++++++++++
- group    |    1 +
- 4 files changed, 341 insertions(+), 0 deletions(-)
- create mode 100755 278
- create mode 100644 278.args
- create mode 100644 278.out
+Results are:
 
-diff --git a/278 b/278
-new file mode 100755
-index 0000000..71f12e0
---- /dev/null
-+++ b/278
-@@ -0,0 +1,247 @@
-+#! /bin/bash
-+# FS QA Test No. 278
-+#
-+# Btrfs Online defragmentation tests
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Fujitsu Liu Bo.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=liubo2009@cn.fujitsu.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+test_path="`pwd`"
-+progs_dir="$test_path/src/btrfs_online_defragment/"
-+tmp=tmp/$$
-+defrag_args="$test_path/${seq}.args"
-+
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+_create_file()
-+{
-+	CNT=11999
-+	FILESIZE=48000
-+	if [ "$DEFRAG_TARGET" = "1" ];then
-+		for i in `seq $CNT -1 0`; do
-+			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
-+			 conv=notrunc seek=$i oflag=sync &>/dev/null
-+		done
-+		# get md5sum
-+		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
-+	elif [ "$DEFRAG_TARGET" = "2" ];then
-+		mkdir $SCRATCH_MNT/tmp_dir
-+		for i in `seq $CNT -1 0`; do
-+			dd if=/dev/zero of=$SCRATCH_MNT/tmp_dir/tmp_file bs=4k \
-+			count=1 conv=notrunc seek=$i oflag=sync &>/dev/null
-+		done
-+		# get md5sum
-+		md5sum $SCRATCH_MNT/tmp_dir/tmp_file > /tmp/checksum
-+	elif [ "$DEFRAG_TARGET" = "3" ];then
-+		for i in `seq $CNT -1 0`; do
-+			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
-+			conv=notrunc seek=$i oflag=sync &>/dev/null
-+		done
-+		# get md5sum
-+		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
-+	fi
-+}
-+
-+_btrfs_online_defrag()
-+{
-+	str=""
-+	if [ "$FILE_RANGE" = "2" ];then
-+		str="$str -s -1 -l $((FILESIZE / 2)) "
-+	elif [ "$FILE_RANGE" = "3" ];then
-+		str="$str -s $((FILESIZE + 1)) -l $((FILESIZE / 2)) "
-+		HAVE_DEFRAG=1
-+	elif [ "$FILE_RANGE" = "4" ];then
-+		str="$str -l -1 "
-+	elif [ "$FILE_RANGE" = "5" ];then
-+		str="$str -l $((FILESIZE + 1)) "
-+	elif [ "$FILE_RANGE" = "6" ];then
-+		str="$str -l $((FILESIZE / 2)) "
-+	fi
-+
-+	if [ "$DEFRAG_COMPRESS" = "2" ];then
-+		str="$str -c "
-+	fi
-+
-+	if [ "$FLUSH" = "2" ];then
-+		str="$str -f "
-+	fi
-+
-+	if [ "$THRESH" = "2" ];then
-+		str="$str -t -1 "
-+	elif [ "$THRESH" = "3" ];then
-+		str="$str -t $PAGESIZE "
-+	fi
-+
-+	if [ "$str" != "" ]; then
-+		btrfs filesystem defragment $str $SCRATCH_MNT/tmp_file
-+	else
-+		if [ "$DEFRAG_TARGET" = "1" ];then
-+			btrfs filesystem defragment $SCRATCH_MNT/tmp_file
-+		elif [ "$DEFRAG_TARGET" = "2" ];then
-+			btrfs filesystem defragment $SCRATCH_MNT/tmp_dir
-+		elif [ "$DEFRAG_TARGET" = "3" ];then
-+			btrfs filesystem defragment $SCRATCH_MNT
-+		fi
-+	fi
-+	ret_val=$?
-+	sync
-+	if [ $ret_val -ne 20 ];then
-+		echo "btrfs filesystem defragment failed! err is $ret_val"
-+	fi
-+}
-+
-+_checksum()
-+{
-+	md5sum -c /tmp/checksum > /dev/null 2>&1
-+	if [ $? -ne 0 ]; then
-+		echo "md5 checksum failed!"
-+	fi
-+}
-+
-+_fsck()
-+{
-+	btrfsck $SCRATCH_DEV > /dev/null 2>&1
-+	ret_val=$?
-+	if [ $ret_val -ne 0 ]; then
-+		echo "btrfsck _FAIL_! err is $ret_val"
-+	fi
-+}
-+
-+_parse_options()
-+{
-+	PASS=0
-+	if [ "`echo $args | grep "#"`" != "" ];then
-+		PASS=1
-+	fi
-+
-+	if [ $PASS -ne 1 ];then
-+	DEFRAG_TARGET=`echo $args | awk -F ' ' '{ print $1 }'`
-+	case $DEFRAG_TARGET in
-+		"1")
-+			echo "a single file"
-+			;;
-+		"2")
-+			echo "a directory"
-+			;;
-+		"3")
-+			echo "a filesystem"
-+			;;
-+	esac
-+
-+	FILE_RANGE=`echo $args | awk -F ' ' '{ print $2 }'`
-+	case $FILE_RANGE in
-+		"1")
-+			echo "online defragment range: default"
-+			;;
-+		"2")
-+			echo "online defragment range: start < 0 && 0 < len < file size"
-+			;;
-+		"3")
-+			echo "online defragment range: start > file size && 0 < len < file size"
-+			;;
-+		"4")
-+			echo "online defragment range: start = 0 && len < 0"
-+			;;
-+		"5")
-+			echo "online defragment range: start = 0 && len > file size"
-+			;;
-+		"6")
-+			echo "online defragment range: start = 0 && 0 < len < file size"
-+			;;
-+	esac
-+
-+	DEFRAG_COMPRESS=`echo $args | awk -F ' ' '{ print $3 }'`
-+	case $DEFRAG_COMPRESS in
-+		"1")
-+			echo "online defragment compress: off"
-+			;;
-+		"2")
-+			echo "online defragment compress: on"
-+	esac
-+	fi
-+}
-+
-+_cleanup_defrag()
-+{
-+	rm -fr $SCRATCH_MNT/*
-+	umount $SCRATCH_MNT > /dev/null 2>&1
-+}
-+
-+_setup_defrag()
-+{
-+	umount $SCRATCH_MNT > /dev/null 2>&1
-+	_scratch_mkfs > /dev/null 2>&1
-+	_scratch_mount
-+	_create_file
-+}
-+
-+_rundefrag()
-+{
-+	args=$1
-+
-+	echo "btrfs online defragment test start"
-+	while read args
-+	do
-+		echo "$args"
-+		_parse_options
-+		_setup_defrag
-+		_btrfs_online_defrag
-+		_checksum
-+		_cleanup_defrag
-+		_fsck
-+	done < $args
-+	echo "btrfs online defragment test done"
-+}
-+
-+_runtest()
-+{
-+	_rundefrag $defrag_args
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.defrag
-+
-+# real QA test starts here
-+_supported_fs btrfs
-+_supported_os Linux
-+
-+_setup_testdir
-+## We require scratch so that we'll have free contiguous space
-+_require_scratch
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_mount
-+
-+_require_defrag
-+
-+_runtest
-+
-+status=0
-+exit
-diff --git a/278.args b/278.args
-new file mode 100644
-index 0000000..9c22dc9
---- /dev/null
-+++ b/278.args
-@@ -0,0 +1,18 @@
-+1	1	1	1	1
-+1	1	1	1	2
-+1	1	1	1	3
-+1	1	1	2	1
-+1	1	2	-	-
-+1	6	1	1	1
-+1	1	1	1	1
-+1	1	1	1	2
-+1	1	1	1	3
-+1	1	1	2	1
-+1	1	2	-	-
-+1	2	1	1	1
-+1	3	1	1	1
-+1	4	1	1	1
-+1	5	1	1	1
-+1	6	1	1	1
-+2	1	1	1	1
-+3	1	1	1	1
-diff --git a/278.out b/278.out
-new file mode 100644
-index 0000000..2fc167d
---- /dev/null
-+++ b/278.out
-@@ -0,0 +1,75 @@
-+QA output created by 278
-+btrfs online defragment test start
-+1	1	1	1	1
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	1	1	2
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	1	1	3
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	1	2	1
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	2	-	-
-+a single file
-+online defragment range: default
-+online defragment compress: on
-+1	6	1	1	1
-+a single file
-+online defragment range: start = 0 && 0 < len < file size
-+online defragment compress: off
-+1	1	1	1	1
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	1	1	2
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	1	1	3
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	1	2	1
-+a single file
-+online defragment range: default
-+online defragment compress: off
-+1	1	2	-	-
-+a single file
-+online defragment range: default
-+online defragment compress: on
-+1	2	1	1	1
-+a single file
-+online defragment range: start < 0 && 0 < len < file size
-+online defragment compress: off
-+1	3	1	1	1
-+a single file
-+online defragment range: start > file size && 0 < len < file size
-+online defragment compress: off
-+1	4	1	1	1
-+a single file
-+online defragment range: start = 0 && len < 0
-+online defragment compress: off
-+1	5	1	1	1
-+a single file
-+online defragment range: start = 0 && len > file size
-+online defragment compress: off
-+1	6	1	1	1
-+a single file
-+online defragment range: start = 0 && 0 < len < file size
-+online defragment compress: off
-+2	1	1	1	1
-+a directory
-+online defragment range: default
-+online defragment compress: off
-+3	1	1	1	1
-+a filesystem
-+online defragment range: default
-+online defragment compress: off
-+btrfs online defragment test done
-diff --git a/group b/group
-index 99592d3..9dedd25 100644
---- a/group
-+++ b/group
-@@ -391,3 +391,4 @@ deprecated
- 275 auto rw
- 276 auto rw metadata
- 277 auto ioctl quick metadata
-+278 auto
+			Writes
+Threads		vanilla		patched		read
+    1		0.85s		0.93s		0.88s
+    2		1.20s		0.58s		0.54s
+    4		1.23s		0.32s		0.31s
+    8		1.40s		0.27s		0.27s
+   16		2.36s		0.23s		0.25s
+
+So overwrites scale pretty much like reads now: ~1,000,000 overwrite
+IOs per second to that one file with 8-16 threads. Given these tests
+are running on an 8p VM, it's not surprising it doesn't go any
+faster than that as the thread count goes up.
+
+The patch hacks in some stuff that Christoph's transactional size
+and timestamp update patches do correctly, so these changes would
+need to wait for that series to be finalised. As it is, this patch
+doesn't appear to cause any new xfstests regressions, so it's good
+for discussion and testing....
+
+Anyway, for people to comment on, the patch is below.
+
+Cheers,
+
+Dave.
 -- 
-1.6.5.2
+Dave Chinner
+david@fromorbit.com
+
+
+xfs: use shared ilock mode for direct IO writes by default
+
+From: Dave Chinner <dchinner@redhat.com>
+
+For the direct IO write path, we only really need the ilock to be
+taken in exclusive mode during IO submission if we need to do extent
+allocation. We currently take it in exclusive mode for both the
+write sanity checks and for block mapping and allocation.
+
+In the case of the write sanity checks, we only need to protect the
+inode from change while this is occurring, and hence we can use a
+shared lock for this. We still need to provide exclusion for EOF
+zeroing, so we need to detect that case and upgrade the locking to
+exclusive in that case. This is a simple extension of the existing
+iolock upgrade case.
+
+We also have the case of timestamp updates occurring inside the
+ilock. however, we don't really care if timestamp update races occur
+as they are going to end up with the same timestamp anyway. Further,
+as we move to transactional timestamp updates, we can't do the
+update from within the ilock at all. Hence move the timestamp
+update outside the ilock altogether as we don't need or want it to
+be protected there.
+
+For block mapping, the direct IO case has to drop the ilock after
+the initial read mapping for transaction reservation before the
+allocation can be done. This means that the mapping to determine if
+allocation is needed simply requires a "don't change" locking
+semantic. i.e. a shared lock.
+
+Hence we can safely change the xfs_get_blocks() code to use a shared
+lock for the initial mapping lookup because that provides the same
+guarantees but doesn't introduce new race conditions due to the
+allocation having to upgrade the lock - it already has those race
+conditions and has to handle them. This means that overwrite and
+write into preallocated space direct IO will be mapped with just a
+shared lock.
+
+Finally, we only take the ilock during IO completion if the current
+ioend is beyond the file size. This is a quick hack that will be
+fixed properly by transactional size updates.
+
+In combination, these three changes remove all exclusive
+serialisation points in the direct IO write path for single file
+overwrite workloads.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_aops.c  |   22 ++++++++++++++++++++--
+ fs/xfs/xfs_file.c  |   35 +++++++++++++++++++++--------------
+ fs/xfs/xfs_iomap.c |   10 +++++++---
+ fs/xfs/xfs_iomap.h |    2 +-
+ 4 files changed, 49 insertions(+), 20 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 74b9baf..4c84508 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -138,6 +138,9 @@ xfs_setfilesize(
+ 	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
+ 	xfs_fsize_t		isize;
+ 
++	if (!xfs_ioend_new_eof(ioend))
++		return 0;
++
+ 	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+ 		return EAGAIN;
+ 
+@@ -1121,7 +1124,22 @@ __xfs_get_blocks(
+ 		return 0;
+ 
+ 	if (create) {
+-		lockmode = XFS_ILOCK_EXCL;
++		/*
++		 * For direct IO, we lock in shared mode so that write
++		 * operations that don't require allocation can occur
++		 * concurrently. The ilock has to be dropped over the allocation
++		 * transaction reservation, so the only thing the ilock is
++		 * providing here is modification exclusion. i.e. there is no
++		 * need to hold the lock exclusive.
++		 *
++		 * For buffered IO, if we need to do delayed allocation then
++		 * hold the ilock exclusive so that the lookup and delalloc
++		 * reservation is atomic.
++		 */
++		if (direct)
++			lockmode = XFS_ILOCK_SHARED;
++		else
++			lockmode = XFS_ILOCK_EXCL;
+ 		xfs_ilock(ip, lockmode);
+ 	} else {
+ 		lockmode = xfs_ilock_map_shared(ip);
+@@ -1144,7 +1162,7 @@ __xfs_get_blocks(
+ 	      imap.br_startblock == DELAYSTARTBLOCK))) {
+ 		if (direct) {
+ 			error = xfs_iomap_write_direct(ip, offset, size,
+-						       &imap, nimaps);
++						       &imap, nimaps, &lockmode);
+ 		} else {
+ 			error = xfs_iomap_write_delay(ip, offset, size, &imap);
+ 		}
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 10ec272..c74e28c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -650,41 +650,48 @@ xfs_file_aio_write_checks(
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			error = 0;
++	int			ilock = XFS_ILOCK_SHARED;
+ 
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_rw_ilock(ip, ilock);
+ restart:
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+ 	if (error) {
+-		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
++		xfs_rw_iunlock(ip, ilock);
+ 		return error;
+ 	}
+ 
+-	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
+-		file_update_time(file);
+-
+ 	/*
+ 	 * If the offset is beyond the size of the file, we need to zero any
+ 	 * blocks that fall between the existing EOF and the start of this
+-	 * write.  If zeroing is needed and we are currently holding the
+-	 * iolock shared, we need to update it to exclusive which involves
+-	 * dropping all locks and relocking to maintain correct locking order.
+-	 * If we do this, restart the function to ensure all checks and values
+-	 * are still valid.
++	 * write.  If zeroing is needed and we are currently holding shared
++	 * locks, we need to update it to exclusive which involves dropping all
++	 * locks and relocking to maintain correct locking order.  If we do
++	 * this, restart the function to ensure all checks and values are still
++	 * valid.
+ 	 */
+ 	if (*pos > i_size_read(inode)) {
+-		if (*iolock == XFS_IOLOCK_SHARED) {
+-			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
++		if (*iolock == XFS_IOLOCK_SHARED || ilock == XFS_ILOCK_SHARED) {
++			xfs_rw_iunlock(ip, ilock | *iolock);
+ 			*iolock = XFS_IOLOCK_EXCL;
+-			xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++			ilock = XFS_ILOCK_EXCL;
++			xfs_rw_ilock(ip, ilock | *iolock);
+ 			goto restart;
+ 		}
+ 		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
+ 	}
+-	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_rw_iunlock(ip, ilock);
+ 	if (error)
+ 		return error;
+ 
+ 	/*
++	 * we can't do any operation that might call .dirty_inode under the
++	 * ilock when we move to completely transactional updates. Hence this
++	 * timestamp must sit outside the ilock.
++	 */
++	if (likely(!(file->f_mode & FMODE_NOCMTIME)))
++		file_update_time(file);
++
++	/*
+ 	 * If we're writing the file then make sure to clear the setuid and
+ 	 * setgid bits if the process is not being run by root.  This keeps
+ 	 * people from modifying setuid and setgid binaries.
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 246c7d5..792c81d 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -123,7 +123,8 @@ xfs_iomap_write_direct(
+ 	xfs_off_t	offset,
+ 	size_t		count,
+ 	xfs_bmbt_irec_t *imap,
+-	int		nmaps)
++	int		nmaps,
++	int		*lockmode)
+ {
+ 	xfs_mount_t	*mp = ip->i_mount;
+ 	xfs_fileoff_t	offset_fsb;
+@@ -189,7 +190,8 @@ xfs_iomap_write_direct(
+ 	/*
+ 	 * Allocate and setup the transaction
+ 	 */
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++	xfs_iunlock(ip, *lockmode);
++
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
+ 	error = xfs_trans_reserve(tp, resblks,
+ 			XFS_WRITE_LOG_RES(mp), resrtextents,
+@@ -200,7 +202,9 @@ xfs_iomap_write_direct(
+ 	 */
+ 	if (error)
+ 		xfs_trans_cancel(tp, 0);
+-	xfs_ilock(ip, XFS_ILOCK_EXCL);
++
++	*lockmode = XFS_ILOCK_EXCL;
++	xfs_ilock(ip, *lockmode);
+ 	if (error)
+ 		goto error_out;
+ 
+diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
+index 8061576..21e3398 100644
+--- a/fs/xfs/xfs_iomap.h
++++ b/fs/xfs/xfs_iomap.h
+@@ -22,7 +22,7 @@ struct xfs_inode;
+ struct xfs_bmbt_irec;
+ 
+ extern int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
+-			struct xfs_bmbt_irec *, int);
++			struct xfs_bmbt_irec *, int, int *);
+ extern int xfs_iomap_write_delay(struct xfs_inode *, xfs_off_t, size_t,
+ 			struct xfs_bmbt_irec *);
+ extern int xfs_iomap_write_allocate(struct xfs_inode *, xfs_off_t, size_t,
 
 _______________________________________________
 xfs mailing list
