@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1AG4I5F006356 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 10:04:18 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 7Rk2xnqfpOLGZ7oz (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Feb 2012 08:04:17 -0800 (PST)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/4] ocfs2: Use generic handlers of O_SYNC AIO DIO
-Date: Fri, 10 Feb 2012 17:04:00 +0100
-Message-Id: <1328889842-23231-3-git-send-email-jack@suse.cz>
-In-Reply-To: <1328889842-23231-1-git-send-email-jack@suse.cz>
-References: <1328889842-23231-1-git-send-email-jack@suse.cz>
+	q1AGmF7r009295 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 10:48:15 -0600
+Date: Fri, 10 Feb 2012 10:48:17 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/7] xfs: use a normal shrinker for the dquot freelist
+Message-ID: <20120210164817.GN7762@sgi.com>
+References: <20120201135719.202171828@bombadil.infradead.org>
+	<20120201140039.011990931@bombadil.infradead.org>
+	<20120209220320.GL7762@sgi.com>
+	<20120209225626.GA844@infradead.org>
+	<20120209231346.GM7762@sgi.com> <20120210015233.GF12836@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120210015233.GF12836@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,48 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: cluster-devel@redhat.com, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
-file.
+On Fri, Feb 10, 2012 at 12:52:33PM +1100, Dave Chinner wrote:
+> On Thu, Feb 09, 2012 at 05:13:46PM -0600, Ben Myers wrote:
+> > On Thu, Feb 09, 2012 at 05:56:26PM -0500, Christoph Hellwig wrote:
+> > > On Thu, Feb 09, 2012 at 04:03:20PM -0600, Ben Myers wrote:
+> > > > > -
+> > > > > -	return B_TRUE;
+> > > > > +	while (!list_empty(&dispose_list)) {
+> > > > > +		dqp = list_first_entry(&dispose_list, struct xfs_dquot,
+> > > > > +				       q_freelist);
+> > > > > +		list_del_init(&dqp->q_freelist);
+> > > > > +		xfs_qm_dqfree_one(dqp);
+> > > > > +	}
+> > > > > +out:
+> > > > > +	return (xfs_Gqm->qm_dqfrlist_cnt / 100) * sysctl_vfs_cache_pressure;
+> > > > 
+> > > > return atomic_read(&xfs_Gqm->qm_totaldquots);
+> > > > 
+> > > > This works well for me and seems to be closer to the shrinker interface
+> > > > as documented:
+> > > 
+> > > It's pointless - we can only apply pressure to dquots that are on the
+> > > freelist.  No amount of shaking will allow us to reclaim a referenced
+> > > dquot.
+> > 
+> > Sure... then it should be:
+> > 
+> > return atomic_read(&xfs_Gqm->qm_frlist_cnt);
+> > 
+> > What is the value of the additional calculation?
+> 
+> It's applying the user controllable vfs_cache_pressure setting to
+> the reclaim weight. That is, if the user wants to reclaim
+> inode/dentry/dquot slab caches faster than the page cache (i.e.
+> perfer data caching over metadata caching) or vice cersa, then the
+> change the sysctl value and shrinkers should then take that into
+> account....
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/ocfs2/aops.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
-index 78b68af..3d14c2b 100644
---- a/fs/ocfs2/aops.c
-+++ b/fs/ocfs2/aops.c
-@@ -593,9 +593,7 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
- 	level = ocfs2_iocb_rw_locked_level(iocb);
- 	ocfs2_rw_unlock(inode, level);
- 
--	if (is_async)
--		aio_complete(iocb, ret, 0);
--	inode_dio_done(inode);
-+	generic_dio_end_io(iocb, offset, bytes, private, ret, is_async);
- }
- 
- /*
-@@ -642,7 +640,7 @@ static ssize_t ocfs2_direct_IO(int rw,
- 	return __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev,
- 				    iov, offset, nr_segs,
- 				    ocfs2_direct_IO_get_blocks,
--				    ocfs2_dio_end_io, NULL, 0);
-+				    ocfs2_dio_end_io, NULL, DIO_SYNC_WRITES);
- }
- 
- static void ocfs2_figure_cluster_boundaries(struct ocfs2_super *osb,
--- 
-1.7.1
+Aha.  Thanks for the explanation.  It sounds like including
+sysclt_vfs_cache_pressure in this calculation is a good thing.
 
 _______________________________________________
 xfs mailing list
