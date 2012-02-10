@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1AGueCB009606 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 10:56:40 -0600
-Date: Fri, 10 Feb 2012 10:56:46 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/7] xfs: use a normal shrinker for the dquot freelist
-Message-ID: <20120210165646.GO7762@sgi.com>
-References: <20120201135719.202171828@bombadil.infradead.org>
-	<20120201140039.011990931@bombadil.infradead.org>
-	<20120209220320.GL7762@sgi.com>
-	<20120209225626.GA844@infradead.org>
-	<20120210014947.GE12836@dastard>
+	q1AKb5Ai021403 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 14:37:06 -0600
+Message-ID: <4F357FEF.5080507@sgi.com>
+Date: Fri, 10 Feb 2012 14:37:03 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120210014947.GE12836@dastard>
+Subject: Re: [PATCH -v2 1/3] xfs: change available ranges of softlimit and
+	hardlimit in quota check
+References: <20120206124951.12624.88233.stgit@ltc219.sdl.hitachi.co.jp>
+	<20120206125007.12624.58454.stgit@ltc219.sdl.hitachi.co.jp>
+In-Reply-To: <20120206125007.12624.58454.stgit@ltc219.sdl.hitachi.co.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,64 +19,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Feb 10, 2012 at 12:49:47PM +1100, Dave Chinner wrote:
-> On Thu, Feb 09, 2012 at 05:56:26PM -0500, Christoph Hellwig wrote:
-> > On Thu, Feb 09, 2012 at 04:03:20PM -0600, Ben Myers wrote:
-> > > > +	LIST_HEAD		(dispose_list);
-> > > > +	struct xfs_dquot	*dqp;
-> > > >  
-> > > > -	if (nfree <= ndqused && nfree < ndquot)
-> > > > +	if ((sc->gfp_mask & (__GFP_FS|__GFP_WAIT)) != (__GFP_FS|__GFP_WAIT))
-> > > >  		return 0;
-> > > > +	if (!nr_to_scan)
-> > > > +		goto out;
-> > > 
-> > > I suggest something more like:
-> > > 
-> > > 	if (!nr_to_scan)
-> > > 		goto out;
-> > >         if ((sc->gfp_mask...
-> > > 		return -1;
-> > 
-> > Why?  Counting the number of objects when we can't actually do anything
-> > is just a waste of time, and -1 vs 0 for the sizing pass seem to be
-> > treateds the same in the calling code.
-> 
-> .....
-> 
-> > >  * The callback must not return -1 if nr_to_scan is zero.
-> > 
-> > this is against your suggestion of using -1 for the estimation pass
-> > above, btw.
-> 
-> Technically, if the shrinker cannot make progress or the gfp mask
-> means it cannot enter the filesystem code, then it should return -1,
-> not zero. Yes, the calc code treats 0 and -1 the same because it is
-> defensive - for the calculation a shrinker can validly return 0 to
-> mean "I have no work to do" rather than "I cannot do any work in
-> this context", but both mean the same thing - don't try to run the
-> shrinker here.
-> 
-> However, the later shrinker callout to do work (i.e. nr_to_scan !=
-> 0) relies on this distinction to break out of the shrink loop early
-> whenteh shrinker says "can't do any work". If you just keep
-> returning zero there then it will just looping uselessly until the
-> scan count runs out.
-> 
-> The interface is a piece of shit, and I need to get back to my patch
-> series that fixes this all up by separating the calculation callback
-> from the work callback...
+On 02/06/12 06:50, Mitsuo Hayasaka wrote:
+> In general, quota allows us to use disk blocks and inodes up to each
+> limit, that is, they are available if they don't exceed their limitations.
+> Current xfs sets their available ranges to lower than them except disk
+> inode quota check. So, this patch changes the ranges to not beyond them.
+>
+> Signed-off-by: Mitsuo Hayasaka<mitsuo.hayasaka.hu@hitachi.com>
+> Cc: Ben Myers<bpm@sgi.com>
+> Cc: Alex Elder<elder@kernel.org>
+> Cc: Christoph Hellwig<hch@lst.de>
+> ---
+>
+>   fs/xfs/xfs_dquot.c       |   24 ++++++++++++------------
+>   fs/xfs/xfs_log_recover.c |    6 +++---
+>   fs/xfs/xfs_qm_syscalls.c |    4 ++--
+>   fs/xfs/xfs_trans_dquot.c |    4 ++--
+>   4 files changed, 19 insertions(+), 19 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
 
-Ok... so it'll be sorted out in a different patch.  ;)
+> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> index eafbcff..711a86e 100644
+> --- a/fs/xfs/xfs_qm_syscalls.c
+> +++ b/fs/xfs/xfs_qm_syscalls.c
+> @@ -813,11 +813,11 @@ xfs_qm_export_dquot(
+>   	     (XFS_IS_OQUOTA_ENFORCED(mp)&&
+>   			(dst->d_flags&  (FS_PROJ_QUOTA | FS_GROUP_QUOTA))))&&
+>   	dst->d_id != 0) {
+> -		if (((int) dst->d_bcount>= (int) dst->d_blk_softlimit)&&
+> +		if (((int) dst->d_bcount>  (int) dst->d_blk_softlimit)&&
+>   		(dst->d_blk_softlimit>  0)) {
+>   			ASSERT(dst->d_btimer != 0);
+>   		}
+> -		if (((int) dst->d_icount>= (int) dst->d_ino_softlimit)&&
+> +		if (((int) dst->d_icount>  (int) dst->d_ino_softlimit)&&
+>   		(dst->d_ino_softlimit>  0)) {
+>   			ASSERT(dst->d_itimer != 0);
+>   		}
 
--Ben
+Good catch on the off by one page comparisons. I like the patch.
+
+Question: I know this was like this before, but why is the 64 bit counts 
+and limits being casted into integers for these tests inside the DEBUG?
+
+--Mark Tinguely
+   tinguely@sgi.com
 
 _______________________________________________
 xfs mailing list
