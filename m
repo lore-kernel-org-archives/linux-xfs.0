@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1ALWAed023351 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 15:32:10 -0600
-Message-ID: <4F358CD6.9000602@sgi.com>
-Date: Fri, 10 Feb 2012 15:32:06 -0600
+	q1AMNA5w025696 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 16:23:10 -0600
+Message-ID: <4F3598CB.2060008@sgi.com>
+Date: Fri, 10 Feb 2012 16:23:07 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH -v2 2/3] xfs: make inode quota check more general
+Subject: Re: [PATCH -v2 3/3] xfs: cleanup quota check on disk blocks and inodes
+	reservations
 References: <20120206124951.12624.88233.stgit@ltc219.sdl.hitachi.co.jp>
-	<20120206125030.12624.95365.stgit@ltc219.sdl.hitachi.co.jp>
-In-Reply-To: <20120206125030.12624.95365.stgit@ltc219.sdl.hitachi.co.jp>
+	<20120206125105.12624.93123.stgit@ltc219.sdl.hitachi.co.jp>
+In-Reply-To: <20120206125105.12624.93123.stgit@ltc219.sdl.hitachi.co.jp>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,21 +26,24 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 Cc: yrl.pp-manager.tt@hitachi.com, xfs@oss.sgi.com
 
-On 02/06/12 06:50, Mitsuo Hayasaka wrote:
-> The xfs checks quota when reserving disk blocks and inodes. In the block
-> reservation, it checks if the total number of blocks including current
-> usage and new reservation exceed quota. In the inode reservation,
-> it checks using the total number of inodes including only current usage
-> without new reservation. However, this inode quota check works well
-> since the caller of xfs_trans_dquot() always sets the argument of the
-> number of new inode reservation to 1 or 0 and inode is reserved one by
-> one in current xfs.
+On 02/06/12 06:51, Mitsuo Hayasaka wrote:
+> This patch is a cleanup of quota check on disk blocks and inodes
+> reservations, and changes it as follows.
 >
-> To make it more general, this patch changes it to the same way as the
-> block quota check.
+> (1) add a total_count variable to store the total number of
+>      current usages and new reservations for disk blocks and inodes,
+>      respectively.
 >
+> (2) make it more readable to check if the local variables softlimit
+>      and hardlimit are positive. It has been changed as follows.
+> 	    if (softlimit>  0ULL) ->  if (softlimit)
+> 	    if (hardlimit>  0ULL) ->  if (hardlimit)
+>      This is because they are defined as xfs_qcnt_t which is unsigned.
+>
+> Signed-off-by: Mitsuo Hayasaka<mitsuo.hayasaka.hu@hitachi.com>
 
-Does not hurt to be consistent with the block reservations.
+
+Looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
