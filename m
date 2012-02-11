@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1B0fAce034275 for <xfs@oss.sgi.com>; Fri, 10 Feb 2012 18:41:10 -0600
-Date: Fri, 10 Feb 2012 18:41:12 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC v3 PATCH 1/4] xfs: Remove incore use of XFS_OQUOTA_ENFD
-	and XFS_OQUOTA_CHKD
-Message-ID: <20120211004112.GP7762@sgi.com>
-References: <20120123173158.31640.30333.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173204.31640.53918.sendpatchset@chandra-lucid.austin.ibm.com>
+	q1BKDO1p103840 for <xfs@oss.sgi.com>; Sat, 11 Feb 2012 14:13:24 -0600
+Received: from mail-ee0-f53.google.com (mail-ee0-f53.google.com
+	[74.125.83.53]) by cuda.sgi.com with ESMTP id RBtwS9Hh3FknnsaM
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sat, 11 Feb 2012 12:13:21 -0800 (PST)
+Received: by eeke51 with SMTP id e51so1951666eek.26
+	for <xfs@oss.sgi.com>; Sat, 11 Feb 2012 12:13:20 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: [PATCH 0/7] better dquot caching
+Date: Sat, 11 Feb 2012 21:13:15 +0100
+References: <20120201135719.202171828@bombadil.infradead.org>
+In-Reply-To: <20120201135719.202171828@bombadil.infradead.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120123173204.31640.53918.sendpatchset@chandra-lucid.austin.ibm.com>
+Message-Id: <201202112113.15683.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,369 +23,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 23, 2012 at 11:32:04AM -0600, Chandra Seetharaman wrote:
-> Define new macros XFS_GQUOTA_ENFD, XFS_GQUOTA_CHKD, XFS_PQUOTA_ENFD, and
-> XFS_PQUOTA_CHKD.
-> 
-> Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-> start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts. 
-> 
-> No changes is made to the on-disk version of the superblock yet. On-disk
-> copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
->  
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  fs/xfs/xfs_mount.c       |   30 ++++++++++++++++++++++++++++++
->  fs/xfs/xfs_qm.c          |    9 ++++++---
->  fs/xfs/xfs_qm_syscalls.c |   26 ++++++++++++++------------
->  fs/xfs/xfs_quota.h       |   36 +++++++++++++++++++++++++-----------
->  fs/xfs/xfs_quotaops.c    |    6 ++++--
->  fs/xfs/xfs_super.c       |   16 ++++++++--------
->  fs/xfs/xfs_trans_dquot.c |    4 ++--
->  7 files changed, 89 insertions(+), 38 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_quota.h b/fs/xfs/xfs_quota.h
-> index b50ec5b..d7205b0 100644
-> --- a/fs/xfs/xfs_quota.h
-> +++ b/fs/xfs/xfs_quota.h
-> @@ -152,19 +152,34 @@ typedef struct xfs_qoff_logformat {
->  #define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
->  
->  /*
-> + * Start differentiating group quota and project quota in-core
-> + * using distinct flags, instead of using the combined OQUOTA flags.
-> + *
-> + * Conversion to and from the combined OQUOTA flag (if necessary)
-> + * is done only in xfs_sb_{to,from}_disk()
-> + */
-> +#define XFS_GQUOTA_ENFD	0x0080  /* group quota limits enforced */
-> +#define XFS_GQUOTA_CHKD	0x0100  /* quotacheck run on group quotas */
-> +#define XFS_PQUOTA_ENFD	0x0200  /* project quota limits enforced */
-> +#define XFS_PQUOTA_CHKD	0x0400  /* quotacheck run on project quotas */
-> +
-> +/*
->   * Quota Accounting/Enforcement flags
->   */
->  #define XFS_ALL_QUOTA_ACCT	\
->  		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
-> -#define XFS_ALL_QUOTA_ENFD	(XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD)
-> -#define XFS_ALL_QUOTA_CHKD	(XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)
-> +#define XFS_ALL_QUOTA_ENFD	\
-> +		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
-> +#define XFS_ALL_QUOTA_CHKD	\
-> +		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
->  
->  #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
->  #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
->  #define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
->  #define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
->  #define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
-> -#define XFS_IS_OQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_OQUOTA_ENFD)
-> +#define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
-> +#define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
->  
->  /*
->   * Incore only flags for quotaoff - these bits get cleared when quota(s)
-> @@ -259,24 +274,23 @@ typedef struct xfs_qoff_logformat {
->  	((XFS_IS_UQUOTA_ON(mp) && \
->  		(mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD) == 0) || \
->  	 (XFS_IS_GQUOTA_ON(mp) && \
-> -		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
-> -		 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT))) || \
-> +		(mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD) == 0) || \
->  	 (XFS_IS_PQUOTA_ON(mp) && \
-> -		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
-> -		 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))))
-> +		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
->  
->  #define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-> +				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
->  
->  #define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-> +				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
->  
->  #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|\
-> -				 XFS_GQUOTA_ACCT)
-> +				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD|\
-> +				 XFS_GQUOTA_ACCT|XFS_GQUOTA_ENFD|\
-> +				 XFS_GQUOTA_CHKD)
->  
->  
->  /*
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 25e9908..64313e4 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -593,6 +593,20 @@ xfs_sb_from_disk(
->  	to->sb_uquotino = be64_to_cpu(from->sb_uquotino);
->  	to->sb_gquotino = be64_to_cpu(from->sb_gquotino);
->  	to->sb_qflags = be16_to_cpu(from->sb_qflags);
-> +	if ((to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
-> +			(to->sb_qflags & (XFS_PQUOTA_ENFD |XFS_GQUOTA_ENFD |
-> +				XFS_PQUOTA_CHKD| XFS_GQUOTA_CHKD))) {
-> +		xfs_notice(mp, "Super block has XFS_OQUOTA bits along with "
-> +			"XFS_PQUOTA and/or XFS_GQUOTA bits. Fixing it.\n");
-> +	}
-> +	if (to->sb_qflags & XFS_OQUOTA_ENFD)
-> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
-> +	if (to->sb_qflags & XFS_OQUOTA_CHKD)
-> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
-> +					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
-> +	to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
-> +
->  	to->sb_flags = from->sb_flags;
->  	to->sb_shared_vn = from->sb_shared_vn;
->  	to->sb_inoalignmt = be32_to_cpu(from->sb_inoalignmt);
-> @@ -622,11 +636,26 @@ xfs_sb_to_disk(
->  	xfs_sb_field_t	f;
->  	int		first;
->  	int		size;
-> +	__be16		saved_qflags;
->  
->  	ASSERT(fields);
->  	if (!fields)
->  		return;
->  
-> +	/*
-> +	 * in-core version of qflags do not have XFS_OQUOTA.*, whereas the
-> + 	 * on-disk version does. So, save the in-core sb_qflags and restore
-> +	 * it after we modify and copy it to the buffer to be copied to
-> +	 * disk.
-> +	 */
-> +	saved_qflags = from->sb_qflags;
-> +
-> +	if (from->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> +		from->sb_qflags |= XFS_OQUOTA_ENFD;
-> +	if (from->sb_qflags & (XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> +		from->sb_qflags |= XFS_OQUOTA_CHKD;
-> +	from->sb_qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
->  	while (fields) {
->  		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
->  		first = xfs_sb_info[f].offset;
-> @@ -657,6 +686,7 @@ xfs_sb_to_disk(
->  
->  		fields &= ~(1LL << f);
->  	}
-> +	from->sb_qflags = saved_qflags;
-
-I am disgusted that you should have to save the sb_qflags like this.
-After reading this 'fields' loop in xfs_sb_to_disk along with all the
-related crap I am actually feeling a little nauseous.
-
-I don't know why in XFS we seem to feel the need to do everything in the
-most complicated way possible.
-
-The rest of the patch looks good.
-
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
->  }
->  
->  /*
-> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> index 1b2f5b3..bb8c2ac 100644
-> --- a/fs/xfs/xfs_qm.c
-> +++ b/fs/xfs/xfs_qm.c
-> @@ -313,8 +313,10 @@ xfs_qm_mount_quotas(
->  	 */
->  	if (!XFS_IS_UQUOTA_ON(mp))
->  		mp->m_qflags &= ~XFS_UQUOTA_CHKD;
-> -	if (!(XFS_IS_GQUOTA_ON(mp) || XFS_IS_PQUOTA_ON(mp)))
-> -		mp->m_qflags &= ~XFS_OQUOTA_CHKD;
-> +	if (!XFS_IS_GQUOTA_ON(mp))
-> +		mp->m_qflags &= ~XFS_GQUOTA_CHKD;
-> +	if (!XFS_IS_PQUOTA_ON(mp))
-> +		mp->m_qflags &= ~XFS_PQUOTA_CHKD;
->  
->   write_changes:
->  	/*
-> @@ -1449,7 +1451,8 @@ xfs_qm_quotacheck(
->  					XFS_QMOPT_GQUOTA : XFS_QMOPT_PQUOTA);
->  		if (error)
->  			goto error_return;
-> -		flags |= XFS_OQUOTA_CHKD;
-> +		flags |= XFS_IS_GQUOTA_ON(mp) ?
-> +					XFS_GQUOTA_CHKD : XFS_PQUOTA_CHKD;
->  	}
->  
->  	do {
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index eafbcff..d43c68c 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -121,11 +121,11 @@ xfs_qm_scall_quotaoff(
->  	}
->  	if (flags & XFS_GQUOTA_ACCT) {
->  		dqtype |= XFS_QMOPT_GQUOTA;
-> -		flags |= (XFS_OQUOTA_CHKD | XFS_OQUOTA_ENFD);
-> +		flags |= (XFS_GQUOTA_CHKD | XFS_GQUOTA_ENFD);
->  		inactivate_flags |= XFS_GQUOTA_ACTIVE;
->  	} else if (flags & XFS_PQUOTA_ACCT) {
->  		dqtype |= XFS_QMOPT_PQUOTA;
-> -		flags |= (XFS_OQUOTA_CHKD | XFS_OQUOTA_ENFD);
-> +		flags |= (XFS_PQUOTA_CHKD | XFS_PQUOTA_ENFD);
->  		inactivate_flags |= XFS_PQUOTA_ACTIVE;
->  	}
->  
-> @@ -349,9 +349,11 @@ xfs_qm_scall_quotaon(
->  	    ||
->  	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
->  	    (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
-> -	    (flags & XFS_GQUOTA_ACCT) == 0 &&
-> +	    (flags & XFS_PQUOTA_ENFD))
-> +	    ||
-> +	    ((flags & XFS_GQUOTA_ACCT) == 0 &&
->  	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
-> -	    (flags & XFS_OQUOTA_ENFD))) {
-> +	    (flags & XFS_GQUOTA_ENFD))) {
->  		xfs_debug(mp,
->  			"%s: Can't enforce without acct, flags=%x sbflags=%x\n",
->  			__func__, flags, mp->m_sb.sb_qflags);
-> @@ -801,8 +803,8 @@ xfs_qm_export_dquot(
->  	 * so return zeroes in that case.
->  	 */
->  	if ((!XFS_IS_UQUOTA_ENFORCED(mp) && src->d_flags == XFS_DQ_USER) ||
-> -	    (!XFS_IS_OQUOTA_ENFORCED(mp) &&
-> -			(src->d_flags & (XFS_DQ_PROJ | XFS_DQ_GROUP)))) {
-> +	    (!XFS_IS_PQUOTA_ENFORCED(mp) && src->d_flags == XFS_DQ_PROJ) || 
-> +	    (!XFS_IS_GQUOTA_ENFORCED(mp) && src->d_flags == XFS_DQ_GROUP)) {
->  		dst->d_btimer = 0;
->  		dst->d_itimer = 0;
->  		dst->d_rtbtimer = 0;
-> @@ -810,8 +812,8 @@ xfs_qm_export_dquot(
->  
->  #ifdef DEBUG
->  	if (((XFS_IS_UQUOTA_ENFORCED(mp) && dst->d_flags == FS_USER_QUOTA) ||
-> -	     (XFS_IS_OQUOTA_ENFORCED(mp) &&
-> -			(dst->d_flags & (FS_PROJ_QUOTA | FS_GROUP_QUOTA)))) &&
-> +	     (XFS_IS_PQUOTA_ENFORCED(mp) && dst->d_flags == FS_PROJ_QUOTA) ||
-> +	     (XFS_IS_GQUOTA_ENFORCED(mp) && dst->d_flags == FS_GROUP_QUOTA)) &&
->  	    dst->d_id != 0) {
->  		if (((int) dst->d_bcount >= (int) dst->d_blk_softlimit) &&
->  		    (dst->d_blk_softlimit > 0)) {
-> @@ -860,10 +862,10 @@ xfs_qm_export_flags(
->  		uflags |= FS_QUOTA_GDQ_ACCT;
->  	if (flags & XFS_UQUOTA_ENFD)
->  		uflags |= FS_QUOTA_UDQ_ENFD;
-> -	if (flags & (XFS_OQUOTA_ENFD)) {
-> -		uflags |= (flags & XFS_GQUOTA_ACCT) ?
-> -			FS_QUOTA_GDQ_ENFD : FS_QUOTA_PDQ_ENFD;
-> -	}
-> +	if (flags & XFS_PQUOTA_ENFD)
-> +		uflags |= FS_QUOTA_PDQ_ENFD;
-> +	if (flags & XFS_GQUOTA_ENFD)
-> +		uflags |= FS_QUOTA_GDQ_ENFD;
->  	return (uflags);
->  }
->  
-> diff --git a/fs/xfs/xfs_quotaops.c b/fs/xfs/xfs_quotaops.c
-> index 7e76f53..be5389e 100644
-> --- a/fs/xfs/xfs_quotaops.c
-> +++ b/fs/xfs/xfs_quotaops.c
-> @@ -76,8 +76,10 @@ xfs_fs_set_xstate(
->  		flags |= XFS_GQUOTA_ACCT;
->  	if (uflags & FS_QUOTA_UDQ_ENFD)
->  		flags |= XFS_UQUOTA_ENFD;
-> -	if (uflags & (FS_QUOTA_PDQ_ENFD|FS_QUOTA_GDQ_ENFD))
-> -		flags |= XFS_OQUOTA_ENFD;
-> +	if (uflags & FS_QUOTA_PDQ_ENFD)
-> +		flags |= XFS_PQUOTA_ENFD;
-> +	if (uflags & FS_QUOTA_GDQ_ENFD)
-> +		flags |= XFS_GQUOTA_ENFD;
->  
->  	switch (op) {
->  	case Q_XQUOTAON:
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 5e0d43f..01de9f9 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -339,17 +339,17 @@ xfs_parseargs(
->  		} else if (!strcmp(this_char, MNTOPT_PQUOTA) ||
->  			   !strcmp(this_char, MNTOPT_PRJQUOTA)) {
->  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
-> -					 XFS_OQUOTA_ENFD);
-> +					 XFS_PQUOTA_ENFD);
->  		} else if (!strcmp(this_char, MNTOPT_PQUOTANOENF)) {
->  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
-> -			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
-> +			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
->  		} else if (!strcmp(this_char, MNTOPT_GQUOTA) ||
->  			   !strcmp(this_char, MNTOPT_GRPQUOTA)) {
->  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
-> -					 XFS_OQUOTA_ENFD);
-> +					 XFS_GQUOTA_ENFD);
->  		} else if (!strcmp(this_char, MNTOPT_GQUOTANOENF)) {
->  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
-> -			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
-> +			mp->m_qflags &= ~XFS_GQUOTA_ENFD;
->  		} else if (!strcmp(this_char, MNTOPT_DELAYLOG)) {
->  			xfs_warn(mp,
->  	"delaylog is the default now, option is deprecated.");
-> @@ -542,12 +542,12 @@ xfs_showargs(
->  	/* Either project or group quotas can be active, not both */
->  
->  	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
-> -		if (mp->m_qflags & XFS_OQUOTA_ENFD)
-> +		if (mp->m_qflags & XFS_PQUOTA_ENFD)
->  			seq_puts(m, "," MNTOPT_PRJQUOTA);
->  		else
->  			seq_puts(m, "," MNTOPT_PQUOTANOENF);
->  	} else if (mp->m_qflags & XFS_GQUOTA_ACCT) {
-> -		if (mp->m_qflags & XFS_OQUOTA_ENFD)
-> +		if (mp->m_qflags & XFS_GQUOTA_ENFD)
->  			seq_puts(m, "," MNTOPT_GRPQUOTA);
->  		else
->  			seq_puts(m, "," MNTOPT_GQUOTANOENF);
-> @@ -1059,8 +1059,8 @@ xfs_fs_statfs(
->  	spin_unlock(&mp->m_sb_lock);
->  
->  	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
-> -	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
-> -			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
-> +	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))) ==
-> +			      (XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD))
->  		xfs_qm_statvfs(ip, statp);
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_trans_dquot.c b/fs/xfs/xfs_trans_dquot.c
-> index 4d00ee6..bea957d 100644
-> --- a/fs/xfs/xfs_trans_dquot.c
-> +++ b/fs/xfs/xfs_trans_dquot.c
-> @@ -640,8 +640,8 @@ xfs_trans_dqresv(
->  	if ((flags & XFS_QMOPT_FORCE_RES) == 0 &&
->  	    dqp->q_core.d_id &&
->  	    ((XFS_IS_UQUOTA_ENFORCED(dqp->q_mount) && XFS_QM_ISUDQ(dqp)) ||
-> -	     (XFS_IS_OQUOTA_ENFORCED(dqp->q_mount) &&
-> -	      (XFS_QM_ISPDQ(dqp) || XFS_QM_ISGDQ(dqp))))) {
-> +	     (XFS_IS_PQUOTA_ENFORCED(dqp->q_mount) && XFS_QM_ISPDQ(dqp)) ||
-> +	     (XFS_IS_GQUOTA_ENFORCED(dqp->q_mount) && XFS_QM_ISGDQ(dqp)))) {
->  		if (nblks > 0) {
->  			/*
->  			 * dquot is locked already. See if we'd go over the
-> -- 
-> 1.7.1
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkbmVzZGF5IDAxIG9mIEZlYnJ1YXJ5IDIwMTIsIENocmlzdG9waCBIZWxsd2lnIHdyb3Rl
+Ogo+IFRoaXMgc2VyaWVzIGltcHJvdmVzIGhhbmRsaW5nIG9mIGxhcmdlIG51bWJlciBvZiBkcXVv
+dHMuICBJdCByZXBsYWNlZAo+IHRoZSBkaXJlY3QgcmVjeWNsaW5nIG9mIGRxdW90cyBmcm9tIHRo
+ZSBmcmVlbGlzdCB3aXRoIGEgc2hyaW5rZXIsIHJlbW92ZXMKPiB0aGUgdXBwZXIgYm91bmQgb2Yg
+ZHF1b3RzLCBhbmQgdXNlcyBwZXItZmlsZXN5c3RlbSBzdHJ1Y3R1cmVzIGZvciBhbGwKPiBxdW90
+YSBzdGF0ZSwgaW5jbHVkaW5nIHN3aXRjaGluZyBmcm9tIGEgaGFzaCB0byBhIHJhZGl4LXRyZWUg
+Zm9yIGxvb2t1cHMuCj4gCj4gRm9yIHJlcGVhdGVkIGxvb2t1cHMgb2YgZHF1b3RzIG91dCBvZiBh
+IGxhcmdlIHBvb2wgSSBzZWUgaW1wcm92ZW1lbnRzCj4gYmV0d2VuIDUwJSBhbmQgNTAwJSBjb21w
+YXJlZCB0byB0aGUgcHJldmlvdXMgY29kZS4gIEFsbCB0aGVzZSB0ZXN0cwo+IGhhdmUgYmVlbiBw
+ZXJmb3JtZWQgd2l0aCBRX1hRVU9UQVNZTkMgYWxyZWFkeSBkaXNhYmxlZCBhcyBpdCB3b3VsZAo+
+IGNoYW5nZSB0aGUgcmVzdWx0IHRvIG11Y2ggZm9yIGJvdGggdGhlIG9sZCBhbmQgbmV3IGNvZGUu
+CgpUaGFua3MgZm9yIHRoaXMgaW1wcm92ZW1lbnQhCgpPbiAzLjAuMTcgbXkgc2NyaXB0IHRoYXQg
+ZXhlY3V0ZXMgfjEzMGsgb2YgUV9YUVVPVEFHRVQgbG9va3VwcyBkb2VzIGl0J3Mgam9iIAppbiAx
+bTM1cy0xbTQ1cyBhbmQgbW9zdCBvZiB0aGF0IGlzIHN5cyB0aW1lLgoKMy4zLjBnaXQgKyBxdW90
+YSBwYXRjaHNldHMgZG9lcyB0aGUgc2FtZSB0aGluZyBpbiAyM3MgYW5kIHdoZW4gY2FjaGUgZ2V0
+cyBob3QgCml0IGdvZXMgZG93biB0byA5cy0xMHMgYnV0IHN5cyB0aW1lIGlzIG9ubHkgfjFzLgoK
+Tm90ZSB0aGF0IEknbSB1c2luZyB4ZnNfcXVvdGEgcGF0Y2hlZCB0byBhdm9pZCBkb2luZyBYUVVP
+VEFTWU5DLCBzbyB0aGF0IHRpbWUgCmlzIG1vc3RseSBYUVVPVEFHRVQgYWxzbyBvbiAzLjAuMTcg
+a2VybmVsLgoKT2YgY291cnNlIHRoZSBiZXN0IHRlc3Qgd291bGQgYmUgdG8gdGVzdCAzLjMgd2l0
+aG91dCBhbmQgd2l0aCBxdW90YSBwYXRjaHNldHMgCmJ1dCBJIGRvbid0IHRoaW5rIHRoZXJlIHdl
+cmUgYW55IG90aGVyIGltcHJvdmVtZW50cyBiZXR3ZWVuIDMuMCBhbmQgMy4zIHRoYXQgCmNvdWxk
+IGdldCBzdWNoIHNwZWVkIGltcHJvdmVtZW50IGZvciB0b25zIG9mIFhRVU9UQUdFVCBjYWxscy4K
+CnBzLiBteSAzLjMuMGdpdCBrZXJuZWwgaGFkIHRoaXMgcGF0Y2hzZXQgYW5kICJbUEFUQ0ggMC8z
+XSBpbmNsdWRlIHJlc2VydmF0aW9ucyAKaW4gcXVvdGEgcmVwb3J0aW4iIGluY2x1ZGVkCgoKMy4w
+LjE3CnJlYWwgICAgMW0zNC45NzBzCnVzZXIgICAgMG00LjAyNnMKc3lzICAgICAxbTI1LjA4MXMK
+CnJlYWwgICAgMW00NS4zNjVzCnVzZXIgICAgMG00LjEwNnMKc3lzICAgICAxbTM1LjM4MHMKCnJl
+YWwgICAgMW00NS44MzVzCnVzZXIgICAgMG0zLjkzNnMKc3lzICAgICAxbTM1Ljg1NHMKCnJlYWwg
+ICAgMW00NS42MDhzCnVzZXIgICAgMG00LjAyM3MKc3lzICAgICAxbTM0LjE4MXMKCnJlYWwgICAg
+MW0zNi4yMDdzCnVzZXIgICAgMG0zLjk4NnMKc3lzICAgICAxbTI2LjA2OHMKCnJlYWwgICAgMW00
+NS45NjlzCnVzZXIgICAgMG00LjAxNnMKc3lzICAgICAxbTM1LjgyN3MKCnJlYWwgICAgMW0zNS42
+MDhzCnVzZXIgICAgMG0zLjgzNnMKc3lzICAgICAxbTI1LjUzNHMKCnJlYWwgICAgMW00NS44ODJz
+CnVzZXIgICAgMG0zLjk4NnMKc3lzICAgICAxbTM1LjcwMHMKCnJlYWwgICAgMW00NS45MTNzCnVz
+ZXIgICAgMG0zLjg3NnMKc3lzICAgICAxbTM2LjA2NHMKCnJlYWwgICAgMW00NS43MDJzCnVzZXIg
+ICAgMG00LjAxMHMKc3lzICAgICAxbTM1LjkzN3MKCgozLjNnaXQgKyBxdW90YSBwYXRjaHNldHMK
+cmVhbCAgICAwbTIzLjgxMXMKdXNlciAgICAwbTMuNzYwcwpzeXMgICAgIDBtMS4zNzNzCgpyZWFs
+ICAgIDBtOS43MTJzCnVzZXIgICAgMG0zLjc0MHMKc3lzICAgICAwbTEuMDQ3cwoKcmVhbCAgICAw
+bTkuMjc2cwp1c2VyICAgIDBtMy43MTNzCnN5cyAgICAgMG0xLjExM3MKCnJlYWwgICAgMG05Ljg4
+MHMKdXNlciAgICAwbTMuODcwcwpzeXMgICAgIDBtMC45MzdzCgpyZWFsICAgIDBtMTEuODQxcwp1
+c2VyICAgIDBtMy43NDBzCnN5cyAgICAgMG0xLjA3N3MKCnJlYWwgICAgMG0xMC4wODZzCnVzZXIg
+ICAgMG0zLjc2MHMKc3lzICAgICAwbTEuMDU3cwoKcmVhbCAgICAwbTEwLjE3MHMKdXNlciAgICAw
+bTMuNzkwcwpzeXMgICAgIDBtMS4wNjNzCgpyZWFsICAgIDBtOS40NTdzCnVzZXIgICAgMG0zLjY4
+NnMKc3lzICAgICAwbTEuMTAwcwoKcmVhbCAgICAwbTEwLjE1MHMKdXNlciAgICAwbTMuNzU2cwpz
+eXMgICAgIDBtMS4wNzNzCgpyZWFsICAgIDBtOS4zMzFzCnVzZXIgICAgMG0zLjgxMHMKc3lzICAg
+ICAwbTEuMDA3cwotLSAKQXJrYWRpdXN6IE1pxZtraWV3aWN6ICAgICAgICBQTEQvTGludXggVGVh
+bQphcmVrbSAvIG1hdmVuLnBsICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQtbGludXgub3JnLwoK
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxp
+bmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGlu
+Zm8veGZzCg==
