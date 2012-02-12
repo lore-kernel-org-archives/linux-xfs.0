@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1CLEboX206526 for <xfs@oss.sgi.com>; Sun, 12 Feb 2012 15:14:37 -0600
-Received: from pavilion.ashurst.eu.org (pavilion.ashurst.eu.org
-	[85.119.82.45]) by cuda.sgi.com with ESMTP id 1Uxrcl7XKxrRKHag
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 12 Feb 2012 13:14:35 -0800 (PST)
-Message-ID: <4F382BDF.3070901@ashurst.eu.org>
-Date: Sun, 12 Feb 2012 21:15:11 +0000
-From: Andy Bennett <andyjpb@ashurst.eu.org>
+	q1CL1D8q205795 for <xfs@oss.sgi.com>; Sun, 12 Feb 2012 15:01:13 -0600
+Received: from mail-ee0-f53.google.com (mail-ee0-f53.google.com
+	[74.125.83.53]) by cuda.sgi.com with ESMTP id 1dXTffRxtgv1uGx5
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 12 Feb 2012 13:01:11 -0800 (PST)
+Received: by eeke51 with SMTP id e51so2372365eek.26
+	for <xfs@oss.sgi.com>; Sun, 12 Feb 2012 13:01:10 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: quotacheck speed
+Date: Sun, 12 Feb 2012 22:01:07 +0100
 MIME-Version: 1.0
-References: <4F3803B1.1090205@ashurst.eu.org> <20120212200647.GI12836@dastard>
-In-Reply-To: <20120212200647.GI12836@dastard>
-Subject: Re: Disk spin down
+Message-Id: <201202122201.07649.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,53 +21,19 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi,
-
-> Seems to me that something is still dirtying an inode regularly.
-> 
-> Perhaps you need to look at the XFS and writeback event traces to
-> find out what process is dirtying the inode. trace-cmd is your
-> friend...
-
-Something like this?
-
------
-echo 1 > /sys/kernel/debug/tracing/events/xfs/enable
-
-echo 0 > /sys/kernel/debug/tracing/events/xfs/enable
-
-more /sys/kernel/debug/tracing/trace
------
-
-
-I tried recreating the situation of the last 2 days (clean boot, stopped
-services) and it's currently quiescing nicely. :-(
-
-I'll keep an eye on it and try to catch it in the act but every time I
-turn the tracing on the HDD light stays firmly off. :-(
-
-
-
-
-
-
-
-Regards,
-@ndy
-
--- 
-andyjpb@ashurst.eu.org
-http://www.ashurst.eu.org/
-0x7EBA75FF
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkhpLAoKV2hlbiBtb3VudGluZyA4MDBHQiBmaWxlc3lzdGVtIChhZnRlciByZXBhaXIgZm9yIGV4
+YW1wbGUpIGhlcmUgcXVvdGFjaGVjayAKdGFrZXMgMTAgbWludXRlcy4gUXVpdGUgbG9uZyB0aW1l
+IHRoYXQgYWRkcyB0byB3aG9sZSB0aW1lIG9mIGZpbGVzeXN0ZW0gCmRvd250aW1lIChyZXBhaXIg
+KyBxdW90YWNoZWNrKS4KCkkgd29uZGVyIGlmIHF1b3RhY2hlY2sgY2FuIGJlIHNvbWVob3cgaW1w
+cm92ZWQgb3IgZG9uZSBkaWZmZXJlbnRseSBsaWtlIGRvaW5nIAppdCBpbiBwYXJhbGxlbCB3aXRo
+IG5vcm1hbCBmcyB1c2FnZSAoc28gdGhlcmUgd2lsbCBiZSBubyBkb3dudGltZSkgPwotLSAKQXJr
+YWRpdXN6IE1pxZtraWV3aWN6ICAgICAgICBQTEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBs
+ICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQtbGludXgub3JnLwoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
