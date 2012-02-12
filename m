@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1CMM3jc211424 for <xfs@oss.sgi.com>; Sun, 12 Feb 2012 16:22:04 -0600
+	q1CMZF91212227 for <xfs@oss.sgi.com>; Sun, 12 Feb 2012 16:35:15 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	s26ceDVmiaaaAoIq for <xfs@oss.sgi.com>;
-	Sun, 12 Feb 2012 14:22:02 -0800 (PST)
-Date: Mon, 13 Feb 2012 09:21:59 +1100
+	QwKjVHAfJXkn19bD for <xfs@oss.sgi.com>;
+	Sun, 12 Feb 2012 14:35:13 -0800 (PST)
+Date: Mon, 13 Feb 2012 09:35:11 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: quotacheck speed
-Message-ID: <20120212222159.GJ12836@dastard>
-References: <201202122201.07649.arekm@maven.pl>
+Subject: Re: Disk spin down
+Message-ID: <20120212223511.GK12836@dastard>
+References: <4F3803B1.1090205@ashurst.eu.org> <20120212200647.GI12836@dastard>
+	<4F382BDF.3070901@ashurst.eu.org> <4F382F00.9040100@ashurst.eu.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201202122201.07649.arekm@maven.pl>
+In-Reply-To: <4F382F00.9040100@ashurst.eu.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,45 +23,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+To: Andy Bennett <andyjpb@ashurst.eu.org>
 Cc: xfs@oss.sgi.com
 
-T24gU3VuLCBGZWIgMTIsIDIwMTIgYXQgMTA6MDE6MDdQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IAo+IEhpLAo+IAo+IFdoZW4gbW91bnRpbmcgODAwR0IgZmlsZXN5c3Rl
-bSAoYWZ0ZXIgcmVwYWlyIGZvciBleGFtcGxlKSBoZXJlIHF1b3RhY2hlY2sgCj4gdGFrZXMgMTAg
-bWludXRlcy4gUXVpdGUgbG9uZyB0aW1lIHRoYXQgYWRkcyB0byB3aG9sZSB0aW1lIG9mIGZpbGVz
-eXN0ZW0gCj4gZG93bnRpbWUgKHJlcGFpciArIHF1b3RhY2hlY2spLgoKSG93IGxvbmcgZG9lcyBh
-IHJlcGFpciB2cyBxdW90YWNoZWNrIG9mIHRoYXQgc2FtZSBmaWxlc3lzdGVtIHRha2U/CnJlcGFp
-ciBoYXMgdG8gaXRlcmF0ZSB0aGUgaW5vZGVzIDItMyB0aW1lcywgc28gaWYgdGhhdCBpcyBmYXN0
-ZXIKdGhhbiBxdW90YWNoZWNrLCB0aGVuIHRoYXQgaXMgcmVhbGx5IGltcG9ydGFudCB0byBrbm93
-Li4uLgoKPiBJIHdvbmRlciBpZiBxdW90YWNoZWNrIGNhbiBiZSBzb21laG93IGltcHJvdmVkIG9y
-IGRvbmUgZGlmZmVyZW50bHkgbGlrZSBkb2luZyAKPiBpdCBpbiBwYXJhbGxlbCB3aXRoIG5vcm1h
-bCBmcyB1c2FnZSAoc28gdGhlcmUgd2lsbCBiZSBubyBkb3dudGltZSkgPwoKcXVvdGFjaGVjayBt
-YWtlcyB0aGUgYXNzdW1wdGlvbiB0aGF0IGl0IGlzIHJ1biBvbiBhbiBvdGhlcndpc2UgaWRsZQpm
-aWxlc3lzdGVtIHRoYXQgbm9ib2R5IGlzIGFjY2Vzc2luZy4gV2VsbCwgd2hhdCBpdCByZXF1aXJl
-cyBpcyB0aGF0Cm5vYm9keSBpcyBtb2RpZnlpbmcgaXQuIFdoYXQgd2UgY291bGQgZG8gaXMgYnJp
-bmcgdGhlIGZpbGVzeXN0ZW0gdXAKaW4gYSBmcm96ZW4gc3RhdGUgc28gdGhhdCByZWFkLW9ubHkg
-YWNjZXNzIGNvdWxkIGJlIG1hZGUgYnV0Cm1vZGlmaWNhdGlvbnMgYXJlIGJsb2NrZWQgdW50aWwg
-dGhlIHF1b3RhY2hlY2sgaXMgY29tcGxldGVkLgoKQWxzbywgcXVvdGFjaGVjayB1c2VzIHRoZSBi
-dWxrc3RhdCBjb2RlIHRvIGl0ZXJhdGUgYWxsIHRoZSBpbm9kZXMKcXVpY2tseS4gSW1wcm92ZW1l
-bnRzIGluIGJ1bGtzdGF0IHNwZWVkIHdpbGwgdHJhbnNsYXRlIGRpcmVjdGx5CmludG8gZmFzdGVy
-IHF1b3RhY2hlY2tzLiBxdW90YWNoZWNrIGNvdWxkIHByb2JhYmx5IGRyaXZlIGJ1bGtzdGF0IGlu
-CmEgcGFyYWxsZWwgbWFubmVyIHRvIGRvIHRoZSBxdW90YWNoZWNrIGZhc3RlciwgYnV0IHRoYXQg
-YXNzdW1lcyB0aGF0CnRoZSB1bmRlcmx5aW5nIHN0b3JhZ2UgaXMgbm90IGFscmVhZHkgc2VlayBi
-b3VuZC4gV2hhdCBpcyB0aGUKdXRpbGlzYXRpb24gb2YgdGhlIHVuZGVybHlpbmcgc3RvcmFnZSBh
-bmQgQ1BVIHdoaWxlIHF1b3RhY2hlY2sgaXMKcnVubmluZz8KCk90aGVyd2lzZSwgYnVsa3N0YXQg
-aW5vZGUgcHJlZmV0Y2hpbmcgY291bGQgYmUgaW1wcm92ZWQgbGlrZQp4ZnNfcmVwYWlyIHdhcyB0
-byBsb29rIGF0IGlub2RlIGNodW5rIGRlbnNpdHkgYW5kIGNoYW5nZSBJTyBwYXR0ZXJucwphbmQg
-dG8gc2xpY2UgYW5kIGRpY2UgbGFyZ2UgSU8gYnVmZmVycyBpbnRvIHNtYWxsZXIgaW5vZGUgYnVm
-ZmVycy4KV2UgY2FuIGFjdHVhbGx5IGRvIHRoYXQgZWZmaWNpZW50bHkgbm93IHRoYXQgd2UgZG9u
-J3QgdXNlIHRoZSBwYWdlCmNhY2hlIGZvciBtZXRhZGF0YSBjYWNoaW5nLiBJZiByZXBhaXIgaXMg
-aXRlcmF0aW5nIGlub2RlcyBmYXN0ZXIKdGhhbiBidWxrc3RhdCwgdGhlbiB0aGlzIG9wdGltaXNh
-dGlvbiB3aWxsIGJlIHRoZSByZWFzb24gYW5kIGhhdmluZwp0aGF0IGRhdGEgcG9pbnQgaXMgdmVy
-eSBpbXBvcnRhbnQuLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZy
-b21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
-YWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Sun, Feb 12, 2012 at 09:28:32PM +0000, Andy Bennett wrote:
+> Hi,
+> 
+> >> Seems to me that something is still dirtying an inode regularly.
+> >>
+> >> Perhaps you need to look at the XFS and writeback event traces to
+> >> find out what process is dirtying the inode. trace-cmd is your
+> >> friend...
+> > 
+> > Something like this?
+> > 
+> > -----
+> > echo 1 > /sys/kernel/debug/tracing/events/xfs/enable
+> > 
+> > echo 0 > /sys/kernel/debug/tracing/events/xfs/enable
+> > 
+> > more /sys/kernel/debug/tracing/trace
+> > -----
+> > 
+> > 
+> > I tried recreating the situation of the last 2 days (clean boot, stopped
+> > services) and it's currently quiescing nicely. :-(
+> > 
+> > I'll keep an eye on it and try to catch it in the act but every time I
+> > turn the tracing on the HDD light stays firmly off. :-(
+> 
+> There is more interesting news already.
+> 
+> I had used 'hdparm -S 120' to set the spindown_timeout to 10 minutes. It
+> appears that that was sticking through a cold boot. Setting that back to
+> its previous value of 1 (5 seconds) makes the disk constantly spin up
+> and down when I suspect it is idle.
+
+Well, that's kind of important to know.
+
+It takes XFS a minimum of 90s to idle a filesystem properly after
+any modification. Setting a spindown time shorter than this will
+cause the disk to spin up and down all the time until the filesystem
+idles itself.
+
+What else have you tuned on your system?
+
+> I've caught a trace over the course of a few spinup/downs and attached
+> it (gzipped as it's 208K unpacked).
+
+Which you've taken about 90s after boot, so while there is probably
+still dirty inodes due to the boot process. Indeed:
+
+       flush-8:0-1225  [002]    91.103273: xfs_ilock: dev 8:6 ino 0x80a124 flags ILOCK_EXCL caller xfs_iomap_write_allocate
+       flush-8:0-1225  [002]    91.103287: xfs_perag_get: dev 8:6 agno 2 refcount 28 caller xfs_bmap_btalloc_nullfb
+       flush-8:0-1225  [002]    91.103290: xfs_perag_put: dev 8:6 agno 2 refcount 27 caller xfs_bmap_btalloc_nullfb
+       flush-8:0-1225  [002]    91.103292: xfs_perag_get: dev 8:6 agno 3 refcount 32 caller xfs_bmap_btalloc_nullfb
+       flush-8:0-1225  [002]    91.103293: xfs_perag_put: dev 8:6 agno 3 refcount 31 caller xfs_bmap_btalloc_nullfb
+       flush-8:0-1225  [002]    91.103295: xfs_perag_get: dev 8:6 agno 2 refcount 28 caller xfs_alloc_vextent
+
+That's data writeback happening, so filesystem idling is still at
+least 90s away from this.  So, it's no surprise your disk is
+spinning up and down here because there is IO being done every 5-10
+seconds which is in the same order of frequency as the IO the system
+is issuing....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
