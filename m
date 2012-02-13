@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DGaSJn023356 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:36:28 -0600
-Message-ID: <4F393C08.6000801@sgi.com>
-Date: Mon, 13 Feb 2012 10:36:24 -0600
-From: Bill Kendall <wkendall@sgi.com>
+	q1DH8SKu026337 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:08:28 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	WmODpboZfHy4Z168 (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Feb 2012 09:08:27 -0800 (PST)
+Date: Mon, 13 Feb 2012 12:08:25 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+Message-ID: <20120213170825.GA7197@infradead.org>
+References: <4F394116.8080200@cape-horn-eng.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfsdump: use the full 32-bit generation number
-References: <1328813180-29095-1-git-send-email-wkendall@sgi.com>
-	<20120212234720.GA3848@infradead.org>
-In-Reply-To: <20120212234720.GA3848@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <4F394116.8080200@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,33 +24,20 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Richard Ems <richard.ems@cape-horn-eng.com>
 Cc: xfs@oss.sgi.com
 
-On 02/12/2012 05:47 PM, Christoph Hellwig wrote:
-> Looks generally good to me, but is there any good reason to not make
-> the -K argument extensible by requiring a version argument, even if
-> that one currently only supports 2 and 3 as valid values?
+On Mon, Feb 13, 2012 at 05:57:58PM +0100, Richard Ems wrote:
+> This is a backup system running dirvish, so most files in the dirs I am
+> removing are hard links. Almost all of the files do have ACLs set.
 
-I thought about doing that, but given the low frequency of format
-changes decided it could wait until there's more than one old format
-to support. -K without an argument could be treated as "generate
-the previous media format", or with an argument it could generate
-a specific format. I'm okay with requiring a version argument though,
-being explicit is better.
-
-FWIW, the way things have always worked is that xfsrestore provides
-backwards compatibility for all dump formats. xfsdump has, until
-now, always generated the current format. It's nice to provide
-the ability to generate old formats during a transition period,
-but long-term I don't see xfsdump retaining support for generating
-all old formats.
-
-Bill
+How many ACLs do you usually have set?  If they aren't stored inline
+but need to go out of the inode unlinks will be extremly slow for
+kernels before v3.2.
 
 _______________________________________________
 xfs mailing list
