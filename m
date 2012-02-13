@@ -1,21 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DHggKa028391 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:42:42 -0600
+	q1DHmHJd028658 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:48:17 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	qG6n8EEtWM4o0cMZ (version=TLSv1 cipher=AES256-SHA bits=256
+	U9aDi7IdYndlSQ8C (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 09:42:41 -0800 (PST)
-Date: Mon, 13 Feb 2012 12:42:40 -0500
+	Mon, 13 Feb 2012 09:48:13 -0800 (PST)
+Date: Mon, 13 Feb 2012 12:48:06 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_fsr: Get the last mount on a specific mount point
-Message-ID: <20120213174240.GA3474@infradead.org>
-References: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
+Subject: Re: concurrent direct IO write in xfs
+Message-ID: <20120213174806.GA7630@infradead.org>
+References: <CAFLer83FBZG9ZCrT2jUZBcTC2a2tx_CDmykyPF4cTP0dbHGw7Q@mail.gmail.com>
+	<20120116232549.GC6922@dastard>
+	<CAFLer81XkMTh_gxd95pzxCEs1yGRsTrZijX3c7ewgRzeA7DCSQ@mail.gmail.com>
+	<20120123051155.GI15102@dastard>
+	<CAFLer82QxfgXEx7ofzOHOK2YKiA+ab+_Aizd10SWHvnC-mVUHg@mail.gmail.com>
+	<CAFLer81GWSCCCMppU=2dE+5KKqD-hYVKAA0hz9n-CBbxAs_xfw@mail.gmail.com>
+	<20120124035431.GD6922@dastard> <20120209060920.GF7479@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <20120209060920.GF7479@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,224 +34,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Zheng Da <zhengda1936@gmail.com>, xfs@oss.sgi.com
 
-Thanks for taking care of this, but this just seems to make the already
-horribly ugly code even worse.
+On Thu, Feb 09, 2012 at 05:09:20PM +1100, Dave Chinner wrote:
+>  	if (create) {
+> -		lockmode = XFS_ILOCK_EXCL;
+> +		/*
+> +		 * For direct IO, we lock in shared mode so that write
+> +		 * operations that don't require allocation can occur
+> +		 * concurrently. The ilock has to be dropped over the allocation
+> +		 * transaction reservation, so the only thing the ilock is
+> +		 * providing here is modification exclusion. i.e. there is no
+> +		 * need to hold the lock exclusive.
+> +		 *
+> +		 * For buffered IO, if we need to do delayed allocation then
+> +		 * hold the ilock exclusive so that the lookup and delalloc
+> +		 * reservation is atomic.
+> +		 */
+> +		if (direct)
+> +			lockmode = XFS_ILOCK_SHARED;
+> +		else
+> +			lockmode = XFS_ILOCK_EXCL;
+>  		xfs_ilock(ip, lockmode);
+>  	} else {
+>  		lockmode = xfs_ilock_map_shared(ip);
 
-What do you think about the version below?
+We'll actually need to use xfs_ilock_map_shared for the the direct
+create case too, to make sure we have the exclusive lock when we first
+read the extent list in.
 
----
-From: Christoph Hellwig <hch@lst.de>
-Subject: fsr: fix /proc/mounts parsing
-
-Make sure we do not reject an XFS root mount just because /dev/root is also
-listed in /proc/mounts.  The root cause for this was the awkward getmntany
-function, which is replaced with a broader reach find_mountpoint function
-which replace getmntany and the surrounding code from the main routine in
-a structured way.  This changes the flow from finding a mounted filesystem
-matching the argument and checking that it's XFS to find a mounted XFS
-filesystem and thus fixes the bug.
-
-Based on analysis and an earlier patch from
-Carlos Maiolino <cmaiolino@redhat.com>.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
----
- fsr/xfs_fsr.c |  142 +++++++++++++++++++++++++++++-----------------------------
- 1 file changed, 72 insertions(+), 70 deletions(-)
-
-Index: xfsprogs-dev/fsr/xfs_fsr.c
-===================================================================
---- xfsprogs-dev.orig/fsr/xfs_fsr.c	2012-02-12 16:30:07.286766766 -0800
-+++ xfsprogs-dev/fsr/xfs_fsr.c	2012-02-12 16:42:39.293447376 -0800
-@@ -109,7 +109,6 @@ static void tmp_init(char *mnt);
- static char * tmp_next(char *mnt);
- static void tmp_close(char *mnt);
- int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
--static int getmntany(FILE *, struct mntent *, struct mntent *, struct stat64 *);
- 
- xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
- 
-@@ -178,18 +177,73 @@ aborter(int unused)
- 	exit(1);
- }
- 
-+/*
-+ * Check if the argument is either the device name or mountpoint of an XFS
-+ * filesystem.  Note that we do not care about bind mounted regular files
-+ * here - the code that handles defragmentation of invidual files takes care
-+ * of that.
-+ */
-+static char *
-+find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
-+{
-+	struct mntent *t;
-+	struct stat64 ms;
-+	FILE *mtabp;
-+	char *mntp = NULL;
-+
-+	mtabp = setmntent(mtab, "r");
-+	if (!mtabp) {
-+		fprintf(stderr, _("%s: cannot read %s\n"),
-+			progname, mtab);
-+		exit(1);
-+	}
-+
-+	while ((t = getmntent(mtabp))) {
-+		if (S_ISDIR(sb->st_mode)) {
-+			if (stat64(t->mnt_dir, &ms) < 0)
-+				continue;
-+			if (sb->st_ino != ms.st_ino)
-+				continue;
-+			if (sb->st_dev != ms.st_dev)
-+				continue;
-+		} else {
-+			if (stat64(t->mnt_fsname, &ms) < 0)
-+				continue;
-+			if (sb->st_rdev != ms.st_rdev)
-+				continue;
-+		}
-+
-+		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
-+			continue;
-+
-+		/*
-+		 * If we found an entry based on the device name make sure we
-+		 * stat the mountpoint that the mtab gave actually is accessible
-+		 * before using it.
-+		 */
-+		if (S_ISBLK(sb->st_mode)) {
-+			struct stat64 sb2;
-+
-+			if (stat64(t->mnt_dir, &sb2) < 0)
-+				continue;
-+		}
-+
-+		mntp = t->mnt_dir;
-+		break;
-+	}
-+
-+	endmntent(mtabp);
-+	return mntp;
-+}
-+
- int
- main(int argc, char **argv)
- {
--	struct stat64 sb, sb2;
-+	struct stat64 sb;
- 	char *argname;
--	char *cp;
- 	int c;
--	struct mntent mntpref;
--	register struct mntent *mntp;
--	struct mntent ment;
-+	char *mntp;
- 	char *mtab = NULL;
--	register FILE *mtabp;
- 
- 	setlinebuf(stdout);
- 	progname = basename(argv[0]);
-@@ -281,49 +335,26 @@ main(int argc, char **argv)
- 	if (optind < argc) {
- 		for (; optind < argc; optind++) {
- 			argname = argv[optind];
--			mntp = NULL;
-+
- 			if (lstat64(argname, &sb) < 0) {
- 				fprintf(stderr,
- 					_("%s: could not stat: %s: %s\n"),
- 					progname, argname, strerror(errno));
- 				continue;
- 			}
--			if (S_ISLNK(sb.st_mode) && stat64(argname, &sb2) == 0 &&
--			    (S_ISBLK(sb2.st_mode) || S_ISCHR(sb2.st_mode)))
--				sb = sb2;
--			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
--				if ((mtabp = setmntent(mtab, "r")) == NULL) {
--					fprintf(stderr,
--						_("%s: cannot read %s\n"),
--						progname, mtab);
--					exit(1);
--				}
--				bzero(&mntpref, sizeof(mntpref));
--				if (S_ISDIR(sb.st_mode))
--					mntpref.mnt_dir = argname;
--				else
--					mntpref.mnt_fsname = argname;
- 
--				if (getmntany(mtabp, &ment, &mntpref, &sb) &&
--				    strcmp(ment.mnt_type, MNTTYPE_XFS) == 0) {
--					mntp = &ment;
--					if (S_ISBLK(sb.st_mode)) {
--						cp = mntp->mnt_dir;
--						if (cp == NULL ||
--						    stat64(cp, &sb2) < 0) {
--							fprintf(stderr, _(
--						"%s: could not stat: %s: %s\n"),
--							progname, argname,
--							strerror(errno));
--							continue;
--						}
--						sb = sb2;
--						argname = cp;
--					}
--				}
-+			if (S_ISLNK(sb.st_mode)) {
-+				struct stat64 sb2;
-+
-+				if (stat64(argname, &sb2) == 0 &&
-+				    (S_ISBLK(sb2.st_mode) ||
-+				     S_ISCHR(sb2.st_mode)))
-+				sb = sb2;
- 			}
-+
-+			mntp = find_mountpoint(mtab, argname, &sb);
- 			if (mntp != NULL) {
--				fsrfs(mntp->mnt_dir, 0, 100);
-+				fsrfs(mntp, 0, 100);
- 			} else if (S_ISCHR(sb.st_mode)) {
- 				fprintf(stderr, _(
- 					"%s: char special not supported: %s\n"),
-@@ -1639,35 +1670,6 @@ fsrprintf(const char *fmt, ...)
- }
- 
- /*
-- * emulate getmntany
-- */
--static int
--getmntany(FILE *fp, struct mntent *mp, struct mntent *mpref, struct stat64 *s)
--{
--	struct mntent *t;
--	struct stat64 ms;
--
--	while ((t = getmntent(fp))) {
--		if (mpref->mnt_fsname) {	/* device */
--			if (stat64(t->mnt_fsname, &ms) < 0)
--				continue;
--			if (s->st_rdev != ms.st_rdev)
--				continue;
--		}
--		if (mpref->mnt_dir) {		/* mount point */
--			if (stat64(t->mnt_dir, &ms) < 0)
--				continue;
--			if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
--				continue;
--		}
--		*mp = *t;
--		break;
--	}
--	return (t != NULL);
--}
--
--
--/*
-  * Initialize a directory for tmp file use.  This is used
-  * by the full filesystem defragmentation when we're walking
-  * the inodes and do not know the path for the individual
+Also xfs_qm_dqattach_locked really wants the inode locked exclusively,
+which your current code doesn't handle.
 
 _______________________________________________
 xfs mailing list
