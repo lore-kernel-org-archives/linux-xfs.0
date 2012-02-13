@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DHrlbV028919 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:53:47 -0600
+	q1DIAEH1029924 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 12:10:14 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wkCARSa3eLnY4H12 (version=TLSv1 cipher=AES256-SHA bits=256
+	zZsZ3VVoD9kFYPS1 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 09:53:46 -0800 (PST)
-Date: Mon, 13 Feb 2012 12:53:44 -0500
+	Mon, 13 Feb 2012 10:10:13 -0800 (PST)
+Date: Mon, 13 Feb 2012 13:10:12 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3 v2] xfstests: add btrfs online defragments QA test
-Message-ID: <20120213175344.GA15040@infradead.org>
-References: <1328766034-1324-1-git-send-email-liubo2009@cn.fujitsu.com>
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+Message-ID: <20120213181012.GA27962@infradead.org>
+References: <4F394116.8080200@cape-horn-eng.com>
+	<20120213170825.GA7197@infradead.org>
+	<4F394442.9020307@cape-horn-eng.com>
+	<20120213171556.GA13449@infradead.org>
+	<4F3947D6.5060402@cape-horn-eng.com>
+	<20120213172937.GA25248@infradead.org>
+	<4F394E10.9000804@cape-horn-eng.com>
+	<20120213180220.GA24163@infradead.org>
+	<4F395134.8030202@cape-horn-eng.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1328766034-1324-1-git-send-email-liubo2009@cn.fujitsu.com>
+In-Reply-To: <4F395134.8030202@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,126 +36,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Liu Bo <liubo2009@cn.fujitsu.com>
-Cc: hch@infradead.org, linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-This still needs a bit more work:
+On Mon, Feb 13, 2012 at 07:06:44PM +0100, Richard Ems wrote:
+> So
+> 
+> 1. use kernels > 3.2, if XFS partition was not created using "-i size=1024"
 
-> +test_path="`pwd`"
-> +progs_dir="$test_path/src/btrfs_online_defragment/"
+Yes.
 
-this isn't actually used.
+> 2. if XFS partition was created using "-i size=1024", kernels < 3.2 will
+> also be fast while unlinking files with out of line attributes
 
+Exactly.
 
-> +tmp=tmp/$$
-> +defrag_args="$test_path/${seq}.args"
-
-Just hardcode the arguments, preferably without the args file
-indirection.
-
-> +_create_file()
-> +{
-> +	CNT=11999
-> +	FILESIZE=48000
-> +	if [ "$DEFRAG_TARGET" = "1" ];then
-> +		for i in `seq $CNT -1 0`; do
-> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
-> +			 conv=notrunc seek=$i oflag=sync &>/dev/null
-> +		done
-> +		# get md5sum
-> +		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
-> +	elif [ "$DEFRAG_TARGET" = "2" ];then
-> +		mkdir $SCRATCH_MNT/tmp_dir
-> +		for i in `seq $CNT -1 0`; do
-> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_dir/tmp_file bs=4k \
-> +			count=1 conv=notrunc seek=$i oflag=sync &>/dev/null
-> +		done
-> +		# get md5sum
-> +		md5sum $SCRATCH_MNT/tmp_dir/tmp_file > /tmp/checksum
-> +	elif [ "$DEFRAG_TARGET" = "3" ];then
-> +		for i in `seq $CNT -1 0`; do
-> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
-> +			conv=notrunc seek=$i oflag=sync &>/dev/null
-> +		done
-> +		# get md5sum
-> +		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
-> +	fi
-> +}
-
-It seems like each of these cases should be a different function.
-
-> +_btrfs_online_defrag()
-> +{
-> +	str=""
-> +	if [ "$FILE_RANGE" = "2" ];then
-> +		str="$str -s -1 -l $((FILESIZE / 2)) "
-> +	elif [ "$FILE_RANGE" = "3" ];then
-> +		str="$str -s $((FILESIZE + 1)) -l $((FILESIZE / 2)) "
-> +		HAVE_DEFRAG=1
-> +	elif [ "$FILE_RANGE" = "4" ];then
-> +		str="$str -l -1 "
-> +	elif [ "$FILE_RANGE" = "5" ];then
-> +		str="$str -l $((FILESIZE + 1)) "
-> +	elif [ "$FILE_RANGE" = "6" ];then
-> +		str="$str -l $((FILESIZE / 2)) "
-> +	fi
-> +
-> +	if [ "$DEFRAG_COMPRESS" = "2" ];then
-> +		str="$str -c "
-> +	fi
-> +
-> +	if [ "$FLUSH" = "2" ];then
-> +		str="$str -f "
-> +	fi
-> +
-> +	if [ "$THRESH" = "2" ];then
-> +		str="$str -t -1 "
-> +	elif [ "$THRESH" = "3" ];then
-> +		str="$str -t $PAGESIZE "
-> +	fi
-> +
-> +	if [ "$str" != "" ]; then
-> +		btrfs filesystem defragment $str $SCRATCH_MNT/tmp_file
-> +	else
-> +		if [ "$DEFRAG_TARGET" = "1" ];then
-> +			btrfs filesystem defragment $SCRATCH_MNT/tmp_file
-> +		elif [ "$DEFRAG_TARGET" = "2" ];then
-> +			btrfs filesystem defragment $SCRATCH_MNT/tmp_dir
-> +		elif [ "$DEFRAG_TARGET" = "3" ];then
-> +			btrfs filesystem defragment $SCRATCH_MNT
-> +		fi
-> +	fi
-> +	ret_val=$?
-> +	sync
-> +	if [ $ret_val -ne 20 ];then
-> +		echo "btrfs filesystem defragment failed! err is $ret_val"
-> +	fi
-> +}
-
-> +_fsck()
-> +{
-> +	btrfsck $SCRATCH_DEV > /dev/null 2>&1
-> +	ret_val=$?
-> +	if [ $ret_val -ne 0 ]; then
-> +		echo "btrfsck _FAIL_! err is $ret_val"
-> +	fi
-> +}
-
-This should use the generic xfstests fsck invocation wrappers.
-
-> +_parse_options()
-
-Please don't use an option parser but just call the low-level file
-creation functions directly.
-
-> +_cleanup_defrag()
-> +{
-> +	rm -fr $SCRATCH_MNT/*
-> +	umount $SCRATCH_MNT > /dev/null 2>&1
-> +}
-
-No need to remove everything as the scratch filesystem gets recreated
-every time.
+For workloads like yours creating the large inodes (probably only with
+512 byte inodes, though) will be preferably if you have a choice, as it
+should be even faster.
 
 _______________________________________________
 xfs mailing list
