@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DHTd70027675 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:29:39 -0600
+	q1DHFxjq026850 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:15:59 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	1GNDRm5uVC14EtuD (version=TLSv1 cipher=AES256-SHA bits=256
+	dRcMGvgmBgQhIEQK (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 09:29:38 -0800 (PST)
-Date: Mon, 13 Feb 2012 12:29:37 -0500
+	Mon, 13 Feb 2012 09:15:58 -0800 (PST)
+Date: Mon, 13 Feb 2012 12:15:56 -0500
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
-Message-ID: <20120213172937.GA25248@infradead.org>
+Message-ID: <20120213171556.GA13449@infradead.org>
 References: <4F394116.8080200@cape-horn-eng.com>
 	<20120213170825.GA7197@infradead.org>
 	<4F394442.9020307@cape-horn-eng.com>
-	<20120213171556.GA13449@infradead.org>
-	<4F3947D6.5060402@cape-horn-eng.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F3947D6.5060402@cape-horn-eng.com>
+In-Reply-To: <4F394442.9020307@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,35 +31,38 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Richard Ems <richard.ems@cape-horn-eng.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Feb 13, 2012 at 06:26:46PM +0100, Richard Ems wrote:
-> YES. All files (and dirs) that I checked do show something as
+On Mon, Feb 13, 2012 at 06:11:30PM +0100, Richard Ems wrote:
+> On 02/13/2012 06:08 PM, Christoph Hellwig wrote:
+> > On Mon, Feb 13, 2012 at 05:57:58PM +0100, Richard Ems wrote:
+> >> This is a backup system running dirvish, so most files in the dirs I am
+> >> removing are hard links. Almost all of the files do have ACLs set.
+> > 
+> > How many ACLs do you usually have set?  If they aren't stored inline
+> > but need to go out of the inode unlinks will be extremly slow for
+> > kernels before v3.2.
+> > 
 > 
-> 0: [0..7]: 18531216..18531223
-> 
-> So, what improvements can I expect from a kernel > 3.2 ?
-> Can I read somewhere about the changes/patches introduced?
+> Almost all dirs and files there do have ACLs set.
+> Each of them do have about 10 user ACLs and 10 default ACls.
+> Is that too many?
+> Is this then the reason for being that slow?
 
-On some crazy workloads I've seen speedups up to a factor of 10.000 (5
-orders or magnitude).  You probably won't get that much of a speedup,
-but it will still be significant.
+That doesn't sound like a lot to me, but instead of guessing around,
+let's just check the actual facts.
 
-The patch in mainline for this is:
+Does "xfs_bmap -a" for the kind of files you are deleting show any
+extents? If it doesn't the output will look like:
 
-commit 859f57ca00805e6c482eef1a7ab073097d02c8ca
-Author: Christoph Hellwig <hch@infradead.org>
-Date:   Sat Aug 27 14:45:11 2011 +0000
+# xfs_bmap -a internal
+internal: no extents
 
-    xfs: avoid synchronous transactions when deleting attr blocks
+if it has any it will look like:
 
-> Is there another way to mount/create/mkfs the XFS to improve the unlink
-> time for this case?
-
-Try increasing the inode size during filesystem creating using the
-"-i size=512" option or even "-i size=1024" if you still have
-out of line attributes.  The should give you even bigger speedups
-for this workload than the patch above.
+# xfs_bmap -a external
+external:
+	0: [0..7]: 8557712..8557719
 
 _______________________________________________
 xfs mailing list
