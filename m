@@ -1,13 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Date: Mon, 13 Feb 2012 15:10:27 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] XFS; xfs_trans_add_item() - don't assign in ASSERT()
-	when compare is intended
-Message-ID: <20120213211027.GV8262@sgi.com>
-References: <alpine.LNX.2.00.1202132149270.16039@swampdragon.chaosbits.net>
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
+	q1DNDkEJ049752 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 17:13:46 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	GDN3MIfzp1UCBImb for <xfs@oss.sgi.com>;
+	Mon, 13 Feb 2012 15:13:44 -0800 (PST)
+Date: Tue, 14 Feb 2012 10:13:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: quotacheck speed
+Message-ID: <20120213231341.GC14132@dastard>
+References: <201202122201.07649.arekm@maven.pl>
+	<20120212222159.GJ12836@dastard>
+	<201202131916.51209.arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LNX.2.00.1202132149270.16039@swampdragon.chaosbits.net>
+In-Reply-To: <201202131916.51209.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,47 +24,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jesper Juhl <jj@chaosbits.net>
-Cc: xfs-masters@oss.sgi.com, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 13, 2012 at 09:51:05PM +0100, Jesper Juhl wrote:
-> It looks to me like the two ASSERT()s in xfs_trans_add_item() really
-> want to do a compare (==) rather than assignment (=).
-> This patch changes it from the former to the latter.
-                                 latter        former
-
-I'll update your comment as you suggested.
-
-> I must admit though, that I don't know this code well and have only
-> compile tested this change. But if assignment is really intended it
-> really seems strange to do it as part of an ASSERT...
-> 
-> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
-> ---
->  fs/xfs/xfs_trans.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> index 329b06a..7adcdf1 100644
-> --- a/fs/xfs/xfs_trans.c
-> +++ b/fs/xfs/xfs_trans.c
-> @@ -1151,8 +1151,8 @@ xfs_trans_add_item(
->  {
->  	struct xfs_log_item_desc *lidp;
->  
-> -	ASSERT(lip->li_mountp = tp->t_mountp);
-> -	ASSERT(lip->li_ailp = tp->t_mountp->m_ail);
-> +	ASSERT(lip->li_mountp == tp->t_mountp);
-> +	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
-
-Yeah, nice find...  ;)
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gTW9uLCBGZWIgMTMsIDIwMTIgYXQgMDc6MTY6NTFQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIFN1bmRheSAxMiBvZiBGZWJydWFyeSAyMDEyLCBEYXZlIENoaW5u
+ZXIgd3JvdGU6Cj4gPiBPbiBTdW4sIEZlYiAxMiwgMjAxMiBhdCAxMDowMTowN1BNICswMTAwLCBB
+cmthZGl1c3ogTWnFm2tpZXdpY3ogd3JvdGU6Cj4gPiA+IEhpLAo+ID4gPiAKPiA+ID4gV2hlbiBt
+b3VudGluZyA4MDBHQiBmaWxlc3lzdGVtIChhZnRlciByZXBhaXIgZm9yIGV4YW1wbGUpIGhlcmUg
+cXVvdGFjaGVjawo+ID4gPiB0YWtlcyAxMCBtaW51dGVzLiBRdWl0ZSBsb25nIHRpbWUgdGhhdCBh
+ZGRzIHRvIHdob2xlIHRpbWUgb2YgZmlsZXN5c3RlbQo+ID4gPiBkb3dudGltZSAocmVwYWlyICsg
+cXVvdGFjaGVjaykuCj4gPiAKPiA+IEhvdyBsb25nIGRvZXMgYSByZXBhaXIgdnMgcXVvdGFjaGVj
+ayBvZiB0aGF0IHNhbWUgZmlsZXN5c3RlbSB0YWtlPwo+ID4gcmVwYWlyIGhhcyB0byBpdGVyYXRl
+IHRoZSBpbm9kZXMgMi0zIHRpbWVzLCBzbyBpZiB0aGF0IGlzIGZhc3Rlcgo+ID4gdGhhbiBxdW90
+YWNoZWNrLCB0aGVuIHRoYXQgaXMgcmVhbGx5IGltcG9ydGFudCB0byBrbm93Li4uLgo+IAo+IERv
+bid0IGhhdmUgZXhhY3QgdGltZXMgYnV0IGxvb2tpbmcgYXQgbmFnaW9zIGFuZCBkbWVzZyBpdCB0
+b29rIGFib3V0Ogo+IHJlcGFpciB+MjAgbWludXRlcywgcXVvdGFjaGVjayB+MTAgbWludXRlcyAo
+aXQncyA4MDBHQiBvZiBtYWlsZGlycykuCgpPay4gU2VlbXMgbGlrZSByZXBhaXIgaXMgYSBsaXR0
+bGUgZmFzdGVyIHRoYW4gcXVvdGFjaGVjaywgdGhlbi4KCj4gPiA+IEkgd29uZGVyIGlmIHF1b3Rh
+Y2hlY2sgY2FuIGJlIHNvbWVob3cgaW1wcm92ZWQgb3IgZG9uZSBkaWZmZXJlbnRseSBsaWtlCj4g
+PiA+IGRvaW5nIGl0IGluIHBhcmFsbGVsIHdpdGggbm9ybWFsIGZzIHVzYWdlIChzbyB0aGVyZSB3
+aWxsIGJlIG5vIGRvd250aW1lKQo+ID4gPiA/Cj4gPiAKPiA+IHF1b3RhY2hlY2sgbWFrZXMgdGhl
+IGFzc3VtcHRpb24gdGhhdCBpdCBpcyBydW4gb24gYW4gb3RoZXJ3aXNlIGlkbGUKPiA+IGZpbGVz
+eXN0ZW0gdGhhdCBub2JvZHkgaXMgYWNjZXNzaW5nLiBXZWxsLCB3aGF0IGl0IHJlcXVpcmVzIGlz
+IHRoYXQKPiA+IG5vYm9keSBpcyBtb2RpZnlpbmcgaXQuIFdoYXQgd2UgY291bGQgZG8gaXMgYnJp
+bmcgdGhlIGZpbGVzeXN0ZW0gdXAKPiA+IGluIGEgZnJvemVuIHN0YXRlIHNvIHRoYXQgcmVhZC1v
+bmx5IGFjY2VzcyBjb3VsZCBiZSBtYWRlIGJ1dAo+ID4gbW9kaWZpY2F0aW9ucyBhcmUgYmxvY2tl
+ZCB1bnRpbCB0aGUgcXVvdGFjaGVjayBpcyBjb21wbGV0ZWQuCj4gCj4gUmVhZC1vbmx5IGlzIGJl
+dHRlciB0aGFuIG5vIGFjY2VzcyBhdCBhbGwuIEkgd2FzIGhvcGluZyB0aGF0IHRoZXJlIGlzIGEg
+d2F5IHRvIAo+IG1ha2UgcXVvdGFjaGVjayBiZWluZyByZWNhbGN1bGF0ZWQgb24gdGhlIGZseSB3
+aXRoIHRha2luZyBhbGwgd3JpdGUgYWNjZXNzZXMgCj4gdGhhdCBoYXBwZW4gaW4gbWVhbnRpbWUg
+aW50byBhY2NvdW50LgoKVGhlIHByb2JsZW0gaXMgdGhhdCB3ZSdkIG5lZWQgdG8ga2VlcCB0d28g
+c2V0cyBvZiBkcXVvdHMgaW4gbWVtb3J5CmZvciBlYWNoIHF1b3RhIHVzZXIgd2hpbGUgdGhlIHF1
+b3RhIGNoZWNrIGlzIGJlaW5nIGRvbmUgLSBvbmUgdG8KdHJhY2sgbW9kaWZpY2F0aW9ucyBiZWlu
+ZyBtYWRlLCBhbmQgdGhlIG90aGVyIHRvIHRyYWNrIHF1b3RhY2hlY2sKcHJvZ3Jlc3MuIEl0IGdl
+dHMgY29tcGxleCBxdWl0ZSByYXBpZGx5IHRoZW4gLSB3aGVyZSBkbyB3ZSBhY2NvdW50CmNoYW5n
+ZXMgdG8gYW4gaW5vZGUgdGhhdCBoYXNuJ3QgYmVlbiBxdW90YS1jaGVja2VkIHlldD8gT3Igdmlj
+ZQp2ZXJzYT8gSG93IGRvIHdlIGV2ZW4ga25vdyBpZiBhbiBpbm9kZSBoYXMgYmVlbiBxdW90YSBj
+aGVja2VkPwoKVEhlc2UgYXJlIHByb2JhYmx5IGFsbCB0aGluZ3MgdGhhdCBjYW4gYmUgc29sdmVk
+LCBidXQgSSBnZXQgbG9zdCBpbgp0aGUgY29tcGxleGl0eSB3aGVuIGp1c3QgdGhpbmtpbmcgYWJv
+dXQgaXQuLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJp
+dC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
