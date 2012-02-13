@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DHrNin028885 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:53:23 -0600
-Received: from smtprelay03.ispgateway.de (smtprelay03.ispgateway.de
-	[80.67.18.15]) by cuda.sgi.com with ESMTP id gbGc8GTSkyoPib6W
-	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 09:53:21 -0800 (PST)
-Message-ID: <4F394E10.9000804@cape-horn-eng.com>
-Date: Mon, 13 Feb 2012 18:53:20 +0100
-From: Richard Ems <richard.ems@cape-horn-eng.com>
+	q1DHggKa028391 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 11:42:42 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	qG6n8EEtWM4o0cMZ (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Feb 2012 09:42:41 -0800 (PST)
+Date: Mon, 13 Feb 2012 12:42:40 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs_fsr: Get the last mount on a specific mount point
+Message-ID: <20120213174240.GA3474@infradead.org>
+References: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
-References: <4F394116.8080200@cape-horn-eng.com>
-	<20120213170825.GA7197@infradead.org>
-	<4F394442.9020307@cape-horn-eng.com>
-	<20120213171556.GA13449@infradead.org>
-	<4F3947D6.5060402@cape-horn-eng.com>
-	<20120213172937.GA25248@infradead.org>
-In-Reply-To: <20120213172937.GA25248@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,71 +24,228 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 02/13/2012 06:29 PM, Christoph Hellwig wrote:
-> On Mon, Feb 13, 2012 at 06:26:46PM +0100, Richard Ems wrote:
->> YES. All files (and dirs) that I checked do show something as
->>
->> 0: [0..7]: 18531216..18531223
->>
->> So, what improvements can I expect from a kernel > 3.2 ?
->> Can I read somewhere about the changes/patches introduced?
-> =
+Thanks for taking care of this, but this just seems to make the already
+horribly ugly code even worse.
 
-> On some crazy workloads I've seen speedups up to a factor of 10.000 (5
-> orders or magnitude).  You probably won't get that much of a speedup,
-> but it will still be significant.
-> =
+What do you think about the version below?
 
-> The patch in mainline for this is:
-> =
+---
+From: Christoph Hellwig <hch@lst.de>
+Subject: fsr: fix /proc/mounts parsing
 
-> commit 859f57ca00805e6c482eef1a7ab073097d02c8ca
-> Author: Christoph Hellwig <hch@infradead.org>
-> Date:   Sat Aug 27 14:45:11 2011 +0000
-> =
+Make sure we do not reject an XFS root mount just because /dev/root is also
+listed in /proc/mounts.  The root cause for this was the awkward getmntany
+function, which is replaced with a broader reach find_mountpoint function
+which replace getmntany and the surrounding code from the main routine in
+a structured way.  This changes the flow from finding a mounted filesystem
+matching the argument and checking that it's XFS to find a mounted XFS
+filesystem and thus fixes the bug.
 
->     xfs: avoid synchronous transactions when deleting attr blocks
-> =
+Based on analysis and an earlier patch from
+Carlos Maiolino <cmaiolino@redhat.com>.
 
->> Is there another way to mount/create/mkfs the XFS to improve the unlink
->> time for this case?
-> =
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-> Try increasing the inode size during filesystem creating using the
-> "-i size=3D512" option or even "-i size=3D1024" if you still have
-> out of line attributes.  The should give you even bigger speedups
-> for this workload than the patch above.
-> =
+---
+ fsr/xfs_fsr.c |  142 +++++++++++++++++++++++++++++-----------------------------
+ 1 file changed, 72 insertions(+), 70 deletions(-)
 
-
-Ok, Many thanks for this good info!
-
-I will try to install a > 3.2 kernel and will create new XFS partitions
-with "-i size=3D1024", since we use ACLs a lot for user access.
-Is there a chance to change existing XFS partitions to "-i size=3D1024" ?
-I already have 5 big partitions, all full of ACLs and not running
-kernels > 3.2 !
-
-Many thanks again,
-Richard
-
-
--- =
-
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
-
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+Index: xfsprogs-dev/fsr/xfs_fsr.c
+===================================================================
+--- xfsprogs-dev.orig/fsr/xfs_fsr.c	2012-02-12 16:30:07.286766766 -0800
++++ xfsprogs-dev/fsr/xfs_fsr.c	2012-02-12 16:42:39.293447376 -0800
+@@ -109,7 +109,6 @@ static void tmp_init(char *mnt);
+ static char * tmp_next(char *mnt);
+ static void tmp_close(char *mnt);
+ int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
+-static int getmntany(FILE *, struct mntent *, struct mntent *, struct stat64 *);
+ 
+ xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
+ 
+@@ -178,18 +177,73 @@ aborter(int unused)
+ 	exit(1);
+ }
+ 
++/*
++ * Check if the argument is either the device name or mountpoint of an XFS
++ * filesystem.  Note that we do not care about bind mounted regular files
++ * here - the code that handles defragmentation of invidual files takes care
++ * of that.
++ */
++static char *
++find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
++{
++	struct mntent *t;
++	struct stat64 ms;
++	FILE *mtabp;
++	char *mntp = NULL;
++
++	mtabp = setmntent(mtab, "r");
++	if (!mtabp) {
++		fprintf(stderr, _("%s: cannot read %s\n"),
++			progname, mtab);
++		exit(1);
++	}
++
++	while ((t = getmntent(mtabp))) {
++		if (S_ISDIR(sb->st_mode)) {
++			if (stat64(t->mnt_dir, &ms) < 0)
++				continue;
++			if (sb->st_ino != ms.st_ino)
++				continue;
++			if (sb->st_dev != ms.st_dev)
++				continue;
++		} else {
++			if (stat64(t->mnt_fsname, &ms) < 0)
++				continue;
++			if (sb->st_rdev != ms.st_rdev)
++				continue;
++		}
++
++		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
++			continue;
++
++		/*
++		 * If we found an entry based on the device name make sure we
++		 * stat the mountpoint that the mtab gave actually is accessible
++		 * before using it.
++		 */
++		if (S_ISBLK(sb->st_mode)) {
++			struct stat64 sb2;
++
++			if (stat64(t->mnt_dir, &sb2) < 0)
++				continue;
++		}
++
++		mntp = t->mnt_dir;
++		break;
++	}
++
++	endmntent(mtabp);
++	return mntp;
++}
++
+ int
+ main(int argc, char **argv)
+ {
+-	struct stat64 sb, sb2;
++	struct stat64 sb;
+ 	char *argname;
+-	char *cp;
+ 	int c;
+-	struct mntent mntpref;
+-	register struct mntent *mntp;
+-	struct mntent ment;
++	char *mntp;
+ 	char *mtab = NULL;
+-	register FILE *mtabp;
+ 
+ 	setlinebuf(stdout);
+ 	progname = basename(argv[0]);
+@@ -281,49 +335,26 @@ main(int argc, char **argv)
+ 	if (optind < argc) {
+ 		for (; optind < argc; optind++) {
+ 			argname = argv[optind];
+-			mntp = NULL;
++
+ 			if (lstat64(argname, &sb) < 0) {
+ 				fprintf(stderr,
+ 					_("%s: could not stat: %s: %s\n"),
+ 					progname, argname, strerror(errno));
+ 				continue;
+ 			}
+-			if (S_ISLNK(sb.st_mode) && stat64(argname, &sb2) == 0 &&
+-			    (S_ISBLK(sb2.st_mode) || S_ISCHR(sb2.st_mode)))
+-				sb = sb2;
+-			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
+-				if ((mtabp = setmntent(mtab, "r")) == NULL) {
+-					fprintf(stderr,
+-						_("%s: cannot read %s\n"),
+-						progname, mtab);
+-					exit(1);
+-				}
+-				bzero(&mntpref, sizeof(mntpref));
+-				if (S_ISDIR(sb.st_mode))
+-					mntpref.mnt_dir = argname;
+-				else
+-					mntpref.mnt_fsname = argname;
+ 
+-				if (getmntany(mtabp, &ment, &mntpref, &sb) &&
+-				    strcmp(ment.mnt_type, MNTTYPE_XFS) == 0) {
+-					mntp = &ment;
+-					if (S_ISBLK(sb.st_mode)) {
+-						cp = mntp->mnt_dir;
+-						if (cp == NULL ||
+-						    stat64(cp, &sb2) < 0) {
+-							fprintf(stderr, _(
+-						"%s: could not stat: %s: %s\n"),
+-							progname, argname,
+-							strerror(errno));
+-							continue;
+-						}
+-						sb = sb2;
+-						argname = cp;
+-					}
+-				}
++			if (S_ISLNK(sb.st_mode)) {
++				struct stat64 sb2;
++
++				if (stat64(argname, &sb2) == 0 &&
++				    (S_ISBLK(sb2.st_mode) ||
++				     S_ISCHR(sb2.st_mode)))
++				sb = sb2;
+ 			}
++
++			mntp = find_mountpoint(mtab, argname, &sb);
+ 			if (mntp != NULL) {
+-				fsrfs(mntp->mnt_dir, 0, 100);
++				fsrfs(mntp, 0, 100);
+ 			} else if (S_ISCHR(sb.st_mode)) {
+ 				fprintf(stderr, _(
+ 					"%s: char special not supported: %s\n"),
+@@ -1639,35 +1670,6 @@ fsrprintf(const char *fmt, ...)
+ }
+ 
+ /*
+- * emulate getmntany
+- */
+-static int
+-getmntany(FILE *fp, struct mntent *mp, struct mntent *mpref, struct stat64 *s)
+-{
+-	struct mntent *t;
+-	struct stat64 ms;
+-
+-	while ((t = getmntent(fp))) {
+-		if (mpref->mnt_fsname) {	/* device */
+-			if (stat64(t->mnt_fsname, &ms) < 0)
+-				continue;
+-			if (s->st_rdev != ms.st_rdev)
+-				continue;
+-		}
+-		if (mpref->mnt_dir) {		/* mount point */
+-			if (stat64(t->mnt_dir, &ms) < 0)
+-				continue;
+-			if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
+-				continue;
+-		}
+-		*mp = *t;
+-		break;
+-	}
+-	return (t != NULL);
+-}
+-
+-
+-/*
+  * Initialize a directory for tmp file use.  This is used
+  * by the full filesystem defragmentation when we're walking
+  * the inodes and do not know the path for the individual
 
 _______________________________________________
 xfs mailing list
