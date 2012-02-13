@@ -1,30 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
-	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DLGxpZ042657 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 15:16:59 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	6fVLO2qPP1opneTW (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 13:16:55 -0800 (PST)
-Date: Mon, 13 Feb 2012 16:16:54 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
-Message-ID: <20120213211654.GA20192@infradead.org>
-References: <20120213170825.GA7197@infradead.org>
-	<4F394442.9020307@cape-horn-eng.com>
-	<20120213171556.GA13449@infradead.org>
-	<4F3947D6.5060402@cape-horn-eng.com>
-	<20120213172937.GA25248@infradead.org>
-	<4F394E10.9000804@cape-horn-eng.com>
-	<20120213180220.GA24163@infradead.org>
-	<4F395134.8030202@cape-horn-eng.com>
-	<20120213181012.GA27962@infradead.org>
-	<4F395B1A.7010709@cape-horn-eng.com>
+Date: Mon, 13 Feb 2012 15:10:27 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] XFS; xfs_trans_add_item() - don't assign in ASSERT()
+	when compare is intended
+Message-ID: <20120213211027.GV8262@sgi.com>
+References: <alpine.LNX.2.00.1202132149270.16039@swampdragon.chaosbits.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F395B1A.7010709@cape-horn-eng.com>
+In-Reply-To: <alpine.LNX.2.00.1202132149270.16039@swampdragon.chaosbits.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,27 +20,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Ems <richard.ems@cape-horn-eng.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Jesper Juhl <jj@chaosbits.net>
+Cc: xfs-masters@oss.sgi.com, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Feb 13, 2012 at 07:48:58PM +0100, Richard Ems wrote:
-> I already updated to 3.2.4 and started the same "find dir" command again
-> that previously took 100 min to run. It has been running now for over 30
-> min ...
+On Mon, Feb 13, 2012 at 09:51:05PM +0100, Jesper Juhl wrote:
+> It looks to me like the two ASSERT()s in xfs_trans_add_item() really
+> want to do a compare (==) rather than assignment (=).
+> This patch changes it from the former to the latter.
+                                 latter        former
+
+I'll update your comment as you suggested.
+
+> I must admit though, that I don't know this code well and have only
+> compile tested this change. But if assignment is really intended it
+> really seems strange to do it as part of an ASSERT...
 > 
-> Should this "find" run time also improve ?
+> Signed-off-by: Jesper Juhl <jj@chaosbits.net>
+> ---
+>  fs/xfs/xfs_trans.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 329b06a..7adcdf1 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -1151,8 +1151,8 @@ xfs_trans_add_item(
+>  {
+>  	struct xfs_log_item_desc *lidp;
+>  
+> -	ASSERT(lip->li_mountp = tp->t_mountp);
+> -	ASSERT(lip->li_ailp = tp->t_mountp->m_ail);
+> +	ASSERT(lip->li_mountp == tp->t_mountp);
+> +	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
 
-No, not by that change anyway.
-
-> Or will only unlink run time improve ?
-
-Yes.
-
-> Do I have to mount the XFS partition with some new/old/special option?
-
-I'd have to look into it in more detail.  IIRC you said you're using
-RAID6 which can be fairly nasty for small reads.  Did you use the
-inode64 mount option on the filesystem?
+Yeah, nice find...  ;)
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
