@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1CNmsNm216763 for <xfs@oss.sgi.com>; Sun, 12 Feb 2012 17:48:55 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	VwFRTcqAzKblCkdk (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 12 Feb 2012 15:48:53 -0800 (PST)
-Date: Sun, 12 Feb 2012 18:48:52 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests: fix msync() call in fsx.c:domapwrite()
-Message-ID: <20120212234852.GB3848@infradead.org>
-References: <1328642166-389-1-git-send-email-curtw@google.com>
+	q1D0I73A218651 for <xfs@OSS.SGI.com>; Sun, 12 Feb 2012 18:18:07 -0600
+Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
+	[87.194.255.144]) by cuda.sgi.com with ESMTP id
+	wxg4UB2VwHIOofXp for <xfs@OSS.SGI.com>;
+	Sun, 12 Feb 2012 16:18:04 -0800 (PST)
+Received: from ty.sabi.co.UK (87.194.99.40) by honeysuckle.london.02.net
+	(8.5.140)
+	id 4EEF52D201019F25 for xfs@OSS.SGI.com; Mon, 13 Feb 2012 00:18:02 +0000
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1RwjcB-0007Mt-T5
+	for <xfs@OSS.SGI.com>; Mon, 13 Feb 2012 00:17:55 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1328642166-389-1-git-send-email-curtw@google.com>
+Message-ID: <20280.22195.757724.368356@tree.ty.sabi.co.UK>
+Date: Mon, 13 Feb 2012 00:17:55 +0000
+Subject: Re: quotacheck speed
+In-Reply-To: <20120212234425.GA23625@infradead.org>
+References: <201202122201.07649.arekm@maven.pl>
+	<20120212234425.GA23625@infradead.org>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,21 +32,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Curt Wohlgemuth <curtw@google.com>
-Cc: linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-On Tue, Feb 07, 2012 at 11:16:06AM -0800, Curt Wohlgemuth wrote:
-> This explicitly sends MS_SYNC as the flag to msync() in
-> fsx.c, in domapwrite().  Without this flag, the memory
-> written to the mmap'ed region will not be flushed to disk;
-> in fact, on Linux, calling msync() with a '0' or MS_ASYNC
-> flag is a no-op.
+>> When mounting 800GB filesystem (after repair for example)
+>> here quotacheck takes 10 minutes. Quite long time that adds
+>> to whole time of filesystem downtime (repair + quotacheck).
 
-Looks sensible to me - what exactly msync did has always been grossly
-different for different operating systems, including changing meaning
-on Linux a few times, so let's be explicit.
+For tight downtime minimization requirements wishful thinking is
+not a strategy: whole filetree metadata scans are not cheap. If
+you require fast scan of metadata of the whole filetree, ensure
+filetrees don't have a lot of metadata (or fund the development
+of a parallel whole tree metadata scanner).
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Also 10 minutes is not that long; file system checks/repairs can
+take days or weeks.
+
+>> I wonder if quotacheck can be somehow improved or done
+>> differently like doing it in parallel with normal fs usage
+>> (so there will be no downtime) ?
+
+>From 'man 8 quotacheck':
+
+ "It is strongly recommended to run quotacheck with quotas turned off for  the  filesys-
+  tem.  Otherwise, possible damage or loss to data in the quota files can result.  It is
+  also unwise to run quotacheck on a live filesystem as actual usage may  change  during
+  the  scan.   To  prevent  this,  quotacheck  tries to remount the filesystem read-only
+  before starting the scan.  After the scan is done it  remounts  the  filesystem  read-
+  write.  You  can disable this with option -m.  You can also make quotacheck ignore the
+  failure to remount the filesystem read-only with option -M."
+
+Accoridng to this the only consequence of parallel running of
+'quotacheck' is a somewhat inaccurate accounting of quotas.
+
+> I think the best idea to improve the performance in case you
+> did a repair is to integrate the quotacheck code into repair.
+
+Probably this should be 'xfs_check' more than 'xfs_repair'...
+
+[ ... ]
 
 _______________________________________________
 xfs mailing list
