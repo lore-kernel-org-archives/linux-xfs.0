@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1D8atam251572 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 02:36:56 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id CDNo3OvZFvIGDmRJ for
-	<xfs@oss.sgi.com>; Mon, 13 Feb 2012 00:36:54 -0800 (PST)
-Date: Mon, 13 Feb 2012 08:36:51 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Disk spin down
-Message-ID: <20120213083651.GA40007@nsrc.org>
-References: <4F3803B1.1090205@ashurst.eu.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F3803B1.1090205@ashurst.eu.org>
+	q1D9fPpl255545 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 03:41:25 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id f1qyEDyoNYwLskQZ for
+	<xfs@oss.sgi.com>; Mon, 13 Feb 2012 01:41:24 -0800 (PST)
+Subject: Re: [Cluster-devel] [PATCH 3/4] gfs2: Use generic handlers of
+	O_SYNC AIO DIO
+From: Steven Whitehouse <swhiteho@redhat.com>
+In-Reply-To: <1328889842-23231-4-git-send-email-jack@suse.cz>
+References: <1328889842-23231-1-git-send-email-jack@suse.cz>
+	<1328889842-23231-4-git-send-email-jack@suse.cz>
+Date: Mon, 13 Feb 2012 09:42:18 +0000
+Message-ID: <1329126138.2702.4.camel@menhir>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,16 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andy Bennett <andyjpb@ashurst.eu.org>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, cluster-devel@redhat.com, Jeff Moyer <jmoyer@redhat.com>, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Sun, Feb 12, 2012 at 06:23:45PM +0000, Andy Bennett wrote:
-> Can someone help me work out where writes are coming from on my system?
+Hi,
 
-Is the filesystem in question mounted with 'relatime' or 'noatime'?
-Otherwise, merely reading a file will cause its inode to be dirtied.
+Acked-by: Steven Whitehouse <swhiteho@redhat.com>
 
-(However in modern kernels, 'relatime' might be the default, I'm not sure)
+That looks ok to me,
+
+Steve.
+
+On Fri, 2012-02-10 at 17:04 +0100, Jan Kara wrote:
+> Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
+> file.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> ---
+>  fs/gfs2/aops.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+> index 501e5cb..9c381ff 100644
+> --- a/fs/gfs2/aops.c
+> +++ b/fs/gfs2/aops.c
+> @@ -1034,7 +1034,7 @@ static ssize_t gfs2_direct_IO(int rw, struct kiocb *iocb,
+>  
+>  	rv = __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev, iov,
+>  				  offset, nr_segs, gfs2_get_block_direct,
+> -				  NULL, NULL, 0);
+> +				  NULL, NULL, DIO_SYNC_WRITES);
+>  out:
+>  	gfs2_glock_dq_m(1, &gh);
+>  	gfs2_holder_uninit(&gh);
+
 
 _______________________________________________
 xfs mailing list
