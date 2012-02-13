@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DIGu0n030145 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 12:16:56 -0600
-Received: from mail-ee0-f53.google.com (mail-ee0-f53.google.com
-	[74.125.83.53]) by cuda.sgi.com with ESMTP id xVSu7pKpEpgZsAdO
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:16:55 -0800 (PST)
-Received: by eeke51 with SMTP id e51so2805700eek.26
-	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:16:54 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: quotacheck speed
-Date: Mon, 13 Feb 2012 19:16:51 +0100
-References: <201202122201.07649.arekm@maven.pl>
-	<20120212222159.GJ12836@dastard>
-In-Reply-To: <20120212222159.GJ12836@dastard>
+	q1DIn3ej032084 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 12:49:04 -0600
+Received: from smtprelay02.ispgateway.de (smtprelay02.ispgateway.de
+	[80.67.29.24]) by cuda.sgi.com with ESMTP id ZBPt9B4nQMp72GYj
+	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:49:02 -0800 (PST)
+Message-ID: <4F395B1A.7010709@cape-horn-eng.com>
+Date: Mon, 13 Feb 2012 19:48:58 +0100
+From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
-Message-Id: <201202131916.51209.arekm@maven.pl>
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+References: <4F394116.8080200@cape-horn-eng.com>
+	<20120213170825.GA7197@infradead.org>
+	<4F394442.9020307@cape-horn-eng.com>
+	<20120213171556.GA13449@infradead.org>
+	<4F3947D6.5060402@cape-horn-eng.com>
+	<20120213172937.GA25248@infradead.org>
+	<4F394E10.9000804@cape-horn-eng.com>
+	<20120213180220.GA24163@infradead.org>
+	<4F395134.8030202@cape-horn-eng.com>
+	<20120213181012.GA27962@infradead.org>
+In-Reply-To: <20120213181012.GA27962@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +29,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-T24gU3VuZGF5IDEyIG9mIEZlYnJ1YXJ5IDIwMTIsIERhdmUgQ2hpbm5lciB3cm90ZToKPiBPbiBT
-dW4sIEZlYiAxMiwgMjAxMiBhdCAxMDowMTowN1BNICswMTAwLCBBcmthZGl1c3ogTWnFm2tpZXdp
-Y3ogd3JvdGU6Cj4gPiBIaSwKPiA+IAo+ID4gV2hlbiBtb3VudGluZyA4MDBHQiBmaWxlc3lzdGVt
-IChhZnRlciByZXBhaXIgZm9yIGV4YW1wbGUpIGhlcmUgcXVvdGFjaGVjawo+ID4gdGFrZXMgMTAg
-bWludXRlcy4gUXVpdGUgbG9uZyB0aW1lIHRoYXQgYWRkcyB0byB3aG9sZSB0aW1lIG9mIGZpbGVz
-eXN0ZW0KPiA+IGRvd250aW1lIChyZXBhaXIgKyBxdW90YWNoZWNrKS4KPiAKPiBIb3cgbG9uZyBk
-b2VzIGEgcmVwYWlyIHZzIHF1b3RhY2hlY2sgb2YgdGhhdCBzYW1lIGZpbGVzeXN0ZW0gdGFrZT8K
-PiByZXBhaXIgaGFzIHRvIGl0ZXJhdGUgdGhlIGlub2RlcyAyLTMgdGltZXMsIHNvIGlmIHRoYXQg
-aXMgZmFzdGVyCj4gdGhhbiBxdW90YWNoZWNrLCB0aGVuIHRoYXQgaXMgcmVhbGx5IGltcG9ydGFu
-dCB0byBrbm93Li4uLgoKRG9uJ3QgaGF2ZSBleGFjdCB0aW1lcyBidXQgbG9va2luZyBhdCBuYWdp
-b3MgYW5kIGRtZXNnIGl0IHRvb2sgYWJvdXQ6CnJlcGFpciB+MjAgbWludXRlcywgcXVvdGFjaGVj
-ayB+MTAgbWludXRlcyAoaXQncyA4MDBHQiBvZiBtYWlsZGlycykuCgo+IAo+ID4gSSB3b25kZXIg
-aWYgcXVvdGFjaGVjayBjYW4gYmUgc29tZWhvdyBpbXByb3ZlZCBvciBkb25lIGRpZmZlcmVudGx5
-IGxpa2UKPiA+IGRvaW5nIGl0IGluIHBhcmFsbGVsIHdpdGggbm9ybWFsIGZzIHVzYWdlIChzbyB0
-aGVyZSB3aWxsIGJlIG5vIGRvd250aW1lKQo+ID4gPwo+IAo+IHF1b3RhY2hlY2sgbWFrZXMgdGhl
-IGFzc3VtcHRpb24gdGhhdCBpdCBpcyBydW4gb24gYW4gb3RoZXJ3aXNlIGlkbGUKPiBmaWxlc3lz
-dGVtIHRoYXQgbm9ib2R5IGlzIGFjY2Vzc2luZy4gV2VsbCwgd2hhdCBpdCByZXF1aXJlcyBpcyB0
-aGF0Cj4gbm9ib2R5IGlzIG1vZGlmeWluZyBpdC4gV2hhdCB3ZSBjb3VsZCBkbyBpcyBicmluZyB0
-aGUgZmlsZXN5c3RlbSB1cAo+IGluIGEgZnJvemVuIHN0YXRlIHNvIHRoYXQgcmVhZC1vbmx5IGFj
-Y2VzcyBjb3VsZCBiZSBtYWRlIGJ1dAo+IG1vZGlmaWNhdGlvbnMgYXJlIGJsb2NrZWQgdW50aWwg
-dGhlIHF1b3RhY2hlY2sgaXMgY29tcGxldGVkLgoKUmVhZC1vbmx5IGlzIGJldHRlciB0aGFuIG5v
-IGFjY2VzcyBhdCBhbGwuIEkgd2FzIGhvcGluZyB0aGF0IHRoZXJlIGlzIGEgd2F5IHRvIAptYWtl
-IHF1b3RhY2hlY2sgYmVpbmcgcmVjYWxjdWxhdGVkIG9uIHRoZSBmbHkgd2l0aCB0YWtpbmcgYWxs
-IHdyaXRlIGFjY2Vzc2VzIAp0aGF0IGhhcHBlbiBpbiBtZWFudGltZSBpbnRvIGFjY291bnQuCgo+
-IEFsc28sIHF1b3RhY2hlY2sgdXNlcyB0aGUgYnVsa3N0YXQgY29kZSB0byBpdGVyYXRlIGFsbCB0
-aGUgaW5vZGVzCj4gcXVpY2tseS4gSW1wcm92ZW1lbnRzIGluIGJ1bGtzdGF0IHNwZWVkIHdpbGwg
-dHJhbnNsYXRlIGRpcmVjdGx5Cj4gaW50byBmYXN0ZXIgcXVvdGFjaGVja3MuIHF1b3RhY2hlY2sg
-Y291bGQgcHJvYmFibHkgZHJpdmUgYnVsa3N0YXQgaW4KPiBhIHBhcmFsbGVsIG1hbm5lciB0byBk
-byB0aGUgcXVvdGFjaGVjayBmYXN0ZXIsIGJ1dCB0aGF0IGFzc3VtZXMgdGhhdAo+IHRoZSB1bmRl
-cmx5aW5nIHN0b3JhZ2UgaXMgbm90IGFscmVhZHkgc2VlayBib3VuZC4gV2hhdCBpcyB0aGUKPiB1
-dGlsaXNhdGlvbiBvZiB0aGUgdW5kZXJseWluZyBzdG9yYWdlIGFuZCBDUFUgd2hpbGUgcXVvdGFj
-aGVjayBpcwo+IHJ1bm5pbmc/CgpXaWxsIHRyeSB0byBnYXRoZXIgbW9yZSBpbmZvcm1hdGlvbiB0
-aGVuLgoKPiAKPiBPdGhlcndpc2UsIGJ1bGtzdGF0IGlub2RlIHByZWZldGNoaW5nIGNvdWxkIGJl
-IGltcHJvdmVkIGxpa2UKPiB4ZnNfcmVwYWlyIHdhcyB0byBsb29rIGF0IGlub2RlIGNodW5rIGRl
-bnNpdHkgYW5kIGNoYW5nZSBJTyBwYXR0ZXJucwo+IGFuZCB0byBzbGljZSBhbmQgZGljZSBsYXJn
-ZSBJTyBidWZmZXJzIGludG8gc21hbGxlciBpbm9kZSBidWZmZXJzLgo+IFdlIGNhbiBhY3R1YWxs
-eSBkbyB0aGF0IGVmZmljaWVudGx5IG5vdyB0aGF0IHdlIGRvbid0IHVzZSB0aGUgcGFnZQo+IGNh
-Y2hlIGZvciBtZXRhZGF0YSBjYWNoaW5nLiBJZiByZXBhaXIgaXMgaXRlcmF0aW5nIGlub2RlcyBm
-YXN0ZXIKPiB0aGFuIGJ1bGtzdGF0LCB0aGVuIHRoaXMgb3B0aW1pc2F0aW9uIHdpbGwgYmUgdGhl
-IHJlYXNvbiBhbmQgaGF2aW5nCj4gdGhhdCBkYXRhIHBvaW50IGlzIHZlcnkgaW1wb3J0YW50Li4u
-Lgo+IAo+IENoZWVycywKPiAKPiBEYXZlLgoKCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAg
-ICAgIFBMRC9MaW51eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRw
-LnBsZC1saW51eC5vcmcvCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5j
-b20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 02/13/2012 07:10 PM, Christoph Hellwig wrote:
+> On Mon, Feb 13, 2012 at 07:06:44PM +0100, Richard Ems wrote:
+>> So
+>>
+>> 1. use kernels > 3.2, if XFS partition was not created using "-i size=3D=
+1024"
+> =
+
+> Yes.
+> =
+
+>> 2. if XFS partition was created using "-i size=3D1024", kernels < 3.2 wi=
+ll
+>> also be fast while unlinking files with out of line attributes
+> =
+
+> Exactly.
+> =
+
+> For workloads like yours creating the large inodes (probably only with
+> 512 byte inodes, though) will be preferably if you have a choice, as it
+> should be even faster.
+> =
+
+
+I already updated to 3.2.4 and started the same "find dir" command again
+that previously took 100 min to run. It has been running now for over 30
+min ...
+
+Should this "find" run time also improve ?
+Or will only unlink run time improve ?
+I expect both of them to change similarly, or not? Wrong assumption?
+
+Do I have to mount the XFS partition with some new/old/special option?
+
+Thanks again,
+Richard
+
+
+-- =
+
+Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
+
+Cape Horn Engineering S.L.
+C/ Dr. J.J. D=F3mine 1, 5=BA piso
+46011 Valencia
+Tel : +34 96 3242923 / Fax 924
+http://www.cape-horn-eng.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
