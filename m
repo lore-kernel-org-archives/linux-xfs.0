@@ -1,11 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DI6S9X029637 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 12:06:28 -0600
-Subject: [GIT PULL] XFS update for 3.3
-Message-Id: <20120213180629.527D4426DA7@whiskey.americas.sgi.com>
-Date: Mon, 13 Feb 2012 12:06:29 -0600 (CST)
-From: bpm@sgi.com (Ben Myers)
+	q1DI6kqk029749 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 12:06:46 -0600
+Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
+	[80.67.31.94]) by cuda.sgi.com with ESMTP id fRH0nAF0F15hwNxd
+	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:06:45 -0800 (PST)
+Message-ID: <4F395134.8030202@cape-horn-eng.com>
+Date: Mon, 13 Feb 2012 19:06:44 +0100
+From: Richard Ems <richard.ems@cape-horn-eng.com>
+MIME-Version: 1.0
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+References: <4F394116.8080200@cape-horn-eng.com>
+	<20120213170825.GA7197@infradead.org>
+	<4F394442.9020307@cape-horn-eng.com>
+	<20120213171556.GA13449@infradead.org>
+	<4F3947D6.5060402@cape-horn-eng.com>
+	<20120213172937.GA25248@infradead.org>
+	<4F394E10.9000804@cape-horn-eng.com>
+	<20120213180220.GA24163@infradead.org>
+In-Reply-To: <20120213180220.GA24163@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,45 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hi Linus,
+On 02/13/2012 07:02 PM, Christoph Hellwig wrote:
+> On Mon, Feb 13, 2012 at 06:53:20PM +0100, Richard Ems wrote:
+>> I will try to install a > 3.2 kernel and will create new XFS partitions
+>> with "-i size=3D1024", since we use ACLs a lot for user access.
+>> Is there a chance to change existing XFS partitions to "-i size=3D1024" ?
+> =
 
-   Please pull the following two bugfixes in XFS for 3.3.  One fix passes
-   KMEM_SLEEP to kmem_realloc instead of 0, and the other resolves a possible
-   deadlock in xfs quotas.
+> Unfortunately not.  Note that the speedups in 3.2 only matter for
+> out of line attributes - once you store the ACLs inside the inode the
+> code that makes it dog slow in old kernels is never used.
+
+Ok, I see, many thanks.
+
+So
+
+1. use kernels > 3.2, if XFS partition was not created using "-i size=3D102=
+4"
+
+2. if XFS partition was created using "-i size=3D1024", kernels < 3.2 will
+also be fast while unlinking files with out of line attributes
+
+Right?
 
 Thanks,
-	Ben
+Richard
 
-The following changes since commit 612b8507c5d545feed2437b3d2239929cac7688d:
-  Linus Torvalds (1):
-        Merge branch 'drm-fixes' of git://people.freedesktop.org/~airlied/linux
+-- =
 
-are available in the git repository at:
+Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
 
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Christoph Hellwig (1):
-      xfs: use a normal shrinker for the dquot freelist
-
-Mitsuo Hayasaka (1):
-      xfs: pass KM_SLEEP flag to kmem_realloc() in xlog_recover_add_to_cnt_trans()
-
- fs/xfs/kmem.h            |    6 -
- fs/xfs/xfs_dquot.c       |  103 ++++------------
- fs/xfs/xfs_log_recover.c |    2 +-
- fs/xfs/xfs_qm.c          |  291 ++++++++++++++++++----------------------------
- fs/xfs/xfs_qm.h          |   14 ---
- fs/xfs/xfs_qm_stats.c    |    4 +-
- fs/xfs/xfs_trace.h       |    5 +-
- 7 files changed, 142 insertions(+), 283 deletions(-)
+Cape Horn Engineering S.L.
+C/ Dr. J.J. D=F3mine 1, 5=BA piso
+46011 Valencia
+Tel : +34 96 3242923 / Fax 924
+http://www.cape-horn-eng.com
 
 _______________________________________________
 xfs mailing list
