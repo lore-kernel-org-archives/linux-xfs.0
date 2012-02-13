@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DGw1YX025636 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:58:01 -0600
-Received: from smtprelay06.ispgateway.de (smtprelay06.ispgateway.de
-	[80.67.31.103]) by cuda.sgi.com with ESMTP id Fp6Myde4sVPSxF2D
-	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 08:57:59 -0800 (PST)
-Received: from [62.43.225.238] (helo=[192.168.30.191])
-	by smtprelay06.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
-	id 1RwzDy-0001Am-SN
-	for xfs@oss.sgi.com; Mon, 13 Feb 2012 17:57:58 +0100
-Message-ID: <4F394116.8080200@cape-horn-eng.com>
-Date: Mon, 13 Feb 2012 17:57:58 +0100
-From: Richard Ems <richard.ems@cape-horn-eng.com>
+	q1DGaSJn023356 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 10:36:28 -0600
+Message-ID: <4F393C08.6000801@sgi.com>
+Date: Mon, 13 Feb 2012 10:36:24 -0600
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Subject: XFS unlink still slow on 3.1.9 kernel ?
+Subject: Re: [PATCH v2] xfsdump: use the full 32-bit generation number
+References: <1328813180-29095-1-git-send-email-wkendall@sgi.com>
+	<20120212234720.GA3848@infradead.org>
+In-Reply-To: <20120212234720.GA3848@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,55 +18,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hello list !
+On 02/12/2012 05:47 PM, Christoph Hellwig wrote:
+> Looks generally good to me, but is there any good reason to not make
+> the -K argument extensible by requiring a version argument, even if
+> that one currently only supports 2 and 3 as valid values?
 
-I ran a "find dir" on one directory with 11 million files and dirs in it
-and it took 100 minutes. Is this a "normal" run time to be expected?
+I thought about doing that, but given the low frequency of format
+changes decided it could wait until there's more than one old format
+to support. -K without an argument could be treated as "generate
+the previous media format", or with an argument it could generate
+a specific format. I'm okay with requiring a version argument though,
+being explicit is better.
 
-I am running openSUSE 12.1, kernel 3.1.9-1.4-default. The 20 TB XFS
-partition is 100% full and is on an external InforTrend RAID system with
-24 x 1 TB SATA HDDs on RAID 6 with one hot-spare HDD, so 21 data discs
-plus 2 parity discs plus 1 hot-spare disc. The case is connected through
-SCSI.
+FWIW, the way things have always worked is that xfsrestore provides
+backwards compatibility for all dump formats. xfsdump has, until
+now, always generated the current format. It's nice to provide
+the ability to generate old formats during a transition period,
+but long-term I don't see xfsdump retaining support for generating
+all old formats.
 
-The system was not running anything else on that discs and the load on
-the server was around 1 because of only this one find command running.
-
-I am asking because I am seeing very long times while removing big
-directory trees. I thought on kernels above 3.0 removing dirs and files
-had improved a lot, but I don't see that improvement.
-
-This is a backup system running dirvish, so most files in the dirs I am
-removing are hard links. Almost all of the files do have ACLs set.
-
-
-# mount | grep xfs
-/dev/sda1 on /backup/IFT type xfs
-(rw,noatime,nodiratime,attr2,delaylog,nobarrier,logbufs=3D8,logbsize=3D256k=
-,sunit=3D256,swidth=3D5376,noquota,_netdev)
-
-Any thoughts?
-
-
-Thanks, Richard
-
-
-
--- =
-
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
-
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+Bill
 
 _______________________________________________
 xfs mailing list
