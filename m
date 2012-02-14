@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1EIc4id116318 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 12:38:05 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BuA9TBJhQVe9LolX for
-	<xfs@oss.sgi.com>; Tue, 14 Feb 2012 10:38:03 -0800 (PST)
-Message-ID: <4F3AAA03.2010305@redhat.com>
-Date: Tue, 14 Feb 2012 10:37:55 -0800
-From: Eric Sandeen <sandeen@redhat.com>
+	q1EJ7wvh117975 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 13:07:59 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	wXFiOiMp29BmYVvu (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 14 Feb 2012 11:07:57 -0800 (PST)
+Date: Tue, 14 Feb 2012 14:07:53 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+Message-ID: <20120214190753.GA8383@infradead.org>
+References: <4F3A5B49.6020803@cape-horn-eng.com> <4F3AA191.9030606@mnsu.edu>
+	<4F3AA40D.50302@cape-horn-eng.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfsprogs: skip FSGEOMETRY call in openfile if no geom var
-	present
+Content-Disposition: inline
+In-Reply-To: <4F3AA40D.50302@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,30 +29,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, Christoph Hellwig <hch@infradead.org>
+To: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>, xfs@oss.sgi.com
 
-sendfile_f() calls openfile() with NULL *geom even if it's on an
-xfs filesystem, so we need to skip the ioctl if (!geom).
+On Tue, Feb 14, 2012 at 07:12:29PM +0100, Richard Ems wrote:
+> # /net/c3m/usr/local/software/XFS/summarise_stat.pl /bin/
+>       9  6.2% are scripts (shell, perl, whatever)
+>      65 44.8% don't use any stat() family calls at all
+>      61 42.1% use 32-bit stat() family interfaces only
+>       9  6.2% use 64-bit stat64() family interfaces only
+>       1  0.7% use both 32-bit and 64-bit stat() family interfaces
+> 
+> So I was not sure if I should use inode64 or not.
 
-Fixes regression from d1b88183bb3fc5e338746db53269310348646753
+Are you on a 32-bit system (userspace, kernel doesn't matter)?
 
-Reported-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/io/open.c b/io/open.c
-index 97631e2..ac39ccc 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -163,7 +163,7 @@ openfile(
- 		}
- 	}
- 
--	if (!platform_test_xfs_fd(fd))
-+	if (!geom || !platform_test_xfs_fd(fd))
- 		return fd;
- 
- 	if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+If the system is 64-bit even the plain stat handles 64-bit inodes just
+fine.
 
 _______________________________________________
 xfs mailing list
