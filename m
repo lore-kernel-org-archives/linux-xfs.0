@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1E0mLT3054413 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 18:48:23 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	G1VDyj63U5cSsQ3R (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 16:48:19 -0800 (PST)
-Date: Mon, 13 Feb 2012 19:48:18 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V2] xfs_io: fix fiemap loop continuation
-Message-ID: <20120214004818.GA6766@infradead.org>
-References: <1328163674-9420-1-git-send-email-david@fromorbit.com>
-	<20120213190903.GA12477@infradead.org>
-	<20120214004532.GJ7479@dastard>
+	q1E1Ln0P056384 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 19:21:49 -0600
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id YSz5zHOeoqjMRLwj for
+	<xfs@oss.sgi.com>; Mon, 13 Feb 2012 17:21:47 -0800 (PST)
+Message-ID: <4F39B6C0.4090606@cn.fujitsu.com>
+Date: Tue, 14 Feb 2012 09:20:00 +0800
+From: Liu Bo <liubo2009@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120214004532.GJ7479@dastard>
+Subject: Re: [PATCH 3/3 v2] xfstests: add btrfs online defragments QA test
+References: <1328766034-1324-1-git-send-email-liubo2009@cn.fujitsu.com>
+	<20120213175344.GA15040@infradead.org>
+In-Reply-To: <20120213175344.GA15040@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +25,135 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Feb 14, 2012 at 11:45:32AM +1100, Dave Chinner wrote:
-> On Mon, Feb 13, 2012 at 02:09:03PM -0500, Christoph Hellwig wrote:
-> > This actually seems to break 252 and 255 for me.
+On 02/14/2012 01:53 AM, Christoph Hellwig wrote:
+> This still needs a bit more work:
 > 
-> Ok, there was some code that expected last_logical to be in FSB
-> units, not bytes that I failed to convert.
+>> +test_path="`pwd`"
+>> +progs_dir="$test_path/src/btrfs_online_defragment/"
 > 
-> Fixed version below.
+> this isn't actually used.
+> 
+> 
+>> +tmp=tmp/$$
+>> +defrag_args="$test_path/${seq}.args"
+> 
+> Just hardcode the arguments, preferably without the args file
+> indirection.
+> 
+>> +_create_file()
+>> +{
+>> +	CNT=11999
+>> +	FILESIZE=48000
+>> +	if [ "$DEFRAG_TARGET" = "1" ];then
+>> +		for i in `seq $CNT -1 0`; do
+>> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
+>> +			 conv=notrunc seek=$i oflag=sync &>/dev/null
+>> +		done
+>> +		# get md5sum
+>> +		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
+>> +	elif [ "$DEFRAG_TARGET" = "2" ];then
+>> +		mkdir $SCRATCH_MNT/tmp_dir
+>> +		for i in `seq $CNT -1 0`; do
+>> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_dir/tmp_file bs=4k \
+>> +			count=1 conv=notrunc seek=$i oflag=sync &>/dev/null
+>> +		done
+>> +		# get md5sum
+>> +		md5sum $SCRATCH_MNT/tmp_dir/tmp_file > /tmp/checksum
+>> +	elif [ "$DEFRAG_TARGET" = "3" ];then
+>> +		for i in `seq $CNT -1 0`; do
+>> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
+>> +			conv=notrunc seek=$i oflag=sync &>/dev/null
+>> +		done
+>> +		# get md5sum
+>> +		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
+>> +	fi
+>> +}
+> 
+> It seems like each of these cases should be a different function.
+> 
+>> +_btrfs_online_defrag()
+>> +{
+>> +	str=""
+>> +	if [ "$FILE_RANGE" = "2" ];then
+>> +		str="$str -s -1 -l $((FILESIZE / 2)) "
+>> +	elif [ "$FILE_RANGE" = "3" ];then
+>> +		str="$str -s $((FILESIZE + 1)) -l $((FILESIZE / 2)) "
+>> +		HAVE_DEFRAG=1
+>> +	elif [ "$FILE_RANGE" = "4" ];then
+>> +		str="$str -l -1 "
+>> +	elif [ "$FILE_RANGE" = "5" ];then
+>> +		str="$str -l $((FILESIZE + 1)) "
+>> +	elif [ "$FILE_RANGE" = "6" ];then
+>> +		str="$str -l $((FILESIZE / 2)) "
+>> +	fi
+>> +
+>> +	if [ "$DEFRAG_COMPRESS" = "2" ];then
+>> +		str="$str -c "
+>> +	fi
+>> +
+>> +	if [ "$FLUSH" = "2" ];then
+>> +		str="$str -f "
+>> +	fi
+>> +
+>> +	if [ "$THRESH" = "2" ];then
+>> +		str="$str -t -1 "
+>> +	elif [ "$THRESH" = "3" ];then
+>> +		str="$str -t $PAGESIZE "
+>> +	fi
+>> +
+>> +	if [ "$str" != "" ]; then
+>> +		btrfs filesystem defragment $str $SCRATCH_MNT/tmp_file
+>> +	else
+>> +		if [ "$DEFRAG_TARGET" = "1" ];then
+>> +			btrfs filesystem defragment $SCRATCH_MNT/tmp_file
+>> +		elif [ "$DEFRAG_TARGET" = "2" ];then
+>> +			btrfs filesystem defragment $SCRATCH_MNT/tmp_dir
+>> +		elif [ "$DEFRAG_TARGET" = "3" ];then
+>> +			btrfs filesystem defragment $SCRATCH_MNT
+>> +		fi
+>> +	fi
+>> +	ret_val=$?
+>> +	sync
+>> +	if [ $ret_val -ne 20 ];then
+>> +		echo "btrfs filesystem defragment failed! err is $ret_val"
+>> +	fi
+>> +}
+> 
+>> +_fsck()
+>> +{
+>> +	btrfsck $SCRATCH_DEV > /dev/null 2>&1
+>> +	ret_val=$?
+>> +	if [ $ret_val -ne 0 ]; then
+>> +		echo "btrfsck _FAIL_! err is $ret_val"
+>> +	fi
+>> +}
+> 
+> This should use the generic xfstests fsck invocation wrappers.
+> 
+>> +_parse_options()
+> 
+> Please don't use an option parser but just call the low-level file
+> creation functions directly.
+> 
+>> +_cleanup_defrag()
+>> +{
+>> +	rm -fr $SCRATCH_MNT/*
+>> +	umount $SCRATCH_MNT > /dev/null 2>&1
+>> +}
+> 
+> No need to remove everything as the scratch filesystem gets recreated
+> every time.
+> 
+> 
 
-Can you sent a relative patch to the previous one? I've already
-commited it a while ago.
+OK, I'll update this more carefully ;)
+and thanks for your time!
+
+thanks,
+liubo
 
 _______________________________________________
 xfs mailing list
