@@ -1,23 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1E5ZpVG068748 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 23:35:51 -0600
-Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
-	[209.85.215.181]) by cuda.sgi.com with ESMTP id
-	sTd1RV2245Vu3DUP (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 21:35:49 -0800 (PST)
-Received: by eaak14 with SMTP id k14so2911217eaa.26
-	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 21:35:47 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: Re: quotacheck speed
-Date: Tue, 14 Feb 2012 06:35:45 +0100
-References: <201202122201.07649.arekm@maven.pl>
-	<201202131909.50605.arekm@maven.pl>
-	<20120213234235.GE14132@dastard>
-In-Reply-To: <20120213234235.GE14132@dastard>
+	q1E9mUUC082283 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 03:48:31 -0600
+Received: from smtprelay03.ispgateway.de (smtprelay03.ispgateway.de
+	[80.67.18.15]) by cuda.sgi.com with ESMTP id G4MMWiuv1NAvDgCh
+	for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 01:48:28 -0800 (PST)
+Message-ID: <4F3A2DE9.5050901@cape-horn-eng.com>
+Date: Tue, 14 Feb 2012 10:48:25 +0100
+From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
-Message-Id: <201202140635.45902.arekm@maven.pl>
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+References: <20120213170825.GA7197@infradead.org>
+	<4F394442.9020307@cape-horn-eng.com>
+	<20120213171556.GA13449@infradead.org>
+	<4F3947D6.5060402@cape-horn-eng.com>
+	<20120213172937.GA25248@infradead.org>
+	<4F394E10.9000804@cape-horn-eng.com>
+	<20120213180220.GA24163@infradead.org>
+	<4F395134.8030202@cape-horn-eng.com>
+	<20120213181012.GA27962@infradead.org>
+	<4F395B1A.7010709@cape-horn-eng.com>
+	<20120213211654.GA20192@infradead.org>
+In-Reply-To: <20120213211654.GA20192@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,49 +30,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-T24gVHVlc2RheSAxNCBvZiBGZWJydWFyeSAyMDEyLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gT24g
-TW9uLCBGZWIgMTMsIDIwMTIgYXQgMDc6MDk6NTBQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtraWV3
-aWN6IHdyb3RlOgo+ID4gT24gTW9uZGF5IDEzIG9mIEZlYnJ1YXJ5IDIwMTIsIENocmlzdG9waCBI
-ZWxsd2lnIHdyb3RlOgo+ID4gPiBPbiBTdW4sIEZlYiAxMiwgMjAxMiBhdCAxMDowMTowN1BNICsw
-MTAwLCBBcmthZGl1c3ogTWk/P2tpZXdpY3ogd3JvdGU6Cj4gPiA+ID4gSGksCj4gPiA+ID4gCj4g
-PiA+ID4gV2hlbiBtb3VudGluZyA4MDBHQiBmaWxlc3lzdGVtIChhZnRlciByZXBhaXIgZm9yIGV4
-YW1wbGUpIGhlcmUKPiA+ID4gPiBxdW90YWNoZWNrIHRha2VzIDEwIG1pbnV0ZXMuIFF1aXRlIGxv
-bmcgdGltZSB0aGF0IGFkZHMgdG8gd2hvbGUgdGltZQo+ID4gPiA+IG9mIGZpbGVzeXN0ZW0gZG93
-bnRpbWUgKHJlcGFpciArIHF1b3RhY2hlY2spLgo+ID4gPiA+IAo+ID4gPiA+IEkgd29uZGVyIGlm
-IHF1b3RhY2hlY2sgY2FuIGJlIHNvbWVob3cgaW1wcm92ZWQgb3IgZG9uZSBkaWZmZXJlbnRseQo+
-ID4gPiA+IGxpa2UgZG9pbmcgaXQgaW4gcGFyYWxsZWwgd2l0aCBub3JtYWwgZnMgdXNhZ2UgKHNv
-IHRoZXJlIHdpbGwgYmUgbm8KPiA+ID4gPiBkb3dudGltZSkgPwo+ID4gPiAKPiA+ID4gSSB0aGlu
-ayB0aGUgYmVzdCBpZGVhIHRvIGltcHJvdmUgdGhlIHBlcmZvcm1hbmNlIGluIGNhc2UgeW91IGRp
-ZCBhCj4gPiA+IHJlcGFpciBpcyB0byBpbnRlZ3JhdGUgdGhlIHF1b3RhY2hlY2sgY29kZSBpbnRv
-IHJlcGFpci4gIEl0J3MgZmFpcmx5Cj4gPiA+IHNpbXBsZSBnaXZlbiB0aGF0IHF1b3RhY2hlY2sg
-c2ltcGx5IHdhbGtzIGFsbCBpbm9kZXMgYW5kIGFkZHMgdGhlaXIKPiA+ID4gc3BhY2UgdXNhZ2Ug
-dG8gdGhlIGNvcnJlY3QgdXNlci9ncm91cC9wcm9qZWN0LCBhbmQgZ2l2ZW4gdGhhdCByZXBhaXIK
-PiA+ID4gYWxyZWFkeSB3YWxrcyBhbGwgaW5vZGVzLCBhbmQgY2hlY2tzIHRoZWlyIGJsb2NrIG1h
-cHMgaXQgZG9lcyBtb3N0IG9mCj4gPiA+IHRoYXQgd29yayBhbHJlYWR5Lgo+ID4gCj4gPiBUaGF0
-IHdvdWxkIGJlIGludGVyZXN0aW5nIGFuZCBwcm9iYWJseSBtYWtlCj4gPiAKPiA+ID4gVGhlIG9u
-bHkgZG93bnNpZGUgd291bGQgYmUgdGhhdCB0aGUgbWVtb3J5IHVzYWdlCj4gPiA+IG9mIHJlcGFp
-ciBpbmNyZWFzZXMgYSBiaXQgYnkga2VlcGluZyB0aGUgZHF1b3RzIGluIG1lbW9yeWIsIGJ1dCBl
-dmVuCj4gPiA+IGZvciB5b3VyIDEzMDAwMCBkcXVvdCBzZXR1cCB0aGF0IHdvdWxkIGFkZCBhYm91
-dCAxMDAgYnl0ZXMgKiAxMzAwMDAKPiA+ID4gcGxlYXNlIGEgYml0IG9mIGluLW1lbW9yeSBtZXRh
-ZGF0YSAobGVzcyB0aGFuIDIwTUIgdG90YWwpIG9mIG1lbW9yeQo+ID4gPiB1c2FnZSwgc28gaXQg
-cHJvYmFibHkgaXMgYSBnb29kIHRyYWRlb2ZmLgo+ID4gPiAKPiA+ID4gCj4gPiA+IEluIHdoYXQg
-Y2FzZXMgZG8geW91IHJlZ3VsYXJseSBydW4gcXVvdGFjaGVjayB3aGVuIHlvdSBkaWQgbm90IGRv
-Cj4gPiA+IGEgcmVwYWlyIGZpcnN0Pwo+ID4gCj4gPiBJIGRvbid0IGluaXRpYXRlIHF1b3RhY2hl
-Y2sgbWFudWFsbHkuIEFGQUlLIGludGVybmFsIHhmcyBxdW90YWNoZWNrCj4gPiBoYXBwZW5zIGlu
-IHR3byBjYXNlcyBoZXJlOgo+ID4gMSkgcmVwYWlyLT5tb3VudAo+ID4gMikgZmlsZXN5c3RlbSBo
-YXMgcXVvdGFjaGVjayBkb25lIHByb3Blcmx5IHNvbWUgdGltZSBhZ28gLT4gdW1vdW50IC0+Cj4g
-PiBtb3VudC0KPiA+IAo+ID4gPm9vcHMvcmVzZXQvc29tZXRoaW5nIGxpa2UgdGhhdCBoYXBwZW5z
-IHdoaWxlIG1vdW50aW5nIC0+IG5ldyBtb3VudAo+IAo+IFNvIHlvdSdkIGxpa2UgYm90aCBxdW90
-YWNoZWNrIHRvIGJlIHNwZWQgdXAgYW5kIHJlcGFpcgo+IHRvIGRvIGl0IGFzIHdlbGw/IDspCgpX
-ZWxsLCAxKSBpcyBoYXBwZW5pbmcgbXVjaCBtb3JlIG9mdGVuIHRoYW4gMikgOi0pCgotLSAKQXJr
-YWRpdXN6IE1pxZtraWV3aWN6ICAgICAgICBQTEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBs
-ICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQtbGludXgub3JnLwoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+Hi Christoph, hi list,
+
+I don;t have ONE dir with that 11 million files, it's one dir with many
+directories and a total of about 11 million files AND dirs! See output
+below!
+
+On 02/13/2012 10:16 PM, Christoph Hellwig wrote:
+> On Mon, Feb 13, 2012 at 07:48:58PM +0100, Richard Ems wrote:
+>> I already updated to 3.2.4 and started the same "find dir" command again
+>> that previously took 100 min to run. It has been running now for over 30
+>> min ...
+>>
+>> Should this "find" run time also improve ?
+> =
+
+> No, not by that change anyway.
+
+It didn't improve, 100 min again.
+
+
+
+>> Or will only unlink run time improve ?
+> =
+
+> Yes.
+
+rm took about 110 min.
+
+
+>> Do I have to mount the XFS partition with some new/old/special option?
+> =
+
+> I'd have to look into it in more detail.  IIRC you said you're using
+> RAID6 which can be fairly nasty for small reads.  Did you use the
+> inode64 mount option on the filesystem?
+
+No, I did not use it, but I was thinking about and ran the script from
+http://sandeen.net/misc/summarise_stat.pl and got as an example on /bin:
+
+# /net/c3m/usr/local/software/XFS/summarise_stat.pl /bin/
+      9  6.2% are scripts (shell, perl, whatever)
+     65 44.8% don't use any stat() family calls at all
+     61 42.1% use 32-bit stat() family interfaces only
+      9  6.2% use 64-bit stat64() family interfaces only
+      1  0.7% use both 32-bit and 64-bit stat() family interfaces
+
+So I was not sure if I should use inode64 or not.
+
+
+
+This are the times that the run took yesterday:
+
+Mon Feb 13 19:14:07 CET 2012
+
++ wc -l
++ find 2012-02-13/
+11377443
+
+real    101m30.811s
+user    0m17.365s
+sys     1m4.632s
+
+
+Mon Feb 13 20:55:38 CET 2012
+
++ wc -l
++ find 2012-02-13/ -type d
+834591
+
+real    103m52.686s
+user    0m11.765s
+sys     1m41.018s
+
+
++ wc -l
++ find 2012-02-13/ -type f
+10539154
+
+real    104m38.421s
+user    0m19.905s
+sys     1m47.551s
+
+
++ /bin/rm -i -rf 2012-02-13/
+
+real    110m55.764s
+user    0m13.401s
+sys     4m3.115s
+
+Tue Feb 14 02:15:05 CET 2012
+
+
+Thanks again,
+Richard
+
+
+-- =
+
+Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
+
+Cape Horn Engineering S.L.
+C/ Dr. J.J. D=F3mine 1, 5=BA piso
+46011 Valencia
+Tel : +34 96 3242923 / Fax 924
+http://www.cape-horn-eng.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
