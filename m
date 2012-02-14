@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1E1Ln0P056384 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 19:21:49 -0600
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id YSz5zHOeoqjMRLwj for
-	<xfs@oss.sgi.com>; Mon, 13 Feb 2012 17:21:47 -0800 (PST)
-Message-ID: <4F39B6C0.4090606@cn.fujitsu.com>
-Date: Tue, 14 Feb 2012 09:20:00 +0800
-From: Liu Bo <liubo2009@cn.fujitsu.com>
+	q1E5W2tP068645 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 23:32:02 -0600
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id g9ecVxfoAFZAp27L
+	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 21:32:01 -0800 (PST)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id 0ACD66C161
+	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 23:32:01 -0600 (CST)
+Message-ID: <4F39F1CB.3060806@hardwarefreak.com>
+Date: Mon, 13 Feb 2012 23:31:55 -0600
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/3 v2] xfstests: add btrfs online defragments QA test
-References: <1328766034-1324-1-git-send-email-liubo2009@cn.fujitsu.com>
-	<20120213175344.GA15040@infradead.org>
-In-Reply-To: <20120213175344.GA15040@infradead.org>
+Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
+References: <20120213170825.GA7197@infradead.org>
+	<4F394442.9020307@cape-horn-eng.com>
+	<20120213171556.GA13449@infradead.org>
+	<4F3947D6.5060402@cape-horn-eng.com>
+	<20120213172937.GA25248@infradead.org>
+	<4F394E10.9000804@cape-horn-eng.com>
+	<20120213180220.GA24163@infradead.org>
+	<4F395134.8030202@cape-horn-eng.com>
+	<20120213181012.GA27962@infradead.org>
+	<4F395B1A.7010709@cape-horn-eng.com>
+	<20120213211654.GA20192@infradead.org>
+In-Reply-To: <20120213211654.GA20192@infradead.org>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,135 +38,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-btrfs@vger.kernel.org, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 02/14/2012 01:53 AM, Christoph Hellwig wrote:
-> This still needs a bit more work:
-> 
->> +test_path="`pwd`"
->> +progs_dir="$test_path/src/btrfs_online_defragment/"
-> 
-> this isn't actually used.
-> 
-> 
->> +tmp=tmp/$$
->> +defrag_args="$test_path/${seq}.args"
-> 
-> Just hardcode the arguments, preferably without the args file
-> indirection.
-> 
->> +_create_file()
->> +{
->> +	CNT=11999
->> +	FILESIZE=48000
->> +	if [ "$DEFRAG_TARGET" = "1" ];then
->> +		for i in `seq $CNT -1 0`; do
->> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
->> +			 conv=notrunc seek=$i oflag=sync &>/dev/null
->> +		done
->> +		# get md5sum
->> +		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
->> +	elif [ "$DEFRAG_TARGET" = "2" ];then
->> +		mkdir $SCRATCH_MNT/tmp_dir
->> +		for i in `seq $CNT -1 0`; do
->> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_dir/tmp_file bs=4k \
->> +			count=1 conv=notrunc seek=$i oflag=sync &>/dev/null
->> +		done
->> +		# get md5sum
->> +		md5sum $SCRATCH_MNT/tmp_dir/tmp_file > /tmp/checksum
->> +	elif [ "$DEFRAG_TARGET" = "3" ];then
->> +		for i in `seq $CNT -1 0`; do
->> +			dd if=/dev/zero of=$SCRATCH_MNT/tmp_file bs=4k count=1 \
->> +			conv=notrunc seek=$i oflag=sync &>/dev/null
->> +		done
->> +		# get md5sum
->> +		md5sum $SCRATCH_MNT/tmp_file > /tmp/checksum
->> +	fi
->> +}
-> 
-> It seems like each of these cases should be a different function.
-> 
->> +_btrfs_online_defrag()
->> +{
->> +	str=""
->> +	if [ "$FILE_RANGE" = "2" ];then
->> +		str="$str -s -1 -l $((FILESIZE / 2)) "
->> +	elif [ "$FILE_RANGE" = "3" ];then
->> +		str="$str -s $((FILESIZE + 1)) -l $((FILESIZE / 2)) "
->> +		HAVE_DEFRAG=1
->> +	elif [ "$FILE_RANGE" = "4" ];then
->> +		str="$str -l -1 "
->> +	elif [ "$FILE_RANGE" = "5" ];then
->> +		str="$str -l $((FILESIZE + 1)) "
->> +	elif [ "$FILE_RANGE" = "6" ];then
->> +		str="$str -l $((FILESIZE / 2)) "
->> +	fi
->> +
->> +	if [ "$DEFRAG_COMPRESS" = "2" ];then
->> +		str="$str -c "
->> +	fi
->> +
->> +	if [ "$FLUSH" = "2" ];then
->> +		str="$str -f "
->> +	fi
->> +
->> +	if [ "$THRESH" = "2" ];then
->> +		str="$str -t -1 "
->> +	elif [ "$THRESH" = "3" ];then
->> +		str="$str -t $PAGESIZE "
->> +	fi
->> +
->> +	if [ "$str" != "" ]; then
->> +		btrfs filesystem defragment $str $SCRATCH_MNT/tmp_file
->> +	else
->> +		if [ "$DEFRAG_TARGET" = "1" ];then
->> +			btrfs filesystem defragment $SCRATCH_MNT/tmp_file
->> +		elif [ "$DEFRAG_TARGET" = "2" ];then
->> +			btrfs filesystem defragment $SCRATCH_MNT/tmp_dir
->> +		elif [ "$DEFRAG_TARGET" = "3" ];then
->> +			btrfs filesystem defragment $SCRATCH_MNT
->> +		fi
->> +	fi
->> +	ret_val=$?
->> +	sync
->> +	if [ $ret_val -ne 20 ];then
->> +		echo "btrfs filesystem defragment failed! err is $ret_val"
->> +	fi
->> +}
-> 
->> +_fsck()
->> +{
->> +	btrfsck $SCRATCH_DEV > /dev/null 2>&1
->> +	ret_val=$?
->> +	if [ $ret_val -ne 0 ]; then
->> +		echo "btrfsck _FAIL_! err is $ret_val"
->> +	fi
->> +}
-> 
-> This should use the generic xfstests fsck invocation wrappers.
-> 
->> +_parse_options()
-> 
-> Please don't use an option parser but just call the low-level file
-> creation functions directly.
-> 
->> +_cleanup_defrag()
->> +{
->> +	rm -fr $SCRATCH_MNT/*
->> +	umount $SCRATCH_MNT > /dev/null 2>&1
->> +}
-> 
-> No need to remove everything as the scratch filesystem gets recreated
-> every time.
-> 
-> 
+On 2/13/2012 3:16 PM, Christoph Hellwig wrote:
 
-OK, I'll update this more carefully ;)
-and thanks for your time!
+> I'd have to look into it in more detail.  IIRC you said you're using
+> RAID6 which can be fairly nasty for small reads.  Did you use the
+> inode64 mount option on the filesystem?
 
-thanks,
-liubo
+On 2/13/2012 10:57 AM, Richard Ems wrote:
+
+> # mount | grep xfs
+> /dev/sda1 on /backup/IFT type xfs
+>
+(rw,noatime,nodiratime,attr2,delaylog,nobarrier,logbufs=8,logbsize=256k,sunit=256,swidth=5376,noquota,_netdev)
+
+With a 16TB+ XFS, 20TB here, isn't inode64 the default allocator?
+
+[...]
+
+> 20 TB XFS
+> partition is 100% full
+
+Does the fact the FS is 100% full make any difference here?
+
+
+> The case is connected through SCSI.
+
+Do you mean iSCSI?  Does the host on which you're running your "find
+dir" command have a 1GbE or 10GbE connection to the InforTrend unit?
+More than one connection using bonding or multipath?  Direct connected
+or through a switch(es)?  What brand is the switch(es)?  Switch(es)
+under heavy load?
+
+If it's a single direct 1GbE connection it's possible you're running out
+of host pipe bandwidth which is only ~100MB/s in each direction.  Check
+iotop/iostat while running your command to see if you're peaking the
+interface with either read or write bytes.  If either are at or above
+100MB/s then your host pipe is full, thus this is a significant part of
+your high run time problem.
+
+Also check the performance data in the management interface on the
+InforTrend unit to see if you're hitting any limits there (if it has
+such a feature).  RAID6 is numerically intensive and that particular
+controller may not have the ASIC horsepower to keep up with the IOPS
+workload you're throwing at it.
+
+Lastly, please paste the exact command or script you refer to as "find
+dir" which is generating the workload in question.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
