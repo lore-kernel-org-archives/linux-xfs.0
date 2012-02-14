@@ -1,27 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1EBiL9I089874 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 05:44:21 -0600
-Received: from smtprelay02.ispgateway.de (smtprelay02.ispgateway.de
-	[80.67.31.25]) by cuda.sgi.com with ESMTP id qJQIzx6xw63jn1wY
-	for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 03:44:19 -0800 (PST)
-Message-ID: <4F3A4910.8060502@cape-horn-eng.com>
-Date: Tue, 14 Feb 2012 12:44:16 +0100
+	q1ECW4n9092459 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 06:32:04 -0600
+Received: from smtprelay04.ispgateway.de (smtprelay04.ispgateway.de
+	[80.67.31.38]) by cuda.sgi.com with ESMTP id 3GKfmIO0KcEDZcRg
+	for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 04:32:03 -0800 (PST)
+Message-ID: <4F3A5440.409@cape-horn-eng.com>
+Date: Tue, 14 Feb 2012 13:32:00 +0100
 From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
 Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
-References: <20120213170825.GA7197@infradead.org>
-	<4F394442.9020307@cape-horn-eng.com>
-	<20120213171556.GA13449@infradead.org>
-	<4F3947D6.5060402@cape-horn-eng.com>
-	<20120213172937.GA25248@infradead.org>
-	<4F394E10.9000804@cape-horn-eng.com>
-	<20120213180220.GA24163@infradead.org>
-	<4F395134.8030202@cape-horn-eng.com>
-	<20120213181012.GA27962@infradead.org>
-	<4F395B1A.7010709@cape-horn-eng.com>
-	<20120213211654.GA20192@infradead.org>
-In-Reply-To: <20120213211654.GA20192@infradead.org>
+References: <4F394116.8080200@cape-horn-eng.com>
+	<20120214000924.GF14132@dastard>
+In-Reply-To: <20120214000924.GF14132@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,31 +25,84 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 02/13/2012 10:16 PM, Christoph Hellwig wrote:
-> On Mon, Feb 13, 2012 at 07:48:58PM +0100, Richard Ems wrote:
->> I already updated to 3.2.4 and started the same "find dir" command again
->> that previously took 100 min to run. It has been running now for over 30
->> min ...
->>
->> Should this "find" run time also improve ?
+Hi Dave, hi list,
+
+first thanks for the very detailed reply. Please find below my comments
+and questions.
+
+On 02/14/2012 01:09 AM, Dave Chinner wrote:
+> On Mon, Feb 13, 2012 at 05:57:58PM +0100, Richard Ems wrote:
+>> I am running openSUSE 12.1, kernel 3.1.9-1.4-default. The 20 TB XFS
+>> partition is 100% full
 > =
 
-> No, not by that change anyway.
+> Running filesystems to 100% full is always a bad idea - it causes
+> significant increases in fragementation of both data and metadata
+> compared to a filesystem that doesn't get past ~90% full.
+
+Yes, true, I know. But I have no other free space for this backups. I am
+waiting for a new already ordered system and will have 4 times this
+space. So later I will open a new thread asking if my thoughts for
+creating this new 80 TB XFS partition are right.
+
+
+
+>> I am asking because I am seeing very long times while removing big
+>> directory trees. I thought on kernels above 3.0 removing dirs and files
+>> had improved a lot, but I don't see that improvement.
 > =
 
->> Or will only unlink run time improve ?
+> You won't if the directory traversal is seek bound and that is the
+> limiting factor for performance.
+
+*Seek bound*? *When* is the directory traversal *seek bound*?
+
+
+>> This is a backup system running dirvish, so most files in the dirs I am
+>> removing are hard links. Almost all of the files do have ACLs set.
 > =
 
-> Yes.
+> The unlink will have an extra IO to read per inode - the out-of-line
+> attribute block, so you've just added 11 million IOs to the 800,000
+> the traversal already takes to the unlink overhead. So it's going to
+> take roughly ten hours because the unlink is gong to be read IO seek
+> bound....
 
-On a second test, removing 37981 directories with 312674 files, again
-all with ACLs set, went from ~46 sec on 3.1.9 to ~13 sec on 3.2.4, so
-the improvement is clearly there with 3.2.4 !
+It took 110 minutes and not 10 hours. All files and dirs there had ACLs set.
 
+
+> Christophs suggestions to use larger inodes to keep the attribute
+> data inline is a very good one - whenever you have a workload that
+> is attribute heavy you should use larger inodes to try to keep the
+> attributes in-line if possible. The down side is that increasing the
+> inode size increases the amount of IO required to read/write inodes,
+> though this typically isn't a huge penalty compared to the penalty
+> of out-of-line attributes.
+
+I will use larger inodes always from now on, since we largely use ACLs
+on our XFS partitions.
+
+
+> Also, for large directories like this (millions of entries) you
+> should also consider using a larger directory block size (mkfs -n
+> size=3Dxxxx option) as that can be scaled independently to the
+> filesystem block size. This will significantly decrease the amount
+> of IO and fragmentation large directories cause. Peak modification
+> performance of small directories will be reduced because larger
+> block size directories consume more CPU to process, but for large
+> directories performance will be significantly better as they will
+> spend much less time waiting for IO.
+
+This was not ONE directory with that many files, but a directory
+containing 834591 subdirectories (deeply nested, not all in the same
+dir!) and 10539154 files.
+
+Many thanks,
 Richard
+
 
 -- =
 
