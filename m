@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1E10GbJ055232 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 19:00:16 -0600
+	q1E0ja6A054074 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 18:45:36 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	WLgCqL8MQe2aID58 for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 17:00:14 -0800 (PST)
-Date: Tue, 14 Feb 2012 12:00:12 +1100
+	4TTlwocF56YuyaAq for <xfs@oss.sgi.com>;
+	Mon, 13 Feb 2012 16:45:34 -0800 (PST)
+Date: Tue, 14 Feb 2012 11:45:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs_io: fix fiemap loop continuation
-Message-ID: <20120214010012.GK7479@dastard>
+Subject: [PATCH V2] xfs_io: fix fiemap loop continuation
+Message-ID: <20120214004532.GJ7479@dastard>
 References: <1328163674-9420-1-git-send-email-david@fromorbit.com>
 	<20120213190903.GA12477@infradead.org>
-	<20120214004532.GJ7479@dastard>
-	<20120214004818.GA6766@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120214004818.GA6766@infradead.org>
+In-Reply-To: <20120213190903.GA12477@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,21 +30,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 13, 2012 at 07:48:18PM -0500, Christoph Hellwig wrote:
-> On Tue, Feb 14, 2012 at 11:45:32AM +1100, Dave Chinner wrote:
-> > On Mon, Feb 13, 2012 at 02:09:03PM -0500, Christoph Hellwig wrote:
-> > > This actually seems to break 252 and 255 for me.
-> > 
-> > Ok, there was some code that expected last_logical to be in FSB
-> > units, not bytes that I failed to convert.
-> > 
-> > Fixed version below.
-> 
-> Can you sent a relative patch to the previous one? I've already
-> commited it a while ago.
+On Mon, Feb 13, 2012 at 02:09:03PM -0500, Christoph Hellwig wrote:
+> This actually seems to break 252 and 255 for me.
 
-Below.
+Ok, there was some code that expected last_logical to be in FSB
+units, not bytes that I failed to convert.
 
+Fixed version below.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
@@ -68,18 +62,15 @@ retreiving the first 32 extents from offset block zero.
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 ---
-Version 3
-o update to current tree.
-
 Version 2
 o Fix remaining cases where last_logical was expected to be in FSB
   units rather than bytes.
 
- io/fiemap.c |   27 +++++++++++++++------------
- 1 files changed, 15 insertions(+), 12 deletions(-)
+ io/fiemap.c |   33 ++++++++++++++++++---------------
+ 1 files changed, 18 insertions(+), 15 deletions(-)
 
 diff --git a/io/fiemap.c b/io/fiemap.c
-index 99296dd..e32a416 100644
+index 066e693..e32a416 100644
 --- a/io/fiemap.c
 +++ b/io/fiemap.c
 @@ -75,12 +75,14 @@ print_verbose(
@@ -112,6 +103,15 @@ index 99296dd..e32a416 100644
  		(*cur_extent)++;
  		memset(lbuf, 0, sizeof(lbuf));
  	}
+@@ -108,7 +110,7 @@ print_verbose(
+ 	       boff_w, bbuf, tot_w, len, flg_w, flgbuf);
+ 
+ 	(*cur_extent)++;
+-	*last_logical = lstart + len;
++	*last_logical = extent->fe_logical + extent->fe_length;
+ }
+ 
+ static void
 @@ -121,19 +123,20 @@ print_plain(
  	__u64			*last_logical)
  {
@@ -137,6 +137,24 @@ index 99296dd..e32a416 100644
  		else
  			printf("\n");
  		(*cur_extent)++;
+@@ -151,7 +154,7 @@ print_plain(
+ 	else
+ 		printf("\n");
+ 	(*cur_extent)++;
+-	*last_logical = lstart + len;
++	*last_logical = extent->fe_logical + extent->fe_length;
+ }
+ 
+ int
+@@ -252,7 +255,7 @@ fiemap_f(
+ 		memset(fiemap, 0, map_size);
+ 		fiemap->fm_flags = fiemap_flags;
+ 		fiemap->fm_start = last_logical;
+-		fiemap->fm_length = -1;
++		fiemap->fm_length = -1LL;
+ 		fiemap->fm_extent_count = num_extents;
+ 
+ 		ret = ioctl(file->fd, FS_IOC_FIEMAP, (unsigned long)fiemap);
 @@ -281,6 +284,7 @@ fiemap_f(
  				print_plain(extent, lflag, blocksize,
  					    max_extents, &cur_extent,
