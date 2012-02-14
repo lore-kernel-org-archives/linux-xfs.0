@@ -1,12 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1EAsqMK087235 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 04:54:52 -0600
-Received: from smtprelay04.ispgateway.de (smtprelay04.ispgateway.de
-	[80.67.31.27]) by cuda.sgi.com with ESMTP id pk8AeMut1iULu1Zz
-	for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 02:54:50 -0800 (PST)
-Message-ID: <4F3A3D78.9080108@cape-horn-eng.com>
-Date: Tue, 14 Feb 2012 11:54:48 +0100
+	q1EBiL9I089874 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 05:44:21 -0600
+Received: from smtprelay02.ispgateway.de (smtprelay02.ispgateway.de
+	[80.67.31.25]) by cuda.sgi.com with ESMTP id qJQIzx6xw63jn1wY
+	for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 03:44:19 -0800 (PST)
+Message-ID: <4F3A4910.8060502@cape-horn-eng.com>
+Date: Tue, 14 Feb 2012 12:44:16 +0100
 From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
 Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
@@ -54,13 +54,11 @@ On 02/13/2012 10:16 PM, Christoph Hellwig wrote:
 
 > Yes.
 
-I ran a rm on a smaller dir, containing 9225 dirs and 425659 files and
-it took ~37 sec on 3.1.9 and ~20 sec on 3.2.4, so I do see a good
-improvement there.
+On a second test, removing 37981 directories with 312674 files, again
+all with ACLs set, went from ~46 sec on 3.1.9 to ~13 sec on 3.2.4, so
+the improvement is clearly there with 3.2.4 !
 
-Thanks,
 Richard
-
 
 -- =
 
