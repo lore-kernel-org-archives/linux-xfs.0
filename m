@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1EHIq7V112645 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 11:18:52 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id xzxvQJPU8g3gOVFw for
-	<xfs@oss.sgi.com>; Tue, 14 Feb 2012 09:18:50 -0800 (PST)
-Message-ID: <4F3A9776.2010108@redhat.com>
-Date: Tue, 14 Feb 2012 09:18:46 -0800
-From: Eric Sandeen <sandeen@redhat.com>
+	q1EHL7c4112771 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 11:21:07 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id wKMRWcBLMSThZFlh
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 14 Feb 2012 09:21:06 -0800 (PST)
+Received: by lahd3 with SMTP id d3so191840lah.26
+	for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 09:21:04 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: deprecate the "-F" foreign flag
-References: <4F2AC948.1050909@redhat.com> <20120213190028.GA1941@infradead.org>
-In-Reply-To: <20120213190028.GA1941@infradead.org>
+Date: Wed, 15 Feb 2012 01:21:04 +0800
+Message-ID: <CAGdb-8fC4-3swyyfP3xO=camgzDjR5GYV3qoaB1w+xAfiNeYPw@mail.gmail.com>
+Subject: xfsrestore will create orphanage directory when use -t
+From: Tommy Wu <wu.tommy@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,14 +25,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs <xfs@oss.sgi.com>
 
-On 2/13/12 11:00 AM, Christoph Hellwig wrote:
-> This actually breaks the following nreak tests 249 and 256 for me, can
-> you please look into fixing these ASAP?
+from the xfsdump man page:
+xfsrestore also generates a directory named orphanage in the dest
+directory. xfsrestore removes this directory after completing a simple
+restore. However, if orphanage is not empty, it is not removed. This
+can happen if files present on the dump media are not referenced by
+any of the restored directories. The orphanage has an entry for each
+such file. The entry name is the file's original inode number, a ".",
+and the file's generation count modulo 4096 (only the lower 12 bits of
+the generation count are used).
 
-argh will do.
+and the -t option from xfsdump man page:
+Displays the contents of the dump, but does not create or modify any
+files or directories. It may be desirable to set the verbosity level
+to silent when using this option.
+
+But when we use -t option with xfsrestore, it still create orphanage
+directory in current directory (because no dest directory assign).
+and if it's not empty, it is not removed.
+
+This is a bug or it's a feature?
+
+-- 
+
+Tommy Wu
 
 _______________________________________________
 xfs mailing list
