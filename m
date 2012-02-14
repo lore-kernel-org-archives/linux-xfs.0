@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1DNfWsX051654 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 17:41:33 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	bnhT67t76G6lQMsz for <xfs@oss.sgi.com>;
-	Mon, 13 Feb 2012 15:41:31 -0800 (PST)
-Date: Tue, 14 Feb 2012 10:41:29 +1100
+	q1E0CTdK052855 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 18:12:29 -0600
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	v2N6BBQLqO0XLwN4 for <xfs@oss.sgi.com>;
+	Mon, 13 Feb 2012 16:12:28 -0800 (PST)
+Date: Tue, 14 Feb 2012 11:12:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Disk spin down
-Message-ID: <20120213234129.GD14132@dastard>
-References: <4F3803B1.1090205@ashurst.eu.org> <20120213083651.GA40007@nsrc.org>
+Subject: Re: BUG: soft lockup - CPU#0 stuck for 67s! [kworker/0:5:29244] /
+	xfs_trans_committed_bulk
+Message-ID: <20120214001224.GG14132@dastard>
+References: <4F396BCF.8070008@fangornsrealm.eu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120213083651.GA40007@nsrc.org>
+In-Reply-To: <4F396BCF.8070008@fangornsrealm.eu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,25 +27,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Candler <B.Candler@pobox.com>
-Cc: Andy Bennett <andyjpb@ashurst.eu.org>, xfs@oss.sgi.com
+To: Alexander Schwarzkopf <alexander.schwarzkopf@fangornsrealm.eu>
+Cc: xfs@oss.sgi.com
 
-On Mon, Feb 13, 2012 at 08:36:51AM +0000, Brian Candler wrote:
-> On Sun, Feb 12, 2012 at 06:23:45PM +0000, Andy Bennett wrote:
-> > Can someone help me work out where writes are coming from on my system?
+On Mon, Feb 13, 2012 at 09:00:15PM +0100, Alexander Schwarzkopf wrote:
+> Hello,
 > 
-> Is the filesystem in question mounted with 'relatime' or 'noatime'?
-> Otherwise, merely reading a file will cause its inode to be dirtied.
+> I have found some hangs with XFS filesystem, but not with this problem.
 > 
-> (However in modern kernels, 'relatime' might be the default, I'm not sure)
+> Our File, NIS- and Webserver runs fine for some months. But then it
+> starts hanging.
 
-relatime has been the default for quite some time, and even before
-relatime was implemented in the VFS, xfs implementated atime updates
-in a manner almost indistinguishable from relatime since about 2007....
+Most likely it is a known problem that has been fixed and has been
+backported to 3.0-stable. I'd suggest moving to that kernel at
+minimum....
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
