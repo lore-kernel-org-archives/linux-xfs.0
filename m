@@ -1,31 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1E5W2tP068645 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 23:32:02 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id g9ecVxfoAFZAp27L
-	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 21:32:01 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 0ACD66C161
-	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 23:32:01 -0600 (CST)
-Message-ID: <4F39F1CB.3060806@hardwarefreak.com>
-Date: Mon, 13 Feb 2012 23:31:55 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q1E5ZpVG068748 for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 23:35:51 -0600
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	sTd1RV2245Vu3DUP (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Feb 2012 21:35:49 -0800 (PST)
+Received: by eaak14 with SMTP id k14so2911217eaa.26
+	for <xfs@oss.sgi.com>; Mon, 13 Feb 2012 21:35:47 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: quotacheck speed
+Date: Tue, 14 Feb 2012 06:35:45 +0100
+References: <201202122201.07649.arekm@maven.pl>
+	<201202131909.50605.arekm@maven.pl>
+	<20120213234235.GE14132@dastard>
+In-Reply-To: <20120213234235.GE14132@dastard>
 MIME-Version: 1.0
-Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
-References: <20120213170825.GA7197@infradead.org>
-	<4F394442.9020307@cape-horn-eng.com>
-	<20120213171556.GA13449@infradead.org>
-	<4F3947D6.5060402@cape-horn-eng.com>
-	<20120213172937.GA25248@infradead.org>
-	<4F394E10.9000804@cape-horn-eng.com>
-	<20120213180220.GA24163@infradead.org>
-	<4F395134.8030202@cape-horn-eng.com>
-	<20120213181012.GA27962@infradead.org>
-	<4F395B1A.7010709@cape-horn-eng.com>
-	<20120213211654.GA20192@infradead.org>
-In-Reply-To: <20120213211654.GA20192@infradead.org>
-Reply-To: stan@hardwarefreak.com
+Message-Id: <201202140635.45902.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,63 +26,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 2/13/2012 3:16 PM, Christoph Hellwig wrote:
-
-> I'd have to look into it in more detail.  IIRC you said you're using
-> RAID6 which can be fairly nasty for small reads.  Did you use the
-> inode64 mount option on the filesystem?
-
-On 2/13/2012 10:57 AM, Richard Ems wrote:
-
-> # mount | grep xfs
-> /dev/sda1 on /backup/IFT type xfs
->
-(rw,noatime,nodiratime,attr2,delaylog,nobarrier,logbufs=8,logbsize=256k,sunit=256,swidth=5376,noquota,_netdev)
-
-With a 16TB+ XFS, 20TB here, isn't inode64 the default allocator?
-
-[...]
-
-> 20 TB XFS
-> partition is 100% full
-
-Does the fact the FS is 100% full make any difference here?
-
-
-> The case is connected through SCSI.
-
-Do you mean iSCSI?  Does the host on which you're running your "find
-dir" command have a 1GbE or 10GbE connection to the InforTrend unit?
-More than one connection using bonding or multipath?  Direct connected
-or through a switch(es)?  What brand is the switch(es)?  Switch(es)
-under heavy load?
-
-If it's a single direct 1GbE connection it's possible you're running out
-of host pipe bandwidth which is only ~100MB/s in each direction.  Check
-iotop/iostat while running your command to see if you're peaking the
-interface with either read or write bytes.  If either are at or above
-100MB/s then your host pipe is full, thus this is a significant part of
-your high run time problem.
-
-Also check the performance data in the management interface on the
-InforTrend unit to see if you're hitting any limits there (if it has
-such a feature).  RAID6 is numerically intensive and that particular
-controller may not have the ASIC horsepower to keep up with the IOPS
-workload you're throwing at it.
-
-Lastly, please paste the exact command or script you refer to as "find
-dir" which is generating the workload in question.
-
--- 
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAxNCBvZiBGZWJydWFyeSAyMDEyLCBEYXZlIENoaW5uZXIgd3JvdGU6Cj4gT24g
+TW9uLCBGZWIgMTMsIDIwMTIgYXQgMDc6MDk6NTBQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtraWV3
+aWN6IHdyb3RlOgo+ID4gT24gTW9uZGF5IDEzIG9mIEZlYnJ1YXJ5IDIwMTIsIENocmlzdG9waCBI
+ZWxsd2lnIHdyb3RlOgo+ID4gPiBPbiBTdW4sIEZlYiAxMiwgMjAxMiBhdCAxMDowMTowN1BNICsw
+MTAwLCBBcmthZGl1c3ogTWk/P2tpZXdpY3ogd3JvdGU6Cj4gPiA+ID4gSGksCj4gPiA+ID4gCj4g
+PiA+ID4gV2hlbiBtb3VudGluZyA4MDBHQiBmaWxlc3lzdGVtIChhZnRlciByZXBhaXIgZm9yIGV4
+YW1wbGUpIGhlcmUKPiA+ID4gPiBxdW90YWNoZWNrIHRha2VzIDEwIG1pbnV0ZXMuIFF1aXRlIGxv
+bmcgdGltZSB0aGF0IGFkZHMgdG8gd2hvbGUgdGltZQo+ID4gPiA+IG9mIGZpbGVzeXN0ZW0gZG93
+bnRpbWUgKHJlcGFpciArIHF1b3RhY2hlY2spLgo+ID4gPiA+IAo+ID4gPiA+IEkgd29uZGVyIGlm
+IHF1b3RhY2hlY2sgY2FuIGJlIHNvbWVob3cgaW1wcm92ZWQgb3IgZG9uZSBkaWZmZXJlbnRseQo+
+ID4gPiA+IGxpa2UgZG9pbmcgaXQgaW4gcGFyYWxsZWwgd2l0aCBub3JtYWwgZnMgdXNhZ2UgKHNv
+IHRoZXJlIHdpbGwgYmUgbm8KPiA+ID4gPiBkb3dudGltZSkgPwo+ID4gPiAKPiA+ID4gSSB0aGlu
+ayB0aGUgYmVzdCBpZGVhIHRvIGltcHJvdmUgdGhlIHBlcmZvcm1hbmNlIGluIGNhc2UgeW91IGRp
+ZCBhCj4gPiA+IHJlcGFpciBpcyB0byBpbnRlZ3JhdGUgdGhlIHF1b3RhY2hlY2sgY29kZSBpbnRv
+IHJlcGFpci4gIEl0J3MgZmFpcmx5Cj4gPiA+IHNpbXBsZSBnaXZlbiB0aGF0IHF1b3RhY2hlY2sg
+c2ltcGx5IHdhbGtzIGFsbCBpbm9kZXMgYW5kIGFkZHMgdGhlaXIKPiA+ID4gc3BhY2UgdXNhZ2Ug
+dG8gdGhlIGNvcnJlY3QgdXNlci9ncm91cC9wcm9qZWN0LCBhbmQgZ2l2ZW4gdGhhdCByZXBhaXIK
+PiA+ID4gYWxyZWFkeSB3YWxrcyBhbGwgaW5vZGVzLCBhbmQgY2hlY2tzIHRoZWlyIGJsb2NrIG1h
+cHMgaXQgZG9lcyBtb3N0IG9mCj4gPiA+IHRoYXQgd29yayBhbHJlYWR5Lgo+ID4gCj4gPiBUaGF0
+IHdvdWxkIGJlIGludGVyZXN0aW5nIGFuZCBwcm9iYWJseSBtYWtlCj4gPiAKPiA+ID4gVGhlIG9u
+bHkgZG93bnNpZGUgd291bGQgYmUgdGhhdCB0aGUgbWVtb3J5IHVzYWdlCj4gPiA+IG9mIHJlcGFp
+ciBpbmNyZWFzZXMgYSBiaXQgYnkga2VlcGluZyB0aGUgZHF1b3RzIGluIG1lbW9yeWIsIGJ1dCBl
+dmVuCj4gPiA+IGZvciB5b3VyIDEzMDAwMCBkcXVvdCBzZXR1cCB0aGF0IHdvdWxkIGFkZCBhYm91
+dCAxMDAgYnl0ZXMgKiAxMzAwMDAKPiA+ID4gcGxlYXNlIGEgYml0IG9mIGluLW1lbW9yeSBtZXRh
+ZGF0YSAobGVzcyB0aGFuIDIwTUIgdG90YWwpIG9mIG1lbW9yeQo+ID4gPiB1c2FnZSwgc28gaXQg
+cHJvYmFibHkgaXMgYSBnb29kIHRyYWRlb2ZmLgo+ID4gPiAKPiA+ID4gCj4gPiA+IEluIHdoYXQg
+Y2FzZXMgZG8geW91IHJlZ3VsYXJseSBydW4gcXVvdGFjaGVjayB3aGVuIHlvdSBkaWQgbm90IGRv
+Cj4gPiA+IGEgcmVwYWlyIGZpcnN0Pwo+ID4gCj4gPiBJIGRvbid0IGluaXRpYXRlIHF1b3RhY2hl
+Y2sgbWFudWFsbHkuIEFGQUlLIGludGVybmFsIHhmcyBxdW90YWNoZWNrCj4gPiBoYXBwZW5zIGlu
+IHR3byBjYXNlcyBoZXJlOgo+ID4gMSkgcmVwYWlyLT5tb3VudAo+ID4gMikgZmlsZXN5c3RlbSBo
+YXMgcXVvdGFjaGVjayBkb25lIHByb3Blcmx5IHNvbWUgdGltZSBhZ28gLT4gdW1vdW50IC0+Cj4g
+PiBtb3VudC0KPiA+IAo+ID4gPm9vcHMvcmVzZXQvc29tZXRoaW5nIGxpa2UgdGhhdCBoYXBwZW5z
+IHdoaWxlIG1vdW50aW5nIC0+IG5ldyBtb3VudAo+IAo+IFNvIHlvdSdkIGxpa2UgYm90aCBxdW90
+YWNoZWNrIHRvIGJlIHNwZWQgdXAgYW5kIHJlcGFpcgo+IHRvIGRvIGl0IGFzIHdlbGw/IDspCgpX
+ZWxsLCAxKSBpcyBoYXBwZW5pbmcgbXVjaCBtb3JlIG9mdGVuIHRoYW4gMikgOi0pCgotLSAKQXJr
+YWRpdXN6IE1pxZtraWV3aWN6ICAgICAgICBQTEQvTGludXggVGVhbQphcmVrbSAvIG1hdmVuLnBs
+ICAgICAgICAgICAgaHR0cDovL2Z0cC5wbGQtbGludXgub3JnLwoKX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
+aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
