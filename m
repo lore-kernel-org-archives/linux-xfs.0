@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1F2VoPu142352 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 20:31:50 -0600
+	q1F2Vnbo142346 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 20:31:50 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	6647mkLdwzOXXmTH (version=TLSv1 cipher=AES256-SHA bits=256
+	jChcmtAHlK05hGU2 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Feb 2012 18:31:49 -0800 (PST)
+	Tue, 14 Feb 2012 18:31:48 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RxUeq-0004SI-EW
-	for xfs@oss.sgi.com; Wed, 15 Feb 2012 02:31:48 +0000
-Message-Id: <20120215023148.399729881@bombadil.infradead.org>
-Date: Tue, 14 Feb 2012 21:29:35 -0500
+	Linux)) id 1RxUeo-0004Na-Mp
+	for xfs@oss.sgi.com; Wed, 15 Feb 2012 02:31:46 +0000
+Message-Id: <20120215022926.577682146@bombadil.infradead.org>
+Date: Tue, 14 Feb 2012 21:29:26 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 9/9] quota: make Q_XQUOTASYNC a noop
-References: <20120215022926.577682146@bombadil.infradead.org>
-Content-Disposition: inline; filename=quota-disable-Q_XQUOTASYNC
+Subject: [PATCH 0/9] quota updates V2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,29 +30,13 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that XFS takes quota reservations into account there is no need to flush
-anything before reporting quotas - in addition to beeing fully transactional
-all quota information is also 100% coherent with the rest of the filesystem
-now.
+Resend of the my previous two quota series.  The changes are:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Index: xfs/fs/quota/quota.c
-===================================================================
---- xfs.orig/fs/quota/quota.c	2012-02-02 13:06:30.693396524 +0100
-+++ xfs/fs/quota/quota.c	2012-02-02 13:23:23.181244741 +0100
-@@ -282,10 +282,9 @@ static int do_quotactl(struct super_bloc
- 	case Q_XGETQUOTA:
- 		return quota_getxquota(sb, type, id, addr);
- 	case Q_XQUOTASYNC:
--		/* caller already holds s_umount */
- 		if (sb->s_flags & MS_RDONLY)
- 			return -EROFS;
--		writeback_inodes_sb(sb, WB_REASON_SYNC);
-+		/* XFS quotas are fully coherent now, making this call a noop */
- 		return 0;
- 	default:
- 		return -EINVAL;
+ - drop the first patch is it's now included in mainline
+ - rebase one patch on top of other changes in the tree
+ - make various commit messages nicer
+ - include a tested-by statement for arekm, who confirms the impressive
+   speedups on his real life system
 
 _______________________________________________
 xfs mailing list
