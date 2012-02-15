@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1F2WQ69142546 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 20:32:26 -0600
-Date: Tue, 14 Feb 2012 21:32:19 -0500
+	q1F2Vo4Q142351 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 20:31:50 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	26NgkssUCSKG0V7C (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 14 Feb 2012 18:31:49 -0800 (PST)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1RxUeq-0004Rm-8q
+	for xfs@oss.sgi.com; Wed, 15 Feb 2012 02:31:48 +0000
+Message-Id: <20120215023148.224784543@bombadil.infradead.org>
+Date: Tue, 14 Feb 2012 21:29:34 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH -v2 1/3] xfs: change available ranges of softlimit and
-	hardlimit in quota check
-Message-ID: <20120215023219.GA17149@infradead.org>
-References: <20120206124951.12624.88233.stgit@ltc219.sdl.hitachi.co.jp>
-	<20120206125007.12624.58454.stgit@ltc219.sdl.hitachi.co.jp>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120206125007.12624.58454.stgit@ltc219.sdl.hitachi.co.jp>
+Subject: [PATCH 8/9] xfs: include reservations in quota reporting
+References: <20120215022926.577682146@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-quota-report-delalloc-reservations
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,22 +25,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
-Cc: Alex Elder <elder@kernel.org>, yrl.pp-manager.tt@hitachi.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>, Alex Elder <aelder@sgi.com>, Christoph Hellwig <hch@lst.de>
+To: xfs@oss.sgi.com
 
-On Mon, Feb 06, 2012 at 09:50:07PM +0900, Mitsuo Hayasaka wrote:
-> In general, quota allows us to use disk blocks and inodes up to each
-> limit, that is, they are available if they don't exceed their limitations.
-> Current xfs sets their available ranges to lower than them except disk
-> inode quota check. So, this patch changes the ranges to not beyond them.
+Report all quota usage including the currently pending reservations.  This
+avoids the need to flush delalloc space before gathering quota information,
+and matches quota enforcement, which already takes the reservations into
+account.
 
-Looks good,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Index: xfs/fs/xfs/xfs_qm_bhv.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm_bhv.c	2012-02-02 15:06:42.624326140 +0100
++++ xfs/fs/xfs/xfs_qm_bhv.c	2012-02-02 15:06:43.077657017 +0100
+@@ -40,28 +40,28 @@
+ STATIC void
+ xfs_fill_statvfs_from_dquot(
+ 	struct kstatfs		*statp,
+-	xfs_disk_dquot_t	*dp)
++	struct xfs_dquot	*dqp)
+ {
+ 	__uint64_t		limit;
+ 
+-	limit = dp->d_blk_softlimit ?
+-		be64_to_cpu(dp->d_blk_softlimit) :
+-		be64_to_cpu(dp->d_blk_hardlimit);
++	limit = dqp->q_core.d_blk_softlimit ?
++		be64_to_cpu(dqp->q_core.d_blk_softlimit) :
++		be64_to_cpu(dqp->q_core.d_blk_hardlimit);
+ 	if (limit && statp->f_blocks > limit) {
+ 		statp->f_blocks = limit;
+ 		statp->f_bfree = statp->f_bavail =
+-			(statp->f_blocks > be64_to_cpu(dp->d_bcount)) ?
+-			 (statp->f_blocks - be64_to_cpu(dp->d_bcount)) : 0;
++			(statp->f_blocks > dqp->q_res_bcount) ?
++			 (statp->f_blocks - dqp->q_res_bcount) : 0;
+ 	}
+ 
+-	limit = dp->d_ino_softlimit ?
+-		be64_to_cpu(dp->d_ino_softlimit) :
+-		be64_to_cpu(dp->d_ino_hardlimit);
++	limit = dqp->q_core.d_ino_softlimit ?
++		be64_to_cpu(dqp->q_core.d_ino_softlimit) :
++		be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+ 	if (limit && statp->f_files > limit) {
+ 		statp->f_files = limit;
+ 		statp->f_ffree =
+-			(statp->f_files > be64_to_cpu(dp->d_icount)) ?
+-			 (statp->f_ffree - be64_to_cpu(dp->d_icount)) : 0;
++			(statp->f_files > dqp->q_res_icount) ?
++			 (statp->f_ffree - dqp->q_res_icount) : 0;
+ 	}
+ }
+ 
+@@ -82,7 +82,7 @@ xfs_qm_statvfs(
+ 	xfs_dquot_t		*dqp;
+ 
+ 	if (!xfs_qm_dqget(mp, NULL, xfs_get_projid(ip), XFS_DQ_PROJ, 0, &dqp)) {
+-		xfs_fill_statvfs_from_dquot(statp, &dqp->q_core);
++		xfs_fill_statvfs_from_dquot(statp, dqp);
+ 		xfs_qm_dqput(dqp);
+ 	}
+ }
+Index: xfs/fs/xfs/xfs_qm_syscalls.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm_syscalls.c	2012-02-02 15:06:42.837658317 +0100
++++ xfs/fs/xfs/xfs_qm_syscalls.c	2012-02-02 15:07:31.894059224 +0100
+@@ -758,8 +758,8 @@ xfs_qm_scall_getquota(
+ 		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_blk_softlimit));
+ 	dst->d_ino_hardlimit = be64_to_cpu(dqp->q_core.d_ino_hardlimit);
+ 	dst->d_ino_softlimit = be64_to_cpu(dqp->q_core.d_ino_softlimit);
+-	dst->d_bcount = XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_bcount));
+-	dst->d_icount = be64_to_cpu(dqp->q_core.d_icount);
++	dst->d_bcount = XFS_FSB_TO_BB(mp, dqp->q_res_bcount);
++	dst->d_icount = dqp->q_res_icount;
+ 	dst->d_btimer = be32_to_cpu(dqp->q_core.d_btimer);
+ 	dst->d_itimer = be32_to_cpu(dqp->q_core.d_itimer);
+ 	dst->d_iwarns = be16_to_cpu(dqp->q_core.d_iwarns);
+@@ -768,7 +768,7 @@ xfs_qm_scall_getquota(
+ 		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtb_hardlimit));
+ 	dst->d_rtb_softlimit =
+ 		XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtb_softlimit));
+-	dst->d_rtbcount = XFS_FSB_TO_BB(mp, be64_to_cpu(dqp->q_core.d_rtbcount));
++	dst->d_rtbcount = XFS_FSB_TO_BB(mp, dqp->q_res_rtbcount);
+ 	dst->d_rtbtimer = be32_to_cpu(dqp->q_core.d_rtbtimer);
+ 	dst->d_rtbwarns = be16_to_cpu(dqp->q_core.d_rtbwarns);
+ 
 
 _______________________________________________
 xfs mailing list
