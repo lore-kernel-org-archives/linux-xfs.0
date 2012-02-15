@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1F2VndB142347 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 20:31:50 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Ye8Vv9UhKdyycGjh (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Feb 2012 18:31:48 -0800 (PST)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RxUeo-0004OA-Sr
-	for xfs@oss.sgi.com; Wed, 15 Feb 2012 02:31:46 +0000
-Message-Id: <20120215023146.847910539@bombadil.infradead.org>
-Date: Tue, 14 Feb 2012 21:29:27 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/9] xfs: use per-filesystem dquot LRU lists
-References: <20120215022926.577682146@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-per-mount-lru-2
+	q1FAdGN3167600 for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 04:39:16 -0600
+Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id qEBtIAZk81z92nI6
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 15 Feb 2012 02:39:13 -0800 (PST)
+Received: by bkcit16 with SMTP id it16so851838bkc.26
+	for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 02:39:12 -0800 (PST)
+From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: Re: quotacheck speed
+Date: Wed, 15 Feb 2012 11:39:10 +0100
+References: <201202122201.07649.arekm@maven.pl>
+	<20120213234235.GE14132@dastard>
+	<201202140635.45902.arekm@maven.pl>
+In-Reply-To: <201202140635.45902.arekm@maven.pl>
+MIME-Version: 1.0
+Message-Id: <201202151139.10612.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,354 +25,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Replace the global dquot lru lists with a per-filesystem one.
-
-Note that the shrinker isn't wired up to the per-superblock VFS shrinker
-infrastructure, as doing so would cause problems due to summing up and
-splitting out again the counts for inodes and dquots.  I do not believe this
-is a major issue as the quota cache is not deeply interwinded with inode
-and dentry caching.
-
-Also temporarily stop tracking the system-wide count of dquots on the LRU
-lists for /proc/fs/xfs/xqm, which will be added back later in the series.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
----
- fs/xfs/xfs_dquot.c    |   37 +++++++++++++++--------------
- fs/xfs/xfs_dquot.h    |    2 -
- fs/xfs/xfs_qm.c       |   62 +++++++++++++++++++++-----------------------------
- fs/xfs/xfs_qm.h       |    7 +++--
- fs/xfs/xfs_qm_stats.c |    2 -
- 5 files changed, 52 insertions(+), 58 deletions(-)
-
-Index: xfs/fs/xfs/xfs_dquot.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2012-02-12 13:18:46.000000000 -0800
-+++ xfs/fs/xfs/xfs_dquot.c	2012-02-12 13:19:02.840266068 -0800
-@@ -47,7 +47,7 @@
-  *     qi->qi_dqlist_lock
-  *       dquot->q_qlock (xfs_dqlock() and friends)
-  *         dquot->q_flush (xfs_dqflock() and friends)
-- *         xfs_Gqm->qm_dqfrlist_lock
-+ *         qi->qi_lru_lock
-  *
-  * If two dquots need to be locked the order is user before group/project,
-  * otherwise by the lowest id first, see xfs_dqlock2.
-@@ -69,7 +69,7 @@ void
- xfs_qm_dqdestroy(
- 	xfs_dquot_t	*dqp)
- {
--	ASSERT(list_empty(&dqp->q_freelist));
-+	ASSERT(list_empty(&dqp->q_lru));
- 
- 	mutex_destroy(&dqp->q_qlock);
- 	kmem_zone_free(xfs_Gqm->qm_dqzone, dqp);
-@@ -497,7 +497,7 @@ xfs_qm_dqread(
- 	dqp->dq_flags = type;
- 	dqp->q_core.d_id = cpu_to_be32(id);
- 	dqp->q_mount = mp;
--	INIT_LIST_HEAD(&dqp->q_freelist);
-+	INIT_LIST_HEAD(&dqp->q_lru);
- 	mutex_init(&dqp->q_qlock);
- 	init_waitqueue_head(&dqp->q_pinwait);
- 
-@@ -843,7 +843,6 @@ restart:
- 	return (0);
- }
- 
--
- /*
-  * Release a reference to the dquot (decrement ref-count)
-  * and unlock it. If there is a group quota attached to this
-@@ -869,12 +868,13 @@ recurse:
- 
- 	trace_xfs_dqput_free(dqp);
- 
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--	if (list_empty(&dqp->q_freelist)) {
--		list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
--		xfs_Gqm->qm_dqfrlist_cnt++;
-+	mutex_lock(&dqp->q_mount->m_quotainfo->qi_lru_lock);
-+	if (list_empty(&dqp->q_lru)) {
-+		list_add_tail(&dqp->q_lru,
-+			      &dqp->q_mount->m_quotainfo->qi_lru_list);
-+		dqp->q_mount->m_quotainfo->qi_lru_count++;
- 	}
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+	mutex_unlock(&dqp->q_mount->m_quotainfo->qi_lru_lock);
- 
- 	/*
- 	 * If we just added a udquot to the freelist, then we want to release
-@@ -1125,6 +1125,7 @@ xfs_qm_dqpurge(
- {
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	struct xfs_dqhash	*qh = dqp->q_hash;
-+	struct xfs_quotainfo	*qi = mp->m_quotainfo;
- 
- 	xfs_dqlock(dqp);
- 
-@@ -1175,21 +1176,21 @@ xfs_qm_dqpurge(
- 	qh->qh_version++;
- 	mutex_unlock(&qh->qh_lock);
- 
--	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
-+	mutex_lock(&qi->qi_dqlist_lock);
- 	list_del_init(&dqp->q_mplist);
--	mp->m_quotainfo->qi_dqreclaims++;
--	mp->m_quotainfo->qi_dquots--;
--	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
-+	qi->qi_dqreclaims++;
-+	qi->qi_dquots--;
-+	mutex_unlock(&qi->qi_dqlist_lock);
- 
- 	/*
- 	 * We move dquots to the freelist as soon as their reference count
- 	 * hits zero, so it really should be on the freelist here.
- 	 */
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--	ASSERT(!list_empty(&dqp->q_freelist));
--	list_del_init(&dqp->q_freelist);
--	xfs_Gqm->qm_dqfrlist_cnt--;
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+	mutex_lock(&qi->qi_lru_lock);
-+	ASSERT(!list_empty(&dqp->q_lru));
-+	list_del_init(&dqp->q_lru);
-+	qi->qi_lru_count--;
-+	mutex_unlock(&qi->qi_lru_lock);
- 
- 	xfs_qm_dqdestroy(dqp);
- }
-Index: xfs/fs/xfs/xfs_dquot.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.h	2012-02-10 09:18:14.885180611 -0800
-+++ xfs/fs/xfs/xfs_dquot.h	2012-02-12 13:19:02.840266068 -0800
-@@ -47,7 +47,7 @@ struct xfs_trans;
-  */
- typedef struct xfs_dquot {
- 	uint		 dq_flags;	/* various flags (XFS_DQ_*) */
--	struct list_head q_freelist;	/* global free list of dquots */
-+	struct list_head q_lru;		/* global free list of dquots */
- 	struct list_head q_mplist;	/* mount's list of dquots */
- 	struct list_head q_hashlist;	/* gloabl hash list of dquots */
- 	xfs_dqhash_t	*q_hash;	/* the hashchain header */
-Index: xfs/fs/xfs/xfs_qm.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2012-02-12 13:18:46.000000000 -0800
-+++ xfs/fs/xfs/xfs_qm.c	2012-02-12 13:19:02.840266068 -0800
-@@ -61,11 +61,6 @@ STATIC int	xfs_qm_init_quotainos(xfs_mou
- STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
- STATIC int	xfs_qm_shake(struct shrinker *, struct shrink_control *);
- 
--static struct shrinker xfs_qm_shaker = {
--	.shrink = xfs_qm_shake,
--	.seeks = DEFAULT_SEEKS,
--};
--
- /*
-  * Initialize the XQM structure.
-  * Note that there is not one quota manager per file system.
-@@ -106,13 +101,6 @@ xfs_Gqm_init(void)
- 	}
- 
- 	/*
--	 * Freelist of all dquots of all file systems
--	 */
--	INIT_LIST_HEAD(&xqm->qm_dqfrlist);
--	xqm->qm_dqfrlist_cnt = 0;
--	mutex_init(&xqm->qm_dqfrlist_lock);
--
--	/*
- 	 * dquot zone. we register our own low-memory callback.
- 	 */
- 	if (!qm_dqzone) {
-@@ -122,8 +110,6 @@ xfs_Gqm_init(void)
- 	} else
- 		xqm->qm_dqzone = qm_dqzone;
- 
--	register_shrinker(&xfs_qm_shaker);
--
- 	/*
- 	 * The t_dqinfo portion of transactions.
- 	 */
-@@ -156,12 +142,6 @@ xfs_qm_destroy(
- 	ASSERT(xqm != NULL);
- 	ASSERT(xqm->qm_nrefs == 0);
- 
--	unregister_shrinker(&xfs_qm_shaker);
--
--	mutex_lock(&xqm->qm_dqfrlist_lock);
--	ASSERT(list_empty(&xqm->qm_dqfrlist));
--	mutex_unlock(&xqm->qm_dqfrlist_lock);
--
- 	hsize = xqm->qm_dqhashmask + 1;
- 	for (i = 0; i < hsize; i++) {
- 		xfs_qm_list_destroy(&(xqm->qm_usr_dqhtable[i]));
-@@ -827,6 +807,10 @@ xfs_qm_init_quotainfo(
- 	mutex_init(&qinf->qi_dqlist_lock);
- 	lockdep_set_class(&qinf->qi_dqlist_lock, &xfs_quota_mplist_class);
- 
-+	INIT_LIST_HEAD(&qinf->qi_lru_list);
-+	qinf->qi_lru_count = 0;
-+	mutex_init(&qinf->qi_lru_lock);
-+
- 	qinf->qi_dqreclaims = 0;
- 
- 	/* mutex used to serialize quotaoffs */
-@@ -894,6 +878,9 @@ xfs_qm_init_quotainfo(
- 		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
- 	}
- 
-+	qinf->qi_shrinker.shrink = xfs_qm_shake;
-+	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
-+	register_shrinker(&qinf->qi_shrinker);
- 	return 0;
- }
- 
-@@ -913,6 +900,8 @@ xfs_qm_destroy_quotainfo(
- 	ASSERT(qi != NULL);
- 	ASSERT(xfs_Gqm != NULL);
- 
-+	unregister_shrinker(&qi->qi_shrinker);
-+
- 	/*
- 	 * Release the reference that XQM kept, so that we know
- 	 * when the XQM structure should be freed. We cannot assume
-@@ -1624,6 +1613,7 @@ xfs_qm_dqreclaim_one(
- 	struct list_head	*dispose_list)
- {
- 	struct xfs_mount	*mp = dqp->q_mount;
-+	struct xfs_quotainfo	*qi = mp->m_quotainfo;
- 	int			error;
- 
- 	if (!xfs_dqlock_nowait(dqp))
-@@ -1639,8 +1629,8 @@ xfs_qm_dqreclaim_one(
- 		trace_xfs_dqreclaim_want(dqp);
- 		XQM_STATS_INC(xqmstats.xs_qm_dqwants);
- 
--		list_del_init(&dqp->q_freelist);
--		xfs_Gqm->qm_dqfrlist_cnt--;
-+		list_del_init(&dqp->q_lru);
-+		qi->qi_lru_count--;
- 		return;
- 	}
- 
-@@ -1688,8 +1678,8 @@ xfs_qm_dqreclaim_one(
- 	xfs_dqunlock(dqp);
- 
- 	ASSERT(dqp->q_nrefs == 0);
--	list_move_tail(&dqp->q_freelist, dispose_list);
--	xfs_Gqm->qm_dqfrlist_cnt--;
-+	list_move_tail(&dqp->q_lru, dispose_list);
-+	qi->qi_lru_count--;
- 
- 	trace_xfs_dqreclaim_done(dqp);
- 	XQM_STATS_INC(xqmstats.xs_qm_dqreclaims);
-@@ -1701,7 +1691,7 @@ out_busy:
- 	/*
- 	 * Move the dquot to the tail of the list so that we don't spin on it.
- 	 */
--	list_move_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
-+	list_move_tail(&dqp->q_lru, &qi->qi_lru_list);
- 
- 	trace_xfs_dqreclaim_busy(dqp);
- 	XQM_STATS_INC(xqmstats.xs_qm_dqreclaim_misses);
-@@ -1712,6 +1702,8 @@ xfs_qm_shake(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
-+	struct xfs_quotainfo	*qi =
-+		container_of(shrink, struct xfs_quotainfo, qi_shrinker);
- 	int			nr_to_scan = sc->nr_to_scan;
- 	LIST_HEAD		(dispose_list);
- 	struct xfs_dquot	*dqp;
-@@ -1721,24 +1713,23 @@ xfs_qm_shake(
- 	if (!nr_to_scan)
- 		goto out;
- 
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--	while (!list_empty(&xfs_Gqm->qm_dqfrlist)) {
-+	mutex_lock(&qi->qi_lru_lock);
-+	while (!list_empty(&qi->qi_lru_list)) {
- 		if (nr_to_scan-- <= 0)
- 			break;
--		dqp = list_first_entry(&xfs_Gqm->qm_dqfrlist, struct xfs_dquot,
--				       q_freelist);
-+		dqp = list_first_entry(&qi->qi_lru_list, struct xfs_dquot,
-+				       q_lru);
- 		xfs_qm_dqreclaim_one(dqp, &dispose_list);
- 	}
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+	mutex_unlock(&qi->qi_lru_lock);
- 
- 	while (!list_empty(&dispose_list)) {
--		dqp = list_first_entry(&dispose_list, struct xfs_dquot,
--				       q_freelist);
--		list_del_init(&dqp->q_freelist);
-+		dqp = list_first_entry(&dispose_list, struct xfs_dquot, q_lru);
-+		list_del_init(&dqp->q_lru);
- 		xfs_qm_dqfree_one(dqp);
- 	}
- out:
--	return (xfs_Gqm->qm_dqfrlist_cnt / 100) * sysctl_vfs_cache_pressure;
-+	return (qi->qi_lru_count / 100) * sysctl_vfs_cache_pressure;
- }
- 
- /*
-Index: xfs/fs/xfs/xfs_qm.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm.h	2012-02-12 13:18:46.000000000 -0800
-+++ xfs/fs/xfs/xfs_qm.h	2012-02-12 13:19:02.843599401 -0800
-@@ -57,9 +57,6 @@ typedef struct xfs_qm {
- 	xfs_dqlist_t	*qm_usr_dqhtable;/* udquot hash table */
- 	xfs_dqlist_t	*qm_grp_dqhtable;/* gdquot hash table */
- 	uint		 qm_dqhashmask;	 /* # buckets in dq hashtab - 1 */
--	struct list_head qm_dqfrlist;	 /* freelist of dquots */
--	struct mutex	 qm_dqfrlist_lock;
--	int		 qm_dqfrlist_cnt;
- 	atomic_t	 qm_totaldquots; /* total incore dquots */
- 	uint		 qm_nrefs;	 /* file systems with quota on */
- 	kmem_zone_t	*qm_dqzone;	 /* dquot mem-alloc zone */
-@@ -73,6 +70,9 @@ typedef struct xfs_qm {
- typedef struct xfs_quotainfo {
- 	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
- 	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
-+	struct list_head qi_lru_list;
-+	struct mutex	 qi_lru_lock;
-+	int		 qi_lru_count;
- 	struct list_head qi_dqlist;	 /* all dquots in filesys */
- 	struct mutex	 qi_dqlist_lock;
- 	int		 qi_dquots;
-@@ -93,6 +93,7 @@ typedef struct xfs_quotainfo {
- 	xfs_qcnt_t	 qi_isoftlimit;	 /* default inode count soft limit */
- 	xfs_qcnt_t	 qi_rtbhardlimit;/* default realtime blk hard limit */
- 	xfs_qcnt_t	 qi_rtbsoftlimit;/* default realtime blk soft limit */
-+	struct shrinker  qi_shrinker;
- } xfs_quotainfo_t;
- 
- 
-Index: xfs/fs/xfs/xfs_qm_stats.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm_stats.c	2012-02-12 13:18:46.000000000 -0800
-+++ xfs/fs/xfs/xfs_qm_stats.c	2012-02-12 13:19:02.843599401 -0800
-@@ -45,7 +45,7 @@ static int xqm_proc_show(struct seq_file
- 			0,
- 			xfs_Gqm? atomic_read(&xfs_Gqm->qm_totaldquots) : 0,
- 			0,
--			xfs_Gqm? xfs_Gqm->qm_dqfrlist_cnt : 0);
-+			0);
- 	return 0;
- }
- 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlc2RheSAxNCBvZiBGZWJydWFyeSAyMDEyLCBBcmthZGl1c3ogTWnFm2tpZXdpY3ogd3Jv
+dGU6Cj4gT24gVHVlc2RheSAxNCBvZiBGZWJydWFyeSAyMDEyLCBEYXZlIENoaW5uZXIgd3JvdGU6
+Cj4gPiBPbiBNb24sIEZlYiAxMywgMjAxMiBhdCAwNzowOTo1MFBNICswMTAwLCBBcmthZGl1c3og
+TWnFm2tpZXdpY3ogd3JvdGU6Cj4gPiA+IE9uIE1vbmRheSAxMyBvZiBGZWJydWFyeSAyMDEyLCBD
+aHJpc3RvcGggSGVsbHdpZyB3cm90ZToKPiA+ID4gPiBPbiBTdW4sIEZlYiAxMiwgMjAxMiBhdCAx
+MDowMTowN1BNICswMTAwLCBBcmthZGl1c3ogTWk/P2tpZXdpY3ogd3JvdGU6Cj4gPiA+ID4gPiBI
+aSwKPiA+ID4gPiA+IAo+ID4gPiA+ID4gV2hlbiBtb3VudGluZyA4MDBHQiBmaWxlc3lzdGVtIChh
+ZnRlciByZXBhaXIgZm9yIGV4YW1wbGUpIGhlcmUKPiA+ID4gPiA+IHF1b3RhY2hlY2sgdGFrZXMg
+MTAgbWludXRlcy4gUXVpdGUgbG9uZyB0aW1lIHRoYXQgYWRkcyB0byB3aG9sZQo+ID4gPiA+ID4g
+dGltZSBvZiBmaWxlc3lzdGVtIGRvd250aW1lIChyZXBhaXIgKyBxdW90YWNoZWNrKS4KPiA+ID4g
+PiA+IAo+ID4gPiA+ID4gSSB3b25kZXIgaWYgcXVvdGFjaGVjayBjYW4gYmUgc29tZWhvdyBpbXBy
+b3ZlZCBvciBkb25lIGRpZmZlcmVudGx5Cj4gPiA+ID4gPiBsaWtlIGRvaW5nIGl0IGluIHBhcmFs
+bGVsIHdpdGggbm9ybWFsIGZzIHVzYWdlIChzbyB0aGVyZSB3aWxsIGJlIG5vCj4gPiA+ID4gPiBk
+b3dudGltZSkgPwo+ID4gPiA+IAo+ID4gPiA+IEkgdGhpbmsgdGhlIGJlc3QgaWRlYSB0byBpbXBy
+b3ZlIHRoZSBwZXJmb3JtYW5jZSBpbiBjYXNlIHlvdSBkaWQgYQo+ID4gPiA+IHJlcGFpciBpcyB0
+byBpbnRlZ3JhdGUgdGhlIHF1b3RhY2hlY2sgY29kZSBpbnRvIHJlcGFpci4gIEl0J3MgZmFpcmx5
+Cj4gPiA+ID4gc2ltcGxlIGdpdmVuIHRoYXQgcXVvdGFjaGVjayBzaW1wbHkgd2Fsa3MgYWxsIGlu
+b2RlcyBhbmQgYWRkcyB0aGVpcgo+ID4gPiA+IHNwYWNlIHVzYWdlIHRvIHRoZSBjb3JyZWN0IHVz
+ZXIvZ3JvdXAvcHJvamVjdCwgYW5kIGdpdmVuIHRoYXQgcmVwYWlyCj4gPiA+ID4gYWxyZWFkeSB3
+YWxrcyBhbGwgaW5vZGVzLCBhbmQgY2hlY2tzIHRoZWlyIGJsb2NrIG1hcHMgaXQgZG9lcyBtb3N0
+IG9mCj4gPiA+ID4gdGhhdCB3b3JrIGFscmVhZHkuCj4gPiA+IAo+ID4gPiBUaGF0IHdvdWxkIGJl
+IGludGVyZXN0aW5nIGFuZCBwcm9iYWJseSBtYWtlCj4gPiA+IAo+ID4gPiA+IFRoZSBvbmx5IGRv
+d25zaWRlIHdvdWxkIGJlIHRoYXQgdGhlIG1lbW9yeSB1c2FnZQo+ID4gPiA+IG9mIHJlcGFpciBp
+bmNyZWFzZXMgYSBiaXQgYnkga2VlcGluZyB0aGUgZHF1b3RzIGluIG1lbW9yeWIsIGJ1dCBldmVu
+Cj4gPiA+ID4gZm9yIHlvdXIgMTMwMDAwIGRxdW90IHNldHVwIHRoYXQgd291bGQgYWRkIGFib3V0
+IDEwMCBieXRlcyAqIDEzMDAwMAo+ID4gPiA+IHBsZWFzZSBhIGJpdCBvZiBpbi1tZW1vcnkgbWV0
+YWRhdGEgKGxlc3MgdGhhbiAyME1CIHRvdGFsKSBvZiBtZW1vcnkKPiA+ID4gPiB1c2FnZSwgc28g
+aXQgcHJvYmFibHkgaXMgYSBnb29kIHRyYWRlb2ZmLgo+ID4gPiA+IAo+ID4gPiA+IAo+ID4gPiA+
+IEluIHdoYXQgY2FzZXMgZG8geW91IHJlZ3VsYXJseSBydW4gcXVvdGFjaGVjayB3aGVuIHlvdSBk
+aWQgbm90IGRvCj4gPiA+ID4gYSByZXBhaXIgZmlyc3Q/Cj4gPiA+IAo+ID4gPiBJIGRvbid0IGlu
+aXRpYXRlIHF1b3RhY2hlY2sgbWFudWFsbHkuIEFGQUlLIGludGVybmFsIHhmcyBxdW90YWNoZWNr
+Cj4gPiA+IGhhcHBlbnMgaW4gdHdvIGNhc2VzIGhlcmU6Cj4gPiA+IDEpIHJlcGFpci0+bW91bnQK
+PiA+ID4gMikgZmlsZXN5c3RlbSBoYXMgcXVvdGFjaGVjayBkb25lIHByb3Blcmx5IHNvbWUgdGlt
+ZSBhZ28gLT4gdW1vdW50IC0+Cj4gPiA+IG1vdW50LQo+ID4gPiAKPiA+ID4gPm9vcHMvcmVzZXQv
+c29tZXRoaW5nIGxpa2UgdGhhdCBoYXBwZW5zIHdoaWxlIG1vdW50aW5nIC0+IG5ldyBtb3VudAo+
+ID4gCj4gPiBTbyB5b3UnZCBsaWtlIGJvdGggcXVvdGFjaGVjayB0byBiZSBzcGVkIHVwIGFuZCBy
+ZXBhaXIKPiA+IHRvIGRvIGl0IGFzIHdlbGw/IDspCj4gCj4gV2VsbCwgMSkgaXMgaGFwcGVuaW5n
+IG11Y2ggbW9yZSBvZnRlbiB0aGFuIDIpIDotKQoKT2gsIGFuZCBvbmUgbW9yZSBzY2VuYXJpby4g
+UnVubmluZyBzeXN0ZW0sIHN5c3JxIHUsIHMsIGIgLT4gbmV3IGJvb3QsIG1vdW50IC0+IApxdW90
+YWNoZWNrIHJ1bnMuCgpEb2VzIGl0IG5lZWQgdG8gcnVuIGluIHN1Y2ggY2FzZT8KCi0tIApBcmth
+ZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51eCBUZWFtCmFyZWttIC8gbWF2ZW4ucGwg
+ICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5vcmcvCgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dp
+LmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
