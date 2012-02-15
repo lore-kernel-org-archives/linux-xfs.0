@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1FJFnAL197781 for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 13:15:49 -0600
-Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id MjdjUDUM3KmDSHje
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 15 Feb 2012 11:15:48 -0800 (PST)
-Received: by bkcit16 with SMTP id it16so1391343bkc.26
-	for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 11:15:47 -0800 (PST)
+	q1FLjMgA205289 for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 15:45:22 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	rESSAlkthSmVCClw for <xfs@oss.sgi.com>;
+	Wed, 15 Feb 2012 13:45:20 -0800 (PST)
+Date: Thu, 16 Feb 2012 08:45:17 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: quotacheck speed
+Message-ID: <20120215214517.GL14132@dastard>
+References: <201202122201.07649.arekm@maven.pl>
+	<20120213234235.GE14132@dastard>
+	<201202140635.45902.arekm@maven.pl>
+	<201202151139.10612.arekm@maven.pl>
 MIME-Version: 1.0
-Date: Wed, 15 Feb 2012 20:15:46 +0100
-Message-ID: <CAFLt3phWcaQ4K3OPSVUkyN0BXqh+jQgQbeA59Oav23aOPLYMYw@mail.gmail.com>
-Subject: Transactional XFS?
-From: Grozdan <neutrino8@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <201202151139.10612.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,25 +25,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi,
-
-I just finished watching the excellent speech of Dave Chinner at
-linux.conf.au and I must say I'm impressed by the recent improvements
-to XFS. Towards the end of the talk, Dave talked about upcoming
-improvements on Metadata reliability and other features. What I'm
-wondering about is if there are any plans in making XFS transactional
-(fully atomic) like it is the case with recent NTFS versions on
-Windows Vista and higher?
-
-Thanks
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBGZWIgMTUsIDIwMTIgYXQgMTE6Mzk6MTBBTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIFR1ZXNkYXkgMTQgb2YgRmVicnVhcnkgMjAxMiwgQXJrYWRpdXN6
+IE1pxZtraWV3aWN6IHdyb3RlOgo+ID4gT24gVHVlc2RheSAxNCBvZiBGZWJydWFyeSAyMDEyLCBE
+YXZlIENoaW5uZXIgd3JvdGU6Cj4gPiA+IE9uIE1vbiwgRmViIDEzLCAyMDEyIGF0IDA3OjA5OjUw
+UE0gKzAxMDAsIEFya2FkaXVzeiBNacWba2lld2ljeiB3cm90ZToKPiA+ID4gPiBPbiBNb25kYXkg
+MTMgb2YgRmVicnVhcnkgMjAxMiwgQ2hyaXN0b3BoIEhlbGx3aWcgd3JvdGU6Cj4gPiA+ID4gPiBJ
+biB3aGF0IGNhc2VzIGRvIHlvdSByZWd1bGFybHkgcnVuIHF1b3RhY2hlY2sgd2hlbiB5b3UgZGlk
+IG5vdCBkbwo+ID4gPiA+ID4gYSByZXBhaXIgZmlyc3Q/Cj4gPiA+ID4gCj4gPiA+ID4gSSBkb24n
+dCBpbml0aWF0ZSBxdW90YWNoZWNrIG1hbnVhbGx5LiBBRkFJSyBpbnRlcm5hbCB4ZnMgcXVvdGFj
+aGVjawo+ID4gPiA+IGhhcHBlbnMgaW4gdHdvIGNhc2VzIGhlcmU6Cj4gPiA+ID4gMSkgcmVwYWly
+LT5tb3VudAo+ID4gPiA+IDIpIGZpbGVzeXN0ZW0gaGFzIHF1b3RhY2hlY2sgZG9uZSBwcm9wZXJs
+eSBzb21lIHRpbWUgYWdvIC0+IHVtb3VudCAtPgo+ID4gPiA+IG1vdW50LQo+ID4gPiA+IAo+ID4g
+PiA+ID5vb3BzL3Jlc2V0L3NvbWV0aGluZyBsaWtlIHRoYXQgaGFwcGVucyB3aGlsZSBtb3VudGlu
+ZyAtPiBuZXcgbW91bnQKPiA+ID4gCj4gPiA+IFNvIHlvdSdkIGxpa2UgYm90aCBxdW90YWNoZWNr
+IHRvIGJlIHNwZWQgdXAgYW5kIHJlcGFpcgo+ID4gPiB0byBkbyBpdCBhcyB3ZWxsPyA7KQo+ID4g
+Cj4gPiBXZWxsLCAxKSBpcyBoYXBwZW5pbmcgbXVjaCBtb3JlIG9mdGVuIHRoYW4gMikgOi0pCj4g
+Cj4gT2gsIGFuZCBvbmUgbW9yZSBzY2VuYXJpby4gUnVubmluZyBzeXN0ZW0sIHN5c3JxIHUsIHMs
+IGIgLT4gbmV3IGJvb3QsIG1vdW50IC0+IAo+IHF1b3RhY2hlY2sgcnVucy4KPiAKPiBEb2VzIGl0
+IG5lZWQgdG8gcnVuIGluIHN1Y2ggY2FzZT8KClRoYXQncyBubyBkaWZmZXJlbnQgdG8gYW4gdW5j
+bGVhbiBzaHV0ZG93bi4gSSdtIG5vdCBzdXJlIHdoeSB0aGF0CndvdWxkIHRyaWdnZXIgYSBxdW90
+YWNoZWNrLiBBbnl0aGluZyBpbnRoZSBsb2cgdGhhdCBtaWdodCBpbmRpY2F0ZQp3aHkgaXQgc3Rh
+cnRlZCBhIHF1b3RhY2hlY2s/CgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlk
+QGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
