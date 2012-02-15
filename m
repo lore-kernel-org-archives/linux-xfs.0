@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1F1SMod139494 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 19:28:22 -0600
+	q1F1WMLe139725 for <xfs@oss.sgi.com>; Tue, 14 Feb 2012 19:32:22 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JNKh8MqQnb7yI4Sg for <xfs@oss.sgi.com>;
-	Tue, 14 Feb 2012 17:28:17 -0800 (PST)
-Date: Wed, 15 Feb 2012 12:27:53 +1100
+	oMxcCaBA25hJDXYy for <xfs@oss.sgi.com>;
+	Tue, 14 Feb 2012 17:32:20 -0800 (PST)
+Date: Wed, 15 Feb 2012 12:32:17 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS unlink still slow on 3.1.9 kernel ?
-Message-ID: <20120215012753.GJ14132@dastard>
-References: <4F394116.8080200@cape-horn-eng.com>
-	<20120214000924.GF14132@dastard> <4F3A5440.409@cape-horn-eng.com>
+Subject: Re: xfs_fsr (defragmenting) 'XFS_IOC_SWAPEXT failed: ino=xxxxxx:
+	Invalid argument' error
+Message-ID: <20120215013217.GK14132@dastard>
+References: <4F3AAC04.5090400@rhul.ac.uk>
+ <20120215002811.GM7479@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F3A5440.409@cape-horn-eng.com>
+In-Reply-To: <20120215002811.GM7479@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +28,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Ems <richard.ems@cape-horn-eng.com>
+To: Tom Crane <T.Crane@rhul.ac.uk>
 Cc: xfs@oss.sgi.com
 
-On Tue, Feb 14, 2012 at 01:32:00PM +0100, Richard Ems wrote:
-> On 02/14/2012 01:09 AM, Dave Chinner wrote:
-> >> I am asking because I am seeing very long times while removing big
-> >> directory trees. I thought on kernels above 3.0 removing dirs and files
-> >> had improved a lot, but I don't see that improvement.
-> > 
-> > You won't if the directory traversal is seek bound and that is the
-> > limiting factor for performance.
-> 
-> *Seek bound*? *When* is the directory traversal *seek bound*?
+On Wed, Feb 15, 2012 at 11:28:11AM +1100, Dave Chinner wrote:
 
-Whenever you are traversing a directory structure that is not alrady
-hot in the cache. IOWS, almost always.
+> http://www.spinics.net/lists/xfs/msg09736.html
 
-> >> This is a backup system running dirvish, so most files in the dirs I am
-> >> removing are hard links. Almost all of the files do have ACLs set.
-> > 
-> > The unlink will have an extra IO to read per inode - the out-of-line
-> > attribute block, so you've just added 11 million IOs to the 800,000
-> > the traversal already takes to the unlink overhead. So it's going to
-> > take roughly ten hours because the unlink is gong to be read IO seek
-> > bound....
-> 
-> It took 110 minutes and not 10 hours. All files and dirs there had ACLs set.
-
-I was basing that on you "find dir" time of 100 minutes, which was
-the only number you gave, and making the assumption it didn't read
-the attribute blocks and that it was seeing worse case seek times
-(i.e. avg seek times) for every IO.
-
-Given the way locality works in XFS, I'd suggest that the typical
-seek time will be much less (a few blocks, not half the disk
-platter) and not necessarily on the same disk (due to RAID) so the
-average seek time for your workload is likely to be much lower. If
-it's at 1ms (closer to track-to-track seek times) instead of the
-5ms, then that 10hrs becomes 2hrs for that many IOs....
-
-> > Also, for large directories like this (millions of entries) you
-> > should also consider using a larger directory block size (mkfs -n
-> > size=xxxx option) as that can be scaled independently to the
-> > filesystem block size. This will significantly decrease the amount
-> > of IO and fragmentation large directories cause. Peak modification
-> > performance of small directories will be reduced because larger
-> > block size directories consume more CPU to process, but for large
-> > directories performance will be significantly better as they will
-> > spend much less time waiting for IO.
-> 
-> This was not ONE directory with that many files, but a directory
-> containing 834591 subdirectories (deeply nested, not all in the same
-> dir!) and 10539154 files.
-
-So you've got a directory *tree* that indexes 11 million inodes, not
-"one directory with 11 million files and dirs in it" as you
-originally described.  Both Christoph and I have interpreted your
-original description as "one large directory", but there's no need
-to shout at us because it's difficult to understand any given
-configuration from just a few lines of text.  IOWs, details like "one
-directory" vs "one directory tree" might seem insignificant to you,
-but they mean an awful lot us developers and can easily lead us down
-the wrong path.
-
-FWIW, directory tree traversal is even more read IO latency
-sensitive than a single large directory traversal because we can't
-do readahead across directory boundaries to hide seek latencies as
-much as possible and the locality on individual directories can be
-very different depending on the allocaiton policy the filesystem is
-using. As it is, large directory blocks can also reduce the amount
-of IO needed in this sort of situation and speed up traversals....
+Well, that shows how slow the XFS mailing list can be at times. I
+found Eric's reply in this thread in an internet archive via google
+before it arrived in my inbox. IOWs, the the mail archive site
+received it, published it and google crawled it before the XFS list
+finished distributing the mail to all recipiants....
 
 Cheers,
 
