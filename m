@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1G6GqAj233483 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 00:16:52 -0600
+	q1G6wQn3235011 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 00:58:27 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	55mXImpQ1KOYyuPX for <xfs@oss.sgi.com>;
-	Wed, 15 Feb 2012 22:16:50 -0800 (PST)
-Date: Thu, 16 Feb 2012 17:16:37 +1100
+	9s5vFoZVBuqV9l5A for <xfs@oss.sgi.com>;
+	Wed, 15 Feb 2012 22:58:25 -0800 (PST)
+Date: Thu, 16 Feb 2012 17:58:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 00/12] log grant code cleanups
-Message-ID: <20120216061637.GY14132@dastard>
-References: <20111212141346.986825692@bombadil.infradead.org>
+Subject: Re: [PATCH 2/5] xfs: do not require an ioend for new EOF calculation
+Message-ID: <20120216065823.GB14132@dastard>
+References: <20120207181037.745771452@bombadil.infradead.org>
+	<20120207181155.167493646@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20111212141346.986825692@bombadil.infradead.org>
+In-Reply-To: <20120207181155.167493646@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,29 +30,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Dec 12, 2011 at 09:13:47AM -0500, Christoph Hellwig wrote:
-> This series removes the opportunistic log space wakeups which had no
-> use but hiding real races for far too long, and applies various bits
-> of refactoring to the log grant code to make it smaller and more readable.
+On Tue, Feb 07, 2012 at 01:10:39PM -0500, Christoph Hellwig wrote:
+> Replace xfs_ioend_new_eof with a new inline xfs_new_eof helper that
+> doesn't require and ioend, and is available also outside of xfs_aops.c.
+> 
+> Also make the code a bit more clear by using a normal if statement
+> instead of a slightly misleading MIN().
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Christoph, I was just going over this series again so I could add a
-reviewed-by tag to it to get it moving for 3.3. Everything looks
-just fine except for one thing - the issue raised and potential
-solution described here:
+Looks good.
 
-http://oss.sgi.com/archives/xfs/2011-12/msg00056.html
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-You said you were going to look at adding this fix to the series,
-but I don't see it in this patch set.
-
-I agree that the patch set as it stands does not introduce a new
-race condition (i.e. this is a pre-existing condition), but I was
-wondering if you'd updated more recently to add a fix for this
-problem before I gave a reviewed-by on it.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
