@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1G5c6fb229272 for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 23:38:06 -0600
-Received: from kaylee.flamingspork.com (kaylee.flamingspork.com
-	[74.207.245.61]) by cuda.sgi.com with ESMTP id 4UE39fnC91ibeU9D
-	for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 21:38:05 -0800 (PST)
-From: Stewart Smith <stewart@flamingspork.com>
-Subject: Re: Transactional XFS?
-In-Reply-To: <20120216014338.GX14132@dastard>
-References: <CAFLt3phWcaQ4K3OPSVUkyN0BXqh+jQgQbeA59Oav23aOPLYMYw@mail.gmail.com>
-	<20120216002237.GW14132@dastard> <87k43nzj5e.fsf@flamingspork.com>
-	<20120216014338.GX14132@dastard>
-Date: Thu, 16 Feb 2012 16:38:02 +1100
-Message-ID: <87ehtvz6bp.fsf@flamingspork.com>
+	q1G6GqAj233483 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 00:16:52 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	55mXImpQ1KOYyuPX for <xfs@oss.sgi.com>;
+	Wed, 15 Feb 2012 22:16:50 -0800 (PST)
+Date: Thu, 16 Feb 2012 17:16:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [patch 00/12] log grant code cleanups
+Message-ID: <20120216061637.GY14132@dastard>
+References: <20111212141346.986825692@bombadil.infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20111212141346.986825692@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,45 +26,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Grozdan <neutrino8@gmail.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Thu, 16 Feb 2012 12:43:38 +1100, Dave Chinner <david@fromorbit.com> wrote:
-> Oh, so making some set of random user changes to random user data
-> have ACID properties? That's what databases are for, isn't it?  :P
+On Mon, Dec 12, 2011 at 09:13:47AM -0500, Christoph Hellwig wrote:
+> This series removes the opportunistic log space wakeups which had no
+> use but hiding real races for far too long, and applies various bits
+> of refactoring to the log grant code to make it smaller and more readable.
 
-Yep :)
+Christoph, I was just going over this series again so I could add a
+reviewed-by tag to it to get it moving for 3.3. Everything looks
+just fine except for one thing - the issue raised and potential
+solution described here:
 
-> I dont see us implementing anything like this in XFS anytime soon.
-> We are looking to add transaction grouping so that we can make
-> things that currently require multiple transactions (e.g. create a
-> file, add a default ACL) atomic, but I don't have any plans to
-> open the can of worms that is userspace controlled transactions any
-> time soon.
+http://oss.sgi.com/archives/xfs/2011-12/msg00056.html
 
-The worst part is working out the semantics as to not break existing apps
-(without completely sacrificing concurrency).
+You said you were going to look at adding this fix to the series,
+but I don't see it in this patch set.
 
-> We already have this upgrade rollback functionality in development
-> with none of that complexity - it uses filesystem snapshots so is
-> effectively filesystem independent and already works with yum and
-> btrfs. You don't need any special application support for this -
-> rollback from a failed upgrade is as simple as a reboot.
+I agree that the patch set as it stands does not introduce a new
+race condition (i.e. this is a pre-existing condition), but I was
+wondering if you'd updated more recently to add a fix for this
+problem before I gave a reviewed-by on it.
 
-The downside being you also roll back your logs and any other changes
-made during that time. On the whole though, it's probably sufficient.
+Cheers,
 
-> Sure, Microsoft have been trying to make their filesystem a database
-> for years. It's theoretically possible, but in practice they've
-> fallen short in every attempt in the past 15 years.
-
-err... try 20 years :)
-
-It's funny in a way, sqlite succeeds at effectively doing this for an
-awful large number of applications.
-
+Dave.
 -- 
-Stewart Smith
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
