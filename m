@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1G0Mfcr214890 for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 18:22:41 -0600
+	q1G07qfv213983 for <xfs@oss.sgi.com>; Wed, 15 Feb 2012 18:07:52 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MLUWYwbTO1hbS0kI for <xfs@oss.sgi.com>;
-	Wed, 15 Feb 2012 16:22:39 -0800 (PST)
-Date: Thu, 16 Feb 2012 11:22:37 +1100
+	Bu5S6jkpabg1CPH7 for <xfs@oss.sgi.com>;
+	Wed, 15 Feb 2012 16:07:51 -0800 (PST)
+Date: Thu, 16 Feb 2012 11:07:49 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Transactional XFS?
-Message-ID: <20120216002237.GW14132@dastard>
-References: <CAFLt3phWcaQ4K3OPSVUkyN0BXqh+jQgQbeA59Oav23aOPLYMYw@mail.gmail.com>
+Subject: Re: [PATCH 6/9] xfs: remove the global xfs_Gqm structure
+Message-ID: <20120216000749.GR14132@dastard>
+References: <20120215022926.577682146@bombadil.infradead.org>
+	<20120215023147.804149683@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAFLt3phWcaQ4K3OPSVUkyN0BXqh+jQgQbeA59Oav23aOPLYMYw@mail.gmail.com>
+In-Reply-To: <20120215023147.804149683@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,27 +27,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Grozdan <neutrino8@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Feb 15, 2012 at 08:15:46PM +0100, Grozdan wrote:
-> Hi,
+On Tue, Feb 14, 2012 at 09:29:32PM -0500, Christoph Hellwig wrote:
+> Initialize the slab caches for the quote code as soon XFS is loaded, and
+> remove the now unused overhead of a reference counted global structure.
 > 
-> I just finished watching the excellent speech of Dave Chinner at
-> linux.conf.au and I must say I'm impressed by the recent improvements
-> to XFS. Towards the end of the talk, Dave talked about upcoming
-> improvements on Metadata reliability and other features. What I'm
-> wondering about is if there are any plans in making XFS transactional
-> (fully atomic) like it is the case with recent NTFS versions on
-> Windows Vista and higher?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-What do you mean by "fully atomic"? NTFS is not fully atomic - it
-doesn't journal data so can lose data on a crash - so I'm not sure
-what you mean here....
+Looks good to me. A nice cleanup.
 
-Cheers,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
