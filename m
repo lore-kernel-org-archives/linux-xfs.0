@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1GMMj4K023584 for <xfs@OSS.SGI.com>; Thu, 16 Feb 2012 16:22:50 -0600
-Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
-	[87.194.255.144]) by cuda.sgi.com with ESMTP id
-	sHZKA5DFFYJHYtn4 for <xfs@OSS.SGI.com>;
-	Thu, 16 Feb 2012 14:22:42 -0800 (PST)
-Received: from ty.sabi.co.UK (87.194.99.40) by honeysuckle.london.02.net
-	(8.5.140)
-	id 4F3C660E00045B3C for xfs@OSS.SGI.com; Thu, 16 Feb 2012 22:22:42 +0000
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1Ry9Wt-0006Gx-4x
-	for <xfs@OSS.SGI.com>; Thu, 16 Feb 2012 22:10:19 +0000
-MIME-Version: 1.0
-Message-ID: <20285.32459.17959.50223@tree.ty.sabi.co.UK>
-Date: Thu, 16 Feb 2012 22:10:19 +0000
-Subject: Re: Transactional XFS?
-In-Reply-To: <20120216014338.GX14132@dastard>
-References: <CAFLt3phWcaQ4K3OPSVUkyN0BXqh+jQgQbeA59Oav23aOPLYMYw@mail.gmail.com>
-	<20120216002237.GW14132@dastard> <87k43nzj5e.fsf@flamingspork.com>
-	<20120216014338.GX14132@dastard>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+	q1GM15GF022297 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 16:01:05 -0600
+Received: from mail.hq.newdream.net (mail.hq.newdream.net [66.33.206.127]) by
+	cuda.sgi.com with ESMTP id CSsj99nkQtxbiGf9 for
+	<xfs@oss.sgi.com>; Thu, 16 Feb 2012 14:01:02 -0800 (PST)
+Received: from mail.hq.newdream.net (localhost [127.0.0.1])
+	by mail.hq.newdream.net (Postfix) with ESMTP id F285424280
+	for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 14:03:26 -0800 (PST)
+Received: from [172.22.22.6] (c-71-195-31-37.hsd1.mn.comcast.net
+	[71.195.31.37])
+	by mail.hq.newdream.net (Postfix) with ESMTPSA id A73A12427E
+	for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 14:03:26 -0800 (PST)
+Message-ID: <1329429660.16207.19.camel@doink>
+Subject: [PATCH] xfs: only take the ILOCK in xfs_reclaim_inode()
+From: Alex Elder <elder@dreamhost.com>
+Date: Thu, 16 Feb 2012 16:01:00 -0600
+Mime-Version: 1.0
+Reply-To: elder@dreamhost.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,43 +30,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-[ ... ]
+At the end of xfs_reclaim_inode(), the inode is locked in order to
+we wait for a possible concurrent lookup to complete before the
+inode is freed.  This synchronization step was taking both the ILOCK
+and the IOLOCK, but the latter was causing lockdep to produce
+reports of the possibility of deadlock.
 
-> Oh, so making some set of random user changes to random user data
-> have ACID properties? That's what databases are for, isn't it?  :P
+It turns out that there's no need to acquire the IOLOCK at this
+point anyway.  It may have been required in some earlier version of
+the code, but there should be no need to take the IOLOCK in
+xfs_iget(), so there's no (longer) any need to get it here for
+synchronization.  Add an assertion in xfs_iget() as a reminder
+of this assumption.
 
-I am going to use this and in particular "That's what databases
-are for, isn't it?" as a quote to throw at people who try to use
-filesystems as database managers, usually with very many very
-small files (also known as "records" to database people), but
-not only.
+Dave Chinner diagnosed this on IRC, and Christoph Hellwig suggested
+no longer including the IOLOCK.  I just put together the patch.
 
->> I think it'd be possible to do.. you know, if you lock a
->> number of FS and VFS devs in a room with database people for
->> a month or so we may theoritically solve nearly all the
->> problems....
+Signed-off-by: Alex Elder <elder@dreamhost.com>
+---
+ fs/xfs/xfs_iget.c |    9 +++++++++
+ fs/xfs/xfs_sync.c |   10 ++++------
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
-The DBMS people have given up long, long ago. At least since
-the article by Stonebraker mentioned here:
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index 0fa98b1..39d51d9 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -421,6 +421,15 @@ xfs_iget(
+ 	xfs_perag_t	*pag;
+ 	xfs_agino_t	agino;
+ 
++	/*
++	 * xfs_reclaim_inode() uses the ILOCK to ensure an inode
++	 * doesn't get freed while it's being referenced during a
++	 * radix tree traversal here.  It assumes this function
++	 * aqcuires only the ILOCK (and therefore it has no need to
++	 * involve the IOLOCK in this synchronization).
++	 */
++	ASSERT((lock_flags & (XFS_IOLOCK_EXCL | XFS_IOLOCK_SHARED)) == 0);
++
+ 	/* reject inode numbers outside existing AGs */
+ 	if (!ino || XFS_INO_TO_AGNO(mp, ino) >= mp->m_sb.sb_agcount)
+ 		return EINVAL;
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index f0994aedc..61c6986 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -918,17 +918,15 @@ reclaim:
+ 	 * can reference the inodes in the cache without taking references.
+ 	 *
+ 	 * We make that OK here by ensuring that we wait until the inode is
+-	 * unlocked after the lookup before we go ahead and free it.  We get
+-	 * both the ilock and the iolock because the code may need to drop the
+-	 * ilock one but will still hold the iolock.
++	 * unlocked after the lookup before we go ahead and free it.
+ 	 */
+-	xfs_ilock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_qm_dqdetach(ip);
+-	xfs_iunlock(ip, XFS_ILOCK_EXCL | XFS_IOLOCK_EXCL);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 
+ 	xfs_inode_free(ip);
+-	return error;
+ 
++	return error;
+ }
+ 
+ /*
+-- 
+1.7.5.4
 
-  http://WWW.sabi.co.UK/blog/anno05-4th.html#051012d
 
-Anyhow Oracle has sponsored two filesystem designs, one being
-OCFS2, which is pretty decent, targeted at DBMS storage and does
-not have ACID as such, and one being BTRFS which is not targeted
-at DBMS storage and that has snapshots for rollback of failed
-transactions.
-
-> Sure, Microsoft have been trying to make their filesystem a
-> database for years. It's theoretically possible, but in
-> practice they've fallen short in every attempt in the past 15
-> years.
-
-I think it would be easier to do the opposite, and there have
-been indeed filesystems implemented on top of DBMSes (with the
-DBMS storing their data directly on top of block devices).
 
 _______________________________________________
 xfs mailing list
