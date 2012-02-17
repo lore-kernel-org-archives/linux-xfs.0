@@ -1,15 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1H5cqw4055448 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 23:38:52 -0600
+	q1HBpven078323 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 05:51:57 -0600
+Received: from extern.innogames.de (extern.innogames.de [80.252.99.240]) by
+	cuda.sgi.com with ESMTP id fHHef9XO0ctjwR3n for
+	<xfs@oss.sgi.com>; Fri, 17 Feb 2012 03:51:55 -0800 (PST)
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by extern.innogames.de (Postfix) with ESMTP id 275D76040F5
+	for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 12:51:55 +0100 (CET)
+Received: from extern.innogames.de ([127.0.0.1])
+	by localhost (extern.innogames.de [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id zbSPFqESK2jY for <xfs@oss.sgi.com>;
+	Fri, 17 Feb 2012 12:51:55 +0100 (CET)
+Received: from [172.16.5.29] (unknown [212.48.107.10])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by extern.innogames.de (Postfix) with ESMTPSA id 072376040F4
+	for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 12:51:55 +0100 (CET)
+Message-ID: <4F3E3F5A.9000202@innogames.de>
+Date: Fri, 17 Feb 2012 12:51:54 +0100
+From: Bernhard Schrader <bernhard.schrader@innogames.de>
 MIME-Version: 1.0
-In-Reply-To: <CADDb1s2_rQJsvLxCFgc1jreMx1vNvQV2YA50Z6k8BcMinQbsiw@mail.gmail.com>
-References: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
-	<CADDb1s2_rQJsvLxCFgc1jreMx1vNvQV2YA50Z6k8BcMinQbsiw@mail.gmail.com>
-Date: Fri, 17 Feb 2012 14:38:48 +0900
-Message-ID: <CAKYAXd83T3fxEF+_Q7BOfaOg0ngvh41-q=qNOfXFNROB3gCU1w@mail.gmail.com>
-Subject: Re: [PATCH 1/1] xfs: fix buffer flushing during log unmount
-From: Namjae Jeon <linkinjeon@gmail.com>
+Subject: Problems with filesizes on different Kernels
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,184 +30,136 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Alex Elder <elder@kernel.org>, Amit Sahrawat <amit.sahrawat83@gmail.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>
+To: xfs@oss.sgi.com
 
-SGkuIERhdmUsIENocmlzdG9waC4KCldvdWxkIHlvdSBwbGVhc2UgcmV2aWV3IHRoaXMgcGF0Y2gg
-PwoKVGhhbmtzLgoKMjAxMi8yLzE1IEFtaXQgU2FocmF3YXQgPGFtaXQuc2FocmF3YXQ4M0BnbWFp
-bC5jb20+Ogo+IEVycnJvciBsb2dzIG9uIDMuMC4xOAo+IEFyY2hpdGVjdHVyZTogQVJNCj4gSnVz
-dCB0cmllZCB0byBtb3VudCBhIGNvcnJ1cHRlZCBVU0IgSEREIC0gd2hpY2ggcmVzdWx0ZWQgaW4g
-dGhlIGJlbG93Cj4gbWVudGlvbmVkIGJlaGF2aW91ci4KPgo+ICM+IG1vdW50IC10IHhmcyAvZGV2
-L3NkYjMgL21udC8KPiBYRlMgKHNkYjMpOiBNb3VudGluZyBGaWxlc3lzdGVtCj4gWEZTIChzZGIz
-KTogU3RhcnRpbmcgcmVjb3ZlcnkgKGxvZ2RldjogaW50ZXJuYWwpCj4gZTQyMGQwMDA6IDNmIGI1
-IGNlIDVkIDE1IDNiIDY0IGUyIGJiIGI0IGYyIDliIGEwIDk3IGY1IGY0IMKgPy4uXS47ZC4uLi4u
-Li4uLgo+IFhGUyAoc2RiMyk6IEludGVybmFsIGVycm9yIHhmc19idHJlZV9jaGVja19zYmxvY2sg
-YXQgbGluZSAxMjAgb2YgZmlsZQo+IGZzL3hmcy94ZnNfYnRyZWUuYy4gwqBDYWxsZXIgMHhjMDEy
-YzQ0NAo+Cj4gWzxjMDAzYTAwOD5dICh1bndpbmRfYmFja3RyYWNlKzB4MC8weGU0KSBmcm9tIFs8
-YzAxM2M5OTA+XQo+ICh4ZnNfY29ycnVwdGlvbl9lcnJvcisweDU0LzB4NzApCj4gWzxjMDEzYzk5
-MD5dICh4ZnNfY29ycnVwdGlvbl9lcnJvcisweDU0LzB4NzApIGZyb20gWzxjMDEyYzMxMD5dCj4g
-KHhmc19idHJlZV9jaGVja19zYmxvY2srMHhlNC8weGY4KQo+IFs8YzAxMmMzMTA+XSAoeGZzX2J0
-cmVlX2NoZWNrX3NibG9jaysweGU0LzB4ZjgpIGZyb20gWzxjMDEyYzQ0ND5dCj4gKHhmc19idHJl
-ZV9yZWFkX2J1Zl9ibG9jaysweDc4LzB4OTgpCj4gWzxjMDEyYzQ0ND5dICh4ZnNfYnRyZWVfcmVh
-ZF9idWZfYmxvY2srMHg3OC8weDk4KSBmcm9tIFs8YzAxMmUwYjA+XQo+ICh4ZnNfYnRyZWVfcnNo
-aWZ0KzB4YjAvMHg1MDgpCj4gWzxjMDEyZTBiMD5dICh4ZnNfYnRyZWVfcnNoaWZ0KzB4YjAvMHg1
-MDgpIGZyb20gWzxjMDEyZTVjND5dCj4gKHhmc19idHJlZV9tYWtlX2Jsb2NrX3VuZnVsbCsweGJj
-LzB4MTY4KQo+IFs8YzAxMmU1YzQ+XSAoeGZzX2J0cmVlX21ha2VfYmxvY2tfdW5mdWxsKzB4YmMv
-MHgxNjgpIGZyb20KPiBbPGMwMTJlODU0Pl0gKHhmc19idHJlZV9pbnNyZWMrMHgxZTQvMHg1MDQp
-Cj4gWzxjMDEyZTg1ND5dICh4ZnNfYnRyZWVfaW5zcmVjKzB4MWU0LzB4NTA0KSBmcm9tIFs8YzAx
-MmViZDg+XQo+ICh4ZnNfYnRyZWVfaW5zZXJ0KzB4NjQvMHgxNWMpCj4gWzxjMDEyZWJkOD5dICh4
-ZnNfYnRyZWVfaW5zZXJ0KzB4NjQvMHgxNWMpIGZyb20gWzxjMDExYTUxYz5dCj4gKHhmc19mcmVl
-X2FnX2V4dGVudCsweDQ3OC8weDVhOCkKPiBbPGMwMTFhNTFjPl0gKHhmc19mcmVlX2FnX2V4dGVu
-dCsweDQ3OC8weDVhOCkgZnJvbSBbPGMwMTFhZjFjPl0KPiAoeGZzX2ZyZWVfZXh0ZW50KzB4Y2Mv
-MHgxMDgpCj4gWzxjMDExYWYxYz5dICh4ZnNfZnJlZV9leHRlbnQrMHhjYy8weDEwOCkgZnJvbSBb
-PGMwMTRkMmI0Pl0KPiAoeGxvZ19yZWNvdmVyX3Byb2Nlc3NfZWZpKzB4MTY4LzB4MWQ0KQo+IFs8
-YzAxNGQyYjQ+XSAoeGxvZ19yZWNvdmVyX3Byb2Nlc3NfZWZpKzB4MTY4LzB4MWQ0KSBmcm9tIFs8
-YzAxNGQzODA+XQo+ICh4bG9nX3JlY292ZXJfcHJvY2Vzc19lZmlzKzB4NjAvMHhhYykKPiBbPGMw
-MTRkMzgwPl0gKHhsb2dfcmVjb3Zlcl9wcm9jZXNzX2VmaXMrMHg2MC8weGFjKSBmcm9tIFs8YzAx
-NGQ4YjQ+XQo+ICh4bG9nX3JlY292ZXJfZmluaXNoKzB4MTgvMHg5MCkKPiBbPGMwMTRkOGI0Pl0g
-KHhsb2dfcmVjb3Zlcl9maW5pc2grMHgxOC8weDkwKSBmcm9tIFs8YzAxNTQzOTA+XQo+ICh4ZnNf
-bW91bnRmcysweDRjOC8weDVjNCkKPiBbPGMwMTU0MzkwPl0gKHhmc19tb3VudGZzKzB4NGM4LzB4
-NWM0KSBmcm9tIFs8YzAxNjdjNWM+XQo+ICh4ZnNfZnNfZmlsbF9zdXBlcisweDE1MC8weDI0NCkK
-PiBbPGMwMTY3YzVjPl0gKHhmc19mc19maWxsX3N1cGVyKzB4MTUwLzB4MjQ0KSBmcm9tIFs8YzAw
-YzA1ZjQ+XQo+IChtb3VudF9iZGV2KzB4MTIwLzB4MTljKQo+IFs8YzAwYzA1ZjQ+XSAobW91bnRf
-YmRldisweDEyMC8weDE5YykgZnJvbSBbPGMwMTY2MTk4Pl0gKHhmc19mc19tb3VudCsweDEwLzB4
-MTgpCj4gWzxjMDE2NjE5OD5dICh4ZnNfZnNfbW91bnQrMHgxMC8weDE4KSBmcm9tIFs8YzAwYmYz
-OWM+XSAobW91bnRfZnMrMHgxMC8weGI4KQo+IFs8YzAwYmYzOWM+XSAobW91bnRfZnMrMHgxMC8w
-eGI4KSBmcm9tIFs8YzAwZDZkNTA+XSAodmZzX2tlcm5fbW91bnQrMHg1MC8weDg4KQo+IFs8YzAw
-ZDZkNTA+XSAodmZzX2tlcm5fbW91bnQrMHg1MC8weDg4KSBmcm9tIFs8YzAwZDcwMGM+XQo+IChk
-b19rZXJuX21vdW50KzB4MzQvMHhjOCkKPiBbPGMwMGQ3MDBjPl0gKGRvX2tlcm5fbW91bnQrMHgz
-NC8weGM4KSBmcm9tIFs8YzAwZDg0MjA+XSAoZG9fbW91bnQrMHg2MjAvMHg2ODgpCj4gWzxjMDBk
-ODQyMD5dIChkb19tb3VudCsweDYyMC8weDY4OCkgZnJvbSBbPGMwMGQ4NTBjPl0gKHN5c19tb3Vu
-dCsweDg0LzB4YzQpCj4gWzxjMDBkODUwYz5dIChzeXNfbW91bnQrMHg4NC8weGM0KSBmcm9tIFs8
-YzAwMzQyNjA+XSAocmV0X2Zhc3Rfc3lzY2FsbCsweDAvMHgzMCkKPiBYRlMgKHNkYjMpOiBDb3Jy
-dXB0aW9uIGRldGVjdGVkLiBVbm1vdW50IGFuZCBydW4geGZzX3JlcGFpcgo+IFhGUyAoc2RiMyk6
-IEludGVybmFsIGVycm9yIHhmc190cmFuc19jYW5jZWwgYXQgbGluZSAxOTI4IG9mIGZpbGUKPiBm
-cy94ZnMveGZzX3RyYW5zLmMuIMKgQ2FsbGVyIDB4YzAxNGQzMTQKPgo+IFs8YzAwM2EwMDg+XSAo
-dW53aW5kX2JhY2t0cmFjZSsweDAvMHhlNCkgZnJvbSBbPGMwMTU2ZTM0Pl0KPiAoeGZzX3RyYW5z
-X2NhbmNlbCsweDcwLzB4ZmMpCj4gWzxjMDE1NmUzND5dICh4ZnNfdHJhbnNfY2FuY2VsKzB4NzAv
-MHhmYykgZnJvbSBbPGMwMTRkMzE0Pl0KPiAoeGxvZ19yZWNvdmVyX3Byb2Nlc3NfZWZpKzB4MWM4
-LzB4MWQ0KQo+IFs8YzAxNGQzMTQ+XSAoeGxvZ19yZWNvdmVyX3Byb2Nlc3NfZWZpKzB4MWM4LzB4
-MWQ0KSBmcm9tIFs8YzAxNGQzODA+XQo+ICh4bG9nX3JlY292ZXJfcHJvY2Vzc19lZmlzKzB4NjAv
-MHhhYykKPiBbPGMwMTRkMzgwPl0gKHhsb2dfcmVjb3Zlcl9wcm9jZXNzX2VmaXMrMHg2MC8weGFj
-KSBmcm9tIFs8YzAxNGQ4YjQ+XQo+ICh4bG9nX3JlY292ZXJfZmluaXNoKzB4MTgvMHg5MCkKPiBb
-PGMwMTRkOGI0Pl0gKHhsb2dfcmVjb3Zlcl9maW5pc2grMHgxOC8weDkwKSBmcm9tIFs8YzAxNTQz
-OTA+XQo+ICh4ZnNfbW91bnRmcysweDRjOC8weDVjNCkKPiBbPGMwMTU0MzkwPl0gKHhmc19tb3Vu
-dGZzKzB4NGM4LzB4NWM0KSBmcm9tIFs8YzAxNjdjNWM+XQo+ICh4ZnNfZnNfZmlsbF9zdXBlcisw
-eDE1MC8weDI0NCkKPiBbPGMwMTY3YzVjPl0gKHhmc19mc19maWxsX3N1cGVyKzB4MTUwLzB4MjQ0
-KSBmcm9tIFs8YzAwYzA1ZjQ+XQo+IChtb3VudF9iZGV2KzB4MTIwLzB4MTljKQo+IFs8YzAwYzA1
-ZjQ+XSAobW91bnRfYmRldisweDEyMC8weDE5YykgZnJvbSBbPGMwMTY2MTk4Pl0gKHhmc19mc19t
-b3VudCsweDEwLzB4MTgpCj4gWzxjMDE2NjE5OD5dICh4ZnNfZnNfbW91bnQrMHgxMC8weDE4KSBm
-cm9tIFs8YzAwYmYzOWM+XSAobW91bnRfZnMrMHgxMC8weGI4KQo+IFs8YzAwYmYzOWM+XSAobW91
-bnRfZnMrMHgxMC8weGI4KSBmcm9tIFs8YzAwZDZkNTA+XSAodmZzX2tlcm5fbW91bnQrMHg1MC8w
-eDg4KQo+IFs8YzAwZDZkNTA+XSAodmZzX2tlcm5fbW91bnQrMHg1MC8weDg4KSBmcm9tIFs8YzAw
-ZDcwMGM+XQo+IChkb19rZXJuX21vdW50KzB4MzQvMHhjOCkKPiBbPGMwMGQ3MDBjPl0gKGRvX2tl
-cm5fbW91bnQrMHgzNC8weGM4KSBmcm9tIFs8YzAwZDg0MjA+XSAoZG9fbW91bnQrMHg2MjAvMHg2
-ODgpCj4gWzxjMDBkODQyMD5dIChkb19tb3VudCsweDYyMC8weDY4OCkgZnJvbSBbPGMwMGQ4NTBj
-Pl0gKHN5c19tb3VudCsweDg0LzB4YzQpCj4gWzxjMDBkODUwYz5dIChzeXNfbW91bnQrMHg4NC8w
-eGM0KSBmcm9tIFs8YzAwMzQyNjA+XSAocmV0X2Zhc3Rfc3lzY2FsbCsweDAvMHgzMCkKPiBYRlMg
-KHNkYjMpOiB4ZnNfZG9fZm9yY2Vfc2h1dGRvd24oMHg4KSBjYWxsZWQgZnJvbSBsaW5lIDE5Mjkg
-b2YgZmlsZQo+IGZzL3hmcy94ZnNfdHJhbnMuYy4gwqBSZXR1cm4gYWRkcmVzcyA9IDB4YzAxNTZl
-NDgKPiBYRlMgKHNkYjMpOiBDb3JydXB0aW9uIG9mIGluLW1lbW9yeSBkYXRhIGRldGVjdGVkLiDC
-oFNodXR0aW5nIGRvd24gZmlsZXN5c3RlbQo+IFhGUyAoc2RiMyk6IFBsZWFzZSB1bW91bnQgdGhl
-IGZpbGVzeXN0ZW0gYW5kIHJlY3RpZnkgdGhlIHByb2JsZW0ocykKPiBYRlMgKHNkYjMpOiBGYWls
-ZWQgdG8gcmVjb3ZlciBFRklzCj4gWEZTIChzZGIzKTogbG9nIG1vdW50IGZpbmlzaCBmYWlsZWQK
-PiBVbmFibGUgdG8gaGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVzdCBhdCB2aXJ0dWFsIGFkZHJl
-c3MgZmZmZmZmZmYKPiBwZ2QgPSBlODBiYzAwMAo+IFtmZmZmZmZmZl0gKnBnZD02OGZmYzgyMSwg
-KnB0ZT0wMDAwMDAwMCwgKnBwdGU9MDAwMDAwMDAKPiBJbnRlcm5hbCBlcnJvcjogT29wczogMTcg
-WyMxXSBQUkVFTVBUIFNNUAo+IE1vZHVsZXMgbGlua2VkIGluOgo+IENQVTogMSDCoCDCoE5vdCB0
-YWludGVkIMKgKDMuMC4xOCAjMTcpCj4gUEMgaXMgYXQgc3RybmxlbisweDEwLzB4MjgKPiBMUiBp
-cyBhdCBzdHJpbmcrMHgzNC8weGNjCj4gcGMgOiBbPGMwMTk2NGUwPl0gwqAgwqBsciA6IFs8YzAx
-OTdhZDg+XSDCoCDCoHBzcjogYTAwMDAwOTMKPiBzcCA6IGU0MjRmY2EwIMKgaXAgOiAwMDAwMDAw
-MCDCoGZwIDogMDAwMDA0MDAKPiByMTA6IGU0MjRmZDhjIMKgcjkgOiAwMDAwMDAwMiDCoHI4IDog
-ZmZmZmZmZmYKPiByNyA6IDAwMDAwMDAwIMKgcjYgOiAwMDAwZmZmZiDCoHI1IDogYzAzYWJjYTgg
-wqByNCA6IGMwM2FiOGIwCj4gcjMgOiAwMDAwMDAwMCDCoHIyIDogZmZmZmZmZmYgwqByMSA6IGZm
-ZmZmZmZmIMKgcjAgOiBmZmZmZmZmZgo+IEZsYWdzOiBOekN2IMKgSVJRcyBvZmYgwqBGSVFzIG9u
-IMKgTW9kZSBTVkNfMzIgwqBJU0EgQVJNIMKgU2VnbWVudCB1c2VyCj4gQ29udHJvbDogMTBjNTNj
-N2QgwqBUYWJsZTogNjgwYmMwNGEgwqBEQUM6IDAwMDAwMDE1Cj4gUHJvY2VzcyBtb3VudCAocGlk
-OiA2NTYsIHN0YWNrIGxpbWl0ID0gMHhlNDI0ZTJmMCkKPiBTdGFjazogKDB4ZTQyNGZjYTAgdG8g
-MHhlNDI1MDAwMCkKPiAuLi4KPiAuLi4KPiBmZmUwOiAwMDAwMDAwMCBiZTg4NDcwYyAwMDA0MzZk
-YyAwMDAwOTYwNCBhMDAwMDAxMCBiZTg4NGI0ZiA0NWQ2NTYwMCAwNDAwMDAwMAo+IFs8YzAxOTY0
-ZTA+XSAoc3RybmxlbisweDEwLzB4MjgpIGZyb20gWzxjMDE5N2FkOD5dIChzdHJpbmcrMHgzNC8w
-eGNjKQo+IFs8YzAxOTdhZDg+XSAoc3RyaW5nKzB4MzQvMHhjYykgZnJvbSBbPGMwMTk4ODc0Pl0g
-KHZzbnByaW50ZisweDFiYy8weDM0NCkKPiBbPGMwMTk4ODc0Pl0gKHZzbnByaW50ZisweDFiYy8w
-eDM0NCkgZnJvbSBbPGMwMTk4YTY4Pl0gKHZzY25wcmludGYrMHhjLzB4MjQpCj4gWzxjMDE5OGE2
-OD5dICh2c2NucHJpbnRmKzB4Yy8weDI0KSBmcm9tIFs8YzAwNTc0MjQ+XSAodnByaW50aysweDE0
-Yy8weDNmYykKPiBbPGMwMDU3NDI0Pl0gKHZwcmludGsrMHgxNGMvMHgzZmMpIGZyb20gWzxjMDI5
-MzgyMD5dIChwcmludGsrMHgxOC8weDI0KQo+IFs8YzAyOTM4MjA+XSAocHJpbnRrKzB4MTgvMHgy
-NCkgZnJvbSBbPGMwMTY2MGM4Pl0gKHhmc19hbGVydF90YWcrMHg2NC8weDk4KQo+IFs8YzAxNjYw
-Yzg+XSAoeGZzX2FsZXJ0X3RhZysweDY0LzB4OTgpIGZyb20gWzxjMDE1ODAzND5dCj4gKHhmc190
-cmFuc19haWxfZGVsZXRlX2J1bGsrMHg3NC8weDExOCkKPiBbPGMwMTU4MDM0Pl0gKHhmc190cmFu
-c19haWxfZGVsZXRlX2J1bGsrMHg3NC8weDExOCkgZnJvbSBbPGMwMTJmZTgwPl0KPiAoeGZzX2J1
-Zl9pb2RvbmUrMHgyYy8weDM4KQo+IFs8YzAxMmZlODA+XSAoeGZzX2J1Zl9pb2RvbmUrMHgyYy8w
-eDM4KSBmcm9tIFs8YzAxMmZlMzA+XQo+ICh4ZnNfYnVmX2RvX2NhbGxiYWNrcysweDI4LzB4Mzgp
-Cj4gWzxjMDEyZmUzMD5dICh4ZnNfYnVmX2RvX2NhbGxiYWNrcysweDI4LzB4MzgpIGZyb20gWzxj
-MDEyZmZmYz5dCj4gKHhmc19idWZfaW9kb25lX2NhbGxiYWNrcysweDEzYy8weDE2NCkKPiBbPGMw
-MTJmZmZjPl0gKHhmc19idWZfaW9kb25lX2NhbGxiYWNrcysweDEzYy8weDE2NCkgZnJvbSBbPGMw
-MTVmZmM0Pl0KPiAoeGZzX2J1Zl9pb2RvbmVfd29yaysweDFjLzB4NDApCj4gWzxjMDE1ZmZjND5d
-ICh4ZnNfYnVmX2lvZG9uZV93b3JrKzB4MWMvMHg0MCkgZnJvbSBbPGMwMTYwMTk0Pl0KPiAoeGZz
-X2Jpb2Vycm9yKzB4NDQvMHg0YykKPiBbPGMwMTYwMTk0Pl0gKHhmc19iaW9lcnJvcisweDQ0LzB4
-NGMpIGZyb20gWzxjMDE2MDc1Yz5dCj4gKHhmc19mbHVzaF9idWZ0YXJnKzB4Y2MvMHgxNDgpCj4g
-WzxjMDE2MDc1Yz5dICh4ZnNfZmx1c2hfYnVmdGFyZysweGNjLzB4MTQ4KSBmcm9tIFs8YzAxNjA3
-Zjg+XQo+ICh4ZnNfZnJlZV9idWZ0YXJnKzB4MjAvMHg1YykKPiBbPGMwMTYwN2Y4Pl0gKHhmc19m
-cmVlX2J1ZnRhcmcrMHgyMC8weDVjKSBmcm9tIFs8YzAxNjdjZDg+XQo+ICh4ZnNfZnNfZmlsbF9z
-dXBlcisweDFjYy8weDI0NCkKPiBbPGMwMTY3Y2Q4Pl0gKHhmc19mc19maWxsX3N1cGVyKzB4MWNj
-LzB4MjQ0KSBmcm9tIFs8YzAwYzA1ZjQ+XQo+IChtb3VudF9iZGV2KzB4MTIwLzB4MTljKQo+IFs8
-YzAwYzA1ZjQ+XSAobW91bnRfYmRldisweDEyMC8weDE5YykgZnJvbSBbPGMwMTY2MTk4Pl0gKHhm
-c19mc19tb3VudCsweDEwLzB4MTgpCj4gWzxjMDE2NjE5OD5dICh4ZnNfZnNfbW91bnQrMHgxMC8w
-eDE4KSBmcm9tIFs8YzAwYmYzOWM+XSAobW91bnRfZnMrMHgxMC8weGI4KQo+IFs8YzAwYmYzOWM+
-XSAobW91bnRfZnMrMHgxMC8weGI4KSBmcm9tIFs8YzAwZDZkNTA+XSAodmZzX2tlcm5fbW91bnQr
-MHg1MC8weDg4KQo+IFs8YzAwZDZkNTA+XSAodmZzX2tlcm5fbW91bnQrMHg1MC8weDg4KSBmcm9t
-IFs8YzAwZDcwMGM+XQo+IChkb19rZXJuX21vdW50KzB4MzQvMHhjOCkKPiBbPGMwMGQ3MDBjPl0g
-KGRvX2tlcm5fbW91bnQrMHgzNC8weGM4KSBmcm9tIFs8YzAwZDg0MjA+XSAoZG9fbW91bnQrMHg2
-MjAvMHg2ODgpCj4gWzxjMDBkODQyMD5dIChkb19tb3VudCsweDYyMC8weDY4OCkgZnJvbSBbPGMw
-MGQ4NTBjPl0gKHN5c19tb3VudCsweDg0LzB4YzQpCj4gWzxjMDBkODUwYz5dIChzeXNfbW91bnQr
-MHg4NC8weGM0KSBmcm9tIFs8YzAwMzQyNjA+XSAocmV0X2Zhc3Rfc3lzY2FsbCsweDAvMHgzMCkK
-PiBDb2RlOiBlM2EwMzAwMCBlMTUxMDAwMyBlMDgzMjAwMCAwYTAwMDAwMyAoZTdkMGMwMDMpCj4g
-LS0tWyBlbmQgdHJhY2UgOWZhZTI2ZDkyNTgyMDc0NiBdLS0tCj4gbm90ZTogbW91bnRbNjU2XSBl
-eGl0ZWQgd2l0aCBwcmVlbXB0X2NvdW50IDIKPiBTZWdtZW50YXRpb24gZmF1bHQKPiAjPgo+ICM+
-Cj4KPiBSZWdhcmRzLAo+IEFtaXQgU2FocmF3YXQKPgo+IE9uIFdlZCwgRmViIDE1LCAyMDEyIGF0
-IDU6MjYgUE0sIEFtaXQgU2FocmF3YXQKPiA8YW1pdC5zYWhyYXdhdDgzQGdtYWlsLmNvbT4gd3Jv
-dGU6Cj4+IFdoZW5ldmVyIHRoZXJlIGlzIGEgbW91bnQvdW5tb3VudCBmYWlsdXJlIC0gdGhlcmUg
-aXMgYSBjaGFuY2Ugb2YgY2FsbGluZyB0aGUKPj4gY2FsbGJhY2tzIGZ1bmN0aW9ucyBvbmNlIC0g
-dHJhbnNhY3Rpb24gYWlsIG1vdW50IHBvaW50ZXIgaXMgZGVzdHJveWVkLiBTbywgaXQgcmVzdWx0
-cwo+PiBpbiBOVUxMIHBvaW50ZXIgZXhjZXB0aW9uIGZvbGxvd2VkIGJ5IGhhbmcuIFNvLCBiZWZv
-cmUgdW5tb3VudCBvZiB0aGUgbG9nIC0gZmx1c2ggYWxsCj4+IHRoZSBwZW5kaW5nIGJ1ZmZlcnMu
-Cj4+Cj4+IFNpZ25lZC1vZmYtYnk6IEFtaXQgU2FocmF3YXQgPGFtaXQuc2FocmF3YXQ4M0BnbWFp
-bC5jb20+Cj4+IFNpZ25lZC1vZmYtYnk6IE5hbWphZSBKZW9uIDxsaW5raW5qZW9uQGdtYWlsLmNv
-bT4KPj4gLS0tCj4+IMKgZnMveGZzL3hmc19sb2cuYyDCoCB8IMKgIDEwICsrKysrKysrKysKPj4g
-wqBmcy94ZnMveGZzX21vdW50LmMgfCDCoCDCoDkgLS0tLS0tLS0tCj4+IMKgMiBmaWxlcyBjaGFu
-Z2VkLCAxMCBpbnNlcnRpb25zKCspLCA5IGRlbGV0aW9ucygtKQo+Pgo+PiBkaWZmIC0tZ2l0IGEv
-ZnMveGZzL3hmc19sb2cuYyBiL2ZzL3hmcy94ZnNfbG9nLmMKPj4gaW5kZXggZTJjYzM1Ni4uYjky
-NGE1YiAxMDA2NDQKPj4gLS0tIGEvZnMveGZzL3hmc19sb2cuYwo+PiArKysgYi9mcy94ZnMveGZz
-X2xvZy5jCj4+IEBAIC03MzksNiArNzM5LDE2IEBAIHhmc19sb2dfdW5tb3VudF93cml0ZSh4ZnNf
-bW91bnRfdCAqbXApCj4+IMKgdm9pZAo+PiDCoHhmc19sb2dfdW5tb3VudCh4ZnNfbW91bnRfdCAq
-bXApCj4+IMKgewo+PiArIMKgIMKgIMKgIGludCBlcnJvciA9IDA7Cj4+ICsgwqAgwqAgwqAgLyoK
-Pj4gKyDCoCDCoCDCoCDCoCogTWFrZSBzdXJlIGFsbCBidWZmZXJzIGhhdmUgYmVlbiBmbHVzaGVk
-IGFuZCBjb21wbGV0ZWQgYmVmb3JlCj4+ICsgwqAgwqAgwqAgwqAqIHVubW91bnRpbmcgdGhlIGxv
-Zy4KPj4gKyDCoCDCoCDCoCDCoCovCj4+ICsgwqAgwqAgwqAgZXJyb3IgPSB4ZnNfZmx1c2hfYnVm
-dGFyZyhtcC0+bV9kZGV2X3RhcmdwLCAxKTsKPj4gKyDCoCDCoCDCoCBpZiAoZXJyb3IpCj4+ICsg
-wqAgwqAgwqAgwqAgwqAgwqAgwqAgY21uX2VycihDRV9XQVJOLCAiJWQgYnVzeSBidWZmZXJzIGR1
-cmluZyBsb2cgdW5tb3VudC4iLCBlcnJvcik7Cj4+ICsgwqAgwqAgwqAgeGZzX3dhaXRfYnVmdGFy
-ZyhtcC0+bV9kZGV2X3RhcmdwKTsKPj4gKwo+PiDCoCDCoCDCoCDCoHhmc190cmFuc19haWxfZGVz
-dHJveShtcCk7Cj4+IMKgIMKgIMKgIMKgeGxvZ19kZWFsbG9jX2xvZyhtcC0+bV9sb2cpOwo+PiDC
-oH0KPj4gZGlmZiAtLWdpdCBhL2ZzL3hmcy94ZnNfbW91bnQuYyBiL2ZzL3hmcy94ZnNfbW91bnQu
-Ywo+PiBpbmRleCBkMDZhZmJjLi4zYmQyMjQ2IDEwMDY0NAo+PiAtLS0gYS9mcy94ZnMveGZzX21v
-dW50LmMKPj4gKysrIGIvZnMveGZzL3hmc19tb3VudC5jCj4+IEBAIC0xNTE5LDE1ICsxNTE5LDYg
-QEAgeGZzX3VubW91bnRmcygKPj4gwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAgwqAg
-wqAgwqAgwqAgwqAiRnJlZXNwYWNlIG1heSBub3QgYmUgY29ycmVjdCBvbiBuZXh0IG1vdW50LiIp
-Owo+PiDCoCDCoCDCoCDCoHhmc191bm1vdW50ZnNfd3JpdGVzYihtcCk7Cj4+Cj4+IC0gwqAgwqAg
-wqAgLyoKPj4gLSDCoCDCoCDCoCDCoCogTWFrZSBzdXJlIGFsbCBidWZmZXJzIGhhdmUgYmVlbiBm
-bHVzaGVkIGFuZCBjb21wbGV0ZWQgYmVmb3JlCj4+IC0gwqAgwqAgwqAgwqAqIHVubW91bnRpbmcg
-dGhlIGxvZy4KPj4gLSDCoCDCoCDCoCDCoCovCj4+IC0gwqAgwqAgwqAgZXJyb3IgPSB4ZnNfZmx1
-c2hfYnVmdGFyZyhtcC0+bV9kZGV2X3RhcmdwLCAxKTsKPj4gLSDCoCDCoCDCoCBpZiAoZXJyb3Ip
-Cj4+IC0gwqAgwqAgwqAgwqAgwqAgwqAgwqAgeGZzX3dhcm4obXAsICIlZCBidXN5IGJ1ZmZlcnMg
-ZHVyaW5nIHVubW91bnQuIiwgZXJyb3IpOwo+PiAtIMKgIMKgIMKgIHhmc193YWl0X2J1ZnRhcmco
-bXAtPm1fZGRldl90YXJncCk7Cj4+IC0KPj4gwqAgwqAgwqAgwqB4ZnNfbG9nX3VubW91bnRfd3Jp
-dGUobXApOwo+PiDCoCDCoCDCoCDCoHhmc19sb2dfdW5tb3VudChtcCk7Cj4+IMKgIMKgIMKgIMKg
-eGZzX3V1aWRfdW5tb3VudChtcCk7Cj4+IC0tCj4+IDEuNy4yLjMKPj4KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hi all,
+
+we just discovered a problem, which I think is related to XFS. Well, I 
+will try to explain.
+
+The environment i am working with are around 300 Postgres databases in 
+separated VM's. All are running with XFS. Differences are just in kernel 
+versions.
+- 2.6.18
+- 2.6.39
+- 3.1.4
+
+Some days ago i discovered that the file nodes of my postgresql tables 
+have strange sizes. They are located in 
+/var/lib/postgresql/9.0/main/base/[databaseid]/
+If I execute the following commands i get results like this:
+
+Command: du -sh | tr "\n" " "; du --apparent-size -h
+Result: 6.6G	. 5.7G	.
+
+Well, as you can see there is something wrong. The files consume more 
+Diskspace than they originally would do. This happens only on 2.6.39 and 
+3.1.4 servers. the old 2.6.18 has normal behavior and the sizes are the 
+same for both commands.
+
+The following was done on a 3.1.4 kernel.
+To get some more informations i played a little bit with the xfs tools:
+
+First i choose one file to examine:
+##########
+/var/lib/postgresql/9.0/main/base/43169# ls -lh 64121
+-rw------- 1 postgres postgres 58M 2012-02-16 17:03 64121
+
+/var/lib/postgresql/9.0/main/base/43169# du -sh 64121
+89M    64121
+##########
+
+So this file "64121" has a difference of 31MB.
+
+##########
+/var/lib/postgresql/9.0/main/base/43169# xfs_bmap  64121
+64121:
+     0: [0..116991]: 17328672..17445663
+
+/var/lib/postgresql/9.0/main/base/43169# xfs_fsr -v 64121
+64121
+64121 already fully defragmented.
+
+/var/lib/postgresql/9.0/main/base/43169# xfs_info /dev/xvda1
+meta-data=/dev/root              isize=256    agcount=4, agsize=959932 blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3839727, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=2560, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+/var/lib/postgresql/9.0/main/base/43169# cat /proc/mounts
+rootfs / rootfs rw 0 0
+/dev/root / xfs rw,noatime,nodiratime,attr2,delaylog,nobarrier,noquota 0 0
+tmpfs /lib/init/rw tmpfs rw,nosuid,relatime,mode=755 0 0
+proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
+tmpfs /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
+devpts /dev/pts devpts 
+rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+#########
+
+I sent the following also to postgres mailinglist but i think this is 
+now useful too.
+
+Strange, or  not? Regarding this informations, the file is contiguous on 
+disk and has of course no fragmentation, so why is it showing so much 
+diskusage?
+
+The relation this filenode is belonging to, is an index, and regarding 
+my last overview it seems that this happens for 95% only to indexes/pkeys.
+
+Well you could think i have some strange config settings, but we 
+distribute this config via puppet, and also the servers on old hardware 
+have this config. so things like fillfactor couldn't explain this.
+
+We also thought that there could be some filehandles still exist. So we 
+decided to reboot. Wow, we thought we got it, the free diskspace 
+increased slowly for a while. But then, after 1-2GB captured diskspace 
+it went back to normal and the filenodes grew again. This doesn't 
+explain it as well. :/
+
+One more thing, a xfs_fsr /dev/xvda1 recaptures also some diskspace, but 
+with same effect as a reboot.
+
+
+Some differences on 2.6.18 are the mount options and the lazy-count:
+###########
+xfs_info /dev/xvda1
+meta-data=/dev/root              isize=256    agcount=4, agsize=959996 blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3839983, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096
+log      =internal               bsize=4096   blocks=2560, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+cat /proc/mounts
+rootfs / rootfs rw 0 0
+/dev/root / xfs rw,noatime,nodiratime 0 0
+tmpfs /lib/init/rw tmpfs rw,nosuid 0 0
+proc /proc proc rw,nosuid,nodev,noexec 0 0
+sysfs /sys sysfs rw,nosuid,nodev,noexec 0 0
+tmpfs /dev/shm tmpfs rw,nosuid,nodev 0 0
+devpts /dev/pts devpts rw,nosuid,noexec 0 0
+#############
+
+I don't know what causes this problem, and why we are the only ones who 
+discovered this. I don't know if it's really 100% related to xfs but for 
+now i don't have other ideas. If you need anymore information I will 
+provide.
+
+Thanks in advance
+Bernhard
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
