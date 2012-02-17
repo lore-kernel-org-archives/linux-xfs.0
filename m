@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1H2jOHZ044437 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 20:45:25 -0600
+	q1H2nsHf044630 for <xfs@oss.sgi.com>; Thu, 16 Feb 2012 20:49:55 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	45zl0STDGQwKX0Pn for <xfs@oss.sgi.com>;
-	Thu, 16 Feb 2012 18:45:23 -0800 (PST)
-Date: Fri, 17 Feb 2012 13:45:21 +1100
+	OZjLAtl2YyrP3shH for <xfs@oss.sgi.com>;
+	Thu, 16 Feb 2012 18:49:53 -0800 (PST)
+Date: Fri, 17 Feb 2012 13:49:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: only take the ILOCK in xfs_reclaim_inode()
-Message-ID: <20120217024521.GG14132@dastard>
-References: <1329429660.16207.19.camel@doink>
+Subject: Re: XFS memory recomendation?
+Message-ID: <20120217024941.GH14132@dastard>
+References: <2BF070A7A2375D46BA1B6087F8D5DCB68BEA721CA3@seldmbx01.corpusers.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1329429660.16207.19.camel@doink>
+In-Reply-To: <2BF070A7A2375D46BA1B6087F8D5DCB68BEA721CA3@seldmbx01.corpusers.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +26,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alex Elder <elder@dreamhost.com>
-Cc: xfs@oss.sgi.com
+To: "Assarsson, Emil" <Emil.Assarsson@sonyericsson.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Thu, Feb 16, 2012 at 04:01:00PM -0600, Alex Elder wrote:
-> At the end of xfs_reclaim_inode(), the inode is locked in order to
-> we wait for a possible concurrent lookup to complete before the
-> inode is freed.  This synchronization step was taking both the ILOCK
-> and the IOLOCK, but the latter was causing lockdep to produce
-> reports of the possibility of deadlock.
+On Thu, Feb 16, 2012 at 12:50:57PM +0100, Assarsson, Emil wrote:
+> Hi,
 > 
-> It turns out that there's no need to acquire the IOLOCK at this
-> point anyway.  It may have been required in some earlier version of
-> the code, but there should be no need to take the IOLOCK in
-> xfs_iget(), so there's no (longer) any need to get it here for
-> synchronization.  Add an assertion in xfs_iget() as a reminder
-> of this assumption.
-> 
-> Dave Chinner diagnosed this on IRC, and Christoph Hellwig suggested
-> no longer including the IOLOCK.  I just put together the patch.
-> 
-> Signed-off-by: Alex Elder <elder@dreamhost.com>
+> Are there any recommendations about how much memory I need based
+> on the size of the file system and/or amount of files?  For
+> example: how much memory would be optimal for a 20TB file system
+> with 3000000 files? 
 
-The code and comments is almost identical to the patch I've been
-testing over the past day, so consider it
+/me shrugs
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> I guess it depends on the usage pattern?
+
+Totally.
+
+> Is there any way to make sure that the file allocation table stays in the memory?
+
+What's a "file allocation table"? XFS doesn't have one. :)
+
+XFS does have a sophisticated metadata cache and reclaim scheme that
+keeps frequently referenced metadata hot in cache, but you as a
+user have very little control over that because the cache size is
+effectively controlled by memory pressure. i.e. it's size is
+completely workload dependent.....
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
