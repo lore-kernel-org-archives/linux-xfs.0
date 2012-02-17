@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1HN0AbO115484 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 17:00:10 -0600
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id YUhi9TB7bIitzIFL (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Feb 2012 15:00:09 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1RyWmf-0002F6-1g
-	for xfs@oss.sgi.com; Fri, 17 Feb 2012 15:00:09 -0800
-Message-ID: <33346051.post@talk.nabble.com>
-Date: Fri, 17 Feb 2012 15:00:09 -0800 (PST)
-From: kdasu <kdasu.kdev@gmail.com>
-Subject: [PATCH 4/4] xfs: fix deadlock in xfs_rtfree_extent with kernel v2.6.37
-In-Reply-To: <33346043.post@talk.nabble.com>
+	q1HNawdY118048 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 17:36:59 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 8xjrG1rcKDaVMMhd for
+	<xfs@oss.sgi.com>; Fri, 17 Feb 2012 15:36:57 -0800 (PST)
+Message-ID: <4F3EE490.2010302@redhat.com>
+Date: Fri, 17 Feb 2012 15:36:48 -0800
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-References: <33345988.post@talk.nabble.com> <33346009.post@talk.nabble.com>
-	<33346035.post@talk.nabble.com> <33346043.post@talk.nabble.com>
+Subject: Re: [PATCH] xfs_fsr: Get the last mount on a specific mount point
+References: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
+	<20120213174240.GA3474@infradead.org>
+In-Reply-To: <20120213174240.GA3474@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,109 +25,240 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
 
+On 2/13/12 9:42 AM, Christoph Hellwig wrote:
+> Thanks for taking care of this, but this just seems to make the already
+> horribly ugly code even worse.
+> 
+> What do you think about the version below?
+> 
+> ---
+> From: Christoph Hellwig <hch@lst.de>
+> Subject: fsr: fix /proc/mounts parsing
+> 
+> Make sure we do not reject an XFS root mount just because /dev/root is also
+> listed in /proc/mounts.  The root cause for this was the awkward getmntany
+> function, which is replaced with a broader reach find_mountpoint function
+> which replace getmntany and the surrounding code from the main routine in
+> a structured way.  This changes the flow from finding a mounted filesystem
+> matching the argument and checking that it's XFS to find a mounted XFS
+> filesystem and thus fixes the bug.
+> 
+> Based on analysis and an earlier patch from
+> Carlos Maiolino <cmaiolino@redhat.com>.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
+Looks ok to me, thanks for doing it properly :)
 
-On the 2.6.37 kernel, xfs_fs_evict_inode() leads to a deadlock when
-freeing multiple realtime extents. On further debugging the root
-cause it was determined to be recursive locking of the RT bitmap
-inode during evict operation within the same task context.
-The same vfs evict sequence is replayed by the xfs log recovery on
-mounts on a reboot after the problem happens first time.
-This problem exists on kernel v2.6.39 as well.
+I like Carlos' suggestion for the comment cleanup, and might suggest that
+the /* device */ and /* mount point */ comments remain too; it's obvious
+to us now I guess but I think the landmarks are nice for a fresh read.
+No biggie.
 
-Call stack:
-xfs_ilock   <- simple task deadlock in the xfs_ilock(ip,  XFS_ILOCK_EXCL)
-               re-acquired on second iteration when the inode is cached
-xfs_iget_cache_hit
-xfs_iget
-xfs_trans_iget
-xfs_rtfree_extent <- Call to xfs_trans_iget()
-xfs_bmap_del_extent
-xfs_bunmapi  <- while loop based on number of extents to free
-xfs_itruncate_finish
-xfs_inactive
-evict
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-The deadlock fix has two parts :
-1) check if the inode is already locked in xfs_iget.c in the
-   xfs_iget_cache_hit() function. Do not acquire the inode lock again
-   if ip is already locked with the  XFS_ILOCK_EXCL subclass.
-   We use the active transaction structure to detect if the inode is
-   already lokced.
-2) In addition in xfs_trans_inode.c:xfs_trans_iget() prevent joining
-   already active transaction.
-
-The above changes are also needed along with the backport of following
-2.6.39 kernel patches to 2.6.37 kernel:
-
-xfs: only lock the rt bitmap inode once per allocation
-xfs: fix xfs_get_extsz_hint for a zero extent size hint
-xfs: add lockdep annotations for the rt inodes
-
-Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
----
- fs/xfs/xfs_iget.c        |   12 +++++++++++-
- fs/xfs/xfs_trans_inode.c |    2 +-
- 2 files changed, 12 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index 0cdd269..f05bdc2 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -143,6 +143,7 @@ xfs_inode_free(
- static int
- xfs_iget_cache_hit(
-        struct xfs_perag        *pag,
-+       xfs_trans_t             *tp,
-        struct xfs_inode        *ip,
-        int                     flags,
-        int                     lock_flags) __releases(pag->pag_ici_lock)
-@@ -234,6 +235,15 @@ xfs_iget_cache_hit(
-                trace_xfs_iget_hit(ip);
-        }
- 
-+       /* check inode already locked  */
-+       spin_lock(&ip->i_flags_lock);
-+       if (tp &&  ip->i_transp == tp) {
-+               if ((ip->i_itemp->ili_lock_flags & lock_flags) &
-+                       (XFS_ILOCK_EXCL))
-+                       lock_flags = 0;
-+       }
-+       spin_unlock(&ip->i_flags_lock);
-+
-        if (lock_flags != 0)
-                xfs_ilock(ip, lock_flags);
- 
-@@ -379,7 +389,7 @@ again:
-        ip = radix_tree_lookup(&pag->pag_ici_root, agino);
- 
-        if (ip) {
--               error = xfs_iget_cache_hit(pag, ip, flags, lock_flags);
-+               error = xfs_iget_cache_hit(pag, tp, ip, flags, lock_flags);
-                if (error)
-                        goto out_error_or_again;
-        } else {
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/xfs_trans_inode.c
-index ccb3453..6f8db93 100644
---- a/fs/xfs/xfs_trans_inode.c
-+++ b/fs/xfs/xfs_trans_inode.c
-@@ -58,7 +58,7 @@ xfs_trans_iget(
-        int                     error;
- 
-        error = xfs_iget(mp, tp, ino, flags, lock_flags, ipp);
--       if (!error && tp) {
-+       if (!error && tp && !((*ipp)->i_transp)) {
-                xfs_trans_ijoin(tp, *ipp);
-                (*ipp)->i_itemp->ili_lock_flags = lock_flags;
-        }
--- 
-1.7.5.4
-
--- 
-View this message in context: http://old.nabble.com/-PATCH-0-4--xfs%3A-resurrect-realtime-subvolume-support-on-kernel-2.6.37-tp33345988p33346051.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+> ---
+>  fsr/xfs_fsr.c |  142 +++++++++++++++++++++++++++++-----------------------------
+>  1 file changed, 72 insertions(+), 70 deletions(-)
+> 
+> Index: xfsprogs-dev/fsr/xfs_fsr.c
+> ===================================================================
+> --- xfsprogs-dev.orig/fsr/xfs_fsr.c	2012-02-12 16:30:07.286766766 -0800
+> +++ xfsprogs-dev/fsr/xfs_fsr.c	2012-02-12 16:42:39.293447376 -0800
+> @@ -109,7 +109,6 @@ static void tmp_init(char *mnt);
+>  static char * tmp_next(char *mnt);
+>  static void tmp_close(char *mnt);
+>  int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
+> -static int getmntany(FILE *, struct mntent *, struct mntent *, struct stat64 *);
+>  
+>  xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
+>  
+> @@ -178,18 +177,73 @@ aborter(int unused)
+>  	exit(1);
+>  }
+>  
+> +/*
+> + * Check if the argument is either the device name or mountpoint of an XFS
+> + * filesystem.  Note that we do not care about bind mounted regular files
+> + * here - the code that handles defragmentation of invidual files takes care
+> + * of that.
+> + */
+> +static char *
+> +find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
+> +{
+> +	struct mntent *t;
+> +	struct stat64 ms;
+> +	FILE *mtabp;
+> +	char *mntp = NULL;
+> +
+> +	mtabp = setmntent(mtab, "r");
+> +	if (!mtabp) {
+> +		fprintf(stderr, _("%s: cannot read %s\n"),
+> +			progname, mtab);
+> +		exit(1);
+> +	}
+> +
+> +	while ((t = getmntent(mtabp))) {
+> +		if (S_ISDIR(sb->st_mode)) {
+> +			if (stat64(t->mnt_dir, &ms) < 0)
+> +				continue;
+> +			if (sb->st_ino != ms.st_ino)
+> +				continue;
+> +			if (sb->st_dev != ms.st_dev)
+> +				continue;
+> +		} else {
+> +			if (stat64(t->mnt_fsname, &ms) < 0)
+> +				continue;
+> +			if (sb->st_rdev != ms.st_rdev)
+> +				continue;
+> +		}
+> +
+> +		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
+> +			continue;
+> +
+> +		/*
+> +		 * If we found an entry based on the device name make sure we
+> +		 * stat the mountpoint that the mtab gave actually is accessible
+> +		 * before using it.
+> +		 */
+> +		if (S_ISBLK(sb->st_mode)) {
+> +			struct stat64 sb2;
+> +
+> +			if (stat64(t->mnt_dir, &sb2) < 0)
+> +				continue;
+> +		}
+> +
+> +		mntp = t->mnt_dir;
+> +		break;
+> +	}
+> +
+> +	endmntent(mtabp);
+> +	return mntp;
+> +}
+> +
+>  int
+>  main(int argc, char **argv)
+>  {
+> -	struct stat64 sb, sb2;
+> +	struct stat64 sb;
+>  	char *argname;
+> -	char *cp;
+>  	int c;
+> -	struct mntent mntpref;
+> -	register struct mntent *mntp;
+> -	struct mntent ment;
+> +	char *mntp;
+>  	char *mtab = NULL;
+> -	register FILE *mtabp;
+>  
+>  	setlinebuf(stdout);
+>  	progname = basename(argv[0]);
+> @@ -281,49 +335,26 @@ main(int argc, char **argv)
+>  	if (optind < argc) {
+>  		for (; optind < argc; optind++) {
+>  			argname = argv[optind];
+> -			mntp = NULL;
+> +
+>  			if (lstat64(argname, &sb) < 0) {
+>  				fprintf(stderr,
+>  					_("%s: could not stat: %s: %s\n"),
+>  					progname, argname, strerror(errno));
+>  				continue;
+>  			}
+> -			if (S_ISLNK(sb.st_mode) && stat64(argname, &sb2) == 0 &&
+> -			    (S_ISBLK(sb2.st_mode) || S_ISCHR(sb2.st_mode)))
+> -				sb = sb2;
+> -			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
+> -				if ((mtabp = setmntent(mtab, "r")) == NULL) {
+> -					fprintf(stderr,
+> -						_("%s: cannot read %s\n"),
+> -						progname, mtab);
+> -					exit(1);
+> -				}
+> -				bzero(&mntpref, sizeof(mntpref));
+> -				if (S_ISDIR(sb.st_mode))
+> -					mntpref.mnt_dir = argname;
+> -				else
+> -					mntpref.mnt_fsname = argname;
+>  
+> -				if (getmntany(mtabp, &ment, &mntpref, &sb) &&
+> -				    strcmp(ment.mnt_type, MNTTYPE_XFS) == 0) {
+> -					mntp = &ment;
+> -					if (S_ISBLK(sb.st_mode)) {
+> -						cp = mntp->mnt_dir;
+> -						if (cp == NULL ||
+> -						    stat64(cp, &sb2) < 0) {
+> -							fprintf(stderr, _(
+> -						"%s: could not stat: %s: %s\n"),
+> -							progname, argname,
+> -							strerror(errno));
+> -							continue;
+> -						}
+> -						sb = sb2;
+> -						argname = cp;
+> -					}
+> -				}
+> +			if (S_ISLNK(sb.st_mode)) {
+> +				struct stat64 sb2;
+> +
+> +				if (stat64(argname, &sb2) == 0 &&
+> +				    (S_ISBLK(sb2.st_mode) ||
+> +				     S_ISCHR(sb2.st_mode)))
+> +				sb = sb2;
+>  			}
+> +
+> +			mntp = find_mountpoint(mtab, argname, &sb);
+>  			if (mntp != NULL) {
+> -				fsrfs(mntp->mnt_dir, 0, 100);
+> +				fsrfs(mntp, 0, 100);
+>  			} else if (S_ISCHR(sb.st_mode)) {
+>  				fprintf(stderr, _(
+>  					"%s: char special not supported: %s\n"),
+> @@ -1639,35 +1670,6 @@ fsrprintf(const char *fmt, ...)
+>  }
+>  
+>  /*
+> - * emulate getmntany
+> - */
+> -static int
+> -getmntany(FILE *fp, struct mntent *mp, struct mntent *mpref, struct stat64 *s)
+> -{
+> -	struct mntent *t;
+> -	struct stat64 ms;
+> -
+> -	while ((t = getmntent(fp))) {
+> -		if (mpref->mnt_fsname) {	/* device */
+> -			if (stat64(t->mnt_fsname, &ms) < 0)
+> -				continue;
+> -			if (s->st_rdev != ms.st_rdev)
+> -				continue;
+> -		}
+> -		if (mpref->mnt_dir) {		/* mount point */
+> -			if (stat64(t->mnt_dir, &ms) < 0)
+> -				continue;
+> -			if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
+> -				continue;
+> -		}
+> -		*mp = *t;
+> -		break;
+> -	}
+> -	return (t != NULL);
+> -}
+> -
+> -
+> -/*
+>   * Initialize a directory for tmp file use.  This is used
+>   * by the full filesystem defragmentation when we're walking
+>   * the inodes and do not know the path for the individual
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
