@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1HJLEpI103983 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 13:21:14 -0600
-Date: Fri, 17 Feb 2012 14:21:12 -0500
+	q1HJFS58103768 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 13:15:29 -0600
+Date: Fri, 17 Feb 2012 14:15:23 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 01/12] xfs: split tail_lsn assignments from log space
-	wakeups
-Message-ID: <20120217192112.GA17716@infradead.org>
-References: <20111212141346.986825692@bombadil.infradead.org>
-	<20111212141433.542846138@bombadil.infradead.org>
-	<20120216182121.GQ7762@sgi.com>
+Subject: Re: [PATCH 1/1] xfs: fix buffer flushing during log unmount
+Message-ID: <20120217191522.GB13870@infradead.org>
+References: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120216182121.GQ7762@sgi.com>
+In-Reply-To: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,22 +22,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Nam-Jae Jeon <linkinjeon@gmail.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>
 
-> >  	if (!list_empty(&tmp))
-> >  		xfs_ail_splice(ailp, cur, &tmp, lsn);
-> > +	spin_unlock(&ailp->xa_lock);
-> 
-> Right.  I am uncomfortable with the idea of dropping the ail lock here
-> and then retaking it below in xlog_assign_tail_lsn.  Your suggestion
-> that a variant of xlog_assign_tail_lsn which expects the lock to be held
-> seems reasonable.
+> Whenever there is a mount/unmount failure - there is a chance of calling the
+> callbacks functions once - transaction ail mount pointer is destroyed. So, it results
+> in NULL pointer exception followed by hang. So, before unmount of the log - flush all
+> the pending buffers.
 
-There is no risk in dropping it in terms of correctness, the only
-downside is doupling the amount of lock roundtrips.  The reason why
-I didn't do the version that is called with the lock held is that it
-would be fairly intrusive and ugly.
+>  void
+>  xfs_log_unmount(xfs_mount_t *mp)
+>  {
+> +	int error = 0;
+> +	/*
+> +	 * Make sure all buffers have been flushed and completed before
+> +	 * unmounting the log.
+> +	 */
+> +	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
+> +	if (error)
+> +		cmn_err(CE_WARN, "%d busy buffers during log unmount.", error);
+> +	xfs_wait_buftarg(mp->m_ddev_targp);
+> +	
+
+We do exactly that sequence before the xfs_log_unmount_write call on
+umount.  Care to explain what code in xfs_log_unmount_write would
+require this to be called again?
 
 _______________________________________________
 xfs mailing list
