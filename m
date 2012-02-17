@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1HJFS58103768 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 13:15:29 -0600
-Date: Fri, 17 Feb 2012 14:15:23 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] xfs: fix buffer flushing during log unmount
-Message-ID: <20120217191522.GB13870@infradead.org>
-References: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
+	q1HKonAP109621 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 14:50:50 -0600
+Message-ID: <4F3EBDA6.7070108@sgi.com>
+Date: Fri, 17 Feb 2012 14:50:46 -0600
+From: Bill Kendall <wkendall@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
+Subject: Re: xfsrestore will create orphanage directory when use -t
+References: <CAGdb-8fC4-3swyyfP3xO=camgzDjR5GYV3qoaB1w+xAfiNeYPw@mail.gmail.com>
+In-Reply-To: <CAGdb-8fC4-3swyyfP3xO=camgzDjR5GYV3qoaB1w+xAfiNeYPw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,35 +17,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Nam-Jae Jeon <linkinjeon@gmail.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>
+To: Tommy Wu <wu.tommy@gmail.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-> Whenever there is a mount/unmount failure - there is a chance of calling the
-> callbacks functions once - transaction ail mount pointer is destroyed. So, it results
-> in NULL pointer exception followed by hang. So, before unmount of the log - flush all
-> the pending buffers.
+On 02/14/2012 11:21 AM, Tommy Wu wrote:
+> from the xfsdump man page:
+> xfsrestore also generates a directory named orphanage in the dest
+> directory. xfsrestore removes this directory after completing a simple
+> restore. However, if orphanage is not empty, it is not removed. This
+> can happen if files present on the dump media are not referenced by
+> any of the restored directories. The orphanage has an entry for each
+> such file. The entry name is the file's original inode number, a ".",
+> and the file's generation count modulo 4096 (only the lower 12 bits of
+> the generation count are used).
+>
+> and the -t option from xfsdump man page:
+> Displays the contents of the dump, but does not create or modify any
+> files or directories. It may be desirable to set the verbosity level
+> to silent when using this option.
+>
+> But when we use -t option with xfsrestore, it still create orphanage
+> directory in current directory (because no dest directory assign).
+> and if it's not empty, it is not removed.
+>
+> This is a bug or it's a feature?
 
->  void
->  xfs_log_unmount(xfs_mount_t *mp)
->  {
-> +	int error = 0;
-> +	/*
-> +	 * Make sure all buffers have been flushed and completed before
-> +	 * unmounting the log.
-> +	 */
-> +	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
-> +	if (error)
-> +		cmn_err(CE_WARN, "%d busy buffers during log unmount.", error);
-> +	xfs_wait_buftarg(mp->m_ddev_targp);
-> +	
+I can see code where this would happen, except that it would appear
+to require both -r and -t to be used, and xfsrestore doesn't allow
+that.
 
-We do exactly that sequence before the xfs_log_unmount_write call on
-umount.  Care to explain what code in xfs_log_unmount_write would
-require this to be called again?
+If you send the command line you used I can take another look.
+
+Bill
 
 _______________________________________________
 xfs mailing list
