@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1IGUFus174892 for <xfs@oss.sgi.com>; Sat, 18 Feb 2012 10:30:15 -0600
+	q1ILkA2p192613 for <xfs@oss.sgi.com>; Sat, 18 Feb 2012 15:46:10 -0600
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id M5FTgTgPQHvKNcon (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 18 Feb 2012 13:46:09 -0800 (PST)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1Rys6a-0000sa-VD
+	for xfs@oss.sgi.com; Sat, 18 Feb 2012 13:46:08 -0800
+Message-ID: <33349727.post@talk.nabble.com>
+Date: Sat, 18 Feb 2012 13:46:08 -0800 (PST)
+From: rlinsurf <jellis@dhnet.us>
+Subject: Fatal Error doing make for xfsdump
 MIME-Version: 1.0
-In-Reply-To: <20120217191522.GB13870@infradead.org>
-References: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
-	<20120217191522.GB13870@infradead.org>
-Date: Sat, 18 Feb 2012 22:00:11 +0530
-Message-ID: <CADDb1s35zgur9SGHR_9r=tSr8ZnC-+DTtTXYgc6H_K68Eb_QEQ@mail.gmail.com>
-Subject: Re: [PATCH 1/1] xfs: fix buffer flushing during log unmount
-From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,129 +23,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Nam-Jae Jeon <linkinjeon@gmail.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>
+To: xfs@oss.sgi.com
 
-Hi Christoph,
 
-There are =912=92 scenarios which results in the similar problem related
-to flushing. Both related to handling of buffer callbacks after the
-corresponding mount point passed in the transactions is destroyed.
+I'm getting the following when I try to make:
 
-The first one reported 2 months back (in umount path) =96 which was
-related with the asynchronous callback of buf-iodone handlers being
-called after the freeing up of the mount point in:
-void xfs_log_unmount(xfs_mount_t *mp)
-{
-	xfs_trans_ail_destroy(mp);
-	xlog_dealloc_log(mp->m_log);
-}
+FATAL ERROR: attributes.h does not exist.
+Install the extended attributes (attr) development package.
+Alternatively, run "make install-dev" from the attr source.
+make: *** [include/builddefs] Error 1
 
-The complete tracing information for the first issue is available at:
-http://patchwork.xfs.org/patch/2485/
+I can't figure out how to make this not happen. I've tried doing an apt-get
+install attr, and that succeeded, and doing the make install-dev from the
+attr source, and that succeeded, but the error doesn't go away.
 
-For which the solution was also provided by you as -> xfs: fix buffer
-flushing during unmount
-(http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommitd=
-iff;h=3D87c7bec7fc3377b3873eb3a0f4b603981ea16ebb)
+This is ubuntu 10.11. What am I doing wrong?
 
-Now, we have encountered a similar issue in mount failure path.
-In this scenarios also =96 it is the calling of =91xfs_log_umount=92 without
-waiting for the dependent buffer callbacks to be flushed.
-xfs_mountfs()
-{
-=85
-=85
-error =3D xfs_log_mount_finish(mp);
-	if (error) {
-		cmn_err(CE_WARN, "XFS: log mount finish failed");
-		goto out_rtunmount;
-	}
-=85
-..
-out_log_dealloc:
-	xfs_log_unmount(mp);
-=85
-}
-xfs_fs_fill_super()
-{
-=85
-	error =3D xfs_mountfs(mp);
-	if (error)
-		goto out_filestream_unmount;
-=85
-=85
-out_filestream_unmount:
-	xfs_filestream_unmount(mp);
- out_free_sb:
-	xfs_freesb(mp);
- out_destroy_counters:
-	xfs_icsb_destroy_counters(mp);
-	xfs_close_devices(mp);
-}
+Thanks.
 
-Now, in xfs_close_devices() =96 it tries to flush all the pending buffer
-callbacks =96 but because xfs_log_umount has resulted in destroying of
-ail mountpoint in xfs_trans_ail_destroy(mp);
-This again results in crash at
-xfs_buf_iodone()
-{
-=85
-	xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
-=85
-}
-The backtrace and exact problem was shared as part of the reply to the
-patch submission mail.
-
-So a solution to this =96 also we need to flush buffers.
-
-And because it is a similar situation and also =96 we can make this a
-generic solution.
-The fix from the patch
-http://git.kernel.org/?p=3Dlinux/kernel/git/torvalds/linux.git;a=3Dcommitdi=
-ff;h=3D87c7bec7fc3377b3873eb3a0f4b603981ea16ebb
-was removed and instead tried to put it at one place which could solve
-the similar issues.
-
-Please let me know incase I am not able to clarify properly.
-
-Thanks & Regards,
-Amit Sahrawat
-
-On Sat, Feb 18, 2012 at 12:45 AM, Christoph Hellwig <hch@infradead.org> wro=
-te:
->> Whenever there is a mount/unmount failure - there is a chance of calling=
- the
->> callbacks functions once - transaction ail mount pointer is destroyed. S=
-o, it results
->> in NULL pointer exception followed by hang. So, before unmount of the lo=
-g - flush all
->> the pending buffers.
->
->> =A0void
->> =A0xfs_log_unmount(xfs_mount_t *mp)
->> =A0{
->> + =A0 =A0 int error =3D 0;
->> + =A0 =A0 /*
->> + =A0 =A0 =A0* Make sure all buffers have been flushed and completed bef=
-ore
->> + =A0 =A0 =A0* unmounting the log.
->> + =A0 =A0 =A0*/
->> + =A0 =A0 error =3D xfs_flush_buftarg(mp->m_ddev_targp, 1);
->> + =A0 =A0 if (error)
->> + =A0 =A0 =A0 =A0 =A0 =A0 cmn_err(CE_WARN, "%d busy buffers during log u=
-nmount.", error);
->> + =A0 =A0 xfs_wait_buftarg(mp->m_ddev_targp);
->> +
->
-> We do exactly that sequence before the xfs_log_unmount_write call on
-> umount. =A0Care to explain what code in xfs_log_unmount_write would
-> require this to be called again?
->
+Best,
+Jeffrey 
+-- 
+View this message in context: http://old.nabble.com/Fatal-Error-doing-make-for-xfsdump-tp33349727p33349727.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
