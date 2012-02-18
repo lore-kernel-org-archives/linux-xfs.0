@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1HNawdY118048 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 17:36:59 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8xjrG1rcKDaVMMhd for
-	<xfs@oss.sgi.com>; Fri, 17 Feb 2012 15:36:57 -0800 (PST)
-Message-ID: <4F3EE490.2010302@redhat.com>
-Date: Fri, 17 Feb 2012 15:36:48 -0800
-From: Eric Sandeen <sandeen@redhat.com>
+	q1I0Mird119969 for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 18:22:44 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id F9FWD1cD8tuDBRDu
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 17 Feb 2012 16:22:42 -0800 (PST)
+Received: by lahd3 with SMTP id d3so4575359lah.26
+	for <xfs@oss.sgi.com>; Fri, 17 Feb 2012 16:22:41 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_fsr: Get the last mount on a specific mount point
-References: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
-	<20120213174240.GA3474@infradead.org>
-In-Reply-To: <20120213174240.GA3474@infradead.org>
+In-Reply-To: <4F3EBDA6.7070108@sgi.com>
+References: <CAGdb-8fC4-3swyyfP3xO=camgzDjR5GYV3qoaB1w+xAfiNeYPw@mail.gmail.com>
+	<4F3EBDA6.7070108@sgi.com>
+Date: Sat, 18 Feb 2012 08:22:41 +0800
+Message-ID: <CAGdb-8eMcBghwznGbGQha01paF1L+MdB3QsxHCuCh6ZOW=wsag@mail.gmail.com>
+Subject: Re: xfsrestore will create orphanage directory when use -t
+From: Tommy Wu <wu.tommy@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,240 +28,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-On 2/13/12 9:42 AM, Christoph Hellwig wrote:
-> Thanks for taking care of this, but this just seems to make the already
-> horribly ugly code even worse.
-> 
-> What do you think about the version below?
-> 
-> ---
-> From: Christoph Hellwig <hch@lst.de>
-> Subject: fsr: fix /proc/mounts parsing
-> 
-> Make sure we do not reject an XFS root mount just because /dev/root is also
-> listed in /proc/mounts.  The root cause for this was the awkward getmntany
-> function, which is replaced with a broader reach find_mountpoint function
-> which replace getmntany and the surrounding code from the main routine in
-> a structured way.  This changes the flow from finding a mounted filesystem
-> matching the argument and checking that it's XFS to find a mounted XFS
-> filesystem and thus fixes the bug.
-> 
-> Based on analysis and an earlier patch from
-> Carlos Maiolino <cmaiolino@redhat.com>.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+2012/2/18 Bill Kendall <wkendall@sgi.com>:
+> On 02/14/2012 11:21 AM, Tommy Wu wrote:
+>>
+>> from the xfsdump man page:
+>> xfsrestore also generates a directory named orphanage in the dest
+>> directory. xfsrestore removes this directory after completing a simple
+>> restore. However, if orphanage is not empty, it is not removed. This
+>> can happen if files present on the dump media are not referenced by
+>> any of the restored directories. The orphanage has an entry for each
+>> such file. The entry name is the file's original inode number, a ".",
+>> and the file's generation count modulo 4096 (only the lower 12 bits of
+>> the generation count are used).
+>>
+>> and the -t option from xfsdump man page:
+>> Displays the contents of the dump, but does not create or modify any
+>> files or directories. It may be desirable to set the verbosity level
+>> to silent when using this option.
+>>
+>> But when we use -t option with xfsrestore, it still create orphanage
+>> directory in current directory (because no dest directory assign).
+>> and if it's not empty, it is not removed.
+>>
+>> This is a bug or it's a feature?
+>
+>
+> I can see code where this would happen, except that it would appear
+> to require both -r and -t to be used, and xfsrestore doesn't allow
+> that.
+>
+> If you send the command line you used I can take another look.
+>
+> Bill
 
-Looks ok to me, thanks for doing it properly :)
+here is the command I used for -t:
+cat var.xfsdump.gz | gzip -dqv | xfsrestore -v silent -p 300 -J -t - |
+grep "^xfsrestore:"
 
-I like Carlos' suggestion for the comment cleanup, and might suggest that
-the /* device */ and /* mount point */ comments remain too; it's obvious
-to us now I guess but I think the landmarks are nice for a fresh read.
-No biggie.
+I also test it with only -t option, it also create orphanage folder
+for such dump file (not all dump file has this issue)
+cat var.xfsdump.gz | gzip -dqv | xfsrestore -t - | grep "^xfsrestore:"
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> ---
->  fsr/xfs_fsr.c |  142 +++++++++++++++++++++++++++++-----------------------------
->  1 file changed, 72 insertions(+), 70 deletions(-)
-> 
-> Index: xfsprogs-dev/fsr/xfs_fsr.c
-> ===================================================================
-> --- xfsprogs-dev.orig/fsr/xfs_fsr.c	2012-02-12 16:30:07.286766766 -0800
-> +++ xfsprogs-dev/fsr/xfs_fsr.c	2012-02-12 16:42:39.293447376 -0800
-> @@ -109,7 +109,6 @@ static void tmp_init(char *mnt);
->  static char * tmp_next(char *mnt);
->  static void tmp_close(char *mnt);
->  int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
-> -static int getmntany(FILE *, struct mntent *, struct mntent *, struct stat64 *);
->  
->  xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
->  
-> @@ -178,18 +177,73 @@ aborter(int unused)
->  	exit(1);
->  }
->  
-> +/*
-> + * Check if the argument is either the device name or mountpoint of an XFS
-> + * filesystem.  Note that we do not care about bind mounted regular files
-> + * here - the code that handles defragmentation of invidual files takes care
-> + * of that.
-> + */
-> +static char *
-> +find_mountpoint(char *mtab, char *argname, struct stat64 *sb)
-> +{
-> +	struct mntent *t;
-> +	struct stat64 ms;
-> +	FILE *mtabp;
-> +	char *mntp = NULL;
-> +
-> +	mtabp = setmntent(mtab, "r");
-> +	if (!mtabp) {
-> +		fprintf(stderr, _("%s: cannot read %s\n"),
-> +			progname, mtab);
-> +		exit(1);
-> +	}
-> +
-> +	while ((t = getmntent(mtabp))) {
-> +		if (S_ISDIR(sb->st_mode)) {
-> +			if (stat64(t->mnt_dir, &ms) < 0)
-> +				continue;
-> +			if (sb->st_ino != ms.st_ino)
-> +				continue;
-> +			if (sb->st_dev != ms.st_dev)
-> +				continue;
-> +		} else {
-> +			if (stat64(t->mnt_fsname, &ms) < 0)
-> +				continue;
-> +			if (sb->st_rdev != ms.st_rdev)
-> +				continue;
-> +		}
-> +
-> +		if (strcmp(t->mnt_type, MNTTYPE_XFS) != 0)
-> +			continue;
-> +
-> +		/*
-> +		 * If we found an entry based on the device name make sure we
-> +		 * stat the mountpoint that the mtab gave actually is accessible
-> +		 * before using it.
-> +		 */
-> +		if (S_ISBLK(sb->st_mode)) {
-> +			struct stat64 sb2;
-> +
-> +			if (stat64(t->mnt_dir, &sb2) < 0)
-> +				continue;
-> +		}
-> +
-> +		mntp = t->mnt_dir;
-> +		break;
-> +	}
-> +
-> +	endmntent(mtabp);
-> +	return mntp;
-> +}
-> +
->  int
->  main(int argc, char **argv)
->  {
-> -	struct stat64 sb, sb2;
-> +	struct stat64 sb;
->  	char *argname;
-> -	char *cp;
->  	int c;
-> -	struct mntent mntpref;
-> -	register struct mntent *mntp;
-> -	struct mntent ment;
-> +	char *mntp;
->  	char *mtab = NULL;
-> -	register FILE *mtabp;
->  
->  	setlinebuf(stdout);
->  	progname = basename(argv[0]);
-> @@ -281,49 +335,26 @@ main(int argc, char **argv)
->  	if (optind < argc) {
->  		for (; optind < argc; optind++) {
->  			argname = argv[optind];
-> -			mntp = NULL;
-> +
->  			if (lstat64(argname, &sb) < 0) {
->  				fprintf(stderr,
->  					_("%s: could not stat: %s: %s\n"),
->  					progname, argname, strerror(errno));
->  				continue;
->  			}
-> -			if (S_ISLNK(sb.st_mode) && stat64(argname, &sb2) == 0 &&
-> -			    (S_ISBLK(sb2.st_mode) || S_ISCHR(sb2.st_mode)))
-> -				sb = sb2;
-> -			if (S_ISBLK(sb.st_mode) || (S_ISDIR(sb.st_mode))) {
-> -				if ((mtabp = setmntent(mtab, "r")) == NULL) {
-> -					fprintf(stderr,
-> -						_("%s: cannot read %s\n"),
-> -						progname, mtab);
-> -					exit(1);
-> -				}
-> -				bzero(&mntpref, sizeof(mntpref));
-> -				if (S_ISDIR(sb.st_mode))
-> -					mntpref.mnt_dir = argname;
-> -				else
-> -					mntpref.mnt_fsname = argname;
->  
-> -				if (getmntany(mtabp, &ment, &mntpref, &sb) &&
-> -				    strcmp(ment.mnt_type, MNTTYPE_XFS) == 0) {
-> -					mntp = &ment;
-> -					if (S_ISBLK(sb.st_mode)) {
-> -						cp = mntp->mnt_dir;
-> -						if (cp == NULL ||
-> -						    stat64(cp, &sb2) < 0) {
-> -							fprintf(stderr, _(
-> -						"%s: could not stat: %s: %s\n"),
-> -							progname, argname,
-> -							strerror(errno));
-> -							continue;
-> -						}
-> -						sb = sb2;
-> -						argname = cp;
-> -					}
-> -				}
-> +			if (S_ISLNK(sb.st_mode)) {
-> +				struct stat64 sb2;
-> +
-> +				if (stat64(argname, &sb2) == 0 &&
-> +				    (S_ISBLK(sb2.st_mode) ||
-> +				     S_ISCHR(sb2.st_mode)))
-> +				sb = sb2;
->  			}
-> +
-> +			mntp = find_mountpoint(mtab, argname, &sb);
->  			if (mntp != NULL) {
-> -				fsrfs(mntp->mnt_dir, 0, 100);
-> +				fsrfs(mntp, 0, 100);
->  			} else if (S_ISCHR(sb.st_mode)) {
->  				fprintf(stderr, _(
->  					"%s: char special not supported: %s\n"),
-> @@ -1639,35 +1670,6 @@ fsrprintf(const char *fmt, ...)
->  }
->  
->  /*
-> - * emulate getmntany
-> - */
-> -static int
-> -getmntany(FILE *fp, struct mntent *mp, struct mntent *mpref, struct stat64 *s)
-> -{
-> -	struct mntent *t;
-> -	struct stat64 ms;
-> -
-> -	while ((t = getmntent(fp))) {
-> -		if (mpref->mnt_fsname) {	/* device */
-> -			if (stat64(t->mnt_fsname, &ms) < 0)
-> -				continue;
-> -			if (s->st_rdev != ms.st_rdev)
-> -				continue;
-> -		}
-> -		if (mpref->mnt_dir) {		/* mount point */
-> -			if (stat64(t->mnt_dir, &ms) < 0)
-> -				continue;
-> -			if (s->st_ino != ms.st_ino || s->st_dev != ms.st_dev)
-> -				continue;
-> -		}
-> -		*mp = *t;
-> -		break;
-> -	}
-> -	return (t != NULL);
-> -}
-> -
-> -
-> -/*
->   * Initialize a directory for tmp file use.  This is used
->   * by the full filesystem defragmentation when we're walking
->   * the inodes and do not know the path for the individual
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+-- 
+
+Tommy Wu
 
 _______________________________________________
 xfs mailing list
