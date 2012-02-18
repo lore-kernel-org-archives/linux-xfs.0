@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1ILkA2p192613 for <xfs@oss.sgi.com>; Sat, 18 Feb 2012 15:46:10 -0600
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id M5FTgTgPQHvKNcon (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 18 Feb 2012 13:46:09 -0800 (PST)
-Received: from isper.nabble.com ([192.168.236.156])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1Rys6a-0000sa-VD
-	for xfs@oss.sgi.com; Sat, 18 Feb 2012 13:46:08 -0800
-Message-ID: <33349727.post@talk.nabble.com>
-Date: Sat, 18 Feb 2012 13:46:08 -0800 (PST)
-From: rlinsurf <jellis@dhnet.us>
-Subject: Fatal Error doing make for xfsdump
+	q1IMUxMo194847 for <xfs@oss.sgi.com>; Sat, 18 Feb 2012 16:30:59 -0600
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	O4pG3xc2LxSfkgAW for <xfs@oss.sgi.com>;
+	Sat, 18 Feb 2012 14:30:57 -0800 (PST)
+Date: Sun, 19 Feb 2012 09:30:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fatal Error doing make for xfsdump
+Message-ID: <20120218223054.GA5726@dastard>
+References: <33349727.post@talk.nabble.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <33349727.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,29 +26,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: rlinsurf <jellis@dhnet.us>
+Cc: xfs@oss.sgi.com
 
+On Sat, Feb 18, 2012 at 01:46:08PM -0800, rlinsurf wrote:
+> 
+> I'm getting the following when I try to make:
+> 
+> FATAL ERROR: attributes.h does not exist.
+> Install the extended attributes (attr) development package.
+> Alternatively, run "make install-dev" from the attr source.
+> make: *** [include/builddefs] Error 1
+> 
+> I can't figure out how to make this not happen. I've tried doing an apt-get
+> install attr, and that succeeded, and doing the make install-dev from the
+> attr source, and that succeeded, but the error doesn't go away.
 
-I'm getting the following when I try to make:
+The libattr1 package only contains the binaries, not the environment
+for building code that links against the libraries. install the -dev
+package as well.
 
-FATAL ERROR: attributes.h does not exist.
-Install the extended attributes (attr) development package.
-Alternatively, run "make install-dev" from the attr source.
-make: *** [include/builddefs] Error 1
+$ apt-cache search libattr1
+libattr1 - Extended attribute shared library
+libattr1-dev - Extended attribute static libraries and headers
+$
 
-I can't figure out how to make this not happen. I've tried doing an apt-get
-install attr, and that succeeded, and doing the make install-dev from the
-attr source, and that succeeded, but the error doesn't go away.
+or:
 
-This is ubuntu 10.11. What am I doing wrong?
+$ apt-file search /usr/include/attr/attributes.h
+libattr1-dev: /usr/include/attr/attributes.h
+$
 
-Thanks.
+Cheers,
 
-Best,
-Jeffrey 
+Dave.
 -- 
-View this message in context: http://old.nabble.com/Fatal-Error-doing-make-for-xfsdump-tp33349727p33349727.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
