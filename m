@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1JMRiSW031073 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 16:27:44 -0600
-Date: Sun, 19 Feb 2012 17:27:35 -0500
+	q1JMfKjE031711 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 16:41:21 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	6h9LuB2NYiP1bFxI (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 19 Feb 2012 14:41:19 -0800 (PST)
+Date: Sun, 19 Feb 2012 17:41:18 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/1] xfs: fix buffer flushing during log unmount
-Message-ID: <20120219222735.GA19971@infradead.org>
-References: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
-	<20120217191522.GB13870@infradead.org>
-	<CADDb1s35zgur9SGHR_9r=tSr8ZnC-+DTtTXYgc6H_K68Eb_QEQ@mail.gmail.com>
+Subject: Re: [PATCH 4/4] xfs: fix deadlock in xfs_rtfree_extent with kernel
+	v2.6.37
+Message-ID: <20120219224118.GA31535@infradead.org>
+References: <33345988.post@talk.nabble.com> <33346009.post@talk.nabble.com>
+	<33346035.post@talk.nabble.com> <33346043.post@talk.nabble.com>
+	<33346051.post@talk.nabble.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CADDb1s35zgur9SGHR_9r=tSr8ZnC-+DTtTXYgc6H_K68Eb_QEQ@mail.gmail.com>
+In-Reply-To: <33346051.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,18 +31,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Amit Sahrawat <amit.sahrawat83@gmail.com>
-Cc: Nam-Jae Jeon <linkinjeon@gmail.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>
+To: kdasu <kdasu.kdev@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi Amit,
+On Fri, Feb 17, 2012 at 03:00:09PM -0800, kdasu wrote:
+> 
+> 
+> On the 2.6.37 kernel, xfs_fs_evict_inode() leads to a deadlock when
+> freeing multiple realtime extents. On further debugging the root
+> cause it was determined to be recursive locking of the RT bitmap
+> inode during evict operation within the same task context.
+> The same vfs evict sequence is replayed by the xfs log recovery on
+> mounts on a reboot after the problem happens first time.
+> This problem exists on kernel v2.6.39 as well.
 
-thanks, your explanation makes sense.  Can you resend the patch with
-the full description of what is going on? (or if Ben wants to edit it in
-place before applying it's also fine with me).
+I think you're better off fixing this problem like I did for the
+allocation side, that is:
 
-Thanks a lot for tracking this down.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+ - remove the xfs_ilock and xfs_trans_ijoin (or probably still
+   xfs_trans_iget in your version) from xfs_rtfree_extent, and
+   instead add asserts that the inode is locked and has an inode_item
+   attach to it.
+ - in xfs_bunmapi if we are dealing with an inode with the rt flag
+   bump the reference count on the inode there and attach it to the
+   transaction before calling into xfs_bmap_del_extent, similar to
+   what we do in xfs_bmap_rtalloc.
 
 _______________________________________________
 xfs mailing list
