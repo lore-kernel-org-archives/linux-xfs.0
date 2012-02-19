@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1JLH9jm027404 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 15:17:09 -0600
-Date: Sun, 19 Feb 2012 16:17:06 -0500
+	q1JMRiSW031073 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 16:27:44 -0600
+Date: Sun, 19 Feb 2012 17:27:35 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 00/12] log grant code cleanups
-Message-ID: <20120219211706.GB22831@infradead.org>
-References: <20111212141346.986825692@bombadil.infradead.org>
-	<20120216214609.GB7762@sgi.com>
+Subject: Re: [PATCH 1/1] xfs: fix buffer flushing during log unmount
+Message-ID: <20120219222735.GA19971@infradead.org>
+References: <1329306980-17997-1-git-send-email-amit.sahrawat83@gmail.com>
+	<20120217191522.GB13870@infradead.org>
+	<CADDb1s35zgur9SGHR_9r=tSr8ZnC-+DTtTXYgc6H_K68Eb_QEQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120216214609.GB7762@sgi.com>
+In-Reply-To: <CADDb1s35zgur9SGHR_9r=tSr8ZnC-+DTtTXYgc6H_K68Eb_QEQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,24 +24,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Amit Sahrawat <amit.sahrawat83@gmail.com>
+Cc: Nam-Jae Jeon <linkinjeon@gmail.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, xfs-masters@oss.sgi.com, Ben Myers <bpm@sgi.com>
 
-On Thu, Feb 16, 2012 at 03:46:09PM -0600, Ben Myers wrote:
-> Christoph,
-> 
-> On Mon, Dec 12, 2011 at 09:13:47AM -0500, Christoph Hellwig wrote:
-> > This series removes the opportunistic log space wakeups which had no
-> > use but hiding real races for far too long, and applies various bits
-> > of refactoring to the log grant code to make it smaller and more readable.
-> 
-> This patch set looks just about ready to go.  The only changes I'd like
-> to see are some commit messages where they are missing, and I have a
-> question about patch 11 related to usage t_ocnt on the log ticket.
+Hi Amit,
 
-For the "share ..." commits I can't really think of any commit message
-that actually makes sense - the subject seems to describe what the patch
-does more than enough.
+thanks, your explanation makes sense.  Can you resend the patch with
+the full description of what is going on? (or if Ben wants to edit it in
+place before applying it's also fine with me).
+
+Thanks a lot for tracking this down.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
