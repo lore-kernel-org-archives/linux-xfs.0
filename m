@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1IMUxMo194847 for <xfs@oss.sgi.com>; Sat, 18 Feb 2012 16:30:59 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	O4pG3xc2LxSfkgAW for <xfs@oss.sgi.com>;
-	Sat, 18 Feb 2012 14:30:57 -0800 (PST)
-Date: Sun, 19 Feb 2012 09:30:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Fatal Error doing make for xfsdump
-Message-ID: <20120218223054.GA5726@dastard>
-References: <33349727.post@talk.nabble.com>
+	q1JDGlaJ248590 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 07:16:48 -0600
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id j5Zgf02gYPHOlrEu (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 19 Feb 2012 05:16:44 -0800 (PST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: XFS memory recomendation?
+Date: Sun, 19 Feb 2012 14:16:32 +0100
+Message-ID: <5722408.cXkY2gHLh8@saturn>
+In-Reply-To: <4F3F0A4A.7050708@redhat.com>
+References: <2BF070A7A2375D46BA1B6087F8D5DCB68BEA721CA3@seldmbx01.corpusers.net>
+	<4F3F05D4.1020705@hardwarefreak.com> <4F3F0A4A.7050708@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <33349727.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,49 +22,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4310857409117144917=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: rlinsurf <jellis@dhnet.us>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@redhat.com>, stan@hardwarefreak.com, "Assarsson,
+	Emil" <Emil.Assarsson@sonyericsson.com>
 
-On Sat, Feb 18, 2012 at 01:46:08PM -0800, rlinsurf wrote:
-> 
-> I'm getting the following when I try to make:
-> 
-> FATAL ERROR: attributes.h does not exist.
-> Install the extended attributes (attr) development package.
-> Alternatively, run "make install-dev" from the attr source.
-> make: *** [include/builddefs] Error 1
-> 
-> I can't figure out how to make this not happen. I've tried doing an apt-get
-> install attr, and that succeeded, and doing the make install-dev from the
-> attr source, and that succeeded, but the error doesn't go away.
 
-The libattr1 package only contains the binaries, not the environment
-for building code that links against the libraries. install the -dev
-package as well.
+--===============4310857409117144917==
+Content-Type: multipart/signed; boundary="nextPart38005935.cipAypyCf7"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
 
-$ apt-cache search libattr1
-libattr1 - Extended attribute shared library
-libattr1-dev - Extended attribute static libraries and headers
-$
 
-or:
+--nextPart38005935.cipAypyCf7
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-$ apt-file search /usr/include/attr/attributes.h
-libattr1-dev: /usr/include/attr/attributes.h
-$
+Am Freitag, 17. Februar 2012, 18:17:46 schrieb Eric Sandeen:
+> http://xfs.org/index.php/XFS_FAQ#Q:_Which_factors_influence_the_memor=
+y
+> _usage_of_xfs_repair.3F
 
-Cheers,
+I tried that, and it said "use 434":
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+xfs_repair -n -vv -m 1 /dev/mapper/vg_orion-lv_orion_data=20
+Phase 1 - find and verify superblock...
+        - max_mem =3D 1024, icount =3D 339648, imem =3D 1326, dblock =3D=
+=20
+805304256, dmem =3D 393214
+Required memory for repair is greater that the maximum specified with=20=
+
+the -m option. Please increase it to at least 434.
+
+But when I tried with=20
+# xfs_repair -n -vv -m 434 /dev/mapper/vg_orion-lv_orion_data=20
+it said the same again. It only worked with 435:
+# xfs_repair -n -vv -m 435 /dev/mapper/vg_orion-lv_orion_data=20
+(is that what you call an off-by-1 error?)
+
+Maybe that has been fixed already? This is
+# xfs_repair -V
+xfs_repair Version 3.1.6
+
+BTW, this XFS is 3219644160 KB (3,2TB), used 2,9TB, has (df -i) 325364=20=
+
+inodes used, 293884 files in 31643 dirs. It seems mem usage primarily=20=
+
+comes from inodes, not from the size of the filesystem.
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+--nextPart38005935.cipAypyCf7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAk9A9jkACgkQzhSR9xwSCbQXRQCgzBp93nhscjDjNWRpktZKekNl
+zbAAoKY5pHKUHDC80AsqxDkcAnpNPqFD
+=0kP3
+-----END PGP SIGNATURE-----
+
+--nextPart38005935.cipAypyCf7--
+
+
+--===============4310857409117144917==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4310857409117144917==--
