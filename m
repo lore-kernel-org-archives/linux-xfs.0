@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1K8fDsd067765 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 02:41:13 -0600
-Received: from extern.innogames.de (extern.innogames.de [80.252.99.240]) by
-	cuda.sgi.com with ESMTP id j31FllAz9gt6LQXV for
-	<xfs@oss.sgi.com>; Mon, 20 Feb 2012 00:41:12 -0800 (PST)
-Message-ID: <4F420726.6060000@innogames.de>
-Date: Mon, 20 Feb 2012 09:41:10 +0100
-From: Bernhard Schrader <bernhard.schrader@innogames.de>
-MIME-Version: 1.0
+	q1KB6VmB075720 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 05:06:32 -0600
+Received: from enyo.dsw2k3.info (enyo.dsw2k3.info [195.71.86.239]) by
+	cuda.sgi.com with ESMTP id 9tPMADahDlU9vRyo (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 Feb 2012 03:06:29 -0800 (PST)
+Date: Mon, 20 Feb 2012 12:06:14 +0100
+From: Matthias Schniedermeyer <ms@citd.de>
 Subject: Re: Problems with filesizes on different Kernels
+Message-ID: <20120220110614.GA17526@citd.de>
 References: <4F3E3F5A.9000202@innogames.de> <20120217123335.GA9671@citd.de>
-In-Reply-To: <20120217123335.GA9671@citd.de>
+	<4F420726.6060000@innogames.de>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F420726.6060000@innogames.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,96 +23,183 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Matthias Schniedermeyer <ms@citd.de>
+To: Bernhard Schrader <bernhard.schrader@innogames.de>
 Cc: xfs@oss.sgi.com
 
-On 02/17/2012 01:33 PM, Matthias Schniedermeyer wrote:
-> On 17.02.2012 12:51, Bernhard Schrader wrote:
->> Hi all,
->>
->> we just discovered a problem, which I think is related to XFS. Well,
->> I will try to explain.
->>
->> The environment i am working with are around 300 Postgres databases
->> in separated VM's. All are running with XFS. Differences are just in
->> kernel versions.
->> - 2.6.18
->> - 2.6.39
->> - 3.1.4
->>
->> Some days ago i discovered that the file nodes of my postgresql
->> tables have strange sizes. They are located in
->> /var/lib/postgresql/9.0/main/base/[databaseid]/
->> If I execute the following commands i get results like this:
->>
->> Command: du -sh | tr "\n" " "; du --apparent-size -h
->> Result: 6.6G	. 5.7G	.
->
-> Since a few kernel-version XFS does speculative preallocations, which is
-> primarily a measure to prevent fragmentation.
->
-> The preallocations should go away when you drop the caches.
->
-> sync
-> echo 3>  /proc/sys/vm/drop_caches
->
-> XFS can be prevented to do that with the mount-option "allocsize".
-> Personally i use "allocsize=64k", since i first encountered that
-> behaviour, my workload primarily consists of single-thread writing which
-> doesn't benefit from this preallocation.
-> Your workload OTOH may benefit as it should prevent/lower the
-> fragmentation of the database files.
->
->
->
->
->
->
-> Bis denn
->
+On 20.02.2012 09:41, Bernhard Schrader wrote:
+> On 02/17/2012 01:33 PM, Matthias Schniedermeyer wrote:
+> >On 17.02.2012 12:51, Bernhard Schrader wrote:
+> >>Hi all,
+> >>
+> >>we just discovered a problem, which I think is related to XFS. Well,
+> >>I will try to explain.
+> >>
+> >>The environment i am working with are around 300 Postgres databases
+> >>in separated VM's. All are running with XFS. Differences are just in
+> >>kernel versions.
+> >>- 2.6.18
+> >>- 2.6.39
+> >>- 3.1.4
+> >>
+> >>Some days ago i discovered that the file nodes of my postgresql
+> >>tables have strange sizes. They are located in
+> >>/var/lib/postgresql/9.0/main/base/[databaseid]/
+> >>If I execute the following commands i get results like this:
+> >>
+> >>Command: du -sh | tr "\n" " "; du --apparent-size -h
+> >>Result: 6.6G	. 5.7G	.
+> >
+> >Since a few kernel-version XFS does speculative preallocations, which is
+> >primarily a measure to prevent fragmentation.
+> >
+> >The preallocations should go away when you drop the caches.
+> >
+> >sync
+> >echo 3>  /proc/sys/vm/drop_caches
+> >
+> >XFS can be prevented to do that with the mount-option "allocsize".
+> >Personally i use "allocsize=64k", since i first encountered that
+> >behaviour, my workload primarily consists of single-thread writing which
+> >doesn't benefit from this preallocation.
+> >Your workload OTOH may benefit as it should prevent/lower the
+> >fragmentation of the database files.
+> 
+> Hi Matthias,
+> thanks for the reply, as far as i can say the "echo 3 >
+> /proc/sys/vm/drop_caches" didn't work. the sizes didnt shrink.
 
-Hi Matthias,
-thanks for the reply, as far as i can say the "echo 3 > 
-/proc/sys/vm/drop_caches" didn't work. the sizes didnt shrink. Today i 
-had the chance to test the allocsize=64k. Well, first i thought it 
-worked, i added the mountoption, restarted the server, everything shrink 
-to normal sizes. but right now its more or less "flapping". I have 5.7GB 
-real data and the sizes flap between 6.9GB to 5.7GB.
-But I am wondering a little about the mount output:
+You did "sync" before?
+drop caches only drops "clean" pages, everything that is dirty isn't 
+dropped. Hence the need to "sync" before.
 
-# mount
-/dev/xvda1 on / type xfs 
-(rw,noatime,nodiratime,logbufs=8,nobarrier,allocsize=64k)
-tmpfs on /lib/init/rw type tmpfs (rw,nosuid,mode=0755)
-proc on /proc type proc (rw,noexec,nosuid,nodev)
-sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
-tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
-devpts on /dev/pts type devpts (rw,noexec,nosuid,gid=5,mode=620)
+Also i persume that you didn't stop Postgres?
+I don't know if the process works for files that are currently opened. 
+
+When i tested the behaviour i tested it with files copied by "cp", so 
+they weren't open by any program when i droped the caches.
+
+> Today
+> i had the chance to test the allocsize=64k. Well, first i thought it
+> worked, i added the mountoption, restarted the server, everything
+> shrink to normal sizes. but right now its more or less "flapping". I
+> have 5.7GB real data and the sizes flap between 6.9GB to 5.7GB.
+> But I am wondering a little about the mount output:
+> 
+> # mount
+> /dev/xvda1 on / type xfs
+> (rw,noatime,nodiratime,logbufs=8,nobarrier,allocsize=64k)
+> tmpfs on /lib/init/rw type tmpfs (rw,nosuid,mode=0755)
+> proc on /proc type proc (rw,noexec,nosuid,nodev)
+> sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
+> tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
+> devpts on /dev/pts type devpts (rw,noexec,nosuid,gid=5,mode=620)
+> 
+> 
+> # cat /proc/mounts
+> rootfs / rootfs rw 0 0
+> /dev/root / xfs rw,noatime,nodiratime,attr2,delaylog,nobarrier,noquota 0 0
+> tmpfs /lib/init/rw tmpfs rw,nosuid,relatime,mode=755 0 0
+> proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
+> sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
+> tmpfs /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
+> devpts /dev/pts devpts
+> rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
+> 
+> 
+> In normal mount output i see the allocsize, but not in cat /proc/mounts?!?
+> 
+> Is there a way to completly disable speculative prealocations? or
+> the behavior how it works right now?
+
+In /proc/mounts on my computer allocsize is there:
+/dev/mapper/x1 /x1 xfs rw,nosuid,nodev,noatime,attr2,delaylog,allocsize=64k,noquota 0 0
+
+I tracked down the patch. It went into 2.6.38
+
+- snip -
+commit 055388a3188f56676c21e92962fc366ac8b5cb72
+Author: Dave Chinner <dchinner@redhat.com>
+Date:   Tue Jan 4 11:35:03 2011 +1100
+
+    xfs: dynamic speculative EOF preallocation
+
+    Currently the size of the speculative preallocation during delayed
+    allocation is fixed by either the allocsize mount option of a
+    default size. We are seeing a lot of cases where we need to
+    recommend using the allocsize mount option to prevent fragmentation
+    when buffered writes land in the same AG.
+
+    Rather than using a fixed preallocation size by default (up to 64k),
+    make it dynamic by basing it on the current inode size. That way the
+    EOF preallocation will increase as the file size increases.  Hence
+    for streaming writes we are much more likely to get large
+    preallocations exactly when we need it to reduce fragementation.
+
+    For default settings, the size of the initial extents is determined
+    by the number of parallel writers and the amount of memory in the
+    machine. For 4GB RAM and 4 concurrent 32GB file writes:
+
+    EXT: FILE-OFFSET           BLOCK-RANGE          AG AG-OFFSET                 TOTAL
+       0: [0..1048575]:         1048672..2097247      0 (1048672..2097247)      1048576
+       1: [1048576..2097151]:   5242976..6291551      0 (5242976..6291551)      1048576
+       2: [2097152..4194303]:   12583008..14680159    0 (12583008..14680159)    2097152
+       3: [4194304..8388607]:   25165920..29360223    0 (25165920..29360223)    4194304
+       4: [8388608..16777215]:  58720352..67108959    0 (58720352..67108959)    8388608
+       5: [16777216..33554423]: 117440584..134217791  0 (117440584..134217791) 16777208
+       6: [33554424..50331511]: 184549056..201326143  0 (184549056..201326143) 16777088
+       7: [50331512..67108599]: 251657408..268434495  0 (251657408..268434495) 16777088
+
+    and for 16 concurrent 16GB file writes:
+
+     EXT: FILE-OFFSET           BLOCK-RANGE          AG AG-OFFSET                 TOTAL
+       0: [0..262143]:          2490472..2752615      0 (2490472..2752615)       262144
+       1: [262144..524287]:     6291560..6553703      0 (6291560..6553703)       262144
+       2: [524288..1048575]:    13631592..14155879    0 (13631592..14155879)     524288
+       3: [1048576..2097151]:   30408808..31457383    0 (30408808..31457383)    1048576
+       4: [2097152..4194303]:   52428904..54526055    0 (52428904..54526055)    2097152
+       5: [4194304..8388607]:   104857704..109052007  0 (104857704..109052007)  4194304
+       6: [8388608..16777215]:  209715304..218103911  0 (209715304..218103911)  8388608
+       7: [16777216..33554423]: 452984848..469762055  0 (452984848..469762055) 16777208
+
+    Because it is hard to take back specualtive preallocation, cases
+    where there are large slow growing log files on a nearly full
+    filesystem may cause premature ENOSPC. Hence as the filesystem nears
+    full, the maximum dynamic prealloc size ?s reduced according to this
+    table (based on 4k block size):
+
+    freespace       max prealloc size
+      >5%             full extent (8GB)
+      4-5%             2GB (8GB >> 2)
+      3-4%             1GB (8GB >> 3)
+      2-3%           512MB (8GB >> 4)
+      1-2%           256MB (8GB >> 5)
+      <1%            128MB (8GB >> 6)
+
+    This should reduce the amount of space held in speculative
+    preallocation for such cases.
+
+    The allocsize mount option turns off the dynamic behaviour and fixes
+    the prealloc size to whatever the mount option specifies. i.e. the
+    behaviour is unchanged.
+
+    Signed-off-by: Dave Chinner <dchinner@redhat.com>
+- snip -
 
 
-# cat /proc/mounts
-rootfs / rootfs rw 0 0
-/dev/root / xfs rw,noatime,nodiratime,attr2,delaylog,nobarrier,noquota 0 0
-tmpfs /lib/init/rw tmpfs rw,nosuid,relatime,mode=755 0 0
-proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
-sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
-tmpfs /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
-devpts /dev/pts devpts 
-rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
 
 
-In normal mount output i see the allocsize, but not in cat /proc/mounts?!?
 
-Is there a way to completly disable speculative prealocations? or the 
-behavior how it works right now?
+Bis denn
 
-
-regards
-Bernhard
+-- 
+Real Programmers consider "what you see is what you get" to be just as 
+bad a concept in Text Editors as it is in women. No, the Real Programmer
+wants a "you asked for it, you got it" text editor -- complicated, 
+cryptic, powerful, unforgiving, dangerous.
 
 _______________________________________________
 xfs mailing list
