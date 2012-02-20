@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1KF0PQe088406 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 09:00:25 -0600
-Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id CuYzQ1FcT3rE8QqY
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 20 Feb 2012 07:00:22 -0800 (PST)
-Received: by bkcit16 with SMTP id it16so5246481bkc.26
-	for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 07:00:21 -0800 (PST)
-From: Arkadiusz =?utf-8?q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: xfs_repair: phase7.c:148: phase7: Assertion `no_modify || nrefs > 0'
-	failed.
-Date: Mon, 20 Feb 2012 16:00:18 +0100
+	q1KLXRqd110801 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 15:33:28 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	iZqCV166c3mbMaKB for <xfs@oss.sgi.com>;
+	Mon, 20 Feb 2012 13:33:25 -0800 (PST)
+Date: Tue, 21 Feb 2012 08:33:22 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 4/8] xfs: use common code for quota statistics
+Message-ID: <20120220213322.GC3592@dastard>
+References: <20120220022815.018921977@bombadil.infradead.org>
+	<20120220022904.060961294@bombadil.infradead.org>
 MIME-Version: 1.0
-Message-Id: <201202201600.19086.arekm@maven.pl>
+Content-Disposition: inline
+In-Reply-To: <20120220022904.060961294@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,31 +23,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Cnhmc19yZXBhaXIgZnJvbSB4ZnNwcm9ncy1kZXYgZ2l0Lmtlcm5lbC5vcmcgcmVwb3NpdG9yeQoK
-b24gIGh0dHA6Ly9yb3V0aW5nLmNvbS5wbC94ZnMtbWV0YWR1bXAtMjAxMi0wMi0yMC5iejIgZmFp
-bHMgd2l0aDoKCnJlc2V0dGluZyBpbm9kZSAyNjg3NDA4MzcgbmxpbmtzIGZyb20gNiB0byA1CnJl
-c2V0dGluZyBpbm9kZSAyNjg3NDI3MjggbmxpbmtzIGZyb20gMTc4IHRvIDE3MgpyZXNldHRpbmcg
-aW5vZGUgMjY4ODYxNjIyIG5saW5rcyBmcm9tIDQ1IHRvIDQ0CnJlc2V0dGluZyBpbm9kZSAyNjg5
-MDI0MzggbmxpbmtzIGZyb20gNCB0byAzCnJlc2V0dGluZyBpbm9kZSAyNjg5MjA5MTggbmxpbmtz
-IGZyb20gMTA1MDAgdG8gMTA0ODMKcmVzZXR0aW5nIGlub2RlIDI2OTEzMzgyMCBubGlua3MgZnJv
-bSAxNDUwMSB0byA5NTI3CnJlc2V0dGluZyBpbm9kZSAyNjk0OTYzNDAgbmxpbmtzIGZyb20gNjEg
-dG8gNTUKcmVzZXR0aW5nIGlub2RlIDI2OTc2ODc5MyBubGlua3MgZnJvbSA0IHRvIDMKcmVzZXR0
-aW5nIGlub2RlIDI3MDUzMjYyNiBubGlua3MgZnJvbSA5IHRvIDgKcmVzZXR0aW5nIGlub2RlIDMz
-OTYzMDMyMSBubGlua3MgZnJvbSA1IHRvIDQKcmVzZXR0aW5nIGlub2RlIDMzOTYzMDMyMiBubGlu
-a3MgZnJvbSA0NSB0byAzOQpyZXNldHRpbmcgaW5vZGUgMzM5NjMwMzI3IG5saW5rcyBmcm9tIDI1
-IHRvIDIwCnJlc2V0dGluZyBpbm9kZSA1MzY4NzI5NjAgbmxpbmtzIGZyb20gMiB0byAtNDI3Ngpu
-bGlua3MgLTQyNzYgd2lsbCBvdmVyZmxvdyB2MSBpbm8sIGlubyA1MzY4NzI5NjAgd2lsbCBiZSBj
-b252ZXJ0ZWQgdG8gdmVyc2lvbiAyCnJlc2V0dGluZyBpbm9kZSA1MzY4NzI5NjEgbmxpbmtzIGZy
-b20gMiB0byAzMTcKeGZzX3JlcGFpcjogcGhhc2U3LmM6MTQ4OiBwaGFzZTc6IEFzc2VydGlvbiBg
-bm9fbW9kaWZ5IHx8IG5yZWZzID4gMCcgZmFpbGVkLgoKd2hvbGUgbG9nOiBodHRwOi8vaXhpb24u
-cGxkLWxpbnV4Lm9yZy9+YXJla20veGZzLWxvZy5negoKUGF0Y2hlcyB0byB0ZXN0IHdlbGNvbWUg
-Oi0pCi0tIApBcmthZGl1c3ogTWnFm2tpZXdpY3ogICAgICAgIFBMRC9MaW51eCBUZWFtCmFyZWtt
-IC8gbWF2ZW4ucGwgICAgICAgICAgICBodHRwOi8vZnRwLnBsZC1saW51eC5vcmcvCgpfX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0
-Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Sun, Feb 19, 2012 at 09:28:19PM -0500, Christoph Hellwig wrote:
+> Switch the quota code over to use the generic XFS statistics infrastructure.
+> While the legacy /proc/fs/xfs/xqm and /proc/fs/xfs/xqmstats interfaces are
+> preserved for now the statistics that still have a meaning with the current
+> code are now also available from /proc/fs/xfs/stats.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Looks OK. Just one question/observation, though. This will make the
+quota proc files show up even even quota is not compiled in. Are
+there any applications out there that make use of the presence of
+these files to determine if quota is configured into the kernel or
+not?
+
+I think I just answered my own question - xfstests does exactly this
+proc file test in _require_quota(). So I think their presence needs
+to be conditional on CONFIG_XFS_QUOTA....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
