@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1K2T52p040406 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 20:29:05 -0600
+	q1K2T5t5040408 for <xfs@oss.sgi.com>; Sun, 19 Feb 2012 20:29:05 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	i9Iol8EpedvRatyI (version=TLSv1 cipher=AES256-SHA bits=256
+	MIWmg4Wsas24cf2j (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
 	Sun, 19 Feb 2012 18:29:04 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1RzIzw-0004WC-9K
+	Linux)) id 1RzIzw-0004Vg-3O
 	for xfs@oss.sgi.com; Mon, 20 Feb 2012 02:29:04 +0000
-Message-Id: <20120220022904.240235841@bombadil.infradead.org>
-Date: Sun, 19 Feb 2012 21:28:20 -0500
+Message-Id: <20120220022904.060961294@bombadil.infradead.org>
+Date: Sun, 19 Feb 2012 21:28:19 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/8] xfs: per-filesystem dquot LRU lists
+Subject: [PATCH 4/8] xfs: use common code for quota statistics
 References: <20120220022815.018921977@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-quota-per-mount-lru-2
+Content-Disposition: inline; filename=xfs-cleanup-quota-stats
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,384 +32,522 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Replace the global dquot lru lists with a per-filesystem one.
-
-Note that the shrinker isn't wire up to the per-superblock VFS shrinker
-infrastructure as would have problems summing up and splitting the counts
-for inodes and dquots.  I don't think this is a major problem as the quota
-cache isn't as interwinded with the inode cache as the dentry cache is,
-because an inode that is dropped from the cache will generally release
-a dquot reference, but most of the time it won't be the last one.
+Switch the quota code over to use the generic XFS statistics infrastructure.
+While the legacy /proc/fs/xfs/xqm and /proc/fs/xfs/xqmstats interfaces are
+preserved for now the statistics that still have a meaning with the current
+code are now also available from /proc/fs/xfs/stats.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_dquot.c |   85 +++++++++++++++++++++++++++--------------------------
- fs/xfs/xfs_dquot.h |    2 -
- fs/xfs/xfs_qm.c    |   59 +++++++++++++++---------------------
- fs/xfs/xfs_qm.h    |    7 ++--
- 4 files changed, 74 insertions(+), 79 deletions(-)
+ fs/xfs/xfs_dquot.c    |   14 +++---
+ fs/xfs/xfs_qm.c       |    9 ++--
+ fs/xfs/xfs_qm.h       |    2 
+ fs/xfs/xfs_qm_bhv.c   |    2 
+ fs/xfs/xfs_qm_stats.c |  105 --------------------------------------------------
+ fs/xfs/xfs_qm_stats.h |   53 -------------------------
+ fs/xfs/xfs_stats.c    |   92 ++++++++++++++++++++++++++++++++++++++-----
+ fs/xfs/xfs_stats.h    |   10 ++++
+ 8 files changed, 103 insertions(+), 184 deletions(-)
 
 Index: xfs/fs/xfs/xfs_dquot.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.c	2012-02-17 19:11:41.000000000 -0800
-+++ xfs/fs/xfs/xfs_dquot.c	2012-02-17 19:17:23.773327994 -0800
-@@ -47,7 +47,7 @@
-  *     qi->qi_dqlist_lock
-  *       dquot->q_qlock (xfs_dqlock() and friends)
-  *         dquot->q_flush (xfs_dqflock() and friends)
-- *         xfs_Gqm->qm_dqfrlist_lock
-+ *         qi->qi_lru_lock
-  *
-  * If two dquots need to be locked the order is user before group/project,
-  * otherwise by the lowest id first, see xfs_dqlock2.
-@@ -69,7 +69,7 @@ void
- xfs_qm_dqdestroy(
- 	xfs_dquot_t	*dqp)
- {
--	ASSERT(list_empty(&dqp->q_freelist));
-+	ASSERT(list_empty(&dqp->q_lru));
- 
+--- xfs.orig/fs/xfs/xfs_dquot.c	2012-02-17 20:49:56.473331089 -0800
++++ xfs/fs/xfs/xfs_dquot.c	2012-02-17 20:50:08.776664388 -0800
+@@ -74,7 +74,7 @@ xfs_qm_dqdestroy(
  	mutex_destroy(&dqp->q_qlock);
  	kmem_zone_free(xfs_Gqm->qm_dqzone, dqp);
-@@ -497,7 +497,7 @@ xfs_qm_dqread(
- 	dqp->dq_flags = type;
- 	dqp->q_core.d_id = cpu_to_be32(id);
- 	dqp->q_mount = mp;
--	INIT_LIST_HEAD(&dqp->q_freelist);
-+	INIT_LIST_HEAD(&dqp->q_lru);
- 	mutex_init(&dqp->q_qlock);
- 	init_waitqueue_head(&dqp->q_pinwait);
  
-@@ -844,38 +844,22 @@ restart:
- }
- 
- 
--/*
-- * Release a reference to the dquot (decrement ref-count)
-- * and unlock it. If there is a group quota attached to this
-- * dquot, carefully release that too without tripping over
-- * deadlocks'n'stuff.
-- */
--void
--xfs_qm_dqput(
-+STATIC void
-+xfs_qm_dqput_final(
- 	struct xfs_dquot	*dqp)
- {
-+	struct xfs_quotainfo	*qi = dqp->q_mount->m_quotainfo;
- 	struct xfs_dquot	*gdqp;
- 
--	ASSERT(dqp->q_nrefs > 0);
--	ASSERT(XFS_DQ_IS_LOCKED(dqp));
--
--	trace_xfs_dqput(dqp);
--
--recurse:
--	if (--dqp->q_nrefs > 0) {
--		xfs_dqunlock(dqp);
--		return;
--	}
--
- 	trace_xfs_dqput_free(dqp);
- 
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--	if (list_empty(&dqp->q_freelist)) {
--		list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
--		xfs_Gqm->qm_dqfrlist_cnt++;
-+	mutex_lock(&qi->qi_lru_lock);
-+	if (list_empty(&dqp->q_lru)) {
-+		list_add_tail(&dqp->q_lru, &qi->qi_lru_list);
-+		qi->qi_lru_count++;
- 		XFS_STATS_INC(xs_qm_dquot_unused);
- 	}
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+	mutex_unlock(&qi->qi_lru_lock);
- 
- 	/*
- 	 * If we just added a udquot to the freelist, then we want to release
-@@ -892,10 +876,29 @@ recurse:
- 	/*
- 	 * If we had a group quota hint, release it now.
- 	 */
--	if (gdqp) {
--		dqp = gdqp;
--		goto recurse;
--	}
-+	if (gdqp)
-+		xfs_qm_dqput(gdqp);
-+}
-+
-+/*
-+ * Release a reference to the dquot (decrement ref-count) and unlock it.
-+ *
-+ * If there is a group quota attached to this dquot, carefully release that
-+ * too without tripping over deadlocks'n'stuff.
-+ */
-+void
-+xfs_qm_dqput(
-+	struct xfs_dquot	*dqp)
-+{
-+	ASSERT(dqp->q_nrefs > 0);
-+	ASSERT(XFS_DQ_IS_LOCKED(dqp));
-+
-+	trace_xfs_dqput(dqp);
-+
-+	if (--dqp->q_nrefs > 0)
-+		xfs_dqunlock(dqp);
-+	else
-+		xfs_qm_dqput_final(dqp);
+-	atomic_dec(&xfs_Gqm->qm_totaldquots);
++	XFS_STATS_DEC(xs_qm_dquot);
  }
  
  /*
-@@ -1126,6 +1129,7 @@ xfs_qm_dqpurge(
- {
- 	struct xfs_mount	*mp = dqp->q_mount;
- 	struct xfs_dqhash	*qh = dqp->q_hash;
-+	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+@@ -516,7 +516,7 @@ xfs_qm_dqread(
+ 	if (!(type & XFS_DQ_USER))
+ 		lockdep_set_class(&dqp->q_qlock, &xfs_dquot_other_class);
  
- 	xfs_dqlock(dqp);
+-	atomic_inc(&xfs_Gqm->qm_totaldquots);
++	XFS_STATS_INC(xs_qm_dquot);
  
-@@ -1176,22 +1180,21 @@ xfs_qm_dqpurge(
- 	qh->qh_version++;
- 	mutex_unlock(&qh->qh_lock);
+ 	trace_xfs_dqread(dqp);
  
--	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
-+	mutex_lock(&qi->qi_dqlist_lock);
- 	list_del_init(&dqp->q_mplist);
--	mp->m_quotainfo->qi_dqreclaims++;
--	mp->m_quotainfo->qi_dquots--;
--	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
-+	qi->qi_dqreclaims++;
-+	qi->qi_dquots--;
-+	mutex_unlock(&qi->qi_dqlist_lock);
- 
- 	/*
- 	 * We move dquots to the freelist as soon as their reference count
- 	 * hits zero, so it really should be on the freelist here.
+@@ -712,12 +712,12 @@ restart:
  	 */
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--	ASSERT(!list_empty(&dqp->q_freelist));
--	list_del_init(&dqp->q_freelist);
--	xfs_Gqm->qm_dqfrlist_cnt--;
--	XFS_STATS_DEC(xs_qm_dquot_unused);
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+	mutex_lock(&qi->qi_lru_lock);
-+	ASSERT(!list_empty(&dqp->q_lru));
-+	list_del_init(&dqp->q_lru);
-+	qi->qi_lru_count--;
-+	mutex_unlock(&qi->qi_lru_lock);
+ 	switch (xfs_qm_dqlookup(mp, id, h, O_dqpp)) {
+ 	case -1:
+-		XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
++		XFS_STATS_INC(xs_qm_dquot_dups);
+ 		mutex_unlock(&h->qh_lock);
+ 		delay(1);
+ 		goto restart;
+ 	case 0:
+-		XQM_STATS_INC(xqmstats.xs_qm_dqcachehits);
++		XFS_STATS_INC(xs_qm_dqcachehits);
+ 		/*
+ 		 * The dquot was found, moved to the front of the chain,
+ 		 * taken off the freelist if it was on it, and locked
+@@ -729,7 +729,7 @@ restart:
+ 		trace_xfs_dqget_hit(*O_dqpp);
+ 		return 0;	/* success */
+ 	default:
+-		XQM_STATS_INC(xqmstats.xs_qm_dqcachemisses);
++		XFS_STATS_INC(xs_qm_dqcachemisses);
+ 		break;
+ 	}
+ 
+@@ -804,7 +804,7 @@ restart:
+ 				xfs_qm_dqput(tmpdqp);
+ 			mutex_unlock(&h->qh_lock);
+ 			xfs_qm_dqdestroy(dqp);
+-			XQM_STATS_INC(xqmstats.xs_qm_dquot_dups);
++			XFS_STATS_INC(xs_qm_dquot_dups);
+ 			goto restart;
+ 		default:
+ 			break;
+@@ -873,6 +873,7 @@ recurse:
+ 	if (list_empty(&dqp->q_freelist)) {
+ 		list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
+ 		xfs_Gqm->qm_dqfrlist_cnt++;
++		XFS_STATS_INC(xs_qm_dquot_unused);
+ 	}
+ 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
+ 
+@@ -1189,6 +1190,7 @@ xfs_qm_dqpurge(
+ 	ASSERT(!list_empty(&dqp->q_freelist));
+ 	list_del_init(&dqp->q_freelist);
+ 	xfs_Gqm->qm_dqfrlist_cnt--;
++	XFS_STATS_DEC(xs_qm_dquot_unused);
+ 	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
  
  	xfs_qm_dqdestroy(dqp);
- }
-Index: xfs/fs/xfs/xfs_dquot.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_dquot.h	2012-02-17 18:45:50.000000000 -0800
-+++ xfs/fs/xfs/xfs_dquot.h	2012-02-17 19:13:51.929995233 -0800
-@@ -47,7 +47,7 @@ struct xfs_trans;
-  */
- typedef struct xfs_dquot {
- 	uint		 dq_flags;	/* various flags (XFS_DQ_*) */
--	struct list_head q_freelist;	/* global free list of dquots */
-+	struct list_head q_lru;		/* global free list of dquots */
- 	struct list_head q_mplist;	/* mount's list of dquots */
- 	struct list_head q_hashlist;	/* gloabl hash list of dquots */
- 	xfs_dqhash_t	*q_hash;	/* the hashchain header */
 Index: xfs/fs/xfs/xfs_qm.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c	2012-02-17 19:11:57.693328883 -0800
-+++ xfs/fs/xfs/xfs_qm.c	2012-02-17 19:18:07.813328143 -0800
-@@ -61,11 +61,6 @@ STATIC int	xfs_qm_init_quotainos(xfs_mou
- STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
- STATIC int	xfs_qm_shake(struct shrinker *, struct shrink_control *);
- 
--static struct shrinker xfs_qm_shaker = {
--	.shrink = xfs_qm_shake,
--	.seeks = DEFAULT_SEEKS,
--};
--
- /*
-  * Initialize the XQM structure.
-  * Note that there is not one quota manager per file system.
-@@ -106,13 +101,6 @@ xfs_Gqm_init(void)
- 	}
- 
- 	/*
--	 * Freelist of all dquots of all file systems
--	 */
--	INIT_LIST_HEAD(&xqm->qm_dqfrlist);
--	xqm->qm_dqfrlist_cnt = 0;
--	mutex_init(&xqm->qm_dqfrlist_lock);
--
--	/*
- 	 * dquot zone. we register our own low-memory callback.
- 	 */
- 	if (!qm_dqzone) {
-@@ -122,8 +110,6 @@ xfs_Gqm_init(void)
+--- xfs.orig/fs/xfs/xfs_qm.c	2012-02-17 20:49:56.483331088 -0800
++++ xfs/fs/xfs/xfs_qm.c	2012-02-17 20:50:08.776664388 -0800
+@@ -134,7 +134,6 @@ xfs_Gqm_init(void)
  	} else
- 		xqm->qm_dqzone = qm_dqzone;
+ 		xqm->qm_dqtrxzone = qm_dqtrxzone;
  
--	register_shrinker(&xfs_qm_shaker);
--
- 	/*
- 	 * The t_dqinfo portion of transactions.
- 	 */
-@@ -155,12 +141,6 @@ xfs_qm_destroy(
- 	ASSERT(xqm != NULL);
- 	ASSERT(xqm->qm_nrefs == 0);
+-	atomic_set(&xqm->qm_totaldquots, 0);
+ 	xqm->qm_nrefs = 0;
+ 	return xqm;
  
--	unregister_shrinker(&xfs_qm_shaker);
--
--	mutex_lock(&xqm->qm_dqfrlist_lock);
--	ASSERT(list_empty(&xqm->qm_dqfrlist));
--	mutex_unlock(&xqm->qm_dqfrlist_lock);
--
- 	hsize = xqm->qm_dqhashmask + 1;
- 	for (i = 0; i < hsize; i++) {
- 		xfs_qm_list_destroy(&(xqm->qm_usr_dqhtable[i]));
-@@ -826,6 +806,10 @@ xfs_qm_init_quotainfo(
- 	mutex_init(&qinf->qi_dqlist_lock);
- 	lockdep_set_class(&qinf->qi_dqlist_lock, &xfs_quota_mplist_class);
+@@ -1637,10 +1636,11 @@ xfs_qm_dqreclaim_one(
+ 		xfs_dqunlock(dqp);
  
-+	INIT_LIST_HEAD(&qinf->qi_lru_list);
-+	qinf->qi_lru_count = 0;
-+	mutex_init(&qinf->qi_lru_lock);
-+
- 	qinf->qi_dqreclaims = 0;
- 
- 	/* mutex used to serialize quotaoffs */
-@@ -893,6 +877,9 @@ xfs_qm_init_quotainfo(
- 		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
- 	}
- 
-+	qinf->qi_shrinker.shrink = xfs_qm_shake;
-+	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
-+	register_shrinker(&qinf->qi_shrinker);
- 	return 0;
- }
- 
-@@ -912,6 +899,8 @@ xfs_qm_destroy_quotainfo(
- 	ASSERT(qi != NULL);
- 	ASSERT(xfs_Gqm != NULL);
- 
-+	unregister_shrinker(&qi->qi_shrinker);
-+
- 	/*
- 	 * Release the reference that XQM kept, so that we know
- 	 * when the XQM structure should be freed. We cannot assume
-@@ -1623,6 +1612,7 @@ xfs_qm_dqreclaim_one(
- 	struct list_head	*dispose_list)
- {
- 	struct xfs_mount	*mp = dqp->q_mount;
-+	struct xfs_quotainfo	*qi = mp->m_quotainfo;
- 	int			error;
- 
- 	if (!xfs_dqlock_nowait(dqp))
-@@ -1638,8 +1628,8 @@ xfs_qm_dqreclaim_one(
  		trace_xfs_dqreclaim_want(dqp);
- 		XFS_STATS_INC(xs_qm_dqwants);
+-		XQM_STATS_INC(xqmstats.xs_qm_dqwants);
++		XFS_STATS_INC(xs_qm_dqwants);
  
--		list_del_init(&dqp->q_freelist);
--		xfs_Gqm->qm_dqfrlist_cnt--;
-+		list_del_init(&dqp->q_lru);
-+		qi->qi_lru_count--;
- 		XFS_STATS_DEC(xs_qm_dquot_unused);
+ 		list_del_init(&dqp->q_freelist);
+ 		xfs_Gqm->qm_dqfrlist_cnt--;
++		XFS_STATS_DEC(xs_qm_dquot_unused);
  		return;
  	}
-@@ -1688,8 +1678,8 @@ xfs_qm_dqreclaim_one(
- 	xfs_dqunlock(dqp);
  
+@@ -1690,9 +1690,10 @@ xfs_qm_dqreclaim_one(
  	ASSERT(dqp->q_nrefs == 0);
--	list_move_tail(&dqp->q_freelist, dispose_list);
--	xfs_Gqm->qm_dqfrlist_cnt--;
-+	list_move_tail(&dqp->q_lru, dispose_list);
-+	qi->qi_lru_count--;
- 	XFS_STATS_DEC(xs_qm_dquot_unused);
+ 	list_move_tail(&dqp->q_freelist, dispose_list);
+ 	xfs_Gqm->qm_dqfrlist_cnt--;
++	XFS_STATS_DEC(xs_qm_dquot_unused);
  
  	trace_xfs_dqreclaim_done(dqp);
-@@ -1702,7 +1692,7 @@ out_busy:
- 	/*
- 	 * Move the dquot to the tail of the list so that we don't spin on it.
- 	 */
--	list_move_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
-+	list_move_tail(&dqp->q_lru, &qi->qi_lru_list);
+-	XQM_STATS_INC(xqmstats.xs_qm_dqreclaims);
++	XFS_STATS_INC(xs_qm_dqreclaims);
+ 	return;
+ 
+ out_busy:
+@@ -1704,7 +1705,7 @@ out_busy:
+ 	list_move_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
  
  	trace_xfs_dqreclaim_busy(dqp);
- 	XFS_STATS_INC(xs_qm_dqreclaim_misses);
-@@ -1713,6 +1703,8 @@ xfs_qm_shake(
- 	struct shrinker		*shrink,
- 	struct shrink_control	*sc)
- {
-+	struct xfs_quotainfo	*qi =
-+		container_of(shrink, struct xfs_quotainfo, qi_shrinker);
- 	int			nr_to_scan = sc->nr_to_scan;
- 	LIST_HEAD		(dispose_list);
- 	struct xfs_dquot	*dqp;
-@@ -1722,24 +1714,23 @@ xfs_qm_shake(
- 	if (!nr_to_scan)
- 		goto out;
- 
--	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
--	while (!list_empty(&xfs_Gqm->qm_dqfrlist)) {
-+	mutex_lock(&qi->qi_lru_lock);
-+	while (!list_empty(&qi->qi_lru_list)) {
- 		if (nr_to_scan-- <= 0)
- 			break;
--		dqp = list_first_entry(&xfs_Gqm->qm_dqfrlist, struct xfs_dquot,
--				       q_freelist);
-+		dqp = list_first_entry(&qi->qi_lru_list, struct xfs_dquot,
-+				       q_lru);
- 		xfs_qm_dqreclaim_one(dqp, &dispose_list);
- 	}
--	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
-+	mutex_unlock(&qi->qi_lru_lock);
- 
- 	while (!list_empty(&dispose_list)) {
--		dqp = list_first_entry(&dispose_list, struct xfs_dquot,
--				       q_freelist);
--		list_del_init(&dqp->q_freelist);
-+		dqp = list_first_entry(&dispose_list, struct xfs_dquot, q_lru);
-+		list_del_init(&dqp->q_lru);
- 		xfs_qm_dqfree_one(dqp);
- 	}
- out:
--	return (xfs_Gqm->qm_dqfrlist_cnt / 100) * sysctl_vfs_cache_pressure;
-+	return (qi->qi_lru_count / 100) * sysctl_vfs_cache_pressure;
+-	XQM_STATS_INC(xqmstats.xs_qm_dqreclaim_misses);
++	XFS_STATS_INC(xs_qm_dqreclaim_misses);
  }
  
- /*
+ STATIC int
+Index: xfs/fs/xfs/xfs_qm_stats.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm_stats.c	2012-02-17 20:49:56.493331088 -0800
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,105 +0,0 @@
+-/*
+- * Copyright (c) 2000-2003 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_bit.h"
+-#include "xfs_log.h"
+-#include "xfs_inum.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_ag.h"
+-#include "xfs_alloc.h"
+-#include "xfs_quota.h"
+-#include "xfs_mount.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_inode.h"
+-#include "xfs_itable.h"
+-#include "xfs_bmap.h"
+-#include "xfs_rtalloc.h"
+-#include "xfs_error.h"
+-#include "xfs_attr.h"
+-#include "xfs_buf_item.h"
+-#include "xfs_qm.h"
+-
+-struct xqmstats xqmstats;
+-
+-static int xqm_proc_show(struct seq_file *m, void *v)
+-{
+-	/* maximum; incore; ratio free to inuse; freelist */
+-	seq_printf(m, "%d\t%d\t%d\t%u\n",
+-			0,
+-			xfs_Gqm? atomic_read(&xfs_Gqm->qm_totaldquots) : 0,
+-			0,
+-			xfs_Gqm? xfs_Gqm->qm_dqfrlist_cnt : 0);
+-	return 0;
+-}
+-
+-static int xqm_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, xqm_proc_show, NULL);
+-}
+-
+-static const struct file_operations xqm_proc_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= xqm_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-
+-static int xqmstat_proc_show(struct seq_file *m, void *v)
+-{
+-	/* quota performance statistics */
+-	seq_printf(m, "qm %u %u %u %u %u %u %u %u\n",
+-			xqmstats.xs_qm_dqreclaims,
+-			xqmstats.xs_qm_dqreclaim_misses,
+-			xqmstats.xs_qm_dquot_dups,
+-			xqmstats.xs_qm_dqcachemisses,
+-			xqmstats.xs_qm_dqcachehits,
+-			xqmstats.xs_qm_dqwants,
+-			xqmstats.xs_qm_dqshake_reclaims,
+-			xqmstats.xs_qm_dqinact_reclaims);
+-	return 0;
+-}
+-
+-static int xqmstat_proc_open(struct inode *inode, struct file *file)
+-{
+-	return single_open(file, xqmstat_proc_show, NULL);
+-}
+-
+-static const struct file_operations xqmstat_proc_fops = {
+-	.owner		= THIS_MODULE,
+-	.open		= xqmstat_proc_open,
+-	.read		= seq_read,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-
+-void
+-xfs_qm_init_procfs(void)
+-{
+-	proc_create("fs/xfs/xqmstat", 0, NULL, &xqmstat_proc_fops);
+-	proc_create("fs/xfs/xqm", 0, NULL, &xqm_proc_fops);
+-}
+-
+-void
+-xfs_qm_cleanup_procfs(void)
+-{
+-	remove_proc_entry("fs/xfs/xqm", NULL);
+-	remove_proc_entry("fs/xfs/xqmstat", NULL);
+-}
+Index: xfs/fs/xfs/xfs_qm_stats.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm_stats.h	2012-02-17 20:49:56.506664422 -0800
++++ /dev/null	1970-01-01 00:00:00.000000000 +0000
+@@ -1,53 +0,0 @@
+-/*
+- * Copyright (c) 2002 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef __XFS_QM_STATS_H__
+-#define __XFS_QM_STATS_H__
+-
+-#if defined(CONFIG_PROC_FS) && !defined(XFS_STATS_OFF)
+-
+-/*
+- * XQM global statistics
+- */
+-struct xqmstats {
+-	__uint32_t		xs_qm_dqreclaims;
+-	__uint32_t		xs_qm_dqreclaim_misses;
+-	__uint32_t		xs_qm_dquot_dups;
+-	__uint32_t		xs_qm_dqcachemisses;
+-	__uint32_t		xs_qm_dqcachehits;
+-	__uint32_t		xs_qm_dqwants;
+-	__uint32_t		xs_qm_dqshake_reclaims;
+-	__uint32_t		xs_qm_dqinact_reclaims;
+-};
+-
+-extern struct xqmstats xqmstats;
+-
+-# define XQM_STATS_INC(count)	( (count)++ )
+-
+-extern void xfs_qm_init_procfs(void);
+-extern void xfs_qm_cleanup_procfs(void);
+-
+-#else
+-
+-# define XQM_STATS_INC(count)	do { } while (0)
+-
+-static inline void xfs_qm_init_procfs(void) { };
+-static inline void xfs_qm_cleanup_procfs(void) { };
+-
+-#endif
+-
+-#endif	/* __XFS_QM_STATS_H__ */
+Index: xfs/fs/xfs/xfs_stats.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_stats.h	2012-02-17 20:49:56.516664421 -0800
++++ xfs/fs/xfs/xfs_stats.h	2012-02-17 20:50:08.783331056 -0800
+@@ -183,6 +183,16 @@ struct xfsstats {
+ 	__uint32_t		xs_ibt_2_alloc;
+ 	__uint32_t		xs_ibt_2_free;
+ 	__uint32_t		xs_ibt_2_moves;
++#define XFSSTAT_END_XQMSTAT		(XFSSTAT_END_IBT_V2+6)
++	__uint32_t		xs_qm_dqreclaims;
++	__uint32_t		xs_qm_dqreclaim_misses;
++	__uint32_t		xs_qm_dquot_dups;
++	__uint32_t		xs_qm_dqcachemisses;
++	__uint32_t		xs_qm_dqcachehits;
++	__uint32_t		xs_qm_dqwants;
++#define XFSSTAT_END_QM			(XFSSTAT_END_XQMSTAT+2)
++	__uint32_t		xs_qm_dquot;
++	__uint32_t		xs_qm_dquot_unused;
+ /* Extra precision counters */
+ 	__uint64_t		xs_xstrat_bytes;
+ 	__uint64_t		xs_write_bytes;
 Index: xfs/fs/xfs/xfs_qm.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_qm.h	2012-02-17 19:10:49.000000000 -0800
-+++ xfs/fs/xfs/xfs_qm.h	2012-02-17 19:14:06.713328536 -0800
-@@ -56,9 +56,6 @@ typedef struct xfs_qm {
- 	xfs_dqlist_t	*qm_usr_dqhtable;/* udquot hash table */
- 	xfs_dqlist_t	*qm_grp_dqhtable;/* gdquot hash table */
- 	uint		 qm_dqhashmask;	 /* # buckets in dq hashtab - 1 */
--	struct list_head qm_dqfrlist;	 /* freelist of dquots */
--	struct mutex	 qm_dqfrlist_lock;
--	int		 qm_dqfrlist_cnt;
+--- xfs.orig/fs/xfs/xfs_qm.h	2012-02-17 20:49:56.526664421 -0800
++++ xfs/fs/xfs/xfs_qm.h	2012-02-17 20:50:08.783331056 -0800
+@@ -21,7 +21,6 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_quota_priv.h"
+-#include "xfs_qm_stats.h"
+ 
+ struct xfs_qm;
+ struct xfs_inode;
+@@ -60,7 +59,6 @@ typedef struct xfs_qm {
+ 	struct list_head qm_dqfrlist;	 /* freelist of dquots */
+ 	struct mutex	 qm_dqfrlist_lock;
+ 	int		 qm_dqfrlist_cnt;
+-	atomic_t	 qm_totaldquots; /* total incore dquots */
  	uint		 qm_nrefs;	 /* file systems with quota on */
  	kmem_zone_t	*qm_dqzone;	 /* dquot mem-alloc zone */
  	kmem_zone_t	*qm_dqtrxzone;	 /* t_dqinfo of transactions */
-@@ -71,6 +68,9 @@ typedef struct xfs_qm {
- typedef struct xfs_quotainfo {
- 	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
- 	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
-+	struct list_head qi_lru_list;
-+	struct mutex	 qi_lru_lock;
-+	int		 qi_lru_count;
- 	struct list_head qi_dqlist;	 /* all dquots in filesys */
- 	struct mutex	 qi_dqlist_lock;
- 	int		 qi_dquots;
-@@ -91,6 +91,7 @@ typedef struct xfs_quotainfo {
- 	xfs_qcnt_t	 qi_isoftlimit;	 /* default inode count soft limit */
- 	xfs_qcnt_t	 qi_rtbhardlimit;/* default realtime blk hard limit */
- 	xfs_qcnt_t	 qi_rtbsoftlimit;/* default realtime blk soft limit */
-+	struct shrinker  qi_shrinker;
- } xfs_quotainfo_t;
+Index: xfs/fs/xfs/xfs_qm_bhv.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm_bhv.c	2012-02-17 20:49:56.539997754 -0800
++++ xfs/fs/xfs/xfs_qm_bhv.c	2012-02-17 20:50:08.783331056 -0800
+@@ -92,13 +92,11 @@ xfs_qm_init(void)
+ {
+ 	printk(KERN_INFO "SGI XFS Quota Management subsystem\n");
+ 	mutex_init(&xfs_Gqm_lock);
+-	xfs_qm_init_procfs();
+ }
  
+ void __exit
+ xfs_qm_exit(void)
+ {
+-	xfs_qm_cleanup_procfs();
+ 	if (qm_dqzone)
+ 		kmem_zone_destroy(qm_dqzone);
+ 	if (qm_dqtrxzone)
+Index: xfs/fs/xfs/xfs_stats.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_stats.c	2012-02-17 20:49:56.553331088 -0800
++++ xfs/fs/xfs/xfs_stats.c	2012-02-17 20:50:08.783331056 -0800
+@@ -20,9 +20,18 @@
  
+ DEFINE_PER_CPU(struct xfsstats, xfsstats);
+ 
++static int counter_val(int idx)
++{
++	int val = 0, cpu;
++
++	for_each_possible_cpu(cpu)
++		val += *(((__u32 *)&per_cpu(xfsstats, cpu) + idx));
++	return val;
++}
++
+ static int xfs_stat_proc_show(struct seq_file *m, void *v)
+ {
+-	int		c, i, j, val;
++	int		i, j;
+ 	__uint64_t	xs_xstrat_bytes = 0;
+ 	__uint64_t	xs_write_bytes = 0;
+ 	__uint64_t	xs_read_bytes = 0;
+@@ -50,20 +59,16 @@ static int xfs_stat_proc_show(struct seq
+ 		{ "abtc2",		XFSSTAT_END_ABTC_V2		},
+ 		{ "bmbt2",		XFSSTAT_END_BMBT_V2		},
+ 		{ "ibt2",		XFSSTAT_END_IBT_V2		},
++		/* we print both series of quota information together */
++		{ "qm",			XFSSTAT_END_QM			},
+ 	};
+ 
+ 	/* Loop over all stats groups */
+-	for (i=j = 0; i < ARRAY_SIZE(xstats); i++) {
++	for (i = j = 0; i < ARRAY_SIZE(xstats); i++) {
+ 		seq_printf(m, "%s", xstats[i].desc);
+ 		/* inner loop does each group */
+-		while (j < xstats[i].endpoint) {
+-			val = 0;
+-			/* sum over all cpus */
+-			for_each_possible_cpu(c)
+-				val += *(((__u32*)&per_cpu(xfsstats, c) + j));
+-			seq_printf(m, " %u", val);
+-			j++;
+-		}
++		for (; j < xstats[i].endpoint; j++)
++			seq_printf(m, " %u", counter_val(j));
+ 		seq_putc(m, '\n');
+ 	}
+ 	/* extra precision counters */
+@@ -97,6 +102,57 @@ static const struct file_operations xfs_
+ 	.release	= single_release,
+ };
+ 
++/* legacy quota stats interface no 1 */
++static int xqm_proc_show(struct seq_file *m, void *v)
++{
++	/* maximum; incore; ratio free to inuse; freelist */
++	seq_printf(m, "%d\t%d\t%d\t%u\n",
++			0,
++			counter_val(XFSSTAT_END_XQMSTAT),
++			0,
++			counter_val(XFSSTAT_END_XQMSTAT + 1));
++	return 0;
++}
++
++static int xqm_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, xqm_proc_show, NULL);
++}
++
++static const struct file_operations xqm_proc_fops = {
++	.owner		= THIS_MODULE,
++	.open		= xqm_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++/* legacy quota stats interface no 2 */
++static int xqmstat_proc_show(struct seq_file *m, void *v)
++{
++	int j;
++
++	seq_printf(m, "qm");
++	for (j = XFSSTAT_END_IBT_V2; j < XFSSTAT_END_XQMSTAT; j++)
++		seq_printf(m, " %u", counter_val(j));
++	seq_putc(m, '\n');
++	return 0;
++}
++
++static int xqmstat_proc_open(struct inode *inode, struct file *file)
++{
++	return single_open(file, xqmstat_proc_show, NULL);
++}
++
++static const struct file_operations xqmstat_proc_fops = {
++	.owner		= THIS_MODULE,
++	.open		= xqmstat_proc_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= single_release,
++};
++
++
+ int
+ xfs_init_procfs(void)
+ {
+@@ -105,10 +161,20 @@ xfs_init_procfs(void)
+ 
+ 	if (!proc_create("fs/xfs/stat", 0, NULL,
+ 			 &xfs_stat_proc_fops))
+-		goto out_remove_entry;
++		goto out_remove_xfs_dir;
++	if (!proc_create("fs/xfs/xqmstat", 0, NULL,
++			 &xqmstat_proc_fops))
++		goto out_remove_stat_file;
++	if (!proc_create("fs/xfs/xqm", 0, NULL,
++			 &xqm_proc_fops))
++		goto out_remove_xqmstat_file;
+ 	return 0;
+ 
+- out_remove_entry:
++ out_remove_xqmstat_file:
++	remove_proc_entry("fs/xfs/xqmstat", NULL);
++ out_remove_stat_file:
++	remove_proc_entry("fs/xfs/stat", NULL);
++ out_remove_xfs_dir:
+ 	remove_proc_entry("fs/xfs", NULL);
+  out:
+ 	return -ENOMEM;
+@@ -117,6 +183,8 @@ xfs_init_procfs(void)
+ void
+ xfs_cleanup_procfs(void)
+ {
++	remove_proc_entry("fs/xfs/xqm", NULL);
++	remove_proc_entry("fs/xfs/xqmstat", NULL);
+ 	remove_proc_entry("fs/xfs/stat", NULL);
+ 	remove_proc_entry("fs/xfs", NULL);
+ }
+Index: xfs/fs/xfs/Makefile
+===================================================================
+--- xfs.orig/fs/xfs/Makefile	2012-02-13 13:55:18.900354257 -0800
++++ xfs/fs/xfs/Makefile	2012-02-17 20:50:48.979997616 -0800
+@@ -96,9 +96,6 @@ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o
+ 				   xfs_qm_bhv.o \
+ 				   xfs_qm.o \
+ 				   xfs_quotaops.o
+-ifeq ($(CONFIG_XFS_QUOTA),y)
+-xfs-$(CONFIG_PROC_FS)		+= xfs_qm_stats.o
+-endif
+ xfs-$(CONFIG_XFS_RT)		+= xfs_rtalloc.o
+ xfs-$(CONFIG_XFS_POSIX_ACL)	+= xfs_acl.o
+ xfs-$(CONFIG_PROC_FS)		+= xfs_stats.o
 
 _______________________________________________
 xfs mailing list
