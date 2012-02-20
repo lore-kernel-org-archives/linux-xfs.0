@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1KLoYGb111384 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 15:50:35 -0600
+	q1KMJGiG113746 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 16:19:16 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	eedarHgrGqCU4Cdt (version=TLSv1 cipher=AES256-SHA bits=256
+	yZi8MZHHRQuo14vN (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Feb 2012 13:50:33 -0800 (PST)
-Date: Mon, 20 Feb 2012 16:50:32 -0500
+	Mon, 20 Feb 2012 14:19:15 -0800 (PST)
+Date: Mon, 20 Feb 2012 17:19:15 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/8] xfs: use common code for quota statistics
-Message-ID: <20120220215032.GA19340@infradead.org>
+Subject: Re: [PATCH 7/8] xfs: remove the per-filesystem list of dquots
+Message-ID: <20120220221915.GA10060@infradead.org>
 References: <20120220022815.018921977@bombadil.infradead.org>
-	<20120220022904.060961294@bombadil.infradead.org>
-	<20120220213322.GC3592@dastard>
+	<20120220022904.615605871@bombadil.infradead.org>
+	<20120220221509.GE3592@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120220213322.GC3592@dastard>
+In-Reply-To: <20120220221509.GE3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,27 +33,30 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Feb 21, 2012 at 08:33:22AM +1100, Dave Chinner wrote:
-> On Sun, Feb 19, 2012 at 09:28:19PM -0500, Christoph Hellwig wrote:
-> > Switch the quota code over to use the generic XFS statistics infrastructure.
-> > While the legacy /proc/fs/xfs/xqm and /proc/fs/xfs/xqmstats interfaces are
-> > preserved for now the statistics that still have a meaning with the current
-> > code are now also available from /proc/fs/xfs/stats.
+On Tue, Feb 21, 2012 at 09:15:09AM +1100, Dave Chinner wrote:
+> On Sun, Feb 19, 2012 at 09:28:22PM -0500, Christoph Hellwig wrote:
+> > Instead of keeping a separate per-filesystem list of dquots we can walk
+> > the radix tree for the two places where we need to iterate all quota
+> > structures.
 > > 
 > > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> Looks OK. Just one question/observation, though. This will make the
-> quota proc files show up even even quota is not compiled in. Are
-> there any applications out there that make use of the presence of
-> these files to determine if quota is configured into the kernel or
-> not?
-> 
-> I think I just answered my own question - xfstests does exactly this
-> proc file test in _require_quota(). So I think their presence needs
-> to be conditional on CONFIG_XFS_QUOTA....
+> Still a bit of a lookup vs iterate hold-off remaining, but I think
+> we can live with the reduction now. If it proves to be a noticable
+> problem then we can look towards RCU based lookups, I think.
+> Otherwise it looks OK to me.
 
-Ok, I'll respin it.  That also reminds me I didn't bother to test
-without quotas, which I probably should do as well.
+We only walk the list during:
+
+  - mount time for quotacheck
+  - umount time
+  - full quotaoff
+
+in the first two cases lookups can't happen at all, and in the latter
+they at least shoudn't get this far.  So I really don't think it's
+a problem.  And the full quotaoff even for quota accounting is something
+I'd like to remove sooner or later, it just causes a lot of corner cases
+for very little gain.
 
 _______________________________________________
 xfs mailing list
