@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1KMJGiG113746 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 16:19:16 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	yZi8MZHHRQuo14vN (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Feb 2012 14:19:15 -0800 (PST)
-Date: Mon, 20 Feb 2012 17:19:15 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 7/8] xfs: remove the per-filesystem list of dquots
-Message-ID: <20120220221915.GA10060@infradead.org>
+	q1KM8kIt113197 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 16:08:46 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	iHPa8YUlcwc1gRVS for <xfs@oss.sgi.com>;
+	Mon, 20 Feb 2012 14:08:45 -0800 (PST)
+Date: Tue, 21 Feb 2012 09:08:42 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/8] xfs: per-filesystem dquot LRU lists
+Message-ID: <20120220220842.GD3592@dastard>
 References: <20120220022815.018921977@bombadil.infradead.org>
-	<20120220022904.615605871@bombadil.infradead.org>
-	<20120220221509.GE3592@dastard>
+	<20120220022904.240235841@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120220221509.GE3592@dastard>
+In-Reply-To: <20120220022904.240235841@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +27,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Feb 21, 2012 at 09:15:09AM +1100, Dave Chinner wrote:
-> On Sun, Feb 19, 2012 at 09:28:22PM -0500, Christoph Hellwig wrote:
-> > Instead of keeping a separate per-filesystem list of dquots we can walk
-> > the radix tree for the two places where we need to iterate all quota
-> > structures.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Sun, Feb 19, 2012 at 09:28:20PM -0500, Christoph Hellwig wrote:
+> Replace the global dquot lru lists with a per-filesystem one.
 > 
-> Still a bit of a lookup vs iterate hold-off remaining, but I think
-> we can live with the reduction now. If it proves to be a noticable
-> problem then we can look towards RCU based lookups, I think.
-> Otherwise it looks OK to me.
+> Note that the shrinker isn't wire up to the per-superblock VFS shrinker
+> infrastructure as would have problems summing up and splitting the counts
+> for inodes and dquots.  I don't think this is a major problem as the quota
+> cache isn't as interwinded with the inode cache as the dentry cache is,
+> because an inode that is dropped from the cache will generally release
+> a dquot reference, but most of the time it won't be the last one.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-We only walk the list during:
+Looks OK.
 
-  - mount time for quotacheck
-  - umount time
-  - full quotaoff
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-in the first two cases lookups can't happen at all, and in the latter
-they at least shoudn't get this far.  So I really don't think it's
-a problem.  And the full quotaoff even for quota accounting is something
-I'd like to remove sooner or later, it just causes a lot of corner cases
-for very little gain.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
