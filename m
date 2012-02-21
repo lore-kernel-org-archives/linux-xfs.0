@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1L5E8fq145672 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 23:14:08 -0600
+	q1L4uEsM144583 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 22:56:14 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	6AXonXNadlRUjXKx for <xfs@oss.sgi.com>;
-	Mon, 20 Feb 2012 21:14:06 -0800 (PST)
-Date: Tue, 21 Feb 2012 16:14:04 +1100
+	dFunEDbRo4m7CK7F for <xfs@oss.sgi.com>;
+	Mon, 20 Feb 2012 20:56:12 -0800 (PST)
+Date: Tue, 21 Feb 2012 15:56:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/8] xfs: make xfs_inode_item_size idempotent
-Message-ID: <20120221051404.GM3592@dastard>
-References: <20120221003824.415885674@bombadil.infradead.org>
-	<20120221003907.081625923@bombadil.infradead.org>
+Subject: Re: [PATCH 00/12] log grant code cleanups V2
+Message-ID: <20120221045610.GI3592@dastard>
+References: <20120220023119.435889631@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120221003907.081625923@bombadil.infradead.org>
+In-Reply-To: <20120220023119.435889631@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +29,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Feb 20, 2012 at 07:38:30PM -0500, Christoph Hellwig wrote:
-> Move all code messing with the inode log item flags into xfs_inode_item_format
-> to make sure xfs_inode_item_size really only calculates the the number of
-> vectors, but doesn't modify any state of the inode item.
+On Sun, Feb 19, 2012 at 09:31:19PM -0500, Christoph Hellwig wrote:
+> This series removes the opportunistic log space wakeups which had no
+> use but hiding real races for far too long, and applies various bits
+> of refactoring to the log grant code to make it smaller and more readable.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Changes since V1:
+> 	- address various minor review comments
 
-Looks ok so:
+You can add:
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-One minor cleanup:
-
->  	case XFS_DINODE_FMT_LOCAL:
-> -		ASSERT(!(iip->ili_format.ilf_fields &
-> -			 (XFS_ILOG_ABROOT | XFS_ILOG_AEXT)));
-> -		if (iip->ili_format.ilf_fields & XFS_ILOG_ADATA) {
-> +		iip->ili_format.ilf_fields &=
-> +			~(XFS_ILOG_AEXT | XFS_ILOG_ABROOT);
-> +
-> +		if ((iip->ili_format.ilf_fields & XFS_ILOG_ADATA) &&
-> +		    ip->i_afp->if_bytes > 0) {
->  			ASSERT(ip->i_afp->if_bytes > 0);
-
-That assert can go - it's checked in the if statement now.
+To the series. Solving the higher level issue of grant heads moving
+between the sample and the addition can wait until this goes in. 
 
 Cheers,
 
