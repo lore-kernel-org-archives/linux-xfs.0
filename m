@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1L0d9qq122351 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 18:39:10 -0600
+	q1L0d9bf122324 for <xfs@oss.sgi.com>; Mon, 20 Feb 2012 18:39:09 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	HJDY0GTd9CtnYYjk (version=TLSv1 cipher=AES256-SHA bits=256
+	jzugEBD1Y6Dgv5VE (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Feb 2012 16:39:07 -0800 (PST)
+	Mon, 20 Feb 2012 16:39:06 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Rzdl4-0006hE-5h
+	Linux)) id 1Rzdl4-0006hl-BZ
 	for xfs@oss.sgi.com; Tue, 21 Feb 2012 00:39:06 +0000
-Message-Id: <20120221003906.124899527@bombadil.infradead.org>
-Date: Mon, 20 Feb 2012 19:38:25 -0500
+Message-Id: <20120221003906.313004161@bombadil.infradead.org>
+Date: Mon, 20 Feb 2012 19:38:26 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/8] xfs: use per-filesystem I/O completion workqueues
+Subject: [PATCH 2/8] xfs: do not require an ioend for new EOF calculation
 References: <20120221003824.415885674@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-split-workqueues
+Content-Disposition: inline; filename=xfs-simplify-eof-calculation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,248 +32,101 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The new concurrency managed workqueues are cheap enough that we can create
-per-filesystem instead of global workqueues.  This allows us to remove the
-trylock or defer scheme on the ilock, which is not helpful once we have
-outstanding log reservations until finishing a size update.
+Replace xfs_ioend_new_eof with a new inline xfs_new_eof helper that
+doesn't require and ioend, and is available also outside of xfs_aops.c.
 
-Also allow the default concurrency on this workqueues so that I/O completions
-blocking on the ilock for one inode do not block process for another inode.
+Also make the code a bit more clear by using a normal if statement
+instead of a slightly misleading MIN().
 
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_aops.c  |   39 ++++++++++-----------------------------
- fs/xfs/xfs_aops.h  |    2 --
- fs/xfs/xfs_buf.c   |   17 -----------------
- fs/xfs/xfs_mount.h |    3 +++
- fs/xfs/xfs_super.c |   39 ++++++++++++++++++++++++++++++++++++++-
- 5 files changed, 51 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_aops.c  |   24 ++++--------------------
+ fs/xfs/xfs_inode.h |   14 ++++++++++++++
+ 2 files changed, 18 insertions(+), 20 deletions(-)
 
 Index: xfs/fs/xfs/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2012-02-13 15:59:57.997159607 -0800
-+++ xfs/fs/xfs/xfs_aops.c	2012-02-19 13:21:45.653291774 -0800
-@@ -126,21 +126,15 @@ static inline bool xfs_ioend_is_append(s
+--- xfs.orig/fs/xfs/xfs_aops.c	2011-11-30 11:05:19.260046232 +0100
++++ xfs/fs/xfs/xfs_aops.c	2011-11-30 11:06:07.983115611 +0100
+@@ -99,23 +99,6 @@ xfs_destroy_ioend(
+ }
  
  /*
-  * Update on-disk file size now that data has been written to disk.
-- *
-- * This function does not block as blocking on the inode lock in IO completion
-- * can lead to IO completion order dependency deadlocks.. If it can't get the
-- * inode ilock it will return EAGAIN. Callers must handle this.
-  */
--STATIC int
-+STATIC void
- xfs_setfilesize(
+- * If the end of the current ioend is beyond the current EOF,
+- * return the new EOF value, otherwise zero.
+- */
+-STATIC xfs_fsize_t
+-xfs_ioend_new_eof(
 -	xfs_ioend_t		*ioend)
-+	struct xfs_ioend	*ioend)
- {
+-{
 -	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+-	xfs_fsize_t		isize;
+-	xfs_fsize_t		bsize;
+-
+-	bsize = ioend->io_offset + ioend->io_size;
+-	isize = MIN(i_size_read(VFS_I(ip)), bsize);
+-	return isize > ip->i_d.di_size ? isize : 0;
+-}
+-
+-/*
+  * Fast and loose check if this write could update the on-disk inode size.
+  */
+ static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
+@@ -135,7 +118,7 @@ xfs_setfilesize(
  	xfs_fsize_t		isize;
  
--	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
--		return EAGAIN;
--
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_ioend_new_eof(ioend);
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	isize = xfs_ioend_new_eof(ioend);
++	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
  	if (isize) {
  		trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
-@@ -149,7 +143,6 @@ xfs_setfilesize(
- 	}
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return 0;
- }
- 
- /*
-@@ -163,10 +156,12 @@ xfs_finish_ioend(
- 	struct xfs_ioend	*ioend)
+ 		ip->i_d.di_size = isize;
+@@ -357,6 +340,7 @@ xfs_submit_ioend_bio(
+ 	xfs_ioend_t		*ioend,
+ 	struct bio		*bio)
  {
- 	if (atomic_dec_and_test(&ioend->io_remaining)) {
-+		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-+
- 		if (ioend->io_type == IO_UNWRITTEN)
--			queue_work(xfsconvertd_workqueue, &ioend->io_work);
-+			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
- 		else if (xfs_ioend_is_append(ioend))
--			queue_work(xfsdatad_workqueue, &ioend->io_work);
-+			queue_work(mp->m_data_workqueue, &ioend->io_work);
- 		else
- 			xfs_destroy_ioend(ioend);
- 	}
-@@ -207,23 +202,9 @@ xfs_end_io(
- 	 * We might have to update the on-disk file size after extending
- 	 * writes.
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	atomic_inc(&ioend->io_remaining);
+ 	bio->bi_private = ioend;
+ 	bio->bi_end_io = xfs_end_bio;
+@@ -365,8 +349,8 @@ xfs_submit_ioend_bio(
+ 	 * If the I/O is beyond EOF we mark the inode dirty immediately
+ 	 * but don't update the inode size until I/O completion.
  	 */
--	error = xfs_setfilesize(ioend);
--	ASSERT(!error || error == EAGAIN);
--
-+	xfs_setfilesize(ioend);
- done:
--	/*
--	 * If we didn't complete processing of the ioend, requeue it to the
--	 * tail of the workqueue for another attempt later. Otherwise destroy
--	 * it.
--	 */
--	if (error == EAGAIN) {
--		atomic_inc(&ioend->io_remaining);
--		xfs_finish_ioend(ioend);
--		/* ensure we don't spin on blocked ioends */
--		delay(1);
--	} else {
--		xfs_destroy_ioend(ioend);
--	}
-+	xfs_destroy_ioend(ioend);
+-	if (xfs_ioend_new_eof(ioend))
+-		xfs_mark_inode_dirty(XFS_I(ioend->io_inode));
++	if (xfs_new_eof(ip, ioend->io_offset + ioend->io_size))
++		xfs_mark_inode_dirty(ip);
+ 
+ 	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE, bio);
+ }
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 11:05:16.670060264 +0100
++++ xfs/fs/xfs/xfs_inode.h	2011-11-30 11:06:03.769805103 +0100
+@@ -275,6 +275,20 @@ static inline xfs_fsize_t XFS_ISIZE(stru
  }
  
  /*
-Index: xfs/fs/xfs/xfs_aops.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_aops.h	2012-02-13 13:48:02.390346163 -0800
-+++ xfs/fs/xfs/xfs_aops.h	2012-02-19 13:21:45.653291774 -0800
-@@ -18,8 +18,6 @@
- #ifndef __XFS_AOPS_H__
- #define __XFS_AOPS_H__
- 
--extern struct workqueue_struct *xfsdatad_workqueue;
--extern struct workqueue_struct *xfsconvertd_workqueue;
- extern mempool_t *xfs_ioend_pool;
- 
- /*
-Index: xfs/fs/xfs/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2012-02-13 13:48:02.393679497 -0800
-+++ xfs/fs/xfs/xfs_buf.c	2012-02-19 13:21:45.653291774 -0800
-@@ -45,8 +45,6 @@ static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
- 
- static struct workqueue_struct *xfslogd_workqueue;
--struct workqueue_struct *xfsdatad_workqueue;
--struct workqueue_struct *xfsconvertd_workqueue;
- 
- #ifdef XFS_BUF_LOCK_TRACKING
- # define XB_SET_OWNER(bp)	((bp)->b_last_holder = current->pid)
-@@ -1793,21 +1791,8 @@ xfs_buf_init(void)
- 	if (!xfslogd_workqueue)
- 		goto out_free_buf_zone;
- 
--	xfsdatad_workqueue = alloc_workqueue("xfsdatad", WQ_MEM_RECLAIM, 1);
--	if (!xfsdatad_workqueue)
--		goto out_destroy_xfslogd_workqueue;
--
--	xfsconvertd_workqueue = alloc_workqueue("xfsconvertd",
--						WQ_MEM_RECLAIM, 1);
--	if (!xfsconvertd_workqueue)
--		goto out_destroy_xfsdatad_workqueue;
--
- 	return 0;
- 
-- out_destroy_xfsdatad_workqueue:
--	destroy_workqueue(xfsdatad_workqueue);
-- out_destroy_xfslogd_workqueue:
--	destroy_workqueue(xfslogd_workqueue);
-  out_free_buf_zone:
- 	kmem_zone_destroy(xfs_buf_zone);
-  out:
-@@ -1817,8 +1802,6 @@ xfs_buf_init(void)
- void
- xfs_buf_terminate(void)
- {
--	destroy_workqueue(xfsconvertd_workqueue);
--	destroy_workqueue(xfsdatad_workqueue);
- 	destroy_workqueue(xfslogd_workqueue);
- 	kmem_zone_destroy(xfs_buf_zone);
- }
-Index: xfs/fs/xfs/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_super.c	2012-02-19 12:58:45.823295509 -0800
-+++ xfs/fs/xfs/xfs_super.c	2012-02-19 13:23:48.836624774 -0800
-@@ -759,6 +759,36 @@ xfs_setup_devices(
- 	return 0;
- }
- 
-+STATIC int
-+xfs_init_mount_workqueues(
-+	struct xfs_mount	*mp)
++ * If this I/O goes past the on-disk inode size update it unless it would
++ * be past the current in-core inode size.
++ */
++static inline xfs_fsize_t
++xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
 +{
-+	mp->m_data_workqueue = alloc_workqueue("xfs-data/%s",
-+			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+	if (!mp->m_data_workqueue)
-+		goto out;
++	xfs_fsize_t i_size = i_size_read(VFS_I(ip));
 +
-+	mp->m_unwritten_workqueue = alloc_workqueue("xfs-conv/%s",
-+			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+	if (!mp->m_unwritten_workqueue)
-+		goto out_destroy_data_iodone_queue;
-+
-+	return 0;
-+
-+out_destroy_data_iodone_queue:
-+	destroy_workqueue(mp->m_data_workqueue);
-+out:
-+	return -ENOMEM;
++	if (new_size > i_size)
++		new_size = i_size;
++	return new_size > ip->i_d.di_size ? new_size : 0;
 +}
 +
-+STATIC void
-+xfs_destroy_mount_workqueues(
-+	struct xfs_mount	*mp)
-+{
-+	destroy_workqueue(mp->m_data_workqueue);
-+	destroy_workqueue(mp->m_unwritten_workqueue);
-+}
-+
- /* Catch misguided souls that try to use this interface on XFS */
- STATIC struct inode *
- xfs_fs_alloc_inode(
-@@ -982,6 +1012,7 @@ xfs_fs_put_super(
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
-+	xfs_destroy_mount_workqueues(mp);
- 	xfs_close_devices(mp);
- 	xfs_free_fsname(mp);
- 	kfree(mp);
-@@ -1308,10 +1339,14 @@ xfs_fs_fill_super(
- 	if (error)
- 		goto out_free_fsname;
- 
--	error = xfs_icsb_init_counters(mp);
-+	error = xfs_init_mount_workqueues(mp);
- 	if (error)
- 		goto out_close_devices;
- 
-+	error = xfs_icsb_init_counters(mp);
-+	if (error)
-+		goto out_destroy_workqueues;
-+
- 	error = xfs_readsb(mp, flags);
- 	if (error)
- 		goto out_destroy_counters;
-@@ -1374,6 +1409,8 @@ xfs_fs_fill_super(
- 	xfs_freesb(mp);
-  out_destroy_counters:
- 	xfs_icsb_destroy_counters(mp);
-+out_destroy_workqueues:
-+	xfs_destroy_mount_workqueues(mp);
-  out_close_devices:
- 	xfs_close_devices(mp);
-  out_free_fsname:
-Index: xfs/fs/xfs/xfs_mount.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_mount.h	2012-02-13 13:48:02.410346163 -0800
-+++ xfs/fs/xfs/xfs_mount.h	2012-02-19 13:21:45.656625108 -0800
-@@ -211,6 +211,9 @@ typedef struct xfs_mount {
- 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
- 						/* low free space thresholds */
-+
-+	struct workqueue_struct	*m_data_workqueue;
-+	struct workqueue_struct	*m_unwritten_workqueue;
- } xfs_mount_t;
- 
- /*
++/*
+  * i_flags helper functions
+  */
+ static inline void
 
 _______________________________________________
 xfs mailing list
