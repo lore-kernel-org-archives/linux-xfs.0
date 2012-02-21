@@ -1,30 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1LGvlC0198107 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 10:57:47 -0600
-Received: from e4.ny.us.ibm.com (e4.ny.us.ibm.com [32.97.182.144]) by
-	cuda.sgi.com with ESMTP id EyiP4uO7HlH8ywaa (version=TLSv1
+	q1LGwveH198222 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 10:58:57 -0600
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id NenRovq0msVZfQqn (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Feb 2012 08:57:45 -0800 (PST)
+	Tue, 21 Feb 2012 08:58:56 -0800 (PST)
 Received: from /spool/local
-	by e4.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Tue, 21 Feb 2012 11:57:43 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 2E6156E8055
-	for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 11:53:53 -0500 (EST)
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q1LGrpBg220154 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 11:53:52 -0500
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id q1LGrlHx002842
-	for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 09:53:47 -0700
+	Tue, 21 Feb 2012 09:58:56 -0700
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 42B12C90054
+	for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 11:58:54 -0500 (EST)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q1LGwqKF159536 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 11:58:53 -0500
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id q1LGwkak000779
+	for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 09:58:46 -0700
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Tue, 21 Feb 2012 10:53:41 -0600
-Message-Id: <20120221165341.22549.58434.sendpatchset@chandra-lucid.austin.ibm.com>
-Subject: [RFC v4 PATCH 0/4] xfs: Allow pquota and gquota to be used together
+Date: Tue, 21 Feb 2012 10:58:45 -0600
+Message-Id: <20120221165845.23253.658.sendpatchset@chandra-lucid.austin.ibm.com>
+In-Reply-To: <20120221165833.23253.38042.sendpatchset@chandra-lucid.austin.ibm.com>
+References: <20120221165833.23253.38042.sendpatchset@chandra-lucid.austin.ibm.com>
+Subject: [PATCH 2/4] xfstests: Add a require_seppquota function
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,52 +43,39 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Hello All,
+>From 6076480613e3034eab9758903c093a0b24048658 Mon Sep 17 00:00:00 2001
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Date: Wed, 8 Feb 2012 10:04:49 -0600
+Subject: [PATCH 2/3] Add a require_seppquota function in preparation for testing
+ simultaneous use of pquota and gquota in a filesystem
 
-This is the version 4 of the changes to allow pquota and gquota to be used
-together.
+Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+---
+ common.quota |    9 +++++++++
+ 1 files changed, 9 insertions(+), 0 deletions(-)
 
-Version 3 of the posting can be found at
-http://oss.sgi.com/archives/xfs/2012-01/msg00309.html
-
-Changes from version 2 to version 3:
-- Remove save_flags with storing the value (in to superblock) 
-  based on field type info
-- fix checkpatch.pl warnings and errors
-
-version 2 of the posting can be found at
-http://marc.info/?l=linux-xfs&m=131966420607401&w=2
-
-Changes from version 2 to version 3:
- - hash table for pquota is added.
- - changes to apply cleanly with the latest tree
-
-version 1 of the posting can be found at
-http://article.gmane.org/gmane.comp.file-systems.xfs.general/41284
-
-Changes from version 1 to version 2:
-
- - Created a new prep patch to accomodate some generic changes that ease
-   the later patches.
- - Created a new patch to add a new field qs_pquota to fs_quota_stat
-   with appropriate versioning changes
- - Changed the logic to allow XFS_OQUOTA.* flags to be allowed only in
-   the older versions.
- - Changed couple of places where PQUOTA checking was on the else if
-   construct so as to allow both GQUOTA and PQUOTA in those places.
- - Fixed comments in xfs_quota.h to reflect the current changes.
- - Changed the name of the macro XFS_SB_VERSION2_SEPER_PQUOTA to 
-   XFS_SB_VERSION2_NO_OQUOTA
- - got rid of the macros XFS_MOUNT_QUOTA_SET1 and XFS_MOUNT_QUOTA_SET2
- - added a new inline function xfs_inode_dquot(ip, type) to simplify
-   the error path in xfs_qm_dqget()
- - got rid of the macro XFS_IS_THIS_QUOTA_OFF
- - added comment to explain why sb_qflags is saved and restored in 
-   xfs_sb_to_disk()
-
-Thanks & Regards,
-
-chandra
+diff --git a/common.quota b/common.quota
+index 9736306..16344ea 100644
+--- a/common.quota
++++ b/common.quota
+@@ -87,6 +87,15 @@ _require_nobody()
+     [ $? -ne 0 ] && _notrun "group file does not contain nobody/nogroup."
+ }
+ 
++#
++# checks to see if mkfs supports separate pquota
++#
++_require_seppquota()
++{
++    mkfs.xfs -o test 2>&1 | grep seppquota > /dev/null
++    [ $? -ne 0 ] && _notrun "mkfs does not support separate pquota."
++}
++
+ # create a file as a specific user (uid)
+ # takes filename, id, type (u/g/p), blocksize, blockcount
+ #
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
