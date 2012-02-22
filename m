@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1M3Q7KF240604 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 21:26:08 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id qj5AdOK5kxTi2bVJ for <xfs@oss.sgi.com>;
-	Tue, 21 Feb 2012 19:26:05 -0800 (PST)
-Message-ID: <4F44604C.1000201@sandeen.net>
-Date: Tue, 21 Feb 2012 21:26:04 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q1MEQmXm026991 for <xfs@oss.sgi.com>; Wed, 22 Feb 2012 08:26:48 -0600
+Message-ID: <4F44FB25.7080608@sgi.com>
+Date: Wed, 22 Feb 2012 08:26:45 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] repair: fix a few message formats in process_dinode_int
-References: <20120209181959.GA28010@infradead.org>
-In-Reply-To: <20120209181959.GA28010@infradead.org>
+Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support V8
+References: <4F3E532E.6000708@oracle.com> <4F43B081.3000300@sgi.com>
+	<4F445B73.4000501@oracle.com>
+In-Reply-To: <4F445B73.4000501@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,63 +18,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: jeff.liu@oracle.com
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-T24gMi85LzEyIDEyOjE5IFBNLCBDaHJpc3RvcGggSGVsbHdpZyB3cm90ZToKPiBBbHdheXMgb3V0
-77+9dXQgbmV3bGluZSBhZnRlciBtZXNzYWdlcywgYW5kIHNraXAgY29ycnVwdGlvbnMgd2Fybmlu
-Z3MKPiBpZiBoYW5kbGluZyB1bmNlcnRhaW4gaW5vZGVzLgo+IAo+IFNpZ25lZC1vZmYtYnk6IENo
-cmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPgoKUmV2aWV3ZWQtYnk6IEVyaWMgU2FuZGVlbiA8
-c2FuZGVlbkByZWRoYXQuY29tPgoKPiAKPiBJbmRleDogeGZzcHJvZ3MtZGV2L3JlcGFpci9kaW5v
-ZGUuYwo+ID09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT0KPiAtLS0geGZzcHJvZ3MtZGV2Lm9yaWcvcmVwYWlyL2Rpbm9kZS5j
-CTIwMTItMDItMDUgMDU6NTk6MDguNDQxOTIyOTA1IC0wODAwCj4gKysrIHhmc3Byb2dzLWRldi9y
-ZXBhaXIvZGlub2RlLmMJMjAxMi0wMi0wNiAxMTo1NjozNi42ODk1MDI4MTMgLTA4MDAKPiBAQCAt
-MjU1MiwxNiArMjU1MiwyMiBAQCBfKCJiYWQgKG5lZ2F0aXZlKSBzaXplICUiIFBSSWQ2NCAiIG9u
-IGluCj4gIAkJdWludDE2X3QgZmxhZ3MgPSBiZTE2X3RvX2NwdShkaW5vLT5kaV9mbGFncyk7Cj4g
-IAo+ICAJCWlmIChmbGFncyAmIH5YRlNfRElGTEFHX0FOWSkgewo+IC0JCQlkb193YXJuKF8oIkJh
-ZCBmbGFncyBzZXQgaW4gaW5vZGUgJSIgUFJJdTY0KSwgbGlubyk7Cj4gKwkJCWlmICghdW5jZXJ0
-YWluKSB7Cj4gKwkJCQlkb193YXJuKAo+ICsJXygiQmFkIGZsYWdzIHNldCBpbiBpbm9kZSAlIiBQ
-Ukl1NjQgIlxuIiksCj4gKwkJCQkJbGlubyk7Cj4gKwkJCX0KPiAgCQkJZmxhZ3MgJj0gflhGU19E
-SUZMQUdfQU5ZOwo+ICAJCX0KPiAgCj4gIAkJaWYgKGZsYWdzICYgKFhGU19ESUZMQUdfUkVBTFRJ
-TUUgfCBYRlNfRElGTEFHX1JUSU5IRVJJVCkpIHsKPiAgCQkJLyogbmVlZCBhbiBydC1kZXYhICov
-Cj4gIAkJCWlmICghcnRfbmFtZSkgewo+IC0JCQkJZG9fd2FybigKPiAtCV8oImlub2RlICUiIFBS
-SXU2NCAiIGhhcyBSVCBmbGFnIHNldCBidXQgdGhlcmUgaXMgbm8gUlQgZGV2aWNlIiksCj4gLQkJ
-CQkJbGlubyk7Cj4gKwkJCQlpZiAoIXVuY2VydGFpbikgewo+ICsJCQkJCWRvX3dhcm4oCj4gKwlf
-KCJpbm9kZSAlIiBQUkl1NjQgIiBoYXMgUlQgZmxhZyBzZXQgYnV0IHRoZXJlIGlzIG5vIFJUIGRl
-dmljZVxuIiksCj4gKwkJCQkJCWxpbm8pOwo+ICsJCQkJfQo+ICAJCQkJZmxhZ3MgJj0gfihYRlNf
-RElGTEFHX1JFQUxUSU1FIHwKPiAgCQkJCQkJWEZTX0RJRkxBR19SVElOSEVSSVQpOwo+ICAJCQl9
-Cj4gQEAgLTI1NjksOCArMjU3NSwxMSBAQCBfKCJiYWQgKG5lZ2F0aXZlKSBzaXplICUiIFBSSWQ2
-NCAiIG9uIGluCj4gIAkJaWYgKGZsYWdzICYgWEZTX0RJRkxBR19ORVdSVEJNKSB7Cj4gIAkJCS8q
-IG11c3QgYmUgYSBydCBiaXRtYXAgaW5vZGUgKi8KPiAgCQkJaWYgKGxpbm8gIT0gbXAtPm1fc2Iu
-c2JfcmJtaW5vKSB7Cj4gLQkJCQlkb193YXJuKF8oImlub2RlICUiIFBSSXU2NCAiIG5vdCBydCBi
-aXRtYXAiKSwKPiAtCQkJCQlsaW5vKTsKPiArCQkJCWlmICghdW5jZXJ0YWluKSB7Cj4gKwkJCQkJ
-ZG9fd2FybigKPiArCV8oImlub2RlICUiIFBSSXU2NCAiIG5vdCBydCBiaXRtYXBcbiIpLAo+ICsJ
-CQkJCQlsaW5vKTsKPiArCQkJCX0KPiAgCQkJCWZsYWdzICY9IH5YRlNfRElGTEFHX05FV1JUQk07
-Cj4gIAkJCX0KPiAgCQl9Cj4gQEAgLTI1ODAsOSArMjU4OSwxMSBAQCBfKCJiYWQgKG5lZ2F0aXZl
-KSBzaXplICUiIFBSSWQ2NCAiIG9uIGluCj4gIAkJCSAgICAgWEZTX0RJRkxBR19OT1NZTUxJTktT
-KSkgewo+ICAJCQkvKiBtdXN0IGJlIGEgZGlyZWN0b3J5ICovCj4gIAkJCWlmIChkaV9tb2RlICYm
-ICFTX0lTRElSKGRpX21vZGUpKSB7Cj4gLQkJCQlkb193YXJuKAo+IC0JXygiZGlyZWN0b3J5IGZs
-YWdzIHNldCBvbiBub24tZGlyZWN0b3J5IGlub2RlICUiIFBSSXU2NCApLAo+IC0JCQkJCWxpbm8p
-Owo+ICsJCQkJaWYgKCF1bmNlcnRhaW4pIHsKPiArCQkJCQlkb193YXJuKAo+ICsJXygiZGlyZWN0
-b3J5IGZsYWdzIHNldCBvbiBub24tZGlyZWN0b3J5IGlub2RlICUiIFBSSXU2NCAiXG4iICksCj4g
-KwkJCQkJCWxpbm8pOwo+ICsJCQkJfQo+ICAJCQkJZmxhZ3MgJj0gfihYRlNfRElGTEFHX1JUSU5I
-RVJJVCB8Cj4gIAkJCQkJCVhGU19ESUZMQUdfRVhUU1pJTkhFUklUIHwKPiAgCQkJCQkJWEZTX0RJ
-RkxBR19QUk9KSU5IRVJJVCB8Cj4gQEAgLTI1OTIsOSArMjYwMywxMSBAQCBfKCJiYWQgKG5lZ2F0
-aXZlKSBzaXplICUiIFBSSWQ2NCAiIG9uIGluCj4gIAkJaWYgKGZsYWdzICYgKFhGU19ESUZMQUdf
-UkVBTFRJTUUgfCBYRlNfWEZMQUdfRVhUU0laRSkpIHsKPiAgCQkJLyogbXVzdCBiZSBhIGZpbGUg
-Ki8KPiAgCQkJaWYgKGRpX21vZGUgJiYgIVNfSVNSRUcoZGlfbW9kZSkpIHsKPiAtCQkJCWRvX3dh
-cm4oCj4gLQlfKCJmaWxlIGZsYWdzIHNldCBvbiBub24tZmlsZSBpbm9kZSAlIiBQUkl1NjQpLAo+
-IC0JCQkJCWxpbm8pOwo+ICsJCQkJaWYgKCF1bmNlcnRhaW4pIHsKPiArCQkJCQlkb193YXJuKAo+
-ICsJXygiZmlsZSBmbGFncyBzZXQgb24gbm9uLWZpbGUgaW5vZGUgJSIgUFJJdTY0ICJcbiIpLAo+
-ICsJCQkJCQlsaW5vKTsKPiArCQkJCX0KPiAgCQkJCWZsYWdzICY9IH4oWEZTX0RJRkxBR19SRUFM
-VElNRSB8Cj4gIAkJCQkJCVhGU19YRkxBR19FWFRTSVpFKTsKPiAgCQkJfQo+IAo+IAo+IAo+IAo+
-IF9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCj4geGZzIG1h
-aWxpbmcgbGlzdAo+IHhmc0Bvc3Muc2dpLmNvbQo+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
-L2xpc3RpbmZvL3hmcwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
-L21haWxtYW4vbGlzdGluZm8veGZzCg==
+On 02/21/12 21:05, Jeff Liu wrote:
+> On 02/21/2012 10:56 PM, Mark Tinguely wrote:
+>
+>> On 02/17/12 07:16, Jeff Liu wrote:
+>>> Hello,
+>>>
+>>> This is the revised patch according to Dave's comments for V7.
+>>>
+>>> Changes to V8:
+>>> --------------
+>>> 1. If there is an internal error raised at extent reading routine, just
+>>> return it rather than ENXIO.
+>>> 2. Add the commit message.
+>>> 3. Remove the for(;;) loop since there is no continuous holes shown even
+>>> if create a Petabyte sparse file with hole extent length longer than
+>>> 32-bit.  Thanks Dave for helping verify that!
+>>> 4. In xfs_seek_data(), s/len/end/, looks 'end' is more meaningful here
+>>> to indicate the range of extents mapped.
+>>> 5. Remove BUG() from xfs_seek_data() since xfs_bmapi_read() have found
+>>> any corruption during the lookup, it should not occurred at all.
+>>>
+>>> Any comments are appreciated!
+>>>
+>>> Thanks,
+>>> -Jeff
+>>>
+>>>
+>>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>>
+>> ...
+>>
+>>> +STATIC loff_t
+>>> +xfs_seek_hole(
+>> ...
+>>> +
+>>> +    fsbno = XFS_B_TO_FSBT(mp, start);
+>>> +    error = xfs_bmap_first_unused(NULL, ip, 1,&fsbno, XFS_DATA_FORK);
+>>> +    if (error)
+>>> +        goto out_unlock;
+>>> +
+>>> +    holeoff = XFS_FSB_TO_B(mp, fsbno);
+>>> +    if (holeoff<= start)
+>>> +        offset = start;
+>>> +    else
+>>> +        offset = min_t(loff_t, holeoff, isize);
+>>> +
+>>
+>> ...
+>>
+>> Very Nice. Much more concise.
+>>
+>> Can xfs_bmap_first_unused() return something larger than the end of file?
+>
+> I think it could be happen if the file has no holes past the given
+> offset. In this case, it will return the first block past the end of
+> file. That is why "min_t()" is used to determine the final value.
+>
+> Thanks,
+> -Jeff
+>
+>>
+>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+>
+>
+
+Okay. Looks good.
+
+--Mark Tinguely.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
