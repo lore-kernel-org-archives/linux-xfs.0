@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1LHdOlO201702 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 11:39:25 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id jv03yYFXdtrtIFdT
-	for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 09:39:23 -0800 (PST)
-Message-ID: <4F43D6CB.3010508@hardwarefreak.com>
-Date: Tue, 21 Feb 2012 11:39:23 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q1M3Iw9t240365 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 21:18:59 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id kA4Z5RQ1MwoSBD7l for <xfs@oss.sgi.com>;
+	Tue, 21 Feb 2012 19:18:56 -0800 (PST)
+Message-ID: <4F445E9F.5030003@sandeen.net>
+Date: Tue, 21 Feb 2012 21:18:55 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
 Subject: Re: XFS, empty files after a crash
 References: <4F4387A7.2070009@gmail.com>
-In-Reply-To: <4F4387A7.2070009@gmail.com>
-Reply-To: stan@hardwarefreak.com
+	<20291.50554.414722.399249@tree.ty.sabi.co.UK>
+In-Reply-To: <20291.50554.414722.399249@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,40 +25,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: kadafax@gmail.com
-Cc: xfs@oss.sgi.com
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-On 2/21/2012 6:01 AM, kfx wrote:
+On 2/21/12 10:25 AM, Peter Grandi wrote:
+>> Hi, After a crash, a lot of files on a xfs file system report
+>> an empty size with "ls -a" but not with "du". [ ... ]
+> 
+> It is a FAQ:
+> 
+>   http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_see_binary_NULLS_in_some_files_after_recovery_when_I_unplugged_the_power.3F
+> 
+> Usually it is a good idea to do a web search before reporting a
+> problem.
 
-> After a crash, a lot of files on a xfs file system report an empty size
-> with "ls -a" but not with "du".
-> xfs_check and xfs_repair don't report any problem to repair (although an
-> internal log is used) :(
-> So if I understand correctly, those empty files actually use space on
-> the disk but are incorrectly reported as empty by the system.
-> Is there a way to copy back the used blocks to recover the files ?
+He seems to be reporting a different problem.
 
-What was the nature of the crash?  Kernel panic?  Power failure?  Other?
+In the FAQ case above, one would get a file but "it has is a size but no extents " - i.e. ls -l would show 1M, but du would show 0, and no extents are allocated.
 
-Do you have have backups of previously existing files that are now shown
-as zero size?  If so delete and restore, maybe just overwrite.
+In this case, he has no size, blocks are reported used, but no extents are allocated.  That actually seems like a new/odd case.
 
-For new files that were in the process of being created you're simply
-out of luck.  The metadata may have hit the journal but the file data in
-buffer cache was lost.
+>> Is there a way to copy back the used blocks to recover the
+>> files ?
+> 
+> No, because your applications told XFS that the content of those
+> blocks could be thrown away in case of crash.
 
-In memory write buffering/ordering techniques are what give modern
-filesystems their write throughput performance.  Unfortunately this
-comes at a cost, when systems crash.  As Peter mentioned, one way to
-mitigate this is coding apps to sync their writes.  This obviously has a
-performance impact.  Another is possibly to mount filesystems with the
-sync option, which will obviously severely impact write performance.
-Both will prevent or at least lessen the carnage you've seen as a result
-of this crash.  You may not be able to live the performance of the
-latter, though.
+> It is your responsibility to ensure that your applications use
+> 'fsync' or at least 'fsyncdata' when data should be stored
+> permanently before a crash occurs.
 
--- 
-Stan
+I'd agree that there is likely nothing to recover; there are no extents allocated.  I'm not sure why du is reporting space used though.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
