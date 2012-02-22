@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1M3Iw9t240365 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 21:18:59 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id kA4Z5RQ1MwoSBD7l for <xfs@oss.sgi.com>;
-	Tue, 21 Feb 2012 19:18:56 -0800 (PST)
-Message-ID: <4F445E9F.5030003@sandeen.net>
-Date: Tue, 21 Feb 2012 21:18:55 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q1M35iLr239873 for <xfs@oss.sgi.com>; Tue, 21 Feb 2012 21:05:44 -0600
+Message-ID: <4F445B73.4000501@oracle.com>
+Date: Wed, 22 Feb 2012 11:05:23 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: XFS, empty files after a crash
-References: <4F4387A7.2070009@gmail.com>
-	<20291.50554.414722.399249@tree.ty.sabi.co.UK>
-In-Reply-To: <20291.50554.414722.399249@tree.ty.sabi.co.UK>
+Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support V8
+References: <4F3E532E.6000708@oracle.com> <4F43B081.3000300@sgi.com>
+In-Reply-To: <4F43B081.3000300@sgi.com>
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,39 +22,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-On 2/21/12 10:25 AM, Peter Grandi wrote:
->> Hi, After a crash, a lot of files on a xfs file system report
->> an empty size with "ls -a" but not with "du". [ ... ]
+On 02/21/2012 10:56 PM, Mark Tinguely wrote:
+
+> On 02/17/12 07:16, Jeff Liu wrote:
+>> Hello,
+>>
+>> This is the revised patch according to Dave's comments for V7.
+>>
+>> Changes to V8:
+>> --------------
+>> 1. If there is an internal error raised at extent reading routine, just
+>> return it rather than ENXIO.
+>> 2. Add the commit message.
+>> 3. Remove the for(;;) loop since there is no continuous holes shown even
+>> if create a Petabyte sparse file with hole extent length longer than
+>> 32-bit.  Thanks Dave for helping verify that!
+>> 4. In xfs_seek_data(), s/len/end/, looks 'end' is more meaningful here
+>> to indicate the range of extents mapped.
+>> 5. Remove BUG() from xfs_seek_data() since xfs_bmapi_read() have found
+>> any corruption during the lookup, it should not occurred at all.
+>>
+>> Any comments are appreciated!
+>>
+>> Thanks,
+>> -Jeff
+>>
+>>
+>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
 > 
-> It is a FAQ:
+> ...
 > 
->   http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_see_binary_NULLS_in_some_files_after_recovery_when_I_unplugged_the_power.3F
+>> +STATIC loff_t
+>> +xfs_seek_hole(
+> ...
+>> +
+>> +    fsbno = XFS_B_TO_FSBT(mp, start);
+>> +    error = xfs_bmap_first_unused(NULL, ip, 1,&fsbno, XFS_DATA_FORK);
+>> +    if (error)
+>> +        goto out_unlock;
+>> +
+>> +    holeoff = XFS_FSB_TO_B(mp, fsbno);
+>> +    if (holeoff<= start)
+>> +        offset = start;
+>> +    else
+>> +        offset = min_t(loff_t, holeoff, isize);
+>> +
 > 
-> Usually it is a good idea to do a web search before reporting a
-> problem.
-
-He seems to be reporting a different problem.
-
-In the FAQ case above, one would get a file but "it has is a size but no extents " - i.e. ls -l would show 1M, but du would show 0, and no extents are allocated.
-
-In this case, he has no size, blocks are reported used, but no extents are allocated.  That actually seems like a new/odd case.
-
->> Is there a way to copy back the used blocks to recover the
->> files ?
+> ...
 > 
-> No, because your applications told XFS that the content of those
-> blocks could be thrown away in case of crash.
+> Very Nice. Much more concise.
+> 
+> Can xfs_bmap_first_unused() return something larger than the end of file?
 
-> It is your responsibility to ensure that your applications use
-> 'fsync' or at least 'fsyncdata' when data should be stored
-> permanently before a crash occurs.
+I think it could be happen if the file has no holes past the given
+offset. In this case, it will return the first block past the end of
+file. That is why "min_t()" is used to determine the final value.
 
-I'd agree that there is likely nothing to recover; there are no extents allocated.  I'm not sure why du is reporting space used though.
+Thanks,
+-Jeff
 
--Eric
+> 
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
