@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1N0gZKr062063 for <xfs@oss.sgi.com>; Wed, 22 Feb 2012 18:42:35 -0600
-Received: from MMS3.broadcom.com (mms3.broadcom.com [216.31.210.19]) by
-	cuda.sgi.com with ESMTP id 8mDdBBkfQ5RnObjt for
-	<xfs@oss.sgi.com>; Wed, 22 Feb 2012 16:42:34 -0800 (PST)
-From: "Kamal Dasu" <kdasu.kdev@gmail.com>
-Subject: [PATCH] xfs: fix deadlock in xfs_rtfree_extent with kernel v3.x
-Date: Wed, 22 Feb 2012 19:41:39 -0500
-Message-ID: <1329957699-20769-1-git-send-email-kdasu.kdev@gmail.com>
-In-Reply-To: <kdasu.kdev@gmail.com>
-References: <kdasu.kdev@gmail.com>
+	q1N1GAFZ064122 for <xfs@oss.sgi.com>; Wed, 22 Feb 2012 19:16:11 -0600
+Received: from mail-lpp01m010-f53.google.com (mail-lpp01m010-f53.google.com
+	[209.85.215.53]) by cuda.sgi.com with ESMTP id c2Z2Qt0HEcu1tL1E
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 22 Feb 2012 17:16:08 -0800 (PST)
+Received: by lahd3 with SMTP id d3so795655lah.26
+	for <xfs@oss.sgi.com>; Wed, 22 Feb 2012 17:16:07 -0800 (PST)
 MIME-Version: 1.0
+In-Reply-To: <4F45347A.2050204@sgi.com>
+References: <CAGdb-8fC4-3swyyfP3xO=camgzDjR5GYV3qoaB1w+xAfiNeYPw@mail.gmail.com>
+	<4F3EBDA6.7070108@sgi.com>
+	<CAGdb-8eMcBghwznGbGQha01paF1L+MdB3QsxHCuCh6ZOW=wsag@mail.gmail.com>
+	<4F45347A.2050204@sgi.com>
+Date: Thu, 23 Feb 2012 09:16:07 +0800
+Message-ID: <CAGdb-8cYNM-Ef0PKi-jwN-tTuHsH_ZEs1xy3-rdbRwpj5Ut-qw@mail.gmail.com>
+Subject: Re: xfsrestore will create orphanage directory when use -t
+From: Tommy Wu <wu.tommy@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,75 +30,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, kdasu.kdev@gmail.com, cernekee@gmail.com
+To: Bill Kendall <wkendall@sgi.com>
+Cc: xfs <xfs@oss.sgi.com>
 
-To fix the deadlock caused by recursively calling xfs_rtfree_extent
+2012/2/23 Bill Kendall <wkendall@sgi.com>:
+> On 02/17/2012 06:22 PM, Tommy Wu wrote:
+>>
+>> 2012/2/18 Bill Kendall<wkendall@sgi.com>:
+>>>
+>>> On 02/14/2012 11:21 AM, Tommy Wu wrote:
+>>>>
+>>>>
+>>>> from the xfsdump man page:
+>>>> xfsrestore also generates a directory named orphanage in the dest
+>>>> directory. xfsrestore removes this directory after completing a simple
+>>>> restore. However, if orphanage is not empty, it is not removed. This
+>>>> can happen if files present on the dump media are not referenced by
+>>>> any of the restored directories. The orphanage has an entry for each
+>>>> such file. The entry name is the file's original inode number, a ".",
+>>>> and the file's generation count modulo 4096 (only the lower 12 bits of
+>>>> the generation count are used).
+>>>>
+>>>> and the -t option from xfsdump man page:
+>>>> Displays the contents of the dump, but does not create or modify any
+>>>> files or directories. It may be desirable to set the verbosity level
+>>>> to silent when using this option.
+>>>>
+>>>> But when we use -t option with xfsrestore, it still create orphanage
+>>>> directory in current directory (because no dest directory assign).
+>>>> and if it's not empty, it is not removed.
+>>>>
+>>>> This is a bug or it's a feature?
+>>>
+>>>
+>>>
+>>> I can see code where this would happen, except that it would appear
+>>> to require both -r and -t to be used, and xfsrestore doesn't allow
+>>> that.
+>>>
+>>> If you send the command line you used I can take another look.
+>>>
+>>> Bill
+>>
+>>
+>> here is the command I used for -t:
+>> cat var.xfsdump.gz | gzip -dqv | xfsrestore -v silent -p 300 -J -t - |
+>> grep "^xfsrestore:"
+>>
+>> I also test it with only -t option, it also create orphanage folder
+>> for such dump file (not all dump file has this issue)
+>> cat var.xfsdump.gz | gzip -dqv | xfsrestore -t - | grep "^xfsrestore:"
+>
+>
+> I found an issue which is likely the same as what you're seeing. I'll
+> post a patch shortly, please let me know whether or not it fixes the
+> problem.
+>
+> Thanks,
+> Bill
 
- - removed xfs_ilock() and xfs_trans_ijoin() from xfs_rtfree_extent(),
-   instead added asserts that the inode is locked and has an inode_item
-   attached to it.
- - in xfs_bunmapi() when dealing with an inode with the rt flag
-   call xfs_ilock() and xfs_trans_ijoin() so that the
-   reference count is bumped on the inode and attached it to the
-   transaction before calling into xfs_bmap_del_extent, similar to
-   what we do in xfs_bmap_rtalloc.
+yes, after apply the patch, no such directory generated during xfsdump -t.
+thanks.
 
-Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
----
- fs/xfs/xfs_bmap.c    |    9 +++++++++
- fs/xfs/xfs_rtalloc.c |    9 ++++-----
- 2 files changed, 13 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 188ef2f..9a0aa33 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -5124,6 +5124,15 @@ xfs_bunmapi(
- 		cur->bc_private.b.flags = 0;
- 	} else
- 		cur = NULL;
-+
-+	if (isrt) {
-+		/*
-+		 * Synchronize by locking the bitmap inode.
-+		 */
-+		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
-+		xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-+	}
-+
- 	extno = 0;
- 	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
- 	       (nexts == 0 || extno < nexts)) {
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index 87323f1..ca4f315 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -183,6 +183,7 @@ error_cancel:
- 		oblocks = map.br_startoff + map.br_blockcount;
- 	}
- 	return 0;
-+
- error:
- 	return error;
- }
-@@ -2139,11 +2140,9 @@ xfs_rtfree_extent(
- 	xfs_buf_t	*sumbp;		/* summary file block buffer */
- 
- 	mp = tp->t_mountp;
--	/*
--	 * Synchronize by locking the bitmap inode.
--	 */
--	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
--	xfs_trans_ijoin(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
-+
-+	ASSERT(mp->m_rbmip->i_itemp != NULL);
-+	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
- 
- #if defined(__KERNEL__) && defined(DEBUG)
- 	/*
 -- 
-1.7.5.4
 
+Tommy Wu
 
 _______________________________________________
 xfs mailing list
