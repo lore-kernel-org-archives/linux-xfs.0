@@ -1,22 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1NMFRUL158634 for <xfs@oss.sgi.com>; Thu, 23 Feb 2012 16:15:28 -0600
-Received: from millhouse.houseofnate.net
-	(dsl092-086-237.bos1.dsl.speakeasy.net [66.92.86.237]) by
-	cuda.sgi.com with ESMTP id zWgvI24VKOsdfwHm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Feb 2012 14:15:25 -0800 (PST)
-Message-ID: <4F46BA7B.70600@houseofnate.net>
-Date: Thu, 23 Feb 2012 17:15:23 -0500
-From: "Nathaniel W. Turner" <nate@houseofnate.net>
-MIME-Version: 1.0
-Subject: Re: XFS, empty files after a crash
-References: <4F4387A7.2070009@gmail.com>
-	<20291.50554.414722.399249@tree.ty.sabi.co.UK>
-	<4F445E9F.5030003@sandeen.net>
-	<4F4695B1.4060202@houseofnate.net> <4F469C7F.9020208@gmail.com>
-In-Reply-To: <4F469C7F.9020208@gmail.com>
+	q1NMieGY161434 for <xfs@oss.sgi.com>; Thu, 23 Feb 2012 16:44:41 -0600
+Subject: [GIT PULL] XFS update for 3.3
+Message-Id: <20120223224444.5F139426DA7@whiskey.americas.sgi.com>
+Date: Thu, 23 Feb 2012 16:44:44 -0600 (CST)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +14,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 02/23/2012 03:07 PM, kadafax@gmail.com wrote:
->
->> kfx, try getting the inode number of the file (via stat or ls -i) and then 
->> doing something like this:
->>
->> xfs_db -r $DEV -c "inode $INO" -c "bmap" 
->
->
-> # xfs_db -r /dev/sdc1 -c "inode 114748" -c "bmap"
-> data offset 0 startblock 1881705728 (7/2657536) count 6460 flag 0
->
-> # xfs_db -r /dev/sdc1 -c "inode 114754" -c "bmap"
-> data offset 0 startblock 1077794560 (4/4052736) count 6582 flag 0
+Hi Linus,
 
-If you want to see what's behind those data extents (which are probably 
-partially written), you could do something along these lines:
+   Please pull the following three bugfixes for xfs in 3.3:
 
-# Determine the AG size
-agblocks=$(xfs_db -r /dev/sdc1 -c sb -c p | grep ^agblocks | sed 's/.* = //')
+   A fix from Jesper Juhl removes an assignment in an ASSERT when a compare is
+   intended.  Two fixes from Mitsuo Hayasaka address off-by-ones in XFS quota
+   enforcement.
 
-# Copy the extent in the first file, which consists of 6460 blocks (~26MB)
-# in AG 7 starting at AG-relative block 2657536:
-dd if=/dev/sdc1 bs=4096 skip=$(($agblocks * 7 + 2657536)) count=6460 of=./blob
-# examine ./blob
-...
+Thanks,
+   Ben
+
+The following changes since commit 45196cee28a5bcfb6ddbe2bffa4270cbed66ae4b:
+  Linus Torvalds (1):
+        Merge tag 'usb-3.3-rc4' of git://git.kernel.org/.../gregkh/usb
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Jesper Juhl (1):
+      XFS: xfs_trans_add_item() - don't assign in ASSERT() when compare is intended
+
+Mitsuo Hayasaka (2):
+      xfs: change available ranges of softlimit and hardlimit in quota check
+      xfs: make inode quota check more general
+
+ fs/xfs/xfs_dquot.c       |   24 ++++++++++++------------
+ fs/xfs/xfs_log_recover.c |    6 +++---
+ fs/xfs/xfs_qm_syscalls.c |    4 ++--
+ fs/xfs/xfs_trans.c       |    4 ++--
+ fs/xfs/xfs_trans_dquot.c |   10 ++++++----
+ 5 files changed, 25 insertions(+), 23 deletions(-)
 
 _______________________________________________
 xfs mailing list
