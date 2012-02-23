@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1NAmw65097577 for <xfs@oss.sgi.com>; Thu, 23 Feb 2012 04:48:59 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id COXd4yFkoDtkcAZj (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 23 Feb 2012 02:48:56 -0800 (PST)
-Received: from relay2.suse.de (unknown [195.135.220.254])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mx2.suse.de (Postfix) with ESMTP id 3D425906EB
-	for <xfs@oss.sgi.com>; Thu, 23 Feb 2012 11:48:54 +0100 (CET)
-Date: Thu, 23 Feb 2012 11:48:53 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: xlog_space_left: head behind tail
-Message-ID: <20120223104853.GA24638@quack.suse.cz>
+	q1NGqx6m130241 for <xfs@oss.sgi.com>; Thu, 23 Feb 2012 10:52:59 -0600
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id 5iVBzqaCR2nWGnBn (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 23 Feb 2012 08:52:58 -0800 (PST)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1S0bub-0006S7-Ms
+	for xfs@oss.sgi.com; Thu, 23 Feb 2012 08:52:57 -0800
+Message-ID: <33379323.post@talk.nabble.com>
+Date: Thu, 23 Feb 2012 08:52:57 -0800 (PST)
+From: Kamal Dasu <kdasu.kdev@gmail.com>
+Subject: [PATCH 4/4] V2 xfs: fix deadlock in xfs_rtfree_extent with kernel
+	v2.6.37
+In-Reply-To: <33365485.post@talk.nabble.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+References: <33345988.post@talk.nabble.com> <33346009.post@talk.nabble.com>
+	<33346035.post@talk.nabble.com> <33346043.post@talk.nabble.com>
+	<33346051.post@talk.nabble.com>
+	<20120219224118.GA31535@infradead.org>
+	<33365485.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,47 +36,76 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-  Hello,
 
-  when I run:
-while true; do ~/tests/xfstests-dev/ltp/fsstress -d /mnt -n 10000 -p 4; done
+To fix the deadlock caused by recursively calling xfs_rtfree_extent
+from xfs_bunmapi():
 
-and in parallel
+ - removed  xfs_trans_iget() from xfs_rtfree_extent(),
+   instead added asserts that the inode is locked and has an inode_item
+   attached to it.
+ - in xfs_bunmapi() when dealing with an inode with the rt flag
+   call xfs_ilock() and xfs_trans_ijoin() so that the
+   reference count is bumped on the inode and attached it to the
+   transaction before calling into xfs_bmap_del_extent, similar to
+   what we do in xfs_bmap_rtalloc.
 
-while true; do ./fsfreeze /mnt; sync; ./fsfreeze -u /mnt; sleep 3; done
+Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
+---
+ fs/xfs/xfs_bmap.c    |   10 ++++++++++
+ fs/xfs/xfs_rtalloc.c |   13 ++++++-------
+ 2 files changed, 16 insertions(+), 7 deletions(-)
 
-where fsfreeze is a small utility freezing and unfreezing filesystem. I get
-warnings like:
-[ 2029.103193] XFS (vdb1): xlog_space_left: head behind tail
-[ 2029.103195]   tail_cycle = 10, tail_bytes = 6036480
-[ 2029.103197]   GH   cycle = 10, GH   bytes = 6035728
-[ 2029.103218] XFS (vdb1): xlog_space_left: head behind tail
-[ 2029.103219]   tail_cycle = 10, tail_bytes = 6036480
-[ 2029.103220]   GH   cycle = 10, GH   bytes = 6035728
-[ 2033.269796] XFS (vdb1): xlog_space_left: head behind tail
-[ 2033.269800]   tail_cycle = 10, tail_bytes = 6400512
-[ 2033.269803]   GH   cycle = 10, GH   bytes = 6399752
-[ 2033.269830] XFS (vdb1): xlog_space_left: head behind tail
-[ 2033.269835]   tail_cycle = 10, tail_bytes = 6400512
-[ 2033.269838]   GH   cycle = 10, GH   bytes = 6399752
-[ 2033.269847] XFS (vdb1): xlog_space_left: head behind tail
-[ 2033.269850]   tail_cycle = 10, tail_bytes = 6400512
-[ 2033.269852]   GH   cycle = 10, GH   bytes = 6399752
-[ 2033.269892] XFS (vdb1): xlog_space_left: head behind tail
-[ 2033.269894]   tail_cycle = 10, tail_bytes = 6400512
-[ 2033.269896]   GH   cycle = 10, GH   bytes = 6399752
-[ 2033.269915] XFS (vdb1): xlog_space_left: head behind tail
-[ 2033.269918]   tail_cycle = 10, tail_bytes = 6400512
-[ 2033.269920]   GH   cycle = 10, GH   bytes = 6399752
-
-They usually start to appear like 20 minutes after starting the tests and
-when they start to appear they happen every couple of seconds (as you can
-see from the timestamps). Is it a real problem or just annoyance?
-
-								Honza
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 36c317c..103a253 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5058,6 +5058,16 @@ xfs_bunmapi(
+                cur->bc_private.b.flags = 0;
+        } else
+                cur = NULL;
++
++       if (isrt) {
++               /*
++                * Synchronize by locking the bitmap inode.
++                */
++               xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
++               xfs_trans_ijoin_ref(tp, mp->m_rbmip,
++                                   XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP);
++       }
++
+        extno = 0;
+        while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
+               (nexts == 0 || extno < nexts)) {
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index f592ac9..d0a48d4 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -2160,13 +2160,12 @@ xfs_rtfree_extent(
+        xfs_buf_t       *sumbp;         /* summary file block buffer */
+ 
+        mp = tp->t_mountp;
+-       /*
+-        * Synchronize by locking the bitmap inode.
+-        */
+-       error = xfs_trans_iget(mp, tp, mp->m_sb.sb_rbmino, 0,
+-                              XFS_ILOCK_EXCL | XFS_ILOCK_RTBITMAP, &ip);
+-       if (error)
+-               return error;
++
++       ASSERT(mp->m_rbmip->i_itemp != NULL);
++       ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
++
++       ip = mp->m_rbmip;
++
+ #if defined(__KERNEL__) && defined(DEBUG)
+        /*
+         * Check to see that this whole range is currently allocated.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+1.7.5.4
+
+-- 
+View this message in context: http://old.nabble.com/-PATCH-0-4--RFC-xfs%3A-resurrect-realtime-subvolume-support-on-kernel-2.6.37-tp33345988p33379323.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
