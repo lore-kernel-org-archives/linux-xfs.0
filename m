@@ -1,28 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1O8N0wk005666 for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 02:23:00 -0600
-Received: from mail.4lin.net (mail.4lin.net [46.4.210.97]) by cuda.sgi.com
-	with ESMTP id jRJEXE1h5sDEZBbs for <xfs@oss.sgi.com>;
-	Fri, 24 Feb 2012 00:22:59 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.4lin.net (Postfix) with ESMTP id E265290C1
-	for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 09:25:37 +0100 (CET)
-Received: from mail.4lin.net ([127.0.0.1])
-	by localhost (mail.4lin.net [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id yW-epQ1CGWSp for <xfs@oss.sgi.com>;
-	Fri, 24 Feb 2012 09:25:29 +0100 (CET)
-Received: from pcdenny.rbg.informatik.tu-darmstadt.de
-	(pcdenny.rbg.informatik.tu-darmstadt.de [130.83.160.152])
-	(using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by mail.4lin.net (Postfix) with ESMTPSA id E88DC55AA
-	for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 09:25:28 +0100 (CET)
-From: Denny Schierz <linuxmail@4lin.net>
-Subject: Save options for XFS over ISCSI ~ 17TB (for backup)
-Date: Fri, 24 Feb 2012 09:22:48 +0100
-Message-Id: <A527AC3D-1CBC-48F6-9570-83E4C1A0D794@4lin.net>
-Mime-Version: 1.0 (Apple Message framework v1257)
+	q1O9iUsv014709
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Feb 2012 03:44:30 -0600
+Received: from mail-wi0-f181.google.com (mail-wi0-f181.google.com
+	[209.85.212.181]) by cuda.sgi.com with ESMTP id
+	jHb27w0nLh55E5KY (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <linux-xfs@oss.sgi.com>;
+	Fri, 24 Feb 2012 01:44:29 -0800 (PST)
+Received: by wibhi8 with SMTP id hi8so1510806wib.26
+	for <linux-xfs@oss.sgi.com>; Fri, 24 Feb 2012 01:44:28 -0800 (PST)
+MIME-Version: 1.0
+Date: Fri, 24 Feb 2012 15:14:28 +0530
+Message-ID: <CADDb1s3hy-=vEWKevmtpbSLiPZ727SEa4P1XeRCb+xVeevzWnw@mail.gmail.com>
+Subject: kernel BUG at fs/namei.c:1320!
+From: Amit Sahrawat <amit.sahrawat83@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,75 +23,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1934143535762144756=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: LKML <linux-kernel@vger.kernel.org>, linux-fsdevel@vger.kernel.org, linux-xfs@oss.sgi.com
+
+I have encountered a BUG_ON in VFS
+
+kernel version: 2.6.35.14
+Architecture: ARM
+
+Test Case: Tried to remove a file from a corrupted filesystem.
+
+>From the trigger BUG_ON point it points that the inode which
+is to be removed - has not matching parent directory from which it is
+to be removed.
+
+Even though -it is reasonable - to verify this parent/child behaviour,
+but I have a
+doubt about the placement of BUG_ON at this place. Because this leads to 'halt'
+of complete system - even though it is related to particular filesystem(file).
+So, instead of BUG_ON -> WARN_ON could have been used to highlight the issue.
+
+Please share your opinion - also is this really related with the FS
+corruption thing or can be
+some issue with the dentry caching part?
 
 
---===============1934143535762144756==
-Content-Type: multipart/signed; boundary="Apple-Mail=_921E8ED2-FFCA-45B0-BE17-00511F036E05"; protocol="application/pgp-signature"; micalg=pgp-sha1
+kernel BUG at fs/namei.c:1320!
+Unable to handle kernel NULL pointer dereference at virtual address 00000000
+pgd = deb5c000
+[00000000] *pgd=a577d031, *pte=00000000, *ppte=00000000
+...
+...
+PC is at __bug+0x2c/0x38
+LR is at sub_preempt_count+0x4c/0x68
+pc : [<c003f4b8>]    lr : [<c038f8ac>]    psr: 60000013
+sp : deb39ed0  ip : deb39df0  fp : deb39edc
+r10: 00000000  r9 : deb38000  r8 : c003b708
+r7 : 00000028  r6 : 00000001  r5 : e401c9d0  r4 : e41a5220
+r3 : 00000000  r2 : 40000000  r1 : c04b3ce4  r0 : 00000034
+...
+...
+Backtrace(CPU 1):
+[<c003f48c>] (__bug+0x0/0x38) from [<c0142cb0>] (may_delete+0x44/0x134)
+[<c0142c6c>] (may_delete+0x0/0x134) from [<c014446c>] (vfs_rmdir+0x24/0xdc)
+ r7:00000028 r6:0000000c r5:e401cbb8 r4:e41a5220
+[<c0144448>] (vfs_rmdir+0x0/0xdc) from [<c0146068>] (do_rmdir+0xac/0xf8)
+ r6:0000000c r5:00000000 r4:e41a5220 r3:e41a5220
+[<c0145fbc>] (do_rmdir+0x0/0xf8) from [<c014610c>] (sys_rmdir+0x20/0x24)
+ r5:ffffffff r4:00994388
+[<c01460ec>] (sys_rmdir+0x0/0x24) from [<c003b4c0>] (ret_fast_syscall+0x0/0x48)
+Code: e59f0010 e1a01003 eb0d28f0 e3a03000 (e5833000)
 
 
---Apple-Mail=_921E8ED2-FFCA-45B0-BE17-00511F036E05
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-hi,
-
-I want to migrate away from Solaris with ZFS to Linux with XFS (BTRFS is =
-to young) . At the moment, I have Solaris 10 with ISCSI initiator =
-running and a zpool with a size round about ~17TB. The ISCSI target  is =
-a Linux Debian with "tgt" Daemon and connected via SAS (LSI Logic / =
-Symbios Logic SAS2008) to several LSI JBODS (630j).=20
-
-Every jbod has 12 (2TB) disks and managed by mdadm as a RAID6 device and =
-on top LVM. I have two ISCSI target servers (one for _cold_ standby) and =
-all servers has  power connection via UPS and a second direct one.
-
-As I sad, I want to get away from Solaris 10 and know I search for =
-options to use XFS with save options, in case of emergency (poweroff =
-etc.). We use the JBODS mostly for backups (bacula) so, =
-performance/realtime isn't imported, since network is the limit.
-
-Under ZFS I can make sure,  with zpool scrub (file system check), that =
-all data are completely  written and consistence. But what is the best =
-way under XFS? Should I remount XFS every month for a file system check =
-(re/mount) ? What happens in the case, of ISCSI problems?
-
-So, I need just a few suggestions :-)
-
-cu denny=
-
---Apple-Mail=_921E8ED2-FFCA-45B0-BE17-00511F036E05
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP using GPGMail
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
-
-iEYEARECAAYFAk9HSNgACgkQKlzhkqt9P+CUJwCfRHR/C9/VDk1w0QzQH9ACyyb6
-jScAnjd+wjYOgk79ucti7XC9AHf1iJpo
-=EbY7
------END PGP SIGNATURE-----
-
---Apple-Mail=_921E8ED2-FFCA-45B0-BE17-00511F036E05--
-
-
---===============1934143535762144756==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks & Regards,
+Amit Sahrawat
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1934143535762144756==--
