@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1OE8Bcd050143 for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 08:08:11 -0600
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id 3pojCCaCajPzvgaR for
-	<xfs@oss.sgi.com>; Fri, 24 Feb 2012 06:08:08 -0800 (PST)
-Received: from harpe.intellique.com (unknown [82.225.196.72])
-	by smtp4-g21.free.fr (Postfix) with ESMTP id DE6B84C801D
-	for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 15:08:03 +0100 (CET)
-Date: Fri, 24 Feb 2012 15:08:05 +0100
-From: Emmanuel Florac <eflorac@intellique.com>
+	q1OEvkH5055949 for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 08:57:46 -0600
+Received: from firestarter.dermichi.com (firestarter.dermichi.com
+	[194.177.153.153]) by cuda.sgi.com with ESMTP id
+	4WrNsM0EMyC1EDaW (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 24 Feb 2012 06:57:44 -0800 (PST)
+Received: from noclinksys.net4you.net ([194.177.153.180] helo=[192.168.34.188])
+	by firestarter.dermichi.com with esmtpsa (TLSv1:CAMELLIA256-SHA:256)
+	(Exim 4.77) (envelope-from <mw@dermichi.com>) id 1S0wac-00081n-U3
+	for xfs@oss.sgi.com; Fri, 24 Feb 2012 15:57:42 +0100
+Message-ID: <4F47A564.8090204@dermichi.com>
+Date: Fri, 24 Feb 2012 15:57:40 +0100
+From: Michael Weissenbacher <mw@dermichi.com>
+MIME-Version: 1.0
 Subject: Re: creating a new 80 TB XFS
-Message-ID: <20120224150805.243e4906@harpe.intellique.com>
-In-Reply-To: <4F478818.4050803@cape-horn-eng.com>
 References: <4F478818.4050803@cape-horn-eng.com>
-Mime-Version: 1.0
+In-Reply-To: <4F478818.4050803@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,70 +26,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Le Fri, 24 Feb 2012 13:52:40 +0100
-Richard Ems <richard.ems@cape-horn-eng.com> =E9crivait:
+Hi Richard!
+> 
+> mkfs.xfs -i size=512 -d su=stripe_size,sw=28 -L Backup_2 /dev/sdX1
+> 
+This suggests that you plan to create partitions like /dev/sdX1 on the
+RAID-6. If you really do (which is not a good idea IMHO because it buys
+you nothing) you will have to be extra-careful to not mess up the stripe
+alignment. I think the better option is to create the XFS directly on
+/dev/sdX without partitions.
 
-> Hi list,
-> =
-
-> We are getting now 32 x 3 TB Hitachi SATA HDDs.
-> I plan to configure them in a single RAID 6 set with one or two
-> hot-standby discs. The raw storage space will then be 28 x 3 TB =3D 84
-> TB. On this one RAID set I will create only one volume.
-> Any thoughts on this?
-
-If you'd rather go for more safety you could build 2 16 drives RAID-6
-arrays instead. I'd be somewhat reluctant to make a 30 drives array
---though current drives are quite safe apparently.
-
-> =
-
-> *MKFS*
-> We also heavily use ACLs for almost all of our files. Christoph
-> Hellwig suggested in a previous mail to use "-i size=3D512" on XFS
-> creation, so my mkfs.xfs would look something like:
-> =
-
-> mkfs.xfs -i size=3D512 -d su=3Dstripe_size,sw=3D28 -L Backup_2 /dev/sdX1
-
-Looks OK to me.
- =
-
-> =
-
-> *MOUNT*
-> On mount I will use the options
-> =
-
-> mount -o noatime,nobarrier,nofail,logbufs=3D8,logbsize=3D256k,inode64
-> /dev/sdX1 /mount_point
-
-I think that the logbufs/logbsize option matches the default here. Use
-delaylog if applicable. See the xfs FAQ.
- =
-
-> What about the largeio mount option? In which cases would it be
-> useful?
-> =
-
-
-If you're mostly writing/reading large files. Like really large
-(several megabytes and more).
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+cheers,
+Michael
 
 _______________________________________________
 xfs mailing list
