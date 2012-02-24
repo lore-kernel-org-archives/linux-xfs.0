@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1NMieGY161434 for <xfs@oss.sgi.com>; Thu, 23 Feb 2012 16:44:41 -0600
-Subject: [GIT PULL] XFS update for 3.3
-Message-Id: <20120223224444.5F139426DA7@whiskey.americas.sgi.com>
-Date: Thu, 23 Feb 2012 16:44:44 -0600 (CST)
-From: bpm@sgi.com (Ben Myers)
+	q1O79V33260028 for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 01:09:32 -0600
+From: santosh nayak <santoshprasadnayak@gmail.com>
+Subject: [PATCH] xfs: Use memset to initialize structure member.
+Date: Fri, 24 Feb 2012 12:38:42 +0530
+Message-Id: <1330067322-17011-1-git-send-email-santoshprasadnayak@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,41 +19,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: bpm@sgi.com
+Cc: Santosh Nayak <santoshprasadnayak@gmail.com>, elder@kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, xfs-masters@oss.sgi.com
 
-Hi Linus,
+From: Santosh Nayak <santoshprasadnayak@gmail.com>
 
-   Please pull the following three bugfixes for xfs in 3.3:
+Sparse is giving following warning:
+fs/xfs/xfs_bmap.c:4826:41: warning: Using plain integer as NULL pointer.
 
-   A fix from Jesper Juhl removes an assignment in an ASSERT when a compare is
-   intended.  Two fixes from Mitsuo Hayasaka address off-by-ones in XFS quota
-   enforcement.
+To avoid this warning, use memset to initialize the structure member.
 
-Thanks,
-   Ben
+Signed-off-by: Santosh Nayak <santoshprasadnayak@gmail.com>
+---
+ fs/xfs/xfs_bmap.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletions(-)
 
-The following changes since commit 45196cee28a5bcfb6ddbe2bffa4270cbed66ae4b:
-  Linus Torvalds (1):
-        Merge tag 'usb-3.3-rc4' of git://git.kernel.org/.../gregkh/usb
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs for-linus
-
-Jesper Juhl (1):
-      XFS: xfs_trans_add_item() - don't assign in ASSERT() when compare is intended
-
-Mitsuo Hayasaka (2):
-      xfs: change available ranges of softlimit and hardlimit in quota check
-      xfs: make inode quota check more general
-
- fs/xfs/xfs_dquot.c       |   24 ++++++++++++------------
- fs/xfs/xfs_log_recover.c |    6 +++---
- fs/xfs/xfs_qm_syscalls.c |    4 ++--
- fs/xfs/xfs_trans.c       |    4 ++--
- fs/xfs/xfs_trans_dquot.c |   10 ++++++----
- 5 files changed, 25 insertions(+), 23 deletions(-)
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 188ef2f..030e93f 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4823,7 +4823,7 @@ xfs_bmapi_write(
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	struct xfs_ifork	*ifp;
+-	struct xfs_bmalloca	bma = { 0 };	/* args for xfs_bmap_alloc */
++	struct xfs_bmalloca	bma;		/* args for xfs_bmap_alloc */
+ 	xfs_fileoff_t		end;		/* end of mapped file region */
+ 	int			eof;		/* after the end of extents */
+ 	int			error;		/* error return */
+@@ -4852,6 +4852,8 @@ xfs_bmapi_write(
+ 	ASSERT(!(flags & XFS_BMAPI_IGSTATE));
+ 	ASSERT(tp != NULL);
+ 	ASSERT(len > 0);
++
++	memset(&bma, 0, sizeof(bma));
+ 
+ 	whichfork = (flags & XFS_BMAPI_ATTRFORK) ?
+ 		XFS_ATTR_FORK : XFS_DATA_FORK;
+-- 
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
