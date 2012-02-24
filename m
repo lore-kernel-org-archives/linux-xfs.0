@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1OG5ug0062547 for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 10:05:57 -0600
-Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
-	[80.67.31.99]) by cuda.sgi.com with ESMTP id LJhDA0CGokiLwUp8
-	for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 08:05:55 -0800 (PST)
-Received: from [62.43.225.238] (helo=[192.168.30.191])
-	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
-	id 1S0xec-0000kc-Td
-	for xfs@oss.sgi.com; Fri, 24 Feb 2012 17:05:54 +0100
-Message-ID: <4F47B562.5080801@cape-horn-eng.com>
-Date: Fri, 24 Feb 2012 17:05:54 +0100
-From: Richard Ems <richard.ems@cape-horn-eng.com>
-MIME-Version: 1.0
+	q1OGwva2069618 for <xfs@oss.sgi.com>; Fri, 24 Feb 2012 10:58:57 -0600
+Received: from a.mx.filmlight.ltd.uk (a.mx.filmlight.ltd.uk [77.107.81.250])
+	by cuda.sgi.com with SMTP id lmhFkxs22eh7Svz3 for
+	<xfs@oss.sgi.com>; Fri, 24 Feb 2012 08:58:56 -0800 (PST)
 Subject: Re: creating a new 80 TB XFS
+Mime-Version: 1.0 (Apple Message framework v1084)
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <4F47B020.4000202@cape-horn-eng.com>
+Date: Fri, 24 Feb 2012 16:58:54 +0000
+Message-Id: <C8615237-38FA-403B-956D-DBA0BE26A718@filmlight.ltd.uk>
 References: <4F478818.4050803@cape-horn-eng.com>
-	<4F47A564.8090204@dermichi.com>
-In-Reply-To: <4F47A564.8090204@dermichi.com>
+	<20120224150805.243e4906@harpe.intellique.com>
+	<4F47B020.4000202@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,32 +26,46 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: xfs@oss.sgi.com
 
-On 02/24/2012 03:57 PM, Michael Weissenbacher wrote:
-> Hi Richard!
->>
->> mkfs.xfs -i size=3D512 -d su=3Dstripe_size,sw=3D28 -L Backup_2 /dev/sdX1
->>
-> This suggests that you plan to create partitions like /dev/sdX1 on the
-> RAID-6. If you really do (which is not a good idea IMHO because it buys
-> you nothing) you will have to be extra-careful to not mess up the stripe
-> alignment. I think the better option is to create the XFS directly on
-> /dev/sdX without partitions.
 
-Ok, thanks. I think I will go then to /dev/sdX , no partitions.
+On 24 Feb 2012, at 15:43, Richard Ems wrote:
 
-Richard
+> =
 
--- =
+> =
 
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
+> On 02/24/2012 03:08 PM, Emmanuel Florac wrote:
+>> Le Fri, 24 Feb 2012 13:52:40 +0100
+>> Richard Ems <richard.ems@cape-horn-eng.com> =E9crivait:
+>> =
 
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+>>> Hi list,
+>>> =
+
+>>> We are getting now 32 x 3 TB Hitachi SATA HDDs.
+>>> I plan to configure them in a single RAID 6 set with one or two
+>>> hot-standby discs. The raw storage space will then be 28 x 3 TB =3D 84
+>>> TB. On this one RAID set I will create only one volume.
+>>> Any thoughts on this?
+>> =
+
+>> If you'd rather go for more safety you could build 2 16 drives RAID-6
+>> arrays instead. I'd be somewhat reluctant to make a 30 drives array
+>> --though current drives are quite safe apparently.
+> =
+
+> Thanks, yes, this sounds good, but it's a matter of administration
+> simplicity doing the backups why I chose to have only one
+> volume/partition/XFS. At some point one of both drives will become near
+> to full and moving dirs from one partition to the other won't be that
+> easy with out backup system ...
+
+You might consider making a software raid0 from the two raid-6 arrays.
+
+--
+Roger
 
 _______________________________________________
 xfs mailing list
