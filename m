@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1RCK5rc055005 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 06:20:05 -0600
-Received: from smtprelay01.ispgateway.de (smtprelay01.ispgateway.de
-	[80.67.18.13]) by cuda.sgi.com with ESMTP id 85szdn3RSBzHCKxn
-	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 04:20:02 -0800 (PST)
+	q1RCrB3l058161 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 06:53:11 -0600
+Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
+	[80.67.31.97]) by cuda.sgi.com with ESMTP id obcM93SGOLe3y6VW
+	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 04:53:09 -0800 (PST)
 Received: from [62.43.225.238] (helo=[192.168.30.191])
-	by smtprelay01.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
+	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
 	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
-	id 1S1zYe-0007Op-T4
-	for xfs@oss.sgi.com; Mon, 27 Feb 2012 13:20:00 +0100
-Message-ID: <4F4B74F0.3040801@cape-horn-eng.com>
-Date: Mon, 27 Feb 2012 13:20:00 +0100
+	id 1S204f-0007lE-P7
+	for xfs@oss.sgi.com; Mon, 27 Feb 2012 13:53:05 +0100
+Message-ID: <4F4B7CB1.50102@cape-horn-eng.com>
+Date: Mon, 27 Feb 2012 13:53:05 +0100
 From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
-Subject: Re: creating a new 80 TB XFS
-References: <4F478818.4050803@cape-horn-eng.com> <2897177.rcH5T34bLh@saturn>
-In-Reply-To: <2897177.rcH5T34bLh@saturn>
+Subject: Re: XFS status update for January 2012
+References: <20120225120216.GA21721@infradead.org>
+	<4F4B5CB3.8090107@cape-horn-eng.com>
+	<4F4B7408.8020706@waagmeester.co.za>
+In-Reply-To: <4F4B7408.8020706@waagmeester.co.za>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,34 +33,25 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 02/27/2012 12:56 PM, Michael Monnerie wrote:
-> Am Freitag, 24. Februar 2012, 13:52:40 schrieb Richard Ems:
->> The raw storage space will then be 28 x 3 TB =3D 84 TB.
+On 02/27/2012 01:16 PM, Coert Waagmeester wrote:
+
+> Hello Richard,
 > =
 
-> Please remember that it will be 2,79 TiB per drive, that's 78 TiB =
+> Here I am running gentoo with kernel 3.2
+> In the 2.6 era I always mounted my xfs file systems with the delaylog
+> option, is this still necessary? Is delaylog now default?
 
-> overall. So it's missing 6 TB in reality, depending on how you =
+Hi Coert,
 
-> calculated the source space you have and backup space you need. In =
+I am running now 3.2.7 and the output of " grep xfs /proc/mounts " shows
+delaylog as being in use. I didn't put this option in /etc/fstab, so I
+think it must be default now.
 
-> Multi-TB environments people still are surprised by the big "rounding =
-
-> error" from harddisk TB to real TiB. And I've had customers who couldn't =
-
-> even do their first backup, as the backup system was full already. They =
-
-> calculated backup space only for one backup, and without the TB->TiB =
-
-> conversion.
-
-Thanks Michael, I have alrady taken this into account.
-
-We have now about 40 TB to backup and about 60 TB max. And there is
-space for 32 more HDDs in the backup system, which we will add later as
-needed.
+But surely a developer can give a much better answer to your question.
 
 Richard
+
 
 -- =
 
