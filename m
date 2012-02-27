@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1R1xbni012796 for <xfs@oss.sgi.com>; Sun, 26 Feb 2012 19:59:37 -0600
-Date: Sun, 26 Feb 2012 19:59:41 -0600
+	q1R1v6jO012698 for <xfs@oss.sgi.com>; Sun, 26 Feb 2012 19:57:06 -0600
+Date: Sun, 26 Feb 2012 19:57:11 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/8] xfs: merge xfs_qm_export_dquot into
+Subject: Re: [PATCH 7/9] xfs: merge xfs_qm_export_dquot into
 	xfs_qm_scall_getquota
-Message-ID: <20120227015941.GI7762@sgi.com>
-References: <20120220022815.018921977@bombadil.infradead.org>
-	<20120220022903.488870885@bombadil.infradead.org>
+Message-ID: <20120227015711.GH7762@sgi.com>
+References: <20120215022926.577682146@bombadil.infradead.org>
+	<20120215023148.024760659@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120220022903.488870885@bombadil.infradead.org>
+In-Reply-To: <20120215023148.024760659@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,21 +29,49 @@ Cc: xfs@oss.sgi.com
 
 Hi Christoph,
 
-On Sun, Feb 19, 2012 at 09:28:16PM -0500, Christoph Hellwig wrote:
+On Tue, Feb 14, 2012 at 09:29:33PM -0500, Christoph Hellwig wrote:
 > The is no good reason to have these two separate, and for the next change
-> we would need the full struct xfs_dquot in xfs_qm_export_dquot, so better
-> just fold the code now instead of changing it spuriously.
+> I'd need the full struct xfs_dquot in xfs_qm_export_dquot, so better just
+> fold the code now instead of changing it around.
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I should have replied to this patch, not the older rev.
+...
 
-I have a question about the error code, now we're not mapping errors to
-EFAULT and we used do... which is correct?
+> -int
+> -xfs_qm_scall_getquota(
 
-Thanks,
-	Ben
+...
+
+> -	/*
+> -	 * Convert the disk dquot to the exportable format
+> -	 */
+> -	xfs_qm_export_dquot(mp, &dqp->q_core, out);
+> -	xfs_qm_dqput(dqp);
+> -	return (error ? XFS_ERROR(EFAULT) : 0);
+> -}
+
+Note that we used to map all errors to EFAULT.
+
+...
+
+> +int
+> +xfs_qm_scall_getquota(
+
+...
+
+> +out_put:
+> +	xfs_qm_dqput(dqp);
+> +	return error;
+
+And, now we don't.
+
+The rest of the patch looks great to me.  If you intend to change the
+error code, please mention so in the commit message.  Was it wrong
+before, or will it be wrong if we pull this in?
+
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
