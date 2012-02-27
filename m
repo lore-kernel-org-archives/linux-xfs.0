@@ -1,18 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1RBv39s053254 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 05:57:03 -0600
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id trYID5XrJ2g1PeEQ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 27 Feb 2012 03:57:00 -0800 (PST)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: creating a new 80 TB XFS
-Date: Mon, 27 Feb 2012 12:56:57 +0100
-Message-ID: <2897177.rcH5T34bLh@saturn>
-In-Reply-To: <4F478818.4050803@cape-horn-eng.com>
-References: <4F478818.4050803@cape-horn-eng.com>
+	q1RCGIvj054701 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 06:16:20 -0600
+Received: from mail.bushveldgrain.co.za (mail.bushveldgrain.co.za
+	[196.25.181.10]) by cuda.sgi.com with ESMTP id L3otADLXBq877fAP
+	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 04:16:12 -0800 (PST)
+Received: from localhost (mail.bushveldgrain.co.za [127.0.0.1])
+	by mail.bushveldgrain.co.za (Postfix) with ESMTP id 5FB2C660BE
+	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 14:16:10 +0200 (SAST)
+Received: from mail.bushveldgrain.co.za ([127.0.0.1])
+	by localhost (mail.bushveldgrain.co.za [127.0.0.1]) (amavisd-new,
+	port 10024) with ESMTP id EZTKE1Y4mkjW for <xfs@oss.sgi.com>;
+	Mon, 27 Feb 2012 14:16:09 +0200 (SAST)
+Received: from [196.1.1.163] (unknown [196.1.1.163])
+	by mail.bushveldgrain.co.za (Postfix) with ESMTP id D10F16608D
+	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 14:16:08 +0200 (SAST)
+Message-ID: <4F4B7408.8020706@waagmeester.co.za>
+Date: Mon, 27 Feb 2012 14:16:08 +0200
+From: Coert Waagmeester <lgroups@waagmeester.co.za>
 MIME-Version: 1.0
+Subject: Re: XFS status update for January 2012
+References: <20120225120216.GA21721@infradead.org>
+	<4F4B5CB3.8090107@cape-horn-eng.com>
+In-Reply-To: <4F4B5CB3.8090107@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,72 +31,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============6444359729370014012=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: xfs@oss.sgi.com
+
+On 02/27/2012 12:36 PM, Richard Ems wrote:
+> On 02/25/2012 01:02 PM, Christoph Hellwig wrote:
+>> January saw the release of Linux 3.2, which as usual included a large
+>> number of XFS changes, most notably an large speedup for removing files
+>> that have external attribute blocks, speedups and livelock fixes for
+>> sync while doing heavy I/O, and large internal cleanups of the inode
+>> block map handling.  The diffstat for XFS in Linux 3.2 is:
+>>
+>>   54 files changed, 2414 insertions(+), 2625 deletions(-)
+>>
+>> which is slightly below the average of the last releases.
+>>
+>> In the meantime development for 3.3 went ahead full speed, including
+>> the removal of the deprecated pre-delaylog logging code, various
+>> quota cleanups, a shrink of the inode, a great simplification of the file
+>> write path as well as the usual batch of fixes and cleanups.
+>>
+>> On the userland side xfs_repair saw various major fixes and speedups,
+>> with few other fixes thrown in, while xfsdump got two commits fixing
+>> longer standing issues recently reported on the mailing list.  For
+>> xfstests January was an extremely slow month, seeing only two new test cases
+>> and less than a handful of other updates.
+>
+> Many thanks to all of your for the good work and support on the mailing
+> list !
+>
+> cheers,
+> Richard
+>
+>
+
+Hello Richard,
+
+Here I am running gentoo with kernel 3.2
+In the 2.6 era I always mounted my xfs file systems with the delaylog 
+option, is this still necessary? Is delaylog now default?
 
 
---===============6444359729370014012==
-Content-Type: multipart/signed; boundary="nextPart5630910.kUIWtkkh4g"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: quoted-printable
-
-
---nextPart5630910.kUIWtkkh4g
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-
-Am Freitag, 24. Februar 2012, 13:52:40 schrieb Richard Ems:
-> The raw storage space will then be 28 x 3 TB =3D 84 TB.
-
-Please remember that it will be 2,79 TiB per drive, that's 78 TiB=20
-overall. So it's missing 6 TB in reality, depending on how you=20
-calculated the source space you have and backup space you need. In=20
-Multi-TB environments people still are surprised by the big "rounding=20=
-
-error" from harddisk TB to real TiB. And I've had customers who couldn'=
-t=20
-even do their first backup, as the backup system was full already. They=
-=20
-calculated backup space only for one backup, and without the TB->TiB=20=
-
-conversion.
-
-https://en.wikipedia.org/wiki/Byte
-
---=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=C3=A9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
---nextPart5630910.kUIWtkkh4g
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEABECAAYFAk9Lb4kACgkQzhSR9xwSCbT3XQCdGs+7lqZcIm7kiTARX+8njT3V
-RoIAoKwEC+nlkItlbnXIyQhk53Q1wLmQ
-=NV2l
------END PGP SIGNATURE-----
-
---nextPart5630910.kUIWtkkh4g--
-
-
---===============6444359729370014012==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Kind regards,
+Coert Waagmeester
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============6444359729370014012==--
