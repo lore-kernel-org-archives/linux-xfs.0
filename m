@@ -1,31 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1R8NEr6035222 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 02:23:14 -0600
-Received: from extern.innogames.de (extern.innogames.de [80.252.99.240]) by
-	cuda.sgi.com with ESMTP id bxgt030t9b0ZSEGV for
-	<xfs@oss.sgi.com>; Mon, 27 Feb 2012 00:23:12 -0800 (PST)
-Received: from localhost (localhost.localdomain [127.0.0.1])
-	by extern.innogames.de (Postfix) with ESMTP id 8C98428E196
-	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 09:23:11 +0100 (CET)
-Received: from extern.innogames.de ([127.0.0.1])
-	by localhost (extern.innogames.de [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id IXzAoDBqX6d6 for <xfs@oss.sgi.com>;
-	Mon, 27 Feb 2012 09:23:11 +0100 (CET)
-Received: from [172.16.5.29] (unknown [212.48.107.10])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by extern.innogames.de (Postfix) with ESMTPSA id 7910428E195
-	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 09:23:11 +0100 (CET)
-Message-ID: <4F4B3D6F.1050300@innogames.de>
-Date: Mon, 27 Feb 2012 09:23:11 +0100
-From: Bernhard Schrader <bernhard.schrader@innogames.de>
+	q1R8hqAO036616 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 02:43:52 -0600
+Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
+	[209.85.214.53]) by cuda.sgi.com with ESMTP id SXC3cZRV0UCE5B58
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 27 Feb 2012 00:43:50 -0800 (PST)
+Received: by bkwj10 with SMTP id j10so1123982bkw.26
+	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 00:43:49 -0800 (PST)
+Message-ID: <4F4B423E.2000409@gmail.com>
+Date: Mon, 27 Feb 2012 09:43:42 +0100
+From: kadafax@gmail.com
 MIME-Version: 1.0
-Subject: Re: Problems with filesizes on different Kernels
-References: <4F3E3F5A.9000202@innogames.de> <20120217123335.GA9671@citd.de>
-	<4F420726.6060000@innogames.de> <20120220110614.GA17526@citd.de>
-	<4F42375E.7000309@innogames.de>
-In-Reply-To: <4F42375E.7000309@innogames.de>
+Subject: Re: XFS, empty files after a crash
+References: <4F4387A7.2070009@gmail.com> <20120227010402.GR3592@dastard>
+In-Reply-To: <20120227010402.GR3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,216 +23,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 02/20/2012 01:06 PM, Bernhard Schrader wrote:
-> On 02/20/2012 12:06 PM, Matthias Schniedermeyer wrote:
->> On 20.02.2012 09:41, Bernhard Schrader wrote:
->>> On 02/17/2012 01:33 PM, Matthias Schniedermeyer wrote:
->>>> On 17.02.2012 12:51, Bernhard Schrader wrote:
->>>>> Hi all,
->>>>>
->>>>> we just discovered a problem, which I think is related to XFS. Well,
->>>>> I will try to explain.
->>>>>
->>>>> The environment i am working with are around 300 Postgres databases
->>>>> in separated VM's. All are running with XFS. Differences are just in
->>>>> kernel versions.
->>>>> - 2.6.18
->>>>> - 2.6.39
->>>>> - 3.1.4
->>>>>
->>>>> Some days ago i discovered that the file nodes of my postgresql
->>>>> tables have strange sizes. They are located in
->>>>> /var/lib/postgresql/9.0/main/base/[databaseid]/
->>>>> If I execute the following commands i get results like this:
->>>>>
->>>>> Command: du -sh | tr "\n" " "; du --apparent-size -h
->>>>> Result: 6.6G . 5.7G .
->>>>
->>>> Since a few kernel-version XFS does speculative preallocations,
->>>> which is
->>>> primarily a measure to prevent fragmentation.
->>>>
->>>> The preallocations should go away when you drop the caches.
->>>>
->>>> sync
->>>> echo 3> /proc/sys/vm/drop_caches
->>>>
->>>> XFS can be prevented to do that with the mount-option "allocsize".
->>>> Personally i use "allocsize=64k", since i first encountered that
->>>> behaviour, my workload primarily consists of single-thread writing
->>>> which
->>>> doesn't benefit from this preallocation.
->>>> Your workload OTOH may benefit as it should prevent/lower the
->>>> fragmentation of the database files.
->>>
->>> Hi Matthias,
->>> thanks for the reply, as far as i can say the "echo 3>
->>> /proc/sys/vm/drop_caches" didn't work. the sizes didnt shrink.
+Le 27/02/12 02:04, Dave Chinner a =E9crit :
+> On Tue, Feb 21, 2012 at 01:01:43PM +0100, kfx wrote:
+>> # du  myfile
+>> 27460    myfile
 >>
->> You did "sync" before?
->> drop caches only drops "clean" pages, everything that is dirty isn't
->> dropped. Hence the need to "sync" before.
+>> # du --apparent-size myfile
+>> 0    myfile
 >>
->> Also i persume that you didn't stop Postgres?
->> I don't know if the process works for files that are currently opened.
->>
->> When i tested the behaviour i tested it with files copied by "cp", so
->> they weren't open by any program when i droped the caches.
->>
->>> Today
->>> i had the chance to test the allocsize=64k. Well, first i thought it
->>> worked, i added the mountoption, restarted the server, everything
->>> shrink to normal sizes. but right now its more or less "flapping". I
->>> have 5.7GB real data and the sizes flap between 6.9GB to 5.7GB.
->>> But I am wondering a little about the mount output:
->>>
->>> # mount
->>> /dev/xvda1 on / type xfs
->>> (rw,noatime,nodiratime,logbufs=8,nobarrier,allocsize=64k)
->>> tmpfs on /lib/init/rw type tmpfs (rw,nosuid,mode=0755)
->>> proc on /proc type proc (rw,noexec,nosuid,nodev)
->>> sysfs on /sys type sysfs (rw,noexec,nosuid,nodev)
->>> tmpfs on /dev/shm type tmpfs (rw,nosuid,nodev)
->>> devpts on /dev/pts type devpts (rw,noexec,nosuid,gid=5,mode=620)
->>>
->>>
->>> # cat /proc/mounts
->>> rootfs / rootfs rw 0 0
->>> /dev/root / xfs
->>> rw,noatime,nodiratime,attr2,delaylog,nobarrier,noquota 0 0
->>> tmpfs /lib/init/rw tmpfs rw,nosuid,relatime,mode=755 0 0
->>> proc /proc proc rw,nosuid,nodev,noexec,relatime 0 0
->>> sysfs /sys sysfs rw,nosuid,nodev,noexec,relatime 0 0
->>> tmpfs /dev/shm tmpfs rw,nosuid,nodev,relatime 0 0
->>> devpts /dev/pts devpts
->>> rw,nosuid,noexec,relatime,gid=5,mode=620,ptmxmode=000 0 0
->>>
->>>
->>> In normal mount output i see the allocsize, but not in cat
->>> /proc/mounts?!?
->>>
->>> Is there a way to completly disable speculative prealocations? or
->>> the behavior how it works right now?
->>
->> In /proc/mounts on my computer allocsize is there:
->> /dev/mapper/x1 /x1 xfs
->> rw,nosuid,nodev,noatime,attr2,delaylog,allocsize=64k,noquota 0 0
->>
->> I tracked down the patch. It went into 2.6.38
->>
->> - snip -
->> commit 055388a3188f56676c21e92962fc366ac8b5cb72
->> Author: Dave Chinner<dchinner@redhat.com>
->> Date: Tue Jan 4 11:35:03 2011 +1100
->>
->> xfs: dynamic speculative EOF preallocation
->>
->> Currently the size of the speculative preallocation during delayed
->> allocation is fixed by either the allocsize mount option of a
->> default size. We are seeing a lot of cases where we need to
->> recommend using the allocsize mount option to prevent fragmentation
->> when buffered writes land in the same AG.
->>
->> Rather than using a fixed preallocation size by default (up to 64k),
->> make it dynamic by basing it on the current inode size. That way the
->> EOF preallocation will increase as the file size increases. Hence
->> for streaming writes we are much more likely to get large
->> preallocations exactly when we need it to reduce fragementation.
->>
->> For default settings, the size of the initial extents is determined
->> by the number of parallel writers and the amount of memory in the
->> machine. For 4GB RAM and 4 concurrent 32GB file writes:
->>
->> EXT: FILE-OFFSET BLOCK-RANGE AG AG-OFFSET TOTAL
->> 0: [0..1048575]: 1048672..2097247 0 (1048672..2097247) 1048576
->> 1: [1048576..2097151]: 5242976..6291551 0 (5242976..6291551) 1048576
->> 2: [2097152..4194303]: 12583008..14680159 0 (12583008..14680159) 2097152
->> 3: [4194304..8388607]: 25165920..29360223 0 (25165920..29360223) 4194304
->> 4: [8388608..16777215]: 58720352..67108959 0 (58720352..67108959) 8388608
->> 5: [16777216..33554423]: 117440584..134217791 0 (117440584..134217791)
->> 16777208
->> 6: [33554424..50331511]: 184549056..201326143 0 (184549056..201326143)
->> 16777088
->> 7: [50331512..67108599]: 251657408..268434495 0 (251657408..268434495)
->> 16777088
->>
->> and for 16 concurrent 16GB file writes:
->>
->> EXT: FILE-OFFSET BLOCK-RANGE AG AG-OFFSET TOTAL
->> 0: [0..262143]: 2490472..2752615 0 (2490472..2752615) 262144
->> 1: [262144..524287]: 6291560..6553703 0 (6291560..6553703) 262144
->> 2: [524288..1048575]: 13631592..14155879 0 (13631592..14155879) 524288
->> 3: [1048576..2097151]: 30408808..31457383 0 (30408808..31457383) 1048576
->> 4: [2097152..4194303]: 52428904..54526055 0 (52428904..54526055) 2097152
->> 5: [4194304..8388607]: 104857704..109052007 0 (104857704..109052007)
->> 4194304
->> 6: [8388608..16777215]: 209715304..218103911 0 (209715304..218103911)
->> 8388608
->> 7: [16777216..33554423]: 452984848..469762055 0 (452984848..469762055)
->> 16777208
->>
->> Because it is hard to take back specualtive preallocation, cases
->> where there are large slow growing log files on a nearly full
->> filesystem may cause premature ENOSPC. Hence as the filesystem nears
->> full, the maximum dynamic prealloc size ?s reduced according to this
->> table (based on 4k block size):
->>
->> freespace max prealloc size
->> >5% full extent (8GB)
->> 4-5% 2GB (8GB>> 2)
->> 3-4% 1GB (8GB>> 3)
->> 2-3% 512MB (8GB>> 4)
->> 1-2% 256MB (8GB>> 5)
->> <1% 128MB (8GB>> 6)
->>
->> This should reduce the amount of space held in speculative
->> preallocation for such cases.
->>
->> The allocsize mount option turns off the dynamic behaviour and fixes
->> the prealloc size to whatever the mount option specifies. i.e. the
->> behaviour is unchanged.
->>
->> Signed-off-by: Dave Chinner<dchinner@redhat.com>
->> - snip -
->>
->>
->>
->>
->>
->> Bis denn
->>
+>> # xfs_bmap myfile
+>> myfile: no extents
+> That doesn't seem right:
 >
-> Yes, I did the sync, and you are right, I didn't restarted the postgres
-> process.
-> Well, but today i restarted the whole server. And regarding the last
-> paragraph you wrote, the allocsize=64K should stop the dynamic
-> preallocation... but right now it doesnt seem so, the sizes always get
-> back to the 5.7GB, but in between it raises up.
-> Could it be possible, because of the different mount outputs, that it
-> didnt get loaded well?
+> $ ls -l foobar
+> -rw------- 1 root root 0 Feb 27 11:54 foobar
+> $ du foobar
+> 1024    foobar
+> $ du --apparent-size foobar
+> 0       foobar
+> $ xfs_bmap foobar
+> foobar:
+> 	0: [0..2047]: 255169872..255171919
 >
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> So xfs_bmap can and does report extents beyond EOF.
+>
+> du uses the fstat(2) syscall to get the block count from the inode,
+> so it's seeing an inode with a block count but no extents. Can you
+> dump the inode via xfs_db like so:
+>
+> $ ls -i foobar
+> 604424233 foobar
+> $ sudo xfs_db -r -c "inode 604424233" -c p /dev/md0
+> core.magic =3D 0x494e
+> core.mode =3D 0100600
+> core.version =3D 2
+> .....
+>
+> And post the output?
+[root@server 1_out]# du foobar
+25840    foobar
+[root@server 1_out]# du --apparent-size foobar
+0    foobar
+[root@server 1_out]# xfs_bmap foobar
+foobar: no extents
+[root@server 1_out]# ls -i foobar
+114748 foobar
+[root@server 1_out]# xfs_db -r -c "inode 114748" -c p /dev/sdc1
+core.magic =3D 0x494e
+core.mode =3D 0100644
+core.version =3D 2
+core.format =3D 2 (extents)
+core.nlinkv2 =3D 1
+core.onlink =3D 0
+core.projid =3D 0
+core.uid =3D 12488
+core.gid =3D 12488
+core.flushiter =3D 0
+core.atime.sec =3D Tue Jan 24 14:50:52 2012
+core.atime.nsec =3D 609667096
+core.mtime.sec =3D Tue Jan 24 14:50:53 2012
+core.mtime.nsec =3D 579672930
+core.ctime.sec =3D Tue Jan 24 14:50:53 2012
+core.ctime.nsec =3D 579672930
+core.size =3D 0
+core.nblocks =3D 6460
+core.extsize =3D 0
+core.nextents =3D 1
+core.naextents =3D 0
+core.forkoff =3D 0
+core.aformat =3D 2 (extents)
+core.dmevmask =3D 0
+core.dmstate =3D 0
+core.newrtbm =3D 0
+core.prealloc =3D 0
+core.realtime =3D 0
+core.immutable =3D 0
+core.append =3D 0
+core.sync =3D 0
+core.noatime =3D 0
+core.nodump =3D 0
+core.rtinherit =3D 0
+core.projinherit =3D 0
+core.nosymlinks =3D 0
+core.extsz =3D 0
+core.extszinherit =3D 0
+core.nodefrag =3D 0
+core.filestream =3D 0
+core.gen =3D 1924597489
+next_unlinked =3D null
+u.bmx[0] =3D [startoff,startblock,blockcount,extentflag] =
+
+0:[0,1881705728,6460,0]
+
+After using the Nathaniel's advices and dd'ing the file:
+[root@server recover]# ls -alh foobar
+-rw-r--r-- 1 root root 26M Feb 24 10:39 /recover/foobar
 
 
-Just to give you the solution. Well, the allocsize setting itself was 
-correct, but the mountpoint for this option was / so the flag isn't 
-remountable on this point, i had to add "rootflags=allocsize=64k" to the 
-extra kernel line in my *.sxp files of each VM, this way it recognized 
-the option and worked as expected.
 
-thanks all for help.
-
-regards
-Bernhard
 
 _______________________________________________
 xfs mailing list
