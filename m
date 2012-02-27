@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1R8hqAO036616 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 02:43:52 -0600
-Received: from mail-bk0-f53.google.com (mail-bk0-f53.google.com
-	[209.85.214.53]) by cuda.sgi.com with ESMTP id SXC3cZRV0UCE5B58
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 27 Feb 2012 00:43:50 -0800 (PST)
-Received: by bkwj10 with SMTP id j10so1123982bkw.26
-	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 00:43:49 -0800 (PST)
-Message-ID: <4F4B423E.2000409@gmail.com>
-Date: Mon, 27 Feb 2012 09:43:42 +0100
-From: kadafax@gmail.com
+	q1RAaciY046515 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 04:36:39 -0600
+Received: from smtprelay04.ispgateway.de (smtprelay04.ispgateway.de
+	[80.67.29.8]) by cuda.sgi.com with ESMTP id nOjNOzMXrUmocISP
+	for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 02:36:37 -0800 (PST)
+Received: from [62.43.225.238] (helo=[192.168.30.191])
+	by smtprelay04.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
+	id 1S1xwa-000193-F5
+	for xfs@oss.sgi.com; Mon, 27 Feb 2012 11:36:36 +0100
+Message-ID: <4F4B5CB3.8090107@cape-horn-eng.com>
+Date: Mon, 27 Feb 2012 11:36:35 +0100
+From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
-Subject: Re: XFS, empty files after a crash
-References: <4F4387A7.2070009@gmail.com> <20120227010402.GR3592@dastard>
-In-Reply-To: <20120227010402.GR3592@dastard>
+Subject: Re: XFS status update for January 2012
+References: <20120225120216.GA21721@infradead.org>
+In-Reply-To: <20120225120216.GA21721@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,110 +25,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Le 27/02/12 02:04, Dave Chinner a =E9crit :
-> On Tue, Feb 21, 2012 at 01:01:43PM +0100, kfx wrote:
->> # du  myfile
->> 27460    myfile
->>
->> # du --apparent-size myfile
->> 0    myfile
->>
->> # xfs_bmap myfile
->> myfile: no extents
-> That doesn't seem right:
->
-> $ ls -l foobar
-> -rw------- 1 root root 0 Feb 27 11:54 foobar
-> $ du foobar
-> 1024    foobar
-> $ du --apparent-size foobar
-> 0       foobar
-> $ xfs_bmap foobar
-> foobar:
-> 	0: [0..2047]: 255169872..255171919
->
-> So xfs_bmap can and does report extents beyond EOF.
->
-> du uses the fstat(2) syscall to get the block count from the inode,
-> so it's seeing an inode with a block count but no extents. Can you
-> dump the inode via xfs_db like so:
->
-> $ ls -i foobar
-> 604424233 foobar
-> $ sudo xfs_db -r -c "inode 604424233" -c p /dev/md0
-> core.magic =3D 0x494e
-> core.mode =3D 0100600
-> core.version =3D 2
-> .....
->
-> And post the output?
-[root@server 1_out]# du foobar
-25840    foobar
-[root@server 1_out]# du --apparent-size foobar
-0    foobar
-[root@server 1_out]# xfs_bmap foobar
-foobar: no extents
-[root@server 1_out]# ls -i foobar
-114748 foobar
-[root@server 1_out]# xfs_db -r -c "inode 114748" -c p /dev/sdc1
-core.magic =3D 0x494e
-core.mode =3D 0100644
-core.version =3D 2
-core.format =3D 2 (extents)
-core.nlinkv2 =3D 1
-core.onlink =3D 0
-core.projid =3D 0
-core.uid =3D 12488
-core.gid =3D 12488
-core.flushiter =3D 0
-core.atime.sec =3D Tue Jan 24 14:50:52 2012
-core.atime.nsec =3D 609667096
-core.mtime.sec =3D Tue Jan 24 14:50:53 2012
-core.mtime.nsec =3D 579672930
-core.ctime.sec =3D Tue Jan 24 14:50:53 2012
-core.ctime.nsec =3D 579672930
-core.size =3D 0
-core.nblocks =3D 6460
-core.extsize =3D 0
-core.nextents =3D 1
-core.naextents =3D 0
-core.forkoff =3D 0
-core.aformat =3D 2 (extents)
-core.dmevmask =3D 0
-core.dmstate =3D 0
-core.newrtbm =3D 0
-core.prealloc =3D 0
-core.realtime =3D 0
-core.immutable =3D 0
-core.append =3D 0
-core.sync =3D 0
-core.noatime =3D 0
-core.nodump =3D 0
-core.rtinherit =3D 0
-core.projinherit =3D 0
-core.nosymlinks =3D 0
-core.extsz =3D 0
-core.extszinherit =3D 0
-core.nodefrag =3D 0
-core.filestream =3D 0
-core.gen =3D 1924597489
-next_unlinked =3D null
-u.bmx[0] =3D [startoff,startblock,blockcount,extentflag] =
+On 02/25/2012 01:02 PM, Christoph Hellwig wrote:
+> January saw the release of Linux 3.2, which as usual included a large
+> number of XFS changes, most notably an large speedup for removing files
+> that have external attribute blocks, speedups and livelock fixes for
+> sync while doing heavy I/O, and large internal cleanups of the inode
+> block map handling.  The diffstat for XFS in Linux 3.2 is:
+> =
 
-0:[0,1881705728,6460,0]
+>  54 files changed, 2414 insertions(+), 2625 deletions(-)
+> =
 
-After using the Nathaniel's advices and dd'ing the file:
-[root@server recover]# ls -alh foobar
--rw-r--r-- 1 root root 26M Feb 24 10:39 /recover/foobar
+> which is slightly below the average of the last releases.
+> =
+
+> In the meantime development for 3.3 went ahead full speed, including
+> the removal of the deprecated pre-delaylog logging code, various
+> quota cleanups, a shrink of the inode, a great simplification of the file
+> write path as well as the usual batch of fixes and cleanups.
+> =
+
+> On the userland side xfs_repair saw various major fixes and speedups,
+> with few other fixes thrown in, while xfsdump got two commits fixing
+> longer standing issues recently reported on the mailing list.  For
+> xfstests January was an extremely slow month, seeing only two new test ca=
+ses
+> and less than a handful of other updates.
+
+Many thanks to all of your for the good work and support on the mailing
+list !
+
+cheers,
+Richard
 
 
+-- =
 
+Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
+
+Cape Horn Engineering S.L.
+C/ Dr. J.J. D=F3mine 1, 5=BA piso
+46011 Valencia
+Tel : +34 96 3242923 / Fax 924
+http://www.cape-horn-eng.com
 
 _______________________________________________
 xfs mailing list
