@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1R1v6jO012698 for <xfs@oss.sgi.com>; Sun, 26 Feb 2012 19:57:06 -0600
-Date: Sun, 26 Feb 2012 19:57:11 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 7/9] xfs: merge xfs_qm_export_dquot into
-	xfs_qm_scall_getquota
-Message-ID: <20120227015711.GH7762@sgi.com>
-References: <20120215022926.577682146@bombadil.infradead.org>
-	<20120215023148.024760659@bombadil.infradead.org>
+	q1R3C0sJ016200 for <xfs@oss.sgi.com>; Sun, 26 Feb 2012 21:12:00 -0600
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id bCfjbrewYHnMo2Ea (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 26 Feb 2012 19:11:59 -0800 (PST)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1S1r0I-0004sr-J7
+	for xfs@oss.sgi.com; Sun, 26 Feb 2012 19:11:58 -0800
+Message-ID: <33397518.post@talk.nabble.com>
+Date: Sun, 26 Feb 2012 19:11:58 -0800 (PST)
+From: MikeJeezy <forums@mgaccess.net>
+Subject: Re: mount: Structure needs cleaning
+In-Reply-To: <20120227004902.GQ3592@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120215023148.024760659@bombadil.infradead.org>
+References: <33393100.post@talk.nabble.com>
+	<4F49B693.4080309@hardwarefreak.com>
+	<33393429.post@talk.nabble.com> <20120227004902.GQ3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,54 +31,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Christoph,
 
-On Tue, Feb 14, 2012 at 09:29:33PM -0500, Christoph Hellwig wrote:
-> The is no good reason to have these two separate, and for the next change
-> I'd need the full struct xfs_dquot in xfs_qm_export_dquot, so better just
-> fold the code now instead of changing it around.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-...
 
-> -int
-> -xfs_qm_scall_getquota(
+>The only reason for running xfs-repair -L is if you cannot mount the
+>filesystem to replay the log. i.e. on a shutdown like this, the
+>usual process is:
 
-...
+Right, when I tried to mount the volume it said "Structure needs cleaning"
 
-> -	/*
-> -	 * Convert the disk dquot to the exportable format
-> -	 */
-> -	xfs_qm_export_dquot(mp, &dqp->q_core, out);
-> -	xfs_qm_dqput(dqp);
-> -	return (error ? XFS_ERROR(EFAULT) : 0);
-> -}
+>You can only find out by looking at what the output of xfs_repair
+>told you about trashing inodes/directories.
 
-Note that we used to map all errors to EFAULT.
+Is this only output to the screen or to a log somewhere?
 
-...
+> On 02/26/2012 11:07am, Stan Hoeppner wrote: 
+>Are those other VMs using XFS filesystems? 
 
-> +int
-> +xfs_qm_scall_getquota(
+What kernel version are you running?  
 
-...
+2.6.18-274.18.1.el5
 
-> +out_put:
-> +	xfs_qm_dqput(dqp);
-> +	return error;
+>Are you using LVM under XFS?  
 
-And, now we don't.
+No
 
-The rest of the patch looks great to me.  If you intend to change the
-error code, please mention so in the commit message.  Was it wrong
-before, or will it be wrong if we pull this in?
+>What fstab mount options?  
 
-Regards,
-Ben
+/dev/sdd1               /mnt/ob1               xfs     defaults        0 0
+/dev/sde1               /mnt/ob2               xfs     defaults        0 0
+
+>Does your SAN array have battery backed write cache?  
+
+This one does not currently, but I have ordered BBWC for it.
+
+>Are the individual drive caches in the underlying array disabled? 
+
+Write cache: enabled
+Read ahead: enabled
+
+-- 
+View this message in context: http://old.nabble.com/mount%3A-Structure-needs-cleaning-tp33393100p33397518.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
