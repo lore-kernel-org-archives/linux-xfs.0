@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1SMuQ4o223453 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 16:56:26 -0600
-Received: from nm6-vm4.bullet.mail.ne1.yahoo.com
-	(nm6-vm4.bullet.mail.ne1.yahoo.com [98.138.91.166]) by
-	cuda.sgi.com with SMTP id MZBCK2RqEpT68roi for
-	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 14:56:25 -0800 (PST)
-Message-ID: <1330469778.9688.7.camel@core24>
-Subject: Poor performance using discard
-From: Thomas Lynema <lyz27@yahoo.com>
-Date: Tue, 28 Feb 2012 17:56:18 -0500
-Mime-Version: 1.0
+	q1SNwk3D227819 for <xfs@OSS.SGI.com>; Tue, 28 Feb 2012 17:58:47 -0600
+Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
+	cuda.sgi.com with ESMTP id byrqktEOw1ztRw0d for
+	<xfs@OSS.SGI.com>; Tue, 28 Feb 2012 15:58:45 -0800 (PST)
+Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
+	id 4EEB63D20149217F for xfs@OSS.SGI.com;
+	Tue, 28 Feb 2012 23:58:42 +0000
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1S2WwH-0008PZ-Sj
+	for <xfs@OSS.SGI.com>; Tue, 28 Feb 2012 23:58:37 +0000
+MIME-Version: 1.0
+Message-ID: <20301.27181.727405.287963@tree.ty.sabi.co.UK>
+Date: Tue, 28 Feb 2012 23:58:37 +0000
+Subject: Re: Poor performance using discard
+In-Reply-To: <1330469778.9688.7.camel@core24>
+References: <1330469778.9688.7.camel@core24>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,100 +26,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============2650297500839475855=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
+[ ... ]
 
---===============2650297500839475855==
-Content-Type: multipart/signed; micalg="pgp-sha1"; protocol="application/pgp-signature";
-	boundary="=-u7ZEuJjPAnxQUM3IY6KY"
+> /dev/mapper/ssdvg0-testLV on /media/temp type xfs
+> (rw,noatime,nodiratime,discard) [ ... ] real 5m7.139s [ ... ]
 
+> There where lockups where the system would pause for about a
+> minute during the process.
 
---=-u7ZEuJjPAnxQUM3IY6KY
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+> ext4 handles this scenerio fine:
 
-Please reply to my personal email as well as I am not subscribed to the
-list.
+> /dev/mapper/ssdvg0-testLV on /media/temp type ext4
+> (rw,noatime,nodiratime,discard) [ ... ] real 0m0.943s [ ... ]
 
-I have a PP120GS25SSDR it does support trim=20
+> xfs mounted without discard seems to handle this fine:
 
-cat /sys/block/sdc/queue/discard_max_bytes=20
-2147450880
+> /dev/mapper/ssdvg0-testLV on /media/temp type xfs
+> (rw,noatime,nodiratime) [ ... ] real 0m1.634s [ ... ]
 
-The entire drive is one partition that is totally used by LVM.
+[ ... ]
 
-I made a test vg and formatted it with mkfs.xfs.  Then mounted it with
-discard and got the following result when deleting a kernel source:
+> Any suggestions?
 
-/dev/mapper/ssdvg0-testLV on /media/temp type xfs
-(rw,noatime,nodiratime,discard)
+* Look at 'vmstat 1' while 'rm' is running.
 
-time rm -rf linux-3.2.6-gentoo/
-real   5m7.139s
-user   0m0.080s
-sys   0m1.580s=20
+* Learn how TRIM is specified, and thus why many people prefer
+  running periodically 'fstrim' which uses FITRIM to mounting
+  with 'discard'.
 
-There where lockups where the system would pause for about a minute
-during the process.
+* Compare with my Crucial M4 flash SSD with XFS:
 
-ext4 handles this scenerio fine:
+    #  time sh -c 'sysctl vm/drop_caches=3; rm -r linux-2.6.32; sync'
+    vm.drop_caches = 3
 
-/dev/mapper/ssdvg0-testLV on /media/temp type ext4
-(rw,noatime,nodiratime,discard)
+    real    0m59.604s
+    user    0m0.060s
+    sys     0m3.944s
 
-time rm -rf linux-3.2.6-gentoo/
-
-real   0m0.943s
-user   0m0.050s
-sys   0m0.830s=20
-
-xfs mounted without discard seems to handle this fine:
-
-/dev/mapper/ssdvg0-testLV on /media/temp type xfs
-(rw,noatime,nodiratime)
-
-time rm -rf linux-3.2.6-gentoo/
-real	0m1.634s
-user	0m0.040s
-sys	0m1.420s
-
-uname -a
-Linux core24 3.2.5-gentoo #11 SMP PREEMPT Sat Feb 11 15:46:22 EST 2012
-x86_64 Intel(R) Core(TM)2 Quad CPU Q6700 @ 2.66GHz GenuineIntel
-GNU/Linux
-
-
-Any suggestions?
-
-
---=-u7ZEuJjPAnxQUM3IY6KY
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part
-Content-Transfer-Encoding: 7bit
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEABECAAYFAk9NW5cACgkQ1SP4uQI29eGyVwCfQfMzvh+nxhqUHdYvqhxvf6Kp
-f/kAnR2JrhN4KDs5mdqGevyT8sZQTPYi
-=1ANH
------END PGP SIGNATURE-----
-
---=-u7ZEuJjPAnxQUM3IY6KY--
-
-
---===============2650297500839475855==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+  That's pretty good for ~32k files and ~390MiB. Probably the
+  TRIM implementation on the M4 is rather faster than that on
+  the Patriot.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2650297500839475855==--
