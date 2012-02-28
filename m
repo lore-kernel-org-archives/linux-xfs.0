@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1SA9GSZ173679 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:09:17 -0600
-Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
-	cuda.sgi.com with ESMTP id i8CVW3Nj3yhdNt0d (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Feb 2012 02:09:12 -0800 (PST)
-Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.661580.B.133042353328757@bugs.debian.org>
-Date: Tue, 28 Feb 2012 04:11:51 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Message-ID: <20120228091151.GA24717@infradead.org>
-References: <20120228074914.31280.78231.reportbug@frosties.localnet>
+	q1SAB9SR173794 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:11:09 -0600
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id xfRhEu440hM4fgAD (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Feb 2012 02:11:07 -0800 (PST)
+Date: Tue, 28 Feb 2012 11:11:05 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Warning from unlock_new_inode
+Message-ID: <20120228101105.GA4125@quack.suse.cz>
+References: <20120222220137.GB3650@quack.suse.cz>
+	<20120228083444.GB22995@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120228074914.31280.78231.reportbug@frosties.localnet>
-Reply-To: Christoph Hellwig <hch@infradead.org>, 661580@bugs.debian.org
+In-Reply-To: <20120228083444.GB22995@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,85 +27,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Goswin von Brederlow <goswin-v-b@web.de>, 661580@bugs.debian.org
-Cc: Debian Bug Tracking System <submit@bugs.debian.org>, Carlos Maiolino <cmaiolino@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Carlos, didn't you plan to look into this issue?
+On Tue 28-02-12 03:34:44, Christoph Hellwig wrote:
+> On Wed, Feb 22, 2012 at 11:01:37PM +0100, Jan Kara wrote:
+> >   Hello,
+> > 
+> >   while running fsstress on XFS partition with 3.3-rc4 kernel + my freeze
+> > fixes (they do not touch anything relevant AFAICT) I've got the following
+> > warning:
+> 
+> That's stressing including freezes or without?  Do you have a better
+> description of te workload?
+  It was:
+~/tests/xfstests-dev/ltp/fsstress -d /mnt -n 10000 -p 4
 
-Goswin, how do you determin that mkfs is still doing unaligned I/O
-when forcing the large sevtor size?  Once we set the sector size XFS
-can't do I/O smaller than it.
+  while doing in parallel
+while true; do freeze; sync; unfreeze; sleep 4; done
+ 
+> Either way it's an odd one, I can't see any obvious way how this would
+> happen.
+  Yeah, and I never seen it again although I was stressing the filesystem
+for quite a long time. So I think we can put this off for now.
 
-On Tue, Feb 28, 2012 at 08:49:14AM +0100, Goswin von Brederlow wrote:
-> Package: xfsprogs
-> Version: 3.1.7
-> Severity: important
-> File: /sbin/mkfs.xfs
-> 
-> Hi,
-> 
-> since I recently bought a harddisk with 4K sector size I've been
-> checking for correct alignment and blocksizes in various things. One
-> of them being xfs.
-> 
-> When I partition the disk in parted it shows correctly to have a
-> logical blocksize of 512 byte and physical blocksize of 4096 byte.
-> But mkfs.xfs does not detect that the physical blocksize is 4096 byte
-> and creates a filesystem with:
-> 
-> meta-data=/dev/sde1              isize=256    agcount=32, agsize=22892696 blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=732566272, imaxpct=5
->          =                       sunit=0      swidth=0 blks
-> naming   =version 2              bsize=4096   ascii-ci=0
-> log      =internal               bsize=4096   blocks=357698, version=2
->          =                       sectsz=512   sunit=0 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> 
-> This often results in access to the disk that is not aligned to the
-> blocksize with the resulting degradation in performance.
-> 
-> Further, manually selecting the right sector size of 4096 still causes
-> lots of unaligned access while formating and while mounting the
-> filesystem. It does seem to fix the problem for actual use though.
-> 
-> MfG
-> 	Goswin
-> 
-> -- System Information:
-> Debian Release: wheezy/sid
->   APT prefers unstable
->   APT policy: (500, 'unstable')
-> Architecture: amd64 (x86_64)
-> 
-> Kernel: Linux 3.1.0-1-amd64 (SMP w/4 CPU cores)
-> Locale: LANG=C, LC_CTYPE=de_DE (charmap=ISO-8859-1)
-> Shell: /bin/sh linked to /bin/dash
-> 
-> Versions of packages xfsprogs depends on:
-> ii  libblkid1     2.20.1-1
-> ii  libc6         2.13-21 
-> ii  libreadline5  5.2-11  
-> ii  libuuid1      2.19.1-5
-> 
-> xfsprogs recommends no packages.
-> 
-> Versions of packages xfsprogs suggests:
-> pn  acl      2.2.51-4  
-> pn  attr     1:2.4.46-3
-> pn  quota    <none>    
-> pn  xfsdump  <none>    
-> 
-> -- no debconf information
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
----end quoted text---
+								Honza
 
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
