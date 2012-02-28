@@ -1,23 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1SDXFFe189629 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 07:33:16 -0600
-Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
-	cuda.sgi.com with ESMTP id nupgMQEV0WwkKHaO (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Feb 2012 05:33:14 -0800 (PST)
-Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.661580.B.13304357449730@bugs.debian.org>
-Date: Tue, 28 Feb 2012 10:28:50 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Message-ID: <20120228132850.GB6739@dhcp-32-204.gru.redhat.com>
-References: <20120228074914.31280.78231.reportbug@frosties.localnet>
-	<20120228091151.GA24717@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120228091151.GA24717@infradead.org>
-Reply-To: Carlos Maiolino <cmaiolino@redhat.com>, 661580@bugs.debian.org
+	q1SEUFsu193548 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 08:30:16 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id exxXzHCEBaeYhkQO for
+	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 06:30:14 -0800 (PST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH] 251: Make fstrim call a bit more random
+Date: Tue, 28 Feb 2012 15:30:00 +0100
+Message-Id: <1330439400-26390-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,30 +17,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Debian Bug Tracking System <submit@bugs.debian.org>, 661580@bugs.debian.org, Goswin von Brederlow <goswin-v-b@web.de>
+To: xfs@oss.sgi.com
+Cc: Lukas Czerner <lczerner@redhat.com>, aelder@sgi.com
 
-On Tue, Feb 28, 2012 at 04:11:51AM -0500, Christoph Hellwig wrote:
-> Carlos, didn't you plan to look into this issue?
-> 
-> Goswin, how do you determin that mkfs is still doing unaligned I/O
-> when forcing the large sevtor size?  Once we set the sector size XFS
-> can't do I/O smaller than it.
-> 
-> On Tue, Feb 28, 2012 at 08:49:14AM +0100, Goswin von Brederlow wrote:
+To cover cases when fstrim arguments are not block/block group/file
+system size aligned, we can be a bit more random. This commit changes
+fstrim argument computing to use $RANDOM bash variable in order to have
+different minlen, start, len argument settings and change the full fs
+fstrim to be called randomly as well.
 
-Yes, I was looking to it some time ago, but iirc it was already implemented and
-I was just fixins some issues on the code already implemented. I just got a new
-box and I'm recovering my backup (including code trees). I'll take a look on
-this later today and let you know on which steps this is.
+Also make kill and wait not complain about non existent process, since
+it may have already finished before we attempt to kill it and wait for
+it. No reason to fail the test.
 
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+ 251 |   23 +++++++++++++----------
+ 1 files changed, 13 insertions(+), 10 deletions(-)
+
+diff --git a/251 b/251
+index fa3d74a..0b68898 100755
+--- a/251
++++ b/251
+@@ -54,21 +54,21 @@ _cleanup()
+ 
+ _destroy()
+ {
+-	kill $pids $fstrim_pid
+-	wait $pids $fstrim_pid
++	kill $pids $fstrim_pid 2> /dev/null
++	wait $pids $fstrim_pid 2> /dev/null
+ 	rm -rf $tmp
+ }
+ 
+ _destroy_fstrim()
+ {
+-	kill $fpid
+-	wait $fpid
++	kill $fpid 2> /dev/null
++	wait $fpid 2> /dev/null
+ }
+ 
+ _fail()
+ {
+ 	echo "$1"
+-	kill $mypid
++	kill $mypid 2> /dev/null
+ }
+ 
+ _check_fstrim_support()
+@@ -87,13 +87,16 @@ fstrim_loop()
+ 	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
+ 
+ 	while true ; do
+-		step=1048576
++		step=$((RANDOM*$RANDOM))
++		minlen=$((RANDOM*($RANDOM%2+1)))
+ 		start=0
+-		$here/src/fstrim $SCRATCH_MNT &
+-		fpid=$!
+-		wait $fpid
++		if [ $((RANDOM%10)) -gt 7 ]; then
++			$here/src/fstrim $SCRATCH_MNT &
++			fpid=$!
++			wait $fpid
++		fi
+ 		while [ $start -lt $fsize ] ; do
+-			$here/src/fstrim -s ${start}k -l ${step}k $SCRATCH_MNT &
++			$here/src/fstrim -m ${minlen}k -s ${start}k -l ${step}k $SCRATCH_MNT &
+ 			fpid=$!
+ 			wait $fpid
+ 			start=$(( $start + $step ))
 -- 
---Carlos
-
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
