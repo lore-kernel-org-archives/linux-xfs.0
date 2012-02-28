@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1SG3ZQn200623 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 10:03:36 -0600
-Received: from mail-iy0-f181.google.com (mail-iy0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	0sZW7NyMUbLagqke (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Feb 2012 08:03:32 -0800 (PST)
-Received: by iaoo28 with SMTP id o28so4862791iao.26
-	for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 08:03:31 -0800 (PST)
+	q1SGDJBh201280 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 10:13:19 -0600
+Message-ID: <4F4CFD1D.1010408@sgi.com>
+Date: Tue, 28 Feb 2012 10:13:17 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <1329957699-20769-1-git-send-email-kdasu.kdev@gmail.com>
-References: <kdasu.kdev@gmail.com>
-	<1329957699-20769-1-git-send-email-kdasu.kdev@gmail.com>
-Date: Tue, 28 Feb 2012 11:03:31 -0500
-Message-ID: <CAC=U0a0Y2mL9DtYU1gWf0Qvjop97YPQ2g_m6mo9czdyW-atDdQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: fix deadlock in xfs_rtfree_extent with kernel v3.x
-From: Kamal Dasu <kdasu.kdev@gmail.com>
+Subject: Re: [PATCH 1/8] xfs: use per-filesystem I/O completion workqueues
+References: <20120221003824.415885674@bombadil.infradead.org>
+	<20120221003906.124899527@bombadil.infradead.org>
+In-Reply-To: <20120221003906.124899527@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +18,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Adding reference to the related thread for an older kernel :
+On 02/20/12 18:38, Christoph Hellwig wrote:
+> The new concurrency managed workqueues are cheap enough that we can create
+> per-filesystem instead of global workqueues.  This allows us to remove the
+> trylock or defer scheme on the ilock, which is not helpful once we have
+> outstanding log reservations until finishing a size update.
+>
+> Also allow the default concurrency on this workqueues so that I/O completions
+> blocking on the ilock for one inode do not block process for another inode.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
 
-<a href="http://old.nabble.com/forum/ViewPost.jtp?post=33405297&framed=y">http://old.nabble.com/forum/ViewPost.jtp?post=33405297&framed=y</a>
+Looks good.
 
-Kamal
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
