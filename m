@@ -1,35 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1S9ElqU171413 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 03:14:47 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id tYqFEc9Td8qIAfiT for
-	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 01:14:46 -0800 (PST)
-Received: from smtp.pobox.com (unknown [127.0.0.1])
-	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id 064C24A76
-	for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:14:45 -0500 (EST)
-Received: from b-pb-sasl-quonix.pobox.com (unknown [127.0.0.1])
-	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id EDAE54A72
-	for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:14:43 -0500 (EST)
-Received: from device-12dac2 (unknown [92.40.254.207]) (using TLSv1 with
-	cipher DHE-RSA-AES256-SHA (256/256 bits)) (No client certificate
-	requested)
-	by b-sasl-quonix.pobox.com (Postfix) with ESMTPSA id 5141C4A6D for
-	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:14:43 -0500 (EST)
-Received: from brian by device-12dac2 with local (Exim 4.77) (envelope-from
-	<b.candler@pobox.com>) id M03J0H-000182-8O for xfs@oss.sgi.com;
-	Tue, 28 Feb 2012 09:14:41 +0000
-Date: Tue, 28 Feb 2012 09:14:41 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: mount: Structure needs cleaning
-Message-ID: <20120228091441.GA1562@nsrc.org>
-References: <33393100.post@talk.nabble.com>
-	<4F49B693.4080309@hardwarefreak.com> <33393429.post@talk.nabble.com>
-	<20120227004902.GQ3592@dastard> <33397518.post@talk.nabble.com>
-	<20120228014813.GU3592@dastard>
+	q1SA9GSZ173679 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:09:17 -0600
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id i8CVW3Nj3yhdNt0d (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Feb 2012 02:09:12 -0800 (PST)
+Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.661580.B.133042353328757@bugs.debian.org>
+Date: Tue, 28 Feb 2012 04:11:51 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Message-ID: <20120228091151.GA24717@infradead.org>
+References: <20120228074914.31280.78231.reportbug@frosties.localnet>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120228014813.GU3592@dastard>
+In-Reply-To: <20120228074914.31280.78231.reportbug@frosties.localnet>
+Reply-To: Christoph Hellwig <hch@infradead.org>, 661580@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -42,33 +29,85 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Goswin von Brederlow <goswin-v-b@web.de>, 661580@bugs.debian.org
+Cc: Debian Bug Tracking System <submit@bugs.debian.org>, Carlos Maiolino <cmaiolino@redhat.com>
 
-On Tue, Feb 28, 2012 at 12:48:13PM +1100, Dave Chinner wrote:
-> > Write cache: enabled
+Carlos, didn't you plan to look into this issue?
+
+Goswin, how do you determin that mkfs is still doing unaligned I/O
+when forcing the large sevtor size?  Once we set the sector size XFS
+can't do I/O smaller than it.
+
+On Tue, Feb 28, 2012 at 08:49:14AM +0100, Goswin von Brederlow wrote:
+> Package: xfsprogs
+> Version: 3.1.7
+> Severity: important
+> File: /sbin/mkfs.xfs
 > 
-> There's your problem. You should read all the relevant sections on
-> write caches in the XFS FAQ. e.g:
+> Hi,
 > 
-> http://xfs.org/index.php/XFS_FAQ#Q._Which_settings_does_my_RAID_controller_need_.3F
+> since I recently bought a harddisk with 4K sector size I've been
+> checking for correct alignment and blocksizes in various things. One
+> of them being xfs.
+> 
+> When I partition the disk in parted it shows correctly to have a
+> logical blocksize of 512 byte and physical blocksize of 4096 byte.
+> But mkfs.xfs does not detect that the physical blocksize is 4096 byte
+> and creates a filesystem with:
+> 
+> meta-data=/dev/sde1              isize=256    agcount=32, agsize=22892696 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=732566272, imaxpct=5
+>          =                       sunit=0      swidth=0 blks
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=357698, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> 
+> This often results in access to the disk that is not aligned to the
+> blocksize with the resulting degradation in performance.
+> 
+> Further, manually selecting the right sector size of 4096 still causes
+> lots of unaligned access while formating and while mounting the
+> filesystem. It does seem to fix the problem for actual use though.
+> 
+> MfG
+> 	Goswin
+> 
+> -- System Information:
+> Debian Release: wheezy/sid
+>   APT prefers unstable
+>   APT policy: (500, 'unstable')
+> Architecture: amd64 (x86_64)
+> 
+> Kernel: Linux 3.1.0-1-amd64 (SMP w/4 CPU cores)
+> Locale: LANG=C, LC_CTYPE=de_DE (charmap=ISO-8859-1)
+> Shell: /bin/sh linked to /bin/dash
+> 
+> Versions of packages xfsprogs depends on:
+> ii  libblkid1     2.20.1-1
+> ii  libc6         2.13-21 
+> ii  libreadline5  5.2-11  
+> ii  libuuid1      2.19.1-5
+> 
+> xfsprogs recommends no packages.
+> 
+> Versions of packages xfsprogs suggests:
+> pn  acl      2.2.51-4  
+> pn  attr     1:2.4.46-3
+> pn  quota    <none>    
+> pn  xfsdump  <none>    
+> 
+> -- no debconf information
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+---end quoted text---
 
-As a side question to this: if I am using Linux's md software RAID with an
-HBA, and XFS is using write barriers (as I believe it does by default), is
-it still necessary to disable write caching on the drives?
-
-My reading of the FAQ suggests that the write barrier by itself should be
-sufficient - but this requires that the md RAID driver implements write
-barriers correctly.  I seem to remember reading a long time ago that LVM
-and/or dmraid didn't, although that may be different now.
-
-Incidentally I'm using 'mdadm ... -b internal' to ensure that the RAID array
-marks dirty areas, so that if a write part-completes (e.g.  a block is
-written to only one half of a RAID1) then at next power-up this should be
-made consistent again.
-
-Regards,
-
-Brian.
 
 _______________________________________________
 xfs mailing list
