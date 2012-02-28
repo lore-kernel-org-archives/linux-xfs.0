@@ -1,22 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1S8aepU169821 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 02:36:40 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	wa3INatMVb5wLbDs (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Feb 2012 00:36:39 -0800 (PST)
-Date: Tue, 28 Feb 2012 03:36:38 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] V2 xfs: fix deadlock in xfs_rtfree_extent with
-	kernel v2.6.37
-Message-ID: <20120228083638.GC22995@infradead.org>
-References: <33390983.post@talk.nabble.com>
+	q1S9ElqU171413 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 03:14:47 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id tYqFEc9Td8qIAfiT for
+	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 01:14:46 -0800 (PST)
+Received: from smtp.pobox.com (unknown [127.0.0.1])
+	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id 064C24A76
+	for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:14:45 -0500 (EST)
+Received: from b-pb-sasl-quonix.pobox.com (unknown [127.0.0.1])
+	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id EDAE54A72
+	for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:14:43 -0500 (EST)
+Received: from device-12dac2 (unknown [92.40.254.207]) (using TLSv1 with
+	cipher DHE-RSA-AES256-SHA (256/256 bits)) (No client certificate
+	requested)
+	by b-sasl-quonix.pobox.com (Postfix) with ESMTPSA id 5141C4A6D for
+	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 04:14:43 -0500 (EST)
+Received: from brian by device-12dac2 with local (Exim 4.77) (envelope-from
+	<b.candler@pobox.com>) id M03J0H-000182-8O for xfs@oss.sgi.com;
+	Tue, 28 Feb 2012 09:14:41 +0000
+Date: Tue, 28 Feb 2012 09:14:41 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: mount: Structure needs cleaning
+Message-ID: <20120228091441.GA1562@nsrc.org>
+References: <33393100.post@talk.nabble.com>
+	<4F49B693.4080309@hardwarefreak.com> <33393429.post@talk.nabble.com>
+	<20120227004902.GQ3592@dastard> <33397518.post@talk.nabble.com>
+	<20120228014813.GU3592@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <33390983.post@talk.nabble.com>
+In-Reply-To: <20120228014813.GU3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +42,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kamal Dasu <kdasu.kdev@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Feb 25, 2012 at 07:57:02AM -0800, Kamal Dasu wrote:
+On Tue, Feb 28, 2012 at 12:48:13PM +1100, Dave Chinner wrote:
+> > Write cache: enabled
 > 
-> Christoph,
+> There's your problem. You should read all the relevant sections on
+> write caches in the XFS FAQ. e.g:
 > 
-> I have not been able to create a simple test case for this yet.
-> 
-> Currently the only way I have is to use an a time shift recording
-> application 
-> that stores video streams on a real-time subvolume.  Sometimes when such
-> a stream is deleted I see the problem. I have not  figured out how to create
-> a 
-> test to consistently get allocation where the bit map span multiple extents
-> while 
-> freeing  the inode. 
-> 
-> I am still trying to come with a simple test case. 
-> If you have any ideas let me know I will be happy to try it out.
-> 
-> I have also posted a equivalent post for the 3.3 kernel branch.
-> http://old.nabble.com/-PATCH--xfs%3A-fix-deadlock-in-xfs_rtfree_extent-with-kernel-v3.x-to33375114.html
+> http://xfs.org/index.php/XFS_FAQ#Q._Which_settings_does_my_RAID_controller_need_.3F
 
-That's the mail I replied to :)
+As a side question to this: if I am using Linux's md software RAID with an
+HBA, and XFS is using write barriers (as I believe it does by default), is
+it still necessary to disable write caching on the drives?
 
-Either way - I'd love to get a good test case for it eventually, but for
-now let's put in the obvious fix even if we don't have a good
-reproducer.
+My reading of the FAQ suggests that the write barrier by itself should be
+sufficient - but this requires that the md RAID driver implements write
+barriers correctly.  I seem to remember reading a long time ago that LVM
+and/or dmraid didn't, although that may be different now.
 
-Alex, I'd suggest this is a 3.3-rc issue as it's a regression, even if
-an old one.
+Incidentally I'm using 'mdadm ... -b internal' to ensure that the RAID array
+marks dirty areas, so that if a write part-completes (e.g.  a block is
+written to only one half of a RAID1) then at next power-up this should be
+made consistent again.
+
+Regards,
+
+Brian.
 
 _______________________________________________
 xfs mailing list
