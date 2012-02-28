@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1SB90vo178075 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 05:09:00 -0600
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	3bA6fNz90IvTN0xK (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Feb 2012 03:08:58 -0800 (PST)
-Date: Tue, 28 Feb 2012 06:08:58 -0500
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/8] xfs: make xfs_inode_item_size idempotent
-Message-ID: <20120228110858.GB21870@infradead.org>
-References: <20120221003824.415885674@bombadil.infradead.org>
-	<20120221003907.081625923@bombadil.infradead.org>
-	<20120221051404.GM3592@dastard>
+	q1SDXFFe189629 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 07:33:16 -0600
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id nupgMQEV0WwkKHaO (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 28 Feb 2012 05:33:14 -0800 (PST)
+Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.661580.B.13304357449730@bugs.debian.org>
+Date: Tue, 28 Feb 2012 10:28:50 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Message-ID: <20120228132850.GB6739@dhcp-32-204.gru.redhat.com>
+References: <20120228074914.31280.78231.reportbug@frosties.localnet>
+	<20120228091151.GA24717@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120221051404.GM3592@dastard>
+In-Reply-To: <20120228091151.GA24717@infradead.org>
+Reply-To: Carlos Maiolino <cmaiolino@redhat.com>, 661580@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,26 +30,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Debian Bug Tracking System <submit@bugs.debian.org>, 661580@bugs.debian.org, Goswin von Brederlow <goswin-v-b@web.de>
 
-On Tue, Feb 21, 2012 at 04:14:04PM +1100, Dave Chinner wrote:
-> One minor cleanup:
+On Tue, Feb 28, 2012 at 04:11:51AM -0500, Christoph Hellwig wrote:
+> Carlos, didn't you plan to look into this issue?
 > 
-> >  	case XFS_DINODE_FMT_LOCAL:
-> > -		ASSERT(!(iip->ili_format.ilf_fields &
-> > -			 (XFS_ILOG_ABROOT | XFS_ILOG_AEXT)));
-> > -		if (iip->ili_format.ilf_fields & XFS_ILOG_ADATA) {
-> > +		iip->ili_format.ilf_fields &=
-> > +			~(XFS_ILOG_AEXT | XFS_ILOG_ABROOT);
-> > +
-> > +		if ((iip->ili_format.ilf_fields & XFS_ILOG_ADATA) &&
-> > +		    ip->i_afp->if_bytes > 0) {
-> >  			ASSERT(ip->i_afp->if_bytes > 0);
+> Goswin, how do you determin that mkfs is still doing unaligned I/O
+> when forcing the large sevtor size?  Once we set the sector size XFS
+> can't do I/O smaller than it.
 > 
-> That assert can go - it's checked in the if statement now.
+> On Tue, Feb 28, 2012 at 08:49:14AM +0100, Goswin von Brederlow wrote:
 
-Fixed.
+Yes, I was looking to it some time ago, but iirc it was already implemented and
+I was just fixins some issues on the code already implemented. I just got a new
+box and I'm recovering my backup (including code trees). I'll take a look on
+this later today and let you know on which steps this is.
+
+-- 
+--Carlos
+
 
 _______________________________________________
 xfs mailing list
