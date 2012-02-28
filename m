@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1S1mYM8141674 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 19:48:34 -0600
+	q1S1dTfa140988 for <xfs@oss.sgi.com>; Mon, 27 Feb 2012 19:39:30 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	y5ub9xn5ZoDPhZeb for <xfs@oss.sgi.com>;
-	Mon, 27 Feb 2012 17:48:15 -0800 (PST)
-Date: Tue, 28 Feb 2012 12:48:13 +1100
+	m1HDj2ReDz8ffgIT for <xfs@oss.sgi.com>;
+	Mon, 27 Feb 2012 17:39:27 -0800 (PST)
+Date: Tue, 28 Feb 2012 12:39:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: mount: Structure needs cleaning
-Message-ID: <20120228014813.GU3592@dastard>
-References: <33393100.post@talk.nabble.com>
-	<4F49B693.4080309@hardwarefreak.com>
-	<33393429.post@talk.nabble.com> <20120227004902.GQ3592@dastard>
-	<33397518.post@talk.nabble.com>
+Subject: Re: XFS, empty files after a crash
+Message-ID: <20120228013924.GT3592@dastard>
+References: <4F4387A7.2070009@gmail.com> <20120227010402.GR3592@dastard>
+	<4F4B423E.2000409@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <33397518.post@talk.nabble.com>
+In-Reply-To: <4F4B423E.2000409@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +23,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: MikeJeezy <forums@mgaccess.net>
+To: kadafax@gmail.com
 Cc: xfs@oss.sgi.com
 
-On Sun, Feb 26, 2012 at 07:11:58PM -0800, MikeJeezy wrote:
-> 
-> 
-> 
-> >The only reason for running xfs-repair -L is if you cannot mount the
-> >filesystem to replay the log. i.e. on a shutdown like this, the
-> >usual process is:
-> 
-> Right, when I tried to mount the volume it said "Structure needs cleaning"
+On Mon, Feb 27, 2012 at 09:43:42AM +0100, kadafax@gmail.com wrote:
+> Le 27/02/12 02:04, Dave Chinner a =E9crit :
+> >On Tue, Feb 21, 2012 at 01:01:43PM +0100, kfx wrote:
+> >># du  myfile
+> >>27460    myfile
+> >>
+> >># du --apparent-size myfile
+> >>0    myfile
+> >>
+> >># xfs_bmap myfile
+> >>myfile: no extents
+> >That doesn't seem right:
+> >
+> >$ ls -l foobar
+> >-rw------- 1 root root 0 Feb 27 11:54 foobar
+> >$ du foobar
+> >1024    foobar
+> >$ du --apparent-size foobar
+> >0       foobar
+> >$ xfs_bmap foobar
+> >foobar:
+> >	0: [0..2047]: 255169872..255171919
+> >
+> >So xfs_bmap can and does report extents beyond EOF.
+> >
+> >du uses the fstat(2) syscall to get the block count from the inode,
+> >so it's seeing an inode with a block count but no extents. Can you
+> >dump the inode via xfs_db like so:
+.....
+> [root@server 1_out]# xfs_db -r -c "inode 114748" -c p /dev/sdc1
+> core.magic =3D 0x494e
+> core.mode =3D 0100644
+> core.version =3D 2
+> core.format =3D 2 (extents)
+.....
+> core.size =3D 0
+> core.nblocks =3D 6460
+> core.extsize =3D 0
+> core.nextents =3D 1
+.....
+> core.prealloc =3D 0
+....
+> core.extsz =3D 0
+> core.extszinherit =3D 0
+....
+> u.bmx[0] =3D [startoff,startblock,blockcount,extentflag]
+> 0:[0,1881705728,6460,0]
 
-OK, so you've done the right thing. I always like to check first ;)
+Ok, so there's an extent there, but xfs_bmap is not showing it
+because it isn't a preallocation but rather a normal extent. What
+this indicates is that the inode size was not updated on disk after
+the data write had occurred.
 
-> >You can only find out by looking at what the output of xfs_repair
-> >told you about trashing inodes/directories.
-> 
-> Is this only output to the screen or to a log somewhere?
-
-Only to stdout.
-
-> > On 02/26/2012 11:07am, Stan Hoeppner wrote: 
-> >Are those other VMs using XFS filesystems? 
-> 
-> What kernel version are you running?  
-> 
-> 2.6.18-274.18.1.el5
-
-If you are running RHEL, you should really report problems through
-the support channel.
-
-> >Does your SAN array have battery backed write cache?  
-> 
-> This one does not currently, but I have ordered BBWC for it.
-> 
-> >Are the individual drive caches in the underlying array disabled? 
-> 
-> Write cache: enabled
-
-There's your problem. You should read all the relevant sections on
-write caches in the XFS FAQ. e.g:
-
-http://xfs.org/index.php/XFS_FAQ#Q._Which_settings_does_my_RAID_controller_need_.3F
+Given you are running 2.6.38 (the unbuntu kernel), this is likely
+caused by a known bug introduced in 2.6.37 by VFS changes outside
+XFS to prevent sync livelocks. That has been fixed in current 3.0.x
+stable kernels and more recent 3.2+ kernels.  I'd suggest upgrading
+your kernel.
 
 Cheers,
 
 Dave.
+-- =
 
--- 
 Dave Chinner
 david@fromorbit.com
 
