@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1TAMwEh004663 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 04:22:58 -0600
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id 2ANgcDrjo4pbxEKo (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Feb 2012 02:22:57 -0800 (PST)
-Message-ID: <4F4DD203.5090705@oracle.com>
-Date: Wed, 29 Feb 2012 15:21:39 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q1TAcIIe005647 for <xfs@OSS.SGI.com>; Wed, 29 Feb 2012 04:38:19 -0600
+Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
+	cuda.sgi.com with ESMTP id 5guv320QkljLmE4U for
+	<xfs@OSS.SGI.com>; Wed, 29 Feb 2012 02:38:14 -0800 (PST)
+Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
+	id 4EEB63D2014AE552 for xfs@OSS.SGI.com;
+	Wed, 29 Feb 2012 10:38:14 +0000
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1S2gv7-0000ae-IO
+	for <xfs@OSS.SGI.com>; Wed, 29 Feb 2012 10:38:05 +0000
 MIME-Version: 1.0
-Subject: Re: Question about project quota with container
-References: <4F4D8413.4050709@oracle.com>
-	<20120229083633.GA14241@infradead.org>
-In-Reply-To: <20120229083633.GA14241@infradead.org>
-Reply-To: jeff.liu@oracle.com
+Message-ID: <20302.11.782743.768635@tree.ty.sabi.co.UK>
+Date: Wed, 29 Feb 2012 10:38:03 +0000
+Subject: Re: Poor performance using discard
+In-Reply-To: <20120229040819.GZ3592@dastard>
+References: <1330469778.9688.7.camel@core24> <20120229012259.GW3592@dastard>
+	<1330480826.9688.23.camel@core24> <20120229040819.GZ3592@dastard>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,52 +27,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-Hi Christoph,
-
-Thanks for you prompt response!
-
-On 02/29/2012 04:36 PM, Christoph Hellwig wrote:
-
->> I was wondering if other file system will also implement project quota
->> based on these two configuration files in the future? In other words, is
->> it a standard?
-> 
-> The have been a few attempts at roughly similar quotas for ext4, but
-> they were incompatible enough to not reuse any infrastructure like this.
-
-> 
->>
->> Alternatively, maybe the project path and ID can be setup at cgroup
->> control files too, the following things could be implemented like
->> "xfsprogs/quota/edit.c", but I would put aside this idea for now.
-> 
-> Assigning the project IDs in the cgroups code sounds fine to me.
-
-Ok, I'll try it first.
-
-> To make peoples life's easier it might be good idea to keep the
-> /etc/projects and /etc/projid files uptodate even from that code.
-
-To update these two files at cgroup is also fine to me.
-
-Thanks,
--Jeff
-
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+WyAuLi4gXQoKPiBTYW1lIGFnYWluIC0gYXBhcmVudGx5IHdoZW4geW91IHN5c3RlbSBnb2VzIGlk
+bGUsIGl0IGJ1cm5zIGEgQ1BVIGluCj4gdXNlciB0aW1lLCBidXQgc3RvcHMgZG9pbmcgdGhhdCB3
+aGVuIElPIGlzIGluIHByb2dyZXNzLgoKPj4gVGhpcyB0aW1lLCBJIHJhbiBhIHN5bmMuICBUaGF0
+IHNob3VsZCBtZWFuIGFsbCBvZiB0aGUgZGlzY2FyZAo+PiBvcGVyYXRpb25zIHdlcmUgY29tcGxl
+dGVkLi4ucmlnaHQ/Cgo+IFdlbGwsIGl0IGNlcnRhaW5seSBpcyB0aGUgY2FzZSBmb3IgWEZTLiBJ
+J20gbm90IHN1cmUgd2hhdCBpcwo+IGhhcHBlbmluZyB3aXRoIGV4dDQgdGhvdWdoLgoKPj4gSWYg
+aXQgbWFrZXMgYSBkaWZmZXJlbmNlLCB3aGVuIEkgZ2V0IHRoZSBpL28gaGFuZyBkdXJpbmcgdGhl
+Cj4+IHhmcyBkZWxldGVzLCBteSBlbnRpcmUgc3lzdGVtIHNlZW1zIHRvIGhhbmcuICBJdCBkb2Vz
+bid0IGp1c3QKPj4gaGFuZyB0aGF0IHBhcnRpY3VsYXIgbW91bnRlZCB2b2x1bWVzJyBpL28uCgo+
+IEFueSBlcnJvcnMgaW4gZG1lc2c/CgpJIGhhZCBob3BlZCB0aGF0IHRoZSBPUCB3b3VsZCB0YWtl
+IG15IHN1Z2dlc3Rpb25zIGFuZCBydW5zIHNvbWUKd2ViIHNlYXJjaCwgYmVjYXVzZSBJIHdhcyBv
+YnZpb3VzbHkgc3VnZ2VzdGluZyB0aGF0IHRoZXJlIHRoZQpiZWhhdmlvdXIgaGUgc2F3IGlzIGV4
+cGVjdGVkIGFuZCBjb3JyZWN0IGZvciBYRlM6Cgo+Pj4gKiBMZWFybiBob3cgVFJJTSBpcyBzcGVj
+aWZpZWQsIGFuZCB0aHVzIHdoeSBtYW55IHBlb3BsZSBwcmVmZXIKPj4+ICAgcnVubmluZyBwZXJp
+b2RpY2FsbHkgJ2ZzdHJpbScgd2hpY2ggdXNlcyBGSVRSSU0gdG8gbW91bnRpbmcKPj4+ICAgd2l0
+aCAnZGlzY2FyZCcuCgpTbyBsZXQncyBjdXQgaXQgc2hvcnQ6IHRoZSBUUklNIGNvbW1hbmQgaXMg
+c3BlY2lmaWVkIHRvIGJlCnN5bmNocm9ub3VzLgoKVGhlcmVmb3JlIGEgc2VxdWVuY2UgaWYgVFJJ
+TSBvcGVyYXRpb25zIHdpbGwgbG9jayB1cCB0aGUgZGlzaywKYW5kIHVzdWFsbHkgYXMgYSByZXN1
+bHQgdGhlIGhvc3QgdG9vLiBJbiBhZGRpdGlvbiB0byB0aGlzLCBpbgpzb21lIGltcGxlbWVudGF0
+aW9ucyBUUklNIGlzIGZhc3RlciBhbmQgaW4gc29tZSBpdCBpcyBzbG93ZXIsCmJ1dCBhZ2FpbiB0
+aGUgbWFpbiBwcm9ibGVtIGlzIHRoYXQgaXQgaXMgc3luY2hyb25vdXMuCgpUaGVyZWZvcmUgdXNp
+bmcgJ2Rpc2NhcmQnIHdoaWNoIHVzZXMgVFJJTSBpcyBzdWJqZWN0IHRvIGV4YWN0bHkKdGhlIGJl
+aGF2aW91ciByZXBvcnRlZC4gQnV0ICdleHQ0JyBiYXRjaGVzIFRSSU1zLCBpc3N1aW5nIHRoZW0K
+b3V0IG9mIHRoZSBqb3VybmFsLCB3aGlsZSBYRlMgcHJvYmFibHkgaXNzdWVzIHRoZW0gd2l0aCBl
+dmVyeQpkZWxldGlvbiBvcGVyYXRpb24sIHNvICdleHQ0JyBzaG91bGQgYmUgaGl0IGxlc3MsIGJ1
+dCB0aGUKZGlmZmVyZW5jZSBzaG91bGQgbm90IGJlIGFzIGxhcmdlIGFzIHJlcG9ydGVkLgoKSSBz
+dXNwZWN0IHRoZW4gdGhhdCByZWNlbnQgJ2V4dDQnIGlnbm9yZXMgJ2Rpc2NhcmQnIHByZWNpc2Vs
+eQpiZWNhdXNlIG9mIHRoZSBtYW55IHJlcG9ydHMgb2YgZnJlZXplcyB0aGV5IG1heSBoYXZlIHJl
+Y2VpdmVkLgoKQW4gZWFybHkgZGlzY3Vzc2lvbiBvZiB0aGUgaXNzdWUgd2l0aCBUUklNOgoKaHR0
+cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy9saW51eC1mc2RldmVsL21zZzIzMDY0Lmh0bWwKCkZy
+b20gdGhpcyByZXBvcnQgaXQgc2VlbXMgdGhhdCAnZXh0NCcgdXNlZCB0byBiZSAic2xvdyIKb24g
+J2Rpc2NhcmQnIHRvbzoKCmh0dHBzOi8vcGF0cmljay1uYWdlbC5uZXQvYmxvZy9hcmNoaXZlcy8z
+MzcKICJJIGRpZCBpdCB0aHJlZSB0aW1lcyB3aXRoIGFuZCB0aHJlZSB0aW1lcyB3aXRob3V0IHRo
+ZSDigJxkaXNjYXJk4oCdCiAgb3B0aW9uLCBhbmQgdGhlbiB0b29rIHRoZSBhdmVyYWdlIG9mIHRo
+b3NlIHRocmVlIHRyaWVzOgogIFdpdGhvdXQg4oCcZGlzY2FyZOKAnSBvcHRpb246CiAgICAgIFVu
+cGFjazogMS4yMXMKICAgICAgU3luYzogMS42NnMgKD0gMTcyIE1CL3MpCiAgICAgIERlbGV0ZTog
+MC40N3MKICAgICAgU3luYzogMC4xN3MKICBXaXRoIOKAnGRpc2NhcmTigJ0gb3B0aW9uOgogICAg
+ICBVbnBhY2s6IDEuMThzCiAgICAgIFN5bmM6IDEuNjJzICg9IDE3NiBNQi9zKQogICAgICBEZWxl
+dGU6IDAuNDhzCiAgICAgIFN5bmM6IDQwLjQxcwogIFNvLCB3aXRoIOKAnGRpc2NhcmTigJ0gb24s
+IGRlbGV0aW5nIGEgYmlnIGJ1bmNoIG9mIHNtYWxsIGZpbGVzIGlzIDY0CiAgdGltZXMgc2xvd2Vy
+IG9uIG15IFNTRC4gRm9yIHRob3NlIH40MCBzZWNvbmRzIGFueSBJL08gaXMgcmVhbGx5CiAgc2xv
+dywgc28gdGhhdOKAmXMgcHJldHR5IG11Y2ggdGhlIHRpbWUgd2hlbiB5b3UgZ2V0IGEgZnJlc2gg
+Y3VwIG9mCiAgY29mZmVlLCBvciB3YXN0ZSB0aW1lIHdhdGNoaW5nIHRoZSBtYXNzIHN0b3JhZ2Ug
+YWN0aXZpdHkgTEVELiIKCkFsc28gdGhlICdtYW4nIHBhZ2UgZm9yICdmc3RyaW0nOgoKaHR0cDov
+L3d3dy52ZG1ldWxlbi5uZXQvY2dpLWJpbi9tYW4vbWFuMmh0bWw/ZnN0cmltKzgKICItbSwgLS1t
+aW5pbXVtIG1pbmltdW0tZnJlZS1leHRlbnQKICAgIE1pbmltdW0gY29udGlndW91cyBmcmVlIHJh
+bmdlIHRvIGRpc2NhcmQsIGluIGJ5dGVzLgogICAgKFRoaXMgdmFsdWUgaXMgaW50ZXJuYWxseSBy
+b3VuZGVkIHVwIHRvIGEgbXVsdGlwbGUgb2YgdGhlCiAgICBmaWxlc3lzdGVtIGJsb2NrIHNpemUp
+LiBGcmVlIHJhbmdlcyBzbWFsbGVyIHRoYW4gdGhpcyB3aWxsIGJlCiAgICBpZ25vcmVkLiBCeSBp
+bmNyZWFzaW5nIHRoaXMgdmFsdWUsIHRoZSBmc3RyaW0gb3BlcmF0aW9uIHdpbGwKICAgIGNvbXBs
+ZXRlIG1vcmUgcXVpY2tseSBmb3IgZmlsZXN5c3RlbXMgd2l0aCBiYWRseSBmcmFnbWVudGVkCiAg
+ICBmcmVlc3BhY2UsIGFsdGhvdWdoIG5vdCBhbGwgYmxvY2tzIHdpbGwgYmUgZGlzY2FyZGVkLiBE
+ZWZhdWx0CiAgICB2YWx1ZSBpcyB6ZXJvLCBkaXNjYXJkIGV2ZXJ5IGZyZWUgYmxvY2suIgoKTm90
+ZSB0aGUgIkJ5IGluY3JlYXNpbmcgdGhpcyB2YWx1ZSwgdGhlIGZzdHJpbSBvcGVyYXRpb24gd2ls
+bApjb21wbGV0ZSBtb3JlIHF1aWNrbHkgZm9yIGZpbGVzeXN0ZW1zIHdpdGggYmFkbHkgZnJhZ21l
+bnRlZApmcmVlc3BhY2UiLCB3aGljaCBpbXBsaWVzIHRoYXQgRklUUklNIGlzIGFsc28gc3luY2hy
+b25vdXMgb3Igc2xvdwpvciBib3RoLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29z
+cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
