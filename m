@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1T8aZb4260309 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 02:36:37 -0600
+	q1T93fXo261870 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 03:03:41 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	uSsFOgn5lgCMzBXE (version=TLSv1 cipher=AES256-SHA bits=256
+	lqTZQRS9A39Sy56P (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Feb 2012 00:36:34 -0800 (PST)
-Date: Wed, 29 Feb 2012 03:36:33 -0500
+	Wed, 29 Feb 2012 01:03:33 -0800 (PST)
+Date: Wed, 29 Feb 2012 04:03:28 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Question about project quota with container
-Message-ID: <20120229083633.GA14241@infradead.org>
-References: <4F4D8413.4050709@oracle.com>
+Subject: Re: Warning from unlock_new_inode
+Message-ID: <20120229090328.GA5903@infradead.org>
+References: <20120222220137.GB3650@quack.suse.cz>
+	<20120228083444.GB22995@infradead.org>
+	<20120229005351.GV3592@dastard> <20120229014906.GX3592@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F4D8413.4050709@oracle.com>
+In-Reply-To: <20120229014906.GX3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +30,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-> I was wondering if other file system will also implement project quota
-> based on these two configuration files in the future? In other words, is
-> it a standard?
+Looks good, except that I'd drop the _must_ shouting in the comment.
 
-The have been a few attempts at roughly similar quotas for ext4, but
-they were incompatible enough to not reuse any infrastructure like this.
-
-> 
-> Alternatively, maybe the project path and ID can be setup at cgroup
-> control files too, the following things could be implemented like
-> "xfsprogs/quota/edit.c", but I would put aside this idea for now.
-
-Assigning the project IDs in the cgroups code sounds fine to me.  To
-make peoples life's easier it might be good idea to keep the
-/etc/projects and /etc/projid files uptodate even from that code.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
