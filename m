@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1SNwk3D227819 for <xfs@OSS.SGI.com>; Tue, 28 Feb 2012 17:58:47 -0600
-Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
-	cuda.sgi.com with ESMTP id byrqktEOw1ztRw0d for
-	<xfs@OSS.SGI.com>; Tue, 28 Feb 2012 15:58:45 -0800 (PST)
-Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
-	id 4EEB63D20149217F for xfs@OSS.SGI.com;
-	Tue, 28 Feb 2012 23:58:42 +0000
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1S2WwH-0008PZ-Sj
-	for <xfs@OSS.SGI.com>; Tue, 28 Feb 2012 23:58:37 +0000
+	q1T0ru8n231157 for <xfs@oss.sgi.com>; Tue, 28 Feb 2012 18:53:56 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	9JBAyIUNgcdjS96k for <xfs@oss.sgi.com>;
+	Tue, 28 Feb 2012 16:53:54 -0800 (PST)
+Date: Wed, 29 Feb 2012 11:53:51 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Warning from unlock_new_inode
+Message-ID: <20120229005351.GV3592@dastard>
+References: <20120222220137.GB3650@quack.suse.cz>
+	<20120228083444.GB22995@infradead.org>
 MIME-Version: 1.0
-Message-ID: <20301.27181.727405.287963@tree.ty.sabi.co.UK>
-Date: Tue, 28 Feb 2012 23:58:37 +0000
-Subject: Re: Poor performance using discard
-In-Reply-To: <1330469778.9688.7.camel@core24>
-References: <1330469778.9688.7.camel@core24>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Content-Disposition: inline
+In-Reply-To: <20120228083444.GB22995@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,48 +27,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-[ ... ]
+On Tue, Feb 28, 2012 at 03:34:44AM -0500, Christoph Hellwig wrote:
+> On Wed, Feb 22, 2012 at 11:01:37PM +0100, Jan Kara wrote:
+> >   Hello,
+> > 
+> >   while running fsstress on XFS partition with 3.3-rc4 kernel + my freeze
+> > fixes (they do not touch anything relevant AFAICT) I've got the following
+> > warning:
+> 
+> That's stressing including freezes or without?  Do you have a better
+> description of te workload?
+> 
+> Either way it's an odd one, I can't see any obvious way how this would
+> happen.
 
-> /dev/mapper/ssdvg0-testLV on /media/temp type xfs
-> (rw,noatime,nodiratime,discard) [ ... ] real 5m7.139s [ ... ]
+FWIW, I'm trying to track down exactly the same warning on a RHEL6.2
+kernel being triggered by NFS filehandle lookup. The problem is
+being being reproduced reliably by a well known NFS benchmark, but
+this gives more a bit more information on where a race condition in
+the inode lookup may exist.
 
-> There where lockups where the system would pause for about a
-> minute during the process.
+That is, the only common element here in these two lookup paths is
+that they are the only two calls to xfs_iget() with
+XFS_IGET_UNTRUSTED set in the flags. I doubt this is a coincidence.
 
-> ext4 handles this scenerio fine:
+Cheers,
 
-> /dev/mapper/ssdvg0-testLV on /media/temp type ext4
-> (rw,noatime,nodiratime,discard) [ ... ] real 0m0.943s [ ... ]
-
-> xfs mounted without discard seems to handle this fine:
-
-> /dev/mapper/ssdvg0-testLV on /media/temp type xfs
-> (rw,noatime,nodiratime) [ ... ] real 0m1.634s [ ... ]
-
-[ ... ]
-
-> Any suggestions?
-
-* Look at 'vmstat 1' while 'rm' is running.
-
-* Learn how TRIM is specified, and thus why many people prefer
-  running periodically 'fstrim' which uses FITRIM to mounting
-  with 'discard'.
-
-* Compare with my Crucial M4 flash SSD with XFS:
-
-    #  time sh -c 'sysctl vm/drop_caches=3; rm -r linux-2.6.32; sync'
-    vm.drop_caches = 3
-
-    real    0m59.604s
-    user    0m0.060s
-    sys     0m3.944s
-
-  That's pretty good for ~32k files and ~390MiB. Probably the
-  TRIM implementation on the M4 is rather faster than that on
-  the Patriot.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
