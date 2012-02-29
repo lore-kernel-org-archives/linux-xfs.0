@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1T9tB7k002228 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 03:55:11 -0600
+	q1T9tBwc002231 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 03:55:12 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	fCJLUldA9bb3aS42 (version=TLSv1 cipher=AES256-SHA bits=256
+	kEMDXPtloLwHiwzR (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Feb 2012 01:55:10 -0800 (PST)
+	Wed, 29 Feb 2012 01:55:09 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1S2gFZ-0006Ci-Jh
-	for xfs@oss.sgi.com; Wed, 29 Feb 2012 09:55:09 +0000
-Message-Id: <20120229095509.559250501@bombadil.infradead.org>
-Date: Wed, 29 Feb 2012 04:53:55 -0500
+	Linux)) id 1S2gFY-00069b-FE
+	for xfs@oss.sgi.com; Wed, 29 Feb 2012 09:55:08 +0000
+Message-Id: <20120229095508.434845082@bombadil.infradead.org>
+Date: Wed, 29 Feb 2012 04:53:49 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 8/8] xfs: reimplement fdatasync support
+Subject: [PATCH 2/8] xfs: do not require an ioend for new EOF calculation
 References: <20120229095347.009884687@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-implement-fdatasync
+Content-Disposition: inline; filename=xfs-simplify-eof-calculation
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,93 +32,102 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Add an in-memory only flag to say we logged timestamps only, and use it to
-check if fdatasync can optimize away the log force.
+Replace xfs_ioend_new_eof with a new inline xfs_new_eof helper that
+doesn't require and ioend, and is available also outside of xfs_aops.c.
+
+Also make the code a bit more clear by using a normal if statement
+instead of a slightly misleading MIN().
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_file.c       |    7 +++++--
- fs/xfs/xfs_inode_item.c |    3 ++-
- fs/xfs/xfs_inode_item.h |   11 ++++++++++-
- fs/xfs/xfs_super.c      |    2 +-
- 4 files changed, 18 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_aops.c  |   24 ++++--------------------
+ fs/xfs/xfs_inode.h |   14 ++++++++++++++
+ 2 files changed, 18 insertions(+), 20 deletions(-)
 
-Index: xfs/fs/xfs/xfs_inode_item.c
+Index: xfs/fs/xfs/xfs_aops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.c	2012-02-28 12:02:29.643918816 +0100
-+++ xfs/fs/xfs/xfs_inode_item.c	2012-02-28 12:02:53.871918171 +0100
-@@ -438,7 +438,8 @@ out:
- 	 * games in recovery easier, which isn't a big deal as just about any
- 	 * transaction would dirty it anyway.
- 	 */
--	iip->ili_format.ilf_fields = XFS_ILOG_CORE | iip->ili_fields;
-+	iip->ili_format.ilf_fields = XFS_ILOG_CORE |
-+		(iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
- 	iip->ili_format.ilf_size = nvecs;
+--- xfs.orig/fs/xfs/xfs_aops.c	2011-11-30 11:05:19.260046232 +0100
++++ xfs/fs/xfs/xfs_aops.c	2011-11-30 11:06:07.983115611 +0100
+@@ -99,23 +99,6 @@ xfs_destroy_ioend(
  }
  
-Index: xfs/fs/xfs/xfs_inode_item.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode_item.h	2012-02-28 12:02:29.643918816 +0100
-+++ xfs/fs/xfs/xfs_inode_item.h	2012-02-28 12:04:47.539915134 +0100
-@@ -86,6 +86,15 @@ typedef struct xfs_inode_log_format_64 {
- #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
- #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
+ /*
+- * If the end of the current ioend is beyond the current EOF,
+- * return the new EOF value, otherwise zero.
+- */
+-STATIC xfs_fsize_t
+-xfs_ioend_new_eof(
+-	xfs_ioend_t		*ioend)
+-{
+-	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
+-	xfs_fsize_t		isize;
+-	xfs_fsize_t		bsize;
+-
+-	bsize = ioend->io_offset + ioend->io_size;
+-	isize = MIN(i_size_read(VFS_I(ip)), bsize);
+-	return isize > ip->i_d.di_size ? isize : 0;
+-}
+-
+-/*
+  * Fast and loose check if this write could update the on-disk inode size.
+  */
+ static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
+@@ -135,7 +118,7 @@ xfs_setfilesize(
+ 	xfs_fsize_t		isize;
  
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+-	isize = xfs_ioend_new_eof(ioend);
++	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
+ 	if (isize) {
+ 		trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
+ 		ip->i_d.di_size = isize;
+@@ -357,6 +340,7 @@ xfs_submit_ioend_bio(
+ 	xfs_ioend_t		*ioend,
+ 	struct bio		*bio)
+ {
++	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	atomic_inc(&ioend->io_remaining);
+ 	bio->bi_private = ioend;
+ 	bio->bi_end_io = xfs_end_bio;
+@@ -365,8 +349,8 @@ xfs_submit_ioend_bio(
+ 	 * If the I/O is beyond EOF we mark the inode dirty immediately
+ 	 * but don't update the inode size until I/O completion.
+ 	 */
+-	if (xfs_ioend_new_eof(ioend))
+-		xfs_mark_inode_dirty(XFS_I(ioend->io_inode));
++	if (xfs_new_eof(ip, ioend->io_offset + ioend->io_size))
++		xfs_mark_inode_dirty(ip);
+ 
+ 	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE, bio);
+ }
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2011-11-30 11:05:16.670060264 +0100
++++ xfs/fs/xfs/xfs_inode.h	2011-11-30 11:06:03.769805103 +0100
+@@ -275,6 +275,20 @@ static inline xfs_fsize_t XFS_ISIZE(stru
+ }
+ 
+ /*
++ * If this I/O goes past the on-disk inode size update it unless it would
++ * be past the current in-core inode size.
++ */
++static inline xfs_fsize_t
++xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
++{
++	xfs_fsize_t i_size = i_size_read(VFS_I(ip));
++
++	if (new_size > i_size)
++		new_size = i_size;
++	return new_size > ip->i_d.di_size ? new_size : 0;
++}
 +
 +/*
-+ * The timestamps are dirty, but not necessarily anything else in the inode
-+ * core.  Unlike the other fields above this one must never make it to disk
-+ * in the ilf_fields of the inode_log_format, but is purely store in-memory in
-+ * ili_fields in the inode_log_item.
-+ */
-+#define XFS_ILOG_TIMESTAMP	0x4000
-+
- #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
- 				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
-@@ -101,7 +110,7 @@ typedef struct xfs_inode_log_format_64 {
- 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
- 				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
- 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
--				 XFS_ILOG_ABROOT)
-+				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
- 
- static inline int xfs_ilog_fbroot(int w)
- {
-Index: xfs/fs/xfs/xfs_file.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_file.c	2012-02-28 12:01:00.063921211 +0100
-+++ xfs/fs/xfs/xfs_file.c	2012-02-28 12:02:53.875918171 +0100
-@@ -197,8 +197,11 @@ xfs_file_fsync(
- 	 * to flush the log up to the latest LSN that touched the inode.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	if (xfs_ipincount(ip))
--		lsn = ip->i_itemp->ili_last_lsn;
-+	if (xfs_ipincount(ip)) {
-+		if (!datasync ||
-+		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
-+			lsn = ip->i_itemp->ili_last_lsn;
-+	}
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
- 	if (lsn)
-Index: xfs/fs/xfs/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_super.c	2012-02-28 12:01:00.071921207 +0100
-+++ xfs/fs/xfs/xfs_super.c	2012-02-28 12:02:53.875918171 +0100
-@@ -907,7 +907,7 @@ xfs_fs_dirty_inode(
- 	ip->i_d.di_mtime.t_nsec = (__int32_t)inode->i_mtime.tv_nsec;
- 
- 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
- 	error = xfs_trans_commit(tp, 0);
- 	if (error)
- 		goto trouble;
+  * i_flags helper functions
+  */
+ static inline void
 
 _______________________________________________
 xfs mailing list
