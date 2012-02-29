@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1T9tAaL002206 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 03:55:11 -0600
+	q1T9tB7k002228 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 03:55:11 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	LFUklsuNaYXPNFMU (version=TLSv1 cipher=AES256-SHA bits=256
+	fCJLUldA9bb3aS42 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 29 Feb 2012 01:55:08 -0800 (PST)
+	Wed, 29 Feb 2012 01:55:10 -0800 (PST)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1S2gFY-000695-99
-	for xfs@oss.sgi.com; Wed, 29 Feb 2012 09:55:08 +0000
-Message-Id: <20120229095508.235216264@bombadil.infradead.org>
-Date: Wed, 29 Feb 2012 04:53:48 -0500
+	Linux)) id 1S2gFZ-0006Ci-Jh
+	for xfs@oss.sgi.com; Wed, 29 Feb 2012 09:55:09 +0000
+Message-Id: <20120229095509.559250501@bombadil.infradead.org>
+Date: Wed, 29 Feb 2012 04:53:55 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 1/8] xfs: use per-filesystem I/O completion workqueues
+Subject: [PATCH 8/8] xfs: reimplement fdatasync support
 References: <20120229095347.009884687@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-split-workqueues
+Content-Disposition: inline; filename=xfs-implement-fdatasync
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,250 +32,93 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The new concurrency managed workqueues are cheap enough that we can create
-per-filesystem instead of global workqueues.  This allows us to remove the
-trylock or defer scheme on the ilock, which is not helpful once we have
-outstanding log reservations until finishing a size update.
-
-Also allow the default concurrency on this workqueues so that I/O completions
-blocking on the ilock for one inode do not block process for another inode.
+Add an in-memory only flag to say we logged timestamps only, and use it to
+check if fdatasync can optimize away the log force.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_aops.c  |   39 ++++++++++-----------------------------
- fs/xfs/xfs_aops.h  |    2 --
- fs/xfs/xfs_buf.c   |   17 -----------------
- fs/xfs/xfs_mount.h |    3 +++
- fs/xfs/xfs_super.c |   39 ++++++++++++++++++++++++++++++++++++++-
- 5 files changed, 51 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_file.c       |    7 +++++--
+ fs/xfs/xfs_inode_item.c |    3 ++-
+ fs/xfs/xfs_inode_item.h |   11 ++++++++++-
+ fs/xfs/xfs_super.c      |    2 +-
+ 4 files changed, 18 insertions(+), 5 deletions(-)
 
-Index: xfs/fs/xfs/xfs_aops.c
+Index: xfs/fs/xfs/xfs_inode_item.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2012-02-13 15:59:57.997159607 -0800
-+++ xfs/fs/xfs/xfs_aops.c	2012-02-19 13:21:45.653291774 -0800
-@@ -126,21 +126,15 @@ static inline bool xfs_ioend_is_append(s
- 
- /*
-  * Update on-disk file size now that data has been written to disk.
-- *
-- * This function does not block as blocking on the inode lock in IO completion
-- * can lead to IO completion order dependency deadlocks.. If it can't get the
-- * inode ilock it will return EAGAIN. Callers must handle this.
-  */
--STATIC int
-+STATIC void
- xfs_setfilesize(
--	xfs_ioend_t		*ioend)
-+	struct xfs_ioend	*ioend)
- {
--	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	xfs_fsize_t		isize;
- 
--	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
--		return EAGAIN;
--
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_ioend_new_eof(ioend);
- 	if (isize) {
- 		trace_xfs_setfilesize(ip, ioend->io_offset, ioend->io_size);
-@@ -149,7 +143,6 @@ xfs_setfilesize(
- 	}
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
--	return 0;
- }
- 
- /*
-@@ -163,10 +156,12 @@ xfs_finish_ioend(
- 	struct xfs_ioend	*ioend)
- {
- 	if (atomic_dec_and_test(&ioend->io_remaining)) {
-+		struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
-+
- 		if (ioend->io_type == IO_UNWRITTEN)
--			queue_work(xfsconvertd_workqueue, &ioend->io_work);
-+			queue_work(mp->m_unwritten_workqueue, &ioend->io_work);
- 		else if (xfs_ioend_is_append(ioend))
--			queue_work(xfsdatad_workqueue, &ioend->io_work);
-+			queue_work(mp->m_data_workqueue, &ioend->io_work);
- 		else
- 			xfs_destroy_ioend(ioend);
- 	}
-@@ -207,23 +202,9 @@ xfs_end_io(
- 	 * We might have to update the on-disk file size after extending
- 	 * writes.
+--- xfs.orig/fs/xfs/xfs_inode_item.c	2012-02-28 12:02:29.643918816 +0100
++++ xfs/fs/xfs/xfs_inode_item.c	2012-02-28 12:02:53.871918171 +0100
+@@ -438,7 +438,8 @@ out:
+ 	 * games in recovery easier, which isn't a big deal as just about any
+ 	 * transaction would dirty it anyway.
  	 */
--	error = xfs_setfilesize(ioend);
--	ASSERT(!error || error == EAGAIN);
--
-+	xfs_setfilesize(ioend);
- done:
--	/*
--	 * If we didn't complete processing of the ioend, requeue it to the
--	 * tail of the workqueue for another attempt later. Otherwise destroy
--	 * it.
--	 */
--	if (error == EAGAIN) {
--		atomic_inc(&ioend->io_remaining);
--		xfs_finish_ioend(ioend);
--		/* ensure we don't spin on blocked ioends */
--		delay(1);
--	} else {
--		xfs_destroy_ioend(ioend);
--	}
-+	xfs_destroy_ioend(ioend);
+-	iip->ili_format.ilf_fields = XFS_ILOG_CORE | iip->ili_fields;
++	iip->ili_format.ilf_fields = XFS_ILOG_CORE |
++		(iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
+ 	iip->ili_format.ilf_size = nvecs;
  }
  
- /*
-Index: xfs/fs/xfs/xfs_aops.h
+Index: xfs/fs/xfs/xfs_inode_item.h
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.h	2012-02-13 13:48:02.390346163 -0800
-+++ xfs/fs/xfs/xfs_aops.h	2012-02-19 13:21:45.653291774 -0800
-@@ -18,8 +18,6 @@
- #ifndef __XFS_AOPS_H__
- #define __XFS_AOPS_H__
+--- xfs.orig/fs/xfs/xfs_inode_item.h	2012-02-28 12:02:29.643918816 +0100
++++ xfs/fs/xfs/xfs_inode_item.h	2012-02-28 12:04:47.539915134 +0100
+@@ -86,6 +86,15 @@ typedef struct xfs_inode_log_format_64 {
+ #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
+ #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
  
--extern struct workqueue_struct *xfsdatad_workqueue;
--extern struct workqueue_struct *xfsconvertd_workqueue;
- extern mempool_t *xfs_ioend_pool;
++
++/*
++ * The timestamps are dirty, but not necessarily anything else in the inode
++ * core.  Unlike the other fields above this one must never make it to disk
++ * in the ilf_fields of the inode_log_format, but is purely store in-memory in
++ * ili_fields in the inode_log_item.
++ */
++#define XFS_ILOG_TIMESTAMP	0x4000
++
+ #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+ 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
+ 				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
+@@ -101,7 +110,7 @@ typedef struct xfs_inode_log_format_64 {
+ 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
+ 				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
+ 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+-				 XFS_ILOG_ABROOT)
++				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
  
- /*
-Index: xfs/fs/xfs/xfs_buf.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_buf.c	2012-02-13 13:48:02.393679497 -0800
-+++ xfs/fs/xfs/xfs_buf.c	2012-02-19 13:21:45.653291774 -0800
-@@ -45,8 +45,6 @@ static kmem_zone_t *xfs_buf_zone;
- STATIC int xfsbufd(void *);
- 
- static struct workqueue_struct *xfslogd_workqueue;
--struct workqueue_struct *xfsdatad_workqueue;
--struct workqueue_struct *xfsconvertd_workqueue;
- 
- #ifdef XFS_BUF_LOCK_TRACKING
- # define XB_SET_OWNER(bp)	((bp)->b_last_holder = current->pid)
-@@ -1793,21 +1791,8 @@ xfs_buf_init(void)
- 	if (!xfslogd_workqueue)
- 		goto out_free_buf_zone;
- 
--	xfsdatad_workqueue = alloc_workqueue("xfsdatad", WQ_MEM_RECLAIM, 1);
--	if (!xfsdatad_workqueue)
--		goto out_destroy_xfslogd_workqueue;
--
--	xfsconvertd_workqueue = alloc_workqueue("xfsconvertd",
--						WQ_MEM_RECLAIM, 1);
--	if (!xfsconvertd_workqueue)
--		goto out_destroy_xfsdatad_workqueue;
--
- 	return 0;
- 
-- out_destroy_xfsdatad_workqueue:
--	destroy_workqueue(xfsdatad_workqueue);
-- out_destroy_xfslogd_workqueue:
--	destroy_workqueue(xfslogd_workqueue);
-  out_free_buf_zone:
- 	kmem_zone_destroy(xfs_buf_zone);
-  out:
-@@ -1817,8 +1802,6 @@ xfs_buf_init(void)
- void
- xfs_buf_terminate(void)
+ static inline int xfs_ilog_fbroot(int w)
  {
--	destroy_workqueue(xfsconvertd_workqueue);
--	destroy_workqueue(xfsdatad_workqueue);
- 	destroy_workqueue(xfslogd_workqueue);
- 	kmem_zone_destroy(xfs_buf_zone);
- }
+Index: xfs/fs/xfs/xfs_file.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_file.c	2012-02-28 12:01:00.063921211 +0100
++++ xfs/fs/xfs/xfs_file.c	2012-02-28 12:02:53.875918171 +0100
+@@ -197,8 +197,11 @@ xfs_file_fsync(
+ 	 * to flush the log up to the latest LSN that touched the inode.
+ 	 */
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_ipincount(ip))
+-		lsn = ip->i_itemp->ili_last_lsn;
++	if (xfs_ipincount(ip)) {
++		if (!datasync ||
++		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
++			lsn = ip->i_itemp->ili_last_lsn;
++	}
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+ 	if (lsn)
 Index: xfs/fs/xfs/xfs_super.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_super.c	2012-02-19 12:58:45.823295509 -0800
-+++ xfs/fs/xfs/xfs_super.c	2012-02-19 13:23:48.836624774 -0800
-@@ -759,6 +759,36 @@ xfs_setup_devices(
- 	return 0;
- }
+--- xfs.orig/fs/xfs/xfs_super.c	2012-02-28 12:01:00.071921207 +0100
++++ xfs/fs/xfs/xfs_super.c	2012-02-28 12:02:53.875918171 +0100
+@@ -907,7 +907,7 @@ xfs_fs_dirty_inode(
+ 	ip->i_d.di_mtime.t_nsec = (__int32_t)inode->i_mtime.tv_nsec;
  
-+STATIC int
-+xfs_init_mount_workqueues(
-+	struct xfs_mount	*mp)
-+{
-+	mp->m_data_workqueue = alloc_workqueue("xfs-data/%s",
-+			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+	if (!mp->m_data_workqueue)
-+		goto out;
-+
-+	mp->m_unwritten_workqueue = alloc_workqueue("xfs-conv/%s",
-+			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+	if (!mp->m_unwritten_workqueue)
-+		goto out_destroy_data_iodone_queue;
-+
-+	return 0;
-+
-+out_destroy_data_iodone_queue:
-+	destroy_workqueue(mp->m_data_workqueue);
-+out:
-+	return -ENOMEM;
-+}
-+
-+STATIC void
-+xfs_destroy_mount_workqueues(
-+	struct xfs_mount	*mp)
-+{
-+	destroy_workqueue(mp->m_data_workqueue);
-+	destroy_workqueue(mp->m_unwritten_workqueue);
-+}
-+
- /* Catch misguided souls that try to use this interface on XFS */
- STATIC struct inode *
- xfs_fs_alloc_inode(
-@@ -982,6 +1012,7 @@ xfs_fs_put_super(
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
-+	xfs_destroy_mount_workqueues(mp);
- 	xfs_close_devices(mp);
- 	xfs_free_fsname(mp);
- 	kfree(mp);
-@@ -1308,10 +1339,14 @@ xfs_fs_fill_super(
+ 	xfs_trans_ijoin(tp, ip, XFS_ILOCK_EXCL);
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
+ 	error = xfs_trans_commit(tp, 0);
  	if (error)
- 		goto out_free_fsname;
- 
--	error = xfs_icsb_init_counters(mp);
-+	error = xfs_init_mount_workqueues(mp);
- 	if (error)
- 		goto out_close_devices;
- 
-+	error = xfs_icsb_init_counters(mp);
-+	if (error)
-+		goto out_destroy_workqueues;
-+
- 	error = xfs_readsb(mp, flags);
- 	if (error)
- 		goto out_destroy_counters;
-@@ -1374,6 +1409,8 @@ xfs_fs_fill_super(
- 	xfs_freesb(mp);
-  out_destroy_counters:
- 	xfs_icsb_destroy_counters(mp);
-+out_destroy_workqueues:
-+	xfs_destroy_mount_workqueues(mp);
-  out_close_devices:
- 	xfs_close_devices(mp);
-  out_free_fsname:
-Index: xfs/fs/xfs/xfs_mount.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_mount.h	2012-02-13 13:48:02.410346163 -0800
-+++ xfs/fs/xfs/xfs_mount.h	2012-02-19 13:21:45.656625108 -0800
-@@ -211,6 +211,9 @@ typedef struct xfs_mount {
- 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
- 	int64_t			m_low_space[XFS_LOWSP_MAX];
- 						/* low free space thresholds */
-+
-+	struct workqueue_struct	*m_data_workqueue;
-+	struct workqueue_struct	*m_unwritten_workqueue;
- } xfs_mount_t;
- 
- /*
+ 		goto trouble;
 
 _______________________________________________
 xfs mailing list
