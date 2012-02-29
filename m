@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q1T7ehWb257712 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 01:40:43 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id xT4Aeyj0Zh11iHlJ for
-	<xfs@oss.sgi.com>; Tue, 28 Feb 2012 23:40:40 -0800 (PST)
-Date: Wed, 29 Feb 2012 07:40:40 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: mount: Structure needs cleaning
-Message-ID: <20120229074040.GA4192@nsrc.org>
-References: <33393100.post@talk.nabble.com>
-	<4F49B693.4080309@hardwarefreak.com> <33393429.post@talk.nabble.com>
-	<20120227004902.GQ3592@dastard> <33397518.post@talk.nabble.com>
-	<20120228014813.GU3592@dastard> <20120228091441.GA1562@nsrc.org>
-	<20120229035044.GY3592@dastard>
+	q1T8aZb4260309 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 02:36:37 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	uSsFOgn5lgCMzBXE (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Feb 2012 00:36:34 -0800 (PST)
+Date: Wed, 29 Feb 2012 03:36:33 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Question about project quota with container
+Message-ID: <20120229083633.GA14241@infradead.org>
+References: <4F4D8413.4050709@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120229035044.GY3592@dastard>
+In-Reply-To: <4F4D8413.4050709@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +28,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Jeff Liu <jeff.liu@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Feb 29, 2012 at 02:50:44PM +1100, Dave Chinner wrote:
-> > > http://xfs.org/index.php/XFS_FAQ#Q._Which_settings_does_my_RAID_controller_need_.3F
-> > 
-> > As a side question to this: if I am using Linux's md software RAID with an
-> > HBA, and XFS is using write barriers (as I believe it does by default), is
-> > it still necessary to disable write caching on the drives?
+> I was wondering if other file system will also implement project quota
+> based on these two configuration files in the future? In other words, is
+> it a standard?
+
+The have been a few attempts at roughly similar quotas for ext4, but
+they were incompatible enough to not reuse any infrastructure like this.
+
 > 
-> No. The MD layers pass the correct flushes to the drives now.
+> Alternatively, maybe the project path and ID can be setup at cgroup
+> control files too, the following things could be implemented like
+> "xfsprogs/quota/edit.c", but I would put aside this idea for now.
 
-Thank you: that's very clear and very helpful.
-
-Regards,
-
-Brian.
+Assigning the project IDs in the cgroups code sounds fine to me.  To
+make peoples life's easier it might be good idea to keep the
+/etc/projects and /etc/projid files uptodate even from that code.
 
 _______________________________________________
 xfs mailing list
