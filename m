@@ -1,25 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2190I8l095162 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 03:00:18 -0600
-Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
-	cuda.sgi.com with ESMTP id 1UKk3oS6BoNhLlzu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 01 Mar 2012 01:00:17 -0800 (PST)
-Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.661580.B661580.133059221410476@bugs.debian.org>
-From: Goswin von Brederlow <goswin-v-b@web.de>
-References: <20120228074914.31280.78231.reportbug@frosties.localnet>
-	<20120228091151.GA24717@infradead.org> <4F4E82E6.3040505@sandeen.net>
-	<87399tkmdf.fsf@frosties.localnet>
-	<20120301060637.GA28009@infradead.org>
-Date: Thu, 01 Mar 2012 09:56:13 +0100
-In-Reply-To: <20120301060637.GA28009@infradead.org> (Christoph Hellwig's
-	message of "Thu, 1 Mar 2012 01:06:37 -0500")
-Message-ID: <8762eo3djm.fsf@frosties.localnet>
-MIME-Version: 1.0
-Reply-To: Goswin von Brederlow <goswin-v-b@web.de>, 661580@bugs.debian.org
+	q218FM98092610 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 02:15:22 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id O5A8LnkOkWu6LEhO for
+	<xfs@oss.sgi.com>; Thu, 01 Mar 2012 00:15:20 -0800 (PST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH v2] 251: Make fstrim call a bit more random
+Date: Thu,  1 Mar 2012 09:15:16 +0100
+Message-Id: <1330589716-32362-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1330439400-26390-1-git-send-email-lczerner@redhat.com>
+References: <1330439400-26390-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +19,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Debian Bug Tracking System <submit@bugs.debian.org>, Eric Sandeen <sandeen@sandeen.net>, Carlos Maiolino <cmaiolino@redhat.com>, 661580@bugs.debian.org, Goswin von Brederlow <goswin-v-b@web.de>
+To: xfs@oss.sgi.com
+Cc: elder@dreamhost.com, Lukas Czerner <lczerner@redhat.com>
 
-Christoph Hellwig <hch@infradead.org> writes:
+To cover cases when fstrim arguments are not block/block group/file
+system size aligned, we can be a bit more random. This commit changes
+fstrim argument computing to use $RANDOM bash variable in order to have
+different minlen, start, len argument settings and change the full fs
+fstrim to be called randomly as well.
 
-> On Thu, Mar 01, 2012 at 04:53:32AM +0100, Goswin von Brederlow wrote:
->> I'm asuming libblkid is used, otherwise a sectorsize of 512 would make
->> no sense.
->> 
->> It might be that NBD advertises the geometry wrong, as in ft.sectorsize
->> isn't set correctly. That would make that part at least a kernel bug.
->
-> Now that I've looked at nbd: I can't find any way to transfer the
-> physical or logical block size information to the nbd client.  How
-> do you try set it on the server?
+Also make kill and wait not complain about non existent process, since
+it may have already finished before we attempt to kill it and wait for
+it. No reason to fail the test.
 
-I don't. The protocol doesn't (yet) have an option for this. There are a
-number of new options planed for the new handshake protocol but the nbd
-maintainer hasn't had time to implement them yet.
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+---
+v2: guess maximum minlen so we do not fail if milnen limitation
+    of the fs is too small.
 
-What I do is set the blocksize = 4096 on the nbd-client commandline
-knowing that that is what the server expects.
+ 251 |   36 +++++++++++++++++++++++++-----------
+ 1 files changed, 25 insertions(+), 11 deletions(-)
 
-MfG
-        Goswin
-
+diff --git a/251 b/251
+index fa3d74a..6d87bf4 100755
+--- a/251
++++ b/251
+@@ -54,21 +54,21 @@ _cleanup()
+ 
+ _destroy()
+ {
+-	kill $pids $fstrim_pid
+-	wait $pids $fstrim_pid
++	kill $pids $fstrim_pid 2> /dev/null
++	wait $pids $fstrim_pid 2> /dev/null
+ 	rm -rf $tmp
+ }
+ 
+ _destroy_fstrim()
+ {
+-	kill $fpid
+-	wait $fpid
++	kill $fpid 2> /dev/null
++	wait $fpid 2> /dev/null
+ }
+ 
+ _fail()
+ {
+ 	echo "$1"
+-	kill $mypid
++	kill $mypid 2> /dev/null
+ }
+ 
+ _check_fstrim_support()
+@@ -76,6 +76,16 @@ _check_fstrim_support()
+ 	$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null
+ }
+ 
++_guess_max_minlen()
++{
++	mmlen=100000
++	while [ $mmlen -gt 1 ]; do
++		$here/src/fstrim -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
++		mmlen=$(($mmlen/2))
++	done
++	echo $mmlen
++}
++
+ ##
+ # Background FSTRIM loop. We are trimming the device in the loop and for
+ # test coverage, we are doing whole device trim followed by several smaller
+@@ -85,15 +95,19 @@ fstrim_loop()
+ {
+ 	trap "_destroy_fstrim; exit \$status" 2 15
+ 	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
++	mmlen=$(_guess_max_minlen)
+ 
+ 	while true ; do
+-		step=1048576
+-		start=0
+-		$here/src/fstrim $SCRATCH_MNT &
+-		fpid=$!
+-		wait $fpid
++		step=$((RANDOM*$RANDOM))
++		minlen=$(((RANDOM*($RANDOM%2+1))%$mmlen))
++		start=$RANDOM
++		if [ $((RANDOM%10)) -gt 7 ]; then
++			$here/src/fstrim $SCRATCH_MNT &
++			fpid=$!
++			wait $fpid
++		fi
+ 		while [ $start -lt $fsize ] ; do
+-			$here/src/fstrim -s ${start}k -l ${step}k $SCRATCH_MNT &
++			$here/src/fstrim -m ${minlen}k -s ${start}k -l ${step}k $SCRATCH_MNT &
+ 			fpid=$!
+ 			wait $fpid
+ 			start=$(( $start + $step ))
+-- 
+1.7.4.4
 
 _______________________________________________
 xfs mailing list
