@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q213wWcN074424 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 21:58:33 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	w2xjytu4A8ibM9wo for <xfs@oss.sgi.com>;
-	Wed, 29 Feb 2012 19:58:31 -0800 (PST)
-Date: Thu, 1 Mar 2012 14:58:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Warning from unlock_new_inode
-Message-ID: <20120301035812.GA5091@dastard>
-References: <20120222220137.GB3650@quack.suse.cz>
-	<20120228083444.GB22995@infradead.org>
-	<20120229005351.GV3592@dastard> <20120229014906.GX3592@dastard>
-	<20120301030324.GX28391@sgi.com>
+	q214X4RS076450 for <xfs@oss.sgi.com>; Wed, 29 Feb 2012 22:33:05 -0600
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id VS7OpVvLgH3NRqwy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 29 Feb 2012 20:33:03 -0800 (PST)
+Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.661580.B.13305761474124@bugs.debian.org>
+From: Goswin von Brederlow <goswin-v-b@web.de>
+References: <20120228074914.31280.78231.reportbug@frosties.localnet>
+	<20120228091151.GA24717@infradead.org> <4F4E82E6.3040505@sandeen.net>
+Date: Thu, 01 Mar 2012 04:53:32 +0100
+In-Reply-To: <4F4E82E6.3040505@sandeen.net> (Eric Sandeen's message of "Wed,
+	29 Feb 2012 13:56:22 -0600")
+Message-ID: <87399tkmdf.fsf@frosties.localnet>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120301030324.GX28391@sgi.com>
+Reply-To: Goswin von Brederlow <goswin-v-b@web.de>, 661580@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,122 +30,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Christoph Hellwig <hch@infradead.org>, Debian Bug Tracking System <submit@bugs.debian.org>, Carlos Maiolino <cmaiolino@redhat.com>, 661580@bugs.debian.org, Goswin von Brederlow <goswin-v-b@web.de>
 
-On Wed, Feb 29, 2012 at 09:03:24PM -0600, Ben Myers wrote:
-> > The race condition is between the insertion of the inode into the
-> > cache in the case of a cache miss and a concurrently lookup:
-> > 
-> > Thread 1			Thread 2
-> > xfs_iget()
-> >   xfs_iget_cache_miss()
-> >     xfs_iread()
-> >     lock radix tree
-> >     radix_tree_insert()
-> >     				rcu_read_lock
-> > 				radix_tree_lookup
-> > 				lock inode flags
-> > 				XFS_INEW not set
-> > 				igrab()
-> > 				unlock inode flags
-> > 				rcu_read_unlock
-> > 				use uninitialised inode
-> > 				.....
-> >     lock inode flags
-> >     set XFS_INEW
-> >     unlock inode flags
-> >     unlock radix tree
-> >   xfs_setup_inode()
-> >     inode flags = I_NEW
-> >     unlock_new_inode()
-> >       WARNING as inode flags != I_NEW
+Eric Sandeen <sandeen@sandeen.net> writes:
 
-.....
+> On 2/28/12 3:11 AM, Christoph Hellwig wrote:
+>> Carlos, didn't you plan to look into this issue?
+>> 
+>> Goswin, how do you determin that mkfs is still doing unaligned I/O
+>> when forcing the large sevtor size?  Once we set the sector size XFS
+>> can't do I/O smaller than it.
+>
+> I did think this was supposed to be working already:
+>
+>         get_topology(&xi, &ft);
+>
+>         if (ft.sectoralign) {
+>                 /*
+>                  * Older Linux software RAID versions want the sector size
+>                  * to match the block size to avoid switching I/O sizes.
+>                  * For the legacy libdisk case we thus set the sector size to
+>                  * match the block size.  For systems using libblkid we assume
+>                  * that the kernel is recent enough to not require this and
+>                  * ft.sectoralign will never be set.
+>                  */
+>                 sectorsize = blocksize;
+>         } else if (!ssflag) {
+>                 /*
+>                  * Unless specified manually on the command line use the
+>                  * advertised sector size of the device.
+>                  */
+>                 sectorsize = ft.sectorsize ? ft.sectorsize : XFS_MIN_SECTORSIZE;
+>         }
+>
+> but it may depend on whether or not it is being built with libblkid support or not...?
+>
+> I'll try to test it when I have some time, unless Carlos beats me to it.
+>
+> -Eric
 
-> > -	spin_lock(&pag->pag_ici_lock);
-> > +	/* These values _must_ be set before inserting the inode into the radix
-> > +	 * tree as the moment it is inserted a concurrent lookup (allowed by the
-> > +	 * RCU locking mechanism) can find it and that lookup must see that this
-> > +	 * is an inode currently under construction (i.e. that XFS_INEW is set).
-> > +	 * The ip->i_flags_lock that protects the XFS_INEW flag forms the
-> > +	 * memory barrier that ensures this detection works correctly at lookup
-> > +	 * time.
-> > +	 */
-> > +	xfs_iflags_set(ip, XFS_INEW);
-> > +	ip->i_udquot = ip->i_gdquot = NULL;
-> >  
-> >  	/* insert the new inode */
-> > +	spin_lock(&pag->pag_ici_lock);
-> >  	error = radix_tree_insert(&pag->pag_ici_root, agino, ip);
-> >  	if (unlikely(error)) {
-> >  		WARN_ON(error != -EEXIST);
-> > @@ -360,11 +370,6 @@ xfs_iget_cache_miss(
-> >  		error = EAGAIN;
-> >  		goto out_preload_end;
-> >  	}
-> > -
-> > -	/* These values _must_ be set before releasing the radix tree lock! */
-> 							   ^^^ 
-> So, in this comment 'radix tree lock' refers to pag->pag_ici_lock?
+I'm asuming libblkid is used, otherwise a sectorsize of 512 would make
+no sense.
 
-Right. "ici" is short for "in-core inode". So pag_ici_lock reads as
-"per-ag in-core inode lock". The lock is used to protect
-modifications to the in-core inode cache which is radix tree indexed
-and the root is at pag_ici_root...
+It might be that NBD advertises the geometry wrong, as in ft.sectorsize
+isn't set correctly. That would make that part at least a kernel bug.
 
-> And, pag_ici_lock lock provides no exclusion with radix_tree_lookup.
+MfG
+        Goswin
 
-Right, but rcu based radix tree traversal is safe as long as the
-objects being indexed are RCU freed and have some external method of
-validating their freed/in use state independent of the radix tree
-lookup. IOWs, tree lookups are not synchronised with inserts,
-deletes or tag modifications - the are synchronised with RCU freeing
-of the objects the tree points to. Hence we only need to validate
-the objects against races with RCU freeing after the tree lookup -
-we don't need to care about the state of the tree at all....
-
-> I believe I understand.  That isn't to say that I couldn't use a
-> brush-up on RCU.  Awesome.  ;)
-
-RCU is tricky. It took me a long time to convince myself that we
-could use RCU lookups here because it relies on memory barriers
-rather than locking to ensure coherency across all CPUs.  I firmly
-beleive that when a concept is difficult to understand, it shouldn't
-be made harder to understand by optimising it with a smart and/or
-tricky implementation. Spin locks provide memory barriers and they
-are something simple that everyone understands, therefore all we
-need to concentrate on is the order in which operations occur....
-
-FWIW, once I had decided on the memory barrier implementation
-(ip->i_flags_lock), there were three basic principles I followed to
-prove to myself that the inode cache lookup is RCU safe:
-
-	1. that the state of inodes in the process of removal from
-	the tree is detectable during lookup (i.e. via the
-	XFS_IRECLAIM flag).
-
-	2. that inodes in the process of being freed (regardless of
-	removal state) in the RCU grace period can be detected (i.e.
-	by clearing ip->i_ino before calling rcu_free)
-
-	3. that the state of new inodes is detectable during lookup
-	so we can avoid them until they are fully initialised. i.e.
-	the XFS_INEW flag.
-
-That's why xfs_iget_cache_hit() takes the i_flags_lock, then checks
-ip->i_ino and against the XFS_INEW | XFS_IRECLAIM flags, and
-xfs_inode_free() ensures that ip->i_ino = 0 and XFS_IRECLAIM is set
-before calling rcu_free() on the inode. The problem was that I
-hadn't got the ordering of operations for #3 correct, and that's
-what the bug fix is for....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
