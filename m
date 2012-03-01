@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q218FM98092610 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 02:15:22 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id O5A8LnkOkWu6LEhO for
-	<xfs@oss.sgi.com>; Thu, 01 Mar 2012 00:15:20 -0800 (PST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH v2] 251: Make fstrim call a bit more random
-Date: Thu,  1 Mar 2012 09:15:16 +0100
-Message-Id: <1330589716-32362-1-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1330439400-26390-1-git-send-email-lczerner@redhat.com>
-References: <1330439400-26390-1-git-send-email-lczerner@redhat.com>
+	q218I6Xs092815 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 02:18:06 -0600
+Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
+	cuda.sgi.com with ESMTP id bBF35Zkcbx0d9Yg1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 01 Mar 2012 00:18:04 -0800 (PST)
+Subject: Bug#661580: mkfs.xfs fails to detect correct sector size
+Resent-To: debian-bugs-dist@lists.debian.org
+Resent-Message-ID: <handler.661580.B661580.133058965824549@bugs.debian.org>
+MIME-Version: 1.0
+From: Goswin von Brederlow <goswin-v-b@web.de>
+Message-ID: <20120301081409.3103.43155.reportbug@frosties.localnet>
+Date: Thu, 01 Mar 2012 09:14:09 +0100
+Reply-To: Goswin von Brederlow <goswin-v-b@web.de>, 661580@bugs.debian.org
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,108 +22,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: elder@dreamhost.com, Lukas Czerner <lczerner@redhat.com>
+To: Debian Bug Tracking System <661580@bugs.debian.org>
 
-To cover cases when fstrim arguments are not block/block group/file
-system size aligned, we can be a bit more random. This commit changes
-fstrim argument computing to use $RANDOM bash variable in order to have
-different minlen, start, len argument settings and change the full fs
-fstrim to be called randomly as well.
+Package: xfsprogs
+Version: 3.1.7
+Followup-For: Bug #661580
 
-Also make kill and wait not complain about non existent process, since
-it may have already finished before we attempt to kill it and wait for
-it. No reason to fail the test.
+Hi again,
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
-v2: guess maximum minlen so we do not fail if milnen limitation
-    of the fs is too small.
+I've patched the NBD driver to set the physical sector size. Was way
+easier than I imagined:
 
- 251 |   36 +++++++++++++++++++++++++-----------
- 1 files changed, 25 insertions(+), 11 deletions(-)
-
-diff --git a/251 b/251
-index fa3d74a..6d87bf4 100755
---- a/251
-+++ b/251
-@@ -54,21 +54,21 @@ _cleanup()
+----------------------------------------------------------------------
+--- linux/drivers/block/nbd.c~      2012-03-01 09:10:35.000000000 +0100
++++ linux/drivers/block/nbd.c       2012-03-01 08:57:49.000000000 +0100
+@@ -413,6 +413,9 @@
+                return ret;
+        }
  
- _destroy()
- {
--	kill $pids $fstrim_pid
--	wait $pids $fstrim_pid
-+	kill $pids $fstrim_pid 2> /dev/null
-+	wait $pids $fstrim_pid 2> /dev/null
- 	rm -rf $tmp
- }
- 
- _destroy_fstrim()
- {
--	kill $fpid
--	wait $fpid
-+	kill $fpid 2> /dev/null
-+	wait $fpid 2> /dev/null
- }
- 
- _fail()
- {
- 	echo "$1"
--	kill $mypid
-+	kill $mypid 2> /dev/null
- }
- 
- _check_fstrim_support()
-@@ -76,6 +76,16 @@ _check_fstrim_support()
- 	$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null
- }
- 
-+_guess_max_minlen()
-+{
-+	mmlen=100000
-+	while [ $mmlen -gt 1 ]; do
-+		$here/src/fstrim -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &> /dev/null && break
-+		mmlen=$(($mmlen/2))
-+	done
-+	echo $mmlen
-+}
++       /* Set physical block size to blocksize */
++       blk_queue_physical_block_size(lo->disk->queue, lo->blksize);
 +
- ##
- # Background FSTRIM loop. We are trimming the device in the loop and for
- # test coverage, we are doing whole device trim followed by several smaller
-@@ -85,15 +95,19 @@ fstrim_loop()
- {
- 	trap "_destroy_fstrim; exit \$status" 2 15
- 	fsize=$(df | grep $SCRATCH_MNT | grep $SCRATCH_DEV  | awk '{print $2}')
-+	mmlen=$(_guess_max_minlen)
+        while ((req = nbd_read_stat(lo)) != NULL)
+                nbd_end_request(req);
  
- 	while true ; do
--		step=1048576
--		start=0
--		$here/src/fstrim $SCRATCH_MNT &
--		fpid=$!
--		wait $fpid
-+		step=$((RANDOM*$RANDOM))
-+		minlen=$(((RANDOM*($RANDOM%2+1))%$mmlen))
-+		start=$RANDOM
-+		if [ $((RANDOM%10)) -gt 7 ]; then
-+			$here/src/fstrim $SCRATCH_MNT &
-+			fpid=$!
-+			wait $fpid
-+		fi
- 		while [ $start -lt $fsize ] ; do
--			$here/src/fstrim -s ${start}k -l ${step}k $SCRATCH_MNT &
-+			$here/src/fstrim -m ${minlen}k -s ${start}k -l ${step}k $SCRATCH_MNT &
- 			fpid=$!
- 			wait $fpid
- 			start=$(( $start + $step ))
--- 
-1.7.4.4
+----------------------------------------------------------------------
+
+And I can confirm that the sector size detection is still broken in
+3.1.7.
+
+root@frosties:~$ parted /dev/nbd0
+GNU Parted 2.3
+Using /dev/nbd0
+Welcome to GNU Parted! Type 'help' to view a list of commands.
+(parted) p                                                                
+Model: Unknown (unknown)
+Disk /dev/nbd0: 16.8MB
+Sector size (logical/physical): 512B/4096B
+Partition Table: loop
+
+Number  Start  End     Size    File system  Flags
+ 1      0.00B  16.8MB  16.8MB  xfs
+
+(parted) q                                                                
+root@frosties:~$ mkfs.xfs -f /dev/nbd0 
+meta-data=/dev/nbd0              isize=256    agcount=1, agsize=4096 blks
+         =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=4096, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=1200, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+mrvn@frosties:~% tail /sys/block/nbd0/queue/*
+==> /sys/block/nbd0/queue/add_random <==
+1
+
+==> /sys/block/nbd0/queue/discard_granularity <==
+0
+
+==> /sys/block/nbd0/queue/discard_max_bytes <==
+0
+
+==> /sys/block/nbd0/queue/discard_zeroes_data <==
+0
+
+==> /sys/block/nbd0/queue/hw_sector_size <==
+512
+
+==> /sys/block/nbd0/queue/iosched <==
+tail: error reading `/sys/block/nbd0/queue/iosched': Is a directory
+
+==> /sys/block/nbd0/queue/iostats <==
+1
+
+==> /sys/block/nbd0/queue/logical_block_size <==
+512
+
+==> /sys/block/nbd0/queue/max_hw_sectors_kb <==
+127
+
+==> /sys/block/nbd0/queue/max_integrity_segments <==
+0
+
+==> /sys/block/nbd0/queue/max_sectors_kb <==
+127
+
+==> /sys/block/nbd0/queue/max_segment_size <==
+65536
+
+==> /sys/block/nbd0/queue/max_segments <==
+128
+
+==> /sys/block/nbd0/queue/minimum_io_size <==
+4096
+
+==> /sys/block/nbd0/queue/nomerges <==
+0
+
+==> /sys/block/nbd0/queue/nr_requests <==
+128
+
+==> /sys/block/nbd0/queue/optimal_io_size <==
+0
+
+==> /sys/block/nbd0/queue/physical_block_size <==
+4096
+
+==> /sys/block/nbd0/queue/read_ahead_kb <==
+128
+
+==> /sys/block/nbd0/queue/rotational <==
+0
+
+==> /sys/block/nbd0/queue/rq_affinity <==
+1
+
+==> /sys/block/nbd0/queue/scheduler <==
+noop deadline [cfq] 
+
+
+MfG
+	Goswin
+
+-- System Information:
+Debian Release: wheezy/sid
+  APT prefers unstable
+  APT policy: (500, 'unstable')
+Architecture: amd64 (x86_64)
+
+Kernel: Linux 3.1.0-1-amd64 (SMP w/4 CPU cores)
+Locale: LANG=C, LC_CTYPE=de_DE (charmap=ISO-8859-1)
+Shell: /bin/sh linked to /bin/dash
+
+Versions of packages xfsprogs depends on:
+ii  libblkid1     2.20.1-1
+ii  libc6         2.13-21 
+ii  libreadline5  5.2-11  
+ii  libuuid1      2.19.1-5
+
+xfsprogs recommends no packages.
+
+Versions of packages xfsprogs suggests:
+pn  acl      2.2.51-4  
+pn  attr     1:2.4.46-3
+pn  quota    <none>    
+pn  xfsdump  <none>    
+
+-- no debconf information
+
 
 _______________________________________________
 xfs mailing list
