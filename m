@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q224DN7T241541 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 22:13:23 -0600
+	q224DIWb241507 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 22:13:18 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	c9Lhwdd47zl3m7fd for <xfs@oss.sgi.com>;
-	Thu, 01 Mar 2012 20:13:22 -0800 (PST)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1S3Jrt-0006Fv-0D
-	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:13:21 +1100
+	IOv8GgMwqVEk4kqh for <xfs@oss.sgi.com>;
+	Thu, 01 Mar 2012 20:13:17 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1S3Jrj-0006Fw-2T
+	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:13:11 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1S3JqT-0000Iu-GL
+	(envelope-from <dave@disappointment.disaster>) id 1S3JqT-0000Ix-HC
 	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:11:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/8] xfs: Fix open flag handling in open_by_handle code
-Date: Fri,  2 Mar 2012 15:11:41 +1100
-Message-Id: <1330661507-1121-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/8] xfs: handle kmalloc failure when reading attrs
+Date: Fri,  2 Mar 2012 15:11:42 +1100
+Message-Id: <1330661507-1121-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1330661507-1121-1-git-send-email-david@fromorbit.com>
 References: <1330661507-1121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -38,47 +37,47 @@ From: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Sparse identified some unsafe handling of open flags in the xfs open
-by handle ioctl code. Update the code to use the correct access
-macros to ensure that we handle the open flags correctly.
+xfsdump uses for a large buffer for extended attributes, which has a
+kmalloc'd shadow buffer in the kernel. This can fail after the
+system has been running for some time as it is a high order
+allocation. Add a fallback to vmalloc so that it doesn't require
+contiguous memory and so won't randomly fail while xfsdump is
+running.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ioctl.c |   11 +++--------
- 1 files changed, 3 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_ioctl.c |   11 +++++++----
+ 1 files changed, 7 insertions(+), 4 deletions(-)
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 76f3ca5..86c86d8 100644
+index 86c86d8..7721962 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -230,24 +230,19 @@ xfs_open_by_handle(
+@@ -445,9 +445,12 @@ xfs_attrmulti_attr_get(
  
- 	/* Put open permission in namei format. */
- 	permflag = hreq->oflags;
--	if ((permflag+1) & O_ACCMODE)
--		permflag++;
--	if (permflag & O_TRUNC)
--		permflag |= 2;
--
- 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
--	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
-+	    (OPEN_FMODE(permflag) & FMODE_WRITE) && IS_APPEND(inode)) {
- 		error = -XFS_ERROR(EPERM);
- 		goto out_dput;
- 	}
+ 	if (*len > XATTR_SIZE_MAX)
+ 		return EINVAL;
+-	kbuf = kmalloc(*len, GFP_KERNEL);
+-	if (!kbuf)
+-		return ENOMEM;
++	kbuf = kmem_zalloc(*len, KM_SLEEP | KM_MAYFAIL);
++	if (!kbuf) {
++		kbuf = kmem_zalloc_large(*len);
++		if (!kbuf)
++			return ENOMEM;
++	}
  
--	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-+	if ((OPEN_FMODE(permflag) & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
- 		error = -XFS_ERROR(EACCES);
- 		goto out_dput;
- 	}
+ 	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
+ 	if (error)
+@@ -457,7 +460,7 @@ xfs_attrmulti_attr_get(
+ 		error = EFAULT;
  
- 	/* Can't write directories. */
--	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
-+	if (S_ISDIR(inode->i_mode) && (OPEN_FMODE(permflag) & FMODE_WRITE)) {
- 		error = -XFS_ERROR(EISDIR);
- 		goto out_dput;
- 	}
+  out_kfree:
+-	kfree(kbuf);
++	kmem_free(kbuf);
+ 	return error;
+ }
+ 
 -- 
 1.7.9
 
