@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22Etn3x085954 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 08:55:49 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id pAnoCSe0n0XHv8z4 for <xfs@oss.sgi.com>;
-	Fri, 02 Mar 2012 06:55:48 -0800 (PST)
-Message-ID: <4F50DF73.7050006@sandeen.net>
-Date: Fri, 02 Mar 2012 08:55:47 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	q22EqwWO083548 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 08:52:58 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id Dif6gZf1iE9tAuPq for
+	<xfs@oss.sgi.com>; Fri, 02 Mar 2012 06:52:57 -0800 (PST)
+Date: Fri, 2 Mar 2012 14:52:58 +0000
+From: Brian Candler <B.Candler@pobox.com>
 Subject: Re: [XFS] xfs_repair time how long it takes??
+Message-ID: <20120302145258.GB12059@nsrc.org>
 References: <CABF-5WptGU3vmScFcpHVstd2UZfCAqiY4dGvL=_1+feFvYuS6g@mail.gmail.com>
-In-Reply-To: <CABF-5WptGU3vmScFcpHVstd2UZfCAqiY4dGvL=_1+feFvYuS6g@mail.gmail.com>
+	<20120302140145.GA11911@nsrc.org>
+	<37B5727D-1E3B-4A96-BF7F-4CA6DAF9B63C@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <37B5727D-1E3B-4A96-BF7F-4CA6DAF9B63C@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,54 +27,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ryan Lee <ryanlee.lahk@gmail.com>
+To: Ryan <ryanlee.lahk@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On 3/2/12 7:09 AM, Ryan Lee wrote:
-> Hi, My name is Ryan.
->  
-> I am a computer programmer who are making  embedded linux products.
->  
-> Nowadays one of  my job is porting the XFS Filesystem in our embedded linux products.
->  
-> Everything is going well until the day before Yesterday.
->  
-> The problem is the taking time with xfs_repair like this "]# xfs_repair -P -L /dev/sda2" is to long to wait in our embedded system and for me, so the booing time is increasing around 2 minutes totally.
+On Fri, Mar 02, 2012 at 11:26:30PM +0900, Ryan wrote:
+> How about the dirty log. I use the xfs_repair because the dirty log must be removed when i mount HDD.
 
-Why are you running it with -L?
-And why are you running it with -P?
+Google for "xfs dirty log" and I get this as the second hit:
 
-As others mentioned, there is no reason to run xfs_repair on every boot.
-And if you run it with -L on every boot, you've ruined the whole reason for using a journaling filesystem in the first place.
+http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/xfsrepair.html
 
--Eric
+What it says is the exact opposite of what you said above:
 
-> If the HDD has a big size of data what  I wrote,  the xfs_repair takes time more and more next booting time as I mention it.
->  
-> So, it makes a big problem with my company products.
->  
-> Would you mind helping me to solve this problem.
->  
-> I think many company who use XFS Filesystem without  this kind problem.
->  
-> Please sharing any information with XFS Filesystem.
->  
-> I attached the console message what i saw.
->  
-> I really appreciate you read my e-mail.
->  
-> Have a good day.
->  
-> Thanks, Ryan.
->  
->  
->  
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+- the dirty log is automatically dealt with when you mount the filesystem
+- xfs_repair will refuse to run if a dirty log is present
+
+So running xfs_repair on boot is actually a bad idea.
 
 _______________________________________________
 xfs mailing list
