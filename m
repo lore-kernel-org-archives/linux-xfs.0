@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22AcWVv039863 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 04:38:33 -0600
+	q22AV5Zf039617 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 04:31:05 -0600
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	YjiaSACRmgCcRkg9 (version=TLSv1 cipher=AES256-SHA bits=256
+	lREHw9HuXrJphaN7 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Mar 2012 02:38:32 -0800 (PST)
-Date: Fri, 2 Mar 2012 05:38:31 -0500
+	Fri, 02 Mar 2012 02:31:04 -0800 (PST)
+Date: Fri, 2 Mar 2012 05:31:02 -0500
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/8] xfs: add a shrinker for quotacheck
-Message-ID: <20120302103831.GA16825@infradead.org>
+Subject: Re: [PATCH 3/8] xfs: handle kmalloc failure when reading attrs
+Message-ID: <20120302103102.GA12499@infradead.org>
 References: <1330661507-1121-1-git-send-email-david@fromorbit.com>
-	<1330661507-1121-9-git-send-email-david@fromorbit.com>
-	<20120302075104.GG4117@infradead.org>
-	<20120302100426.GI5091@dastard>
+	<1330661507-1121-4-git-send-email-david@fromorbit.com>
+	<20120302074920.GE4117@infradead.org>
+	<20120302094938.GH5091@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120302100426.GI5091@dastard>
+In-Reply-To: <20120302094938.GH5091@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,44 +34,26 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Fri, Mar 02, 2012 at 09:04:26PM +1100, Dave Chinner wrote:
-> On Fri, Mar 02, 2012 at 02:51:04AM -0500, Christoph Hellwig wrote:
-> > Hmm, I don't like this complication all that much.
+On Fri, Mar 02, 2012 at 08:49:38PM +1100, Dave Chinner wrote:
+> That only handles vmalloced memory, but kmem_free()
+> handles both kmalloc() and vmalloc() memory:
 > 
-> Though it is a simple, self contained fix for the problem...
-
-It just smells hacky.  If the non-caching version doesn't go anywhere
-I won't veto it, but it's defintively not my favourite.
-
-> > Why would we even bother caching inodes during quotacheck?  The bulkstat
-> > is a 100% sequential read only workload going through all inodes in the
-> > filesystem.  I think we should simply not cache any inodes while in
-> > quotacheck.
+> void
+> kmem_free(const void *ptr)
+> {
+>         if (!is_vmalloc_addr(ptr)) {
+>                 kfree(ptr);
+>         } else {
+>                 vfree(ptr);
+>         }
+> }
 > 
-> I have tried that approach previously with inodes read through
-> bulkstat, but I couldn't find a clean workable solution. It kept
-> getting rather complex because all our caching and recycling is tied
-> into VFS level triggers. That was a while back, so maybe there is a
-> simpler solution that I missed in attempting to do this.
-> 
-> I suspect for a quotacheck only solution we can hack a check into
-> .drop_inode, but a generic coherent non-cached bulkstat lookup is
-> somewhat more troublesome.
+> Avoiding having to open code this vmalloc check is exactly why I
+> chose kmem_free() here ;)
 
-Right, the whole issue also applies to any bulkstat.  But even for that
-it doesn't seem that bad.
-
-We add a new XFS_IGET_BULKSTAT flag for iget, which then sets an
-XFS_INOTCACHE or similar flag on the inode.  If we see that in bulkstat
-on a clean inode in ->drop_inode return true there, which takes care
-of the VFS side.
-
-For the XFS side we'd have to move the call to xfs_syncd_init earlier 
-during the mount process, which effectively revers
-2bcf6e970f5a88fa05dced5eeb0326e13d93c4a1.  That should be fine now that
-we never call into the quota code from the sync work items.  If we want
-to be entirely on the safe side we could only move starting the reclaim
-work item earlier.
+Oh - this should have been removed when I changed kmem_alloc to not use
+vmalloc anymore.  I'd really prefer to have this kind of check in the
+callers as it should be the exception, not the rule.
 
 _______________________________________________
 xfs mailing list
