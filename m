@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22JudVt138279 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 13:56:39 -0600
+	q22JudwT138277 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 13:56:39 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Fhg2RXygEd7U0cE8 for
+	cuda.sgi.com with ESMTP id Fza0P1trCTpWOnZ9 for
 	<xfs@oss.sgi.com>; Fri, 02 Mar 2012 11:56:38 -0800 (PST)
 From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH 0/7, v2] fs: fix up AIO+DIO+O_SYNC to actually do the sync part
-Date: Fri,  2 Mar 2012 14:56:08 -0500
-Message-Id: <1330718175-21540-1-git-send-email-jmoyer@redhat.com>
+Subject: [PATCH 2/7] ocfs2: Use generic handlers of O_SYNC AIO DIO
+Date: Fri,  2 Mar 2012 14:56:10 -0500
+Message-Id: <1330718175-21540-3-git-send-email-jmoyer@redhat.com>
+In-Reply-To: <1330718175-21540-1-git-send-email-jmoyer@redhat.com>
+References: <1330718175-21540-1-git-send-email-jmoyer@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,33 +25,45 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
-Cc: hch@infradead.org, jack@suse.cz
+Cc: hch@infradead.org, Jeff Moyer <jmoyer@redhat.com>, jack@suse.cz
 
-Hi,
+From: Jan Kara <jack@suse.cz>
 
-Currently, AIO+DIO+O_SYNC writes are not actually sync'd (for xfs), or
-they are sync'd before the I/O is actually issued (everybody else).
-The following patch series fixes this in two parts.  First, for the
-file systems that use the generic routines, Jan has provided some
-generic infrastructure to perform the syncs after the I/O is completed.
-Second, for those file systems which require some endio processing of
-their own for O_DIRECT writes (xfs and ext4), I've implemented file
-system specific syncing.  This passes the updated xfs-tests 113 test
-I posted earlier, as well as all of the tests in the aio group.  I
-tested ext3, ext4, xfs, and btrfs only.
+Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
+file.
 
-Comments, as always, are appreciated.
+Signed-off-by: Jan Kara <jack@suse.cz>
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+---
+ fs/ocfs2/aops.c |    6 ++----
+ 1 files changed, 2 insertions(+), 4 deletions(-)
 
-Cheers,
-Jeff
-
-[PATCH 1/7] vfs: Handle O_SYNC AIO DIO in generic code properly
-[PATCH 2/7] ocfs2: Use generic handlers of O_SYNC AIO DIO
-[PATCH 3/7] gfs2: Use generic handlers of O_SYNC AIO DIO
-[PATCH 4/7] btrfs: Use generic handlers of O_SYNC AIO DIO
-[PATCH 5/7] xfs: honor the O_SYNC flag for aysnchronous direct I/O requests
-[PATCH 6/7] ext4: honor the O_SYNC flag for aysnchronous direct I/O requests
-[PATCH 7/7] filemap: don't call generic_write_sync for -EIOCBQUEUED
+diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
+index 78b68af..3d14c2b 100644
+--- a/fs/ocfs2/aops.c
++++ b/fs/ocfs2/aops.c
+@@ -593,9 +593,7 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
+ 	level = ocfs2_iocb_rw_locked_level(iocb);
+ 	ocfs2_rw_unlock(inode, level);
+ 
+-	if (is_async)
+-		aio_complete(iocb, ret, 0);
+-	inode_dio_done(inode);
++	generic_dio_end_io(iocb, offset, bytes, private, ret, is_async);
+ }
+ 
+ /*
+@@ -642,7 +640,7 @@ static ssize_t ocfs2_direct_IO(int rw,
+ 	return __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev,
+ 				    iov, offset, nr_segs,
+ 				    ocfs2_direct_IO_get_blocks,
+-				    ocfs2_dio_end_io, NULL, 0);
++				    ocfs2_dio_end_io, NULL, DIO_SYNC_WRITES);
+ }
+ 
+ static void ocfs2_figure_cluster_boundaries(struct ocfs2_super *osb,
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
