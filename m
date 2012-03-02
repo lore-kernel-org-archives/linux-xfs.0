@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2VNSf1X006485 for <xfs@oss.sgi.com>; Sat, 31 Mar 2012 18:28:41 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	h4ddhz8krxFPqy1v (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 31 Mar 2012 16:28:37 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1SE7im-00055k-58
-	for xfs@oss.sgi.com; Sat, 31 Mar 2012 23:28:36 +0000
-Date: Sat, 31 Mar 2012 19:28:36 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] 030: fix for new xfs_repair versions
-Message-ID: <20120331232836.GA19572@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
+	q224DPWj241557 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 22:13:25 -0600
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	TU0xsZ137HYGZQiG for <xfs@oss.sgi.com>;
+	Thu, 01 Mar 2012 20:13:23 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1S3Jrj-0006Fz-5I
+	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:13:11 +1100
+Received: from dave by disappointment with local (Exim 4.77)
+	(envelope-from <dave@disappointment.disaster>) id 1S3JqT-0000J7-KL
+	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:11:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 6/8] xfs: remove remaining scraps of struct xfs_iomap
+Date: Fri,  2 Mar 2012 15:11:45 +1100
+Message-Id: <1330661507-1121-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1330661507-1121-1-git-send-email-david@fromorbit.com>
+References: <1330661507-1121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,54 +26,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Given that we now drop invalid unlinked inode lists there is no message
-to capture.  Also add a sed expression to avoid failures on old repair
-versions.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Dave Chinner <dchinner@redhat.com>
 
-Index: xfstests-dev/030
-===================================================================
---- xfstests-dev.orig/030	2012-03-31 23:15:11.000000000 +0000
-+++ xfstests-dev/030	2012-03-31 23:18:31.000000000 +0000
-@@ -55,7 +55,8 @@ _check_ag()
- 	for structure in 'sb 0' 'agf 0' 'agi 0' 'agfl 0'
- 	do
- 		echo "Corrupting $structure - setting bits to $1"
--		_check_repair $1 "$structure"
-+		_check_repair $1 "$structure" |
-+			sed -e 's/error following ag 0 unlinked list//'
- 	done
- }
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_vnode.h    |    1 -
+ fs/xfs/xfs_vnodeops.h |    3 ---
+ 2 files changed, 0 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_vnode.h b/fs/xfs/xfs_vnode.h
+index 7c220b4..db14d0c 100644
+--- a/fs/xfs/xfs_vnode.h
++++ b/fs/xfs/xfs_vnode.h
+@@ -22,7 +22,6 @@
  
-@@ -97,8 +98,7 @@ src/devzero -v -1 -n "$clear" $SCRATCH_D
+ struct file;
+ struct xfs_inode;
+-struct xfs_iomap;
+ struct attrlist_cursor_kern;
  
- # now kick off the real repair test...
- #
--_scratch_mkfs_xfs $DSIZE | _filter_mkfs | \
--    sed -e 's/error following ag 0 unlinked list//' 2>$tmp.mkfs
-+_scratch_mkfs_xfs $DSIZE | _filter_mkfs 2>$tmp.mkfs
- . $tmp.mkfs
- _check_ag 0
- _check_ag -1
-Index: xfstests-dev/030.out.linux
-===================================================================
---- xfstests-dev.orig/030.out.linux	2012-03-31 23:19:09.000000000 +0000
-+++ xfstests-dev/030.out.linux	2012-03-31 23:19:17.000000000 +0000
-@@ -85,7 +85,6 @@ bad agbno AGBNO for inobt root, agno 0
- root inode chunk not found
- Phase 3 - for each AG...
-         - scan and clear agi unlinked lists...
--error following ag 0 unlinked list
-         - process known inodes and perform inode discovery...
-         - process newly discovered inodes...
- Phase 4 - check for duplicate blocks...
+ /*
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index 0c877cb..447e146 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -10,7 +10,6 @@ struct kiocb;
+ struct pipe_inode_info;
+ struct uio;
+ struct xfs_inode;
+-struct xfs_iomap;
+ 
+ 
+ int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap, int flags);
+@@ -49,8 +48,6 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		int flags, struct attrlist_cursor_kern *cursor);
+-int xfs_bmap(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
+-		int flags, struct xfs_iomap *iomapp, int *niomaps);
+ void xfs_tosspages(struct xfs_inode *inode, xfs_off_t first,
+ 		xfs_off_t last, int fiopt);
+ int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
+-- 
+1.7.9
 
 _______________________________________________
 xfs mailing list
