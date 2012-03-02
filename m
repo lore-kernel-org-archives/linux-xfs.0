@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q224DPrP241571 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 22:13:26 -0600
+	q224DHqN241492 for <xfs@oss.sgi.com>; Thu, 1 Mar 2012 22:13:17 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	3VqcXWQbxrmox3gL for <xfs@oss.sgi.com>;
-	Thu, 01 Mar 2012 20:13:24 -0800 (PST)
+	Fiq6rtMeq4ILo06y for <xfs@oss.sgi.com>;
+	Thu, 01 Mar 2012 20:13:15 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1S3Jrj-0006G3-70
+	(envelope-from <dave@fromorbit.com>) id 1S3Jrj-0006Fy-4P
 	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:13:11 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1S3JqT-0000JC-M0
+	(envelope-from <dave@disappointment.disaster>) id 1S3JqT-0000J3-JA
 	for xfs@oss.sgi.com; Fri, 02 Mar 2012 15:11:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 8/8] xfs: add a shrinker for quotacheck
-Date: Fri,  2 Mar 2012 15:11:47 +1100
-Message-Id: <1330661507-1121-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: introduce an allocation workqueue
+Date: Fri,  2 Mar 2012 15:11:44 +1100
+Message-Id: <1330661507-1121-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1330661507-1121-1-git-send-email-david@fromorbit.com>
 References: <1330661507-1121-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,104 +37,152 @@ From: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Whenthe filesystem is mounting, the superblock based shrinker cannot run due to
-the mount process holding the sb->s_umount lock exclusively. Hence when
-quotacheck runs, it cannot shrink the inode cache if it grows too large. We've
-had repeated problems with the inode cache shrinker startup and quotacheck
-resulting in OOM conditions.
+We currently have significant issues with the amount of stack that
+allocation in XFS uses, especially in the writeback path. We can
+easily consume 4k of stack between mapping the page, manipulating
+the bmap btree and allocating blocks from the free list. Not to
+mention btree block readahead and other functionality that issues IO
+in the allocation path.
 
-Avoid this problem altogether by installing a quotacheck specific inode cache
-shrinker that is registered before the quotacheck starts, and is then
-unregistered after the quotacheck finishes. This shrinker uses exactly the same
-infrastructure as the superblock based inode cache shrinker, so there is very
-little extra code.
+As a result, we can no longer fit allocation in the writeback path
+in the stack space provided on x86_64. To alleviate this problem,
+introduce an allocation workqueue and move all allocations to a
+seperate context. This can be easily added as an interposing layer
+into xfs_alloc_vextent(), which takes a single argument structure
+and does not return until the allocation is complete or has failed.
+
+To do this, add a work structure and a completion to the allocation
+args structure. This allows xfs_alloc_vextent to queue the args onto
+the workqueue and wait for it to be completed by the worker. This
+can be done completely transparently to the caller.
+
+The worker function needs to ensure that it sets and clears the
+PF_TRANS flag appropriately as it is being run in an active
+transaction context. Work can also be queued in a memory reclaim
+context, so a rescuer is needed for the workqueue.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_qm.c |   28 ++++++++++++++++++++++++++++
- fs/xfs/xfs_qm.h |    2 ++
- 2 files changed, 30 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_alloc.c |   34 +++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_alloc.h |    5 +++++
+ fs/xfs/xfs_super.c |   16 ++++++++++++++++
+ 3 files changed, 54 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index c872fea..c1a42f1 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -823,6 +823,7 @@ xfs_qm_init_quotainfo(
- 		return error;
- 	}
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index ce84ffd..31e9033 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -35,6 +35,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
  
-+	qinf->qi_mount = mp;
- 	INIT_LIST_HEAD(&qinf->qi_dqlist);
- 	mutex_init(&qinf->qi_dqlist_lock);
- 	lockdep_set_class(&qinf->qi_dqlist_lock, &xfs_quota_mplist_class);
-@@ -1398,6 +1399,26 @@ error0:
++struct workqueue_struct *xfs_alloc_wq;
+ 
+ #define XFS_ABSDIFF(a,b)	(((a) <= (b)) ? ((b) - (a)) : ((a) - (b)))
+ 
+@@ -2207,7 +2208,7 @@ xfs_alloc_read_agf(
+  * group or loop over the allocation groups to find the result.
+  */
+ int				/* error */
+-xfs_alloc_vextent(
++__xfs_alloc_vextent(
+ 	xfs_alloc_arg_t	*args)	/* allocation argument structure */
+ {
+ 	xfs_agblock_t	agsize;	/* allocation group size */
+@@ -2417,6 +2418,37 @@ error0:
+ 	return error;
  }
  
- /*
-+ * quotacheck specific shrinker. This is only active while quotacheck is in
-+ * progress as the superblock shrinker won't run until the mount completes and
-+ * drops the sb->s_umount lock.
-+ */
-+static int
-+xfs_qm_quotacheck_shrink(
-+	struct shrinker		*shr,
-+	struct shrink_control	*sc)
++static void
++xfs_alloc_vextent_worker(
++	struct work_struct	*work)
 +{
-+	struct xfs_quotainfo	*qi = container_of(shr, struct xfs_quotainfo,
-+							qi_shrinker);
-+	if (!(sc->gfp_mask & __GFP_FS))
-+		return -1;
-+	if (sc->nr_to_scan)
-+		xfs_reclaim_inodes_nr(qi->qi_mount, sc->nr_to_scan);
++	struct xfs_alloc_arg	*args = container_of(work,
++						struct xfs_alloc_arg, work);
++	unsigned long		pflags;
 +
-+	return xfs_reclaim_inodes_count(qi->qi_mount);
++	/* we are in a transaction context here */
++	current_set_flags_nested(&pflags, PF_FSTRANS);
++
++	args->result = __xfs_alloc_vextent(args);
++	complete(args->done);
++
++	current_restore_flags_nested(&pflags, PF_FSTRANS);
 +}
 +
-+/*
-  * Walk thru all the filesystem inodes and construct a consistent view
-  * of the disk quota world. If the quotacheck fails, disable quotas.
-  */
-@@ -1410,6 +1431,7 @@ xfs_qm_quotacheck(
- 	size_t		structsz;
- 	xfs_inode_t	*uip, *gip;
- 	uint		flags;
-+	struct xfs_quotainfo *qi = mp->m_quotainfo;
- 
- 	count = INT_MAX;
- 	structsz = 1;
-@@ -1427,6 +1449,11 @@ xfs_qm_quotacheck(
- 
- 	xfs_notice(mp, "Quotacheck needed: Please wait.");
- 
-+	qi->qi_shrinker.seeks = DEFAULT_SEEKS;
-+	qi->qi_shrinker.shrink = xfs_qm_quotacheck_shrink;
-+	qi->qi_shrinker.batch = 1024;
-+	register_shrinker(&qi->qi_shrinker);
 +
- 	/*
- 	 * First we go thru all the dquots on disk, USR and GRP/PRJ, and reset
- 	 * their counters to zero. We need a clean slate.
-@@ -1500,6 +1527,7 @@ xfs_qm_quotacheck(
- 	mp->m_qflags |= flags;
++int				/* error */
++xfs_alloc_vextent(
++	xfs_alloc_arg_t	*args)	/* allocation argument structure */
++{
++	DECLARE_COMPLETION_ONSTACK(done);
++
++	args->done = &done;
++	INIT_WORK(&args->work, xfs_alloc_vextent_worker);
++	queue_work(xfs_alloc_wq, &args->work);
++	wait_for_completion(&done);
++	return args->result;
++}
++
+ /*
+  * Free an extent.
+  * Just break up the extent address and hand off to xfs_free_ag_extent
+diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
+index 2f52b92..ab5d0fd 100644
+--- a/fs/xfs/xfs_alloc.h
++++ b/fs/xfs/xfs_alloc.h
+@@ -25,6 +25,8 @@ struct xfs_perag;
+ struct xfs_trans;
+ struct xfs_busy_extent;
  
-  error_return:
-+	unregister_shrinker(&qi->qi_shrinker);
- 	if (error) {
- 		xfs_warn(mp,
- 	"Quotacheck: Unsuccessful (Error %d): Disabling quotas.",
-diff --git a/fs/xfs/xfs_qm.h b/fs/xfs/xfs_qm.h
-index 9a9b997..9ee7990 100644
---- a/fs/xfs/xfs_qm.h
-+++ b/fs/xfs/xfs_qm.h
-@@ -73,6 +73,8 @@ typedef struct xfs_qm {
- typedef struct xfs_quotainfo {
- 	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
- 	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
-+	struct xfs_mount *qi_mount;
-+	struct shrinker	 qi_shrinker;
- 	struct list_head qi_dqlist;	 /* all dquots in filesys */
- 	struct mutex	 qi_dqlist_lock;
- 	int		 qi_dquots;
++extern struct workqueue_struct *xfs_alloc_wq;
++
+ /*
+  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
+  */
+@@ -119,6 +121,9 @@ typedef struct xfs_alloc_arg {
+ 	char		isfl;		/* set if is freelist blocks - !acctg */
+ 	char		userdata;	/* set if this is user data */
+ 	xfs_fsblock_t	firstblock;	/* io first block allocated */
++	struct completion *done;
++	struct work_struct work;
++	int		result;
+ } xfs_alloc_arg_t;
+ 
+ /*
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5e0d43f..13fa0cf 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1604,12 +1604,28 @@ xfs_init_workqueues(void)
+ 	xfs_syncd_wq = alloc_workqueue("xfssyncd", WQ_NON_REENTRANT, 0);
+ 	if (!xfs_syncd_wq)
+ 		return -ENOMEM;
++
++	/*
++	 * The allocation workqueue can be used in memory reclaim situations
++	 * (writepage path), and parallelism is only limited by the number of
++	 * AGs in all the filesystems mounted. Hence use the default large
++	 * max_active value for this workqueue.
++	 */
++	xfs_alloc_wq = alloc_workqueue("xfsalloc", WQ_MEM_RECLAIM, 0);
++	if (!xfs_alloc_wq)
++		goto out_destroy_syncd;
++
+ 	return 0;
++
++out_destroy_syncd:
++	destroy_workqueue(xfs_syncd_wq);
++	return -ENOMEM;
+ }
+ 
+ STATIC void
+ xfs_destroy_workqueues(void)
+ {
++	destroy_workqueue(xfs_alloc_wq);
+ 	destroy_workqueue(xfs_syncd_wq);
+ }
+ 
 -- 
 1.7.9
 
