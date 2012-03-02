@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22GwEDn107993 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 10:58:14 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id IizdmmEYf0ANyD8x for <xfs@oss.sgi.com>;
-	Fri, 02 Mar 2012 08:58:13 -0800 (PST)
-Message-ID: <4F50FC24.3060908@sandeen.net>
-Date: Fri, 02 Mar 2012 10:58:12 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q22JFnDv122429 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 13:15:50 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id TCFZEWZZKz693sww for
+	<xfs@oss.sgi.com>; Fri, 02 Mar 2012 11:15:48 -0800 (PST)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: [xfstests patch] 113: add testing for O_DIRECT + O_SYNC
+Date: Fri, 02 Mar 2012 14:15:46 -0500
+Message-ID: <x49ipim7r19.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH V3] xfstests 279: test mkfs with various sector sizes &
-	alignments
-References: <4F5005D1.6040208@redhat.com> <4F50479B.2050609@sandeen.net>
-In-Reply-To: <4F50479B.2050609@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,270 +22,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
 
-This test uses the scsi_debug module to test mkfs against
-various physical & logical sector sizes, and with aligned
-and unaligned devices.
+Hi,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+This patch adds a couple more aio-stress runs to test 113.  The first
+simply adds -S, to test out AIO+DIO+O_SYNC.  The second adds -S and -o
+2, which directs aio-stress to only perform the random write test.
+These two tests helped identify several bugs in ext4.
 
-Dave, I think this implements all your suggestions (in one way or
-another...) except the non-modular scsi_debug.  I don't know
-how to manipulate things like offset if it's built in, but
-if you want to look... I don't see it.
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 
-V3: remove a couple stray/extra "tee" commands
-
-I looked into doing a generic version of this but I think without
-the sector size checking unique to xfs it's a little pointless.
-
-diff --git a/279 b/279
-new file mode 100755
-index 0000000..7d30251
---- /dev/null
-+++ b/279
-@@ -0,0 +1,120 @@
-+#! /bin/bash
-+# FS QA Test No. 279
-+#
-+# Test mkfs.xfs against various types of devices with varying
-+# logical & physical sector sizes and offsets.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@redhat.com
+diff --git a/113 b/113
+index 23676e0..b2ec510 100755
+--- a/113
++++ b/113
+@@ -100,4 +100,10 @@ _do_test 2 "-s 10m" $count $procs
+ # as above, but now using direct IO
+ _do_test 3 "-s 10m -O" $count $procs
+ 
++# dio with O_SYNC and unwritten extent conversion
++_do_test 4 "-s 10m -O -S" $count $procs
 +
-+seq=`basename $0`
-+echo "QA output created by $seq"
++# random dio writes with O_SYNC and unwritten extent conversion
++_do_test 5 "-s 10m -O -S -o 2" $count $procs
 +
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
+ exit
+diff --git a/113.out b/113.out
+index 1f3b866..aa856a6 100644
+--- a/113.out
++++ b/113.out
+@@ -12,3 +12,11 @@ aio-stress.2 : -t 20 -s 10m
+ -----------------------------------------------
+ aio-stress.3 : -t 20 -s 10m -O
+ -----------------------------------------------
 +
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+    _put_scsi_debug_dev
-+}
++-----------------------------------------------
++aio-stress.4 : -t 20 -s 10m -O -S
++-----------------------------------------------
 +
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.scsi_debug
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scsi_debug
-+
-+rm -f $seq.full
-+
-+# Remove xfs signature so -f isn't needed to re-mkfs
-+_wipe_device()
-+{
-+	device=$1
-+	dd if=/dev/zero of=$device bs=4k count=1 &>/dev/null
-+}
-+
-+_check_mkfs()
-+{
-+	echo "===================" 
-+	echo "mkfs with opts: $@" | sed -e "s,/dev/sd.,DEVICE,"
-+	/sbin/mkfs.xfs $@ 2>/dev/null > $tmp.mkfs.full
-+	if [ $? -ne 0 ]; then
-+		echo "Failed."
-+		return
-+	fi
-+	echo "Passed."
-+	cat $tmp.mkfs.full | _filter_mkfs >> $seq.full 2>$tmp.mkfs
-+	. $tmp.mkfs
-+	echo "Got sector size: $sectsz"
-+	device=`echo $@ | awk '{print $NF}'`
-+	_wipe_device $device
-+}
-+
-+# === 4k physical 512b logical aligned
-+(
-+echo "==================="
-+echo "4k physical 512b logical aligned"
-+SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 512 0 128`
-+# sector size should default to 4k
-+_check_mkfs $SCSI_DEBUG_DEV
-+# blocksize smaller than physical sectorsize should revert to logical sectorsize
-+_check_mkfs -b size=2048 -f $SCSI_DEBUG_DEV
-+) | tee -a $seq.full
-+_put_scsi_debug_dev
-+
-+# === 4k physical 512b logical unaligned
-+(
-+echo "==================="
-+echo "4k physical 512b logical unaligned"
-+SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 512 1 128`
-+# should fail on misalignment
-+_check_mkfs $SCSI_DEBUG_DEV
-+# should fall back to logical sector size with force
-+_check_mkfs -f $SCSI_DEBUG_DEV
-+# with 4k sector specified should fail without force
-+_check_mkfs -s size=4096 $SCSI_DEBUG_DEV
-+# with 4k sector specified should fall back to logical sector size with force
-+_check_mkfs -s size=4096 -f $SCSI_DEBUG_DEV
-+) | tee -a $seq.full
-+_put_scsi_debug_dev
-+
-+# === hard 4k physical / 4k logical
-+(
-+echo "==================="
-+echo "hard 4k physical / 4k logical"
-+SCSI_DEBUG_DEV=`_get_scsi_debug_dev 4096 4096 0 128`
-+# block size smaller than sector size should fail 
-+_check_mkfs -b size=2048 $SCSI_DEBUG_DEV
-+# sector size smaller than physical sector size should fail
-+_check_mkfs -s size=512 $SCSI_DEBUG_DEV
-+) | tee -a $seq.full
-+_put_scsi_debug_dev
-+
-+status=0
-+exit
-diff --git a/279.out b/279.out
-new file mode 100644
-index 0000000..5c49846
---- /dev/null
-+++ b/279.out
-@@ -0,0 +1,35 @@
-+QA output created by 279
-+===================
-+4k physical 512b logical aligned
-+===================
-+mkfs with opts: DEVICE
-+Passed.
-+Got sector size: 4096
-+===================
-+mkfs with opts: -b size=2048 -f DEVICE
-+Passed.
-+Got sector size: 512
-+===================
-+4k physical 512b logical unaligned
-+===================
-+mkfs with opts: DEVICE
-+Failed.
-+===================
-+mkfs with opts: -f DEVICE
-+Passed.
-+Got sector size: 512
-+===================
-+mkfs with opts: -s size=4096 DEVICE
-+Failed.
-+===================
-+mkfs with opts: -s size=4096 -f DEVICE
-+Passed.
-+Got sector size: 4096
-+===================
-+hard 4k physical / 4k logical
-+===================
-+mkfs with opts: -b size=2048 DEVICE
-+Failed.
-+===================
-+mkfs with opts: -s size=512 DEVICE
-+Failed.
-diff --git a/common.scsi_debug b/common.scsi_debug
-new file mode 100644
-index 0000000..9f9177c
---- /dev/null
-+++ b/common.scsi_debug
-@@ -0,0 +1,62 @@
-+##/bin/bash
-+#
-+# Copyright (c) 2012 Red Hat, Inc
-+# All Rights Reserved.
-+#
-+# Written by Eric Sandeen <sandeen@redhat.com>
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#
-+# Functions useful for tests on unique block devices
-+#
-+
-+_require_scsi_debug()
-+{
-+	# make sure we have the module and it's not already used
-+	modinfo scsi_debug 2>&1 > /dev/null || _notrun "scsi_debug module not found"
-+	lsmod | grep -wq scsi_debug && _notrun "scsi_debug module in use"
-+	# make sure it has the features we need
-+	# logical/physical sectors plus unmap support all went in together
-+	modinfo scsi_debug | grep -wq sector_size || _notrun "scsi_debug too old"
-+}
-+
-+# Args: [physical sector size, [logical sector size, [unaligned(0|1), [size in megs]]]]
-+_get_scsi_debug_dev()
-+{
-+	# Defaults to phys 512, logical 512, aligned
-+	physical=${1-512}
-+	logical=${2-512}
-+	unaligned=${3-0}
-+	size=${4-128}
-+
-+	phys_exp=0
-+	while [ $logical -lt $physical ]; do
-+		let physical=physical/2
-+		let phys_exp=phys_exp+1
-+	done
-+	opts="sector_size=$logical physblk_exp=$phys_exp lowest_aligned=$unaligned dev_size_mb=$size"
-+	echo "scsi_debug options $opts" >> $seq.full
-+	modprobe scsi_debug $opts
-+	[ $? -eq 0 ] || _fail "scsi_debug modprobe failed"
-+	sleep 1
-+	device=`grep -wl scsi_debug /sys/block/sd*/device/model | awk -F / '{print $4}'`
-+	echo "/dev/$device"
-+}
-+
-+_put_scsi_debug_dev()
-+{
-+	sleep 1
-+	rmmod scsi_debug || _fail "Could not remove scsi_debug module"
-+}
-diff --git a/group b/group
-index 6f2d748..7a91f41 100644
---- a/group
-+++ b/group
-@@ -392,3 +392,4 @@ deprecated
- 276 auto rw metadata
- 277 auto ioctl quick metadata
- 278 repair auto
-+279 auto mkfs
++-----------------------------------------------
++aio-stress.5 : -t 20 -s 10m -O -S -o 2
++-----------------------------------------------
 
 _______________________________________________
 xfs mailing list
