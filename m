@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22JudwT138277 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 13:56:39 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Fza0P1trCTpWOnZ9 for
-	<xfs@oss.sgi.com>; Fri, 02 Mar 2012 11:56:38 -0800 (PST)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH 2/7] ocfs2: Use generic handlers of O_SYNC AIO DIO
-Date: Fri,  2 Mar 2012 14:56:10 -0500
-Message-Id: <1330718175-21540-3-git-send-email-jmoyer@redhat.com>
-In-Reply-To: <1330718175-21540-1-git-send-email-jmoyer@redhat.com>
-References: <1330718175-21540-1-git-send-email-jmoyer@redhat.com>
+	q22KFpoh143196 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 14:15:52 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id JZ7B8eKIjPpa0TAF for <xfs@oss.sgi.com>;
+	Fri, 02 Mar 2012 12:15:50 -0800 (PST)
+Message-ID: <4F512A75.9030300@sandeen.net>
+Date: Fri, 02 Mar 2012 14:15:49 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: [xfstests patch] 113: add testing for O_DIRECT + O_SYNC
+References: <x49ipim7r19.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <x49ipim7r19.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,51 +20,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
-Cc: hch@infradead.org, Jeff Moyer <jmoyer@redhat.com>, jack@suse.cz
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Jan Kara <jack@suse.cz>
+On 3/2/12 1:15 PM, Jeff Moyer wrote:
+> Hi,
+> 
+> This patch adds a couple more aio-stress runs to test 113.  The first
+> simply adds -S, to test out AIO+DIO+O_SYNC.  The second adds -S and -o
+> 2, which directs aio-stress to only perform the random write test.
+> These two tests helped identify several bugs in ext4.
+> 
+> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
 
-Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
-file.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
----
- fs/ocfs2/aops.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+Looks fine, I'll check it into xfstests-dev, thanks!
 
-diff --git a/fs/ocfs2/aops.c b/fs/ocfs2/aops.c
-index 78b68af..3d14c2b 100644
---- a/fs/ocfs2/aops.c
-+++ b/fs/ocfs2/aops.c
-@@ -593,9 +593,7 @@ static void ocfs2_dio_end_io(struct kiocb *iocb,
- 	level = ocfs2_iocb_rw_locked_level(iocb);
- 	ocfs2_rw_unlock(inode, level);
- 
--	if (is_async)
--		aio_complete(iocb, ret, 0);
--	inode_dio_done(inode);
-+	generic_dio_end_io(iocb, offset, bytes, private, ret, is_async);
- }
- 
- /*
-@@ -642,7 +640,7 @@ static ssize_t ocfs2_direct_IO(int rw,
- 	return __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev,
- 				    iov, offset, nr_segs,
- 				    ocfs2_direct_IO_get_blocks,
--				    ocfs2_dio_end_io, NULL, 0);
-+				    ocfs2_dio_end_io, NULL, DIO_SYNC_WRITES);
- }
- 
- static void ocfs2_figure_cluster_boundaries(struct ocfs2_super *osb,
--- 
-1.7.1
+-Eric
+
+> 
+> diff --git a/113 b/113
+> index 23676e0..b2ec510 100755
+> --- a/113
+> +++ b/113
+> @@ -100,4 +100,10 @@ _do_test 2 "-s 10m" $count $procs
+>  # as above, but now using direct IO
+>  _do_test 3 "-s 10m -O" $count $procs
+>  
+> +# dio with O_SYNC and unwritten extent conversion
+> +_do_test 4 "-s 10m -O -S" $count $procs
+> +
+> +# random dio writes with O_SYNC and unwritten extent conversion
+> +_do_test 5 "-s 10m -O -S -o 2" $count $procs
+> +
+>  exit
+> diff --git a/113.out b/113.out
+> index 1f3b866..aa856a6 100644
+> --- a/113.out
+> +++ b/113.out
+> @@ -12,3 +12,11 @@ aio-stress.2 : -t 20 -s 10m
+>  -----------------------------------------------
+>  aio-stress.3 : -t 20 -s 10m -O
+>  -----------------------------------------------
+> +
+> +-----------------------------------------------
+> +aio-stress.4 : -t 20 -s 10m -O -S
+> +-----------------------------------------------
+> +
+> +-----------------------------------------------
+> +aio-stress.5 : -t 20 -s 10m -O -S -o 2
+> +-----------------------------------------------
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
