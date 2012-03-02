@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22EqwWO083548 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 08:52:58 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id Dif6gZf1iE9tAuPq for
-	<xfs@oss.sgi.com>; Fri, 02 Mar 2012 06:52:57 -0800 (PST)
-Date: Fri, 2 Mar 2012 14:52:58 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: [XFS] xfs_repair time how long it takes??
-Message-ID: <20120302145258.GB12059@nsrc.org>
-References: <CABF-5WptGU3vmScFcpHVstd2UZfCAqiY4dGvL=_1+feFvYuS6g@mail.gmail.com>
-	<20120302140145.GA11911@nsrc.org>
-	<37B5727D-1E3B-4A96-BF7F-4CA6DAF9B63C@gmail.com>
+	q22Evra4086930 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 08:57:53 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id WlAi4zz7mM5NRbLd for <xfs@oss.sgi.com>;
+	Fri, 02 Mar 2012 06:57:52 -0800 (PST)
+Message-ID: <4F50DFEF.60401@sandeen.net>
+Date: Fri, 02 Mar 2012 08:57:51 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <37B5727D-1E3B-4A96-BF7F-4CA6DAF9B63C@gmail.com>
+Subject: Re: [PATCH] xfstests: before test execution, print test number to
+	syslog
+References: <1330691215-4796-1-git-send-email-sbehrens@giantdisaster.de>
+In-Reply-To: <1330691215-4796-1-git-send-email-sbehrens@giantdisaster.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +25,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ryan <ryanlee.lahk@gmail.com>
+To: Stefan Behrens <sbehrens@giantdisaster.de>
 Cc: xfs@oss.sgi.com
 
-On Fri, Mar 02, 2012 at 11:26:30PM +0900, Ryan wrote:
-> How about the dirty log. I use the xfs_repair because the dirty log must be removed when i mount HDD.
+On 3/2/12 6:26 AM, Stefan Behrens wrote:
+> When the xfstests are executed in a batch (like "check 001-299")
+> and produce syslog output, it is helpful to know which test was
+> causing the output. Therefore each time a test is started, a
+> syslog message is generated that contains the number of the
+> xfstest.
+> 
+> Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
 
-Google for "xfs dirty log" and I get this as the second hit:
+I like this; I almost sent a similar patch once.
 
-http://docs.redhat.com/docs/en-US/Red_Hat_Enterprise_Linux/6/html/Storage_Administration_Guide/xfsrepair.html
+But would like to let others chime in as well to be sure.
 
-What it says is the exact opposite of what you said above:
+Is "logger" universal and portable to other systems?  That'd be
+my only concern with the patch.
 
-- the dirty log is automatically dealt with when you mount the filesystem
-- xfs_repair will refuse to run if a dirty log is present
+-Eric
 
-So running xfs_repair on boot is actually a bad idea.
+> ---
+>  check |    1 +
+>  1 files changed, 1 insertions(+), 0 deletions(-)
+> 
+> diff --git a/check b/check
+> index f792009..883edcc 100755
+> --- a/check
+> +++ b/check
+> @@ -241,6 +241,7 @@ do
+>  	start=`_wallclock`
+>  	$timestamp && echo -n "	["`date "+%T"`"]"
+>  	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
+> +	logger "run xfstest $seq"
+>  	./$seq >$tmp.rawout 2>&1
+>  	sts=$?
+>  	$timestamp && _timestamp
 
 _______________________________________________
 xfs mailing list
