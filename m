@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22AM59C039076 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 04:22:06 -0600
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id dyCU0oOtQ0NhHYGa
-	for <xfs@oss.sgi.com>; Fri, 02 Mar 2012 02:22:04 -0800 (PST)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 9406D6C0C8
-	for <xfs@oss.sgi.com>; Fri,  2 Mar 2012 04:22:03 -0600 (CST)
-Message-ID: <4F509F49.8060902@hardwarefreak.com>
-Date: Fri, 02 Mar 2012 04:22:01 -0600
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q22AhpqL040036 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 04:43:51 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	5ewX448LDvxwKQgF (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 02 Mar 2012 02:43:50 -0800 (PST)
+Date: Fri, 2 Mar 2012 05:43:48 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: XFS: Assertion failed: bp->b_bn != XFS_BUF_DADDR_NULL, file:
+	fs/xfs/xfs_buf.c, line: 598
+Message-ID: <20120302104348.GA22230@infradead.org>
+References: <1330539626.7615.73.camel@utemp.mieszkanie>
 MIME-Version: 1.0
-Subject: Re: time for userspace releases?
-References: <20120112161227.GA3225@infradead.org>
-	<20120302084123.GA19172@infradead.org>
-In-Reply-To: <20120302084123.GA19172@infradead.org>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <1330539626.7615.73.camel@utemp.mieszkanie>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,19 +29,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Rafa?? Kupka <kupson@kupson.net>
+Cc: xfs@oss.sgi.com
 
-On 3/2/2012 2:41 AM, Christoph Hellwig wrote:
-> On Thu, Jan 12, 2012 at 11:12:27AM -0500, Christoph Hellwig wrote:
->> [looks like the list manager ate this mail the first time, sorry if
->>  anyone gets it twice]
-
-Brent Bice of SGI has been investigating the OSS list server problems,
-since 2/27.  He seems truly interested and eager to help.  Maybe this
-will lead to something good.
-
--- 
-Stan
+>From the trace this looks like we got incorrect results from xfs_imap,
+which got some fairly significant changes between the two kernels
+you tested.  Can you check if 2.6.36 shows this issue?  It's the first
+kernel that had these big changes in inode lookup.
 
 _______________________________________________
 xfs mailing list
