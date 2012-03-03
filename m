@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q22M9rdA161560 for <xfs@oss.sgi.com>; Fri, 2 Mar 2012 16:09:54 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id RInth8U2HHhKTBRR for <xfs@oss.sgi.com>;
-	Fri, 02 Mar 2012 14:09:52 -0800 (PST)
-Message-ID: <4F51452F.90608@sandeen.net>
-Date: Fri, 02 Mar 2012 16:09:51 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q239Xc81255409 for <xfs@oss.sgi.com>; Sat, 3 Mar 2012 03:33:38 -0600
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	Gpn5xeRi09UKs1ZC (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 03 Mar 2012 01:33:33 -0800 (PST)
+Date: Sat, 3 Mar 2012 04:33:32 -0500
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [xfstests patch] 113: add testing for O_DIRECT + O_SYNC
+Message-ID: <20120303093332.GA8417@infradead.org>
+References: <x49ipim7r19.fsf@segfault.boston.devel.redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/2] repair: fix messages from set_nlinks
-References: <20120228174223.GA6148@infradead.org>
-	<20120228174251.GB6148@infradead.org>
-In-Reply-To: <20120228174251.GB6148@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <x49ipim7r19.fsf@segfault.boston.devel.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,58 +28,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
 
-On 2/28/12 11:42 AM, Christoph Hellwig wrote:
-> Link counts are unsigned and need to be printed as such.  Also only
-> print the varning about upgrading the inode version if the inode was
-            warning
-
-> version 1 before.
+On Fri, Mar 02, 2012 at 02:15:46PM -0500, Jeff Moyer wrote:
+> Hi,
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> This patch adds a couple more aio-stress runs to test 113.  The first
+> simply adds -S, to test out AIO+DIO+O_SYNC.  The second adds -S and -o
+> 2, which directs aio-stress to only perform the random write test.
+> These two tests helped identify several bugs in ext4.
 
-Well you got reviews for the hard part, 1/2 :)
+I'd rather make this a separate testcase, maybe moving the _do_test into
+common code.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> 
-> Index: xfsprogs-dev/repair/phase7.c
-> ===================================================================
-> --- xfsprogs-dev.orig/repair/phase7.c	2012-02-28 12:45:52.627849317 +0100
-> +++ xfsprogs-dev/repair/phase7.c	2012-02-28 14:03:20.475986024 +0100
-> @@ -40,19 +40,20 @@ set_nlinks(
->  
->  	if (!no_modify) {
->  		*dirty = 1;
-> -		do_warn(_("resetting inode %" PRIu64 " nlinks from %d to %d\n"),
-> +		do_warn(_("resetting inode %" PRIu64 " nlinks from %u to %u\n"),
->  			ino, dinoc->di_nlink, nrefs);
->  
-> -		if (nrefs > XFS_MAXLINK_1)  {
-> +		if (dinoc->di_version == 1 && nrefs > XFS_MAXLINK_1)  {
->  			ASSERT(fs_inode_nlink);
->  			do_warn(
-> -_("nlinks %d will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
-> +_("nlinks %u will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
->  				nrefs, ino);
->  
->  		}
->  		dinoc->di_nlink = nrefs;
->  	} else  {
-> -		do_warn(_("would have reset inode %" PRIu64 " nlinks from %d to %d\n"),
-> +		do_warn(
-> +_("would have reset inode %" PRIu64 " nlinks from %u to %u\n"),
->  			ino, dinoc->di_nlink, nrefs);
->  	}
->  }
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Rationale:  newly added tests shouldn't make old testcases fail, as that
+would be rather confusing.
 
 _______________________________________________
 xfs mailing list
