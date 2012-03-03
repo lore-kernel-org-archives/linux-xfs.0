@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q23J3wXU071976 for <xfs@oss.sgi.com>; Sat, 3 Mar 2012 13:03:59 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id E66w9bMdm30MaxXv for <xfs@oss.sgi.com>;
-	Sat, 03 Mar 2012 11:03:57 -0800 (PST)
-Message-ID: <4F526B1C.4000304@sandeen.net>
-Date: Sat, 03 Mar 2012 13:03:56 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [xfstests patch] 113: add testing for O_DIRECT + O_SYNC
-References: <x49ipim7r19.fsf@segfault.boston.devel.redhat.com>
-	<20120303093332.GA8417@infradead.org>
-In-Reply-To: <20120303093332.GA8417@infradead.org>
+	q23KUNSN075510 for <xfs@oss.sgi.com>; Sat, 3 Mar 2012 14:30:24 -0600
+Received: from mail.qboosh.pl (mail.qboosh.pl [217.73.31.61]) by cuda.sgi.com
+	with ESMTP id 78qJB9TdcD9Y8qbt (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 03 Mar 2012 12:30:20 -0800 (PST)
+Date: Sat, 3 Mar 2012 21:37:59 +0100
+From: Jakub Bogusz <qboosh@pld-linux.org>
+Subject: Re: time for userspace releases?
+Message-ID: <20120303203759.GA24517@mail>
+References: <20120112161227.GA3225@infradead.org>
+	<20120302084123.GA19172@infradead.org>
+Mime-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120302084123.GA19172@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,34 +28,37 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-fsdevel@vger.kernel.org, Jeff Moyer <jmoyer@redhat.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On 3/3/12 3:33 AM, Christoph Hellwig wrote:
-> On Fri, Mar 02, 2012 at 02:15:46PM -0500, Jeff Moyer wrote:
->> Hi,
->>
->> This patch adds a couple more aio-stress runs to test 113.  The first
->> simply adds -S, to test out AIO+DIO+O_SYNC.  The second adds -S and -o
->> 2, which directs aio-stress to only perform the random write test.
->> These two tests helped identify several bugs in ext4.
+On Fri, Mar 02, 2012 at 03:41:23AM -0500, Christoph Hellwig wrote:
+> On Thu, Jan 12, 2012 at 11:12:27AM -0500, Christoph Hellwig wrote:
+> > [looks like the list manager ate this mail the first time, sorry if
+> >  anyone gets it twice]
+> > 
+> > We have some important repair fixes pending, as well as major changes
+> > in xfsdump.  Maybe it's time to schedule releases in about two weeks
+> > and get any outstanding changes in?
 > 
-> I'd rather make this a separate testcase, maybe moving the _do_test into
-> common code.
-> 
-> Rationale:  newly added tests shouldn't make old testcases fail, as that
-> would be rather confusing.
+> We've dragged this out another 1 1/2 month, so let's get the ball
+> rolling.  I'd like to declare today feature and string freeze for
+> xfsprogs 3.1.8, and once Jakub has sent in the translations get it
+> out.  We should try to get a 3.1.9 out relatively soon after that as
+> there is lots more repair work pending, as well as the userspace support
+> for separate group and project quotas.  If we aim for a 2 to 3 month
+> release cycle we should be able to time it for the Linux 3.4 release.
 
-Well, phooey, I committed it already.
+Where can I get .pot for xfsprogs-3.1.8 from?
 
-I can do another patch to revert & add to a new test if you really want.
+> There are no translations for xfsdump, but I'd propose to release it at
+> the same time.  Given the significant changes I think the xfsdump
+> version should be bumped to 3.1.0.
 
--Eric
+Currently I have about 1/3 of xfsdump strings translated and they slowly
+grow... I'll sent them after completion.
 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+
+-- 
+Jakub Bogusz    http://qboosh.pl/
 
 _______________________________________________
 xfs mailing list
