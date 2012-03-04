@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q24G9MST001675 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 10:09:23 -0600
-Received: from mail.vlasiu.net (mail.vlasiu.net [213.157.175.46]) by
-	cuda.sgi.com with ESMTP id QRgYBIRhD3Rx3JdG (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 04 Mar 2012 08:09:21 -0800 (PST)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.vlasiu.net (Postfix) with ESMTP id 7995D7E008
-	for <xfs@oss.sgi.com>; Sun,  4 Mar 2012 18:09:19 +0200 (EET)
-Received: from mail.vlasiu.net ([127.0.0.1])
-	by localhost (mail.vlasiu.net [127.0.0.1]) (amavisd-new, port 10024)
-	with LMTP id jO5UqeUOt5iT for <xfs@oss.sgi.com>;
-	Sun,  4 Mar 2012 18:09:17 +0200 (EET)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.vlasiu.net (Postfix) with ESMTP id F415A7E008
-	for <xfs@oss.sgi.com>; Sun,  4 Mar 2012 18:09:16 +0200 (EET)
-Date: Sun, 4 Mar 2012 18:09:12 +0200 (EET)
-From: Gabriel VLASIU <gabriel@vlasiu.net>
-Subject: failed to set versionnum in AG 1
-Message-ID: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
+	q24HDoVt008623 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 11:13:50 -0600
+Received: from xwis.net (xwis.net [88.198.24.17]) by cuda.sgi.com with ESMTP
+	id NKxSBp3m6jAaTykS (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 04 Mar 2012 09:13:47 -0800 (PST)
+Message-ID: <4F53A2FF.3000305@xwis.net>
+Date: Sun, 04 Mar 2012 18:14:39 +0100
+From: Olaf van der Spek <olaf@xwis.net>
 MIME-Version: 1.0
+Subject: Re: fsync, rename, O_ATOMIC/O_PONIES
+References: <4F50BF89.7020909@xwis.net> <20120302131240.GA14186@infradead.org>
+In-Reply-To: <20120302131240.GA14186@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +21,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+On 2-3-2012 14:12, Christoph Hellwig wrote:
+>> I'd like to ask:
+>> - Is there a tool to log all unsafe operations?
+>
+> What is an unsafe operation?  Anything that's dumb and might lose data?
 
-Hi!
+For example
 
-On all my older partitions with xfs I have this problem:
+> The possibilities are sheer endless.
 
-# xfs_db -x /dev/sdh1
-xfs_db> version
-versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
-xfs_db> version attr2
-writing all SBs
-Superblock has mismatched features2 fields, skipping modification
-failed to set versionnum in AG 1
-versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+And?
 
-Some does not even has ATTR2 enabled and "version attr2" give the same 
-error and ATTR2 get enabled.
+>> - What is the *right* way to update a file?
+>
+>   fd = open(tmpfile, ...);
+>   write(fd, ...);  // or any other update
+>   fdatasync(fd);
+>   rename(tmpfile, realfile);
 
-Can this error be fixed and how? Should I worry about this?
-Thank you.
+Argh, come on.
+That's not real and it's not complete. tmpfile is undefined, errors 
+aren't handled and you have lots of unlisted assumptions or regressions.
 
-
-Sincerely,
-Gabriel
-
-- -- 
-
-// Gabriel VLASIU
-//
-// OpenGPG-KeyID      : 0xE684206E
-// OpenGPG-Fingerprint: 0C3D 9F8B 725D E243 CB3C 8428 796A DB1F E684 206E
-// OpenGPG-URL        : http://www.vlasiu.net/public.key
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk9Tk6gACgkQeWrbH+aEIG5wiwCdF+273blEdosPWCDNblJdvUAv
-xqAAnRKt47B8zEbSbXArf3KJJhf1vcyD
-=pqqw
------END PGP SIGNATURE-----
+Olaf
 
 _______________________________________________
 xfs mailing list
