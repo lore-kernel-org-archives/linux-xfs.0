@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q256fUxS121503 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 00:41:30 -0600
-Received: from server52.dayanadns.com (server52.dayanadns.com [204.50.22.15])
-	by cuda.sgi.com with ESMTP id lueGFzS3pLWPCoGG (version=TLSv1
+	q257VmnT123804 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 01:31:49 -0600
+Received: from mail.vlasiu.net (mail.vlasiu.net [213.157.175.46]) by
+	cuda.sgi.com with ESMTP id pc69C5a04MAwBrOA (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 04 Mar 2012 22:41:29 -0800 (PST)
-Received: from [64.254.187.212] (port=35133 helo=[10.0.0.7])
-	by server52.dayanadns.com with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.67) (envelope-from <jeffrey.hundstad@mnsu.edu>)
-	id 1S4Rbp-0003KD-VA
-	for xfs@oss.sgi.com; Sun, 04 Mar 2012 22:41:27 -0800
-Message-ID: <4F546014.3030601@mnsu.edu>
-Date: Mon, 05 Mar 2012 00:41:24 -0600
-From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
+	Sun, 04 Mar 2012 23:31:47 -0800 (PST)
+Date: Mon, 5 Mar 2012 09:31:38 +0200 (EET)
+From: Gabriel VLASIU <gabriel@vlasiu.net>
+Subject: Re: failed to set versionnum in AG 1
+In-Reply-To: <20120305011032.GL5091@dastard>
+Message-ID: <alpine.LRH.2.02.1203050912001.10815@mail.vlasiu.net>
+References: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
+	<20120305011032.GL5091@dastard>
 MIME-Version: 1.0
-Subject: Re: Poor performance using discard
-References: <1330469778.9688.7.camel@core24> <20120229012259.GW3592@dastard>
-	<1330480826.9688.23.camel@core24> <20120229040819.GZ3592@dastard>
-	<1330702910.6438.40.camel@core24> <20120305030254.GA3592@dastard>
-In-Reply-To: <20120305030254.GA3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,44 +22,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 03/04/2012 09:02 PM, Dave Chinner wrote:
-> On Fri, Mar 02, 2012 at 10:41:50AM -0500, Thomas Lynema wrote:
->> Peter was right then.  Per multiple recommendations
->> I'm switching to fstrim, it is quicker than the deletes.
->>
->> fstrim consistently takes about a minute to run on a 40GB
->> volume.
->>
->> time fstrim -v /usr
->> /usr: 9047117824 bytes were trimmed
->>
->> real	0m56.121s
->> user	0m0.090s
->> sys	0m0.000s
->>
->> I see that the running of fstrim was already discussed
->> http://oss.sgi.com/archives/xfs/2011-05/msg00338.html.
->>
->> Please add something to the FAQ about using SSDs.  It would be great if
->> people could see the recommended mount options and fstrim crontab entry
->> (or other option) for running xfs on a SSD.
-> It's a publicly modifiable wiki. Feel free to add what you've
-> learned here to a new FAQ entry - others will come by and correct
-> anything in it that is inaccurate....
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
-And it is already there:
-http://xfs.org/index.php/FITRIM/discard
+Hi Dave!
 
-Feel free to expand it.
+On Mon, 5 Mar 2012, Dave Chinner wrote:
 
--- 
-Jeffrey Hundstad
+> > # xfs_db -x /dev/sdh1
+> > xfs_db> version
+> > versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+> 
+> it already has the attr2 feature bit set.
+Yes, it has. But another (old) partition does not have ATTR2 enabled. And 
+the error is the same when I try to set ATTR2. And the funny thing is, 
+after that, version report ATTR2 as set.
+
+All my partitions have been created on RHEL5 (some are even older). On a 
+new partition (created on RHEL6) I can set ATTR2 over and over again 
+without any error reported. Should I backup everything, reformat all 
+partitions and restore everything?
+
+> > xfs_db> version attr2
+> > writing all SBs
+> > Superblock has mismatched features2 fields, skipping modification
+> > failed to set versionnum in AG 1
+> > versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+> 
+> What version of xfs_db are you using?
+3.1.1 and 3.1.7
+
+> And why do you need to set the attr2 feature this way? It gets set
+> automatically when it gets used because on recent kernels it is the
+> default mount option. If you have an older kernel and need to turn
+> attr2 on, then simply add the "attr2" field to the mount options on
+> the filesystem. Once xfs_info reports attr=2 for the filesytem, you
+> can remove the attr2 mount option...
+Thank you, but I know that. In fact it was the first thing I tried: can 
+the filesystem be be mounted if I add attr2 is in fstab. And I was able to 
+do so. Still, ATTR2 was not reported for the partition I was talking 
+above (without ATTR2 reported by version).
+
+But that's not the point. I see an error message here "Superblock has 
+>>mismatched<< features2 fields". And another one ">>failed<< to set 
+versionnum in AG 1".
+Still, xfs_repair does not see anything wrong with the filesystem. So 
+who's wrong? xfs_repair or xfs_db?
+An most important: it's possible in the future to loose some data?
+
+Sincerely,
+Gabriel
+
+- -- 
+
+// Gabriel VLASIU
+//
+// OpenGPG-KeyID      : 0xE684206E
+// OpenGPG-Fingerprint: 0C3D 9F8B 725D E243 CB3C 8428 796A DB1F E684 206E
+// OpenGPG-URL        : http://www.vlasiu.net/public.key
+
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk9Ua9oACgkQeWrbH+aEIG6x/QCeOrLQCVrVbBnzT5UXmKy8bwdK
+u/YAn1P3G2L80MMvX0qD0Tf25fBLleX+
+=BZVM
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
