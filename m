@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q25FiZUP217091 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 09:44:35 -0600
-Received: from xwis.net (xwis.net [88.198.24.17]) by cuda.sgi.com with ESMTP
-	id CqEkorJrgwwHWpyz (version=TLSv1 cipher=AES256-SHA bits=256
+	q25GGF7J226375 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 10:16:16 -0600
+Received: from mail-gx0-f181.google.com (mail-gx0-f181.google.com
+	[209.85.161.181]) by cuda.sgi.com with ESMTP id
+	vOPE1aLlv5KIKqCN (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 Mar 2012 07:44:33 -0800 (PST)
-Message-ID: <4F54DF5A.4090301@xwis.net>
-Date: Mon, 05 Mar 2012 16:44:26 +0100
-From: Olaf van der Spek <olaf@xwis.net>
+	Mon, 05 Mar 2012 08:16:14 -0800 (PST)
+Received: by ggni4 with SMTP id i4so2613803ggn.26
+	for <xfs@oss.sgi.com>; Mon, 05 Mar 2012 08:16:13 -0800 (PST)
 MIME-Version: 1.0
-Subject: Re: fsync, rename, O_ATOMIC/O_PONIES
-References: <4F50BF89.7020909@xwis.net> <20120302131240.GA14186@infradead.org>
-	<4F53A2FF.3000305@xwis.net> <20120305010203.GK5091@dastard>
-In-Reply-To: <20120305010203.GK5091@dastard>
+In-Reply-To: <20120302074558.GB4117@infradead.org>
+References: <1330636285-11200-1-git-send-email-kdasu.kdev@gmail.com>
+	<de74feb44ebd887269fe85d9a5879765afccf4c2.1330635228.git.kdasu.kdev@gmail.com>
+	<20120302074558.GB4117@infradead.org>
+Date: Mon, 5 Mar 2012 11:16:13 -0500
+Message-ID: <CAC=U0a14QA1+UpkVJZtbJf1F6kVdKbYyWFKRD8Ex_j61L3s7oA@mail.gmail.com>
+Subject: Re: [PATCH 1/2] xfsprogs: replace deprecated ustat call with statfs
+	in libxfs/linux.c
+From: Kamal Dasu <kdasu.kdev@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,59 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Kevin Cernekee <cernekee@gmail.com>
 
-On 5-3-2012 2:02, Dave Chinner wrote:
->> Argh, come on.
->> That's not real and it's not complete. tmpfile is undefined, errors
->> aren't handled and you have lots of unlisted assumptions or
->> regressions.
+Christoph,
+
+> More seriously - ustat provides the benefit to check if the block device
+> is mounted anywhere, which we make use of here.  A statfs of the block
+> device path doesn't provide that functionality at all.
 >
-> The above is perfectly reasonable psuedo code for quickly describing
-> how to safely overwriting a file. If you want to know about error
-> handling and assumptions, read the man pages for operation.
 
-But I don't have a psuedo code compiler. Using psuedo code hides 
-complexity and bugs. Even the code from Jeff Moyer in the article you're 
-refering too contained bugs.
+Now I understand your concern. However if we would want to replace the
+deprecated ustat call, then what other way would be acceptable to
+achieve the same. Would parsing the /proc/mounts for the block device
+name suffice ?.
 
-Don't you think it's quite strange there's no real code available to 
-handle this widespread problem?
+Thanks
+Kamal
 
-> To make it easy for you, I'll just point out this has already been
-> dealt with early in in the LWN thread for that article, here's the
-> link to the comment and the relevant LWN article providing you with
-> all the information you want:
+On Fri, Mar 2, 2012 at 2:45 AM, Christoph Hellwig <hch@infradead.org> wrote:
+> On Thu, Mar 01, 2012 at 04:11:24PM -0500, Kamal Dasu wrote:
+>> >From the ustat man page
+>>
+>> NOTES
+>> =A0 =A0 =A0 =A0ustat() is deprecated and has only =A0been =A0provided =
+=A0for =A0compatibility.
+>> =A0 =A0 =A0 =A0All new programs should use statfs(2) instead.
 >
-> http://lwn.net/Articles/476606/
-> https://lwn.net/Articles/457667/
-
-It also doesn't handle the assumptions / regressions: 
-http://lwn.net/Articles/485182/
-Assuming the target is not a symlink to a different volume
-Assuming you are allowed to create the tmp file
-Assuming you are allowed to overwrite an existing file having the same 
-name as your tmp file
-Assuming it's ok to reset meta-data, like file owner, permissions, acls, 
-creation timestamp, etc.
-Assuming the performance regression due to fsync is ok (request was for 
-atomic, not durable)
-
-> And that my stance on this atomic rename subject is simply this: If
-> we want to change reanme behaviour, then the filesystem is not the
-> right place to do it - atomic rename semantics need to be defined
-> and enforced at the VFS.  See here:
+> xfsprogs isn't new :)
 >
-> http://lwn.net/Articles/479152/
-
-I don't think rename is part of the solution.
-
-Olaf
+> More seriously - ustat provides the benefit to check if the block device
+> is mounted anywhere, which we make use of here. =A0A statfs of the block
+> device path doesn't provide that functionality at all.
+>
 
 _______________________________________________
 xfs mailing list
