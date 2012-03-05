@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q25HWMBI233637 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 11:32:23 -0600
-Received: from mo-p00-ob.rzone.de (mo-p00-ob.rzone.de [81.169.146.161]) by
-	cuda.sgi.com with ESMTP id CCasSl6JVyj5RYNi (version=TLSv1
-	cipher=DES-CBC3-SHA bits=168 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 Mar 2012 09:32:21 -0800 (PST)
-Message-ID: <4F54F8A1.7020603@giantdisaster.de>
-Date: Mon, 05 Mar 2012 18:32:17 +0100
-From: Stefan Behrens <sbehrens@giantdisaster.de>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: before test execution, print test number to
-	syslog
-References: <1330691215-4796-1-git-send-email-sbehrens@giantdisaster.de>
-	<20120305012301.GM5091@dastard>
-In-Reply-To: <20120305012301.GM5091@dastard>
+	q25LeH5a009647 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 15:40:17 -0600
+Received: from mx0.pronet.com.pl (mx0.pronet.com.pl [193.108.35.26]) by
+	cuda.sgi.com with ESMTP id 2iMGQ94m8mvOqoRn for
+	<xfs@oss.sgi.com>; Mon, 05 Mar 2012 13:40:15 -0800 (PST)
+Subject: Re: XFS: Assertion failed: bp->b_bn != XFS_BUF_DADDR_NULL, file:
+	fs/xfs/xfs_buf.c, line: 598
+From: =?UTF-8?Q?Rafa=C5=82?= Kupka <kupson@kupson.net>
+In-Reply-To: <20120303114413.GA18748@infradead.org>
+References: <1330539626.7615.73.camel@utemp.mieszkanie>
+	<20120302104348.GA22230@infradead.org>
+	<1330774627.32457.24.camel@utemp.mieszkanie>
+	<20120303114413.GA18748@infradead.org>
+Date: Mon, 05 Mar 2012 22:40:12 +0100
+Message-ID: <1330983612.28645.18.camel@utemp.mieszkanie>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,51 +24,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On 3/5/2012 2:23 AM, Dave Chinner wrote:
-> On Fri, Mar 02, 2012 at 01:26:55PM +0100, Stefan Behrens wrote:
->> When the xfstests are executed in a batch (like "check 001-299")
->> and produce syslog output, it is helpful to know which test was
->> causing the output. Therefore each time a test is started, a
->> syslog message is generated that contains the number of the
->> xfstest.
->>
->> Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
->> ---
->>  check |    1 +
->>  1 files changed, 1 insertions(+), 0 deletions(-)
->>
->> diff --git a/check b/check
->> index f792009..883edcc 100755
->> --- a/check
->> +++ b/check
->> @@ -241,6 +241,7 @@ do
->>  	start=`_wallclock`
->>  	$timestamp && echo -n "	["`date "+%T"`"]"
->>  	[ ! -x $seq ] && chmod u+x $seq # ensure we can run it
->> +	logger "run xfstest $seq"
->>  	./$seq >$tmp.rawout 2>&1
->>  	sts=$?
->>  	$timestamp && _timestamp
-> 
-> Only thing I'd suggest here is that errors (e.g. logger is not
-> installed) are redirected to /dev/null so there isn't additional
-> noise if we fail to log to syslog.
+On Sat, 2012-03-03 at 06:44 -0500, Christoph Hellwig wrote:
+> On Sat, Mar 03, 2012 at 12:37:07PM +0100, Rafa?? Kupka wrote:
+> > On Fri, 2012-03-02 at 05:43 -0500, Christoph Hellwig wrote:
+Hi,
 
-Patch v2 is sent which checks that logger can be executed. Additional
-output cannot happen according to the sources. Thanks!
+I've completed bisection process. It looks like kernel up to
 
+704b2907 "xfs: register the inode cache shrinker before quotachecks"
 
-> 
-> Cheers,
-> 
-> Dave.
+is good and first bad commit is:
+
+0e6e847f "xfs: stop using the page cache to back the buffer cache"
+
+I double tested it - 704b2907 can do 60+ loops of xfsdump without any
+trouble and 0e6e847f breaks in <10 iterations.
+
+> > - git revision c5850150d0b9ae16840c5d9846f9d5a759996a15:
+> >     Merge branch 'for-linus' of git://oss.sgi.com/xfs/xfs
+> >     =
+
+> >     * 'for-linus' of git://oss.sgi.com/xfs/xfs:
+> >       xfs: stop using the page cache to back the buffer cache
+> >       xfs: register the inode cache shrinker before quotachecks
+> >       xfs: xfs_trans_read_buf() should return an error on failure
+> =
+
+> This is the only patch in that area.  Give me a bit more time to
+> figure out how it could related to your issues.
+
+Can I do something more to help?
+
+Regards,
+Rafa=B3 Kupka
 
 _______________________________________________
 xfs mailing list
