@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q25129lk068675 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 19:02:09 -0600
+	q251AadB069228 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 19:10:36 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	GgUFYmX4P1HIIPCl for <xfs@oss.sgi.com>;
-	Sun, 04 Mar 2012 17:02:06 -0800 (PST)
-Date: Mon, 5 Mar 2012 12:02:03 +1100
+	idJM7cR5MyiIIJnr for <xfs@oss.sgi.com>;
+	Sun, 04 Mar 2012 17:10:34 -0800 (PST)
+Date: Mon, 5 Mar 2012 12:10:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fsync, rename, O_ATOMIC/O_PONIES
-Message-ID: <20120305010203.GK5091@dastard>
-References: <4F50BF89.7020909@xwis.net> <20120302131240.GA14186@infradead.org>
-	<4F53A2FF.3000305@xwis.net>
+Subject: Re: failed to set versionnum in AG 1
+Message-ID: <20120305011032.GL5091@dastard>
+References: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F53A2FF.3000305@xwis.net>
+In-Reply-To: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +26,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Olaf van der Spek <olaf@xwis.net>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Gabriel VLASIU <gabriel@vlasiu.net>
+Cc: xfs@oss.sgi.com
 
-On Sun, Mar 04, 2012 at 06:14:39PM +0100, Olaf van der Spek wrote:
-> On 2-3-2012 14:12, Christoph Hellwig wrote:
-> >>I'd like to ask:
-> >>- Is there a tool to log all unsafe operations?
-> >
-> >What is an unsafe operation?  Anything that's dumb and might lose data?
+On Sun, Mar 04, 2012 at 06:09:12PM +0200, Gabriel VLASIU wrote:
+> -----BEGIN PGP SIGNED MESSAGE-----
+> Hash: SHA1
 > 
-> For example
+> Hi!
 > 
-> >The possibilities are sheer endless.
+> On all my older partitions with xfs I have this problem:
 > 
-> And?
-> 
-> >>- What is the *right* way to update a file?
-> >
-> >  fd = open(tmpfile, ...);
-> >  write(fd, ...);  // or any other update
-> >  fdatasync(fd);
-> >  rename(tmpfile, realfile);
-> 
-> Argh, come on.
-> That's not real and it's not complete. tmpfile is undefined, errors
-> aren't handled and you have lots of unlisted assumptions or
-> regressions.
+> # xfs_db -x /dev/sdh1
+> xfs_db> version
+> versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
 
-The above is perfectly reasonable psuedo code for quickly describing
-how to safely overwriting a file. If you want to know about error
-handling and assumptions, read the man pages for operation.
+it already has the attr2 feature bit set.
 
-To make it easy for you, I'll just point out this has already been
-dealt with early in in the LWN thread for that article, here's the
-link to the comment and the relevant LWN article providing you with
-all the information you want:
+> xfs_db> version attr2
+> writing all SBs
+> Superblock has mismatched features2 fields, skipping modification
+> failed to set versionnum in AG 1
+> versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
 
-http://lwn.net/Articles/476606/
-https://lwn.net/Articles/457667/
+What version of xfs_db are you using?
 
-And that my stance on this atomic rename subject is simply this: If
-we want to change reanme behaviour, then the filesystem is not the
-right place to do it - atomic rename semantics need to be defined
-and enforced at the VFS.  See here:
-
-http://lwn.net/Articles/479152/
-
-This has all been hashed out before - we don't need to revisit this
-discussion here. If you want to solve the problem once and for all,
-submit patches to LKML to implement the new rename semantics in a
-new syscall....
+And why do you need to set the attr2 feature this way? It gets set
+automatically when it gets used because on recent kernels it is the
+default mount option. If you have an older kernel and need to turn
+attr2 on, then simply add the "attr2" field to the mount options on
+the filesystem. Once xfs_info reports attr=2 for the filesytem, you
+can remove the attr2 mount option...
 
 Cheers,
 
