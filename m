@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q251AadB069228 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 19:10:36 -0600
+	q251nu1M080948 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 19:49:56 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	idJM7cR5MyiIIJnr for <xfs@oss.sgi.com>;
-	Sun, 04 Mar 2012 17:10:34 -0800 (PST)
-Date: Mon, 5 Mar 2012 12:10:32 +1100
+	GndyqXyu0gN6frcZ for <xfs@oss.sgi.com>;
+	Sun, 04 Mar 2012 17:49:39 -0800 (PST)
+Date: Mon, 5 Mar 2012 12:49:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: failed to set versionnum in AG 1
-Message-ID: <20120305011032.GL5091@dastard>
-References: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
+Subject: Re: [PATCH 8/8] xfs: add a shrinker for quotacheck
+Message-ID: <20120305014936.GN5091@dastard>
+References: <1330661507-1121-1-git-send-email-david@fromorbit.com>
+	<1330661507-1121-9-git-send-email-david@fromorbit.com>
+	<20120302075104.GG4117@infradead.org>
+	<20120302100426.GI5091@dastard>
+	<20120302103831.GA16825@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
+In-Reply-To: <20120302103831.GA16825@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,37 +30,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gabriel VLASIU <gabriel@vlasiu.net>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, Mar 04, 2012 at 06:09:12PM +0200, Gabriel VLASIU wrote:
-> -----BEGIN PGP SIGNED MESSAGE-----
-> Hash: SHA1
+On Fri, Mar 02, 2012 at 05:38:31AM -0500, Christoph Hellwig wrote:
+> On Fri, Mar 02, 2012 at 09:04:26PM +1100, Dave Chinner wrote:
+> > On Fri, Mar 02, 2012 at 02:51:04AM -0500, Christoph Hellwig wrote:
+> > > Hmm, I don't like this complication all that much.
+> > 
+> > Though it is a simple, self contained fix for the problem...
 > 
-> Hi!
+> It just smells hacky.  If the non-caching version doesn't go anywhere
+> I won't veto it, but it's defintively not my favourite.
 > 
-> On all my older partitions with xfs I have this problem:
+> > > Why would we even bother caching inodes during quotacheck?  The bulkstat
+> > > is a 100% sequential read only workload going through all inodes in the
+> > > filesystem.  I think we should simply not cache any inodes while in
+> > > quotacheck.
+> > 
+> > I have tried that approach previously with inodes read through
+> > bulkstat, but I couldn't find a clean workable solution. It kept
+> > getting rather complex because all our caching and recycling is tied
+> > into VFS level triggers. That was a while back, so maybe there is a
+> > simpler solution that I missed in attempting to do this.
+> > 
+> > I suspect for a quotacheck only solution we can hack a check into
+> > .drop_inode, but a generic coherent non-cached bulkstat lookup is
+> > somewhat more troublesome.
 > 
-> # xfs_db -x /dev/sdh1
-> xfs_db> version
-> versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+> Right, the whole issue also applies to any bulkstat.  But even for that
+> it doesn't seem that bad.
+> 
+> We add a new XFS_IGET_BULKSTAT flag for iget, which then sets an
+> XFS_INOTCACHE or similar flag on the inode.  If we see that in bulkstat
+> on a clean inode in ->drop_inode return true there, which takes care
+> of the VFS side.
 
-it already has the attr2 feature bit set.
+Right, that's effectively what I did. All the problems came from
+getting cache hits on an inode marked XFS_INOTCACHE and having to
+convert it to a cached inode at that point. I suspect that the
+problems I had related to the fact that this bug:
 
-> xfs_db> version attr2
-> writing all SBs
-> Superblock has mismatched features2 fields, skipping modification
-> failed to set versionnum in AG 1
-> versionnum [0xb4b4+0x8] = V4,ATTR,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+778e24b xfs: reset inode per-lifetime state when recycling it
 
-What version of xfs_db are you using?
+had not been discovered at the time so that was likely related to
+the problems I was seeing.
 
-And why do you need to set the attr2 feature this way? It gets set
-automatically when it gets used because on recent kernels it is the
-default mount option. If you have an older kernel and need to turn
-attr2 on, then simply add the "attr2" field to the mount options on
-the filesystem. Once xfs_info reports attr=2 for the filesytem, you
-can remove the attr2 mount option...
+> For the XFS side we'd have to move the call to xfs_syncd_init earlier 
+> during the mount process, which effectively revers
+> 2bcf6e970f5a88fa05dced5eeb0326e13d93c4a1.  That should be fine now that
+> we never call into the quota code from the sync work items.  If we want
+> to be entirely on the safe side we could only move starting the reclaim
+> work item earlier.
+
+I initially suspected that all we needed to do here is check if
+(mp->m_super->sb_flags & MS_ACTIVE) is set in the syncd work, and if
+it isn't, just requeue the work again. That would prevent it from
+running during mount and shutdown.
+
+However, the reclaim work already checks this to prevent shutdown
+races, so we can't actually queue inode reclaim work during the mount
+process right now, either. Indeed, this is the only reason we are
+not crashing on quotacheck right now - the syncd workqueue is not
+intialised until after the quotacheck completes, but we are most
+certainly trying to queue reclaim work during quotacheck. It's only
+this check against MS_ACTIVE that is preventing quotacheck from
+trying to queue work on an uninitialised workqueue.
+
+This is turning into quite a mess - the additional shrinker might be
+the simplest solution for 3.4....
 
 Cheers,
 
