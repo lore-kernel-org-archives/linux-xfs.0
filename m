@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q254BBVW102752 for <xfs@oss.sgi.com>; Sun, 4 Mar 2012 22:11:11 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id lCEqjI8OtfTMe3Nf for <xfs@oss.sgi.com>;
-	Sun, 04 Mar 2012 20:11:10 -0800 (PST)
-Message-ID: <4F543CDD.9030703@sandeen.net>
-Date: Sun, 04 Mar 2012 22:11:09 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q256fUxS121503 for <xfs@oss.sgi.com>; Mon, 5 Mar 2012 00:41:30 -0600
+Received: from server52.dayanadns.com (server52.dayanadns.com [204.50.22.15])
+	by cuda.sgi.com with ESMTP id lueGFzS3pLWPCoGG (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 04 Mar 2012 22:41:29 -0800 (PST)
+Received: from [64.254.187.212] (port=35133 helo=[10.0.0.7])
+	by server52.dayanadns.com with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.67) (envelope-from <jeffrey.hundstad@mnsu.edu>)
+	id 1S4Rbp-0003KD-VA
+	for xfs@oss.sgi.com; Sun, 04 Mar 2012 22:41:27 -0800
+Message-ID: <4F546014.3030601@mnsu.edu>
+Date: Mon, 05 Mar 2012 00:41:24 -0600
+From: Jeffrey Hundstad <jeffrey.hundstad@mnsu.edu>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: add freeze and dangerous groups
-References: <4F50FBB1.1090107@redhat.com> <20120305030843.GB3592@dastard>
-In-Reply-To: <20120305030843.GB3592@dastard>
+Subject: Re: Poor performance using discard
+References: <1330469778.9688.7.camel@core24> <20120229012259.GW3592@dastard>
+	<1330480826.9688.23.camel@core24> <20120229040819.GZ3592@dastard>
+	<1330702910.6438.40.camel@core24> <20120305030254.GA3592@dastard>
+In-Reply-To: <20120305030254.GA3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,58 +28,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 3/4/12 9:08 PM, Dave Chinner wrote:
-> On Fri, Mar 02, 2012 at 10:56:17AM -0600, Eric Sandeen wrote:
->> Add 2 new test groups:
+On 03/04/2012 09:02 PM, Dave Chinner wrote:
+> On Fri, Mar 02, 2012 at 10:41:50AM -0500, Thomas Lynema wrote:
+>> Peter was right then.  Per multiple recommendations
+>> I'm switching to fstrim, it is quicker than the deletes.
 >>
->> freeze: tests which test filesystem freeze
-> 
-> That's fine.
-> 
->> dangerous: tests which may hang or oops
-> 
-> Hmmm.
-> 
->> The 2nd may be useful for automated testing to do i.e.
+>> fstrim consistently takes about a minute to run on a 40GB
+>> volume.
 >>
->> ./check -g auto -x dangerous
->> ./check -g auto,dangerous
+>> time fstrim -v /usr
+>> /usr: 9047117824 bytes were trimmed
 >>
->> to try to get fuller coverage before running into tests
->> which may panic or hang the box and stop the test cycle.
+>> real	0m56.121s
+>> user	0m0.090s
+>> sys	0m0.000s
 >>
->> I doubt I have all the potential dangerous tests, but
->> they can be added later when found.
+>> I see that the running of fstrim was already discussed
+>> http://oss.sgi.com/archives/xfs/2011-05/msg00338.html.
 >>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> I'm not sure "dangerous" is a black and white status for a test.
-> What if the test doesn't cause problems for upstream, but causes
-> problems for older vendor kernels? Does that make it dangerous? e.g.
-> test 104 will hang a RHEL5.x kernel, but is perfectly safe on a
-> RHEL6.x kernel - does that make it dangerous? It seems that many of
-> the recent tests for specific regressions fall into this sort of
-> category. Indeed, how do we answer the question "when does a test no
-> longer be considered dangerous" or "what test is considered
-> dangerous for this kernel/platform"?
+>> Please add something to the FAQ about using SSDs.  It would be great if
+>> people could see the recommended mount options and fstrim crontab entry
+>> (or other option) for running xfs on a SSD.
+> It's a publicly modifiable wiki. Feel free to add what you've
+> learned here to a new FAQ entry - others will come by and correct
+> anything in it that is inaccurate....
 
-Well, I was thinking that if the original failure mode was a hang or oops, that's "dangerous."
+And it is already there:
+http://xfs.org/index.php/FITRIM/discard
 
-I agree that it's a little nebulous; if you see no value, I'm not hung up on it.
+Feel free to expand it.
 
-maybe it's a bad choice of words... but the intention was to flag which tests have failure modes which will interrupt further tests.
--Eric
-
-> Cheers,
-> 
-> Dave.
+-- 
+Jeffrey Hundstad
 
 _______________________________________________
 xfs mailing list
