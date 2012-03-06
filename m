@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q267UalD093727 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 01:30:36 -0600
-Received: from mail.vlasiu.net (mail.vlasiu.net [213.157.175.46]) by
-	cuda.sgi.com with ESMTP id 6bJTqCT4M0aDnKOU (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 05 Mar 2012 23:30:33 -0800 (PST)
-Date: Tue, 6 Mar 2012 09:30:23 +0200 (EET)
-From: Gabriel VLASIU <gabriel@vlasiu.net>
-Subject: Re: failed to set versionnum in AG 1
-In-Reply-To: <20120305222807.GE3592@dastard>
-Message-ID: <alpine.LRH.2.02.1203060909370.32267@mail.vlasiu.net>
-References: <alpine.LRH.2.02.1203041803340.8964@mail.vlasiu.net>
-	<20120305011032.GL5091@dastard>
-	<alpine.LRH.2.02.1203050912001.10815@mail.vlasiu.net>
-	<20120305222807.GE3592@dastard>
-MIME-Version: 1.0
+	q26B0P6G119393 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 05:00:26 -0600
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id imr6fWjL1uyv530O (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 06 Mar 2012 03:00:24 -0800 (PST)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH] xfs: Fix oops on IO error during
+	xlog_recover_process_iunlinks()
+Date: Tue,  6 Mar 2012 12:00:16 +0100
+Message-Id: <1331031616-31692-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,97 +19,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+When an IO error happens during inode deletion run from
+xlog_recover_process_iunlinks() filesystem gets shutdown. Thus any subsequent
+attempt to read buffers fails. Code in xlog_recover_process_iunlinks() does not
+count with the fact that read of a buffer which was read a while ago can
+really fail which results in the oops on
+  agi = XFS_BUF_TO_AGI(agibp);
 
- Hi!
+Fix the problem by handling error from xfs_read_agi() in all cases.
 
-On Tue, 6 Mar 2012, Dave Chinner wrote:
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_log_recover.c |   15 ++++++++++++---
+ 1 files changed, 12 insertions(+), 3 deletions(-)
 
-> That's because the error you are getting is for setting the value
-> into secondary superblocks, but the primary superblock has had the
-> value set correctly.
-I see.
-
-> No, most definitely not. There's nothing wrong with your
-> filesystems.
-That's a very good news for me.
-
-> So you're using the versions that detect inconsistencies correctly,
-> and also write everythign consistently. So it's a problem from an
-> old mkfs binary (2.9.x or 3.0.x) or caused by something you've done
-> poking around with xfs_db.
-I do not "poke" around filesystems with data. I use xfs in production 
-since redhat 9. I do not know how old are the filesystems in question 
-but some are probably more than 7-8 years old.
-The only thing I set to those filesystem over the years is log2 attribute 
-using xfs_admin (and the filesystem label). But since xfs_admin cannot set 
-the ATTR2 I had to use xfs_db.
-
-> "Once xfs_info reports attr=2 for the filesytem, you
-> can remove the attr2 mount option..."
-> 
-> The attr2 feature bit will only get set when the attr2 format
-> is first used, so if you're workload isn't causing attr2 format
-> inodes to be created, the feature bit will not get set. Hence you
-> need to leave the mount option set until xfs_info (which reads the
-> superblock feature bits) reports it being set.
-Oh... I see. Thank you.
-
-> IOWs, if you have to resort to using xfs_db to set a feature bit,
-> you are doing something wrong. xfs_admin and/or mount options give
-> you control over all feature bits that are safe for user
-> modification...
-OK. I'll keep that in mind.
-
-> There's nothing wrong with either of them, likewise there is nothing
-> really wrong with your filesystem.
-However, it would be nice if xfs_repair would correct secondary 
-superblock too.
-
-> > An most important: it's possible in the future to loose some data?
-> 
-> No.
-OK. That's what it really matter.
-
-> So, if you want to make everything absolutely consistent with xfs_db
-> (seeing as something is inconsistenti as a result of either the age
-> of the filesystems or the poking you've done) then you need to copy
-> the sb_features2 field to sb_bad_features2 field in every secondary
-> superblock. i.e. something like:
-Thanks, but I think I'm going to skip this. In the future maybe I will 
-try-it but not for now.
-
-
-Thank you very much for your help.
-
-
-Sincerely,
-Gabriel
-
-- -- 
-
-// Gabriel VLASIU
-//
-// OpenGPG-KeyID      : 0xE684206E
-// OpenGPG-Fingerprint: 0C3D 9F8B 725D E243 CB3C 8428 796A DB1F E684 206E
-// OpenGPG-URL        : http://www.vlasiu.net/public.key
-
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEARECAAYFAk9VvQ8ACgkQeWrbH+aEIG5+SgCfTGonFTC5exu67m1P6eU2PAPt
-0IkAn3YFA3MZWsK8C4DSpFBNqIUxXWrU
-=e+du
------END PGP SIGNATURE-----
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0ed9ee7..3899264 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3178,11 +3178,17 @@ xlog_recover_process_iunlinks(
+ 
+ 				/*
+ 				 * Reacquire the agibuffer and continue around
+-				 * the loop. This should never fail as we know
+-				 * the buffer was good earlier on.
++				 * the loop.
+ 				 */
+ 				error = xfs_read_agi(mp, NULL, agno, &agibp);
+-				ASSERT(error == 0);
++				/*
++				 * We failed to read a buffer we succeeded
++				 * reading just a while ago. Likely because the
++				 * filesystem is shutdown now. Just try the
++				 * next AG.
++				 */
++				if (error)
++					goto next_ag;
+ 				agi = XFS_BUF_TO_AGI(agibp);
+ 			}
+ 		}
+@@ -3192,6 +3198,9 @@ xlog_recover_process_iunlinks(
+ 		 * go on to the next one.
+ 		 */
+ 		xfs_buf_relse(agibp);
++next_ag:
++		/* Hrm... C9x seems to require this */
++		;
+ 	}
+ 
+ 	mp->m_dmevmask = mp_dmevmask;
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
