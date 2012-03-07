@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q274os3O020692 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 22:50:54 -0600
+	q274oaSM020568 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 22:50:36 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	m1eU2QVdLCdI8V9P for <xfs@oss.sgi.com>;
-	Tue, 06 Mar 2012 20:50:53 -0800 (PST)
+	SjHcvysdZGQcbPe9 for <xfs@oss.sgi.com>;
+	Tue, 06 Mar 2012 20:50:34 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1S58pw-0001oP-3m
-	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:52 +1100
+	(envelope-from <dave@fromorbit.com>) id 1S58pc-0001ns-3z
+	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:32 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1S58pb-0007Ur-SY
+	(envelope-from <dave@disappointment.disaster>) id 1S58pb-0007Uu-TP
 	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:31 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/10] xfs: fallback to vmalloc for large buffers in
-	xfs_getbmap
-Date: Wed,  7 Mar 2012 15:50:22 +1100
-Message-Id: <1331095828-28742-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/10] xfs: introduce an allocation workqueue
+Date: Wed,  7 Mar 2012 15:50:23 +1100
+Message-Id: <1331095828-28742-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1331095828-28742-1-git-send-email-david@fromorbit.com>
 References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,46 +35,150 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_getbmap uses for a large buffer for extents, which is kmalloc'd.
-This can fail after the system has been running for some time as it
-is a high order allocation. Add a fallback to vmalloc so that it
-doesn't require contiguous memory and so won't randomly fail on
-files with large extent lists.
+We currently have significant issues with the amount of stack that
+allocation in XFS uses, especially in the writeback path. We can
+easily consume 4k of stack between mapping the page, manipulating
+the bmap btree and allocating blocks from the free list. Not to
+mention btree block readahead and other functionality that issues IO
+in the allocation path.
+
+As a result, we can no longer fit allocation in the writeback path
+in the stack space provided on x86_64. To alleviate this problem,
+introduce an allocation workqueue and move all allocations to a
+seperate context. This can be easily added as an interposing layer
+into xfs_alloc_vextent(), which takes a single argument structure
+and does not return until the allocation is complete or has failed.
+
+To do this, add a work structure and a completion to the allocation
+args structure. This allows xfs_alloc_vextent to queue the args onto
+the workqueue and wait for it to be completed by the worker. This
+can be done completely transparently to the caller.
+
+The worker function needs to ensure that it sets and clears the
+PF_TRANS flag appropriately as it is being run in an active
+transaction context. Work can also be queued in a memory reclaim
+context, so a rescuer is needed for the workqueue.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap.c |   13 ++++++++++---
- 1 files changed, 10 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_alloc.c |   34 +++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_alloc.h |    5 +++++
+ fs/xfs/xfs_super.c |   16 ++++++++++++++++
+ 3 files changed, 54 insertions(+), 1 deletions(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 188ef2f..3548c6f 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -5536,8 +5536,12 @@ xfs_getbmap(
- 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
- 		return XFS_ERROR(ENOMEM);
- 	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
--	if (!out)
--		return XFS_ERROR(ENOMEM);
-+	if (!out) {
-+		out = kmem_zalloc_large(bmv->bmv_count *
-+					sizeof(struct getbmapx));
-+		if (!out)
-+			return XFS_ERROR(ENOMEM);
-+	}
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index ce84ffd..31e9033 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -35,6 +35,7 @@
+ #include "xfs_error.h"
+ #include "xfs_trace.h"
  
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
-@@ -5661,7 +5665,10 @@ xfs_getbmap(
- 			break;
- 	}
++struct workqueue_struct *xfs_alloc_wq;
  
--	kmem_free(out);
-+	if (is_vmalloc_addr(out))
-+		kmem_free_large(out);
-+	else
-+		kmem_free(out);
+ #define XFS_ABSDIFF(a,b)	(((a) <= (b)) ? ((b) - (a)) : ((a) - (b)))
+ 
+@@ -2207,7 +2208,7 @@ xfs_alloc_read_agf(
+  * group or loop over the allocation groups to find the result.
+  */
+ int				/* error */
+-xfs_alloc_vextent(
++__xfs_alloc_vextent(
+ 	xfs_alloc_arg_t	*args)	/* allocation argument structure */
+ {
+ 	xfs_agblock_t	agsize;	/* allocation group size */
+@@ -2417,6 +2418,37 @@ error0:
  	return error;
+ }
+ 
++static void
++xfs_alloc_vextent_worker(
++	struct work_struct	*work)
++{
++	struct xfs_alloc_arg	*args = container_of(work,
++						struct xfs_alloc_arg, work);
++	unsigned long		pflags;
++
++	/* we are in a transaction context here */
++	current_set_flags_nested(&pflags, PF_FSTRANS);
++
++	args->result = __xfs_alloc_vextent(args);
++	complete(args->done);
++
++	current_restore_flags_nested(&pflags, PF_FSTRANS);
++}
++
++
++int				/* error */
++xfs_alloc_vextent(
++	xfs_alloc_arg_t	*args)	/* allocation argument structure */
++{
++	DECLARE_COMPLETION_ONSTACK(done);
++
++	args->done = &done;
++	INIT_WORK(&args->work, xfs_alloc_vextent_worker);
++	queue_work(xfs_alloc_wq, &args->work);
++	wait_for_completion(&done);
++	return args->result;
++}
++
+ /*
+  * Free an extent.
+  * Just break up the extent address and hand off to xfs_free_ag_extent
+diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
+index 2f52b92..ab5d0fd 100644
+--- a/fs/xfs/xfs_alloc.h
++++ b/fs/xfs/xfs_alloc.h
+@@ -25,6 +25,8 @@ struct xfs_perag;
+ struct xfs_trans;
+ struct xfs_busy_extent;
+ 
++extern struct workqueue_struct *xfs_alloc_wq;
++
+ /*
+  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
+  */
+@@ -119,6 +121,9 @@ typedef struct xfs_alloc_arg {
+ 	char		isfl;		/* set if is freelist blocks - !acctg */
+ 	char		userdata;	/* set if this is user data */
+ 	xfs_fsblock_t	firstblock;	/* io first block allocated */
++	struct completion *done;
++	struct work_struct work;
++	int		result;
+ } xfs_alloc_arg_t;
+ 
+ /*
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 5e0d43f..13fa0cf 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1604,12 +1604,28 @@ xfs_init_workqueues(void)
+ 	xfs_syncd_wq = alloc_workqueue("xfssyncd", WQ_NON_REENTRANT, 0);
+ 	if (!xfs_syncd_wq)
+ 		return -ENOMEM;
++
++	/*
++	 * The allocation workqueue can be used in memory reclaim situations
++	 * (writepage path), and parallelism is only limited by the number of
++	 * AGs in all the filesystems mounted. Hence use the default large
++	 * max_active value for this workqueue.
++	 */
++	xfs_alloc_wq = alloc_workqueue("xfsalloc", WQ_MEM_RECLAIM, 0);
++	if (!xfs_alloc_wq)
++		goto out_destroy_syncd;
++
+ 	return 0;
++
++out_destroy_syncd:
++	destroy_workqueue(xfs_syncd_wq);
++	return -ENOMEM;
+ }
+ 
+ STATIC void
+ xfs_destroy_workqueues(void)
+ {
++	destroy_workqueue(xfs_alloc_wq);
+ 	destroy_workqueue(xfs_syncd_wq);
  }
  
 -- 
