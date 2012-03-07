@@ -1,15 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q27HL2Ws134562 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 11:21:03 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id flvzehFiCqHgCRWw for
-	<xfs@oss.sgi.com>; Wed, 07 Mar 2012 09:21:01 -0800 (PST)
-Message-ID: <4F5798F9.2050809@redhat.com>
-Date: Wed, 07 Mar 2012 11:20:57 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	q27HGLih129910 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 11:16:22 -0600
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id oBxhA818EE4aiyx5 for
+	<xfs@oss.sgi.com>; Wed, 07 Mar 2012 09:16:20 -0800 (PST)
+Received: from smtp.pobox.com (unknown [127.0.0.1])
+	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id 408E86867
+	for <xfs@oss.sgi.com>; Wed,  7 Mar 2012 12:16:20 -0500 (EST)
+Received: from b-pb-sasl-quonix.pobox.com (unknown [127.0.0.1])
+	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id 37EF76866
+	for <xfs@oss.sgi.com>; Wed,  7 Mar 2012 12:16:20 -0500 (EST)
+Received: from Brians-MacBook-Air.local (unknown [217.206.150.147]) (using
+	TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits)) (No client
+	certificate
+	requested) by b-sasl-quonix.pobox.com (Postfix) with ESMTPSA id
+	D72B16865 for
+	<xfs@oss.sgi.com>; Wed,  7 Mar 2012 12:16:19 -0500 (EST)
+Received: from brian by Brians-MacBook-Air.local with local (Exim 4.77)
+	(envelope-from <b.candler@pobox.com>) id M0IYN7-000I6P-8H for
+	xfs@oss.sgi.com; Wed, 07 Mar 2012 17:16:19 +0000
+Date: Wed, 7 Mar 2012 17:16:19 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: df bigger than ls?
+Message-ID: <20120307171619.GA23557@nsrc.org>
+References: <20120307155439.GA23360@nsrc.org>
 MIME-Version: 1.0
-Subject: [PATCH] default to 64 bit inodes & add feature flag
+Content-Disposition: inline
+In-Reply-To: <20120307155439.GA23360@nsrc.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,133 +40,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, Dave Chinner <dchinner@redhat.com>
+To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Mar 07, 2012 at 03:54:39PM +0000, Brian Candler wrote:
+> core.size = 1085407232
+> core.nblocks = 262370
 
-Default to allowing 64-bit inodes on the filesystem.
+core.nblocks is correct here: space used = 262370 * 4 = 1049480 KB
 
-Add a feature bit to the the superblock to record whether 64 bit inodes have
-been allocated on the filesystem or not. This allows us to reject mounting the
-filesytem with inode32 if 64 bit inodes are present.
+(If I add up all the non-hole extents I get 2098944 blocks = 1049472 KB
+so there are two extra blocks of something)
 
-Once a 64 bitinode is allocated, the inode64 superblock feature bit will be set.
-Once the superblock feature bit is set, the filesystem will default to 64 bit
-inodes regardless of whether inode64 is specified as a mount option.
+This begs the question of where stat() is getting its info from?
 
-To ensure only 32 bit inodes are created, the inode32 mount option must be
-used. If there are already 64 bit inodes as flagged by the superblock feature
-bit, then the inode32 mount will be refused.
+Ah... but I've found that after unmounting and remounting the filesystem
+(which I had to do for xfs_db), du and stat report the correct info.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
+In fact, dropping the inode caches is sufficient to fix the problem:
 
-Passing this along to revive the old discussion ... 
-Thanks,
--Eric
+root@storage1:~# du -h /disk*/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk10/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk11/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk12/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk2/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk3/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk4/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk5/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk6/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk7/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk8/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+2.0G	/disk9/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+root@storage1:~# echo 3 >/proc/sys/vm/drop_caches 
+root@storage1:~# du -h /disk*/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk10/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk11/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk12/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk2/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk3/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk4/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk5/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk6/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk7/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk8/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+1.1G	/disk9/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+root@storage1:~# 
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index dad1a31..c80790e 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1011,6 +1011,19 @@ alloc_inode:
- 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
- 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
- 	xfs_perag_put(pag);
-+
-+	/* set the inode64 feature bit if necessary */
-+	if (ino > XFS_MAXINUMBER_32 &&
-+	    !xfs_sb_version_hasinode64(&mp->m_sb)) {
-+		spin_lock(&mp->m_sb_lock);
-+		if (!xfs_sb_version_hasinode64(&mp->m_sb)) {
-+			xfs_sb_version_addinode64(&mp->m_sb);
-+			spin_unlock(&mp->m_sb_lock);
-+			xfs_mod_sb(tp, XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
-+		} else
-+			spin_unlock(&mp->m_sb_lock);
-+	}
-+
- 	*inop = ino;
- 	return 0;
- error1:
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index cb6ae71..5e28c99 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -80,6 +80,7 @@ struct xfs_mount;
- #define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
- #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
- #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
-+#define XFS_SB_VERSION2_INODE64		0x00000020	/* 64 bit inodes */
- #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
- 
- #define	XFS_SB_VERSION2_OKREALFBITS	\
-@@ -503,6 +504,18 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
- 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
- }
- 
-+static inline int xfs_sb_version_hasinode64(xfs_sb_t *sbp)
-+{
-+	return xfs_sb_version_hasmorebits(sbp) &&
-+		(sbp->sb_features2 & XFS_SB_VERSION2_INODE64);
-+}
-+
-+static inline void xfs_sb_version_addinode64(xfs_sb_t *sbp)
-+{
-+	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
-+	sbp->sb_features2 |= XFS_SB_VERSION2_INODE64;
-+}
-+
- /*
-  * end of superblock version macros
-  */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ee5b695..376a12d 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -88,6 +88,7 @@ mempool_t *xfs_ioend_pool;
- #define MNTOPT_BARRIER	"barrier"	/* use writer barriers for log write and
- 					 * unwritten extent conversion */
- #define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
-+#define MNTOPT_32BITINODE   "inode32"	/* inodes allowed in first 32 bits */
- #define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
- #define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
- #define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
-@@ -198,7 +199,8 @@ xfs_parseargs(
- 	 */
- 	mp->m_flags |= XFS_MOUNT_BARRIER;
- 	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
--	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-+	if (!xfs_sb_version_hasinode64(&mp->m_sb))
-+		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
- 
- 	/*
- 	 * These can be overridden by the mount option parsing.
-@@ -295,6 +297,15 @@ xfs_parseargs(
- 				return EINVAL;
- 			}
- 			dswidth = simple_strtoul(value, &eov, 10);
-+		} else if (!strcmp(this_char, MNTOPT_32BITINODE)) {
-+			if (xfs_sb_version_hasinode64(&mp->m_sb)) {
-+				xfs_warn(mp,
-+					"XFS: 64 bit inodes present. "
-+					"%s option not allowed on this system",
-+					this_char);
-+				return EINVAL;
-+			}
-+			mp->m_flags |= ~XFS_MOUNT_SMALL_INUMS;
- 		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
- 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
- #if !XFS_BIG_INUMS
-@@ -494,6 +505,7 @@ xfs_showargs(
- 		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
- 		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
- 		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
-+		{ XFS_MOUNT_SMALL_INUMS, 	"," MNTOPT_32BITINODE },
- 		{ 0, NULL }
- 	};
- 	static struct proc_xfs_info xfs_info_unset[] = {
+Very odd, but not really a major problem other than the confusion it causes.
+
+Regards,
+
+Brian.
 
 _______________________________________________
 xfs mailing list
