@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q27HXGVN136382 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 11:33:16 -0600
-Received: from josefsipek.net (josefsipek.net [64.9.206.49]) by cuda.sgi.com
-	with ESMTP id cqkW2FpxvITEtUjA for <xfs@oss.sgi.com>;
-	Wed, 07 Mar 2012 09:33:15 -0800 (PST)
-Date: Wed, 7 Mar 2012 12:33:13 -0500
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: [PATCH] default to 64 bit inodes & add feature flag
-Message-ID: <20120307173313.GA20399@josefsipek.net>
-References: <4F5798F9.2050809@redhat.com>
+	q27HdPXe136564 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 11:39:25 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id gu2AhbUKe9vMGGpZ for <xfs@oss.sgi.com>;
+	Wed, 07 Mar 2012 09:39:24 -0800 (PST)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 2A5434963345
+	for <xfs@oss.sgi.com>; Wed,  7 Mar 2012 11:39:24 -0600 (CST)
+Message-ID: <4F579D4C.4040208@sandeen.net>
+Date: Wed, 07 Mar 2012 11:39:24 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F5798F9.2050809@redhat.com>
+Subject: Re: [PATCH] Printk for ENOSPC due to lack of inodes
+References: <20120227003733.GA28162@Xye>
+In-Reply-To: <20120227003733.GA28162@Xye>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,147 +29,101 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Dave Chinner <dchinner@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Mar 07, 2012 at 11:20:57AM -0600, Eric Sandeen wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 2/26/12 6:37 PM, Raghavendra D Prabhu wrote:
+> Hi,
 > 
-> Default to allowing 64-bit inodes on the filesystem.
-> 
-> Add a feature bit to the the superblock to record whether 64 bit inodes have
-> been allocated on the filesystem or not. This allows us to reject mounting the
-> filesytem with inode32 if 64 bit inodes are present.
-> 
-> Once a 64 bitinode is allocated, the inode64 superblock feature bit will be set.
-> Once the superblock feature bit is set, the filesystem will default to 64 bit
-> inodes regardless of whether inode64 is specified as a mount option.
-> 
-> To ensure only 32 bit inodes are created, the inode32 mount option must be
-> used. If there are already 64 bit inodes as flagged by the superblock feature
-> bit, then the inode32 mount will be refused.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> While diagnosing a MySQL crash (on a Centos 5.7 box), I noticed that
+> it had failed with ENOSPC earlier; it was rebooted after that; now
+> after reboot, even though space was there, ENOSPC was showing up, I
+> also did df -i and it showed inodes available. At this point,
+> mounting with inode64 option was tried, which fixed it. 
+> http://oss.sgi.com/archives/xfs/2011-03/msg00299.html helped me
+> here.
 
-Love it!  Just last night, I ended up with a filesystem (x86_64, ~36TB, RAID
-60) that started giving me ENOSPC for no reason (~1% disk utilization).
-Eric pointed out that I forgot to use inode64.  (For whatever reason, I
-thought that a 64-bit system would implicitly use 64-bit inodes.  We'll
-*never* mount this fs on a 32-bit system, so I don't care about the
-"incompatibility".)
+Yeah, that's kind of a bummer.  And given the semi-ugly situation
+we're in with inode32, maybe a syslog message would be good.
 
-I'm liking the feature-bit approach.
+But a few things; I don't think we want to warn on every inode-allocation
+ENOSPC.  Ideally I'd probably do a WARN_ON_ONCE or a ratelimited printk.
+xfs_warn_once_per_fs()?  :)
 
-Jeff.
+I'd probably also want to only do it in the case where the ENOSPC was due
+to either inode32, or due to fragmented freespace.
 
-> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-> index dad1a31..c80790e 100644
-> --- a/fs/xfs/xfs_ialloc.c
-> +++ b/fs/xfs/xfs_ialloc.c
-> @@ -1011,6 +1011,19 @@ alloc_inode:
->  	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
->  	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
->  	xfs_perag_put(pag);
-> +
-> +	/* set the inode64 feature bit if necessary */
-> +	if (ino > XFS_MAXINUMBER_32 &&
-> +	    !xfs_sb_version_hasinode64(&mp->m_sb)) {
-> +		spin_lock(&mp->m_sb_lock);
-> +		if (!xfs_sb_version_hasinode64(&mp->m_sb)) {
-> +			xfs_sb_version_addinode64(&mp->m_sb);
-> +			spin_unlock(&mp->m_sb_lock);
-> +			xfs_mod_sb(tp, XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
-> +		} else
-> +			spin_unlock(&mp->m_sb_lock);
-> +	}
-> +
->  	*inop = ino;
->  	return 0;
->  error1:
-> diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-> index cb6ae71..5e28c99 100644
-> --- a/fs/xfs/xfs_sb.h
-> +++ b/fs/xfs/xfs_sb.h
-> @@ -80,6 +80,7 @@ struct xfs_mount;
->  #define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
->  #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
->  #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
-> +#define XFS_SB_VERSION2_INODE64		0x00000020	/* 64 bit inodes */
->  #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
+Without looking very hard yet; could this be done in xfs_dialloc() so that
+the exact reason for the ENOSPC can be issued?  (maxicount, inode32, or
+no free contiguous space...)
+
+-Eric
+
+> 
+> So, I have attached a patch here.
+> 
+> =====================================================================
+> 
+> 
+> When a ENOSPC is encountered and it is due to lack of inodes (particularly
+> without inode64), it is not possible to detect this (df -i doesn't help here),
+> so adding a printk which can aid in detecting this.
+> 
+> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+> ---
+>  fs/xfs/xfs_qm.c       |    3 +++
+>  fs/xfs/xfs_vnodeops.c |   10 ++++++++--
+>  2 files changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index c872fea..fbefa87 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -987,6 +987,9 @@ xfs_qm_qino_alloc(
 >  
->  #define	XFS_SB_VERSION2_OKREALFBITS	\
-> @@ -503,6 +504,18 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
->  		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
->  }
+>      error = xfs_dir_ialloc(&tp, NULL, S_IFREG, 1, 0, 0, 1, ip, &committed);
+>      if (error) {
+> +        if (error == ENOSPC)
+> +            xfs_err(mp, "Out of inodes: Required %d, Current %llu, Maximum %llu",
+> +                    XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
+>          xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES |
+>                   XFS_TRANS_ABORT);
+>          return error;
+> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+> index ebdb888..7542c36 100644
+> --- a/fs/xfs/xfs_vnodeops.c
+> +++ b/fs/xfs/xfs_vnodeops.c
+> @@ -946,8 +946,11 @@ xfs_create(
+>      error = xfs_dir_ialloc(&tp, dp, mode, is_dir ? 2 : 1, rdev,
+>                     prid, resblks > 0, &ip, &committed);
+>      if (error) {
+> -        if (error == ENOSPC)
+> +        if (error == ENOSPC) {
+> +            xfs_err(mp, "Out of inodes: Required %d, Current %llu, Maximum %llu",
+> +                    XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
+>              goto out_trans_cancel;
+> +        }
+>          goto out_trans_abort;
+>      }
 >  
-> +static inline int xfs_sb_version_hasinode64(xfs_sb_t *sbp)
-> +{
-> +	return xfs_sb_version_hasmorebits(sbp) &&
-> +		(sbp->sb_features2 & XFS_SB_VERSION2_INODE64);
-> +}
-> +
-> +static inline void xfs_sb_version_addinode64(xfs_sb_t *sbp)
-> +{
-> +	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
-> +	sbp->sb_features2 |= XFS_SB_VERSION2_INODE64;
-> +}
-> +
->  /*
->   * end of superblock version macros
->   */
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index ee5b695..376a12d 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -88,6 +88,7 @@ mempool_t *xfs_ioend_pool;
->  #define MNTOPT_BARRIER	"barrier"	/* use writer barriers for log write and
->  					 * unwritten extent conversion */
->  #define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
-> +#define MNTOPT_32BITINODE   "inode32"	/* inodes allowed in first 32 bits */
->  #define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
->  #define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
->  #define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
-> @@ -198,7 +199,8 @@ xfs_parseargs(
->  	 */
->  	mp->m_flags |= XFS_MOUNT_BARRIER;
->  	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
-> -	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> +	if (!xfs_sb_version_hasinode64(&mp->m_sb))
-> +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+> @@ -1610,8 +1613,11 @@ xfs_symlink(
+>      error = xfs_dir_ialloc(&tp, dp, S_IFLNK | (mode & ~S_IFMT), 1, 0,
+>                     prid, resblks > 0, &ip, NULL);
+>      if (error) {
+> -        if (error == ENOSPC)
+> +        if (error == ENOSPC) {
+> +            xfs_err(mp, "Out of inodes: Required %d, Current %llu, Maximum %llu",
+> +                    XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
+>              goto error_return;
+> +        }
+>          goto error1;
+>      }
 >  
->  	/*
->  	 * These can be overridden by the mount option parsing.
-> @@ -295,6 +297,15 @@ xfs_parseargs(
->  				return EINVAL;
->  			}
->  			dswidth = simple_strtoul(value, &eov, 10);
-> +		} else if (!strcmp(this_char, MNTOPT_32BITINODE)) {
-> +			if (xfs_sb_version_hasinode64(&mp->m_sb)) {
-> +				xfs_warn(mp,
-> +					"XFS: 64 bit inodes present. "
-> +					"%s option not allowed on this system",
-> +					this_char);
-> +				return EINVAL;
-> +			}
-> +			mp->m_flags |= ~XFS_MOUNT_SMALL_INUMS;
->  		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
->  			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
->  #if !XFS_BIG_INUMS
-> @@ -494,6 +505,7 @@ xfs_showargs(
->  		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
->  		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
->  		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
-> +		{ XFS_MOUNT_SMALL_INUMS, 	"," MNTOPT_32BITINODE },
->  		{ 0, NULL }
->  	};
->  	static struct proc_xfs_info xfs_info_unset[] = {
 > 
-
--- 
-I have always wished for my computer to be as easy to use as my telephone;
-my wish has come true because I can no longer figure out how to use my
-telephone.
-		- Bjarne Stroustrup
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
