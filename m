@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q274omB8020649 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 22:50:48 -0600
+	q274odel020598 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 22:50:39 -0600
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	Ggcpr8cy6nlnrNSn for <xfs@oss.sgi.com>;
-	Tue, 06 Mar 2012 20:50:46 -0800 (PST)
+	NNAwvEEC04CieLnj for <xfs@oss.sgi.com>;
+	Tue, 06 Mar 2012 20:50:36 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1S58pm-0001o8-Fe
-	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:42 +1100
+	(envelope-from <dave@fromorbit.com>) id 1S58pc-0001o9-Gm
+	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:32 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1S58pc-0007V3-8V
+	(envelope-from <dave@disappointment.disaster>) id 1S58pc-0007V9-AT
 	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:32 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/10] xfs: initialise xfssync work before running quotachecks
-Date: Wed,  7 Mar 2012 15:50:26 +1100
-Message-Id: <1331095828-28742-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/10] xfs: don't cache inodes read through bulkstat
+Date: Wed,  7 Mar 2012 15:50:28 +1100
+Message-Id: <1331095828-28742-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1331095828-28742-1-git-send-email-david@fromorbit.com>
 References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,78 +35,139 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Because the mount process can run a quotacheck and consume lots of
-inodes, we need to be able to run periodic inode reclaim during the
-mount process. This will prevent running the system out of memory
-during quota checks.
+When we read inodes via bulkstat, we generally only read them once
+and then throw them away - they never get used again. If we retain
+them in cache, then it simply causes the working set of inodes and
+other cached items to be reclaimed just so the inode cache can grow.
 
-This essentially reverts 2bcf6e97, but that is safe to do now that
-the quota sync code that was causing problems during long quotacheck
-executions is now gone.
+Avoid this problem by marking inodes read by bulkstat as not to be
+cached and check this flag in .drop_inode to determine whether the
+inode should be added to the VFS LRU or not. If the inode lookup
+hits an already cached inode, then don't set the flag. If the inode
+lookup hits an inode marked with no cache flag, remove the flag and
+allow it to be cached once the current reference goes away.
+
+Inodes marked as not cached will get cleaned up by the background
+inode reclaim or via memory pressure, so they will still generate
+some short term cache pressure. They will, however, be reclaimed
+much sooner and in preference to cache hot inodes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_super.c |   15 ++++++++-------
- 1 files changed, 8 insertions(+), 7 deletions(-)
+ fs/xfs/xfs_iget.c   |    8 ++++++--
+ fs/xfs/xfs_inode.h  |    4 +++-
+ fs/xfs/xfs_itable.c |    3 ++-
+ fs/xfs/xfs_super.c  |   17 +++++++++++++++++
+ 4 files changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 13fa0cf..150d8f4 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1343,22 +1343,22 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index 93fc1dc..20ddb1e 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -290,7 +290,7 @@ xfs_iget_cache_hit(
+ 	if (lock_flags != 0)
+ 		xfs_ilock(ip, lock_flags);
  
--	error = xfs_mountfs(mp);
-+	error = xfs_syncd_init(mp);
- 	if (error)
- 		goto out_filestream_unmount;
- 
--	error = xfs_syncd_init(mp);
-+	error = xfs_mountfs(mp);
- 	if (error)
--		goto out_unmount;
-+		goto out_syncd_stop;
- 
- 	root = igrab(VFS_I(mp->m_rootip));
- 	if (!root) {
- 		error = ENOENT;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 	if (is_bad_inode(root)) {
- 		error = EINVAL;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 	sb->s_root = d_alloc_root(root);
- 	if (!sb->s_root) {
-@@ -1368,6 +1368,8 @@ xfs_fs_fill_super(
+-	xfs_iflags_clear(ip, XFS_ISTALE);
++	xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
+ 	XFS_STATS_INC(xs_ig_found);
  
  	return 0;
+@@ -315,6 +315,7 @@ xfs_iget_cache_miss(
+ 	struct xfs_inode	*ip;
+ 	int			error;
+ 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
++	int			iflags;
  
-+ out_syncd_stop:
-+	xfs_syncd_stop(mp);
-  out_filestream_unmount:
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
-@@ -1384,8 +1386,6 @@ xfs_fs_fill_super(
+ 	ip = xfs_inode_alloc(mp, ino);
+ 	if (!ip)
+@@ -359,8 +360,11 @@ xfs_iget_cache_miss(
+ 	 * memory barrier that ensures this detection works correctly at lookup
+ 	 * time.
+ 	 */
++	iflags = XFS_INEW;
++	if (flags & XFS_IGET_DONTCACHE)
++		iflags |= XFS_IDONTCACHE;
+ 	ip->i_udquot = ip->i_gdquot = NULL;
+-	xfs_iflags_set(ip, XFS_INEW);
++	xfs_iflags_set(ip, iflags);
  
-  out_iput:
- 	iput(root);
-- out_syncd_stop:
--	xfs_syncd_stop(mp);
-  out_unmount:
- 	/*
- 	 * Blow away any referenced inode in the filestreams cache.
-@@ -1397,6 +1397,7 @@ xfs_fs_fill_super(
- 	xfs_flush_buftarg(mp->m_ddev_targp, 1);
+ 	/* insert the new inode */
+ 	spin_lock(&pag->pag_ici_lock);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index eda4937..096b887 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -374,10 +374,11 @@ xfs_set_projid(struct xfs_inode *ip,
+ #define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
+ #define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
+ #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
++#define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
  
- 	xfs_unmountfs(mp);
-+	xfs_syncd_stop(mp);
- 	goto out_free_sb;
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+- * inode lookup. Thi prevents unintended behaviour on the new inode from
++ * inode lookup. This prevents unintended behaviour on the new inode from
+  * ocurring.
+  */
+ #define XFS_IRECLAIM_RESET_FLAGS	\
+@@ -544,6 +545,7 @@ do { \
+  */
+ #define XFS_IGET_CREATE		0x1
+ #define XFS_IGET_UNTRUSTED	0x2
++#define XFS_IGET_DONTCACHE	0x4
+ 
+ int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+ 			    xfs_ino_t, struct xfs_dinode **,
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 751e94f..b832c58 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -76,7 +76,8 @@ xfs_bulkstat_one_int(
+ 		return XFS_ERROR(ENOMEM);
+ 
+ 	error = xfs_iget(mp, NULL, ino,
+-			 XFS_IGET_UNTRUSTED, XFS_ILOCK_SHARED, &ip);
++			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
++			 XFS_ILOCK_SHARED, &ip);
+ 	if (error) {
+ 		*stat = BULKSTAT_RV_NOTHING;
+ 		goto out_free;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b1df512..c162765 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -953,6 +953,22 @@ xfs_fs_evict_inode(
+ 	xfs_inactive(ip);
  }
  
++/*
++ * We do an unlocked check for XFS_IDONTCACHE here because we are already
++ * serialised against cache hits here via the inode->i_lock and igrab() in
++ * xfs_iget_cache_hit(). Hence a lookup that might clear this flag will not be
++ * racing with us, and it avoids needing to grab a spinlock here for every inode
++ * we drop the final reference on.
++ */
++STATIC int
++xfs_fs_drop_inode(
++	struct inode		*inode)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++
++	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
++}
++
+ STATIC void
+ xfs_free_fsname(
+ 	struct xfs_mount	*mp)
+@@ -1431,6 +1447,7 @@ static const struct super_operations xfs_super_operations = {
+ 	.dirty_inode		= xfs_fs_dirty_inode,
+ 	.write_inode		= xfs_fs_write_inode,
+ 	.evict_inode		= xfs_fs_evict_inode,
++	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
+ 	.freeze_fs		= xfs_fs_freeze,
 -- 
 1.7.9
 
