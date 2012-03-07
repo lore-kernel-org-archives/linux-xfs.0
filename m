@@ -1,31 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q27Fselh110256 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 09:54:40 -0600
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id E1hQSnQ4safGJ3FF for
-	<xfs@oss.sgi.com>; Wed, 07 Mar 2012 07:54:39 -0800 (PST)
-Received: from smtp.pobox.com (unknown [127.0.0.1])
-	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id 6F3B97FE2
-	for <xfs@oss.sgi.com>; Wed,  7 Mar 2012 10:54:38 -0500 (EST)
-Received: from b-pb-sasl-quonix.pobox.com (unknown [127.0.0.1])
-	by b-sasl-quonix.pobox.com (Postfix) with ESMTP id 64E127FD9
-	for <xfs@oss.sgi.com>; Wed,  7 Mar 2012 10:54:38 -0500 (EST)
-Received: from Brians-MacBook-Air.local (unknown [217.206.150.147]) (using
-	TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits)) (No client
-	certificate
-	requested) by b-sasl-quonix.pobox.com (Postfix) with ESMTPSA id
-	E5D8C7FD8 for
-	<xfs@oss.sgi.com>; Wed,  7 Mar 2012 10:54:37 -0500 (EST)
-Received: from brian by Brians-MacBook-Air.local with local (Exim 4.77)
-	(envelope-from <b.candler@pobox.com>) id M0IUV3-000I17-RG for
-	xfs@oss.sgi.com; Wed, 07 Mar 2012 15:54:39 +0000
-Date: Wed, 7 Mar 2012 15:54:39 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: df bigger than ls?
-Message-ID: <20120307155439.GA23360@nsrc.org>
+	q27HL2Ws134562 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 11:21:03 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id flvzehFiCqHgCRWw for
+	<xfs@oss.sgi.com>; Wed, 07 Mar 2012 09:21:01 -0800 (PST)
+Message-ID: <4F5798F9.2050809@redhat.com>
+Date: Wed, 07 Mar 2012 11:20:57 -0600
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: [PATCH] default to 64 bit inodes & add feature flag
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,144 +22,133 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, Dave Chinner <dchinner@redhat.com>
 
-I have created some files spread across 12 XFS filesystems, using a
-glusterfs "striped" volume.  This writes files with lots of holes(*) - so I
-would expect the space reported by 'du' to be less than the space reported
-by 'ls'.
+From: Dave Chinner <dchinner@redhat.com>
 
-However it's the other way round - du is reporting more space used than ls! 
-Here's what I mean:  I'm looking at the files directly on the underlying
-disk mount point, not via glusterfs at all.
+Default to allowing 64-bit inodes on the filesystem.
 
-$ ls -lh /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
--rw-rw-r-- 1 brian brian 1.1G 2012-03-07 15:19 /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-$ ls -lk /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
--rw-rw-r-- 1 brian brian 1059968 2012-03-07 15:19 /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-$ du -h /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-2.0G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-$ du -k /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-2096392	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+Add a feature bit to the the superblock to record whether 64 bit inodes have
+been allocated on the filesystem or not. This allows us to reject mounting the
+filesytem with inode32 if 64 bit inodes are present.
 
-And here's what xfs_bmap reports:
+Once a 64 bitinode is allocated, the inode64 superblock feature bit will be set.
+Once the superblock feature bit is set, the filesystem will default to 64 bit
+inodes regardless of whether inode64 is specified as a mount option.
 
-root@storage1:~# xfs_bmap -vp /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff:
- EXT: FILE-OFFSET         BLOCK-RANGE            AG AG-OFFSET              TOTAL FLAGS
-   0: [0..255]:           2933325744..2933325999  2 (3059152..3059407)       256 00000
-   1: [256..3071]:        hole                                              2816
-   2: [3072..3327]:       2933326000..2933326255  2 (3059408..3059663)       256 00000
-   3: [3328..6143]:       hole                                              2816
-   4: [6144..8191]:       2933326472..2933328519  2 (3059880..3061927)      2048 00000
-   5: [8192..9215]:       hole                                              1024
-   6: [9216..13311]:      2933369480..2933373575  2 (3102888..3106983)      4096 00000
-   7: [13312..15359]:     hole                                              2048
-   8: [15360..23551]:     2933375624..2933383815  2 (3109032..3117223)      8192 00000
-   9: [23552..24575]:     hole                                              1024
-  10: [24576..40959]:     2933587168..2933603551  2 (3320576..3336959)     16384 00000
-  11: [40960..43007]:     hole                                              2048
-  12: [43008..75775]:     2933623008..2933655775  2 (3356416..3389183)     32768 00000
-  13: [75776..76799]:     hole                                              1024
-  14: [76800..142335]:    2933656800..2933722335  2 (3390208..3455743)     65536 00000
-  15: [142336..144383]:   hole                                              2048
-  16: [144384..275455]:   2933724384..2933855455  2 (3457792..3588863)    131072 00000
-  17: [275456..276479]:   hole                                              1024
-  18: [276480..538623]:   2935019808..2935281951  2 (4753216..5015359)    262144 00000
-  19: [538624..540671]:   hole                                              2048
-  20: [540672..1064959]:  2935284000..2935808287  2 (5017408..5541695)    524288 00000
-  21: [1064960..1065983]: hole                                              1024
-  22: [1065984..2114559]: 2935809312..2936857887  2 (5542720..6591295)   1048576 00000
-  23: [2114560..2116607]: hole                                              2048
-  24: [2116608..2119935]: 2943037984..2943041311  2 (12771392..12774719)    3328 00000
-root@storage1:~# 
+To ensure only 32 bit inodes are created, the inode32 mount option must be
+used. If there are already 64 bit inodes as flagged by the superblock feature
+bit, then the inode32 mount will be refused.
 
-Given that these values are all in 512-byte disk blocks, the total file size
-is (2119935 + 1) * 512 which agrees with ls. And some proportion of it
-is holes, so du should report less than this, shouldn't it?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
 
-(Aside: it starts off being 11/12th holes as expected, but after a while
-isn't.  This may be a different bug, possibly in glusterfs itself)
+Passing this along to revive the old discussion ... 
+Thanks,
+-Eric
 
-I guess 'du' gets its info from stat(), and stat() also says the file is
-using 4192784 blocks which is 2096392 KB:
-
-$ stat /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-  File: `/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff'
-  Size: 1085407232	Blocks: 4192784    IO Block: 4096   regular file
-Device: 810h/2064d	Inode: 8595657903  Links: 1
-Access: (0664/-rw-rw-r--)  Uid: ( 1000/   brian)   Gid: ( 1000/   brian)
-Access: 2012-03-07 15:20:36.044365215 +0000
-Modify: 2012-03-07 15:19:33.640364277 +0000
-Change: 2012-03-07 15:19:33.640364277 +0000
-
-Finally, here is xfs_db dump of the inode:
-
-# ls -i /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-8595657903 /disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-...
-xfs_db> inode 8595657903
-xfs_db> p
-core.magic = 0x494e
-core.mode = 0100664
-core.version = 2
-core.format = 3 (btree)
-core.nlinkv2 = 1
-core.onlink = 0
-core.projid_lo = 0
-core.projid_hi = 0
-core.uid = 1000
-core.gid = 1000
-core.flushiter = 231
-core.atime.sec = Wed Mar  7 15:20:36 2012
-core.atime.nsec = 044365215
-core.mtime.sec = Wed Mar  7 15:19:33 2012
-core.mtime.nsec = 640364277
-core.ctime.sec = Wed Mar  7 15:19:33 2012
-core.ctime.nsec = 640364277
-core.size = 1085407232
-core.nblocks = 262370
-core.extsize = 0
-core.nextents = 13
-core.naextents = 1
-core.forkoff = 15
-core.aformat = 2 (extents)
-core.dmevmask = 0
-core.dmstate = 0
-core.newrtbm = 0
-core.prealloc = 0
-core.realtime = 0
-core.immutable = 0
-core.append = 0
-core.sync = 0
-core.noatime = 0
-core.nodump = 0
-core.rtinherit = 0
-core.projinherit = 0
-core.nosymlinks = 0
-core.extsz = 0
-core.extszinherit = 0
-core.nodefrag = 0
-core.filestream = 0
-core.gen = 1875303423
-next_unlinked = null
-u.bmbt.level = 1
-u.bmbt.numrecs = 1
-u.bmbt.keys[1] = [startoff] 1:[0]
-u.bmbt.ptrs[1] = 1:537294687
-a.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,537253238,1,0]
-xfs_db> 
-
-Platform: ubuntu 11.10
-Linux 3.0.0-15-server #26-Ubuntu SMP Fri Jan 20 19:07:39 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
-
-Have I missed something obvious, or is there a bug of some sort here?
-
-Regards,
-
-Brian.
-
-(*) http://gluster.org/community/documentation//index.php/GlusterFS_Technical_FAQ#Stripe_behavior_not_working_as_expected
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index dad1a31..c80790e 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1011,6 +1011,19 @@ alloc_inode:
+ 	xfs_btree_del_cursor(cur, XFS_BTREE_NOERROR);
+ 	xfs_trans_mod_sb(tp, XFS_TRANS_SB_IFREE, -1);
+ 	xfs_perag_put(pag);
++
++	/* set the inode64 feature bit if necessary */
++	if (ino > XFS_MAXINUMBER_32 &&
++	    !xfs_sb_version_hasinode64(&mp->m_sb)) {
++		spin_lock(&mp->m_sb_lock);
++		if (!xfs_sb_version_hasinode64(&mp->m_sb)) {
++			xfs_sb_version_addinode64(&mp->m_sb);
++			spin_unlock(&mp->m_sb_lock);
++			xfs_mod_sb(tp, XFS_SB_VERSIONNUM | XFS_SB_FEATURES2);
++		} else
++			spin_unlock(&mp->m_sb_lock);
++	}
++
+ 	*inop = ino;
+ 	return 0;
+ error1:
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index cb6ae71..5e28c99 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -80,6 +80,7 @@ struct xfs_mount;
+ #define XFS_SB_VERSION2_RESERVED4BIT	0x00000004
+ #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
+ #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
++#define XFS_SB_VERSION2_INODE64		0x00000020	/* 64 bit inodes */
+ #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
+ 
+ #define	XFS_SB_VERSION2_OKREALFBITS	\
+@@ -503,6 +504,18 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+ 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
+ }
+ 
++static inline int xfs_sb_version_hasinode64(xfs_sb_t *sbp)
++{
++	return xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_INODE64);
++}
++
++static inline void xfs_sb_version_addinode64(xfs_sb_t *sbp)
++{
++	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
++	sbp->sb_features2 |= XFS_SB_VERSION2_INODE64;
++}
++
+ /*
+  * end of superblock version macros
+  */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index ee5b695..376a12d 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -88,6 +88,7 @@ mempool_t *xfs_ioend_pool;
+ #define MNTOPT_BARRIER	"barrier"	/* use writer barriers for log write and
+ 					 * unwritten extent conversion */
+ #define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
++#define MNTOPT_32BITINODE   "inode32"	/* inodes allowed in first 32 bits */
+ #define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
+ #define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
+ #define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
+@@ -198,7 +199,8 @@ xfs_parseargs(
+ 	 */
+ 	mp->m_flags |= XFS_MOUNT_BARRIER;
+ 	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+-	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
++	if (!xfs_sb_version_hasinode64(&mp->m_sb))
++		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+ 
+ 	/*
+ 	 * These can be overridden by the mount option parsing.
+@@ -295,6 +297,15 @@ xfs_parseargs(
+ 				return EINVAL;
+ 			}
+ 			dswidth = simple_strtoul(value, &eov, 10);
++		} else if (!strcmp(this_char, MNTOPT_32BITINODE)) {
++			if (xfs_sb_version_hasinode64(&mp->m_sb)) {
++				xfs_warn(mp,
++					"XFS: 64 bit inodes present. "
++					"%s option not allowed on this system",
++					this_char);
++				return EINVAL;
++			}
++			mp->m_flags |= ~XFS_MOUNT_SMALL_INUMS;
+ 		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
+ 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+ #if !XFS_BIG_INUMS
+@@ -494,6 +505,7 @@ xfs_showargs(
+ 		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
+ 		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
+ 		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
++		{ XFS_MOUNT_SMALL_INUMS, 	"," MNTOPT_32BITINODE },
+ 		{ 0, NULL }
+ 	};
+ 	static struct proc_xfs_info xfs_info_unset[] = {
 
 _______________________________________________
 xfs mailing list
