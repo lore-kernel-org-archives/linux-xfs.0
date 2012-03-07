@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q274oaSM020568 for <xfs@oss.sgi.com>; Tue, 6 Mar 2012 22:50:36 -0600
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	SjHcvysdZGQcbPe9 for <xfs@oss.sgi.com>;
-	Tue, 06 Mar 2012 20:50:34 -0800 (PST)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1S58pc-0001ns-3z
-	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:32 +1100
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1S58pb-0007Uu-TP
-	for xfs@oss.sgi.com; Wed, 07 Mar 2012 15:50:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/10] xfs: introduce an allocation workqueue
-Date: Wed,  7 Mar 2012 15:50:23 +1100
-Message-Id: <1331095828-28742-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1331095828-28742-1-git-send-email-david@fromorbit.com>
-References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	q27B7Abt075257 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 05:07:11 -0600
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id i2wA4WMcFam5J7KC (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 07 Mar 2012 03:07:09 -0800 (PST)
+Date: Wed, 7 Mar 2012 12:07:05 +0100
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] xfs: Fix oops on IO error during
+	xlog_recover_process_iunlinks()
+Message-ID: <20120307110705.GD18658@quack.suse.cz>
+References: <1331031616-31692-1-git-send-email-jack@suse.cz>
+	<20120307011716.GI3592@dastard>
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="jI8keyz6grp/JLjh"
+Content-Disposition: inline
+In-Reply-To: <20120307011716.GI3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,165 +25,184 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
 
-We currently have significant issues with the amount of stack that
-allocation in XFS uses, especially in the writeback path. We can
-easily consume 4k of stack between mapping the page, manipulating
-the bmap btree and allocating blocks from the free list. Not to
-mention btree block readahead and other functionality that issues IO
-in the allocation path.
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-As a result, we can no longer fit allocation in the writeback path
-in the stack space provided on x86_64. To alleviate this problem,
-introduce an allocation workqueue and move all allocations to a
-seperate context. This can be easily added as an interposing layer
-into xfs_alloc_vextent(), which takes a single argument structure
-and does not return until the allocation is complete or has failed.
+On Wed 07-03-12 12:17:16, Dave Chinner wrote:
+> On Tue, Mar 06, 2012 at 12:00:16PM +0100, Jan Kara wrote:
+> > When an IO error happens during inode deletion run from
+> > xlog_recover_process_iunlinks() filesystem gets shutdown. Thus any subsequent
+> > attempt to read buffers fails. Code in xlog_recover_process_iunlinks() does not
+> > count with the fact that read of a buffer which was read a while ago can
+> > really fail which results in the oops on
+> >   agi = XFS_BUF_TO_AGI(agibp);
+> > 
+> > Fix the problem by handling error from xfs_read_agi() in all cases.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/xfs/xfs_log_recover.c |   15 ++++++++++++---
+> >  1 files changed, 12 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> > index 0ed9ee7..3899264 100644
+> > --- a/fs/xfs/xfs_log_recover.c
+> > +++ b/fs/xfs/xfs_log_recover.c
+> > @@ -3178,11 +3178,17 @@ xlog_recover_process_iunlinks(
+> >  
+> >  				/*
+> >  				 * Reacquire the agibuffer and continue around
+> > -				 * the loop. This should never fail as we know
+> > -				 * the buffer was good earlier on.
+> > +				 * the loop.
+> >  				 */
+> >  				error = xfs_read_agi(mp, NULL, agno, &agibp);
+> > -				ASSERT(error == 0);
+> > +				/*
+> > +				 * We failed to read a buffer we succeeded
+> > +				 * reading just a while ago. Likely because the
+> > +				 * filesystem is shutdown now. Just try the
+> > +				 * next AG.
+> > +				 */
+> > +				if (error)
+> > +					goto next_ag;
+> >  				agi = XFS_BUF_TO_AGI(agibp);
+> >  			}
+> >  		}
+> 
+> That function is full of ugly code. We don't need to continually
+> lock and unlock the AGI in the inner loop. Indeed, we probably don't
+> even need to lock the buffer to read the AGI bucket entries because
+> we aren't going to be racing with anyone here. Hence all we really
+> need is an extra hold on the agi buffer to make sure it doesn't go
+> away once we've dropped the lock via xfs_buf_relse(). i.e.
+> 
+> 
+> 	/*
+> 	 * take an extra reference to the buffer and then release it
+> 	 * to drop the lock so that it can be acquired in the normal
+> 	 * course of the transaction to truncate and free each
+> 	 * inode.  Because we are not racing with anyone else here
+> 	 * for the AGI buffer, we don't even need to hold it locked
+> 	 * to read the initial unlinked bucket entries out of the
+> 	 * buffer.
+> 	 */
+> 	agi = XFS_BUF_TO_AGI(agibp);
+> 	xfs_buf_hold(agibp);
+> 	xfs_buf_relse(agibp);
+> 	for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+> 		agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+> 		while (agino != NULLAGINO) {
+> 			agino = xlog_recover_process_one_iunlink(mp,
+> 					agno, agino, bucket);
+> 		}
+> 	}
+> 	xfs_buf_rele(agibp)
+  Thanks for review Dave. So something like attached patch?
 
-To do this, add a work structure and a completion to the allocation
-args structure. This allows xfs_alloc_vextent to queue the args onto
-the workqueue and wait for it to be completed by the worker. This
-can be done completely transparently to the caller.
+								Honza
 
-The worker function needs to ensure that it sets and clears the
-PF_TRANS flag appropriately as it is being run in an active
-transaction context. Work can also be queued in a memory reclaim
-context, so a rescuer is needed for the workqueue.
+--jI8keyz6grp/JLjh
+Content-Type: text/x-patch; charset=us-ascii
+Content-Disposition: attachment; filename="0001-xfs-Fix-oops-on-IO-error-during-xlog_recover_process.patch"
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>From 276d5ecac71d9e6ec6ac970e594f5a49450d07e2 Mon Sep 17 00:00:00 2001
+From: Jan Kara <jack@suse.cz>
+Date: Tue, 6 Mar 2012 11:39:48 +0100
+Subject: [PATCH v2] xfs: Fix oops on IO error during xlog_recover_process_iunlinks()
+
+When an IO error happens during inode deletion run from
+xlog_recover_process_iunlinks() filesystem gets shutdown. Thus any subsequent
+attempt to read buffers fails. Code in xlog_recover_process_iunlinks() does not
+count with the fact that read of a buffer which was read a while ago can
+really fail which results in the oops on
+  agi = XFS_BUF_TO_AGI(agibp);
+
+Fix the problem by cleaning up the buffer handling in
+xlog_recover_process_iunlinks(). We release buffer lock but keep buffer
+reference to AG buffer. That is enough for buffer to not go away under us
+and we don't have to call xfs_read_agi() all the time.
+
+CC: stable@kernel.org
+Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_alloc.c |   34 +++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_alloc.h |    5 +++++
- fs/xfs/xfs_super.c |   16 ++++++++++++++++
- 3 files changed, 54 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_log_recover.c |   34 ++++++++++++----------------------
+ 1 files changed, 12 insertions(+), 22 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index ce84ffd..31e9033 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -35,6 +35,7 @@
- #include "xfs_error.h"
- #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0ed9ee7..0827644 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3161,37 +3161,27 @@ xlog_recover_process_iunlinks(
+ 			 */
+ 			continue;
+ 		}
++		/*
++		 * Take an extra reference to the buffer and then release it
++		 * to drop the lock so that it can be acquired in the normal
++		 * course of the transaction to truncate and free each
++		 * inode.  Because we are not racing with anyone else here
++		 * for the AGI buffer, we don't even need to hold it locked
++		 * to read the initial unlinked bucket entries out of the
++		 * buffer.
++		 */
+ 		agi = XFS_BUF_TO_AGI(agibp);
++		xfs_buf_hold(agibp);
++		xfs_buf_relse(agibp);
  
-+struct workqueue_struct *xfs_alloc_wq;
+ 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+ 			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+ 			while (agino != NULLAGINO) {
+-				/*
+-				 * Release the agi buffer so that it can
+-				 * be acquired in the normal course of the
+-				 * transaction to truncate and free the inode.
+-				 */
+-				xfs_buf_relse(agibp);
+-
+ 				agino = xlog_recover_process_one_iunlink(mp,
+ 							agno, agino, bucket);
+-
+-				/*
+-				 * Reacquire the agibuffer and continue around
+-				 * the loop. This should never fail as we know
+-				 * the buffer was good earlier on.
+-				 */
+-				error = xfs_read_agi(mp, NULL, agno, &agibp);
+-				ASSERT(error == 0);
+-				agi = XFS_BUF_TO_AGI(agibp);
+ 			}
+ 		}
+-
+-		/*
+-		 * Release the buffer for the current agi so we can
+-		 * go on to the next one.
+-		 */
+-		xfs_buf_relse(agibp);
++		xfs_buf_rele(agibp);
+ 	}
  
- #define XFS_ABSDIFF(a,b)	(((a) <= (b)) ? ((b) - (a)) : ((a) - (b)))
- 
-@@ -2207,7 +2208,7 @@ xfs_alloc_read_agf(
-  * group or loop over the allocation groups to find the result.
-  */
- int				/* error */
--xfs_alloc_vextent(
-+__xfs_alloc_vextent(
- 	xfs_alloc_arg_t	*args)	/* allocation argument structure */
- {
- 	xfs_agblock_t	agsize;	/* allocation group size */
-@@ -2417,6 +2418,37 @@ error0:
- 	return error;
- }
- 
-+static void
-+xfs_alloc_vextent_worker(
-+	struct work_struct	*work)
-+{
-+	struct xfs_alloc_arg	*args = container_of(work,
-+						struct xfs_alloc_arg, work);
-+	unsigned long		pflags;
-+
-+	/* we are in a transaction context here */
-+	current_set_flags_nested(&pflags, PF_FSTRANS);
-+
-+	args->result = __xfs_alloc_vextent(args);
-+	complete(args->done);
-+
-+	current_restore_flags_nested(&pflags, PF_FSTRANS);
-+}
-+
-+
-+int				/* error */
-+xfs_alloc_vextent(
-+	xfs_alloc_arg_t	*args)	/* allocation argument structure */
-+{
-+	DECLARE_COMPLETION_ONSTACK(done);
-+
-+	args->done = &done;
-+	INIT_WORK(&args->work, xfs_alloc_vextent_worker);
-+	queue_work(xfs_alloc_wq, &args->work);
-+	wait_for_completion(&done);
-+	return args->result;
-+}
-+
- /*
-  * Free an extent.
-  * Just break up the extent address and hand off to xfs_free_ag_extent
-diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
-index 2f52b92..ab5d0fd 100644
---- a/fs/xfs/xfs_alloc.h
-+++ b/fs/xfs/xfs_alloc.h
-@@ -25,6 +25,8 @@ struct xfs_perag;
- struct xfs_trans;
- struct xfs_busy_extent;
- 
-+extern struct workqueue_struct *xfs_alloc_wq;
-+
- /*
-  * Freespace allocation types.  Argument to xfs_alloc_[v]extent.
-  */
-@@ -119,6 +121,9 @@ typedef struct xfs_alloc_arg {
- 	char		isfl;		/* set if is freelist blocks - !acctg */
- 	char		userdata;	/* set if this is user data */
- 	xfs_fsblock_t	firstblock;	/* io first block allocated */
-+	struct completion *done;
-+	struct work_struct work;
-+	int		result;
- } xfs_alloc_arg_t;
- 
- /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 5e0d43f..13fa0cf 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1604,12 +1604,28 @@ xfs_init_workqueues(void)
- 	xfs_syncd_wq = alloc_workqueue("xfssyncd", WQ_NON_REENTRANT, 0);
- 	if (!xfs_syncd_wq)
- 		return -ENOMEM;
-+
-+	/*
-+	 * The allocation workqueue can be used in memory reclaim situations
-+	 * (writepage path), and parallelism is only limited by the number of
-+	 * AGs in all the filesystems mounted. Hence use the default large
-+	 * max_active value for this workqueue.
-+	 */
-+	xfs_alloc_wq = alloc_workqueue("xfsalloc", WQ_MEM_RECLAIM, 0);
-+	if (!xfs_alloc_wq)
-+		goto out_destroy_syncd;
-+
- 	return 0;
-+
-+out_destroy_syncd:
-+	destroy_workqueue(xfs_syncd_wq);
-+	return -ENOMEM;
- }
- 
- STATIC void
- xfs_destroy_workqueues(void)
- {
-+	destroy_workqueue(xfs_alloc_wq);
- 	destroy_workqueue(xfs_syncd_wq);
- }
- 
+ 	mp->m_dmevmask = mp_dmevmask;
 -- 
-1.7.9
+1.7.1
+
+
+--jI8keyz6grp/JLjh
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--jI8keyz6grp/JLjh--
