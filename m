@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q282B4Z1194047 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 20:11:04 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	7n6132Npo1vwv1oN for <xfs@oss.sgi.com>;
-	Wed, 07 Mar 2012 18:10:57 -0800 (PST)
-Date: Thu, 8 Mar 2012 13:10:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: df bigger than ls?
-Message-ID: <20120308021054.GM3592@dastard>
-References: <20120307155439.GA23360@nsrc.org> <20120307171619.GA23557@nsrc.org>
-	<4F57A32A.5010704@sandeen.net>
+	q282I00v194314 for <xfs@oss.sgi.com>; Wed, 7 Mar 2012 20:18:00 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id cUtsEO73dW0alJNZ for <xfs@oss.sgi.com>;
+	Wed, 07 Mar 2012 18:17:59 -0800 (PST)
+Message-ID: <4F5816D6.80801@sandeen.net>
+Date: Wed, 07 Mar 2012 20:17:58 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F57A32A.5010704@sandeen.net>
+Subject: Re: df bigger than ls?
+References: <20120307155439.GA23360@nsrc.org> <20120307171619.GA23557@nsrc.org>
+	<4F57A32A.5010704@sandeen.net> <20120308021054.GM3592@dastard>
+In-Reply-To: <20120308021054.GM3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,163 +25,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com, Brian Candler <B.Candler@pobox.com>
 
-On Wed, Mar 07, 2012 at 12:04:26PM -0600, Eric Sandeen wrote:
-> On 3/7/12 11:16 AM, Brian Candler wrote:
-> > On Wed, Mar 07, 2012 at 03:54:39PM +0000, Brian Candler wrote:
-> >> core.size = 1085407232
-> >> core.nblocks = 262370
-> > 
-> > core.nblocks is correct here: space used = 262370 * 4 = 1049480 KB
-> > 
-> > (If I add up all the non-hole extents I get 2098944 blocks = 1049472 KB
-> > so there are two extra blocks of something)
-> > 
-> > This begs the question of where stat() is getting its info from?
+On 3/7/12 8:10 PM, Dave Chinner wrote:
+> On Wed, Mar 07, 2012 at 12:04:26PM -0600, Eric Sandeen wrote:
 
-stat(2) also reported delayed allocation reservations that are only
-kept in memory.
+...
 
-....
-
-> so:
+>> # du -hc bigfile* 2.0G	bigfile1 1.1G	bigfile2 907M
+>> bigfile3
+>>
+>> Dave, is this working as intended?
 > 
-> # dd if=/dev/zero of=bigfile bs=1M count=1100 &>/dev/null
-> # ls -lh bigfile
-> -rw-r--r--. 1 root root 1.1G Mar  7 11:47 bigfile
-> # du -h bigfile
-> 1.1G	bigfile
+> Yes. Your problem is that you have a very small filesystem, which is
+> not the case that we optimise XFS for. :/
+
+Well, sure ;)
+
+>> I know the speculative
+>> preallocation amount for new files is supposed to go down as the
+>> fs fills, but is there no way to discard prealloc space to avoid
+>> ENOSPC on other files?
 > 
-> but:
+> We don't track what files have current active preallocations, we
+> only reduce the preallocation size as the filesystem nears ENOSPC.
+> This generally works just fine in situations where the filesystem
+> size is significantly greater than the maximum extent size. i.e. the
+> common case
 > 
-> # rm -f bigfile
-> # for I in `seq 1 1100`; do dd if=/dev/zero of=bigfile conv=notrunc bs=1M seek=$I count=1 &>/dev/null; done
-> # ls -lh bigfile
-> -rw-r--r--. 1 root root 1.1G Mar  7 11:49 bigfile
-> # du -h bigfile
-> 2.0G	bigfile
+> The problem you are tripping over here is that the maximum extent
+> size is greater than the filesystem size, so the preallocation size
+> is also greater than the filesystem size and hence can contribute
+> significantly to premature ENOSPC. I see two possible ways to
+> minimise this problem:
 
-This is tripping the NFS server write pattern heuristic. i.e. it is
-detecting repeated open/write at EOF/close patterns and so is not
-truncating away the speculative EOF reservation on close(). This
-si what prevents fragmentation of files being written concurrently
-with this pattern.
+FWIW I'm not overly worried about my 4G filesystem, that was just
+an obviously extreme case to test the behavior.
 
-> This should get freed when the inode is dropped from the cache;
-> hence your cache drop bringing it back to size.
+I'd be more interested to know if the behavior was causing any
+issues for Brian's case, or if it was just confusing.  :)
 
-Right. It is assumes that once you've triggered that heuristic, the
-preallocation needs to last for as long as the inode is in the
-working set. The inode cache tracks the current working set, so the
-preallocation release is tied to cache eviction.
-
-> But there does seem to be an issue here; if I make a 4G filesystem
-> and repeat the above test 3 times, the 3rd run gets ENOSPC, and
-> the last file written comes up short, while the first one retains
-> all it's extra preallocated space:
+> 	1. reduce the maximum speculative preallocation size based
+> 	on filesystem size at mount time.
 > 
-> # du -hc bigfile* 2.0G	bigfile1 1.1G	bigfile2 907M
-> bigfile3
+> 	2. track inodes with active speculative preallocation and
+> 	have an enospc based trigger that can find them and truncate
+> 	away excess idle speculative preallocation.
 > 
-> Dave, is this working as intended?
+> The first is relatively easy to do, but will only reduce the
+> incidence of your problem - we still need to allow significant
+> preallocation sizes (e.g. 64MB) to avoid the fragmentation problems.
 
-Yes. Your problem is that you have a very small filesystem, which is
-not the case that we optimise XFS for. :/
+Might be worth it; even though a 4G fs is obviously not a design point,
+it's good not to have diabolical behavior.  Although I suppose if xfstests
+doesn't hit it in everything it does, it's probably not a big deal.
+ISTR you did have to fix one thing up, though.
 
-> I know the speculative
-> preallocation amount for new files is supposed to go down as the
-> fs fills, but is there no way to discard prealloc space to avoid
-> ENOSPC on other files?
+> The second is needed to reclaim the space we've already preallocated
+> but is not being used. That's more complex to do - probably a radix
+> tree bit and a periodic background scan to reduce the time window
+> the preallocation sits around from cache lifetime to "idle for some
+> time" along with a on-demand, synchronous ENOSPC scan. This will
+> need some more thought as to how to do it effectively, but isn't
+> impossible to do....
 
-We don't track what files have current active preallocations, we
-only reduce the preallocation size as the filesystem nears ENOSPC.
-This generally works just fine in situations where the filesystem
-size is significantly greater than the maximum extent size. i.e. the
-common case
+It seems worth thinking about.  I guess I'm still a little concerned
+about the ENOSPC case; it could lead to some confusion - I could imagine
+several hundreds of gigs under preallocation, with a reasonable-sized
+filesystem returning ENOSPC quite early.
 
-The problem you are tripping over here is that the maximum extent
-size is greater than the filesystem size, so the preallocation size
-is also greater than the filesystem size and hence can contribute
-significantly to premature ENOSPC. I see two possible ways to
-minimise this problem:
+-Eric
 
-	1. reduce the maximum speculative preallocation size based
-	on filesystem size at mount time.
-
-	2. track inodes with active speculative preallocation and
-	have an enospc based trigger that can find them and truncate
-	away excess idle speculative preallocation.
-
-The first is relatively easy to do, but will only reduce the
-incidence of your problem - we still need to allow significant
-preallocation sizes (e.g. 64MB) to avoid the fragmentation problems.
-
-The second is needed to reclaim the space we've already preallocated
-but is not being used. That's more complex to do - probably a radix
-tree bit and a periodic background scan to reduce the time window
-the preallocation sits around from cache lifetime to "idle for some
-time" along with a on-demand, synchronous ENOSPC scan. This will
-need some more thought as to how to do it effectively, but isn't
-impossible to do....
-
-Cheers,
-
-Dave.
+> Cheers,
 > 
-> -Eric
+> Dave.
+>>
+>> -Eric
+>>
+>>> root@storage1:~# du -h /disk*/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk10/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk11/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk12/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk2/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk3/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk4/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk5/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk6/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk7/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk8/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 2.0G	/disk9/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> root@storage1:~# echo 3 >/proc/sys/vm/drop_caches 
+>>> root@storage1:~# du -h /disk*/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk10/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk11/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk12/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk2/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk3/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk4/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk5/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk6/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk7/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk8/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> 1.1G	/disk9/scratch2/work/PRSRA1/PRSRA1.1.0.bff
+>>> root@storage1:~# 
+>>>
+>>> Very odd, but not really a major problem other than the confusion it causes.
+>>>
+>>> Regards,
+>>>
+>>> Brian.
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>>
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
 > 
-> > root@storage1:~# du -h /disk*/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk10/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk11/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk12/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk2/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk3/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk4/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk5/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk6/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk7/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk8/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 2.0G	/disk9/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > root@storage1:~# echo 3 >/proc/sys/vm/drop_caches 
-> > root@storage1:~# du -h /disk*/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk10/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk11/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk12/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk1/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk2/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk3/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk4/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk5/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk6/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk7/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk8/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > 1.1G	/disk9/scratch2/work/PRSRA1/PRSRA1.1.0.bff
-> > root@storage1:~# 
-> > 
-> > Very odd, but not really a major problem other than the confusion it causes.
-> > 
-> > Regards,
-> > 
-> > Brian.
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> > 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
