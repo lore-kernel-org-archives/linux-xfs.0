@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28AMYHN016464 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 04:22:35 -0600
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	MTA3rjPvDYHQ3OoE for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 02:22:33 -0800 (PST)
-Date: Thu, 8 Mar 2012 21:22:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: df bigger than ls?
-Message-ID: <20120308102230.GS3592@dastard>
-References: <20120307155439.GA23360@nsrc.org> <20120307171619.GA23557@nsrc.org>
-	<4F57A32A.5010704@sandeen.net> <20120308085035.GA23992@nsrc.org>
-	<20120308095932.GA24187@nsrc.org>
+	q28FbGv4044993 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 09:37:16 -0600
+Date: Thu, 8 Mar 2012 09:37:21 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] default to 64 bit inodes & add feature flag
+Message-ID: <20120308153721.GS7762@sgi.com>
+References: <4F5798F9.2050809@redhat.com> <20120308013413.GL3592@dastard>
+	<4F5813D8.8070305@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120308095932.GA24187@nsrc.org>
+In-Reply-To: <4F5813D8.8070305@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,55 +23,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Candler <B.Candler@pobox.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Mar 08, 2012 at 09:59:32AM +0000, Brian Candler wrote:
-> On Thu, Mar 08, 2012 at 08:50:35AM +0000, Brian Candler wrote:
-> > Aha.  This may well be what is screwing up gluster's disk usage on a striped
-> > volume - I believe XFS is preallocating space which is actually going to end
-> > up being a hole!
-
-How is the filesystem supposed to know that? All it sees is
-extending writes, which is what triggers speculative preallocation.
-
-> Here is a standalone testcase.
+On Wed, Mar 07, 2012 at 08:05:12PM -0600, Eric Sandeen wrote:
+> On 3/7/12 7:34 PM, Dave Chinner wrote:
+> > On Wed, Mar 07, 2012 at 11:20:57AM -0600, Eric Sandeen wrote:
+> >> From: Dave Chinner <dchinner@redhat.com>
+> >>
+> >> Default to allowing 64-bit inodes on the filesystem.
+> >>
+> >> Add a feature bit to the the superblock to record whether 64 bit inodes have
+> >> been allocated on the filesystem or not. This allows us to reject mounting the
+> >> filesytem with inode32 if 64 bit inodes are present.
+> >>
+> >> Once a 64 bitinode is allocated, the inode64 superblock feature bit will be set.
+> >> Once the superblock feature bit is set, the filesystem will default to 64 bit
+> >> inodes regardless of whether inode64 is specified as a mount option.
+> >>
+> >> To ensure only 32 bit inodes are created, the inode32 mount option must be
+> >> used. If there are already 64 bit inodes as flagged by the superblock feature
+> >> bit, then the inode32 mount will be refused.
+> >>
+> >> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> >> ---
+> >>
+> >> Passing this along to revive the old discussion ... 
+> > 
+> > I have no objections to do this. However, the kernel patch is just
+> > the tip of the iceberg when it comes to implementing this.
+> > 
+> > Were there patches for userspace support of the feature bit? I don't
+> > recall if there were. I'm thinking that xfs_info needs to output
+> > whether this is set, which means the flag needs to be added to the
+> > xfs geometry ioctls in the kernel.
 > 
-> $ for i in {0..19}; do dd if=/dev/zero of=testfile bs=128k count=1 seek=$[$i * 12]; done
+> Nope, you just put this patch out as a suggestion, and pointed out
+> that userspace needed updates too.
+> 
+> If people are in agreement about this then we can proceed with the rest...
 
-Yup, that's behaving exactly as expected there. When you seek past
-the existing EOF, and there is a speculative preallocation between
-the old EOF and the new EOF, it writes zeros to that range because
-the assumption is that you are going to fill it with data.
+Please do.  I too have been burned by mounting a filesystem with big
+inos without the correct mount option.  This is a great idea.
 
-There are applications that do this to trigger that exact
-preallocation - Samba is a classic case because windows clients will
-write one byte 128k beyond the current EOF to get NTFS to trigger
-large preallocation, then send back and write the real data to the
-server. In cases like these, you want the hole allocated and filled
-with zeros before the real writes come in just in case the server
-crashes between the single byte write and the real data being
-written....
-
-FWIW, XFS on Irix had special code to detect out of order NFS
-writes and do a similar hole filling trick to avoid fragmentation.
-
-There's no one correct behaviour when dealing with writes of this
-sort. In some cases the current behaviour is perfect (and samba on
-XFS is widely used), in other cases it won't be exactly what you
-want.
-
-Indeed, you can avoid this problem by using ftruncate() to extend
-the file before writing, write the regions in reverse order, using
-fallocate to allocate the exact blocks you want before writing, or
-use the allocsize mount option to turn of the dynamic behaviour.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Ben
 
 _______________________________________________
 xfs mailing list
