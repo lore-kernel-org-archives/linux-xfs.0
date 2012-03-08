@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28GNgTt047711 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 10:23:42 -0600
-Date: Thu, 8 Mar 2012 10:23:48 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: df bigger than ls?
-Message-ID: <20120308162348.GT7762@sgi.com>
-References: <20120307155439.GA23360@nsrc.org> <20120307171619.GA23557@nsrc.org>
-	<4F57A32A.5010704@sandeen.net> <20120308021054.GM3592@dastard>
+	q28GEKPR047251 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 10:14:20 -0600
+Received: from josefsipek.net (josefsipek.net [64.9.206.49]) by cuda.sgi.com
+	with ESMTP id 8xtVpJQscn0hEn2r for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 08:14:19 -0800 (PST)
+Date: Thu, 8 Mar 2012 11:14:18 -0500
+From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
+Subject: Re: [PATCH] default to 64 bit inodes & add feature flag
+Message-ID: <20120308161418.GA17800@josefsipek.net>
+References: <4F5798F9.2050809@redhat.com> <20120308013413.GL3592@dastard>
+	<4F5813D8.8070305@sandeen.net> <20120308153721.GS7762@sgi.com>
+	<4F58D35D.7080504@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120308021054.GM3592@dastard>
+In-Reply-To: <4F58D35D.7080504@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,73 +27,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Candler <B.Candler@pobox.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ben Myers <bpm@sgi.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Mar 08, 2012 at 01:10:54PM +1100, Dave Chinner wrote:
-> On Wed, Mar 07, 2012 at 12:04:26PM -0600, Eric Sandeen wrote:
-> > But there does seem to be an issue here; if I make a 4G filesystem
-> > and repeat the above test 3 times, the 3rd run gets ENOSPC, and
-> > the last file written comes up short, while the first one retains
-> > all it's extra preallocated space:
-> > 
-> > # du -hc bigfile* 2.0G	bigfile1 1.1G	bigfile2 907M
-> > bigfile3
-> > 
-> > Dave, is this working as intended?
+On Thu, Mar 08, 2012 at 09:42:21AM -0600, Eric Sandeen wrote:
+> So, after thinking about this (and talking on irc) some more, I'm
+> not convinced that a feature flag is the way to go.
 > 
-> Yes. Your problem is that you have a very small filesystem, which is
-> not the case that we optimise XFS for. :/
-
-I have seen a similar problem on some very large filesystems too.  This
-is not just dependent upon the size of the filesystem, but also the
-workload.  I think it is also a big problem for folks using quotas.
-
-> > I know the speculative
-> > preallocation amount for new files is supposed to go down as the
-> > fs fills, but is there no way to discard prealloc space to avoid
-> > ENOSPC on other files?
->
-> I see two possible ways to
-> minimise this problem:
->
-> 	1. reduce the maximum speculative preallocation size based
-> 	on filesystem size at mount time.
+> If we set a feature flag, suddenly old filesystems with 64-bit
+> inodes will grow a new feature, and this will force a userspace
+> upgrade - but there is no real new feature.  This seems like a bad
+> idea.  My original patch (which Dave responded to with this one)
+> simply made inode64 default, with no feature flags.
 > 
-> 	2. track inodes with active speculative preallocation and
-> 	have an enospc based trigger that can find them and truncate
-> 	away excess idle speculative preallocation.
->
+> Unless someone has a really compelling argument for the flag,
+> I'm thinking this is the wrong approach after all.
 > 
-> The first is relatively easy to do, but will only reduce the
-> incidence of your problem - we still need to allow significant
-> preallocation sizes (e.g. 64MB) to avoid the fragmentation problems.
+> Perhaps I should resend the just-make-it-default patch.
 > 
-> The second is needed to reclaim the space we've already preallocated
-> but is not being used. That's more complex to do - probably a radix
-> tree bit and a periodic background scan to reduce the time window
-> the preallocation sits around from cache lifetime to "idle for some
-> time" along with a on-demand, synchronous ENOSPC scan. This will
-> need some more thought as to how to do it effectively, but isn't
-> impossible to do....
+> Comments?
 
-Alex and I discussed this problem briefly awhile ago.  What is the best
-way to lose when you hit ENOSPC (project quotas) or EDQUOT in
-xfs_iomap_write_delay?  You want to be fair; one user hitting his quota
-shouldn't be able to steal some other user's block reservations unless
-you really are near ENOSPC for the entire filesystem.  
+I was thinking about this sort of scenario.  You are right, there's no
+on-disk format change.  My initial thought about how to handle this was to
+just make inode64 the default on 64-bit builds.  I think the feature flag
+idea is good because it essentially acts as a taint flag - much like the
+attr2 feature flag.  The difference is, in the inode64 case...
 
-I suggested something like... track inodes with preallocated block
-reservations in LRU order and by dquot, so that the poor fella who is at
-EDQUOT will first clean up the preallocations that resulted in quota
-being enforced, try again, and then work on preallocations of other
-users only if it can help in his situation.  IIRC Alex shut me down when
-he heard LRU.  ;)
+1) it's the same on-disk format
+2) there are years of ambiguous-inode filesystems out there
 
-Now that block reservations count toward quotas the symptom will
-probably be a little different.
+Out of curiosity...is there a reason we can't do both?  Default to 64-bit,
+and slowly introduce the 64-bit inodes feature flag?
 
--Ben
+Jeff.
+
+-- 
+What is the difference between Mechanical Engineers and Civil Engineers?
+Mechanical Engineers build weapons, Civil Engineers build targets.
 
 _______________________________________________
 xfs mailing list
