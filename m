@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28A3HtG008862 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 04:03:17 -0600
+	q28AMYHN016464 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 04:22:35 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	VhZktM7c03COL4PH for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 02:03:15 -0800 (PST)
-Date: Thu, 8 Mar 2012 21:03:13 +1100
+	MTA3rjPvDYHQ3OoE for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 02:22:33 -0800 (PST)
+Date: Thu, 8 Mar 2012 21:22:30 +1100
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: df bigger than ls?
-Message-ID: <20120308100313.GR3592@dastard>
+Message-ID: <20120308102230.GS3592@dastard>
 References: <20120307155439.GA23360@nsrc.org> <20120307171619.GA23557@nsrc.org>
-	<4F57A32A.5010704@sandeen.net> <201203080904.12362.arekm@maven.pl>
+	<4F57A32A.5010704@sandeen.net> <20120308085035.GA23992@nsrc.org>
+	<20120308095932.GA24187@nsrc.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201203080904.12362.arekm@maven.pl>
+In-Reply-To: <20120308095932.GA24187@nsrc.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,47 +24,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: Brian Candler <B.Candler@pobox.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-T24gVGh1LCBNYXIgMDgsIDIwMTIgYXQgMDk6MDQ6MTJBTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IE9uIFdlZG5lc2RheSAwNyBvZiBNYXJjaCAyMDEyLCBFcmljIFNhbmRl
-ZW4gd3JvdGU6Cj4gCj4gPiBYRlMgc3BlY3VsYXRpdmVseSBwcmVhbGxvY2F0ZXMgc3BhY2Ugb2Zm
-IHRoZSBlbmQgb2YgYSBmaWxlLiAgVGhlIGFtb3VudCBvZgo+ID4gc3BhY2UgYWxsb2NhdGVkIGRl
-cGVuZHMgb24gdGhlIHByZXNlbnQgc2l6ZSBvZiB0aGUgZmlsZSwgYW5kIHRoZSBhbW91bnQgb2YK
-PiA+IGF2YWlsYWJsZSBmcmVlIHNwYWNlLiAgVGhpcyBjYW4gYmUgb3ZlcnJpZGRlbgo+ID4gd2l0
-aCBtb3VudCAtbyBhbGxvY3NpemU9NjRrIChvciBvdGhlciBzaXplIGZvciBleGFtcGxlKQo+IAo+
-IFdoYXQgd2FzIHRoZSBkZWZhdWx0IGJlZm9yZSBzcGVjdWxhdGl2ZSBwcmVhbGxvY2F0aW9uIHdh
-cyBhZGRlZCAob3IgY2hhbmdlZCAKPiBzb21ld2hlcmUgaW4gMi42LjN4IGxpbmUgYWZhaWspID8K
-Ckl0J3MgY2hhbmdlZCBtYW55IHRpbWVzIG92ZXIgdGhlIGxpZmUgb2YgWEZTLgoKT3JpZ2luYWxs
-eSBpdCB3YXMgcXVpdGUgYSBsYXJnZSBudW1iZXIgYW5kIGNvdWxkIGhhcHBlbiBhbnl3aGVyZSBp
-bgp0aGUgZmlsZSAtIEkgY2FuJ3QgcmVtZW1iZXIgZXhhY3RseSB3aGF0IGl0IHdhcyBidXQgc29t
-ZSB0aW1lIGFyb3VuZAoxOTk3IG9uIElyaXggaXQgZ290IGJyb3VnaHQgYmFjayB0byAxNiBibG9j
-a3MgcGVyIHdyaXR0ZW4gcmVnaW9uCmJlY2F1c2Ugb2YgaXNzdWVzIHdpdGggSXJpeCBORlMgc2Vy
-dmVycyBrZWVwaW5nIHRlbnMgb2YgdGhvdXNhbmRzIG9mCmZpbGVzIG9wZW4gKGFuZCBoZW5jZSBu
-ZXZlciBoYXZpbmcgc3BlY3VsYXRpdmUgcHJlYWxsb2NhdGlvbgpyZW1vdmVkKSB3aXRoIG11bHRp
-cGxlIHByZWFsbG9jYXRpb25zIGFsbCB0aHJvdWdoIHNwYXJzZSBmaWxlcyBhbmQKaGVuY2UgcnVu
-bmluZyBmaWxlc3lzdGVtcyBhbmQgdXNlciBxdW90YXMgb3V0IG9mIHNwYWNlLgoKVGhpcyAxNiBi
-bG9jayBzaXplIHdhcyB0aGUgZGVmYXVsdCB3aGVuIHBvcnRlZCB0byBsaW51eCB3aGVuIHBvcnRp
-bmcKdG8gTGludXgsIGJ1dCB3b3VsZCBhbHNvIHJvdW5kIHVwIHRvIHN0cmlwZSB1bml0IHNpemUg
-aWYgdGhlIGZpbGUKd2FzIGxhcmdlciB0aGFuIDUxMmtiLiAgSW4gMjAwNCB0aGUgc3BlY3VsYXRp
-dmUgcHJlYWxsb2NhdGlvbiB3YXMKcmVkdWNlZCB0byBFT0YgcHJlYWxsb2NhdGlvbiBvbmx5IGlu
-c3RlYWQgb2YgYW55d2hlcmUgaW4gYSBob2xlIGluIGEKZmlsZS4gIFNvbWV3aGVyZSBhbG9uZyB0
-aGUgbGluZSB0aGUgZGVmYXVsdCBzaXplIGdvdCBjaGFuZ2VkIHRvClBBR0VfU0laRSByYXRoZXIg
-dGhhbiAxNiBibG9ja3MuIFRoZW4gdGhlIGFsbG9jc2l6ZSBtb3VudCBvcHRpb24gd2FzCmludHJv
-ZHVjZWQgaW4gMjAwNSB0byBlbmFibGUgaXQgdG8gYmUgaW5jcmVhc2VkIGZvciB0aG9zZSB0aGF0
-Cm5lZWRlZCBsYXJnZSBwcmVhbGxvY2F0aW9uICh0eXBpY2FsbHkgUFZSIHVzZXJzKSwgYW5kIHRo
-ZSBtYXhpbXVtCmluY3JlYXNlZCB0byAxR0IuCgpJdCBnb3QgYnJva2VuIGJ5IGNoYW5nZXMgaW4g
-MjAwOCwgZml4ZWQgaW4gMjAwOSwgYW5kIHRoZW4gbWFkZQpkeW5hbWljIGluIDIuNi4zOCBhbmQg
-bm93IGl0IGJlaGF2ZXMgbW9yZSBsaWtlIGl0IGRpZCBpbiAxOTk1IGZvcgpmaWxlcyBiZWluZyBl
-eHRlbmRlZC4KClNvIHRoZXJlJ3MgYSBsb25nIGhpc3Rvcnkgb2YgY2hhbmdpbmcgdGhlIHNwZWN1
-bGF0aXZlIHByZWFsbG9jYXRpb24KYmVoYXZpb3VyIG9mIFhGUyB0byBhZGFwdCB0byBjaGFuZ2lu
-ZyBzdG9yYWdlIGNoYXJhY3RlcmlzdGljcywKd29ya2xvYWRzIGFuZCBjYXBhY2l0aWVzLi4uLi4K
-CkNoZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On Thu, Mar 08, 2012 at 09:59:32AM +0000, Brian Candler wrote:
+> On Thu, Mar 08, 2012 at 08:50:35AM +0000, Brian Candler wrote:
+> > Aha.  This may well be what is screwing up gluster's disk usage on a striped
+> > volume - I believe XFS is preallocating space which is actually going to end
+> > up being a hole!
+
+How is the filesystem supposed to know that? All it sees is
+extending writes, which is what triggers speculative preallocation.
+
+> Here is a standalone testcase.
+> 
+> $ for i in {0..19}; do dd if=/dev/zero of=testfile bs=128k count=1 seek=$[$i * 12]; done
+
+Yup, that's behaving exactly as expected there. When you seek past
+the existing EOF, and there is a speculative preallocation between
+the old EOF and the new EOF, it writes zeros to that range because
+the assumption is that you are going to fill it with data.
+
+There are applications that do this to trigger that exact
+preallocation - Samba is a classic case because windows clients will
+write one byte 128k beyond the current EOF to get NTFS to trigger
+large preallocation, then send back and write the real data to the
+server. In cases like these, you want the hole allocated and filled
+with zeros before the real writes come in just in case the server
+crashes between the single byte write and the real data being
+written....
+
+FWIW, XFS on Irix had special code to detect out of order NFS
+writes and do a similar hole filling trick to avoid fragmentation.
+
+There's no one correct behaviour when dealing with writes of this
+sort. In some cases the current behaviour is perfect (and samba on
+XFS is widely used), in other cases it won't be exactly what you
+want.
+
+Indeed, you can avoid this problem by using ftruncate() to extend
+the file before writing, write the regions in reverse order, using
+fallocate to allocate the exact blocks you want before writing, or
+use the allocsize mount option to turn of the dynamic behaviour.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
