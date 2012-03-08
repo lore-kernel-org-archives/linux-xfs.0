@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28Ndvf8097361 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 17:39:57 -0600
+	q28NrUN6104116 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 17:53:30 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	E3GmkAQg6B9i7Dw7 for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 15:39:56 -0800 (PST)
-Date: Fri, 9 Mar 2012 10:39:53 +1100
+	cqKTUObzLlLn3Z9g for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 15:53:28 -0800 (PST)
+Date: Fri, 9 Mar 2012 10:53:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] default to 64 bit inodes & add feature flag
-Message-ID: <20120308233953.GP5091@dastard>
-References: <4F5798F9.2050809@redhat.com> <20120308013413.GL3592@dastard>
-	<4F5813D8.8070305@sandeen.net> <20120308153721.GS7762@sgi.com>
-	<4F58D35D.7080504@sandeen.net> <20120308163832.GV8545@sgi.com>
+Subject: Re: Safe to use XFS in production in Linux 3.2.9?
+Message-ID: <20120308235326.GQ5091@dastard>
+References: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120308163832.GV8545@sgi.com>
+In-Reply-To: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,44 +26,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Josef 'Jeff' Sipek <jeffpc@josefsipek.net>, Eric Sandeen <sandeen@sandeen.net>, xfs-oss <xfs@oss.sgi.com>
+To: Sean Thomas Caron <scaron@umich.edu>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 08, 2012 at 10:38:32AM -0600, Ben Myers wrote:
-> On Thu, Mar 08, 2012 at 09:42:21AM -0600, Eric Sandeen wrote:
-> > So, after thinking about this (and talking on irc) some more, I'm
-> > not convinced that a feature flag is the way to go.
-> > 
-> > If we set a feature flag, suddenly old filesystems with 64-bit
-> > inodes will grow a new feature, and this will force a userspace
-> > upgrade - but there is no real new feature.  This seems like a bad
-> > idea.  My original patch (which Dave responded to with this one)
-> > simply made inode64 default, with no feature flags.
-> > 
-> > Unless someone has a really compelling argument for the flag,
-> > I'm thinking this is the wrong approach after all.
-> > 
-> > Perhaps I should resend the just-make-it-default patch.
-> > 
-> > Comments?
+On Thu, Mar 08, 2012 at 02:06:00PM -0500, Sean Thomas Caron wrote:
+> Hi all,
 > 
-> Ew!  Forcing a userspace upgrade is not desireable.  Since we would only
-> want to set the feature bit if userspace were already upgraded, and only
-> if there are 64 bit inos...  How about two bits:  one is set by mkfs and
-> checked by the kernel to see if it is ok to set the other.  ;)
-> 
-> The first bit could also act as 'now its ok to default to inode64'.
+> We're currently using Linux 3.0.12 with Cristoph's
+> xfs-bulletproof-sync patch and it seems to be working very well for
+> us. Unfortunately this kernel is vulnerable to the recent
+> CVE-2012-0056 no permission checking on writes to /proc/(pid)/mem
+> local root exploit, so we've got to leave it behind.
 
-Too complex, IMO. Just add an xfs_admin command to set the inode64
-feature bit. That then overrides the inode64/inode32 mount option,
-and guarantees that the user has already upgraded userspace.
+Hasn't it been fixed in 3.0.23? root exploits are the sort of thing
+that are supposed to be fixed in long term stable kernels....
 
-i.e. the mount options are only valid if the feature bit it not set,
-and the feature bit can only be set via xfs_admin after a userspace
-upgrade. Kernels that don't understand the feature bit will refuse
-to mount, keeping in line with the current practise of requiring
-both kernel and userspace upgrades to occur in step to use new
-features....
+> I see that the newest recommended stable kernel on kernel.org is
+> 3.2.9. Have there been any major changes to XFS between 3.0.12 and
+> 3.2.9 that would be considered "risky" in a production environment?
+
+The 3.2.x kernels really haven't been run in production environments
+for that long for us to be able to tell if there are problems or
+not.
+
+> I assume the xfs-bulletproof-sync patch has already been committed
+> to the code base in 3.2-train, so we shouldn't have to worry about
+> that any longer?
+
+Should have been, but I'm not exactly sure what is in that patch
+Christoph gave you, so you'll have to verify that yourself.
 
 Cheers,
 
