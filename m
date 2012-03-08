@@ -1,14 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28MKud9089470 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:20:56 -0600
-Message-ID: <4F5930BC.7040106@redhat.com>
-Date: Thu, 08 Mar 2012 16:20:44 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	q28MT89Q089748 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:29:09 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id CfisqJBUHCFFY0Hu for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 14:29:08 -0800 (PST)
+Message-ID: <4F5932B1.5040208@sandeen.net>
+Date: Thu, 08 Mar 2012 16:29:05 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_io: allow -F in open args
-References: <4F2AC948.1050909@redhat.com> <4F592728.9060706@sgi.com>
-In-Reply-To: <4F592728.9060706@sgi.com>
+Subject: Re: [PATCH v2] xfstests: before test execution, print test number
+	to syslog
+References: <1330968369-31779-1-git-send-email-sbehrens@giantdisaster.de>
+	<20120305213512.GC3592@dastard>
+In-Reply-To: <20120305213512.GC3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,40 +26,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
 
-Now that -F ("foreign") is automagic, we should no longer list
-it in the help output for open, but we should still accept
-it for compatibility; esp. as it is still in the case statement.
-Oops.
+On 3/5/12 3:35 PM, Dave Chinner wrote:
+> On Mon, Mar 05, 2012 at 06:26:09PM +0100, Stefan Behrens wrote:
+>> When the xfstests are executed in a batch (like "check 001-299")
+>> and produce syslog output, it is helpful to know which test was
+>> causing the output. Therefore each time a test is started, a
+>> syslog message is generated that contains the number of the
+>> xfstest.
+>>
+>> Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
+> 
+> Looks ok.
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Reported-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Thanks, I pushed this.
 
-diff --git a/io/open.c b/io/open.c
-index ac39ccc..46538ba 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -240,7 +240,6 @@ open_help(void)
- "\n"
- " Opens a file for subsequent use by all of the other xfs_io commands.\n"
- " With no arguments, open uses the stat command to show the current file.\n"
--" -F -- foreign filesystem file, disallow XFS-specific commands\n"
- " -a -- open with the O_APPEND flag (append-only mode)\n"
- " -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
- " -f -- open with O_CREAT (create the file if it doesn't exist)\n"
-@@ -274,7 +273,7 @@ open_f(
- 		return 0;
- 	}
- 
--	while ((c = getopt(argc, argv, "Racdfm:nrstx")) != EOF) {
-+	while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
- 		switch (c) {
- 		case 'F':
- 			/* Ignored / deprecated now, handled automatically */
-
+-Eric
 
 _______________________________________________
 xfs mailing list
