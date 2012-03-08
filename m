@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28JAenk057307 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 13:10:41 -0600
-Received: from mx0.pronet.com.pl (mx0.pronet.com.pl [193.108.35.26]) by
-	cuda.sgi.com with ESMTP id wndr1thvSlKo4vSo for
-	<xfs@oss.sgi.com>; Thu, 08 Mar 2012 11:10:36 -0800 (PST)
-Subject: Re: XFS: Assertion failed: bp->b_bn != XFS_BUF_DADDR_NULL, file:
-	fs/xfs/xfs_buf.c, line: 598
-From: =?UTF-8?Q?Rafa=C5=82?= Kupka <kupson@kupson.net>
-In-Reply-To: <20120306203020.GG3592@dastard>
-References: <1330539626.7615.73.camel@utemp.mieszkanie>
-	<20120302104348.GA22230@infradead.org>
-	<1330774627.32457.24.camel@utemp.mieszkanie>
-	<20120303114413.GA18748@infradead.org>
-	<1330983612.28645.18.camel@utemp.mieszkanie>
-	<20120306203020.GG3592@dastard>
-Date: Thu, 08 Mar 2012 20:10:17 +0100
-Message-ID: <1331233817.20679.18.camel@utemp.mieszkanie>
-Mime-Version: 1.0
+	q28J63qY057122 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 13:06:03 -0600
+Received: from webrelay-aldf.mr.itd.umich.edu (webrelay-aldf.mr.itd.umich.edu
+	[141.211.14.43]) by cuda.sgi.com with ESMTP id UAMPSdugARmRAX79
+	for <xfs@oss.sgi.com>; Thu, 08 Mar 2012 11:06:02 -0800 (PST)
+Message-ID: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
+Date: Thu, 08 Mar 2012 14:06:00 -0500
+From: Sean Thomas Caron <scaron@umich.edu>
+Subject: Safe to use XFS in production in Linux 3.2.9?
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,63 +19,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-2"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="Yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: scaron@umich.edu
 
-On Wed, 2012-03-07 at 07:30 +1100, Dave Chinner wrote:
-> On Mon, Mar 05, 2012 at 10:40:12PM +0100, Rafa=B3 Kupka wrote:
-Hi,
+Hi all,
 
-> > is good and first bad commit is:
-> > =
+We're currently using Linux 3.0.12 with Cristoph's  
+xfs-bulletproof-sync patch and it seems to be working very well for  
+us. Unfortunately this kernel is vulnerable to the recent  
+CVE-2012-0056 no permission checking on writes to /proc/(pid)/mem  
+local root exploit, so we've got to leave it behind.
 
-> > 0e6e847f "xfs: stop using the page cache to back the buffer cache"
-> =
+I see that the newest recommended stable kernel on kernel.org is  
+3.2.9. Have there been any major changes to XFS between 3.0.12 and  
+3.2.9 that would be considered "risky" in a production environment? Is  
+there any reason why we shouldn't be using 3.2.9 in production? We got  
+bit pretty hard by various sync failure bugs in 2.6.38 that resulted  
+in major data loss - so I want to make absolutely sure there aren't  
+any "snakes in the grass" before we try a newer kernel.
 
-> Which changed internals of the buffer cache, but not the external
-> interfaces.
-> =
+If 3.2.9 is not suitable, is there at least a kernel in 3.2-train that  
+is fairly safe as far as XFS goes?
 
-> > I double tested it - 704b2907 can do 60+ loops of xfsdump without any
-> > trouble and 0e6e847f breaks in <10 iterations.
-> =
+I assume the xfs-bulletproof-sync patch has already been committed to  
+the code base in 3.2-train, so we shouldn't have to worry about that  
+any longer?
 
-> What is your test case?
+I'm not subscribed to the list; please CC any replies to my personal  
+e-mail and expect some delay in response; I'm just watching the  
+mailing list through the archives.
 
-I run xfsdump (to /dev/null) in a loop and execute postmark benchmark at
-the same time. It's a minimal Debian/Squeeze installation in KVM guest
-but it happened on another system too. An Xen server with 512MB memory
-in Dom0.
+Thank you!
 
-xfsdump -f /dev/null -l0 -p1 -J -L "test" -M "test" /
-
-and postmark with file (also in loop):
-set size 500 1000000
-set number 1000
-set transactions 1000
-run
-quit
-
-Typically after few iterations xfsdump is stuck with log messages
-mentioned in previous e-mails.
-
-Important thing I recently notice - I'm able to reproduce this bug only
-on small memory KVM guests (384M). This very same system started with 1G
-memory runs fine for 100+ xfsdump executions.
-
-> Also, it might be worthwhile to capture an event trace (e.g. all the
-> xfs_buf events) to see what occurs just before the error is
-> triggered. That might tell us exactl what sequence has occurred
-> leading up to the error.
-
-I will try to provide this information in a few days.
-
-Best Regards,
-Rafal Kupka
+-Sean
 
 _______________________________________________
 xfs mailing list
