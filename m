@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28Mg5o8090447 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:42:06 -0600
+	q28MN6HG089556 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:23:06 -0600
 Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id WTxj215RotvF7O0U for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 14:42:05 -0800 (PST)
-Message-ID: <4F5935BC.4050104@sandeen.net>
-Date: Thu, 08 Mar 2012 16:42:04 -0600
+	with ESMTP id vqCtu5yX4SaPQxvK for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 14:23:04 -0800 (PST)
+Message-ID: <4F593147.8050603@sandeen.net>
+Date: Thu, 08 Mar 2012 16:23:03 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [patch 1/1] xfstests: update inode softlimit output in 050
-References: <20120222182713.040087240@sgi.com>
-	<20120222182832.076759206@sgi.com>
-In-Reply-To: <20120222182832.076759206@sgi.com>
+Subject: [PATCH V2] xfstests: several 274 fixups
+References: <4F271967.10308@sandeen.net>
+In-Reply-To: <4F271967.10308@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,38 +24,134 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, Christoph Hellwig <hch@lst.de>, Mark Tinguely <tinguely@sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>, WuBo <wu.bo@cn.fujitsu.com>
+Cc: ext4 development <linux-ext4@vger.kernel.org>
 
-On 2/22/12 12:27 PM, Ben Myers wrote:
+This changes quite a few things about 274 to make it more robust
+and useful.
 
-> With Mitsuo Hayasaka's kernel patch "xfs: change available ranges of softlimit
-> and hardlimit in quota check", xfs quota behavior is slightly different.
-> 
-> This needs to be reflected in test 050.  The new behavior is that we only start
-> the timer when we're above soft inode quota, and we don't start the timer when
-> we're at or below.
-> 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
-> Index: xfstests/050.out
-> ===================================================================
-> --- xfstests.orig/050.out
-> +++ xfstests/050.out
-> @@ -20,7 +20,7 @@ realtime =RDEV extsz=XXX blocks=XXX, rte
->  
->  *** push past the soft block limit
->  [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-> -[NAME] 140 100 500 00 [7 days] 4 4 10 00 [7 days] 0 0 0 00 [--------]
-> +[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
+* More comments
+* Use xfs_io for falloc (not all systems have /usr/bin/fallocate)
+* use _require_xfs_io_falloc to be sure system & fs support preallocation
+* Do not remove all of the files in $SCRATCH_MNT/ post-mkfs
+* Do not remove all of the files in $SCRATCH_MNT/ on completion
+  (this breaks e2fsck when lost+found/ goes missing)
+* Don't cd into $SCRATCH_MNT
+* Try harder to completely fill the fs
+* Use a larger preallocated space, and write into all of it (hopefully
+  avoid just accidentally succeeding by writing into fs reserved
+  space that may be there)
+* Save more output in $seq.full instead of /dev/null
+* Fill preallocated space diabolically
 
-...
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
+V2: Several fixes suggested by Dave.
+Also fills prealloc space diabolically.  This fails on ext4.
 
-Hm, but now old kernels would fail.
+diff --git a/274 b/274
+index b658004..bba5eb4 100755
+--- a/274
++++ b/274
+@@ -1,7 +1,9 @@
+ #! /bin/bash
+ # FS QA Test No. 274
+ #
+-# preallocation test
++# preallocation test:
++# Preallocate space to a file, and fill the rest of the fs to 100%.
++# Then test a write into that preallocated space, which should succeed.
+ #
+ #-----------------------------------------------------------------------
+ # Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
+@@ -35,7 +37,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _cleanup()
+ {
+ 	cd /
+-	rm -f $SCRATCH_MNT/* $tmp.*
++	rm -f $tmp.*
+ 	_scratch_unmount
+ }
+ 
+@@ -46,6 +48,7 @@ _cleanup()
+ _supported_fs generic
+ _supported_os IRIX Linux
+ _require_scratch
++_require_xfs_io_falloc
+ 
+ echo "------------------------------"
+ echo "preallocation test"
+@@ -57,35 +60,42 @@ umount $SCRATCH_DEV 2>/dev/null
+ _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+ _scratch_mount
+ 
+-rm -rf $SCRATCH_MNT/*
+-cd $SCRATCH_MNT
+-dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
+-if [ $? -ne 0 ]
+-then
+-	echo "create file err"
+-	status=1
+-	exit
+-fi
++# Create a 4k file and Allocate 4M past EOF on that file
++xfs_io -F -f -c "pwrite 0 4k" -c "falloc -k 4k 4m" $SCRATCH_MNT/test \
++	>>$seq.full 2>&1 || _fail "failed to create test file"
+ 
+-fallocate -n -o 4K -l 1M test >/dev/null 2>&1
+-if [ $? -ne 0 ]
+-then
+-	echo "fallocate file err"
+-	status=1
+-	exit
+-fi
+-
+-dd if=/dev/zero of=tmp1 bs=1M >/dev/null 2>&1
+-dd if=/dev/zero of=tmp2 bs=4K >/dev/null 2>&1
++# Fill the rest of the fs completely
++# Note, this will show ENOSPC errors in $seq.full, that's ok.
++echo "Fill fs with 1M IOs; EIO expected" >> $seq.full
++dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M >>$seq.full 2>&1
++echo "Fill fs with 4K IOs; EIO expected" >> $seq.full
++dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=4K >>$seq.full 2>&1
+ sync
++# Last effort, use O_SYNC
++echo "Fill fs with 4K DIOs; EIO expected" >> $seq.full
++dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K oflag=sync >>$seq.full 2>&1
++# Save space usage info
++echo "Post-fill space:" >> $seq.full
++df $SCRATCH_MNT >>$seq.full 2>&1
+ 
+-dd if=/dev/zero of=test seek=1 bs=4K count=2 conv=notrunc >/dev/null 2>&1
+-if [ $? -ne 0 ]
+-then
+-	echo "fill prealloc range err"
+-	status=1
+-	exit
+-fi
++# Now attempt a write into all of the preallocated space -
++# in a very nasty way, badly fragmenting it and then filling it in.
++echo "Fill in prealloc space; fragment at offsets:" >> $seq.full
++for i in `seq 1 2 1023`; do
++	echo -n "$i " >> $seq.full
++	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
++		>>$seq.full 2>/dev/null || _fail "failed to write to test file"
++done
++sync
++echo >> $seq.full
++echo "Fill in prealloc space; fill holes at offsets:" >> $seq.full
++for i in `seq 2 2 1023`; do
++	echo -n "$i " >> $seq.full
++	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
++		>>$seq.full 2>/dev/null || _fail "failed to fill test file"
++done
++sync
++echo >> $seq.full
+ 
+ echo "done"
+ exit
 
-Maybe it's better to go 1 past the limit in the test, rather than meet it, and then it'd fail on both old & new kernels?
-
--Eric
 
 _______________________________________________
 xfs mailing list
