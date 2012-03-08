@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28MN6HG089556 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:23:06 -0600
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id vqCtu5yX4SaPQxvK for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 14:23:04 -0800 (PST)
-Message-ID: <4F593147.8050603@sandeen.net>
-Date: Thu, 08 Mar 2012 16:23:03 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	q28NKjgq093008 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 17:20:45 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	ket5vSTiaElPXQha for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 15:20:43 -0800 (PST)
+Date: Fri, 9 Mar 2012 10:20:41 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/19] xfs: Convert to new freezing code
+Message-ID: <20120308232041.GU3592@dastard>
+References: <1330963277-26336-1-git-send-email-jack@suse.cz>
+	<1330963277-26336-12-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstests: several 274 fixups
-References: <4F271967.10308@sandeen.net>
-In-Reply-To: <4F271967.10308@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <1330963277-26336-12-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,134 +27,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, WuBo <wu.bo@cn.fujitsu.com>
-Cc: ext4 development <linux-ext4@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: sandeen@redhat.com, Alex Elder <elder@kernel.org>, Kamal Mostafa <kamal@canonical.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Al Viro <viro@ZenIV.linux.org.uk>, dchinner@redhat.com, linux-fsdevel@vger.kernel.org
 
-This changes quite a few things about 274 to make it more robust
-and useful.
+On Mon, Mar 05, 2012 at 05:01:09PM +0100, Jan Kara wrote:
+> Generic code now blocks all writers from standard write paths. So we block all
+> writers coming from ioctl and replace blocking of transactions on frozen
+> filesystem with a debugging check. As a bonus, we get a protection of ioctl
+> against racing remount read-only. We also convert xfs_file_aio_write() to a
+> non-racy freeze protection.
+....
+> diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> index 329b06a..6468a2a 100644
+> --- a/fs/xfs/xfs_trans.c
+> +++ b/fs/xfs/xfs_trans.c
+> @@ -577,7 +577,6 @@ xfs_trans_alloc(
+>  	xfs_mount_t	*mp,
+>  	uint		type)
+>  {
+> -	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+>  	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+>  }
 
-* More comments
-* Use xfs_io for falloc (not all systems have /usr/bin/fallocate)
-* use _require_xfs_io_falloc to be sure system & fs support preallocation
-* Do not remove all of the files in $SCRATCH_MNT/ post-mkfs
-* Do not remove all of the files in $SCRATCH_MNT/ on completion
-  (this breaks e2fsck when lost+found/ goes missing)
-* Don't cd into $SCRATCH_MNT
-* Try harder to completely fill the fs
-* Use a larger preallocated space, and write into all of it (hopefully
-  avoid just accidentally succeeding by writing into fs reserved
-  space that may be there)
-* Save more output in $seq.full instead of /dev/null
-* Fill preallocated space diabolically
+So what is there to stop internal XFS threads from starting
+transactions when the filesystem is frozen? Previously this
+SB_FREEZE_TRANS would guarantee even internal fucntions would get
+stopped, but now there's nothing?
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+I do beleive that ext4 has the same problem (the issue reported with
+the lazy inode init background thread), and I can see that any other
+filesystem that can make modifications via internal triggers will
+see the same problem - freeze doesn't block them any more...
 
-V2: Several fixes suggested by Dave.
-Also fills prealloc space diabolically.  This fails on ext4.
+Cheers,
 
-diff --git a/274 b/274
-index b658004..bba5eb4 100755
---- a/274
-+++ b/274
-@@ -1,7 +1,9 @@
- #! /bin/bash
- # FS QA Test No. 274
- #
--# preallocation test
-+# preallocation test:
-+# Preallocate space to a file, and fill the rest of the fs to 100%.
-+# Then test a write into that preallocated space, which should succeed.
- #
- #-----------------------------------------------------------------------
- # Copyright (c) 2011-2012 Fujitsu, Inc.  All Rights Reserved.
-@@ -35,7 +37,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
- 	cd /
--	rm -f $SCRATCH_MNT/* $tmp.*
-+	rm -f $tmp.*
- 	_scratch_unmount
- }
- 
-@@ -46,6 +48,7 @@ _cleanup()
- _supported_fs generic
- _supported_os IRIX Linux
- _require_scratch
-+_require_xfs_io_falloc
- 
- echo "------------------------------"
- echo "preallocation test"
-@@ -57,35 +60,42 @@ umount $SCRATCH_DEV 2>/dev/null
- _scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
- _scratch_mount
- 
--rm -rf $SCRATCH_MNT/*
--cd $SCRATCH_MNT
--dd if=/dev/zero of=test bs=4K count=1 >/dev/null 2>&1
--if [ $? -ne 0 ]
--then
--	echo "create file err"
--	status=1
--	exit
--fi
-+# Create a 4k file and Allocate 4M past EOF on that file
-+xfs_io -F -f -c "pwrite 0 4k" -c "falloc -k 4k 4m" $SCRATCH_MNT/test \
-+	>>$seq.full 2>&1 || _fail "failed to create test file"
- 
--fallocate -n -o 4K -l 1M test >/dev/null 2>&1
--if [ $? -ne 0 ]
--then
--	echo "fallocate file err"
--	status=1
--	exit
--fi
--
--dd if=/dev/zero of=tmp1 bs=1M >/dev/null 2>&1
--dd if=/dev/zero of=tmp2 bs=4K >/dev/null 2>&1
-+# Fill the rest of the fs completely
-+# Note, this will show ENOSPC errors in $seq.full, that's ok.
-+echo "Fill fs with 1M IOs; EIO expected" >> $seq.full
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M >>$seq.full 2>&1
-+echo "Fill fs with 4K IOs; EIO expected" >> $seq.full
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=4K >>$seq.full 2>&1
- sync
-+# Last effort, use O_SYNC
-+echo "Fill fs with 4K DIOs; EIO expected" >> $seq.full
-+dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K oflag=sync >>$seq.full 2>&1
-+# Save space usage info
-+echo "Post-fill space:" >> $seq.full
-+df $SCRATCH_MNT >>$seq.full 2>&1
- 
--dd if=/dev/zero of=test seek=1 bs=4K count=2 conv=notrunc >/dev/null 2>&1
--if [ $? -ne 0 ]
--then
--	echo "fill prealloc range err"
--	status=1
--	exit
--fi
-+# Now attempt a write into all of the preallocated space -
-+# in a very nasty way, badly fragmenting it and then filling it in.
-+echo "Fill in prealloc space; fragment at offsets:" >> $seq.full
-+for i in `seq 1 2 1023`; do
-+	echo -n "$i " >> $seq.full
-+	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
-+		>>$seq.full 2>/dev/null || _fail "failed to write to test file"
-+done
-+sync
-+echo >> $seq.full
-+echo "Fill in prealloc space; fill holes at offsets:" >> $seq.full
-+for i in `seq 2 2 1023`; do
-+	echo -n "$i " >> $seq.full
-+	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
-+		>>$seq.full 2>/dev/null || _fail "failed to fill test file"
-+done
-+sync
-+echo >> $seq.full
- 
- echo "done"
- exit
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
