@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28K8n5f060854 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 14:08:49 -0600
-Date: Thu, 8 Mar 2012 14:08:55 -0600
+	q28K6mgE060771 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 14:06:48 -0600
+Date: Thu, 8 Mar 2012 14:06:57 -0600
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/8] log all inode updates V3
-Message-ID: <20120308200855.GY7762@sgi.com>
+Subject: Re: [PATCH 8/8] xfs: reimplement fdatasync support
+Message-ID: <20120308200657.GX7762@sgi.com>
 References: <20120229095347.009884687@bombadil.infradead.org>
+	<20120229095509.559250501@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120229095347.009884687@bombadil.infradead.org>
+In-Reply-To: <20120229095509.559250501@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,19 +26,14 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Wed, Feb 29, 2012 at 04:53:47AM -0500, Christoph Hellwig wrote:
-> Changes since V2:
->   - address more review feedback
+On Wed, Feb 29, 2012 at 04:53:55AM -0500, Christoph Hellwig wrote:
+> Add an in-memory only flag to say we logged timestamps only, and use it to
+> check if fdatasync can optimize away the log force.
 > 
-> Changes since V1:
->   - address all review feedback
->   - reimplement an optimized fdatasync
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I believe this series is ready to go except for my concern about
-xfs_ioend_is_append, which needs to go over all of the ioends in order
-to determine whether an append is possible, not just the first.
-
--Ben
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
