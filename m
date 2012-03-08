@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28MT89Q089748 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:29:09 -0600
+	q28MGjfo089371 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:16:45 -0600
 Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id CfisqJBUHCFFY0Hu for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 14:29:08 -0800 (PST)
-Message-ID: <4F5932B1.5040208@sandeen.net>
-Date: Thu, 08 Mar 2012 16:29:05 -0600
+	with ESMTP id 8A8tcV7IxlodE9Ed for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 14:16:44 -0800 (PST)
+Message-ID: <4F592FCB.6090006@sandeen.net>
+Date: Thu, 08 Mar 2012 16:16:43 -0600
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: before test execution, print test number
-	to syslog
-References: <1330968369-31779-1-git-send-email-sbehrens@giantdisaster.de>
-	<20120305213512.GC3592@dastard>
-In-Reply-To: <20120305213512.GC3592@dastard>
+Subject: Re: [PATCH] xfs_io: deprecate the "-F" foreign flag
+References: <4F2AC948.1050909@redhat.com> <4F592728.9060706@sgi.com>
+In-Reply-To: <4F592728.9060706@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,26 +24,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 3/5/12 3:35 PM, Dave Chinner wrote:
-> On Mon, Mar 05, 2012 at 06:26:09PM +0100, Stefan Behrens wrote:
->> When the xfstests are executed in a batch (like "check 001-299")
->> and produce syslog output, it is helpful to know which test was
->> causing the output. Therefore each time a test is started, a
->> syslog message is generated that contains the number of the
->> xfstest.
+On 3/8/12 3:39 PM, Mark Tinguely wrote:
+> On 02/02/12 11:35, Eric Sandeen wrote:
+
+...
+
+>> @@ -282,10 +274,10 @@ open_f(
+>>           return 0;
+>>       }
 >>
->> Signed-off-by: Stefan Behrens <sbehrens@giantdisaster.de>
+>> -    while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
+>> +    while ((c = getopt(argc, argv, "Racdfm:nrstx")) != EOF) {
+>>           switch (c) {
+>>           case 'F':
+>> -            flags |= IO_FOREIGN;
+>> +            /* Ignored / deprecated now, handled automatically */
+>>               break;
 > 
-> Looks ok.
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> The "-F" is still in the command line open's help in open.
+> 
+> cxfs_io> help open
+> open [-acdrstx] [path] -- open the file specified by path
+> 
+>  opens a new file in the requested mode
+> 
+>  Example:
+>  'open -cd /tmp/data' - creates/opens data file read-write for direct IO
+> 
+>  Opens a file for subsequent use by all of the other xfs_io commands.
+>  With no arguments, open uses the stat command to show the current file.
+>  -F -- foreign filesystem file, disallow XFS-specific commands
+>  -a -- open with the O_APPEND flag (append-only mode)
+>  -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)
+>  -f -- open with O_CREAT (create the file if it doesn't exist)
+>  -m -- permissions to use in case a new file is created (default 0600)
+>  -n -- open with O_NONBLOCK
+>  -r -- open with O_RDONLY, the default is O_RDWR
+>  -s -- open with O_SYNC
+>  -t -- open with O_TRUNC (truncate the file to zero length if it exists)
+>  -R -- mark the file as a realtime XFS file immediately after opening it
+>  Note1: usually read/write direct IO requests must be blocksize aligned;
+>         some kernels, however, allow sectorsize alignment for direct IO.
+>  Note2: the bmap for non-regular files can be obtained provided the file
+>         was opened correctly (in particular, must be opened read-only).
+> 
+> 
+> The "F" was taken out of the command line's getopt(), so it can't be
+> specified. I guess either put the "F" back in the the open.c getopt()
+> or take it complete from the command line.
 
-Thanks, I pushed this.
+Ah crud, sorry.  Patch shortly.
 
 -Eric
+
+> xfs_io> open -F somefile
+> open: invalid option -- 'F'
+> open [-acdrstx] [path] -- open the file specified by path
+> 
+> Thanks,
+> 
+> --Mark Tinguely
+> tinguely@sgi.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
