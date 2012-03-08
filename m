@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28MbwaB090294 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:37:58 -0600
-Message-ID: <4F5934BF.9060808@redhat.com>
-Date: Thu, 08 Mar 2012 16:37:51 -0600
-From: Eric Sandeen <sandeen@redhat.com>
+	q28Mg5o8090447 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 16:42:06 -0600
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id WTxj215RotvF7O0U for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 14:42:05 -0800 (PST)
+Message-ID: <4F5935BC.4050104@sandeen.net>
+Date: Thu, 08 Mar 2012 16:42:04 -0600
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: allow -F in open args
-References: <4F2AC948.1050909@redhat.com> <4F592728.9060706@sgi.com>
-	<4F5930BC.7040106@redhat.com> <4F593493.6010106@sgi.com>
-In-Reply-To: <4F593493.6010106@sgi.com>
+Subject: Re: [patch 1/1] xfstests: update inode softlimit output in 050
+References: <20120222182713.040087240@sgi.com>
+	<20120222182832.076759206@sgi.com>
+In-Reply-To: <20120222182832.076759206@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,51 +25,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com, Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>, Christoph Hellwig <hch@lst.de>, Mark Tinguely <tinguely@sgi.com>
 
-On 3/8/12 4:37 PM, Mark Tinguely wrote:
-> On 03/08/12 16:20, Eric Sandeen wrote:
->> Now that -F ("foreign") is automagic, we should no longer list
->> it in the help output for open, but we should still accept
->> it for compatibility; esp. as it is still in the case statement.
->> Oops.
->>
->> Reported-by: Mark Tinguely<tinguely@sgi.com>
->> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
->> ---
->>
->> diff --git a/io/open.c b/io/open.c
->> index ac39ccc..46538ba 100644
->> --- a/io/open.c
->> +++ b/io/open.c
->> @@ -240,7 +240,6 @@ open_help(void)
->>   "\n"
->>   " Opens a file for subsequent use by all of the other xfs_io commands.\n"
->>   " With no arguments, open uses the stat command to show the current file.\n"
->> -" -F -- foreign filesystem file, disallow XFS-specific commands\n"
->>   " -a -- open with the O_APPEND flag (append-only mode)\n"
->>   " -d -- open with O_DIRECT (non-buffered IO, note alignment constraints)\n"
->>   " -f -- open with O_CREAT (create the file if it doesn't exist)\n"
->> @@ -274,7 +273,7 @@ open_f(
->>           return 0;
->>       }
->>
->> -    while ((c = getopt(argc, argv, "Racdfm:nrstx")) != EOF) {
->> +    while ((c = getopt(argc, argv, "FRacdfm:nrstx")) != EOF) {
->>           switch (c) {
->>           case 'F':
->>               /* Ignored / deprecated now, handled automatically */
->>
->>
-> 
-> Thank-you. Probably could take it out of the man page under the open I/O command now too.
+On 2/22/12 12:27 PM, Ben Myers wrote:
 
-Gah.  With your blessing I'll commit that as well?
+> With Mitsuo Hayasaka's kernel patch "xfs: change available ranges of softlimit
+> and hardlimit in quota check", xfs quota behavior is slightly different.
+> 
+> This needs to be reflected in test 050.  The new behavior is that we only start
+> the timer when we're above soft inode quota, and we don't start the timer when
+> we're at or below.
+> 
+> Signed-off-by: Ben Myers <bpm@sgi.com>
+> Index: xfstests/050.out
+> ===================================================================
+> --- xfstests.orig/050.out
+> +++ xfstests/050.out
+> @@ -20,7 +20,7 @@ realtime =RDEV extsz=XXX blocks=XXX, rte
+>  
+>  *** push past the soft block limit
+>  [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
+> -[NAME] 140 100 500 00 [7 days] 4 4 10 00 [7 days] 0 0 0 00 [--------]
+> +[NAME] 140 100 500 00 [7 days] 4 4 10 00 [--------] 0 0 0 00 [--------]
 
-> Reviewed-by: Mark Tinguely
-> 
-> 
+...
+
+
+Hm, but now old kernels would fail.
+
+Maybe it's better to go 1 past the limit in the test, rather than meet it, and then it'd fail on both old & new kernels?
+
+-Eric
 
 _______________________________________________
 xfs mailing list
