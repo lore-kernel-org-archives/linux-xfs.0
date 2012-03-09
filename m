@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q29Gu8Bw258200 for <xfs@oss.sgi.com>; Fri, 9 Mar 2012 10:56:08 -0600
-Received: from webrelay-asb.mr.itd.umich.edu (webrelay-asb.mr.itd.umich.edu
-	[141.211.125.12]) by cuda.sgi.com with ESMTP id
-	hTbJF5F97Syv6q3t for <xfs@oss.sgi.com>;
-	Fri, 09 Mar 2012 08:56:07 -0800 (PST)
-Message-ID: <20120309115605.19814j9wazanzy0w@web.mail.umich.edu>
-Date: Fri, 09 Mar 2012 11:56:05 -0500
+	q29GtfHK258175 for <xfs@oss.sgi.com>; Fri, 9 Mar 2012 10:55:41 -0600
+Received: from webrelay-aldf.mr.itd.umich.edu (webrelay-aldf.mr.itd.umich.edu
+	[141.211.14.43]) by cuda.sgi.com with ESMTP id g1onyEHMYxqDLkTE
+	for <xfs@oss.sgi.com>; Fri, 09 Mar 2012 08:55:41 -0800 (PST)
+Message-ID: <20120309115540.18835d95gar7hecc@web.mail.umich.edu>
+Date: Fri, 09 Mar 2012 11:55:40 -0500
 From: Sean Thomas Caron <scaron@umich.edu>
 Subject: Re: Safe to use XFS in production in Linux 3.2.9?
 References: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
-	<20120308235326.GQ5091@dastard>
-	<20120309110838.147865q6j5c9hqsc@web.mail.umich.edu>
-	<20120309164533.GA7762@sgi.com>
-In-Reply-To: <20120309164533.GA7762@sgi.com>
+	<CAGpXXZLQp+m_soTBw8Zq-M0cyKqVTASSAXMt6YV07ntfqJhMag@mail.gmail.com>
+In-Reply-To: <CAGpXXZLQp+m_soTBw8Zq-M0cyKqVTASSAXMt6YV07ntfqJhMag@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -29,39 +26,47 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"; DelSp="Yes"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: hch@lst.de, xfs@oss.sgi.com
+To: Greg Freemyer <greg.freemyer@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi Ben,
+Hi Greg,
 
-Thank you for the confirmation! We'll move ahead with 3.0.23, then
+Yeah, thanks; we've been pointed in the direction of using 3.0-train  
+instead, and I'm moving ahead with building 3.0.23. I just didn't see  
+any clear guidance on kernel.org so I thought I'd ask about the best  
+way to move forward.
 
 Best,
 
 -Sean
 
-Quoting Ben Myers <bpm@sgi.com>:
+Quoting Greg Freemyer <greg.freemyer@gmail.com>:
 
+> On Thu, Mar 8, 2012 at 2:06 PM, Sean Thomas Caron <scaron@umich.edu> wrote:
+>
+>> Hi all,
+>>
+>> We're currently using Linux 3.0.12 with Cristoph's xfs-bulletproof-sync
+>> patch and it seems to be working very well for us. Unfortunately this
+>> kernel is vulnerable to the recent CVE-2012-0056 no permission checking on
+>> writes to /proc/(pid)/mem local root exploit, so we've got to leave it
+>> behind.
+>>
+>> I see that the newest recommended stable kernel on kernel.org is 3.2.9.
+>>
+>
+>
 > Sean,
 >
-> On Fri, Mar 09, 2012 at 11:08:38AM -0500, Sean Thomas Caron wrote:
->> OK, Linux 3.2.9 doesn't sound very safe to use in production. So, fine,
->> we can try 3.0.23; it appears that a fix for CVE-2012-0056 was applied
->> around 3.0.19 so it should be all set in that regard.
->>
->> I'm comparing the contents of the xfs-bulletproof-sync patch with the
->> 3.0.23 XFS sources and it's not entirely clear to me if 3.0.23 fully
->> implements the fixes in the patch. Please forgive me because it's a
->> little long, but here's the contents of the patch:
+> You do appreciate 3.0 has been designated a long-term kernel by the
+> kernel.org team and will get kernel.org support for 2 years.  3.2 is not a
+> long-term kernel, so support drops from kernel.org more or less when 3.3
+> comes out.
 >
-> Looks like this fix made 3.0.16:
+> 3.2 support will come from the distributors of course, but I don't know if
+> any of the major releases are based on 3.2.
 >
-> # git describe 6826d3e80d143ca7411fd2dca05bc57c7ed3e620
-> v3.0.15-68-g6826d3e
->
-> -Ben
->
->
+> Greg
 >
 
 
