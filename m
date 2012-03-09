@@ -1,21 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q298NBLj184450 for <xfs@oss.sgi.com>; Fri, 9 Mar 2012 02:23:11 -0600
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id HpGXgQDk85BJYiZS (version=TLSv1 cipher=AES256-SHA
+	q29DSZp1224725 for <xfs@oss.sgi.com>; Fri, 9 Mar 2012 07:28:35 -0600
+Received: from twin.jikos.cz (twin.jikos.cz [89.185.236.188]) by cuda.sgi.com
+	with ESMTP id ZHDIGMwhE73YYIO0 (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 09 Mar 2012 00:23:09 -0800 (PST)
-Date: Fri, 9 Mar 2012 09:23:06 +0100
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH 11/19] xfs: Convert to new freezing code
-Message-ID: <20120309082306.GB21038@quack.suse.cz>
-References: <1330963277-26336-1-git-send-email-jack@suse.cz>
-	<1330963277-26336-12-git-send-email-jack@suse.cz>
-	<20120308232041.GU3592@dastard>
-MIME-Version: 1.0
+	Fri, 09 Mar 2012 05:28:31 -0800 (PST)
+Received: from twin.jikos.cz (dave@localhost [127.0.0.1])
+	by twin.jikos.cz (8.13.6/8.13.6) with ESMTP id q29DSTS8005313
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 9 Mar 2012 14:28:30 +0100
+Received: (from dave@localhost)
+	by twin.jikos.cz (8.13.6/8.13.6/Submit) id q29DSSXK005312
+	for xfs@oss.sgi.com; Fri, 9 Mar 2012 14:28:28 +0100
+Date: Fri, 9 Mar 2012 14:28:28 +0100
+From: David Sterba <dave@jikos.cz>
+Subject: xfstests - unchecked mount failures
+Message-ID: <20120309132828.GI4334@twin.jikos.cz>
+Mime-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120308232041.GU3592@dastard>
+Reply-To: dave@jikos.cz
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,46 +32,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: sandeen@redhat.com, Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, Kamal Mostafa <kamal@canonical.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Al Viro <viro@ZenIV.linux.org.uk>, dchinner@redhat.com, linux-fsdevel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-On Fri 09-03-12 10:20:41, Dave Chinner wrote:
-> On Mon, Mar 05, 2012 at 05:01:09PM +0100, Jan Kara wrote:
-> > Generic code now blocks all writers from standard write paths. So we block all
-> > writers coming from ioctl and replace blocking of transactions on frozen
-> > filesystem with a debugging check. As a bonus, we get a protection of ioctl
-> > against racing remount read-only. We also convert xfs_file_aio_write() to a
-> > non-racy freeze protection.
-> ....
-> > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-> > index 329b06a..6468a2a 100644
-> > --- a/fs/xfs/xfs_trans.c
-> > +++ b/fs/xfs/xfs_trans.c
-> > @@ -577,7 +577,6 @@ xfs_trans_alloc(
-> >  	xfs_mount_t	*mp,
-> >  	uint		type)
-> >  {
-> > -	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-> >  	return _xfs_trans_alloc(mp, type, KM_SLEEP);
-> >  }
-> 
-> So what is there to stop internal XFS threads from starting
-> transactions when the filesystem is frozen? Previously this
-> SB_FREEZE_TRANS would guarantee even internal fucntions would get
-> stopped, but now there's nothing?
-> 
-> I do beleive that ext4 has the same problem (the issue reported with
-> the lazy inode init background thread), and I can see that any other
-> filesystem that can make modifications via internal triggers will
-> see the same problem - freeze doesn't block them any more...
-  Yes, I'll have to audit filesystem internal threads. I forgot about these
-in the first round. Most of them shouldn't have anything to do because the
-filesystem is clean but there are exceptions as ext4 lazyinit has shown.
+Hi,
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+I've encountered a bad situation when a failed mount in test 269 did not stop
+the test and continued to use the mount point and exhausted space on the root
+partition. A quick grep revealed that there are more tests with unchecked
+_scratch_mount calls.
+
+The underlying problem with failed mount was observed when the mount comes in a
+quick sequence after mount, I saw it with btrfs, and don't know if it affects
+other filesystems.
+
+So, either all callers should check the return value or _scratch_mount
+calls _fail. I'd go for the latter as it will make it more resilient
+against unintentional ommision of checking the retval in new tests and
+reviewer does not have keep that in mind.
+
+
+david
 
 _______________________________________________
 xfs mailing list
