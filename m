@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q28NrUN6104116 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 17:53:30 -0600
+	q290HFfa110026 for <xfs@oss.sgi.com>; Thu, 8 Mar 2012 18:17:15 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	cqKTUObzLlLn3Z9g for <xfs@oss.sgi.com>;
-	Thu, 08 Mar 2012 15:53:28 -0800 (PST)
-Date: Fri, 9 Mar 2012 10:53:26 +1100
+	WGIHEBHni0VQAFRW for <xfs@oss.sgi.com>;
+	Thu, 08 Mar 2012 16:17:13 -0800 (PST)
+Date: Fri, 9 Mar 2012 11:17:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Safe to use XFS in production in Linux 3.2.9?
-Message-ID: <20120308235326.GQ5091@dastard>
-References: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
+Subject: Re: df bigger than ls?
+Message-ID: <20120309001710.GR5091@dastard>
+References: <20120307155439.GA23360@nsrc.org> <20120307171619.GA23557@nsrc.org>
+	<4F57A32A.5010704@sandeen.net> <20120308021054.GM3592@dastard>
+	<20120308162348.GT7762@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
+In-Reply-To: <20120308162348.GT7762@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,35 +28,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Sean Thomas Caron <scaron@umich.edu>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Brian Candler <B.Candler@pobox.com>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Thu, Mar 08, 2012 at 02:06:00PM -0500, Sean Thomas Caron wrote:
-> Hi all,
+On Thu, Mar 08, 2012 at 10:23:48AM -0600, Ben Myers wrote:
+> On Thu, Mar 08, 2012 at 01:10:54PM +1100, Dave Chinner wrote:
+> > On Wed, Mar 07, 2012 at 12:04:26PM -0600, Eric Sandeen wrote:
+> > > and repeat the above test 3 times, the 3rd run gets ENOSPC, and
+> > > the last file written comes up short, while the first one retains
+> > > all it's extra preallocated space:
+> > > 
+> > > # du -hc bigfile* 2.0G	bigfile1 1.1G	bigfile2 907M
+> > > bigfile3
+> > > 
+> > > Dave, is this working as intended?
+> > 
+> > Yes. Your problem is that you have a very small filesystem, which is
+> > not the case that we optimise XFS for. :/
 > 
-> We're currently using Linux 3.0.12 with Cristoph's
-> xfs-bulletproof-sync patch and it seems to be working very well for
-> us. Unfortunately this kernel is vulnerable to the recent
-> CVE-2012-0056 no permission checking on writes to /proc/(pid)/mem
-> local root exploit, so we've got to leave it behind.
+> I have seen a similar problem on some very large filesystems too.
 
-Hasn't it been fixed in 3.0.23? root exploits are the sort of thing
-that are supposed to be fixed in long term stable kernels....
+So report the problems to the list, don't keep them to yourself. If
+we don't hear about problems, then as far as we are concerned they
+don't exist.
 
-> I see that the newest recommended stable kernel on kernel.org is
-> 3.2.9. Have there been any major changes to XFS between 3.0.12 and
-> 3.2.9 that would be considered "risky" in a production environment?
+> This
+> is not just dependent upon the size of the filesystem, but also the
+> workload.  I think it is also a big problem for folks using quotas.
 
-The 3.2.x kernels really haven't been run in production environments
-for that long for us to be able to tell if there are problems or
-not.
+Nobody has reported significant quota problems, either....
 
-> I assume the xfs-bulletproof-sync patch has already been committed
-> to the code base in 3.2-train, so we shouldn't have to worry about
-> that any longer?
+> Alex and I discussed this problem briefly awhile ago.  What is the best
+> way to lose when you hit ENOSPC (project quotas) or EDQUOT in
+> xfs_iomap_write_delay?  You want to be fair; one user hitting his quota
+> shouldn't be able to steal some other user's block reservations unless
+> you really are near ENOSPC for the entire filesystem.  
+> 
+> I suggested something like... track inodes with preallocated block
+> reservations in LRU order and by dquot, so that the poor fella who is at
+> EDQUOT will first clean up the preallocations that resulted in quota
+> being enforced, try again, and then work on preallocations of other
+> users only if it can help in his situation.  IIRC Alex shut me down when
+> he heard LRU.  ;)
 
-Should have been, but I'm not exactly sure what is in that patch
-Christoph gave you, so you'll have to verify that yourself.
+And I agree with Alex. Nothing additional needs to be tracked on top
+of inodes with speculative prealloc. Just the search filter would
+need to be different (i.e. only select inodes with a specific dquot
+attached).
+
+> Now that block reservations count toward quotas the symptom will
+> probably be a little different.
+
+Block reservations have always counted towards quotas, it's just
+that they were never reported.
 
 Cheers,
 
