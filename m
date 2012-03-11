@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2AMiVMo247986 for <xfs@oss.sgi.com>; Sat, 10 Mar 2012 16:44:42 -0600
-Received: from selenium.quasiparticle.net (selenium.quasiparticle.net
-	[188.40.96.248]) by cuda.sgi.com with ESMTP id TUkG5KKGPSHt5H0C
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 10 Mar 2012 14:44:07 -0800 (PST)
-Received: from [10.1.0.3] (unknown [10.1.0.3])
-	by selenium.quasiparticle.net (Postfix) with ESMTP id BE6E320040
-	for <xfs@oss.sgi.com>; Sat, 10 Mar 2012 23:44:03 +0100 (CET)
-Message-ID: <4F5BD933.8040101@sfg.quasiparticle.net>
-Date: Sat, 10 Mar 2012 23:44:03 +0100
-From: "Dhivael i-Khial t'Jahlei" <dhivael@sfg.quasiparticle.net>
+	q2BBXLYE108631 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 06:33:22 -0500
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id W7L2fTGcX1SSq7xE for
+	<xfs@oss.sgi.com>; Sun, 11 Mar 2012 04:33:20 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: Safe to use XFS in production in Linux 3.2.9?
+Date: Sun, 11 Mar 2012 12:33:18 +0100
+References: <20120308140600.77406b8zzy2zggkc@web.mail.umich.edu>
+	<CAGpXXZLQp+m_soTBw8Zq-M0cyKqVTASSAXMt6YV07ntfqJhMag@mail.gmail.com>
+	(sfid-20120309_180335_585519_1302BD3B)
+In-Reply-To: <CAGpXXZLQp+m_soTBw8Zq-M0cyKqVTASSAXMt6YV07ntfqJhMag@mail.gmail.com>
 MIME-Version: 1.0
-Subject: 20 wakeups/second/mounted filesystem in xfsaild
+Message-Id: <201203111233.18986.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,29 +22,32 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Sean Thomas Caron <scaron@umich.edu>, Greg Freemyer <greg.freemyer@gmail.com>
 
-Hello,
-
-i recently switched from ext4 to XFS on some systems. Much to my
-surprise, XFS produces quite a lot of wakeups in kernel 3.2.9.
-
-On every mounted filesystem, the associated xfsaild will wake up 20
-times per second, when the filesystem is sufficiently loaded, it will
-never wake up. The filesystems are mounted with defaults, I'm seeing the
-problem on virtual IDE drives in virtual machines and SSD < dmcrypt <
-LVM < XFS stacks.
-
-Am I doing something wrong, or am I seeing expected behaviour in XFS?
-
-
- -- Sean
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gRnJlaXRhZywgOS4gTcOkcnogMjAxMiBzY2hyaWViIEdyZWcgRnJlZW15ZXI6Cj4gT24gVGh1
+LCBNYXIgOCwgMjAxMiBhdCAyOjA2IFBNLCBTZWFuIFRob21hcyBDYXJvbiA8c2Nhcm9uQHVtaWNo
+LmVkdT4gCndyb3RlOgo+ID4gSGkgYWxsLAo+ID4gCj4gPiBXZSdyZSBjdXJyZW50bHkgdXNpbmcg
+TGludXggMy4wLjEyIHdpdGggQ3Jpc3RvcGgncwo+ID4geGZzLWJ1bGxldHByb29mLXN5bmMgcGF0
+Y2ggYW5kIGl0IHNlZW1zIHRvIGJlIHdvcmtpbmcgdmVyeSB3ZWxsIGZvcgo+ID4gdXMuIFVuZm9y
+dHVuYXRlbHkgdGhpcyBrZXJuZWwgaXMgdnVsbmVyYWJsZSB0byB0aGUgcmVjZW50Cj4gPiBDVkUt
+MjAxMi0wMDU2IG5vIHBlcm1pc3Npb24gY2hlY2tpbmcgb24gd3JpdGVzIHRvIC9wcm9jLyhwaWQp
+L21lbQo+ID4gbG9jYWwgcm9vdCBleHBsb2l0LCBzbyB3ZSd2ZSBnb3QgdG8gbGVhdmUgaXQgYmVo
+aW5kLgo+ID4gCj4gPiBJIHNlZSB0aGF0IHRoZSBuZXdlc3QgcmVjb21tZW5kZWQgc3RhYmxlIGtl
+cm5lbCBvbiBrZXJuZWwub3JnIGlzCj4gPiAzLjIuOS4KPiAKPiBTZWFuLAo+IAo+IFlvdSBkbyBh
+cHByZWNpYXRlIDMuMCBoYXMgYmVlbiBkZXNpZ25hdGVkIGEgbG9uZy10ZXJtIGtlcm5lbCBieSB0
+aGUKPiBrZXJuZWwub3JnIHRlYW0gYW5kIHdpbGwgZ2V0IGtlcm5lbC5vcmcgc3VwcG9ydCBmb3Ig
+MiB5ZWFycy4gIDMuMiBpcwo+IG5vdCBhIGxvbmctdGVybSBrZXJuZWwsIHNvIHN1cHBvcnQgZHJv
+cHMgZnJvbSBrZXJuZWwub3JnIG1vcmUgb3IgbGVzcwo+IHdoZW4gMy4zIGNvbWVzIG91dC4KPiAK
+PiAzLjIgc3VwcG9ydCB3aWxsIGNvbWUgZnJvbSB0aGUgZGlzdHJpYnV0b3JzIG9mIGNvdXJzZSwg
+YnV0IEkgZG9uJ3Qga25vdwo+IGlmIGFueSBvZiB0aGUgbWFqb3IgcmVsZWFzZXMgYXJlIGJhc2Vk
+IG9uIDMuMi4KCkFGQUlSIFVidW50dSAxMi4wNCBhcyB3ZWxsIGFzIERlYmlhbiBXaGVlenkgd2ls
+bCB1c2Uga2VybmVsIDMuMi4KCi0tIApNYXJ0aW4gJ0hlbGlvcycgU3RlaWdlcndhbGQgLSBodHRw
+Oi8vd3d3LkxpY2h0dm9sbC5kZQpHUEc6IDAzQjAgMEQ2QyAwMDQwIDA3MTAgNEFGQSAgQjgyRiA5
+OTFCIEVBQUMgQTU5OSA4NEM3CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
