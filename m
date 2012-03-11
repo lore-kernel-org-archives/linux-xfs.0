@@ -1,14 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2BEmWUF128332 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 09:48:32 -0500
-Message-ID: <4F5C90DF.8070605@oracle.com>
-Date: Sun, 11 Mar 2012 19:47:43 +0800
+	q2BDpBQo125751 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 08:51:11 -0500
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id RsF180wlcPf42Znj (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 11 Mar 2012 06:51:09 -0700 (PDT)
+Message-ID: <4F5C8361.5070303@oracle.com>
+Date: Sun, 11 Mar 2012 18:50:09 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
 Subject: Re: [RFC PATCH v1 0/4] cgroup quota
-References: <4F59E78A.7060903@oracle.com> <4F5C933F.3000409@parallels.com>
-In-Reply-To: <4F5C933F.3000409@parallels.com>
+References: <4F59E78A.7060903@oracle.com> <4F5C8A0C.8050904@parallels.com>
+In-Reply-To: <4F5C8A0C.8050904@parallels.com>
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -23,9 +27,11 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Glauber Costa <glommer@parallels.com>
-Cc: jack@suse.cz, Lezcano <daniel.lezcano@free.fr>, lxc-devel@lists.sourceforge.net, Li Zefan <lizf@cn.fujitsu.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, tytso@MIT.EDU, Chris Mason <chris.mason@oracle.com>, Christopher Jones <christopher.jones@oracle.com>, tj@kernel.org, cgroups@vger.kernel.org, Daniel@oss.sgi.com
+Cc: jack@suse.cz, Daniel Lezcano <daniel.lezcano@free.fr>, cgroups@vger.kernel.org, lxc-devel@lists.sourceforge.net, Li Zefan <lizf@cn.fujitsu.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, Christopher Jones <christopher.jones@oracle.com>, tj@kernel.org, tytso@MIT.EDU, Chris Mason <chris.mason@oracle.com>
 
-On 03/11/2012 07:57 PM, Glauber Costa wrote:
+Hi Glauber,
+
+On 03/11/2012 07:18 PM, Glauber Costa wrote:
 
 > On 03/09/2012 03:20 PM, Jeff Liu wrote:
 >> Hello,
@@ -153,79 +159,33 @@ On 03/11/2012 07:57 PM, Glauber Costa wrote:
 >> for demo purpose. :)
 >>
 >> Any criticism and suggestions are welcome!
->>
-> When I started reading through this, I had one question in mind:
 > 
-> "Why cgroups?"
-> 
-> After I read it, I have one question in mind:
-> 
-> "Why cgroups?"
-> 
-> It really seems like the wrong interface for that. Specially since you
-> doesn't seem to be doing anything really clever to divide the charges,
-> etc. You are basically using cgroups as an interface to configure
-> quotas. And I see no reason whatsoever to do it. Quotas already have a
-> very well-defined interface.
-> 
-> In summary, I don't see how creating a new cgroup will do us any good
-> here, specially if we're doing it just for the configuration interface.
-> 
-> There are two pieces of the puzzle for container-quota: An outer quota,
-> that the box admin applies to that container as a whole, and a container
-> quota, that the container admin can apply to its user.
-> 
-> The outer quota does not need any relation with cgroups at all!
-> As a matter of fact, we already have this feature, you just don't
-> realize it: if you assume you have project quota, we just need to
-> configure the project to start at the subtree the container starts.
-> 
-> so, for instance, if you have:
-> /root/lxc-root/
-> 
-> Then you create a project quota ontop of it, and you're done.
+> I have mixed feelings about this. The feature is obviously welcome, but
+> I am not sure if
+> the approach you took is the best one... I'll go through the patches
+> now, and hopefully will
+> have a better opinion by the end =)
 
-Thanks for your comments!
+Thanks for your response!
 
-I know project quota can be configured outside of a container just as
-you mentioned above.
+Daniel has pointed me that Anqin had gave a try for implementing
+container quota feature in UID/GUID form back to 2009, his patch set can
+be found at:
+https://lkml.org/lkml/2009/2/23/35
 
-Actually, at the present time, what I am trying to do are:
+However, He had to give up because of a new job.
 
-Given that an outside storage path, it has already configured with a
-specified project ID, and it was bind mounted into a container.
+Looks a possible approach is to combine cgroup with project quota(or
+tree quota?) according to the feedback from Paul at that time:
+https://lkml.org/lkml/2009/2/23/35
 
-Now the user hope to setup quota limits on the bind mounted path inside
-the container.  Assuming that the project ID has been attached to
-container through cgroup interface, so that he don't need to configured
-quota outsides(Exactly, sys admin can setup it outsides directly), just
-specify them via cgroup file.
+So I wrote this draft patch out to present my basic ideas(even not
+consider xattr storage space for XFS in current demo).
 
-Further thoughts, again, assume a particular project ID has been
-assigned to a container,  if the sys admin want to configure quota
-limits outsides, his operations should be denied;  and the sys admin
-even can not remove the project ID if it was already attached to a
-container.
+I am definitely a newbie in this area, so please forgive me if I make
+some stupid mistakes. :)
 
-And also, if there has already a project quota limits enforced outsides
-to a directly, but the user can still setup a smaller quota limit s
-through cgroup ,those limits just mixed up, but the smaller quota only
-be effected for those processes running at container.
-
-> 
-> What we really need here, is a way to have a privileged user inside a
-> container to create normal quotas (user, group) that he can configure,
-> and have this quota be always smaller than, say, a project quota defined
-> for the container from the outside. But cgroups is hardly the interface,
-> or place, for that: Usually, the processes inside the container won't
-> have access to their cgroups. They will contain the limits they are
-> entitled to, and we don't won't the processes to change that at will. So
-> tying it to cgroups does not solve the fundamental problem, which is how
-> we have the container admin to set up quotas...
-
-Sigh, exactly, I need some time to understand your opinions.  Thanks again.
-
-
+Thanks,
 -Jeff
 
 > 
