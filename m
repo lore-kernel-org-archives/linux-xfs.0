@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2BDpBQo125751 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 08:51:11 -0500
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id RsF180wlcPf42Znj (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 11 Mar 2012 06:51:09 -0700 (PDT)
-Message-ID: <4F5C8361.5070303@oracle.com>
-Date: Sun, 11 Mar 2012 18:50:09 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q2BMjhjH198394 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 17:45:44 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	ic3oo4XDwsNa9onL for <xfs@oss.sgi.com>;
+	Sun, 11 Mar 2012 15:45:41 -0700 (PDT)
+Date: Mon, 12 Mar 2012 09:45:37 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/19] xfs: Convert to new freezing code
+Message-ID: <20120311224537.GV5091@dastard>
+References: <1330963277-26336-1-git-send-email-jack@suse.cz>
+	<1330963277-26336-12-git-send-email-jack@suse.cz>
+	<20120308232041.GU3592@dastard>
+	<20120309142253.GB14159@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH v1 0/4] cgroup quota
-References: <4F59E78A.7060903@oracle.com> <4F5C8A0C.8050904@parallels.com>
-In-Reply-To: <4F5C8A0C.8050904@parallels.com>
-Reply-To: jeff.liu@oracle.com
+Content-Disposition: inline
+In-Reply-To: <20120309142253.GB14159@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,174 +29,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Glauber Costa <glommer@parallels.com>
-Cc: jack@suse.cz, Daniel Lezcano <daniel.lezcano@free.fr>, cgroups@vger.kernel.org, lxc-devel@lists.sourceforge.net, Li Zefan <lizf@cn.fujitsu.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, Christopher Jones <christopher.jones@oracle.com>, tj@kernel.org, tytso@MIT.EDU, Chris Mason <chris.mason@oracle.com>
+To: Jan Kara <jack@suse.cz>
+Cc: sandeen@redhat.com, Alex Elder <elder@kernel.org>, Kamal Mostafa <kamal@canonical.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Al Viro <viro@ZenIV.linux.org.uk>, dchinner@redhat.com, linux-fsdevel@vger.kernel.org
 
-Hi Glauber,
+On Fri, Mar 09, 2012 at 03:22:53PM +0100, Jan Kara wrote:
+> On Fri 09-03-12 10:20:41, Dave Chinner wrote:
+> > On Mon, Mar 05, 2012 at 05:01:09PM +0100, Jan Kara wrote:
+> > > Generic code now blocks all writers from standard write paths. So we block all
+> > > writers coming from ioctl and replace blocking of transactions on frozen
+> > > filesystem with a debugging check. As a bonus, we get a protection of ioctl
+> > > against racing remount read-only. We also convert xfs_file_aio_write() to a
+> > > non-racy freeze protection.
+> > ....
+> > > diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+> > > index 329b06a..6468a2a 100644
+> > > --- a/fs/xfs/xfs_trans.c
+> > > +++ b/fs/xfs/xfs_trans.c
+> > > @@ -577,7 +577,6 @@ xfs_trans_alloc(
+> > >  	xfs_mount_t	*mp,
+> > >  	uint		type)
+> > >  {
+> > > -	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
+> > >  	return _xfs_trans_alloc(mp, type, KM_SLEEP);
+> > >  }
+> > 
+> > So what is there to stop internal XFS threads from starting
+> > transactions when the filesystem is frozen? Previously this
+> > SB_FREEZE_TRANS would guarantee even internal fucntions would get
+> > stopped, but now there's nothing?
+>   I've checked XFS now and I didn't find any work that would be done on a
+> clean filesystem. I found:
+> _xfs_mru_cache_reap() - doesn't seem to do any IO
 
-On 03/11/2012 07:18 PM, Glauber Costa wrote:
+Causes iput() on inodes, which if dropping the last reference to the
+inode can cause them to enter reclaim and hence have transactions
+run on them to either truncate blocks beyonds EOF or to do the
+second phase of an unlink(). So it will definitely break the freeze
+model.
 
-> On 03/09/2012 03:20 PM, Jeff Liu wrote:
->> Hello,
->>
->> Disk quota feature has been asked at LXC list from time to time.
->> Given that the project quota has already implemented in XFS for a long
->> time, and it was also in progress for EXT4.
->> So the major idea is to assign one or more project IDs(or tree ID?) to
->> container, but leaving quota setup via cgroup
->> config files, so all the tasks running at container could have project
->> quota constraints applied.
->>
->> I'd like to post an initial patch sets here, the stupid implements is
->> very simple and even crash me
->> in some cases, sorry! But I would like to submit it to get more
->> feedback to make sure I am going down
->> the right road. :)
->>
->> Let me introduce it now.
->>
->> 1. Setup project quota on XFS(enabled pquota) firstly.
->> For example, the "project100" is configured on "/xfs/quota_test"
->> directory.
->>
->> $ cat /etc/projects
->> 100:/xfs/quota_test
->>
->> $ cat /etc/projid
->> project100:100
->>
->> $ sudo xfs_quota -x -c 'report -p'
->> Project quota on /xfs (/dev/sda7)
->>                                 Blocks
->> Project ID       Used       Soft       Hard    Warn/Grace
->> ---------- --------------------------------------------------
->> project100          0          0          0     00 [--------]
->>
->> 2. Mount cgroup on /cgroup.
->> cgroup on /cgroup type cgroup (rw)
->>
->> After that, there will have a couple of quota.XXXX files presented at
->> /cgroup.
->> $ ls -l /cgroup/quota.*
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.activate
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.add_project
->> -r--r--r-- 1 root root 0 Mar  9 18:27 /cgroup/quota.all
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.block_limit_in_bytes
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.deactivate
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.inode_limit
->> -r--r--r-- 1 root root 0 Mar  9 18:27 /cgroup/quota.projects
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.remove_project
->> --w------- 1 root root 0 Mar  9 18:27
->> /cgroup/quota.reset_block_limit_in_bytes
->> --w------- 1 root root 0 Mar  9 18:27 /cgroup/quota.reset_inode_limit
->>
->> 3. To assign a project ID to container, just echo it to
->> quota.add_project as:
->> echo "project100:100">  /cgroup/quota.add_project
->>
->> To get a short list of the current projects assigned to container,
->> user can check quota.projects,
->> # cat /cgroup/quota.projects
->> Project ID (project100:100)    status: off
->>
->> The totally quota info can be check against quota.all, it will show
->> something like below:
->> # cat /cgroup/quota.all
->> Project ID (project100:100)    status: off
->>    block_soft_limit    9223372036854775807
->>    block_hard_limit    9223372036854775807
->>    block_max_usage    0
->>    block_usage    0
->>    inode_soft_limit    9223372036854775807
->>    inode_hard_limit    9223372036854775807
->>    inode_max_usage    0
->>    inode_usage    0
->>
->> Note that about "status: off", by default, a new assigned project will
->> in OFF state, user could
->> turn it on by echo the project ID to quota.activate as below:
->> # echo 100>  /cgroup/quota.activate
->> # cat /cgroup/quota.all
->> Project ID (project100:100)    status: on     *now  status changed.*
->>    block_soft_limit    9223372036854775807
->>    block_hard_limit    9223372036854775807
->>    block_max_usage    0
->>    block_usage    0
->>    inode_soft_limit    9223372036854775807
->>    inode_hard_limit    9223372036854775807
->>    inode_max_usage    0
->>    inode_usage    0
->>
->> But it will do nothing since without quota setup.
->>
->> 4. To configure quota via cgroup, user need to interact with
->> quota.inode_limit and quota.block_limit_in_bytes.
->> For now, I only add a simple inode quota check to XFS, it looks
->> something like below:
->>
->> # echo "100 2:4">>  /cgroup/quota.inode_limit
->> # cat /cgroup/quota.all
->> Project ID (project100:100)    status: on
->>    block_soft_limit    9223372036854775807
->>    block_hard_limit    9223372036854775807
->>    block_max_usage    0
->>    block_usage    0
->>    inode_soft_limit    2
->>    inode_hard_limit    4
->>    inode_max_usage    0
->>    inode_usage    0
->>
->> # for ((i=0; i<  6; i++)); do touch xfs/quota_test/test.$i; done
->>
->> Project ID (project100:100)    status: on
->>    block_soft_limit    9223372036854775807
->>    block_hard_limit    9223372036854775807
->>    block_max_usage    0
->>    block_usage    0
->>    inode_soft_limit    2
->>    inode_hard_limit    4
->>    inode_max_usage    4
->>    inode_usage    4
->>
->> Sorry again, above steps crashed me sometimes for now, it works just
->> for demo purpose. :)
->>
->> Any criticism and suggestions are welcome!
-> 
-> I have mixed feelings about this. The feature is obviously welcome, but
-> I am not sure if
-> the approach you took is the best one... I'll go through the patches
-> now, and hopefully will
-> have a better opinion by the end =)
+> xfs_end_io(), xfs_buf_iodone_work() - shouldn't be a problem either since only
+>   reads can happen on a frozen filesystem
+> xfs_reclaim_worker() - everything is clean so no IO should happen
 
-Thanks for your response!
+It will do work as other things push inodes into reclaim. e.g.
+filestreams inode expiry. And it will still run to reclaim clean
+inodes...
 
-Daniel has pointed me that Anqin had gave a try for implementing
-container quota feature in UID/GUID form back to 2009, his patch set can
-be found at:
-https://lkml.org/lkml/2009/2/23/35
+> xfs_flush_worker() - everything is clean so no IO should happen
+> xfs_sync_worker() - again the same if I understand the code right
 
-However, He had to give up because of a new job.
+xfs_sync_worker() will always trigger a log force, so if there is
+anything that has dirtied the journal, it will trigger IO. We have
+no protection against the journal being dirtied anymore, so no
+guarantees can be given here.
 
-Looks a possible approach is to combine cgroup with project quota(or
-tree quota?) according to the feedback from Paul at that time:
-https://lkml.org/lkml/2009/2/23/35
+Basically, your patchset creates a "shell" around the outside of the
+filesystem that catches all the external modifications that can
+occur through the VFS and ioctls. The "shell" is now the only layer
+of defense because the patchset removes the layer of protection that
+prevents internal modifications from occurring.
 
-So I wrote this draft patch out to present my basic ideas(even not
-consider xattr storage space for XFS in current demo).
+For example, the XFS patch added a bunch of protection to ioctls on
+XFS that only modify file metadata and so never were protected
+against data freezes - they were all implicitly protected by the inner
+transaction subsystem freeze. All of the above cases were protected
+by the inner layer of defense, which is now gone.
 
-I am definitely a newbie in this area, so please forgive me if I make
-some stupid mistakes. :)
+Not to mention the shrinkers. The inode cache shrinkers can
+cause inodes to enter reclaim which can trigger EOF truncation just
+like _xfs_mru_cache_reap(). The dquot cache shrinker can also issue
+IO, and dquots will be dirtied by EOF truncation. Same with buffers,
+and the buffer cache shrinker.
 
-Thanks,
--Jeff
+I'm sure other filesystems have just as complex or even more complex
+internal paths that trigger dirtying and IO that the "freeze shell"
+model does not prevent. I don't think auditing is good enough - the
+shell model is, IMO, too easy to break and too hard to test for
+breakage...
 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Cheers,
 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
