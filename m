@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2CGEUDL105186 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 11:14:31 -0500
+	q2CGGSFk105312 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 11:16:28 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	FybAG08nZEbRUNLO (version=TLSv1 cipher=AES256-SHA bits=256
+	gCME64fwXgXKu4gd (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Mar 2012 09:14:29 -0700 (PDT)
-Date: Mon, 12 Mar 2012 12:14:25 -0400
+	Mon, 12 Mar 2012 09:16:27 -0700 (PDT)
+Date: Mon, 12 Mar 2012 12:16:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 3.2.9 and locking problem
-Message-ID: <20120312161425.GA23815@infradead.org>
-References: <201203092028.47177.arekm@maven.pl> <20120312005325.GX5091@dastard>
-	<201203121443.59217.arekm@maven.pl>
+Subject: Re: [PATCH 05/10] xfs: introduce an allocation workqueue
+Message-ID: <20120312161626.GA24098@infradead.org>
+References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	<1331095828-28742-6-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201203121443.59217.arekm@maven.pl>
+In-Reply-To: <1331095828-28742-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,15 +29,13 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz Mi??kiewicz <arekm@maven.pl>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-In the 3.2 version xfs_sync_flags does a double unlock of the ilock -
-change the last argument of xfs_trans_ijoin from XFS_ILOCK_EXCL to 0
-will fix this.  The 3.0 version doesn't have this bug.
+While I still heavily dislike the idea I can't see how else we can
+work around the stack abuse in common code:
 
-And btw, the additions to the on-disk format are gross - this stuff
-broke before and will break again when we add new features.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
