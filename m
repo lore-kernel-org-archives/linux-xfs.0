@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2C0rToD226928 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:53:29 -0500
+	q2C0kfT3226699 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:46:41 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	deQ55Q1xubOGL4GN for <xfs@oss.sgi.com>;
-	Sun, 11 Mar 2012 17:53:27 -0700 (PDT)
-Date: Mon, 12 Mar 2012 11:53:25 +1100
+	pbe2AwhIGxvHTcy1 for <xfs@oss.sgi.com>;
+	Sun, 11 Mar 2012 17:46:38 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1S6tPI-0005LD-Hp
+	for xfs@oss.sgi.com; Mon, 12 Mar 2012 11:46:36 +1100
+Date: Mon, 12 Mar 2012 11:46:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.2.9 and locking problem
-Message-ID: <20120312005325.GX5091@dastard>
-References: <201203092028.47177.arekm@maven.pl>
+Subject: Re: xfstests - unchecked mount failures
+Message-ID: <20120312004636.GW5091@dastard>
+References: <20120309132828.GI4334@twin.jikos.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201203092028.47177.arekm@maven.pl>
+In-Reply-To: <20120309132828.GI4334@twin.jikos.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,52 +25,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBNYXIgMDksIDIwMTIgYXQgMDg6Mjg6NDdQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
-aWV3aWN6IHdyb3RlOgo+IAo+IEFyZSB0aGVyZSBhbnkgYnVncyBpbiBhcmVhIHZpc2libGUgaW4g
-dHJhY2ViYWNrcyBiZWxvdz8gSSBoYXZlIGEgc3lzdGVtIHdoZXJlIG9uZSBvcGVyYXRpb24KPiAo
-dXBncmFkZSBvZiBzaW5nbGUgcnBtIHBhY2thZ2UpIGNhdXNlcyBycG0gcHJvY2VzcyB0byBoYW5n
-IGluIEQtc3RhdGUsIHN5c3JxLXcgYmVsb3c6Cj4gCj4gWyAgNDAwLjc1NTI1M10gU3lzUnEgOiBT
-aG93IEJsb2NrZWQgU3RhdGUKPiBbICA0MDAuNzU4NTA3XSAgIHRhc2sgICAgICAgICAgICAgICAg
-ICAgICAgICBQQyBzdGFjayAgIHBpZCBmYXRoZXIKPiBbICA0MDAuNzU4NTA3XSBycG0gICAgICAg
-ICAgICAgRCAwMDAwMDAwMTAwMDA1NzgxICAgICAwICA4NzMyICAgODY5OCAweDAwMDAwMDAwCj4g
-WyAgNDAwLjc1ODUwN10gIGZmZmY4ODAyMTY1N2RjNDggMDAwMDAwMDAwMDAwMDA4NiBmZmZmODgw
-MjAwMDAwMDAwIGZmZmY4ODAyNTEyNmY0ODAKPiBbICA0MDAuNzU4NTA3XSAgZmZmZjg4MDI1MjI3
-NjYzMCBmZmZmODgwMjE2NTdkZmQ4IGZmZmY4ODAyMTY1N2RmZDggZmZmZjg4MDIxNjU3ZGZkOAo+
-IFsgIDQwMC43NTg1MDddICBmZmZmODgwMjUyMDc0YWYwIGZmZmY4ODAyNTIyNzY2MzAgZmZmZjg4
-MDI0Y2IwZDAwNSBmZmZmODgwMjE2NTdkY2IwCj4gWyAgNDAwLjc1ODUwN10gQ2FsbCBUcmFjZToK
-PiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZmZjgxMTRiMjJhPl0gPyBrbWVtX2NhY2hlX2ZyZWUr
-MHgyYS8weDExMAo+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODExNGQyZWQ+XSA/IGttZW1f
-Y2FjaGVfYWxsb2MrMHgxMWQvMHgxNDAKPiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZmZmEwMGRm
-M2M3Pl0gPyBrbWVtX3pvbmVfYWxsb2MrMHg2Ny8weGUwIFt4ZnNdCj4gWyAgNDAwLjc1ODUwN10g
-IFs8ZmZmZmZmZmY4MTQ4Yjc4YT5dIHNjaGVkdWxlKzB4M2EvMHg1MAo+IFsgIDQwMC43NTg1MDdd
-ICBbPGZmZmZmZmZmODE0OGQyNWQ+XSByd3NlbV9kb3duX2ZhaWxlZF9jb21tb24rMHhiZC8weDE1
-MAo+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODE0OGQzMDM+XSByd3NlbV9kb3duX3dyaXRl
-X2ZhaWxlZCsweDEzLzB4MjAKPiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZmZjgxMjY1MmEzPl0g
-Y2FsbF9yd3NlbV9kb3duX3dyaXRlX2ZhaWxlZCsweDEzLzB4MjAKPiBbICA0MDAuNzU4NTA3XSAg
-WzxmZmZmZmZmZjgxNDhjOGVkPl0gPyBkb3duX3dyaXRlKzB4MmQvMHg0MAo+IFsgIDQwMC43NTg1
-MDddICBbPGZmZmZmZmZmYTAwY2Y5N2M+XSB4ZnNfaWxvY2srMHhjYy8weDEyMCBbeGZzXQo+IFsg
-IDQwMC43NTg1MDddICBbPGZmZmZmZmZmYTAwZDRhY2U+XSB4ZnNfc2V0YXR0cl9ub25zaXplKzB4
-MWNlLzB4NWIwIFt4ZnNdCj4gWyAgNDAwLjc1ODUwN10gIFs8ZmZmZmZmZmY4MTI2NTUwMj5dID8g
-X19zdHJuY3B5X2Zyb21fdXNlcisweDIyLzB4NjAKPiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZm
-ZmEwMGQ1MmFiPl0geGZzX3ZuX3NldGF0dHIrMHgxYi8weDQwIFt4ZnNdCj4gWyAgNDAwLjc1ODUw
-N10gIFs8ZmZmZmZmZmY4MTE3YzFhMj5dIG5vdGlmeV9jaGFuZ2UrMHgxYTIvMHgzNDAKPiBbICA0
-MDAuNzU4NTA3XSAgWzxmZmZmZmZmZjgxMTVlZDgwPl0gY2hvd25fY29tbW9uKzB4ZDAvMHhmMAo+
-IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODExNWZlNGM+XSBzeXNfY2hvd24rMHhhYy8weDFh
-MAo+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODE0OTUxMTI+XSBzeXN0ZW1fY2FsbF9mYXN0
-cGF0aCsweDE2LzB4MWIKCkkgY2FuJ3Qgc2VlIHdoeSB3ZSdkIGdldCBhIHRhc2sgc3R1Y2sgaGVy
-ZSAtIGl0J3Mgd2FpdGluZyBvbiB0aGUKWEZTX0lMT0NLX0VYQ0wuIFRoZSBvbmx5IHJlYXNvbiBm
-b3IgdGhpcyBpcyBpZiB3ZSBsZWFrZWQgYW4gdW5sb2NrCnNvbWV3aGVyZS4gSXQgYXBwZWFycyB5
-b3UgY2FuIHJlcHJvZHVjZSB0aGlzIGZhaXJseSBxdWlja2x5LCBzbwpydW5uaW5nIGFuIGV2ZW50
-IHRyYWNlIHZpYSB0cmFjZS1jbWQgZm9yIGFsbCB0aGUgeGZzX2lsb2NrIHRyYWNlCnBvaW50cyBh
-bmQgcG9zdGluZyB0aGUgcmVwb3J0IG91dHB1dCBtaWdodCB0ZWxsIHVzIHdoYXQgaW5vZGUgaXMK
-YmxvY2tlZCBhbmQgd2hlcmUgd2UgbGVha2VkIChpZiB0aGF0IGlzIHRoZSBjYXVzZSkuCgpDaGVl
-cnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Fri, Mar 09, 2012 at 02:28:28PM +0100, David Sterba wrote:
+> Hi,
+> 
+> I've encountered a bad situation when a failed mount in test 269 did not stop
+> the test and continued to use the mount point and exhausted space on the root
+> partition. A quick grep revealed that there are more tests with unchecked
+> _scratch_mount calls.
+>
+> The underlying problem with failed mount was observed when the mount comes in a
+> quick sequence after mount,
+
+Sorry, what? Do you mean mount after mkfs? 
+
+> I saw it with btrfs, and don't know if it affects
+> other filesystems.
+
+If btrfs is failing to mount because it happens too soon after mkfs,
+then that's a btrfs bug, not a xfstests problem.
+
+> So, either all callers should check the return value or _scratch_mount
+> calls _fail.
+
+Some tests expect _scratch_mount to fail, so you can't change how
+_scratch_mount behaves....
+
+> I'd go for the latter as it will make it more resilient
+> against unintentional ommision of checking the retval in new tests and
+> reviewer does not have keep that in mind.
+
+I think it is fine to assume that you can mount a filesystem that
+you just run mkfs on. If you are testing something that you expect
+failure, then sure, check the return, but immeidately after mkfs
+(that will fail the test if it fails) it is reasonable to assume
+that mount will work.
+
+Of course, if you want to add return value checking to all the
+current unchecked callers of _scratch_mount then send a patch
+for review. ;)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
