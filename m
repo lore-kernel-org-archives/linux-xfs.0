@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2C0uaLj227071 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:56:36 -0500
+	q2C0xOYO227186 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:59:24 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8Kue722lFapAK0m9 for <xfs@oss.sgi.com>;
-	Sun, 11 Mar 2012 17:56:34 -0700 (PDT)
-Date: Mon, 12 Mar 2012 11:56:32 +1100
+	jgakEuoiKXMNmsyy for <xfs@oss.sgi.com>;
+	Sun, 11 Mar 2012 17:59:23 -0700 (PDT)
+Date: Mon, 12 Mar 2012 11:59:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 1B files, slow file creation, only AG0 used
-Message-ID: <20120312005632.GY5091@dastard>
-References: <CAEm1Pvny7Q2rrsCLURvo5kQM3vt+yMg17WxoSYGKVWm7Lgp8MA@mail.gmail.com>
+Subject: Re: 20 wakeups/second/mounted filesystem in xfsaild
+Message-ID: <20120312005921.GZ5091@dastard>
+References: <4F5BD933.8040101@sfg.quasiparticle.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAEm1Pvny7Q2rrsCLURvo5kQM3vt+yMg17WxoSYGKVWm7Lgp8MA@mail.gmail.com>
+In-Reply-To: <4F5BD933.8040101@sfg.quasiparticle.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,42 +26,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Spiegle <mike@nauticaltech.com>
+To: Dhivael i-Khial t'Jahlei <dhivael@sfg.quasiparticle.net>
 Cc: xfs@oss.sgi.com
 
-On Fri, Mar 09, 2012 at 06:13:27PM -0800, Michael Spiegle wrote:
-> We're seeing some very strange behavior with XFS on the default kernel
-> for CentOS 5.6 (note, I have also 3.2.9 and witnessed the same issue).
->  The dataset on this server is about 1B small files (anywhere from 1KB
-> to 50KB).  We first noticed it when creating files in a directory.  A
-> simple 'touch' would take over 300ms on a completely idle system.  If
-> I simply create a different directory, touching files is 1ms or
-> faster.  Example:
+On Sat, Mar 10, 2012 at 11:44:03PM +0100, Dhivael i-Khial t'Jahlei wrote:
+> Hello,
 > 
-> # time touch 0
-> real    0m0.323s
-> user    0m0.000s
-> sys     0m0.323s
+> i recently switched from ext4 to XFS on some systems. Much to my
+> surprise, XFS produces quite a lot of wakeups in kernel 3.2.9.
 > 
-> # mkdir tmp2
-> # time touch tmp2/0
-> real    0m0.001s
-> user    0m0.000s
-> sys     0m0.000s
+> On every mounted filesystem, the associated xfsaild will wake up 20
+> times per second, when the filesystem is sufficiently loaded, it will
+> never wake up. The filesystems are mounted with defaults, I'm seeing the
+> problem on virtual IDE drives in virtual machines and SSD < dmcrypt <
+> LVM < XFS stacks.
+> 
+> Am I doing something wrong, or am I seeing expected behaviour in XFS?
 
-Entirely normal. some operations require Io to complete (e.g.
-reading directory blocks to find where to insert the new entry),
-while adding the first file to a directory generally requires zero
-IO. You're seeing the difference between cold cache and hot cache
-performance.
-
-> We've done quite a bit of testing and debugging, and while we don't
-> have an answer yet, we've noticed that our filesystem was created with
-> the default of 32 AGs.  When using xfs_db, we notice that all
-> allocations appear to be in AG0 only.
-
-Go look up what the inode32 and inode64 mount options do. The
-default is inode32....
+Currently expected behaviour - there was a recent bug fix for a
+nasty, hard to hit corner case that reintroduced this periodic
+wakeup. We're waiting for things to settle down before (i.e. give
+users some time to report whether the problem really is fixed before
+removing the periodic wakeup again....
 
 Cheers,
 
