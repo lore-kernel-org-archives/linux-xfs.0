@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2C0xOYO227186 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:59:24 -0500
+	q2C0rToD226928 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:53:29 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jgakEuoiKXMNmsyy for <xfs@oss.sgi.com>;
-	Sun, 11 Mar 2012 17:59:23 -0700 (PDT)
-Date: Mon, 12 Mar 2012 11:59:21 +1100
+	deQ55Q1xubOGL4GN for <xfs@oss.sgi.com>;
+	Sun, 11 Mar 2012 17:53:27 -0700 (PDT)
+Date: Mon, 12 Mar 2012 11:53:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 20 wakeups/second/mounted filesystem in xfsaild
-Message-ID: <20120312005921.GZ5091@dastard>
-References: <4F5BD933.8040101@sfg.quasiparticle.net>
+Subject: Re: 3.2.9 and locking problem
+Message-ID: <20120312005325.GX5091@dastard>
+References: <201203092028.47177.arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F5BD933.8040101@sfg.quasiparticle.net>
+In-Reply-To: <201203092028.47177.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,41 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dhivael i-Khial t'Jahlei <dhivael@sfg.quasiparticle.net>
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
 Cc: xfs@oss.sgi.com
 
-On Sat, Mar 10, 2012 at 11:44:03PM +0100, Dhivael i-Khial t'Jahlei wrote:
-> Hello,
-> 
-> i recently switched from ext4 to XFS on some systems. Much to my
-> surprise, XFS produces quite a lot of wakeups in kernel 3.2.9.
-> 
-> On every mounted filesystem, the associated xfsaild will wake up 20
-> times per second, when the filesystem is sufficiently loaded, it will
-> never wake up. The filesystems are mounted with defaults, I'm seeing the
-> problem on virtual IDE drives in virtual machines and SSD < dmcrypt <
-> LVM < XFS stacks.
-> 
-> Am I doing something wrong, or am I seeing expected behaviour in XFS?
-
-Currently expected behaviour - there was a recent bug fix for a
-nasty, hard to hit corner case that reintroduced this periodic
-wakeup. We're waiting for things to settle down before (i.e. give
-users some time to report whether the problem really is fixed before
-removing the periodic wakeup again....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBNYXIgMDksIDIwMTIgYXQgMDg6Mjg6NDdQTSArMDEwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IAo+IEFyZSB0aGVyZSBhbnkgYnVncyBpbiBhcmVhIHZpc2libGUgaW4g
+dHJhY2ViYWNrcyBiZWxvdz8gSSBoYXZlIGEgc3lzdGVtIHdoZXJlIG9uZSBvcGVyYXRpb24KPiAo
+dXBncmFkZSBvZiBzaW5nbGUgcnBtIHBhY2thZ2UpIGNhdXNlcyBycG0gcHJvY2VzcyB0byBoYW5n
+IGluIEQtc3RhdGUsIHN5c3JxLXcgYmVsb3c6Cj4gCj4gWyAgNDAwLjc1NTI1M10gU3lzUnEgOiBT
+aG93IEJsb2NrZWQgU3RhdGUKPiBbICA0MDAuNzU4NTA3XSAgIHRhc2sgICAgICAgICAgICAgICAg
+ICAgICAgICBQQyBzdGFjayAgIHBpZCBmYXRoZXIKPiBbICA0MDAuNzU4NTA3XSBycG0gICAgICAg
+ICAgICAgRCAwMDAwMDAwMTAwMDA1NzgxICAgICAwICA4NzMyICAgODY5OCAweDAwMDAwMDAwCj4g
+WyAgNDAwLjc1ODUwN10gIGZmZmY4ODAyMTY1N2RjNDggMDAwMDAwMDAwMDAwMDA4NiBmZmZmODgw
+MjAwMDAwMDAwIGZmZmY4ODAyNTEyNmY0ODAKPiBbICA0MDAuNzU4NTA3XSAgZmZmZjg4MDI1MjI3
+NjYzMCBmZmZmODgwMjE2NTdkZmQ4IGZmZmY4ODAyMTY1N2RmZDggZmZmZjg4MDIxNjU3ZGZkOAo+
+IFsgIDQwMC43NTg1MDddICBmZmZmODgwMjUyMDc0YWYwIGZmZmY4ODAyNTIyNzY2MzAgZmZmZjg4
+MDI0Y2IwZDAwNSBmZmZmODgwMjE2NTdkY2IwCj4gWyAgNDAwLjc1ODUwN10gQ2FsbCBUcmFjZToK
+PiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZmZjgxMTRiMjJhPl0gPyBrbWVtX2NhY2hlX2ZyZWUr
+MHgyYS8weDExMAo+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODExNGQyZWQ+XSA/IGttZW1f
+Y2FjaGVfYWxsb2MrMHgxMWQvMHgxNDAKPiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZmZmEwMGRm
+M2M3Pl0gPyBrbWVtX3pvbmVfYWxsb2MrMHg2Ny8weGUwIFt4ZnNdCj4gWyAgNDAwLjc1ODUwN10g
+IFs8ZmZmZmZmZmY4MTQ4Yjc4YT5dIHNjaGVkdWxlKzB4M2EvMHg1MAo+IFsgIDQwMC43NTg1MDdd
+ICBbPGZmZmZmZmZmODE0OGQyNWQ+XSByd3NlbV9kb3duX2ZhaWxlZF9jb21tb24rMHhiZC8weDE1
+MAo+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODE0OGQzMDM+XSByd3NlbV9kb3duX3dyaXRl
+X2ZhaWxlZCsweDEzLzB4MjAKPiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZmZjgxMjY1MmEzPl0g
+Y2FsbF9yd3NlbV9kb3duX3dyaXRlX2ZhaWxlZCsweDEzLzB4MjAKPiBbICA0MDAuNzU4NTA3XSAg
+WzxmZmZmZmZmZjgxNDhjOGVkPl0gPyBkb3duX3dyaXRlKzB4MmQvMHg0MAo+IFsgIDQwMC43NTg1
+MDddICBbPGZmZmZmZmZmYTAwY2Y5N2M+XSB4ZnNfaWxvY2srMHhjYy8weDEyMCBbeGZzXQo+IFsg
+IDQwMC43NTg1MDddICBbPGZmZmZmZmZmYTAwZDRhY2U+XSB4ZnNfc2V0YXR0cl9ub25zaXplKzB4
+MWNlLzB4NWIwIFt4ZnNdCj4gWyAgNDAwLjc1ODUwN10gIFs8ZmZmZmZmZmY4MTI2NTUwMj5dID8g
+X19zdHJuY3B5X2Zyb21fdXNlcisweDIyLzB4NjAKPiBbICA0MDAuNzU4NTA3XSAgWzxmZmZmZmZm
+ZmEwMGQ1MmFiPl0geGZzX3ZuX3NldGF0dHIrMHgxYi8weDQwIFt4ZnNdCj4gWyAgNDAwLjc1ODUw
+N10gIFs8ZmZmZmZmZmY4MTE3YzFhMj5dIG5vdGlmeV9jaGFuZ2UrMHgxYTIvMHgzNDAKPiBbICA0
+MDAuNzU4NTA3XSAgWzxmZmZmZmZmZjgxMTVlZDgwPl0gY2hvd25fY29tbW9uKzB4ZDAvMHhmMAo+
+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODExNWZlNGM+XSBzeXNfY2hvd24rMHhhYy8weDFh
+MAo+IFsgIDQwMC43NTg1MDddICBbPGZmZmZmZmZmODE0OTUxMTI+XSBzeXN0ZW1fY2FsbF9mYXN0
+cGF0aCsweDE2LzB4MWIKCkkgY2FuJ3Qgc2VlIHdoeSB3ZSdkIGdldCBhIHRhc2sgc3R1Y2sgaGVy
+ZSAtIGl0J3Mgd2FpdGluZyBvbiB0aGUKWEZTX0lMT0NLX0VYQ0wuIFRoZSBvbmx5IHJlYXNvbiBm
+b3IgdGhpcyBpcyBpZiB3ZSBsZWFrZWQgYW4gdW5sb2NrCnNvbWV3aGVyZS4gSXQgYXBwZWFycyB5
+b3UgY2FuIHJlcHJvZHVjZSB0aGlzIGZhaXJseSBxdWlja2x5LCBzbwpydW5uaW5nIGFuIGV2ZW50
+IHRyYWNlIHZpYSB0cmFjZS1jbWQgZm9yIGFsbCB0aGUgeGZzX2lsb2NrIHRyYWNlCnBvaW50cyBh
+bmQgcG9zdGluZyB0aGUgcmVwb3J0IG91dHB1dCBtaWdodCB0ZWxsIHVzIHdoYXQgaW5vZGUgaXMK
+YmxvY2tlZCBhbmQgd2hlcmUgd2UgbGVha2VkIChpZiB0aGF0IGlzIHRoZSBjYXVzZSkuCgpDaGVl
+cnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
