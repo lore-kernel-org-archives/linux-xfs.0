@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2CI2KjK120304 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 13:02:21 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	gB4DxkwAD02NZheU (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Mar 2012 11:02:19 -0700 (PDT)
-Date: Mon, 12 Mar 2012 14:02:18 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: 3.2.9 and locking problem
-Message-ID: <20120312180218.GA22632@infradead.org>
-References: <201203092028.47177.arekm@maven.pl> <20120312005325.GX5091@dastard>
-	<201203121443.59217.arekm@maven.pl>
-	<20120312161425.GA23815@infradead.org>
-	<4F5E371A.4000004@cape-horn-eng.com>
+	q2CKbPrD138197 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 15:37:25 -0500
+Date: Mon, 12 Mar 2012 15:37:32 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 5/8] xfs: per-filesystem dquot LRU lists
+Message-ID: <20120312203732.GF7762@sgi.com>
+References: <20120220022815.018921977@bombadil.infradead.org>
+	<20120220022904.240235841@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F5E371A.4000004@cape-horn-eng.com>
+In-Reply-To: <20120220022904.240235841@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,22 +23,63 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Ems <richard.ems@cape-horn-eng.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Mar 12, 2012 at 06:49:14PM +0100, Richard Ems wrote:
-> Hi Christoph,
+On Sun, Feb 19, 2012 at 09:28:20PM -0500, Christoph Hellwig wrote:
+> Replace the global dquot lru lists with a per-filesystem one.
 > 
-> On 03/12/2012 05:14 PM, Christoph Hellwig wrote:
-> > In the 3.2 version xfs_sync_flags does a double unlock of the ilock -
-> > change the last argument of xfs_trans_ijoin from XFS_ILOCK_EXCL to 0
-> > will fix this.  The 3.0 version doesn't have this bug.
+> Note that the shrinker isn't wire up to the per-superblock VFS shrinker
+> infrastructure as would have problems summing up and splitting the counts
+> for inodes and dquots.  I don't think this is a major problem as the quota
+> cache isn't as interwinded with the inode cache as the dentry cache is,
+> because an inode that is dropped from the cache will generally release
+> a dquot reference, but most of the time it won't be the last one.
 > 
-> Is there already a fix or will there be one for 3.2.10 ?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > 
-> I am already using 3.2.x on 4 servers in production ...
 
-It's code added by the vserver patch that doesn't exist in mainline.
+...
+
+> @@ -1126,6 +1129,7 @@ xfs_qm_dqpurge(
+>  {
+>  	struct xfs_mount	*mp = dqp->q_mount;
+>  	struct xfs_dqhash	*qh = dqp->q_hash;
+> +	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+>  
+>  	xfs_dqlock(dqp);
+>  
+> @@ -1176,22 +1180,21 @@ xfs_qm_dqpurge(
+>  	qh->qh_version++;
+>  	mutex_unlock(&qh->qh_lock);
+>  
+> -	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
+> +	mutex_lock(&qi->qi_dqlist_lock);
+>  	list_del_init(&dqp->q_mplist);
+> -	mp->m_quotainfo->qi_dqreclaims++;
+> -	mp->m_quotainfo->qi_dquots--;
+> -	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
+> +	qi->qi_dqreclaims++;
+> +	qi->qi_dquots--;
+> +	mutex_unlock(&qi->qi_dqlist_lock);
+>  
+>  	/*
+>  	 * We move dquots to the freelist as soon as their reference count
+>  	 * hits zero, so it really should be on the freelist here.
+>  	 */
+> -	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+> -	ASSERT(!list_empty(&dqp->q_freelist));
+> -	list_del_init(&dqp->q_freelist);
+> -	xfs_Gqm->qm_dqfrlist_cnt--;
+> -	XFS_STATS_DEC(xs_qm_dquot_unused);
+
+Looks like you have removed this decrement of xs_qm_dquot_unused.  You
+didn't mention it in your commit message, so I am not sure if it is
+intentional.
+
+Other than that, this patch looks good.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
