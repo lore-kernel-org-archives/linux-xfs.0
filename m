@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2C0kfT3226699 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:46:41 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	pbe2AwhIGxvHTcy1 for <xfs@oss.sgi.com>;
-	Sun, 11 Mar 2012 17:46:38 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1S6tPI-0005LD-Hp
-	for xfs@oss.sgi.com; Mon, 12 Mar 2012 11:46:36 +1100
-Date: Mon, 12 Mar 2012 11:46:36 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests - unchecked mount failures
-Message-ID: <20120312004636.GW5091@dastard>
-References: <20120309132828.GI4334@twin.jikos.cz>
+	q2C2xSuH233124 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 21:59:28 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id iliGLs0C3F3iTkpt
+	for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:59:26 -0700 (PDT)
+Message-ID: <4F5D6690.3010006@hardwarefreak.com>
+Date: Sun, 11 Mar 2012 21:59:28 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120309132828.GI4334@twin.jikos.cz>
+Subject: Re: 1B files, slow file creation, only AG0 used
+References: <CAEm1Pvny7Q2rrsCLURvo5kQM3vt+yMg17WxoSYGKVWm7Lgp8MA@mail.gmail.com>
+	<4F5ADFCB.9010602@sandeen.net>
+	<CAEm1PvmTCaw_eSNPPvQLvwu5X7ywseOBbALxMkSLnOT9iQd6fQ@mail.gmail.com>
+In-Reply-To: <CAEm1PvmTCaw_eSNPPvQLvwu5X7ywseOBbALxMkSLnOT9iQd6fQ@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,53 +27,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: mike@nauticaltech.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-On Fri, Mar 09, 2012 at 02:28:28PM +0100, David Sterba wrote:
-> Hi,
-> 
-> I've encountered a bad situation when a failed mount in test 269 did not stop
-> the test and continued to use the mount point and exhausted space on the root
-> partition. A quick grep revealed that there are more tests with unchecked
-> _scratch_mount calls.
->
-> The underlying problem with failed mount was observed when the mount comes in a
-> quick sequence after mount,
+On 3/9/2012 11:25 PM, Michael Spiegle wrote:
 
-Sorry, what? Do you mean mount after mkfs? 
+> Our "1B" files are spread out evenly into a tree of 65536 directories.
+>  I've read the docs, and they seem explicit about new directories
+> being created in new AGs, however we are not seeing that on our
+> system.  All 1B files (despite being spread out across more than 64K
+> dirs) are in the first AG.  I have tried remounting the filesystem
+> with inode64 (and on 3.2.9), but this behavior does not seem to change
+> even if I add more files afterwards.
 
-> I saw it with btrfs, and don't know if it affects
-> other filesystems.
+When using the inode32 allocator and having 64k dirs, and seeing no
+files in AGs other than AG0, might this tend to suggest that these are
+zero length files or similar, being stored entirely within the directory
+inodes, thus occupying no extents in other AGs?  Would this tend to
+explain why 'everything' is in AG0?
 
-If btrfs is failing to mount because it happens too soon after mkfs,
-then that's a btrfs bug, not a xfstests problem.
+> As mentioned above, the inode64 mount option doesn't seem to affect
+> anything.  Can you think of anything else I should check that would
+> prevent this from working?
 
-> So, either all callers should check the return value or _scratch_mount
-> calls _fail.
+If my guess about these files is correct, mounting with inode64 and
+writing additional files should create new directory inodes in other
+AGs, but you still won't see file extents in those other AGs, just as
+you don't in the first AG.
 
-Some tests expect _scratch_mount to fail, so you can't change how
-_scratch_mount behaves....
+Are you using this XFS filesystem as a poor man's database or something
+similar?  This would tend to explain a billion files, with no extents,
+wholly stored in directory inodes, only in AG0, while using the inode32
+allocator.
 
-> I'd go for the latter as it will make it more resilient
-> against unintentional ommision of checking the retval in new tests and
-> reviewer does not have keep that in mind.
-
-I think it is fine to assume that you can mount a filesystem that
-you just run mkfs on. If you are testing something that you expect
-failure, then sure, check the return, but immeidately after mkfs
-(that will fail the test if it fails) it is reasonable to assume
-that mount will work.
-
-Of course, if you want to add return value checking to all the
-current unchecked callers of _scratch_mount then send a patch
-for review. ;)
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
