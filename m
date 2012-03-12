@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2CLsNav144955 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 16:54:23 -0500
-Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	24f1ubEuUMqd3VbT (version=TLSv1 cipher=RC4-SHA bits=128
+	q2CMBSws152358 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 17:11:29 -0500
+Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	Y23JjJY96EwZdaVb (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Mar 2012 14:54:22 -0700 (PDT)
-Received: by ghbz13 with SMTP id z13so4188623ghb.26
-	for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 14:54:21 -0700 (PDT)
-Received: by yenq2 with SMTP id q2so4215669yen.26
-	for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 14:54:20 -0700 (PDT)
+	Mon, 12 Mar 2012 15:11:26 -0700 (PDT)
+Received: by yenq2 with SMTP id q2so4237800yen.26
+	for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 15:11:25 -0700 (PDT)
+Received: by yhjj72 with SMTP id j72so4218590yhj.26
+	for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 15:11:25 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20120312005632.GY5091@dastard>
+In-Reply-To: <4F5D6690.3010006@hardwarefreak.com>
 References: <CAEm1Pvny7Q2rrsCLURvo5kQM3vt+yMg17WxoSYGKVWm7Lgp8MA@mail.gmail.com>
-	<20120312005632.GY5091@dastard>
-Date: Mon, 12 Mar 2012 14:54:20 -0700
-Message-ID: <CAEm1Pvm4+K3dBm+CQad3O2LLYBi76trYx9nBazwv5MNC24sZBg@mail.gmail.com>
+	<4F5ADFCB.9010602@sandeen.net>
+	<CAEm1PvmTCaw_eSNPPvQLvwu5X7ywseOBbALxMkSLnOT9iQd6fQ@mail.gmail.com>
+	<4F5D6690.3010006@hardwarefreak.com>
+Date: Mon, 12 Mar 2012 15:11:25 -0700
+Message-ID: <CAEm1PvmfrNAYiDKbsmx-0vaqMX_0h6WKEnDAWUKF7h9g1CQP0g@mail.gmail.com>
 Subject: Re: 1B files, slow file creation, only AG0 used
 From: Michael Spiegle <mike@nauticaltech.com>
 Reply-To: mike@nauticaltech.com
@@ -28,63 +30,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: stan@hardwarefreak.com
 Cc: xfs@oss.sgi.com
 
-I believe we figured out what was going wrong:
-1) You definitely need inode64 as a mount option
-2) It seems that the AG metadata was being cached.  We had to unmount
-the system and remount it to get updated counts on per-AG usage.
-
-For the moment, I've written a script to copy/rename/delete our files
-so that they are gradually migrated to new AGs.  FWIW, I noticed that
-this operation is significantly faster on an EL6.2-based kernel
-(2.6.32) compared to EL5 (2.6.18).  I'm also using the 'delaylog'
-mount option which probably helps a bit.  I still have a few other
-curiosities about this particular issue though:
-
-On Sun, Mar 11, 2012 at 5:56 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Sun, Mar 11, 2012 at 7:59 PM, Stan Hoeppner <stan@hardwarefreak.com> wro=
+te:
 >
-> Entirely normal. some operations require Io to complete (e.g.
-> reading directory blocks to find where to insert the new entry),
-> while adding the first file to a directory generally requires zero
-> IO. You're seeing the difference between cold cache and hot cache
-> performance.
+> When using the inode32 allocator and having 64k dirs, and seeing no
+> files in AGs other than AG0, might this tend to suggest that these are
+> zero length files or similar, being stored entirely within the directory
+> inodes, thus occupying no extents in other AGs? =A0Would this tend to
+> explain why 'everything' is in AG0?
 >
 
-In this situation, any files written to the same directory exhibited
-this issue regardless of cache state.  For example:
-
-Takes 300ms to complete:
-touch tmp/0
-
-Takes 600ms to complete:
-touch tmp/0 tmp/1
-
-Takes 1200ms to complete:
-touch tmp/0 tmp/1 tmp/2 tmp/3
-
-I would expect the directory to be cached after the first file is
-created.  I don't understand why all subsequent writes were affected
-as well.
+If any of our files are 0-bytes, then that would probably be an error.
+ Our files are anywhere from 1K-50KB.  There could be files outside of
+that range, but they're at the edges of the bell curve.
 
 >
-> Go look up what the inode32 and inode64 mount options do. The
-> default is inode32....
+> If my guess about these files is correct, mounting with inode64 and
+> writing additional files should create new directory inodes in other
+> AGs, but you still won't see file extents in those other AGs, just as
+> you don't in the first AG.
 >
+> Are you using this XFS filesystem as a poor man's database or something
+> similar? =A0This would tend to explain a billion files, with no extents,
+> wholly stored in directory inodes, only in AG0, while using the inode32
+> allocator.
+>
+> --
+> Stan
 
-So now that we're mounting inode64, I wonder if we'll see degraded
-performance in the future due to a sub-optimal on-disk layout of our
-data.  Even though I am migrating data to other AGs, will there be any
-permanent "damage" to AG0 since it had to allocate 1B inodes?  What
-happens to all of that metadata when the files are removed?
+I mentioned it in another reply, but we just found out that the AG
+information appeared to be cached.  We had to unmount/remount the
+filesystem in order to get updated counts.  We do see other AGs being
+used when mounting with inode64.
 
-Regards,
-Mike
+No, we have a database for the database stuff =3D)  These are legitimate
+pieces of content that we're storing for our users (many many billions
+of files).  We were using EXT3, but recently moved to XFS.  It's nice
+to not be constrained by statically-allocated inodes!
 
 _______________________________________________
 xfs mailing list
