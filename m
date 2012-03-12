@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2CKbPrD138197 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 15:37:25 -0500
-Date: Mon, 12 Mar 2012 15:37:32 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 5/8] xfs: per-filesystem dquot LRU lists
-Message-ID: <20120312203732.GF7762@sgi.com>
-References: <20120220022815.018921977@bombadil.infradead.org>
-	<20120220022904.240235841@bombadil.infradead.org>
+	q2CLsNav144955 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 16:54:23 -0500
+Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	24f1ubEuUMqd3VbT (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 12 Mar 2012 14:54:22 -0700 (PDT)
+Received: by ghbz13 with SMTP id z13so4188623ghb.26
+	for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 14:54:21 -0700 (PDT)
+Received: by yenq2 with SMTP id q2so4215669yen.26
+	for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 14:54:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120220022904.240235841@bombadil.infradead.org>
+In-Reply-To: <20120312005632.GY5091@dastard>
+References: <CAEm1Pvny7Q2rrsCLURvo5kQM3vt+yMg17WxoSYGKVWm7Lgp8MA@mail.gmail.com>
+	<20120312005632.GY5091@dastard>
+Date: Mon, 12 Mar 2012 14:54:20 -0700
+Message-ID: <CAEm1Pvm4+K3dBm+CQad3O2LLYBi76trYx9nBazwv5MNC24sZBg@mail.gmail.com>
+Subject: Re: 1B files, slow file creation, only AG0 used
+From: Michael Spiegle <mike@nauticaltech.com>
+Reply-To: mike@nauticaltech.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +32,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Feb 19, 2012 at 09:28:20PM -0500, Christoph Hellwig wrote:
-> Replace the global dquot lru lists with a per-filesystem one.
-> 
-> Note that the shrinker isn't wire up to the per-superblock VFS shrinker
-> infrastructure as would have problems summing up and splitting the counts
-> for inodes and dquots.  I don't think this is a major problem as the quota
-> cache isn't as interwinded with the inode cache as the dentry cache is,
-> because an inode that is dropped from the cache will generally release
-> a dquot reference, but most of the time it won't be the last one.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
+I believe we figured out what was going wrong:
+1) You definitely need inode64 as a mount option
+2) It seems that the AG metadata was being cached.  We had to unmount
+the system and remount it to get updated counts on per-AG usage.
 
-...
+For the moment, I've written a script to copy/rename/delete our files
+so that they are gradually migrated to new AGs.  FWIW, I noticed that
+this operation is significantly faster on an EL6.2-based kernel
+(2.6.32) compared to EL5 (2.6.18).  I'm also using the 'delaylog'
+mount option which probably helps a bit.  I still have a few other
+curiosities about this particular issue though:
 
-> @@ -1126,6 +1129,7 @@ xfs_qm_dqpurge(
->  {
->  	struct xfs_mount	*mp = dqp->q_mount;
->  	struct xfs_dqhash	*qh = dqp->q_hash;
-> +	struct xfs_quotainfo	*qi = mp->m_quotainfo;
->  
->  	xfs_dqlock(dqp);
->  
-> @@ -1176,22 +1180,21 @@ xfs_qm_dqpurge(
->  	qh->qh_version++;
->  	mutex_unlock(&qh->qh_lock);
->  
-> -	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
-> +	mutex_lock(&qi->qi_dqlist_lock);
->  	list_del_init(&dqp->q_mplist);
-> -	mp->m_quotainfo->qi_dqreclaims++;
-> -	mp->m_quotainfo->qi_dquots--;
-> -	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
-> +	qi->qi_dqreclaims++;
-> +	qi->qi_dquots--;
-> +	mutex_unlock(&qi->qi_dqlist_lock);
->  
->  	/*
->  	 * We move dquots to the freelist as soon as their reference count
->  	 * hits zero, so it really should be on the freelist here.
->  	 */
-> -	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
-> -	ASSERT(!list_empty(&dqp->q_freelist));
-> -	list_del_init(&dqp->q_freelist);
-> -	xfs_Gqm->qm_dqfrlist_cnt--;
-> -	XFS_STATS_DEC(xs_qm_dquot_unused);
+On Sun, Mar 11, 2012 at 5:56 PM, Dave Chinner <david@fromorbit.com> wrote:
+>
+> Entirely normal. some operations require Io to complete (e.g.
+> reading directory blocks to find where to insert the new entry),
+> while adding the first file to a directory generally requires zero
+> IO. You're seeing the difference between cold cache and hot cache
+> performance.
+>
 
-Looks like you have removed this decrement of xs_qm_dquot_unused.  You
-didn't mention it in your commit message, so I am not sure if it is
-intentional.
+In this situation, any files written to the same directory exhibited
+this issue regardless of cache state.  For example:
 
-Other than that, this patch looks good.
+Takes 300ms to complete:
+touch tmp/0
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+Takes 600ms to complete:
+touch tmp/0 tmp/1
+
+Takes 1200ms to complete:
+touch tmp/0 tmp/1 tmp/2 tmp/3
+
+I would expect the directory to be cached after the first file is
+created.  I don't understand why all subsequent writes were affected
+as well.
+
+>
+> Go look up what the inode32 and inode64 mount options do. The
+> default is inode32....
+>
+
+So now that we're mounting inode64, I wonder if we'll see degraded
+performance in the future due to a sub-optimal on-disk layout of our
+data.  Even though I am migrating data to other AGs, will there be any
+permanent "damage" to AG0 since it had to allocate 1B inodes?  What
+happens to all of that metadata when the files are removed?
+
+Regards,
+Mike
 
 _______________________________________________
 xfs mailing list
