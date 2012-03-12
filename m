@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2C2xSuH233124 for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 21:59:28 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id iliGLs0C3F3iTkpt
-	for <xfs@oss.sgi.com>; Sun, 11 Mar 2012 19:59:26 -0700 (PDT)
-Message-ID: <4F5D6690.3010006@hardwarefreak.com>
-Date: Sun, 11 Mar 2012 21:59:28 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q2C9bmVO051170 for <xfs@oss.sgi.com>; Mon, 12 Mar 2012 04:37:49 -0500
+Message-ID: <4F5DC396.60701@parallels.com>
+Date: Mon, 12 Mar 2012 13:36:22 +0400
+From: Glauber Costa <glommer@parallels.com>
 MIME-Version: 1.0
-Subject: Re: 1B files, slow file creation, only AG0 used
-References: <CAEm1Pvny7Q2rrsCLURvo5kQM3vt+yMg17WxoSYGKVWm7Lgp8MA@mail.gmail.com>
-	<4F5ADFCB.9010602@sandeen.net>
-	<CAEm1PvmTCaw_eSNPPvQLvwu5X7ywseOBbALxMkSLnOT9iQd6fQ@mail.gmail.com>
-In-Reply-To: <CAEm1PvmTCaw_eSNPPvQLvwu5X7ywseOBbALxMkSLnOT9iQd6fQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: [RFC PATCH v1 0/4] cgroup quota
+References: <4F59E78A.7060903@oracle.com> <4F5C933F.3000409@parallels.com>
+	<4F5C90DF.8070605@oracle.com>
+In-Reply-To: <4F5C90DF.8070605@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,45 +18,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: mike@nauticaltech.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: jeff.liu@oracle.com
+Cc: jack@suse.cz, Lezcano <daniel.lezcano@free.fr>, lxc-devel@lists.sourceforge.net, Li Zefan <lizf@cn.fujitsu.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Ben Myers <bpm@sgi.com>, tytso@MIT.EDU, Chris Mason <chris.mason@oracle.com>, Christopher Jones <christopher.jones@oracle.com>, tj@kernel.org, cgroups@vger.kernel.org, Daniel@oss.sgi.com
 
-On 3/9/2012 11:25 PM, Michael Spiegle wrote:
+On 03/11/2012 03:47 PM, Jeff Liu wrote:
+> And also, if there has already a project quota limits enforced outsides
+> to a directly, but the user can still setup a smaller quota limit s
+> through cgroup ,those limits just mixed up, but the smaller quota only
+> be effected for those processes running at container.
+>
+>> >
+>> >  What we really need here, is a way to have a privileged user inside a
+>> >  container to create normal quotas (user, group) that he can configure,
+>> >  and have this quota be always smaller than, say, a project quota defined
+>> >  for the container from the outside. But cgroups is hardly the interface,
+>> >  or place, for that: Usually, the processes inside the container won't
+>> >  have access to their cgroups. They will contain the limits they are
+>> >  entitled to, and we don't won't the processes to change that at will. So
+>> >  tying it to cgroups does not solve the fundamental problem, which is how
+>> >  we have the container admin to set up quotas...
+> Sigh, exactly, I need some time to understand your opinions.  Thanks again.
+>
+>
 
-> Our "1B" files are spread out evenly into a tree of 65536 directories.
->  I've read the docs, and they seem explicit about new directories
-> being created in new AGs, however we are not seeing that on our
-> system.  All 1B files (despite being spread out across more than 64K
-> dirs) are in the first AG.  I have tried remounting the filesystem
-> with inode64 (and on 3.2.9), but this behavior does not seem to change
-> even if I add more files afterwards.
+My take on this is that you should stick to the quota interface. It 
+seems to works well enough for people out there. This means, how quotas 
+are configured, viewed, etc, should work with standard tools.
 
-When using the inode32 allocator and having 64k dirs, and seeing no
-files in AGs other than AG0, might this tend to suggest that these are
-zero length files or similar, being stored entirely within the directory
-inodes, thus occupying no extents in other AGs?  Would this tend to
-explain why 'everything' is in AG0?
-
-> As mentioned above, the inode64 mount option doesn't seem to affect
-> anything.  Can you think of anything else I should check that would
-> prevent this from working?
-
-If my guess about these files is correct, mounting with inode64 and
-writing additional files should create new directory inodes in other
-AGs, but you still won't see file extents in those other AGs, just as
-you don't in the first AG.
-
-Are you using this XFS filesystem as a poor man's database or something
-similar?  This would tend to explain a billion files, with no extents,
-wholly stored in directory inodes, only in AG0, while using the inode32
-allocator.
-
--- 
-Stan
+Now, we need some of those quotas to be tied to a particular mnt 
+namespace (I believe namespaces to be the right isolation abstraction 
+here, not cgroups), in the sense that they can only be active inside 
+that mnt namespace. And then when you bill an inode, block, or anything 
+else that quota limits, you bill it to any quota structure that is 
+possibly interested in it. Right now the code bills it to one quota 
+structure, the one that matches your UID, GID, etc (XFS may be a bit 
+more skilled already here, I don't know)
 
 _______________________________________________
 xfs mailing list
