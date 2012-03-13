@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2D64qRo207739 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 01:04:52 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	UctKRH4vvMNyWWaJ for <xfs@oss.sgi.com>;
-	Mon, 12 Mar 2012 23:04:48 -0700 (PDT)
-Date: Tue, 13 Mar 2012 17:04:44 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: repeatable attribute corruption
-Message-ID: <20120313060444.GE5091@dastard>
-References: <1331589615.25204.35.camel@montana.filmlight.ltd.uk>
-	<20120313042216.GD5091@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120313042216.GD5091@dastard>
+	q2D8rBlY230775 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 03:53:11 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	OpBZFsP84eeOFNRW (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Mar 2012 01:53:09 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1S7NTg-0002cH-Ly
+	for xfs@oss.sgi.com; Tue, 13 Mar 2012 08:53:08 +0000
+Message-Id: <20120313085308.631894051@bombadil.infradead.org>
+Date: Tue, 13 Mar 2012 04:52:34 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 2/5] xfs: per-filesystem dquot LRU lists
+References: <20120313085232.134690907@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-quota-per-mount-lru-2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,610 +25,391 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Mar 13, 2012 at 03:22:16PM +1100, Dave Chinner wrote:
-> On Mon, Mar 12, 2012 at 10:00:15PM +0000, Roger Willcocks wrote:
-> > Hi folks,
-> > 
-> > On stock CentOS kernels from 5.5 (earliest I tried) through to the
-> > latest 6.2 kernel (as of five days ago) 2.6.32-220.7.1.el6.x86_64 I can
-> > repeatedly create a silent on-disk corruption. This typically shows up
-> > later as:
-> > 
-> > XFS internal error xfs_da_do_buf(1) at line 2020 of
-> > file /usr/src/redhat/BUILD/kernel-2.6.18/linux-2.6.18.x86_64/fs/xfs/xfs_da_btree.c
-> > 
-> > (or line 2112 of the same file).
-> > 
-> > The 'before' metadump is a bit big to attach to an email (~600k) so
-> > here's a download link valid for 30 days -
-> > 
-> > http://private.filmlight.ltd.uk/c4c864ecca4ac13b/xfs_attrib_crash.taz
-> > 
-> > - this is a gzip-compressed tar file containing 
-> > 
-> > -rw-r--r--.  1 root root   10885632 Mar 12 18:02 xfs_metadump_hda6
-> > -rw-r--r--.  1 root root       3558 Mar 12 18:15 zap.txt
-> > 
-> > The metadump expands to about 5GB. xfs_repair believes it to be clean.
-> > I've not obfuscated the dump; it was originally a copy of the linux
-> > header directory from the 5.5 kernel.
-> > 
-> > 'zap.txt' simply overwrites a single existing extended (directory)
-> > attribute with a slightly longer value. So, steps to repeat:
-> > 
-> > # xfs_mdrestore xfs_metadump_hda6 xfs.img 
-> > # mkdir /mnt/disk1
-> > # mount -o loop xfs.img /mnt/disk1
-> > # setfattr --restore=zap.txt
-> > # umount /mnt/disk1
-> > # xfs_repair -n xfs.img
-> > ...
-> > bad sibling back pointer for block 4 in attribute fork for inode 131
-> > problem with attribute contents in inode 131
-> > would clear attr fork
-> > bad nblocks 8 for inode 131, would reset to 3
-> > bad anextents 4 for inode 131, would reset to 0
-> > ...
-> 
-> OK, I've reproduced it. There's some kind of problem in the atomic
-> attribute rename code when the new attribute gets has to be moved
-> into a new block.
-....
+Replace the global dquot lru lists with a per-filesystem one.
 
-> So there's been multiple blocks added, but not enough removed, and
-> somewhere along the line the ordering of them has been screwed up.
-> Both copies of the attribute that remain are marked complete, so
-> something is definitely screwed up here.
-> 
-> First thing I need to do is add tracing to the attribute
-> modification code to find out what is going on here....
+Note that the shrinker isn't wire up to the per-superblock VFS shrinker
+infrastructure as would have problems summing up and splitting the counts
+for inodes and dquots.  I don't think this is a major problem as the quota
+cache isn't as interwinded with the inode cache as the dentry cache is,
+because an inode that is dropped from the cache will generally release
+a dquot reference, but most of the time it won't be the last one.
 
-And the tracing shows just how complex a "simple" operation can be:
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-xfs_ilock:            dev 7:0 ino 0x83 flags ILOCK_EXCL caller xfs_attr_set_int
-xfs_attr_node_addname: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags ADDNAME|OKNOENT
-xfs_attr_leaf_lookup: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags ADDNAME|OKNOENT
-xfs_attr_node_replace: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags ADDNAME|OKNOENT
-
-Here we see adding the new attribute has detected that it is a
-replacement of an existing attribute, so it triggers the atomic
-rename behaviour. First thing it tries to do is add the new
-attribute with an "incomplete" flag.
-
-
-xfs_attr_leaf_add:    dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_split:         dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_split:  dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-
-The new attribute doesn't fit into the existing leaf, so it splits.
-
-xfs_da_grow_inode:    dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_iext_insert:      dev 7:0 ino 0x83 state ATTR idx 3 offset 3 block 622 count 1 flag 0 caller xfs_bmap_add_extent_hole_real
-
-so a block at fab 622 was added, and a rebalance was done:
-
-xfs_attr_leaf_create: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_rebalance: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-
-Now it tries to add the new attribute again, and finds it doesn't
-fit into either of the rebalanced blocks:
-
-xfs_attr_leaf_add:    dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_split:  dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-
-so it grows again:
-
-xfs_da_grow_inode:    dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_bmap_post_update: dev 7:0 ino 0x83 state LC|ATTR idx 3 offset 3 block 622 count 2 flag 0 caller xfs_bmap_add_extent_hole_real
-
-And it is block 623 that was added. It now tries to rebalance again,
-and add the entry again. This time it does a node split onto the new
-block, andch results in a successful add, and then it commits the
-transaction:
-
-xfs_attr_leaf_create: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_rebalance: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_add:    dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_node_split:    dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_node_add:      dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_node_add:      dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_inode_pin:        dev 7:0 ino 0x83 count 1 pincount 0 caller xfs_cil_prepare_item.isra.1
-xfs_log_done_perm:    dev 7:0 type ATTR_SET .....
-
-At this point, we have an attribute tree that has two copies of the
-attribute - the old and the new - with the new entry having the
-incomplete flag set in it. The transaction has committed, so we are
-ready to do the atomic swap:
-
-xfs_attr_leaf_flipflags: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_log_done_perm:    dev 7:0 type ATTR_SET ....
-
-We've now changed the incomplete flag to be on the old entry, so now
-the new entry is the valid one. The final trnasaction will remove
-the old entry, the stale blocks and rebalance the attribute tree:
-
-xfs_attr_leaf_lookup: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_lookup: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_lookup: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_join:          dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_attr_leaf_unbalance: dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_shrink_inode:  dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_bunmap:           dev 7:0 ino 0x83 size 0x2000 bno 0x3 len 0x1flags METADATA|ATTRFORK caller xfs_da_shrink_inode
-xfs_bmap_pre_update:  dev 7:0 ino 0x83 state ATTR idx 3 offset 3 block 622 count 2 flag 0 caller xfs_bmap_del_extent
-xfs_bmap_post_update: dev 7:0 ino 0x83 state ATTR idx 3 offset 4 block 623 count 1 flag 0 caller xfs_bmap_del_extent
-xfs_da_node_remove:   dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_da_root_join:     dev 7:0 ino 0x83 name FLAX_OTHER namelen 10 hashval 0xb611400d inumber 0x0 op_flags RENAME|ADDNAME|OKNOENT
-xfs_log_done_perm:    dev 7:0 type ATTR_SET ...
-xfs_free_extent:      dev 7:0 agno 0 agbno 622 len 1 isfl 0 none
-xfs_alloc_busy:       dev 7:0 agno 0 agbno 622 len 1
-xfs_log_done_perm:    dev 7:0 type ATTR_SET ....
-
-And what we see here is only block 622 is freed. So we added two
-blocks to the tree, but only removed one, but ended up with all the
-attributes fitting back in the original two leaf blocks.
-
-I suspect this is rarely travelled code - the replacement of the
-attribute where it requires two new blocks, splits and rebalances to
-occur before an add can be made is likely to be a rarely trodden
-path, and it's probably rarer that the removal path ends up with the
-new attribute fitting in the old block and so has to clean up the
-two added blocks at once.
-
-more in-depth tracing is required to understand where it is going
-wrong. The patch that created the above traces is below.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-xfs: add lots of attribute trace points
-
-From: Dave Chinner <dchinner@redhat.com>
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr.c      |   16 ++++++++++++++
- fs/xfs/xfs_attr_leaf.c |   33 +++++++++++++++++++++++++++-
- fs/xfs/xfs_da_btree.c  |   26 +++++++++++++++++++++++
- fs/xfs/xfs_trace.h     |   54 ++++++++++++++++++++++++++++++++++++++++++++++-
- 4 files changed, 125 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_dquot.c |   85 +++++++++++++++++++++++++++--------------------------
+ fs/xfs/xfs_dquot.h |    2 -
+ fs/xfs/xfs_qm.c    |   59 +++++++++++++++---------------------
+ fs/xfs/xfs_qm.h    |    7 ++--
+ 4 files changed, 74 insertions(+), 79 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 08b9ac6..65d61b9 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -853,6 +853,8 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2012-03-12 14:04:41.123336674 +0100
++++ xfs/fs/xfs/xfs_dquot.c	2012-03-13 09:37:23.186787717 +0100
+@@ -47,7 +47,7 @@
+  *     qi->qi_dqlist_lock
+  *       dquot->q_qlock (xfs_dqlock() and friends)
+  *         dquot->q_flush (xfs_dqflock() and friends)
+- *         xfs_Gqm->qm_dqfrlist_lock
++ *         qi->qi_lru_lock
+  *
+  * If two dquots need to be locked the order is user before group/project,
+  * otherwise by the lowest id first, see xfs_dqlock2.
+@@ -69,7 +69,7 @@ void
+ xfs_qm_dqdestroy(
+ 	xfs_dquot_t	*dqp)
  {
- 	int newsize, forkoff, retval;
+-	ASSERT(list_empty(&dqp->q_freelist));
++	ASSERT(list_empty(&dqp->q_lru));
  
-+	trace_xfs_attr_sf_addname(args);
-+
- 	retval = xfs_attr_shortform_lookup(args);
- 	if ((args->flags & ATTR_REPLACE) && (retval == ENOATTR)) {
- 		return(retval);
-@@ -896,6 +898,8 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 	xfs_dabuf_t *bp;
- 	int retval, error, committed, forkoff;
+ 	mutex_destroy(&dqp->q_qlock);
+ 	kmem_zone_free(xfs_Gqm->qm_dqzone, dqp);
+@@ -497,7 +497,7 @@ xfs_qm_dqread(
+ 	dqp->dq_flags = type;
+ 	dqp->q_core.d_id = cpu_to_be32(id);
+ 	dqp->q_mount = mp;
+-	INIT_LIST_HEAD(&dqp->q_freelist);
++	INIT_LIST_HEAD(&dqp->q_lru);
+ 	mutex_init(&dqp->q_qlock);
+ 	init_waitqueue_head(&dqp->q_pinwait);
  
-+	trace_xfs_attr_leaf_addname(args);
-+
+@@ -844,38 +844,22 @@ restart:
+ }
+ 
+ 
+-/*
+- * Release a reference to the dquot (decrement ref-count)
+- * and unlock it. If there is a group quota attached to this
+- * dquot, carefully release that too without tripping over
+- * deadlocks'n'stuff.
+- */
+-void
+-xfs_qm_dqput(
++STATIC void
++xfs_qm_dqput_final(
+ 	struct xfs_dquot	*dqp)
+ {
++	struct xfs_quotainfo	*qi = dqp->q_mount->m_quotainfo;
+ 	struct xfs_dquot	*gdqp;
+ 
+-	ASSERT(dqp->q_nrefs > 0);
+-	ASSERT(XFS_DQ_IS_LOCKED(dqp));
+-
+-	trace_xfs_dqput(dqp);
+-
+-recurse:
+-	if (--dqp->q_nrefs > 0) {
+-		xfs_dqunlock(dqp);
+-		return;
+-	}
+-
+ 	trace_xfs_dqput_free(dqp);
+ 
+-	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-	if (list_empty(&dqp->q_freelist)) {
+-		list_add_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
+-		xfs_Gqm->qm_dqfrlist_cnt++;
++	mutex_lock(&qi->qi_lru_lock);
++	if (list_empty(&dqp->q_lru)) {
++		list_add_tail(&dqp->q_lru, &qi->qi_lru_list);
++		qi->qi_lru_count++;
+ 		XFS_STATS_INC(xs_qm_dquot_unused);
+ 	}
+-	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++	mutex_unlock(&qi->qi_lru_lock);
+ 
  	/*
- 	 * Read the (only) block in the attribute list in.
+ 	 * If we just added a udquot to the freelist, then we want to release
+@@ -892,10 +876,29 @@ recurse:
+ 	/*
+ 	 * If we had a group quota hint, release it now.
  	 */
-@@ -920,6 +924,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 			xfs_da_brelse(args->trans, bp);
- 			return(retval);
- 		}
+-	if (gdqp) {
+-		dqp = gdqp;
+-		goto recurse;
+-	}
++	if (gdqp)
++		xfs_qm_dqput(gdqp);
++}
 +
-+		trace_xfs_attr_leaf_replace(args);
++/*
++ * Release a reference to the dquot (decrement ref-count) and unlock it.
++ *
++ * If there is a group quota attached to this dquot, carefully release that
++ * too without tripping over deadlocks'n'stuff.
++ */
++void
++xfs_qm_dqput(
++	struct xfs_dquot	*dqp)
++{
++	ASSERT(dqp->q_nrefs > 0);
++	ASSERT(XFS_DQ_IS_LOCKED(dqp));
 +
- 		args->op_flags |= XFS_DA_OP_RENAME;	/* an atomic rename */
- 		args->blkno2 = args->blkno;		/* set 2nd entry info*/
- 		args->index2 = args->index;
-@@ -1090,6 +1097,8 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
- 	xfs_dabuf_t *bp;
- 	int error, committed, forkoff;
++	trace_xfs_dqput(dqp);
++
++	if (--dqp->q_nrefs > 0)
++		xfs_dqunlock(dqp);
++	else
++		xfs_qm_dqput_final(dqp);
+ }
  
-+	trace_xfs_attr_leaf_removename(args);
-+
+ /*
+@@ -1115,6 +1118,7 @@ xfs_qm_dqpurge(
+ {
+ 	struct xfs_mount	*mp = dqp->q_mount;
+ 	struct xfs_dqhash	*qh = dqp->q_hash;
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+ 
+ 	xfs_dqlock(dqp);
+ 
+@@ -1165,22 +1169,22 @@ xfs_qm_dqpurge(
+ 	qh->qh_version++;
+ 	mutex_unlock(&qh->qh_lock);
+ 
+-	mutex_lock(&mp->m_quotainfo->qi_dqlist_lock);
++	mutex_lock(&qi->qi_dqlist_lock);
+ 	list_del_init(&dqp->q_mplist);
+-	mp->m_quotainfo->qi_dqreclaims++;
+-	mp->m_quotainfo->qi_dquots--;
+-	mutex_unlock(&mp->m_quotainfo->qi_dqlist_lock);
++	qi->qi_dqreclaims++;
++	qi->qi_dquots--;
++	mutex_unlock(&qi->qi_dqlist_lock);
+ 
  	/*
- 	 * Remove the attribute.
+ 	 * We move dquots to the freelist as soon as their reference count
+ 	 * hits zero, so it really should be on the freelist here.
  	 */
-@@ -1223,6 +1232,8 @@ xfs_attr_node_addname(xfs_da_args_t *args)
- 	xfs_mount_t *mp;
- 	int committed, retval, error;
+-	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-	ASSERT(!list_empty(&dqp->q_freelist));
+-	list_del_init(&dqp->q_freelist);
+-	xfs_Gqm->qm_dqfrlist_cnt--;
++	mutex_lock(&qi->qi_lru_lock);
++	ASSERT(!list_empty(&dqp->q_lru));
++	list_del_init(&dqp->q_lru);
++	qi->qi_lru_count--;
+ 	XFS_STATS_DEC(xs_qm_dquot_unused);
+-	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++	mutex_unlock(&qi->qi_lru_lock);
  
-+	trace_xfs_attr_node_addname(args);
-+
+ 	xfs_qm_dqdestroy(dqp);
+ }
+Index: xfs/fs/xfs/xfs_dquot.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.h	2012-03-12 09:26:54.216721892 +0100
++++ xfs/fs/xfs/xfs_dquot.h	2012-03-13 09:36:10.070119695 +0100
+@@ -47,7 +47,7 @@ struct xfs_trans;
+  */
+ typedef struct xfs_dquot {
+ 	uint		 dq_flags;	/* various flags (XFS_DQ_*) */
+-	struct list_head q_freelist;	/* global free list of dquots */
++	struct list_head q_lru;		/* global free list of dquots */
+ 	struct list_head q_mplist;	/* mount's list of dquots */
+ 	struct list_head q_hashlist;	/* gloabl hash list of dquots */
+ 	xfs_dqhash_t	*q_hash;	/* the hashchain header */
+Index: xfs/fs/xfs/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.c	2012-03-12 14:04:41.126670008 +0100
++++ xfs/fs/xfs/xfs_qm.c	2012-03-13 09:36:10.036786361 +0100
+@@ -61,11 +61,6 @@ STATIC int	xfs_qm_init_quotainos(xfs_mou
+ STATIC int	xfs_qm_init_quotainfo(xfs_mount_t *);
+ STATIC int	xfs_qm_shake(struct shrinker *, struct shrink_control *);
+ 
+-static struct shrinker xfs_qm_shaker = {
+-	.shrink = xfs_qm_shake,
+-	.seeks = DEFAULT_SEEKS,
+-};
+-
+ /*
+  * Initialize the XQM structure.
+  * Note that there is not one quota manager per file system.
+@@ -106,13 +101,6 @@ xfs_Gqm_init(void)
+ 	}
+ 
  	/*
- 	 * Fill in bucket of arguments/results/context to carry around.
+-	 * Freelist of all dquots of all file systems
+-	 */
+-	INIT_LIST_HEAD(&xqm->qm_dqfrlist);
+-	xqm->qm_dqfrlist_cnt = 0;
+-	mutex_init(&xqm->qm_dqfrlist_lock);
+-
+-	/*
+ 	 * dquot zone. we register our own low-memory callback.
  	 */
-@@ -1249,6 +1260,9 @@ restart:
- 	} else if (retval == EEXIST) {
- 		if (args->flags & ATTR_CREATE)
- 			goto out;
-+
-+		trace_xfs_attr_node_replace(args);
-+
- 		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
- 		args->blkno2 = args->blkno;		/* set 2nd entry info*/
- 		args->index2 = args->index;
-@@ -1480,6 +1494,8 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 	xfs_dabuf_t *bp;
- 	int retval, error, committed, forkoff;
+ 	if (!qm_dqzone) {
+@@ -122,8 +110,6 @@ xfs_Gqm_init(void)
+ 	} else
+ 		xqm->qm_dqzone = qm_dqzone;
  
-+	trace_xfs_attr_node_removename(args);
-+
+-	register_shrinker(&xfs_qm_shaker);
+-
  	/*
- 	 * Tie a string around our finger to remind us where we are.
+ 	 * The t_dqinfo portion of transactions.
  	 */
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index d25eafd..73c0679 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -235,6 +235,8 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
- 	xfs_inode_t *dp;
- 	xfs_ifork_t *ifp;
+@@ -155,12 +141,6 @@ xfs_qm_destroy(
+ 	ASSERT(xqm != NULL);
+ 	ASSERT(xqm->qm_nrefs == 0);
  
-+	trace_xfs_attr_sf_create(args);
+-	unregister_shrinker(&xfs_qm_shaker);
+-
+-	mutex_lock(&xqm->qm_dqfrlist_lock);
+-	ASSERT(list_empty(&xqm->qm_dqfrlist));
+-	mutex_unlock(&xqm->qm_dqfrlist_lock);
+-
+ 	hsize = xqm->qm_dqhashmask + 1;
+ 	for (i = 0; i < hsize; i++) {
+ 		xfs_qm_list_destroy(&(xqm->qm_usr_dqhtable[i]));
+@@ -826,6 +806,10 @@ xfs_qm_init_quotainfo(
+ 	mutex_init(&qinf->qi_dqlist_lock);
+ 	lockdep_set_class(&qinf->qi_dqlist_lock, &xfs_quota_mplist_class);
+ 
++	INIT_LIST_HEAD(&qinf->qi_lru_list);
++	qinf->qi_lru_count = 0;
++	mutex_init(&qinf->qi_lru_lock);
 +
- 	dp = args->dp;
- 	ASSERT(dp != NULL);
- 	ifp = dp->i_afp;
-@@ -268,6 +270,8 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
- 	xfs_inode_t *dp;
- 	xfs_ifork_t *ifp;
+ 	qinf->qi_dqreclaims = 0;
  
-+	trace_xfs_attr_sf_add(args);
-+
- 	dp = args->dp;
- 	mp = dp->i_mount;
- 	dp->i_d.di_forkoff = forkoff;
-@@ -337,6 +341,8 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
- 	xfs_mount_t *mp;
- 	xfs_inode_t *dp;
+ 	/* mutex used to serialize quotaoffs */
+@@ -893,6 +877,9 @@ xfs_qm_init_quotainfo(
+ 		qinf->qi_rtbwarnlimit = XFS_QM_RTBWARNLIMIT;
+ 	}
  
-+	trace_xfs_attr_sf_remove(args);
-+
- 	dp = args->dp;
- 	mp = dp->i_mount;
- 	base = sizeof(xfs_attr_sf_hdr_t);
-@@ -405,6 +411,8 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
- 	int i;
- 	xfs_ifork_t *ifp;
++	qinf->qi_shrinker.shrink = xfs_qm_shake;
++	qinf->qi_shrinker.seeks = DEFAULT_SEEKS;
++	register_shrinker(&qinf->qi_shrinker);
+ 	return 0;
+ }
  
-+	trace_xfs_attr_sf_lookup(args);
-+
- 	ifp = args->dp->i_afp;
- 	ASSERT(ifp->if_flags & XFS_IFINLINE);
- 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-@@ -476,6 +484,8 @@ xfs_attr_shortform_to_leaf(xfs_da_args_t *args)
- 	xfs_dabuf_t *bp;
- 	xfs_ifork_t *ifp;
+@@ -912,6 +899,8 @@ xfs_qm_destroy_quotainfo(
+ 	ASSERT(qi != NULL);
+ 	ASSERT(xfs_Gqm != NULL);
  
-+	trace_xfs_attr_sf_to_leaf(args);
-+
- 	dp = args->dp;
- 	ifp = dp->i_afp;
- 	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-@@ -775,6 +785,8 @@ xfs_attr_leaf_to_shortform(xfs_dabuf_t *bp, xfs_da_args_t *args, int forkoff)
- 	char *tmpbuffer;
- 	int error, i;
- 
-+	trace_xfs_attr_leaf_to_sf(args);
-+
- 	dp = args->dp;
- 	tmpbuffer = kmem_alloc(XFS_LBSIZE(dp->i_mount), KM_SLEEP);
- 	ASSERT(tmpbuffer != NULL);
-@@ -848,6 +860,8 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
- 	xfs_dablk_t blkno;
- 	int error;
- 
-+	trace_xfs_attr_leaf_to_node(args);
-+
- 	dp = args->dp;
- 	bp1 = bp2 = NULL;
- 	error = xfs_da_grow_inode(args, &blkno);
-@@ -911,6 +925,8 @@ xfs_attr_leaf_create(xfs_da_args_t *args, xfs_dablk_t blkno, xfs_dabuf_t **bpp)
- 	xfs_dabuf_t *bp;
- 	int error;
- 
-+	trace_xfs_attr_leaf_create(args);
-+
- 	dp = args->dp;
- 	ASSERT(dp != NULL);
- 	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp,
-@@ -948,6 +964,8 @@ xfs_attr_leaf_split(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
- 	xfs_dablk_t blkno;
- 	int error;
- 
-+	trace_xfs_attr_leaf_split(state->args);
++	unregister_shrinker(&qi->qi_shrinker);
 +
  	/*
- 	 * Allocate space for a new leaf node.
- 	 */
-@@ -1001,6 +1019,8 @@ xfs_attr_leaf_add(xfs_dabuf_t *bp, xfs_da_args_t *args)
- 	xfs_attr_leaf_map_t *map;
- 	int tablesize, entsize, sum, tmp, i;
- 
-+	trace_xfs_attr_leaf_add(args);
-+
- 	leaf = bp->data;
- 	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT((args->index >= 0)
-@@ -1128,8 +1148,6 @@ xfs_attr_leaf_add_work(xfs_dabuf_t *bp, xfs_da_args_t *args, int mapindex)
- 	       (be32_to_cpu(entry->hashval) <= be32_to_cpu((entry+1)->hashval)));
- 
- 	/*
--	 * Copy the attribute name and value into the new space.
--	 *
- 	 * For "remote" attribute values, simply note that we need to
- 	 * allocate space for the "remote" value.  We can't actually
- 	 * allocate the extents in this transaction, and we can't decide
-@@ -1265,6 +1283,8 @@ xfs_attr_leaf_rebalance(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
- 	ASSERT(leaf2->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	args = state->args;
- 
-+	trace_xfs_attr_leaf_rebalance(args);
-+
- 	/*
- 	 * Check ordering of blocks, reverse if it makes things simpler.
- 	 *
-@@ -1810,6 +1830,8 @@ xfs_attr_leaf_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
- 	xfs_mount_t *mp;
- 	char *tmpbuffer;
- 
-+	trace_xfs_attr_leaf_unbalance(state->args);
-+
- 	/*
- 	 * Set up environment.
- 	 */
-@@ -1919,6 +1941,8 @@ xfs_attr_leaf_lookup_int(xfs_dabuf_t *bp, xfs_da_args_t *args)
- 	int probe, span;
- 	xfs_dahash_t hashval;
- 
-+	trace_xfs_attr_leaf_lookup(args);
-+
- 	leaf = bp->data;
- 	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(be16_to_cpu(leaf->hdr.count)
-@@ -2445,6 +2469,7 @@ xfs_attr_leaf_clearflag(xfs_da_args_t *args)
- 	char *name;
- #endif /* DEBUG */
- 
-+	trace_xfs_attr_leaf_clearflag(args);
- 	/*
- 	 * Set up the operation.
- 	 */
-@@ -2509,6 +2534,8 @@ xfs_attr_leaf_setflag(xfs_da_args_t *args)
- 	xfs_dabuf_t *bp;
- 	int error;
- 
-+	trace_xfs_attr_leaf_setflag(args);
-+
- 	/*
- 	 * Set up the operation.
- 	 */
-@@ -2565,6 +2592,8 @@ xfs_attr_leaf_flipflags(xfs_da_args_t *args)
- 	char *name1, *name2;
- #endif /* DEBUG */
- 
-+	trace_xfs_attr_leaf_flipflags(args);
-+
- 	/*
- 	 * Read the block containing the "old" attr
- 	 */
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 77c7425..2ce0e28 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -108,6 +108,8 @@ xfs_da_node_create(xfs_da_args_t *args, xfs_dablk_t blkno, int level,
- 	int error;
- 	xfs_trans_t *tp;
- 
-+	trace_xfs_da_node_create(args);
-+
- 	tp = args->trans;
- 	error = xfs_da_get_buf(tp, args->dp, blkno, -1, &bp, whichfork);
- 	if (error)
-@@ -140,6 +142,8 @@ xfs_da_split(xfs_da_state_t *state)
- 	xfs_dabuf_t *bp;
- 	int max, action, error, i;
- 
-+	trace_xfs_da_split(state->args);
-+
- 	/*
- 	 * Walk back up the tree splitting/inserting/adjusting as necessary.
- 	 * If we need to insert and there isn't room, split the node, then
-@@ -300,6 +304,8 @@ xfs_da_root_split(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
- 	xfs_mount_t *mp;
- 	xfs_dir2_leaf_t *leaf;
- 
-+	trace_xfs_da_root_split(state->args);
-+
- 	/*
- 	 * Copy the existing (incorrect) block from the root node position
- 	 * to a free space somewhere.
-@@ -380,6 +386,8 @@ xfs_da_node_split(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
- 	int newcount, error;
- 	int useextra;
- 
-+	trace_xfs_da_node_split(state->args);
-+
- 	node = oldblk->bp->data;
- 	ASSERT(node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
- 
-@@ -466,6 +474,8 @@ xfs_da_node_rebalance(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
- 	int count, tmp;
- 	xfs_trans_t *tp;
- 
-+	trace_xfs_da_node_rebalance(state->args);
-+
- 	node1 = blk1->bp->data;
- 	node2 = blk2->bp->data;
- 	/*
-@@ -574,6 +584,8 @@ xfs_da_node_add(xfs_da_state_t *state, xfs_da_state_blk_t *oldblk,
- 	xfs_da_node_entry_t *btree;
- 	int tmp;
- 
-+	trace_xfs_da_node_add(state->args);
-+
- 	node = oldblk->bp->data;
- 	ASSERT(node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
- 	ASSERT((oldblk->index >= 0) && (oldblk->index <= be16_to_cpu(node->hdr.count)));
-@@ -619,6 +631,8 @@ xfs_da_join(xfs_da_state_t *state)
- 	xfs_da_state_blk_t *drop_blk, *save_blk;
- 	int action, error;
- 
-+	trace_xfs_da_join(state->args);
-+
- 	action = 0;
- 	drop_blk = &state->path.blk[ state->path.active-1 ];
- 	save_blk = &state->altpath.blk[ state->path.active-1 ];
-@@ -723,6 +737,8 @@ xfs_da_root_join(xfs_da_state_t *state, xfs_da_state_blk_t *root_blk)
- 	xfs_dabuf_t *bp;
- 	int error;
- 
-+	trace_xfs_da_root_join(state->args);
-+
- 	args = state->args;
- 	ASSERT(args != NULL);
- 	ASSERT(root_blk->magic == XFS_DA_NODE_MAGIC);
-@@ -941,6 +957,8 @@ xfs_da_node_remove(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk)
- 	xfs_da_node_entry_t *btree;
- 	int tmp;
- 
-+	trace_xfs_da_node_remove(state->args);
-+
- 	node = drop_blk->bp->data;
- 	ASSERT(drop_blk->index < be16_to_cpu(node->hdr.count));
- 	ASSERT(drop_blk->index >= 0);
-@@ -984,6 +1002,8 @@ xfs_da_node_unbalance(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
- 	int tmp;
- 	xfs_trans_t *tp;
- 
-+	trace_xfs_da_node_unbalance(state->args);
-+
- 	drop_node = drop_blk->bp->data;
- 	save_node = save_blk->bp->data;
- 	ASSERT(drop_node->hdr.info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC));
-@@ -1652,6 +1672,8 @@ xfs_da_grow_inode(
- 	int			count;
+ 	 * Release the reference that XQM kept, so that we know
+ 	 * when the XQM structure should be freed. We cannot assume
+@@ -1623,6 +1612,7 @@ xfs_qm_dqreclaim_one(
+ 	struct list_head	*dispose_list)
+ {
+ 	struct xfs_mount	*mp = dqp->q_mount;
++	struct xfs_quotainfo	*qi = mp->m_quotainfo;
  	int			error;
  
-+	trace_xfs_da_grow_inode(args);
-+
- 	if (args->whichfork == XFS_DATA_FORK) {
- 		bno = args->dp->i_mount->m_dirleafblk;
- 		count = args->dp->i_mount->m_dirblkfsbs;
-@@ -1690,6 +1712,8 @@ xfs_da_swap_lastblock(xfs_da_args_t *args, xfs_dablk_t *dead_blknop,
- 	xfs_dir2_leaf_t *dead_leaf2;
- 	xfs_dahash_t dead_hash;
+ 	if (!xfs_dqlock_nowait(dqp))
+@@ -1638,8 +1628,8 @@ xfs_qm_dqreclaim_one(
+ 		trace_xfs_dqreclaim_want(dqp);
+ 		XFS_STATS_INC(xs_qm_dqwants);
  
-+	trace_xfs_da_swap_lastblock(args);
-+
- 	dead_buf = *dead_bufp;
- 	dead_blkno = *dead_blknop;
- 	tp = args->trans;
-@@ -1878,6 +1902,8 @@ xfs_da_shrink_inode(xfs_da_args_t *args, xfs_dablk_t dead_blkno,
- 	xfs_trans_t *tp;
- 	xfs_mount_t *mp;
+-		list_del_init(&dqp->q_freelist);
+-		xfs_Gqm->qm_dqfrlist_cnt--;
++		list_del_init(&dqp->q_lru);
++		qi->qi_lru_count--;
+ 		XFS_STATS_DEC(xs_qm_dquot_unused);
+ 		return;
+ 	}
+@@ -1688,8 +1678,8 @@ xfs_qm_dqreclaim_one(
+ 	xfs_dqunlock(dqp);
  
-+	trace_xfs_da_shrink_inode(args);
-+
- 	dp = args->dp;
- 	w = args->whichfork;
- 	tp = args->trans;
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 3b369c1..cde466b 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1408,7 +1408,7 @@ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_noagbp);
- DEFINE_ALLOC_EVENT(xfs_alloc_vextent_loopfailed);
- DEFINE_ALLOC_EVENT(xfs_alloc_vextent_allfailed);
+ 	ASSERT(dqp->q_nrefs == 0);
+-	list_move_tail(&dqp->q_freelist, dispose_list);
+-	xfs_Gqm->qm_dqfrlist_cnt--;
++	list_move_tail(&dqp->q_lru, dispose_list);
++	qi->qi_lru_count--;
+ 	XFS_STATS_DEC(xs_qm_dquot_unused);
  
--DECLARE_EVENT_CLASS(xfs_dir2_class,
-+DECLARE_EVENT_CLASS(xfs_da_class,
- 	TP_PROTO(struct xfs_da_args *args),
- 	TP_ARGS(args),
- 	TP_STRUCT__entry(
-@@ -1443,7 +1443,7 @@ DECLARE_EVENT_CLASS(xfs_dir2_class,
- )
+ 	trace_xfs_dqreclaim_done(dqp);
+@@ -1702,7 +1692,7 @@ out_busy:
+ 	/*
+ 	 * Move the dquot to the tail of the list so that we don't spin on it.
+ 	 */
+-	list_move_tail(&dqp->q_freelist, &xfs_Gqm->qm_dqfrlist);
++	list_move_tail(&dqp->q_lru, &qi->qi_lru_list);
  
- #define DEFINE_DIR2_EVENT(name) \
--DEFINE_EVENT(xfs_dir2_class, name, \
-+DEFINE_EVENT(xfs_da_class, name, \
- 	TP_PROTO(struct xfs_da_args *args), \
- 	TP_ARGS(args))
- DEFINE_DIR2_EVENT(xfs_dir2_sf_addname);
-@@ -1472,6 +1472,56 @@ DEFINE_DIR2_EVENT(xfs_dir2_node_replace);
- DEFINE_DIR2_EVENT(xfs_dir2_node_removename);
- DEFINE_DIR2_EVENT(xfs_dir2_node_to_leaf);
+ 	trace_xfs_dqreclaim_busy(dqp);
+ 	XFS_STATS_INC(xs_qm_dqreclaim_misses);
+@@ -1713,6 +1703,8 @@ xfs_qm_shake(
+ 	struct shrinker		*shrink,
+ 	struct shrink_control	*sc)
+ {
++	struct xfs_quotainfo	*qi =
++		container_of(shrink, struct xfs_quotainfo, qi_shrinker);
+ 	int			nr_to_scan = sc->nr_to_scan;
+ 	LIST_HEAD		(dispose_list);
+ 	struct xfs_dquot	*dqp;
+@@ -1722,24 +1714,23 @@ xfs_qm_shake(
+ 	if (!nr_to_scan)
+ 		goto out;
  
-+#define DEFINE_ATTR_EVENT(name) \
-+DEFINE_EVENT(xfs_da_class, name, \
-+	TP_PROTO(struct xfs_da_args *args), \
-+	TP_ARGS(args))
-+DEFINE_ATTR_EVENT(xfs_attr_sf_add);
-+DEFINE_ATTR_EVENT(xfs_attr_sf_addname);
-+DEFINE_ATTR_EVENT(xfs_attr_sf_create);
-+DEFINE_ATTR_EVENT(xfs_attr_sf_lookup);
-+DEFINE_ATTR_EVENT(xfs_attr_sf_remove);
-+DEFINE_ATTR_EVENT(xfs_attr_sf_removename);
-+DEFINE_ATTR_EVENT(xfs_attr_sf_to_leaf);
-+
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_add);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_addname);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_create);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_lookup);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_replace);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_removename);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_split);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_clearflag);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_setflag);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_flipflags);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_to_sf);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_to_node);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_rebalance);
-+DEFINE_ATTR_EVENT(xfs_attr_leaf_unbalance);
-+
-+DEFINE_ATTR_EVENT(xfs_attr_node_addname);
-+DEFINE_ATTR_EVENT(xfs_attr_node_lookup);
-+DEFINE_ATTR_EVENT(xfs_attr_node_replace);
-+DEFINE_ATTR_EVENT(xfs_attr_node_removename);
-+
-+#define DEFINE_DA_EVENT(name) \
-+DEFINE_EVENT(xfs_da_class, name, \
-+	TP_PROTO(struct xfs_da_args *args), \
-+	TP_ARGS(args))
-+DEFINE_DA_EVENT(xfs_da_split);
-+DEFINE_DA_EVENT(xfs_da_join);
-+DEFINE_DA_EVENT(xfs_da_root_split);
-+DEFINE_DA_EVENT(xfs_da_root_join);
-+DEFINE_DA_EVENT(xfs_da_node_add);
-+DEFINE_DA_EVENT(xfs_da_node_create);
-+DEFINE_DA_EVENT(xfs_da_node_split);
-+DEFINE_DA_EVENT(xfs_da_node_remove);
-+DEFINE_DA_EVENT(xfs_da_node_rebalance);
-+DEFINE_DA_EVENT(xfs_da_node_unbalance);
-+DEFINE_DA_EVENT(xfs_da_swap_lastblock);
-+DEFINE_DA_EVENT(xfs_da_grow_inode);
-+DEFINE_DA_EVENT(xfs_da_shrink_inode);
-+
- DECLARE_EVENT_CLASS(xfs_dir2_space_class,
- 	TP_PROTO(struct xfs_da_args *args, int idx),
- 	TP_ARGS(args, idx),
+-	mutex_lock(&xfs_Gqm->qm_dqfrlist_lock);
+-	while (!list_empty(&xfs_Gqm->qm_dqfrlist)) {
++	mutex_lock(&qi->qi_lru_lock);
++	while (!list_empty(&qi->qi_lru_list)) {
+ 		if (nr_to_scan-- <= 0)
+ 			break;
+-		dqp = list_first_entry(&xfs_Gqm->qm_dqfrlist, struct xfs_dquot,
+-				       q_freelist);
++		dqp = list_first_entry(&qi->qi_lru_list, struct xfs_dquot,
++				       q_lru);
+ 		xfs_qm_dqreclaim_one(dqp, &dispose_list);
+ 	}
+-	mutex_unlock(&xfs_Gqm->qm_dqfrlist_lock);
++	mutex_unlock(&qi->qi_lru_lock);
+ 
+ 	while (!list_empty(&dispose_list)) {
+-		dqp = list_first_entry(&dispose_list, struct xfs_dquot,
+-				       q_freelist);
+-		list_del_init(&dqp->q_freelist);
++		dqp = list_first_entry(&dispose_list, struct xfs_dquot, q_lru);
++		list_del_init(&dqp->q_lru);
+ 		xfs_qm_dqfree_one(dqp);
+ 	}
+ out:
+-	return (xfs_Gqm->qm_dqfrlist_cnt / 100) * sysctl_vfs_cache_pressure;
++	return (qi->qi_lru_count / 100) * sysctl_vfs_cache_pressure;
+ }
+ 
+ /*
+Index: xfs/fs/xfs/xfs_qm.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.h	2012-03-12 14:04:41.126670008 +0100
++++ xfs/fs/xfs/xfs_qm.h	2012-03-13 09:36:10.046786362 +0100
+@@ -56,9 +56,6 @@ typedef struct xfs_qm {
+ 	xfs_dqlist_t	*qm_usr_dqhtable;/* udquot hash table */
+ 	xfs_dqlist_t	*qm_grp_dqhtable;/* gdquot hash table */
+ 	uint		 qm_dqhashmask;	 /* # buckets in dq hashtab - 1 */
+-	struct list_head qm_dqfrlist;	 /* freelist of dquots */
+-	struct mutex	 qm_dqfrlist_lock;
+-	int		 qm_dqfrlist_cnt;
+ 	uint		 qm_nrefs;	 /* file systems with quota on */
+ 	kmem_zone_t	*qm_dqzone;	 /* dquot mem-alloc zone */
+ 	kmem_zone_t	*qm_dqtrxzone;	 /* t_dqinfo of transactions */
+@@ -71,6 +68,9 @@ typedef struct xfs_qm {
+ typedef struct xfs_quotainfo {
+ 	xfs_inode_t	*qi_uquotaip;	 /* user quota inode */
+ 	xfs_inode_t	*qi_gquotaip;	 /* group quota inode */
++	struct list_head qi_lru_list;
++	struct mutex	 qi_lru_lock;
++	int		 qi_lru_count;
+ 	struct list_head qi_dqlist;	 /* all dquots in filesys */
+ 	struct mutex	 qi_dqlist_lock;
+ 	int		 qi_dquots;
+@@ -91,6 +91,7 @@ typedef struct xfs_quotainfo {
+ 	xfs_qcnt_t	 qi_isoftlimit;	 /* default inode count soft limit */
+ 	xfs_qcnt_t	 qi_rtbhardlimit;/* default realtime blk hard limit */
+ 	xfs_qcnt_t	 qi_rtbsoftlimit;/* default realtime blk soft limit */
++	struct shrinker  qi_shrinker;
+ } xfs_quotainfo_t;
+ 
+ 
 
 _______________________________________________
 xfs mailing list
