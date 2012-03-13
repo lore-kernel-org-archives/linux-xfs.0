@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2DI7wPZ040633 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 13:07:59 -0500
-Received: from mail-pz0-f47.google.com (mail-pz0-f47.google.com
-	[209.85.210.47]) by cuda.sgi.com with ESMTP id kQa7viUHHNywQDwg
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 13 Mar 2012 11:07:57 -0700 (PDT)
-Received: by dado14 with SMTP id o14so1288181dad.6
-	for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 11:07:56 -0700 (PDT)
+	q2DK3lcM058714 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 15:03:47 -0500
+Date: Tue, 13 Mar 2012 15:03:54 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 4/5] xfs: remove the per-filesystem list of dquots
+Message-ID: <20120313200354.GI7762@sgi.com>
+References: <20120313085232.134690907@bombadil.infradead.org>
+	<20120313085308.997632929@bombadil.infradead.org>
 MIME-Version: 1.0
-Date: Tue, 13 Mar 2012 18:07:56 +0000
-Message-ID: <CAEDdjHeXsv6ySy7_QVtSb-LcFG1Q+_aDOdq4QENZk1mvFWgUzw@mail.gmail.com>
-Subject: xfs log error: head behind tail
-From: Pedro Ribeiro <pedrib@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120313085308.997632929@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,73 +23,155 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hi,
+Hey Christoph,
 
-I'm running a custom kernel in one of my production systems. It is
-basically a 2.6.39.4 patched with TuxOnIce and backporting of a number
-of xfs and vfs patches from the 3.0 series:
-xfs-avoid-direct-i-o-write-vs-buffered-i-o-race.patch
-xfs-avoid-synchronous-transactions-when-deleting-attr-blocks.patch
-xfs-do-not-update-xa_last_pushed_lsn-for-locked-items.patch
-xfs-dont-serialise-direct-io-reads-on-page-cache.patch
-xfs-fix-attr2-vs-large-data-fork-assert.patch
-xfs-fix-buffer-flushing-during-unmount.patch
-xfs-fix-error-handling-for-synchronous-writes.patch
-xfs-fix-nfs-export-of-64-bit-inodes-numbers-on-32-bit-kernels.patch
-xfs-fix-possible-memory-corruption-in-xfs_readlink.patch
-xfs-fix-write_inode-return-values.patch
-xfs-fix-xfs_mark_inode_dirty-during-umount.patch
-xfs-force-buffer-writeback-before-blocking-on-the-ilock-in-inode-reclaim.patch
-xfs-force-the-log-if-we-encounter-pinned-buffers-in-.iop_pushbuf.patch
-xfs-return-eio-when-xfs_vn_getattr-failed.patch
-xfs-revert-to-using-a-kthread-for-ail-pushing-botto.patch
-xfs-start-periodic-workers-later.patch
-xfs-use-a-cursor-for-bulk-ail-insertion.patch
-xfs-use-doalloc-flag-in-xfs_qm_dqattach_one.patch
-xfs-validate-acl-count.patch
-vfs-add-device-tag-to-proc-self-mountstats.patch
-vfs-automount-should-ignore-lookup_follow.patch
-vfs-fix-automount-for-negative-autofs-dentries.patch
-vfs-fix-statfs-automounter-semantics-regression.patch
-vfs-fix-the-remaining-automounter-semantics-regressions.patch
-vfs-pathname-lookup-add-lookup_automount-flag.patch
-vfs-show-o_cloexe-bit-properly-in-proc-pid-fdinfo-fd-files.patch
-(among other non-fs backported patches)
+On Tue, Mar 13, 2012 at 04:52:36AM -0400, Christoph Hellwig wrote:
+> Instead of keeping a separate per-filesystem list of dquots we can walk
+> the radix tree for the two places where we need to iterate all quota
+> structures.
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> ---
+>  fs/xfs/xfs_dquot.c |   37 ++----
+>  fs/xfs/xfs_dquot.h |    3 
+>  fs/xfs/xfs_qm.c    |  283 +++++++++++++++++++++++------------------------------
+>  fs/xfs/xfs_qm.h    |    4 
+>  4 files changed, 142 insertions(+), 185 deletions(-)
+> 
+> V2: remove the useless flags/type argument to the iterator callbacks
+>
 
+...
 
-My syslog is showing a lot of these messages:
+> Index: xfs/fs/xfs/xfs_qm.c
+> ===================================================================
+> --- xfs.orig/fs/xfs/xfs_qm.c	2012-03-13 09:37:53.236788274 +0100
+> +++ xfs/fs/xfs/xfs_qm.c	2012-03-13 09:39:32.823456788 +0100
+> @@ -169,6 +169,196 @@ xfs_qm_rele_quotafs_ref(
+>  }
+>  
+>  /*
+> + * We use the batch lookup interface to iterate over the dquots as it
+> + * currently is the only interface into the radix tree code that allows
+> + * fuzzy lookups instead of exact matches.  Holding the lock over multiple
+> + * operations is fine as all callers are used either during mount/umount
+> + * or quotaoff.
+> + */
+> +#define XFS_DQ_LOOKUP_BATCH	32
+> +
+> +STATIC int
+> +xfs_qm_dquot_walk(
+> +	struct xfs_mount	*mp,
+> +	int			type,
+> +	int			(*execute)(struct xfs_dquot *dqp))
+> +{
+> +	struct xfs_quotainfo	*qi = mp->m_quotainfo;
+> +	struct radix_tree_root	*tree = XFS_DQUOT_TREE(qi, type);
+> +	uint32_t		next_index;
+> +	int			last_error = 0;
+> +	int			skipped;
+> +	int			nr_found;
+> +
+> +restart:
+> +	skipped = 0;
+> +	next_index = 0;
+> +	nr_found = 0;
+> +
+> +	while (1) {
+> +		struct xfs_dquot *batch[XFS_DQ_LOOKUP_BATCH];
 
-Mar 13 18:01:49 Biramilho kernel: [509425.318618] XFS (dm-1):
-xlog_space_left: head behind tail
-Mar 13 18:01:49 Biramilho kernel: [509425.318620]   tail_cycle = 345,
-tail_bytes = 103334400
-Mar 13 18:01:49 Biramilho kernel: [509425.318623]   GH   cycle = 345,
-GH   bytes = 103334192
-Mar 13 18:05:56 Biramilho kernel: [509672.560893] XFS (dm-1):
-xlog_space_left: head behind tail
-Mar 13 18:05:56 Biramilho kernel: [509672.560897]   tail_cycle = 345,
-tail_bytes = 103366144
-Mar 13 18:05:56 Biramilho kernel: [509672.560900]   GH   cycle = 345,
-GH   bytes = 103365936
-Mar 13 18:05:56 Biramilho kernel: [509672.560911] XFS (dm-1):
-xlog_space_left: head behind tail
-Mar 13 18:05:56 Biramilho kernel: [509672.560914]   tail_cycle = 345,
-tail_bytes = 103366144
-Mar 13 18:05:56 Biramilho kernel: [509672.560917]   GH   cycle = 345,
-GH   bytes = 103365936
+Eesh.. that probably doesn't need to go onto the stack.  I know we are
+doing it elsewhere too, and that we also sometimes complain about other
+peoples' stack usage.  Don't necessarily have to clean it up now,
+though.  ;)
 
-dm-1 is a partition in a LVM device inside a LUKS encrypted container.
-My uptime is about 67 days with 70 TuxOnIce hibernaitons in between.
-This started to happen at least 10 days ago.
+> +		int		error = 0;
+> +		int		i;
+> +
+> +		mutex_lock(&qi->qi_tree_lock);
+> +		nr_found = radix_tree_gang_lookup(tree, (void **)batch,
+> +					next_index, XFS_DQ_LOOKUP_BATCH);
+> +		if (!nr_found) {
+> +			mutex_unlock(&qi->qi_tree_lock);
+> +			break;
+> +		}
+> +
+> +		for (i = 0; i < nr_found; i++) {
+> +			struct xfs_dquot *dqp = batch[i];
+> +
+> +			next_index = be32_to_cpu(dqp->q_core.d_id) + 1;
+> +
+> +			error = execute(batch[i]);
+> +			if (error == EAGAIN) {
+> +				skipped++;
+> +				continue;
+> +			}
+> +			if (error && last_error != EFSCORRUPTED)
+> +				last_error = error;
+> +		}
+> +
+> +		mutex_unlock(&qi->qi_tree_lock);
+> +
+> +		/* bail out if the filesystem is corrupted.  */
+> +		if (error == EFSCORRUPTED) {
+		    last_error
 
-Is this dangerous? Should I be worried?
+Error can be overwritten in the nr_found loop above.  I think last_error
+is what you want.
 
-Thank you for your help. Please CC me in as i'm not part of the XFS list.
+> +			skipped = 0;
+> +			break;
+> +		}
+> +	}
+> +
+> +	if (skipped) {
+> +		delay(1);
+> +		goto restart;
+> +	}
+> +
+> +	return last_error;
+> +}
+
+...
+
+> +/*
+> + * Purge the dquot cache.
+> + */
+> +int
+> +xfs_qm_dqpurge_all(
+> +	struct xfs_mount	*mp,
+> +	uint			flags)
+> +{
+> +	int			error = 0, error2;
+> +
+> +	if (flags & XFS_QMOPT_UQUOTA)
+> +		error = xfs_qm_dquot_walk(mp, XFS_DQ_USER, xfs_qm_dqpurge);
+> +	if (flags & XFS_QMOPT_GQUOTA) {
+> +		error2 = xfs_qm_dquot_walk(mp, XFS_DQ_GROUP, xfs_qm_dqpurge);
+> +		if (!error)
+> +			error = error2;
+> +	}
+> +	if (flags & XFS_QMOPT_PQUOTA) {
+> +		error2 = xfs_qm_dquot_walk(mp, XFS_DQ_PROJ, xfs_qm_dqpurge);
+> +		if (!error)
+> +			error = error2;
+> +	}
+> +	return error;
+> +}
+
+One caller of this function, xfs_qm_scall_quotaoff, treats the return
+value not as an error, but as a counter of the number of dquots left to
+purge.  If you really do have an error in here, we probably don't want
+to loop.  If we do, lets make it clearer that we're checking for an
+error and not a count.
 
 Regards,
-Pedro
+Ben
 
 _______________________________________________
 xfs mailing list
