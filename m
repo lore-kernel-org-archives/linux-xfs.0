@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2DLsDTO074550 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 16:54:13 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	iEb7bjoj4bjod9xe for <xfs@oss.sgi.com>;
-	Tue, 13 Mar 2012 14:54:11 -0700 (PDT)
-Date: Wed, 14 Mar 2012 08:54:09 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs: remove the per-filesystem list of dquots
-Message-ID: <20120313215409.GI5091@dastard>
-References: <20120313085232.134690907@bombadil.infradead.org>
-	<20120313085308.997632929@bombadil.infradead.org>
-	<20120313200354.GI7762@sgi.com>
+	q2DNL9FE078257 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 18:21:09 -0500
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id hfFABqMNnj9R4vts (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 13 Mar 2012 16:21:07 -0700 (PDT)
+Received: from isper.nabble.com ([192.168.236.156])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1S7b1f-0001lm-7v
+	for xfs@oss.sgi.com; Tue, 13 Mar 2012 16:21:07 -0700
+Message-ID: <33498437.post@talk.nabble.com>
+Date: Tue, 13 Mar 2012 16:21:07 -0700 (PDT)
+From: troby <Thorn.Roby@harlandfs.com>
+Subject: How to deal with XFS stripe geometry mismatch with hardware RAID5
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120313200354.GI7762@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,85 +27,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Mar 13, 2012 at 03:03:54PM -0500, Ben Myers wrote:
-> Hey Christoph,
-> 
-> On Tue, Mar 13, 2012 at 04:52:36AM -0400, Christoph Hellwig wrote:
-> > Instead of keeping a separate per-filesystem list of dquots we can walk
-> > the radix tree for the two places where we need to iterate all quota
-> > structures.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > 
-> > ---
-> >  fs/xfs/xfs_dquot.c |   37 ++----
-> >  fs/xfs/xfs_dquot.h |    3 
-> >  fs/xfs/xfs_qm.c    |  283 +++++++++++++++++++++++------------------------------
-> >  fs/xfs/xfs_qm.h    |    4 
-> >  4 files changed, 142 insertions(+), 185 deletions(-)
-> > 
-> > V2: remove the useless flags/type argument to the iterator callbacks
-> >
-> 
-> ...
-> 
-> > Index: xfs/fs/xfs/xfs_qm.c
-> > ===================================================================
-> > --- xfs.orig/fs/xfs/xfs_qm.c	2012-03-13 09:37:53.236788274 +0100
-> > +++ xfs/fs/xfs/xfs_qm.c	2012-03-13 09:39:32.823456788 +0100
-> > @@ -169,6 +169,196 @@ xfs_qm_rele_quotafs_ref(
-> >  }
-> >  
-> >  /*
-> > + * We use the batch lookup interface to iterate over the dquots as it
-> > + * currently is the only interface into the radix tree code that allows
-> > + * fuzzy lookups instead of exact matches.  Holding the lock over multiple
-> > + * operations is fine as all callers are used either during mount/umount
-> > + * or quotaoff.
-> > + */
-> > +#define XFS_DQ_LOOKUP_BATCH	32
-> > +
-> > +STATIC int
-> > +xfs_qm_dquot_walk(
-> > +	struct xfs_mount	*mp,
-> > +	int			type,
-> > +	int			(*execute)(struct xfs_dquot *dqp))
-> > +{
-> > +	struct xfs_quotainfo	*qi = mp->m_quotainfo;
-> > +	struct radix_tree_root	*tree = XFS_DQUOT_TREE(qi, type);
-> > +	uint32_t		next_index;
-> > +	int			last_error = 0;
-> > +	int			skipped;
-> > +	int			nr_found;
-> > +
-> > +restart:
-> > +	skipped = 0;
-> > +	next_index = 0;
-> > +	nr_found = 0;
-> > +
-> > +	while (1) {
-> > +		struct xfs_dquot *batch[XFS_DQ_LOOKUP_BATCH];
-> 
-> Eesh.. that probably doesn't need to go onto the stack.  I know we are
-> doing it elsewhere too, and that we also sometimes complain about other
-> peoples' stack usage.  Don't necessarily have to clean it up now,
-> though.  ;)
 
-Actually, if we do the walk from the shrinker we can't reliably
-allocate it, so it has to go on the stack. That being said, there
-are optimised generic radix tree walk methods being worked on, so
-this will go away soon...
+I have a 30TB XFS filesystem created on CentOS 5.4 X86_64, kernel 2.6.39,
+using xfsprogs 2.9.4. The underlying hardware is 12 3TB SATA drives on a
+Dell PERC 700 controller with 1GB cache. There is an external journal on a
+separate set of 15k SAS drives (I suspect now this was unnecessary, because
+there is very little metadata activity). When I created the filesystem I
+(mistakenly) believed the stripe width of the filesystem should count all 12
+drives rather than 11. I've seen some opinions that this is correct, but a
+larger number which have convinced me that it is not. I also set up the RAID
+BIOS to use a small stripe element of 8KB per drive, based on the I/O
+request size I was seeing at the time in previous installations of the same
+application, which was generally doing writes around 100KB. l'm trying to
+determine how to proceed to optimize write performance. Recreating the
+filesystem and its existing data is not out of the question, but would be a
+last resort.
 
-Cheers,
+The filesystem contains a MongoDB installation consisting of roughly 13000
+2GB files which are already allocated. The application is almost exclusively
+inserting data, there are no updates, and files are written pretty much
+sequentially. When I set up the fstab entry I believed that it would inherit
+the stripe geometry automatically, however now I understand that is not the
+case with XFS version 2. What I'm seeing now is average request sizes which
+are about 100KB, half the stripe size. With a typical write volume around
+5MB per second I am getting wait times around 50ms, which appears to be
+degrading performance. The filesystem was created on a partition aligned to
+a 1MB boundary.
 
-Dave.
+Short of recreating the filesystem with the correct stripe width, would it
+make sense to change the mount options to define a stripe width that
+actually matches either the filesystem (11 stripe elements wide) or the
+hardware (12 stripe elements wide)? Is there a danger of filesystem
+corruption if I give fstab a mount geometry that doesn't match the values
+used at filesystem creation time?
+
+I'm unclear on the role of the RAID hardware cache in this. Since the writes
+are sequential, and since the volume of data written is such that it would
+take about 3 minutes to actually fill the RAID cache, I would think the data
+would be resident in the cache long enough to assemble a full-width stripe
+at the hardware level and avoid the 4 I/O RAID5 penalty. 
 -- 
-Dave Chinner
-david@fromorbit.com
+View this message in context: http://old.nabble.com/How-to-deal-with-XFS-stripe-geometry-mismatch-with-hardware-RAID5-tp33498437p33498437.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
