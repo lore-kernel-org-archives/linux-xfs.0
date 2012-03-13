@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2DKsYYT070883 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 15:54:34 -0500
-Date: Tue, 13 Mar 2012 15:54:41 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/5] quota updates V4
-Message-ID: <20120313205441.GK7762@sgi.com>
-References: <20120313085232.134690907@bombadil.infradead.org>
+	q2DLFicd072772 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 16:15:44 -0500
+Message-ID: <4F5FB8F9.6020401@sgi.com>
+Date: Tue, 13 Mar 2012 16:15:37 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120313085232.134690907@bombadil.infradead.org>
+Subject: Re: [PATCH 02/10] xfs: Fix open flag handling in open_by_handle code
+References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	<1331095828-28742-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1331095828-28742-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,23 +18,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 13, 2012 at 04:52:32AM -0400, Christoph Hellwig wrote:
-> Changes since V3:
-> 	- drop the already merged patches
-> 	- address minor review feedback
+On 03/06/12 22:50, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Sparse identified some unsafe handling of open flags in the xfs open
+> by handle ioctl code. Update the code to use the correct access
+> macros to ensure that we handle the open flags correctly.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-Christoph, I think this is ready to go except for a couple issues with
-patch #4.
+Looks good.
 
-Regards,
-	Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
