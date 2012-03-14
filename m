@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2E8a68m149719 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 03:36:06 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id TJXR2m73trCCQd5U
-	for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 01:36:05 -0700 (PDT)
-Message-ID: <4F605877.2030304@hardwarefreak.com>
-Date: Wed, 14 Mar 2012 03:36:07 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q2ED8voa204756 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 08:09:01 -0500
+Received: from v3-1046.systemlinux.org (systemlinux.org [79.140.41.46]) by
+	cuda.sgi.com with ESMTP id faWYzl0jZ0mREyAq for
+	<xfs@oss.sgi.com>; Wed, 14 Mar 2012 06:08:49 -0700 (PDT)
+Date: Wed, 14 Mar 2012 14:09:02 +0100
+From: Andre Noll <maan@systemlinux.org>
+Subject: display project quota as user
+Message-ID: <20120314130902.GA26508@systemlinux.org>
 MIME-Version: 1.0
-Subject: Re: How to deal with XFS stripe geometry mismatch with hardware RAID5
-References: <33498437.post@talk.nabble.com>
-In-Reply-To: <33498437.post@talk.nabble.com>
-Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,75 +18,90 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============7605837670671961118=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: troby <Thorn.Roby@harlandfs.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: =?utf-8?B?QW5kcsOpIEMu?= Stiel <andre.stiel@tuebingen.mpg.de>
 
-On 3/13/2012 6:21 PM, troby wrote:
 
-> Short of recreating the filesystem with the correct stripe width, would it
-> make sense to change the mount options to define a stripe width that
-> actually matches either the filesystem (11 stripe elements wide) or the
-> hardware (12 stripe elements wide)? Is there a danger of filesystem
-> corruption if I give fstab a mount geometry that doesn't match the values
-> used at filesystem creation time?
+--===============7605837670671961118==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="PNTmBPCT7hxwcZjr"
+Content-Disposition: inline
 
-What would make sense is for you to first show
 
-$ cat /etc/fstab
-$ xfs_info /dev/raid_device_name
+--PNTmBPCT7hxwcZjr
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-before we recommend any changes.
+Simple question: Can non-privileged users display XFS project quotas?
 
-> I'm unclear on the role of the RAID hardware cache in this. Since the writes
-> are sequential, 
+Currently the command
 
-This seems to be an assumption at odds with other information you've
-provided.
+	xfs_quota -c 'quota -p 42'
 
-> and since the volume of data written is such that it would
-> take about 3 minutes to actually fill the RAID cache, 
+fails when executed as a non-root user due to quotactl(Q_XGETQUOTA,...)
+returning EPERM. The problem seems to be that fs/quota/quota.c has no
+knowledge of project quotas at all.
 
-The PERC 700 operates in write-through cache mode if no BBU is present
-or the battery is degraded or has failed.  You did not state whether
-your PERC 700 has the BBU installed.  If not, you can increase write
-performance and decrease latency pretty substantially by adding the BBU
-which enables the write-back cache mode.
+The proof-of-concept patch below makes quotactl(Q_XGETQUOTA,...)
+succeed for any user when called with type =3D=3D XQM_PRJQUOTA. However,
+relaxing the permission checks like this might not please everybody,
+changes semantics of an existing API and adds the XFS specific constant
+XQM_PRJQUOTA to fs/quota.c. So I'm not even asking to apply something
+like that.
 
-You may want to check whether MongoDB uses fsync writes by default.  If
-it does, and you don't have the BBU and write-back cache, this is
-affecting your write latency and throughput as well.
+Is there a better way to allow users to display project quotas?
 
-> I would think the data
-> would be resident in the cache long enough to assemble a full-width stripe
-> at the hardware level and avoid the 4 I/O RAID5 penalty. 
+Thanks
+Andre
+---
 
-Again, write-back-cache is only enabled with BBU on the PERC 700.  Do
-note that achieving full stripe width writes is as much a function of
-your application workload and filesystem tuning as it is the RAID
-firmware, especially if the cache is in write-through mode, in which
-case the firmware can't do much, if anything, to maximize full width
-stripes.
+diff --git a/fs/quota/quota.c b/fs/quota/quota.c
+index fc2c438..010763d 100644
+--- a/fs/quota/quota.c
++++ b/fs/quota/quota.c
+@@ -33,7 +33,8 @@ static int check_quotactl_permission(struct super_block *=
+sb, int type, int cmd,
+ 	case Q_GETQUOTA:
+ 	case Q_XGETQUOTA:
+ 		if ((type =3D=3D USRQUOTA && current_euid() =3D=3D id) ||
+-		    (type =3D=3D GRPQUOTA && in_egroup_p(id)))
++		    (type =3D=3D GRPQUOTA && in_egroup_p(id)) ||
++		    (type =3D=3D XQM_PRJQUOTA))
+ 			break;
+ 		/*FALLTHROUGH*/
+ 	default:
+--=20
+The only person who always got his work done by Friday was Robinson Crusoe
 
-And keep in mind you won't hit the parity read-modify-write penalty on
-new stripe writes.  This only happens when rewriting existing stripes.
-Your reported 50ms of latency for 100KB write IOs seems to suggest you
-don't have the BBU installed and you're actually doing RMW on existing
-stripes, not strictly new stripe writes.  This is likely because...
+--PNTmBPCT7hxwcZjr
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
 
-As an XFS filesystem gets full (you're at ~87%), file blocks may begin
-to be written into free space within existing partially occupied RAID
-stripes.  This is where the RAID5/6 RMW penalty really kicks you in the
-a$$, especially if you have misaligned the filesystem geometry to the
-underlying RAID geometry.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.10 (GNU/Linux)
 
--- 
-Stan
+iEYEARECAAYFAk9gmG4ACgkQWto1QDEAkw8MygCfVUklgw57FKSreTY0gYV96FVO
+5OwAoITjEUj2niy1WEwA2pUMyWnzcV9d
+=g6pe
+-----END PGP SIGNATURE-----
+
+--PNTmBPCT7hxwcZjr--
+
+
+--===============7605837670671961118==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============7605837670671961118==--
