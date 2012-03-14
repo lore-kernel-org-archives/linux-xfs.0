@@ -1,38 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2E2Yfa7105550 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 21:34:41 -0500
-Received: from cartman.its.monash.edu.au (cartman.its.monash.edu.au
-	[130.194.13.166]) by cuda.sgi.com with ESMTP id
-	ahJF71deXYfUG6WE for <xfs@oss.sgi.com>;
-	Tue, 13 Mar 2012 19:34:39 -0700 (PDT)
-Received: from chapman.its.monash.edu.au ([130.194.13.89])
-	by cartman.its.monash.edu.au
-	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
-	with ESMTP id <0M0U008W6SHMKH60@cartman.its.monash.edu.au> for
-	xfs@oss.sgi.com; Wed, 14 Mar 2012 13:34:34 +1100 (EST)
-Received: from chapman.its.monash.edu.au (localhost.localdomain [127.0.0.1])
-	by localhost (Postfix) with SMTP id D8A287E611C	for <xfs@oss.sgi.com>;
-	Wed, 14 Mar 2012 13:34:33 +1100 (EST)
-Received: from mail-pz0-f45.google.com
-	(mail-pz0-f45.google.com [209.85.210.45])
-	(using TLSv1 with cipher RC4-SHA (128/128 bits))
-	(No client certificate requested)	by chapman.its.monash.edu.au
-	(Postfix) with ESMTPS id A71127E6107	for <xfs@oss.sgi.com>; Wed,
-	14 Mar 2012 13:34:32 +1100 (EST)
-Received: by dadp14 with SMTP id p14so2170065dad.32 for <xfs@oss.sgi.com>; Tue,
-	13 Mar 2012 19:34:29 -0700 (PDT)
-Date: Wed, 14 Mar 2012 13:34:29 +1100
-From: Nathan Scott <nathans@debian.org>
-Subject: Re: [PATCH 4/8 v2] xfs: use common code for quota statistics
-In-reply-to: <20120313214027.GF5091@dastard>
-Message-id: <CAAp5ZgO+jJM5WHzbFLE98FoGmqztWZoQZ6u5-Zp=b6ow10JV=w@mail.gmail.com>
-MIME-version: 1.0
-References: <20120220022815.018921977@bombadil.infradead.org>
-	<20120220022904.060961294@bombadil.infradead.org>
-	<20120221014809.GA18227@infradead.org> <20120312175519.GE7762@sgi.com>
-	<20120313084241.GA359@infradead.org> <20120313152748.GG7762@sgi.com>
-	<20120313214027.GF5091@dastard>
+	q2E32hao106443 for <xfs@oss.sgi.com>; Tue, 13 Mar 2012 22:02:43 -0500
+Date: Wed, 14 Mar 2012 14:00:52 +1100
+From: Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH 11/19] xfs: Convert to new freezing code
+Message-ID: <20120314030052.GF2706@devil.redhat.com>
+References: <1330963277-26336-1-git-send-email-jack@suse.cz>
+	<1330963277-26336-12-git-send-email-jack@suse.cz>
+	<20120308232041.GU3592@dastard>
+	<20120309142253.GB14159@quack.suse.cz>
+	<20120311224537.GV5091@dastard>
+	<20120312175551.GI5998@quack.suse.cz>
+	<20120312234817.GA5091@dastard>
+	<20120313213020.GE20451@quack.suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120313213020.GE20451@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,164 +25,166 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7819892620021237801=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: sandeen@redhat.com, Alex Elder <elder@kernel.org>, Kamal Mostafa <kamal@canonical.com>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org
 
---===============7819892620021237801==
-Content-type: multipart/alternative; boundary=e89a8ffba955997c7f04bb2ad099
+On Tue, Mar 13, 2012 at 10:30:20PM +0100, Jan Kara wrote:
+> On Tue 13-03-12 10:48:17, Dave Chinner wrote:
+> > On Mon, Mar 12, 2012 at 06:55:51PM +0100, Jan Kara wrote:
+> > > On Mon 12-03-12 09:45:37, Dave Chinner wrote:
+> > > I just had to change some properties of the shell to
+> > > be usable for freezing as well. But the shell has to be maintained
+> > > regardless of how we decide to do freezing.
+> > > 
+> > > Also believe me that I've initially tried to fix the freezing without the
+> > > external shell. But it just isn't enough to prevent dirty inodes from being
+> > > created (e.g. from directory operations) while sync during freezing is
+> > > running.
+> > 
+> > Sure - the old mechanism was "freeze data" which only protected data
+> > modification paths, followed by "freeze trans" which protected
+> > metadata modification paths (like directory operations). You started
+> > by removing the metadata modification path protection - it is any
+> > wonder that those operations continued to dirty inodes until you
+> > expanded the "freeze data" shell to mean "freeze data and metadata"?
+>   That's just not true. Remember older versions of this patch set. Old
+> model is doing:
+>    freeze data
+>    sync
+>    freeze metadata (via freezing transations)
+> and it is broken mainly because while sync is running, new metadata are
+> dirtied and thus you end up with dirty metadata on a frozen filesystem.
 
---e89a8ffba955997c7f04bb2ad099
-Content-Type: text/plain; charset=ISO-8859-1
+But that exactly the issue that the filesystem .freeze_fs
+method is supposed to handle.  It's supposed to finish the
+freeze process by finishing all outstanding metadata operations and
+cleaning all remaining dirty metadata. It still has to guarantee
+this regardless of the model used prior to this.
 
-Hey guys,
+> Forcing the journal commit in ->freeze_fs() pushes changes to disk but
+> inodes still remain dirty and actually, it can be too late for flusher
+> thread anyway because it can be already hanging trying to start a
+> transaction.
 
-On 14 March 2012 08:40, Dave Chinner <david@fromorbit.com> wrote:
+If the changes are already in the journal, then there is no new
+transaction work needed to clean the VFS state.  Indeed, .freezefs
+needs to write back all dirty metadata objects that it is tracking
+internally in the journal so that a snapshot of the frozen image is
+consistent and can be mounted read-only without running recovery...
 
-> On Tue, Mar 13, 2012 at 10:27:48AM -0500, Ben Myers wrote:
-> > On Tue, Mar 13, 2012 at 04:42:42AM -0400, Christoph Hellwig wrote:
-> > > On Mon, Mar 12, 2012 at 12:55:19PM -0500, Ben Myers wrote:
-> > > > > +static int xqm_proc_show(struct seq_file *m, void *v)
-> > > > > +{
-> > > > > +       /* maximum; incore; ratio free to inuse; freelist */
-> > > > > +       seq_printf(m, "%d\t%d\t%d\t%u\n",
-> > > > > +                       0,
-> > > > > +                       counter_val(XFSSTAT_END_XQMSTAT),
-> > > >
-> > > > This patch looks great.  It might break some PCP scripts, I'm not
-> sure.
-> > >
-> > > Why would it break them?  The existing stats are still kept around, and
-> > > new additions to the main stats file are expected to happen once in a
-> > > while.
-> >
-> > I'm not sure that it would.  You've added a line to the common stats
-> > procfile, and the pmda might expect the xpc line immediately after ibt2.
->
+> > It's like the hard shelli/soft center security model - it protects
+> > well from external attackers, but once they get inside, there's no
+> > protection. Indeed, there is zero protection from inside jobs, and
+> > thats where multiple layers of defense are needed.
+> > 
+> > Your freeze changes provide us with a hard outer shell, but it's got
+> > a really, really soft center. We can't use the outer shell defenses
+> > deep inside the shell because of the locking orders that have been
+> > defined (freeze protection must be outermost), so we need another
+> > layer....
+>   I think there are two different issues. One is your complaint that
+> extending the shell to cover also internal sources of fs modification will
+> be too fragile if not done implicitely on transaction start.
 
-In an amusing twist, it turns out that the quota stats were originally part
-of
-the main procfs stats file and were later on moved into their own file as
-part of making xqm modular.  So, by good fortune PCP already supports
-a move back into the original stats file for these stats, provided the same
-prefix ("qm") is used.
+Most definitely. It means that we have to have freeze behaviour in
+mind whether doing any async/background work. That's usually the
+furthest think from people's minds when implementing stuff like
+background inode initialisation...
 
+> Another is a question whether we could reasonably fend off internal
+> modification using the current two counters. The MRU thread or ->release
+> can be easily handled with them (->release can be handled by the counter
+> ranking below mmap_sem). For shrinkers, I'm not that certain. Certainly the
+> outer counter won't work. The inner one with lock ranking just below
+> mmap_sem might work - depends on whether there are any XFS locks under
+> mmap_sem from within which we'd do GFP_KERNEL allocations. But here I agree
+> issues might be nasty enough to warrant another counter.
 
->
-> IIRC the pmda triggers off the descriptor at the start of the line.
->
+Might be nasty? There's no question about it in my mind that it
+*would* be nasty....
 
-That's correct.
+> This is connected with another somewhat related issue: Do we want shrinkers
+> to block on frozen filesystem? That could result in unrelated processes
+> blocking on frozen filesystem. I'd find it nicer if we just skipped
+> the writes if the filesystem is frozen as it seems to me
+> xfs_free_eofblocks() is somewhat optional. Is it true?
 
+Not really. It needs to be done on rw filesytems[*].
 
-> It ignores lines that it doesn't understand the descriptor for (like
-> all the v2 btree stats). I should probably update the pmda fo all
-> those stats....
->
+Besides, this isn't really an XFS specific problem - the shrinkers
+need to operate on frozen filesystems. e.g. run a directory
+traversal of a frozen filesystem, and if you stop the shrinkers from
+running then the dcache/icache growth will run the system out of
+memory.
 
-That was done quite awhile back (mid-2010), unless there's some other
-stats come along since then that I don't know about yet?  (are these the
-ones you mean, Dave?...)
+Sure, blocking a shrinker can be considered antisocial, but if you
+can't free memory because it will dirty inodes on a frozen
+filesystem then it is better to block the shrinker until the
+filesytem is unfrozen than it is to allow the shrinker to fail and
+eventually OOM the machine. Freezing filesysetms is supposed to be a
+short term, workload-invisible operation. Kicking the OOM killer
+because you can't free inodes is far more antisocial than having
+those applications pause while the fs is frozen.
 
-$ egrep '^[a-z]+2 ' /proc/fs/xfs/stat
-abtb2 4769967 54332939 635853 643428 507 508 282413 22672 61298 45587 1093
-1111 1600 1619 393677507
-abtc2 10166604 113971561 4264119 4272402 1213 1214 77487 9464 29584 35760
-1551 1571 2764 2785 1438715558
-bmbt2 152523 1231148 52950 42558 0 0 1372 1385 5117 1340 85 48 85 48 1545160
-ibt2 9475130 102652889 5672 2878 0 0 6549337 15214 801 869 17 0 17 0 1202730
-$
+[*] Right now we are discussing adding a new background/async worker
+that that does speculative preallocation removal to make it occur
+faster than it currently does. So skipping it is not really an
+option and this is exactly the sort of "new feature needs to
+consider how to deal with freeze" problem I'm talking about.
 
-( those are the xfs.btree.alloc_blocks.*, xfs.btree.alloc_contig.*,
-xfs.btree.block_map.*, and xfs.btree.inode.lookup.* metrics )
+> > > But in the end, if you guys really feel strongly about it and decide that
+> > > XFS wants to keep it's mechanism of freezing on transaction start, then I
+> > > won't stop you. Although it would mean XFS would have to have three
+> > > counters to protect freezing while other filesystems will need only two.
+> > 
+> > There is two counters only to avoid lockdep problems because the
+> > different entry points to the outer shell have different locking
+> > orders. I fail to see why adding a third counter to provide an
+> > innermost freeze lock that retains the current level of protection
+> > is a big deal because all that it really needs to work is a
+> > different lock order.
+>   The two counters are needed to avoid deadlocks, not just because of
+> lockdep... The third counter can be added but per-cpu counters are not
+> exactly cheap (in terms of memory) so I don't want to add it without a good
+> reason. Lock ordering constraints in shrinkers might be this good reason.
 
-cheers.
+An additional percpu counter is far, far cheaper than the cost of
+always needing to consider how not to break filesystem freezing for
+the forseeable future.
 
---
-Nathan
+> Also fitting the XFS transaction system to freezing was a bit ugly (because
+> you need to log a dummy transaction on a frozen filesystem
 
---e89a8ffba955997c7f04bb2ad099
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Sure - that's to ensure the log is dirty so that open-but-unlinked
+inodes are handled correctly by recovery if the system crashes while the
+filesystem is frozen. But the last patch in your series would prevent
+freezing filesystems while there are open-but-unlinked files
+present, so all that grot could be removed.
 
-Hey guys,<br><br><div class=3D"gmail_quote">On 14 March 2012 08:40, Dave Ch=
-inner <span dir=3D"ltr">&lt;<a href=3D"mailto:david@fromorbit.com">david@fr=
-omorbit.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" styl=
-e=3D"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"im">On Tue, Mar 13, 2012 at 10:27:48AM -0500, Ben Myers wrote=
-:<br>
-&gt; On Tue, Mar 13, 2012 at 04:42:42AM -0400, Christoph Hellwig wrote:<br>
-&gt; &gt; On Mon, Mar 12, 2012 at 12:55:19PM -0500, Ben Myers wrote:<br>
-&gt; &gt; &gt; &gt; +static int xqm_proc_show(struct seq_file *m, void *v)<=
-br>
-&gt; &gt; &gt; &gt; +{<br>
-&gt; &gt; &gt; &gt; + =A0 =A0 =A0 /* maximum; incore; ratio free to inuse; =
-freelist */<br>
-&gt; &gt; &gt; &gt; + =A0 =A0 =A0 seq_printf(m, &quot;%d\t%d\t%d\t%u\n&quot=
-;,<br>
-&gt; &gt; &gt; &gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 0,<br>
-&gt; &gt; &gt; &gt; + =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 counter_v=
-al(XFSSTAT_END_XQMSTAT),<br>
-&gt; &gt; &gt;<br>
-&gt; &gt; &gt; This patch looks great. =A0It might break some PCP scripts, =
-I&#39;m not sure.<br>
-&gt; &gt;<br>
-&gt; &gt; Why would it break them? =A0The existing stats are still kept aro=
-und, and<br>
-&gt; &gt; new additions to the main stats file are expected to happen once =
-in a<br>
-&gt; &gt; while.<br>
-&gt;<br>
-&gt; I&#39;m not sure that it would. =A0You&#39;ve added a line to the comm=
-on stats<br>
-&gt; procfile, and the pmda might expect the xpc line immediately after ibt=
-2.<br></div></blockquote><div><br>In an amusing twist, it turns out that th=
-e quota stats were originally part of<br>the main procfs stats file and wer=
-e later on moved into their own file as<br>
-part of making xqm modular.=A0 So, by good fortune PCP already supports<br>=
-a move back into the original stats file for these stats, provided the same=
-<br>prefix (&quot;qm&quot;) is used.<br>=A0</div><blockquote class=3D"gmail=
-_quote" style=3D"margin:0pt 0pt 0pt 0.8ex;border-left:1px solid rgb(204,204=
-,204);padding-left:1ex">
-<div class=3D"im">
-<br>
-</div>IIRC the pmda triggers off the descriptor at the start of the line.<b=
-r></blockquote><div><br>That&#39;s correct.<br>=A0</div><blockquote class=
-=3D"gmail_quote" style=3D"margin:0pt 0pt 0pt 0.8ex;border-left:1px solid rg=
-b(204,204,204);padding-left:1ex">
+Indeed, when that patch goes to mainline, the XFS code for
+handling remount,ro and freeze can be made identical....
 
-It ignores lines that it doesn&#39;t understand the descriptor for (like<br=
->
-all the v2 btree stats). I should probably update the pmda fo all<br>
-those stats....<br></blockquote><div><br>That was done quite awhile back (m=
-id-2010), unless there&#39;s some other<br>stats come along since then that=
- I don&#39;t know about yet?=A0 (are these the<br>ones you mean, Dave?...)<=
-br>
-<br></div></div>$ egrep &#39;^[a-z]+2 &#39; /proc/fs/xfs/stat <br>abtb2 476=
-9967 54332939 635853 643428 507 508 282413 22672 61298 45587 1093 1111 1600=
- 1619 393677507<br>abtc2 10166604 113971561 4264119 4272402 1213 1214 77487=
- 9464 29584 35760 1551 1571 2764 2785 1438715558<br>
-bmbt2 152523 1231148 52950 42558 0 0 1372 1385 5117 1340 85 48 85 48 154516=
-0<br>ibt2 9475130 102652889 5672 2878 0 0 6549337 15214 801 869 17 0 17 0 1=
-202730<br>$ <br><br>( those are the xfs.btree.alloc_blocks.*, xfs.btree.all=
-oc_contig.*,<br>
-xfs.btree.block_map.*, and xfs.btree.inode.lookup.* metrics )<br><br>cheers=
-.<br><br>--<br>Nathan<br>
+> and you have
+> things like xfs_trans_dup() which requires us to bump the counter even
+> though the filesystem is already in freezing process) so I'd be happier if
+> we could avoid it...
 
---e89a8ffba955997c7f04bb2ad099--
+The only additional infrastructure that you need to provide is a
+"start_nested" operation for xfs_trans_dup() that increments the
+percpu counter. I don't think that's a difficult problem to solve.
 
+Cheers,
 
---===============7819892620021237801==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+dchinner@redhat.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7819892620021237801==--
