@@ -1,33 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2EKRl0S248314 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 15:27:47 -0500
-Received: from e2.ny.us.ibm.com (e2.ny.us.ibm.com [32.97.182.142]) by
-	cuda.sgi.com with ESMTP id H13yoQYIz6dnXxye (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 Mar 2012 13:27:45 -0700 (PDT)
-Received: from /spool/local
-	by e2.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 14 Mar 2012 16:27:43 -0400
-Received: from d01relay07.pok.ibm.com (d01relay07.pok.ibm.com [9.56.227.147])
-	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id B9FDB6E8057
-	for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 16:26:51 -0400 (EDT)
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay07.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q2EKQoHR3162184
-	for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 16:26:50 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	q2EKQn29018325 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 17:26:49 -0300
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Wed, 14 Mar 2012 15:26:47 -0500
-Message-Id: <20120314202647.17044.26319.sendpatchset@chandra-lucid.austin.ibm.com>
-In-Reply-To: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
-References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
-Subject: [RFC v5 PATCH 4/4] xfs: Add a new field to fs_quota_stat to get
-	pquota information
+	q2EKhsqC255913 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 15:43:54 -0500
+Date: Wed, 14 Mar 2012 15:44:01 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 10/10] xfs: don't cache inodes read through bulkstat
+Message-ID: <20120314204401.GN7762@sgi.com>
+References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	<1331095828-28742-11-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1331095828-28742-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,164 +19,188 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
->From d9644452d8754bb07198041094dc3f34bbffe0d1 Mon Sep 17 00:00:00 2001
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Wed, 14 Mar 2012 14:34:12 -0500
-Subject: [PATCH 4/4] Add a new field to fs_quota_stat and define a new version for
- the bigger size.
+On Wed, Mar 07, 2012 at 03:50:28PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When we read inodes via bulkstat, we generally only read them once
+> and then throw them away - they never get used again. If we retain
+> them in cache, then it simply causes the working set of inodes and
+> other cached items to be reclaimed just so the inode cache can grow.
+> 
+> Avoid this problem by marking inodes read by bulkstat as not to be
+> cached and check this flag in .drop_inode to determine whether the
+> inode should be added to the VFS LRU or not. If the inode lookup
+> hits an already cached inode, then don't set the flag. If the inode
+> lookup hits an inode marked with no cache flag, remove the flag and
+> allow it to be cached once the current reference goes away.
+> 
+> Inodes marked as not cached will get cleaned up by the background
+> inode reclaim or via memory pressure, so they will still generate
+> some short term cache pressure. They will, however, be reclaimed
+> much sooner and in preference to cache hot inodes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
----
- fs/quota/quota.c          |    6 +++++-
- fs/xfs/xfs_qm_syscalls.c  |   26 +++++++++++++-------------
- include/linux/dqblk_xfs.h |   28 +++++++++++++++++++++++++++-
- 3 files changed, 45 insertions(+), 15 deletions(-)
+Looks good.
 
-diff --git a/fs/quota/quota.c b/fs/quota/quota.c
-index 7a9bede..c8bd1e4 100644
---- a/fs/quota/quota.c
-+++ b/fs/quota/quota.c
-@@ -203,8 +203,12 @@ static int quota_getxstate(struct super_block *sb, void __user *addr)
- 
- 	if (!sb->s_qcop->get_xstate)
- 		return -ENOSYS;
-+	if (copy_from_user(&fqs, addr, 1)) /* just get the version */
-+		return -EFAULT;
-+	if (!valid_qstat_version(fqs.qs_version))
-+		fqs.qs_version = FS_QSTAT_VERSION;
- 	ret = sb->s_qcop->get_xstate(sb, &fqs);
--	if (!ret && copy_to_user(addr, &fqs, sizeof(fqs)))
-+	if (!ret && copy_to_user(addr, &fqs, qstatsize(fqs.qs_version)))
- 		return -EFAULT;
- 	return ret;
- }
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 832ec26..a922723 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -428,7 +428,6 @@ xfs_qm_scall_getqstat(
- 	tempuqip = tempgqip = temppqip = B_FALSE;
- 	memset(out, 0, sizeof(fs_quota_stat_t));
- 
--	out->qs_version = FS_QSTAT_VERSION;
- 	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
- 		out->qs_uquota.qfs_ino = NULLFSINO;
- 		out->qs_gquota.qfs_ino = NULLFSINO;
-@@ -441,8 +440,6 @@ xfs_qm_scall_getqstat(
- 	out->qs_pad = 0;
- 	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
- 	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
--	if (&out->qs_gquota != &out->qs_pquota)
--		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
- 
- 	if (q) {
- 		uip = q->qi_uquotaip;
-@@ -459,11 +456,6 @@ xfs_qm_scall_getqstat(
- 					0, 0, &gip) == 0)
- 			tempgqip = B_TRUE;
- 	}
--	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
--		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
--					0, 0, &pip) == 0)
--			temppqip = B_TRUE;
--	}
- 	if (uip) {
- 		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
- 		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
-@@ -476,11 +468,19 @@ xfs_qm_scall_getqstat(
- 		if (tempgqip)
- 			IRELE(gip);
- 	}
--	if (pip) {
--		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
--		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
--		if (temppqip)
--			IRELE(pip);
-+	if (out->qs_version >= FS_QSTAT_VERSION_2) {
-+		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-+		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
-+			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
-+						0, 0, &pip) == 0)
-+				temppqip = B_TRUE;
-+		}
-+		if (pip) {
-+			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-+			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-+			if (temppqip)
-+				IRELE(pip);
-+		}
- 	}
- 	if (q) {
- 		out->qs_incoredqs = q->qi_dquots;
-diff --git a/include/linux/dqblk_xfs.h b/include/linux/dqblk_xfs.h
-index f17e3bb..5be63fb 100644
---- a/include/linux/dqblk_xfs.h
-+++ b/include/linux/dqblk_xfs.h
-@@ -18,6 +18,7 @@
- #define _LINUX_DQBLK_XFS_H
- 
- #include <linux/types.h>
-+#include <linux/stddef.h>
- 
- /*
-  * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
-@@ -139,6 +140,7 @@ typedef struct fs_disk_quota {
-  * incore.
-  */
- #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
-+#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
- 
- /*
-  * Some basic information about 'quota files'.
-@@ -155,13 +157,37 @@ typedef struct fs_quota_stat {
- 	__s8		qs_pad;		/* unused */
- 	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
- 	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
--#define qs_pquota	qs_gquota
- 	__u32		qs_incoredqs;	/* number of dquots incore */
- 	__s32		qs_btimelimit;  /* limit for blks timer */	
- 	__s32		qs_itimelimit;  /* limit for inodes timer */	
- 	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
- 	__u16		qs_bwarnlimit;	/* limit for num warnings */
- 	__u16		qs_iwarnlimit;	/* limit for num warnings */
-+	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
- } fs_quota_stat_t;
- 
-+#define FS_QSTAT_V1_SIZE	(offsetof(fs_quota_stat_t, qs_pquota))
-+#define FS_QSTAT_V2_SIZE	(FS_QSTAT_V1_SIZE + sizeof (fs_qfilestat_t))
-+
-+static inline int valid_qstat_version(int version)
-+{
-+	switch (version) {
-+	case FS_QSTAT_VERSION:
-+	case FS_QSTAT_VERSION_2:
-+		return 1;
-+	default:
-+		return 0;
-+	}
-+}
-+static inline int qstatsize(int version)
-+{
-+	switch (version) {
-+	case FS_QSTAT_VERSION_2:
-+		return FS_QSTAT_V2_SIZE;
-+	case FS_QSTAT_VERSION:
-+	default:
-+		return FS_QSTAT_V1_SIZE;
-+	}
-+}
-+
- #endif	/* _LINUX_DQBLK_XFS_H */
--- 
-1.7.1
+Reviewed-by: Ben Myers <bpm@sgi.com>
+
+> ---
+>  fs/xfs/xfs_iget.c   |    8 ++++++--
+>  fs/xfs/xfs_inode.h  |    4 +++-
+>  fs/xfs/xfs_itable.c |    3 ++-
+>  fs/xfs/xfs_super.c  |   17 +++++++++++++++++
+>  4 files changed, 28 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+> index 93fc1dc..20ddb1e 100644
+> --- a/fs/xfs/xfs_iget.c
+> +++ b/fs/xfs/xfs_iget.c
+> @@ -290,7 +290,7 @@ xfs_iget_cache_hit(
+>  	if (lock_flags != 0)
+>  		xfs_ilock(ip, lock_flags);
+>  
+> -	xfs_iflags_clear(ip, XFS_ISTALE);
+> +	xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
+>  	XFS_STATS_INC(xs_ig_found);
+>  
+>  	return 0;
+> @@ -315,6 +315,7 @@ xfs_iget_cache_miss(
+>  	struct xfs_inode	*ip;
+>  	int			error;
+>  	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
+> +	int			iflags;
+>  
+>  	ip = xfs_inode_alloc(mp, ino);
+>  	if (!ip)
+> @@ -359,8 +360,11 @@ xfs_iget_cache_miss(
+>  	 * memory barrier that ensures this detection works correctly at lookup
+>  	 * time.
+>  	 */
+> +	iflags = XFS_INEW;
+> +	if (flags & XFS_IGET_DONTCACHE)
+> +		iflags |= XFS_IDONTCACHE;
+>  	ip->i_udquot = ip->i_gdquot = NULL;
+> -	xfs_iflags_set(ip, XFS_INEW);
+> +	xfs_iflags_set(ip, iflags);
+>  
+>  	/* insert the new inode */
+>  	spin_lock(&pag->pag_ici_lock);
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index eda4937..096b887 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -374,10 +374,11 @@ xfs_set_projid(struct xfs_inode *ip,
+>  #define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
+>  #define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
+>  #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
+> +#define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
+>  
+>  /*
+>   * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+> - * inode lookup. Thi prevents unintended behaviour on the new inode from
+> + * inode lookup. This prevents unintended behaviour on the new inode from
+>   * ocurring.
+>   */
+>  #define XFS_IRECLAIM_RESET_FLAGS	\
+> @@ -544,6 +545,7 @@ do { \
+>   */
+>  #define XFS_IGET_CREATE		0x1
+>  #define XFS_IGET_UNTRUSTED	0x2
+> +#define XFS_IGET_DONTCACHE	0x4
+>  
+>  int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+>  			    xfs_ino_t, struct xfs_dinode **,
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 751e94f..b832c58 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -76,7 +76,8 @@ xfs_bulkstat_one_int(
+>  		return XFS_ERROR(ENOMEM);
+>  
+>  	error = xfs_iget(mp, NULL, ino,
+> -			 XFS_IGET_UNTRUSTED, XFS_ILOCK_SHARED, &ip);
+> +			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
+> +			 XFS_ILOCK_SHARED, &ip);
+>  	if (error) {
+>  		*stat = BULKSTAT_RV_NOTHING;
+>  		goto out_free;
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index b1df512..c162765 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -953,6 +953,22 @@ xfs_fs_evict_inode(
+>  	xfs_inactive(ip);
+>  }
+>  
+> +/*
+> + * We do an unlocked check for XFS_IDONTCACHE here because we are already
+> + * serialised against cache hits here via the inode->i_lock and igrab() in
+> + * xfs_iget_cache_hit(). Hence a lookup that might clear this flag will not be
+> + * racing with us, and it avoids needing to grab a spinlock here for every inode
+> + * we drop the final reference on.
+> + */
+
+I'll try to put this in my own words, just in case it is mystifying for
+anyone else.  ;)
+
+In this case it is ok to do check of ip->i_flags without holding
+inode->i_flags_lock because... we have exclusion from xfs_iget_cache_hit
+as follows:
+
+The 'dropper' would have taken inode->i_lock when the inode's count went
+to zero, and if the XFS_IDONTCARE flag is set, dropper will return 1 to
+iput_final which will result in iput_final skipping the inode lru and
+setting I_FREEING immediately, before droppig inode->i_lock and evicting
+the inode.
+
+A 'cache hitter' must call igrab in order to get a reference on the
+inode.  igrab takes the inode->i_lock, and if I_FREEING is set, it
+returns NULL, then xfs_iget_cache_hit returns EAGAIN, and is restarted.
+
+So... any 'cache hitter' who could possibly clear the XFS_IDONTCACHE
+flag subsequent to 'dropper' checking it would always be unable to get a
+reference due to I_FREEING having been set by the dropper.
+
+I appreciate that you added the comment.
+
+Regards,
+	Ben
+
+> +STATIC int
+> +xfs_fs_drop_inode(
+> +	struct inode		*inode)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +
+> +	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
+> +}
+> +
+>  STATIC void
+>  xfs_free_fsname(
+>  	struct xfs_mount	*mp)
+> @@ -1431,6 +1447,7 @@ static const struct super_operations xfs_super_operations = {
+>  	.dirty_inode		= xfs_fs_dirty_inode,
+>  	.write_inode		= xfs_fs_write_inode,
+>  	.evict_inode		= xfs_fs_evict_inode,
+> +	.drop_inode		= xfs_fs_drop_inode,
+>  	.put_super		= xfs_fs_put_super,
+>  	.sync_fs		= xfs_fs_sync_fs,
+>  	.freeze_fs		= xfs_fs_freeze,
+> -- 
+> 1.7.9
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
