@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2E53xPg134523 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 00:04:00 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	SzR8l10yYXvltgeL for <xfs@oss.sgi.com>;
-	Tue, 13 Mar 2012 22:03:57 -0700 (PDT)
-Date: Wed, 14 Mar 2012 16:03:54 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/8 v2] xfs: use common code for quota statistics
-Message-ID: <20120314050354.GX3592@dastard>
-References: <20120220022815.018921977@bombadil.infradead.org>
-	<20120220022904.060961294@bombadil.infradead.org>
-	<20120221014809.GA18227@infradead.org>
-	<20120312175519.GE7762@sgi.com>
-	<20120313084241.GA359@infradead.org>
-	<20120313152748.GG7762@sgi.com> <20120313214027.GF5091@dastard>
-	<CAAp5ZgO+jJM5WHzbFLE98FoGmqztWZoQZ6u5-Zp=b6ow10JV=w@mail.gmail.com>
+	q2E7btKQ142636 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 02:37:55 -0500
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id EhSZc5PHCEdU4Zjp for
+	<xfs@oss.sgi.com>; Wed, 14 Mar 2012 00:37:53 -0700 (PDT)
+Date: Wed, 14 Mar 2012 07:37:52 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: How to deal with XFS stripe geometry mismatch with hardware RAID5
+Message-ID: <20120314073752.GA44708@nsrc.org>
+References: <33498437.post@talk.nabble.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAAp5ZgO+jJM5WHzbFLE98FoGmqztWZoQZ6u5-Zp=b6ow10JV=w@mail.gmail.com>
+In-Reply-To: <33498437.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,42 +25,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@debian.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: troby <Thorn.Roby@harlandfs.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Mar 14, 2012 at 01:34:29PM +1100, Nathan Scott wrote:
-> On 14 March 2012 08:40, Dave Chinner <david@fromorbit.com> wrote:
-> > It ignores lines that it doesn't understand the descriptor for (like
-> > all the v2 btree stats). I should probably update the pmda fo all
-> > those stats....
-> >
-> 
-> That was done quite awhile back (mid-2010), unless there's some other
-> stats come along since then that I don't know about yet?  (are these the
-> ones you mean, Dave?...)
-> 
-> $ egrep '^[a-z]+2 ' /proc/fs/xfs/stat
-> abtb2 4769967 54332939 635853 643428 507 508 282413 22672 61298 45587 1093
-> 1111 1600 1619 393677507
-> abtc2 10166604 113971561 4264119 4272402 1213 1214 77487 9464 29584 35760
-> 1551 1571 2764 2785 1438715558
-> bmbt2 152523 1231148 52950 42558 0 0 1372 1385 5117 1340 85 48 85 48 1545160
-> ibt2 9475130 102652889 5672 2878 0 0 6549337 15214 801 869 17 0 17 0 1202730
-> $
-> 
-> ( those are the xfs.btree.alloc_blocks.*, xfs.btree.alloc_contig.*,
-> xfs.btree.block_map.*, and xfs.btree.inode.lookup.* metrics )
+On Tue, Mar 13, 2012 at 04:21:07PM -0700, troby wrote:
+> there is very little metadata activity). When I created the filesystem I
+> (mistakenly) believed the stripe width of the filesystem should count all 12
+> drives rather than 11. I've seen some opinions that this is correct, but a
+> larger number which have convinced me that it is not.
 
-Yeah, that's them. I hadn't noticed them in name space because I'd
-been looking for similar metric names to xfs.bmap_btree rather than
-in a separate xfs.btree heirarchy.
+With a 12-disk RAID5 you have 11 data disks, so the optimal filesystem
+alignment is 11 x stripe size.  This is auto-detected for software (md)
+raid, but may or may not be for hardware RAID controllers.
 
-Cheers,
+For example, here is a 12-disk RAID6 md array (10 data, 2 parity):
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+$ cat /proc/mdstat
+Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5] [raid4]
+[raid10] 
+md127 : active raid6 sdf[4] sdb[0] sdh[6] sdj[8] sdi[7] sdd[2] sdm[10]
+sdk[9] sdc[1] sdl[11] sdg[5] sde[3]
+      29302654080 blocks super 1.2 level 6, 64k chunk, algorithm 2 [12/12]
+[UUUUUUUUUUUU]
+      
+And here is the XFS filesystem which was created on it:
+
+$ xfs_info /dev/md127
+meta-data=/dev/md127             isize=256    agcount=32, agsize=228926992 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=7325663520, imaxpct=5
+         =                       sunit=16     swidth=160 blks
+naming   =version 2              bsize=16384  ascii-ci=0
+log      =internal               bsize=4096   blocks=521728, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+The parameters were detected automatically. sunit=16 x 4K = 64K, swidth=
+160 x 4K = 640K.
+
+> I also set up the RAID
+> BIOS to use a small stripe element of 8KB per drive, based on the I/O
+> request size I was seeing at the time in previous installations of the same
+> application, which was generally doing writes around 100KB.
+
+I'd say this is almost guaranteed to give poor performance, because there
+will always be partial stripe write if you are doing random writes.  e.g. 
+consider the best case, which is when the 100KB is aligned with the start of
+the stripe.  You will have:
+
+- a 88KB write across the whole stripe
+  - 12 disks seek and write; this will take a whole revolution before
+    it completes on every drive, i.e. 8.3ms rotational latency, in addition
+    to seek time. The transfer time will be insignificant
+  - one tiny write
+- 12KB write across a partial stripe. This will involve an 8K write to block
+  A, a 4K read of block B and block P (parity), and a 4K write of block B
+  and block P.
+
+Now consider what it would have been with a 256KB stripe size. If you're
+lucky and the whole 100K fits within a chunk, you'll have:
+
+- read 100K from block A and block P
+- write 100K to block A and block P
+
+There is less rotational latency, only slightly higher transfer time
+(for a slow drive which does 100MB/sec, 100KB will take 1ms), and will allow
+concurrent writers in the same area of disk, and much faster access if there
+are concurrent readers of those 100K chunks.
+
+The performance will still suck however, compared to RAID10.
+
+> I'm unclear on the role of the RAID hardware cache in this. Since the writes
+> are sequential, and since the volume of data written is such that it would
+> take about 3 minutes to actually fill the RAID cache, I would think the data
+> would be resident in the cache long enough to assemble a full-width stripe
+> at the hardware level and avoid the 4 I/O RAID5 penalty. 
+
+Only if you're writing sequentially. For example, if you were untarring a
+huge tar file containing 100KB files, all in the same directory, XFS can
+allocate the extents one after the other, and so you will be doing pure
+stripe writes.
+
+But for *random* I/O, which I'm pretty sure is what mongodb will be doing,
+you won't have a chance. The controller will be forced to read the existing
+data and parity blocks so it can write back the updated parity.
+
+So the conclusion is: do you actually care about performance for this
+application?  If you do, I'd say don't use RAID5.  If you absolutely must
+use parity RAID then go buy a Netapp ($$$) or experiment with btrfs (risky). 
+The cost of another 10 disks for a RAID10 array is going to be small in
+comparison.
+
+Regards,
+
+Brian.
 
 _______________________________________________
 xfs mailing list
