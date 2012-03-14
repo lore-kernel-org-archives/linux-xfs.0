@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2EHrEHQ218204 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 12:53:14 -0500
+	q2EHhlTO217667 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 12:43:47 -0500
 Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id FdeFdBnJNR9dwSdz (version=TLSv1
+	cuda.sgi.com with ESMTP id 8jSM74oadKBdWzrq (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 14 Mar 2012 10:53:12 -0700 (PDT)
+	Wed, 14 Mar 2012 10:43:45 -0700 (PDT)
 Received: from isper.nabble.com ([192.168.236.156])
 	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1S7sNs-000666-FJ
-	for xfs@oss.sgi.com; Wed, 14 Mar 2012 10:53:12 -0700
-Message-ID: <33504119.post@talk.nabble.com>
-Date: Wed, 14 Mar 2012 10:53:12 -0700 (PDT)
+	(envelope-from <lists@nabble.com>) id 1S7sEi-0003ru-Op
+	for xfs@oss.sgi.com; Wed, 14 Mar 2012 10:43:44 -0700
+Message-ID: <33504048.post@talk.nabble.com>
+Date: Wed, 14 Mar 2012 10:43:44 -0700 (PDT)
 From: troby <Thorn.Roby@harlandfs.com>
 Subject: Re: How to deal with XFS stripe geometry mismatch with hardware RAID5
-In-Reply-To: <20120314073752.GA44708@nsrc.org>
+In-Reply-To: <4F605877.2030304@hardwarefreak.com>
 MIME-Version: 1.0
-References: <33498437.post@talk.nabble.com> <20120314073752.GA44708@nsrc.org>
+References: <33498437.post@talk.nabble.com>
+	<4F605877.2030304@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,129 +33,104 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
-The choice of RAID5 was a compromise due to the need to store 30TB of data on
-each of 2 systems (a master and a replicated slave) - we couldn't afford
-that much space on our SAN for this application, but we could afford a
-12-bay system with 3TB SATA drives. My hope was that since the write pattern
-was expected to be large sequential writes with no updates that the RAID5
-penalty would not be significant. And it's quite possible that would be the
-case if I had got the stripe width right. The 8K element size was chosen
-because the actual average request size I was seeing on previous
-installations of the database was around 60K, which is still smaller than
-the stripe width over 12 drives even using 8K. I did try btrfs early on to
-take advantage of compression, but it failed. This was about six months ago,
-though.
+/dev/sdb1       /data   xfs    
+defaults,logdev=/dev/sda3,logbsize=256k,logbufs=8,largeio,nobarrier
+
+meta-data=/dev/sdb1              isize=256    agcount=32, agsize=251772920
+blks
+         =                       sectsz=4096  attr=0
+data     =                       bsize=4096   blocks=8056733408, imaxpct=2
+         =                       sunit=2      swidth=24 blks, unwritten=1
+naming   =version 2              bsize=4096
+log      =external               bsize=4096   blocks=16000, version=2
+         =                       sectsz=4096  sunit=1 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
-Brian Candler wrote:
+Mongo pre-allocates its datafiles and zero-fills them (there is a short
+header at the start of each, not rewritten as far as I know)  and then
+writes to them sequentially, wrapping around when it hits the end. In this
+case the entire load is inserts, no updates, hence the sequential writes.
+The data will not wrap around for about 6 months, at which time old files
+will be overwritten starting from the beginning. The BBU is functioning and
+the cache is set to write-back. The files are memory-mapped, I'll check
+whether fsync is used. Flushing is done about every 30 seconds and takes
+about 8 seconds.
+
+One thing I'm wondering is whether the incorrect stripe structure I
+specified with mkfs is actually written into the file system structure or
+effectively just a hint to the kernel for what to use for a write size. If
+not, could I specify the correct stripe width in the mount options and
+override the incorrect width used by mkfs? Since the current average write
+size is only about half the specified stripe size, and since I'm not using
+md or xfs v.3 it seems the kernel is ignoring it for now. 
+
+
+Stan Hoeppner wrote:
 > 
-> On Tue, Mar 13, 2012 at 04:21:07PM -0700, troby wrote:
->> there is very little metadata activity). When I created the filesystem I
->> (mistakenly) believed the stripe width of the filesystem should count all
->> 12
->> drives rather than 11. I've seen some opinions that this is correct, but
->> a
->> larger number which have convinced me that it is not.
+> On 3/13/2012 6:21 PM, troby wrote:
 > 
-> With a 12-disk RAID5 you have 11 data disks, so the optimal filesystem
-> alignment is 11 x stripe size.  This is auto-detected for software (md)
-> raid, but may or may not be for hardware RAID controllers.
+>> Short of recreating the filesystem with the correct stripe width, would
+>> it
+>> make sense to change the mount options to define a stripe width that
+>> actually matches either the filesystem (11 stripe elements wide) or the
+>> hardware (12 stripe elements wide)? Is there a danger of filesystem
+>> corruption if I give fstab a mount geometry that doesn't match the values
+>> used at filesystem creation time?
 > 
-> For example, here is a 12-disk RAID6 md array (10 data, 2 parity):
+> What would make sense is for you to first show
 > 
-> $ cat /proc/mdstat
-> Personalities : [linear] [multipath] [raid0] [raid1] [raid6] [raid5]
-> [raid4]
-> [raid10] 
-> md127 : active raid6 sdf[4] sdb[0] sdh[6] sdj[8] sdi[7] sdd[2] sdm[10]
-> sdk[9] sdc[1] sdl[11] sdg[5] sde[3]
->       29302654080 blocks super 1.2 level 6, 64k chunk, algorithm 2 [12/12]
-> [UUUUUUUUUUUU]
->       
-> And here is the XFS filesystem which was created on it:
+> $ cat /etc/fstab
+> $ xfs_info /dev/raid_device_name
 > 
-> $ xfs_info /dev/md127
-> meta-data=/dev/md127             isize=256    agcount=32, agsize=228926992
-> blks
->          =                       sectsz=512   attr=2
-> data     =                       bsize=4096   blocks=7325663520, imaxpct=5
->          =                       sunit=16     swidth=160 blks
-> naming   =version 2              bsize=16384  ascii-ci=0
-> log      =internal               bsize=4096   blocks=521728, version=2
->          =                       sectsz=512   sunit=16 blks, lazy-count=1
-> realtime =none                   extsz=4096   blocks=0, rtextents=0
-> 
-> The parameters were detected automatically. sunit=16 x 4K = 64K, swidth=
-> 160 x 4K = 640K.
-> 
->> I also set up the RAID
->> BIOS to use a small stripe element of 8KB per drive, based on the I/O
->> request size I was seeing at the time in previous installations of the
->> same
->> application, which was generally doing writes around 100KB.
-> 
-> I'd say this is almost guaranteed to give poor performance, because there
-> will always be partial stripe write if you are doing random writes.  e.g. 
-> consider the best case, which is when the 100KB is aligned with the start
-> of
-> the stripe.  You will have:
-> 
-> - a 88KB write across the whole stripe
->   - 12 disks seek and write; this will take a whole revolution before
->     it completes on every drive, i.e. 8.3ms rotational latency, in
-> addition
->     to seek time. The transfer time will be insignificant
->   - one tiny write
-> - 12KB write across a partial stripe. This will involve an 8K write to
-> block
->   A, a 4K read of block B and block P (parity), and a 4K write of block B
->   and block P.
-> 
-> Now consider what it would have been with a 256KB stripe size. If you're
-> lucky and the whole 100K fits within a chunk, you'll have:
-> 
-> - read 100K from block A and block P
-> - write 100K to block A and block P
-> 
-> There is less rotational latency, only slightly higher transfer time
-> (for a slow drive which does 100MB/sec, 100KB will take 1ms), and will
-> allow
-> concurrent writers in the same area of disk, and much faster access if
-> there
-> are concurrent readers of those 100K chunks.
-> 
-> The performance will still suck however, compared to RAID10.
+> before we recommend any changes.
 > 
 >> I'm unclear on the role of the RAID hardware cache in this. Since the
 >> writes
->> are sequential, and since the volume of data written is such that it
->> would
->> take about 3 minutes to actually fill the RAID cache, I would think the
->> data
+>> are sequential, 
+> 
+> This seems to be an assumption at odds with other information you've
+> provided.
+> 
+>> and since the volume of data written is such that it would
+>> take about 3 minutes to actually fill the RAID cache, 
+> 
+> The PERC 700 operates in write-through cache mode if no BBU is present
+> or the battery is degraded or has failed.  You did not state whether
+> your PERC 700 has the BBU installed.  If not, you can increase write
+> performance and decrease latency pretty substantially by adding the BBU
+> which enables the write-back cache mode.
+> 
+> You may want to check whether MongoDB uses fsync writes by default.  If
+> it does, and you don't have the BBU and write-back cache, this is
+> affecting your write latency and throughput as well.
+> 
+>> I would think the data
 >> would be resident in the cache long enough to assemble a full-width
 >> stripe
 >> at the hardware level and avoid the 4 I/O RAID5 penalty. 
 > 
-> Only if you're writing sequentially. For example, if you were untarring a
-> huge tar file containing 100KB files, all in the same directory, XFS can
-> allocate the extents one after the other, and so you will be doing pure
-> stripe writes.
+> Again, write-back-cache is only enabled with BBU on the PERC 700.  Do
+> note that achieving full stripe width writes is as much a function of
+> your application workload and filesystem tuning as it is the RAID
+> firmware, especially if the cache is in write-through mode, in which
+> case the firmware can't do much, if anything, to maximize full width
+> stripes.
 > 
-> But for *random* I/O, which I'm pretty sure is what mongodb will be doing,
-> you won't have a chance. The controller will be forced to read the
-> existing
-> data and parity blocks so it can write back the updated parity.
+> And keep in mind you won't hit the parity read-modify-write penalty on
+> new stripe writes.  This only happens when rewriting existing stripes.
+> Your reported 50ms of latency for 100KB write IOs seems to suggest you
+> don't have the BBU installed and you're actually doing RMW on existing
+> stripes, not strictly new stripe writes.  This is likely because...
 > 
-> So the conclusion is: do you actually care about performance for this
-> application?  If you do, I'd say don't use RAID5.  If you absolutely must
-> use parity RAID then go buy a Netapp ($$$) or experiment with btrfs
-> (risky). 
-> The cost of another 10 disks for a RAID10 array is going to be small in
-> comparison.
+> As an XFS filesystem gets full (you're at ~87%), file blocks may begin
+> to be written into free space within existing partially occupied RAID
+> stripes.  This is where the RAID5/6 RMW penalty really kicks you in the
+> a$$, especially if you have misaligned the filesystem geometry to the
+> underlying RAID geometry.
 > 
-> Regards,
-> 
-> Brian.
+> -- 
+> Stan
 > 
 > _______________________________________________
 > xfs mailing list
@@ -164,7 +140,7 @@ Brian Candler wrote:
 > 
 
 -- 
-View this message in context: http://old.nabble.com/How-to-deal-with-XFS-stripe-geometry-mismatch-with-hardware-RAID5-tp33498437p33504119.html
+View this message in context: http://old.nabble.com/How-to-deal-with-XFS-stripe-geometry-mismatch-with-hardware-RAID5-tp33498437p33504048.html
 Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
