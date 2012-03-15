@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2F811w2076702 for <xfs@oss.sgi.com>; Thu, 15 Mar 2012 03:01:01 -0500
-Received: from v3-1046.systemlinux.org (systemlinux.org [79.140.41.46]) by
-	cuda.sgi.com with ESMTP id PbctZO1wsCBhAgmQ for
-	<xfs@oss.sgi.com>; Thu, 15 Mar 2012 01:00:58 -0700 (PDT)
-Date: Thu, 15 Mar 2012 09:01:11 +0100
-From: Andre Noll <maan@systemlinux.org>
-Subject: Re: display project quota as user
-Message-ID: <20120315080111.GB26508@systemlinux.org>
-References: <20120314130902.GA26508@systemlinux.org>
-	<20120314233127.GL5091@dastard>
-MIME-Version: 1.0
-In-Reply-To: <20120314233127.GL5091@dastard>
+	q2F8tEgg091101 for <xfs@oss.sgi.com>; Thu, 15 Mar 2012 03:55:15 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id xwhstQ3HJg44bmpi (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 15 Mar 2012 01:55:12 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH v2] xfs: Fix oops on IO error during
+	xlog_recover_process_iunlinks()
+Date: Thu, 15 Mar 2012 09:55:05 +0100
+Message-Id: <1331801705-1145-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,67 +19,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5971646119145623350=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: =?utf-8?B?QW5kcsOpIEMu?= Stiel <andre.stiel@tuebingen.mpg.de>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Jan Kara <jack@suse.cz>, Alex Elder <elder@kernel.org>, stable@kernel.org, xfs@oss.sgi.com
 
+When an IO error happens during inode deletion run from
+xlog_recover_process_iunlinks() filesystem gets shutdown. Thus any subsequent
+attempt to read buffers fails. Code in xlog_recover_process_iunlinks() does not
+count with the fact that read of a buffer which was read a while ago can
+really fail which results in the oops on
+  agi = XFS_BUF_TO_AGI(agibp);
 
---===============5971646119145623350==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="kORqDWCi7qDJ0mEj"
-Content-Disposition: inline
+Fix the problem by cleaning up the buffer handling in
+xlog_recover_process_iunlinks() as suggested by Dave Chinner. We release buffer
+lock but keep buffer reference to AG buffer. That is enough for buffer stay
+pinned in memory and we don't have to call xfs_read_agi() all the time.
 
+CC: stable@kernel.org
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_log_recover.c |   34 ++++++++++++----------------------
+ 1 files changed, 12 insertions(+), 22 deletions(-)
 
---kORqDWCi7qDJ0mEj
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+  Last time I sent this patch as a reply to Dave's email and apparently the
+patch didn't catch the attention. So I'm resending it now.
 
-On Thu, Mar 15, 10:31, Dave Chinner wrote:
-> > Is there a better way to allow users to display project quotas?
->=20
-> There is no user <=3D> projid mapping that exists, so either the
-> information is available to everyone, or it is available only to
-> root. In this case, system wide quota reports are limited to root,
-> and I don't see that changing.
->=20
-> If you really must allow users to see project quota limits, then
-> write a simple wrapper program and allow only the users that need
-> the infomration to execute it via sudo....
-
-OK, will do that. Thanks for the clarification.
-
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
-
---kORqDWCi7qDJ0mEj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.10 (GNU/Linux)
-
-iEYEARECAAYFAk9hoccACgkQWto1QDEAkw/AGwCfdQUa3LMERJyIWMsan/BzuKdc
-wKIAn1AAEbtBbrzbQD1kv5FTGQT6gt6z
-=Yt7y
------END PGP SIGNATURE-----
-
---kORqDWCi7qDJ0mEj--
-
-
---===============5971646119145623350==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 0ed9ee7..0827644 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3161,37 +3161,27 @@ xlog_recover_process_iunlinks(
+ 			 */
+ 			continue;
+ 		}
++		/*
++		 * Take an extra reference to the buffer and then release it
++		 * to drop the lock so that it can be acquired in the normal
++		 * course of the transaction to truncate and free each
++		 * inode.  Because we are not racing with anyone else here
++		 * for the AGI buffer, we don't even need to hold it locked
++		 * to read the initial unlinked bucket entries out of the
++		 * buffer.
++		 */
+ 		agi = XFS_BUF_TO_AGI(agibp);
++		xfs_buf_hold(agibp);
++		xfs_buf_relse(agibp);
+ 
+ 		for (bucket = 0; bucket < XFS_AGI_UNLINKED_BUCKETS; bucket++) {
+ 			agino = be32_to_cpu(agi->agi_unlinked[bucket]);
+ 			while (agino != NULLAGINO) {
+-				/*
+-				 * Release the agi buffer so that it can
+-				 * be acquired in the normal course of the
+-				 * transaction to truncate and free the inode.
+-				 */
+-				xfs_buf_relse(agibp);
+-
+ 				agino = xlog_recover_process_one_iunlink(mp,
+ 							agno, agino, bucket);
+-
+-				/*
+-				 * Reacquire the agibuffer and continue around
+-				 * the loop. This should never fail as we know
+-				 * the buffer was good earlier on.
+-				 */
+-				error = xfs_read_agi(mp, NULL, agno, &agibp);
+-				ASSERT(error == 0);
+-				agi = XFS_BUF_TO_AGI(agibp);
+ 			}
+ 		}
+-
+-		/*
+-		 * Release the buffer for the current agi so we can
+-		 * go on to the next one.
+-		 */
+-		xfs_buf_relse(agibp);
++		xfs_buf_rele(agibp);
+ 	}
+ 
+ 	mp->m_dmevmask = mp_dmevmask;
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5971646119145623350==--
