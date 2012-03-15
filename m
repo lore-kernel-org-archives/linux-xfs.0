@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2ENVtod006744 for <xfs@oss.sgi.com>; Wed, 14 Mar 2012 18:31:55 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	L4lAoEJLJCEDwJty for <xfs@oss.sgi.com>;
-	Wed, 14 Mar 2012 16:31:53 -0700 (PDT)
-Date: Thu, 15 Mar 2012 10:31:27 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: display project quota as user
-Message-ID: <20120314233127.GL5091@dastard>
-References: <20120314130902.GA26508@systemlinux.org>
+	q2F0VxaN009629 for <xfs@OSS.SGI.com>; Wed, 14 Mar 2012 19:31:59 -0500
+Received: from woodbine.london.02.net (woodbine.london.02.net
+	[87.194.255.145]) by cuda.sgi.com with ESMTP id
+	kt6zZk5tCqHeVus1 for <xfs@OSS.SGI.com>;
+	Wed, 14 Mar 2012 17:31:56 -0700 (PDT)
+Received: from ty.sabi.co.UK (87.194.99.40) by woodbine.london.02.net (8.5.140)
+	id 4EEB6474058C9B67 for xfs@OSS.SGI.com; Thu, 15 Mar 2012 00:31:56 +0000
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1S7ybb-0003AT-Bf
+	for <xfs@OSS.SGI.com>; Thu, 15 Mar 2012 00:31:47 +0000
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120314130902.GA26508@systemlinux.org>
+Message-ID: <20321.14449.839373.158043@tree.ty.sabi.co.UK>
+Date: Thu, 15 Mar 2012 00:31:45 +0000
+Subject: Re: How to deal with XFS stripe geometry mismatch with hardware RAID5
+In-Reply-To: <33506375.post@talk.nabble.com>
+References: <33498437.post@talk.nabble.com>
+	<4F605877.2030304@hardwarefreak.com>
+	<33504048.post@talk.nabble.com> <20120314210514.GA46448@nsrc.org>
+	<33506375.post@talk.nabble.com>
+From: pg_xf2@xf2.for.to.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,46 +33,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andre Noll <maan@systemlinux.org>
-Cc: =?iso-8859-1?Q?Andr=E9_C=2E?= Stiel <andre.stiel@tuebingen.mpg.de>, xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-On Wed, Mar 14, 2012 at 02:09:02PM +0100, Andre Noll wrote:
-> Simple question: Can non-privileged users display XFS project quotas?
-> 
-> Currently the command
-> 
-> 	xfs_quota -c 'quota -p 42'
-> 
-> fails when executed as a non-root user due to quotactl(Q_XGETQUOTA,...)
-> returning EPERM. The problem seems to be that fs/quota/quota.c has no
-> knowledge of project quotas at all.
+[ ... ]
 
-Right - only XFS supports project quotas.
+>> lfs.303:
+>> 0: [0..4192255]: 36322376672..36326568927
+[ ... ]
+>> lfs.3:
+>> 0: [0..1048575]: 2039336992..2040385567
 
-> The proof-of-concept patch below makes quotactl(Q_XGETQUOTA,...)
-> succeed for any user when called with type == XQM_PRJQUOTA. However,
-> relaxing the permission checks like this might not please everybody,
-> changes semantics of an existing API and adds the XFS specific constant
-> XQM_PRJQUOTA to fs/quota.c. So I'm not even asking to apply something
-> like that.
-> 
-> Is there a better way to allow users to display project quotas?
+  $ factor 36322376672 2039336992
+  36322376672: 2 2 2 2 2 37 3257 9419
+  2039336992: 2 2 2 2 2 7 11 37 22369
+  $ factor 4192256 1048576
+  4192256: 2 2 2 2 2 2 2 2 2 2 2 23 89
+  1048576: 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2
 
-There is no user <=> projid mapping that exists, so either the
-information is available to everyone, or it is available only to
-root. In this case, system wide quota reports are limited to root,
-and I don't see that changing.
+The starting addresses look like to be 16KiB aligned (starting
+sector a multiple of 2^5 512B sectors). I would have expected
+different. The sizes are a multiple of 1MB, 2047MiB and 512MiB,
+which are plausible.
 
-If you really must allow users to see project quota limits, then
-write a simple wrapper program and allow only the users that need
-the infomration to execute it via sudo....
+[ ... ]
 
-Cheers,
+> I'm not familiar with the btrace output, but here's the summary of roughly
+> 5 minutes:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>> Total (8,16):
+>> Reads Queued:      16,914,    1,888MiB  Writes Queued:      47,147,   1,438MiB
+>> Read Dispatches:   16,914,    1,888MiB  Write Dispatches:   47,050,   1,438MiB
+>> Reads Requeued:         0               Writes Requeued:         0
+>> Reads Completed:   16,914,    1,888MiB  Writes Completed:   47,050,   1,438MiB
+>> Read Merges:            0,        0KiB  Write Merges:           97,   592KiB
+>> IO unplugs:        17,060               Timer unplugs:           6
+>> Throughput (R/W): 5,528KiB/s / 4,209KiB/s
+>> Events (8,16): 418,873 entries
+>> Skips: 0 forward (0 -   0.0%)
+
+That's around 17k reads, or 60/s, each of 100K, and 47k writes,
+or 160/s, average 31K. Both read and writes happen at around
+4-5MB/s.
+
+Since the RAID5 is managed by the PERC, the reads cannot be
+those in RMW, and it is unlikely that these be sequential with
+the writes. There may be quite a bit of random access going on.
 
 _______________________________________________
 xfs mailing list
