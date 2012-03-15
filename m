@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2FHeA7E159513 for <xfs@oss.sgi.com>; Thu, 15 Mar 2012 12:40:11 -0500
-Received: from www.open-std.org (vps-93-90-116-65.vpsforce.eu [93.90.116.65])
-	by cuda.sgi.com with ESMTP id B6IPjsYf8ZomCKRm for
-	<xfs@oss.sgi.com>; Thu, 15 Mar 2012 10:40:09 -0700 (PDT)
-Date: Thu, 15 Mar 2012 18:40:08 +0100
-From: keld@keldix.com
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-Message-ID: <20120315174008.GB30531@www5.open-std.org>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
-	<4F61803A.60009@hardwarefreak.com>
-	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
-	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
-	<20120315152548.GA25194@www5.open-std.org>
-	<CAA8mOyDquGX0kEbQSpo=S0EYdNvXNBQ6ZLnb5Sc7uvCPYB+xqA@mail.gmail.com>
-	<20120315171548.GA30531@www5.open-std.org>
-Mime-Version: 1.0
+	q2FIEJ8p168814 for <xfs@oss.sgi.com>; Thu, 15 Mar 2012 13:14:20 -0500
+Date: Thu, 15 Mar 2012 13:14:26 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 10/10] xfs: don't cache inodes read through bulkstat
+Message-ID: <20120315181426.GO7762@sgi.com>
+References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	<1331095828-28742-11-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120315171548.GA30531@www5.open-std.org>
+In-Reply-To: <1331095828-28742-11-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,47 +23,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jessie Evangelista <jessie.evangelista@gmail.com>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 15, 2012 at 06:15:49PM +0100, keld@keldix.com wrote:
-> On Fri, Mar 16, 2012 at 12:52:19AM +0800, Jessie Evangelista wrote:
-> > Hi keld,
-> > 
-> > On Thu, Mar 15, 2012 at 11:25 PM,  <keld@keldix.com> wrote:
-> > > On Thu, Mar 15, 2012 at 02:07:25PM +0000, Peter Grandi wrote:
-> > >> >>> I want to create a raid10,n2 using 3 1TB SATA drives.
-> > >> >>> I want to create an xfs filesystem on top of it. The
-> > >> >>> filesystem will be used as NFS/Samba storage.
-> > >>
-> > >> Consider also an 'o2' layout (it is probably the same thing for a
-> > >> 3 drive RAID10) or even a RAID5, as 3 drives and this usage seems
-> > >> one of the few cases where RAID5 may be plausible.
-> > >
-> > > Well, for a file server like NFS/Samba, you could also consider raid10,f2.
-> > > I would think you could get about double the read performance compared to n2 and o2
-> > > layouts, and also for individual read transfers on a running system
-> > > you would get somthing like double the read performance.
-> > > Write performance could be somewhat slower (0 to 10 %) bot as users
-> > > are not waiting for writes to complete, they will probably not notice.
-> > 
-> > I also plan to try raid10f2. Did you do your own benchmarks or are you
-> > quoting someone elses?
+On Wed, Mar 07, 2012 at 03:50:28PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Both, look at our wiki: https://raid.wiki.kernel.org/articles/p/e/r/Performance.html
+> When we read inodes via bulkstat, we generally only read them once
+> and then throw them away - they never get used again. If we retain
+> them in cache, then it simply causes the working set of inodes and
+> other cached items to be reclaimed just so the inode cache can grow.
+> 
+> Avoid this problem by marking inodes read by bulkstat as not to be
+> cached and check this flag in .drop_inode to determine whether the
+> inode should be added to the VFS LRU or not. If the inode lookup
+> hits an already cached inode, then don't set the flag. If the inode
+> lookup hits an inode marked with no cache flag, remove the flag and
+> allow it to be cached once the current reference goes away.
+> 
+> Inodes marked as not cached will get cleaned up by the background
+> inode reclaim or via memory pressure, so they will still generate
+> some short term cache pressure. They will, however, be reclaimed
+> much sooner and in preference to cache hot inodes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_iget.c   |    8 ++++++--
+>  fs/xfs/xfs_inode.h  |    4 +++-
+>  fs/xfs/xfs_itable.c |    3 ++-
+>  fs/xfs/xfs_super.c  |   17 +++++++++++++++++
+>  4 files changed, 28 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+> index 93fc1dc..20ddb1e 100644
+> --- a/fs/xfs/xfs_iget.c
+> +++ b/fs/xfs/xfs_iget.c
+> @@ -290,7 +290,7 @@ xfs_iget_cache_hit(
+>  	if (lock_flags != 0)
+>  		xfs_ilock(ip, lock_flags);
+>  
+> -	xfs_iflags_clear(ip, XFS_ISTALE);
+> +	xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
 
-I think it would be interesting to include your figures on the wiki page, if
-you publish them here on the list. 
-
-Maybe we should rearrange the wiki page a little. I am not so happy about the 
-data reported in the section "New benchmarks from 2011" as it only illustrates
-what is happening with a 100 % used CPU. I would like to move it to a separate page.
-Also the really old data in section "Old performance benchmark" should be moved to
-a separate page, IMHO. The text on the wiki page should be gaving info of
-general interest for systems running today (still IMHO). Comments?
-
-Best regards
-keld
+If XFS_IGET_DONTCACHE is set, maybe you don't want to clear
+XFS_IDONTCACHE.
 
 _______________________________________________
 xfs mailing list
