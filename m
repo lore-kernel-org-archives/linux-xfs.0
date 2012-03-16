@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2G3aAq5235431 for <xfs@oss.sgi.com>; Thu, 15 Mar 2012 22:36:10 -0500
-Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
-	[209.85.217.181]) by cuda.sgi.com with ESMTP id
-	VX6dgPJIq0Em16f4 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 15 Mar 2012 20:36:08 -0700 (PDT)
-Received: by lbok6 with SMTP id k6so2092890lbo.26
-	for <xfs@oss.sgi.com>; Thu, 15 Mar 2012 20:36:07 -0700 (PDT)
+	q2G6FAxV002764 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 01:15:11 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	IyliHPKXCeujJFvx for <xfs@oss.sgi.com>;
+	Thu, 15 Mar 2012 23:15:08 -0700 (PDT)
+Date: Fri, 16 Mar 2012 17:15:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: repeatable attribute corruption
+Message-ID: <20120316061504.GP5091@dastard>
+References: <1331589615.25204.35.camel@montana.filmlight.ltd.uk>
 MIME-Version: 1.0
-In-Reply-To: <20322.29849.917554.794740@tree.ty.sabi.co.UK>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
-	<4F61803A.60009@hardwarefreak.com>
-	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
-	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
-	<CAA8mOyCUCyzGCuNtn4txFuBtbk22M6LRpShNVH_Szb5=_F1PBw@mail.gmail.com>
-	<20322.29849.917554.794740@tree.ty.sabi.co.UK>
-Date: Fri, 16 Mar 2012 11:36:07 +0800
-Message-ID: <CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-From: Jessie Evangelista <jessie.evangelista@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1331589615.25204.35.camel@montana.filmlight.ltd.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,124 +22,192 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg@lxra2.for.sabi.co.uk>
-Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
+To: Roger Willcocks <roger@filmlight.ltd.uk>
+Cc: xfs@oss.sgi.com
 
-> But usually you can still set the XFS idea of sector size to 4096,
-> which is probably a good idea in general.
-
-I'm now running kernel 3.0.0-16-server Ubuntu 10.04LTS
-cat /sys/block/sd[b-d]/queue/physical_block_size shows 512
-cat /sys/block/sd[b-d]/device/model shows ST31000524AS
-looking up the model at seagate, the specs page does not mention 512
-byte sectors
-but it did mention guaranteed sectors of 1,953,525,168
-multiplying by 512bytes we do get 1000204886016(1TBish)
-
-Anyway, I'll have a look at setting the sector size for xfs
-
-> I did that in the following bits of the reply. You must be in a
-> real hurry if you cannot trim down the quoting or write your
-> comments after reading through once...
-
-I did read thru your comments several times and I really appreciate them.
-Will look into setting vm/dirty_bytes, vm/dirty_background_bytes,
-vm/dirty_expire_centisecs, vm/dirty_writeback_centisecs.
-
-I'm still scouring the internet for a best practice recipe for
-implementing xfs/mdraid.
-I am open to writing one and including the inputs everyone is contributing =
-here.
-In my search, I also saw some references of alignment issues for partitions.
-this is what I used to setup the partitions for the md device
-
-sfdisk /dev/sdb <<EOF
-unit: sectors
-
-63,104872257,fd
-0,0,0
-0,0,0
-0,0,0
-EOF
-
-I've read a recommendation to start the partition on the 1MB mark.
-Does this make sense?
-
->> let me define safety as needed by the usecase: fileA is a 2MB
->> open office document file already existing on the file system.
->> userA opens fileA locally, modifies a lot of lines and attempts
->> to save it. as the saving operation is proceeding, the PSU goes
->> haywire and power is cut abruptly.
->
-> To worry you, if the PSU goes haywire, the disk data may become
-> subtly corrupted:
->
-> https://blogs.oracle.com/elowe/entry/zfs_saves_the_day_ta
-> =A0=ABAnother user, also running a Tyan 2885 dual-Opteron workstation
-> =A0like mine, had experienced data corruption with SATA disks. The
-> =A0root cause? A faulty power supply.=BB
->
-> Even if that is not an argument for filesystem provided checksums,
-> as the ZFS (and other) people say, but for end-to-end (application
-> level) ones.
-
-Mmmm, Ive also been reading up on ZFS but haven't put it thru its paces.
-
->> I expect fileA should be as it was before the save operation and
->> should not be corrupted in anyway. =A0Am I asking/expecting too much?
->
-> That is too much to expect of the filesystem and at the same time
-> too little.
->
-> It is too much because it is strictly the responsibility of the
-> application, and it is very expensive, because it can only happen
-> by simulating copy-on-write (app makes a copy of the document,
-> updates the copy, and then atomically renames it, and then makes
-> another copy). Some applications like OOo/LibreO/VIM instead use a
-> log file to record updates, and then merge those on save (copy,
-> merge, rename), which is better. Some filesystems like NILFS2 or
-> BTRFS or Next3/Next4 use COW to provide builtin versioning, but
-> that's expensive too. The original UNIX insight to provide a very
-> simple file abstraction layer should not be lightly discarded (but
-> I like NILFS2 in particular).
->
-> It is too little because of what happens if you have dozens to
-> thousands of modified but not yet fully persisted files, sych as
-> newly created mail folders, 'tar' unpacks , source tree checkins,
+On Mon, Mar 12, 2012 at 10:00:15PM +0000, Roger Willcocks wrote:
+> Hi folks,
+> 
+> On stock CentOS kernels from 5.5 (earliest I tried) through to the
+> latest 6.2 kernel (as of five days ago) 2.6.32-220.7.1.el6.x86_64 I can
+> repeatedly create a silent on-disk corruption. This typically shows up
+> later as:
+> 
+> XFS internal error xfs_da_do_buf(1) at line 2020 of
+> file /usr/src/redhat/BUILD/kernel-2.6.18/linux-2.6.18.x86_64/fs/xfs/xfs_da_btree.c
+> 
+> (or line 2112 of the same file).
+> 
+> The 'before' metadump is a bit big to attach to an email (~600k) so
+> here's a download link valid for 30 days -
+> 
+> http://private.filmlight.ltd.uk/c4c864ecca4ac13b/xfs_attrib_crash.taz
+> 
+> - this is a gzip-compressed tar file containing 
+> 
+> -rw-r--r--.  1 root root   10885632 Mar 12 18:02 xfs_metadump_hda6
+> -rw-r--r--.  1 root root       3558 Mar 12 18:15 zap.txt
+> 
+> The metadump expands to about 5GB. xfs_repair believes it to be clean.
+> I've not obfuscated the dump; it was originally a copy of the linux
+> header directory from the 5.5 kernel.
+> 
+> 'zap.txt' simply overwrites a single existing extended (directory)
+> attribute with a slightly longer value. So, steps to repeat:
+> 
+> # xfs_mdrestore xfs_metadump_hda6 xfs.img 
+> # mkdir /mnt/disk1
+> # mount -o loop xfs.img /mnt/disk1
+> # setfattr --restore=zap.txt
+> # umount /mnt/disk1
+> # xfs_repair -n xfs.img
 > ...
->
-> As I tried to show in my previous reply, and in the NFS blog entry
-> mentioned in it too, on a creduly practical level relying on
-> applications doing the right thing is optimistic, and it may be
-> regrettably expedient to complement barriers with frequent system
-> driven flushing, which partially simulates (at a price) O_PONIES.
+> bad sibling back pointer for block 4 in attribute fork for inode 131
+> problem with attribute contents in inode 131
+> would clear attr fork
+> bad nblocks 8 for inode 131, would reset to 3
+> bad anextents 4 for inode 131, would reset to 0
 
-I'd like to read about the NFS blog entry but the link you included
-results in a 404.
-I forgot to mention in my last reply.
+OK, I think I have a handle on this now. It is a nasty corner case,
+and I'll try to explain it (later most of this will end up in the
+commit message).
 
-Based on what I understood from your thoughts above, if an
-applications issues a flush/fsync
-and it does not complete due to some catastrophic crash,
-xfs on its own can not roll back to the prev version of the file in
-case of unfinished write operation.
-disabling the device caches wouldn't help either right?
-only filesystems that do COW can do this at the expense of
-performance? (btrfs and zfs, please hurry and grow up!)
+What we have is the initial condition of a node format attribute
+btree with two leaves at index 1 and 2. Call them L1 and L2.  The
+leaf L1 is completely full, there is not a single byte of free space
+in it. L2 is mostly empty.  The attribute being replaced - call it X
+- is the last attribute in L1.
 
-> As to to LVM2 it is very rarely needed. The only really valuable
-> feature it has is snapshot LVs, and those are very expensive. XFS,
-> which can allocate routinely 2GiB (or bigger) files as a single
-> extents, can be used as a volume manager too.
+The way an attribute replace is executed is that the replacement
+attribute - call it Y - is first inserted into the tree, but has an
+INCOMPLETE flag set on it so that list traversals ignore it. Once
+this transaction is committed, a second transaction it run to
+atomically mark Y as COMPLETE and X as INCOMPLETE, so that a
+traversal will now find Y and skip X. Once that transaction is
+committed, attribute X is then removed.
 
-If you were in my place with the resource constraints, you'd go with:
-xfs with barriers on top of mdraid10 with device cache ON and setting
-vm/dirty_bytes, vm/dirty_background_bytes, vm/dirty_expire_centisecs,
-vm/dirty_writeback_centisecs to safe values
+So, the initial condition is:
+
+     +--------+     +--------+
+     |   L1   |     |   L2   |
+     | fwd: 2 |---->| fwd: 0 |
+     | bwd: 0 |<----| bwd: 1 |
+     | fsp: 0 |     | fsp: N |
+     |--------|     |--------|
+     | attr A |     | attr 1 |
+     |--------|     |--------|
+     | attr B |     | attr 2 |
+     |--------|     |--------|
+     ..........     ..........
+     |--------|     |--------|
+     | attr X |     | attr n |
+     +--------+     +--------+
+
+
+So now we go to replace X, and see that L1:fsp = 0 - it is full so
+we can't insert Y in the same leaf. So we record the the location of
+attribute X so we can track it for later use, then we split L1 into
+L1 and L3 and reblance across the two leafs. We end with:
+
+
+     +--------+     +--------+     +--------+
+     |   L1   |     |   L3   |     |   L2   |
+     | fwd: 3 |---->| fwd: 2 |---->| fwd: 0 |
+     | bwd: 0 |<----| bwd: 1 |<----| bwd: 3 |
+     | fsp: M |     | fsp: J |     | fsp: N |
+     |--------|     |--------|     |--------|
+     | attr A |     | attr X |     | attr 1 |
+     |--------|     +--------+     |--------|
+     | attr B |                    | attr 2 |
+     |--------|                    |--------|
+     ..........                    ..........
+     |--------|                    |--------|
+     | attr W |                    | attr n |
+     +--------+                    +--------+
+
+
+And we track that the original attribute is now at L3:0.
+
+We then try to insert Y into L1 again, and find that there isn't
+enough room because the new attribute is larger than the old one.
+Hence we have to split again to make room for Y. We end up with
+this:
+
+
+     +--------+     +--------+     +--------+     +--------+
+     |   L1   |     |   L4   |     |   L3   |     |   L2   |
+     | fwd: 4 |---->| fwd: 3 |---->| fwd: 2 |---->| fwd: 0 |
+     | bwd: 0 |<----| bwd: 1 |<----| bwd: 4 |<----| bwd: 3 |
+     | fsp: M |     | fsp: J |     | fsp: J |     | fsp: N |
+     |--------|     |--------|     |--------|     |--------|
+     | attr A |     | attr Y |     | attr X |     | attr 1 |
+     |--------|     + INCOMP +     +--------+     |--------|
+     | attr B |     +--------+                    | attr 2 |
+     |--------|                                   |--------|
+     ..........                                   ..........
+     |--------|                                   |--------|
+     | attr W |                                   | attr n |
+     +--------+                                   +--------+
+
+And now we have the new (incomplete) attribute @ L4:0, and the
+original attribute at L3:0. At this point, the first transaction is
+committed, and we move to the flipping of the flags.
+
+This is where we are supposed to end up with this:
+
+     +--------+     +--------+     +--------+     +--------+
+     |   L1   |     |   L4   |     |   L3   |     |   L2   |
+     | fwd: 4 |---->| fwd: 3 |---->| fwd: 2 |---->| fwd: 0 |
+     | bwd: 0 |<----| bwd: 1 |<----| bwd: 4 |<----| bwd: 3 |
+     | fsp: M |     | fsp: J |     | fsp: J |     | fsp: N |
+     |--------|     |--------|     |--------|     |--------|
+     | attr A |     | attr Y |     | attr X |     | attr 1 |
+     |--------|     +--------+     + INCOMP +     |--------|
+     | attr B |                    +--------+     | attr 2 |
+     |--------|                                   |--------|
+     ..........                                   ..........
+     |--------|                                   |--------|
+     | attr W |                                   | attr n |
+     +--------+                                   +--------+
+
+But that doesn't happen properly - the attribute tracking indexes
+are not pointing to the right locations, and so we modify random
+attributes. We then try to remove attribute X, which then involves
+leaf joins, and things then go pear-shaped because the in-memory
+state is corrupt, resulting in the breakage we see on disk.
+
+This double split on insertion is indeed a rare corner case becase
+growing attributes is not a common operation, and it's even less
+common that the attribute being grown is the last attribute in a
+full leaf.
+
+The root of the problem is the handling of this corner case - the
+initial rebalance moves the entry that is being replaced to a new
+block, and the tracking code gets this wrong - it no longer points
+to the attribute that will be replaced. That's where it starts going
+wrong, but the code that does this tracking is exceedinly twisty and
+I don't yet fully understand all the cases it handles. Hence I can
+fix this specific problem, but I'm currently causing regressions in
+other cases.
+
+I think the first thing I have to do is clean up the tracking code
+to use descriptive variables names because it is all to easy to
+confuse what "index/blkno" and "index2/blkno2" are actually holding
+and that makes it much harder to understand the code.
+
+But, that can wait: it is Beer O'Clock on a hot friday afternoon, so
+I'm going take the dog for a walk and then go down to the pub....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
