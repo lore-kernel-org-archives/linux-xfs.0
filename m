@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2GHubtS122743 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:56:38 -0500
+	q2GHucSg122762 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:56:38 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	GGHvTzvCrgxHKIZ9 (version=TLSv1 cipher=AES256-SHA bits=256
+	xrgDSqzIbaO882dV (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 16 Mar 2012 10:56:36 -0700 (PDT)
+	Fri, 16 Mar 2012 10:56:37 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1S8bOG-0001GE-D5
+	Linux)) id 1S8bOG-0001Fi-7f
 	for xfs@oss.sgi.com; Fri, 16 Mar 2012 17:56:36 +0000
-Message-Id: <20120316175636.373605151@bombadil.infradead.org>
-Date: Fri, 16 Mar 2012 13:55:44 -0400
+Message-Id: <20120316175636.187265302@bombadil.infradead.org>
+Date: Fri, 16 Mar 2012 13:55:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 3/4] xfs: allow assigning the tail lsn with the AIL lock held
+Subject: [PATCH 2/4] xfs: remove log item from AIL in xfs_iflush after a
+	shutdown
 References: <20120316175541.258282540@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-lockless-xlog_assign_tail_lsn
+Content-Disposition: inline; filename=xfs-delete-inode-from-ail-earlier
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,156 +33,117 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Provide a variant of xlog_assign_tail_lsn that has the AIL lock already
-held.  By doing so we do an additional atomic_read + atomic_set under
-the lock, which comes down to two instructions.
-
-Switch xfs_trans_ail_update_bulk and xfs_trans_ail_delete_bulk to the
-new version to reduce the number of lock roundtrips, and prepare for
-a new addition that would require a third lock roundtrip in
-xfs_trans_ail_delete_bulk.  This addition is also the reason for
-slightly rearranging the conditionals and relying on xfs_log_space_wake
-for checking that the filesystem has been shut down internally.
+If a filesystem has been forced shutdown we are never going to write inodes
+to disk, which means the inode items will stay in the AIL until we free
+the inode. Currently that is not a problem, but a pending change requires us
+to empty the AIL before shutting down the filesystem. In that case leaving
+the inode in the AIL is lethal. Make sure to remove the log item from the AIL
+to allow emptying the AIL on shutdown filesystems.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_log.c        |   31 +++++++++++++++++++++++--------
- fs/xfs/xfs_log.h        |    1 +
- fs/xfs/xfs_trans_ail.c  |   22 +++++++++++++++-------
- fs/xfs/xfs_trans_priv.h |    1 +
- 4 files changed, 40 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_iget.c  |   18 +-----------------
+ fs/xfs/xfs_inode.c |   17 +++++++++--------
+ fs/xfs/xfs_sync.c  |    1 +
+ 3 files changed, 11 insertions(+), 25 deletions(-)
 
-Index: xfs/fs/xfs/xfs_log.c
+Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.c	2012-03-16 12:44:55.880363918 +0100
-+++ xfs/fs/xfs/xfs_log.c	2012-03-16 12:50:24.040370003 +0100
-@@ -915,27 +915,42 @@ xfs_log_need_covered(xfs_mount_t *mp)
-  * We may be holding the log iclog lock upon entering this routine.
-  */
- xfs_lsn_t
--xlog_assign_tail_lsn(
-+xlog_assign_tail_lsn_locked(
- 	struct xfs_mount	*mp)
+--- xfs.orig/fs/xfs/xfs_inode.c	2012-03-16 12:44:56.037030588 +0100
++++ xfs/fs/xfs/xfs_inode.c	2012-03-16 12:47:03.697032954 +0100
+@@ -2397,7 +2397,6 @@ xfs_iflush(
+ 	xfs_inode_t		*ip,
+ 	uint			flags)
  {
--	xfs_lsn_t		tail_lsn;
- 	struct log		*log = mp->m_log;
-+	struct xfs_log_item	*lip;
-+	xfs_lsn_t		tail_lsn;
-+
-+	assert_spin_locked(&mp->m_ail->xa_lock);
+-	xfs_inode_log_item_t	*iip;
+ 	xfs_buf_t		*bp;
+ 	xfs_dinode_t		*dip;
+ 	xfs_mount_t		*mp;
+@@ -2410,7 +2409,6 @@ xfs_iflush(
+ 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
+ 	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
+ 
+-	iip = ip->i_itemp;
+ 	mp = ip->i_mount;
  
  	/*
- 	 * To make sure we always have a valid LSN for the log tail we keep
- 	 * track of the last LSN which was committed in log->l_last_sync_lsn,
--	 * and use that when the AIL was empty and xfs_ail_min_lsn returns 0.
--	 *
--	 * If the AIL has been emptied we also need to wake any process
--	 * waiting for this condition.
-+	 * and use that when the AIL was empty.
+@@ -2447,13 +2445,14 @@ xfs_iflush(
+ 	/*
+ 	 * This may have been unpinned because the filesystem is shutting
+ 	 * down forcibly. If that's the case we must not write this inode
+-	 * to disk, because the log record didn't make it to disk!
++	 * to disk, because the log record didn't make it to disk.
++	 *
++	 * We also have to remove the log item from the AIL in this case,
++	 * as we wait for an empty AIL as part of the unmount process.
  	 */
--	tail_lsn = xfs_ail_min_lsn(mp->m_ail);
--	if (!tail_lsn)
-+	lip = xfs_ail_min(mp->m_ail);
-+	if (lip)
-+		tail_lsn = lip->li_lsn;
-+	else
- 		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
- 	atomic64_set(&log->l_tail_lsn, tail_lsn);
- 	return tail_lsn;
+ 	if (XFS_FORCED_SHUTDOWN(mp)) {
+-		if (iip)
+-			iip->ili_fields = 0;
+-		xfs_ifunlock(ip);
+-		return XFS_ERROR(EIO);
++		error = XFS_ERROR(EIO);
++		goto abort_out;
+ 	}
+ 
+ 	/*
+@@ -2500,11 +2499,13 @@ corrupt_out:
+ 	xfs_buf_relse(bp);
+ 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ cluster_corrupt_out:
++	error = XFS_ERROR(EFSCORRUPTED);
++abort_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+ 	xfs_iflush_abort(ip);
+-	return XFS_ERROR(EFSCORRUPTED);
++	return error;
  }
  
-+xfs_lsn_t
-+xlog_assign_tail_lsn(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_lsn_t		tail_lsn;
-+
-+	spin_lock(&mp->m_ail->xa_lock);
-+	tail_lsn = xlog_assign_tail_lsn_locked(mp);
-+	spin_unlock(&mp->m_ail->xa_lock);
-+
-+	return tail_lsn;
-+}
-+
- /*
-  * Return the space in the log between the tail and the head.  The head
-  * is passed in the cycle/bytes formal parms.  In the special case where
-Index: xfs/fs/xfs/xfs_log.h
+ 
+Index: xfs/fs/xfs/xfs_iget.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_log.h	2012-03-16 12:44:55.893697252 +0100
-+++ xfs/fs/xfs/xfs_log.h	2012-03-16 12:47:09.127033055 +0100
-@@ -152,6 +152,7 @@ int	  xfs_log_mount(struct xfs_mount	*mp
- 			int		 	num_bblocks);
- int	  xfs_log_mount_finish(struct xfs_mount *mp);
- xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
-+xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
- void	  xfs_log_space_wake(struct xfs_mount *mp);
- int	  xfs_log_notify(struct xfs_mount	*mp,
- 			 struct xlog_in_core	*iclog,
-Index: xfs/fs/xfs/xfs_trans_ail.c
+--- xfs.orig/fs/xfs/xfs_iget.c	2012-03-16 12:44:56.047030587 +0100
++++ xfs/fs/xfs/xfs_iget.c	2012-03-16 12:47:03.697032954 +0100
+@@ -123,23 +123,7 @@ xfs_inode_free(
+ 		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
+ 
+ 	if (ip->i_itemp) {
+-		/*
+-		 * Only if we are shutting down the fs will we see an
+-		 * inode still in the AIL. If it is there, we should remove
+-		 * it to prevent a use-after-free from occurring.
+-		 */
+-		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
+-		struct xfs_ail	*ailp = lip->li_ailp;
+-
+-		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
+-				       XFS_FORCED_SHUTDOWN(ip->i_mount));
+-		if (lip->li_flags & XFS_LI_IN_AIL) {
+-			spin_lock(&ailp->xa_lock);
+-			if (lip->li_flags & XFS_LI_IN_AIL)
+-				xfs_trans_ail_delete(ailp, lip);
+-			else
+-				spin_unlock(&ailp->xa_lock);
+-		}
++		ASSERT(!(ip->i_itemp->ili_item.li_flags & XFS_LI_IN_AIL));
+ 		xfs_inode_item_destroy(ip);
+ 		ip->i_itemp = NULL;
+ 	}
+Index: xfs/fs/xfs/xfs_sync.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_trans_ail.c	2012-03-16 12:44:55.917030586 +0100
-+++ xfs/fs/xfs/xfs_trans_ail.c	2012-03-16 12:50:20.483703269 +0100
-@@ -79,7 +79,7 @@ xfs_ail_check(
-  * Return a pointer to the first item in the AIL.  If the AIL is empty, then
-  * return NULL.
-  */
--static xfs_log_item_t *
-+xfs_log_item_t *
- xfs_ail_min(
- 	struct xfs_ail  *ailp)
- {
-@@ -667,11 +667,15 @@ xfs_trans_ail_update_bulk(
- 
- 	if (!list_empty(&tmp))
- 		xfs_ail_splice(ailp, cur, &tmp, lsn);
--	spin_unlock(&ailp->xa_lock);
- 
--	if (mlip_changed && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
--		xlog_assign_tail_lsn(ailp->xa_mount);
-+	if (mlip_changed) {
-+		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
-+			xlog_assign_tail_lsn_locked(ailp->xa_mount);
-+		spin_unlock(&ailp->xa_lock);
-+
- 		xfs_log_space_wake(ailp->xa_mount);
-+	} else {
-+		spin_unlock(&ailp->xa_lock);
+--- xfs.orig/fs/xfs/xfs_sync.c	2012-03-16 12:44:57.707030619 +0100
++++ xfs/fs/xfs/xfs_sync.c	2012-03-16 12:47:03.697032954 +0100
+@@ -783,6 +783,7 @@ restart:
+ 		goto reclaim;
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_iunpin_wait(ip);
++		xfs_iflush_abort(ip);
+ 		goto reclaim;
  	}
- }
- 
-@@ -729,11 +733,15 @@ xfs_trans_ail_delete_bulk(
- 		if (mlip == lip)
- 			mlip_changed = 1;
- 	}
--	spin_unlock(&ailp->xa_lock);
- 
--	if (mlip_changed && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
--		xlog_assign_tail_lsn(ailp->xa_mount);
-+	if (mlip_changed) {
-+		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
-+			xlog_assign_tail_lsn_locked(ailp->xa_mount);
-+		spin_unlock(&ailp->xa_lock);
-+
- 		xfs_log_space_wake(ailp->xa_mount);
-+	} else {
-+		spin_unlock(&ailp->xa_lock);
- 	}
- }
- 
-Index: xfs/fs/xfs/xfs_trans_priv.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_trans_priv.h	2012-03-16 12:44:55.943697253 +0100
-+++ xfs/fs/xfs/xfs_trans_priv.h	2012-03-16 12:49:31.993702371 +0100
-@@ -102,6 +102,7 @@ xfs_trans_ail_delete(
- 
- void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
- void			xfs_ail_push_all(struct xfs_ail *);
-+struct xfs_log_item	*xfs_ail_min(struct xfs_ail  *ailp);
- xfs_lsn_t		xfs_ail_min_lsn(struct xfs_ail *ailp);
- 
- struct xfs_log_item *	xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
+ 	if (xfs_ipincount(ip)) {
 
 _______________________________________________
 xfs mailing list
