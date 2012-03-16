@@ -1,16 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2GH7jHS105102 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:07:45 -0500
-Message-ID: <4F63735D.5040302@sgi.com>
-Date: Fri, 16 Mar 2012 12:07:41 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q2GHFBFe109931 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:15:11 -0500
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id gCpPgmxij5Y3yUqD for
+	<xfs@oss.sgi.com>; Fri, 16 Mar 2012 10:15:09 -0700 (PDT)
+Date: Fri, 16 Mar 2012 17:15:09 +0000
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
+Message-ID: <20120316171509.GD49365@nsrc.org>
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
+	<4F61803A.60009@hardwarefreak.com>
+	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
+	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
+	<CAA8mOyCUCyzGCuNtn4txFuBtbk22M6LRpShNVH_Szb5=_F1PBw@mail.gmail.com>
+	<20322.29849.917554.794740@tree.ty.sabi.co.UK>
+	<CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 08/10] xfs: initialise xfssync work before running
-	quotachecks
-References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
-	<1331095828-28742-9-git-send-email-david@fromorbit.com>
-In-Reply-To: <1331095828-28742-9-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,55 +27,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jessie Evangelista <jessie.evangelista@gmail.com>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Peter Grandi <pg@lxra2.for.sabi.co.uk>, Linux fs XFS <xfs@oss.sgi.com>
 
-On 03/06/12 22:50, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Because the mount process can run a quotacheck and consume lots of
-> inodes, we need to be able to run periodic inode reclaim during the
-> mount process. This will prevent running the system out of memory
-> during quota checks.
->
-> This essentially reverts 2bcf6e97, but that is safe to do now that
-> the quota sync code that was causing problems during long quotacheck
-> executions is now gone.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
->   fs/xfs/xfs_super.c |   15 ++++++++-------
->   1 files changed, 8 insertions(+), 7 deletions(-)
->
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 13fa0cf..150d8f4 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1343,22 +1343,22 @@ xfs_fs_fill_super(
+On Fri, Mar 16, 2012 at 11:36:07AM +0800, Jessie Evangelista wrote:
+> I'm still scouring the internet for a best practice recipe for
+> implementing xfs/mdraid.
+> I am open to writing one and including the inputs everyone is contributing here.
+> In my search, I also saw some references of alignment issues for partitions.
+> this is what I used to setup the partitions for the md device
+> 
+> sfdisk /dev/sdb <<EOF
+> unit: sectors
+> 
+> 63,104872257,fd
+> 0,0,0
+> 0,0,0
+> 0,0,0
+> EOF
+> 
+> I've read a recommendation to start the partition on the 1MB mark.
+> Does this make sense?
 
->   	/*
->   	 * Blow away any referenced inode in the filestreams cache.
-> @@ -1397,6 +1397,7 @@ xfs_fs_fill_super(
->   	xfs_flush_buftarg(mp->m_ddev_targp, 1);
->
->   	xfs_unmountfs(mp);
-> +	xfs_syncd_stop(mp);
->   	goto out_free_sb;
->   }
->
-
-
-Shouldn't the xfs_syncd_stop() preceed the xfs_unmountfs()?
-
-xfs_unmountfs() calls xfs_free_perag() and there is an iterator in inode 
-and data sync workers.
-
-Mark Tinguely
-<tinguely@sgi.com>
+I would just make the raw disks members of the RAID array, e.g.
+/dev/sdb, /dev/sdc etc and not partition them.
 
 _______________________________________________
 xfs mailing list
