@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2GGHSqK095354 for <xfs@OSS.SGI.com>; Fri, 16 Mar 2012 11:17:28 -0500
-Received: from april.london.02.net (april.london.02.net [87.194.255.143]) by
-	cuda.sgi.com with ESMTP id QwjrG0SntawYfyv6 for
-	<xfs@OSS.SGI.com>; Fri, 16 Mar 2012 09:17:26 -0700 (PDT)
+	q2GH7jHS105102 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:07:45 -0500
+Message-ID: <4F63735D.5040302@sgi.com>
+Date: Fri, 16 Mar 2012 12:07:41 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Message-ID: <20323.12382.695317.414302@tree.ty.sabi.co.UK>
-Date: Fri, 16 Mar 2012 12:21:50 +0000
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-In-Reply-To: <3633779.GerkmFcqtU@saturn>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
-	<20322.29849.917554.794740@tree.ty.sabi.co.UK>
-	<CAA8mOyC-xCcNxQFz-M1_TfnxcGBmpUdQ57_vYNVF11jhWK3SSA@mail.gmail.com>
-	<3633779.GerkmFcqtU@saturn>
-From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
+Subject: Re: [PATCH 08/10] xfs: initialise xfssync work before running
+	quotachecks
+References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	<1331095828-28742-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1331095828-28742-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,53 +19,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>, Linux RAID <linux-raid@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-[ ... ]
+On 03/06/12 22:50, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Because the mount process can run a quotacheck and consume lots of
+> inodes, we need to be able to run periodic inode reclaim during the
+> mount process. This will prevent running the system out of memory
+> during quota checks.
+>
+> This essentially reverts 2bcf6e97, but that is safe to do now that
+> the quota sync code that was causing problems during long quotacheck
+> executions is now gone.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/xfs_super.c |   15 ++++++++-------
+>   1 files changed, 8 insertions(+), 7 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 13fa0cf..150d8f4 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1343,22 +1343,22 @@ xfs_fs_fill_super(
 
->> If you were in my place with the resource constraints, you'd
->> go with: xfs with barriers on top of mdraid10 with device
->> cache ON and setting vm/dirty_bytes, vm/dirty_background_bytes,
->> vm/dirty_expire_centisecs, vm/dirty_writeback_centisecs to
->> safe values
+>   	/*
+>   	 * Blow away any referenced inode in the filestreams cache.
+> @@ -1397,6 +1397,7 @@ xfs_fs_fill_super(
+>   	xfs_flush_buftarg(mp->m_ddev_targp, 1);
+>
+>   	xfs_unmountfs(mp);
+> +	xfs_syncd_stop(mp);
+>   	goto out_free_sb;
+>   }
+>
 
-> If you ever experienced a crash where lots of sensible and
-> important data were lost, you would not even think about
-> "device cache ON".
 
-It is not as simple as that... *If* hw barriers are implemented
-*and* applications do the right things, that is not a concern.
-Disabling the device cache is just a way to turn barriers on for
-everything. Indeed the whole rationale for having the 'barrier'
-option is to let the device caches on, and the OP did ask how to
-test that barriers actually work.
+Shouldn't the xfs_syncd_stop() preceed the xfs_unmountfs()?
 
-Since even most consumers level drives currently implement
-barriers correctly, the biggest problem today, as per the
-O_PONIES discussions, is applications that don't do the right
-thing, and therefore the biggest risk is large amounts of dirty
-pages in system memory (either NFS client or server), not in the
-drive caches.
+xfs_unmountfs() calls xfs_free_perag() and there is an iterator in inode 
+and data sync workers.
 
-Since the Linux flusher parameters are/have been demented, I
-have seen one or more GiB of dirty pages in system memory (on
-hosts I didn't configure...), which also causes performance
-problems.
-
-Again, as a crassly expedient thing, working around the lack of
-"do the right thing" in applications by letting only a few
-seconds of dirty pages accumulate in system memory seems to fool
-enough users (and many system administrators and application
-developers) into thinking that stuff is "safe". It worked well
-enough for 'ext3' for many years, quite regrettably.
-
-  Note: 'ext3' has also had the "helpful" issue of excessive
-  impact of flushing, which made 'fsync' performance terrible,
-  but improved the apparent safety for "optimistic" applications.
+Mark Tinguely
+<tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
