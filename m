@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2GHubH5122741 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:56:37 -0500
+	q2GHubTZ122742 for <xfs@oss.sgi.com>; Fri, 16 Mar 2012 12:56:37 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	OJSWobWIt1GNXrWj (version=TLSv1 cipher=AES256-SHA bits=256
+	Rhx30fm8ghz7CtzR (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 16 Mar 2012 10:56:36 -0700 (PDT)
 Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1S8bOF-0001Ec-Sb
-	for xfs@oss.sgi.com; Fri, 16 Mar 2012 17:56:35 +0000
-Message-Id: <20120316175541.258282540@bombadil.infradead.org>
-Date: Fri, 16 Mar 2012 13:55:41 -0400
+	Linux)) id 1S8bOG-0001FC-1P
+	for xfs@oss.sgi.com; Fri, 16 Mar 2012 17:56:36 +0000
+Message-Id: <20120316175635.995054821@bombadil.infradead.org>
+Date: Fri, 16 Mar 2012 13:55:42 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 0/4] implement filesystem freezing by emptying the AIL
+Subject: [PATCH 1/4] xfs: remove log item from AIL in xfs_qm_dqflush after a
+	shutdown
+References: <20120316175541.258282540@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-delete-dquot-from-ail-earlier
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,9 +33,46 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-This series was part of the one to write buffers directly from xfsaild,
-but it can stand on its own, and with all the discussion on freezing
-it might be a good idea to get it out ASAP.
+If a filesystem has been forced shutdown we are never going to write dquots
+to disk, which means the dquot items will stay in the AIL forever.
+Currently that is not a problem, but a pending chance requires us to
+empty the AIL before shutting down the filesystem, in which case this
+behaviour is lethal.  Make sure to remove the log item from the AIL
+to allow emptying the AIL on shutdown filesystems.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+---
+ fs/xfs/xfs_dquot.c |   13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+
+Index: xfs/fs/xfs/xfs_dquot.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_dquot.c	2012-02-23 17:52:53.916002428 -0800
++++ xfs/fs/xfs/xfs_dquot.c	2012-02-23 17:53:01.829335739 -0800
+@@ -904,10 +904,21 @@ xfs_qm_dqflush(
+ 	/*
+ 	 * This may have been unpinned because the filesystem is shutting
+ 	 * down forcibly. If that's the case we must not write this dquot
+-	 * to disk, because the log record didn't make it to disk!
++	 * to disk, because the log record didn't make it to disk.
++	 *
++	 * We also have to remove the log item from the AIL in this case,
++	 * as we wait for an emptry AIL as part of the unmount process.
+ 	 */
+ 	if (XFS_FORCED_SHUTDOWN(mp)) {
++		struct xfs_log_item	*lip = &dqp->q_logitem.qli_item;
+ 		dqp->dq_flags &= ~XFS_DQ_DIRTY;
++
++		spin_lock(&mp->m_ail->xa_lock);
++		if (lip->li_flags & XFS_LI_IN_AIL)
++			xfs_trans_ail_delete(mp->m_ail, lip);
++		else
++			spin_unlock(&mp->m_ail->xa_lock);
++
+ 		xfs_dqfunlock(dqp);
+ 		return XFS_ERROR(EIO);
+ 	}
 
 _______________________________________________
 xfs mailing list
