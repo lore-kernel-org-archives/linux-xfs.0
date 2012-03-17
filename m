@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2GJScA0129739 for <xfs@OSS.SGI.com>; Fri, 16 Mar 2012 14:28:38 -0500
-Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
-	cuda.sgi.com with ESMTP id C0gzAwWjwE8pmFL4 for
-	<xfs@OSS.SGI.com>; Fri, 16 Mar 2012 12:28:36 -0700 (PDT)
+	q2H02Xhr195780 for <xfs@OSS.SGI.com>; Fri, 16 Mar 2012 19:02:34 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id VJmp7NmWkNy50LqZ
+	for <xfs@OSS.SGI.com>; Fri, 16 Mar 2012 17:02:25 -0700 (PDT)
+Message-ID: <4F63D48E.9080109@hardwarefreak.com>
+Date: Fri, 16 Mar 2012 19:02:22 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Message-ID: <20323.37976.162802.876821@tree.ty.sabi.co.UK>
-Date: Fri, 16 Mar 2012 19:28:24 +0000
 Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-In-Reply-To: <CAKuK5J11JTdwZSBWj7DH7c+hE--MVNQVVrcKXaV2AO-wEpWBog@mail.gmail.com>
 References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
 	<4F61803A.60009@hardwarefreak.com>
 	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
 	<4F633121.10800@hardwarefreak.com>
 	<CAKuK5J3GHgWcnYLqwRV8s_wMjO2nBVf7h=yONtn90kPn9A_3Gg@mail.gmail.com>
 	<CAKuK5J11JTdwZSBWj7DH7c+hE--MVNQVVrcKXaV2AO-wEpWBog@mail.gmail.com>
-From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
+	<20323.37976.162802.876821@tree.ty.sabi.co.UK>
+In-Reply-To: <20323.37976.162802.876821@tree.ty.sabi.co.UK>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,104 +27,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
+To: Peter Grandi <pg@lxra2.to.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 
-[ ... ]
+On 3/16/2012 2:28 PM, Peter Grandi wrote:
+> [ ... ]
+> 
+>>>> write barriers will ensure journal and thus filesystem
+>>>> integrity in a crash/power fail event.  They do NOT guarantee
+>>>> file data integrity as file data isn't journaled.
+> 
+> Not well expressed, 
 
->>> write barriers will ensure journal and thus filesystem
->>> integrity in a crash/power fail event. =A0They do NOT guarantee
->>> file data integrity as file data isn't journaled.
+Given the audience, the OP, I was simply avoiding getting too deep in
+the weeds Peter.  This thread is on the linux-raid list, not xfs@oss.
+You know I have a tendency to get too deep in the weeds.  I think I did
+nice job of balance here. ;)
 
-Not well expressed, as XFS barriers do ensure file data integrity,
-*if the applications uses them* (and uses them in exactly the
-right way).
+> as XFS barriers do ensure file data integrity,
+> *if the applications uses them* (and uses them in exactly the
+> right way).
 
-The difference between metadata and data with XFS is that XFS
-itself will use barriers on metadata at the right times, because
-that's data to XFS, but it won't use barriers on data, leaving
-that entirely to the application.
+How will the OP know which, if any, of his users' desktop applications
+do fsyncs, properly?  He won't.  Which is why I made the general
+statement, which is correct, if not elaborate, nor down in the weeds.
 
->>> =A0No filesystem (Linux anyway) journals data, only metadata.
+> The difference between metadata and data with XFS is that XFS
+> itself will use barriers on metadata at the right times, because
+> that's data to XFS, but it won't use barriers on data[1], leaving
+> that entirely to the application.
 
->> That's not true, is it? ext3 and ext4 support journal=3Ddata.
+[1]File data, just to be clear
 
-They do, because they journal blocks, which is not generally a
-great choice, but gives the option to journal data blocks too more
-easily than other choices. But it is a very special case that few
-people use.
+>>>>  No filesystem (Linux anyway) journals data, only metadata.
+> 
+>>> That's not true, is it? ext3 and ext4 support journal=data.
+> 
+> They do, because they journal blocks, which is not generally a
+> great choice, but gives the option to journal data blocks too more
+> easily than other choices. But it is a very special case that few
+> people use.
 
-Also, there are significant issues with 'ext3' and 'fsync' and
-journaling:
+Few use it because the performance is absolutely horrible.  data=journal
+disables delayed allocation (which serious contributes to any modern
+filesystem's performance--EXT devs stole/borrowed delayed allocation
+from XFS BTW) and it disables O_DIRECT.  It also doubles the number of
+data writes to media, once to the journal, once to the filesystem, for
+every block of every file written.
 
-http://lwn.net/Articles/328363/
- =ABThere is one other important change needed to get a truly
-  quick fsync() with ext3, though: the filesystem must be
-  mounted in data=3Dwriteback mode. This mode eliminates the
-  requirement that data blocks be flushed to disk ahead of
-  metadata; in data=3Dordered mode, instead, the amount of data to
-  be written guarantees that fsync() will always be slower.
-  Switching to data=3Dwriteback eliminates those writes, but, in
-  the process, it also turns off the feature which made ext3
-  seem more robust than ext4.=BB
+> On a more general note, journaling and barriers are sort of
+> distinct issues.
+> 
+> The real purpose of barriers is to ensure that updates are
+> actually on the recording medium, whether in the journal or
+> directly on final destination.
+> That is barriers are used to ensure that data or metadata on the
+> persistent layer is current.
 
-On a more general note, journaling and barriers are sort of
-distinct issues.
+Correct.  Again, trying to stay out of the weeds.  I'd established that
+XFS uses barriers on journal writes for metadata consistency, which
+prevents filesystem corruption after a crash, but not necessarily file
+corruption.  Making the statement that XFS doesn't journal data gets the
+point across more quickly, while staying out of the weeds.
 
-The real purpose of barriers is to ensure that updates are
-actually on the recording medium, whether in the journal or
-directly on final destination.
-That is barriers are used to ensure that data or metadata on the
-persistent layer is current.
+[...]
 
-The purpose of a journal is not to ensure that the state on the
-persistent layer are *current*, but rather *consistent* (at a
-lower cost than synchronous updates), without having to be
-careful about the order in which the updates are made current.
-The updates are made consistent by writing them to the log as
-they are needed (not necessarily immediately), and then on
-recovery the order gets sorted out spatially.
+> The 'freeze' features of XFS does not rely on snapshotting, it
+> relies on suspending all processes that are writing to the
+> filetree, so updates are avoided for the duration.
 
-Currency does not imply consistency (if the updates are made
-current in some arbitrary order) and consistency does not imply
-currency (if the recording medium is kept consistent but updates
-are applied to it infrequently).
+xfs_freeze was moved into the VFS in 2.6.29 and is called automatically
+when doing an LVM snapshot of any Linux FS supporting such.  Thus,
+snapshotting relies on xfs_freeze, not the other way round.  And
+xfs_freeze doesn't suspend all processes that are writing to the
+filesystem.  All write system calls to the filesystem are simply halted,
+and the process blocks on IO until the filesystem is unfrozen.
 
-The BSD FFS does not need a journal because it is designed to be
-very careful as to the order in which updates are made current,
-and log file systems don't aim for spatial currency.
+> As the XFS team have been adding or planning to add various "new"
+> features like checksums, maybe one day they will add COW to XFS
+> too (not such an easy task when considering how large XFS extents
+> can be, but the hole punching code can help there).
 
-> And btrfs supports COW (as does nilfs2) with "transactions",
-> which should/could be similar?
+Not at all an easy rewrite of XFS.  And that's what COW would be, a
+massive rewrite.  Copy on write definitely has some advantages for some
+usage scenarios, but it's not yet been proven the holy grail of
+filesystem design.
 
-Not quite. They are more like "checkpoints", that is alternate
-root inodes that "snapshot" the state of the whole filetree at
-some point.
-
-These are not entirely inexpensive, and as a result as I learned
-from a talk about some recent updates about the BSD FFS:
-
-  http://www.sabi.co.uk/blog/12-two.html#120222
-
-COW filesystems like ZFS/BTRFS/... need to have a journal too to
-support 'fsync' in between checkpoints.
-
-BTW there are now COW versions of 'ext3' and 'ext4', with
-snapshotting too:
-
-  http://www.sabi.co.uk/blog/12-two.html#120218b
-
-The 'freeze' features of XFS does not rely on snapshotting, it
-relies on suspending all processes that are writing to the
-filetree, so updates are avoided for the duration.
-
-As the XFS team have been adding or planning to add various "new"
-features like checksums, maybe one day they will add COW to XFS
-too (not such an easy task when considering how large XFS extents
-can be, but the hole punching code can help there).
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
