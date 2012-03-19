@@ -1,36 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2JKPUK1160719 for <xfs@oss.sgi.com>; Mon, 19 Mar 2012 15:25:31 -0500
-Received: from stan.its.monash.edu.au (stan.its.monash.edu.au
-	[130.194.13.165]) by cuda.sgi.com with ESMTP id
-	WIZFRGGdhZEXDB04 for <xfs@oss.sgi.com>;
-	Mon, 19 Mar 2012 13:25:28 -0700 (PDT)
-Received: from chapman.its.monash.edu.au ([130.194.13.89])
-	by stan.its.monash.edu.au
-	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
-	with ESMTP id <0M15006JEFEEC510@stan.its.monash.edu.au> for
-	xfs@oss.sgi.com; Tue, 20 Mar 2012 07:25:26 +1100 (EST)
-Received: from chapman.its.monash.edu.au (localhost.localdomain [127.0.0.1])
-	by localhost (Postfix) with SMTP id DD6687E611E	for <xfs@oss.sgi.com>;
-	Tue, 20 Mar 2012 07:25:26 +1100 (EST)
-Received: from mail-pb0-f54.google.com
-	(mail-pb0-f54.google.com [209.85.160.54])
-	(using TLSv1 with cipher RC4-SHA (128/128 bits))
-	(No client certificate requested)	by chapman.its.monash.edu.au
-	(Postfix) with ESMTPS id 5D8827E60FC	for <xfs@oss.sgi.com>; Tue,
-	20 Mar 2012 07:25:26 +1100 (EST)
-Received: by pbcwz17 with SMTP id wz17so1526122pbc.41 for <xfs@oss.sgi.com>;
-	Mon, 19 Mar 2012 13:25:23 -0700 (PDT)
-Date: Tue, 20 Mar 2012 07:25:23 +1100
-From: Nathan Scott <nathans@debian.org>
-Subject: Re: [patch 1/1] xfsprogs: update summaries in preparation for release
+	q2JK4SnB159673 for <xfs@oss.sgi.com>; Mon, 19 Mar 2012 15:04:28 -0500
+Message-Id: <20120319200435.983772174@sgi.com>
+Date: Mon, 19 Mar 2012 15:03:26 -0500
+From: bpm@sgi.com
+Subject: [patch 1/1] xfsprogs: update summaries in preparation for release
 	3.1.8
-In-reply-to: <20120319200435.983772174@sgi.com>
-Message-id: <CAAp5ZgO6jfxOCaArrOPARmQVZR8r0E2SPa7zY4_0zBHO4HJEhQ@mail.gmail.com>
-MIME-version: 1.0
 References: <20120319200325.070328663@sgi.com>
-	<20120319200435.983772174@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,51 +16,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7762992709484085536=="
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============7463748941906593409=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: bpm@sgi.com
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Nathan Scott <nathans@debian.org>, bpm@sgi.com
 
---===============7762992709484085536==
-Content-type: multipart/alternative; boundary=e89a8ff24717a1173004bb9e5bf3
+--===============7463748941906593409==
+Content-Disposition: inline; filename=update-summaries
 
---e89a8ff24717a1173004bb9e5bf3
-Content-Type: text/plain; charset=ISO-8859-1
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Summary looks good to me, thanks.
+Index: xfsprogs/VERSION
+===================================================================
+--- xfsprogs.orig/VERSION
++++ xfsprogs/VERSION
+@@ -3,5 +3,5 @@
+ #
+ PKG_MAJOR=3
+ PKG_MINOR=1
+-PKG_REVISION=7
++PKG_REVISION=8
+ PKG_BUILD=1
+Index: xfsprogs/debian/changelog
+===================================================================
+--- xfsprogs.orig/debian/changelog
++++ xfsprogs/debian/changelog
+@@ -1,3 +1,10 @@
++xfsprogs (3.1.8) unstable; urgency=low
++
++  * New upstream release
++  * Numerous xfs_repair fixes
++
++ -- Nathan Scott <nathans@debian.org>  Mon, 19 Mar 2012 14:21:00 +1100
++
+ xfsprogs (3.1.7) unstable; urgency=low
+ 
+   * New upstream release
+Index: xfsprogs/doc/CHANGES
+===================================================================
+--- xfsprogs.orig/doc/CHANGES
++++ xfsprogs/doc/CHANGES
+@@ -1,3 +1,44 @@
++xfsprogs-3.1.8 (19 March 2012)
++	- Fix xfs_repair segfault on a corrupted filesystem by validating the
++	  acl count before reading it.
++	- Avoid xfs_repair deadlocks on prefetched buffers.
++	- Fix various incorrect printf formats, thanks to Jakub Bogusz for
++	  reporting.
++	- Polish translation update, thanks to Jakub Bogusz.
++	- Refuse mkfs.xfs on misaligned devices when using 4k sectors, unless
++	  the -f option is specified, and then force 512b sector size,
++	  thanks to Carlos Maiolino.
++	- Avoid a possible loop on the unlinked inode list in phase 3 of
++	  xfs_repair, thanks to Stefan Pfetzing for reporting.
++	- Allocate inode and free extent records individually in xfs_repair.
++	- Fix a possible deadlock btree nodes in xfs_repair by using recursive
++	  locking, thanks to Arkadiusz Miśkiewicz for reporting and testing.
++	- Fix possible xfs_repair deadlocks in inode prefetching, thanks to
++	  Arkadiusz Miśkiewicz for reporting and testing.
++	- Make xfs_repair handle filesystems with the log in ag 0, thanks to
++	  Sindre Skogen for reporting.
++	- Deprecate the -F foreign flag to xfs_io.
++	- Add debian linux-libc-dev build dependancy.
++	- Add an extended fiemap configure check.
++	- Various cleanups in xfs_repair.
++	- Update xfs_check man page to recommend xfs_repair over xfs_check,
++	  thanks to Arkadiusz Miśkiewicz.
++	- Update the on-disk extent count as part of inode repair when moving
++	  inodes to lost+found to avoid to avoid tripping over a check in
++	  xfs_iformat, thanks to Arkadiusz Miśkiewicz for reporting and
++	  testing.
++	- Check for size parsing errors in xfs_quota, thanks to James Lawrie
++	  for reporting.
++	- Fix fiemap loop continuation in xfs_io.
++	- Make mkfs.xfs properly handle physical sector size.
++	- Fix /proc/mounts parsing in xfs_fsr.
++	- Fix xfs_repair when ag_stride options with attributes and dirv1 code,
++	  thanks to Tom Crane for reporting and testing.
++	- Fix message formats in process_dinode_int.
++	- Fix xfs_repair handling of link counts when the on-disk count
++	  overflows 8 bits.
++	- Fix messages from set_nlinks in xfs_repair.
++
+ xfsprogs-3.1.7 (17 November 2011)
+ 	- Pull in fix for debian/control
+ 	- Polish translation update, thanks to Jakub Bogusz
 
-On 20 March 2012 07:03, <bpm@sgi.com> wrote:
 
-> Signed-off-by: Ben Myers <bpm@sgi.com>
->
-
-Reviewed-by: Nathan Scott <nathans@debian.org>
-
-cheers.
-
---
-Nathan
-
---e89a8ff24717a1173004bb9e5bf3
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Summary looks good to me, thanks.<br><br><div class=3D"gmail_quote">On 20 M=
-arch 2012 07:03,  <span dir=3D"ltr">&lt;<a href=3D"mailto:bpm@sgi.com">bpm@=
-sgi.com</a>&gt;</span> wrote:<br><blockquote class=3D"gmail_quote" style=3D=
-"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex">
-<div class=3D"HOEnZb"><div class=3D"h5">Signed-off-by: Ben Myers &lt;<a hre=
-f=3D"mailto:bpm@sgi.com">bpm@sgi.com</a>&gt;</div></div></blockquote><div><=
-br></div><div>Reviewed-by: Nathan Scott &lt;<a href=3D"mailto:nathans@debia=
-n.org">nathans@debian.org</a>&gt;</div>
-<div><br></div><div>cheers.</div><div><br></div><div>--</div><div>Nathan</d=
-iv></div>
-
---e89a8ff24717a1173004bb9e5bf3--
-
-
---===============7762992709484085536==
+--===============7463748941906593409==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -94,4 +116,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7762992709484085536==--
+--===============7463748941906593409==--
