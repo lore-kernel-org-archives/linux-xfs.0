@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2ILHWeN027048 for <xfs@oss.sgi.com>; Sun, 18 Mar 2012 16:17:32 -0500
-Received: from busoni.debian.org (busoni.debian.org [140.211.15.34]) by
-	cuda.sgi.com with ESMTP id l1HJhQ47oxEtM8qx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 18 Mar 2012 14:17:26 -0700 (PDT)
-Subject: Bug#664550: xfs_quota: "report -p" doesn't show all projects
-Resent-To: debian-bugs-dist@lists.debian.org
-Resent-Message-ID: <handler.664550.B.133210510920574@bugs.debian.org>
-Date: Sun, 18 Mar 2012 22:11:11 +0100
-From: Sergio Gelato <Sergio.Gelato@astro.su.se>
-Message-ID: <20120318211111.GA22507@hanuman.astro.su.se>
+	q2J97Spl108768 for <xfs@oss.sgi.com>; Mon, 19 Mar 2012 04:07:28 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id vFFgoO0lrl1wI7aG
+	for <xfs@oss.sgi.com>; Mon, 19 Mar 2012 02:07:27 -0700 (PDT)
+Message-ID: <4F66F74D.3030909@hardwarefreak.com>
+Date: Mon, 19 Mar 2012 04:07:25 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-Reply-To: Sergio Gelato <Sergio.Gelato@astro.su.se>, 664550@bugs.debian.org
+Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
+References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
+	<4F61803A.60009@hardwarefreak.com>
+	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
+	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
+	<4F64115D.50208@hardwarefreak.com> <20120317223454.GQ5091@dastard>
+	<20325.17387.216150.45013@tree.ty.sabi.co.UK>
+	<20325.50714.237894.328039@tree.ty.sabi.co.UK>
+	<20120318140051.GA2594@infradead.org>
+	<20326.13500.799169.828158@tree.ty.sabi.co.UK>
+In-Reply-To: <20326.13500.799169.828158@tree.ty.sabi.co.UK>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,25 +33,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: submit@bugs.debian.org
+To: Peter Grandi <pg@lxra2.to.sabi.co.UK>
+Cc: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
 
-Package: xfsprogs
-Version: 3.1.4
+On 3/18/2012 2:17 PM, Peter Grandi wrote:
 
-When invoked without an explicit -U argument, the report and dump subcommands
-of xfs_quota only mention projects that have a corresponding entry in
-/etc/projid . This important fact is not mentioned in the man page.
-It could easily result in loss of quota limit information across dump/restore
-on systems where /etc/projid is out of date, corrupt or missing.
+> It is noticeable that 90% of your post is pure malicious
+> offtopic personal attack, and the rest is "from on high",
+> and the whole is entirely devoid of technical content.
 
-(Aside: even the fact that the dump subcommand accepts -L and -U isn't 
-documented in the man page. Why not?)
+It is noticeable that 100% of my post was technical content, directly
+asked questions of you, yet you chose to respond to Christoph's
+"personal attacks" while avoiding answering my purely technical questions.
 
-With an explicit -U, the code switches from getprent() (which iterates
-over the contents of /etc/projid) to a simple loop over all project IDs
-in the given range. This is better, except possibly for performance if
-the project ID space is sparse.
+I guess we can assume your silence, your unwillingness to answer my
+questions, is a sign of capitulation.
 
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
