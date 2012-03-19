@@ -1,27 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2JEirCc133573
-	for <linux-xfs@oss.sgi.com>; Mon, 19 Mar 2012 09:44:55 -0500
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id EZiFP7KQLu48TrKD (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Mon, 19 Mar 2012 07:44:52 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1S9dpI-0005Rf-O6
-	for linux-xfs@oss.sgi.com; Mon, 19 Mar 2012 15:44:49 +0100
-Received: from office1.visionpointsystems.com ([216.252.206.159])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 19 Mar 2012 15:44:48 +0100
-Received: from acook by office1.visionpointsystems.com with local (Gmexim 0.1
-	(Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Mon, 19 Mar 2012 15:44:48 +0100
-From: Alan Cook <acook@visionpointsystems.com>
-Subject: ftruncate() Writes Last Block of File
-Date: Mon, 19 Mar 2012 14:44:33 +0000 (UTC)
-Message-ID: <loom.20120319T153420-855@post.gmane.org>
-Mime-Version: 1.0
+	q2JGll0l145401 for <xfs@oss.sgi.com>; Mon, 19 Mar 2012 11:47:47 -0500
+Message-ID: <4F676330.1070005@sgi.com>
+Date: Mon, 19 Mar 2012 11:47:44 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 05/10] xfs: introduce an allocation workqueue
+References: <1331095828-28742-1-git-send-email-david@fromorbit.com>
+	<1331095828-28742-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1331095828-28742-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,36 +18,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-I have three questions regarding the XFS implementation of ftruncate().  In the
-block device driver, I can see that writes are being performed to the last block
-of previously written file when ftruncate() is called.  I believe that I found
-ftruncate() in the XFS sources, but all I see is the filesize being updated in
-the inode.  So if ftruncate() is writing to the last block, it appears to be a
-triggered event.
+On 03/06/12 22:50, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> We currently have significant issues with the amount of stack that
+> allocation in XFS uses, especially in the writeback path. We can
+> easily consume 4k of stack between mapping the page, manipulating
+> the bmap btree and allocating blocks from the free list. Not to
+> mention btree block readahead and other functionality that issues IO
+> in the allocation path.
+>
+> As a result, we can no longer fit allocation in the writeback path
+> in the stack space provided on x86_64. To alleviate this problem,
+> introduce an allocation workqueue and move all allocations to a
+> seperate context. This can be easily added as an interposing layer
+> into xfs_alloc_vextent(), which takes a single argument structure
+> and does not return until the allocation is complete or has failed.
+>
+> To do this, add a work structure and a completion to the allocation
+> args structure. This allows xfs_alloc_vextent to queue the args onto
+> the workqueue and wait for it to be completed by the worker. This
+> can be done completely transparently to the caller.
+>
+> The worker function needs to ensure that it sets and clears the
+> PF_TRANS flag appropriately as it is being run in an active
+> transaction context. Work can also be queued in a memory reclaim
+> context, so a rescuer is needed for the workqueue.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 
-To test, I added printk() statements in the block device driver that outputs
-jiffies for write operations.  A file is created and written (~1 MiB), and then
-truncated to 8192 via ftruncate().  The original write to file happens about 20
-jiffies before the call to ftruncate().  When looking at the output, there is an
-additional write to what is the last block of the truncated file, which reports
-the same jiffies as the call to ftruncate().
 
-I am not reporting this as a bug, simply looking for more information, as it was
-not something that I expected to happen.
+#include <std/disclaimer>	# speaking for myself
 
-Does ftruncate() actually write to the last block of the file?  If not, any
-thoughts on what would be?  It only happens when ftruncate() is called.
+As the problem is described above, it sounds like the STANDARD x86_64
+configuration is in stack crisis needing to put a worker in-line to
+solve the stack issue.
 
-Where in the XFS kernel code is ftruncate() implemented?  I searched around, but
-have no confidence that what I see is actually the ftruncate() implementation.
+Adding an in-line worker to fix a "stack crisis" without any other
+measures and the Linux's implementation of the kernel stack (not
+configurable on compilation, and requiring order of magnitude physical
+allocation), sent me into a full blown rant last week. The standard,
+what? when? why? how? WTF? - you know the standard rant. I even
+generated a couple yawns of response from people! :)
 
-If ftruncate() does write to the last block of the file, why does it do so?
+
+x86_64, x86_32 (and untested ARM) code can be sent to anyone who wants
+to try this at home. I would say, a generic configuration is using at
+most 3KB of the stack is being used by the time xfs_alloc_vextent()
+is being called and that includes the nested calls of the routine. So
+for most setups, we can say the standard 8KB stacks is in no danger of
+depletion and will not benefit from this feature.
+
+Let us talk about 4KB stacks....people may need to use them because
+the embedded environment has less memory, it is more sensitive to the
+physical contiguous nature of the multi-page stacks, and the smaller
+memory amounts may cause the allocation routines to nest more. If XFS
+can't optimize the stack use enough to be much help, and going to
+8KB stacks is too expensive, then extra-ordinary operations such as
+this feature may be needed but please make it a configurable option
+for 4KB stacks and not the default code.
+
+I believe that the kernel stacks do not need to be physically
+contiguous. Would 8KB stacks be used in this environment if the Linux
+did not implement them as physically contiguous? What is the plan
+when the 8KB limits become threatened?
+
+This feature and the related nuances are good topics for the
+upcoming Linux Filesystem and MM forum next month.
+
+Mark Tinguely
 
 
 _______________________________________________
