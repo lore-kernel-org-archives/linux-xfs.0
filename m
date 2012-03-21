@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2LKxjTx120505 for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 15:59:45 -0500
-Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id VjWoAUyR2D1Enjw3
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 21 Mar 2012 13:59:43 -0700 (PDT)
-Received: by werm13 with SMTP id m13so1473902wer.26
-	for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 13:59:42 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120321183613.2C93F426DA7@whiskey.americas.sgi.com>
-References: <20120321183613.2C93F426DA7@whiskey.americas.sgi.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Wed, 21 Mar 2012 13:59:22 -0700
-Message-ID: <CA+55aFyz5UWiJeeMbwZUZEscisZY5Jb0nADpJP6jWKwf3Uai1A@mail.gmail.com>
+	q2LM6jfG127139 for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 17:06:45 -0500
+Date: Wed, 21 Mar 2012 17:06:52 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [GIT PULL] XFS update for 3.4-rc1
+Message-ID: <20120321220652.GJ8451@sgi.com>
+References: <20120321183613.2C93F426DA7@whiskey.americas.sgi.com>
+	<CA+55aFyz5UWiJeeMbwZUZEscisZY5Jb0nADpJP6jWKwf3Uai1A@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyz5UWiJeeMbwZUZEscisZY5Jb0nADpJP6jWKwf3Uai1A@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +23,52 @@ Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Wed, Mar 21, 2012 at 11:36 AM, Ben Myers <bpm@sgi.com> wrote:
->
-> =A0 Please pull from git://oss.sgi.com/xfs/xfs for-linus
+Hey Linus,
 
-"Already up-to-date."
+On Wed, Mar 21, 2012 at 01:59:22PM -0700, Linus Torvalds wrote:
+> On Wed, Mar 21, 2012 at 11:36 AM, Ben Myers <bpm@sgi.com> wrote:
+> >
+> > =A0 Please pull from git://oss.sgi.com/xfs/xfs for-linus
+> =
 
-I'd assume you forgot to push, but in fact all the things you quote
-there seem to have been in 3.3 already. So the whole pull request
-seems stale.
+> "Already up-to-date."
+> =
 
-Wazzup?
+> I'd assume you forgot to push, but in fact all the things you quote
+> there seem to have been in 3.3 already. So the whole pull request
+> seems stale.
+> =
 
-                  Linus
+> Wazzup?
+
+PEBKAC mostly.
+
+xfs/master contains scalability improvements for dquots, log grant code
+cleanups, plus bugfixes and cleanups large and small.
+
+Unfortunately the stuff in:  git://oss.sgi.com/xfs/xfs master
+
+Conflicts with the stuff in:  git://oss.sgi.com/xfs/xfs for-linus
+
+I've resolved the conflict here:  git://oss.sgi.com/xfs/xfs for-linus-merged
+
+I would like to figure out how to =
+
+1) send important bugfixes upstream after rc1, and
+2) not hold up development commits to xfs/master, while
+3) avoiding conflicts like this.
+
+Our old strategy was to hold off on development commits for awhile after
+rc1, and I would like to avoid that.  It occured to me that
+fast-forwarding xfs/master immediately to an important bugfix once it
+has been pulled in to your tree might accomplish this, but clearly I
+didn't get that figured out.
+
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
