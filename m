@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2LNU0jX141789 for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 18:30:00 -0500
+	q2LNw1qc146453 for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 18:58:01 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	3eF7S1hi15S4y7tH for <xfs@oss.sgi.com>;
-	Wed, 21 Mar 2012 16:29:58 -0700 (PDT)
-Date: Thu, 22 Mar 2012 10:29:56 +1100
+	UzGoGBEDzPGGEPvT for <xfs@oss.sgi.com>;
+	Wed, 21 Mar 2012 16:57:59 -0700 (PDT)
+Date: Thu, 22 Mar 2012 10:57:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/4] xfs: allow assigning the tail lsn with the AIL lock
-	held
-Message-ID: <20120321232956.GA5091@dastard>
+Subject: Re: [PATCH 4/4] xfs: implement freezing by emptying the AIL
+Message-ID: <20120321235738.GB5091@dastard>
 References: <20120316175541.258282540@bombadil.infradead.org>
-	<20120316175636.373605151@bombadil.infradead.org>
+	<20120316175636.554421689@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120316175636.373605151@bombadil.infradead.org>
+In-Reply-To: <20120316175636.554421689@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +30,74 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Fri, Mar 16, 2012 at 01:55:44PM -0400, Christoph Hellwig wrote:
-> Provide a variant of xlog_assign_tail_lsn that has the AIL lock already
-> held.  By doing so we do an additional atomic_read + atomic_set under
-> the lock, which comes down to two instructions.
+On Fri, Mar 16, 2012 at 01:55:45PM -0400, Christoph Hellwig wrote:
+> Now that we write back all metadata either synchronously or through the AIL
+> we can simply implement metadata freezing in terms of emptying the AIL.
 > 
-> Switch xfs_trans_ail_update_bulk and xfs_trans_ail_delete_bulk to the
-> new version to reduce the number of lock roundtrips, and prepare for
-> a new addition that would require a third lock roundtrip in
-> xfs_trans_ail_delete_bulk.
+> The implementation for this is fairly simply and straight-forward:  A new
+> routine is added that increments a counter that tells xfsaild to not stop
+> until the AIL is empty and then waits on a wakeup from
+> xfs_trans_ail_delete_bulk to signal that the AIL is empty.
+> 
+> As usual the devil is in the details, in this case the filesystem shutdown
+> code.  Currently we are a bit sloppy there and do not continue ail pushing
+> in that case, and thus never reach the code in the log item implementations
+> that can unwind in case of a shutdown filesystem.  Also the code to 
+> abort inode and dquot flushes was rather sloppy before and did not remove
+> the log items from the AIL, which had to be fixed as well.
+> 
+> Also treat unmount the same way as freeze now, except that we still keep a
+> synchronous inode reclaim pass to make sure we reclaim all clean inodes, too.
+> 
+> As an upside we can now remove the radix tree based inode writeback and
+> xfs_unmountfs_writesb.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-What new addition is that? I don't see it in this patchset (maybe
-I'm just blind), so maybe this isn't necessary in the commit
-message?
+.....
 
+> @@ -397,6 +396,15 @@ xfsaild_push(
+>  	XFS_STATS_INC(xs_push_ail);
+>  
+>  	/*
+> +	 * If we are draining the AIL push all items, not just the current
+> +	 * threshold.
+> +	 */
+> +	if (atomic_read(&ailp->xa_wait_empty))
+> +		target = xfs_ail_max(ailp)->li_lsn;
+
+I don't think this is safe - we may have finished pushing the AIL to
+empty, but the waiter that decrements xa_wait_empty may not have run
+yet and we can race with that. In that case, xfs_ail_max() will
+return NULL as the AIL is empty.
+
+.....
+
+> @@ -611,6 +614,34 @@ xfs_ail_push_all(
+>  }
+>  
+>  /*
+> + * Push out all items in the AIL immediately and wait until the AIL is empty.
+> + */
+> +void
+> +xfs_ail_push_all_sync(
+> +	struct xfs_ail  *ailp)
+> +{
+> +	DEFINE_WAIT(wait);
+> +
+> +	/*
+> +	 * We use a counter instead of a flag here to support multiple
+> +	 * processes calling into sync at the same time.
+> +	 */
+> +	atomic_inc(&ailp->xa_wait_empty);
+> +	do {
+> +		prepare_to_wait(&ailp->xa_empty, &wait, TASK_KILLABLE);
+
+Why a killable wait? We need to wait until the push is complete
+before returning because we can't return an error and we don't want
+ctrl-c to break out of this loop while writeback it still taking
+place on a non-shutdown based unmount (e.g. got thousands of inodes
+to write on a slow RAID5 device doing RMW cycles for every inode).
 
 Cheers,
 
