@@ -1,11 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2LIa69X109418 for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 13:36:06 -0500
-Subject: [GIT PULL] XFS update for 3.4-rc1
-Message-Id: <20120321183613.2C93F426DA7@whiskey.americas.sgi.com>
-Date: Wed, 21 Mar 2012 13:36:13 -0500 (CDT)
-From: bpm@sgi.com (Ben Myers)
+	q2LIvDGr110496 for <xfs@oss.sgi.com>; Wed, 21 Mar 2012 13:57:14 -0500
+Received: from kyle.its.monash.edu.au (kyle.its.monash.edu.au
+	[130.194.13.163]) by cuda.sgi.com with ESMTP id
+	QTgnesJL1Jh0r7d3 for <xfs@oss.sgi.com>;
+	Wed, 21 Mar 2012 11:57:12 -0700 (PDT)
+Received: from idle.its.monash.edu.au ([130.194.13.84])
+	by kyle.its.monash.edu.au
+	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
+	with ESMTP id <0M190071Z0N90I10@kyle.its.monash.edu.au> for
+	xfs@oss.sgi.com; Thu, 22 Mar 2012 05:57:10 +1100 (EST)
+Received: from idle.its.monash.edu.au (localhost.localdomain [127.0.0.1])
+	by localhost (Postfix) with SMTP id DBFE5100A3	for <xfs@oss.sgi.com>;
+	Thu, 22 Mar 2012 05:57:10 +1100 (EST)
+Received: from mail-pb0-f54.google.com
+	(mail-pb0-f54.google.com [209.85.160.54])
+	(using TLSv1 with cipher RC4-SHA (128/128 bits))
+	(No client certificate requested)	by idle.its.monash.edu.au (Postfix)
+	with ESMTPS id 6AA8F10097	for <xfs@oss.sgi.com>; Thu,
+	22 Mar 2012 05:57:10 +1100 (EST)
+Received: by pbcwz17 with SMTP id wz17so1160408pbc.41 for <xfs@oss.sgi.com>;
+	Wed, 21 Mar 2012 11:57:07 -0700 (PDT)
+Date: Thu, 22 Mar 2012 05:57:07 +1100
+From: Nathan Scott <nathans@debian.org>
+Subject: Re: [patch 1/1] xfsdump: update summaries in preparation for release
+In-reply-to: <20120321172813.301990261@sgi.com>
+Message-id: <CAAp5ZgNpxMY=NnuwhGmjsmEgxvmDrYcwhLNr6cr7WOj26G06pg@mail.gmail.com>
+MIME-version: 1.0
+References: <20120320204316.811460772@sgi.com>
+	<20120321172813.301990261@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,70 +38,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3057480933943910745=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: bpm@sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi Linus,
+--===============3057480933943910745==
+Content-type: multipart/alternative; boundary=e89a8ff25518a6829304bbc55b85
 
-   Please pull from git://oss.sgi.com/xfs/xfs for-linus
+--e89a8ff25518a6829304bbc55b85
+Content-Type: text/plain; charset=ISO-8859-1
 
-   Bugfixes and cleanups.
+On 21 March 2012 07:43, <bpm@sgi.com> wrote:
 
-Thanks,
-	Ben
+> Signed-off-by: Ben Myers <bpm@sgi.com>
+> ---
+>  VERSION          |    4 ++--
+>  debian/changelog |    6 ++++++
+>  doc/CHANGES      |   15 +++++++++++++++
+>  3 files changed, 23 insertions(+), 2 deletions(-)
+> ...
 
-The following changes since commit 31f6765266417c0d99f0e922fe82848a7c9c2ae9:
 
-  Merge tag 'hwmon-for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/groeck/linux-staging (2012-03-21 10:37:25 -0700)
+Looks good to me, thanks.
 
-are available in the git repository at:
+Reviewed-by: Nathan Scott <nathans@debian.org>
 
-  git://oss.sgi.com/xfs/xfs for-linus
+--
+Nathan
 
-Amit Sahrawat (1):
-      xfs: kill the unused XFS_BB_FSB_OFFSET macro
+--e89a8ff25518a6829304bbc55b85
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-Chandra Seetharaman (4):
-      Define a new function xfs_this_quota_on()
-      Define a new function xfs_inode_dquot()
-      Change xfs_sb_from_disk() interface to take a mount pointer
-      Define new macro XFS_ALL_QUOTA_ACTIVE and simply some usage
+<div><div class=3D"gmail_quote">On 21 March 2012 07:43,  <span dir=3D"ltr">=
+&lt;<a href=3D"mailto:bpm@sgi.com">bpm@sgi.com</a>&gt;</span> wrote:<br><bl=
+ockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1px #=
+ccc solid;padding-left:1ex">
+Signed-off-by: Ben Myers &lt;<a href=3D"mailto:bpm@sgi.com">bpm@sgi.com</a>=
+&gt;<br>
+---<br>
+=A0VERSION =A0 =A0 =A0 =A0 =A0| =A0 =A04 ++--<br>
+=A0debian/changelog | =A0 =A06 ++++++<br>
+=A0doc/CHANGES =A0 =A0 =A0| =A0 15 +++++++++++++++<br>
+=A03 files changed, 23 insertions(+), 2 deletions(-)<br>...</blockquote><di=
+v><br></div>Looks good to me, thanks.<div><br></div><div>Reviewed-by: Natha=
+n Scott &lt;<a href=3D"mailto:nathans@debian.org">nathans@debian.org</a>&gt=
+;<br>
+<br></div><div>--</div><div>Nathan=A0</div></div></div>
 
-Christoph Hellwig (1):
-      xfs: use a normal shrinker for the dquot freelist
+--e89a8ff25518a6829304bbc55b85--
 
-Jesper Juhl (1):
-      XFS: xfs_trans_add_item() - don't assign in ASSERT() when compare is intended
 
-Mitsuo Hayasaka (3):
-      xfs: show uuid when mount fails due to duplicate uuid
-      xfs: change available ranges of softlimit and hardlimit in quota check
-      xfs: make inode quota check more general
-
- fs/xfs/kmem.h            |    6 -
- fs/xfs/xfs_dquot.c       |  164 ++++++++------------------
- fs/xfs/xfs_dquot.h       |   30 ++++-
- fs/xfs/xfs_log_recover.c |    8 +-
- fs/xfs/xfs_mount.c       |    8 +-
- fs/xfs/xfs_mount.h       |    2 +-
- fs/xfs/xfs_qm.c          |  293 ++++++++++++++++++----------------------------
- fs/xfs/xfs_qm.h          |   14 ---
- fs/xfs/xfs_qm_stats.c    |    4 +-
- fs/xfs/xfs_qm_syscalls.c |    4 +-
- fs/xfs/xfs_quota.h       |    2 +
- fs/xfs/xfs_sb.h          |    1 -
- fs/xfs/xfs_super.c       |    7 +-
- fs/xfs/xfs_trace.h       |    5 +-
- fs/xfs/xfs_trans.c       |    4 +-
- fs/xfs/xfs_trans_dquot.c |   10 +-
- 16 files changed, 216 insertions(+), 346 deletions(-)
+--===============3057480933943910745==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3057480933943910745==--
