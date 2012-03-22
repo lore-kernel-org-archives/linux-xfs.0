@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2MHwnuP007514 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 12:58:49 -0500
+	q2MHq1lT006235 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 12:52:01 -0500
 Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
 	[128.162.233.19])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 85FFE304059
-	for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 10:58:46 -0700 (PDT)
-Date: Thu, 22 Mar 2012 12:58:55 -0500
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 52069AC008
+	for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 10:51:58 -0700 (PDT)
+Date: Thu, 22 Mar 2012 12:52:10 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [ANNOUNCE] xfsdump 3.1.0
-Message-ID: <20120322175855.GM8451@sgi.com>
+Subject: [ANNOUNCE] xfsprogs 3.1.8
+Message-ID: <20120322175210.GL8451@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -20,41 +20,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Version 3.1.0 of xfsdump has been released.
-
-A gzipped tar archive of the source code is available here:
-
-	ftp://oss.sgi.com/projects/xfs/cmd_tars/xfsdump-3.1.0.tar.gz
-
-The source code can be accessed via git using this URL:
-
-	git://oss.sgi.com/xfs/cmds/xfsdump.git
-
-Below is a summary (from the doc/CHANGES file) of changes since release
-3.0.6:
-
-xfsdump-3.1.0 (22 March 2012)
-	- Fix metadata restore on split files.
-	- Add a -D option to skip a recursive scan of the filesystem
-	  when dumping.
-	- Fix a 1 byte overflow with empty lists, thanks to Mike Frysinger.
-	- Enable multi-stream support on Linux using pthreads.
-	- Fix handling of Ctrl-D in prompts.
-	- Obsolete SGI_XFSDUMP_SKIP_FILE extended attribute for excluding
-	  files from dump.
-	- Fix restoration of extended attributes on the root directory.
-	- Use the full 32-bit inode generation number instead of 12-bit
-	  generation number.  Bump the dump format version to 3.
-	- Do not create parent directories for orphaned files during
-	  list-only (-t option) restore.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+VmVyc2lvbiAzLjEuOCBvZiB4ZnNwcm9ncyBoYXMgYmVlbiByZWxlYXNlZC4KCkEgZ3ppcHBlZCB0
+YXIgYXJjaGl2ZSBvZiB0aGUgc291cmNlIGNvZGUgaXMgYXZhaWxhYmxlIGhlcmU6CgpmdHA6Ly9v
+c3Muc2dpLmNvbS9wcm9qZWN0cy94ZnMvY21kX3RhcnMveGZzcHJvZ3MtMy4xLjgudGFyLmd6CgpU
+aGUgc291cmNlIGNvZGUgY2FuIGJlIGFjY2Vzc2VkIHZpYSBnaXQgdXNpbmcgdGhpcyBVUkw6Cgpn
+aXQ6Ly9vc3Muc2dpLmNvbS94ZnMvY21kcy94ZnNwcm9ncwoKQmVsb3cgaXMgYSBzdW1tYXJ5IChm
+cm9tIHRoZSBkb2MvQ0hBTkdFUyBmaWxlKSBvZiBjaGFuZ2VzIHNpbmNlIHJlbGVhc2UKMy4xLjcu
+Cgp4ZnNwcm9ncy0zLjEuOCAoMjAgTWFyY2ggMjAxMikKCS0gRml4IHhmc19yZXBhaXIgc2VnZmF1
+bHQgb24gYSBjb3JydXB0ZWQgZmlsZXN5c3RlbSBieSB2YWxpZGF0aW5nIHRoZQoJICBhY2wgY291
+bnQgYmVmb3JlIHJlYWRpbmcgaXQuCgktIEF2b2lkIHhmc19yZXBhaXIgZGVhZGxvY2tzIG9uIHBy
+ZWZldGNoZWQgYnVmZmVycy4KCS0gRml4IHZhcmlvdXMgaW5jb3JyZWN0IHByaW50ZiBmb3JtYXRz
+LCB0aGFua3MgdG8gSmFrdWIgQm9ndXN6IGZvcgoJICByZXBvcnRpbmcuCgktIFBvbGlzaCB0cmFu
+c2xhdGlvbiB1cGRhdGUsIHRoYW5rcyB0byBKYWt1YiBCb2d1c3ouCgktIFJlZnVzZSBta2ZzLnhm
+cyBvbiBtaXNhbGlnbmVkIGRldmljZXMgd2hlbiB1c2luZyA0ayBzZWN0b3JzLCB1bmxlc3MKCSAg
+dGhlIC1mIG9wdGlvbiBpcyBzcGVjaWZpZWQsIGFuZCB0aGVuIGZvcmNlIDUxMmIgc2VjdG9yIHNp
+emUsCgkgIHRoYW5rcyB0byBDYXJsb3MgTWFpb2xpbm8uCgktIEF2b2lkIGEgcG9zc2libGUgbG9v
+cCBvbiB0aGUgdW5saW5rZWQgaW5vZGUgbGlzdCBpbiBwaGFzZSAzIG9mCgkgIHhmc19yZXBhaXIs
+IHRoYW5rcyB0byBTdGVmYW4gUGZldHppbmcgZm9yIHJlcG9ydGluZy4KCS0gQWxsb2NhdGUgaW5v
+ZGUgYW5kIGZyZWUgZXh0ZW50IHJlY29yZHMgaW5kaXZpZHVhbGx5IGluIHhmc19yZXBhaXIuCgkt
+IEZpeCBhIHBvc3NpYmxlIGRlYWRsb2NrIGJ0cmVlIG5vZGVzIGluIHhmc19yZXBhaXIgYnkgdXNp
+bmcgcmVjdXJzaXZlCgkgIGxvY2tpbmcsIHRoYW5rcyB0byBBcmthZGl1c3ogTWnFm2tpZXdpY3og
+Zm9yIHJlcG9ydGluZyBhbmQgdGVzdGluZy4KCS0gRml4IHBvc3NpYmxlIHhmc19yZXBhaXIgZGVh
+ZGxvY2tzIGluIGlub2RlIHByZWZldGNoaW5nLCB0aGFua3MgdG8KCSAgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IGZvciByZXBvcnRpbmcgYW5kIHRlc3RpbmcuCgktIE1ha2UgeGZzX3JlcGFpciBoYW5k
+bGUgZmlsZXN5c3RlbXMgd2l0aCB0aGUgbG9nIGluIGFnIDAsIHRoYW5rcyB0bwoJICBTaW5kcmUg
+U2tvZ2VuIGZvciByZXBvcnRpbmcuCgktIERlcHJlY2F0ZSB0aGUgLUYgZm9yZWlnbiBmbGFnIHRv
+IHhmc19pby4KCS0gQWRkIGRlYmlhbiBsaW51eC1saWJjLWRldiBidWlsZCBkZXBlbmRhbmN5LgoJ
+LSBBZGQgYW4gZXh0ZW5kZWQgZmllbWFwIGNvbmZpZ3VyZSBjaGVjay4KCS0gVmFyaW91cyBjbGVh
+bnVwcyBpbiB4ZnNfcmVwYWlyLgoJLSBVcGRhdGUgeGZzX2NoZWNrIG1hbiBwYWdlIHRvIHJlY29t
+bWVuZCB4ZnNfcmVwYWlyIG92ZXIgeGZzX2NoZWNrLAoJICB0aGFua3MgdG8gQXJrYWRpdXN6IE1p
+xZtraWV3aWN6LgoJLSBVcGRhdGUgdGhlIG9uLWRpc2sgZXh0ZW50IGNvdW50IGFzIHBhcnQgb2Yg
+aW5vZGUgcmVwYWlyIHdoZW4gbW92aW5nCgkgIGlub2RlcyB0byBsb3N0K2ZvdW5kIHRvIGF2b2lk
+IHRvIGF2b2lkIHRyaXBwaW5nIG92ZXIgYSBjaGVjayBpbgoJICB4ZnNfaWZvcm1hdCwgdGhhbmtz
+IHRvIEFya2FkaXVzeiBNacWba2lld2ljeiBmb3IgcmVwb3J0aW5nIGFuZAoJICB0ZXN0aW5nLgoJ
+LSBDaGVjayBmb3Igc2l6ZSBwYXJzaW5nIGVycm9ycyBpbiB4ZnNfcXVvdGEsIHRoYW5rcyB0byBK
+YW1lcyBMYXdyaWUKCSAgZm9yIHJlcG9ydGluZy4KCS0gRml4IGZpZW1hcCBsb29wIGNvbnRpbnVh
+dGlvbiBpbiB4ZnNfaW8uCgktIE1ha2UgbWtmcy54ZnMgcHJvcGVybHkgaGFuZGxlIHBoeXNpY2Fs
+IHNlY3RvciBzaXplLgoJLSBGaXggL3Byb2MvbW91bnRzIHBhcnNpbmcgaW4geGZzX2Zzci4KCS0g
+Rml4IHhmc19yZXBhaXIgd2hlbiBhZ19zdHJpZGUgb3B0aW9ucyB3aXRoIGF0dHJpYnV0ZXMgYW5k
+IGRpcnYxIGNvZGUsCgkgIHRoYW5rcyB0byBUb20gQ3JhbmUgZm9yIHJlcG9ydGluZyBhbmQgdGVz
+dGluZy4KCS0gRml4IG1lc3NhZ2UgZm9ybWF0cyBpbiBwcm9jZXNzX2Rpbm9kZV9pbnQuCgktIEZp
+eCB4ZnNfcmVwYWlyIGhhbmRsaW5nIG9mIGxpbmsgY291bnRzIHdoZW4gdGhlIG9uLWRpc2sgY291
+bnQKCSAgb3ZlcmZsb3dzIDggYml0cy4KCS0gRml4IG1lc3NhZ2VzIGZyb20gc2V0X25saW5rcyBp
+biB4ZnNfcmVwYWlyLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29t
+L21haWxtYW4vbGlzdGluZm8veGZzCg==
