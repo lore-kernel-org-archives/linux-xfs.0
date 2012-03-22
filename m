@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2M5Flkc180516 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 00:15:47 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	91CbbUpg8vhBeuBB for <xfs@oss.sgi.com>;
-	Wed, 21 Mar 2012 22:15:45 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SAaNE-00035z-1W
-	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:44 +1100
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SAaMw-0000Wd-Ij
-	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:26 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/8] xfs: Account log unmount transaction correctly
-Date: Thu, 22 Mar 2012 16:15:11 +1100
-Message-Id: <1332393313-1955-7-git-send-email-david@fromorbit.com>
-In-Reply-To: <1332393313-1955-1-git-send-email-david@fromorbit.com>
-References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
+	q2MB4RIl223887
+	for <linux-xfs@oss.sgi.com>; Thu, 22 Mar 2012 06:04:28 -0500
+Received: from tetraware.net (new.virutasdegoma.com [213.165.82.142]) by
+	cuda.sgi.com with ESMTP id mm28bnipleV0q4C4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Thu, 22 Mar 2012 04:04:25 -0700 (PDT)
+Received: from localhost ([127.0.0.1] helo=server2.tetraware.net)
+	by tetraware.net with esmtp (Exim 4.69)
+	(envelope-from <tiendas.propias-bounces@charanga.es>)
+	id 1SAfkP-0004uq-4I
+	for linux-xfs@oss.sgi.com; Thu, 22 Mar 2012 12:00:01 +0100
+MIME-Version: 1.0
+Subject: =?iso-8859-1?q?El_mensaje_enviado_a_Tiendas=2Epropias_espera_la_?=
+	=?iso-8859-1?q?aprobacion_del_moderador?=
+From: tiendas.propias-bounces@charanga.es
+Message-ID: <mailman.9235.1332413998.30278.tiendas.propias@charanga.es>
+Date: Thu, 22 Mar 2012 11:59:58 +0100
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,56 +26,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Your mail to 'Tiendas.propias' with the subject
 
-There have been a few reports of this warning appearing recently:
+    Qkyxrkgbadk
 
-XFS (dm-4): xlog_space_left: head behind tail
- tail_cycle = 129, tail_bytes = 20163072
- GH   cycle = 129, GH   bytes = 20162880
+Is being held until the list moderator can review it for approval.
 
-The common cause appears to be lots of freeze and unfreeze cycles,
-and the output from the warnings indicates that we are leaking
-around 8 bytes of log space per freeze/unfreeze cycle.
+The reason it is being held:
 
-When we freeze the filesystem, we write an unmount record and that
-uses xlog_write directly - a special type of transaction,
-effectively. What it doesn't do, however, is correctly acocunt for
-the log space it uses. The unmount record writes an 8 byte structure
-with a special magic number into the log, and the space this
-consumes is not accounted for in the log ticket tracking the
-operation. Hence we leak 8 bytes every unmount record that is
-written.
+    Mensaje dirigido a una lista privada procedente de una direcci=F3n
+que no pertenece a la lista
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+Either the message will get posted to the list, or you will receive
+notification of the moderator's decision.  If you would like to cancel
+this posting, please visit the following URL:
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 98a9cb5..6db1fef 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -726,8 +726,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
- 				.lv_iovecp = &reg,
- 			};
- 
--			/* remove inited flag */
-+			/* remove inited flag, and account for space used */
- 			tic->t_flags = 0;
-+			tic->t_curr_res -= sizeof(magic);
- 			error = xlog_write(log, &vec, tic, &lsn,
- 					   NULL, XLOG_UNMOUNT_TRANS);
- 			/*
--- 
-1.7.9
+    http://correo.charanga.es/servidor/mailman/confirm/tiendas.propias/9332=
+629635f44c5a3375f4789fddab36f3e11f25
 
 _______________________________________________
 xfs mailing list
