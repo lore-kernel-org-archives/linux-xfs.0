@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2MJxYLD029715 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 14:59:34 -0500
-Date: Thu, 22 Mar 2012 14:59:43 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: fix deadlock in xfs_rtfree_extent with kernel v3.x
-Message-ID: <20120322195943.GT7762@sgi.com>
-References: <kdasu.kdev@gmail.com>
-	<1329957699-20769-1-git-send-email-kdasu.kdev@gmail.com>
+	q2ML7TVL035678 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 16:07:30 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	Bme6sEZWZTT5raZb for <xfs@oss.sgi.com>;
+	Thu, 22 Mar 2012 14:07:27 -0700 (PDT)
+Date: Fri, 23 Mar 2012 08:07:23 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/8] xfs: initialise xfssync work before running
+	quotachecks
+Message-ID: <20120322210723.GC5091@dastard>
+References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
+	<1332393313-1955-4-git-send-email-david@fromorbit.com>
+	<20120322151548.GS7762@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1329957699-20769-1-git-send-email-kdasu.kdev@gmail.com>
+In-Reply-To: <20120322151548.GS7762@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +29,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kamal Dasu <kdasu.kdev@gmail.com>
-Cc: cernekee@gmail.com, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Feb 22, 2012 at 07:41:39PM -0500, Kamal Dasu wrote:
-> To fix the deadlock caused by recursively calling xfs_rtfree_extent
+On Thu, Mar 22, 2012 at 10:15:48AM -0500, Ben Myers wrote:
+> On Thu, Mar 22, 2012 at 04:15:08PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Because the mount process can run a quotacheck and consume lots of
+> > inodes, we need to be able to run periodic inode reclaim during the
+> > mount process. This will prevent running the system out of memory
+> > during quota checks.
+> > 
+> > This essentially reverts 2bcf6e97, but that is safe to do now that
+> > the quota sync code that was causing problems during long quotacheck
+> > executions is now gone.
 > 
->  - removed xfs_ilock() and xfs_trans_ijoin() from xfs_rtfree_extent(),
->    instead added asserts that the inode is locked and has an inode_item
->    attached to it.
->  - in xfs_bunmapi() when dealing with an inode with the rt flag
->    call xfs_ilock() and xfs_trans_ijoin() so that the
->    reference count is bumped on the inode and attached it to the
->    transaction before calling into xfs_bmap_del_extent, similar to
->    what we do in xfs_bmap_rtalloc.
-> 
-> Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
+> Dave, I've held off on #s 3 and 4 because they appear to be racy.  Being
 
-Kamal, this looks good to me.
-Reviewed-by: Ben Myers <bpm@sgi.com>
+What race?
+
+Cheers,
+
+Dave
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
