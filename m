@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2M5FmMN180527 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 00:15:48 -0500
+	q2M5FaC3180450 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 00:15:36 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	KF7VIvgHLKiYGOCh for <xfs@oss.sgi.com>;
-	Wed, 21 Mar 2012 22:15:46 -0700 (PDT)
+	ch2aM5UecLdDRUI2 for <xfs@oss.sgi.com>;
+	Wed, 21 Mar 2012 22:15:34 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SAaNE-000360-2P
-	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:44 +1100
+	(envelope-from <dave@fromorbit.com>) id 1SAaN4-00035y-0Z
+	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:34 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SAaMw-0000Wg-Kq
+	(envelope-from <dave@disappointment.disaster>) id 1SAaMw-0000WY-Hd
 	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 7/8] xfs: fix fstrim offset calculations
-Date: Thu, 22 Mar 2012 16:15:12 +1100
-Message-Id: <1332393313-1955-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: don't cache inodes read through bulkstat
+Date: Thu, 22 Mar 2012 16:15:10 +1100
+Message-Id: <1332393313-1955-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1332393313-1955-1-git-send-email-david@fromorbit.com>
 References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,209 +35,140 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_ioc_fstrim() doesn't treat the incoming offset and length
-correctly. It treats them as a filesystem block address, rather than
-a disk address. This is wrong because the range passed in is a
-linear representation , while the filesystem block address notiation
-is a sparse representation. Hence we cannot convert the range direct
-to filesystem block units and then use that for calculating the
-range to trim.
+When we read inodes via bulkstat, we generally only read them once
+and then throw them away - they never get used again. If we retain
+them in cache, then it simply causes the working set of inodes and
+other cached items to be reclaimed just so the inode cache can grow.
 
-While this sounds dangerous, the problem is limited to calculting
-what AGs need to be trimmed. The code that calcuates the actual
-ranges to trim gets the right result (i.e. only ever discards free
-space), even though it uses the wrong ranges to limit what is
-trimmed. Hence this is not a bug that endangers user data.
+Avoid this problem by marking inodes read by bulkstat not to be
+cached and check this flag in .drop_inode to determine whether the
+inode should be added to the VFS LRU or not. If the inode lookup
+hits an already cached inode, then don't set the flag. If the inode
+lookup hits an inode marked with no cache flag, remove the flag and
+allow it to be cached once the current reference goes away.
 
-Fix this by treating the range as a disk address range and use the
-appropriate functions to convert the range into the desired formats
-for calculations.
-
-Further, fix the first free extent lookup (the longest) to actually
-find the largest free extent. Currently this lookup uses a <=
-lookup, which results in finding the extent to the left of the
-largest because we can never get an exact match on the largest
-extent. This is due to the fact that while we know it's size, we
-don't know it's location and so the exact match fails and we move
-one record to the left to get the next largest extent. Instead, use
-a >= search so that the lookup returns the largest extent regardless
-of the fact we don't get an exact match on it.
+Inodes marked as not cached will get cleaned up by the background
+inode reclaim or via memory pressure, so they will still generate
+some short term cache pressure. They will, however, be reclaimed
+much sooner and in preference to cache hot inodes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_alloc.c   |    2 +-
- fs/xfs/xfs_alloc.h   |    7 +++++
- fs/xfs/xfs_discard.c |   61 +++++++++++++++++++++++++++++++------------------
- 3 files changed, 46 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_iget.c   |    8 ++++++--
+ fs/xfs/xfs_inode.h  |    4 +++-
+ fs/xfs/xfs_itable.c |    3 ++-
+ fs/xfs/xfs_super.c  |   17 +++++++++++++++++
+ 4 files changed, 28 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 31e9033..0f0df27 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -69,7 +69,7 @@ xfs_alloc_lookup_eq(
-  * Lookup the first record greater than or equal to [bno, len]
-  * in the btree given by cur.
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index a98cb45..bcc6c24 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -289,7 +289,7 @@ xfs_iget_cache_hit(
+ 	if (lock_flags != 0)
+ 		xfs_ilock(ip, lock_flags);
+ 
+-	xfs_iflags_clear(ip, XFS_ISTALE);
++	xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
+ 	XFS_STATS_INC(xs_ig_found);
+ 
+ 	return 0;
+@@ -314,6 +314,7 @@ xfs_iget_cache_miss(
+ 	struct xfs_inode	*ip;
+ 	int			error;
+ 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
++	int			iflags;
+ 
+ 	ip = xfs_inode_alloc(mp, ino);
+ 	if (!ip)
+@@ -358,8 +359,11 @@ xfs_iget_cache_miss(
+ 	 * memory barrier that ensures this detection works correctly at lookup
+ 	 * time.
+ 	 */
++	iflags = XFS_INEW;
++	if (flags & XFS_IGET_DONTCACHE)
++		iflags |= XFS_IDONTCACHE;
+ 	ip->i_udquot = ip->i_gdquot = NULL;
+-	xfs_iflags_set(ip, XFS_INEW);
++	xfs_iflags_set(ip, iflags);
+ 
+ 	/* insert the new inode */
+ 	spin_lock(&pag->pag_ici_lock);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index f123dbe..7fee338 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -387,10 +387,11 @@ xfs_set_projid(struct xfs_inode *ip,
+ #define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
+ #define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
+ #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
++#define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
+ 
+ /*
+  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
+- * inode lookup. Thi prevents unintended behaviour on the new inode from
++ * inode lookup. This prevents unintended behaviour on the new inode from
+  * ocurring.
   */
--STATIC int				/* error */
-+int				/* error */
- xfs_alloc_lookup_ge(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
- 	xfs_agblock_t		bno,	/* starting block of extent */
-diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
-index ab5d0fd..3a7e7d8 100644
---- a/fs/xfs/xfs_alloc.h
-+++ b/fs/xfs/xfs_alloc.h
-@@ -248,6 +248,13 @@ xfs_alloc_lookup_le(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat);	/* success/failure */
+ #define XFS_IRECLAIM_RESET_FLAGS	\
+@@ -553,6 +554,7 @@ do { \
+  */
+ #define XFS_IGET_CREATE		0x1
+ #define XFS_IGET_UNTRUSTED	0x2
++#define XFS_IGET_DONTCACHE	0x4
  
-+int				/* error */
-+xfs_alloc_lookup_ge(
-+	struct xfs_btree_cur	*cur,	/* btree cursor */
-+	xfs_agblock_t		bno,	/* starting block of extent */
-+	xfs_extlen_t		len,	/* length of extent */
-+	int			*stat);	/* success/failure */
-+
- int					/* error */
- xfs_alloc_get_rec(
- 	struct xfs_btree_cur	*cur,	/* btree cursor */
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 286a051..1ad3a4b 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -37,9 +37,9 @@ STATIC int
- xfs_trim_extents(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
--	xfs_fsblock_t		start,
--	xfs_fsblock_t		end,
--	xfs_fsblock_t		minlen,
-+	xfs_daddr_t		start,
-+	xfs_daddr_t		end,
-+	xfs_daddr_t		minlen,
- 	__uint64_t		*blocks_trimmed)
- {
- 	struct block_device	*bdev = mp->m_ddev_targp->bt_bdev;
-@@ -67,7 +67,7 @@ xfs_trim_extents(
- 	/*
- 	 * Look up the longest btree in the AGF and start with it.
- 	 */
--	error = xfs_alloc_lookup_le(cur, 0,
-+	error = xfs_alloc_lookup_ge(cur, 0,
- 			    be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest), &i);
- 	if (error)
- 		goto out_del_cursor;
-@@ -77,8 +77,10 @@ xfs_trim_extents(
- 	 * enough to be worth discarding.
- 	 */
- 	while (i) {
--		xfs_agblock_t fbno;
--		xfs_extlen_t flen;
-+		xfs_agblock_t	fbno;
-+		xfs_extlen_t	flen;
-+		xfs_daddr_t	dbno;
-+		xfs_extlen_t	dlen;
+ int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+ 			    xfs_ino_t, struct xfs_dinode **,
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 9720c54..acc2bf2 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -75,7 +75,8 @@ xfs_bulkstat_one_int(
+ 		return XFS_ERROR(ENOMEM);
  
- 		error = xfs_alloc_get_rec(cur, &fbno, &flen, &i);
- 		if (error)
-@@ -87,9 +89,17 @@ xfs_trim_extents(
- 		ASSERT(flen <= be32_to_cpu(XFS_BUF_TO_AGF(agbp)->agf_longest));
- 
- 		/*
-+		 * use daddr format for all range/len calculations as that is
-+		 * the format the range/len variables are supplied in by
-+		 * userspace.
-+		 */
-+		dbno = XFS_AGB_TO_DADDR(mp, agno, fbno);
-+		dlen = XFS_FSB_TO_BB(mp, flen);
-+
-+		/*
- 		 * Too small?  Give up.
- 		 */
--		if (flen < minlen) {
-+		if (dlen < minlen) {
- 			trace_xfs_discard_toosmall(mp, agno, fbno, flen);
- 			goto out_del_cursor;
- 		}
-@@ -99,8 +109,7 @@ xfs_trim_extents(
- 		 * supposed to discard skip it.  Do not bother to trim
- 		 * down partially overlapping ranges for now.
- 		 */
--		if (XFS_AGB_TO_FSB(mp, agno, fbno) + flen < start ||
--		    XFS_AGB_TO_FSB(mp, agno, fbno) > end) {
-+		if (dbno + dlen < start || dbno > end) {
- 			trace_xfs_discard_exclude(mp, agno, fbno, flen);
- 			goto next_extent;
- 		}
-@@ -115,10 +124,7 @@ xfs_trim_extents(
- 		}
- 
- 		trace_xfs_discard_extent(mp, agno, fbno, flen);
--		error = -blkdev_issue_discard(bdev,
--				XFS_AGB_TO_DADDR(mp, agno, fbno),
--				XFS_FSB_TO_BB(mp, flen),
--				GFP_NOFS, 0);
-+		error = -blkdev_issue_discard(bdev, dbno, dlen, GFP_NOFS, 0);
- 		if (error)
- 			goto out_del_cursor;
- 		*blocks_trimmed += flen;
-@@ -137,6 +143,15 @@ out_put_perag:
- 	return error;
+ 	error = xfs_iget(mp, NULL, ino,
+-			 XFS_IGET_UNTRUSTED, XFS_ILOCK_SHARED, &ip);
++			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
++			 XFS_ILOCK_SHARED, &ip);
+ 	if (error) {
+ 		*stat = BULKSTAT_RV_NOTHING;
+ 		goto out_free;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 3e87b02..aef50ab 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -950,6 +950,22 @@ xfs_fs_evict_inode(
+ 	xfs_inactive(ip);
  }
  
 +/*
-+ * trim a range of the filesystem.
-+ *
-+ * Note: the parameters passed from userspace are byte ranges into the
-+ * filesystem which does not match to the format we use for filesystem block
-+ * addressing. FSB addressing is sparse (AGNO|AGBNO), while the incoming format
-+ * is a linear address range. Hence we need to use DADDR based conversions and
-+ * comparisons for determining the correct offset and regions to trim.
++ * We do an unlocked check for XFS_IDONTCACHE here because we are already
++ * serialised against cache hits here via the inode->i_lock and igrab() in
++ * xfs_iget_cache_hit(). Hence a lookup that might clear this flag will not be
++ * racing with us, and it avoids needing to grab a spinlock here for every inode
++ * we drop the final reference on.
 + */
- int
- xfs_ioc_trim(
- 	struct xfs_mount		*mp,
-@@ -145,7 +160,7 @@ xfs_ioc_trim(
- 	struct request_queue	*q = mp->m_ddev_targp->bt_bdev->bd_disk->queue;
- 	unsigned int		granularity = q->limits.discard_granularity;
- 	struct fstrim_range	range;
--	xfs_fsblock_t		start, end, minlen;
-+	xfs_daddr_t		start, end, minlen;
- 	xfs_agnumber_t		start_agno, end_agno, agno;
- 	__uint64_t		blocks_trimmed = 0;
- 	int			error, last_error = 0;
-@@ -159,22 +174,22 @@ xfs_ioc_trim(
- 
- 	/*
- 	 * Truncating down the len isn't actually quite correct, but using
--	 * XFS_B_TO_FSB would mean we trivially get overflows for values
-+	 * BBTOB would mean we trivially get overflows for values
- 	 * of ULLONG_MAX or slightly lower.  And ULLONG_MAX is the default
- 	 * used by the fstrim application.  In the end it really doesn't
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
--	start = XFS_B_TO_FSBT(mp, range.start);
--	end = start + XFS_B_TO_FSBT(mp, range.len) - 1;
--	minlen = XFS_B_TO_FSB(mp, max_t(u64, granularity, range.minlen));
-+	start = BTOBB(range.start);
-+	end = start + BTOBBT(range.len) - 1;
-+	minlen = BTOBB(max_t(u64, granularity, range.minlen));
- 
--	if (start >= mp->m_sb.sb_dblocks)
-+	if (XFS_BB_TO_FSB(mp, start) >= mp->m_sb.sb_dblocks)
- 		return -XFS_ERROR(EINVAL);
--	if (end > mp->m_sb.sb_dblocks - 1)
--		end = mp->m_sb.sb_dblocks - 1;
-+	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
-+		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)- 1;
- 
--	start_agno = XFS_FSB_TO_AGNO(mp, start);
--	end_agno = XFS_FSB_TO_AGNO(mp, end);
-+	start_agno = xfs_daddr_to_agno(mp, start);
-+	end_agno = xfs_daddr_to_agno(mp, end);
- 
- 	for (agno = start_agno; agno <= end_agno; agno++) {
- 		error = -xfs_trim_extents(mp, agno, start, end, minlen,
++STATIC int
++xfs_fs_drop_inode(
++	struct inode		*inode)
++{
++	struct xfs_inode	*ip = XFS_I(inode);
++
++	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
++}
++
+ STATIC void
+ xfs_free_fsname(
+ 	struct xfs_mount	*mp)
+@@ -1433,6 +1449,7 @@ static const struct super_operations xfs_super_operations = {
+ 	.destroy_inode		= xfs_fs_destroy_inode,
+ 	.dirty_inode		= xfs_fs_dirty_inode,
+ 	.evict_inode		= xfs_fs_evict_inode,
++	.drop_inode		= xfs_fs_drop_inode,
+ 	.put_super		= xfs_fs_put_super,
+ 	.sync_fs		= xfs_fs_sync_fs,
+ 	.freeze_fs		= xfs_fs_freeze,
 -- 
 1.7.9
 
