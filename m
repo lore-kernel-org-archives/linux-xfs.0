@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2M5FaC3180450 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 00:15:36 -0500
+	q2M5FUsg180372 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 00:15:30 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ch2aM5UecLdDRUI2 for <xfs@oss.sgi.com>;
-	Wed, 21 Mar 2012 22:15:34 -0700 (PDT)
+	PtN3Mp5x2fRgs7Wi for <xfs@oss.sgi.com>;
+	Wed, 21 Mar 2012 22:15:28 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SAaN4-00035y-0Z
-	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:34 +1100
+	(envelope-from <dave@fromorbit.com>) id 1SAaMt-00035h-Ul
+	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:24 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SAaMw-0000WY-Hd
-	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:26 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1SAaMm-0000WV-Gt
+	for xfs@oss.sgi.com; Thu, 22 Mar 2012 16:15:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/8] xfs: don't cache inodes read through bulkstat
-Date: Thu, 22 Mar 2012 16:15:10 +1100
-Message-Id: <1332393313-1955-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 4/8] xfs: remove MS_ACTIVE guard from inode reclaim work
+Date: Thu, 22 Mar 2012 16:15:09 +1100
+Message-Id: <1332393313-1955-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1332393313-1955-1-git-send-email-david@fromorbit.com>
 References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,140 +35,110 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we read inodes via bulkstat, we generally only read them once
-and then throw them away - they never get used again. If we retain
-them in cache, then it simply causes the working set of inodes and
-other cached items to be reclaimed just so the inode cache can grow.
+We need to be able to queue inode reclaim work during the mount
+process as quotacheck can cause large amounts of inodes to be read
+and we need to clean them up periodically as the shrinkers can not
+run until after the mount process has completed.
 
-Avoid this problem by marking inodes read by bulkstat not to be
-cached and check this flag in .drop_inode to determine whether the
-inode should be added to the VFS LRU or not. If the inode lookup
-hits an already cached inode, then don't set the flag. If the inode
-lookup hits an inode marked with no cache flag, remove the flag and
-allow it to be cached once the current reference goes away.
+The reclaim work is currently protected from running during the
+unmount process by a check against MS_ACTIVE. Unfortunately, this
+also means that the relcaim work cannot run during mount.  The
+unmount process should stop the reclaim cleanly before freeing
+anything that the reclaim work depends on, so there is no need to
+have this guard in place.
 
-Inodes marked as not cached will get cleaned up by the background
-inode reclaim or via memory pressure, so they will still generate
-some short term cache pressure. They will, however, be reclaimed
-much sooner and in preference to cache hot inodes.
+Also, the inode reclaim work is demand driven, so there is no need
+to start it immediately during mount. It will be started the moment
+an inode is queued for reclaim, so qutoacheck will trigger it just
+fine.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iget.c   |    8 ++++++--
- fs/xfs/xfs_inode.h  |    4 +++-
- fs/xfs/xfs_itable.c |    3 ++-
- fs/xfs/xfs_super.c  |   17 +++++++++++++++++
- 4 files changed, 28 insertions(+), 4 deletions(-)
+ fs/xfs/xfs_super.c |    3 +--
+ fs/xfs/xfs_sync.c  |   27 ++++++++++++++++-----------
+ 2 files changed, 17 insertions(+), 13 deletions(-)
 
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index a98cb45..bcc6c24 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -289,7 +289,7 @@ xfs_iget_cache_hit(
- 	if (lock_flags != 0)
- 		xfs_ilock(ip, lock_flags);
- 
--	xfs_iflags_clear(ip, XFS_ISTALE);
-+	xfs_iflags_clear(ip, XFS_ISTALE | XFS_IDONTCACHE);
- 	XFS_STATS_INC(xs_ig_found);
- 
- 	return 0;
-@@ -314,6 +314,7 @@ xfs_iget_cache_miss(
- 	struct xfs_inode	*ip;
- 	int			error;
- 	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, ino);
-+	int			iflags;
- 
- 	ip = xfs_inode_alloc(mp, ino);
- 	if (!ip)
-@@ -358,8 +359,11 @@ xfs_iget_cache_miss(
- 	 * memory barrier that ensures this detection works correctly at lookup
- 	 * time.
- 	 */
-+	iflags = XFS_INEW;
-+	if (flags & XFS_IGET_DONTCACHE)
-+		iflags |= XFS_IDONTCACHE;
- 	ip->i_udquot = ip->i_gdquot = NULL;
--	xfs_iflags_set(ip, XFS_INEW);
-+	xfs_iflags_set(ip, iflags);
- 
- 	/* insert the new inode */
- 	spin_lock(&pag->pag_ici_lock);
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index f123dbe..7fee338 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -387,10 +387,11 @@ xfs_set_projid(struct xfs_inode *ip,
- #define XFS_IFLOCK		(1 << __XFS_IFLOCK_BIT)
- #define __XFS_IPINNED_BIT	8	 /* wakeup key for zero pin count */
- #define XFS_IPINNED		(1 << __XFS_IPINNED_BIT)
-+#define XFS_IDONTCACHE		(1 << 9) /* don't cache the inode long term */
- 
- /*
-  * Per-lifetime flags need to be reset when re-using a reclaimable inode during
-- * inode lookup. Thi prevents unintended behaviour on the new inode from
-+ * inode lookup. This prevents unintended behaviour on the new inode from
-  * ocurring.
-  */
- #define XFS_IRECLAIM_RESET_FLAGS	\
-@@ -553,6 +554,7 @@ do { \
-  */
- #define XFS_IGET_CREATE		0x1
- #define XFS_IGET_UNTRUSTED	0x2
-+#define XFS_IGET_DONTCACHE	0x4
- 
- int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
- 			    xfs_ino_t, struct xfs_dinode **,
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 9720c54..acc2bf2 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -75,7 +75,8 @@ xfs_bulkstat_one_int(
- 		return XFS_ERROR(ENOMEM);
- 
- 	error = xfs_iget(mp, NULL, ino,
--			 XFS_IGET_UNTRUSTED, XFS_ILOCK_SHARED, &ip);
-+			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
-+			 XFS_ILOCK_SHARED, &ip);
- 	if (error) {
- 		*stat = BULKSTAT_RV_NOTHING;
- 		goto out_free;
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 3e87b02..aef50ab 100644
+index a08c56d..3e87b02 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -950,6 +950,22 @@ xfs_fs_evict_inode(
- 	xfs_inactive(ip);
+@@ -965,8 +965,6 @@ xfs_fs_put_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+-	xfs_syncd_stop(mp);
+-
+ 	/*
+ 	 * Blow away any referenced inode in the filestreams cache.
+ 	 * This can and will cause log traffic as inodes go inactive
+@@ -977,6 +975,7 @@ xfs_fs_put_super(
+ 	xfs_flush_buftarg(mp->m_ddev_targp, 1);
+ 
+ 	xfs_unmountfs(mp);
++	xfs_syncd_stop(mp);
+ 	xfs_freesb(mp);
+ 	xfs_icsb_destroy_counters(mp);
+ 	xfs_destroy_mount_workqueues(mp);
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index 205ebcb..6771fcd 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -460,7 +460,15 @@ xfs_sync_worker(
+ 					struct xfs_mount, m_sync_work);
+ 	int		error;
+ 
+-	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
++	/*
++	 * We shouldn't write/force the log if we are in the mount/unmount
++	 * process or on a read only filesystem. The workqueue still needs to be
++	 * active in both cases, however, because it is used for inode reclaim
++	 * during these times. hence use the MS_ACTIVE flag to avoid doing
++	 * anything in these periods.
++	 */
++	if (!(mp->m_super->s_flags & MS_ACTIVE) &&
++	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
+ 		/* dgc: errors ignored here */
+ 		if (mp->m_super->s_frozen == SB_UNFROZEN &&
+ 		    xfs_log_need_covered(mp))
+@@ -488,14 +496,6 @@ xfs_syncd_queue_reclaim(
+ 	struct xfs_mount        *mp)
+ {
+ 
+-	/*
+-	 * We can have inodes enter reclaim after we've shut down the syncd
+-	 * workqueue during unmount, so don't allow reclaim work to be queued
+-	 * during unmount.
+-	 */
+-	if (!(mp->m_super->s_flags & MS_ACTIVE))
+-		return;
+-
+ 	rcu_read_lock();
+ 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
+ 		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
+@@ -564,7 +564,6 @@ xfs_syncd_init(
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 
+ 	xfs_syncd_queue_sync(mp);
+-	xfs_syncd_queue_reclaim(mp);
+ 
+ 	return 0;
+ }
+@@ -574,7 +573,13 @@ xfs_syncd_stop(
+ 	struct xfs_mount	*mp)
+ {
+ 	cancel_delayed_work_sync(&mp->m_sync_work);
+-	cancel_delayed_work_sync(&mp->m_reclaim_work);
++
++	/*
++	 * we flush any pending inode reclaim work rather than cancel it here.
++	 * This ensures that there are no clean inodes queued during unmount
++	 * left unreclaimed when we return.
++	 */
++	flush_delayed_work_sync(&mp->m_reclaim_work);
+ 	cancel_work_sync(&mp->m_flush_work);
  }
  
-+/*
-+ * We do an unlocked check for XFS_IDONTCACHE here because we are already
-+ * serialised against cache hits here via the inode->i_lock and igrab() in
-+ * xfs_iget_cache_hit(). Hence a lookup that might clear this flag will not be
-+ * racing with us, and it avoids needing to grab a spinlock here for every inode
-+ * we drop the final reference on.
-+ */
-+STATIC int
-+xfs_fs_drop_inode(
-+	struct inode		*inode)
-+{
-+	struct xfs_inode	*ip = XFS_I(inode);
-+
-+	return generic_drop_inode(inode) || (ip->i_flags & XFS_IDONTCACHE);
-+}
-+
- STATIC void
- xfs_free_fsname(
- 	struct xfs_mount	*mp)
-@@ -1433,6 +1449,7 @@ static const struct super_operations xfs_super_operations = {
- 	.destroy_inode		= xfs_fs_destroy_inode,
- 	.dirty_inode		= xfs_fs_dirty_inode,
- 	.evict_inode		= xfs_fs_evict_inode,
-+	.drop_inode		= xfs_fs_drop_inode,
- 	.put_super		= xfs_fs_put_super,
- 	.sync_fs		= xfs_fs_sync_fs,
- 	.freeze_fs		= xfs_fs_freeze,
 -- 
 1.7.9
 
