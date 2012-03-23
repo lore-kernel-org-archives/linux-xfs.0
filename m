@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2NDYZOq186467 for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 08:34:35 -0500
-Message-ID: <4F6C7BE7.3060100@sgi.com>
-Date: Fri, 23 Mar 2012 08:34:31 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q2NDvpUH188740 for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 08:57:51 -0500
+Received: from mail.vlasiu.net (mail.vlasiu.net [213.157.175.46]) by
+	cuda.sgi.com with ESMTP id 6iHlXW0gAy7kvhDi (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Mar 2012 06:57:47 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.vlasiu.net (Postfix) with ESMTP id 3D5E97E06D
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 15:57:46 +0200 (EET)
+Received: from mail.vlasiu.net ([127.0.0.1])
+	by localhost (mail.vlasiu.net [127.0.0.1]) (amavisd-new, port 10024)
+	with LMTP id JPi1CdYahZeM for <xfs@oss.sgi.com>;
+	Fri, 23 Mar 2012 15:57:44 +0200 (EET)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.vlasiu.net (Postfix) with ESMTP id E04267E06D
+	for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 15:57:43 +0200 (EET)
+Date: Fri, 23 Mar 2012 15:57:37 +0200 (EET)
+From: Gabriel VLASIU <gabriel@vlasiu.net>
+Subject: xfs_fsr XFS_IOC_SWAPEXT failed
+Message-ID: <alpine.LRH.2.02.1203231552490.21859@mail.vlasiu.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/8] xfs: initialise xfssync work before running
-	quotachecks
-References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
-	<1332393313-1955-4-git-send-email-david@fromorbit.com>
-	<20120322151548.GS7762@sgi.com> <20120322210723.GC5091@dastard>
-In-Reply-To: <20120322210723.GC5091@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,54 +29,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 03/22/12 16:07, Dave Chinner wrote:
-> On Thu, Mar 22, 2012 at 10:15:48AM -0500, Ben Myers wrote:
->> On Thu, Mar 22, 2012 at 04:15:08PM +1100, Dave Chinner wrote:
->>> From: Dave Chinner<dchinner@redhat.com>
->>>
->>> Because the mount process can run a quotacheck and consume lots of
->>> inodes, we need to be able to run periodic inode reclaim during the
->>> mount process. This will prevent running the system out of memory
->>> during quota checks.
->>>
->>> This essentially reverts 2bcf6e97, but that is safe to do now that
->>> the quota sync code that was causing problems during long quotacheck
->>> executions is now gone.
->>
->> Dave, I've held off on #s 3 and 4 because they appear to be racy.  Being
->
-> What race?
->
-> Cheers,
->
-> Dave
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Hi!
+
+Can somebody explain the reason for this error:
+
+# xfs_fsr -vvv \{aed7ec6a-7659-494a-8837-cabce9e6f506\}.vdi                                                            
+{aed7ec6a-7659-494a-8837-cabce9e6f506}.vdi
+XFS_IOC_SWAPEXT failed: {aed7ec6a-7659-494a-8837-cabce9e6f506}.vdi: Invalid argument
+
+I can copy this file and there are no errors reported by virtualbox.
+The kernel version is 3.3.0.
+
+Thank you.
 
 
-2 of the sync workers use iterators
-  xfs_inode_ag_iterator()
-   xfs_perag_get()
-    radix_tree_lookup(&mp->m_perag_tree, agno)
+Sincerely,
+Gabriel
 
-The race I was worried about was in xfs_mount() to initialize the
-mp->m_perag_lock, and the radix tree initialization:
-  INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC)).
+- -- 
 
-There is a lock and 2 or 3 unbuffered I/O are performed in xfs_mountfs()
-before the mp->m_perag_tree is initialized.
+// Gabriel VLASIU
+//
+// OpenGPG-KeyID      : 0xE684206E
+// OpenGPG-Fingerprint: 0C3D 9F8B 725D E243 CB3C 8428 796A DB1F E684 206E
+// OpenGPG-URL        : http://www.vlasiu.net/public.key
 
-I was also looking at the xfs_perag_t being allocated in mountfs() and 
-being deallocated in umountfs(), but it turns out that is not important, 
-xfs_perag_get() will return NULL if these have not been allocated yet or 
-have been removed for the required ag.
 
-Mark Tinguely.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEARECAAYFAk9sgVEACgkQeWrbH+aEIG4yJwCdEQ+7j+dEO83ThG6LqRXujyZ8
+VBcAn2EjjzhaUqDcvVAOXuhiic91DEJg
+=ZAR0
+-----END PGP SIGNATURE-----
 
 _______________________________________________
 xfs mailing list
