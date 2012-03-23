@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2NK5lpN006231 for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 15:05:47 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id ErXTTDFuk4VDq5cI for <xfs@oss.sgi.com>;
-	Fri, 23 Mar 2012 13:05:46 -0700 (PDT)
-Message-ID: <4F6CD799.9090903@sandeen.net>
-Date: Fri, 23 Mar 2012 15:05:45 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	q2NKN60Z007847 for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 15:23:06 -0500
+Received: from mail.vlasiu.net (mail.vlasiu.net [213.157.175.46]) by
+	cuda.sgi.com with ESMTP id NoOxaV3CHKTFyTSY (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Mar 2012 13:23:05 -0700 (PDT)
+Date: Fri, 23 Mar 2012 22:22:54 +0200 (EET)
+From: Gabriel VLASIU <gabriel@vlasiu.net>
 Subject: Re: xfs_fsr XFS_IOC_SWAPEXT failed
+In-Reply-To: <4F6CD799.9090903@sandeen.net>
+Message-ID: <alpine.LRH.2.02.1203232220010.4760@mail.vlasiu.net>
 References: <alpine.LRH.2.02.1203231552490.21859@mail.vlasiu.net>
 	<4F6CD1DC.7010706@sandeen.net>
 	<alpine.LRH.2.02.1203232159210.3056@mail.vlasiu.net>
-In-Reply-To: <alpine.LRH.2.02.1203232159210.3056@mail.vlasiu.net>
+	<4F6CD799.9090903@sandeen.net>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,56 +28,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gabriel VLASIU <gabriel@vlasiu.net>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-On 3/23/12 3:01 PM, Gabriel VLASIU wrote:
-> On Fri, 23 Mar 2012, Eric Sandeen wrote:
+On Fri, 23 Mar 2012, Eric Sandeen wrote:
+
+> It wouldn't be expected to.
 > 
->> Check kernel logs / dmesg?
-> xfs_swap_extents: inode 0x400dd2e4 format is incompatible for exchanging.
+> Please see also
 > 
-> Also xfs_repair does not report anything wrong.
-
-It wouldn't be expected to.
-
-Please see also
-
-https://bugzilla.redhat.com/show_bug.cgi?id=671015
-
-and suggestions for tracing the error, so we know exactly which case this is.
-
-Thanks,
-- -Eric
-
-
+> https://bugzilla.redhat.com/show_bug.cgi?id=671015
 > 
-> Sincerely,
-> Gabriel
-> 
-> 
+> and suggestions for tracing the error, so we know exactly which case this is.
+
+# cat /sys/kernel/debug/tracing/trace
+# tracer: nop
+#
+# entries-in-buffer/entries-written: 2/2   #P:2
+#
+#                              _-----=> irqs-off
+#                             / _----=> need-resched
+#                            | / _---=> hardirq/softirq
+#                            || / _--=> preempt-depth
+#                            ||| /     delay
+#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
+#              | |       |   ||||       |         |
+         xfs_fsr-3895  [000] .... 108290.726664: xfs_swap_extent_before: dev 7:0 ino 0x400dd2e4 (target), btree format, num_extents 1463, broot size 120, fork offset 104
+         xfs_fsr-3895  [000] .... 108290.726666: xfs_swap_extent_before: dev 7:0 ino 0x1c4917 (temp), extent format, num_extents 1, broot size 0, fork offset 104
+
+Should I add the trace to the bugzilla?
+Thank you.
+
+
+Sincerely,
+Gabriel
+
+- -- 
+
+// Gabriel VLASIU
+//
+// OpenGPG-KeyID      : 0xE684206E
+// OpenGPG-Fingerprint: 0C3D 9F8B 725D E243 CB3C 8428 796A DB1F E684 206E
+// OpenGPG-URL        : http://www.vlasiu.net/public.key
+
 
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPbNeYAAoJECCuFpLhPd7g7oMQAJj7eeTurTYhjUxHpt09/y6G
-EwGsjn8CnicpzYgmZ8KckZxeW8rdrxn6fspgYKTkVd8zuolgSw0CSmtO78Cn3wr/
-SvJo5XPR61gFrDTGyhQGdLt13h/U096gNMS3lZnTWM7Cydkgw8Uv0VD6vX42iO9L
-qzn7nAAypRm3Bd5KdNCDBbA3Y2sovjqixE/W5qYSDt0OzkEXwSpj/0VN/Dk1xPEz
-n2eEvFDx3KoaEyBQWlaN02c+WHsDsfNjp+qIlgyCp3fa78Ho+I1WJGQ9tQzsAmLb
-u98WkGkMx66BswAiFIIMq9LeljUQA69oIpCUS1ZWzW71/BZEwAKwfBeBa5n4aVJz
-3cQjpGVR9uVfOvBcQB5oS+gjLcTF2A6HXI4DEe0xU90VeRotEj/Y0HgNhHhIxDef
-Qq7u9w8cChdR7dIIVBNoTbGGV3OtDUo+LPFCcTfNH4UGLM5UftGp3nbPmx+O9IcB
-fBGhTn+6qb4JFo4sVcIjVeQ7SFwvs36/OOFWnvtoe46kW/G/JdnMc9TQ8B0FoMn7
-vRtqj9eJ8pDdxefdTVMtKxuze135FGTByxB6KrwOWw87KWP7NgU/29UBAVp1WdP5
-GRUxnTLK/zvI4+sLbifwHi8H6liu87eqsKTQi/nGkjKbwLp4iOrbtV1dIxx8q++f
-md88m2JD6Np7pd+mmYxI
-=d4wS
+iEYEARECAAYFAk9s254ACgkQeWrbH+aEIG6axQCeMpnlT5YRoMSqYI7B+NMoE2zm
+e98An3BW+/bk2jdsPcc8nE/c2c7gtimo
+=D4cr
 -----END PGP SIGNATURE-----
 
 _______________________________________________
