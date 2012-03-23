@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2NJfIrs257048 for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 14:41:18 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id PcSweBVYwStxL4AR for <xfs@oss.sgi.com>;
-	Fri, 23 Mar 2012 12:41:16 -0700 (PDT)
-Message-ID: <4F6CD1DC.7010706@sandeen.net>
-Date: Fri, 23 Mar 2012 14:41:16 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
+	q2NK22eA006084 for <xfs@oss.sgi.com>; Fri, 23 Mar 2012 15:02:02 -0500
+Received: from mail.vlasiu.net (mail.vlasiu.net [213.157.175.46]) by
+	cuda.sgi.com with ESMTP id bI4DlM7c6xxmFIBX (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 23 Mar 2012 13:02:00 -0700 (PDT)
+Date: Fri, 23 Mar 2012 22:01:50 +0200 (EET)
+From: Gabriel VLASIU <gabriel@vlasiu.net>
 Subject: Re: xfs_fsr XFS_IOC_SWAPEXT failed
+In-Reply-To: <4F6CD1DC.7010706@sandeen.net>
+Message-ID: <alpine.LRH.2.02.1203232159210.3056@mail.vlasiu.net>
 References: <alpine.LRH.2.02.1203231552490.21859@mail.vlasiu.net>
-In-Reply-To: <alpine.LRH.2.02.1203231552490.21859@mail.vlasiu.net>
+	<4F6CD1DC.7010706@sandeen.net>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,51 +26,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gabriel VLASIU <gabriel@vlasiu.net>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
 -----BEGIN PGP SIGNED MESSAGE-----
 Hash: SHA1
 
-On 3/23/12 8:57 AM, Gabriel VLASIU wrote:
-> Hi!
-> 
-> Can somebody explain the reason for this error:
-> 
-> # xfs_fsr -vvv \{aed7ec6a-7659-494a-8837-cabce9e6f506\}.vdi
-> {aed7ec6a-7659-494a-8837-cabce9e6f506}.vdi
-> XFS_IOC_SWAPEXT failed: {aed7ec6a-7659-494a-8837-cabce9e6f506}.vdi: Invalid argument
-> 
-> I can copy this file and there are no errors reported by virtualbox.
-> The kernel version is 3.3.0.
+On Fri, 23 Mar 2012, Eric Sandeen wrote:
 
-Check kernel logs / dmesg?
+> Check kernel logs / dmesg?
+xfs_swap_extents: inode 0x400dd2e4 format is incompatible for exchanging.
 
-- -Eric
+Also xfs_repair does not report anything wrong.
 
-> Thank you.
-> 
-> 
-> Sincerely,
-> Gabriel
+
+Sincerely,
+Gabriel
+
+- -- 
+
+// Gabriel VLASIU
+//
+// OpenGPG-KeyID      : 0xE684206E
+// OpenGPG-Fingerprint: 0C3D 9F8B 725D E243 CB3C 8428 796A DB1F E684 206E
+// OpenGPG-URL        : http://www.vlasiu.net/public.key
+
+
 -----BEGIN PGP SIGNATURE-----
-Version: GnuPG/MacGPG2 v2.0.17 (Darwin)
-Comment: GPGTools - http://gpgtools.org
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+Version: GnuPG v1.4.11 (GNU/Linux)
 
-iQIcBAEBAgAGBQJPbNHbAAoJECCuFpLhPd7g3f4QAMYjEZyP1PnvhJcaHgYhygZI
-eI2l2Bk5K7UfNY20lKwOe8A07CeLBXZ3QdjfBWM5QwUZB2gxYuM4d0G2H+XIqLsr
-2Qe7+zarR6heV9qT3QmNE93bDKVgPG/rU3IYchL40THMFlkobC0sk9Kxu9S5Trrb
-ssEOJFmcnVhtaCc6mle1Sac+SfArDixPbVlSny5esdQXh88v1Or7ixj+fL4/ck3c
-680koIyoBnBr8po/dhDASzcW7H3wSuzldweOtbiq2JrHAIOUV9qY+A2f49ieUmt+
-9TZUa86jsPNWE5DHn5BQ0C0OBphDXDfCEhNELf33sbOKUK0KkKLD3anloX/LtlKi
-OrFlKstFgrdlDg0QY8yimYbxJvLAd48oA7qHqMKg8+moq9H//RP56DJJ7SfrL0G7
-E7/0+Jxd9ii7d9cNHEAlxVYRY9JQT9G0hCL17NFxTBProHhhCmSZihil5QYMno9o
-mO6Goh5DupCHnRSmj+M9GrhHHNiWpzLwwgAIMnadchyzSzrnCmSfU3Xsfw40JpaS
-w654Full2tEWjszxSjox3smeGjR22//hh1koXMjdavbwwh9suRIjHegUl+U/bo0p
-kGcNDwJiZD2O9vx2EuNfcDZbOB7UjSuE8eLzy5Nizmo8/e+x1q7YdmOJW12nkwzV
-TG6nlVlk31LQhiMq1BDQ
-=VaL/
+iEYEARECAAYFAk9s1q4ACgkQeWrbH+aEIG7cbQCggnj+KBd/DNaqIslz7hu/uprI
+VvYAniFH5PPOhbMCpEuzrsa5v4s+nzMm
+=8WGr
 -----END PGP SIGNATURE-----
 
 _______________________________________________
