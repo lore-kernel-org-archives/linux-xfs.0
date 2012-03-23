@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2MLT3sN037352 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 16:29:03 -0500
-Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
-	cuda.sgi.com with ESMTP id SrGY5HKk69YL8fFE for
-	<xfs@oss.sgi.com>; Thu, 22 Mar 2012 14:29:00 -0700 (PDT)
-MIME-Version: 1.0
-Message-ID: <20331.39194.377610.888636@tree.ty.sabi.co.UK>
-Date: Thu, 22 Mar 2012 21:26:50 +0000
-Subject: Re: raid10n2/xfs setup guidance on write-cache/barrier
-In-Reply-To: <4F6624A3.5010206@hardwarefreak.com>
-References: <CAA8mOyDKrWg0QUEHxcD4ocXXD42nJu0TG+sXjC4j2RsigHTcmw@mail.gmail.com>
-	<4F61803A.60009@hardwarefreak.com>
-	<CAA8mOyCzs36YD_QUMq25HQf8zuq1=tmSTPjYdoFJwy2Oq9sLmw@mail.gmail.com>
-	<20321.63389.586851.689070@tree.ty.sabi.co.UK>
-	<4F64115D.50208@hardwarefreak.com> <20120317223454.GQ5091@dastard>
-	<20325.17387.216150.45013@tree.ty.sabi.co.UK>
-	<20325.50714.237894.328039@tree.ty.sabi.co.UK>
-	<4F6624A3.5010206@hardwarefreak.com>
-From: pg@lxra2.to.sabi.co.UK (Peter Grandi)
+	q2N1m0d8071392 for <xfs@oss.sgi.com>; Thu, 22 Mar 2012 20:48:00 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	H3OFKIqvufl3brsR for <xfs@oss.sgi.com>;
+	Thu, 22 Mar 2012 18:47:58 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SAtbe-0005K4-F5
+	for xfs@oss.sgi.com; Fri, 23 Mar 2012 12:47:54 +1100
+Received: from dave by disappointment with local (Exim 4.77)
+	(envelope-from <dave@disappointment.disaster>) id 1SAtbW-0003OW-E3
+	for xfs@oss.sgi.com; Fri, 23 Mar 2012 12:47:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 2/2] xfs: avoid shutdown hang in xlog_wait()
+Date: Fri, 23 Mar 2012 12:47:43 +1100
+Message-Id: <1332467263-12985-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1332467263-12985-1-git-send-email-david@fromorbit.com>
+References: <1332467263-12985-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,147 +26,150 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux RAID <linux-raid@vger.kernel.org>, Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-WyAuLi4gXQoKPj4gU28gaW4gbXkgdmlldyAnZGVsYXlsb2cnIGNhbm5vdCBiZSBkZXNjcmliZWQg
-Ym9sZGx5IGFuZAo+PiBiYXJlbHkgZGVzY3JpYmVkLCBlc3BlY2lhbGx5IGluIHRoaXMgdGhyZWFk
-LCBhcyBhbgo+PiBpbXByb3ZlbWVudCBpbiBYRlMgcGVyZm9ybWFuY2UsIGFzIGl0IGlzIGFuIGlt
-cHJvdmVtZW50IGluCj4+IFhGUydzIHVuc2FmZXR5IHRvIG9idGFpbiBncmVhdGVyIHNwZWVkLCBz
-aW1pbGFyIHRvIGJ1dCBub3QgYXMKPj4gZXh0ZW5zaXZlIGFzICdub2JhcnJpZXInLgoKPiBZb3Ug
-aGF2ZSByZWNvbW1lbmRlZCBpbiB2YXJpb3VzIHBhc3QgcG9zdHMgb24gbXVsdGlwbGUgbGlzdHMK
-PiB0aGF0IHVzZXJzIHNob3VsZCBtYXggb3V0IGxvZ2JzaXplIGFuZCBsb2didWZzIHRvIGluY3Jl
-YXNlCj4gbWV0YWRhdGEgcGVyZm9ybWFuY2UuCgpQZXJoYXBzIHlvdSBjb25mdXNlIG1lIHdpdGgg
-RGF2ZUMgKG9yLCBzZWUgbGF0ZXIsIHRoZSBYRlMgRkFRKSwKZm9yIGV4YW1wbGU6CgpodHRwOi8v
-b3NzLnNnaS5jb20vYXJjaGl2ZXMveGZzLzIwMTAtMDkvbXNnMDAxMTMuaHRtbAogwqs+IFdoeSBp
-c24ndCBsb2dic2l6ZT0yNTZrIGRlZmF1bHQsIHdoZW4gaXQncyBzdWdnZXN0ZWQgbW9zdAogID4g
-b2YgdGhlIHRpbWUgYW55d2F5PwogIEl0J3Mgc3VnZ2VzdGVkIHdoZW4gcGVvcGxlIGFyZSBhc2tp
-bmcgYWJvdXQgcGVyZm9ybWFuY2UKICB0dW5pbmcuIFdoZW4gdGhlIHBlcmZvcm1hbmNlIGlzIGFj
-Y2VwdGlibGUgd2l0aCB0aGUgZGVmYXVsdAogIHZhbHVlLCB0aGVuIHlvdSBkb24ndCBoZWFyIGFi
-b3V0IGl0LCBkbyB5b3U/wrsKaHR0cDovL29zcy5zZ2kuY29tL2FyY2hpdmVzL3hmcy8yMDA3LTEx
-L21zZzAwOTE4Lmh0bWwKIMKrIyBta2ZzLnhmcyAtZiAtbCBsYXp5LWNvdW50PTEsdmVyc2lvbj0y
-LHNpemU9MTI4bSAtaSBhdHRyPTIgLWQgYWdjb3VudD00IDxkZXY+CiAgIyBtb3VudCAtbyBsb2di
-c2l6ZT0yNTZrIDxkZXY+IDxtdHB0PgogIEFuZCBpZiB5b3UgZG9uJ3QgY2FyZSBhYm91dCBmaWxz
-eXN0ZW0gY29ycnVwdGlvbiBvbiBwb3dlciBsb3NzOgogICMgbW91bnQgLW8gbG9nYnNpemU9MjU2
-ayxub2JhcnJpZXIgPGRldj4gPG10cHQ+wrsKCj4gWW91IG1hZGUgbm8gbWVudGlvbiBpbiB0aG9z
-ZSBwb3N0cyBhYm91dCBzYWZldHkgYXMgeW91IGhhdmUKPiBoZXJlLgoKQXMgdG8gc2FmZXR5LCB0
-aGlzIHRocmVhZCwgYnkgdGhlIGV4cGxpY2l0IHJlcXVlc3Qgb2YgdGhlCm9yaWdpbmFsIHBvc3Rl
-ciwgaXMgYWJvdXQgc2FmZXR5IGJlZm9yZSBzcGVlZC4gQnV0IEkgYWxyZWFkeQptYWRlIHRoaXMg
-cG9pbnQgYWJvdmUgYXMgaW4gwqtlc3BlY2lhbGx5IGluIHRoaXMgdGhyZWFkwrsuCgpBbHNvLCAi
-bG9nYnVmcyIgaGF2ZSBiZWVuIGtub3duIGZvciBhIGxvbmcgdGltZSB0byBoYXZlIGFuCnVuc2Fm
-ZXR5IGFzcGVjdCwgZm9yIGV4YW1wbGUgdGhlcmUgaXMgYSBjbGVhciBtZW50aW9uIGZyb20gMjAw
-MSwKYnV0IGFsc28gc2VlIHRoZSBxdW90ZSBmcm9tIHRoZSBYRlMgRkFRIGJlbG93OgoKaHR0cDov
-L29zcy5zZ2kuY29tL2FyY2hpdmVzL3hmcy8yMDAxLTA1L21zZzAzMzkxLmh0bWwKIMKrbG9nYnVm
-cz00IG9yIGxvZ2J1ZnM9OCwgdGhpcyBpbmNyZWFzZXMgKGZyb20gMikgdGhlIG51bWJlcgogIG9m
-IGluIG1lbW9yeSBsb2cgYnVmZmVycy4gVGhpcyBtZWFucyB5b3UgY2FuIGhhdmUgbW9yZSBhY3Rp
-dmUKICB0cmFuc2FjdGlvbnMgYXQgb25jZSwgYW5kIGNhbiBzdGlsbCBwZXJmb3JtIG1ldGFkYXRh
-IGNoYW5nZXMKICB3aGlsZSB0aGUgbG9nIGlzIGJlaW5nIHN5bmNlZCB0byBkaXNrLiBUaGUgZmxp
-cCBzaWRlIG9mIHRoaXMgaXMKICB0aGF0IHRoZSBhbW91bnQgb2YgbWV0YWRhdGEgY2hhbmdlcyB3
-aGljaCBtYXkgYmUgbG9zdCBvbiBjcmFzaAogIGlzIGdyZWF0ZXIuwrsKClRoYXQncyAibmV3cyIg
-ZnJvbSBvdmVyIDEwIHllYXJzIGFnby4uLgoKPiBMb2didWZzIGFyZSBpbi1tZW1vcnkgam91cm5h
-bCB3cml0ZSBidWZmZXJzIGFuZCBhcmUgdm9sYXRpbGUuCj4gRGVsYXlsb2cgdXNlcyBpbi1tZW1v
-cnkgc3RydWN0dXJlcyB0aGF0IGFyZSB2b2xhdGlsZS4gU28sIHdoeSBkbwo+IHlvdSBjb25zaWRl
-ciBsb2didWZzIHRvIGJlIGluaGVyZW50bHkgc2FmZXIgdGhhbiBkZWxheWxvZz8KClRoYXQncyBh
-IHF1b3RlIGZyb20gdGhlICdkZWxheWxvZycgZG9jdW1lbnRhdGlvbjogwqt0aGUgcG90ZW50aWFs
-CmZvciBsb3NzIG9mIG1ldGFkYXRhIG9uIGEgY3Jhc2ggaXMgbXVjaCBncmVhdGVyIHRoYW4gZm9y
-IHRoZQpleGlzdGluZyBsb2dnaW5nIG1lY2hhbmlzbcK7LgoKPiBGb2xsb3dpbmcgdGhlIGxvZ2lj
-IHlvdSd2ZSB1c2VkIGluIHRoaXMgdGhyZWFkLCBib3RoIHNob3VsZCBiZQo+IGNvbnNpZGVyZWQg
-ZXF1YWxseSB1bnNhZmUuCgpUaGV5IGFyZSBib3RoIHVuc2FmZSAoYXQgbGVhc3Qgd2l0aCBhcHBs
-aWNhdGlvbnMgdGhhdCBkbyBub3QgdXNlCidmc3luYycgYXBwcm9wcmlhdGVseSksIGJ1dCBub3Qg
-ZXF1YWxseSwgYXMgdGhleSBoYXZlIHF1aXRlCmRpZmZlcmVudCBzZW1hbnRpY3MgYW5kIGJlaGF2
-aW91ciwgYXMgdGhlIHF1b3RlIGFib3ZlIGZyb20gdGhlCidkZWxheWxvZycgZG9jcyBzdGF0ZXMg
-KGFuZCBzZWUgdGhlIHF1b3RlIGZyb20gdGhlIFhGUyBGQVEgYmVsb3cpLgoKPiBZZXQgSSBkb24n
-dCByZWNhbGwgeW91IGV2ZXIgcHJlYWNoaW5nIGFnYWluc3QgbG9nYnVmcyBpbiB0aGUKPiBwYXN0
-LgoKV2h5IHNob3VsZCBJIHByZWFjaCBhZ2FpbnN0IGFueSBvZiB0aGUgc2FmZXR5L3NwZWVkIHRy
-YWRlb2Zmcz8KRWFjaCBvZiB0aGVtIGhhcyBhIGRvbWFpbiBvZiB1c2FiaWxpdHksIGluY2x1ZGlu
-ZyAnbm9iYXJyaWVyJyBvcgonZWF0bXlkYXRhJywgb3IgZXZlbiAnc3luYycuCgo+IElzIGl0IGJl
-Y2F1c2UgbG9nYnVmcyBjYW4gJ29ubHknIHBvdGVudGlhbGx5IGxvc2UgMk1CIHdvcnRoIG9mCj4g
-bWV0YWRhdGEgdHJhbnNhY3Rpb25zLCBhbmQgZGVsYXlsb2cgY2FuIHBvdGVudGlhbGx5IGxvc2Ug
-bW9yZQo+IHRoYW4gMk1CPwoKVGhhdCdzIGEgcXVvdGUgZnJvbSB0aGUgJ2RlbGF5bG9nJyBkb2N1
-bWVudGF0aW9uOiDCq0luIG90aGVyIHdvcmRzLAppbnN0ZWFkIG9mIHRoZXJlIG9ubHkgYmVpbmcg
-YSBtYXhpbXVtIG9mIDJNQiBvZiB0cmFuc2FjdGlvbgpjaGFuZ2VzIG5vdCB3cml0dGVuIHRvIHRo
-ZSBsb2cgYXQgYW55IHBvaW50IGluIHRpbWUsIHRoZXJlIG1heSBiZQphIG11Y2ggZ3JlYXRlciBh
-bW91bnQgYmVpbmcgYWNjdW11bGF0ZWQgaW4gbWVtb3J5LsK7IMKrV2hhdCBpdCBkb2VzCm1lYW4g
-aXMgdGhhdCBhcyBmYXIgYXMgdGhlIHJlY292ZXJlZCBmaWxlc3lzdGVtIGlzIGNvbmNlcm5lZCwK
-dGhlcmUgbWF5IGJlIG1hbnkgdGhvdXNhbmRzIG9mIHRyYW5zYWN0aW9ucyB0aGF0IHNpbXBseSBk
-aWQgbm90Cm9jY3VyIGFzIGEgcmVzdWx0IG9mIHRoZSBjcmFzaC7CuwoKPiBTbyB5b3UncmUgY29t
-cGFyaW5nIGRlbGF5bG9nJ3Mgdm9sYXRpbGUgYnVmZmVyIGFyY2hpdGVjdHVyZSB0bwo+IHNvZnR3
-YXJlIHRoYXQgKmludGVudGlvbmFsbHkgYW5kIHRyYW5zcGFyZW50bHkgZGlzYWJsZXMgZnN5bmMq
-PwoKVGhleSBhcmUgYm90aCBzcGVlZC1lbmhhbmNpbmcgb3B0aW9ucy4gSWYgJ2RlbGF5bG9nJyBj
-YW4gYmUKY29tcGFyZWQgd2l0aCAnbm9iYXJyaWVyJyBvciAnc3luYycgYXMgdG8gdGhlaXIgZWZm
-ZWN0cyBvbgpwZXJmb3JtYW5jZSwgc28gY2FuICdlYXRteWRhdGEnLgoKVGhlIHBvaW50IG9mIGNv
-bXBhcmluZyAnc3luYycgb3IgJ2RlbGF5bG9nJyB0byAnbm9iYXJyaWVyJyBvciB0bwonZWFzdG15
-ZGF0YScgaXMgdG8ganVzdGlmeSB3aHkgSSB0aGluayB0aGF0ICdkZWxheWxvZycgwqtjYW5ub3Qg
-YmUKZGVzY3JpYmVkIGJvbGRseSBhbmQgYmFyZWx5IGRlc2NyaWJlZCwgZXNwZWNpYWxseSBpbiB0
-aGlzIHRocmVhZCwKYXMgYW4gaW1wcm92ZW1lbnQgaW4gWEZTIHBlcmZvcm1hbmNlwrsuIGJlY2F1
-c2UgaWYgdGhlIG9ubHkgdGhpbmcKdGhhdCBtYXR0ZXJzIGlzIHRoZSBpbXByb3ZlbWVudCBpbiBz
-cGVlZCwgdGhlbiAnbm9iYXJyaWVyJyBvcgonZWF0bXlkYXRhJyBjYW4gZ2l2ZSBiZXR0ZXIgcGVy
-Zm9ybWFuY2UgdGhhbiAnZGVsYXlsb2cnLCBhbmQgdG8gbWUKdGhhdCBpcyBhbiBhYnN1cmQgYXJn
-dW1lbnQuCgo+IFNvIGRvIHlvdSBiZWxpZXZlIGEgc2ltaWxhciB3YXJuaW5nIHNob3VsZCBiZSBh
-dHRhY2hlZCB0byB0aGUKPiBkb2NzIGZvciBkZWxheWxvZz8KCllvdSBzZWVtIHVuYXdhcmUgdGhh
-dCBhIHNpbWlsYXIgd2FybmluZyBpcyBhbHJlYWR5IHBhcnQgb2YgdGhlIGRvYwpmb3IgJ2RlbGF5
-bG9nJywgYW5kIEkgaGF2ZSBxdW90ZWQgaXQgcHJvbWluZW50bHkgYmVmb3JlIChhbmQgYWJvdmUp
-LgoKPiBBbmQgdGh1cyB0byB0aGUgdXNlIG9mIGxvZ2J1ZnMgYXMgd2VsbD8KCllvdSBzZWVtIHVu
-YXdhcmUgdGhhdCB0aGUgWEZTIEZBUSBhbHJlYWR5IHN0YXRlczoKCmh0dHA6Ly93d3cueGZzLm9y
-Zy9pbmRleC5waHAvWEZTX0ZBUSNROl9JX3dhbnRfdG9fdHVuZV9teV9YRlNfZmlsZXN5c3RlbXNf
-Zm9yXy4zQ3NvbWV0aGluZy4zRQogwqtGb3IgbW91bnQgb3B0aW9ucywgdGhlIG9ubHkgdGhpbmcg
-dGhhdCB3aWxsIGNoYW5nZSBtZXRhZGF0YQogIHBlcmZvcm1hbmNlIGNvbnNpZGVyYWJseSBhcmUg
-dGhlIGxvZ2JzaXplIGFuZCBkZWxheWxvZyBtb3VudAogIG9wdGlvbnMuCgogIEluY3JlYXNpbmcg
-bG9nYnNpemUgcmVkdWNlcyB0aGUgbnVtYmVyIG9mIGpvdXJuYWwgSU9zIGZvciBhCiAgZ2l2ZW4g
-d29ya2xvYWQsIGFuZCBkZWxheWxvZyB3aWxsIHJlZHVjZSB0aGVtIGV2ZW4gZnVydGhlci4KCiAg
-VGhlIHRyYWRlIG9mZiBmb3IgdGhpcyBpbmNyZWFzZSBpbiBtZXRhZGF0YSBwZXJmb3JtYW5jZSBp
-cwogIHRoYXQgbW9yZSBvcGVyYXRpb25zIG1heSBiZSAibWlzc2luZyIgYWZ0ZXIgcmVjb3Zlcnkg
-aWYgdGhlCiAgc3lzdGVtIGNyYXNoZXMgd2hpbGUgYWN0aXZlbHkgbWFraW5nIG1vZGlmaWNhdGlv
-bnMuwrsKCj4gSG93IGFib3V0IGFsbCB3cml0ZSBidWZmZXJzL2NhY2hlcyBpbiB0aGUgTGludXgg
-a2VybmVsPwoKSW5kZWVkIGl0IHdvdWxkIGJlIGEgdmVyeSBnb29kIGlkZWEgZ2l2ZW4gdGhlIHBv
-b3IgbGV2ZWwgb2YKYXdhcmVuZXNzIG9mIHRoZSBkb3duc2lkZXMgb2YgbW9yZSBidWZmZXJpbmcv
-Y2FjaGluZyAobm90IGp1c3QKbGVzcyBzYWZldHksIGFsc28gaGlnaGVyIGxhdGVuY3kgYW5kIGV2
-ZW4gbG93ZXIgb3ZlcmFsbAp0aHJvdWdocHV0IGluIG1hbnkgY2FzZXMpLgoKQnV0IHRoYXQgZGlz
-Y3Vzc2lvbiBoYXMgYWxyZWFkeSBoYXBwZW5lZCBhIGZldyB0aW1lcywgaW4gdGhlCnZhcmlvdXMg
-J09fUE9OSUVTJyBkaXNjdXNzaW9ucywgYXMgdG8gdGhhdCBJIGhhdmUgbWVudGlvbmVkIHRoaXMK
-cGFnZSBmb3IgYSB3ZWFyeSBzdW1tYXJ5IG9mIHRoZSBzdG9yeSBhdCBzb21lIHBvaW50IGluIHRp
-bWU6CgpodHRwOi8vc2FuZGVlbi5uZXQvd29yZHByZXNzL2NvbXB1dGVycy9mc3luYy1zaWdoLwoK
-IMKrU28gbm93IHdlIGFyZSBmYWNlZCB3aXRoIHNvbWUgZGVjaXNpb25zLiAgU2hvdWxkIHRoZSBm
-aWxlc3lzdGVtCiAgcHV0IGluIGhhY2tzIHRoYXQgb2ZmZXIgbW9yZSBkYXRhIHNhZmV0eSB0aGFu
-IHBvc2l4IGd1YXJhbnRlZXM/CiAgUG9zc2libHkuIFByb2JhYmx5LiBCdXQgdGhlcmUgYXJlIHRy
-YWRlb2Zmcy4gWEZTLCBhZnRlciBnaXZpbmcKICB1cCBvbiB0aGUgZnN5bmMtZWR1Y2F0aW9uIGZp
-Z2h0IGxvbmcgYWdvIChub3RlOyBmc3luYyBpcyBwcmV0dHkKICB3ZWxsLWJlaGF2ZWQgb24gWEZT
-KSBwdXQgaW4gc29tZSBjaGFuZ2VzIHRvIGVzc2VudGlhbGx5IGZzeW5jCiAgdW5kZXIgdGhlIGNv
-dmVycyBvbiBjbG9zZSwgaWYgYSBmaWxlIGhhcyBiZWVuIHRydW5jYXRlZCAodGhpbmsKICBmaWxl
-IG92ZXJ3cml0ZSkuwrsKCk5vdGUgdGhlIHNhZCDCq1hGUywgYWZ0ZXIgZ2l2aW5nIHVwIG9uIHRo
-ZSBmc3luYy1lZHVjYXRpb24gZmlnaHQKbG9uZyBhZ2/CuyBzdGF0bWVudC4gQWxzbyByZWxhdGVk
-IHRvIHRoaXMsIGFib3V0IGRlZmF1bHRpbmcgdG8Kc2FmZXIgaW1wbGljaXQgc2VtYW50aWNzOgoK
-IMKrQnV0IG5vdyB3ZeKAmXZlIHRha2VuIHRoYXQgY29udHJvbCBhd2F5IGZyb20gdGhlIGFwcHMg
-KGRpZCB0aGV5CiAgd2FudCBpdD8pIGFuZCBpbnRyb2R1Y2VkIGJlaGF2aW9yIHdoaWNoIG1heSBz
-bG93IGRvd24gc29tZQogIG90aGVyIHdvcmtsb2Fkcy4gQW5kLCBwZXJoYXBzIHdvcnNlLCBlbmNv
-dXJhZ2VkIHNsb3BweSBhcHAKICB3cml0aW5nIGJlY2F1c2UgdGhlIGZpbGVzeXN0ZW0gaGFzIHRh
-a2VuIGNhcmUgb2YgcHVzaGluZyBzdHVmZgogIHRvIGRpc2sgd2hlbiB0aGUgYXBwbGljYXRpb24g
-Zm9yZ2V0cyAob3IgbmV2ZXIga25ldykuIEkgZHVubm8KICBob3cgdG8gcmVzb2x2ZSB0aGlzIHJp
-Z2h0IG5vdy7CuwoKPiBXaGVyZSBleGFjdGx5IGRvIHlvdSBkcmF3IHRoZSBsaW5lIFBldGVyLCBi
-ZXR3ZWVuIHVuc2FmZS9zYWZlCj4gdXNlIG9mIGluLW1lbW9yeSB3cml0ZSBidWZmZXJzPwoKQXQg
-dGhlIHBvaW50IHdoZXJlIHRoZSBhcHBsaWNhdGlvbiByZXF1aXJlbWVudHMgZHJhdyBpdCAob3IK
-cGVyaGFwcyBhIGJpdCBzYWZlciB0aGFuIHRoYXQsICJqdXN0IGluIGNhc2UiKS4KCkZvciBzb21l
-IGFwcGxpY2F0aW9ucyBpdCBtdXN0IGJlIHRpZ2h0LCBmb3Igb3RoZXJzIGl0IGNhbiBiZQpsb29z
-ZS4gUXVvdGluZyBhZ2FpbiBmcm9tIHRoZSAnZGVsYXlsb2cnIGRvY3M6IMKrVGhpcyBtYWtlcyBp
-dCBldmVuCm1vcmUgaW1wb3J0YW50IHRoYXQgYXBwbGljYXRpb25zIHRoYXQgY2FyZSBhYm91dCB0
-aGVpciBkYXRhIHVzZQpmc3luYygpIHdoZXJlIHRoZXkgbmVlZCB0byBlbnN1cmUgYXBwbGljYXRp
-b24gbGV2ZWwgZGF0YSBpbnRlZ3JpdHkKaXMgbWFpbnRhaW5lZC7CuyB3aGljaCBzZWVtcyBhIHN0
-cmFpZ2h0IHN0YXRlbWVudCB0aGF0IHRoZSBsZXZlbCBvZgpzYWZldHkgaXMgYXBwbGljYXRpb24t
-ZGVwZW5kZW50LgoKRm9yIG1lICdkZWxheWxvZycgaXMganVzdCBhIHBvaW50IG9uIGEgbGluZSBv
-ZiB0cmFkZW9mZnMgZ29pbmcKZnJvbSAnc3luYycgdG8gJ25vYmFycmllcicsIGl0IGlzIHVzZWZ1
-bCBhcyBkaWZmZXJlbnQgcG9pbnQsIGJ1dAppdCBjYW5ub3QgYmUgYm9sZGx5IGFuZCBiYXJlbHkg
-ZGVzY3JpYmVkIGFzIGdpdmluZyBiZXR0ZXIKcGVyZm9ybWFuY2UsIGFueW1vcmUgdGhhbiAnbm9i
-YXJyaWVyJyBjYW4gYmUgYm9sZGx5IGFuZCBiYXJlbHkKZGVzY3JpYmVkIGFzIGdpdmluZyBiZXR0
-ZXIgcGVyZm9ybWFuY2UgdGhhbiAnc3luYycuCgpVbmxlc3Mgb25lIGJvbGRseSBpZ25vcmVzIHRo
-ZSB2ZXJ5IGRpZmZlcmVudCBzZW1hbnRpY3MsIHNvbWV0aGluZwp0aGF0IHRoZSAnZGVsYXlsb2cn
-IGRvY3VtZW50YXRpb24gYW5kIHRoZSBYRlMgRkFRIGRvbid0IGRvLgoKT3ZlcnNlbGxpbmcgJ2Rl
-bGF5bG9nJyB3aXRoIGNoZWVreSBwcm9wYWdhbmRhIGdsb3NzaW5nIG92ZXIgdGhlCmhlYXZ5IHRy
-YWRlb2ZmcyBpbnZvbHZlZCBpcyB1bmRlcnN0YW5kYWJsZSwgYnV0IHF1aXRlIHdyb25nLgoKQWdh
-aW4sIFhGUyBtZXRhZGF0YSBwZXJmb3JtYW5jZSB3aXRob3V0ICdkZWxheWxvZycgd2FzIHByZXR0
-eQpkZWNlbnQsIGV2ZW4gaWYgc3BlZWQgd2FzIHNsb3cgZHVlIHRvIHVudXN1YWxseSBzYWZlIHNl
-bWFudGljcy4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+From: Dave Chinner <dchinner@redhat.com>
+
+When a shutdown is triggered from failing to find an item in the AIL
+during delete, we can be called from either metadata IO completion
+context or from log IO completion context. In the case of log IO
+completion context, we must indicate that this is a log error so
+that the forced shutdown does not attempt to flush the log.
+
+To flush the log whilst in log IO completion will cause a deadlock
+as the shutdown won't proceed until log IO completes, and log Io
+cannot complete because it has blocked waiting for itself to
+complete....
+
+We delete items in the AIL from log IO completion when we are
+unpinning in-memory only items, or items that do not require
+writeback to remove from the AIL (e.g. EFI/EFD items). Hence there
+are several locations that need this treatment.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c     |    2 +-
+ fs/xfs/xfs_dquot_item.c   |    2 +-
+ fs/xfs/xfs_extfree_item.c |    2 +-
+ fs/xfs/xfs_inode.c        |    4 ++--
+ fs/xfs/xfs_inode_item.c   |    6 ++++--
+ fs/xfs/xfs_inode_item.h   |    2 +-
+ 6 files changed, 10 insertions(+), 8 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 3e5f654..07fac37 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -460,7 +460,7 @@ xfs_buf_item_unpin(
+ 			error = xfs_trans_ail_delete(ailp, lip);
+ 			if (error == EFSCORRUPTED)
+ 				xfs_force_shutdown(ailp->xa_mount,
+-						   SHUTDOWN_CORRUPT_INCORE);
++						   SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+ 			ASSERT(bp->b_fspriv == NULL);
+ 		}
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 69a098c..452fb24 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -457,7 +457,7 @@ xfs_qm_qoffend_logitem_committed(
+ 	spin_lock(&ailp->xa_lock);
+ 	error = xfs_trans_ail_delete(ailp, (struct xfs_log_item *)qfs);
+ 	if (error == EFSCORRUPTED)
+-		xfs_force_shutdown(ailp->xa_mount, SHUTDOWN_CORRUPT_INCORE);
++		xfs_force_shutdown(ailp->xa_mount, SHUTDOWN_LOG_IO_ERROR);
+ 
+ 	kmem_free(qfs);
+ 	kmem_free(qfe);
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 4ccf2b6..40d1b0e 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -69,7 +69,7 @@ __xfs_efi_release(
+ 		error = xfs_trans_ail_delete(ailp, &efip->efi_item);
+ 		if (error == EFSCORRUPTED)
+ 			xfs_force_shutdown(ailp->xa_mount,
+-						SHUTDOWN_CORRUPT_INCORE);
++						SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_efi_item_free(efip);
+ 	}
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index bc46c0a..4fb2e99 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2377,7 +2377,7 @@ cluster_corrupt_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(iq);
++	xfs_iflush_abort(iq, false);
+ 	kmem_free(ilist);
+ 	xfs_perag_put(pag);
+ 	return XFS_ERROR(EFSCORRUPTED);
+@@ -2503,7 +2503,7 @@ cluster_corrupt_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(ip);
++	xfs_iflush_abort(ip, false);
+ 	return XFS_ERROR(EFSCORRUPTED);
+ }
+ 
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index b0a813f..bd7fd73 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -883,7 +883,8 @@ xfs_iflush_done(
+  */
+ void
+ xfs_iflush_abort(
+-	xfs_inode_t		*ip)
++	struct xfs_inode	*ip,
++	bool			stale)
+ {
+ 	xfs_inode_log_item_t	*iip = ip->i_itemp;
+ 
+@@ -898,6 +899,7 @@ xfs_iflush_abort(
+ 							(xfs_log_item_t *)iip);
+ 				if (error == EFSCORRUPTED)
+ 					xfs_force_shutdown(ailp->xa_mount,
++						stale ? SHUTDOWN_LOG_IO_ERROR :
+ 							SHUTDOWN_CORRUPT_INCORE);
+ 			} else
+ 				spin_unlock(&ailp->xa_lock);
+@@ -925,7 +927,7 @@ xfs_istale_done(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_log_item	*lip)
+ {
+-	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode);
++	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode, true);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index 41d61c3..376d4d0 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -165,7 +165,7 @@ extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
+ extern void xfs_inode_item_destroy(struct xfs_inode *);
+ extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
+ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+-extern void xfs_iflush_abort(struct xfs_inode *);
++extern void xfs_iflush_abort(struct xfs_inode *, bool);
+ extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
+ 					 xfs_inode_log_format_t *);
+ 
+-- 
+1.7.9
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
