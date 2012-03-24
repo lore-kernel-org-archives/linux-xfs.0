@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2ODlXak029212 for <xfs@oss.sgi.com>; Sat, 24 Mar 2012 08:47:33 -0500
+	q2ODg7M1028418 for <xfs@oss.sgi.com>; Sat, 24 Mar 2012 08:42:07 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	WpPmi6C1RPQnj0FF (version=TLSv1 cipher=AES256-SHA bits=256
+	YWHxFZ2RoEm000Z3 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 24 Mar 2012 06:47:32 -0700 (PDT)
-Date: Sat, 24 Mar 2012 09:47:30 -0400
+	Sat, 24 Mar 2012 06:42:06 -0700 (PDT)
+Date: Sat, 24 Mar 2012 09:42:06 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/4] xfs: remove log item from AIL in xfs_iflush after a
-	shutdown
-Message-ID: <20120324134730.GA4674@infradead.org>
-References: <20120316175541.258282540@bombadil.infradead.org>
-	<20120316175636.187265302@bombadil.infradead.org>
-	<20120321232029.GZ5091@dastard>
+Subject: Re: [PATCH 8/8] xfs: add lots of attribute trace points
+Message-ID: <20120324134206.GB25674@infradead.org>
+References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
+	<1332393313-1955-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120321232029.GZ5091@dastard>
+In-Reply-To: <1332393313-1955-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,17 +30,44 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 22, 2012 at 10:20:29AM +1100, Dave Chinner wrote:
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Thu, Mar 22, 2012 at 04:15:13PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Looks OK, but I'm just not sure that all the necessary places to
-> remove the inode from the AIL have been found. How did you find
-> them, and how can we validate them?
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-We flush all inodes during either an unmount of also periodically,
-so we'll git it there eventually.  
+Looks good mostly good, minor comments below:
+
+>  	/*
+> -	 * Copy the attribute name and value into the new space.
+> -	 *
+
+Why does this get removed?
+
+>  
+>  #define DEFINE_DIR2_EVENT(name) \
+> -DEFINE_EVENT(xfs_dir2_class, name, \
+> +DEFINE_EVENT(xfs_da_class, name, \
+>  	TP_PROTO(struct xfs_da_args *args), \
+>  	TP_ARGS(args))
+
+
+> +#define DEFINE_ATTR_EVENT(name) \
+> +DEFINE_EVENT(xfs_da_class, name, \
+> +	TP_PROTO(struct xfs_da_args *args), \
+> +	TP_ARGS(args))
+
+> +#define DEFINE_DA_EVENT(name) \
+> +DEFINE_EVENT(xfs_da_class, name, \
+> +	TP_PROTO(struct xfs_da_args *args), \
+> +	TP_ARGS(args))
+
+We should use the DEFINE_DA_EVENT macro for all of these tracepoints,
+instead of having two duplicates of it.
+
+Also all the tracepoints should print of which fork we operate on,
+which is useful at least for the ones in common code.
 
 _______________________________________________
 xfs mailing list
