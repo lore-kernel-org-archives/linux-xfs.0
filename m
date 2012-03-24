@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2OH42Sn068138 for <xfs@oss.sgi.com>; Sat, 24 Mar 2012 12:04:03 -0500
+	q2OH39HA067844 for <xfs@oss.sgi.com>; Sat, 24 Mar 2012 12:03:09 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	AvvGhTkDTDejzrut (version=TLSv1 cipher=AES256-SHA bits=256
+	HshsSG5rpKVJ4XJU (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 24 Mar 2012 10:04:02 -0700 (PDT)
-Date: Sat, 24 Mar 2012 13:04:01 -0400
+	Sat, 24 Mar 2012 10:03:03 -0700 (PDT)
+Date: Sat, 24 Mar 2012 13:03:02 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: LVM volume with XFS file system hanged
-Message-ID: <20120324170401.GC21708@infradead.org>
-References: <CANs4eSAs3B3qjMN=Z56-Y9HfXBsGNbJ_QD0hNmpYu8VcP-Ce8w@mail.gmail.com>
+Subject: Re: [PATCH 2/2] xfs: avoid shutdown hang in xlog_wait()
+Message-ID: <20120324170302.GB21708@infradead.org>
+References: <1332467263-12985-1-git-send-email-david@fromorbit.com>
+	<1332467263-12985-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CANs4eSAs3B3qjMN=Z56-Y9HfXBsGNbJ_QD0hNmpYu8VcP-Ce8w@mail.gmail.com>
+In-Reply-To: <1332467263-12985-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,28 +29,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Supratik Goswami <supratiksekhar@gmail.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Mar 23, 2012 at 02:19:05PM +0530, Supratik Goswami wrote:
-> Hi
+On Fri, Mar 23, 2012 at 12:47:43PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Our current system is running Ubuntu 10.04 with a the below kernel version.
+> When a shutdown is triggered from failing to find an item in the AIL
+> during delete, we can be called from either metadata IO completion
+> context or from log IO completion context. In the case of log IO
+> completion context, we must indicate that this is a log error so
+> that the forced shutdown does not attempt to flush the log.
 > 
-> root@ip-10-0-1-117:~# cat /etc/issue
-> Ubuntu 10.04.4 LTS \n \l
+> To flush the log whilst in log IO completion will cause a deadlock
+> as the shutdown won't proceed until log IO completes, and log Io
+> cannot complete because it has blocked waiting for itself to
+> complete....
 > 
-> root@ip-10-0-1-117:~# uname -a
-> Linux ip-10-0-1-117 2.6.32-343-ec2 #45-Ubuntu SMP Tue Feb 14 18:18:17
-> UTC 2012 x86_64 GNU/Linux
-> 
-> We have an LVM volume which is using XFS filesystem. We found the
-> below call trace in /var/log/messages when it was unresponsive.
-> 
-> Can anyone please tell me what went wrong ?
+> We delete items in the AIL from log IO completion when we are
+> unpinning in-memory only items, or items that do not require
+> writeback to remove from the AIL (e.g. EFI/EFD items). Hence there
+> are several locations that need this treatment.
 
-Device mapper is hanging for some reason, and XFS waits for it to
-finish.
+Looks good.  I wonder if it might be simple to simply pass a flags
+argument to xfs_ail_delete(_bulk) which tells which kind of shutdown
+to do.
 
 _______________________________________________
 xfs mailing list
