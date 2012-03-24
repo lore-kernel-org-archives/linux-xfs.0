@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2OH6KIe068543 for <xfs@oss.sgi.com>; Sat, 24 Mar 2012 12:06:20 -0500
+	q2OH1q6J067626 for <xfs@oss.sgi.com>; Sat, 24 Mar 2012 12:01:52 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	SfQ4CrKNlywnfzpH (version=TLSv1 cipher=AES256-SHA bits=256
+	9I3gD7mZPEGeus5F (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 24 Mar 2012 10:06:19 -0700 (PDT)
-Date: Sat, 24 Mar 2012 13:06:18 -0400
+	Sat, 24 Mar 2012 10:01:48 -0700 (PDT)
+Date: Sat, 24 Mar 2012 13:01:46 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] xfs: implement freezing by emptying the AIL
-Message-ID: <20120324170618.GD21708@infradead.org>
-References: <20120316175541.258282540@bombadil.infradead.org>
-	<20120316175636.554421689@bombadil.infradead.org>
-	<20120321235738.GB5091@dastard>
+Subject: Re: [PATCH 1/2] xfs: move shutdown out of xfs_trans_ail_delete_bulk
+Message-ID: <20120324170146.GA21708@infradead.org>
+References: <1332467263-12985-1-git-send-email-david@fromorbit.com>
+	<1332467263-12985-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120321235738.GB5091@dastard>
+In-Reply-To: <1332467263-12985-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,41 +30,50 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 22, 2012 at 10:57:38AM +1100, Dave Chinner wrote:
-> > +	 * threshold.
-> > +	 */
-> > +	if (atomic_read(&ailp->xa_wait_empty))
-> > +		target = xfs_ail_max(ailp)->li_lsn;
-> 
-> I don't think this is safe - we may have finished pushing the AIL to
-> empty, but the waiter that decrements xa_wait_empty may not have run
-> yet and we can race with that. In that case, xfs_ail_max() will
-> return NULL as the AIL is empty.
+>  	spin_lock(&ailp->xa_lock);
+> -	xfs_trans_ail_delete(ailp, (xfs_log_item_t *)qfs);
+> +	error = xfs_trans_ail_delete(ailp, (struct xfs_log_item *)qfs);
 
-True - I'll add a check for that.
+please make this a:
 
-> > +{
-> > +	DEFINE_WAIT(wait);
-> > +
-> > +	/*
-> > +	 * We use a counter instead of a flag here to support multiple
-> > +	 * processes calling into sync at the same time.
-> > +	 */
-> > +	atomic_inc(&ailp->xa_wait_empty);
-> > +	do {
-> > +		prepare_to_wait(&ailp->xa_empty, &wait, TASK_KILLABLE);
-> 
-> Why a killable wait? We need to wait until the push is complete
-> before returning because we can't return an error and we don't want
-> ctrl-c to break out of this loop while writeback it still taking
-> place on a non-shutdown based unmount (e.g. got thousands of inodes
-> to write on a slow RAID5 device doing RMW cycles for every inode).
+	error = xfs_trans_ail_delete(ailp, &qfs->qli_item);
 
-The idea was to ease debugging if we couldn't empty the AIL.  But given
-that we'd leak tons of structures that probably is not a good idea.
-I'll change it.
+while you're at it.
+
+>  		if (lip->li_flags & XFS_LI_IN_AIL) {
+>  			spin_lock(&ailp->xa_lock);
+> -			if (lip->li_flags & XFS_LI_IN_AIL)
+> -				xfs_trans_ail_delete(ailp, lip);
+> -			else
+> +			if (lip->li_flags & XFS_LI_IN_AIL) {
+> +				int	error = xfs_trans_ail_delete(ailp, lip);
+> +				if (error == EFSCORRUPTED)
+> +					xfs_force_shutdown(ailp->xa_mount,
+> +							SHUTDOWN_CORRUPT_INCORE);
+> +			} else
+
+Given that we already have two checks for XFS_LI_IN_AIL around the
+call to xfs_trans_ail_delete I don't think we need to handle the error
+here.
+
+> @@ -887,8 +892,13 @@ xfs_iflush_abort(
+>  		if (iip->ili_item.li_flags & XFS_LI_IN_AIL) {
+>  			spin_lock(&ailp->xa_lock);
+>  			if (iip->ili_item.li_flags & XFS_LI_IN_AIL) {
+> +				int	error;
+>  				/* xfs_trans_ail_delete() drops the AIL lock. */
+> -				xfs_trans_ail_delete(ailp, (xfs_log_item_t *)iip);
+> +				error = xfs_trans_ail_delete(ailp,
+> +							(xfs_log_item_t *)iip);
+> +				if (error == EFSCORRUPTED)
+> +					xfs_force_shutdown(ailp->xa_mount,
+> +							SHUTDOWN_CORRUPT_INCORE);
+
+Same argument here.
+
+Also please pass in &iip->>ili_item instead of the cast here.
 
 _______________________________________________
 xfs mailing list
