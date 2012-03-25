@@ -1,24 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2PBS96T077734 for <xfs@oss.sgi.com>; Sun, 25 Mar 2012 06:28:11 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	VYuv7yO15ESVjbOl (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 Mar 2012 04:28:04 -0700 (PDT)
-Date: Sun, 25 Mar 2012 07:28:01 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/2] xfs: avoid shutdown hang in xlog_wait()
-Message-ID: <20120325112801.GA7157@infradead.org>
-References: <1332467263-12985-1-git-send-email-david@fromorbit.com>
-	<1332467263-12985-3-git-send-email-david@fromorbit.com>
-	<20120324170302.GB21708@infradead.org>
-	<20120324224648.GF5091@dastard>
+	q2PIKevS175166 for <xfs@oss.sgi.com>; Sun, 25 Mar 2012 13:20:40 -0500
+Received: from mail.windriver.com (mail.windriver.com [147.11.1.11]) by
+	cuda.sgi.com with ESMTP id WwMg1jcbN3DScZ4o (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 25 Mar 2012 11:20:38 -0700 (PDT)
+Message-ID: <4F6F61F3.40903@windriver.com>
+Date: Sun, 25 Mar 2012 14:20:35 -0400
+From: Paul Gortmaker <paul.gortmaker@windriver.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120324224648.GF5091@dastard>
+Subject: Building tilegx defconfig gets init/exit section errors in xfs.
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +23,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: linux-next@vger.kernel.org, cmetcalf@tilera.com
 
-On Sun, Mar 25, 2012 at 09:46:49AM +1100, Dave Chinner wrote:
-> > Looks good.  I wonder if it might be simple to simply pass a flags
-> > argument to xfs_ail_delete(_bulk) which tells which kind of shutdown
-> > to do.
-> 
-> I thought about doing that, but it seems strange and unusual to tell
-> code how to handle errors internally instead of returning the error
-> and letting the caller handle it...
-> 
-> I don't mind either way, though. If you prefer I pass in the
-> shutdown flag, I can change it all to do that....
+Hi All,
 
-I don't have a strong opinion.  Moving the shutdown to the caller is
-cleaner for sure, but it's a lot of churn when the other version would
+Recently the tilegx defconfig was added to the linux-next build
+coverage, which exposed this.
+ 
+LD      .tmp_vmlinux1
+`xfs_qm_exit' referenced in section `.init.text' of fs/built-in.o:
+ defined in discarded section `.exit.text' of fs/built-in.o
+make[1]: *** [.tmp_vmlinux1] Error 1
+
+http://kisskb.ellerman.id.au/kisskb/buildresult/5941293/
+
+It seemed odd to me, since I didn't think there was anything arch
+specific in the init/exit sectioning, so I thought I'd mention it
+here, just in case it hasn't been brought up before.
+
+Thanks,
+Paul.
 
 _______________________________________________
 xfs mailing list
