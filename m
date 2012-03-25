@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2PIKevS175166 for <xfs@oss.sgi.com>; Sun, 25 Mar 2012 13:20:40 -0500
-Received: from mail.windriver.com (mail.windriver.com [147.11.1.11]) by
-	cuda.sgi.com with ESMTP id WwMg1jcbN3DScZ4o (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 25 Mar 2012 11:20:38 -0700 (PDT)
-Message-ID: <4F6F61F3.40903@windriver.com>
-Date: Sun, 25 Mar 2012 14:20:35 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
+	q2PNNCil252917 for <xfs@oss.sgi.com>; Sun, 25 Mar 2012 18:23:13 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	WDR1MIeYyH3mhlE5 for <xfs@oss.sgi.com>;
+	Sun, 25 Mar 2012 16:23:10 -0700 (PDT)
+Date: Mon, 26 Mar 2012 10:22:53 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/8] xfs: initialise xfssync work before running
+	quotachecks
+Message-ID: <20120325232253.GJ5091@dastard>
+References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
+	<1332393313-1955-4-git-send-email-david@fromorbit.com>
+	<20120322151548.GS7762@sgi.com> <20120322210723.GC5091@dastard>
+	<4F6C7BE7.3060100@sgi.com>
 MIME-Version: 1.0
-Subject: Building tilegx defconfig gets init/exit section errors in xfs.
+Content-Disposition: inline
+In-Reply-To: <4F6C7BE7.3060100@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,27 +30,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: linux-next@vger.kernel.org, cmetcalf@tilera.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-Hi All,
+On Fri, Mar 23, 2012 at 08:34:31AM -0500, Mark Tinguely wrote:
+> On 03/22/12 16:07, Dave Chinner wrote:
+> >On Thu, Mar 22, 2012 at 10:15:48AM -0500, Ben Myers wrote:
+> >>On Thu, Mar 22, 2012 at 04:15:08PM +1100, Dave Chinner wrote:
+> >>>From: Dave Chinner<dchinner@redhat.com>
+> >>>
+> >>>Because the mount process can run a quotacheck and consume lots of
+> >>>inodes, we need to be able to run periodic inode reclaim during the
+> >>>mount process. This will prevent running the system out of memory
+> >>>during quota checks.
+> >>>
+> >>>This essentially reverts 2bcf6e97, but that is safe to do now that
+> >>>the quota sync code that was causing problems during long quotacheck
+> >>>executions is now gone.
+> >>
+> >>Dave, I've held off on #s 3 and 4 because they appear to be racy.  Being
+> >
+> >What race?
+> >
+> >Cheers,
+> >
+> >Dave
+> 
+> 
+> 2 of the sync workers use iterators
+>  xfs_inode_ag_iterator()
+>   xfs_perag_get()
+>    radix_tree_lookup(&mp->m_perag_tree, agno)
+> 
+> The race I was worried about was in xfs_mount() to initialize the
+> mp->m_perag_lock, and the radix tree initialization:
+>  INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC)).
+> 
+> There is a lock and 2 or 3 unbuffered I/O are performed in xfs_mountfs()
+> before the mp->m_perag_tree is initialized.
 
-Recently the tilegx defconfig was added to the linux-next build
-coverage, which exposed this.
- 
-LD      .tmp_vmlinux1
-`xfs_qm_exit' referenced in section `.init.text' of fs/built-in.o:
- defined in discarded section `.exit.text' of fs/built-in.o
-make[1]: *** [.tmp_vmlinux1] Error 1
+Yes they are uncached IOs so do not utilise the cache that
+requires the mp->m_perag_tree to be initialised.
 
-http://kisskb.ellerman.id.au/kisskb/buildresult/5941293/
+> I was also looking at the xfs_perag_t being allocated in mountfs()
+> and being deallocated in umountfs(), but it turns out that is not
+> important, xfs_perag_get() will return NULL if these have not been
+> allocated yet or have been removed for the required ag.
 
-It seemed odd to me, since I didn't think there was anything arch
-specific in the init/exit sectioning, so I thought I'd mention it
-here, just in case it hasn't been brought up before.
+Correct. The other side of that is that if xfssyncd is doing some
+form of inode cache iteration, it will simply not find any perag
+structures to scani and hence won't cause problems. Same with the
+reclaim worker.
 
-Thanks,
-Paul.
+Were there any other issues?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
