@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QMI6wk103323 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 17:18:07 -0500
+	q2QMDcRY102837 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 17:13:38 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	pZcR0K6o9yDTSzDm for <xfs@oss.sgi.com>;
-	Mon, 26 Mar 2012 15:18:05 -0700 (PDT)
-Date: Tue, 27 Mar 2012 09:17:51 +1100
+	7G8ZvcBG3EFtg1VH for <xfs@oss.sgi.com>;
+	Mon, 26 Mar 2012 15:13:37 -0700 (PDT)
+Date: Tue, 27 Mar 2012 09:13:30 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/5] xfs: reduce ilock hold times in xfs_setattr_size
-Message-ID: <20120326221750.GR5091@dastard>
+Subject: Re: [PATCH 1/5] xfs: avoid taking the ilock unnessecarily in
+	xfs_qm_dqattach
+Message-ID: <20120326221330.GP5091@dastard>
 References: <20120326211421.518374058@bombadil.infradead.org>
-	<20120326211603.455167123@bombadil.infradead.org>
+	<20120326211603.074328642@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120326211603.455167123@bombadil.infradead.org>
+In-Reply-To: <20120326211603.074328642@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,20 +31,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Mon, Mar 26, 2012 at 05:14:24PM -0400, Christoph Hellwig wrote:
-> We do not need the ilock for most checks done in the beginning of
-> xfs_setattr_size.  Replace the long critical section before starting the
-> transaction with a smaller one around xfs_zero_eof and an optional one
-> inside xfs_qm_dqattach that isn't entered unless using quotas.  While
-> this isn't a big optimization for xfs_setattr_size itself it will allow
-> pushing the ilock into xfs_zero_eof itself later.
+On Mon, Mar 26, 2012 at 05:14:22PM -0400, Christoph Hellwig wrote:
+> Check if we actually need to attach a dquot before taking the ilock in
+> xfs_qm_dqattach.  This avoid superflous lock roundtrips for the common cases
+> of quota support compiled in but not activated on a filesystem and an
+> inode that already has the dquots attached.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks sane to me.
+Looks good. One minor thing:
+
+> +static inline bool
+> +xfs_qm_need_dqattach(
+> +	struct xfs_inode	*ip)
+> +{
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +
+> +	if (!XFS_IS_QUOTA_RUNNING(mp))
+> +		return false;
+> +	if (!XFS_IS_QUOTA_ON(mp))
+> +		return false;
+> +	if (!XFS_NOT_DQATTACHED(mp, ip))
+> +		return false;
+> +	if (ip->i_ino == mp->m_sb.sb_uquotino ||
+> +	    ip->i_ino == mp->m_sb.sb_gquotino)
+> +		return false;
+> +	return true;
+> +}
+
+That's probably a little large for an inline function. Let the
+compiler decide whether to inline it or not. In most cases, it will
+inline it because it is a static function....
+
+Otherwise,
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
