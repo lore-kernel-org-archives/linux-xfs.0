@@ -1,20 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QJUbUT074319 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 14:30:37 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id oFrdm9QsqQyAOqir for
-	<xfs@oss.sgi.com>; Mon, 26 Mar 2012 12:30:35 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q2QJUZA1006775
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 15:30:35 -0400
-Message-ID: <4F70C3D9.80708@redhat.com>
-Date: Mon, 26 Mar 2012 14:30:33 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfstests 235: do smaller test IO
+	q2QLG7qi093869 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 16:16:07 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	YwoXceCxBOF0m6C3 (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Mar 2012 14:16:03 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1SCHGl-0000rH-45
+	for xfs@oss.sgi.com; Mon, 26 Mar 2012 21:16:03 +0000
+Message-Id: <20120326211603.074328642@bombadil.infradead.org>
+Date: Mon, 26 Mar 2012 17:14:22 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH 1/5] xfs: avoid taking the ilock unnessecarily in
+	xfs_qm_dqattach
+References: <20120326211421.518374058@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-optimize-dqattach-locking
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,55 +26,75 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Eryu Guan <eguan@redhat.com>
+To: xfs@oss.sgi.com
 
-Test 235 fails on ext2/ext3 with 1024 fs block size because a
-16k write uses an extra metadata block.  If we do a smaller write
-this won't happen.
+Check if we actually need to attach a dquot before taking the ilock in
+xfs_qm_dqattach.  This avoid superflous lock roundtrips for the common cases
+of quota support compiled in but not activated on a filesystem and an
+inode that already has the dquots attached.
 
-Reported by: Eryu Guan <eguan@redhat.com>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+
 ---
+ fs/xfs/xfs_qm.c |   26 +++++++++++++++++++++-----
+ 1 file changed, 21 insertions(+), 5 deletions(-)
 
-diff --git a/235 b/235
-index 7150fca..0c2ae8f 100755
---- a/235
-+++ b/235
-@@ -70,7 +70,7 @@ mount -o remount,ro $SCRATCH_DEV 2>&1 | tee -a $seq.full | _filter_scratch
- touch $SCRATCH_MNT/failed 2>&1 | tee -a $seq.full | _filter_scratch
- mount -o remount,rw $SCRATCH_DEV 2>&1 | tee -a $seq.full | _filter_scratch
+Index: xfs/fs/xfs/xfs_qm.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_qm.c	2012-03-26 21:11:12.000000000 +0200
++++ xfs/fs/xfs/xfs_qm.c	2012-03-26 21:13:13.342148303 +0200
+@@ -476,6 +476,23 @@ done:
+ 	xfs_dqunlock(udq);
+ }
  
--$XFS_IO_PROG -F -c 'pwrite 0 16k' -c 'fsync' \
-+$XFS_IO_PROG -F -c 'pwrite 0 8k' -c 'fsync' \
- 			$SCRATCH_MNT/testfile >>$seq.full 2>&1
- repquota -u -g $SCRATCH_MNT  | grep -v "^root" | _filter_scratch
++static inline bool
++xfs_qm_need_dqattach(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	if (!XFS_IS_QUOTA_RUNNING(mp))
++		return false;
++	if (!XFS_IS_QUOTA_ON(mp))
++		return false;
++	if (!XFS_NOT_DQATTACHED(mp, ip))
++		return false;
++	if (ip->i_ino == mp->m_sb.sb_uquotino ||
++	    ip->i_ino == mp->m_sb.sb_gquotino)
++		return false;
++	return true;
++}
  
-diff --git a/235.out b/235.out
-index 345e29d..a095694 100644
---- a/235.out
-+++ b/235.out
-@@ -21,7 +21,7 @@ Block grace time: 7days; Inode grace time: 7days
-                         Block limits                File limits
- User            used    soft    hard  grace    used  soft  hard  grace
- ----------------------------------------------------------------------
--fsgqa     --      16       0       0              1     0     0       
-+fsgqa     --       8       0       0              1     0     0       
+ /*
+  * Given a locked inode, attach dquot(s) to it, taking U/G/P-QUOTAON
+@@ -493,11 +510,7 @@ xfs_qm_dqattach_locked(
+ 	uint		nquotas = 0;
+ 	int		error = 0;
  
+-	if (!XFS_IS_QUOTA_RUNNING(mp) ||
+-	    !XFS_IS_QUOTA_ON(mp) ||
+-	    !XFS_NOT_DQATTACHED(mp, ip) ||
+-	    ip->i_ino == mp->m_sb.sb_uquotino ||
+-	    ip->i_ino == mp->m_sb.sb_gquotino)
++	if (!xfs_qm_need_dqattach(ip))
+ 		return 0;
  
- *** Report for group quotas on device SCRATCH_DEV
-@@ -29,6 +29,6 @@ Block grace time: 7days; Inode grace time: 7days
-                         Block limits                File limits
- Group           used    soft    hard  grace    used  soft  hard  grace
- ----------------------------------------------------------------------
--fsgqa     --      16       0       0              1     0     0       
-+fsgqa     --       8       0       0              1     0     0       
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+@@ -568,6 +581,9 @@ xfs_qm_dqattach(
+ {
+ 	int			error;
  
- 
++	if (!xfs_qm_need_dqattach(ip))
++		return 0;
++
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	error = xfs_qm_dqattach_locked(ip, flags);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 
 _______________________________________________
 xfs mailing list
