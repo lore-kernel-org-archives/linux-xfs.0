@@ -1,11 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QLrZfo100570 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 16:53:35 -0500
-Date: Mon, 26 Mar 2012 16:53:44 -0500
-From: Ben Myers <bpm@sgi.com>
+	q2QLxNdN101286 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 16:59:23 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	x2e9CVEo0bFXvDIj for <xfs@oss.sgi.com>;
+	Mon, 26 Mar 2012 14:59:21 -0700 (PDT)
+Date: Tue, 27 Mar 2012 08:59:19 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Building tilegx defconfig gets init/exit section errors in xfs.
-Message-ID: <20120326215344.GX7762@sgi.com>
+Message-ID: <20120326215919.GN5091@dastard>
 References: <4F6F61F3.40903@windriver.com>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -25,9 +29,9 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Paul Gortmaker <paul.gortmaker@windriver.com>
 Cc: linux-next@vger.kernel.org, cmetcalf@tilera.com, xfs@oss.sgi.com
 
-Hey Paul,
-
 On Sun, Mar 25, 2012 at 02:20:35PM -0400, Paul Gortmaker wrote:
+> Hi All,
+> 
 > Recently the tilegx defconfig was added to the linux-next build
 > coverage, which exposed this.
 >  
@@ -42,11 +46,17 @@ On Sun, Mar 25, 2012 at 02:20:35PM -0400, Paul Gortmaker wrote:
 > specific in the init/exit sectioning, so I thought I'd mention it
 > here, just in case it hasn't been brought up before.
 
-Yep, this is fixed in the xfs master branch, and we'll be requesting a pull
-ASAP.  Thanks for reporting it!  ;)
+Already been reported, a patch has been provided, too. So the fix
+is underway.
 
-Regards,
-	Ben
+Thanks for reporting the problem anyway, Paul.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
