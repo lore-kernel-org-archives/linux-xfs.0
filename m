@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QMDcRY102837 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 17:13:38 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	7G8ZvcBG3EFtg1VH for <xfs@oss.sgi.com>;
-	Mon, 26 Mar 2012 15:13:37 -0700 (PDT)
-Date: Tue, 27 Mar 2012 09:13:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/5] xfs: avoid taking the ilock unnessecarily in
-	xfs_qm_dqattach
-Message-ID: <20120326221330.GP5091@dastard>
-References: <20120326211421.518374058@bombadil.infradead.org>
-	<20120326211603.074328642@bombadil.infradead.org>
+	q2QMLJh6103710 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 17:21:19 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 5J6CHTmaTLiyBUP2 for
+	<xfs@oss.sgi.com>; Mon, 26 Mar 2012 15:21:17 -0700 (PDT)
+Message-ID: <4F70EBD8.9030006@redhat.com>
+Date: Mon, 26 Mar 2012 17:21:12 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120326211603.074328642@bombadil.infradead.org>
+Subject: Re: [PATCH] xfstests 235: do smaller test IO
+References: <4F70C3D9.80708@redhat.com> <20120326220926.GO5091@dastard>
+In-Reply-To: <20120326220926.GO5091@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,47 +24,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Mar 26, 2012 at 05:14:22PM -0400, Christoph Hellwig wrote:
-> Check if we actually need to attach a dquot before taking the ilock in
-> xfs_qm_dqattach.  This avoid superflous lock roundtrips for the common cases
-> of quota support compiled in but not activated on a filesystem and an
-> inode that already has the dquots attached.
+On 3/26/12 5:09 PM, Dave Chinner wrote:
+> On Mon, Mar 26, 2012 at 02:30:33PM -0500, Eric Sandeen wrote:
+>> Test 235 fails on ext2/ext3 with 1024 fs block size because a
+>> 16k write uses an extra metadata block.  If we do a smaller write
+>> this won't happen.
+> .....
+>>  
+>> -$XFS_IO_PROG -F -c 'pwrite 0 16k' -c 'fsync' \
+>> +$XFS_IO_PROG -F -c 'pwrite 0 8k' -c 'fsync' \
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> So now it fails only on 512 byte block size filesystems?
 
-Looks good. One minor thing:
+ext[23] don't do 512 byte block filesystems, so no.  ;)
 
-> +static inline bool
-> +xfs_qm_need_dqattach(
-> +	struct xfs_inode	*ip)
-> +{
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +
-> +	if (!XFS_IS_QUOTA_RUNNING(mp))
-> +		return false;
-> +	if (!XFS_IS_QUOTA_ON(mp))
-> +		return false;
-> +	if (!XFS_NOT_DQATTACHED(mp, ip))
-> +		return false;
-> +	if (ip->i_ino == mp->m_sb.sb_uquotino ||
-> +	    ip->i_ino == mp->m_sb.sb_gquotino)
-> +		return false;
-> +	return true;
-> +}
+> Perhaps rather than an exact match, a "within_tolerance" match could
+> be done on the relevant fields?
+> 
+> i.e something like:
+> 
+> blksused=`{requota cmd} | awk '/fsgqa/ { print $3 }'`
+> _within_tolerance "blocks used" $blksused 16 1
+> 
+> If you wanted to get really fancy, the tolerance could be set
+> depending on filesystem type and block size, but I don't think that
+> is really necessary....
 
-That's probably a little large for an inline function. Let the
-compiler decide whether to inline it or not. In most cases, it will
-inline it because it is a static function....
+But I don't want to get really fancy, I spend enough time in xfstests
+already.  ;)
 
-Otherwise,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+TBH even the _within_tolerance will take more munging around to get right,
+it doesn't seem worth it, but if it's required for a review, ok...
+
+-Eric
+
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
