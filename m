@@ -1,14 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QMAo6q102648 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 17:10:50 -0500
-Message-ID: <4F70E951.50009@windriver.com>
-Date: Mon, 26 Mar 2012 18:10:25 -0400
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
+	q2QMD2VP102786 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 17:13:02 -0500
+Received: from USMAMAIL.TILERA.COM (usmamail.tilera.com [206.83.70.75]) by
+	cuda.sgi.com with ESMTP id 7xTsiTJTYHWA6FLm (version=TLSv1
+	cipher=AES128-SHA bits=128 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 26 Mar 2012 15:13:01 -0700 (PDT)
+Message-ID: <4F70E9EA.5010207@tilera.com>
+Date: Mon, 26 Mar 2012 18:12:58 -0400
+From: Chris Metcalf <cmetcalf@tilera.com>
 MIME-Version: 1.0
 Subject: Re: Building tilegx defconfig gets init/exit section errors in xfs.
 References: <4F6F61F3.40903@windriver.com> <20120326215919.GN5091@dastard>
-In-Reply-To: <20120326215919.GN5091@dastard>
+	<4F70E951.50009@windriver.com>
+In-Reply-To: <4F70E951.50009@windriver.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,8 +26,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: bpm@sgi.com, linux-next@vger.kernel.org, cmetcalf@tilera.com, xfs@oss.sgi.com
+To: Paul Gortmaker <paul.gortmaker@windriver.com>
+Cc: bpm@sgi.com, linux-next@vger.kernel.org, xfs@oss.sgi.com
 
 On 12-03-26 05:59 PM, Dave Chinner wrote:
 > On Sun, Mar 25, 2012 at 02:20:35PM -0400, Paul Gortmaker wrote:
@@ -41,27 +46,17 @@ On 12-03-26 05:59 PM, Dave Chinner wrote:
 >> It seemed odd to me, since I didn't think there was anything arch
 >> specific in the init/exit sectioning, so I thought I'd mention it
 >> here, just in case it hasn't been brought up before.
-> 
 > Already been reported, a patch has been provided, too. So the fix
 > is underway.
-> 
+>
 > Thanks for reporting the problem anyway, Paul.
 
-Thanks Dave, Ben - seems gmane archive isn't easily searchable, but
-the nabble one is.  I'll add this link to the linux-next triage
-report until the fix appears in a linux-next build:
+And I'll second that with my thanks for adding tilegx to the linux-next
+build coverage!  Please do continue to cc me on any issues that are exposed.
 
-http://old.nabble.com/-PATCH--fs%3A-xfs%3A-fix-section-mismatch-in-linux-next-td33519270.html
-
-And next time I'll try harder to search a useful archive.  :)
-
-Paul.
-
-
-> 
-> Cheers,
-> 
-> Dave.
+-- 
+Chris Metcalf, Tilera Corp.
+http://www.tilera.com
 
 _______________________________________________
 xfs mailing list
