@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QFAsnW260337 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 10:10:54 -0500
-Message-ID: <4F7086FA.9010003@sgi.com>
-Date: Mon, 26 Mar 2012 10:10:50 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 3/8] xfs: initialise xfssync work before running
-	quotachecks
-References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
-	<1332393313-1955-4-git-send-email-david@fromorbit.com>
-	<20120322151548.GS7762@sgi.com> <20120322210723.GC5091@dastard>
-	<4F6C7BE7.3060100@sgi.com> <20120325232253.GJ5091@dastard>
-In-Reply-To: <20120325232253.GJ5091@dastard>
+	q2QG5enK025402 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 11:05:40 -0500
+Received: from mx0.pronet.com.pl (mx0.pronet.com.pl [193.108.35.26]) by
+	cuda.sgi.com with ESMTP id KyAw3ho1CjWQ6PZT for
+	<xfs@oss.sgi.com>; Mon, 26 Mar 2012 09:05:37 -0700 (PDT)
+Subject: Re: XFS: Assertion failed: bp->b_bn != XFS_BUF_DADDR_NULL, file:
+	fs/xfs/xfs_buf.c, line: 598
+From: =?UTF-8?Q?Rafa=C5=82?= Kupka <kupson@kupson.net>
+In-Reply-To: <1331233817.20679.18.camel@utemp.mieszkanie>
+References: <1330539626.7615.73.camel@utemp.mieszkanie>
+	<20120302104348.GA22230@infradead.org>
+	<1330774627.32457.24.camel@utemp.mieszkanie>
+	<20120303114413.GA18748@infradead.org>
+	<1330983612.28645.18.camel@utemp.mieszkanie>
+	<20120306203020.GG3592@dastard>
+	<1331233817.20679.18.camel@utemp.mieszkanie>
+Date: Mon, 26 Mar 2012 18:05:25 +0200
+Message-ID: <1332777925.14696.194.camel@utemp.mieszkanie>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,79 +27,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 03/25/12 18:22, Dave Chinner wrote:
-> On Fri, Mar 23, 2012 at 08:34:31AM -0500, Mark Tinguely wrote:
->> >  On 03/22/12 16:07, Dave Chinner wrote:
->>> >  >On Thu, Mar 22, 2012 at 10:15:48AM -0500, Ben Myers wrote:
->>>> >  >>On Thu, Mar 22, 2012 at 04:15:08PM +1100, Dave Chinner wrote:
->>>>> >  >>>From: Dave Chinner<dchinner@redhat.com>
->>>>> >  >>>
->>>>> >  >>>Because the mount process can run a quotacheck and consume lots of
->>>>> >  >>>inodes, we need to be able to run periodic inode reclaim during the
->>>>> >  >>>mount process. This will prevent running the system out of memory
->>>>> >  >>>during quota checks.
->>>>> >  >>>
->>>>> >  >>>This essentially reverts 2bcf6e97, but that is safe to do now that
->>>>> >  >>>the quota sync code that was causing problems during long quotacheck
->>>>> >  >>>executions is now gone.
->>>> >  >>
->>>> >  >>Dave, I've held off on #s 3 and 4 because they appear to be racy.  Being
->>> >  >
->>> >  >What race?
->>> >  >
->>> >  >Cheers,
->>> >  >
->>> >  >Dave
->> >
->> >
->> >  2 of the sync workers use iterators
->> >    xfs_inode_ag_iterator()
->> >     xfs_perag_get()
->> >      radix_tree_lookup(&mp->m_perag_tree, agno)
->> >
->> >  The race I was worried about was in xfs_mount() to initialize the
->> >  mp->m_perag_lock, and the radix tree initialization:
->> >    INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC)).
->> >
->> >  There is a lock and 2 or 3 unbuffered I/O are performed in xfs_mountfs()
->> >  before the mp->m_perag_tree is initialized.
-> Yes they are uncached IOs so do not utilise the cache that
-> requires the mp->m_perag_tree to be initialised.
+On Thu, 2012-03-08 at 20:10 +0100, Rafa=B3 Kupka wrote: =
 
-The point I was trying to make is the sync workers use iterators. The 
-race is to get the mp->m_perag_tree initialized before one of the sync 
-workers tries to do a xfs_perag_get().
+> On Wed, 2012-03-07 at 07:30 +1100, Dave Chinner wrote:
 
-I mentioned the lock and the 2 or 3 unbuffered I/O because they are the 
-potential items that can take some time between starting the sync 
-workers and intializing the m_perag_tree radix tree.
+Hi,
 
->> >  I was also looking at the xfs_perag_t being allocated in mountfs()
->> >  and being deallocated in umountfs(), but it turns out that is not
->> >  important, xfs_perag_get() will return NULL if these have not been
->> >  allocated yet or have been removed for the required ag.
-> Correct. The other side of that is that if xfssyncd is doing some
-> form of inode cache iteration, it will simply not find any perag
-> structures to scani and hence won't cause problems. Same with the
-> reclaim worker.
->
-> Were there any other issues?
->
-> Cheers,
->
-> Dave.
-> -- Dave Chinner david@fromorbit.com
+Finally I've captured this event trace. Hope it will help.
 
-Thanks,
+> > Also, it might be worthwhile to capture an event trace (e.g. all the
+> > xfs_buf events) to see what occurs just before the error is
+> > triggered. That might tell us exactl what sequence has occurred
+> > leading up to the error.
+> =
 
---Mark Tinguely
+> I will try to provide this information in a few days.
+
+Kernel version - Linus tree up to:
+0e6e847f "xfs: stop using the page cache to back the buffer cache"
+
+It's uniprocessor virtual machine (KVM) with 384 MB RAM.
+
+Full event trace is available at https://gist.github.com/2206109
+(sorry for it's *.perl extension, my mistake).
+
+Kernel log entry:
+[  495.197571] XFS (vda2): I/O error occurred: meta-data dev vda2 block 0x1=
+3d80       ("xfs_trans_read_buf") error 5 buf count 8192
+[  495.198283] XFS (vda2): xfs_imap_to_bp: xfs_trans_read_buf() returned er=
+ror 5.
+[  501.540477] XFS (vda2): I/O error occurred: meta-data dev vda2 block 0x1=
+3d80       ("xfs_trans_read_buf") error 5 buf count 8192
+[  501.543047] XFS (vda2): xfs_imap_to_bp: xfs_trans_read_buf() returned er=
+ror 5.
+
+It's possible that this "I/O error" is caused by memory pressure?
+
+Related trace line:
+xfsdump-2498  [000] 24195.782269: xfs_buf_ioerror: dev 254:2 bno 0x13d80 le=
+n 0x2000 hold 3 pincount 0 lock 0 error 5 flags READ|TRYLOCK|PAGES caller _=
+xfs_buf_ioapply
+
+Events related to "bno 0x13d80":
+xfsdump-2498  [000] 24195.782266: xfs_buf_get: dev 254:2 bno 0x13d80 len 0x=
+2000 hold 2 pincount 0 lock 0 flags READ|LOCK|DONT_BLOCK caller xfs_buf_read
+xfsdump-2498  [000] 24195.782266: xfs_buf_read: dev 254:2 bno 0x13d80 len 0=
+x2000 hold 2 pincount 0 lock 0 flags READ|LOCK|DONT_BLOCK caller xfs_trans_=
+read_buf
+xfsdump-2498  [000] 24195.782267: xfs_buf_iorequest: dev 254:2 bno 0x13d80 =
+len 0x2000 hold 2 pincount 0 lock 0 flags READ|TRYLOCK|PAGES caller _xfs_bu=
+f_read
+xfsdump-2498  [000] 24195.782267: xfs_buf_hold: dev 254:2 bno 0x13d80 len 0=
+x2000 hold 2 pincount 0 lock 0 flags READ|TRYLOCK|PAGES caller xfs_buf_iore=
+quest
+xfsdump-2498  [000] 24195.782269: xfs_buf_ioerror: dev 254:2 bno 0x13d80 le=
+n 0x2000 hold 3 pincount 0 lock 0 error 5 flags READ|TRYLOCK|PAGES caller _=
+xfs_buf_ioapply
+xfsdump-2498  [000] 24195.782270: xfs_buf_rele: dev 254:2 bno 0x13d80 len 0=
+x2000 hold 3 pincount 0 lock 0 flags READ|TRYLOCK|PAGES caller xfs_buf_iore=
+quest
+xfsdump-2498  [000] 24195.782985: xfs_buf_unlock: dev 254:2 bno 0x13d80 len=
+ 0x2000 hold 2 pincount 0 lock 1 flags READ|TRYLOCK|PAGES caller xfs_buf_re=
+lse
+xfsdump-2498  [000] 24195.782986: xfs_buf_rele: dev 254:2 bno 0x13d80 len 0=
+x2000 hold 2 pincount 0 lock 1 flags READ|TRYLOCK|PAGES caller xfs_trans_re=
+ad_buf
+
+Do this data put some light on this issue?
+
+Regards,
+Rafa=B3 Kupka
 
 _______________________________________________
 xfs mailing list
