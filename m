@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2QLG8lq093878 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 16:16:08 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	PoZmo5GCLYn7DURJ (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 26 Mar 2012 14:16:04 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1SCHGl-0000tL-T4
-	for xfs@oss.sgi.com; Mon, 26 Mar 2012 21:16:03 +0000
-Message-Id: <20120326211603.856796827@bombadil.infradead.org>
-Date: Mon, 26 Mar 2012 17:14:26 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/5] xfs: use shared ilock mode for direct IO writes by default
-References: <20120326211421.518374058@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-optimize-direct-io-locking
+	q2QLtqxA100893 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 16:55:52 -0500
+Date: Mon, 26 Mar 2012 16:56:01 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v3] xfs: Fix oops on IO error during
+	xlog_recover_process_iunlinks()
+Message-ID: <20120326215601.GY7762@sgi.com>
+References: <1331804042-11580-1-git-send-email-jack@suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1331804042-11580-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,195 +19,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@infradead.org>, Alex Elder <elder@kernel.org>, stable@kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Mar 15, 2012 at 10:34:02AM +0100, Jan Kara wrote:
+> When an IO error happens during inode deletion run from
+> xlog_recover_process_iunlinks() filesystem gets shutdown. Thus any subsequent
+> attempt to read buffers fails. Code in xlog_recover_process_iunlinks() does not
+> count with the fact that read of a buffer which was read a while ago can
+> really fail which results in the oops on
+>   agi = XFS_BUF_TO_AGI(agibp);
+> 
+> Fix the problem by cleaning up the buffer handling in
+> xlog_recover_process_iunlinks() as suggested by Dave Chinner. We release buffer
+> lock but keep buffer reference to AG buffer. That is enough for buffer to stay
+> pinned in memory and we don't have to call xfs_read_agi() all the time.
+> 
+> CC: stable@kernel.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-For the direct IO write path, we only really need the ilock to be taken in
-exclusive mode during IO submission if we need to do extent allocation
-instaled of all the time.
-
-Change the block mapping code to take the ilock in shared mode for the
-initial block mapping, and only retake it exclusively when we actually
-have to perform extent allocations.  We were already dropping the ilock
-for the transaction allocation, so this doesn't introduce new race windows.
-
-Based on an earlier patch from Dave Chinner.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-
----
- fs/xfs/xfs_aops.c  |   21 +++++++++++++++++----
- fs/xfs/xfs_iomap.c |   45 +++++++++++++++++++--------------------------
- 2 files changed, 36 insertions(+), 30 deletions(-)
-
-Index: xfs/fs/xfs/xfs_aops.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2012-03-26 21:06:52.184213212 +0200
-+++ xfs/fs/xfs/xfs_aops.c	2012-03-26 21:16:40.744358040 +0200
-@@ -1146,7 +1146,14 @@ __xfs_get_blocks(
- 	if (!create && direct && offset >= i_size_read(inode))
- 		return 0;
- 
--	if (create) {
-+	/*
-+	 * Direct I/O is usually done on preallocated files, so try getting
-+	 * a block mapping without an exclusive lock first.  For buffer
-+	 * writes we already have the exclusive iolock anyway, so avoiding
-+	 * a lock roundtrip here by taking the ilock exclusive from the
-+	 * beginning is a useful micro optimization.
-+	 */
-+	if (create && !direct) {
- 		lockmode = XFS_ILOCK_EXCL;
- 		xfs_ilock(ip, lockmode);
- 	} else {
-@@ -1169,22 +1176,28 @@ __xfs_get_blocks(
- 	     (imap.br_startblock == HOLESTARTBLOCK ||
- 	      imap.br_startblock == DELAYSTARTBLOCK))) {
- 		if (direct) {
-+			xfs_iunlock(ip, lockmode);
-+
- 			error = xfs_iomap_write_direct(ip, offset, size,
- 						       &imap, nimaps);
-+			if (error)
-+				return -error;
- 		} else {
- 			error = xfs_iomap_write_delay(ip, offset, size, &imap);
-+			if (error)
-+				goto out_unlock;
-+
-+			xfs_iunlock(ip, lockmode);
- 		}
--		if (error)
--			goto out_unlock;
- 
- 		trace_xfs_get_blocks_alloc(ip, offset, size, 0, &imap);
- 	} else if (nimaps) {
- 		trace_xfs_get_blocks_found(ip, offset, size, 0, &imap);
-+		xfs_iunlock(ip, lockmode);
- 	} else {
- 		trace_xfs_get_blocks_notfound(ip, offset, size);
- 		goto out_unlock;
- 	}
--	xfs_iunlock(ip, lockmode);
- 
- 	if (imap.br_startblock != HOLESTARTBLOCK &&
- 	    imap.br_startblock != DELAYSTARTBLOCK) {
-Index: xfs/fs/xfs/xfs_iomap.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iomap.c	2012-03-26 21:06:52.200879787 +0200
-+++ xfs/fs/xfs/xfs_iomap.c	2012-03-26 21:21:34.406100475 +0200
-@@ -142,11 +142,7 @@ xfs_iomap_write_direct(
- 	int		committed;
- 	int		error;
- 
--	/*
--	 * Make sure that the dquots are there. This doesn't hold
--	 * the ilock across a disk read.
--	 */
--	error = xfs_qm_dqattach_locked(ip, 0);
-+	error = xfs_qm_dqattach(ip, 0);
- 	if (error)
- 		return XFS_ERROR(error);
- 
-@@ -158,7 +154,7 @@ xfs_iomap_write_direct(
- 	if ((offset + count) > XFS_ISIZE(ip)) {
- 		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
- 		if (error)
--			goto error_out;
-+			return XFS_ERROR(error);
- 	} else {
- 		if (nmaps && (imap->br_startblock == HOLESTARTBLOCK))
- 			last_fsb = MIN(last_fsb, (xfs_fileoff_t)
-@@ -190,7 +186,6 @@ xfs_iomap_write_direct(
- 	/*
- 	 * Allocate and setup the transaction
- 	 */
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_DIOSTRAT);
- 	error = xfs_trans_reserve(tp, resblks,
- 			XFS_WRITE_LOG_RES(mp), resrtextents,
-@@ -199,15 +194,16 @@ xfs_iomap_write_direct(
- 	/*
- 	 * Check for running out of space, note: need lock to return
- 	 */
--	if (error)
-+	if (error) {
- 		xfs_trans_cancel(tp, 0);
-+		return XFS_ERROR(error);
-+	}
-+
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (error)
--		goto error_out;
- 
- 	error = xfs_trans_reserve_quota_nblks(tp, ip, qblocks, 0, quota_flag);
- 	if (error)
--		goto error1;
-+		goto out_trans_cancel;
- 
- 	xfs_trans_ijoin(tp, ip, 0);
- 
-@@ -224,42 +220,39 @@ xfs_iomap_write_direct(
- 	error = xfs_bmapi_write(tp, ip, offset_fsb, count_fsb, bmapi_flag,
- 				&firstfsb, 0, imap, &nimaps, &free_list);
- 	if (error)
--		goto error0;
-+		goto out_bmap_cancel;
- 
- 	/*
- 	 * Complete the transaction
- 	 */
- 	error = xfs_bmap_finish(&tp, &free_list, &committed);
- 	if (error)
--		goto error0;
-+		goto out_bmap_cancel;
- 	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
- 	if (error)
--		goto error_out;
-+		goto out_unlock;
- 
- 	/*
- 	 * Copy any maps to caller's array and return any error.
- 	 */
- 	if (nimaps == 0) {
--		error = ENOSPC;
--		goto error_out;
-+		error = XFS_ERROR(ENOSPC);
-+		goto out_unlock;
- 	}
- 
--	if (!(imap->br_startblock || XFS_IS_REALTIME_INODE(ip))) {
-+	if (!(imap->br_startblock || XFS_IS_REALTIME_INODE(ip)))
- 		error = xfs_alert_fsblock_zero(ip, imap);
--		goto error_out;
--	}
- 
--	return 0;
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	return error;
- 
--error0:	/* Cancel bmap, unlock inode, unreserve quota blocks, cancel trans */
-+out_bmap_cancel:
- 	xfs_bmap_cancel(&free_list);
- 	xfs_trans_unreserve_quota_nblks(tp, ip, qblocks, 0, quota_flag);
--
--error1:	/* Just cancel transaction */
-+out_trans_cancel:
- 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
--
--error_out:
--	return XFS_ERROR(error);
-+	goto out_unlock;
- }
- 
- /*
+Looks good to me...
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
