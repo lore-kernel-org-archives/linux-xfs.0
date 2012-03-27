@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2R1Fjdg140821 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 20:15:46 -0500
+	q2R1Iwqk141777 for <xfs@oss.sgi.com>; Mon, 26 Mar 2012 20:18:58 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	rCAzObAC2J7w0BGr for <xfs@oss.sgi.com>;
-	Mon, 26 Mar 2012 18:15:43 -0700 (PDT)
-Date: Tue, 27 Mar 2012 12:15:40 +1100
+	h473nSGxXdEaFnAj for <xfs@oss.sgi.com>;
+	Mon, 26 Mar 2012 18:18:56 -0700 (PDT)
+Date: Tue, 27 Mar 2012 12:18:34 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfs: push the ilock into xfs_zero_eof
-Message-ID: <20120327011540.GS5091@dastard>
-References: <20120326211421.518374058@bombadil.infradead.org>
-	<20120326211603.654869525@bombadil.infradead.org>
+Subject: Re: [PATCH] xfstests 235: do smaller test IO
+Message-ID: <20120327011834.GT5091@dastard>
+References: <4F70C3D9.80708@redhat.com> <20120326220926.GO5091@dastard>
+	<4F70EBD8.9030006@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120326211603.654869525@bombadil.infradead.org>
+In-Reply-To: <4F70EBD8.9030006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,55 +27,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Eryu Guan <eguan@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Mar 26, 2012 at 05:14:25PM -0400, Christoph Hellwig wrote:
-> Instead of calling xfs_zero_eof with the ilock held only take it internally
-> for the minimall required critical section around xfs_bmapi_read.  This
-> also requires changing the calling convention for xfs_zero_last_block
-> slightly.  The actual zeroing operation is still serialized by the iolock,
-> which must be taken exclusively over the call to xfs_zero_eof.
+On Mon, Mar 26, 2012 at 05:21:12PM -0500, Eric Sandeen wrote:
+> On 3/26/12 5:09 PM, Dave Chinner wrote:
+> > On Mon, Mar 26, 2012 at 02:30:33PM -0500, Eric Sandeen wrote:
+> >> Test 235 fails on ext2/ext3 with 1024 fs block size because a
+> >> 16k write uses an extra metadata block.  If we do a smaller write
+> >> this won't happen.
+> > .....
+> >>  
+> >> -$XFS_IO_PROG -F -c 'pwrite 0 16k' -c 'fsync' \
+> >> +$XFS_IO_PROG -F -c 'pwrite 0 8k' -c 'fsync' \
+> > 
+> > So now it fails only on 512 byte block size filesystems?
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-.....
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	xfs_fileoff_t		last_fsb = XFS_B_TO_FSBT(mp, isize);
-> +	int			zero_offset = XFS_B_FSB_OFFSET(mp, isize);
-> +	int			zero_len;
-> +	int			nimaps = 1;
-> +	int			error = 0;
-> +	struct xfs_bmbt_irec	imap;
->  
-> -	last_fsb = XFS_B_TO_FSBT(mp, isize);
-> -	nimaps = 1;
-> +	xfs_ilock(ip, XFS_ILOCK_EXCL);
->  	error = xfs_bmapi_read(ip, last_fsb, 1, &imap, &nimaps, 0);
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> ext[23] don't do 512 byte block filesystems, so no.  ;)
 
-Does that even need to be an exclusive lock? a shared lock is all
-that is needed to do a lookup, and this is just a lookup...
+Oh, I forgot about that. Well, just ignore me.
 
-....
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-> @@ -521,23 +503,18 @@ xfs_zero_eof(
->  	while (start_zero_fsb <= end_zero_fsb) {
->  		nimaps = 1;
->  		zero_count_fsb = end_zero_fsb - start_zero_fsb + 1;
-> +
-> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
->  		error = xfs_bmapi_read(ip, start_zero_fsb, zero_count_fsb,
->  					  &imap, &nimaps, 0);
-> -		if (error) {
-> -			ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-> +		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-
-Same question - it is a read lookup so why do we need exclusive
-locking here?
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
