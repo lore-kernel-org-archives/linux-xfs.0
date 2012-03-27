@@ -1,25 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2RCDBh3051182 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 07:13:11 -0500
-Received: from mail.hq.newdream.net (mail.hq.newdream.net [66.33.206.127]) by
-	cuda.sgi.com with ESMTP id lRyzLA3fDY2EYLRO for
-	<xfs@oss.sgi.com>; Tue, 27 Mar 2012 05:13:09 -0700 (PDT)
-Received: from mail.hq.newdream.net (localhost [127.0.0.1])
-	by mail.hq.newdream.net (Postfix) with ESMTP id 92174243EE
-	for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 05:14:41 -0700 (PDT)
-Received: from [172.22.22.4] (c-71-195-31-37.hsd1.mn.comcast.net
-	[71.195.31.37])
-	by mail.hq.newdream.net (Postfix) with ESMTPSA id 4FF8A243C7
-	for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 05:14:41 -0700 (PDT)
-Message-ID: <4F71AED4.1010505@dreamhost.com>
-Date: Tue, 27 Mar 2012 07:13:08 -0500
-From: Alex Elder <elder@dreamhost.com>
+	q2RExJda097411 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 09:59:20 -0500
+Date: Tue, 27 Mar 2012 10:59:17 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] repair: fix the variable-width nlink array
+Message-ID: <20120327145917.GA31635@infradead.org>
+References: <20120228174223.GA6148@infradead.org>
+	<20120301212822.GM7762@sgi.com>
+	<20120302074433.GA4117@infradead.org>
+	<20120326174914.GR8451@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [ANNOUNCE] XFS Developers meeting in San Francisco, April 3rd
-References: <20120127170920.GA31465@infradead.org>
-	<20120327095800.GA4575@infradead.org>
-In-Reply-To: <20120327095800.GA4575@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20120326174914.GR8451@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +21,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 03/27/2012 04:58 AM, Christoph Hellwig wrote:
-> Can I get a list of people who want to attend?  I got a few
-> confirmations on irc and on the sides, but no defintive list.
+On Mon, Mar 26, 2012 at 12:49:14PM -0500, Ben Myers wrote:
+> Hey Christoph,
+> 
+> On Fri, Mar 02, 2012 at 02:44:33AM -0500, Christoph Hellwig wrote:
+> > On Thu, Mar 01, 2012 at 03:28:22PM -0600, Ben Myers wrote:
+> > > On my machine test 030 has regressed.  It passed on 3.1.7.
+> > 
+> > That's an older change.  I have a fix in my local tree, but it needs
+> > polishing so that it still works with older repair versions.
+> 
+> Have you had a chance to work on your fix for 030?
 
-I'll be there.		-Alex
-
-
-> On Fri, Jan 27, 2012 at 12:09:20PM -0500, Christoph Hellwig wrote:
->> I'd like to invite any current, past or future XFS developer to the
->> XFS developers meeting, which is happening as part of the 6th Annual Linux
->> Foundation Collaboration Summit in San Francisco on April, 3rd 2012.
->>
->> All attendees should request an invitation from the Linux Foundation.
->> Attendees of the Linux Storage, Filesystem&  MM Summit, which happens the
->> two days before the Collaboration Summit and the XFS Developers meeting
->> will automatically be invited to the Collaboration Summit.
->>
->> Please reply to this mail on the xfs@oss.sgi.com list if you want to attend so
->> that I can keep track of the attendees, although you may join any time
->> available space permitting.
-> ---end quoted text---
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
+Sorry, I still haven't managed to get back to speed on xfstests,
+we are still missing tons of external commits, and various testcases
+seem to fail right now.  I'll get back to it this weekend hopefully.
 
 _______________________________________________
 xfs mailing list
