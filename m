@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2RGkjVg128322 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 11:46:45 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	sWV2G5V7QOWF56vV (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 27 Mar 2012 09:46:45 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1SCZXg-00079z-FQ
-	for xfs@oss.sgi.com; Tue, 27 Mar 2012 16:46:44 +0000
-Message-Id: <20120327164644.420702935@bombadil.infradead.org>
-Date: Tue, 27 Mar 2012 12:44:02 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 02/10] xfs: remove log item from AIL in xfs_iflush after a
-	shutdown
-References: <20120327164400.967415009@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-delete-inode-from-ail-earlier
+	q2RGuH5n130348 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 11:56:17 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 7qWIv0QiJFOcujRK for
+	<xfs@oss.sgi.com>; Tue, 27 Mar 2012 09:56:16 -0700 (PDT)
+Date: Tue, 27 Mar 2012 12:19:41 -0400
+From: Vivek Goyal <vgoyal@redhat.com>
+Subject: Re: [PATCH] xfs: Do background CIL flushes via a workqueue
+Message-ID: <20120327161941.GC28707@redhat.com>
+References: <1332841605-3538-1-git-send-email-david@fromorbit.com>
+	<20120327143127.GA11434@infradead.org>
+	<20120327155759.GB28707@redhat.com>
+	<20120327160300.GA22555@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120327160300.GA22555@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,124 +24,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-If a filesystem has been forced shutdown we are never going to write inodes
-to disk, which means the inode items will stay in the AIL until we free
-the inode. Currently that is not a problem, but a pending change requires us
-to empty the AIL before shutting down the filesystem. In that case leaving
-the inode in the AIL is lethal. Make sure to remove the log item from the AIL
-to allow emptying the AIL on shutdown filesystems.
+On Tue, Mar 27, 2012 at 12:03:00PM -0400, Christoph Hellwig wrote:
+> On Tue, Mar 27, 2012 at 11:57:59AM -0400, Vivek Goyal wrote:
+> > On Tue, Mar 27, 2012 at 10:31:27AM -0400, Christoph Hellwig wrote:
+> > > Vivek, does CFQ still need any hints for this sort of handoff?
+> > > 
+> > 
+> > Christoph, I don't understand the issue enough to comment on it.
+> > 
+> > Had a quick look at the patch. Looks like some action (writing log), has
+> > been moved to a worker thread.  And in some cases (log force triggered
+> > flush, whatever it is), we seem to prefer to do it from the submitter's
+> > context.
+> 
+> Yes.  This is to workaround the old problem of cfq getting utterly
+> confused if cooperating I/O beeing submitted from different threads.
+> 
+> The case in the previous version of this patch was:
+> 
+>  - thread doing the fsync will write out data, and wait for it
+>  - then we'd force the log by kicking a workqueue and waiting for it
+> 
+> quite similar to the ext3/4 fsync issues that we had long discussions
+> about.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Ok, then I think that fundamental issue still remains with CFQ. And there
+is no general solution to recognizing dependency between processes.
 
----
- fs/xfs/xfs_iget.c  |   18 +-----------------
- fs/xfs/xfs_inode.c |   17 +++++++++--------
- fs/xfs/xfs_sync.c  |    1 +
- 3 files changed, 11 insertions(+), 25 deletions(-)
+But a specific workaround  for ext3/ext4 fsync problem was put by corrado
+long back.
 
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2012-03-16 12:44:56.037030588 +0100
-+++ xfs/fs/xfs/xfs_inode.c	2012-03-16 12:47:03.697032954 +0100
-@@ -2397,7 +2397,6 @@ xfs_iflush(
- 	xfs_inode_t		*ip,
- 	uint			flags)
- {
--	xfs_inode_log_item_t	*iip;
- 	xfs_buf_t		*bp;
- 	xfs_dinode_t		*dip;
- 	xfs_mount_t		*mp;
-@@ -2410,7 +2409,6 @@ xfs_iflush(
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       ip->i_d.di_nextents > XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK));
- 
--	iip = ip->i_itemp;
- 	mp = ip->i_mount;
- 
- 	/*
-@@ -2447,13 +2445,14 @@ xfs_iflush(
- 	/*
- 	 * This may have been unpinned because the filesystem is shutting
- 	 * down forcibly. If that's the case we must not write this inode
--	 * to disk, because the log record didn't make it to disk!
-+	 * to disk, because the log record didn't make it to disk.
-+	 *
-+	 * We also have to remove the log item from the AIL in this case,
-+	 * as we wait for an empty AIL as part of the unmount process.
- 	 */
- 	if (XFS_FORCED_SHUTDOWN(mp)) {
--		if (iip)
--			iip->ili_fields = 0;
--		xfs_ifunlock(ip);
--		return XFS_ERROR(EIO);
-+		error = XFS_ERROR(EIO);
-+		goto abort_out;
- 	}
- 
- 	/*
-@@ -2500,11 +2499,13 @@ corrupt_out:
- 	xfs_buf_relse(bp);
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
- cluster_corrupt_out:
-+	error = XFS_ERROR(EFSCORRUPTED);
-+abort_out:
- 	/*
- 	 * Unlocks the flush lock
- 	 */
- 	xfs_iflush_abort(ip);
--	return XFS_ERROR(EFSCORRUPTED);
-+	return error;
- }
- 
- 
-Index: xfs/fs/xfs/xfs_iget.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_iget.c	2012-03-16 12:44:56.047030587 +0100
-+++ xfs/fs/xfs/xfs_iget.c	2012-03-16 12:47:03.697032954 +0100
-@@ -123,23 +123,7 @@ xfs_inode_free(
- 		xfs_idestroy_fork(ip, XFS_ATTR_FORK);
- 
- 	if (ip->i_itemp) {
--		/*
--		 * Only if we are shutting down the fs will we see an
--		 * inode still in the AIL. If it is there, we should remove
--		 * it to prevent a use-after-free from occurring.
--		 */
--		xfs_log_item_t	*lip = &ip->i_itemp->ili_item;
--		struct xfs_ail	*ailp = lip->li_ailp;
--
--		ASSERT(((lip->li_flags & XFS_LI_IN_AIL) == 0) ||
--				       XFS_FORCED_SHUTDOWN(ip->i_mount));
--		if (lip->li_flags & XFS_LI_IN_AIL) {
--			spin_lock(&ailp->xa_lock);
--			if (lip->li_flags & XFS_LI_IN_AIL)
--				xfs_trans_ail_delete(ailp, lip);
--			else
--				spin_unlock(&ailp->xa_lock);
--		}
-+		ASSERT(!(ip->i_itemp->ili_item.li_flags & XFS_LI_IN_AIL));
- 		xfs_inode_item_destroy(ip);
- 		ip->i_itemp = NULL;
- 	}
-Index: xfs/fs/xfs/xfs_sync.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_sync.c	2012-03-16 12:44:57.707030619 +0100
-+++ xfs/fs/xfs/xfs_sync.c	2012-03-16 12:47:03.697032954 +0100
-@@ -783,6 +783,7 @@ restart:
- 		goto reclaim;
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		xfs_iunpin_wait(ip);
-+		xfs_iflush_abort(ip);
- 		goto reclaim;
- 	}
- 	if (xfs_ipincount(ip)) {
+commit 749ef9f8423054e326f3a246327ed2db4b6d395f
+Author: Corrado Zoccolo <czoccolo@gmail.com>
+Date:   Mon Sep 20 15:24:50 2010 +0200
+
+    cfq: improve fsync performance for small files
+
+Basically, I think previously journal commits were "WRITE" and were
+showing most likely on async IO tree. And "fsync" IO was synchronous
+and probably showing up on "sync-noidle" tree. CFQ does idling before
+it switches between trees hence transition from one process to other
+was slow.
+
+Now corrado, changed the IO type from journaling thread to "WRITE_SYNC"
+which makes writes synchronous and sets the REQ_NOIDLE flag. Hence forcing
+"journal" thread to show up on "sync-noidle" tree. I think "fsync" was
+already there so effectively both the processes are on same service tree
+and we don't idle between processes when they are on "sync-noidle" tree.
+
+So xfs either need to resort to similar optimizaiton where IO type from
+both the process context is of same type or try to do all the IO from
+one process context. 
+
+AFAIK, CFQ does not have any generic mechanism to detect process IO
+dependecny.
+
+Thanks
+Vivek
 
 _______________________________________________
 xfs mailing list
