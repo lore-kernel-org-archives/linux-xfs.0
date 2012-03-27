@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2RI809k142941 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 13:08:00 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IhuJUXVGYU8jMn2x for
-	<xfs@oss.sgi.com>; Tue, 27 Mar 2012 11:07:59 -0700 (PDT)
-Date: Tue, 27 Mar 2012 13:18:45 -0400
-From: Vivek Goyal <vgoyal@redhat.com>
-Subject: Re: [PATCH] xfs: Do background CIL flushes via a workqueue
-Message-ID: <20120327171845.GD28707@redhat.com>
-References: <1332841605-3538-1-git-send-email-david@fromorbit.com>
-	<20120327143127.GA11434@infradead.org>
-	<20120327155759.GB28707@redhat.com>
-	<20120327160300.GA22555@infradead.org>
-	<20120327161941.GC28707@redhat.com>
-	<20120327170309.GA6712@infradead.org>
+	q2RIHZk7145397 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 13:17:35 -0500
+Message-ID: <4F72043A.5010600@sgi.com>
+Date: Tue, 27 Mar 2012 13:17:30 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120327170309.GA6712@infradead.org>
+Subject: Re: [PATCH 01/10] xfs: remove log item from AIL in xfs_qm_dqflush
+	after a shutdown
+References: <20120327164400.967415009@bombadil.infradead.org>
+	<20120327164644.243162639@bombadil.infradead.org>
+In-Reply-To: <20120327164644.243162639@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +19,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 27, 2012 at 01:03:09PM -0400, Christoph Hellwig wrote:
-> On Tue, Mar 27, 2012 at 12:19:41PM -0400, Vivek Goyal wrote:
-> > So xfs either need to resort to similar optimizaiton where IO type from
-> > both the process context is of same type or try to do all the IO from
-> > one process context. 
-> 
-> All XFS log I/O is marked SYNC and (FUA and/or FLUSH).
+On 03/27/12 11:44, Christoph Hellwig wrote:
+> If a filesystem has been forced shutdown we are never going to write dquots
+> to disk, which means the dquot items will stay in the AIL forever.
+> Currently that is not a problem, but a pending chance requires us to
+> empty the AIL before shutting down the filesystem, in which case this
+> behaviour is lethal.  Make sure to remove the log item from the AIL
+> to allow emptying the AIL on shutdown filesystems.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
 
-In that case I am not sure if XFS should still face the idling issue. If
-it does, then we need to debug it further and see why the fix is not
-working.
+Looks good.
 
-Dave, any chance of 10 seconds of blktrace data when this problem happens?
-
-Thanks
-Vivek
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
