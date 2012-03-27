@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2RKqD1q168563 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 15:52:13 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	JU960PhLpmcZRyeR for <xfs@oss.sgi.com>;
-	Tue, 27 Mar 2012 13:52:11 -0700 (PDT)
-Date: Wed, 28 Mar 2012 07:52:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/5] reduce exclusive ilock hold times V2
-Message-ID: <20120327205201.GC5091@dastard>
-References: <20120327143445.196524266@bombadil.infradead.org>
+	q2RKorTY168466 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 15:50:54 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gFiP1sbgseQxXjvy for
+	<xfs@oss.sgi.com>; Tue, 27 Mar 2012 13:50:52 -0700 (PDT)
+Message-ID: <4F722828.4000102@redhat.com>
+Date: Tue, 27 Mar 2012 15:50:48 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120327143445.196524266@bombadil.infradead.org>
+Subject: Re: [PATCH] xfs: check on-disk (not incore) btree root size in dfrag.c
+References: <4F7225BA.40200@redhat.com>
+In-Reply-To: <4F7225BA.40200@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,40 +24,100 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Gabriel VLASIU <gabriel@vlasiu.net>
 
-On Tue, Mar 27, 2012 at 10:34:45AM -0400, Christoph Hellwig wrote:
-> This series tries to reduce the amount we hold the ilock exclusively,
-> especially during direct I/O writes where they currently hurt us.
+On 3/27/12 3:40 PM, Eric Sandeen wrote:
+> xfs_swap_extents_check_format() contains checks to make sure that
+> original and the temporary files during defrag are compatible;
+> Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
+> because the tests found the btree root to be of size 120,
+> while the fork offset was only 104; IOW, they overlapped.
 > 
-> Dave showed that his earlier version which is less aggressive than this
-> one can already provide magnitudes of better throughput and iops for
-> parallel direct I/O workloads, and this one should be even better.
+> However, this is just due to an error in the
+> xfs_swap_extents_check_format() tests, because it is checking
+> the in-memory btree root size against the on-disk fork offset.
+> We should be checking the on-disk sizes in both cases.
 > 
-> Changes from V1:
->  - do not mark xfs_qm_need_dqattach as inline
->  - various comment and commit message updates
+> This patch adds a new macro to calculate this size, and uses
+> it in the tests.
+> 
+> With this change, the filesystem image provided by Gabriel
+> allows for proper file degragmentation.
 
-Consider the whole series:
+Hm, as usually happens right after finalizing this I stumbled
+on something else.  xfs_iroot_realloc() does essentially the same
+test, but uses a funky macro to resolve the incore/ondisk size
+difference:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+        ASSERT(ifp->if_broot_bytes <=
+                XFS_IFORK_SIZE(ip, whichfork) + XFS_BROOT_SIZE_ADJ);
 
-> I specificly did not add the delalloc assert in the direct I/O write path
-> in this series, as it triggers with or without this patch.  I will look into
-> that issue next.
+so dfrag.c could be fixed up the same way, I suppose, using
+XFS_BROOT_SIZE_ADJ if desired (though I have no real love for that
+undocumented macro!)
 
-I'm getting that assert (and other delalloc block asserts) when
-fsstress is running quite often these days. I suspect that he lack
-of IOLOCK synchronisation in .page_mkwrite is biting us here, but
-I'm interested to know what you find...
+-Eric
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Reported-by: Gabriel VLASIU <gabriel@vlasiu.net>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/xfs_bmap_btree.h b/fs/xfs/xfs_bmap_btree.h
+> index 0e66c4e..d9eeb64 100644
+> --- a/fs/xfs/xfs_bmap_btree.h
+> +++ b/fs/xfs/xfs_bmap_btree.h
+> @@ -189,12 +189,14 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
+>  #define XFS_BMAP_BROOT_SPACE_CALC(nrecs) \
+>  	(int)(XFS_BTREE_LBLOCK_LEN + \
+>  	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+> -
+>  #define XFS_BMAP_BROOT_SPACE(bb) \
+>  	(XFS_BMAP_BROOT_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
+> +
+>  #define XFS_BMDR_SPACE_CALC(nrecs) \
+>  	(int)(sizeof(xfs_bmdr_block_t) + \
+>  	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
+> +#define XFS_BMAP_BMDR_SPACE(bb) \
+> +	(XFS_BMDR_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
+>  
+>  /*
+>   * Maximum number of bmap btree levels.
+> diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+> index dd974a5..2707d86 100644
+> --- a/fs/xfs/xfs_dfrag.c
+> +++ b/fs/xfs/xfs_dfrag.c
+> @@ -26,6 +26,9 @@
+>  #include "xfs_ag.h"
+>  #include "xfs_mount.h"
+>  #include "xfs_bmap_btree.h"
+> +#include "xfs_alloc_btree.h"
+> +#include "xfs_ialloc_btree.h"
+> +#include "xfs_btree.h"
+>  #include "xfs_dinode.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_inode_item.h"
+> @@ -184,7 +187,7 @@ xfs_swap_extents_check_format(
+>  	 */
+>  	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+>  		if (XFS_IFORK_BOFF(ip) &&
+> -		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
+> +		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
+>  			return EINVAL;
+>  		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
+>  		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
+> @@ -194,9 +197,8 @@ xfs_swap_extents_check_format(
+>  	/* Reciprocal target->temp btree format checks */
+>  	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
+>  		if (XFS_IFORK_BOFF(tip) &&
+> -		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
+> +		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
+>  			return EINVAL;
+> -
+>  		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
+>  		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
+>  			return EINVAL;
+> 
 
 _______________________________________________
 xfs mailing list
