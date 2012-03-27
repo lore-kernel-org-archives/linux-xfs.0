@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2RKeXWX167692 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 15:40:33 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nlM8v0sdqEdvlJpG for
-	<xfs@oss.sgi.com>; Tue, 27 Mar 2012 13:40:31 -0700 (PDT)
-Message-ID: <4F7225BA.40200@redhat.com>
-Date: Tue, 27 Mar 2012 15:40:26 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q2RKmGbj168284 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 15:48:17 -0500
+Date: Tue, 27 Mar 2012 15:48:25 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 7/8] xfs: fix fstrim offset calculations
+Message-ID: <20120327204825.GB7762@sgi.com>
+References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
+	<1332393313-1955-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: check on-disk (not incore) btree root size in dfrag.c
+Content-Disposition: inline
+In-Reply-To: <1332393313-1955-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,84 +23,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Gabriel VLASIU <gabriel@vlasiu.net>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-xfs_swap_extents_check_format() contains checks to make sure that
-original and the temporary files during defrag are compatible;
-Gabriel VLASIU ran into a case where xfs_fsr returned EINVAL
-because the tests found the btree root to be of size 120,
-while the fork offset was only 104; IOW, they overlapped.
+On Thu, Mar 22, 2012 at 04:15:12PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> xfs_ioc_fstrim() doesn't treat the incoming offset and length
+> correctly. It treats them as a filesystem block address, rather than
+> a disk address. This is wrong because the range passed in is a
+> linear representation , while the filesystem block address notiation
+> is a sparse representation. Hence we cannot convert the range direct
+> to filesystem block units and then use that for calculating the
+> range to trim.
+> 
+> While this sounds dangerous, the problem is limited to calculting
+> what AGs need to be trimmed. The code that calcuates the actual
+> ranges to trim gets the right result (i.e. only ever discards free
+> space), even though it uses the wrong ranges to limit what is
+> trimmed. Hence this is not a bug that endangers user data.
 
-However, this is just due to an error in the
-xfs_swap_extents_check_format() tests, because it is checking
-the in-memory btree root size against the on-disk fork offset.
-We should be checking the on-disk sizes in both cases.
+Yep, I can see that the calculation of what we pass to blkdev_issue_discard()
+is correct and always a free extent.  I am having a hard time seeing the
+problem related to calculating which AGs to trim.  Can you give an example?
 
-This patch adds a new macro to calculate this size, and uses
-it in the tests.
+> Fix this by treating the range as a disk address range and use the
+> appropriate functions to convert the range into the desired formats
+> for calculations.
+> 
+> Further, fix the first free extent lookup (the longest) to actually
+> find the largest free extent. Currently this lookup uses a <=
+> lookup, which results in finding the extent to the left of the
+> largest because we can never get an exact match on the largest
+> extent. This is due to the fact that while we know it's size, we
+> don't know it's location and so the exact match fails and we move
+> one record to the left to get the next largest extent. Instead, use
+> a >= search so that the lookup returns the largest extent regardless
+> of the fact we don't get an exact match on it.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-With this change, the filesystem image provided by Gabriel
-allows for proper file degragmentation.
-
-Reported-by: Gabriel VLASIU <gabriel@vlasiu.net>
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_bmap_btree.h b/fs/xfs/xfs_bmap_btree.h
-index 0e66c4e..d9eeb64 100644
---- a/fs/xfs/xfs_bmap_btree.h
-+++ b/fs/xfs/xfs_bmap_btree.h
-@@ -189,12 +189,14 @@ typedef __be64 xfs_bmbt_ptr_t, xfs_bmdr_ptr_t;
- #define XFS_BMAP_BROOT_SPACE_CALC(nrecs) \
- 	(int)(XFS_BTREE_LBLOCK_LEN + \
- 	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
--
- #define XFS_BMAP_BROOT_SPACE(bb) \
- 	(XFS_BMAP_BROOT_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
-+
- #define XFS_BMDR_SPACE_CALC(nrecs) \
- 	(int)(sizeof(xfs_bmdr_block_t) + \
- 	       ((nrecs) * (sizeof(xfs_bmbt_key_t) + sizeof(xfs_bmbt_ptr_t))))
-+#define XFS_BMAP_BMDR_SPACE(bb) \
-+	(XFS_BMDR_SPACE_CALC(be16_to_cpu((bb)->bb_numrecs)))
- 
- /*
-  * Maximum number of bmap btree levels.
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index dd974a5..2707d86 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -26,6 +26,9 @@
- #include "xfs_ag.h"
- #include "xfs_mount.h"
- #include "xfs_bmap_btree.h"
-+#include "xfs_alloc_btree.h"
-+#include "xfs_ialloc_btree.h"
-+#include "xfs_btree.h"
- #include "xfs_dinode.h"
- #include "xfs_inode.h"
- #include "xfs_inode_item.h"
-@@ -184,7 +187,7 @@ xfs_swap_extents_check_format(
- 	 */
- 	if (tip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
- 		if (XFS_IFORK_BOFF(ip) &&
--		    tip->i_df.if_broot_bytes > XFS_IFORK_BOFF(ip))
-+		    XFS_BMAP_BMDR_SPACE(tip->i_df.if_broot) > XFS_IFORK_BOFF(ip))
- 			return EINVAL;
- 		if (XFS_IFORK_NEXTENTS(tip, XFS_DATA_FORK) <=
- 		    XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK))
-@@ -194,9 +197,8 @@ xfs_swap_extents_check_format(
- 	/* Reciprocal target->temp btree format checks */
- 	if (ip->i_d.di_format == XFS_DINODE_FMT_BTREE) {
- 		if (XFS_IFORK_BOFF(tip) &&
--		    ip->i_df.if_broot_bytes > XFS_IFORK_BOFF(tip))
-+		    XFS_BMAP_BMDR_SPACE(ip->i_df.if_broot) > XFS_IFORK_BOFF(tip))
- 			return EINVAL;
--
- 		if (XFS_IFORK_NEXTENTS(ip, XFS_DATA_FORK) <=
- 		    XFS_IFORK_MAXEXT(tip, XFS_DATA_FORK))
- 			return EINVAL;
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
