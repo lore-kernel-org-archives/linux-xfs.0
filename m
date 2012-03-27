@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2RLj57o172927 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 16:45:05 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	e5NoB2OcAQJALPkg for <xfs@oss.sgi.com>;
-	Tue, 27 Mar 2012 14:45:03 -0700 (PDT)
-Date: Wed, 28 Mar 2012 08:45:01 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 8/8] xfs: add lots of attribute trace points
-Message-ID: <20120327214501.GF5091@dastard>
-References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
-	<1332393313-1955-9-git-send-email-david@fromorbit.com>
-	<20120327211844.GC7762@sgi.com>
+	q2RMJGBg178474 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 17:19:16 -0500
+Date: Tue, 27 Mar 2012 15:19:26 -0700
+From: Phil White <pwhite@sgi.com>
+Subject: Re: [ANNOUNCE] XFS Developers meeting in San Francisco, April 3rd
+Message-ID: <20120327221923.GA3017@caliban.sgi.com>
+References: <20120127170920.GA31465@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120327211844.GC7762@sgi.com>
+In-Reply-To: <20120127170920.GA31465@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +22,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 27, 2012 at 04:18:44PM -0500, Ben Myers wrote:
-> On Thu, Mar 22, 2012 at 04:15:13PM +1100, Dave Chinner wrote:
-> > +DEFINE_ATTR_EVENT(xfs_attr_sf_removename);
+Count me in!
+
+-Phil
+
+On Fri, Jan 27, 2012 at 12:09:20PM -0500, Christoph Hellwig wrote:
+> I'd like to invite any current, past or future XFS developer to the
+> XFS developers meeting, which is happening as part of the 6th Annual Linux
+> Foundation Collaboration Summit in San Francisco on April, 3rd 2012.
 > 
-> This one is unused ^^^
-
-An oversight due to copy-n-paste enthusiasm. Just remove it, or do
-you want me to send a new patch with it removed?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> All attendees should request an invitation from the Linux Foundation.
+> Attendees of the Linux Storage, Filesystem & MM Summit, which happens the
+> two days before the Collaboration Summit and the XFS Developers meeting
+> will automatically be invited to the Collaboration Summit.
+> 
+> Please reply to this mail on the xfs@oss.sgi.com list if you want to attend so
+> that I can keep track of the attendees, although you may join any time
+> available space permitting.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
