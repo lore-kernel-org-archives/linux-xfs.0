@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2R9l4WT258736 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 04:47:04 -0500
+	q2R9kJPk258534 for <xfs@oss.sgi.com>; Tue, 27 Mar 2012 04:46:20 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	RbzaCs88yxZ4tr7E for <xfs@oss.sgi.com>;
-	Tue, 27 Mar 2012 02:47:02 -0700 (PDT)
-Received: from [192.168.1.2] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SCSzU-0006VK-Jw
-	for xfs@oss.sgi.com; Tue, 27 Mar 2012 20:47:00 +1100
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SCSzF-0000vc-MP
-	for xfs@oss.sgi.com; Tue, 27 Mar 2012 20:46:45 +1100
+	IZWIZzbatVJm7Vh7 for <xfs@oss.sgi.com>;
+	Tue, 27 Mar 2012 02:46:16 -0700 (PDT)
+Date: Tue, 27 Mar 2012 20:45:47 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: Do background CIL flushes via a workqueue
-Date: Tue, 27 Mar 2012 20:46:45 +1100
-Message-Id: <1332841605-3538-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH v2] shutdown hang fix (was Re: [PATCH 2/2] xfs: avoid
+	shutdown hang in xlog_wait())
+Message-ID: <20120327094547.GZ5091@dastard>
+References: <1332467263-12985-1-git-send-email-david@fromorbit.com>
+	<1332467263-12985-3-git-send-email-david@fromorbit.com>
+	<20120324170302.GB21708@infradead.org>
+	<20120324224648.GF5091@dastard>
+	<20120325112801.GA7157@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120325112801.GA7157@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,417 +27,293 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
+
+On Sun, Mar 25, 2012 at 07:28:01AM -0400, Christoph Hellwig wrote:
+> On Sun, Mar 25, 2012 at 09:46:49AM +1100, Dave Chinner wrote:
+> > > Looks good.  I wonder if it might be simple to simply pass a flags
+> > > argument to xfs_ail_delete(_bulk) which tells which kind of shutdown
+> > > to do.
+> > 
+> > I thought about doing that, but it seems strange and unusual to tell
+> > code how to handle errors internally instead of returning the error
+> > and letting the caller handle it...
+> > 
+> > I don't mind either way, though. If you prefer I pass in the
+> > shutdown flag, I can change it all to do that....
+> 
+> I don't have a strong opinion.  Moving the shutdown to the caller is
+> cleaner for sure, but it's a lot of churn when the other version would
+
+Ok, Here's a "pass-in-the-shutdown-method" version of the change.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+
+xfs: pass shutdown method into xfs_trans_ail_delete_bulk
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Doing background CIL flushes adds significant latency to whatever
-async transaction that triggers it. To avoid blocking async
-transactions on things like waiting for log buffer IO to complete,
-move the CIL push off into a workqueue.  By moving the push work
-into a workqueue, we remove all the latency that the commit adds
-from the foreground transaction commit path. This also means that
-single threaded workloads won't do the CIL push procssing, leaving
-them more CPU to do more async transactions.
-
-To do this, we need to keep track of the sequence number we have
-pushed work for. This avoids having many transaction commits
-attempting to schedule work for the same sequence, and ensures that
-we only ever have one push (background or forced) in progress at a
-time. It also means that we don't need to take the CIL lock in write
-mode to check for potential background push races, which reduces
-lock contention.
-
-To avoid potential issues with "smart" IO schedulers, don't use the
-workqueue for log force triggered flushes. Instead, do them directly
-so that the log IO is done directly by the process issuing the log
-force and so doesn't get stuck on IO elevator queue idling
-incorrectly delaying the log IO from the workqueue.
+xfs_trans_ail_delete_bulk() can be called from different contexts so
+if the item is not in the AIL we need different shutdown for each
+context.  Pass in the shutdown method needed so the correct action
+can be taken.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log_cil.c  |  241 ++++++++++++++++++++++++++++++-------------------
- fs/xfs/xfs_log_priv.h |    4 +
- fs/xfs/xfs_super.c    |    6 ++
- 3 files changed, 158 insertions(+), 93 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index d4fadbe..6a5a7ba 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -31,57 +31,7 @@
- #include "xfs_alloc.h"
- #include "xfs_discard.h"
- 
--/*
-- * Perform initial CIL structure initialisation.
-- */
--int
--xlog_cil_init(
--	struct log	*log)
--{
--	struct xfs_cil	*cil;
--	struct xfs_cil_ctx *ctx;
--
--	cil = kmem_zalloc(sizeof(*cil), KM_SLEEP|KM_MAYFAIL);
--	if (!cil)
--		return ENOMEM;
--
--	ctx = kmem_zalloc(sizeof(*ctx), KM_SLEEP|KM_MAYFAIL);
--	if (!ctx) {
--		kmem_free(cil);
--		return ENOMEM;
--	}
--
--	INIT_LIST_HEAD(&cil->xc_cil);
--	INIT_LIST_HEAD(&cil->xc_committing);
--	spin_lock_init(&cil->xc_cil_lock);
--	init_rwsem(&cil->xc_ctx_lock);
--	init_waitqueue_head(&cil->xc_commit_wait);
--
--	INIT_LIST_HEAD(&ctx->committing);
--	INIT_LIST_HEAD(&ctx->busy_extents);
--	ctx->sequence = 1;
--	ctx->cil = cil;
--	cil->xc_ctx = ctx;
--	cil->xc_current_sequence = ctx->sequence;
--
--	cil->xc_log = log;
--	log->l_cilp = cil;
--	return 0;
--}
--
--void
--xlog_cil_destroy(
--	struct log	*log)
--{
--	if (log->l_cilp->xc_ctx) {
--		if (log->l_cilp->xc_ctx->ticket)
--			xfs_log_ticket_put(log->l_cilp->xc_ctx->ticket);
--		kmem_free(log->l_cilp->xc_ctx);
--	}
--
--	ASSERT(list_empty(&log->l_cilp->xc_cil));
--	kmem_free(log->l_cilp);
--}
-+struct workqueue_struct *xfs_cil_wq;
- 
- /*
-  * Allocate a new ticket. Failing to get a new ticket makes it really hard to
-@@ -426,8 +376,7 @@ xlog_cil_committed(
-  */
- STATIC int
- xlog_cil_push(
--	struct log		*log,
--	xfs_lsn_t		push_seq)
-+	struct log		*log)
- {
- 	struct xfs_cil		*cil = log->l_cilp;
- 	struct xfs_log_vec	*lv;
-@@ -443,39 +392,35 @@ xlog_cil_push(
- 	struct xfs_log_iovec	lhdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
- 	xfs_lsn_t		commit_lsn;
-+	xfs_lsn_t		push_seq;
- 
- 	if (!cil)
- 		return 0;
- 
--	ASSERT(!push_seq || push_seq <= cil->xc_ctx->sequence);
--
- 	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_SLEEP|KM_NOFS);
- 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
- 
--	/*
--	 * Lock out transaction commit, but don't block for background pushes
--	 * unless we are well over the CIL space limit. See the definition of
--	 * XLOG_CIL_HARD_SPACE_LIMIT() for the full explanation of the logic
--	 * used here.
--	 */
--	if (!down_write_trylock(&cil->xc_ctx_lock)) {
--		if (!push_seq &&
--		    cil->xc_ctx->space_used < XLOG_CIL_HARD_SPACE_LIMIT(log))
--			goto out_free_ticket;
--		down_write(&cil->xc_ctx_lock);
--	}
-+	down_write(&cil->xc_ctx_lock);
- 	ctx = cil->xc_ctx;
- 
--	/* check if we've anything to push */
--	if (list_empty(&cil->xc_cil))
--		goto out_skip;
-+	spin_lock(&cil->xc_cil_lock);
-+	push_seq = cil->xc_push_seq;
-+	ASSERT(push_seq > 0 && push_seq <= ctx->sequence);
- 
--	/* check for spurious background flush */
--	if (!push_seq && cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
-+	/*
-+	 * Check if we've anything to push. If there is nothing, then we don't
-+	 * move on to a new sequence number and so we have to be able to push
-+	 * this sequence again later.
-+	 */
-+	if (list_empty(&cil->xc_cil)) {
-+		cil->xc_push_seq = 0;
-+		spin_unlock(&cil->xc_cil_lock);
- 		goto out_skip;
-+	}
-+	spin_unlock(&cil->xc_cil_lock);
- 
- 	/* check for a previously pushed seqeunce */
--	if (push_seq && push_seq < cil->xc_ctx->sequence)
-+	if (push_seq < cil->xc_ctx->sequence)
- 		goto out_skip;
- 
- 	/*
-@@ -629,7 +574,6 @@ restart:
- 
- out_skip:
- 	up_write(&cil->xc_ctx_lock);
--out_free_ticket:
- 	xfs_log_ticket_put(new_ctx->ticket);
- 	kmem_free(new_ctx);
- 	return 0;
-@@ -641,6 +585,80 @@ out_abort:
- 	return XFS_ERROR(EIO);
- }
- 
-+static void
-+xlog_cil_push_work(
-+	struct work_struct	*work)
-+{
-+	struct xfs_cil		*cil = container_of(work, struct xfs_cil,
-+							xc_push_work);
-+	xlog_cil_push(cil->xc_log);
-+}
-+
-+/*
-+ * We need to push CIL every so often so we don't cache more than we can fit in
-+ * the log. The limit really is that a checkpoint can't be more than half the
-+ * log (the current checkpoint is not allowed to overwrite the previous
-+ * checkpoint), but commit latency and memory usage limit this to a smaller
-+ * size.
-+ */
-+static void
-+xlog_cil_push_background(
-+	struct log	*log)
-+{
-+	struct xfs_cil	*cil = log->l_cilp;
-+
-+	/*
-+	 * The cil won't be empty because we are called while holding the
-+	 * context lock so whatever we added to the CIL will still be there
-+	 */
-+	ASSERT(!list_empty(&cil->xc_cil));
-+
-+	/*
-+	 * don't do a background push if we haven't used up all the
-+	 * space available yet.
-+	 */
-+	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
-+		return;
-+
-+	spin_lock(&cil->xc_cil_lock);
-+	cil->xc_push_seq = cil->xc_current_sequence;
-+	queue_work(xfs_cil_wq, &cil->xc_push_work);
-+	spin_unlock(&cil->xc_cil_lock);
-+
-+}
-+
-+static void
-+xlog_cil_push_foreground(
-+	struct log	*log,
-+	xfs_lsn_t	push_seq)
-+{
-+	struct xfs_cil	*cil = log->l_cilp;
-+
-+	if (!cil)
-+		return;
-+
-+	ASSERT(push_seq && push_seq <= cil->xc_current_sequence);
-+
-+	/* start on any pending background push to minimise wait time on it */
-+	flush_work(&cil->xc_push_work);
-+
-+	/*
-+	 * If the CIL is empty or we've already pushed the sequence then
-+	 * there's no work we need to do.
-+	 */
-+	spin_lock(&cil->xc_cil_lock);
-+	if (list_empty(&cil->xc_cil) || push_seq <= cil->xc_push_seq) {
-+		spin_unlock(&cil->xc_cil_lock);
-+		return;
-+	}
-+
-+	cil->xc_push_seq = push_seq;
-+	spin_unlock(&cil->xc_cil_lock);
-+
-+	/* do the push now */
-+	xlog_cil_push(log);
-+}
-+
- /*
-  * Commit a transaction with the given vector to the Committed Item List.
-  *
-@@ -667,7 +685,6 @@ xfs_log_commit_cil(
- {
- 	struct log		*log = mp->m_log;
- 	int			log_flags = 0;
--	int			push = 0;
- 	struct xfs_log_vec	*log_vector;
- 
- 	if (flags & XFS_TRANS_RELEASE_LOG_RES)
-@@ -719,21 +736,9 @@ xfs_log_commit_cil(
+---
+ fs/xfs/xfs_buf_item.c     |    4 ++--
+ fs/xfs/xfs_dquot.c        |    2 +-
+ fs/xfs/xfs_dquot_item.c   |    2 +-
+ fs/xfs/xfs_extfree_item.c |    3 ++-
+ fs/xfs/xfs_iget.c         |    3 ++-
+ fs/xfs/xfs_inode.c        |    4 ++--
+ fs/xfs/xfs_inode_item.c   |   23 +++++++++++++----------
+ fs/xfs/xfs_inode_item.h   |    2 +-
+ fs/xfs/xfs_log_recover.c  |    3 ++-
+ fs/xfs/xfs_trans_ail.c    |    5 +++--
+ fs/xfs/xfs_trans_priv.h   |    8 +++++---
+ 11 files changed, 34 insertions(+), 25 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index eac97ef..8111a65 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -455,7 +455,7 @@ xfs_buf_item_unpin(
+ 			bp->b_iodone = NULL;
+ 		} else {
+ 			spin_lock(&ailp->xa_lock);
+-			xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
++			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+ 			ASSERT(bp->b_fspriv == NULL);
+ 		}
+@@ -1045,6 +1045,6 @@ xfs_buf_iodone(
+ 	 * Either way, AIL is useless if we're forcing a shutdown.
  	 */
- 	xfs_trans_free_items(tp, *commit_lsn, 0);
- 
--	/* check for background commit before unlock */
--	if (log->l_cilp->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log))
--		push = 1;
-+	xlog_cil_push_background(log);
- 
- 	up_read(&log->l_cilp->xc_ctx_lock);
--
--	/*
--	 * We need to push CIL every so often so we don't cache more than we
--	 * can fit in the log. The limit really is that a checkpoint can't be
--	 * more than half the log (the current checkpoint is not allowed to
--	 * overwrite the previous checkpoint), but commit latency and memory
--	 * usage limit this to a smaller size in most cases.
--	 */
--	if (push)
--		xlog_cil_push(log, 0);
- 	return 0;
+ 	spin_lock(&ailp->xa_lock);
+-	xfs_trans_ail_delete(ailp, lip);
++	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 	xfs_buf_item_free(BUF_ITEM(lip));
  }
- 
-@@ -746,9 +751,6 @@ xfs_log_commit_cil(
-  *
-  * We return the current commit lsn to allow the callers to determine if a
-  * iclog flush is necessary following this call.
-- *
-- * XXX: Initially, just push the CIL unconditionally and return whatever
-- * commit lsn is there. It'll be empty, so this is broken for now.
-  */
- xfs_lsn_t
- xlog_cil_force_lsn(
-@@ -766,8 +768,7 @@ xlog_cil_force_lsn(
- 	 * xlog_cil_push() handles racing pushes for the same sequence,
- 	 * so no need to deal with it here.
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 1155208..abbdb7a 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -857,7 +857,7 @@ xfs_qm_dqflush_done(
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+ 		spin_lock(&ailp->xa_lock);
+ 		if (lip->li_lsn == qip->qli_flush_lsn)
+-			xfs_trans_ail_delete(ailp, lip);
++			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 		else
+ 			spin_unlock(&ailp->xa_lock);
+ 	}
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 34baeae..4e3127b 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -454,7 +454,7 @@ xfs_qm_qoffend_logitem_committed(
+ 	 * xfs_trans_ail_delete() drops the AIL lock.
  	 */
--	if (sequence == cil->xc_current_sequence)
--		xlog_cil_push(log, sequence);
-+	xlog_cil_push_foreground(log, sequence);
+ 	spin_lock(&ailp->xa_lock);
+-	xfs_trans_ail_delete(ailp, (xfs_log_item_t *)qfs);
++	xfs_trans_ail_delete(ailp, &qfs->qql_item, SHUTDOWN_LOG_IO_ERROR);
  
+ 	kmem_free(qfs);
+ 	kmem_free(qfe);
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 35c2aff..be61d1d 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -64,7 +64,8 @@ __xfs_efi_release(
+ 	if (!test_and_clear_bit(XFS_EFI_COMMITTED, &efip->efi_flags)) {
+ 		spin_lock(&ailp->xa_lock);
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+-		xfs_trans_ail_delete(ailp, &efip->efi_item);
++		xfs_trans_ail_delete(ailp, &efip->efi_item,
++				     SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_efi_item_free(efip);
+ 	}
+ }
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index bcc6c24..b9df823 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -136,7 +136,8 @@ xfs_inode_free(
+ 		if (lip->li_flags & XFS_LI_IN_AIL) {
+ 			spin_lock(&ailp->xa_lock);
+ 			if (lip->li_flags & XFS_LI_IN_AIL)
+-				xfs_trans_ail_delete(ailp, lip);
++				xfs_trans_ail_delete(ailp, lip,
++						     SHUTDOWN_CORRUPT_INCORE);
+ 			else
+ 				spin_unlock(&ailp->xa_lock);
+ 		}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index bc46c0a..4fb2e99 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2377,7 +2377,7 @@ cluster_corrupt_out:
  	/*
- 	 * See if we can find a previous sequence still committing.
-@@ -826,3 +827,57 @@ xfs_log_item_in_current_chkpt(
- 		return false;
- 	return true;
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(iq);
++	xfs_iflush_abort(iq, false);
+ 	kmem_free(ilist);
+ 	xfs_perag_put(pag);
+ 	return XFS_ERROR(EFSCORRUPTED);
+@@ -2503,7 +2503,7 @@ cluster_corrupt_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(ip);
++	xfs_iflush_abort(ip, false);
+ 	return XFS_ERROR(EFSCORRUPTED);
  }
-+
-+/*
-+ * Perform initial CIL structure initialisation.
-+ */
-+int
-+xlog_cil_init(
-+	struct log	*log)
-+{
-+	struct xfs_cil	*cil;
-+	struct xfs_cil_ctx *ctx;
-+
-+	cil = kmem_zalloc(sizeof(*cil), KM_SLEEP|KM_MAYFAIL);
-+	if (!cil)
-+		return ENOMEM;
-+
-+	ctx = kmem_zalloc(sizeof(*ctx), KM_SLEEP|KM_MAYFAIL);
-+	if (!ctx) {
-+		kmem_free(cil);
-+		return ENOMEM;
-+	}
-+
-+	INIT_WORK(&cil->xc_push_work, xlog_cil_push_work);
-+	INIT_LIST_HEAD(&cil->xc_cil);
-+	INIT_LIST_HEAD(&cil->xc_committing);
-+	spin_lock_init(&cil->xc_cil_lock);
-+	init_rwsem(&cil->xc_ctx_lock);
-+	init_waitqueue_head(&cil->xc_commit_wait);
-+
-+	INIT_LIST_HEAD(&ctx->committing);
-+	INIT_LIST_HEAD(&ctx->busy_extents);
-+	ctx->sequence = 1;
-+	ctx->cil = cil;
-+	cil->xc_ctx = ctx;
-+	cil->xc_current_sequence = ctx->sequence;
-+
-+	cil->xc_log = log;
-+	log->l_cilp = cil;
-+	return 0;
-+}
-+
-+void
-+xlog_cil_destroy(
-+	struct log	*log)
-+{
-+	if (log->l_cilp->xc_ctx) {
-+		if (log->l_cilp->xc_ctx->ticket)
-+			xfs_log_ticket_put(log->l_cilp->xc_ctx->ticket);
-+		kmem_free(log->l_cilp->xc_ctx);
-+	}
-+
-+	ASSERT(list_empty(&log->l_cilp->xc_cil));
-+	kmem_free(log->l_cilp);
-+}
-+
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 2152900..ea8c076 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -417,8 +417,12 @@ struct xfs_cil {
- 	struct list_head	xc_committing;
- 	wait_queue_head_t	xc_commit_wait;
- 	xfs_lsn_t		xc_current_sequence;
-+	struct work_struct	xc_push_work;
-+	xfs_lsn_t		xc_push_seq;
- };
  
-+extern struct workqueue_struct *xfs_cil_wq;
-+
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 05d924e..696f565 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -848,7 +848,8 @@ xfs_iflush_done(
+ 			ASSERT(i <= need_ail);
+ 		}
+ 		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
+-		xfs_trans_ail_delete_bulk(ailp, log_items, i);
++		xfs_trans_ail_delete_bulk(ailp, log_items, i,
++					  SHUTDOWN_CORRUPT_INCORE);
+ 	}
+ 
+ 
+@@ -869,16 +870,15 @@ xfs_iflush_done(
+ }
+ 
  /*
-  * The amount of log space we allow the CIL to aggregate is difficult to size.
-  * Whatever we choose, we have to make sure we can get a reservation for the
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index aef50ab..c5059f5 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1634,8 +1634,13 @@ xfs_init_workqueues(void)
- 	if (!xfs_alloc_wq)
- 		goto out_destroy_syncd;
- 
-+	xfs_cil_wq = alloc_workqueue("xfscwcilalloc", WQ_MEM_RECLAIM, 0);
-+	if (!xfs_cil_wq)
-+		goto out_destroy_alloc;
- 	return 0;
- 
-+out_destroy_alloc:
-+	destroy_workqueue(xfs_alloc_wq);
- out_destroy_syncd:
- 	destroy_workqueue(xfs_syncd_wq);
- 	return -ENOMEM;
-@@ -1644,6 +1649,7 @@ out_destroy_syncd:
- STATIC void
- xfs_destroy_workqueues(void)
+- * This is the inode flushing abort routine.  It is called
+- * from xfs_iflush when the filesystem is shutting down to clean
+- * up the inode state.
+- * It is responsible for removing the inode item
+- * from the AIL if it has not been re-logged, and unlocking the inode's
+- * flush lock.
++ * This is the inode flushing abort routine.  It is called from xfs_iflush when
++ * the filesystem is shutting down to clean up the inode state.  It is
++ * responsible for removing the inode item from the AIL if it has not been
++ * re-logged, and unlocking the inode's flush lock.
+  */
+ void
+ xfs_iflush_abort(
+-	xfs_inode_t		*ip)
++	xfs_inode_t		*ip,
++	bool			stale)
  {
-+	destroy_workqueue(xfs_cil_wq);
- 	destroy_workqueue(xfs_alloc_wq);
- 	destroy_workqueue(xfs_syncd_wq);
+ 	xfs_inode_log_item_t	*iip = ip->i_itemp;
+ 
+@@ -888,7 +888,10 @@ xfs_iflush_abort(
+ 			spin_lock(&ailp->xa_lock);
+ 			if (iip->ili_item.li_flags & XFS_LI_IN_AIL) {
+ 				/* xfs_trans_ail_delete() drops the AIL lock. */
+-				xfs_trans_ail_delete(ailp, (xfs_log_item_t *)iip);
++				xfs_trans_ail_delete(ailp, &iip->ili_item,
++						stale ?
++						     SHUTDOWN_LOG_IO_ERROR :
++						     SHUTDOWN_CORRUPT_INCORE);
+ 			} else
+ 				spin_unlock(&ailp->xa_lock);
+ 		}
+@@ -915,7 +918,7 @@ xfs_istale_done(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_log_item	*lip)
+ {
+-	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode);
++	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode, true);
  }
--- 
-1.7.9
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index 41d61c3..376d4d0 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -165,7 +165,7 @@ extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
+ extern void xfs_inode_item_destroy(struct xfs_inode *);
+ extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
+ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+-extern void xfs_iflush_abort(struct xfs_inode *);
++extern void xfs_iflush_abort(struct xfs_inode *, bool);
+ extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
+ 					 xfs_inode_log_format_t *);
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 7c75c73..41f0694 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2642,7 +2642,8 @@ xlog_recover_efd_pass2(
+ 				 * xfs_trans_ail_delete() drops the
+ 				 * AIL lock.
+ 				 */
+-				xfs_trans_ail_delete(ailp, lip);
++				xfs_trans_ail_delete(ailp, lip,
++						     SHUTDOWN_CORRUPT_INCORE);
+ 				xfs_efi_item_free(efip);
+ 				spin_lock(&ailp->xa_lock);
+ 				break;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 1dead07..a6016e4 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -700,7 +700,8 @@ void
+ xfs_trans_ail_delete_bulk(
+ 	struct xfs_ail		*ailp,
+ 	struct xfs_log_item	**log_items,
+-	int			nr_items) __releases(ailp->xa_lock)
++	int			nr_items,
++	int			shutdown_type) __releases(ailp->xa_lock)
+ {
+ 	xfs_log_item_t		*mlip;
+ 	int			mlip_changed = 0;
+@@ -718,7 +719,7 @@ xfs_trans_ail_delete_bulk(
+ 				xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+ 		"%s: attempting to delete a log item that is not in the AIL",
+ 						__func__);
+-				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++				xfs_force_shutdown(mp, shutdown_type);
+ 			}
+ 			return;
+ 		}
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 8ab2ced..449c881 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -90,14 +90,16 @@ xfs_trans_ail_update(
+ }
+ 
+ void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+-				struct xfs_log_item **log_items, int nr_items)
++				struct xfs_log_item **log_items, int nr_items,
++				int shutdown_type)
+ 				__releases(ailp->xa_lock);
+ static inline void
+ xfs_trans_ail_delete(
+ 	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
++	xfs_log_item_t	*lip,
++	int		shutdown_type) __releases(ailp->xa_lock)
+ {
+-	xfs_trans_ail_delete_bulk(ailp, &lip, 1);
++	xfs_trans_ail_delete_bulk(ailp, &lip, 1, shutdown_type);
+ }
+ 
+ void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
 
 _______________________________________________
 xfs mailing list
