@@ -1,26 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2SKZ6KT188716 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 15:35:07 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id gC6v4CZXbd8obpEk for
-	<xfs@oss.sgi.com>; Wed, 28 Mar 2012 13:35:05 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q2SKZ5dS021330
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 16:35:05 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q2SKZ4R8000807
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 16:35:04 -0400
-Message-ID: <4F7375F7.5090305@redhat.com>
-Date: Wed, 28 Mar 2012 15:35:03 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: [PATCH] mkfs.xfs: print std info if agcount makes agsize out of bounds
+	q2SM6Zeb222742 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 17:06:35 -0500
+Subject: [GIT PULL] XFS update for 3.4 (part 2)
+Message-Id: <20120328220642.920D444925E@whiskey.americas.sgi.com>
+Date: Wed, 28 Mar 2012 17:06:42 -0500 (CDT)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,63 +14,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-When specifying a too-small agcount with stripe geometry,
-mkfs.xfs can fail with a somewhat unexpected message:
+Hi Linus,
 
-$ mkfs.xfs -f -d file,name=fsfile,size=9764864000b,agcount=31,su=512k,sw=20
-Allocation group size (314995613) is not a multiple of the stripe unit (128)
+   Please pull from
+   git://oss.sgi.com/xfs/xfs for-linus
 
-This strikes me as especially odd because normally, mkfs.xfs
-tries to fix up the agsize to be a stripe multiple.  The only way
-we get to the above error message is if ag _size_ is out of bounds;
-exiting with an error about alignment rather than about size
-seems odd.
+   This includes:
 
-Maybe below is too clever, but if by the time we've decided that
-agsize is out of bounds after rounding it both up and down,
-as necessary, to get to a stripe-width multiple, calling
-validate_ag_geometry() will give us the same standard message as
-if we had specified no stripe geometry:
+   Fixes for tracing of xfs_name strings, flag handling in open_by_handle, a
+   log space hang with freeze/unfreeze, fstrim offset calculations, a section
+   mismatch with xfs_qm_exit, an oops in xlog_recover_process_iunlinks, and a
+   deadlock in xfs_rtfree_extent.  There are also additional trace points for
+   attributes, and the addition of a workqueue for allocation to work around
+   kernel stack size limitations.
 
-$ mkfs/mkfs.xfs -f -d file,name=fsfile,size=9764864000b,agcount=31,su=512k,sw=20
-agsize (314995613b) too big, maximum is 268435455 blocks
-Usage: mkfs.xfs
-...
+Thanks,
+	Ben
 
-$ mkfs/mkfs.xfs -f -d file,name=fsfile,size=9764864000b,agcount=31
-agsize (314995613b) too big, maximum is 268435455 blocks
-Usage: mkfs.xfs
-...
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+The following changes since commit 735e941caa9a35f933297af0ab1e0ad6447411c4:
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 5445b6f..1f829c5 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -2174,9 +2174,12 @@ _("size %s specified for log subvolume is too large, maximum is %lld blocks\n"),
- 				if (nodsflag) {
- 					dsunit = dswidth = 0;
- 				} else {
--					fprintf(stderr,
--_("Allocation group size (%lld) is not a multiple of the stripe unit (%d)\n"),
--						(long long)agsize, dsunit);
-+					/*
-+					 * agsize is out of bounds, this will
-+					 * print nice details & exit.
-+					 */
-+					validate_ag_geometry(blocklog, dblocks,
-+							    agsize, agcount);
- 					exit(1);
- 				}
- 			}
+  Merge tag 'common-clk-api' of git://git.kernel.org/pub/scm/linux/kernel/git/arm/arm-soc (2012-03-28 12:38:06 -0700)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs for-linus
+
+Christoph Hellwig (1):
+      xfs: trace xfs_name strings correctly
+
+Dave Chinner (6):
+      xfs: Fix open flag handling in open_by_handle code
+      xfs: introduce an allocation workqueue
+      xfs: don't cache inodes read through bulkstat
+      xfs: Account log unmount transaction correctly
+      xfs: fix fstrim offset calculations
+      xfs: add lots of attribute trace points
+
+Gerard Snitselaar (1):
+      fs: xfs: fix section mismatch in linux-next
+
+Jan Kara (1):
+      xfs: Fix oops on IO error during xlog_recover_process_iunlinks()
+
+Kamal Dasu (1):
+      xfs: fix deadlock in xfs_rtfree_extent
+
+ fs/xfs/xfs_alloc.c       |   36 ++++++++++++++++++++-
+ fs/xfs/xfs_alloc.h       |   12 +++++++
+ fs/xfs/xfs_attr.c        |   16 +++++++++
+ fs/xfs/xfs_attr_leaf.c   |   40 +++++++++++++++++++++--
+ fs/xfs/xfs_bmap.c        |    9 +++++
+ fs/xfs/xfs_da_btree.c    |   32 +++++++++++++++++++
+ fs/xfs/xfs_discard.c     |   61 ++++++++++++++++++++++-------------
+ fs/xfs/xfs_dquot.c       |    2 +-
+ fs/xfs/xfs_iget.c        |    8 +++-
+ fs/xfs/xfs_inode.h       |    4 ++-
+ fs/xfs/xfs_ioctl.c       |   14 +++-----
+ fs/xfs/xfs_itable.c      |    3 +-
+ fs/xfs/xfs_log.c         |    3 +-
+ fs/xfs/xfs_log_recover.c |   33 ++++++-------------
+ fs/xfs/xfs_rtalloc.c     |    9 ++---
+ fs/xfs/xfs_super.c       |   33 +++++++++++++++++++
+ fs/xfs/xfs_trace.h       |   78 +++++++++++++++++++++++++++++++++++++++++++---
+ 17 files changed, 317 insertions(+), 76 deletions(-)
 
 _______________________________________________
 xfs mailing list
