@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2SHLE86146526 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 12:21:14 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id upePhivT0bEzl42B for <xfs@oss.sgi.com>;
-	Wed, 28 Mar 2012 10:21:13 -0700 (PDT)
-Message-ID: <4F734887.7000508@sandeen.net>
-Date: Wed, 28 Mar 2012 12:21:11 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q2SHcJAr149269 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 12:38:19 -0500
+Date: Wed, 28 Mar 2012 12:38:29 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 3/8] xfs: initialise xfssync work before running
+	quotachecks
+Message-ID: <20120328173829.GD7762@sgi.com>
+References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
+	<1332393313-1955-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/1] xfs: use XFS_BMAP_BMDR_SPACE vs. XFS_BROOT_SIZE_ADJ
-References: <4F7225BA.40200@redhat.com>
-In-Reply-To: <4F7225BA.40200@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1332393313-1955-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,74 +24,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-XFS_BROOT_SIZE_ADJ is an undocumented macro which accounts for
-the difference in size between the on-disk and in-core btree
-root.  It's much clearer to just use the newly-added 
-XFS_BMAP_BMDR_SPACE macro which gives us the on-disk size
-directly.
+On Thu, Mar 22, 2012 at 04:15:08PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Because the mount process can run a quotacheck and consume lots of
+> inodes, we need to be able to run periodic inode reclaim during the
+> mount process. This will prevent running the system out of memory
+> during quota checks.
+> 
+> This essentially reverts 2bcf6e97, but that is safe to do now that
+> the quota sync code that was causing problems during long quotacheck
+> executions is now gone.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_super.c |   17 +++++++++--------
+>  1 files changed, 9 insertions(+), 8 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 2c3cc2e..a08c56d 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1346,31 +1346,33 @@ xfs_fs_fill_super(
+>  	sb->s_time_gran = 1;
+>  	set_posix_acl_flag(sb);
+>  
+> -	error = xfs_mountfs(mp);
+> +	error = xfs_syncd_init(mp);
+>  	if (error)
+>  		goto out_filestream_unmount;
+>  
+> -	error = xfs_syncd_init(mp);
+> +	error = xfs_mountfs(mp);
+>  	if (error)
+> -		goto out_unmount;
+> +		goto out_syncd_stop;
+>  
+>  	root = igrab(VFS_I(mp->m_rootip));
+>  	if (!root) {
+>  		error = ENOENT;
+> -		goto out_syncd_stop;
+> +		goto out_unmount;
+>  	}
+>  	if (is_bad_inode(root)) {
+>  		error = EINVAL;
+> -		goto out_syncd_stop;
+> +		goto out_unmount;
+>  	}
+>  	sb->s_root = d_make_root(root);
+		     ^^^^ 
 
-In one case, we must test that the if_broot exists before
-applying the macro, however.
+I haven't seen a patch to use d_make_root instead of d_alloc_root, so we'll
+take the earlier version of this patch... this one doesn't apply.  ;)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
-index a372163..be76047 100644
---- a/fs/xfs/xfs_dinode.h
-+++ b/fs/xfs/xfs_dinode.h
-@@ -107,9 +107,6 @@ typedef enum xfs_dinode_fmt {
- #define XFS_LITINO(mp) \
- 	((int)(((mp)->m_sb.sb_inodesize) - sizeof(struct xfs_dinode)))
- 
--#define	XFS_BROOT_SIZE_ADJ	\
--	(XFS_BTREE_LBLOCK_LEN - sizeof(xfs_bmdr_block_t))
--
- /*
-  * Inode data & attribute fork sizes, per inode.
-  */
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index b210224..a1a6337 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1833,8 +1833,8 @@ xfs_iroot_realloc(
- 		np = (char *)XFS_BMAP_BROOT_PTR_ADDR(mp, ifp->if_broot, 1,
- 						     (int)new_size);
- 		ifp->if_broot_bytes = (int)new_size;
--		ASSERT(ifp->if_broot_bytes <=
--			XFS_IFORK_SIZE(ip, whichfork) + XFS_BROOT_SIZE_ADJ);
-+		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
-+			XFS_IFORK_SIZE(ip, whichfork));
- 		memmove(np, op, cur_max * (uint)sizeof(xfs_dfsbno_t));
- 		return;
- 	}
-@@ -1886,8 +1886,9 @@ xfs_iroot_realloc(
- 	kmem_free(ifp->if_broot);
- 	ifp->if_broot = new_broot;
- 	ifp->if_broot_bytes = (int)new_size;
--	ASSERT(ifp->if_broot_bytes <=
--		XFS_IFORK_SIZE(ip, whichfork) + XFS_BROOT_SIZE_ADJ);
-+	if (ifp->if_broot)
-+		ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
-+			XFS_IFORK_SIZE(ip, whichfork));
- 	return;
- }
- 
-@@ -2201,9 +2202,8 @@ xfs_iflush_fork(
- 		if ((iip->ili_format.ilf_fields & brootflag[whichfork]) &&
- 		    (ifp->if_broot_bytes > 0)) {
- 			ASSERT(ifp->if_broot != NULL);
--			ASSERT(ifp->if_broot_bytes <=
--			       (XFS_IFORK_SIZE(ip, whichfork) +
--				XFS_BROOT_SIZE_ADJ));
-+			ASSERT(XFS_BMAP_BMDR_SPACE(ifp->if_broot) <=
-+			        XFS_IFORK_SIZE(ip, whichfork));
- 			xfs_bmbt_to_bmdr(mp, ifp->if_broot, ifp->if_broot_bytes,
- 				(xfs_bmdr_block_t *)cp,
- 				XFS_DFORK_SIZE(dip, mp, whichfork));
+-Ben
 
 _______________________________________________
 xfs mailing list
