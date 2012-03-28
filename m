@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2U4k32u251571 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 23:46:03 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id j5ZRCPtXhbGgFzrt for <xfs@oss.sgi.com>;
-	Thu, 29 Mar 2012 21:46:02 -0700 (PDT)
-Message-ID: <4F753A89.5050909@sandeen.net>
-Date: Thu, 29 Mar 2012 23:46:01 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: Buffalo LS-Q4.0 Raid 5 XFS errors
-References: <004b01cd0d3f$c6d4fbc0$547ef340$@tx.rr.com>
-	<20120329064054.GP5091@dastard>
-	<002501cd0dbe$24be21c0$6e3a6540$@tx.rr.com>
-	<20120329213100.GA18323@dastard>
-	<005101cd0df9$67f61250$37e236f0$@tx.rr.com>
-	<20120329230317.GD18323@dastard>
-	<005501cd0e03$c1ccaf00$45660d00$@tx.rr.com>
-	<20120329235200.GE18323@dastard>
-	<005601cd0e11$c0b62d90$422288b0$@tx.rr.com>
-In-Reply-To: <005601cd0e11$c0b62d90$422288b0$@tx.rr.com>
+	q2SNi5RH245171 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 18:44:05 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id MtyHAIhZvqRjsthx (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 28 Mar 2012 16:44:03 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 00/19 v4] Fix filesystem freezing deadlocks
+Date: Thu, 29 Mar 2012 01:43:15 +0200
+Message-Id: <1332978214-15535-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,117 +18,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Kirk Anderson <kirkande@tx.rr.com>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, ocfs2-devel@oss.oracle.com, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, sandeen@redhat.com, linux-nilfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>, cluster-devel@redhat.com, Anton Altaparmakov <anton@tuxera.com>, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Joel Becker <jlbec@evilplan.org>, dchinner@redhat.com, Steven Whitehouse <swhiteho@redhat.com>, Chris Mason <chris.mason@oracle.com>, linux-nfs@vger.kernel.org, Alex Elder <elder@kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, Kamal Mostafa <kamal@canonical.com>, Al Viro <viro@ZenIV.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, linux-btrfs@vger.kernel.org
 
-On 3/29/12 8:09 PM, Kirk Anderson wrote:
-> I really appreciate your help to this point.  I do not have the xfs_irecover
-> command available.  Do you think there is an rpm for it that would be
-> compatible with the flavor of Linux this box is running? 
+  Hello,
 
-xfs_irecover isn't packaged up anywhere AFAIK.  If/when Christoph's patch
-makes it upstream, it'll make its way into packages.
+  here is the fourth iteration of my patches to improve filesystem freezing.
+Filesystem freezing is currently racy and thus we can end up with dirty data on
+frozen filesystem (see changelog patch 06 for detailed race description). This
+patch series aims at fixing this.
 
-Until then you'd need to get it built yourself...
+To be able to block all places where inodes get dirtied, I've moved filesystem
+freeze handling in mnt_want_write() / mnt_drop_write(). This however required
+some code shuffling and changes to kern_path_create() (see patches 02-05). I
+think the result is OK but opinions may differ ;). The advantage of this change
+also is that all filesystems get freeze protection almost for free - even ext2
+can handle freezing well now.
 
--Eric
+Another potential contention point might be patch 19. In that patch we make
+freeze_super() refuse to freeze the filesystem when there are open but unlinked
+files which may be impractical in some cases. The main reason for this is the
+problem with handling of file deletion from fput() called with mmap_sem held
+(e.g. from munmap(2)), and then there's the fact that we cannot really force
+such filesystem into a consistent state... But if people think that freezing
+with open but unlinked files should happen, then I have some possible
+solutions in mind (maybe as a separate patchset since this is large enough).
 
-> root@LS-QLF55:~# uname -a
-> Linux LS-QLF55 2.6.22.7 #395 Thu May 21 22:24:49 JST 2009 armv5tejl unknown
-> 
->  If so, where may I find it?  Since I do not have a backup of this it sounds
-> like I have nothing to lose in trying the xfs_repair or should I hold out
-> for xfs_irecover?  Please let me know.  Thanks, Kirk
-> 
-> -----Original Message-----
-> From: Dave Chinner [mailto:david@fromorbit.com] 
-> Sent: Thursday, March 29, 2012 6:52 PM
-> To: Kirk Anderson
-> Cc: xfs@oss.sgi.com
-> Subject: Re: Buffalo LS-Q4.0 Raid 5 XFS errors
-> 
-> On Thu, Mar 29, 2012 at 06:29:14PM -0500, Kirk Anderson wrote:
->> These two matched.
->>
->> root@LS-QLF55:~# dd if=/dev/sda6 bs=512 count=1 2> /dev/null | hexdump 
->> -C > dump_sda6.txt root@LS-QLF55:~# dd if=/dev/md2 bs=512 count=1 2> 
->> /dev/null | hexdump -C > dump_md2.txt root@LS-QLF55:~# diff 
->> dump_sda6.txt dump_md2.txt root@LS-QLF55:~#
->>
->> root@LS-QLF55:~# dd if=/dev/md2 bs=512 count=4 2> /dev/null | hexdump 
->> -C
->> 00000000  58 46 53 42 00 00 10 00  00 00 00 00 2b 4e 92 c0
->> |XFSB........+N..|
->> 00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> 00000020  1b 5a c5 ad cc e3 40 11  87 4d f5 8e 9b f8 37 c0
->> |.Z....@..M....7.|
->> 00000030  00 00 00 00 20 00 00 07  00 00 00 00 00 00 01 00  |....
->> ...........|
->> 00000040  00 00 00 00 00 00 01 01  00 00 00 00 00 00 01 02
->> |................|
->> 00000050  00 00 00 30 01 5a 74 a0  00 00 00 20 00 00 00 00  |...0.Zt....
->> ....|
->> 00000060  00 00 80 00 3d 84 10 00  01 00 00 10 00 00 00 00
->> |....=...........|
->> 00000070  00 00 00 00 00 00 00 00  0c 0c 08 04 19 00 00 19
->> |................|
->> 00000080  00 00 00 00 00 04 50 c0  00 00 00 00 00 00 02 ce
->> |......P.........|
->> 00000090  00 00 00 00 0b ba 45 ab  00 00 00 00 00 00 00 00
->> |......E.........|
->> 000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> 000000b0  00 00 00 00 00 00 00 02  00 00 00 10 00 00 00 30
->> |...............0|
->> 000000c0  00 0c 10 00 00 00 10 00  00 00 00 00 00 00 00 00
->> |................|
->> 000000d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
->> |................|
->> *
->> 00000800
-> 
-> The AGF, AGI and AGFL have all been zeroed. Something has overwritten them.
-> Your filesysetm is likely to be toast.
-> 
->>
->>
->> root@LS-QLF55:~# xfs_db -c "sb 0" -c p -c "agf 0" -c p -c "agi 0" -c p
->> /dev/md2
->> cache_node_purge: refcount was 1, not zero (node=0xb1698)
->> xfs_db: cannot read root inode (22)
-> 
-> And that means the zeroing has extended well into the filesystem, and your
-> root directory has been lost. There's really not that much that reapir can
-> do for you at this point execpt make a mess. There is no AGI left to find
-> where in-use inodes might live to recover them, and the directory structure
-> cannot be used to find them, either, so I think the only thing you can do
-> now is start on disaster recovery.
-> 
-> Christoph had a patch to xfs_repair that allowed it to run xfs_irecover like
-> functionality - I don't think he ever posted it, so you might just have to
-> find the original xfs_irecover utility and make use of that to extract
-> whatever you can from the busted filesystem.
-> 
-> Other than that, I think that there's little we can do to help you recover
-> the filesystem intact at this point....
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+I'm not able to hit any deadlocks, lockdep warnings, or dirty data on frozen
+filesystem despite beating it with fsstress and bash-shared-mapping while
+freezing and unfreezing for several hours (using ext4 and xfs) so I'm
+reasonably confident this could finally be the right solution.
+
+And for people wanting to test - this patchset is based on patch series
+"Push file_update_time() into .page_mkwrite" so you'll need to pull that one
+in as well.
+
+Changes since v3:
+  * added third level of freezing for fs internal purposes - hooked some
+    filesystems to use it (XFS, nilfs2)
+  * removed racy i_size check from filemap_mkwrite()
+
+Changes since v2:
+  * completely rewritten
+  * freezing is now blocked at VFS entry points
+  * two stage freezing to handle both mmapped writes and other IO
+
+The biggest changes since v1:
+  * have two counters to provide safe state transitions for SB_FREEZE_WRITE
+    and SB_FREEZE_TRANS states
+  * use percpu counters instead of own percpu structure
+  * added documentation fixes from the old fs freezing series
+  * converted XFS to use SB_FREEZE_TRANS counter instead of its private
+    m_active_trans counter
+
+								Honza
+
+CC: Alex Elder <elder@kernel.org>
+CC: Anton Altaparmakov <anton@tuxera.com>
+CC: Ben Myers <bpm@sgi.com>
+CC: Chris Mason <chris.mason@oracle.com>
+CC: cluster-devel@redhat.com
+CC: "David S. Miller" <davem@davemloft.net>
+CC: fuse-devel@lists.sourceforge.net
+CC: "J. Bruce Fields" <bfields@fieldses.org>
+CC: Joel Becker <jlbec@evilplan.org>
+CC: KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>
+CC: linux-btrfs@vger.kernel.org
+CC: linux-ext4@vger.kernel.org
+CC: linux-nfs@vger.kernel.org
+CC: linux-nilfs@vger.kernel.org
+CC: linux-ntfs-dev@lists.sourceforge.net
+CC: Mark Fasheh <mfasheh@suse.com>
+CC: Miklos Szeredi <miklos@szeredi.hu>
+CC: ocfs2-devel@oss.oracle.com
+CC: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+CC: Steven Whitehouse <swhiteho@redhat.com>
+CC: "Theodore Ts'o" <tytso@mit.edu>
+CC: xfs@oss.sgi.com
 
 _______________________________________________
 xfs mailing list
