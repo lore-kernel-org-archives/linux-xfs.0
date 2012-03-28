@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2SFQfHK121147 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 10:26:41 -0500
+	q2SFAnsO113741 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 10:10:54 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	F3KQrIeavOft6f5u (version=TLSv1 cipher=AES256-SHA bits=256
+	XzcTzTAp5EF1GtAL (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 28 Mar 2012 08:26:40 -0700 (PDT)
-Date: Wed, 28 Mar 2012 11:26:39 -0400
+	Wed, 28 Mar 2012 08:10:46 -0700 (PDT)
+Date: Wed, 28 Mar 2012 11:10:41 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/4] xfs: use blocks for counting length of buffers
-Message-ID: <20120328152639.GB12205@infradead.org>
-References: <1332911958-5613-1-git-send-email-david@fromorbit.com>
-	<1332911958-5613-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 00/10] remove xfsbufd
+Message-ID: <20120328151040.GA2487@infradead.org>
+References: <20120327164400.967415009@bombadil.infradead.org>
+	<20120328005337.GH3592@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1332911958-5613-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120328005337.GH3592@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,42 +30,35 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-> +			tmp = (valuelen < BBTOB(bp->b_length))
-> +				? valuelen : BBTOB(bp->b_length);
+On Wed, Mar 28, 2012 at 11:53:37AM +1100, Dave Chinner wrote:
+> in IO patterns and performance under heavy load here with this
+> patch set. it doesn't however, reduce the buffer cache lookups all
+> that much on such workloads - about 10% at most - as most of the
+> lookups are common from the directory and inode buffer
+> modifications. Here's a sample profile:
 
-maybe use min or min_t here while you're at it?
+10% might not be extremly huge, but it's pretty significant.
 
-> -		tmp = (valuelen < XFS_BUF_SIZE(bp)) ? valuelen :
-> -							XFS_BUF_SIZE(bp);
-> +		tmp = valuelen < BBTOB(bp->b_length) ? valuelen :
-> +						       BBTOB(bp->b_length);
+> This shows that 50% of the lookups from the directory code, 25% from
+> the inode btree lookups, 12% from mapping inodes, and 10% from
+> reading the AGI buffer during inode allocation. 
+> 
+> You know, I suspect that we could avoid almost all those AGI buffer
+> lookups by moving to a similar in-core log and flush technique that
+> the inodes use. We've already got all the information in the struct
+> xfs_perag - rearranging it to have a "in-core on disk" structures
+> for the AGI, AGF and AGFL would make a lot of the "select an AG"
+> code much simpler than having to read and modify the AG buffers
+> directly. It might even be possible to do such a change without
+> needing to change the on-disk journal format for them...
+> 
+> I think I'll put that on my list of stuff to do - right next to
+> in-core unlinked inode lists....
 
-Same here.
-
->  		xfs_buf_iomove(bp, 0, tmp, src, XBRW_WRITE);
-> -		if (tmp < XFS_BUF_SIZE(bp))
-> -			xfs_buf_zero(bp, tmp, XFS_BUF_SIZE(bp) - tmp);
-> +		if (tmp < BBTOB(bp->b_length))
-> +			xfs_buf_zero(bp, tmp, BBTOB(bp->b_length) - tmp);
-
-Also a local buf_len variable in this function would probably be useful.
-
-> -	size_t			b_buffer_length;/* size of buffer in bytes */
-> +	size_t			b_length;	/* size of buffer in BBs */
-
-A count of blocks probably shold not be a size_t, but a uint.
-
->  	TP_fast_assign(
->  		__entry->dev = bp->b_target->bt_dev;
->  		__entry->bno = bp->b_bn;
-> -		__entry->buffer_length = bp->b_buffer_length;
-> +		__entry->buffer_length = BBTOB(bp->b_length);
-
-Given that we print the bno in blocks it might make sense to print
-this as number of blocks, too?  Change the description string to nblks
-in that case as well.
+Sounds fine.  A simple short-term fix might be to simply pin a reference
+to the AGI buffers and add a pointer from struct xfs_perag to them.
 
 _______________________________________________
 xfs mailing list
