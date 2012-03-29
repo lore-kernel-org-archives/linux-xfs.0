@@ -1,14 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2TM5Jbg198835 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 17:05:19 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Yyy2d5BE2StwsFIn for
-	<xfs@oss.sgi.com>; Thu, 29 Mar 2012 15:05:17 -0700 (PDT)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: [PATCH 0/7, v3] fs: fix up AIO+DIO+O_SYNC to actually do the sync part
-Date: Thu, 29 Mar 2012 18:04:58 -0400
-Message-Id: <1333058705-31512-1-git-send-email-jmoyer@redhat.com>
+	q2TM78tZ199521 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 17:07:08 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	9RbZtHNgQfyREqep for <xfs@oss.sgi.com>;
+	Thu, 29 Mar 2012 15:07:07 -0700 (PDT)
+Date: Fri, 30 Mar 2012 09:07:04 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/8] xfs: check for buffer errors before waiting
+Message-ID: <20120329220704.GB18323@dastard>
+References: <1333023835-12856-1-git-send-email-david@fromorbit.com>
+	<1333023835-12856-2-git-send-email-david@fromorbit.com>
+	<4F74B229.6030707@sgi.com> <20120329211025.GD692@dastard>
+	<4F74D89B.1060008@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F74D89B.1060008@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,43 +25,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: hch@infradead.org, linux-ext4@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On Thu, Mar 29, 2012 at 04:48:11PM -0500, Mark Tinguely wrote:
+> On 03/29/12 16:10, Dave Chinner wrote:
+> >On Thu, Mar 29, 2012 at 02:04:09PM -0500, Mark Tinguely wrote:
+> >If the previous user of the buffer got an error, it is not
+> >guaranteed to be cleared because the buffer is not re-initialised.
+> >i.e. it's an uncached buffer that we control completely and reuse
+> >from IO to IO with just a reset of the bno and length. If b_error is
+> >non zero here, then the IO can fail because nothing else clears the
+> >error in the dispatch path....
+> 
+> Thank-you for the explanation.
+> 
+> FYI: I am having problems with the patches applying. This patch
+> complained at hunk at offset 623. Maybe I am using too new of kernel
+> source.
 
-Currently, AIO+DIO+O_SYNC writes are not actually sync'd (for xfs), or
-they are sync'd before the I/O is actually issued (everybody else).
-The following patch series fixes this in two parts.  First, for the
-file systems that use the generic routines, Jan has provided some
-generic infrastructure to perform the syncs after the I/O is completed.
-Second, for those file systems which require some endio processing of
-their own for O_DIRECT writes (xfs and ext4), I've implemented file
-system specific syncing.  This passes the updated xfs-tests 113 test
-I posted earlier, as well as all of the tests in the aio group.  I
-tested ext3, ext4, xfs, and btrfs only.
-
-This is a data integrity path, and the current code does not honor
-O_SYNC, so any review would be greatly appreciated.
+That's because they are based on top of a current TOT mainline and
+Christoph's dio ilock and xfsbufd removal changes.
 
 Cheers,
-Jeff
 
-Changes since v2: updated the xfs patch to resolve conflicts with new
-code (the flush workqueue is now one per mount point).
-
-[PATCH 1/7] vfs: Handle O_SYNC AIO DIO in generic code properly
-[PATCH 2/7] ocfs2: Use generic handlers of O_SYNC AIO DIO
-[PATCH 3/7] gfs2: Use generic handlers of O_SYNC AIO DIO
-[PATCH 4/7] btrfs: Use generic handlers of O_SYNC AIO DIO
-[PATCH 5/7] xfs: honor the O_SYNC flag for aysnchronous direct I/O requests
-[PATCH 6/7] ext4: honor the O_SYNC flag for aysnchronous direct I/O requests
-[PATCH 7/7] filemap: don't call generic_write_sync for -EIOCBQUEUED
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
