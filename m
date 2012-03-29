@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2TNQJTx207789 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 18:26:19 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	O6DS2rcV2ja4SwaP (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 29 Mar 2012 16:26:17 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1SDOjR-0000J8-1q
-	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:26:17 +0000
-Date: Thu, 29 Mar 2012 19:26:17 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 2/2] xfs: remove xfs_inotobp
-Message-ID: <20120329232616.GA1163@infradead.org>
-References: <20120329232543.GA30033@infradead.org>
+	q2TNTNLi208060 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 18:29:23 -0500
+Received: from mho-01-ewr.mailhop.org (mho-01-ewr.mailhop.org [204.13.248.71])
+	by cuda.sgi.com with ESMTP id kM1LSrEEzAo0W279 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 29 Mar 2012 16:29:22 -0700 (PDT)
+From: "Kirk Anderson" <kirkande@tx.rr.com>
+References: <004b01cd0d3f$c6d4fbc0$547ef340$@tx.rr.com>
+	<20120329064054.GP5091@dastard>
+	<002501cd0dbe$24be21c0$6e3a6540$@tx.rr.com>
+	<20120329213100.GA18323@dastard>
+	<005101cd0df9$67f61250$37e236f0$@tx.rr.com>
+	<20120329230317.GD18323@dastard>
+In-Reply-To: <20120329230317.GD18323@dastard>
+Subject: RE: Buffalo LS-Q4.0 Raid 5 XFS errors
+Date: Thu, 29 Mar 2012 18:29:14 -0500
+Message-ID: <005501cd0e03$c1ccaf00$45660d00$@tx.rr.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120329232543.GA30033@infradead.org>
+Content-Language: en-us
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,127 +31,108 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: 'Dave Chinner' <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-There is no need to keep this helper around, opencoding it in the only
-caller is just as clear.
+These two matched.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+root@LS-QLF55:~# dd if=/dev/sda6 bs=512 count=1 2> /dev/null | hexdump -C >
+dump_sda6.txt
+root@LS-QLF55:~# dd if=/dev/md2 bs=512 count=1 2> /dev/null | hexdump -C >
+dump_md2.txt
+root@LS-QLF55:~# diff dump_sda6.txt dump_md2.txt
+root@LS-QLF55:~#
 
----
- fs/xfs/xfs_inode.c |   70 ++++++++++++++---------------------------------------
- fs/xfs/xfs_inode.h |    3 --
- 2 files changed, 19 insertions(+), 54 deletions(-)
+root@LS-QLF55:~# dd if=/dev/md2 bs=512 count=4 2> /dev/null | hexdump -C
+00000000  58 46 53 42 00 00 10 00  00 00 00 00 2b 4e 92 c0
+|XFSB........+N..|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+|................|
+00000020  1b 5a c5 ad cc e3 40 11  87 4d f5 8e 9b f8 37 c0
+|.Z....@..M....7.|
+00000030  00 00 00 00 20 00 00 07  00 00 00 00 00 00 01 00  |....
+...........|
+00000040  00 00 00 00 00 00 01 01  00 00 00 00 00 00 01 02
+|................|
+00000050  00 00 00 30 01 5a 74 a0  00 00 00 20 00 00 00 00  |...0.Zt....
+....|
+00000060  00 00 80 00 3d 84 10 00  01 00 00 10 00 00 00 00
+|....=...........|
+00000070  00 00 00 00 00 00 00 00  0c 0c 08 04 19 00 00 19
+|................|
+00000080  00 00 00 00 00 04 50 c0  00 00 00 00 00 00 02 ce
+|......P.........|
+00000090  00 00 00 00 0b ba 45 ab  00 00 00 00 00 00 00 00
+|......E.........|
+000000a0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+|................|
+000000b0  00 00 00 00 00 00 00 02  00 00 00 10 00 00 00 30
+|...............0|
+000000c0  00 0c 10 00 00 00 10 00  00 00 00 00 00 00 00 00
+|................|
+000000d0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00
+|................|
+*
+00000800
 
-Index: xfs/fs/xfs/xfs_inode.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.c	2012-03-29 16:14:23.223420421 -0700
-+++ xfs/fs/xfs/xfs_inode.c	2012-03-29 16:15:37.309685727 -0700
-@@ -202,47 +202,6 @@ xfs_imap_to_bp(
- }
- 
- /*
-- * This routine is called to map an inode number within a file
-- * system to the buffer containing the on-disk version of the
-- * inode.  It returns a pointer to the buffer containing the
-- * on-disk inode in the bpp parameter, and in the dip parameter
-- * it returns a pointer to the on-disk inode within that buffer.
-- *
-- * If a non-zero error is returned, then the contents of bpp and
-- * dipp are undefined.
-- *
-- * Use xfs_imap() to determine the size and location of the
-- * buffer to read from disk.
-- */
--int
--xfs_inotobp(
--	xfs_mount_t	*mp,
--	xfs_trans_t	*tp,
--	xfs_ino_t	ino,
--	xfs_dinode_t	**dipp,
--	xfs_buf_t	**bpp,
--	int		*offset,
--	uint		imap_flags)
--{
--	struct xfs_imap	imap;
--	xfs_buf_t	*bp;
--	int		error;
--
--	imap.im_blkno = 0;
--	error = xfs_imap(mp, tp, ino, &imap, imap_flags);
--	if (error)
--		return error;
--
--	error = xfs_imap_to_bp(mp, tp, &imap, dipp, &bp, XBF_LOCK, imap_flags);
--	if (error)
--		return error;
--
--	*bpp = bp;
--	*offset = imap.im_boffset;
--	return 0;
--}
--
--/*
-  * Move inode type and inode format specific information from the
-  * on-disk inode to the in-core inode.  For fifos, devs, and sockets
-  * this means set if_rdev to the proper value.  For files, directories,
-@@ -1418,23 +1377,32 @@ xfs_iunlink_remove(
- 		next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
- 		last_ibp = NULL;
- 		while (next_agino != agino) {
--			/*
--			 * If the last inode wasn't the one pointing to
--			 * us, then release its buffer since we're not
--			 * going to do anything with it.
--			 */
--			if (last_ibp != NULL) {
-+			struct xfs_imap	imap;
-+
-+			if (last_ibp)
- 				xfs_trans_brelse(tp, last_ibp);
--			}
-+
-+			imap.im_blkno = 0;
- 			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
--			error = xfs_inotobp(mp, tp, next_ino, &last_dip,
--					    &last_ibp, &last_offset, 0);
-+
-+			error = xfs_imap(mp, tp, next_ino, &imap, 0);
-+			if (error) {
-+				xfs_warn(mp,
-+	"%s: xfs_imap returned error %d.",
-+					 __func__, error);
-+				return error;
-+			}
-+
-+			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
-+					       &last_ibp, XBF_LOCK, 0);
- 			if (error) {
- 				xfs_warn(mp,
--					"%s: xfs_inotobp() returned error %d.",
-+	"%s: xfs_imap_to_bp returned error %d.",
- 					__func__, error);
- 				return error;
- 			}
-+
-+			last_offset = imap.im_boffset;
- 			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
- 			ASSERT(next_agino != NULLAGINO);
- 			ASSERT(next_agino != 0);
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2012-03-29 16:14:23.223420421 -0700
-+++ xfs/fs/xfs/xfs_inode.h	2012-03-29 16:15:37.309685727 -0700
-@@ -555,9 +555,6 @@ do { \
- #define XFS_IGET_UNTRUSTED	0x2
- #define XFS_IGET_DONTCACHE	0x4
- 
--int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
--			    xfs_ino_t, struct xfs_dinode **,
--			    struct xfs_buf **, int *, uint);
- int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
- 			       struct xfs_imap *, struct xfs_dinode **,
- 			       struct xfs_buf **, uint, uint);
+
+root@LS-QLF55:~# xfs_db -c "sb 0" -c p -c "agf 0" -c p -c "agi 0" -c p
+/dev/md2
+cache_node_purge: refcount was 1, not zero (node=0xb1698)
+xfs_db: cannot read root inode (22)
+cache_node_purge: refcount was 1, not zero (node=0xb4e08)
+xfs_db: cannot read realtime bitmap inode (22)
+Segmentation fault
+root@LS-QLF55:~#
+
+Please let me know what my next steps are.  Thanks, Kirk
+
+
+-----Original Message-----
+From: Dave Chinner [mailto:david@fromorbit.com] 
+Sent: Thursday, March 29, 2012 6:03 PM
+To: Kirk Anderson
+Cc: xfs@oss.sgi.com
+Subject: Re: Buffalo LS-Q4.0 Raid 5 XFS errors
+
+On Thu, Mar 29, 2012 at 05:15:08PM -0500, Kirk Anderson wrote:
+> Thank you again for your help.  Please let me know what my next step 
+> should be.
+> 
+> Here is the output from the dd command.  My understanding is that I 
+> use the
+> /dev/sd[a-d]6 for mine as the  cat /proc/mdstat indicated that
+> md2 : active raid5 sda6[0] sdd6[3] sdc6[2] sdb6[1]
+>       2906278656 blocks level 5, 64k chunk, algorithm 2 [4/4] [UUUU]
+> 
+> root@LS-QLF55:~# dd if=/dev/sda6 bs=512 count=1 2> /dev/null | hexdump 
+> -C
+> 00000000  58 46 53 42 00 00 10 00  00 00 00 00 2b 4e 92 c0 
+> |XFSB........+N..|
+.....
+
+Ok, so that's a superblock. Does it match the output of
+
+# dd if=/dev/md2 bs=512 count=1 2> /dev/null | hexdump -C
+
+It should match according to the above, but it doesn't hurt to confirm.  If
+it doesn't then your RAID device has been SBTW and that's what you need to
+fix first.
+
+If it does match, can you dump the output of
+
+# dd if=/dev/md2 bs=512 count=4 2> /dev/null | hexdump -C
+
+and
+
+# xfs_db -c "sb 0" -c p -c "agf 0" -c p -c "agi 0" -c p /dev/md2
+
+Cheers,
+
+Dave.
+--
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
