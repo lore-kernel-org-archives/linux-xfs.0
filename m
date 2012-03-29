@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2T8pHWa054186 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 03:51:18 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	dBKp7GF3HuV3ZUWu for <xfs@oss.sgi.com>;
-	Thu, 29 Mar 2012 01:51:15 -0700 (PDT)
-Date: Thu, 29 Mar 2012 19:51:12 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: Do background CIL flushes via a workqueue
-Message-ID: <20120329085112.GQ5091@dastard>
-References: <1332841605-3538-1-git-send-email-david@fromorbit.com>
-	<20120327143127.GA11434@infradead.org>
-	<20120327155759.GB28707@redhat.com>
-	<20120327160300.GA22555@infradead.org>
-	<20120327161941.GC28707@redhat.com>
+	q2TANBsO073280 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 05:23:12 -0500
+Received: from mx.nrchpc.ac.cn ([221.122.61.228]) by cuda.sgi.com with ESMTP
+	id SJPGXPvBvUgHV9Y5 (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 29 Mar 2012 03:23:08 -0700 (PDT)
+Received: from liuyumsPC ([221.122.61.228]) (authenticated bits=0)
+	by mx.nrchpc.ac.cn (8.13.8/8.13.8) with ESMTP id q2TAOjKT023452
+	for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 18:24:45 +0800
+From: "Liu Yu" <liuyums@bwstor.com.cn>
+Subject: xfstests: 066: why stat dir but not largefile?
+Date: Thu, 29 Mar 2012 18:23:05 +0800
+Message-ID: <007e01cd0d95$ee7537c0$cb5fa740$@com.cn>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120327161941.GC28707@redhat.com>
+Content-Language: zh-cn
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,86 +27,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Mar 27, 2012 at 12:19:41PM -0400, Vivek Goyal wrote:
-> On Tue, Mar 27, 2012 at 12:03:00PM -0400, Christoph Hellwig wrote:
-> > On Tue, Mar 27, 2012 at 11:57:59AM -0400, Vivek Goyal wrote:
-> > > On Tue, Mar 27, 2012 at 10:31:27AM -0400, Christoph Hellwig wrote:
-> > > > Vivek, does CFQ still need any hints for this sort of handoff?
-> > > > 
-> > > 
-> > > Christoph, I don't understand the issue enough to comment on it.
-> > > 
-> > > Had a quick look at the patch. Looks like some action (writing log), has
-> > > been moved to a worker thread.  And in some cases (log force triggered
-> > > flush, whatever it is), we seem to prefer to do it from the submitter's
-> > > context.
-> > 
-> > Yes.  This is to workaround the old problem of cfq getting utterly
-> > confused if cooperating I/O beeing submitted from different threads.
-> > 
-> > The case in the previous version of this patch was:
-> > 
-> >  - thread doing the fsync will write out data, and wait for it
-> >  - then we'd force the log by kicking a workqueue and waiting for it
-> > 
-> > quite similar to the ext3/4 fsync issues that we had long discussions
-> > about.
-> 
-> Ok, then I think that fundamental issue still remains with CFQ. And there
-> is no general solution to recognizing dependency between processes.
-> 
-> But a specific workaround  for ext3/ext4 fsync problem was put by corrado
-> long back.
-> 
-> commit 749ef9f8423054e326f3a246327ed2db4b6d395f
-> Author: Corrado Zoccolo <czoccolo@gmail.com>
-> Date:   Mon Sep 20 15:24:50 2010 +0200
-> 
->     cfq: improve fsync performance for small files
-> 
-> Basically, I think previously journal commits were "WRITE" and were
-> showing most likely on async IO tree. And "fsync" IO was synchronous
-> and probably showing up on "sync-noidle" tree. CFQ does idling before
-> it switches between trees hence transition from one process to other
-> was slow.
-> 
-> Now corrado, changed the IO type from journaling thread to "WRITE_SYNC"
-> which makes writes synchronous and sets the REQ_NOIDLE flag. Hence forcing
-> "journal" thread to show up on "sync-noidle" tree. I think "fsync" was
-> already there so effectively both the processes are on same service tree
-> and we don't idle between processes when they are on "sync-noidle" tree.
+Hi folks,
 
-Oh, that hack.  Have a look at the patch Jan Kara just posted to the
-ext4 list (jbd: Refine commit writeout logic,
-http://comments.gmane.org/gmane.comp.file-systems.ext4/31704) where
-he removes that WRITE_SYNC from the ext4 journal commit to reduce
-read latencies in the presence of writes by an order of magnitude.
-IOWs, we need to revert the hack that ext4 uses to work around the
-CFQ-caused fsync latency problem because it causes much worse read
-latency problems on CFQ.
+If we indeed want to stat dir, then what do we create a largefile for?
 
-That is, we simply can't fix CFQ idling heuristic deficiencies at the
-filesystem level simply by changing the IO classification. All we
-can chosen from is bad performance on workload A or bad performance
-on workload B, neither of which are particularly appealing.
-
-> So xfs either need to resort to similar optimizaiton where IO type from
-> both the process context is of same type or try to do all the IO from
-> one process context. 
-
-Submiting all the IO from the same context is exactly what this
-patch does - it avoids the whole steaming pile of CFQ problems that
-way.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Yu
 
 _______________________________________________
 xfs mailing list
