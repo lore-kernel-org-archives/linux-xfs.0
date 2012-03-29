@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2TCOGiD092031 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 07:24:16 -0500
+	q2TC7wV7085819 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 07:07:59 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	CimKkp5nMkyYKuBA for <xfs@oss.sgi.com>;
-	Thu, 29 Mar 2012 05:24:15 -0700 (PDT)
+	L4occSpNbq6rLWzL for <xfs@oss.sgi.com>;
+	Thu, 29 Mar 2012 05:07:55 -0700 (PDT)
 Received: from [192.168.1.2] (helo=disappointment)
 	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SDEOj-0003fE-HS
-	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:24:13 +1100
+	(envelope-from <dave@fromorbit.com>) id 1SDE8u-0003dh-Jt
+	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:07:52 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SDEOT-0003NS-JI
-	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:23:57 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1SDE8U-0003JN-LV
+	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:07:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/8] xfs: check for buffer errors before waiting
-Date: Thu, 29 Mar 2012 23:23:48 +1100
-Message-Id: <1333023835-12856-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1333023835-12856-1-git-send-email-david@fromorbit.com>
-References: <1333023835-12856-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH] xfs: fix buffer lookup race on allocation failure
+Date: Thu, 29 Mar 2012 23:07:26 +1100
+Message-Id: <1333022846-12697-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,127 +34,131 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If we call xfs_buf_iowait() on a buffer that failed dispatch due to
-an IO error, it will wait forever for an Io that does not exist.
-This is hndled in xfs_buf_read, but there is other code that calls
-xfs_buf_iowait directly that doesn't.
+When memory allocation fails to add the page array or tht epages to
+a buffer during xfs_buf_get(), the buffer is left in the cache in a
+partially initialised state. There is enough state left for the next
+lookup on that buffer to find the buffer, and for the buffer to then
+be used without finishing the initialisation.  As a result, when an
+attempt to do IO on the buffer occurs, it fails with EIO because
+there are no pages attached to the buffer.
 
-Rather than make the call sites have to handle checking for dispatch
-errors and then checking for completion errors, make
-xfs_buf_iowait() check for dispatch errors on the buffer before
-waiting. This means we handle both dispatch and completion errors
-with one set of error handling at the caller sites.
+We cannot remove the buffer from the cache immediately and free it,
+because there may already be a racing lookup that is blocked on the
+buffer lock. hence the moment we unlock the buffer to then free it,
+the other user is woken and we have a use-after-free situation.
+
+Hence we have to mark the buffer as "broken" and check that after we
+have gained the buffer lock on a cache hit lookup. This enables
+racing lookups to avoid the broken buffer and drop their references,
+allowing the buffer to be freed.
+
+This however, doesn't solve the problem completely - there may be a
+delay in the buffer getting freed (e.g. pre-emption), so when we try
+the lookup a second time with a new buffer to insert into the tree,
+if we find the broken buffer again, drop the buffer lock, sleep for
+a short while, and try the lookup again. When the broken bufer is
+finally removed from the cache we will make forwards progress.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c         |   22 ++++++++++------------
- fs/xfs/xfs_buf.h         |    2 +-
- fs/xfs/xfs_log_recover.c |    2 ++
- 3 files changed, 13 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_buf.c   |   33 ++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_buf.h   |    2 ++
+ fs/xfs/xfs_trace.h |    2 ++
+ 3 files changed, 36 insertions(+), 1 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d65d972..2122b0f 100644
+index 6819b51..3588460 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -623,17 +623,15 @@ _xfs_buf_read(
- 	xfs_buf_t		*bp,
- 	xfs_buf_flags_t		flags)
- {
--	int			status;
--
- 	ASSERT(!(flags & XBF_WRITE));
- 	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
+@@ -441,6 +441,7 @@ _xfs_buf_find(
+ 	ASSERT(!(range_base & (xfs_off_t)btp->bt_smask));
  
- 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+ 	/* get tree root */
++lookup_again:
+ 	pag = xfs_perag_get(btp->bt_mount,
+ 				xfs_daddr_to_agno(btp->bt_mount, ioff));
  
--	status = xfs_buf_iorequest(bp);
--	if (status || bp->b_error || (flags & XBF_ASYNC))
--		return status;
-+	xfs_buf_iorequest(bp);
-+	if (flags & XBF_ASYNC)
-+		return 0;
- 	return xfs_buf_iowait(bp);
- }
- 
-@@ -718,7 +716,7 @@ xfs_buf_read_uncached(
- 
- 	xfsbdstrat(mp, bp);
- 	error = xfs_buf_iowait(bp);
--	if (error || bp->b_error) {
-+	if (error) {
- 		xfs_buf_relse(bp);
- 		return NULL;
+@@ -505,6 +506,24 @@ found:
  	}
-@@ -1275,7 +1273,7 @@ next_chunk:
- 	}
- }
  
--int
-+void
- xfs_buf_iorequest(
- 	xfs_buf_t		*bp)
- {
-@@ -1296,13 +1294,12 @@ xfs_buf_iorequest(
- 	_xfs_buf_ioend(bp, 0);
+ 	/*
++	 * If the buffer initialisation was not completed correctly after
++	 * insertion into the cache we can't use this buffer and we are pinning
++	 * it preventing it from being removed from the cache. Hence just avoid
++	 * the buffer if it is broken, allowing it to be reclaimed and removed
++	 * from the cache. If we are here with a new buffer to insert into the
++	 * cache, we want to try the lookup again so that the expected "insert
++	 * on lookup failure" semantics are preserved for this case.
++	 */
++	if (bp->b_flags & XBF_BROKEN) {
++		trace_xfs_buf_find_broken(bp, flags, _RET_IP_);
++		xfs_buf_relse(bp);
++		if (!new_bp)
++			return NULL;
++		delay(1);
++		goto lookup_again;
++	}
++
++	/*
+ 	 * if the buffer is stale, clear all the external state associated with
+ 	 * it. We need to keep flags such as how we allocated the buffer memory
+ 	 * intact here.
+@@ -552,8 +571,20 @@ xfs_buf_get(
  
- 	xfs_buf_rele(bp);
--	return 0;
- }
+ 	if (bp == new_bp) {
+ 		error = xfs_buf_allocate_memory(bp, flags);
+-		if (error)
++		if (error) {
++			/*
++			 * The buffer has been inserted into the cache now, so
++			 * will be visible to other callers. Once we unlock the
++			 * buffer, someone else can grab it out of the tree.
++			 * It's a broken buffer, so we have to ensure that it is
++			 * noticed - just freeing the buffer here can result in
++			 * use-after-free if someone is already waiting on the
++			 * buffer lock.
++			 */
++			bp->b_flags |= XBF_BROKEN;
++			trace_xfs_buf_get_broken(bp, flags, _RET_IP_);
+ 			goto no_buffer;
++		}
+ 	} else
+ 		kmem_zone_free(xfs_buf_zone, new_bp);
  
- /*
-- *	Waits for I/O to complete on the buffer supplied.
-- *	It returns immediately if no I/O is pending.
-- *	It returns the I/O error code, if any, or 0 if there was no error.
-+ * Waits for I/O to complete on the buffer supplied.  It returns immediately if
-+ * no I/O is pending or there is already a pending error on the buffer.  It
-+ * returns the I/O error code, if any, or 0 if there was no error.
-  */
- int
- xfs_buf_iowait(
-@@ -1310,7 +1307,8 @@ xfs_buf_iowait(
- {
- 	trace_xfs_buf_iowait(bp, _RET_IP_);
- 
--	wait_for_completion(&bp->b_iowait);
-+	if (!bp->b_error)
-+		wait_for_completion(&bp->b_iowait);
- 
- 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
- 	return bp->b_error;
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index d4d1ee2..664fb4e 100644
+index 5bf3be4..aa8cbd5 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -193,7 +193,7 @@ extern int xfs_bdstrat_cb(struct xfs_buf *);
- extern void xfs_buf_ioend(xfs_buf_t *,	int);
- extern void xfs_buf_ioerror(xfs_buf_t *, int);
- extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
--extern int xfs_buf_iorequest(xfs_buf_t *);
-+extern void xfs_buf_iorequest(xfs_buf_t *);
- extern int xfs_buf_iowait(xfs_buf_t *);
- extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
- 				xfs_buf_rw_t);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 396e3bf..64ed6ff 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -179,6 +179,7 @@ xlog_bread_noalign(
- 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
- 	XFS_BUF_READ(bp);
- 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
-+	bp->b_error = 0;
+@@ -51,6 +51,7 @@ typedef enum {
+ #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
+ #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
+ #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
++#define XBF_BROKEN	(1 << 8) /* buffer is broken, do not find it */
  
- 	xfsbdstrat(log->l_mp, bp);
- 	error = xfs_buf_iowait(bp);
-@@ -266,6 +267,7 @@ xlog_bwrite(
- 	xfs_buf_hold(bp);
- 	xfs_buf_lock(bp);
- 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
-+	bp->b_error = 0;
+ /* I/O hints for the BIO layer */
+ #define XBF_SYNCIO	(1 << 10)/* treat this buffer as synchronous I/O */
+@@ -78,6 +79,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_DONE,		"DONE" }, \
+ 	{ XBF_DELWRI,		"DELWRI" }, \
+ 	{ XBF_STALE,		"STALE" }, \
++	{ XBF_BROKEN,		"BROKEN" }, \
+ 	{ XBF_SYNCIO,		"SYNCIO" }, \
+ 	{ XBF_FUA,		"FUA" }, \
+ 	{ XBF_FLUSH,		"FLUSH" }, \
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 06838c4..2478cb8 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -386,7 +386,9 @@ DEFINE_EVENT(xfs_buf_flags_class, name, \
+ 	TP_PROTO(struct xfs_buf *bp, unsigned flags, unsigned long caller_ip), \
+ 	TP_ARGS(bp, flags, caller_ip))
+ DEFINE_BUF_FLAGS_EVENT(xfs_buf_find);
++DEFINE_BUF_FLAGS_EVENT(xfs_buf_find_broken);
+ DEFINE_BUF_FLAGS_EVENT(xfs_buf_get);
++DEFINE_BUF_FLAGS_EVENT(xfs_buf_get_broken);
+ DEFINE_BUF_FLAGS_EVENT(xfs_buf_read);
  
- 	error = xfs_bwrite(bp);
- 	if (error)
+ TRACE_EVENT(xfs_buf_ioerror,
 -- 
 1.7.9
 
