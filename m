@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2TC7wV7085819 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 07:07:59 -0500
+	q2TCOMPw092079 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 07:24:22 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	L4occSpNbq6rLWzL for <xfs@oss.sgi.com>;
-	Thu, 29 Mar 2012 05:07:55 -0700 (PDT)
+	HGoCIC0Y5OzoRc2A for <xfs@oss.sgi.com>;
+	Thu, 29 Mar 2012 05:24:20 -0700 (PDT)
 Received: from [192.168.1.2] (helo=disappointment)
 	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SDE8u-0003dh-Jt
-	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:07:52 +1100
+	(envelope-from <dave@fromorbit.com>) id 1SDEOj-0003fI-LI
+	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:24:13 +1100
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SDE8U-0003JN-LV
-	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:07:26 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1SDEOT-0003Nd-Nh
+	for xfs@oss.sgi.com; Thu, 29 Mar 2012 23:23:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix buffer lookup race on allocation failure
-Date: Thu, 29 Mar 2012 23:07:26 +1100
-Message-Id: <1333022846-12697-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: kill b_file_offset
+Date: Thu, 29 Mar 2012 23:23:52 +1100
+Message-Id: <1333023835-12856-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1333023835-12856-1-git-send-email-david@fromorbit.com>
+References: <1333023835-12856-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,131 +36,119 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When memory allocation fails to add the page array or tht epages to
-a buffer during xfs_buf_get(), the buffer is left in the cache in a
-partially initialised state. There is enough state left for the next
-lookup on that buffer to find the buffer, and for the buffer to then
-be used without finishing the initialisation.  As a result, when an
-attempt to do IO on the buffer occurs, it fails with EIO because
-there are no pages attached to the buffer.
-
-We cannot remove the buffer from the cache immediately and free it,
-because there may already be a racing lookup that is blocked on the
-buffer lock. hence the moment we unlock the buffer to then free it,
-the other user is woken and we have a use-after-free situation.
-
-Hence we have to mark the buffer as "broken" and check that after we
-have gained the buffer lock on a cache hit lookup. This enables
-racing lookups to avoid the broken buffer and drop their references,
-allowing the buffer to be freed.
-
-This however, doesn't solve the problem completely - there may be a
-delay in the buffer getting freed (e.g. pre-emption), so when we try
-the lookup a second time with a new buffer to insert into the tree,
-if we find the broken buffer again, drop the buffer lock, sleep for
-a short while, and try the lookup again. When the broken bufer is
-finally removed from the cache we will make forwards progress.
+Seeing as we pass block numbers around everywhere in the buffer
+cache now, it makes no sense to index everything by byte offset.
+Replace all the byte offset indexing with block number based
+indexing, and replace all uses of the byte offset with direct
+conversion from the block index.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c   |   33 ++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_buf.h   |    2 ++
- fs/xfs/xfs_trace.h |    2 ++
- 3 files changed, 36 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_buf.c |   17 +++++++----------
+ fs/xfs/xfs_buf.h |    5 +----
+ 2 files changed, 8 insertions(+), 14 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 6819b51..3588460 100644
+index 5a61ddc..19266cf 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -441,6 +441,7 @@ _xfs_buf_find(
- 	ASSERT(!(range_base & (xfs_off_t)btp->bt_smask));
- 
- 	/* get tree root */
-+lookup_again:
- 	pag = xfs_perag_get(btp->bt_mount,
- 				xfs_daddr_to_agno(btp->bt_mount, ioff));
- 
-@@ -505,6 +506,24 @@ found:
+@@ -190,7 +190,7 @@ xfs_buf_alloc(
+ 	sema_init(&bp->b_sema, 0); /* held, no waiters */
+ 	XB_SET_OWNER(bp);
+ 	bp->b_target = target;
+-	bp->b_file_offset = blkno << BBSHIFT;
++
+ 	/*
+ 	 * Set buffer_length and count_desired to the same value initially.
+ 	 * I/O routines should use count_desired, which will be the same in
+@@ -331,8 +331,8 @@ xfs_buf_allocate_memory(
  	}
  
- 	/*
-+	 * If the buffer initialisation was not completed correctly after
-+	 * insertion into the cache we can't use this buffer and we are pinning
-+	 * it preventing it from being removed from the cache. Hence just avoid
-+	 * the buffer if it is broken, allowing it to be reclaimed and removed
-+	 * from the cache. If we are here with a new buffer to insert into the
-+	 * cache, we want to try the lookup again so that the expected "insert
-+	 * on lookup failure" semantics are preserved for this case.
-+	 */
-+	if (bp->b_flags & XBF_BROKEN) {
-+		trace_xfs_buf_find_broken(bp, flags, _RET_IP_);
-+		xfs_buf_relse(bp);
-+		if (!new_bp)
-+			return NULL;
-+		delay(1);
-+		goto lookup_again;
-+	}
-+
-+	/*
- 	 * if the buffer is stale, clear all the external state associated with
- 	 * it. We need to keep flags such as how we allocated the buffer memory
- 	 * intact here.
-@@ -552,8 +571,20 @@ xfs_buf_get(
+ use_alloc_page:
+-	end = bp->b_file_offset + bp->b_buffer_length;
+-	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(bp->b_file_offset);
++	end = BBTOB(bp->b_bn) + bp->b_buffer_length;
++	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(BBTOB(bp->b_bn));
+ 	error = _xfs_buf_get_pages(bp, page_count, flags);
+ 	if (unlikely(error))
+ 		return error;
+@@ -433,19 +433,17 @@ _xfs_buf_find(
+ 	xfs_buf_flags_t		flags,
+ 	xfs_buf_t		*new_bp)
+ {
+-	xfs_off_t		offset;
+ 	size_t			numbytes;
+ 	struct xfs_perag	*pag;
+ 	struct rb_node		**rbp;
+ 	struct rb_node		*parent;
+ 	xfs_buf_t		*bp;
  
- 	if (bp == new_bp) {
- 		error = xfs_buf_allocate_memory(bp, flags);
--		if (error)
-+		if (error) {
-+			/*
-+			 * The buffer has been inserted into the cache now, so
-+			 * will be visible to other callers. Once we unlock the
-+			 * buffer, someone else can grab it out of the tree.
-+			 * It's a broken buffer, so we have to ensure that it is
-+			 * noticed - just freeing the buffer here can result in
-+			 * use-after-free if someone is already waiting on the
-+			 * buffer lock.
-+			 */
-+			bp->b_flags |= XBF_BROKEN;
-+			trace_xfs_buf_get_broken(bp, flags, _RET_IP_);
- 			goto no_buffer;
-+		}
- 	} else
- 		kmem_zone_free(xfs_buf_zone, new_bp);
+-	offset = blkno << BBSHIFT;
+ 	numbytes = numblks << BBSHIFT;
  
+ 	/* Check for IOs smaller than the sector size / not sector aligned */
+ 	ASSERT(!(numbytes < (1 << btp->bt_sshift)));
+-	ASSERT(!(offset & (xfs_off_t)btp->bt_smask));
++	ASSERT(!(BBTOB(blkno) & (xfs_off_t)btp->bt_smask));
+ 
+ 	/* get tree root */
+ lookup_again:
+@@ -461,13 +459,13 @@ lookup_again:
+ 		parent = *rbp;
+ 		bp = rb_entry(parent, struct xfs_buf, b_rbnode);
+ 
+-		if (offset < bp->b_file_offset)
++		if (blkno < bp->b_bn)
+ 			rbp = &(*rbp)->rb_left;
+-		else if (offset > bp->b_file_offset)
++		else if (blkno > bp->b_bn)
+ 			rbp = &(*rbp)->rb_right;
+ 		else {
+ 			/*
+-			 * found a block offset match. If the range doesn't
++			 * found a block number match. If the range doesn't
+ 			 * match, the only way this is allowed is if the buffer
+ 			 * in the cache is stale and the transaction that made
+ 			 * it stale has not yet committed. i.e. we are
+@@ -741,7 +739,6 @@ xfs_buf_set_empty(
+ 	bp->b_pages = NULL;
+ 	bp->b_page_count = 0;
+ 	bp->b_addr = NULL;
+-	bp->b_file_offset = 0;
+ 	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
+ 	bp->b_bn = XFS_BUF_DADDR_NULL;
+ 	bp->b_flags &= ~XBF_MAPPED;
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 5bf3be4..aa8cbd5 100644
+index 43163bf..4cda900 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -51,6 +51,7 @@ typedef enum {
- #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
- #define XBF_DELWRI	(1 << 6) /* buffer has dirty pages */
- #define XBF_STALE	(1 << 7) /* buffer has been staled, do not find it */
-+#define XBF_BROKEN	(1 << 8) /* buffer is broken, do not find it */
+@@ -118,7 +118,7 @@ typedef struct xfs_buf {
+ 	 * fast-path on locking.
+ 	 */
+ 	struct rb_node		b_rbnode;	/* rbtree node */
+-	xfs_off_t		b_file_offset;	/* offset in file */
++	xfs_daddr_t		b_bn;		/* block number for I/O */
+ 	size_t			b_buffer_length;/* size of buffer in bytes */
+ 	atomic_t		b_hold;		/* reference count */
+ 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+@@ -130,7 +130,6 @@ typedef struct xfs_buf {
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
+ 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
+-	xfs_daddr_t		b_bn;		/* block number for I/O */
+ 	size_t			b_count_desired;/* desired transfer size */
+ 	void			*b_addr;	/* virtual address of buffer */
+ 	struct work_struct	b_iodone_work;
+@@ -247,8 +246,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
  
- /* I/O hints for the BIO layer */
- #define XBF_SYNCIO	(1 << 10)/* treat this buffer as synchronous I/O */
-@@ -78,6 +79,7 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_DONE,		"DONE" }, \
- 	{ XBF_DELWRI,		"DELWRI" }, \
- 	{ XBF_STALE,		"STALE" }, \
-+	{ XBF_BROKEN,		"BROKEN" }, \
- 	{ XBF_SYNCIO,		"SYNCIO" }, \
- 	{ XBF_FUA,		"FUA" }, \
- 	{ XBF_FLUSH,		"FLUSH" }, \
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 06838c4..2478cb8 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -386,7 +386,9 @@ DEFINE_EVENT(xfs_buf_flags_class, name, \
- 	TP_PROTO(struct xfs_buf *bp, unsigned flags, unsigned long caller_ip), \
- 	TP_ARGS(bp, flags, caller_ip))
- DEFINE_BUF_FLAGS_EVENT(xfs_buf_find);
-+DEFINE_BUF_FLAGS_EVENT(xfs_buf_find_broken);
- DEFINE_BUF_FLAGS_EVENT(xfs_buf_get);
-+DEFINE_BUF_FLAGS_EVENT(xfs_buf_get_broken);
- DEFINE_BUF_FLAGS_EVENT(xfs_buf_read);
- 
- TRACE_EVENT(xfs_buf_ioerror,
+ #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
+ #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
+-#define XFS_BUF_OFFSET(bp)		((bp)->b_file_offset)
+-#define XFS_BUF_SET_OFFSET(bp, off)	((bp)->b_file_offset = (off))
+ #define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
+ #define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
+ #define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
 -- 
 1.7.9
 
