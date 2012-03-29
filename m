@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2TM78tZ199521 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 17:07:08 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	9RbZtHNgQfyREqep for <xfs@oss.sgi.com>;
-	Thu, 29 Mar 2012 15:07:07 -0700 (PDT)
-Date: Fri, 30 Mar 2012 09:07:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/8] xfs: check for buffer errors before waiting
-Message-ID: <20120329220704.GB18323@dastard>
-References: <1333023835-12856-1-git-send-email-david@fromorbit.com>
-	<1333023835-12856-2-git-send-email-david@fromorbit.com>
-	<4F74B229.6030707@sgi.com> <20120329211025.GD692@dastard>
-	<4F74D89B.1060008@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F74D89B.1060008@sgi.com>
+	q2TM5HpR198801 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 17:05:17 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0ySmJhePCmK6dd73 for
+	<xfs@oss.sgi.com>; Thu, 29 Mar 2012 15:05:15 -0700 (PDT)
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: [PATCH 7/7] filemap: don't call generic_write_sync for -EIOCBQUEUED
+Date: Thu, 29 Mar 2012 18:05:05 -0400
+Message-Id: <1333058705-31512-8-git-send-email-jmoyer@redhat.com>
+In-Reply-To: <1333058705-31512-1-git-send-email-jmoyer@redhat.com>
+References: <1333058705-31512-1-git-send-email-jmoyer@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,38 +19,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: hch@infradead.org, Jeff Moyer <jmoyer@redhat.com>, linux-ext4@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-On Thu, Mar 29, 2012 at 04:48:11PM -0500, Mark Tinguely wrote:
-> On 03/29/12 16:10, Dave Chinner wrote:
-> >On Thu, Mar 29, 2012 at 02:04:09PM -0500, Mark Tinguely wrote:
-> >If the previous user of the buffer got an error, it is not
-> >guaranteed to be cleared because the buffer is not re-initialised.
-> >i.e. it's an uncached buffer that we control completely and reuse
-> >from IO to IO with just a reset of the bno and length. If b_error is
-> >non zero here, then the IO can fail because nothing else clears the
-> >error in the dispatch path....
-> 
-> Thank-you for the explanation.
-> 
-> FYI: I am having problems with the patches applying. This patch
-> complained at hunk at offset 623. Maybe I am using too new of kernel
-> source.
+Hi,
 
-That's because they are based on top of a current TOT mainline and
-Christoph's dio ilock and xfsbufd removal changes.
+As it stands, generic_file_aio_write will call into generic_write_sync
+when -EIOCBQUEUED is returned from __generic_file_aio_write.  EIOCBQUEUED
+indicates that an I/O was submitted but NOT completed.  Thus, we will
+flush the disk cache, potentially before the write(s) even make it to
+the disk!  Up until now, this has been the best we could do, as file
+systems didn't bother to flush the disk cache after an O_SYNC AIO+DIO
+write.  After applying the prior two patches to xfs and ext4, at least
+the major two file systems do the right thing.  So, let's go ahead and
+fix this backwards logic.
 
-Cheers,
+Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+---
+ mm/filemap.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Dave.
+diff --git a/mm/filemap.c b/mm/filemap.c
+index 79c4b2b..ef81dfb 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2614,7 +2614,7 @@ ssize_t generic_file_aio_write(struct kiocb *iocb, const struct iovec *iov,
+ 	ret = __generic_file_aio_write(iocb, iov, nr_segs, &iocb->ki_pos);
+ 	mutex_unlock(&inode->i_mutex);
+ 
+-	if (ret > 0 || ret == -EIOCBQUEUED) {
++	if (ret > 0) {
+ 		ssize_t err;
+ 
+ 		err = generic_write_sync(file, pos, ret);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.1
 
 _______________________________________________
 xfs mailing list
