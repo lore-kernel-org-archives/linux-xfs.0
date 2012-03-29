@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2T6U9lw042679 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 01:30:09 -0500
+	q2T6ewVg043239 for <xfs@oss.sgi.com>; Thu, 29 Mar 2012 01:40:58 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sm4oo6OkcF4NDzNq for <xfs@oss.sgi.com>;
-	Wed, 28 Mar 2012 23:30:06 -0700 (PDT)
-Date: Thu, 29 Mar 2012 17:30:02 +1100
+	crt4ggNCKUNN5TqW for <xfs@oss.sgi.com>;
+	Wed, 28 Mar 2012 23:40:56 -0700 (PDT)
+Date: Thu, 29 Mar 2012 17:40:54 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v2] xfs: Ensure inode reclaim can run during quotacheck
-Message-ID: <20120329063002.GO5091@dastard>
-References: <1332393313-1955-1-git-send-email-david@fromorbit.com>
-	<1332393313-1955-4-git-send-email-david@fromorbit.com>
-	<20120322151548.GS7762@sgi.com> <20120322210723.GC5091@dastard>
-	<4F6C7BE7.3060100@sgi.com> <20120325232253.GJ5091@dastard>
-	<4F7086FA.9010003@sgi.com> <20120326215709.GM5091@dastard>
-	<20120328194018.GE7762@sgi.com> <20120329002949.GA692@dastard>
+Subject: Re: Buffalo LS-Q4.0 Raid 5 XFS errors
+Message-ID: <20120329064054.GP5091@dastard>
+References: <004b01cd0d3f$c6d4fbc0$547ef340$@tx.rr.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120329002949.GA692@dastard>
+In-Reply-To: <004b01cd0d3f$c6d4fbc0$547ef340$@tx.rr.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +26,68 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Kirk Anderson <kirkande@tx.rr.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Mar 29, 2012 at 11:29:49AM +1100, Dave Chinner wrote:
-> On Wed, Mar 28, 2012 at 02:40:18PM -0500, Ben Myers wrote:
-> 
-> [ snip repeated arguments about startup races ]
-> 
-> [ insert repeated responses about "fixed in next patch" ]
-> 
-> [ wait for circle to go around again ]
-> 
-> > I suggest 3 and 4 should be combined into one patch.
-> 
-> Why didn't you just say that's what you want? I have no problem
-> doing that.  I just kept them separate as there are two logical
-> changes to the fix - startup order changes, and MS_ACTIVE guard
-> changes.  Do you want me to send a new combined patch?
+On Wed, Mar 28, 2012 at 07:06:22PM -0500, Kirk Anderson wrote:
+> I have a Buffalo LS-QLF55 4TB Raid 5 box.  It is out of warranty.  It was
+> using firmware 1.10.    The unit stopped responding and would not power down
+> through the web interface, nor the power button on the front of the unit.  I
+> unplugged the unit and plugged it back in.  The unit now shows the drives as
+> unformatted.  I have provided some information below and would greatly
+> appreciate some guidance as to what my next steps are to minimize my data
+> loss.  Any and all help is greatly appreciated.  Thanks, Kirk
 
-Here's a new combined patch against current linus+xfsdev TOT.
+No unformatted:
+
+> XFS: log mount/recovery failed: error 117
+> 
+> XFS: log mount failed
+
+Basically your filesystem was corrupted by the crash.
+
+> Filesystem "md2": Disabling barriers, not supported by the underlying device
+> 
+> XFS mounting filesystem md2
+> 
+> Starting XFS recovery on filesystem: md2 (logdev: internal)
+> 
+> Filesystem "md2": xfs_inode_recover: Bad inode magic number, dino ptr =
+> 0xc6d2c000, dino bp = 0xc782fa80, ino = 256
+> 
+> Filesystem "md2": XFS internal error xlog_recover_do_inode_trans(1) at line
+> 2310 of file fs/xfs/xfs_log_recover.c.  Caller 0xc017f368
+> 
+> [<c002b758>] (dump_stack+0x0/0x14) from [<c01666fc>]
+> (xfs_error_report+0x54/0x64)
+> 
+> [<c01666a8>] (xfs_error_report+0x0/0x64) from [<c017eb2c>]
+> (xlog_recover_do_inode_trans+0x28c/0x8ac)
+> 
+> [<c017e8a0>] (xlog_recover_do_inode_trans+0x0/0x8ac) from [<c017f368>]
+> (xlog_recover_do_trans+0x80/0x154)
+> 
+> [<c017f2e8>] (xlog_recover_do_trans+0x0/0x154) from [<c017f478>]
+> (xlog_recover_commit_trans+0x3c/0x54)
+> 
+> [<c017f43c>] (xlog_recover_commit_trans+0x0/0x54) from [<c017f5f4>]
+> (xlog_recover_process_data+0x164/0x224)
+> 
+> r7:c725e204 r6:c0b802d8 r5:08be0000 r4:e5000000
+> 
+> [<c017f490>] (xlog_recover_process_data+0x0/0x224) from [<c017f9b4>]
+> (xlog_do_recovery_pass+0x300/0x828)
+> 
+> [<c017f6b4>] (xlog_do_recovery_pass+0x0/0x828) from [<c017ff54>]
+> (xlog_do_log_recovery+0x78/0x9c)
+> 
+> [<c017fedc>] (xlog_do_log_recovery+0x0/0x9c) from [<c017ff98>]
+> (xlog_do_recover+0x20/0x138)
+
+And this is saying that there are no inodes where there are supposed
+to be inodes.
+
+The usual recovery via xfs_repair steps should be taken....
 
 Cheers,
 
@@ -58,160 +95,6 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-xfs: Ensure inode reclaim can run during quotacheck
-
-From: Dave Chinner <dchinner@redhat.com>
-
-Because the mount process can run a quotacheck and consume lots of
-inodes, we need to be able to run periodic inode reclaim during the
-mount process. This will prevent running the system out of memory
-during quota checks.
-
-This essentially reverts 2bcf6e97, but that is safe to do now that
-the quota sync code that was causing problems during long quotacheck
-executions is now gone.
-
-The reclaim work is currently protected from running during the
-unmount process by a check against MS_ACTIVE. Unfortunately, this
-also means that the reclaim work cannot run during mount.  The
-unmount process should stop the reclaim cleanly before freeing
-anything that the reclaim work depends on, so there is no need to
-have this guard in place.
-
-Also, the inode reclaim work is demand driven, so there is no need
-to start it immediately during mount. It will be started the moment
-an inode is queued for reclaim, so qutoacheck will trigger it just
-fine.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_super.c |   20 ++++++++++----------
- fs/xfs/xfs_sync.c  |   19 +++++++++----------
- 2 files changed, 19 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index dab9a5f..aef50ab 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -981,8 +981,6 @@ xfs_fs_put_super(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
--	xfs_syncd_stop(mp);
--
- 	/*
- 	 * Blow away any referenced inode in the filestreams cache.
- 	 * This can and will cause log traffic as inodes go inactive
-@@ -993,6 +991,7 @@ xfs_fs_put_super(
- 	xfs_flush_buftarg(mp->m_ddev_targp, 1);
- 
- 	xfs_unmountfs(mp);
-+	xfs_syncd_stop(mp);
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_destroy_mount_workqueues(mp);
-@@ -1362,31 +1361,33 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
- 
--	error = xfs_mountfs(mp);
-+	error = xfs_syncd_init(mp);
- 	if (error)
- 		goto out_filestream_unmount;
- 
--	error = xfs_syncd_init(mp);
-+	error = xfs_mountfs(mp);
- 	if (error)
--		goto out_unmount;
-+		goto out_syncd_stop;
- 
- 	root = igrab(VFS_I(mp->m_rootip));
- 	if (!root) {
- 		error = ENOENT;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 	if (is_bad_inode(root)) {
- 		error = EINVAL;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 	sb->s_root = d_make_root(root);
- 	if (!sb->s_root) {
- 		error = ENOMEM;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 
- 	return 0;
- 
-+ out_syncd_stop:
-+	xfs_syncd_stop(mp);
-  out_filestream_unmount:
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
-@@ -1403,8 +1404,6 @@ out_destroy_workqueues:
-  out:
- 	return -error;
- 
-- out_syncd_stop:
--	xfs_syncd_stop(mp);
-  out_unmount:
- 	/*
- 	 * Blow away any referenced inode in the filestreams cache.
-@@ -1416,6 +1415,7 @@ out_destroy_workqueues:
- 	xfs_flush_buftarg(mp->m_ddev_targp, 1);
- 
- 	xfs_unmountfs(mp);
-+	xfs_syncd_stop(mp);
- 	goto out_free_sb;
- }
- 
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 205ebcb..c318d8a 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -460,7 +460,15 @@ xfs_sync_worker(
- 					struct xfs_mount, m_sync_work);
- 	int		error;
- 
--	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+	/*
-+	 * We shouldn't write/force the log if we are in the mount/unmount
-+	 * process or on a read only filesystem. The workqueue still needs to be
-+	 * active in both cases, however, because it is used for inode reclaim
-+	 * during these times. hence use the MS_ACTIVE flag to avoid doing
-+	 * anything in these periods.
-+	 */
-+	if (!(mp->m_super->s_flags & MS_ACTIVE) &&
-+	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 		/* dgc: errors ignored here */
- 		if (mp->m_super->s_frozen == SB_UNFROZEN &&
- 		    xfs_log_need_covered(mp))
-@@ -488,14 +496,6 @@ xfs_syncd_queue_reclaim(
- 	struct xfs_mount        *mp)
- {
- 
--	/*
--	 * We can have inodes enter reclaim after we've shut down the syncd
--	 * workqueue during unmount, so don't allow reclaim work to be queued
--	 * during unmount.
--	 */
--	if (!(mp->m_super->s_flags & MS_ACTIVE))
--		return;
--
- 	rcu_read_lock();
- 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
- 		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
-@@ -564,7 +564,6 @@ xfs_syncd_init(
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 
- 	xfs_syncd_queue_sync(mp);
--	xfs_syncd_queue_reclaim(mp);
- 
- 	return 0;
- }
 
 _______________________________________________
 xfs mailing list
