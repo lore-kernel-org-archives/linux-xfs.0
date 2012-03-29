@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2T0thAS257394 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 19:55:43 -0500
+	q2T1OP7Z261494 for <xfs@oss.sgi.com>; Wed, 28 Mar 2012 20:24:26 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	k23Eb70bMxz18G7n for <xfs@oss.sgi.com>;
-	Wed, 28 Mar 2012 17:55:42 -0700 (PDT)
-Date: Thu, 29 Mar 2012 11:55:40 +1100
+	XMcsYobvP4qCzpNq for <xfs@oss.sgi.com>;
+	Wed, 28 Mar 2012 18:24:24 -0700 (PDT)
+Date: Thu, 29 Mar 2012 12:24:04 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/1] xfs: use XFS_BMAP_BMDR_SPACE vs. XFS_BROOT_SIZE_ADJ
-Message-ID: <20120329005540.GK5091@dastard>
-References: <4F7225BA.40200@redhat.com>
- <4F734887.7000508@sandeen.net>
+Subject: Re: [PATCH] mkfs.xfs: print std info if agcount makes agsize out of
+	bounds
+Message-ID: <20120329012404.GL5091@dastard>
+References: <4F7375F7.5090305@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F734887.7000508@sandeen.net>
+In-Reply-To: <4F7375F7.5090305@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,24 +27,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Mar 28, 2012 at 12:21:11PM -0500, Eric Sandeen wrote:
-> XFS_BROOT_SIZE_ADJ is an undocumented macro which accounts for
-> the difference in size between the on-disk and in-core btree
-> root.  It's much clearer to just use the newly-added 
-> XFS_BMAP_BMDR_SPACE macro which gives us the on-disk size
-> directly.
+On Wed, Mar 28, 2012 at 03:35:03PM -0500, Eric Sandeen wrote:
+> When specifying a too-small agcount with stripe geometry,
+> mkfs.xfs can fail with a somewhat unexpected message:
 > 
-> In one case, we must test that the if_broot exists before
-> applying the macro, however.
+> $ mkfs.xfs -f -d file,name=fsfile,size=9764864000b,agcount=31,su=512k,sw=20
+> Allocation group size (314995613) is not a multiple of the stripe unit (128)
+> 
+> This strikes me as especially odd because normally, mkfs.xfs
+> tries to fix up the agsize to be a stripe multiple.  The only way
+> we get to the above error message is if ag _size_ is out of bounds;
+> exiting with an error about alignment rather than about size
+> seems odd.
+> 
+> Maybe below is too clever, but if by the time we've decided that
+> agsize is out of bounds after rounding it both up and down,
+> as necessary, to get to a stripe-width multiple, calling
+> validate_ag_geometry() will give us the same standard message as
+> if we had specified no stripe geometry:
+> 
+> $ mkfs/mkfs.xfs -f -d file,name=fsfile,size=9764864000b,agcount=31,su=512k,sw=20
+> agsize (314995613b) too big, maximum is 268435455 blocks
+> Usage: mkfs.xfs
+> ...
+> 
+> $ mkfs/mkfs.xfs -f -d file,name=fsfile,size=9764864000b,agcount=31
+> agsize (314995613b) too big, maximum is 268435455 blocks
+> Usage: mkfs.xfs
+> ...
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Looks good.
+Makes sense. Consider it:
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+As an aside, do you want to touch that error message:
+
+agsize (314995613b) too big, maximum is 268435455 blocks
+
+so that it uses the same notation for blocks for both numbers. i.e.
+something like:
+
+agsize (314995613 blocks) too big, maximum is 268435455 blocks
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
