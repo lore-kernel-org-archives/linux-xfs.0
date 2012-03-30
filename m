@@ -1,21 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2UEoekt115842 for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 09:50:40 -0500
+	q2UEsqYb116618 for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 09:54:53 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DOADllPGwykc8nyT for
-	<xfs@oss.sgi.com>; Fri, 30 Mar 2012 07:50:39 -0700 (PDT)
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH 5/7] xfs: honor the O_SYNC flag for aysnchronous direct
-	I/O requests
-References: <1333058705-31512-1-git-send-email-jmoyer@redhat.com>
-	<1333058705-31512-6-git-send-email-jmoyer@redhat.com>
-	<20120329225743.GC18323@dastard>
-Date: Fri, 30 Mar 2012 10:50:30 -0400
-In-Reply-To: <20120329225743.GC18323@dastard> (Dave Chinner's message of "Fri,
-	30 Mar 2012 09:57:43 +1100")
-Message-ID: <x49y5qii1mx.fsf@segfault.boston.devel.redhat.com>
+	cuda.sgi.com with ESMTP id MtPlGaioJA2krOtv for
+	<xfs@oss.sgi.com>; Fri, 30 Mar 2012 07:54:51 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q2UEspLJ016137
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 10:54:51 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q2UEsnXm011508
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 10:54:51 -0400
+Message-ID: <4F75C939.6030009@redhat.com>
+Date: Fri, 30 Mar 2012 09:54:49 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
+Subject: [PATCH 1/2] xfs_fsr: extra debugging info
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +33,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, hch@infradead.org, linux-ext4@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hi, Dave,
+Provide 2 new pieces of information when -d is specified to
+xfs_fsr:
 
-Thanks for the review!
+* If we needed to grow the forkoffset and couldn't
+* If we were unable to match the fork offset
 
-> or better still, factor xfs_file_fsync() so that it calls a helper
-> that doesn't wait for data IO completion, and call that helper here
-> too. The semantics of fsync/fdatasync are too complex to have to
-> implement and maintain in multiple locations....
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-I definitely agree with consolidating things.  However, there are four
-blocking calls in xfs_file_fsync (filemap_write_and_wait_range,
-xfs_blkdev_issue_flush, _xfs_log_force_lsn, and another call to
-xfs_blkdev_issue_flush).  How would you propose to make that
-non-blocking given that those steps have to happen in sequence?
-
-Cheers,
-Jeff
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 2db2224..d83bdc9 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -1021,6 +1021,7 @@ fsr_setup_attr_fork(
+ {
+ 	struct stat64	tstatbuf;
+ 	int		i;
++	int		diff = 0;
+ 	int		last_forkoff = 0;
+ 	int		no_change_cnt = 0;
+ 	int		ret;
+@@ -1056,7 +1057,6 @@ fsr_setup_attr_fork(
+ 		xfs_bstat_t	tbstat;
+ 		xfs_ino_t	ino;
+ 		char		name[64];
+-		int		diff;
+ 
+ 		/*
+ 		 * bulkstat the temp inode  to see what the forkoff is. Use
+@@ -1122,6 +1122,8 @@ fsr_setup_attr_fork(
+ 			 * non-contiguous offsets.
+ 			 */
+ 			/* XXX: unimplemented! */
++			if (dflag)
++				printf(_("data fork growth unimplemented\n"));
+ 			goto out;
+ 		}
+ 
+@@ -1137,6 +1139,10 @@ fsr_setup_attr_fork(
+ out:
+ 	if (dflag)
+ 		fsrprintf(_("set temp attr\n"));
++	/* We failed to resolve the fork difference */
++	if (dflag && diff)
++		fsrprintf(_("failed to match fork offset\n"));;
++
+ 	return 0;
+ }
+ 
 
 _______________________________________________
 xfs mailing list
