@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q2UF1mEs118165 for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 10:01:48 -0500
+	q2UGOEBb143081 for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 11:24:14 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BnUdcBAuWFJnAOM8 for
-	<xfs@oss.sgi.com>; Fri, 30 Mar 2012 08:01:47 -0700 (PDT)
-Message-ID: <4F75CAD9.60808@redhat.com>
-Date: Fri, 30 Mar 2012 10:01:45 -0500
+	cuda.sgi.com with ESMTP id DjGTtMRycCZQZvTG for
+	<xfs@oss.sgi.com>; Fri, 30 Mar 2012 09:24:13 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q2UGOCTb014144
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 12:24:12 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q2UGOBIO010715
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 30 Mar 2012 12:24:12 -0400
+Message-ID: <4F75DE2B.7030807@redhat.com>
+Date: Fri, 30 Mar 2012 11:24:11 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2] xfs_fsr: create extent-based attr to grow forkoff
-References: <4F75C939.6030009@redhat.com>
-In-Reply-To: <4F75C939.6030009@redhat.com>
+Subject: [PATCH] Fix wrong flag ASSERT in xfs_attr_shortform_getvalue
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,94 +34,44 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
-Cc: Gabriel VLASIU <gabriel@vlasiu.net>
 
-In some cases the target file may have a non-local attribute,
-but the temp file gets assigned a local attribute on creation,
-due to selinux, for example.
+This ASSERT is testing an if_flags flag value against
+a di_aformat enum value.  di_aformat is never assigned
+XFS_IFINLINE.
 
-In this case, the large-ish selinux attr will create a forkoff
-in the temp file smaller than the forkoff in the target file,
-because the FMT_EXTENTS attr takes up less space.  There is
-no mechanism to grow the forkoff to match, so we can end up
-failing to swap these 2 inodes if the result is not enough
-data space in the temp inode as a result.
+This happens to work for now, because XFS_IFINLINE has
+the same value as XFS_DINODE_FMT_LOCAL, and that's tested
+just before we call this function.
 
-After testing the target file for a non-local extent, and
-checking to see if the forkoff needs to be grown on the first
-pass, we can add a large attr to knock all attributes of the
-temp file out of local format, and grow the fork offset.
+However, I think the intention is to assert that we have
+read in the data, i.e. XFS_IFINLINE on if_flags, before
+we use if_data.  This is done in other places through the
+code as well.
 
-This passes xfstest 227, and also resolves issues seen on
-a metadata image provided by Gabriel.
-
-Reported-by: Gabriel VLASIU <gabriel@vlasiu.net>
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
-diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-index d83bdc9..e8ab028 100644
---- a/fsr/xfs_fsr.c
-+++ b/fsr/xfs_fsr.c
-@@ -1022,6 +1022,8 @@ fsr_setup_attr_fork(
- 	struct stat64	tstatbuf;
- 	int		i;
- 	int		diff = 0;
-+	struct fsxattr	fsx;
-+	int		target_attr_local = 0;
- 	int		last_forkoff = 0;
- 	int		no_change_cnt = 0;
- 	int		ret;
-@@ -1052,6 +1054,11 @@ fsr_setup_attr_fork(
- 		return -1;
- 	}
+Note, maybe it should be:
+
+	ASSERT(args->dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
+
+but there is an if statement in the caller which assures that,
+so as the code stands that would seem pointless.  I'm not 100%
+sure what the original intent was, though, so ...
+
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index 76d93dc..8ca76ad 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -441,7 +441,7 @@ xfs_attr_shortform_getvalue(xfs_da_args_t *args)
+ 	xfs_attr_sf_entry_t *sfe;
+ 	int i;
  
-+	memset(&fsx, 0, sizeof(fsx));
-+	ioctl(fd, XFS_IOC_FSGETXATTR, &fsx);
-+	if (fsx.fsx_nextents == 0)
-+		target_attr_local = 1;
-+
- 	i = 0;
- 	do {
- 		xfs_bstat_t	tbstat;
-@@ -1072,6 +1079,7 @@ fsr_setup_attr_fork(
- 		if (dflag)
- 			fsrprintf(_("orig forkoff %d, temp forkoff %d\n"),
- 					bstatp->bs_forkoff, tbstat.bs_forkoff);
-+		diff = tbstat.bs_forkoff - bstatp->bs_forkoff;
- 
- 		snprintf(name, sizeof(name), "user.%d", i);
- 
-@@ -1086,6 +1094,21 @@ fsr_setup_attr_fork(
- 				return -1;
- 			}
- 			continue;
-+		} else if (i == 0 && diff < 0 && target_attr_local == 0) {
-+			/*
-+			 * A small attr may exist from eg selinux but, if the
-+			 * target is not local, write a big attr to tempfile
-+			 * to knock it out of local format to match target.
-+			 * This should actually increase the temp forkoffset.
-+			 */
-+			char val[2048];
-+			memset(val, 'X', 2048);
-+			ret = fsetxattr(tfd, name, val, 2048, XATTR_CREATE);
-+			if (ret) {
-+				fsrprintf(_("could not set large ATTR\n"));
-+				return -1;
-+			}
-+			continue;
- 		}
- 
- 		/*
-@@ -1100,7 +1123,6 @@ fsr_setup_attr_fork(
- 		last_forkoff = tbstat.bs_forkoff;
- 
- 		/* work out which way to grow the fork */
--		diff = tbstat.bs_forkoff - bstatp->bs_forkoff;
- 		if (abs(diff) > fsgeom.inodesize - sizeof(struct xfs_dinode)) {
- 			fsrprintf(_("forkoff diff %d too large!\n"), diff);
- 			return -1;
+-	ASSERT(args->dp->i_d.di_aformat == XFS_IFINLINE);
++	ASSERT(args->dp->i_afp->if_flags == XFS_IFINLINE);
+ 	sf = (xfs_attr_shortform_t *)args->dp->i_afp->if_u1.if_data;
+ 	sfe = &sf->list[0];
+ 	for (i = 0; i < sf->hdr.count;
 
 _______________________________________________
 xfs mailing list
