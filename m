@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q32ES39k186612 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 09:28:03 -0500
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id SjiihV4Fj3iBwsPH
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Apr 2012 07:28:01 -0700 (PDT)
-Received: by pbcuo1 with SMTP id uo1so5263114pbc.26
-	for <xfs@oss.sgi.com>; Mon, 02 Apr 2012 07:28:01 -0700 (PDT)
-From: CHEN Baozi <baozich@gmail.com>
-Subject: [RFC] Add XFS support in SYSLINUX
-Date: Mon, 2 Apr 2012 22:27:53 +0800
-Message-Id: <D9839BD8-29F4-4472-A5B5-7974497B14DD@gmail.com>
-Mime-Version: 1.0 (Apple Message framework v1084)
+	q32ETG6B186743 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 09:29:17 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zGQCWbvba0FsHM7O for
+	<xfs@oss.sgi.com>; Mon, 02 Apr 2012 07:29:15 -0700 (PDT)
+Subject: Re: [PATCH 3/7] gfs2: Use generic handlers of O_SYNC AIO DIO
+From: Steven Whitehouse <swhiteho@redhat.com>
+In-Reply-To: <1333058705-31512-4-git-send-email-jmoyer@redhat.com>
+References: <1333058705-31512-1-git-send-email-jmoyer@redhat.com>
+	<1333058705-31512-4-git-send-email-jmoyer@redhat.com>
+Date: Mon, 02 Apr 2012 15:29:31 +0100
+Message-ID: <1333376971.2701.26.camel@menhir>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,18 +25,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@infradead.org, linux-ext4@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
 
-Hi all,
+Hi,
 
-I'm a student applying for this year's GSoC and planning to add XFS support to the syslinux bootloader. I did some research on the syslinux's implementation, and have a rough idea. 
+On Thu, 2012-03-29 at 18:05 -0400, Jeff Moyer wrote:
+> From: Jan Kara <jack@suse.cz>
+> 
+> Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
+> file.
+> 
+> Signed-off-by: Jan Kara <jack@suse.cz>
+> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
+Acked-by: Steven Whitehouse <swhiteho@redhat.com>
 
-XFS starts its superblock from the first bytes of partition, where syslinux would install its boot codes(in the first 512 bytes). Currently, we have two approach to handle that. One is to follow the GRUB that put its codes in the first few bytes immediately following the MBR and before the first partition's first sector. However, this approach breaks some designing rules of syslinux, so it won't be accepted. The other one that we are now considering is to use the remaining 2048 bytes left in XFS's first block. But I'm not sure that this area is reserved for some new features in the future. 
+Steve.
 
-Any comment?
+> ---
+>  fs/gfs2/aops.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+> index 38b7a74..2589781 100644
+> --- a/fs/gfs2/aops.c
+> +++ b/fs/gfs2/aops.c
+> @@ -1034,7 +1034,7 @@ static ssize_t gfs2_direct_IO(int rw, struct kiocb *iocb,
+>  
+>  	rv = __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev, iov,
+>  				  offset, nr_segs, gfs2_get_block_direct,
+> -				  NULL, NULL, 0);
+> +				  NULL, NULL, DIO_SYNC_WRITES);
+>  out:
+>  	gfs2_glock_dq_m(1, &gh);
+>  	gfs2_holder_uninit(&gh);
 
-Regards,
-Chen Baozi
+
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
