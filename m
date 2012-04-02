@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q32ETG6B186743 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 09:29:17 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zGQCWbvba0FsHM7O for
-	<xfs@oss.sgi.com>; Mon, 02 Apr 2012 07:29:15 -0700 (PDT)
-Subject: Re: [PATCH 3/7] gfs2: Use generic handlers of O_SYNC AIO DIO
-From: Steven Whitehouse <swhiteho@redhat.com>
-In-Reply-To: <1333058705-31512-4-git-send-email-jmoyer@redhat.com>
-References: <1333058705-31512-1-git-send-email-jmoyer@redhat.com>
-	<1333058705-31512-4-git-send-email-jmoyer@redhat.com>
-Date: Mon, 02 Apr 2012 15:29:31 +0100
-Message-ID: <1333376971.2701.26.camel@menhir>
-Mime-Version: 1.0
+	q32EZDUS187586 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 09:35:13 -0500
+Message-ID: <4F79B91E.3060008@sgi.com>
+Date: Mon, 02 Apr 2012 09:35:10 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH] 030: fix for new xfs_repair versions
+References: <20120331232836.GA19572@infradead.org>
+In-Reply-To: <20120331232836.GA19572@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,45 +17,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, hch@infradead.org, linux-ext4@vger.kernel.org, jack@suse.cz, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On 03/31/12 18:28, Christoph Hellwig wrote:
+> Given that we now drop invalid unlinked inode lists there is no message
+> to capture.  Also add a sed expression to avoid failures on old repair
+> versions.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>
+> Index: xfstests-dev/030
+> ===================================================================
+> --- xfstests-dev.orig/030	2012-03-31 23:15:11.000000000 +0000
+> +++ xfstests-dev/030	2012-03-31 23:18:31.000000000 +0000
+> @@ -55,7 +55,8 @@ _check_ag()
+>   	for structure in 'sb 0' 'agf 0' 'agi 0' 'agfl 0'
+>   	do
+>   		echo "Corrupting $structure - setting bits to $1"
+> -		_check_repair $1 "$structure"
+> +		_check_repair $1 "$structure" |
+> +			sed -e 's/error following ag 0 unlinked list//'
+>   	done
+>   }
+>
+> @@ -97,8 +98,7 @@ src/devzero -v -1 -n "$clear" $SCRATCH_D
+>
+>   # now kick off the real repair test...
+>   #
+> -_scratch_mkfs_xfs $DSIZE | _filter_mkfs | \
+> -    sed -e 's/error following ag 0 unlinked list//' 2>$tmp.mkfs
+> +_scratch_mkfs_xfs $DSIZE | _filter_mkfs 2>$tmp.mkfs
+>   . $tmp.mkfs
+>   _check_ag 0
+>   _check_ag -1
+> Index: xfstests-dev/030.out.linux
+> ===================================================================
+> --- xfstests-dev.orig/030.out.linux	2012-03-31 23:19:09.000000000 +0000
+> +++ xfstests-dev/030.out.linux	2012-03-31 23:19:17.000000000 +0000
+> @@ -85,7 +85,6 @@ bad agbno AGBNO for inobt root, agno 0
+>   root inode chunk not found
+>   Phase 3 - for each AG...
+>           - scan and clear agi unlinked lists...
+> -error following ag 0 unlinked list
+>           - process known inodes and perform inode discovery...
+>           - process newly discovered inodes...
+>   Phase 4 - check for duplicate blocks...
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-On Thu, 2012-03-29 at 18:05 -0400, Jeff Moyer wrote:
-> From: Jan Kara <jack@suse.cz>
-> 
-> Use generic handlers to queue fsync() when AIO DIO is completed for O_SYNC
-> file.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> Signed-off-by: Jeff Moyer <jmoyer@redhat.com>
-Acked-by: Steven Whitehouse <swhiteho@redhat.com>
+The sed left a blank line where where the "error following ag 0 unlinked 
+list" would have been in an 3.0.x kernel run of the test.
 
-Steve.
+Maybe add another "sed -e '/^$/d'" to the filter?
 
-> ---
->  fs/gfs2/aops.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-> index 38b7a74..2589781 100644
-> --- a/fs/gfs2/aops.c
-> +++ b/fs/gfs2/aops.c
-> @@ -1034,7 +1034,7 @@ static ssize_t gfs2_direct_IO(int rw, struct kiocb *iocb,
->  
->  	rv = __blockdev_direct_IO(rw, iocb, inode, inode->i_sb->s_bdev, iov,
->  				  offset, nr_segs, gfs2_get_block_direct,
-> -				  NULL, NULL, 0);
-> +				  NULL, NULL, DIO_SYNC_WRITES);
->  out:
->  	gfs2_glock_dq_m(1, &gh);
->  	gfs2_holder_uninit(&gh);
-
+--Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
