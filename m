@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q314vpPW069370 for <xfs@oss.sgi.com>; Sat, 31 Mar 2012 23:57:51 -0500
-Message-ID: <4F77DFDB.1040802@oracle.com>
-Date: Sun, 01 Apr 2012 12:55:55 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q327jZP4118822 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 02:45:35 -0500
+Received: from smtpout.karoo.kcom.com (mercury.karoo.kcom.com [212.50.160.61])
+	by cuda.sgi.com with ESMTP id UvJ9iGMysakJj5Vs for
+	<xfs@oss.sgi.com>; Mon, 02 Apr 2012 00:45:33 -0700 (PDT)
+Message-ID: <4F79591C.6090508@daxxi.net>
+Date: Mon, 02 Apr 2012 08:45:32 +0100
+From: Dave B <xfs_bugs@daxxi.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: don't fill statvfs with project quota for a directory
-	if it was not enabled.
-Reply-To: jeff.liu@oracle.com
+Subject: Corrupt xfs on USB HDD : sub-optimal xfs_repair
+Reply-To: xfs@oss.sgi.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,95 +19,198 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5228971866900063559=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Ben Myers <bpm@sgi.com>
 
-Hello,
+This is a multi-part message in MIME format.
+--===============5228971866900063559==
+Content-Type: multipart/alternative;
+ boundary="------------030502030408010202030908"
 
-I can trigger a BUG() at fs/xfs/xfs_dquot.c on vanilla kernel 3.3.0 by the following steps:
+This is a multi-part message in MIME format.
+--------------030502030408010202030908
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-1. mount a XFS partition without 'pquota' option.
-   /dev/sda7 on /xfs type xfs (rw)
 
-2. setup project1 on it.
-   $ cat /etc/projects 
-   1:/xfs
-   $ cat /etc/projid
-   project1:1
-   $ sudo xfs_quota -x -c 'project -s project1' /xfs
+Hi,
 
-3. du -sh /xfs
+The two files in the root directory of a 500GB external USB HDD  became 
+corrupt,
+probably due to a power failure.
 
-[  170.024496] XFS: Assertion failed: XFS_IS_QUOTA_RUNNING(mp), file: fs/xfs/xfs_dquot.c, line: 680
-[  170.024534] ------------[ cut here ]------------
-[  170.024630] kernel BUG at fs/xfs/xfs_message.c:101!
-[  170.024718] invalid opcode: 0000 [#1] SMP DEBUG_PAGEALLOC
-[  170.024836] Modules linked in: xfs cryptd aes_i586 aes_generic ....
-[  170.026787] Pid: 2082, comm: du Not tainted 3.3.0-dirty #48 LENOVO 7661D43/7661D43
-[  170.026950] EIP: 0060:[<f94892c4>] EFLAGS: 00010246 CPU: 1
-[  170.027126] EIP is at assfail+0x47/0x57 [xfs]
-[  170.027207] EAX: 0000006a EBX: e2031f58 ECX: 00000000 EDX: 00000007
-[  170.027319] ESI: 00000000 EDI: e364f000 EBP: e2031e88 ESP: e2031e74
-[  170.027432]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-[  170.027530] Process du (pid: 2082, ti=e2030000 task=e3096a80 task.ti=e2030000)
-[  170.027659] Stack:
-[  170.027702]  00000000 f9543fbb f95523d2 f955210c 000002a8 e2031ec0 f9521d2c 3432302e
-[  170.027912]  5d303834 00000020 e364f0dc 00000001 c13abe66 00000246 e2031eb4 00000246
-[  170.028015]  e2031f58 e2031f58 e2b01880 e2031edc f9527edc 00000002 00000000 e2031ed4
-[  170.028015] Call Trace:
-[  170.028015]  [<f9521d2c>] xfs_qm_dqget+0x4e/0x90d [xfs]
-[  170.028015]  [<c13abe66>] ? do_raw_spin_lock+0xdc/0x1fd
-[  170.028015]  [<f9527edc>] xfs_qm_statvfs+0x4e/0xa5 [xfs]
-[  170.028015]  [<f948a666>] xfs_fs_statfs+0x2b0/0x2c8 [xfs]
-[  170.028015]  [<c1263c8b>] statfs_by_dentry+0x82/0xc1
-[  170.028015]  [<c1263cee>] vfs_statfs+0x24/0x12a
-[  170.028015]  [<c1263ed8>] fd_statfs+0x55/0x81
-[  170.028015]  [<c126407b>] sys_fstatfs64+0x3f/0x7a
-[  170.028015]  [<c183071c>] syscall_call+0x7/0xb
-[  170.028015] Code: 10 89 54 24 0c 89 44 24 08 c7 44 24 04 bb 3f 54 f9 c7 04 24 00 ...
-[  170.028015] EIP: [<f94892c4>] assfail+0x47/0x57 [xfs] SS:ESP 0068:e2031e74
-[  170.083305] ---[ end trace 76dc24be29466355 ]---
+dave@K-Matrix $ ls -l /media/Galaxy/
+ls: cannot access /media/Galaxy/ChnSchld_pre_4-14.tgz: No such file or 
+directory
+ls: cannot access /media/Galaxy/dhr820xu.ext: No such file or directory
+total 24
+??????????   ? ?    ?        ?                ? ChnSchld_pre_4-14.tgz
+??????????   ? ?    ?        ?                ? dhr820xu.ext
+drwxr-xr-x   7 dave dave  4096 2012-02-13 12:45 DHR recordings
+drwxr-xr-x 212 dave dave 12288 2008-11-30 00:21 Miles Davis
+drwxr-xr-x   5 dave dave  4096 2012-02-16 06:06 PartImage
 
-IMHO, we can check if the project quota is running or not before performing xfs_qm_statvfs(), just return if not.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+xfs_repair didn't help much; it just removed the two filenames.
+At minimum, I expected two entries in L+F but the L+F directory was not 
+created.
 
----
- fs/xfs/xfs_super.c |   13 +++++++++----
- 1 files changed, 9 insertions(+), 4 deletions(-)
+dave@K-Matrix $ sudo xfs_repair /dev/sdc1
+Phase 1 - find and verify superblock...
+Phase 2 - using internal log
+         - zero log...
+         - scan filesystem freespace and inode maps...
+         - found root inode chunk
+Phase 3 - for each AG...
+         - scan and clear agi unlinked lists...
+         - process known inodes and perform inode discovery...
+         - agno = 0
+         - agno = 1
+         - agno = 2
+         - agno = 3
+         - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+         - setting up duplicate extent list...
+         - check for inodes claiming duplicate blocks...
+         - agno = 0
+entry "ChnSchld_pre_4-14.tgz" in shortform directory 128 references free 
+inode 48145461
+junking entry "ChnSchld_pre_4-14.tgz" in directory inode 128
+entry "dhr820xu.ext" in shortform directory 128 references free inode 
+48145451
+junking entry "dhr820xu.ext" in directory inode 128
+         - agno = 1
+         - agno = 2
+         - agno = 3
+Phase 5 - rebuild AG headers and trees...
+         - reset superblock...
+Phase 6 - check inode connectivity...
+         - resetting contents of realtime bitmap and summary inodes
+         - traversing filesystem ...
+         - traversal finished ...
+         - moving disconnected inodes to lost+found ...
+Phase 7 - verify and correct link counts...
+done
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index ee5b695..dfc3666 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1059,10 +1059,15 @@ xfs_fs_statfs(
- 
- 	spin_unlock(&mp->m_sb_lock);
- 
--	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
--	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
--			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
--		xfs_qm_statvfs(ip, statp);
-+	/* don't try to fill statvfs with project quota if it's not running */
-+	if (XFS_IS_PQUOTA_RUNNING(mp)) {
-+		if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
-+		    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
-+		     (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD)) {
-+			xfs_qm_statvfs(ip, statp);
-+		}
-+	}
-+
- 	return 0;
- }
- 
--- 
-1.7.9
+
+See longer console session and before/after metadumps in ~7MB d/l at:
+http://daxxi.net/xfs/Galaxy_500GB_xfs.tar.gz
+user: xfs  ,  p/w: xfs
+(please only d/l if 2x240MB metadumps will be meaningful to you)
+
+
+Environment:
+Linux K-Matrix 3.0.0-16-generic #29-Ubuntu SMP Tue Feb 14 12:49:42 UTC 
+2012 i686 athlon i386 GNU/Linux
+
+
+Dave
+
+
+--------------030502030408010202030908
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+<html>
+  <head>
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+  </head>
+  <body bgcolor="#FFFF99" text="#000000">
+    <br>
+    Hi,<br>
+    <br>
+    The two files in the root directory of a 500GB external USB HDD 
+    became corrupt,<br>
+    probably due to a power failure.<br>
+    <br>
+    dave@K-Matrix $ ls -l /media/Galaxy/<br>
+    ls: cannot access /media/Galaxy/ChnSchld_pre_4-14.tgz: No such file
+    or directory<br>
+    ls: cannot access /media/Galaxy/dhr820xu.ext: No such file or
+    directory<br>
+    total 24<br>
+    ??????????   ? ?    ?        ?                ?
+    ChnSchld_pre_4-14.tgz<br>
+    ??????????   ? ?    ?        ?                ? dhr820xu.ext<br>
+    drwxr-xr-x   7 dave dave  4096 2012-02-13 12:45 DHR recordings<br>
+    drwxr-xr-x 212 dave dave 12288 2008-11-30 00:21 Miles Davis<br>
+    drwxr-xr-x   5 dave dave  4096 2012-02-16 06:06 PartImage<br>
+    <br>
+    <br>
+    xfs_repair didn't help much; it just removed the two filenames.<br>
+    At minimum, I expected two entries in L+F but the L+F directory was
+    not created.<br>
+    <br>
+    dave@K-Matrix $ sudo xfs_repair /dev/sdc1<br>
+    Phase 1 - find and verify superblock...<br>
+    Phase 2 - using internal log<br>
+            - zero log...<br>
+            - scan filesystem freespace and inode maps...<br>
+            - found root inode chunk<br>
+    Phase 3 - for each AG...<br>
+            - scan and clear agi unlinked lists...<br>
+            - process known inodes and perform inode discovery...<br>
+            - agno = 0<br>
+            - agno = 1<br>
+            - agno = 2<br>
+            - agno = 3<br>
+            - process newly discovered inodes...<br>
+    Phase 4 - check for duplicate blocks...<br>
+            - setting up duplicate extent list...<br>
+            - check for inodes claiming duplicate blocks...<br>
+            - agno = 0<br>
+    entry "ChnSchld_pre_4-14.tgz" in shortform directory 128 references
+    free inode 48145461<br>
+    junking entry "ChnSchld_pre_4-14.tgz" in directory inode 128<br>
+    entry "dhr820xu.ext" in shortform directory 128 references free
+    inode 48145451<br>
+    junking entry "dhr820xu.ext" in directory inode 128<br>
+            - agno = 1<br>
+            - agno = 2<br>
+            - agno = 3<br>
+    Phase 5 - rebuild AG headers and trees...<br>
+            - reset superblock...<br>
+    Phase 6 - check inode connectivity...<br>
+            - resetting contents of realtime bitmap and summary inodes<br>
+            - traversing filesystem ...<br>
+            - traversal finished ...<br>
+            - moving disconnected inodes to lost+found ...<br>
+    Phase 7 - verify and correct link counts...<br>
+    done<br>
+    <br>
+    <br>
+    See longer console session and before/after metadumps in ~7MB d/l
+    at:<br>
+    <a class="moz-txt-link-freetext"
+      href="http://daxxi.net/xfs/Galaxy_500GB_xfs.tar.gz">http://daxxi.net/xfs/Galaxy_500GB_xfs.tar.gz</a><br>
+    user: xfs  ,  p/w: xfs<br>
+    (please only d/l if 2x240MB metadumps will be meaningful to you)<br>
+    <br>
+    <br>
+    Environment:<br>
+    Linux K-Matrix 3.0.0-16-generic #29-Ubuntu SMP Tue Feb 14 12:49:42
+    UTC 2012 i686 athlon i386 GNU/Linux<br>
+    <br>
+    <br>
+    Dave<br>
+    <br>
+  </body>
+</html>
+
+--------------030502030408010202030908--
+
+
+--===============5228971866900063559==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5228971866900063559==--
