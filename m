@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q32ImYFZ238361 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 13:48:35 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	KVkNoHw3QcmQE43A (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Apr 2012 11:48:31 -0700 (PDT)
-Date: Mon, 2 Apr 2012 14:48:30 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC] Add XFS support in SYSLINUX
-Message-ID: <20120402184830.GA12792@infradead.org>
-References: <D9839BD8-29F4-4472-A5B5-7974497B14DD@gmail.com>
+	q32JQYF5244190 for <xfs@oss.sgi.com>; Mon, 2 Apr 2012 14:26:34 -0500
+Message-ID: <4F79FD69.70406@sgi.com>
+Date: Mon, 02 Apr 2012 14:26:33 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <D9839BD8-29F4-4472-A5B5-7974497B14DD@gmail.com>
+Subject: Re: [PATCH 3/5] xfs: reduce ilock hold times in xfs_setattr_size
+References: <20120327143445.196524266@bombadil.infradead.org>
+	<20120327143826.615954651@bombadil.infradead.org>
+In-Reply-To: <20120327143826.615954651@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,33 +18,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: CHEN Baozi <baozich@gmail.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Hi Chen,
+On 03/27/12 09:34, Christoph Hellwig wrote:
+> We do not need the ilock for most checks done in the beginning of
+> xfs_setattr_size.  Replace the long critical section before starting the
+> transaction with a smaller one around xfs_zero_eof and an optional one
+> inside xfs_qm_dqattach that isn't entered unless using quotas.  While
+> this isn't a big optimization for xfs_setattr_size itself it will allow
+> pushing the ilock into xfs_zero_eof itself later.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
 
-thanks a lot for your interested in tackling this project.
 
-Writing to the end of the first block would work for 4k or larger block
-sizes filesystems, but it's not a very clean solution.
+Looks good.
 
-Id had a quick brainstorm with Dave and we came up with the following
-idea:
-
- - create an extended attribute on the root filesystem that is larger
-   than than the filesystem block size (typically 4k), and store the
-   syslink payload in it.
- - for the first prototype get its block number using the GETBMAPX
-   ioctl, and use it.
-
-once that prototype works we can talk about a good interface for you.
-We could precreate the attribute at mkfs time at a fixed block number
-so that syslinux can hardcode it, or we could discuss any other kind
-of interface that helps you.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
