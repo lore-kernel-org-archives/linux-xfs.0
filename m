@@ -1,24 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q35JuIn4067406 for <xfs@OSS.SGI.com>; Thu, 5 Apr 2012 14:56:18 -0500
-Received: from woodbine.london.02.net (woodbine.london.02.net
-	[87.194.255.145]) by cuda.sgi.com with ESMTP id
-	5o0F4h9YMmF7BIP1 for <xfs@OSS.SGI.com>;
-	Thu, 05 Apr 2012 12:56:16 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by woodbine.london.02.net (8.5.140)
-	id 4F70C667003D4F52 for xfs@OSS.SGI.com; Thu, 5 Apr 2012 20:56:14 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SFsmx-0006gK-1q
-	for <xfs@OSS.SGI.com>; Thu, 05 Apr 2012 20:56:11 +0100
+	q35KYcMx070336 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 15:34:40 -0500
+Received: from na3sys009aog105.obsmtp.com (na3sys009aog105.obsmtp.com
+	[74.125.149.75]) by cuda.sgi.com with SMTP id cU6d1uUgBLUbCvnA
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 13:34:31 -0700 (PDT)
+Received: by lbgc1 with SMTP id c1so373029lbg.24
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 13:34:29 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <20349.63706.913104.777446@tree.ty.sabi.co.UK>
-Date: Thu, 5 Apr 2012 20:56:10 +0100
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-In-Reply-To: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+Date: Thu, 5 Apr 2012 16:34:29 -0400
+Message-ID: <CAFcHYYA5Ff3zdVtqArnWjM1vYkn-2BQfAnthUTQwTbWH=L3Mhg@mail.gmail.com>
+Subject: XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1518 of file
+	fs/xfs/xfs_alloc.c.
+From: Robert Bennett <rbennett@mail.crawford.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,107 +21,233 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3046106761760085613=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-[ ... ]
+--===============3046106761760085613==
+Content-Type: multipart/alternative; boundary=f46d04088d7b7cc5b804bcf47794
 
-> The filesystem operations I care about the most are the likes which
-> involve thousands of small files across lots of directories, like
-> large trees of source code. For my test, I created a tarball of a
-> finished IcedTea6 build, about 2.5 GB in size. It contains roughly
-> 200,000 files in 20,000 directories.
+--f46d04088d7b7cc5b804bcf47794
+Content-Type: text/plain; charset=ISO-8859-1
 
-Ah another totally inappropriate "test" of something (euphemism)
-insipid. The XFS mailing list gets regularly queries on this topic.
+file system error - unmounted file system and had to perform xfs_repair -L
 
-Apparently not many people have figured out in the Linux culture
-that general purpose filesystems cannot handle well large groups
-of small files, and since the beginning of computing various
-forms of "aggregate" files have been used for that, like 'ar'
-('.a') files from UNIX, which should have been used far more
-commonly than has happened, and never mind things like BDB/GDBM
-databases.
+file system came back, thank you!
 
-But many lazy application programmer like to use the filesystem
-as a small-record database, it is so easy...
+below is the pertinent portion of the log file.
 
-> [ ... ] I ran the tests with a current RHEL 6.2 kernel and
-> also with a 3.3rc2 kernel. Both of them exhibited the same
-> behavior. The disk hardware used was a SmartArray p400
-> controller with 6x 10k rpm 300GB SAS disks in RAID 6. The
-> server has plenty of RAM (64 GB). [ ... ]
+0 length files created in lost+found
 
-Huge hardware, but (euphemism) imaginative setup, as among its
-many defects RAID6 is particularly inappropriate for most small
-file/metadata heavy operation.
+An rsync process was occurring at the time.
 
-> [ ... ] I created two directory hierarchies, each containing
-> the unpacked tarball 20 times, which I rsynced simultaneously
-> to the target filesystem. When this was done, I deleted one
-> half of them, creating some free space fragmentation, and what
-> I hoped would mimic real-world conditions to some degree.
 
-Your test is less (euphemism) insignificant because you tried
-to cope with filetree lifetime issues.
+Please help me to troubleshoot this.
 
-> [ ... ] disk head jumps about wildly between four zones which
-> are written to in almost perfectly linear fashion.
 
-> [ ... ] I am aware that no filesystem can be optimal,
+[root@alice lost+found]# uname -a
+Linux alice 2.6.32-131.17.1.el6.x86_64 #1 SMP Thu Sep 29 10:24:25 EDT 2011
+x86_64 x86_64 x86_64 GNU/Linux
 
-Every filesystem can be close to optimal, just not for every
-workload.
+thanks
 
-> but given that the entire write set -- all 2.5 GB of it -- is
-> "known" to the file system, that is, in memory, wouldn't it be
-> possible to write it out to disk in a somewhat more reasonable
-> fashion?
+-bob
 
-That sounds to me like a (euphemism) strategic aim: why ever
-should a filesystem optimize that special case? Especially given
-that 
 
-XFS does spread file allocations across AGs because it aims for
-multihreaded operations, especially on RAID sets with several
-independent (that is, not RAID6 with small writes) arms.
+ Mar 28 14:48:28 alice kernel: XFS internal error XFS_WANT_CORRUPTED_GOTO
+at line 1518 of file fs/xfs/xfs_alloc.c. Caller 0xffffffffa023a532
 
-Unfortunately filesystems are not psychic and cannot use
-predictive allocation policies, and have to cope with poorly
-written applications that don't do advising (or 'fsync' properly
-which is even worse). So some policies get hard-written in the
-filesystem "flavor".
+Mar 28 14:48:28 alice kernel: Pid: 6135, comm: mv Not tainted
+2.6.32-131.17.1.el6.x86_64 #1
 
-Your remedy, as you have noticed, is to tweak the filesystem
-logic by changing the number of AGs, and you might also want to
-experiment with the elevator (you seem to have forgotten about
-that) and other block subsystem policies, and/or with the safety
-vs.  latency tradeoffs available at the filesystem and storage
-system levels.
+Mar 28 14:48:28 alice kernel: Call Trace:
 
-There are many annoying details, and recentish version of XFS
-try to help with the hideous hack of building an elevator inside
-the filesystem code itself:
+Mar 28 14:48:28 alice kernel: [<ffffffffa0262163>] ?
+xfs_error_report+0x43/0x50 [xfs]
 
-  http://oss.sgi.com/archives/xfs/2010-01/msg00011.html
-  http://oss.sgi.com/archives/xfs/2010-01/msg00008.html
+Mar 28 14:48:28 alice kernel: [<ffffffffa023a532>] ?
+xfs_free_extent+0xa2/0xc0 [xfs]
 
-which however is sort of effective, because the Linux block IO
-subsystem has several (euphemism) appalling issues.
+Mar 28 14:48:28 alice kernel: [<ffffffffa02385da>] ?
+xfs_free_ag_extent+0x56a/0x7e0 [xfs]
 
-> As can be seen from the time scale in the bottom part, the ext4
-> version performed about 5 times as fast because of a much more
-> disk-friendly write pattern.
+Mar 28 14:48:28 alice kernel: [<ffffffffa023a532>] ?
+xfs_free_extent+0xa2/0xc0 [xfs]
 
-Is it really disk friendly for every workload? Think about what
-happens on 'ext4' there, and when it jumps between block groups,
-and it is in effect doing commits in a different order. What
-'ext4' does costs dearly on other workload types.
+Mar 28 14:48:28 alice kernel: [<ffffffffa0243edd>] ?
+xfs_bmap_finish+0x15d/0x1a0 [xfs]
+
+Mar 28 14:48:28 alice kernel: [<ffffffffa0269cf3>] ?
+xfs_itruncate_finish+0x183/0x390 [xfs]
+
+Mar 28 14:48:28 alice kernel: [<ffffffffa0284dc8>] ?
+xfs_inactive+0x358/0x4e0 [xfs]
+
+Mar 28 14:48:28 alice kernel: [<ffffffff814dc34e>] ? mutex_lock+0x1e/0x50
+
+Mar 28 14:48:28 alice kernel: [<ffffffffa0294fa0>] ?
+xfs_fs_clear_inode+0xa0/0xe0 [xfs]
+
+Mar 28 14:48:28 alice kernel: [<ffffffff8118cb7f>] ? clear_inode+0x8f/0x110
+
+Mar 28 14:48:28 alice kernel: [<ffffffff8118d326>] ?
+generic_delete_inode+0x196/0x1d0
+
+Mar 28 14:48:28 alice kernel: [<ffffffff8118d3c5>] ?
+generic_drop_inode+0x65/0x80
+
+Mar 28 14:48:28 alice kernel: [<ffffffff8118c232>] ? iput+0x62/0x70
+
+Mar 28 14:48:28 alice kernel: [<ffffffff811835e2>] ?
+do_unlinkat+0x112/0x1c0
+
+Mar 28 14:48:28 alice kernel: [<ffffffff81177e36>] ?
+sys_newfstatat+0x36/0x50
+
+Mar 28 14:48:28 alice kernel: [<ffffffff811837f2>] ? sys_unlinkat+0x22/0x40
+
+Mar 28 14:48:28 alice kernel: [<ffffffff8100b172>] ?
+system_call_fastpath+0x16/0x1b
+
+Mar 28 14:48:28 alice kernel: xfs_force_shutdown(drbd1,0x8) called from
+line 4011 of file fs/xfs/xfs_bmap.c. Return address = 0xffffffffa0243f16
+
+Mar 28 14:48:28 alice kernel: Filesystem "drbd1": Corruption of in-memory
+data detected. Shutting down filesystem: drbd1
+
+Mar 28 14:48:28 alice kernel: Please umount the filesystem, and rectify the
+problem(s)
+
+--f46d04088d7b7cc5b804bcf47794
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+
+
+<p class=3D"MsoNormal">file system error - unmounted file system and had to=
+ perform
+xfs_repair -L </p>
+
+<p class=3D"MsoNormal">file system came back, thank you! </p>
+
+<p class=3D"MsoNormal">below is the pertinent portion of the log file. <br>=
+</p><p class=3D"MsoNormal">0 length files created in lost+found</p><p class=
+=3D"MsoNormal">An rsync process was occurring at the time.<br></p><p class=
+=3D"MsoNormal">
+<br></p><p class=3D"MsoNormal">Please help me to troubleshoot this.=A0=A0</=
+p><p class=3D"MsoNormal"><br></p><p class=3D"MsoNormal">[root@alice lost+fo=
+und]# uname -a<br>Linux alice 2.6.32-131.17.1.el6.x86_64 #1 SMP Thu Sep 29 =
+10:24:25 EDT 2011 x86_64 x86_64 x86_64 GNU/Linux<br>
+<br></p>
+
+<p class=3D"MsoNormal">thanks </p>
+
+<p class=3D"MsoNormal">-bob</p><p class=3D"MsoNormal"><br> </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: XFS internal error
+XFS_WANT_CORRUPTED_GOTO at line 1518 of file fs/xfs/xfs_alloc.c. Caller
+0xffffffffa023a532 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: Pid: 6135, comm: mv No=
+t
+tainted 2.6.32-131.17.1.el6.x86_64 #1 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: Call Trace: </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffffa0262163&=
+gt;] ?
+xfs_error_report+0x43/0x50 [xfs]</p>
+
+<p class=3D"MsoNormal"><span style></span>Mar 28 14:48:28 alice
+kernel: [&lt;ffffffffa023a532&gt;] ? xfs_free_extent+0xa2/0xc0 [xfs]</p>
+
+<p class=3D"MsoNormal"><span style></span>Mar 28 14:48:28 alice
+kernel: [&lt;ffffffffa02385da&gt;] ? xfs_free_ag_extent+0x56a/0x7e0 [xfs] <=
+/p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffffa023a532&=
+gt;] ?
+xfs_free_extent+0xa2/0xc0 [xfs] </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffffa0243edd&=
+gt;] ?
+xfs_bmap_finish+0x15d/0x1a0 [xfs]</p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffffa0269cf3&=
+gt;] ?
+xfs_itruncate_finish+0x183/0x390 [xfs] </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffffa0284dc8&=
+gt;] ?
+xfs_inactive+0x358/0x4e0 [xfs] </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff814dc34e&=
+gt;] ?
+mutex_lock+0x1e/0x50 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffffa0294fa0&=
+gt;] ?
+xfs_fs_clear_inode+0xa0/0xe0 [xfs] </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff8118cb7f&=
+gt;] ?
+clear_inode+0x8f/0x110 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff8118d326&=
+gt;] ?
+generic_delete_inode+0x196/0x1d0 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff8118d3c5&=
+gt;] ?
+generic_drop_inode+0x65/0x80 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff8118c232&=
+gt;] ?
+iput+0x62/0x70 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff811835e2&=
+gt;] ?
+do_unlinkat+0x112/0x1c0 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff81177e36&=
+gt;] ?
+sys_newfstatat+0x36/0x50 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff811837f2&=
+gt;] ?
+sys_unlinkat+0x22/0x40 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: [&lt;ffffffff8100b172&=
+gt;] ?
+system_call_fastpath+0x16/0x1b </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: xfs_force_shutdown(drb=
+d1,0x8)
+called from line 4011 of file fs/xfs/xfs_bmap.c. Return address =3D
+0xffffffffa0243f16 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: Filesystem &quot;drbd1=
+&quot;:
+Corruption of in-memory data detected. Shutting down filesystem: drbd1 </p>
+
+<p class=3D"MsoNormal">Mar 28 14:48:28 alice kernel: Please umount the file=
+system,
+and rectify the problem(s)</p>
+
+
+--f46d04088d7b7cc5b804bcf47794--
+
+
+--===============3046106761760085613==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3046106761760085613==--
