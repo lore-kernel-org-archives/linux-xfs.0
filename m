@@ -1,20 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q35IAjqg060817 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 13:10:45 -0500
-Received: from mail-gx0-f181.google.com (mail-gx0-f181.google.com
-	[209.85.161.181]) by cuda.sgi.com with ESMTP id
-	KQDccCpup6zgZYZG (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Apr 2012 11:10:43 -0700 (PDT)
-Received: by ggni4 with SMTP id i4so1166174ggn.26
-	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 11:10:43 -0700 (PDT)
+	q35JScaX065327 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 14:28:38 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id vL9gs6HMnaslnGMR for
+	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 12:28:37 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q35JSaKW015418
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 15:28:36 -0400
+Received: from Liberator-563.local (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q35JSZpY025263
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 15:28:36 -0400
+Message-ID: <4F7DF263.6060802@redhat.com>
+Date: Thu, 05 Apr 2012 12:28:35 -0700
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Date: Thu, 5 Apr 2012 20:10:43 +0200
-Message-ID: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-Subject: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-From: Stefan Ring <stefanrin@gmail.com>
+Subject: [PATCH] set freed perag structures to NULL to avoid mount failure oops
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +33,77 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Encouraged by reading about the recent improvements to XFS, I decided
-to give it another try on a new server machine. I am happy to report
-that compared to my previous tests a few years ago, performance has
-progressed from unusably slow to barely acceptable, but still lagging
-behind ext4, which is a noticeable (and notable) improvement indeed
-;).
+We encountered a bug after log replay failed on mount:
 
-The filesystem operations I care about the most are the likes which
-involve thousands of small files across lots of directories, like
-large trees of source code. For my test, I created a tarball of a
-finished IcedTea6 build, about 2.5 GB in size. It contains roughly
-200,000 files in 20,000 directories. The test I want to report about
-here was extracting this tarball onto an XFS filesystem. I tested
-other actions as well, but they didn't reveal anything too noticeable.
+[14217.617258] XFS (md5): log mount/recovery failed: error 5
+[14217.624037] XFS (md5): log mount failed
+[14234.866732] general protection fault: 0000 [#1] SMP 
+...
+[14234.913286] RIP: 0010:[<ffffffff810c2cbe>]  [<ffffffff810c2cbe>]
+__lock_acquire+0x2be/0xa20
+[14234.913293] RSP: 0018:ffff880116c6fa38  EFLAGS: 00010002
+[14234.913294] RAX: 6b6b6b6b6b6b6b6b RBX: 0000000000000000 RCX: 0000000000000000
+[14234.913321] Call Trace:
+[14234.913335]  [<ffffffff810c3aad>] lock_acquire+0x9d/0x1f0
+[14234.913365]  [<ffffffff8162f646>] _raw_spin_lock+0x46/0x80
+[14234.913372]  [<ffffffff8130e60d>] _atomic_dec_and_lock+0x4d/0x70
+[14234.913382]  [<ffffffffa0392801>] xfs_buf_rele+0x51/0x1e0 [xfs]
+[14234.913400]  [<ffffffffa039554f>] xfs_flush_buftarg+0x10f/0x130 [xfs]
+[14234.913410]  [<ffffffffa03955a4>] xfs_free_buftarg+0x34/0x70 [xfs]
+[14234.913422]  [<ffffffffa03a4634>] xfs_close_devices+0x64/0x70 [xfs]
+[14234.913433]  [<ffffffffa03a5890>] xfs_fs_fill_super+0x180/0x2a0 [xfs]
+[14234.913436]  [<ffffffff811b7a71>] mount_bdev+0x1d1/0x220
+[14234.913460]  [<ffffffffa03a3ad5>] xfs_fs_mount+0x15/0x20 [xfs]
+[14234.913462]  [<ffffffff811b8603>] mount_fs+0x43/0x1b0
+[14234.913468]  [<ffffffff811d473a>] vfs_kern_mount+0x6a/0xd0
+[14234.913471]  [<ffffffff811d6124>] do_kern_mount+0x54/0x110
+[14234.913473]  [<ffffffff811d7c34>] do_mount+0x1a4/0x260
+[14234.913476]  [<ffffffff811d8100>] sys_mount+0x90/0xe0
+[14234.913478]  [<ffffffff81639202>] system_call_fastpath+0x16/0x1b
 
-So the test consists of nothing but un-tarring the archive, followed
-by a "sync" to make sure that the time-to-disk is measured. Prior to
-running it, I had populated the filesystem in the following way:
 
-I created two directory hierarchies, each containing the unpacked
-tarball 20 times, which I rsynced simultaneously to the target
-filesystem. When this was done, I deleted one half of them, creating
-some free space fragmentation, and what I hoped would mimic real-world
-conditions to some degree.
+RAX is freed memory.
 
-So now to the test itself -- the tar "x" command returned quite fast
-(on the order of only a few seconds), but the following sync took
-ages. I created a diagram using seekwatcher, and it reveals that the
-disk head jumps about wildly between four zones which are written to
-in almost perfectly linear fashion.
+After xfs_mountfs() fails to replay the log, it
+goes to out_perag_free: which does xfs_free_perag().
 
-When I reran the test with only a single allocation group, behavior
-was much better (about twice as fast).
+Later down the mount failure path, xfs_buf_rele() checks for (!pag):
 
-OTOH, when I continuously extracted the same tarball in a loop without
-syncing in-between, it would continuously slow down in the ag=1 case
-to the point of being unacceptably slow. The same behavior did not
-occur with ag=4.
+        if (!pag) {
+                ASSERT(list_empty(&bp->b_lru));
+                ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
+                if (atomic_dec_and_test(&bp->b_hold))
+                        xfs_buf_free(bp);
+                return;
+        }
 
-I am aware that no filesystem can be optimal, but given that the
-entire write set -- all 2.5 GB of it -- is "known" to the file system,
-that is, in memory, wouldn't it be possible to write it out to disk in
-a somewhat more reasonable fashion?
+but we did not set the perag to NULL, so this doesn't get hit.
+Next we do:
 
-This is the seekwatcher graph:
-http://dl.dropbox.com/u/5338701/dev/xfs/xfs-ag4.png
+        if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
 
-And for comparison, the same on ext4, on the same partition primed in
-the same way (parallel rsyncs mentioned above):
-http://dl.dropbox.com/u/5338701/dev/xfs/ext4.png
+which goes bang if the perag has been freed.
 
-As can be seen from the time scale in the bottom part, the ext4
-version performed about 5 times as fast because of a much more
-disk-friendly write pattern.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-I ran the tests with a current RHEL 6.2 kernel and also with a 3.3rc2
-kernel. Both of them exhibited the same behavior. The disk hardware
-used was a SmartArray p400 controller with 6x 10k rpm 300GB SAS disks
-in RAID 6. The server has plenty of RAM (64 GB).
+Full disclosure: not yet tested, will do soon :)
+
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 1ffead4..ad830f7 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -252,6 +252,7 @@ __xfs_free_perag(
+ 
+ 	ASSERT(atomic_read(&pag->pag_ref) == 0);
+ 	kmem_free(pag);
++	pag = NULL;
+ }
+ 
+ /*
+
 
 _______________________________________________
 xfs mailing list
