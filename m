@@ -1,33 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q360PS9A093114 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 19:25:29 -0500
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id Efq75WyFDHryL1Fa
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 17:25:28 -0700 (PDT)
-Received: by pbcuo1 with SMTP id uo1so2351216pbc.26
-	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 17:25:27 -0700 (PDT)
+	q360x4JM097653 for <xfs@OSS.SGI.com>; Thu, 5 Apr 2012 19:59:04 -0500
+Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
+	cuda.sgi.com with ESMTP id fUGgPOhzG2nThM8o for
+	<xfs@OSS.SGI.com>; Thu, 05 Apr 2012 17:59:02 -0700 (PDT)
+Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
+	id 4EEB63D201F51134 for xfs@OSS.SGI.com;
+	Fri, 6 Apr 2012 01:59:00 +0100
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SFxVv-0006qy-3G
+	for <xfs@OSS.SGI.com>; Fri, 06 Apr 2012 01:58:55 +0100
+Resent-Message-ID: <20350.16334.969513.824965@tree.ty.sabi.co.UK>
+Resent-To: Linux fs XFS <xfs@oss.sgi.com>
+Subject: Re: repeated abuses of the XFS list
+Date: Thu, 05 Apr 2012 18:55:38 -0500
 MIME-Version: 1.0
-In-Reply-To: <4F7E0842.6090004@hardwarefreak.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
-	<CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
-	<4F776492.4070600@hardwarefreak.com>
-	<CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com>
-	<4F77D0B2.8000809@hardwarefreak.com>
-	<CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
-	<4F77EA55.6090004@hardwarefreak.com>
-	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
-	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
-	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
-	<4F792154.5020006@hardwarefreak.com>
-	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
-	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
-	<4F7E0842.6090004@hardwarefreak.com>
-Date: Fri, 6 Apr 2012 08:25:27 +0800
-Message-ID: <CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-From: daobang wang <wangdb1981@gmail.com>
+From: Russell Cattelan <cattelan@thebarn.com>
+Message-ID: <4F7E30FA.3010404@thebarn.com>
+References: <20350.11825.59139.309447@tree.ty.sabi.co.UK>
+In-Reply-To: <20350.11825.59139.309447@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,53 +28,108 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0328120161046580145=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
 
-Hi All,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--===============0328120161046580145==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig4F045EBCAA6830DA61DBFCB6"
 
-    I have found the solution, i updated the xfsprogs from 2.10.1 to
-3.1.5, and could repair it, Thanks.
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig4F045EBCAA6830DA61DBFCB6
+Content-Type: multipart/mixed;
+ boundary="------------030205080504080705020507"
 
-Best Wishes,
-Daobang Wang.
+This is a multi-part message in MIME format.
+--------------030205080504080705020507
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 4/5/2012 1:48 AM, daobang wang wrote:
->> Hi stan,
->>
->>      I duplicated the input/output error issue, about the detail
->> operations and logs, please see the attachments, Is there any way to
->> fix this? thanks!
->>
->> Best Regards,
->> Daobang Wang.
->
->
-> These fiilesystem issues have nothing to do with linux-raid.  I'm
-> copying the XFS mailing list which is where this discussion should be
-> taking place from this point forward.  Please reply-to-all, and paste
-> the output you previously attached, but inline this time.
->
-> Also, since the XFS folks are unfamiliar with what you're doing up to
-> this point, please provide a basic description of your hardware/storage
-> setup, kernel version, mdraid configuration, xfs_info output as well as
-> your fstab XFS mount options, and a description of your workload.
->
-> My best guess at this point as to the du and ls errors is that your
-> application is not behaving properly, or you're still running with XFS
-> barriers disabled, which, I say _loudly_ for the 2nd time, you should
-> NOT do in the absence of BBWC, which you stated you do not have.
->
-> --
-> Stan
->
+You must be joking!
+I'm not about to ban one of the most knowledgeable and productive
+xfs developers from the email list.
+
+I see nothing particularly offensive about these posts.
+
+I can understand you may upset about what Christoph said but
+he has every right to state his opinions on things no matter how
+much you disagree.
+
+-Russell
+
+
+
+On 4/5/12 6:43 PM, Peter Grandi wrote:
+> Hi, you are listed as the owner of the XFS mailing list, and I
+> wish to complain that Cristoph Hellwig, have repeatedly made
+> malicious personal attacks, for example:
+>=20
+>   http://oss.sgi.com/pipermail/xfs/2012-April/018176.html
+>   http://oss.sgi.com/archives/xfs/2012-03/msg00376.html
+>=20
+> Please ban him because he is turning the XFS mailing list in a
+> disreputable vehicle for offtopic and offensive flaming.
+>=20
+> This to me this looks like mobbing, beause coordinated personal
+> attacks have been done by a small group of people including:
+>=20
+>   http://oss.sgi.com/archives/xfs/2012-03/msg00370.html
+>   http://oss.sgi.com/archives/xfs/2012-03/msg00365.html
+
+
+--------------030205080504080705020507
+Content-Type: text/x-vcard; charset=utf-8;
+ name="cattelan.vcf"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+ filename="cattelan.vcf"
+
+begin:vcard
+fn:Russell Cattelan
+n:Cattelan;Russell
+org:Digital Elves Inc
+adr:;;2824 Lakeview Ave;Roseville;MN;55113;usa
+email;internet:cattelan@digitalelves.com
+tel;work:612 293 6009
+tel;cell:612 805 3144
+x-mozilla-html:FALSE
+url:http://digitalelves.com
+version:2.1
+end:vcard
+
+
+--------------030205080504080705020507--
+
+--------------enig4F045EBCAA6830DA61DBFCB6
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (Darwin)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
+
+iEYEARECAAYFAk9+MPsACgkQNRmM+OaGhBjUmQCfdXcTLr9KMc5rpzd/TlnqOPKd
+7NoAniRW73CC/wKve8hF46aRdBQLmqXu
+=/KG2
+-----END PGP SIGNATURE-----
+
+--------------enig4F045EBCAA6830DA61DBFCB6--
+
+
+--===============0328120161046580145==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0328120161046580145==--
