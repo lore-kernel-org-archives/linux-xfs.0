@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q355IqUd005481 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 00:18:53 -0500
-Message-ID: <4F7D2AC3.50204@oracle.com>
-Date: Thu, 05 Apr 2012 13:16:51 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: don't fill statvfs with project quota for a directory
-	if it was not enabled.
-References: <4F77DFDB.1040802@oracle.com>	
-	<20120402163903.GA6425@infradead.org>
-	<1333558102.21996.117.camel@chandra-lucid.austin.ibm.com>
-In-Reply-To: <1333558102.21996.117.camel@chandra-lucid.austin.ibm.com>
-Reply-To: jeff.liu@oracle.com
+	q358Jn9Y014346 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 03:19:49 -0500
+Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
+	[209.85.210.46]) by cuda.sgi.com with ESMTP id UoBeFFAA6NT6cG7q
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 01:19:48 -0700 (PDT)
+Received: by dadz9 with SMTP id z9so1729854dad.5
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 01:19:47 -0700 (PDT)
+From: baozich@gmail.com
+Subject: [PATCH] xfsprogs: fix comments of xfs_dinode_t.
+Date: Thu,  5 Apr 2012 16:00:11 +0800
+Message-Id: <1333612811-26847-1-git-send-email-baozich@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,93 +20,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: sekharan@us.ibm.com
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Chen Baozi <baozich@gmail.com>
 
-Hi Chandra, 
-On 04/05/2012 12:48 AM, Chandra Seetharaman wrote:
+From: Chen Baozi <baozich@gmail.com>
 
-> I tried the steps in latest xfs tree and on mainline 3.3.0. Unable to
-> reproduce the problem.
-> 
-> Jeff, how big was the FS and how full was it ?
 
-Sorry, I have missed one major step to reproduce this issue previously.
-Could you try to create a file under the project directory before setting it up?
+Signed-off-by: Chen Baozi <baozich@gmail.com>
+---
+ include/xfs_dinode.h |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Steps:
-1. echo "1:/xfs" > /etc/projects; echo "project1:1" > /etc/projid
-2. echo "test" > /xfs/testme
-3. xfs_quota -x -c 'project -s project1' /xfs
-4. du -sh /xfs
-
-I have posted a test to xfstest at below link, it can help reproducing this issue.
-http://www.spinics.net/lists/xfs/msg10744.html
-
-Thanks,
--Jeff
-
-> 
-> Christoph, BTW, 3.3.0 does not have my changes. Ben pushed it for
-> 3.4-rc1
-> 
-> Here is my results with 3.3.0
-> -------------------
-> -bash-4.1$ uname -r
-> 3.3.0 
-> bash-4.1$  mount | grep xfs
-> /dev/sdb1 on /xfs type xfs (rw)
-> bash-4.1$ cat /etc/projects
-> 1:/xfs
-> bash-4.1$ cat /etc/projid
-> project1:1
-> bash-4.1$ sudo xfs_quota -x -c 'project -s project1' /xfs
-> [sudo] password for chandra: 
-> Setting up project project1 (path /xfs)...
-> Processed 1 (/etc/projects and cmdline) paths for project project1 with
-> recursion depth infinite (-1).
-> bash-4.1$ du -sh /xfs
-> 0       /xfs
-> bash-4.1$ exit
-> ------------------
-> 
-> Chandra
-> 
-> On Mon, 2012-04-02 at 12:39 -0400, Christoph Hellwig wrote:
->> On Sun, Apr 01, 2012 at 12:55:55PM +0800, Jeff Liu wrote:
->>> Hello,
->>>
->>> I can trigger a BUG() at fs/xfs/xfs_dquot.c on vanilla kernel 3.3.0 by the following steps:
->>>
->>> 1. mount a XFS partition without 'pquota' option.
->>>    /dev/sda7 on /xfs type xfs (rw)
->>>
->>> 2. setup project1 on it.
->>>    $ cat /etc/projects 
->>>    1:/xfs
->>>    $ cat /etc/projid
->>>    project1:1
->>>    $ sudo xfs_quota -x -c 'project -s project1' /xfs
->>>
->>> 3. du -sh /xfs
->>
->> Can you wire this up as a test case for xfstests?
->>
->>> +		    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
->>> +		     (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD)) {
->>
->> This check is supposed to return false.  I guess Chandras separate
->> project quota inode preparations somehow broke it.
->>
->> Chandra, can you look into this issue?
->>
-> 
-> 
-
+diff --git a/include/xfs_dinode.h b/include/xfs_dinode.h
+index dffba9b..0079de5 100644
+--- a/include/xfs_dinode.h
++++ b/include/xfs_dinode.h
+@@ -33,7 +33,7 @@ typedef struct xfs_timestamp {
+  * variable size the leftover area split into a data and an attribute fork.
+  * The format of the data and attribute fork depends on the format of the
+  * inode as indicated by di_format and di_aformat.  To access the data and
+- * attribute use the XFS_DFORK_PTR, XFS_DFORK_DPTR, and XFS_DFORK_PTR macros
++ * attribute use the XFS_DFORK_DPTR, XFS_DFORK_APTR, and XFS_DFORK_PTR macros
+  * below.
+  *
+  * There is a very similar struct icdinode in xfs_inode which matches the
+-- 
+1.7.9.1
 
 _______________________________________________
 xfs mailing list
