@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q366jk4m138435 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 01:45:47 -0500
+	q366o1wA138651 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 01:50:01 -0500
 Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
-	[209.85.210.46]) by cuda.sgi.com with ESMTP id Vy2i6hZAEE99rcAD
+	[209.85.210.46]) by cuda.sgi.com with ESMTP id iM69rBaDgQ7wscMn
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 23:45:45 -0700 (PDT)
-Received: by dadz9 with SMTP id z9so3226727dad.5
-	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 23:45:44 -0700 (PDT)
+	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 23:49:59 -0700 (PDT)
+Received: by dadz9 with SMTP id z9so3230583dad.5
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 23:49:59 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
+In-Reply-To: <CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
 References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
 	<CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
 	<4F776492.4070600@hardwarefreak.com>
@@ -27,8 +27,9 @@ References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
 	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
 	<CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
 	<CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
-Date: Fri, 6 Apr 2012 14:45:44 +0800
-Message-ID: <CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
+	<CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
+Date: Fri, 6 Apr 2012 14:49:59 +0800
+Message-ID: <CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
 Subject: Re: RAID5 created by 8 disks works with xfs
 From: daobang wang <wangdb1981@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -46,75 +47,90 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Jack Wang <jack.wang.usish@gmail.com>
 Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Jacky,
+I did more tests, and found the mkfs.xfs did not hang.
 
-     Yes, the environment is like your description, i will try with
-your suggestion. thanks a lot.
+I tried to make the xfs on 7TB logical volume, both 2.10.1 and 3.1.5
+mkfs.xfs -f dev will work well, less than one minute.
 
-On 4/6/12, Jack Wang <jack.wang.usish@gmail.com> wrote:
-> using bigger inode size or inode64 does help?
+But when i tried to make xfs on 8TB logical volume, 2.10.1 works well,
+less than 1 minute, but 3.1.5 needs 5 minutes.
+
+On 4/6/12, daobang wang <wangdb1981@gmail.com> wrote:
+> Hi Jacky,
 >
-> So your environment is NVR software running in Linux ,100+ D1 streamer
-> directly write to filesystem on top of 16 SATA disks (with raid5 and
-> vg)?
+>      Yes, the environment is like your description, i will try with
+> your suggestion. thanks a lot.
 >
-> 2012/4/6 daobang wang <wangdb1981@gmail.com>:
->> There is another issue, i updated xfsprog from 2.10.1 to 3.1.5, and
->> found i could not make the xfs filesystem when the logical volume size
->> large than 8TB with command mkfs.xfs -f -i size=3D512
->> /dev/vg+vg00+20120406101850/lv+nxx+lv0000, this command seems hang, it
->> did not return for a long time, is there any parameter i should
->> adjust?
+> On 4/6/12, Jack Wang <jack.wang.usish@gmail.com> wrote:
+>> using bigger inode size or inode64 does help?
 >>
->> Thank you very much
+>> So your environment is NVR software running in Linux ,100+ D1 streamer
+>> directly write to filesystem on top of 16 SATA disks (with raid5 and
+>> vg)?
 >>
->> Best Regards,
->> Daobang Wang.
->>
->> On 4/6/12, daobang wang <wangdb1981@gmail.com> wrote:
->>> Hi All,
+>> 2012/4/6 daobang wang <wangdb1981@gmail.com>:
+>>> There is another issue, i updated xfsprog from 2.10.1 to 3.1.5, and
+>>> found i could not make the xfs filesystem when the logical volume size
+>>> large than 8TB with command mkfs.xfs -f -i size=3D512
+>>> /dev/vg+vg00+20120406101850/lv+nxx+lv0000, this command seems hang, it
+>>> did not return for a long time, is there any parameter i should
+>>> adjust?
 >>>
->>> =A0 =A0 I have found the solution, i updated the xfsprogs from 2.10.1 to
->>> 3.1.5, and could repair it, Thanks.
+>>> Thank you very much
 >>>
->>> Best Wishes,
+>>> Best Regards,
 >>> Daobang Wang.
 >>>
->>> On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
->>>> On 4/5/2012 1:48 AM, daobang wang wrote:
->>>>> Hi stan,
+>>> On 4/6/12, daobang wang <wangdb1981@gmail.com> wrote:
+>>>> Hi All,
+>>>>
+>>>> =A0 =A0 I have found the solution, i updated the xfsprogs from 2.10.1 =
+to
+>>>> 3.1.5, and could repair it, Thanks.
+>>>>
+>>>> Best Wishes,
+>>>> Daobang Wang.
+>>>>
+>>>> On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>>>>> On 4/5/2012 1:48 AM, daobang wang wrote:
+>>>>>> Hi stan,
+>>>>>>
+>>>>>> =A0 =A0 =A0I duplicated the input/output error issue, about the deta=
+il
+>>>>>> operations and logs, please see the attachments, Is there any way to
+>>>>>> fix this? thanks!
+>>>>>>
+>>>>>> Best Regards,
+>>>>>> Daobang Wang.
 >>>>>
->>>>> =A0 =A0 =A0I duplicated the input/output error issue, about the detail
->>>>> operations and logs, please see the attachments, Is there any way to
->>>>> fix this? thanks!
 >>>>>
->>>>> Best Regards,
->>>>> Daobang Wang.
+>>>>> These fiilesystem issues have nothing to do with linux-raid. =A0I'm
+>>>>> copying the XFS mailing list which is where this discussion should be
+>>>>> taking place from this point forward. =A0Please reply-to-all, and pas=
+te
+>>>>> the output you previously attached, but inline this time.
+>>>>>
+>>>>> Also, since the XFS folks are unfamiliar with what you're doing up to
+>>>>> this point, please provide a basic description of your
+>>>>> hardware/storage
+>>>>> setup, kernel version, mdraid configuration, xfs_info output as well
+>>>>> as
+>>>>> your fstab XFS mount options, and a description of your workload.
+>>>>>
+>>>>> My best guess at this point as to the du and ls errors is that your
+>>>>> application is not behaving properly, or you're still running with XFS
+>>>>> barriers disabled, which, I say _loudly_ for the 2nd time, you should
+>>>>> NOT do in the absence of BBWC, which you stated you do not have.
+>>>>>
+>>>>> --
+>>>>> Stan
+>>>>>
 >>>>
->>>>
->>>> These fiilesystem issues have nothing to do with linux-raid. =A0I'm
->>>> copying the XFS mailing list which is where this discussion should be
->>>> taking place from this point forward. =A0Please reply-to-all, and paste
->>>> the output you previously attached, but inline this time.
->>>>
->>>> Also, since the XFS folks are unfamiliar with what you're doing up to
->>>> this point, please provide a basic description of your hardware/storage
->>>> setup, kernel version, mdraid configuration, xfs_info output as well as
->>>> your fstab XFS mount options, and a description of your workload.
->>>>
->>>> My best guess at this point as to the du and ls errors is that your
->>>> application is not behaving properly, or you're still running with XFS
->>>> barriers disabled, which, I say _loudly_ for the 2nd time, you should
->>>> NOT do in the absence of BBWC, which you stated you do not have.
->>>>
->>>> --
->>>> Stan
->>>>
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>>
 >
 
 _______________________________________________
