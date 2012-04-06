@@ -1,25 +1,33 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q360Dndw092285 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 19:13:50 -0500
-Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
-	cuda.sgi.com with ESMTP id 4RSVH7hiWusApV2x for
-	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 17:13:48 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
-	id 4EEB63D201F4FCBF for xfs@oss.sgi.com;
-	Fri, 6 Apr 2012 01:13:46 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SFwo5-0006p3-1S
-	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 01:13:37 +0100
+	q360PS9A093114 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 19:25:29 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id Efq75WyFDHryL1Fa
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 17:25:28 -0700 (PDT)
+Received: by pbcuo1 with SMTP id uo1so2351216pbc.26
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 17:25:27 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <20350.13616.901974.523140@tree.ty.sabi.co.UK>
-Date: Fri, 6 Apr 2012 01:13:36 +0100
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-In-Reply-To: <20350.9643.379841.771496@tree.ty.sabi.co.UK>
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+In-Reply-To: <4F7E0842.6090004@hardwarefreak.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
+	<CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
+	<4F776492.4070600@hardwarefreak.com>
+	<CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com>
+	<4F77D0B2.8000809@hardwarefreak.com>
+	<CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
+	<4F77EA55.6090004@hardwarefreak.com>
+	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
+	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
+	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
+	<4F792154.5020006@hardwarefreak.com>
+	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
+	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+	<4F7E0842.6090004@hardwarefreak.com>
+Date: Fri, 6 Apr 2012 08:25:27 +0800
+Message-ID: <CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+From: daobang wang <wangdb1981@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,37 +40,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: stan@hardwarefreak.com
+Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-[ ... ]
+Hi All,
 
-> Which means that your Linux-level seek graphs may be not so
-> useful, because the host adapter may be drastically rearranging
-> the seek patterns, and you may need to tweak the P400 elevator,
-> rather than or in addition to the Linux elevator.
+    I have found the solution, i updated the xfsprogs from 2.10.1 to
+3.1.5, and could repair it, Thanks.
 
-> Unless possibly barriers are enabled, and even with a BBWC the
-> P400 writes through on receiving a barrier request. IIRC XFS is
-> rather stricter in issuing barrier requests than 'ext4', and you
-> may be seeing more the effect of that than the effect of aiming
-> to splitting the access patterns between 4 AGs [ ... ]
+Best Wishes,
+Daobang Wang.
 
-As to this, in theory even having split the files among 4 AGs,
-the upload from system RAM to host adapter RAM and then to disk
-could happen by writing first all the dirty blocks for one AG,
-then a long seek to the next AG, and so on, and the additional
-cost of 3 long seeks would be negligible. 
-
-That you report a significant slowdown indicates that this is
-not happening, and that likely XFS flushing is happening not in
-spacewise order but in timewise order.
-
-The seeks graphs you have gathered indeed indicate that with
-'ext4' there is a spacewise flush, while with XFS the flush
-alternates constantly among the 4 AGs, instead of doing each AG
-in turn. Which seems to indicate an elevator issue or a barrier
-issue after the delayed allocator has assigned block addresses
-to the various pages being flushed.
+On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 4/5/2012 1:48 AM, daobang wang wrote:
+>> Hi stan,
+>>
+>>      I duplicated the input/output error issue, about the detail
+>> operations and logs, please see the attachments, Is there any way to
+>> fix this? thanks!
+>>
+>> Best Regards,
+>> Daobang Wang.
+>
+>
+> These fiilesystem issues have nothing to do with linux-raid.  I'm
+> copying the XFS mailing list which is where this discussion should be
+> taking place from this point forward.  Please reply-to-all, and paste
+> the output you previously attached, but inline this time.
+>
+> Also, since the XFS folks are unfamiliar with what you're doing up to
+> this point, please provide a basic description of your hardware/storage
+> setup, kernel version, mdraid configuration, xfs_info output as well as
+> your fstab XFS mount options, and a description of your workload.
+>
+> My best guess at this point as to the du and ls errors is that your
+> application is not behaving properly, or you're still running with XFS
+> barriers disabled, which, I say _loudly_ for the 2nd time, you should
+> NOT do in the absence of BBWC, which you stated you do not have.
+>
+> --
+> Stan
+>
 
 _______________________________________________
 xfs mailing list
