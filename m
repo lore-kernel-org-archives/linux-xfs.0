@@ -1,27 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3621wd8112921 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 21:01:58 -0500
-Received: from x.digitalelves.com (x.digitalelves.com [209.98.77.55]) by
-	cuda.sgi.com with ESMTP id Y70Aq6S6Zhwv3puO (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Apr 2012 19:01:57 -0700 (PDT)
-Received: from macpro00.x.thebarn.com (c-66-41-26-220.hsd1.mn.comcast.net
-	[66.41.26.220]) (authenticated bits=0)
-	by x.digitalelves.com (8.14.5/8.14.4) with ESMTP id q3621tjL011046
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 21:01:56 -0500 (CDT)
-	(envelope-from cattelan@digitalelves.com)
-Message-ID: <4F7E4E93.6050803@digitalelves.com>
-Date: Thu, 05 Apr 2012 21:01:55 -0500
-From: Russell Cattelan <cattelan@thebarn.com>
+	q362XMll118918 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 21:33:22 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id sN8nL8e4BOvGRXXq
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 19:33:21 -0700 (PDT)
+Received: by pbcuo1 with SMTP id uo1so2455618pbc.26
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 19:33:21 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: repeated abuses of the XFS list
-References: <20350.11825.59139.309447@tree.ty.sabi.co.UK>
-	<4F7E30FA.3010404@thebarn.com>
-	<20350.14023.770391.715110@tree.ty.sabi.co.UK>
-	<4F7E3C57.3030103@thebarn.com>
-In-Reply-To: <4F7E3C57.3030103@thebarn.com>
+In-Reply-To: <CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
+	<CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
+	<4F776492.4070600@hardwarefreak.com>
+	<CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com>
+	<4F77D0B2.8000809@hardwarefreak.com>
+	<CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
+	<4F77EA55.6090004@hardwarefreak.com>
+	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
+	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
+	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
+	<4F792154.5020006@hardwarefreak.com>
+	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
+	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+	<4F7E0842.6090004@hardwarefreak.com>
+	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+Date: Fri, 6 Apr 2012 10:33:21 +0800
+Message-ID: <CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+From: daobang wang <wangdb1981@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,78 +41,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Sorry for what appears to be an off topic posts.
+There is another issue, i updated xfsprog from 2.10.1 to 3.1.5, and
+found i could not make the xfs filesystem when the logical volume size
+large than 8TB with command mkfs.xfs -f -i size=512
+/dev/vg+vg00+20120406101850/lv+nxx+lv0000, this command seems hang, it
+did not return for a long time, is there any parameter i should
+adjust?
 
-These emails were part of a non-xfs related conversation
-that was forwarded to list by Peter Grandi.
+Thank you very much
 
-While I did write these emails I did not sent them to the list.
+Best Regards,
+Daobang Wang.
 
-If any additional emails on this topic show up they will not have come
-directly from me.
-
--Russell
-
-
-On 4/5/12 7:44 PM, Russell Cattelan wrote:
-> Well I'm afraid I'm going to respectfully disagree.
-> I don't have the full story of everything that happened
-> but none of the post you pointed out are totally off topic.
-> There seems to be some question about what you have said previously
-> about XFS,  which to me would seem on topic.
-> 
-> I have forwarded your email to Christoph and the other prominent members
-> of the XFS team and if they feel further action is warranted we
-> can revisit the issue. Based on what you have sent I do
-> not feel there is grounds for action.
-> 
-> -Russell
-> 
-> 
-> On 4/5/12 7:20 PM, Peter Grandi wrote:
->>> You must be joking! I'm not about to ban one of the most
->>> knowledgeable and productive xfs developers from the email
->>> list.
+On 4/6/12, daobang wang <wangdb1981@gmail.com> wrote:
+> Hi All,
+>
+>     I have found the solution, i updated the xfsprogs from 2.10.1 to
+> 3.1.5, and could repair it, Thanks.
+>
+> Best Wishes,
+> Daobang Wang.
+>
+> On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>> On 4/5/2012 1:48 AM, daobang wang wrote:
+>>> Hi stan,
+>>>
+>>>      I duplicated the input/output error issue, about the detail
+>>> operations and logs, please see the attachments, Is there any way to
+>>> fix this? thanks!
+>>>
+>>> Best Regards,
+>>> Daobang Wang.
 >>
->> Well, if one of these guys post offtopic and malicious rants, I
->> guess that his being an XFS developer should not matter.
 >>
->> With being an XFS developer comes also some responsibility to
->> maintain a technical and professional tone in the XFS mailing
->> list, and not to abuse his position. Same for the others.
+>> These fiilesystem issues have nothing to do with linux-raid.  I'm
+>> copying the XFS mailing list which is where this discussion should be
+>> taking place from this point forward.  Please reply-to-all, and paste
+>> the output you previously attached, but inline this time.
 >>
->>> I see nothing particularly offensive about these posts.
+>> Also, since the XFS folks are unfamiliar with what you're doing up to
+>> this point, please provide a basic description of your hardware/storage
+>> setup, kernel version, mdraid configuration, xfs_info output as well as
+>> your fstab XFS mount options, and a description of your workload.
 >>
->> They personal attacks about competence and character. They are
->> pure flames, and because they are coordinated they seem to be
->> mobbing.
+>> My best guess at this point as to the du and ls errors is that your
+>> application is not behaving properly, or you're still running with XFS
+>> barriers disabled, which, I say _loudly_ for the 2nd time, you should
+>> NOT do in the absence of BBWC, which you stated you do not have.
 >>
->> To me, you seem to be expliciting endorsing the use of the XFS
->> mailing list to publish "ad hominem" attacks and mobbing.
+>> --
+>> Stan
 >>
->>> I can understand you may upset about what Christoph said but
->>> he has every right to state his opinions on things no matter
->>> how much you disagree.
->>
->> But his opinions are on offtopic "things": the topic of the XFS
->> mailing list is XFS, not people's competence or character, or
->> rants/attacks on people.
->>
->> Some of the links I have sent you contain no technical content,
->> purely personal attacks. How can this be legitimate XFS content?
->>
->> I think that it is your responsbility to ensure that posts are
->> kept ontopic, and you assume responsibility for their content
->> otherwise.
-> 
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+>
 
 _______________________________________________
 xfs mailing list
