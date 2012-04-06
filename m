@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q360xW3W097744 for <xfs@OSS.SGI.com>; Thu, 5 Apr 2012 19:59:32 -0500
-Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
-	cuda.sgi.com with ESMTP id 3jl22DmxGbtVyhI8 for
-	<xfs@OSS.SGI.com>; Thu, 05 Apr 2012 17:59:30 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
-	id 4EEB63D201F51164 for xfs@OSS.SGI.com;
-	Fri, 6 Apr 2012 01:59:30 +0100
+	q360x3KY097646 for <xfs@oss.sgi.com>; Thu, 5 Apr 2012 19:59:03 -0500
+Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
+	[87.194.255.144]) by cuda.sgi.com with ESMTP id
+	Cetx7uu7QLrxSpQX for <xfs@oss.sgi.com>;
+	Thu, 05 Apr 2012 17:59:01 -0700 (PDT)
+Received: from ty.sabi.co.UK (87.194.99.40) by honeysuckle.london.02.net
+	(8.5.140)
+	id 4F58EC1A00C9D93C for xfs@oss.sgi.com; Fri, 6 Apr 2012 01:59:00 +0100
 Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SFxWP-0006r8-PS
-	for <xfs@OSS.SGI.com>; Fri, 06 Apr 2012 01:59:25 +0100
-Resent-Message-ID: <20350.16365.649902.158043@tree.ty.sabi.co.UK>
-Resent-To: Linux fs XFS <xfs@oss.sgi.com>
-Subject: Re: repeated abuses of the XFS list
-Date: Thu, 05 Apr 2012 19:44:07 -0500
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SFxR4-0006pz-Eq
+	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 01:53:54 +0100
 MIME-Version: 1.0
-From: Russell Cattelan <cattelan@thebarn.com>
-Message-ID: <4F7E3C57.3030103@thebarn.com>
-References: <20350.11825.59139.309447@tree.ty.sabi.co.UK>
-	<4F7E30FA.3010404@thebarn.com>
-	<20350.14023.770391.715110@tree.ty.sabi.co.UK>
-In-Reply-To: <20350.14023.770391.715110@tree.ty.sabi.co.UK>
+Message-ID: <20350.16033.766746.102885@tree.ty.sabi.co.UK>
+Date: Fri, 6 Apr 2012 01:53:53 +0100
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+In-Reply-To: <20350.9643.379841.771496@tree.ty.sabi.co.UK>
+References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,127 +29,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4563024159078240092=="
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.sabi.co.UK>
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---===============4563024159078240092==
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enigC900D95FFA3A0A8015EDFCA3"
+> [ ... ] Which brings another subject: usually hw RAID host
+> adapter have cache, and have firmware that cleverly rearranges
+> writes. Looking at the specs of the P400: [ ... ] it seems to
+> me that it has standard 256MB of cache, and only supports
+> RAID6 with a battery backed write cache (wise!). [ ... ]
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigC900D95FFA3A0A8015EDFCA3
-Content-Type: multipart/mixed;
- boundary="------------010606040704000509040506"
+Uhm, looking further into the P400 an interesting detail:
 
-This is a multi-part message in MIME format.
---------------010606040704000509040506
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+http://hardforum.com/showpost.php?s=3Dc19964285e760bee47b8558ae82899d5&p=3D=
+1033958051&postcount=3D4
+ =ABOne is a stick of memory with a battery attached to it and one
+  without. The one without is what the basic models ship with
+  and usually has either 256 or 512Mb of memory, it supports
+  caching for read operations only. [ ... ] You need the battery
+  backed write cache module if you want to be able to use/turn
+  on write caching on the array controller which makes a huge
+  difference for write performance in general and is pretty much
+  critical for raid 5 performance on writes.=BB
 
-Well I'm afraid I'm going to respectfully disagree.
-I don't have the full story of everything that happened
-but none of the post you pointed out are totally off topic.
-There seems to be some question about what you have said previously
-about XFS,  which to me would seem on topic.
-
-I have forwarded your email to Christoph and the other prominent members
-of the XFS team and if they feel further action is warranted we
-can revisit the issue. Based on what you have sent I do
-not feel there is grounds for action.
-
--Russell
-
-
-On 4/5/12 7:20 PM, Peter Grandi wrote:
->> You must be joking! I'm not about to ban one of the most
->> knowledgeable and productive xfs developers from the email
->> list.
->=20
-> Well, if one of these guys post offtopic and malicious rants, I
-> guess that his being an XFS developer should not matter.
->=20
-> With being an XFS developer comes also some responsibility to
-> maintain a technical and professional tone in the XFS mailing
-> list, and not to abuse his position. Same for the others.
->=20
->> I see nothing particularly offensive about these posts.
->=20
-> They personal attacks about competence and character. They are
-> pure flames, and because they are coordinated they seem to be
-> mobbing.
->=20
-> To me, you seem to be expliciting endorsing the use of the XFS
-> mailing list to publish "ad hominem" attacks and mobbing.
->=20
->> I can understand you may upset about what Christoph said but
->> he has every right to state his opinions on things no matter
->> how much you disagree.
->=20
-> But his opinions are on offtopic "things": the topic of the XFS
-> mailing list is XFS, not people's competence or character, or
-> rants/attacks on people.
->=20
-> Some of the links I have sent you contain no technical content,
-> purely personal attacks. How can this be legitimate XFS content?
->=20
-> I think that it is your responsbility to ensure that posts are
-> kept ontopic, and you assume responsibility for their content
-> otherwise.
-
-
---------------010606040704000509040506
-Content-Type: text/x-vcard; charset=utf-8;
- name="cattelan.vcf"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: attachment;
- filename="cattelan.vcf"
-
-begin:vcard
-fn:Russell Cattelan
-n:Cattelan;Russell
-org:Digital Elves Inc
-adr:;;2824 Lakeview Ave;Roseville;MN;55113;usa
-email;internet:cattelan@digitalelves.com
-tel;work:612 293 6009
-tel;cell:612 805 3144
-x-mozilla-html:FALSE
-url:http://digitalelves.com
-version:2.1
-end:vcard
-
-
---------------010606040704000509040506--
-
---------------enigC900D95FFA3A0A8015EDFCA3
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (Darwin)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org/
-
-iEYEARECAAYFAk9+PFkACgkQNRmM+OaGhBhCFQCfZj7jzjzF1SpA3uSY67+wVAGh
-5dMAnjdEe/HlTKS1Qas8igmOraubdcqd
-=MnuW
------END PGP SIGNATURE-----
-
---------------enigC900D95FFA3A0A8015EDFCA3--
-
-
---===============4563024159078240092==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+It may be worthwhile to check if there is an enabled BBWC
+because if there is the BBWC the host adapter should be
+buffering writes up to 256MiB/512MiB and sorting them thus long
+inter-AG seeks should be happening only 10 or 5 times or not
+much more (4 times) that. Instead it may be happening that the
+P400 is doing write-through, which would reflect the unsorted
+seek pattern at the Linux->host adapter level into the host
+adapter->disk drive level.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4563024159078240092==--
