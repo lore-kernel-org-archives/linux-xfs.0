@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q368j7RW159190 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 03:45:08 -0500
-Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
-	[209.85.210.46]) by cuda.sgi.com with ESMTP id 9JISmG33HVQxICLY
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 06 Apr 2012 01:45:06 -0700 (PDT)
-Received: by dadz9 with SMTP id z9so3342600dad.5
-	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 01:45:06 -0700 (PDT)
+	q36BCPeP196854 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 06:12:26 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id xrBtErGAMnN8DzbT
+	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 04:12:24 -0700 (PDT)
+Message-ID: <4F7ECF97.6020601@hardwarefreak.com>
+Date: Fri, 06 Apr 2012 06:12:23 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <4F7EA6D4.804@hardwarefreak.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
 References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
-	<4F77D0B2.8000809@hardwarefreak.com>
-	<CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
 	<4F77EA55.6090004@hardwarefreak.com>
 	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
 	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
@@ -27,10 +25,9 @@ References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
 	<CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
 	<CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
 	<4F7EA6D4.804@hardwarefreak.com>
-Date: Fri, 6 Apr 2012 16:45:06 +0800
-Message-ID: <CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-From: daobang wang <wangdb1981@gmail.com>
+	<CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
+In-Reply-To: <CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,41 +40,31 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
+To: daobang wang <wangdb1981@gmail.com>
 Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi stan,
+On 4/6/2012 3:45 AM, daobang wang wrote:
+> Hi stan,
+> 
+>     Thank you for your reply, the envrionment is the same that i
+> mentioned before,  [...]
 
-    Thank you for your reply, the envrionment is the same that i
-mentioned before,  the user allows the cache data to miss, so i did
-not disable the barriers, they just demands that the filesystem should
-be repaired after system restarted. We did not deal with the fstab
-now, it is the next step work.
+There's seems to be some kind of communication failure here.  I'll make
+this really simple.  Please fill in the blanks.
 
-    And about the mkfs.xfs slow issue, we found the logsize is too
-large, it caused making the xfs filesystem slowly.
+$ uname -a
 
-    Thanks again.
+$ xfs_info [device]
 
-Have a good day.
-Daobang Wang.
+$ cat /etc/fstab|grep xfs
 
-On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 4/6/2012 1:49 AM, daobang wang wrote:
->> I did more tests, and found the mkfs.xfs did not hang.
->>
->> I tried to make the xfs on 7TB logical volume, both 2.10.1 and 3.1.5
->> mkfs.xfs -f dev will work well, less than one minute.
->>
->> But when i tried to make xfs on 8TB logical volume, 2.10.1 works well,
->> less than 1 minute, but 3.1.5 needs 5 minutes.
->
-> Once you provide the information I requested I'd be glad to help you
-> further.  Without that information I'm wasting my time.
->
-> --
-> Stan
->
+$ mdadm --detail /dev/mdX
+
+
+Thanks.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
