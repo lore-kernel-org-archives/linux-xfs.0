@@ -1,25 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q36EafIV249805 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 09:36:41 -0500
-Received: from anakin.london.02.net (anakin.london.02.net [87.194.255.134]) by
-	cuda.sgi.com with ESMTP id iGSg08Jo21LXl4vH for
-	<xfs@oss.sgi.com>; Fri, 06 Apr 2012 07:36:39 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by anakin.london.02.net (8.5.140)
-	id 4EEB63D201F6C712 for xfs@oss.sgi.com;
-	Fri, 6 Apr 2012 15:36:37 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SGAH9-00086a-A2
-	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 15:36:31 +0100
+	q36FbX7C000505 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 10:37:34 -0500
+Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id Edc7C1hKtIhYNbTW
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 06 Apr 2012 08:37:33 -0700 (PDT)
+Received: by yhjj72 with SMTP id j72so1746960yhj.26
+	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 08:37:32 -0700 (PDT)
 MIME-Version: 1.0
-Message-ID: <20350.65390.662663.682964@tree.ty.sabi.co.UK>
-Date: Fri, 6 Apr 2012 15:36:30 +0100
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-In-Reply-To: <20349.63706.913104.777446@tree.ty.sabi.co.UK>
+In-Reply-To: <20350.65390.662663.682964@tree.ty.sabi.co.UK>
 References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
 	<20349.63706.913104.777446@tree.ty.sabi.co.UK>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+	<20350.65390.662663.682964@tree.ty.sabi.co.UK>
+Date: Fri, 6 Apr 2012 17:37:32 +0200
+Message-ID: <CAAxjCEwNAOMUypaORP=BcJmdT3=GBykAYFjJD54_ixnLc+O6SQ@mail.gmail.com>
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,71 +26,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Linux fs XFS <xfs@oss.sgi.com>
 
-[ ... ]
-
-> [ ... ]  general purpose filesystems cannot handle well large
-> groups of small files,
-[ ... ]
-
->> As can be seen from the time scale in the bottom part, the
->> ext4 version performed about 5 times as fast because of a much
->> more disk-friendly write pattern.
-
-As to 'ext4' and doing (euphemism) insipid tests involving
-peculiar setups, there is an interesting story in this post:
-
-  http://oss.sgi.com/archives/xfs/2012-03/msg00465.html
-
-on the perils of using 'tar x' as a "test" of something
-meaningful (illustrated using a much smaller "test" than
-yours).
-
-The telling details was that there was a ratio of 227 times (6
-seconds versus 23 minutes) between running 'tar x' without any
-safety and with most safeties.
-
-A ratio of 227 times indicates that there is something big going
-on, which is that contemporary disk drives have 2 orders of
-magnitude between bulk sequential and small random "speed" (which
-is the major reason why =ABgeneral purpose filesystems cannot
-handle well large groups of small files=BB), and that in between
-one can choose a vast number of different safety/speed tradeoffs
-(or introduce performance problems :->).
-
-Does that means that 'ext4' has "Abysmal write performance" in
-the 23 minutes case? No, just a different tradeoff.
-
-Similarly XFS has had for a long time a mostly undeserved
-reputation for being "slow" on small-IO/metadata intensive
-workloads, in large part because traditionally it has been
-designed to deliver a higher level of (implicit, metadata) safety
-than other filesystems; for good reasons.
-
-Therefore as I argued in other comments the =ABexcessive seeking=BB
-you report seems due to me more to storage layer issues and
-perhaps stricter interpretation of safety by XFS, than to
-something really wrong with XFS, which is a tool that has to be
-deployed with consideration.
-
-As to that a comparison that does point a finger at the
-underlying storage system:
-
-  * In your graphs 'ext4' writes out 2.5GB of small files at
-    around 100MB/s (and with relatively few long seeks on that
-    workload) on an "enterprise" storage system that has 4+2
-    disks each capable of 130MB/s.
-
-  * In the 6s "test" I did reported above in a similar situation
-    'ext4' wrote out 370MB also at not much less than 100MB/s,
-    but on a single "consumer" disk on a much slower destktop.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+PiBBcyB0byAnZXh0NCcgYW5kIGRvaW5nIChldXBoZW1pc20pIGluc2lwaWQgdGVzdHMgaW52b2x2
+aW5nCj4gcGVjdWxpYXIgc2V0dXBzLCB0aGVyZSBpcyBhbiBpbnRlcmVzdGluZyBzdG9yeSBpbiB0
+aGlzIHBvc3Q6Cj4KPiDCoGh0dHA6Ly9vc3Muc2dpLmNvbS9hcmNoaXZlcy94ZnMvMjAxMi0wMy9t
+c2cwMDQ2NS5odG1sCgpJIHJlYWxseSBkb24ndCBzZWUgdGhlIGNvbm5lY3Rpb24gdG8gdGhpcyB0
+aHJlYWQuIFlvdSdyZSBhZHZvY2F0aW5nCm1vc3RseSB0aGF0IHRhciB1c2UgZnN5bmMgb24gZXZl
+cnkgZmlsZSwgd2hpY2ggdG8gbWUgc2VlbXMgYWJzdXJkLiBJZgp0aGUgc3lzdGVtIGdvZXMgZG93
+biBoYWxmd2F5IHRocm91Z2ggdGFyIGV4dHJhY3Rpb24sIEkgd291bGQgZGVsZXRlCnRoZSB0cmVl
+IGFuZCB1bnRhciBhZ2Fpbi4gV2hhdCBkbyBJIGNhcmUgaWYgc29tZSBmaWxlcyBhcmUgY29ycnVw
+dCwKd2hlbiB0aGUgZW50aXJlIHRyZWUgaXMgaW5jb21wbGV0ZSBhbnl3YXk/CgpEZXNwaXRlIHRo
+ZSBzb21ld2hhdCBpbmZsYW1tYXRvcnkgdGhyZWFkIHN1YmplY3QsIEkgZG9uJ3Qgd2FudCB0byBi
+YXNoCmFueW9uZS4gSXQncyBqdXN0IHRoYXQgdW50YXJyaW5nIGxhcmdlIHNvdXJjZSB0cmVlcyBp
+cyBhIHZlcnkgdHlwaWNhbAp3b3JrbG9hZCBmb3IgbWUuIEFuZCBJIGp1c3QgZG9uJ3Qgd2FudCB0
+byBhY2NlcHQgdGhhdCBYRlMgY2Fubm90IGRvCmJldHRlciB0aGFuIGJlaW5nIHNldmVyYWwgb3Jk
+ZXJzIG9mIG1hZ25pdHVkZSBzbG93ZXIgdGhhbiBleHQ0CihzcGVha2luZyBvZiBiaW5hcnkgb3Jk
+ZXJzIG9mIG1hZ25pdHVkZSkuIEFzIEkgc2VlIGl0LCBib3RoIGZpbGUKc3lzdGVtcyBnaXZlIHRo
+ZSBzYW1lIGd1YXJhbnRlZXM6CgoxKSBUaGF0IHVwb24gY29tcGxldGlvbiBvZiBzeW5jLCBhbGwg
+ZGF0YSBpcyByZWFkaWx5IGF2YWlsYWJsZSBvbgpwZXJtYW5lbnQgc3RvcmFnZS4KMikgVGhhdCB0
+aGUgZmlsZSBzeXN0ZW0gbWV0YWRhdGEgZG9lc24ndCBzdWZmZXIgY29ycnVwdGlvbiwgc2hvdWxk
+IHRoZQpzeXN0ZW0gbG9zZSBwb3dlciBkdXJpbmcgdGhlIG9wZXJhdGlvbi4KCl9fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
+QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
