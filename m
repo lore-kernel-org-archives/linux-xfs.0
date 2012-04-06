@@ -1,14 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q36GCCdb008263 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 11:12:12 -0500
-Message-ID: <4F7F15D8.9050807@sgi.com>
-Date: Fri, 06 Apr 2012 11:12:08 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q36FZWuL261923 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 10:35:32 -0500
+Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
+	[87.194.255.144]) by cuda.sgi.com with ESMTP id
+	YPHMHFdTtRze3dY3 for <xfs@oss.sgi.com>;
+	Fri, 06 Apr 2012 08:35:30 -0700 (PDT)
+Received: from ty.sabi.co.UK (87.194.99.40) by honeysuckle.london.02.net
+	(8.5.140)
+	id 4F58EC1A00CC608C for xfs@oss.sgi.com; Fri, 6 Apr 2012 16:35:28 +0100
+Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SGBC6-00088l-Re
+	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 16:35:22 +0100
 MIME-Version: 1.0
-Subject: Re: [PATCH V2] xfstests: several 274 fixups
-References: <4F271967.10308@sandeen.net> <4F593147.8050603@sandeen.net>
-In-Reply-To: <4F593147.8050603@sandeen.net>
+Message-ID: <20351.3386.718183.518416@tree.ty.sabi.co.UK>
+Date: Fri, 6 Apr 2012 16:35:22 +0100
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+In-Reply-To: <CAAxjCEwYVB4T2EHU6JWi5Oxf=hepoKjVVj+dVAYWo_t4KNFeyg@mail.gmail.com>
+References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+	<CAAxjCEwYVB4T2EHU6JWi5Oxf=hepoKjVVj+dVAYWo_t4KNFeyg@mail.gmail.com>
+From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,39 +30,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-On 03/08/12 16:23, Eric Sandeen wrote:
-> This changes quite a few things about 274 to make it more robust
-> and useful.
->
-> * More comments
-> * Use xfs_io for falloc (not all systems have /usr/bin/fallocate)
-> * use _require_xfs_io_falloc to be sure system&  fs support preallocation
-> * Do not remove all of the files in $SCRATCH_MNT/ post-mkfs
-> * Do not remove all of the files in $SCRATCH_MNT/ on completion
->    (this breaks e2fsck when lost+found/ goes missing)
-> * Don't cd into $SCRATCH_MNT
-> * Try harder to completely fill the fs
-> * Use a larger preallocated space, and write into all of it (hopefully
->    avoid just accidentally succeeding by writing into fs reserved
->    space that may be there)
-> * Save more output in $seq.full instead of /dev/null
-> * Fill preallocated space diabolically
->
-> Signed-off-by: Eric Sandeen<sandeen@redhat.com>
-> ---
-
-Looks very nice.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+WyAuLi4gXQoKPiBZZXMsIGl0IGRvZXMgaGF2ZSAyNTYgTUIgQkJXQywgYW5kIGl0IGlzIGVuYWJs
+ZWQuIFdoZW4gSQo+IGRpc2FibGVkIGl0LCB0aGUgdGltZSBuZWVkZWQgd291bGQgcmlzZSBmcm9t
+IDEyMCBzZWMgaW4gdGhlCj4gQkJXQyBjYXNlIHRvIGEgd2hvcHBpbmcgMzMwIHNlYy4KCj4gSUlS
+QywgSSBkaWQgdGhlIGJlbmNobWFyayB3aXRoIGJhcnJpZXI9MCwgYnV0IGNoYW5naW5nIHRoaXMg
+ZGlkIG5vdAo+IG1ha2UgYSBiaWcgZGlmZmVyZW5jZS4KCk5vdGUgdGhhdCB0aGUgc3ludGF4IGlz
+IHNsaWdodGx5IGRpZmZlcmVudCBiZXR3ZWVuICdleHQ0JyBhbmQKWEZTLCBhbmQgaWYgeW91IHVz
+ZSAnYmFycmllcj0wJyB3aXRoIFhGUywgaXQgd2lsbCBtb3VudCB0aGUKZmlsZXRyZWUgKndpdGgq
+IGJhcnJpZXJzIChqdXN0IGRvdWJsZSBjaGVja2VkKS4KCj4gTm90aGluZyBkaWQ7IHRoYXTigJlz
+IHdoYXQgZnJ1c3RyYXRlZCBtZSBhIGJpdCA7KS4gSSBhbHNvIHRyaWVkCj4gZGlmZmVyZW50IExp
+bnV4IElPIGVsZXZhdG9ycywgYXMgeW91IHN1Z2dlc3RlZCBpbiB5b3VyIG90aGVyCj4gcmVzcG9u
+c2UsIHdpdGhvdXQgYW55IG1lYXN1cmFibGUgZWZmZWN0LgoKSGVyZSBhIGxvdCBkZXBlbmRzIG9u
+IHRoZSBmaXJtd2FyZSBvZiB0aGUgUDQwMCwgYmVjYXVzZSB3aXRoIGEKQkJXQyBpbiB0aGVvcnkg
+aXQgY2FuIGNvbXBsZXRlbHkgaWdub3JlIHRoZSByZXF1ZXN0IG9yZGVyaW5nIGFuZAp0aGUgYmFy
+cmllcnMgaXQgcmVjZWl2ZXMgZnJvbSB0aGUgTGludXggc2lkZSAoYW5kIGJhcnJpZXJzCiptaWdo
+dCogYmUgZGlzYWJsZWQpLCBzbyBieSBhbmQgbGFyZ2UgdGhlIExpbnV4IGVsZXZhdG9yIHNob3Vs
+ZApub3QgbWF0dGVyLgoKICBOb3RlOiB3aGF0IHdvdWxkIGxvb2sgZ29vZCBpbiB0aGlzIHZlcnkg
+bmFycm93IGV4YW1wbGUgaXMKICBzb21ldGhpbmcgbGlrZSAnYW50aWNpcGF0b3J5JywgYW5kIHdo
+aWxlIHRoYXQgaGFzIGRpc2FwcGVhcmVkCiAgSUlSQyB0aGVyZSBpcyBhIHdheSB0byB0d2VhayAn
+Y2ZxJyB0byBiZWhhdmUgbGlrZSB0aGF0LgoKQnV0IHRoZSB0aW1lcyB5b3UgcmVwb3J0IGFyZSBj
+b25zaXN0ZW50IHdpdGggdGhlIG5vdGlvbiB0aGF0CnlvdXIgTGludXggc2lkZSBzZWVrIGdyYXBo
+IGlzIHdoYXQgaGFwcGVucyBhdCB0aGUgUDQwMCBsZXZlbAp0b28sIHdoaWNoIGlzIHNvbWV0aGlu
+ZyB0aGF0IHNob3VsZCBub3QgaGFwcGVuIHdpdGggYSBCQldDLgoKSWYgdGhhdCdzIHRoZSBjYXNl
+LCB0d2Vha2luZyB0aGUgTGludXggc2lkZSBzY2hlZHVsaW5nIG1pZ2h0CmhlbHAsIGZvciBleGFt
+cGxlIGluY3JlYXNpbmcgYSBsb3QgJ3F1ZXVlL25yX3JlcXVlc3RzJyBhbmQKJ2RldmljZS9xdWV1
+ZV9kZXB0aCcgKCducl9yZXF1ZXN0cycgc2hvdWxkIGJlIGFwcGFyZW50bHkgYXQKbGVhc3QgdHdp
+Y2UgJ3F1ZXVlX2RlcHRoJyBpbiBtb3N0IGNhc2VzKS4KCk9yIGVsc2UgZW5zdXJpbmcgdGhhdCB0
+aGUgUDQwMCBkb2VzIHJlb3JkZXIgcmVxdWVzdHMgYW5kIGRvZXMKbm90IHdyaXRlLXRocm91Z2gs
+IGFzIGl0IGhhcyBhIEJCV0MuCgpPdmVyYWxsIHlvdXIgdGVzdCBkb2VzIG5vdCBzZWVtIHZlcnkg
+bm90YWJsZSB0byBtZSwgZXhjZXB0IHRoYXQKaXQgaXMgc3RyYW5nZSB0aGF0IGluIHRoZSBYRlMg
+NCBBRyBjYXNlIHRoZSBnZW5lcmF0ZWQgSU8gc3RyZWFtCihhdCB0aGUgTGludXggbGV2ZWwpIGlz
+IHNlZWtpbmcgaW5jZXNzYW50bHkgYmV0d2VlbiB0aGUgNCBBR3MKaW5zdGVhZCBvZiBpbiBwaGFz
+ZXMsIGFuZCB0aGlzIGFwcGFyZW50bHkgZ2V0cyByZWZsZWN0ZWQgdG8gdGhlCmRpc2tzIGJ5IHRo
+ZSBQNDAwIGV2ZW4gaWYgaXQgaGFzIGEgQkJXQy4KCkl0IGlzIG5vdCBjbGVhciB0byBtZSB3aHkg
+dGhlIHNlZWtzIGFtb25nIHRoZSA0QUdzIGhhcHBlbiBpbgpzdWNoIGEgdGlnaHRseSBpbnRlcmxl
+YXZlZCB3YXkgKGJhcnJpZXJzPyBUaGUgd2F5IGpvdXJuYWxpbmcKd29ya3M/KSBpbnN0ZWFkIG9m
+IGEgbW9yZSBidWxreSB3YXkuCgpUaGUgc3VnZ2VzdGlvbiBieSBhbm90aGVyIGNvbW1lbnRlciB0
+byB1c2UgJ3JvdG9yc3RlcCcgKHByb2JhYmx5CnNldCB0byBhIGhpZ2ggdmFsdWUpIG1heSBoZWxw
+IHRoZW4sIGFzIGl0IGJ1bmNoZXMgZmlsZXMgaW4gQUdzLgoKPiBUaGUgc3RyaXBlIHNpemUgaXMg
+dGhpcywgYnR3Ljogc3U9MTZrLHN3PTQKCkJUVyBjb25ncmF0dWxhdGlvbnMgZm9yIGxpbWl0aW5n
+IHlvdXIgUkFJRDYgc2V0IHRvIDQrMiwgYW5kCnVzaW5nIGEgcmVsYXRpdmVseSBzbWFsbCBjaHVu
+ayBzaXplIGNvbXBhcmVkIHRvIHRoYXQgY2hvc2VuIGJ5Cm1hbnkgb3RoZXJzLgoKQnV0IGl0IGlz
+IHN0aWxsIHByZXR0eSBsYXJnZSBmb3IgdGhpcyBjYXNlOiA2NEtpQiB3aGVuIHlvdXIKYXZlcmFn
+ZSBmaWxlIHNpemUgaXMgYXJvdW5kIDEyS2lCLiBQb3RlbnRpYWxseSBsb3RzIG9mIFJNVywgYW5k
+CmxpdHRsZSBvcHBvcnR1bml0eSB0byB0YWtlIGFkdmFudGFnZSBvZiB0aGUgaGlnaGVyIHBhcmFs
+bGVsaXNtCm9mIGhhdmluZyA0IEFHcyB3aXRoIDQgaW5kZXBlbmRlbnQgc3RyZWFtcyBvZiBkYXRh
+LgoKQXMgbWVudGlvbmVkIGluIGFub3RoZXIgY29tbWVudCwgSSBnb3QgbmVhcmx5IHRoZSBzYW1l
+ICdleHQ0Jwp3cml0ZW91dCByYXRlIG9uIGEgc2luZ2xlIGRpc2suLi4KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
