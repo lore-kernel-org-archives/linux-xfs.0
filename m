@@ -1,23 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q365rKJS133997 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 00:53:21 -0500
-Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
-	[209.85.213.181]) by cuda.sgi.com with ESMTP id
-	U5JG1qVmuPYovR3V (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 05 Apr 2012 22:53:19 -0700 (PDT)
-Received: by yenq2 with SMTP id q2so1544500yen.26
-	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 22:53:18 -0700 (PDT)
+	q366jk4m138435 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 01:45:47 -0500
+Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
+	[209.85.210.46]) by cuda.sgi.com with ESMTP id Vy2i6hZAEE99rcAD
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 05 Apr 2012 23:45:45 -0700 (PDT)
+Received: by dadz9 with SMTP id z9so3226727dad.5
+	for <xfs@oss.sgi.com>; Thu, 05 Apr 2012 23:45:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20350.9643.379841.771496@tree.ty.sabi.co.UK>
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
-Date: Fri, 6 Apr 2012 07:53:18 +0200
-Message-ID: <CAAxjCEwYVB4T2EHU6JWi5Oxf=hepoKjVVj+dVAYWo_t4KNFeyg@mail.gmail.com>
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-From: Stefan Ring <stefanrin@gmail.com>
+In-Reply-To: <CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
+	<CADNH=7H_rgiY4fkB0SHo0yPhSBib7Gq-E_fu18yuJx=enn-eGg@mail.gmail.com>
+	<4F776492.4070600@hardwarefreak.com>
+	<CACwgYDOSrEYUps2VLpFSZ-irH7Mn_-BWrOYYDgXS=ULrmVuEPw@mail.gmail.com>
+	<4F77D0B2.8000809@hardwarefreak.com>
+	<CACwgYDMx6nQF-OwYj-BA+sZivUK=kmv2tPukgf5JGwA1vMTGrA@mail.gmail.com>
+	<4F77EA55.6090004@hardwarefreak.com>
+	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
+	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
+	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
+	<4F792154.5020006@hardwarefreak.com>
+	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
+	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+	<4F7E0842.6090004@hardwarefreak.com>
+	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+	<CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
+	<CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
+Date: Fri, 6 Apr 2012 14:45:44 +0800
+Message-ID: <CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+From: daobang wang <wangdb1981@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +39,85 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Grandi <pg_xf2@xf2.for.to.sabi.co.uk>
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Jack Wang <jack.wang.usish@gmail.com>
+Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-PiBXaGljaCBicmluZ3MgYW5vdGhlciBzdWJqZWN0OiB1c3VhbGx5IGh3IFJBSUQgaG9zdCBhZGFw
-dGVyIGhhdmUKPiBjYWNoZSwgYW5kIGhhdmUgZmlybXdhcmUgdGhhdCBjbGV2ZXJseSByZWFycmFu
-Z2VzIHdyaXRlcy4KPgo+IExvb2tpbmcgYXQgdGhlIHNwZWNzIG9mIHRoZSBQNDAwOgo+Cj4gwqBo
-dHRwOi8vaDE4MDA0Lnd3dzEuaHAuY29tL3Byb2R1Y3RzL3NlcnZlcnMvcHJvbGlhbnRzdG9yYWdl
-L2FycmF5Y29udHJvbGxlcnMvc21hcnRhcnJheXA0MDAvCj4KPiBpdCBzZWVtcyB0byBtZSB0aGF0
-IGl0IGhhcyBzdGFuZGFyZCAyNTZNQiBvZiBjYWNoZSwgYW5kIG9ubHkKPiBzdXBwb3J0cyBSQUlE
-NiB3aXRoIGEgYmF0dGVyeSBiYWNrZWQgd3JpdGUgY2FjaGUgKHdpc2UhKS4KPgo+IFdoaWNoIG1l
-YW5zIHRoYXQgeW91ciBMaW51eC1sZXZlbCBzZWVrIGdyYXBocyBtYXkgYmUgbm90IHNvCj4gdXNl
-ZnVsLCBiZWNhdXNlIHRoZSBob3N0IGFkYXB0ZXIgbWF5IGJlIGRyYXN0aWNhbGx5IHJlYXJyYW5n
-aW5nCj4gdGhlIHNlZWsgcGF0dGVybnMsIGFuZCB5b3UgbWF5IG5lZWQgdG8gdHdlYWsgdGhlIFA0
-MDAgZWxldmF0b3IsCj4gcmF0aGVyIHRoYW4gb3IgaW4gYWRkaXRpb24gdG8gdGhlIExpbnV4IGVs
-ZXZhdG9yLgo+Cj4gVW5sZXNzIHBvc3NpYmx5IGJhcnJpZXJzIGFyZSBlbmFibGVkLCBhbmQgZXZl
-biB3aXRoIGEgQkJXQyB0aGUKPiBQNDAwIHdyaXRlcyB0aHJvdWdoIG9uIHJlY2VpdmluZyBhIGJh
-cnJpZXIgcmVxdWVzdC4gSUlSQyBYRlMgaXMKPiByYXRoZXIgc3RyaWN0ZXIgaW4gaXNzdWluZyBi
-YXJyaWVyIHJlcXVlc3RzIHRoYW4gJ2V4dDQnLCBhbmQgeW91Cj4gbWF5IGJlIHNlZWluZyBtb3Jl
-IHRoZSBlZmZlY3Qgb2YgdGhhdCB0aGFuIHRoZSBlZmZlY3Qgb2YgYWltaW5nCj4gdG8gc3BsaXR0
-aW5nIHRoZSBhY2Nlc3MgcGF0dGVybnMgYmV0d2VlbiA0IEFHcyB0byBpbXByb3ZlIHRoZQo+IHBv
-dGVudGlhbCBmb3IgbXVsdGl0aHJlYWRpbmcgKHdoaWNoIHlvdSBkZW55IGJlY2F1c2UgeW91IGFy
-ZQo+IHVzaW5nIHdoYXQgaXMgbW9zdCBsaWtlbHkgYSBsYXJnZSBSQUlENiBzdHJpcGUgc2l6ZSB3
-aXRoIGEgc21hbGwKPiBJTyBpbnRlbnNpdmUgd3JpdGUgd29ya2xvYWQsIGFzIHByZXZpb3VzbHkg
-bm90ZWQpLgoKWWVzLCBpdCBkb2VzIGhhdmUgMjU2IE1CIEJCV0MsIGFuZCBpdCBpcyBlbmFibGVk
-LiBXaGVuIEkgZGlzYWJsZWQgaXQsCnRoZSB0aW1lIG5lZWRlZCB3b3VsZCByaXNlIGZyb20gMTIw
-IHNlYyBpbiB0aGUgQkJXQyBjYXNlIHRvIGEgd2hvcHBpbmcKMzMwIHNlYy4KCklJUkMsIEkgZGlk
-IHRoZSBiZW5jaG1hcmsgd2l0aCBiYXJyaWVyPTAsIGJ1dCBjaGFuZ2luZyB0aGlzIGRpZCBub3QK
-bWFrZSBhIGJpZyBkaWZmZXJlbmNlLiBOb3RoaW5nIGRpZDsgdGhhdOKAmXMgd2hhdCBmcnVzdHJh
-dGVkIG1lIGEgYml0CjspLiBJIGFsc28gdHJpZWQgZGlmZmVyZW50IExpbnV4IElPIGVsZXZhdG9y
-cywgYXMgeW91IHN1Z2dlc3RlZCBpbgp5b3VyIG90aGVyIHJlc3BvbnNlLCB3aXRob3V0IGFueSBt
-ZWFzdXJhYmxlIGVmZmVjdC4KClRoZSBzdHJpcGUgc2l6ZSBpcyB0aGlzLCBidHcuOiBzdT0xNmss
-c3c9NAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
-IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
-bGlzdGluZm8veGZzCg==
+Hi Jacky,
+
+     Yes, the environment is like your description, i will try with
+your suggestion. thanks a lot.
+
+On 4/6/12, Jack Wang <jack.wang.usish@gmail.com> wrote:
+> using bigger inode size or inode64 does help?
+>
+> So your environment is NVR software running in Linux ,100+ D1 streamer
+> directly write to filesystem on top of 16 SATA disks (with raid5 and
+> vg)?
+>
+> 2012/4/6 daobang wang <wangdb1981@gmail.com>:
+>> There is another issue, i updated xfsprog from 2.10.1 to 3.1.5, and
+>> found i could not make the xfs filesystem when the logical volume size
+>> large than 8TB with command mkfs.xfs -f -i size=3D512
+>> /dev/vg+vg00+20120406101850/lv+nxx+lv0000, this command seems hang, it
+>> did not return for a long time, is there any parameter i should
+>> adjust?
+>>
+>> Thank you very much
+>>
+>> Best Regards,
+>> Daobang Wang.
+>>
+>> On 4/6/12, daobang wang <wangdb1981@gmail.com> wrote:
+>>> Hi All,
+>>>
+>>> =A0 =A0 I have found the solution, i updated the xfsprogs from 2.10.1 to
+>>> 3.1.5, and could repair it, Thanks.
+>>>
+>>> Best Wishes,
+>>> Daobang Wang.
+>>>
+>>> On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+>>>> On 4/5/2012 1:48 AM, daobang wang wrote:
+>>>>> Hi stan,
+>>>>>
+>>>>> =A0 =A0 =A0I duplicated the input/output error issue, about the detail
+>>>>> operations and logs, please see the attachments, Is there any way to
+>>>>> fix this? thanks!
+>>>>>
+>>>>> Best Regards,
+>>>>> Daobang Wang.
+>>>>
+>>>>
+>>>> These fiilesystem issues have nothing to do with linux-raid. =A0I'm
+>>>> copying the XFS mailing list which is where this discussion should be
+>>>> taking place from this point forward. =A0Please reply-to-all, and paste
+>>>> the output you previously attached, but inline this time.
+>>>>
+>>>> Also, since the XFS folks are unfamiliar with what you're doing up to
+>>>> this point, please provide a basic description of your hardware/storage
+>>>> setup, kernel version, mdraid configuration, xfs_info output as well as
+>>>> your fstab XFS mount options, and a description of your workload.
+>>>>
+>>>> My best guess at this point as to the du and ls errors is that your
+>>>> application is not behaving properly, or you're still running with XFS
+>>>> barriers disabled, which, I say _loudly_ for the 2nd time, you should
+>>>> NOT do in the absence of BBWC, which you stated you do not have.
+>>>>
+>>>> --
+>>>> Stan
+>>>>
+>>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
