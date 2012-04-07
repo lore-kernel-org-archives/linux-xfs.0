@@ -1,28 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q37GoJwf038832 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 11:50:19 -0500
-Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
-	[87.194.255.144]) by cuda.sgi.com with ESMTP id
-	tGv03FYuscRmeYYR for <xfs@oss.sgi.com>;
-	Sat, 07 Apr 2012 09:50:17 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by honeysuckle.london.02.net
-	(8.5.140)
-	id 4F58EC1A00D1B072 for xfs@oss.sgi.com; Sat, 7 Apr 2012 17:50:16 +0100
-Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SGYpw-0000uE-UY
-	for <xfs@oss.sgi.com>; Sat, 07 Apr 2012 17:50:04 +0100
+	q37HAAmB045944 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 12:10:10 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	u5nF0qkEJOdmvi6R (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 07 Apr 2012 10:10:07 -0700 (PDT)
+Received: by obqv19 with SMTP id v19so4850258obq.26
+	for <xfs@oss.sgi.com>; Sat, 07 Apr 2012 10:10:07 -0700 (PDT)
+Message-ID: <4F8074EC.2030108@gmail.com>
+Date: Sat, 07 Apr 2012 13:10:04 -0400
+From: Joe Landman <joe.landman@gmail.com>
 MIME-Version: 1.0
-Message-ID: <20352.28730.273834.568559@tree.ty.sabi.co.UK>
-Date: Sat, 7 Apr 2012 17:50:02 +0100
 Subject: Re: XFS: Abysmal write performance because of excessive seeking
 	(allocation groups to blame?)
-In-Reply-To: <CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
 References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
 	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
 	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
 	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
+	<20352.28730.273834.568559@tree.ty.sabi.co.UK>
+In-Reply-To: <20352.28730.273834.568559@tree.ty.sabi.co.UK>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,124 +29,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-WyAuLi4gXQoKPj4gQXMgdG8gdGhpcywgaW4gdGhlb3J5IGV2ZW4gaGF2aW5nIHNwbGl0IHRoZSBm
-aWxlcyBhbW9uZyA0Cj4+IEFHcywgdGhlIHVwbG9hZCBmcm9tIHN5c3RlbSBSQU0gdG8gaG9zdCBh
-ZGFwdGVyIFJBTSBhbmQgdGhlbgo+PiB0byBkaXNrIGNvdWxkIGhhcHBlbiBieSB3cml0aW5nIGZp
-cnN0IGFsbCB0aGUgZGlydHkgYmxvY2tzCj4+IGZvciBvbmUgQUcsIHRoZW4gYSBsb25nIHNlZWsg
-dG8gdGhlIG5leHQgQUcsIGFuZCBzbyBvbiwgYW5kCj4+IHRoZSBhZGRpdGlvbmFsIGNvc3Qgb2Yg
-MyBsb25nIHNlZWtzIHdvdWxkIGJlIG5lZ2xpZ2libGUuCgo+IFllcywgdGhhdOKAmXMgZXhhY3Rs
-eSB3aGF0IEkgaGFkIGluIG1pbmQsIGFuZCB3aGF0IHByb21wdGVkIG1lCj4gdG8gd3JpdGUgdGhp
-cyBwb3N0LiBJdCB3b3VsZCBiZSBhYm91dCAxMCB0aW1lcyBhcyBmYXN0LgoKQWhoaCB5ZXMsIGJ1
-dCBsZXQncyBnbyBiYWNrIHRvIHRoaXMgYW5kIHN1bW1hcml6ZSBzb21lIG9mIG15CnByZXZpb3Vz
-IG9ic2VydmF0aW9uczoKCiAgKiBJZiB0aGUgc2NoZWR1bGluZyBvcmRlciB3YXMgYnkgQUcsIGFu
-ZCB0aGUgaGFyZHdhcmUgd2FzCiAgICBwYXJhbGxlbCwgdGhlIGF2YWlsYWJsZSBwYXJhbGxlbGlz
-bSB3b3VsZCBub3QgYmUgZXhwbG9pdGVkLAogICAgKGFuZCBmcmFnbWVudGF0aW9uIG1pZ2h0IGJl
-IHdvcnNlKSBhcyBpZiB0aGVyZSB3ZXJlIG9ubHkgYQogICAgc2luZ2xlIEFHLiBBbmQgWEZTIGRv
-ZXMgbGV0IHlvdSBjb25maWd1cmUgdGhlIG51bWJlciBvZiBBR3MKICAgIGluIHBhcnQgZm9yIGZv
-ciB0aGF0IHJlYXNvbi4KCiAgKiBZb3VyIHN0b3JhZ2UgbGF5ZXIgZG9lcyBub3Qgc2VlbSB0byBk
-ZWxpdmVyIHBhcmFsbGVsCiAgICBvcGVyYXRpb25zOiBhcyB0aGUgfjEwME1CL3Mgb3ZlcmFsbCAn
-ZXh0NCcgc3BlZWQgYW5kIHRoZQogICAgc2VlayBncmFwaHMgc2hvdywgaW4gZWZmZWN0IHlvdXIg
-NCsyIFJBSUQ2IHBlcmZvcm1zIGluIHRoaXMKICAgIGNhc2UgYXMgaWYgaXQgd2VyZSBhIHNpbmds
-ZSBkcml2ZSB3aXRoIGEgc2luZ2xlIGFybS4KCiAgKiBFdmVuIHdpdGggdGhlIGFjdHVhbCBzY2hl
-ZHVsaW5nIGF0IHRoZSBMaW51eCBsZXZlbCBiZWluZyBieQogICAgaW50ZXJsZWF2aW5nIEFHcyBp
-biBYRlMsIHlvdXIgaG9zdCBhZGFwdGVyIHdpdGggYSBCQldDCiAgICBzaG91bGQgYmUgYWJsZSB0
-byByZW9yZGVyIHRoZW0sIGluIDI1Nk1pQiBsb3RzLCBpZ25vcmluZwogICAgTGludXggbGV2ZWwg
-YmFycmllcnMgYW5kIG9yZGVyaW5nLCBidXQgaXQgc2VlbXMgdGhhdCB0aGlzIGlzCiAgICBub3Qg
-aGFwcGVuaW5nLgoKU28gdGhlIG1ham9yIHRoaW5ncyB0byBsb29rIGludG8gc2VlbSB0byBtZToK
-CiAgKiBFbnN1cmUgdGhhdCB5b3VyIFJBSUQgc2V0IGNhbiBkZWxpdmVyIHRoZSBwYXJhbGxlbGlz
-bSBhdAogICAgd2hpY2ggWEZTIGlzIHRhcmdldGVkLCB3aXRoIHRoZSBidWxrIHRyYW5zZmVyIHJh
-dGVzIHRoYXQgaXQKICAgIGNhbiBkby4KCiAgKiBPdGhlcndpc2UgZmlndXJlIG91dCB3YXlzIHRv
-IGVuc3VyZSB0aGF0IHRoZSBJTyB0cmFuc2FjdGlvbnMKICAgIGdlbmVyYXRlZCBieSBYRlMgYXJl
-IG5vdCBpbiBpbnRlcmxlYXZlLUFHIG9yZGVyLgoKICAqIE90aGVyd2lzZSBmaWd1cmUgb3V0IHdh
-eXMgdG8gZ2V0IHRoZSBYRlMgSU8gb3JkZXJpbmcKICAgIHJlYXJyYW5nZWQgYXQgdGhlIHN0b3Jh
-Z2UgbGF5ZXIgaW4gc3BhY2V3aXNlIG9yZGVyLgoKU3VtbWFyaXppbmcgc29tZSBvZiB0aGUgdGhp
-bmdzIHRvIHRyeSwgYW5kIHNvbWUgb2YgdGhlbSBhcmUKcmF0aGVyIHRlbnRhdGl2ZSwgYmVjYXVz
-ZSB5b3UgaGF2ZSBhIHJhdGhlciBwZWN1bGlhciBjb3JuZXIKY2FzZToKCiAgKiBDaGFuZ2UgdGhl
-IGZsdXNoZXIgdG8gd3JpdGVvdXQgaW5jcmVtZW50YWxseSBpbnN0ZWFkIG9mIGp1c3QKICAgIGF0
-ICdzeW5jJyB0aW1lLCBlLmcuIGV2ZXJ5IDEtMiBzZWNvbmRzLiBJbiBzb21lIHNpbWlsYXIKICAg
-IGNhc2VzIHRoaXMgbWFrZXMgdGhpbmdzIGEgbG90IGJldHRlciwgYXMgbGFyZ2UgJ3VwbG9hZHMn
-IHRvCiAgICB0aGUgc3RvcmFnZSBsYXllciBmcm9tIHRoZSBwYWdlIGNhY2hlIGNhbiBjYXVzZSBk
-YW1hZ2luZwogICAgbGF0ZW5jaWVzLiBCdXQgdGhlIHN1Y2Nlc3Mgb2YgdGhpcyBtYXkgZGVwZW5k
-IG9uIGhhdmluZyBhCiAgICBwcm9wZXJseSBwYXJhbGxlbCBzdG9yYWdlIGxheWVyLCBhdCBsZWFz
-dCBmb3IgWEZTLgoKICAqIFVzZSBhIGRpZmZlcmVudCBSQUlEIHNldHVwLiBJZiB0aGUgUkFJRCBz
-ZXQgaXMgdXNlZCBvbmx5IGZvcgogICAgcmVwcm9kdWNpYmxlIGRhdGEsIGEgUkFJRDAsIGVsc2Ug
-YSBSQUlEMTAsIG9yIGV2ZW4gYSBSQUlENQogICAgd2l0aCBhIHNtYWxsIGNodW5rIHNpemUuCgog
-ICogQ2hlY2sgdGhlIGVsZXZhdG9yIGFuZCBjYWNoZSBwb2xpY3kgb24gdGhlIFA0MDAsIGlmIHRo
-ZXkgYXJlCiAgICBzZXR0YWJsZS4gVG9vIGJhZCBtYW55IFJBSUQgaG9zdCBhZGFwdGVycyBoYXZl
-IChldXBoZW1pc20pCiAgICBoaWRlb3VzIGZ3IChtYW55IG9sZGVyIDN3YXJlIG1vZGVscyBjb21l
-IHRvIG1pbmQpIHdpdGggc29tZQogICAgdW5kb2N1bWVudGVkIChldXBoZW1pc20pIHBlY3VsaWFy
-dGllcyBhcyB0byBzY2hlZHVsaW5nLgoKICAqIFR3ZWFrICdxdWV1ZS9ucl9yZXF1ZXN0cycgYW5k
-ICdkZXZpY2UvcXVldWVfZGVwdGgnLiBQcm9iYWJseQogICAgdGhleSBzaG91bGQgYmUgYmlnICho
-dW5kcmVkcy90aG91c2FuZHMpLCBidXQgdmFyaW91cwogICAgc2V0dGluZ3Mgc2hvdWxkIGJlIHRy
-aWVkIGFzIGZ3IHNvbWV0aW1lcyBpcyBzbyB3ZWlyZC4KCiAgKiBHaXZlbiB0aGF0IGl0IGlzIG5v
-dyBlc3RhYmxpc2hlZCB0aGF0IHlvdXIgaG9zdCBhZGFwdGVyIGhhcwogICAgQkJXQywgY29uc2lk
-ZXIgc3dpdGNoaW5nIHRoZSBMaW51eCBlbGV2YXRvciB0byAnbm9vcCcsIHNvIGFzCiAgICB0byBs
-ZWF2ZSBJTyBzY2hlZHVsaW5nIHRvIHRoZSBob3N0IGFkYXB0ZXIgZncsIGFuZCByZWR1Y2UKICAg
-IGlzc3VlIGxhdGVuY3kuICdxdWV1ZS9ucl9yZXF1ZXN0cycgbWF5IGJlIHNldCB0byBhIHZlcnkg
-bG93CiAgICBudW1iZXIgaGVyZSBwZXJoYXBzLCBidXQgbXkgZ3Vlc3MgaXMgdGhhdCBpdCBzaG91
-bGRuJ3QgbWF0dGVyLgoKICAqIEFsdGVybmF0aXZlbHkgaWYgdGhlIGhvc3QgYWRhcHRlciBmdyBp
-bnNpc3RzIG9uIG5vdAogICAgcmVvcmRlcmluZyBJTyBmcm9tIHRoZSBMaW51eCBsZXZlbCwgdXNl
-IExpbnV4IGVsZXZhdG9yCiAgICBzZXR0aW5ncyB0aGF0IGJlaGF2ZXMgc2ltaWxhcmx5IHRvICdh
-bnRpY2lwYXRvcnknLgoKSXQgbWF5IGhlbHAgdG8gdXNlIEJvbm5pZSAoR2FybG9mZidzIDEuNCB2
-ZXJzaW9uIHdpdGgKJy1vX2RpcmVjdCcpIHRvIGdpdmUgYSByb3VnaCBmZWVsIG9mIGZpbGV0cmVl
-IHNwZWVkIHByb2ZpbGUsIGZvcgpleGFtcGxlIEkgdGVuZCB0byB1c2UgdGhlc2Ugb3B0aW9uczoK
-CiAgQm9ubmllIC15IC11IC1vX2RpcmVjdCAtcyAyMDAwIC12IDIgLWQgIiRESVIiCgpVbHRpbWF0
-ZWx5IGV2ZW4gJ2V4dDQnIGRvZXMgbm90IHNlZW0gdGhlIHJpZ2h0IGZpbGVzeXN0ZW0gZm9yCnRo
-aXMgd29ya2xvYWQgZWl0aGVyLCBiZWNhdXNlIGFsbCB0aGVzZSAibGVnYWN5IiBmaWxlc3lzdGVt
-cyBhcmUKdGFyZ2V0ZWQgYXQgc2l0dWF0aW9ucyB3aGVyZSBkYXRhIGlzIG11Y2ggYmlnZ2VyIHRo
-YW4gbWVtb3J5LAphbmQgeW91IGFyZSB0cnlpbmcgdG8gZml0IHRoZW0gaW50byBhIHZlcnkgc3Bl
-Y2lmaWMgY29ybmVyIGNhc2UKd2hlcmUgdGhlIG9wcG9zaXRlIGlzIHRydWUuCgpNYWtpbmcgbXkg
-ZmFudGFzeSBydW4gd2lsZCwgbXkgZ3Vlc3MgaXMgdGhhdCB5b3VyIHdvcmtsb2FkIGlzCm5vdCAn
-dGFyIHgnLCBidXQgcmVsZWFzZSBidWlsZGluZywgd2hlcmUgc291cmNlcyBhbmQgb2JqZWN0cyBm
-aXQKZW50aXJlbHkgaW4gbWVtb3J5LCBhbmQgeW91IGFyZSBvbmx5IGNvbmNlcm5lZCB3aXRoIHBl
-cnNpc3RpbmcKdGhlIHNvdXJjZXMgYmVjYXVzZSB5b3Ugd2FudCB0byBkbyBzZXZlcmFsIGJ1aWxk
-cyBmcm9tIHRoYXQgc2V0Cm9mIHNvdXJjZXMgd2l0aG91dCByZS10YXIteC1pbmcgdGhlbSwgYW5k
-IGlkZWFsbHkgeW91IHdvdWxkIGxpa2UKdG8gcmVkdWNlIGJ1aWxkIHRpbWVzIGJ5IGJ1aWxkaW5n
-IHNldmVyYWwgb2JqZWN0cyBpbiBwYXJhbGxlbC4KCiAgQlRXIHlvdXIgY29ybmVyIGNhc2UgdGhl
-biBoYXMgYW5vdGhlciBwcm9wZXJ0eSBoZXJlOiB0aGF0IGRpc2sKICB3cml0ZXMgZ3JlYXRseSBl
-eGNlZWQgZGlzayByZWFkcywgYmVjYXVzZSB5b3Ugd291bGQgb25seSB3cml0ZQogIG9uY2UgdGhl
-IHNvdXJjZXMgYW5kIHRoZW4gcmVhZCB0aGVtIGZyb20gY2FjaGUgZXZlcnkgdGltZQogIHRoZXJl
-YWZ0ZXIgd2hpbGUgdGhlIHN5c3RlbSBpcyB1cC4gSSBkb3VidCBhbHNvIHRoYXQgeW91IHdvdWxk
-CiAgd2FudCB0byBwZXJzaXN0IHRoZSBnZW5lcmF0ZWQgb2JqZWN0cyB0aGVtc2VsdmVzLCBidXQg
-b25seSB0aGUKICBnZW5lcmF0ZWQgZmluYWwgInBhY2thZ2UiIGNvbnRhaW5pbmcgdGhlbSwgd2hp
-Y2ggbWlnaHQgc3VnZ2VzdAogIGJ1aWxkaW5nIHRoZSBvYmplY3RzIHRvIGEgJ3RtcGZzJywgdW5s
-c3MgeW91IHdhbnQgdGhlbQogIHBlcnNpc3RlZCAoYSBiaXQpIHRvIG1ha2UgYnVpbGRzIHJlc3Rh
-cnRhYmxlLgoKSWYgdGhhdCdzIHRoZSBjYXNlLCBhbmQgeW91IGNhbm5vdCBmaXggdGhlIHN0b3Jh
-Z2UgbGF5ZXIgdG8gYmUKbW9yZSBzdWl0YWJsZSBmb3IgJ2V4dDQnIG9yIFhGUywgY29uc2lkZXIg
-dXNpbmcgTklMRlMyLCBvciBldmVuCidleHQyJyAod2l0aCBhIGxvbmcgZmx1c2hlciBpbnRlcnZh
-bCBwZXJoYXBzKS4KCiAgTm90ZTogb3IgImNoZWF0IiBhbmQgZG8geW91ciBidWlsZHMgdG8gYSBm
-bGFzaCBTU0QsIGFzIHRoZXkKICAgIGJvdGggcnVuIGEgZncgbGF5ZXIgdGhhdCBpbXBsZW1lbnRz
-IGEgQ09XL2xvZ2dpbmcgYWxsb2NhdGlvbgogICAgc3RyYXRlZ3ksIGFuZCBoYXZlIG5pY2VyIHNl
-ZWsgdGltZXMgOi0pLgoKPiBUaGF04oCZcyB3aGF0IGJvdGhlcnMgbWUgc28gbXVjaC4KCkFuZCBp
-biBjYXNlIHlvdSBkaWQgbm90IGdldCB0aGlzIGJlZm9yZSwgSSBoYXZlIGEgbG9uZyBzdGFuZGlu
-ZwpwZXQgcGVldmUgYWJvdXQgYWJ1c2luZyBmaWxlc3lzdGVtcyBmb3Igc21hbGwgZmlsZSBJTywg
-b3Igb3RoZXIKd2F5cyBvZiBnb2luZyBhZ2FpbnN0IHRoZSBncmFpbiBvZiB3aGF0IGlzIHBsYXVz
-aWJsZSwgd2hpY2ggSQpjYWxsIHRoZSAic3ludGFjdGljIGFwcHJvYWNoIiAoZXZlcnkgc3ludGFj
-dGljYWxseSB2YWxpZCBzeXN0ZW0KY29uZmlndXJhdGlvbiBpcyBhc3N1bWVkIHRvIHdvcmsgZXF1
-YWxseSB3ZWxsLi4uKS4KClNvbWUgdGVjaG5pY2FsIHBvc3RzY3JpcHRzOgoKICAqIEl0IHNlZW1z
-IHRoYXQgbW9zdCBpZiBub3QgYWxsIFJBSUQ2IGltcGxlbWVudGF0aW9ucyBkb24ndCBkbwogICAg
-c2hvcnRlbmVkIFJNV3MsIHdoZXJlIG9ubHkgdGhlIHVwZGF0ZWQgYmxvY2tzIGFuZCB0aGUgUFEK
-ICAgIGJsb2NrcyBhcmUgaW52b2x2ZWQsIGJ1dCB0aGV5IGFsd2F5cyBkbyBmdWxsIHN0cmlwZSBS
-TVcuCiAgICBFdmVuIHdpdGggYSBCQldDIGluIHRoZSBob3N0IGFkYXB0ZXIgdGhpcyBpcyBvbmUg
-bWFqb3IKICAgIHJlYXNvbiB0byBhdm9pZCBSQUlENiBpbiBmYXZvciBvZiBhdCBsZWFzdCBSQUlE
-NSwgZm9yIHlvdXIKICAgIHNldHVwIGluIHBhcnRpY3VsYXIuIEJ1dCBoZXksIFJBSUQ2IHNldHVw
-cyBhcmUgYWxsCiAgICBzeW50YWN0aWNhbGx5IHZhbGlkISA6LSkKCiAgKiBUaGUgJ2V4dDMnIG9u
-IGRpc2sgbGF5b3V0IGFuZCBhbGxvY2F0aW9uIHBvbGljaWVzIHNlZW0gdG8KICAgIGRlbGl2ZXIg
-dmVyeSBnb29kIGNvbXBhY3QgbG9jYWxpdHkgb24gYnVsayB3cml0ZW91dHMgYW5kCiAgICBvbiBy
-ZWxhdGl2ZWx5IGZyZXNoIGZpbGV0cmVlcywgYnV0IHRoZW4gbG9jYWxpdHkgY2FuIGRlZ3JhZGUK
-ICAgIGFwb2NhbGlwdGljYWxseSBvdmVyIHRpbWUsIGxpa2Ugc2V2ZW4gdGltZXM6CiAgICAgIGh0
-dHA6Ly93d3cuc2FiaS5jby51ay9ibG9nL2Fubm8wNS0zcmQuaHRtbCMwNTA5MTMKICAgIEkgc3Vz
-cGVjdCB0aGF0IHRoZSBzYW1lIGFwcGxpZXMgdG8gJ2V4dDQnLCBldmVuIGlmIHBlcmhhcHMgYQog
-ICAgYml0IGxlc3MuIFlvdSBoYXZlIHRyaWVkIHRvICJhZ2UiIHRoZSBmaWxldHJlZSBhIGJpdCwg
-YnV0IEkKICAgIHN1c3BlY3QgeW91IGRpZCBub3Qgc3VjY2VlZCBlbm91Z2gsIGFzIHRoZSBncmFw
-aGVkIExpbnV4CiAgICBsZXZlbCBzZWVrIHBhdHRlcm5zIHdpdGggJ2V4dDQnIHNob3dzIGEgbW9z
-dGx5LWxpbmVhciB3cml0ZS4KCiAgKiBIb3BlZnVsbHkgeW91ciBzdG9yYWdlIGxheWVyIGRvZXMg
-bm90IHVzZSBETS9MVk1zLi4uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
-aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 04/07/2012 12:50 PM, Peter Grandi wrote:
+
+>    * Your storage layer does not seem to deliver parallel
+>      operations: as the ~100MB/s overall 'ext4' speed and the
+>      seek graphs show, in effect your 4+2 RAID6 performs in this
+>      case as if it were a single drive with a single arm.
+
+This is what lept out at me.  I retried a very similar test (pulled 
+Icedtea 2.1, compiled it, tarred it, measured untar on our boxen).  I 
+was getting a fairly consistent 4 +/- delta seconds.
+
+Ignoring the rest of your post for brevity (basically to focus upon this 
+one issue), I suspect that the observed performance issue has more to do 
+with the RAID card, the disks, and the server than the file system.
+
+100MB/s on some supposedly fast drives with a RAID card indicates that 
+either the RAID is badly implemented, the RAID layout is suspect, or 
+similar.  He should be getting closer to N(data disks) * BW(single disk) 
+for something "close" to a streaming operation.
+
+This isn't suggesting that he didn't hit some bug which happens to over 
+specify use of ag=0, but he definitely had a weak RAID system (at best).
+
+If he retries with a more capable system, or one with a saner RAID 
+layout (16k chunk size?  For spinning rust?  Seriously?  Short stroking 
+DB layout?), an agcount of 32 or higher, and still sees similar issues, 
+then I'd be more suspicious of a bug.
+
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
