@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q37HAAmB045944 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 12:10:10 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	u5nF0qkEJOdmvi6R (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 07 Apr 2012 10:10:07 -0700 (PDT)
-Received: by obqv19 with SMTP id v19so4850258obq.26
-	for <xfs@oss.sgi.com>; Sat, 07 Apr 2012 10:10:07 -0700 (PDT)
-Message-ID: <4F8074EC.2030108@gmail.com>
-Date: Sat, 07 Apr 2012 13:10:04 -0400
-From: Joe Landman <joe.landman@gmail.com>
-MIME-Version: 1.0
+	q37IvfWK055323 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 13:57:41 -0500
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id QW3UnC1qx3vBWWRN for
+	<xfs@oss.sgi.com>; Sat, 07 Apr 2012 11:57:39 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: XFS: Abysmal write performance because of excessive seeking
 	(allocation groups to blame?)
+Date: Sat, 7 Apr 2012 20:57:38 +0200
 References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
-	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
-	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-	<20352.28730.273834.568559@tree.ty.sabi.co.UK>
-In-Reply-To: <20352.28730.273834.568559@tree.ty.sabi.co.UK>
+	<20120405213740.GA22824@infradead.org>
+	<CAAxjCExBcaB6J-u7ivZKWnKiF7oP10JRxzKzQNRuppHkTE2Tzw@mail.gmail.com>
+	(sfid-20120407_201050_615911_B7F4ADC4)
+In-Reply-To: <CAAxjCExBcaB6J-u7ivZKWnKiF7oP10JRxzKzQNRuppHkTE2Tzw@mail.gmail.com>
+MIME-Version: 1.0
+Message-Id: <201204072057.38286.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,52 +24,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: Stefan Ring <stefanrin@gmail.com>, Christoph Hellwig <hch@infradead.org>
 
-On 04/07/2012 12:50 PM, Peter Grandi wrote:
-
->    * Your storage layer does not seem to deliver parallel
->      operations: as the ~100MB/s overall 'ext4' speed and the
->      seek graphs show, in effect your 4+2 RAID6 performs in this
->      case as if it were a single drive with a single arm.
-
-This is what lept out at me.  I retried a very similar test (pulled 
-Icedtea 2.1, compiled it, tarred it, measured untar on our boxen).  I 
-was getting a fairly consistent 4 +/- delta seconds.
-
-Ignoring the rest of your post for brevity (basically to focus upon this 
-one issue), I suspect that the observed performance issue has more to do 
-with the RAID card, the disks, and the server than the file system.
-
-100MB/s on some supposedly fast drives with a RAID card indicates that 
-either the RAID is badly implemented, the RAID layout is suspect, or 
-similar.  He should be getting closer to N(data disks) * BW(single disk) 
-for something "close" to a streaming operation.
-
-This isn't suggesting that he didn't hit some bug which happens to over 
-specify use of ag=0, but he definitely had a weak RAID system (at best).
-
-If he retries with a more capable system, or one with a saner RAID 
-layout (16k chunk size?  For spinning rust?  Seriously?  Short stroking 
-DB layout?), an agcount of 32 or higher, and still sees similar issues, 
-then I'd be more suspicious of a bug.
-
--- 
-Joseph Landman, Ph.D
-Founder and CEO
-Scalable Informatics Inc.
-email: landman@scalableinformatics.com
-web  : http://scalableinformatics.com
-        http://scalableinformatics.com/sicluster
-phone: +1 734 786 8423 x121
-fax  : +1 866 888 3112
-cell : +1 734 612 4615
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gRnJlaXRhZywgNi4gQXByaWwgMjAxMiBzY2hyaWViIFN0ZWZhbiBSaW5nOgo+ID4gdGhhbmtz
+IGZvciB0aGUgZGV0YWlsZWQgcmVwb3J0Lgo+IAo+IFRoYW5rcyBmb3IgdGhlIGRldGFpbGVkIGFu
+ZCBraW5kIGFuc3dlci4KPiAKPiA+IENhbiB5b3UgdHJ5IGEgZmV3IG1vdW50IG9wdGlvbnMgZm9y
+IG1lIGJvdGggYWxsIHRvZ2V0aGVyIGFuZCBpZiB5b3UKPiA+IGhhdmUgc29tZSB0aW1lIGFsc28g
+aW5kaXZpZHVhbGx5Lgo+ID4gCj4gPiAgLW8gaW5vZGU2NAo+ID4gCj4gPiAgICAgICAgVGhpcyBh
+bGxvd3MgaW5vZGVzIHRvIGJlIGNsb3NlIHRvIGRhdGEgZXZlbiBmb3IgPjFUQgo+ID4gICAgICAg
+IGZpbGVzeXN0ZW1zLiAgSXQncyBzb21ldGhpbmcgd2UgaG9wZSB0byBtYWtlIHRoZSBkZWZhdWx0
+IHNvb24uCj4gCj4gVGhlIGZpbGVzeXN0ZW0gaXMgbm90IHRoYXQgbGFyZ2UuIEl04oCZcyBvbmx5
+IDQwMEdCLiBJIHR1cm5lZCBpdCBvbgo+IGFueXdheS4gTm8gZGlmZmVyZW5jZS4KPiAKPiA+ICAt
+byBmaWxlc3RyZWFtcwo+ID4gCj4gPiAgICAgICAgVGhpcyBrZWVwcyBkYXRhIHdyaXR0ZW4gaW4g
+YSBzaW5nbGUgZGlyZWN0b3J5IGdyb3VwIHRvZ2V0aGVyLgo+ID4gICAgICAgIE5vdCBzdXJlIHlv
+dXIgZGlyZWN0b3JpZXMgYXJlIGxhcmdlIGVub3VnaCB0byByZWFsbHkgYmVuZWZpdAo+ID4gICAg
+ICAgIGZyb20gaXQsIGJ1dCBpdCdzIHdvcnRoIGEgdHJ5Lgo+ID4gIC1vIGFsbG9jc2l6ZT00awo+
+ID4gCj4gPiAgICAgICAgVGhpcyBkaXNhYmxlcyB0aGUgYWdyZXNzaXZlIGZpbGUgcHJlYWxsb2Nh
+dGlvbiB3ZSBkbyBpbiBYRlMsCj4gPiAgICAgICAgd2hpY2ggc291bmRzIGxpa2UgaXQncyBub3Qg
+dXNlZnVsIGZvciB5b3VyIHdvcmtsb2FkLgo+IAo+IGlub2RlNjQrZmlsZXN0cmVhbXM6IG5vIGRp
+ZmZlcmVuY2UKPiBpbm9kZTY0K2FsbG9jc2l6ZTogbm8gZGlmZmVyZW5jZQo+IGlub2RlNjQrZmls
+ZXN0cmVhbXMrYWxsb2NzaXplOiBubyBkaWZmZXJlbmNlIDooCj4gCj4gPiBGb3IgbWV0YWRhdGEg
+aW50ZW5zaXZlIHdvcmtsb2FkcyBsaWtlIHlvdXJzIHlvdSB3b3VsZCBiZSBtdWNoIGJldHRlcgo+
+ID4gdXNpbmcgYSBub24tc3RyaXBpbmcgcmFpZCwgZS5nLiBjb25jYXRlbnRhdGlvbiBhbmQgbWly
+cm9yaW5nIGluc3RlYWQKPiA+IG9mIHJhaWQgNSBvciByYWlkIDYuICBJIGtub3cgdGhpcyBoYXMg
+YSBjb3N0IGluIHRlcm1zIG9mICJ3YXN0ZWQiCj4gPiBzcGFjZSwgYnV0IGZvciBJT1BzIGJvdW5k
+IHdvcmtsb2FkIHRoZSBkaWZmZXJlbmNlIGlzIGRyYW1hdGljLgo+IAo+IEhtbSwgSeKAmW0gc3Vy
+ZSB5b3XigJlyZSByaWdodCwgYnV0IEnigJltIG91dCBvZiBsdWNrIGhlcmUuIElmIEkgaGFkIDI0
+Cj4gZHJpdmVzLCBJIGNvdWxkIHRoaW5rIGFib3V0IGEgZGlmZmVyZW50IG9yZ2FuaXphdGlvbi4g
+QnV0IHdpdGggb25seSA2Cj4gYmF5cywgSSBjYW5ub3QgZ2l2ZSB1cCBhbGwgdGhhdCBzcGFjZS4K
+PiAKPiBBbHRob3VnaCAqaW4gdGhlb3J5KiwgaXQgKnNob3VsZCogYmUgcG9zc2libGUgdG8gcnVu
+IGZhc3QgZm9yCj4gd3JpdGUtb25seSB3b3JrbG9hZHMuIFRoZSBzdHJpcGUgc2l6ZSBpcyA2NCBL
+QiAoNHgxNiksIGFuZCBpdOKAmXMgbm90Cj4gbGlrZSBkYXRhIGlzIHdyaXR0ZW4gYWxsIG92ZXIg
+dGhlIHBsYWNlLiBTbyBpdCBzaG91bGQgdmVyeSB3ZWxsIGJlCj4gcG9zc2libGUgdG8gd3JpdGUg
+dGhlIGRhdGEgb3V0IGluIHNvbWUgcmVhc29uYWJseSBzaXplZCBhbmQgYWxpZ25lZAo+IGNodW5r
+cy4gVGhlIGZpbGVzeXN0ZW0gcGFydGl0aW9uIGl0c2VsZiBpcyBuaWNlbHkgYWxpZ25lZC4KCkFu
+ZCBpcyBYRlMgYWxpZ25lZCB0byB0aGUgUkFJRCA2PwoKV2hhdCBkb2VzIHhmc19pbmZvIGRpc3Bs
+YXkgb24gaXQ/CgotLSAKTWFydGluICdIZWxpb3MnIFN0ZWlnZXJ3YWxkIC0gaHR0cDovL3d3dy5M
+aWNodHZvbGwuZGUKR1BHOiAwM0IwIDBENkMgMDA0MCAwNzEwIDRBRkEgIEI4MkYgOTkxQiBFQUFD
+IEE1OTkgODRDNwoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
+aWxtYW4vbGlzdGluZm8veGZzCg==
