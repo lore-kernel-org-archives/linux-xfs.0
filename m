@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q36NSdc1095206 for <xfs@oss.sgi.com>; Fri, 6 Apr 2012 18:28:40 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id z5z5wt7LjDs6q7VM
-	for <xfs@oss.sgi.com>; Fri, 06 Apr 2012 16:28:38 -0700 (PDT)
-Message-ID: <4F7F7C25.8040605@hardwarefreak.com>
-Date: Fri, 06 Apr 2012 18:28:37 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q377RqM0201053 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 02:27:52 -0500
+Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	1FCNjSrqdnR1DhBf (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 07 Apr 2012 00:27:51 -0700 (PDT)
+Received: by yenq2 with SMTP id q2so1981928yen.26
+	for <xfs@oss.sgi.com>; Sat, 07 Apr 2012 00:27:50 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
+In-Reply-To: <4F7F7C25.8040605@hardwarefreak.com>
 References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
 	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
 	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
 	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-In-Reply-To: <CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+	<4F7F7C25.8040605@hardwarefreak.com>
+Date: Sat, 7 Apr 2012 09:27:50 +0200
+Message-ID: <CAAxjCEyJW1b4dbKctbrgdWjykQt8Hb4Sw1RKdys3oUsehNHCcQ@mail.gmail.com>
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,82 +29,35 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
+To: stan@hardwarefreak.com
 Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-On 4/6/2012 2:27 AM, Stefan Ring wrote:
->> As to this, in theory even having split the files among 4 AGs,
->> the upload from system RAM to host adapter RAM and then to disk
->> could happen by writing first all the dirty blocks for one AG,
->> then a long seek to the next AG, and so on, and the additional
->> cost of 3 long seeks would be negligible.
-> =
-
-> Yes, that=92s exactly what I had in mind, and what prompted me to write
-> this post. It would be about 10 times as fast. That=92s what bothers me
-> so much.
-
-XFS is still primarily a "lots and large" filesystem.  Its allocation
-group based design is what facilitates this.  Very wide stripe arrays
-have horrible performance for most workloads, especially random IOPS
-heavy workloads, and you won't see hardware that will allow arrays of
-hundreds, let alone dozens of spindles in a RAID stripe set.  Say one
-needs a high IOPS single 50TB filesystem.  We could use 4 Nexsan E60
-arrays each containing 60 15k SAS drives of 450GB each, 240 drives
-total.  Creating four 60 drive RAID10 arrays, let alone 60 drive RAID6
-arrays, would be silly.
-
-Instead, a far more optimal solution would be to set aside 4 spares per
-chassis and create 14 four drive RADI10 arrays.  This would yield ~600
-seeks/sec and ~400MB/s sequential throughput performance per 2 spindle
-array.  We'd stitch the resulting 56 hardware RAID10 arrays together in
-an mdraid linear (concatenated) array.  Then we'd format this 112
-effective spindle linear array with simply:
-
-$ mkfs.xfs -d agcount=3D56 /dev/md0
-
-Since each RAID10 is 900GB capacity, we have 56 AGs of just under the
-1TB limit, 1 AG per 2 physical spindles.  Due to the 2 stripe spindle
-nature of the constituent hardware RAID10 arrays, we don't need to worry
-about aligning XFS writes to the RAID stripe width.  The hardware cache
-will take care of filling the small stripes.  Now we're in the opposite
-situation of having too many AGs per spindle.  We've put 2 spindles in a
-single AG and turned the seek starvation issues on its head.
-
-Given a workload with at least 56 threads, we can write 56 files in
-parallel at ~400MB/s each, one to each AG, 22.4GB/s aggregate
-throughput.  With this particular hardware, the 16x8Gb FC ports limit
-total one way bandwidth to 12.8GB/s aggregate, or "only" 228MB/s per AG.
- Not too shabby.  But streaming bandwidth isn't the workload here.  This
-setup will allow for ~30,000 random write IOPS with 56 writers. Not that
-impressive compared to SSD, but you've got 50TB of space instead of a
-few hundred gigs.
-
-The moral of this story is this:  If XFS behaved the way you opine
-above, each of these 56 AGs would be written in a serial fashion,
-basically limiting the throughput of 112 effective 15k SAS spindles to
-something along the lines of only ~400MB/s and ~600 random IOPS.  Note
-that this hypothetical XFS storage system is tiny compared to some of
-those in the wild.  NASA's Advanced Supercomputing Division alone has
-deployed 500TB+ XFS filesystems on nested concatenated/striped arrays.
-
-So while the XFS AG architecture may not be perfectly suited to your
-single 6 drive RAID6 array, it still gives rather remarkable performance
-given that the same architecture can scale pretty linearly to the
-heights above, and far beyond.  Something EXTx and others could never
-dream of.  Some of the SGI guys might be able to confirm deployed single
-XFS filesystems spanning 1000+ drives in the past.  Today we'd probably
-only see that scale with CXFS.
-
--- =
-
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+PiBJbnN0ZWFkLCBhIGZhciBtb3JlIG9wdGltYWwgc29sdXRpb24gd291bGQgYmUgdG8gc2V0IGFz
+aWRlIDQgc3BhcmVzIHBlcgo+IGNoYXNzaXMgYW5kIGNyZWF0ZSAxNCBmb3VyIGRyaXZlIFJBREkx
+MCBhcnJheXMuIMKgVGhpcyB3b3VsZCB5aWVsZCB+NjAwCj4gc2Vla3Mvc2VjIGFuZCB+NDAwTUIv
+cyBzZXF1ZW50aWFsIHRocm91Z2hwdXQgcGVyZm9ybWFuY2UgcGVyIDIgc3BpbmRsZQo+IGFycmF5
+LiDCoFdlJ2Qgc3RpdGNoIHRoZSByZXN1bHRpbmcgNTYgaGFyZHdhcmUgUkFJRDEwIGFycmF5cyB0
+b2dldGhlciBpbgo+IGFuIG1kcmFpZCBsaW5lYXIgKGNvbmNhdGVuYXRlZCkgYXJyYXkuIMKgVGhl
+biB3ZSdkIGZvcm1hdCB0aGlzIDExMgo+IGVmZmVjdGl2ZSBzcGluZGxlIGxpbmVhciBhcnJheSB3
+aXRoIHNpbXBseToKPgo+ICQgbWtmcy54ZnMgLWQgYWdjb3VudD01NiAvZGV2L21kMAo+Cj4gU2lu
+Y2UgZWFjaCBSQUlEMTAgaXMgOTAwR0IgY2FwYWNpdHksIHdlIGhhdmUgNTYgQUdzIG9mIGp1c3Qg
+dW5kZXIgdGhlCj4gMVRCIGxpbWl0LCAxIEFHIHBlciAyIHBoeXNpY2FsIHNwaW5kbGVzLiDCoER1
+ZSB0byB0aGUgMiBzdHJpcGUgc3BpbmRsZQo+IG5hdHVyZSBvZiB0aGUgY29uc3RpdHVlbnQgaGFy
+ZHdhcmUgUkFJRDEwIGFycmF5cywgd2UgZG9uJ3QgbmVlZCB0byB3b3JyeQo+IGFib3V0IGFsaWdu
+aW5nIFhGUyB3cml0ZXMgdG8gdGhlIFJBSUQgc3RyaXBlIHdpZHRoLiDCoFRoZSBoYXJkd2FyZSBj
+YWNoZQo+IHdpbGwgdGFrZSBjYXJlIG9mIGZpbGxpbmcgdGhlIHNtYWxsIHN0cmlwZXMuIMKgTm93
+IHdlJ3JlIGluIHRoZSBvcHBvc2l0ZQo+IHNpdHVhdGlvbiBvZiBoYXZpbmcgdG9vIG1hbnkgQUdz
+IHBlciBzcGluZGxlLiDCoFdlJ3ZlIHB1dCAyIHNwaW5kbGVzIGluIGEKPiBzaW5nbGUgQUcgYW5k
+IHR1cm5lZCB0aGUgc2VlayBzdGFydmF0aW9uIGlzc3VlcyBvbiBpdHMgaGVhZC4KClNvIGl0IHNv
+dW5kcyBsaWtlIHRoYXQgZm9yIHBvb3IgZ3V5cyBsaWtlIHVzLCB3aG8gY2Fu4oCZdCBhZmZvcmQg
+dGhlCmhhcmR3YXJlIHRvIGhhdmUgZG96ZW5zIG9mIHNwaW5kbGVzLCB0aGUgYmVzdCBvcHRpb24g
+d291bGQgYmUgdG8KY3JlYXRlIHRoZSBYRlMgZmlsZSBzeXN0ZW0gd2l0aCBhZ2NvdW50PTE/IFRo
+YXQgc2VlbXMgdG8gYmUgdGhlIG9ubHkKcmVhc29uYWJsZSBjb25jbHVzaW9uIHRvIG1lLCBzaW5j
+ZSBhIHNpbmdsZSBSQUlEIGRldmljZSwgbGlrZSBhIHNpbmdsZQpkaXNrLCBjYW5ub3Qgd3JpdGUg
+aW4gcGFyYWxsZWwgYW55d2F5LgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5z
+Z2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
