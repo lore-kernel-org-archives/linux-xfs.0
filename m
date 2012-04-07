@@ -1,26 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q37GoJB5038833 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 11:50:19 -0500
-Received: from woodbine.london.02.net (woodbine.london.02.net
-	[87.194.255.145]) by cuda.sgi.com with ESMTP id
-	jWdRvGV7NSDPl317 for <xfs@oss.sgi.com>;
+	q37GoJwf038832 for <xfs@oss.sgi.com>; Sat, 7 Apr 2012 11:50:19 -0500
+Received: from honeysuckle.london.02.net (honeysuckle.london.02.net
+	[87.194.255.144]) by cuda.sgi.com with ESMTP id
+	tGv03FYuscRmeYYR for <xfs@oss.sgi.com>;
 	Sat, 07 Apr 2012 09:50:17 -0700 (PDT)
-Received: from ty.sabi.co.UK (87.194.99.40) by woodbine.london.02.net (8.5.140)
-	id 4F70C6670046067A for xfs@oss.sgi.com; Sat, 7 Apr 2012 17:50:16 +0100
+Received: from ty.sabi.co.UK (87.194.99.40) by honeysuckle.london.02.net
+	(8.5.140)
+	id 4F58EC1A00D1B072 for xfs@oss.sgi.com; Sat, 7 Apr 2012 17:50:16 +0100
 Received: from from [127.0.0.1] (helo=tree.ty.sabi.co.UK)
-	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SGVlP-0000jk-7w
-	for <xfs@oss.sgi.com>; Sat, 07 Apr 2012 14:33:11 +0100
+	by ty.sabi.co.UK with esmtp(Exim 4.71 #1) id 1SGYpw-0000uE-UY
+	for <xfs@oss.sgi.com>; Sat, 07 Apr 2012 17:50:04 +0100
 MIME-Version: 1.0
-Message-ID: <20352.16918.404710.960311@tree.ty.sabi.co.UK>
-Date: Sat, 7 Apr 2012 14:33:10 +0100
+Message-ID: <20352.28730.273834.568559@tree.ty.sabi.co.UK>
+Date: Sat, 7 Apr 2012 17:50:02 +0100
 Subject: Re: XFS: Abysmal write performance because of excessive seeking
 	(allocation groups to blame?)
-In-Reply-To: <CAAxjCEwNAOMUypaORP=BcJmdT3=GBykAYFjJD54_ixnLc+O6SQ@mail.gmail.com>
+In-Reply-To: <CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
 References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20349.63706.913104.777446@tree.ty.sabi.co.UK>
-	<20350.65390.662663.682964@tree.ty.sabi.co.UK>
-	<CAAxjCEwNAOMUypaORP=BcJmdT3=GBykAYFjJD54_ixnLc+O6SQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
+	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
 From: pg_xf2@xf2.for.sabi.co.UK (Peter Grandi)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -30,118 +31,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Linux fs XFS <xfs@oss.sgi.com>
 
->> As to 'ext4' and doing (euphemism) insipid tests involving
->> peculiar setups, there is an interesting story in this post:
-
->> =A0http://oss.sgi.com/archives/xfs/2012-03/msg00465.html
-
-> I really don't see the connection to this thread. You're
-> advocating mostly that tar use fsync on every file, which to
-> me seems absurd.
-
-Rather different: I am pointing out that there is a fundamental
-problem, that the spectrum of safety/speed tradeoffs covers 2
-orders of magnitude as to speed, and that for equivalent points
-XFS and 'ext4' don't perform that differently (factor of 2 in
-this particular "test", which is sort of "noise").
-
-  Note: it is Schilling who advocates for 'tar' to 'fsync' every
-    file, and he gives some pretty good reasons why that should
-    be the default, and why that should not be that expensive,
-    (which I is a bit optimistic0. My advocacy in that thread
-    was that having different safety/speed tradeoffs is a good
-    thing, if they are honestly represented as tradeoffs.
-
-So it is likely if there is a significant difference you are
-getting a different tradeoff even if you may not *want* a
-different tradeoff.
-
-  Note: JFS and XFS are more or less as good as it gets as to
-    "general purpose" filesystems, and when people complain
-    about "speed" of them odds are that they are using either
-    improperly, or in corner cases, or there is a problem in the
-    application or storage layer. To get something better than
-    JFS or XFS one must look at filesystems based on radically
-    different tradeoffs, like NILFS2 (log), OCFS2 (shareable) or
-    BTRFS (COW). In your case perhaps NILFS2 would give best
-    results.
-
-And that's what seems to be happening: 'ext4' seems to commit
-metadata and data in spacewise order, XFS in timewise order,
-because the seek order on writeout probably reflects the order
-in which files were extracted from the 'tar' file.
-
-> If the system goes down halfway through tar extraction, I
-> would delete the tree and untar again. What do I care if some
-> files are corrupt, when the entire tree is incomplete anyway?
-
-Maybe you don't care; but filesystems are not psychic (they use
-hardwired and adaptive policy, not predictive) and given that
-most people seem to care the default for XFS is to try harder to
-keep metadata durable.
-
-Also various versions of 'tar' have options that allow
-continuing rather than restarting an extraction because some
-people prefer that.
-
-> [ ... ] It's just that untarring large source trees is a very
-> typical workload for me.
-
-Well, it makes a lot of difference whether you are creating an
-extreme corner case just to see what happens, or whether you
-have a real problem, even a corner case problem, about which you
-have to make some compromise.
-
-The problem you have described seems rather strange:
-
-  * You write a lot of little files to memory, as you have way
-    more memory than data.
-  * The whole is written out to a relatively RAID6 in one go, on
-    a storage layer that can do 500-700MB/s but does 1/5th of that.
-  * You don't do anything else with the files.
-
-> And I just don't want to accept that XFS cannot do better than
-> being several orders of magnitude slower than ext4 (speaking
-> of binary orders of magnitude).
-
-> As I see it, both file systems give the same guarantees:
-> 1) That upon completion of sync, all data is readily available
->    on permanent storage.
-> 2) That the file system metadata doesn't suffer corruption,
->    should the system lose power during the operation.
-
-Yes, but they also give you some *implicit* guarantees that are
-different. For example that:
-
-  * XFS spreads out files for you so you can better take
-    advantage of parallelism in your storage layer, and further
-    allocations are more resistant to fragmentation.
-
-  * 'ext4' probably commits in a different and less safe order
-    from XFS. If the storage layer rearranged IO order this
-    might matter a lot less.
-
-You may not care about either, but then you are doing something
-very special.
-
-For example, if you were to use your freshly written sources to
-do a build, then conceivably spreading the files over 4 AGs
-means that the builds can be much quicker on a system with
-available hardware parallelism.
-
-Also, *you* don't care about the order in which losses would
-happen, and how much, if the system crashes, but most users tend
-to want to avoid repeating work, because either they are not
-copying data, or the copy is huge and they don't want to restart
-it from the beginning.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+WyAuLi4gXQoKPj4gQXMgdG8gdGhpcywgaW4gdGhlb3J5IGV2ZW4gaGF2aW5nIHNwbGl0IHRoZSBm
+aWxlcyBhbW9uZyA0Cj4+IEFHcywgdGhlIHVwbG9hZCBmcm9tIHN5c3RlbSBSQU0gdG8gaG9zdCBh
+ZGFwdGVyIFJBTSBhbmQgdGhlbgo+PiB0byBkaXNrIGNvdWxkIGhhcHBlbiBieSB3cml0aW5nIGZp
+cnN0IGFsbCB0aGUgZGlydHkgYmxvY2tzCj4+IGZvciBvbmUgQUcsIHRoZW4gYSBsb25nIHNlZWsg
+dG8gdGhlIG5leHQgQUcsIGFuZCBzbyBvbiwgYW5kCj4+IHRoZSBhZGRpdGlvbmFsIGNvc3Qgb2Yg
+MyBsb25nIHNlZWtzIHdvdWxkIGJlIG5lZ2xpZ2libGUuCgo+IFllcywgdGhhdOKAmXMgZXhhY3Rs
+eSB3aGF0IEkgaGFkIGluIG1pbmQsIGFuZCB3aGF0IHByb21wdGVkIG1lCj4gdG8gd3JpdGUgdGhp
+cyBwb3N0LiBJdCB3b3VsZCBiZSBhYm91dCAxMCB0aW1lcyBhcyBmYXN0LgoKQWhoaCB5ZXMsIGJ1
+dCBsZXQncyBnbyBiYWNrIHRvIHRoaXMgYW5kIHN1bW1hcml6ZSBzb21lIG9mIG15CnByZXZpb3Vz
+IG9ic2VydmF0aW9uczoKCiAgKiBJZiB0aGUgc2NoZWR1bGluZyBvcmRlciB3YXMgYnkgQUcsIGFu
+ZCB0aGUgaGFyZHdhcmUgd2FzCiAgICBwYXJhbGxlbCwgdGhlIGF2YWlsYWJsZSBwYXJhbGxlbGlz
+bSB3b3VsZCBub3QgYmUgZXhwbG9pdGVkLAogICAgKGFuZCBmcmFnbWVudGF0aW9uIG1pZ2h0IGJl
+IHdvcnNlKSBhcyBpZiB0aGVyZSB3ZXJlIG9ubHkgYQogICAgc2luZ2xlIEFHLiBBbmQgWEZTIGRv
+ZXMgbGV0IHlvdSBjb25maWd1cmUgdGhlIG51bWJlciBvZiBBR3MKICAgIGluIHBhcnQgZm9yIGZv
+ciB0aGF0IHJlYXNvbi4KCiAgKiBZb3VyIHN0b3JhZ2UgbGF5ZXIgZG9lcyBub3Qgc2VlbSB0byBk
+ZWxpdmVyIHBhcmFsbGVsCiAgICBvcGVyYXRpb25zOiBhcyB0aGUgfjEwME1CL3Mgb3ZlcmFsbCAn
+ZXh0NCcgc3BlZWQgYW5kIHRoZQogICAgc2VlayBncmFwaHMgc2hvdywgaW4gZWZmZWN0IHlvdXIg
+NCsyIFJBSUQ2IHBlcmZvcm1zIGluIHRoaXMKICAgIGNhc2UgYXMgaWYgaXQgd2VyZSBhIHNpbmds
+ZSBkcml2ZSB3aXRoIGEgc2luZ2xlIGFybS4KCiAgKiBFdmVuIHdpdGggdGhlIGFjdHVhbCBzY2hl
+ZHVsaW5nIGF0IHRoZSBMaW51eCBsZXZlbCBiZWluZyBieQogICAgaW50ZXJsZWF2aW5nIEFHcyBp
+biBYRlMsIHlvdXIgaG9zdCBhZGFwdGVyIHdpdGggYSBCQldDCiAgICBzaG91bGQgYmUgYWJsZSB0
+byByZW9yZGVyIHRoZW0sIGluIDI1Nk1pQiBsb3RzLCBpZ25vcmluZwogICAgTGludXggbGV2ZWwg
+YmFycmllcnMgYW5kIG9yZGVyaW5nLCBidXQgaXQgc2VlbXMgdGhhdCB0aGlzIGlzCiAgICBub3Qg
+aGFwcGVuaW5nLgoKU28gdGhlIG1ham9yIHRoaW5ncyB0byBsb29rIGludG8gc2VlbSB0byBtZToK
+CiAgKiBFbnN1cmUgdGhhdCB5b3VyIFJBSUQgc2V0IGNhbiBkZWxpdmVyIHRoZSBwYXJhbGxlbGlz
+bSBhdAogICAgd2hpY2ggWEZTIGlzIHRhcmdldGVkLCB3aXRoIHRoZSBidWxrIHRyYW5zZmVyIHJh
+dGVzIHRoYXQgaXQKICAgIGNhbiBkby4KCiAgKiBPdGhlcndpc2UgZmlndXJlIG91dCB3YXlzIHRv
+IGVuc3VyZSB0aGF0IHRoZSBJTyB0cmFuc2FjdGlvbnMKICAgIGdlbmVyYXRlZCBieSBYRlMgYXJl
+IG5vdCBpbiBpbnRlcmxlYXZlLUFHIG9yZGVyLgoKICAqIE90aGVyd2lzZSBmaWd1cmUgb3V0IHdh
+eXMgdG8gZ2V0IHRoZSBYRlMgSU8gb3JkZXJpbmcKICAgIHJlYXJyYW5nZWQgYXQgdGhlIHN0b3Jh
+Z2UgbGF5ZXIgaW4gc3BhY2V3aXNlIG9yZGVyLgoKU3VtbWFyaXppbmcgc29tZSBvZiB0aGUgdGhp
+bmdzIHRvIHRyeSwgYW5kIHNvbWUgb2YgdGhlbSBhcmUKcmF0aGVyIHRlbnRhdGl2ZSwgYmVjYXVz
+ZSB5b3UgaGF2ZSBhIHJhdGhlciBwZWN1bGlhciBjb3JuZXIKY2FzZToKCiAgKiBDaGFuZ2UgdGhl
+IGZsdXNoZXIgdG8gd3JpdGVvdXQgaW5jcmVtZW50YWxseSBpbnN0ZWFkIG9mIGp1c3QKICAgIGF0
+ICdzeW5jJyB0aW1lLCBlLmcuIGV2ZXJ5IDEtMiBzZWNvbmRzLiBJbiBzb21lIHNpbWlsYXIKICAg
+IGNhc2VzIHRoaXMgbWFrZXMgdGhpbmdzIGEgbG90IGJldHRlciwgYXMgbGFyZ2UgJ3VwbG9hZHMn
+IHRvCiAgICB0aGUgc3RvcmFnZSBsYXllciBmcm9tIHRoZSBwYWdlIGNhY2hlIGNhbiBjYXVzZSBk
+YW1hZ2luZwogICAgbGF0ZW5jaWVzLiBCdXQgdGhlIHN1Y2Nlc3Mgb2YgdGhpcyBtYXkgZGVwZW5k
+IG9uIGhhdmluZyBhCiAgICBwcm9wZXJseSBwYXJhbGxlbCBzdG9yYWdlIGxheWVyLCBhdCBsZWFz
+dCBmb3IgWEZTLgoKICAqIFVzZSBhIGRpZmZlcmVudCBSQUlEIHNldHVwLiBJZiB0aGUgUkFJRCBz
+ZXQgaXMgdXNlZCBvbmx5IGZvcgogICAgcmVwcm9kdWNpYmxlIGRhdGEsIGEgUkFJRDAsIGVsc2Ug
+YSBSQUlEMTAsIG9yIGV2ZW4gYSBSQUlENQogICAgd2l0aCBhIHNtYWxsIGNodW5rIHNpemUuCgog
+ICogQ2hlY2sgdGhlIGVsZXZhdG9yIGFuZCBjYWNoZSBwb2xpY3kgb24gdGhlIFA0MDAsIGlmIHRo
+ZXkgYXJlCiAgICBzZXR0YWJsZS4gVG9vIGJhZCBtYW55IFJBSUQgaG9zdCBhZGFwdGVycyBoYXZl
+IChldXBoZW1pc20pCiAgICBoaWRlb3VzIGZ3IChtYW55IG9sZGVyIDN3YXJlIG1vZGVscyBjb21l
+IHRvIG1pbmQpIHdpdGggc29tZQogICAgdW5kb2N1bWVudGVkIChldXBoZW1pc20pIHBlY3VsaWFy
+dGllcyBhcyB0byBzY2hlZHVsaW5nLgoKICAqIFR3ZWFrICdxdWV1ZS9ucl9yZXF1ZXN0cycgYW5k
+ICdkZXZpY2UvcXVldWVfZGVwdGgnLiBQcm9iYWJseQogICAgdGhleSBzaG91bGQgYmUgYmlnICho
+dW5kcmVkcy90aG91c2FuZHMpLCBidXQgdmFyaW91cwogICAgc2V0dGluZ3Mgc2hvdWxkIGJlIHRy
+aWVkIGFzIGZ3IHNvbWV0aW1lcyBpcyBzbyB3ZWlyZC4KCiAgKiBHaXZlbiB0aGF0IGl0IGlzIG5v
+dyBlc3RhYmxpc2hlZCB0aGF0IHlvdXIgaG9zdCBhZGFwdGVyIGhhcwogICAgQkJXQywgY29uc2lk
+ZXIgc3dpdGNoaW5nIHRoZSBMaW51eCBlbGV2YXRvciB0byAnbm9vcCcsIHNvIGFzCiAgICB0byBs
+ZWF2ZSBJTyBzY2hlZHVsaW5nIHRvIHRoZSBob3N0IGFkYXB0ZXIgZncsIGFuZCByZWR1Y2UKICAg
+IGlzc3VlIGxhdGVuY3kuICdxdWV1ZS9ucl9yZXF1ZXN0cycgbWF5IGJlIHNldCB0byBhIHZlcnkg
+bG93CiAgICBudW1iZXIgaGVyZSBwZXJoYXBzLCBidXQgbXkgZ3Vlc3MgaXMgdGhhdCBpdCBzaG91
+bGRuJ3QgbWF0dGVyLgoKICAqIEFsdGVybmF0aXZlbHkgaWYgdGhlIGhvc3QgYWRhcHRlciBmdyBp
+bnNpc3RzIG9uIG5vdAogICAgcmVvcmRlcmluZyBJTyBmcm9tIHRoZSBMaW51eCBsZXZlbCwgdXNl
+IExpbnV4IGVsZXZhdG9yCiAgICBzZXR0aW5ncyB0aGF0IGJlaGF2ZXMgc2ltaWxhcmx5IHRvICdh
+bnRpY2lwYXRvcnknLgoKSXQgbWF5IGhlbHAgdG8gdXNlIEJvbm5pZSAoR2FybG9mZidzIDEuNCB2
+ZXJzaW9uIHdpdGgKJy1vX2RpcmVjdCcpIHRvIGdpdmUgYSByb3VnaCBmZWVsIG9mIGZpbGV0cmVl
+IHNwZWVkIHByb2ZpbGUsIGZvcgpleGFtcGxlIEkgdGVuZCB0byB1c2UgdGhlc2Ugb3B0aW9uczoK
+CiAgQm9ubmllIC15IC11IC1vX2RpcmVjdCAtcyAyMDAwIC12IDIgLWQgIiRESVIiCgpVbHRpbWF0
+ZWx5IGV2ZW4gJ2V4dDQnIGRvZXMgbm90IHNlZW0gdGhlIHJpZ2h0IGZpbGVzeXN0ZW0gZm9yCnRo
+aXMgd29ya2xvYWQgZWl0aGVyLCBiZWNhdXNlIGFsbCB0aGVzZSAibGVnYWN5IiBmaWxlc3lzdGVt
+cyBhcmUKdGFyZ2V0ZWQgYXQgc2l0dWF0aW9ucyB3aGVyZSBkYXRhIGlzIG11Y2ggYmlnZ2VyIHRo
+YW4gbWVtb3J5LAphbmQgeW91IGFyZSB0cnlpbmcgdG8gZml0IHRoZW0gaW50byBhIHZlcnkgc3Bl
+Y2lmaWMgY29ybmVyIGNhc2UKd2hlcmUgdGhlIG9wcG9zaXRlIGlzIHRydWUuCgpNYWtpbmcgbXkg
+ZmFudGFzeSBydW4gd2lsZCwgbXkgZ3Vlc3MgaXMgdGhhdCB5b3VyIHdvcmtsb2FkIGlzCm5vdCAn
+dGFyIHgnLCBidXQgcmVsZWFzZSBidWlsZGluZywgd2hlcmUgc291cmNlcyBhbmQgb2JqZWN0cyBm
+aXQKZW50aXJlbHkgaW4gbWVtb3J5LCBhbmQgeW91IGFyZSBvbmx5IGNvbmNlcm5lZCB3aXRoIHBl
+cnNpc3RpbmcKdGhlIHNvdXJjZXMgYmVjYXVzZSB5b3Ugd2FudCB0byBkbyBzZXZlcmFsIGJ1aWxk
+cyBmcm9tIHRoYXQgc2V0Cm9mIHNvdXJjZXMgd2l0aG91dCByZS10YXIteC1pbmcgdGhlbSwgYW5k
+IGlkZWFsbHkgeW91IHdvdWxkIGxpa2UKdG8gcmVkdWNlIGJ1aWxkIHRpbWVzIGJ5IGJ1aWxkaW5n
+IHNldmVyYWwgb2JqZWN0cyBpbiBwYXJhbGxlbC4KCiAgQlRXIHlvdXIgY29ybmVyIGNhc2UgdGhl
+biBoYXMgYW5vdGhlciBwcm9wZXJ0eSBoZXJlOiB0aGF0IGRpc2sKICB3cml0ZXMgZ3JlYXRseSBl
+eGNlZWQgZGlzayByZWFkcywgYmVjYXVzZSB5b3Ugd291bGQgb25seSB3cml0ZQogIG9uY2UgdGhl
+IHNvdXJjZXMgYW5kIHRoZW4gcmVhZCB0aGVtIGZyb20gY2FjaGUgZXZlcnkgdGltZQogIHRoZXJl
+YWZ0ZXIgd2hpbGUgdGhlIHN5c3RlbSBpcyB1cC4gSSBkb3VidCBhbHNvIHRoYXQgeW91IHdvdWxk
+CiAgd2FudCB0byBwZXJzaXN0IHRoZSBnZW5lcmF0ZWQgb2JqZWN0cyB0aGVtc2VsdmVzLCBidXQg
+b25seSB0aGUKICBnZW5lcmF0ZWQgZmluYWwgInBhY2thZ2UiIGNvbnRhaW5pbmcgdGhlbSwgd2hp
+Y2ggbWlnaHQgc3VnZ2VzdAogIGJ1aWxkaW5nIHRoZSBvYmplY3RzIHRvIGEgJ3RtcGZzJywgdW5s
+c3MgeW91IHdhbnQgdGhlbQogIHBlcnNpc3RlZCAoYSBiaXQpIHRvIG1ha2UgYnVpbGRzIHJlc3Rh
+cnRhYmxlLgoKSWYgdGhhdCdzIHRoZSBjYXNlLCBhbmQgeW91IGNhbm5vdCBmaXggdGhlIHN0b3Jh
+Z2UgbGF5ZXIgdG8gYmUKbW9yZSBzdWl0YWJsZSBmb3IgJ2V4dDQnIG9yIFhGUywgY29uc2lkZXIg
+dXNpbmcgTklMRlMyLCBvciBldmVuCidleHQyJyAod2l0aCBhIGxvbmcgZmx1c2hlciBpbnRlcnZh
+bCBwZXJoYXBzKS4KCiAgTm90ZTogb3IgImNoZWF0IiBhbmQgZG8geW91ciBidWlsZHMgdG8gYSBm
+bGFzaCBTU0QsIGFzIHRoZXkKICAgIGJvdGggcnVuIGEgZncgbGF5ZXIgdGhhdCBpbXBsZW1lbnRz
+IGEgQ09XL2xvZ2dpbmcgYWxsb2NhdGlvbgogICAgc3RyYXRlZ3ksIGFuZCBoYXZlIG5pY2VyIHNl
+ZWsgdGltZXMgOi0pLgoKPiBUaGF04oCZcyB3aGF0IGJvdGhlcnMgbWUgc28gbXVjaC4KCkFuZCBp
+biBjYXNlIHlvdSBkaWQgbm90IGdldCB0aGlzIGJlZm9yZSwgSSBoYXZlIGEgbG9uZyBzdGFuZGlu
+ZwpwZXQgcGVldmUgYWJvdXQgYWJ1c2luZyBmaWxlc3lzdGVtcyBmb3Igc21hbGwgZmlsZSBJTywg
+b3Igb3RoZXIKd2F5cyBvZiBnb2luZyBhZ2FpbnN0IHRoZSBncmFpbiBvZiB3aGF0IGlzIHBsYXVz
+aWJsZSwgd2hpY2ggSQpjYWxsIHRoZSAic3ludGFjdGljIGFwcHJvYWNoIiAoZXZlcnkgc3ludGFj
+dGljYWxseSB2YWxpZCBzeXN0ZW0KY29uZmlndXJhdGlvbiBpcyBhc3N1bWVkIHRvIHdvcmsgZXF1
+YWxseSB3ZWxsLi4uKS4KClNvbWUgdGVjaG5pY2FsIHBvc3RzY3JpcHRzOgoKICAqIEl0IHNlZW1z
+IHRoYXQgbW9zdCBpZiBub3QgYWxsIFJBSUQ2IGltcGxlbWVudGF0aW9ucyBkb24ndCBkbwogICAg
+c2hvcnRlbmVkIFJNV3MsIHdoZXJlIG9ubHkgdGhlIHVwZGF0ZWQgYmxvY2tzIGFuZCB0aGUgUFEK
+ICAgIGJsb2NrcyBhcmUgaW52b2x2ZWQsIGJ1dCB0aGV5IGFsd2F5cyBkbyBmdWxsIHN0cmlwZSBS
+TVcuCiAgICBFdmVuIHdpdGggYSBCQldDIGluIHRoZSBob3N0IGFkYXB0ZXIgdGhpcyBpcyBvbmUg
+bWFqb3IKICAgIHJlYXNvbiB0byBhdm9pZCBSQUlENiBpbiBmYXZvciBvZiBhdCBsZWFzdCBSQUlE
+NSwgZm9yIHlvdXIKICAgIHNldHVwIGluIHBhcnRpY3VsYXIuIEJ1dCBoZXksIFJBSUQ2IHNldHVw
+cyBhcmUgYWxsCiAgICBzeW50YWN0aWNhbGx5IHZhbGlkISA6LSkKCiAgKiBUaGUgJ2V4dDMnIG9u
+IGRpc2sgbGF5b3V0IGFuZCBhbGxvY2F0aW9uIHBvbGljaWVzIHNlZW0gdG8KICAgIGRlbGl2ZXIg
+dmVyeSBnb29kIGNvbXBhY3QgbG9jYWxpdHkgb24gYnVsayB3cml0ZW91dHMgYW5kCiAgICBvbiBy
+ZWxhdGl2ZWx5IGZyZXNoIGZpbGV0cmVlcywgYnV0IHRoZW4gbG9jYWxpdHkgY2FuIGRlZ3JhZGUK
+ICAgIGFwb2NhbGlwdGljYWxseSBvdmVyIHRpbWUsIGxpa2Ugc2V2ZW4gdGltZXM6CiAgICAgIGh0
+dHA6Ly93d3cuc2FiaS5jby51ay9ibG9nL2Fubm8wNS0zcmQuaHRtbCMwNTA5MTMKICAgIEkgc3Vz
+cGVjdCB0aGF0IHRoZSBzYW1lIGFwcGxpZXMgdG8gJ2V4dDQnLCBldmVuIGlmIHBlcmhhcHMgYQog
+ICAgYml0IGxlc3MuIFlvdSBoYXZlIHRyaWVkIHRvICJhZ2UiIHRoZSBmaWxldHJlZSBhIGJpdCwg
+YnV0IEkKICAgIHN1c3BlY3QgeW91IGRpZCBub3Qgc3VjY2VlZCBlbm91Z2gsIGFzIHRoZSBncmFw
+aGVkIExpbnV4CiAgICBsZXZlbCBzZWVrIHBhdHRlcm5zIHdpdGggJ2V4dDQnIHNob3dzIGEgbW9z
+dGx5LWxpbmVhciB3cml0ZS4KCiAgKiBIb3BlZnVsbHkgeW91ciBzdG9yYWdlIGxheWVyIGRvZXMg
+bm90IHVzZSBETS9MVk1zLi4uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNn
+aS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
