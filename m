@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q39N70w9229732 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 18:07:00 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id ApmuK2ZuY7L0Zx0S
-	for <xfs@oss.sgi.com>; Mon, 09 Apr 2012 16:06:59 -0700 (PDT)
-Message-ID: <4F836B93.7070903@hardwarefreak.com>
-Date: Mon, 09 Apr 2012 18:06:59 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q39MiL6h221628 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 17:44:21 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	9E3NWbLKLaf32nGK for <xfs@oss.sgi.com>;
+	Mon, 09 Apr 2012 15:44:19 -0700 (PDT)
+Date: Tue, 10 Apr 2012 08:44:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: detecting case-insensitivity
+Message-ID: <20120409224416.GM18323@dastard>
+References: <LBVkglc6jtb7.r3bLKBnl@host202.hostmonster.com>
+	<20120409212833.GA10508@fieldses.org>
+	<20120409221946.GL18323@dastard>
+	<20120409222720.GB10508@fieldses.org>
 MIME-Version: 1.0
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
-	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
-	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-	<20352.28730.273834.568559@tree.ty.sabi.co.UK>
-	<4F8074EC.2030108@gmail.com> <4F82063F.4070609@hardwarefreak.com>
-	<CAAxjCEyzmbuynT4C=wkL9Dryz1LN95soKgR4cDrZ81c3=8d24g@mail.gmail.com>
-In-Reply-To: <CAAxjCEyzmbuynT4C=wkL9Dryz1LN95soKgR4cDrZ81c3=8d24g@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20120409222720.GB10508@fieldses.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,27 +29,72 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: xfs@oss.sgi.com
+To: "J. Bruce Fields" <bfields@fieldses.org>
+Cc: Vyacheslav Dubeyko <slava@dubeyko.com>, xfs@oss.sgi.com
 
-On 4/9/2012 4:23 AM, Stefan Ring wrote:
->> Or merely a weak/old product.  The P400 was an entry level RAID HBA,
->> HP's first PCIe/SAS RAID card.  It was discontinued quite some time ago.
->>  The use of DDR2/533 memory indicates it's design stage started probably
->> somewhere around 2004, 8 years ago.
+On Mon, Apr 09, 2012 at 06:27:20PM -0400, J. Bruce Fields wrote:
+> On Tue, Apr 10, 2012 at 08:19:46AM +1000, Dave Chinner wrote:
+> > On Mon, Apr 09, 2012 at 05:28:33PM -0400, J. Bruce Fields wrote:
+> > > > > From: Dave Chinner <david@fromorbit.com>
+> > > > > Date: 09.04.2012 03.30
+> > > > > 
+> > > > > On Sat, Apr 07, 2012 at 10:00:29AM -0400, J. Bruce Fields wrote:
+> > > > > > Is there a generic way to detect whether a given filesystem is
+> > > > > > case-insensitive?  If not, how should it be done?  (A bit in s_flags?)
+> > > > > 
+> > > > > I don't think there is a generic flag for it. We could trivially add
+> > > > > one, I think, as it is generally a fixed property for the entire
+> > > > > filesystem....
+> > > 
+> > > So, I assume the following is totally wrong, but the basic idea (create
+> > > a new flag, set it based on xfs_sb_version_hasasciici, check it in nfsd)
+> > > would work?
+> > 
+> > Looks mostly OK to me.
+> > 
+> > > On Mon, Apr 09, 2012 at 09:01:11AM +0400, Vyacheslav Dubeyko wrote:
+> > > > But why does it need to detect that filesystem case-insensitive or not? In what use-case does it need to make such detection?
+> > > 
+> > > To be honest, I have no idea--it's not a mandatory attribute, so I think
+> > > I'll instead just ceasing to support the attribute and seeing if anyone
+> > > complains....
+> > 
+> > I suspect that there are some applications out there that might care
+> > that Bruce and bruce are the same file for matching purposes (e.g. a
+> > file manager)
 > 
-> It was what you got when you bought a direct-attach storage blade from
-> HP until a few months ago. Apparently, they changed it to P410i very
-> recently: <http://h10010.www1.hp.com/wwpc/us/en/sm/WF06a/3709945-3709945-3710114-3722820-3722776-4304942.html?dnr=1>
+> I suppose they could try the create and find out what happens.
+> 
+> If they actually want to be able to predict collisions instead of
+> recognizing them after the fact then they may need to know in more
+> detail how we handle case, and then I worry that I'll have to start
+> understanding what language like this means:
+> 
+> 	http://tools.ietf.org/html/draft-ietf-nfsv4-rfc3530bis-17#section-12.7.1.3
+> 
+> 	...if the NFSv4 file server supports the case_insensitive file
+> 	system attribute, and if the case_insensitive attribute is true
+> 	for a given file system, the NFS version 4 server MUST use the
+> 	Unicode case mapping tables for the version of Unicode
+> 	corresponding to the character repertoire.
+> 
+> which isn't high on my todo list.
 
-Nonetheless, it's performance is quite bad with RAID6 (RAID10 as well).
- If you're happy with EXT4 on the P400 based RAID6, you'll be even much
-happier with 3-4x more performance using md for the RAID6.  If it was
-worth your time to test the XFS concat I would think this test would be
-even more so, as it appears you'll be sticking with EXT4.
+Right, unicode CI is a bitch to handle. There's still a lot of work
+to be done in XFS before that is supported. See:
 
+http://xfs.org/index.php/Unfinished_work#Support_for_unicode_.2F_utf8_filesystems
+
+So if the NFSv4 flag really means full unicode CI, then there's
+still work at the XFS level to be able to support that. ASCII CI is
+a walk in the park compared to unicode....
+
+Cheers,
+
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
