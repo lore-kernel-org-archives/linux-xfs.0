@@ -1,24 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q399NO6u079308 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 04:23:24 -0500
-Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	h3oYkSyZRtDRdIRC (version=TLSv1 cipher=RC4-SHA bits=128
+	q39B2bTQ097290 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 06:02:37 -0500
+Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	CeACpvh4pw9tDrFt (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 09 Apr 2012 02:23:22 -0700 (PDT)
-Received: by ghbz13 with SMTP id z13so2536948ghb.26
-	for <xfs@oss.sgi.com>; Mon, 09 Apr 2012 02:23:22 -0700 (PDT)
+	Mon, 09 Apr 2012 04:02:27 -0700 (PDT)
+Received: by yenq2 with SMTP id q2so2563355yen.26
+	for <xfs@oss.sgi.com>; Mon, 09 Apr 2012 04:02:27 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <4F82063F.4070609@hardwarefreak.com>
+In-Reply-To: <4F8055E4.1000808@hardwarefreak.com>
 References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
 	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
 	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
 	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-	<20352.28730.273834.568559@tree.ty.sabi.co.UK>
-	<4F8074EC.2030108@gmail.com> <4F82063F.4070609@hardwarefreak.com>
-Date: Mon, 9 Apr 2012 11:23:22 +0200
-Message-ID: <CAAxjCEyzmbuynT4C=wkL9Dryz1LN95soKgR4cDrZ81c3=8d24g@mail.gmail.com>
+	<4F7F7C25.8040605@hardwarefreak.com>
+	<CAAxjCEyJW1b4dbKctbrgdWjykQt8Hb4Sw1RKdys3oUsehNHCcQ@mail.gmail.com>
+	<4F8055E4.1000808@hardwarefreak.com>
+Date: Mon, 9 Apr 2012 13:02:27 +0200
+Message-ID: <CAAxjCEz8TpRvjvbuYPp1xf9X2HwskN5AuPak62R5Jhkg+mmFHA@mail.gmail.com>
 Subject: Re: XFS: Abysmal write performance because of excessive seeking
 	(allocation groups to blame?)
 From: Stefan Ring <stefanrin@gmail.com>
@@ -35,17 +36,43 @@ Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: stan@hardwarefreak.com
-Cc: xfs@oss.sgi.com
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-PiBPciBtZXJlbHkgYSB3ZWFrL29sZCBwcm9kdWN0LiDCoFRoZSBQNDAwIHdhcyBhbiBlbnRyeSBs
-ZXZlbCBSQUlEIEhCQSwKPiBIUCdzIGZpcnN0IFBDSWUvU0FTIFJBSUQgY2FyZC4gwqBJdCB3YXMg
-ZGlzY29udGludWVkIHF1aXRlIHNvbWUgdGltZSBhZ28uCj4gwqBUaGUgdXNlIG9mIEREUjIvNTMz
-IG1lbW9yeSBpbmRpY2F0ZXMgaXQncyBkZXNpZ24gc3RhZ2Ugc3RhcnRlZCBwcm9iYWJseQo+IHNv
-bWV3aGVyZSBhcm91bmQgMjAwNCwgOCB5ZWFycyBhZ28uCgpJdCB3YXMgd2hhdCB5b3UgZ290IHdo
-ZW4geW91IGJvdWdodCBhIGRpcmVjdC1hdHRhY2ggc3RvcmFnZSBibGFkZSBmcm9tCkhQIHVudGls
-IGEgZmV3IG1vbnRocyBhZ28uIEFwcGFyZW50bHksIHRoZXkgY2hhbmdlZCBpdCB0byBQNDEwaSB2
-ZXJ5CnJlY2VudGx5OiA8aHR0cDovL2gxMDAxMC53d3cxLmhwLmNvbS93d3BjL3VzL2VuL3NtL1dG
-MDZhLzM3MDk5NDUtMzcwOTk0NS0zNzEwMTE0LTM3MjI4MjAtMzcyMjc3Ni00MzA0OTQyLmh0bWw/
-ZG5yPTE+CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4
-ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1h
-bi9saXN0aW5mby94ZnMK
+PiBOb3QgYXQgYWxsLiDCoFlvdSBjYW4gYWNoaWV2ZSB0aGlzIHBlcmZvcm1hbmNlIHdpdGggdGhl
+IDYgMzAwR0Igc3BpbmRsZXMKPiB5b3UgY3VycmVudGx5IGhhdmUsIGFzIENocmlzdG9waCBhbmQg
+SSBib3RoIG1lbnRpb25lZC4gwqBZb3Ugc2ltcGx5IGxvc2UKPiBvbmUgc3BpbmRsZSBvZiBjYXBh
+Y2l0eSwgMzAwR0IsIHZzIHlvdXIgY3VycmVudCBSQUlENiBzZXR1cC4gwqBNYWtlIDMKPiBSQUlE
+MSBwYWlycyBpbiB0aGUgcDQwMCBhbmQgY29uY2F0ZW5hdGUgdGhlbS4gwqBJZiB0aGUgcDQwMCBj
+YW4ndCBkbyB0aGlzCj4gY29uY2F0IHRoZSBtaXJyb3IgcGFpciBkZXZpY2VzIHdpdGggbWQgLS1s
+aW5lYXIuIMKgRm9ybWF0IHRoZSByZXN1bHRpbmcKPiBMaW51eCBibG9jayBkZXZpY2Ugd2l0aCB0
+aGUgZm9sbG93aW5nIGFuZCBtb3VudCB3aXRoIGlub2RlNjQuCj4KPiAkIG1rZnMueGZzIC1kIGFn
+Y291bnQ9MyAvZGV2L1tkZXZpY2VdCj4KPiBUaGF0IHdpbGwgZ2l2ZSB5b3UgMSBBRyBwZXIgc3Bp
+bmRsZSwgMyBob3Jpem9udGFsIEFHcyB0b3RhbCBpbnN0ZWFkIG9mIDQKPiB2ZXJ0aWNhbCBBR3Mg
+YXMgeW91IGdldCB3aXRoIGRlZmF1bHQgc3RyaXBpbmcgc2V0dXAuIMKgVGhpcyBpcyBvcHRpbWFs
+Cj4gZm9yIHlvdXIgaGlnaCBJT1BTIHdvcmtsb2FkIGFzIGl0IGVsaW1pbmF0ZXMgYWxsICdleHRy
+YW5lb3VzJyBzZWVrcwo+IHlpZWxkaW5nIGEgcGVyIGRpc2sgYWNjZXNzIHBhdHRlcm4gbmVhcmx5
+IGlkZW50aWNhbCB0byBFWFQ0LiDCoEFuZCBpdAo+IHdpbGwgYWxtb3N0IGNlcnRhaW5seSBvdXRy
+dW4gRVhUNCBvbiB5b3VyIFJBSUQ2IGR1ZSBtb3N0bHkgdG8gdGhlCj4gZWxpbWluYXRlZCBzZWVr
+cywgYnV0IGFsc28gdG8gZWxpbWluYXRpb24gb2YgcGFyaXR5IGNhbGN1bGF0aW9ucy4KPiBZb3Un
+dmUgd2lwZWQgdGhlIGFycmF5IGEgZmV3IHRpbWVzIGluIHlvdXIgdGVzdGluZyBhbHJlYWR5IHJp
+Z2h0LCBzbyBvbmUKPiBvciB0d28gbW9yZSB0ZXN0IHNldHVwcyBzaG91bGQgYmUgbm8gc3dlYXQu
+IMKgR2l2ZSBpdCBhIGdvLiDCoFRoZSByZXN1bHRzCj4gd2lsbCBiZSBwbGVhc2FudGx5IHN1cnBy
+aXNpbmcuCgpXZWxsIEkgaGFkIHRvIG1vdmUgYXJvdW5kIHF1aXRlIGEgYml0IG9mIGRhdGEsIGJ1
+dCBmb3IgdGhlIHNha2Ugb2YKY29tcGxldGVuZXNzLCBJIGhhZCB0byBnaXZlIGl0IGEgdHJ5LgoK
+V2l0aCBhIG5pY2UgYW5kIHRpZHkgZnJlc2ggWEZTIGZpbGUgc3lzdGVtLCBwZXJmb3JtYW5jZSBp
+cyBpbmRlZWQKaW1wcmVzc2l2ZSDigJMgYWJvdXQgMTYgc2VjIGZvciB0aGUgc2FtZSB0YXNrIHRo
+YXQgd291bGQgdGFrZSAyIG1pbiAyNQpiZWZvcmUuIFNvIHRoYXTigJlzIGFib3V0IDE1MCBNQi9z
+ZWMsIHdoaWNoIGlzIG5vdCBncmVhdCwgYnV0IGZvciBtYW55CnRpbnkgZmlsZXMgaXQgd291bGQg
+cGVyaGFwcyBiZSBhIGJpdCB1bnJlYXNvbmFibGUgdG8gZXhwZWN0IG1vcmUuIEEKc2ltcGxlIGNv
+cHkgb2YgdGhlIHRhciBvbnRvIHRoZSBYRlMgZmlsZSBzeXN0ZW0geWllbGRzIHRoZSBzYW1lIGxp
+bmVhcgpwZXJmb3JtYW5jZSwgdGhlIHNhbWUgYXMgd2l0aCBleHQ0LCBidHcuIFNvIDE1MCBNQi9z
+ZWMgc2VlbXMgdG8gYmUgdGhlCmJlc3QgdGhlc2UgZGlza3MgY2FuIGRvLCBtZWFuaW5nIHRoYXQg
+dGhlb3JldGljYWxseSwgd2l0aCAzIEFHcywgaXQKc2hvdWxkIGJlIGFibGUgdG8gcmVhY2ggNDUw
+IE1CL3NlYyB1bmRlciBvcHRpbWFsIGNvbmRpdGlvbnMuCgpJIHdpbGwgc3RpbGwgZG8gYSB0ZXN0
+IHdpdGggdGhlIGZyZWUgc3BhY2UgZnJhZ21lbnRhdGlvbiBwcmltaW5nIG9uCnRoZSBjb25jYXRl
+bmF0ZWQgQUc9MyB2b2x1bWUsIGJlY2F1c2UgaXQgc2VlbXMgdG8gYmUgcmF0aGVyIHNsb3cgYXMK
+d2VsbC4KCkJ1dCB0aGVuIEkgZ3Vlc3MgSeKAmW0gYmFjayB0byBleHQ0IGxhbmQuIFhGUyBqdXN0
+IGRvZXNu4oCZdCBvZmZlciBlbm91Z2gKYmVuZWZpdHMgaW4gdGhpcyBjYXNlIHRvIGp1c3RpZnkg
+dGhlIGhhc3NsZS4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9t
+YWlsbWFuL2xpc3RpbmZvL3hmcwo=
