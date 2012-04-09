@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q38N2H8E219171 for <xfs@oss.sgi.com>; Sun, 8 Apr 2012 18:02:18 -0500
+	q390Jm0O236824 for <xfs@oss.sgi.com>; Sun, 8 Apr 2012 19:19:48 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	l7H9zkLDbdd6BX3E for <xfs@oss.sgi.com>;
-	Sun, 08 Apr 2012 16:02:15 -0700 (PDT)
-Date: Mon, 9 Apr 2012 09:02:08 +1000
+	BhoK1wn6iIR7FdOK for <xfs@oss.sgi.com>;
+	Sun, 08 Apr 2012 17:19:46 -0700 (PDT)
+Date: Mon, 9 Apr 2012 10:19:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: detecting case-insensitivity
-Message-ID: <20120408230208.GH18323@dastard>
-References: <20120407140029.GA24090@fieldses.org>
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+Message-ID: <20120409001943.GI18323@dastard>
+References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
+	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
+	<4F7F7C25.8040605@hardwarefreak.com>
+	<CAAxjCEyJW1b4dbKctbrgdWjykQt8Hb4Sw1RKdys3oUsehNHCcQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120407140029.GA24090@fieldses.org>
+In-Reply-To: <CAAxjCEyJW1b4dbKctbrgdWjykQt8Hb4Sw1RKdys3oUsehNHCcQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,29 +28,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: xfs@oss.sgi.com
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: stan@hardwarefreak.com, Linux fs XFS <xfs@oss.sgi.com>
 
-On Sat, Apr 07, 2012 at 10:00:29AM -0400, J. Bruce Fields wrote:
-> Is there a generic way to detect whether a given filesystem is
-> case-insensitive?  If not, how should it be done?  (A bit in s_flags?)
-
-I don't think there is a generic flag for it. We could trivially add
-one, I think, as it is generally a fixed property for the entire
-filesystem....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gU2F0LCBBcHIgMDcsIDIwMTIgYXQgMDk6Mjc6NTBBTSArMDIwMCwgU3RlZmFuIFJpbmcgd3Jv
+dGU6Cj4gPiBJbnN0ZWFkLCBhIGZhciBtb3JlIG9wdGltYWwgc29sdXRpb24gd291bGQgYmUgdG8g
+c2V0IGFzaWRlIDQgc3BhcmVzIHBlcgo+ID4gY2hhc3NpcyBhbmQgY3JlYXRlIDE0IGZvdXIgZHJp
+dmUgUkFESTEwIGFycmF5cy4gwqBUaGlzIHdvdWxkIHlpZWxkIH42MDAKPiA+IHNlZWtzL3NlYyBh
+bmQgfjQwME1CL3Mgc2VxdWVudGlhbCB0aHJvdWdocHV0IHBlcmZvcm1hbmNlIHBlciAyIHNwaW5k
+bGUKPiA+IGFycmF5LiDCoFdlJ2Qgc3RpdGNoIHRoZSByZXN1bHRpbmcgNTYgaGFyZHdhcmUgUkFJ
+RDEwIGFycmF5cyB0b2dldGhlciBpbgo+ID4gYW4gbWRyYWlkIGxpbmVhciAoY29uY2F0ZW5hdGVk
+KSBhcnJheS4gwqBUaGVuIHdlJ2QgZm9ybWF0IHRoaXMgMTEyCj4gPiBlZmZlY3RpdmUgc3BpbmRs
+ZSBsaW5lYXIgYXJyYXkgd2l0aCBzaW1wbHk6Cj4gPgo+ID4gJCBta2ZzLnhmcyAtZCBhZ2NvdW50
+PTU2IC9kZXYvbWQwCj4gPgo+ID4gU2luY2UgZWFjaCBSQUlEMTAgaXMgOTAwR0IgY2FwYWNpdHks
+IHdlIGhhdmUgNTYgQUdzIG9mIGp1c3QgdW5kZXIgdGhlCj4gPiAxVEIgbGltaXQsIDEgQUcgcGVy
+IDIgcGh5c2ljYWwgc3BpbmRsZXMuIMKgRHVlIHRvIHRoZSAyIHN0cmlwZSBzcGluZGxlCj4gPiBu
+YXR1cmUgb2YgdGhlIGNvbnN0aXR1ZW50IGhhcmR3YXJlIFJBSUQxMCBhcnJheXMsIHdlIGRvbid0
+IG5lZWQgdG8gd29ycnkKPiA+IGFib3V0IGFsaWduaW5nIFhGUyB3cml0ZXMgdG8gdGhlIFJBSUQg
+c3RyaXBlIHdpZHRoLiDCoFRoZSBoYXJkd2FyZSBjYWNoZQo+ID4gd2lsbCB0YWtlIGNhcmUgb2Yg
+ZmlsbGluZyB0aGUgc21hbGwgc3RyaXBlcy4gwqBOb3cgd2UncmUgaW4gdGhlIG9wcG9zaXRlCj4g
+PiBzaXR1YXRpb24gb2YgaGF2aW5nIHRvbyBtYW55IEFHcyBwZXIgc3BpbmRsZS4gwqBXZSd2ZSBw
+dXQgMiBzcGluZGxlcyBpbiBhCj4gPiBzaW5nbGUgQUcgYW5kIHR1cm5lZCB0aGUgc2VlayBzdGFy
+dmF0aW9uIGlzc3VlcyBvbiBpdHMgaGVhZC4KPiAKPiBTbyBpdCBzb3VuZHMgbGlrZSB0aGF0IGZv
+ciBwb29yIGd1eXMgbGlrZSB1cywgd2hvIGNhbuKAmXQgYWZmb3JkIHRoZQo+IGhhcmR3YXJlIHRv
+IGhhdmUgZG96ZW5zIG9mIHNwaW5kbGVzLCB0aGUgYmVzdCBvcHRpb24gd291bGQgYmUgdG8KPiBj
+cmVhdGUgdGhlIFhGUyBmaWxlIHN5c3RlbSB3aXRoIGFnY291bnQ9MT8KCk5vLCBiZWNhdXNlIHRo
+ZW4geW91IGhhdmUgbm8gcmVkdW5kYW5jeSBpbiBtZXRhZGF0YSBzdHJ1Y3R1cmVzLCBzbwppZiB5
+b3UgbG9zZS9jb3JydXB0IHRoZSBzdXBlcmJsb2NrIHlvdSBjYW4gZWFzaWVyIGxvc2UgdGhlIGVu
+dGlyZQpmaWxlc3l0ZW0uICBOb3QgdG8gbWVudGlvbiB5b3UgaGF2ZSBubyBhbGxvY2F0aW9uIHBh
+cmFsbGVsaXNtIGluIHRoZQpmaWxlc3lzdGVtLCBzbyB5b3UnbGwgZ2V0IHRlcnJpYmxlIHBlcmZv
+cm1hbmNlIGluIG1hbnkgY29tbW9uCndvcmtsb2Fkcy4gSU8gZmFpcm5lc3Mgd2lsbCBhbHNvIGJl
+IGEgYmlnIHByb2JsZW0uCgo+IFRoYXQgc2VlbXMgdG8gYmUgdGhlIG9ubHkgcmVhc29uYWJsZSBj
+b25jbHVzaW9uIHRvIG1lLCBzaW5jZSBhCj4gc2luZ2xlIFJBSUQgZGV2aWNlLCBsaWtlIGEgc2lu
+Z2xlIGRpc2ssIGNhbm5vdCB3cml0ZSBpbiBwYXJhbGxlbAo+IGFueXdheS4KCkEgZGVjZW50IFJB
+SUQgY29udHJvbGxlciB3aXRoIGEgQkJXQyBhbmQgYSBzaW5nbGUgTFVOIGJlbmVmaXRzIGZyb20K
+cGFyYWxsZWxpc20ganVzdCBhcyBtdWNoIGFzIGEgbGFyZ2UgZGlzayBhcnJheXMgZG8gYmVjYXVz
+ZSB0aGUgQkJXQwptaW5pbWlzZXMgdGhlIHdyaXRlIElPIGxhdGVuY3kgYW5kIHRoZSBjb250cm9s
+bGVyIHRvIGRvIGEgYmV0dGVyIGpvYgpvZiBzY2hlZHVsaW5nIGl0J3MgSU8uCgpDaGVlcnMsCgpE
+YXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
+cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
