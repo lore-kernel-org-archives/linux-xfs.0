@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q39MJoAP217346 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 17:19:50 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HMXTiTrRC098DWfN for <xfs@oss.sgi.com>;
-	Mon, 09 Apr 2012 15:19:48 -0700 (PDT)
-Date: Tue, 10 Apr 2012 08:19:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: detecting case-insensitivity
-Message-ID: <20120409221946.GL18323@dastard>
-References: <LBVkglc6jtb7.r3bLKBnl@host202.hostmonster.com>
-	<20120409212833.GA10508@fieldses.org>
+	q39N70w9229732 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 18:07:00 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id ApmuK2ZuY7L0Zx0S
+	for <xfs@oss.sgi.com>; Mon, 09 Apr 2012 16:06:59 -0700 (PDT)
+Message-ID: <4F836B93.7070903@hardwarefreak.com>
+Date: Mon, 09 Apr 2012 18:06:59 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120409212833.GA10508@fieldses.org>
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
+	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
+	<20352.28730.273834.568559@tree.ty.sabi.co.UK>
+	<4F8074EC.2030108@gmail.com> <4F82063F.4070609@hardwarefreak.com>
+	<CAAxjCEyzmbuynT4C=wkL9Dryz1LN95soKgR4cDrZ81c3=8d24g@mail.gmail.com>
+In-Reply-To: <CAAxjCEyzmbuynT4C=wkL9Dryz1LN95soKgR4cDrZ81c3=8d24g@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,59 +32,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: Vyacheslav Dubeyko <slava@dubeyko.com>, xfs@oss.sgi.com
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Apr 09, 2012 at 05:28:33PM -0400, J. Bruce Fields wrote:
-> > > From: Dave Chinner <david@fromorbit.com>
-> > > Date: 09.04.2012 03.30
-> > > 
-> > > On Sat, Apr 07, 2012 at 10:00:29AM -0400, J. Bruce Fields wrote:
-> > > > Is there a generic way to detect whether a given filesystem is
-> > > > case-insensitive?  If not, how should it be done?  (A bit in s_flags?)
-> > > 
-> > > I don't think there is a generic flag for it. We could trivially add
-> > > one, I think, as it is generally a fixed property for the entire
-> > > filesystem....
+On 4/9/2012 4:23 AM, Stefan Ring wrote:
+>> Or merely a weak/old product.  The P400 was an entry level RAID HBA,
+>> HP's first PCIe/SAS RAID card.  It was discontinued quite some time ago.
+>>  The use of DDR2/533 memory indicates it's design stage started probably
+>> somewhere around 2004, 8 years ago.
 > 
-> So, I assume the following is totally wrong, but the basic idea (create
-> a new flag, set it based on xfs_sb_version_hasasciici, check it in nfsd)
-> would work?
+> It was what you got when you bought a direct-attach storage blade from
+> HP until a few months ago. Apparently, they changed it to P410i very
+> recently: <http://h10010.www1.hp.com/wwpc/us/en/sm/WF06a/3709945-3709945-3710114-3722820-3722776-4304942.html?dnr=1>
 
-Looks mostly OK to me.
+Nonetheless, it's performance is quite bad with RAID6 (RAID10 as well).
+ If you're happy with EXT4 on the P400 based RAID6, you'll be even much
+happier with 3-4x more performance using md for the RAID6.  If it was
+worth your time to test the XFS concat I would think this test would be
+even more so, as it appears you'll be sticking with EXT4.
 
-> On Mon, Apr 09, 2012 at 09:01:11AM +0400, Vyacheslav Dubeyko wrote:
-> > But why does it need to detect that filesystem case-insensitive or not? In what use-case does it need to make such detection?
-> 
-> To be honest, I have no idea--it's not a mandatory attribute, so I think
-> I'll instead just ceasing to support the attribute and seeing if anyone
-> complains....
-
-I suspect that there are some applications out there that might care
-that Bruce and bruce are the same file for matching purposes (e.g. a
-file manager)
-
-....
-
-> diff --git a/fs/nfsd/vfs.c b/fs/nfsd/vfs.c
-> index 7423d71..890f439 100644
-> --- a/fs/nfsd/vfs.c
-> +++ b/fs/nfsd/vfs.c
-> @@ -1458,7 +1458,7 @@ do_nfsd_create(struct svc_rqst *rqstp, struct svc_fh *fhp,
->  		switch (createmode) {
->  		case NFS3_CREATE_UNCHECKED:
->  			if (! S_ISREG(dchild->d_inode->i_mode))
-> -				err = nfserr_exist;
-> +				goto out;
-
-Not sure what this change is for, though....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Stan
 
 _______________________________________________
 xfs mailing list
