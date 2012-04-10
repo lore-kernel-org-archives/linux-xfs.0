@@ -1,29 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3A6BQkc053618 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 01:11:26 -0500
-Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
-	[209.85.213.53]) by cuda.sgi.com with ESMTP id 0NNdrq1wGVto2v3O
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 09 Apr 2012 23:11:25 -0700 (PDT)
-Received: by yhjj72 with SMTP id j72so3126830yhj.26
-	for <xfs@oss.sgi.com>; Mon, 09 Apr 2012 23:11:24 -0700 (PDT)
+	q3A7C9W0058972 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 02:12:10 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	7CyuG45YiB3iqScA for <xfs@oss.sgi.com>;
+	Tue, 10 Apr 2012 00:12:07 -0700 (PDT)
+Date: Tue, 10 Apr 2012 17:12:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] set freed perag structures to NULL to avoid mount
+	failure oops
+Message-ID: <20120410071204.GO18323@dastard>
+References: <4F7DF263.6060802@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4F8372DC.7030405@hardwarefreak.com>
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
-	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
-	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-	<4F7F7C25.8040605@hardwarefreak.com>
-	<CAAxjCEyJW1b4dbKctbrgdWjykQt8Hb4Sw1RKdys3oUsehNHCcQ@mail.gmail.com>
-	<4F8055E4.1000808@hardwarefreak.com>
-	<CAAxjCEz8TpRvjvbuYPp1xf9X2HwskN5AuPak62R5Jhkg+mmFHA@mail.gmail.com>
-	<4F8372DC.7030405@hardwarefreak.com>
-Date: Tue, 10 Apr 2012 08:11:24 +0200
-Message-ID: <CAAxjCEx14NrgUatB349vx8h0kCxE=cS7d4DLLPnjwB035tB3Hw@mail.gmail.com>
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-From: Stefan Ring <stefanrin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <4F7DF263.6060802@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,67 +23,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-PiAxNTBNQi9zIGlzbid0IGNvcnJlY3QuIMKgU2hvdWxkIGJlIGNsb3NlciB0byA0NTBNQi9zLiDC
-oFRoaXMgbWFrZXMgaXQKPiBhcHBlYXIgdGhhdCB5b3UncmUgd3JpdGluZyBhbGwgdGhlc2UgZmls
-ZXMgdG8gYSBzaW5nbGUgZGlyZWN0b3J5LiDCoElmCj4geW91J3JlIHdyaXRpbmcgdGhlbSBmYWly
-bHkgZXZlbmx5IHRvIDMgZGlyZWN0b3JpZXMgb3IgYSBtdWx0aXBsZSBvZiAzLAo+IHlvdSBzaG91
-bGQgc2VlIGNsb3NlIHRvIDQ1ME1CL3MsIGlmIHVzaW5nIG1kcmFpZCBsaW5lYXIgb3ZlciAzIFA0
-MDAKPiBSQUlEMSBwYWlycy4gwqBJZiB0aGlzIGlzIHdoYXQgeW91J3JlIGRvaW5nIHRoZW4gc29t
-ZXRoaW5nIHNlZW1zIHdyb25nCj4gc29tZXdoZXJlLiDCoFRyeSB1bnBhY2tpbmcgYSBrZXJuZWwg
-dGFyYmFsbC4gwqBMb3RzIG9mIHN1YmRpcmVjdG9yaWVzIHRvCj4gZXhlcmNpc2UgYWxsIDMgQUdz
-IHRodXMgYWxsIDMgc3BpbmRsZXMuCgpUaGUgc3BpbmRsZXMgd2VyZSBleGVyY2lzZWQ7IEkgd2F0
-Y2hlZCBpdCB3aXRoIGlvc3RhdC4gTWF5YmUgSSBjb3VsZApoYXZlIHJlYWNoZWQgbW9yZSB3aXRo
-IG1vcmUgcGFyYWxsZWxpc20sIGJ1dCB0aGF0IHdhc27igJl0IG15IGdvYWwgYXQKYWxsLiBBbHRo
-b3VnaCwgb3ZlciB0aGUgY291cnNlIG9mIHRoZXNlIGV4cGVyaW1lbnRzLCBJIGdvdCB0byBkb3Vi
-dAp0aGF0IHRoZSBjb250cm9sbGVyIGNvdWxkIGV2ZW4gaGFuZGxlIHRoaXMgZGF0YSByYXRlLgoK
-Pj4gc2ltcGxlIGNvcHkgb2YgdGhlIHRhciBvbnRvIHRoZSBYRlMgZmlsZSBzeXN0ZW0geWllbGRz
-IHRoZSBzYW1lIGxpbmVhcgo+PiBwZXJmb3JtYW5jZSwgdGhlIHNhbWUgYXMgd2l0aCBleHQ0LCBi
-dHcuIFNvIDE1MCBNQi9zZWMgc2VlbXMgdG8gYmUgdGhlCj4+IGJlc3QgdGhlc2UgZGlza3MgY2Fu
-IGRvLCBtZWFuaW5nIHRoYXQgdGhlb3JldGljYWxseSwgd2l0aCAzIEFHcywgaXQKPj4gc2hvdWxk
-IGJlIGFibGUgdG8gcmVhY2ggNDUwIE1CL3NlYyB1bmRlciBvcHRpbWFsIGNvbmRpdGlvbnMuCj4K
-PiBUaGUgb3B0aW1hbCBjb25kaXRpb24sIGFnYWluLCByZXF1aXJlcyB3cml0aW5nIDMgb2YgdGhp
-cyBmaWxlIHRvIDMKPiBkaXJlY3RvcmllcyB0byBoaXQgfjQ1ME1CL3MsIHdoaWNoIHlvdSBzaG91
-bGQgZ2V0IGNsb3NlIHRvIGlmIHVzaW5nCj4gbWRyYWlkIGxpbmVhciBvdmVyIFJBSUQxIHBhaXJz
-LiDCoFhGUyBpcyBhIGZpbGVzeXN0ZW0gYWZ0ZXIgYWxsLCBzbyBpdCdzCj4gcGFyYWxsZWxpc20g
-bXVzdCBjb21lIGZyb20gbWFuaXB1bGF0aW5nIHVzYWdlIG9mIGZpbGVzeXN0ZW0gc3RydWN0dXJl
-cy4KPiDCoEkgdGhvdWdodCBJIGV4cGxhaW5lZCBhbGwgb2YgdGhpcyBwcmV2aW91c2x5IHdoZW4g
-SSBpbnRyb2R1Y2VkIHRoZSAiWEZTCj4gY29uY2F0IiBpbnRvIHRoaXMgdGhyZWFkLgoKVGhlIG9w
-dGltYWwgY29uZGl0aW9uIHdvdWxkIGJlIDMgcGFyYWxsZWwgd3JpdGVzIG9mIGh1Z2UgZmlsZXMs
-IHdoaWNoCmNhbiBiZSBlYXNpbHkgd3JpdHRlbiBsaW5lYXJseS4gTm90IHRob3VzYW5kcyBvZiB0
-aW55IGZpbGVzLgoKPj4gQnV0IHRoZW4gSSBndWVzcyBJ4oCZbSBiYWNrIHRvIGV4dDQgbGFuZC4g
-WEZTIGp1c3QgZG9lc27igJl0IG9mZmVyIGVub3VnaAo+PiBiZW5lZml0cyBpbiB0aGlzIGNhc2Ug
-dG8ganVzdGlmeSB0aGUgaGFzc2xlLgo+Cj4gSWYgeW91IHdlcmUgd3JpdGluZyB0byBvbmx5IG9u
-ZSBkaXJlY3RvcnkgSSBjYW4gdW5kZXJzdGFuZCB0aGlzCj4gc2VudGltZW50LiDCoEFnYWluLCBp
-ZiB5b3Ugd2VyZSB3cml0aW5nIDMgZGlyZWN0b3JpZXMgZmFpcmx5IGV2ZW5seSwgd2l0aAo+IHRo
-ZSBtZCBjb25jYXQsIHRoZW4geW91ciBzZW50aW1lbnQgaGVyZSBzaG91bGQgYmUgcXVpdGUgZGlm
-ZmVyZW50LgoKSGFoYSwgSSBtYWRlIGEgVS10dXJuIG9uIHRoaXMgb25lLiBYRlMgaXMgYmFjayBv
-biB0aGUgdGFibGUgKGFuZCBvbgp0aGUgZGlza3Mgbm93KSA7KS4gV2hlbiBJIHRob3VnaHQgSSB3
-YXMgZG9uZSwgSSB3YW50ZWQgdG8gcmVzdG9yZSBhCmZldyBsYXJnZSBLVk0gaW1hZ2VzIHdoaWNo
-IHdlcmUgb24gdGhlIGRpc2tzIHByaW9yIHRvIHRoZSBSQUlECnJlY29uZmlndXJhdGlvbi4gV2l0
-aCBleHQ0LCBJIHdhdGNoZWQgaW9zdGF0IHdyaXRpbmcgYXQgMTMwTUIvcyBmb3IgYQp3aGlsZS4g
-QWZ0ZXIgMiBvciAzIG1pbnV0ZXMsIGl0IGJyb2tlIGRvd24gY29tcGxldGVseSBhbmQgbGFuZ3Vp
-c2hlZAphdCAzMC00ME1CL3MgZm9yIG1hbnkgbWludXRlcywgZXZlbiBhZnRlciBJIGhhZCBTSUdT
-VE9QZWQgdGhlIHdyaXRpbmcKcHJvY2VzcywgZHVyaW5nIHdoaWNoIGl0IHdhcyBuZWFybHkgaW1w
-b3NzaWJsZSB0byB1c2UgdmltIHRvIGVkaXQgYQpmaWxlIG9uIHRoZSBleHQ0IHBhcnRpdGlvbi4g
-SXQgd291bGQgcGF1c2UgZm9yIHRlbnMgb2Ygc2Vjb25kcyBhbGwgdGhlCnRpbWUuIEl04oCZcyBu
-b3QgZXZlbiBjbGVhciB3aHkgaXQgYnJva2UgZG93biBzbyBiYWRseS4gRnJvbSBhbm90aGVyCnNl
-ZWt3YXRjaGVyIHNhbXBsZSBJIHRvb2ssIGl0IGxvb2tlZCBsaWtlIGZhaXJseSBsaW5lYXIgd3Jp
-dGluZy4KClNvIEkgdGhyZXcgWEZTIGJhY2sgaW4sIHJlc3RhcnRlZCB0aGUgcmVzdG9yZSwgYW5k
-IGl0IHdlbnQgdmVyeQpzbW9vdGhseSB3aGlsZSBzdGlsbCBwcm92aWRpbmcgYWNjZXB0YWJsZSBp
-bnRlcmFjdGl2aXR5LgoKWEZTIGlzIG5vdCBhIHBhbmFjZWEgKG9idmlvdXNseSksIGFuZCBpdCBt
-YXkgYmUgYSBiaXQgc2xvd2VyIGluIG1hbnkKY2FzZXMsIGFuZCBkb2VzbuKAmXQgc2VlbSB0byBj
-b3BlIHdlbGwgd2l0aCBmcmFnbWVudGVkIGZyZWUgc3BhY2UgKHdoaWNoCmlzIHdoYXQgdGhpcyBl
-bnRpcmUgdGhyZWFkIGlzIHJlYWxseSBhYm91dCksIGJ1dCBvdmVyYWxsIGl0IGZlZWxzIG1vcmUK
-d2VsbC1yb3VuZGVkLiBBZnRlciBhbGwsIEkgZG9u4oCZdCByZWFsbHkgY2FyZSBob3cgbXVjaCBp
-dCB3cml0ZXMgcGVyCnRpbWUgdW5pdCwgYXMgbG9uZyBhcyBpdOKAmXMgbm90IHJpZGljdWxvdXNs
-eSBsaXR0bGUgYW5kIGl0IGRvZXNu4oCZdApicmluZyBldmVyeXRoaW5nIGVsc2UgdG8gYSBoYWx0
-LgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
-aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
-dGluZm8veGZzCg==
+On Thu, Apr 05, 2012 at 12:28:35PM -0700, Eric Sandeen wrote:
+> We encountered a bug after log replay failed on mount:
+> 
+> [14217.617258] XFS (md5): log mount/recovery failed: error 5
+> [14217.624037] XFS (md5): log mount failed
+> [14234.866732] general protection fault: 0000 [#1] SMP 
+> ...
+> [14234.913286] RIP: 0010:[<ffffffff810c2cbe>]  [<ffffffff810c2cbe>]
+> __lock_acquire+0x2be/0xa20
+> [14234.913293] RSP: 0018:ffff880116c6fa38  EFLAGS: 00010002
+> [14234.913294] RAX: 6b6b6b6b6b6b6b6b RBX: 0000000000000000 RCX: 0000000000000000
+> [14234.913321] Call Trace:
+> [14234.913335]  [<ffffffff810c3aad>] lock_acquire+0x9d/0x1f0
+> [14234.913365]  [<ffffffff8162f646>] _raw_spin_lock+0x46/0x80
+> [14234.913372]  [<ffffffff8130e60d>] _atomic_dec_and_lock+0x4d/0x70
+> [14234.913382]  [<ffffffffa0392801>] xfs_buf_rele+0x51/0x1e0 [xfs]
+> [14234.913400]  [<ffffffffa039554f>] xfs_flush_buftarg+0x10f/0x130 [xfs]
+> [14234.913410]  [<ffffffffa03955a4>] xfs_free_buftarg+0x34/0x70 [xfs]
+> [14234.913422]  [<ffffffffa03a4634>] xfs_close_devices+0x64/0x70 [xfs]
+> [14234.913433]  [<ffffffffa03a5890>] xfs_fs_fill_super+0x180/0x2a0 [xfs]
+> [14234.913436]  [<ffffffff811b7a71>] mount_bdev+0x1d1/0x220
+> [14234.913460]  [<ffffffffa03a3ad5>] xfs_fs_mount+0x15/0x20 [xfs]
+> [14234.913462]  [<ffffffff811b8603>] mount_fs+0x43/0x1b0
+> [14234.913468]  [<ffffffff811d473a>] vfs_kern_mount+0x6a/0xd0
+> [14234.913471]  [<ffffffff811d6124>] do_kern_mount+0x54/0x110
+> [14234.913473]  [<ffffffff811d7c34>] do_mount+0x1a4/0x260
+> [14234.913476]  [<ffffffff811d8100>] sys_mount+0x90/0xe0
+> [14234.913478]  [<ffffffff81639202>] system_call_fastpath+0x16/0x1b
+> 
+> 
+> RAX is freed memory.
+> 
+> After xfs_mountfs() fails to replay the log, it
+> goes to out_perag_free: which does xfs_free_perag().
+> 
+> Later down the mount failure path, xfs_buf_rele() checks for (!pag):
+> 
+>         if (!pag) {
+>                 ASSERT(list_empty(&bp->b_lru));
+>                 ASSERT(RB_EMPTY_NODE(&bp->b_rbnode));
+>                 if (atomic_dec_and_test(&bp->b_hold))
+>                         xfs_buf_free(bp);
+>                 return;
+>         }
+> 
+> but we did not set the perag to NULL, so this doesn't get hit.
+
+Sure, bp->b_pag is only set for cached buffers, but it also has a
+reference to the perag structure so it is supposed to be guaranteed
+that the perag structure is valid until the buffer is freed and the
+perag reference is dropped.
+
+> Next we do:
+> 
+>         if (atomic_dec_and_lock(&bp->b_hold, &pag->pag_buf_lock)) {
+> 
+> which goes bang if the perag has been freed.
+
+Which means that the unmount has failed to flush all the active
+buffers. This woul dhave resulted in an ASSERT() firing in
+xfs_free_perag() on a debug kernel....
+
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> Full disclosure: not yet tested, will do soon :)
+> 
+> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+> index 1ffead4..ad830f7 100644
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -252,6 +252,7 @@ __xfs_free_perag(
+>  
+>  	ASSERT(atomic_read(&pag->pag_ref) == 0);
+
+.... right here, or even even before call_rcu() was called
+
+>  	kmem_free(pag);
+> +	pag = NULL;
+>  }
+
+As it is, I don't quite understand what setting a local variable to
+NULL is supposed to acheive here - the perag structure has been
+removed from the radix tree and zeroing a local variable doesn't do
+anything globally visible...
+
+What is more likely is that the log mount failure path is not
+flushing the buftarg correctly before tearing down the perag
+structures. Indeed, a log mount failure (and a perag data
+intialisation failure) will simply tear down the perag structures
+without waiting for cached buffers to be flushed in xfs_mountfs(),
+so that is going to the root cause of this problem. i.e. we need
+xfs_flush_buftarg() calls in the mountfs error handling path....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
