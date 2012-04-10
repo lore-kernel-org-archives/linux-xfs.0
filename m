@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3AF0NQc168975 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 10:00:28 -0500
-Message-ID: <4F844B02.2030301@sgi.com>
-Date: Tue, 10 Apr 2012 10:00:18 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q3AFBsRM172883 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 10:11:54 -0500
+Received: from psmtp.com (na3sys009aog127.obsmtp.com [74.125.149.107]) by
+	cuda.sgi.com with SMTP id BK3JatMnKYv7ED5G for
+	<xfs@oss.sgi.com>; Tue, 10 Apr 2012 08:11:53 -0700 (PDT)
+Received: by lbok13 with SMTP id k13so2367564lbo.3
+	for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 08:11:51 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
-References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
-	<1334052213-26870-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1334052213-26870-2-git-send-email-david@fromorbit.com>
+Date: Tue, 10 Apr 2012 11:11:51 -0400
+Message-ID: <CAFcHYYCoVOUOhzoeY1y576gRQzROMjQVDefa0iBF_fcCk0WFXw@mail.gmail.com>
+Subject: Re: XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1518 of file
+	fs/xfs/xfs_alloc.c.
+From: Robert Bennett <rbennett@mail.crawford.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,86 +21,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============8209222774283516866=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 04/10/12 05:03, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Buffers are always returned locked from the lookup routines. Hence
-> we don't need to tell the lookup routines to return locked buffers,
-> on to try and lock them. Remove XBF_LOCK from all the callers and
-> from internal buffer cache usage.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
->   fs/xfs/xfs_attr.c        |    5 ++---
->   fs/xfs/xfs_attr_leaf.c   |    2 +-
->   fs/xfs/xfs_buf.c         |   20 +++++---------------
->   fs/xfs/xfs_buf.h         |    4 +---
->   fs/xfs/xfs_fsops.c       |   13 +++++--------
->   fs/xfs/xfs_ialloc.c      |    3 +--
->   fs/xfs/xfs_inode.c       |   16 +++++++---------
->   fs/xfs/xfs_log_recover.c |    7 +++----
->   fs/xfs/xfs_rw.c          |    2 +-
->   fs/xfs/xfs_trans_buf.c   |    4 ++--
->   fs/xfs/xfs_vnodeops.c    |    2 +-
->   11 files changed, 29 insertions(+), 49 deletions(-)
->
+--===============8209222774283516866==
+Content-Type: multipart/alternative; boundary=f46d04426bd6d76d1b04bd548a4a
 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index 7a945fd..8d76df1 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -179,7 +179,7 @@ xfs_buf_alloc(
->   	/*
->   	 * We don't want certain flags to appear in b_flags.
->   	 */
-> -	flags&= ~(XBF_LOCK|XBF_MAPPED|XBF_DONT_BLOCK|XBF_READ_AHEAD);
-> +	flags&= ~(XBF_MAPPED|XBF_DONT_BLOCK|XBF_READ_AHEAD);
->
->   	atomic_set(&bp->b_hold, 1);
->   	atomic_set(&bp->b_lru_ref, 1);
-> @@ -578,19 +578,14 @@ found:
->   		if (unlikely(error)) {
->   			xfs_warn(target->bt_mount,
->   				"%s: failed to map pages\n", __func__);
-> -			goto no_buffer;
-> +			xfs_buf_relse(bp);
-> +			return NULL;
->   		}
->   	}
->
->   	XFS_STATS_INC(xb_get);
->   	trace_xfs_buf_get(bp, flags, _RET_IP_);
->   	return bp;
-> -
-> -no_buffer:
-> -	if (flags&  (XBF_LOCK | XBF_TRYLOCK))
-> -		xfs_buf_unlock(bp);
-> -	xfs_buf_rele(bp);
-> -	return NULL;
->   }
+--f46d04426bd6d76d1b04bd548a4a
+Content-Type: text/plain; charset=ISO-8859-1
+
+I am new to this mailing list, so please forgive me if my protocol is not
+polished.
+
+The XFS performance is phenomenal for our use case.  The question(s) is
+what can be done to mitigate this issue.  The particulars are as follows:
+OS = RedHat Linux 6.2
+LVM2
+DRBD synching between two Super Micro Head Nodes
+~ 35TB
+Hardware RAID = LSI
+XFS created with default settings
+
+Thanks for any help.
+
+-bob
+
+--f46d04426bd6d76d1b04bd548a4a
+Content-Type: text/html; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+
+I am new to this mailing list, so please forgive me if my protocol is not p=
+olished.=A0 <br><br>The XFS performance is phenomenal for our use case.=A0 =
+The question(s) is what can be done to mitigate this issue.=A0 The particul=
+ars are as follows:<br>
+OS =3D RedHat Linux 6.2<br>LVM2<br>DRBD synching between two Super Micro He=
+ad Nodes<br>~ 35TB<br>Hardware RAID =3D LSI<br>XFS created with default set=
+tings<br><br>Thanks for any help.<br><br>-bob<br>
+
+--f46d04426bd6d76d1b04bd548a4a--
 
 
-Do you have a new copy of the "xfs: fix buffer lookup race on allocation 
-failure" patch. It would go about here in the sources.
-
-The reason I ask, the sources that I have for xfs_buf_get() seems to 
-still have a "goto no_buffer" for the failed xfs_buf_allocate_memory() 
-call and this patch removes that call. I did not find anything in the 8 
-buf clean-up series that would alter this area.
-
-
-Thank-you,
-
---Mark Tinguely <tinguely@sgi.com>
+--===============8209222774283516866==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8209222774283516866==--
