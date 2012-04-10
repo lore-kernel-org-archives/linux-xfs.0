@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3A9rSOt080250 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 04:53:28 -0500
+	q3AA6DPw081012 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 05:06:13 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	tE7oBJCGt6AVxSu4 for <xfs@oss.sgi.com>;
-	Tue, 10 Apr 2012 02:53:26 -0700 (PDT)
+	EkqifRANqHVi4ziA for <xfs@oss.sgi.com>;
+	Tue, 10 Apr 2012 03:06:12 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SHXlM-0002WC-6p
-	for xfs@oss.sgi.com; Tue, 10 Apr 2012 19:53:24 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SHXxi-0002XT-Gd
+	for xfs@oss.sgi.com; Tue, 10 Apr 2012 20:06:10 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SHXir-0006w5-52
-	for xfs@oss.sgi.com; Tue, 10 Apr 2012 19:50:49 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SHXvD-000701-Dd
+	for xfs@oss.sgi.com; Tue, 10 Apr 2012 20:03:35 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] [RFC] xfs: use iolock on XFS_IOC_ALLOCSP calls
-Date: Tue, 10 Apr 2012 19:50:49 +1000
-Message-Id: <1334051449-26631-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/3] xfs: More xfs_buf cleanups
+Date: Tue, 10 Apr 2012 20:03:30 +1000
+Message-Id: <1334052213-26870-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,74 +31,14 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+These 3 patches sit on top of my recent series titled:
 
-fsstress has a particular effective way of stopping debug XFS
-kernels. We keep seeing assert failures due finding delayed
-allocation extents where there should be none. This shows up when
-extracting extent maps and we are holding all the locks we should be
-to prevent races, so this really makes no sense to see these errors.
+[PATCH 0/8] xfs: clean up unit usage in xfs_buf V2
 
-After checking that fsstress does not use mmap, it occurred to me
-that fsstress uses something that no sane application uses - the
-XFS_IOC_ALLOCSP ioctl interfaces for preallocation. These interfaces
-do allocation of blocks beyond EOF without using preallocation, and
-then call setattr to extend and zero the allocated blocks.
-
-THe problem here is this is a buffered write, and hence the
-allocation is a delayed allocation. Unlike the buffered IO path, the
-allocation and zeroing are not serialised using the IOLOCK. Hence
-the ALLOCSP operation can race with operations holding the iolock to
-prevent buffered IO operations from occurring.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_vnodeops.c |   22 +++++++++++++++++++---
- 1 files changed, 19 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 6c18745..9b6c94e 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2315,17 +2315,33 @@ xfs_change_file_space(
- 	case XFS_IOC_ALLOCSP64:
- 	case XFS_IOC_FREESP:
- 	case XFS_IOC_FREESP64:
-+		/*
-+		 * These operations actually do IO when extending the file, but
-+		 * the allocation is done seperately to the zeroing that is
-+		 * done. This set of operations need to be serialised against
-+		 * other IO operations, such as truncate and buffered IO. We
-+		 * need to take the IOLOCK here to serialise the allocation and
-+		 * zeroing IO to prevent other IOLOCK holders (e.g. getbmap,
-+		 * truncate, direct IO) from racing against the transient
-+		 * allocated but not written state we can have here.
-+		 */
-+		xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		if (startoffset > fsize) {
- 			error = xfs_alloc_file_space(ip, fsize,
--					startoffset - fsize, 0, attr_flags);
--			if (error)
-+					startoffset - fsize, 0,
-+					attr_flags | XFS_ATTR_NOLOCK);
-+			if (error) {
-+				xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 				break;
-+			}
- 		}
- 
- 		iattr.ia_valid = ATTR_SIZE;
- 		iattr.ia_size = startoffset;
- 
--		error = xfs_setattr_size(ip, &iattr, attr_flags);
-+		error = xfs_setattr_size(ip, &iattr,
-+					 attr_flags | XFS_ATTR_NOLOCK);
-+		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
- 		if (error)
- 			return error;
--- 
-1.7.9
+These patches remove bits of the API that are effectively the
+default behaviour used by everything or are redundant. This just
+makes API usage simpler and gives it a smaller footprint to modify
+in future.
 
 _______________________________________________
 xfs mailing list
