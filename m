@@ -1,27 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3AFuw8G178452 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 10:56:58 -0500
-Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
-	[209.85.213.181]) by cuda.sgi.com with ESMTP id
-	P5uuCyN1ULsnzK1Z (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 10 Apr 2012 08:56:57 -0700 (PDT)
-Received: by yenq2 with SMTP id q2so3443586yen.26
-	for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 08:56:57 -0700 (PDT)
+	q3AHHZca185895 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 12:17:36 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 8B6JzNWkOHL0jXyc for
+	<xfs@oss.sgi.com>; Tue, 10 Apr 2012 10:17:34 -0700 (PDT)
+Message-ID: <4F845242.1070300@redhat.com>
+Date: Tue, 10 Apr 2012 10:31:14 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <4F844474.3010005@gmail.com>
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20120405213740.GA22824@infradead.org>
-	<CAAxjCExBcaB6J-u7ivZKWnKiF7oP10JRxzKzQNRuppHkTE2Tzw@mail.gmail.com>
-	<201204072057.38286.Martin@lichtvoll.de>
-	<CAAxjCEzRa7CpbA9iESEDjmWQMsJTjkWHJj69ADOXDa4CiRpx3w@mail.gmail.com>
-	<4F844474.3010005@gmail.com>
-Date: Tue, 10 Apr 2012 17:56:57 +0200
-Message-ID: <CAAxjCEySjXrpvJBEEA5fwMT6GkXxEogFM_=TXpdjWxL5UR_irQ@mail.gmail.com>
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-From: Stefan Ring <stefanrin@gmail.com>
+Subject: Re: [PATCH] set freed perag structures to NULL to avoid mount failure
+	oops
+References: <4F7DF263.6060802@redhat.com> <20120410071204.GO18323@dastard>
+In-Reply-To: <20120410071204.GO18323@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,31 +21,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-PiB0cnkgMTI4ayB0byA1MTJrIGZvciBzdHJpcGUgc2l6ZS4gwqBBbmQgdHJ5IHRvIGluY3JlYXNl
-IHlvdXIgYWdjb3VudCBieQo+IChuZWFybHkpIGFuIG9yZGVyIG9mIG1hZ25pdHVkZS4KCldvdWxk
-IHRoYXQgYmUgb2YgYW55IHJlYWwgdmFsdWUgdG8gYW55b25lIGhlcmUsIGV4Y2VwdCBmb3Igc2F0
-aXNmeWluZwpjdXJpb3NpdHkgKHdoaWNoIEkgZmVlbCBhcyB3ZWxsIDspKT8gQmVjYXVzZSBmcmFu
-a2x5LCBpdOKAmXMgYSBsb3Qgb2YKd29yaywgYW5kIEnigJltIHF1aXRlIHRocm91Z2ggd2l0aCB0
-aGlzIHRlZGlvdXMga2luZCBvZiBhY3Rpdml0eeKApgoKTXkgY29uY2x1c2lvbiBpcyB0aGF0IGV2
-ZXJ5dGhpbmcgc2hvdWxkIHdvcmsgd2VsbCBpZiB0aGUgbGV2ZWxzIGJlbG93CnRoZSBmaWxlIHN5
-c3RlbSBiZWhhdmVkIHRoZSB3YXkgdGhleSBzaG91bGQgYW5kIGJyb3VnaHQgdGhlIHdyaXRlcwpp
-bnRvIGEgc2FuZSBvcmRlci4gQXBwYXJlbnRseSwgYm90aCB0aGUgUkFJRCBjb250cm9sbGVyIGFz
-IHdlbGwgYXMgdGhlCkxpbnV4IGJsb2NrIHNjaGVkdWxlciBmYWlsIHRvIGRvIHNvLiBEZXNwaXRl
-IHRoZSBhbm5veWluZyBuYXR1cmUgb2YKdGhpcyBzdGF0ZSBvZiBhZmZhaXJzLCBJIGRvIGJlbGll
-dmUgdGhhdCBmaWxlIHN5c3RlbXMgc2hvdWxkIGJlIGFibGUKdG8gY291bnQgb24gdGhlIGxvd2Vy
-IGxldmVscyBvZiB0aGUgc3RhY2sgZm9yIHN1Y2ggbG93LWxldmVsIHdvcmsgYW5kCm5vdCB3b3Jr
-IGFyb3VuZCB0aGVtLCBidXQgYXBwYXJlbnRseSwgdGhleSBhcmUgb2Z0ZW4gZmFpbGVkLiBQcm9i
-YWJseQp0aGF04oCZcyBvbmUgb2YgdGhlIHJlYXNvbnMgd2h5IGFsbW9zdCBldmVyeSBmaWxlIHN5
-c3RlbSBhY3F1aXJlcyBzb21lCnNvcnQgb2YgYmxvY2sgc2NoZWR1bGluZyBvdmVyIHRpbWUuIE1h
-eWJlIHNvbWUgZGF5LCB0aGUgTGludXggSU8Kc2NoZWR1bGVyIHdpbGwgZG8gYSBiZXR0ZXIgam9i
-LiBVbmZvcnR1bmF0ZWx5LCBieSB0aGVuLCB0aGlzIGVudGlyZQppc3N1ZSB3aWxsIGJlIGlycmVs
-ZXZhbnQgYmVjYXVzZSBub2JvZHkgd2lsbCBiZSB1c2luZyByb3RhdGlvbmFsCnN0b3JhZ2UgYW55
-bW9yZSwgYXQgbGVhc3Qgbm90IGZvciBldmVyeWRheSB3b3JrLgoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On 4/10/12 2:12 AM, Dave Chinner wrote:
+> On Thu, Apr 05, 2012 at 12:28:35PM -0700, Eric Sandeen wrote:
+
+...
+
+>>  	kmem_free(pag);
+>> +	pag = NULL;
+>>  }
+> 
+> As it is, I don't quite understand what setting a local variable to
+> NULL is supposed to acheive here - the perag structure has been
+> removed from the radix tree and zeroing a local variable doesn't do
+> anything globally visible...
+
+er, right.  Ok.
+
+> What is more likely is that the log mount failure path is not
+> flushing the buftarg correctly before tearing down the perag
+> structures. Indeed, a log mount failure (and a perag data
+> intialisation failure) will simply tear down the perag structures
+> without waiting for cached buffers to be flushed in xfs_mountfs(),
+> so that is going to the root cause of this problem. i.e. we need
+> xfs_flush_buftarg() calls in the mountfs error handling path....
+
+Ok, makes sense.
+
+-Eric
+
+> Cheers,
+> 
+> Dave.
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
