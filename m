@@ -1,26 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3A4YF3U045628 for <xfs@oss.sgi.com>; Mon, 9 Apr 2012 23:34:16 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id V0Sb2pQavMLaaeBB for
-	<xfs@oss.sgi.com>; Mon, 09 Apr 2012 21:34:14 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3A4YEVU014965
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 00:34:14 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q3A4YD3S000454
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 00:34:13 -0400
-Message-ID: <4F83B844.3060508@redhat.com>
-Date: Mon, 09 Apr 2012 23:34:12 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q3A6BQkc053618 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 01:11:26 -0500
+Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id 0NNdrq1wGVto2v3O
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 09 Apr 2012 23:11:25 -0700 (PDT)
+Received: by yhjj72 with SMTP id j72so3126830yhj.26
+	for <xfs@oss.sgi.com>; Mon, 09 Apr 2012 23:11:24 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH] metadump: obfuscate symlinks by path component
+In-Reply-To: <4F8372DC.7030405@hardwarefreak.com>
+References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
+	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
+	<4F7F7C25.8040605@hardwarefreak.com>
+	<CAAxjCEyJW1b4dbKctbrgdWjykQt8Hb4Sw1RKdys3oUsehNHCcQ@mail.gmail.com>
+	<4F8055E4.1000808@hardwarefreak.com>
+	<CAAxjCEz8TpRvjvbuYPp1xf9X2HwskN5AuPak62R5Jhkg+mmFHA@mail.gmail.com>
+	<4F8372DC.7030405@hardwarefreak.com>
+Date: Tue, 10 Apr 2012 08:11:24 +0200
+Message-ID: <CAAxjCEx14NrgUatB349vx8h0kCxE=cS7d4DLLPnjwB035tB3Hw@mail.gmail.com>
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,104 +32,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: stan@hardwarefreak.com
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-xfs_metadump currently obfuscates entire symlinks without regard
-to path components; this can lead to a corrupt image when restoring
-a metadump containing extremely long symlinks:
-
-Phase 3 - for each AG...
-        - scan and clear agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-component of symlink in inode 145 too long
-problem with symbolic link in inode 145
-cleared inode 145
-... <more trail of woe>
-
-Fix this by consolidating symlink obfuscation into a new
-function which obfuscates one path component at a time.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-Yes, I need to do an xfstest for this.  metadumping a filesystem
-after fsstressing it works well.
-
-diff --git a/db/metadump.c b/db/metadump.c
-index c5ffddb..9f15d9e 100644
---- a/db/metadump.c
-+++ b/db/metadump.c
-@@ -956,6 +956,40 @@ obfuscate_sf_dir(
- }
- 
- static void
-+obfuscate_path_components(
-+	char			*buf,
-+	__uint64_t		len)
-+{
-+	uchar_t			*comp;
-+	xfs_dahash_t		hash;
-+
-+	comp = (uchar_t *)buf;
-+	while (comp < (uchar_t *)buf + len) {
-+		char	*slash;
-+		int	namelen;
-+
-+		/* find slash at end of this component */
-+		slash = strchr((char *)comp, '/');
-+		if (!slash) {
-+			/* last (or single) component */
-+			namelen = strlen((char *)comp);
-+			hash = libxfs_da_hashname(comp, namelen);
-+			obfuscate_name(hash, namelen, comp);
-+			break;
-+		}
-+		namelen = slash - (char *)comp;
-+		/* handle leading or consecutive slashes */
-+		if (!namelen) {
-+			comp++;
-+			continue;
-+		}
-+		hash = libxfs_da_hashname(comp, namelen);
-+		obfuscate_name(hash, namelen, comp);
-+		comp += namelen + 1;
-+	}
-+}
-+
-+static void
- obfuscate_sf_symlink(
- 	xfs_dinode_t		*dip)
- {
-@@ -971,8 +1005,7 @@ obfuscate_sf_symlink(
- 	}
- 
- 	buf = (char *)XFS_DFORK_DPTR(dip);
--	while (len > 0)
--		buf[--len] = random() % 127 + 1;
-+	obfuscate_path_components(buf, len);
- }
- 
- static void
-@@ -1176,11 +1209,8 @@ obfuscate_symlink_blocks(
- 	char			*block,
- 	xfs_dfilblks_t		count)
- {
--	int 			i;
--
- 	count <<= mp->m_sb.sb_blocklog;
--	for (i = 0; i < count; i++)
--		block[i] = random() % 127 + 1;
-+	obfuscate_path_components(block, count);
- }
- 
- #define MAX_REMOTE_VALS		4095
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+PiAxNTBNQi9zIGlzbid0IGNvcnJlY3QuIMKgU2hvdWxkIGJlIGNsb3NlciB0byA0NTBNQi9zLiDC
+oFRoaXMgbWFrZXMgaXQKPiBhcHBlYXIgdGhhdCB5b3UncmUgd3JpdGluZyBhbGwgdGhlc2UgZmls
+ZXMgdG8gYSBzaW5nbGUgZGlyZWN0b3J5LiDCoElmCj4geW91J3JlIHdyaXRpbmcgdGhlbSBmYWly
+bHkgZXZlbmx5IHRvIDMgZGlyZWN0b3JpZXMgb3IgYSBtdWx0aXBsZSBvZiAzLAo+IHlvdSBzaG91
+bGQgc2VlIGNsb3NlIHRvIDQ1ME1CL3MsIGlmIHVzaW5nIG1kcmFpZCBsaW5lYXIgb3ZlciAzIFA0
+MDAKPiBSQUlEMSBwYWlycy4gwqBJZiB0aGlzIGlzIHdoYXQgeW91J3JlIGRvaW5nIHRoZW4gc29t
+ZXRoaW5nIHNlZW1zIHdyb25nCj4gc29tZXdoZXJlLiDCoFRyeSB1bnBhY2tpbmcgYSBrZXJuZWwg
+dGFyYmFsbC4gwqBMb3RzIG9mIHN1YmRpcmVjdG9yaWVzIHRvCj4gZXhlcmNpc2UgYWxsIDMgQUdz
+IHRodXMgYWxsIDMgc3BpbmRsZXMuCgpUaGUgc3BpbmRsZXMgd2VyZSBleGVyY2lzZWQ7IEkgd2F0
+Y2hlZCBpdCB3aXRoIGlvc3RhdC4gTWF5YmUgSSBjb3VsZApoYXZlIHJlYWNoZWQgbW9yZSB3aXRo
+IG1vcmUgcGFyYWxsZWxpc20sIGJ1dCB0aGF0IHdhc27igJl0IG15IGdvYWwgYXQKYWxsLiBBbHRo
+b3VnaCwgb3ZlciB0aGUgY291cnNlIG9mIHRoZXNlIGV4cGVyaW1lbnRzLCBJIGdvdCB0byBkb3Vi
+dAp0aGF0IHRoZSBjb250cm9sbGVyIGNvdWxkIGV2ZW4gaGFuZGxlIHRoaXMgZGF0YSByYXRlLgoK
+Pj4gc2ltcGxlIGNvcHkgb2YgdGhlIHRhciBvbnRvIHRoZSBYRlMgZmlsZSBzeXN0ZW0geWllbGRz
+IHRoZSBzYW1lIGxpbmVhcgo+PiBwZXJmb3JtYW5jZSwgdGhlIHNhbWUgYXMgd2l0aCBleHQ0LCBi
+dHcuIFNvIDE1MCBNQi9zZWMgc2VlbXMgdG8gYmUgdGhlCj4+IGJlc3QgdGhlc2UgZGlza3MgY2Fu
+IGRvLCBtZWFuaW5nIHRoYXQgdGhlb3JldGljYWxseSwgd2l0aCAzIEFHcywgaXQKPj4gc2hvdWxk
+IGJlIGFibGUgdG8gcmVhY2ggNDUwIE1CL3NlYyB1bmRlciBvcHRpbWFsIGNvbmRpdGlvbnMuCj4K
+PiBUaGUgb3B0aW1hbCBjb25kaXRpb24sIGFnYWluLCByZXF1aXJlcyB3cml0aW5nIDMgb2YgdGhp
+cyBmaWxlIHRvIDMKPiBkaXJlY3RvcmllcyB0byBoaXQgfjQ1ME1CL3MsIHdoaWNoIHlvdSBzaG91
+bGQgZ2V0IGNsb3NlIHRvIGlmIHVzaW5nCj4gbWRyYWlkIGxpbmVhciBvdmVyIFJBSUQxIHBhaXJz
+LiDCoFhGUyBpcyBhIGZpbGVzeXN0ZW0gYWZ0ZXIgYWxsLCBzbyBpdCdzCj4gcGFyYWxsZWxpc20g
+bXVzdCBjb21lIGZyb20gbWFuaXB1bGF0aW5nIHVzYWdlIG9mIGZpbGVzeXN0ZW0gc3RydWN0dXJl
+cy4KPiDCoEkgdGhvdWdodCBJIGV4cGxhaW5lZCBhbGwgb2YgdGhpcyBwcmV2aW91c2x5IHdoZW4g
+SSBpbnRyb2R1Y2VkIHRoZSAiWEZTCj4gY29uY2F0IiBpbnRvIHRoaXMgdGhyZWFkLgoKVGhlIG9w
+dGltYWwgY29uZGl0aW9uIHdvdWxkIGJlIDMgcGFyYWxsZWwgd3JpdGVzIG9mIGh1Z2UgZmlsZXMs
+IHdoaWNoCmNhbiBiZSBlYXNpbHkgd3JpdHRlbiBsaW5lYXJseS4gTm90IHRob3VzYW5kcyBvZiB0
+aW55IGZpbGVzLgoKPj4gQnV0IHRoZW4gSSBndWVzcyBJ4oCZbSBiYWNrIHRvIGV4dDQgbGFuZC4g
+WEZTIGp1c3QgZG9lc27igJl0IG9mZmVyIGVub3VnaAo+PiBiZW5lZml0cyBpbiB0aGlzIGNhc2Ug
+dG8ganVzdGlmeSB0aGUgaGFzc2xlLgo+Cj4gSWYgeW91IHdlcmUgd3JpdGluZyB0byBvbmx5IG9u
+ZSBkaXJlY3RvcnkgSSBjYW4gdW5kZXJzdGFuZCB0aGlzCj4gc2VudGltZW50LiDCoEFnYWluLCBp
+ZiB5b3Ugd2VyZSB3cml0aW5nIDMgZGlyZWN0b3JpZXMgZmFpcmx5IGV2ZW5seSwgd2l0aAo+IHRo
+ZSBtZCBjb25jYXQsIHRoZW4geW91ciBzZW50aW1lbnQgaGVyZSBzaG91bGQgYmUgcXVpdGUgZGlm
+ZmVyZW50LgoKSGFoYSwgSSBtYWRlIGEgVS10dXJuIG9uIHRoaXMgb25lLiBYRlMgaXMgYmFjayBv
+biB0aGUgdGFibGUgKGFuZCBvbgp0aGUgZGlza3Mgbm93KSA7KS4gV2hlbiBJIHRob3VnaHQgSSB3
+YXMgZG9uZSwgSSB3YW50ZWQgdG8gcmVzdG9yZSBhCmZldyBsYXJnZSBLVk0gaW1hZ2VzIHdoaWNo
+IHdlcmUgb24gdGhlIGRpc2tzIHByaW9yIHRvIHRoZSBSQUlECnJlY29uZmlndXJhdGlvbi4gV2l0
+aCBleHQ0LCBJIHdhdGNoZWQgaW9zdGF0IHdyaXRpbmcgYXQgMTMwTUIvcyBmb3IgYQp3aGlsZS4g
+QWZ0ZXIgMiBvciAzIG1pbnV0ZXMsIGl0IGJyb2tlIGRvd24gY29tcGxldGVseSBhbmQgbGFuZ3Vp
+c2hlZAphdCAzMC00ME1CL3MgZm9yIG1hbnkgbWludXRlcywgZXZlbiBhZnRlciBJIGhhZCBTSUdT
+VE9QZWQgdGhlIHdyaXRpbmcKcHJvY2VzcywgZHVyaW5nIHdoaWNoIGl0IHdhcyBuZWFybHkgaW1w
+b3NzaWJsZSB0byB1c2UgdmltIHRvIGVkaXQgYQpmaWxlIG9uIHRoZSBleHQ0IHBhcnRpdGlvbi4g
+SXQgd291bGQgcGF1c2UgZm9yIHRlbnMgb2Ygc2Vjb25kcyBhbGwgdGhlCnRpbWUuIEl04oCZcyBu
+b3QgZXZlbiBjbGVhciB3aHkgaXQgYnJva2UgZG93biBzbyBiYWRseS4gRnJvbSBhbm90aGVyCnNl
+ZWt3YXRjaGVyIHNhbXBsZSBJIHRvb2ssIGl0IGxvb2tlZCBsaWtlIGZhaXJseSBsaW5lYXIgd3Jp
+dGluZy4KClNvIEkgdGhyZXcgWEZTIGJhY2sgaW4sIHJlc3RhcnRlZCB0aGUgcmVzdG9yZSwgYW5k
+IGl0IHdlbnQgdmVyeQpzbW9vdGhseSB3aGlsZSBzdGlsbCBwcm92aWRpbmcgYWNjZXB0YWJsZSBp
+bnRlcmFjdGl2aXR5LgoKWEZTIGlzIG5vdCBhIHBhbmFjZWEgKG9idmlvdXNseSksIGFuZCBpdCBt
+YXkgYmUgYSBiaXQgc2xvd2VyIGluIG1hbnkKY2FzZXMsIGFuZCBkb2VzbuKAmXQgc2VlbSB0byBj
+b3BlIHdlbGwgd2l0aCBmcmFnbWVudGVkIGZyZWUgc3BhY2UgKHdoaWNoCmlzIHdoYXQgdGhpcyBl
+bnRpcmUgdGhyZWFkIGlzIHJlYWxseSBhYm91dCksIGJ1dCBvdmVyYWxsIGl0IGZlZWxzIG1vcmUK
+d2VsbC1yb3VuZGVkLiBBZnRlciBhbGwsIEkgZG9u4oCZdCByZWFsbHkgY2FyZSBob3cgbXVjaCBp
+dCB3cml0ZXMgcGVyCnRpbWUgdW5pdCwgYXMgbG9uZyBhcyBpdOKAmXMgbm90IHJpZGljdWxvdXNs
+eSBsaXR0bGUgYW5kIGl0IGRvZXNu4oCZdApicmluZyBldmVyeXRoaW5nIGVsc2UgdG8gYSBoYWx0
+LgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1h
+aWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlz
+dGluZm8veGZzCg==
