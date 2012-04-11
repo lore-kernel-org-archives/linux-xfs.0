@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BK5G93106187 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:05:16 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	cAPbztCAeT7lGzFC (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Apr 2012 13:05:15 -0700 (PDT)
-Date: Wed, 11 Apr 2012 16:05:14 -0400
+	q3BJxMac105768 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 14:59:23 -0500
+Date: Wed, 11 Apr 2012 15:59:15 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] [RFC] xfs: use iolock on XFS_IOC_ALLOCSP calls
-Message-ID: <20120411200514.GF28816@infradead.org>
-References: <1334051449-26631-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] xfs: don't fill statvfs with project quota for a
+	directory if it was not enabled.
+Message-ID: <20120411195915.GA28816@infradead.org>
+References: <4F77DFDB.1040802@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1334051449-26631-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <4F77DFDB.1040802@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,14 +23,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-The patch looks good to me.  I wonder if we should write the zeroes to
-disk directly instead of the buffer cache.  In the end it's probably
-that no one uses the interfaces and cares anyway.
+Sorry for taking so long to get back to this, but conferences and work
+kept me really busy the last two weeks.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> -	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
+> -	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
+> -			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
+> -		xfs_qm_statvfs(ip, statp);
+
+I thjink the correct fix here is to replace the || between the inode
+flag and quota flag check with and && - we want both the above
+conditions to be true.  Can you respin the patch by doing that and make
+sure it still passes the test case?  I'd like to send it of to -stable
+ASAP.
 
 _______________________________________________
 xfs mailing list
