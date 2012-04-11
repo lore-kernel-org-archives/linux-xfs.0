@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3B7P55Z034457 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 02:25:06 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UTD75GgLSTn7KEL7 for
-	<xfs@oss.sgi.com>; Wed, 11 Apr 2012 00:25:04 -0700 (PDT)
-Date: Wed, 11 Apr 2012 09:24:50 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH] 273: don't delete everything if $SCRATCH_MNT isn't set
-In-Reply-To: <4F8430FF.2090706@netapp.com>
-Message-ID: <alpine.LFD.2.00.1204110917300.3798@dhcp-27-109.brq.redhat.com>
-References: <4F832C25.3080408@netapp.com> <20120409214445.GJ18323@dastard>
-	<4F8430FF.2090706@netapp.com>
+	q3BGPDHS083135 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 11:25:13 -0500
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 56E748F8054
+	for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 09:25:10 -0700 (PDT)
+Date: Wed, 11 Apr 2012 11:26:27 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: [PATCH] disable tags in post-receive hook
+Message-ID: <20120411162627.GJ1802@sgi.com>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,79 +24,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Bryan Schumaker <bjschuma@netapp.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, 10 Apr 2012, Bryan Schumaker wrote:
+Hey Folks,
 
-> On 04/09/12 17:44, Dave Chinner wrote:
-> 
-> > On Mon, Apr 09, 2012 at 02:36:21PM -0400, Bryan Schumaker wrote:
-> >> The cleanup function is trapped before _require_scratch() is called, and
-> >> then expands "rm -rf $SCRATCH_MNT/*" to "rm -rf /*"
-> > 
-> > It doesn't need to clean up the scratch device - tests need to mkfs
-> > it first before using it, so just remove the $tmp* files. The sae
-> > fix is needed for tests 274 and 275.
-> > 
-> > Also, it shouldn't be using "-rf" to do cleanup - "rm -f $tmp.*" is
-> > sufficient to remove all the tmp files...
-> 
-> 
-> Thanks for looking!  Maybe something like this?  (copying what 272 does):
+    Yesterday I pushed tags to the oss.sgi.com xfs git repository and forgot to
+    disable the post-receive hook which generates email to the list at commit
+    time.  You probably saw the resulting mailbomb.  I'm sorry about that.  In
+    order to make sure it doesn't happen again next time, I have applied the
+    following patch to our post-receive hook:
 
-This is actually not needed at all. Simply removing the 'rm -rf
-$SCRATCH_MNT/*' line should be good enough :).
 
-There is no need to remove anything from SCRATCH_DEV on cleanup, as
-well as prior to actual testing.
+--- post-receive-email.xfs	2009-01-16 01:05:09.000000000 -0600
++++ post-receive-email.xfs.tags_disabled	2012-04-11 10:39:30.542537604 -0500
+@@ -105,6 +105,9 @@
+ 			# un-annotated tag
+ 			refname_type="tag"
+ 			short_refname=${refname##refs/tags/}
++			# bpm: clear recipients to disable sending email for 
++			# tags.  I just mail bombed the list.  3/11/12
++			recipients=""
+ 			;;
+ 		refs/tags/*,tag)
+ 			# annotated tag
+@@ -114,6 +117,9 @@
+ 			if [ -n "$announcerecipients" ]; then
+ 				recipients="$announcerecipients"
+ 			fi
++			# bpm: clear recipients to disable sending email for 
++			# tags.  I just mail bombed the list.  3/11/12
++			recipients=""
+ 			;;
+ 		refs/heads/*,commit)
+ 			# branch
 
-And Dave is right, there are more tests like this which has to be fixed.
 
-> 
-> diff --git a/273 b/273
-> index 2965132..4641e9d 100755
-> --- a/273
-> +++ b/273
-> @@ -30,14 +30,7 @@ echo "QA output created by $seq"
->  here=`pwd`
->  tmp=/tmp/$$
->  status=0	# success is the default!
-> -trap "_cleanup; exit \$status" 0 1 2 3 15
-> -
-> -_cleanup()
-> -{
-> -	cd /
-> -	rm -rf $SCRATCH_MNT/* $tmp.*
-> -	_scratch_unmount
-> -}
-> +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
->  
->  . ./common.rc
->  . ./common.filter
-> @@ -138,7 +131,18 @@ umount $SCRATCH_DEV 2>/dev/null
->  _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
->  _scratch_mount
->  
-> -_do_workload
-> +if ! _do_workload; then
-> +	echo "workout failed"
-> +	_scratch_unmount
-> +	status=1
-> +	exit
-> +fi
-> +
-> +if ! _scratch_unmount; then
-> +	echo "failed to umount"
-> +	status=1
-> +	exit
-> +fi
->  
->  _check_scratch_fs
->  status=$?
-> 
+    I've tested it out and it seems to have the desired effect.  So... just a
+    heads up, you won't be receiving mail for new tags in the xfs git repo on
+    oss.sgi.com.
 
--- 
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
