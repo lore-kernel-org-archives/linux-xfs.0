@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BK5nCL106228 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:05:50 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	M1z8Dtlekv8QI3kc (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Apr 2012 13:05:48 -0700 (PDT)
-Date: Wed, 11 Apr 2012 16:05:47 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
-Message-ID: <20120411200547.GG28816@infradead.org>
-References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
-	<1334052213-26870-2-git-send-email-david@fromorbit.com>
+	q3BKbcJY108042 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:37:38 -0500
+Received: from fieldses.org (fieldses.org [174.143.236.118]) by cuda.sgi.com
+	with ESMTP id OyuMIAuaQRVjKy7K (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Apr 2012 13:37:37 -0700 (PDT)
+Date: Wed, 11 Apr 2012 16:37:35 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: detecting case-insensitivity
+Message-ID: <20120411203735.GB31706@fieldses.org>
+References: <20120407140029.GA24090@fieldses.org>
+	<20120411200335.GD28816@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1334052213-26870-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120411200335.GD28816@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,13 +27,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Looks good, although it will have context clashes with my imap changes.
+On Wed, Apr 11, 2012 at 04:03:35PM -0400, Christoph Hellwig wrote:
+> Can you add a new s_feature_flags instead of s_flags which is shared
+> with the mount user ABI?  MS_I_VERSION should also move there.
 
+I was wondering about that.  Yes, that makes a lot more sense, I'll work
+on it.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+--b.
 
 _______________________________________________
 xfs mailing list
