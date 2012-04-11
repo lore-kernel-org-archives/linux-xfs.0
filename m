@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BK6ngc106296 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:06:49 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DjOVhcz8Ns99Z7hB (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Apr 2012 13:06:48 -0700 (PDT)
-Date: Wed, 11 Apr 2012 16:06:47 -0400
+	q3BKMF2j107368 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:22:15 -0500
+Date: Wed, 11 Apr 2012 16:22:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfs: kill XBF_DONTBLOCK
-Message-ID: <20120411200647.GI28816@infradead.org>
-References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
-	<1334052213-26870-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] disable tags in post-receive hook
+Message-ID: <20120411202212.GA16352@infradead.org>
+References: <20120411162627.GJ1802@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1334052213-26870-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120411162627.GJ1802@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,12 +22,10 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Looks good.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Looks like a useful change to me.
 
 _______________________________________________
 xfs mailing list
