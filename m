@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BJxMac105768 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 14:59:23 -0500
-Date: Wed, 11 Apr 2012 15:59:15 -0400
+	q3BK7Wbp106330 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:07:32 -0500
+Date: Wed, 11 Apr 2012 16:07:29 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: don't fill statvfs with project quota for a
-	directory if it was not enabled.
-Message-ID: <20120411195915.GA28816@infradead.org>
-References: <4F77DFDB.1040802@oracle.com>
+Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
+Message-ID: <20120411200729.GJ28816@infradead.org>
+References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
+	<1334052213-26870-2-git-send-email-david@fromorbit.com>
+	<4F844B02.2030301@sgi.com> <20120410222027.GR18323@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F77DFDB.1040802@oracle.com>
+In-Reply-To: <20120410222027.GR18323@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,22 +24,22 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-Sorry for taking so long to get back to this, but conferences and work
-kept me really busy the last two weeks.
+On Wed, Apr 11, 2012 at 08:20:27AM +1000, Dave Chinner wrote:
+> > The reason I ask, the sources that I have for xfs_buf_get() seems to
+> > still have a "goto no_buffer" for the failed
+> > xfs_buf_allocate_memory() call and this patch removes that call. I
+> > did not find anything in the 8 buf clean-up series that would alter
+> > this area.
+> 
+> I'm sure I posted it previously. Let me update all the reviewed-by
+> tags and I'll resend the entire series....
 
-> -	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
-> -	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
-> -			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
-> -		xfs_qm_statvfs(ip, statp);
-
-I thjink the correct fix here is to replace the || between the inode
-flag and quota flag check with and && - we want both the above
-conditions to be true.  Can you respin the patch by doing that and make
-sure it still passes the test case?  I'd like to send it of to -stable
-ASAP.
+I think Mark meant the patch to fix the error handling for failed
+allocation, which needs to be redone to only insert the buffer into the
+rbtree once it's fully set up.
 
 _______________________________________________
 xfs mailing list
