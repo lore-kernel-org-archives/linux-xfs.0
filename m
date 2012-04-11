@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BLxhic117459 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 16:59:43 -0500
-Date: Wed, 11 Apr 2012 17:00:57 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] disable tags in post-receive hook
-Message-ID: <20120411220057.GQ1802@sgi.com>
-References: <20120411162627.GJ1802@sgi.com>
-	<20120411202212.GA16352@infradead.org>
+	q3BK5G93106187 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:05:16 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	cAPbztCAeT7lGzFC (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Apr 2012 13:05:15 -0700 (PDT)
+Date: Wed, 11 Apr 2012 16:05:14 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] [RFC] xfs: use iolock on XFS_IOC_ALLOCSP calls
+Message-ID: <20120411200514.GF28816@infradead.org>
+References: <1334051449-26631-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120411202212.GA16352@infradead.org>
+In-Reply-To: <1334051449-26631-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,19 +28,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hey,
+The patch looks good to me.  I wonder if we should write the zeroes to
+disk directly instead of the buffer cache.  In the end it's probably
+that no one uses the interfaces and cares anyway.
 
-On Wed, Apr 11, 2012 at 04:22:12PM -0400, Christoph Hellwig wrote:
-> Looks like a useful change to me.
-
-I don't think anyone will really miss the tag notification.  If anyone
-really feels otherwise they have the opportunity to say so.  ;)
-
-Thanks,
-       Ben
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
