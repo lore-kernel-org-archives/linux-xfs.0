@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BKAV5H106514 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:10:31 -0500
-Received: from mx2.netapp.com (mx2.netapp.com [216.240.18.37]) by cuda.sgi.com
-	with ESMTP id zDggOcf3WsgGdzJC (version=TLSv1 cipher=RC4-SHA
-	bits=128 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 11 Apr 2012 13:10:30 -0700 (PDT)
-Message-ID: <4F85E524.1090107@netapp.com>
-Date: Wed, 11 Apr 2012 16:10:12 -0400
-From: Bryan Schumaker <bjschuma@netapp.com>
+	q3BMx5Jx125195 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 17:59:07 -0500
+Date: Wed, 11 Apr 2012 18:59:03 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
+Message-ID: <20120411225903.GA16192@infradead.org>
+References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
+	<1334052213-26870-2-git-send-email-david@fromorbit.com>
+	<4F844B02.2030301@sgi.com> <20120410222027.GR18323@dastard>
+	<20120411200729.GJ28816@infradead.org>
+	<20120411225132.GV18323@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH] 273: don't delete everything if $SCRATCH_MNT isn't set
-References: <4F832C25.3080408@netapp.com> <20120409214445.GJ18323@dastard>
-	<20120411200433.GE28816@infradead.org>
-In-Reply-To: <20120411200433.GE28816@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <20120411225132.GV18323@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +26,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On 04/11/12 16:04, Christoph Hellwig wrote:
+On Thu, Apr 12, 2012 at 08:51:32AM +1000, Dave Chinner wrote:
+> Right. What I meant was that I need to resend the entire 12-13
+> buffer cache patches I have in my queue right now so that they
+> should all apply easily...
 
-> On Tue, Apr 10, 2012 at 07:44:45AM +1000, Dave Chinner wrote:
->> On Mon, Apr 09, 2012 at 02:36:21PM -0400, Bryan Schumaker wrote:
->>> The cleanup function is trapped before _require_scratch() is called, and
->>> then expands "rm -rf $SCRATCH_MNT/*" to "rm -rf /*"
->>
->> It doesn't need to clean up the scratch device - tests need to mkfs
->> it first before using it, so just remove the $tmp* files. The sae
->> fix is needed for tests 274 and 275.
-> 
-> Given his address I assume Bryan might test on NFS, which has funky
-> semantics for the scratch device.
-> 
-> Is that true Bryan?  I really need to dive back into how we handle NFS
-> in this respect to have a good judgement on this patch.
-> 
-
-
-Yeah, I'm testing on NFS (I guess the netapp address is a bit of a giveaway...).  I don't think this test runs on NFS, but if the scratch variables are unset then it'll still delete the root directory of the NFS client.
-
-- Bryan
+Can you make sure the allocation fix is first in the series?  That's
+material for 3.4-rc and stable backports.
 
 _______________________________________________
 xfs mailing list
