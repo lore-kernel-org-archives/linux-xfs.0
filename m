@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3AMKW6t238247 for <xfs@oss.sgi.com>; Tue, 10 Apr 2012 17:20:32 -0500
+	q3B7UbtD034903 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 02:30:37 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	OnfSLsbNAt0HDCfw for <xfs@oss.sgi.com>;
-	Tue, 10 Apr 2012 15:20:30 -0700 (PDT)
-Date: Wed, 11 Apr 2012 08:20:27 +1000
+	NjQvEEnFCqt13BZI for <xfs@oss.sgi.com>;
+	Wed, 11 Apr 2012 00:30:34 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1SHs0d-0005Fz-Mc
+	for xfs@oss.sgi.com; Wed, 11 Apr 2012 17:30:31 +1000
+Date: Wed, 11 Apr 2012 17:30:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
-Message-ID: <20120410222027.GR18323@dastard>
-References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
-	<1334052213-26870-2-git-send-email-david@fromorbit.com>
-	<4F844B02.2030301@sgi.com>
+Subject: xfstests 263 failures
+Message-ID: <20120411073031.GU18323@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F844B02.2030301@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +27,130 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Apr 10, 2012 at 10:00:18AM -0500, Mark Tinguely wrote:
-> On 04/10/12 05:03, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >Buffers are always returned locked from the lookup routines. Hence
-> >we don't need to tell the lookup routines to return locked buffers,
-> >on to try and lock them. Remove XBF_LOCK from all the callers and
-> >from internal buffer cache usage.
+Folks,
+
+I think I've found the cause of the fsx failures demonstrated by
+fsx.
+
+Firstly, the failure is that a mmap read is detecting non-zero data
+beyond EOF when the page is mapped. The buffered read code does not
+zero out the range beyond EOF in a page, so it makes the assumption
+that it must be zero on disk.
+
+Well, if a block exists beyond EOF (e.g. due to speculative
+preallocation) when an unaligned DIO is written to that block, the
+direct IO code won't always zero it. That's because it needs to be
+marked as a new buffer to trigger sub-block zeroing. If the DIO
+overlaps EOF, then the xfs_get_blocks() code will not mark the
+buffer as new, hence won't zero the tail of the block.
+
+I've managed to condense it down into a simple, reproducable script
+that demonstrates the problem reliably:
+
+#!/bin/bash
+
+tf=/mnt/test/foo
+
+rm -f $tf
+
+# pattern a large extent
+xfs_io -f -c "pwrite -S 0xaa 0 0x80000" -c s -c "bmap -vp" -c "truncate 0x60000" $tf
+
+# create speculative delalloc beyond EOF. First close will truncate it,
+# second write and close will leave it behind for the DIO write to land in.
+xfs_io -f -c s -c "pwrite -S 0xbb 0x60000 0x2000" $tf
+xfs_io -f -c s -c "pwrite -S 0xbb 0x60000 0x4000" $tf
+
+# do unaligned dio write overlapping the EOF
+xfs_io -f -d -c "pwrite 0x63c00 0x600" -c "bmap -vp" $tf
+
+# mmap the region and read it, should see 0xaa patterns beyond
+# 0x64200 from the original patterned extent if the direct IO has
+# failed to zero the tail of the block.
+xfs_io -f -c "mmap 0x63000 0x2000" -c "mread -f 0x63800 0x1000" $tf
+
+---
+
+Essentially, the test does this:
+
+write a large extent containing "0xaa" in each byte:
+
+   0                                                80
+   +aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa+
+                                                     EOF
+
+Truncate back to 60
+
+   0                                   60           80
+   +aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa+aaaaaaaaaaaaa+
+                                       EOF
+
+Write 0xbb @ EOF twice to trigger persistent allocation beyond EOF
+
+   0                                        64      80
+   +aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaabbbb+aaaaaaaa+
+                                            EOF
+
+Write 0xcd unaligned across EOF. Zoomed:
+
+   ....      60                    64         65
+   +aaaaaaaaa+bbbbbbbbbbbbbbbbbcdcd+cd+aaaaaaaa.....
+                                      EOF
+
+And what comes back is a bb/cd/aa pattern like this:
+
 .....
-> >-no_buffer:
-> >-	if (flags&  (XBF_LOCK | XBF_TRYLOCK))
-> >-		xfs_buf_unlock(bp);
-> >-	xfs_buf_rele(bp);
-> >-	return NULL;
-> >  }
-> 
-> 
-> Do you have a new copy of the "xfs: fix buffer lookup race on
-> allocation failure" patch. It would go about here in the sources.
-> 
-> The reason I ask, the sources that I have for xfs_buf_get() seems to
-> still have a "goto no_buffer" for the failed
-> xfs_buf_allocate_memory() call and this patch removes that call. I
-> did not find anything in the 8 buf clean-up series that would alter
-> this area.
+000641d0:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd ................
+000641e0:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd ................
+000641f0:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd ................
+00064200:  aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa ................
+00064210:  aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa ................
+00064220:  aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa ................
+00064230:  aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa aa ................
 
-I'm sure I posted it previously. Let me update all the reviewed-by
-tags and I'll resend the entire series....
+When what we should see is bb/cd/00 pattern from the mmap read like
+this (ext4) as 0x64200 is the EOF:
+
+000641d0:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd ................
+000641e0:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd ................
+000641f0:  cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd cd ................
+00064200:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+00064210:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+00064220:  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ................
+
+I haven't been able to follow the maze of extremely dark, twisty and
+mystifying passages of the ext4 DIO code to determine why it doesn't
+have this problem.
+
+The seemingly simple answer of marking unaligned maps beyond EOF as
+new doesn't solve the problem - that causes writes with unaligned
+start blocks to be zeroed, overwriting data. i.e. this result for
+the above test:
+
+   ....      60           63       64         65
+   +aaaaaaaaa+bbbbbbbbbbbb+0000cdcd+cd+00000000.....
+                                      EOF
+
+because the front of the DIO write is unaligned.
+
+Hence we cannot use "buffer new" to tell the DIO code to just zero
+the unaligned tail because it means "zero both ends if they are
+unaligned". However, the dio code will abort any zeroing if
+buffer_new is not set....
+
+I thought that maybe I could split the DIO up into two mappings -
+one for before EOF and one for after EOF. That, unfortunately,
+doesn't work either, because we might have a single sector DIO that
+has EOF landing in the middle of it. Once again, we don't want to
+zero the front end, but we do want to zero the rear end.
+
+So I think this means I need to hack something into the DIO code
+itself to detect an unaligned write to mapped blocks beyond EOF to
+zero the remainder of the filesystem block.
+
+Does anyone see any other way to deal with this problem?
 
 Cheers,
 
