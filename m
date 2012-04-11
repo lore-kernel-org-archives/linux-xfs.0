@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BK7Wbp106330 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:07:32 -0500
-Date: Wed, 11 Apr 2012 16:07:29 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
-Message-ID: <20120411200729.GJ28816@infradead.org>
-References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
-	<1334052213-26870-2-git-send-email-david@fromorbit.com>
-	<4F844B02.2030301@sgi.com> <20120410222027.GR18323@dastard>
+	q3BMsjtk124160 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 17:54:45 -0500
+Received: from goalpost.americas.sgi.com (goalpost.americas.sgi.com
+	[128.162.232.54])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 452B930407E
+	for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:54:42 -0700 (PDT)
+Date: Wed, 11 Apr 2012 17:19:31 -0500
+From: Geoffrey Wehrman <gwehrman@sgi.com>
+Subject: Re: XFS: Abysmal write performance because of excessive seeking
+	(allocation groups to blame?)
+Message-ID: <20120411221931.GA20677@sgi.com>
+References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
+	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
+	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
+	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
+	<4F7F7C25.8040605@hardwarefreak.com>
+	<20120409142134.GC21431@sgi.com>
+	<4F848A5F.2050809@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120410222027.GR18323@dastard>
+In-Reply-To: <4F848A5F.2050809@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,22 +33,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: Stefan Ring <stefanrin@gmail.com>, Linux fs XFS <xfs@oss.sgi.com>
 
-On Wed, Apr 11, 2012 at 08:20:27AM +1000, Dave Chinner wrote:
-> > The reason I ask, the sources that I have for xfs_buf_get() seems to
-> > still have a "goto no_buffer" for the failed
-> > xfs_buf_allocate_memory() call and this patch removes that call. I
-> > did not find anything in the 8 buf clean-up series that would alter
-> > this area.
-> 
-> I'm sure I posted it previously. Let me update all the reviewed-by
-> tags and I'll resend the entire series....
+On Tue, Apr 10, 2012 at 02:30:39PM -0500, Stan Hoeppner wrote:
+| On 4/9/2012 9:21 AM, Geoffrey Wehrman wrote:
+| > On Fri, Apr 06, 2012 at 06:28:37PM -0500, Stan Hoeppner wrote:
+| > | So while the XFS AG architecture may not be perfectly suited to your
+| > | single 6 drive RAID6 array, it still gives rather remarkable performance
+| > | given that the same architecture can scale pretty linearly to the
+| > | heights above, and far beyond.  Something EXTx and others could never
+| > | dream of.  Some of the SGI guys might be able to confirm deployed single
+| > | XFS filesystems spanning 1000+ drives in the past.  Today we'd probably
+| > | only see that scale with CXFS.
+| 
+| Good to hear from you Geoffrey.
+| 
+| > With an SGI IS16000 array which supports up to 1,200 drives, filesystems
+| > with large numbers of drives isn't difficult.  Most configurations
+| > using the IS16000 have 8+2 RAID6 luns.  
+| 
+| Is the concatenation of all these RAID6 LUNs performed within the
+| IS16000, or with md/lvm, or?
 
-I think Mark meant the patch to fix the error handling for failed
-allocation, which needs to be redone to only insert the buffer into the
-rbtree once it's fully set up.
+The LUNs were concatenated with XVM which is SGI's md/lvm equivalent.
+The filesystem was then constructed so that the LUN boundaries matched
+AG boundaries in the filesystem.  The filesystem was mounted with the
+inode64 mount option.  inode64 rotors directories across AGs, and then
+attempts to allocate space for files created in the AG containing the
+directory.  Utilizing this behavior allowed the generated load to be
+spread across the entire set of LUNs.
+
+| > I've seen sustained 15 GB/s to
+| > a single filesystem on one of the arrays with a 600 drive configuration.
+| 
+| To be clear, this is a single Linux XFS filesystem on a single host, not
+| multiple CXFS clients, correct?  If so, out of curiosity, is the host in
+| this case an old Itanium Altix or the newer Xeon based Altix UV?  And
+| finally, is this example system using FC or Infiniband connectivity?
+| How many ports?
+
+This was a single Linux XFS filesystem, but with two CXFS client hosts.
+They were both rather ordinary dual socket x86_64 Xeon systems using
+FC connectivity.  I fully expect that the same results could be obtained
+from a single host with enough I/O bandwidth.
+
+
+-- 
+Geoffrey Wehrman
 
 _______________________________________________
 xfs mailing list
