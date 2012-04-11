@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3BMsjtk124160 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 17:54:45 -0500
-Received: from goalpost.americas.sgi.com (goalpost.americas.sgi.com
-	[128.162.232.54])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 452B930407E
-	for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:54:42 -0700 (PDT)
-Date: Wed, 11 Apr 2012 17:19:31 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: XFS: Abysmal write performance because of excessive seeking
-	(allocation groups to blame?)
-Message-ID: <20120411221931.GA20677@sgi.com>
-References: <CAAxjCEwBMbd0x7WQmFELM8JyFu6Kv_b+KDe3XFqJE6shfSAfyQ@mail.gmail.com>
-	<20350.9643.379841.771496@tree.ty.sabi.co.UK>
-	<20350.13616.901974.523140@tree.ty.sabi.co.UK>
-	<CAAxjCEzkemiYin4KYZX62Ei6QLUFbgZESdwS8krBy0dSqOn6aA@mail.gmail.com>
-	<4F7F7C25.8040605@hardwarefreak.com>
-	<20120409142134.GC21431@sgi.com>
-	<4F848A5F.2050809@hardwarefreak.com>
+	q3BK2Zrg105979 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 15:02:36 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	qm8WtSQ4SwB6EBcJ (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 11 Apr 2012 13:02:29 -0700 (PDT)
+Date: Wed, 11 Apr 2012 16:02:27 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfstests: Introduce test case 285 for project quota
+	negative test collections
+Message-ID: <20120411200227.GB28816@infradead.org>
+References: <4F7C575A.7030507@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4F848A5F.2050809@hardwarefreak.com>
+In-Reply-To: <4F7C575A.7030507@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,54 +29,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: Stefan Ring <stefanrin@gmail.com>, Linux fs XFS <xfs@oss.sgi.com>
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Tue, Apr 10, 2012 at 02:30:39PM -0500, Stan Hoeppner wrote:
-| On 4/9/2012 9:21 AM, Geoffrey Wehrman wrote:
-| > On Fri, Apr 06, 2012 at 06:28:37PM -0500, Stan Hoeppner wrote:
-| > | So while the XFS AG architecture may not be perfectly suited to your
-| > | single 6 drive RAID6 array, it still gives rather remarkable performance
-| > | given that the same architecture can scale pretty linearly to the
-| > | heights above, and far beyond.  Something EXTx and others could never
-| > | dream of.  Some of the SGI guys might be able to confirm deployed single
-| > | XFS filesystems spanning 1000+ drives in the past.  Today we'd probably
-| > | only see that scale with CXFS.
-| 
-| Good to hear from you Geoffrey.
-| 
-| > With an SGI IS16000 array which supports up to 1,200 drives, filesystems
-| > with large numbers of drives isn't difficult.  Most configurations
-| > using the IS16000 have 8+2 RAID6 luns.  
-| 
-| Is the concatenation of all these RAID6 LUNs performed within the
-| IS16000, or with md/lvm, or?
+Hi Jeff,
 
-The LUNs were concatenated with XVM which is SGI's md/lvm equivalent.
-The filesystem was then constructed so that the LUN boundaries matched
-AG boundaries in the filesystem.  The filesystem was mounted with the
-inode64 mount option.  inode64 rotors directories across AGs, and then
-attempts to allocate space for files created in the AG containing the
-directory.  Utilizing this behavior allowed the generated load to be
-spread across the entire set of LUNs.
+thanks a lot for sending this patch!
 
-| > I've seen sustained 15 GB/s to
-| > a single filesystem on one of the arrays with a 600 drive configuration.
-| 
-| To be clear, this is a single Linux XFS filesystem on a single host, not
-| multiple CXFS clients, correct?  If so, out of curiosity, is the host in
-| this case an old Itanium Altix or the newer Xeon based Altix UV?  And
-| finally, is this example system using FC or Infiniband connectivity?
-| How many ports?
+> I'd like to introduce a new test to verify something like this, it is intended to run as a negative test
+> collections for project quota.  It only verify the above issue for now, maybe its better to wrap the steps in a individual function?
 
-This was a single Linux XFS filesystem, but with two CXFS client hosts.
-They were both rather ordinary dual socket x86_64 Xeon systems using
-FC connectivity.  I fully expect that the same results could be obtained
-from a single host with enough I/O bandwidth.
+We should have one testcase for one thing to test - by that defintion
+this bug should really stay a test case on it's own.  Some more comments
+below.
 
+> +_create_pquota_config_files()
+> +{
+> +	echo "1:$tmpdir" > /etc/projects
+> +	echo "$project_name:1" > /etc/projid
+> +}
 
--- 
-Geoffrey Wehrman
+We can use numeric ids for projects directly, and the -p object to
+various xfs_quota subcommands also allows refering to a path instead
+of a project name, that way we don't have to rewrite the config files
+in /etc.
+
+> +echo "*** create loopback image file ***"
+> +dd if=/dev/zero of=$tmpfile bs=4k count=4096 >/dev/null 2>&1
+> +
+> +echo "*** mkfs.xfs ***"
+> +mkfs.xfs -b size=4096 $tmpfile >/dev/null 2>&1
+> +
+> +# mount loopback image but without pquota option
+> +mount -o loop $tmpfile $tmpdir || _fail "!!! failed to loopback mount"
+
+This should use _scratch_mkfs _scratch_mount and so on instead of
+opencoding it.
+
 
 _______________________________________________
 xfs mailing list
