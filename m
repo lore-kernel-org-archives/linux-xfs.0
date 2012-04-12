@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3CDGmRR165823 for <xfs@oss.sgi.com>; Thu, 12 Apr 2012 08:16:48 -0500
-Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id 2xSkP8PV25c3Vool (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 12 Apr 2012 06:16:47 -0700 (PDT)
-Message-ID: <4F86D546.80804@oracle.com>
-Date: Thu, 12 Apr 2012 21:14:46 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q3CDNxM8166564 for <xfs@oss.sgi.com>; Thu, 12 Apr 2012 08:23:59 -0500
+Message-ID: <4F86D76C.5090805@sgi.com>
+Date: Thu, 12 Apr 2012 08:23:56 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: Introduce test case 285 for project quota
-	negative test collections
-References: <4F7C575A.7030507@oracle.com>
-	<20120411200227.GB28816@infradead.org>
-In-Reply-To: <20120411200227.GB28816@infradead.org>
-Reply-To: jeff.liu@oracle.com
+Subject: Re: [PATCH 1/3] xfs: kill XBF_LOCK
+References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
+	<1334052213-26870-2-git-send-email-david@fromorbit.com>
+	<4F844B02.2030301@sgi.com> <20120410222027.GR18323@dastard>
+	<20120411200729.GJ28816@infradead.org>
+In-Reply-To: <20120411200729.GJ28816@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +20,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Hi Christoph,
+On 04/11/12 15:07, Christoph Hellwig wrote:
+> On Wed, Apr 11, 2012 at 08:20:27AM +1000, Dave Chinner wrote:
+>>> The reason I ask, the sources that I have for xfs_buf_get() seems to
+>>> still have a "goto no_buffer" for the failed
+>>> xfs_buf_allocate_memory() call and this patch removes that call. I
+>>> did not find anything in the 8 buf clean-up series that would alter
+>>> this area.
+>>
+>> I'm sure I posted it previously. Let me update all the reviewed-by
+>> tags and I'll resend the entire series....
+>
+> I think Mark meant the patch to fix the error handling for failed
+> allocation, which needs to be redone to only insert the buffer into the
+> rbtree once it's fully set up.
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Thanks for your comments below, I'll fix them up and repost it here.
+That is correct.
 
--Jeff
-On 04/12/2012 04:02 AM, Christoph Hellwig wrote:
+The series in general looked good to me.
 
-> Hi Jeff,
-> 
-> thanks a lot for sending this patch!
-> 
->> I'd like to introduce a new test to verify something like this, it is intended to run as a negative test
->> collections for project quota.  It only verify the above issue for now, maybe its better to wrap the steps in a individual function?
-> 
-> We should have one testcase for one thing to test - by that defintion
-> this bug should really stay a test case on it's own.  Some more comments
-> below.
-> 
->> +_create_pquota_config_files()
->> +{
->> +	echo "1:$tmpdir" > /etc/projects
->> +	echo "$project_name:1" > /etc/projid
->> +}
-> 
-> We can use numeric ids for projects directly, and the -p object to
-> various xfs_quota subcommands also allows refering to a path instead
-> of a project name, that way we don't have to rewrite the config files
-> in /etc.
-> 
->> +echo "*** create loopback image file ***"
->> +dd if=/dev/zero of=$tmpfile bs=4k count=4096 >/dev/null 2>&1
->> +
->> +echo "*** mkfs.xfs ***"
->> +mkfs.xfs -b size=4096 $tmpfile >/dev/null 2>&1
->> +
->> +# mount loopback image but without pquota option
->> +mount -o loop $tmpfile $tmpdir || _fail "!!! failed to loopback mount"
-> 
-> This should use _scratch_mkfs _scratch_mount and so on instead of
-> opencoding it.
-
-
+--Mark Tinguely.
 
 _______________________________________________
 xfs mailing list
