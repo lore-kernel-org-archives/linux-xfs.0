@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3C492v6002204 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 23:09:03 -0500
-Received: from mail228-174.sinamail.sina.com.cn
-	(mail228-174.sinamail.sina.com.cn [60.28.228.174]) by
-	cuda.sgi.com with ESMTP id oslKCHEzAxA5aDvD for
-	<xfs@oss.sgi.com>; Wed, 11 Apr 2012 21:09:00 -0700 (PDT)
-Date: Thu, 12 Apr 2012 11:59:57 +0800 
-From: <sn0wing@sina.com>
-Subject: Re: [PATCH] xfs: don't fill statvfs with project quota for a
-	directory if it was not enabled.
+	q3C4Ov0V005218 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 23:24:58 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id OZO63aWBP5rPMjFG for <xfs@oss.sgi.com>;
+	Wed, 11 Apr 2012 21:24:56 -0700 (PDT)
+Message-ID: <4F865915.80104@sandeen.net>
+Date: Wed, 11 Apr 2012 23:24:53 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Message-Id: <20120412035957.434673800A6@webmail.sinamail.sina.com.cn>
-Reply-To: sn0wing@sina.com
+Subject: Re: Fragmentation Issue We Are Having
+References: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
+	<20120412021626.GX18323@dastard>
+	<CADrkzim1B9fU5sK73uGicPpr7D+ANPwKWGdMS7TroyoX5ncdOw@mail.gmail.com>
+In-Reply-To: <CADrkzim1B9fU5sK73uGicPpr7D+ANPwKWGdMS7TroyoX5ncdOw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,98 +22,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0931996205405745190=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hch <hch@infradead.org>
-Cc: bpm <bpm@sgi.com>, xfs <xfs@oss.sgi.com>
+To: David Fuller <dfuller@epoch.com>
+Cc: xfs@oss.sgi.com
 
---===============0931996205405745190==
-Content-Type: multipart/alternative;
-	 boundary="=-sinamail_alt_52e8c6c2f0efdf96c3704324221bb7f9"
+On 4/11/12 9:55 PM, David Fuller wrote:
+> Dave,
+> 
+> Thanks so much for that informative read.  This helps me fight my case that systematic
+> defrags are not needed and are bad for the system in general.
+> 
+> After reading this I did do some checks against some of our larger tables and found that
+> on average we are storing about 2.5GB per extent. For me that seems pretty reasonable
+> to me and does not require defrag'ing at this time.
 
---=-sinamail_alt_52e8c6c2f0efdf96c3704324221bb7f9
-Content-Type: text/plain;
-	charset=GBK
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
+I've also added a visual aid to that faq entry to show how quickly the frag factor
+approaches 100% :)
 
-SGkgQ2hyaXN0b3BoLAoKSSBhbSBKZWZmIExpdSwgSSBjYW5ub3QgY29ubmVjdCB0byBteSBPcmFj
-bGUgZW1haWwgYm94LCBsb29rcyBpdCB3YXMgYmxvY2tlZCBieSB0aGUgc3R1cGlkIGNoaW5hIGZp
-cmV3YWxsIHRvZGF5LiA6KAo+IC0JaWYgKChpcC0+aV9kLmRpX2ZsYWdzICYgWEZTX0RJRkxBR19Q
-Uk9KSU5IRVJJVCkgfHwNCj4gLQkgICAgKChtcC0+bV9xZmxhZ3MgJiAoWEZTX1BRVU9UQV9BQ0NU
-fFhGU19PUVVPVEFfRU5GRCkpKSA9PQ0KPiAtCQkJICAgICAgKFhGU19QUVVPVEFfQUNDVHxYRlNf
-T1FVT1RBX0VORkQpKQ0KPiAtCQl4ZnNfcW1fc3RhdHZmcyhpcCwgc3RhdHApOw0KPiBJIHRoamlu
-ayB0aGUgY29ycmVjdCBmaXggaGVyZSBpcyB0byByZXBsYWNlIHRoZSB8fCBiZXR3ZWVuIHRoZSBp
-bm9kZQ0KPiBmbGFnIGFuZCBxdW90YSBmbGFnIGNoZWNrIHdpdGggYW5kICYmIC0gd2Ugd2FudCBi
-b3RoIHRoZSBhYm92ZQ0KPiBjb25kaXRpb25zIHRvIGJlIHRydWUuClRoYW5rcyEKPiBDYW4geW91
-IHJlc3BpbiB0aGUgcGF0Y2ggYnkgZG9pbmcgdGhhdCBhbmQgbWFrZQ0KPiBzdXJlIGl0IHN0aWxs
-IHBhc3NlcyB0aGUgdGVzdCBjYXNlPyAgSSdkIGxpa2UgdG8gc2VuZCBpdCBvZiB0byAtc3RhYmxl
-DQo+IEFTQVAuCkl0IHdvcmtzIHdpdGggeW91ciBjb21tZW50cywgdGhlIHJldmlzZWQgd2FzIHNo
-b3duIGFzIGZvbGxvd2luZzoKClNpZ25lZC1vZmYtYnk6IEppZSBMaXUgPGplZmYubGl1QG9yYWNs
-ZS5jb20+CgotLS0KIGZzL3hmcy94ZnNfc3VwZXIuYyB8ICAgIDIgKy0KIDEgZmlsZXMgY2hhbmdl
-ZCwgMSBpbnNlcnRpb25zKCspLCAxIGRlbGV0aW9ucygtKQoKZGlmZiAtLWdpdCBhL2ZzL3hmcy94
-ZnNfc3VwZXIuYyBiL2ZzL3hmcy94ZnNfc3VwZXIuYwppbmRleCBlZTViNjk1Li5lMzg3MWQ1IDEw
-MDY0NAotLS0gYS9mcy94ZnMveGZzX3N1cGVyLmMKKysrIGIvZnMveGZzL3hmc19zdXBlci5jCkBA
-IC0xMDU5LDcgKzEwNTksNyBAQCB4ZnNfZnNfc3RhdGZzKAogCiAJc3Bpbl91bmxvY2soJm1wLT5t
-X3NiX2xvY2spOwogCi0JaWYgKChpcC0+aV9kLmRpX2ZsYWdzICYgWEZTX0RJRkxBR19QUk9KSU5I
-RVJJVCkgfHwKKwlpZiAoKGlwLT5pX2QuZGlfZmxhZ3MgJiBYRlNfRElGTEFHX1BST0pJTkhFUklU
-KSAmJgogCSAgICAoKG1wLT5tX3FmbGFncyAmIChYRlNfUFFVT1RBX0FDQ1R8WEZTX09RVU9UQV9F
-TkZEKSkpID09CiAJCQkgICAgICAoWEZTX1BRVU9UQV9BQ0NUfFhGU19PUVVPVEFfRU5GRCkpCiAJ
-CXhmc19xbV9zdGF0dmZzKGlwLCBzdGF0cCk7Ci0tIAoxLjcuOQogCg==
+-Eric
 
-
---=-sinamail_alt_52e8c6c2f0efdf96c3704324221bb7f9
-Content-Type: text/html;
-	charset=GBK
-Content-Transfer-Encoding: base64
-Content-Disposition: inline
-
-SGkgQ2hyaXN0b3BoLDxicj48YnI+SSBhbSBKZWZmIExpdSwgSSBjYW5ub3QgY29ubmVjdCB0byBt
-eSBPcmFjbGUgZW1haWwgYm94LCBsb29rcyBpdCB3YXMgYmxvY2tlZCBieSB0aGUgc3R1cGlkIGNo
-aW5hIGZpcmV3YWxsIHRvZGF5LiA6KDxicj48YmxvY2txdW90ZSB0eXBlPSJjaXRlIiBzdHlsZT0i
-Y29sb3I6IHJnYigwLCAwLCAwKTsiPjxwcmUgd3JhcD0iIj48c3BhbiBjbGFzcz0ibW96LXR4dC1j
-aXRldGFncyI+Jmd0OyA8L3NwYW4+LQlpZiAoKGlwLSZndDtpX2QuZGlfZmxhZ3MgJmFtcDsgWEZT
-X0RJRkxBR19QUk9KSU5IRVJJVCkgfHwNCjxzcGFuIGNsYXNzPSJtb3otdHh0LWNpdGV0YWdzIj4m
-Z3Q7IDwvc3Bhbj4tCSAgICAoKG1wLSZndDttX3FmbGFncyAmYW1wOyAoWEZTX1BRVU9UQV9BQ0NU
-fFhGU19PUVVPVEFfRU5GRCkpKSA9PQ0KPHNwYW4gY2xhc3M9Im1vei10eHQtY2l0ZXRhZ3MiPiZn
-dDsgPC9zcGFuPi0JCQkgICAgICAoWEZTX1BRVU9UQV9BQ0NUfFhGU19PUVVPVEFfRU5GRCkpDQo8
-c3BhbiBjbGFzcz0ibW96LXR4dC1jaXRldGFncyI+Jmd0OyA8L3NwYW4+LQkJeGZzX3FtX3N0YXR2
-ZnMoaXAsIHN0YXRwKTsNCjwvcHJlPjwvYmxvY2txdW90ZT48cHJlIHdyYXA9IiI+Jmd0OyBJIHRo
-amluayB0aGUgY29ycmVjdCBmaXggaGVyZSBpcyB0byByZXBsYWNlIHRoZSB8fCBiZXR3ZWVuIHRo
-ZSBpbm9kZQ0KJmd0OyBmbGFnIGFuZCBxdW90YSBmbGFnIGNoZWNrIHdpdGggYW5kICZhbXA7JmFt
-cDsgLSB3ZSB3YW50IGJvdGggdGhlIGFib3ZlDQomZ3Q7IGNvbmRpdGlvbnMgdG8gYmUgdHJ1ZS48
-YnI+VGhhbmtzITxicj4mZ3Q7IENhbiB5b3UgcmVzcGluIHRoZSBwYXRjaCBieSBkb2luZyB0aGF0
-IGFuZCBtYWtlDQomZ3Q7IHN1cmUgaXQgc3RpbGwgcGFzc2VzIHRoZSB0ZXN0IGNhc2U/ICBJJ2Qg
-bGlrZSB0byBzZW5kIGl0IG9mIHRvIC1zdGFibGUNCiZndDsgQVNBUC48YnI+SXQgd29ya3Mgd2l0
-aCB5b3VyIGNvbW1lbnRzLCB0aGUgcmV2aXNlZCB3YXMgc2hvd24gYXMgZm9sbG93aW5nOjxicj48
-YnI+U2lnbmVkLW9mZi1ieTogSmllIExpdSAmbHQ7amVmZi5saXVAb3JhY2xlLmNvbSZndDs8YnI+
-PGJyPi0tLTxicj4gZnMveGZzL3hmc19zdXBlci5jIHwgICAgMiArLTxicj4gMSBmaWxlcyBjaGFu
-Z2VkLCAxIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb25zKC0pPGJyPjxicj5kaWZmIC0tZ2l0IGEv
-ZnMveGZzL3hmc19zdXBlci5jIGIvZnMveGZzL3hmc19zdXBlci5jPGJyPmluZGV4IGVlNWI2OTUu
-LmUzODcxZDUgMTAwNjQ0PGJyPi0tLSBhL2ZzL3hmcy94ZnNfc3VwZXIuYzxicj4rKysgYi9mcy94
-ZnMveGZzX3N1cGVyLmM8YnI+QEAgLTEwNTksNyArMTA1OSw3IEBAIHhmc19mc19zdGF0ZnMoPGJy
-PiA8YnI+IAlzcGluX3VubG9jaygmYW1wO21wLSZndDttX3NiX2xvY2spOzxicj4gPGJyPi0JaWYg
-KChpcC0mZ3Q7aV9kLmRpX2ZsYWdzICZhbXA7IFhGU19ESUZMQUdfUFJPSklOSEVSSVQpIHx8PGJy
-PisJaWYgKChpcC0mZ3Q7aV9kLmRpX2ZsYWdzICZhbXA7IFhGU19ESUZMQUdfUFJPSklOSEVSSVQp
-ICZhbXA7JmFtcDs8YnI+IAkgICAgKChtcC0mZ3Q7bV9xZmxhZ3MgJmFtcDsgKFhGU19QUVVPVEFf
-QUNDVHxYRlNfT1FVT1RBX0VORkQpKSkgPT08YnI+IAkJCSAgICAgIChYRlNfUFFVT1RBX0FDQ1R8
-WEZTX09RVU9UQV9FTkZEKSk8YnI+IAkJeGZzX3FtX3N0YXR2ZnMoaXAsIHN0YXRwKTs8YnI+LS0g
-PGJyPjEuNy45PGJyPiZuYnNwOzwvcHJlPjxicj4=
-
-
---=-sinamail_alt_52e8c6c2f0efdf96c3704324221bb7f9--
-
-
---===============0931996205405745190==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> --David Fuller
+> 
+> 
+> <http://www.topshelfads.com/email/sig/epochbestbilling.jpg>
+> 
+> 
+> On Wed, Apr 11, 2012 at 7:16 PM, Dave Chinner <david@fromorbit.com <mailto:david@fromorbit.com>> wrote:
+> 
+>     On Wed, Apr 11, 2012 at 06:04:25PM -0700, David Fuller wrote:
+>     > We seen to be having an issue whereby our database server
+>     > gets to 90% or higher fragmentation.  When it gets to this point
+>     > we would need to remove form production and defrag using the
+>     > xfs_fsr tool.
+> 
+>     Bad assumption.
+> 
+>     > The server does get a lot of writes and reads.  Is
+>     > there something we can do to reduce the fragmentation or could
+>     > this be a result of hard disk tweaks we use or mount options?
+>     >
+>     > here is some fo the tweaks we do:
+>     >
+>     > /bin/echo "512" > /sys/block/sda/queue/read_ahead_kb
+>     > /bin/echo "10000" > /sys/block/sda/queue/nr_requests
+>     > /bin/echo "512" > /sys/block/sdb/queue/read_ahead_kb
+>     > /bin/echo "10000" > /sys/block/sdb/queue/nr_requests
+>     > /bin/echo "noop" > /sys/block/sda/queue/scheduler
+>     > /bin/echo "noop" > /sys/block/sdb/queue/scheduler
+> 
+>     They have no effect on filesystem fragmentation.
+> 
+>     > Adn here are the mount options on one of our servers:
+>     >
+>     >  xfs     rw,noikeep,allocsize=256M,logbufs=8,sunit=128,swidth=2304
+>     >
+>     > the sunit and swidth vary on each server based on disk drives.
+>     >
+>     > We do use LVM on the volume where the mysql data is stored
+>     > as we need this for snapshotting.  Here is an example of a current state:
+>     >
+>     > xfs_db -c frag -r /dev/mapper/vgmysql-lvmysql
+>     > actual 42586, ideal 3134, fragmentation factor 92.64%
+> 
+>     Read this first:
+> 
+>     http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_says_I.27m_over_50.25.__Is_that_bad.3F
+> 
+>     Then decide whether 10 extents per file is really a problem or not.
+> 
+>     Cheers,
+> 
+>     Dave.
+>     --
+>     Dave Chinner
+>     david@fromorbit.com <mailto:david@fromorbit.com>
+> 
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0931996205405745190==--
