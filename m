@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3C1qsnt163982 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 20:52:54 -0500
-Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
-	[209.85.210.46]) by cuda.sgi.com with ESMTP id aUW6rmNoVZLLv55S
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 11 Apr 2012 18:52:53 -0700 (PDT)
-Received: by dadz9 with SMTP id z9so2354397dad.5
-	for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 18:52:53 -0700 (PDT)
-From: Chen Baozi <baozich@gmail.com>
-Subject: [PATCH] fs/xfs/xfs_dinode.h: fix comments of xfs_dinode_t.
-Date: Thu, 12 Apr 2012 01:52:35 +0800
-Message-Id: <1334166755-32052-1-git-send-email-baozich@gmail.com>
+	q3C2GWe7178956 for <xfs@oss.sgi.com>; Wed, 11 Apr 2012 21:16:32 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	xSjDKVbItGuuiw9S for <xfs@oss.sgi.com>;
+	Wed, 11 Apr 2012 19:16:29 -0700 (PDT)
+Date: Thu, 12 Apr 2012 12:16:26 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Fragmentation Issue We Are Having
+Message-ID: <20120412021626.GX18323@dastard>
+References: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,35 +22,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-kernel@vger.kernel.org
-Cc: Chen Baozi <baozich@gmail.com>
+To: David Fuller <dfuller@epoch.com>
+Cc: xfs@oss.sgi.com
 
+On Wed, Apr 11, 2012 at 06:04:25PM -0700, David Fuller wrote:
+> We seen to be having an issue whereby our database server
+> gets to 90% or higher fragmentation.  When it gets to this point
+> we would need to remove form production and defrag using the
+> xfs_fsr tool.
 
-Signed-off-by: Chen Baozi <baozich@gmail.com>
----
- fs/xfs/xfs_dinode.h |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+Bad assumption.
 
-diff --git a/fs/xfs/xfs_dinode.h b/fs/xfs/xfs_dinode.h
-index a372163..1d9643b 100644
---- a/fs/xfs/xfs_dinode.h
-+++ b/fs/xfs/xfs_dinode.h
-@@ -33,7 +33,7 @@ typedef struct xfs_timestamp {
-  * variable size the leftover area split into a data and an attribute fork.
-  * The format of the data and attribute fork depends on the format of the
-  * inode as indicated by di_format and di_aformat.  To access the data and
-- * attribute use the XFS_DFORK_PTR, XFS_DFORK_DPTR, and XFS_DFORK_PTR macros
-+ * attribute use the XFS_DFORK_DPTR, XFS_DFORK_APTR, and XFS_DFORK_PTR macros
-  * below.
-  *
-  * There is a very similar struct icdinode in xfs_inode which matches the
+> The server does get a lot of writes and reads.  Is
+> there something we can do to reduce the fragmentation or could
+> this be a result of hard disk tweaks we use or mount options?
+> 
+> here is some fo the tweaks we do:
+> 
+> /bin/echo "512" > /sys/block/sda/queue/read_ahead_kb
+> /bin/echo "10000" > /sys/block/sda/queue/nr_requests
+> /bin/echo "512" > /sys/block/sdb/queue/read_ahead_kb
+> /bin/echo "10000" > /sys/block/sdb/queue/nr_requests
+> /bin/echo "noop" > /sys/block/sda/queue/scheduler
+> /bin/echo "noop" > /sys/block/sdb/queue/scheduler
+
+They have no effect on filesystem fragmentation.
+
+> Adn here are the mount options on one of our servers:
+> 
+>  xfs     rw,noikeep,allocsize=256M,logbufs=8,sunit=128,swidth=2304
+> 
+> the sunit and swidth vary on each server based on disk drives.
+> 
+> We do use LVM on the volume where the mysql data is stored
+> as we need this for snapshotting.  Here is an example of a current state:
+>
+> xfs_db -c frag -r /dev/mapper/vgmysql-lvmysql
+> actual 42586, ideal 3134, fragmentation factor 92.64%
+
+Read this first:
+
+http://xfs.org/index.php/XFS_FAQ#Q:_The_xfs_db_.22frag.22_command_says_I.27m_over_50.25.__Is_that_bad.3F
+
+Then decide whether 10 extents per file is really a problem or not.
+
+Cheers,
+
+Dave.
 -- 
-1.7.1
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
