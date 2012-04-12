@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3C7vmW9128876 for <xfs@oss.sgi.com>; Thu, 12 Apr 2012 02:57:49 -0500
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id UQdjk23lSifUr4xK for
-	<xfs@oss.sgi.com>; Thu, 12 Apr 2012 00:57:47 -0700 (PDT)
-Date: Thu, 12 Apr 2012 08:57:47 +0100
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Fragmentation Issue We Are Having
-Message-ID: <20120412075747.GB30891@nsrc.org>
-References: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
+	q3C8na5L132785 for <xfs@oss.sgi.com>; Thu, 12 Apr 2012 03:49:36 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id ykZYtAD0S4alEqdV
+	for <xfs@oss.sgi.com>; Thu, 12 Apr 2012 01:49:35 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id ADAE86C105
+	for <xfs@oss.sgi.com>; Thu, 12 Apr 2012 03:49:34 -0500 (CDT)
+Message-ID: <4F86971A.1030507@hardwarefreak.com>
+Date: Thu, 12 Apr 2012 03:49:30 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
+Subject: Re: [PATCH] disable tags in post-receive hook
+References: <20120411162627.GJ1802@sgi.com>
+In-Reply-To: <20120411162627.GJ1802@sgi.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +28,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: David Fuller <dfuller@epoch.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Apr 11, 2012 at 06:04:25PM -0700, David Fuller wrote:
->    Adn here are the mount options on one of our servers:
+On 4/11/2012 11:26 AM, Ben Myers wrote:
+> Hey Folks,
 > 
->     xfs     rw,noikeep,allocsize=256M,logbufs=8,sunit=128,swidth=2304
+>     Yesterday I pushed tags to the oss.sgi.com xfs git repository and forgot to
+>     disable the post-receive hook which generates email to the list at commit
+>     time.  You probably saw the resulting mailbomb.  I'm sorry about that.  In
+>     order to make sure it doesn't happen again next time, I have applied the
+>     following patch to our post-receive hook:
 
-What's the total file system size? If it's over 1TB then you almost
-certainly should have 'inode64' as well.
-http://xfs.org/index.php/XFS_FAQ#Q:_What_is_the_inode64_mount_option_for.3F
+I curse you for the error Ben and praise you for this correction.
+Mailman unsubbed me sometime yesterday according to a subject line.
+There was no body, no reason give.  But, I know the cause.
+
+I was limiting concurrent SMTP connections to 1 to fight runaway bots.
+Was working great until this bombing run.  The OSS list server runs
+Sendmail, which is dumb and opens a new connection for every message
+delivery.  This behavior can potentially bring an MX to its knees due to
+smtpd process starvation.
+
+Postfix on the other hand will open one connection and keep sending
+until all mail queued for the destination MX has been sent, or until
+there is more than a 2 second delay between deliveries.
+
+I understand Brent Bice of SGI is building an 'evidence file' to justify
+a rebuild of OSS to use Postfix and the latest Mailman.  Maybe you could
+lend your support or blessing.
+
+The current OSS list server has other problems as well, including large
+delays between receiving posts and sending them back out.  I'm assuming
+I'm not the only one to notice this.
+
+Thanks.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
