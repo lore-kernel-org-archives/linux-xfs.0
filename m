@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DCBHf6037878 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:18 -0500
+	q3DCBS4q037959 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:28 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	kjnrIx86HJVFcEqY for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 05:11:16 -0700 (PDT)
+	3U2rTtnBkU8xSfAH for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:11:27 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SIfLE-00030s-5R
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:04 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SIfLO-00031V-9l
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:14 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SIfLD-0003O5-UZ
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:03 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SIfLO-0003OT-6V
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/18] xfs: Use preallocation for inodes with extsz hints
-Date: Fri, 13 Apr 2012 22:10:48 +1000
-Message-Id: <1334319061-12968-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/18] xfs: kill xfs_buf_btoc
+Date: Fri, 13 Apr 2012 22:10:57 +1000
+Message-Id: <1334319061-12968-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,51 +35,131 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfstest 229 exposes a problem with buffered IO, delayed allocation
-and extent size hints. That is when we do delayed allocation during
-buffered IO, we reserve space for the extent size hint alignment and
-allocate the physical space to align the extent, but we do not zero
-the regions of the extent that aren't written by the write(2)
-syscall. The result is that we expose stale data in unwritten
-regions of the extent size hints.
+xfs_buf_btoc and friends are simple macros that do basic block
+to page index conversion and vice versa. These aren't widely used,
+and we use open coded masking and shifting everywhere else. Hence
+remove themacros and open code the work they do.
 
-There are two ways to fix this. The first is to detect that we are
-doing unaligned writes, check if there is already a mapping or data
-over the extent size hint range, and if not zero the page cache
-first before then doing the real write. This can be very expensive
-for large extent size hints, especially if the subsequent writes
-fill then entire extent size before the data is written to disk.
-
-The second, and simpler way, is simply to turn off delayed
-allocation when the extent size hint is set and use preallocation
-instead. This results in unwritten extents being laid down on disk
-and so only the written portions will be converted. This matches the
-behaviour for direct IO, and will also work for the real time
-device. The disadvantage of this approach is that for small extent
-size hints we can get file fragmentation, but in general extent size
-hints are fairly large (e.g. stripe width sized) so this isn't a big
-deal.
-
-Implement the second approach as it is simple and effective.
+Also, use of PAGE_CACHE_{SIZE|SHIFT|MASK} for these macros is now
+incorrect - we are using pages directly and not the page cache, so
+use PAGE_{SIZE|MASK|SHIFT} instead.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_aops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_buf.c |   39 +++++++++++++++++++++------------------
+ fs/xfs/xfs_buf.h |    5 -----
+ 2 files changed, 21 insertions(+), 23 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 2fc12db..19ce2e2 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1175,7 +1175,7 @@ __xfs_get_blocks(
- 	    (!nimaps ||
- 	     (imap.br_startblock == HOLESTARTBLOCK ||
- 	      imap.br_startblock == DELAYSTARTBLOCK))) {
--		if (direct) {
-+		if (direct || xfs_get_extsz_hint(ip)) {
- 			xfs_iunlock(ip, lockmode);
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index b508eaf..7a945fd 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -300,7 +300,7 @@ xfs_buf_allocate_memory(
+ 	size_t			nbytes, offset;
+ 	gfp_t			gfp_mask = xb_to_gfp(flags);
+ 	unsigned short		page_count, i;
+-	xfs_off_t		end;
++	xfs_off_t		start, end;
+ 	int			error;
  
- 			error = xfs_iomap_write_direct(ip, offset, size,
+ 	/*
+@@ -308,15 +308,15 @@ xfs_buf_allocate_memory(
+ 	 * the memory from the heap - there's no need for the complexity of
+ 	 * page arrays to keep allocation down to order 0.
+ 	 */
+-	if (bp->b_length < BTOBB(PAGE_SIZE)) {
+-		bp->b_addr = kmem_alloc(BBTOB(bp->b_length), xb_to_km(flags));
++	size = BBTOB(bp->b_length);
++	if (size < PAGE_SIZE) {
++		bp->b_addr = kmem_alloc(size, xb_to_km(flags));
+ 		if (!bp->b_addr) {
+ 			/* low memory - use alloc_page loop instead */
+ 			goto use_alloc_page;
+ 		}
+ 
+-		if (((unsigned long)(bp->b_addr + BBTOB(bp->b_length) - 1) &
+-								PAGE_MASK) !=
++		if (((unsigned long)(bp->b_addr + size - 1) & PAGE_MASK) !=
+ 		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+ 			/* b_addr spans two pages - use alloc_page instead */
+ 			kmem_free(bp->b_addr);
+@@ -332,14 +332,14 @@ xfs_buf_allocate_memory(
+ 	}
+ 
+ use_alloc_page:
+-	end = BBTOB(bp->b_bn + bp->b_length);
+-	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(BBTOB(bp->b_bn));
++	start = BBTOB(bp->b_bn) >> PAGE_SHIFT;
++	end = (BBTOB(bp->b_bn + bp->b_length) + PAGE_SIZE - 1) >> PAGE_SHIFT;
++	page_count = end - start;
+ 	error = _xfs_buf_get_pages(bp, page_count, flags);
+ 	if (unlikely(error))
+ 		return error;
+ 
+ 	offset = bp->b_offset;
+-	size = BBTOB(bp->b_length);
+ 	bp->b_flags |= _XBF_PAGES;
+ 
+ 	for (i = 0; i < bp->b_page_count; i++) {
+@@ -1314,27 +1314,30 @@ xfs_buf_iomove(
+ 	void			*data,	/* data address			*/
+ 	xfs_buf_rw_t		mode)	/* read/write/zero flag		*/
+ {
+-	size_t			bend, cpoff, csize;
+-	struct page		*page;
++	size_t			bend;
+ 
+ 	bend = boff + bsize;
+ 	while (boff < bend) {
+-		page = bp->b_pages[xfs_buf_btoct(boff + bp->b_offset)];
+-		cpoff = xfs_buf_poff(boff + bp->b_offset);
+-		csize = min_t(size_t,
+-			      PAGE_SIZE - cpoff, BBTOB(bp->b_io_length) - boff);
++		struct page	*page;
++		int		page_index, page_offset, csize;
++
++		page_index = (boff + bp->b_offset) >> PAGE_SHIFT;
++		page_offset = (boff + bp->b_offset) & ~PAGE_MASK;
++		page = bp->b_pages[page_index];
++		csize = min_t(size_t, PAGE_SIZE - page_offset,
++				      BBTOB(bp->b_io_length) - boff);
+ 
+-		ASSERT(((csize + cpoff) <= PAGE_SIZE));
++		ASSERT((csize + page_offset) <= PAGE_SIZE);
+ 
+ 		switch (mode) {
+ 		case XBRW_ZERO:
+-			memset(page_address(page) + cpoff, 0, csize);
++			memset(page_address(page) + page_offset, 0, csize);
+ 			break;
+ 		case XBRW_READ:
+-			memcpy(data, page_address(page) + cpoff, csize);
++			memcpy(data, page_address(page) + page_offset, csize);
+ 			break;
+ 		case XBRW_WRITE:
+-			memcpy(page_address(page) + cpoff, data, csize);
++			memcpy(page_address(page) + page_offset, data, csize);
+ 		}
+ 
+ 		boff += csize;
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 9787645..5b048f7 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -32,11 +32,6 @@
+ 
+ #define XFS_BUF_DADDR_NULL	((xfs_daddr_t) (-1LL))
+ 
+-#define xfs_buf_ctob(pp)	((pp) * PAGE_CACHE_SIZE)
+-#define xfs_buf_btoc(dd)	(((dd) + PAGE_CACHE_SIZE-1) >> PAGE_CACHE_SHIFT)
+-#define xfs_buf_btoct(dd)	((dd) >> PAGE_CACHE_SHIFT)
+-#define xfs_buf_poff(aa)	((aa) & ~PAGE_CACHE_MASK)
+-
+ typedef enum {
+ 	XBRW_READ = 1,			/* transfer into target memory */
+ 	XBRW_WRITE = 2,			/* transfer from target memory */
 -- 
 1.7.9.5
 
