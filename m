@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DBwGcs036107 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 06:58:16 -0500
+	q3DC2jrR036697 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:02:45 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	AQEsUVCO3iFoI0fC for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 04:58:14 -0700 (PDT)
-Date: Fri, 13 Apr 2012 21:58:12 +1000
+	PNVcULA3uHGDpiMU for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:02:43 -0700 (PDT)
+Date: Fri, 13 Apr 2012 22:02:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 4/5] xfstests: sync before umount to avoid device busy
-	problems
-Message-ID: <20120413115812.GP6734@dastard>
-References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
-	<1334310586-2281-4-git-send-email-tmarek@redhat.com>
-	<4F87FF3D.7030803@giantdisaster.de>
-	<alpine.LFD.2.00.1204131249390.14961@dhcp-27-109.brq.redhat.com>
+Subject: Re: [PATCH 0/3] xfs: More xfs_buf cleanups
+Message-ID: <20120413120242.GQ6734@dastard>
+References: <1334052213-26870-1-git-send-email-david@fromorbit.com>
+	<20120411200821.GK28816@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1204131249390.14961@dhcp-27-109.brq.redhat.com>
+In-Reply-To: <20120411200821.GK28816@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +27,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Fri, Apr 13, 2012 at 12:57:20PM +0200, Lukas Czerner wrote:
-> On Fri, 13 Apr 2012, Stefan Behrens wrote:
-> > On 4/13/2012 11:49 AM, tmarek@redhat.com wrote:
-> > > From: Tom Marek <tmarek@redhat.com>
-> > > 
-> > > Some tests might fail because of 'device or resource busy' when unmounting
-> > > either the SCRATCH or the TEST device. The reason this happenes is that
-> > > some processes might not have time to finish properly, or they are still
-> > > waiting for IO. The sync command was added before unmount into
-> > > _scratch_unmount() and umount_or_remount_ro which should help processes to
-> > > finish before unmounting takes place and thus it solves the problem.
-> > > This fixes for example tests 226 and 247.
-> > > 
-> > > Test 226 uses plain umount command which suffers from exactly the same problem
-> > > as described above. Use fixed _scratch_unmount() instead of plain umount fixes
-> > > this problem.
-....
+On Wed, Apr 11, 2012 at 04:08:22PM -0400, Christoph Hellwig wrote:
+> On Tue, Apr 10, 2012 at 08:03:30PM +1000, Dave Chinner wrote:
+> > These 3 patches sit on top of my recent series titled:
 > > 
-> > If a xfstest process is still running when _scratch_umount() is called,
-> > that xfstest is wrong and needs to be fixed IMO.
-> 
-> I agree, however some tests does not explicitly wait for all processes
-> to finish. It is kind of hard to see why 226 has this problem, since
-> there are no processes running on background, but sync certainly seems
-> to help. It seems to be just a matter of timing though.
-
-Which indicates a problem that needs to be understood, not hidden.
-
-> > If a system or filesystem thread is still running and umount fails to
-> > handle it, the system or filesystem needs to be fixed IMO.
+> > [PATCH 0/8] xfs: clean up unit usage in xfs_buf V2
 > > 
-> > xfstests shall uncover issues, not hide them.
+> > These patches remove bits of the API that are effectively the
+> > default behaviour used by everything or are redundant. This just
+> > makes API usage simpler and gives it a smaller footprint to modify
+> > in future.
 > 
-> I do not think this is fs issue at all.
+> If you touch these interfaces any chance you could kill the impliciy
+> XBF_MAPPED thing we do in various places?  Probably best by reversing
+> it and only pass in an XBF_UNMAPPED for the inode buffers as that's
+> the only place where we want them.
 
-There are no background threads in 226, so if the unmount is failing
-then there is something wrong with the unmount process.  Indeed, 226
-is doing direct Io writes prior to unmount, so the only dirty
-objects should be the inode and free space indexing metadata. If
-unmount is failing to handle this, we need to know why....
-
-So I definitely agree with Stefan on this one - adding a sync before
-unmount looks like hiding a problem rather than solving it...
+Sounds like a good idea. I'll write a patch to do this....
 
 Cheers,
 
