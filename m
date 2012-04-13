@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3D9oRrZ020315 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:28 -0500
+	q3D9oTNB020332 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:29 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UtzrxdTee3ucDL5W for
-	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:26 -0700 (PDT)
+	cuda.sgi.com with ESMTP id pFap4Lj04N7AeyRZ for
+	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:28 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oQWN004562
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oSmF006393
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:26 -0400
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:28 -0400
 From: tmarek@redhat.com
-Subject: [PATCH 4/5] xfstests: sync before umount to avoid device busy problems
-Date: Fri, 13 Apr 2012 11:49:45 +0200
-Message-Id: <1334310586-2281-4-git-send-email-tmarek@redhat.com>
+Subject: [PATCH 5/5] xfstests 273: fix of reading scratch size and removing
+	lost+found
+Date: Fri, 13 Apr 2012 11:49:46 +0200
+Message-Id: <1334310586-2281-5-git-send-email-tmarek@redhat.com>
 In-Reply-To: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,71 +35,68 @@ Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
 
 From: Tom Marek <tmarek@redhat.com>
 
-Some tests might fail because of 'device or resource busy' when unmounting
-either the SCRATCH or the TEST device. The reason this happenes is that
-some processes might not have time to finish properly, or they are still
-waiting for IO. The sync command was added before unmount into
-_scratch_unmount() and umount_or_remount_ro which should help processes to
-finish before unmounting takes place and thus it solves the problem.
-This fixes for example tests 226 and 247.
+There were two reasons why test 273 was failing. Firstrly, it was removing
+everything from SCRATCH_MNT directory at the beginning of tests including
+the lost+found directory. This cauesd error while checking scratch fs after
+finishing test. Secondly, obtaining of the partition size was not counting
+with with behaviour of df utility which may split the line containg
+informations about one partition when it is too long thus it may have returned
+nothing.
 
-Test 226 uses plain umount command which suffers from exactly the same problem
-as described above. Use fixed _scratch_unmount() instead of plain umount fixes
-this problem.
+First problem was solved with removing all unnecessary rm -rf commands and the
+second one was fixed with alternative awk script which is able to deal with
+any line splitting possible.
 
 Signed-off-by: Tom Marek <tmarek@redhat.com>
 
 Reviewed-by: Lukas Czerner <lczerner@redhat.com>
 ---
- 226       |    4 ++--
- common.rc |    5 +++++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ 273 |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/226 b/226
-index 6f28ac9..f8847c6 100755
---- a/226
-+++ b/226
-@@ -61,7 +61,7 @@ for I in `seq 1 $loops`; do
- done
- 
- echo
--umount $SCRATCH_DEV
-+_scratch_unmount
- _scratch_mount
- 
- echo "--> $loops direct 64m writes in a loop"
-@@ -73,7 +73,7 @@ for I in `seq 1 $loops`; do
- done
- 
- echo
--umount $SCRATCH_DEV
-+_scratch_unmount
- 
- status=0
- exit
-diff --git a/common.rc b/common.rc
-index cab0b64..e56e5bc 100644
---- a/common.rc
-+++ b/common.rc
-@@ -255,6 +255,8 @@ _scratch_mount()
- 
- _scratch_unmount()
+diff --git a/273 b/273
+index 2965132..86262d1 100755
+--- a/273
++++ b/273
+@@ -35,7 +35,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+ _cleanup()
  {
-+    # Run sync to give processes some time to finish before unmount
-+    sync
-     $UMOUNT_PROG $SCRATCH_DEV
+ 	cd /
+-	rm -rf $SCRATCH_MNT/* $tmp.*
++	rm -rf $tmp.*
+ 	_scratch_unmount
  }
  
-@@ -1051,6 +1053,9 @@ _umount_or_remount_ro()
-     device=$1
-     mountpoint=`_is_mounted $device`
+@@ -66,9 +66,9 @@ _file_create()
+ 		exit
+ 	fi
  
-+    # Run sync to give processes some time to finish before unmount
-+    sync
-+
-     if [ $USE_REMOUNT -eq 0 ]; then
-         $UMOUNT_PROG $device
-     else
+-	cd $SCRATCH_MNT/origin
++	cd $SCRATCH_MNT
+ 
+-	_disksize=`df --block-size=1 | grep $SCRATCH_DEV | awk '{print $2}'`
++	_disksize=`df --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
+ 	_disksize=$(($_disksize / 3))
+ 	_num=$(($_disksize / $count / $threads / 4096))
+ 	_count=$count
+@@ -105,8 +105,6 @@ _do_workload()
+ {
+ 	_pids=""
+ 	_pid=1
+-	
+-	rm -rf $SCRATCH_MNT/*
+ 
+ 	_threads_set
+ 	_file_create
+@@ -134,7 +132,7 @@ echo "------------------------------"
+ 
+ rm -f $seq.full
+ 
+-umount $SCRATCH_DEV 2>/dev/null
++_scratch_unmount 2>/dev/null
+ _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+ _scratch_mount
+ 
 -- 
 1.7.7.6
 
