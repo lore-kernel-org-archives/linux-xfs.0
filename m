@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3D9oPh7020288 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:25 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id tlTeiV1I38ygKl7p for
-	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:20 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oKWT004578
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:20 -0400
-From: tmarek@redhat.com
-Subject: [PATCH 1/5] xfstests 062: fix support for ext4 and SELinux
-Date: Fri, 13 Apr 2012 11:49:42 +0200
-Message-Id: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
+	q3DA4DBg022200 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:04:13 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	KaAKNdt5zquDgwKi for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 03:04:11 -0700 (PDT)
+Date: Fri, 13 Apr 2012 20:04:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 04/10] xfs: implement freezing by emptying the AIL
+Message-ID: <20120413100409.GH6734@dastard>
+References: <20120327164400.967415009@bombadil.infradead.org>
+	<20120327164644.830680325@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120327164644.830680325@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,290 +23,118 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-From: Tom Marek <tmarek@redhat.com>
+On Tue, Mar 27, 2012 at 12:44:04PM -0400, Christoph Hellwig wrote:
+> Now that we write back all metadata either synchronously or through the AIL
+> we can simply implement metadata freezing in terms of emptying the AIL.
+> 
+> The implementation for this is fairly simply and straight-forward:  A new
+> routine is added that increments a counter that tells xfsaild to not stop
+> until the AIL is empty and then waits on a wakeup from
+> xfs_trans_ail_delete_bulk to signal that the AIL is empty.
+> 
+> As usual the devil is in the details, in this case the filesystem shutdown
+> code.  Currently we are a bit sloppy there and do not continue ail pushing
+> in that case, and thus never reach the code in the log item implementations
+> that can unwind in case of a shutdown filesystem.  Also the code to 
+> abort inode and dquot flushes was rather sloppy before and did not remove
+> the log items from the AIL, which had to be fixed as well.
 
-Tests number 062 was supposed to work with ext4 fs but there were some
-problems in it - Tests haven't considered existence of lost+found directory in
-ext4. Also when scratch was mounted with SELinux context test failed because
-fgetattr returns SELinux extended attributes. And when fgetattr is run with
-recursive flag it's output might change between file systems due to different
-file ordering. Fix this by sorting the output manually. Also all lines
-containing SELinux and lost+found were removed from output.
+Probably don't need this bit in the commit message - the previous
+commits kind of explain the reason....
 
-Signed-off-by: Tom Marek <tmarek@redhat.com>
+> Also treat unmount the same way as freeze now, except that we still keep a
+> synchronous inode reclaim pass to make sure we reclaim all clean inodes, too.
 
-Reviewed-by: Lukas Czerner <lczerner@redhat.com>
----
- 062     |   50 ++++++++++++++++++++++++++---------
- 062.out |   90 +++++++++++++++++++++++++++++++-------------------------------
- 2 files changed, 82 insertions(+), 58 deletions(-)
+Actaully, I think we need an inode reclaim pass when freezing, too,
+otherwise the shrinker or background reclaim will get stuck trying
+to reclaim them.
 
-diff --git a/062 b/062
-index f666e1b..116296b 100755
---- a/062
-+++ b/062
-@@ -46,6 +46,30 @@ _cleanup()
- }
- trap "_cleanup; exit \$status" 0 1 2 3 15
- 
-+# remove "security.selinux=..." because it is not installed on all systems
-+# and it not relevant to this test
-+_remove_selinux(){
-+	egrep -v '^(selinux|security\.selinux)'
-+}
-+
-+# sort getfattr output and remove entries containing only selinux attributes
-+_sort_getfattr(){
-+	awk '
-+	BEGIN{
-+		RS=""
-+	}
-+	{
-+		a[FNR]=$0
-+	}
-+	END{
-+		n = asort(a);
-+		for(i = 1; i <= n; ++i){
-+			if (a[i] ~ /# file: SCRATCH_MNT[^\n]*\nsecurity.selinux[^\n]*\n/)
-+				print a[i] "\n"
-+		}
-+	}'
-+}
-+
- getfattr()
- {
-     $GETFATTR_PROG --absolute-names -dh $@ 2>&1 | _filter_scratch
-@@ -67,7 +91,7 @@ _create_test_bed()
- 	mknod $SCRATCH_MNT/dev/c c 0 0
- 	mknod $SCRATCH_MNT/dev/p p
- 	# sanity check
--	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch
-+	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch | grep -v "lost+found"
- }
- 
- # real QA test starts here
-@@ -102,7 +126,7 @@ for nsp in $ATTR_MODES; do
- 		echo "*** set/get one initially empty attribute"
-     
- 		setfattr -h -n $nsp.name $SCRATCH_MNT/$inode
--		getfattr -m $nsp $SCRATCH_MNT/$inode
-+		getfattr -m $nsp $SCRATCH_MNT/$inode | _remove_selinux
- 
- 		echo "*** overwrite empty, set several new attributes"
- 		setfattr -h -n $nsp.name -v 0xbabe $SCRATCH_MNT/$inode
-@@ -110,33 +134,33 @@ for nsp in $ATTR_MODES; do
- 		setfattr -h -n $nsp.name3 -v 0xdeface $SCRATCH_MNT/$inode
- 
- 		echo "*** fetch several attribute names and values (hex)"
--		getfattr -m $nsp -e hex $SCRATCH_MNT/$inode
-+		getfattr -m $nsp -e hex $SCRATCH_MNT/$inode | _remove_selinux
- 
- 		echo "*** fetch several attribute names and values (base64)"
--		getfattr -m $nsp -e base64 $SCRATCH_MNT/$inode
-+		getfattr -m $nsp -e base64 $SCRATCH_MNT/$inode | _remove_selinux
- 		
- 		echo "*** shrink value of an existing attribute"
- 		setfattr -h -n $nsp.name2 -v 0xdeaf $SCRATCH_MNT/$inode
--		getfattr -m $nsp -e hex $SCRATCH_MNT/$inode
-+		getfattr -m $nsp -e hex $SCRATCH_MNT/$inode | _remove_selinux
- 
- 		echo "*** grow value of existing attribute"
- 		setfattr -h -n $nsp.name2 -v 0xdecade $SCRATCH_MNT/$inode
--		getfattr -m $nsp -e hex $SCRATCH_MNT/$inode
-+		getfattr -m $nsp -e hex $SCRATCH_MNT/$inode | _remove_selinux
- 		
- 		echo "*** set an empty value for second attribute"
- 		setfattr -h -n $nsp.name2 $SCRATCH_MNT/$inode
--		getfattr -m $nsp -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
-+		getfattr -m $nsp -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter | _remove_selinux
- 
- 		echo "*** overwrite empty value"
- 		setfattr -h -n $nsp.name2 -v 0xcafe $SCRATCH_MNT/$inode
--		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
-+		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter | _remove_selinux
- 
- 		echo "*** remove attribute"
- 		setfattr -h -x $nsp.name2 $SCRATCH_MNT/$inode
--		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter
-+		getfattr -m $nsp -e hex -n $nsp.name2 $SCRATCH_MNT/$inode 2>&1 | invalid_attribute_filter | _remove_selinux
- 
- 		echo "*** final list (strings, type=$inode, nsp=$nsp)"
--		getfattr -m '.' -e hex $SCRATCH_MNT/$inode
-+		getfattr -m '.' -e hex $SCRATCH_MNT/$inode | _sort_getfattr | _remove_selinux
- 	
- 	done
- done
-@@ -160,18 +184,18 @@ _extend_test_bed()
- 	# whack a symlink in the middle, just to be difficult
- 	ln -s $SCRATCH_MNT/here/up $SCRATCH_MNT/descend/and
- 	# dump out our new starting point
--	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch
-+	find $SCRATCH_MNT | LC_COLLATE=POSIX sort | _filter_scratch | grep -v "lost+found"
- }
- 
- _extend_test_bed
- 
- echo
- echo "*** directory descent with us following symlinks"
--getfattr -h -L -R -m '.' -e hex $SCRATCH_MNT
-+getfattr -h -L -R -m '.' -e hex $SCRATCH_MNT | _sort_getfattr | _remove_selinux
- 
- echo
- echo "*** directory descent without following symlinks"
--getfattr -h -P -R -m '.' -e hex $SCRATCH_MNT
-+getfattr -h -P -R -m '.' -e hex $SCRATCH_MNT | _sort_getfattr | _remove_selinux
- 
- 
- # 
-diff --git a/062.out b/062.out
-index 699254a..8cc3c65 100644
---- a/062.out
-+++ b/062.out
-@@ -508,21 +508,21 @@ SCRATCH_MNT/lnk
- SCRATCH_MNT/reg
- 
- *** directory descent with us following symlinks
--# file: SCRATCH_MNT/reg
--trusted.name=0xbabe
--trusted.name3=0xdeface
--user.name=0xbabe
--user.name3=0xdeface
-+# file: SCRATCH_MNT/descend
-+user.1=0x3233
-+user.x=0x797a
- 
--# file: SCRATCH_MNT/dir
--trusted.name=0xbabe
--trusted.name3=0xdeface
--user.name=0xbabe
--user.name3=0xdeface
-+# file: SCRATCH_MNT/descend/and/ascend
-+trusted.9=0x3837
-+trusted.a=0x6263
- 
--# file: SCRATCH_MNT/lnk
--trusted.name=0xbabe
--trusted.name3=0xdeface
-+# file: SCRATCH_MNT/descend/down
-+user.1=0x3233
-+user.x=0x797a
-+
-+# file: SCRATCH_MNT/descend/down/here
-+user.1=0x3233
-+user.x=0x797a
- 
- # file: SCRATCH_MNT/dev/b
- trusted.name=0xbabe
-@@ -536,6 +536,12 @@ trusted.name3=0xdeface
- trusted.name=0xbabe
- trusted.name3=0xdeface
- 
-+# file: SCRATCH_MNT/dir
-+trusted.name=0xbabe
-+trusted.name3=0xdeface
-+user.name=0xbabe
-+user.name3=0xdeface
-+
- # file: SCRATCH_MNT/here
- trusted.9=0x3837
- trusted.a=0x6263
-@@ -548,6 +554,18 @@ trusted.a=0x6263
- trusted.9=0x3837
- trusted.a=0x6263
- 
-+# file: SCRATCH_MNT/lnk
-+trusted.name=0xbabe
-+trusted.name3=0xdeface
-+
-+# file: SCRATCH_MNT/reg
-+trusted.name=0xbabe
-+trusted.name3=0xdeface
-+user.name=0xbabe
-+user.name3=0xdeface
-+
-+
-+*** directory descent without following symlinks
- # file: SCRATCH_MNT/descend
- user.1=0x3233
- user.x=0x797a
-@@ -560,28 +578,6 @@ user.x=0x797a
- user.1=0x3233
- user.x=0x797a
- 
--# file: SCRATCH_MNT/descend/and/ascend
--trusted.9=0x3837
--trusted.a=0x6263
--
--
--*** directory descent without following symlinks
--# file: SCRATCH_MNT/reg
--trusted.name=0xbabe
--trusted.name3=0xdeface
--user.name=0xbabe
--user.name3=0xdeface
--
--# file: SCRATCH_MNT/dir
--trusted.name=0xbabe
--trusted.name3=0xdeface
--user.name=0xbabe
--user.name3=0xdeface
--
--# file: SCRATCH_MNT/lnk
--trusted.name=0xbabe
--trusted.name3=0xdeface
--
- # file: SCRATCH_MNT/dev/b
- trusted.name=0xbabe
- trusted.name3=0xdeface
-@@ -594,6 +590,12 @@ trusted.name3=0xdeface
- trusted.name=0xbabe
- trusted.name3=0xdeface
- 
-+# file: SCRATCH_MNT/dir
-+trusted.name=0xbabe
-+trusted.name3=0xdeface
-+user.name=0xbabe
-+user.name3=0xdeface
-+
- # file: SCRATCH_MNT/here
- trusted.9=0x3837
- trusted.a=0x6263
-@@ -606,17 +608,15 @@ trusted.a=0x6263
- trusted.9=0x3837
- trusted.a=0x6263
- 
--# file: SCRATCH_MNT/descend
--user.1=0x3233
--user.x=0x797a
--
--# file: SCRATCH_MNT/descend/down
--user.1=0x3233
--user.x=0x797a
-+# file: SCRATCH_MNT/lnk
-+trusted.name=0xbabe
-+trusted.name3=0xdeface
- 
--# file: SCRATCH_MNT/descend/down/here
--user.1=0x3233
--user.x=0x797a
-+# file: SCRATCH_MNT/reg
-+trusted.name=0xbabe
-+trusted.name3=0xdeface
-+user.name=0xbabe
-+user.name3=0xdeface
- 
- 
- 
+.....
+
+> -STATIC void
+> -xfs_quiesce_fs(
+> -	struct xfs_mount	*mp)
+> -{
+> -	int	count = 0, pincount;
+> -
+> -	xfs_reclaim_inodes(mp, 0);
+> -	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+
+here's where we used to do inode reclaim during a freeze...
+
+....
+> @@ -421,8 +342,8 @@ xfs_quiesce_attr(
+>  	while (atomic_read(&mp->m_active_trans) > 0)
+>  		delay(100);
+>  
+> -	/* flush inodes and push all remaining buffers out to disk */
+> -	xfs_quiesce_fs(mp);
+> +	/* flush all pending changes from the AIL */
+> +	xfs_ail_push_all_sync(mp->m_ail);
+
+and now that doesn't happen. I think we still need the reclaim pass
+here...
+
+> @@ -397,6 +396,15 @@ xfsaild_push(
+>  	XFS_STATS_INC(xs_push_ail);
+>  
+>  	/*
+> +	 * If we are draining the AIL push all items, not just the current
+> +	 * threshold.
+> +	 */
+> +	if (atomic_read(&ailp->xa_wait_empty))
+> +		target = xfs_ail_max(ailp)->li_lsn;
+> +	else
+> +		target = ailp->xa_target;
+> +
+
+I'm not sure this is the best way to do this. Effectively you've
+implemented xfs_ail_push_all() differently, and added a new counter
+to do it.
+
+....
+> @@ -611,6 +614,34 @@ xfs_ail_push_all(
+>  }
+>  
+>  /*
+> + * Push out all items in the AIL immediately and wait until the AIL is empty.
+> + */
+> +void
+> +xfs_ail_push_all_sync(
+> +	struct xfs_ail  *ailp)
+> +{
+> +	DEFINE_WAIT(wait);
+> +
+> +	/*
+> +	 * We use a counter instead of a flag here to support multiple
+> +	 * processes calling into sync at the same time.
+> +	 */
+> +	atomic_inc(&ailp->xa_wait_empty);
+
+if we just set the target here appropriately, we don't need the
+atomic counter, just:
+
+	do {
+		prepare_to_wait()
+		ailp->xa_target = xfs_ail_max(ailp)->li_lsn;
+		wake_up_process(ailp->xa_task);
+		if (!xfs_ail_min_lsn(ailp))
+			break;
+		schedule();
+	} while (xfs_ail_min_lsn(ailp));
+
+
+All the other changes look OK.
 -- 
-1.7.7.6
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
