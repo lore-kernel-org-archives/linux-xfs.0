@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DCBUe1037977 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:30 -0500
+	q3DCBC6t037779 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:12 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LwInNQJnKb3apzRa for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 05:11:28 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SIfLY-00031d-AS
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:24 +1000
+	gTmr8qnNgKIQHpxV for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:11:10 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SIfLI-00030q-Ui
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:08 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SIfLO-0003Od-8N
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:14 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SIfLD-0003Nx-Qp
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/18] xfs: kill xfs_read_buf()
-Date: Fri, 13 Apr 2012 22:10:59 +1000
-Message-Id: <1334319061-12968-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/18] xfs: pass shutdown method into xfs_trans_ail_delete_bulk
+Date: Fri, 13 Apr 2012 22:10:45 +1000
+Message-Id: <1334319061-12968-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,174 +35,242 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_read_buf() is effectively the same as xfs_trans_read_buf() when called
-outside a transaction context. The error handling is slightly different in that
-xfs_read_buf stales the errored buffer it gets back, but there is probably good
-reason for xfs_trans_read_buf() for doing this.
-
-Hence update xfs_trans_read_buf() to the same error handling as xfs_read_buf(),
-and convert all the callers of xfs_read_buf() to use the former function. We can
-then remove xfs_read_buf().
+xfs_trans_ail_delete_bulk() can be called from different contexts so
+if the item is not in the AIL we need different shutdown for each
+context.  Pass in the shutdown method needed so the correct action
+can be taken.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_attr.c        |    4 ++--
- fs/xfs/xfs_fsops.c       |    2 +-
- fs/xfs/xfs_log_recover.c |   11 ++++------
- fs/xfs/xfs_rw.c          |   50 ----------------------------------------------
- fs/xfs/xfs_rw.h          |    3 ---
- fs/xfs/xfs_trans_buf.c   |    4 ++++
- 6 files changed, 11 insertions(+), 63 deletions(-)
+ fs/xfs/xfs_buf_item.c     |    4 ++--
+ fs/xfs/xfs_dquot.c        |    2 +-
+ fs/xfs/xfs_dquot_item.c   |    2 +-
+ fs/xfs/xfs_extfree_item.c |    3 ++-
+ fs/xfs/xfs_inode.c        |    4 ++--
+ fs/xfs/xfs_inode_item.c   |   23 +++++++++++++----------
+ fs/xfs/xfs_inode_item.h   |    2 +-
+ fs/xfs/xfs_log_recover.c  |    3 ++-
+ fs/xfs/xfs_trans_ail.c    |    5 +++--
+ fs/xfs/xfs_trans_priv.h   |    8 +++++---
+ 10 files changed, 32 insertions(+), 24 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index c8ef9a9..ad85bed 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -1987,8 +1987,8 @@ xfs_attr_rmtval_get(xfs_da_args_t *args)
- 			       (map[i].br_startblock != HOLESTARTBLOCK));
- 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
- 			blkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
--			error = xfs_read_buf(mp, mp->m_ddev_targp, dblkno,
--					     blkcnt, XBF_DONT_BLOCK, &bp);
-+			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-+						   dblkno, blkcnt, 0, &bp);
- 			if (error)
- 				return(error);
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index fb20f38..7f0abea 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -454,7 +454,7 @@ xfs_buf_item_unpin(
+ 			bp->b_iodone = NULL;
+ 		} else {
+ 			spin_lock(&ailp->xa_lock);
+-			xfs_trans_ail_delete(ailp, (xfs_log_item_t *)bip);
++			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_LOG_IO_ERROR);
+ 			xfs_buf_item_relse(bp);
+ 			ASSERT(bp->b_fspriv == NULL);
+ 		}
+@@ -1006,6 +1006,6 @@ xfs_buf_iodone(
+ 	 * Either way, AIL is useless if we're forcing a shutdown.
+ 	 */
+ 	spin_lock(&ailp->xa_lock);
+-	xfs_trans_ail_delete(ailp, lip);
++	xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 	xfs_buf_item_free(BUF_ITEM(lip));
+ }
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 0760c47..7bf3855 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -857,7 +857,7 @@ xfs_qm_dqflush_done(
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+ 		spin_lock(&ailp->xa_lock);
+ 		if (lip->li_lsn == qip->qli_flush_lsn)
+-			xfs_trans_ail_delete(ailp, lip);
++			xfs_trans_ail_delete(ailp, lip, SHUTDOWN_CORRUPT_INCORE);
+ 		else
+ 			spin_unlock(&ailp->xa_lock);
+ 	}
+diff --git a/fs/xfs/xfs_dquot_item.c b/fs/xfs/xfs_dquot_item.c
+index 9c5d58d..aa6a2a6 100644
+--- a/fs/xfs/xfs_dquot_item.c
++++ b/fs/xfs/xfs_dquot_item.c
+@@ -384,7 +384,7 @@ xfs_qm_qoffend_logitem_committed(
+ 	 * xfs_trans_ail_delete() drops the AIL lock.
+ 	 */
+ 	spin_lock(&ailp->xa_lock);
+-	xfs_trans_ail_delete(ailp, (xfs_log_item_t *)qfs);
++	xfs_trans_ail_delete(ailp, &qfs->qql_item, SHUTDOWN_LOG_IO_ERROR);
  
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 874d398..e9f5bc0 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -402,7 +402,7 @@ xfs_growfs_data_private(
+ 	kmem_free(qfs);
+ 	kmem_free(qfe);
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index 1a40dd7..1c57eb9 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -64,7 +64,8 @@ __xfs_efi_release(
+ 	if (!test_and_clear_bit(XFS_EFI_COMMITTED, &efip->efi_flags)) {
+ 		spin_lock(&ailp->xa_lock);
+ 		/* xfs_trans_ail_delete() drops the AIL lock. */
+-		xfs_trans_ail_delete(ailp, &efip->efi_item);
++		xfs_trans_ail_delete(ailp, &efip->efi_item,
++				     SHUTDOWN_LOG_IO_ERROR);
+ 		xfs_efi_item_free(efip);
+ 	}
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index acd846d..65d7d99 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -2377,7 +2377,7 @@ cluster_corrupt_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(iq);
++	xfs_iflush_abort(iq, false);
+ 	kmem_free(ilist);
+ 	xfs_perag_put(pag);
+ 	return XFS_ERROR(EFSCORRUPTED);
+@@ -2482,7 +2482,7 @@ abort_out:
+ 	/*
+ 	 * Unlocks the flush lock
+ 	 */
+-	xfs_iflush_abort(ip);
++	xfs_iflush_abort(ip, false);
+ 	return error;
+ }
  
- 	/* update secondary superblocks. */
- 	for (agno = 1; agno < nagcount; agno++) {
--		error = xfs_read_buf(mp, mp->m_ddev_targp,
-+		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
- 				  XFS_FSS_TO_BB(mp, 1), 0, &bp);
- 		if (error) {
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 6353eb3..b700ced 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -2535,14 +2535,11 @@ xlog_recover_dquot_pass2(
- 		return XFS_ERROR(EIO);
- 	ASSERT(dq_f->qlf_len == 1);
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 8aaebb2..3f96a94 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -777,7 +777,8 @@ xfs_iflush_done(
+ 			ASSERT(i <= need_ail);
+ 		}
+ 		/* xfs_trans_ail_delete_bulk() drops the AIL lock. */
+-		xfs_trans_ail_delete_bulk(ailp, log_items, i);
++		xfs_trans_ail_delete_bulk(ailp, log_items, i,
++					  SHUTDOWN_CORRUPT_INCORE);
+ 	}
  
--	error = xfs_read_buf(mp, mp->m_ddev_targp,
--			     dq_f->qlf_blkno,
--			     XFS_FSB_TO_BB(mp, dq_f->qlf_len),
--			     0, &bp);
--	if (error) {
--		xfs_buf_ioerror_alert(bp, "xlog_recover_do..(read#3)");
-+	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
-+				   XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp);
-+	if (error)
- 		return error;
--	}
-+
- 	ASSERT(bp);
- 	ddq = (xfs_disk_dquot_t *)xfs_buf_offset(bp, dq_f->qlf_boffset);
  
-diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
-index 2ce9775..3c2488a 100644
---- a/fs/xfs/xfs_rw.c
-+++ b/fs/xfs/xfs_rw.c
-@@ -92,56 +92,6 @@ xfs_do_force_shutdown(
+@@ -798,16 +799,15 @@ xfs_iflush_done(
  }
  
  /*
-- * This isn't an absolute requirement, but it is
-- * just a good idea to call xfs_read_buf instead of
-- * directly doing a read_buf call. For one, we shouldn't
-- * be doing this disk read if we are in SHUTDOWN state anyway,
-- * so this stops that from happening. Secondly, this does all
-- * the error checking stuff and the brelse if appropriate for
-- * the caller, so the code can be a little leaner.
-- */
--
--int
--xfs_read_buf(
--	struct xfs_mount *mp,
--	xfs_buftarg_t	 *target,
--	xfs_daddr_t	 blkno,
--	int              len,
--	uint             flags,
--	xfs_buf_t	 **bpp)
--{
--	xfs_buf_t	 *bp;
--	int		 error;
--
--	if (!flags)
--		flags = XBF_MAPPED;
--
--	bp = xfs_buf_read(target, blkno, len, flags);
--	if (!bp)
--		return XFS_ERROR(EIO);
--	error = bp->b_error;
--	if (!error && !XFS_FORCED_SHUTDOWN(mp)) {
--		*bpp = bp;
--	} else {
--		*bpp = NULL;
--		if (error) {
--			xfs_buf_ioerror_alert(bp, __func__);
--		} else {
--			error = XFS_ERROR(EIO);
--		}
--		if (bp) {
--			XFS_BUF_UNDONE(bp);
--			xfs_buf_stale(bp);
--			/*
--			 * brelse clears B_ERROR and b_error
--			 */
--			xfs_buf_relse(bp);
--		}
--	}
--	return (error);
--}
--
--/*
-  * helper function to extract extent size hint from inode
+- * This is the inode flushing abort routine.  It is called
+- * from xfs_iflush when the filesystem is shutting down to clean
+- * up the inode state.
+- * It is responsible for removing the inode item
+- * from the AIL if it has not been re-logged, and unlocking the inode's
+- * flush lock.
++ * This is the inode flushing abort routine.  It is called from xfs_iflush when
++ * the filesystem is shutting down to clean up the inode state.  It is
++ * responsible for removing the inode item from the AIL if it has not been
++ * re-logged, and unlocking the inode's flush lock.
   */
- xfs_extlen_t
-diff --git a/fs/xfs/xfs_rw.h b/fs/xfs/xfs_rw.h
-index bbdb9ad..967b3a4 100644
---- a/fs/xfs/xfs_rw.h
-+++ b/fs/xfs/xfs_rw.h
-@@ -39,9 +39,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
- /*
-  * Prototypes for functions in xfs_rw.c.
-  */
--extern int xfs_read_buf(struct xfs_mount *mp, xfs_buftarg_t *btp,
--			xfs_daddr_t blkno, int len, uint flags,
--			struct xfs_buf **bpp);
- extern xfs_extlen_t xfs_get_extsz_hint(struct xfs_inode *ip);
+ void
+ xfs_iflush_abort(
+-	xfs_inode_t		*ip)
++	xfs_inode_t		*ip,
++	bool			stale)
+ {
+ 	xfs_inode_log_item_t	*iip = ip->i_itemp;
  
- #endif /* __XFS_RW_H__ */
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index f9cb7ee..5e4cf61 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -274,6 +274,8 @@ xfs_trans_read_buf(
- 	xfs_buf_log_item_t	*bip;
- 	int			error;
- 
-+	*bpp = NULL;
-+
- 	if (flags == 0)
- 		flags = XBF_MAPPED;
- 
-@@ -289,6 +291,8 @@ xfs_trans_read_buf(
- 		if (bp->b_error) {
- 			error = bp->b_error;
- 			xfs_buf_ioerror_alert(bp, __func__);
-+			XFS_BUF_UNDONE(bp);
-+			xfs_buf_stale(bp);
- 			xfs_buf_relse(bp);
- 			return error;
+@@ -817,7 +817,10 @@ xfs_iflush_abort(
+ 			spin_lock(&ailp->xa_lock);
+ 			if (iip->ili_item.li_flags & XFS_LI_IN_AIL) {
+ 				/* xfs_trans_ail_delete() drops the AIL lock. */
+-				xfs_trans_ail_delete(ailp, (xfs_log_item_t *)iip);
++				xfs_trans_ail_delete(ailp, &iip->ili_item,
++						stale ?
++						     SHUTDOWN_LOG_IO_ERROR :
++						     SHUTDOWN_CORRUPT_INCORE);
+ 			} else
+ 				spin_unlock(&ailp->xa_lock);
  		}
+@@ -844,7 +847,7 @@ xfs_istale_done(
+ 	struct xfs_buf		*bp,
+ 	struct xfs_log_item	*lip)
+ {
+-	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode);
++	xfs_iflush_abort(INODE_ITEM(lip)->ili_inode, true);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index 41d61c3..376d4d0 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -165,7 +165,7 @@ extern void xfs_inode_item_init(struct xfs_inode *, struct xfs_mount *);
+ extern void xfs_inode_item_destroy(struct xfs_inode *);
+ extern void xfs_iflush_done(struct xfs_buf *, struct xfs_log_item *);
+ extern void xfs_istale_done(struct xfs_buf *, struct xfs_log_item *);
+-extern void xfs_iflush_abort(struct xfs_inode *);
++extern void xfs_iflush_abort(struct xfs_inode *, bool);
+ extern int xfs_inode_item_format_convert(xfs_log_iovec_t *,
+ 					 xfs_inode_log_format_t *);
+ 
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 5e864a9..396e3bf 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2645,7 +2645,8 @@ xlog_recover_efd_pass2(
+ 				 * xfs_trans_ail_delete() drops the
+ 				 * AIL lock.
+ 				 */
+-				xfs_trans_ail_delete(ailp, lip);
++				xfs_trans_ail_delete(ailp, lip,
++						     SHUTDOWN_CORRUPT_INCORE);
+ 				xfs_efi_item_free(efip);
+ 				spin_lock(&ailp->xa_lock);
+ 				break;
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 99106f1..cd2fde7 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -717,7 +717,8 @@ void
+ xfs_trans_ail_delete_bulk(
+ 	struct xfs_ail		*ailp,
+ 	struct xfs_log_item	**log_items,
+-	int			nr_items) __releases(ailp->xa_lock)
++	int			nr_items,
++	int			shutdown_type) __releases(ailp->xa_lock)
+ {
+ 	xfs_log_item_t		*mlip;
+ 	int			mlip_changed = 0;
+@@ -735,7 +736,7 @@ xfs_trans_ail_delete_bulk(
+ 				xfs_alert_tag(mp, XFS_PTAG_AILDELETE,
+ 		"%s: attempting to delete a log item that is not in the AIL",
+ 						__func__);
+-				xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++				xfs_force_shutdown(mp, shutdown_type);
+ 			}
+ 			return;
+ 		}
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index dd2742f..da03d1a 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -93,14 +93,16 @@ xfs_trans_ail_update(
+ }
+ 
+ void	xfs_trans_ail_delete_bulk(struct xfs_ail *ailp,
+-				struct xfs_log_item **log_items, int nr_items)
++				struct xfs_log_item **log_items, int nr_items,
++				int shutdown_type)
+ 				__releases(ailp->xa_lock);
+ static inline void
+ xfs_trans_ail_delete(
+ 	struct xfs_ail	*ailp,
+-	xfs_log_item_t	*lip) __releases(ailp->xa_lock)
++	xfs_log_item_t	*lip,
++	int		shutdown_type) __releases(ailp->xa_lock)
+ {
+-	xfs_trans_ail_delete_bulk(ailp, &lip, 1);
++	xfs_trans_ail_delete_bulk(ailp, &lip, 1, shutdown_type);
+ }
+ 
+ void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
 -- 
 1.7.9.5
 
