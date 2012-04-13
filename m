@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DCBVQH038002 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:31 -0500
+	q3DCB8FG037752 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:09 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	CsMACv7qEoUWSfZB for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 05:11:30 -0700 (PDT)
+	dFb86rzos67CLIFd for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:11:07 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SIfLY-00031I-6s
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:24 +1000
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SIfLE-0003OM-3x
+	(envelope-from <dave@fromorbit.com>) id 1SIfLE-00030r-5T
 	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:04 +1000
+Received: from dave by disappointment with local (Exim 4.77)
+	(envelope-from <dave@disappointment.disaster>) id 1SIfLD-0003O2-TN
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/18] xfs: kill b_file_offset
-Date: Fri, 13 Apr 2012 22:10:54 +1000
-Message-Id: <1334319061-12968-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/18] xfs: page type check in writeback only checks last
+	buffer
+Date: Fri, 13 Apr 2012 22:10:47 +1000
+Message-Id: <1334319061-12968-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,120 +36,77 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Seeing as we pass block numbers around everywhere in the buffer
-cache now, it makes no sense to index everything by byte offset.
-Replace all the byte offset indexing with block number based
-indexing, and replace all uses of the byte offset with direct
-conversion from the block index.
+xfs_is_delayed_page() checks to see if a page has buffers matching
+the given IO type passed in. It does so by walking the buffer heads
+on the page and checking if the state flags match the IO type.
+
+However, the "acceptable" variable that is calculated is overwritten
+every time a new buffer is checked. Hence if the first buffer on the
+page is of the right type, this state is lost if the second buffer
+is not of the correct type. This means that xfs_aops_discard_page()
+may not discard delalloc regions when it is supposed to, and
+xfs_convert_page() may not cluster IO as efficiently as possible.
+
+This problem only occurs on filesystems with a block size smaller
+than page size.
+
+Also, rename xfs_is_delayed_page() to xfs_check_page_type() to
+better describe what it is doing - it is not delalloc specific
+anymore.
+
+The problem was first noticed by Peter Watkins.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_buf.c |   17 +++++++----------
- fs/xfs/xfs_buf.h |    5 +----
- 2 files changed, 8 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_aops.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index c104cbb..58561d9 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -190,7 +190,7 @@ xfs_buf_alloc(
- 	sema_init(&bp->b_sema, 0); /* held, no waiters */
- 	XB_SET_OWNER(bp);
- 	bp->b_target = target;
--	bp->b_file_offset = blkno << BBSHIFT;
-+
- 	/*
- 	 * Set buffer_length and count_desired to the same value initially.
- 	 * I/O routines should use count_desired, which will be the same in
-@@ -331,8 +331,8 @@ xfs_buf_allocate_memory(
- 	}
- 
- use_alloc_page:
--	end = bp->b_file_offset + bp->b_buffer_length;
--	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(bp->b_file_offset);
-+	end = BBTOB(bp->b_bn) + bp->b_buffer_length;
-+	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(BBTOB(bp->b_bn));
- 	error = _xfs_buf_get_pages(bp, page_count, flags);
- 	if (unlikely(error))
- 		return error;
-@@ -433,19 +433,17 @@ _xfs_buf_find(
- 	xfs_buf_flags_t		flags,
- 	xfs_buf_t		*new_bp)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 0783def..2fc12db 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -623,7 +623,7 @@ xfs_map_at_offset(
+  * or delayed allocate extent.
+  */
+ STATIC int
+-xfs_is_delayed_page(
++xfs_check_page_type(
+ 	struct page		*page,
+ 	unsigned int		type)
  {
--	xfs_off_t		offset;
- 	size_t			numbytes;
- 	struct xfs_perag	*pag;
- 	struct rb_node		**rbp;
- 	struct rb_node		*parent;
- 	xfs_buf_t		*bp;
+@@ -637,11 +637,11 @@ xfs_is_delayed_page(
+ 		bh = head = page_buffers(page);
+ 		do {
+ 			if (buffer_unwritten(bh))
+-				acceptable = (type == IO_UNWRITTEN);
++				acceptable += (type == IO_UNWRITTEN);
+ 			else if (buffer_delay(bh))
+-				acceptable = (type == IO_DELALLOC);
++				acceptable += (type == IO_DELALLOC);
+ 			else if (buffer_dirty(bh) && buffer_mapped(bh))
+-				acceptable = (type == IO_OVERWRITE);
++				acceptable += (type == IO_OVERWRITE);
+ 			else
+ 				break;
+ 		} while ((bh = bh->b_this_page) != head);
+@@ -684,7 +684,7 @@ xfs_convert_page(
+ 		goto fail_unlock_page;
+ 	if (page->mapping != inode->i_mapping)
+ 		goto fail_unlock_page;
+-	if (!xfs_is_delayed_page(page, (*ioendp)->io_type))
++	if (!xfs_check_page_type(page, (*ioendp)->io_type))
+ 		goto fail_unlock_page;
  
--	offset = BBTOB(blkno);
- 	numbytes = BBTOB(numblks);
+ 	/*
+@@ -834,7 +834,7 @@ xfs_aops_discard_page(
+ 	struct buffer_head	*bh, *head;
+ 	loff_t			offset = page_offset(page);
  
- 	/* Check for IOs smaller than the sector size / not sector aligned */
- 	ASSERT(!(numbytes < (1 << btp->bt_sshift)));
--	ASSERT(!(offset & (xfs_off_t)btp->bt_smask));
-+	ASSERT(!(BBTOB(blkno) & (xfs_off_t)btp->bt_smask));
+-	if (!xfs_is_delayed_page(page, IO_DELALLOC))
++	if (!xfs_check_page_type(page, IO_DELALLOC))
+ 		goto out_invalidate;
  
- 	/* get tree root */
- 	pag = xfs_perag_get(btp->bt_mount,
-@@ -460,13 +458,13 @@ _xfs_buf_find(
- 		parent = *rbp;
- 		bp = rb_entry(parent, struct xfs_buf, b_rbnode);
- 
--		if (offset < bp->b_file_offset)
-+		if (blkno < bp->b_bn)
- 			rbp = &(*rbp)->rb_left;
--		else if (offset > bp->b_file_offset)
-+		else if (blkno > bp->b_bn)
- 			rbp = &(*rbp)->rb_right;
- 		else {
- 			/*
--			 * found a block offset match. If the range doesn't
-+			 * found a block number match. If the range doesn't
- 			 * match, the only way this is allowed is if the buffer
- 			 * in the cache is stale and the transaction that made
- 			 * it stale has not yet committed. i.e. we are
-@@ -712,7 +710,6 @@ xfs_buf_set_empty(
- 	bp->b_pages = NULL;
- 	bp->b_page_count = 0;
- 	bp->b_addr = NULL;
--	bp->b_file_offset = 0;
- 	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
- 	bp->b_bn = XFS_BUF_DADDR_NULL;
- 	bp->b_flags &= ~XBF_MAPPED;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index ffd6da0..4d472e5 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -116,7 +116,7 @@ typedef struct xfs_buf {
- 	 * fast-path on locking.
- 	 */
- 	struct rb_node		b_rbnode;	/* rbtree node */
--	xfs_off_t		b_file_offset;	/* offset in file */
-+	xfs_daddr_t		b_bn;		/* block number for I/O */
- 	size_t			b_buffer_length;/* size of buffer in bytes */
- 	atomic_t		b_hold;		/* reference count */
- 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-@@ -128,7 +128,6 @@ typedef struct xfs_buf {
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
--	xfs_daddr_t		b_bn;		/* block number for I/O */
- 	size_t			b_count_desired;/* desired transfer size */
- 	void			*b_addr;	/* virtual address of buffer */
- 	struct work_struct	b_iodone_work;
-@@ -245,8 +244,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- 
- #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
- #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
--#define XFS_BUF_OFFSET(bp)		((bp)->b_file_offset)
--#define XFS_BUF_SET_OFFSET(bp, off)	((bp)->b_file_offset = (off))
- #define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
- #define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
- #define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
 -- 
 1.7.9.5
 
