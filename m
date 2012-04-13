@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3D9oOpf020280 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:24 -0500
+	q3D9oRrZ020315 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:28 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id pBFxrsnHgMnwaEy1 for
-	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:22 -0700 (PDT)
+	cuda.sgi.com with ESMTP id UtzrxdTee3ucDL5W for
+	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:26 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oMbV012479
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oQWN004562
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:22 -0400
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:26 -0400
 From: tmarek@redhat.com
-Subject: [PATCH 2/5] xfstests 233: fix user fsgqa access to fsstress
-Date: Fri, 13 Apr 2012 11:49:43 +0200
-Message-Id: <1334310586-2281-2-git-send-email-tmarek@redhat.com>
+Subject: [PATCH 4/5] xfstests: sync before umount to avoid device busy problems
+Date: Fri, 13 Apr 2012 11:49:45 +0200
+Message-Id: <1334310586-2281-4-git-send-email-tmarek@redhat.com>
 In-Reply-To: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,43 +34,71 @@ Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
 
 From: Tom Marek <tmarek@redhat.com>
 
-User fsgqa may sometimes be unable to run fsstress (when xfstests are owned by
-root) because fsgqa doesn't have rights to list directory where the fsstress
-utility is located.
+Some tests might fail because of 'device or resource busy' when unmounting
+either the SCRATCH or the TEST device. The reason this happenes is that
+some processes might not have time to finish properly, or they are still
+waiting for IO. The sync command was added before unmount into
+_scratch_unmount() and umount_or_remount_ro which should help processes to
+finish before unmounting takes place and thus it solves the problem.
+This fixes for example tests 226 and 247.
 
-This fix changes directory to fsstress location as root before running
-fsstress so user fsgqa may run it without any problems.
+Test 226 uses plain umount command which suffers from exactly the same problem
+as described above. Use fixed _scratch_unmount() instead of plain umount fixes
+this problem.
 
 Signed-off-by: Tom Marek <tmarek@redhat.com>
 
 Reviewed-by: Lukas Czerner <lczerner@redhat.com>
 ---
- 233 |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ 226       |    4 ++--
+ common.rc |    5 +++++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/233 b/233
-index 28e6ac7..e9eacae 100755
---- a/233
-+++ b/233
-@@ -62,14 +62,16 @@ _fsstress()
- -f rmdir=20 -f link=10 -f creat=10 -f mkdir=10 -f unlink=20 -f symlink=10 \
- -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
- -n $count -d $out -p 7"
--
- 	echo "fsstress $args" | tee -a $here/$seq.full | sed -e "s#$out#outdir#"
--	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $here/$seq.full | _filter_num
-+	fsstressdir=${FSSTRESS_PROG%/*}
-+	cd $fsstressdir
-+	if ! su $qa_user -c "./`basename $FSSTRESS_PROG` $args" | tee -a $here/$seq.full | _filter_num
- 	then
- 		echo "    fsstress $args returned $?"
- 		cat $tmp.out | tee -a $here/$seq.full
- 		status=1
- 	fi
-+	cd $here
+diff --git a/226 b/226
+index 6f28ac9..f8847c6 100755
+--- a/226
++++ b/226
+@@ -61,7 +61,7 @@ for I in `seq 1 $loops`; do
+ done
+ 
+ echo
+-umount $SCRATCH_DEV
++_scratch_unmount
+ _scratch_mount
+ 
+ echo "--> $loops direct 64m writes in a loop"
+@@ -73,7 +73,7 @@ for I in `seq 1 $loops`; do
+ done
+ 
+ echo
+-umount $SCRATCH_DEV
++_scratch_unmount
+ 
+ status=0
+ exit
+diff --git a/common.rc b/common.rc
+index cab0b64..e56e5bc 100644
+--- a/common.rc
++++ b/common.rc
+@@ -255,6 +255,8 @@ _scratch_mount()
+ 
+ _scratch_unmount()
+ {
++    # Run sync to give processes some time to finish before unmount
++    sync
+     $UMOUNT_PROG $SCRATCH_DEV
  }
  
- # real QA test starts here
+@@ -1051,6 +1053,9 @@ _umount_or_remount_ro()
+     device=$1
+     mountpoint=`_is_mounted $device`
+ 
++    # Run sync to give processes some time to finish before unmount
++    sync
++
+     if [ $USE_REMOUNT -eq 0 ]; then
+         $UMOUNT_PROG $device
+     else
 -- 
 1.7.7.6
 
