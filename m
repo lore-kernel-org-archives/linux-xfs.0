@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DAXjmx025731 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:33:46 -0500
+	q3DAa09W026023 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:36:00 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lDkFTKMIqweIUYxX for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 03:33:44 -0700 (PDT)
-Date: Fri, 13 Apr 2012 20:33:38 +1000
+	jPYW5t9uiD6ln7Eh for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 03:35:58 -0700 (PDT)
+Date: Fri, 13 Apr 2012 20:35:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/10] xfs: do not write the buffer from xfs_qm_dqflush
-Message-ID: <20120413103338.GK6734@dastard>
+Subject: Re: [PATCH 08/10] xfs: do not add buffers to the delwri queue until
+	pushed
+Message-ID: <20120413103552.GL6734@dastard>
 References: <20120327164400.967415009@bombadil.infradead.org>
-	<20120327164646.158577302@bombadil.infradead.org>
+	<20120327164646.539031348@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120327164646.158577302@bombadil.infradead.org>
+In-Reply-To: <20120327164646.539031348@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,16 +31,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Mar 27, 2012 at 12:44:07PM -0400, Christoph Hellwig wrote:
-> Instead of writing the buffer directly from inside xfs_qm_dqflush return it
-> to the caller and let the caller decide what to do with the buffer.  Also
-> remove the pincount check in xfs_qm_dqflush that all non-blocking callers
-> already implement and the now unused flags parameter and the XFS_DQ_IS_DIRTY
-> check that all callers already perform.
+On Tue, Mar 27, 2012 at 12:44:08PM -0400, Christoph Hellwig wrote:
+> Instead of adding buffers to the delwri list as soon as they are logged,
+> even if they can't be written until commited because they are pinned
+> defer adding them to the delwri list until xfsaild pushes them.  This
+> makes the code more similar to other log items and prepares for writing
+> buffers directly from xfsaild.
+> 
+> The complication here is that we need to fail buffers that were added
+> but not logged yet in xfs_buf_item_unpin, borrowing code from
+> xfs_bioerror.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok.
+Looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
