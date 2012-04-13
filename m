@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DI1JdO080489 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 13:01:19 -0500
-Message-ID: <4F8869EC.9060107@sgi.com>
-Date: Fri, 13 Apr 2012 13:01:16 -0500
+	q3DIWRnQ083782 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 13:32:27 -0500
+Message-ID: <4F88713B.7070805@sgi.com>
+Date: Fri, 13 Apr 2012 13:32:27 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 01/18] xfs: Ensure inode reclaim can run during quotacheck
+Subject: Re: [PATCH 06/18] xfs: fix buffer lookup race on allocation failure
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<1334319061-12968-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1334319061-12968-2-git-send-email-david@fromorbit.com>
+	<1334319061-12968-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1334319061-12968-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +28,33 @@ Cc: xfs@oss.sgi.com
 On 04/13/12 07:10, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Because the mount process can run a quotacheck and consume lots of
-> inodes, we need to be able to run periodic inode reclaim during the
-> mount process. This will prevent running the system out of memory
-> during quota checks.
+> When memory allocation fails to add the page array or tht epages to
+> a buffer during xfs_buf_get(), the buffer is left in the cache in a
+> partially initialised state. There is enough state left for the next
+> lookup on that buffer to find the buffer, and for the buffer to then
+> be used without finishing the initialisation.  As a result, when an
+> attempt to do IO on the buffer occurs, it fails with EIO because
+> there are no pages attached to the buffer.
 >
-> This essentially reverts 2bcf6e97, but that is safe to do now that
-> the quota sync code that was causing problems during long quotacheck
-> executions is now gone.
+> We cannot remove the buffer from the cache immediately and free it,
+> because there may already be a racing lookup that is blocked on the
+> buffer lock. Hence the moment we unlock the buffer to then free it,
+> the other user is woken and we have a use-after-free situation.
 >
-> The reclaim work is currently protected from running during the
-> unmount process by a check against MS_ACTIVE. Unfortunately, this
-> also means that the reclaim work cannot run during mount.  The
-> unmount process should stop the reclaim cleanly before freeing
-> anything that the reclaim work depends on, so there is no need to
-> have this guard in place.
->
-> Also, the inode reclaim work is demand driven, so there is no need
-> to start it immediately during mount. It will be started the moment
-> an inode is queued for reclaim, so qutoacheck will trigger it just
-> fine.
+> To avoid this race condition altogether, allocate the pages for the
+> buffer before we insert it into the cache.  This then means that we
+> don't have an allocation  failure case to deal after the buffer is
+> already present in the cache, and hence avoid the problem
+> altogether.  In most cases we won't have racing inserts for the same
+> buffer, and so won't increase the memory pressure allocation before
+> insertion may entail.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
 
-Looks good.
+
+Much simpler idea than v1. Looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
