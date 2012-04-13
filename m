@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DCBJJk037888 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:19 -0500
+	q3DCBUe1037977 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:30 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	kiJF31jVlldCVa20 for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 05:11:16 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SIfLO-00031P-63
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:14 +1000
+	LwInNQJnKb3apzRa for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:11:28 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SIfLY-00031d-AS
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:24 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SIfLE-0003OI-2p
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:04 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SIfLO-0003Od-8N
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/18] xfs: clean up buffer get/read call API
-Date: Fri, 13 Apr 2012 22:10:53 +1000
-Message-Id: <1334319061-12968-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 16/18] xfs: kill xfs_read_buf()
+Date: Fri, 13 Apr 2012 22:10:59 +1000
+Message-Id: <1334319061-12968-17-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,475 +36,174 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The xfs_buf_get/read API is not consistent in the units it uses, and
-does not use appropriate or consistent units/types for the
-variables.
+xfs_read_buf() is effectively the same as xfs_trans_read_buf() when called
+outside a transaction context. The error handling is slightly different in that
+xfs_read_buf stales the errored buffer it gets back, but there is probably good
+reason for xfs_trans_read_buf() for doing this.
 
-Convert the API to use disk addresses and block counts for all
-buffer get and read calls. Use consistent naming for all the
-functions and their declarations, and convert the internal functions
-to use disk addresses and block counts to avoid need to convert them
-from one type to another and back again.
-
-Fix all the callers to use disk addresses and block counts. In many
-cases, this removes an additional conversion from the function call
-as the callers already have a block count.
+Hence update xfs_trans_read_buf() to the same error handling as xfs_read_buf(),
+and convert all the callers of xfs_read_buf() to use the former function. We can
+then remove xfs_read_buf().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_buf.c         |   86 +++++++++++++++++++++++++---------------------
- fs/xfs/xfs_buf.h         |   38 +++++++++++---------
- fs/xfs/xfs_fsops.c       |    4 +--
- fs/xfs/xfs_log.c         |    6 ++--
- fs/xfs/xfs_log_recover.c |    2 +-
- fs/xfs/xfs_mount.c       |   12 +++----
- fs/xfs/xfs_rtalloc.c     |    8 ++---
- fs/xfs/xfs_vnodeops.c    |    2 +-
- 8 files changed, 84 insertions(+), 74 deletions(-)
+ fs/xfs/xfs_attr.c        |    4 ++--
+ fs/xfs/xfs_fsops.c       |    2 +-
+ fs/xfs/xfs_log_recover.c |   11 ++++------
+ fs/xfs/xfs_rw.c          |   50 ----------------------------------------------
+ fs/xfs/xfs_rw.h          |    3 ---
+ fs/xfs/xfs_trans_buf.c   |    4 ++++
+ 6 files changed, 11 insertions(+), 63 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index fb88163..c104cbb 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -166,8 +166,8 @@ xfs_buf_stale(
- struct xfs_buf *
- xfs_buf_alloc(
- 	struct xfs_buftarg	*target,
--	xfs_off_t		range_base,
--	size_t			range_length,
-+	xfs_daddr_t		blkno,
-+	size_t			numblks,
- 	xfs_buf_flags_t		flags)
- {
- 	struct xfs_buf		*bp;
-@@ -190,14 +190,21 @@ xfs_buf_alloc(
- 	sema_init(&bp->b_sema, 0); /* held, no waiters */
- 	XB_SET_OWNER(bp);
- 	bp->b_target = target;
--	bp->b_file_offset = range_base;
-+	bp->b_file_offset = blkno << BBSHIFT;
- 	/*
- 	 * Set buffer_length and count_desired to the same value initially.
- 	 * I/O routines should use count_desired, which will be the same in
- 	 * most cases but may be reset (e.g. XFS recovery).
- 	 */
--	bp->b_buffer_length = bp->b_count_desired = range_length;
-+	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
- 	bp->b_flags = flags;
-+
-+	/*
-+	 * We do not set the block number here in the buffer because we have not
-+	 * finished initialising the buffer. We insert the buffer into the cache
-+	 * in this state, so this ensures that we are unable to do IO on a
-+	 * buffer that hasn't been fully initialised.
-+	 */
- 	bp->b_bn = XFS_BUF_DADDR_NULL;
- 	atomic_set(&bp->b_pin_count, 0);
- 	init_waitqueue_head(&bp->b_waiters);
-@@ -420,29 +427,29 @@ _xfs_buf_map_pages(
-  */
- xfs_buf_t *
- _xfs_buf_find(
--	xfs_buftarg_t		*btp,	/* block device target		*/
--	xfs_off_t		ioff,	/* starting offset of range	*/
--	size_t			isize,	/* length of range		*/
-+	struct xfs_buftarg	*btp,
-+	xfs_daddr_t		blkno,
-+	size_t			numblks,
- 	xfs_buf_flags_t		flags,
- 	xfs_buf_t		*new_bp)
- {
--	xfs_off_t		range_base;
--	size_t			range_length;
-+	xfs_off_t		offset;
-+	size_t			numbytes;
- 	struct xfs_perag	*pag;
- 	struct rb_node		**rbp;
- 	struct rb_node		*parent;
- 	xfs_buf_t		*bp;
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index c8ef9a9..ad85bed 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -1987,8 +1987,8 @@ xfs_attr_rmtval_get(xfs_da_args_t *args)
+ 			       (map[i].br_startblock != HOLESTARTBLOCK));
+ 			dblkno = XFS_FSB_TO_DADDR(mp, map[i].br_startblock);
+ 			blkcnt = XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+-			error = xfs_read_buf(mp, mp->m_ddev_targp, dblkno,
+-					     blkcnt, XBF_DONT_BLOCK, &bp);
++			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
++						   dblkno, blkcnt, 0, &bp);
+ 			if (error)
+ 				return(error);
  
--	range_base = (ioff << BBSHIFT);
--	range_length = (isize << BBSHIFT);
-+	offset = BBTOB(blkno);
-+	numbytes = BBTOB(numblks);
- 
- 	/* Check for IOs smaller than the sector size / not sector aligned */
--	ASSERT(!(range_length < (1 << btp->bt_sshift)));
--	ASSERT(!(range_base & (xfs_off_t)btp->bt_smask));
-+	ASSERT(!(numbytes < (1 << btp->bt_sshift)));
-+	ASSERT(!(offset & (xfs_off_t)btp->bt_smask));
- 
- 	/* get tree root */
- 	pag = xfs_perag_get(btp->bt_mount,
--				xfs_daddr_to_agno(btp->bt_mount, ioff));
-+				xfs_daddr_to_agno(btp->bt_mount, blkno));
- 
- 	/* walk tree */
- 	spin_lock(&pag->pag_buf_lock);
-@@ -453,9 +460,9 @@ _xfs_buf_find(
- 		parent = *rbp;
- 		bp = rb_entry(parent, struct xfs_buf, b_rbnode);
- 
--		if (range_base < bp->b_file_offset)
-+		if (offset < bp->b_file_offset)
- 			rbp = &(*rbp)->rb_left;
--		else if (range_base > bp->b_file_offset)
-+		else if (offset > bp->b_file_offset)
- 			rbp = &(*rbp)->rb_right;
- 		else {
- 			/*
-@@ -466,7 +473,7 @@ _xfs_buf_find(
- 			 * reallocating a busy extent. Skip this buffer and
- 			 * continue searching to the right for an exact match.
- 			 */
--			if (bp->b_buffer_length != range_length) {
-+			if (bp->b_buffer_length != numbytes) {
- 				ASSERT(bp->b_flags & XBF_STALE);
- 				rbp = &(*rbp)->rb_right;
- 				continue;
-@@ -526,21 +533,20 @@ found:
-  */
- struct xfs_buf *
- xfs_buf_get(
--	xfs_buftarg_t		*target,/* target for buffer		*/
--	xfs_off_t		ioff,	/* starting offset of range	*/
--	size_t			isize,	/* length of range		*/
-+	xfs_buftarg_t		*target,
-+	xfs_daddr_t		blkno,
-+	size_t			numblks,
- 	xfs_buf_flags_t		flags)
- {
- 	struct xfs_buf		*bp;
- 	struct xfs_buf		*new_bp;
- 	int			error = 0;
- 
--	bp = _xfs_buf_find(target, ioff, isize, flags, NULL);
-+	bp = _xfs_buf_find(target, blkno, numblks, flags, NULL);
- 	if (likely(bp))
- 		goto found;
- 
--	new_bp = xfs_buf_alloc(target, ioff << BBSHIFT, isize << BBSHIFT,
--			       flags);
-+	new_bp = xfs_buf_alloc(target, blkno, numblks, flags);
- 	if (unlikely(!new_bp))
- 		return NULL;
- 
-@@ -550,7 +556,7 @@ xfs_buf_get(
- 		return NULL;
- 	}
- 
--	bp = _xfs_buf_find(target, ioff, isize, flags, new_bp);
-+	bp = _xfs_buf_find(target, blkno, numblks, flags, new_bp);
- 	if (!bp) {
- 		xfs_buf_free(new_bp);
- 		return NULL;
-@@ -563,7 +569,7 @@ xfs_buf_get(
- 	 * Now we have a workable buffer, fill in the block number so
- 	 * that we can do IO on it.
- 	 */
--	bp->b_bn = ioff;
-+	bp->b_bn = blkno;
- 	bp->b_count_desired = bp->b_buffer_length;
- 
- found:
-@@ -607,15 +613,15 @@ _xfs_buf_read(
- xfs_buf_t *
- xfs_buf_read(
- 	xfs_buftarg_t		*target,
--	xfs_off_t		ioff,
--	size_t			isize,
-+	xfs_daddr_t		blkno,
-+	size_t			numblks,
- 	xfs_buf_flags_t		flags)
- {
- 	xfs_buf_t		*bp;
- 
- 	flags |= XBF_READ;
- 
--	bp = xfs_buf_get(target, ioff, isize, flags);
-+	bp = xfs_buf_get(target, blkno, numblks, flags);
- 	if (bp) {
- 		trace_xfs_buf_read(bp, flags, _RET_IP_);
- 
-@@ -650,13 +656,13 @@ xfs_buf_read(
- void
- xfs_buf_readahead(
- 	xfs_buftarg_t		*target,
--	xfs_off_t		ioff,
--	size_t			isize)
-+	xfs_daddr_t		blkno,
-+	size_t			numblks)
- {
- 	if (bdi_read_congested(target->bt_bdi))
- 		return;
- 
--	xfs_buf_read(target, ioff, isize,
-+	xfs_buf_read(target, blkno, numblks,
- 		     XBF_TRYLOCK|XBF_ASYNC|XBF_READ_AHEAD|XBF_DONT_BLOCK);
- }
- 
-@@ -666,16 +672,15 @@ xfs_buf_readahead(
-  */
- struct xfs_buf *
- xfs_buf_read_uncached(
--	struct xfs_mount	*mp,
- 	struct xfs_buftarg	*target,
- 	xfs_daddr_t		daddr,
--	size_t			length,
-+	size_t			numblks,
- 	int			flags)
- {
- 	xfs_buf_t		*bp;
- 	int			error;
- 
--	bp = xfs_buf_get_uncached(target, length, flags);
-+	bp = xfs_buf_get_uncached(target, numblks, flags);
- 	if (!bp)
- 		return NULL;
- 
-@@ -683,7 +688,7 @@ xfs_buf_read_uncached(
- 	XFS_BUF_SET_ADDR(bp, daddr);
- 	XFS_BUF_READ(bp);
- 
--	xfsbdstrat(mp, bp);
-+	xfsbdstrat(target->bt_mount, bp);
- 	error = xfs_buf_iowait(bp);
- 	if (error) {
- 		xfs_buf_relse(bp);
-@@ -699,7 +704,7 @@ xfs_buf_read_uncached(
- void
- xfs_buf_set_empty(
- 	struct xfs_buf		*bp,
--	size_t			len)
-+	size_t			numblks)
- {
- 	if (bp->b_pages)
- 		_xfs_buf_free_pages(bp);
-@@ -708,7 +713,7 @@ xfs_buf_set_empty(
- 	bp->b_page_count = 0;
- 	bp->b_addr = NULL;
- 	bp->b_file_offset = 0;
--	bp->b_buffer_length = bp->b_count_desired = len;
-+	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
- 	bp->b_bn = XFS_BUF_DADDR_NULL;
- 	bp->b_flags &= ~XBF_MAPPED;
- }
-@@ -770,17 +775,18 @@ xfs_buf_associate_memory(
- xfs_buf_t *
- xfs_buf_get_uncached(
- 	struct xfs_buftarg	*target,
--	size_t			len,
-+	size_t			numblks,
- 	int			flags)
- {
--	unsigned long		page_count = PAGE_ALIGN(len) >> PAGE_SHIFT;
-+	unsigned long		page_count;
- 	int			error, i;
- 	xfs_buf_t		*bp;
- 
--	bp = xfs_buf_alloc(target, 0, len, 0);
-+	bp = xfs_buf_alloc(target, 0, numblks, 0);
- 	if (unlikely(bp == NULL))
- 		goto fail;
- 
-+	page_count = PAGE_ALIGN(numblks << BBSHIFT) >> PAGE_SHIFT;
- 	error = _xfs_buf_get_pages(bp, page_count, 0);
- 	if (error)
- 		goto fail_free_buf;
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 87a4748..ffd6da0 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -150,26 +150,30 @@ typedef struct xfs_buf {
- 
- 
- /* Finding and Reading Buffers */
--extern xfs_buf_t *_xfs_buf_find(xfs_buftarg_t *, xfs_off_t, size_t,
--				xfs_buf_flags_t, xfs_buf_t *);
-+struct xfs_buf *_xfs_buf_find(struct xfs_buftarg *target, xfs_daddr_t blkno,
-+				size_t numblks, xfs_buf_flags_t flags,
-+				struct xfs_buf *new_bp);
- #define xfs_incore(buftarg,blkno,len,lockit) \
- 	_xfs_buf_find(buftarg, blkno ,len, lockit, NULL)
- 
--extern xfs_buf_t *xfs_buf_get(xfs_buftarg_t *, xfs_off_t, size_t,
--				xfs_buf_flags_t);
--extern xfs_buf_t *xfs_buf_read(xfs_buftarg_t *, xfs_off_t, size_t,
--				xfs_buf_flags_t);
--
--struct xfs_buf *xfs_buf_alloc(struct xfs_buftarg *, xfs_off_t, size_t,
--			      xfs_buf_flags_t);
--extern void xfs_buf_set_empty(struct xfs_buf *bp, size_t len);
--extern xfs_buf_t *xfs_buf_get_uncached(struct xfs_buftarg *, size_t, int);
--extern int xfs_buf_associate_memory(xfs_buf_t *, void *, size_t);
--extern void xfs_buf_hold(xfs_buf_t *);
--extern void xfs_buf_readahead(xfs_buftarg_t *, xfs_off_t, size_t);
--struct xfs_buf *xfs_buf_read_uncached(struct xfs_mount *mp,
--				struct xfs_buftarg *target,
--				xfs_daddr_t daddr, size_t length, int flags);
-+struct xfs_buf *xfs_buf_get(struct xfs_buftarg *target, xfs_daddr_t blkno,
-+				size_t numblks, xfs_buf_flags_t flags);
-+struct xfs_buf *xfs_buf_read(struct xfs_buftarg *target, xfs_daddr_t blkno,
-+				size_t numblks, xfs_buf_flags_t flags);
-+void xfs_buf_readahead(struct xfs_buftarg *target, xfs_daddr_t blkno,
-+				size_t numblks);
-+
-+struct xfs_buf *xfs_buf_get_empty(struct xfs_buftarg *target, size_t numblks);
-+struct xfs_buf *xfs_buf_alloc(struct xfs_buftarg *target, xfs_daddr_t blkno,
-+				size_t numblks, xfs_buf_flags_t flags);
-+void xfs_buf_set_empty(struct xfs_buf *bp, size_t numblks);
-+int xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t length);
-+
-+struct xfs_buf *xfs_buf_get_uncached(struct xfs_buftarg *target, size_t numblks,
-+				int flags);
-+struct xfs_buf *xfs_buf_read_uncached(struct xfs_buftarg *target,
-+				xfs_daddr_t daddr, size_t numblks, int flags);
-+void xfs_buf_hold(struct xfs_buf *bp);
- 
- /* Releasing Buffers */
- extern void xfs_buf_free(xfs_buf_t *);
 diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 1c6fdeb..019ba5c 100644
+index 874d398..e9f5bc0 100644
 --- a/fs/xfs/xfs_fsops.c
 +++ b/fs/xfs/xfs_fsops.c
-@@ -147,9 +147,9 @@ xfs_growfs_data_private(
- 	if ((error = xfs_sb_validate_fsb_count(&mp->m_sb, nb)))
- 		return error;
- 	dpct = pct - mp->m_sb.sb_imax_pct;
--	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+	bp = xfs_buf_read_uncached(mp->m_ddev_targp,
- 				XFS_FSB_TO_BB(mp, nb) - XFS_FSS_TO_BB(mp, 1),
--				BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
-+				XFS_FSS_TO_BB(mp, 1), 0);
- 	if (!bp)
- 		return EIO;
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 418d5d7..8990012 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1187,7 +1187,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 	xlog_get_iclog_buffer_size(mp, log);
+@@ -402,7 +402,7 @@ xfs_growfs_data_private(
  
- 	error = ENOMEM;
--	bp = xfs_buf_alloc(mp->m_logdev_targp, 0, log->l_iclog_size, 0);
-+	bp = xfs_buf_alloc(mp->m_logdev_targp, 0, BTOBB(log->l_iclog_size), 0);
- 	if (!bp)
- 		goto out_free_log;
- 	bp->b_iodone = xlog_iodone;
-@@ -1219,7 +1219,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
- 		prev_iclog = iclog;
- 
- 		bp = xfs_buf_get_uncached(mp->m_logdev_targp,
--						log->l_iclog_size, 0);
-+						BTOBB(log->l_iclog_size), 0);
- 		if (!bp)
- 			goto out_free_iclog;
- 
-@@ -1588,7 +1588,7 @@ xlog_dealloc_log(xlog_t *log)
- 	 * always need to ensure that the extra buffer does not point to memory
- 	 * owned by another log buffer before we free it.
- 	 */
--	xfs_buf_set_empty(log->l_xbuf, log->l_iclog_size);
-+	xfs_buf_set_empty(log->l_xbuf, BTOBB(log->l_iclog_size));
- 	xfs_buf_free(log->l_xbuf);
- 
- 	iclog = log->l_iclog;
+ 	/* update secondary superblocks. */
+ 	for (agno = 1; agno < nagcount; agno++) {
+-		error = xfs_read_buf(mp, mp->m_ddev_targp,
++		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+ 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+ 				  XFS_FSS_TO_BB(mp, 1), 0, &bp);
+ 		if (error) {
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 64ed6ff..d94ed40 100644
+index 6353eb3..b700ced 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -120,7 +120,7 @@ xlog_get_bp(
- 		nbblks += log->l_sectBBsize;
- 	nbblks = round_up(nbblks, log->l_sectBBsize);
+@@ -2535,14 +2535,11 @@ xlog_recover_dquot_pass2(
+ 		return XFS_ERROR(EIO);
+ 	ASSERT(dq_f->qlf_len == 1);
  
--	bp = xfs_buf_get_uncached(log->l_mp->m_logdev_targp, BBTOB(nbblks), 0);
-+	bp = xfs_buf_get_uncached(log->l_mp->m_logdev_targp, nbblks, 0);
- 	if (bp)
- 		xfs_buf_unlock(bp);
- 	return bp;
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 385a3b1..89be5ff 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -684,8 +684,8 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 	sector_size = xfs_getsize_buftarg(mp->m_ddev_targp);
+-	error = xfs_read_buf(mp, mp->m_ddev_targp,
+-			     dq_f->qlf_blkno,
+-			     XFS_FSB_TO_BB(mp, dq_f->qlf_len),
+-			     0, &bp);
+-	if (error) {
+-		xfs_buf_ioerror_alert(bp, "xlog_recover_do..(read#3)");
++	error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp, dq_f->qlf_blkno,
++				   XFS_FSB_TO_BB(mp, dq_f->qlf_len), 0, &bp);
++	if (error)
+ 		return error;
+-	}
++
+ 	ASSERT(bp);
+ 	ddq = (xfs_disk_dquot_t *)xfs_buf_offset(bp, dq_f->qlf_boffset);
  
- reread:
--	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
--					XFS_SB_DADDR, sector_size, 0);
-+	bp = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
-+					BTOBB(sector_size), 0);
- 	if (!bp) {
- 		if (loud)
- 			xfs_warn(mp, "SB buffer read failed");
-@@ -1033,9 +1033,9 @@ xfs_check_sizes(xfs_mount_t *mp)
- 		xfs_warn(mp, "filesystem size mismatch detected");
- 		return XFS_ERROR(EFBIG);
- 	}
--	bp = xfs_buf_read_uncached(mp, mp->m_ddev_targp,
-+	bp = xfs_buf_read_uncached(mp->m_ddev_targp,
- 					d - XFS_FSS_TO_BB(mp, 1),
--					BBTOB(XFS_FSS_TO_BB(mp, 1)), 0);
-+					XFS_FSS_TO_BB(mp, 1), 0);
- 	if (!bp) {
- 		xfs_warn(mp, "last sector read failed");
- 		return EIO;
-@@ -1048,9 +1048,9 @@ xfs_check_sizes(xfs_mount_t *mp)
- 			xfs_warn(mp, "log size mismatch detected");
- 			return XFS_ERROR(EFBIG);
+diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
+index 2ce9775..3c2488a 100644
+--- a/fs/xfs/xfs_rw.c
++++ b/fs/xfs/xfs_rw.c
+@@ -92,56 +92,6 @@ xfs_do_force_shutdown(
+ }
+ 
+ /*
+- * This isn't an absolute requirement, but it is
+- * just a good idea to call xfs_read_buf instead of
+- * directly doing a read_buf call. For one, we shouldn't
+- * be doing this disk read if we are in SHUTDOWN state anyway,
+- * so this stops that from happening. Secondly, this does all
+- * the error checking stuff and the brelse if appropriate for
+- * the caller, so the code can be a little leaner.
+- */
+-
+-int
+-xfs_read_buf(
+-	struct xfs_mount *mp,
+-	xfs_buftarg_t	 *target,
+-	xfs_daddr_t	 blkno,
+-	int              len,
+-	uint             flags,
+-	xfs_buf_t	 **bpp)
+-{
+-	xfs_buf_t	 *bp;
+-	int		 error;
+-
+-	if (!flags)
+-		flags = XBF_MAPPED;
+-
+-	bp = xfs_buf_read(target, blkno, len, flags);
+-	if (!bp)
+-		return XFS_ERROR(EIO);
+-	error = bp->b_error;
+-	if (!error && !XFS_FORCED_SHUTDOWN(mp)) {
+-		*bpp = bp;
+-	} else {
+-		*bpp = NULL;
+-		if (error) {
+-			xfs_buf_ioerror_alert(bp, __func__);
+-		} else {
+-			error = XFS_ERROR(EIO);
+-		}
+-		if (bp) {
+-			XFS_BUF_UNDONE(bp);
+-			xfs_buf_stale(bp);
+-			/*
+-			 * brelse clears B_ERROR and b_error
+-			 */
+-			xfs_buf_relse(bp);
+-		}
+-	}
+-	return (error);
+-}
+-
+-/*
+  * helper function to extract extent size hint from inode
+  */
+ xfs_extlen_t
+diff --git a/fs/xfs/xfs_rw.h b/fs/xfs/xfs_rw.h
+index bbdb9ad..967b3a4 100644
+--- a/fs/xfs/xfs_rw.h
++++ b/fs/xfs/xfs_rw.h
+@@ -39,9 +39,6 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+ /*
+  * Prototypes for functions in xfs_rw.c.
+  */
+-extern int xfs_read_buf(struct xfs_mount *mp, xfs_buftarg_t *btp,
+-			xfs_daddr_t blkno, int len, uint flags,
+-			struct xfs_buf **bpp);
+ extern xfs_extlen_t xfs_get_extsz_hint(struct xfs_inode *ip);
+ 
+ #endif /* __XFS_RW_H__ */
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index f9cb7ee..5e4cf61 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -274,6 +274,8 @@ xfs_trans_read_buf(
+ 	xfs_buf_log_item_t	*bip;
+ 	int			error;
+ 
++	*bpp = NULL;
++
+ 	if (flags == 0)
+ 		flags = XBF_MAPPED;
+ 
+@@ -289,6 +291,8 @@ xfs_trans_read_buf(
+ 		if (bp->b_error) {
+ 			error = bp->b_error;
+ 			xfs_buf_ioerror_alert(bp, __func__);
++			XFS_BUF_UNDONE(bp);
++			xfs_buf_stale(bp);
+ 			xfs_buf_relse(bp);
+ 			return error;
  		}
--		bp = xfs_buf_read_uncached(mp, mp->m_logdev_targp,
-+		bp = xfs_buf_read_uncached(mp->m_logdev_targp,
- 					d - XFS_FSB_TO_BB(mp, 1),
--					XFS_FSB_TO_B(mp, 1), 0);
-+					XFS_FSB_TO_BB(mp, 1), 0);
- 		if (!bp) {
- 			xfs_warn(mp, "log device read failed");
- 			return EIO;
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index ca4f315..7434d3f 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1872,9 +1872,9 @@ xfs_growfs_rt(
- 	/*
- 	 * Read in the last block of the device, make sure it exists.
- 	 */
--	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
-+	bp = xfs_buf_read_uncached(mp->m_rtdev_targp,
- 				XFS_FSB_TO_BB(mp, nrblocks - 1),
--				XFS_FSB_TO_B(mp, 1), 0);
-+				XFS_FSB_TO_BB(mp, 1), 0);
- 	if (!bp)
- 		return EIO;
- 	xfs_buf_relse(bp);
-@@ -2219,9 +2219,9 @@ xfs_rtmount_init(
- 			(unsigned long long) mp->m_sb.sb_rblocks);
- 		return XFS_ERROR(EFBIG);
- 	}
--	bp = xfs_buf_read_uncached(mp, mp->m_rtdev_targp,
-+	bp = xfs_buf_read_uncached(mp->m_rtdev_targp,
- 					d - XFS_FSB_TO_BB(mp, 1),
--					XFS_FSB_TO_B(mp, 1), 0);
-+					XFS_FSB_TO_BB(mp, 1), 0);
- 	if (!bp) {
- 		xfs_warn(mp, "realtime device size check failed");
- 		return EIO;
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 64981d7..445c224 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -1966,7 +1966,7 @@ xfs_zero_remaining_bytes(
- 
- 	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
- 					mp->m_rtdev_targp : mp->m_ddev_targp,
--				mp->m_sb.sb_blocksize, XBF_DONT_BLOCK);
-+				BTOBB(mp->m_sb.sb_blocksize), XBF_DONT_BLOCK);
- 	if (!bp)
- 		return XFS_ERROR(ENOMEM);
- 
 -- 
 1.7.9.5
 
