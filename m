@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DBjc5k034858 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 06:45:38 -0500
-Received: from g5t0008.atlanta.hp.com (g5t0008.atlanta.hp.com [15.192.0.45])
-	by cuda.sgi.com with ESMTP id nvan8WVHJ9dU1kNx (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 04:45:37 -0700 (PDT)
-Received: from G6W1798G.americas.hpqcorp.net (g6w1798g.atlanta.hp.com
-	[16.230.17.175]) (using TLSv1 with cipher AES128-SHA (128/128 bits))
-	(No client certificate requested)
-	by g5t0008.atlanta.hp.com (Postfix) with ESMTPS id A561524171
-	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 11:45:36 +0000 (UTC)
-From: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
-Subject: Re: XFS / xfssyncd lock-ups on 2.6.38-8
-Date: Fri, 13 Apr 2012 11:44:23 +0000
-Message-ID: <A9EE9F358EEA094684DE8F34867F5DB72F9B2485@G4W3214.americas.hpqcorp.net>
-Content-Language: en-US
+	q3DBo0Jd035292 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 06:50:00 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	HSJEwkf0XFpdwZN3 for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 04:49:59 -0700 (PDT)
+Date: Fri, 13 Apr 2012 21:49:57 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/5] xfstests 198, 240: added check for aiodio-sparse2
+Message-ID: <20120413114957.GO6734@dastard>
+References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
+	<1334310586-2281-3-git-send-email-tmarek@redhat.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1334310586-2281-3-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,24 +27,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: tmarek@redhat.com
+Cc: lczerner@redhat.com, dchinner@redhat.com, xfs@oss.sgi.com
 
-> > Would appreciate any thoughts/pointers to fixes or workarounds if this is a 
-> > known issue.
->
-> This was fixed by:
->
->         xfs: force the log if we encounter pinned buffers in .iop_pushbuf
+On Fri, Apr 13, 2012 at 11:49:44AM +0200, tmarek@redhat.com wrote:
+> From: Tom Marek <tmarek@redhat.com>
+> 
+> Tests number 198 and 240 could fail when aiodio-sparse2 was not build.
+> Check whether aiodio-sparse is built was added to both tests.
+> 
+> Signed-off-by: Tom Marek <tmarek@redhat.com>
+> 
+> Reviewed-by: Lukas Czerner <lczerner@redhat.com>
+> ---
+>  198 |    2 ++
+>  240 |    2 ++
+>  2 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/198 b/198
+> index e46ec8d..b9b47b2 100755
+> --- a/198
+> +++ b/198
+> @@ -45,6 +45,8 @@ _cleanup()
+>  _supported_fs generic
+>  _supported_os Linux
+>  
+> +[-x $here/src/aio-dio-regress/aiodio_sparse2] || _notrun "src/aio-dio-regress/aiodio_sparse2 not built"
+> +
 
-Can this patch be applied to 2.6.38 by itself or does it depend on other things that are not present in 2.6.38? I noticed it's small, applies and compiles but I can't judge if there are other dependencies. 
+_require_aiodio
 
-...Juerg
+Cheers,
 
-
->
-> in Linux 3.1.  I've also backported it to the 3.0-stable issues.  I
-> would recommend to upgrade to the latest Linux 3.0-stable release, as
-> I'll plan to backport all important XFS fixes to it.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
