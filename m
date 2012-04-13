@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3D9oPOe020290 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:25 -0500
+	q3D9oOpf020280 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:24 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id OooYLM5DVzPdgNtS for
-	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:24 -0700 (PDT)
+	cuda.sgi.com with ESMTP id pBFxrsnHgMnwaEy1 for
+	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:22 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oOME004558
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oMbV012479
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:24 -0400
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:22 -0400
 From: tmarek@redhat.com
-Subject: [PATCH 3/5] xfstests 198, 240: added check for aiodio-sparse2
-Date: Fri, 13 Apr 2012 11:49:44 +0200
-Message-Id: <1334310586-2281-3-git-send-email-tmarek@redhat.com>
+Subject: [PATCH 2/5] xfstests 233: fix user fsgqa access to fsstress
+Date: Fri, 13 Apr 2012 11:49:43 +0200
+Message-Id: <1334310586-2281-2-git-send-email-tmarek@redhat.com>
 In-Reply-To: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,41 +34,41 @@ Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
 
 From: Tom Marek <tmarek@redhat.com>
 
-Tests number 198 and 240 could fail when aiodio-sparse2 was not build.
-Check whether aiodio-sparse is built was added to both tests.
+User fsgqa may sometimes be unable to run fsstress (when xfstests are owned by
+root) because fsgqa doesn't have rights to list directory where the fsstress
+utility is located.
+
+This fix changes directory to fsstress location as root before running
+fsstress so user fsgqa may run it without any problems.
 
 Signed-off-by: Tom Marek <tmarek@redhat.com>
 
 Reviewed-by: Lukas Czerner <lczerner@redhat.com>
 ---
- 198 |    2 ++
- 240 |    2 ++
- 2 files changed, 4 insertions(+), 0 deletions(-)
+ 233 |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/198 b/198
-index e46ec8d..b9b47b2 100755
---- a/198
-+++ b/198
-@@ -45,6 +45,8 @@ _cleanup()
- _supported_fs generic
- _supported_os Linux
- 
-+[-x $here/src/aio-dio-regress/aiodio_sparse2] || _notrun "src/aio-dio-regress/aiodio_sparse2 not built"
-+
- echo "Silence is golden."
- 
- # real QA test starts here
-diff --git a/240 b/240
-index 563449e..5a563ca 100755
---- a/240
-+++ b/240
-@@ -53,6 +53,8 @@ _supported_os Linux
- 
- _require_sparse_files
- 
-+[-x $here/src/aio-dio-regress/aiodio_sparse2] || _notrun "src/aio-dio-regress/aiodio_sparse2 not built"
-+
- echo "Silence is golden."
+diff --git a/233 b/233
+index 28e6ac7..e9eacae 100755
+--- a/233
++++ b/233
+@@ -62,14 +62,16 @@ _fsstress()
+ -f rmdir=20 -f link=10 -f creat=10 -f mkdir=10 -f unlink=20 -f symlink=10 \
+ -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
+ -n $count -d $out -p 7"
+-
+ 	echo "fsstress $args" | tee -a $here/$seq.full | sed -e "s#$out#outdir#"
+-	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $here/$seq.full | _filter_num
++	fsstressdir=${FSSTRESS_PROG%/*}
++	cd $fsstressdir
++	if ! su $qa_user -c "./`basename $FSSTRESS_PROG` $args" | tee -a $here/$seq.full | _filter_num
+ 	then
+ 		echo "    fsstress $args returned $?"
+ 		cat $tmp.out | tee -a $here/$seq.full
+ 		status=1
+ 	fi
++	cd $here
+ }
  
  # real QA test starts here
 -- 
