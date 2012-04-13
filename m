@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DCBLHL037922 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:22 -0500
+	q3DCBHf6037878 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:18 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	PIGJeAImaWJmsHJW for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 05:11:20 -0700 (PDT)
+	kjnrIx86HJVFcEqY for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:11:16 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SIfLO-00030v-4X
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:14 +1000
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SIfLE-0003OG-1w
+	(envelope-from <dave@fromorbit.com>) id 1SIfLE-00030s-5R
 	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:04 +1000
+Received: from dave by disappointment with local (Exim 4.77)
+	(envelope-from <dave@disappointment.disaster>) id 1SIfLD-0003O5-UZ
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/18] xfs: use kmem_zone_zalloc for buffers
-Date: Fri, 13 Apr 2012 22:10:52 +1000
-Message-Id: <1334319061-12968-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/18] xfs: Use preallocation for inodes with extsz hints
+Date: Fri, 13 Apr 2012 22:10:48 +1000
+Message-Id: <1334319061-12968-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,36 +35,51 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To replace the alloc/memset pair.
+xfstest 229 exposes a problem with buffered IO, delayed allocation
+and extent size hints. That is when we do delayed allocation during
+buffered IO, we reserve space for the extent size hint alignment and
+allocate the physical space to align the extent, but we do not zero
+the regions of the extent that aren't written by the write(2)
+syscall. The result is that we expose stale data in unwritten
+regions of the extent size hints.
+
+There are two ways to fix this. The first is to detect that we are
+doing unaligned writes, check if there is already a mapping or data
+over the extent size hint range, and if not zero the page cache
+first before then doing the real write. This can be very expensive
+for large extent size hints, especially if the subsequent writes
+fill then entire extent size before the data is written to disk.
+
+The second, and simpler way, is simply to turn off delayed
+allocation when the extent size hint is set and use preallocation
+instead. This results in unwritten extents being laid down on disk
+and so only the written portions will be converted. This matches the
+behaviour for direct IO, and will also work for the real time
+device. The disadvantage of this approach is that for small extent
+size hints we can get file fragmentation, but in general extent size
+hints are fairly large (e.g. stripe width sized) so this isn't a big
+deal.
+
+Implement the second approach as it is simple and effective.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_buf.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index e7dab7d..fb88163 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -172,7 +172,7 @@ xfs_buf_alloc(
- {
- 	struct xfs_buf		*bp;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 2fc12db..19ce2e2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1175,7 +1175,7 @@ __xfs_get_blocks(
+ 	    (!nimaps ||
+ 	     (imap.br_startblock == HOLESTARTBLOCK ||
+ 	      imap.br_startblock == DELAYSTARTBLOCK))) {
+-		if (direct) {
++		if (direct || xfs_get_extsz_hint(ip)) {
+ 			xfs_iunlock(ip, lockmode);
  
--	bp = kmem_zone_alloc(xfs_buf_zone, xb_to_km(flags));
-+	bp = kmem_zone_zalloc(xfs_buf_zone, xb_to_km(flags));
- 	if (unlikely(!bp))
- 		return NULL;
- 
-@@ -181,7 +181,6 @@ xfs_buf_alloc(
- 	 */
- 	flags &= ~(XBF_LOCK|XBF_MAPPED|XBF_DONT_BLOCK|XBF_READ_AHEAD);
- 
--	memset(bp, 0, sizeof(xfs_buf_t));
- 	atomic_set(&bp->b_hold, 1);
- 	atomic_set(&bp->b_lru_ref, 1);
- 	init_completion(&bp->b_iowait);
+ 			error = xfs_iomap_write_direct(ip, offset, size,
 -- 
 1.7.9.5
 
