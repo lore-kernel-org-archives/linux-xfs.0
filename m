@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3D9gVnd019122 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:42:31 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	O7y1gCxbIE6CNPUA for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 02:42:29 -0700 (PDT)
-Date: Fri, 13 Apr 2012 19:42:27 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/10] xfs: allow assigning the tail lsn with the AIL
-	lock held
-Message-ID: <20120413094227.GG6734@dastard>
-References: <20120327164400.967415009@bombadil.infradead.org>
-	<20120327164644.597749707@bombadil.infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120327164644.597749707@bombadil.infradead.org>
+	q3D9oPOe020290 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 04:50:25 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id OooYLM5DVzPdgNtS for
+	<xfs@oss.sgi.com>; Fri, 13 Apr 2012 02:50:24 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3D9oOME004558
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 05:50:24 -0400
+From: tmarek@redhat.com
+Subject: [PATCH 3/5] xfstests 198, 240: added check for aiodio-sparse2
+Date: Fri, 13 Apr 2012 11:49:44 +0200
+Message-Id: <1334310586-2281-3-git-send-email-tmarek@redhat.com>
+In-Reply-To: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
+References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,34 +24,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
 
-On Tue, Mar 27, 2012 at 12:44:03PM -0400, Christoph Hellwig wrote:
-> Provide a variant of xlog_assign_tail_lsn that has the AIL lock already
-> held.  By doing so we do an additional atomic_read + atomic_set under
-> the lock, which comes down to two instructions.
-> 
-> Switch xfs_trans_ail_update_bulk and xfs_trans_ail_delete_bulk to the
-> new version to reduce the number of lock roundtrips, and prepare for
-> a new addition that would require a third lock roundtrip in
-> xfs_trans_ail_delete_bulk.  This addition is also the reason for
-> slightly rearranging the conditionals and relying on xfs_log_space_wake
-> for checking that the filesystem has been shut down internally.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+From: Tom Marek <tmarek@redhat.com>
 
-Looks good, and will be slightly more efficient, too.
+Tests number 198 and 240 could fail when aiodio-sparse2 was not build.
+Check whether aiodio-sparse is built was added to both tests.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Tom Marek <tmarek@redhat.com>
 
+Reviewed-by: Lukas Czerner <lczerner@redhat.com>
+---
+ 198 |    2 ++
+ 240 |    2 ++
+ 2 files changed, 4 insertions(+), 0 deletions(-)
+
+diff --git a/198 b/198
+index e46ec8d..b9b47b2 100755
+--- a/198
++++ b/198
+@@ -45,6 +45,8 @@ _cleanup()
+ _supported_fs generic
+ _supported_os Linux
+ 
++[-x $here/src/aio-dio-regress/aiodio_sparse2] || _notrun "src/aio-dio-regress/aiodio_sparse2 not built"
++
+ echo "Silence is golden."
+ 
+ # real QA test starts here
+diff --git a/240 b/240
+index 563449e..5a563ca 100755
+--- a/240
++++ b/240
+@@ -53,6 +53,8 @@ _supported_os Linux
+ 
+ _require_sparse_files
+ 
++[-x $here/src/aio-dio-regress/aiodio_sparse2] || _notrun "src/aio-dio-regress/aiodio_sparse2 not built"
++
+ echo "Silence is golden."
+ 
+ # real QA test starts here
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
