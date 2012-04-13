@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3DCB7JQ037744 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:07 -0500
+	q3DCBJGK037900 for <xfs@oss.sgi.com>; Fri, 13 Apr 2012 07:11:19 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	GgRDFEr1nfTI7n0z for <xfs@oss.sgi.com>;
-	Fri, 13 Apr 2012 05:11:06 -0700 (PDT)
+	EG7GWWGYHUdQ7D7u for <xfs@oss.sgi.com>;
+	Fri, 13 Apr 2012 05:11:17 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SIfLE-00030p-5S
+	(envelope-from <dave@fromorbit.com>) id 1SIfLE-00030x-8a
 	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:04 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SIfLD-0003Nv-Py
-	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:03 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SIfLE-0003OQ-5h
+	for xfs@oss.sgi.com; Fri, 13 Apr 2012 22:11:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/18] xfs: Ensure inode reclaim can run during quotacheck
-Date: Fri, 13 Apr 2012 22:10:44 +1000
-Message-Id: <1334319061-12968-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/18] xfs: use blocks for storing the desired IO size
+Date: Fri, 13 Apr 2012 22:10:56 +1000
+Message-Id: <1334319061-12968-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,148 +33,372 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Now that we pass block counts everywhere, and index buffers by block
+number and length in units of blocks, convert the desired IO size
+into block counts rather than bytes. Convert the code to use block
+counts, and those that need byte counts get converted at the time of
+use.
 
-Because the mount process can run a quotacheck and consume lots of
-inodes, we need to be able to run periodic inode reclaim during the
-mount process. This will prevent running the system out of memory
-during quota checks.
+Rename the b_desired_count variable to something closer to it's
+purpose - b_io_length - as it is only used to specify the length of
+an IO for a subset of the buffer.  The only time this is used is for
+log IO - both writing iclogs and during log recovery. In all other
+cases, the b_io_length matches b_length, and hence a lot of code
+confuses the two. e.g. the buf item code uses the io count
+exclusively when it should be using the buffer length. Fix these
+apprpriately as they are found.
 
-This essentially reverts 2bcf6e97, but that is safe to do now that
-the quota sync code that was causing problems during long quotacheck
-executions is now gone.
-
-The reclaim work is currently protected from running during the
-unmount process by a check against MS_ACTIVE. Unfortunately, this
-also means that the reclaim work cannot run during mount.  The
-unmount process should stop the reclaim cleanly before freeing
-anything that the reclaim work depends on, so there is no need to
-have this guard in place.
-
-Also, the inode reclaim work is demand driven, so there is no need
-to start it immediately during mount. It will be started the moment
-an inode is queued for reclaim, so qutoacheck will trigger it just
-fine.
+Also, remove the XFS_BUF_{SET_}COUNT() macros that are just wrappers
+around the desired IO length. They only serve to make the code
+shouty loud, don't actually add any real value, and are often used
+incorrectly.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_super.c |   20 ++++++++++----------
- fs/xfs/xfs_sync.c  |   19 +++++++++----------
- 2 files changed, 19 insertions(+), 20 deletions(-)
+ fs/xfs/xfs_buf.c         |   26 +++++++++++++-------------
+ fs/xfs/xfs_buf.h         |    4 +---
+ fs/xfs/xfs_buf_item.c    |   15 ++++++++-------
+ fs/xfs/xfs_da_btree.c    |   16 ++++++++--------
+ fs/xfs/xfs_log.c         |    2 +-
+ fs/xfs/xfs_log_recover.c |   15 ++++++++-------
+ fs/xfs/xfs_trans_buf.c   |    4 ++--
+ 7 files changed, 41 insertions(+), 41 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6306882..744d6b0 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -981,10 +981,9 @@ xfs_fs_put_super(
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 088b4f0..b508eaf 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -192,12 +192,12 @@ xfs_buf_alloc(
+ 	bp->b_target = target;
+ 
+ 	/*
+-	 * Set length and count_desired to the same value initially.
+-	 * I/O routines should use count_desired, which will be the same in
++	 * Set length and io_length to the same value initially.
++	 * I/O routines should use io_length, which will be the same in
+ 	 * most cases but may be reset (e.g. XFS recovery).
+ 	 */
+ 	bp->b_length = numblks;
+-	bp->b_count_desired = numblks << BBSHIFT;
++	bp->b_io_length = numblks;
+ 	bp->b_flags = flags;
+ 
+ 	/*
+@@ -296,7 +296,7 @@ xfs_buf_allocate_memory(
+ 	xfs_buf_t		*bp,
+ 	uint			flags)
  {
- 	struct xfs_mount	*mp = XFS_M(sb);
+-	size_t			size = bp->b_count_desired;
++	size_t			size;
+ 	size_t			nbytes, offset;
+ 	gfp_t			gfp_mask = xb_to_gfp(flags);
+ 	unsigned short		page_count, i;
+@@ -339,6 +339,7 @@ use_alloc_page:
+ 		return error;
  
--	xfs_syncd_stop(mp);
--
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
-+	xfs_syncd_stop(mp);
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_destroy_mount_workqueues(mp);
-@@ -1354,31 +1353,33 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
+ 	offset = bp->b_offset;
++	size = BBTOB(bp->b_length);
+ 	bp->b_flags |= _XBF_PAGES;
  
--	error = xfs_mountfs(mp);
-+	error = xfs_syncd_init(mp);
- 	if (error)
- 		goto out_filestream_unmount;
+ 	for (i = 0; i < bp->b_page_count; i++) {
+@@ -569,7 +570,7 @@ xfs_buf_get(
+ 	 * that we can do IO on it.
+ 	 */
+ 	bp->b_bn = blkno;
+-	bp->b_count_desired = BBTOB(bp->b_length);
++	bp->b_io_length = bp->b_length;
  
--	error = xfs_syncd_init(mp);
-+	error = xfs_mountfs(mp);
- 	if (error)
--		goto out_unmount;
-+		goto out_syncd_stop;
- 
- 	root = igrab(VFS_I(mp->m_rootip));
- 	if (!root) {
- 		error = ENOENT;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 	if (is_bad_inode(root)) {
- 		error = EINVAL;
--		goto out_syncd_stop;
-+		goto out_unmount;
- 	}
- 	sb->s_root = d_make_root(root);
- 	if (!sb->s_root) {
- 		error = ENOMEM;
--		goto out_syncd_stop;
-+		goto out_unmount;
+ found:
+ 	if (!(bp->b_flags & XBF_MAPPED)) {
+@@ -712,7 +713,7 @@ xfs_buf_set_empty(
+ 	bp->b_page_count = 0;
+ 	bp->b_addr = NULL;
+ 	bp->b_length = numblks;
+-	bp->b_count_desired = numblks << BBSHIFT;
++	bp->b_io_length = numblks;
+ 	bp->b_bn = XFS_BUF_DADDR_NULL;
+ 	bp->b_flags &= ~XBF_MAPPED;
+ }
+@@ -764,7 +765,7 @@ xfs_buf_associate_memory(
+ 		pageaddr += PAGE_SIZE;
  	}
  
- 	return 0;
+-	bp->b_count_desired = len;
++	bp->b_io_length = BTOBB(len);
+ 	bp->b_length = BTOBB(buflen);
+ 	bp->b_flags |= XBF_MAPPED;
  
-+ out_syncd_stop:
-+	xfs_syncd_stop(mp);
-  out_filestream_unmount:
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
-@@ -1395,11 +1396,10 @@ out_destroy_workqueues:
-  out:
- 	return -error;
- 
-- out_syncd_stop:
--	xfs_syncd_stop(mp);
-  out_unmount:
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
-+	xfs_syncd_stop(mp);
- 	goto out_free_sb;
+@@ -1006,9 +1007,8 @@ xfs_buf_ioerror_alert(
+ 	const char		*func)
+ {
+ 	xfs_alert(bp->b_target->bt_mount,
+-"metadata I/O error: block 0x%llx (\"%s\") error %d buf count %zd",
+-		(__uint64_t)XFS_BUF_ADDR(bp), func,
+-		bp->b_error, XFS_BUF_COUNT(bp));
++"metadata I/O error: block 0x%llx (\"%s\") error %d numblks %d",
++		(__uint64_t)XFS_BUF_ADDR(bp), func, bp->b_error, bp->b_length);
  }
  
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index f0f1894..f7f019f 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -379,7 +379,15 @@ xfs_sync_worker(
- 					struct xfs_mount, m_sync_work);
- 	int		error;
+ int
+@@ -1180,7 +1180,7 @@ _xfs_buf_ioapply(
+ 	int			rw, map_i, total_nr_pages, nr_pages;
+ 	struct bio		*bio;
+ 	int			offset = bp->b_offset;
+-	int			size = bp->b_count_desired;
++	int			size = BBTOB(bp->b_io_length);
+ 	sector_t		sector = bp->b_bn;
  
--	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+	/*
-+	 * We shouldn't write/force the log if we are in the mount/unmount
-+	 * process or on a read only filesystem. The workqueue still needs to be
-+	 * active in both cases, however, because it is used for inode reclaim
-+	 * during these times. hence use the MS_ACTIVE flag to avoid doing
-+	 * anything in these periods.
-+	 */
-+	if (!(mp->m_super->s_flags & MS_ACTIVE) &&
-+	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 		/* dgc: errors ignored here */
- 		if (mp->m_super->s_frozen == SB_UNFROZEN &&
- 		    xfs_log_need_covered(mp))
-@@ -407,14 +415,6 @@ xfs_syncd_queue_reclaim(
- 	struct xfs_mount        *mp)
+ 	total_nr_pages = bp->b_page_count;
+@@ -1228,7 +1228,7 @@ next_chunk:
+ 			break;
+ 
+ 		offset = 0;
+-		sector += nbytes >> BBSHIFT;
++		sector += BTOBB(nbytes);
+ 		size -= nbytes;
+ 		total_nr_pages--;
+ 	}
+@@ -1322,7 +1322,7 @@ xfs_buf_iomove(
+ 		page = bp->b_pages[xfs_buf_btoct(boff + bp->b_offset)];
+ 		cpoff = xfs_buf_poff(boff + bp->b_offset);
+ 		csize = min_t(size_t,
+-			      PAGE_SIZE-cpoff, bp->b_count_desired-boff);
++			      PAGE_SIZE - cpoff, BBTOB(bp->b_io_length) - boff);
+ 
+ 		ASSERT(((csize + cpoff) <= PAGE_SIZE));
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 3dab208..9787645 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -128,7 +128,6 @@ typedef struct xfs_buf {
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
+ 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
+-	size_t			b_count_desired;/* desired transfer size */
+ 	void			*b_addr;	/* virtual address of buffer */
+ 	struct work_struct	b_iodone_work;
+ 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
+@@ -137,6 +136,7 @@ typedef struct xfs_buf {
+ 	struct xfs_trans	*b_transp;
+ 	struct page		**b_pages;	/* array of page pointers */
+ 	struct page		*b_page_array[XB_PAGES]; /* inline pages */
++	int			b_io_length;	/* IO size in BBs */
+ 	atomic_t		b_pin_count;	/* pin count */
+ 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
+ 	unsigned int		b_page_count;	/* size of page array */
+@@ -244,8 +244,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
+ 
+ #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
+ #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
+-#define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
+-#define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
+ 
+ static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
  {
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index 7f0abea..a25206c 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -123,11 +123,11 @@ xfs_buf_item_log_check(
+ 	ASSERT(bip->bli_logged != NULL);
  
--	/*
--	 * We can have inodes enter reclaim after we've shut down the syncd
--	 * workqueue during unmount, so don't allow reclaim work to be queued
--	 * during unmount.
--	 */
--	if (!(mp->m_super->s_flags & MS_ACTIVE))
--		return;
--
- 	rcu_read_lock();
- 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
- 		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
-@@ -483,7 +483,6 @@ xfs_syncd_init(
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 	bp = bip->bli_buf;
+-	ASSERT(XFS_BUF_COUNT(bp) > 0);
++	ASSERT(bp->b_length > 0);
+ 	ASSERT(bp->b_addr != NULL);
+ 	orig = bip->bli_orig;
+ 	buffer = bp->b_addr;
+-	for (x = 0; x < XFS_BUF_COUNT(bp); x++) {
++	for (x = 0; x < BBTOB(bp->b_length); x++) {
+ 		if (orig[x] != buffer[x] && !btst(bip->bli_logged, x)) {
+ 			xfs_emerg(bp->b_mount,
+ 				"%s: bip %x buffer %x orig %x index %d",
+@@ -657,7 +657,8 @@ xfs_buf_item_init(
+ 	 * truncate any pieces.  map_size is the size of the
+ 	 * bitmap needed to describe the chunks of the buffer.
+ 	 */
+-	chunks = (int)((XFS_BUF_COUNT(bp) + (XFS_BLF_CHUNK - 1)) >> XFS_BLF_SHIFT);
++	chunks = (int)((BBTOB(bp->b_length) + (XFS_BLF_CHUNK - 1)) >>
++								XFS_BLF_SHIFT);
+ 	map_size = (int)((chunks + NBWORD) >> BIT_TO_WORD_SHIFT);
  
- 	xfs_syncd_queue_sync(mp);
--	xfs_syncd_queue_reclaim(mp);
+ 	bip = (xfs_buf_log_item_t*)kmem_zone_zalloc(xfs_buf_item_zone,
+@@ -667,7 +668,7 @@ xfs_buf_item_init(
+ 	xfs_buf_hold(bp);
+ 	bip->bli_format.blf_type = XFS_LI_BUF;
+ 	bip->bli_format.blf_blkno = (__int64_t)XFS_BUF_ADDR(bp);
+-	bip->bli_format.blf_len = (ushort)BTOBB(XFS_BUF_COUNT(bp));
++	bip->bli_format.blf_len = (ushort)bp->b_length;
+ 	bip->bli_format.blf_map_size = map_size;
  
- 	return 0;
+ #ifdef XFS_TRANS_DEBUG
+@@ -679,9 +680,9 @@ xfs_buf_item_init(
+ 	 * the buffer to indicate which bytes the callers have asked
+ 	 * to have logged.
+ 	 */
+-	bip->bli_orig = (char *)kmem_alloc(XFS_BUF_COUNT(bp), KM_SLEEP);
+-	memcpy(bip->bli_orig, bp->b_addr, XFS_BUF_COUNT(bp));
+-	bip->bli_logged = (char *)kmem_zalloc(XFS_BUF_COUNT(bp) / NBBY, KM_SLEEP);
++	bip->bli_orig = kmem_alloc(BBTOB(bp->b_length), KM_SLEEP);
++	memcpy(bip->bli_orig, bp->b_addr, BBTOB(bp->b_length));
++	bip->bli_logged = kmem_zalloc(BBTOB(bp->b_length) / NBBY, KM_SLEEP);
+ #endif
+ 
+ 	/*
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 7f1a6f5..b8adc79 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -2277,20 +2277,20 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps)
+ 	if (nbuf == 1) {
+ 		dabuf->nbuf = 1;
+ 		bp = bps[0];
+-		dabuf->bbcount = (short)BTOBB(XFS_BUF_COUNT(bp));
++		dabuf->bbcount = bp->b_length;
+ 		dabuf->data = bp->b_addr;
+ 		dabuf->bps[0] = bp;
+ 	} else {
+ 		dabuf->nbuf = nbuf;
+ 		for (i = 0, dabuf->bbcount = 0; i < nbuf; i++) {
+ 			dabuf->bps[i] = bp = bps[i];
+-			dabuf->bbcount += BTOBB(XFS_BUF_COUNT(bp));
++			dabuf->bbcount += bp->b_length;
+ 		}
+ 		dabuf->data = kmem_alloc(BBTOB(dabuf->bbcount), KM_SLEEP);
+-		for (i = off = 0; i < nbuf; i++, off += XFS_BUF_COUNT(bp)) {
++		for (i = off = 0; i < nbuf; i++, off += BBTOB(bp->b_length)) {
+ 			bp = bps[i];
+ 			memcpy((char *)dabuf->data + off, bp->b_addr,
+-				XFS_BUF_COUNT(bp));
++				BBTOB(bp->b_length));
+ 		}
+ 	}
+ 	return dabuf;
+@@ -2310,10 +2310,10 @@ xfs_da_buf_clean(xfs_dabuf_t *dabuf)
+ 		ASSERT(dabuf->nbuf > 1);
+ 		dabuf->dirty = 0;
+ 		for (i = off = 0; i < dabuf->nbuf;
+-				i++, off += XFS_BUF_COUNT(bp)) {
++				i++, off += BBTOB(bp->b_length)) {
+ 			bp = dabuf->bps[i];
+ 			memcpy(bp->b_addr, dabuf->data + off,
+-						XFS_BUF_COUNT(bp));
++						BBTOB(bp->b_length));
+ 		}
+ 	}
  }
+@@ -2356,10 +2356,10 @@ xfs_da_log_buf(xfs_trans_t *tp, xfs_dabuf_t *dabuf, uint first, uint last)
+ 	}
+ 	dabuf->dirty = 1;
+ 	ASSERT(first <= last);
+-	for (i = off = 0; i < dabuf->nbuf; i++, off += XFS_BUF_COUNT(bp)) {
++	for (i = off = 0; i < dabuf->nbuf; i++, off += BBTOB(bp->b_length)) {
+ 		bp = dabuf->bps[i];
+ 		f = off;
+-		l = f + XFS_BUF_COUNT(bp) - 1;
++		l = f + BBTOB(bp->b_length) - 1;
+ 		if (f < first)
+ 			f = first;
+ 		if (l > last)
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index f9d8355..5e2aa52 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1487,7 +1487,7 @@ xlog_sync(xlog_t		*log,
+ 	} else {
+ 		iclog->ic_bwritecnt = 1;
+ 	}
+-	XFS_BUF_SET_COUNT(bp, count);
++	bp->b_io_length = BTOBB(count);
+ 	bp->b_fspriv = iclog;
+ 	XFS_BUF_ZEROFLAGS(bp);
+ 	XFS_BUF_ASYNC(bp);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 15b7470..0872d71 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -178,7 +178,7 @@ xlog_bread_noalign(
+ 
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+ 	XFS_BUF_READ(bp);
+-	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
++	bp->b_io_length = nbblks;
+ 	bp->b_error = 0;
+ 
+ 	xfsbdstrat(log->l_mp, bp);
+@@ -266,7 +266,7 @@ xlog_bwrite(
+ 	XFS_BUF_ZEROFLAGS(bp);
+ 	xfs_buf_hold(bp);
+ 	xfs_buf_lock(bp);
+-	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
++	bp->b_io_length = nbblks;
+ 	bp->b_error = 0;
+ 
+ 	error = xfs_bwrite(bp);
+@@ -1774,7 +1774,7 @@ xlog_recover_do_inode_buffer(
+ 
+ 	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
+ 
+-	inodes_per_buf = XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog;
++	inodes_per_buf = BBTOB(bp->b_io_length) >> mp->m_sb.sb_inodelog;
+ 	for (i = 0; i < inodes_per_buf; i++) {
+ 		next_unlinked_offset = (i * mp->m_sb.sb_inodesize) +
+ 			offsetof(xfs_dinode_t, di_next_unlinked);
+@@ -1816,7 +1816,8 @@ xlog_recover_do_inode_buffer(
+ 
+ 		ASSERT(item->ri_buf[item_index].i_addr != NULL);
+ 		ASSERT((item->ri_buf[item_index].i_len % XFS_BLF_CHUNK) == 0);
+-		ASSERT((reg_buf_offset + reg_buf_bytes) <= XFS_BUF_COUNT(bp));
++		ASSERT((reg_buf_offset + reg_buf_bytes) <=
++							BBTOB(bp->b_io_length));
+ 
+ 		/*
+ 		 * The current logged region contains a copy of the
+@@ -1875,8 +1876,8 @@ xlog_recover_do_reg_buffer(
+ 		ASSERT(nbits > 0);
+ 		ASSERT(item->ri_buf[i].i_addr != NULL);
+ 		ASSERT(item->ri_buf[i].i_len % XFS_BLF_CHUNK == 0);
+-		ASSERT(XFS_BUF_COUNT(bp) >=
+-		       ((uint)bit << XFS_BLF_SHIFT)+(nbits<<XFS_BLF_SHIFT));
++		ASSERT(BBTOB(bp->b_io_length) >=
++		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
+ 
+ 		/*
+ 		 * Do a sanity check if this is a dquot buffer. Just checking
+@@ -2169,7 +2170,7 @@ xlog_recover_buffer_pass2(
+ 	 */
+ 	if (XFS_DINODE_MAGIC ==
+ 	    be16_to_cpu(*((__be16 *)xfs_buf_offset(bp, 0))) &&
+-	    (XFS_BUF_COUNT(bp) != MAX(log->l_mp->m_sb.sb_blocksize,
++	    (BBTOB(bp->b_io_length) != MAX(log->l_mp->m_sb.sb_blocksize,
+ 			(__uint32_t)XFS_INODE_CLUSTER_SIZE(log->l_mp)))) {
+ 		xfs_buf_stale(bp);
+ 		error = xfs_bwrite(bp);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 9132d16..2ec196b 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -56,7 +56,7 @@ xfs_trans_buf_item_match(
+ 		if (blip->bli_item.li_type == XFS_LI_BUF &&
+ 		    blip->bli_buf->b_target == target &&
+ 		    XFS_BUF_ADDR(blip->bli_buf) == blkno &&
+-		    XFS_BUF_COUNT(blip->bli_buf) == len)
++		    BBTOB(blip->bli_buf->b_length) == len)
+ 			return blip->bli_buf;
+ 	}
+ 
+@@ -585,7 +585,7 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 
+ 	ASSERT(bp->b_transp == tp);
+ 	ASSERT(bip != NULL);
+-	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
++	ASSERT(first <= last && last < BBTOB(bp->b_length));
+ 	ASSERT(bp->b_iodone == NULL ||
+ 	       bp->b_iodone == xfs_buf_iodone_callbacks);
+ 
 -- 
 1.7.9.5
 
