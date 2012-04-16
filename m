@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3GEYtsT219681 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 09:34:56 -0500
-Message-ID: <4F8C2E0D.3040005@sgi.com>
-Date: Mon, 16 Apr 2012 09:34:53 -0500
+	q3GFAobS224140 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 10:10:50 -0500
+Message-ID: <4F8C3678.6030306@sgi.com>
+Date: Mon, 16 Apr 2012 10:10:48 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 17/18] xfs: kill XBF_DONTBLOCK
+Subject: Re: [PATCH 18/18] xfs: use iolock on XFS_IOC_ALLOCSP calls
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<1334319061-12968-18-git-send-email-david@fromorbit.com>
-In-Reply-To: <1334319061-12968-18-git-send-email-david@fromorbit.com>
+	<1334319061-12968-19-git-send-email-david@fromorbit.com>
+In-Reply-To: <1334319061-12968-19-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,21 +28,28 @@ Cc: xfs@oss.sgi.com
 On 04/13/12 07:11, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Just about all callers of xfs_buf_read() and xfs_buf_get() use XBF_DONTBLOCK.
-> This is used to make memory allocation use GFP_NOFS rather than GFP_KERNEL to
-> avoid recursion through memory reclaim back into the filesystem.
+> fsstress has a particular effective way of stopping debug XFS
+> kernels. We keep seeing assert failures due finding delayed
+> allocation extents where there should be none. This shows up when
+> extracting extent maps and we are holding all the locks we should be
+> to prevent races, so this really makes no sense to see these errors.
 >
-> All the blocking get calls in growfs occur inside a transaction, even though
-> they are no part of the transaction, so all allocation will be GFP_NOFS due to
-> the task flag PF_TRANS being set. The blocking read calls occur during log
-> recovery, so they will probably be unaffected by converting to GFP_NOFS
-> allocations.
+> After checking that fsstress does not use mmap, it occurred to me
+> that fsstress uses something that no sane application uses - the
+> XFS_IOC_ALLOCSP ioctl interfaces for preallocation. These interfaces
+> do allocation of blocks beyond EOF without using preallocation, and
+> then call setattr to extend and zero the allocated blocks.
 >
-> Hence make XBF_DONTBLOCK behaviour always occur for buffers and kill the flag.
+> THe problem here is this is a buffered write, and hence the
+> allocation is a delayed allocation. Unlike the buffered IO path, the
+> allocation and zeroing are not serialised using the IOLOCK. Hence
+> the ALLOCSP operation can race with operations holding the iolock to
+> prevent buffered IO operations from occurring.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > Reviewed-by: Christoph Hellwig<hch@lst.de>
 > ---
+
 
 Looks good.
 
