@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3GHll7J233735 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 12:47:47 -0500
-Date: Mon, 16 Apr 2012 12:49:29 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2] xfstests: Introduce test case 285 to check
-	statfs(2) will not cause ASSERT(XFS_IS_QUOTA_RUNNING(mp)) failed.
-Message-ID: <20120416174929.GD2924@sgi.com>
-References: <4F87ED3D.5060105@oracle.com>
+	q3GInQWY237640 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 13:49:26 -0500
+Message-ID: <4F8C69B3.9050303@sgi.com>
+Date: Mon, 16 Apr 2012 13:49:23 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F87ED3D.5060105@oracle.com>
+Subject: Re: [PATCH 02/18 V2] xfs: pass shutdown method into
+	xfs_trans_ail_delete_bulk
+References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
+	<1334319061-12968-3-git-send-email-david@fromorbit.com>
+	<4F88651E.2030908@sgi.com> <20120413230451.GS6734@dastard>
+	<20120413233825.GT6734@dastard>
+In-Reply-To: <20120413233825.GT6734@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,49 +21,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Jeff,
+On 04/13/12 18:38, Dave Chinner wrote:
+> On Sat, Apr 14, 2012 at 09:04:51AM +1000, Dave Chinner wrote:
+>> On Fri, Apr 13, 2012 at 12:40:46PM -0500, Mark Tinguely wrote:
+>>> On 04/13/12 07:10, Dave Chinner wrote:
+>>>> From: Dave Chinner<dchinner@redhat.com>
+>>>>
+>>>> xfs_trans_ail_delete_bulk() can be called from different contexts so
+>>>> if the item is not in the AIL we need different shutdown for each
+>>>> context.  Pass in the shutdown method needed so the correct action
+>>>> can be taken.
+>>>>
+>>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>>> Reviewed-by: Christoph Hellwig<hch@lst.de>
+>>>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+>>>
+>>>
+>>>
+>>> These items in my copy of Christoph's xfsbufd series are not
+>>> resolved in this patch:
+>>
+>> Ah, oh, that's my fault. I re-ordered the series so that all my
+>> patches were after christoph's, and when reapplying christophs
+>> patches from my series there were a few merge conflicts I obviously
+>> didn't resolve correctly.
+>>
+>> I'll fix my tree up and repost this patch.
+>
+> Updated patch below.
+>
 
-On Fri, Apr 13, 2012 at 05:09:17PM +0800, Jeff Liu wrote:
-> Call statfs(2) against a project directory cause ASSERT(XFS_IS_QUOTA_RUNNING(mp)) at xfs_qm_dqget() failed pre-vanilla kernel-3.4
-> if the "pquota" or "prjquota" mount option was not enabled on the underlying partition.  This test case can help checking it.
+Applies cleanly. Thanks.
 
-A nice find.
-
-> +echo "Silence is golden."
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_xfs_quota
-> +_require_scratch
-> +
-> +proj_dir="${SCRATCH_MNT}/test_project"
-> +test_file="${proj_dir}/test_file"
-> +
-> +_scratch_mkfs_xfs			>/dev/null 2>&1
-> +_qmount
-> +
-> +mkdir $proj_dir
-> +touch $test_file
-> +
-> +$XFS_QUOTA_PROG -x -c "project -s -p ${proj_dir} 2012" $SCRATCH_DEV \
-> +					>/dev/null 2>&1
-> +du -sh $proj_dir			>/dev/null 2>&1
-
-I was unable to reproduce this until I changed 'du -sh' to 'df'.  Now it does
-crash consistently without your fix for xfs_fs_statfs().
-
-With that change you can consider this
-Reviewed-by: Ben Myers <bpm@sgi.com>
-
--Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
