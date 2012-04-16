@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3G6vA5j179615 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 01:57:10 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id wDkE9coiJCVbOUQh for
-	<xfs@oss.sgi.com>; Sun, 15 Apr 2012 23:57:09 -0700 (PDT)
-Date: Mon, 16 Apr 2012 08:57:00 +0200 (CEST)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: Re: [PATCH 4/5] xfstests: sync before umount to avoid device busy
-	problems
-In-Reply-To: <20120413115812.GP6734@dastard>
-Message-ID: <alpine.LFD.2.00.1204160853520.11313@dhcp-27-109.brq.redhat.com>
-References: <1334310586-2281-1-git-send-email-tmarek@redhat.com>
-	<1334310586-2281-4-git-send-email-tmarek@redhat.com>
-	<4F87FF3D.7030803@giantdisaster.de>
-	<alpine.LFD.2.00.1204131249390.14961@dhcp-27-109.brq.redhat.com>
-	<20120413115812.GP6734@dastard>
+	q3G6wTAY179908 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 01:58:29 -0500
+Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
+	[209.85.210.46]) by cuda.sgi.com with ESMTP id PHGDt0KpSQ1ppz15
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 15 Apr 2012 23:58:28 -0700 (PDT)
+Received: by dadz9 with SMTP id z9so7861978dad.5
+	for <xfs@oss.sgi.com>; Sun, 15 Apr 2012 23:58:27 -0700 (PDT)
+Message-ID: <4F8BC30D.5040601@kernel.org>
+Date: Mon, 16 Apr 2012 14:58:21 +0800
+From: Shaohua Li <shli@kernel.org>
 MIME-Version: 1.0
+Subject: Re: [RFC]xfs: using GFP_NOFS for blkdev_issue_flush
+References: <4F8BC112.9090508@fusionio.com>
+In-Reply-To: <4F8BC112.9090508@fusionio.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,71 +23,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Lukas Czerner <lczerner@redhat.com>, Stefan Behrens <sbehrens@giantdisaster.de>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org
 
-On Fri, 13 Apr 2012, Dave Chinner wrote:
+On 4/16/12 2:49 PM, Shaohua Li wrote:
+>
+> flush request is issued in transaction commit code path usually, so
+> looks using
+> GFP_KERNEL to allocate memory for flush request bio falls into the classic
+> deadlock issue (memory reclaim recursion). Use GFP_NOFS to avoid recursion
+> from reclaim context. Per Dave Chinner, there is only blkdev_issue_flush
+> might
+> be buggy here. But using GFP_NOFS by default for all calls should not
+> matter.
+>
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> ---
+> fs/xfs/xfs_super.c | 2 +-
+> 1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> Index: linux/fs/xfs/xfs_super.c
+> ===================================================================
+> --- linux.orig/fs/xfs/xfs_super.c 2012-04-13 10:08:26.095496072 +0800
+> +++ linux/fs/xfs/xfs_super.c 2012-04-13 10:08:42.555496865 +0800
+> @@ -622,7 +622,7 @@ void
+> xfs_blkdev_issue_flush(
+> xfs_buftarg_t *buftarg)
+> {
+> - blkdev_issue_flush(buftarg->bt_bdev, GFP_KERNEL, NULL);
+> + blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS, NULL);
+> }
+>
+> STATIC void
+>
+Oops, I apologize for the html mail, it slipped to wrong imap server. 
+below one has correct format.
 
-> On Fri, Apr 13, 2012 at 12:57:20PM +0200, Lukas Czerner wrote:
-> > On Fri, 13 Apr 2012, Stefan Behrens wrote:
-> > > On 4/13/2012 11:49 AM, tmarek@redhat.com wrote:
-> > > > From: Tom Marek <tmarek@redhat.com>
-> > > > 
-> > > > Some tests might fail because of 'device or resource busy' when unmounting
-> > > > either the SCRATCH or the TEST device. The reason this happenes is that
-> > > > some processes might not have time to finish properly, or they are still
-> > > > waiting for IO. The sync command was added before unmount into
-> > > > _scratch_unmount() and umount_or_remount_ro which should help processes to
-> > > > finish before unmounting takes place and thus it solves the problem.
-> > > > This fixes for example tests 226 and 247.
-> > > > 
-> > > > Test 226 uses plain umount command which suffers from exactly the same problem
-> > > > as described above. Use fixed _scratch_unmount() instead of plain umount fixes
-> > > > this problem.
-> ....
-> > > 
-> > > If a xfstest process is still running when _scratch_umount() is called,
-> > > that xfstest is wrong and needs to be fixed IMO.
-> > 
-> > I agree, however some tests does not explicitly wait for all processes
-> > to finish. It is kind of hard to see why 226 has this problem, since
-> > there are no processes running on background, but sync certainly seems
-> > to help. It seems to be just a matter of timing though.
-> 
-> Which indicates a problem that needs to be understood, not hidden.
-> 
-> > > If a system or filesystem thread is still running and umount fails to
-> > > handle it, the system or filesystem needs to be fixed IMO.
-> > > 
-> > > xfstests shall uncover issues, not hide them.
-> > 
-> > I do not think this is fs issue at all.
-> 
-> There are no background threads in 226, so if the unmount is failing
-> then there is something wrong with the unmount process.  Indeed, 226
-> is doing direct Io writes prior to unmount, so the only dirty
-> objects should be the inode and free space indexing metadata. If
-> unmount is failing to handle this, we need to know why....
-> 
-> So I definitely agree with Stefan on this one - adding a sync before
-> unmount looks like hiding a problem rather than solving it...
+flush request is issued in transaction commit code path usually, so 
+looks using
+GFP_KERNEL to allocate memory for flush request bio falls into the classic
+deadlock issue (memory reclaim recursion). Use GFP_NOFS to avoid recursion
+from reclaim context. Per Dave Chinner, there is only blkdev_issue_flush 
+might
+be buggy here. But using GFP_NOFS by default for all calls should not 
+matter.
 
-Hmm ok, you're right. Since there is no background process we have to see
-what is actually holding back unmount from proceeding successfully. Tom,
-will you look into this please ?
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+  fs/xfs/xfs_super.c |    2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks!
--Lukas
+Index: linux/fs/xfs/xfs_super.c
+===================================================================
+--- linux.orig/fs/xfs/xfs_super.c	2012-04-13 10:08:26.095496072 +0800
++++ linux/fs/xfs/xfs_super.c	2012-04-13 10:08:42.555496865 +0800
+@@ -622,7 +622,7 @@ void
+  xfs_blkdev_issue_flush(
+  	xfs_buftarg_t		*buftarg)
+  {
+-	blkdev_issue_flush(buftarg->bt_bdev, GFP_KERNEL, NULL);
++	blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS, NULL);
+  }
 
-> 
-> Cheers,
-> 
-> Dave.
-> 
+  STATIC void
 
 _______________________________________________
 xfs mailing list
