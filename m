@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3GGTSef228396 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 11:29:28 -0500
-Date: Mon, 16 Apr 2012 11:31:12 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v2] xfstests: Introduce test case 285 to check
-	statfs(2) will not cause ASSERT(XFS_IS_QUOTA_RUNNING(mp)) failed.
-Message-ID: <20120416163112.GC2924@sgi.com>
-References: <4F87ED3D.5060105@oracle.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F87ED3D.5060105@oracle.com>
+	q3GGEPRT227444 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 11:14:26 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id fpE6FjswMZ6Vdl6f (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 16 Apr 2012 09:14:24 -0700 (PDT)
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 00/19 v5] Fix filesystem freezing deadlocks
+Date: Mon, 16 Apr 2012 18:13:38 +0200
+Message-Id: <1334592845-22862-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,176 +18,96 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-nilfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>, cluster-devel@redhat.com, Anton Altaparmakov <anton@tuxera.com>, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Joel Becker <jlbec@evilplan.org>, dchinner@redhat.com, Steven Whitehouse <swhiteho@redhat.com>, Chris Mason <chris.mason@oracle.com>, linux-nfs@vger.kernel.org, Alex Elder <elder@kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-btrfs@vger.kernel.org
 
-Hey Jeff,
+  Hello,
 
-On Fri, Apr 13, 2012 at 05:09:17PM +0800, Jeff Liu wrote:
-> Call statfs(2) against a project directory cause ASSERT(XFS_IS_QUOTA_RUNNING(mp)) at xfs_qm_dqget() failed pre-vanilla kernel-3.4
-> if the "pquota" or "prjquota" mount option was not enabled on the underlying partition.  This test case can help checking it.
-> 
-> [15002.359375] XFS: Assertion failed: *nmap >= 1, file: fs/xfs/xfs_bmap.c, line: 4362
+  here is the fifth iteration of my patches to improve filesystem freezing.
+No serious changes since last time. Mostly I rebased patches and merged this
+series with series moving file_update_time() to ->page_mkwrite() to simplify
+testing and merging.
 
-I'd have expected to see an xfs_qm_dqget related stack trace here.  Are you
-sure that this is the one you intended to include?
+Filesystem freezing is currently racy and thus we can end up with dirty data on
+frozen filesystem (see changelog patch 13 for detailed race description). This
+patch series aims at fixing this.
 
-Thanks,
-	Ben
+To be able to block all places where inodes get dirtied, I've moved filesystem
+file_update_time() call to ->page_mkwrite callback (patches 01-07) and put
+freeze handling in mnt_want_write() / mnt_drop_write(). That however required
+some code shuffling and changes to kern_path_create() (see patches 09-12). I
+think the result is OK but opinions may differ ;). The advantage of this change
+also is that all filesystems get freeze protection almost for free - even ext2
+can handle freezing well now.
 
+Another potential contention point might be patch 19. In that patch we make
+freeze_super() refuse to freeze the filesystem when there are open but unlinked
+files which may be impractical in some cases. The main reason for this is the
+problem with handling of file deletion from fput() called with mmap_sem held
+(e.g. from munmap(2)), and then there's the fact that we cannot really force
+such filesystem into a consistent state... But if people think that freezing
+with open but unlinked files should happen, then I have some possible
+solutions in mind (maybe as a separate patchset since this is large enough).
 
-> [15002.359416] ------------[ cut here ]------------
-> [15002.359508] kernel BUG at fs/xfs/xfs_message.c:101!
-> [15002.359594] invalid opcode: 0000 [#1] SMP 
-> [15002.359683] Modules linked in: xfs(O) cryptd aes_i586 aes_generic binfmt_misc ...
-> [15002.361578] 
-> [15002.361614] Pid: 4886, comm: seek_test Tainted: G           O 3.2.0-rc1-00306-g7f80850 #6 LENOVO 7661D43/7661D43
-> [15002.361807] EIP: 0060:[<f94f9d2c>] EFLAGS: 00210246 CPU: 1
-> [15002.361976] EIP is at assfail+0x47/0x57 [xfs]
-> [15002.362055] EAX: 0000005c EBX: e90d4400 ECX: 00000000 EDX: 000000b6
-> [15002.362162] ESI: 00000000 EDI: f39ed800 EBP: f39d7e40 ESP: f39d7e2c
-> [15002.362269]  DS: 007b ES: 007b FS: 00d8 GS: 00e0 SS: 0068
-> [15002.362366] Process seek_test (pid: 4886, ti=f39d6000 task=db5cd960 task.ti=f39d6000)
-> [15002.362452] Stack:
-> [15002.362452]  00000000 f95b705a f95bb47d f95ba4f4 0000110a f39d7ee4 f952a5b5 00000000
-> [15002.362452]  f39d7ed0 f39d7ed4 f39d7eb0 f39d7e94 00000000 00000000 f39d7eb0 f95662ad
-> [15002.362452]  00000000 00000000 00000000 f950910e e90d4438 00000001 00000000 00000000
-> [15002.362452] Call Trace:
-> [15002.362452]  [<f952a5b5>] xfs_bmapi_read+0x65/0x5fb [xfs]
-> [15002.362452]  [<f95662ad>] ? xfs_iext_bno_to_ext+0x10b/0x231 [xfs]
-> [15002.362452]  [<f950910e>] ? kmem_alloc+0x4c/0x102 [xfs]
-> [15002.362452]  [<f952b808>] ? xfs_getbmapx_fix_eof_hole+0x210/0x269 [xfs]
-> [15002.362452]  [<f94f7a3b>] xfs_find_desired_extent+0x37e/0x5ac [xfs]
-> [15002.362452]  [<f94e6e70>] xfs_file_llseek+0xe9/0x1d8 [xfs]
-> [15002.362452]  [<c1213670>] ? fsnotify_modify+0xa9/0xbf
-> [15002.362452]  [<f94e6d87>] ? i_size_read+0x8f/0x8f [xfs]
-> [15002.362452]  [<c1213330>] vfs_llseek+0x76/0x8a
-> [15002.362452]  [<c1213ebf>] sys_lseek+0x78/0xc7
-> [15002.362452]  [<c1814814>] syscall_call+0x7/0xb
-> [15002.362452] Code: 10 89 54 24 0c 89 44 24 08 c7 44 24 04 5a 70 5b f9 c7 04 24 00 00 00 00 e8 ad fc ff ff 83 05 305 ...
-> [15002.362452] EIP: [<f94f9d2c>] assfail+0x47/0x57 [xfs] SS:ESP 0068:f39d7e2c
-> [15002.466588] ---[ end trace ce044edd5a2cbfa7 ]---
-> 
-> 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> 
-> ---
->  285     |   75 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  285.out |    2 +
->  group   |    1 +
->  3 files changed, 78 insertions(+), 0 deletions(-)
->  create mode 100755 285
->  create mode 100644 285.out
-> 
-> diff --git a/285 b/285
-> new file mode 100755
-> index 0000000..9084fbb
-> --- /dev/null
-> +++ b/285
-> @@ -0,0 +1,75 @@
-> +#! /bin/bash
-> +# FS QA Test No. 285
-> +#
-> +# This test verify statfs(2) against a project directory will not cause
-> +# ASSERT(XFS_IS_QUOTA_RUNNING(mp)) at xfs_qm_dqget() failed if the project
-> +# quota option was not enabled on the underlying partition.  It was failed
-> +# pre-vanilla kernel 3.4.
-> +#
-> +#-----------------------------------------------------------------------
-> +# Copyright (c) 2012 Oracle Liu Jie.  All Rights Reserved.
-> +#
-> +# This program is free software; you can redistribute it and/or
-> +# modify it under the terms of the GNU General Public License as
-> +# published by the Free Software Foundation.
-> +#
-> +# This program is distributed in the hope that it would be useful,
-> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
-> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-> +# GNU General Public License for more details.
-> +#
-> +# You should have received a copy of the GNU General Public License
-> +# along with this program; if not, write the Free Software Foundation,
-> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  021101301  USA
-> +# ---------------------------------------------------------------------
-> +#
-> +# creator
-> +owner=jeff.liu@oracle.com
-> +
-> +seq=`basename $0`
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	umount $SCRATCH_MNT 2>/dev/null
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common.rc
-> +. ./common.filter
-> +. ./common.quota
-> +
-> +echo "Silence is golden."
-> +
-> +# Modify as appropriate.
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_xfs_quota
-> +_require_scratch
-> +
-> +proj_dir="${SCRATCH_MNT}/test_project"
-> +test_file="${proj_dir}/test_file"
-> +
-> +_scratch_mkfs_xfs			>/dev/null 2>&1
-> +_qmount
-> +
-> +mkdir $proj_dir
-> +touch $test_file
-> +
-> +$XFS_QUOTA_PROG -x -c "project -s -p ${proj_dir} 2012" $SCRATCH_DEV \
-> +					>/dev/null 2>&1
-> +du -sh $proj_dir			>/dev/null 2>&1
-> +
-> +# Clean up
-> +rm -rf $proj_dir
-> +_scratch_unmount
-> +
-> +status=0
-> +exit
-> diff --git a/285.out b/285.out
-> new file mode 100644
-> index 0000000..18b5787
-> --- /dev/null
-> +++ b/285.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 285
-> +Silence is golden.
-> diff --git a/group b/group
-> index 104ed35..51ee3fd 100644
-> --- a/group
-> +++ b/group
-> @@ -403,3 +403,4 @@ deprecated
->  282 dump ioctl auto quick
->  283 dump ioctl auto quick
->  284 auto
-> +285 auto quick quota
-> -- 
-> 1.7.9
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+I'm not able to hit any deadlocks, lockdep warnings, or dirty data on frozen
+filesystem despite beating it with fsstress and bash-shared-mapping while
+freezing and unfreezing for several hours (using ext4 and xfs) so I'm
+reasonably confident this could finally be the right solution.
+
+Changes since v4:
+  * added a couple of Acked-by's
+  * added some comments & doc update
+  * added patches from series "Push file_update_time() into .page_mkwrite"
+    since it doesn't make much sense to keep them separate anymore
+  * rebased on top of 3.4-rc2
+
+Changes since v3:
+  * added third level of freezing for fs internal purposes - hooked some
+    filesystems to use it (XFS, nilfs2)
+  * removed racy i_size check from filemap_mkwrite()
+
+Changes since v2:
+  * completely rewritten
+  * freezing is now blocked at VFS entry points
+  * two stage freezing to handle both mmapped writes and other IO
+
+The biggest changes since v1:
+  * have two counters to provide safe state transitions for SB_FREEZE_WRITE
+    and SB_FREEZE_TRANS states
+  * use percpu counters instead of own percpu structure
+  * added documentation fixes from the old fs freezing series
+  * converted XFS to use SB_FREEZE_TRANS counter instead of its private
+    m_active_trans counter
+
+								Honza
+
+CC: Alex Elder <elder@kernel.org>
+CC: Anton Altaparmakov <anton@tuxera.com>
+CC: Ben Myers <bpm@sgi.com>
+CC: Chris Mason <chris.mason@oracle.com>
+CC: cluster-devel@redhat.com
+CC: "David S. Miller" <davem@davemloft.net>
+CC: fuse-devel@lists.sourceforge.net
+CC: "J. Bruce Fields" <bfields@fieldses.org>
+CC: Joel Becker <jlbec@evilplan.org>
+CC: KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>
+CC: linux-btrfs@vger.kernel.org
+CC: linux-ext4@vger.kernel.org
+CC: linux-nfs@vger.kernel.org
+CC: linux-nilfs@vger.kernel.org
+CC: linux-ntfs-dev@lists.sourceforge.net
+CC: Mark Fasheh <mfasheh@suse.com>
+CC: Miklos Szeredi <miklos@szeredi.hu>
+CC: ocfs2-devel@oss.oracle.com
+CC: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+CC: Steven Whitehouse <swhiteho@redhat.com>
+CC: "Theodore Ts'o" <tytso@mit.edu>
+CC: xfs@oss.sgi.com
 
 _______________________________________________
 xfs mailing list
