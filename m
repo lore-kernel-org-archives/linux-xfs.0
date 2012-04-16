@@ -1,15 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3GJPEkD240066 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 14:25:14 -0500
-Message-ID: <4F8C7217.60802@sgi.com>
-Date: Mon, 16 Apr 2012 14:25:11 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q3GKfbdo244718 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 15:41:37 -0500
+Received: from mail.hq.newdream.net (mail.hq.newdream.net [66.33.206.127]) by
+	cuda.sgi.com with ESMTP id ax2TTOVTyXMOEWft for
+	<xfs@oss.sgi.com>; Mon, 16 Apr 2012 13:41:36 -0700 (PDT)
+Received: from mail.hq.newdream.net (localhost [127.0.0.1])
+	by mail.hq.newdream.net (Postfix) with ESMTP id 48C6524493
+	for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 13:44:31 -0700 (PDT)
+Received: from [172.22.22.4] (c-71-195-31-37.hsd1.mn.comcast.net
+	[71.195.31.37])
+	by mail.hq.newdream.net (Postfix) with ESMTPSA id 126D024492
+	for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 13:44:30 -0700 (PDT)
+Message-ID: <4F8C83FE.30406@dreamhost.com>
+Date: Mon, 16 Apr 2012 15:41:34 -0500
+From: Alex Elder <elder@dreamhost.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 05/10] xfs: do flush inodes from background inode reclaim
-References: <20120327164400.967415009@bombadil.infradead.org>
-	<20120327164645.389070852@bombadil.infradead.org>
-In-Reply-To: <20120327164645.389070852@bombadil.infradead.org>
+Subject: Re: BUG: task blocked on waiter in xfs_trans_dqlockedjoin()
+References: <4F8C1FDD.70600@dreamhost.com>
+In-Reply-To: <4F8C1FDD.70600@dreamhost.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,29 +31,31 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 03/27/12 11:44, Christoph Hellwig wrote:
-> We already flush dirty inodes throug the AIL regularly, there is no reason
-> to have second thread compete with it and disturb the I/O pattern.  We still
-> do write inodes when doing a synchronous reclaim from the shrinker or during
-> unmount for now.
->
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
->
-> ---
+On 04/16/2012 08:34 AM, Alex Elder wrote:
+> I am getting the following warning while running xfstests. I haven't
+> started looking at it closely yet, but I wanted to report it so others
+> could have a look. The XFS code in use was at commit c922bbc819,
+> with ad637a10f4 cherry-picked on top of it. The tests all passed,
+> so now I'm going to have to narrow down which test produces the failure
+> (it was not near the first, nor the last test...).
 
-> -	 */
-> -	return 0;
-> +	xfs_iflock(ip);
->
->   reclaim:
->   	xfs_ifunlock(ip);
+I have reproduced the problem running only test 232:
+# Run fsstress with quotas enabled and verify accounted quotas in the end
 
-Is this flush lock / flush unlock cycle needed?
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+There is very little to this test (other than running fsstress).
+It's basically:
+   quotacheck -u -g $SCRATCH_MNT 2>/dev/null
+   quotaon -u -g $SCRATCH_MNT 2>/dev/null
+   _check_quota_usage
+   _fsstress
+
+Now I'll look a little closer at the XFS path, and will try to
+grab some extra information while reproducing it.
+
+					-Alex
 
 _______________________________________________
 xfs mailing list
