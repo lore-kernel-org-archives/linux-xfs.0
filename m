@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3G6mUCM179107 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 01:48:30 -0500
-Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
-	cuda.sgi.com with ESMTP id ziR7bZwhrQ9XquNC (version=TLSv1
+	q3G6o1da179247 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 01:50:01 -0500
+Received: from mx2.fusionio.com (mx2.fusionio.com [66.114.96.31]) by
+	cuda.sgi.com with ESMTP id 7bjLdKyHRkuiXrO8 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 15 Apr 2012 23:48:28 -0700 (PDT)
-Message-ID: <4F8BC0B9.90604@profihost.ag>
-Date: Mon, 16 Apr 2012 08:48:25 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	Sun, 15 Apr 2012 23:49:59 -0700 (PDT)
+Message-ID: <4F8BC112.9090508@fusionio.com>
+Date: Mon, 16 Apr 2012 14:49:54 +0800
+From: Shaohua Li <shli@fusionio.com>
 MIME-Version: 1.0
-Subject: XFS blocked task in xlog_cil_force_lsn
+Subject: [RFC]xfs: using GFP_NOFS for blkdev_issue_flush
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,40 +19,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stable@vger.kernel.org
-Cc: Christoph Hellwig <hch@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, Philipp Herz - Profihost AG <p.herz@profihost.ag>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org
 
-Hi,
 
-today i've seen this call trace / block in XFS while running 3.0.27.
+flush request is issued in transaction commit code path usually, so 
+looks using
+GFP_KERNEL to allocate memory for flush request bio falls into the classic
+deadlock issue (memory reclaim recursion). Use GFP_NOFS to avoid recursion
+from reclaim context. Per Dave Chinner, there is only blkdev_issue_flush 
+might
+be buggy here. But using GFP_NOFS by default for all calls should not 
+matter.
 
-INFO: task xfsaild/sdc3:1818 blocked for more than 120 seconds.
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-xfsaild/sdc3    D ffff88041f374dc8     0  1818      2 0x00000000
-ffff88041edd3d30 0000000000000046 ffff8803ecaa8dc0 ffff88041f23fe28
-ffff88041f374860 0000000000010800 ffff88041edd3fd8 ffff88041edd2010
-ffff88041edd3fd8 0000000000010800 ffff88041f15c860 ffff88041f374860
-Call Trace:
- [<ffffffff8159c94a>] schedule+0x3a/0x60
- [<ffffffff812763a9>] xlog_cil_force_lsn+0xe9/0x110
- [<ffffffff8104caf0>] ? try_to_wake_up+0x2a0/0x2a0
- [<ffffffff81273922>] _xfs_log_force+0x62/0x250
- [<ffffffff81273d23>] xfs_log_force+0x13/0x40
- [<ffffffff81281ac7>] ? xfs_trans_ail_cursor_next+0x27/0x30
- [<ffffffff81282237>] xfsaild+0x447/0x460
- [<ffffffff81281df0>] ? xfs_trans_ail_init+0xb0/0xb0
- [<ffffffff8106f646>] kthread+0x96/0xa0
- [<ffffffff815a0214>] kernel_thread_helper+0x4/0x10
- [<ffffffff8106f5b0>] ? kthread_worker_fn+0x130/0x130
- [<ffffffff815a0210>] ? gs_change+0xb/0xb
+Signed-off-by: Shaohua Li <shli@fusionio.com>
+---
+  fs/xfs/xfs_super.c |    2 +-
+  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Is there a known fix / patch available?
+Index: linux/fs/xfs/xfs_super.c
+===================================================================
+--- linux.orig/fs/xfs/xfs_super.c    2012-04-13 10:08:26.095496072 +0800
++++ linux/fs/xfs/xfs_super.c    2012-04-13 10:08:42.555496865 +0800
+@@ -622,7 +622,7 @@ void
+  xfs_blkdev_issue_flush(
+      xfs_buftarg_t        *buftarg)
+  {
+-    blkdev_issue_flush(buftarg->bt_bdev, GFP_KERNEL, NULL);
++    blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS, NULL);
+  }
 
-Stefan
+  STATIC void
+
+
+This e-mail message, its contents and any attachments to it are confidential to the intended recipient, and may contain information that is privileged and/or exempt from disclosure under applicable law. If you are not the intended recipient, please immediately notify the sender and destroy the original e-mail message and any attachments (and any copies that may have been made) from your system or otherwise. Any unauthorized use, copying, disclosure or distribution of this information is strictly prohibited.  Email addresses that end with a ?-c? identify the sender as a Fusion-io contractor.
 
 _______________________________________________
 xfs mailing list
