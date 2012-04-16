@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3G5EnMx171537 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 00:14:49 -0500
+	q3G5EpUE171546 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 00:14:51 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	miBCknlOkqUGrXE2 for <xfs@oss.sgi.com>;
-	Sun, 15 Apr 2012 22:14:48 -0700 (PDT)
+	JH7dpIAsJdzPhq9F for <xfs@oss.sgi.com>;
+	Sun, 15 Apr 2012 22:14:49 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SJeGU-0000mB-7Q
-	for xfs@oss.sgi.com; Mon, 16 Apr 2012 15:14:14 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SJeGe-0000mT-9w
+	for xfs@oss.sgi.com; Mon, 16 Apr 2012 15:14:24 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SJeGU-0005N9-4g
-	for xfs@oss.sgi.com; Mon, 16 Apr 2012 15:14:14 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SJeGe-0005NF-6F
+	for xfs@oss.sgi.com; Mon, 16 Apr 2012 15:14:24 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/7] xfs: move xfs_fsb_to_db to xfs_bmap.h
-Date: Mon, 16 Apr 2012 15:14:08 +1000
-Message-Id: <1334553251-20571-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/7] xfs: move xfs_do_force_shutdown() and kill xfs_rw.c
+Date: Mon, 16 Apr 2012 15:14:10 +1000
+Message-Id: <1334553251-20571-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334553251-20571-1-git-send-email-david@fromorbit.com>
 References: <1334553251-20571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,77 +35,194 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This is the only remaining useful function in xfs_rw.h, so move it
-to a header file responsible for block mapping functions that the
-callers already include. Soon we can get rid of xfs_rw.h.
+xfs-do-force_shutdown now is the only thing in xfs_rw.c. There is no
+need to keep it in it's own file anymore, so move it to xfs_fsops.c
+next to xfs_fs_goingdown() and kill xfs_rw.c.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap.c |   13 +++++++++++++
- fs/xfs/xfs_bmap.h |    3 +++
- fs/xfs/xfs_rw.h   |   14 --------------
- 3 files changed, 16 insertions(+), 14 deletions(-)
+ fs/xfs/Makefile    |    1 -
+ fs/xfs/xfs_fsops.c |   60 +++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_rw.c    |   90 ----------------------------------------------------
+ 3 files changed, 60 insertions(+), 91 deletions(-)
+ delete mode 100644 fs/xfs/xfs_rw.c
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 85e7e32..1e58bc3 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -6157,3 +6157,16 @@ next_block:
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index ca9229f..d2bf974 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -50,7 +50,6 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_sync.o \
+ 				   xfs_xattr.o \
+ 				   xfs_rename.o \
+-				   xfs_rw.o \
+ 				   xfs_utils.o \
+ 				   xfs_vnodeops.o \
+ 				   kmem.o \
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index f6c7698..537c2ae 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -688,3 +688,63 @@ xfs_fs_goingdown(
  
- 	return error;
+ 	return 0;
  }
 +
 +/*
-+ * Convert the given file system block to a disk block.  We have to treat it
-+ * differently based on whether the file is a real time file or not, because the
-+ * bmap code does.
++ * Force a shutdown of the filesystem instantly while keeping the filesystem
++ * consistent. We don't do an unmount here; just shutdown the shop, make sure
++ * that absolutely nothing persistent happens to this filesystem after this
++ * point.
 + */
-+xfs_daddr_t
-+xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
++void
++xfs_do_force_shutdown(
++	xfs_mount_t	*mp,
++	int		flags,
++	char		*fname,
++	int		lnnum)
 +{
-+	return (XFS_IS_REALTIME_INODE(ip) ? \
-+		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
-+		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
++	int		logerror;
++
++	logerror = flags & SHUTDOWN_LOG_IO_ERROR;
++
++	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
++		xfs_notice(mp,
++	"%s(0x%x) called from line %d of file %s.  Return address = 0x%p",
++			__func__, flags, lnnum, fname, __return_address);
++	}
++	/*
++	 * No need to duplicate efforts.
++	 */
++	if (XFS_FORCED_SHUTDOWN(mp) && !logerror)
++		return;
++
++	/*
++	 * This flags XFS_MOUNT_FS_SHUTDOWN, makes sure that we don't
++	 * queue up anybody new on the log reservations, and wakes up
++	 * everybody who's sleeping on log reservations to tell them
++	 * the bad news.
++	 */
++	if (xfs_log_force_umount(mp, logerror))
++		return;
++
++	if (flags & SHUTDOWN_CORRUPT_INCORE) {
++		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
++    "Corruption of in-memory data detected.  Shutting down filesystem");
++		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
++			xfs_stack_trace();
++	} else if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
++		if (logerror) {
++			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
++		"Log I/O Error Detected.  Shutting down filesystem");
++		} else if (flags & SHUTDOWN_DEVICE_REQ) {
++			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
++		"All device paths lost.  Shutting down filesystem");
++		} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
++			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
++		"I/O Error Detected. Shutting down filesystem");
++		}
++	}
++	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
++		xfs_alert(mp,
++	"Please umount the filesystem and rectify the problem(s)");
++	}
 +}
-diff --git a/fs/xfs/xfs_bmap.h b/fs/xfs/xfs_bmap.h
-index 89ee672..803b56d 100644
---- a/fs/xfs/xfs_bmap.h
-+++ b/fs/xfs/xfs_bmap.h
-@@ -211,6 +211,9 @@ int	xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
- 		int whichfork, int *count);
- int	xfs_bmap_punch_delalloc_range(struct xfs_inode *ip,
- 		xfs_fileoff_t start_fsb, xfs_fileoff_t length);
-+
-+xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
-+
- #endif	/* __KERNEL__ */
- 
- #endif	/* __XFS_BMAP_H__ */
-diff --git a/fs/xfs/xfs_rw.h b/fs/xfs/xfs_rw.h
-index 967b3a4..13f6317 100644
---- a/fs/xfs/xfs_rw.h
-+++ b/fs/xfs/xfs_rw.h
-@@ -23,20 +23,6 @@ struct xfs_inode;
- struct xfs_mount;
- 
- /*
-- * Convert the given file system block to a disk block.
-- * We have to treat it differently based on whether the
-- * file is a real time file or not, because the bmap code
-- * does.
+diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
+deleted file mode 100644
+index c406cb6..0000000
+--- a/fs/xfs/xfs_rw.c
++++ /dev/null
+@@ -1,90 +0,0 @@
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 - */
--static inline xfs_daddr_t
--xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
--{
--	return (XFS_IS_REALTIME_INODE(ip) ? \
--		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
--		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
--}
+-#include "xfs.h"
+-#include "xfs_fs.h"
+-#include "xfs_types.h"
+-#include "xfs_bit.h"
+-#include "xfs_log.h"
+-#include "xfs_trans.h"
+-#include "xfs_sb.h"
+-#include "xfs_ag.h"
+-#include "xfs_mount.h"
+-#include "xfs_bmap_btree.h"
+-#include "xfs_dinode.h"
+-#include "xfs_inode.h"
+-#include "xfs_error.h"
 -
 -/*
-  * Prototypes for functions in xfs_rw.c.
-  */
- extern xfs_extlen_t xfs_get_extsz_hint(struct xfs_inode *ip);
+- * Force a shutdown of the filesystem instantly while keeping
+- * the filesystem consistent. We don't do an unmount here; just shutdown
+- * the shop, make sure that absolutely nothing persistent happens to
+- * this filesystem after this point.
+- */
+-void
+-xfs_do_force_shutdown(
+-	xfs_mount_t	*mp,
+-	int		flags,
+-	char		*fname,
+-	int		lnnum)
+-{
+-	int		logerror;
+-
+-	logerror = flags & SHUTDOWN_LOG_IO_ERROR;
+-
+-	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
+-		xfs_notice(mp,
+-	"%s(0x%x) called from line %d of file %s.  Return address = 0x%p",
+-			__func__, flags, lnnum, fname, __return_address);
+-	}
+-	/*
+-	 * No need to duplicate efforts.
+-	 */
+-	if (XFS_FORCED_SHUTDOWN(mp) && !logerror)
+-		return;
+-
+-	/*
+-	 * This flags XFS_MOUNT_FS_SHUTDOWN, makes sure that we don't
+-	 * queue up anybody new on the log reservations, and wakes up
+-	 * everybody who's sleeping on log reservations to tell them
+-	 * the bad news.
+-	 */
+-	if (xfs_log_force_umount(mp, logerror))
+-		return;
+-
+-	if (flags & SHUTDOWN_CORRUPT_INCORE) {
+-		xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_CORRUPT,
+-    "Corruption of in-memory data detected.  Shutting down filesystem");
+-		if (XFS_ERRLEVEL_HIGH <= xfs_error_level)
+-			xfs_stack_trace();
+-	} else if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
+-		if (logerror) {
+-			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_LOGERROR,
+-		"Log I/O Error Detected.  Shutting down filesystem");
+-		} else if (flags & SHUTDOWN_DEVICE_REQ) {
+-			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
+-		"All device paths lost.  Shutting down filesystem");
+-		} else if (!(flags & SHUTDOWN_REMOTE_REQ)) {
+-			xfs_alert_tag(mp, XFS_PTAG_SHUTDOWN_IOERROR,
+-		"I/O Error Detected. Shutting down filesystem");
+-		}
+-	}
+-	if (!(flags & SHUTDOWN_FORCE_UMOUNT)) {
+-		xfs_alert(mp,
+-	"Please umount the filesystem and rectify the problem(s)");
+-	}
+-}
 -- 
 1.7.9.5
 
