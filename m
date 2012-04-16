@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3G5ELBw171366 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 00:14:21 -0500
+	q3G5EOKv171374 for <xfs@oss.sgi.com>; Mon, 16 Apr 2012 00:14:24 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	GdefJoKpD6Yzm6Mi for <xfs@oss.sgi.com>;
-	Sun, 15 Apr 2012 22:14:18 -0700 (PDT)
+	Dzen9WBmU7YvfQmD for <xfs@oss.sgi.com>;
+	Sun, 15 Apr 2012 22:14:22 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SJeGU-0000mA-6V
+	(envelope-from <dave@fromorbit.com>) id 1SJeGU-0000mC-8M
 	for xfs@oss.sgi.com; Mon, 16 Apr 2012 15:14:14 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SJeGU-0005N7-3l
+	(envelope-from <dave@disappointment.disaster>) id 1SJeGU-0005NC-5a
 	for xfs@oss.sgi.com; Mon, 16 Apr 2012 15:14:14 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/7] xfs: clean up busy extent naming
-Date: Mon, 16 Apr 2012 15:14:07 +1000
-Message-Id: <1334553251-20571-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/7] xfs: move xfs_get_extsz_hint() and kill xfs_rw.h
+Date: Mon, 16 Apr 2012 15:14:09 +1000
+Message-Id: <1334553251-20571-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1334553251-20571-1-git-send-email-david@fromorbit.com>
 References: <1334553251-20571-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,467 +35,268 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that the busy extent tracking has been moved out of the
-allocation files, clean up the namespace it uses to
-"xfs_extent_busy" rather than a mix of "xfs_busy" and
-"xfs_alloc_busy".
+The only thing left in xfs_rw.h is a function prototype for an inode
+function.  Move that to xfs_inode.h, and kill xfs_rw.h.
+
+Also move the function implementing the prototype from xfs_rw.c to
+xfs_inode.c so we only have one function left in xfs_rw.c
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_alloc.c       |   12 ++++----
- fs/xfs/xfs_alloc_btree.c |    6 ++--
- fs/xfs/xfs_discard.c     |    4 +--
- fs/xfs/xfs_extent_busy.c |   76 +++++++++++++++++++++++-----------------------
- fs/xfs/xfs_log_cil.c     |    6 ++--
- fs/xfs/xfs_trace.h       |   16 +++++-----
- fs/xfs/xfs_trans.c       |    4 +--
- 7 files changed, 62 insertions(+), 62 deletions(-)
+ fs/xfs/xfs_aops.c        |    1 -
+ fs/xfs/xfs_attr.c        |    1 -
+ fs/xfs/xfs_bmap.c        |    1 -
+ fs/xfs/xfs_fsops.c       |    1 -
+ fs/xfs/xfs_inode.c       |   14 ++++++++++++++
+ fs/xfs/xfs_inode.h       |    2 ++
+ fs/xfs/xfs_iomap.c       |    1 -
+ fs/xfs/xfs_iops.c        |    1 -
+ fs/xfs/xfs_log.c         |    1 -
+ fs/xfs/xfs_log_recover.c |    1 -
+ fs/xfs/xfs_mount.c       |    1 -
+ fs/xfs/xfs_rtalloc.c     |    1 -
+ fs/xfs/xfs_rw.c          |   15 ---------------
+ fs/xfs/xfs_rw.h          |   30 ------------------------------
+ fs/xfs/xfs_trans_buf.c   |    1 -
+ 15 files changed, 16 insertions(+), 56 deletions(-)
+ delete mode 100644 fs/xfs/xfs_rw.h
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index ae6df25..588496d 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -47,7 +47,7 @@ STATIC int xfs_alloc_ag_vextent_near(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
- STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
- 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
--STATIC void xfs_alloc_busy_trim(struct xfs_alloc_arg *,
-+STATIC void xfs_extent_busy_trim(struct xfs_alloc_arg *,
- 		xfs_agblock_t, xfs_extlen_t, xfs_agblock_t *, xfs_extlen_t *);
- 
- /*
-@@ -152,7 +152,7 @@ xfs_alloc_compute_aligned(
- 	xfs_extlen_t	len;
- 
- 	/* Trim busy sections out of found extent */
--	xfs_alloc_busy_trim(args, foundbno, foundlen, &bno, &len);
-+	xfs_extent_busy_trim(args, foundbno, foundlen, &bno, &len);
- 
- 	if (args->alignment > 1 && len >= args->minlen) {
- 		xfs_agblock_t	aligned_bno = roundup(bno, args->alignment);
-@@ -536,7 +536,7 @@ xfs_alloc_ag_vextent(
- 		if (error)
- 			return error;
- 
--		ASSERT(!xfs_alloc_busy_search(args->mp, args->agno,
-+		ASSERT(!xfs_extent_busy_search(args->mp, args->agno,
- 					      args->agbno, args->len));
- 	}
- 
-@@ -603,7 +603,7 @@ xfs_alloc_ag_vextent_exact(
- 	/*
- 	 * Check for overlapping busy extents.
- 	 */
--	xfs_alloc_busy_trim(args, fbno, flen, &tbno, &tlen);
-+	xfs_extent_busy_trim(args, fbno, flen, &tbno, &tlen);
- 
- 	/*
- 	 * Give up if the start of the extent is busy, or the freespace isn't
-@@ -1391,7 +1391,7 @@ xfs_alloc_ag_vextent_small(
- 		if (error)
- 			goto error0;
- 		if (fbno != NULLAGBLOCK) {
--			xfs_alloc_busy_reuse(args->mp, args->agno, fbno, 1,
-+			xfs_extent_busy_reuse(args->mp, args->agno, fbno, 1,
- 					     args->userdata);
- 
- 			if (args->userdata) {
-@@ -2496,7 +2496,7 @@ xfs_free_extent(
- 
- 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
- 	if (!error)
--		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len, 0);
-+		xfs_extent_busy_insert(tp, args.agno, args.agbno, len, 0);
- error0:
- 	xfs_perag_put(args.pag);
- 	return error;
-diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
-index 3f66548..68ebabc 100644
---- a/fs/xfs/xfs_alloc_btree.c
-+++ b/fs/xfs/xfs_alloc_btree.c
-@@ -94,7 +94,7 @@ xfs_allocbt_alloc_block(
- 		return 0;
- 	}
- 
--	xfs_alloc_busy_reuse(cur->bc_mp, cur->bc_private.a.agno, bno, 1, false);
-+	xfs_extent_busy_reuse(cur->bc_mp, cur->bc_private.a.agno, bno, 1, false);
- 
- 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
- 	new->s = cpu_to_be32(bno);
-@@ -119,8 +119,8 @@ xfs_allocbt_free_block(
- 	if (error)
- 		return error;
- 
--	xfs_alloc_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
--			      XFS_ALLOC_BUSY_SKIP_DISCARD);
-+	xfs_extent_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
-+			      XFS_EXTENT_BUSY_SKIP_DISCARD);
- 	xfs_trans_agbtree_delta(cur->bc_tp, -1);
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index e3f1abe..f9c3fe3 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -118,7 +118,7 @@ xfs_trim_extents(
- 		 * If any blocks in the range are still busy, skip the
- 		 * discard and try again the next time.
- 		 */
--		if (xfs_alloc_busy_search(mp, agno, fbno, flen)) {
-+		if (xfs_extent_busy_search(mp, agno, fbno, flen)) {
- 			trace_xfs_discard_busy(mp, agno, fbno, flen);
- 			goto next_extent;
- 		}
-@@ -212,7 +212,7 @@ xfs_discard_extents(
- 	struct xfs_mount	*mp,
- 	struct list_head	*list)
- {
--	struct xfs_busy_extent	*busyp;
-+	struct xfs_extent_busy	*busyp;
- 	int			error = 0;
- 
- 	list_for_each_entry(busyp, list, list) {
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 388a4b0..80c99d1 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -32,27 +32,27 @@
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 1194bdc..5584c5c 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -28,7 +28,6 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_alloc.h"
+ #include "xfs_error.h"
+-#include "xfs_rw.h"
+ #include "xfs_iomap.h"
+ #include "xfs_vnodeops.h"
+ #include "xfs_trace.h"
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 561fd60..a17ff01 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -38,7 +38,6 @@
+ #include "xfs_error.h"
+ #include "xfs_quota.h"
+ #include "xfs_trans_space.h"
+-#include "xfs_rw.h"
+ #include "xfs_vnodeops.h"
  #include "xfs_trace.h"
  
- void
--xfs_alloc_busy_insert(
-+xfs_extent_busy_insert(
- 	struct xfs_trans	*tp,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len,
- 	unsigned int		flags)
- {
--	struct xfs_busy_extent	*new;
--	struct xfs_busy_extent	*busyp;
-+	struct xfs_extent_busy	*new;
-+	struct xfs_extent_busy	*busyp;
- 	struct xfs_perag	*pag;
- 	struct rb_node		**rbp;
- 	struct rb_node		*parent = NULL;
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 1e58bc3..26ab256 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -41,7 +41,6 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_error.h"
+ #include "xfs_attr_leaf.h"
+-#include "xfs_rw.h"
+ #include "xfs_quota.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_buf_item.h"
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 2635e17..f6c7698 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -38,7 +38,6 @@
+ #include "xfs_itable.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_rtalloc.h"
+-#include "xfs_rw.h"
+ #include "xfs_filestream.h"
+ #include "xfs_trace.h"
  
--	new = kmem_zalloc(sizeof(struct xfs_busy_extent), KM_MAYFAIL);
-+	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_MAYFAIL);
- 	if (!new) {
- 		/*
- 		 * No Memory!  Since it is now not possible to track the free
- 		 * block, make this a synchronous transaction to insure that
- 		 * the block is not reused before this transaction commits.
- 		 */
--		trace_xfs_alloc_busy_enomem(tp->t_mountp, agno, bno, len);
-+		trace_xfs_extent_busy_enomem(tp->t_mountp, agno, bno, len);
- 		xfs_trans_set_sync(tp);
- 		return;
- 	}
-@@ -64,14 +64,14 @@ xfs_alloc_busy_insert(
- 	new->flags = flags;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index f64b482..c6fb5f0 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -61,6 +61,20 @@ STATIC int xfs_iformat_local(xfs_inode_t *, xfs_dinode_t *, int, int);
+ STATIC int xfs_iformat_extents(xfs_inode_t *, xfs_dinode_t *, int);
+ STATIC int xfs_iformat_btree(xfs_inode_t *, xfs_dinode_t *, int);
  
- 	/* trace before insert to be able to see failed inserts */
--	trace_xfs_alloc_busy(tp->t_mountp, agno, bno, len);
-+	trace_xfs_extent_busy(tp->t_mountp, agno, bno, len);
- 
- 	pag = xfs_perag_get(tp->t_mountp, new->agno);
- 	spin_lock(&pag->pagb_lock);
- 	rbp = &pag->pagb_tree.rb_node;
- 	while (*rbp) {
- 		parent = *rbp;
--		busyp = rb_entry(parent, struct xfs_busy_extent, rb_node);
-+		busyp = rb_entry(parent, struct xfs_extent_busy, rb_node);
- 
- 		if (new->bno < busyp->bno) {
- 			rbp = &(*rbp)->rb_left;
-@@ -95,14 +95,14 @@ xfs_alloc_busy_insert(
++/*
++ * helper function to extract extent size hint from inode
++ */
++xfs_extlen_t
++xfs_get_extsz_hint(
++	struct xfs_inode	*ip)
++{
++	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_d.di_extsize)
++		return ip->i_d.di_extsize;
++	if (XFS_IS_REALTIME_INODE(ip))
++		return ip->i_mount->m_sb.sb_rextsize;
++	return 0;
++}
++
+ #ifdef DEBUG
  /*
-  * Search for a busy extent within the range of the extent we are about to
-  * allocate.  You need to be holding the busy extent tree lock when calling
-- * xfs_alloc_busy_search(). This function returns 0 for no overlapping busy
-+ * xfs_extent_busy_search(). This function returns 0 for no overlapping busy
-  * extent, -1 for an overlapping but not exact busy extent, and 1 for an exact
-  * match. This is done so that a non-zero return indicates an overlap that
-  * will require a synchronous transaction, but it can still be
-  * used to distinguish between a partial or exact match.
-  */
- int
--xfs_alloc_busy_search(
-+xfs_extent_busy_search(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		bno,
-@@ -110,7 +110,7 @@ xfs_alloc_busy_search(
- {
- 	struct xfs_perag	*pag;
- 	struct rb_node		*rbp;
--	struct xfs_busy_extent	*busyp;
-+	struct xfs_extent_busy	*busyp;
- 	int			match = 0;
+  * Make sure that the extents in the given memory buffer
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index f0e252f..1efff36 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -533,6 +533,8 @@ int		xfs_iflush(struct xfs_inode *, struct xfs_buf **);
+ void		xfs_lock_inodes(xfs_inode_t **, int, uint);
+ void		xfs_lock_two_inodes(xfs_inode_t *, xfs_inode_t *, uint);
  
- 	pag = xfs_perag_get(mp, agno);
-@@ -120,7 +120,7 @@ xfs_alloc_busy_search(
++xfs_extlen_t	xfs_get_extsz_hint(struct xfs_inode *ip);
++
+ #define IHOLD(ip) \
+ do { \
+ 	ASSERT(atomic_read(&VFS_I(ip)->i_count) > 0) ; \
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 0a6b7ff..845cea0 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -36,7 +36,6 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_error.h"
+ #include "xfs_itable.h"
+-#include "xfs_rw.h"
+ #include "xfs_attr.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_trans_space.h"
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index e6d6a32..e7a6660 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -33,7 +33,6 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_error.h"
+ #include "xfs_itable.h"
+-#include "xfs_rw.h"
+ #include "xfs_attr.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_utils.h"
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index dec1458..97e489b 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -34,7 +34,6 @@
+ #include "xfs_trans_priv.h"
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+-#include "xfs_rw.h"
+ #include "xfs_trace.h"
  
- 	/* find closest start bno overlap */
- 	while (rbp) {
--		busyp = rb_entry(rbp, struct xfs_busy_extent, rb_node);
-+		busyp = rb_entry(rbp, struct xfs_extent_busy, rb_node);
- 		if (bno < busyp->bno) {
- 			/* may overlap, but exact start block is lower */
- 			if (bno + len > busyp->bno)
-@@ -154,10 +154,10 @@ xfs_alloc_busy_search(
-  * needs to be restarted.
-  */
- STATIC bool
--xfs_alloc_busy_update_extent(
-+xfs_extent_busy_update_extent(
- 	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
--	struct xfs_busy_extent	*busyp,
-+	struct xfs_extent_busy	*busyp,
- 	xfs_agblock_t		fbno,
- 	xfs_extlen_t		flen,
- 	bool			userdata)
-@@ -171,7 +171,7 @@ xfs_alloc_busy_update_extent(
- 	 * performing the discard a chance to mark the extent unbusy
- 	 * and retry.
- 	 */
--	if (busyp->flags & XFS_ALLOC_BUSY_DISCARDED) {
-+	if (busyp->flags & XFS_EXTENT_BUSY_DISCARDED) {
- 		spin_unlock(&pag->pagb_lock);
- 		delay(1);
- 		spin_lock(&pag->pagb_lock);
-@@ -285,13 +285,13 @@ xfs_alloc_busy_update_extent(
- 		ASSERT(0);
+ kmem_zone_t	*xfs_log_ticket_zone;
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index b700ced..574e2e9 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -40,7 +40,6 @@
+ #include "xfs_extfree_item.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_quota.h"
+-#include "xfs_rw.h"
+ #include "xfs_utils.h"
+ #include "xfs_trace.h"
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 89be5ff..f511d22 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -38,7 +38,6 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_error.h"
+-#include "xfs_rw.h"
+ #include "xfs_quota.h"
+ #include "xfs_fsops.h"
+ #include "xfs_utils.h"
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index b6ef74d..92d4331 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -33,7 +33,6 @@
+ #include "xfs_rtalloc.h"
+ #include "xfs_fsops.h"
+ #include "xfs_error.h"
+-#include "xfs_rw.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_trans_space.h"
+ #include "xfs_utils.h"
+diff --git a/fs/xfs/xfs_rw.c b/fs/xfs/xfs_rw.c
+index 7e3644f..c406cb6 100644
+--- a/fs/xfs/xfs_rw.c
++++ b/fs/xfs/xfs_rw.c
+@@ -28,7 +28,6 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_error.h"
+-#include "xfs_rw.h"
+ 
+ /*
+  * Force a shutdown of the filesystem instantly while keeping
+@@ -89,17 +88,3 @@ xfs_do_force_shutdown(
+ 	"Please umount the filesystem and rectify the problem(s)");
  	}
- 
--	trace_xfs_alloc_busy_reuse(mp, pag->pag_agno, fbno, flen);
-+	trace_xfs_extent_busy_reuse(mp, pag->pag_agno, fbno, flen);
- 	return true;
- 
- out_force_log:
- 	spin_unlock(&pag->pagb_lock);
- 	xfs_log_force(mp, XFS_LOG_SYNC);
--	trace_xfs_alloc_busy_force(mp, pag->pag_agno, fbno, flen);
-+	trace_xfs_extent_busy_force(mp, pag->pag_agno, fbno, flen);
- 	spin_lock(&pag->pagb_lock);
- 	return false;
  }
-@@ -301,7 +301,7 @@ out_force_log:
-  * For a given extent [fbno, flen], make sure we can reuse it safely.
-  */
- void
--xfs_alloc_busy_reuse(
-+xfs_extent_busy_reuse(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
- 	xfs_agblock_t		fbno,
-@@ -318,8 +318,8 @@ xfs_alloc_busy_reuse(
- restart:
- 	rbp = pag->pagb_tree.rb_node;
- 	while (rbp) {
--		struct xfs_busy_extent *busyp =
--			rb_entry(rbp, struct xfs_busy_extent, rb_node);
-+		struct xfs_extent_busy *busyp =
-+			rb_entry(rbp, struct xfs_extent_busy, rb_node);
- 		xfs_agblock_t	bbno = busyp->bno;
- 		xfs_agblock_t	bend = bbno + busyp->length;
+-
+-/*
+- * helper function to extract extent size hint from inode
+- */
+-xfs_extlen_t
+-xfs_get_extsz_hint(
+-	struct xfs_inode	*ip)
+-{
+-	if ((ip->i_d.di_flags & XFS_DIFLAG_EXTSIZE) && ip->i_d.di_extsize)
+-		return ip->i_d.di_extsize;
+-	if (XFS_IS_REALTIME_INODE(ip))
+-		return ip->i_mount->m_sb.sb_rextsize;
+-	return 0;
+-}
+diff --git a/fs/xfs/xfs_rw.h b/fs/xfs/xfs_rw.h
+deleted file mode 100644
+index 13f6317..0000000
+--- a/fs/xfs/xfs_rw.h
++++ /dev/null
+@@ -1,30 +0,0 @@
+-/*
+- * Copyright (c) 2000-2006 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- *
+- * This program is free software; you can redistribute it and/or
+- * modify it under the terms of the GNU General Public License as
+- * published by the Free Software Foundation.
+- *
+- * This program is distributed in the hope that it would be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; if not, write the Free Software Foundation,
+- * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+- */
+-#ifndef	__XFS_RW_H__
+-#define	__XFS_RW_H__
+-
+-struct xfs_buf;
+-struct xfs_inode;
+-struct xfs_mount;
+-
+-/*
+- * Prototypes for functions in xfs_rw.c.
+- */
+-extern xfs_extlen_t xfs_get_extsz_hint(struct xfs_inode *ip);
+-
+-#endif /* __XFS_RW_H__ */
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index 7d69213..743d7a5 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -32,7 +32,6 @@
+ #include "xfs_buf_item.h"
+ #include "xfs_trans_priv.h"
+ #include "xfs_error.h"
+-#include "xfs_rw.h"
+ #include "xfs_trace.h"
  
-@@ -331,7 +331,7 @@ restart:
- 			continue;
- 		}
- 
--		if (!xfs_alloc_busy_update_extent(mp, pag, busyp, fbno, flen,
-+		if (!xfs_extent_busy_update_extent(mp, pag, busyp, fbno, flen,
- 						  userdata))
- 			goto restart;
- 	}
-@@ -346,7 +346,7 @@ restart:
-  * code needs to force out the log and retry the allocation.
-  */
- STATIC void
--xfs_alloc_busy_trim(
-+xfs_extent_busy_trim(
- 	struct xfs_alloc_arg	*args,
- 	xfs_agblock_t		bno,
- 	xfs_extlen_t		len,
-@@ -365,8 +365,8 @@ restart:
- 	flen = len;
- 	rbp = args->pag->pagb_tree.rb_node;
- 	while (rbp && flen >= args->minlen) {
--		struct xfs_busy_extent *busyp =
--			rb_entry(rbp, struct xfs_busy_extent, rb_node);
-+		struct xfs_extent_busy *busyp =
-+			rb_entry(rbp, struct xfs_extent_busy, rb_node);
- 		xfs_agblock_t	fend = fbno + flen;
- 		xfs_agblock_t	bbno = busyp->bno;
- 		xfs_agblock_t	bend = bbno + busyp->length;
-@@ -384,8 +384,8 @@ restart:
- 		 * extent instead of trimming the allocation.
- 		 */
- 		if (!args->userdata &&
--		    !(busyp->flags & XFS_ALLOC_BUSY_DISCARDED)) {
--			if (!xfs_alloc_busy_update_extent(args->mp, args->pag,
-+		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
-+			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
- 							  busyp, fbno, flen,
- 							  false))
- 				goto restart;
-@@ -517,7 +517,7 @@ restart:
- 	spin_unlock(&args->pag->pagb_lock);
- 
- 	if (fbno != bno || flen != len) {
--		trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len,
-+		trace_xfs_extent_busy_trim(args->mp, args->agno, bno, len,
- 					  fbno, flen);
- 	}
- 	*rbno = fbno;
-@@ -529,19 +529,19 @@ fail:
- 	 * re-check if the trimmed extent satisfies the minlen requirement.
- 	 */
- 	spin_unlock(&args->pag->pagb_lock);
--	trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
-+	trace_xfs_extent_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
- 	*rbno = fbno;
- 	*rlen = 0;
- }
- 
- static void
--xfs_alloc_busy_clear_one(
-+xfs_extent_busy_clear_one(
- 	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
--	struct xfs_busy_extent	*busyp)
-+	struct xfs_extent_busy	*busyp)
- {
- 	if (busyp->length) {
--		trace_xfs_alloc_busy_clear(mp, busyp->agno, busyp->bno,
-+		trace_xfs_extent_busy_clear(mp, busyp->agno, busyp->bno,
- 						busyp->length);
- 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
- 	}
-@@ -556,12 +556,12 @@ xfs_alloc_busy_clear_one(
-  * these as undergoing a discard operation instead.
-  */
- void
--xfs_alloc_busy_clear(
-+xfs_extent_busy_clear(
- 	struct xfs_mount	*mp,
- 	struct list_head	*list,
- 	bool			do_discard)
- {
--	struct xfs_busy_extent	*busyp, *n;
-+	struct xfs_extent_busy	*busyp, *n;
- 	struct xfs_perag	*pag = NULL;
- 	xfs_agnumber_t		agno = NULLAGNUMBER;
- 
-@@ -577,10 +577,10 @@ xfs_alloc_busy_clear(
- 		}
- 
- 		if (do_discard && busyp->length &&
--		    !(busyp->flags & XFS_ALLOC_BUSY_SKIP_DISCARD))
--			busyp->flags = XFS_ALLOC_BUSY_DISCARDED;
-+		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD))
-+			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
- 		else
--			xfs_alloc_busy_clear_one(mp, pag, busyp);
-+			xfs_extent_busy_clear_one(mp, pag, busyp);
- 	}
- 
- 	if (pag) {
-@@ -593,11 +593,11 @@ xfs_alloc_busy_clear(
-  * Callback for list_sort to sort busy extents by the AG they reside in.
-  */
- int
--xfs_busy_extent_ag_cmp(
-+xfs_extent_busy_ag_cmp(
- 	void			*priv,
- 	struct list_head	*a,
- 	struct list_head	*b)
- {
--	return container_of(a, struct xfs_busy_extent, list)->agno -
--		container_of(b, struct xfs_busy_extent, list)->agno;
-+	return container_of(a, struct xfs_extent_busy, list)->agno -
-+		container_of(b, struct xfs_extent_busy, list)->agno;
- }
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 4442757..0d42422 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -338,8 +338,8 @@ xlog_cil_committed(
- 	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
- 					ctx->start_lsn, abort);
- 
--	xfs_alloc_busy_sort(&ctx->busy_extents);
--	xfs_alloc_busy_clear(mp, &ctx->busy_extents,
-+	xfs_extent_busy_sort(&ctx->busy_extents);
-+	xfs_extent_busy_clear(mp, &ctx->busy_extents,
- 			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
- 
- 	spin_lock(&ctx->cil->xc_cil_lock);
-@@ -352,7 +352,7 @@ xlog_cil_committed(
- 		ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
- 
- 		xfs_discard_extents(mp, &ctx->busy_extents);
--		xfs_alloc_busy_clear(mp, &ctx->busy_extents, false);
-+		xfs_extent_busy_clear(mp, &ctx->busy_extents, false);
- 	}
- 
- 	kmem_free(ctx);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 900764c..febff43 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1142,7 +1142,7 @@ TRACE_EVENT(xfs_bunmap,
- 
- );
- 
--DECLARE_EVENT_CLASS(xfs_busy_class,
-+DECLARE_EVENT_CLASS(xfs_extent_busy_class,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		 xfs_agblock_t agbno, xfs_extlen_t len),
- 	TP_ARGS(mp, agno, agbno, len),
-@@ -1165,17 +1165,17 @@ DECLARE_EVENT_CLASS(xfs_busy_class,
- 		  __entry->len)
- );
- #define DEFINE_BUSY_EVENT(name) \
--DEFINE_EVENT(xfs_busy_class, name, \
-+DEFINE_EVENT(xfs_extent_busy_class, name, \
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
- 		 xfs_agblock_t agbno, xfs_extlen_t len), \
- 	TP_ARGS(mp, agno, agbno, len))
--DEFINE_BUSY_EVENT(xfs_alloc_busy);
--DEFINE_BUSY_EVENT(xfs_alloc_busy_enomem);
--DEFINE_BUSY_EVENT(xfs_alloc_busy_force);
--DEFINE_BUSY_EVENT(xfs_alloc_busy_reuse);
--DEFINE_BUSY_EVENT(xfs_alloc_busy_clear);
-+DEFINE_BUSY_EVENT(xfs_extent_busy);
-+DEFINE_BUSY_EVENT(xfs_extent_busy_enomem);
-+DEFINE_BUSY_EVENT(xfs_extent_busy_force);
-+DEFINE_BUSY_EVENT(xfs_extent_busy_reuse);
-+DEFINE_BUSY_EVENT(xfs_extent_busy_clear);
- 
--TRACE_EVENT(xfs_alloc_busy_trim,
-+TRACE_EVENT(xfs_extent_busy_trim,
- 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
- 		 xfs_agblock_t agbno, xfs_extlen_t len,
- 		 xfs_agblock_t tbno, xfs_extlen_t tlen),
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index d8bdb61..f674855 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -608,8 +608,8 @@ STATIC void
- xfs_trans_free(
- 	struct xfs_trans	*tp)
- {
--	xfs_alloc_busy_sort(&tp->t_busy);
--	xfs_alloc_busy_clear(tp->t_mountp, &tp->t_busy, false);
-+	xfs_extent_busy_sort(&tp->t_busy);
-+	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
- 
- 	atomic_dec(&tp->t_mountp->m_active_trans);
- 	xfs_trans_free_dqinfo(tp);
+ /*
 -- 
 1.7.9.5
 
