@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3H9K2e5036927 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 04:20:03 -0500
-Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
-	cuda.sgi.com with ESMTP id HdFEuZilLdiNrk0G (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Apr 2012 02:20:00 -0700 (PDT)
-Message-ID: <4F8D35B8.4090507@profihost.ag>
-Date: Tue, 17 Apr 2012 11:19:52 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-MIME-Version: 1.0
-Subject: Re: XFS blocked task in xlog_cil_force_lsn
-References: <4F8BC0B9.90604@profihost.ag> <20120416235647.GA6734@dastard>
-	<4F8D27A1.2090809@profihost.ag> <20120417083210.GI6734@dastard>
-In-Reply-To: <20120417083210.GI6734@dastard>
+	q3H9PLOf037601 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 04:25:21 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id w3etFd07KiDA1Hhz for
+	<xfs@oss.sgi.com>; Tue, 17 Apr 2012 02:25:19 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3H9PJlr016674
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 05:25:19 -0400
+From: Tom Marek <tmarek@redhat.com>
+Subject: [PATCH 1/3 V2] xfstests 233: fix user fsgqa access to fsstress
+Date: Tue, 17 Apr 2012 11:24:45 +0200
+Message-Id: <1334654687-25450-1-git-send-email-tmarek@redhat.com>
+In-Reply-To: <y>
+References: <y>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,41 +24,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, Philipp Herz - Profihost AG <p.herz@profihost.ag>, stable@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
 
-Am 17.04.2012 10:32, schrieb Dave Chinner:
->>> What's your storage hardware, application, workload, etc?
->> It a Raid 10 of 1TB SATA Drives in front of a 3Ware Controller doing
->> heavy rsync backups.
-> 
-> Hmmm. It sounds like it is just taking a long time for the IO to
-> complete, not that there is any other problem. If the IO is realy,
-> really slow, the a log force is definitely a place it coul dstall
-> for some time.
-OK as i've seen this just once it just might be that the controller /
-disks were too slow in this case.
+User fsgqa may sometimes be unable to run fsstress (when xfstests are owned by
+root) because fsgqa doesn't have rights to list directory where the fsstress
+utility is located.
 
-> Does the RAID controller have a BBWC?
-No but doesn't matter ;-) If it crashes i can just repair the FS and
-restart the backup again.
+This fix changes directory to fsstress location as root before running
+fsstress so user fsgqa may run it without any problems.
 
-> What IO scheduler are you using?
-[root@backup1 ~]# cat /sys/block/sdc/queue/scheduler
-[noop] deadline cfq
+Signed-off-by: Tom Marek <tmarek@redhat.com>
+Reviewed-by: Lukas Czerner <lczerner@redhat.com>
+---
+ 233 |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-> Does mounting with nobarriers reduce the stall time?
-It is already mounted with nobarrier:
-/dev/sdc3 on /sdc3 type xfs (rw,noatime,nodiratime,nobarrier,prjquota)
-
-> Can you reduce the IO load so that it doesn't end up in this state?
-Can try that by just doing less backups per time period.
-
-Stefan
+diff --git a/233 b/233
+index 28e6ac7..e9eacae 100755
+--- a/233
++++ b/233
+@@ -62,14 +62,16 @@ _fsstress()
+ -f rmdir=20 -f link=10 -f creat=10 -f mkdir=10 -f unlink=20 -f symlink=10 \
+ -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
+ -n $count -d $out -p 7"
+-
+ 	echo "fsstress $args" | tee -a $here/$seq.full | sed -e "s#$out#outdir#"
+-	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $here/$seq.full | _filter_num
++	fsstressdir=${FSSTRESS_PROG%/*}
++	cd $fsstressdir
++	if ! su $qa_user -c "./`basename $FSSTRESS_PROG` $args" | tee -a $here/$seq.full | _filter_num
+ 	then
+ 		echo "    fsstress $args returned $?"
+ 		cat $tmp.out | tee -a $here/$seq.full
+ 		status=1
+ 	fi
++	cd $here
+ }
+ 
+ # real QA test starts here
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
