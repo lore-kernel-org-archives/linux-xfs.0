@@ -1,22 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3H8wXZY035977 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 03:58:33 -0500
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id DfsKLTZBlCuQ99Jm for
-	<xfs@oss.sgi.com>; Tue, 17 Apr 2012 01:58:31 -0700 (PDT)
-Date: Tue, 17 Apr 2012 09:58:28 +0100
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Fragmentation Issue We Are Having
-Message-ID: <20120417085828.GA13168@nsrc.org>
-References: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
-	<20120412075747.GB30891@nsrc.org>
-	<CADrkzi=JNsbXJHkcb=oOZHLEYMBDUkNHu9O8JFT9h+kSArL47A@mail.gmail.com>
-	<20120413071905.GA823@nsrc.org> <20120413075634.GD6734@dastard>
-	<20120413081725.GA3640@nsrc.org> <20120417002610.GC6734@dastard>
+	q3H9K2e5036927 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 04:20:03 -0500
+Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
+	cuda.sgi.com with ESMTP id HdFEuZilLdiNrk0G (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Apr 2012 02:20:00 -0700 (PDT)
+Message-ID: <4F8D35B8.4090507@profihost.ag>
+Date: Tue, 17 Apr 2012 11:19:52 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120417002610.GC6734@dastard>
+Subject: Re: XFS blocked task in xlog_cil_force_lsn
+References: <4F8BC0B9.90604@profihost.ag> <20120416235647.GA6734@dastard>
+	<4F8D27A1.2090809@profihost.ag> <20120417083210.GI6734@dastard>
+In-Reply-To: <20120417083210.GI6734@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,39 +27,36 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: David Fuller <dfuller@epoch.com>, xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Greg KH <gregkh@linuxfoundation.org>, Philipp Herz - Profihost AG <p.herz@profihost.ag>, stable@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Apr 17, 2012 at 10:26:10AM +1000, Dave Chinner wrote:
-> > > You can't just blindly assert that something is needed purely on
-> > > the size of the filesystem.
-> > 
-> > Thanks, but then perhaps the XFS FAQ needs updating. It warns that you might
-> > have compatibility problems with old clients (NFS) and inode64, but it
-> > doesn't say "for some workloads inode32 may perform better than inode64 on
-> > large filesystems".
+Am 17.04.2012 10:32, schrieb Dave Chinner:
+>>> What's your storage hardware, application, workload, etc?
+>> It a Raid 10 of 1TB SATA Drives in front of a 3Ware Controller doing
+>> heavy rsync backups.
 > 
-> The FAQ doesn't say anything about whether inode32 performs better
-> than inode64 or vice versa.
+> Hmmm. It sounds like it is just taking a long time for the IO to
+> complete, not that there is any other problem. If the IO is realy,
+> really slow, the a log force is definitely a place it coul dstall
+> for some time.
+OK as i've seen this just once it just might be that the controller /
+disks were too slow in this case.
 
-With respect it does, although in only three words:
-"Also, performance sucks".
+> Does the RAID controller have a BBWC?
+No but doesn't matter ;-) If it crashes i can just repair the FS and
+restart the backup again.
 
-Maybe it would be useful to expand this. How about:
+> What IO scheduler are you using?
+[root@backup1 ~]# cat /sys/block/sdc/queue/scheduler
+[noop] deadline cfq
 
-"Also, performance sucks for many common workloads and benchmarks, such as
-sequentially extracting or reading a large hierarchy of files.  This is
-because in filesystems >1TB without inode64, files created within the same
-parent directory are not created in the same allocation group with adjacent
-extents."
+> Does mounting with nobarriers reduce the stall time?
+It is already mounted with nobarrier:
+/dev/sdc3 on /sdc3 type xfs (rw,noatime,nodiratime,nobarrier,prjquota)
 
-If as you say inode32 was just a hack for broken NFS clients, then it seems
-to me that the *intended* default performance characteristics are those of
-inode64?  That is, the designers considered this to be the most appropriate
-performance compromise for typical users?
+> Can you reduce the IO load so that it doesn't end up in this state?
+Can try that by just doing less backups per time period.
 
-Regards,
-
-Brian.
+Stefan
 
 _______________________________________________
 xfs mailing list
