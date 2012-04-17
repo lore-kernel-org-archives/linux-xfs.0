@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3HEgwpf074387 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 09:42:58 -0500
-Date: Tue, 17 Apr 2012 09:44:44 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/18] xfs: current patch queue
-Message-ID: <20120417144444.GH1802@sgi.com>
-References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<20120416212911.GE2924@sgi.com> <20120417041258.GF6734@dastard>
+	q3HHskYc093454 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 12:54:46 -0500
+Message-ID: <4F8DAE64.9060605@sgi.com>
+Date: Tue, 17 Apr 2012 12:54:44 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120417041258.GF6734@dastard>
+Subject: Re: [PATCH 03/18] xfs: Do background CIL flushes via a workqueue
+References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
+	<1334319061-12968-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1334319061-12968-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,41 +18,45 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hey Dave,
+On 04/13/12 07:10, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Doing background CIL flushes adds significant latency to whatever
+> async transaction that triggers it. To avoid blocking async
+> transactions on things like waiting for log buffer IO to complete,
+> move the CIL push off into a workqueue.  By moving the push work
+> into a workqueue, we remove all the latency that the commit adds
+> from the foreground transaction commit path. This also means that
+> single threaded workloads won't do the CIL push procssing, leaving
+> them more CPU to do more async transactions.
+>
+> To do this, we need to keep track of the sequence number we have
+> pushed work for. This avoids having many transaction commits
+> attempting to schedule work for the same sequence, and ensures that
+> we only ever have one push (background or forced) in progress at a
+> time. It also means that we don't need to take the CIL lock in write
+> mode to check for potential background push races, which reduces
+> lock contention.
+>
+> To avoid potential issues with "smart" IO schedulers, don't use the
+> workqueue for log force triggered flushes. Instead, do them directly
+> so that the log IO is done directly by the process issuing the log
+> force and so doesn't get stuck on IO elevator queue idling
+> incorrectly delaying the log IO from the workqueue.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-On Tue, Apr 17, 2012 at 02:12:58PM +1000, Dave Chinner wrote:
-> On Mon, Apr 16, 2012 at 04:29:11PM -0500, Ben Myers wrote:
-> > On Fri, Apr 13, 2012 at 10:10:43PM +1000, Dave Chinner wrote:
-> > > Here's a repost of my current patch queue. They are all based on Christoph's
-> > > ilock and xfsbufd patch series and been tested on top of them. I've updated all
-> > > the reviewed-by tags, so if the patch is missing such a tag then it hasn't been
-> > > reviewed....
-> > 
-> > Looks like Christoph has some work to do on patch 4 of his xfsbufd series.  Do
-> > you want to rebase to something without that patch?
-> 
-> It's a bit of a PITA to do because of all the overlap with
-> Christoph's patch set.
+Makes sense.
 
-I noticed.  ;)
-
-> I'll spend the afternoon trying to work out
-> what is wrong with Christoph's code, because I think we really need
-> to get rid of the xfsbufd before I start making the buffer code more
-> complex again...
-
-Cool.  I agree it's great to get rid of xfsbufd, just wanted you to know that
-the hang is blocking this series.
-
-Regards,
-	Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
