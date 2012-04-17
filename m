@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3JDrYWw067622 for <xfs@oss.sgi.com>; Thu, 19 Apr 2012 08:53:35 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id CcsfA7OTrIUgc2mh for
-	<xfs@oss.sgi.com>; Thu, 19 Apr 2012 06:53:33 -0700 (PDT)
-Message-ID: <4F9018D5.4050202@redhat.com>
-Date: Thu, 19 Apr 2012 15:53:25 +0200
-From: Tom Marek <tmarek@redhat.com>
+	q3H9X1Fa038329 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 04:33:01 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id nxlde9zXveLOIANa (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 17 Apr 2012 02:33:00 -0700 (PDT)
+Date: Tue, 17 Apr 2012 11:32:46 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 00/19 v5] Fix filesystem freezing deadlocks
+Message-ID: <20120417093246.GD7198@quack.suse.cz>
+References: <1334592845-22862-1-git-send-email-jack@suse.cz>
+	<C9A0E2F0-ED57-40D6-9F75-5D72D45D21F0@dilger.ca>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3 V2] xfstests 198, 240, common.rc: added check for
-	aiodio-sparse2
-References: <y> <1334654687-25450-1-git-send-email-tmarek@redhat.com>
-	<1334654687-25450-2-git-send-email-tmarek@redhat.com>
-	<20120418235135.GS6734@dastard>
-	<alpine.LFD.2.00.1204191029220.4508@dhcp-27-109.brq.redhat.com>
-In-Reply-To: <alpine.LFD.2.00.1204191029220.4508@dhcp-27-109.brq.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <C9A0E2F0-ED57-40D6-9F75-5D72D45D21F0@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,71 +23,69 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: dchinner@redhat.com, xfs@oss.sgi.com
+To: Andreas Dilger <adilger@whamcloud.com>
+Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, ocfs2-devel@oss.oracle.com, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-nilfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>, cluster-devel@redhat.com, Anton Altaparmakov <anton@tuxera.com>, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Joel Becker <jlbec@evilplan.org>, dchinner@redhat.com, Steven Whitehouse <swhiteho@redhat.com>, Chris Mason <chris.mason@oracle.com>, linux-nfs@vger.kernel.org, Alex Elder <elder@kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, LKML <linux-kernel@vger.kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, linux-fsdevel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, linux-btrfs@vger.kernel.org
 
-On 04/19/2012 10:32 AM, Lukas Czerner wrote:
-> On Thu, 19 Apr 2012, Dave Chinner wrote:
->
->> On Tue, Apr 17, 2012 at 11:24:46AM +0200, Tom Marek wrote:
->>> Tests number 198 and 240 could fail when aiodio-sparse2 was not build.
->>> _require_aiodio helper was added to common.rc file to fix this.
->>>
->>> Cc: david@fromorbit.com
->>> Signed-off-by: Tom Marek<tmarek@redhat.com>
->>> Reviewed-by: Lukas Czerner<lczerner@redhat.com>
->> .....
->>> @@ -770,6 +770,14 @@ _require_scratch()
->>>       fi
->>>   }
->>>
->>> +# this test needs aio-dio-regress to be built
->>> +#
->>> +_require_aiodio()
->>> +{
->>> +    [ -x $here/src/aio-dio-regress/aiodio_sparse2 ] || \
->>> +        _notrun "This tests requires src/aio-dio-regress/ to be built"
->>> +}
->> This function already exists in common.rc, which is why I pointed it
->> out for use.
->>
->> # this test requires that a (specified) aio-dio executable exists
->> # $1 - command (optional)
->> #
->> _require_aiodio()
->> {
->>      if [ -z "$1" ]
->>      then
->>          AIO_TEST=src/aio-dio-regress/aiodio_sparse2
->>          [ -x $AIO_TEST ] || _notrun "aio-dio utilities required"
->>      else
->>          AIO_TEST=src/aio-dio-regress/$1
->>          [ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
->>      fi
->> }
->>
->> Cheers,
->>
->> Dave.
-> Hi Tom,
->
-> did you use the git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> repository for the xfstests ? The one I've been using (from
-> oss.sgi.com) is terribly out of date so it does not have
-> _require_aiodio() yet.
->
-> Thanks!
-> -Lukas
-Hi Lukas,
+On Mon 16-04-12 15:02:50, Andreas Dilger wrote:
+> On 2012-04-16, at 9:13 AM, Jan Kara wrote:
+> > Another potential contention point might be patch 19. In that patch
+> > we make freeze_super() refuse to freeze the filesystem when there
+> > are open but unlinked files which may be impractical in some cases.
+> > The main reason for this is the problem with handling of file deletion
+> > from fput() called with mmap_sem held (e.g. from munmap(2)), and
+> > then there's the fact that we cannot really force such filesystem
+> > into a consistent state... But if people think that freezing with
+> > open but unlinked files should happen, then I have some possible
+> > solutions in mind (maybe as a separate patchset since this is
+> > large enough).
+> 
+> Looking at a desktop system, I think it is very typical that there
+> are open-unlinked files present, so I don't know if this is really
+> an acceptable solution.  It isn't clear from your comments whether
+> this is a blanket refusal for all open-unlinked files, or only in
+> some particular cases...
+  Thanks for looking at this. It is currently a blanket refusal. And I
+agree it's problematic. There are two problems with open but unlinked
+files.
 
-unfortunately I was using that old repository on oos.sgi.com.
-Thanks!
+One is that some old filesystems cannot get in a consistent state in
+presence of open but unlinked files but for filesystems we really care
+about - xfs, ext4, ext3, btrfs, or even ocfs2, gfs2 - that is not a real
+issue (these filesystems will delete those inodes on next mount read-write).
 
-T.
+The other problem is with what should happen when you put last inode
+reference on a frozen filesystem. Two possibilities I see are:
+
+a) block the iput() call - that is inconvenient because it can be
+called in various contexts. I think we could possibly use the same level of
+freeze protection as for page fault (this has changed since I originally
+thought about this and that would make things simpler) but I'm not
+completely sure.
+
+b) let the iput finish but filesystem will keep inode on its orphan list
+(or it's equivalent) and the inode will be deleted after the filesystem is
+thawed. The advantage of this is we don't have to block iput(), the
+disadvantage is we have to have filesystem support and not all filesystems
+can do this.
+
+Any thoughts?
+
+								Honza
+> 
+> lsof | grep deleted
+> nautilus  25393  adilger   19r      REG           253,0      340     253954 /home/adilger/.local/share/gvfs-metadata/home (deleted)
+> nautilus  25393  adilger   20r      REG           253,0    32768     253964 /home/adilger/.local/share/gvfs-metadata/home-f332a8f3.log (deleted)
+> gnome-ter 25623  adilger   22u      REG            0,18    17841    2717846 /tmp/vtePIRJCW (deleted)
+> gnome-ter 25623  adilger   23u      REG            0,18     5568    2717847 /tmp/vteDCSJCW (deleted)
+> gnome-ter 25623  adilger   29u      REG            0,18      480    2728484 /tmp/vte6C1TCW (deleted)
+  
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
