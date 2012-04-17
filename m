@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3HHskYc093454 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 12:54:46 -0500
-Message-ID: <4F8DAE64.9060605@sgi.com>
-Date: Tue, 17 Apr 2012 12:54:44 -0500
+	q3HIg6ca096089 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 13:42:06 -0500
+Message-ID: <4F8DB97B.30100@sgi.com>
+Date: Tue, 17 Apr 2012 13:42:03 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/18] xfs: Do background CIL flushes via a workqueue
-References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<1334319061-12968-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1334319061-12968-4-git-send-email-david@fromorbit.com>
+Subject: Re: [RFC]xfs: using GFP_NOFS for blkdev_issue_flush
+References: <4F8BC112.9090508@fusionio.com> <4F8BC30D.5040601@kernel.org>
+In-Reply-To: <4F8BC30D.5040601@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,39 +21,26 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Shaohua Li <shli@kernel.org>
 Cc: xfs@oss.sgi.com
 
-On 04/13/12 07:10, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
+On 04/16/12 01:58, Shaohua Li wrote:
+
+> flush request is issued in transaction commit code path usually, so
+> looks using
+> GFP_KERNEL to allocate memory for flush request bio falls into the classic
+> deadlock issue (memory reclaim recursion). Use GFP_NOFS to avoid recursion
+> from reclaim context. Per Dave Chinner, there is only blkdev_issue_flush
+> might
+> be buggy here. But using GFP_NOFS by default for all calls should not
+> matter.
 >
-> Doing background CIL flushes adds significant latency to whatever
-> async transaction that triggers it. To avoid blocking async
-> transactions on things like waiting for log buffer IO to complete,
-> move the CIL push off into a workqueue.  By moving the push work
-> into a workqueue, we remove all the latency that the commit adds
-> from the foreground transaction commit path. This also means that
-> single threaded workloads won't do the CIL push procssing, leaving
-> them more CPU to do more async transactions.
->
-> To do this, we need to keep track of the sequence number we have
-> pushed work for. This avoids having many transaction commits
-> attempting to schedule work for the same sequence, and ensures that
-> we only ever have one push (background or forced) in progress at a
-> time. It also means that we don't need to take the CIL lock in write
-> mode to check for potential background push races, which reduces
-> lock contention.
->
-> To avoid potential issues with "smart" IO schedulers, don't use the
-> workqueue for log force triggered flushes. Instead, do them directly
-> so that the log IO is done directly by the process issuing the log
-> force and so doesn't get stuck on IO elevator queue idling
-> incorrectly delaying the log IO from the workqueue.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
 > ---
 
-Makes sense.
+
+Looks good.
+
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
