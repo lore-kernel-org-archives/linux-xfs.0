@@ -1,21 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3I1wMmA134374 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 20:58:22 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	FMo0QMCy6lfvCnXY for <xfs@oss.sgi.com>;
-	Tue, 17 Apr 2012 18:58:20 -0700 (PDT)
-Date: Wed, 18 Apr 2012 11:58:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/18] xfs: Do background CIL flushes via a workqueue
-Message-ID: <20120418015818.GN6734@dastard>
-References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<1334319061-12968-4-git-send-email-david@fromorbit.com>
-	<20120417212155.GA16881@sgi.com>
+	q3I2NCSo138157 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 21:23:12 -0500
+Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
+	[209.85.210.46]) by cuda.sgi.com with ESMTP id MWNp3eizfGKLaCEu
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 17 Apr 2012 19:23:11 -0700 (PDT)
+Received: by dadz9 with SMTP id z9so10764308dad.5
+	for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 19:23:10 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120417212155.GA16881@sgi.com>
+In-Reply-To: <4F7ECF97.6020601@hardwarefreak.com>
+References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
+	<4F77EA55.6090004@hardwarefreak.com>
+	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
+	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
+	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
+	<4F792154.5020006@hardwarefreak.com>
+	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
+	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
+	<4F7E0842.6090004@hardwarefreak.com>
+	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
+	<CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
+	<CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
+	<CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
+	<CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
+	<4F7EA6D4.804@hardwarefreak.com>
+	<CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
+	<4F7ECF97.6020601@hardwarefreak.com>
+Date: Wed, 18 Apr 2012 10:23:10 +0800
+Message-ID: <CACwgYDORRvCT3zBfeKL99ebO2zWt0RJAVQyXu0Zawoz_r+8bHw@mail.gmail.com>
+Subject: Re: RAID5 created by 8 disks works with xfs
+From: daobang wang <wangdb1981@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,72 +43,94 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Tue, Apr 17, 2012 at 04:21:55PM -0500, Ben Myers wrote:
-> On Fri, Apr 13, 2012 at 10:10:46PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Doing background CIL flushes adds significant latency to whatever
-> > async transaction that triggers it. To avoid blocking async
-> > transactions on things like waiting for log buffer IO to complete,
-> > move the CIL push off into a workqueue.  By moving the push work
-> > into a workqueue, we remove all the latency that the commit adds
-> > from the foreground transaction commit path. This also means that
-> > single threaded workloads won't do the CIL push procssing, leaving
-> > them more CPU to do more async transactions.
-> > 
-> > To do this, we need to keep track of the sequence number we have
-> > pushed work for. This avoids having many transaction commits
-> > attempting to schedule work for the same sequence, and ensures that
-> > we only ever have one push (background or forced) in progress at a
-> > time. It also means that we don't need to take the CIL lock in write
-> > mode to check for potential background push races, which reduces
-> > lock contention.
-> > 
-> > To avoid potential issues with "smart" IO schedulers, don't use the
-> > workqueue for log force triggered flushes. Instead, do them directly
-> > so that the log IO is done directly by the process issuing the log
-> > force and so doesn't get stuck on IO elevator queue idling
-> > incorrectly delaying the log IO from the workqueue.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-.....
-> Gah! I just hit this assert.  
-> 
-> v3.4-rc2-3-g8a00ebe with:
-> Christoph's ilock series
-> Christoph's xfsbufd series
-> Jan's freeze series
-> Dave's queue.
-> 
-> nfs7 login: [ 1175.172406] XFS: Assertion failed: push_seq > 0 && push_seq <= ctx->sequence, file: /root/xfs/fs/xfs/xfs_log_cil.c, line: 406
-> [ 1175.183766] ------------[ cut here ]------------
-> [ 1175.188010] kernel BUG at /root/xfs/fs/xfs/xfs_message.c:101!
-> [ 1175.188010] invalid opcode: 0000 [#1] PREEMPT SMP 
-> [ 1175.188010] Modules linked in: xfs(O) exportfs af_packet dm_mod floppy iTCO_wdt sg i2c_i801 iTCO_vendor_support e7xxx_edac edac_core sr_mod e100 cdrom e1000 shpchp pci_hotplug button serio_raw pcspkr autofs4 processor thermal_sys ata_generic
-> [ 1175.188010] 
-> [ 1175.188010] Pid: 2760, comm: kworker/3:2 Tainted: G           O 3.4.0-rc2-1.2-desktop+ #15 TYAN Computer Corp. S2721-533 Thunder i7501 Pro/S2721-533 Thunder i7501 Pro
-> [ 1175.188010] EIP: 0060:[<faa4f966>] EFLAGS: 00010296 CPU: 3
-> [ 1175.188010] EIP is at assfail+0x26/0x30 [xfs]
-> [ 1175.188010] EAX: 00000087 EBX: f1f10980 ECX: 00000079 EDX: 00000046
-> [ 1175.188010] ESI: f1f10780 EDI: 00000000 EBP: f1d93ec4 ESP: f1d93eb0
-> [ 1175.188010]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
-> [ 1175.188010] CR0: 8005003b CR2: b770ee20 CR3: 2779c000 CR4: 000007f0
-> [ 1175.188010] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
-> [ 1175.188010] DR6: ffff0ff0 DR7: 00000400
+Hi stan,
 
-Ah, that's a 32 bit machine. The sequence numbers are 64 bit values
-- I wonder if there's an issue with reading/writing
-xc_current_sequence without a spinlock held...
+    So sorry to reply this so late, the original envrionment is not
+exist now, i build a same one, please see the detail output.
 
-Cheers,
+1. uname -a
+Linux nsspioneer 2.6.36.4-v64 #1 SMP Fri Apr 13 10:16:12 CST 2012
+x86_64 x86_64 x86_64 GNU/Linux
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+2.xfs_info /dev/vg+vg00+20120418101725/lv+nxx+lv0000
+meta-data=/dev/vg+vg00+20120418101725/lv+nxx+lv0000 isize=256
+agcount=13, agsize=268435440 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=3418374144, imaxpct=5
+         =                       sunit=16     swidth=128 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=32768, version=2
+         =                       sectsz=512   sunit=16 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+3. the command "cat /etc/fstab | grep xfs" has no output, we did not
+save it in fstab
+
+4. mdadm -D /dev/md127
+/dev/md127:
+        Version : 1.2
+  Creation Time : Wed Apr 18 10:02:26 2012
+     Raid Level : raid5
+     Array Size : 13673525376 (13040.09 GiB 14001.69 GB)
+  Used Dev Size : 1953360768 (1862.87 GiB 2000.24 GB)
+   Raid Devices : 8
+  Total Devices : 8
+    Persistence : Superblock is persistent
+
+  Intent Bitmap : Internal
+
+    Update Time : Wed Apr 18 10:12:22 2012
+          State : online
+ Active Devices : 8
+Working Devices : 8
+ Failed Devices : 0
+  Spare Devices : 0
+
+         Layout : left-symmetric
+     Chunk Size : 64K
+
+           Name : md+LD00+120418100226
+           UUID : bbddf00e:779ca156:bb4f7d10:285e4fcf
+         Events : 195
+
+    Number   Major   Minor   RaidDevice State
+       0       8       16        0      active sync   /dev/sdb
+       1       8       32        1      active sync   /dev/sdc
+       2       8       48        2      active sync   /dev/sdd
+       3       8       64        3      active sync   /dev/sde
+       4       8       80        4      active sync   /dev/sdf
+       5       8       96        5      active sync   /dev/sdg
+       6       8      112        6      active sync   /dev/sdh
+       8       8      128        7      active sync   /dev/sdi
+
+On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
+> On 4/6/2012 3:45 AM, daobang wang wrote:
+>> Hi stan,
+>>
+>>     Thank you for your reply, the envrionment is the same that i
+>> mentioned before,  [...]
+>
+> There's seems to be some kind of communication failure here.  I'll make
+> this really simple.  Please fill in the blanks.
+>
+> $ uname -a
+>
+> $ xfs_info [device]
+>
+> $ cat /etc/fstab|grep xfs
+>
+> $ mdadm --detail /dev/mdX
+>
+>
+> Thanks.
+>
+> --
+> Stan
+>
+>
 
 _______________________________________________
 xfs mailing list
