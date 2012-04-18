@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3IHrIsB220456 for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 12:53:18 -0500
-Message-ID: <4F8EFF8A.80305@sgi.com>
-Date: Wed, 18 Apr 2012 12:53:14 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
+	q3IIIljT222716 for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 13:18:52 -0500
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 2DC218F804B
+	for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 11:18:42 -0700 (PDT)
+Date: Wed, 18 Apr 2012 13:14:07 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [PATCH 04/10] xfs: implement freezing by emptying the AIL
+Message-ID: <20120418181407.GC16881@sgi.com>
 References: <20120327164400.967415009@bombadil.infradead.org>
 	<20120327164644.830680325@bombadil.infradead.org>
 	<4F8C22D4.3040908@sgi.com> <20120416235432.GZ6734@dastard>
 	<20120417042023.GG6734@dastard> <20120417082633.GH6734@dastard>
-In-Reply-To: <20120417082633.GH6734@dastard>
+	<4F8EBE13.9040207@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4F8EBE13.9040207@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,109 +26,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 04/17/12 03:26, Dave Chinner wrote:
+On Wed, Apr 18, 2012 at 08:13:55AM -0500, Mark Tinguely wrote:
+> On 04/17/12 03:26, Dave Chinner wrote:
+> >On Tue, Apr 17, 2012 at 02:20:23PM +1000, Dave Chinner wrote:
+> >
+> >commit 281627df3eb55e1b729b9bb06fff5ff112929646
+> >Author: Christoph Hellwig<hch@infradead.org>
+> >Date:   Tue Mar 13 08:41:05 2012 +0000
+> >
+> >     xfs: log file size updates at I/O completion time
+> >
+> >That confirms my analysis above - the problem is being exposed by new
+> >code in the writeback path that does transaction allocation where it
+> >didn't used to.
+> >
+> >Clearly the problem is not really the new code in Christoph's
+> >patches - it's an existing freeze problem that has previously
+> >resulted in data writes occuring after a freeze has completed (of
+> >which we have had rare complaints about). That sounds pretty dire,
+> >except for one thing: Jan Kara's patch set that fixes all these
+> >freeze problems:
+> >
+> >https://lkml.org/lkml/2012/4/16/356
+> >
+> >And now that I've run some testing with Jan's patch series, along
+> >with Christoph's and mine (75-odd patches ;), a couple of my test
+> >VMs have been running test 068 in a tight loop for about half an
+> >hour without a hang, so I'd consider this problem fixed by Jan's
+> >freeze fixes given I could reliably hang it in 2-3 minutes before
+> >adding Jan's patch set to my stack.
+> >
+> >So the fix for this problem is getting Jan's patch set into the
+> >kernel at the same time we get the inode size logging changes into
+> >the kernel. What do people think about that for a plan?
+> >
+> >Cheers,
+> >
+> >Dave.
+> 
+> Good job.
+> 
+> Jan's freeze patch set is at v5 and seems to be settling down. What
+> is the status of Jan's freeze code getting into the kernel?
 
-> Yeah, it's pretty clear what is happening here. We don't have
-> freeze protection against EOF zeroing operations. At least
-> xfs_setattr_size() and xfs_change_file_space() fail to check for
-> freeze, and that is initially what I though was causing this problem.
->
-> However, adding freeze checks into the relevant paths didn't make
-> the hangs go away, so there's more to it than that. Basically, we've
-> been getting races between checking for freeze, the dirtying of the
-> pages and the flusher thread syncing out the dirty data. i.e.:
->
-> Thread 1		Thread 2		freeze		flusher thread
-> write inode A
-> check for freeze
-> 					grab s_umount
-> 					SB_FREEZE_WRITE
-> 					writeback_inodes_sb()
-> 								iterate dirty inodes
-> 								inode A not in flush
-> 					sync_inodes_sb()
-> 								iterate dirty inodes
-> 								inode A not in flush
-> dirty pages
-> mark inode A dirty
-> write inode A done.
-> 					SB_FREEZE_TRANS
-> 					drop s_umount
-> 					freeze done
-> 			sync
-> 			grab s_umount
-> 								iterate dirty inodes
-> 								Flush dirty inode A
->
->
-> Before we added the transactional inode size updates, this race
-> simply went unnoticed because nothing caused the flusher thread to
-> block. All the problems I see are due to overwrites of allocated
-> space - if there was real allocation then the delalloc conversion
-> would have always hung. Now we see that when we need to extend the
-> file size when writing, we ahve to allocate a transaction and hence
-> the flusher thread now hangs.
->
-> While I can "fix" the xfs_setattr_size() and xfs_change_file_space()
-> triggers, they don't close the above race condition, so this problem
-> is essentially unfixable in XFS. The only reason we have not tripped
-> over it before is that the flusher thread didn't hang waiting for a
-> transaction reservation when the race was hit.
->
-> So why didn't this happen before Christoph's patch set? That's
-> something I can't explain. Oh, wait, yes I can - 068 hangs even
-> without this patch of Christoph's. Actually, looking at my xfstests
-> logs, I can trace the start of the failures back to mid march, and
-> that coincided with an update to the xfstests installed on my test
-> boxes. Which coincides with when my machines first saw this change:
->
-> commit 281627df3eb55e1b729b9bb06fff5ff112929646
-> Author: Christoph Hellwig<hch@infradead.org>
-> Date:   Tue Mar 13 08:41:05 2012 +0000
->
->      xfs: log file size updates at I/O completion time
->
-> That confirms my analysis above - the problem is being exposed by new
-> code in the writeback path that does transaction allocation where it
-> didn't used to.
->
-> Clearly the problem is not really the new code in Christoph's
-> patches - it's an existing freeze problem that has previously
-> resulted in data writes occuring after a freeze has completed (of
-> which we have had rare complaints about). That sounds pretty dire,
-> except for one thing: Jan Kara's patch set that fixes all these
-> freeze problems:
->
-> https://lkml.org/lkml/2012/4/16/356
->
-> And now that I've run some testing with Jan's patch series, along
-> with Christoph's and mine (75-odd patches;), a couple of my test
-> VMs have been running test 068 in a tight loop for about half an
-> hour without a hang, so I'd consider this problem fixed by Jan's
-> freeze fixes given I could reliably hang it in 2-3 minutes before
-> adding Jan's patch set to my stack.
->
-> So the fix for this problem is getting Jan's patch set into the
-> kernel at the same time we get the inode size logging changes into
-> the kernel. What do people think about that for a plan?
->
-> Cheers,
->
-> Dave.
-> -- Dave Chinner david@fromorbit.com
+The trouble I was having yesterday seems to be related to the i386 box on which
+I was running.  Apparently something has regressed badly since 3.3 on that
+i386.  Seems to be working fine on another x86_64 machine.
 
-Just a heads up, Jan's freeze patch did clear up the test 086 hang on my 
-test box as well, but the 106 (quota test) hang on one of the mounts is 
-still there.
-
---Mark.
+-Ben
 
 _______________________________________________
 xfs mailing list
