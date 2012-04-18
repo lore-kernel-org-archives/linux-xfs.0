@@ -1,36 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3I2NCSo138157 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 21:23:12 -0500
-Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
-	[209.85.210.46]) by cuda.sgi.com with ESMTP id MWNp3eizfGKLaCEu
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 17 Apr 2012 19:23:11 -0700 (PDT)
-Received: by dadz9 with SMTP id z9so10764308dad.5
-	for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 19:23:10 -0700 (PDT)
+	q3I91h7g172650 for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 04:01:43 -0500
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id 0kT7c5WQhESU1Shr for
+	<xfs@oss.sgi.com>; Wed, 18 Apr 2012 02:01:41 -0700 (PDT)
+Date: Wed, 18 Apr 2012 10:00:51 +0100
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Fragmentation Issue We Are Having
+Message-ID: <20120418090051.GA14814@nsrc.org>
+References: <CADrkzimg891ZBGK7-UzhGeey16KwH-ZXpEqFr=O3KwD3qA9LwQ@mail.gmail.com>
+	<20120412075747.GB30891@nsrc.org>
+	<CADrkzi=JNsbXJHkcb=oOZHLEYMBDUkNHu9O8JFT9h+kSArL47A@mail.gmail.com>
+	<20120413071905.GA823@nsrc.org> <20120413075634.GD6734@dastard>
+	<20120413081725.GA3640@nsrc.org> <20120417002610.GC6734@dastard>
+	<20120417085828.GA13168@nsrc.org> <20120418013607.GK6734@dastard>
 MIME-Version: 1.0
-In-Reply-To: <4F7ECF97.6020601@hardwarefreak.com>
-References: <CACwgYDPQBNa7z7WcyUjV2Rx8Qf47r7eaRCowNKxjLBz+fYcfvQ@mail.gmail.com>
-	<4F77EA55.6090004@hardwarefreak.com>
-	<CACwgYDMVHT5DFjJztX9JvsVQJ+uOjPrfcs4+0aGXotDvf6tymQ@mail.gmail.com>
-	<CACwgYDMXF9WEgzW9vL_0=GdRc_t+67WAkRTKNoKOMEMCvjujVw@mail.gmail.com>
-	<CALFpzo5aKM2y_stDR14PNYMHEcq5CEptuFiXrvcCpXTzSQmAxw@mail.gmail.com>
-	<4F792154.5020006@hardwarefreak.com>
-	<CACwgYDPsZSEhuqNP8YgAksEq9BB6YOS1Q8jGx2J7DCrrOh_JQw@mail.gmail.com>
-	<CACwgYDOtCoVF-p+KKqPYxHhA4vWF78Ueecx9hcVWLoyxFWzV9Q@mail.gmail.com>
-	<4F7E0842.6090004@hardwarefreak.com>
-	<CACwgYDMEpFqJhtUGeRg4hvux3GigNRnA--V18DwdyUvJpY434w@mail.gmail.com>
-	<CACwgYDPur_8sO-BhhP-ggEmPCGa5ddsCcmSDfCuhD9OgiwGRyw@mail.gmail.com>
-	<CA+res+RR5iAZsEY8G21YkQn+p_8EYSFvu4+H1SK=HXshOcS-4g@mail.gmail.com>
-	<CACwgYDN5ceD3ka-O9t1rGdj4tS=JpHVm_ZWetqZ7ZAOyEjqspA@mail.gmail.com>
-	<CACwgYDOc2C=j1hrbtwTqOPr77wtfLvxow9xNeF+mGUakt1rHzQ@mail.gmail.com>
-	<4F7EA6D4.804@hardwarefreak.com>
-	<CACwgYDMXZ2O+7B163eg5h-D5sw9_0MRgu8BAahjgOr+td8cJtg@mail.gmail.com>
-	<4F7ECF97.6020601@hardwarefreak.com>
-Date: Wed, 18 Apr 2012 10:23:10 +0800
-Message-ID: <CACwgYDORRvCT3zBfeKL99ebO2zWt0RJAVQyXu0Zawoz_r+8bHw@mail.gmail.com>
-Subject: Re: RAID5 created by 8 disks works with xfs
-From: daobang wang <wangdb1981@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120418013607.GK6734@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -43,94 +30,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Marcus Sorensen <shadowsor@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, =?ISO-8859-1?Q?Mathias_Bur=E9n?= <mathias.buren@gmail.com>, Jack Wang <jack.wang.usish@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: David Fuller <dfuller@epoch.com>, xfs@oss.sgi.com
 
-Hi stan,
+On Wed, Apr 18, 2012 at 11:36:07AM +1000, Dave Chinner wrote:
+> And it assumes that inode32 cannot do locality of
+> files at all, when in fact it has tunable locality through a syctl.
+> 
+> Indeed, here's some the performance enhancing games SGI play that
+> can only be achieved by using the inode32 allocator:
+> 
+> http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=linux&db=bks&fname=/SGI_Admin/LX_XFS_AG/ch07.html
 
-    So sorry to reply this so late, the original envrionment is not
-exist now, i build a same one, please see the detail output.
+Ah, that's new to me. So with inode32 and
+  sysctl fs.xfs.rotorstep=255
+you can get roughly the same locality benefit for sequentially-written files
+as inode64?  (Aside: if you have two processes writing files to two different
+directories, will they end up mixing their files in the same AG? That
+could hurt performance at readback time if reading them sequentially)
 
-1. uname -a
-Linux nsspioneer 2.6.36.4-v64 #1 SMP Fri Apr 13 10:16:12 CST 2012
-x86_64 x86_64 x86_64 GNU/Linux
+I'm not really complaining about anything here except the dearth of
+readily-accessible information. If I download the whole admin book:
+http://techpubs.sgi.com/library/manuals/4000/007-4273-004/pdf/007-4273-004.pdf
+I see the option inode64 only mentioned once in passing (as being
+incompatible with ibound). So if there's detailled information on
+what exactly inode64 does and when to use it, it must be somewhere else.
 
-2.xfs_info /dev/vg+vg00+20120418101725/lv+nxx+lv0000
-meta-data=/dev/vg+vg00+20120418101725/lv+nxx+lv0000 isize=256
-agcount=13, agsize=268435440 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=3418374144, imaxpct=5
-         =                       sunit=16     swidth=128 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=32768, version=2
-         =                       sectsz=512   sunit=16 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Here's my user story. As a newbie, my first test was to make a 3TB
+filesystem on a single drive, and I was doing a simple workload consisting
+of writing 1000 files per directory sequentially.  I could achieve a
+sequential write speed of 75MB/s but only a sequential read speed of 25MB/s. 
+After questioning this on the list and eventually finding that files were
+scattered around the disk (thanks to xfs_bmap).  I was pointed to the
+inode64 option, which I had seen in the FAQ but hadn't realised how big a
+performance difference it would make.
 
-3. the command "cat /etc/fstab | grep xfs" has no output, we did not
-save it in fstab
+This wasn't just an idle benchmark: my main application is creating a corpus
+of files and then processing that corpus of files (either sequentially, or
+with multiple processes each working sequentially through subsections of the
+corpus)
 
-4. mdadm -D /dev/md127
-/dev/md127:
-        Version : 1.2
-  Creation Time : Wed Apr 18 10:02:26 2012
-     Raid Level : raid5
-     Array Size : 13673525376 (13040.09 GiB 14001.69 GB)
-  Used Dev Size : 1953360768 (1862.87 GiB 2000.24 GB)
-   Raid Devices : 8
-  Total Devices : 8
-    Persistence : Superblock is persistent
+Regards,
 
-  Intent Bitmap : Internal
-
-    Update Time : Wed Apr 18 10:12:22 2012
-          State : online
- Active Devices : 8
-Working Devices : 8
- Failed Devices : 0
-  Spare Devices : 0
-
-         Layout : left-symmetric
-     Chunk Size : 64K
-
-           Name : md+LD00+120418100226
-           UUID : bbddf00e:779ca156:bb4f7d10:285e4fcf
-         Events : 195
-
-    Number   Major   Minor   RaidDevice State
-       0       8       16        0      active sync   /dev/sdb
-       1       8       32        1      active sync   /dev/sdc
-       2       8       48        2      active sync   /dev/sdd
-       3       8       64        3      active sync   /dev/sde
-       4       8       80        4      active sync   /dev/sdf
-       5       8       96        5      active sync   /dev/sdg
-       6       8      112        6      active sync   /dev/sdh
-       8       8      128        7      active sync   /dev/sdi
-
-On 4/6/12, Stan Hoeppner <stan@hardwarefreak.com> wrote:
-> On 4/6/2012 3:45 AM, daobang wang wrote:
->> Hi stan,
->>
->>     Thank you for your reply, the envrionment is the same that i
->> mentioned before,  [...]
->
-> There's seems to be some kind of communication failure here.  I'll make
-> this really simple.  Please fill in the blanks.
->
-> $ uname -a
->
-> $ xfs_info [device]
->
-> $ cat /etc/fstab|grep xfs
->
-> $ mdadm --detail /dev/mdX
->
->
-> Thanks.
->
-> --
-> Stan
->
->
+Brian.
 
 _______________________________________________
 xfs mailing list
