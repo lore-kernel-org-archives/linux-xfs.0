@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3IFBjSN207096 for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 10:11:45 -0500
-Received: from josefsipek.net (josefsipek.net [64.9.206.49]) by cuda.sgi.com
-	with ESMTP id 3Uy8nJ9p9J5tbmWr for <xfs@oss.sgi.com>;
-	Wed, 18 Apr 2012 08:11:43 -0700 (PDT)
-Received: from poseidon.cudanet.local (unknown [12.200.95.45])
-	by josefsipek.net (Postfix) with ESMTPSA id C684BA6A64
-	for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 11:11:41 -0400 (EDT)
-Date: Wed, 18 Apr 2012 11:11:40 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: task blocked for more than 120 seconds
-Message-ID: <20120418151139.GC4652@poseidon.cudanet.local>
+	q3IHrIsB220456 for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 12:53:18 -0500
+Message-ID: <4F8EFF8A.80305@sgi.com>
+Date: Wed, 18 Apr 2012 12:53:14 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: Re: [PATCH 04/10] xfs: implement freezing by emptying the AIL
+References: <20120327164400.967415009@bombadil.infradead.org>
+	<20120327164644.830680325@bombadil.infradead.org>
+	<4F8C22D4.3040908@sgi.com> <20120416235432.GZ6734@dastard>
+	<20120417042023.GG6734@dastard> <20120417082633.GH6734@dastard>
+In-Reply-To: <20120417082633.GH6734@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,63 +20,109 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Greetings!  I have a file server that get a pretty nasty load (about 15
-million files created every day).  After some time, I noticed that the load
-average spiked up from the usual 30 to about 180.  dmesg revealed:
+On 04/17/12 03:26, Dave Chinner wrote:
 
-[434042.318401] INFO: task php:2185 blocked for more than 120 seconds.
-[434042.318403] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-[434042.318405] php             D 000000010675d6cd     0  2185  27306 0x00000000
-[434042.318408]  ffff88008d735a48 0000000000000086 ffff88008d735938 ffffffff00000000
-[434042.318412]  ffff88008d734010 ffff88000e28e340 0000000000012000 ffff88008d735fd8
-[434042.318416]  ffff88008d735fd8 0000000000012000 ffff8807ef9966c0 ffff88000e28e340
-[434042.318419] Call Trace:
-[434042.318442]  [<ffffffffa0087a9b>] ? xfs_trans_brelse+0xee/0xf7 [xfs]
-[434042.318464]  [<ffffffffa00689de>] ? xfs_da_brelse+0x71/0x96 [xfs]
-[434042.318485]  [<ffffffffa006df10>] ? xfs_dir2_leaf_lookup_int+0x211/0x225 [xfs]
-[434042.318489]  [<ffffffff8141481e>] schedule+0x55/0x57
-[434042.318512]  [<ffffffffa0083de2>] xlog_reserveq_wait+0x115/0x1c0 [xfs]
-[434042.318515]  [<ffffffff810381f1>] ? try_to_wake_up+0x23d/0x23d
-[434042.318539]  [<ffffffffa0083f45>] xlog_grant_log_space+0xb8/0x1be [xfs]
-[434042.318562]  [<ffffffffa0084164>] xfs_log_reserve+0x119/0x133 [xfs]
-[434042.318585]  [<ffffffffa0080cf1>] xfs_trans_reserve+0xca/0x199 [xfs]
-[434042.318605]  [<ffffffffa00500dc>] xfs_create+0x18d/0x467 [xfs]
-[434042.318623]  [<ffffffffa00485be>] xfs_vn_mknod+0xa0/0xf9 [xfs]
-[434042.318640]  [<ffffffffa0048632>] xfs_vn_create+0xb/0xd [xfs]
-[434042.318644]  [<ffffffff810f0c5d>] vfs_create+0x6e/0x9e
-[434042.318647]  [<ffffffff810f1c5e>] do_last+0x302/0x642
-[434042.318651]  [<ffffffff810f2068>] path_openat+0xca/0x344
-[434042.318654]  [<ffffffff810f23d1>] do_filp_open+0x38/0x87
-[434042.318658]  [<ffffffff810fb22e>] ? alloc_fd+0x76/0x11e
-[434042.318661]  [<ffffffff810e40b1>] do_sys_open+0x10b/0x1a4
-[434042.318664]  [<ffffffff810e4173>] sys_open+0x1b/0x1d
+> Yeah, it's pretty clear what is happening here. We don't have
+> freeze protection against EOF zeroing operations. At least
+> xfs_setattr_size() and xfs_change_file_space() fail to check for
+> freeze, and that is initially what I though was causing this problem.
+>
+> However, adding freeze checks into the relevant paths didn't make
+> the hangs go away, so there's more to it than that. Basically, we've
+> been getting races between checking for freeze, the dirtying of the
+> pages and the flusher thread syncing out the dirty data. i.e.:
+>
+> Thread 1		Thread 2		freeze		flusher thread
+> write inode A
+> check for freeze
+> 					grab s_umount
+> 					SB_FREEZE_WRITE
+> 					writeback_inodes_sb()
+> 								iterate dirty inodes
+> 								inode A not in flush
+> 					sync_inodes_sb()
+> 								iterate dirty inodes
+> 								inode A not in flush
+> dirty pages
+> mark inode A dirty
+> write inode A done.
+> 					SB_FREEZE_TRANS
+> 					drop s_umount
+> 					freeze done
+> 			sync
+> 			grab s_umount
+> 								iterate dirty inodes
+> 								Flush dirty inode A
+>
+>
+> Before we added the transactional inode size updates, this race
+> simply went unnoticed because nothing caused the flusher thread to
+> block. All the problems I see are due to overwrites of allocated
+> space - if there was real allocation then the delalloc conversion
+> would have always hung. Now we see that when we need to extend the
+> file size when writing, we ahve to allocate a transaction and hence
+> the flusher thread now hangs.
+>
+> While I can "fix" the xfs_setattr_size() and xfs_change_file_space()
+> triggers, they don't close the above race condition, so this problem
+> is essentially unfixable in XFS. The only reason we have not tripped
+> over it before is that the flusher thread didn't hang waiting for a
+> transaction reservation when the race was hit.
+>
+> So why didn't this happen before Christoph's patch set? That's
+> something I can't explain. Oh, wait, yes I can - 068 hangs even
+> without this patch of Christoph's. Actually, looking at my xfstests
+> logs, I can trace the start of the failures back to mid march, and
+> that coincided with an update to the xfstests installed on my test
+> boxes. Which coincides with when my machines first saw this change:
+>
+> commit 281627df3eb55e1b729b9bb06fff5ff112929646
+> Author: Christoph Hellwig<hch@infradead.org>
+> Date:   Tue Mar 13 08:41:05 2012 +0000
+>
+>      xfs: log file size updates at I/O completion time
+>
+> That confirms my analysis above - the problem is being exposed by new
+> code in the writeback path that does transaction allocation where it
+> didn't used to.
+>
+> Clearly the problem is not really the new code in Christoph's
+> patches - it's an existing freeze problem that has previously
+> resulted in data writes occuring after a freeze has completed (of
+> which we have had rare complaints about). That sounds pretty dire,
+> except for one thing: Jan Kara's patch set that fixes all these
+> freeze problems:
+>
+> https://lkml.org/lkml/2012/4/16/356
+>
+> And now that I've run some testing with Jan's patch series, along
+> with Christoph's and mine (75-odd patches;), a couple of my test
+> VMs have been running test 068 in a tight loop for about half an
+> hour without a hang, so I'd consider this problem fixed by Jan's
+> freeze fixes given I could reliably hang it in 2-3 minutes before
+> adding Jan's patch set to my stack.
+>
+> So the fix for this problem is getting Jan's patch set into the
+> kernel at the same time we get the inode size logging changes into
+> the kernel. What do people think about that for a plan?
+>
+> Cheers,
+>
+> Dave.
+> -- Dave Chinner david@fromorbit.com
 
-It makes sense that'd the load average would spike up if some major lock got
-held longer than it should have been.
+Just a heads up, Jan's freeze patch did clear up the test 086 hang on my 
+test box as well, but the 106 (quota test) hang on one of the mounts is 
+still there.
 
-The box has 32GB RAM, 6 cores, and it's running 3.2.2.
-
-I've looked at the commits in the stable tree since 3.2.2 was tagged, and I
-do see a couple of useful commits so I'll try to get the kernel updated
-anyway but I don't quite see any of those fixes addressing this "hang".
-
-Thanks,
-
-Jeff.
-
--- 
-Research, n.:
-  Consider Columbus:
-    He didn't know where he was going.
-    When he got there he didn't know where he was.
-    When he got back he didn't know where he had been.
-    And he did it all on someone else's money.
+--Mark.
 
 _______________________________________________
 xfs mailing list
