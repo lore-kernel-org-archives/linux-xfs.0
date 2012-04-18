@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3I1lAsk130289 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 20:47:10 -0500
+	q3I1wMmA134374 for <xfs@oss.sgi.com>; Tue, 17 Apr 2012 20:58:22 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EfYbV9jSDUEbX2Zg for <xfs@oss.sgi.com>;
-	Tue, 17 Apr 2012 18:47:08 -0700 (PDT)
-Date: Wed, 18 Apr 2012 11:47:06 +1000
+	FMo0QMCy6lfvCnXY for <xfs@oss.sgi.com>;
+	Tue, 17 Apr 2012 18:58:20 -0700 (PDT)
+Date: Wed, 18 Apr 2012 11:58:18 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH 03/18] xfs: Do background CIL flushes via a workqueue
-Message-ID: <20120418014706.GM6734@dastard>
+Message-ID: <20120418015818.GN6734@dastard>
 References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
 	<1334319061-12968-4-git-send-email-david@fromorbit.com>
-	<20120417212155.GA16881@sgi.com> <20120417214956.GB16881@sgi.com>
+	<20120417212155.GA16881@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120417214956.GB16881@sgi.com>
+In-Reply-To: <20120417212155.GA16881@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,93 +24,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBBcHIgMTcsIDIwMTIgYXQgMDQ6NDk6NTZQTSAtMDUwMCwgQmVuIE15ZXJzIHdyb3Rl
-Ogo+IE9uIFR1ZSwgQXByIDE3LCAyMDEyIGF0IDA0OjIxOjU1UE0gLTA1MDAsIEJlbiBNeWVycyB3
-cm90ZToKPiA+IEdhaCEgSSBqdXN0IGhpdCB0aGlzIGFzc2VydC4gIAo+ID4gCj4gPiB2My40LXJj
-Mi0zLWc4YTAwZWJlIHdpdGg6Cj4gPiBDaHJpc3RvcGgncyBpbG9jayBzZXJpZXMKPiA+IENocmlz
-dG9waCdzIHhmc2J1ZmQgc2VyaWVzCj4gPiBKYW4ncyBmcmVlemUgc2VyaWVzCj4gPiBEYXZlJ3Mg
-cXVldWUuCj4gPiAKPiA+IG5mczcgbG9naW46IFsgMTE3NS4xNzI0MDZdIFhGUzogQXNzZXJ0aW9u
-IGZhaWxlZDogcHVzaF9zZXEgPiAwICYmIHB1c2hfc2VxIDw9IGN0eC0+c2VxdWVuY2UsIGZpbGU6
-IC9yb290L3hmcy9mcy94ZnMveGZzX2xvZ19jaWwuYywgbGluZTogNDA2Cgp3aGljaCBoYXMgcHJv
-YmFibHkgcmVzdWx0ZWQgaW4gYSBsb2cgY29ycnVwdGlvbi4KCj4gWyAgMzkwLjA5NzYzM10gLS0t
-WyBlbmQgdHJhY2UgMzNhOTc5NWI2MzgxNTdiOSBdLS0tCj4gCj4gSGVyZSBpdCBpcyBmcm9tIHRo
-ZSBzeXN0ZW0gbG9nCj4gCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzg5LjYz
-NzU0M10gWEZTICgyNjQ9MjExMzYxUNuUMzAwKTogTW91bnRpbmcgRmlsZXN5c3RlbQo+IEFwciAx
-NyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM4OS45MTI0MDJdIFhGUyAoMjY0PTIxMTM2MVDb
-lDMwMCk6IFN0YXJ0aW5nIHJlY292ZXJ5IChsb2dkZXY6IGludGVybmFsKQo+IEFwciAxNyAxNjoz
-NToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wNTQzNTddIFhGUyAoMjY0PTIxMTM2MVDblDMwMCk6
-IHhsb2dfcmVjb3Zlcl9pbm9kZV9wYXNzMjogQmFkIGlub2RlIG1hZ2ljIG51bWJlciwgZGlwID0g
-MHhmMGZmZDgwMCwgZGlubyBicCA9IDB4ZWY4OWM0ODAsIGlubyA9IDI1NTQxNTkyCj4gQXByIDE3
-IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA2NjI5MF0gWEZTICgyNjQ9MjExMzYxUNuU
-MzAwKTogSW50ZXJuYWwgZXJyb3IgeGxvZ19yZWNvdmVyX2lub2RlX3Bhc3MyKDEpIGF0IGxpbmUg
-MjI0OCBvZiBmaWxlIC9yb290L3hmcy9mcy94ZnMveGZzX2xvZ19yZWNvdmVyLmMuICBDYWxsZXIg
-MHhmYWEwOGZmYQoKQmVjYXVzZSBsb2cgcmVjb3ZlcnkgaGFzIHJlYWQgYSBiYWQgaW5vZGUgZnJv
-bSBkaXNrLCB3aGljaCBtZWFucyBhbgphbGxvY2F0aW9uIHRyYW5zYWN0aW9uIGhhcyBwcm9iYWJs
-eSBub3QgYmVlbiByZXBsYXllZC4KCi4uLi4KCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5l
-bDogWyAgMzkwLjA4MjA4NF0gWEZTICgyNjQ9MjExMzYxUNuUMzAwKTogbG9nIG1vdW50L3JlY292
-ZXJ5IGZhaWxlZDogZXJyb3IgMTE3Cj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAg
-MzkwLjA4MjIwOV0gWEZTICgyNjQ9MjExMzYxUNuUMzAwKTogbG9nIG1vdW50IGZhaWxlZAo+IEFw
-ciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wODIyMTddIFhGUzogQXNzZXJ0aW9u
-IGZhaWxlZDogYXRvbWljX3JlYWQoJnBhZy0+cGFnX3JlZikgPT0gMCwgZmlsZTogL3Jvb3QveGZz
-L2ZzL3hmcy94ZnNfbW91bnQuYywgbGluZTogMjcyCj4gCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4
-IGtlcm5lbDogWyAgMzkwLjA5MjU0Ml0gLS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0t
-LS0tCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA5NzAwNF0ga2VybmVs
-IEJVRyBhdCAvcm9vdC94ZnMvZnMveGZzL3hmc19tZXNzYWdlLmM6MTAxIQo+IEFwciAxNyAxNjoz
-NToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdIGludmFsaWQgb3Bjb2RlOiAwMDAwIFsj
-MV0gUFJFRU1QVCBTTVAgCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA5
-NzAwNF0gTW9kdWxlcyBsaW5rZWQgaW46IHhmcyhPKSBleHBvcnRmcyBhZl9wYWNrZXQgZG1fbW9k
-IGUxMDAwIGUxMDAgc3JfbW9kIHNocGNocCBpVENPX3dkdCBjZHJvbSBpMmNfaTgwMSBlN3h4eF9l
-ZGFjIGlUQ09fdmVuZG9yX3N1cHBvcnQgc2cgZmxvcHB5IHBjaV9ob3RwbHVnIHNlcmlvX3JhdyBi
-dXR0b24gZWRhY19jb3JlIHBjc3BrciBhdXRvZnM0IHByb2Nlc3NvciB0aGVybWFsX3N5cyBhdGFf
-Z2VuZXJpYwo+IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdIAo+
-IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdIFBpZDogNTIxNywg
-Y29tbTogbW91bnQgVGFpbnRlZDogRyAgICAgICAgICAgTyAzLjQuMC1yYzItMS4yLWRlc2t0b3Ar
-ICMxNSBUWUFOIENvbXB1dGVyIENvcnAuIFMyNzIxLTUzMyBUaHVuZGVyIGk3NTAxIFByby9TMjcy
-MS01MzMgVGh1bmRlciBpNzUwMSBQcm8KPiBBcHIgMTcgMTY6MzU6MTIgbGludXgga2VybmVsOiBb
-ICAzOTAuMDk3MDA0XSBFSVA6IDAwNjA6WzxmYTliOGQ1Nj5dIEVGTEFHUzogMDAwMTAyODYgQ1BV
-OiAzCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA5NzAwNF0gRUlQIGlz
-IGF0IGFzc2ZhaWwrMHgyNi8weDMwIFt4ZnNdCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5l
-bDogWyAgMzkwLjA5NzAwNF0gRUFYOiAwMDAwMDA3YiBFQlg6IGYwZjg3NjgwIEVDWDogMDAwMDAw
-ZjMgRURYOiAwMDAwMDA0Ngo+IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4w
-OTcwMDRdIEVTSTogMDAwMDAwMDAgRURJOiBmMWQwODlhOCBFQlA6IGYxZDY3ZGRjIEVTUDogZjFk
-NjdkYzgKPiBBcHIgMTcgMTY6MzU6MTIgbGludXgga2VybmVsOiBbICAzOTAuMDk3MDA0XSAgRFM6
-IDAwN2IgRVM6IDAwN2IgRlM6IDAwZDggR1M6IDAwMzMgU1M6IDAwNjgKPiBBcHIgMTcgMTY6MzU6
-MTIgbGludXgga2VybmVsOiBbICAzOTAuMDk3MDA0XSBDUjA6IDgwMDUwMDNiIENSMjogYjc3MzU1
-ODAgQ1IzOiAyZmY4MjAwMCBDUjQ6IDAwMDAwN2YwCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtl
-cm5lbDogWyAgMzkwLjA5NzAwNF0gRFIwOiAwMDAwMDAwMCBEUjE6IDAwMDAwMDAwIERSMjogMDAw
-MDAwMDAgRFIzOiAwMDAwMDAwMAo+IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5
-MC4wOTcwMDRdIERSNjogZmZmZjBmZjAgRFI3OiAwMDAwMDQwMAo+IEFwciAxNyAxNjozNToxMiBs
-aW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdIFByb2Nlc3MgbW91bnQgKHBpZDogNTIxNywgdGk9
-ZjFkNjYwMDAgdGFzaz1mMGQ5OTA2MCB0YXNrLnRpPWYxZDY2MDAwKQo+IEFwciAxNyAxNjozNTox
-MiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdIFN0YWNrOgo+IEFwciAxNyAxNjozNToxMiBs
-aW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdICAwMDAwMDAwMCBmYWEzMTg0NCBmYWEzOTlkNCBm
-YWE0MWE3ZiAwMDAwMDExMCBmMWQ2N2RmOCBmYWEwYjEyNSBmMWQwODk5Ywo+IEFwciAxNyAxNjoz
-NToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdICBmMWQwODgwMCAwMDAwMDA3NSBmMWQw
-ODgwMCAwMDAwMDAxNCBmMWQ2N2U1MCBmYWEwZGZlOSBmMWQwODgwMCBmYWE0MWMzNAo+IEFwciAx
-NyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdICAwMDAwNTAwMCBlZjgyYjcw
-MCBmYTlhZWE1MCBmMWQ2N2UyNCBmMWQwOGFjYyAwMDAwMDAwMCAwMDAwMDAwMiAwMDAwMDAwMwo+
-IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdIENhbGwgVHJhY2U6
-Cj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA5NzAwNF0gIFs8ZmFhMGIx
-MjU+XSB4ZnNfZnJlZV9wZXJhZysweDc1LzB4YTAgW3hmc10KPiBBcHIgMTcgMTY6MzU6MTIgbGlu
-dXgga2VybmVsOiBbICAzOTAuMDk3MDA0XSAgWzxmYWEwZGZlOT5dIHhmc19tb3VudGZzKzB4MmQ5
-LzB4NzEwIFt4ZnNdCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA5NzAw
-NF0gIFs8ZmE5YWVhNTA+XSA/IF94ZnNfZmlsZXN0cmVhbV9waWNrX2FnKzB4MWIwLzB4MWIwIFt4
-ZnNdCj4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5lbDogWyAgMzkwLjA5NzAwNF0gIFs8ZmE5
-YmI1ZDY+XSB4ZnNfZnNfZmlsbF9zdXBlcisweDE5Ni8weDI0MCBbeGZzXQo+IEFwciAxNyAxNjoz
-NToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcwMDRdICBbPGMwMzFjZTcyPl0gbW91bnRfYmRl
-disweDE3Mi8weDFiMAo+IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wOTcw
-MDRdICBbPGZhOWI5NjVhPl0geGZzX2ZzX21vdW50KzB4MWEvMHgyMCBbeGZzXQoKQW5kIHRoYXQn
-cyBhIGRpZmZlcmVudCBwcm9ibGVtIHRoYXQgRXJpYyB0cmlwcGVkIG92ZXIgYSBjb3VwbGUgb2YK
-d2Vla3MgYWdvLCBidXQgaGFzbid0IHNlbnQgYSBuZXcgcGF0Y2ggdG8gZml4OgoKaHR0cDovL29z
-cy5zZ2kuY29tL2FyY2hpdmVzL3hmcy8yMDEyLTA0L21zZzAwMDM1Lmh0bWwKaHR0cDovL29zcy5z
-Z2kuY29tL2FyY2hpdmVzL3hmcy8yMDEyLTA0L21zZzAwMTE1Lmh0bWwKCkNoZWVycywKCkRhdmUu
-Ci0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNn
-aS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Apr 17, 2012 at 04:21:55PM -0500, Ben Myers wrote:
+> On Fri, Apr 13, 2012 at 10:10:46PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Doing background CIL flushes adds significant latency to whatever
+> > async transaction that triggers it. To avoid blocking async
+> > transactions on things like waiting for log buffer IO to complete,
+> > move the CIL push off into a workqueue.  By moving the push work
+> > into a workqueue, we remove all the latency that the commit adds
+> > from the foreground transaction commit path. This also means that
+> > single threaded workloads won't do the CIL push procssing, leaving
+> > them more CPU to do more async transactions.
+> > 
+> > To do this, we need to keep track of the sequence number we have
+> > pushed work for. This avoids having many transaction commits
+> > attempting to schedule work for the same sequence, and ensures that
+> > we only ever have one push (background or forced) in progress at a
+> > time. It also means that we don't need to take the CIL lock in write
+> > mode to check for potential background push races, which reduces
+> > lock contention.
+> > 
+> > To avoid potential issues with "smart" IO schedulers, don't use the
+> > workqueue for log force triggered flushes. Instead, do them directly
+> > so that the log IO is done directly by the process issuing the log
+> > force and so doesn't get stuck on IO elevator queue idling
+> > incorrectly delaying the log IO from the workqueue.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+.....
+> Gah! I just hit this assert.  
+> 
+> v3.4-rc2-3-g8a00ebe with:
+> Christoph's ilock series
+> Christoph's xfsbufd series
+> Jan's freeze series
+> Dave's queue.
+> 
+> nfs7 login: [ 1175.172406] XFS: Assertion failed: push_seq > 0 && push_seq <= ctx->sequence, file: /root/xfs/fs/xfs/xfs_log_cil.c, line: 406
+> [ 1175.183766] ------------[ cut here ]------------
+> [ 1175.188010] kernel BUG at /root/xfs/fs/xfs/xfs_message.c:101!
+> [ 1175.188010] invalid opcode: 0000 [#1] PREEMPT SMP 
+> [ 1175.188010] Modules linked in: xfs(O) exportfs af_packet dm_mod floppy iTCO_wdt sg i2c_i801 iTCO_vendor_support e7xxx_edac edac_core sr_mod e100 cdrom e1000 shpchp pci_hotplug button serio_raw pcspkr autofs4 processor thermal_sys ata_generic
+> [ 1175.188010] 
+> [ 1175.188010] Pid: 2760, comm: kworker/3:2 Tainted: G           O 3.4.0-rc2-1.2-desktop+ #15 TYAN Computer Corp. S2721-533 Thunder i7501 Pro/S2721-533 Thunder i7501 Pro
+> [ 1175.188010] EIP: 0060:[<faa4f966>] EFLAGS: 00010296 CPU: 3
+> [ 1175.188010] EIP is at assfail+0x26/0x30 [xfs]
+> [ 1175.188010] EAX: 00000087 EBX: f1f10980 ECX: 00000079 EDX: 00000046
+> [ 1175.188010] ESI: f1f10780 EDI: 00000000 EBP: f1d93ec4 ESP: f1d93eb0
+> [ 1175.188010]  DS: 007b ES: 007b FS: 00d8 GS: 0000 SS: 0068
+> [ 1175.188010] CR0: 8005003b CR2: b770ee20 CR3: 2779c000 CR4: 000007f0
+> [ 1175.188010] DR0: 00000000 DR1: 00000000 DR2: 00000000 DR3: 00000000
+> [ 1175.188010] DR6: ffff0ff0 DR7: 00000400
+
+Ah, that's a 32 bit machine. The sequence numbers are 64 bit values
+- I wonder if there's an issue with reading/writing
+xc_current_sequence without a spinlock held...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
