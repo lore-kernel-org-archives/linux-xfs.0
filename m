@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3J01kS3250373 for <xfs@oss.sgi.com>; Wed, 18 Apr 2012 19:01:46 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	WawUgbbIgk07npcN for <xfs@oss.sgi.com>;
-	Wed, 18 Apr 2012 17:01:43 -0700 (PDT)
-Date: Thu, 19 Apr 2012 10:01:41 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3 V2] xfstests 233: fix user fsgqa access to fsstress
-Message-ID: <20120419000141.GT6734@dastard>
-References: <y>
- <1334654687-25450-1-git-send-email-tmarek@redhat.com>
+	q3J8WFKS031028 for <xfs@oss.sgi.com>; Thu, 19 Apr 2012 03:32:15 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id gjKNxvkIrudLOM4F for
+	<xfs@oss.sgi.com>; Thu, 19 Apr 2012 01:32:14 -0700 (PDT)
+Date: Thu, 19 Apr 2012 10:32:07 +0200 (CEST)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: Re: [PATCH 2/3 V2] xfstests 198, 240, common.rc: added check for
+	aiodio-sparse2
+In-Reply-To: <20120418235135.GS6734@dastard>
+Message-ID: <alpine.LFD.2.00.1204191029220.4508@dhcp-27-109.brq.redhat.com>
+References: <y> <1334654687-25450-1-git-send-email-tmarek@redhat.com>
+	<1334654687-25450-2-git-send-email-tmarek@redhat.com>
+	<20120418235135.GS6734@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1334654687-25450-1-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +27,62 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tom Marek <tmarek@redhat.com>
-Cc: lczerner@redhat.com, dchinner@redhat.com, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com, xfs@oss.sgi.com
 
-On Tue, Apr 17, 2012 at 11:24:45AM +0200, Tom Marek wrote:
-> User fsgqa may sometimes be unable to run fsstress (when xfstests are owned by
-> root) because fsgqa doesn't have rights to list directory where the fsstress
-> utility is located.
+On Thu, 19 Apr 2012, Dave Chinner wrote:
 
-That sounds like an installation problem, not something that needs
-to be worked around in the tests. Indeed, this problem woul dmean
-that the fsgqa user woul dnot be able to execute anything in the
-src/, ltp/ or tools/ subdirectories, and I don't think we want to
-work around all those sorts of problems in tests like this.
+> On Tue, Apr 17, 2012 at 11:24:46AM +0200, Tom Marek wrote:
+> > Tests number 198 and 240 could fail when aiodio-sparse2 was not build.
+> > _require_aiodio helper was added to common.rc file to fix this.
+> > 
+> > Cc: david@fromorbit.com
+> > Signed-off-by: Tom Marek <tmarek@redhat.com>
+> > Reviewed-by: Lukas Czerner <lczerner@redhat.com>
+> .....
+> > @@ -770,6 +770,14 @@ _require_scratch()
+> >      fi
+> >  }
+> >  
+> > +# this test needs aio-dio-regress to be built
+> > +#
+> > +_require_aiodio()
+> > +{
+> > +    [ -x $here/src/aio-dio-regress/aiodio_sparse2 ] || \
+> > +        _notrun "This tests requires src/aio-dio-regress/ to be built"
+> > +}
+> 
+> This function already exists in common.rc, which is why I pointed it
+> out for use.
+> 
+> # this test requires that a (specified) aio-dio executable exists
+> # $1 - command (optional)
+> #
+> _require_aiodio()
+> {
+>     if [ -z "$1" ]
+>     then
+>         AIO_TEST=src/aio-dio-regress/aiodio_sparse2
+>         [ -x $AIO_TEST ] || _notrun "aio-dio utilities required"
+>     else
+>         AIO_TEST=src/aio-dio-regress/$1
+>         [ -x $AIO_TEST ] || _notrun "$AIO_TEST not built"
+>     fi
+> }
+> 
+> Cheers,
+> 
+> Dave.
 
-Indeed, if you look at the make install rules, the install rule for
-the ltp/ subdir does:
+Hi Tom,
 
-....
-TARGETS = doio fsstress fsx growfiles iogen
-SCRIPTS = rwtest.sh
-.....
-install: default
-        $(INSTALL) -m 755 -d $(PKG_LIB_DIR)/ltp
-        $(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/ltp
-        $(INSTALL) -m 755 $(SCRIPTS) $(PKG_LIB_DIR)/ltp
+did you use the git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+repository for the xfstests ? The one I've been using (from
+oss.sgi.com) is terribly out of date so it does not have
+_require_aiodio() yet.
 
-It changes the permissions on the ltp/ directory to rwxr-xr-x, as
-well as for the binaries in the ltp/ subdir. This means the fsgqa
-user should be able to run the ltp/fsstress binary without any
-changes to the test scripts.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks!
+-Lukas
 
 _______________________________________________
 xfs mailing list
