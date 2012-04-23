@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3N5xZlj127573 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:35 -0500
+	q3N5xqZ0127727 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:52 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	DDlyLPeOdAWdPymK for <xfs@oss.sgi.com>;
-	Sun, 22 Apr 2012 22:59:34 -0700 (PDT)
+	QsVokDqBAD15Jdze for <xfs@oss.sgi.com>;
+	Sun, 22 Apr 2012 22:59:50 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMCIz-0001ae-27
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SMCJP-0001bg-B6
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:47 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMCIy-0004YP-VO
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:20 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SMCJP-0004ZE-85
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 20/37] xfs: kill b_file_offset
-Date: Mon, 23 Apr 2012 15:58:50 +1000
-Message-Id: <1335160747-17254-21-git-send-email-david@fromorbit.com>
+Subject: [PATCH 37/37] xfs: make XBF_MAPPED the default behaviour
+Date: Mon, 23 Apr 2012 15:59:07 +1000
+Message-Id: <1335160747-17254-38-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,120 +35,280 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Seeing as we pass block numbers around everywhere in the buffer
-cache now, it makes no sense to index everything by byte offset.
-Replace all the byte offset indexing with block number based
-indexing, and replace all uses of the byte offset with direct
-conversion from the block index.
+Rather than specifying XBF_MAPPED for almost all buffers, introduce
+XBF_UNMAPPED for the couple of users that use unmapped buffers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_buf.c |   17 +++++++----------
- fs/xfs/xfs_buf.h |    5 +----
- 2 files changed, 8 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_buf.c         |   28 +++++++++++++---------------
+ fs/xfs/xfs_buf.h         |    4 ++--
+ fs/xfs/xfs_fsops.c       |   10 +++++-----
+ fs/xfs/xfs_inode.c       |    1 +
+ fs/xfs/xfs_log_recover.c |    4 ++--
+ fs/xfs/xfs_trans_buf.c   |    6 ------
+ fs/xfs/xfs_vnodeops.c    |    3 +--
+ 7 files changed, 24 insertions(+), 32 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index d3a1974..854b27a 100644
+index b2795ba..172d3cc 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -196,7 +196,7 @@ xfs_buf_alloc(
- 	sema_init(&bp->b_sema, 0); /* held, no waiters */
- 	XB_SET_OWNER(bp);
- 	bp->b_target = target;
--	bp->b_file_offset = blkno << BBSHIFT;
-+
+@@ -65,11 +65,11 @@ xfs_buf_is_vmapped(
  	/*
- 	 * Set buffer_length and count_desired to the same value initially.
- 	 * I/O routines should use count_desired, which will be the same in
-@@ -337,8 +337,8 @@ xfs_buf_allocate_memory(
+ 	 * Return true if the buffer is vmapped.
+ 	 *
+-	 * The XBF_MAPPED flag is set if the buffer should be mapped, but the
+-	 * code is clever enough to know it doesn't have to map a single page,
+-	 * so the check has to be both for XBF_MAPPED and bp->b_page_count > 1.
++	 * b_addr is null if the buffer is not mapped, but the code is clever
++	 * enough to know it doesn't have to map a single page, so the check has
++	 * to be both for b_addr and bp->b_page_count > 1.
+ 	 */
+-	return (bp->b_flags & XBF_MAPPED) && bp->b_page_count > 1;
++	return bp->b_addr && bp->b_page_count > 1;
+ }
+ 
+ static inline int
+@@ -181,7 +181,7 @@ xfs_buf_alloc(
+ 	 * We don't want certain flags to appear in b_flags unless they are
+ 	 * specifically set by later operations on the buffer.
+ 	 */
+-	flags &= ~(XBF_MAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
++	flags &= ~(XBF_UNMAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
+ 
+ 	atomic_set(&bp->b_hold, 1);
+ 	atomic_set(&bp->b_lru_ref, 1);
+@@ -329,7 +329,7 @@ xfs_buf_allocate_memory(
+ 		bp->b_pages = bp->b_page_array;
+ 		bp->b_pages[0] = virt_to_page(bp->b_addr);
+ 		bp->b_page_count = 1;
+-		bp->b_flags |= XBF_MAPPED | _XBF_KMEM;
++		bp->b_flags |= _XBF_KMEM;
+ 		return 0;
  	}
  
- use_alloc_page:
--	end = bp->b_file_offset + bp->b_buffer_length;
--	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(bp->b_file_offset);
-+	end = BBTOB(bp->b_bn) + bp->b_buffer_length;
-+	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(BBTOB(bp->b_bn));
- 	error = _xfs_buf_get_pages(bp, page_count, flags);
- 	if (unlikely(error))
- 		return error;
-@@ -439,19 +439,17 @@ _xfs_buf_find(
- 	xfs_buf_flags_t		flags,
- 	xfs_buf_t		*new_bp)
- {
--	xfs_off_t		offset;
- 	size_t			numbytes;
- 	struct xfs_perag	*pag;
- 	struct rb_node		**rbp;
- 	struct rb_node		*parent;
- 	xfs_buf_t		*bp;
+@@ -399,8 +399,9 @@ _xfs_buf_map_pages(
+ 	if (bp->b_page_count == 1) {
+ 		/* A single page buffer is always mappable */
+ 		bp->b_addr = page_address(bp->b_pages[0]) + bp->b_offset;
+-		bp->b_flags |= XBF_MAPPED;
+-	} else if (flags & XBF_MAPPED) {
++	} else if (flags & XBF_UNMAPPED) {
++		bp->b_addr = NULL;
++	} else {
+ 		int retried = 0;
  
--	offset = BBTOB(blkno);
- 	numbytes = BBTOB(numblks);
+ 		do {
+@@ -414,7 +415,6 @@ _xfs_buf_map_pages(
+ 		if (!bp->b_addr)
+ 			return -ENOMEM;
+ 		bp->b_addr += bp->b_offset;
+-		bp->b_flags |= XBF_MAPPED;
+ 	}
  
- 	/* Check for IOs smaller than the sector size / not sector aligned */
- 	ASSERT(!(numbytes < (1 << btp->bt_sshift)));
--	ASSERT(!(offset & (xfs_off_t)btp->bt_smask));
-+	ASSERT(!(BBTOB(blkno) & (xfs_off_t)btp->bt_smask));
+ 	return 0;
+@@ -520,7 +520,7 @@ found:
+ 	 */
+ 	if (bp->b_flags & XBF_STALE) {
+ 		ASSERT((bp->b_flags & _XBF_DELWRI_Q) == 0);
+-		bp->b_flags &= XBF_MAPPED | _XBF_KMEM | _XBF_PAGES;
++		bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
+ 	}
  
- 	/* get tree root */
- 	pag = xfs_perag_get(btp->bt_mount,
-@@ -466,13 +464,13 @@ _xfs_buf_find(
- 		parent = *rbp;
- 		bp = rb_entry(parent, struct xfs_buf, b_rbnode);
+ 	trace_xfs_buf_find(bp, flags, _RET_IP_);
+@@ -575,7 +575,7 @@ xfs_buf_get(
+ 	bp->b_io_length = bp->b_length;
  
--		if (offset < bp->b_file_offset)
-+		if (blkno < bp->b_bn)
- 			rbp = &(*rbp)->rb_left;
--		else if (offset > bp->b_file_offset)
-+		else if (blkno > bp->b_bn)
- 			rbp = &(*rbp)->rb_right;
- 		else {
- 			/*
--			 * found a block offset match. If the range doesn't
-+			 * found a block number match. If the range doesn't
- 			 * match, the only way this is allowed is if the buffer
- 			 * in the cache is stale and the transaction that made
- 			 * it stale has not yet committed. i.e. we are
-@@ -718,7 +716,6 @@ xfs_buf_set_empty(
- 	bp->b_pages = NULL;
- 	bp->b_page_count = 0;
- 	bp->b_addr = NULL;
--	bp->b_file_offset = 0;
- 	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
+ found:
+-	if (!(bp->b_flags & XBF_MAPPED)) {
++	if (!bp->b_addr) {
+ 		error = _xfs_buf_map_pages(bp, flags);
+ 		if (unlikely(error)) {
+ 			xfs_warn(target->bt_mount,
+@@ -707,7 +707,6 @@ xfs_buf_set_empty(
+ 	bp->b_length = numblks;
+ 	bp->b_io_length = numblks;
  	bp->b_bn = XFS_BUF_DADDR_NULL;
- 	bp->b_flags &= ~XBF_MAPPED;
+-	bp->b_flags &= ~XBF_MAPPED;
+ }
+ 
+ static inline struct page *
+@@ -759,7 +758,6 @@ xfs_buf_associate_memory(
+ 
+ 	bp->b_io_length = BTOBB(len);
+ 	bp->b_length = BTOBB(buflen);
+-	bp->b_flags |= XBF_MAPPED;
+ 
+ 	return 0;
+ }
+@@ -790,7 +788,7 @@ xfs_buf_get_uncached(
+ 	}
+ 	bp->b_flags |= _XBF_PAGES;
+ 
+-	error = _xfs_buf_map_pages(bp, XBF_MAPPED);
++	error = _xfs_buf_map_pages(bp, 0);
+ 	if (unlikely(error)) {
+ 		xfs_warn(target->bt_mount,
+ 			"%s: failed to map pages\n", __func__);
+@@ -1287,7 +1285,7 @@ xfs_buf_offset(
+ {
+ 	struct page		*page;
+ 
+-	if (bp->b_flags & XBF_MAPPED)
++	if (bp->b_addr)
+ 		return bp->b_addr + offset;
+ 
+ 	offset += bp->b_offset;
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index ffd6da0..4d472e5 100644
+index 846dee3..7f1d139 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -116,7 +116,7 @@ typedef struct xfs_buf {
- 	 * fast-path on locking.
- 	 */
- 	struct rb_node		b_rbnode;	/* rbtree node */
--	xfs_off_t		b_file_offset;	/* offset in file */
-+	xfs_daddr_t		b_bn;		/* block number for I/O */
- 	size_t			b_buffer_length;/* size of buffer in bytes */
- 	atomic_t		b_hold;		/* reference count */
- 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-@@ -128,7 +128,6 @@ typedef struct xfs_buf {
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
--	xfs_daddr_t		b_bn;		/* block number for I/O */
- 	size_t			b_count_desired;/* desired transfer size */
- 	void			*b_addr;	/* virtual address of buffer */
- 	struct work_struct	b_iodone_work;
-@@ -245,8 +244,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
+@@ -41,7 +41,6 @@ typedef enum {
+ #define XBF_READ	(1 << 0) /* buffer intended for reading from device */
+ #define XBF_WRITE	(1 << 1) /* buffer intended for writing to device */
+ #define XBF_READ_AHEAD	(1 << 2) /* asynchronous read-ahead */
+-#define XBF_MAPPED	(1 << 3) /* buffer mapped (b_addr valid) */
+ #define XBF_ASYNC	(1 << 4) /* initiator will not wait for completion */
+ #define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
+ #define XBF_STALE	(1 << 6) /* buffer has been staled, do not find it */
+@@ -53,6 +52,7 @@ typedef enum {
  
- #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
- #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
--#define XFS_BUF_OFFSET(bp)		((bp)->b_file_offset)
--#define XFS_BUF_SET_OFFSET(bp, off)	((bp)->b_file_offset = (off))
- #define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
- #define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
- #define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
+ /* flags used only as arguments to access routines */
+ #define XBF_TRYLOCK	(1 << 16)/* lock requested, but do not wait */
++#define XBF_UNMAPPED	(1 << 17)/* do not map the buffer */
+ 
+ /* flags used only internally */
+ #define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
+@@ -65,7 +65,6 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_READ,		"READ" }, \
+ 	{ XBF_WRITE,		"WRITE" }, \
+ 	{ XBF_READ_AHEAD,	"READ_AHEAD" }, \
+-	{ XBF_MAPPED,		"MAPPED" }, \
+ 	{ XBF_ASYNC,		"ASYNC" }, \
+ 	{ XBF_DONE,		"DONE" }, \
+ 	{ XBF_STALE,		"STALE" }, \
+@@ -73,6 +72,7 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_FUA,		"FUA" }, \
+ 	{ XBF_FLUSH,		"FLUSH" }, \
+ 	{ XBF_TRYLOCK,		"TRYLOCK" }, 	/* should never be set */\
++	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 75593d9..c25b094 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -190,7 +190,7 @@ xfs_growfs_data_private(
+ 		 */
+ 		bp = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+-				 XFS_FSS_TO_BB(mp, 1), XBF_MAPPED);
++				 XFS_FSS_TO_BB(mp, 1), 0);
+ 		if (!bp) {
+ 			error = ENOMEM;
+ 			goto error0;
+@@ -227,7 +227,7 @@ xfs_growfs_data_private(
+ 		 */
+ 		bp = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+-				 XFS_FSS_TO_BB(mp, 1), XBF_MAPPED);
++				 XFS_FSS_TO_BB(mp, 1), 0);
+ 		if (!bp) {
+ 			error = ENOMEM;
+ 			goto error0;
+@@ -256,7 +256,7 @@ xfs_growfs_data_private(
+ 		 */
+ 		bp = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+-				 BTOBB(mp->m_sb.sb_blocksize), XBF_MAPPED);
++				 BTOBB(mp->m_sb.sb_blocksize), 0);
+ 		if (!bp) {
+ 			error = ENOMEM;
+ 			goto error0;
+@@ -282,7 +282,7 @@ xfs_growfs_data_private(
+ 		 */
+ 		bp = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+-				 BTOBB(mp->m_sb.sb_blocksize), XBF_MAPPED);
++				 BTOBB(mp->m_sb.sb_blocksize), 0);
+ 		if (!bp) {
+ 			error = ENOMEM;
+ 			goto error0;
+@@ -309,7 +309,7 @@ xfs_growfs_data_private(
+ 		 */
+ 		bp = xfs_buf_get(mp->m_ddev_targp,
+ 				 XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+-				 BTOBB(mp->m_sb.sb_blocksize), XBF_MAPPED);
++				 BTOBB(mp->m_sb.sb_blocksize), 0);
+ 		if (!bp) {
+ 			error = ENOMEM;
+ 			goto error0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 72ec1a4..a59eea0 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -150,6 +150,7 @@ xfs_imap_to_bp(
+ 	int		ni;
+ 	xfs_buf_t	*bp;
+ 
++	buf_flags |= XBF_UNMAPPED;
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+ 				   (int)imap->im_len, buf_flags, &bp);
+ 	if (error) {
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 574e2e9..d7abe5f 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -2127,8 +2127,8 @@ xlog_recover_buffer_pass2(
+ 	trace_xfs_log_recover_buf_recover(log, buf_f);
+ 
+ 	buf_flags = 0;
+-	if (!(buf_f->blf_flags & XFS_BLF_INODE_BUF))
+-		buf_flags |= XBF_MAPPED;
++	if (buf_f->blf_flags & XFS_BLF_INODE_BUF)
++		buf_flags |= XBF_UNMAPPED;
+ 
+ 	bp = xfs_buf_read(mp->m_ddev_targp, buf_f->blf_blkno, buf_f->blf_len,
+ 			  buf_flags);
+diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
+index d250afa..21c5a5e 100644
+--- a/fs/xfs/xfs_trans_buf.c
++++ b/fs/xfs/xfs_trans_buf.c
+@@ -138,9 +138,6 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
+ 	xfs_buf_t		*bp;
+ 	xfs_buf_log_item_t	*bip;
+ 
+-	if (flags == 0)
+-		flags = XBF_MAPPED;
+-
+ 	/*
+ 	 * Default to a normal get_buf() call if the tp is NULL.
+ 	 */
+@@ -264,9 +261,6 @@ xfs_trans_read_buf(
+ 
+ 	*bpp = NULL;
+ 
+-	if (flags == 0)
+-		flags = XBF_MAPPED;
+-
+ 	/*
+ 	 * Default to a normal get_buf() call if the tp is NULL.
+ 	 */
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 5b3f5b1..82b000f 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -79,8 +79,7 @@ xfs_readlink_bmap(
+ 		d = XFS_FSB_TO_DADDR(mp, mval[n].br_startblock);
+ 		byte_cnt = XFS_FSB_TO_B(mp, mval[n].br_blockcount);
+ 
+-		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt),
+-				  XBF_MAPPED);
++		bp = xfs_buf_read(mp->m_ddev_targp, d, BTOBB(byte_cnt), 0);
+ 		if (!bp)
+ 			return XFS_ERROR(ENOMEM);
+ 		error = bp->b_error;
 -- 
 1.7.9.5
 
