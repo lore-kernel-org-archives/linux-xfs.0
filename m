@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3N5xbGJ127601 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:38 -0500
+	q3N5xpVl127718 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:51 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xfyFciFqIK2XFGpH for <xfs@oss.sgi.com>;
-	Sun, 22 Apr 2012 22:59:35 -0700 (PDT)
+	h6apml6u5mgUqyM5 for <xfs@oss.sgi.com>;
+	Sun, 22 Apr 2012 22:59:49 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMCJ9-0001ay-UN
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:31 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SMCJK-0001bD-56
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:42 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMCJ9-0004YU-0s
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:31 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SMCJF-0004Ys-1i
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:37 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 22/37] xfs: use blocks for storing the desired IO size
-Date: Mon, 23 Apr 2012 15:58:52 +1000
-Message-Id: <1335160747-17254-23-git-send-email-david@fromorbit.com>
+Subject: [PATCH 30/37] xfs: clean up busy extent naming
+Date: Mon, 23 Apr 2012 15:59:00 +1000
+Message-Id: <1335160747-17254-31-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,372 +33,469 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Now that we pass block counts everywhere, and index buffers by block
-number and length in units of blocks, convert the desired IO size
-into block counts rather than bytes. Convert the code to use block
-counts, and those that need byte counts get converted at the time of
-use.
+From: Dave Chinner <dchinner@redhat.com>
 
-Rename the b_desired_count variable to something closer to it's
-purpose - b_io_length - as it is only used to specify the length of
-an IO for a subset of the buffer.  The only time this is used is for
-log IO - both writing iclogs and during log recovery. In all other
-cases, the b_io_length matches b_length, and hence a lot of code
-confuses the two. e.g. the buf item code uses the io count
-exclusively when it should be using the buffer length. Fix these
-apprpriately as they are found.
-
-Also, remove the XFS_BUF_{SET_}COUNT() macros that are just wrappers
-around the desired IO length. They only serve to make the code
-shouty loud, don't actually add any real value, and are often used
-incorrectly.
+Now that the busy extent tracking has been moved out of the
+allocation files, clean up the namespace it uses to
+"xfs_extent_busy" rather than a mix of "xfs_busy" and
+"xfs_alloc_busy".
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_buf.c         |   26 +++++++++++++-------------
- fs/xfs/xfs_buf.h         |    4 +---
- fs/xfs/xfs_buf_item.c    |   15 ++++++++-------
- fs/xfs/xfs_da_btree.c    |   16 ++++++++--------
- fs/xfs/xfs_log.c         |    2 +-
- fs/xfs/xfs_log_recover.c |   15 ++++++++-------
- fs/xfs/xfs_trans_buf.c   |    4 ++--
- 7 files changed, 41 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_alloc.c       |   12 ++++----
+ fs/xfs/xfs_alloc_btree.c |    6 ++--
+ fs/xfs/xfs_discard.c     |    4 +--
+ fs/xfs/xfs_extent_busy.c |   76 +++++++++++++++++++++++-----------------------
+ fs/xfs/xfs_log_cil.c     |    6 ++--
+ fs/xfs/xfs_trace.h       |   16 +++++-----
+ fs/xfs/xfs_trans.c       |    4 +--
+ 7 files changed, 62 insertions(+), 62 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 382c49a..ab3c449 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -198,12 +198,12 @@ xfs_buf_alloc(
- 	bp->b_target = target;
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index ae6df25..588496d 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -47,7 +47,7 @@ STATIC int xfs_alloc_ag_vextent_near(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+-STATIC void xfs_alloc_busy_trim(struct xfs_alloc_arg *,
++STATIC void xfs_extent_busy_trim(struct xfs_alloc_arg *,
+ 		xfs_agblock_t, xfs_extlen_t, xfs_agblock_t *, xfs_extlen_t *);
  
+ /*
+@@ -152,7 +152,7 @@ xfs_alloc_compute_aligned(
+ 	xfs_extlen_t	len;
+ 
+ 	/* Trim busy sections out of found extent */
+-	xfs_alloc_busy_trim(args, foundbno, foundlen, &bno, &len);
++	xfs_extent_busy_trim(args, foundbno, foundlen, &bno, &len);
+ 
+ 	if (args->alignment > 1 && len >= args->minlen) {
+ 		xfs_agblock_t	aligned_bno = roundup(bno, args->alignment);
+@@ -536,7 +536,7 @@ xfs_alloc_ag_vextent(
+ 		if (error)
+ 			return error;
+ 
+-		ASSERT(!xfs_alloc_busy_search(args->mp, args->agno,
++		ASSERT(!xfs_extent_busy_search(args->mp, args->agno,
+ 					      args->agbno, args->len));
+ 	}
+ 
+@@ -603,7 +603,7 @@ xfs_alloc_ag_vextent_exact(
  	/*
--	 * Set length and count_desired to the same value initially.
--	 * I/O routines should use count_desired, which will be the same in
-+	 * Set length and io_length to the same value initially.
-+	 * I/O routines should use io_length, which will be the same in
- 	 * most cases but may be reset (e.g. XFS recovery).
+ 	 * Check for overlapping busy extents.
  	 */
- 	bp->b_length = numblks;
--	bp->b_count_desired = numblks << BBSHIFT;
-+	bp->b_io_length = numblks;
- 	bp->b_flags = flags;
+-	xfs_alloc_busy_trim(args, fbno, flen, &tbno, &tlen);
++	xfs_extent_busy_trim(args, fbno, flen, &tbno, &tlen);
  
  	/*
-@@ -302,7 +302,7 @@ xfs_buf_allocate_memory(
- 	xfs_buf_t		*bp,
- 	uint			flags)
- {
--	size_t			size = bp->b_count_desired;
-+	size_t			size;
- 	size_t			nbytes, offset;
- 	gfp_t			gfp_mask = xb_to_gfp(flags);
- 	unsigned short		page_count, i;
-@@ -345,6 +345,7 @@ use_alloc_page:
+ 	 * Give up if the start of the extent is busy, or the freespace isn't
+@@ -1391,7 +1391,7 @@ xfs_alloc_ag_vextent_small(
+ 		if (error)
+ 			goto error0;
+ 		if (fbno != NULLAGBLOCK) {
+-			xfs_alloc_busy_reuse(args->mp, args->agno, fbno, 1,
++			xfs_extent_busy_reuse(args->mp, args->agno, fbno, 1,
+ 					     args->userdata);
+ 
+ 			if (args->userdata) {
+@@ -2496,7 +2496,7 @@ xfs_free_extent(
+ 
+ 	error = xfs_free_ag_extent(tp, args.agbp, args.agno, args.agbno, len, 0);
+ 	if (!error)
+-		xfs_alloc_busy_insert(tp, args.agno, args.agbno, len, 0);
++		xfs_extent_busy_insert(tp, args.agno, args.agbno, len, 0);
+ error0:
+ 	xfs_perag_put(args.pag);
+ 	return error;
+diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
+index 3f66548..68ebabc 100644
+--- a/fs/xfs/xfs_alloc_btree.c
++++ b/fs/xfs/xfs_alloc_btree.c
+@@ -94,7 +94,7 @@ xfs_allocbt_alloc_block(
+ 		return 0;
+ 	}
+ 
+-	xfs_alloc_busy_reuse(cur->bc_mp, cur->bc_private.a.agno, bno, 1, false);
++	xfs_extent_busy_reuse(cur->bc_mp, cur->bc_private.a.agno, bno, 1, false);
+ 
+ 	xfs_trans_agbtree_delta(cur->bc_tp, 1);
+ 	new->s = cpu_to_be32(bno);
+@@ -119,8 +119,8 @@ xfs_allocbt_free_block(
+ 	if (error)
  		return error;
  
- 	offset = bp->b_offset;
-+	size = BBTOB(bp->b_length);
- 	bp->b_flags |= _XBF_PAGES;
- 
- 	for (i = 0; i < bp->b_page_count; i++) {
-@@ -575,7 +576,7 @@ xfs_buf_get(
- 	 * that we can do IO on it.
- 	 */
- 	bp->b_bn = blkno;
--	bp->b_count_desired = BBTOB(bp->b_length);
-+	bp->b_io_length = bp->b_length;
- 
- found:
- 	if (!(bp->b_flags & XBF_MAPPED)) {
-@@ -718,7 +719,7 @@ xfs_buf_set_empty(
- 	bp->b_page_count = 0;
- 	bp->b_addr = NULL;
- 	bp->b_length = numblks;
--	bp->b_count_desired = numblks << BBSHIFT;
-+	bp->b_io_length = numblks;
- 	bp->b_bn = XFS_BUF_DADDR_NULL;
- 	bp->b_flags &= ~XBF_MAPPED;
+-	xfs_alloc_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
+-			      XFS_ALLOC_BUSY_SKIP_DISCARD);
++	xfs_extent_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
++			      XFS_EXTENT_BUSY_SKIP_DISCARD);
+ 	xfs_trans_agbtree_delta(cur->bc_tp, -1);
+ 	return 0;
  }
-@@ -770,7 +771,7 @@ xfs_buf_associate_memory(
- 		pageaddr += PAGE_SIZE;
- 	}
- 
--	bp->b_count_desired = len;
-+	bp->b_io_length = BTOBB(len);
- 	bp->b_length = BTOBB(buflen);
- 	bp->b_flags |= XBF_MAPPED;
- 
-@@ -1012,9 +1013,8 @@ xfs_buf_ioerror_alert(
- 	const char		*func)
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index e3f1abe..f9c3fe3 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -118,7 +118,7 @@ xfs_trim_extents(
+ 		 * If any blocks in the range are still busy, skip the
+ 		 * discard and try again the next time.
+ 		 */
+-		if (xfs_alloc_busy_search(mp, agno, fbno, flen)) {
++		if (xfs_extent_busy_search(mp, agno, fbno, flen)) {
+ 			trace_xfs_discard_busy(mp, agno, fbno, flen);
+ 			goto next_extent;
+ 		}
+@@ -212,7 +212,7 @@ xfs_discard_extents(
+ 	struct xfs_mount	*mp,
+ 	struct list_head	*list)
  {
- 	xfs_alert(bp->b_target->bt_mount,
--"metadata I/O error: block 0x%llx (\"%s\") error %d buf count %zd",
--		(__uint64_t)XFS_BUF_ADDR(bp), func,
--		bp->b_error, XFS_BUF_COUNT(bp));
-+"metadata I/O error: block 0x%llx (\"%s\") error %d numblks %d",
-+		(__uint64_t)XFS_BUF_ADDR(bp), func, bp->b_error, bp->b_length);
- }
+-	struct xfs_busy_extent	*busyp;
++	struct xfs_extent_busy	*busyp;
+ 	int			error = 0;
  
+ 	list_for_each_entry(busyp, list, list) {
+diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+index 388a4b0..80c99d1 100644
+--- a/fs/xfs/xfs_extent_busy.c
++++ b/fs/xfs/xfs_extent_busy.c
+@@ -32,27 +32,27 @@
+ #include "xfs_trace.h"
+ 
+ void
+-xfs_alloc_busy_insert(
++xfs_extent_busy_insert(
+ 	struct xfs_trans	*tp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		bno,
+ 	xfs_extlen_t		len,
+ 	unsigned int		flags)
+ {
+-	struct xfs_busy_extent	*new;
+-	struct xfs_busy_extent	*busyp;
++	struct xfs_extent_busy	*new;
++	struct xfs_extent_busy	*busyp;
+ 	struct xfs_perag	*pag;
+ 	struct rb_node		**rbp;
+ 	struct rb_node		*parent = NULL;
+ 
+-	new = kmem_zalloc(sizeof(struct xfs_busy_extent), KM_MAYFAIL);
++	new = kmem_zalloc(sizeof(struct xfs_extent_busy), KM_MAYFAIL);
+ 	if (!new) {
+ 		/*
+ 		 * No Memory!  Since it is now not possible to track the free
+ 		 * block, make this a synchronous transaction to insure that
+ 		 * the block is not reused before this transaction commits.
+ 		 */
+-		trace_xfs_alloc_busy_enomem(tp->t_mountp, agno, bno, len);
++		trace_xfs_extent_busy_enomem(tp->t_mountp, agno, bno, len);
+ 		xfs_trans_set_sync(tp);
+ 		return;
+ 	}
+@@ -64,14 +64,14 @@ xfs_alloc_busy_insert(
+ 	new->flags = flags;
+ 
+ 	/* trace before insert to be able to see failed inserts */
+-	trace_xfs_alloc_busy(tp->t_mountp, agno, bno, len);
++	trace_xfs_extent_busy(tp->t_mountp, agno, bno, len);
+ 
+ 	pag = xfs_perag_get(tp->t_mountp, new->agno);
+ 	spin_lock(&pag->pagb_lock);
+ 	rbp = &pag->pagb_tree.rb_node;
+ 	while (*rbp) {
+ 		parent = *rbp;
+-		busyp = rb_entry(parent, struct xfs_busy_extent, rb_node);
++		busyp = rb_entry(parent, struct xfs_extent_busy, rb_node);
+ 
+ 		if (new->bno < busyp->bno) {
+ 			rbp = &(*rbp)->rb_left;
+@@ -95,14 +95,14 @@ xfs_alloc_busy_insert(
+ /*
+  * Search for a busy extent within the range of the extent we are about to
+  * allocate.  You need to be holding the busy extent tree lock when calling
+- * xfs_alloc_busy_search(). This function returns 0 for no overlapping busy
++ * xfs_extent_busy_search(). This function returns 0 for no overlapping busy
+  * extent, -1 for an overlapping but not exact busy extent, and 1 for an exact
+  * match. This is done so that a non-zero return indicates an overlap that
+  * will require a synchronous transaction, but it can still be
+  * used to distinguish between a partial or exact match.
+  */
  int
-@@ -1186,7 +1186,7 @@ _xfs_buf_ioapply(
- 	int			rw, map_i, total_nr_pages, nr_pages;
- 	struct bio		*bio;
- 	int			offset = bp->b_offset;
--	int			size = bp->b_count_desired;
-+	int			size = BBTOB(bp->b_io_length);
- 	sector_t		sector = bp->b_bn;
- 
- 	total_nr_pages = bp->b_page_count;
-@@ -1234,7 +1234,7 @@ next_chunk:
- 			break;
- 
- 		offset = 0;
--		sector += nbytes >> BBSHIFT;
-+		sector += BTOBB(nbytes);
- 		size -= nbytes;
- 		total_nr_pages--;
- 	}
-@@ -1328,7 +1328,7 @@ xfs_buf_iomove(
- 		page = bp->b_pages[xfs_buf_btoct(boff + bp->b_offset)];
- 		cpoff = xfs_buf_poff(boff + bp->b_offset);
- 		csize = min_t(size_t,
--			      PAGE_SIZE-cpoff, bp->b_count_desired-boff);
-+			      PAGE_SIZE - cpoff, BBTOB(bp->b_io_length) - boff);
- 
- 		ASSERT(((csize + cpoff) <= PAGE_SIZE));
- 
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 3dab208..9787645 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -128,7 +128,6 @@ typedef struct xfs_buf {
- 	struct list_head	b_list;
- 	struct xfs_perag	*b_pag;		/* contains rbtree root */
- 	xfs_buftarg_t		*b_target;	/* buffer target (device) */
--	size_t			b_count_desired;/* desired transfer size */
- 	void			*b_addr;	/* virtual address of buffer */
- 	struct work_struct	b_iodone_work;
- 	xfs_buf_iodone_t	b_iodone;	/* I/O completion function */
-@@ -137,6 +136,7 @@ typedef struct xfs_buf {
- 	struct xfs_trans	*b_transp;
- 	struct page		**b_pages;	/* array of page pointers */
- 	struct page		*b_page_array[XB_PAGES]; /* inline pages */
-+	int			b_io_length;	/* IO size in BBs */
- 	atomic_t		b_pin_count;	/* pin count */
- 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
- 	unsigned int		b_page_count;	/* size of page array */
-@@ -244,8 +244,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
- 
- #define XFS_BUF_ADDR(bp)		((bp)->b_bn)
- #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
--#define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
--#define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
- 
- static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+-xfs_alloc_busy_search(
++xfs_extent_busy_search(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		bno,
+@@ -110,7 +110,7 @@ xfs_alloc_busy_search(
  {
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 7f0abea..a25206c 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -123,11 +123,11 @@ xfs_buf_item_log_check(
- 	ASSERT(bip->bli_logged != NULL);
+ 	struct xfs_perag	*pag;
+ 	struct rb_node		*rbp;
+-	struct xfs_busy_extent	*busyp;
++	struct xfs_extent_busy	*busyp;
+ 	int			match = 0;
  
- 	bp = bip->bli_buf;
--	ASSERT(XFS_BUF_COUNT(bp) > 0);
-+	ASSERT(bp->b_length > 0);
- 	ASSERT(bp->b_addr != NULL);
- 	orig = bip->bli_orig;
- 	buffer = bp->b_addr;
--	for (x = 0; x < XFS_BUF_COUNT(bp); x++) {
-+	for (x = 0; x < BBTOB(bp->b_length); x++) {
- 		if (orig[x] != buffer[x] && !btst(bip->bli_logged, x)) {
- 			xfs_emerg(bp->b_mount,
- 				"%s: bip %x buffer %x orig %x index %d",
-@@ -657,7 +657,8 @@ xfs_buf_item_init(
- 	 * truncate any pieces.  map_size is the size of the
- 	 * bitmap needed to describe the chunks of the buffer.
+ 	pag = xfs_perag_get(mp, agno);
+@@ -120,7 +120,7 @@ xfs_alloc_busy_search(
+ 
+ 	/* find closest start bno overlap */
+ 	while (rbp) {
+-		busyp = rb_entry(rbp, struct xfs_busy_extent, rb_node);
++		busyp = rb_entry(rbp, struct xfs_extent_busy, rb_node);
+ 		if (bno < busyp->bno) {
+ 			/* may overlap, but exact start block is lower */
+ 			if (bno + len > busyp->bno)
+@@ -154,10 +154,10 @@ xfs_alloc_busy_search(
+  * needs to be restarted.
+  */
+ STATIC bool
+-xfs_alloc_busy_update_extent(
++xfs_extent_busy_update_extent(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_perag	*pag,
+-	struct xfs_busy_extent	*busyp,
++	struct xfs_extent_busy	*busyp,
+ 	xfs_agblock_t		fbno,
+ 	xfs_extlen_t		flen,
+ 	bool			userdata)
+@@ -171,7 +171,7 @@ xfs_alloc_busy_update_extent(
+ 	 * performing the discard a chance to mark the extent unbusy
+ 	 * and retry.
  	 */
--	chunks = (int)((XFS_BUF_COUNT(bp) + (XFS_BLF_CHUNK - 1)) >> XFS_BLF_SHIFT);
-+	chunks = (int)((BBTOB(bp->b_length) + (XFS_BLF_CHUNK - 1)) >>
-+								XFS_BLF_SHIFT);
- 	map_size = (int)((chunks + NBWORD) >> BIT_TO_WORD_SHIFT);
- 
- 	bip = (xfs_buf_log_item_t*)kmem_zone_zalloc(xfs_buf_item_zone,
-@@ -667,7 +668,7 @@ xfs_buf_item_init(
- 	xfs_buf_hold(bp);
- 	bip->bli_format.blf_type = XFS_LI_BUF;
- 	bip->bli_format.blf_blkno = (__int64_t)XFS_BUF_ADDR(bp);
--	bip->bli_format.blf_len = (ushort)BTOBB(XFS_BUF_COUNT(bp));
-+	bip->bli_format.blf_len = (ushort)bp->b_length;
- 	bip->bli_format.blf_map_size = map_size;
- 
- #ifdef XFS_TRANS_DEBUG
-@@ -679,9 +680,9 @@ xfs_buf_item_init(
- 	 * the buffer to indicate which bytes the callers have asked
- 	 * to have logged.
- 	 */
--	bip->bli_orig = (char *)kmem_alloc(XFS_BUF_COUNT(bp), KM_SLEEP);
--	memcpy(bip->bli_orig, bp->b_addr, XFS_BUF_COUNT(bp));
--	bip->bli_logged = (char *)kmem_zalloc(XFS_BUF_COUNT(bp) / NBBY, KM_SLEEP);
-+	bip->bli_orig = kmem_alloc(BBTOB(bp->b_length), KM_SLEEP);
-+	memcpy(bip->bli_orig, bp->b_addr, BBTOB(bp->b_length));
-+	bip->bli_logged = kmem_zalloc(BBTOB(bp->b_length) / NBBY, KM_SLEEP);
- #endif
- 
- 	/*
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index 7f1a6f5..b8adc79 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -2277,20 +2277,20 @@ xfs_da_buf_make(int nbuf, xfs_buf_t **bps)
- 	if (nbuf == 1) {
- 		dabuf->nbuf = 1;
- 		bp = bps[0];
--		dabuf->bbcount = (short)BTOBB(XFS_BUF_COUNT(bp));
-+		dabuf->bbcount = bp->b_length;
- 		dabuf->data = bp->b_addr;
- 		dabuf->bps[0] = bp;
- 	} else {
- 		dabuf->nbuf = nbuf;
- 		for (i = 0, dabuf->bbcount = 0; i < nbuf; i++) {
- 			dabuf->bps[i] = bp = bps[i];
--			dabuf->bbcount += BTOBB(XFS_BUF_COUNT(bp));
-+			dabuf->bbcount += bp->b_length;
- 		}
- 		dabuf->data = kmem_alloc(BBTOB(dabuf->bbcount), KM_SLEEP);
--		for (i = off = 0; i < nbuf; i++, off += XFS_BUF_COUNT(bp)) {
-+		for (i = off = 0; i < nbuf; i++, off += BBTOB(bp->b_length)) {
- 			bp = bps[i];
- 			memcpy((char *)dabuf->data + off, bp->b_addr,
--				XFS_BUF_COUNT(bp));
-+				BBTOB(bp->b_length));
- 		}
+-	if (busyp->flags & XFS_ALLOC_BUSY_DISCARDED) {
++	if (busyp->flags & XFS_EXTENT_BUSY_DISCARDED) {
+ 		spin_unlock(&pag->pagb_lock);
+ 		delay(1);
+ 		spin_lock(&pag->pagb_lock);
+@@ -285,13 +285,13 @@ xfs_alloc_busy_update_extent(
+ 		ASSERT(0);
  	}
- 	return dabuf;
-@@ -2310,10 +2310,10 @@ xfs_da_buf_clean(xfs_dabuf_t *dabuf)
- 		ASSERT(dabuf->nbuf > 1);
- 		dabuf->dirty = 0;
- 		for (i = off = 0; i < dabuf->nbuf;
--				i++, off += XFS_BUF_COUNT(bp)) {
-+				i++, off += BBTOB(bp->b_length)) {
- 			bp = dabuf->bps[i];
- 			memcpy(bp->b_addr, dabuf->data + off,
--						XFS_BUF_COUNT(bp));
-+						BBTOB(bp->b_length));
- 		}
- 	}
+ 
+-	trace_xfs_alloc_busy_reuse(mp, pag->pag_agno, fbno, flen);
++	trace_xfs_extent_busy_reuse(mp, pag->pag_agno, fbno, flen);
+ 	return true;
+ 
+ out_force_log:
+ 	spin_unlock(&pag->pagb_lock);
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+-	trace_xfs_alloc_busy_force(mp, pag->pag_agno, fbno, flen);
++	trace_xfs_extent_busy_force(mp, pag->pag_agno, fbno, flen);
+ 	spin_lock(&pag->pagb_lock);
+ 	return false;
  }
-@@ -2356,10 +2356,10 @@ xfs_da_log_buf(xfs_trans_t *tp, xfs_dabuf_t *dabuf, uint first, uint last)
+@@ -301,7 +301,7 @@ out_force_log:
+  * For a given extent [fbno, flen], make sure we can reuse it safely.
+  */
+ void
+-xfs_alloc_busy_reuse(
++xfs_extent_busy_reuse(
+ 	struct xfs_mount	*mp,
+ 	xfs_agnumber_t		agno,
+ 	xfs_agblock_t		fbno,
+@@ -318,8 +318,8 @@ xfs_alloc_busy_reuse(
+ restart:
+ 	rbp = pag->pagb_tree.rb_node;
+ 	while (rbp) {
+-		struct xfs_busy_extent *busyp =
+-			rb_entry(rbp, struct xfs_busy_extent, rb_node);
++		struct xfs_extent_busy *busyp =
++			rb_entry(rbp, struct xfs_extent_busy, rb_node);
+ 		xfs_agblock_t	bbno = busyp->bno;
+ 		xfs_agblock_t	bend = bbno + busyp->length;
+ 
+@@ -331,7 +331,7 @@ restart:
+ 			continue;
+ 		}
+ 
+-		if (!xfs_alloc_busy_update_extent(mp, pag, busyp, fbno, flen,
++		if (!xfs_extent_busy_update_extent(mp, pag, busyp, fbno, flen,
+ 						  userdata))
+ 			goto restart;
  	}
- 	dabuf->dirty = 1;
- 	ASSERT(first <= last);
--	for (i = off = 0; i < dabuf->nbuf; i++, off += XFS_BUF_COUNT(bp)) {
-+	for (i = off = 0; i < dabuf->nbuf; i++, off += BBTOB(bp->b_length)) {
- 		bp = dabuf->bps[i];
- 		f = off;
--		l = f + XFS_BUF_COUNT(bp) - 1;
-+		l = f + BBTOB(bp->b_length) - 1;
- 		if (f < first)
- 			f = first;
- 		if (l > last)
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index f9d8355..5e2aa52 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1487,7 +1487,7 @@ xlog_sync(xlog_t		*log,
- 	} else {
- 		iclog->ic_bwritecnt = 1;
+@@ -346,7 +346,7 @@ restart:
+  * code needs to force out the log and retry the allocation.
+  */
+ STATIC void
+-xfs_alloc_busy_trim(
++xfs_extent_busy_trim(
+ 	struct xfs_alloc_arg	*args,
+ 	xfs_agblock_t		bno,
+ 	xfs_extlen_t		len,
+@@ -365,8 +365,8 @@ restart:
+ 	flen = len;
+ 	rbp = args->pag->pagb_tree.rb_node;
+ 	while (rbp && flen >= args->minlen) {
+-		struct xfs_busy_extent *busyp =
+-			rb_entry(rbp, struct xfs_busy_extent, rb_node);
++		struct xfs_extent_busy *busyp =
++			rb_entry(rbp, struct xfs_extent_busy, rb_node);
+ 		xfs_agblock_t	fend = fbno + flen;
+ 		xfs_agblock_t	bbno = busyp->bno;
+ 		xfs_agblock_t	bend = bbno + busyp->length;
+@@ -384,8 +384,8 @@ restart:
+ 		 * extent instead of trimming the allocation.
+ 		 */
+ 		if (!args->userdata &&
+-		    !(busyp->flags & XFS_ALLOC_BUSY_DISCARDED)) {
+-			if (!xfs_alloc_busy_update_extent(args->mp, args->pag,
++		    !(busyp->flags & XFS_EXTENT_BUSY_DISCARDED)) {
++			if (!xfs_extent_busy_update_extent(args->mp, args->pag,
+ 							  busyp, fbno, flen,
+ 							  false))
+ 				goto restart;
+@@ -517,7 +517,7 @@ restart:
+ 	spin_unlock(&args->pag->pagb_lock);
+ 
+ 	if (fbno != bno || flen != len) {
+-		trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len,
++		trace_xfs_extent_busy_trim(args->mp, args->agno, bno, len,
+ 					  fbno, flen);
  	}
--	XFS_BUF_SET_COUNT(bp, count);
-+	bp->b_io_length = BTOBB(count);
- 	bp->b_fspriv = iclog;
- 	XFS_BUF_ZEROFLAGS(bp);
- 	XFS_BUF_ASYNC(bp);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 15b7470..0872d71 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -178,7 +178,7 @@ xlog_bread_noalign(
- 
- 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
- 	XFS_BUF_READ(bp);
--	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
-+	bp->b_io_length = nbblks;
- 	bp->b_error = 0;
- 
- 	xfsbdstrat(log->l_mp, bp);
-@@ -266,7 +266,7 @@ xlog_bwrite(
- 	XFS_BUF_ZEROFLAGS(bp);
- 	xfs_buf_hold(bp);
- 	xfs_buf_lock(bp);
--	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
-+	bp->b_io_length = nbblks;
- 	bp->b_error = 0;
- 
- 	error = xfs_bwrite(bp);
-@@ -1774,7 +1774,7 @@ xlog_recover_do_inode_buffer(
- 
- 	trace_xfs_log_recover_buf_inode_buf(mp->m_log, buf_f);
- 
--	inodes_per_buf = XFS_BUF_COUNT(bp) >> mp->m_sb.sb_inodelog;
-+	inodes_per_buf = BBTOB(bp->b_io_length) >> mp->m_sb.sb_inodelog;
- 	for (i = 0; i < inodes_per_buf; i++) {
- 		next_unlinked_offset = (i * mp->m_sb.sb_inodesize) +
- 			offsetof(xfs_dinode_t, di_next_unlinked);
-@@ -1816,7 +1816,8 @@ xlog_recover_do_inode_buffer(
- 
- 		ASSERT(item->ri_buf[item_index].i_addr != NULL);
- 		ASSERT((item->ri_buf[item_index].i_len % XFS_BLF_CHUNK) == 0);
--		ASSERT((reg_buf_offset + reg_buf_bytes) <= XFS_BUF_COUNT(bp));
-+		ASSERT((reg_buf_offset + reg_buf_bytes) <=
-+							BBTOB(bp->b_io_length));
- 
- 		/*
- 		 * The current logged region contains a copy of the
-@@ -1875,8 +1876,8 @@ xlog_recover_do_reg_buffer(
- 		ASSERT(nbits > 0);
- 		ASSERT(item->ri_buf[i].i_addr != NULL);
- 		ASSERT(item->ri_buf[i].i_len % XFS_BLF_CHUNK == 0);
--		ASSERT(XFS_BUF_COUNT(bp) >=
--		       ((uint)bit << XFS_BLF_SHIFT)+(nbits<<XFS_BLF_SHIFT));
-+		ASSERT(BBTOB(bp->b_io_length) >=
-+		       ((uint)bit << XFS_BLF_SHIFT) + (nbits << XFS_BLF_SHIFT));
- 
- 		/*
- 		 * Do a sanity check if this is a dquot buffer. Just checking
-@@ -2169,7 +2170,7 @@ xlog_recover_buffer_pass2(
+ 	*rbno = fbno;
+@@ -529,19 +529,19 @@ fail:
+ 	 * re-check if the trimmed extent satisfies the minlen requirement.
  	 */
- 	if (XFS_DINODE_MAGIC ==
- 	    be16_to_cpu(*((__be16 *)xfs_buf_offset(bp, 0))) &&
--	    (XFS_BUF_COUNT(bp) != MAX(log->l_mp->m_sb.sb_blocksize,
-+	    (BBTOB(bp->b_io_length) != MAX(log->l_mp->m_sb.sb_blocksize,
- 			(__uint32_t)XFS_INODE_CLUSTER_SIZE(log->l_mp)))) {
- 		xfs_buf_stale(bp);
- 		error = xfs_bwrite(bp);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 9132d16..2ec196b 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -56,7 +56,7 @@ xfs_trans_buf_item_match(
- 		if (blip->bli_item.li_type == XFS_LI_BUF &&
- 		    blip->bli_buf->b_target == target &&
- 		    XFS_BUF_ADDR(blip->bli_buf) == blkno &&
--		    XFS_BUF_COUNT(blip->bli_buf) == len)
-+		    BBTOB(blip->bli_buf->b_length) == len)
- 			return blip->bli_buf;
+ 	spin_unlock(&args->pag->pagb_lock);
+-	trace_xfs_alloc_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
++	trace_xfs_extent_busy_trim(args->mp, args->agno, bno, len, fbno, 0);
+ 	*rbno = fbno;
+ 	*rlen = 0;
+ }
+ 
+ static void
+-xfs_alloc_busy_clear_one(
++xfs_extent_busy_clear_one(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_perag	*pag,
+-	struct xfs_busy_extent	*busyp)
++	struct xfs_extent_busy	*busyp)
+ {
+ 	if (busyp->length) {
+-		trace_xfs_alloc_busy_clear(mp, busyp->agno, busyp->bno,
++		trace_xfs_extent_busy_clear(mp, busyp->agno, busyp->bno,
+ 						busyp->length);
+ 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
+ 	}
+@@ -556,12 +556,12 @@ xfs_alloc_busy_clear_one(
+  * these as undergoing a discard operation instead.
+  */
+ void
+-xfs_alloc_busy_clear(
++xfs_extent_busy_clear(
+ 	struct xfs_mount	*mp,
+ 	struct list_head	*list,
+ 	bool			do_discard)
+ {
+-	struct xfs_busy_extent	*busyp, *n;
++	struct xfs_extent_busy	*busyp, *n;
+ 	struct xfs_perag	*pag = NULL;
+ 	xfs_agnumber_t		agno = NULLAGNUMBER;
+ 
+@@ -577,10 +577,10 @@ xfs_alloc_busy_clear(
+ 		}
+ 
+ 		if (do_discard && busyp->length &&
+-		    !(busyp->flags & XFS_ALLOC_BUSY_SKIP_DISCARD))
+-			busyp->flags = XFS_ALLOC_BUSY_DISCARDED;
++		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD))
++			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
+ 		else
+-			xfs_alloc_busy_clear_one(mp, pag, busyp);
++			xfs_extent_busy_clear_one(mp, pag, busyp);
  	}
  
-@@ -585,7 +585,7 @@ xfs_trans_log_buf(xfs_trans_t	*tp,
+ 	if (pag) {
+@@ -593,11 +593,11 @@ xfs_alloc_busy_clear(
+  * Callback for list_sort to sort busy extents by the AG they reside in.
+  */
+ int
+-xfs_busy_extent_ag_cmp(
++xfs_extent_busy_ag_cmp(
+ 	void			*priv,
+ 	struct list_head	*a,
+ 	struct list_head	*b)
+ {
+-	return container_of(a, struct xfs_busy_extent, list)->agno -
+-		container_of(b, struct xfs_busy_extent, list)->agno;
++	return container_of(a, struct xfs_extent_busy, list)->agno -
++		container_of(b, struct xfs_extent_busy, list)->agno;
+ }
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index 4442757..0d42422 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -338,8 +338,8 @@ xlog_cil_committed(
+ 	xfs_trans_committed_bulk(ctx->cil->xc_log->l_ailp, ctx->lv_chain,
+ 					ctx->start_lsn, abort);
  
- 	ASSERT(bp->b_transp == tp);
- 	ASSERT(bip != NULL);
--	ASSERT((first <= last) && (last < XFS_BUF_COUNT(bp)));
-+	ASSERT(first <= last && last < BBTOB(bp->b_length));
- 	ASSERT(bp->b_iodone == NULL ||
- 	       bp->b_iodone == xfs_buf_iodone_callbacks);
+-	xfs_alloc_busy_sort(&ctx->busy_extents);
+-	xfs_alloc_busy_clear(mp, &ctx->busy_extents,
++	xfs_extent_busy_sort(&ctx->busy_extents);
++	xfs_extent_busy_clear(mp, &ctx->busy_extents,
+ 			     (mp->m_flags & XFS_MOUNT_DISCARD) && !abort);
  
+ 	spin_lock(&ctx->cil->xc_cil_lock);
+@@ -352,7 +352,7 @@ xlog_cil_committed(
+ 		ASSERT(mp->m_flags & XFS_MOUNT_DISCARD);
+ 
+ 		xfs_discard_extents(mp, &ctx->busy_extents);
+-		xfs_alloc_busy_clear(mp, &ctx->busy_extents, false);
++		xfs_extent_busy_clear(mp, &ctx->busy_extents, false);
+ 	}
+ 
+ 	kmem_free(ctx);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 900764c..febff43 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -1142,7 +1142,7 @@ TRACE_EVENT(xfs_bunmap,
+ 
+ );
+ 
+-DECLARE_EVENT_CLASS(xfs_busy_class,
++DECLARE_EVENT_CLASS(xfs_extent_busy_class,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		 xfs_agblock_t agbno, xfs_extlen_t len),
+ 	TP_ARGS(mp, agno, agbno, len),
+@@ -1165,17 +1165,17 @@ DECLARE_EVENT_CLASS(xfs_busy_class,
+ 		  __entry->len)
+ );
+ #define DEFINE_BUSY_EVENT(name) \
+-DEFINE_EVENT(xfs_busy_class, name, \
++DEFINE_EVENT(xfs_extent_busy_class, name, \
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+ 		 xfs_agblock_t agbno, xfs_extlen_t len), \
+ 	TP_ARGS(mp, agno, agbno, len))
+-DEFINE_BUSY_EVENT(xfs_alloc_busy);
+-DEFINE_BUSY_EVENT(xfs_alloc_busy_enomem);
+-DEFINE_BUSY_EVENT(xfs_alloc_busy_force);
+-DEFINE_BUSY_EVENT(xfs_alloc_busy_reuse);
+-DEFINE_BUSY_EVENT(xfs_alloc_busy_clear);
++DEFINE_BUSY_EVENT(xfs_extent_busy);
++DEFINE_BUSY_EVENT(xfs_extent_busy_enomem);
++DEFINE_BUSY_EVENT(xfs_extent_busy_force);
++DEFINE_BUSY_EVENT(xfs_extent_busy_reuse);
++DEFINE_BUSY_EVENT(xfs_extent_busy_clear);
+ 
+-TRACE_EVENT(xfs_alloc_busy_trim,
++TRACE_EVENT(xfs_extent_busy_trim,
+ 	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 		 xfs_agblock_t agbno, xfs_extlen_t len,
+ 		 xfs_agblock_t tbno, xfs_extlen_t tlen),
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index 6af1dc1..584e76a 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -613,8 +613,8 @@ STATIC void
+ xfs_trans_free(
+ 	struct xfs_trans	*tp)
+ {
+-	xfs_alloc_busy_sort(&tp->t_busy);
+-	xfs_alloc_busy_clear(tp->t_mountp, &tp->t_busy, false);
++	xfs_extent_busy_sort(&tp->t_busy);
++	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
+ 
+ 	atomic_dec(&tp->t_mountp->m_active_trans);
+ 	if (tp->t_flags & XFS_TRANS_FREEZE_PROT)
 -- 
 1.7.9.5
 
