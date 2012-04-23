@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3N5xO0Z127429 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:24 -0500
+	q3N5xQ2c127447 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:26 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	vmHLEU2ntnAswIdC for <xfs@oss.sgi.com>;
-	Sun, 22 Apr 2012 22:59:22 -0700 (PDT)
+	vlDIeYnaKFDHzi5o for <xfs@oss.sgi.com>;
+	Sun, 22 Apr 2012 22:59:24 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMCIy-0001Zh-F7
+	(envelope-from <dave@fromorbit.com>) id 1SMCIy-0001Zi-Fu
 	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:20 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMCIo-0004XO-C9
+	(envelope-from <dave@disappointment.disaster>) id 1SMCIo-0004XT-DG
 	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/37] xfs: allow assigning the tail lsn with the AIL lock held
-Date: Mon, 23 Apr 2012 15:58:33 +1000
-Message-Id: <1335160747-17254-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/37] xfs: implement freezing by emptying the AIL
+Date: Mon, 23 Apr 2012 15:58:34 +1000
+Message-Id: <1335160747-17254-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,157 +35,389 @@ To: xfs@oss.sgi.com
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Provide a variant of xlog_assign_tail_lsn that has the AIL lock already
-held.  By doing so we do an additional atomic_read + atomic_set under
-the lock, which comes down to two instructions.
+Now that we write back all metadata either synchronously or through
+the AIL we can simply implement metadata freezing in terms of
+emptying the AIL.
 
-Switch xfs_trans_ail_update_bulk and xfs_trans_ail_delete_bulk to the
-new version to reduce the number of lock roundtrips, and prepare for
-a new addition that would require a third lock roundtrip in
-xfs_trans_ail_delete_bulk.  This addition is also the reason for
-slightly rearranging the conditionals and relying on xfs_log_space_wake
-for checking that the filesystem has been shut down internally.
+The implementation for this is fairly simply and straight-forward:
+A new routine is added that asks the xfsaild to push the AIL to the
+end and waits for it to complete and send a wakeup. The routine will
+then loop if the AIL is not actually empty, and continue to do so
+until the AIL is compeltely empty.
+
+We keep an inode reclaim pass in the freeze process to avoid having
+memory pressure have to reclaim inodes that require dirtying the
+filesystem to be reclaimed after the freeze has completed. This
+means we can also treat unmount in the exact same way as freeze.
+
+As an upside we can now remove the radix tree based inode writeback
+and xfs_unmountfs_writesb.
+
+[ Dave Chinner:
+	- Cleaned up commit message.
+	- Added inode reclaim passes back into freeze.
+	- Cleaned up wakeup mechanism to avoid the use of a new
+	  sleep counter variable. ]
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c        |   31 +++++++++++++++++++++++--------
- fs/xfs/xfs_log.h        |    1 +
- fs/xfs/xfs_trans_ail.c  |   22 +++++++++++++++-------
- fs/xfs/xfs_trans_priv.h |    1 +
- 4 files changed, 40 insertions(+), 15 deletions(-)
+ fs/xfs/xfs_mount.c      |   56 ++++++---------------------
+ fs/xfs/xfs_mount.h      |    1 -
+ fs/xfs/xfs_sync.c       |   96 +++++++----------------------------------------
+ fs/xfs/xfs_trans_ail.c  |   36 ++++++++++++++----
+ fs/xfs/xfs_trans_priv.h |    2 +
+ 5 files changed, 56 insertions(+), 135 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 6db1fef..418d5d7 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -916,27 +916,42 @@ xfs_log_need_covered(xfs_mount_t *mp)
-  * We may be holding the log iclog lock upon entering this routine.
-  */
- xfs_lsn_t
--xlog_assign_tail_lsn(
-+xlog_assign_tail_lsn_locked(
- 	struct xfs_mount	*mp)
- {
--	xfs_lsn_t		tail_lsn;
- 	struct log		*log = mp->m_log;
-+	struct xfs_log_item	*lip;
-+	xfs_lsn_t		tail_lsn;
-+
-+	assert_spin_locked(&mp->m_ail->xa_lock);
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 5aa7444..f7f3e97 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -22,6 +22,7 @@
+ #include "xfs_log.h"
+ #include "xfs_inum.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_sb.h"
+ #include "xfs_ag.h"
+ #include "xfs_dir2.h"
+@@ -1475,15 +1476,15 @@ xfs_unmountfs(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
  
  	/*
- 	 * To make sure we always have a valid LSN for the log tail we keep
- 	 * track of the last LSN which was committed in log->l_last_sync_lsn,
--	 * and use that when the AIL was empty and xfs_ail_min_lsn returns 0.
--	 *
--	 * If the AIL has been emptied we also need to wake any process
--	 * waiting for this condition.
-+	 * and use that when the AIL was empty.
+-	 * Do a delwri reclaim pass first so that as many dirty inodes are
+-	 * queued up for IO as possible. Then flush the buffers before making
+-	 * a synchronous path to catch all the remaining inodes are reclaimed.
+-	 * This makes the reclaim process as quick as possible by avoiding
+-	 * synchronous writeout and blocking on inodes already in the delwri
+-	 * state as much as possible.
++	 * Flush all pending changes from the AIL.
++	 */
++	xfs_ail_push_all_sync(mp->m_ail);
++
++	/*
++	 * And reclaim all inodes.  At this point there should be no dirty
++	 * inode, and none should be pinned or locked, but use synchronous
++	 * reclaim just to be sure.
  	 */
--	tail_lsn = xfs_ail_min_lsn(mp->m_ail);
--	if (!tail_lsn)
-+	lip = xfs_ail_min(mp->m_ail);
-+	if (lip)
-+		tail_lsn = lip->li_lsn;
-+	else
- 		tail_lsn = atomic64_read(&log->l_last_sync_lsn);
- 	atomic64_set(&log->l_tail_lsn, tail_lsn);
- 	return tail_lsn;
+-	xfs_reclaim_inodes(mp, 0);
+-	xfs_flush_buftarg(mp->m_ddev_targp, 1);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
+ 
+ 	xfs_qm_unmount(mp);
+@@ -1519,15 +1520,12 @@ xfs_unmountfs(
+ 	if (error)
+ 		xfs_warn(mp, "Unable to update superblock counters. "
+ 				"Freespace may not be correct on next mount.");
+-	xfs_unmountfs_writesb(mp);
+ 
+ 	/*
+-	 * Make sure all buffers have been flushed and completed before
+-	 * unmounting the log.
++	 * At this point we might have modified the superblock again and thus
++	 * added an item to the AIL, thus flush it again.
+ 	 */
+-	error = xfs_flush_buftarg(mp->m_ddev_targp, 1);
+-	if (error)
+-		xfs_warn(mp, "%d busy buffers during unmount.", error);
++	xfs_ail_push_all_sync(mp->m_ail);
+ 	xfs_wait_buftarg(mp->m_ddev_targp);
+ 
+ 	xfs_log_unmount_write(mp);
+@@ -1588,36 +1586,6 @@ xfs_log_sbcount(xfs_mount_t *mp)
+ 	return error;
  }
  
-+xfs_lsn_t
-+xlog_assign_tail_lsn(
-+	struct xfs_mount	*mp)
-+{
-+	xfs_lsn_t		tail_lsn;
-+
-+	spin_lock(&mp->m_ail->xa_lock);
-+	tail_lsn = xlog_assign_tail_lsn_locked(mp);
-+	spin_unlock(&mp->m_ail->xa_lock);
-+
-+	return tail_lsn;
-+}
-+
+-int
+-xfs_unmountfs_writesb(xfs_mount_t *mp)
+-{
+-	xfs_buf_t	*sbp;
+-	int		error = 0;
+-
+-	/*
+-	 * skip superblock write if fs is read-only, or
+-	 * if we are doing a forced umount.
+-	 */
+-	if (!((mp->m_flags & XFS_MOUNT_RDONLY) ||
+-		XFS_FORCED_SHUTDOWN(mp))) {
+-
+-		sbp = xfs_getsb(mp, 0);
+-
+-		XFS_BUF_UNDONE(sbp);
+-		XFS_BUF_UNREAD(sbp);
+-		xfs_buf_delwri_dequeue(sbp);
+-		XFS_BUF_WRITE(sbp);
+-		XFS_BUF_UNASYNC(sbp);
+-		ASSERT(sbp->b_target == mp->m_ddev_targp);
+-		xfsbdstrat(mp, sbp);
+-		error = xfs_buf_iowait(sbp);
+-		if (error)
+-			xfs_buf_ioerror_alert(sbp, __func__);
+-		xfs_buf_relse(sbp);
+-	}
+-	return error;
+-}
+-
  /*
-  * Return the space in the log between the tail and the head.  The head
-  * is passed in the cycle/bytes formal parms.  In the special case where
-diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
-index 2c622be..748d312 100644
---- a/fs/xfs/xfs_log.h
-+++ b/fs/xfs/xfs_log.h
-@@ -152,6 +152,7 @@ int	  xfs_log_mount(struct xfs_mount	*mp,
- 			int		 	num_bblocks);
- int	  xfs_log_mount_finish(struct xfs_mount *mp);
- xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
-+xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
- void	  xfs_log_space_wake(struct xfs_mount *mp);
- int	  xfs_log_notify(struct xfs_mount	*mp,
- 			 struct xlog_in_core	*iclog,
+  * xfs_mod_sb() can be used to copy arbitrary changes to the
+  * in-core superblock into the superblock buffer to be logged.
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 73f6c7a..dbd9d42 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -375,7 +375,6 @@ extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
+ extern int	xfs_mountfs(xfs_mount_t *mp);
+ 
+ extern void	xfs_unmountfs(xfs_mount_t *);
+-extern int	xfs_unmountfs_writesb(xfs_mount_t *);
+ extern int	xfs_mod_incore_sb(xfs_mount_t *, xfs_sb_field_t, int64_t, int);
+ extern int	xfs_mod_incore_sb_batch(xfs_mount_t *, xfs_mod_sb_t *,
+ 			uint, int);
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index c07cbb4..7163ca8 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -241,45 +241,6 @@ xfs_sync_inode_data(
+ 	return error;
+ }
+ 
+-STATIC int
+-xfs_sync_inode_attr(
+-	struct xfs_inode	*ip,
+-	struct xfs_perag	*pag,
+-	int			flags)
+-{
+-	int			error = 0;
+-
+-	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_inode_clean(ip))
+-		goto out_unlock;
+-	if (!xfs_iflock_nowait(ip)) {
+-		if (!(flags & SYNC_WAIT))
+-			goto out_unlock;
+-		xfs_iflock(ip);
+-	}
+-
+-	if (xfs_inode_clean(ip)) {
+-		xfs_ifunlock(ip);
+-		goto out_unlock;
+-	}
+-
+-	error = xfs_iflush(ip, flags);
+-
+-	/*
+-	 * We don't want to try again on non-blocking flushes that can't run
+-	 * again immediately. If an inode really must be written, then that's
+-	 * what the SYNC_WAIT flag is for.
+-	 */
+-	if (error == EAGAIN) {
+-		ASSERT(!(flags & SYNC_WAIT));
+-		error = 0;
+-	}
+-
+- out_unlock:
+-	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-	return error;
+-}
+-
+ /*
+  * Write out pagecache data for the whole filesystem.
+  */
+@@ -300,19 +261,6 @@ xfs_sync_data(
+ 	return 0;
+ }
+ 
+-/*
+- * Write out inode metadata (attributes) for the whole filesystem.
+- */
+-STATIC int
+-xfs_sync_attr(
+-	struct xfs_mount	*mp,
+-	int			flags)
+-{
+-	ASSERT((flags & ~SYNC_WAIT) == 0);
+-
+-	return xfs_inode_ag_iterator(mp, xfs_sync_inode_attr, flags);
+-}
+-
+ STATIC int
+ xfs_sync_fsdata(
+ 	struct xfs_mount	*mp)
+@@ -350,7 +298,7 @@ xfs_sync_fsdata(
+  * First stage of freeze - no writers will make progress now we are here,
+  * so we flush delwri and delalloc buffers here, then wait for all I/O to
+  * complete.  Data is frozen at that point. Metadata is not frozen,
+- * transactions can still occur here so don't bother flushing the buftarg
++ * transactions can still occur here so don't bother emptying the AIL
+  * because it'll just get dirty again.
+  */
+ int
+@@ -379,33 +327,6 @@ xfs_quiesce_data(
+ 	return error ? error : error2;
+ }
+ 
+-STATIC void
+-xfs_quiesce_fs(
+-	struct xfs_mount	*mp)
+-{
+-	int	count = 0, pincount;
+-
+-	xfs_reclaim_inodes(mp, 0);
+-	xfs_flush_buftarg(mp->m_ddev_targp, 0);
+-
+-	/*
+-	 * This loop must run at least twice.  The first instance of the loop
+-	 * will flush most meta data but that will generate more meta data
+-	 * (typically directory updates).  Which then must be flushed and
+-	 * logged before we can write the unmount record. We also so sync
+-	 * reclaim of inodes to catch any that the above delwri flush skipped.
+-	 */
+-	do {
+-		xfs_reclaim_inodes(mp, SYNC_WAIT);
+-		xfs_sync_attr(mp, SYNC_WAIT);
+-		pincount = xfs_flush_buftarg(mp->m_ddev_targp, 1);
+-		if (!pincount) {
+-			delay(50);
+-			count++;
+-		}
+-	} while (count < 2);
+-}
+-
+ /*
+  * Second stage of a quiesce. The data is already synced, now we have to take
+  * care of the metadata. New transactions are already blocked, so we need to
+@@ -421,8 +342,12 @@ xfs_quiesce_attr(
+ 	while (atomic_read(&mp->m_active_trans) > 0)
+ 		delay(100);
+ 
+-	/* flush inodes and push all remaining buffers out to disk */
+-	xfs_quiesce_fs(mp);
++	/* reclaim inodes to do any IO before the freeze completes */
++	xfs_reclaim_inodes(mp, 0);
++	xfs_reclaim_inodes(mp, SYNC_WAIT);
++
++	/* flush all pending changes from the AIL */
++	xfs_ail_push_all_sync(mp->m_ail);
+ 
+ 	/*
+ 	 * Just warn here till VFS can correctly support
+@@ -436,7 +361,12 @@ xfs_quiesce_attr(
+ 		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
+ 				"Frozen image may not be consistent.");
+ 	xfs_log_unmount_write(mp);
+-	xfs_unmountfs_writesb(mp);
++
++	/*
++	 * At this point we might have modified the superblock again and thus
++	 * added an item to the AIL, thus flush it again.
++	 */
++	xfs_ail_push_all_sync(mp->m_ail);
+ }
+ 
+ static void
 diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 1dead07..77acc53 100644
+index 77acc53..0425ca1 100644
 --- a/fs/xfs/xfs_trans_ail.c
 +++ b/fs/xfs/xfs_trans_ail.c
-@@ -79,7 +79,7 @@ xfs_ail_check(
-  * Return a pointer to the first item in the AIL.  If the AIL is empty, then
-  * return NULL.
-  */
--static xfs_log_item_t *
-+xfs_log_item_t *
- xfs_ail_min(
- 	struct xfs_ail  *ailp)
- {
-@@ -667,11 +667,15 @@ xfs_trans_ail_update_bulk(
- 
- 	if (!list_empty(&tmp))
- 		xfs_ail_splice(ailp, cur, &tmp, lsn);
--	spin_unlock(&ailp->xa_lock);
- 
--	if (mlip_changed && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
--		xlog_assign_tail_lsn(ailp->xa_mount);
-+	if (mlip_changed) {
-+		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
-+			xlog_assign_tail_lsn_locked(ailp->xa_mount);
-+		spin_unlock(&ailp->xa_lock);
-+
- 		xfs_log_space_wake(ailp->xa_mount);
-+	} else {
-+		spin_unlock(&ailp->xa_lock);
+@@ -383,9 +383,8 @@ xfsaild_push(
+ 		spin_lock(&ailp->xa_lock);
  	}
+ 
+-	target = ailp->xa_target;
+ 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
+-	if (!lip || XFS_FORCED_SHUTDOWN(mp)) {
++	if (!lip) {
+ 		/*
+ 		 * AIL is empty or our push has reached the end.
+ 		 */
+@@ -408,6 +407,7 @@ xfsaild_push(
+ 	 * lots of contention on the AIL lists.
+ 	 */
+ 	lsn = lip->li_lsn;
++	target = ailp->xa_target;
+ 	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
+ 		int	lock_result;
+ 		/*
+@@ -466,11 +466,6 @@ xfsaild_push(
+ 		}
+ 
+ 		spin_lock(&ailp->xa_lock);
+-		/* should we bother continuing? */
+-		if (XFS_FORCED_SHUTDOWN(mp))
+-			break;
+-		ASSERT(mp->m_log);
+-
+ 		count++;
+ 
+ 		/*
+@@ -611,6 +606,30 @@ xfs_ail_push_all(
  }
  
-@@ -729,11 +733,15 @@ xfs_trans_ail_delete_bulk(
- 		if (mlip == lip)
- 			mlip_changed = 1;
- 	}
--	spin_unlock(&ailp->xa_lock);
- 
--	if (mlip_changed && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
--		xlog_assign_tail_lsn(ailp->xa_mount);
-+	if (mlip_changed) {
-+		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
-+			xlog_assign_tail_lsn_locked(ailp->xa_mount);
-+		spin_unlock(&ailp->xa_lock);
+ /*
++ * Push out all items in the AIL immediately and wait until the AIL is empty.
++ */
++void
++xfs_ail_push_all_sync(
++	struct xfs_ail  *ailp)
++{
++	struct xfs_log_item	*lip;
++	DEFINE_WAIT(wait);
 +
- 		xfs_log_space_wake(ailp->xa_mount);
-+	} else {
++	spin_lock(&ailp->xa_lock);
++	while ((lip = xfs_ail_max(ailp)) != NULL) {
++		prepare_to_wait(&ailp->xa_empty, &wait, TASK_UNINTERRUPTIBLE);
++		ailp->xa_target = lip->li_lsn;
++		wake_up_process(ailp->xa_task);
 +		spin_unlock(&ailp->xa_lock);
- 	}
- }
++		schedule();
++		spin_lock(&ailp->xa_lock);
++	}
++	spin_unlock(&ailp->xa_lock);
++
++	finish_wait(&ailp->xa_empty, &wait);
++}
++
++/*
+  * xfs_trans_ail_update - bulk AIL insertion operation.
+  *
+  * @xfs_trans_ail_update takes an array of log items that all need to be
+@@ -737,6 +756,8 @@ xfs_trans_ail_delete_bulk(
+ 	if (mlip_changed) {
+ 		if (!XFS_FORCED_SHUTDOWN(ailp->xa_mount))
+ 			xlog_assign_tail_lsn_locked(ailp->xa_mount);
++		if (list_empty(&ailp->xa_ail))
++			wake_up_all(&ailp->xa_empty);
+ 		spin_unlock(&ailp->xa_lock);
  
+ 		xfs_log_space_wake(ailp->xa_mount);
+@@ -773,6 +794,7 @@ xfs_trans_ail_init(
+ 	INIT_LIST_HEAD(&ailp->xa_ail);
+ 	INIT_LIST_HEAD(&ailp->xa_cursors);
+ 	spin_lock_init(&ailp->xa_lock);
++	init_waitqueue_head(&ailp->xa_empty);
+ 
+ 	ailp->xa_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
+ 			ailp->xa_mount->m_fsname);
 diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 8ab2ced..46a1ebd 100644
+index 46a1ebd..218304a 100644
 --- a/fs/xfs/xfs_trans_priv.h
 +++ b/fs/xfs/xfs_trans_priv.h
-@@ -102,6 +102,7 @@ xfs_trans_ail_delete(
+@@ -71,6 +71,7 @@ struct xfs_ail {
+ 	spinlock_t		xa_lock;
+ 	xfs_lsn_t		xa_last_pushed_lsn;
+ 	int			xa_log_flush;
++	wait_queue_head_t	xa_empty;
+ };
+ 
+ /*
+@@ -102,6 +103,7 @@ xfs_trans_ail_delete(
  
  void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
  void			xfs_ail_push_all(struct xfs_ail *);
-+struct xfs_log_item	*xfs_ail_min(struct xfs_ail  *ailp);
++void			xfs_ail_push_all_sync(struct xfs_ail *);
+ struct xfs_log_item	*xfs_ail_min(struct xfs_ail  *ailp);
  xfs_lsn_t		xfs_ail_min_lsn(struct xfs_ail *ailp);
  
- struct xfs_log_item *	xfs_trans_ail_cursor_first(struct xfs_ail *ailp,
 -- 
 1.7.9.5
 
