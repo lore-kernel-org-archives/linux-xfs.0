@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3NHH4Cu217197 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 12:17:04 -0500
-Received: from josefsipek.net (josefsipek.net [64.9.206.49]) by cuda.sgi.com
-	with ESMTP id GkkkXSzbGOVECNdU for <xfs@oss.sgi.com>;
-	Mon, 23 Apr 2012 10:17:03 -0700 (PDT)
-Date: Mon, 23 Apr 2012 13:16:58 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: task blocked for more than 120 seconds
-Message-ID: <20120423171658.GA21260@poseidon.cudanet.local>
-References: <20120418151139.GC4652@poseidon.cudanet.local>
-	<20120418234821.GR6734@dastard>
-	<20120419154601.GB8230@poseidon.cudanet.local>
-	<20120419225603.GA9541@dastard>
-	<20120420135820.GB9189@poseidon.cudanet.local>
-	<20120421002932.GG9541@dastard>
+	q3NHt5VE221912 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 12:55:05 -0500
+Date: Mon, 23 Apr 2012 12:57:25 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 29/37] xfs: move busy extent handling to it's own file
+Message-ID: <20120423175725.GG16881@sgi.com>
+References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
+	<1335160747-17254-30-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120421002932.GG9541@dastard>
+In-Reply-To: <1335160747-17254-30-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,45 +26,28 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Apr 21, 2012 at 10:29:32AM +1000, Dave Chinner wrote:
-> On Fri, Apr 20, 2012 at 09:58:20AM -0400, Josef 'Jeff' Sipek wrote:
-...
-> > Right.  Here's the output from a few minutes ago (I removed the empty lines
-> > and redundant column headings):
+Hey Dave,
+
+On Mon, Apr 23, 2012 at 03:58:59PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Thanks, that makes it easy to read ;)
-
-Yeah, I don't know who's brilliant idea it was to output the headings every
-time.
-
-> Now comes the "more data needed" bit. I still need the sysrq-w
-> output,
-
-D'oh!  Totally forgot to put that up somewhere.
-
-http://31bits.net/download/xfs_log.gz
-
-Sadly, it looks like the kernel's ring buffer wrapped while dumping the ~180
-stacks.
-
-> but also given the length of the incident, some other data
-> is definitely needed:
+> To make it easier to handle userspace code merges, move all the busy
+> extent handling out of the allocation code and into it's own file.
+> The userspace code does not need the busy extent code, so this
+> simplifies the merging of the kernel code into the userspace
+> xfsprogs library.
 > 
-> 	- a 30s event trace - it'll compress pretty well
-> 	  (trace-cmd record -e xfs* sleep 30; trace-cmd report > output.txt)
+> Because the busy extent code has been almost completely rewritten
+> over the past couple of years, also update the copyright on this new
+> file to include the authors that made all those changes.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Hrm... Time to figure out how to get ftrace going on Gentoo.  I don't see an
-obvious package to install to get trace-cmd.
+D'oh!  This one doesn't compile:
 
-> 	- vmstat 1 output for the same period
-> 	- output of /proc/meminfo at the same time
-> 	- the same iostat output for comparison.
+/root/xfs/fs/xfs/xfs_discard.c:32:29: fatal error: xfs_extent_busy.h: No such file or directory
 
-Jeff.
-
--- 
-I'm somewhere between geek and normal.
-		- Linus Torvalds
+-Ben
 
 _______________________________________________
 xfs mailing list
