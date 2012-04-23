@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3N7sdxo146216 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 02:54:39 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	4HC4jEUDV8RXRSZ1 for <xfs@oss.sgi.com>;
-	Mon, 23 Apr 2012 00:54:36 -0700 (PDT)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1SME6S-0001r9-TL
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 17:54:32 +1000
-Date: Mon, 23 Apr 2012 17:54:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 12/37 V2] xfs: Do background CIL flushes via a workqueue
-Message-ID: <20120423075432.GM9541@dastard>
-References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<1335160747-17254-13-git-send-email-david@fromorbit.com>
+	q3NC9tN9178526 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 07:09:55 -0500
+Received: from mail-pz0-f46.google.com (mail-pz0-f46.google.com
+	[209.85.210.46]) by cuda.sgi.com with ESMTP id SFxPlw1GLR8UYs9R
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 23 Apr 2012 05:09:53 -0700 (PDT)
+Received: by dadz9 with SMTP id z9so17579246dad.5
+	for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 05:09:53 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1335160747-17254-13-git-send-email-david@fromorbit.com>
+Date: Mon, 23 Apr 2012 14:09:53 +0200
+Message-ID: <CADLDEKsP4DsXf_G07ub+a-ODbrJbsiprRJUX1fJdaQ41TB7+Xg@mail.gmail.com>
+Subject: Still seeing hangs in xlog_grant_log_space
+From: Juerg Haefliger <juergh@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,481 +27,174 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Mon, Apr 23, 2012 at 03:58:42PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Doing background CIL flushes adds significant latency to whatever
-> async transaction that triggers it. To avoid blocking async
-> transactions on things like waiting for log buffer IO to complete,
-> move the CIL push off into a workqueue.  By moving the push work
-> into a workqueue, we remove all the latency that the commit adds
-> from the foreground transaction commit path. This also means that
-> single threaded workloads won't do the CIL push procssing, leaving
-> them more CPU to do more async transactions.
-> 
-> To do this, we need to keep track of the sequence number we have
-> pushed work for. This avoids having many transaction commits
-> attempting to schedule work for the same sequence, and ensures that
-> we only ever have one push (background or forced) in progress at a
-> time. It also means that we don't need to take the CIL lock in write
-> mode to check for potential background push races, which reduces
-> lock contention.
-> 
-> To avoid potential issues with "smart" IO schedulers, don't use the
-> workqueue for log force triggered flushes. Instead, do them directly
-> so that the log IO is done directly by the process issuing the log
-> force and so doesn't get stuck on IO elevator queue idling
-> incorrectly delaying the log IO from the workqueue.
+Hi,
 
-I think I understand what is triggering this ASSERT:
+I have a test system that I'm using to try to force an XFS filesystem
+hang since we're encountering that problem sporadically in production
+running a 2.6.38-8 Natty kernel. The original idea was to use this
+system to find the patches that fix the issue but I've tried a whole
+bunch of kernels and they all hang eventually (anywhere from 5 to 45
+mins) with the stack trace shown below. Only an emergency flush will
+bring the filesystem back. I tried kernels 3.0.29, 3.1.10, 3.2.15,
+3.3.2. From reading through the mail archives, I get the impression
+that this should be fixed in 3.1.
 
-	ASSERT(push_seq > 0 && push_seq <= ctx->sequence);
+What makes the test system special is:
+1) The test partition uses 1024 block size and 576b log size.
+2) The RAID controller cache is disabled.
 
-as the condition that is triggering is push_seq = 0.
+I can't seem to hit the problem without the above modifications.
 
-Basically, the situation where the CIL is empty when a push is
-executed causes the xc_push_seq to be set to zero so that a
-subsequent push of that sequence number can be flushed. i.e. if
-there is force when tehre is no dirty items, the sequence number is
-not incremented as tehre is no commit, and hence if have subsequent
-modifications on that sequence number we need to be able to force it
-again. Resetting the push_seq is how that is acheived. If we get a
-push with a zero sequence number, the code actually handles that
-just fine by ignoring it. So, effectively, the assert for push_seq >
-no longer valid so it should just be removed.
+For the IO workload I pre-create 8000 files with random content and
+sizes between 1k and 128k on the test partition. Then I run a tool
+that spawns a bunch of threads which just copy these files to a
+different directory on the same partition. At the same time there are
+other threads that rename, remove and overwrite random files in the
+destination directory keeping the file count at around 500.
 
-It does, however, point out one thing - that we can be queuing
-multiple works when we don't need to, so we also need to check for
-whether we need to push based on the current sequence number in the
-background push check. the updated patch below addresses both these
-issues.
+Let me know what other information I can provide to pin this down.
 
-Cheers,
+Thanks
+...Juerg
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
-xfs: Do background CIL flushes via a workqueue
+haefligerj@use0453rtk:/xfs-hang$ xfs_info /xfs-hang/
+meta-data=/dev/mapper/vg00-tmp   isize=256    agcount=4, agsize=2441216 blks
+         =                       sectsz=512   attr=2
+data     =                       bsize=1024   blocks=9764864, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=1024   blocks=576, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-From: Dave Chinner <dchinner@redhat.com>
+haefligerj@use0453rtk:/xfs-hang$ mount | grep xfs-hang
+/dev/mapper/vg00-tmp on /xfs-hang type xfs (rw)
 
-Doing background CIL flushes adds significant latency to whatever
-async transaction that triggers it. To avoid blocking async
-transactions on things like waiting for log buffer IO to complete,
-move the CIL push off into a workqueue.  By moving the push work
-into a workqueue, we remove all the latency that the commit adds
-from the foreground transaction commit path. This also means that
-single threaded workloads won't do the CIL push procssing, leaving
-them more CPU to do more async transactions.
-
-To do this, we need to keep track of the sequence number we have
-pushed work for. This avoids having many transaction commits
-attempting to schedule work for the same sequence, and ensures that
-we only ever have one push (background or forced) in progress at a
-time. It also means that we don't need to take the CIL lock in write
-mode to check for potential background push races, which reduces
-lock contention.
-
-To avoid potential issues with "smart" IO schedulers, don't use the
-workqueue for log force triggered flushes. Instead, do them directly
-so that the log IO is done directly by the process issuing the log
-force and so doesn't get stuck on IO elevator queue idling
-incorrectly delaying the log IO from the workqueue.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-
----
- fs/xfs/xfs_log_cil.c  |  244 ++++++++++++++++++++++++++++++-------------------
- fs/xfs/xfs_log_priv.h |    2 +
- fs/xfs/xfs_mount.h    |    1 +
- fs/xfs/xfs_super.c    |    7 ++
- 4 files changed, 160 insertions(+), 94 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index d4fadbe..5fc7ec5 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -32,58 +32,6 @@
- #include "xfs_discard.h"
- 
- /*
-- * Perform initial CIL structure initialisation.
-- */
--int
--xlog_cil_init(
--	struct log	*log)
--{
--	struct xfs_cil	*cil;
--	struct xfs_cil_ctx *ctx;
--
--	cil = kmem_zalloc(sizeof(*cil), KM_SLEEP|KM_MAYFAIL);
--	if (!cil)
--		return ENOMEM;
--
--	ctx = kmem_zalloc(sizeof(*ctx), KM_SLEEP|KM_MAYFAIL);
--	if (!ctx) {
--		kmem_free(cil);
--		return ENOMEM;
--	}
--
--	INIT_LIST_HEAD(&cil->xc_cil);
--	INIT_LIST_HEAD(&cil->xc_committing);
--	spin_lock_init(&cil->xc_cil_lock);
--	init_rwsem(&cil->xc_ctx_lock);
--	init_waitqueue_head(&cil->xc_commit_wait);
--
--	INIT_LIST_HEAD(&ctx->committing);
--	INIT_LIST_HEAD(&ctx->busy_extents);
--	ctx->sequence = 1;
--	ctx->cil = cil;
--	cil->xc_ctx = ctx;
--	cil->xc_current_sequence = ctx->sequence;
--
--	cil->xc_log = log;
--	log->l_cilp = cil;
--	return 0;
--}
--
--void
--xlog_cil_destroy(
--	struct log	*log)
--{
--	if (log->l_cilp->xc_ctx) {
--		if (log->l_cilp->xc_ctx->ticket)
--			xfs_log_ticket_put(log->l_cilp->xc_ctx->ticket);
--		kmem_free(log->l_cilp->xc_ctx);
--	}
--
--	ASSERT(list_empty(&log->l_cilp->xc_cil));
--	kmem_free(log->l_cilp);
--}
--
--/*
-  * Allocate a new ticket. Failing to get a new ticket makes it really hard to
-  * recover, so we don't allow failure here. Also, we allocate in a context that
-  * we don't want to be issuing transactions from, so we need to tell the
-@@ -426,8 +374,7 @@ xlog_cil_committed(
-  */
- STATIC int
- xlog_cil_push(
--	struct log		*log,
--	xfs_lsn_t		push_seq)
-+	struct log		*log)
- {
- 	struct xfs_cil		*cil = log->l_cilp;
- 	struct xfs_log_vec	*lv;
-@@ -443,39 +390,36 @@ xlog_cil_push(
- 	struct xfs_log_iovec	lhdr;
- 	struct xfs_log_vec	lvhdr = { NULL };
- 	xfs_lsn_t		commit_lsn;
-+	xfs_lsn_t		push_seq;
- 
- 	if (!cil)
- 		return 0;
- 
--	ASSERT(!push_seq || push_seq <= cil->xc_ctx->sequence);
--
- 	new_ctx = kmem_zalloc(sizeof(*new_ctx), KM_SLEEP|KM_NOFS);
- 	new_ctx->ticket = xlog_cil_ticket_alloc(log);
- 
--	/*
--	 * Lock out transaction commit, but don't block for background pushes
--	 * unless we are well over the CIL space limit. See the definition of
--	 * XLOG_CIL_HARD_SPACE_LIMIT() for the full explanation of the logic
--	 * used here.
--	 */
--	if (!down_write_trylock(&cil->xc_ctx_lock)) {
--		if (!push_seq &&
--		    cil->xc_ctx->space_used < XLOG_CIL_HARD_SPACE_LIMIT(log))
--			goto out_free_ticket;
--		down_write(&cil->xc_ctx_lock);
--	}
-+	down_write(&cil->xc_ctx_lock);
- 	ctx = cil->xc_ctx;
- 
--	/* check if we've anything to push */
--	if (list_empty(&cil->xc_cil))
--		goto out_skip;
-+	spin_lock(&cil->xc_cil_lock);
-+	push_seq = cil->xc_push_seq;
-+	ASSERT(push_seq <= ctx->sequence);
- 
--	/* check for spurious background flush */
--	if (!push_seq && cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
-+	/*
-+	 * Check if we've anything to push. If there is nothing, then we don't
-+	 * move on to a new sequence number and so we have to be able to push
-+	 * this sequence again later.
-+	 */
-+	if (list_empty(&cil->xc_cil)) {
-+		cil->xc_push_seq = 0;
-+		spin_unlock(&cil->xc_cil_lock);
- 		goto out_skip;
-+	}
-+	spin_unlock(&cil->xc_cil_lock);
-+
- 
- 	/* check for a previously pushed seqeunce */
--	if (push_seq && push_seq < cil->xc_ctx->sequence)
-+	if (push_seq < cil->xc_ctx->sequence)
- 		goto out_skip;
- 
- 	/*
-@@ -629,7 +573,6 @@ restart:
- 
- out_skip:
- 	up_write(&cil->xc_ctx_lock);
--out_free_ticket:
- 	xfs_log_ticket_put(new_ctx->ticket);
- 	kmem_free(new_ctx);
- 	return 0;
-@@ -641,6 +584,82 @@ out_abort:
- 	return XFS_ERROR(EIO);
- }
- 
-+static void
-+xlog_cil_push_work(
-+	struct work_struct	*work)
-+{
-+	struct xfs_cil		*cil = container_of(work, struct xfs_cil,
-+							xc_push_work);
-+	xlog_cil_push(cil->xc_log);
-+}
-+
-+/*
-+ * We need to push CIL every so often so we don't cache more than we can fit in
-+ * the log. The limit really is that a checkpoint can't be more than half the
-+ * log (the current checkpoint is not allowed to overwrite the previous
-+ * checkpoint), but commit latency and memory usage limit this to a smaller
-+ * size.
-+ */
-+static void
-+xlog_cil_push_background(
-+	struct log	*log)
-+{
-+	struct xfs_cil	*cil = log->l_cilp;
-+
-+	/*
-+	 * The cil won't be empty because we are called while holding the
-+	 * context lock so whatever we added to the CIL will still be there
-+	 */
-+	ASSERT(!list_empty(&cil->xc_cil));
-+
-+	/*
-+	 * don't do a background push if we haven't used up all the
-+	 * space available yet.
-+	 */
-+	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
-+		return;
-+
-+	spin_lock(&cil->xc_cil_lock);
-+	if (cil->xc_push_seq < cil->xc_current_sequence) {
-+		cil->xc_push_seq = cil->xc_current_sequence;
-+		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
-+	}
-+	spin_unlock(&cil->xc_cil_lock);
-+
-+}
-+
-+static void
-+xlog_cil_push_foreground(
-+	struct log	*log,
-+	xfs_lsn_t	push_seq)
-+{
-+	struct xfs_cil	*cil = log->l_cilp;
-+
-+	if (!cil)
-+		return;
-+
-+	ASSERT(push_seq && push_seq <= cil->xc_current_sequence);
-+
-+	/* start on any pending background push to minimise wait time on it */
-+	flush_work(&cil->xc_push_work);
-+
-+	/*
-+	 * If the CIL is empty or we've already pushed the sequence then
-+	 * there's no work we need to do.
-+	 */
-+	spin_lock(&cil->xc_cil_lock);
-+	if (list_empty(&cil->xc_cil) || push_seq <= cil->xc_push_seq) {
-+		spin_unlock(&cil->xc_cil_lock);
-+		return;
-+	}
-+
-+	cil->xc_push_seq = push_seq;
-+	spin_unlock(&cil->xc_cil_lock);
-+
-+	/* do the push now */
-+	xlog_cil_push(log);
-+}
-+
- /*
-  * Commit a transaction with the given vector to the Committed Item List.
-  *
-@@ -667,7 +686,6 @@ xfs_log_commit_cil(
- {
- 	struct log		*log = mp->m_log;
- 	int			log_flags = 0;
--	int			push = 0;
- 	struct xfs_log_vec	*log_vector;
- 
- 	if (flags & XFS_TRANS_RELEASE_LOG_RES)
-@@ -719,21 +737,9 @@ xfs_log_commit_cil(
- 	 */
- 	xfs_trans_free_items(tp, *commit_lsn, 0);
- 
--	/* check for background commit before unlock */
--	if (log->l_cilp->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log))
--		push = 1;
-+	xlog_cil_push_background(log);
- 
- 	up_read(&log->l_cilp->xc_ctx_lock);
--
--	/*
--	 * We need to push CIL every so often so we don't cache more than we
--	 * can fit in the log. The limit really is that a checkpoint can't be
--	 * more than half the log (the current checkpoint is not allowed to
--	 * overwrite the previous checkpoint), but commit latency and memory
--	 * usage limit this to a smaller size in most cases.
--	 */
--	if (push)
--		xlog_cil_push(log, 0);
- 	return 0;
- }
- 
-@@ -746,9 +752,6 @@ xfs_log_commit_cil(
-  *
-  * We return the current commit lsn to allow the callers to determine if a
-  * iclog flush is necessary following this call.
-- *
-- * XXX: Initially, just push the CIL unconditionally and return whatever
-- * commit lsn is there. It'll be empty, so this is broken for now.
-  */
- xfs_lsn_t
- xlog_cil_force_lsn(
-@@ -766,8 +769,7 @@ xlog_cil_force_lsn(
- 	 * xlog_cil_push() handles racing pushes for the same sequence,
- 	 * so no need to deal with it here.
- 	 */
--	if (sequence == cil->xc_current_sequence)
--		xlog_cil_push(log, sequence);
-+	xlog_cil_push_foreground(log, sequence);
- 
- 	/*
- 	 * See if we can find a previous sequence still committing.
-@@ -826,3 +828,57 @@ xfs_log_item_in_current_chkpt(
- 		return false;
- 	return true;
- }
-+
-+/*
-+ * Perform initial CIL structure initialisation.
-+ */
-+int
-+xlog_cil_init(
-+	struct log	*log)
-+{
-+	struct xfs_cil	*cil;
-+	struct xfs_cil_ctx *ctx;
-+
-+	cil = kmem_zalloc(sizeof(*cil), KM_SLEEP|KM_MAYFAIL);
-+	if (!cil)
-+		return ENOMEM;
-+
-+	ctx = kmem_zalloc(sizeof(*ctx), KM_SLEEP|KM_MAYFAIL);
-+	if (!ctx) {
-+		kmem_free(cil);
-+		return ENOMEM;
-+	}
-+
-+	INIT_WORK(&cil->xc_push_work, xlog_cil_push_work);
-+	INIT_LIST_HEAD(&cil->xc_cil);
-+	INIT_LIST_HEAD(&cil->xc_committing);
-+	spin_lock_init(&cil->xc_cil_lock);
-+	init_rwsem(&cil->xc_ctx_lock);
-+	init_waitqueue_head(&cil->xc_commit_wait);
-+
-+	INIT_LIST_HEAD(&ctx->committing);
-+	INIT_LIST_HEAD(&ctx->busy_extents);
-+	ctx->sequence = 1;
-+	ctx->cil = cil;
-+	cil->xc_ctx = ctx;
-+	cil->xc_current_sequence = ctx->sequence;
-+
-+	cil->xc_log = log;
-+	log->l_cilp = cil;
-+	return 0;
-+}
-+
-+void
-+xlog_cil_destroy(
-+	struct log	*log)
-+{
-+	if (log->l_cilp->xc_ctx) {
-+		if (log->l_cilp->xc_ctx->ticket)
-+			xfs_log_ticket_put(log->l_cilp->xc_ctx->ticket);
-+		kmem_free(log->l_cilp->xc_ctx);
-+	}
-+
-+	ASSERT(list_empty(&log->l_cilp->xc_cil));
-+	kmem_free(log->l_cilp);
-+}
-+
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 2152900..735ff1e 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -417,6 +417,8 @@ struct xfs_cil {
- 	struct list_head	xc_committing;
- 	wait_queue_head_t	xc_commit_wait;
- 	xfs_lsn_t		xc_current_sequence;
-+	struct work_struct	xc_push_work;
-+	xfs_lsn_t		xc_push_seq;
- };
- 
- /*
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dbd9d42..401ca2e 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -214,6 +214,7 @@ typedef struct xfs_mount {
- 
- 	struct workqueue_struct	*m_data_workqueue;
- 	struct workqueue_struct	*m_unwritten_workqueue;
-+	struct workqueue_struct	*m_cil_workqueue;
- } xfs_mount_t;
- 
- /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index eb19efb..21db0d5 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -773,8 +773,14 @@ xfs_init_mount_workqueues(
- 	if (!mp->m_unwritten_workqueue)
- 		goto out_destroy_data_iodone_queue;
- 
-+	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
-+			WQ_MEM_RECLAIM, 0, mp->m_fsname);
-+	if (!mp->m_cil_workqueue)
-+		goto out_destroy_unwritten;
- 	return 0;
- 
-+out_destroy_unwritten:
-+	destroy_workqueue(mp->m_unwritten_workqueue);
- out_destroy_data_iodone_queue:
- 	destroy_workqueue(mp->m_data_workqueue);
- out:
-@@ -785,6 +791,7 @@ STATIC void
- xfs_destroy_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
-+	destroy_workqueue(mp->m_cil_workqueue);
- 	destroy_workqueue(mp->m_data_workqueue);
- 	destroy_workqueue(mp->m_unwritten_workqueue);
- }
+Apr 23 11:25:45 use0453rtk kernel: [  719.663591] INFO: task
+kworker/6:2:367 blocked for more than 120 seconds.
+Apr 23 11:25:45 use0453rtk kernel: [  719.663601] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Apr 23 11:25:45 use0453rtk kernel: [  719.663609] kworker/6:2     D
+ffffffff818080c0     0   367      2 0x00000000
+Apr 23 11:25:45 use0453rtk kernel: [  719.663616]  ffff8817ffddfc30
+0000000000000046 0000000000000000 0000000000000000
+Apr 23 11:25:45 use0453rtk kernel: [  719.663622]  ffff8817ffdde000
+ffff8817ffdde000 ffff880c03304100 ffff8818003fc040
+Apr 23 11:25:45 use0453rtk kernel: [  719.663627]  ffff8817ffddfc20
+ffff880bffc94c00 ffff8818002f7aa8 0000000000000ab4
+Apr 23 11:25:45 use0453rtk kernel: [  719.663633] Call Trace:
+Apr 23 11:25:45 use0453rtk kernel: [  719.663644]
+[<ffffffff8164a4bf>] schedule+0x3f/0x60
+Apr 23 11:25:45 use0453rtk kernel: [  719.663671]
+[<ffffffffa00edf63>] xlog_reserveq_wait+0x103/0x270 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663679]
+[<ffffffff81085300>] ? try_to_wake_up+0x2b0/0x2b0
+Apr 23 11:25:45 use0453rtk kernel: [  719.663693]
+[<ffffffffa00ee367>] xlog_grant_log_space+0x157/0x200 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663708]
+[<ffffffffa00f0cbb>] xfs_log_reserve+0x14b/0x1c0 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663722]
+[<ffffffffa00eba4c>] xfs_trans_reserve+0x9c/0x200 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663735]
+[<ffffffffa00a7e90>] ? xfs_reclaim_inode_grab+0x90/0x90 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663748]
+[<ffffffffa00a7e90>] ? xfs_reclaim_inode_grab+0x90/0x90 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663760]
+[<ffffffffa009d363>] xfs_fs_log_dummy+0x43/0x90 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663773]
+[<ffffffffa00a7f0c>] xfs_sync_worker+0x7c/0x80 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663778]
+[<ffffffff810704ab>] process_one_work+0x11b/0x4a0
+Apr 23 11:25:45 use0453rtk kernel: [  719.663783]
+[<ffffffff81070be9>] worker_thread+0x169/0x350
+Apr 23 11:25:45 use0453rtk kernel: [  719.663787]
+[<ffffffff81070a80>] ? rescuer_thread+0x210/0x210
+Apr 23 11:25:45 use0453rtk kernel: [  719.663792]
+[<ffffffff810755ae>] kthread+0x9e/0xb0
+Apr 23 11:25:45 use0453rtk kernel: [  719.663799]
+[<ffffffff816540e4>] kernel_thread_helper+0x4/0x10
+Apr 23 11:25:45 use0453rtk kernel: [  719.663804]
+[<ffffffff81075510>] ? flush_kthread_worker+0xc0/0xc0
+Apr 23 11:25:45 use0453rtk kernel: [  719.663808]
+[<ffffffff816540e0>] ? gs_change+0x13/0x13
+Apr 23 11:25:45 use0453rtk kernel: [  719.663822] INFO: task
+flush-252:2:5916 blocked for more than 120 seconds.
+Apr 23 11:25:45 use0453rtk kernel: [  719.663828] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+Apr 23 11:25:45 use0453rtk kernel: [  719.663836] flush-252:2     D
+ffffffff818080c0     0  5916      2 0x00000000
+Apr 23 11:25:45 use0453rtk kernel: [  719.663841]  ffff880c0135f650
+0000000000000046 ffff880c0135f600 ffffffff8164b571
+Apr 23 11:25:45 use0453rtk kernel: [  719.663846]  ffff880c0135e000
+ffff880c0135e000 ffff880c03308870 ffff880c0087e870
+Apr 23 11:25:45 use0453rtk kernel: [  719.663851]  ffff880c0135f640
+ffff880bffc94c00 ffff881800a5c4a8 00000000000163f0
+Apr 23 11:25:45 use0453rtk kernel: [  719.663857] Call Trace:
+Apr 23 11:25:45 use0453rtk kernel: [  719.663861]
+[<ffffffff8164b571>] ? _raw_spin_unlock_irq+0x21/0x50
+Apr 23 11:25:45 use0453rtk kernel: [  719.663866]
+[<ffffffff8164a4bf>] schedule+0x3f/0x60
+Apr 23 11:25:45 use0453rtk kernel: [  719.663880]
+[<ffffffffa00edf63>] xlog_reserveq_wait+0x103/0x270 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663884]
+[<ffffffff81085300>] ? try_to_wake_up+0x2b0/0x2b0
+Apr 23 11:25:45 use0453rtk kernel: [  719.663898]
+[<ffffffffa00ee367>] xlog_grant_log_space+0x157/0x200 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663912]
+[<ffffffffa00f0cbb>] xfs_log_reserve+0x14b/0x1c0 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663926]
+[<ffffffffa00eba4c>] xfs_trans_reserve+0x9c/0x200 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663940]
+[<ffffffffa00eb8c1>] ? xfs_trans_alloc+0xa1/0xb0 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663953]
+[<ffffffffa00a1bd6>] xfs_iomap_write_allocate+0x1d6/0x370 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663960]
+[<ffffffff812e7307>] ? generic_make_request+0xc7/0x100
+Apr 23 11:25:45 use0453rtk kernel: [  719.663964]
+[<ffffffff812e73c7>] ? submit_bio+0x87/0x110
+Apr 23 11:25:45 use0453rtk kernel: [  719.663974]
+[<ffffffffa0094559>] xfs_map_blocks+0x269/0x2b0 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663985]
+[<ffffffffa009473f>] xfs_vm_writepage+0x19f/0x540 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.663994]
+[<ffffffff81117d07>] __writepage+0x17/0x40
+Apr 23 11:25:45 use0453rtk kernel: [  719.663998]
+[<ffffffff81118468>] write_cache_pages+0x228/0x4f0
+Apr 23 11:25:45 use0453rtk kernel: [  719.664003]
+[<ffffffff81117cf0>] ? set_page_dirty+0x70/0x70
+Apr 23 11:25:45 use0453rtk kernel: [  719.664008]
+[<ffffffff8111877a>] generic_writepages+0x4a/0x70
+Apr 23 11:25:45 use0453rtk kernel: [  719.664018]
+[<ffffffffa00932bc>] xfs_vm_writepages+0x5c/0x80 [xfs]
+Apr 23 11:25:45 use0453rtk kernel: [  719.664023]
+[<ffffffff8111a201>] do_writepages+0x21/0x40
+Apr 23 11:25:45 use0453rtk kernel: [  719.664029]
+[<ffffffff811981a5>] writeback_single_inode+0x185/0x470
+Apr 23 11:25:45 use0453rtk kernel: [  719.664034]
+[<ffffffff8119888d>] writeback_sb_inodes+0x19d/0x270
+Apr 23 11:25:45 use0453rtk kernel: [  719.664039]
+[<ffffffff811989f6>] __writeback_inodes_wb+0x96/0xc0
+Apr 23 11:25:45 use0453rtk kernel: [  719.664043]
+[<ffffffff81198d33>] wb_writeback+0x313/0x340
+Apr 23 11:25:45 use0453rtk kernel: [  719.664048]
+[<ffffffff81188ae2>] ? get_nr_inodes+0x52/0x70
+Apr 23 11:25:45 use0453rtk kernel: [  719.664053]
+[<ffffffff811992f7>] wb_do_writeback+0x257/0x260
+Apr 23 11:25:45 use0453rtk kernel: [  719.664058]
+[<ffffffff81062e0a>] ? del_timer_sync+0x3a/0x60
+Apr 23 11:25:45 use0453rtk kernel: [  719.664063]
+[<ffffffff8119938c>] bdi_writeback_thread+0x8c/0x2c0
+Apr 23 11:25:45 use0453rtk kernel: [  719.664067]
+[<ffffffff81199300>] ? wb_do_writeback+0x260/0x260
+Apr 23 11:25:45 use0453rtk kernel: [  719.664071]
+[<ffffffff810755ae>] kthread+0x9e/0xb0
+Apr 23 11:25:45 use0453rtk kernel: [  719.664076]
+[<ffffffff816540e4>] kernel_thread_helper+0x4/0x10
+Apr 23 11:25:45 use0453rtk kernel: [  719.664080]
+[<ffffffff81075510>] ? flush_kthread_worker+0xc0/0xc0
+Apr 23 11:25:45 use0453rtk kernel: [  719.664084]
+[<ffffffff816540e0>] ? gs_change+0x13/0x13
 
 _______________________________________________
 xfs mailing list
