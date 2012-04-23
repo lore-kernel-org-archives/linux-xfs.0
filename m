@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3N5xSX3127482 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:29 -0500
+	q3N5xa2O127583 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:36 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9VPWwYxjW79GcIrp for <xfs@oss.sgi.com>;
-	Sun, 22 Apr 2012 22:59:27 -0700 (PDT)
+	JFMBWVWVY91JTdnu for <xfs@oss.sgi.com>;
+	Sun, 22 Apr 2012 22:59:34 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMCIy-0001aQ-TR
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:20 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SMCJ9-0001av-Po
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:31 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMCIy-0004YC-P4
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:20 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SMCJ8-0004YR-WA
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/37] xfs: check for buffer errors before waiting
-Date: Mon, 23 Apr 2012 15:58:46 +1000
-Message-Id: <1335160747-17254-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 21/37] xfs: use blocks for counting length of buffers
+Date: Mon, 23 Apr 2012 15:58:51 +1000
+Message-Id: <1335160747-17254-22-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,129 +35,298 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If we call xfs_buf_iowait() on a buffer that failed dispatch due to
-an IO error, it will wait forever for an Io that does not exist.
-This is hndled in xfs_buf_read, but there is other code that calls
-xfs_buf_iowait directly that doesn't.
+Now that we pass block counts everywhere, and index buffers by block
+number, track the length of the buffer in units of blocks rather
+than bytes. Convert the code to use block counts, and those that
+need byte counts get converted at the time of use.
 
-Rather than make the call sites have to handle checking for dispatch
-errors and then checking for completion errors, make
-xfs_buf_iowait() check for dispatch errors on the buffer before
-waiting. This means we handle both dispatch and completion errors
-with one set of error handling at the caller sites.
+Also, remove the XFS_BUF_{SET_}SIZE() macros that are just wrappers
+around the buffer length. They onyl serve to make the code shouty
+loud and don't actually add any real value.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_buf.c         |   22 ++++++++++------------
- fs/xfs/xfs_buf.h         |    2 +-
- fs/xfs/xfs_log_recover.c |    2 ++
- 3 files changed, 13 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_attr.c        |   15 +++++++++------
+ fs/xfs/xfs_buf.c         |   22 ++++++++++++----------
+ fs/xfs/xfs_buf.h         |    4 +---
+ fs/xfs/xfs_log.c         |    5 +----
+ fs/xfs/xfs_log_recover.c |    8 ++++----
+ fs/xfs/xfs_trace.h       |   14 +++++++-------
+ 6 files changed, 34 insertions(+), 34 deletions(-)
 
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 65d61b9..6e9bd7e 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -1993,8 +1993,7 @@ xfs_attr_rmtval_get(xfs_da_args_t *args)
+ 			if (error)
+ 				return(error);
+ 
+-			tmp = (valuelen < XFS_BUF_SIZE(bp))
+-				? valuelen : XFS_BUF_SIZE(bp);
++			tmp = min_t(int, valuelen, BBTOB(bp->b_length));
+ 			xfs_buf_iomove(bp, 0, tmp, dst, XBRW_READ);
+ 			xfs_buf_relse(bp);
+ 			dst += tmp;
+@@ -2097,6 +2096,8 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 	lblkno = args->rmtblkno;
+ 	valuelen = args->valuelen;
+ 	while (valuelen > 0) {
++		int buflen;
++
+ 		/*
+ 		 * Try to remember where we decided to put the value.
+ 		 */
+@@ -2118,11 +2119,13 @@ xfs_attr_rmtval_set(xfs_da_args_t *args)
+ 				 XBF_LOCK | XBF_DONT_BLOCK);
+ 		if (!bp)
+ 			return ENOMEM;
+-		tmp = (valuelen < XFS_BUF_SIZE(bp)) ? valuelen :
+-							XFS_BUF_SIZE(bp);
++
++		buflen = BBTOB(bp->b_length);
++		tmp = min_t(int, valuelen, buflen);
+ 		xfs_buf_iomove(bp, 0, tmp, src, XBRW_WRITE);
+-		if (tmp < XFS_BUF_SIZE(bp))
+-			xfs_buf_zero(bp, tmp, XFS_BUF_SIZE(bp) - tmp);
++		if (tmp < buflen)
++			xfs_buf_zero(bp, tmp, buflen - tmp);
++
+ 		error = xfs_bwrite(bp);	/* GROT: NOTE: synchronous write */
+ 		xfs_buf_relse(bp);
+ 		if (error)
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index da2541e..86d9af7 100644
+index 854b27a..382c49a 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -600,17 +600,15 @@ _xfs_buf_read(
- 	xfs_buf_t		*bp,
- 	xfs_buf_flags_t		flags)
- {
--	int			status;
--
- 	ASSERT(!(flags & XBF_WRITE));
- 	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
+@@ -198,11 +198,12 @@ xfs_buf_alloc(
+ 	bp->b_target = target;
  
- 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+ 	/*
+-	 * Set buffer_length and count_desired to the same value initially.
++	 * Set length and count_desired to the same value initially.
+ 	 * I/O routines should use count_desired, which will be the same in
+ 	 * most cases but may be reset (e.g. XFS recovery).
+ 	 */
+-	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
++	bp->b_length = numblks;
++	bp->b_count_desired = numblks << BBSHIFT;
+ 	bp->b_flags = flags;
  
--	status = xfs_buf_iorequest(bp);
--	if (status || bp->b_error || (flags & XBF_ASYNC))
--		return status;
-+	xfs_buf_iorequest(bp);
-+	if (flags & XBF_ASYNC)
-+		return 0;
- 	return xfs_buf_iowait(bp);
- }
+ 	/*
+@@ -313,14 +314,14 @@ xfs_buf_allocate_memory(
+ 	 * the memory from the heap - there's no need for the complexity of
+ 	 * page arrays to keep allocation down to order 0.
+ 	 */
+-	if (bp->b_buffer_length < PAGE_SIZE) {
+-		bp->b_addr = kmem_alloc(bp->b_buffer_length, xb_to_km(flags));
++	if (bp->b_length < BTOBB(PAGE_SIZE)) {
++		bp->b_addr = kmem_alloc(BBTOB(bp->b_length), xb_to_km(flags));
+ 		if (!bp->b_addr) {
+ 			/* low memory - use alloc_page loop instead */
+ 			goto use_alloc_page;
+ 		}
  
-@@ -695,7 +693,7 @@ xfs_buf_read_uncached(
- 
- 	xfsbdstrat(mp, bp);
- 	error = xfs_buf_iowait(bp);
--	if (error || bp->b_error) {
-+	if (error) {
- 		xfs_buf_relse(bp);
- 		return NULL;
+-		if (((unsigned long)(bp->b_addr + bp->b_buffer_length - 1) &
++		if (((unsigned long)(bp->b_addr + BBTOB(bp->b_length) - 1) &
+ 								PAGE_MASK) !=
+ 		    ((unsigned long)bp->b_addr & PAGE_MASK)) {
+ 			/* b_addr spans two pages - use alloc_page instead */
+@@ -337,7 +338,7 @@ xfs_buf_allocate_memory(
  	}
-@@ -1252,7 +1250,7 @@ next_chunk:
+ 
+ use_alloc_page:
+-	end = BBTOB(bp->b_bn) + bp->b_buffer_length;
++	end = BBTOB(bp->b_bn + bp->b_length);
+ 	page_count = xfs_buf_btoc(end) - xfs_buf_btoct(BBTOB(bp->b_bn));
+ 	error = _xfs_buf_get_pages(bp, page_count, flags);
+ 	if (unlikely(error))
+@@ -477,7 +478,7 @@ _xfs_buf_find(
+ 			 * reallocating a busy extent. Skip this buffer and
+ 			 * continue searching to the right for an exact match.
+ 			 */
+-			if (bp->b_buffer_length != numbytes) {
++			if (bp->b_length != numblks) {
+ 				ASSERT(bp->b_flags & XBF_STALE);
+ 				rbp = &(*rbp)->rb_right;
+ 				continue;
+@@ -574,7 +575,7 @@ xfs_buf_get(
+ 	 * that we can do IO on it.
+ 	 */
+ 	bp->b_bn = blkno;
+-	bp->b_count_desired = bp->b_buffer_length;
++	bp->b_count_desired = BBTOB(bp->b_length);
+ 
+ found:
+ 	if (!(bp->b_flags & XBF_MAPPED)) {
+@@ -716,7 +717,8 @@ xfs_buf_set_empty(
+ 	bp->b_pages = NULL;
+ 	bp->b_page_count = 0;
+ 	bp->b_addr = NULL;
+-	bp->b_buffer_length = bp->b_count_desired = numblks << BBSHIFT;
++	bp->b_length = numblks;
++	bp->b_count_desired = numblks << BBSHIFT;
+ 	bp->b_bn = XFS_BUF_DADDR_NULL;
+ 	bp->b_flags &= ~XBF_MAPPED;
+ }
+@@ -769,7 +771,7 @@ xfs_buf_associate_memory(
  	}
- }
  
--int
-+void
- xfs_buf_iorequest(
- 	xfs_buf_t		*bp)
- {
-@@ -1273,13 +1271,12 @@ xfs_buf_iorequest(
- 	_xfs_buf_ioend(bp, 0);
+ 	bp->b_count_desired = len;
+-	bp->b_buffer_length = buflen;
++	bp->b_length = BTOBB(buflen);
+ 	bp->b_flags |= XBF_MAPPED;
  
- 	xfs_buf_rele(bp);
--	return 0;
- }
- 
- /*
-- *	Waits for I/O to complete on the buffer supplied.
-- *	It returns immediately if no I/O is pending.
-- *	It returns the I/O error code, if any, or 0 if there was no error.
-+ * Waits for I/O to complete on the buffer supplied.  It returns immediately if
-+ * no I/O is pending or there is already a pending error on the buffer.  It
-+ * returns the I/O error code, if any, or 0 if there was no error.
-  */
- int
- xfs_buf_iowait(
-@@ -1287,7 +1284,8 @@ xfs_buf_iowait(
- {
- 	trace_xfs_buf_iowait(bp, _RET_IP_);
- 
--	wait_for_completion(&bp->b_iowait);
-+	if (!bp->b_error)
-+		wait_for_completion(&bp->b_iowait);
- 
- 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
- 	return bp->b_error;
+ 	return 0;
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 7083cf4..87a4748 100644
+index 4d472e5..3dab208 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -191,7 +191,7 @@ extern int xfs_bdstrat_cb(struct xfs_buf *);
- extern void xfs_buf_ioend(xfs_buf_t *,	int);
- extern void xfs_buf_ioerror(xfs_buf_t *, int);
- extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
--extern int xfs_buf_iorequest(xfs_buf_t *);
-+extern void xfs_buf_iorequest(xfs_buf_t *);
- extern int xfs_buf_iowait(xfs_buf_t *);
- extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
- 				xfs_buf_rw_t);
+@@ -117,7 +117,7 @@ typedef struct xfs_buf {
+ 	 */
+ 	struct rb_node		b_rbnode;	/* rbtree node */
+ 	xfs_daddr_t		b_bn;		/* block number for I/O */
+-	size_t			b_buffer_length;/* size of buffer in bytes */
++	int			b_length;	/* size of buffer in BBs */
+ 	atomic_t		b_hold;		/* reference count */
+ 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+ 	xfs_buf_flags_t		b_flags;	/* status flags */
+@@ -246,8 +246,6 @@ void xfs_buf_stale(struct xfs_buf *bp);
+ #define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
+ #define XFS_BUF_COUNT(bp)		((bp)->b_count_desired)
+ #define XFS_BUF_SET_COUNT(bp, cnt)	((bp)->b_count_desired = (cnt))
+-#define XFS_BUF_SIZE(bp)		((bp)->b_buffer_length)
+-#define XFS_BUF_SET_SIZE(bp, cnt)	((bp)->b_buffer_length = (cnt))
+ 
+ static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+ {
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 8990012..f9d8355 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1197,9 +1197,6 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	spin_lock_init(&log->l_icloglock);
+ 	init_waitqueue_head(&log->l_flush_wait);
+ 
+-	/* log record size must be multiple of BBSIZE; see xlog_rec_header_t */
+-	ASSERT((XFS_BUF_SIZE(bp) & BBMASK) == 0);
+-
+ 	iclogp = &log->l_iclog;
+ 	/*
+ 	 * The amount of memory to allocate for the iclog structure is
+@@ -1239,7 +1236,7 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 		head->h_fmt = cpu_to_be32(XLOG_FMT);
+ 		memcpy(&head->h_fs_uuid, &mp->m_sb.sb_uuid, sizeof(uuid_t));
+ 
+-		iclog->ic_size = XFS_BUF_SIZE(bp) - log->l_iclog_hsize;
++		iclog->ic_size = BBTOB(bp->b_length) - log->l_iclog_hsize;
+ 		iclog->ic_state = XLOG_STATE_ACTIVE;
+ 		iclog->ic_log = log;
+ 		atomic_set(&iclog->ic_refcnt, 0);
 diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 396e3bf..64ed6ff 100644
+index d94ed40..15b7470 100644
 --- a/fs/xfs/xfs_log_recover.c
 +++ b/fs/xfs/xfs_log_recover.c
-@@ -179,6 +179,7 @@ xlog_bread_noalign(
+@@ -146,7 +146,7 @@ xlog_align(
+ {
+ 	xfs_daddr_t	offset = blk_no & ((xfs_daddr_t)log->l_sectBBsize - 1);
+ 
+-	ASSERT(BBTOB(offset + nbblks) <= XFS_BUF_SIZE(bp));
++	ASSERT(offset + nbblks <= bp->b_length);
+ 	return bp->b_addr + BBTOB(offset);
+ }
+ 
+@@ -174,7 +174,7 @@ xlog_bread_noalign(
+ 	nbblks = round_up(nbblks, log->l_sectBBsize);
+ 
+ 	ASSERT(nbblks > 0);
+-	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
++	ASSERT(nbblks <= bp->b_length);
+ 
  	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
  	XFS_BUF_READ(bp);
- 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
-+	bp->b_error = 0;
+@@ -219,7 +219,7 @@ xlog_bread_offset(
+ 	xfs_caddr_t	offset)
+ {
+ 	xfs_caddr_t	orig_offset = bp->b_addr;
+-	int		orig_len = bp->b_buffer_length;
++	int		orig_len = BBTOB(bp->b_length);
+ 	int		error, error2;
  
- 	xfsbdstrat(log->l_mp, bp);
- 	error = xfs_buf_iowait(bp);
-@@ -266,6 +267,7 @@ xlog_bwrite(
- 	xfs_buf_hold(bp);
- 	xfs_buf_lock(bp);
- 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
-+	bp->b_error = 0;
+ 	error = xfs_buf_associate_memory(bp, offset, BBTOB(nbblks));
+@@ -260,7 +260,7 @@ xlog_bwrite(
+ 	nbblks = round_up(nbblks, log->l_sectBBsize);
  
- 	error = xfs_bwrite(bp);
- 	if (error)
+ 	ASSERT(nbblks > 0);
+-	ASSERT(BBTOB(nbblks) <= XFS_BUF_SIZE(bp));
++	ASSERT(nbblks <= bp->b_length);
+ 
+ 	XFS_BUF_SET_ADDR(bp, log->l_logBBstart + blk_no);
+ 	XFS_BUF_ZEROFLAGS(bp);
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 2e41756..900764c 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -281,7 +281,7 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+ 	TP_STRUCT__entry(
+ 		__field(dev_t, dev)
+ 		__field(xfs_daddr_t, bno)
+-		__field(size_t, buffer_length)
++		__field(int, nblks)
+ 		__field(int, hold)
+ 		__field(int, pincount)
+ 		__field(unsigned, lockval)
+@@ -291,18 +291,18 @@ DECLARE_EVENT_CLASS(xfs_buf_class,
+ 	TP_fast_assign(
+ 		__entry->dev = bp->b_target->bt_dev;
+ 		__entry->bno = bp->b_bn;
+-		__entry->buffer_length = bp->b_buffer_length;
++		__entry->nblks = bp->b_length;
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
+ 		__entry->lockval = bp->b_sema.count;
+ 		__entry->flags = bp->b_flags;
+ 		__entry->caller_ip = caller_ip;
+ 	),
+-	TP_printk("dev %d:%d bno 0x%llx len 0x%zx hold %d pincount %d "
++	TP_printk("dev %d:%d bno 0x%llx nblks 0x%x hold %d pincount %d "
+ 		  "lock %d flags %s caller %pf",
+ 		  MAJOR(__entry->dev), MINOR(__entry->dev),
+ 		  (unsigned long long)__entry->bno,
+-		  __entry->buffer_length,
++		  __entry->nblks,
+ 		  __entry->hold,
+ 		  __entry->pincount,
+ 		  __entry->lockval,
+@@ -362,7 +362,7 @@ DECLARE_EVENT_CLASS(xfs_buf_flags_class,
+ 	TP_fast_assign(
+ 		__entry->dev = bp->b_target->bt_dev;
+ 		__entry->bno = bp->b_bn;
+-		__entry->buffer_length = bp->b_buffer_length;
++		__entry->buffer_length = BBTOB(bp->b_length);
+ 		__entry->flags = flags;
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
+@@ -406,7 +406,7 @@ TRACE_EVENT(xfs_buf_ioerror,
+ 	TP_fast_assign(
+ 		__entry->dev = bp->b_target->bt_dev;
+ 		__entry->bno = bp->b_bn;
+-		__entry->buffer_length = bp->b_buffer_length;
++		__entry->buffer_length = BBTOB(bp->b_length);
+ 		__entry->hold = atomic_read(&bp->b_hold);
+ 		__entry->pincount = atomic_read(&bp->b_pin_count);
+ 		__entry->lockval = bp->b_sema.count;
+@@ -450,7 +450,7 @@ DECLARE_EVENT_CLASS(xfs_buf_item_class,
+ 		__entry->bli_recur = bip->bli_recur;
+ 		__entry->bli_refcount = atomic_read(&bip->bli_refcount);
+ 		__entry->buf_bno = bip->bli_buf->b_bn;
+-		__entry->buf_len = bip->bli_buf->b_buffer_length;
++		__entry->buf_len = BBTOB(bip->bli_buf->b_length);
+ 		__entry->buf_flags = bip->bli_buf->b_flags;
+ 		__entry->buf_hold = atomic_read(&bip->bli_buf->b_hold);
+ 		__entry->buf_pincount = atomic_read(&bip->bli_buf->b_pin_count);
 -- 
 1.7.9.5
 
