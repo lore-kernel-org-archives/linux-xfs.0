@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3N600Za127795 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 01:00:00 -0500
+	q3N5xvWE127770 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 00:59:57 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	XxzumYRi9jW5kEau for <xfs@oss.sgi.com>;
-	Sun, 22 Apr 2012 22:59:59 -0700 (PDT)
+	rHoPeON8hvZEhYGq for <xfs@oss.sgi.com>;
+	Sun, 22 Apr 2012 22:59:55 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMCJP-0001bb-9O
-	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:47 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SMCJU-0001bx-BJ
+	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:52 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMCJP-0004ZA-6B
+	(envelope-from <dave@disappointment.disaster>) id 1SMCJP-0004ZC-72
 	for xfs@oss.sgi.com; Mon, 23 Apr 2012 15:59:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 35/37] xfs: Properly exclude IO type flags from buffer flags
-Date: Mon, 23 Apr 2012 15:59:05 +1000
-Message-Id: <1335160747-17254-36-git-send-email-david@fromorbit.com>
+Subject: [PATCH 36/37] xfs: flush outstanding buffers on log mount failure
+Date: Mon, 23 Apr 2012 15:59:06 +1000
+Message-Id: <1335160747-17254-37-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,34 +35,54 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Recent event tracing during a debugging session showed that flags
-that define the IO type for a buffer are leaking into the flags on
-the buffer incorrectly. Fix the flag exclusion mask in
-xfs_buf_alloc() to avoid problems that may be caused by such
-leakage.
+When we fail to mount the log in xfs_mountfs(), we tear down all the
+infrastructure we have already allocated. However, the process of
+mounting the log may have progressed to the point of reading,
+caching and modifying buffers in memory. Hence before we can free
+all the infrastructure, we have to flush and remove all the buffers
+from memory.
+
+Problem first reported by Eric Sandeen, later a different incarnation
+was reported by Ben Myers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index af8480d..b2795ba 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -178,9 +178,10 @@ xfs_buf_alloc(
- 		return NULL;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 6698e0d..b09a4a7 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1288,7 +1288,7 @@ xfs_mountfs(
+ 			      XFS_FSB_TO_BB(mp, sbp->sb_logblocks));
+ 	if (error) {
+ 		xfs_warn(mp, "log mount failed");
+-		goto out_free_perag;
++		goto out_fail_wait;
+ 	}
  
  	/*
--	 * We don't want certain flags to appear in b_flags.
-+	 * We don't want certain flags to appear in b_flags unless they are
-+	 * specifically set by later operations on the buffer.
- 	 */
--	flags &= ~(XBF_MAPPED|XBF_READ_AHEAD);
-+	flags &= ~(XBF_MAPPED | XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
+@@ -1315,7 +1315,7 @@ xfs_mountfs(
+ 	     !mp->m_sb.sb_inprogress) {
+ 		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
+ 		if (error)
+-			goto out_free_perag;
++			goto out_fail_wait;
+ 	}
  
- 	atomic_set(&bp->b_hold, 1);
- 	atomic_set(&bp->b_lru_ref, 1);
+ 	/*
+@@ -1439,6 +1439,10 @@ xfs_mountfs(
+ 	IRELE(rip);
+  out_log_dealloc:
+ 	xfs_log_unmount(mp);
++ out_fail_wait:
++	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
++		xfs_wait_buftarg(mp->m_logdev_targp);
++	xfs_wait_buftarg(mp->m_ddev_targp);
+  out_free_perag:
+ 	xfs_free_perag(mp);
+  out_remove_uuid:
 -- 
 1.7.9.5
 
