@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3NFhCZl207636 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 10:43:12 -0500
-Message-ID: <4F95788D.2040101@sgi.com>
-Date: Mon, 23 Apr 2012 10:43:09 -0500
+	q3NFlZLJ207973 for <xfs@oss.sgi.com>; Mon, 23 Apr 2012 10:47:35 -0500
+Message-ID: <4F957998.6010900@sgi.com>
+Date: Mon, 23 Apr 2012 10:47:36 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 28/37] xfs: move xfsagino_t to xfs_types.h
+Subject: Re: [PATCH 36/37] xfs: flush outstanding buffers on log mount failure
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<1335160747-17254-29-git-send-email-david@fromorbit.com>
-In-Reply-To: <1335160747-17254-29-git-send-email-david@fromorbit.com>
+	<1335160747-17254-37-git-send-email-david@fromorbit.com>
+In-Reply-To: <1335160747-17254-37-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,13 +25,18 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 04/23/12 00:58, Dave Chinner wrote:
+On 04/23/12 00:59, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Untangle the header file includes a bit by moving the definition of
-> xfs_agino_t to xfs_types.h. This removes the dependency that xfs_ag.h has on
-> xfs_inum.h, meaning we don't need to include xfs_inum.h everywhere we include
-> xfs_ag.h.
+> When we fail to mount the log in xfs_mountfs(), we tear down all the
+> infrastructure we have already allocated. However, the process of
+> mounting the log may have progressed to the point of reading,
+> caching and modifying buffers in memory. Hence before we can free
+> all the infrastructure, we have to flush and remove all the buffers
+> from memory.
+>
+> Problem first reported by Eric Sandeen, later a different incarnation
+> was reported by Ben Myers.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
