@@ -1,24 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3O6Xvch031579 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 01:33:57 -0500
+	q3O6XnNU031543 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 01:33:49 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VN2wf4DT4oSQYxXJ for <xfs@oss.sgi.com>;
-	Mon, 23 Apr 2012 23:33:55 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMZJx-0004NL-Vs
-	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:54 +1000
+	ApeCOhZc9fPQsTEq for <xfs@oss.sgi.com>;
+	Mon, 23 Apr 2012 23:33:47 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SMZJo-0004NK-3v
+	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:44 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMZJn-0005t5-TH
+	(envelope-from <dave@disappointment.disaster>) id 1SMZJn-0005t3-SB
 	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/10] xfs: add trace points for log forces
-Date: Tue, 24 Apr 2012 16:33:31 +1000
-Message-Id: <1335249220-22274-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1335249220-22274-1-git-send-email-david@fromorbit.com>
-References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/10] xfs: discontiguous buffer support a.k.a. die xfs_dabuf
+	die
+Date: Tue, 24 Apr 2012 16:33:30 +1000
+Message-Id: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,98 +32,59 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+This patch series builds on top the current patch queue I posted
+yesterday. This series replaces the struct xfs-dabuf with an xfs_buf
+that can serve the same purpose.
 
-To enable easy tracing of the location of log forces and the
-frequency of them via perf, add a pair of trace points to the log
-force functions.  This will help debug where excessive log forces
-are being issued from by simple perf commands like:
+Directory buffers may be made up of multiple extents, but are
+currently formed by creating individual buffers and then copying the
+data out of them into a linear memory region in a dabuf structure.
+All dabuf operations then require walking all the underlying buffers
+to change the state of the underlying buffers, and once a dabuf is
+modified the contents need to be copied back to the underlying
+buffers before they are logged.
 
-# ~/perf/perf top -e xfs:xfs_log_force -G -U
+All of these operations can be done on a normal xfs_buf, but the
+normal xfs_buf does not support multiple disk block ranges or doing
+multiple disjoint I/Os to read or write a buffer. Supporting
+multiple disk block ranges is not difficult - we simply need to
+attach an iovec-like array to the buffer rather than just using a
+single block number and length.
 
-Which gives this sort of output:
+Splitting the buffer up into multiple IOs for read and write is not
+difficult, either. We already track the number of IO remaining to
+complete an IO, so this can be used to wait for the multiple IO
+dispatched to complete (for both read and write).
 
-Events: 141  xfs:xfs_log_force
--  100.00%  [kernel]  [k] xfs_log_force
-   - xfs_log_force
-        87.04% xfsaild
-           kthread
-           kernel_thread_helper
-      - 12.87% xfs_buf_lock
-           _xfs_buf_find
-           xfs_buf_get
-           xfs_trans_get_buf
-           xfs_da_do_buf
-           xfs_da_get_buf
-           xfs_dir2_data_init
-           xfs_dir2_leaf_addname
-           xfs_dir_createname
-           xfs_create
-           xfs_vn_mknod
-           xfs_vn_create
-           vfs_create
-           do_last.isra.41
-           path_openat
-           do_filp_open
-           do_sys_open
-           sys_open
-           system_call_fastpath
+The only interesting twist to this is logging the changes. We can
+treat the discontiguous buffer as a single buffer for most purposes
+except for formatting the changes into the log. When formatting, we
+need to split the changes into a format item per underlying region
+so that recovery does not need to know about compound buffers and
+can recover each segment of a directory block indivdually as it does
+now. The fact that recovery will replay all or none of the
+transaction ensures this process is still atomic from a change
+recovery point of view.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c   |    2 ++
- fs/xfs/xfs_trace.h |   16 ++++++++++++++++
- 2 files changed, 18 insertions(+)
+Further, even though log recovery doesn't use discontiguous buffers,
+there will be no confusion between a short buffer written by
+recovery and a discontiguous buffer read by the directory code after
+mount because the lengths of the buffer will be different. hence we
+need no changes to mount or log recovery processing as we already
+ensure that all log recovery changes hve been written to disk before
+we finish the mount process.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 9b10a15..6b965bf 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2941,6 +2941,7 @@ xfs_log_force(
- {
- 	int	error;
- 
-+	trace_xfs_log_force(mp, 0);
- 	error = _xfs_log_force(mp, flags, NULL);
- 	if (error)
- 		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-@@ -3089,6 +3090,7 @@ xfs_log_force_lsn(
- {
- 	int	error;
- 
-+	trace_xfs_log_force(mp, lsn);
- 	error = _xfs_log_force_lsn(mp, lsn, flags, NULL);
- 	if (error)
- 		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index febff43..7cf9d35 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -874,6 +874,22 @@ DECLARE_EVENT_CLASS(xfs_log_item_class,
- 		  __print_flags(__entry->flags, "|", XFS_LI_FLAGS))
- )
- 
-+TRACE_EVENT(xfs_log_force,
-+	TP_PROTO(struct xfs_mount *mp, xfs_lsn_t lsn),
-+	TP_ARGS(mp, lsn),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_lsn_t, lsn)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = mp->m_super->s_dev;
-+		__entry->lsn = lsn;
-+	),
-+	TP_printk("dev %d:%d lsn 0x%llx",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->lsn)
-+)
-+
- #define DEFINE_LOG_ITEM_EVENT(name) \
- DEFINE_EVENT(xfs_log_item_class, name, \
- 	TP_PROTO(struct xfs_log_item *lip), \
--- 
-1.7.9.5
+The reason for making this changes is that we can now use a buffer
+cache callback to do all the metadata CRC calculations and
+verifications across both contiguous and discontiguous directory
+blocks. It greatly simplifies the implementation of this code and
+makes it consistent with all other metadata buffers. It should also
+provide a performance improvement because it avoids double copying
+and reduces the number of cached buffers.
+
+I've tested this on 4k/4k (FSB/DB sizes), 512b/64k, and 4k/64k
+combinations with xfstests and some dbench, fsmark and compilebench
+stress loads. More testing is welcome....
 
 _______________________________________________
 xfs mailing list
