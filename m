@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3O6XxeG031597 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 01:33:59 -0500
+	q3O6XxPx031600 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 01:33:59 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	mbL1FryTLpR3GnbU for <xfs@oss.sgi.com>;
-	Mon, 23 Apr 2012 23:33:56 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMZJo-0004NM-3v
-	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:44 +1000
+	q1oGaPIFfZ3nFCnS for <xfs@oss.sgi.com>;
+	Mon, 23 Apr 2012 23:33:57 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SMZJy-0004Nc-EO
+	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:54 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMZJn-0005t7-Ur
-	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:43 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SMZJo-0005tK-C4
+	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:44 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/10] xfs: separate buffer indexing from block map
-Date: Tue, 24 Apr 2012 16:33:32 +1000
-Message-Id: <1335249220-22274-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/10] xfs: struct xfs_buf_log_format isn't variable sized.
+Date: Tue, 24 Apr 2012 16:33:36 +1000
+Message-Id: <1335249220-22274-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,186 +36,162 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To support discontiguous buffers in the buffer cache, we need to
-separate the cache index variables from the I/O map. While this is
-currently a 1:1 mapping, discontiguous buffer support will break
-this relationship.
+The struct xfs_buf_log_format wants to think the dirty bitmap is
+variable sized.  In fact, it is variable size on disk simply due to
+the way we map it from the in-memory structure, but we still just
+use a fixed size memory allocation for the in-memory structure.
 
-However, for caching purposes, we can still treat them the same as a
-contiguous buffer - the block number of the first block and the
-length of the buffer - as that is still a unique representation.
-Also, the only way we will ever access the discontiguous regions of
-buffers is via bulding the complete buffer in the first place, so
-using the initial block number and entire buffer length is a sane
-way to index the buffers.
+Hence it makes no sense to set the function up as a variable sized
+structure when we already know it's maximum size, and we always
+allocate it as such. Simplify the structure by making the dirty
+bitmap a fixed sized array and just using the size of the structure
+for the allocation size.
 
-Add a block mapping vector construct to the xfs_buf and use it in
-the places where we are doing IO instead of the current
-b_bn/b_length variables.
+This will make it much simpler to allocate and manipulate an array
+of format structures for discontiguous buffer support.
+
+The previous struct xfs_buf_log_item size according to
+/proc/slabinfo was 224 bytes. pahole doesn't give the same size
+because of the variable size definition. With this modification,
+pahole reports the same as /proc/slabinfo:
+
+	/* size: 224, cachelines: 4, members: 6 */
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c |   21 +++++++++++++--------
- fs/xfs/xfs_buf.h |   17 +++++++++++++----
- 2 files changed, 26 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_alloc_btree.h |   14 --------------
+ fs/xfs/xfs_buf_item.h    |   36 ++++++++++++++++++------------------
+ fs/xfs/xfs_super.c       |    5 ++---
+ fs/xfs/xfs_types.h       |   14 ++++++++++++++
+ 4 files changed, 34 insertions(+), 35 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 172d3cc..0a07db4 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -199,6 +199,7 @@ xfs_buf_alloc(
- 	 * most cases but may be reset (e.g. XFS recovery).
- 	 */
- 	bp->b_length = numblks;
-+	bp->b_map.bm_len = numblks;
- 	bp->b_io_length = numblks;
- 	bp->b_flags = flags;
+diff --git a/fs/xfs/xfs_alloc_btree.h b/fs/xfs/xfs_alloc_btree.h
+index a6caa00..359fb86 100644
+--- a/fs/xfs/xfs_alloc_btree.h
++++ b/fs/xfs/xfs_alloc_btree.h
+@@ -51,20 +51,6 @@ typedef struct xfs_alloc_rec_incore {
+ typedef __be32 xfs_alloc_ptr_t;
  
-@@ -209,6 +210,7 @@ xfs_buf_alloc(
- 	 * buffer that hasn't been fully initialised.
- 	 */
- 	bp->b_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_map.bm_bn = XFS_BUF_DADDR_NULL;
- 	atomic_set(&bp->b_pin_count, 0);
- 	init_waitqueue_head(&bp->b_waiters);
+ /*
+- * Minimum and maximum blocksize and sectorsize.
+- * The blocksize upper limit is pretty much arbitrary.
+- * The sectorsize upper limit is due to sizeof(sb_sectsize).
+- */
+-#define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
+-#define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
+-#define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
+-#define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
+-#define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
+-#define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
+-#define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
+-#define XFS_MAX_SECTORSIZE	(1 << XFS_MAX_SECTORSIZE_LOG)
+-
+-/*
+  * Block numbers in the AG:
+  * SB is sector 0, AGF is sector 1, AGI is sector 2, AGFL is sector 3.
+  */
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index b6ecd20..ff26867 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -21,23 +21,6 @@
+ extern kmem_zone_t	*xfs_buf_item_zone;
  
-@@ -334,8 +336,9 @@ xfs_buf_allocate_memory(
- 	}
+ /*
+- * This is the structure used to lay out a buf log item in the
+- * log.  The data map describes which 128 byte chunks of the buffer
+- * have been logged.
+- * For 6.2 and beyond, this is XFS_LI_BUF.  We use this to log everything.
+- */
+-typedef struct xfs_buf_log_format {
+-	unsigned short	blf_type;	/* buf log item type indicator */
+-	unsigned short	blf_size;	/* size of this item */
+-	ushort		blf_flags;	/* misc state */
+-	ushort		blf_len;	/* number of blocks in this buf */
+-	__int64_t	blf_blkno;	/* starting blkno of this buf */
+-	unsigned int	blf_map_size;	/* size of data bitmap in words */
+-	unsigned int	blf_data_map[1];/* variable size bitmap of */
+-					/*   regions of buffer in this item */
+-} xfs_buf_log_format_t;
+-
+-/*
+  * This flag indicates that the buffer contains on disk inodes
+  * and requires special recovery handling.
+  */
+@@ -61,6 +44,23 @@ typedef struct xfs_buf_log_format {
+ #define	NBWORD			(NBBY * sizeof(unsigned int))
  
- use_alloc_page:
--	start = BBTOB(bp->b_bn) >> PAGE_SHIFT;
--	end = (BBTOB(bp->b_bn + bp->b_length) + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	start = BBTOB(bp->b_map.bm_bn) >> PAGE_SHIFT;
-+	end = (BBTOB(bp->b_map.bm_bn + bp->b_length) + PAGE_SIZE - 1)
-+								>> PAGE_SHIFT;
- 	page_count = end - start;
- 	error = _xfs_buf_get_pages(bp, page_count, flags);
- 	if (unlikely(error))
-@@ -572,7 +575,7 @@ xfs_buf_get(
- 	 * that we can do IO on it.
- 	 */
- 	bp->b_bn = blkno;
--	bp->b_io_length = bp->b_length;
-+	bp->b_map.bm_bn = blkno;
- 
- found:
- 	if (!bp->b_addr) {
-@@ -596,7 +599,7 @@ _xfs_buf_read(
- 	xfs_buf_flags_t		flags)
- {
- 	ASSERT(!(flags & XBF_WRITE));
--	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
-+	ASSERT(bp->b_map.bm_bn != XFS_BUF_DADDR_NULL);
- 
- 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
-@@ -677,8 +680,8 @@ xfs_buf_read_uncached(
- 		return NULL;
- 
- 	/* set up the buffer for a read IO */
--	XFS_BUF_SET_ADDR(bp, daddr);
--	XFS_BUF_READ(bp);
-+	bp->b_map.bm_bn = daddr;
-+	bp->b_flags |= XBF_READ;
- 
- 	xfsbdstrat(target->bt_mount, bp);
- 	error = xfs_buf_iowait(bp);
-@@ -707,6 +710,8 @@ xfs_buf_set_empty(
- 	bp->b_length = numblks;
- 	bp->b_io_length = numblks;
- 	bp->b_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_map.bm_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_map.bm_len = bp->b_length;
- }
- 
- static inline struct page *
-@@ -1171,7 +1176,7 @@ _xfs_buf_ioapply(
- 	struct bio		*bio;
- 	int			offset = bp->b_offset;
- 	int			size = BBTOB(bp->b_io_length);
--	sector_t		sector = bp->b_bn;
-+	sector_t		sector = bp->b_map.bm_bn;
- 
- 	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
-@@ -1576,7 +1581,7 @@ xfs_buf_cmp(
- 	struct xfs_buf	*bp = container_of(b, struct xfs_buf, b_list);
- 	xfs_daddr_t		diff;
- 
--	diff = ap->b_bn - bp->b_bn;
-+	diff = ap->b_map.bm_bn - bp->b_map.bm_bn;
- 	if (diff < 0)
- 		return -1;
- 	if (diff > 0)
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 7f1d139..cc616969 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -58,6 +58,7 @@ typedef enum {
- #define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
- #define _XBF_KMEM	(1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	(1 << 22)/* buffer on a delwri queue */
-+#define _XBF_COMPOUND	(1 << 23)/* compound buffer */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -75,7 +76,8 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
--	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
-+	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-+	{ _XBF_COMPOUND,	"COMPOUND" }
- 
- typedef struct xfs_buftarg {
- 	dev_t			bt_dev;
-@@ -98,6 +100,11 @@ typedef void (*xfs_buf_iodone_t)(struct xfs_buf *);
- 
- #define XB_PAGES	2
- 
-+struct xfs_buf_map {
-+	xfs_daddr_t		bm_bn;	/* block number for I/O */
-+	int			bm_len;	/* size of I/O */
-+};
+ /*
++ * This is the structure used to lay out a buf log item in the
++ * log.  The data map describes which 128 byte chunks of the buffer
++ * have been logged.
++ */
++#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
 +
- typedef struct xfs_buf {
- 	/*
- 	 * first cacheline holds all the fields needed for an uncontended cache
-@@ -107,7 +114,7 @@ typedef struct xfs_buf {
- 	 * fast-path on locking.
- 	 */
- 	struct rb_node		b_rbnode;	/* rbtree node */
--	xfs_daddr_t		b_bn;		/* block number for I/O */
-+	xfs_daddr_t		b_bn;		/* block number of buffer */
- 	int			b_length;	/* size of buffer in BBs */
- 	atomic_t		b_hold;		/* reference count */
- 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-@@ -127,12 +134,14 @@ typedef struct xfs_buf {
- 	struct xfs_trans	*b_transp;
- 	struct page		**b_pages;	/* array of page pointers */
- 	struct page		*b_page_array[XB_PAGES]; /* inline pages */
-+	struct xfs_buf_map	b_map;		/* compound buffer map */
- 	int			b_io_length;	/* IO size in BBs */
- 	atomic_t		b_pin_count;	/* pin count */
- 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	unsigned short		b_error;	/* error code on I/O */
++typedef struct xfs_buf_log_format {
++	unsigned short	blf_type;	/* buf log item type indicator */
++	unsigned short	blf_size;	/* size of this item */
++	ushort		blf_flags;	/* misc state */
++	ushort		blf_len;	/* number of blocks in this buf */
++	__int64_t	blf_blkno;	/* starting blkno of this buf */
++	unsigned int	blf_map_size;	/* used size of data bitmap in words */
++	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
++} xfs_buf_log_format_t;
 +
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
++/*
+  * buf log item flags
+  */
+ #define	XFS_BLI_HOLD		0x01
+@@ -102,7 +102,7 @@ typedef struct xfs_buf_log_item {
+ 	char			*bli_orig;	/* original buffer copy */
+ 	char			*bli_logged;	/* bytes logged (bitmap) */
  #endif
-@@ -233,8 +242,8 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
- #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
+-	xfs_buf_log_format_t	bli_format;	/* in-log header */
++	struct xfs_buf_log_format bli_format;	/* embedded in-log header */
+ } xfs_buf_log_item_t;
  
--#define XFS_BUF_ADDR(bp)		((bp)->b_bn)
--#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
-+#define XFS_BUF_ADDR(bp)		((bp)->b_map.bm_bn)
-+#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_map.bm_bn = (xfs_daddr_t)(bno))
+ void	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 36528d2..65b51d2 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1514,9 +1514,8 @@ xfs_init_zones(void)
+ 	 * size possible under XFS.  This wastes a little bit of memory,
+ 	 * but it is much faster.
+ 	 */
+-	xfs_buf_item_zone = kmem_zone_init((sizeof(xfs_buf_log_item_t) +
+-				(((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) /
+-				  NBWORD) * sizeof(int))), "xfs_buf_item");
++	xfs_buf_item_zone = kmem_zone_init(sizeof(struct xfs_buf_log_item),
++					   "xfs_buf_item");
+ 	if (!xfs_buf_item_zone)
+ 		goto out_destroy_log_item_desc_zone;
  
- static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
- {
+diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
+index 398cf68..7a41874 100644
+--- a/fs/xfs/xfs_types.h
++++ b/fs/xfs/xfs_types.h
+@@ -133,6 +133,20 @@ typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
+ #define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
+ 
+ /*
++ * Minimum and maximum blocksize and sectorsize.
++ * The blocksize upper limit is pretty much arbitrary.
++ * The sectorsize upper limit is due to sizeof(sb_sectsize).
++ */
++#define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
++#define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
++#define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
++#define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
++#define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
++#define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
++#define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
++#define XFS_MAX_SECTORSIZE	(1 << XFS_MAX_SECTORSIZE_LOG)
++
++/*
+  * Min numbers of data/attr fork btree root pointers.
+  */
+ #define MINDBTPTRS	3
 -- 
 1.7.9.5
 
