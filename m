@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3O6Xpc7031551 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 01:33:51 -0500
+	q3O6XxeG031597 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 01:33:59 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ECFmVVJm4QhxmlWx for <xfs@oss.sgi.com>;
-	Mon, 23 Apr 2012 23:33:48 -0700 (PDT)
+	mbL1FryTLpR3GnbU for <xfs@oss.sgi.com>;
+	Mon, 23 Apr 2012 23:33:56 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SMZJo-0004Nb-EQ
+	(envelope-from <dave@fromorbit.com>) id 1SMZJo-0004NM-3v
 	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:44 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SMZJo-0005tH-2C
-	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:44 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SMZJn-0005t7-Ur
+	for xfs@oss.sgi.com; Tue, 24 Apr 2012 16:33:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/10] xfs: add discontiguous buffer support to transactions
-Date: Tue, 24 Apr 2012 16:33:35 +1000
-Message-Id: <1335249220-22274-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/10] xfs: separate buffer indexing from block map
+Date: Tue, 24 Apr 2012 16:33:32 +1000
+Message-Id: <1335249220-22274-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,221 +35,186 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Now that the buffer cache supports discontiguous buffers, add
-support to the transaction buffer interface for getting and reading
-buffers.
+To support discontiguous buffers in the buffer cache, we need to
+separate the cache index variables from the I/O map. While this is
+currently a 1:1 mapping, discontiguous buffer support will break
+this relationship.
 
-Note that this patch does not convert the buffer item logging to
-support discontiguous buffers. That will be done as a separate
-commit.
+However, for caching purposes, we can still treat them the same as a
+contiguous buffer - the block number of the first block and the
+length of the buffer - as that is still a unique representation.
+Also, the only way we will ever access the discontiguous regions of
+buffers is via bulding the complete buffer in the first place, so
+using the initial block number and entire buffer length is a sane
+way to index the buffers.
+
+Add a block mapping vector construct to the xfs_buf and use it in
+the places where we are doing IO instead of the current
+b_bn/b_length variables.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_trans.h     |   50 +++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trans_buf.c |   68 ++++++++++++++++++++++++------------------------
- 2 files changed, 79 insertions(+), 39 deletions(-)
+ fs/xfs/xfs_buf.c |   21 +++++++++++++--------
+ fs/xfs/xfs_buf.h |   17 +++++++++++++----
+ 2 files changed, 26 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a5d31d5..7a50ad3 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -450,11 +450,51 @@ xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
- int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
- 				  uint, uint);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
--struct xfs_buf	*xfs_trans_get_buf(xfs_trans_t *, struct xfs_buftarg *, xfs_daddr_t,
--				   int, uint);
--int		xfs_trans_read_buf(struct xfs_mount *, xfs_trans_t *,
--				   struct xfs_buftarg *, xfs_daddr_t, int, uint,
--				   struct xfs_buf **);
-+
-+struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
-+				       struct xfs_buftarg *target,
-+				       struct xfs_buf_map *map, int nmaps,
-+				       uint flags);
-+
-+static inline struct xfs_buf *
-+xfs_trans_get_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	xfs_daddr_t		blkno,
-+	int			numblks,
-+	uint			flags)
-+{
-+	struct xfs_buf_map	map = {
-+		.bm_bn = blkno,
-+		.bm_len = numblks,
-+	};
-+	return xfs_trans_get_buf_map(tp, target, &map, 1, flags);
-+}
-+
-+int		xfs_trans_read_buf_map(struct xfs_mount *mp,
-+				       struct xfs_trans *tp,
-+				       struct xfs_buftarg *target,
-+				       struct xfs_buf_map *map, int nmaps,
-+				       xfs_buf_flags_t flags,
-+				       struct xfs_buf **bpp);
-+
-+static inline int
-+xfs_trans_read_buf(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	xfs_daddr_t		blkno,
-+	int			numblks,
-+	xfs_buf_flags_t		flags,
-+	struct xfs_buf		**bpp)
-+{
-+	struct xfs_buf_map	map = {
-+		.bm_bn = blkno,
-+		.bm_len = numblks,
-+	};
-+	return xfs_trans_read_buf_map(mp, tp, target, &map, 1, flags, bpp);
-+}
-+
- struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
- 
- void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 21c5a5e..6311b99 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -41,20 +41,26 @@ STATIC struct xfs_buf *
- xfs_trans_buf_item_match(
- 	struct xfs_trans	*tp,
- 	struct xfs_buftarg	*target,
--	xfs_daddr_t		blkno,
--	int			len)
-+	struct xfs_buf_map	*map,
-+	int			nmaps)
- {
- 	struct xfs_log_item_desc *lidp;
- 	struct xfs_buf_log_item	*blip;
-+	int			len = 0;
-+	int			i;
-+
-+	for (i = 0; i < nmaps; i++)
-+		len += map[i].bm_len;
- 
--	len = BBTOB(len);
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
- 		blip = (struct xfs_buf_log_item *)lidp->lid_item;
- 		if (blip->bli_item.li_type == XFS_LI_BUF &&
- 		    blip->bli_buf->b_target == target &&
--		    XFS_BUF_ADDR(blip->bli_buf) == blkno &&
--		    BBTOB(blip->bli_buf->b_length) == len)
-+		    XFS_BUF_ADDR(blip->bli_buf) == map[0].bm_bn &&
-+		    blip->bli_buf->b_length == len) {
-+			ASSERT(blip->bli_buf->b_map_count == nmaps);
- 			return blip->bli_buf;
-+		}
- 	}
- 
- 	return NULL;
-@@ -128,21 +134,19 @@ xfs_trans_bjoin(
-  * If the transaction pointer is NULL, make this just a normal
-  * get_buf() call.
-  */
--xfs_buf_t *
--xfs_trans_get_buf(xfs_trans_t	*tp,
--		  xfs_buftarg_t	*target_dev,
--		  xfs_daddr_t	blkno,
--		  int		len,
--		  uint		flags)
-+struct xfs_buf *
-+xfs_trans_get_buf_map(
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	struct xfs_buf_map	*map,
-+	int			nmaps,
-+	xfs_buf_flags_t		flags)
- {
- 	xfs_buf_t		*bp;
- 	xfs_buf_log_item_t	*bip;
- 
--	/*
--	 * Default to a normal get_buf() call if the tp is NULL.
--	 */
--	if (tp == NULL)
--		return xfs_buf_get(target_dev, blkno, len, flags);
-+	if (!tp)
-+		return xfs_buf_get_map(target, map, nmaps, flags);
- 
- 	/*
- 	 * If we find the buffer in the cache with this transaction
-@@ -150,7 +154,7 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 	 * have it locked.  In this case we just increment the lock
- 	 * recursion count and return the buffer to the caller.
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 172d3cc..0a07db4 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -199,6 +199,7 @@ xfs_buf_alloc(
+ 	 * most cases but may be reset (e.g. XFS recovery).
  	 */
--	bp = xfs_trans_buf_item_match(tp, target_dev, blkno, len);
-+	bp = xfs_trans_buf_item_match(tp, target, map, nmaps);
- 	if (bp != NULL) {
- 		ASSERT(xfs_buf_islocked(bp));
- 		if (XFS_FORCED_SHUTDOWN(tp->t_mountp)) {
-@@ -167,7 +171,7 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 		return (bp);
+ 	bp->b_length = numblks;
++	bp->b_map.bm_len = numblks;
+ 	bp->b_io_length = numblks;
+ 	bp->b_flags = flags;
+ 
+@@ -209,6 +210,7 @@ xfs_buf_alloc(
+ 	 * buffer that hasn't been fully initialised.
+ 	 */
+ 	bp->b_bn = XFS_BUF_DADDR_NULL;
++	bp->b_map.bm_bn = XFS_BUF_DADDR_NULL;
+ 	atomic_set(&bp->b_pin_count, 0);
+ 	init_waitqueue_head(&bp->b_waiters);
+ 
+@@ -334,8 +336,9 @@ xfs_buf_allocate_memory(
  	}
  
--	bp = xfs_buf_get(target_dev, blkno, len, flags);
-+	bp = xfs_buf_get_map(target, map, nmaps, flags);
- 	if (bp == NULL) {
+ use_alloc_page:
+-	start = BBTOB(bp->b_bn) >> PAGE_SHIFT;
+-	end = (BBTOB(bp->b_bn + bp->b_length) + PAGE_SIZE - 1) >> PAGE_SHIFT;
++	start = BBTOB(bp->b_map.bm_bn) >> PAGE_SHIFT;
++	end = (BBTOB(bp->b_map.bm_bn + bp->b_length) + PAGE_SIZE - 1)
++								>> PAGE_SHIFT;
+ 	page_count = end - start;
+ 	error = _xfs_buf_get_pages(bp, page_count, flags);
+ 	if (unlikely(error))
+@@ -572,7 +575,7 @@ xfs_buf_get(
+ 	 * that we can do IO on it.
+ 	 */
+ 	bp->b_bn = blkno;
+-	bp->b_io_length = bp->b_length;
++	bp->b_map.bm_bn = blkno;
+ 
+ found:
+ 	if (!bp->b_addr) {
+@@ -596,7 +599,7 @@ _xfs_buf_read(
+ 	xfs_buf_flags_t		flags)
+ {
+ 	ASSERT(!(flags & XBF_WRITE));
+-	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
++	ASSERT(bp->b_map.bm_bn != XFS_BUF_DADDR_NULL);
+ 
+ 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
+ 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+@@ -677,8 +680,8 @@ xfs_buf_read_uncached(
  		return NULL;
- 	}
-@@ -246,26 +250,22 @@ int	xfs_error_mod = 33;
-  * read_buf() call.
-  */
- int
--xfs_trans_read_buf(
--	xfs_mount_t	*mp,
--	xfs_trans_t	*tp,
--	xfs_buftarg_t	*target,
--	xfs_daddr_t	blkno,
--	int		len,
--	uint		flags,
--	xfs_buf_t	**bpp)
-+xfs_trans_read_buf_map(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	struct xfs_buf_map	*map,
-+	int			nmaps,
-+	xfs_buf_flags_t		flags,
-+	struct xfs_buf		**bpp)
- {
- 	xfs_buf_t		*bp;
- 	xfs_buf_log_item_t	*bip;
- 	int			error;
  
- 	*bpp = NULL;
--
--	/*
--	 * Default to a normal get_buf() call if the tp is NULL.
--	 */
--	if (tp == NULL) {
--		bp = xfs_buf_read(target, blkno, len, flags);
-+	if (!tp) {
-+		bp = xfs_buf_read_map(target, map, nmaps, flags);
- 		if (!bp)
- 			return (flags & XBF_TRYLOCK) ?
- 					EAGAIN : XFS_ERROR(ENOMEM);
-@@ -303,7 +303,7 @@ xfs_trans_read_buf(
- 	 * If the buffer is not yet read in, then we read it in, increment
- 	 * the lock recursion count, and return it to the caller.
+ 	/* set up the buffer for a read IO */
+-	XFS_BUF_SET_ADDR(bp, daddr);
+-	XFS_BUF_READ(bp);
++	bp->b_map.bm_bn = daddr;
++	bp->b_flags |= XBF_READ;
+ 
+ 	xfsbdstrat(target->bt_mount, bp);
+ 	error = xfs_buf_iowait(bp);
+@@ -707,6 +710,8 @@ xfs_buf_set_empty(
+ 	bp->b_length = numblks;
+ 	bp->b_io_length = numblks;
+ 	bp->b_bn = XFS_BUF_DADDR_NULL;
++	bp->b_map.bm_bn = XFS_BUF_DADDR_NULL;
++	bp->b_map.bm_len = bp->b_length;
+ }
+ 
+ static inline struct page *
+@@ -1171,7 +1176,7 @@ _xfs_buf_ioapply(
+ 	struct bio		*bio;
+ 	int			offset = bp->b_offset;
+ 	int			size = BBTOB(bp->b_io_length);
+-	sector_t		sector = bp->b_bn;
++	sector_t		sector = bp->b_map.bm_bn;
+ 
+ 	total_nr_pages = bp->b_page_count;
+ 	map_i = 0;
+@@ -1576,7 +1581,7 @@ xfs_buf_cmp(
+ 	struct xfs_buf	*bp = container_of(b, struct xfs_buf, b_list);
+ 	xfs_daddr_t		diff;
+ 
+-	diff = ap->b_bn - bp->b_bn;
++	diff = ap->b_map.bm_bn - bp->b_map.bm_bn;
+ 	if (diff < 0)
+ 		return -1;
+ 	if (diff > 0)
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index 7f1d139..cc616969 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -58,6 +58,7 @@ typedef enum {
+ #define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
+ #define _XBF_KMEM	(1 << 21)/* backed by heap memory */
+ #define _XBF_DELWRI_Q	(1 << 22)/* buffer on a delwri queue */
++#define _XBF_COMPOUND	(1 << 23)/* compound buffer */
+ 
+ typedef unsigned int xfs_buf_flags_t;
+ 
+@@ -75,7 +76,8 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+-	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
++	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
++	{ _XBF_COMPOUND,	"COMPOUND" }
+ 
+ typedef struct xfs_buftarg {
+ 	dev_t			bt_dev;
+@@ -98,6 +100,11 @@ typedef void (*xfs_buf_iodone_t)(struct xfs_buf *);
+ 
+ #define XB_PAGES	2
+ 
++struct xfs_buf_map {
++	xfs_daddr_t		bm_bn;	/* block number for I/O */
++	int			bm_len;	/* size of I/O */
++};
++
+ typedef struct xfs_buf {
+ 	/*
+ 	 * first cacheline holds all the fields needed for an uncontended cache
+@@ -107,7 +114,7 @@ typedef struct xfs_buf {
+ 	 * fast-path on locking.
  	 */
--	bp = xfs_trans_buf_item_match(tp, target, blkno, len);
-+	bp = xfs_trans_buf_item_match(tp, target, map, nmaps);
- 	if (bp != NULL) {
- 		ASSERT(xfs_buf_islocked(bp));
- 		ASSERT(bp->b_transp == tp);
-@@ -349,7 +349,7 @@ xfs_trans_read_buf(
- 		return 0;
- 	}
+ 	struct rb_node		b_rbnode;	/* rbtree node */
+-	xfs_daddr_t		b_bn;		/* block number for I/O */
++	xfs_daddr_t		b_bn;		/* block number of buffer */
+ 	int			b_length;	/* size of buffer in BBs */
+ 	atomic_t		b_hold;		/* reference count */
+ 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
+@@ -127,12 +134,14 @@ typedef struct xfs_buf {
+ 	struct xfs_trans	*b_transp;
+ 	struct page		**b_pages;	/* array of page pointers */
+ 	struct page		*b_page_array[XB_PAGES]; /* inline pages */
++	struct xfs_buf_map	b_map;		/* compound buffer map */
+ 	int			b_io_length;	/* IO size in BBs */
+ 	atomic_t		b_pin_count;	/* pin count */
+ 	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
+ 	unsigned int		b_page_count;	/* size of page array */
+ 	unsigned int		b_offset;	/* page offset in first page */
+ 	unsigned short		b_error;	/* error code on I/O */
++
+ #ifdef XFS_BUF_LOCK_TRACKING
+ 	int			b_last_holder;
+ #endif
+@@ -233,8 +242,8 @@ void xfs_buf_stale(struct xfs_buf *bp);
+ #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
+ #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
  
--	bp = xfs_buf_read(target, blkno, len, flags);
-+	bp = xfs_buf_read_map(target, map, nmaps, flags);
- 	if (bp == NULL) {
- 		*bpp = NULL;
- 		return (flags & XBF_TRYLOCK) ?
+-#define XFS_BUF_ADDR(bp)		((bp)->b_bn)
+-#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
++#define XFS_BUF_ADDR(bp)		((bp)->b_map.bm_bn)
++#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_map.bm_bn = (xfs_daddr_t)(bno))
+ 
+ static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
+ {
 -- 
 1.7.9.5
 
