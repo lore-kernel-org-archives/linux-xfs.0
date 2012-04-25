@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3PAroN8182061 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 05:53:50 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id HcocuF5Rb1yhERRk for
-	<xfs@oss.sgi.com>; Wed, 25 Apr 2012 03:53:49 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q3PArmK3000624
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 06:53:49 -0400
-From: Tom Marek <tmarek@redhat.com>
-Subject: [PATCH 2/2] xfstests 273: fix of reading scratch size and removing
-	lost+found
-Date: Wed, 25 Apr 2012 12:52:57 +0200
-Message-Id: <1335351177-3014-2-git-send-email-tmarek@redhat.com>
-In-Reply-To: <1335351177-3014-1-git-send-email-tmarek@redhat.com>
-References: <1335351177-3014-1-git-send-email-tmarek@redhat.com>
+	q3PEKHKl203749 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 09:20:17 -0500
+Received: from b.mx.filmlight.ltd.uk (b.mx.filmlight.ltd.uk [77.107.81.251])
+	by cuda.sgi.com with SMTP id A7WJ0kiZYcwTNlt2 for
+	<xfs@oss.sgi.com>; Wed, 25 Apr 2012 07:20:16 -0700 (PDT)
+Subject: Re: A little RAID experiment
+From: Roger Willcocks <roger@filmlight.ltd.uk>
+In-Reply-To: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+Date: Wed, 25 Apr 2012 15:17:03 +0100
+Message-Id: <1335363423.4586.431.camel@montana.filmlight.ltd.uk>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,74 +20,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Tom Marek <tmarek@redhat.com>, lczerner@redhat.com, dchinner@redhat.com
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-There were two reasons why test 273 was failing. Firstrly, when running on
-ext4 fs it was removing everything from SCRATCH_MNT directory at the beginning
-of tests including the lost+found directory. This caused error while checking
-scratch fs after finishing test. Secondly, obtaining of the partition size was
-not counting with with behaviour of df utility which may split the line containg
-informations about one partition when it is too long thus it may have returned
-nothing.
+I've tried this on a system with two x 3ware (lsi) 9750-16i4e each
+having 12 x Hitachi Deskstar 1TB disks formatted as raid 6; the two
+hardware raids combined as a software raid 0 [*].
 
-First problem was solved with removing all rm -rf commands and the
-second one was fixed with alternative awk script which is able to deal with
-any line splitting possible. Also 'umount $SCRATCH_DEV' was substituted for
-'_scratch_unmount'.
+xfs formatted and mounted with 'noatime,noalign,nobarrier'.
 
-Signed-off-by: Tom Marek <tmarek@redhat.com>
----
- 273 |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+Result (seems reasonably consistent):
 
-diff --git a/273 b/273
-index 2965132..8636241 100755
---- a/273
-+++ b/273
-@@ -35,7 +35,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
- _cleanup()
- {
- 	cd /
--	rm -rf $SCRATCH_MNT/* $tmp.*
-+	rm -rf $tmp.* $SCRATCH_MNT/origin $SCRATCH_MNT/sub*
- 	_scratch_unmount
- }
- 
-@@ -68,7 +68,7 @@ _file_create()
- 
- 	cd $SCRATCH_MNT/origin
- 
--	_disksize=`df --block-size=1 | grep $SCRATCH_DEV | awk '{print $2}'`
-+	_disksize=`df --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
- 	_disksize=$(($_disksize / 3))
- 	_num=$(($_disksize / $count / $threads / 4096))
- 	_count=$count
-@@ -106,8 +106,6 @@ _do_workload()
- 	_pids=""
- 	_pid=1
- 	
--	rm -rf $SCRATCH_MNT/*
--
- 	_threads_set
- 	_file_create
- 
-@@ -134,7 +132,7 @@ echo "------------------------------"
- 
- rm -f $seq.full
- 
--umount $SCRATCH_DEV 2>/dev/null
-+_scratch_unmount 2>/dev/null
- _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
- _scratch_mount
- 
+Operations performed:  0 Read, 127458 Write, 0 Other = 127458 Total
+Read 0b  Written 995.77Mb  Total transferred 995.77Mb  (66.337Mb/sec)
+ 8491.11 Requests/sec executed]
+
+This with CentOS 5.8 kernel. Note that the 17TB volume is 92% full.
+
+# xfs_bmap test_file.0 
+test_file.0:
+        0: [0..4963295]: 21324666648..21329629943
+        1: [4963296..9919871]: 22779572824..22784529399
+        2: [9919872..14871367]: 22769382704..22774334199
+        3: [14871368..16777215]: 22767476856..22769382703
+
+--
+Roger
+
+[*] actually a variation of raid 0 which distributes the blocks in a
+pattern which compensates for the units being much faster at their edge
+than at their center, to give a flatter performance curve.
+
+
+On Wed, 2012-04-25 at 10:07 +0200, Stefan Ring wrote:
+> This grew out of the discussion in my other thread ("Abysmal write
+> performance because of excessive seeking (allocation groups to
+> blame?)") -- that should in fact have been called "Free space
+> fragmentation causes excessive seeks".
+> 
+> Could someone with a good hardware RAID (5 or 6, but also mirrored
+> setups would be interesting) please conduct a little experiment for
+> me?
+> 
+> I've put up a modified sysbench here:
+> <https://github.com/Ringdingcoder/sysbench>. This tries to simulate
+> the write pattern I've seen with XFS. It would be really interesting
+> to know how different RAID controllers cope with this.
+> 
+> - Checkout (or download tarball):
+> https://github.com/Ringdingcoder/sysbench/tarball/master
+> - ./configure --without-mysql && make
+> - fallocate -l 8g test_file.0
+> - ./sysbench/sysbench --test=fileio --max-time=15
+> --max-requests=10000000 --file-num=1 --file-extra-flags=direct
+> --file-total-size=8G --file-block-size=8192 --file-fsync-all=off
+> --file-fsync-freq=0 --file-fsync-mode=fdatasync --num-threads=1
+> --file-test-mode=ag4 run
+> 
+> If you don't have fallocate, you can also use the last line with "run"
+> replaced by "prepare" to create the file. Run the benchmark a few
+> times to check if the numbers are somewhat stable. When doing a few
+> runs in direct succession, the first one will likely be faster because
+> the cache has not been loaded up yet. The interesting part of the
+> output is this:
+> 
+> Read 0b  Written 64.516Mb  Total transferred 64.516Mb  (4.301Mb/sec)
+>   550.53 Requests/sec executed
+> 
+> That's a measurement from my troubled RAID 6 volume (SmartArray P400,
+> 6x 10k disks).
+> 
+> >From the other controller in this machine (RAID 1, SmartArray P410i,
+> 2x 15k disks), I get:
+> 
+> Read 0b  Written 276.85Mb  Total transferred 276.85Mb  (18.447Mb/sec)
+>  2361.21 Requests/sec executed
+> 
+> The better result might be caused by the better controller or the RAID
+> 1, with the latter reason being more likely.
+> 
+> Regards,
+> Stefan
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 -- 
-1.7.7.6
+Roger Willcocks <roger@filmlight.ltd.uk>
 
 _______________________________________________
 xfs mailing list
