@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3P0Pv4S128317 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 19:25:58 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	JgQkx7FJVYJ3g5wa for <xfs@oss.sgi.com>;
-	Tue, 24 Apr 2012 17:25:56 -0700 (PDT)
-Date: Wed, 25 Apr 2012 10:25:52 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC]xfs: using GFP_NOFS for blkdev_issue_flush
-Message-ID: <20120425002552.GU9541@dastard>
-References: <4F8BC112.9090508@fusionio.com> <4F8BC30D.5040601@kernel.org>
-	<20120418013746.GL6734@dastard> <20120424132346.GA24575@kernel.org>
+	q3P87dOG166099 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 03:07:39 -0500
+Received: from mail-gy0-f181.google.com (mail-gy0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	Lu1ksZ1x0mmIalNW (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Apr 2012 01:07:38 -0700 (PDT)
+Received: by ghbz13 with SMTP id z13so1738094ghb.26
+	for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 01:07:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120424132346.GA24575@kernel.org>
+Date: Wed, 25 Apr 2012 10:07:37 +0200
+Message-ID: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+Subject: A little RAID experiment
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +26,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Shaohua Li <shli@kernel.org>
-Cc: hch@infradead.org, xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-On Tue, Apr 24, 2012 at 09:23:46PM +0800, Shaohua Li wrote:
-> On Wed, Apr 18, 2012 at 11:37:46AM +1000, Dave Chinner wrote:
-> > On Mon, Apr 16, 2012 at 02:58:21PM +0800, Shaohua Li wrote:
-> > > On 4/16/12 2:49 PM, Shaohua Li wrote:
-> > > >
-> > > >flush request is issued in transaction commit code path usually, so
-> > > >looks using
-> > > >GFP_KERNEL to allocate memory for flush request bio falls into the classic
-> > > >deadlock issue (memory reclaim recursion). Use GFP_NOFS to avoid recursion
-> > > >from reclaim context. Per Dave Chinner, there is only blkdev_issue_flush
-> > > >might
-> > > >be buggy here. But using GFP_NOFS by default for all calls should not
-> > > >matter.
-> > 
-> > Can you update the commit message like I suggested previously?
-> Copied exactly.
-> 
-> 
-> Issuing a block device flush request in transaction context using GFP_KERNEL
-> directly can cause deadlocks due to memory reclaim recursion. Use GFP_NOFS to
-> avoid recursion from reclaim context.
-> 
-> Signed-off-by: Shaohua Li <shli@fusionio.com>
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> ---
->  fs/xfs/xfs_super.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> Index: linux/fs/xfs/xfs_super.c
-> ===================================================================
-> --- linux.orig/fs/xfs/xfs_super.c	2012-04-13 10:08:26.095496072 +0800
-> +++ linux/fs/xfs/xfs_super.c	2012-04-13 10:08:42.555496865 +0800
-> @@ -622,7 +622,7 @@ void
->  xfs_blkdev_issue_flush(
->  	xfs_buftarg_t		*buftarg)
->  {
-> -	blkdev_issue_flush(buftarg->bt_bdev, GFP_KERNEL, NULL);
-> +	blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS, NULL);
->  }
->  
->  STATIC void
+This grew out of the discussion in my other thread ("Abysmal write
+performance because of excessive seeking (allocation groups to
+blame?)") -- that should in fact have been called "Free space
+fragmentation causes excessive seeks".
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Could someone with a good hardware RAID (5 or 6, but also mirrored
+setups would be interesting) please conduct a little experiment for
+me?
 
--- 
-Dave Chinner
-david@fromorbit.com
+I've put up a modified sysbench here:
+<https://github.com/Ringdingcoder/sysbench>. This tries to simulate
+the write pattern I've seen with XFS. It would be really interesting
+to know how different RAID controllers cope with this.
+
+- Checkout (or download tarball):
+https://github.com/Ringdingcoder/sysbench/tarball/master
+- ./configure --without-mysql && make
+- fallocate -l 8g test_file.0
+- ./sysbench/sysbench --test=fileio --max-time=15
+--max-requests=10000000 --file-num=1 --file-extra-flags=direct
+--file-total-size=8G --file-block-size=8192 --file-fsync-all=off
+--file-fsync-freq=0 --file-fsync-mode=fdatasync --num-threads=1
+--file-test-mode=ag4 run
+
+If you don't have fallocate, you can also use the last line with "run"
+replaced by "prepare" to create the file. Run the benchmark a few
+times to check if the numbers are somewhat stable. When doing a few
+runs in direct succession, the first one will likely be faster because
+the cache has not been loaded up yet. The interesting part of the
+output is this:
+
+Read 0b  Written 64.516Mb  Total transferred 64.516Mb  (4.301Mb/sec)
+  550.53 Requests/sec executed
+
+That's a measurement from my troubled RAID 6 volume (SmartArray P400,
+6x 10k disks).
+
+>From the other controller in this machine (RAID 1, SmartArray P410i,
+2x 15k disks), I get:
+
+Read 0b  Written 276.85Mb  Total transferred 276.85Mb  (18.447Mb/sec)
+ 2361.21 Requests/sec executed
+
+The better result might be caused by the better controller or the RAID
+1, with the latter reason being more likely.
+
+Regards,
+Stefan
 
 _______________________________________________
 xfs mailing list
