@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3OKvloS110223 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 15:57:47 -0500
-Message-ID: <4F9713C8.8080808@sgi.com>
-Date: Tue, 24 Apr 2012 15:57:44 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q3P0Pv4S128317 for <xfs@oss.sgi.com>; Tue, 24 Apr 2012 19:25:58 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	JgQkx7FJVYJ3g5wa for <xfs@oss.sgi.com>;
+	Tue, 24 Apr 2012 17:25:56 -0700 (PDT)
+Date: Wed, 25 Apr 2012 10:25:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC]xfs: using GFP_NOFS for blkdev_issue_flush
+Message-ID: <20120425002552.GU9541@dastard>
+References: <4F8BC112.9090508@fusionio.com> <4F8BC30D.5040601@kernel.org>
+	<20120418013746.GL6734@dastard> <20120424132346.GA24575@kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_fsr: Get the last mount on a specific mount point
-References: <1328640076-12645-1-git-send-email-cmaiolino@redhat.com>
-	<20120213174240.GA3474@infradead.org> <4F3EE490.2010302@redhat.com>
-	<20120424201404.GA29605@andromeda.usersys.redhat.com>
-In-Reply-To: <20120424201404.GA29605@andromeda.usersys.redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20120424132346.GA24575@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,33 +23,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs@oss.sgi.com
+To: Shaohua Li <shli@kernel.org>
+Cc: hch@infradead.org, xfs@oss.sgi.com
 
-On 04/24/12 15:14, Carlos Maiolino wrote:
->>> What do you think about the version below?
->>>
->>> ---
->>> From: Christoph Hellwig<hch@lst.de>
->>> Subject: fsr: fix /proc/mounts parsing
->>>
->>
->> Looks ok to me, thanks for doing it properly :)
->>
->> Reviewed-by: Eric Sandeen<sandeen@redhat.com>
->>
->>> ---
->
-> ping
->
+On Tue, Apr 24, 2012 at 09:23:46PM +0800, Shaohua Li wrote:
+> On Wed, Apr 18, 2012 at 11:37:46AM +1000, Dave Chinner wrote:
+> > On Mon, Apr 16, 2012 at 02:58:21PM +0800, Shaohua Li wrote:
+> > > On 4/16/12 2:49 PM, Shaohua Li wrote:
+> > > >
+> > > >flush request is issued in transaction commit code path usually, so
+> > > >looks using
+> > > >GFP_KERNEL to allocate memory for flush request bio falls into the classic
+> > > >deadlock issue (memory reclaim recursion). Use GFP_NOFS to avoid recursion
+> > > >from reclaim context. Per Dave Chinner, there is only blkdev_issue_flush
+> > > >might
+> > > >be buggy here. But using GFP_NOFS by default for all calls should not
+> > > >matter.
+> > 
+> > Can you update the commit message like I suggested previously?
+> Copied exactly.
+> 
+> 
+> Issuing a block device flush request in transaction context using GFP_KERNEL
+> directly can cause deadlocks due to memory reclaim recursion. Use GFP_NOFS to
+> avoid recursion from reclaim context.
+> 
+> Signed-off-by: Shaohua Li <shli@fusionio.com>
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+>  fs/xfs/xfs_super.c |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> Index: linux/fs/xfs/xfs_super.c
+> ===================================================================
+> --- linux.orig/fs/xfs/xfs_super.c	2012-04-13 10:08:26.095496072 +0800
+> +++ linux/fs/xfs/xfs_super.c	2012-04-13 10:08:42.555496865 +0800
+> @@ -622,7 +622,7 @@ void
+>  xfs_blkdev_issue_flush(
+>  	xfs_buftarg_t		*buftarg)
+>  {
+> -	blkdev_issue_flush(buftarg->bt_bdev, GFP_KERNEL, NULL);
+> +	blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS, NULL);
+>  }
+>  
+>  STATIC void
 
-The new test is much better organized.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
