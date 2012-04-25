@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3PJvk0O231102 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 14:57:46 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id xtPieuCMEUuVPsDX for <xfs@oss.sgi.com>;
-	Wed, 25 Apr 2012 12:57:45 -0700 (PDT)
-Message-ID: <4F985738.7030103@sandeen.net>
-Date: Wed, 25 Apr 2012 14:57:44 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q3PK981x232480 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 15:09:08 -0500
+Message-ID: <4F9859E1.6010601@sgi.com>
+Date: Wed, 25 Apr 2012 15:09:05 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: 11.1
-References: <1335383079.55171.YahooMailNeo@web126001.mail.ne1.yahoo.com>
-In-Reply-To: <1335383079.55171.YahooMailNeo@web126001.mail.ne1.yahoo.com>
+Subject: Re: [PATCH 37/37] xfs: make XBF_MAPPED the default behaviour
+References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
+	<1335160747-17254-38-git-send-email-david@fromorbit.com>
+In-Reply-To: <1335160747-17254-38-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,31 +18,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Paul Jones <ntdeveloper2002@yahoo.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 4/25/12 2:44 PM, Paul Jones wrote:
-> I am running stock Suse 11.1, which is pretty old. Is there a way for
-> me to take the latest version of the xfs code and compile it for
-> 11.1, or os there a dependency on later kernel versions/Suse versions
-> somehow? I am running 2.6-32..I wanted to get all the latest
-> scalability and performance fixes..
+PS.
+On 04/23/12 00:59, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Rather than specifying XBF_MAPPED for almost all buffers, introduce
+> XBF_UNMAPPED for the couple of users that use unmapped buffers.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+>   fs/xfs/xfs_buf.c         |   28 +++++++++++++---------------
+>   fs/xfs/xfs_buf.h         |    4 ++--
+>   fs/xfs/xfs_fsops.c       |   10 +++++-----
+>   fs/xfs/xfs_inode.c       |    1 +
+>   fs/xfs/xfs_log_recover.c |    4 ++--
+>   fs/xfs/xfs_trans_buf.c   |    6 ------
+>   fs/xfs/xfs_vnodeops.c    |    3 +--
+>   7 files changed, 24 insertions(+), 32 deletions(-)
+>
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> @@ -707,7 +707,6 @@ xfs_buf_set_empty(
+>   	bp->b_length = numblks;
+>   	bp->b_io_length = numblks;
+>   	bp->b_bn = XFS_BUF_DADDR_NULL;
+> -	bp->b_flags&= ~XBF_MAPPED;
+>   }
+>
 
-backporting newer filesystems to older kernels is a nontrivial task.
-Distros do it with a fair bit of effort and testing; non-fs-ninjas
-usually do not.  :)
+I know that bp->baddr is set to NULL and denotes that this is not
+mapped, but why not set the XBF_UNMAPPED?
 
-So yes, it's technically possible, but it's not a drop-in replacement.
+>   static inline struct page *
+> @@ -759,7 +758,6 @@ xfs_buf_associate_memory(
+>
+>   	bp->b_io_length = BTOBB(len);
+>   	bp->b_length = BTOBB(buflen);
+> -	bp->b_flags |= XBF_MAPPED;
+>
+>   	return 0;
+>   }
 
-(if you're talking about the userspace xfsprogs code, that's another
-matter; newer xfsprogs & xfsdump should work fine with older kernels,
-just build it and go)
+I think the answer is no, but can XBF_UNMAPPED be set and leaked here?
 
--Eric
+Thanks
+
+--Mark Tinguely
 
 _______________________________________________
 xfs mailing list
