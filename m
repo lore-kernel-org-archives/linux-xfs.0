@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3PIZuQv224012 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 13:35:56 -0500
-Message-ID: <4F98440B.6060007@sgi.com>
-Date: Wed, 25 Apr 2012 13:35:55 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q3PJifij229998 for <xfs@oss.sgi.com>; Wed, 25 Apr 2012 14:44:41 -0500
+Received: from nm13-vm3.bullet.mail.ne1.yahoo.com
+	(nm13-vm3.bullet.mail.ne1.yahoo.com [98.138.91.143]) by
+	cuda.sgi.com with SMTP id 4eHPshHyZKXPZAEJ for
+	<xfs@oss.sgi.com>; Wed, 25 Apr 2012 12:44:39 -0700 (PDT)
+Message-ID: <1335383079.55171.YahooMailNeo@web126001.mail.ne1.yahoo.com>
+Date: Wed, 25 Apr 2012 12:44:39 -0700 (PDT)
+From: Paul Jones <ntdeveloper2002@yahoo.com>
+Subject: 11.1
 MIME-Version: 1.0
-Subject: Re: [PATCH 37/37] xfs: make XBF_MAPPED the default behaviour
-References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<1335160747-17254-38-git-send-email-david@fromorbit.com>
-In-Reply-To: <1335160747-17254-38-git-send-email-david@fromorbit.com>
+Reply-To: Paul Jones <ntdeveloper2002@yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,34 +20,17 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 04/23/12 00:59, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> Rather than specifying XBF_MAPPED for almost all buffers, introduce
-> XBF_UNMAPPED for the couple of users that use unmapped buffers.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
->   fs/xfs/xfs_buf.c         |   28 +++++++++++++---------------
->   fs/xfs/xfs_buf.h         |    4 ++--
->   fs/xfs/xfs_fsops.c       |   10 +++++-----
->   fs/xfs/xfs_inode.c       |    1 +
->   fs/xfs/xfs_log_recover.c |    4 ++--
->   fs/xfs/xfs_trans_buf.c   |    6 ------
->   fs/xfs/xfs_vnodeops.c    |    3 +--
->   7 files changed, 24 insertions(+), 32 deletions(-)
->
+Searched through the lists, but didnt find an answer or maybe I missed it:)
 
-Looks good.
+I am running stock Suse 11.1, which is pretty old. Is there a way for me to take the latest version of the xfs code and compile it for 11.1, or os there a dependency on later kernel versions/Suse versions somehow? I am running 2.6-32..I wanted to get all the latest scalability and performance fixes..
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Thanks!
 
 _______________________________________________
 xfs mailing list
