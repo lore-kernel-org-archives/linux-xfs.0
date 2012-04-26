@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3QCbq23053957 for <xfs@oss.sgi.com>; Thu, 26 Apr 2012 07:37:52 -0500
-Received: from mail-vx0-f181.google.com (mail-vx0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	zKhy1LBKAjHmhXWR (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 26 Apr 2012 05:37:50 -0700 (PDT)
-Received: by vcge1 with SMTP id e1so2136328vcg.26
-	for <xfs@oss.sgi.com>; Thu, 26 Apr 2012 05:37:50 -0700 (PDT)
+	q3QFnYNQ067776 for <xfs@oss.sgi.com>; Thu, 26 Apr 2012 10:49:34 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id mgYRUkMCGUjcW9a1 for <xfs@oss.sgi.com>;
+	Thu, 26 Apr 2012 08:49:33 -0700 (PDT)
+Message-ID: <4F996E8C.7030301@sandeen.net>
+Date: Thu, 26 Apr 2012 10:49:32 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20120425223845.GX9541@dastard>
-References: <CADLDEKsP4DsXf_G07ub+a-ODbrJbsiprRJUX1fJdaQ41TB7+Xg@mail.gmail.com>
-	<20120423143843.GN9541@dastard>
-	<CADLDEKvFF3FvEHVtmwdWhbM58_jrCRX+Uk9vLBg1hA8sizh5BQ@mail.gmail.com>
-	<20120423235840.GQ9541@dastard>
-	<CADLDEKsfckBw2oVYFfaaTbpe8Ri+rYJr2e5SB7-pM0BU9nRUeA@mail.gmail.com>
-	<20120424120731.GT9541@dastard>
-	<CADLDEKs01GnxgYh2UTt1waVDUXHbB_RcBcUTBr5REFg5aD5jHA@mail.gmail.com>
-	<20120425223845.GX9541@dastard>
-Date: Thu, 26 Apr 2012 14:37:50 +0200
-Message-ID: <CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-From: Juerg Haefliger <juergh@gmail.com>
+Subject: Re: [PATCH 2/2] xfstests 273: fix of reading scratch size and removing
+	lost+found
+References: <1335351177-3014-1-git-send-email-tmarek@redhat.com>
+	<1335351177-3014-2-git-send-email-tmarek@redhat.com>
+In-Reply-To: <1335351177-3014-2-git-send-email-tmarek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,57 +26,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Tom Marek <tmarek@redhat.com>
+Cc: lczerner@redhat.com, dchinner@redhat.com, xfs@oss.sgi.com
 
-On Thu, Apr 26, 2012 at 12:38 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Apr 24, 2012 at 08:26:04PM +0200, Juerg Haefliger wrote:
->> On Tue, Apr 24, 2012 at 2:07 PM, Dave Chinner <david@fromorbit.com> wrote:
->> > On Tue, Apr 24, 2012 at 10:55:22AM +0200, Juerg Haefliger wrote:
->> >> > Alright, then I need all the usual information. I suspect an event
->> >> > trace is the only way I'm going to see what is happening. I just
->> >> > updated the FAQ entry, so all the necessary info for gathering a
->> >> > trace should be there now.
->> >> >
->> >> > http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
->> >>
->> >> Very good. Will do. What kernel do you want me to run? I would prefer
->> >> our current production kernel (2.6.38-8-server) but I understand if
->> >> you want something newer.
->> >
->> > If you can reproduce it on a current kernel - 3.4-rc4 if possible, if
->> > not a 3.3.x stable kernel would be best. 2.6.38 is simply too old to
->> > be useful for debugging these sorts of problems...
->>
->> OK, I reproduced a hang running 3.4-rc4. The data is here but it's a
->> whopping 2GB (yes it's compressed):
->> https://region-a.geo-1.objects.hpcloudsvc.com:443/v1.0/AUTH_9630ead2-6194-40df-afd3-7395448d4536/xfs-hang/report-2012-04-24.tar
->
-> That's a bit big to be useful, and far bigger than I'm willing to
-> download given that I'm on the end of a wet piece of string, not a
-> big fat intarwebby pipe.
+On 4/25/12 5:52 AM, Tom Marek wrote:
+> There were two reasons why test 273 was failing. Firstrly, when running on
+> ext4 fs it was removing everything from SCRATCH_MNT directory at the beginning
+> of tests including the lost+found directory. This caused error while checking
+> scratch fs after finishing test. Secondly, obtaining of the partition size was
+> not counting with with behaviour of df utility which may split the line containg
+> informations about one partition when it is too long thus it may have returned
+> nothing.
+> 
+> First problem was solved with removing all rm -rf commands and the
+> second one was fixed with alternative awk script which is able to deal with
+> any line splitting possible. Also 'umount $SCRATCH_DEV' was substituted for
+> '_scratch_unmount'.
+> 
+> Signed-off-by: Tom Marek <tmarek@redhat.com>
+> ---
+>  273 |    8 +++-----
+>  1 files changed, 3 insertions(+), 5 deletions(-)
+> 
+> diff --git a/273 b/273
+> index 2965132..8636241 100755
+> --- a/273
+> +++ b/273
+> @@ -35,7 +35,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+>  _cleanup()
+>  {
+>  	cd /
+> -	rm -rf $SCRATCH_MNT/* $tmp.*
+> +	rm -rf $tmp.* $SCRATCH_MNT/origin $SCRATCH_MNT/sub*
 
-Fair enough.
+Why remove anything at all from $SCRATCH_MNT?  It'll get re-mkfs'd next time it's used anyway.
 
+Other than that, patch seems fine.
 
-> I'm assuming it is the event trace
-> that is causing it to blow out? If so, just the 30-60s either side of
-> the hang first showing up is probaby necessary, and that should cut
-> the size down greatly....
-
-Can I shorten the existing trace.dat? I stopped the trace
-automatically 10 secs after the the xlog_... trace showed up in syslog
-so effectively some 130+ secs after the hang occured.
-
-...Juerg
-
-
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
+>  	_scratch_unmount
+>  }
+>  
+> @@ -68,7 +68,7 @@ _file_create()
+>  
+>  	cd $SCRATCH_MNT/origin
+>  
+> -	_disksize=`df --block-size=1 | grep $SCRATCH_DEV | awk '{print $2}'`
+> +	_disksize=`df --block-size=1 $SCRATCH_DEV | awk -v sd=$SCRATCH_DEV 'BEGIN{c=0}{for(i=1;i<=NF;++i){a[c]=$i;++c}}END{for(entry in a){if(a[entry] ~ sd){print a[entry + 3]; break}}}'`
+>  	_disksize=$(($_disksize / 3))
+>  	_num=$(($_disksize / $count / $threads / 4096))
+>  	_count=$count
+> @@ -106,8 +106,6 @@ _do_workload()
+>  	_pids=""
+>  	_pid=1
+>  	
+> -	rm -rf $SCRATCH_MNT/*
+> -
+>  	_threads_set
+>  	_file_create
+>  
+> @@ -134,7 +132,7 @@ echo "------------------------------"
+>  
+>  rm -f $seq.full
+>  
+> -umount $SCRATCH_DEV 2>/dev/null
+> +_scratch_unmount 2>/dev/null
+>  _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>  _scratch_mount
+>  
 
 _______________________________________________
 xfs mailing list
