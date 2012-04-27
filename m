@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3RFAXp0177708 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 10:10:33 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id TMu35A2nP0sU3kUy
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 08:10:32 -0700 (PDT)
-Message-ID: <4F9AB6E9.2050201@hardwarefreak.com>
-Date: Fri, 27 Apr 2012 10:10:33 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q3RFSHbd178991 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 10:28:18 -0500
+Received: from crunch.scalableinformatics.com
+	(173-10-54-97-Michigan.hfc.comcastbusiness.net [173.10.54.97])
+	by cuda.sgi.com with ESMTP id QlBk4Woz23SbYB5w (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 27 Apr 2012 08:28:15 -0700 (PDT)
+Received: from crunch.scalableinformatics.com (localhost [127.0.0.1])
+	by crunch.scalableinformatics.com (Postfix) with ESMTP id 9D7DF8788187
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 11:28:20 -0400 (EDT)
+Received: from [192.168.1.171] (metal.scalableinformatics.com [192.168.1.171])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client did not present a certificate)
+	by crunch.scalableinformatics.com (Postfix) with ESMTPSA id
+	9201D805A0AA
+	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 11:28:20 -0400 (EDT)
+Message-ID: <4F9ABB35.4020806@scalableinformatics.com>
+Date: Fri, 27 Apr 2012 11:28:53 -0400
+From: Joe Landman <landman@scalableinformatics.com>
 MIME-Version: 1.0
 Subject: Re: A little RAID experiment
 References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
 	<1335363423.4586.431.camel@montana.filmlight.ltd.uk>
 	<CAAxjCExzLXGMw2O32kR8xGS6-EpfwfKm-zkM0Vy58bryWygZuQ@mail.gmail.com>
 In-Reply-To: <CAAxjCExzLXGMw2O32kR8xGS6-EpfwfKm-zkM0Vy58bryWygZuQ@mail.gmail.com>
-Reply-To: stan@hardwarefreak.com
+Reply-To: landman@scalableinformatics.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,55 +34,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: Roger Willcocks <roger@filmlight.ltd.uk>, Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 4/26/2012 3:53 AM, Stefan Ring wrote:
->> Read 0b  Written 995.77Mb  Total transferred 995.77Mb  (66.337Mb/sec)
->>  8491.11 Requests/sec executed]
-> =
-
-> I was a bit sceptical towards your measurement at first, especially
-> since your xfs_bmap shows that the file is split into 4 regions which
-> nicely aligns (almost) with the agcount=3D4 setup that the benchmark
-> emulates, but this seems to be just a coincidence.
-> =
-
-> Meanwhile, I've found a customer's system, where we have a MegaRAID
-> SAS 1078 with a 6-disk RAID 6 volume, and this one delivers 54MB/sec,
-> which really puts the SmartArray controller to shame at its measly
-> 4MB/sec.
-
-That's interesting considering the MegaRAID 8708/8880, which I assume is
-the 1078 based card above, and the P400 are of roughly the same IC
-generation.  Both use PowerPC cores, the P400 at 440MHz and the 1078 at
-500MHz, both with DDR2 DRAM, the P400 @533 and the 8880 @667.  On paper
-they're very similar.  I'd guess the cause of the big performance
-difference is that the 1078 has dedicated parity circuitry and the P400
-likely calculates parity in software on the PPC core.  FYI, the parity
-engines on the 2208 dual core ASIC are apparently lightning fast
-compared to any previous generations.  This chip is found on the
-MegaRAID 9265, 9266, 9285, each board having 1GB DDR3-1333 cache.
-
-> I just want to stress that our machine with the SmartArray controller
-> is not a cheap old dusty leftover, but a recently-bought (December
-> 2011) not exactly cheap Blade server, and that=92s all you get from HP.
-
-The fact they still sell a product doesn't mean it's recent technology.
- On the contrary, HP, IBM, and to a lesser extent Dell, tend to keep
-some models on the shelf for a very long time, often 4 years or more.
-The P400 has likely been around even longer, given it's DDR2 memory and
-SATA 3Gb interfaces.
-
--- =
-
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMDQvMjYvMjAxMiAwNDo1MyBBTSwgU3RlZmFuIFJpbmcgd3JvdGU6CgoKPiBJIGp1c3Qgd2Fu
+dCB0byBzdHJlc3MgdGhhdCBvdXIgbWFjaGluZSB3aXRoIHRoZSBTbWFydEFycmF5IGNvbnRyb2xs
+ZXIKPiBpcyBub3QgYSBjaGVhcCBvbGQgZHVzdHkgbGVmdG92ZXIsIGJ1dCBhIHJlY2VudGx5LWJv
+dWdodCAoRGVjZW1iZXIKPiAyMDExKSBub3QgZXhhY3RseSBjaGVhcCBCbGFkZSBzZXJ2ZXIsIGFu
+ZCB0aGF04oCZcyBhbGwgeW91IGdldCBmcm9tIEhQLgoKV2UgaGF2ZSBhbiBhbmVjZG90ZSBhYm91
+dCBzb21ldGhpbmcgYWtpbiB0byB0aGlzIHdoaWNoIGhhcHBlbmVkIDIgeWVhcnMgCmFnby4gIEEg
+cG90ZW50aWFsIGN1c3RvbWVyIHdhcyB0ZXN0aW5nIGEgPGluc2VydCBsYXJnZSBtdWx0aS1sZXR0
+ZXIgCmFjcm9ueW0gYnJhbmQgbmFtZSBoZXJlPiBtYWNoaW5lIHRvIHJ1biBhIHNwZWNpZmljIHNl
+dCBvZiBzb2Z0d2FyZSB3aGljaCAKdGlnaHRseSBjb3VwbGVkIHRvIGl0cyBkaXNrcy4gIFBlcmZv
+cm1hbmNlIHdhcyB0ZXJyaWJsZS4gIE91ciBwYXJ0bmVyIAoodGhlIHNvZnR3YXJlIHZlbmRvcikg
+Y29udGFjdGVkIHVzIGFuZCBhc2tlZCB1cyB0byBoZWxwLiAgV2UnZCBzdWdnZXN0ZWQgCnRoYXQg
+dGhlIHBhcnRuZXIgbG9hbiB0aGVtIHRoZSBtYWNoaW5lIHRoZXkgaGFkIGJvdWdodCBmcm9tIHVz
+IDIgeWVhcnMgCmVhcmxpZXIgKGF0IHRoZSB0aW1lKSBhbmQgdHJ5IHRoYXQuCgpPdXIgMiB5ZWFy
+IG9sZCBtYWNoaW5lIChhY3R1YWxseSAyIGdlbmVyYXRpb25zIGJhY2sgYXQgdGhlIHRpbWUgb2Yg
+dGVzdCwgCm5vdyA1IGdlbmVyYXRpb25zIGJlaGluZCBvdXIgY3VycmVudCBraXQpIHdvdW5kIHVw
+IGJlaW5nIG1vcmUgdGhhbiBhbiAKb3JkZXIgb2YgbWFnbml0dWRlIGZhc3RlciB0aGFuIHRoZSAo
+dGhlbikgbGF0ZXN0IGFuZCBncmVhdGVzdCBraXQgZnJvbSAKPGluc2VydCBsYXJnZSBtdWx0aS1s
+ZXR0ZXIgYWNyb255bSBicmFuZCBuYW1lIGhlcmU+LgoKVGhlIGxlc3NvbiBpcyB0aGlzLiAgTGF0
+ZXN0IGFuZCBncmVhdGVzdCBkb2Vzbid0IG1lYW4gZmFzdGVzdC4gIERlc2lnbiwgCmFuZCBpbXBs
+ZW1lbnRhdGlvbiBtYXR0ZXIuICBCcmFuZCBuYW1lcyBkb24ndC4KClRvIHRoaXMgZGF5LCB3ZSBz
+dGlsbCBzZWUgbWFjaGluZXMgYmVpbmcgcHVzaGVkIG91dCB3aXRoIFBDSXggdGVjaG5vbG9neSAK
+Zm9yIG5ldHdvcmtpbmcsIG9yIGRpc2ssIG9yIC4uLgoKLi4uIGFuZCBjdXN0b21lcnMgYnV5IGl0
+IHVwLCBmb3IgcmVhc29ucyB0aGF0IGhhdmUgbGl0dGxlIHRvIGRvIHdpdGggCnBlcmZvcm1hbmNl
+LCBzdWl0YWJpbGl0eSB0byB0aGUgdGFzaywgZXRjLgoKSWYgeW91IG5lZWQgcGVyZm9ybWFuY2Us
+IGl0cyBpbXBvcnRhbnQgdG8gZm9jdXMgc29tZSBlZmZvcnQgdXBvbiAKbG9jYXRpbmcgc3lzdGVt
+cy92ZW5kb3JzIGNhcGFibGUgb2YgcGVyZm9ybWluZyB3aGVyZSB5b3UgbmVlZCB0aGVtIHRvIApw
+ZXJmb3JtLiAgT3RoZXJ3aXNlIHlvdSBtYXkgd2luZCB1cCB3aXRoIGEgd2FybWVkIG92ZXIgd2Vi
+IHNlcnZlciB3aXRoIApzb21lIHJhbmRvbSBjYXJkIGFuZCBhIGZldyAiZmFzdCIgZGlza3MgdG9z
+c2VkIGluLgoKSSBkb24ndCBtZWFuIHRvIGJlIGJsdW50LCBidXQgdGhpcyBpcyBiYXNpY2FsbHkg
+d2hhdCB5b3Ugd2VyZSBzb2xkLiAKTm90ZSBhbHNvLCBJIHNlZSB0aGlzIGluIGNsdXN0ZXIgZmls
+ZSBzeXN0ZW0gYml0cyBhbGwgdGhlIHRpbWUuICBXZSBnZXQgCmNhbGxzIGZyb20gcGVvcGxlLCB3
+aG8gZGVzY3JpYmUgYSBkZXNpZ24sIGFuZCBhc2sgdXMgZm9yIGhlbHAgbWFraW5nIAp0aGVtIGdv
+IGZhc3QuICBXZSBkaXNjb3ZlciB0aGF0IHRoZXkndmUgbWFkZSBzb21lIGRlZXAgZnVuZGFtZW50
+YWwgCmRlc2lnbiBkZWNpc2lvbnMgdmVyeSBwb29ybHkgKHVzdWFsbHkgdXBvbiB0aGUgYmFzaXMg
+b2Ygd2hhdCA8aW5zZXJ0IApsYXJnZSBtdWx0aS1sZXR0ZXIgYWNyb255bSBicmFuZCBuYW1lIGhl
+cmU+IHRvbGQgdGhlbSB3ZXJlIG9wdGlvbnMpLCBhbmQgCnRoZXJlIHdhcyBubyB3YXkgdG8gZ2V0
+IGJldHdlZW4gcG9pbnQgQSAodGhlaXIgcGVyIHVuaXQgcGVyZm9ybWFuY2UpIGFuZCAKcG9pbnQg
+QiAod2hhdCB0aGV5IHdlcmUgaG9waW5nIGZvciBhcyBhbiBhZ2dyZWdhdGUgc3lzdGVtIHBlcmZv
+cm1hbmNlKS4KCkF0IHRoZSBtb3N0IGJhc2ljIGxldmVsLCB5b3VyIHBlcmZvcm1hbmNlIHdpbGwg
+YmUgbW9kdWxhdGVkIGJ5IHlvdXIgCnNsb3dlc3QgcGVyZm9ybWluZyBwYXJ0LiAgWW91IGNhbiBw
+dXQgaW5maW5pdGVseSBmYXN0IGRpc2tzIG9uIGEgc2xvdyAKY29udHJvbGxlciwgYW5kIHlvdXIg
+cGVyZm9ybWFuY2Ugd2lsbCBiZSB0ZXJyaWJsZS4gIFlvdSBjYW4gcHV0IHNsb3cgCmRpc2tzIG9u
+IGEgdmVyeSBmYXN0IGNvbnRyb2xsZXIsIGFuZCB5b3Ugd2lsbCBsaWtlbHkgaGF2ZSBiZXR0ZXIg
+bHVjay4KCi9Ib3BpbmcgdGhpcyBsZXNzb24gaXMgbm90IGxvc3QgLi4uCgotLSAKSm9zZXBoIExh
+bmRtYW4sIFBoLkQKRm91bmRlciBhbmQgQ0VPClNjYWxhYmxlIEluZm9ybWF0aWNzIEluYy4KZW1h
+aWw6IGxhbmRtYW5Ac2NhbGFibGVpbmZvcm1hdGljcy5jb20Kd2ViICA6IGh0dHA6Ly9zY2FsYWJs
+ZWluZm9ybWF0aWNzLmNvbQogICAgICAgIGh0dHA6Ly9zY2FsYWJsZWluZm9ybWF0aWNzLmNvbS9z
+aWNsdXN0ZXIKcGhvbmU6ICsxIDczNCA3ODYgODQyMyB4MTIxCmZheCAgOiArMSA4NjYgODg4IDMx
+MTIKY2VsbCA6ICsxIDczNCA2MTIgNDYxNQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
