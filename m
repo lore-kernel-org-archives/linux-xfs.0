@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3R9jWMh148016 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 04:45:32 -0500
+	q3R9je4L148058 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 04:45:40 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	gzBUhypJC7A9Wray for <xfs@oss.sgi.com>;
-	Fri, 27 Apr 2012 02:45:31 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SNhjz-00048i-Va
-	for xfs@oss.sgi.com; Fri, 27 Apr 2012 19:45:27 +1000
+	t1yn317nH7Bh0YFM for <xfs@oss.sgi.com>;
+	Fri, 27 Apr 2012 02:45:39 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SNhkA-00048l-0k
+	for xfs@oss.sgi.com; Fri, 27 Apr 2012 19:45:38 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SNhjz-0003lJ-RI
+	(envelope-from <dave@disappointment.disaster>) id 1SNhjz-0003lQ-Us
 	for xfs@oss.sgi.com; Fri, 27 Apr 2012 19:45:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] xfs: failed writes and stale delalloc blocks.
-Date: Fri, 27 Apr 2012 19:45:19 +1000
-Message-Id: <1335519922-14371-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: prevent needless mount warning causing test failures
+Date: Fri, 27 Apr 2012 19:45:22 +1000
+Message-Id: <1335519922-14371-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1335519922-14371-1-git-send-email-david@fromorbit.com>
+References: <1335519922-14371-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +34,53 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The fist patch fixes the original off-by-one I found that lead to assert
-failures. The assert failures still happened, and that lead to the discovery
-that we can leave delalloc blocks inside the file too. That's a much more
-complex fix, explained in the patch, and effectively makes the first patch
-redundant. I wanted to leave them as two separate patches, though, because it
-shows that there are two definitely classes of errors we have to handle
-correctly.
+From: Dave Chinner <dchinner@redhat.com>
 
-These two patches don't solve all the xfs_getbmap() and evict() assert failures
-relating to delayed allocation blocks. When I have all the debug and tracing
-turned on with ehese patches, test 083 can run in a loop for an hour and not
-fail, running a successful test every ~20s.
+Often mounting small filesystem with small logs will emit a warning
+such as:
 
-However, one in every five test runs resulted in a test failure because of the
-checking of the filesystem (using 512 byte block size) would trigger a mount
-warning and that would cause a false detection of a failure. Hence the third
-patch to prevent that warning from occurring. I'm still seeing a less regular
-check failure when not running with debug and tracing, but this error message is
-not the cause anymore.
+XFS (vdb): Invalid block length (0x2000) for buffer
 
-Back to delayed allocation: when I remove either the debug or the tracing, I
-still see fairly regular assert failures, but this time they are not a result of
-failed writes.  The inodes that trigger failures do not show up in the failed
-write debug output, and the extent debug output always indicates there are
-delalloc blocks beyond EOF and the tracing indicates that they were put there as
-a result of speculative delayed allocation beyond EOF.
+during log recovery. This causes tests to randomly fail because this
+output causes the clean filesystem checks on test completion to
+think the filesystem is inconsistent.
 
-I beleive the reason that fsstress is tripping the bmap assert is because,
-unlike fiemap and the xfs_io bmap command, it is giving length to the range it
-wants mapped and so we are trying to map beyond EOF. Of course, there are
-delalloc blocks there which triggers the assert. I need to modify xfs_io to see
-if this really is the cause of the remaining assert failures....
+The cause of the error is simply that log recovery is asking for a
+buffer size that is larger than the log when zeroing the tail. This
+is because the buffer size is rounded up, and if the right head and
+tail conditions exist then the buffer size can be larger than the log.
+Limit the variable size xlog_get_bp() callers to requesting buffers
+smaller than the log.
 
-However, in the mean time, these patches remove one source of assert failures
-and make my xfstests runs much less likely to fail. I can get the majority of my
-auto group test runs completing with these patches instead of a 50% failure rate
-without the patches.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log_recover.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-I hope everyone enjoys reviewing patch 2/3 as much as I enjoyed writing it - it
-was a PITA until I found that set_buffer_new() bug in __xfs_get_blocks().... ;)
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index d7abe5f..ca38690 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -441,6 +441,8 @@ xlog_find_verify_cycle(
+ 	 * a log sector, or we're out of luck.
+ 	 */
+ 	bufblks = 1 << ffs(nbblks);
++	while (bufblks > log->l_logBBsize)
++		bufblks >>= 1;
+ 	while (!(bp = xlog_get_bp(log, bufblks))) {
+ 		bufblks >>= 1;
+ 		if (bufblks < log->l_sectBBsize)
+@@ -1226,6 +1228,8 @@ xlog_write_log_records(
+ 	 * log sector, or we're out of luck.
+ 	 */
+ 	bufblks = 1 << ffs(blocks);
++	while (bufblks > log->l_logBBsize)
++		bufblks >>= 1;
+ 	while (!(bp = xlog_get_bp(log, bufblks))) {
+ 		bufblks >>= 1;
+ 		if (bufblks < sectbb)
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
