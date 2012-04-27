@@ -1,31 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3RFSHbd178991 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 10:28:18 -0500
-Received: from crunch.scalableinformatics.com
-	(173-10-54-97-Michigan.hfc.comcastbusiness.net [173.10.54.97])
-	by cuda.sgi.com with ESMTP id QlBk4Woz23SbYB5w (version=TLSv1
+	q3RLSRmS209476 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 16:28:28 -0500
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id 6GrE7rJYIdti1SyV (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Apr 2012 08:28:15 -0700 (PDT)
-Received: from crunch.scalableinformatics.com (localhost [127.0.0.1])
-	by crunch.scalableinformatics.com (Postfix) with ESMTP id 9D7DF8788187
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 11:28:20 -0400 (EDT)
-Received: from [192.168.1.171] (metal.scalableinformatics.com [192.168.1.171])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client did not present a certificate)
-	by crunch.scalableinformatics.com (Postfix) with ESMTPSA id
-	9201D805A0AA
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 11:28:20 -0400 (EDT)
-Message-ID: <4F9ABB35.4020806@scalableinformatics.com>
-Date: Fri, 27 Apr 2012 11:28:53 -0400
-From: Joe Landman <landman@scalableinformatics.com>
+	Fri, 27 Apr 2012 14:28:24 -0700 (PDT)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: 11.1
+Date: Fri, 27 Apr 2012 23:28:21 +0200
+Message-ID: <17581099.Xa2dmGhCPu@saturn>
+In-Reply-To: <1335383079.55171.YahooMailNeo@web126001.mail.ne1.yahoo.com>
+References: <1335383079.55171.YahooMailNeo@web126001.mail.ne1.yahoo.com>
 MIME-Version: 1.0
-Subject: Re: A little RAID experiment
-References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
-	<1335363423.4586.431.camel@montana.filmlight.ltd.uk>
-	<CAAxjCExzLXGMw2O32kR8xGS6-EpfwfKm-zkM0Vy58bryWygZuQ@mail.gmail.com>
-In-Reply-To: <CAAxjCExzLXGMw2O32kR8xGS6-EpfwfKm-zkM0Vy58bryWygZuQ@mail.gmail.com>
-Reply-To: landman@scalableinformatics.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,60 +21,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============2392303820051065611=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Paul Jones <ntdeveloper2002@yahoo.com>
 
-T24gMDQvMjYvMjAxMiAwNDo1MyBBTSwgU3RlZmFuIFJpbmcgd3JvdGU6CgoKPiBJIGp1c3Qgd2Fu
-dCB0byBzdHJlc3MgdGhhdCBvdXIgbWFjaGluZSB3aXRoIHRoZSBTbWFydEFycmF5IGNvbnRyb2xs
-ZXIKPiBpcyBub3QgYSBjaGVhcCBvbGQgZHVzdHkgbGVmdG92ZXIsIGJ1dCBhIHJlY2VudGx5LWJv
-dWdodCAoRGVjZW1iZXIKPiAyMDExKSBub3QgZXhhY3RseSBjaGVhcCBCbGFkZSBzZXJ2ZXIsIGFu
-ZCB0aGF04oCZcyBhbGwgeW91IGdldCBmcm9tIEhQLgoKV2UgaGF2ZSBhbiBhbmVjZG90ZSBhYm91
-dCBzb21ldGhpbmcgYWtpbiB0byB0aGlzIHdoaWNoIGhhcHBlbmVkIDIgeWVhcnMgCmFnby4gIEEg
-cG90ZW50aWFsIGN1c3RvbWVyIHdhcyB0ZXN0aW5nIGEgPGluc2VydCBsYXJnZSBtdWx0aS1sZXR0
-ZXIgCmFjcm9ueW0gYnJhbmQgbmFtZSBoZXJlPiBtYWNoaW5lIHRvIHJ1biBhIHNwZWNpZmljIHNl
-dCBvZiBzb2Z0d2FyZSB3aGljaCAKdGlnaHRseSBjb3VwbGVkIHRvIGl0cyBkaXNrcy4gIFBlcmZv
-cm1hbmNlIHdhcyB0ZXJyaWJsZS4gIE91ciBwYXJ0bmVyIAoodGhlIHNvZnR3YXJlIHZlbmRvcikg
-Y29udGFjdGVkIHVzIGFuZCBhc2tlZCB1cyB0byBoZWxwLiAgV2UnZCBzdWdnZXN0ZWQgCnRoYXQg
-dGhlIHBhcnRuZXIgbG9hbiB0aGVtIHRoZSBtYWNoaW5lIHRoZXkgaGFkIGJvdWdodCBmcm9tIHVz
-IDIgeWVhcnMgCmVhcmxpZXIgKGF0IHRoZSB0aW1lKSBhbmQgdHJ5IHRoYXQuCgpPdXIgMiB5ZWFy
-IG9sZCBtYWNoaW5lIChhY3R1YWxseSAyIGdlbmVyYXRpb25zIGJhY2sgYXQgdGhlIHRpbWUgb2Yg
-dGVzdCwgCm5vdyA1IGdlbmVyYXRpb25zIGJlaGluZCBvdXIgY3VycmVudCBraXQpIHdvdW5kIHVw
-IGJlaW5nIG1vcmUgdGhhbiBhbiAKb3JkZXIgb2YgbWFnbml0dWRlIGZhc3RlciB0aGFuIHRoZSAo
-dGhlbikgbGF0ZXN0IGFuZCBncmVhdGVzdCBraXQgZnJvbSAKPGluc2VydCBsYXJnZSBtdWx0aS1s
-ZXR0ZXIgYWNyb255bSBicmFuZCBuYW1lIGhlcmU+LgoKVGhlIGxlc3NvbiBpcyB0aGlzLiAgTGF0
-ZXN0IGFuZCBncmVhdGVzdCBkb2Vzbid0IG1lYW4gZmFzdGVzdC4gIERlc2lnbiwgCmFuZCBpbXBs
-ZW1lbnRhdGlvbiBtYXR0ZXIuICBCcmFuZCBuYW1lcyBkb24ndC4KClRvIHRoaXMgZGF5LCB3ZSBz
-dGlsbCBzZWUgbWFjaGluZXMgYmVpbmcgcHVzaGVkIG91dCB3aXRoIFBDSXggdGVjaG5vbG9neSAK
-Zm9yIG5ldHdvcmtpbmcsIG9yIGRpc2ssIG9yIC4uLgoKLi4uIGFuZCBjdXN0b21lcnMgYnV5IGl0
-IHVwLCBmb3IgcmVhc29ucyB0aGF0IGhhdmUgbGl0dGxlIHRvIGRvIHdpdGggCnBlcmZvcm1hbmNl
-LCBzdWl0YWJpbGl0eSB0byB0aGUgdGFzaywgZXRjLgoKSWYgeW91IG5lZWQgcGVyZm9ybWFuY2Us
-IGl0cyBpbXBvcnRhbnQgdG8gZm9jdXMgc29tZSBlZmZvcnQgdXBvbiAKbG9jYXRpbmcgc3lzdGVt
-cy92ZW5kb3JzIGNhcGFibGUgb2YgcGVyZm9ybWluZyB3aGVyZSB5b3UgbmVlZCB0aGVtIHRvIApw
-ZXJmb3JtLiAgT3RoZXJ3aXNlIHlvdSBtYXkgd2luZCB1cCB3aXRoIGEgd2FybWVkIG92ZXIgd2Vi
-IHNlcnZlciB3aXRoIApzb21lIHJhbmRvbSBjYXJkIGFuZCBhIGZldyAiZmFzdCIgZGlza3MgdG9z
-c2VkIGluLgoKSSBkb24ndCBtZWFuIHRvIGJlIGJsdW50LCBidXQgdGhpcyBpcyBiYXNpY2FsbHkg
-d2hhdCB5b3Ugd2VyZSBzb2xkLiAKTm90ZSBhbHNvLCBJIHNlZSB0aGlzIGluIGNsdXN0ZXIgZmls
-ZSBzeXN0ZW0gYml0cyBhbGwgdGhlIHRpbWUuICBXZSBnZXQgCmNhbGxzIGZyb20gcGVvcGxlLCB3
-aG8gZGVzY3JpYmUgYSBkZXNpZ24sIGFuZCBhc2sgdXMgZm9yIGhlbHAgbWFraW5nIAp0aGVtIGdv
-IGZhc3QuICBXZSBkaXNjb3ZlciB0aGF0IHRoZXkndmUgbWFkZSBzb21lIGRlZXAgZnVuZGFtZW50
-YWwgCmRlc2lnbiBkZWNpc2lvbnMgdmVyeSBwb29ybHkgKHVzdWFsbHkgdXBvbiB0aGUgYmFzaXMg
-b2Ygd2hhdCA8aW5zZXJ0IApsYXJnZSBtdWx0aS1sZXR0ZXIgYWNyb255bSBicmFuZCBuYW1lIGhl
-cmU+IHRvbGQgdGhlbSB3ZXJlIG9wdGlvbnMpLCBhbmQgCnRoZXJlIHdhcyBubyB3YXkgdG8gZ2V0
-IGJldHdlZW4gcG9pbnQgQSAodGhlaXIgcGVyIHVuaXQgcGVyZm9ybWFuY2UpIGFuZCAKcG9pbnQg
-QiAod2hhdCB0aGV5IHdlcmUgaG9waW5nIGZvciBhcyBhbiBhZ2dyZWdhdGUgc3lzdGVtIHBlcmZv
-cm1hbmNlKS4KCkF0IHRoZSBtb3N0IGJhc2ljIGxldmVsLCB5b3VyIHBlcmZvcm1hbmNlIHdpbGwg
-YmUgbW9kdWxhdGVkIGJ5IHlvdXIgCnNsb3dlc3QgcGVyZm9ybWluZyBwYXJ0LiAgWW91IGNhbiBw
-dXQgaW5maW5pdGVseSBmYXN0IGRpc2tzIG9uIGEgc2xvdyAKY29udHJvbGxlciwgYW5kIHlvdXIg
-cGVyZm9ybWFuY2Ugd2lsbCBiZSB0ZXJyaWJsZS4gIFlvdSBjYW4gcHV0IHNsb3cgCmRpc2tzIG9u
-IGEgdmVyeSBmYXN0IGNvbnRyb2xsZXIsIGFuZCB5b3Ugd2lsbCBsaWtlbHkgaGF2ZSBiZXR0ZXIg
-bHVjay4KCi9Ib3BpbmcgdGhpcyBsZXNzb24gaXMgbm90IGxvc3QgLi4uCgotLSAKSm9zZXBoIExh
-bmRtYW4sIFBoLkQKRm91bmRlciBhbmQgQ0VPClNjYWxhYmxlIEluZm9ybWF0aWNzIEluYy4KZW1h
-aWw6IGxhbmRtYW5Ac2NhbGFibGVpbmZvcm1hdGljcy5jb20Kd2ViICA6IGh0dHA6Ly9zY2FsYWJs
-ZWluZm9ybWF0aWNzLmNvbQogICAgICAgIGh0dHA6Ly9zY2FsYWJsZWluZm9ybWF0aWNzLmNvbS9z
-aWNsdXN0ZXIKcGhvbmU6ICsxIDczNCA3ODYgODQyMyB4MTIxCmZheCAgOiArMSA4NjYgODg4IDMx
-MTIKY2VsbCA6ICsxIDczNCA2MTIgNDYxNQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
-L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
+
+--===============2392303820051065611==
+Content-Type: multipart/signed; boundary="nextPart3666988.Uqhd6af5Kl"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
+
+
+--nextPart3666988.Uqhd6af5Kl
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+
+Am Mittwoch, 25. April 2012, 12:44:39 schrieb Paul Jones:
+> I am running stock Suse 11.1, which is pretty old. Is there a way for=
+
+> me to take the latest version of the xfs code and compile it for
+> 11.1, or os there a dependency on later kernel versions/Suse versions=
+
+> somehow? I am running 2.6-32..I wanted to get all the latest
+> scalability and performance fixes..
+
+We're on openSUSE since the beginning, and we have several openSUSE 11.=
+1=20
+still running, but with actual 3.3 kernels. It's possible. Depending on=
+=20
+your hardware, there can be some corners, but they are solveable. In ou=
+r=20
+case, those servers are on VMware ESXi 5, that's no problem.
+
+Basically, just download the newest kernel, go to=20
+/usr/src/linux-<version>/ and
+gzip -cd /proc/config.gz >.config
+(this copies your current .config), then do
+make menuconfig
+and change what you like/need, compile and install the kernel.
+
+It's good to keep the old one in the /boot/grub/menu.lst, so you're=20
+easily able to start that should the new one not start at first.
+
+But this is a bit OT, so we should end it on the xfs list.
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+--nextPart3666988.Uqhd6af5Kl
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAk+bD3UACgkQzhSR9xwSCbR49wCg5Mc3IAsBX1xWbVacGmwvQARI
+gWwAnR+rvevjJnu5pDH35ukxSupPWFmb
+=NZQy
+-----END PGP SIGNATURE-----
+
+--nextPart3666988.Uqhd6af5Kl--
+
+
+--===============2392303820051065611==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============2392303820051065611==--
