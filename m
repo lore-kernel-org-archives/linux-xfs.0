@@ -1,22 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3S24olP238252 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 21:04:50 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	QVyOz58KKSDcjpGz (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 27 Apr 2012 19:04:49 -0700 (PDT)
-Received: by obbun3 with SMTP id un3so2061601obb.26
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 19:04:48 -0700 (PDT)
+	q3S2D1dS238709 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 21:13:01 -0500
+Date: Fri, 27 Apr 2012 21:15:46 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/37] xfs: current 3.4 patch queue
+Message-ID: <20120428021546.GI16881@sgi.com>
+References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-In-Reply-To: <18818650.cGNyynGa9I@saturn>
-References: <CAK6JqP3ze2pocsgoKUTZx_J6w-Zc9V=StqDnqG0Gx0v5hw=FGQ@mail.gmail.com>
-	<18818650.cGNyynGa9I@saturn>
-Date: Fri, 27 Apr 2012 19:04:48 -0700
-Message-ID: <CAK6JqP3Da7E6dumOuvF12uLKXeTKAWdLw3gYs6ZtEhw3WEDQeg@mail.gmail.com>
-Subject: Re: Problem recovering XFS filesystem
-From: Aaron Williams <aaron.w2@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1335160747-17254-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,159 +18,107 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3365828126489531490=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
---===============3365828126489531490==
-Content-Type: multipart/alternative; boundary=e89a8fb1f862516c2f04beb3a560
+Dave,
 
---e89a8fb1f862516c2f04beb3a560
-Content-Type: text/plain; charset=ISO-8859-1
+I want to pull this in and have been testing toward that end.  With Jan's
+patches this seems to be working well.  I've had to disable a couple asserts:
 
-On Fri, Apr 27, 2012 at 2:31 PM, Michael Monnerie <
-michael.monnerie@is.it-management.at> wrote:
+Index: xfs/fs/xfs/xfs_bmap.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_bmap.c
++++ xfs/fs/xfs/xfs_bmap.c
+@@ -5620,8 +5620,8 @@ xfs_getbmap(
+                                XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+                        out[cur_ext].bmv_unused1 = 0;
+                        out[cur_ext].bmv_unused2 = 0;
+-                       ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
+-                             (map[i].br_startblock != DELAYSTARTBLOCK));
++//                     ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
++//                           (map[i].br_startblock != DELAYSTARTBLOCK));
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+                            whichfork == XFS_ATTR_FORK) {
+                                /* came to the end of attribute fork */
 
-> Am Donnerstag, 26. April 2012, 13:00:06 schrieb Aaron Williams:
-> > I was able to recover the filesystem.
->
-> So your RAID busted the filesystem. Maybe the devs could want an
-> xfs_metadump of the FS before your repair, so they can inspect it and
-> improve xfs_repair.
->
-> Hi Michael,
+Index: xfs/fs/xfs/xfs_super.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_super.c
++++ xfs/fs/xfs/xfs_super.c
+@@ -822,7 +822,7 @@ xfs_fs_destroy_inode(
+        if (is_bad_inode(inode))
+                goto out_reclaim;
 
-It appears that way, or it may be the fact that I mounted with nobarrier
-and in the process of recovering the RAID the information in the
-battery-backed RAID cache got blown away. I have an Areca ARC-1210
-controller that was in the process of rebuilding when I attempted to shut
-down and reboot my Linux system after I mistakenly unplugged the wrong
-drive from my RAID array. I had another drive fail on me and it had
-completed rebuilding itself using a hot spare drive. I intended to remove
-the bad drive to replace it but disconnected the wrong drive. After
-reconnecting the good drive it went on to start rebuilding itself again. At
-this point I decided it might be safer to shut down Linux to replace the
-drive and thought the RAID controller would pick up where it left off in
-rebuilding.
+-       ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
++//     ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
 
-Linux did not shut down all the way however. I don't know if it was waiting
-for the array to rebuild itself or if something else happened. Anyway, I
-eventually hit the reset button. The RAID BIOS reported it could not find
-the array and I had to go about rebuilding the array. I also did a volume
-check which found about 70,000 blocks that it repaired.  Needless to say I
-was quite nervous.
+        /*
+         * We should never get here with one of the reclaim flags already set.
 
-Once that was done Linux refused to mount the XFS partition, I think due to
-corruption in the log.
+That first one has been hanging around for awhile.  It isn't due to this patch
+set.  The second I'm not so sure about.  Looks like you're addressing these in a
+different thread.
 
-I have an image of my pre-repaired filesystem by using dd and can try and
-do a meta dump. The filesystem is 1.9TB in size with about 1.2TB of data in
-use.
+I'm also testing this patch set them without Jan's work, since I'm not sure when
+it will be pulled in.  Here's the latest:
 
-It looks like I was able to recover everything fine after blowing away the
-log. I see a bunch of files recovered in lost+found but those all appear to
-be files like cached web pages, etc.
+case login: [ 2934.077472] BUG: unable to handle kernel paging request at ffffc900036a8010
+[ 2934.078452] IP: [<ffffffffa009a790>] xlog_get_lowest_lsn+0x30/0x80 [xfs]
+[ 2934.078452] PGD 12b029067 PUD 12b02a067 PMD 378f5067 PTE 0
+[ 2934.078452] Oops: 0000 [#1] SMP
+[ 2934.078452] CPU 1
+[ 2934.078452] Modules linked in: xfs(O) exportfs e1000e [last unloaded: xfs]
+[ 2934.078452]
+[ 2934.078452] Pid: 9031, comm: kworker/1:15 Tainted: G           O 3.4.0-rc2+ #3 SGI.COM AltixXE310/X7DGT-INF
+[ 2934.078452] RIP: 0010:[<ffffffffa009a790>]  [<ffffffffa009a790>] xlog_get_lowest_lsn+0x30/0x80 [xfs]
+[ 2934.078452] RSP: 0018:ffff880078281d10  EFLAGS: 00010246
+[ 2934.078452] RAX: ffffc900036a8000 RBX: ffff8800378c7e00 RCX: ffff8800378c7e00
+[ 2934.078452] RDX: ffff8800378426c0 RSI: 0000000000000000 RDI: 0000000000000000
+[ 2934.078452] RBP: ffff880078281d10 R08: ffff8800378c7d00 R09: 0000000000000000
+[ 2934.078452] R10: 0000000000000400 R11: 0000000000000001 R12: ffff880037842600
+[ 2934.078452] R13: ffff8800378c7e00 R14: 0000000000000000 R15: ffff88012fc99205
+[ 2934.078452] FS:  0000000000000000(0000) GS:ffff88012fc80000(0000) knlGS:0000000000000000
+[ 2934.078452] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[ 2934.078452] CR2: ffffc900036a8010 CR3: 0000000037870000 CR4: 00000000000007e0
+[ 2934.078452] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[ 2934.078452] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[ 2934.078452] Process kworker/1:15 (pid: 9031, threadinfo ffff880078280000, task ffff880098f7a490)
+[ 2934.078452] Stack:
+[ 2934.078452]  ffff880078281d90 ffffffffa009b006 0000000300000000 ffff8800378c7e00
+[ 2934.078452]  ffff880037842600 ffff8800378c7d00 0000000000000286 0000000000000000
+[ 2934.078452]  0000000100000000 ffff8800378426a8 ffff8800378426c0 ffff8800378c7e00
+[ 2934.078452] Call Trace:
+[ 2934.078452]  [<ffffffffa009b006>] xlog_state_do_callback+0xa6/0x390 [xfs]
+[ 2934.078452]  [<ffffffffa009b3d7>] xlog_state_done_syncing+0xe7/0x110 [xfs]
+[ 2934.078452]  [<ffffffffa009bbde>] xlog_iodone+0x7e/0x100 [xfs]
+[ 2934.078452]  [<ffffffffa00372d1>] xfs_buf_iodone_work+0x21/0x50 [xfs]
+[ 2934.078452]  [<ffffffff81051498>] process_one_work+0x158/0x440
+[ 2934.078452]  [<ffffffffa00372b0>] ? xfs_bioerror_relse+0x80/0x80 [xfs]
+[ 2934.078452]  [<ffffffff8105428b>] worker_thread+0x17b/0x410
+[ 2934.078452]  [<ffffffff81054110>] ? manage_workers+0x200/0x200
+[ 2934.078452]  [<ffffffff81058bce>] kthread+0x9e/0xb0
+[ 2934.078452]  [<ffffffff816f8014>] kernel_thread_helper+0x4/0x10
+[ 2934.078452]  [<ffffffff81058b30>] ? kthread_freezable_should_stop+0x70/0x70
+[ 2934.078452]  [<ffffffff816f8010>] ? gs_change+0xb/0xb
+[ 2934.078452] Code: 00 00 00 31 ff 48 89 e5 4c 89 c1 eb 0f 66 0f 1f 44 00 00 48 8b 49 30 49 39 c8 74 40 0f b7 41 5c a8 41 75 ef 48 8b 81 c8 00 00 00 <48> 8b 70 10 48 0f ce 48 85 f6 74 05 48 85 ff 74 14 48 89 f2 48
+[ 2934.078452] RIP  [<ffffffffa009a790>] xlog_get_lowest_lsn+0x30/0x80 [xfs]
+[ 2934.078452]  RSP <ffff880078281d10>
+[ 2934.078452] CR2: ffffc900036a8010
+[ 2934.078452] ---[ end trace b65516a5387874db ]---
 
-I also dumped the log to a file (128M).
+Looks like I've seen that one before this patch series:
+http://oss.sgi.com/pipermail/xfs/2012-March/017909.html
 
-So far it looks like any actual data loss is minimal (thankfully) and was a
-good wakeup call to start doing more frequent backups.
+Looking good.  ;)
 
-I also upgraded xfsprogs from 3.1.6-2.1.2 to 3.1.8 which did a much better
-job at recovery than my previous attempt.
-
-It would be nice if xfs_db would allow me to continue when the log is dirty
-instead of requiring me to mount the filesystem first. It also would be
-nice if xfs_logprint could try and identify the filenames of the inodes
-involved.
-
-I understand that there are plans to update XFS to include the UID in all
-of the on-disk structures. Any idea on when this will happen?
-
--Aaron
-
---e89a8fb1f862516c2f04beb3a560
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote">On Fri, Apr 2=
-7, 2012 at 2:31 PM, Michael Monnerie <span dir=3D"ltr">&lt;<a href=3D"mailt=
-o:michael.monnerie@is.it-management.at" target=3D"_blank">michael.monnerie@=
-is.it-management.at</a>&gt;</span> wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0 0 0 .8ex;border-left:1p=
-x #ccc solid;padding-left:1ex">Am Donnerstag, 26. April 2012, 13:00:06 schr=
-ieb Aaron Williams:<br>
-<div class=3D"im">&gt; I was able to recover the filesystem.<br>
-<br>
-</div>So your RAID busted the filesystem. Maybe the devs could want an<br>
-xfs_metadump of the FS before your repair, so they can inspect it and<br>
-improve xfs_repair.<br>
-<span class=3D"HOEnZb"><font color=3D"#888888"><br></font></span></blockquo=
-te><div>Hi Michael,</div><div><br></div><div>It appears that way, or it may=
- be the fact that I mounted with nobarrier
- and in the process of recovering the RAID the information in the=20
-battery-backed RAID cache got blown away. I have an Areca ARC-1210 controll=
-er that was in the process of rebuilding when I attempted to shut down and =
-reboot my Linux system after I mistakenly unplugged the wrong drive from my=
- RAID array. I had another drive fail on me and it had completed rebuilding=
- itself using a hot spare drive. I intended to remove the bad drive to repl=
-ace it but disconnected the wrong drive. After reconnecting the good drive =
-it went on to start rebuilding itself again. At this point I decided it mig=
-ht be safer to shut down Linux to replace the drive and thought the RAID co=
-ntroller would pick up where it left off in rebuilding.</div>
-<div><br></div><div>Linux did not shut down all the way however. I don&#39;=
-t know if it was waiting for the array to rebuild itself or if something el=
-se happened. Anyway, I eventually hit the reset button. The RAID BIOS repor=
-ted it could not find the array and I had to go about rebuilding the array.=
- I also did a volume check which found about 70,000 blocks that it repaired=
-. =A0Needless to say I was quite nervous.</div>
-<div><br></div><div>Once that was done Linux refused to mount the XFS parti=
-tion, I think due to corruption in the log.</div><div><br></div><div>I have=
- an image of my=20
-pre-repaired filesystem by using dd and can try and do a meta dump. The=20
-filesystem is 1.9TB in size with about 1.2TB of data in use.</div>
-
-<br>
-
-It looks like I was able to recover everything fine after blowing away=20
-the log. I see a bunch of files recovered in lost+found but those all=20
-appear to be files like cached web pages, etc.</div><div class=3D"gmail_quo=
-te">
-
-<br>
-
-I also dumped the log to a file (128M).<br>
-
-<br>So far it looks like any actual data loss is minimal (thankfully) and=
-=20
-was a good wakeup call to start doing more frequent backups.<br>
-
-<br>
-I also upgraded xfsprogs from 3.1.6-2.1.2 to 3.1.8 which did a much better =
-job at recovery than my previous attempt.</div><div class=3D"gmail_quote"><=
-br></div>It would be nice if xfs_db would allow me to continue when the log=
- is dirty instead of requiring me to mount the filesystem first. It also wo=
-uld be nice if xfs_logprint could try and identify the filenames of the ino=
-des involved.<br>
-<br><div class=3D"gmail_quote">I understand that there are plans to update =
-XFS to include the UID in all of the on-disk structures. Any idea on when t=
-his will happen?<br><br>
--Aaron</div></div>
-
---e89a8fb1f862516c2f04beb3a560--
-
-
---===============3365828126489531490==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-Ben
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3365828126489531490==--
