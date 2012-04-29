@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3T0lPH7066454 for <xfs@oss.sgi.com>; Sat, 28 Apr 2012 19:47:25 -0500
+	q3T0ldIR066574 for <xfs@oss.sgi.com>; Sat, 28 Apr 2012 19:47:39 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	XVTClsphB0kXAaML for <xfs@oss.sgi.com>;
-	Sat, 28 Apr 2012 17:47:08 -0700 (PDT)
-Date: Sun, 29 Apr 2012 10:14:39 +1000
+	XoXEEDgdz4BHjnKT for <xfs@oss.sgi.com>;
+	Sat, 28 Apr 2012 17:47:10 -0700 (PDT)
+Date: Sun, 29 Apr 2012 10:35:39 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/37] xfs: current 3.4 patch queue
-Message-ID: <20120429001439.GN9541@dastard>
-References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<20120428021546.GI16881@sgi.com>
+Subject: Re: Problem recovering XFS filesystem
+Message-ID: <20120429003539.GP9541@dastard>
+References: <CAK6JqP3ze2pocsgoKUTZx_J6w-Zc9V=StqDnqG0Gx0v5hw=FGQ@mail.gmail.com>
+	<18818650.cGNyynGa9I@saturn>
+	<CAK6JqP3Da7E6dumOuvF12uLKXeTKAWdLw3gYs6ZtEhw3WEDQeg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120428021546.GI16881@sgi.com>
+In-Reply-To: <CAK6JqP3Da7E6dumOuvF12uLKXeTKAWdLw3gYs6ZtEhw3WEDQeg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,106 +28,98 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Aaron Williams <aaron.w2@gmail.com>
+Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
 
-On Fri, Apr 27, 2012 at 09:15:46PM -0500, Ben Myers wrote:
-> Dave,
+On Fri, Apr 27, 2012 at 07:04:48PM -0700, Aaron Williams wrote:
+> On Fri, Apr 27, 2012 at 2:31 PM, Michael Monnerie <
+> michael.monnerie@is.it-management.at> wrote:
 > 
-> I want to pull this in and have been testing toward that end.  With Jan's
-> patches this seems to be working well.  I've had to disable a couple asserts:
+> > Am Donnerstag, 26. April 2012, 13:00:06 schrieb Aaron Williams:
+> > > I was able to recover the filesystem.
+> >
+> > So your RAID busted the filesystem. Maybe the devs could want an
+> > xfs_metadump of the FS before your repair, so they can inspect it and
+> > improve xfs_repair.
+> >
+> > Hi Michael,
+
+<snip story of woe>
+
+> Once that was done Linux refused to mount the XFS partition, I think due to
+> corruption in the log.
+
+The reason will be in the log. e.g dmesg |tail -100 usually tells
+you why it failed to mount.
+
+> I have an image of my pre-repaired filesystem by using dd and can try and
+> do a meta dump. The filesystem is 1.9TB in size with about 1.2TB of data in
+> use.
+
+ISTR that metadump needs the log to be clean first, too.
+
+> It looks like I was able to recover everything fine after blowing away the
+> log. I see a bunch of files recovered in lost+found but those all appear to
+> be files like cached web pages, etc.
 > 
-> Index: xfs/fs/xfs/xfs_bmap.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_bmap.c
-> +++ xfs/fs/xfs/xfs_bmap.c
-> @@ -5620,8 +5620,8 @@ xfs_getbmap(
->                                 XFS_FSB_TO_BB(mp, map[i].br_blockcount);
->                         out[cur_ext].bmv_unused1 = 0;
->                         out[cur_ext].bmv_unused2 = 0;
-> -                       ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
-> -                             (map[i].br_startblock != DELAYSTARTBLOCK));
-> +//                     ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
-> +//                           (map[i].br_startblock != DELAYSTARTBLOCK));
->                          if (map[i].br_startblock == HOLESTARTBLOCK &&
->                             whichfork == XFS_ATTR_FORK) {
->                                 /* came to the end of attribute fork */
+> I also dumped the log to a file (128M).
 > 
-> Index: xfs/fs/xfs/xfs_super.c
-> ===================================================================
-> --- xfs.orig/fs/xfs/xfs_super.c
-> +++ xfs/fs/xfs/xfs_super.c
-> @@ -822,7 +822,7 @@ xfs_fs_destroy_inode(
->         if (is_bad_inode(inode))
->                 goto out_reclaim;
+> So far it looks like any actual data loss is minimal (thankfully) and was a
+> good wakeup call to start doing more frequent backups.
 > 
-> -       ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
-> +//     ASSERT(XFS_FORCED_SHUTDOWN(ip->i_mount) || ip->i_delayed_blks == 0);
+> I also upgraded xfsprogs from 3.1.6-2.1.2 to 3.1.8 which did a much better
+> job at recovery than my previous attempt.
 
-That's the two problems my latest patch series help reduce. I think
-they solve this second one, and I now understand the remaining case
-I'm tripping over the first one, and that is a case of modifying the
-assert to avoid failure.
+That's good to know ;)
 
-FYI, that last case is due to specualtive delalloc beyond EOF, and
-when allocating the range during writeback being able to allocate
-part of what is beyond EOF but not all of it due to limited
-available free space sizes. Hence data flushes will never be able to
-convert that remaining delalloc range beyond EOF, and so getbmap
-will assert fail above on that.
+> It would be nice if xfs_db would allow me to continue when the log is dirty
+> instead of requiring me to mount the filesystem first.
 
+Log recovery is done by the kernel code, not userspace, which is why
+there is this requirement. If the kernel can't replay it, then you
+have to use xfs_repair to zero it. Unforutnately, you can't just
+zero the log with xfs_repair - you could do it hackily by terminatin
+xfs_reapir just after it has zeroed the log....
 
-> That first one has been hanging around for awhile.  It isn't due to this patch
-> set.  The second I'm not so sure about.  Looks like you're addressing these in a
-> different thread.
+> It also would be
+> nice if xfs_logprint could try and identify the filenames of the inodes
+> involved.
 
-Same problem, different failure modes.
+xfs_logprint just analyses the log transactions - it knows nothing
+about the structure of the filesystem and doesn't even mount it. If
+you want to know the names of the inodes, then use xfs_db once you
+have the inode numbers in question. That requires a full filesystem
+traversal to find the name for the inode number in question, so can
+be *very* slow. Given that there can be hundreds of thousands of
+unique inodes in the log, that sort of translation woul dbe
+*extremely* expensive.
 
-> I'm also testing this patch set them without Jan's work, since I'm not sure when
-> it will be pulled in.  Here's the latest:
-> 
-> case login: [ 2934.077472] BUG: unable to handle kernel paging request at ffffc900036a8010
-> [ 2934.078452] IP: [<ffffffffa009a790>] xlog_get_lowest_lsn+0x30/0x80 [xfs]
-> [ 2934.078452] PGD 12b029067 PUD 12b02a067 PMD 378f5067 PTE 0
-> [ 2934.078452] Oops: 0000 [#1] SMP
-> [ 2934.078452] CPU 1
-> [ 2934.078452] Modules linked in: xfs(O) exportfs e1000e [last unloaded: xfs]
-> [ 2934.078452]
-> [ 2934.078452] Pid: 9031, comm: kworker/1:15 Tainted: G           O 3.4.0-rc2+ #3 SGI.COM AltixXE310/X7DGT-INF
+> I understand that there are plans to update XFS to include the UID
 
-What out-of-tree module do you have loaded that tainted the kernel?
-The ethernet driver?
+UUID, not UID.
 
+> in all of the on-disk structures. Any idea on when this will
+> happen?
 
-> [ 2934.078452] RIP: 0010:[<ffffffffa009a790>]  [<ffffffffa009a790>] xlog_get_lowest_lsn+0x30/0x80 [xfs]
-.....
-> [ 2934.078452] Call Trace:
-> [ 2934.078452]  [<ffffffffa009b006>] xlog_state_do_callback+0xa6/0x390 [xfs]
-> [ 2934.078452]  [<ffffffffa009b3d7>] xlog_state_done_syncing+0xe7/0x110 [xfs]
-> [ 2934.078452]  [<ffffffffa009bbde>] xlog_iodone+0x7e/0x100 [xfs]
-> [ 2934.078452]  [<ffffffffa00372d1>] xfs_buf_iodone_work+0x21/0x50 [xfs]
-> [ 2934.078452]  [<ffffffff81051498>] process_one_work+0x158/0x440
-> [ 2934.078452]  [<ffffffffa00372b0>] ? xfs_bioerror_relse+0x80/0x80 [xfs]
-> [ 2934.078452]  [<ffffffff8105428b>] worker_thread+0x17b/0x410
-> [ 2934.078452]  [<ffffffff81054110>] ? manage_workers+0x200/0x200
-> [ 2934.078452]  [<ffffffff81058bce>] kthread+0x9e/0xb0
-> [ 2934.078452]  [<ffffffff816f8014>] kernel_thread_helper+0x4/0x10
-> [ 2934.078452]  [<ffffffff81058b30>] ? kthread_freezable_should_stop+0x70/0x70
+When it is ready. And then you'll have to mkfs a new filesystem to
+use it because it can't be retro-fitted to existing filesystems....
 
-Only way this can happen is if the log has already been torn down
-before an IO completion for a log write occurs. Not sure how that
-can happen, but we do do some log io (write the unmount record) on
-unmount and then tear down the log without having first flsuhed the
-buftarg....
-
-> Looks like I've seen that one before this patch series:
-> http://oss.sgi.com/pipermail/xfs/2012-March/017909.html
-
-Yeah, i don't think it is related.
+I'm already pushing infrastructure changes needed to support all the
+new on-disk functionality into the kernel, so the timeframe is
+months for experimental support on the new on-disk format....
 
 Cheers,
 
 Dave.
+> 
+> -Aaron
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
+
 -- 
 Dave Chinner
 david@fromorbit.com
