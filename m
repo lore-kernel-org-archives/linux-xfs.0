@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3TLoTBJ162101 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 16:50:29 -0500
-Date: Sun, 29 Apr 2012 17:50:27 -0400
+	q3TLr248162585 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 16:53:02 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	GY0TtLl9xsm90YXp (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 29 Apr 2012 14:53:01 -0700 (PDT)
+Date: Sun, 29 Apr 2012 17:53:00 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 29/37 V3] xfs: move busy extent handling to it's own file
-Message-ID: <20120429215027.GH19889@infradead.org>
+Subject: Re: [PATCH 31/37] xfs: move xfs_fsb_to_db to xfs_bmap.h
+Message-ID: <20120429215300.GJ19889@infradead.org>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<1335160747-17254-30-git-send-email-david@fromorbit.com>
-	<20120423175725.GG16881@sgi.com> <20120424002502.GS9541@dastard>
-	<4F96CD24.2070805@sgi.com> <4F96EC97.3050404@sgi.com>
-	<20120429103943.GQ9541@dastard>
+	<1335160747-17254-32-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120429103943.GQ9541@dastard>
+In-Reply-To: <1335160747-17254-32-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,15 +30,43 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Ben Myers <bpm@sgi.com>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-I would have called it xfs_busy_extent.h, but given how far you are with
-the series it's really not worth bike sheeding about this detail.
+On Mon, Apr 23, 2012 at 03:59:01PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> This is the only remaining useful function in xfs_rw.h, so move it
 
-Looks good,
+Well, xfs_get_extsz_hint also still is useful, and you only move it in
+the next patch.
 
+> +/*
+> + * Convert the given file system block to a disk block.  We have to treat it
+> + * differently based on whether the file is a real time file or not, because the
+> + * bmap code does.
+> + */
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Might be worth alaborating why exactly.  When I last looked over it I
+couldn't make much sense of it.
+
+> +xfs_daddr_t
+> +xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+> +{
+> +	return (XFS_IS_REALTIME_INODE(ip) ? \
+> +		 (xfs_daddr_t)XFS_FSB_TO_BB((ip)->i_mount, (fsb)) : \
+> +		 XFS_FSB_TO_DADDR((ip)->i_mount, (fsb)));
+> +}
+
+Might be worth to "demacrofy" it while you're at it, e.g. rewrite it as:
+
+xfs_daddr_t
+xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
+{
+	if (XFS_IS_REALTIME_INODE(ip))
+		return XFS_FSB_TO_BB(ip->i_mount, fsb);
+	else
+		return XFS_FSB_TO_DADDR(ip->i_mount, fsb);
+}
 
 _______________________________________________
 xfs mailing list
