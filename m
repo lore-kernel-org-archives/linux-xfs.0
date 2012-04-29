@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3S4gh8v248968 for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 23:42:43 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id oHvYu5McspXGpIoU
-	for <xfs@oss.sgi.com>; Fri, 27 Apr 2012 21:42:42 -0700 (PDT)
-Message-ID: <4F9B7542.8070207@hardwarefreak.com>
-Date: Fri, 27 Apr 2012 23:42:42 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q3T0lCBV066360 for <xfs@oss.sgi.com>; Sat, 28 Apr 2012 19:47:13 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	pBbrWYysiEl1PCXx for <xfs@oss.sgi.com>;
+	Sat, 28 Apr 2012 17:47:10 -0700 (PDT)
+Date: Sun, 29 Apr 2012 10:21:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 00/37] xfs: current 3.4 patch queue
+Message-ID: <20120429002129.GO9541@dastard>
+References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
+	<20120428021546.GI16881@sgi.com> <20120428212833.GJ16881@sgi.com>
 MIME-Version: 1.0
-Subject: Re: A little RAID experiment
-References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
-	<1335363423.4586.431.camel@montana.filmlight.ltd.uk>
-	<CAAxjCExzLXGMw2O32kR8xGS6-EpfwfKm-zkM0Vy58bryWygZuQ@mail.gmail.com>
-	<4F9ABB35.4020806@scalableinformatics.com>
-In-Reply-To: <4F9ABB35.4020806@scalableinformatics.com>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20120428212833.GJ16881@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,87 +23,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: landman@scalableinformatics.com
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 4/27/2012 10:28 AM, Joe Landman wrote:
-> On 04/26/2012 04:53 AM, Stefan Ring wrote:
-> =
+On Sat, Apr 28, 2012 at 04:28:33PM -0500, Ben Myers wrote:
+> On Fri, Apr 27, 2012 at 09:15:46PM -0500, Ben Myers wrote:
+> > I want to pull this in and have been testing toward that end.  With Jan's
+> > patches this seems to be working well.
+> 
+> Another BUG without Jan's patches:
+> 
+> [ 1811.832319] BUG: unable to handle kernel NULL pointer dereference at 0000000000000038
+> [ 1811.833303] IP: [<ffffffff816ef359>] _raw_spin_lock+0x9/0x30
+> [ 1811.833303] PGD 128d0d067 PUD 128675067 PMD 0
+> [ 1811.833303] Oops: 0002 [#1] SMP
+> [ 1811.833303] CPU 2
+> [ 1811.833303] Modules linked in: xfs(O) nfsd exportfs e1000e
+> [ 1811.833303]
+> [ 1811.833303] Pid: 12942, comm: kworker/2:15 Tainted: G           O 3.4.0-rc2+ #3 SGI.COM AltixXE310/X7DGT-INF
+> [ 1811.833303] RIP: 0010:[<ffffffff816ef359>]  [<ffffffff816ef359>] _raw_spin_lock+0x9/0x30
+> [ 1811.833303] RSP: 0018:ffff880129235b40  EFLAGS: 00010286
+> [ 1811.833303] RAX: 0000000000000100 RBX: ffff880128685480 RCX: 0000000000000000
+> [ 1811.833303] RDX: 0000000f00004cb5 RSI: ffff880128685480 RDI: 0000000000000038
+> [ 1811.833303] RBP: ffff880129235b40 R08: ffff88012870ab00 R09: 0000000000000000
+> [ 1811.833303] R10: 0000000000000400 R11: 0000000000000001 R12: ffff88012870ad80
+> [ 1811.833303] R13: ffff880126e5c180 R14: ffff880126e5c1b0 R15: ffff880128f48780
+> [ 1811.833303] FS:  0000000000000000(0000) GS:ffff88012fd00000(0000) knlGS:0000000000000000
+> [ 1811.833303] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+> [ 1811.833303] CR2: 0000000000000038 CR3: 0000000128aa2000 CR4: 00000000000007e0
+> [ 1811.833303] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+> [ 1811.833303] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+> [ 1811.833303] Process kworker/2:15 (pid: 12942, threadinfo ffff880129234000, task ffff88012ab83a80)
+> [ 1811.833303] Stack:
+> [ 1811.833303]  ffff880129235cd0 ffffffffa00b8531 0000000000000000 0000000000001000
+> [ 1811.833303]  0000000000000000 0000000f00004cb5 0000000000000000 0000000000000038
+> [ 1811.833303]  0000000000000001 0000000000000000 0000000000000000 0000000000000000
+> [ 1811.833303] Call Trace:
+> [ 1811.833303]  [<ffffffffa00b8531>] xfs_trans_committed_bulk+0x41/0x300 [xfs]
+> [ 1811.833303]  [<ffffffff81068c3e>] ? try_to_wake_up+0x1fe/0x280
+> [ 1811.833303]  [<ffffffffa00be4f6>] xlog_cil_committed+0x36/0x130 [xfs]
+> [ 1811.833303]  [<ffffffffa00ba07d>] xlog_state_do_callback+0x16d/0x390 [xfs]
+> [ 1811.833303]  [<ffffffffa00ba387>] xlog_state_done_syncing+0xe7/0x110 [xfs]
+> [ 1811.833303]  [<ffffffffa00bab8e>] xlog_iodone+0x7e/0x100 [xfs]
+> [ 1811.833303]  [<ffffffffa00562d1>] xfs_buf_iodone_work+0x21/0x50 [xfs]
+> [ 1811.833303]  [<ffffffff81051498>] process_one_work+0x158/0x440
 
-> =
+Look slike the same thing - a NULL ailp, which implies the callback
+occurred while the log is being torn down..
 
->> I just want to stress that our machine with the SmartArray controller
->> is not a cheap old dusty leftover, but a recently-bought (December
->> 2011) not exactly cheap Blade server, and that=92s all you get from HP.
-> =
+Cheers,
 
-> We have an anecdote about something akin to this which happened 2 years
-> ago.  A potential customer was testing a <insert large multi-letter
-> acronym brand name here> machine to run a specific set of software which
-> tightly coupled to its disks.  Performance was terrible.  Our partner
-> (the software vendor) contacted us and asked us to help.  We'd suggested
-> that the partner loan them the machine they had bought from us 2 years
-> earlier (at the time) and try that.
-> =
-
-> Our 2 year old machine (actually 2 generations back at the time of test,
-> now 5 generations behind our current kit) wound up being more than an
-> order of magnitude faster than the (then) latest and greatest kit from
-> <insert large multi-letter acronym brand name here>.
-> =
-
-> The lesson is this.  Latest and greatest doesn't mean fastest.  Design,
-> and implementation matter.  Brand names don't.
-> =
-
-> To this day, we still see machines being pushed out with PCIx technology
-> for networking, or disk, or ...
-
-I've seen this as well.  A vendor gets comfortable and confident with a
-particular main board, RAID card, NIC, etc, that demonstrate uber
-reliability in the field and is easy to work on/with.  They continue
-selling it as long as they can still get their hands on it, even though
-much better technology has long been available.  It's the "stick with
-what we know works" mentality.  Sometimes this is a good strategy.  If a
-customer constantly needs maximum performance, obviously not.
-
-> ... and customers buy it up, for reasons that have little to do with
-> performance, suitability to the task, etc.
-> =
-
-> If you need performance, its important to focus some effort upon
-> locating systems/vendors capable of performing where you need them to
-> perform.  Otherwise you may wind up with a warmed over web server with
-> some random card and a few "fast" disks tossed in.
-> =
-
-> I don't mean to be blunt, but this is basically what you were sold. Note
-> also, I see this in cluster file system bits all the time.  We get calls
-> from people, who describe a design, and ask us for help making them go
-> fast.  We discover that they've made some deep fundamental design
-> decisions very poorly (usually upon the basis of what <insert large
-> multi-letter acronym brand name here> told them were options), and there
-> was no way to get between point A (their per unit performance) and point
-> B (what they were hoping for as an aggregate system performance).
-> =
-
-> At the most basic level, your performance will be modulated by your
-> slowest performing part.  You can put infinitely fast disks on a slow
-> controller, and your performance will be terrible.  You can put slow
-> disks on a very fast controller, and you will likely have better luck.
-
-I generally agree with this last statement, but I think it's most
-relevant to parity arrays.  In general RAID1/10 performance tends to be
-less impacted by controller speed.  But yes, a really poor slow
-controller is going to limit anything you try to do with any disks.
-
--- =
-
-Stan
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
