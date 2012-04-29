@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3TLtvN4162934 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 16:55:57 -0500
+	q3TLtQba162879 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 16:55:26 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	UTvuTud8ndRONxtx (version=TLSv1 cipher=AES256-SHA bits=256
+	gftSNXs4ugA8bSHV (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 29 Apr 2012 14:55:56 -0700 (PDT)
-Date: Sun, 29 Apr 2012 17:55:55 -0400
+	Sun, 29 Apr 2012 14:55:25 -0700 (PDT)
+Date: Sun, 29 Apr 2012 17:55:25 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 36/37] xfs: flush outstanding buffers on log mount failure
-Message-ID: <20120429215555.GO19889@infradead.org>
+Subject: Re: [PATCH 34/37] xfs: clean up xfs_bit.h includes
+Message-ID: <20120429215525.GM19889@infradead.org>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<1335160747-17254-37-git-send-email-david@fromorbit.com>
+	<1335160747-17254-35-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1335160747-17254-37-git-send-email-david@fromorbit.com>
+In-Reply-To: <1335160747-17254-35-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,24 +32,19 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Apr 23, 2012 at 03:59:06PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we fail to mount the log in xfs_mountfs(), we tear down all the
-> infrastructure we have already allocated. However, the process of
-> mounting the log may have progressed to the point of reading,
-> caching and modifying buffers in memory. Hence before we can free
-> all the infrastructure, we have to flush and remove all the buffers
-> from memory.
-> 
-> Problem first reported by Eric Sandeen, later a different incarnation
-> was reported by Ben Myers.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+>   * Visible inode allocation functions.
+>   */
+> +/*
+> + * Find a free (set) bit in the inode bitmask.
+> + */
+> +static inline int xfs_ialloc_find_free(xfs_inofree_t *fp)
+> +{
+> +	return xfs_lowbit64(*fp);
+> +}
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I'd suggest killing this helper entirely - there is just a single
+caller, and using the lowbit helper directly actually is even more
+obvious.
 
 _______________________________________________
 xfs mailing list
