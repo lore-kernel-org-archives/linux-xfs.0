@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3U1BrEs179343 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 20:11:53 -0500
+	q3U1ObQf180317 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 20:24:37 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	51rZXPaBoTbGEUrp for <xfs@oss.sgi.com>;
-	Sun, 29 Apr 2012 18:11:51 -0700 (PDT)
-Date: Mon, 30 Apr 2012 11:11:24 +1000
+	JSxwJTNgdmCg4one for <xfs@oss.sgi.com>;
+	Sun, 29 Apr 2012 18:24:35 -0700 (PDT)
+Date: Mon, 30 Apr 2012 11:24:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 6/3] xfs: make largest supported offset less shouty
-Message-ID: <20120430011124.GD3283@dastard>
-References: <1335519922-14371-1-git-send-email-david@fromorbit.com>
-	<20120429125729.GU9541@dastard>
-	<20120429215830.GQ19889@infradead.org>
+Subject: Re: [PATCH 03/18] xfs: Do background CIL flushes via a workqueue
+Message-ID: <20120430012432.GE3283@dastard>
+References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
+	<1334319061-12968-4-git-send-email-david@fromorbit.com>
+	<20120417212155.GA16881@sgi.com> <20120417214956.GB16881@sgi.com>
+	<20120418014706.GM6734@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120429215830.GQ19889@infradead.org>
+In-Reply-To: <20120418014706.GM6734@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +25,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Sun, Apr 29, 2012 at 05:58:30PM -0400, Christoph Hellwig wrote:
-> On Sun, Apr 29, 2012 at 10:57:29PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > XFS_MAXIOFFSET() is just a simple macro that resolves to
-> > mp->m_maxioffset. It doesn't need to exist, and it just makes the
-> > code unnecessarily loud and shouty.
-> > 
-> > Make it quiet and easy to read.
-> 
-> Do we actually need to keep around a value in our superblock?
-> s_maxbytes in the VFS superblock already does this, and it seems like
-> at least our checks in the read path are superflous.
-
-Ah, we do indeed keep the same value in s_maxbytes - that's one step
-removed from m_maxioffset because it uses the same function to
-calculate it, and they are done a long way apart. Ok, it looks like
-I've got a couple more patches to write to finish off this cleanup.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBBcHIgMTgsIDIwMTIgYXQgMTE6NDc6MDZBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
+b3RlOgo+IE9uIFR1ZSwgQXByIDE3LCAyMDEyIGF0IDA0OjQ5OjU2UE0gLTA1MDAsIEJlbiBNeWVy
+cyB3cm90ZToKPiA+IE9uIFR1ZSwgQXByIDE3LCAyMDEyIGF0IDA0OjIxOjU1UE0gLTA1MDAsIEJl
+biBNeWVycyB3cm90ZToKPiA+ID4gR2FoISBJIGp1c3QgaGl0IHRoaXMgYXNzZXJ0LiAgCj4gPiA+
+IAo+ID4gPiB2My40LXJjMi0zLWc4YTAwZWJlIHdpdGg6Cj4gPiA+IENocmlzdG9waCdzIGlsb2Nr
+IHNlcmllcwo+ID4gPiBDaHJpc3RvcGgncyB4ZnNidWZkIHNlcmllcwo+ID4gPiBKYW4ncyBmcmVl
+emUgc2VyaWVzCj4gPiA+IERhdmUncyBxdWV1ZS4KPiA+ID4gCj4gPiA+IG5mczcgbG9naW46IFsg
+MTE3NS4xNzI0MDZdIFhGUzogQXNzZXJ0aW9uIGZhaWxlZDogcHVzaF9zZXEgPiAwICYmIHB1c2hf
+c2VxIDw9IGN0eC0+c2VxdWVuY2UsIGZpbGU6IC9yb290L3hmcy9mcy94ZnMveGZzX2xvZ19jaWwu
+YywgbGluZTogNDA2Cj4gCj4gd2hpY2ggaGFzIHByb2JhYmx5IHJlc3VsdGVkIGluIGEgbG9nIGNv
+cnJ1cHRpb24uCj4gCj4gPiBbICAzOTAuMDk3NjMzXSAtLS1bIGVuZCB0cmFjZSAzM2E5Nzk1YjYz
+ODE1N2I5IF0tLS0KPiA+IAo+ID4gSGVyZSBpdCBpcyBmcm9tIHRoZSBzeXN0ZW0gbG9nCj4gPiAK
+PiA+IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM4OS42Mzc1NDNdIFhGUyAoMjY0
+PTIxMTM2MVDblDMwMCk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KPiA+IEFwciAxNyAxNjozNToxMiBs
+aW51eCBrZXJuZWw6IFsgIDM4OS45MTI0MDJdIFhGUyAoMjY0PTIxMTM2MVDblDMwMCk6IFN0YXJ0
+aW5nIHJlY292ZXJ5IChsb2dkZXY6IGludGVybmFsKQo+ID4gQXByIDE3IDE2OjM1OjEyIGxpbnV4
+IGtlcm5lbDogWyAgMzkwLjA1NDM1N10gWEZTICgyNjQ9MjExMzYxUNuUMzAwKTogeGxvZ19yZWNv
+dmVyX2lub2RlX3Bhc3MyOiBCYWQgaW5vZGUgbWFnaWMgbnVtYmVyLCBkaXAgPSAweGYwZmZkODAw
+LCBkaW5vIGJwID0gMHhlZjg5YzQ4MCwgaW5vID0gMjU1NDE1OTIKPiA+IEFwciAxNyAxNjozNTox
+MiBsaW51eCBrZXJuZWw6IFsgIDM5MC4wNjYyOTBdIFhGUyAoMjY0PTIxMTM2MVDblDMwMCk6IElu
+dGVybmFsIGVycm9yIHhsb2dfcmVjb3Zlcl9pbm9kZV9wYXNzMigxKSBhdCBsaW5lIDIyNDggb2Yg
+ZmlsZSAvcm9vdC94ZnMvZnMveGZzL3hmc19sb2dfcmVjb3Zlci5jLiAgQ2FsbGVyIDB4ZmFhMDhm
+ZmEKPiAKPiBCZWNhdXNlIGxvZyByZWNvdmVyeSBoYXMgcmVhZCBhIGJhZCBpbm9kZSBmcm9tIGRp
+c2ssIHdoaWNoIG1lYW5zIGFuCj4gYWxsb2NhdGlvbiB0cmFuc2FjdGlvbiBoYXMgcHJvYmFibHkg
+bm90IGJlZW4gcmVwbGF5ZWQuCgpKdXN0IGFzIGEgbm90ZSAtIEknbSBnZXR0aW5nIGl0ZXN0IDEy
+MSByZWxpYWJseSB0cmlwcGluZyBvdmVyIHRoaXMKZXhhY3QgcHJvYmxlbSBhcyBhIHJlc3VsdCBv
+ZiB0aGUgZGlzY29udGlndW91cyBidWZmZXIgaXRlbSBzdXBwb3J0CnBhdGNoLiBCYXNpY2FsbHkg
+dGhlIHByb2JsZW0gaXMgdGhhdCBhbiBpbm9kZSBtb2RpZmljYXRpb24KdHJhbnNhY3Rpb24gaXMg
+YmVpbmcgcmVwbGF5ZWQgYmVmb3JlIHRoZSBpbm9kZSBidWZmZXIgYWxsb2NhdGlvbgp0cmFuc2Fj
+dGlvbiwgc28gdGhlIHJlYWQgb2YgdGhlIGlub2RlIGJ1ZmZlciByZXR1cm5zIGFuCnVuaW5pdGlh
+bGlzZWQgZGF0YSBhcmVhLCBhbmQgaGVuY2UgdGhlIGFzc2VydCBmYWlsdXJlLgoKQXQgdGhpcyBw
+b2ludCBJIGNhbid0IHNlZSB3aHkgdGhhdCBwYXRjaCB3b3VsZCBjYXVzZSB0aGUgcHJvYmxlbSB0
+bwpvY2N1ciBhbmQgdGhpcyB0ZW5kcyB0byBpbXBseSB0aGF0IGl0IGlzbid0IHRoYXQgcGF0Y2gg
+dGhhdCBoYXMKY2F1c2VkIHRoZSBidWcuIEkgc3VzcGVjdCB0aGF0IHRoZSBwcm9ibGVtIGlzIHRo
+YXQgdGhlIHJlbG9nZ2luZyBvZgp0aGUgYnVmZmVyIGZvciB0aGUgdW5saW5rZWQgaW5vZGUgbGlz
+dCB1cGRhdGVzIGlzIG1vdmluZyB0aGUgYnVmZmVyCmJlaGluZCB0aGUgaW5vZGUgbW9kaWZpY2F0
+aW9ucyBpbiB0aGUgQ0lMIHNvIHRoZSBvcmRlciBvZiBvcGVyYXRpb25zCmluIHRoZSBDSUwgaXMg
+aW5vZGUgbW9kaWZpY2F0aW9uKHMpIGZvbGxvd2VkIGJ5IGJ1ZmZlcgptb2RpZmljYXRpb25zLiBU
+aGF0IG9yZGVyIGlzIHRoZW4gcmVmbGVjdGVkIGluIHRoZSBvcmRlciBjaGFuZ2VzIGFyZQp3cml0
+dGVuIHRvIHRoZSBsb2cgaW4gdGhlIGNoZWNrcG9pbnQuCgpXaGF0IEkgZG9uJ3QgdW5kZXJzdGFu
+ZCB5ZXQgaXMgd2h5IHRoYXQgcGF0Y2ggdHJpZ2dlcnMgYW4gYXBwYXJlbnQKY2hhbmdlIG9mIGJl
+aGF2aW91ciB3aGVuIGl0IGRvZXNuJ3QgY2hhbmdlIHRoZSBvcmRlciBvZiBsb2dnaW5nIG9yCm9w
+ZXJhdGlvbnMgYXQgYWxsLiBTbyBJIG5lZWQgdG8gZG8gbW9yZSBkZWJ1Z2dpbmcgYmVmb3JlIGJl
+aW5nIGFibGUKdG8gc2F5IHdoYXQgaXMgY2F1c2luZyB0aGlzLgoKQ2hlZXJzLAoKRGF2ZS4KLS0g
+CkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNv
+bQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
