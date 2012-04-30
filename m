@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3U69Hsm213459 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 01:09:18 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	XeMZmt6iMdCOc1dE for <xfs@oss.sgi.com>;
-	Sun, 29 Apr 2012 23:09:15 -0700 (PDT)
-Date: Mon, 30 Apr 2012 16:09:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 03/18] xfs: Do background CIL flushes via a workqueue
-Message-ID: <20120430060913.GJ7015@dastard>
-References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<1334319061-12968-4-git-send-email-david@fromorbit.com>
-	<20120417212155.GA16881@sgi.com> <20120417214956.GB16881@sgi.com>
-	<20120418014706.GM6734@dastard> <20120430012432.GE3283@dastard>
+	q3U88Jvf224921 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 03:08:20 -0500
+Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
+	cuda.sgi.com with ESMTP id 9y1LiJ8C7PyMkhTD (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 30 Apr 2012 01:08:16 -0700 (PDT)
+Message-ID: <4F9E4874.8050505@profihost.ag>
+Date: Mon, 30 Apr 2012 10:08:20 +0200
+From: Stefan Priebe <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120430012432.GE3283@dastard>
+Subject: Kernel 3.0.30 hang in xfs_submit_ioend_bio
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,52 +19,53 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, gregkh@linuxfoundation.org, stable@vger.kernel.org
 
-T24gTW9uLCBBcHIgMzAsIDIwMTIgYXQgMTE6MjQ6MzJBTSArMTAwMCwgRGF2ZSBDaGlubmVyIHdy
-b3RlOgo+IE9uIFdlZCwgQXByIDE4LCAyMDEyIGF0IDExOjQ3OjA2QU0gKzEwMDAsIERhdmUgQ2hp
-bm5lciB3cm90ZToKPiA+IE9uIFR1ZSwgQXByIDE3LCAyMDEyIGF0IDA0OjQ5OjU2UE0gLTA1MDAs
-IEJlbiBNeWVycyB3cm90ZToKPiA+ID4gT24gVHVlLCBBcHIgMTcsIDIwMTIgYXQgMDQ6MjE6NTVQ
-TSAtMDUwMCwgQmVuIE15ZXJzIHdyb3RlOgo+ID4gPiA+IEdhaCEgSSBqdXN0IGhpdCB0aGlzIGFz
-c2VydC4gIAo+ID4gPiA+IAo+ID4gPiA+IHYzLjQtcmMyLTMtZzhhMDBlYmUgd2l0aDoKPiA+ID4g
-PiBDaHJpc3RvcGgncyBpbG9jayBzZXJpZXMKPiA+ID4gPiBDaHJpc3RvcGgncyB4ZnNidWZkIHNl
-cmllcwo+ID4gPiA+IEphbidzIGZyZWV6ZSBzZXJpZXMKPiA+ID4gPiBEYXZlJ3MgcXVldWUuCj4g
-PiA+ID4gCj4gPiA+ID4gbmZzNyBsb2dpbjogWyAxMTc1LjE3MjQwNl0gWEZTOiBBc3NlcnRpb24g
-ZmFpbGVkOiBwdXNoX3NlcSA+IDAgJiYgcHVzaF9zZXEgPD0gY3R4LT5zZXF1ZW5jZSwgZmlsZTog
-L3Jvb3QveGZzL2ZzL3hmcy94ZnNfbG9nX2NpbC5jLCBsaW5lOiA0MDYKPiA+IAo+ID4gd2hpY2gg
-aGFzIHByb2JhYmx5IHJlc3VsdGVkIGluIGEgbG9nIGNvcnJ1cHRpb24uCj4gPiAKPiA+ID4gWyAg
-MzkwLjA5NzYzM10gLS0tWyBlbmQgdHJhY2UgMzNhOTc5NWI2MzgxNTdiOSBdLS0tCj4gPiA+IAo+
-ID4gPiBIZXJlIGl0IGlzIGZyb20gdGhlIHN5c3RlbSBsb2cKPiA+ID4gCj4gPiA+IEFwciAxNyAx
-NjozNToxMiBsaW51eCBrZXJuZWw6IFsgIDM4OS42Mzc1NDNdIFhGUyAoMjY0PTIxMTM2MVDblDMw
-MCk6IE1vdW50aW5nIEZpbGVzeXN0ZW0KPiA+ID4gQXByIDE3IDE2OjM1OjEyIGxpbnV4IGtlcm5l
-bDogWyAgMzg5LjkxMjQwMl0gWEZTICgyNjQ9MjExMzYxUNuUMzAwKTogU3RhcnRpbmcgcmVjb3Zl
-cnkgKGxvZ2RldjogaW50ZXJuYWwpCj4gPiA+IEFwciAxNyAxNjozNToxMiBsaW51eCBrZXJuZWw6
-IFsgIDM5MC4wNTQzNTddIFhGUyAoMjY0PTIxMTM2MVDblDMwMCk6IHhsb2dfcmVjb3Zlcl9pbm9k
-ZV9wYXNzMjogQmFkIGlub2RlIG1hZ2ljIG51bWJlciwgZGlwID0gMHhmMGZmZDgwMCwgZGlubyBi
-cCA9IDB4ZWY4OWM0ODAsIGlubyA9IDI1NTQxNTkyCj4gPiA+IEFwciAxNyAxNjozNToxMiBsaW51
-eCBrZXJuZWw6IFsgIDM5MC4wNjYyOTBdIFhGUyAoMjY0PTIxMTM2MVDblDMwMCk6IEludGVybmFs
-IGVycm9yIHhsb2dfcmVjb3Zlcl9pbm9kZV9wYXNzMigxKSBhdCBsaW5lIDIyNDggb2YgZmlsZSAv
-cm9vdC94ZnMvZnMveGZzL3hmc19sb2dfcmVjb3Zlci5jLiAgQ2FsbGVyIDB4ZmFhMDhmZmEKPiA+
-IAo+ID4gQmVjYXVzZSBsb2cgcmVjb3ZlcnkgaGFzIHJlYWQgYSBiYWQgaW5vZGUgZnJvbSBkaXNr
-LCB3aGljaCBtZWFucyBhbgo+ID4gYWxsb2NhdGlvbiB0cmFuc2FjdGlvbiBoYXMgcHJvYmFibHkg
-bm90IGJlZW4gcmVwbGF5ZWQuCj4gCj4gSnVzdCBhcyBhIG5vdGUgLSBJJ20gZ2V0dGluZyBpdGVz
-dCAxMjEgcmVsaWFibHkgdHJpcHBpbmcgb3ZlciB0aGlzCj4gZXhhY3QgcHJvYmxlbSBhcyBhIHJl
-c3VsdCBvZiB0aGUgZGlzY29udGlndW91cyBidWZmZXIgaXRlbSBzdXBwb3J0Cj4gcGF0Y2guIEJh
-c2ljYWxseSB0aGUgcHJvYmxlbSBpcyB0aGF0IGFuIGlub2RlIG1vZGlmaWNhdGlvbgo+IHRyYW5z
-YWN0aW9uIGlzIGJlaW5nIHJlcGxheWVkIGJlZm9yZSB0aGUgaW5vZGUgYnVmZmVyIGFsbG9jYXRp
-b24KPiB0cmFuc2FjdGlvbiwgc28gdGhlIHJlYWQgb2YgdGhlIGlub2RlIGJ1ZmZlciByZXR1cm5z
-IGFuCj4gdW5pbml0aWFsaXNlZCBkYXRhIGFyZWEsIGFuZCBoZW5jZSB0aGUgYXNzZXJ0IGZhaWx1
-cmUuCj4gCj4gQXQgdGhpcyBwb2ludCBJIGNhbid0IHNlZSB3aHkgdGhhdCBwYXRjaCB3b3VsZCBj
-YXVzZSB0aGUgcHJvYmxlbSB0bwo+IG9jY3VyIGFuZCB0aGlzIHRlbmRzIHRvIGltcGx5IHRoYXQg
-aXQgaXNuJ3QgdGhhdCBwYXRjaCB0aGF0IGhhcwo+IGNhdXNlZCB0aGUgYnVnLgoKVGhlIGJ1ZyB3
-YXMgaW4gbXkgY29kZSAtIHRoZSBjYWxjdWxhdGlvbiBmb3IgdGhlIG1hcCBzaXplIHdhcyB3cm9u
-ZwpzbyBvbmx5IHRoZSBmaXJzdCBoYWxmIG9mIHRoZSBtb2RpZmljYXRpb25zIHRvIHRoZSBidWZm
-ZXIgd2FzIGJlaW5nCnJlcGxheWVkLiBTbywgdGhpcyBzZWVtcyB1bnJlbGF0ZWQuCgpDaGVlcnMs
-CgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZz
-QG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hi,
+
+while running several systems with 3.0.30 i'm seeing this call trace 
+pretty often. Is this problem known?
+
+[925680.203973] Call Trace:
+[925680.204038]  [<c02f1f82>] ? xfs_bmap_search_extents+0x52/0xf0
+[925680.204118]  [<c0164e9a>] ? ktime_get_ts+0xba/0xf0
+[925680.204170]  [<c0610ce0>] schedule+0x30/0x50
+[925680.204221]  [<c0610d71>] io_schedule+0x71/0xb0
+[925680.204273]  [<c0362420>] get_request_wait+0xa0/0x150
+[925680.204326]  [<c015afd0>] ? wake_up_bit+0x60/0x60
+[925680.204376]  [<c03625c6>] __make_request+0xf6/0x280
+[925680.204427]  [<c036143d>] generic_make_request+0x3fd/0x610
+[925680.204481]  [<c01d03ca>] ? kmem_cache_alloc+0xfa/0x110
+[925680.204532]  [<c0336a46>] ? xfs_convert_page+0x166/0x310
+[925680.204586]  [<c01a32fe>] ? mempool_alloc_slab+0xe/0x10
+[925680.204639]  [<c01a32fe>] ? mempool_alloc_slab+0xe/0x10
+[925680.204690]  [<c01a32fe>] ? mempool_alloc_slab+0xe/0x10
+[925680.204741]  [<c03616ba>] submit_bio+0x6a/0x100
+[925680.204792]  [<c01fec09>] ? bvec_alloc_bs+0x49/0xe0
+[925680.204843]  [<c01fed21>] ? bio_alloc_bioset+0x81/0xb0
+[925680.204894]  [<c03366a7>] xfs_submit_ioend_bio+0x47/0x70
+[925680.204946]  [<c03367a4>] xfs_submit_ioend+0xd4/0xe0
+[925680.204998]  [<c0337ba3>] xfs_vm_writepage+0x253/0x580
+[925680.205056]  [<c01fa127>] ? free_buffer_head+0x17/0x30
+[925680.205109]  [<c01ae8ca>] shrink_page_list+0x55a/0x750
+[925680.205162]  [<c01aed60>] shrink_inactive_list+0x1a0/0x350
+[925680.205214]  [<c01af321>] shrink_zone+0x411/0x570
+[925680.205265]  [<c01af9fe>] kswapd+0x57e/0x9c0
+[925680.205315]  [<c015afd0>] ? wake_up_bit+0x60/0x60
+[925680.205365]  [<c01af480>] ? shrink_zone+0x570/0x570
+[925680.205415]  [<c015ac14>] kthread+0x74/0x80
+[925680.205464]  [<c015aba0>] ? kthread_worker_fn+0x140/0x140
+[925680.205516]  [<c06137be>] kernel_thread_helper+0x6/0xd
+
+
+Greets Stefan
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
