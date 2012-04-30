@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3UHVA2V015690 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 12:31:10 -0500
-Received: from beaver.old-horrors.ru (mail.renton.name [90.155.165.44]) by
-	cuda.sgi.com with ESMTP id 4gnRQiX6F47bTeIc (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Apr 2012 10:31:09 -0700 (PDT)
-Received: from beaver.old-horrors.ru (beaver.old-horrors.ru [127.0.0.1])
-	by beaver.old-horrors.ru (8.14.4/8.14.4) with ESMTP id q3UHVCKY016306
-	for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 21:31:12 +0400
-Received: (from renton@localhost)
-	by beaver.old-horrors.ru (8.14.4/8.14.4/Submit) id q3UHVCcP016305
-	for xfs@oss.sgi.com; Mon, 30 Apr 2012 21:31:12 +0400
-Date: Mon, 30 Apr 2012 21:31:12 +0400
-From: Alexey Vlasov <renton@renton.name>
-Subject: Cleancache support in XFS
-Message-ID: <20120430173112.GA16257@beaver>
+	q3UJCMN8022827 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 14:12:25 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	a7ajHt3wifsjz2m7 (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 30 Apr 2012 12:12:19 -0700 (PDT)
+Date: Mon, 30 Apr 2012 15:12:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Cleancache support in XFS
+Message-ID: <20120430191218.GA23530@infradead.org>
+References: <20120430173112.GA16257@beaver>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20120430173112.GA16257@beaver>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,18 +28,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Alexey Vlasov <renton@renton.name>
+Cc: xfs@oss.sgi.com
 
-Hi.
+On Mon, Apr 30, 2012 at 09:31:12PM +0400, Alexey Vlasov wrote:
+> Hi.
+> 
+> Could you please tell me if you are planning to support cleancache in
+> XFS?
+> And when will it take place approximately?
 
-Could you please tell me if you are planning to support cleancache in
-XFS?
-And when will it take place approximately?
-
-Thank you in advance.
-
--- 
-BRGDS. Alexey Vlasov.
+As soon as someone submits a patch.  In theory it should just work, but
+the cleancache maintainer require a completely idiotic one liner to
+actually enable it.  Feel free to submit it once you actually tested it.
 
 _______________________________________________
 xfs mailing list
