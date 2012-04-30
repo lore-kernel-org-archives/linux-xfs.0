@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3UNCRUV047377 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 18:12:27 -0500
+	q3UNKJ9W048150 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 18:20:19 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2sR51ZlBIkFehGal for <xfs@oss.sgi.com>;
-	Mon, 30 Apr 2012 16:12:25 -0700 (PDT)
-Date: Tue, 1 May 2012 09:12:23 +1000
+	eHRFEBvoaRzuzzXs for <xfs@oss.sgi.com>;
+	Mon, 30 Apr 2012 16:20:18 -0700 (PDT)
+Date: Tue, 1 May 2012 09:20:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Assertion failed: RB_EMPTY_NODE(&bp->b_rbnode)
-Message-ID: <20120430231223.GN7015@dastard>
+Subject: Re: [PATCH 00/37] xfs: current 3.4 patch queue
+Message-ID: <20120430232007.GO7015@dastard>
 References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
-	<20120430143200.GL16881@sgi.com>
+	<20120430143434.GM16881@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120430143200.GL16881@sgi.com>
+In-Reply-To: <20120430143434.GM16881@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,25 +30,44 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Apr 30, 2012 at 09:32:00AM -0500, Ben Myers wrote:
-> While testing this patchset without Jan's freeze work, I hit this assert.  I
-> believe I have not seen this one before.
+On Mon, Apr 30, 2012 at 09:34:34AM -0500, Ben Myers wrote:
+> While testing this patchset without Jan's freeze work, I hit this assert.
+> 
+> This one rings bells for me, but I can't find where it's been reported.
 > 
 > -Ben
 > 
-> [36850.416217] XFS: Assertion failed: RB_EMPTY_NODE(&bp->b_rbnode), file: /work/xfs/fs/xfs/xfs_buf.c, line: 838
-> [36850.445669] BUG: unable to handle kernel NULL pointer dereference at 0000000000000038
+> 
+> [56571.411824] BUG: unable to handle kernel NULL pointer dereference at 0000000000000028
+> [56571.412798] IP: [<ffffffffa00bf477>] xfs_log_space_wake+0x17/0x140 [xfs]
 
-Two problems - the BUG seems to be one that you have reported
-before, while the assert failure tends to indicate a use after free
-situation on a buffer (i.e.  a log buffer has been torn down while
-IO is still in progress). That smells like different symptoms of the
-same problem....
+Which is failing on this:
 
-I think you are going to have to debug this one, Ben, because I have
-not seen anything at all like these problems on any of my test or
-stress workloads. I don't even know what test you are running at the
-time these failures are occurring, so I can't even start looking...
+(gdb) l *(xfs_log_space_wake+0x17)
+0xffffffff81482cb7 is in xfs_log_space_wake (fs/xfs/xfs_log.c:844).
+839             struct xfs_mount        *mp)
+840     {
+841             struct log              *log = mp->m_log;
+842             int                     free_bytes;
+843
+844 >>>>>>>     if (XLOG_FORCED_SHUTDOWN(log))
+845                     return;
+
+On this offset:
+
+$ pahole fs/xfs/xfs_log.o |grep -A 6 "^struct log"
+struct log {
+        struct xfs_mount *         l_mp;                 /*     0     8 */
+        struct xfs_ail *           l_ailp;               /*     8     8 */
+        struct xfs_cil *           l_cilp;               /*    16     8 */
+        struct xfs_buf *           l_xbuf;               /*    24     8 */
+        struct xfs_buftarg *       l_targ;               /*    32     8 */
+        uint                       l_flags;              /*    40     4 */
+                                                         ^^^^^^^^^^^^^^^^^
+
+So the log pointer passed is NULL. That's the first definite sign
+that the problems you are seeing are all a result of log buffer IO
+completing after the log has been torn down.
 
 Cheers,
 
