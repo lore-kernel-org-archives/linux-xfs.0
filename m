@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3U0T5Fe175671 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 19:29:05 -0500
+	q3U0WaPV176026 for <xfs@oss.sgi.com>; Sun, 29 Apr 2012 19:32:36 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	mG4fT6FcSYhAtMW4 for <xfs@oss.sgi.com>;
-	Sun, 29 Apr 2012 17:29:03 -0700 (PDT)
-Date: Mon, 30 Apr 2012 10:29:00 +1000
+	fPEEr9o3vUUA11qE for <xfs@oss.sgi.com>;
+	Sun, 29 Apr 2012 17:32:35 -0700 (PDT)
+Date: Mon, 30 Apr 2012 10:32:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 04/18] xfs: page type check in writeback only checks last
-	buffer
-Message-ID: <20120430002900.GA3283@dastard>
-References: <1334319061-12968-1-git-send-email-david@fromorbit.com>
-	<1334319061-12968-5-git-send-email-david@fromorbit.com>
-	<20120429213926.GB19889@infradead.org>
+Subject: Re: [PATCH 28/37] xfs: move xfsagino_t to xfs_types.h
+Message-ID: <20120430003233.GB3283@dastard>
+References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
+	<1335160747-17254-29-git-send-email-david@fromorbit.com>
+	<20120429214917.GG19889@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120429213926.GB19889@infradead.org>
+In-Reply-To: <20120429214917.GG19889@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +31,21 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sun, Apr 29, 2012 at 05:39:26PM -0400, Christoph Hellwig wrote:
-> On Fri, Apr 13, 2012 at 10:10:47PM +1000, Dave Chinner wrote:
-> > The problem was first noticed by Peter Watkins.
+On Sun, Apr 29, 2012 at 05:49:17PM -0400, Christoph Hellwig wrote:
+> On Mon, Apr 23, 2012 at 03:58:58PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Untangle the header file includes a bit by moving the definition of
+> > xfs_agino_t to xfs_types.h. This removes the dependency that xfs_ag.h has on
+> > xfs_inum.h, meaning we don't need to include xfs_inum.h everywhere we include
+> > xfs_ag.h.
 > 
-> Was this a user visible bug?  Do we have a test case for it?
+> This patch by itself looks good to me, but is there any good reason to
+> keep xfs_inum.h around at all?
 
-Not that I know of, and no. It was noticed by Peter when doing some
-work to try to understand the writeback code and the
-allocation-to-data-write crash hole.
+I have that same question written down on my todo list. Seems like
+most of what remains could be added to xfs_ag.h or similar. One step
+at a time ;)
 
 Cheers,
 
