@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3UDnt1d257611 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 08:49:55 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	fol1amXv2tHnV5Eo (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Apr 2012 06:49:52 -0700 (PDT)
-Date: Mon, 30 Apr 2012 09:49:50 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] xfs: punch all delalloc blocks beyond EOF on write
-	failure.
-Message-ID: <20120430134950.GA4445@infradead.org>
-References: <1335519922-14371-1-git-send-email-david@fromorbit.com>
-	<1335519922-14371-2-git-send-email-david@fromorbit.com>
+	q3UELZE6260943 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 09:21:35 -0500
+Date: Mon, 30 Apr 2012 09:24:31 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/37] xfs: current 3.4 patch queue
+Message-ID: <20120430142431.GK16881@sgi.com>
+References: <1335160747-17254-1-git-send-email-david@fromorbit.com>
+	<20120423180123.GH16881@sgi.com> <20120423232936.GP9541@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1335519922-14371-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120423232936.GP9541@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,9 +26,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+Dave,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Tue, Apr 24, 2012 at 09:29:36AM +1000, Dave Chinner wrote:
+> On Mon, Apr 23, 2012 at 01:01:23PM -0500, Ben Myers wrote:
+> > On Mon, Apr 23, 2012 at 03:58:30PM +1000, Dave Chinner wrote:
+> > > I haven't been able to reproduce Ben's CIL commit
+> > > sequence assert failure from the async log flushing patch (patch
+> > > 12/37), so whatever the cause of that problem is is still unknown.
+> > > 
+> > > [ Actually, as I wrote this I had a concurrent rm -rf just trip this
+> > > assert, so the problem is real and I've obviously got more work to
+> > > do on this one.... ]
+> > 
+> > I just hit it again, looks like in test 273.
+> > [ 6587.548841] XFS: Assertion failed: push_seq > 0 && push_seq <= ctx->sequence, file: /root/xfs/fs/xfs/xfs_log_cil.c, line: 405
+> > 
+> > This time I have a dump.  ;)
+> 
+> Try version 2 of the patch (#12)....
+
+Yep, with version 2 I haven't seen this in awhile.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
