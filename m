@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q3UNOEtv048814 for <xfs@oss.sgi.com>; Mon, 30 Apr 2012 18:24:15 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	0haFKYnQFIYFgzG0 for <xfs@oss.sgi.com>;
-	Mon, 30 Apr 2012 16:24:13 -0700 (PDT)
-Date: Tue, 1 May 2012 09:24:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/10] xfs: separate buffer indexing from block map
-Message-ID: <20120430232410.GP7015@dastard>
-References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
-	<1335249220-22274-3-git-send-email-david@fromorbit.com>
-	<4F9EE7EC.4030203@sgi.com>
+	q41AkgKs120929 for <xfs@oss.sgi.com>; Tue, 1 May 2012 05:46:42 -0500
+Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
+	[209.85.213.53]) by cuda.sgi.com with ESMTP id MKJr8Q1aNfD0IG8E
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 01 May 2012 03:46:42 -0700 (PDT)
+Received: by yhjj72 with SMTP id j72so142468yhj.26
+	for <xfs@oss.sgi.com>; Tue, 01 May 2012 03:46:41 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4F9EE7EC.4030203@sgi.com>
+In-Reply-To: <4F9AA43A.1060509@hardwarefreak.com>
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+	<4F9AA43A.1060509@hardwarefreak.com>
+Date: Tue, 1 May 2012 12:46:41 +0200
+Message-ID: <CAAxjCEzzMk0TFKy23cAA_cAxbUFLS6cOCjgRBQocDUNtJO2UnA@mail.gmail.com>
+Subject: Re: A little RAID experiment
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,70 +24,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: stan@hardwarefreak.com
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-On Mon, Apr 30, 2012 at 02:28:44PM -0500, Mark Tinguely wrote:
-> On 04/24/12 01:33, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >To support discontiguous buffers in the buffer cache, we need to
-> >separate the cache index variables from the I/O map. While this is
-> >currently a 1:1 mapping, discontiguous buffer support will break
-> >this relationship.
-> >
-> >However, for caching purposes, we can still treat them the same as a
-> >contiguous buffer - the block number of the first block and the
-> >length of the buffer - as that is still a unique representation.
-> >Also, the only way we will ever access the discontiguous regions of
-> >buffers is via bulding the complete buffer in the first place, so
-> >using the initial block number and entire buffer length is a sane
-> >way to index the buffers.
-> >
-> >Add a block mapping vector construct to the xfs_buf and use it in
-> >the places where we are doing IO instead of the current
-> >b_bn/b_length variables.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ...
-> >+struct xfs_buf_map {
-> >+	xfs_daddr_t		bm_bn;	/* block number for I/O */
-> >+	int			bm_len;	/* size of I/O */
-> >+};
-> >+
-> >  typedef struct xfs_buf {
-> >  	/*
-> >  	 * first cacheline holds all the fields needed for an uncontended cache
-> >@@ -107,7 +114,7 @@ typedef struct xfs_buf {
-> >  	 * fast-path on locking.
-> >  	 */
-> >  	struct rb_node		b_rbnode;	/* rbtree node */
-> >-	xfs_daddr_t		b_bn;		/* block number for I/O */
-> >+	xfs_daddr_t		b_bn;		/* block number of buffer */
-> >  	int			b_length;	/* size of buffer in BBs */
-> 
-> Looks good.
-> Do you plan to eventually remove b_bn and b_length from xfs_buf?
-
-No. b_bn is a fast way of identifying unique buffers for cache
-lookups and is located in the same cacheline as the tree node so we
-don't take an extra cache miss on every buffer we traverse during
-tree walks in _xfs_buf_find(). Also, b_length is used so often it is
-much cleaner to keep it around than it s to iterate over all the
-maps to calculate it every time it is needed.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+PiBTdGVmYW4sIHlvdSBzaG91bGQgYmUgYWJsZSB0byBzaW1wbHkgY2xlYXIgdGhlIFA0MTBpIGNv
+bmZpZ3VyYXRpb24gaW4KPiB0aGUgQklPUywgcG93ZXIgZG93biwgdGhlbiBzaW1wbHkgY29ubmVj
+dCB0aGUgNiBkcml2ZSBiYWNrcGxhbmUgY2FibGUgdG8KPiB0aGUgNDEwaSwgbG9hZCB0aGUgY29u
+ZmlnIGZyb20gdGhlIGRpc2tzLCBhbmQgZ28uIMKgVGhpcyBhbGxvd3MgaGVhZCB0bwo+IGhlYWQg
+UkFJRDYgY29tcGFyaXNvbiBiZXR3ZWVuIHRoZSBQNDAwIGFuZCBQNDEwaS4gwqBObyBkb3VidCB0
+aGUgNDEwaQo+IHdpbGwgYmUgcXVpY2tlci4gwqBUaGlzIHByb2NlZHVyZSB3aWxsIHRlbGwgeW91
+IGhvdyBtdWNoIHF1aWNrZXIuCgpVbmZvcnR1bmF0ZWx5LCB0aGUgc2VydmVyIGlzIGxvY2F0ZWQg
+YXQgYSBob3N0aW5nIGZhY2lsaXR5IGF0IHRoZQpvcHBvc2l0ZSBlbmQgb2YgdG93biwgYW5kIEkn
+ZCBzcGVuZCBhbiBlbnRpcmUgZGF5IGp1c3QgdHJhdmVsaW5nIHRvCmFuZCBmcm8sIHNvIHRoYXQn
+cyBub3QgY3VycmVudGx5IGFuIG9wdGlvbi4gSSBtaWdodCBnZXQgbHVja3kgdGhvdWdoLApiZWNh
+dXNlIHdlIHNob3VsZCBzb29uIGdldCBhbm90aGVyIHNlcnZlciB3aXRoIGFuIGV4dGVybmFsIFA0
+MTBpLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZz
+IG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4v
+bGlzdGluZm8veGZzCg==
