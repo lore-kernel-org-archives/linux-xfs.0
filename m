@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4282X8W016430 for <xfs@oss.sgi.com>; Wed, 2 May 2012 03:02:34 -0500
-Received: from beaver.old-horrors.ru (mail.renton.name [90.155.165.44]) by
-	cuda.sgi.com with ESMTP id TGdr1bgOOW2cCMYy (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 02 May 2012 01:02:28 -0700 (PDT)
-Date: Wed, 2 May 2012 12:02:20 +0400
-From: Alexey Vlasov <renton@renton.name>
-Subject: Re: Cleancache support in XFS
-Message-ID: <20120502080220.GA20504@beaver>
-References: <20120430173112.GA16257@beaver>
-	<20120430191218.GA23530@infradead.org>
+	q42Dd6L9045385 for <xfs@oss.sgi.com>; Wed, 2 May 2012 08:39:06 -0500
+Message-ID: <4FA138F6.3010806@sgi.com>
+Date: Wed, 02 May 2012 08:39:02 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120430191218.GA23530@infradead.org>
+Subject: Re: [PATCH 06/10] xfs: struct xfs_buf_log_format isn't variable sized.
+References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
+	<1335249220-22274-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1335249220-22274-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,25 +18,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Apr 30, 2012 at 03:12:18PM -0400, Christoph Hellwig wrote:
-> > 
-> > Could you please tell me if you are planning to support cleancache in
-> > XFS?
-> 
-> As soon as someone submits a patch.  In theory it should just work, but
-> the cleancache maintainer require a completely idiotic one liner to
-> actually enable it.  Feel free to submit it once you actually tested it.
+On 04/24/12 01:33, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> The struct xfs_buf_log_format wants to think the dirty bitmap is
+> variable sized.  In fact, it is variable size on disk simply due to
+> the way we map it from the in-memory structure, but we still just
+> use a fixed size memory allocation for the in-memory structure.
+>
+> Hence it makes no sense to set the function up as a variable sized
+> structure when we already know it's maximum size, and we always
+> allocate it as such. Simplify the structure by making the dirty
+> bitmap a fixed sized array and just using the size of the structure
+> for the allocation size.
+>
+> This will make it much simpler to allocate and manipulate an array
+> of format structures for discontiguous buffer support.
+>
+> The previous struct xfs_buf_log_item size according to
+> /proc/slabinfo was 224 bytes. pahole doesn't give the same size
+> because of the variable size definition. With this modification,
+> pahole reports the same as /proc/slabinfo:
+>
+> 	/* size: 224, cachelines: 4, members: 6 */
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 
-Cleancache_init_fs () I can actually put where it it should be  but I
-think it won't be enough. I think there some hooks needed (as for brtfs)
-but I can't fix it as I'm far from programming.
+Looks good.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
