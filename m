@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q423s6a6244262 for <xfs@oss.sgi.com>; Tue, 1 May 2012 22:54:07 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id B2ILZ2IvniVDKlAi for
-	<xfs@oss.sgi.com>; Tue, 01 May 2012 20:54:05 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q423s4jA022273
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 1 May 2012 23:54:05 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q423s3eD005607
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 1 May 2012 23:54:04 -0400
-Message-ID: <4FA0AFDB.5060009@redhat.com>
-Date: Tue, 01 May 2012 22:54:03 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q4282X8W016430 for <xfs@oss.sgi.com>; Wed, 2 May 2012 03:02:34 -0500
+Received: from beaver.old-horrors.ru (mail.renton.name [90.155.165.44]) by
+	cuda.sgi.com with ESMTP id TGdr1bgOOW2cCMYy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 02 May 2012 01:02:28 -0700 (PDT)
+Date: Wed, 2 May 2012 12:02:20 +0400
+From: Alexey Vlasov <renton@renton.name>
+Subject: Re: Cleancache support in XFS
+Message-ID: <20120502080220.GA20504@beaver>
+References: <20120430173112.GA16257@beaver>
+	<20120430191218.GA23530@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfs_repair: fix for fragmented multiblock dirs
+Content-Disposition: inline
+In-Reply-To: <20120430191218.GA23530@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,32 +27,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-blkmap_getn() was reallocating the bmap_ext_t *bmp array
-for each extent in the loop, thereby losing previously
-filled-in elements, and generally making a mess of things.
+On Mon, Apr 30, 2012 at 03:12:18PM -0400, Christoph Hellwig wrote:
+> > 
+> > Could you please tell me if you are planning to support cleancache in
+> > XFS?
+> 
+> As soon as someone submits a patch.  In theory it should just work, but
+> the cleancache maintainer require a completely idiotic one liner to
+> actually enable it.  Feel free to submit it once you actually tested it.
 
-Allocating it only the first time through the loop
-fixes this right up.
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/repair/bmap.c b/repair/bmap.c
-index 2f1c307..c43ca7f 100644
---- a/repair/bmap.c
-+++ b/repair/bmap.c
-@@ -168,7 +168,8 @@ blkmap_getn(
- 		/*
- 		 * rare case - multiple extents for a single dir block
- 		 */
--		bmp = malloc(nb * sizeof(bmap_ext_t));
-+		if (!bmp)
-+			bmp = malloc(nb * sizeof(bmap_ext_t));
- 		if (!bmp)
- 			do_error(_("blkmap_getn malloc failed (%" PRIu64 " bytes)\n"),
- 						nb * sizeof(bmap_ext_t));
+Cleancache_init_fs () I can actually put where it it should be  but I
+think it won't be enough. I think there some hooks needed (as for brtfs)
+but I can't fix it as I'm far from programming.
 
 _______________________________________________
 xfs mailing list
