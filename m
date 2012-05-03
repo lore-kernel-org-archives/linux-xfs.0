@@ -1,23 +1,38 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q43KMv77198236 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:22:57 -0500
-Received: from fieldses.org (fieldses.org [174.143.236.118]) by cuda.sgi.com
-	with ESMTP id VDpRVbA5cuAyRkoy (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 May 2012 13:22:56 -0700 (PDT)
-Date: Thu, 3 May 2012 16:22:49 -0400
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: detecting case-insensitivity
-Message-ID: <20120503202249.GB19237@fieldses.org>
-References: <20120407140029.GA24090@fieldses.org>
-	<20120411200335.GD28816@infradead.org>
-	<20120411203735.GB31706@fieldses.org>
-	<20120430212649.GB22323@fieldses.org>
-	<20120430230105.GL7015@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120430230105.GL7015@dastard>
+	q43KQgt1198510 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:26:42 -0500
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
+	cuda.sgi.com with ESMTP id p5PiXR5bbXesP2MB (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 May 2012 13:26:42 -0700 (PDT)
+Received: from /spool/local
+	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 3 May 2012 14:26:41 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 4145619D804E
+	for <xfs@oss.sgi.com>; Thu,  3 May 2012 14:26:28 -0600 (MDT)
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q43KQKvj205308 for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:26:28 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id q43KQI7D025907
+	for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:26:18 -0600
+Subject: Re: [PATCH 1/4] xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and
+	XFS_OQUOTA_CHKD
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20120503200457.GQ16881@sgi.com>
+References: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120123173249.31735.17660.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120503200457.GQ16881@sgi.com>
+Date: Thu, 03 May 2012 15:26:17 -0500
+Message-ID: <1336076777.1118.80.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +45,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, May 01, 2012 at 09:01:05AM +1000, Dave Chinner wrote:
-> On Mon, Apr 30, 2012 at 05:26:49PM -0400, J. Bruce Fields wrote:
-> > On Wed, Apr 11, 2012 at 04:37:35PM -0400, J. Bruce Fields wrote:
-> > > On Wed, Apr 11, 2012 at 04:03:35PM -0400, Christoph Hellwig wrote:
-> > > > Can you add a new s_feature_flags instead of s_flags which is shared
-> > > > with the mount user ABI?  MS_I_VERSION should also move there.
-> > > 
-> > > I was wondering about that.  Yes, that makes a lot more sense, I'll work
-> > > on it.
+On Thu, 2012-05-03 at 15:04 -0500, Ben Myers wrote:
+> On Mon, Jan 23, 2012 at 11:32:49AM -0600, Chandra Seetharaman wrote:
+> > >From ba28fc49821079a734f24af05671155f6b32b20c Mon Sep 17 00:00:00 2001
+> > From: Chandra Seetharaman <sekharan@us.ibm.com>
+> > Date: Tue, 13 Dec 2011 15:55:34 -0600
+> > Subject: [PATCH 1/4] Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
+> >  start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
 > > 
-> > Just something like this?
+> > No changes is made to the on-disk version of the superblock yet. On-disk
+>              are						   The 
 > 
-> .....
+will fix
+ 
+> > copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
+> <
+
+<snip>
+> >  
+> > +static inline int xfs_sb_version_hasnooquota(xfs_sb_t *sbp)
 > 
-> >  #define S_SYNC		1	/* Writes are synced at once */
-> > @@ -268,7 +271,7 @@ struct inodes_stat_t {
-> >  					((inode)->i_flags & (S_SYNC|S_DIRSYNC)))
-> >  #define IS_MANDLOCK(inode)	__IS_FLG(inode, MS_MANDLOCK)
-> >  #define IS_NOATIME(inode)   __IS_FLG(inode, MS_RDONLY|MS_NOATIME)
-> > -#define IS_I_VERSION(inode)   __IS_FLG(inode, MS_I_VERSION)
-> > +#define IS_I_VERSION(inode)  ((inode)->i_sb->s_flags & SF_I_VERSION)
+> IIRC, in the kernel you used xfs_sb_version_has_no_oquota.  I think you should
+> use the same name in xfsprogs.
+
+yes, will fix.
 > 
-> (inode)->i_sb->s_feature_flags?
-
-Whoops, thanks.
-
-> >  #define IS_NOQUOTA(inode)	((inode)->i_flags & S_NOQUOTA)
-> >  #define IS_APPEND(inode)	((inode)->i_flags & S_APPEND)
-> > @@ -1428,7 +1431,8 @@ struct super_block {
-> >  	const struct dquot_operations	*dq_op;
-> >  	const struct quotactl_ops	*s_qcop;
-> >  	const struct export_operations *s_export_op;
-> > -	unsigned long		s_flags;
-> > +	unsigned long		s_flags; /* mount flags */
-> > +	unsigned int		s_feature_flags;
+> > +{
+> > +	return xfs_sb_version_hasmorebits(sbp) &&
+> > +		(sbp->sb_features2 & XFS_SB_VERSION2_NO_OQUOTA);
+> > +}
+> > +
+> > +static inline void xfs_sb_version_addnooquota(xfs_sb_t *sbp)
+> > +{
+> > +	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
+> > +	sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
 > 
-> why not an unsigned long like s_flags?
+> I'm not sure about this.  I don't think addnooquota necessarily implies a 32
+> bit project id.  What say you?
 
-OK.
+It is cut-n-paste issue, it should be XFS_SB_VERSION2_NO_OQUOTA
+will fix it.
+> 
+> Else, the patch looks pretty good.
+> 
+> -Ben
+> 
 
-(Why does it matter?  I figured we can always extend it later.)
-
---b.
 
 _______________________________________________
 xfs mailing list
