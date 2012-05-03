@@ -1,38 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q43KQgt1198510 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:26:42 -0500
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150]) by
-	cuda.sgi.com with ESMTP id p5PiXR5bbXesP2MB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 May 2012 13:26:42 -0700 (PDT)
-Received: from /spool/local
-	by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 3 May 2012 14:26:41 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
-	[9.17.195.107])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 4145619D804E
-	for <xfs@oss.sgi.com>; Thu,  3 May 2012 14:26:28 -0600 (MDT)
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q43KQKvj205308 for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:26:28 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id q43KQI7D025907
-	for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:26:18 -0600
-Subject: Re: [PATCH 1/4] xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20120503200457.GQ16881@sgi.com>
-References: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173249.31735.17660.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120503200457.GQ16881@sgi.com>
-Date: Thu, 03 May 2012 15:26:17 -0500
-Message-ID: <1336076777.1118.80.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	q43Kg0tK199827 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:42:00 -0500
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id ekUE48ZybBkJdfSC for
+	<xfs@oss.sgi.com>; Thu, 03 May 2012 13:41:58 -0700 (PDT)
+Date: Thu, 3 May 2012 21:41:57 +0100
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Storage server, hung tasks and tracebacks
+Message-ID: <20120503204157.GC4387@nsrc.org>
+References: <20120502184450.GA2557@nsrc.org>
+	<4FA27EF8.6040002@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4FA27EF8.6040002@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -41,61 +22,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, 2012-05-03 at 15:04 -0500, Ben Myers wrote:
-> On Mon, Jan 23, 2012 at 11:32:49AM -0600, Chandra Seetharaman wrote:
-> > >From ba28fc49821079a734f24af05671155f6b32b20c Mon Sep 17 00:00:00 2001
-> > From: Chandra Seetharaman <sekharan@us.ibm.com>
-> > Date: Tue, 13 Dec 2011 15:55:34 -0600
-> > Subject: [PATCH 1/4] Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
-> >  start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
-> > 
-> > No changes is made to the on-disk version of the superblock yet. On-disk
->              are						   The 
-> 
-will fix
- 
-> > copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
-> <
-
-<snip>
-> >  
-> > +static inline int xfs_sb_version_hasnooquota(xfs_sb_t *sbp)
-> 
-> IIRC, in the kernel you used xfs_sb_version_has_no_oquota.  I think you should
-> use the same name in xfsprogs.
-
-yes, will fix.
-> 
-> > +{
-> > +	return xfs_sb_version_hasmorebits(sbp) &&
-> > +		(sbp->sb_features2 & XFS_SB_VERSION2_NO_OQUOTA);
-> > +}
-> > +
-> > +static inline void xfs_sb_version_addnooquota(xfs_sb_t *sbp)
-> > +{
-> > +	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
-> > +	sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
-> 
-> I'm not sure about this.  I don't think addnooquota necessarily implies a 32
-> bit project id.  What say you?
-
-It is cut-n-paste issue, it should be XFS_SB_VERSION2_NO_OQUOTA
-will fix it.
-> 
-> Else, the patch looks pretty good.
-> 
-> -Ben
-> 
-
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBNYXkgMDMsIDIwMTIgYXQgMDc6NTA6MDBBTSAtMDUwMCwgU3RhbiBIb2VwcG5lciB3
+cm90ZToKPiA+IEFueSBvdGhlciBzdWdnZXN0aW9ucyAoYW5kIG9mIGNvdXJzZSBpbnRlcnByZXRh
+dGlvbiBvZiB0aGUga2VybmVsIGNhbGwKPiA+IHRyYWNlYmFja3MpIHdvdWxkIGJlIG11Y2ggYXBw
+cmVjaWF0ZWQuCj4gCj4gV2hpY2ggbWFpbmJvYXJkcyBhcmUgdGhlc2UgQnJpYW4/ICBNYWtlL21v
+ZGVsPwoKVHlhbiBTNTUxMCwgd2l0aCBJbnRlbCBYZW9uIENQVSBFMzEyMjUgQCAzLjEwR0h6CgpV
+cGdyYWRlZCB0byBCSU9TIDEuMDVhIGFuZCBpS1ZNIDMuMDAKCj4gTWFrZS9tb2RlbC9jb3VudCBv
+ZiBhbGwgYWRkIGluIGNhcmRzPwoKMSB4IExTSSBTQVM5MjAx4oCTMTZpCjEgeCBMU0kgU0FTOTIx
+MTjigJM4aQoxIHggSW50ZWwgWDUyMC1EQTIgZHVhbCAxMEcgTklDCgphbHRob3VnaCB0aGUgMTBH
+IGxpbmsgd2Fzbid0IGJlaW5nIHVzZWQgZm9yIHRoZSBtb3N0IHJlY2VudCB0ZXN0cy4KCj4gTWFr
+ZS9tb2RlbCBvZiBQU1U/CgpXaWxsIGhhdmUgdG8gY2hlY2ssIEkgdGhpbmsgaXQgbWF5IGJlIHRo
+aXMgb25lOgpodHRwOi8vd3d3LnhjYXNlLmNvLnVrL1hDQVNFLVBvd2VyLVN1cHBseS1wL3BzdS1k
+b2xwaGluLTkwMC4uaHRtCgo+IE1ha2UgbW9kZWwgb2YgY2hhc3Npcz8KCmh0dHA6Ly93d3cueGNh
+c2UuY28udWsvMjQtYmF5LUhvdHN3YXAtcmFja21vdW50LWNoYXNzaXMtbm9yY28tUlBDLTQyMjQt
+cC9jYXNlLXhjYXNlLXJtNDI0Lmh0bQoKVGhlIGRyaXZlcyBhcmUgMjQgeCBTVDMwMDBETTAwMSAo
+SSB3YXMgaG9waW5nIHRvIGdldCBsb3ctcG93ZXIgSGl0YWNoaQpkcml2ZXMgYnV0IHRoZXkgd2Vy
+ZW4ndCBhdmFpbGFibGUgYXQgdGhlIHRpbWUpCgo+IEknbGwgc2xldXRoIGFyb3VuZCBhbmQgc2Vl
+IHdoYXQgSSBjYW4gZmluZC4gIENvdWxkIGJlIHNvbWUgb2JzY3VyZQo+IGV4cGFuc2lvbiBjYXJk
+IGludGVyYWN0aW9uLiAgQ291bGQgYmUgdW5kZXJzaXplZCBQU1VzIG9yIGxhY2sgb2YKPiBiYWNr
+cGxhbmVzIHNwcmVhZCBldmVubHkgYWNyb3NzIHRoZSAxMnYgcmFpbHMgb2YgYSBtdWx0aS1yYWls
+IFBTVSwgZXRjLCBldGMuCgpNdWNoIGFwcHJlY2lhdGVkLgoKSG93ZXZlciwgbGFzdCBuaWdodCBJ
+IHJlYm9vdGVkIG9uZSBib3ggKHRoZSBvbmUgd2hpY2ggd291bGRuJ3QgbGV0IG1lIHNzaAppbikg
+dGhlbiB1cGdyYWRlZCBpdCB0byB1YnVudHUgMTIuMDQuICBJdCBoYXMgYmVlbiBydW5uaW5nIGEg
+Y291cGxlIG9mCmNvbmN1cnJlbnQgYm9ubmllKysgaW5zdGFuY2VzIGZvciBvdmVyIDI0IGhvdXJz
+IHdpdGhvdXQgYSBoaXRjaC4KClNvIG1heWJlIGl0J3MgdGhlIG1wdDJzYXMgZHJpdmVyIHdoaWNo
+IGlzIHRoZSBkaWZmZXJlbmNlOgoKW2RtZXNnIGZyb20gVWJ1bnR1IDExLjEwXQogICAgbXB0MnNh
+cyB2ZXJzaW9uIDA4LjEwMC4wMC4wMgoKW2RtZXNnIGZyb20gVWJ1bnR1IDEyLjA0XQogICAgbXB0
+MnNhcyB2ZXJzaW9uIDEwLjEwMC4wMC4wMAoKUmVnYXJkcywKCkJyaWFuLgoKX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNA
+b3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
