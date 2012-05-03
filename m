@@ -1,37 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q43KHxIr197888 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:17:59 -0500
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
-	cuda.sgi.com with ESMTP id rFPsBM4cRaFmkuz9 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 03 May 2012 13:17:58 -0700 (PDT)
-Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Thu, 3 May 2012 14:17:55 -0600
-Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
-	[9.17.195.228])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 2218E19D804A
-	for <xfs@oss.sgi.com>; Thu,  3 May 2012 14:16:50 -0600 (MDT)
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q43KGQ1V063162 for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:16:33 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id q43KGNvc000317
-	for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:16:23 -0600
-Subject: Re: [RFC v5 PATCH 3/4] xfs: Add pquotaino to on-disk super block
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20120503171608.GP16881@sgi.com>
-References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120314202641.17044.32835.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120503171608.GP16881@sgi.com>
-Date: Thu, 03 May 2012 15:16:22 -0500
-Message-ID: <1336076182.1118.73.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	q43KMv77198236 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:22:57 -0500
+Received: from fieldses.org (fieldses.org [174.143.236.118]) by cuda.sgi.com
+	with ESMTP id VDpRVbA5cuAyRkoy (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 May 2012 13:22:56 -0700 (PDT)
+Date: Thu, 3 May 2012 16:22:49 -0400
+From: "J. Bruce Fields" <bfields@fieldses.org>
+Subject: Re: detecting case-insensitivity
+Message-ID: <20120503202249.GB19237@fieldses.org>
+References: <20120407140029.GA24090@fieldses.org>
+	<20120411200335.GD28816@infradead.org>
+	<20120411203735.GB31706@fieldses.org>
+	<20120430212649.GB22323@fieldses.org>
+	<20120430230105.GL7015@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120430230105.GL7015@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,141 +30,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Thu, 2012-05-03 at 12:16 -0500, Ben Myers wrote:
-> Chandra,
-> 
-> On Wed, Mar 14, 2012 at 03:26:42PM -0500, Chandra Seetharaman wrote:
-> > >From 9d32afb9cc284b2511951c45b47f6a73dfd0a7e1 Mon Sep 17 00:00:00 2001
-> > From: Chandra Seetharaman <sekharan@us.ibm.com>
-> > Date: Wed, 14 Mar 2012 14:26:20 -0500
-> > Subject: [PATCH 3/4] Add a new field to the superblock to add support for seperate pquota
-> >  with a specific version.
+On Tue, May 01, 2012 at 09:01:05AM +1000, Dave Chinner wrote:
+> On Mon, Apr 30, 2012 at 05:26:49PM -0400, J. Bruce Fields wrote:
+> > On Wed, Apr 11, 2012 at 04:37:35PM -0400, J. Bruce Fields wrote:
+> > > On Wed, Apr 11, 2012 at 04:03:35PM -0400, Christoph Hellwig wrote:
+> > > > Can you add a new s_feature_flags instead of s_flags which is shared
+> > > > with the mount user ABI?  MS_I_VERSION should also move there.
+> > > 
+> > > I was wondering about that.  Yes, that makes a lot more sense, I'll work
+> > > on it.
 > > 
-> > No change made yet to gather both project and group quota with quotactl.
+> > Just something like this?
 > 
-> This note that you're going to do in the next patch is useful, but please also
-> put a description of what you're doing in this patch.  ;)
+> .....
 > 
+> >  #define S_SYNC		1	/* Writes are synced at once */
+> > @@ -268,7 +271,7 @@ struct inodes_stat_t {
+> >  					((inode)->i_flags & (S_SYNC|S_DIRSYNC)))
+> >  #define IS_MANDLOCK(inode)	__IS_FLG(inode, MS_MANDLOCK)
+> >  #define IS_NOATIME(inode)   __IS_FLG(inode, MS_RDONLY|MS_NOATIME)
+> > -#define IS_I_VERSION(inode)   __IS_FLG(inode, MS_I_VERSION)
+> > +#define IS_I_VERSION(inode)  ((inode)->i_sb->s_flags & SF_I_VERSION)
+> 
+> (inode)->i_sb->s_feature_flags?
 
-You want more info than the line above it ? (Add a new field to the
-superblock to add support for seperate pquota with a specific version.)
+Whoops, thanks.
 
-I can do it.
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> >  #define IS_NOQUOTA(inode)	((inode)->i_flags & S_NOQUOTA)
+> >  #define IS_APPEND(inode)	((inode)->i_flags & S_APPEND)
+> > @@ -1428,7 +1431,8 @@ struct super_block {
+> >  	const struct dquot_operations	*dq_op;
+> >  	const struct quotactl_ops	*s_qcop;
+> >  	const struct export_operations *s_export_op;
+> > -	unsigned long		s_flags;
+> > +	unsigned long		s_flags; /* mount flags */
+> > +	unsigned int		s_feature_flags;
 > 
-> ...
-> 
-> > @@ -1055,19 +1057,22 @@ xfs_qm_qino_alloc(
-> >  		ASSERT((sbfields & (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
-> >  				   XFS_SB_GQUOTINO | XFS_SB_QFLAGS)) ==
-> >  		       (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
-> > -			XFS_SB_GQUOTINO | XFS_SB_QFLAGS));
-> > +			XFS_SB_GQUOTINO | XFS_SB_PQUOTINO | XFS_SB_QFLAGS));
-> >  
-> >  		xfs_sb_version_addquota(&mp->m_sb);
-> >  		mp->m_sb.sb_uquotino = NULLFSINO;
-> >  		mp->m_sb.sb_gquotino = NULLFSINO;
-> > +		mp->m_sb.sb_pquotino = NULLFSINO;
-> >  
-> >  		/* qflags will get updated _after_ quotacheck */
-> >  		mp->m_sb.sb_qflags = 0;
-> >  	}
-> >  	if (flags & XFS_QMOPT_UQUOTA)
-> >  		mp->m_sb.sb_uquotino = (*ip)->i_ino;
-> > -	else
-> > +	else if (flags & XFS_QMOPT_GQUOTA)
-> >  		mp->m_sb.sb_gquotino = (*ip)->i_ino;
-> > +	else
-> 
-> Maybe?
-> 	     {
-> 		ASSERT(flags & XFS_QMOPT_PQUOTA);
-> > +		mp->m_sb.sb_pquotino = (*ip)->i_ino;
+> why not an unsigned long like s_flags?
 
-will do.
+OK.
 
-> 	}
-> ...
-> 
-> > @@ -439,10 +441,13 @@ xfs_qm_scall_getqstat(
-> >  	out->qs_pad = 0;
-> >  	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
-> >  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
-> > +	if (&out->qs_gquota != &out->qs_pquota)
-> > +		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-> 
-> I was a little surprised not to get a warning for that test.  
+(Why does it matter?  I figured we can always extend it later.)
 
-Yeah, compiler is happy with it :)
-
-> 
-> ...
-> 
-> > @@ -1317,6 +1311,15 @@ xfs_fs_fill_super(
-> >  	if (error)
-> >  		goto out_destroy_counters;
-> >  
-> > +	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
-> > +	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
-> > +	    !xfs_sb_version_has_no_oquota(&mp->m_sb)) {
-> > +		xfs_warn(mp, "Super block does not support "
-> > +				 "project and group quota together");
-> > +		error = EINVAL;
-> > +		goto out_free_sb;
-> > +	}
-> > +
-> 
-> You'd see this warning if you have an old superblock with the new flags.  Maybe
-> it is worth writing a test for that.
-
-You mean old superblock with this code and -opquota,gquota on mount,
-correct ? Then yes, I can add that.
-
-
-> 
-> ...
-> 
-> > diff --git a/include/linux/dqblk_xfs.h b/include/linux/dqblk_xfs.h
-> > index 8655280..f17e3bb 100644
-> > --- a/include/linux/dqblk_xfs.h
-> > +++ b/include/linux/dqblk_xfs.h
-> > @@ -155,6 +155,7 @@ typedef struct fs_quota_stat {
-> >  	__s8		qs_pad;		/* unused */
-> >  	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
-> >  	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
-> > +#define qs_pquota	qs_gquota
-> 
-> Cool.  This #define goes away in the next patch.
-> 
-> I've been over this and it is looking pretty good to me...  I'm thinking about
-> what basic xfstests would be good to have for this feature.
-> 
-> Old sb_version with new flags, 
-> new sb_version with old flags, etc.
-
-I am little confused about what you mean by flags here. From the user
-point of view, they can either use pquota and gquota together or not.
-
-With old version using them together would fail with one message  
-"cannot mount with both project and group quota"
-
-with new code it will fail with a different message
-"Super block does not support project and group quota together"
-
-> 
-> I'll revisit that shortly.
-> 
-> -Ben
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
+--b.
 
 _______________________________________________
 xfs mailing list
