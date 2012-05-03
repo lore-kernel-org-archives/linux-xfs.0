@@ -1,17 +1,37 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q43K1eLn196791 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:01:40 -0500
-Date: Thu, 3 May 2012 15:04:57 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/4] xfsprogs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-Message-ID: <20120503200457.GQ16881@sgi.com>
-References: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173249.31735.17660.sendpatchset@chandra-lucid.austin.ibm.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120123173249.31735.17660.sendpatchset@chandra-lucid.austin.ibm.com>
+	q43KHxIr197888 for <xfs@oss.sgi.com>; Thu, 3 May 2012 15:17:59 -0500
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
+	cuda.sgi.com with ESMTP id rFPsBM4cRaFmkuz9 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 03 May 2012 13:17:58 -0700 (PDT)
+Received: from /spool/local
+	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 3 May 2012 14:17:55 -0600
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com
+	[9.17.195.228])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 2218E19D804A
+	for <xfs@oss.sgi.com>; Thu,  3 May 2012 14:16:50 -0600 (MDT)
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q43KGQ1V063162 for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:16:33 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id q43KGNvc000317
+	for <xfs@oss.sgi.com>; Thu, 3 May 2012 14:16:23 -0600
+Subject: Re: [RFC v5 PATCH 3/4] xfs: Add pquotaino to on-disk super block
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20120503171608.GP16881@sgi.com>
+References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120314202641.17044.32835.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120503171608.GP16881@sgi.com>
+Date: Thu, 03 May 2012 15:16:22 -0500
+Message-ID: <1336076182.1118.73.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,198 +44,141 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 23, 2012 at 11:32:49AM -0600, Chandra Seetharaman wrote:
-> >From ba28fc49821079a734f24af05671155f6b32b20c Mon Sep 17 00:00:00 2001
-> From: Chandra Seetharaman <sekharan@us.ibm.com>
-> Date: Tue, 13 Dec 2011 15:55:34 -0600
-> Subject: [PATCH 1/4] Remove incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
->  start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts.
+On Thu, 2012-05-03 at 12:16 -0500, Ben Myers wrote:
+> Chandra,
 > 
-> No changes is made to the on-disk version of the superblock yet. On-disk
-             are						   The 
-
-> copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
->
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  db/check.c          |    8 ++++----
->  include/xfs_quota.h |   47 +++++++++++++++++++++++++++++++++--------------
->  include/xfs_sb.h    |   17 ++++++++++++++++-
->  repair/versions.c   |   18 ++++--------------
->  repair/xfs_repair.c |    4 ++--
->  5 files changed, 59 insertions(+), 35 deletions(-)
+> On Wed, Mar 14, 2012 at 03:26:42PM -0500, Chandra Seetharaman wrote:
+> > >From 9d32afb9cc284b2511951c45b47f6a73dfd0a7e1 Mon Sep 17 00:00:00 2001
+> > From: Chandra Seetharaman <sekharan@us.ibm.com>
+> > Date: Wed, 14 Mar 2012 14:26:20 -0500
+> > Subject: [PATCH 3/4] Add a new field to the superblock to add support for seperate pquota
+> >  with a specific version.
+> > 
+> > No change made yet to gather both project and group quota with quotactl.
 > 
-> diff --git a/db/check.c b/db/check.c
-> index e601e0a..f00fae7 100644
-> --- a/db/check.c
-> +++ b/db/check.c
-> @@ -2883,11 +2883,11 @@ process_inode(
->  			process_quota(IS_USER_QUOTA, id, blkmap);
->  		else if (id->ino == mp->m_sb.sb_gquotino &&
->  			 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
-> -			 (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD))
-> +			 (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD))
->  			process_quota(IS_GROUP_QUOTA, id, blkmap);
->  		else if (id->ino == mp->m_sb.sb_gquotino &&
->  			 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
-> -			 (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD))
-> +			 (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD))
->  			process_quota(IS_PROJECT_QUOTA, id, blkmap);
->  	}
->  	if (blkmap)
-> @@ -3896,11 +3896,11 @@ quota_init(void)
->  	qgdo = mp->m_sb.sb_gquotino != 0 &&
->  	       mp->m_sb.sb_gquotino != NULLFSINO &&
->  	       (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) &&
-> -	       (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
-> +	       (mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD);
->  	qpdo = mp->m_sb.sb_gquotino != 0 &&
->  	       mp->m_sb.sb_gquotino != NULLFSINO &&
->  	       (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) &&
-> -	       (mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD);
-> +	       (mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD);
->  	if (qudo)
->  		qudata = xcalloc(QDATA_HASH_SIZE, sizeof(qdata_t *));
->  	if (qgdo)
-> diff --git a/include/xfs_quota.h b/include/xfs_quota.h
-> index 5d1f57d..aa583a3 100644
-> --- a/include/xfs_quota.h
-> +++ b/include/xfs_quota.h
-> @@ -154,19 +154,42 @@ typedef struct xfs_qoff_logformat {
->  #define XFS_GQUOTA_ACCT	0x0040  /* group quota accounting ON */
->  
->  /*
-> + * Start differentiating group quota and project quota in-core
-> + * using distinct flags, instead of using the combined OQUOTA flags.
-> + *
-> + * Conversion to and from the combined OQUOTA flag (if necessary)
-> + * is done only in xfs_sb_{to,from}_disk()
-> + */
-> +#define XFS_GQUOTA_ENFD 0x0080  /* group quota limits enforced */
-> +#define XFS_GQUOTA_CHKD 0x0100  /* quotacheck run on group quotas */
-> +#define XFS_PQUOTA_ENFD 0x0200  /* project quota limits enforced */
-> +#define XFS_PQUOTA_CHKD 0x0400  /* quotacheck run on project quotas */
-> +
-> +#define XFS_VALID_QFLAGS(sbp) (xfs_sb_version_hasnooquota(sbp) ? \
-> +		(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|XFS_UQUOTA_CHKD| \
-> +		 XFS_GQUOTA_ACCT|XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD| \
-> +		 XFS_PQUOTA_ACCT|XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD) : \
-> +		(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|XFS_UQUOTA_CHKD| \
-> +		 XFS_GQUOTA_ACCT|XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD| \
-> +		 XFS_PQUOTA_ACCT))
-> +
-> +/*
->   * Quota Accounting/Enforcement flags
->   */
->  #define XFS_ALL_QUOTA_ACCT	\
->  		(XFS_UQUOTA_ACCT | XFS_GQUOTA_ACCT | XFS_PQUOTA_ACCT)
-> -#define XFS_ALL_QUOTA_ENFD	(XFS_UQUOTA_ENFD | XFS_OQUOTA_ENFD)
-> -#define XFS_ALL_QUOTA_CHKD	(XFS_UQUOTA_CHKD | XFS_OQUOTA_CHKD)
-> +#define XFS_ALL_QUOTA_ENFD	\
-> +		(XFS_UQUOTA_ENFD | XFS_GQUOTA_ENFD | XFS_PQUOTA_ENFD)
-> +#define XFS_ALL_QUOTA_CHKD	\
-> +		(XFS_UQUOTA_CHKD | XFS_GQUOTA_CHKD | XFS_PQUOTA_CHKD)
->  
->  #define XFS_IS_QUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_ALL_QUOTA_ACCT)
->  #define XFS_IS_UQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_UQUOTA_ACCT)
->  #define XFS_IS_PQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_PQUOTA_ACCT)
->  #define XFS_IS_GQUOTA_RUNNING(mp)	((mp)->m_qflags & XFS_GQUOTA_ACCT)
->  #define XFS_IS_UQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_UQUOTA_ENFD)
-> -#define XFS_IS_OQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_OQUOTA_ENFD)
-> +#define XFS_IS_GQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_GQUOTA_ENFD)
-> +#define XFS_IS_PQUOTA_ENFORCED(mp)	((mp)->m_qflags & XFS_PQUOTA_ENFD)
->  
->  /*
->   * Incore only flags for quotaoff - these bits get cleared when quota(s)
-> @@ -184,8 +207,6 @@ typedef struct xfs_qoff_logformat {
->  #define XFS_IS_QUOTA_ON(mp)	((mp)->m_qflags & (XFS_UQUOTA_ACTIVE | \
->  						   XFS_GQUOTA_ACTIVE | \
->  						   XFS_PQUOTA_ACTIVE))
-> -#define XFS_IS_OQUOTA_ON(mp)	((mp)->m_qflags & (XFS_GQUOTA_ACTIVE | \
-> -						   XFS_PQUOTA_ACTIVE))
->  #define XFS_IS_UQUOTA_ON(mp)	((mp)->m_qflags & XFS_UQUOTA_ACTIVE)
->  #define XFS_IS_GQUOTA_ON(mp)	((mp)->m_qflags & XFS_GQUOTA_ACTIVE)
->  #define XFS_IS_PQUOTA_ON(mp)	((mp)->m_qflags & XFS_PQUOTA_ACTIVE)
-> @@ -260,25 +281,23 @@ typedef struct xfs_qoff_logformat {
->  	((XFS_IS_UQUOTA_ON(mp) && \
->  		(mp->m_sb.sb_qflags & XFS_UQUOTA_CHKD) == 0) || \
->  	 (XFS_IS_GQUOTA_ON(mp) && \
-> -		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
-> -		 (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT))) || \
-> +		(mp->m_sb.sb_qflags & XFS_GQUOTA_CHKD) == 0) || \
->  	 (XFS_IS_PQUOTA_ON(mp) && \
-> -		((mp->m_sb.sb_qflags & XFS_OQUOTA_CHKD) == 0 || \
-> -		 (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT))))
-> +		(mp->m_sb.sb_qflags & XFS_PQUOTA_CHKD) == 0))
->  
->  #define XFS_MOUNT_QUOTA_SET1	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-> +				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD)
->  
->  #define XFS_MOUNT_QUOTA_SET2	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_GQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD)
-> +				 XFS_GQUOTA_ENFD|XFS_GQUOTA_CHKD)
->  
->  #define XFS_MOUNT_QUOTA_ALL	(XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD|\
->  				 XFS_UQUOTA_CHKD|XFS_PQUOTA_ACCT|\
-> -				 XFS_OQUOTA_ENFD|XFS_OQUOTA_CHKD|\
-> -				 XFS_GQUOTA_ACCT)
-> -
-> +				 XFS_PQUOTA_ENFD|XFS_PQUOTA_CHKD|\
-> +				 XFS_GQUOTA_ACCT|XFS_GQUOTA_ENFD|\
-> +				 XFS_GQUOTA_CHKD)
->  
->  /*
->   * The structure kept inside the xfs_trans_t keep track of dquot changes
-> diff --git a/include/xfs_sb.h b/include/xfs_sb.h
-> index 5dcc2d7..69c6822 100644
-> --- a/include/xfs_sb.h
-> +++ b/include/xfs_sb.h
-> @@ -81,11 +81,13 @@ struct xfs_mount;
->  #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
->  #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
->  #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
-> +#define XFS_SB_VERSION2_NO_OQUOTA	0x00000100	/* sep prj quota inode */
->  
->  #define	XFS_SB_VERSION2_OKREALFBITS	\
->  	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
->  	 XFS_SB_VERSION2_ATTR2BIT	| \
-> -	 XFS_SB_VERSION2_PROJID32BIT)
-> +	 XFS_SB_VERSION2_PROJID32BIT	| \
-> +	 XFS_SB_VERSION2_NO_OQUOTA)
->  #define	XFS_SB_VERSION2_OKSASHFBITS	\
->  	(0)
->  #define XFS_SB_VERSION2_OKREALBITS	\
-> @@ -510,6 +512,19 @@ static inline void xfs_sb_version_addprojid32bit(xfs_sb_t *sbp)
->  	sbp->sb_bad_features2 |= XFS_SB_VERSION2_PROJID32BIT;
->  }
->  
-> +static inline int xfs_sb_version_hasnooquota(xfs_sb_t *sbp)
+> This note that you're going to do in the next patch is useful, but please also
+> put a description of what you're doing in this patch.  ;)
+> 
 
-IIRC, in the kernel you used xfs_sb_version_has_no_oquota.  I think you should
-use the same name in xfsprogs.
+You want more info than the line above it ? (Add a new field to the
+superblock to add support for seperate pquota with a specific version.)
 
-> +{
-> +	return xfs_sb_version_hasmorebits(sbp) &&
-> +		(sbp->sb_features2 & XFS_SB_VERSION2_NO_OQUOTA);
-> +}
-> +
-> +static inline void xfs_sb_version_addnooquota(xfs_sb_t *sbp)
-> +{
-> +	sbp->sb_versionnum |= XFS_SB_VERSION_MOREBITSBIT;
-> +	sbp->sb_features2 |= XFS_SB_VERSION2_PROJID32BIT;
+I can do it.
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> 
+> ...
+> 
+> > @@ -1055,19 +1057,22 @@ xfs_qm_qino_alloc(
+> >  		ASSERT((sbfields & (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
+> >  				   XFS_SB_GQUOTINO | XFS_SB_QFLAGS)) ==
+> >  		       (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
+> > -			XFS_SB_GQUOTINO | XFS_SB_QFLAGS));
+> > +			XFS_SB_GQUOTINO | XFS_SB_PQUOTINO | XFS_SB_QFLAGS));
+> >  
+> >  		xfs_sb_version_addquota(&mp->m_sb);
+> >  		mp->m_sb.sb_uquotino = NULLFSINO;
+> >  		mp->m_sb.sb_gquotino = NULLFSINO;
+> > +		mp->m_sb.sb_pquotino = NULLFSINO;
+> >  
+> >  		/* qflags will get updated _after_ quotacheck */
+> >  		mp->m_sb.sb_qflags = 0;
+> >  	}
+> >  	if (flags & XFS_QMOPT_UQUOTA)
+> >  		mp->m_sb.sb_uquotino = (*ip)->i_ino;
+> > -	else
+> > +	else if (flags & XFS_QMOPT_GQUOTA)
+> >  		mp->m_sb.sb_gquotino = (*ip)->i_ino;
+> > +	else
+> 
+> Maybe?
+> 	     {
+> 		ASSERT(flags & XFS_QMOPT_PQUOTA);
+> > +		mp->m_sb.sb_pquotino = (*ip)->i_ino;
 
-I'm not sure about this.  I don't think addnooquota necessarily implies a 32
-bit project id.  What say you?
+will do.
 
-Else, the patch looks pretty good.
+> 	}
+> ...
+> 
+> > @@ -439,10 +441,13 @@ xfs_qm_scall_getqstat(
+> >  	out->qs_pad = 0;
+> >  	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+> >  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+> > +	if (&out->qs_gquota != &out->qs_pquota)
+> > +		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+> 
+> I was a little surprised not to get a warning for that test.  
 
--Ben
+Yeah, compiler is happy with it :)
+
+> 
+> ...
+> 
+> > @@ -1317,6 +1311,15 @@ xfs_fs_fill_super(
+> >  	if (error)
+> >  		goto out_destroy_counters;
+> >  
+> > +	if ((mp->m_qflags & (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE)) &&
+> > +	    (mp->m_qflags & (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE)) &&
+> > +	    !xfs_sb_version_has_no_oquota(&mp->m_sb)) {
+> > +		xfs_warn(mp, "Super block does not support "
+> > +				 "project and group quota together");
+> > +		error = EINVAL;
+> > +		goto out_free_sb;
+> > +	}
+> > +
+> 
+> You'd see this warning if you have an old superblock with the new flags.  Maybe
+> it is worth writing a test for that.
+
+You mean old superblock with this code and -opquota,gquota on mount,
+correct ? Then yes, I can add that.
+
+
+> 
+> ...
+> 
+> > diff --git a/include/linux/dqblk_xfs.h b/include/linux/dqblk_xfs.h
+> > index 8655280..f17e3bb 100644
+> > --- a/include/linux/dqblk_xfs.h
+> > +++ b/include/linux/dqblk_xfs.h
+> > @@ -155,6 +155,7 @@ typedef struct fs_quota_stat {
+> >  	__s8		qs_pad;		/* unused */
+> >  	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
+> >  	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
+> > +#define qs_pquota	qs_gquota
+> 
+> Cool.  This #define goes away in the next patch.
+> 
+> I've been over this and it is looking pretty good to me...  I'm thinking about
+> what basic xfstests would be good to have for this feature.
+> 
+> Old sb_version with new flags, 
+> new sb_version with old flags, etc.
+
+I am little confused about what you mean by flags here. From the user
+point of view, they can either use pquota and gquota together or not.
+
+With old version using them together would fail with one message  
+"cannot mount with both project and group quota"
+
+with new code it will fail with a different message
+"Super block does not support project and group quota together"
+
+> 
+> I'll revisit that shortly.
+> 
+> -Ben
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
 
 _______________________________________________
 xfs mailing list
