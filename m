@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q44G6WpK053536 for <xfs@oss.sgi.com>; Fri, 4 May 2012 11:06:32 -0500
-Date: Fri, 4 May 2012 11:09:53 -0500
+	q44GSe7j055229 for <xfs@oss.sgi.com>; Fri, 4 May 2012 11:28:40 -0500
+Date: Fri, 4 May 2012 11:32:05 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/4] xfsprogs: Add new field pquotaino to  on disk
-	superblock
-Message-ID: <20120504160953.GR16881@sgi.com>
+Subject: Re: [PATCH 3/4] xfsprogs: Add qs_pquota to the fs_quota
+Message-ID: <20120504163205.GS16881@sgi.com>
 References: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173258.31735.97984.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120123173304.31735.10706.sendpatchset@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120123173258.31735.97984.sendpatchset@chandra-lucid.austin.ibm.com>
+In-Reply-To: <20120123173304.31735.10706.sendpatchset@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,75 +26,73 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 23, 2012 at 11:32:58AM -0600, Chandra Seetharaman wrote:
-> >From e0df4087facfd89e59183f4b8003196396d1a6d3 Mon Sep 17 00:00:00 2001
+On Mon, Jan 23, 2012 at 11:33:04AM -0600, Chandra Seetharaman wrote:
+> >From 9de21fc22372c3ba65a38e259aa023a74d1cae36 Mon Sep 17 00:00:00 2001
 > From: Chandra Seetharaman <sekharan@us.ibm.com>
-> Date: Tue, 13 Dec 2011 16:06:33 -0600
-> Subject: [PATCH 2/4] Add a new field sb_pquotino to the on-disk superblock data structure
->  and add accompanying code.
+> Date: Tue, 13 Dec 2011 16:08:19 -0600
+> Subject: [PATCH 3/4] Add a new field qs_pquota to the data structure fs_quota_stat and also
+>  define a new version for the same.
+> 
+> Inform the kernel that the data structure is newer one and on return
+> from kernel check the version and act accordingly.
 > 
 > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-
-Looking pretty good.  Again, if you could be more specific about what the patch
-does in your commit header it'd be helpful.
-
-...
-
-> @@ -174,11 +192,36 @@ xfs_sb_to_disk(
->  	xfs_sb_field_t	f;
->  	int		first;
->  	int		size;
-> +	__be16		saved_qflags = 0;
+> ---
+>  include/xqm.h |    2 ++
+>  quota/state.c |    6 +++++-
+>  2 files changed, 7 insertions(+), 1 deletions(-)
+> 
+> diff --git a/include/xqm.h b/include/xqm.h
+> index 47f58a0..24e1ea0 100644
+> --- a/include/xqm.h
+> +++ b/include/xqm.h
+> @@ -124,6 +124,7 @@ typedef struct fs_disk_quota {
+>   * incore.
+>   */
+>  #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
+> +#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
 >  
->  	ASSERT(fields);
->  	if (!fields)
->  		return;
->  
-> +	if (!xfs_sb_version_hasnooquota(from) &&
-> +		    (from->sb_qflags & (XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD))) {
-> +
-> +		if (from->sb_qflags & XFS_PQUOTA_ACCT) {
-> +			from->sb_gquotino = from->sb_pquotino;
-> +			from->sb_pquotino = 0;
-> +		}
-> +		/*
-> +		 * in-core version of qflags do not have XFS_OQUOTA.*, whereas
-> +		 * the on-disk version does. So, save the in-core sb_qflags
-> +		 * and restore it after we modify and copy it to the buffer
-> +		 * to be copied to disk.
-> +		 */
-> +		saved_qflags = from->sb_qflags;
-> +
-> +		if (from->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
-> +			from->sb_qflags |= XFS_OQUOTA_ENFD;
-> +		if (from->sb_qflags & (XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
-> +			from->sb_qflags |= XFS_OQUOTA_CHKD;
-> +		from->sb_qflags &= ~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
-> +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
-> + 	}
-> +
->  	while (fields) {
->  		f = (xfs_sb_field_t)xfs_lowbit64((__uint64_t)fields);
->  		first = xfs_sb_info[f].offset;
-> @@ -209,6 +252,14 @@ xfs_sb_to_disk(
->  
->  		fields &= ~(1LL << f);
->  	}
-> +	/* Revert to the old saved values */
-> +	if (saved_qflags) {
-> +		from->sb_qflags = saved_qflags;
-> +		if (from->sb_qflags & XFS_PQUOTA_ACCT) {
-> +			from->sb_pquotino = from->sb_gquotino;
-> +			from->sb_gquotino = 0;
-> +		}
-> +	}
->  }
->
+>  /*
+>   * Some basic information about 'quota files'.
+> @@ -146,6 +147,7 @@ typedef struct fs_quota_stat {
+>  	__s32		qs_rtbtimelimit;/* limit for rt blks timer */
+>  	__u16		qs_bwarnlimit;	/* limit for num warnings */
+>  	__u16		qs_iwarnlimit;	/* limit for num warnings */
+> +	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
+>  } fs_quota_stat_t;
 
-I'd really prefer not modifying 'from' temporarily.  If possible use a temporary
-variable and do the conversion manually for qflags as you have done in the
-kernel.
+Yep, same stuff you did for the kernel.
+
+>  #endif	/* __XQM_H__ */
+> diff --git a/quota/state.c b/quota/state.c
+> index 42bffc0..678699f 100644
+> --- a/quota/state.c
+> +++ b/quota/state.c
+> @@ -152,6 +152,8 @@ state_quotafile_mount(
+>  	fs_quota_stat_t	s;
+>  	char		*dev = mount->fs_name;
+>  
+> +	bzero(&s, sizeof(struct fs_quota_stat));
+> +	s.qs_version = FS_QSTAT_VERSION_2;
+>  	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
+>  		if (flags & VERBOSE_FLAG)
+>  			fprintf(fp, _("%s quota are not enabled on %s\n"),
+> @@ -168,7 +170,9 @@ state_quotafile_mount(
+>  				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
+>  				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
+>  	if (type & XFS_PROJ_QUOTA)
+> -		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
+> +		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, 
+> +				(s.qs_version >= FS_QSTAT_VERSION_2) ?
+> +				&s.qs_pquota : &s.qs_gquota,
+>  				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
+>  				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
+
+Ah, nice.  Older kernels which do not have VERSION_2 overwrite qs_version.  You'll do the right thing either way.
+
+Looks good.
+
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
