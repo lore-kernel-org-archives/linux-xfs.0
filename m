@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q43MJgcl209719 for <xfs@oss.sgi.com>; Thu, 3 May 2012 17:19:43 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id ftdnJHhtqgvgHfwm
-	for <xfs@oss.sgi.com>; Thu, 03 May 2012 15:19:41 -0700 (PDT)
-Message-ID: <4FA3047D.8060908@hardwarefreak.com>
-Date: Thu, 03 May 2012 17:19:41 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
-Subject: Re: Storage server, hung tasks and tracebacks
-References: <20120502184450.GA2557@nsrc.org>
-	<4FA27EF8.6040002@hardwarefreak.com>
-	<20120503204157.GC4387@nsrc.org>
-In-Reply-To: <20120503204157.GC4387@nsrc.org>
-Reply-To: stan@hardwarefreak.com
+	q44B96Sx020278 for <xfs@oss.sgi.com>; Fri, 4 May 2012 06:09:06 -0500
+Received: from out1.ip06ir2.opaltelecom.net (out1.ip06ir2.opaltelecom.net
+	[62.24.128.242]) by cuda.sgi.com with ESMTP id Vq32GIlOMaI6Eiyc
+	for <xfs@oss.sgi.com>; Fri, 04 May 2012 04:09:04 -0700 (PDT)
+Received: from Solaris (localhost [127.0.0.1])
+	by Solaris.localdomain (Postfix) with ESMTP id 302E24C0422
+	for <xfs@oss.sgi.com>; Fri,  4 May 2012 12:08:31 +0100 (BST)
+Subject: corrupt dinode 4345, extent total = 1, nblocks = 0.  This is a bug.
+From: =?windows-1252?Q?Dr_Peter_A_Barlow?= <peter@redcliffmicro.co.uk>
+Date: Fri, 4 May 2012 12:08:31 +0100
+Mime-Version: 1.0
+Message-Id: <zarafa.4fa3b8af.2072.03b91b1f6d9ca76b@Solaris>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,104 +21,92 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============4777396272290316876=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Candler <B.Candler@pobox.com>
-Cc: xfs@oss.sgi.com
+To: =?windows-1252?Q?xfs=40oss=2Esgi=2Ecom?= <xfs@oss.sgi.com>
 
-On 5/3/2012 3:41 PM, Brian Candler wrote:
-> On Thu, May 03, 2012 at 07:50:00AM -0500, Stan Hoeppner wrote:
->>> Any other suggestions (and of course interpretation of the kernel call
->>> tracebacks) would be much appreciated.
->>
->> Which mainboards are these Brian?  Make/model?
-> =
+This is a multi-part message in MIME format. Your mail reader does not
+understand MIME message format.
+--===============4777396272290316876==
+Content-Type: multipart/alternative;
+ boundary="=_LyXEGAuIDhIgOo4rvO7tVGqELuRPG8qxDdnmOYSFvKjtVekD"
 
-> Tyan S5510, with Intel Xeon CPU E31225 @ 3.10GHz
-> =
+This is a multi-part message in MIME format. Your mail reader does not
+understand MIME message format.
+--=_LyXEGAuIDhIgOo4rvO7tVGqELuRPG8qxDdnmOYSFvKjtVekD
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
-> Upgraded to BIOS 1.05a and iKVM 3.00
-> =
+Hello,=0D=0A=0D=0A=A0=0D=0AI=92ve received the following error..=0D=0A=0D=
+=0A=A0=0D=0Acorrupt dinode 4345, extent total =3D 1, nblocks =3D 0.=A0 Th=
+is is a bug.=0D=0A=0D=0APlease capture the filesystem metadata with xfs_m=
+etadump and=0D=0A=0D=0Areport it to xfs@oss.sgi.com.=0D=0A=0D=0Acache_nod=
+e_purge: refcount was 1, not zero (node=3D0x7f80593d8fc0)=0D=0A=0D=0A=A0=0D=
+=0Afatal error -- 117 - couldn't iget disconnected inode=0D=0A=0D=0A=A0=0D=
+=0Athe zipped metadata is 60MB so emailing it is not feasible.=0D=0A=0D=0A=
+=A0=0D=0APlease advise as I am=A0 desperate to recover my data.=0D=0A=0D=0A=
+=A0=0D=0AMany thanks,=0D=0A=0D=0A=A0=0D=0APeter.=0D=0A=0D=0A=A0=0D=0A
+--=_LyXEGAuIDhIgOo4rvO7tVGqELuRPG8qxDdnmOYSFvKjtVekD
+Content-Type: text/html; charset=windows-1252
+Content-Transfer-Encoding: quoted-printable
 
->> Make/model/count of all add in cards?
-> =
+<html xmlns:v=3D"urn:schemas-microsoft-com:vml" xmlns:o=3D"urn:schemas-mi=
+crosoft-com:office:office" xmlns:w=3D"urn:schemas-microsoft-com:office:wo=
+rd" xmlns:m=3D"http://schemas.microsoft.com/office/2004/12/omml" xmlns=3D=
+"http://www.w3.org/TR/REC-html40"><head><META HTTP-EQUIV=3D"Content-Type"=
+ CONTENT=3D"text/html; charset=3Dus-ascii"><meta name=3DGenerator content=
+=3D"Microsoft Word 14 (filtered medium)"><style><!--=0D=0A/* Font Definit=
+ions */=0D=0A@font-face=0D=0A=09{font-family:Calibri;=0D=0A=09panose-1:2 =
+15 5 2 2 2 4 3 2 4;}=0D=0A/* Style Definitions */=0D=0Ap.MsoNormal, li.Ms=
+oNormal, div.MsoNormal=0D=0A=09{margin:0cm;=0D=0A=09margin-bottom:.0001pt=
+;=0D=0A=09font-size:11.0pt;=0D=0A=09font-family:"Calibri","sans-serif";=0D=
+=0A=09mso-fareast-language:EN-US;}=0D=0Aa:link, span.MsoHyperlink=0D=0A=09=
+{mso-style-priority:99;=0D=0A=09color:blue;=0D=0A=09text-decoration:under=
+line;}=0D=0Aa:visited, span.MsoHyperlinkFollowed=0D=0A=09{mso-style-prior=
+ity:99;=0D=0A=09color:purple;=0D=0A=09text-decoration:underline;}=0D=0Asp=
+an.EmailStyle17=0D=0A=09{mso-style-type:personal-compose;=0D=0A=09font-fa=
+mily:"Calibri","sans-serif";=0D=0A=09color:windowtext;}=0D=0A.MsoChpDefau=
+lt=0D=0A=09{mso-style-type:export-only;=0D=0A=09font-family:"Calibri","sa=
+ns-serif";=0D=0A=09mso-fareast-language:EN-US;}=0D=0A@page WordSection1=0D=
+=0A=09{size:612.0pt 792.0pt;=0D=0A=09margin:72.0pt 72.0pt 72.0pt 72.0pt;}=
+=0D=0Adiv.WordSection1=0D=0A=09{page:WordSection1;}=0D=0A--></style><!--[=
+if gte mso 9]><xml>=0D=0A<o:shapedefaults v:ext=3D"edit" spidmax=3D"1026"=
+ />=0D=0A</xml><![endif]--><!--[if gte mso 9]><xml>=0D=0A<o:shapelayout v=
+:ext=3D"edit">=0D=0A<o:idmap v:ext=3D"edit" data=3D"1" />=0D=0A</o:shapel=
+ayout></xml><![endif]--></head><body lang=3DEN-GB link=3Dblue vlink=3Dpur=
+ple><div class=3DWordSection1><p class=3DMsoNormal>Hello,<o:p></o:p></p><=
+p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p class=3DMsoNormal>I&#8217;ve =
+received the following error..<o:p></o:p></p><p class=3DMsoNormal><o:p>&n=
+bsp;</o:p></p><p class=3DMsoNormal><i>corrupt dinode 4345, extent total =3D=
+ 1, nblocks =3D 0.&nbsp; This is a bug.<o:p></o:p></i></p><p class=3DMsoN=
+ormal><i>Please capture the filesystem metadata with xfs_metadump and<o:p=
+></o:p></i></p><p class=3DMsoNormal><i>report it to xfs@oss.sgi.com.<o:p>=
+</o:p></i></p><p class=3DMsoNormal><i>cache_node_purge: refcount was 1, n=
+ot zero (node=3D0x7f80593d8fc0)<o:p></o:p></i></p><p class=3DMsoNormal><i=
+><o:p>&nbsp;</o:p></i></p><p class=3DMsoNormal><i>fatal error -- 117 - co=
+uldn't iget disconnected inode<o:p></o:p></i></p><p class=3DMsoNormal><o:=
+p>&nbsp;</o:p></p><p class=3DMsoNormal>the zipped metadata is 60MB so ema=
+iling it is not feasible.<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;<=
+/o:p></p><p class=3DMsoNormal>Please advise as I am&nbsp; desperate to re=
+cover my data.<o:p></o:p></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p><p=
+ class=3DMsoNormal>Many thanks,<o:p></o:p></p><p class=3DMsoNormal><o:p>&=
+nbsp;</o:p></p><p class=3DMsoNormal>Peter.<span style=3D'font-size:7.5pt;=
+font-family:"Arial","sans-serif";color:gray;mso-fareast-language:EN-GB'><=
+o:p></o:p></span></p><p class=3DMsoNormal><o:p>&nbsp;</o:p></p></div></bo=
+dy></html>
+--=_LyXEGAuIDhIgOo4rvO7tVGqELuRPG8qxDdnmOYSFvKjtVekD--
 
-> 1 x LSI SAS9201=9616i
-> 1 x LSI SAS92118=968i
-> 1 x Intel X520-DA2 dual 10G NIC
-> =
 
-> although the 10G link wasn't being used for the most recent tests.
-
-I'm not finding anything down this avenue so far.
-
->> Make/model of PSU?
-> =
-
-> Will have to check, I think it may be this one:
-> http://www.xcase.co.uk/XCASE-Power-Supply-p/psu-dolphin-900..htm
-> =
-
->> Make model of chassis?
-> =
-
-> http://www.xcase.co.uk/24-bay-Hotswap-rackmount-chassis-norco-RPC-4224-p/=
-case-xcase-rm424.htm
-> =
-
-> The drives are 24 x ST3000DM001 (I was hoping to get low-power Hitachi
-> drives but they weren't available at the time)
-
-Yuk.  Zero technical info available on this "house brand" PSU or
-chassis.  That PSU is decidedly consumer oriented.  It may be fine, but
-there seems to be no documentation available to verify its output
-current or rail config.  No pic of the PSU sticker, no manual to be
-found online.  Many of these "house brand" and cheap no-name Chinese
-PSUs don't put out anywhere near the advertised power, nor necessarily
-cleanly, which is why the UL sticker is so handy--it doesn't lie as the
-printing on the box might.  No pic of the inside of that chassis, and no
-manual here either, so I have no way of knowing the backplane
-architecture.  I'd have to guess it's a 6x 4 drive passive backplane
-setup similar to the Norco chassis.
-
-FWIW, I'd never buy a PSU with a "technical description" of:
-
-    140mm Red Fan
-    Strong Long Cables
-    Strong outer Casing
-    Quality Internal Components
-    Low Noise - Big Heat Sinks
-
-One can spend a few extra bucks (pounds) and get a SuperMicro or Sparkle
-unit with all the tech specs and QC test data available online, such as:
- http://www.supermicro.com/products/powersupply/80plus/80plus_pws-865-pq.pdf
-
-> However, last night I rebooted one box (the one which wouldn't let me ssh
-> in) then upgraded it to ubuntu 12.04.  It has been running a couple of
-> concurrent bonnie++ instances for over 24 hours without a hitch.
-> =
-
-> So maybe it's the mpt2sas driver which is the difference:
-> =
-
-> [dmesg from Ubuntu 11.10]
->     mpt2sas version 08.100.00.02
-> =
-
-> [dmesg from Ubuntu 12.04]
->     mpt2sas version 10.100.00.00
-
-Glad to hear you've got one running somewhat stable.  Could be a driver
-problem, but it's pretty rare for a SCSI driver to hard lock a box isn't
-it?  Keep us posted.
-
--- =
-
-Stan
+--===============4777396272290316876==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4777396272290316876==--
