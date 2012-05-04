@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q44Jn0s9080027 for <xfs@oss.sgi.com>; Fri, 4 May 2012 14:49:00 -0500
-Date: Fri, 4 May 2012 14:52:24 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC v5 PATCH 3/4] xfs: Add pquotaino to on-disk super block
-Message-ID: <20120504195224.GU16881@sgi.com>
-References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120314202641.17044.32835.sendpatchset@chandra-lucid.austin.ibm.com>
+	q44JsdBV080789 for <xfs@oss.sgi.com>; Fri, 4 May 2012 14:54:39 -0500
+Message-ID: <4FA433FF.9070405@sgi.com>
+Date: Fri, 04 May 2012 14:54:39 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120314202641.17044.32835.sendpatchset@chandra-lucid.austin.ibm.com>
+Subject: Re: [PATCH 09/10] xfs: remove struct xfs_dabuf and infrastructure
+References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
+	<1335249220-22274-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1335249220-22274-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,38 +18,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Mar 14, 2012 at 03:26:42PM -0500, Chandra Seetharaman wrote:
-> @@ -1055,19 +1057,22 @@ xfs_qm_qino_alloc(
->  		ASSERT((sbfields & (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
->  				   XFS_SB_GQUOTINO | XFS_SB_QFLAGS)) ==
->  		       (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
-> -			XFS_SB_GQUOTINO | XFS_SB_QFLAGS));
-> +			XFS_SB_GQUOTINO | XFS_SB_PQUOTINO | XFS_SB_QFLAGS));
+On 04/24/12 01:33, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> The struct xfs_dabuf now only tracks a single xfs_buf and all the
+> information it holds can be gained directly from the xfs_buf. Hence
+> we can remove the struct dabuf and pass the xfs_buf around
+> everywhere.
+>
+> Kill the struct dabuf and the associated infrastructure.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-I popped this assert in my testing.  I think it should look like this:
+wow, that must have been fun...
 
-Index: xfs/fs/xfs/xfs_qm.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_qm.c
-+++ xfs/fs/xfs/xfs_qm.c
-@@ -838,7 +838,8 @@ xfs_qm_qino_alloc(
-        if (flags & XFS_QMOPT_SBVERSION) {
-                ASSERT(!xfs_sb_version_hasquota(&mp->m_sb));
-                ASSERT((sbfields & (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
--                                  XFS_SB_GQUOTINO | XFS_SB_QFLAGS)) ==
-+                                  XFS_SB_GQUOTINO | XFS_SB_PQUOTINO |
-+                                  XFS_SB_QFLAGS)) ==
-                       (XFS_SB_VERSIONNUM | XFS_SB_UQUOTINO |
-                        XFS_SB_GQUOTINO | XFS_SB_PQUOTINO | XFS_SB_QFLAGS));
 
--Ben
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
