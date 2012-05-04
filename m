@@ -1,11 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q44Jv56F081331 for <xfs@oss.sgi.com>; Fri, 4 May 2012 14:57:05 -0500
-Date: Fri, 4 May 2012 15:00:32 -0500
+	q44K0ehg081735 for <xfs@oss.sgi.com>; Fri, 4 May 2012 15:00:40 -0500
+Date: Fri, 4 May 2012 15:04:03 -0500
 From: Ben Myers <bpm@sgi.com>
 Subject: Re: [RFC v5 PATCH 2/4] xfs: Add pquota fields where gquota is used.
-Message-ID: <20120504200032.GV16881@sgi.com>
+Message-ID: <20120504200403.GW16881@sgi.com>
 References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
 	<20120314202636.17044.11836.sendpatchset@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
@@ -27,47 +27,91 @@ To: Chandra Seetharaman <sekharan@us.ibm.com>
 Cc: xfs@oss.sgi.com
 
 On Wed, Mar 14, 2012 at 03:26:36PM -0500, Chandra Seetharaman wrote:
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 7c01cda..8800197 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -516,7 +516,7 @@ xfs_setattr_nonsize(
->  		ASSERT(udqp == NULL);
->  		ASSERT(gdqp == NULL);
->  		error = xfs_qm_vop_dqalloc(ip, uid, gid, xfs_get_projid(ip),
-> -					 qflags, &udqp, &gdqp);
-> +					 qflags, &udqp, &gdqp, NULL);
->  		if (error)
->  			return error;
->  	}
-> @@ -552,7 +552,7 @@ xfs_setattr_nonsize(
->  		     (XFS_IS_GQUOTA_ON(mp) && igid != gid))) {
->  			ASSERT(tp);
->  			error = xfs_qm_vop_chown_reserve(tp, ip, udqp, gdqp,
-> -						capable(CAP_FOWNER) ?
-> +						NULL, capable(CAP_FOWNER) ?
->  						XFS_QMOPT_FORCE_RES : 0);
->  			if (error)	/* out of quota */
->  				goto out_trans_cancel;
+> @@ -1517,7 +1521,7 @@ xfs_symlink(
+>  	int			n;
+>  	xfs_buf_t		*bp;
+>  	prid_t			prid;
+> -	struct xfs_dquot	*udqp, *gdqp;
+> +	struct xfs_dquot	*udqp, *gdqp, *pdqp;
+>  	uint			resblks;
+>  
+>  	*ipp = NULL;
+> @@ -1547,7 +1551,7 @@ xfs_symlink(
+>  	 * Make sure that we have allocated dquot(s) on disk.
+>  	 */
+>  	error = xfs_qm_vop_dqalloc(dp, current_fsuid(), current_fsgid(), prid,
+> -			XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT, &udqp, &gdqp);
+> +		XFS_QMOPT_QUOTALL | XFS_QMOPT_INHERIT, &udqp, &gdqp, &pdqp);
+>  	if (error)
+>  		goto std_return;
+>  
+> @@ -1588,7 +1592,8 @@ xfs_symlink(
+>  	/*
+>  	 * Reserve disk quota : blocks and inode.
+>  	 */
+> -	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp, resblks, 1, 0);
+> +	error = xfs_trans_reserve_quota(tp, mp, udqp, gdqp,
+> +						pdqp, resblks, 1, 0);
+>  	if (error)
+>  		goto error_return;
+>  
+> @@ -1626,7 +1631,7 @@ xfs_symlink(
+>  	/*
+>  	 * Also attach the dquot(s) to it, if applicable.
+>  	 */
+> -	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp);
+> +	xfs_qm_vop_create_dqattach(tp, ip, udqp, gdqp, pdqp);
+>  
+>  	if (resblks)
+>  		resblks -= XFS_IALLOC_SPACE_RES(mp);
+> @@ -1710,6 +1715,7 @@ xfs_symlink(
+>  	error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+>  	xfs_qm_dqrele(udqp);
+>  	xfs_qm_dqrele(gdqp);
+> +	xfs_qm_dqrele(pdqp);
+>  
+>  	*ipp = ip;
+>  	return 0;
+> @@ -1723,6 +1729,7 @@ xfs_symlink(
+>  	xfs_trans_cancel(tp, cancel_flags);
+>  	xfs_qm_dqrele(udqp);
+>  	xfs_qm_dqrele(gdqp);
+> +	xfs_qm_dqrele(pdqp);
+		      ^^^^
 
-I popped an assert in xfs_setattr_nonsize in my testing.  Here is my suggestion:
+Crashing here consistently on test 005, null ptr deref.
 
-Index: xfs/fs/xfs/xfs_iops.c
+pdqp needs to be initialized in this function:
+
+Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_iops.c
-+++ xfs/fs/xfs/xfs_iops.c
-@@ -594,7 +594,8 @@ xfs_setattr_nonsize(
-                }
-                if (igid != gid) {
-                        if (XFS_IS_QUOTA_RUNNING(mp) && XFS_IS_GQUOTA_ON(mp)) {
--                               ASSERT(!XFS_IS_PQUOTA_ON(mp));
-+                               ASSERT(xfs_sb_version_has_no_oquota(&mp->m_sb)
-+                                      || !XFS_IS_PQUOTA_ON(mp));
-                                ASSERT(mask & ATTR_GID);
-                                ASSERT(gdqp);
-                                olddquot2 = xfs_qm_vop_chown(tp, ip,
+--- xfs.orig/fs/xfs/xfs_vnodeops.c
++++ xfs/fs/xfs/xfs_vnodeops.c
+@@ -1525,7 +1525,7 @@ xfs_symlink(
+        if (pathlen >= MAXPATHLEN)      /* total string too long */
+                return XFS_ERROR(ENAMETOOLONG);
+ 
+-       udqp = gdqp = NULL;
++       udqp = gdqp = pdqp = NULL;
+        if (dp->i_d.di_flags & XFS_DIFLAG_PROJINHERIT)
+                prid = xfs_get_projid(dp);
+        else
+
 
 -Ben
+
+>  
+>  	if (unlock_dp_on_error)
+>  		xfs_iunlock(dp, XFS_ILOCK_EXCL);
+> @@ -2189,7 +2196,7 @@ xfs_free_file_space(
+>  		}
+>  		xfs_ilock(ip, XFS_ILOCK_EXCL);
+>  		error = xfs_trans_reserve_quota(tp, mp,
+> -				ip->i_udquot, ip->i_gdquot,
+> +				ip->i_udquot, ip->i_gdquot, ip->i_pdquot,
+>  				resblks, 0, XFS_QMOPT_RES_REGBLKS);
+>  		if (error)
+>  			goto error1;
 
 _______________________________________________
 xfs mailing list
