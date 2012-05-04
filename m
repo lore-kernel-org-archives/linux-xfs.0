@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q44GSe7j055229 for <xfs@oss.sgi.com>; Fri, 4 May 2012 11:28:40 -0500
-Date: Fri, 4 May 2012 11:32:05 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 3/4] xfsprogs: Add qs_pquota to the fs_quota
-Message-ID: <20120504163205.GS16881@sgi.com>
-References: <20120123173243.31735.37262.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120123173304.31735.10706.sendpatchset@chandra-lucid.austin.ibm.com>
+	q44GWhSU055698 for <xfs@oss.sgi.com>; Fri, 4 May 2012 11:32:43 -0500
+Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
+	cuda.sgi.com with ESMTP id XVzdX6ArANfrGus1 for
+	<xfs@oss.sgi.com>; Fri, 04 May 2012 09:32:42 -0700 (PDT)
+Date: Fri, 4 May 2012 17:32:37 +0100
+From: Brian Candler <B.Candler@pobox.com>
+Subject: Re: Storage server, hung tasks and tracebacks
+Message-ID: <20120504163237.GA6128@nsrc.org>
+References: <20120502184450.GA2557@nsrc.org>
+	<4FA27EF8.6040002@hardwarefreak.com> <20120503204157.GC4387@nsrc.org>
+	<4FA3047D.8060908@hardwarefreak.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120123173304.31735.10706.sendpatchset@chandra-lucid.austin.ibm.com>
+In-Reply-To: <4FA3047D.8060908@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,76 +27,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
+To: Stan Hoeppner <stan@hardwarefreak.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Jan 23, 2012 at 11:33:04AM -0600, Chandra Seetharaman wrote:
-> >From 9de21fc22372c3ba65a38e259aa023a74d1cae36 Mon Sep 17 00:00:00 2001
-> From: Chandra Seetharaman <sekharan@us.ibm.com>
-> Date: Tue, 13 Dec 2011 16:08:19 -0600
-> Subject: [PATCH 3/4] Add a new field qs_pquota to the data structure fs_quota_stat and also
->  define a new version for the same.
-> 
-> Inform the kernel that the data structure is newer one and on return
-> from kernel check the version and act accordingly.
-> 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  include/xqm.h |    2 ++
->  quota/state.c |    6 +++++-
->  2 files changed, 7 insertions(+), 1 deletions(-)
-> 
-> diff --git a/include/xqm.h b/include/xqm.h
-> index 47f58a0..24e1ea0 100644
-> --- a/include/xqm.h
-> +++ b/include/xqm.h
-> @@ -124,6 +124,7 @@ typedef struct fs_disk_quota {
->   * incore.
->   */
->  #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
-> +#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
->  
->  /*
->   * Some basic information about 'quota files'.
-> @@ -146,6 +147,7 @@ typedef struct fs_quota_stat {
->  	__s32		qs_rtbtimelimit;/* limit for rt blks timer */
->  	__u16		qs_bwarnlimit;	/* limit for num warnings */
->  	__u16		qs_iwarnlimit;	/* limit for num warnings */
-> +	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
->  } fs_quota_stat_t;
+On Thu, May 03, 2012 at 05:19:41PM -0500, Stan Hoeppner wrote:
+> Glad to hear you've got one running somewhat stable.  Could be a driver
+> problem, but it's pretty rare for a SCSI driver to hard lock a box isn't
+> it?
 
-Yep, same stuff you did for the kernel.
+Yes, that bothers me too.
 
->  #endif	/* __XQM_H__ */
-> diff --git a/quota/state.c b/quota/state.c
-> index 42bffc0..678699f 100644
-> --- a/quota/state.c
-> +++ b/quota/state.c
-> @@ -152,6 +152,8 @@ state_quotafile_mount(
->  	fs_quota_stat_t	s;
->  	char		*dev = mount->fs_name;
->  
-> +	bzero(&s, sizeof(struct fs_quota_stat));
-> +	s.qs_version = FS_QSTAT_VERSION_2;
->  	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
->  		if (flags & VERBOSE_FLAG)
->  			fprintf(fp, _("%s quota are not enabled on %s\n"),
-> @@ -168,7 +170,9 @@ state_quotafile_mount(
->  				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
->  				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
->  	if (type & XFS_PROJ_QUOTA)
-> -		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
-> +		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, 
-> +				(s.qs_version >= FS_QSTAT_VERSION_2) ?
-> +				&s.qs_pquota : &s.qs_gquota,
->  				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
->  				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
+> Keep us posted.
 
-Ah, nice.  Older kernels which do not have VERSION_2 overwrite qs_version.  You'll do the right thing either way.
+Last night I fired up two more instances of bonnie++ on that box, so there
+were four at once.  Going back to the box now, I find that they have all
+hung :-(
 
-Looks good.
+They are stuck at:
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+    Delete files in random order...
+    Stat files in random order...
+    Stat files in random order...
+    Stat files in sequential order...
+
+respectively.
+
+iostat 5 shows no activity. There are 9 hung processes:
+
+$ uptime
+ 17:23:35 up 1 day, 20:39,  1 user,  load average: 9.04, 9.08, 8.91
+$ ps auxwww | grep " D" | grep -v grep
+root        35  1.5  0.0      0     0 ?        D    May02  42:10 [kswapd0]
+root      1179  0.0  0.0      0     0 ?        D    May02   1:50 [xfsaild/md126]
+root      3127  0.0  0.0  25096   312 ?        D    16:55   0:00 /usr/lib/postfix/master
+tomi     29138  1.1  0.0 378860  3708 pts/1    D+   12:43   3:06 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
+tomi     29390  1.0  0.0 378860  3560 pts/3    D+   12:52   2:53 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
+tomi     30356  1.1  0.0 378860  3512 pts/2    D+   13:32   2:36 bonnie++ -d /disk/scratch/testb -s 16384k -n 98:800k:500k:1000
+root     31075  0.0  0.0      0     0 ?        D    14:00   0:04 [kworker/0:0]
+tomi     31796  0.6  0.0 378860  3864 pts/4    D+   14:30   1:05 bonnie++ -d /disk/scratch/testb -s 16384k -n 98:800k:500k:1000
+root     31922  0.0  0.0      0     0 ?        D    14:35   0:00 [kworker/1:0]
+
+dmesg shows hung tasks and backtraces, starting with:
+
+[150927.599920] INFO: task kswapd0:35 blocked for more than 120 seconds.
+[150927.600263] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+[150927.600698] kswapd0         D ffffffff81806240     0    35      2 0x00000000
+[150927.600704]  ffff880212389330 0000000000000046 ffff880212389320 ffffffff81082df5
+[150927.600710]  ffff880212389fd8 ffff880212389fd8 ffff880212389fd8 0000000000013780
+[150927.600715]  ffff8802121816f0 ffff88020e538000 ffff880212389320 ffff88020e538000
+[150927.600719] Call Trace:
+[150927.600728]  [<ffffffff81082df5>] ? __queue_work+0xe5/0x320
+[150927.600733]  [<ffffffff8165a55f>] schedule+0x3f/0x60
+[150927.600739]  [<ffffffff814e82c6>] md_flush_request+0x86/0x140
+[150927.600745]  [<ffffffff8105f990>] ? try_to_wake_up+0x200/0x200
+[150927.600756]  [<ffffffffa0010419>] raid0_make_request+0x119/0x1c0 [raid0]
+...
+
+Now, the only other thing I have found by googling is a suggestion that LSI
+drivers lock up when there is any smart or hddtemp activity: see end of
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/906873
+
+On this system the smartmontools package is installed, but I have not
+configured it, and smartd is not running.  I don't have hddtemp installed
+either.
+
+I am completely at a loss with all this... I've never seen a Unix/Linux
+system behave so unreliably.  One of the company's directors has reminded me
+that we have a Windows storage server with 48 disks which has been running
+without incident for the last 3 or 4 years, and I don't have a good answer
+for that :-(
+
+Regards,
+
+Brian.
 
 _______________________________________________
 xfs mailing list
