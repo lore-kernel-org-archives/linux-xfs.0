@@ -1,18 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q44LtNaZ094652 for <xfs@oss.sgi.com>; Fri, 4 May 2012 16:55:23 -0500
-Received: from mail-qa0-f46.google.com (mail-qa0-f46.google.com
-	[209.85.216.46]) by cuda.sgi.com with ESMTP id j72P5VaAZli2hqgo
+	q457ibkD157404 for <xfs@oss.sgi.com>; Sat, 5 May 2012 02:44:37 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id tKY71pIE5crhFbad
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 04 May 2012 14:55:22 -0700 (PDT)
-Received: by qadb17 with SMTP id b17so1660676qad.5
-	for <xfs@oss.sgi.com>; Fri, 04 May 2012 14:55:21 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sat, 05 May 2012 00:44:36 -0700 (PDT)
+Received: by pbbrr13 with SMTP id rr13so5343650pbb.26
+	for <xfs@oss.sgi.com>; Sat, 05 May 2012 00:44:35 -0700 (PDT)
 MIME-Version: 1.0
-Date: Fri, 4 May 2012 17:55:21 -0400
-Message-ID: <CAH4wwdHb0=9UtTiwz-fAYovXGO6J8soda31S+dgCGNKBA3j5sw@mail.gmail.com>
-Subject: deadlock below xfs_ialloc, when radix_tree_preload goes into reclaim?
-From: Peter Watkins <treestem@gmail.com>
+In-Reply-To: <CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
+References: <20120423235840.GQ9541@dastard>
+	<CADLDEKsfckBw2oVYFfaaTbpe8Ri+rYJr2e5SB7-pM0BU9nRUeA@mail.gmail.com>
+	<20120424120731.GT9541@dastard>
+	<CADLDEKs01GnxgYh2UTt1waVDUXHbB_RcBcUTBr5REFg5aD5jHA@mail.gmail.com>
+	<20120425223845.GX9541@dastard>
+	<CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
+	<20120426224412.GA9541@dastard>
+	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
+	<20120426230738.GB9541@dastard>
+	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
+	<20120427110922.GF9541@dastard>
+	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
+Date: Sat, 5 May 2012 09:44:35 +0200
+Message-ID: <CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+From: Juerg Haefliger <juergh@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,86 +34,142 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Greetings,
+>>> >> >> > I'm assuming it is the event trace
+>>> >> >> > that is causing it to blow out? If so, just the 30-60s either s=
+ide of
+>>> >> >> > the hang first showing up is probaby necessary, and that should=
+ cut
+>>> >> >> > the size down greatly....
+>>> >> >>
+>>> >> >> Can I shorten the existing trace.dat?
+>>
+>> Looks like you can - the "trace-cmd split" option.
+>>
+>>> >> >
+>>> >> > No idea, but that's likely the problem - I don't want the binary
+>>> >> > trace.dat file. I want the text output of the report command
+>>> >> > generated from the binary trace.dat file...
+>>> >>
+>>> >> Well yes. I did RTFM :-) trace.dat is 15GB.
+>>> >
+>>> > OK, that's a lot larger than I expected for a hung filesystem....
+>>> >
+>>> >> >> I stopped the trace
+>>> >> >> automatically 10 secs after the the xlog_... trace showed up in s=
+yslog
+>>> >> >> so effectively some 130+ secs after the hang occured.
+>>> >
+>>> > Can you look at the last timestamp in the report file, and trim off
+>>> > anything from the start that is older than, say, 180s before that?
+>>>
+>>> Cut the trace down to 180 secs which brought the filesize down to
+>>> 93MB: https://region-a.geo-1.objects.hpcloudsvc.com:443/v1.0/AUTH_9630e=
+ad2-6194-40df-afd3-7395448d4536/xfs-hang/report-2012-04-24-180secs.tgz
+>>
+>> I see the problem - the trace.dat file is hosted on an XFS
+>> filesystem, so all the writes to the trace.dat file are causing
+>> events to be logged, which causes writes to the trace.dat file....
+>>
+>> taking out al the trace-cmd events:
+>>
+>> $ grep -v trace-cmd trace_report_180secs.txt > t.t
+>> $ ls -l trace_report_180secs.txt t.t
+>> -rw-r--r-- 1 dave dave 2136941443 Apr 27 18:52 trace_report_180secs.txt
+>> -rw-r--r-- 1 dave dave =A0 =A03280629 Apr 27 20:12 t.t
+>>
+>> Brings the event trace for that 180s down ifrom 2.1GB to 3.2MB,
+>> which is much more like I'd expect from a hung filesystem....
+>>
+>> Ok, so it looks like there's lots of noise from other XFS
+>> filesystems to, and from the info.log, the xfs-hang filesystem is on
+>> device 252:2 (/dev/vg00/tmp):
+>>
+>> $ grep "dev 252:2" t.t
+>> $
+>>
+>> And there are no events from that filesystem in the log at all. Ok,
+>> so what you need to do is find out if there are *any* events from
+>> that device in the larger log file you have.....
+>>
+>> If not, then it is time for advanced trace-cmd mojo. We can tell it
+>> to filter events only from the PID of the test script and all it's
+>> children using:
+>>
+>> # trace-cmd record -e xfs\* -P <parent-pid> -c
+>>
+>> But better would be to use the device number of the relevant
+>> filesystem to filter the events. The device is 252:2, which means in
+>> kernel terms is it:
+>>
+>> =A0 =A0 =A0 =A0dev =3D (major << 20) | minor
+>> =A0 =A0 =A0 =A0 =A0 =A0=3D 0xfc00002
+>>
+>> So you should be able to get just the xfs-hang events via:
+>>
+>> # trace-cmd record -e xfs\* -d 'dev =3D=3D 0xfc00002'
+>>
+>> and as long as you don't host log files on /xfs-hang, it'll only
+>> record the workload running on the xfs-hang filesystem.
+>
+> Third try: https://region-a.geo-1.objects.hpcloudsvc.com:443/v1.0/AUTH_96=
+30ead2-6194-40df-afd3-7395448d4536/xfs-hang/report-2012-04-27-180secs.tgz
+> Filtered by device, trace events go to a different filesystem.
 
-Anyone seen a deadlock like the one below? It's a 17TB system with 32
-bit inodes and it's doing lots of inode allocations at the same time.
-So you might consider it a stress test for inode alloc activity on a
-single AG.
+Did anybody have a chance to look at the data?
 
-xfs_ialloc called xfs_dialloc and got the agi header buf, then it
-called xfs_iget which went into reclaim during radix_tree_preload.
-While trying to shrink the inode cache, xfs_iunlink_remove tries to
-get the same agi header buf.
-
-With 64 bit inodes you'd be less likely to hit this path, but it's
-still possible, no?
-
-Should this call to radix_tree_preload use GFP_NOFS? The code base is
-old, but the same elements of the deadlock still seem to be there in
-the upstream code ... though I may be missing something there.
-
-Oh, some caveats: yes, it's an ancient 2.6.27 kernel, no I don't have
-a handy reproducer (I could try to create one), and yes I really am
-trying to switch to 64b inodes.
-
--Peter
+Thanks
+...Juerg
 
 
-
- #0 [ffff88021bc030c8] schedule at ffffffff804fa2ee
- #1 [ffff88021bc03170] schedule_timeout at ffffffff804faddb
- #2 [ffff88021bc031e0] __down at ffffffff804fb9b1
- #3 [ffff88021bc03230] down at ffffffff80265cab
- #4 [ffff88021bc03250] xfs_buf_lock at ffffffffa04cbd98
- #5 [ffff88021bc03270] _xfs_buf_find at ffffffffa04cbed4
- #6 [ffff88021bc032c0] xfs_buf_get_flags at ffffffffa04cd642
- #7 [ffff88021bc03300] xfs_buf_read_flags at ffffffffa04cd76b
- #8 [ffff88021bc03320] xfs_trans_read_buf at ffffffffa04c186f
- #9 [ffff88021bc03370] xfs_iunlink_remove at ffffffffa04aa809
- <=== wants agi buffer for lock ordering
-#10 [ffff88021bc03410] xfs_ifree at ffffffffa04aab27
-#11 [ffff88021bc03470] xfs_inactive at ffffffffa04c5653
-#12 [ffff88021bc034c0] xfs_fs_clear_inode at ffffffffa04d48c8
-#13 [ffff88021bc034f0] clear_inode at ffffffff802f26f5
-#14 [ffff88021bc03510] generic_delete_inode at ffffffff802f2d1f
-#15 [ffff88021bc03540] generic_drop_inode at ffffffff802f2e47
-#16 [ffff88021bc03560] iput at ffffffff802f2f6b
-#18 [ffff88021bc035c0] clear_inode at ffffffff802f26f5
-#19 [ffff88021bc035e0] dispose_list at ffffffff802f2780
-#20 [ffff88021bc03620] shrink_icache_memory at ffffffff802f30a4
-#21 [ffff88021bc03680] shrink_slab at ffffffff802adff7
-#22 [ffff88021bc036d0] zone_reclaim at ffffffff802b0913
-<=== uh oh, memory reclaim!
-#23 [ffff88021bc03770] get_page_from_freelist at ffffffff802a8944
-#24 [ffff88021bc03850] __alloc_pages_internal at ffffffff802a8e3d
-#25 [ffff88021bc038d0] alloc_pages_current at ffffffff802cb2dd
-#26 [ffff88021bc03900] new_slab at ffffffff802d2190
-#27 [ffff88021bc03940] __slab_alloc at ffffffff802d27e2
-#28 [ffff88021bc039a0] kmem_cache_alloc at ffffffff802d2cd4
-#29 [ffff88021bc039e0] radix_tree_preload at ffffffff8039c5e1
- <=== should be GFP_NOFS instead of GFP_KERNEL ?
-#30 [ffff88021bc03a10] xfs_iget_core at ffffffffa04a7b9b
-#31 [ffff88021bc03a90] xfs_iget at ffffffffa04a80e0
-#32 [ffff88021bc03af0] xfs_trans_iget at ffffffffa04c1f82
-#33 [ffff88021bc03b40] xfs_ialloc at ffffffffa04a9132
- <=== calling ialloc after dialloc, holds buf_lock for agi header !
-#34 [ffff88021bc03be0] xfs_dir_ialloc at ffffffffa04c28f5
-#35 [ffff88021bc03ca0] xfs_create at ffffffffa04c5bdd
-#36 [ffff88021bc03d70] xfs_vn_mknod at ffffffffa04d12d1
-#37 [ffff88021bc03dd0] xfs_vn_create at ffffffffa04d13b0
-#38 [ffff88021bc03de0] vfs_create at ffffffff802e6adb
-#39 [ffff88021bc03e20] do_filp_open at ffffffff802e7123
-#40 [ffff88021bc03eb0] expand_files at ffffffff802f4cf1
-#41 [ffff88021bc03ef0] alloc_fd at ffffffff802f52f8
-#42 [ffff88021bc03f30] do_sys_open at ffffffff802db5c8
-#43 [ffff88021bc03f70] compat_sys_open at ffffffff80314caa
+>
+>> BTW, how often do you see this sort of thing:
+>>
+>> [ =A0220.571551] ------------[ cut here ]------------
+>> [ =A0220.571562] WARNING: at fs/inode.c:280 drop_nlink+0x49/0x50()
+>> [ =A0220.571564] Hardware name: SE2170s
+>> [ =A0220.571565] Modules linked in: ipmi_devintf ipmi_si ipmi_msghandler=
+ ip6table_filter ip6_tables ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_=
+ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_CHECKSUM iptable_ma=
+ngle xt_tcpudp iptable_filter ip_tables x_tables bridge 8021q garp stp core=
+temp ghash_clmulni_intel aesni_intel cryptd usbhid i7core_edac lp edac_core=
+ hid aes_x86_64 parport serio_raw microcode xfs igb hpsa dca
+>> [ =A0220.571594] Pid: 4637, comm: copy-files Not tainted 3.4.0-rc4 #2
+>> [ =A0220.571595] Call Trace:
+>> [ =A0220.571603] =A0[<ffffffff810508cf>] warn_slowpath_common+0x7f/0xc0
+>> [ =A0220.571605] =A0[<ffffffff8105092a>] warn_slowpath_null+0x1a/0x20
+>> [ =A0220.571607] =A0[<ffffffff81193319>] drop_nlink+0x49/0x50
+>> [ =A0220.571628] =A0[<ffffffffa00701ef>] xfs_droplink+0x2f/0x60 [xfs]
+>> [ =A0220.571640] =A0[<ffffffffa0072d58>] xfs_remove+0x2e8/0x3c0 [xfs]
+>> [ =A0220.571645] =A0[<ffffffff8163aeee>] ? _raw_spin_lock+0xe/0x20
+>> [ =A0220.571656] =A0[<ffffffffa0068248>] xfs_vn_unlink+0x48/0x90 [xfs]
+>> [ =A0220.571659] =A0[<ffffffff8118684f>] vfs_unlink+0x9f/0x100
+>> [ =A0220.571662] =A0[<ffffffff811893ef>] do_unlinkat+0x1af/0x1e0
+>> [ =A0220.571668] =A0[<ffffffff810a8eab>] ? sys_futex+0x7b/0x180
+>> [ =A0220.571670] =A0[<ffffffff8118a9a6>] sys_unlink+0x16/0x20
+>> [ =A0220.571675] =A0[<ffffffff816431a9>] system_call_fastpath+0x16/0x1b
+>>
+>> You might want to run xfs-repair over your filesystems to find out
+>> how many inodes have bad link counts....
+>
+> First time I saw it was when I started using 3.4-rc4. I repaired the
+> fs before I rerun the test that produced the above data.
+>
+> ...Juerg
+>
+>
+>> Cheers,
+>>
+>> Dave.
+>> --
+>> Dave Chinner
+>> david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
