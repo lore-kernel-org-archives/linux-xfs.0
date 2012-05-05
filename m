@@ -1,31 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q457ibkD157404 for <xfs@oss.sgi.com>; Sat, 5 May 2012 02:44:37 -0500
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id tKY71pIE5crhFbad
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 05 May 2012 00:44:36 -0700 (PDT)
-Received: by pbbrr13 with SMTP id rr13so5343650pbb.26
-	for <xfs@oss.sgi.com>; Sat, 05 May 2012 00:44:35 -0700 (PDT)
+	q45AdisD176201 for <xfs@oss.sgi.com>; Sat, 5 May 2012 05:39:44 -0500
+Received: from blu0-omc4-s28.blu0.hotmail.com (blu0-omc4-s28.blu0.hotmail.com
+	[65.55.111.167]) by cuda.sgi.com with ESMTP id pG4DRhocW8ZrGIjw
+	for <xfs@oss.sgi.com>; Sat, 05 May 2012 03:39:42 -0700 (PDT)
+Message-ID: <BLU157-W73C2A4EB41699C95D094AF02D0@phx.gbl>
+From: Berhardt Eckl <bernhardt.eckl@hotmail.de>
+Subject: Null in file after crash
+Date: Sat, 5 May 2012 12:39:42 +0200
 MIME-Version: 1.0
-In-Reply-To: <CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
-References: <20120423235840.GQ9541@dastard>
-	<CADLDEKsfckBw2oVYFfaaTbpe8Ri+rYJr2e5SB7-pM0BU9nRUeA@mail.gmail.com>
-	<20120424120731.GT9541@dastard>
-	<CADLDEKs01GnxgYh2UTt1waVDUXHbB_RcBcUTBr5REFg5aD5jHA@mail.gmail.com>
-	<20120425223845.GX9541@dastard>
-	<CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
-	<20120426224412.GA9541@dastard>
-	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
-	<20120426230738.GB9541@dastard>
-	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
-	<20120427110922.GF9541@dastard>
-	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
-Date: Sat, 5 May 2012 09:44:35 +0200
-Message-ID: <CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-From: Juerg Haefliger <juergh@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,143 +18,209 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
-
->>> >> >> > I'm assuming it is the event trace
->>> >> >> > that is causing it to blow out? If so, just the 30-60s either s=
-ide of
->>> >> >> > the hang first showing up is probaby necessary, and that should=
- cut
->>> >> >> > the size down greatly....
->>> >> >>
->>> >> >> Can I shorten the existing trace.dat?
->>
->> Looks like you can - the "trace-cmd split" option.
->>
->>> >> >
->>> >> > No idea, but that's likely the problem - I don't want the binary
->>> >> > trace.dat file. I want the text output of the report command
->>> >> > generated from the binary trace.dat file...
->>> >>
->>> >> Well yes. I did RTFM :-) trace.dat is 15GB.
->>> >
->>> > OK, that's a lot larger than I expected for a hung filesystem....
->>> >
->>> >> >> I stopped the trace
->>> >> >> automatically 10 secs after the the xlog_... trace showed up in s=
-yslog
->>> >> >> so effectively some 130+ secs after the hang occured.
->>> >
->>> > Can you look at the last timestamp in the report file, and trim off
->>> > anything from the start that is older than, say, 180s before that?
->>>
->>> Cut the trace down to 180 secs which brought the filesize down to
->>> 93MB: https://region-a.geo-1.objects.hpcloudsvc.com:443/v1.0/AUTH_9630e=
-ad2-6194-40df-afd3-7395448d4536/xfs-hang/report-2012-04-24-180secs.tgz
->>
->> I see the problem - the trace.dat file is hosted on an XFS
->> filesystem, so all the writes to the trace.dat file are causing
->> events to be logged, which causes writes to the trace.dat file....
->>
->> taking out al the trace-cmd events:
->>
->> $ grep -v trace-cmd trace_report_180secs.txt > t.t
->> $ ls -l trace_report_180secs.txt t.t
->> -rw-r--r-- 1 dave dave 2136941443 Apr 27 18:52 trace_report_180secs.txt
->> -rw-r--r-- 1 dave dave =A0 =A03280629 Apr 27 20:12 t.t
->>
->> Brings the event trace for that 180s down ifrom 2.1GB to 3.2MB,
->> which is much more like I'd expect from a hung filesystem....
->>
->> Ok, so it looks like there's lots of noise from other XFS
->> filesystems to, and from the info.log, the xfs-hang filesystem is on
->> device 252:2 (/dev/vg00/tmp):
->>
->> $ grep "dev 252:2" t.t
->> $
->>
->> And there are no events from that filesystem in the log at all. Ok,
->> so what you need to do is find out if there are *any* events from
->> that device in the larger log file you have.....
->>
->> If not, then it is time for advanced trace-cmd mojo. We can tell it
->> to filter events only from the PID of the test script and all it's
->> children using:
->>
->> # trace-cmd record -e xfs\* -P <parent-pid> -c
->>
->> But better would be to use the device number of the relevant
->> filesystem to filter the events. The device is 252:2, which means in
->> kernel terms is it:
->>
->> =A0 =A0 =A0 =A0dev =3D (major << 20) | minor
->> =A0 =A0 =A0 =A0 =A0 =A0=3D 0xfc00002
->>
->> So you should be able to get just the xfs-hang events via:
->>
->> # trace-cmd record -e xfs\* -d 'dev =3D=3D 0xfc00002'
->>
->> and as long as you don't host log files on /xfs-hang, it'll only
->> record the workload running on the xfs-hang filesystem.
->
-> Third try: https://region-a.geo-1.objects.hpcloudsvc.com:443/v1.0/AUTH_96=
-30ead2-6194-40df-afd3-7395448d4536/xfs-hang/report-2012-04-27-180secs.tgz
-> Filtered by device, trace events go to a different filesystem.
-
-Did anybody have a chance to look at the data?
-
-Thanks
-...Juerg
+To: xfs@oss.sgi.com
 
 
->
->> BTW, how often do you see this sort of thing:
->>
->> [ =A0220.571551] ------------[ cut here ]------------
->> [ =A0220.571562] WARNING: at fs/inode.c:280 drop_nlink+0x49/0x50()
->> [ =A0220.571564] Hardware name: SE2170s
->> [ =A0220.571565] Modules linked in: ipmi_devintf ipmi_si ipmi_msghandler=
- ip6table_filter ip6_tables ipt_MASQUERADE iptable_nat nf_nat nf_conntrack_=
-ipv4 nf_defrag_ipv4 xt_state nf_conntrack ipt_REJECT xt_CHECKSUM iptable_ma=
-ngle xt_tcpudp iptable_filter ip_tables x_tables bridge 8021q garp stp core=
-temp ghash_clmulni_intel aesni_intel cryptd usbhid i7core_edac lp edac_core=
- hid aes_x86_64 parport serio_raw microcode xfs igb hpsa dca
->> [ =A0220.571594] Pid: 4637, comm: copy-files Not tainted 3.4.0-rc4 #2
->> [ =A0220.571595] Call Trace:
->> [ =A0220.571603] =A0[<ffffffff810508cf>] warn_slowpath_common+0x7f/0xc0
->> [ =A0220.571605] =A0[<ffffffff8105092a>] warn_slowpath_null+0x1a/0x20
->> [ =A0220.571607] =A0[<ffffffff81193319>] drop_nlink+0x49/0x50
->> [ =A0220.571628] =A0[<ffffffffa00701ef>] xfs_droplink+0x2f/0x60 [xfs]
->> [ =A0220.571640] =A0[<ffffffffa0072d58>] xfs_remove+0x2e8/0x3c0 [xfs]
->> [ =A0220.571645] =A0[<ffffffff8163aeee>] ? _raw_spin_lock+0xe/0x20
->> [ =A0220.571656] =A0[<ffffffffa0068248>] xfs_vn_unlink+0x48/0x90 [xfs]
->> [ =A0220.571659] =A0[<ffffffff8118684f>] vfs_unlink+0x9f/0x100
->> [ =A0220.571662] =A0[<ffffffff811893ef>] do_unlinkat+0x1af/0x1e0
->> [ =A0220.571668] =A0[<ffffffff810a8eab>] ? sys_futex+0x7b/0x180
->> [ =A0220.571670] =A0[<ffffffff8118a9a6>] sys_unlink+0x16/0x20
->> [ =A0220.571675] =A0[<ffffffff816431a9>] system_call_fastpath+0x16/0x1b
->>
->> You might want to run xfs-repair over your filesystems to find out
->> how many inodes have bad link counts....
->
-> First time I saw it was when I started using 3.4-rc4. I repaired the
-> fs before I rerun the test that produced the above data.
->
-> ...Juerg
->
->
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
 
+Hello all,
+
+after a XFS recovery, caused by a system crash, one of my files seems to be trashed. The file contains an encrypted container and can not be mounted since that crash. Hexedit shows some parts are filled with 0 Bytes.
+The crash happened some time ago in 2005, the filesystem was dumped and nearly untouched since then. I can not tell which kernel or XFS version was used.
+Xfs_bmap shows many holes, so it looks like a problem mentioned here: http://xfs.org/index.php/XFS_FAQ#Q:_Why_do_I_see_binary_NULLS_in_some_files_after_recovery_when_I_unplugged_the_power.3F
+
+Is there any chance to revert to the state the file was before the crash? Or maybe anything else that could help to restore the file?
+Some of the "missing parts" can be found via hexedit the dump, so at least some of the missing "holes" are still on the disc.
+
+xfs_bmap output:
+        0: [0..7]: hole
+        1: [8..23]: 1016..1031
+        2: [24..31]: 2504..2511
+        3: [32..39]: hole
+        4: [40..79]: 200..239
+        5: [80..87]: 3008..3015
+        6: [88..3479]: hole
+        7: [3480..3583]: 96..199
+        8: [3584..3599]: 1064..1079
+        9: [3600..3711]: 1744..1855
+        10: [3712..3767]: 2032..2087
+        11: [3768..3815]: 2192..2239
+        12: [3816..3831]: 2256..2271
+        13: [3832..3895]: 2280..2343
+        14: [3896..3935]: 2416..2455
+        15: [3936..3975]: 2464..2503
+        16: [3976..4071]: 2632..2727
+        17: [4072..4463]: hole
+        18: [4464..4471]: 2512..2519
+        19: [4472..4487]: 1000..1015
+        20: [4488..4495]: hole
+        21: [4496..4511]: 1160..1175
+        22: [4512..4575]: hole
+        23: [4576..4583]: 2000..2007
+        24: [4584..4631]: 1080..1127
+        25: [4632..4639]: hole
+        26: [4640..4663]: 1136..1159
+        27: [4664..4679]: 2008..2023
+        28: [4680..298991]: hole
+        29: [298992..299023]: 2728..2759
+        30: [299024..299127]: hole
+        31: [299128..299143]: 2760..2775
+        32: [299144..356103]: hole
+        33: [356104..356223]: 240..359
+        34: [356224..390023]: hole
+        35: [390024..390039]: 3032..3047
+        36: [390040..393847]: hole
+        37: [393848..393887]: 2856..2895
+        38: [393888..396711]: hole
+        39: [396712..396727]: 1032..1047
+        40: [396728..396743]: 2896..2911
+        41: [396744..396959]: hole
+        42: [396960..396975]: 2912..2927
+        43: [396976..397495]: hole
+        44: [397496..397511]: 1392..1407
+        45: [397512..397855]: hole
+        46: [397856..397879]: 2928..2951
+        47: [397880..397895]: hole
+        48: [397896..397911]: 1968..1983
+        49: [397912..397935]: hole
+        50: [397936..397951]: 1048..1063
+        51: [397952..397959]: 2272..2279
+        52: [397960..397967]: 2456..2463
+        53: [397968..398071]: hole
+        54: [398072..398103]: 1184..1215
+        55: [398104..398135]: 3048..3079
+        56: [398136..398151]: 1984..1999
+        57: [398152..398167]: 3080..3095
+        58: [398168..399639]: hole
+        59: [399640..399655]: 3096..3111
+        60: [399656..420575]: hole
+        61: [420576..420591]: 3112..3127
+        62: [420592..486767]: hole
+        63: [486768..486783]: 1216..1231
+        64: [486784..486991]: hole
+        65: [486992..487007]: 1232..1247
+        66: [487008..488071]: hole
+        67: [488072..488087]: 3128..3143
+        68: [488088..494023]: hole
+        69: [494024..494039]: 2088..2103
+        70: [494040..494175]: hole
+        71: [494176..494191]: 3144..3159
+        72: [494192..494495]: hole
+        73: [494496..494511]: 1248..1263
+        74: [494512..494519]: 2952..2959
+        75: [494520..495807]: hole
+        76: [495808..495823]: 3160..3175
+        77: [495824..496103]: hole
+        78: [496104..496119]: 3176..3191
+        79: [496120..496183]: hole
+        80: [496184..496231]: 2960..3007
+        81: [496232..496239]: hole
+        82: [496240..496255]: 3016..3031
+        83: [496256..496303]: hole
+        84: [496304..496319]: 3192..3207
+        85: [496320..510471]: hole
+        86: [510472..510487]: 2104..2119
+        87: [510488..510543]: hole
+        88: [510544..510559]: 2176..2191
+        89: [510560..939639]: hole
+        90: [939640..939655]: 1264..1279
+        91: [939656..998999]: hole
+        92: [999000..999015]: 1280..1295
+        93: [999016..1045607]: hole
+        94: [1045608..1045623]: 2120..2135
+        95: [1045624..1362151]: hole
+        96: [1362152..1362167]: 1328..1343
+        97: [1362168..1513727]: hole
+        98: [1513728..1513743]: 1312..1327
+        99: [1513744..1513823]: hole
+        100: [1513824..1513839]: 2776..2791
+        101: [1513840..1546375]: hole
+        102: [1546376..1546391]: 2792..2807
+        103: [1546392..1557199]: hole
+        104: [1557200..1557215]: 2808..2823
+        105: [1557216..1563711]: hole
+        106: [1563712..1563727]: 2824..2839
+        107: [1563728..1564167]: hole
+        108: [1564168..1564183]: 2840..2855
+        109: [1564184..1682495]: hole
+        110: [1682496..1682503]: 2344..2351
+        111: [1682504..1780503]: hole
+        112: [1780504..1780607]: 768..871
+        113: [1780608..1837999]: hole
+        114: [1838000..1838015]: 2136..2151
+        115: [1838016..1865223]: hole
+        116: [1865224..1865239]: 2160..2175
+        117: [1865240..1875359]: hole
+        118: [1875360..1875367]: 2240..2247
+        119: [1875368..1878679]: hole
+        120: [1878680..1878687]: 2152..2159
+        121: [1878688..1886607]: hole
+        122: [1886608..1886719]: 360..471
+        123: [1886720..1898679]: hole
+        124: [1898680..1898751]: 472..543
+        125: [1898752..1905519]: hole
+        126: [1905520..1905559]: 2552..2591
+        127: [1905560..1906359]: hole
+        128: [1906360..1906375]: 2352..2367
+        129: [1906376..1912095]: hole
+        130: [1912096..1912191]: 544..639
+        131: [1912192..1916703]: hole
+        132: [1916704..1916711]: 2368..2375
+        133: [1916712..1929999]: hole
+        134: [1930000..1930039]: 1544..1583
+        135: [1930040..1930151]: hole
+        136: [1930152..1930175]: 2392..2415
+        137: [1930176..1953935]: hole
+        138: [1953936..1953959]: 2608..2631
+        139: [1953960..1959895]: hole
+        140: [1959896..1959903]: 2592..2599
+        141: [1959904..1960455]: hole
+        142: [1960456..1960479]: 2528..2551
+        143: [1960480..1961495]: hole
+        144: [1961496..1961503]: 2024..2031
+        145: [1961504..1961511]: 2520..2527
+        146: [1961512..1965975]: hole
+        147: [1965976..1966039]: 1856..1919
+        148: [1966040..2023615]: hole
+        149: [2023616..2023631]: 2376..2391
+        150: [2023632..2171271]: hole
+        151: [2171272..2171279]: 1352..1359
+        152: [2171280..2317303]: hole
+        153: [2317304..2317359]: 704..759
+        154: [2317360..2341399]: hole
+        155: [2341400..2341415]: 1296..1311
+        156: [2341416..2660815]: hole
+        157: [2660816..2660823]: 2248..2255
+        158: [2660824..2664023]: hole
+        159: [2664024..2664071]: 1584..1631
+        160: [2664072..2670455]: hole
+        161: [2670456..2670487]: 1360..1391
+        162: [2670488..2678431]: hole
+        163: [2678432..2678503]: 872..943
+        164: [2678504..2685759]: hole
+        165: [2685760..2685815]: 944..999
+        166: [2685816..2700175]: hole
+        167: [2700176..2700183]: 1128..1135
+        168: [2700184..2707711]: hole
+        169: [2707712..2707719]: 1176..1183
+        170: [2707720..2721447]: hole
+        171: [2721448..2721495]: 1920..1967
+        172: [2721496..2767527]: hole
+        173: [2767528..2767639]: 1632..1743
+        174: [2767640..2811607]: hole
+        175: [2811608..2811615]: 1344..1351
+        176: [2811616..2811623]: 2600..2607
+        177: [2811624..2811671]: hole
+        178: [2811672..2811687]: 1408..1423
+        179: [2811688..2852159]: hole
+        180: [2852160..2852223]: 640..703
+        181: [2852224..3041159]: hole
+        182: [3041160..3041167]: 1424..1431
+
+ 		 	   		  
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
