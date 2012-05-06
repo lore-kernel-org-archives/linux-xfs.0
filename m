@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q468lxe7163841 for <xfs@oss.sgi.com>; Sun, 6 May 2012 03:47:59 -0500
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id nE4lHVO0JIEpqLBT for
-	<xfs@oss.sgi.com>; Sun, 06 May 2012 01:47:58 -0700 (PDT)
-Date: Sun, 6 May 2012 08:47:55 +0000
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Storage server, hung tasks and tracebacks
-Message-ID: <20120506084755.GC7633@nsrc.org>
-References: <20120502184450.GA2557@nsrc.org>
-	<4FA27EF8.6040002@hardwarefreak.com> <20120503204157.GC4387@nsrc.org>
-	<4FA3047D.8060908@hardwarefreak.com> <20120504163237.GA6128@nsrc.org>
-	<4FA4C321.2070105@hardwarefreak.com>
+	q46916SC165858 for <xfs@oss.sgi.com>; Sun, 6 May 2012 04:01:06 -0500
+Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
+	cuda.sgi.com with ESMTP id 3v7j7ZnDaAgiSrOF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 06 May 2012 02:01:04 -0700 (PDT)
+Message-ID: <4FA63DDA.9070707@profihost.ag>
+Date: Sun, 06 May 2012 11:01:14 +0200
+From: Stefan Priebe <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4FA4C321.2070105@hardwarefreak.com>
+Subject: suddenly slow writes on XFS Filesystem
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,35 +19,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Sat, May 05, 2012 at 01:05:21AM -0500, Stan Hoeppner wrote:
-> Did I already mention checking the AC lines feeding these 3 boxes?
-> Assuming they're on UPS are the boost/buck features working properly?
-> Is your area known for fantastic clean power or dirty power with lots of
-> sags?  That's the first thing I'd suspect with 3 new machines all
-> behaving this way.
+Hi,
 
-We thought that too. These boxes are installed in a data centre; however we
-just took power to a new rack and these three machines are installed in
-there, so it's not impossible there's a problem with the feed to that rack.
+since a few days i've experienced a really slow fs on one of our backup 
+systems.
 
-We did have some machines on the A and B PDUs in this rack, but we may also
-try powering one from an adjacent rack.
+I'm not sure whether this is XFS related or related to the Controller / 
+Disks.
 
-Many thanks for your helpful suggestions, and we are working through this
-with the equipment supplier (who is extraordinarily helpful and
-knowledgeable and as keen to get to the bottom of this as we are). I'll
-certainly let you know when we have a resolution.
+It is a raid 10 of 20 SATA Disks and i can only write to them with about 
+700kb/s while doing random i/o. I tried vanilla Kernel 3.0.30 and 3.3.4 
+- no difference. Writing to another partition on another xfs array works 
+fine.
 
-Regards,
+Details:
+#~ df -h
+/dev/sdb1             4,6T  4,4T  207G  96% /mnt
 
-Brian.
+#~ df -i
+/dev/sdb1            4875737052 4659318044 216419008  96% /mnt
+
+#~ xfs_db -c frag -r /dev/sdb1
+actual 83160469, ideal 82145389, fragmentation factor 1,22%
+
+#~ xfs_info /dev/sdb1
+meta-data=/dev/sdb1              isize=256    agcount=5, 
+agsize=268435392 blks
+          =                       sectsz=512   attr=2
+data     =                       bsize=4096   blocks=1218967031, imaxpct=5
+          =                       sunit=64     swidth=1280 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal               bsize=4096   blocks=32768, version=2
+          =                       sectsz=512   sunit=64 blks, lazy-count=0
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+#~ cat /proc/mounts
+/dev/sdb1 /mnt xfs 
+rw,noatime,nodiratime,attr2,nobarrier,logbufs=8,logbsize=256k,sunit=512,swidth=10240,prjquota 
+0 0
+
+Any ideas?
+
+Stefan
 
 _______________________________________________
 xfs mailing list
