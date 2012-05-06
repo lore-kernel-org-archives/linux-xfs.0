@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q46F3WZ6247827 for <xfs@oss.sgi.com>; Sun, 6 May 2012 10:03:32 -0500
-Received: from oproxy9.bluehost.com (oproxy9.bluehost.com [69.89.24.6]) by
-	cuda.sgi.com with SMTP id 2nr9GZ452lRV13Gp for
-	<xfs@oss.sgi.com>; Sun, 06 May 2012 08:03:28 -0700 (PDT)
-Message-ID: <4FA692B7.9040006@tao.ma>
-Date: Sun, 06 May 2012 23:03:19 +0800
-From: Tao Ma <tm@tao.ma>
+	q46Fjr3c256522 for <xfs@oss.sgi.com>; Sun, 6 May 2012 10:45:53 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 3blCj0ZJll34Ev9K
+	for <xfs@oss.sgi.com>; Sun, 06 May 2012 08:45:52 -0700 (PDT)
+Message-ID: <4FA69CB0.8000008@hardwarefreak.com>
+Date: Sun, 06 May 2012 10:45:52 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: make 275 xfs specific.
-References: <1336230429-2939-1-git-send-email-tm@tao.ma>
-	<20120505233744.GE25351@dastard>
-In-Reply-To: <20120505233744.GE25351@dastard>
+Subject: Re: suddenly slow writes on XFS Filesystem
+References: <4FA63DDA.9070707@profihost.ag>
+	(sfid-20120506_121127_622020_FC89E0F4)
+	<201205061233.58496.Martin@lichtvoll.de>
+In-Reply-To: <201205061233.58496.Martin@lichtvoll.de>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,33 +27,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: Stefan Priebe <s.priebe@profihost.ag>, xfs@oss.sgi.com
 
-On 05/06/2012 07:37 AM, Dave Chinner wrote:
-> On Sat, May 05, 2012 at 11:07:09PM +0800, Tao Ma wrote:
->> From: Tao Ma <boyu.mt@taobao.com>
->>
->> In my test with ext4, 275 can't pass because ext4
->> can create a 8k file in the end not like what xfs
->> does. So make this test case xfs only for now.
+On 5/6/2012 5:33 AM, Martin Steigerwald wrote:
+> Am Sonntag, 6. Mai 2012 schrieb Stefan Priebe:
+>> It is a raid 10 of 20 SATA Disks and i can only write to them with
+>> about  700kb/s while doing random i/o. I tried vanilla Kernel 3.0.30
+>> and 3.3.4 - no difference. Writing to another partition on another xfs
+>> array works fine.
 > 
-> It's not an XFS specific test - it's a test that is supposed to test
-> POSIX write behaviour. i.e. if the filesystem is full, and then you
-> free 4k of space, then an 8k write should only be able to write 4k,
-> yes?
-Yes, but it doesn't work as expected for ext4.
-> 
-> So doesn't a failure on ext4 indicate that there's something wrong
-> with ext4 (either it's ENOSPC detection or the short write
-> handling), not the test?
-Actually in my test, ext4 can create the file with 8K file size, not a
-short write. I haven't looked into it yet. But AFAICS, if we have an
-ext4 volume with 8k cluster size, a 4k file can occupy a 8k cluster and
-the final write of 8k will succeed instead of the short write.
+> Additionally what RAID is this? SoftRAID or some - which one? - hardware 
+> RAID controller? And what disks are used, whats the rpm of these?
 
-Thanks
-Tao
+I doubt much of this stuff matters.  Stefan's filesystem is 96% full,
+w/~200GB free.  This free space is likely heavily fragmented.  If he's
+doing allocation in this fragmented free space I'd think that would
+fully explain his write performance dropping off a cliff due to massive
+head seeking.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
