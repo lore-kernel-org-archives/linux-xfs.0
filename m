@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q47EW9HV066550 for <xfs@oss.sgi.com>; Mon, 7 May 2012 09:32:09 -0500
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id haB5b11on33MkXNB for
-	<xfs@oss.sgi.com>; Mon, 07 May 2012 07:32:07 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: suddenly slow writes on XFS Filesystem
-Date: Mon, 7 May 2012 16:32:03 +0200
-References: <4FA63DDA.9070707@profihost.ag>
-	<201205071031.38856.Martin@lichtvoll.de>
-	<4FA7D4D1.6070609@profihost.ag>
-	(sfid-20120507_162145_568797_0C0B5263)
-In-Reply-To: <4FA7D4D1.6070609@profihost.ag>
+	q47Gaaxg093087 for <xfs@oss.sgi.com>; Mon, 7 May 2012 11:36:36 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id o6kZT2WbgU1mGflO
+	for <xfs@oss.sgi.com>; Mon, 07 May 2012 09:36:35 -0700 (PDT)
+Message-ID: <4FA7FA14.6080700@hardwarefreak.com>
+Date: Mon, 07 May 2012 11:36:36 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Message-Id: <201205071632.03378.Martin@lichtvoll.de>
+Subject: Re: suddenly slow writes on XFS Filesystem
+References: <4FA63DDA.9070707@profihost.ag> <20120507013456.GW5091@dastard>
+	<4FA76E11.1070708@profihost.ag> <20120507071713.GZ5091@dastard>
+	<4FA77842.5010703@profihost.ag>
+In-Reply-To: <4FA77842.5010703@profihost.ag>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,104 +23,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Cc: stan@hardwarefreak.com, xfs@oss.sgi.com
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Am Montag, 7. Mai 2012 schrieb Stefan Priebe - Profihost AG:
-> Am 07.05.2012 10:31, schrieb Martin Steigerwald:
-> > Am Montag, 7. Mai 2012 schrieb Stefan Priebe - Profihost AG:
-> > Did you verify that at the time you perceive slowness the servers you
-> > backup can deliver data fast enough?
-> =
+On 5/7/2012 2:22 AM, Stefan Priebe - Profihost AG wrote:
 
-> Yes. It works fine to another partition.
+>    from      to extents  blocks    pct
+>       1       1  942737  942737   0,87
+>       2       3  671860 1590480   1,47
+>       4       7  461268 2416025   2,23
+>       8      15 1350517 18043063  16,67
+>      16      31  111254 2547581   2,35
+>      32      63  192032 9039799   8,35
+>      64     127   33026 3317194   3,07
+>     128     255   14254 2665812   2,46
+>     256     511   12516 4631200   4,28
+>     512    1023    6942 5031081   4,65
+>    1024    2047    4622 6893270   6,37
+>    2048    4095    3268 9412271   8,70
+>    4096    8191    2135 12716435  11,75
+>    8192   16383     338 3974884   3,67
+>   16384   32767     311 7018658   6,49
+>   32768   65535     105 4511372   4,17
+>   65536  131071      29 2577756   2,38
+>  131072  262143       8 1339796   1,24
+>  262144  524287      10 3950416   3,65
+>  524288 1048575       4 2580085   2,38
+> 1048576 2097151       2 3028028   2,80
 
-With more free space I suppose?
+This shows what I originally suspected.  Notice how top heavy this
+histogram is.  Over half of your free space sits on little islands of
+8MB or less.  17% is in islands of 60KB or less.  This is heavily
+fragmented free space.  Contrast this with an XFS from the opposite end
+of the aging spectrum that is only 1/3rd full and has seen very few
+deletes as it has aged:
 
-> =
+   from      to extents  blocks    pct
+      1       1    1028    1028   0.01
+      2       3    1185    2864   0.02
+      4       7    1656    9007   0.06
+      8      15    5232   67674   0.41
+     16      31      36     775   0.00
+     32      63       7     292   0.00
+     64     127       4     350   0.00
+    128     255       6    1286   0.01
+    256     511       4    1460   0.01
+    512    1023       5    4278   0.03
+   1024    2047       5    6965   0.04
+   2048    4095       5   12935   0.08
+   4096    8191       1    8179   0.05
+   8192   16383       2   29570   0.18
+  16384   32767       2   60352   0.37
+  32768   65535       3  148594   0.91
+  65536  131071       2  195575   1.20
+ 131072  262143       2  420917   2.57
+ 524288 1048575       2 1499689   9.17
+4194304 6103694       3 13876795  84.88
 
-> > I would like to now, whether there are really processes waiting for
-> > I/O during rsync workload.
-> > =
+Notice how it is very bottom heavy, and that 85% of the free space is in
+large islands of 16GB to 24GB.
 
-> > Can you try vmstat 5 and
-> > while true; do ps aux | grep " D" | grep -v grep ; sleep 1; done
-> =
+Stefan, at this point in your filesystem's aging process, it may not
+matter how much space you keep freeing up, as your deletion of small
+files simply adds more heavily fragmented free space to the pool.  It's
+the nature of your workload causing this.  If you were rsyncing and
+deleting 500MB files the story would be much different.
 
-> Here it is:
-> # vmstat 5
-> procs -----------memory---------- ---swap-- -----io---- -system--
-> ----cpu----
->  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
-> id wa
->  0  1      0 396688     48 7728136    0    0   229   374   22   32  1
-> 12 85  2
->  2  0      0 421744     48 7717348    0    0  3722  1169 9015 8389  1 =
+What I would suggest is doing an xfsdump to a filesystem on another LUN
+or machine, expand the size of this LUN by 50% or more (I gather this is
+an external RAID), format it appropriately, then xfsrestore.  This will
+eliminate your current free space fragmentation, and the 50% size
+increase will delay the next occurrence of this problem.  If you can't
+expand the LUN, simply do the xfsdump/format/xfsrestore, which will give
+you contiguous free space.
 
-> 2 95  2
->  0  1      0 405780     48 7751904    0    0  8937   207 10780 9290  2
-> 2 88  7
->  0  0      0 486928     48 7733300    0    0  2526  1277 8275 7791  1 =
-
-> 2 96  1
->  0  0      0 416692     48 7778164    0    0  5046 43750 8548 8141  1 =
-
-> 2 95  2
->  0  0      0 444968     48 7777792    0    0  8021  1709 9315 8573  2 =
-
-> 2 94  2
->  2  0      0 357924     48 7946532    0    0 48181  1031 17646 12684 10
->  4 87  0
->  1  0      0 348696     48 8137200    0    0 74366  1056 24362 16775 15
->  5 81  0
->  1  0      0 391552     48 8279000    0    0 54693  1242 19224 13957 11
->  4 85  0
-
-Hmm, there are some I/O wait times, but they are lower than I expected.
-
-In the last lines the throughput is higher than in the first lines. Does =
-
-that correlate to higher speed in rsync? It may also be excessive writes =
-
-due to free space fragmentation, but Dave or someone else might be able to =
-
-say whether such a huge difference can be blamed to free space =
-
-fragmentation alone.
-
-> # while true; do ps aux | grep " D" | grep -v grep ; sleep 1; done
-> root     12493  2.0  0.2 101780 48392 ?        D    15:35   0:24 rsync
-> --daemon
-> root     13581  3.5  0.1  76832 20828 ?        D    15:50   0:10 rsync
-> --daemon
-> root     12493  2.0  0.2 101268 48508 ?        D    15:35   0:24 rsync
-> --daemon
-> root     12494  3.9  0.2 128220 44328 ?        D    15:35   0:47 rsync
-> --daemon
-> root     12493  2.0  0.2 101268 48508 ?        D    15:35   0:24 rsync
-> --daemon
-
-Still these rsyncs appear to be in uninteruptible sleep quite =
-
-consistently. They shouldn=B4t be in that state when waiting on network =
-
-socket readyness.
-
-So this workloads seems to be I/O bound to me.
-
-I suggest trying to keep the volume above 500 GB free and see whether that =
-
-works consistently.
-
-Thanks,
--- =
-
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
