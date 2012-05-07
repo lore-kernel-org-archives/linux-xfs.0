@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q46LhRWF060586 for <xfs@oss.sgi.com>; Sun, 6 May 2012 16:43:27 -0500
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id MkmiDENVAmBjbg1B for
-	<xfs@oss.sgi.com>; Sun, 06 May 2012 14:43:25 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: suddenly slow writes on XFS Filesystem
-Date: Sun, 6 May 2012 23:43:21 +0200
-References: <4FA63DDA.9070707@profihost.ag>
-	<201205061233.58496.Martin@lichtvoll.de>
-	<4FA69CB0.8000008@hardwarefreak.com>
-	(sfid-20120506_233742_387085_AFEABC59)
-	(sfid-20120506_233742_387085_AFEABC59)
-In-Reply-To: <4FA69CB0.8000008@hardwarefreak.com>
+	q471NAtY142307 for <xfs@oss.sgi.com>; Sun, 6 May 2012 20:23:10 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	txqLFm20GT5hqpQH for <xfs@oss.sgi.com>;
+	Sun, 06 May 2012 18:23:07 -0700 (PDT)
+Date: Mon, 7 May 2012 11:23:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfstests: make 275 xfs specific.
+Message-ID: <20120507012304.GV5091@dastard>
+References: <1336230429-2939-1-git-send-email-tm@tao.ma>
+	<20120505233744.GE25351@dastard> <4FA692B7.9040006@tao.ma>
 MIME-Version: 1.0
-Message-Id: <201205062343.21871.Martin@lichtvoll.de>
+Content-Disposition: inline
+In-Reply-To: <4FA692B7.9040006@tao.ma>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +27,56 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Stefan Priebe <s.priebe@profihost.ag>, xfs@oss.sgi.com
+To: Tao Ma <tm@tao.ma>
+Cc: xfs@oss.sgi.com
 
-Am Sonntag, 6. Mai 2012 schrieb Stan Hoeppner:
-> On 5/6/2012 5:33 AM, Martin Steigerwald wrote:
-> > Am Sonntag, 6. Mai 2012 schrieb Stefan Priebe:
-> >> It is a raid 10 of 20 SATA Disks and i can only write to them with
-> >> about  700kb/s while doing random i/o. I tried vanilla Kernel 3.0.30
-> >> and 3.3.4 - no difference. Writing to another partition on another
-> >> xfs array works fine.
+On Sun, May 06, 2012 at 11:03:19PM +0800, Tao Ma wrote:
+> On 05/06/2012 07:37 AM, Dave Chinner wrote:
+> > On Sat, May 05, 2012 at 11:07:09PM +0800, Tao Ma wrote:
+> >> From: Tao Ma <boyu.mt@taobao.com>
+> >>
+> >> In my test with ext4, 275 can't pass because ext4
+> >> can create a 8k file in the end not like what xfs
+> >> does. So make this test case xfs only for now.
 > > 
-> > Additionally what RAID is this? SoftRAID or some - which one? -
-> > hardware RAID controller? And what disks are used, whats the rpm of
-> > these?
-> 
-> I doubt much of this stuff matters.  Stefan's filesystem is 96% full,
-> w/~200GB free.  This free space is likely heavily fragmented.  If he's
-> doing allocation in this fragmented free space I'd think that would
-> fully explain his write performance dropping off a cliff due to massive
-> head seeking.
+> > It's not an XFS specific test - it's a test that is supposed to test
+> > POSIX write behaviour. i.e. if the filesystem is full, and then you
+> > free 4k of space, then an 8k write should only be able to write 4k,
+> > yes?
+> Yes, but it doesn't work as expected for ext4.
 
-Hmmm, I thought about that low free space percentage, too, but then 200 GB 
-free still sounded like quite much to me. Nonetheless, since according to 
-Stefan freeing some space solved the slowness issue, that seems to have 
-been it.
+It won't work as expected for many XFS configurations, too. e.g.
+filesystem block size > 4k on 16/64k page machines, or if the
+filesystem is configured with an inheritable extent size hint on the
+root directory (XFS has been able to do per-file "bigalloc"
+for years ;)
 
-Can free space be defragmented in XFS? xfs_fsr only tries to defragment 
-files as far as I know.
+> > So doesn't a failure on ext4 indicate that there's something wrong
+> > with ext4 (either it's ENOSPC detection or the short write
+> > handling), not the test?
+> Actually in my test, ext4 can create the file with 8K file size, not a
+> short write. I haven't looked into it yet. But AFAICS, if we have an
+> ext4 volume with 8k cluster size, a 4k file can occupy a 8k cluster and
+> the final write of 8k will succeed instead of the short write.
 
-Thanks,
+IOws, you are testing with bigalloc?
+
+Many tests make the assumption that allocation/extent size is the
+same as the filesystem block size, and many more make the assumption
+that the filesystem block size is always 4k. These tests generally
+fail on differently configured filesystems, and so need massaging to
+make work on these sorts of configs.
+
+In this case, just make the write larger than the largest possible
+allocation size (say 2MB), and fail the test if the write is
+complete rather than short...
+
+Cheers,
+
+Dave.
 -- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
