@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q47GiCGp095100 for <xfs@oss.sgi.com>; Mon, 7 May 2012 11:44:12 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id NQYt2xQLB7TOHTkJ
-	for <xfs@oss.sgi.com>; Mon, 07 May 2012 09:44:11 -0700 (PDT)
-Message-ID: <4FA7FBDC.9070308@hardwarefreak.com>
-Date: Mon, 07 May 2012 11:44:12 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q47HFTcl101937 for <xfs@oss.sgi.com>; Mon, 7 May 2012 12:15:29 -0500
+Date: Mon, 7 May 2012 12:19:08 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+Message-ID: <20120507171908.GA16881@sgi.com>
+References: <CADLDEKs01GnxgYh2UTt1waVDUXHbB_RcBcUTBr5REFg5aD5jHA@mail.gmail.com>
+	<20120425223845.GX9541@dastard>
+	<CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
+	<20120426224412.GA9541@dastard>
+	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
+	<20120426230738.GB9541@dastard>
+	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
+	<20120427110922.GF9541@dastard>
+	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
+	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: suddenly slow writes on XFS Filesystem
-References: <4FA63DDA.9070707@profihost.ag> <20120507013456.GW5091@dastard>
-	<4FA76E11.1070708@profihost.ag>
-	(sfid-20120507_095413_656560_122EB192)
-	<201205071021.14478.Martin@lichtvoll.de>
-In-Reply-To: <201205071021.14478.Martin@lichtvoll.de>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,35 +31,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, xfs@oss.sgi.com
+To: Juerg Haefliger <juergh@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On 5/7/2012 3:21 AM, Martin Steigerwald wrote:
-> Am Montag, 7. Mai 2012 schrieb Stefan Priebe - Profihost AG:
+Hey Juerg,
 
->> after deleting 400GB it was faster. Now there are still 300GB free but
->> it is slow as hell again ;-(
-> 
-> Well, before you had 200 GB free, now you have 300 GB free. Thats not that 
-> much more. You have 5 AGs, so if distributed evenly it would be 40 to 60 
-> GB free space per AG.
-> 
-> The 10% Dave recommended of 4,6 TB would be 460 GB.
+On Sat, May 05, 2012 at 09:44:35AM +0200, Juerg Haefliger wrote:
+> Did anybody have a chance to look at the data?
 
-As I mentioned, increasing the size of the free space pool will only
-help for a short duration.  Most of the files Stefan is deleting are
-small files.  Thus he's simply punching out small holes of free space,
-which is the problem he already has.  Now if he could delete a handful
-of large files (10GB+) that are mostly contiguous now, that would help
-quite a bit, as the resulting free space wouldn't be horribly fragmented.
+https://bugs.launchpad.net/ubuntu/+source/linux/+bug/979498
 
-So the takeaway is that simply deleting files to get more space isn't
-the right way to go.  Deleting larger files that are currently
-contiguous is the way to go.  At least for some temporary breathing
-room.  The "permanent" solution I described in another reply.
+Here you indicate that you have created a reproducer.  Can you post it to the list?
 
--- 
-Stan
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
