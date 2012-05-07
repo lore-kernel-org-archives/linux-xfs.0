@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q47C7Tvg038928 for <xfs@oss.sgi.com>; Mon, 7 May 2012 07:07:29 -0500
-Received: from mail.wnohang.net (wnohang.net [178.79.154.173]) by cuda.sgi.com
-	with ESMTP id e25gc1VqF8GCLOXb for <xfs@oss.sgi.com>;
-	Mon, 07 May 2012 05:07:27 -0700 (PDT)
-Received: from localhost (unknown [122.167.119.151])
-	by mail.wnohang.net (Postfix) with ESMTPSA id 6A71FF0413
-	for <xfs@oss.sgi.com>; Mon,  7 May 2012 08:07:22 -0400 (EDT)
-Date: Mon, 7 May 2012 17:37:18 +0530
-From: Raghavendra D Prabhu <rprabhu@wnohang.net>
-Subject: Re: [PATCH] [PATCH] Stop periodic syncing if filesystem is already
-	shutdown.
-Message-ID: <20120507120718.GA18105@Xye>
-References: <a27cbce4f4b35c2a8aee1b58d88c22381fe70ccf.1336378182.git.rprabhu@wnohang.net>
+	q47CiJjP044694 for <xfs@oss.sgi.com>; Mon, 7 May 2012 07:44:19 -0500
+Received: from mail-wi0-f169.google.com (mail-wi0-f169.google.com
+	[209.85.212.169]) by cuda.sgi.com with ESMTP id
+	rFt21w8lRatNkbvV (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 07 May 2012 05:44:18 -0700 (PDT)
+Received: by wibhn14 with SMTP id hn14so846721wib.2
+	for <xfs@oss.sgi.com>; Mon, 07 May 2012 05:44:17 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <a27cbce4f4b35c2a8aee1b58d88c22381fe70ccf.1336378182.git.rprabhu@wnohang.net>
+Date: Mon, 7 May 2012 20:44:17 +0800
+Message-ID: <CAF7KpS-r4zRXZxBU3U8ohxA85-rEvbAzCewYZDr44MNdP+YmFg@mail.gmail.com>
+Subject: fallocate bug?
+From: Zhu Han <schumi.han@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,249 +22,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7334790812452526330=="
+Content-Type: multipart/mixed; boundary="===============2336685928020412430=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
+--===============2336685928020412430==
+Content-Type: multipart/alternative; boundary=f46d043892abd4f7ae04bf71a0a1
 
---===============7334790812452526330==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="bg08WKrSYDhXBjb5"
-Content-Disposition: inline
-
-
---bg08WKrSYDhXBjb5
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
+--f46d043892abd4f7ae04bf71a0a1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
 
-Hi,
+Seems like xfs of CentOS 6.X occupies much more storage space than desired
+if fallocate is used against the file. Here is the step to reproduce it:
 
-Apparently calling xfs_syncd_stop from xfs_sync_worker doesn't=20
-work well; So I have moved it to xfs_bwrite; though with this I=20
-noticed a 2-3 log force errors at flush and umount. Here is the=20
-revised version.=20
+By the way, is it normal when the file is moved around after the
+preallocated region is filled with data?
 
+$ uname -r
+2.6.32-220.7.1.el6.x86_64
 
- From e202a7d76d8209fd3eb70158719a65034a409168 Mon Sep 17 00:00:00 2001
-Message-Id: <e202a7d76d8209fd3eb70158719a65034a409168.1336390891.git.rprabh=
-u@wnohang.net>
-=46rom: Raghavendra D Prabhu <rprabhu@wnohang.net>
-Date: Mon, 7 May 2012 17:07:49 +0530
-Subject: [PATCH] Stop periodic syncing if filesystem is already shutdown.
+$fallocate -n --offset 0 -l 1G file    ---->Write a little more data than
+the preallocated size
 
-This is to prevent xfs_log_force from running ad-infinitum (due to xfs_sync=
-) till umount if the disk has been forcefully unplugged.
+$ xfs_bmap -p -vv file
+file:
+ EXT: FILE-OFFSET      BLOCK-RANGE            AG AG-OFFSET
+TOTAL FLAGS
+   0: [0..2097151]:    2593408088..2595505239 21 (29420144..31517295)
+2097152 10000
 
-This is to prevent messages like these from being displayed repeatedly.
+$ dd if=3D/dev/zero of=3D/tmp/file bs=3D1M count=3D1026 conv=3Dfsync
 
-[ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
+$ xfs_bmap -p -vv file
+file:
+ EXT: FILE-OFFSET      BLOCK-RANGE            AG AG-OFFSET
+TOTAL FLAGS
+   0: [0..4194303]:    2709184016..2713378319 22 (23101408..27295711)
+4194304 00000
 
-Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
-doesn't stop till the filesystem has been unmounted (and it keeps printing
-"error 5 returned" to kernel log).
+$ du -h --apparent-size file
+1.1G    file
 
-To simulate it, mount an xfs filesystem located on external disk, and then =
-pull
-the power to the disk (non-usb powered disk).
+$du -h file
+2.0G
 
-Tested it on latest linus tree.
-Now, the kernel log looks,
+best regards,
+=E9=9F=A9=E7=AB=B9(Zhu Han)
 
-[  268.307303] XFS (sdb2): xfs_do_force_shutdown(0x1) called from line 1031=
- of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
-[  268.307318] XFS (sdb2): I/O Error Detected. Shutting down filesystem
-[  268.307323] XFS (sdb2): Please umount the filesystem and rectify the pro=
-blem(s)
+--f46d043892abd4f7ae04bf71a0a1
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-Since, xfs_syncd_stop is already called in xfs_bwrite; the message is not
-printed; also added checks in xfs_sync_worker and xfs_flush_worker to retur=
-n in
-this case (if they have already been entered).
+Seems like xfs of CentOS 6.X occupies much more storage space than desired =
+if fallocate is used against the file. Here is the step to reproduce it:<br=
+><br>By the way, is it normal when the file is moved around after the preal=
+located region is filled with data? <br>
+<br>$ uname -r<br>2.6.32-220.7.1.el6.x86_64<br><br>$fallocate -n --offset 0=
+ -l 1G file=C2=A0=C2=A0=C2=A0 ----&gt;Write a little more data than the pre=
+allocated size<br><br>$ xfs_bmap -p -vv file<br>file:<br>=C2=A0EXT: FILE-OF=
+FSET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 BLOCK-RANGE=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 AG AG-OFFSET=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 TOTAL FLAGS<br>
+=C2=A0=C2=A0 0: [0..2097151]:=C2=A0=C2=A0=C2=A0 2593408088..2595505239 21 (=
+29420144..31517295) 2097152 10000<br><br>$ dd if=3D/dev/zero of=3D/tmp/file=
+ bs=3D1M count=3D1026 conv=3Dfsync<br><br>$ xfs_bmap -p -vv file<br>file:<b=
+r>=C2=A0EXT: FILE-OFFSET=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 BLOCK-RANGE=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 AG AG-OFFSET=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ TOTAL FLAGS<br>
+=C2=A0=C2=A0 0: [0..4194303]:=C2=A0=C2=A0=C2=A0 2709184016..2713378319 22 (=
+23101408..27295711) 4194304 00000<br><br>$ du -h --apparent-size file<br>1.=
+1G=C2=A0=C2=A0=C2=A0 file<br><br>$du -h file<br>2.0G<br><br clear=3D"all">b=
+est regards,<br>
+=E9=9F=A9=E7=AB=B9(Zhu Han)<br>
 
-Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-  ---
----
-  fs/xfs/xfs_buf.c  |    1 +
-  fs/xfs/xfs_sync.c |   10 ++++++++++
-  2 files changed, 11 insertions(+)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 6819b51..7bdf018 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1029,6 +1029,7 @@ xfs_bwrite(
-  	if (error) {
-  		xfs_force_shutdown(bp->b_target->bt_mount,
-  				   SHUTDOWN_META_IO_ERROR);
-+		xfs_syncd_stop(bp->b_target->bt_mount);
-  	}
-  	return error;
-  }
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 205ebcb..79745a5 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -460,6 +460,11 @@ xfs_sync_worker(
-  					struct xfs_mount, m_sync_work);
-  	int		error;
- =20
-+	if (!xfs_fs_writable(mp)) {
-+		xfs_err(mp, "Filesystem not writable / already shutdown.");
-+		return;
-+	}
-+
-  	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-  		/* dgc: errors ignored here */
-  		if (mp->m_super->s_frozen =3D=3D SB_UNFROZEN &&
-@@ -551,6 +556,11 @@ xfs_flush_worker(
-  	struct xfs_mount *mp =3D container_of(work,
-  					struct xfs_mount, m_flush_work);
- =20
-+	if (!xfs_fs_writable(mp)) {
-+		xfs_err(mp, "Filesystem not writable / already shutdown.");
-+		return;
-+	}
-+
-  	xfs_sync_data(mp, SYNC_TRYLOCK);
-  	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
-  }
---=20
-1.7.10.1
+--f46d043892abd4f7ae04bf71a0a1--
 
 
-
-* On Mon, May 07, 2012 at 02:44:07PM +0530, raghu.prabhu13@gmail.com <raghu=
-=2Eprabhu13@gmail.com> wrote:
->From: Raghavendra D Prabhu <rprabhu@wnohang.net>
->
->This is to prevent syncing from running ad-infinitum till umount if the di=
-sk has been forcefully unplugged.
->
->This is to prevent messages like these from being displayed.
->
->=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->[ 3816.416570] XFS (sdb3): xfs_do_force_shutdown(0x1) called from line 103=
-1 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
->[ 3816.416586] XFS (sdb3): I/O Error Detected. Shutting down filesystem
->[ 3816.416592] XFS (sdb3): Please umount the filesystem and rectify the pr=
-oblem(s)
->[ 3842.941953] XFS (sdb3): xfs_log_force: error 5 returned.
->[ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
->[ 3878.913310] XFS (sdb3): xfs_log_force: error 5 returned.
->[ 3878.913322] XFS (sdb3): xfs_do_force_shutdown(0x1) called from line 103=
-1 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
->[ 3878.913350] XFS (sdb3): xfs_log_force: error 5 returned.
->[ 3878.913362] XFS (sdb3): xfs_log_force: error 5 returned.
->=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
->
->Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
->doesn't stop till the filesystem has been unmounted (and it keeps printing
->"error 5 returned" to kernel log).
->
->To simulate it, mount an xfs filesystem located on external disk, and then=
- pull
->the power to the disk (non-usb powered disk).
->
->Tested it on latest linus tree.
->Now, the kernel log looks,
->
->[ 2477.305280] XFS (sdc3): xfs_do_force_shutdown(0x1) called from line 103=
-1 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
->[ 2477.305295] XFS (sdc3): I/O Error Detected. Shutting down filesystem
->[ 2477.305300] XFS (sdc3): Please umount the filesystem and rectify the pr=
-oblem(s)
->[ 2477.305588] XFS (sdc2): xfs_do_force_shutdown(0x1) called from line 103=
-1 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
->[ 2477.305600] XFS (sdc2): I/O Error Detected. Shutting down filesystem
->[ 2477.305604] XFS (sdc2): Please umount the filesystem and rectify the pr=
-oblem(s)
->[ 2487.810718] XFS (sdc3): xfs_log_force: error 5 returned.
->[ 2487.810729] XFS (sdc3): xfs_do_force_shutdown(0x1) called from line 103=
-1 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
->[ 2487.812981] XFS (sdc2): xfs_log_force: error 5 returned.
->[ 2487.812991] XFS (sdc2): xfs_do_force_shutdown(0x1) called from line 103=
-1 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
->[ 2489.420042] XFS (sdc3): Filesystem not writable / already shutdown.
->[ 2490.955438] XFS (sdc2): Filesystem not writable / already shutdown.
->
->Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
->Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
->---
-> fs/xfs/xfs_sync.c |   12 ++++++++++++
-> 1 file changed, 12 insertions(+)
->
->diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
->index 205ebcb..7ec412c 100644
->--- a/fs/xfs/xfs_sync.c
->+++ b/fs/xfs/xfs_sync.c
->@@ -460,6 +460,12 @@ xfs_sync_worker(
-> 					struct xfs_mount, m_sync_work);
-> 	int		error;
->
->+	if (!xfs_fs_writable(mp)) {
->+		xfs_err(mp, "Filesystem not writable / already shutdown.");
->+		xfs_syncd_stop(mp);
->+		return;
->+	}
->+
-> 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
-> 		/* dgc: errors ignored here */
-> 		if (mp->m_super->s_frozen =3D=3D SB_UNFROZEN &&
->@@ -551,6 +557,12 @@ xfs_flush_worker(
-> 	struct xfs_mount *mp =3D container_of(work,
-> 					struct xfs_mount, m_flush_work);
->
->+	if (!xfs_fs_writable(mp)) {
->+		xfs_err(mp, "Filesystem not writable / already shutdown.");
->+		xfs_syncd_stop(mp);
->+		return;
->+	}
->+
-> 	xfs_sync_data(mp, SYNC_TRYLOCK);
-> 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
-> }
->--=20
->1.7.10.1
->
->_______________________________________________
->xfs mailing list
->xfs@oss.sgi.com
->http://oss.sgi.com/mailman/listinfo/xfs
-
-
-
-
-Regards,
---=20
-Raghavendra Prabhu
-GPG Id : 0xD72BE977
-Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
-www: wnohang.net
-
---bg08WKrSYDhXBjb5
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPp7r2AAoJEKYW3KHXK+l3YEgH/jJDdTiMwGZfjyJF49PpmJms
-1j+pvnZ96owjXeU1cpn7w7FCb/VRfq3b1z/1Re1vqrzEon1e7s+NVWi94RB3G+hK
-0H6rNz3b4s1nZlaWKZBRzWjUzzrbZou6+4Ij6PWF0Dv+eo27KSTX5PxUnLOfweJv
-udGVpatJHg6fAmF4w8IoXh9KRI7hVz0pi2VXp7amJMf0664d7JBrrg+3O2vLpIWK
-8o4Sxw+49KdNAo3+nmgQ5kSmjme39UwJCIVE/IDQgR2jqIbw3XiehaMIeq0gIx53
-UOukDrvlRY00LJ1W/LfmwmvffdKYL/AuS+SP3AA9/XOgNi/TeAzK8wLbAaXOg9I=
-=wN7S
------END PGP SIGNATURE-----
-
---bg08WKrSYDhXBjb5--
-
-
---===============7334790812452526330==
+--===============2336685928020412430==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -277,4 +112,4 @@ xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
 
---===============7334790812452526330==--
+--===============2336685928020412430==--
