@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q478Vfpd242986 for <xfs@oss.sgi.com>; Mon, 7 May 2012 03:31:41 -0500
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 3iziCgxf3Z5JPDdQ for
-	<xfs@oss.sgi.com>; Mon, 07 May 2012 01:31:39 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: suddenly slow writes on XFS Filesystem
-Date: Mon, 7 May 2012 10:31:38 +0200
-References: <4FA63DDA.9070707@profihost.ag> <20120507013456.GW5091@dastard>
-	<4FA76E11.1070708@profihost.ag>
-	(sfid-20120507_095413_656560_122EB192)
-In-Reply-To: <4FA76E11.1070708@profihost.ag>
-MIME-Version: 1.0
-Message-Id: <201205071031.38856.Martin@lichtvoll.de>
+	q479FKvY259509 for <xfs@oss.sgi.com>; Mon, 7 May 2012 04:15:21 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id EdWguP4I6ZjvzDoI
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 07 May 2012 02:15:19 -0700 (PDT)
+Received: by pbbrr13 with SMTP id rr13so7396381pbb.26
+	for <xfs@oss.sgi.com>; Mon, 07 May 2012 02:15:19 -0700 (PDT)
+From: raghu.prabhu13@gmail.com
+Subject: [PATCH] [PATCH] Stop periodic syncing if filesystem is already
+	shutdown.
+Date: Mon,  7 May 2012 14:44:07 +0530
+Message-Id: <a27cbce4f4b35c2a8aee1b58d88c22381fe70ccf.1336378182.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,91 +21,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: stan@hardwarefreak.com, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Raghavendra D Prabhu <rprabhu@wnohang.net>, raghu.prabhu13@gmail.com
 
-Am Montag, 7. Mai 2012 schrieb Stefan Priebe - Profihost AG:
-> > iostat -x -d -m 5 and vmstat 5 traces would be
-> > useful to see if it is your array that is slow.....
-> 
-> ~ # iostat -x -d -m 5
-> Linux 2.6.40.28intel (server844-han)    05/07/2012      _x86_64_
-> (8 CPU)
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  254,80   25,40     1,72     0,16
-> 13,71     0,86    3,08   2,39  67,06
-> sda               0,00     0,20    0,00    1,20     0,00     0,00
-> 6,50     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  187,40   24,20     1,26     0,19
-> 14,05     0,75    3,56   3,33  70,50
-> sda               0,00     0,00    0,00    0,40     0,00     0,00
-> 4,50     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00    11,20  242,40   92,00     1,56     0,89
-> 15,00     4,70   14,06   1,58  52,68
-> sda               0,00     0,20    0,00    2,60     0,00     0,02
-> 12,00     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  166,20   24,00     0,99     0,17
-> 12,51     0,57    3,02   2,40  45,56
-> sda               0,00     0,00    0,00    0,00     0,00     0,00
-> 0,00     0,00    0,00   0,00   0,00
-> 
-> qDevice:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s
-> avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  188,00   25,40     1,22     0,16
-> 13,23     0,44    2,04   1,78  38,02
-> sda               0,00     0,00    0,00    0,00     0,00     0,00
-> 0,00     0,00    0,00   0,00   0,00
+From: Raghavendra D Prabhu <rprabhu@wnohang.net>
 
-Disk utilization seems to be quite high but it seems there not near to
-90 to 100%. So there might be other overheads involved - like network
-or (unlikely) CPU.
+This is to prevent syncing from running ad-infinitum till umount if the disk has been forcefully unplugged.
 
-Did you verify that at the time you perceive slowness the servers you
-backup can deliver data fast enough?
+This is to prevent messages like these from being displayed.
 
-I would like to now, whether there are really processes waiting for I/O
-during rsync workload.
+==========================================
+[ 3816.416570] XFS (sdb3): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[ 3816.416586] XFS (sdb3): I/O Error Detected. Shutting down filesystem
+[ 3816.416592] XFS (sdb3): Please umount the filesystem and rectify the problem(s)
+[ 3842.941953] XFS (sdb3): xfs_log_force: error 5 returned.
+[ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
+[ 3878.913310] XFS (sdb3): xfs_log_force: error 5 returned.
+[ 3878.913322] XFS (sdb3): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[ 3878.913350] XFS (sdb3): xfs_log_force: error 5 returned.
+[ 3878.913362] XFS (sdb3): xfs_log_force: error 5 returned.
+===========================================
 
-Can you try vmstat 5 and 
+Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
+doesn't stop till the filesystem has been unmounted (and it keeps printing
+"error 5 returned" to kernel log).
 
-while true; do ps aux | grep " D" | grep -v grep ; sleep 1; done
+To simulate it, mount an xfs filesystem located on external disk, and then pull
+the power to the disk (non-usb powered disk).
 
-while the backup workload is running and slow?
+Tested it on latest linus tree. 
+Now, the kernel log looks,
 
-Like this:
+[ 2477.305280] XFS (sdc3): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[ 2477.305295] XFS (sdc3): I/O Error Detected. Shutting down filesystem
+[ 2477.305300] XFS (sdc3): Please umount the filesystem and rectify the problem(s)
+[ 2477.305588] XFS (sdc2): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[ 2477.305600] XFS (sdc2): I/O Error Detected. Shutting down filesystem
+[ 2477.305604] XFS (sdc2): Please umount the filesystem and rectify the problem(s)
+[ 2487.810718] XFS (sdc3): xfs_log_force: error 5 returned.
+[ 2487.810729] XFS (sdc3): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[ 2487.812981] XFS (sdc2): xfs_log_force: error 5 returned.
+[ 2487.812991] XFS (sdc2): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[ 2489.420042] XFS (sdc3): Filesystem not writable / already shutdown.
+[ 2490.955438] XFS (sdc2): Filesystem not writable / already shutdown.
 
-merkaba:~> while true; do ps aux | grep " D" | grep -v grep ; sleep 1; done
-root      1508  0.0  0.0      0     0 ?        D    Mai06   0:00 [flush-253:2]
-root      1508  0.0  0.0      0     0 ?        D    Mai06   0:00 [flush-253:2]
-martin   28374  100  0.0   9800   652 pts/7    D+   10:27   0:02 dd if=/dev/zero of=fhgs
-root      1508  0.0  0.0      0     0 ?        D    Mai06   0:00 [flush-253:2]
+Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+---
+ fs/xfs/xfs_sync.c |   12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-(this is with an Ext4, so its using the flush daemon, with XFS you
-probably see xfssyncd or xfsbufd instead if I am not mistaken and if
-rsync processes are waiting for I/O they should appear there too)
-
-And yes, its important to have vmstat 5 output during workload is
-happening to see the amount of CPU time that the kernel cannot use
-for processing cause all processes that are runnable wait for I/O.
-
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index 205ebcb..7ec412c 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -460,6 +460,12 @@ xfs_sync_worker(
+ 					struct xfs_mount, m_sync_work);
+ 	int		error;
+ 
++	if (!xfs_fs_writable(mp)) {
++		xfs_err(mp, "Filesystem not writable / already shutdown.");
++		xfs_syncd_stop(mp);
++		return;
++	}
++
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+ 		/* dgc: errors ignored here */
+ 		if (mp->m_super->s_frozen == SB_UNFROZEN &&
+@@ -551,6 +557,12 @@ xfs_flush_worker(
+ 	struct xfs_mount *mp = container_of(work,
+ 					struct xfs_mount, m_flush_work);
+ 
++	if (!xfs_fs_writable(mp)) {
++		xfs_err(mp, "Filesystem not writable / already shutdown.");
++		xfs_syncd_stop(mp);
++		return;
++	}
++
+ 	xfs_sync_data(mp, SYNC_TRYLOCK);
+ 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
+ }
 -- 
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+1.7.10.1
 
 _______________________________________________
 xfs mailing list
