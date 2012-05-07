@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from nfs10.americas.sgi.com (nfs10.americas.sgi.com [128.162.245.67])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q47KSDIF156286 for <xfs@oss.sgi.com>; Mon, 7 May 2012 15:28:13 -0500
-Message-Id: <20120507204247.732720098@nfs10.americas.sgi.com>
-Date: Mon, 07 May 2012 15:42:27 -0500
+	q47KSDuS156270 for <xfs@oss.sgi.com>; Mon, 7 May 2012 15:28:13 -0500
+Message-Id: <20120507204247.120777169@nfs10.americas.sgi.com>
+Date: Mon, 07 May 2012 15:42:25 -0500
 From: bpm@sgi.com
-Subject: [patch 5/5] [PATCH 6/3] xfs: make largest supported offset less shouty
+Subject: [patch 3/5] [PATCH 4/3] xfs: dont assert on delalloc regions beyond
+	EOF
 References: <20120507204222.921092617@nfs10.americas.sgi.com>
 Content-Disposition: inline;
-	filename=xfs-make-largest-supported-offset-less-shouty-2.patch
+	filename=xfs-don-t-assert-on-delalloc-regions-beyond-eof.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,131 +26,55 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-dev@sgi.com, xfs@oss.sgi.com
 Cc: Dave Chinner <dchinner@redhat.com>
 
+
 From: Dave Chinner <dchinner@redhat.com>
 
-XFS_MAXIOFFSET() is just a simple macro that resolves to
-mp->m_maxioffset. It doesn't need to exist, and it just makes the
-code unnecessarily loud and shouty.
+When we are doing speculative delayed allocation beyond EOF,
+conversion of the region allocated beyond EOF is dependent on the
+largest free space extent available. If the largest free extent is
+smaller than the delalloc range, then after allocation we leave
+a delalloc extent that starts beyond EOF. This extent cannot *ever*
+be converted by flushing data, and so will remain there until either
+the EOF moves into the extent or it is truncated away.
 
-Make it quiet and easy to read.
+Hence if xfs_getbmap() runs on such an inode and is asked to return
+extents beyond EOF, it will assert fail on this extent even though
+there is nothing xfs_getbmap() can do to convert it to a real
+extent. Hence we should simply report these delalloc extents rather
+than assert that there should be none.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_bmap.c     |    2 +-
- fs/xfs/xfs_file.c     |    2 +-
- fs/xfs/xfs_inode.c    |    2 +-
- fs/xfs/xfs_iomap.c    |    2 +-
- fs/xfs/xfs_mount.h    |    2 --
- fs/xfs/xfs_qm.c       |    2 +-
- fs/xfs/xfs_vnodeops.c |   10 +++++-----
- 7 files changed, 10 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_bmap.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 478bce9..919e038 100644
+index 26ab256..478bce9 100644
 --- a/fs/xfs/xfs_bmap.c
 +++ b/fs/xfs/xfs_bmap.c
-@@ -5517,7 +5517,7 @@ xfs_getbmap(
- 		if (xfs_get_extsz_hint(ip) ||
- 		    ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC|XFS_DIFLAG_APPEND)){
- 			prealloced = 1;
--			fixlen = XFS_MAXIOFFSET(mp);
-+			fixlen = mp->m_maxioffset;
- 		} else {
- 			prealloced = 0;
- 			fixlen = XFS_ISIZE(ip);
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index a37e43d..2d99208 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -273,7 +273,7 @@ xfs_file_aio_read(
- 		}
- 	}
- 
--	n = XFS_MAXIOFFSET(mp) - iocb->ki_pos;
-+	n = mp->m_maxioffset - iocb->ki_pos;
- 	if (n <= 0 || size == 0)
- 		return 0;
- 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index a59eea0..95e0d4a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1226,7 +1226,7 @@ xfs_itruncate_extents(
- 	 * then there is nothing to do.
- 	 */
- 	first_unmap_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)new_size);
--	last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
-+	last_block = XFS_B_TO_FSB(mp, mp->m_maxioffset);
- 	if (first_unmap_block == last_block)
- 		return 0;
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 4a08ea3..9172d80 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -285,7 +285,7 @@ xfs_iomap_eof_want_preallocate(
- 	 * do any speculative allocation.
- 	 */
- 	start_fsb = XFS_B_TO_FSBT(mp, ((xfs_ufsize_t)(offset + count - 1)));
--	count_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
-+	count_fsb = XFS_B_TO_FSB(mp, mp->m_maxioffset);
- 	while (count_fsb > 0) {
- 		imaps = nimaps;
- 		firstblock = NULLFSBLOCK;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 401ca2e..d0c6a0c 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -297,8 +297,6 @@ xfs_preferred_iosize(xfs_mount_t *mp)
- 			PAGE_CACHE_SIZE));
- }
- 
--#define XFS_MAXIOFFSET(mp)	((mp)->m_maxioffset)
--
- #define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
- 				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
- #define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 249db19..58cd3bd 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -940,7 +940,7 @@ xfs_qm_dqiterate(
- 	map = kmem_alloc(XFS_DQITER_MAP_SIZE * sizeof(*map), KM_SLEEP);
- 
- 	lblkno = 0;
--	maxlblkcnt = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
-+	maxlblkcnt = XFS_B_TO_FSB(mp, mp->m_maxioffset);
- 	do {
- 		nmaps = XFS_DQITER_MAP_SIZE;
- 		/*
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 82b000f..e6580ea 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -174,7 +174,7 @@ xfs_free_eofblocks(
- 	 * of the file.  If not, then there is nothing to do.
- 	 */
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
--	last_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
-+	last_fsb = XFS_B_TO_FSB(mp, mp->m_maxioffset);
- 	if (last_fsb <= end_fsb)
- 		return 0;
- 	map_len = last_fsb - end_fsb;
-@@ -2262,10 +2262,10 @@ xfs_change_file_space(
- 
- 	llen = bf->l_len > 0 ? bf->l_len - 1 : bf->l_len;
- 
--	if (   (bf->l_start < 0)
--	    || (bf->l_start > XFS_MAXIOFFSET(mp))
--	    || (bf->l_start + llen < 0)
--	    || (bf->l_start + llen > XFS_MAXIOFFSET(mp)))
-+	if (bf->l_start < 0 ||
-+	    bf->l_start > mp->m_maxioffset ||
-+	    bf->l_start + llen < 0 ||
-+	    bf->l_start + llen > mp->m_maxioffset)
- 		return XFS_ERROR(EINVAL);
- 
- 	bf->l_whence = 0;
+@@ -5620,8 +5620,20 @@ xfs_getbmap(
+ 				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+ 			out[cur_ext].bmv_unused1 = 0;
+ 			out[cur_ext].bmv_unused2 = 0;
+-			ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
+-			      (map[i].br_startblock != DELAYSTARTBLOCK));
++
++			/*
++			 * delayed allocation extents that start beyond EOF can
++			 * occur due to speculative EOF allocation when the
++			 * delalloc extent is larger than the largest freespace
++			 * extent at conversion time. These extents cannot be
++			 * converted by data writeback, so can exist here even
++			 * if we are not supposed to be finding delalloc
++			 * extents.
++			 */
++			if (map[i].br_startblock == DELAYSTARTBLOCK &&
++			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
++				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
++
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
 
 _______________________________________________
 xfs mailing list
