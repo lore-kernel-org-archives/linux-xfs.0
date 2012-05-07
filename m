@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q477HQWc220521 for <xfs@oss.sgi.com>; Mon, 7 May 2012 02:17:26 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Byu0SAnQ4KLi4SNA for <xfs@oss.sgi.com>;
-	Mon, 07 May 2012 00:17:17 -0700 (PDT)
-Date: Mon, 7 May 2012 17:17:13 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: suddenly slow writes on XFS Filesystem
-Message-ID: <20120507071713.GZ5091@dastard>
-References: <4FA63DDA.9070707@profihost.ag> <20120507013456.GW5091@dastard>
-	<4FA76E11.1070708@profihost.ag>
+	q477MjvB222471 for <xfs@oss.sgi.com>; Mon, 7 May 2012 02:22:45 -0500
+Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
+	cuda.sgi.com with ESMTP id MeEcyJzH93WOSwS0 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 07 May 2012 00:22:43 -0700 (PDT)
+Message-ID: <4FA77842.5010703@profihost.ag>
+Date: Mon, 07 May 2012 09:22:42 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4FA76E11.1070708@profihost.ag>
+Subject: Re: suddenly slow writes on XFS Filesystem
+References: <4FA63DDA.9070707@profihost.ag> <20120507013456.GW5091@dastard>
+	<4FA76E11.1070708@profihost.ag> <20120507071713.GZ5091@dastard>
+In-Reply-To: <20120507071713.GZ5091@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,103 +26,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Dave Chinner <david@fromorbit.com>
 Cc: stan@hardwarefreak.com, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Mon, May 07, 2012 at 08:39:13AM +0200, Stefan Priebe - Profihost AG wrote:
-> Hi,
-> 
-> after deleting 400GB it was faster. Now there are still 300GB free but
-> it is slow as hell again ;-(
-> 
-> Am 07.05.2012 03:34, schrieb Dave Chinner:
-> > On Sun, May 06, 2012 at 11:01:14AM +0200, Stefan Priebe wrote:
-> >> Hi,
-> >>
-> >> since a few days i've experienced a really slow fs on one of our
-> >> backup systems.
-> >>
-> >> I'm not sure whether this is XFS related or related to the
-> >> Controller / Disks.
-> >>
-> >> It is a raid 10 of 20 SATA Disks and i can only write to them with
-> >> about 700kb/s while doing random i/o.
-> > 
-> > What sort of random IO? size, read, write, direct or buffered, data
-> > or metadata, etc?
-> There are 4 rsync processes running and doing backups of other severs.
-> 
-> > iostat -x -d -m 5 and vmstat 5 traces would be
-> > useful to see if it is your array that is slow.....
-> 
-> ~ # iostat -x -d -m 5
-> Linux 2.6.40.28intel (server844-han)    05/07/2012      _x86_64_
-> (8 CPU)
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s  avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  254,80   25,40     1,72     0,16  13,71     0,86    3,08   2,39  67,06
-> sda               0,00     0,20    0,00    1,20     0,00     0,00  6,50     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s  avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  187,40   24,20     1,26     0,19  14,05     0,75    3,56   3,33  70,50
-> sda               0,00     0,00    0,00    0,40     0,00     0,00  4,50     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s  avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00    11,20  242,40   92,00     1,56     0,89  15,00     4,70   14,06   1,58  52,68
-> sda               0,00     0,20    0,00    2,60     0,00     0,02  12,00     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s  avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  166,20   24,00     0,99     0,17  12,51     0,57    3,02   2,40  45,56
-> sda               0,00     0,00    0,00    0,00     0,00     0,00  0,00     0,00    0,00   0,00   0,00
-> 
-> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await  svctm  %util
-> sdb               0,00     0,00  188,00   25,40     1,22     0,16  13,23     0,44    2,04   1,78  38,02
-> sda               0,00     0,00    0,00    0,00     0,00     0,00  0,00     0,00    0,00   0,00   0,00
 
+>> # vmstat
+> "vmstat 5", not vmstat 5 times....  :/
+oh sorry. Sadly the rsync processes do not run right know i've to kill
+them. Is the output still usable?
+# vmstat 5
+procs -----------memory---------- ---swap-- -----io---- -system--
+----cpu----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy
+id wa
+ 0  1      0 5582136     48 5849956    0    0   176   394   34   54  1
+16 82  1
+ 0  1      0 5552180     48 5854280    0    0  2493  2496 3079 2172  1
+4 86  9
+ 3  2      0 5601308     48 5857672    0    0  1098 28043 5150 1913  0
+10 73 17
+ 0  2      0 5595360     48 5863180    0    0  1098 14336 3945 1897  0
+8 69 22
+ 3  2      0 5594088     48 5865280    0    0   432 15897 4209 2366  0
+8 71 21
+ 0  2      0 5591068     48 5868940    0    0   854 10989 3519 2107  0
+7 70 23
+ 1  1      0 5592004     48 5869872    0    0   180  7886 3605 2436  0
+3 76 22
 
-> # vmstat
+>> /dev/sdb1             4,6T  4,3T  310G  94% /mnt
+> Well, you've probably badly fragmented the free space you have. what
+> does the 'xfs_db -r -c freesp <dev>' command tell you?
 
-"vmstat 5", not vmstat 5 times....  :/
+   from      to extents  blocks    pct
+      1       1  942737  942737   0,87
+      2       3  671860 1590480   1,47
+      4       7  461268 2416025   2,23
+      8      15 1350517 18043063  16,67
+     16      31  111254 2547581   2,35
+     32      63  192032 9039799   8,35
+     64     127   33026 3317194   3,07
+    128     255   14254 2665812   2,46
+    256     511   12516 4631200   4,28
+    512    1023    6942 5031081   4,65
+   1024    2047    4622 6893270   6,37
+   2048    4095    3268 9412271   8,70
+   4096    8191    2135 12716435  11,75
+   8192   16383     338 3974884   3,67
+  16384   32767     311 7018658   6,49
+  32768   65535     105 4511372   4,17
+  65536  131071      29 2577756   2,38
+ 131072  262143       8 1339796   1,24
+ 262144  524287      10 3950416   3,65
+ 524288 1048575       4 2580085   2,38
+1048576 2097151       2 3028028   2,80
 
-> >> I tried vanilla Kernel 3.0.30
-> >> and 3.3.4 - no difference. Writing to another partition on another
-> >> xfs array works fine.
-> >>
-> >> Details:
-> >> #~ df -h
-> >> /dev/sdb1             4,6T  4,4T  207G  96% /mnt
-> > 
-> > Your filesystem is near full - the allocation algorithms definitely
-> > slow down as you approach ENOSPC, and IO efficiency goes to hell
-> > because of a lack of contiguous free space to allocate from.
-> I've now 94% used but it is still slow. It seems it was just getting
-> fast with more than 450GB free space.
-> 
-> /dev/sdb1             4,6T  4,3T  310G  94% /mnt
+>>>> #~ df -i
+>>>> /dev/sdb1            4875737052 4659318044 216419008  96% /mnt
+>>> You have 4.6 *billion* inodes in your filesystem?
+>> Yes - it backups around 100 servers with a lot of files.
+i rechecked this and it seems i sadly copied the wrong output ;-( sorry
+for that.
 
-Well, you've probably badly fragmented the free space you have. what
-does the 'xfs_db -r -c freesp <dev>' command tell you?
+Here is the correct one:
+#~ df -i
+/dev/sdb1            975173568 95212355 879961213   10% /mnt
 
-> >> #~ df -i
-> >> /dev/sdb1            4875737052 4659318044 216419008  96% /mnt
-> > You have 4.6 *billion* inodes in your filesystem?
-> Yes - it backups around 100 servers with a lot of files.
-
-So you have what - lots of symlinks? I mean, 4.6 billion inodes
-alone requires 1.2TB of space, but if I read the fragmentation
-you only have 82 million files with data extents. The only thing
-that would other wise use inodes are directories and symlinks....
-
-Still, I can't see how you'd only have 82 million data inodes and 4.5
-billion directory inodes - where are all the inodes being consumed?
-A massive symlink farm?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Stefan
 
 _______________________________________________
 xfs mailing list
