@@ -1,24 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q47HFTcl101937 for <xfs@oss.sgi.com>; Mon, 7 May 2012 12:15:29 -0500
-Date: Mon, 7 May 2012 12:19:08 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-Message-ID: <20120507171908.GA16881@sgi.com>
-References: <CADLDEKs01GnxgYh2UTt1waVDUXHbB_RcBcUTBr5REFg5aD5jHA@mail.gmail.com>
-	<20120425223845.GX9541@dastard>
-	<CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
-	<20120426224412.GA9541@dastard>
-	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
-	<20120426230738.GB9541@dastard>
-	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
-	<20120427110922.GF9541@dastard>
-	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
-	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
+	q47J8IcC131973 for <xfs@oss.sgi.com>; Mon, 7 May 2012 14:08:18 -0500
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id fFvhgtcd9rKsjcu2 for
+	<xfs@oss.sgi.com>; Mon, 07 May 2012 12:08:16 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
+Subject: Re: suddenly slow writes on XFS Filesystem
+Date: Mon, 7 May 2012 21:08:14 +0200
+References: <4FA63DDA.9070707@profihost.ag> <4FA77842.5010703@profihost.ag>
+	<4FA7FA14.6080700@hardwarefreak.com>
+	(sfid-20120507_185142_476909_3A22D91B)
+In-Reply-To: <4FA7FA14.6080700@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
+Message-Id: <201205072108.15134.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +26,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Juerg Haefliger <juergh@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, stan@hardwarefreak.com
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-Hey Juerg,
+Am Montag, 7. Mai 2012 schrieb Stan Hoeppner:
+> What I would suggest is doing an xfsdump to a filesystem on another LUN
+> or machine, expand the size of this LUN by 50% or more (I gather this
+> is an external RAID), format it appropriately, then xfsrestore.  This
+> will eliminate your current free space fragmentation, and the 50% size
+> increase will delay the next occurrence of this problem.  If you can't
+> expand the LUN, simply do the xfsdump/format/xfsrestore, which will
+> give you contiguous free space.
 
-On Sat, May 05, 2012 at 09:44:35AM +0200, Juerg Haefliger wrote:
-> Did anybody have a chance to look at the data?
+Maybe the new dm thin provisioning could help here? But it might just move 
+the fragmentation from the filesystem to the device mapper layer. I did not 
+yet check the implementation details of the new thin provisioning target.
 
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/979498
-
-Here you indicate that you have created a reproducer.  Can you post it to the list?
-
-Thanks,
-	Ben
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
 
 _______________________________________________
 xfs mailing list
