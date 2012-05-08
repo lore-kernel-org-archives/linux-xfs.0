@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q48MVXfG032951 for <xfs@oss.sgi.com>; Tue, 8 May 2012 17:31:34 -0500
+	q48MZ9Np033778 for <xfs@oss.sgi.com>; Tue, 8 May 2012 17:35:09 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	R79XvNOZ60PKieRI for <xfs@oss.sgi.com>;
-	Tue, 08 May 2012 15:31:31 -0700 (PDT)
-Date: Wed, 9 May 2012 08:31:27 +1000
+	FC0FhZpyXGPr4CN0 for <xfs@oss.sgi.com>;
+	Tue, 08 May 2012 15:35:07 -0700 (PDT)
+Date: Wed, 9 May 2012 08:35:05 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fallocate bug?
-Message-ID: <20120508223127.GH5091@dastard>
-References: <CAF7KpS-r4zRXZxBU3U8ohxA85-rEvbAzCewYZDr44MNdP+YmFg@mail.gmail.com>
-	<20120507235955.GE5091@dastard>
-	<CAF7KpS_02NjAzY1wOQ9U0kwjKH+SzA0O_3VqSfjJgv0P6Hjk=g@mail.gmail.com>
-	<20120508044039.GF5091@dastard>
-	<CAF7KpS906EpxfAMjzW1zx8fSdGacoxkg+Fz=P0Sb3yONMhe7gw@mail.gmail.com>
-	<20120508054703.GG5091@dastard>
-	<CAF7KpS8oyteCDFM9tYWMp1K_vVeD0LTCY+10dSEiM_99KU9sJw@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix delalloc quota accounting on failure
+Message-ID: <20120508223505.GI5091@dastard>
+References: <1336474133-27732-1-git-send-email-david@fromorbit.com>
+	<4FA92DA7.4090809@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAF7KpS8oyteCDFM9tYWMp1K_vVeD0LTCY+10dSEiM_99KU9sJw@mail.gmail.com>
+In-Reply-To: <4FA92DA7.4090809@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,80 +27,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Zhu Han <schumi.han@gmail.com>
+To: Eric Sandeen <sandeen@sandeen.net>
 Cc: xfs@oss.sgi.com
 
-On Tue, May 08, 2012 at 11:25:05PM +0800, Zhu Han wrote:
-> On Tue, May 8, 2012 at 1:47 PM, Dave Chinner <david@fromorbit.com> wrote:
+On Tue, May 08, 2012 at 09:28:55AM -0500, Eric Sandeen wrote:
+> On 5/8/12 5:48 AM, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xfstest 270 was causing quota reservations way beyond what was sane
+> > (ten to hundreds of TB) for a 4GB filesystem. There's a sign problem
+> > in the error handling path of xfs_bmapi_reserve_delalloc() because
+> > xfs_trans_unreserve_quota_nblks() simple negates the value passed -
+> > which doesn't work for an unsigned variable. This causes
+> > reservations of close to 2^32 block instead of removing a
+> > reservation of a handful of blocks.
+> > 
+> > Fix the same problem in the other xfs_trans_unreserve_quota_nblks()
+> > callers where unsigned integer variables are used, too.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > 
-> > On Tue, May 08, 2012 at 01:10:55PM +0800, Zhu Han wrote:
-> > > On Tue, May 8, 2012 at 12:40 PM, Dave Chinner <david@fromorbit.com>
-> > wrote:
-> > > > On Tue, May 08, 2012 at 11:24:52AM +0800, Zhu Han wrote:
-> > > > > On Tue, May 8, 2012 at 7:59 AM, Dave Chinner <david@fromorbit.com>
-> > > > wrote:
-> > > > > > And so now you've triggered the speculative delayed allocation
-> > > > > > beyond EOF, which is normal behaviour. Hence there are currently
-> > > > > > unused blocks beyond EOF which will get removed either when the
-> > next
-> > > > > > close(fd) occurs on the file or the inode is removed from the
-> > cache.
-> > > > > >
-> > > > >
-> > > > > Close(fd) should be invoked before dd quits. But why the extra blocks
-> > > > > beyond EOF are not freed?
-> > > >
-> > > > The removal is conditional on how many times the fd has been closed
-> > > > with dirty data on the inode.
-> > > >
-> > > > > The only way I found to remove the extra blocks is truncate the file
-> > to
-> > > > its
-> > > > > real size.
-> > > >
-> > > > If the close() didn't remove them, they will be removed when the
-> > > > inode ages out of the cache. Why do you even care about them?
-> > >
-> > > Our distributed system depends on the real length of files to account the
-> > > space usage.
-> >
-> > That's ..... naive. It's never been valid to assume that the file
-> > size is an accurate reflection of space usage, especially as it will
-> > *always* be wrong for sparse files. In the same light, you also
-> > cannot assume that it is an accurate reflection for non-sparse files
-> > because we can do both explicit and speculative allocation beyond
-> > EOF which only du will show. Not to mention that metadata is not
-> > accounted in the file length, and that can consume a significant
-> > amount of space, too.
-> >
-> > > This behavior make the account inaccurate.
-> >
-> > The block usage reported by XFS is both accurate and correct. The
-> > file size reported by XFS is both accurate and correct. You're
-> > "account inaccuracy" is assuming that they are the same. Perhaps you
-> > should be using quotas for accurate space usage accounting?
-> >
-> > Anyway, if you really want to stop speculative delayed allocation
-> > beyond EOF, then use the allocsize mount option to control it.
-> >
+> Ouch!
 > 
+> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+> as far as it goes, but a couple thoughts:
 > 
-> Thanks for help.
+> 1) Should the cast be done in the macro so new callers don't get tripped up?
+> 2) Should we just remove the ninos argument from the macro?  It's always passed as 0 (and could potentially suffer the same problem)
 > 
-> I can control the size of pre-allocation, so no data are written beyond the
-> pre-allocated block range, so no speculative allocation is triggered.
-> Besides it, our system can sync the accurate space usage of mount point
-> periodically.
-> 
-> Can you give any hints about the most lightweight approach to get the
-> accurate block usage of whole file system?
+> something like:
 
-If you are just after the whole filesystem, then statfs(2) will give
-you blocks used and free. If you are after a finer breakdown, then
-quotas are probably what you want - they can be used for accounting
-separately to the space limiting enforcement. Hence you get
-accurate, up-to-date per user, group or project space accounting
-without actually limiting space usage at all.
+3) I'm going to remove the problematic macro altogether.
+
+I just wanted to get this fix out there while I look at the other
+quota problems I've found. Hint: xfstests _check_quota_usage()
+doesn't actually work *at all* on XFS (always passes without
+actually checking quotas), and so it has been hiding problems with
+either the tests that use it or the quota code for some time....
 
 Cheers,
 
