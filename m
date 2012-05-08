@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q485l8HT066344 for <xfs@oss.sgi.com>; Tue, 8 May 2012 00:47:08 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	4GLAdxu5Bp4HFkoO for <xfs@oss.sgi.com>;
-	Mon, 07 May 2012 22:47:05 -0700 (PDT)
-Date: Tue, 8 May 2012 15:47:03 +1000
+	q48AmxYv124820 for <xfs@oss.sgi.com>; Tue, 8 May 2012 05:48:59 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	D4HC2wM5lYVVSs8Y for <xfs@oss.sgi.com>;
+	Tue, 08 May 2012 03:48:56 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1SRhyP-00038r-L0
+	for xfs@oss.sgi.com; Tue, 08 May 2012 20:48:53 +1000
+Received: from dave by disappointment with local (Exim 4.77)
+	(envelope-from <dave@disappointment.disaster>) id 1SRhyP-0007Do-9G
+	for xfs@oss.sgi.com; Tue, 08 May 2012 20:48:53 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: fallocate bug?
-Message-ID: <20120508054703.GG5091@dastard>
-References: <CAF7KpS-r4zRXZxBU3U8ohxA85-rEvbAzCewYZDr44MNdP+YmFg@mail.gmail.com>
-	<20120507235955.GE5091@dastard>
-	<CAF7KpS_02NjAzY1wOQ9U0kwjKH+SzA0O_3VqSfjJgv0P6Hjk=g@mail.gmail.com>
-	<20120508044039.GF5091@dastard>
-	<CAF7KpS906EpxfAMjzW1zx8fSdGacoxkg+Fz=P0Sb3yONMhe7gw@mail.gmail.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAF7KpS906EpxfAMjzW1zx8fSdGacoxkg+Fz=P0Sb3yONMhe7gw@mail.gmail.com>
+Subject: [PATCH] xfs: fix delalloc quota accounting on failure
+Date: Tue,  8 May 2012 20:48:53 +1000
+Message-Id: <1336474133-27732-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,65 +24,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Zhu Han <schumi.han@gmail.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, May 08, 2012 at 01:10:55PM +0800, Zhu Han wrote:
-> On Tue, May 8, 2012 at 12:40 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Tue, May 08, 2012 at 11:24:52AM +0800, Zhu Han wrote:
-> > > On Tue, May 8, 2012 at 7:59 AM, Dave Chinner <david@fromorbit.com>
-> > wrote:
-> > > > And so now you've triggered the speculative delayed allocation
-> > > > beyond EOF, which is normal behaviour. Hence there are currently
-> > > > unused blocks beyond EOF which will get removed either when the next
-> > > > close(fd) occurs on the file or the inode is removed from the cache.
-> > > >
-> > >
-> > > Close(fd) should be invoked before dd quits. But why the extra blocks
-> > > beyond EOF are not freed?
-> >
-> > The removal is conditional on how many times the fd has been closed
-> > with dirty data on the inode.
-> >
-> > > The only way I found to remove the extra blocks is truncate the file to
-> > its
-> > > real size.
-> >
-> > If the close() didn't remove them, they will be removed when the
-> > inode ages out of the cache. Why do you even care about them?
-> 
-> Our distributed system depends on the real length of files to account the
-> space usage.
+From: Dave Chinner <dchinner@redhat.com>
 
-That's ..... naive. It's never been valid to assume that the file
-size is an accurate reflection of space usage, especially as it will
-*always* be wrong for sparse files. In the same light, you also
-cannot assume that it is an accurate reflection for non-sparse files
-because we can do both explicit and speculative allocation beyond
-EOF which only du will show. Not to mention that metadata is not
-accounted in the file length, and that can consume a significant
-amount of space, too.
+xfstest 270 was causing quota reservations way beyond what was sane
+(ten to hundreds of TB) for a 4GB filesystem. There's a sign problem
+in the error handling path of xfs_bmapi_reserve_delalloc() because
+xfs_trans_unreserve_quota_nblks() simple negates the value passed -
+which doesn't work for an unsigned variable. This causes
+reservations of close to 2^32 block instead of removing a
+reservation of a handful of blocks.
 
-> This behavior make the account inaccurate.
+Fix the same problem in the other xfs_trans_unreserve_quota_nblks()
+callers where unsigned integer variables are used, too.
 
-The block usage reported by XFS is both accurate and correct. The
-file size reported by XFS is both accurate and correct. You're
-"account inaccuracy" is assuming that they are the same. Perhaps you
-should be using quotas for accurate space usage accounting?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_bmap.c     |    2 +-
+ fs/xfs/xfs_iomap.c    |    2 +-
+ fs/xfs/xfs_vnodeops.c |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
-Anyway, if you really want to stop speculative delayed allocation
-beyond EOF, then use the allocsize mount option to control it.
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 9006656..2115146 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4526,7 +4526,7 @@ out_unreserve_blocks:
+ 		xfs_icsb_modify_counters(mp, XFS_SBS_FDBLOCKS, alen, 0);
+ out_unreserve_quota:
+ 	if (XFS_IS_QUOTA_ON(mp))
+-		xfs_trans_unreserve_quota_nblks(NULL, ip, alen, 0, rt ?
++		xfs_trans_unreserve_quota_nblks(NULL, ip, (long)alen, 0, rt ?
+ 				XFS_QMOPT_RES_RTBLKS : XFS_QMOPT_RES_REGBLKS);
+ 	return error;
+ }
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 756f093..973dff6 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -246,7 +246,7 @@ out_unlock:
+ 
+ out_bmap_cancel:
+ 	xfs_bmap_cancel(&free_list);
+-	xfs_trans_unreserve_quota_nblks(tp, ip, qblocks, 0, quota_flag);
++	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
+ out_trans_cancel:
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+ 	goto out_unlock;
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 57515e2..c22f4e0 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -1916,7 +1916,7 @@ xfs_alloc_file_space(
+ 
+ error0:	/* Cancel bmap, unlock inode, unreserve quota blocks, cancel trans */
+ 	xfs_bmap_cancel(&free_list);
+-	xfs_trans_unreserve_quota_nblks(tp, ip, qblocks, 0, quota_flag);
++	xfs_trans_unreserve_quota_nblks(tp, ip, (long)qblocks, 0, quota_flag);
+ 
+ error1:	/* Just cancel transaction */
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10
 
 _______________________________________________
 xfs mailing list
