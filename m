@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q49KYoHj126702 for <xfs@oss.sgi.com>; Wed, 9 May 2012 15:34:50 -0500
-Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
-	[209.85.210.53]) by cuda.sgi.com with ESMTP id EvqAxrz5XHHKvZzG
-	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 09 May 2012 13:34:49 -0700 (PDT)
-Received: by dadg9 with SMTP id g9so906255dad.26
-	for <xfs@oss.sgi.com>; Wed, 09 May 2012 13:34:48 -0700 (PDT)
-Date: Thu, 10 May 2012 02:04:44 +0530
-From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
-Subject: Re: Re: [PATCH] [PATCH] Stop periodic syncing if filesystem is
-	already shutdown.
-Message-ID: <20120509203444.GB29360@Xye>
-References: <a27cbce4f4b35c2a8aee1b58d88c22381fe70ccf.1336378182.git.rprabhu@wnohang.net>
-	<20120507235321.GD5091@dastard> <20120509200746.GA29360@Xye>
+	q49L7tZQ128384 for <xfs@oss.sgi.com>; Wed, 9 May 2012 16:07:56 -0500
+Message-ID: <4FAADCA8.6030702@sgi.com>
+Date: Wed, 09 May 2012 16:07:52 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <20120509200746.GA29360@Xye>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+References: <20120425223845.GX9541@dastard>
+	<CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
+	<20120426224412.GA9541@dastard>
+	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
+	<20120426230738.GB9541@dastard>
+	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
+	<20120427110922.GF9541@dastard>
+	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
+	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
+	<20120507225944.GA5091@dastard> <20120509073507.GQ5091@dastard>
+In-Reply-To: <20120509073507.GQ5091@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,239 +26,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1500695536806971499=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Juerg Haefliger <juergh@gmail.com>, xfs@oss.sgi.com
 
+On 05/09/12 02:35, Dave Chinner wrote:
 
---===============1500695536806971499==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="7ZAtKRhVyVSsbBD2"
-Content-Disposition: inline
-
-
---7ZAtKRhVyVSsbBD2
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Hi,
-
-Resent with changes I had mentioned earlier.
-
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-[PATCH] This is to prevent xfs_log_force from running ad-infinitum (due to =
-xfs_sync) till umount if the disk has been forcefully unplugged.
-
-This is also to prevent messages like these from being displayed repeatedly.
-
-[ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
-
-Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
-doesn't stop till the filesystem has been unmounted (and it keeps printing
-"error 5 returned" to kernel log).
-
-To simulate it, mount an xfs filesystem located on external disk, and then =
-pull
-the power to the disk (non-usb powered disk).
-
-Tested it on latest linus tree.
-Now, the kernel log looks,
-
-[  268.307303] XFS (sdb2): xfs_do_force_shutdown(0x1) called from line 1031=
- of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
-[  268.307318] XFS (sdb2): I/O Error Detected. Shutting down filesystem
-[  268.307323] XFS (sdb2): Please umount the filesystem and rectify the pro=
-blem(s)
-
-Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
----
----
-  fs/xfs/xfs_log.c |    7 +++++++
-  1 file changed, 7 insertions(+)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 6db1fef..e4192b2 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2932,6 +2932,13 @@ xfs_log_force(
-  {
-  	int	error;
- =20
-+	/*
-+	 * No need to printk here since xfs_bwrite already printks about xfs
-+	 * shutdown if it has shutdown already.
-+	 */
-+	if (XFS_FORCED_SHUTDOWN(mp))
-+		return;
-+
-  	error =3D _xfs_log_force(mp, flags, NULL);
-  	if (error)
-  		xfs_warn(mp, "%s: error %d returned.", __func__, error);
---=20
-1.7.10.1
-
-
-* On Thu, May 10, 2012 at 01:37:46AM +0530, Raghavendra D Prabhu <raghu.pra=
-bhu13@gmail.com> wrote:
 >
->Hi,
->
->
->* On Tue, May 08, 2012 at 09:53:21AM +1000, Dave Chinner <david@fromorbit.=
-com> wrote:
->>On Mon, May 07, 2012 at 02:44:07PM +0530, raghu.prabhu13@gmail.com wrote:
->>>From: Raghavendra D Prabhu <rprabhu@wnohang.net>
->>>
->>>This is to prevent syncing from running ad-infinitum till umount if the =
-disk has been forcefully unplugged.
->>>
->>>This is to prevent messages like these from being displayed.
->>.....
->>>---
->>> fs/xfs/xfs_sync.c |   12 ++++++++++++
->>> 1 file changed, 12 insertions(+)
->>>
->>>diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
->>>index 205ebcb..7ec412c 100644
->>>--- a/fs/xfs/xfs_sync.c
->>>+++ b/fs/xfs/xfs_sync.c
->>>@@ -460,6 +460,12 @@ xfs_sync_worker(
->>> 					struct xfs_mount, m_sync_work);
->>> 	int		error;
->>>
->>>+	if (!xfs_fs_writable(mp)) {
->>>+		xfs_err(mp, "Filesystem not writable / already shutdown.");
->>>+		xfs_syncd_stop(mp);
->>>+		return;
->>>+	}
->>>+
->>
->>That is going to kill the xfssyncd on read only and frozen
->>filesystems as well as shutdowns, so this is certainly not correct.
->>The xfs_sync_worker should continue to run until the filesystem is
->>unmounted, even if it does nothing when it runs.
->
->Yes, in the next patch I had sent --=20
->http://article.gmane.org/gmane.comp.file-systems.xfs.general/45568 --=20
->I removed xfs_syncd_stop from there and added it under xfs_bwrite.
->
->(PS: Adding xfs_syncd_stop in xfs_sync_worker was a very bad decision=20
->- it sent few of my kworkers to 'D' state and nearly corrupted that=20
->fs)
->
->
->>
->>Indeed, all that is needed in xfs_sync_worker() is this:
->>
->>-	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
->>+	if (!xfs_fs_writable(mp)) {
->>
->>and the error message won't appear. It fixes the problem for the
->>shutdown case, as well as handles frozen and read-only filesystems
->>correctly.
->                 I realized from your earlier comment that, calling       =
- =20
->xfs_syncd_stop under xfs_bwrite won't be good either;
->        so I was thinking of just checking for
->
->        XFS_FORCED_SHUTDOWN(mp) in xfs_log_force and bailing out        =
-=20
->if already shutdown.
->
->        which should take care of xfs_sync_worker,        =20
->xfs_flush_worker, xfs_iflush and xfs_unmountfs
->
->
->    Does this sound good?
->
->>
->>> 		/* dgc: errors ignored here */
->>> 		if (mp->m_super->s_frozen =3D=3D SB_UNFROZEN &&
->>>@@ -551,6 +557,12 @@ xfs_flush_worker(
->>> 	struct xfs_mount *mp =3D container_of(work,
->>> 					struct xfs_mount, m_flush_work);
->>>
->>>+	if (!xfs_fs_writable(mp)) {
->>>+		xfs_err(mp, "Filesystem not writable / already shutdown.");
->>>+		xfs_syncd_stop(mp);
->>>+		return;
->>>+	}
->>>+
->>> 	xfs_sync_data(mp, SYNC_TRYLOCK);
->>> 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
->>
->>This is not necessary, either, because xfs_sync_data() has shutdown
->>checks and xfs_flush_worker() should never be called on a shutdown
->>filesystem....
->Yeah, I realized that (sent a patch after this=20
->http://article.gmane.org/gmane.comp.file-systems.xfs.general/45568).
->>
->>Cheers,
->>
->>Dave.
->>--=20
->>Dave Chinner
->>david@fromorbit.com
->>
->
->
->
->
->
->
->
->
->Regards,
->--=20
->Raghavendra Prabhu
->GPG Id : 0xD72BE977
->Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
->www: wnohang.net
+> Transaction	 Wait queues	 Grant head	 Write Head	 Log head	 Log tail
+> -----------------------------------------------------------------------------------------
+> INACTIVE         empty empty     118 438024      118 438024      118 802         118 697
+> INACTIVE         empty empty     119 20240       119 20240       118 802         118 697
+> REMOVE           empty empty     118 438456      118 438456      118 802         118 697
+> REMOVE           empty empty     118 438772      118 438772      118 802         118 697
+> CREATE           empty empty     119 35872       119 35872       118 802         118 697
+> FSYNC_TS         active empty    119 205428      119 205428      118 802         118 697
+> FSYNC_TS         active empty    119 202944      119 202944      118 802         118 697
+> FSYNC_TS         active empty    119 200664      119 200664      118 802         118 697
+> REMOVE           empty empty     118 380316      118 380316      118 724         118 652
+> INACTIVE         empty empty     118 552532      118 552532      118 724         118 652
+> FSYNC_TS         empty empty     118 382140      118 382140      118 724         118 652
+> INACTIVE         empty empty     118 565968      118 565968      118 724         118 652
+> REMOVE           empty empty     119 25404       119 25404       118 802         118 697
+> INACTIVE         active empty    119 25580       119 25580       118 802         118 697
 
 
 
+Just so you don't go down a blind alley, the timestamp on the log went 
+backwards there. If you resort on the time stamps this does not go 
+backwards.
+
+Not sorted:
+grep ungrant_exit trace* | awk '{print $3, $8, $20, $22, $24, $26, $28, 
+$30, $32, $34, $36, $38}' | less
+
+3501.000611: FSYNC_TS active empty 119 205428 119 205428 118 802 118 697
+3501.004513: FSYNC_TS active empty 119 202944 119 202944 118 802 118 697
+3501.005210: FSYNC_TS active empty 119 200664 119 200664 118 802 118 697
+3500.962328: REMOVE empty empty 118 380316 118 380316 118 724 118 652
+3500.962458: INACTIVE empty empty 118 552532 118 552532 118 724 118 652
+3500.962770: FSYNC_TS empty empty 118 382140 118 382140 118 724 118 652
+3500.964781: INACTIVE empty empty 118 565968 118 565968 118 724 118 652
+3500.971259: REMOVE empty empty 119 25404 119 25404 118 802 118 697
+3500.971454: INACTIVE active empty 119 25580 119 25580 118 802 118 697
+
+Sorted on the timestamps:
+grep ungrant_exit trace* | awk '{print $3, $8, $20, $22, $24, $26, $28, 
+$30, $32, $34, $36, $38}' | sort | less
+
+3500.962328: REMOVE empty empty 118 380316 118 380316 118 724 118 652
+3500.962386: INACTIVE empty empty 118 555684 118 555684 118 724 118 652
+3500.962402: CREATE empty empty 118 380492 118 380492 118 724 118 652
+3500.962458: INACTIVE empty empty 118 552532 118 552532 118 724 118 652
+3500.962466: FSYNC_TS empty empty 118 552532 118 552532 118 724 118 652
+3500.962476: REMOVE empty empty 118 380936 118 380936 118 724 118 652
+3500.962534: INACTIVE empty empty 118 556304 118 556304 118 724 118 652
+...
+3500.979002: INACTIVE empty empty 118 437672 118 437672 118 802 118 697
+3500.979185: CREATE empty empty 118 437848 118 437848 118 802 118 697
+3500.979269: CREATE empty empty 118 438024 118 438024 118 802 118 697
+3500.979462: INACTIVE empty empty 118 438024 118 438024 118 802 118 697
+3500.979627: INACTIVE empty empty 119 20240 119 20240 118 802 118 697
+3500.979657: REMOVE empty empty 118 438456 118 438456 118 802 118 697
+3500.979713: REMOVE empty empty 118 438772 118 438772 118 802 118 697
+3500.979815: CREATE empty empty 119 35872 119 35872 118 802 118 697
+3501.000611: FSYNC_TS active empty 119 205428 119 205428 118 802 118 697
 
 
+Maybe I have a corrupted version of his first trace, it looks like there 
+are 2 series of log grant/write/head/tail sequences. These sequences are 
+not even close to each other:
 
-Regards,
---=20
-Raghavendra Prabhu
-GPG Id : 0xD72BE977
-Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
-www: wnohang.net
+188.116687: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1 1655971
+188.116939: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1 1655971
+188.117755: CREATE empty empty 4440 166388 4440 166388 4440 312 4440 310
+188.117784: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1 1655971
+188.117902: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1 1655971
+188.118249: CREATE empty empty 4440 166844 4440 166844 4440 312 4440 310
+188.118350: CREATE empty empty 4440 167300 4440 167300 4440 312 4440 310
+188.118628: FSYNC_TS empty empty 4440 167300 4440 167300 4440 312 4440 310
+188.118837: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1 1655971
+188.118868: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1 1655971
 
---7ZAtKRhVyVSsbBD2
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.19 (GNU/Linux)
-
-iQEcBAEBAgAGBQJPqtTkAAoJEKYW3KHXK+l3EOMIAKlkDGxpHbQbs6xqmprusUIH
-r5hUXdQFL5y5qLHxccgbPSMyXBBd7yaTbNC35pSWJ4pG3mgXi35Bt3aiwv7UmfC5
-7prKfHZV7hpI6hM3H0EvJbMIvKB2ChPg8mqPn/7+W6LnOwW6xmI+3xlK/HJTIEVE
-3rOyOqjRpc6CU9axj/AXvggF5OFGObYMq/rIk1/IUE+F97XpsDpUzXAXhWPm3rKE
-GZegpb1tkIMmx3jroTIv9kY+cc1NA9fiV8HWWub13J458qo38/Cl/t5qcEg4Hrot
-VZoa+B3kFPlOmwSMrxVv3YHMVoicgkIrGd5qcP8rY8EfXwag7Y+n1udl4+bBzW0=
-=dXSY
------END PGP SIGNATURE-----
-
---7ZAtKRhVyVSsbBD2--
-
-
---===============1500695536806971499==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+--Mark Tinguely.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1500695536806971499==--
