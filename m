@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4A2A88S142794 for <xfs@oss.sgi.com>; Wed, 9 May 2012 21:10:08 -0500
-Message-ID: <4FAB237D.5050608@sgi.com>
-Date: Wed, 09 May 2012 21:10:05 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q4A2pVia145062 for <xfs@oss.sgi.com>; Wed, 9 May 2012 21:51:31 -0500
+Message-ID: <4FAB2D14.3020104@oracle.com>
+Date: Thu, 10 May 2012 10:51:00 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-References: <20120425223845.GX9541@dastard>
-	<CADLDEKvYkpUnMrqdMyqCmsYrZcUtiJ6ZRhrRu_ERTjn=r7M3Pg@mail.gmail.com>
-	<20120426224412.GA9541@dastard>
-	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
-	<20120426230738.GB9541@dastard>
-	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
-	<20120427110922.GF9541@dastard>
-	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
-	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
-	<20120507225944.GA5091@dastard> <20120509073507.GQ5091@dastard>
-	<4FAADCA8.6030702@sgi.com>
-In-Reply-To: <4FAADCA8.6030702@sgi.com>
+Subject: Re: [PATCH] Introduce SEEK_DATA/SEEK_HOLE support V8
+References: <4F3E532E.6000708@oracle.com> <4FAAACA1.3090600@sgi.com>
+In-Reply-To: <4FAAACA1.3090600@sgi.com>
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,47 +18,123 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Juerg Haefliger <juergh@gmail.com>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
 
-On 05/09/12 16:07, Mark Tinguely wrote:
->
->
-> Maybe I have a corrupted version of his first trace, it looks like there
-> are 2 series of log grant/write/head/tail sequences. These sequences are
-> not even close to each other:
->
-> 188.116687: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1
-> 1655971
-> 188.116939: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1
-> 1655971
-> 188.117755: CREATE empty empty 4440 166388 4440 166388 4440 312 4440 310
-> 188.117784: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1
-> 1655971
-> 188.117902: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1
-> 1655971
-> 188.118249: CREATE empty empty 4440 166844 4440 166844 4440 312 4440 310
-> 188.118350: CREATE empty empty 4440 167300 4440 167300 4440 312 4440 310
-> 188.118628: FSYNC_TS empty empty 4440 167300 4440 167300 4440 312 4440 310
-> 188.118837: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1
-> 1655971
-> 188.118868: FSYNC_TS empty empty 1 847894476 1 847894476 1 1655998 1
-> 1655971
+On 05/10/2012 01:42 AM, Mark Tinguely wrote:
 
-Oops, there are multiple devices in that trace.
+> On 02/17/12 07:16, Jeff Liu wrote:
+>> Hello,
+>>
+>> This is the revised patch according to Dave's comments for V7.
+>>
+>> Changes to V8:
+>> --------------
+>> 1. If there is an internal error raised at extent reading routine, just
+>> return it rather than ENXIO.
+>> 2. Add the commit message.
+>> 3. Remove the for(;;) loop since there is no continuous holes shown even
+>> if create a Petabyte sparse file with hole extent length longer than
+>> 32-bit.  Thanks Dave for helping verify that!
+>> 4. In xfs_seek_data(), s/len/end/, looks 'end' is more meaningful here
+>> to indicate the range of extents mapped.
+>> 5. Remove BUG() from xfs_seek_data() since xfs_bmapi_read() have found
+>> any corruption during the lookup, it should not occurred at all.
+>>
+>> Any comments are appreciated!
+>>
+>> Thanks,
+>> -Jeff
+>>
+>>
+>> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>> ---
+>>   This patch adds lseek(2) SEEK_DATA/SEEK_HOLE functionality.
+> 
+>> +STATIC loff_t
+>> +xfs_seek_hole(
+>> +    struct file        *file,
+>> +    loff_t            start,
+>> +    u32            type)
+>> +{
+>> +    struct inode        *inode = file->f_mapping->host;
+>> +    struct xfs_inode    *ip = XFS_I(inode);
+>> +    struct xfs_mount    *mp = ip->i_mount;
+>> +    loff_t            uninitialized_var(offset);
+>> +    loff_t            holeoff;
+>> +    xfs_fsize_t        isize;
+>> +    xfs_fileoff_t        fsbno;
+>> +    uint            lock;
+>> +    int            error;
+>> +
+>> +    lock = xfs_ilock_map_shared(ip);
+>> +
+>> +    isize = i_size_read(inode);
+>> +    if (start>= isize) {
+>> +        error = ENXIO;
+>> +        goto out_unlock;
+>> +    }
+>> +
+>> +    fsbno = XFS_B_TO_FSBT(mp, start);
+>> +    error = xfs_bmap_first_unused(NULL, ip, 1,&fsbno, XFS_DATA_FORK);
+>> +    if (error)
+>> +        goto out_unlock;
+>> +
+>> +    holeoff = XFS_FSB_TO_B(mp, fsbno);
+>> +    if (holeoff<= start)
+>> +        offset = start;
+>> +    else
+>> +        offset = min_t(loff_t, holeoff, isize);
+>> +
+>> +    if (offset != file->f_pos)
+>> +        file->f_pos = offset;
+>> +
+>> +out_unlock:
+>> +    xfs_iunlock_map_shared(ip, lock);
+>> +
+>> +    if (error)
+>> +        return -error;
+>> +    return offset;
+>> +}
+> 
+> Sorry this got set aside. This is being dusted off for inclusion.
 
+Thanks for picking this up!
 
-I notice in the trace_report_180secs.txt file, lsn (ail_push and the 
-ungrants) displays are not correct. It acts like the BLOCK_LSN() is 
-shifting too much. Block sequence numbers never make it too far above 
-1100 before incrementing the cycle. I think the problem is the trace not 
-the sequence numbers.
+> 
+> Refresh my memory, do we need a XFS_FORCED_SHUTDOWN test in
+> xfs_seek_hole()? In the earlier versions it was covered in the
+> xfs_bmapi_read().
 
---Mark Tinguely.
+Yes, definitely.
+
+> 
+> A comment on the min_t() that the xfs_bmap_first_unused() could
+> return a value bigger than the isize if there are no more holes
+> may help the forgetful such as myself.
+
+I'll leave a comment for it, it would be helpful to recall the case for
+a long period.
+
+Thanks,
+-Jeff
+
+> 
+> Otherwise it looks good.
+> 
+> Thank-you.
+> 
+> Mark Tinguely <tinguely@sgi.com>
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+
 
 _______________________________________________
 xfs mailing list
