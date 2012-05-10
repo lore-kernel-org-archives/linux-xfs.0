@@ -1,29 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4AGhOpa035193
-	for <linux-xfs@oss.sgi.com>; Thu, 10 May 2012 11:43:25 -0500
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id Cr5E7YHpW2YPcD7V (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Thu, 10 May 2012 09:43:23 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1SSWSX-0007nk-On
-	for linux-xfs@oss.sgi.com; Thu, 10 May 2012 18:43:21 +0200
-Received: from tc-gate1.pci.uni-heidelberg.de ([129.206.21.241])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 10 May 2012 18:43:21 +0200
-Received: from bernd.schubert by tc-gate1.pci.uni-heidelberg.de with local
-	(Gmexim 0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Thu, 10 May 2012 18:43:21 +0200
-From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
-Subject: Re: kernel panic / NULL pointer dereference
-Date: Thu, 10 May 2012 18:43:10 +0200
-Message-ID: <4FABF01E.7080303@itwm.fraunhofer.de>
-References: <jognqm$o21$1@dough.gmane.org>
-Mime-Version: 1.0
-In-Reply-To: <jognqm$o21$1@dough.gmane.org>
+	q4AISnR8046149 for <xfs@oss.sgi.com>; Thu, 10 May 2012 13:28:49 -0500
+Date: Thu, 10 May 2012 13:32:45 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: linux-next: build failure after merge of the xfs tree
+Message-ID: <20120510183245.GL3963@sgi.com>
+References: <20120510130134.0efffc5ba1f3a80c614e8f29@canb.auug.org.au>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120510130134.0efffc5ba1f3a80c614e8f29@canb.auug.org.au>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,51 +22,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-next@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On 05/10/2012 05:45 PM, Bernd Schubert wrote:
-> Hi all,
+On Thu, May 10, 2012 at 01:01:34PM +1000, Stephen Rothwell wrote:
+> After merging the xfs tree, today's linux-next build (powerpc
+> ppc64_defconfig) failed like this:
 > 
-> I'm just playing with an SRP connected NetApp system and just got an XFS 
-> related kernel panic. I guess it is due to large IO (32MiB). At least it 
-> just came up after enabling 32MiB device max_sectors.
-> As the tests are running in a RHEL6 image and as I needed at least 
-> 2.6.39 to get a large srp_tablsize with SRP, I simply installed the 
-> lasted oracle uek kernel. If needed I'm going to update to a vanilla 
-> version.
+> ERROR: ".xfs_extent_busy_trim" [fs/xfs/xfs.ko] undefined!
 > 
+> Caused by commit e459df5b5b93 ("xfs: move busy extent handling to it's
+> own file") (and aided by 425dcd6c2289 "xfs: clean up busy extent naming").
 > 
->> May 10 17:31:49 sgi01 kernel: XFS (sdb): Mounting Filesystem
->> May 10 17:31:49 sgi01 kernel: XFS (sdb): Ending clean mount
->> May 10 17:33:00 sgi01 kernel: BUG: unable to handle kernel NULL 
->> pointer dereference at (null)
->> May 10 17:33:00 sgi01 kernel: IP: [<ffffffffa07f5483>] 
->> xfs_alloc_ioend_bio+0x33/0x50 [xfs]
+> I have used the xfs tree from next-20120508 for today.
 
-Oh, there is a bio allocation path to return NULL:
+Thanks Stephen.  The following should resolve the issue.
 
-bvec_alloc_bs(gfp_mask, nr_iovecs, ) => NULL when nr_iovecs  > BIO_MAX_PAGES
-bio_alloc_bioset(gfp_mask, nr_iovecs, ...)
-bio_alloc(GFP_NOIO, nvecs)
-xfs_alloc_ioend_bio()
-
-And nvecs/nr_iovecs is obtained by bio_get_nr_vecs(), which does not check for
-BIO_MAX_PAGES. Of course, all of that only happens with large IO sizes, 
-which is exactly what I'm doing.
-As xfs_alloc_ioend_bio() is using GFP_NOIO it does not expect bio_alloc 
-to fail, but as I'm trying to send large IOs I guess that is exactly what happens here.
+Regards,
+	Ben
 
 
->May 10 17:33:00 sgi01 kernel: [<ffffffffa07f561e>] xfs_submit_ioend+0xfe/0x110 [xfs]
->May 10 17:33:00 sgi01 kernel: [<ffffffffa07f696b>] xfs_vm_writepage+0x26b/0x510 [xfs]
->May 10 17:33:00 sgi01 kernel: [<ffffffff81112377>] __writepage+0x17/0x40
->May 10 17:33:00 sgi01 kernel: [<ffffffff81113696>] write_cache_pages+0x246/0x520
->May 10 17:33:00 sgi01 kernel: [<ffffffff81112360>] ? set_page_dirty+0x70/0x70
->May 10 17:33:00 sgi01 kernel: [<ffffffff811139c1>] generic_writepages+0x51/0x80
->May 10 17:33:00 sgi01 kernel: [<ffffffffa07f537d>] xfs_vm_writepages+0x5d/0x80 [xfs]
->May 10 17:33:00 sgi01 kernel: [<ffffffff81113a11>] do_writepages+0x21/0x40
->May 10 17:33:00 sgi01 kernel: [<ffffffff8118df2e>] writeback_single_inode+0x10e/0x270
+
+xfs: make xfs_extent_busy_trim not static
+
+Commit e459df5, 'xfs: move busy extent handling to it's own file'
+moved some code from xfs_alloc.c into xfs_extent_busy.c for
+convenience in userspace code merges.  One of the functions moved is
+xfs_extent_busy_trim (formerly xfs_alloc_busy_trim) which is defined
+STATIC.  Unfortunately this function is still used in xfs_alloc.c, and
+this results in an undefined symbol in xfs.ko.
+
+Make xfs_extent_busy_trim not static and add its prototype to
+xfs_extent_busy.h.
+
+Signed-off-by: Ben Myers <bpm@sgi.com>
+
+Index: xfs/fs/xfs/xfs_alloc.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_alloc.c
++++ xfs/fs/xfs/xfs_alloc.c
+@@ -47,8 +47,6 @@ STATIC int xfs_alloc_ag_vextent_near(xfs
+ STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+ STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+ 		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+-STATIC void xfs_extent_busy_trim(struct xfs_alloc_arg *,
+-		xfs_agblock_t, xfs_extlen_t, xfs_agblock_t *, xfs_extlen_t *);
+ 
+ /*
+  * Lookup the record equal to [bno, len] in the btree given by cur.
+Index: xfs/fs/xfs/xfs_extent_busy.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_extent_busy.c
++++ xfs/fs/xfs/xfs_extent_busy.c
+@@ -345,7 +345,7 @@ restart:
+  * args->minlen no suitable extent could be found, and the higher level
+  * code needs to force out the log and retry the allocation.
+  */
+-STATIC void
++void
+ xfs_extent_busy_trim(
+ 	struct xfs_alloc_arg	*args,
+ 	xfs_agblock_t		bno,
+Index: xfs/fs/xfs/xfs_extent_busy.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_extent_busy.h
++++ xfs/fs/xfs/xfs_extent_busy.h
+@@ -54,6 +54,10 @@ void
+ xfs_extent_busy_reuse(struct xfs_mount *mp, xfs_agnumber_t agno,
+ 	xfs_agblock_t fbno, xfs_extlen_t flen, bool userdata);
+ 
++void
++xfs_extent_busy_trim(struct xfs_alloc_arg *args, xfs_agblock_t bno,
++	xfs_extlen_t len, xfs_agblock_t *rbno, xfs_extlen_t *rlen);
++
+ int
+ xfs_extent_busy_ag_cmp(void *priv, struct list_head *a, struct list_head *b);
+ 
 
 _______________________________________________
 xfs mailing list
