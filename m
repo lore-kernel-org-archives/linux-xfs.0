@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4B2WKYO125833 for <xfs@oss.sgi.com>; Thu, 10 May 2012 21:32:21 -0500
-Message-ID: <4FAC7A22.1090005@oracle.com>
-Date: Fri, 11 May 2012 10:32:02 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q4B2bD4F126862 for <xfs@oss.sgi.com>; Thu, 10 May 2012 21:37:14 -0500
+Received: from mail.mail167.cn4e.com (mail.mail167.cn4e.com [218.85.138.167])
+	by cuda.sgi.com with ESMTP id eZoBSHxeptx7XSfi for
+	<xfs@oss.sgi.com>; Thu, 10 May 2012 19:37:11 -0700 (PDT)
+Received: from PC03 (unknown [115.202.161.234])
+	by mail.mail167.cn4e.com (Postfix) with ESMTPA id 5CB888282AA
+	for <xfs@oss.sgi.com>; Fri, 11 May 2012 10:37:07 +0800 (CST)
+From: "Bob" <ex3@greenpoint.cn>
+Subject: =?gb2312?B?QWJvdXQgdHViZSBjb25uZWN0b3IgYW5kIHNob3AgZml4dHVyZXMvp7Gn4Kfj?=
+	=?gb2312?B?p+Sn0afTp+un2qfcIKflp+On5KfRp9+n4KfTp9yn2iCn3qfWp9Kn1qfdp9og?=
+	=?gb2312?B?p9ogp96n1qfSp9an3afup9+n4KfbIKfmp+Wn4qffp9qn5Kflp+Kn7Q==?=
+Date: Fri, 11 May 2012 10:37:18 +0800
+Message-ID: <F64EA7EE81AB404B8FF5C564DA505364@PC03>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 1/2] xfstests: introduce 279 for SEEK_DATA/SEEK_HOLE
-	sanity test
-References: <4F410ABF.7070001@oracle.com> <20120510202810.GQ16881@sgi.com>
-In-Reply-To: <20120510202810.GQ16881@sgi.com>
-Reply-To: jeff.liu@oracle.com
+Content-Class: urn:content-classes:message
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +28,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 05/11/2012 04:28 AM, Ben Myers wrote:
+Dear Purchase Manager, 
+How are you ? This is BOB from Green ponint company which is a professional manufacturer about furniture fittings and harware including knob series,hanger and hook series,leg series,castor series,drawer slide series,tube supports and joints series and so on.
 
-> On Sun, Feb 19, 2012 at 10:44:15PM +0800, Jeff Liu wrote:
->> Introduce 279 for SEEK_DATA/SEEK_HOLE sanity tests.
->>
->> Changes to v3:
->> --------------
->> * Redirect seek sanity test run log to 279.full.
->>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-> 
-> ...
-> 
->> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
->> new file mode 100644
->> index 0000000..8f36dee
->> --- /dev/null
->> +++ b/src/seek_sanity_test.c
->> @@ -0,0 +1,683 @@
-> 
-> ...
-> 
->> +static void get_file_system(int fd)
->> +{
->> +	struct statfs buf;
->> +
->> +	if (!fstatfs(fd, &buf))
->> +		fprintf(stdout, "File system magic#: 0x%x\n", buf.f_type);
-> 
-> Hrm...
-> 
-> # make
-> Building include
-> Building lib
-> Building ltp
-> Building src
-> [DEP]
-> [CC]    seek_sanity_test
-> seek_sanity_test.c: In function 'get_file_system':
-> seek_sanity_test.c:46: warning: format '%x' expects type 'unsigned int', but argument 3 has type 'long int'
-> Building aio-dio-regress
-> Building m4
-> 
-> I'll fix that up for you.
+There are various materials such as  zinc alloy, stainless steel,iron,alu materials etc,and we also supply OEM service.
 
-Thanks a lot!
+We had exported to more than 50 countries and area. Especial Russia market.
 
--Jeff
+I also attached our some items pictures for your checking.
 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+If you have any inquiry about furniture hardware,Please don't hesitate to send us email.we would like to offer you the best price with best service.
+
+Thanks & Best regards
+
+Bob
+
+Taizhou Greenpoint Hardware Co.,Ltd. 
+
+ADD:2-406 JuDing Mansion DongHai Avenue TaiZhou ZheJiang China 318000
+
+TEL: 0086-576-88538277        
+
+FAX: 86-576-88553277       
+
+EMAIL:ex3@greenpoint.cn
+
+http://www.greenpoint.cn/
+
+http://greenpoint.en.alibaba.com/
 
 
 _______________________________________________
