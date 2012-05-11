@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4BEaNET037525
-	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 09:36:23 -0500
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id npog07am2N73hxBE (version=TLSv1
+	q4BEas6E037680
+	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 09:36:54 -0500
+Received: from casper.infradead.org (casper.infradead.org [85.118.1.10]) by
+	cuda.sgi.com with ESMTP id ZUObaoYlcticMCT2 (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 11 May 2012 07:36:22 -0700 (PDT)
-Message-ID: <4FAD23D4.2070405@kernel.dk>
-Date: Fri, 11 May 2012 16:36:04 +0200
+	<linux-xfs@oss.sgi.com>; Fri, 11 May 2012 07:36:54 -0700 (PDT)
+Message-ID: <4FAD23F7.2080605@kernel.dk>
+Date: Fri, 11 May 2012 16:36:39 +0200
 From: Jens Axboe <axboe@kernel.dk>
 MIME-Version: 1.0
 Subject: Re: [PATCH] bio allocation failure due to bio_get_nr_vecs()
 References: <jognqm$o21$1@dough.gmane.org>
 	<4FABF01E.7080303@itwm.fraunhofer.de>
 	<4FAD18D4.3090102@itwm.fraunhofer.de>
-	<x49sjf6vml5.fsf@segfault.boston.devel.redhat.com>
-In-Reply-To: <x49sjf6vml5.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <4FAD18D4.3090102@itwm.fraunhofer.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: linux-xfs@oss.sgi.com, sandeen@sandeen.net, Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>, Tejun Heo <tj@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-xfs@oss.sgi.com, Tejun Heo <tj@kernel.org>, sandeen@sandeen.net, Kent Overstreet <kent.overstreet@gmail.com>
 
-On 05/11/2012 04:06 PM, Jeff Moyer wrote:
-> Bernd Schubert <bernd.schubert@itwm.fraunhofer.de> writes:
+On 05/11/2012 03:49 PM, Bernd Schubert wrote:
+> The number of bio_get_nr_vecs() is passed down via bio_alloc() to
+> bvec_alloc_bs(), which fails the bio allocation if
+> nr_iovecs > BIO_MAX_PAGES. For the underlying caller this causes an
+> unexpected bio allocation failure.
+> Limiting to queue_max_segments() is not sufficient, as max_segments
+> also might be very large.
 > 
->> diff --git a/fs/bio.c b/fs/bio.c
->> index e453924..84da885 100644
->> --- a/fs/bio.c
->> +++ b/fs/bio.c
->> @@ -505,9 +505,14 @@ EXPORT_SYMBOL(bio_clone);
->>  int bio_get_nr_vecs(struct block_device *bdev)
->>  {
->>  	struct request_queue *q = bdev_get_queue(bdev);
->> -	return min_t(unsigned,
->> +	int nr_pages;
-> 
-> Looks like a corrupt patch.
+> bvec_alloc_bs(gfp_mask, nr_iovecs, ) => NULL when nr_iovecs  > BIO_MAX_PAGES
+> bio_alloc_bioset(gfp_mask, nr_iovecs, ...)
+> bio_alloc(GFP_NOIO, nvecs)
+> xfs_alloc_ioend_bio()
 
-It's fine, I think you are misreading the added and removed lines :-)
+Thanks, looks sane. Applied.
 
 -- 
 Jens Axboe
