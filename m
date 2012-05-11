@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4B2bD4F126862 for <xfs@oss.sgi.com>; Thu, 10 May 2012 21:37:14 -0500
-Received: from mail.mail167.cn4e.com (mail.mail167.cn4e.com [218.85.138.167])
-	by cuda.sgi.com with ESMTP id eZoBSHxeptx7XSfi for
-	<xfs@oss.sgi.com>; Thu, 10 May 2012 19:37:11 -0700 (PDT)
-Received: from PC03 (unknown [115.202.161.234])
-	by mail.mail167.cn4e.com (Postfix) with ESMTPA id 5CB888282AA
-	for <xfs@oss.sgi.com>; Fri, 11 May 2012 10:37:07 +0800 (CST)
-From: "Bob" <ex3@greenpoint.cn>
-Subject: =?gb2312?B?QWJvdXQgdHViZSBjb25uZWN0b3IgYW5kIHNob3AgZml4dHVyZXMvp7Gn4Kfj?=
-	=?gb2312?B?p+Sn0afTp+un2qfcIKflp+On5KfRp9+n4KfTp9yn2iCn3qfWp9Kn1qfdp9og?=
-	=?gb2312?B?p9ogp96n1qfSp9an3afup9+n4KfbIKfmp+Wn4qffp9qn5Kflp+Kn7Q==?=
-Date: Fri, 11 May 2012 10:37:18 +0800
-Message-ID: <F64EA7EE81AB404B8FF5C564DA505364@PC03>
+	q4BCfjg9008249 for <xfs@oss.sgi.com>; Fri, 11 May 2012 07:41:45 -0500
+Received: from mail.auma.com (mail.auma.com [62.153.90.116]) by cuda.sgi.com
+	with ESMTP id cWvWm41luarDhgQz for <xfs@oss.sgi.com>;
+	Fri, 11 May 2012 05:41:44 -0700 (PDT)
+From: "Hammer, Marcus" <Marcus.Hammer@auma.com>
+Date: Fri, 11 May 2012 14:41:41 +0200
+Subject: Strange problems with xfs an SLESS11 SP2
+Message-ID: <CBD2D5A5.7C6B%Marcus.Hammer@auma.com>
+Content-Language: de-DE
 MIME-Version: 1.0
-Content-Class: urn:content-classes:message
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +19,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Dear Purchase Manager, 
-How are you ? This is BOB from Green ponint company which is a professional manufacturer about furniture fittings and harware including knob series,hanger and hook series,leg series,castor series,drawer slide series,tube supports and joints series and so on.
+Hello,
 
-There are various materials such as  zinc alloy, stainless steel,iron,alu materials etc,and we also supply OEM service.
+We have upgraded from SLES11 SP1 to SLES11 SP2. We use an exotic ERP System=
+, which stores the data in CISAM Files, which we store on several mounted x=
+fs filesystems ( /disk2, /disk3, /disk4, /disk5 and /disk6)
+The machine is a DELL R910 with 256 GB RAM and installed SLES11 SP2 (before=
+ we used SLES11 SP1). So we also got the new 3.0 kernel after the upgrade. =
+The xfs mounts are LUNs on a netapp storage mapped via fibre channel to the
+Linux host. Also we use multipathd to have several paths to the netapp stor=
+age LUNs.
 
-We had exported to more than 50 countries and area. Especial Russia market.
+Now after the upgrade to SLES11 SP2 we encountered a strange change on the =
+xfs filesystem /disk5:
 
-I also attached our some items pictures for your checking.
+The /disk5 is a frequent accessed xfs filesystem by the ERP system. The dis=
+k usage increased from 53% to 76-78%. But only the disk usage, the size of =
+the files are completely the same. The defragmentation increased to 96%
 
-If you have any inquiry about furniture hardware,Please don't hesitate to send us email.we would like to offer you the best price with best service.
+linuxsrv1:/disk4/ifax/0000 # xfs_db -c frag -r /dev/mapper/360a98000486e593=
+84b34497248694170
+actual 56156, ideal 2014, fragmentation factor 96.41%
 
-Thanks & Best regards
+linuxsrv1:/disk4/ifax/0000 # xfs_info /dev/mapper/360a98000486e59384b344972=
+48694170
+meta-data=3D/dev/mapper/360a98000486e59384b34497248694170 isize=3D256    ag=
+count=3D21, agsize=3D3276800 blks
+         =3D                       sectsz=3D512   attr=3D0
+data     =3D                       bsize=3D4096   blocks=3D68157440, imaxpc=
+t=3D25
+         =3D                       sunit=3D0      swidth=3D0 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
+log      =3Dinternal               bsize=3D4096   blocks=3D25600, version=
+=3D1
+         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
+t=3D0
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
 
-Bob
 
-Taizhou Greenpoint Hardware Co.,Ltd. 
+The fstab for xfs mounts are without any special options or optimizations, =
+here is the snipped from /etc/fstab:
 
-ADD:2-406 JuDing Mansion DongHai Avenue TaiZhou ZheJiang China 318000
+/dev/mapper/360a98000486e59384b3449714a47336c   /disk2  xfs     defaults   =
+     0 2
+/dev/mapper/360a98000486e59384b34497247514a56   /disk3  xfs     defaults   =
+     0 2
+/dev/mapper/360a98000486e59384b34497248694170   /disk4  xfs     defaults   =
+     0 2
+/dev/mapper/360a98000486e59384b344972486f6d4e   /disk5  xfs     defaults   =
+     0 2
+/dev/mapper/360a98000486e59384b3449724e6f4266   /disk6  xfs     defaults   =
+     0 2
+/dev/mapper/360a98000486e59384b3449724f326662   /opt/usr        xfs     def=
+aults        0 2
 
-TEL: 0086-576-88538277        
+But something must have been changed in xfs, because now the metadata incre=
+ased so massive, we never had this before with SLES11 SP1.
 
-FAX: 86-576-88553277       
+I did a defragmentation with xfs_fsr and the metadata and usage decreased t=
+o 53%. But after 1 hour in production we are agin on 76-78% disk usage and =
+this defragmentation
 
-EMAIL:ex3@greenpoint.cn
+So my question is what has changed from 2.6 kernels 3.0 kernels, which can =
+explain this massive increase of metadata. (I did a defrag and we had somet=
+imes over 140.000 extends to one inode).
 
-http://www.greenpoint.cn/
+I am completely confused and do now know how to handle this. Perhaps somebo=
+dy can help me to fix this problem or to understand what happens here=85.
+I also talked with some netapp engineers and they said,  I should ask at xf=
+s.org.
 
-http://greenpoint.en.alibaba.com/
+One the filesystem are about 727 CISAM Files (IDX -> Index Files and DAT =
+=96> DATA Files). There are ten 15 GB Files on which some small content is =
+often changed by the ERP system. The rest of the files are lower than 400 M=
+B.
+We encounter this problem since the upgrade to SLES11 SP2 and the new kerne=
+l 3.0. (By the way we had to disable the transparent hugepages support in k=
+ernel 3.0, because of kernel crashes ;) - but this is a different story=85 )
+
+--
+Mit freundlichen Gr=FC=DFen/Kind regards
+
+M.  Hammer
+System administration
+Information Technology
+
+AUMA Riester GmbH & Co. KG
+Aumastr. 1 =95 79379 Muellheim/Germany
+Tel/Phone +49 7631 809-1620 =95 Fax +49 7631 809-71620
+HammerM@auma.com<mailto:hammerm@auma.com> =95 www.auma.com<http://www.auma.=
+com/>
+
+Sitz: M=FCllheim, Registergericht Freiburg HRA 300276
+phG: AUMA Riester Verwaltungsgesellschaft mbH, Sitz: M=FCllheim, Registerge=
+richt Freiburg HRB 300424
+Gesch=E4ftsf=FChrer: Matthias Dinse, Henrik Newerla
+
+Registered Office: Muellheim, court of registration: Freiburg HRA 300276
+phG: Riester Verwaltungsgesellschaft mbH Registered Office: Muellheim, cour=
+t of registration: Freiburg HRB 300424
+Managing Directors: Matthias Dinse, Henrik Newerla
+
+
 
 
 _______________________________________________
