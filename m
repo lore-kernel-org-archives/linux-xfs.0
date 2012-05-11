@@ -1,19 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4BEVNLC035922
-	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 09:31:24 -0500
-Received: from mail-ee0-f53.google.com (mail-ee0-f53.google.com
-	[74.125.83.53]) by cuda.sgi.com with ESMTP id 5gzpQEFIAGXj5imS
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Fri, 11 May 2012 07:31:22 -0700 (PDT)
-Received: by eekc41 with SMTP id c41so1355857eek.26
-	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 07:31:21 -0700 (PDT)
+	q4BEVa8v035985
+	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 09:31:37 -0500
+Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
+	cuda.sgi.com with ESMTP id RCAfd8Mwp7IriYVy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Fri, 11 May 2012 07:31:35 -0700 (PDT)
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id
+	q4BEVWAr028400
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
+	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 16:31:32 +0200
+Message-ID: <4FAD22BD.7010007@itwm.fraunhofer.de>
+Date: Fri, 11 May 2012 16:31:25 +0200
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 MIME-Version: 1.0
-Date: Fri, 11 May 2012 20:01:20 +0530
-Message-ID: <CANBXnMnw7znBQ9AfbZZqD3Nd77=Jcy15Y2z_=j25WOR7rn0r+w@mail.gmail.com>
-Subject: Blocks deallocation routine when file is deleted
-From: Adil Mujeeb <mujeeb.adil@gmail.com>
+Subject: Re: [PATCH] bio allocation failure due to bio_get_nr_vecs()
+References: <jognqm$o21$1@dough.gmane.org>
+	<4FABF01E.7080303@itwm.fraunhofer.de>
+	<4FAD18D4.3090102@itwm.fraunhofer.de>
+	<x49sjf6vml5.fsf@segfault.boston.devel.redhat.com>
+In-Reply-To: <x49sjf6vml5.fsf@segfault.boston.devel.redhat.com>
+Content-Type: multipart/mixed; boundary="------------080007060100060203010907"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,77 +31,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, sandeen@sandeen.net, linux-xfs@oss.sgi.com, Tejun Heo <tj@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
 
-Hi list,
+This is a multi-part message in MIME format.
+--------------080007060100060203010907
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I wanted to understand the routine of block deallocation when a file
-is deleted from XFS.
+On 05/11/2012 04:06 PM, Jeff Moyer wrote:
+> Bernd Schubert<bernd.schubert@itwm.fraunhofer.de>  writes:
+>
+>> diff --git a/fs/bio.c b/fs/bio.c
+>> index e453924..84da885 100644
+>> --- a/fs/bio.c
+>> +++ b/fs/bio.c
+>> @@ -505,9 +505,14 @@ EXPORT_SYMBOL(bio_clone);
+>>   int bio_get_nr_vecs(struct block_device *bdev)
+>>   {
+>>   	struct request_queue *q = bdev_get_queue(bdev);
+>> -	return min_t(unsigned,
+>> +	int nr_pages;
+>
+> Looks like a corrupt patch.
 
-Suppose initial state of the XFS partition is:
+What do you actually mean? Issue by thunderbird? I just saved the mail 
+in my sent folder and it looks? Just to be sure, patch attached.
 
------------------8<------------------------
-localhost:/home/adil # df /mnt/test/
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/mapper/vg_lv_test
-                      67055628      5280  67050348   1% /mnt/test
------------------8<------------------------
 
-The Used value is 5280. What it (5280) signifies? Number of FSB?
+Thanks,
+Bernd
 
-Now a 1MB size file is being created named xyz. After file creation
-checked the filesystem usage:
+--------------080007060100060203010907
+Content-Type: text/x-patch;
+ name="fix-bio-nrvec.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename="fix-bio-nrvec.patch"
 
------------------8<------------------------
-localhost:/home/adil # df /mnt/test/
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/mapper/vg_lv_test
-                      67055628      6304  67049324   1% /mnt/test
-localhost:/mnt/test # xfs_io xyz
-xfs_io> stat
-fd.path = "xyz"
-fd.flags = non-sync,non-direct,read-write
-stat.ino = 132
-stat.type = regular file
-stat.size = 1048576
-stat.blocks = 2048
-fsxattr.xflags = 0x0 [--------------]
-fsxattr.projid = 0
-fsxattr.extsize = 0
-fsxattr.nextents = 1
-fsxattr.naextents = 0
-dioattr.mem = 0x200
-dioattr.miniosz = 512
-dioattr.maxiosz = 2147483136
------------------8<------------------------
+bio: bio_get_nr_vecs() must not return more than BIO_MAX_PAGES
 
-The used count has increased from 5280 to 6304 i.e. by 1024. What it
-(1024) signifies?
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 
-Now deleted the file and checked the blocks and other information
-whether the blocks allocated returned back or not:
+The number of bio_get_nr_vecs() is passed down via bio_alloc() to
+bvec_alloc_bs(), which fails the bio allocation if
+nr_iovecs > BIO_MAX_PAGES. For the underlying caller this causes an
+unexpected bio allocation failure.
+Limiting to queue_max_segments() is not sufficiet, as max_segments
+also might be very large.
 
------------------8<------------------------
-localhost:/mnt/test # rm xyz
-localhost:/home/adil # df /mnt/test/
-Filesystem           1K-blocks      Used Available Use% Mounted on
-/dev/mapper/vg_lv_test
-                      67055628      5280  67050348   1% /mnt/test
------------------8<------------------------
+bvec_alloc_bs(gfp_mask, nr_iovecs, ) => NULL when nr_iovecs  > BIO_MAX_PAGES
+bio_alloc_bioset(gfp_mask, nr_iovecs, ...)
+bio_alloc(GFP_NOIO, nvecs)
+xfs_alloc_ioend_bio()
 
-So here we see that the used count is decreased to original value (5280).
 
-I would like to know where this deallocation is being done in the
-code. I appreciate if anyone can help me in giving the code flow hint.
+Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+---
+ fs/bio.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-Thanks and Best Regards,
-Adil
+diff --git a/fs/bio.c b/fs/bio.c
+index e453924..84da885 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -505,9 +505,14 @@ EXPORT_SYMBOL(bio_clone);
+ int bio_get_nr_vecs(struct block_device *bdev)
+ {
+ 	struct request_queue *q = bdev_get_queue(bdev);
+-	return min_t(unsigned,
++	int nr_pages;
++
++	nr_pages = min_t(unsigned,
+ 		     queue_max_segments(q),
+ 		     queue_max_sectors(q) / (PAGE_SIZE >> 9) + 1);
++
++	return min_t(unsigned, nr_pages, BIO_MAX_PAGES);
++
+ }
+ EXPORT_SYMBOL(bio_get_nr_vecs);
+ 
+
+--------------080007060100060203010907
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------080007060100060203010907--
