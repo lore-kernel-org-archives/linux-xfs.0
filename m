@@ -1,16 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4BCfjg9008249 for <xfs@oss.sgi.com>; Fri, 11 May 2012 07:41:45 -0500
-Received: from mail.auma.com (mail.auma.com [62.153.90.116]) by cuda.sgi.com
-	with ESMTP id cWvWm41luarDhgQz for <xfs@oss.sgi.com>;
-	Fri, 11 May 2012 05:41:44 -0700 (PDT)
-From: "Hammer, Marcus" <Marcus.Hammer@auma.com>
-Date: Fri, 11 May 2012 14:41:41 +0200
-Subject: Strange problems with xfs an SLESS11 SP2
-Message-ID: <CBD2D5A5.7C6B%Marcus.Hammer@auma.com>
-Content-Language: de-DE
+	q4BDnGCC025869
+	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 08:49:16 -0500
+Received: from mailgw1.uni-kl.de (mailgw1.uni-kl.de [131.246.120.220]) by
+	cuda.sgi.com with ESMTP id p7Letq6U9g5WnAO7 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Fri, 11 May 2012 06:49:14 -0700 (PDT)
+Received: from itwm2.itwm.fhg.de (itwm2.itwm.fhg.de [131.246.191.3])
+	by mailgw1.uni-kl.de (8.14.3/8.14.3/Debian-5+lenny1) with ESMTP id
+	q4BDnCL1012419
+	(version=TLSv1/SSLv3 cipher=EDH-RSA-DES-CBC3-SHA bits=168 verify=NOT)
+	for <linux-xfs@oss.sgi.com>; Fri, 11 May 2012 15:49:12 +0200
+Message-ID: <4FAD18D4.3090102@itwm.fraunhofer.de>
+Date: Fri, 11 May 2012 15:49:08 +0200
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 MIME-Version: 1.0
+Subject: [PATCH] bio allocation failure due to bio_get_nr_vecs()
+References: <jognqm$o21$1@dough.gmane.org>
+	<4FABF01E.7080303@itwm.fraunhofer.de>
+In-Reply-To: <4FABF01E.7080303@itwm.fraunhofer.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,115 +28,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+Cc: Jens Axboe <axboe@kernel.dk>, sandeen@sandeen.net, linux-xfs@oss.sgi.com, Tejun Heo <tj@kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Kent Overstreet <kent.overstreet@gmail.com>
 
-Hello,
+>>> May 10 17:31:49 sgi01 kernel: XFS (sdb): Mounting Filesystem
+>>> May 10 17:31:49 sgi01 kernel: XFS (sdb): Ending clean mount
+>>> May 10 17:33:00 sgi01 kernel: BUG: unable to handle kernel NULL
+>>> pointer dereference at (null)
+>>> May 10 17:33:00 sgi01 kernel: IP: [<ffffffffa07f5483>]
+>>> xfs_alloc_ioend_bio+0x33/0x50 [xfs]
+> 
+> Oh, there is a bio allocation path to return NULL:
+> 
+> bvec_alloc_bs(gfp_mask, nr_iovecs, ) =>  NULL when nr_iovecs>  BIO_MAX_PAGES
+> bio_alloc_bioset(gfp_mask, nr_iovecs, ...)
+> bio_alloc(GFP_NOIO, nvecs)
+> xfs_alloc_ioend_bio()
+> 
+> And nvecs/nr_iovecs is obtained by bio_get_nr_vecs(), which does not check for
+> BIO_MAX_PAGES. Of course, all of that only happens with large IO sizes,
+> which is exactly what I'm doing.
+> As xfs_alloc_ioend_bio() is using GFP_NOIO it does not expect bio_alloc
+> to fail, but as I'm trying to send large IOs I guess that is exactly what happens here.
 
-We have upgraded from SLES11 SP1 to SLES11 SP2. We use an exotic ERP System=
-, which stores the data in CISAM Files, which we store on several mounted x=
-fs filesystems ( /disk2, /disk3, /disk4, /disk5 and /disk6)
-The machine is a DELL R910 with 256 GB RAM and installed SLES11 SP2 (before=
- we used SLES11 SP1). So we also got the new 3.0 kernel after the upgrade. =
-The xfs mounts are LUNs on a netapp storage mapped via fibre channel to the
-Linux host. Also we use multipathd to have several paths to the netapp stor=
-age LUNs.
-
-Now after the upgrade to SLES11 SP2 we encountered a strange change on the =
-xfs filesystem /disk5:
-
-The /disk5 is a frequent accessed xfs filesystem by the ERP system. The dis=
-k usage increased from 53% to 76-78%. But only the disk usage, the size of =
-the files are completely the same. The defragmentation increased to 96%
-
-linuxsrv1:/disk4/ifax/0000 # xfs_db -c frag -r /dev/mapper/360a98000486e593=
-84b34497248694170
-actual 56156, ideal 2014, fragmentation factor 96.41%
-
-linuxsrv1:/disk4/ifax/0000 # xfs_info /dev/mapper/360a98000486e59384b344972=
-48694170
-meta-data=3D/dev/mapper/360a98000486e59384b34497248694170 isize=3D256    ag=
-count=3D21, agsize=3D3276800 blks
-         =3D                       sectsz=3D512   attr=3D0
-data     =3D                       bsize=3D4096   blocks=3D68157440, imaxpc=
-t=3D25
-         =3D                       sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-log      =3Dinternal               bsize=3D4096   blocks=3D25600, version=
-=3D1
-         =3D                       sectsz=3D512   sunit=3D0 blks, lazy-coun=
-t=3D0
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+I see that Kent already fixed an overflow issue 
+in commit 5abebfdd02450fa1349daacf242e70b3736581e3. But even with this commit, 
+bio_get_nr_vecs() still only checks for queue_max_segments(). As we have a maximum 
+of 2048 segments, that does not help much here.
+After cherry-picking 5abebfdd02450fa1349daacf242e70b3736581e3 and applying the patch
+below, I didn't run into panics / NULL pointer dereferences anymore.
 
 
-The fstab for xfs mounts are without any special options or optimizations, =
-here is the snipped from /etc/fstab:
+bio: bio_get_nr_vecs() must not return more than BIO_MAX_PAGES
 
-/dev/mapper/360a98000486e59384b3449714a47336c   /disk2  xfs     defaults   =
-     0 2
-/dev/mapper/360a98000486e59384b34497247514a56   /disk3  xfs     defaults   =
-     0 2
-/dev/mapper/360a98000486e59384b34497248694170   /disk4  xfs     defaults   =
-     0 2
-/dev/mapper/360a98000486e59384b344972486f6d4e   /disk5  xfs     defaults   =
-     0 2
-/dev/mapper/360a98000486e59384b3449724e6f4266   /disk6  xfs     defaults   =
-     0 2
-/dev/mapper/360a98000486e59384b3449724f326662   /opt/usr        xfs     def=
-aults        0 2
+From: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
 
-But something must have been changed in xfs, because now the metadata incre=
-ased so massive, we never had this before with SLES11 SP1.
+The number of bio_get_nr_vecs() is passed down via bio_alloc() to
+bvec_alloc_bs(), which fails the bio allocation if
+nr_iovecs > BIO_MAX_PAGES. For the underlying caller this causes an
+unexpected bio allocation failure.
+Limiting to queue_max_segments() is not sufficient, as max_segments
+also might be very large.
 
-I did a defragmentation with xfs_fsr and the metadata and usage decreased t=
-o 53%. But after 1 hour in production we are agin on 76-78% disk usage and =
-this defragmentation
-
-So my question is what has changed from 2.6 kernels 3.0 kernels, which can =
-explain this massive increase of metadata. (I did a defrag and we had somet=
-imes over 140.000 extends to one inode).
-
-I am completely confused and do now know how to handle this. Perhaps somebo=
-dy can help me to fix this problem or to understand what happens here=85.
-I also talked with some netapp engineers and they said,  I should ask at xf=
-s.org.
-
-One the filesystem are about 727 CISAM Files (IDX -> Index Files and DAT =
-=96> DATA Files). There are ten 15 GB Files on which some small content is =
-often changed by the ERP system. The rest of the files are lower than 400 M=
-B.
-We encounter this problem since the upgrade to SLES11 SP2 and the new kerne=
-l 3.0. (By the way we had to disable the transparent hugepages support in k=
-ernel 3.0, because of kernel crashes ;) - but this is a different story=85 )
-
---
-Mit freundlichen Gr=FC=DFen/Kind regards
-
-M.  Hammer
-System administration
-Information Technology
-
-AUMA Riester GmbH & Co. KG
-Aumastr. 1 =95 79379 Muellheim/Germany
-Tel/Phone +49 7631 809-1620 =95 Fax +49 7631 809-71620
-HammerM@auma.com<mailto:hammerm@auma.com> =95 www.auma.com<http://www.auma.=
-com/>
-
-Sitz: M=FCllheim, Registergericht Freiburg HRA 300276
-phG: AUMA Riester Verwaltungsgesellschaft mbH, Sitz: M=FCllheim, Registerge=
-richt Freiburg HRB 300424
-Gesch=E4ftsf=FChrer: Matthias Dinse, Henrik Newerla
-
-Registered Office: Muellheim, court of registration: Freiburg HRA 300276
-phG: Riester Verwaltungsgesellschaft mbH Registered Office: Muellheim, cour=
-t of registration: Freiburg HRB 300424
-Managing Directors: Matthias Dinse, Henrik Newerla
+bvec_alloc_bs(gfp_mask, nr_iovecs, ) => NULL when nr_iovecs  > BIO_MAX_PAGES
+bio_alloc_bioset(gfp_mask, nr_iovecs, ...)
+bio_alloc(GFP_NOIO, nvecs)
+xfs_alloc_ioend_bio()
 
 
+Signed-off-by: Bernd Schubert <bernd.schubert@itwm.fraunhofer.de>
+---
+ fs/bio.c |    7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
+diff --git a/fs/bio.c b/fs/bio.c
+index e453924..84da885 100644
+--- a/fs/bio.c
++++ b/fs/bio.c
+@@ -505,9 +505,14 @@ EXPORT_SYMBOL(bio_clone);
+ int bio_get_nr_vecs(struct block_device *bdev)
+ {
+ 	struct request_queue *q = bdev_get_queue(bdev);
+-	return min_t(unsigned,
++	int nr_pages;
++
++	nr_pages = min_t(unsigned,
+ 		     queue_max_segments(q),
+ 		     queue_max_sectors(q) / (PAGE_SIZE >> 9) + 1);
++
++	return min_t(unsigned, nr_pages, BIO_MAX_PAGES);
++
+ }
+ EXPORT_SYMBOL(bio_get_nr_vecs);
+ 
 
 _______________________________________________
 xfs mailing list
