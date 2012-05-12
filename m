@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4CDhshe183043 for <xfs@oss.sgi.com>; Sat, 12 May 2012 08:43:54 -0500
-Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
-	cuda.sgi.com with ESMTP id 8n4eTFCmgdHHWohK for
-	<xfs@oss.sgi.com>; Sat, 12 May 2012 06:43:52 -0700 (PDT)
-Date: Sat, 12 May 2012 15:43:22 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
+	q4CHGL3k196889 for <xfs@oss.sgi.com>; Sat, 12 May 2012 12:16:21 -0500
+Received: from zarafa14.zmi.at (zarafa14.zmi.at [212.69.164.59]) by
+	cuda.sgi.com with ESMTP id F11fAqRt0FUvjoxy (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 12 May 2012 10:16:18 -0700 (PDT)
 Subject: Re: badly destroyed XFS (on LVM) - how to repair?
-Message-ID: <20120512154322.47d6608b@galadriel.home>
-In-Reply-To: <1763478.Vy9F5bcWiZ@saturn>
-References: <1763478.Vy9F5bcWiZ@saturn>
+From: =?windows-1252?Q?Michael_Monnerie?=
+	<michael.monnerie@is.it-management.at>
+Date: Sat, 12 May 2012 19:16:16 +0200
 Mime-Version: 1.0
+Message-Id: <vmime.4fae9ae0.550.78dcfc20f42c98e0@zarafa14.zmi.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,23 +20,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: =?windows-1252?Q? Emmanuel_Florac ?= <eflorac@intellique.com>
+Cc: "=?windows-1252?Q? xfs=40oss.sgi.com ?=" <xfs@oss.sgi.com>
 
-TGUgU2F0LCAxMiBNYXkgMjAxMiAxNDo0OTo1NiArMDIwMCB2b3VzIMOpY3JpdmllejoKCj4gVGhl
-IHZvbHVtZSBpcyBhY2Nlc3NpYmxlIG9ubHkgdmlhIC9kZXYvZG0tMCwgaXQgc2VlbXMgdGhpcyBt
-aWdodCBiZQo+IG15IHByb2JsZW0/CgpEaWQgeW91IHJlc3RhcnQgdGhlIExWTSBzZXJ2aWNlIHRv
-IHJlYXNzZW1ibGUgZXZlcnl0aGluZyBwcm9wZXJseT8gU28KZmFyIHlvdSd2ZSBkb25lIGV2ZXJ5
-dGhpbmcgSSB3b3VsZCBoYXZlIHRob3VnaHQgb2YuLi4KCi0tIAotLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRW1t
-YW51ZWwgRmxvcmFjICAgICB8ICAgRGlyZWN0aW9uIHRlY2huaXF1ZQogICAgICAgICAgICAgICAg
-ICAgIHwgICBJbnRlbGxpcXVlCiAgICAgICAgICAgICAgICAgICAgfAk8ZWZsb3JhY0BpbnRlbGxp
-cXVlLmNvbT4KICAgICAgICAgICAgICAgICAgICB8ICAgKzMzIDEgNzggOTQgODQgMDIKLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+I even rebooted the server, because a "vgchange -ay" hangs that session. St=
+ill after the reboot it does this, I can't go around this. =
+
+
+So if lvm is correct, then xfs_repair and xfs_metadump have a problem, as t=
+hey both seem to not work correctly here. =
+
+
+Vom iPhone gesendet, bitte Tippfehler zu entschuldigen.
+Michael Monnerie
++436604156531
+
+Am 12.05.2012 um 15:43 schrieb "Emmanuel Florac" <eflorac@intellique.com>:
+
+> Le Sat, 12 May 2012 14:49:56 +0200 vous =E9criviez:
+> =
+
+>> The volume is accessible only via /dev/dm-0, it seems this might be
+>> my problem?
+> =
+
+> Did you restart the LVM service to reassemble everything properly? So
+> far you've done everything I would have thought of...
+> =
+
+> -- =
+
+> ------------------------------------------------------------------------
+> Emmanuel Florac     |   Direction technique
+>                    |   Intellique
+>                    |    <eflorac@intellique.com>
+>                    |   +33 1 78 94 84 02
+> ------------------------------------------------------------------------
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
