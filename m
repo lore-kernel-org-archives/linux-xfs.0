@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4CHR4Cl197909 for <xfs@oss.sgi.com>; Sat, 12 May 2012 12:27:04 -0500
-Received: from mail.linuxsystems.it (mail.linuxsystems.it [2.119.245.41]) by
-	cuda.sgi.com with ESMTP id 7rxbXxhNPfkNraoo for
-	<xfs@oss.sgi.com>; Sat, 12 May 2012 10:27:01 -0700 (PDT)
-Received: from [192.168.2.4] (unknown [192.168.2.4])
-	by mail.linuxsystems.it (Postfix) with ESMTPSA id 7EA5B3683
-	for <xfs@oss.sgi.com>; Sat, 12 May 2012 19:27:00 +0200 (CEST)
-Message-ID: <4FAE9DBF.1090505@linuxsystems.it>
-Date: Sat, 12 May 2012 19:28:31 +0200
-From: =?ISO-8859-15?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
+	q4CHXCRl198556 for <xfs@oss.sgi.com>; Sat, 12 May 2012 12:33:12 -0500
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id UfyK75tVP904wrVn (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 12 May 2012 10:33:10 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106014.dyn.cm.kabsi.at [81.217.106.14])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id EE9A91822430
+	for <xfs@oss.sgi.com>; Sat, 12 May 2012 19:33:08 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	by mailsrv.i.zmi.at (Postfix) with ESMTP id 353B2CD7C8C
+	for <xfs@oss.sgi.com>; Sat, 12 May 2012 19:33:32 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: badly destroyed XFS (on LVM) - how to repair?
+Date: Sat, 12 May 2012 19:33:04 +0200
+Message-ID: <3096724.ecFtoeOHo8@saturn>
+In-Reply-To: <1763478.Vy9F5bcWiZ@saturn>
+References: <1763478.Vy9F5bcWiZ@saturn>
 MIME-Version: 1.0
-Subject: How to recover data from an xfs partition
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,93 +29,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-15"; Format="flowed"
+Content-Type: multipart/mixed; boundary="===============5193880376611581607=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi,
-I had a (software) problem with my xen server ended ruining my domU =
 
-partitions. I already recovered all my ext4 partitions using fsck.ext4, =
-
-but I can't recover the only xfs partition I have :(
-
-When I try to mount I get:
-
-root@firewall:~# mount -o loop,offset=3D$((97280*1024)) -t xfs =
-
-/srv/xen/webserver.img /mnt
-mount: Structure needs cleaning
+--===============5193880376611581607==
+Content-Type: multipart/signed; boundary="nextPart1976836.SjO3jWyUz7"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
 
 
+--nextPart1976836.SjO3jWyUz7
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-While when trying to fsck I get:
+Another strange thing:
 
-root@firewall:~# xfs_check /dev/loop51
-xfs_check: /dev/loop51 is not a valid XFS filesystem (unexpected SB =
+I now started a "dd if=3D/dev/dm-0 of=3D/dev/null bs=3D1024k".
+For the first seconds(!), it did nothing, I thought it would hang.
+Then it started, but it's reading in a strange way:
 
-magic number 0xeb639010)
-xfs_check: size check failed
-xfs_check: WARNING - filesystem uses v1 dirs,limited functionality provided.
-cache_node_purge: refcount was 1, not zero (node=3D0x11f0820)
-xfs_check: cannot read root inode (22)
-cache_node_purge: refcount was 1, not zero (node=3D0x11f0970)
-xfs_check: cannot read realtime bitmap inode (22)
-xfs_check: size check failed
-xfs_check: WARNING - filesystem uses v1 dirs,limited functionality provided.
-bad superblock magic number eb639010, giving up
+Device:         rrqm/s   wrqm/s     r/s     w/s    rkB/s    wkB/s avgrq=
+-sz avgqu-sz   await  svctm  %util
+xvdg          139378,24     0,00 15893,61    0,00 77640,82     0,00    =
+ 9,77    35,96    2,26   0,06  99,88
+xvda              0,00     0,00    0,00    0,00     0,00     0,00     0=
+,00     0,00    0,00   0,00   0,00
+xvde              0,00     0,00    0,00    0,00     0,00     0,00     0=
+,00     0,00    0,00   0,00   0,00
+xvdb              0,00     0,00    0,00    0,00     0,00     0,00     0=
+,00     0,00    0,00   0,00   0,00
+dm-0              0,00     0,00 155241,52    0,00 77620,76     0,00    =
+ 1,00   353,51    2,28   0,01  99,88
 
+Very many I/Os and very slow KB/s. What could cause that?
+lv readahead is 1536 sectors, that's 128KB per data disk (a 7 disk RAID=
+-5) and should be OK.
 
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
 
-xfs_check:
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
 
-root@firewall:~# xfs_check /dev/loop51
-xfs_check: /dev/loop51 is not a valid XFS filesystem (unexpected SB =
+--nextPart1976836.SjO3jWyUz7
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
 
-magic number 0xeb639010)
-xfs_check: size check failed
-xfs_check: WARNING - filesystem uses v1 dirs,limited functionality provided.
-cache_node_purge: refcount was 1, not zero (node=3D0x22f1820)
-xfs_check: cannot read root inode (22)
-cache_node_purge: refcount was 1, not zero (node=3D0x22f1970)
-xfs_check: cannot read realtime bitmap inode (22)
-xfs_check: size check failed
-xfs_check: WARNING - filesystem uses v1 dirs,limited functionality provided.
-bad superblock magic number eb639010, giving up
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
 
+iEYEABECAAYFAk+untQACgkQzhSR9xwSCbSzswCfcFjk+AJJcpyU4qVBSmWiwmtc
+ThQAn0Kvpa9iOIdjgQJaGQTMMa7P04XL
+=oDP1
+-----END PGP SIGNATURE-----
 
-
-
-xfs_repair:
-
-root@firewall:~# xfs_repair /dev/loop51
-Phase 1 - find and verify superblock...
-bad primary superblock - bad magic number !!!
-
-attempting to find secondary superblock...
-...........................................................................=
-.....found =
-
-candidate secondary superblock...
-unable to verify superblock, continuing...
-.............
-[...]
-....................................Sorry, could not find valid =
-
-secondary superblock
-Exiting now.
+--nextPart1976836.SjO3jWyUz7--
 
 
-How can I restore my data? I cannot believe I had no problems restoring =
-
-*15* ext4 partitions while I can't restore the only xfs partition I have :(
-
-Hope you can help,
-Niccol=F2
+--===============5193880376611581607==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5193880376611581607==--
