@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4F4llgk153298 for <xfs@oss.sgi.com>; Mon, 14 May 2012 23:47:47 -0500
-Message-ID: <4FB1DFD1.709@oracle.com>
-Date: Tue, 15 May 2012 12:47:13 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	q4F6vQed164128 for <xfs@oss.sgi.com>; Tue, 15 May 2012 01:57:26 -0500
+Date: Tue, 15 May 2012 02:57:18 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2] xfs: hole-punch use truncate_pagecache_range
+Message-ID: <20120515065718.GA7373@infradead.org>
+References: <alpine.LSU.2.00.1205131347120.1547@eggly.anvils>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/2] xfstests: introduce 280 for SEEK_DATA/SEEK_HOLE
-	copy check
-References: <4F2FE410.2040508@oracle.com> <4FAD2D18.20403@sgi.com>
-In-Reply-To: <4FAD2D18.20403@sgi.com>
-Reply-To: jeff.liu@oracle.com
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.00.1205131347120.1547@eggly.anvils>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +22,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Hugh Dickins <hughd@google.com>
+Cc: xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, Ben Myers <bpm@sgi.com>, linux-fsdevel@vger.kernel.org
 
-Hi Rich,
+On Sun, May 13, 2012 at 01:50:06PM -0700, Hugh Dickins wrote:
+> When truncating a file, we unmap pages from userspace first, as that's
+> usually more efficient than relying, page by page, on the fallback in
+> truncate_inode_page() - particularly if the file is mapped many times.
+> 
+> Do the same when punching a hole: 3.4 added truncate_pagecache_range()
+> to do the unmap and trunc, so use it in xfs_flushinval_pages(), instead
+> of calling truncate_inode_pages_range() directly.
 
-Sorry for my late response!
+This change looks fine.
 
-On 05/11/2012 11:15 PM, Rich Johnston wrote:
+> Should xfs_tosspages() be using it too?  I don't know: left unchanged.
 
-> 
-> On 02/06/2012 08:30 AM, Jeff Liu wrote:
->> Introduce 280 for SEEK_DATA/SEEK_HOLE copy check.
->>
->> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
->>
-> 
-> 
-> 
->> +static int
->> +do_extent_copy(int src_fd, int dest_fd, off_t data_off, off_t hole_off)
->> +{
-> 
-> ...
-> 
->> +
->> +    while (len>  0) {
->> +        memset(buf, 0, sizeof(buf));
->> +        ssize_t nr_read = read(src_fd, buf, BUF_SIZE);
-> #RCJ The memset above is unnecessary.
-> 
-> 
->> +static int
->> +copy_extents(int src_fd, int dest_fd, off_t src_total_size)
->> +{
->> +    int ret = 0;
->> +    unsigned int i = 0;
-> 
-> ...
-> 
->> +        ++i;
->> +        seek_start = hole_pos;
->> +    } while (seek_start<  src_total_size);
-> #RCJ i is unused.
-
-Thanks for the review, I'll fix them later.
-
--Jeff
-
-> 
-> Other than the comments above, this version of the test looks good.
-> Reviewed-by: Rich Johnston<rjohnston@sgi.com>
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
+I'll look at it.  I've been planning to simplify and/or kill the
+xfs_fs_subr.c wrappers which tend to confuse the code for a while now,
+and deciding what exactly to do should be a fallout from that.
 
 _______________________________________________
 xfs mailing list
