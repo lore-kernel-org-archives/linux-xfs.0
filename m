@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4FKRNQF212215 for <xfs@oss.sgi.com>; Tue, 15 May 2012 15:27:23 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id k1IIq1gwB35B69vZ for <xfs@oss.sgi.com>;
-	Tue, 15 May 2012 13:27:22 -0700 (PDT)
-Message-ID: <4FB2BC2A.6000900@sandeen.net>
-Date: Tue, 15 May 2012 15:27:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q4FMmRxZ223923 for <xfs@oss.sgi.com>; Tue, 15 May 2012 17:48:27 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 35qP50YzhRTlFfnF (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 May 2012 15:48:24 -0700 (PDT)
+Date: Wed, 16 May 2012 00:48:05 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Hole punching and mmap races
+Message-ID: <20120515224805.GA25577@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH] Fix failure in 273 due to lack of inodes
-References: <1337113229-9714-1-git-send-email-jack@suse.cz>
-In-Reply-To: <1337113229-9714-1-git-send-email-jack@suse.cz>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,45 +24,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: sandeen@redhat.com, xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
-On 5/15/12 3:20 PM, Jan Kara wrote:
-> Test 273 fails for me due to lack of inodes (ext? filesystem is not configured
-> to have enough inodes for being filled up by 4k files). So change the test
-> to create larger files so that we don't hit this limit.
-> 
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  273 |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
->  I'm not sure if this fix isn't also just lurking somewhere in the pipeline
-> but I didn't find anything...
-> 
-> diff --git a/273 b/273
-> index 2965132..0bf7167 100755
-> --- a/273
-> +++ b/273
-> @@ -43,7 +43,7 @@ _cleanup()
->  . ./common.filter
->  
->  threads=50
-> -count=1
-> +count=2
->  
->  _threads_set()
->  {
+  Hello,
 
-It seems harmless; I never quite knew what this test was testing, so I can't say whether or not it breaks the purpose of the test ;)
+  Hugh pointed me to ext4 hole punching code which is clearly missing some
+locking. But looking at the code more deeply I realized I don't see
+anything preventing the following race in XFS or ext4:
 
-I'll give it a 
+TASK1				TASK2
+				punch_hole(file, 0, 4096)
+				  filemap_write_and_wait()
+				  truncate_pagecache_range()
+addr = mmap(file);
+addr[0] = 1
+  ^^ writeably fault a page
+				  remove file blocks
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+						FLUSHER
+						write out file
+						  ^^ interesting things can
+happen because we expect blocks under the first page to be allocated /
+reserved but they are not...
 
-and (try to remember to) merge it in a bit, if nobody speaks up against it.
+I'm pretty sure ext4 has this problem, I'm not completely sure whether
+XFS has something to protect against such race but I don't see anything.
 
--Eric
+It's not easy to protect against these races. For truncate, i_size protects
+us against similar races but for hole punching we don't have any such
+mechanism. One way to avoid the race would be to hold mmap_sem while we are
+invalidating the page cache and punching hole but that sounds a bit ugly.
+Alternatively we could just have some special lock (rwsem?) held during
+page_mkwrite() (for reading) and during whole hole punching (for writing)
+to serialize these two operations.
+
+Another alternative, which doesn't really look more appealing, is to go
+page-by-page and always free corresponding blocks under page lock.
+
+Any other ideas or thoughts?
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
