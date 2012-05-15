@@ -1,17 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4FICN39203521 for <xfs@oss.sgi.com>; Tue, 15 May 2012 13:12:23 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id mydj0keX1MLlBEmM for <xfs@oss.sgi.com>;
-	Tue, 15 May 2012 11:12:22 -0700 (PDT)
-Message-ID: <4FB29C85.5000603@sandeen.net>
-Date: Tue, 15 May 2012 13:12:21 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q4FIUmVl204598 for <xfs@oss.sgi.com>; Tue, 15 May 2012 13:30:49 -0500
+Message-ID: <4FB2A0D6.3050409@sgi.com>
+Date: Tue, 15 May 2012 13:30:46 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Test 274 in xfstests
-References: <20120515180521.GE26579@quack.suse.cz>
-In-Reply-To: <20120515180521.GE26579@quack.suse.cz>
+Subject: Re: [PATCH] xfs: use s_umount sema in xfs_sync_worker
+References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
+In-Reply-To: <20120514203449.GE16099@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,36 +17,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: wu.bo@cn.fujitsu.com, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 5/15/12 1:05 PM, Jan Kara wrote:
->   Hello,
-> 
->   test 274 fails e.g. for ext3 because it does not support fallocate(). So
-> I would think the best way to fix the is to add to the test
->   _require_xfs_io_falloc()
-> so that the test is run only for filesystems which do support fallocate.
-> But with that is connected one slightly related question - why does the
-> test use fallocate(1) binary instead of "xfs_io falloc" command which is
-> more common in xfstests?
-> 
-> 								Honza
+On 05/14/12 15:34, Ben Myers wrote:
 
-Argh I'm behind.  I had:
+> Protect xfs_sync_worker by using the s_umount semaphore at the read level to
+> provide exclusion with unmount while work is progressing.
+>
 
-[PATCH V2] xfstests: several 274 fixups
+> -			xfs_log_force(mp, 0);
+> +	if (down_read_trylock(&mp->m_super->s_umount)) {
 
-on the list way too long ago.
+Okay, the s_umount has down_write() performed upon it when it is
+created and does not do a up_write until the filesystem mount is
+complete.
 
-Want to test that out?  It has 1 review on the list, I'll merge it
-soon - if you want to give it a quick test first, go for it :)
+This test is just like the one in grab_super_passive(). The if
+statements have to be separated to know to do the corresponding
+up_read().
 
--Eric
+> +		if (!(mp->m_flags&  XFS_MOUNT_RDONLY)) {
+...
+> +		up_read(&mp->m_super->s_umount);
+
+Looks good.
+
+Reveiewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
