@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4FFlfLn195795 for <xfs@oss.sgi.com>; Tue, 15 May 2012 10:47:41 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id OHxAF57Y2s55gzQv for <xfs@oss.sgi.com>;
-	Tue, 15 May 2012 08:47:39 -0700 (PDT)
-Message-ID: <4FB27A9B.1070800@sandeen.net>
-Date: Tue, 15 May 2012 10:47:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q4FI5f0i203142 for <xfs@oss.sgi.com>; Tue, 15 May 2012 13:05:42 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id ukuCxMc9bat5q4kS (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 15 May 2012 11:05:40 -0700 (PDT)
+Date: Tue, 15 May 2012 20:05:21 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Test 274 in xfstests
+Message-ID: <20120515180521.GE26579@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfstests README: added 'make install' to building
-	steps
-References: <1335351177-3014-1-git-send-email-tmarek@redhat.com>
-In-Reply-To: <1335351177-3014-1-git-send-email-tmarek@redhat.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,37 +24,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tom Marek <tmarek@redhat.com>
-Cc: lczerner@redhat.com, dchinner@redhat.com, xfs@oss.sgi.com
+To: wu.bo@cn.fujitsu.com
+Cc: xfs@oss.sgi.com
 
-On 4/25/12 5:52 AM, Tom Marek wrote:
-> There was no mention of 'make install' step in the README file.
-> Run make install added to section 'Building Linux'.
+  Hello,
 
-Ok, I'll merge this.  TBH I've never run "make install" ;)
+  test 274 fails e.g. for ext3 because it does not support fallocate(). So
+I would think the best way to fix the is to add to the test
+  _require_xfs_io_falloc()
+so that the test is run only for filesystems which do support fallocate.
+But with that is connected one slightly related question - why does the
+test use fallocate(1) binary instead of "xfs_io falloc" command which is
+more common in xfstests?
 
--Eric
-
-> Signed-off-by: Tom Marek <tmarek@redhat.com>
-> ---
->  README |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/README b/README
-> index 0f52f02..d81ede9 100644
-> --- a/README
-> +++ b/README
-> @@ -3,7 +3,9 @@ BUILDING THE FSQA SUITE
->  _______________________
->  
->  Building Linux:
-> -	- cd into the xfstests directory and run make.
-> +	- cd into the xfstests directory
-> +	- run make
-> +	- run make install
->  	
->  Building IRIX:
->  	- cd into the xfstests directory 
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
