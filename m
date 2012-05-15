@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4ELoqW5129723 for <xfs@oss.sgi.com>; Mon, 14 May 2012 16:50:52 -0500
-Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
-	[128.162.233.19])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 45281304048
-	for <xfs@oss.sgi.com>; Mon, 14 May 2012 14:50:49 -0700 (PDT)
-Date: Mon, 14 May 2012 16:55:11 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: git://oss.sgi.com/xfs/xfs master branch rebase
-Message-ID: <20120514215511.GF16099@sgi.com>
+	q4F0wkUq140504 for <xfs@oss.sgi.com>; Mon, 14 May 2012 19:58:46 -0500
+Received: from boosthardware.localdomain (boosthardware.com [88.198.122.139])
+	by cuda.sgi.com with ESMTP id I2usGkGU9offo1nA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 14 May 2012 17:58:45 -0700 (PDT)
+Message-ID: <64776.110.174.53.110.1337043522.squirrel@boosthardware.com>
+In-Reply-To: <20120514142948.GS3963@sgi.com>
+References: <51509.110.174.53.110.1336699622.squirrel@boosthardware.com>
+	<20120511165012.GC16099@sgi.com>
+	<59946.110.174.53.110.1336959906.squirrel@boosthardware.com>
+	<20120514142948.GS3963@sgi.com>
+Date: Tue, 15 May 2012 02:58:42 +0200 (CEST)
+Subject: Re: file corruption issue
+From: "Patrick Shirkey" <pshirkey@boosthardware.com>
 MIME-Version: 1.0
-Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,27 +30,64 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi Folks,
 
-   Apparently there was a PEBKAC in my office on April 18.  I pulled in a patch
-   twice (on separate hosts) and then didn't notice the merge commit when I
-   combined them.
-  
-   Rather than pollute the upstream tree with this garbage I have chosen to
-   rebase the master branch at git://oss.sgi.com/xfs/xfs.  You'll notice that
-   now it doesn't contain 64a97f1 and 576f1a5.  Other than that it is the same
-   as before. 
-   
-   The old branch can still be found here:
-   http://oss.sgi.com/cgi-bin/gitweb.cgi?p=xfs/xfs.git;a=shortlog;h=refs/heads/master-for-3.5-bad
+On Mon, May 14, 2012 4:29 pm, Ben Myers wrote:
+> Hey Patrick,
+>
+> On Mon, May 14, 2012 at 03:45:06AM +0200, Patrick Shirkey wrote:
+>>
+>> On Fri, May 11, 2012 6:50 pm, Ben Myers wrote:
+>> > On Fri, May 11, 2012 at 03:27:02AM +0200, Patrick Shirkey wrote:
+>> >> I have some HP machines running centos:
+>> >>
+>> >> kernel 2.6.32-042stab049.6
+>> >> AMD Opteron(tm) Processor 6180 SE
+>> >> RAM:   528 GB
+>> >> RAID bus controller: Hewlett-Packard Company Smart Array G6
+>> controllers
+>> >>
+>> >> We have experienced some kernel crashes due to a kernel bug with
+>> >> interleaving ram on this hardware which require hard reset of the
+>> >> machines.
+>> >>
+>> >> After reboot we are finding that there is severe file corruption on
+>> the
+>> >> xfs file system where TBs of readonly databases are getting partially
+>> or
+>> >> fully truncated.
+>> >>
+>> >> Has anyone come across this or similar?
+>> >
+>> > This rings a bell for me but I can't be certain.  Could you provide a
+>> > metadump?
+>> >
+>>
+>> The machines are live so we have already restored the data several
+>> times.
+>> Will a metadump from the existing file system be useful or do you need
+>> it
+>> post crash?
+>
+> Well... one of each would be best.  It might be helpful to compare the
+> block
+> map from before the crash with the block map after the crash for one of
+> the
+> read-only corrupted databases.
+>
 
-   I'll keep this 'bad' branch around for awhile for reference.
+Unfortunately I cannot unmount the partition/s to run xfs_metadump because
+they are in use.
 
-   Anyone working on xfs atop the old master branch will need to rebase his or
-   her changes onto the new one.  I apologise for any inconvenience.
+I have found some files that were truncated on a recent crash. Is there
+any tool I can run on those files to get info that might be useful?
 
-Regards,
-	Ben
+
+
+
+
+--
+Patrick Shirkey
+Boost Hardware Ltd
 
 _______________________________________________
 xfs mailing list
