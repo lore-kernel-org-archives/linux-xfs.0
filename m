@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4GD55W4019496 for <xfs@oss.sgi.com>; Wed, 16 May 2012 08:05:05 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id KcnrUrT6GjAyVTGg (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 16 May 2012 06:05:03 -0700 (PDT)
-Date: Wed, 16 May 2012 15:04:45 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120516130445.GA27661@quack.suse.cz>
-References: <20120515224805.GA25577@quack.suse.cz>
-	<20120516021423.GO25351@dastard>
+	q4GGxXvW029779 for <xfs@oss.sgi.com>; Wed, 16 May 2012 11:59:33 -0500
+Date: Wed, 16 May 2012 12:04:03 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: use s_umount sema in xfs_sync_worker
+Message-ID: <20120516170402.GD3963@sgi.com>
+References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
+	<20120516015626.GN25351@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120516021423.GO25351@dastard>
+In-Reply-To: <20120516015626.GN25351@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,89 +24,71 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Wed 16-05-12 12:14:23, Dave Chinner wrote:
-> On Wed, May 16, 2012 at 12:48:05AM +0200, Jan Kara wrote:
-> >   Hello,
+Hey Dave,
+
+On Wed, May 16, 2012 at 11:56:26AM +1000, Dave Chinner wrote:
+> On Mon, May 14, 2012 at 03:34:49PM -0500, Ben Myers wrote:
+> > I'm still hitting this on a regular basis.  Here is some analysis from a recent
+> > crash dump which you may want to skip.  The fix is at the end.
+> ....
+> > ===================================================================
 > > 
-> >   Hugh pointed me to ext4 hole punching code which is clearly missing some
-> > locking. But looking at the code more deeply I realized I don't see
-> > anything preventing the following race in XFS or ext4:
+> > xfs: use s_umount sema in xfs_sync_worker
 > > 
-> > TASK1				TASK2
-> > 				punch_hole(file, 0, 4096)
-> > 				  filemap_write_and_wait()
-> > 				  truncate_pagecache_range()
-> > addr = mmap(file);
-> > addr[0] = 1
-> >   ^^ writeably fault a page
-> > 				  remove file blocks
-> > 
-> > 						FLUSHER
-> > 						write out file
-> > 						  ^^ interesting things can
-> > happen because we expect blocks under the first page to be allocated /
-> > reserved but they are not...
-> > 
-> > I'm pretty sure ext4 has this problem, I'm not completely sure whether
-> > XFS has something to protect against such race but I don't see anything.
+> > xfs_sync_worker checks the MS_ACTIVE flag in sb->s_flags to avoid doing work
+> > during mount and unmount.  This flag can be cleared by unmount after the
+> > xfs_sync_worker checks it but before the work is completed.
 > 
-> No, it doesn't. It's a known problem due to not being able to take a
-> lock in .page_mkwrite() to serialise mmap() IO against truncation or
-> other IO such as direct IO. This has been known for, well, long
-> before we came up with page_mkwrite(). At the time page_mkwrite()
-> was introduced, locking was discusses to solve this problem but was
-> considered difficult on the VM side so it was ignored.
-  I thought someone must have noticed before since XFS has hole punching for
-a long time...
+> Then there are problems all over the place in different filesystems
+> if the straight MS_ACTIVE check is not sufficient.
 
-> > It's not easy to protect against these races. For truncate, i_size protects
-> > us against similar races but for hole punching we don't have any such
-> > mechanism. One way to avoid the race would be to hold mmap_sem while we are
-> > invalidating the page cache and punching hole but that sounds a bit ugly.
-> > Alternatively we could just have some special lock (rwsem?) held during
-> > page_mkwrite() (for reading) and during whole hole punching (for writing)
-> > to serialize these two operations.
+Eh, I won't speak to the problems in other filesystems.  ;)
+
+MS_ACTIVE certainly isn't adequate in the case before us.
+
+> > Protect xfs_sync_worker by using the s_umount semaphore at the read level to
+> > provide exclusion with unmount while work is progressing.
 > 
-> What really needs to happen is that .page_mkwrite() can be made to
-> fail with -EAGAIN and retry the entire page fault from the start an
-> arbitrary number of times instead of just once as the current code
-> does with VM_FAULT_RETRY. That would allow us to try to take the
-> filesystem lock that provides IO exclusion for all other types of IO
-> and fail with EAGAIN if we can't get it without blocking. For XFS,
-> that is the i_iolock rwsem, for others it is the i_mutex, and some
-> other filesystems might take other locks.
-  Actually, I've been playing with VM_FAULT_RETRY recently (for freezing
-patches) and it's completely unhandled for .page_mkwrite() callbacks. Also
-only x86 really tries to handle it at all. Other architectures just don't
-allow it at all. Also there's a ton of callers of things like
-get_user_pages() which would need to handle VM_FAULT_RETRY and for some of
-them it would be actually non-trivial.
+> I don't think that is the right fix for the given problem.
+> 
+> The problem is, as you've stated:
+> 
+> "Looks like the problem is that the sync worker is still running
+> after the log has been torn down, and it calls xfs_fs_log_dummy
+> which generates log traffic."
 
-But in this particular case, I don't think VM_FAULT_RETRY is strictly
-necessary. We can have a lock, which ranks below mmap_sem (and thus
-i_mutex / i_iolock) and above i_mmap_mutex (thus page lock), transaction
-start, etc. Such lock could be taken in page_mkwrite() before taking page
-lock, in truncate() and punch_hold() just after i_mutex, and direct IO
-paths could be tweaked to use it as well I think.
+That's one problem, but we also want to protect against running this code at
+mount time.  s_umount sema is the tool that can do both.  Maybe there are some
+other options.
 
-> FWIW, I've been running at "use the IO lock in page_mkwrite" patch
-> for XFS for several months now, but I haven't posted it because
-> without the VM side being able to handle such locking failures
-> gracefully there's not much point in making the change. I did this
-> patch to reduce the incidence of mmap vs direct IO races that are
-> essentially identical in nature to rule them out of the cause of
-> stray delalloc blocks in files that fsstress has been producing on
-> XFS. FYI, this race condition hasn't been responsible for any of the
-> problems I've found recently....
-  Yeah, I've been trying to hit the race window for a while and I failed as
-well...
+> Why did we allow a new transaction to start while/after the log was
+> torn down?
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+> Isn't that the problem we need to fix because it leads to
+> invalid entries in the physical log that might cause recovery
+> failures?
+
+> Further, any asynchronous worker thread that does
+> transactions could have this same problem regardless of whether we
+> are umounting or cleaning up after a failed mount, so it is not
+> unique to the xfs_sync_worker....
+
+> That is, if we've already started to tear down or torn down the log,
+> we must not allow new transactions to start. Likewise, we can't
+> finalise tear down the log until transactions in progress have
+> completed. Using the s_umount lock here avoids then race, but it
+> really is a VFS level lock not an filesystem level lock) and is,
+> IMO, just papering over the real problem....
+
+I think you have a good point here, but this isn't limited to transactions.  We
+shouldn't even call xfs_log_need_covered without some protection from
+xfs_fs_put_super; xfs_fs_writable doesn't cut the mustard.   I'd better have a
+look at the other workqueues too.  Thanks for pointing this out.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
