@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4G2UqX0243323 for <xfs@oss.sgi.com>; Tue, 15 May 2012 21:30:52 -0500
-Received: from boosthardware.localdomain (boosthardware.com [88.198.122.139])
-	by cuda.sgi.com with ESMTP id uNF21AI6CXCI42Cs (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 15 May 2012 19:30:51 -0700 (PDT)
-Message-ID: <56000.110.174.53.110.1337135447.squirrel@boosthardware.com>
-In-Reply-To: <20120515151331.GG16099@sgi.com>
-References: <51509.110.174.53.110.1336699622.squirrel@boosthardware.com>
-	<20120511165012.GC16099@sgi.com>
-	<59946.110.174.53.110.1336959906.squirrel@boosthardware.com>
-	<20120514142948.GS3963@sgi.com>
-	<64776.110.174.53.110.1337043522.squirrel@boosthardware.com>
-	<20120515151331.GG16099@sgi.com>
-Date: Wed, 16 May 2012 04:30:47 +0200 (CEST)
-Subject: Re: file corruption issue
-From: "Patrick Shirkey" <pshirkey@boosthardware.com>
+	q4G2lcqn244753 for <xfs@oss.sgi.com>; Tue, 15 May 2012 21:47:43 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	IFxmWnAVVcD4BbuU for <xfs@oss.sgi.com>;
+	Tue, 15 May 2012 19:47:33 -0700 (PDT)
+Date: Wed, 16 May 2012 12:14:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120516021423.GO25351@dastard>
+References: <20120515224805.GA25577@quack.suse.cz>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120515224805.GA25577@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,77 +26,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
+On Wed, May 16, 2012 at 12:48:05AM +0200, Jan Kara wrote:
+>   Hello,
+> 
+>   Hugh pointed me to ext4 hole punching code which is clearly missing some
+> locking. But looking at the code more deeply I realized I don't see
+> anything preventing the following race in XFS or ext4:
+> 
+> TASK1				TASK2
+> 				punch_hole(file, 0, 4096)
+> 				  filemap_write_and_wait()
+> 				  truncate_pagecache_range()
+> addr = mmap(file);
+> addr[0] = 1
+>   ^^ writeably fault a page
+> 				  remove file blocks
+> 
+> 						FLUSHER
+> 						write out file
+> 						  ^^ interesting things can
+> happen because we expect blocks under the first page to be allocated /
+> reserved but they are not...
+> 
+> I'm pretty sure ext4 has this problem, I'm not completely sure whether
+> XFS has something to protect against such race but I don't see anything.
 
-On Tue, May 15, 2012 5:13 pm, Ben Myers wrote:
->
-> On Tue, May 15, 2012 at 02:58:42AM +0200, Patrick Shirkey wrote:
->> Unfortunately I cannot unmount the partition/s to run xfs_metadump
->> because
->> they are in use.
->>
->> I have found some files that were truncated on a recent crash. Is there
->> any tool I can run on those files to get info that might be useful?
->
-> Hrm.. xfs_bmap output could be helpful so we can see the block map.  Do
-> you
-> know how big they are supposed to be?  How much was truncated?
->
+No, it doesn't. It's a known problem due to not being able to take a
+lock in .page_mkwrite() to serialise mmap() IO against truncation or
+other IO such as direct IO. This has been known for, well, long
+before we came up with page_mkwrite(). At the time page_mkwrite()
+was introduced, locking was discusses to solve this problem but was
+considered difficult on the VM side so it was ignored.
 
-The files that we have as examples were originally 28bytes but are now 0byte.
+> It's not easy to protect against these races. For truncate, i_size protects
+> us against similar races but for hole punching we don't have any such
+> mechanism. One way to avoid the race would be to hold mmap_sem while we are
+> invalidating the page cache and punching hole but that sounds a bit ugly.
+> Alternatively we could just have some special lock (rwsem?) held during
+> page_mkwrite() (for reading) and during whole hole punching (for writing)
+> to serialize these two operations.
 
-Running xfs_bmap on the 0 byte file returns "no extent".
+What really needs to happen is that .page_mkwrite() can be made to
+fail with -EAGAIN and retry the entire page fault from the start an
+arbitrary number of times instead of just once as the current code
+does with VM_FAULT_RETRY. That would allow us to try to take the
+filesystem lock that provides IO exclusion for all other types of IO
+and fail with EAGAIN if we can't get it without blocking. For XFS,
+that is the i_iolock rwsem, for others it is the i_mutex, and some
+other filesystems might take other locks.
 
-ex.
+FWIW, I've been running at "use the IO lock in page_mkwrite" patch
+for XFS for several months now, but I haven't posted it because
+without the VM side being able to handle such locking failures
+gracefully there's not much point in making the change. I did this
+patch to reduce the incidence of mmap vs direct IO races that are
+essentially identical in nature to rule them out of the cause of
+stray delalloc blocks in files that fsstress has been producing on
+XFS. FYI, this race condition hasn't been responsible for any of the
+problems I've found recently....
 
-These files are located next to each other in the same folder.
+> Another alternative, which doesn't really look more appealing, is to go
+> page-by-page and always free corresponding blocks under page lock.
 
-- 28 byte file:
- EXT: FILE-OFFSET      BLOCK-RANGE              AG AG-OFFSET             
-TOTAL
-   0: [0..7]:          28230136440..28230136447 13 (312849120..312849127) 
-   8
+Doesn't work for regions with no pages in memory over them.
 
-- 0 byte file: no extents
+Cheers,
 
-
-> Unfortunately since you don't know which database will have the
-> corruption...
-> you'll need to get xfs_bmap output for all of them, and then after a crash
-> get
-> the 'after'.  Is that a possibility?
->
-
-I'll try to get some more data.
-
-- Separately I was able to run xfs_metadump against one of our partitions.
-The resulting file is 1.4 GB and it also has some potentially sensitive
-information in it so I am not sure about posting it to a public location.
-Is there anything that I can look for that might be useful.
-
-I have some data from xfs_bmap on specific files located in the same
-partition as the metadump was generated from. I'm not sure if that will
-actually give us any details that can help though as this data is all post
-crash atm.
-
-- A few more details that may be relevant.
-
-1: We are running openvz and LVM on these machines. Are there any known
-issue/s with file corruption after a hard reset with openvz/LVM running?
-
-2: We have observed that while there is no obvious pattern in the data
-corruption is does happen in chunks. It appears to be random chunks of
-files that are corrupted after a crash->reset sequence.
-
-
-
-
-
---
-Patrick Shirkey
-Boost Hardware Ltd
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
