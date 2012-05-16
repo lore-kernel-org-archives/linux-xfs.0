@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4GGxXvW029779 for <xfs@oss.sgi.com>; Wed, 16 May 2012 11:59:33 -0500
-Date: Wed, 16 May 2012 12:04:03 -0500
+	q4GHaCWg031939 for <xfs@oss.sgi.com>; Wed, 16 May 2012 12:36:13 -0500
+Date: Wed, 16 May 2012 12:40:42 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: use s_umount sema in xfs_sync_worker
-Message-ID: <20120516170402.GD3963@sgi.com>
-References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
-	<20120516015626.GN25351@dastard>
+Subject: Re: [PATCH 00/10] xfs: discontiguous buffer support a.k.a. die
+	xfs_dabuf die
+Message-ID: <20120516174042.GJ16099@sgi.com>
+References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120516015626.GN25351@dastard>
+In-Reply-To: <1335249220-22274-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,64 +28,68 @@ Cc: xfs@oss.sgi.com
 
 Hey Dave,
 
-On Wed, May 16, 2012 at 11:56:26AM +1000, Dave Chinner wrote:
-> On Mon, May 14, 2012 at 03:34:49PM -0500, Ben Myers wrote:
-> > I'm still hitting this on a regular basis.  Here is some analysis from a recent
-> > crash dump which you may want to skip.  The fix is at the end.
-> ....
-> > ===================================================================
-> > 
-> > xfs: use s_umount sema in xfs_sync_worker
-> > 
-> > xfs_sync_worker checks the MS_ACTIVE flag in sb->s_flags to avoid doing work
-> > during mount and unmount.  This flag can be cleared by unmount after the
-> > xfs_sync_worker checks it but before the work is completed.
-> 
-> Then there are problems all over the place in different filesystems
-> if the straight MS_ACTIVE check is not sufficient.
+Looks like there are some additional test failures due to this patchset.  Here
+some output from a bisect I did yesterday, running only the tests which failed
+on the machine where I noticed this.
 
-Eh, I won't speak to the problems in other filesystems.  ;)
+# git describe
+v3.4-rc2-54-g1307bbd
 
-MS_ACTIVE certainly isn't adequate in the case before us.
+from patches/series:
+# normal: (there's my baseline on this machine.  I noticed a larger number of test failures on another test box and brought that series over here)
+#Failures: 030 178 230 231 232 233 250 274
+#Failed 8 of 198 tests
 
-> > Protect xfs_sync_worker by using the s_umount semaphore at the read level to
-> > provide exclusion with unmount while work is progressing.
-> 
-> I don't think that is the right fix for the given problem.
-> 
-> The problem is, as you've stated:
-> 
-> "Looks like the problem is that the sync worker is still running
-> after the log has been torn down, and it calls xfs_fs_log_dummy
-> which generates log traffic."
+xfs-fix-delalloc-quota-accounting-on-failure.patch
+xfs-fix-memory-reclaim-deadlock-on-agi-buffer.patch
+xfs-add-trace-points-for-log-forces.patch
+xfs-separate-buffer-indexing-from-block-map.patch
+xfs-convert-internal-buffer-functions-to-pass-maps.patch
+xfs-add-discontiguous-buffer-map-interface.patch
+xfs-add-discontiguous-buffer-support-to-transactions.patch
 
-That's one problem, but we also want to protect against running this code at
-mount time.  s_umount sema is the tool that can do both.  Maybe there are some
-other options.
+# ^^^ bisect 1, went ok.  
+#    030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+#    Failures: 030 230 231 232 233
+#    Failed 5 of 15 tests
 
-> Why did we allow a new transaction to start while/after the log was
-> torn down?
+# ^^^ bisect 4, making sure it's good
+#Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+#Failures: 030 230 231 232 233
+#Failed 5 of 15 tests
 
-> Isn't that the problem we need to fix because it leads to
-> invalid entries in the physical log that might cause recovery
-> failures?
+xfs-struct-xfs_buf_log_format-isn-t-variable-sized.patch
 
-> Further, any asynchronous worker thread that does
-> transactions could have this same problem regardless of whether we
-> are umounting or cleaning up after a failed mount, so it is not
-> unique to the xfs_sync_worker....
+# ^^^ bisect 5, crashed.  (consistently)
 
-> That is, if we've already started to tear down or torn down the log,
-> we must not allow new transactions to start. Likewise, we can't
-> finalise tear down the log until transactions in progress have
-> completed. Using the s_umount lock here avoids then race, but it
-> really is a VFS level lock not an filesystem level lock) and is,
-> IMO, just papering over the real problem....
+xfs-support-discontiguous-buffers-in-the.patch
 
-I think you have a good point here, but this isn't limited to transactions.  We
-shouldn't even call xfs_log_need_covered without some protection from
-xfs_fs_put_super; xfs_fs_writable doesn't cut the mustard.   I'd better have a
-look at the other workqueues too.  Thanks for pointing this out.
+# ^^^ bisect 6
+#Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+#Failures: 030 085 086 087 121 179 182 200 230 231 232 233
+#Failed 12 of 15 tests
+
+xfs-use-multiple-irec-xfs-buf-support-in-dabuf.patch
+
+# ^^^ bisect 3, (still no good)
+#Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+#Failures: 030 085 086 087 121 179 182 200 230 231 232 233
+#Failed 12 of 15 tests
+
+#xfs-remove-struct-xfs_dabuf-and-infrastructure.patch
+#xfs-factor-buffer-reading-from-xfs_dir2_leaf_getdents.patch
+#fs-xfs-xfs_dinode.h-fix-comments-of-xfs_dinode_t.patch
+#fix-wrong-flag-assert-in-xfs_attr_shortform_getvalue.patch
+
+# ^^^ bisect 2, not good (I ran only the tests which failed on the other test box)
+#    030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+#    Failures: 030 085 086 087 121 179 182 200 230 231 232 233
+#    Failed 12 of 15 tests
+
+Looks like there is a problem in
+xfs-struct-xfs_buf_log_format-isn-t-variable-sized.patch,
+and/or
+xfs-support-discontiguous-buffers-in-the.patch.
 
 Regards,
 	Ben
