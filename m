@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4H7hG76129588 for <xfs@oss.sgi.com>; Thu, 17 May 2012 02:43:22 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	cgvdxxW6mi3KIKDr for <xfs@oss.sgi.com>;
-	Thu, 17 May 2012 00:43:11 -0700 (PDT)
-Date: Thu, 17 May 2012 17:43:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120517074308.GQ25351@dastard>
-References: <20120515224805.GA25577@quack.suse.cz>
-	<20120516021423.GO25351@dastard>
-	<20120516130445.GA27661@quack.suse.cz>
+	q4HFtR1j189564 for <xfs@oss.sgi.com>; Thu, 17 May 2012 10:55:27 -0500
+Received: from whiskey.americas.sgi.com (whiskey.americas.sgi.com
+	[128.162.233.19])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id D1FB78F8035
+	for <xfs@oss.sgi.com>; Thu, 17 May 2012 08:55:23 -0700 (PDT)
+Date: Thu, 17 May 2012 11:00:02 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: xfs: assertion failed in xfs_file_dio_aio_write
+Message-ID: <20120517160002.GL16099@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120516130445.GA27661@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,78 +24,117 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, May 16, 2012 at 03:04:45PM +0200, Jan Kara wrote:
-> On Wed 16-05-12 12:14:23, Dave Chinner wrote:
-> > On Wed, May 16, 2012 at 12:48:05AM +0200, Jan Kara wrote:
-> > > It's not easy to protect against these races. For truncate, i_size protects
-> > > us against similar races but for hole punching we don't have any such
-> > > mechanism. One way to avoid the race would be to hold mmap_sem while we are
-> > > invalidating the page cache and punching hole but that sounds a bit ugly.
-> > > Alternatively we could just have some special lock (rwsem?) held during
-> > > page_mkwrite() (for reading) and during whole hole punching (for writing)
-> > > to serialize these two operations.
-> > 
-> > What really needs to happen is that .page_mkwrite() can be made to
-> > fail with -EAGAIN and retry the entire page fault from the start an
-> > arbitrary number of times instead of just once as the current code
-> > does with VM_FAULT_RETRY. That would allow us to try to take the
-> > filesystem lock that provides IO exclusion for all other types of IO
-> > and fail with EAGAIN if we can't get it without blocking. For XFS,
-> > that is the i_iolock rwsem, for others it is the i_mutex, and some
-> > other filesystems might take other locks.
->   Actually, I've been playing with VM_FAULT_RETRY recently (for freezing
-> patches) and it's completely unhandled for .page_mkwrite() callbacks.
+Hi Folks,
 
-Yeah, it's a mess.
+Here's an interesting assert that I hit overnight:
 
-> Also
-> only x86 really tries to handle it at all. Other architectures just don't
-> allow it at all. Also there's a ton of callers of things like
-> get_user_pages() which would need to handle VM_FAULT_RETRY and for some of
-> them it would be actually non-trivial.
+[89045.383286] XFS: Assertion failed: ret < 0 || ret == count, file: /root/xfs/fs/xfs/xfs_file.c, line: 705
+[89045.392866] ------------[ cut here ]------------
+[89045.396761] kernel BUG at /root/xfs/fs/xfs/xfs_message.c:100!
+[89045.396761] invalid opcode: 0000 [#1] SMP 
+[89045.396761] CPU 1 
+[89045.408007] Modules linked in: xfs(O) exportfs af_packet fuse loop dm_mod e1000 shpchp iTCO_wdt tpm_tis sg pci_hotplug sr_mod iTCO_vendor_support intel_rng tpm tpm_bios e752x_edac mic
+rocode floppy cdrom pcspkr serio_raw container edac_core i2c_i801 i2c_core button uhci_hcd ehci_hcd sd_mod crc_t10dif usbcore usb_common edd ext3 mbcache jbd fan processor ide_pci_generi
+c piix ide_core ata_generic ata_piix libata aic79xx scsi_transport_spi scsi_mod thermal thermal_sys hwmon [last unloaded: xfs]
+[89045.408007] 
+[89045.408007] Pid: 26996, comm: dd Tainted: G           O 3.4.0-rc2-0.7-default+ #20 Supermicro X6DHR-8G/X6DHR-8GS/X6DHR-8G/X6DHR-8GS
+[89045.408007] RIP: 0010:[<ffffffffa0309bdd>]  [<ffffffffa0309bdd>] assfail+0x1d/0x30 [xfs]
+[89045.408007] RSP: 0000:ffff880220d3dcd8  EFLAGS: 00010296
+[89045.408007] RAX: 0000000000000072 RBX: 0000000000000000 RCX: 0000000000000086
+[89045.408007] RDX: 00000000000087ac RSI: 0000000000000046 RDI: 0000000000000246
+[89045.408007] RBP: ffff880220d3dcd8 R08: 0000000000000000 R09: 0000000000000000
+[89045.408007] R10: 00000000ffffffff R11: 0000000000000000 R12: 0000000000000000
+[89045.408007] R13: ffff88022ee11388 R14: ffff88022ee11100 R15: 0000000000100000
+[89045.408007] FS:  00007fc8e1342700(0000) GS:ffff88022fc80000(0000) knlGS:0000000000000000
+[89045.408007] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
+[89045.408007] CR2: 00007fe7b0dc6a02 CR3: 0000000220cd9000 CR4: 00000000000007e0
+[89045.408007] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+[89045.408007] DR3: 0000000000000000 DR6: 00000000ffff0ff0 DR7: 0000000000000400
+[89045.408007] Process dd (pid: 26996, threadinfo ffff880220d3c000, task ffff880220c26080)
+[89045.408007] Stack:
+[89045.408007]  ffff880220d3dd58 ffffffffa02fffe7 0000000000100000 0000000000000029
+[89045.408007]  ffff880220d3ded8 ffff880220d3ddf8 0000000020d3dd38 000000000e100000
+[89045.408007]  0000000000000001 0000000000100000 0000000223c72e98 fffffffffffffffb
+[89045.408007] Call Trace:
+[89045.408007]  [<ffffffffa02fffe7>] xfs_file_dio_aio_write+0x147/0x290 [xfs]
+[89045.408007]  [<ffffffffa030031a>] xfs_file_aio_write+0x1ea/0x1f0 [xfs]
+[89045.408007]  [<ffffffff810e4b06>] ? __vm_enough_memory+0x36/0x170
+[89045.408007]  [<ffffffff8110e5d9>] do_sync_write+0xd9/0x120
+[89045.408007]  [<ffffffff81194bfd>] ? security_file_permission+0x1d/0xa0
+[89045.408007]  [<ffffffff8110ec0b>] vfs_write+0xcb/0x180
+[89045.408007]  [<ffffffff8110edb0>] sys_write+0x50/0x90
+[89045.408007]  [<ffffffff813b27f9>] system_call_fastpath+0x16/0x1b
+[89045.408007] Code: 00 00 00 48 89 45 c8 e8 72 fc ff ff c9 c3 55 41 89 d0 48 89 f1 48 89 fa 48 c7 c6 e0 a2 37 a0 31 ff 48 89 e5 31 c0 e8 93 ff ff ff <0f> 0b eb fe 90 90 90 90 90 90 90 9
+0 90 90 90 90 90 90 90 55 4c 
+[89045.408007] RIP  [<ffffffffa0309bdd>] assfail+0x1d/0x30 [xfs]
+[89045.408007]  RSP <ffff880220d3dcd8>
 
-Seems kind of silly to me to have a generic retry capability in the
-page fault handler and then not implement it in a useful manner for
-*anyone*.
+This assertion failed while I was running xfstests -g auto in a loop.  Looks
+like test 247 was running at the time of the crash. 
 
-> But in this particular case, I don't think VM_FAULT_RETRY is strictly
-> necessary. We can have a lock, which ranks below mmap_sem (and thus
-> i_mutex / i_iolock) and above i_mmap_mutex (thus page lock), transaction
-> start, etc. Such lock could be taken in page_mkwrite() before taking page
-> lock, in truncate() and punch_hold() just after i_mutex, and direct IO
-> paths could be tweaked to use it as well I think.
+~/xfstests # while true
+> do
+> ./check -g auto
+> done
+SRC           -- /root/xfs
+BRANCH        -- refs/heads/master
+DESC          -- v3.4-rc2-54-g1307bbd
+PATCHES:
+/root/xfs/patches/xfs-fix-delalloc-quota-accounting-on-failure.patch
+        md5sum:         edbb56145eedc2e79960821246b25425
+        X-Patchwork-Id:
+        Message-Id:     <1336474133-27732-1-git-send-email-david@fromorbit.com>
+/root/xfs/patches/xfs-fix-memory-reclaim-deadlock-on-agi-buffer.patch
+        md5sum:         6157ca5a97fbec939bf046cbd59faa66
+        X-Patchwork-Id:
+        Message-Id:     <1336421497-1554-1-git-send-email-treestem@gmail.com>
+/root/xfs/patches/xfs-add-trace-points-for-log-forces.patch
+        md5sum:         84bb6825bc550f47ebca16f5678d96f0
+        X-Patchwork-Id:
+        Message-Id:     <1335249220-22274-2-git-send-email-david@fromorbit.com>
+/root/xfs/patches/xfs-use-iolock-on-xfs_ioc_allocsp-calls.patch
+        md5sum:         19602e6e5ffcc242b2d2f5680bd9f708
+        X-Patchwork-Id:
+        Message-Id:     <1334051449-26631-1-git-send-email-david@fromorbit.com>
+FSTYP         -- xfs (debug)
+PLATFORM      -- Linux/x86_64 nfs10 3.4.0-rc2-0.7-default+
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdb4
+MOUNT_OPTIONS -- /dev/sdb4 /mnt/scratch
+...
+243 1s ... 0s
+244 2s ... 2s
+245 0s ... 1s
+246 0s ... 1s
+247 31s ...Write failed: Broken pipe
 
-Which means we'd be adding another layer of mostly redundant locking
-just to avoid i_mutex/mmap_sem inversion. But I don't see how it
-solves the direct IO problem because we still need to grab the
-mmap_sem inside the IO during get_user_pages_fast() while holding
-i_mutex/i_iolock....
 
-> > FWIW, I've been running at "use the IO lock in page_mkwrite" patch
-> > for XFS for several months now, but I haven't posted it because
-> > without the VM side being able to handle such locking failures
-> > gracefully there's not much point in making the change. I did this
-> > patch to reduce the incidence of mmap vs direct IO races that are
-> > essentially identical in nature to rule them out of the cause of
-> > stray delalloc blocks in files that fsstress has been producing on
-> > XFS. FYI, this race condition hasn't been responsible for any of the
-> > problems I've found recently....
->   Yeah, I've been trying to hit the race window for a while and I failed as
-> well...
+ 625 STATIC ssize_t
+ 626 xfs_file_dio_aio_write(
+ 627         struct kiocb            *iocb,
+ 628         const struct iovec      *iovp,
+ 629         unsigned long           nr_segs,
+ 630         loff_t                  pos,
+ 631         size_t                  ocount)
+ 632 {
+...
+ 698         ret = generic_file_direct_write(iocb, iovp,
+ 699                         &nr_segs, pos, &iocb->ki_pos, count, ocount);
+ 700 
+ 701 out:
+ 702         xfs_rw_iunlock(ip, iolock);
+ 703 
+ 704         /* No fallback to buffered IO on errors for XFS. */
+ 705         ASSERT(ret < 0 || ret == count);
+ 706         return ret;
+ 707 }
 
-IIRC, it's a rare case (that I consider insane, BTW):  read from a
-file with into a buffer that is a mmap()d region of the same file
-that has not been faulted in yet.....
 
-Cheers,
+Something to keep an eye out for.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
