@@ -1,25 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4GLT4LQ044490
-	for <linux-xfs@oss.sgi.com>; Wed, 16 May 2012 16:29:05 -0500
-Message-ID: <4FB41C1D.8000808@sgi.com>
-Date: Wed, 16 May 2012 16:29:01 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q4H7H5tB125840 for <xfs@oss.sgi.com>; Thu, 17 May 2012 02:17:10 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	1UWVf0qYSxFw9Rrl for <xfs@oss.sgi.com>;
+	Thu, 17 May 2012 00:17:02 -0700 (PDT)
+Date: Thu, 17 May 2012 17:16:58 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: use s_umount sema in xfs_sync_worker
+Message-ID: <20120517071658.GP25351@dastard>
+References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
+	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-References: <20120426224412.GA9541@dastard>
-	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
-	<20120426230738.GB9541@dastard>
-	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
-	<20120427110922.GF9541@dastard>
-	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
-	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
-	<20120507171908.GA16881@sgi.com>
-	<CADLDEKvgT_FcGhJKoPaQv0mh_Jqdaqu8SYatc9xxU7vOY217YQ@mail.gmail.com>
-	<loom.20120510T180646-433@post.gmane.org>
-	<20120516184231.GK16099@sgi.com> <4FB3FA1D.6050102@canonical.com>
-In-Reply-To: <4FB3FA1D.6050102@canonical.com>
+Content-Disposition: inline
+In-Reply-To: <20120516170402.GD3963@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,117 +23,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chris J Arges <chris.j.arges@canonical.com>
-Cc: linux-xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 05/16/12 14:03, Chris J Arges wrote:
-> On 05/16/2012 01:42 PM, Ben Myers wrote:
->> Hey Chris,
->>
->> On Thu, May 10, 2012 at 04:11:27PM +0000, Chris J Arges wrote:
->>> <snip>
->>>> Canonical attached them to the bug report that they filed yesterday:
->>>> http://oss.sgi.com/bugzilla/show_bug.cgi?id=922
->>>>
->>>> ...Juerg
->>>>
->>>
->>> Hello,
->>> I am able to reproduce this bug with the instructions posted in this bug. Let me
->>> know what I can do to help.
->>
->> The bug shows:
->>
->> |This has been tested on the following kernels which all exhibit the same
->> |failures:
->> |- 3.2.0-24 (Ubuntu Precise)
->> |- 3.4.0-rc4
->> |- 3.0.29
->> |- 3.1.10
->> |- 3.2.15
->> |- 3.3.2
->>
->> Can you find an older kernel that isn't broken?
->>
->
-> Sure, I can start digging further back.
-> Also 2.6.38-8-server was the original version that this bug was reported
-> on. So I can try testing circa 2.6.32 to see if that also fails.
-> --chris
->
->> -Ben
->>
->
+On Wed, May 16, 2012 at 12:04:03PM -0500, Ben Myers wrote:
+> On Wed, May 16, 2012 at 11:56:26AM +1000, Dave Chinner wrote:
+> > On Mon, May 14, 2012 at 03:34:49PM -0500, Ben Myers wrote:
+> > > I'm still hitting this on a regular basis.  Here is some analysis from a recent
+> > > crash dump which you may want to skip.  The fix is at the end.
+> > ....
+> > > ===================================================================
+> > > 
+> > > xfs: use s_umount sema in xfs_sync_worker
+> > > 
+> > > xfs_sync_worker checks the MS_ACTIVE flag in sb->s_flags to avoid doing work
+> > > during mount and unmount.  This flag can be cleared by unmount after the
+> > > xfs_sync_worker checks it but before the work is completed.
+> > 
+> > Then there are problems all over the place in different filesystems
+> > if the straight MS_ACTIVE check is not sufficient.
+> 
+> Eh, I won't speak to the problems in other filesystems.  ;)
+> 
+> MS_ACTIVE certainly isn't adequate in the case before us.
 
-What I know so far:
-I have log cleaner kicker added to xlog_grant_head_wake(). This kicker 
-at best would prevent waiting for the next sync before starting the log 
-cleaner.
+Only because the XFS code isn't internally safe...
 
-I have one machine that has been running for 2 days without hanging. 
-Actually, now I would prefer it to hurry up and hang.
+> > > Protect xfs_sync_worker by using the s_umount semaphore at the read level to
+> > > provide exclusion with unmount while work is progressing.
+> > 
+> > I don't think that is the right fix for the given problem.
+> > 
+> > The problem is, as you've stated:
+> > 
+> > "Looks like the problem is that the sync worker is still running
+> > after the log has been torn down, and it calls xfs_fs_log_dummy
+> > which generates log traffic."
+> 
+> That's one problem, but we also want to protect against running this code at
+> mount time.  s_umount sema is the tool that can do both.  Maybe there are some
+> other options.
 
-Here is what see on the machine that is hung:
+The mount case isn't a problem - MS_ACTIVE is only set once the
+mount process is complete and so the check is just fine for that
+case.
 
-A few processes (4-5) are hung waiting to get space on the log. There 
-isn't enough free space on the log for the first transaction and it 
-waits. All other processes will have to wait behind the first process. 
-251,811 bytes of the original 589,842 bytes should still be free (if my 
-hand free space calculations are correct).
+> > Why did we allow a new transaction to start while/after the log was
+> > torn down?
+> 
+> > Isn't that the problem we need to fix because it leads to
+> > invalid entries in the physical log that might cause recovery
+> > failures?
+> 
+> > Further, any asynchronous worker thread that does
+> > transactions could have this same problem regardless of whether we
+> > are umounting or cleaning up after a failed mount, so it is not
+> > unique to the xfs_sync_worker....
+> 
+> > That is, if we've already started to tear down or torn down the log,
+> > we must not allow new transactions to start. Likewise, we can't
+> > finalise tear down the log until transactions in progress have
+> > completed. Using the s_umount lock here avoids then race, but it
+> > really is a VFS level lock not an filesystem level lock) and is,
+> > IMO, just papering over the real problem....
+> 
+> I think you have a good point here, but this isn't limited to transactions.
 
-The AIL is empty. There is nothing to clean. Any new transaction at this 
-point will kick the cleaner, and it still can't start the first waiter, 
-so it joins the wait list.
+I'm pretty sure that the other async threads/wqs are safe w.r.t.
+startup and shutdown. Indeed, some of them have to run while
+mount/unmount are running so must have their own startup/shutdown
+synchronisation. Hence we need to treat each different async work on
+a case by case basis...
 
-The only XFS traffic at this point is inode reclaim worker. This is to 
-be expected.
+> We shouldn't even call xfs_log_need_covered without some
+> protection from xfs_fs_put_super; xfs_fs_writable doesn't cut the
+> mustard.
 
-The CIL has entries, nothing is waiting on the CIL. xc_current_sequence 
-= 117511 xc_push_seq = 117510. So there is nothing for the CIL worker to do.
+Sure, but that check is for a different purpose so it's no surprise
+at all that it doesn't help this case.
 
-117511 is the largest sequence number that I have found so far in the 
-xfs_log_item list. There are a few entries with smaller sequence numbers 
-and the following strange entry:
+AFAICT, we simply don't care if xfs_fs_put_super() has been called -
+what matters is the state of the log at the time
+xfs_log_need_covered() is called.  i.e. xfs_log_need_covered()
+should error out if the log is being recovered or being torn down.
+Same for xfs_log_force(), xfs_log_reserve(), etc. Right now we don't
+even check if we can do the operation safely or not.
 
-77th entry in the xfs_log_item list:
+Right now we assume that new transactions or log operations cannot
+occur (i.e they are stopped) before we tear down the log.  That
+means we either need to prevent transactions from starting once we
+start tearing down the log, or we need to stop the xfs_sync_worker
+before we tear down the log. The second is how we currently avoid
+this problem, so adding a cancel_delayed_work_sync(&mp->m_sync_work)
+to xfs_log_unmount() would probably solve the problem....
 
-crash> struct xfs_log_item ffff88083222b5b8
-struct xfs_log_item {
-   li_ail = {
-     next = 0xffff88083222b5b0,
-     prev = 0x0
-   },
-   li_lsn = 0,
-   li_desc = 0x9f5d9f5d,
-   li_mountp = 0xffff88083116e300,
-   li_ailp = 0x0,
-   li_type = 0,
-   li_flags = 0,
-   li_bio_list = 0x0,
-   li_cb = 0,
-   li_ops = 0xffff88083105de00,
-   li_cil = {
-     next = 0xffff880832ad9f08,
-     prev = 0xffff880831751448
-   },
-   li_lv = 0xc788c788,
-   li_seq = -131906182637504
-}
+Cheers,
 
-Everything in this entry is bad except the li_cil.next and li_cil.prev. 
-It looks like li_ail.next is really part of a list that starts at 
-0xffff88083222b5b0. The best explanation is a junk addresses was 
-inserted into the li_cil chain.
-
-This is a single data point which could be anything including bad 
-hardware. I will continue to traverse this list until I can get the 
-other box to hang. If someone want to traverse their xfs_log_item list ...
-
---Mark Tinguely.
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
