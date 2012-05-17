@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4HKtGrW246535
-	for <linux-xfs@oss.sgi.com>; Thu, 17 May 2012 15:55:16 -0500
-Message-ID: <4FB565C6.8080303@canonical.com>
-Date: Thu, 17 May 2012 15:55:34 -0500
-From: Chris J Arges <chris.j.arges@canonical.com>
+	q4HNSpDa014515 for <xfs@oss.sgi.com>; Thu, 17 May 2012 18:28:51 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id HDlWWdHUQ52e5b57 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 17 May 2012 16:28:49 -0700 (PDT)
+Date: Fri, 18 May 2012 01:28:29 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120517232829.GA31028@quack.suse.cz>
+References: <20120515224805.GA25577@quack.suse.cz>
+	<20120516021423.GO25351@dastard>
+	<20120516130445.GA27661@quack.suse.cz>
+	<20120517074308.GQ25351@dastard>
 MIME-Version: 1.0
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-References: <20120426224412.GA9541@dastard>
-	<CADLDEKs6oMDA-6OhmcFxyRoBVpduKtSput=53TQGn9NCAOXC1Q@mail.gmail.com>
-	<20120426230738.GB9541@dastard>
-	<CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
-	<20120427110922.GF9541@dastard>
-	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
-	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
-	<20120507171908.GA16881@sgi.com>
-	<CADLDEKvgT_FcGhJKoPaQv0mh_Jqdaqu8SYatc9xxU7vOY217YQ@mail.gmail.com>
-	<loom.20120510T180646-433@post.gmane.org>
-	<20120516184231.GK16099@sgi.com>
-In-Reply-To: <20120516184231.GK16099@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20120517074308.GQ25351@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,46 +29,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-xfs@oss.sgi.com, tinguely@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On 05/16/2012 01:42 PM, Ben Myers wrote:
-> Hey Chris,
+On Thu 17-05-12 17:43:08, Dave Chinner wrote:
+> On Wed, May 16, 2012 at 03:04:45PM +0200, Jan Kara wrote:
+> > On Wed 16-05-12 12:14:23, Dave Chinner wrote:
+> > > On Wed, May 16, 2012 at 12:48:05AM +0200, Jan Kara wrote:
+> > > > It's not easy to protect against these races. For truncate, i_size protects
+> > > > us against similar races but for hole punching we don't have any such
+> > > > mechanism. One way to avoid the race would be to hold mmap_sem while we are
+> > > > invalidating the page cache and punching hole but that sounds a bit ugly.
+> > > > Alternatively we could just have some special lock (rwsem?) held during
+> > > > page_mkwrite() (for reading) and during whole hole punching (for writing)
+> > > > to serialize these two operations.
+> > > 
+> > > What really needs to happen is that .page_mkwrite() can be made to
+> > > fail with -EAGAIN and retry the entire page fault from the start an
+> > > arbitrary number of times instead of just once as the current code
+> > > does with VM_FAULT_RETRY. That would allow us to try to take the
+> > > filesystem lock that provides IO exclusion for all other types of IO
+> > > and fail with EAGAIN if we can't get it without blocking. For XFS,
+> > > that is the i_iolock rwsem, for others it is the i_mutex, and some
+> > > other filesystems might take other locks.
+> >   Actually, I've been playing with VM_FAULT_RETRY recently (for freezing
+> > patches) and it's completely unhandled for .page_mkwrite() callbacks.
 > 
-> On Thu, May 10, 2012 at 04:11:27PM +0000, Chris J Arges wrote:
->> <snip>
->>> Canonical attached them to the bug report that they filed yesterday:
->>> http://oss.sgi.com/bugzilla/show_bug.cgi?id=922
->>>
->>> ...Juerg
->>>
->>
->> Hello,
->> I am able to reproduce this bug with the instructions posted in this bug. Let me 
->> know what I can do to help.
+> Yeah, it's a mess.
 > 
-> The bug shows:
+> > Also
+> > only x86 really tries to handle it at all. Other architectures just don't
+> > allow it at all. Also there's a ton of callers of things like
+> > get_user_pages() which would need to handle VM_FAULT_RETRY and for some of
+> > them it would be actually non-trivial.
 > 
-> |This has been tested on the following kernels which all exhibit the same
-> |failures:
-> |- 3.2.0-24 (Ubuntu Precise)
-> |- 3.4.0-rc4
-> |- 3.0.29
-> |- 3.1.10
-> |- 3.2.15
-> |- 3.3.2
+> Seems kind of silly to me to have a generic retry capability in the
+> page fault handler and then not implement it in a useful manner for
+> *anyone*.
+  Yeah. It's only tailored for one specific use in filemap_fault() on
+x86...
+ 
+> > But in this particular case, I don't think VM_FAULT_RETRY is strictly
+> > necessary. We can have a lock, which ranks below mmap_sem (and thus
+> > i_mutex / i_iolock) and above i_mmap_mutex (thus page lock), transaction
+> > start, etc. Such lock could be taken in page_mkwrite() before taking page
+> > lock, in truncate() and punch_hold() just after i_mutex, and direct IO
+> > paths could be tweaked to use it as well I think.
 > 
-> Can you find an older kernel that isn't broken?
-> 
-Tested with Ubuntu Lucid 2.6.32-38-generic #38 (upstream 2.6.32.52), so
-far I am able to run the test for 5 hours, which on the same machine I
-have typically been able to reproduce in 2 hours. Will continue to run
-this, and on another system to verify.
+> Which means we'd be adding another layer of mostly redundant locking
+> just to avoid i_mutex/mmap_sem inversion. But I don't see how it
+> solves the direct IO problem because we still need to grab the
+> mmap_sem inside the IO during get_user_pages_fast() while holding
+> i_mutex/i_iolock....
+  Yeah, direct IO case won't be trivial. We would have to take the lock
+after dio_get_page() and release it before going for next page. While the
+lock was released someone could fault in pages into the area where direct
+IO is happening so we would have to invalidate them while holding the lock
+again. It seems it would work but I agree it's probably too ugly to live
+given how abstract the problem is...
 
---chris
-
-> -Ben
+> > > FWIW, I've been running at "use the IO lock in page_mkwrite" patch
+> > > for XFS for several months now, but I haven't posted it because
+> > > without the VM side being able to handle such locking failures
+> > > gracefully there's not much point in making the change. I did this
+> > > patch to reduce the incidence of mmap vs direct IO races that are
+> > > essentially identical in nature to rule them out of the cause of
+> > > stray delalloc blocks in files that fsstress has been producing on
+> > > XFS. FYI, this race condition hasn't been responsible for any of the
+> > > problems I've found recently....
+> >   Yeah, I've been trying to hit the race window for a while and I failed as
+> > well...
 > 
+> IIRC, it's a rare case (that I consider insane, BTW):  read from a
+> file with into a buffer that is a mmap()d region of the same file
+> that has not been faulted in yet.....
+  With punch hole, the race is less insane - just punching hole in the area
+which is accessed via mmap could race in a bad way AFAICS.
+
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
