@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4IDXCx7174329 for <xfs@oss.sgi.com>; Fri, 18 May 2012 08:33:12 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 7RteIcyLacyKAM2s (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 18 May 2012 06:33:11 -0700 (PDT)
-Date: Fri, 18 May 2012 15:32:50 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120518133250.GC5589@quack.suse.cz>
-References: <20120515224805.GA25577@quack.suse.cz>
-	<20120516021423.GO25351@dastard>
-	<20120516130445.GA27661@quack.suse.cz>
-	<20120517074308.GQ25351@dastard>
-	<20120517232829.GA31028@quack.suse.cz>
-	<20120518101210.GX25351@dastard>
+	q4IER3IP189586 for <xfs@oss.sgi.com>; Fri, 18 May 2012 09:27:03 -0500
+Date: Fri, 18 May 2012 09:31:43 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: How to recover data from an xfs partition
+Message-ID: <20120518143143.GN16099@sgi.com>
+References: <4FAE9DBF.1090505@linuxsystems.it>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120518101210.GX25351@dastard>
+In-Reply-To: <4FAE9DBF.1090505@linuxsystems.it>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,36 +18,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+To: =?iso-8859-1?Q?Niccol=F2?= Belli <darkbasic@linuxsystems.it>
+Cc: xfs@oss.sgi.com
 
-On Fri 18-05-12 20:12:10, Dave Chinner wrote:
-> On Fri, May 18, 2012 at 01:28:29AM +0200, Jan Kara wrote:
-> > On Thu 17-05-12 17:43:08, Dave Chinner wrote:
-> > > On Wed, May 16, 2012 at 03:04:45PM +0200, Jan Kara wrote:
-> > > > On Wed 16-05-12 12:14:23, Dave Chinner wrote:
-> > > IIRC, it's a rare case (that I consider insane, BTW):  read from a
-> > > file with into a buffer that is a mmap()d region of the same file
-> > > that has not been faulted in yet.....
-> >   With punch hole, the race is less insane - just punching hole in the area
-> > which is accessed via mmap could race in a bad way AFAICS.
-> 
-> Seems the simple answer to me is to prevent page faults while hole
-> punching, then....
-  Yes, that's what I was suggesting in the beginning :) And I was asking
-whether people are OK with another lock in the page fault path (in
-particular in ->page_mkwrite) or whether someone has a better idea (e.g.
-taking mmap_sem in the hole punching path seems possible but I'm not sure
-whether that would be considered acceptable abuse).
+Niccolo,
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+On Sat, May 12, 2012 at 07:28:31PM +0200, Niccol=F2 Belli wrote:
+> root@firewall:~# xfs_repair /dev/loop51
+> Phase 1 - find and verify superblock...
+> bad primary superblock - bad magic number !!!
+> =
+
+> attempting to find secondary superblock...
+> .........................................................................=
+.......found
+> candidate secondary superblock...
+> unable to verify superblock, continuing...
+> .............
+> [...]
+> ....................................Sorry, could not find valid
+> secondary superblock
+> Exiting now.
+> =
+
+> =
+
+> How can I restore my data?
+
+I recommend you give it a shot with the latest xfsprogs.  However, it may be
+that your filesystem has been corrupted beyond repair.
+
+-Ben
 
 _______________________________________________
 xfs mailing list
