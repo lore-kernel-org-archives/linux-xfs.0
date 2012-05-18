@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4IACRN1123352 for <xfs@oss.sgi.com>; Fri, 18 May 2012 05:12:27 -0500
+	q4IAScku126049 for <xfs@oss.sgi.com>; Fri, 18 May 2012 05:28:38 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	XdJGybxYzBDUsBL7 for <xfs@oss.sgi.com>;
-	Fri, 18 May 2012 03:12:24 -0700 (PDT)
-Date: Fri, 18 May 2012 20:12:10 +1000
+	Nr8pgt6Y0HCLbFDf for <xfs@oss.sgi.com>;
+	Fri, 18 May 2012 03:28:37 -0700 (PDT)
+Date: Fri, 18 May 2012 20:28:29 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120518101210.GX25351@dastard>
-References: <20120515224805.GA25577@quack.suse.cz>
-	<20120516021423.GO25351@dastard>
-	<20120516130445.GA27661@quack.suse.cz>
-	<20120517074308.GQ25351@dastard>
-	<20120517232829.GA31028@quack.suse.cz>
+Subject: Re: Are two transactions running in parallel OK?
+Message-ID: <20120518102829.GY25351@dastard>
+References: <20120517200831.GB23231@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120517232829.GA31028@quack.suse.cz>
+In-Reply-To: <20120517200831.GB23231@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +27,46 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
+Cc: sandeen@redhat.com, dchinner@redhat.com, xfs@oss.sgi.com
 
-On Fri, May 18, 2012 at 01:28:29AM +0200, Jan Kara wrote:
-> On Thu 17-05-12 17:43:08, Dave Chinner wrote:
-> > On Wed, May 16, 2012 at 03:04:45PM +0200, Jan Kara wrote:
-> > > On Wed 16-05-12 12:14:23, Dave Chinner wrote:
-> > IIRC, it's a rare case (that I consider insane, BTW):  read from a
-> > file with into a buffer that is a mmap()d region of the same file
-> > that has not been faulted in yet.....
->   With punch hole, the race is less insane - just punching hole in the area
-> which is accessed via mmap could race in a bad way AFAICS.
+On Thu, May 17, 2012 at 10:08:31PM +0200, Jan Kara wrote:
+>   Hello,
+> 
+>   I've been into a source of lockdep warning I got with XFS when testing my
+> filesystem freezing patches. The culprit seems to be that when doing direct
+> IO, XFS starts a transaction in xfs_setfilesize_trans_alloc() and attaches
+> that transaction to endio structure. Then it goes on and starts another
+> transaction in xfs_iomap_write_direct() which creates a possible deadlock
+> with filesystem freezing (if the second transaction start happens after we
+> start blocking new transactions, it gets blocked, but the first transaction
+> isn't ever completed).
 
-Seems the simple answer to me is to prevent page faults while hole
-punching, then....
+Both occur within the context of an active write IO - why would
+new transactions be blocked while there are still active write
+operations that require allocation transactions occurring?
+
+> So first I wanted to ask whether my analysis is correct. If yes, I was also
+> wondering whether this cannot cause a deadlock (at least in theory) if the
+> second transaction would block waiting for log space but we couldn't
+> possibly free enough of it due to the first transaction being held open?
+
+Don't think so. The first transaction reservation is for the inode
+size update, but it doesn't hold anything locked so it will not hold
+up log tail pushing so the second transaction reservation will not
+get blocked by it. The onyl way that could happen is if the
+combination of the two transactions is greater than 25% of the log,
+and given that the size update transaction reservation is only about
+600 bytes, that can't occur....
+
+> If freezing deadlock is the only problem with this code, then I guess we
+> could avoid waiting for filesystem freezing when starting the second
+> transaction (although it might end up being rather ugly). Or if anyone else
+> has other idea how to solve this, I'm listening ;).
+
+I'm confused about why the active sb_start_write() of the direct IO
+wouldn't hold off the freeze until the IO has completed. That should
+completely protect the write against freeze until the IO completes,
+which AFAICT means the lockdep report is a false positive....
 
 Cheers,
 
