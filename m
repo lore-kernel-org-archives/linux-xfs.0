@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4IExRV7196977 for <xfs@oss.sgi.com>; Fri, 18 May 2012 09:59:27 -0500
-Received: from mail.linuxsystems.it (mail.linuxsystems.it [2.119.245.41]) by
-	cuda.sgi.com with ESMTP id ncX6X9eRifnX9iDZ for
-	<xfs@oss.sgi.com>; Fri, 18 May 2012 07:59:24 -0700 (PDT)
-Received: from [192.168.2.4] (unknown [192.168.2.4])
-	by mail.linuxsystems.it (Postfix) with ESMTPSA id 1A4C57743
-	for <xfs@oss.sgi.com>; Fri, 18 May 2012 16:59:19 +0200 (CEST)
-Message-ID: <4FB66430.9040202@linuxsystems.it>
-Date: Fri, 18 May 2012 17:01:04 +0200
-From: =?ISO-8859-1?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
+	q4IGeUuR217614 for <xfs@oss.sgi.com>; Fri, 18 May 2012 11:40:30 -0500
+Date: Fri, 18 May 2012 11:45:10 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Badness in xfs_write at fs/xfs/linux-2.6/xfs_lrw.c:838
+Message-ID: <20120518164510.GP16099@sgi.com>
+References: <23d352591001210116s73926b58g97173d8a1b1e82c3@mail.gmail.com>
 MIME-Version: 1.0
-Subject: Re: How to recover data from an xfs partition
-References: <4FAE9DBF.1090505@linuxsystems.it> <20120518143143.GN16099@sgi.com>
-In-Reply-To: <20120518143143.GN16099@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <23d352591001210116s73926b58g97173d8a1b1e82c3@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +18,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: andutt <andreas.utterberg@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+Andutt,
 
-Il 18/05/2012 16:31, Ben Myers ha scritto:
-> I recommend you give it a shot with the latest xfsprogs.  However, it may=
- be
-> that your filesystem has been corrupted beyond repair.
+On Thu, Jan 21, 2010 at 10:16:45AM +0100, andutt wrote:
+> I have some problem with an XFS filesystem, im running Suse SLES 10
+> SP2, with 2.6.16.60-0.42.7-smp kernel untop of a veritas 1Tb volume, a
+> couple of times per day i get following in my kernel log.
+> 
+> Badness in xfs_write at fs/xfs/linux-2.6/xfs_lrw.c:838
 
-I succeeded recovering something with xfsprogs 3.1.8, but no more than =
+(I am picking up this old thread for the benefit of the mail archive, whose
+results I found to be inadequate.  Hopefully what follows is sufficient
+explanation of this warning for the next poor fool.  It may even be correct.)
 
-1GB of data (~5%).
+I was able to reproduce this (once) by running the following overnight:
 
-Fortunately I managed to save some precious config files, considering I =
+while true; do dd if=/dev/zero of=file conv=notrunc bs=4k count=1000 oflag=direct; done
+while true; do dd if=file of=/dev/null bs=1k count=10000 iflag=direct; done
+while true; do dd if=file of=/dev/null bs=4k count=10000; done
+while true; do dd if=file of=/dev/null bs=4k count=10000; done
+while true ; do dd if=file of=/dev/null bs=1k count=1000; done
+while true; do dd if=file of=/dev/null bs=4k count=10000; done
+while true ; do dd if=file of=/dev/null bs=1k count=1000; done          * 'ish
+while true ; do dd if=file of=/dev/null bs=1k count=1000; done          * 'ish
 
-had a 6 months old backup the disaster is a bit less catastrophic.
+* ish... maybe this is what I ran.  It's not in scrollback.
 
-I had a bad time replacing corrupted data from the other ten ext4 =
+I believe what we are seeing is a thin race between the direct write and the
+buffered readers adding cached pages to the file.  It looks to me that the
+direct write and the readers all take the iolock shared.  So there is no
+exclusion between them when the direct write checks for cached pages in the
+file to determine whether to take the iolock exclusive to flush them out, and
+when the actual flushing and WARN_ON occur.  The buffered readers can read data
+from disk into the cache during this window and this causes the WARN_ON to
+fire.
 
-virtual machines, but they didn't give me too much troubles compared to =
+The standard advice given here is:  "Don't do direct and buffered io
+concurrently on the same file."
 
-xfs. How ironic that the data loss happened during the installation of =
+It seems to me that having pages cached during the direct write isn't
+necessarily a problem.  These pages might be at offsets that do not overlap
+with the direct write, and this would be a perfectly valid usage of concurrent
+direct and buffered io.  I believe the required semantics of an overlapping
+buffered/direct situation are undefined (I could be horribly wrong).  And XFS
+leaves it up to the application to use adequate locking to prevent overlapping
+concurrent buffered and direct io.  It looks like running flushinval with
+iolock shared is not a problem here, and there cannot be any dirty pages
+because the direct write has the iolock shared and buffered writes take it
+exclusive.
 
-the backup system...
+I suggest you 1) be certain that your application is doing the Right Thing, and
+then 2) ignore the warning.
 
-To be honest I don't know if I will use xfs anymore, unfortunately I =
+It really is up to the application to do the right thing in this area.  And the
+warning doesn't (necessarily) indicate that the application did something
+wrong, just that it could have.
 
-need per-directory quota and it is the only viable solution.
+This warning has been removed from xfs in v3.1 (see c58cb165). 
 
-Niccol=F2
+-Ben
 
 _______________________________________________
 xfs mailing list
