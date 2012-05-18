@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4IHUlOm231604 for <xfs@oss.sgi.com>; Fri, 18 May 2012 12:30:48 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id uZSRZx6bDzb7RJay for
-	<xfs@oss.sgi.com>; Fri, 18 May 2012 10:30:46 -0700 (PDT)
-Message-ID: <4FB68744.1090304@redhat.com>
-Date: Fri, 18 May 2012 12:30:44 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q4IHkVEK234037 for <xfs@oss.sgi.com>; Fri, 18 May 2012 12:46:32 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 7GMgr0rBSWAT8Jkv for <xfs@oss.sgi.com>;
+	Fri, 18 May 2012 10:46:30 -0700 (PDT)
+Message-ID: <4FB68AF6.1090303@sandeen.net>
+Date: Fri, 18 May 2012 12:46:30 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: Lost patch fixing test 273?
-References: <20120515124654.GE22359@quack.suse.cz>
-In-Reply-To: <20120515124654.GE22359@quack.suse.cz>
+Subject: Re: How to recover data from an xfs partition
+References: <4FAE9DBF.1090505@linuxsystems.it> <20120518143143.GN16099@sgi.com>
+	<4FB66430.9040202@linuxsystems.it>
+In-Reply-To: <4FB66430.9040202@linuxsystems.it>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,30 +21,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
+To: =?ISO-8859-1?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
 Cc: xfs@oss.sgi.com
 
-On 5/15/12 7:46 AM, Jan Kara wrote:
->   Hi,
-> 
->   I'm still getting failures for test 273 among other reasons because
-> http://oss.sgi.com/archives/xfs/2012-04/msg01029.html didn't get applied.
-> Why so?
-> 
-> 								Honza
+On 5/18/12 10:01 AM, Niccol=F2 Belli wrote:
+> Hi,
+> =
+
+> Il 18/05/2012 16:31, Ben Myers ha scritto:
+>> I recommend you give it a shot with the latest xfsprogs.  However, it ma=
+y be
+>> that your filesystem has been corrupted beyond repair.
+> =
+
+> I succeeded recovering something with xfsprogs 3.1.8, but no more than 1G=
+B of data (~5%).
+> =
+
+> Fortunately I managed to save some precious config files, considering I h=
+ad a 6 months old backup the disaster is a bit less catastrophic.
+> =
+
+> I had a bad time replacing corrupted data from the other ten ext4 virtual=
+ machines, but they didn't give me too much troubles compared to xfs. How i=
+ronic that the data loss happened during the installation of the backup sys=
+tem...
+> =
+
+> To be honest I don't know if I will use xfs anymore, unfortunately I need=
+ per-directory quota and it is the only viable solution.
+
+You're welcome to follow your heart on choice of filesystem of course, but =
+without knowing what happened to your storage, it's a little bit of a stret=
+ch to blame xfs.
+
+Just based on:
+
+> xfs_check: /dev/loop51 is not a valid XFS filesystem (unexpected SB magic=
+ number 0xeb639010) =
 
 
-are you pulling from xfstests-dev.git on kernel.org or xfstests.git from oss.sgi.com?
+it appears that something scribbled all over your storage (i.e. the file ba=
+cking it - what was that stored on?)  What it was that did the scribbling, =
+and how much it scribbled is unknown, and it may or may not have been more =
+significant than whatever hit your ext4 partitions.
 
-The former is usually more up to date.
-
-http://git.kernel.org/?p=fs/xfs/xfstests-dev.git;a=commitdiff;h=1fce0780f63ccdd308767e23fe39a18d30d973d6
+I do not think you encountered an xfs bug; something else severely damaged =
+your block device.
 
 -Eric
+
+
+> Niccol=F2
+> =
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> =
+
 
 _______________________________________________
 xfs mailing list
