@@ -1,22 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4INYnfL258530 for <xfs@oss.sgi.com>; Fri, 18 May 2012 18:34:49 -0500
-Received: from mail.linuxsystems.it (mail.linuxsystems.it [2.119.245.41]) by
-	cuda.sgi.com with ESMTP id v2HoaGFb3EUIhxvK for
-	<xfs@oss.sgi.com>; Fri, 18 May 2012 16:34:47 -0700 (PDT)
-Received: from [192.168.2.4] (unknown [192.168.2.4])
-	by mail.linuxsystems.it (Postfix) with ESMTPSA id 8E718786B
-	for <xfs@oss.sgi.com>; Sat, 19 May 2012 01:34:46 +0200 (CEST)
-Message-ID: <4FB6DD00.5010004@linuxsystems.it>
-Date: Sat, 19 May 2012 01:36:32 +0200
-From: =?ISO-8859-1?Q?Niccol=F2_Belli?= <darkbasic@linuxsystems.it>
+	q4J1eVtb011565 for <xfs@oss.sgi.com>; Fri, 18 May 2012 20:40:31 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	8GihTuCwdJca2tg3 for <xfs@oss.sgi.com>;
+	Fri, 18 May 2012 18:40:28 -0700 (PDT)
+Date: Sat, 19 May 2012 11:40:24 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120519014024.GZ25351@dastard>
+References: <20120515224805.GA25577@quack.suse.cz>
+	<20120516021423.GO25351@dastard>
+	<20120516130445.GA27661@quack.suse.cz>
+	<20120517074308.GQ25351@dastard>
+	<20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: How to recover data from an xfs partition
-References: <4FAE9DBF.1090505@linuxsystems.it> <20120518143143.GN16099@sgi.com>
-	<4FB66430.9040202@linuxsystems.it> <4FB68AF6.1090303@sandeen.net>
-	<4FB6B7AB.8030405@linuxsystems.it> <4FB6D17A.7070408@sandeen.net>
-In-Reply-To: <4FB6D17A.7070408@sandeen.net>
+Content-Disposition: inline
+In-Reply-To: <20120518133250.GC5589@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,30 +28,113 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
-Il 19/05/2012 00:47, Eric Sandeen ha scritto:
-> TBH I'd be as likely to
-> blame the SSD, as anything.
+On Fri, May 18, 2012 at 03:32:50PM +0200, Jan Kara wrote:
+> On Fri 18-05-12 20:12:10, Dave Chinner wrote:
+> > On Fri, May 18, 2012 at 01:28:29AM +0200, Jan Kara wrote:
+> > > On Thu 17-05-12 17:43:08, Dave Chinner wrote:
+> > > > On Wed, May 16, 2012 at 03:04:45PM +0200, Jan Kara wrote:
+> > > > > On Wed 16-05-12 12:14:23, Dave Chinner wrote:
+> > > > IIRC, it's a rare case (that I consider insane, BTW):  read from a
+> > > > file with into a buffer that is a mmap()d region of the same file
+> > > > that has not been faulted in yet.....
+> > >   With punch hole, the race is less insane - just punching hole in the area
+> > > which is accessed via mmap could race in a bad way AFAICS.
+> > 
+> > Seems the simple answer to me is to prevent page faults while hole
+> > punching, then....
+>   Yes, that's what I was suggesting in the beginning :) And I was asking
+> whether people are OK with another lock in the page fault path (in
+> particular in ->page_mkwrite)
 
-I didn't even need to fsck the SSD's partition... Something gone mad in =
+Right. I probably should have been clearer in what I said. We got
+back here from considering another IO level lock and all the
+complexity it adds to just solve the hole punch problem....
 
-the Xen code and it corrupted my data, that was the problem.
-I managed to rescue the vast majority of the data in my ext4 partitions, =
+> or whether someone has a better idea (e.g.
+> taking mmap_sem in the hole punching path seems possible but I'm not sure
+> whether that would be considered acceptable abuse).
 
-but not in the xfs one. Who should I blame for this? xfs? the fate? I =
+That's for the VM guys to answer, but it seems wrong to me to have
+to treat hole punching differently to truncation....
 
-really don't know it, I'm just reporting what happened compared to =
+The thing is, mmap IO is completely unlocked from an IO perspective,
+and that means we cannot guarantee exclusion from IO without using
+the IO exclusion lock. That's the simplest way we can make mmap
+serialise sanely against direct IO and hole punching. Hole punching
+is inherently a filesystem operation (just like truncation), and
+mmap operations must stall while it is in progress. It's just that
+we have the problem that we allow the mmap_sem to be taken inside
+the IO exclusion locks...
 
-another fs but I cannot guarantee the bug threated all the partitions =
+So let's step back a moment and have a look at how we've got here.
+The problem is that we've optimised ourselves into a corner with the
+way we handle page cache truncation - we don't need mmap
+serialisation because of the combination of i_size and page locks
+mean we can detect truncated pages safely at page fault time. With
+hole punching, we don't have that i_size safety blanket, and so we
+need some other serialisation mechanism to safely detect whether a
+page is valid or not at any given point in time.
 
-the same way :)
+Because it needs to serialise against IO operations, we need a
+sleeping lock of some kind, and it can't be the existing IO lock.
+And now we are looking at needing a new lock for hole punching, I'm
+really wondering if the i_size/page lock truncation optimisation
+should even continue to exist. i.e. replace it with a single
+mechanism that works for both hole punching, truncation and other
+functions that require exclusive access or exclusion against
+modifications to the mapping tree.
 
-Niccol=F2
+But this is only one of the problems in this area.The way I see it
+is that we have many kludges in the area of page invalidation w.r.t.
+different types of IO, the page cache and mmap, especially when we
+take into account direct IO. What we are seeing here is we need
+some level of _mapping tree exclusion_ between:
+
+	1. mmap vs hole punch (broken)
+	2. mmap vs truncate (i_size/page lock)
+	3. mmap vs direct IO (non-existent)
+	4. mmap vs buffered IO (page lock)
+	5. writeback vs truncate (i_size/page lock)
+	6. writeback vs hole punch (page lock, possibly broken)
+	7. direct IO vs buffered IO (racy - flush cache before/after DIO)
+
+#1, #2, #5 and #6 could be solved by a rw-lock for the operations -
+read for mmap/writeback, exclusive for hole-punch and truncation.
+That, however, doesn't work for #3 and #4 as the exclusion is
+inverted - direct/buffered IO would require a shared mode lock and
+mmap requires the exclusive lock.  Similarly, #7 requires a shared
+lock for direct IO, and a shared lock for buffered IO, but exclusion
+between the two for overlapping ranges. But no one locking primitive
+that currently exists can give us this set of semantics....
+
+Right now we are talking about hacking in some solution to #1, while
+ignoring the wider range of related but ignored/papered over
+problems we also have. I don't have a magic bullet that solves all
+of these problems, but I think it is worth recognising and
+considering that this problem is much larger than just hole punching
+and that these problems have been there for a *long time*.
+
+To me the issue at hand is that we have no method of serialising
+multi-page operations on the mapping tree between the filesystem and
+the VM, and that seems to be the fundamental problem we face in this
+whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+Hence it might be better to try to work out how to fix this entire
+class of problems rather than just adding a complex kuldge that just
+papers over the current "hot" symptom....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
