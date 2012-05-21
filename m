@@ -1,15 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4LLJeRn012781 for <xfs@oss.sgi.com>; Mon, 21 May 2012 16:19:40 -0500
-Message-ID: <4FBAB16A.7000808@sgi.com>
-Date: Mon, 21 May 2012 16:19:38 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q4LM5vld023674 for <xfs@oss.sgi.com>; Mon, 21 May 2012 17:05:57 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hQHBV3Q86yFrtpLZ for
+	<xfs@oss.sgi.com>; Mon, 21 May 2012 15:05:55 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4LM5tCD023674
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 18:05:55 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q4LM5r3S013088
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 18:05:54 -0400
+Message-ID: <4FBABC41.5040001@redhat.com>
+Date: Mon, 21 May 2012 17:05:53 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH v2 2/3] xfs: fix xfsaild hang due to premature idle
-References: <1337626169-21730-1-git-send-email-bfoster@redhat.com>
-	<1337626169-21730-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1337626169-21730-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH] xfstest 285: userspace vs. fragmented multiblock dir2
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,63 +29,162 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 05/21/12 13:49, Brian Foster wrote:
-> Running xfstests 273 in a loop reproduces an XFS lockup due to
-> xfsaild entering idle mode indefinitely. The following
-> high-level sequence of events lead to the hang:
->
-> - xfsaild is running, hits the stuck item threshold and reschedules,
->    setting xa_last_pushed_lsn appropriately.
-> - xa_threshold is updated.
-> - xfsaild restarts from the previous xa_last_pushed_lsn, hits the
->    new target and enters idle mode, even though the previously
->    stuck items still populate the ail.
->
-> Modify the tout logic to only enter idle mode when the ail is empty.
-> IOW, if we hit the target but did not perform the current scan from
-> the start of the ail, reschedule at least one more time.
->
-> Signed-off-by: Brian Foster<bfoster@redhat.com>
-> ---
->   fs/xfs/xfs_trans_ail.c |    2 +-
->   1 files changed, 1 insertions(+), 1 deletions(-)
->
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index ae620eb..8bc8aa2 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -503,7 +503,7 @@ xfsaild_push(
->
->   	/* assume we have more work to do in a short while */
->   out_done:
-> -	if (!count) {
-> +	if (!count&&  !ailp->xa_last_pushed_lsn) {
->   		/* We're past our target or empty, so idle */
->   		ailp->xa_last_pushed_lsn = 0;
->   		ailp->xa_log_flush = 0;
+Current xfs_repair is unhappy with fragmented multiblock
+v2 directories.  This test shows it ... patches to fix
+it soon to follow.
 
-There is another patch in the OSS XFS (43ff2122 in 
-git://oss.sgi.com/xfs/xfs) that is not yet in Linus' tree that is in 
-this area and that is why it is not applying cleanly.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-So the xfs_log_force() will un-stick the stuck items from the previous 
-pass which set the ailp->xa_last_pushed_lsn = 0; I am asking to be 
-re-assured the count will be non-zero and you won't go idle with still 
-stuck items.
-
-
-The problem that we are chasing in the AIL seems different than lost 
-wakeup (next patch), but it would be interesting to have the patch in 
-the kernel for testing.
-
---Mark Tinguely
+diff --git a/285 b/285
+new file mode 100755
+index 0000000..11a66f6
+--- /dev/null
++++ b/285
+@@ -0,0 +1,128 @@
++#! /bin/bash
++# FS QA Test No. 285
++#
++# Test userspace on a fragmented multi-block dir2 filesystem
++#
++#-----------------------------------------------------------------------
++# Copyright (c) Red Hat, Inc.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++_supported_fs xfs
++_supported_os IRIX Linux
++
++# real QA test starts here
++rm -f $seq.full
++_require_scratch
++_scratch_mkfs_xfs -n size=16k -d size=128m >> $seq.full 2>&1
++_scratch_mount
++
++# First we cause very badly fragmented freespace, then
++# make some multiblock directories in the filesystem, which
++# should come out very fragmented as a result
++
++# Step 1: Cause badly fragmented free space
++mkdir $SCRATCH_MNT/fragdir
++for I in `seq 0 27200`; do
++        (echo data > $SCRATCH_MNT/fragdir/f$I) >> $seq.full 2>&1
++done
++sync
++
++for I in `seq 0 2 27200`; do
++        rm -f $SCRATCH_MNT/fragdir/f$I >> $seq.full 2>&1
++done
++sync
++
++# Soak up any remaining freespace
++xfs_io -f -c "pwrite 0 16m" -c "fsync" $SCRATCH_MNT/space_file.large >> $seq.full 2>&1
++
++# Take a look at freespace for any post-mortem on the test
++_scratch_unmount
++xfs_db -c freesp $SCRATCH_DEV >> $seq.full 2>&1
++_scratch_mount
++
++# Step 2: Make a bunch of (hopefully fragmented) multiblock
++# dir2 directories
++
++# - FMT_LOCAL
++mkdir $SCRATCH_MNT/S_IFDIR.FMT_LOCAL
++touch $SCRATCH_MNT/S_IFDIR.FMT_LOCAL/localdirfile
++
++# - FMT_EXTENTS
++mkdir $SCRATCH_MNT/S_IFDIR.FMT_EXTENTS
++for I in `seq 1 100`; do
++	touch $SCRATCH_MNT/S_IFDIR.FMT_EXTENTS/extent_dir_file_$I
++done
++# With a few missing
++for I in `seq 10 2 20` 100; do
++	rm -f $SCRATCH_MNT/S_IFDIR.FMT_EXTENTS/extent_dir_file_$I
++done
++
++# - FMT_BTREE
++mkdir $SCRATCH_MNT/S_IFDIR.FMT_BTREE
++for I in `seq 1 1000`; do
++	touch $SCRATCH_MNT/S_IFDIR.FMT_BTREE/btree_dir_file_$I
++done
++# With a few missing
++for I in `seq 10 2 20` 1000; do
++	rm -f $SCRATCH_MNT/S_IFDIR.FMT_BTREE/btree_dir_file_$I
++done
++
++# Dave's special hack - grow freespace tree
++mkdir $SCRATCH_MNT/S_IFDIR.FMT_BTREE2
++for I in `seq 1 5000`; do
++	touch $SCRATCH_MNT/S_IFDIR.FMT_BTREE2/btree2_dir_file_$I
++done
++# Remove every other (odds)
++for I in `seq 1 2 5000`; do
++	rm -f $SCRATCH_MNT/S_IFDIR.FMT_BTREE2/btree2_dir_file_$I
++done
++
++_scratch_unmount
++# Can xfs_repair and xfs_check cope with this monster?
++_scratch_xfs_repair >> $seq.full 2>&1 || _fail "xfs_repair failed"
++xfs_check $SCRATCH_DEV >> $seq.full 2>&1 || _fail "xfs_check failed"
++
++# Yes they can!  Now...
++# Can xfs_metadump cope with this monster?
++xfs_metadump $SCRATCH_DEV $tmp.metadump || _fail "xfs_metadump failed"
++xfs_mdrestore $tmp.metadump $tmp.img || _fail "xfs_mdrestore failed"
++xfs_repair $tmp.img >> $seq.full 2>&1 || _fail "xfs_repair of metadump failed"
++
++# Yes it can; success, all done
++status=0
++exit
++
+diff --git a/group b/group
+index 104ed35..17afdcd 100644
+--- a/group
++++ b/group
+@@ -403,3 +403,4 @@ deprecated
+ 282 dump ioctl auto quick
+ 283 dump ioctl auto quick
+ 284 auto
++285 repair dir auto
 
 _______________________________________________
 xfs mailing list
