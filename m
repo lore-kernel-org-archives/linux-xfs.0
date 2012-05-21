@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4LIFH3Y238604 for <xfs@oss.sgi.com>; Mon, 21 May 2012 13:15:17 -0500
-Message-ID: <4FBA863B.4040801@redhat.com>
-Date: Mon, 21 May 2012 14:15:23 -0400
+	q4LIULwR240860 for <xfs@oss.sgi.com>; Mon, 21 May 2012 13:30:21 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4gjfgVY0HpxAO73F for
+	<xfs@oss.sgi.com>; Mon, 21 May 2012 11:30:20 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4LIUEjJ023191
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 14:30:19 -0400
 From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [RFC PATCH 2/3] xfs: fix xfsaild hang due to premature idle
+Subject: [RFC PATCH 1/3] xfs: re-enable xfsaild idle mode
+Date: Mon, 21 May 2012 13:21:24 -0400
+Message-Id: <1337620886-41807-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1337620886-41807-1-git-send-email-bfoster@redhat.com>
 References: <1337620886-41807-1-git-send-email-bfoster@redhat.com>
-	<1337620886-41807-3-git-send-email-bfoster@redhat.com>
-	<20120521181232.GS16099@sgi.com>
-In-Reply-To: <20120521181232.GS16099@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,43 +24,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Brian Foster <bfoster@redhat.com>
 
-On 05/21/2012 02:12 PM, Ben Myers wrote:
-> Hey Brian,
-> 
-> On Mon, May 21, 2012 at 01:21:25PM -0400, Brian Foster wrote:
->> Running xfstests 273 in a loop reproduces an XFS lockup due to
->> xfsaild entering idle mode indefinitely. The following
->> high-level sequence of events leads to the hang:
->>
->> - xfsaild is running, hits the stuck item threshold and reschedules,
->>   setting xa_last_pushed_lsn appropriately.
->> - xa_threshold is updated.
->> - xfsaild restarts from the previous xa_last_pushed_lsn, hits the
->>   new target and enters idle mode, even though the previously
->>   stuck items still populate the ail.
->>
->> Modify the tout logic to only enter idle mode when the ail is empty.
->> IOW, if we hit the target but did not perform the current scan from
->> the start of the ail, reschedule at least one more time.
->>
->> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> 
-> Thanks for the patch.  Unfortunately it does not apply cleanly.  Care to spin it again?
-> 
+Allow the xfsaild kernel thread to sleep when there is no work
+to do.
 
-Hmm... thought I rebased, but apparently not. Sorry about that, I'll repost...
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_trans_ail.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-Brian
-
-> Regards,
-> 	Ben
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 974c7be..37cdd41 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -505,7 +505,7 @@ out_done:
+ 		/* We're past our target or empty, so idle */
+ 		ailp->xa_last_pushed_lsn = 0;
+ 
+-		tout = 50;
++		tout = 0;
+ 	} else if (XFS_LSN_CMP(lsn, target) >= 0) {
+ 		/*
+ 		 * We reached the target so wait a bit longer for I/O to
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
