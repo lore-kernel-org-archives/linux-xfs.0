@@ -1,25 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4KNxYdl246134 for <xfs@oss.sgi.com>; Sun, 20 May 2012 18:59:34 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	qvdjFrs5r4UPRhnt for <xfs@oss.sgi.com>;
-	Sun, 20 May 2012 16:59:32 -0700 (PDT)
-Date: Mon, 21 May 2012 09:59:03 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Storage server, hung tasks and tracebacks
-Message-ID: <20120520235903.GB25351@dastard>
-References: <20120502184450.GA2557@nsrc.org>
-	<4FA27EF8.6040002@hardwarefreak.com>
-	<20120503204157.GC4387@nsrc.org>
-	<4FA3047D.8060908@hardwarefreak.com>
-	<20120504163237.GA6128@nsrc.org>
-	<4FA4C321.2070105@hardwarefreak.com>
-	<20120515140237.GA3630@nsrc.org>
+	q4L7ivDN075423 for <xfs@oss.sgi.com>; Mon, 21 May 2012 02:44:58 -0500
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id av5aEu4ekbecwuuz (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 21 May 2012 00:44:54 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106014.dyn.cm.kabsi.at [81.217.106.14])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id ADC15182242E
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 09:44:51 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	by mailsrv.i.zmi.at (Postfix) with ESMTP id 29250CD7C8C
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 09:45:30 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: How to recover data from an xfs partition
+Date: Mon, 21 May 2012 09:44:44 +0200
+Message-ID: <2867697.yP7s3MR3RI@saturn>
+In-Reply-To: <4FB6B7AB.8030405@linuxsystems.it>
+References: <4FAE9DBF.1090505@linuxsystems.it> <4FB68AF6.1090303@sandeen.net>
+	<4FB6B7AB.8030405@linuxsystems.it>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120515140237.GA3630@nsrc.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +30,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============0793615804806394363=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Candler <B.Candler@pobox.com>
-Cc: Stan Hoeppner <stan@hardwarefreak.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, May 15, 2012 at 03:02:37PM +0100, Brian Candler wrote:
-> Update:
-> 
-> After a week away, I am continuing to try to narrow down the problem of this
-> system withing hanging I/O.
-> 
-> I can fairly reliably repeat the problem on a system with 24 disks, and I've
-> embarked on trying some different configs to see what's the simplest way I
-> can make this die.
-> 
-> During this, I found something of interest: I happened to leave an 'iostat
-> 5' process running, and that hung too.  i.e. ps showed it in 'D+' state, and
-> it was unkillable.
-> 
-> root        34  0.6  0.0      0     0 ?        D    11:29   1:18 [kswapd0]
-> root      1258  0.0  0.0  15976   532 ?        Ds   11:29   0:00 /usr/sbin/irqbalance
-> root      1421  0.0  0.0      0     0 ?        D    12:49   0:01 [xfsaild/md127]
-> snmp      1430  0.0  0.0  48608  3440 ?        D    11:29   0:00 /usr/sbin/snmpd -Lsd -Lf /dev/null -u snmp -g snmp -I -smux -p /var/run/snmpd.pid
-> xxxx      1614  1.1  0.0 378860  3812 pts/1    D+   12:50   1:15 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1669  1.2  0.0 378860  3816 pts/2    D+   12:50   1:21 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1727  0.5  0.0 383424   692 pts/3    Dl+  12:51   0:37 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1782  1.2  0.0 378860  3824 pts/4    D+   12:51   1:20 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1954  0.0  0.0   5912   544 pts/0    D+   12:58   0:00 iostat 5
-> root      2642  0.2  0.0      0     0 ?        D    13:25   0:09 [kworker/0:1]
-> root      3233  0.0  0.0   5044   168 ?        Ds   13:50   0:00 /usr/sbin/sshd -D -R
-> xxxx      4648  0.0  0.0   8104   936 pts/6    S+   14:41   0:00 grep --color=auto  D
-> root     29491  0.0  0.0      0     0 ?        D    12:45   0:00 [kworker/1:2]
-> 
-> I wonder if iostat actually communicates with the device driver at all? If
-> not, then presumably it's looking at some kernel data structure.  Maybe
-> there is a lock being kept open on that by someone/something.
-> 
-> At the same time, I notice that 'cat /proc/diskstats' still works, and
-> starting a new 'iostat 5' process works too.
-> 
-> After issuing halt -p I get this:
-> 
-> root        34  0.6  0.0      0     0 ?        D    11:29   1:18 [kswapd0]
-> root      1258  0.0  0.0  15976   532 ?        Ds   11:29   0:00 /usr/sbin/irqbalance
-> root      1421  0.0  0.0      0     0 ?        D    12:49   0:01 [xfsaild/md127]
-> snmp      1430  0.0  0.0  48608  3440 ?        D    11:29   0:00 /usr/sbin/snmpd -Lsd -Lf /dev/null -u snmp -g snmp -I -smux -p /var/run/snmpd.pid
-> xxxx      1614  1.0  0.0 378860  3812 pts/1    D+   12:50   1:15 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1669  1.1  0.0 378860  3816 pts/2    D+   12:50   1:21 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1727  0.5  0.0 383424   692 pts/3    Dl+  12:51   0:37 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1782  1.1  0.0 378860  3824 pts/4    D+   12:51   1:20 bonnie++ -d /disk/scratch/test -s 16384k -n 98:800k:500k:1000
-> xxxx      1954  0.0  0.0   5912   544 pts/0    D+   12:58   0:00 iostat 5
-> root      2642  0.1  0.0      0     0 ?        D    13:25   0:09 [kworker/0:1]
-> root      3233  0.0  0.0   5044   168 ?        Ds   13:50   0:00 /usr/sbin/sshd -D -R
-> root      4753  0.0  0.0  15056   928 ?        D    14:42   0:00 umount /run/rpc_pipefs
-> root      4828  0.0  0.0   4296   348 ?        D    14:42   0:00 sync
-> root      4834  0.0  0.0   8100   624 pts/6    R+   14:50   0:00 grep --color=auto  D
-> root     29491  0.0  0.0      0     0 ?        D    12:45   0:00 [kworker/1:2]
-> 
-> I see even umount'ing rpc_pipefs is hanging. So this suggests there's some
-> sort of global lock involved.
 
-You need to provide the output of sysrq-W at this point ('echo w >
-/proc/sysrq-trigger') so we can see where these are hung. the entire
-dmesg would also be useful....
+--===============0793615804806394363==
+Content-Type: multipart/signed; boundary="nextPart2178272.M5aujiIMs3"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--nextPart2178272.M5aujiIMs3
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+
+Am Freitag, 18. Mai 2012, 22:57:15 schrieb Niccol=C3=B2 Belli:
+> I had to use magic sysrq=20
+> keys (remount read-only, sync, reboot).
+
+Shouldn't that be sync, remount r/o, reboot instead? If you remount r/o=
+,=20
+the cache in the system wouldn't be written anymore.
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+--nextPart2178272.M5aujiIMs3
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAk+58nIACgkQzhSR9xwSCbS75gCgr4dwrqQUuYb2Zqt/JobTU7Kd
+2IUAnRWKp3sn2RonuQNtOmbz1soTf3hP
+=KfWC
+-----END PGP SIGNATURE-----
+
+--nextPart2178272.M5aujiIMs3--
+
+
+--===============0793615804806394363==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============0793615804806394363==--
