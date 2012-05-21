@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4LM7hPt024119 for <xfs@oss.sgi.com>; Mon, 21 May 2012 17:07:43 -0500
+	q4LMA9nI025131 for <xfs@oss.sgi.com>; Mon, 21 May 2012 17:10:09 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id u7XoQbqYO8pMkJsa for
-	<xfs@oss.sgi.com>; Mon, 21 May 2012 15:07:41 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4LM7fVN031584
+	cuda.sgi.com with ESMTP id Yu5N49ClfhyB0QXw for
+	<xfs@oss.sgi.com>; Mon, 21 May 2012 15:10:08 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4LMA7rB024098
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 21 May 2012 18:07:41 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q4LM7eZL008982
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 21 May 2012 18:07:40 -0400
-Message-ID: <4FBABCAB.20300@redhat.com>
-Date: Mon, 21 May 2012 17:07:39 -0500
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 18:10:07 -0400
+Message-ID: <4FBABD3E.2050700@redhat.com>
+Date: Mon, 21 May 2012 17:10:06 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 0/3] xfs_repair fixes for fragmented multiblock v2 dirs
+Subject: [PATCH 1/3] xfs_repair: Fix fragmented multiblock dir2 handling in
+	blkmap_getn()
+References: <4FBABCAB.20300@redhat.com>
+In-Reply-To: <4FBABCAB.20300@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,17 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-3 fixes for xfs_repair on fragmented multiblock v2 dirs.
+blkmap_getn() contains a loop which populates an array of extents
+with mapping information for a dir2 "block," which may consist
+of multiple filesystem blocks.
 
-xfs_repair: Fix fragmented multiblock dir2 handling in blkmap_getn()
-xfs_repair: Document & robustify blkmap_next_off()
-xfs_repair: handle fragmented multiblock dir2 in process_leaf_node_dir2()
+As written, the loop re-allocates the array for each new extent,
+leaking the previously allocated memory and worse, losing the
+previously filled-in extent information.
 
-xfs_check seems to handle things just fine, interstingly enough.
+Fix this by only allocating the array once, for the maximum
+possible number of extents - the number of fs blocks in the dir
+block.
 
--Eric
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/repair/bmap.c b/repair/bmap.c
+index 2f1c307..c43ca7f 100644
+--- a/repair/bmap.c
++++ b/repair/bmap.c
+@@ -168,7 +168,8 @@ blkmap_getn(
+ 		/*
+ 		 * rare case - multiple extents for a single dir block
+ 		 */
+-		bmp = malloc(nb * sizeof(bmap_ext_t));
++		if (!bmp)
++			bmp = malloc(nb * sizeof(bmap_ext_t));
+ 		if (!bmp)
+ 			do_error(_("blkmap_getn malloc failed (%" PRIu64 " bytes)\n"),
+ 						nb * sizeof(bmap_ext_t));
 
 _______________________________________________
 xfs mailing list
