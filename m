@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4LI7YHj237314 for <xfs@oss.sgi.com>; Mon, 21 May 2012 13:07:34 -0500
-Date: Mon, 21 May 2012 13:12:32 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [RFC PATCH 2/3] xfs: fix xfsaild hang due to premature idle
-Message-ID: <20120521181232.GS16099@sgi.com>
-References: <1337620886-41807-1-git-send-email-bfoster@redhat.com>
-	<1337620886-41807-3-git-send-email-bfoster@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1337620886-41807-3-git-send-email-bfoster@redhat.com>
+	q4LI88jf237406 for <xfs@oss.sgi.com>; Mon, 21 May 2012 13:08:08 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id itxEFspmSQFpAUjy for
+	<xfs@oss.sgi.com>; Mon, 21 May 2012 11:08:07 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4LI84b6005978
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 21 May 2012 14:08:06 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [RFC PATCH 0/3] xfs: fix xfsaild races and re-enable idle mode
+Date: Mon, 21 May 2012 13:21:23 -0400
+Message-Id: <1337620886-41807-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,37 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Brian Foster <bfoster@redhat.com>
 
-Hey Brian,
+Hi all,
 
-On Mon, May 21, 2012 at 01:21:25PM -0400, Brian Foster wrote:
-> Running xfstests 273 in a loop reproduces an XFS lockup due to
-> xfsaild entering idle mode indefinitely. The following
-> high-level sequence of events leads to the hang:
-> 
-> - xfsaild is running, hits the stuck item threshold and reschedules,
->   setting xa_last_pushed_lsn appropriately.
-> - xa_threshold is updated.
-> - xfsaild restarts from the previous xa_last_pushed_lsn, hits the
->   new target and enters idle mode, even though the previously
->   stuck items still populate the ail.
-> 
-> Modify the tout logic to only enter idle mode when the ail is empty.
-> IOW, if we hit the target but did not perform the current scan from
-> the start of the ail, reschedule at least one more time.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+We reproduced and debugged several hangs in a rhel6.3 kernel that
+happened to still support xfsaild idle mode. Our short term fix was
+to disable idle mode as in upstream, but I'd like to fire out a
+couple potential fixes that allow us to re-enable idle mode, assuming
+there aren't any other problems I'm not aware of. The details of the
+bug are at:
 
-Thanks for the patch.  Unfortunately it does not apply cleanly.  Care to spin it again?
+https://bugzilla.redhat.com/show_bug.cgi?id=813137
 
-Regards,
-	Ben
+... but I'll try to provide all relevant data in this post. The
+reproducer is xfstests 273 running in a 100-iteration loop. I have
+reproduced this hang on upstream kernels quite reliably with commit
+670ce93f reverted. The performance enhancement in that commit makes
+this much harder to reproduce. 
+
+With the proposed modifications, I've probably run 5+ 100-loop
+iterations of test 273 without reproducing a hang. Previously, I
+was able to reproduce the first hang with 100% reliability and the
+second hang reproduced 10 minutes or so after starting a second
+100-loop test (with the first fix applied).
+
+I still have to run a full xfstests but the changes are small enough
+that I wanted to send them out before I got too far. Thanks.
+
+
+Brian Foster (3):
+  xfs: re-enable xfsaild idle mode
+  xfs: fix xfsaild hang due to premature idle
+  xfs: fix xfsaild hang due to lost wake ups
+
+ fs/xfs/xfs_trans_ail.c  |    8 ++++----
+ fs/xfs/xfs_trans_priv.h |    1 +
+ 2 files changed, 5 insertions(+), 4 deletions(-)
+
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
