@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4LMA9nI025131 for <xfs@oss.sgi.com>; Mon, 21 May 2012 17:10:09 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Yu5N49ClfhyB0QXw for
-	<xfs@oss.sgi.com>; Mon, 21 May 2012 15:10:08 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4LMA7rB024098
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 21 May 2012 18:10:07 -0400
-Message-ID: <4FBABD3E.2050700@redhat.com>
-Date: Mon, 21 May 2012 17:10:06 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q4M0WUqu057889 for <xfs@oss.sgi.com>; Mon, 21 May 2012 19:32:30 -0500
+Message-ID: <4FBADE70.8020903@redhat.com>
+Date: Mon, 21 May 2012 20:31:44 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 1/3] xfs_repair: Fix fragmented multiblock dir2 handling in
-	blkmap_getn()
-References: <4FBABCAB.20300@redhat.com>
-In-Reply-To: <4FBABCAB.20300@redhat.com>
+Subject: Re: [RFC PATCH v2 2/3] xfs: fix xfsaild hang due to premature idle
+References: <1337626169-21730-1-git-send-email-bfoster@redhat.com>
+	<1337626169-21730-3-git-send-email-bfoster@redhat.com>
+	<4FBAB16A.7000808@sgi.com>
+In-Reply-To: <4FBAB16A.7000808@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,38 +23,64 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-blkmap_getn() contains a loop which populates an array of extents
-with mapping information for a dir2 "block," which may consist
-of multiple filesystem blocks.
+On 05/21/2012 05:19 PM, Mark Tinguely wrote:
+> On 05/21/12 13:49, Brian Foster wrote:
+>> Running xfstests 273 in a loop reproduces an XFS lockup due to
+>> xfsaild entering idle mode indefinitely. The following
+>> high-level sequence of events lead to the hang:
+>>
+>> - xfsaild is running, hits the stuck item threshold and reschedules,
+>>    setting xa_last_pushed_lsn appropriately.
+>> - xa_threshold is updated.
+>> - xfsaild restarts from the previous xa_last_pushed_lsn, hits the
+>>    new target and enters idle mode, even though the previously
+>>    stuck items still populate the ail.
+>>
+>> Modify the tout logic to only enter idle mode when the ail is empty.
+>> IOW, if we hit the target but did not perform the current scan from
+>> the start of the ail, reschedule at least one more time.
+>>
+>> Signed-off-by: Brian Foster<bfoster@redhat.com>
+>> ---
+>>   fs/xfs/xfs_trans_ail.c |    2 +-
+>>   1 files changed, 1 insertions(+), 1 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+>> index ae620eb..8bc8aa2 100644
+>> --- a/fs/xfs/xfs_trans_ail.c
+>> +++ b/fs/xfs/xfs_trans_ail.c
+>> @@ -503,7 +503,7 @@ xfsaild_push(
+>>
+>>       /* assume we have more work to do in a short while */
+>>   out_done:
+>> -    if (!count) {
+>> +    if (!count&&  !ailp->xa_last_pushed_lsn) {
+>>           /* We're past our target or empty, so idle */
+>>           ailp->xa_last_pushed_lsn = 0;
+>>           ailp->xa_log_flush = 0;
+> 
 
-As written, the loop re-allocates the array for each new extent,
-leaking the previously allocated memory and worse, losing the
-previously filled-in extent information.
+Hi Mark,
 
-Fix this by only allocating the array once, for the maximum
-possible number of extents - the number of fs blocks in the dir
-block.
+> There is another patch in the OSS XFS (43ff2122 in git://oss.sgi.com/xfs/xfs) that is not yet in Linus' tree that is in this area and that is why it is not applying cleanly.
+> 
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Ah, sorry about that. This is my first time posting patches for XFS so I'm relatively new to the process. :) Should I rebase against the oss.sgi.com tree? For future reference, are new patches expected to be based against that tree?
 
-diff --git a/repair/bmap.c b/repair/bmap.c
-index 2f1c307..c43ca7f 100644
---- a/repair/bmap.c
-+++ b/repair/bmap.c
-@@ -168,7 +168,8 @@ blkmap_getn(
- 		/*
- 		 * rare case - multiple extents for a single dir block
- 		 */
--		bmp = malloc(nb * sizeof(bmap_ext_t));
-+		if (!bmp)
-+			bmp = malloc(nb * sizeof(bmap_ext_t));
- 		if (!bmp)
- 			do_error(_("blkmap_getn malloc failed (%" PRIu64 " bytes)\n"),
- 						nb * sizeof(bmap_ext_t));
+> So the xfs_log_force() will un-stick the stuck items from the previous pass which set the ailp->xa_last_pushed_lsn = 0; I am asking to be re-assured the count will be non-zero and you won't go idle with still stuck items.
+> 
+
+I'm not sure I parse this comment... but my interpretation of xfsaild_push() is that it's possible to "miss" a section of the ail (as reflected by count) when xa_last_pushed_lsn is non-zero. If xa_last_pushed_lsn is 0, how could count be zero unless the ail is empty?
+
+Brian
+
+> 
+> The problem that we are chasing in the AIL seems different than lost wakeup (next patch), but it would be interesting to have the patch in the kernel for testing.
+> 
+> --Mark Tinguely
 
 _______________________________________________
 xfs mailing list
