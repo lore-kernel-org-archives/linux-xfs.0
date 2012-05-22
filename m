@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4MGcVZ7224721 for <xfs@oss.sgi.com>; Tue, 22 May 2012 11:38:31 -0500
+	q4MGcVW4224719 for <xfs@oss.sgi.com>; Tue, 22 May 2012 11:38:31 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Og52r18sfOQi3a77 for
-	<xfs@oss.sgi.com>; Tue, 22 May 2012 09:38:30 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4MGcTbE028709
+	cuda.sgi.com with ESMTP id IZszNG4VAbdbW4tF for
+	<xfs@oss.sgi.com>; Tue, 22 May 2012 09:38:29 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4MGcTh4022369
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Tue, 22 May 2012 12:38:29 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC PATCH v3 2/2] xfs: fix xfsaild hang due to lost wake ups
-Date: Tue, 22 May 2012 12:38:34 -0400
-Message-Id: <1337704714-50235-3-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
-References: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
+Subject: [RFC PATCH v3 0/2] xfs: fix xfsaild races and re-enable idle mode
+Date: Tue, 22 May 2012 12:38:32 -0400
+Message-Id: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,64 +30,46 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Brian Foster <bfoster@redhat.com>
 
-Running xfstests 273 in a loop reproduces an XFS lockup due to
-xfsaild entering idle mode indefinitely. The following
-high-level sequence of events leads to the hang:
+Hi all,
 
-- xfsaild is running with a cached target lsn
-- xfs_ail_push() is invoked, updates ailp->xa_target_lsn and
-  invokes wake_up_process(). wake_up_process() returns 0
-  because xfsaild is already running.
-- xfsaild enters idle mode having met its current target.
+We reproduced and debugged several hangs in a rhel6.3 kernel that
+happened to still support xfsaild idle mode. Our short term fix was
+to disable idle mode as in upstream, but I'd like to fire out a
+couple potential fixes that allow us to re-enable idle mode, assuming
+there aren't any other problems I'm not aware of. The details of the
+bug are at:
 
-Once in the described state, xfs_ail_push() is invoked many
-more times with the already set threshold_lsn, but these calls
-do not lead to wake_up_process() calls because no further
-invocations result in moving the threshold_lsn forward. Add a
-flag to xfs_ail to capture whether an issued wake actually
-succeeds. If not, continue issuing wakes until we know one has
-been successful for the current target.
+https://bugzilla.redhat.com/show_bug.cgi?id=813137
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_trans_ail.c  |    4 ++--
+... but I'll try to provide all relevant data in this post. The
+reproducer is xfstests 273 running in a 100-iteration loop. I have
+reproduced this hang on upstream kernels quite reliably with commit
+670ce93f reverted. The performance enhancement in that commit makes
+this much harder to reproduce.
+
+With the proposed modifications, I've probably run 5+ 100-loop
+iterations of test 273 without reproducing a hang. Previously, I
+was able to reproduce the first hang with 100% reliability and the
+second hang reproduced 10 minutes or so after starting a second
+100-loop test (with the first fix applied).
+
+I still have to run a full xfstests but the changes are small enough
+that I wanted to send them out before I got too far. Thanks.
+
+Changes since v2:
+- Rebased against git://oss.sgi.com/xfs/xfs.
+- Combined patches 1 and 2.
+Changes since v1:
+- Rebased against a pristine tree.
+
+Brian Foster (2):
+  xfs: re-enable xfsaild idle mode when the ail is empty
+  xfs: fix xfsaild hang due to lost wake ups
+
+ fs/xfs/xfs_trans_ail.c  |    9 ++++++---
  fs/xfs/xfs_trans_priv.h |    1 +
- 2 files changed, 3 insertions(+), 2 deletions(-)
+ 2 files changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 8a122d3..8b49be8 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -564,7 +564,7 @@ xfs_ail_push(
- 
- 	lip = xfs_ail_min(ailp);
- 	if (!lip || XFS_FORCED_SHUTDOWN(ailp->xa_mount) ||
--	    XFS_LSN_CMP(threshold_lsn, ailp->xa_target) <= 0)
-+	    ((XFS_LSN_CMP(threshold_lsn, ailp->xa_target) <= 0) && !ailp->xa_pending_wake))
- 		return;
- 
- 	/*
-@@ -575,7 +575,7 @@ xfs_ail_push(
- 	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
- 	smp_wmb();
- 
--	wake_up_process(ailp->xa_task);
-+	ailp->xa_pending_wake = !wake_up_process(ailp->xa_task);
- }
- 
- /*
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index fb62377..688ef73 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -71,6 +71,7 @@ struct xfs_ail {
- 	spinlock_t		xa_lock;
- 	xfs_lsn_t		xa_last_pushed_lsn;
- 	int			xa_log_flush;
-+	int			xa_pending_wake;
- 	struct list_head	xa_buf_list;
- 	wait_queue_head_t	xa_empty;
- };
 -- 
 1.7.7.6
 
