@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4MDEVPV208783 for <xfs@oss.sgi.com>; Tue, 22 May 2012 08:14:31 -0500
-Received: from smtp.pobox.com (b-pb-sasl-quonix.pobox.com [208.72.237.35]) by
-	cuda.sgi.com with ESMTP id DvSjYf61WRPFjXHD for
-	<xfs@oss.sgi.com>; Tue, 22 May 2012 06:14:30 -0700 (PDT)
-Date: Tue, 22 May 2012 14:14:27 +0100
-From: Brian Candler <B.Candler@pobox.com>
-Subject: Re: Storage server, hung tasks and tracebacks
-Message-ID: <20120522131427.GB10660@nsrc.org>
-References: <20120502184450.GA2557@nsrc.org>
-	<4FA27EF8.6040002@hardwarefreak.com> <20120503204157.GC4387@nsrc.org>
-	<4FA3047D.8060908@hardwarefreak.com> <20120504163237.GA6128@nsrc.org>
-	<4FA4C321.2070105@hardwarefreak.com> <20120515140237.GA3630@nsrc.org>
-	<20120520163506.GA7473@nsrc.org>
+	q4MDfrTG214531 for <xfs@oss.sgi.com>; Tue, 22 May 2012 08:41:53 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id PAn7VhkG8InxnqEj for <xfs@oss.sgi.com>;
+	Tue, 22 May 2012 06:41:52 -0700 (PDT)
+Message-ID: <4FBB979F.2010803@sandeen.net>
+Date: Tue, 22 May 2012 08:41:51 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120520163506.GA7473@nsrc.org>
+Subject: [PATCH 2/3 RESEND] xfs_repair fixes for fragmented multiblock v2 dirs
+References: <4FBABCAB.20300@redhat.com>
+In-Reply-To: <4FBABCAB.20300@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,28 +24,71 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stan Hoeppner <stan@hardwarefreak.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Sun, May 20, 2012 at 05:35:06PM +0100, Brian Candler wrote:
-> The main discovery: using ext4 instead of xfs, I cannot get the server to
-> lock up - after 36 hours of continuous testing anyway. With xfs and
-> everything else identical, it typically locks up within 10 minutes.
+blkmap_next_off() was cryptic (to me), so document what it does.
+Also catch cases when the passed in extent index 't' is beyond
+the number of extents in the blkmap, so that:
 
-I re-ran the test using btrfs (not that I would use it in production, but
-just as another comparison).  No lockup after over 24 hours either.
+        ext = blkmap->exts + *t;
 
-So for now I am converting these boxes to ext4.  I should soon have another
-test box with 24 disks that I can reformat as XFS, if something changes and
-you'd like me to retest it.
+doesn't walk off the end of the array into garbage.
 
-I'd still like to use XFS at some point in the future because this is
-running gluster on top, and the gluster people recommend XFS and do most of
-their testing with it.
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-Regards,
+Resending, last one never made it through the mailing list gauntlet...
 
-Brian.
+diff --git a/repair/bmap.c b/repair/bmap.c
+index c43ca7f..85d66dc 100644
+--- a/repair/bmap.c
++++ b/repair/bmap.c
+@@ -206,8 +206,25 @@ blkmap_last_off(
+ 	return ext->startoff + ext->blockcount;
+ }
+ 
+-/*
+- * Return the next offset in a block map.
++/**
++ * blkmap_next_off - Return next logical block offset in a block map.
++ * @blkmap:	blockmap to use
++ * @o:		current file logical block number
++ * @t:		current extent index into blockmap (in/out)
++ *
++ * Given a logical block offset in a file, return the next mapped logical offset
++ * The map index "t" tracks the current extent number in the block map, and
++ * is updated automatically if the returned offset resides within the next
++ * mapped extent.
++ *
++ * If the blockmap contains no extents, or no more logical offsets are mapped,
++ * or the extent index exceeds the number of extents in the map,
++ * return NULLDFILOFF.
++ *
++ * If offset o is beyond extent index t, the first offset in the next extent
++ * after extent t will be returned.
++ *
++ * Intended to be called starting with offset 0, index 0, and iterated.
+  */
+ xfs_dfiloff_t
+ blkmap_next_off(
+@@ -223,10 +240,12 @@ blkmap_next_off(
+ 		*t = 0;
+ 		return blkmap->exts[0].startoff;
+ 	}
++	if (*t >= blkmap->nexts)
++		return NULLDFILOFF;
+ 	ext = blkmap->exts + *t;
+ 	if (o < ext->startoff + ext->blockcount - 1)
+ 		return o + 1;
+-	if (*t >= blkmap->nexts - 1)
++	if (*t == blkmap->nexts - 1)
+ 		return NULLDFILOFF;
+ 	(*t)++;
+ 	return ext[1].startoff;
+
+
+
 
 _______________________________________________
 xfs mailing list
