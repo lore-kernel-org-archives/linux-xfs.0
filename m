@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4MGcVch224720 for <xfs@oss.sgi.com>; Tue, 22 May 2012 11:38:31 -0500
+	q4MGcVZ7224721 for <xfs@oss.sgi.com>; Tue, 22 May 2012 11:38:31 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id v9EHWUfEXM9y9dcQ for
-	<xfs@oss.sgi.com>; Tue, 22 May 2012 09:38:29 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4MGcT78018721
+	cuda.sgi.com with ESMTP id Og52r18sfOQi3a77 for
+	<xfs@oss.sgi.com>; Tue, 22 May 2012 09:38:30 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4MGcTbE028709
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Tue, 22 May 2012 12:38:29 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC PATCH v3 1/2] xfs: re-enable xfsaild idle mode when the ail is
-	empty
-Date: Tue, 22 May 2012 12:38:33 -0400
-Message-Id: <1337704714-50235-2-git-send-email-bfoster@redhat.com>
+Subject: [RFC PATCH v3 2/2] xfs: fix xfsaild hang due to lost wake ups
+Date: Tue, 22 May 2012 12:38:34 -0400
+Message-Id: <1337704714-50235-3-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
 References: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,43 +32,64 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Brian Foster <bfoster@redhat.com>
 
-Running xfstests 273 in a loop on older kernels with xfsaild idle
-mode support reproduces a lockup due to xfsaild entering idle mode
-indefinitely. The following high-level sequence of events leads to
-the hang:
+Running xfstests 273 in a loop reproduces an XFS lockup due to
+xfsaild entering idle mode indefinitely. The following
+high-level sequence of events leads to the hang:
 
-- xfsaild is running, hits the stuck item threshold and reschedules,
-  setting xa_last_pushed_lsn appropriately.
-- xa_threshold is updated.
-- xfsaild restarts from the previous xa_last_pushed_lsn, hits the
-  new target and enters idle mode, even though the previously
-  stuck items still populate the ail.
+- xfsaild is running with a cached target lsn
+- xfs_ail_push() is invoked, updates ailp->xa_target_lsn and
+  invokes wake_up_process(). wake_up_process() returns 0
+  because xfsaild is already running.
+- xfsaild enters idle mode having met its current target.
 
-Modify the tout logic to only enter idle mode when the ail is empty.
-IOW, if we hit the target but did not perform the current scan from
-the start of the ail, reschedule at least one more time.
+Once in the described state, xfs_ail_push() is invoked many
+more times with the already set threshold_lsn, but these calls
+do not lead to wake_up_process() calls because no further
+invocations result in moving the threshold_lsn forward. Add a
+flag to xfs_ail to capture whether an issued wake actually
+succeeds. If not, continue issuing wakes until we know one has
+been successful for the current target.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_trans_ail.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_trans_ail.c  |    4 ++--
+ fs/xfs/xfs_trans_priv.h |    1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9c51448..8a122d3 100644
+index 8a122d3..8b49be8 100644
 --- a/fs/xfs/xfs_trans_ail.c
 +++ b/fs/xfs/xfs_trans_ail.c
-@@ -488,7 +488,10 @@ out_done:
- 		 * longer for I/O to complete and remove pushed items from the
- 		 * AIL before we start the next scan from the start of the AIL.
- 		 */
--		tout = 50;
-+		if (!count && !ailp->xa_last_pushed_lsn)
-+			tout = 0;
-+		else
-+			tout = 50;
- 		ailp->xa_last_pushed_lsn = 0;
- 	} else if (((stuck + flushing) * 100) / count > 90) {
- 		/*
+@@ -564,7 +564,7 @@ xfs_ail_push(
+ 
+ 	lip = xfs_ail_min(ailp);
+ 	if (!lip || XFS_FORCED_SHUTDOWN(ailp->xa_mount) ||
+-	    XFS_LSN_CMP(threshold_lsn, ailp->xa_target) <= 0)
++	    ((XFS_LSN_CMP(threshold_lsn, ailp->xa_target) <= 0) && !ailp->xa_pending_wake))
+ 		return;
+ 
+ 	/*
+@@ -575,7 +575,7 @@ xfs_ail_push(
+ 	xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
+ 	smp_wmb();
+ 
+-	wake_up_process(ailp->xa_task);
++	ailp->xa_pending_wake = !wake_up_process(ailp->xa_task);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index fb62377..688ef73 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -71,6 +71,7 @@ struct xfs_ail {
+ 	spinlock_t		xa_lock;
+ 	xfs_lsn_t		xa_last_pushed_lsn;
+ 	int			xa_log_flush;
++	int			xa_pending_wake;
+ 	struct list_head	xa_buf_list;
+ 	wait_queue_head_t	xa_empty;
+ };
 -- 
 1.7.7.6
 
