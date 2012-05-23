@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4N9S0ow128298 for <xfs@oss.sgi.com>; Wed, 23 May 2012 04:28:00 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	5rcPPuYsWYHRSoET for <xfs@oss.sgi.com>;
-	Wed, 23 May 2012 02:27:59 -0700 (PDT)
-Date: Wed, 23 May 2012 19:27:46 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/10] xfs: discontiguous buffer support a.k.a. die
-	xfs_dabuf die
-Message-ID: <20120523092746.GM25351@dastard>
-References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
-	<20120516174042.GJ16099@sgi.com>
+	q4ND55Ul162320 for <xfs@oss.sgi.com>; Wed, 23 May 2012 08:05:06 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id l3AVw19OaYXL3zqx for
+	<xfs@oss.sgi.com>; Wed, 23 May 2012 06:05:04 -0700 (PDT)
+Message-ID: <4FBCE081.7050003@redhat.com>
+Date: Wed, 23 May 2012 09:05:05 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120516174042.GJ16099@sgi.com>
+Subject: Re: [RFC PATCH v3 2/2] xfs: fix xfsaild hang due to lost wake ups
+References: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
+	<1337704714-50235-3-git-send-email-bfoster@redhat.com>
+	<20120523005830.GL25351@dastard>
+In-Reply-To: <20120523005830.GL25351@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,117 +26,90 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, May 16, 2012 at 12:40:42PM -0500, Ben Myers wrote:
-> Hey Dave,
+On 05/22/2012 08:58 PM, Dave Chinner wrote:
+snip
+
 > 
-> Looks like there are some additional test failures due to this patchset.  Here
-> some output from a bisect I did yesterday, running only the tests which failed
-> on the machine where I noticed this.
-
-So what the configuration you are testing on here?
-
-....
+> Hi Brian - here's kind of what I was thinking when we were talking
+> on IRC. basically we move all the idling logic into xfsaild() to
+> keep it out of xfsaild_push(), and make sure we only idle on an
+> empty AIL when we haven't raced with a target update.
 > 
-> # git describe
-> v3.4-rc2-54-g1307bbd
-
-That's mostly meaningless to me - you've got a 3.4-rc2 kernel with
-54 local commits in it.
-
-> from patches/series:
-> # normal: (there's my baseline on this machine.  I noticed a larger number of test failures on another test box and brought that series over here)
-> #Failures: 030 178 230 231 232 233 250 274
-> #Failed 8 of 198 tests
-......
+> So, I was thinking that we add a previous target variable to the
+> xfs_ail structure. Then xfsaild would become something like:
 > 
-> xfs-fix-delalloc-quota-accounting-on-failure.patch
-> xfs-fix-memory-reclaim-deadlock-on-agi-buffer.patch
-> xfs-add-trace-points-for-log-forces.patch
-> xfs-separate-buffer-indexing-from-block-map.patch
-> xfs-convert-internal-buffer-functions-to-pass-maps.patch
-> xfs-add-discontiguous-buffer-map-interface.patch
-> xfs-add-discontiguous-buffer-support-to-transactions.patch
 > 
-> # ^^^ bisect 1, went ok.  
-> #    030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
-> #    Failures: 030 230 231 232 233
-> #    Failed 5 of 15 tests
-
-
-> # ^^^ bisect 4, making sure it's good
-> #Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
-> #Failures: 030 230 231 232 233
-> #Failed 5 of 15 tests
+> 	while (!kthread_should_stop()) {
 > 
-> xfs-struct-xfs_buf_log_format-isn-t-variable-sized.patch
+> 		spin_lock(&ailp->xa_lock);
+> 		__set_current_state(TASK_INTERRUPTIBLE);
 > 
-> # ^^^ bisect 5, crashed.  (consistently)
+> 		/* barrier matches the xa_target update in xfs_ail_push() */
+> 		smp_rmb();
+> 		if (!xfs_ail_min(ailp) && ailp->xa_target == ailp->xa_prev_target) {
+
+Ok... IIUC, two things can happen here: 1.) we either detect an xa_target update and continue on or 2.) if an _ail_push() occurs any time between now and when we schedule out, it will issue the wakeup successfully because we've already set the task state above (thus avoiding the race).
+
+> 			/* empty ail, not change to push target - idle */
+> 			spin_unlock(&ailp->xa_lock);
+> 			schedule();
+> 			tout = 0;
+> 		}
+> 		spin_unlock(&ailp->xa_lock);
 > 
-> xfs-support-discontiguous-buffers-in-the.patch
+> 		if (tout) {
+> 			/* more work to do soon */
+> 			schedule_timeout(msecs_to_jiffies(tout));
+> 		}
+> 		__set_current_state(TASK_RUNNING);
 > 
-> # ^^^ bisect 6
-> #Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
-> #Failures: 030 085 086 087 121 179 182 200 230 231 232 233
-> #Failed 12 of 15 tests
+> 		try_to_freeze();
+> 
+> 		tout = xfsaild_push(ailp);
+> 	}
+> 
+> And in xfsaild_push(), move where we sample the push target to before the cursor
+> setup, and keep a snapshot of it:
+> 
+> 	/* barrier matches the xa_target update in xfs_ail_push() */
+> 	smp_rmb();
+> 	target = ailp->xa_target;
+> 	ailp->xa_prev_target = target;
+> 
 
-So, 085 086 087 121 179 182 200 are all log recovery tests.....
+The rest is pretty clear...
 
-So what are the failures? This doesn't tell me anything about why
-these have failed, and the last set of test runs I did before
-posting this series showed:
+> This means we do not idle if a new push target was set while we were pushing,
+> even if we emptied the AIL (call it paranoia!).
+> 
 
-Failures: 030 050 073 249 250 263
-Failed 6 of 197 tests
+Sounds reasonable. It looks like the only place we update the push target corresponds to a wake anyway, so this is probably not a departure from intended behavior.
 
-Which is standard for my 4k filesystem block size testing.
+> We can avoid the returning of a zero timeout from xfsaild_push, too,
+> because the idling is not based on the state that we return from the
+> push. Hence we always will return a 10, 20 or 50ms timeout and we
+> can avoid complicating xfsaild_push logic with idling logic. i.e.
+> the logic that is there right now should not need modification...
+> 
+> Finally, rather than calling wake_up_process() in the
+> xfs_ail_push*() functions, call wake_up(&ailp->xa_idle); There can
+> only be one thread sleeping on that (the xfsaild) so there is no
+> need to use the wake_up_all() variant...
+> 
+> FWIW, you might be able to do this without the idle wait queue and
+> just use wake_up_process() - 
+> 
 
-> Looks like there is a problem in
-> xfs-struct-xfs_buf_log_format-isn-t-variable-sized.patch,
+Ok... I'll look into using a wait queue once I have the basics working as is and put the whole thing through my reproducer. Thanks again!
 
-Given the crashes, this is the likely cause of the problem.
-Especially as the version of the patch in this series is missing a
-critical hunk compared to the local patch I have been testing which
-would cause memcpy() to fall off the end of allocated memory
-buffers....
+Brian
 
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -240,15 +240,14 @@ xfs_buf_item_format(
-               (bip->bli_flags & XFS_BLI_STALE));
- 
-        /*
--        * The size of the base structure is the size of the
--        * declared structure plus the space for the extra words
--        * of the bitmap.  We subtract one from the map size, because
--        * the first element of the bitmap is accounted for in the
--        * size of the base structure.
-+        * Base size is the actual size of the ondisk structure - it reflects
-+        * the actual size of the dirty bitmap rather than the size of the in
-+        * memory structure. The xfs_buf_log_format size is the maximum,
-+        * subtract the unused part of the bitmap from it.
-         */
--       base_size =
--               (uint)(sizeof(xfs_buf_log_format_t) +
--                      ((bip->bli_format.blf_map_size - 1) * sizeof(uint)));
-+       base_size = sizeof(struct xfs_buf_log_format) -
-+                   ((XFS_BLF_DATAMAP_SIZE - bip->bli_format.blf_map_size) *
-+                                                               sizeof(uint));
-        vecp->i_addr = &bip->bli_format;
-        vecp->i_len = base_size;
-        vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-
-
-I'll retest the series and repost it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
