@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4NHmsUn218827 for <xfs@oss.sgi.com>; Wed, 23 May 2012 12:48:54 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id E91kAYUId61FJjDI for
-	<xfs@oss.sgi.com>; Wed, 23 May 2012 10:48:53 -0700 (PDT)
-Message-ID: <4FBD2306.8090000@redhat.com>
-Date: Wed, 23 May 2012 13:48:54 -0400
-From: Brian Foster <bfoster@redhat.com>
+	q4NIJbj8224348 for <xfs@oss.sgi.com>; Wed, 23 May 2012 13:19:37 -0500
+Message-ID: <4FBD2A33.8080403@sgi.com>
+Date: Wed, 23 May 2012 13:19:31 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [RFC PATCH v3 2/2] xfs: fix xfsaild hang due to lost wake ups
 References: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
 	<1337704714-50235-3-git-send-email-bfoster@redhat.com>
-	<20120523005830.GL25351@dastard>
-In-Reply-To: <20120523005830.GL25351@dastard>
+	<20120523005830.GL25351@dastard> <4FBD2306.8090000@redhat.com>
+In-Reply-To: <4FBD2306.8090000@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,70 +19,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 05/22/2012 08:58 PM, Dave Chinner wrote:
-snip
-> 
-> Finally, rather than calling wake_up_process() in the
-> xfs_ail_push*() functions, call wake_up(&ailp->xa_idle); There can
-> only be one thread sleeping on that (the xfsaild) so there is no
-> need to use the wake_up_all() variant...
-> 
-> FWIW, you might be able to do this without the idle wait queue and
-> just use wake_up_process() - 
-> 
+On 05/23/12 12:48, Brian Foster wrote:
+> On 05/22/2012 08:58 PM, Dave Chinner wrote:
+> snip
+>>
+>> Finally, rather than calling wake_up_process() in the
+>> xfs_ail_push*() functions, call wake_up(&ailp->xa_idle); There can
+>> only be one thread sleeping on that (the xfsaild) so there is no
+>> need to use the wake_up_all() variant...
+>>
+>> FWIW, you might be able to do this without the idle wait queue and
+>> just use wake_up_process() -
+>>
+>
+> Hi Dave,
+>
+> I have a working version of your suggested algorithm. It looks mostly the same with the exception of a spin_unlock fix. I also have the below version that uses a wait_queue and that I plan to test overnight tonight:
+>
+...
 
-Hi Dave,
+FYI. Test 273 in a loop will still cause the sync_worker to lock when it 
+tries to allocate a dummy transaction.
 
-I have a working version of your suggested algorithm. It looks mostly the same with the exception of a spin_unlock fix. I also have the below version that uses a wait_queue and that I plan to test overnight tonight:
+PID: 29214  TASK: ffff8807e66404c0  CPU: 1   COMMAND: "kworker/1:15"
+  #0 [ffff88081f551b60] __schedule at ffffffff814175d0
+  #1 [ffff88081f551ca8] schedule at ffffffff81417944
+  #2 [ffff88081f551cb8] xlog_grant_head_wait at ffffffffa055a6d5 [xfs]
+  #3 [ffff88081f551d08] xlog_grant_head_check at ffffffffa055a856 [xfs]
+  #4 [ffff88081f551d48] xfs_log_reserve at ffffffffa055a95f [xfs]
+  #5 [ffff88081f551d88] xfs_trans_reserve at ffffffffa0557ee4 [xfs]
+  #6 [ffff88081f551dd8] xfs_fs_log_dummy at ffffffffa050cf88 [xfs]
+  #7 [ffff88081f551df8] xfs_sync_worker at ffffffffa0518454 [xfs]
+  #8 [ffff88081f551e18] process_one_work at ffffffff810564ad
+  #9 [ffff88081f551e68] worker_thread at ffffffff81059203
+#10 [ffff88081f551ee8] kthread at ffffffff8105dd2e
+#11 [ffff88081f551f48] kernel_thread_helper at ffffffff81421a64
 
-	while (!kthread_should_stop()) {
-		if (tout && tout <= 20)
-			state = TASK_KILLABLE;
-		else
-			state = TASK_INTERRUPTIBLE;
+I understand why the dummy transaction was added and I think we can 
+anticipate the hang before it happens and avoid it.
 
-		prepare_to_wait(&ailp->xa_idle, &wait, state);
 
-		spin_lock(&ailp->xa_lock);
-		/* barrier matches the xa_target update in xfs_ail_push() */
-		smp_rmb();
-		if (!xfs_ail_min(ailp) && (ailp->xa_target == ailp->xa_target_prev)) {
-			/* the ail is empty and no change to the push target - idle */
-			spin_unlock(&ailp->xa_lock);
-			schedule();
-		} else if (tout) {
-			spin_unlock(&ailp->xa_lock);
-			/* more work to do soon */
-			schedule_timeout(msecs_to_jiffies(tout));
-		} else {
-			spin_unlock(&ailp->xa_lock);
-		}
-
-		finish_wait(&ailp->xa_idle, &wait);
-
-		try_to_freeze();
-
-		tout = xfsaild_push(ailp);
-	}
-
-... and obviously the xfs_ail_push() side changes to:
-
-	wake_up(&ailp->xa_idle);
-
-Does this wait_queue version look sane to you? Thanks again..
-
-Brian
-
-> Cheers,
-> 
-> Dave.
+--Mark T.
 
 _______________________________________________
 xfs mailing list
