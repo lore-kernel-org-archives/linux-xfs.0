@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4OJQco6074776 for <xfs@oss.sgi.com>; Thu, 24 May 2012 14:26:38 -0500
-Received: from seven.medozas.de (seven.medozas.de [188.40.89.202]) by
-	cuda.sgi.com with ESMTP id 14A6zAxb3tndS2YD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 24 May 2012 12:26:33 -0700 (PDT)
-Date: Thu, 24 May 2012 21:26:31 +0200 (CEST)
-From: Jan Engelhardt <jengelh@inai.de>
-Subject: Re: xfsprogs: .lai files not found
-In-Reply-To: <4FBE60F6.6050709@sandeen.net>
-Message-ID: <alpine.LNX.2.01.1205241902160.16757@frira.zrqbmnf.qr>
-References: <alpine.LNX.2.01.1205241517400.10834@frira.zrqbmnf.qr>
-	<4FBE60F6.6050709@sandeen.net>
+	q4OKJ2cX083846 for <xfs@oss.sgi.com>; Thu, 24 May 2012 15:19:02 -0500
+Received: from mail-qc0-f181.google.com (mail-qc0-f181.google.com
+	[209.85.216.181]) by cuda.sgi.com with ESMTP id
+	UOuX7HxiFlJnNMwr (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 24 May 2012 13:19:00 -0700 (PDT)
+Received: by qcsk26 with SMTP id k26so174575qcs.26
+	for <xfs@oss.sgi.com>; Thu, 24 May 2012 13:19:00 -0700 (PDT)
 MIME-Version: 1.0
+Date: Thu, 24 May 2012 16:18:59 -0400
+Message-ID: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+From: Peter Watkins <treestem@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,31 +26,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs@oss.sgi.com
+To: juergh@gmail.com
+Cc: bpm@sgi.com, xfs@oss.sgi.com
 
+Does your kernel have the effect of
 
-On Thursday 2012-05-24 18:25, Eric Sandeen wrote:
->> 
->> (I frown upon using libtool directly and seek to replace it with an
->> assisted version using automake. There is however __quite__ some
->> cruft in the src tree.)
->
->Agreed that the build system could use love, do we have a volunteer? :)
+0bf6a5bd4b55b466964ead6fa566d8f346a828ee xfs: convert the xfsaild
+thread to a workqueue
+c7eead1e118fb7e34ee8f5063c3c090c054c3820 xfs: revert to using a
+kthread for AIL pushing
 
-Certainly.
-Perhaps confirm that the following oddballs indeed
-mark code that can be replaced:
+In particular, is this code in xfs_trans_ail_push:
 
-- __psint_t/__psunsigned_t looks very much like a pre-C-standard attempt at
-  intptr_t/uintptr_t [and should be changed accordingly]
-
-- many files in include/ should actually be in include/xfs/
-  (which does not exist at clone time)
-
-- 'struct stat64' smells really like an implementation detail
-  of how -D_FILE_OFFSET_BITS=64 (or the absence thereof) is handled.
-  If the -D is given, isn't "struct stat" enough for all supported OSes?
+       smp_wmb();
+       xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
+       smp_wmb();
 
 _______________________________________________
 xfs mailing list
