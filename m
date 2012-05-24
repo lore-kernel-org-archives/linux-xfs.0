@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4OG7FPw031807 for <xfs@oss.sgi.com>; Thu, 24 May 2012 11:07:16 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id fguCF89KLub9WOVz for
-	<xfs@oss.sgi.com>; Thu, 24 May 2012 09:07:13 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q4OG7BfU032327
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 24 May 2012 12:07:11 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH] xfs: re-enable xfsaild idle mode and fix associated races
-Date: Thu, 24 May 2012 12:06:42 -0400
-Message-Id: <1337875602-63025-1-git-send-email-bfoster@redhat.com>
+	q4OGPSi6037173 for <xfs@oss.sgi.com>; Thu, 24 May 2012 11:25:28 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 9oYRQyK12iOQCwcF for <xfs@oss.sgi.com>;
+	Thu, 24 May 2012 09:25:27 -0700 (PDT)
+Message-ID: <4FBE60F6.6050709@sandeen.net>
+Date: Thu, 24 May 2012 11:25:26 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
+MIME-Version: 1.0
+Subject: Re: xfsprogs: .lai files not found
+References: <alpine.LNX.2.01.1205241517400.10834@frira.zrqbmnf.qr>
+In-Reply-To: <alpine.LNX.2.01.1205241517400.10834@frira.zrqbmnf.qr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,110 +20,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Brian Foster <bfoster@redhat.com>
+To: Jan Engelhardt <jengelh@inai.de>
+Cc: xfs@oss.sgi.com
 
-xfsaild idle mode logic currently leads to a couple hangs:
+On 5/24/12 8:45 AM, Jan Engelhardt wrote:
+> 
+> So I tried changing the xfsprogs package in openSUSE to build without 
+> static libraries, and what I got back from the build system was a 
+> warning about completely improper rpath settings.
+> 
+> 
+> 	ERROR: RPATH "/home/abuild/rpmbuild/BUILD/xfsprogs-3.1.6/libxfs/.libs" 
+> 	on 
+> 	/home/abuild/rpmbuild/BUILDROOT/xfsprogs-3.1.6-0.x86_64/usr/sbin/mkfs.xfs 
+> 	is not allowed
+> 	[lots of these]
+> 
+> I therefore ripped out
+> 
+> 	-LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
+> 
+> from include/buildmacros, only to find that the install procedure then 
+> does not work at all anymore.
+> 
+> 	cd ../libhandle/.libs; ../../install-sh -o abuild -g abuild -m 755 -d /lib64; ../../install-sh -o abuild -g abuild -m 644 -T so_dot_version libhandle.lai /lib64; ../../install-sh -o abuild -g abuild -T so_dot_current libhandle.lai /lib64
+> 	install-sh: Unable to find libtool library file libhandle.lai
+> 	install-sh: Unable to find libtool library file libhandle.lai
+> 	gmake[1]: *** [install] Error 2
+> 	make: *** [libhandle-install] Error 2
+> 	error: Bad exit status from /var/tmp/rpm-tmp.JjlSJb (%install)
+> 
+> (I frown upon using libtool directly and seek to replace it with an
+> assisted version using automake. There is however __quite__ some
+> cruft in the src tree.)
 
-1.) If xfsaild is rescheduled in during an incremental scan
-    (i.e., tout != 0) and the target has been updated since
-    the previous run, we can hit the new target and go into
-    idle mode with a still populated ail.
-2.) A wake up is only issued when the target is pushed forward.
-    The wake up can race with xfsaild if it is currently in the
-    process of entering idle mode, causing future wake up
-    events to be lost.
+It's a little embarrassing to say so, but here's the hack I use in fedora for some of this stuff.
 
-Both hangs are reproducible by running xfstests 273 in a loop.
-Modify xfsaild to enter idle mode only when the ail is empty
-and the push target has not been moved forward since the last
-push.
+%configure \
+        --enable-readline=yes   \
+        --enable-blkid=yes
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+# Kill rpaths
+sed -i 's|^hardcode_libdir_flag_spec=.*|hardcode_libdir_flag_spec=""|g' libtool
+sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
-This is a lightly tested version against the xfs tree. I'll be more
-heavily testing a version based on my upstream reproducer tree over the
-next few days followed by similar testing on this patch if all goes
-well. Sending in advance for review.
+...
 
- fs/xfs/xfs_trans_ail.c  |   29 ++++++++++++++++++++++++++---
- fs/xfs/xfs_trans_priv.h |    1 +
- 2 files changed, 27 insertions(+), 3 deletions(-)
+# nuke .la files, etc
+rm -f $RPM_BUILD_ROOT/{%{_lib}/*.{la,a,so},%{_libdir}/*.{la,a}}
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9c51448..0819cd3 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -383,6 +383,12 @@ xfsaild_push(
- 	}
- 
- 	spin_lock(&ailp->xa_lock);
-+
-+	/* barrier matches the xa_target update in xfs_ail_push() */
-+	smp_rmb();
-+	target = ailp->xa_target;
-+	ailp->xa_target_prev = target;
-+
- 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
- 	if (!lip) {
- 		/*
-@@ -397,7 +403,6 @@ xfsaild_push(
- 	XFS_STATS_INC(xs_push_ail);
- 
- 	lsn = lip->li_lsn;
--	target = ailp->xa_target;
- 	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
- 		int	lock_result;
- 
-@@ -527,8 +532,26 @@ xfsaild(
- 			__set_current_state(TASK_KILLABLE);
- 		else
- 			__set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(tout ?
--				 msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
-+
-+		spin_lock(&ailp->xa_lock);
-+
-+		/* barrier matches the xa_target update in xfs_ail_push() */
-+		smp_rmb();
-+		if (!xfs_ail_min(ailp) && (ailp->xa_target == ailp->xa_target_prev)) {
-+			/* the ail is empty and no change to the push target - idle */
-+			spin_unlock(&ailp->xa_lock);
-+			schedule();
-+			tout = 0;
-+			continue;
-+		}
-+		spin_unlock(&ailp->xa_lock);
-+
-+		if (tout) {
-+			/* more work to do soon */
-+			schedule_timeout(msecs_to_jiffies(tout));
-+		}
-+
-+		__set_current_state(TASK_RUNNING);
- 
- 		try_to_freeze();
- 
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index fb62377..53b7c9b 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -67,6 +67,7 @@ struct xfs_ail {
- 	struct task_struct	*xa_task;
- 	struct list_head	xa_ail;
- 	xfs_lsn_t		xa_target;
-+	xfs_lsn_t		xa_target_prev;
- 	struct list_head	xa_cursors;
- 	spinlock_t		xa_lock;
- 	xfs_lsn_t		xa_last_pushed_lsn;
--- 
-1.7.7.6
+Agreed that the build system could use love, do we have a volunteer? :)
+
+-Eric
 
 _______________________________________________
 xfs mailing list
