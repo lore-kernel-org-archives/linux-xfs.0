@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4OEcGoj011755 for <xfs@oss.sgi.com>; Thu, 24 May 2012 09:38:16 -0500
-Message-ID: <4FBE47D0.80307@sgi.com>
-Date: Thu, 24 May 2012 09:38:08 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q4OFSPmi021254 for <xfs@oss.sgi.com>; Thu, 24 May 2012 10:28:25 -0500
+Date: Thu, 24 May 2012 10:33:39 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: file corruption issue
+Message-ID: <20120524153339.GC3963@sgi.com>
+References: <51509.110.174.53.110.1336699622.squirrel@boosthardware.com>
+	<20120511165012.GC16099@sgi.com>
+	<59946.110.174.53.110.1336959906.squirrel@boosthardware.com>
+	<20120514142948.GS3963@sgi.com>
+	<64776.110.174.53.110.1337043522.squirrel@boosthardware.com>
+	<20120515151331.GG16099@sgi.com>
+	<56000.110.174.53.110.1337135447.squirrel@boosthardware.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH v3 2/2] xfs: fix xfsaild hang due to lost wake ups
-References: <1337704714-50235-1-git-send-email-bfoster@redhat.com>
-	<1337704714-50235-3-git-send-email-bfoster@redhat.com>
-	<20120523005830.GL25351@dastard> <4FBD2306.8090000@redhat.com>
-	<4FBD2A33.8080403@sgi.com> <20120523235314.GN25351@dastard>
-In-Reply-To: <20120523235314.GN25351@dastard>
+Content-Disposition: inline
+In-Reply-To: <56000.110.174.53.110.1337135447.squirrel@boosthardware.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,78 +24,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: Patrick Shirkey <pshirkey@boosthardware.com>
+Cc: xfs@oss.sgi.com
 
-On 05/23/12 18:53, Dave Chinner wrote:
-> On Wed, May 23, 2012 at 01:19:31PM -0500, Mark Tinguely wrote:
->> On 05/23/12 12:48, Brian Foster wrote:
->>> On 05/22/2012 08:58 PM, Dave Chinner wrote:
->>> snip
->>>>
->>>> Finally, rather than calling wake_up_process() in the
->>>> xfs_ail_push*() functions, call wake_up(&ailp->xa_idle); There can
->>>> only be one thread sleeping on that (the xfsaild) so there is no
->>>> need to use the wake_up_all() variant...
->>>>
->>>> FWIW, you might be able to do this without the idle wait queue and
->>>> just use wake_up_process() -
->>>>
->>>
->>> Hi Dave,
->>>
->>> I have a working version of your suggested algorithm. It looks mostly the same with the exception of a spin_unlock fix. I also have the below version that uses a wait_queue and that I plan to test overnight tonight:
->>>
->> ...
->>
->> FYI. Test 273 in a loop will still cause the sync_worker to lock
->> when it tries to allocate a dummy transaction.
->>
->> PID: 29214  TASK: ffff8807e66404c0  CPU: 1   COMMAND: "kworker/1:15"
->>   #0 [ffff88081f551b60] __schedule at ffffffff814175d0
->>   #1 [ffff88081f551ca8] schedule at ffffffff81417944
->>   #2 [ffff88081f551cb8] xlog_grant_head_wait at ffffffffa055a6d5 [xfs]
->>   #3 [ffff88081f551d08] xlog_grant_head_check at ffffffffa055a856 [xfs]
->>   #4 [ffff88081f551d48] xfs_log_reserve at ffffffffa055a95f [xfs]
->>   #5 [ffff88081f551d88] xfs_trans_reserve at ffffffffa0557ee4 [xfs]
->>   #6 [ffff88081f551dd8] xfs_fs_log_dummy at ffffffffa050cf88 [xfs]
->>   #7 [ffff88081f551df8] xfs_sync_worker at ffffffffa0518454 [xfs]
->>   #8 [ffff88081f551e18] process_one_work at ffffffff810564ad
->>   #9 [ffff88081f551e68] worker_thread at ffffffff81059203
->> #10 [ffff88081f551ee8] kthread at ffffffff8105dd2e
->> #11 [ffff88081f551f48] kernel_thread_helper at ffffffff81421a64
->>
->> I understand why the dummy transaction was added and I think we can
->> anticipate the hang before it happens and avoid it.
->
-> I don't think this hang has anything to do with the idle patches -
-> it is most likely related to the CIL stall we are chasing down.
->
-> Cheers,
->
-> Dave.
+Hey Patrick,
 
-Correct, this problem is not caused nor can be corrected by the idle
-patches. See thread:
+On Wed, May 16, 2012 at 04:30:47AM +0200, Patrick Shirkey wrote:
+> On Tue, May 15, 2012 5:13 pm, Ben Myers wrote:
+> > On Tue, May 15, 2012 at 02:58:42AM +0200, Patrick Shirkey wrote:
+> >> Unfortunately I cannot unmount the partition/s to run xfs_metadump because
+> >> they are in use.
+> >>
+> >> I have found some files that were truncated on a recent crash. Is there
+> >> any tool I can run on those files to get info that might be useful?
+> >
+> > Hrm.. xfs_bmap output could be helpful so we can see the block map.  Do you
+> > know how big they are supposed to be?  How much was truncated?
+> >
+> 
+> The files that we have as examples were originally 28bytes but are now 0byte.
+> 
+> Running xfs_bmap on the 0 byte file returns "no extent".
+> 
+> ex.
+> 
+> These files are located next to each other in the same folder.
+> 
+> - 28 byte file: EXT: FILE-OFFSET      BLOCK-RANGE              AG AG-OFFSET
+> TOTAL 0: [0..7]:          28230136440..28230136447 13 (312849120..312849127)
+> 8
+> 
+> - 0 byte file: no extents
 
-  Subject: Still seeing hangs in xlog_grant_log_space
+So how old are the files that get truncated?  Were they created very recently?
 
-Brian, the FYI is just a warning that your replicator of running XFS
-test 173 in a loop is triggering dummy ticket allocation stalls in the
-sync_worker. Most of the time, they are quickly given space, but 
-eventually things will line up and XFS will lock up.
+> - A few more details that may be relevant.
+> 
+> 1: We are running openvz and LVM on these machines. Are there any known
+> issue/s with file corruption after a hard reset with openvz/LVM running?
 
-It took me over 200 iterations of test 173 to get the above lock up,
-and yes your v2 patches were in code, but that does not matter.
+I don't know about openvz/LVM...
+ 
+> 2: We have observed that while there is no obvious pattern in the data
+> corruption is does happen in chunks. It appears to be random chunks of files
+> that are corrupted after a crash->reset sequence.
 
-I did not want you to mistake a sync_worker lock up as being caused by
-your code.
+...and the data corruption happened in files that are read only?  Again.. when
+were they created?
 
---Mark.
+Thanks,
+Ben
 
 _______________________________________________
 xfs mailing list
