@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4ODj8Va001575 for <xfs@oss.sgi.com>; Thu, 24 May 2012 08:45:09 -0500
-Received: from seven.medozas.de (seven.medozas.de [188.40.89.202]) by
-	cuda.sgi.com with ESMTP id PdWqeOUlZOqjP1DY (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 24 May 2012 06:45:05 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by seven.medozas.de (Postfix) with ESMTP id 7826921A0C2E
-	for <xfs@oss.sgi.com>; Thu, 24 May 2012 15:45:02 +0200 (CEST)
-Date: Thu, 24 May 2012 15:45:02 +0200 (CEST)
-From: Jan Engelhardt <jengelh@inai.de>
-Subject: xfsprogs: .lai files not found
-Message-ID: <alpine.LNX.2.01.1205241517400.10834@frira.zrqbmnf.qr>
+	q4OEIXj2006962 for <xfs@oss.sgi.com>; Thu, 24 May 2012 09:18:33 -0500
+Date: Thu, 24 May 2012 09:23:47 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+Message-ID: <20120524142347.GZ3963@sgi.com>
+References: <CADLDEKuKLeYiqhQW0E9g_bS0VXoxPGPOck3N004Pxg4_Opbzow@mail.gmail.com>
+	<20120427110922.GF9541@dastard>
+	<CADLDEKtUHAGcOPT1jtcvyJVk+zsoL5_thYFtHJYs+w=6EGuVSA@mail.gmail.com>
+	<CADLDEKs4YbNzj2c0HKHwSdUfKy0efdQRe1rOsWDkWUgd+BOGHw@mail.gmail.com>
+	<20120507171908.GA16881@sgi.com>
+	<CADLDEKvgT_FcGhJKoPaQv0mh_Jqdaqu8SYatc9xxU7vOY217YQ@mail.gmail.com>
+	<20120518171959.GQ16099@sgi.com>
+	<CADLDEKssiOCVRknW3hYtxDxYHSyGr6qfepfai+UymsD6zMGopw@mail.gmail.com>
+	<20120521171136.GR16099@sgi.com>
+	<CADLDEKtVPRa-ZM_T6_-VLnCKtCtJwSNGR3VwR=qmFi1umbmTBQ@mail.gmail.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CADLDEKtVPRa-ZM_T6_-VLnCKtCtJwSNGR3VwR=qmFi1umbmTBQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,41 +27,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Juerg Haefliger <juergh@gmail.com>
+Cc: xfs@oss.sgi.com
 
+On Thu, May 24, 2012 at 07:45:05AM +0200, Juerg Haefliger wrote:
+> > Hit this on a filesystem with a regular sized log over the weekend. =A0=
+If you see
+> > this again in production could you gather up task states?
+> >
+> > echo t > /proc/sysrq-trigger
+> =
 
-So I tried changing the xfsprogs package in openSUSE to build without 
-static libraries, and what I got back from the build system was a 
-warning about completely improper rpath settings.
+> Here is the log from a production hang:
+> =
 
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111805] INFO:
+> task xfssyncd/dm-4:971 blocked for more than 120 seconds.
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111864] "echo 0 >
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111951]
+> xfssyncd/dm-4   D 000000000000000f     0   971      2 0x00000000
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111957]
+> ffff880325e09d00 0000000000000046 ffff880325e09fd8 ffff880325e08000
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111962]
+> 0000000000013d00 ffff880326774858 ffff880325e09fd8 0000000000013d00
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111966]
+> ffff8803241badc0 ffff8803267744a0 0000000000000282 ffff8806265d7e00
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.111971] Call Trace:
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112016]
+> [<ffffffffa00f42d8>] xlog_grant_log_space+0x4a8/0x500 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112023]
+> [<ffffffff8105f6f0>] ? default_wake_function+0x0/0x20
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112046]
+> [<ffffffffa00f61ff>] xfs_log_reserve+0xff/0x140 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112070]
+> [<ffffffffa01021fc>] xfs_trans_reserve+0x9c/0x200 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112092]
+> [<ffffffffa00e6383>] xfs_fs_log_dummy+0x43/0x90 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112117]
+> [<ffffffffa01193c1>] xfs_sync_worker+0x81/0x90 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112141]
+> [<ffffffffa01180f3>] xfssyncd+0x183/0x230 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112164]
+> [<ffffffffa0117f70>] ? xfssyncd+0x0/0x230 [xfs]
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112170]
+> [<ffffffff810871f6>] kthread+0x96/0xa0
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112176]
+> [<ffffffff8100cde4>] kernel_thread_helper+0x4/0x10
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112180]
+> [<ffffffff81087160>] ? kthread+0x0/0xa0
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112183]
+> [<ffffffff8100cde0>] ? kernel_thread_helper+0x0/0x10
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112241] INFO:
+> task ruby1.8:2734 blocked for more than 120 seconds.
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112295] "echo 0 >
+> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> May 23 11:44:33 sw-aw2az1-object062 kernel: [6272393.112378] ruby1.8
 
-	ERROR: RPATH "/home/abuild/rpmbuild/BUILD/xfsprogs-3.1.6/libxfs/.libs" 
-	on 
-	/home/abuild/rpmbuild/BUILDROOT/xfsprogs-3.1.6-0.x86_64/usr/sbin/mkfs.xfs 
-	is not allowed
-	[lots of these]
+Great, that's the same one we saw last saturday.  The xfs_sync_worker is bl=
+ocked
+getting log reservation, so it doesn't push the target on the ail... which
+would possibly release enough space for the log reservation it's blocked on.
 
-I therefore ripped out
+I was thinking of experimenting with something like this:
 
-	-LTLDFLAGS += -rpath $(PKG_ROOT_LIB_DIR)
+Index: xfs/fs/xfs/xfs_sync.c
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+--- xfs.orig/fs/xfs/xfs_sync.c
++++ xfs/fs/xfs/xfs_sync.c
+@@ -392,15 +392,15 @@ xfs_sync_worker(
+        if (down_read_trylock(&mp->m_super->s_umount)) {
+                if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+                        /* dgc: errors ignored here */
+-                       if (mp->m_super->s_frozen =3D=3D SB_UNFROZEN &&
+-                           xfs_log_need_covered(mp))
+-                               error =3D xfs_fs_log_dummy(mp);
+-                       else
+-                               xfs_log_force(mp, 0);
++                       xfs_log_force(mp, 0);
 
-from include/buildmacros, only to find that the install procedure then 
-does not work at all anymore.
+                        /* start pushing all the metadata that is currently
+                         * dirty */
+                        xfs_ail_push_all(mp->m_ail);
++
++                       if (mp->m_super->s_frozen =3D=3D SB_UNFROZEN &&
++                           xfs_log_need_covered(mp))
++                               error =3D xfs_fs_log_dummy(mp);
+                }
+                up_read(&mp->m_super->s_umount);
+        }
 
-	cd ../libhandle/.libs; ../../install-sh -o abuild -g abuild -m 755 -d /lib64; ../../install-sh -o abuild -g abuild -m 644 -T so_dot_version libhandle.lai /lib64; ../../install-sh -o abuild -g abuild -T so_dot_current libhandle.lai /lib64
-	install-sh: Unable to find libtool library file libhandle.lai
-	install-sh: Unable to find libtool library file libhandle.lai
-	gmake[1]: *** [install] Error 2
-	make: *** [libhandle-install] Error 2
-	error: Bad exit status from /var/tmp/rpm-tmp.JjlSJb (%install)
+By forcing the log and pushing all of the ail before trying to cover the lo=
+g we
+don't deadlock that way... but it doesn't fix the greater problem with the =
+ail
+hang.  (It looks like that is being worked in a separate thread.)  And ther=
+e may
+be some other considerations with respect to covering the log later, after
+pushing the ail.  Something for discussion.
 
-(I frown upon using libtool directly and seek to replace it with an
-assisted version using automake. There is however __quite__ some
-cruft in the src tree.)
+-Ben
 
 _______________________________________________
 xfs mailing list
