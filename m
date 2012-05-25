@@ -1,21 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4PEm40K129588 for <xfs@oss.sgi.com>; Fri, 25 May 2012 09:48:04 -0500
-Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
-	[209.85.210.53]) by cuda.sgi.com with ESMTP id lhAbC3IsctP6OabH
-	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 25 May 2012 07:48:02 -0700 (PDT)
-Received: by dadg9 with SMTP id g9so1636339dad.26
-	for <xfs@oss.sgi.com>; Fri, 25 May 2012 07:48:02 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <4FBF63B0.6020209@gmail.com>
-References: <4FBF60D1.80104@gmail.com> <4FBF62D2.20702@fastmail.fm>
-	<4FBF63B0.6020209@gmail.com>
-Date: Fri, 25 May 2012 11:48:01 -0300
-Message-ID: <CABYL=Toi+Mbm1nJ=5HhBnjYiK9ZEL-SYmwe3aLtm5CzTdR8zcg@mail.gmail.com>
-Subject: Re: very slow file deletion on an SSD
-From: Roberto Spadim <roberto@spadim.com.br>
+	q4PFqfpk134530 for <xfs@oss.sgi.com>; Fri, 25 May 2012 10:52:41 -0500
+Received: from seven.medozas.de (seven.medozas.de [188.40.89.202]) by
+	cuda.sgi.com with ESMTP id g5nf8gb9LDWG2zVk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 25 May 2012 08:52:39 -0700 (PDT)
+From: Jan Engelhardt <jengelh@inai.de>
+Subject: Re: xfsprogs/build: use standard type intptr_t
+Date: Fri, 25 May 2012 17:52:25 +0200
+Message-Id: <1337961147-11668-1-git-send-email-jengelh@inai.de>
+In-Reply-To: <20120525103758.GD1707@infradead.org>
+References: <20120525103758.GD1707@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +20,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Landman <joe.landman@gmail.com>
-Cc: linux-raid <linux-raid@vger.kernel.org>, Bernd Schubert <bernd.schubert@fastmail.fm>, xfs@oss.sgi.com
-
-noop scheduler could be better for ssd?
-
-2012/5/25 Joe Landman <joe.landman@gmail.com>:
-> On 05/25/2012 06:45 AM, Bernd Schubert wrote:
->>
->> Hello Joe,
->>
->> On 05/25/2012 12:37 PM, Joe Landman wrote:
->>>
->>> Hi folks:
->>>
->>> Just ran into this (see posted output at bottom). 3.2.14 kernel, MD RAID
->>> 5, xfs file system. Not sure (precisely) where the problem is, hence
->>> posting to both lists.
->>
->>
->> do you have anything enabled, that would make your files to have xattrs?
->
->
-> Not to my knowledge. =A0I'll go back and re-create some files and see.
->
->> http://oss.sgi.com/archives/xfs/2011-08/msg00233.html
->
->
-> Hmmm
->
->
->
-> --
-> Joseph Landman, Ph.D
-> Founder and CEO
-> Scalable Informatics Inc.
-> email: landman@scalableinformatics.com
-> web =A0: http://scalableinformatics.com
-> =A0 =A0 =A0 http://scalableinformatics.com/sicluster
-> phone: +1 734 786 8423 x121
-> fax =A0: +1 866 888 3112
-> cell : +1 734 612 4615
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-raid" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at =A0http://vger.kernel.org/majordomo-info.html
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, joe@perches.com
 
 
+The following changes since commit 14c26c6a05de138a4fd9a0c05ff8e7435a618324:
 
--- =
+  xfs: add trace points for log forces (2012-05-21 10:45:44 -0500)
 
-Roberto Spadim
-Spadim Technology / SPAEmpresarial
+are available in the git repository at:
+  git://inai.de/linux xfs
+
+Jan Engelhardt (2):
+      types.h: implement intptr_t and uintptr_t
+      xfs: use standard (u)intptr_t types
+
+ arch/avr32/include/asm/posix_types.h    |    2 +
+ arch/blackfin/include/asm/posix_types.h |    2 +
+ arch/cris/include/asm/posix_types.h     |    2 +
+ arch/mn10300/include/asm/posix_types.h  |    2 +
+ arch/powerpc/include/asm/posix_types.h  |    2 +
+ arch/s390/include/asm/posix_types.h     |    4 +++
+ arch/sh/include/asm/posix_types_64.h    |    2 +
+ arch/sparc/include/asm/posix_types.h    |    2 +
+ arch/xtensa/include/asm/posix_types.h   |    2 +
+ fs/xfs/xfs_extfree_item.c               |    2 +-
+ fs/xfs/xfs_filestream.c                 |   34 +++++++++++++++---------------
+ fs/xfs/xfs_log.c                        |   10 ++++----
+ fs/xfs/xfs_trans_ail.c                  |    6 ++--
+ fs/xfs/xfs_types.h                      |   11 ----------
+ include/asm-generic/posix_types.h       |    4 +++
+ include/linux/types.h                   |    5 ++-
+ 16 files changed, 53 insertions(+), 39 deletions(-)
 
 _______________________________________________
 xfs mailing list
