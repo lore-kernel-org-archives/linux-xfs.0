@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4PFqfnG134536 for <xfs@oss.sgi.com>; Fri, 25 May 2012 10:52:41 -0500
+	q4PFqfqb134531 for <xfs@oss.sgi.com>; Fri, 25 May 2012 10:52:41 -0500
 Received: from seven.medozas.de (seven.medozas.de [188.40.89.202]) by
-	cuda.sgi.com with ESMTP id TlNvmG7HxTJHvTBC (version=TLSv1
+	cuda.sgi.com with ESMTP id lMLDVLpGvGhu8P9F (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
 	Fri, 25 May 2012 08:52:40 -0700 (PDT)
 From: Jan Engelhardt <jengelh@inai.de>
-Subject: [PATCH 1/2] types.h: implement intptr_t and uintptr_t
-Date: Fri, 25 May 2012 17:52:26 +0200
-Message-Id: <1337961147-11668-2-git-send-email-jengelh@inai.de>
+Subject: [PATCH 2/2] xfs: use standard (u)intptr_t types
+Date: Fri, 25 May 2012 17:52:27 +0200
+Message-Id: <1337961147-11668-3-git-send-email-jengelh@inai.de>
 In-Reply-To: <1337961147-11668-1-git-send-email-jengelh@inai.de>
 References: <20120525103758.GD1707@infradead.org>
 	<1337961147-11668-1-git-send-email-jengelh@inai.de>
@@ -29,199 +29,177 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: hch@infradead.org, joe@perches.com
 
-intptr_t and uintptr_t designate an (un)signed integer type capable of
-holding void* pointers.
-(http://pubs.opengroup.org/onlinepubs/000095399/basedefs/stdint.h.html )
-
-Notes: In linux/types.h, there are a handful of guards like "#ifdef
-_PTRDIFF_T", but a git grep reveals that this is never ever defined
-anywhere, so I omitted a corresponding "#ifdef _INTPTR_T" guard.
-Same goes for "#define __kernel_ptrdiff_t" in
-arch/sh/include/asm/posix_types_64.h.
-
+Cc: Joe Perches <joe@perches.com>
 Signed-off-by: Jan Engelhardt <jengelh@inai.de>
 ---
- arch/avr32/include/asm/posix_types.h    |    2 ++
- arch/blackfin/include/asm/posix_types.h |    2 ++
- arch/cris/include/asm/posix_types.h     |    2 ++
- arch/mn10300/include/asm/posix_types.h  |    2 ++
- arch/powerpc/include/asm/posix_types.h  |    2 ++
- arch/s390/include/asm/posix_types.h     |    4 ++++
- arch/sh/include/asm/posix_types_64.h    |    2 ++
- arch/sparc/include/asm/posix_types.h    |    2 ++
- arch/xtensa/include/asm/posix_types.h   |    2 ++
- include/asm-generic/posix_types.h       |    4 ++++
- include/linux/types.h                   |    5 +++--
- 11 files changed, 27 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_extfree_item.c |    2 +-
+ fs/xfs/xfs_filestream.c   |   34 +++++++++++++++++-----------------
+ fs/xfs/xfs_log.c          |   10 +++++-----
+ fs/xfs/xfs_trans_ail.c    |    6 +++---
+ fs/xfs/xfs_types.h        |   11 -----------
+ 5 files changed, 26 insertions(+), 37 deletions(-)
 
-diff --git a/arch/avr32/include/asm/posix_types.h b/arch/avr32/include/asm/posix_types.h
-index 74667bf..9670c32 100644
---- a/arch/avr32/include/asm/posix_types.h
-+++ b/arch/avr32/include/asm/posix_types.h
-@@ -26,6 +26,8 @@ typedef unsigned short  __kernel_ipc_pid_t;
- typedef unsigned long	__kernel_size_t;
- typedef long		__kernel_ssize_t;
- typedef int             __kernel_ptrdiff_t;
-+typedef int             __kernel_intptr_t;
-+typedef unsigned int    __kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
+diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+index feb36d7..2dfef98 100644
+--- a/fs/xfs/xfs_extfree_item.c
++++ b/fs/xfs/xfs_extfree_item.c
+@@ -239,7 +239,7 @@ xfs_efi_init(
  
- typedef unsigned short  __kernel_old_uid_t;
-diff --git a/arch/blackfin/include/asm/posix_types.h b/arch/blackfin/include/asm/posix_types.h
-index 41bc187..b4da8fa 100644
---- a/arch/blackfin/include/asm/posix_types.h
-+++ b/arch/blackfin/include/asm/posix_types.h
-@@ -19,6 +19,8 @@ typedef unsigned int __kernel_ipc_pid_t;
- typedef unsigned long __kernel_size_t;
- typedef long __kernel_ssize_t;
- typedef int __kernel_ptrdiff_t;
-+typedef int __kernel_intptr_t;
-+typedef unsigned int __kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
+ 	xfs_log_item_init(mp, &efip->efi_item, XFS_LI_EFI, &xfs_efi_item_ops);
+ 	efip->efi_format.efi_nextents = nextents;
+-	efip->efi_format.efi_id = (__psint_t)(void*)efip;
++	efip->efi_format.efi_id = (intptr_t)(void*)efip;
+ 	atomic_set(&efip->efi_next_extent, 0);
  
- typedef unsigned short __kernel_old_uid_t;
-diff --git a/arch/cris/include/asm/posix_types.h b/arch/cris/include/asm/posix_types.h
-index 72b3cd6..241d188 100644
---- a/arch/cris/include/asm/posix_types.h
-+++ b/arch/cris/include/asm/posix_types.h
-@@ -28,6 +28,8 @@ typedef unsigned short	__kernel_gid_t;
- typedef __SIZE_TYPE__	__kernel_size_t;
- typedef long		__kernel_ssize_t;
- typedef int		__kernel_ptrdiff_t;
-+typedef int		__kernel_intptr_t;
-+typedef unsigned int	__kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
+ 	return efip;
+diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+index 5170306..a05595e 100644
+--- a/fs/xfs/xfs_filestream.c
++++ b/fs/xfs/xfs_filestream.c
+@@ -42,24 +42,24 @@ xfs_filestreams_trace(
+ 	int		type,	/* type of trace */
+ 	const char	*func,	/* source function */
+ 	int		line,	/* source line number */
+-	__psunsigned_t	arg0,
+-	__psunsigned_t	arg1,
+-	__psunsigned_t	arg2,
+-	__psunsigned_t	arg3,
+-	__psunsigned_t	arg4,
+-	__psunsigned_t	arg5)
++	uintptr_t	arg0,
++	uintptr_t	arg1,
++	uintptr_t	arg2,
++	uintptr_t	arg3,
++	uintptr_t	arg4,
++	uintptr_t	arg5)
+ {
+ 	ktrace_enter(xfs_filestreams_trace_buf,
+-		(void *)(__psint_t)(type | (line << 16)),
++		(void *)(intptr_t)(type | (line << 16)),
+ 		(void *)func,
+-		(void *)(__psunsigned_t)current_pid(),
++		(void *)(uintptr_t)current_pid(),
+ 		(void *)mp,
+-		(void *)(__psunsigned_t)arg0,
+-		(void *)(__psunsigned_t)arg1,
+-		(void *)(__psunsigned_t)arg2,
+-		(void *)(__psunsigned_t)arg3,
+-		(void *)(__psunsigned_t)arg4,
+-		(void *)(__psunsigned_t)arg5,
++		(void *)(uintptr_t)arg0,
++		(void *)(uintptr_t)arg1,
++		(void *)(uintptr_t)arg2,
++		(void *)(uintptr_t)arg3,
++		(void *)(uintptr_t)arg4,
++		(void *)(uintptr_t)arg5,
+ 		NULL, NULL, NULL, NULL, NULL, NULL);
+ }
  
- typedef unsigned short	__kernel_old_dev_t;
-diff --git a/arch/mn10300/include/asm/posix_types.h b/arch/mn10300/include/asm/posix_types.h
-index ab50618..5f43928 100644
---- a/arch/mn10300/include/asm/posix_types.h
-+++ b/arch/mn10300/include/asm/posix_types.h
-@@ -38,6 +38,8 @@ typedef unsigned long	__kernel_size_t;
- typedef signed long	__kernel_ssize_t;
- #endif
- typedef int		__kernel_ptrdiff_t;
-+typedef int		__kernel_intptr_t;
-+typedef unsigned int	__kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
+@@ -71,9 +71,9 @@ xfs_filestreams_trace(
+ #define TRACE5(mp,t,a0,a1,a2,a3,a4)	TRACE6(mp,t,a0,a1,a2,a3,a4,0)
+ #define TRACE6(mp,t,a0,a1,a2,a3,a4,a5) \
+ 	xfs_filestreams_trace(mp, t, __func__, __LINE__, \
+-				(__psunsigned_t)a0, (__psunsigned_t)a1, \
+-				(__psunsigned_t)a2, (__psunsigned_t)a3, \
+-				(__psunsigned_t)a4, (__psunsigned_t)a5)
++				(uintptr_t)a0, (uintptr_t)a1, \
++				(uintptr_t)a2, (uintptr_t)a3, \
++				(uintptr_t)a4, (uintptr_t)a5)
  
- typedef unsigned short	__kernel_old_dev_t;
-diff --git a/arch/powerpc/include/asm/posix_types.h b/arch/powerpc/include/asm/posix_types.h
-index f139325..6f8d25c 100644
---- a/arch/powerpc/include/asm/posix_types.h
-+++ b/arch/powerpc/include/asm/posix_types.h
-@@ -14,6 +14,8 @@ typedef unsigned long	__kernel_old_dev_t;
- typedef unsigned int	__kernel_size_t;
- typedef int		__kernel_ssize_t;
- typedef long		__kernel_ptrdiff_t;
-+typedef long		__kernel_intptr_t;
-+typedef unsigned long	__kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
+ #define TRACE_AG_SCAN(mp, ag, ag2) \
+ 		TRACE2(mp, XFS_FSTRM_KTRACE_AGSCAN, ag, ag2);
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 6b965bf..70f6f73 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3382,7 +3382,7 @@ xlog_verify_iclog(xlog_t	 *log,
+ 	xlog_in_core_2_t	*xhdr;
+ 	xfs_caddr_t		ptr;
+ 	xfs_caddr_t		base_ptr;
+-	__psint_t		field_offset;
++	intptr_t		field_offset;
+ 	__uint8_t		clientid;
+ 	int			len, i, j, k, op_len;
+ 	int			idx;
+@@ -3421,7 +3421,7 @@ xlog_verify_iclog(xlog_t	 *log,
+ 		ophead = (xlog_op_header_t *)ptr;
  
- typedef unsigned short	__kernel_nlink_t;
-diff --git a/arch/s390/include/asm/posix_types.h b/arch/s390/include/asm/posix_types.h
-index edf8527..8c89e7a 100644
---- a/arch/s390/include/asm/posix_types.h
-+++ b/arch/s390/include/asm/posix_types.h
-@@ -30,6 +30,8 @@ typedef unsigned short  __kernel_uid_t;
- typedef unsigned short  __kernel_gid_t;
- typedef int             __kernel_ssize_t;
- typedef int             __kernel_ptrdiff_t;
-+typedef int             __kernel_intptr_t;
-+typedef unsigned int    __kernel_uintptr_t;
+ 		/* clientid is only 1 byte */
+-		field_offset = (__psint_t)
++		field_offset = (intptr_t)
+ 			       ((xfs_caddr_t)&(ophead->oh_clientid) - base_ptr);
+ 		if (syncing == B_FALSE || (field_offset & 0x1ff)) {
+ 			clientid = ophead->oh_clientid;
+@@ -3444,13 +3444,13 @@ xlog_verify_iclog(xlog_t	 *log,
+ 				(unsigned long)field_offset);
  
- #else /* __s390x__ */
+ 		/* check length */
+-		field_offset = (__psint_t)
++		field_offset = (intptr_t)
+ 			       ((xfs_caddr_t)&(ophead->oh_len) - base_ptr);
+ 		if (syncing == B_FALSE || (field_offset & 0x1ff)) {
+ 			op_len = be32_to_cpu(ophead->oh_len);
+ 		} else {
+-			idx = BTOBBT((__psint_t)&ophead->oh_len -
+-				    (__psint_t)iclog->ic_datap);
++			idx = BTOBBT((intptr_t)&ophead->oh_len -
++				    (intptr_t)iclog->ic_datap);
+ 			if (idx >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE)) {
+ 				j = idx / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+ 				k = idx % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index 9c51448..def28e0 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -187,7 +187,7 @@ xfs_trans_ail_cursor_next(
+ {
+ 	struct xfs_log_item	*lip = cur->item;
  
-@@ -41,6 +43,8 @@ typedef unsigned int    __kernel_uid_t;
- typedef unsigned int    __kernel_gid_t;
- typedef long            __kernel_ssize_t;
- typedef long            __kernel_ptrdiff_t;
-+typedef long            __kernel_intptr_t;
-+typedef unsigned long   __kernel_uintptr_t;
- typedef unsigned long   __kernel_sigset_t;      /* at least 32 bits */
+-	if ((__psint_t)lip & 1)
++	if ((intptr_t)lip & 1)
+ 		lip = xfs_ail_min(ailp);
+ 	if (lip)
+ 		cur->item = xfs_ail_next(ailp, lip);
+@@ -225,7 +225,7 @@ xfs_trans_ail_cursor_clear(
+ 	list_for_each_entry(cur, &ailp->xa_cursors, list) {
+ 		if (cur->item == lip)
+ 			cur->item = (struct xfs_log_item *)
+-					((__psint_t)cur->item | 1);
++					((intptr_t)cur->item | 1);
+ 	}
+ }
  
- #endif /* __s390x__ */
-diff --git a/arch/sh/include/asm/posix_types_64.h b/arch/sh/include/asm/posix_types_64.h
-index fcda07b..0224785 100644
---- a/arch/sh/include/asm/posix_types_64.h
-+++ b/arch/sh/include/asm/posix_types_64.h
-@@ -17,6 +17,8 @@ typedef int		__kernel_ssize_t;
- #define __kernel_ssize_t __kernel_ssize_t
- typedef int		__kernel_ptrdiff_t;
- #define __kernel_ptrdiff_t __kernel_ptrdiff_t
-+typedef int		__kernel_intptr_t;
-+typedef unsigned int	__kernel_uintptr_t;
+@@ -316,7 +316,7 @@ xfs_ail_splice(
+ 	 * find the place in the AIL where the items belong.
+ 	 */
+ 	lip = cur ? cur->item : NULL;
+-	if (!lip || (__psint_t) lip & 1)
++	if (!lip || (intptr_t)lip & 1)
+ 		lip = __xfs_trans_ail_cursor_last(ailp, lsn);
  
- typedef unsigned short	__kernel_old_uid_t;
- #define __kernel_old_uid_t __kernel_old_uid_t
-diff --git a/arch/sparc/include/asm/posix_types.h b/arch/sparc/include/asm/posix_types.h
-index 3070f25..2f2c90d 100644
---- a/arch/sparc/include/asm/posix_types.h
-+++ b/arch/sparc/include/asm/posix_types.h
-@@ -26,6 +26,8 @@ typedef int		       __kernel_suseconds_t;
- typedef unsigned int           __kernel_size_t;
- typedef int                    __kernel_ssize_t;
- typedef long int               __kernel_ptrdiff_t;
-+typedef int                    __kernel_intptr_t;
-+typedef unsigned int           __kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
+ 	/*
+diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
+index 398cf68..7e0639a 100644
+--- a/fs/xfs/xfs_types.h
++++ b/fs/xfs/xfs_types.h
+@@ -43,17 +43,6 @@ typedef char *			xfs_caddr_t;	/* <core address> type */
+ typedef __u32			xfs_dev_t;
+ typedef __u32			xfs_nlink_t;
  
- typedef unsigned short         __kernel_ipc_pid_t;
-diff --git a/arch/xtensa/include/asm/posix_types.h b/arch/xtensa/include/asm/posix_types.h
-index 6e96be0..d35f53e 100644
---- a/arch/xtensa/include/asm/posix_types.h
-+++ b/arch/xtensa/include/asm/posix_types.h
-@@ -25,6 +25,8 @@ typedef unsigned short	__kernel_ipc_pid_t;
- typedef unsigned int	__kernel_size_t;
- typedef int		__kernel_ssize_t;
- typedef long		__kernel_ptrdiff_t;
-+typedef long		__kernel_intptr_t;
-+typedef unsigned long	__kernel_uintptr_t;
- #define __kernel_size_t __kernel_size_t
- 
- typedef unsigned short	__kernel_old_uid_t;
-diff --git a/include/asm-generic/posix_types.h b/include/asm-generic/posix_types.h
-index 91d44bd..c0b9107 100644
---- a/include/asm-generic/posix_types.h
-+++ b/include/asm-generic/posix_types.h
-@@ -71,10 +71,14 @@ typedef unsigned int	__kernel_old_dev_t;
- typedef unsigned int	__kernel_size_t;
- typedef int		__kernel_ssize_t;
- typedef int		__kernel_ptrdiff_t;
-+typedef int		__kernel_intptr_t;
-+typedef unsigned int	__kernel_uintptr_t;
- #else
- typedef __kernel_ulong_t __kernel_size_t;
- typedef __kernel_long_t	__kernel_ssize_t;
- typedef __kernel_long_t	__kernel_ptrdiff_t;
-+typedef __kernel_long_t __kernel_intptr_t;
-+typedef __kernel_ulong_t __kernel_uintptr_t;
- #endif
- #endif
- 
-diff --git a/include/linux/types.h b/include/linux/types.h
-index e5fa503..03c355f 100644
---- a/include/linux/types.h
-+++ b/include/linux/types.h
-@@ -42,8 +42,6 @@ typedef __kernel_gid32_t	gid_t;
- typedef __kernel_uid16_t        uid16_t;
- typedef __kernel_gid16_t        gid16_t;
- 
--typedef unsigned long		uintptr_t;
+-/* __psint_t is the same size as a pointer */
+-#if (BITS_PER_LONG == 32)
+-typedef __int32_t __psint_t;
+-typedef __uint32_t __psunsigned_t;
+-#elif (BITS_PER_LONG == 64)
+-typedef __int64_t __psint_t;
+-typedef __uint64_t __psunsigned_t;
+-#else
+-#error BITS_PER_LONG must be 32 or 64
+-#endif
 -
- #ifdef CONFIG_UID16
- /* This is defined by include/asm-{arch}/posix_types.h */
- typedef __kernel_old_uid_t	old_uid_t;
-@@ -73,6 +71,9 @@ typedef __kernel_ssize_t	ssize_t;
- typedef __kernel_ptrdiff_t	ptrdiff_t;
- #endif
+ #endif	/* __KERNEL__ */
  
-+typedef __kernel_intptr_t	intptr_t;
-+typedef __kernel_uintptr_t	uintptr_t;
-+
- #ifndef _TIME_T
- #define _TIME_T
- typedef __kernel_time_t		time_t;
+ typedef __uint32_t	xfs_agblock_t;	/* blockno in alloc. group */
 -- 
 1.7.7
 
