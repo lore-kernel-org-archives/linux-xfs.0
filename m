@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4QNQ0IQ246942 for <xfs@oss.sgi.com>; Sat, 26 May 2012 18:26:00 -0500
+	q4QNtLkq254733 for <xfs@oss.sgi.com>; Sat, 26 May 2012 18:55:22 -0500
 Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
 	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	qNfeasy4evsrAGrh (version=TLSv1 cipher=RC4-MD5 bits=128
+	7jnsf1fHglQaXWe8 (version=TLSv1 cipher=RC4-MD5 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 26 May 2012 16:25:58 -0700 (PDT)
-Received: by obbuo19 with SMTP id uo19so4002995obb.26
-	for <xfs@oss.sgi.com>; Sat, 26 May 2012 16:25:58 -0700 (PDT)
-Message-ID: <4FC16683.9060800@gmail.com>
-Date: Sat, 26 May 2012 19:25:55 -0400
+	Sat, 26 May 2012 16:55:20 -0700 (PDT)
+Received: by obbuo19 with SMTP id uo19so4033464obb.26
+	for <xfs@oss.sgi.com>; Sat, 26 May 2012 16:55:20 -0700 (PDT)
+Message-ID: <4FC16D65.8000008@gmail.com>
+Date: Sat, 26 May 2012 19:55:17 -0400
 From: Joe Landman <joe.landman@gmail.com>
 MIME-Version: 1.0
 Subject: Re: very slow file deletion on an SSD
@@ -32,105 +32,125 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: linux-raid <linux-raid@vger.kernel.org>, xfs@oss.sgi.com
 
 On 05/26/2012 07:18 PM, Dave Chinner wrote:
-> On Fri, May 25, 2012 at 06:37:05AM -0400, Joe Landman wrote:
->> Hi folks:
->>
->>    Just ran into this (see posted output at bottom).  3.2.14 kernel,
->> MD RAID 5, xfs file system.  Not sure (precisely) where the problem
->> is, hence posting to both lists.
->>
->>   [root@siFlash ~]# cat /proc/mdstat
->> Personalities : [raid1] [raid6] [raid5] [raid4]
->> md22 : active raid5 sdl[0] sds[7] sdx[6] sdu[5] sdk[4] sdz[3] sdw[2] sdr[1]
->>        1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>
->> md20 : active raid5 sdh[0] sdf[7] sdm[6] sdd[5] sdc[4] sde[3] sdi[2] sdg[1]
->>        1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>
->> md21 : active raid5 sdy[0] sdq[7] sdp[6] sdo[5] sdn[4] sdj[3] sdv[2] sdt[1]
->>        1641009216 blocks super 1.2 level 5, 32k chunk, algorithm 2
->> [8/8] [UUUUUUUU]
->>
->> md0 : active raid1 sdb1[1] sda1[0]
->>        93775800 blocks super 1.0 [2/2] [UU]
->>        bitmap: 1/1 pages [4KB], 65536KB chunk
->>
->>
->> md2* are SSD RAID5 arrays we are experimenting with.  Xfs file
->> systems atop them:
->>
->> [root@siFlash ~]# mount | grep md2
->> /dev/md20 on /data/1 type xfs (rw)
->> /dev/md21 on /data/2 type xfs (rw)
->> /dev/md22 on /data/3 type xfs (rw)
->>
->> vanilla mount options (following Dave Chinner's long standing advice)
->>
->> meta-data=/dev/md20              isize=2048   agcount=32,
->> agsize=12820392 blks
->>           =                       sectsz=512   attr=2
->> data     =                       bsize=4096   blocks=410252304, imaxpct=5
->>           =                       sunit=8      swidth=56 blks
->> naming   =version 2              bsize=65536  ascii-ci=0
->> log      =internal               bsize=4096   blocks=30720, version=2
->>           =                       sectsz=512   sunit=8 blks, lazy-count=1
->> realtime =none                   extsz=4096   blocks=0, rtextents=0
->
-> But you haven't followed my advice when it comes to using default
-> mkfs options, have you? You're running 2k inodes and 64k directory
-> block size, which is not exactly a common config
 
-We were experimenting.  Easy to set it back and demonstrate the problem 
-again.
-
->
-> The question is, why do you have these options configured, and are
-> they responsible for things being slow?
->
-
-We saw it before we experimented with some mkfs options.  Will rebuild 
-FS and demo it again.
-
-
->> All this said, deletes from this unit are taking 1-2 seconds per file ...
->
 > Sounds like you might be hitting the synchronous xattr removal
 > problem that was recently fixed (as has been mentioned already), but
 > even so 2 IOs don't take 1-2s to do, unless the MD RAID5 barrier
 > implementation is really that bad. If you mount -o nobarrier, what
 > happens?
 
-[root@siFlash test]# ls -alF  | wc -l
-59
-[root@siFlash test]# /usr/bin/time rm -f *
-^C0.00user 8.46system 0:09.55elapsed 88%CPU (0avgtext+0avgdata 
-2384maxresident)k
-25352inputs+0outputs (0major+179minor)pagefaults 0swaps
-[root@siFlash test]# ls -alF  | wc -l
+Pure vanilla mkfs
+
+
+[root@siFlash ~]# mkfs.xfs -f /dev/md20
+meta-data=/dev/md20              isize=256    agcount=32, 
+agsize=12820384 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=410252288, imaxpct=5
+          =                       sunit=4      swidth=28 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=200320, version=2
+          =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+[root@siFlash ~]# mkfs.xfs -f /dev/md21
+meta-data=/dev/md21              isize=256    agcount=32, 
+agsize=12820384 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=410252288, imaxpct=5
+          =                       sunit=4      swidth=28 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=200320, version=2
+          =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+^[[A[root@siFlash ~]# mkfs.xfs -f /dev/md22
+meta-data=/dev/md22              isize=256    agcount=32, 
+agsize=12820384 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=4096   blocks=410252288, imaxpct=5
+          =                       sunit=4      swidth=28 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=4096   blocks=200320, version=2
+          =                       sectsz=512   sunit=4 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+
+and mount
+
+[root@siFlash ~]# mount /dev/md20 /data/1
+[root@siFlash ~]# mount /dev/md21 /data/2
+[root@siFlash ~]# mount /dev/md22 /data/3
+
+
+Still an issue:
+
+[root@siFlash test]# ls -l | wc -l
 48
+[root@siFlash test]# /usr/bin/time rm -f *
+^C0.00user 5.02system 0:05.33elapsed 94%CPU (0avgtext+0avgdata 
+2368maxresident)k
+24inputs+0outputs (0major+179minor)pagefaults 0swaps
+[root@siFlash test]# ls -l | wc -l
+46
+[root@siFlash test]#
 
-Nope, still an issue:
 
-1338074901.531554 ioctl(0, SNDCTL_TMR_TIMEBASE or TCGETS, {B38400 opost 
-isig icanon echo ...}) = 0 <0.000021>
-1338074901.531701 newfstatat(AT_FDCWD, "1.r.12.0", 
+though now its 3.5 seconds per file delete
+
+1338075592.450387 ioctl(0, SNDCTL_TMR_TIMEBASE or TCGETS, {B38400 opost 
+isig icanon echo ...}) = 0 <0.000020>
+1338075592.450541 newfstatat(AT_FDCWD, "1.r.12.0", 
 {st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
-0 <0.000022>
-1338074901.531840 unlinkat(AT_FDCWD, "1.r.12.0", 0) = 0 <2.586999>
-1338074904.119032 newfstatat(AT_FDCWD, "1.r.13.0", 
+0 <0.000020>
+1338075592.450679 unlinkat(AT_FDCWD, "1.r.12.0", 0) = 0 <3.226394>
+1338075595.677274 newfstatat(AT_FDCWD, "1.r.13.0", 
 {st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
-0 <0.000033>
+0 <0.000088>
+1338075595.677515 unlinkat(AT_FDCWD, "1.r.13.0", 0) = 0 <3.564176>
 
-2.6 seconds for an unlink.
 
-Rebuilding absolutely vanilla file system now, and will rerun checks.
+Remounting with nobarrier
 
->
-> CHeers,
->
-> Dave.
+[root@siFlash test]# mount -o remount,nobarrier /data/1
+[root@siFlash test]# mount -o remount,nobarrier /data/2
+[root@siFlash test]# mount -o remount,nobarrier /data/3
+[root@siFlash test]# mount | grep data
+/dev/md20 on /data/1 type xfs (rw,nobarrier)
+/dev/md21 on /data/2 type xfs (rw,nobarrier)
+/dev/md22 on /data/3 type xfs (rw,nobarrier)
+
+
+doesn't look like this helped
+
+1338075724.110941 newfstatat(AT_FDCWD, "1.r.15.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000035>
+1338075724.111108 unlinkat(AT_FDCWD, "1.r.15.0", 0) = 0 <3.727094>
+1338075727.838380 newfstatat(AT_FDCWD, "1.r.16.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000061>
+1338075727.838600 unlinkat(AT_FDCWD, "1.r.16.0", 0) = 0 <2.611156>
+1338075730.449949 newfstatat(AT_FDCWD, "1.r.17.0", 
+{st_mode=S_IFREG|0600, st_size=1073741824, ...}, AT_SYMLINK_NOFOLLOW) = 
+0 <0.000104>
+1338075730.450165 unlinkat(AT_FDCWD, "1.r.17.0", 0) = 0 <2.869917>
+
+
+2.6-3.7 seconds per unlink.
+
+FWIW:  umount (which does flushes) seems to take a while (~15-20 seconds)
+
+Raw (uncached) read/write speed to a single array is pretty good, so I 
+don't think the array is a problem.
+
+Run status group 0 (all jobs):
+    READ: io=81424MB, aggrb=2606.7MB/s, minb=2606.7MB/s, 
+maxb=2606.7MB/s, mint=31244msec, maxt=31244msec
+
+
+Run status group 0 (all jobs):
+   WRITE: io=55025MB, aggrb=939053KB/s, minb=939053KB/s, 
+maxb=939053KB/s, mint=60002msec, maxt=60002msec
+
 
 -- 
 Joseph Landman, Ph.D
