@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4RHEl1B237370 for <xfs@oss.sgi.com>; Sun, 27 May 2012 12:14:47 -0500
+	q4RHHQBG237725 for <xfs@oss.sgi.com>; Sun, 27 May 2012 12:17:26 -0500
 Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
 	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	paFTDjqKnzm3IUjH (version=TLSv1 cipher=RC4-MD5 bits=128
+	b3nZX17bjVKCWLFP (version=TLSv1 cipher=RC4-MD5 bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 27 May 2012 10:14:46 -0700 (PDT)
-Received: by obbuo19 with SMTP id uo19so5100086obb.26
-	for <xfs@oss.sgi.com>; Sun, 27 May 2012 10:14:45 -0700 (PDT)
-Message-ID: <4FC26101.2050003@gmail.com>
-Date: Sun, 27 May 2012 13:14:41 -0400
+	Sun, 27 May 2012 10:17:09 -0700 (PDT)
+Received: by obbuo19 with SMTP id uo19so5102683obb.26
+	for <xfs@oss.sgi.com>; Sun, 27 May 2012 10:17:08 -0700 (PDT)
+Message-ID: <4FC26191.2050901@gmail.com>
+Date: Sun, 27 May 2012 13:17:05 -0400
 From: Joe Landman <joe.landman@gmail.com>
 MIME-Version: 1.0
 Subject: Re: very slow file deletion on an SSD
@@ -48,30 +48,62 @@ On 05/27/2012 12:07 PM, Eric Sandeen wrote:
 >
 > But it sounds like we can just assume very high fragmentation.
 >
-
-[root@siFlash test]# filefrag  1.r.48.0
-1.r.48.0: 1364 extents found
-
-
 > It's not addressing the exact issue, but why are the files so fragmented?
 > Are they very hole-y or is it just an issue with how they are written?
 > Perhaps preallocation would help you here?
 
-Possibly.  We are testing the system using fio, and doing random reads 
-and writes.  I'll see if we can do a preallocation scheme 
-(before/during) for the files.
+... and one pass with xfs_fsr seems to have "fixed" the problem
 
-So to summarize, the delete performance will be (at least) in part a 
-function of the fragmentation?  A directory full of massively fragmented 
-files will take longer to delete than a directory of contiguous and 
-larger extents?  And I did some experimentation using xfs_repair, and it 
-seems to be the case there as well ... the higher level of 
-fragmentation, the longer the repair seems to take.
+[root@siFlash test]# xfs_fsr
+xfs_fsr -m /proc/mounts -t 7200 -f /var/tmp/.fsrlast_xfs ...
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+/data/1 start inode=0
+/data/2 start inode=0
+/data/3 start inode=0
+Completed all 10 passes
+[root@siFlash test]# filefrag  1.r.48.0
+1.r.48.0: 1 extent found
 
+[root@siFlash test]# rm -f 1.r.48.0
 
+(very fast)
 
->
-> -Eric
+-- 
+Joseph Landman, Ph.D
+Founder and CEO
+Scalable Informatics Inc.
+email: landman@scalableinformatics.com
+web  : http://scalableinformatics.com
+        http://scalableinformatics.com/sicluster
+phone: +1 734 786 8423 x121
+fax  : +1 866 888 3112
+cell : +1 734 612 4615
 
 _______________________________________________
 xfs mailing list
