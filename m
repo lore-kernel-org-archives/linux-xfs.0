@@ -1,22 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4UB72gO206101 for <xfs@oss.sgi.com>; Wed, 30 May 2012 06:07:02 -0500
-Received: from mail-yw0-f53.google.com (mail-yw0-f53.google.com
-	[209.85.213.53]) by cuda.sgi.com with ESMTP id kYU9eM5q0bFqB21c
-	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 30 May 2012 04:07:01 -0700 (PDT)
-Received: by yhp26 with SMTP id 26so3862998yhp.26
-	for <xfs@oss.sgi.com>; Wed, 30 May 2012 04:07:00 -0700 (PDT)
+	q4UEgEMZ246117 for <xfs@oss.sgi.com>; Wed, 30 May 2012 09:42:15 -0500
+Date: Wed, 30 May 2012 09:48:01 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/10] xfs: discontiguous buffer support a.k.a. die
+	xfs_dabuf die
+Message-ID: <20120530144801.GD4721@sgi.com>
+References: <1335249220-22274-1-git-send-email-david@fromorbit.com>
+	<20120516174042.GJ16099@sgi.com> <20120523092746.GM25351@dastard>
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCEzzMk0TFKy23cAA_cAxbUFLS6cOCjgRBQocDUNtJO2UnA@mail.gmail.com>
-References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
-	<4F9AA43A.1060509@hardwarefreak.com>
-	<CAAxjCEzzMk0TFKy23cAA_cAxbUFLS6cOCjgRBQocDUNtJO2UnA@mail.gmail.com>
-Date: Wed, 30 May 2012 13:07:00 +0200
-Message-ID: <CAAxjCEyMEtyDXdPN50HmV_k3vUPxCtYN1k5_AD=gZqu8-1wXqg@mail.gmail.com>
-Subject: Re: A little RAID experiment
-From: Stefan Ring <stefanrin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120523092746.GM25351@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,32 +20,154 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Linux fs XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBNYXkgMSwgMjAxMiBhdCAxMjo0NiBQTSwgU3RlZmFuIFJpbmcgPHN0ZWZhbnJpbkBn
-bWFpbC5jb20+IHdyb3RlOgo+PiBTdGVmYW4sIHlvdSBzaG91bGQgYmUgYWJsZSB0byBzaW1wbHkg
-Y2xlYXIgdGhlIFA0MTBpIGNvbmZpZ3VyYXRpb24gaW4KPj4gdGhlIEJJT1MsIHBvd2VyIGRvd24s
-IHRoZW4gc2ltcGx5IGNvbm5lY3QgdGhlIDYgZHJpdmUgYmFja3BsYW5lIGNhYmxlIHRvCj4+IHRo
-ZSA0MTBpLCBsb2FkIHRoZSBjb25maWcgZnJvbSB0aGUgZGlza3MsIGFuZCBnby4gwqBUaGlzIGFs
-bG93cyBoZWFkIHRvCj4+IGhlYWQgUkFJRDYgY29tcGFyaXNvbiBiZXR3ZWVuIHRoZSBQNDAwIGFu
-ZCBQNDEwaS4gwqBObyBkb3VidCB0aGUgNDEwaQo+PiB3aWxsIGJlIHF1aWNrZXIuIMKgVGhpcyBw
-cm9jZWR1cmUgd2lsbCB0ZWxsIHlvdSBob3cgbXVjaCBxdWlja2VyLgo+Cj4gVW5mb3J0dW5hdGVs
-eSwgdGhlIHNlcnZlciBpcyBsb2NhdGVkIGF0IGEgaG9zdGluZyBmYWNpbGl0eSBhdCB0aGUKPiBv
-cHBvc2l0ZSBlbmQgb2YgdG93biwgYW5kIEknZCBzcGVuZCBhbiBlbnRpcmUgZGF5IGp1c3QgdHJh
-dmVsaW5nIHRvCj4gYW5kIGZybywgc28gdGhhdCdzIG5vdCBjdXJyZW50bHkgYW4gb3B0aW9uLiBJ
-IG1pZ2h0IGdldCBsdWNreSB0aG91Z2gsCj4gYmVjYXVzZSB3ZSBzaG91bGQgc29vbiBnZXQgYW5v
-dGhlciBzZXJ2ZXIgd2l0aCBhbiBleHRlcm5hbCBQNDEwaS4KClRoZSBuZXcgc3RvcmFnZSBibGFk
-ZSBoYXMgb25seSBiZWVuIHVwZ3JhZGVkIHRvIHRoZSBQNDEwaSBjb250cm9sbGVyLAphbmQgZXZl
-biB0aG91Z2ggdGhlcmUgaXMgYSBuZXcgc2V0dGluZyBjYWxsZWQgImVsZXZhdG9yc29ydCIsIHdo
-aWNoIGlzCmVuYWJsZWQsIHRoZSBwZXJmb3JtYW5jZSBpcyBqdXN0IGFzIGJhZC4gVGhlIG5ldyBv
-bmUgaGFzIGEKZmxhc2gtd3JpdGViYWNrIGNhY2hlIGFuZCBtYXkgYmUgZmFzdGVyIGJ5IGEgZmV3
-IHBlcmNlbnQgdGlja3MsIGJ1dAp0aGF0J3MgaXQuIEl0IGRvZXNuJ3QgZXZlbiBtYWtlIHNlbnNl
-IHRvIGNvbXBhcmUgdGhlIHR3byBpbi1kZXB0aCwgYXMKdGhleSBwZXJmb3JtIGFsbW9zdCBpZGVu
-dGljYWxseS4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
-bWFuL2xpc3RpbmZvL3hmcwo=
+Hey Dave,
+
+On Wed, May 23, 2012 at 07:27:46PM +1000, Dave Chinner wrote:
+> On Wed, May 16, 2012 at 12:40:42PM -0500, Ben Myers wrote:
+> > Hey Dave,
+> > 
+> > Looks like there are some additional test failures due to this patchset.  Here
+> > some output from a bisect I did yesterday, running only the tests which failed
+> > on the machine where I noticed this.
+> 
+> So what the configuration you are testing on here?
+
+This is an x86_64 box, a pair of dual core xeon @ 3.6Ghz, a single internal
+disk.
+
+my config:
+TEST_DIR=/mnt/test
+TEST_DEV=/dev/sdb3
+TEST_LOGDEV=/dev/sdb1
+
+SCRATCH_MNT=/mnt/scratch
+SCRATCH_DEV=/dev/sdb4
+SCRATCH_LOGDEV=/dev/sdb2
+
+80gig of memory
+
+# df
+Filesystem           1K-blocks      Used Available Use% Mounted on
+/dev/sda2             68627996  15411112  49730780  24% /
+devtmpfs               4032444        96   4032348   1% /dev
+tmpfs                  4032444         0   4032444   0% /dev/shm
+/dev/sdb3             36896036   4200608  32695428  12% /mnt/test
+/dev/sdb4              2086912     67856   2019056   4% /mnt/scratch
+
+> ....
+> > 
+> > # git describe
+> > v3.4-rc2-54-g1307bbd
+> 
+> That's mostly meaningless to me - you've got a 3.4-rc2 kernel with
+> 54 local commits in it.
+
+My intention was that this refer to some publicly available repo.  The script
+should probably say which one. ;)
+
+In this case it refers to xfs master git tree on oss.  
+
+> > from patches/series:
+> > # normal: (there's my baseline on this machine.  I noticed a larger number of test failures on another test box and brought that series over here)
+> > #Failures: 030 178 230 231 232 233 250 274
+> > #Failed 8 of 198 tests
+> ......
+> > 
+> > xfs-fix-delalloc-quota-accounting-on-failure.patch
+> > xfs-fix-memory-reclaim-deadlock-on-agi-buffer.patch
+> > xfs-add-trace-points-for-log-forces.patch
+> > xfs-separate-buffer-indexing-from-block-map.patch
+> > xfs-convert-internal-buffer-functions-to-pass-maps.patch
+> > xfs-add-discontiguous-buffer-map-interface.patch
+> > xfs-add-discontiguous-buffer-support-to-transactions.patch
+> > 
+> > # ^^^ bisect 1, went ok.  
+> > #    030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+> > #    Failures: 030 230 231 232 233
+> > #    Failed 5 of 15 tests
+> 
+> 
+> > # ^^^ bisect 4, making sure it's good
+> > #Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+> > #Failures: 030 230 231 232 233
+> > #Failed 5 of 15 tests
+> > 
+> > xfs-struct-xfs_buf_log_format-isn-t-variable-sized.patch
+> > 
+> > # ^^^ bisect 5, crashed.  (consistently)
+> > 
+> > xfs-support-discontiguous-buffers-in-the.patch
+> > 
+> > # ^^^ bisect 6
+> > #Ran: 030 050 085 086 087 121 128 179 182 200 230 231 232 233 235
+> > #Failures: 030 085 086 087 121 179 182 200 230 231 232 233
+> > #Failed 12 of 15 tests
+> 
+> So, 085 086 087 121 179 182 200 are all log recovery tests.....
+> 
+> So what are the failures?
+
+I'll have to do another run to gather those up.
+
+> This doesn't tell me anything about why
+> these have failed, and the last set of test runs I did before
+> posting this series showed:
+ 
+> Failures: 030 050 073 249 250 263
+> Failed 6 of 197 tests
+> 
+> Which is standard for my 4k filesystem block size testing.
+>
+> > Looks like there is a problem in
+> > xfs-struct-xfs_buf_log_format-isn-t-variable-sized.patch,
+> 
+> Given the crashes, this is the likely cause of the problem.
+> Especially as the version of the patch in this series is missing a
+> critical hunk compared to the local patch I have been testing which
+> would cause memcpy() to fall off the end of allocated memory
+> buffers....
+> 
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -240,15 +240,14 @@ xfs_buf_item_format(
+>                (bip->bli_flags & XFS_BLI_STALE));
+>  
+>         /*
+> -        * The size of the base structure is the size of the
+> -        * declared structure plus the space for the extra words
+> -        * of the bitmap.  We subtract one from the map size, because
+> -        * the first element of the bitmap is accounted for in the
+> -        * size of the base structure.
+> +        * Base size is the actual size of the ondisk structure - it reflects
+> +        * the actual size of the dirty bitmap rather than the size of the in
+> +        * memory structure. The xfs_buf_log_format size is the maximum,
+> +        * subtract the unused part of the bitmap from it.
+>          */
+> -       base_size =
+> -               (uint)(sizeof(xfs_buf_log_format_t) +
+> -                      ((bip->bli_format.blf_map_size - 1) * sizeof(uint)));
+> +       base_size = sizeof(struct xfs_buf_log_format) -
+> +                   ((XFS_BLF_DATAMAP_SIZE - bip->bli_format.blf_map_size) *
+> +                                                               sizeof(uint));
+>         vecp->i_addr = &bip->bli_format;
+>         vecp->i_len = base_size;
+>         vecp->i_type = XLOG_REG_TYPE_BFORMAT;
+> 
+> 
+> I'll retest the series and repost it.
+
+Ok, looking forward to seeing it.
+
+-Ben
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
