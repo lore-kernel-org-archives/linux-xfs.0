@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4VKnjQO071969 for <xfs@oss.sgi.com>; Thu, 31 May 2012 15:49:45 -0500
-Date: Thu, 31 May 2012 15:55:40 -0500
+	q4VLLJkM073718 for <xfs@oss.sgi.com>; Thu, 31 May 2012 16:21:19 -0500
+Date: Thu, 31 May 2012 16:27:14 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/3] xfs_repair: Fix fragmented multiblock dir2
-	handling in blkmap_getn()
-Message-ID: <20120531205540.GI4721@sgi.com>
+Subject: Re: [PATCH 2/3] xfs_repair: Document & robustify blkmap_next_off()
+Message-ID: <20120531212714.GJ4721@sgi.com>
 References: <4FBABCAB.20300@redhat.com>
- <4FBABD3E.2050700@redhat.com>
+ <4FBABD6A.6070800@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FBABD3E.2050700@redhat.com>
+In-Reply-To: <4FBABD6A.6070800@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +26,67 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-Hey Eric,
-
-On Mon, May 21, 2012 at 05:10:06PM -0500, Eric Sandeen wrote:
-> blkmap_getn() contains a loop which populates an array of extents
-> with mapping information for a dir2 "block," which may consist
-> of multiple filesystem blocks.
+On Mon, May 21, 2012 at 05:10:50PM -0500, Eric Sandeen wrote:
+> blkmap_next_off() was cryptic (to me), so document what it does.
+> Also catch cases when the passed in extent index 't' is beyond
+> the number of extents in the blkmap, so that:
 > 
-> As written, the loop re-allocates the array for each new extent,
-> leaking the previously allocated memory and worse, losing the
-> previously filled-in extent information.
+>         ext = blkmap->exts + *t;
 > 
-> Fix this by only allocating the array once, for the maximum
-> possible number of extents - the number of fs blocks in the dir
-> block.
+> doesn't walk off the end of the array into garbage.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
 > diff --git a/repair/bmap.c b/repair/bmap.c
-> index 2f1c307..c43ca7f 100644
+> index c43ca7f..85d66dc 100644
 > --- a/repair/bmap.c
 > +++ b/repair/bmap.c
-> @@ -168,7 +168,8 @@ blkmap_getn(
->  		/*
->  		 * rare case - multiple extents for a single dir block
->  		 */
-> -		bmp = malloc(nb * sizeof(bmap_ext_t));
-> +		if (!bmp)
-> +			bmp = malloc(nb * sizeof(bmap_ext_t));
+> @@ -206,8 +206,25 @@ blkmap_last_off(
+>  	return ext->startoff + ext->blockcount;
+>  }
+>  
+> -/*
+> - * Return the next offset in a block map.
+> +/**
+> + * blkmap_next_off - Return next logical block offset in a block map.
+> + * @blkmap:	blockmap to use
+> + * @o:		current file logical block number
+> + * @t:		current extent index into blockmap (in/out)
+> + *
+> + * Given a logical block offset in a file, return the next mapped logical offset
+> + * The map index "t" tracks the current extent number in the block map, and
+> + * is updated automatically if the returned offset resides within the next
+> + * mapped extent.
+> + *
+> + * If the blockmap contains no extents, or no more logical offsets are mapped,
+> + * or the extent index exceeds the number of extents in the map,
+> + * return NULLDFILOFF.
+> + *
+> + * If offset o is beyond extent index t, the first offset in the next extent
+> + * after extent t will be returned.
+> + *
+> + * Intended to be called starting with offset 0, index 0, and iterated.
+>   */
+>  xfs_dfiloff_t
+>  blkmap_next_off(
+> @@ -223,10 +240,12 @@ blkmap_next_off(
+>  		*t = 0;
+>  		return blkmap->exts[0].startoff;
+>  	}
+> +	if (*t >= blkmap->nexts)
+> +		return NULLDFILOFF;
+>  	ext = blkmap->exts + *t;
+>  	if (o < ext->startoff + ext->blockcount - 1)
+>  		return o + 1;
+> -	if (*t >= blkmap->nexts - 1)
+> +	if (*t == blkmap->nexts - 1)
+>  		return NULLDFILOFF;
+>  	(*t)++;
+>  	return ext[1].startoff;
 
-Cool.  That's an area where we don't have much test coverage.  I don't see a
-single '-n size' in xfstests.
-
-This looks good to me.  FWICS all the callers free it later.
+Ok, so you have 50 extents, and when *t == 49 you don't want to go looking at
+ext[50].startoff.  Looks good to me.
 
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
