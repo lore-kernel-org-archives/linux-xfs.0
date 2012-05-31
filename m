@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4UM3Qr7067489 for <xfs@oss.sgi.com>; Wed, 30 May 2012 17:03:26 -0500
-Date: Wed, 30 May 2012 17:09:14 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xfs: blocked task in xfs_buf_lock
-Message-ID: <20120530220914.GF4721@sgi.com>
-References: <4FBE1823.2050303@profihost.ag>
- <4FC272D0.4090101@profihost.ag>
+	q4V1UNXw108924 for <xfs@oss.sgi.com>; Wed, 30 May 2012 20:30:23 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id ddScO1BoXRqXH6hb
+	for <xfs@oss.sgi.com>; Wed, 30 May 2012 18:30:22 -0700 (PDT)
+Message-ID: <4FC6C9AE.1070808@hardwarefreak.com>
+Date: Wed, 30 May 2012 20:30:22 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4FC272D0.4090101@profihost.ag>
+Subject: Re: A little RAID experiment
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+	<4F9AA43A.1060509@hardwarefreak.com>
+	<CAAxjCEzzMk0TFKy23cAA_cAxbUFLS6cOCjgRBQocDUNtJO2UnA@mail.gmail.com>
+	<CAAxjCEyMEtyDXdPN50HmV_k3vUPxCtYN1k5_AD=gZqu8-1wXqg@mail.gmail.com>
+In-Reply-To: <CAAxjCEyMEtyDXdPN50HmV_k3vUPxCtYN1k5_AD=gZqu8-1wXqg@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,19 +28,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Priebe <s.priebe@profihost.ag>
-Cc: Christoph Hellwig <hch@infradead.org>, gregkh@linuxfoundation.org, stable@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: Stefan Ring <stefanrin@gmail.com>
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-Stefan, 
+On 5/30/2012 6:07 AM, Stefan Ring wrote:
+> On Tue, May 1, 2012 at 12:46 PM, Stefan Ring <stefanrin@gmail.com> wrote:
+>>> Stefan, you should be able to simply clear the P410i configuration in
+>>> the BIOS, power down, then simply connect the 6 drive backplane cable to
+>>> the 410i, load the config from the disks, and go.  This allows head to
+>>> head RAID6 comparison between the P400 and P410i.  No doubt the 410i
+>>> will be quicker.  This procedure will tell you how much quicker.
+>>
+>> Unfortunately, the server is located at a hosting facility at the
+>> opposite end of town, and I'd spend an entire day just traveling to
+>> and fro, so that's not currently an option. I might get lucky though,
+>> because we should soon get another server with an external P410i.
+> 
+> The new storage blade has only been upgraded to the P410i controller,
+> and even though there is a new setting called "elevatorsort", which is
+> enabled, the performance is just as bad. The new one has a
+> flash-writeback cache and may be faster by a few percent ticks, but
+> that's it. It doesn't even make sense to compare the two in-depth, as
+> they perform almost identically.
 
-On Sun, May 27, 2012 at 08:30:40PM +0200, Stefan Priebe wrote:
-> nobody who has an idea? Or what to check?
+You now have persistent write cache.  Did you test with XFS barriers
+disabled?  If not you should.  You'll likely see a decent, possibly
+outstanding, performance improvement with your huge metadata
+modification workload, as XFS will no longer flush the cache frequently
+when writing to the journal log.
 
-I think we need more information to get anywhere.  Maybe 'echo t >
-/proc/sysrq-trigger' is a good place to start?
-
-Regards,
-Ben
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
