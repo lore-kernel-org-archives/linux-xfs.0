@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q4VLLJkM073718 for <xfs@oss.sgi.com>; Thu, 31 May 2012 16:21:19 -0500
-Date: Thu, 31 May 2012 16:27:14 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/3] xfs_repair: Document & robustify blkmap_next_off()
-Message-ID: <20120531212714.GJ4721@sgi.com>
-References: <4FBABCAB.20300@redhat.com>
- <4FBABD6A.6070800@redhat.com>
+	q513VOhU100305 for <xfs@oss.sgi.com>; Thu, 31 May 2012 22:31:24 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id TIIHRVEf5A9BytU4 for <xfs@oss.sgi.com>;
+	Thu, 31 May 2012 20:31:22 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 0C8624963280
+	for <xfs@oss.sgi.com>; Thu, 31 May 2012 22:31:22 -0500 (CDT)
+Message-ID: <4FC83789.8010900@sandeen.net>
+Date: Thu, 31 May 2012 22:31:21 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4FBABD6A.6070800@redhat.com>
+Subject: Re: [PATCH] Printk for ENOSPC due to lack of inodes
+References: <20120227003733.GA28162@Xye> <4F579D4C.4040208@sandeen.net>
+	<20120531193616.GA3953@Xye.local>
+In-Reply-To: <20120531193616.GA3953@Xye.local>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,72 +30,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Mon, May 21, 2012 at 05:10:50PM -0500, Eric Sandeen wrote:
-> blkmap_next_off() was cryptic (to me), so document what it does.
-> Also catch cases when the passed in extent index 't' is beyond
-> the number of extents in the blkmap, so that:
+On 5/31/12 2:36 PM, Raghavendra D Prabhu wrote:
+> Hi,
 > 
->         ext = blkmap->exts + *t;
+> Thanks for the review. I have now moved it inside xfs_dialloc. Along with adding the message, I noticed that the loop
 > 
-> doesn't walk off the end of the array into garbage.
+>     while (!agi->agi_freecount) {
+>     }
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
+> is redundant when noroom=1 and okalloc=0.
 > 
-> diff --git a/repair/bmap.c b/repair/bmap.c
-> index c43ca7f..85d66dc 100644
-> --- a/repair/bmap.c
-> +++ b/repair/bmap.c
-> @@ -206,8 +206,25 @@ blkmap_last_off(
->  	return ext->startoff + ext->blockcount;
->  }
->  
-> -/*
-> - * Return the next offset in a block map.
-> +/**
-> + * blkmap_next_off - Return next logical block offset in a block map.
-> + * @blkmap:	blockmap to use
-> + * @o:		current file logical block number
-> + * @t:		current extent index into blockmap (in/out)
-> + *
-> + * Given a logical block offset in a file, return the next mapped logical offset
-> + * The map index "t" tracks the current extent number in the block map, and
-> + * is updated automatically if the returned offset resides within the next
-> + * mapped extent.
-> + *
-> + * If the blockmap contains no extents, or no more logical offsets are mapped,
-> + * or the extent index exceeds the number of extents in the map,
-> + * return NULLDFILOFF.
-> + *
-> + * If offset o is beyond extent index t, the first offset in the next extent
-> + * after extent t will be returned.
-> + *
-> + * Intended to be called starting with offset 0, index 0, and iterated.
->   */
->  xfs_dfiloff_t
->  blkmap_next_off(
-> @@ -223,10 +240,12 @@ blkmap_next_off(
->  		*t = 0;
->  		return blkmap->exts[0].startoff;
->  	}
-> +	if (*t >= blkmap->nexts)
-> +		return NULLDFILOFF;
->  	ext = blkmap->exts + *t;
->  	if (o < ext->startoff + ext->blockcount - 1)
->  		return o + 1;
-> -	if (*t >= blkmap->nexts - 1)
-> +	if (*t == blkmap->nexts - 1)
->  		return NULLDFILOFF;
->  	(*t)++;
->  	return ext[1].startoff;
+> Also, xfs_ialloc_ag_alloc function in the loop calls 
+> ============
+>     if (mp->m_maxicount &&
+>         mp->m_sb.sb_icount + XFS_IALLOC_INODES(mp) > mp->m_maxicount) {
+> 
+> ===============
+> 
+> condition again.
+> 
+> So I have moved xfs_tran_brelse etc. into the condition along with message.
+> 
+> Is this logic valid? If it is, then I will look into rate-limiting the message etc.
 
-Ok, so you have 50 extents, and when *t == 49 you don't want to go looking at
-ext[50].startoff.  Looks good to me.
+It'd be easiest to understand this new change as a patch rather than as a description.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+If you are changing logic or flow in addition to adding the messages, it should almost certainly be sent as more than one patch.
+
+Thanks,
+
+-eric
 
 _______________________________________________
 xfs mailing list
