@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q51CdHxh146871 for <xfs@oss.sgi.com>; Fri, 1 Jun 2012 07:39:18 -0500
-Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id OWLKXzAnDs3HjNRd
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 01 Jun 2012 05:39:16 -0700 (PDT)
-Received: by wgbed3 with SMTP id ed3so1380976wgb.32
-	for <xfs@oss.sgi.com>; Fri, 01 Jun 2012 05:39:15 -0700 (PDT)
+	q51DIhMU149871 for <xfs@oss.sgi.com>; Fri, 1 Jun 2012 08:18:43 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id F2051304067
+	for <xfs@oss.sgi.com>; Fri,  1 Jun 2012 06:18:39 -0700 (PDT)
+Received: from [134.15.95.98] (cf-vpn-hw-arenaud-1.corp.sgi.com [134.15.95.98])
+	by estes.americas.sgi.com (Postfix) with ESMTP id ABF587001A4A
+	for <xfs@oss.sgi.com>; Fri,  1 Jun 2012 08:18:39 -0500 (CDT)
+Message-ID: <4FC8C12A.4010805@sgi.com>
+Date: Fri, 01 Jun 2012 09:18:34 -0400
+From: Alain Renaud <arenaud@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <20120601203451.32ae2ed5@asix.localdomain>
-References: <51509.110.174.53.110.1336699622.squirrel@boosthardware.com>
-	<20120511165012.GC16099@sgi.com>
-	<59946.110.174.53.110.1336959906.squirrel@boosthardware.com>
-	<20120514142948.GS3963@sgi.com>
-	<64776.110.174.53.110.1337043522.squirrel@boosthardware.com>
-	<20120601203451.32ae2ed5@asix.localdomain>
-From: Igor M Podlesny <for.poige+xfs@gmail.com>
-Date: Fri, 1 Jun 2012 20:38:43 +0800
-Message-ID: <CA+sTkh58BWZ=xwE8nH5ZrHREm-+BQ8gbJWXMMFMHiCd7hVS-Kg@mail.gmail.com>
-Subject: Re: file corruption issue
+Subject: [PATCH] xfstest: Cleanup test permission and gitignore state.
+Content-Type: multipart/mixed; boundary="------------010606050302090103040709"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,24 +22,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-T24gVHVlLCAxNSBNYXkgMjAxMiAwMjo1ODo0MiArMDIwMCAoQ0VTVCkKcHNoaXJrZXkgYXQgYm9v
-c3RoYXJkd2FyZS5jb20gKFBhdHJpY2sgU2hpcmtleSkgd3JvdGU6Cj4gT24gTW9uLCBNYXkgMTQs
-IDIwMTIgNDoyOSBwbSwgQmVuIE15ZXJzIHdyb3RlOgo+ID4gSGV5IFBhdHJpY2ssClsuLi5dCj4g
-PiBXZWxsLi4uIG9uZSBvZiBlYWNoIHdvdWxkIGJlIGJlc3QuIMKgSXQgbWlnaHQgYmUgaGVscGZ1
-bCB0byBjb21wYXJlIHRoZQo+ID4gYmxvY2sKPiA+IG1hcCBmcm9tIGJlZm9yZSB0aGUgY3Jhc2gg
-d2l0aCB0aGUgYmxvY2sgbWFwIGFmdGVyIHRoZSBjcmFzaCBmb3Igb25lIG9mCj4gPiB0aGUKPiA+
-IHJlYWQtb25seSBjb3JydXB0ZWQgZGF0YWJhc2VzLgo+ID4KPgo+IFVuZm9ydHVuYXRlbHkgSSBj
-YW5ub3QgdW5tb3VudCB0aGUgcGFydGl0aW9uL3MgdG8gcnVuIHhmc19tZXRhZHVtcCBiZWNhdXNl
-Cj4gdGhleSBhcmUgaW4gdXNlLgpbLi4uXQoKwqAgwqAgwqAgwqBXaHkgbm90LCBpZiBpdCdzIG9u
-IExWTT8gWW91IGp1c3Qgc25hcHNob3QgaXQgYW5kIHRoZW4KbW91bnQvdW5tb3VudCBzbmFwc2hv
-dCBpbnN0ZWFkIChzZWUgbWFuIG1vdW50IHRvIG92ZXJjb21lIHNvbWUgWEZTJwpwcmVjYXV0aW9u
-IG1vdW50IGNoZWNrcyBkdWUgdG8gdGhlIHNhbWUgVVVJRCBvZiB0aGUgc25hcHNob3QpLgoKLS0K
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWls
-aW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3Rp
-bmZvL3hmcwo=
+This is a multi-part message in MIME format.
+--------------010606050302090103040709
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+
+The new test 284/285/286 do not have execute permission set so set
+them. Also test 285 and 286 create 2 executable that are not in .gitignore
+so add then to the list.
+
+Signed-off-by: Alain Renaud <arenaud@sgi.com>
+
+diff --git a/.gitignore b/.gitignore
+index 900ff95..c53c0d9 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -88,6 +88,8 @@ src/aio-dio-regress/aio-dio-subblock-eof-read
+  src/aio-dio-regress/aio-free-ring-with-bogus-nr-pages
+  src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer
+  src/aio-dio-regress/aiodio_sparse2
++src/seek_copy_test
++src/seek_sanity_test
+   dmapi/src/common/cmd/read_invis
+  dmapi/src/common/cmd/set_region
+diff --git a/284 b/284
+old mode 100644
+new mode 100755
+diff --git a/285 b/285
+old mode 100644
+new mode 100755
+diff --git a/286 b/286
+old mode 100644
+new mode 100755
+
+--------------010606050302090103040709
+Content-Type: text/plain; charset=UTF-8;
+ name="Attached Message Part"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+ filename="Attached Message Part"
+
+
+--------------010606050302090103040709
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------010606050302090103040709--
