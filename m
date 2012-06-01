@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q51MVkjT183731 for <xfs@oss.sgi.com>; Fri, 1 Jun 2012 17:31:47 -0500
+	q51MVxk8183747 for <xfs@oss.sgi.com>; Fri, 1 Jun 2012 17:31:59 -0500
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id dD4xPSP0lLgJ7giv (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id kGqKIDbnsDp8aAkk (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 01 Jun 2012 15:31:43 -0700 (PDT)
+	Fri, 01 Jun 2012 15:31:57 -0700 (PDT)
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 18/27] xfs: Convert to new freezing code
-Date: Sat,  2 Jun 2012 00:30:32 +0200
-Message-Id: <1338589841-9568-19-git-send-email-jack@suse.cz>
-In-Reply-To: <1338589841-9568-1-git-send-email-jack@suse.cz>
-References: <1338589841-9568-1-git-send-email-jack@suse.cz>
+Subject: [PATCH 00/27 v6] Fix filesystem freezing deadlocks
+Date: Sat,  2 Jun 2012 00:30:14 +0200
+Message-Id: <1338589841-9568-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,426 +24,110 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: linux-fsdevel@vger.kernel.org
-Cc: Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Al Viro <viro@ZenIV.linux.org.uk>, dchinner@redhat.com
+Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, ocfs2-devel@oss.oracle.com, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>, cluster-devel@redhat.com, Chris Mason <chris.mason@oracle.com>, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Joel Becker <jlbec@evilplan.org>, dchinner@redhat.com, Anton Altaparmakov <anton@tuxera.com>, Steven Whitehouse <swhiteho@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-nfs@vger.kernel.org, Alex Elder <elder@kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, Al Viro <viro@ZenIV.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, linux-btrfs@vger.kernel.org
 
-Generic code now blocks all writers from standard write paths. So we add
-blocking of all writers coming from ioctl (we get a protection of ioctl against
-racing remount read-only as a bonus) and convert xfs_file_aio_write() to a
-non-racy freeze protection. We also keep freeze protection on transaction
-start to block internal filesystem writes such as removal of preallocated
-blocks.
+  Hello,
 
-CC: Ben Myers <bpm@sgi.com>
+  here is the sixth iteration of my patches to improve filesystem freezing.
+The change since last iteration is that filesystem can be frozen with open but
+unlinked files. After some thinking, I've decided that the best way to handle
+this is to block removal inside ->evict_inode() of each filesystem and use
+fs-internal level of freeze protection for that (usually I've instrumented
+filesystem's transaction system to use freeze protection). Handling
+inside VFS would be less work but the only level of freeze protection that
+has a chance of not causing deadlocks is the one used for page faults and even
+there it's not clear lock ordering would be correct wrt some fs-specific locks.
+I've converted ext2, ext4, btrfs, xfs, nilfs2, ocfs2, gfs2 and also checked
+that ext3, reiserfs, jfs should work as well (they have their internal freeze
+protection mechanisms, possibly they could be replaced by a generic one but
+given these are mostly aging filesystems, it's not a real priority IHMO).
+So finally I'm not aware of any pending issue with this patch set so if you
+have some concern, please speak up!
+
+Introductory text to first time readers:
+
+Filesystem freezing is currently racy and thus we can end up with dirty data on
+frozen filesystem (see changelog patch 13 for detailed race description). This
+patch series aims at fixing this.
+
+To be able to block all places where inodes get dirtied, I've moved filesystem
+file_update_time() call to ->page_mkwrite callback (patches 01-07) and put
+freeze handling in mnt_want_write() / mnt_drop_write(). That however required
+some code shuffling and changes to kern_path_create() (see patches 09-12). I
+think the result is OK but opinions may differ ;). The advantage of this change
+also is that all filesystems get freeze protection almost for free - even ext2
+can handle freezing well now.
+
+Another potential contention point might be patch 19. In that patch we make
+freeze_super() refuse to freeze the filesystem when there are open but unlinked
+files which may be impractical in some cases. The main reason for this is the
+problem with handling of file deletion from fput() called with mmap_sem held
+(e.g. from munmap(2)), and then there's the fact that we cannot really force
+such filesystem into a consistent state... But if people think that freezing
+with open but unlinked files should happen, then I have some possible
+solutions in mind (maybe as a separate patchset since this is large enough).
+
+I'm not able to hit any deadlocks, lockdep warnings, or dirty data on frozen
+filesystem despite beating it with fsstress and bash-shared-mapping while
+freezing and unfreezing for several hours (using ext4 and xfs) so I'm
+reasonably confident this could finally be the right solution.
+
+Changes since v5:
+  * handle unlinked & open files on frozen filesystem
+  * lockdep keys for freeze protection are now per filesystem type
+  * taught lockdep that freeze protection at lower level does not create
+    dependency when we already hold freeze protection at higher level 
+  * rebased on 3.5-rc1-ish
+
+Changes since v4:
+  * added a couple of Acked-by's
+  * added some comments & doc update
+  * added patches from series "Push file_update_time() into .page_mkwrite"
+    since it doesn't make much sense to keep them separate anymore
+  * rebased on top of 3.4-rc2
+
+Changes since v3:
+  * added third level of freezing for fs internal purposes - hooked some
+    filesystems to use it (XFS, nilfs2)
+  * removed racy i_size check from filemap_mkwrite()
+
+Changes since v2:
+  * completely rewritten
+  * freezing is now blocked at VFS entry points
+  * two stage freezing to handle both mmapped writes and other IO
+
+The biggest changes since v1:
+  * have two counters to provide safe state transitions for SB_FREEZE_WRITE
+    and SB_FREEZE_TRANS states
+  * use percpu counters instead of own percpu structure
+  * added documentation fixes from the old fs freezing series
+  * converted XFS to use SB_FREEZE_TRANS counter instead of its private
+    m_active_trans counter
+
+								Honza
+
 CC: Alex Elder <elder@kernel.org>
+CC: Anton Altaparmakov <anton@tuxera.com>
+CC: Ben Myers <bpm@sgi.com>
+CC: Chris Mason <chris.mason@oracle.com>
+CC: cluster-devel@redhat.com
+CC: "David S. Miller" <davem@davemloft.net>
+CC: fuse-devel@lists.sourceforge.net
+CC: "J. Bruce Fields" <bfields@fieldses.org>
+CC: Joel Becker <jlbec@evilplan.org>
+CC: KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>
+CC: linux-btrfs@vger.kernel.org
+CC: linux-ext4@vger.kernel.org
+CC: linux-nfs@vger.kernel.org
+CC: linux-nilfs@vger.kernel.org
+CC: linux-ntfs-dev@lists.sourceforge.net
+CC: Mark Fasheh <mfasheh@suse.com>
+CC: Miklos Szeredi <miklos@szeredi.hu>
+CC: ocfs2-devel@oss.oracle.com
+CC: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
+CC: Steven Whitehouse <swhiteho@redhat.com>
+CC: "Theodore Ts'o" <tytso@mit.edu>
 CC: xfs@oss.sgi.com
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_aops.c    |   18 ++++++++++++++++
- fs/xfs/xfs_file.c    |   10 ++++++--
- fs/xfs/xfs_ioctl.c   |   55 +++++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_ioctl32.c |   12 ++++++++++
- fs/xfs/xfs_iomap.c   |    4 +-
- fs/xfs/xfs_mount.c   |    2 +-
- fs/xfs/xfs_mount.h   |    3 --
- fs/xfs/xfs_sync.c    |    2 +-
- fs/xfs/xfs_trans.c   |   17 ++++++++++++--
- fs/xfs/xfs_trans.h   |    2 +
- 10 files changed, 109 insertions(+), 16 deletions(-)
-
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index ae31c31..4a001b8 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -124,6 +124,12 @@ xfs_setfilesize_trans_alloc(
- 	ioend->io_append_trans = tp;
- 
- 	/*
-+	 * We will pass freeze protection with a transaction.  So tell lockdep
-+	 * we released it.
-+	 */
-+	rwsem_release(&ioend->io_inode->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-+		      1, _THIS_IP_);
-+	/*
- 	 * We hand off the transaction to the completion thread now, so
- 	 * clear the flag here.
- 	 */
-@@ -199,6 +205,15 @@ xfs_end_io(
- 	struct xfs_inode *ip = XFS_I(ioend->io_inode);
- 	int		error = 0;
- 
-+	if (ioend->io_append_trans) {
-+		/*
-+		 * We've got freeze protection passed with the transaction.
-+		 * Tell lockdep about it.
-+		 */
-+		rwsem_acquire_read(
-+			&ioend->io_inode->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-+			0, 1, _THIS_IP_);
-+	}
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
- 		ioend->io_error = -EIO;
- 		goto done;
-@@ -1405,6 +1420,9 @@ out_trans_cancel:
- 	if (ioend->io_append_trans) {
- 		current_set_flags_nested(&ioend->io_append_trans->t_pflags,
- 					 PF_FSTRANS);
-+		rwsem_acquire_read(
-+			&inode->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-+			0, 1, _THIS_IP_);
- 		xfs_trans_cancel(ioend->io_append_trans, 0);
- 	}
- out_destroy_ioend:
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 8d214b8..1e7bb9c 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -778,10 +778,12 @@ xfs_file_aio_write(
- 	if (ocount == 0)
- 		return 0;
- 
--	xfs_wait_for_freeze(ip->i_mount, SB_FREEZE_WRITE);
-+	sb_start_write(inode->i_sb);
- 
--	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
--		return -EIO;
-+	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-+		ret = -EIO;
-+		goto out;
-+	}
- 
- 	if (unlikely(file->f_flags & O_DIRECT))
- 		ret = xfs_file_dio_aio_write(iocb, iovp, nr_segs, pos, ocount);
-@@ -800,6 +802,8 @@ xfs_file_aio_write(
- 			ret = err;
- 	}
- 
-+out:
-+	sb_end_write(inode->i_sb);
- 	return ret;
- }
- 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 3a05a41..63624fb 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -361,9 +361,15 @@ xfs_fssetdm_by_handle(
- 	if (copy_from_user(&dmhreq, arg, sizeof(xfs_fsop_setdm_handlereq_t)))
- 		return -XFS_ERROR(EFAULT);
- 
-+	error = mnt_want_write_file(parfilp);
-+	if (error)
-+		return error;
-+
- 	dentry = xfs_handlereq_to_dentry(parfilp, &dmhreq.hreq);
--	if (IS_ERR(dentry))
-+	if (IS_ERR(dentry)) {
-+		mnt_drop_write_file(parfilp);
- 		return PTR_ERR(dentry);
-+	}
- 
- 	if (IS_IMMUTABLE(dentry->d_inode) || IS_APPEND(dentry->d_inode)) {
- 		error = -XFS_ERROR(EPERM);
-@@ -379,6 +385,7 @@ xfs_fssetdm_by_handle(
- 				 fsd.fsd_dmstate);
- 
-  out:
-+	mnt_drop_write_file(parfilp);
- 	dput(dentry);
- 	return error;
- }
-@@ -631,7 +638,11 @@ xfs_ioc_space(
- 	if (ioflags & IO_INVIS)
- 		attr_flags |= XFS_ATTR_DMI;
- 
-+	error = mnt_want_write_file(filp);
-+	if (error)
-+		return error;
- 	error = xfs_change_file_space(ip, cmd, bf, filp->f_pos, attr_flags);
-+	mnt_drop_write_file(filp);
- 	return -error;
- }
- 
-@@ -1160,6 +1171,7 @@ xfs_ioc_fssetxattr(
- {
- 	struct fsxattr		fa;
- 	unsigned int		mask;
-+	int error;
- 
- 	if (copy_from_user(&fa, arg, sizeof(fa)))
- 		return -EFAULT;
-@@ -1168,7 +1180,12 @@ xfs_ioc_fssetxattr(
- 	if (filp->f_flags & (O_NDELAY|O_NONBLOCK))
- 		mask |= FSX_NONBLOCK;
- 
--	return -xfs_ioctl_setattr(ip, &fa, mask);
-+	error = mnt_want_write_file(filp);
-+	if (error)
-+		return error;
-+	error = xfs_ioctl_setattr(ip, &fa, mask);
-+	mnt_drop_write_file(filp);
-+	return -error;
- }
- 
- STATIC int
-@@ -1193,6 +1210,7 @@ xfs_ioc_setxflags(
- 	struct fsxattr		fa;
- 	unsigned int		flags;
- 	unsigned int		mask;
-+	int error;
- 
- 	if (copy_from_user(&flags, arg, sizeof(flags)))
- 		return -EFAULT;
-@@ -1207,7 +1225,12 @@ xfs_ioc_setxflags(
- 		mask |= FSX_NONBLOCK;
- 	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
- 
--	return -xfs_ioctl_setattr(ip, &fa, mask);
-+	error = mnt_want_write_file(filp);
-+	if (error)
-+		return error;
-+	error = xfs_ioctl_setattr(ip, &fa, mask);
-+	mnt_drop_write_file(filp);
-+	return -error;
- }
- 
- STATIC int
-@@ -1382,8 +1405,13 @@ xfs_file_ioctl(
- 		if (copy_from_user(&dmi, arg, sizeof(dmi)))
- 			return -XFS_ERROR(EFAULT);
- 
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
-+
- 		error = xfs_set_dmattrs(ip, dmi.fsd_dmevmask,
- 				dmi.fsd_dmstate);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 
-@@ -1431,7 +1459,11 @@ xfs_file_ioctl(
- 
- 		if (copy_from_user(&sxp, arg, sizeof(xfs_swapext_t)))
- 			return -XFS_ERROR(EFAULT);
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_swapext(&sxp);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 
-@@ -1460,9 +1492,14 @@ xfs_file_ioctl(
- 		if (copy_from_user(&inout, arg, sizeof(inout)))
- 			return -XFS_ERROR(EFAULT);
- 
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
-+
- 		/* input parameter is passed in resblks field of structure */
- 		in = inout.resblks;
- 		error = xfs_reserve_blocks(mp, &in, &inout);
-+		mnt_drop_write_file(filp);
- 		if (error)
- 			return -error;
- 
-@@ -1493,7 +1530,11 @@ xfs_file_ioctl(
- 		if (copy_from_user(&in, arg, sizeof(in)))
- 			return -XFS_ERROR(EFAULT);
- 
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_growfs_data(mp, &in);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 
-@@ -1503,7 +1544,11 @@ xfs_file_ioctl(
- 		if (copy_from_user(&in, arg, sizeof(in)))
- 			return -XFS_ERROR(EFAULT);
- 
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_growfs_log(mp, &in);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 
-@@ -1513,7 +1558,11 @@ xfs_file_ioctl(
- 		if (copy_from_user(&in, arg, sizeof(in)))
- 			return -XFS_ERROR(EFAULT);
- 
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_growfs_rt(mp, &in);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index c4f2da0..1244274 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -600,7 +600,11 @@ xfs_file_compat_ioctl(
- 
- 		if (xfs_compat_growfs_data_copyin(&in, arg))
- 			return -XFS_ERROR(EFAULT);
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_growfs_data(mp, &in);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 	case XFS_IOC_FSGROWFSRT_32: {
-@@ -608,7 +612,11 @@ xfs_file_compat_ioctl(
- 
- 		if (xfs_compat_growfs_rt_copyin(&in, arg))
- 			return -XFS_ERROR(EFAULT);
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_growfs_rt(mp, &in);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- #endif
-@@ -627,7 +635,11 @@ xfs_file_compat_ioctl(
- 				   offsetof(struct xfs_swapext, sx_stat)) ||
- 		    xfs_ioctl32_bstat_copyin(&sxp.sx_stat, &sxu->sx_stat))
- 			return -XFS_ERROR(EFAULT);
-+		error = mnt_want_write_file(filp);
-+		if (error)
-+			return error;
- 		error = xfs_swapext(&sxp);
-+		mnt_drop_write_file(filp);
- 		return -error;
- 	}
- 	case XFS_IOC_FSBULKSTAT_32:
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index aadfce6..b3b9b26 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -680,9 +680,9 @@ xfs_iomap_write_unwritten(
- 		 * the same inode that we complete here and might deadlock
- 		 * on the iolock.
- 		 */
--		xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
-+		sb_start_intwrite(mp->m_super);
- 		tp = _xfs_trans_alloc(mp, XFS_TRANS_STRAT_WRITE, KM_NOFS);
--		tp->t_flags |= XFS_TRANS_RESERVE;
-+		tp->t_flags |= XFS_TRANS_RESERVE | XFS_TRANS_FREEZE_PROT;
- 		error = xfs_trans_reserve(tp, resblks,
- 				XFS_WRITE_LOG_RES(mp), 0,
- 				XFS_TRANS_PERM_LOG_RES,
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 536021f..b09a4a7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1544,7 +1544,7 @@ xfs_unmountfs(
- int
- xfs_fs_writable(xfs_mount_t *mp)
- {
--	return !(xfs_test_for_freeze(mp) || XFS_FORCED_SHUTDOWN(mp) ||
-+	return !(mp->m_super->s_writers.frozen || XFS_FORCED_SHUTDOWN(mp) ||
- 		(mp->m_flags & XFS_MOUNT_RDONLY));
- }
- 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 8b89c5a..401ca2e 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -314,9 +314,6 @@ void xfs_do_force_shutdown(struct xfs_mount *mp, int flags, char *fname,
- #define SHUTDOWN_REMOTE_REQ	0x0010	/* shutdown came from remote cell */
- #define SHUTDOWN_DEVICE_REQ	0x0020	/* failed all paths to the device */
- 
--#define xfs_test_for_freeze(mp)		((mp)->m_super->s_frozen)
--#define xfs_wait_for_freeze(mp,l)	vfs_check_frozen((mp)->m_super, (l))
--
- /*
-  * Flags for xfs_mountfs
-  */
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index c9d3409..9986c7a 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -392,7 +392,7 @@ xfs_sync_worker(
- 	if (down_read_trylock(&mp->m_super->s_umount)) {
- 		if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
- 			/* dgc: errors ignored here */
--			if (mp->m_super->s_frozen == SB_UNFROZEN &&
-+			if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
- 			    xfs_log_need_covered(mp))
- 				error = xfs_fs_log_dummy(mp);
- 			else
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index cdf896f..1639ac2 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -576,8 +576,12 @@ xfs_trans_alloc(
- 	xfs_mount_t	*mp,
- 	uint		type)
- {
--	xfs_wait_for_freeze(mp, SB_FREEZE_TRANS);
--	return _xfs_trans_alloc(mp, type, KM_SLEEP);
-+	xfs_trans_t     *tp;
-+
-+	sb_start_intwrite(mp->m_super);
-+	tp = _xfs_trans_alloc(mp, type, KM_SLEEP);
-+	tp->t_flags |= XFS_TRANS_FREEZE_PROT;
-+	return tp;
- }
- 
- xfs_trans_t *
-@@ -588,6 +592,7 @@ _xfs_trans_alloc(
- {
- 	xfs_trans_t	*tp;
- 
-+	WARN_ON(mp->m_super->s_writers.frozen == SB_FREEZE_COMPLETE);
- 	atomic_inc(&mp->m_active_trans);
- 
- 	tp = kmem_zone_zalloc(xfs_trans_zone, memflags);
-@@ -611,6 +616,8 @@ xfs_trans_free(
- 	xfs_extent_busy_clear(tp->t_mountp, &tp->t_busy, false);
- 
- 	atomic_dec(&tp->t_mountp->m_active_trans);
-+	if (tp->t_flags & XFS_TRANS_FREEZE_PROT)
-+		sb_end_intwrite(tp->t_mountp->m_super);
- 	xfs_trans_free_dqinfo(tp);
- 	kmem_zone_free(xfs_trans_zone, tp);
- }
-@@ -643,7 +650,11 @@ xfs_trans_dup(
- 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(tp->t_ticket != NULL);
- 
--	ntp->t_flags = XFS_TRANS_PERM_LOG_RES | (tp->t_flags & XFS_TRANS_RESERVE);
-+	ntp->t_flags = XFS_TRANS_PERM_LOG_RES |
-+		       (tp->t_flags & XFS_TRANS_RESERVE) |
-+		       (tp->t_flags & XFS_TRANS_FREEZE_PROT);
-+	/* We gave our writer reference to the new transaction */
-+	tp->t_flags &= ~XFS_TRANS_FREEZE_PROT;
- 	ntp->t_ticket = xfs_log_ticket_get(tp->t_ticket);
- 	ntp->t_blk_res = tp->t_blk_res - tp->t_blk_res_used;
- 	tp->t_blk_res = tp->t_blk_res_used;
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7ab99e1..a5d31d5 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -179,6 +179,8 @@ struct xfs_log_item_desc {
- #define	XFS_TRANS_SYNC		0x08	/* make commit synchronous */
- #define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
- #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
-+#define XFS_TRANS_FREEZE_PROT	0x40	/* Transaction has elevated writer
-+					   count in superblock */
- 
- /*
-  * Values for call flags parameter.
--- 
-1.7.1
 
 _______________________________________________
 xfs mailing list
