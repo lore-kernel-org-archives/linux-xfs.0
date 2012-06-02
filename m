@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q51MVxk8183747 for <xfs@oss.sgi.com>; Fri, 1 Jun 2012 17:31:59 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id kGqKIDbnsDp8aAkk (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 01 Jun 2012 15:31:57 -0700 (PDT)
-From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 00/27 v6] Fix filesystem freezing deadlocks
-Date: Sat,  2 Jun 2012 00:30:14 +0200
-Message-Id: <1338589841-9568-1-git-send-email-jack@suse.cz>
+	q52EReaN258000 for <xfs@oss.sgi.com>; Sat, 2 Jun 2012 09:27:40 -0500
+Message-ID: <4FCA22BD.3030801@oracle.com>
+Date: Sat, 02 Jun 2012 22:27:09 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH v2] xfstests: Introduce test case 285 to check statfs(2)
+	will not cause ASSERT(XFS_IS_QUOTA_RUNNING(mp)) failed.
+References: <4F87ED3D.5060105@oracle.com> <20120416174929.GD2924@sgi.com>
+In-Reply-To: <20120416174929.GD2924@sgi.com>
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,116 +19,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: Jan Kara <jack@suse.cz>, "J. Bruce Fields" <bfields@fieldses.org>, ocfs2-devel@oss.oracle.com, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, linux-nilfs@vger.kernel.org, Miklos Szeredi <miklos@szeredi.hu>, cluster-devel@redhat.com, Chris Mason <chris.mason@oracle.com>, linux-ext4@vger.kernel.org, fuse-devel@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>, Joel Becker <jlbec@evilplan.org>, dchinner@redhat.com, Anton Altaparmakov <anton@tuxera.com>, Steven Whitehouse <swhiteho@redhat.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, linux-nfs@vger.kernel.org, Alex Elder <elder@kernel.org>, Theodore Ts'o <tytso@mit.edu>, linux-ntfs-dev@lists.sourceforge.net, Al Viro <viro@ZenIV.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, linux-btrfs@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-  Hello,
+Hi Ben,
 
-  here is the sixth iteration of my patches to improve filesystem freezing.
-The change since last iteration is that filesystem can be frozen with open but
-unlinked files. After some thinking, I've decided that the best way to handle
-this is to block removal inside ->evict_inode() of each filesystem and use
-fs-internal level of freeze protection for that (usually I've instrumented
-filesystem's transaction system to use freeze protection). Handling
-inside VFS would be less work but the only level of freeze protection that
-has a chance of not causing deadlocks is the one used for page faults and even
-there it's not clear lock ordering would be correct wrt some fs-specific locks.
-I've converted ext2, ext4, btrfs, xfs, nilfs2, ocfs2, gfs2 and also checked
-that ext3, reiserfs, jfs should work as well (they have their internal freeze
-protection mechanisms, possibly they could be replaced by a generic one but
-given these are mostly aging filesystems, it's not a real priority IHMO).
-So finally I'm not aware of any pending issue with this patch set so if you
-have some concern, please speak up!
+Sorry for the delay! I have worked on another task in the past few weeks.
 
-Introductory text to first time readers:
+On 04/17/2012 01:49 AM, Ben Myers wrote:
 
-Filesystem freezing is currently racy and thus we can end up with dirty data on
-frozen filesystem (see changelog patch 13 for detailed race description). This
-patch series aims at fixing this.
+>> +					>/dev/null 2>&1
+>> +du -sh $proj_dir			>/dev/null 2>&1
+> 
+> I was unable to reproduce this until I changed 'du -sh' to 'df'.  Now it does
+> crash consistently without your fix for xfs_fs_statfs().
+> 
+> With that change you can consider this
+> Reviewed-by: Ben Myers <bpm@sgi.com>
+> 
+> -Ben
 
-To be able to block all places where inodes get dirtied, I've moved filesystem
-file_update_time() call to ->page_mkwrite callback (patches 01-07) and put
-freeze handling in mnt_want_write() / mnt_drop_write(). That however required
-some code shuffling and changes to kern_path_create() (see patches 09-12). I
-think the result is OK but opinions may differ ;). The advantage of this change
-also is that all filesystems get freeze protection almost for free - even ext2
-can handle freezing well now.
 
-Another potential contention point might be patch 19. In that patch we make
-freeze_super() refuse to freeze the filesystem when there are open but unlinked
-files which may be impractical in some cases. The main reason for this is the
-problem with handling of file deletion from fput() called with mmap_sem held
-(e.g. from munmap(2)), and then there's the fact that we cannot really force
-such filesystem into a consistent state... But if people think that freezing
-with open but unlinked files should happen, then I have some possible
-solutions in mind (maybe as a separate patchset since this is large enough).
+This patch was fixed per your comments, I have to adjust the case number to 287 since seek_data/seek_hole tests were merged, and thanks
+you for help fixing issues for them!
 
-I'm not able to hit any deadlocks, lockdep warnings, or dirty data on frozen
-filesystem despite beating it with fsstress and bash-shared-mapping while
-freezing and unfreezing for several hours (using ext4 and xfs) so I'm
-reasonably confident this could finally be the right solution.
+Regards,
+-Jeff
 
-Changes since v5:
-  * handle unlinked & open files on frozen filesystem
-  * lockdep keys for freeze protection are now per filesystem type
-  * taught lockdep that freeze protection at lower level does not create
-    dependency when we already hold freeze protection at higher level 
-  * rebased on 3.5-rc1-ish
 
-Changes since v4:
-  * added a couple of Acked-by's
-  * added some comments & doc update
-  * added patches from series "Push file_update_time() into .page_mkwrite"
-    since it doesn't make much sense to keep them separate anymore
-  * rebased on top of 3.4-rc2
+287: add a project quota test
 
-Changes since v3:
-  * added third level of freezing for fs internal purposes - hooked some
-    filesystems to use it (XFS, nilfs2)
-  * removed racy i_size check from filemap_mkwrite()
+This test is a negative test case. Pre-vanilla kernel-3.4, if the "pquota"
+or "projquota" mount option was not enabled on the underlying XFS partition,
+call statfs(2) against a project quota directory causes xfs_qm_dqget()->
+ASSERT(XFS_IS_QUOTA_RUNNING(mp)) failed.
 
-Changes since v2:
-  * completely rewritten
-  * freezing is now blocked at VFS entry points
-  * two stage freezing to handle both mmapped writes and other IO
+Reviewed-by: Ben Myers <bpm@sgi.com>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+---
+ 287     |   75 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 287.out |    2 +
+ group   |    1 +
+ 3 files changed, 78 insertions(+), 0 deletions(-)
+ create mode 100755 287
+ create mode 100644 287.out
 
-The biggest changes since v1:
-  * have two counters to provide safe state transitions for SB_FREEZE_WRITE
-    and SB_FREEZE_TRANS states
-  * use percpu counters instead of own percpu structure
-  * added documentation fixes from the old fs freezing series
-  * converted XFS to use SB_FREEZE_TRANS counter instead of its private
-    m_active_trans counter
+diff --git a/287 b/287
+new file mode 100755
+index 0000000..736d632
+--- /dev/null
++++ b/287
+@@ -0,0 +1,75 @@
++#! /bin/bash
++# FS QA Test No. 287
++#
++# This test verify statfs(2) against a project directory will not cause
++# ASSERT(XFS_IS_QUOTA_RUNNING(mp)) at xfs_qm_dqget() failed if the project
++# quota option was not enabled on the underlying partition.  It was failed
++# pre-vanilla kernel 3.4.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 Oracle Liu Jie.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  021101301  USA
++# ---------------------------------------------------------------------
++#
++# creator
++owner=jeff.liu@oracle.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	umount $SCRATCH_MNT 2>/dev/null
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++echo "Silence is golden."
++
++# Modify as appropriate.
++_supported_fs xfs
++_supported_os Linux
++_require_xfs_quota
++_require_scratch
++
++proj_dir="${SCRATCH_MNT}/test_project"
++test_file="${proj_dir}/test_file"
++
++_scratch_mkfs_xfs			>/dev/null 2>&1
++_qmount
++
++mkdir $proj_dir
++touch $test_file
++
++$XFS_QUOTA_PROG -x -c "project -s -p ${proj_dir} 2012" $SCRATCH_DEV \
++					>/dev/null 2>&1
++df $proj_dir				>/dev/null 2>&1
++
++# Clean up
++rm -rf $proj_dir
++_scratch_unmount
++
++status=0
++exit
+diff --git a/287.out b/287.out
+new file mode 100644
+index 0000000..e61bda7
+--- /dev/null
++++ b/287.out
+@@ -0,0 +1,2 @@
++QA output created by 287
++Silence is golden.
+diff --git a/group b/group
+index cbe9101..21566af 100644
+--- a/group
++++ b/group
+@@ -405,3 +405,4 @@ deprecated
+ 284 auto
+ 285 auto rw
+ 286 other
++287 auto quick quota
+-- 
+1.7.9
 
-								Honza
-
-CC: Alex Elder <elder@kernel.org>
-CC: Anton Altaparmakov <anton@tuxera.com>
-CC: Ben Myers <bpm@sgi.com>
-CC: Chris Mason <chris.mason@oracle.com>
-CC: cluster-devel@redhat.com
-CC: "David S. Miller" <davem@davemloft.net>
-CC: fuse-devel@lists.sourceforge.net
-CC: "J. Bruce Fields" <bfields@fieldses.org>
-CC: Joel Becker <jlbec@evilplan.org>
-CC: KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>
-CC: linux-btrfs@vger.kernel.org
-CC: linux-ext4@vger.kernel.org
-CC: linux-nfs@vger.kernel.org
-CC: linux-nilfs@vger.kernel.org
-CC: linux-ntfs-dev@lists.sourceforge.net
-CC: Mark Fasheh <mfasheh@suse.com>
-CC: Miklos Szeredi <miklos@szeredi.hu>
-CC: ocfs2-devel@oss.oracle.com
-CC: OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>
-CC: Steven Whitehouse <swhiteho@redhat.com>
-CC: "Theodore Ts'o" <tytso@mit.edu>
-CC: xfs@oss.sgi.com
 
 _______________________________________________
 xfs mailing list
