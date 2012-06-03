@@ -1,30 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q52EXFH1258353 for <xfs@oss.sgi.com>; Sat, 2 Jun 2012 09:33:15 -0500
-Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
-	cuda.sgi.com with ESMTP id LMjPaR9zQCG6crhH (version=TLSv1
+	q535n7Ab068270 for <xfs@oss.sgi.com>; Sun, 3 Jun 2012 00:49:08 -0500
+Received: from mailman.lug.org.uk (mailman.lug.org.uk [212.13.205.203]) by
+	cuda.sgi.com with ESMTP id twQFRyjjoFCdRr6c (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 02 Jun 2012 07:33:14 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by rcsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id q52EXDcB012965
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Sat, 2 Jun 2012 14:33:13 GMT
-Received: from acsmt358.oracle.com (acsmt358.oracle.com [141.146.40.158])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	q52EXCmx018988
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Sat, 2 Jun 2012 14:33:13 GMT
-Received: from abhmt115.oracle.com (abhmt115.oracle.com [141.146.116.67])
-	by acsmt358.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	q52EXCjk005810 for <xfs@oss.sgi.com>; Sat, 2 Jun 2012 09:33:12 -0500
-Message-ID: <4FCA2422.90804@oracle.com>
-Date: Sat, 02 Jun 2012 22:33:06 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	Sat, 02 Jun 2012 22:49:06 -0700 (PDT)
+Received: from localhost ([127.0.0.1] helo=mailman.lug.org.uk)
+	by mailman.lug.org.uk with esmtp (Exim 4.72)
+	(envelope-from <hampshire-bounces@mailman.lug.org.uk>)
+	id 1Sb3fF-0008TC-Vp
+	for xfs@oss.sgi.com; Sun, 03 Jun 2012 05:47:45 +0000
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: fix a compile warning at seek_sanity_test.c
-Reply-To: jeff.liu@oracle.com
+Subject: Your message to Hampshire awaits moderator approval
+From: hampshire-bounces@mailman.lug.org.uk
+Message-ID: <mailman.983.1338702465.1095.hampshire@mailman.lug.org.uk>
+Date: Sun, 03 Jun 2012 05:47:45 +0000
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,38 +30,21 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
+Your mail to 'Hampshire' with the subject
 
-Compiler report warning at seek_sanity_test.c:
-seek_sanity_test.c:46:3: warning: format '%lx' expects type 'long unsigned int', but argument 3 has type 'int'
+    status
 
-Below patch can fix it.
+Is being held until the list moderator can review it for approval.
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+The reason it is being held:
 
----
- src/seek_sanity_test.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+    Post by non-member to a members-only list
 
-diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-index a185e54..34f5508 100644
---- a/src/seek_sanity_test.c
-+++ b/src/seek_sanity_test.c
-@@ -42,8 +42,10 @@ static void get_file_system(int fd)
- {
- 	struct statfs buf;
- 
--	if (!fstatfs(fd, &buf))
--		fprintf(stdout, "File system magic#: 0x%lx\n", buf.f_type);
-+	if (!fstatfs(fd, &buf)) {
-+		fprintf(stdout, "File system magic#: 0x%lx\n",
-+				(unsigned long int)buf.f_type);
-+	}
- }
- 
- static int get_io_sizes(int fd)
--- 
-1.7.9
+Either the message will get posted to the list, or you will receive
+notification of the moderator's decision.  If you would like to cancel
+this posting, please visit the following URL:
+
+    https://mailman.lug.org.uk/mailman/confirm/hampshire/057e2c4152136b450d37829c0b26bda1d8f949d0
 
 _______________________________________________
 xfs mailing list
