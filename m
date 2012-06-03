@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q53BDAqC098372 for <xfs@oss.sgi.com>; Sun, 3 Jun 2012 06:13:10 -0500
+	q53BCwGv098329 for <xfs@oss.sgi.com>; Sun, 3 Jun 2012 06:12:58 -0500
 Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id 9XXjO4EPuAQzfx0v
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id xgIn2QVi49tjWQvC
 	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 03 Jun 2012 04:13:09 -0700 (PDT)
-Received: by mail-pb0-f53.google.com with SMTP id rr13so6066284pbb.26
-	for <xfs@oss.sgi.com>; Sun, 03 Jun 2012 04:13:09 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 03 Jun 2012 04:12:57 -0700 (PDT)
+Received: by pbbrr13 with SMTP id rr13so6066284pbb.26
+	for <xfs@oss.sgi.com>; Sun, 03 Jun 2012 04:12:57 -0700 (PDT)
 From: raghu.prabhu13@gmail.com
-Subject: [PATCH 2/3] XFS: Print error when unable to allocate inodes.
-Date: Sun,  3 Jun 2012 16:42:48 +0530
-Message-Id: <1223a536d5d9722cc80d4edd29449d24284fefc5.1338721614.git.rprabhu@wnohang.net>
-In-Reply-To: <cover.1338721614.git.rprabhu@wnohang.net>
-References: <cover.1338721614.git.rprabhu@wnohang.net>
+Subject: [PATCH 0/3] Print when ENOSPC due to lack of inodes.
+Date: Sun,  3 Jun 2012 16:42:46 +0530
+Message-Id: <cover.1338721614.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,27 +30,22 @@ Cc: Raghavendra D Prabhu <rprabhu@wnohang.net>, raghu.prabhu13@gmail.com
 
 From: Raghavendra D Prabhu <rprabhu@wnohang.net>
 
-When xfs_ialloc_ag_alloc is unable to allocate required number of inodes, printk
-error about it once.
+Currently, when there are no free inodes left / free space to allocate them (usually
+without inode64), there is no indication anywhere of this case, making it harder
+to diagnose this case. 
 
-Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
----
- fs/xfs/xfs_ialloc.c |    2 ++
- 1 file changed, 2 insertions(+)
+Hence, this three-part patch series to print errors to kernel log with reasons,
+when such a situation arises.
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index a02180a..343d7a8 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -744,6 +744,8 @@ xfs_dialloc(
- 				xfs_trans_brelse(tp, agbp);
- 				if (error == ENOSPC) {
- 					*inop = NULLFSINO;
-+					pr_err_once("XFS (%s): Unable to allocate inodes: Required %d, Current %llu, Maximum %llu",
-+							mp->m_fsname, XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
- 					return 0;
- 				} else
- 					return error;
+Raghavendra D Prabhu (3):
+  XFS: Print error when xfs_ialloc_ag_select fails to find continuous
+    free space.
+  XFS: Print error when unable to allocate inodes.
+  XFS: Print error when there are no free AGs.
+
+ fs/xfs/xfs_ialloc.c |   13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
 -- 
 1.7.10.3
 
