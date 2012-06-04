@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q55Gfca4103956 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 11:41:39 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id P9yX5sbBqAoa5Of3 for
-	<xfs@oss.sgi.com>; Tue, 05 Jun 2012 09:41:38 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q55GfbnU002097
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 12:41:37 -0400
-Message-ID: <4FCE36C0.6070408@redhat.com>
-Date: Tue, 05 Jun 2012 11:41:36 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q55LxAKa130731 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 16:59:10 -0500
+Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
+	[80.67.31.97]) by cuda.sgi.com with ESMTP id 4BXK0IKO11sgqh8k
+	for <xfs@oss.sgi.com>; Mon, 04 Jun 2012 01:54:59 -0700 (PDT)
+Received: from [62.43.225.238] (helo=localhost)
+	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
+	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
+	id 1SbT3x-00081z-Vi
+	for xfs@oss.sgi.com; Mon, 04 Jun 2012 10:54:58 +0200
+Message-ID: <4FCC77E1.4030600@cape-horn-eng.com>
+Date: Mon, 04 Jun 2012 10:54:57 +0200
+From: Richard Ems <richard.ems@cape-horn-eng.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: reject completely bogus remount options
+Subject: Segmentation fault in xfs_db frag, xfsprogs-3.1.8
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,66 +23,74 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Vijay Bellur <vbellur@redhat.com>
+To: xfs@oss.sgi.com
 
-There's a long comment about handling non-remountable
-options in xfs_fs_remount, but nothing addresses the case
-of completely bogus mount options at remount time, which
-can lead to some severe strangeness:
+Hi list,
 
-# for I in `seq 1 10`; do mount -o remount,noacl /mnt/test2; done
-# for I in `seq 1 10`; do mount -o remount,badoption /mnt/test2; done
-# grep sdb4 /etc/mtab
-/dev/sdb4 /mnt/test2 xfs rw,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,noacl,badoption,badoption,badoption,badoption,badoption,badoption,badoption,badoption,badoption,badoption 0 0
+I have a cron script running all weekends reporting me the fragmentation
+of one of our backup systems.
+It ran fine up to last weekend when it started reporting "Segmentation
+fault".
 
-This is a bit of a hack, but we can re-use xfs_parseargs()
-with a dummy mount struct to just vet all of the remount
-options which were passed in.  With this, we get a saner
-result:
+This is on an openSUSE 12.1 64bit, running kernel 3.3.6.
 
-[44898.102990] EXT4-fs (sdb4): Unrecognized mount option "badoption" or missing value
+I tried with xfsprogs3.1.6 and the self compiled 3.1.8 version. Both end
+with segmentation fault.
 
-if we try to remount with something ridiculous.
+# df -h /dev/sdc
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdc         80T   57T   23T  72% /backup/ES-6664
 
-In the long run we should probably revamp a lot of the mount option
-handling...
+# mount | grep sdc
+/dev/sdc on /backup/ES-6664 type xfs
+(rw,noatime,attr2,nobarrier,inode64,logbufs=3D8,logbsize=3D256k,sunit=3D128=
+,swidth=3D3712,noquota,_netdev)
+/dev/sdc on /backup/ES-6664 type xfs
+(ro,relatime,attr2,nobarrier,inode64,logbufs=3D8,logbsize=3D256k,sunit=3D12=
+8,swidth=3D3712,noquota,_netdev)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+The FS gets first mounted rw and then bind mounted ro on top of it.
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 9a72dda..0402f9c 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -1157,11 +1157,22 @@ xfs_fs_remount(
- 	int			*flags,
- 	char			*options)
- {
--	struct xfs_mount	*mp = XFS_M(sb);
-+	struct xfs_mount	*mp = XFS_M(sb), dummy_mp;
- 	substring_t		args[MAX_OPT_ARGS];
- 	char			*p;
- 	int			error;
- 
-+	/*
-+	 * Check all the mount options presented to be sure
-+	 * there's nothing too crazy in there.  Non-remountable
-+	 * but valid options are a different issue.
-+	 */
-+	memset(&dummy_mp, 0, sizeof(struct xfs_mount));
-+	dummy_mp.m_super = sb;
-+	error = xfs_parseargs(&dummy_mp, options);
-+	if (error)
-+		return -error;
-+
- 	while ((p = strsep(&options, ",")) != NULL) {
- 		int token;
- 
+# xfs_info /dev/sdc
+meta-data=3D/dev/sdc               isize=3D512    agcount=3D80,
+agsize=3D268435440 blks
+         =3D                       sectsz=3D512   attr=3D2
+data     =3D                       bsize=3D4096   blocks=3D21240231040, ima=
+xpct=3D1
+         =3D                       sunit=3D16     swidth=3D464 blks
+naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
+log      =3Dinternal               bsize=3D4096   blocks=3D521728, version=
+=3D2
+         =3D                       sectsz=3D512   sunit=3D16 blks, lazy-cou=
+nt=3D1
+realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+
+# echo frag | xfs_db -r /dev/sdc
+Segmentation fault
+
+# echo frag | /opt/xfsprogs-3.1.8/sbin/xfs_db -r /dev/sdc
+Segmentation fault
+
+
+Any clues?
+
+Thanks,
+Richard
+
+
+-- =
+
+Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
+
+Cape Horn Engineering S.L.
+C/ Dr. J.J. D=F3mine 1, 5=BA piso
+46011 Valencia
+Tel : +34 96 3242923 / Fax 924
+http://www.cape-horn-eng.com
 
 _______________________________________________
 xfs mailing list
