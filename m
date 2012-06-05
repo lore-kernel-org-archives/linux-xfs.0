@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q55Emdjo093260 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 09:48:39 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	SavqhLXgfeohv2ZQ (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 05 Jun 2012 07:48:37 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1Sbv3k-00051l-Nc
-	for xfs@oss.sgi.com; Tue, 05 Jun 2012 14:48:36 +0000
-Message-Id: <20120605144836.693188178@bombadil.infradead.org>
-Date: Tue, 05 Jun 2012 10:46:54 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 7/7] xfs: merge xfs_ialloc_ag_select into xfs_dialloc
-References: <20120605144647.051012936@bombadil.infradead.org>
-Content-Disposition: inline; filename=xfs-dialloc-factor-ag_selection-2
+	q55FLb12096467 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 10:21:37 -0500
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id 7AQKaE9LGlIy4A5j (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 Jun 2012 08:21:35 -0700 (PDT)
+Received: from telerig.nabble.com ([192.168.236.162])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1SbvZe-0007Gy-Ah
+	for xfs@oss.sgi.com; Tue, 05 Jun 2012 08:21:34 -0700
+Message-ID: <33964752.post@talk.nabble.com>
+Date: Tue, 5 Jun 2012 08:21:34 -0700 (PDT)
+From: Chris J Arges <chris.j.arges@canonical.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+In-Reply-To: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
+MIME-Version: 1.0
+References: <CADLDEKsP4DsXf_G07ub+a-ODbrJbsiprRJUX1fJdaQ41TB7+Xg@mail.gmail.com>
+	<CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,252 +26,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Both function contain the same basic loop over all AGs.  Merge the two
-by creating three passes in the loop instead of duplicating the code.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 
----
- fs/xfs/xfs_ialloc.c |  179 +++++++++++++++-------------------------------------
- 1 file changed, 55 insertions(+), 124 deletions(-)
+Peter Watkins-3 wrote:
+> 
+> Does your kernel have the effect of
+> 
+> 0bf6a5bd4b55b466964ead6fa566d8f346a828ee xfs: convert the xfsaild
+> thread to a workqueue
+> 
 
-Index: xfs/fs/xfs/xfs_ialloc.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_ialloc.c	2012-06-04 12:58:07.104263361 -0400
-+++ xfs/fs/xfs/xfs_ialloc.c	2012-06-04 13:11:52.512284497 -0400
-@@ -439,114 +439,6 @@ xfs_ialloc_next_ag(
- }
- 
- /*
-- * Select an allocation group to look for a free inode in, based on the parent
-- * inode and then mode.  Return the allocation group buffer.
-- */
--STATIC xfs_agnumber_t
--xfs_ialloc_ag_select(
--	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_ino_t	parent,		/* parent directory inode number */
--	umode_t		mode,		/* bits set to indicate file type */
--	int		okalloc)	/* ok to allocate more space */
--{
--	xfs_agnumber_t	agcount;	/* number of ag's in the filesystem */
--	xfs_agnumber_t	agno;		/* current ag number */
--	int		flags;		/* alloc buffer locking flags */
--	xfs_extlen_t	ineed;		/* blocks needed for inode allocation */
--	xfs_extlen_t	longest = 0;	/* longest extent available */
--	xfs_mount_t	*mp;		/* mount point structure */
--	int		needspace;	/* file mode implies space allocated */
--	xfs_perag_t	*pag;		/* per allocation group data */
--	xfs_agnumber_t	pagno;		/* parent (starting) ag number */
--	int		error;
--
--	/*
--	 * Files of these types need at least one block if length > 0
--	 * (and they won't fit in the inode, but that's hard to figure out).
--	 */
--	needspace = S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
--	mp = tp->t_mountp;
--	agcount = mp->m_maxagi;
--	if (S_ISDIR(mode))
--		pagno = xfs_ialloc_next_ag(mp);
--	else {
--		pagno = XFS_INO_TO_AGNO(mp, parent);
--		if (pagno >= agcount)
--			pagno = 0;
--	}
--
--	ASSERT(pagno < agcount);
--
--	/*
--	 * Loop through allocation groups, looking for one with a little
--	 * free space in it.  Note we don't look for free inodes, exactly.
--	 * Instead, we include whether there is a need to allocate inodes
--	 * to mean that blocks must be allocated for them,
--	 * if none are currently free.
--	 */
--	agno = pagno;
--	flags = XFS_ALLOC_FLAG_TRYLOCK;
--	for (;;) {
--		pag = xfs_perag_get(mp, agno);
--		if (!pag->pagi_inodeok) {
--			xfs_ialloc_next_ag(mp);
--			goto nextag;
--		}
--
--		if (!pag->pagi_init) {
--			error = xfs_ialloc_pagi_init(mp, tp, agno);
--			if (error)
--				goto nextag;
--		}
--
--		if (pag->pagi_freecount) {
--			xfs_perag_put(pag);
--			return agno;
--		}
--
--		if (!okalloc)
--			goto nextag;
--
--		if (!pag->pagf_init) {
--			error = xfs_alloc_pagf_init(mp, tp, agno, flags);
--			if (error)
--				goto nextag;
--		}
--
--		/*
--		 * Is there enough free space for the file plus a block of
--		 * inodes? (if we need to allocate some)?
--		 */
--		ineed = XFS_IALLOC_BLOCKS(mp);
--		longest = pag->pagf_longest;
--		if (!longest)
--			longest = pag->pagf_flcount > 0;
--
--		if (pag->pagf_freeblks >= needspace + ineed &&
--		    longest >= ineed) {
--			xfs_perag_put(pag);
--			return agno;
--		}
--nextag:
--		xfs_perag_put(pag);
--		/*
--		 * No point in iterating over the rest, if we're shutting
--		 * down.
--		 */
--		if (XFS_FORCED_SHUTDOWN(mp))
--			return NULLAGNUMBER;
--		agno++;
--		if (agno >= agcount)
--			agno = 0;
--		if (agno == pagno) {
--			if (flags == 0)
--				return NULLAGNUMBER;
--			flags = 0;
--		}
--	}
--}
--
--/*
-  * Try to retrieve the next record to the left/right from the current one.
-  */
- STATIC int
-@@ -901,9 +793,9 @@ xfs_dialloc(
- 	xfs_buf_t	*agbp;		/* allocation group header's buffer */
- 	xfs_agnumber_t	agno;		/* allocation group number */
- 	int		error;		/* error return value */
--	int		ialloced;	/* inode allocation status */
- 	int		noroom = 0;	/* no space for inode blk allocation */
- 	xfs_agnumber_t	start_agno;	/* starting allocation group number */
-+	int		pass;
- 	struct xfs_perag *pag;
- 
- 	if (*IO_agbp) {
-@@ -917,16 +809,6 @@ xfs_dialloc(
- 	}
- 
- 	/*
--	 * We do not have an agbp, so select an initial allocation
--	 * group for inode allocation.
--	 */
--	start_agno = xfs_ialloc_ag_select(tp, parent, mode, okalloc);
--	if (start_agno == NULLAGNUMBER) {
--		*inop = NULLFSINO;
--		return 0;
--	}
--
--	/*
- 	 * If we have already hit the ceiling of inode blocks then clear
- 	 * okalloc so we scan all available agi structures for a free
- 	 * inode.
-@@ -938,12 +820,31 @@ xfs_dialloc(
- 	}
- 
- 	/*
--	 * Loop until we find an allocation group that either has free inodes
--	 * or in which we can allocate some inodes.  Iterate through the
--	 * allocation groups upward, wrapping at the end.
-+	 * For directories start with a new allocation groups, for other file
-+	 * types aim to find an inode close to the parent.
- 	 */
-+	if (S_ISDIR(mode)) {
-+		start_agno = xfs_ialloc_next_ag(mp);
-+		ASSERT(start_agno < mp->m_maxagi);
-+	} else {
-+		start_agno = XFS_INO_TO_AGNO(mp, parent);
-+		if (start_agno >= mp->m_maxagi)
-+			start_agno = 0;
-+	}
-+
-+	/*
-+	 * Loop through allocation groups, looking for one with a little
-+	 * free space in it.  Note we don't look for free inodes, exactly.
-+	 * Instead, we include whether there is a need to allocate inodes
-+	 * to mean that blocks must be allocated for them, if none are
-+	 * currently free.
-+	 */
-+	*inop = NULLFSINO;
- 	agno = start_agno;
-+	pass = 0;
- 	for (;;) {
-+		int			ialloced;
-+
- 		pag = xfs_perag_get(mp, agno);
- 		if (!pag->pagi_inodeok) {
- 			xfs_ialloc_next_ag(mp);
-@@ -980,6 +881,33 @@ xfs_dialloc(
- 			goto nextag;
- 		}
- 
-+		if (!pag->pagf_init) {
-+			int flags = pass ? 0 : XFS_ALLOC_FLAG_TRYLOCK;
-+
-+			error = xfs_alloc_pagf_init(mp, tp, agno, flags);
-+			if (error)
-+				goto out_error;
-+		}
-+
-+		if (pass < 2) {
-+			/*
-+			 * Is there enough free space for the file plus a block
-+			 * of inodes?
-+			 */
-+			xfs_extlen_t	longest = pag->pagf_longest;
-+			int		needspace =
-+				S_ISDIR(mode) || S_ISREG(mode) || S_ISLNK(mode);
-+
-+			if (!longest)
-+				longest = pag->pagf_flcount > 0;
-+
-+			if (pag->pagf_freeblks <
-+			    XFS_IALLOC_BLOCKS(mp) + needspace)
-+				goto nextag;
-+			if (longest < XFS_IALLOC_BLOCKS(mp))
-+				goto nextag;
-+		}
-+
- 		error = xfs_ialloc_ag_alloc(tp, agbp, &ialloced);
- 		if (error) {
- 			xfs_trans_brelse(tp, agbp);
-@@ -1012,8 +940,11 @@ nextag:
- 		if (++agno == mp->m_sb.sb_agcount)
- 			agno = 0;
- 		if (agno == start_agno) {
--			*inop = NULLFSINO;
--			return noroom ? ENOSPC : 0;
-+			if (pass == 2) {
-+				*inop = NULLFSINO;
-+				return noroom ? ENOSPC : 0;
-+			}
-+			pass++;
- 		}
- 	}
- 
+This patch is present in the Ubuntu Precise 3.2 kernel, and I have been able
+to reproduce the failure with this patch applied.
+
+
+Peter Watkins-3 wrote:
+> 
+> c7eead1e118fb7e34ee8f5063c3c090c054c3820 xfs: revert to using a
+> kthread for AIL pushing
+> 
+
+I see this patch is 0030807c66f058230bcb20d2573bcaf28852e804 upstream, and
+this patch is also present in the 3.2 Precise kernel that was tested and
+exhibited the failure.
+
+
+Peter Watkins-3 wrote:
+> 
+> In particular, is this code in xfs_trans_ail_push:
+> 
+>        smp_wmb();
+>        xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
+>        smp_wmb();
+> 
+
+In fs/xfs/xfs_trans_ail.c:xfs_ail_push():
+
+        /*
+         * Ensure that the new target is noticed in push code before it
+clears
+         * the XFS_AIL_PUSHING_BIT.
+         */
+        smp_wmb();
+        xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_lsn);
+        smp_wmb();
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+
+-- 
+View this message in context: http://old.nabble.com/Still-seeing-hangs-in-xlog_grant_log_space-tp33732886p33964752.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
