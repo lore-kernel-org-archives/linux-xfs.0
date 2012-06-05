@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q556T6To050402
-	for <linux-xfs@oss.sgi.com>; Tue, 5 Jun 2012 01:29:06 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	C1r7Jr7UccZHa6Fi for <linux-xfs@oss.sgi.com>;
-	Mon, 04 Jun 2012 23:29:01 -0700 (PDT)
-Date: Tue, 5 Jun 2012 16:28:58 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: task hung over xfs
-Message-ID: <20120605062858.GH4347@dastard>
-References: <CAPB=Z-rL2X3+2eNJwfN=ppk=6W8M08zEL8FR0w5Ew2pELpnFRg@mail.gmail.com>
+	q556Z5T0050950 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 01:35:06 -0500
+Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
+	[209.85.210.53]) by cuda.sgi.com with ESMTP id dXUcIdCCZnjJR8Zp
+	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 04 Jun 2012 23:35:04 -0700 (PDT)
+Received: by dadg9 with SMTP id g9so8683453dad.26
+	for <xfs@oss.sgi.com>; Mon, 04 Jun 2012 23:35:03 -0700 (PDT)
+Date: Tue, 5 Jun 2012 12:04:57 +0530
+From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
+Subject: Re:  Re: [PATCH v4] Stop periodic syncing if filesystem is already
+	shutdown.
+Message-ID: <20120605063457.GA1758@Xye.local>
+References: <d585aa328fc296e20bd3a180c2c3dbc4c77c45df.1338487073.git.rprabhu@wnohang.net>
+	<20120605060617.GG4347@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAPB=Z-rL2X3+2eNJwfN=ppk=6W8M08zEL8FR0w5Ew2pELpnFRg@mail.gmail.com>
+In-Reply-To: <20120605060617.GG4347@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,124 +25,204 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============9043969743192732446=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Raz <raziebe@gmail.com>
-Cc: linux-xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org
-
-On Wed, May 30, 2012 at 09:44:45PM +0300, Raz wrote:
-> Hello
-> We using 2.6.32 gentoo 64bit.=A0 and we're getting task_hung timeout stac=
-k.
-> =
-
-> Our server uses direct IO. =A0It reads files contents to buffers in
-> memory =A0and sends them by TCP. =A0In addition, data is received
-> by TCP and stored in files on disk.
-> Most of the IO is reading data and sending it by TCP sockets.
-> =
-
-> There are 4 threads reading data from disk into memory buffers. One
-> thread per partition.
-> There are about 20 threads reading data from the network and saving it
-> to disk.
-> =
-
-> In addition, there is an operation that is done on every file once it is
-> downloaded. =A0This operation maps data from file to memory. =A0It is done
-> in Java. I assume it is mmap. =A0The mapping is very short.
-> =
-
-> The bellow is the stack. Is this xfs bug=A0 ? root file system is xfs as
-> well the data partition.
-> Was a fix made in this area=A0 ? when was it ?
-> thank you
-> raz
-> =
-
-> =
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
 
- INFO: task java:10449 blocked for more than 120 seconds.
- "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
- java=A0=A0=A0=A0=A0=A0=A0=A0=A0 D 0007ffffffffe708 =A0=A0=A0 0 10449=A0 10=
-408 0x00000000
-=A0 ffff88042acd1c28 0000000000000086 0000000000cd1b88 0000000000000000
-=A0 0000000000000000 ffff88042acd1d7c 000000002c95c410 0000000000000000
-=A0 0000000000015840 000000000000f9c8 ffff88042c95c410 ffff88042e4d96b0
- Call Trace:
-=A0 [<ffffffffa060bd4a>] ?  kmem_zone_alloc+0xaa/0x110 [xfs]
-=A0 [<ffffffff815f33f5>] __down_write_nested+0xa5/0x100
-=A0 [<ffffffff815f346e>] __down_write+0x1e/0x40
-=A0 [<ffffffff815f24ac>] down_write+0x1c/0x40
-=A0 [<ffffffffa05e7e2c>] xfs_ilock+0x9c/0xb0 [xfs]
-=A0 [<ffffffffa06093d6>] xfs_free_eofblocks+0x256/0x290 [xfs]
-=A0 [<ffffffffa0609f1d>] xfs_release+0x14d/0x210 [xfs]
-=A0 [<ffffffffa0612303>] xfs_file_release+0x23/0x40 [xfs]
-=A0 [<ffffffff8114f1f9>] __fput+0xe9/0x210
-=A0 [<ffffffff8114f34b>] fput+0x2b/0x50
-=A0 [<ffffffff81124349>] remove_vma+0x49/0xb0
-=A0 [<ffffffff81125a7a>] do_munmap+0x36a/0x3d0
-=A0 [<ffffffff815f346e>] ?  __down_write+0x1e/0x40
-=A0 [<ffffffff81125b3c>] sys_munmap+0x5c/0xa0
-=A0 [<ffffffff81013302>] system_call_fastpath+0x16/0x1b
+--===============9043969743192732446==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="9amGYk9869ThD9tj"
+Content-Disposition: inline
 
-Holding the mmap_sem, blocked on the iolock in exclusive mode waiting for I=
-O to complete.
 
- java=A0=A0=A0=A0=A0=A0=A0=A0=A0 D ffff8803bc495b48 =A0=A0=A0 0 11768=A0 10=
-408 0x00000000
-=A0 ffff8803bc495a58 0000000000000086 ffff8803bc4959a8 ffffffff815f38bc
-=A0 ffff8803bc4959e8 000000005c14da46 ffff8803bc4959d8 ffffffff811300a2
-=A0 0000000000015840 000000000000f9c8 ffff8803bc468000 ffff88042e4c2d60
- Call Trace:
-=A0 [<ffffffff815f38bc>] ?  _spin_lock+0x1c/0x40
-=A0 [<ffffffff811300a2>] ?  swap_info_get+0x82/0x120
-=A0 [<ffffffff811488c1>] ?  mem_cgroup_commit_charge_swapin+0x21/0x40
-=A0 [<ffffffff815f353d>] __down_read+0xad/0xfa
-=A0 [<ffffffff815f24ec>] down_read+0x1c/0x40
-=A0 [<ffffffff815f6e59>] do_page_fault+0x379/0x3a0
-=A0 [<ffffffff815f4145>] page_fault+0x25/0x30
-=A0 [<ffffffff810fe39c>] ?  file_read_actor+0x6c/0x180
-=A0 [<ffffffff810fe437>] ?  file_read_actor+0x107/0x180
-=A0 [<ffffffff81100d02>] generic_file_aio_read+0x492/0x6b0
-=A0 [<ffffffffa06178f8>] xfs_read+0x138/0x2c0 [xfs]
-=A0 [<ffffffffa06124ce>] xfs_file_aio_read+0x6e/0x90 [xfs]
-=A0 [<ffffffff8114d341>] do_sync_read+0x101/0x160
-=A0 [<ffffffff8108c4a0>] ?  autoremove_wake_function+0x0/0x60
-=A0 [<ffffffff81276b94>] ?  security_file_permission+0x24/0x40
-=A0 [<ffffffff8114dc64>] vfs_read+0xe4/0x1c0
-=A0 [<ffffffff8114de5f>] sys_read+0x5f/0xc0
-=A0 [<ffffffff81013302>] system_call_fastpath+0x16/0x1b
+--9amGYk9869ThD9tj
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Holding the iolock in shared mode, taken a page fault during the
-read() call and blocked on the mmap_sem.
+Hi,
 
-IOWs, you're doing read() IO into a mmap()d buffer, and there's a
-concurrent munmap() of another region of the same file that is open
-under a different file descriptor. ABBA deadlock, and it's been
-there for about 10 years. The problem is the munmap() call calling
-fput() with the mmap_sem() held.
 
-Here's the latest discussion thread about solving it:
+* On Tue, Jun 05, 2012 at 04:06:17PM +1000, Dave Chinner <david@fromorbit.c=
+om> wrote:
+>On Thu, May 31, 2012 at 11:37:34PM +0530, raghu.prabhu13@gmail.com wrote:
+>> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>>
+>> This is to prevent xfs_log_force from running ad-infinitum (due to xfs_s=
+ync)
+>> till umount if the disk has been forcefully unplugged.
+>
+>I'm not sure where versions 2 and 3 went - I haven't seen them....
 
-https://lkml.org/lkml/2012/4/19/635
+Actually I hadn't numbered them, but they are here http://oss.sgi.com/archi=
+ves/xfs/2012-05/msg00065.html (starting from that thread). Sorry for that.
 
-Right now your only option for avoiding the deadlock is "don't do
-that". Soon it might be "upgrade to 3.x", but don't hold your
-breath...
+>
+>>
+>> This is also to prevent messages like these from being displayed repeate=
+dly.
+>>
+>> [ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
+>>
+>> Note, that even after xfs_do_force_shutdown has been called, xfs_log_for=
+ce
+>> doesn't stop till the filesystem has been unmounted (and it keeps printi=
+ng
+>> "error 5 returned" to kernel log).
+>>
+>> To fix it, added return statements to xfs_log_force and xfs_fs_sync_fs i=
+f the
+>> filesystem is already shutdown -- based on XFS_FORCED_SHUTDOWN.
+>>
+>> To simulate it, mount an xfs filesystem located on external disk, and th=
+en pull
+>> the power to the disk.
+>>
+>> Tested it on latest linus tree.
+>>
+>> Now, the dmesg looks,
+>>
+>> [  268.307303] XFS (sdb2): xfs_do_force_shutdown(0x1) called from line 1=
+031 of file fs/xfs/xfs_buf.c.  Return address =3D 0xffffffff8127c13a
+>> [  268.307318] XFS (sdb2): I/O Error Detected. Shutting down filesystem
+>> [  268.307323] XFS (sdb2): Please umount the filesystem and rectify the =
+problem(s)
+>>
+>> ---
+>>
+>> Version 1: Removed calling xfs_syncd_stop from xfs_sync_worker.
+>> Version 2: Removed calling xfs_fs_writable in xfs_sync_worker and xfs_fl=
+ush_worker.
+>> Version 3: Removed calling xfs_syncd_stop in xfs_bwrite.
+>> Version 4: Added return statements to xfs_log_force and xfs_fs_sync_fs.
+>>
+>> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>> Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>>   ---
+>> ---
+>>  fs/xfs/xfs_log.c   |    7 +++++++
+>>  fs/xfs/xfs_super.c |    7 +++++++
+>>  2 files changed, 14 insertions(+)
+>>
+>> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+>> index 6db1fef..e4192b2 100644
+>> --- a/fs/xfs/xfs_log.c
+>> +++ b/fs/xfs/xfs_log.c
+>> @@ -2932,6 +2932,13 @@ xfs_log_force(
+>>  {
+>>  	int	error;
+>>
+>> +	/*
+>> +	 * No need to printk here since xfs_bwrite already printks about xfs
+>> +	 * shutdown if it has shutdown already.
+>> +	 */
+>> +	if (XFS_FORCED_SHUTDOWN(mp))
+>> +		return;
+>> +
+>>  	error =3D _xfs_log_force(mp, flags, NULL);
+>>  	if (error)
+>>  		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+>
+>I don't think this is the right place for the check. Depending on
+>the type of error that caused the shutdown, the log may still be
+>functioning and we need to be able to force the log so we don't lose
+>all the changes in memory. The internal log implementation has all
+>the checks necessary to avoid writing to the log if the log has
+>already been shut down, which is why you keep seeing the error
+>message.
+I went through the function now and noticed a couple of EIOs=20
+returned, makes sense.
+>
+>What it appears to me is that you want to stop the error message
+>from being emitted when the log is shut down. The way to do that is
+>this:
+>
+> 	error =3D _xfs_log_force(mp, flags, NULL);
+>-	if (error)
+>+	if (error && !XFS_FORCED_SHUTDOWN(mp))
+> 		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+>
+>Rather than avoining calling _xfs_log_force() altogether.
+Yes, this should do.
+>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index dab9a5f..b0f6041 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -1010,6 +1010,13 @@ xfs_fs_sync_fs(
+>>  	int			error;
+>>
+>>  	/*
+>> +	 * No need to printk here since xfs_bwrite already printks about xfs
+>> +	 * shutdown if it has shutdown already.
+>> +	 */
+>> +	if (XFS_FORCED_SHUTDOWN(mp))
+>> +		return XFS_ERROR(EIO);
+>
+>
+>I think if someone runs sync or calls syncfs() we should emit an
+>error message indicating that it failed. We can't return an error to
+>sync(), so we are limited to writing to the syslog.  This is not
+>called periodically, so I don't see any problem with emitting an
+>error message here. Being verbose in error states is desirable - you
+>can never have too much information in the logs when something goes
+>wrong....
+Thanks, I look into this.
 
-Cheers,
+>
+>Cheers,
+>
+>Dave.
+>--=20
+>Dave Chinner
+>david@fromorbit.com
+>
+>_______________________________________________
+>xfs mailing list
+>xfs@oss.sgi.com
+>http://oss.sgi.com/mailman/listinfo/xfs
+>
 
-Dave.
--- =
 
-Dave Chinner
-david@fromorbit.com
+
+
+Regards,
+--=20
+Raghavendra Prabhu
+GPG Id : 0xD72BE977
+Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
+www: wnohang.net
+
+--9amGYk9869ThD9tj
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJPzaiRAAoJEKYW3KHXK+l33PIH/16Dvls53VF0NQw4CrZT5/MM
+366G5C798PJnLzG9KDCGY8zM96q1MWD7YR6vviXL0xYAbLDSAGB01Q2kgU3C5npK
+aF5TS7mIIy+GHq/yBfVe6UMH5txCxFi+jnxdTtMq1XwgLF79S+PyiQE5ywFZJA0J
+begncBV7iTqu10TPP41qMB17C4yF3l8htVtQrihYLC48+AkL9jwaVDA88Xgcbapz
++exCWxEPIg1CIFifdkD0DhG1zH/OgwYhhbe/uffNq/2bRszUy2HDl/w/B3R60ko5
+0Mj8DRy9Kmkrri0H+m/IlrGDksFMcPdzwetWN+dHt/zlwDJzUlkBWMfmvt3Rj4k=
+=eELr
+-----END PGP SIGNATURE-----
+
+--9amGYk9869ThD9tj--
+
+
+--===============9043969743192732446==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9043969743192732446==--
