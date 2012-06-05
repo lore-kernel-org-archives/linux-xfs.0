@@ -1,16 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q554G1ar037503 for <xfs@oss.sgi.com>; Mon, 4 Jun 2012 23:16:01 -0500
-Date: Tue, 5 Jun 2012 14:15:46 +1000
-From: Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 18/27] xfs: Convert to new freezing code
-Message-ID: <20120605041546.GB3019@devil.redhat.com>
-References: <1338589841-9568-1-git-send-email-jack@suse.cz>
-	<1338589841-9568-19-git-send-email-jack@suse.cz>
+	q555puYm047240 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 00:51:57 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	TZOmC4WpgDlLf3YU for <xfs@oss.sgi.com>;
+	Mon, 04 Jun 2012 22:51:53 -0700 (PDT)
+Date: Tue, 5 Jun 2012 15:51:50 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120605055150.GF4347@dastard>
+References: <20120515224805.GA25577@quack.suse.cz>
+	<20120516021423.GO25351@dastard>
+	<20120516130445.GA27661@quack.suse.cz>
+	<20120517074308.GQ25351@dastard>
+	<20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1338589841-9568-19-git-send-email-jack@suse.cz>
+In-Reply-To: <20120524123538.GA5632@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,89 +35,122 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Al Viro <viro@ZenIV.linux.org.uk>, xfs@oss.sgi.com
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
-On Sat, Jun 02, 2012 at 12:30:32AM +0200, Jan Kara wrote:
-> Generic code now blocks all writers from standard write paths. So we add
-> blocking of all writers coming from ioctl (we get a protection of ioctl against
-> racing remount read-only as a bonus) and convert xfs_file_aio_write() to a
-> non-racy freeze protection. We also keep freeze protection on transaction
-> start to block internal filesystem writes such as removal of preallocated
-> blocks.
+On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> On Sat 19-05-12 11:40:24, Dave Chinner wrote:
+> > So let's step back a moment and have a look at how we've got here.
+> > The problem is that we've optimised ourselves into a corner with the
+> > way we handle page cache truncation - we don't need mmap
+> > serialisation because of the combination of i_size and page locks
+> > mean we can detect truncated pages safely at page fault time. With
+> > hole punching, we don't have that i_size safety blanket, and so we
+> > need some other serialisation mechanism to safely detect whether a
+> > page is valid or not at any given point in time.
+> > 
+> > Because it needs to serialise against IO operations, we need a
+> > sleeping lock of some kind, and it can't be the existing IO lock.
+> > And now we are looking at needing a new lock for hole punching, I'm
+> > really wondering if the i_size/page lock truncation optimisation
+> > should even continue to exist. i.e. replace it with a single
+> > mechanism that works for both hole punching, truncation and other
+> > functions that require exclusive access or exclusion against
+> > modifications to the mapping tree.
+> > 
+> > But this is only one of the problems in this area.The way I see it
+> > is that we have many kludges in the area of page invalidation w.r.t.
+> > different types of IO, the page cache and mmap, especially when we
+> > take into account direct IO. What we are seeing here is we need
+> > some level of _mapping tree exclusion_ between:
+> > 
+> > 	1. mmap vs hole punch (broken)
+> > 	2. mmap vs truncate (i_size/page lock)
+> > 	3. mmap vs direct IO (non-existent)
+> > 	4. mmap vs buffered IO (page lock)
+> > 	5. writeback vs truncate (i_size/page lock)
+> > 	6. writeback vs hole punch (page lock, possibly broken)
+> > 	7. direct IO vs buffered IO (racy - flush cache before/after DIO)
+>   Yes, this is a nice summary of the most interesting cases. For completeness,
+> here are the remaining cases:
+>   8. mmap vs writeback (page lock)
+>   9. writeback vs direct IO (as direct IO vs buffered IO)
+>  10. writeback vs buffered IO (page lock)
+>  11. direct IO vs truncate (dio_wait)
+>  12. direct IO vs hole punch (dio_wait)
+>  13. buffered IO vs truncate (i_mutex for writes, i_size/page lock for reads)
+>  14. buffered IO vs hole punch (fs dependent, broken for ext4)
+>  15. truncate vs hole punch (fs dependent)
+>  16. mmap vs mmap (page lock)
+>  17. writeback vs writeback (page lock)
+>  18. direct IO vs direct IO (i_mutex or fs dependent)
+>  19. buffered IO vs buffered IO (i_mutex for writes, page lock for reads)
+>  20. truncate vs truncate (i_mutex)
+>  21. punch hole vs punch hole (fs dependent)
 
-I don't think this will apply to a current TOT XFS - the end_io
-context hunks look wrong. Perhaps your rebased this before the XFS
-tree was merged?
+A lot of them are the IO exclusion side of the problem - I
+ignored them just to make my discussion short and
+to the point. So thanks for documenting them for everyone. :)
 
-> CC: Ben Myers <bpm@sgi.com>
-> CC: Alex Elder <elder@kernel.org>
-> CC: xfs@oss.sgi.com
-> Signed-off-by: Jan Kara <jack@suse.cz>
-> ---
->  fs/xfs/xfs_aops.c    |   18 ++++++++++++++++
->  fs/xfs/xfs_file.c    |   10 ++++++--
->  fs/xfs/xfs_ioctl.c   |   55 +++++++++++++++++++++++++++++++++++++++++++++++--
->  fs/xfs/xfs_ioctl32.c |   12 ++++++++++
->  fs/xfs/xfs_iomap.c   |    4 +-
->  fs/xfs/xfs_mount.c   |    2 +-
->  fs/xfs/xfs_mount.h   |    3 --
->  fs/xfs/xfs_sync.c    |    2 +-
->  fs/xfs/xfs_trans.c   |   17 ++++++++++++--
->  fs/xfs/xfs_trans.h   |    2 +
->  10 files changed, 109 insertions(+), 16 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index ae31c31..4a001b8 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -124,6 +124,12 @@ xfs_setfilesize_trans_alloc(
->  	ioend->io_append_trans = tp;
->  
->  	/*
-> +	 * We will pass freeze protection with a transaction.  So tell lockdep
-> +	 * we released it.
-> +	 */
-> +	rwsem_release(&ioend->io_inode->i_sb->s_writers.lock_map[SB_FREEZE_FS-1],
-> +		      1, _THIS_IP_);
-> +	/*
+....
 
-Oh, that's rather ugly. If this is necessary where a transaction
-handle is passed to another thread and completed there, then this
-really needs to be wrapped in helper functions so it is always done
-correctly when the PF_TRANS flag is also transferred. That can be
-done later, though. It will also need to be done to the allocation
-code which passes allocation off to a workqueue, but that is
-currently synchronous so won't be a problem for this change right
-now...
+> > To me the issue at hand is that we have no method of serialising
+> > multi-page operations on the mapping tree between the filesystem and
+> > the VM, and that seems to be the fundamental problem we face in this
+> > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > Hence it might be better to try to work out how to fix this entire
+> > class of problems rather than just adding a complex kuldge that just
+> > papers over the current "hot" symptom....
+>   Yes, looking at the above table, the amount of different synchronization
+> mechanisms is really striking. So probably we should look at some
+> possibility of unifying at least some cases.
 
+It seems to me that we need some thing in between the fine grained
+page lock and the entire-file IO exclusion lock. We need to maintain
+fine grained locking for mmap scalability, but we also need to be
+able to atomically lock ranges of pages.
 
-> @@ -631,7 +638,11 @@ xfs_ioc_space(
->  	if (ioflags & IO_INVIS)
->  		attr_flags |= XFS_ATTR_DMI;
->  
-> +	error = mnt_want_write_file(filp);
-> +	if (error)
-> +		return error;
->  	error = xfs_change_file_space(ip, cmd, bf, filp->f_pos, attr_flags);
-> +	mnt_drop_write_file(filp);
->  	return -error;
+I guess if we were to nest a fine grained multi-state lock
+inside both the IO exclusion lock and the mmap_sem, we might be able
+to kill all problems in one go.
 
-Those positive/negative error conversions are starting to get
-confusing and difficult to get right. I'm going to have to convert
-XFS at some point to return negative errors everywhere so we can get
-rid of that problem once and for all...
+Exclusive access on a range needs to be granted to:
 
-Otherwise, this looks OK. I'll need to pull this in and test it, but
-the I was using the previous version of the patch series for almost
-the entire 3.4-rc cycle and didn't come across any problems with
-it....
+	- direct IO
+	- truncate
+	- hole punch
+
+so they can be serialised against mmap based page faults, writeback
+and concurrent buffered IO. Serialisation against themselves is an
+IO/fs exclusion problem.
+
+Shared access for traversal or modification needs to be granted to:
+
+	- buffered IO
+	- mmap page faults
+	- writeback
+
+Each of these cases can rely on the existing page locks or IO
+exclusion locks to provide safety for concurrent access to the same
+ranges. This means that once we have access granted to a range we
+can check truncate races once and ignore the problem until we drop
+the access.  And the case of taking a page fault within a buffered
+IO won't deadlock because both take a shared lock....
+
+We'd need some kind of efficient shared/exclusive range lock for
+this sort of exclusion, and it's entirely possible that it would
+have too much overhead to be acceptible in the page fault path. It's
+the best I can think of right now.....
+
+As it is, a range lock of this kind would be very handy for other
+things, too (like the IO exclusion locks so we can do concurrent
+buffered writes in XFS ;).
 
 Cheers,
 
 Dave.
 -- 
 Dave Chinner
-dchinner@redhat.com
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
