@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q55LxAKa130731 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 16:59:10 -0500
-Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
-	[80.67.31.97]) by cuda.sgi.com with ESMTP id 4BXK0IKO11sgqh8k
-	for <xfs@oss.sgi.com>; Mon, 04 Jun 2012 01:54:59 -0700 (PDT)
-Received: from [62.43.225.238] (helo=localhost)
-	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
-	id 1SbT3x-00081z-Vi
-	for xfs@oss.sgi.com; Mon, 04 Jun 2012 10:54:58 +0200
-Message-ID: <4FCC77E1.4030600@cape-horn-eng.com>
-Date: Mon, 04 Jun 2012 10:54:57 +0200
-From: Richard Ems <richard.ems@cape-horn-eng.com>
+	q55MGLNO131904 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 17:16:21 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id KZSph9Z0qAHWGEZr (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 05 Jun 2012 15:16:18 -0700 (PDT)
+Date: Wed, 6 Jun 2012 00:16:14 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] xfs: Fix overallocation in xfs_buf_allocate_memory()
+Message-ID: <20120605221614.GA15180@quack.suse.cz>
+References: <1338894490-12662-1-git-send-email-jack@suse.cz>
+	<20120605132852.GB22848@dastard>
 MIME-Version: 1.0
-Subject: Segmentation fault in xfs_db frag, xfsprogs-3.1.8
+Content-Disposition: inline
+In-Reply-To: <20120605132852.GB22848@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,74 +23,106 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-Hi list,
+On Tue 05-06-12 23:28:52, Dave Chinner wrote:
+> On Tue, Jun 05, 2012 at 01:08:10PM +0200, Jan Kara wrote:
+> > Commit 0e6e847f which introduced xfs_buf_allocate_memory() function has a bug
+> > causing the function to overestimate the number of necessary pages.
+> 
+> I don't think that commit is responsible at all - bp->b_bn was not
+> used at all originally - it was bp->b_file_offset that was used.
+  Yes, sorry, I got confused by that patch.
 
-I have a cron script running all weekends reporting me the fragmentation
-of one of our backup systems.
-It ran fine up to last weekend when it started reporting "Segmentation
-fault".
+> > The problem
+> > is that xfs_buf_alloc() sets b_bn to -1
+> 
+> Right, and the change that was made in commit de1cbee (xfs: kill
+> b_file_offset) changed that bp->b_file_offset to bp->b_bn, and that
+> is where the bug was introduced. This means it's only been present
+> in mainline since the 3.5-rc1 XFS merge....
+> 
+> > and thus effectively every buffer is
+> > straddling a page boundary which causes xfs_buf_allocate_memory() to allocate
+> > two pages and use vmalloc() for access which slows things down.
+> 
+> I did not notice this at all - it didn't cause me any problems or
+> slowdowns that I could measure in any benchmark I ran, so I'm
+> interested to know how you found it/noticed it....
+  By luck ;) I take back the "slow down" part (although obviously the
+vmalloc stuff is slower). I was tracking some soft lockup problem with XFS
+and vmalloc in SUSE kernel and looked into vanilla sources where I found
+this bug. I though it's causing also my problem but as you mention, that
+got introduced only recently so it was a false alarm.
 
-This is on an openSUSE 12.1 64bit, running kernel 3.3.6.
+> > Fix the code to use correct block number.
+> > 
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> >  fs/xfs/xfs_buf.c |    7 ++++---
+> >  1 files changed, 4 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > index 172d3cc..b67cc83 100644
+> > --- a/fs/xfs/xfs_buf.c
+> > +++ b/fs/xfs/xfs_buf.c
+> > @@ -296,6 +296,7 @@ xfs_buf_free(
+> >  STATIC int
+> >  xfs_buf_allocate_memory(
+> >  	xfs_buf_t		*bp,
+> > +	xfs_daddr_t		blkno,
+> >  	uint			flags)
+> >  {
+> >  	size_t			size;
+> > @@ -334,8 +335,8 @@ xfs_buf_allocate_memory(
+> >  	}
+> >  
+> >  use_alloc_page:
+> > -	start = BBTOB(bp->b_bn) >> PAGE_SHIFT;
+> > -	end = (BBTOB(bp->b_bn + bp->b_length) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> > +	start = BBTOB(blkno) >> PAGE_SHIFT;
+> > +	end = (BBTOB(blkno + bp->b_length) + PAGE_SIZE - 1) >> PAGE_SHIFT;
+> >  	page_count = end - start;
+> >  	error = _xfs_buf_get_pages(bp, page_count, flags);
+> >  	if (unlikely(error))
+> > @@ -552,7 +553,7 @@ xfs_buf_get(
+> >  	if (unlikely(!new_bp))
+> >  		return NULL;
+> >  
+> > -	error = xfs_buf_allocate_memory(new_bp, flags);
+> > +	error = xfs_buf_allocate_memory(new_bp, blkno, flags);
+> >  	if (error) {
+> >  		kmem_zone_free(xfs_buf_zone, new_bp);
+> >  		return NULL;
+> 
+> While that will fix the problem, I think that I fixed the
+> underlying problem that required us to set bp->b_bn to -1 at
+> initialisation in that same series that introduced this problem.
+> That problem was that we were inserting buffers in a partially
+> intialised state into the cache and so we couldn't allow IO to be
+> started on them in the case of a lookup race before the final
+> initialisation was done. We could detect that case by checking for
+> bp->b_bn == -1 at any point in time.
+> 
+> We now don't insert the new buffer into the cache until it is fully
+> initialised, so we don't need to initialise bp->b_bn to -1 anymore -
+> it can be intialised to the correct block number, which we already
+> pass to xfs_buf_alloc() for the cached case. Hence I think that's
+> the better way to solve the problem. If this is done, then the
+> xfs_buf_alloc() call in xfs_buf_get_uncached() needs to pass
+> XFS_BUF_DADDR_NULL as the blkno rather than 0 as it currently
+> does....
+  OK, I'll redo the patch as you suggest. Thanks for having a look!
 
-I tried with xfsprogs3.1.6 and the self compiled 3.1.8 version. Both end
-with segmentation fault.
-
-# df -h /dev/sdc
-Filesystem      Size  Used Avail Use% Mounted on
-/dev/sdc         80T   57T   23T  72% /backup/ES-6664
-
-# mount | grep sdc
-/dev/sdc on /backup/ES-6664 type xfs
-(rw,noatime,attr2,nobarrier,inode64,logbufs=3D8,logbsize=3D256k,sunit=3D128=
-,swidth=3D3712,noquota,_netdev)
-/dev/sdc on /backup/ES-6664 type xfs
-(ro,relatime,attr2,nobarrier,inode64,logbufs=3D8,logbsize=3D256k,sunit=3D12=
-8,swidth=3D3712,noquota,_netdev)
-
-The FS gets first mounted rw and then bind mounted ro on top of it.
-
-# xfs_info /dev/sdc
-meta-data=3D/dev/sdc               isize=3D512    agcount=3D80,
-agsize=3D268435440 blks
-         =3D                       sectsz=3D512   attr=3D2
-data     =3D                       bsize=3D4096   blocks=3D21240231040, ima=
-xpct=3D1
-         =3D                       sunit=3D16     swidth=3D464 blks
-naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-log      =3Dinternal               bsize=3D4096   blocks=3D521728, version=
-=3D2
-         =3D                       sectsz=3D512   sunit=3D16 blks, lazy-cou=
-nt=3D1
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
-
-# echo frag | xfs_db -r /dev/sdc
-Segmentation fault
-
-# echo frag | /opt/xfsprogs-3.1.8/sbin/xfs_db -r /dev/sdc
-Segmentation fault
-
-
-Any clues?
-
-Thanks,
-Richard
-
-
--- =
-
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
-
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
