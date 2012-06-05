@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q55Nm7Gs137875 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 18:48:07 -0500
+	q55Nsp1B138357 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 18:54:51 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	fBycpJcUOl8LD3oG for <xfs@oss.sgi.com>;
-	Tue, 05 Jun 2012 16:48:05 -0700 (PDT)
-Date: Wed, 6 Jun 2012 09:48:03 +1000
+	rXc1GNqr6mlucoTr for <xfs@oss.sgi.com>;
+	Tue, 05 Jun 2012 16:54:49 -0700 (PDT)
+Date: Wed, 6 Jun 2012 09:54:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstest 285: userspace vs. fragmented multiblock dir2
-Message-ID: <20120605234803.GE22848@dastard>
-References: <4FBABC41.5040001@redhat.com>
- <20120605224600.GN4721@sgi.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+Message-ID: <20120605235447.GF22848@dastard>
+References: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
+	<CADLDEKsGtsw-rrSOE7gY4T81u+p41b34ixv0B7Dh07afJ73n2w@mail.gmail.com>
+	<CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120605224600.GN4721@sgi.com>
+In-Reply-To: <CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,46 +24,93 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Peter Watkins <treestem@gmail.com>
+Cc: Juerg Haefliger <juergh@gmail.com>, bpm@sgi.com, xfs@oss.sgi.com
 
-On Tue, Jun 05, 2012 at 05:46:00PM -0500, Ben Myers wrote:
-> Hey Eric,
-> 
-> On Mon, May 21, 2012 at 05:05:53PM -0500, Eric Sandeen wrote:
-> > Current xfs_repair is unhappy with fragmented multiblock
-> > v2 directories.  This test shows it ... patches to fix
-> > it soon to follow.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> This failed on my system... looks like it's just PEBKAC.  My partitions
-> are too small?
-> 
-> # ./check 287
-> No patches applied
-> KERNEL_TOPDIR -- /root/xfs
-> BRANCH        -- refs/heads/master2
-> DESC          -- v3.4-10158-gf8f5701
-> PATCHES:
-> FSTYP         -- xfs (debug)
-> PLATFORM      -- Linux/x86_64 nfs10 3.5.0-rc1-0.7-default+
-> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdb4
-> MOUNT_OPTIONS -- /dev/sdb4 /mnt/scratch
-> 
-> 287      - no qualified output
+On Fri, May 25, 2012 at 01:03:04PM -0400, Peter Watkins wrote:
+> On Fri, May 25, 2012 at 2:28 AM, Juerg Haefliger <juergh@gmail.com> wrote:
+> >> Does your kernel have the effect of
+> >>
+> >> 0bf6a5bd4b55b466964ead6fa566d8f346a828ee xfs: convert the xfsaild
+> >> thread to a workqueue
+> >
+> > No.
+> >
+> >
+> >> c7eead1e118fb7e34ee8f5063c3c090c054c3820 xfs: revert to using a
+> >> kthread for AIL pushing
+> >
+> > No.
+> >
+> >
+> >> In particular, is this code in xfs_trans_ail_push:
+> >>
+> >> =A0 =A0 =A0 smp_wmb();
+> >> =A0 =A0 =A0 xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_=
+lsn);
+> >> =A0 =A0 =A0 smp_wmb();
+> >
+> > No. xfs_trans_ail_push looks like this:
+> >
+> > void
+> > xfs_trans_ail_push(
+> > =A0 =A0 =A0 =A0struct xfs_ail =A0*ailp,
+> > =A0 =A0 =A0 =A0xfs_lsn_t =A0 =A0 =A0 threshold_lsn)
+> > {
+> > =A0 =A0 =A0 =A0xfs_log_item_t =A0*lip;
+> >
+> > =A0 =A0 =A0 =A0lip =3D xfs_ail_min(ailp);
+> > =A0 =A0 =A0 =A0if (lip && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (XFS_LSN_CMP(threshold_lsn, ailp->xa_=
+target) > 0)
+> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0xfsaild_wakeup(ailp, thr=
+eshold_lsn);
+> > =A0 =A0 =A0 =A0}
+> > }
+> >
+> >
+> > FWIW, the XFS driver in my kernel is identical to the vanilla 2.6.38
+> > driver. I'm still trying to get a XFS trace from a production hang. I
+> > do have a crash dump from a production machine with /tmp hanging.
+> > Would it be helpful to share that dump?
+> >
+> > ...Juerg
+> =
 
-It failed because there is not 287.out file in the patch. Every test
-has to have a golden image to compare the result against...
+> It looks like the combined effect of those patches, perhaps the write
+> barriers, fix one log space hang. That problem exists in 2.6.38.
+
+There are a huge number of fixes to solve these problems since
+2.6.38. It doesn't help us at all to test anymore on 2.6.38,
+especially as that kernel is not supported, and I'd suggest that you
+migrate production off it sooner rather than later.
+
+> Reading bug #922 I see your test case reproduces in recent kernels, so
+> there must be a newer problem also.
+
+Right, that's what we need to find - it appears to be a CIL
+stall/accounting leak, completely unrelated to all the other AIL/log
+space stalls that have been occurring. Last thing is that I was
+waiting for more information on the stall that mark T @ sgi was able
+to reproduce. I haven't heard anything from him since I asked for
+more information on May 23....
+
+> I find the reproducer the most useful, so no need to upload the dump.
+
+At this point, running on a 3.5-rc1 kernel is what we need to get
+working reliably. Once we have the problems solved there, we can
+work out what set of patches need to be backported to 3.0-stable and
+other kernels to fix the problems in those supported kernels...
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
