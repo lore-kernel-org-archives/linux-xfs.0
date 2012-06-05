@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5566Mfx048340 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 01:06:22 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	kxguB0oOSbvJzJVN for <xfs@oss.sgi.com>;
-	Mon, 04 Jun 2012 23:06:20 -0700 (PDT)
-Date: Tue, 5 Jun 2012 16:06:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4] Stop periodic syncing if filesystem is already
-	shutdown.
-Message-ID: <20120605060617.GG4347@dastard>
-References: <d585aa328fc296e20bd3a180c2c3dbc4c77c45df.1338487073.git.rprabhu@wnohang.net>
+	q556MWBk049791 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 01:22:32 -0500
+Received: from mail-ey0-f181.google.com (mail-ey0-f181.google.com
+	[209.85.215.181]) by cuda.sgi.com with ESMTP id
+	bdObRPUgL94jrlgO (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 04 Jun 2012 23:22:30 -0700 (PDT)
+Received: by eaae12 with SMTP id e12so1926490eaa.26
+	for <xfs@oss.sgi.com>; Mon, 04 Jun 2012 23:22:29 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <d585aa328fc296e20bd3a180c2c3dbc4c77c45df.1338487073.git.rprabhu@wnohang.net>
+In-Reply-To: <20120605055150.GF4347@dastard>
+References: <20120515224805.GA25577@quack.suse.cz>
+	<20120516021423.GO25351@dastard>
+	<20120516130445.GA27661@quack.suse.cz>
+	<20120517074308.GQ25351@dastard>
+	<20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+Date: Tue, 5 Jun 2012 08:22:29 +0200
+Message-ID: <CANGUGtBnhRjWGK2v-+ExhZExNbYkF9nTBzQNd7-0f6G5sn51Sg@mail.gmail.com>
+Subject: Re: Hole punching and mmap races
+From: Marco Stornelli <marco.stornelli@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,126 +33,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: raghu.prabhu13@gmail.com
-Cc: Raghavendra D Prabhu <rprabhu@wnohang.net>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Thu, May 31, 2012 at 11:37:34PM +0530, raghu.prabhu13@gmail.com wrote:
-> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> 
-> This is to prevent xfs_log_force from running ad-infinitum (due to xfs_sync)
-> till umount if the disk has been forcefully unplugged.
+2012/6/5 Dave Chinner <david@fromorbit.com>:
+> On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+>> On Sat 19-05-12 11:40:24, Dave Chinner wrote:
+>> > So let's step back a moment and have a look at how we've got here.
+>> > The problem is that we've optimised ourselves into a corner with the
+>> > way we handle page cache truncation - we don't need mmap
+>> > serialisation because of the combination of i_size and page locks
+>> > mean we can detect truncated pages safely at page fault time. With
+>> > hole punching, we don't have that i_size safety blanket, and so we
+>> > need some other serialisation mechanism to safely detect whether a
+>> > page is valid or not at any given point in time.
+>> >
+>> > Because it needs to serialise against IO operations, we need a
+>> > sleeping lock of some kind, and it can't be the existing IO lock.
+>> > And now we are looking at needing a new lock for hole punching, I'm
+>> > really wondering if the i_size/page lock truncation optimisation
+>> > should even continue to exist. i.e. replace it with a single
+>> > mechanism that works for both hole punching, truncation and other
+>> > functions that require exclusive access or exclusion against
+>> > modifications to the mapping tree.
+>> >
+>> > But this is only one of the problems in this area.The way I see it
+>> > is that we have many kludges in the area of page invalidation w.r.t.
+>> > different types of IO, the page cache and mmap, especially when we
+>> > take into account direct IO. What we are seeing here is we need
+>> > some level of _mapping tree exclusion_ between:
+>> >
+>> > =A0 =A0 1. mmap vs hole punch (broken)
+>> > =A0 =A0 2. mmap vs truncate (i_size/page lock)
+>> > =A0 =A0 3. mmap vs direct IO (non-existent)
+>> > =A0 =A0 4. mmap vs buffered IO (page lock)
+>> > =A0 =A0 5. writeback vs truncate (i_size/page lock)
+>> > =A0 =A0 6. writeback vs hole punch (page lock, possibly broken)
+>> > =A0 =A0 7. direct IO vs buffered IO (racy - flush cache before/after D=
+IO)
+>> =A0 Yes, this is a nice summary of the most interesting cases. For compl=
+eteness,
+>> here are the remaining cases:
+>> =A0 8. mmap vs writeback (page lock)
+>> =A0 9. writeback vs direct IO (as direct IO vs buffered IO)
+>> =A010. writeback vs buffered IO (page lock)
+>> =A011. direct IO vs truncate (dio_wait)
+>> =A012. direct IO vs hole punch (dio_wait)
+>> =A013. buffered IO vs truncate (i_mutex for writes, i_size/page lock for=
+ reads)
+>> =A014. buffered IO vs hole punch (fs dependent, broken for ext4)
+>> =A015. truncate vs hole punch (fs dependent)
+>> =A016. mmap vs mmap (page lock)
+>> =A017. writeback vs writeback (page lock)
+>> =A018. direct IO vs direct IO (i_mutex or fs dependent)
+>> =A019. buffered IO vs buffered IO (i_mutex for writes, page lock for rea=
+ds)
+>> =A020. truncate vs truncate (i_mutex)
+>> =A021. punch hole vs punch hole (fs dependent)
+>
 
-I'm not sure where versions 2 and 3 went - I haven't seen them....
+I think we have even the xip cases here.
 
-> 
-> This is also to prevent messages like these from being displayed repeatedly.
-> 
-> [ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
-> 
-> Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
-> doesn't stop till the filesystem has been unmounted (and it keeps printing
-> "error 5 returned" to kernel log).
-> 
-> To fix it, added return statements to xfs_log_force and xfs_fs_sync_fs if the
-> filesystem is already shutdown -- based on XFS_FORCED_SHUTDOWN.
-> 
-> To simulate it, mount an xfs filesystem located on external disk, and then pull
-> the power to the disk.
-> 
-> Tested it on latest linus tree.
-> 
-> Now, the dmesg looks,
-> 
-> [  268.307303] XFS (sdb2): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
-> [  268.307318] XFS (sdb2): I/O Error Detected. Shutting down filesystem
-> [  268.307323] XFS (sdb2): Please umount the filesystem and rectify the problem(s)
-> 
-> ---
-> 
-> Version 1: Removed calling xfs_syncd_stop from xfs_sync_worker.
-> Version 2: Removed calling xfs_fs_writable in xfs_sync_worker and xfs_flush_worker.
-> Version 3: Removed calling xfs_syncd_stop in xfs_bwrite.
-> Version 4: Added return statements to xfs_log_force and xfs_fs_sync_fs.
-> 
-> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
->   ---
-> ---
->  fs/xfs/xfs_log.c   |    7 +++++++
->  fs/xfs/xfs_super.c |    7 +++++++
->  2 files changed, 14 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 6db1fef..e4192b2 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -2932,6 +2932,13 @@ xfs_log_force(
->  {
->  	int	error;
->  
-> +	/*
-> +	 * No need to printk here since xfs_bwrite already printks about xfs
-> +	 * shutdown if it has shutdown already.
-> +	 */
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return;
-> +
->  	error = _xfs_log_force(mp, flags, NULL);
->  	if (error)
->  		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-
-I don't think this is the right place for the check. Depending on
-the type of error that caused the shutdown, the log may still be
-functioning and we need to be able to force the log so we don't lose
-all the changes in memory. The internal log implementation has all
-the checks necessary to avoid writing to the log if the log has
-already been shut down, which is why you keep seeing the error
-message.
-
-What it appears to me is that you want to stop the error message
-from being emitted when the log is shut down. The way to do that is
-this:
-
- 	error = _xfs_log_force(mp, flags, NULL);
--	if (error)
-+	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_warn(mp, "%s: error %d returned.", __func__, error);
-
-Rather than avoining calling _xfs_log_force() altogether.
-
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index dab9a5f..b0f6041 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1010,6 +1010,13 @@ xfs_fs_sync_fs(
->  	int			error;
->  
->  	/*
-> +	 * No need to printk here since xfs_bwrite already printks about xfs
-> +	 * shutdown if it has shutdown already.
-> +	 */
-> +	if (XFS_FORCED_SHUTDOWN(mp))
-> +		return XFS_ERROR(EIO);
-
-
-I think if someone runs sync or calls syncfs() we should emit an
-error message indicating that it failed. We can't return an error to
-sync(), so we are limited to writing to the syslog.  This is not
-called periodically, so I don't see any problem with emitting an
-error message here. Being verbose in error states is desirable - you
-can never have too much information in the logs when something goes
-wrong....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Marco
 
 _______________________________________________
 xfs mailing list
