@@ -1,28 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q56DaNah221852 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 08:36:24 -0500
+	q56Dd2Y8222086 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 08:39:02 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	n6F7ilxpxvemCukd for <xfs@oss.sgi.com>;
-	Wed, 06 Jun 2012 06:36:21 -0700 (PDT)
-Date: Wed, 6 Jun 2012 23:36:16 +1000
+	Ubpa0YtjEf0c1lIP for <xfs@oss.sgi.com>;
+	Wed, 06 Jun 2012 06:39:01 -0700 (PDT)
+Date: Wed, 6 Jun 2012 23:38:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120606133616.GL22848@dastard>
-References: <20120517074308.GQ25351@dastard>
-	<20120517232829.GA31028@quack.suse.cz>
-	<20120518101210.GX25351@dastard>
-	<20120518133250.GC5589@quack.suse.cz>
-	<20120519014024.GZ25351@dastard>
-	<20120524123538.GA5632@quack.suse.cz>
-	<20120605055150.GF4347@dastard>
-	<20120605231530.GB4402@quack.suse.cz>
-	<20120606000636.GG22848@dastard>
-	<20120606095827.GA6304@quack.suse.cz>
+Subject: Re: Segmentation fault in xfs_db frag, xfsprogs-3.1.8
+Message-ID: <20120606133859.GM22848@dastard>
+References: <4FCC77E1.4030600@cape-horn-eng.com>
+	<20120605234528.GD22848@dastard>
+	<4FCF2BAC.6050100@cape-horn-eng.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120606095827.GA6304@quack.suse.cz>
+In-Reply-To: <4FCF2BAC.6050100@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,86 +28,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
+To: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 06, 2012 at 11:58:27AM +0200, Jan Kara wrote:
-> On Wed 06-06-12 10:06:36, Dave Chinner wrote:
-> > On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
-> > > On Tue 05-06-12 15:51:50, Dave Chinner wrote:
-> > > > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
-> > > > > > To me the issue at hand is that we have no method of serialising
-> > > > > > multi-page operations on the mapping tree between the filesystem and
-> > > > > > the VM, and that seems to be the fundamental problem we face in this
-> > > > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
-> > > > > > Hence it might be better to try to work out how to fix this entire
-> > > > > > class of problems rather than just adding a complex kuldge that just
-> > > > > > papers over the current "hot" symptom....
-> > > > >   Yes, looking at the above table, the amount of different synchronization
-> > > > > mechanisms is really striking. So probably we should look at some
-> > > > > possibility of unifying at least some cases.
-> > > > 
-> > > > It seems to me that we need some thing in between the fine grained
-> > > > page lock and the entire-file IO exclusion lock. We need to maintain
-> > > > fine grained locking for mmap scalability, but we also need to be
-> > > > able to atomically lock ranges of pages.
-> > >   Yes, we also need to keep things fine grained to keep scalability of
-> > > direct IO and buffered reads...
-> > > 
-> > > > I guess if we were to nest a fine grained multi-state lock
-> > > > inside both the IO exclusion lock and the mmap_sem, we might be able
-> > > > to kill all problems in one go.
-> > > > 
-> > > > Exclusive access on a range needs to be granted to:
-> > > > 
-> > > > 	- direct IO
-> > > > 	- truncate
-> > > > 	- hole punch
-> > > > 
-> > > > so they can be serialised against mmap based page faults, writeback
-> > > > and concurrent buffered IO. Serialisation against themselves is an
-> > > > IO/fs exclusion problem.
-> > > > 
-> > > > Shared access for traversal or modification needs to be granted to:
-> > > > 
-> > > > 	- buffered IO
-> > > > 	- mmap page faults
-> > > > 	- writeback
-> > > > 
-> > > > Each of these cases can rely on the existing page locks or IO
-> > > > exclusion locks to provide safety for concurrent access to the same
-> > > > ranges. This means that once we have access granted to a range we
-> > > > can check truncate races once and ignore the problem until we drop
-> > > > the access.  And the case of taking a page fault within a buffered
-> > > > IO won't deadlock because both take a shared lock....
-> > >   You cannot just use a lock (not even a shared one) both above and under
-> > > mmap_sem. That is deadlockable in presence of other requests for exclusive
-> > > locking...
-> > 
-> > Well, that's assuming that exclusive lock requests form a barrier to
-> > new shared requests. Remember that I'm talking about a range lock
-> > here, which we can make up whatever semantics we'd need, including
-> > having "shared lock if already locked shared" nested locking
-> > semantics which avoids this page-fault-in-buffered-IO-copy-in/out
-> > problem....
->   That's true. But if you have semantics like this, constant writing to
-> or reading from a file could starve e.g. truncate. So I'd prefer not to
-> open this can of worms and keep semantics of rw semaphores if possible.
+On Wed, Jun 06, 2012 at 12:06:36PM +0200, Richard Ems wrote:
+> On 06/06/2012 01:45 AM, Dave Chinner wrote:
+> > No surprise if you have a large filesystem and the filesystem is
+> > changing while xfs_db is running. xfs_db is not coherent with
+> > mounted filesytems, and it is not recommended that you use it that
+> > way.s xfs-db is a debugging tool, not a filesystem state reporting
+> > tool.
+> 
+> Ok, thanks, didn't know that.
+> I would like to monitor the fragmentation value for all my mounted XFS.
+> I think I read in previous list messages that also other people are
+> using xfs_db this way. Or is there another way to get the fragmentation
+> value?
 
-Except truncate uses the i_mutex/i_iolock for exclusion, so it would
-never get held off any more than it already does by buffered IO in
-this case. i.e. the mapping tree range lock is inside the locks used
-for truncate serialisation, so we don't have a situation where other
-operations woul dbe held off by such an IO pattern...
+No, and what xfs_db reports is mostly useless. You don't have a
+fragmentation problem unless you are noticing performance problems,
+and no fragmentation number will ever tell you that....
 
-> Furthermore, with direct IO you have to set in stone the ordering of
-> mmap_sem and range lock anyway because there we need an exclusive lock.
+> I found this segmentation fault error very strange, since I have been
+> using "echo frag | xfs_db -r" for months already on other big
+> filesystems - 2 x 17 TB, 1 x 25 TB, 1 x 20 TB - and NEVER got a
+> segmentation fault. All 4 filessystems are mounted read-write and are in
+> heavy IO use, nevertheless "echo frag | xfs_db -r" runs as expected (by
+> me), no one xfs_db run crashed with a segmentation fault at all for
+> months, running every weekend.
+> It also ran several times without giving any errors on this 80 TB XFS,
+> but then started to throw segmentation faults some weeks ago.
 
-Yes, mmap basically requires exclusive mmap_sem->shared range lock ordering. For
-direct IO, we only need the mmap_sem for the get_user_pages() call
-IIRC, so that requires exclusive range lock-> shared mmap_sem
-ordering. Unless we can lift the range lock in the mmap path outside
-the mmap_sem, we're still in the same boat....
+It's entirely possible it is running out of memory, failing to
+capture the failure and dereferencing a null pointer....
 
 Cheers,
 
