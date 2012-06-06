@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q562TpuA151185 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 21:29:52 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id FgAVMlswpzegtFI5 for <xfs@oss.sgi.com>;
-	Tue, 05 Jun 2012 19:29:50 -0700 (PDT)
-Message-ID: <4FCEC09D.70504@sandeen.net>
-Date: Tue, 05 Jun 2012 21:29:49 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q564QsFl159856 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 23:26:54 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	LT16Y7tHrDPCBC8s for <xfs@oss.sgi.com>;
+	Tue, 05 Jun 2012 21:26:52 -0700 (PDT)
+Date: Wed, 6 Jun 2012 14:26:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
+Message-ID: <20120606042647.GK22848@dastard>
+References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
+	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
+	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
+	<20120525204536.GA4721@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH V2] xfstest 287: userspace vs. fragmented multiblock dir2
-References: <4FBABC41.5040001@redhat.com>
-In-Reply-To: <4FBABC41.5040001@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20120525204536.GA4721@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,171 +29,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Current xfs_repair is unhappy with fragmented multiblock
-v2 directories.  This test shows it ... patches to fix
-it soon to follow.
+On Fri, May 25, 2012 at 03:45:36PM -0500, Ben Myers wrote:
+> Hey Dave,
+> 
+> On Thu, May 24, 2012 at 05:39:52PM -0500, Ben Myers wrote:
+> > Anyway, I'll make some time to work on this tomorrow so I can test it over
+> > the weekend.
+> 
+> This is going to spin over the weekend.  See what you think.
+> 
+> -----------
+> 
+> xfs:  shutdown xfs_sync_worker before the log
+> 
+> Revert commit 1307bbd, which uses the s_umount semaphore to provide
+> exclusion between xfs_sync_worker and unmount, in favor of shutting down
+> the sync worker before freeing the log in xfs_log_unmount.  This is a
+> cleaner way of resolving the race between xfs_sync_worker and unmount
+> than using s_umount.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+Looks fine to me.
 
-V2: Renumbered, now with even more 287.out-ness.
-(hand-renamed to 287, should apply...)
-((we need to merge the 2 git trees ... ))
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-diff --git a/287 b/287
-new file mode 100755
-index 0000000..11a66f6
---- /dev/null
-+++ b/287
-@@ -0,0 +1,128 @@
-+#! /bin/bash
-+# FS QA Test No. 287
-+#
-+# Test xfs_repair on fragmented multi-block dir2 fs
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+_supported_fs xfs
-+_supported_os IRIX Linux
-+
-+# real QA test starts here
-+rm -f $seq.full
-+_require_scratch
-+_scratch_mkfs_xfs -n size=16k -d size=128m >> $seq.full 2>&1
-+_scratch_mount
-+
-+# First we cause very badly fragmented freespace, then
-+# make some multiblock directories in the filesystem, which
-+# should come out very fragmented as a result
-+
-+# Step 1: Cause badly fragmented free space
-+mkdir $SCRATCH_MNT/fragdir
-+for I in `seq 0 27200`; do
-+        (echo data > $SCRATCH_MNT/fragdir/f$I) >> $seq.full 2>&1
-+done
-+sync
-+
-+for I in `seq 0 2 27200`; do
-+        rm -f $SCRATCH_MNT/fragdir/f$I >> $seq.full 2>&1
-+done
-+sync
-+
-+# Soak up any remaining freespace
-+xfs_io -f -c "pwrite 0 16m" -c "fsync" $SCRATCH_MNT/space_file.large >> $seq.full 2>&1
-+
-+# Take a look at freespace for any post-mortem on the test
-+_scratch_unmount
-+xfs_db -c freesp $SCRATCH_DEV >> $seq.full 2>&1
-+_scratch_mount
-+
-+# Step 2: Make a bunch of (hopefully fragmented) multiblock
-+# dir2 directories
-+
-+# - FMT_LOCAL
-+mkdir $SCRATCH_MNT/S_IFDIR.FMT_LOCAL
-+touch $SCRATCH_MNT/S_IFDIR.FMT_LOCAL/localdirfile
-+
-+# - FMT_EXTENTS
-+mkdir $SCRATCH_MNT/S_IFDIR.FMT_EXTENTS
-+for I in `seq 1 100`; do
-+	touch $SCRATCH_MNT/S_IFDIR.FMT_EXTENTS/extent_dir_file_$I
-+done
-+# With a few missing
-+for I in `seq 10 2 20` 100; do
-+	rm -f $SCRATCH_MNT/S_IFDIR.FMT_EXTENTS/extent_dir_file_$I
-+done
-+
-+# - FMT_BTREE
-+mkdir $SCRATCH_MNT/S_IFDIR.FMT_BTREE
-+for I in `seq 1 1000`; do
-+	touch $SCRATCH_MNT/S_IFDIR.FMT_BTREE/btree_dir_file_$I
-+done
-+# With a few missing
-+for I in `seq 10 2 20` 1000; do
-+	rm -f $SCRATCH_MNT/S_IFDIR.FMT_BTREE/btree_dir_file_$I
-+done
-+
-+# Dave's special hack - grow freespace tree
-+mkdir $SCRATCH_MNT/S_IFDIR.FMT_BTREE2
-+for I in `seq 1 5000`; do
-+	touch $SCRATCH_MNT/S_IFDIR.FMT_BTREE2/btree2_dir_file_$I
-+done
-+# Remove every other (odds)
-+for I in `seq 1 2 5000`; do
-+	rm -f $SCRATCH_MNT/S_IFDIR.FMT_BTREE2/btree2_dir_file_$I
-+done
-+
-+_scratch_unmount
-+# Can xfs_repair and xfs_check cope with this monster?
-+_scratch_xfs_repair >> $seq.full 2>&1 || _fail "xfs_repair failed"
-+xfs_check $SCRATCH_DEV >> $seq.full 2>&1 || _fail "xfs_check failed"
-+
-+# Yes they can!  Now...
-+# Can xfs_metadump cope with this monster?
-+xfs_metadump $SCRATCH_DEV $tmp.metadump || _fail "xfs_metadump failed"
-+xfs_mdrestore $tmp.metadump $tmp.img || _fail "xfs_mdrestore failed"
-+xfs_repair $tmp.img >> $seq.full 2>&1 || _fail "xfs_repair of metadump failed"
-+
-+# Yes it can; success, all done
-+status=0
-+exit
-+
-diff --git a/287.out b/287.out
-new file mode 100644
-index 0000000..58759aa
---- /dev/null
-+++ b/287.out
-@@ -0,0 +1 @@
-+QA output created by 287
-diff --git a/group b/group
-index 104ed35..17afdcd 100644
---- a/group
-+++ b/group
-@@ -403,3 +403,4 @@ deprecated
- 284 auto
- 285 auto rw
- 286 other
-+287 repair
+Once you commit this, I think I'll do a followup set of patches that
+remove all the problems caused by trying to start and stop unrelated
+functionality in the same place.
 
+I think starting by renaming the xfs-syncd workqueue to the
+xfs_mount_wq because there's nothing "sync" related about it's
+functionality any more.
+
+I'll then kill xfs_syncd_init/stop functions and open code the
+intialisation of the work structures and start them in the
+appropriate places for their functionality. e.g. reclaim work is
+demand started and stops when there's nothing more to do or at
+unmount, the flush work is demand started and we need to complete
+them all at unmount, and the xfssync work is really now "periodic
+log work" so should be started once we complete log recovery
+successfullly and stopped before we tear down the log....
+
+Then I can move the xfs_sync_worker to xfs_log.c and rename it.
+If I then convert xfs_flush_worker to use the generic writeback code
+(writeback_inodes_sb_if_idle) the xfs_sync_data() can go away. That
+means the only user of xfs_inode_ag_iterator is the quotaoff code
+(xfs_qm_dqrele_all_inodes), so it could be moved elsewhere (like
+xfs_inode.c).
+
+Then xfs_quiesce_data() can be moved to xfs-super.c where it can sit
+alongside the two functions that call it, and the same can be done
+for xfs_quiesce_attr().
+
+That will leave only inode cache reclaim functions in xfs_sync.c.
+These are closely aligned to the inode allocation, freeing and cache
+lookup functions in xfs_iget.c, so I'm thinking of merging the two
+into a single file named xfs_inode_cache.c so both xfs_sync.c and
+xfs_iget.c go away.
+
+Thoughts?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
