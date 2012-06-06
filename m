@@ -1,21 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q56Dd2Y8222086 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 08:39:02 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Ubpa0YtjEf0c1lIP for <xfs@oss.sgi.com>;
-	Wed, 06 Jun 2012 06:39:01 -0700 (PDT)
-Date: Wed, 6 Jun 2012 23:38:59 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Segmentation fault in xfs_db frag, xfsprogs-3.1.8
-Message-ID: <20120606133859.GM22848@dastard>
-References: <4FCC77E1.4030600@cape-horn-eng.com>
-	<20120605234528.GD22848@dastard>
-	<4FCF2BAC.6050100@cape-horn-eng.com>
+	q56Df1AL222321 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 08:41:02 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id z3zvbz6AwnWuN5yi for
+	<xfs@oss.sgi.com>; Wed, 06 Jun 2012 06:41:00 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q56Dexel011151
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 09:40:59 -0400
+Received: from laptop.bfoster (vpn-10-250.rdu.redhat.com [10.11.10.250])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q56Dew4n001936
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 09:40:59 -0400
+Message-ID: <4FCF5DB9.2000808@redhat.com>
+Date: Wed, 06 Jun 2012 09:40:09 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4FCF2BAC.6050100@cape-horn-eng.com>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+References: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
+	<CADLDEKsGtsw-rrSOE7gY4T81u+p41b34ixv0B7Dh07afJ73n2w@mail.gmail.com>
+	<CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
+	<20120605235447.GF22848@dastard>
+In-Reply-To: <20120605235447.GF22848@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,46 +37,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Richard Ems <richard.ems@cape-horn-eng.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Jun 06, 2012 at 12:06:36PM +0200, Richard Ems wrote:
-> On 06/06/2012 01:45 AM, Dave Chinner wrote:
-> > No surprise if you have a large filesystem and the filesystem is
-> > changing while xfs_db is running. xfs_db is not coherent with
-> > mounted filesytems, and it is not recommended that you use it that
-> > way.s xfs-db is a debugging tool, not a filesystem state reporting
-> > tool.
+On 06/05/2012 07:54 PM, Dave Chinner wrote:
+> On Fri, May 25, 2012 at 01:03:04PM -0400, Peter Watkins wrote:
+>> On Fri, May 25, 2012 at 2:28 AM, Juerg Haefliger <juergh@gmail.com> wrote:
+
+snip
+
+> At this point, running on a 3.5-rc1 kernel is what we need to get
+> working reliably. Once we have the problems solved there, we can
+> work out what set of patches need to be backported to 3.0-stable and
+> other kernels to fix the problems in those supported kernels...
 > 
-> Ok, thanks, didn't know that.
-> I would like to monitor the fragmentation value for all my mounted XFS.
-> I think I read in previous list messages that also other people are
-> using xfs_db this way. Or is there another way to get the fragmentation
-> value?
 
-No, and what xfs_db reports is mostly useless. You don't have a
-fragmentation problem unless you are noticing performance problems,
-and no fragmentation number will ever tell you that....
+Hi guys,
 
-> I found this segmentation fault error very strange, since I have been
-> using "echo frag | xfs_db -r" for months already on other big
-> filesystems - 2 x 17 TB, 1 x 25 TB, 1 x 20 TB - and NEVER got a
-> segmentation fault. All 4 filessystems are mounted read-write and are in
-> heavy IO use, nevertheless "echo frag | xfs_db -r" runs as expected (by
-> me), no one xfs_db run crashed with a segmentation fault at all for
-> months, running every weekend.
-> It also ran several times without giving any errors on this 80 TB XFS,
-> but then started to throw segmentation faults some weeks ago.
+I've been reproducing a similar stall in my testing of the 're-enable
+xfsaild idle mode' patch/thread that only occurs for me in the xfs tree.
+I was able to do a bisect from rc2 down to commit 43ff2122, though the
+history of this issue makes me wonder if this commit just makes the
+problem more reproducible as opposed to introducing it. Anyways, the
+characteristics I observe so far:
 
-It's entirely possible it is running out of memory, failing to
-capture the failure and dereferencing a null pointer....
+- Task blocked for more than 120s message in xlog_grant_head_wait(). I
+see xfs_sync_worker() in my current bt, but I'm pretty sure I've seen
+the same issue without it involved.
+- The AIL is not empty/idle. It spins with a relatively small and
+constant number of entries (I've seen ~8-40). These items are all always
+marked as "flushing."
+- Via crash, all the inodes in the ail appear to be marked as stale
+(i.e. li_cb == xfs_istale_done). The inode flags are
+XFS_ISTALE|XFS_IRECLAIMABLE|XFS_IFLOCK.
+- The iflock in particular is why the ail marks these items 'flushing'
+and why nothing seems to proceed any further (xfsaild just waits for
+these to complete). I can kick the fs back into action with a 'sync.'
 
-Cheers,
+It looks like we only mark in inode stale when an inode cluster is
+freed, so I repeated this test with 'ikeep' and cannot reproduce. I'm
+not sure if anybody is testing for this in recent kernels (Mark?), but
+if so I'd be curious if ikeep has any effect on your test (BTW, this is
+still the looping 273 xfstest).
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+It seems like there could be some kind of race here with inodes being
+marked stale, but also appears that either completion (xfs_istale_done()
+or xfs_iflush_done()) should release the flush lock. I'll see if I can
+trace it further and get anything useful...
+
+Brian
+
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
