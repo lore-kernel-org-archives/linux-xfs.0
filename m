@@ -1,22 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q564QsFl159856 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 23:26:54 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LT16Y7tHrDPCBC8s for <xfs@oss.sgi.com>;
-	Tue, 05 Jun 2012 21:26:52 -0700 (PDT)
-Date: Wed, 6 Jun 2012 14:26:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
-Message-ID: <20120606042647.GK22848@dastard>
-References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
-	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
-	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
-	<20120525204536.GA4721@sgi.com>
+	q569wlgm197922 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 04:58:47 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id VKFgwSkUluAwbL6h (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 06 Jun 2012 02:58:42 -0700 (PDT)
+Date: Wed, 6 Jun 2012 11:58:27 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120606095827.GA6304@quack.suse.cz>
+References: <20120516130445.GA27661@quack.suse.cz>
+	<20120517074308.GQ25351@dastard>
+	<20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
+	<20120606000636.GG22848@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120525204536.GA4721@sgi.com>
+In-Reply-To: <20120606000636.GG22848@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,74 +35,96 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Fri, May 25, 2012 at 03:45:36PM -0500, Ben Myers wrote:
-> Hey Dave,
+On Wed 06-06-12 10:06:36, Dave Chinner wrote:
+> On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
+> > On Tue 05-06-12 15:51:50, Dave Chinner wrote:
+> > > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> > > > > To me the issue at hand is that we have no method of serialising
+> > > > > multi-page operations on the mapping tree between the filesystem and
+> > > > > the VM, and that seems to be the fundamental problem we face in this
+> > > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > > > > Hence it might be better to try to work out how to fix this entire
+> > > > > class of problems rather than just adding a complex kuldge that just
+> > > > > papers over the current "hot" symptom....
+> > > >   Yes, looking at the above table, the amount of different synchronization
+> > > > mechanisms is really striking. So probably we should look at some
+> > > > possibility of unifying at least some cases.
+> > > 
+> > > It seems to me that we need some thing in between the fine grained
+> > > page lock and the entire-file IO exclusion lock. We need to maintain
+> > > fine grained locking for mmap scalability, but we also need to be
+> > > able to atomically lock ranges of pages.
+> >   Yes, we also need to keep things fine grained to keep scalability of
+> > direct IO and buffered reads...
+> > 
+> > > I guess if we were to nest a fine grained multi-state lock
+> > > inside both the IO exclusion lock and the mmap_sem, we might be able
+> > > to kill all problems in one go.
+> > > 
+> > > Exclusive access on a range needs to be granted to:
+> > > 
+> > > 	- direct IO
+> > > 	- truncate
+> > > 	- hole punch
+> > > 
+> > > so they can be serialised against mmap based page faults, writeback
+> > > and concurrent buffered IO. Serialisation against themselves is an
+> > > IO/fs exclusion problem.
+> > > 
+> > > Shared access for traversal or modification needs to be granted to:
+> > > 
+> > > 	- buffered IO
+> > > 	- mmap page faults
+> > > 	- writeback
+> > > 
+> > > Each of these cases can rely on the existing page locks or IO
+> > > exclusion locks to provide safety for concurrent access to the same
+> > > ranges. This means that once we have access granted to a range we
+> > > can check truncate races once and ignore the problem until we drop
+> > > the access.  And the case of taking a page fault within a buffered
+> > > IO won't deadlock because both take a shared lock....
+> >   You cannot just use a lock (not even a shared one) both above and under
+> > mmap_sem. That is deadlockable in presence of other requests for exclusive
+> > locking...
 > 
-> On Thu, May 24, 2012 at 05:39:52PM -0500, Ben Myers wrote:
-> > Anyway, I'll make some time to work on this tomorrow so I can test it over
-> > the weekend.
+> Well, that's assuming that exclusive lock requests form a barrier to
+> new shared requests. Remember that I'm talking about a range lock
+> here, which we can make up whatever semantics we'd need, including
+> having "shared lock if already locked shared" nested locking
+> semantics which avoids this page-fault-in-buffered-IO-copy-in/out
+> problem....
+  That's true. But if you have semantics like this, constant writing to
+or reading from a file could starve e.g. truncate. So I'd prefer not to
+open this can of worms and keep semantics of rw semaphores if possible.
+
+Furthermore, with direct IO you have to set in stone the ordering of
+mmap_sem and range lock anyway because there we need an exclusive lock.
+
+> It also allows writeback to work the same way it does write now when
+> we take a page fault on a page that is under writeback
+  I'm not sure what would be the difference regardless of which semantics
+we choose...
+
+> > Luckily, with buffered writes the situation isn't that bad. You
+> > need mmap_sem only before each page is processed (in
+> > iov_iter_fault_in_readable()). Later on in the loop we use
+> > iov_iter_copy_from_user_atomic() which doesn't need mmap_sem. So we can
+> > just get our shared lock after iov_iter_fault_in_readable() (or simply
+> > leave it for ->write_begin() if we want to give control over the locking to
+> > filesystems).
 > 
-> This is going to spin over the weekend.  See what you think.
-> 
-> -----------
-> 
-> xfs:  shutdown xfs_sync_worker before the log
-> 
-> Revert commit 1307bbd, which uses the s_umount semaphore to provide
-> exclusion between xfs_sync_worker and unmount, in favor of shutting down
-> the sync worker before freeing the log in xfs_log_unmount.  This is a
-> cleaner way of resolving the race between xfs_sync_worker and unmount
-> than using s_umount.
+> That would probably work as well, but it much more likely that
+> people would get it wrong as opposed to special casing the nested
+> lock semantic in the page fault code...
+  I suppose some helper functions could make this easier...
 
-Looks fine to me.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-Once you commit this, I think I'll do a followup set of patches that
-remove all the problems caused by trying to start and stop unrelated
-functionality in the same place.
-
-I think starting by renaming the xfs-syncd workqueue to the
-xfs_mount_wq because there's nothing "sync" related about it's
-functionality any more.
-
-I'll then kill xfs_syncd_init/stop functions and open code the
-intialisation of the work structures and start them in the
-appropriate places for their functionality. e.g. reclaim work is
-demand started and stops when there's nothing more to do or at
-unmount, the flush work is demand started and we need to complete
-them all at unmount, and the xfssync work is really now "periodic
-log work" so should be started once we complete log recovery
-successfullly and stopped before we tear down the log....
-
-Then I can move the xfs_sync_worker to xfs_log.c and rename it.
-If I then convert xfs_flush_worker to use the generic writeback code
-(writeback_inodes_sb_if_idle) the xfs_sync_data() can go away. That
-means the only user of xfs_inode_ag_iterator is the quotaoff code
-(xfs_qm_dqrele_all_inodes), so it could be moved elsewhere (like
-xfs_inode.c).
-
-Then xfs_quiesce_data() can be moved to xfs-super.c where it can sit
-alongside the two functions that call it, and the same can be done
-for xfs_quiesce_attr().
-
-That will leave only inode cache reclaim functions in xfs_sync.c.
-These are closely aligned to the inode allocation, freeing and cache
-lookup functions in xfs_iget.c, so I'm thinking of merging the two
-into a single file named xfs_inode_cache.c so both xfs_sync.c and
-xfs_iget.c go away.
-
-Thoughts?
-
-Cheers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
