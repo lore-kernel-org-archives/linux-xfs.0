@@ -1,21 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q55Nsp1B138357 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 18:54:51 -0500
+	q5606f6e139232 for <xfs@oss.sgi.com>; Tue, 5 Jun 2012 19:06:41 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	rXc1GNqr6mlucoTr for <xfs@oss.sgi.com>;
-	Tue, 05 Jun 2012 16:54:49 -0700 (PDT)
-Date: Wed, 6 Jun 2012 09:54:47 +1000
+	aB7mfbifB7EIqCiw for <xfs@oss.sgi.com>;
+	Tue, 05 Jun 2012 17:06:39 -0700 (PDT)
+Date: Wed, 6 Jun 2012 10:06:36 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-Message-ID: <20120605235447.GF22848@dastard>
-References: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
-	<CADLDEKsGtsw-rrSOE7gY4T81u+p41b34ixv0B7Dh07afJ73n2w@mail.gmail.com>
-	<CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120606000636.GG22848@dastard>
+References: <20120516021423.GO25351@dastard>
+	<20120516130445.GA27661@quack.suse.cz>
+	<20120517074308.GQ25351@dastard>
+	<20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
+In-Reply-To: <20120605231530.GB4402@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,93 +31,105 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Peter Watkins <treestem@gmail.com>
-Cc: Juerg Haefliger <juergh@gmail.com>, bpm@sgi.com, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
-On Fri, May 25, 2012 at 01:03:04PM -0400, Peter Watkins wrote:
-> On Fri, May 25, 2012 at 2:28 AM, Juerg Haefliger <juergh@gmail.com> wrote:
-> >> Does your kernel have the effect of
-> >>
-> >> 0bf6a5bd4b55b466964ead6fa566d8f346a828ee xfs: convert the xfsaild
-> >> thread to a workqueue
-> >
-> > No.
-> >
-> >
-> >> c7eead1e118fb7e34ee8f5063c3c090c054c3820 xfs: revert to using a
-> >> kthread for AIL pushing
-> >
-> > No.
-> >
-> >
-> >> In particular, is this code in xfs_trans_ail_push:
-> >>
-> >> =A0 =A0 =A0 smp_wmb();
-> >> =A0 =A0 =A0 xfs_trans_ail_copy_lsn(ailp, &ailp->xa_target, &threshold_=
-lsn);
-> >> =A0 =A0 =A0 smp_wmb();
-> >
-> > No. xfs_trans_ail_push looks like this:
-> >
-> > void
-> > xfs_trans_ail_push(
-> > =A0 =A0 =A0 =A0struct xfs_ail =A0*ailp,
-> > =A0 =A0 =A0 =A0xfs_lsn_t =A0 =A0 =A0 threshold_lsn)
-> > {
-> > =A0 =A0 =A0 =A0xfs_log_item_t =A0*lip;
-> >
-> > =A0 =A0 =A0 =A0lip =3D xfs_ail_min(ailp);
-> > =A0 =A0 =A0 =A0if (lip && !XFS_FORCED_SHUTDOWN(ailp->xa_mount)) {
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0if (XFS_LSN_CMP(threshold_lsn, ailp->xa_=
-target) > 0)
-> > =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0xfsaild_wakeup(ailp, thr=
-eshold_lsn);
-> > =A0 =A0 =A0 =A0}
-> > }
-> >
-> >
-> > FWIW, the XFS driver in my kernel is identical to the vanilla 2.6.38
-> > driver. I'm still trying to get a XFS trace from a production hang. I
-> > do have a crash dump from a production machine with /tmp hanging.
-> > Would it be helpful to share that dump?
-> >
-> > ...Juerg
-> =
+On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
+> On Tue 05-06-12 15:51:50, Dave Chinner wrote:
+> > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> > > > To me the issue at hand is that we have no method of serialising
+> > > > multi-page operations on the mapping tree between the filesystem and
+> > > > the VM, and that seems to be the fundamental problem we face in this
+> > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > > > Hence it might be better to try to work out how to fix this entire
+> > > > class of problems rather than just adding a complex kuldge that just
+> > > > papers over the current "hot" symptom....
+> > >   Yes, looking at the above table, the amount of different synchronization
+> > > mechanisms is really striking. So probably we should look at some
+> > > possibility of unifying at least some cases.
+> > 
+> > It seems to me that we need some thing in between the fine grained
+> > page lock and the entire-file IO exclusion lock. We need to maintain
+> > fine grained locking for mmap scalability, but we also need to be
+> > able to atomically lock ranges of pages.
+>   Yes, we also need to keep things fine grained to keep scalability of
+> direct IO and buffered reads...
+> 
+> > I guess if we were to nest a fine grained multi-state lock
+> > inside both the IO exclusion lock and the mmap_sem, we might be able
+> > to kill all problems in one go.
+> > 
+> > Exclusive access on a range needs to be granted to:
+> > 
+> > 	- direct IO
+> > 	- truncate
+> > 	- hole punch
+> > 
+> > so they can be serialised against mmap based page faults, writeback
+> > and concurrent buffered IO. Serialisation against themselves is an
+> > IO/fs exclusion problem.
+> > 
+> > Shared access for traversal or modification needs to be granted to:
+> > 
+> > 	- buffered IO
+> > 	- mmap page faults
+> > 	- writeback
+> > 
+> > Each of these cases can rely on the existing page locks or IO
+> > exclusion locks to provide safety for concurrent access to the same
+> > ranges. This means that once we have access granted to a range we
+> > can check truncate races once and ignore the problem until we drop
+> > the access.  And the case of taking a page fault within a buffered
+> > IO won't deadlock because both take a shared lock....
+>   You cannot just use a lock (not even a shared one) both above and under
+> mmap_sem. That is deadlockable in presence of other requests for exclusive
+> locking...
 
-> It looks like the combined effect of those patches, perhaps the write
-> barriers, fix one log space hang. That problem exists in 2.6.38.
+Well, that's assuming that exclusive lock requests form a barrier to
+new shared requests. Remember that I'm talking about a range lock
+here, which we can make up whatever semantics we'd need, including
+having "shared lock if already locked shared" nested locking
+semantics which avoids this page-fault-in-buffered-IO-copy-in/out
+problem....
 
-There are a huge number of fixes to solve these problems since
-2.6.38. It doesn't help us at all to test anymore on 2.6.38,
-especially as that kernel is not supported, and I'd suggest that you
-migrate production off it sooner rather than later.
+It also allows writeback to work the same way it does write now when
+we take a page fult on a page that is under writeback
 
-> Reading bug #922 I see your test case reproduces in recent kernels, so
-> there must be a newer problem also.
+> Luckily, with buffered writes the situation isn't that bad. You
+> need mmap_sem only before each page is processed (in
+> iov_iter_fault_in_readable()). Later on in the loop we use
+> iov_iter_copy_from_user_atomic() which doesn't need mmap_sem. So we can
+> just get our shared lock after iov_iter_fault_in_readable() (or simply
+> leave it for ->write_begin() if we want to give control over the locking to
+> filesystems).
 
-Right, that's what we need to find - it appears to be a CIL
-stall/accounting leak, completely unrelated to all the other AIL/log
-space stalls that have been occurring. Last thing is that I was
-waiting for more information on the stall that mark T @ sgi was able
-to reproduce. I haven't heard anything from him since I asked for
-more information on May 23....
+That would probably work as well, but it much more likely that
+people would get it wrong as opposed to special casing the nested
+lock semantic in the page fault code...
 
-> I find the reproducer the most useful, so no need to upload the dump.
+> > We'd need some kind of efficient shared/exclusive range lock for
+> > this sort of exclusion, and it's entirely possible that it would
+> > have too much overhead to be acceptible in the page fault path. It's
+> > the best I can think of right now.....
+> >
+> > As it is, a range lock of this kind would be very handy for other
+> > things, too (like the IO exclusion locks so we can do concurrent
+> > buffered writes in XFS ;).
+>   Yes, that's what I thought as well. In particular it should be pretty
+> efficient in locking a single page range because that's going to be
+> majority of calls. I'll try to write something and see how fast it can
+> be...
 
-At this point, running on a 3.5-rc1 kernel is what we need to get
-working reliably. Once we have the problems solved there, we can
-work out what set of patches need to be backported to 3.0-stable and
-other kernels to fix the problems in those supported kernels...
+Cool. :)
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
