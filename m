@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q56A6dx5198922 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 05:06:39 -0500
-Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
-	[80.67.31.97]) by cuda.sgi.com with ESMTP id Eu6Jr9byWYvoL0cH
-	for <xfs@oss.sgi.com>; Wed, 06 Jun 2012 03:06:38 -0700 (PDT)
-Received: from [62.43.225.238] (helo=localhost)
-	by smtprelay05.ispgateway.de with esmtpsa (TLSv1:AES256-SHA:256)
-	(Exim 4.68) (envelope-from <richard.ems@cape-horn-eng.com>)
-	id 1ScD8O-0004O1-RX
-	for xfs@oss.sgi.com; Wed, 06 Jun 2012 12:06:36 +0200
-Message-ID: <4FCF2BAC.6050100@cape-horn-eng.com>
-Date: Wed, 06 Jun 2012 12:06:36 +0200
-From: Richard Ems <richard.ems@cape-horn-eng.com>
+	q56DaNah221852 for <xfs@oss.sgi.com>; Wed, 6 Jun 2012 08:36:24 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	n6F7ilxpxvemCukd for <xfs@oss.sgi.com>;
+	Wed, 06 Jun 2012 06:36:21 -0700 (PDT)
+Date: Wed, 6 Jun 2012 23:36:16 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120606133616.GL22848@dastard>
+References: <20120517074308.GQ25351@dastard>
+	<20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
+	<20120606000636.GG22848@dastard>
+	<20120606095827.GA6304@quack.suse.cz>
 MIME-Version: 1.0
-Subject: Re: Segmentation fault in xfs_db frag, xfsprogs-3.1.8
-References: <4FCC77E1.4030600@cape-horn-eng.com>
-	<20120605234528.GD22848@dastard>
-In-Reply-To: <20120605234528.GD22848@dastard>
+Content-Disposition: inline
+In-Reply-To: <20120606095827.GA6304@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,95 +31,97 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
-On 06/06/2012 01:45 AM, Dave Chinner wrote:
-> No surprise if you have a large filesystem and the filesystem is
-> changing while xfs_db is running. xfs_db is not coherent with
-> mounted filesytems, and it is not recommended that you use it that
-> way.s xfs-db is a debugging tool, not a filesystem state reporting
-> tool.
+On Wed, Jun 06, 2012 at 11:58:27AM +0200, Jan Kara wrote:
+> On Wed 06-06-12 10:06:36, Dave Chinner wrote:
+> > On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
+> > > On Tue 05-06-12 15:51:50, Dave Chinner wrote:
+> > > > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> > > > > > To me the issue at hand is that we have no method of serialising
+> > > > > > multi-page operations on the mapping tree between the filesystem and
+> > > > > > the VM, and that seems to be the fundamental problem we face in this
+> > > > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > > > > > Hence it might be better to try to work out how to fix this entire
+> > > > > > class of problems rather than just adding a complex kuldge that just
+> > > > > > papers over the current "hot" symptom....
+> > > > >   Yes, looking at the above table, the amount of different synchronization
+> > > > > mechanisms is really striking. So probably we should look at some
+> > > > > possibility of unifying at least some cases.
+> > > > 
+> > > > It seems to me that we need some thing in between the fine grained
+> > > > page lock and the entire-file IO exclusion lock. We need to maintain
+> > > > fine grained locking for mmap scalability, but we also need to be
+> > > > able to atomically lock ranges of pages.
+> > >   Yes, we also need to keep things fine grained to keep scalability of
+> > > direct IO and buffered reads...
+> > > 
+> > > > I guess if we were to nest a fine grained multi-state lock
+> > > > inside both the IO exclusion lock and the mmap_sem, we might be able
+> > > > to kill all problems in one go.
+> > > > 
+> > > > Exclusive access on a range needs to be granted to:
+> > > > 
+> > > > 	- direct IO
+> > > > 	- truncate
+> > > > 	- hole punch
+> > > > 
+> > > > so they can be serialised against mmap based page faults, writeback
+> > > > and concurrent buffered IO. Serialisation against themselves is an
+> > > > IO/fs exclusion problem.
+> > > > 
+> > > > Shared access for traversal or modification needs to be granted to:
+> > > > 
+> > > > 	- buffered IO
+> > > > 	- mmap page faults
+> > > > 	- writeback
+> > > > 
+> > > > Each of these cases can rely on the existing page locks or IO
+> > > > exclusion locks to provide safety for concurrent access to the same
+> > > > ranges. This means that once we have access granted to a range we
+> > > > can check truncate races once and ignore the problem until we drop
+> > > > the access.  And the case of taking a page fault within a buffered
+> > > > IO won't deadlock because both take a shared lock....
+> > >   You cannot just use a lock (not even a shared one) both above and under
+> > > mmap_sem. That is deadlockable in presence of other requests for exclusive
+> > > locking...
+> > 
+> > Well, that's assuming that exclusive lock requests form a barrier to
+> > new shared requests. Remember that I'm talking about a range lock
+> > here, which we can make up whatever semantics we'd need, including
+> > having "shared lock if already locked shared" nested locking
+> > semantics which avoids this page-fault-in-buffered-IO-copy-in/out
+> > problem....
+>   That's true. But if you have semantics like this, constant writing to
+> or reading from a file could starve e.g. truncate. So I'd prefer not to
+> open this can of worms and keep semantics of rw semaphores if possible.
 
-Ok, thanks, didn't know that.
-I would like to monitor the fragmentation value for all my mounted XFS.
-I think I read in previous list messages that also other people are
-using xfs_db this way. Or is there another way to get the fragmentation
-value?
+Except truncate uses the i_mutex/i_iolock for exclusion, so it would
+never get held off any more than it already does by buffered IO in
+this case. i.e. the mapping tree range lock is inside the locks used
+for truncate serialisation, so we don't have a situation where other
+operations woul dbe held off by such an IO pattern...
 
+> Furthermore, with direct IO you have to set in stone the ordering of
+> mmap_sem and range lock anyway because there we need an exclusive lock.
 
-I found this segmentation fault error very strange, since I have been
-using "echo frag | xfs_db -r" for months already on other big
-filesystems - 2 x 17 TB, 1 x 25 TB, 1 x 20 TB - and NEVER got a
-segmentation fault. All 4 filessystems are mounted read-write and are in
-heavy IO use, nevertheless "echo frag | xfs_db -r" runs as expected (by
-me), no one xfs_db run crashed with a segmentation fault at all for
-months, running every weekend.
-It also ran several times without giving any errors on this 80 TB XFS,
-but then started to throw segmentation faults some weeks ago.
+Yes, mmap basically requires exclusive mmap_sem->shared range lock ordering. For
+direct IO, we only need the mmap_sem for the get_user_pages() call
+IIRC, so that requires exclusive range lock-> shared mmap_sem
+ordering. Unless we can lift the range lock in the mmap path outside
+the mmap_sem, we're still in the same boat....
 
+Cheers,
 
->> # mount | grep sdc
->> /dev/sdc on /backup/ES-6664 type xfs
->> (rw,noatime,attr2,nobarrier,inode64,logbufs=3D8,logbsize=3D256k,sunit=3D=
-128,swidth=3D3712,noquota,_netdev)
->> /dev/sdc on /backup/ES-6664 type xfs
->> (ro,relatime,attr2,nobarrier,inode64,logbufs=3D8,logbsize=3D256k,sunit=
-=3D128,swidth=3D3712,noquota,_netdev)
->>
->> The FS gets first mounted rw and then bind mounted ro on top of it.
-> =
-
-> That doesn't mean the filesystem is mount read only. The only way to
-> ensure that is to remount it read only, because the bind mount
-> doesn't force file descriptors that are already open to magically
-> diasappear or become read-only.
-
-Yes, thanks! I was just trying to show how the XFS was actually mounted,
-and not stating that it was mounted read-only at all. Perhaps I should
-have explained it better.
-
-
->> # echo frag | /opt/xfsprogs-3.1.8/sbin/xfs_db -r /dev/sdc
->> Segmentation fault
-> =
-
-> and if you clear caches before running xfs_db again?
-
-I will try this. I unmounted the filesystem now and I am running frag,
-but I will later try to reproduce the segmentation fault and then see if
-clearing caches helps.
-
-> =
-
->> Any clues?
-> =
-
-> Not really, but then again you are doing something that really isn't
-> guaranteed to work properly in all cases. Build xfs_db from the
-> latest tree and run it without stripping the binary (i.e. run it
-> from the build tree), capture the core file and get a backtrace of
-> where it failed from xfs_db. more than likely it will point to
-> xfs_db having encountered something that is not entirely metadata
-> anymore...
-
-
-Many thanks Dave for all clarifications!
-
-
-
--- =
-
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
-
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
