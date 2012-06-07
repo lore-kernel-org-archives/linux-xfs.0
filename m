@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q57GoEsX121465 for <xfs@oss.sgi.com>; Thu, 7 Jun 2012 11:50:14 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id hkAAKExWBcgxye1G for
-	<xfs@oss.sgi.com>; Thu, 07 Jun 2012 09:50:13 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q57GoCms012005
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 7 Jun 2012 12:50:13 -0400
-Received: from bfoster.bfoster (dhcp-187-76.bos.redhat.com [10.16.187.76])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q57GoCTZ022995
-	for <xfs@oss.sgi.com>; Thu, 7 Jun 2012 12:50:12 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2] xfs: re-enable xfsaild idle mode and fix associated races
-Date: Thu,  7 Jun 2012 12:49:53 -0400
-Message-Id: <1339087793-45731-1-git-send-email-bfoster@redhat.com>
+	q57LwmSa142166 for <xfs@oss.sgi.com>; Thu, 7 Jun 2012 16:58:49 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id j0oCERkWYLCn3kLm (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 07 Jun 2012 14:58:46 -0700 (PDT)
+Date: Thu, 7 Jun 2012 23:58:35 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120607215835.GB393@quack.suse.cz>
+References: <20120517232829.GA31028@quack.suse.cz>
+	<20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
+	<20120606000636.GG22848@dastard>
+	<20120606095827.GA6304@quack.suse.cz>
+	<20120606133616.GL22848@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120606133616.GL22848@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,109 +31,120 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-xfsaild idle mode logic currently leads to a couple hangs:
+On Wed 06-06-12 23:36:16, Dave Chinner wrote:
+> On Wed, Jun 06, 2012 at 11:58:27AM +0200, Jan Kara wrote:
+> > On Wed 06-06-12 10:06:36, Dave Chinner wrote:
+> > > On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
+> > > > On Tue 05-06-12 15:51:50, Dave Chinner wrote:
+> > > > > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> > > > > > > To me the issue at hand is that we have no method of serialising
+> > > > > > > multi-page operations on the mapping tree between the filesystem and
+> > > > > > > the VM, and that seems to be the fundamental problem we face in this
+> > > > > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > > > > > > Hence it might be better to try to work out how to fix this entire
+> > > > > > > class of problems rather than just adding a complex kuldge that just
+> > > > > > > papers over the current "hot" symptom....
+> > > > > >   Yes, looking at the above table, the amount of different synchronization
+> > > > > > mechanisms is really striking. So probably we should look at some
+> > > > > > possibility of unifying at least some cases.
+> > > > > 
+> > > > > It seems to me that we need some thing in between the fine grained
+> > > > > page lock and the entire-file IO exclusion lock. We need to maintain
+> > > > > fine grained locking for mmap scalability, but we also need to be
+> > > > > able to atomically lock ranges of pages.
+> > > >   Yes, we also need to keep things fine grained to keep scalability of
+> > > > direct IO and buffered reads...
+> > > > 
+> > > > > I guess if we were to nest a fine grained multi-state lock
+> > > > > inside both the IO exclusion lock and the mmap_sem, we might be able
+> > > > > to kill all problems in one go.
+> > > > > 
+> > > > > Exclusive access on a range needs to be granted to:
+> > > > > 
+> > > > > 	- direct IO
+> > > > > 	- truncate
+> > > > > 	- hole punch
+> > > > > 
+> > > > > so they can be serialised against mmap based page faults, writeback
+> > > > > and concurrent buffered IO. Serialisation against themselves is an
+> > > > > IO/fs exclusion problem.
+> > > > > 
+> > > > > Shared access for traversal or modification needs to be granted to:
+> > > > > 
+> > > > > 	- buffered IO
+> > > > > 	- mmap page faults
+> > > > > 	- writeback
+> > > > > 
+> > > > > Each of these cases can rely on the existing page locks or IO
+> > > > > exclusion locks to provide safety for concurrent access to the same
+> > > > > ranges. This means that once we have access granted to a range we
+> > > > > can check truncate races once and ignore the problem until we drop
+> > > > > the access.  And the case of taking a page fault within a buffered
+> > > > > IO won't deadlock because both take a shared lock....
+> > > >   You cannot just use a lock (not even a shared one) both above and under
+> > > > mmap_sem. That is deadlockable in presence of other requests for exclusive
+> > > > locking...
+> > > 
+> > > Well, that's assuming that exclusive lock requests form a barrier to
+> > > new shared requests. Remember that I'm talking about a range lock
+> > > here, which we can make up whatever semantics we'd need, including
+> > > having "shared lock if already locked shared" nested locking
+> > > semantics which avoids this page-fault-in-buffered-IO-copy-in/out
+> > > problem....
+> >   That's true. But if you have semantics like this, constant writing to
+> > or reading from a file could starve e.g. truncate. So I'd prefer not to
+> > open this can of worms and keep semantics of rw semaphores if possible.
+> 
+> Except truncate uses the i_mutex/i_iolock for exclusion, so it would
+> never get held off any more than it already does by buffered IO in
+> this case. i.e. the mapping tree range lock is inside the locks used
+> for truncate serialisation, so we don't have a situation where other
+> operations woul dbe held off by such an IO pattern...
+  True. I was just hoping that i_mutex won't be needed if we get our new
+lock right.
 
-1.) If xfsaild is rescheduled in during an incremental scan
-    (i.e., tout != 0) and the target has been updated since
-    the previous run, we can hit the new target and go into
-    idle mode with a still populated ail.
-2.) A wake up is only issued when the target is pushed forward.
-    The wake up can race with xfsaild if it is currently in the
-    process of entering idle mode, causing future wake up
-    events to be lost.
+> > Furthermore, with direct IO you have to set in stone the ordering of
+> > mmap_sem and range lock anyway because there we need an exclusive lock.
+> 
+> Yes, mmap basically requires exclusive mmap_sem->shared range lock ordering. For
+> direct IO, we only need the mmap_sem for the get_user_pages() call
+> IIRC, so that requires exclusive range lock-> shared mmap_sem
+> ordering. Unless we can lift the range lock in the mmap path outside
+> the mmap_sem, we're still in the same boat....
+  Yes. Just as I said before it is not an unsolvable situation since for
+direct IO we can grab our lock after get_user_pages() call. I was thinking
+about it for a while and I realized, that if we have range lock that we
+take during page fault, buffered IO, direct IO, truncate, punch hole, we
+actually don't need a shared version of it. Just the fact it would be range
+lock is enough to avoid serialization.
 
-Both hangs are reproducible by running xfstests 273 in a loop.
-Modify xfsaild to enter idle mode only when the ail is empty
-and the push target has not been moved forward since the last
-push.
+Also I was thinking that since lock ordering forces our new lock to be
+relatively close to page lock and page lock is serializing quite some of
+IO operations anyway, it might be workable (and actually reasonably easy
+to grasp for developers) if the range lock is coupled with page lock - i.e.
+locking a range will be equivalent to locking each page in a range, except
+that this way you can "lock" pages which are not present and thus forbid
+their creation. Also we could implement the common case of locking a range
+containing single page by just taking page lock so we save modification of
+interval tree in the common case and generally make the tree smaller (of
+course, at the cost of somewhat slowing down cases where we want to lock
+larger ranges).
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
+Using something like this in ext4 should be reasonably easy, we'd just need
+to change some code to move page lock up in locking order to make locking
+of ranges useful. Would it be also usable for XFS?
 
-v2:
-- Fixed up comments in xfsaild() based on Dave Chinner's
-  review.
-
- fs/xfs/xfs_trans_ail.c  |   30 +++++++++++++++++++++++++++---
- fs/xfs/xfs_trans_priv.h |    1 +
- 2 files changed, 28 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 9c51448..881f9c6 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -383,6 +383,12 @@ xfsaild_push(
- 	}
- 
- 	spin_lock(&ailp->xa_lock);
-+
-+	/* barrier matches the xa_target update in xfs_ail_push() */
-+	smp_rmb();
-+	target = ailp->xa_target;
-+	ailp->xa_target_prev = target;
-+
- 	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
- 	if (!lip) {
- 		/*
-@@ -397,7 +403,6 @@ xfsaild_push(
- 	XFS_STATS_INC(xs_push_ail);
- 
- 	lsn = lip->li_lsn;
--	target = ailp->xa_target;
- 	while ((XFS_LSN_CMP(lip->li_lsn, target) <= 0)) {
- 		int	lock_result;
- 
-@@ -527,8 +532,27 @@ xfsaild(
- 			__set_current_state(TASK_KILLABLE);
- 		else
- 			__set_current_state(TASK_INTERRUPTIBLE);
--		schedule_timeout(tout ?
--				 msecs_to_jiffies(tout) : MAX_SCHEDULE_TIMEOUT);
-+
-+		spin_lock(&ailp->xa_lock);
-+
-+		/*
-+		 * Idle if the AIL is empty and we are not racing with a target
-+		 * update. The barrier matches the xa_target update in
-+		 * xfs_ail_push().
-+		 */
-+		smp_rmb();
-+		if (!xfs_ail_min(ailp) && (ailp->xa_target == ailp->xa_target_prev)) {
-+			spin_unlock(&ailp->xa_lock);
-+			schedule();
-+			tout = 0;
-+			continue;
-+		}
-+		spin_unlock(&ailp->xa_lock);
-+
-+		if (tout)
-+			schedule_timeout(msecs_to_jiffies(tout));
-+
-+		__set_current_state(TASK_RUNNING);
- 
- 		try_to_freeze();
- 
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index fb62377..53b7c9b 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -67,6 +67,7 @@ struct xfs_ail {
- 	struct task_struct	*xa_task;
- 	struct list_head	xa_ail;
- 	xfs_lsn_t		xa_target;
-+	xfs_lsn_t		xa_target_prev;
- 	struct list_head	xa_cursors;
- 	spinlock_t		xa_lock;
- 	xfs_lsn_t		xa_last_pushed_lsn;
+								Honza
 -- 
-1.7.7.6
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
