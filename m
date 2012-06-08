@@ -1,18 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58Jo4Co251092 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:50:04 -0500
-Date: Fri, 8 Jun 2012 14:56:47 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: xfs_vm_writepage clear iomap_valid when
-	!buffer_uptodate (REV2)
-Message-ID: <20120608195647.GQ4721@sgi.com>
-References: <20120601192207.D6DE99F997@arenaud-laptop>
-	<20120605114516.GM4347@dastard> <4FCDFCE5.5020702@sgi.com>
-	<4FD253D6.9060909@sgi.com>
+	q58LaXfs001245 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 16:36:33 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id t6rk9cOEo2BEtupX (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 08 Jun 2012 14:36:31 -0700 (PDT)
+Date: Fri, 8 Jun 2012 23:36:29 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120608213629.GA1365@quack.suse.cz>
+References: <20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
+	<20120606000636.GG22848@dastard>
+	<20120606095827.GA6304@quack.suse.cz>
+	<20120606133616.GL22848@dastard>
+	<20120607215835.GB393@quack.suse.cz>
+	<20120608005700.GW4347@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FD253D6.9060909@sgi.com>
+In-Reply-To: <20120608005700.GW4347@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,48 +35,190 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Alain Renaud <arenaud@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Fri, Jun 08, 2012 at 03:34:46PM -0400, Alain Renaud wrote:
+On Fri 08-06-12 10:57:00, Dave Chinner wrote:
+> On Thu, Jun 07, 2012 at 11:58:35PM +0200, Jan Kara wrote:
+> > On Wed 06-06-12 23:36:16, Dave Chinner wrote:
+> > > On Wed, Jun 06, 2012 at 11:58:27AM +0200, Jan Kara wrote:
+> > > > On Wed 06-06-12 10:06:36, Dave Chinner wrote:
+> > > > > On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
+> > > > > > On Tue 05-06-12 15:51:50, Dave Chinner wrote:
+> > > > > > > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> > > > > > > > > To me the issue at hand is that we have no method of serialising
+> > > > > > > > > multi-page operations on the mapping tree between the filesystem and
+> > > > > > > > > the VM, and that seems to be the fundamental problem we face in this
+> > > > > > > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > > > > > > > > Hence it might be better to try to work out how to fix this entire
+> > > > > > > > > class of problems rather than just adding a complex kuldge that just
+> > > > > > > > > papers over the current "hot" symptom....
+> > > > > > > >   Yes, looking at the above table, the amount of different synchronization
+> > > > > > > > mechanisms is really striking. So probably we should look at some
+> > > > > > > > possibility of unifying at least some cases.
+> > > > > > > 
+> > > > > > > It seems to me that we need some thing in between the fine grained
+> > > > > > > page lock and the entire-file IO exclusion lock. We need to maintain
+> > > > > > > fine grained locking for mmap scalability, but we also need to be
+> > > > > > > able to atomically lock ranges of pages.
+> > > > > >   Yes, we also need to keep things fine grained to keep scalability of
+> > > > > > direct IO and buffered reads...
+> > > > > > 
+> > > > > > > I guess if we were to nest a fine grained multi-state lock
+> > > > > > > inside both the IO exclusion lock and the mmap_sem, we might be able
+> > > > > > > to kill all problems in one go.
+> > > > > > > 
+> > > > > > > Exclusive access on a range needs to be granted to:
+> > > > > > > 
+> > > > > > > 	- direct IO
+> > > > > > > 	- truncate
+> > > > > > > 	- hole punch
+> > > > > > > 
+> > > > > > > so they can be serialised against mmap based page faults, writeback
+> > > > > > > and concurrent buffered IO. Serialisation against themselves is an
+> > > > > > > IO/fs exclusion problem.
+> > > > > > > 
+> > > > > > > Shared access for traversal or modification needs to be granted to:
+> > > > > > > 
+> > > > > > > 	- buffered IO
+> > > > > > > 	- mmap page faults
+> > > > > > > 	- writeback
+> > > > > > > 
+> > > > > > > Each of these cases can rely on the existing page locks or IO
+> > > > > > > exclusion locks to provide safety for concurrent access to the same
+> > > > > > > ranges. This means that once we have access granted to a range we
+> > > > > > > can check truncate races once and ignore the problem until we drop
+> > > > > > > the access.  And the case of taking a page fault within a buffered
+> > > > > > > IO won't deadlock because both take a shared lock....
+> > > > > >   You cannot just use a lock (not even a shared one) both above and under
+> > > > > > mmap_sem. That is deadlockable in presence of other requests for exclusive
+> > > > > > locking...
+> > > > > 
+> > > > > Well, that's assuming that exclusive lock requests form a barrier to
+> > > > > new shared requests. Remember that I'm talking about a range lock
+> > > > > here, which we can make up whatever semantics we'd need, including
+> > > > > having "shared lock if already locked shared" nested locking
+> > > > > semantics which avoids this page-fault-in-buffered-IO-copy-in/out
+> > > > > problem....
+> > > >   That's true. But if you have semantics like this, constant writing to
+> > > > or reading from a file could starve e.g. truncate. So I'd prefer not to
+> > > > open this can of worms and keep semantics of rw semaphores if possible.
+> > > 
+> > > Except truncate uses the i_mutex/i_iolock for exclusion, so it would
+> > > never get held off any more than it already does by buffered IO in
+> > > this case. i.e. the mapping tree range lock is inside the locks used
+> > > for truncate serialisation, so we don't have a situation where other
+> > > operations woul dbe held off by such an IO pattern...
+> >   True. I was just hoping that i_mutex won't be needed if we get our new
+> > lock right.
+> > 
+> > > > Furthermore, with direct IO you have to set in stone the ordering of
+> > > > mmap_sem and range lock anyway because there we need an exclusive lock.
+> > > 
+> > > Yes, mmap basically requires exclusive mmap_sem->shared range lock ordering. For
+> > > direct IO, we only need the mmap_sem for the get_user_pages() call
+> > > IIRC, so that requires exclusive range lock-> shared mmap_sem
+> > > ordering. Unless we can lift the range lock in the mmap path outside
+> > > the mmap_sem, we're still in the same boat....
+> >   Yes. Just as I said before it is not an unsolvable situation since for
+> > direct IO we can grab our lock after get_user_pages() call. I was thinking
+> > about it for a while and I realized, that if we have range lock that we
+> > take during page fault, buffered IO, direct IO, truncate, punch hole, we
+> > actually don't need a shared version of it. Just the fact it would be range
+> > lock is enough to avoid serialization.
 > 
->   On filesytems with a block size smaller than PAGE_SIZE we currently have
-> a problem with unwritten extents.  If a we have multi-block page for
-> which an unwritten extent has been allocated, and only some of the
-> buffers have been written to, and they are not contiguous, we can expose
-> stale data from disk in the blocks between the writes after extent
-> conversion.
+> Well, we currently allow overlapping direct IO to the same range in
+> XFS, The order of completion is underfined, just like concurrent IOs
+> to the same sector of a disk, but it basically results in direct IO
+> on an XFS file to behave exactly the same way as concurrent IO to a raw
+> device would....
 > 
-> Example of a page with unwritten and real data.
-> buffer  content
-> 0       empty  b_state = 0
-> 1       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-> 2       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-> 3       empty  b_state = 0
-> 4       empty  b_state = 0
-> 5       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-> 6       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-> 7       empty  b_state = 0
-> 
-> Buffers 1, 2, 5, and 6 have been written to, leaving 0, 3, 4, and 7 empty.
-> Currently buffers 1, 2, 5, and 6 are added to a single ioend, and when IO has
-> completed, extent conversion creates a real extent from block 1 through block
-> 6, leaving 0 and 7 unwritten.  However buffers 3 and 4 were not written to
-> disk, so stale data is exposed from those blocks on a subsequent read.
-> 
-> Fix this by setting iomap_valid = 0 when we find a buffer that is not
-> Uptodate.  This ensures that buffers 5 and 6 are not added to the same
-> ioend as buffers 1 and 2.  Later these blocks will be converted into two
-> separate real extents, leaving the blocks in between unwritten.
-> 
-> Signed-off-by: Alain Renaud <arenaud@sgi.com>
+> Now, that does cause some problems for naive users of direct IO
+> (just like those same naive users mix mmap, buffered and direct IO to
+> the same file), but if we are going to make everything else coherent
+> then I have no problems with dropping this functionality and ony
+> allowing concurrency for non-overlapping requests.
+  Yeah, overlapping direct IO is asking for trouble (except possibly two
+direct IO reads).
 
-Looks good to me.  It was Dave who had the comments so we'll wait for his
-second round before pulling this in.  I think that cleaning up PageUptodate
-xfs_convert_page and here in xfs_vm_writepage are valid suggestions, but are
-better left for a separate patch.
+> The other thing is that concurrent overlapping buffered reads to the
+> same range will only serialise on page locks if the range can be
+> lock shared, so there would be no change in behaviour. Making the
+> range lock exclusive would serialise the overlapping reads at a much
+> higher level and will result in a change of cached read behaviour
+> and potentially a significant reduction in performance. This may be
+> a corner case no-one cares about, but exclusive range locking will
+> definitely impact such a workload....
+  For buffered reads we would lock page-by-page anyway (again due to
+locking constraints with mmap_sem when copying what we've read) so there
+shouldn't be any difference to current level of concurrency.
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+> > Also I was thinking that since lock ordering forces our new lock to be
+> > relatively close to page lock and page lock is serializing quite some of
+> > IO operations anyway,
+> 
+> That's the observation that has led me to call it a "mapping
+> tree" lock.
+  I've internally called the locking function lock_mapping_range() ;).
+
+> > it might be workable (and actually reasonably easy
+> > to grasp for developers) if the range lock is coupled with page lock - i.e.
+> > locking a range will be equivalent to locking each page in a range, except
+> > that this way you can "lock" pages which are not present and thus forbid
+> > their creation.
+> 
+> Nice idea, but I think that is introducing requirements and
+> potential complexity way beyond what we need right now. It's already
+> a complex problem, so lets not make it any harder to validate than
+> it already will be... :/
+> 
+> As it is, we can't "forbid" the creation of pages - we control
+> access to the mapping tree, which allows us to prevent insertion or
+> removal of pages from a given range.  That's exactly how it will
+> serialise DIO against buffered/mmap IO, hole punch/truncate against
+> mmap, and so on. It's a mapping tree access control mechanism, not a
+> page serialisation mechanism...
+  I agree, I was imprecise here and it's good to realize exactly what we
+guard.
+
+> > Also we could implement the common case of locking a range
+> > containing single page by just taking page lock so we save modification of
+> > interval tree in the common case and generally make the tree smaller (of
+> > course, at the cost of somewhat slowing down cases where we want to lock
+> > larger ranges).
+> 
+> That seems like premature optimistion to me, and all the cases I
+> think we need to care about are locking large ranges of the tree.
+> Let's measure what the overhead of tracking everything in a single
+> tree is first so we can then see what needs optimising...
+  Umm, I agree that initially we probably want just to have the mapping
+range lock ability, stick it somewhere to IO path and make things work.
+Then we can look into making it faster / merging with page lock.
+
+However I disagree we care most about locking large ranges. For all
+buffered IO and all page faults we need to lock a range containing just a
+single page. We cannot lock more due to locking constraints with mmap_sem.
+So the places that will lock larger ranges are: direct IO, truncate, punch
+hole. Writeback actually doesn't seem to need any additional protection at
+least as I've sketched out things so far.
+
+So single-page ranges matter at least as much as longer ranges. That's why
+I came up with that page lock optimisation and merging...
+
+> Also, I don't think it can replace the page lock entirely because
+> the page lock as that also serialises against other parts of the VM
+> (e.g. memory reclaim). I'd prefer not to complicate the issue by
+> trying to be fancy - it's going to be hard enough to validate that
+> it works correctly without having to validate that it does not
+> introduce races that were previously prevented by the page lock.
+  So I never meant to completely replace page lock. I agree that will be
+almost impossible. I rather meant to add a capability of locking a range of
+pages. But lets leave that for now.
+ 
+									Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
