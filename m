@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q585dA7E173218 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 00:39:10 -0500
+	q585dBoN173241 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 00:39:11 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	ipVkWyoI4rgDso1P for <xfs@oss.sgi.com>;
-	Thu, 07 Jun 2012 22:39:07 -0700 (PDT)
+	PFX38EBAHE59I3E8 for <xfs@oss.sgi.com>;
+	Thu, 07 Jun 2012 22:39:08 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1ScruK-0004hH-TW
-	for xfs@oss.sgi.com; Fri, 08 Jun 2012 15:38:48 +1000
+	(envelope-from <dave@fromorbit.com>) id 1ScruL-0004hP-15
+	for xfs@oss.sgi.com; Fri, 08 Jun 2012 15:38:49 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1ScruK-0002vi-QR
+	(envelope-from <dave@disappointment.disaster>) id 1ScruK-0002vs-U1
 	for xfs@oss.sgi.com; Fri, 08 Jun 2012 15:38:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 6/9] xfs: support discontiguous buffers in the xfs_buf_log_item
-Date: Fri,  8 Jun 2012 15:38:31 +1000
-Message-Id: <1339133914-11148-7-git-send-email-david@fromorbit.com>
+Subject: [PATCH 9/9] xfs: factor buffer reading from xfs_dir2_leaf_getdents
+Date: Fri,  8 Jun 2012 15:38:34 +1000
+Message-Id: <1339133914-11148-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1339133914-11148-1-git-send-email-david@fromorbit.com>
 References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,552 +35,518 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
->From the perspective of the log, we need to keep each segment of a
-discontigous buffer in separate buffer format structures. This means log
-recovery will recover all the changes on a per segment basis without
-requiring any knowledge of the fact that it was logged from a
-compound buffer.
-
-To do this, we need to be able to determine what buffer segment any
-given offset into the compound buffer sits over. This enables us to
-translate the dirty bitmap in the number of separate buffer format
-structures required.
-
-We also need to be able to determine the number of bitmap elements
-that a given buffer segment has, as this determines the size of the
-buffer format structure. Hence we need to be able to determine the
-both the start offset into the buffer and the length of a given
-segment to be able to calculate this.
-
-With this information, we can preallocate, build and format the
-correct log vector array for each segment in a compound buffer to
-appear exactly the same as individually logged buffers in the log.
+The buffer reading code in xfs_dir2_leaf_getdents is complex and difficult to
+follow due to the readahead and all the context is carries. it is also badly
+indented and so difficult to read. Factor it out into a separate function to
+make it easier to understand and optimise in future patches.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c |  332 +++++++++++++++++++++++++++++++++++--------------
- fs/xfs/xfs_buf_item.h |    2 +
- 2 files changed, 243 insertions(+), 91 deletions(-)
+ fs/xfs/xfs_dir2_leaf.c |  436 ++++++++++++++++++++++++++----------------------
+ 1 file changed, 234 insertions(+), 202 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 22ce073..465d9cd 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -153,33 +153,25 @@ STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
-  * If the XFS_BLI_STALE flag has been set, then log nothing.
-  */
- STATIC uint
--xfs_buf_item_size(
--	struct xfs_log_item	*lip)
-+xfs_buf_item_size_segment(
-+	struct xfs_buf_log_item	*bip,
-+	struct xfs_buf_log_format *blfp)
- {
--	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
- 	struct xfs_buf		*bp = bip->bli_buf;
- 	uint			nvecs;
- 	int			next_bit;
- 	int			last_bit;
- 
--	ASSERT(atomic_read(&bip->bli_refcount) > 0);
--	if (bip->bli_flags & XFS_BLI_STALE) {
--		/*
--		 * The buffer is stale, so all we need to log
--		 * is the buf log format structure with the
--		 * cancel flag in it.
--		 */
--		trace_xfs_buf_item_size_stale(bip);
--		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
--		return 1;
--	}
-+	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
-+	if (last_bit == -1)
-+		return 0;
-+
-+	/*
-+	 * initial count for a dirty buffer is 2 vectors - the format structure
-+	 * and the first dirty region.
-+	 */
-+	nvecs = 2;
- 
--	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
--	nvecs = 1;
--	last_bit = xfs_next_bit(bip->bli_format.blf_data_map,
--					 bip->bli_format.blf_map_size, 0);
--	ASSERT(last_bit != -1);
--	nvecs++;
- 	while (last_bit != -1) {
- 		/*
- 		 * This takes the bit number to start looking from and
-@@ -187,16 +179,15 @@ xfs_buf_item_size(
- 		 * if there are no more bits set or the start bit is
- 		 * beyond the end of the bitmap.
- 		 */
--		next_bit = xfs_next_bit(bip->bli_format.blf_data_map,
--						 bip->bli_format.blf_map_size,
--						 last_bit + 1);
-+		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
-+					last_bit + 1);
- 		/*
- 		 * If we run out of bits, leave the loop,
- 		 * else if we find a new set of bits bump the number of vecs,
- 		 * else keep scanning the current set of bits.
- 		 */
- 		if (next_bit == -1) {
--			last_bit = -1;
-+			break;
- 		} else if (next_bit != last_bit + 1) {
- 			last_bit = next_bit;
- 			nvecs++;
-@@ -210,22 +201,73 @@ xfs_buf_item_size(
- 		}
- 	}
- 
--	trace_xfs_buf_item_size(bip);
- 	return nvecs;
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 69accf6..dbe8845 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -759,6 +759,222 @@ xfs_dir2_leaf_compact_x1(
+ 	*highstalep = highstale;
  }
  
- /*
-- * This is called to fill in the vector of log iovecs for the
-- * given log buf item.  It fills the first entry with a buf log
-- * format structure, and the rest point to contiguous chunks
-- * within the buffer.
-+ * This returns the number of log iovecs needed to log the given buf log item.
-+ *
-+ * It calculates this as 1 iovec for the buf log format structure and 1 for each
-+ * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
-+ * in a single iovec.
-+ *
-+ * Discontiguous buffers need a format structure per region that that is being
-+ * logged. This makes the changes in the buffer appear to log recovery as though
-+ * they came from separate buffers, just like would occur if multiple buffers
-+ * were used instead of a single discontiguous buffer. This enables
-+ * discontiguous buffers to be in-memory constructs, completely transparent to
-+ * what ends up on disk.
-+ *
-+ * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
-+ * format structures.
-  */
--STATIC void
--xfs_buf_item_format(
--	struct xfs_log_item	*lip,
--	struct xfs_log_iovec	*vecp)
-+STATIC uint
-+xfs_buf_item_size(
-+	struct xfs_log_item	*lip)
- {
- 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
-+	uint			nvecs;
-+	int			i;
++struct _map_info {
++	xfs_bmbt_irec_t	*map;		/* map vector for blocks */
++	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
++	xfs_dablk_t	map_off;	/* last mapped file offset */
++	int		map_size;	/* total entries in *map */
++	int		map_valid;	/* valid entries in *map */
++	int		nmap;		/* mappings to ask xfs_bmapi */
++	xfs_dir2_db_t	curdb;		/* db for current block */
++};
 +
-+	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-+	if (bip->bli_flags & XFS_BLI_STALE) {
-+		/*
-+		 * The buffer is stale, so all we need to log
-+		 * is the buf log format structure with the
-+		 * cancel flag in it.
-+		 */
-+		trace_xfs_buf_item_size_stale(bip);
-+		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
-+		return bip->bli_format_count;
-+	}
++struct _ra_info {
++	int		ra_current;	/* number of read-ahead blks */
++	int		ra_index;	/* *map index for read-ahead */
++	int		ra_offset;	/* map entry offset for ra */
++	int		ra_want;	/* readahead count wanted */
++};
 +
-+	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
-+
-+	/*
-+	 * the vector count is based on the number of buffer vectors we have
-+	 * dirty bits in. This will only be greater than one when we have a
-+	 * compound buffer with more than one segment dirty. Hence for compound
-+	 * buffers we need to track which segment the dirty bits correspond to,
-+	 * and when we move from one segment to the next increment the vector
-+	 * count for the extra buf log format structure that will need to be
-+	 * written.
-+	 */
-+	nvecs = 0;
-+	for (i = 0; i < bip->bli_format_count; i++) {
-+		nvecs += xfs_buf_item_size_segment(bip, &bip->bli_formats[i]);
-+	}
-+
-+	trace_xfs_buf_item_size(bip);
-+	return nvecs;
-+}
-+
-+static struct xfs_log_iovec *
-+xfs_buf_item_format_segment(
-+	struct xfs_buf_log_item	*bip,
-+	struct xfs_log_iovec	*vecp,
-+	uint			offset,
-+	struct xfs_buf_log_format *blfp)
-+{
- 	struct xfs_buf	*bp = bip->bli_buf;
- 	uint		base_size;
- 	uint		nvecs;
-@@ -235,9 +277,8 @@ xfs_buf_item_format(
- 	uint		nbits;
- 	uint		buffer_offset;
- 
--	ASSERT(atomic_read(&bip->bli_refcount) > 0);
--	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
--	       (bip->bli_flags & XFS_BLI_STALE));
-+	/* copy the flags across from the base format item */
-+	blfp->blf_flags = bip->bli_format.blf_flags;
- 
- 	/*
- 	 * Base size is the actual size of the ondisk structure - it reflects
-@@ -248,26 +289,12 @@ xfs_buf_item_format(
- 	base_size = sizeof(struct xfs_buf_log_format) -
- 		    ((XFS_BLF_DATAMAP_SIZE - bip->bli_format.blf_map_size) *
- 								sizeof(uint));
--	vecp->i_addr = &bip->bli_format;
-+	vecp->i_addr = blfp;
- 	vecp->i_len = base_size;
- 	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
- 	vecp++;
- 	nvecs = 1;
- 
--	/*
--	 * If it is an inode buffer, transfer the in-memory state to the
--	 * format flags and clear the in-memory state. We do not transfer
--	 * this state if the inode buffer allocation has not yet been committed
--	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
--	 * correct replay of the inode allocation.
--	 */
--	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
--		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
--		      xfs_log_item_in_current_chkpt(lip)))
--			bip->bli_format.blf_flags |= XFS_BLF_INODE_BUF;
--		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
--	}
--
- 	if (bip->bli_flags & XFS_BLI_STALE) {
- 		/*
- 		 * The buffer is stale, so all we need to log
-@@ -275,16 +302,15 @@ xfs_buf_item_format(
- 		 * cancel flag in it.
- 		 */
- 		trace_xfs_buf_item_format_stale(bip);
--		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
--		bip->bli_format.blf_size = nvecs;
--		return;
-+		ASSERT(blfp->blf_flags & XFS_BLF_CANCEL);
-+		blfp->blf_size = nvecs;
-+		return vecp;
- 	}
- 
- 	/*
- 	 * Fill in an iovec for each set of contiguous chunks.
- 	 */
--	first_bit = xfs_next_bit(bip->bli_format.blf_data_map,
--					 bip->bli_format.blf_map_size, 0);
-+	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
- 	ASSERT(first_bit != -1);
- 	last_bit = first_bit;
- 	nbits = 1;
-@@ -295,9 +321,8 @@ xfs_buf_item_format(
- 		 * if there are no more bits set or the start bit is
- 		 * beyond the end of the bitmap.
- 		 */
--		next_bit = xfs_next_bit(bip->bli_format.blf_data_map,
--						 bip->bli_format.blf_map_size,
--						 (uint)last_bit + 1);
-+		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
-+					(uint)last_bit + 1);
- 		/*
- 		 * If we run out of bits fill in the last iovec and get
- 		 * out of the loop.
-@@ -308,14 +333,14 @@ xfs_buf_item_format(
- 		 * keep counting and scanning.
- 		 */
- 		if (next_bit == -1) {
--			buffer_offset = first_bit * XFS_BLF_CHUNK;
-+			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
- 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
- 			vecp->i_len = nbits * XFS_BLF_CHUNK;
- 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
- 			nvecs++;
- 			break;
- 		} else if (next_bit != last_bit + 1) {
--			buffer_offset = first_bit * XFS_BLF_CHUNK;
-+			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
- 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
- 			vecp->i_len = nbits * XFS_BLF_CHUNK;
- 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
-@@ -324,14 +349,17 @@ xfs_buf_item_format(
- 			first_bit = next_bit;
- 			last_bit = next_bit;
- 			nbits = 1;
--		} else if (xfs_buf_offset(bp, next_bit << XFS_BLF_SHIFT) !=
--			   (xfs_buf_offset(bp, last_bit << XFS_BLF_SHIFT) +
-+		} else if (xfs_buf_offset(bp, offset +
-+					      (next_bit << XFS_BLF_SHIFT)) !=
-+			   (xfs_buf_offset(bp, offset +
-+					       (last_bit << XFS_BLF_SHIFT)) +
- 			    XFS_BLF_CHUNK)) {
--			buffer_offset = first_bit * XFS_BLF_CHUNK;
-+			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
- 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
- 			vecp->i_len = nbits * XFS_BLF_CHUNK;
- 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
--/* You would think we need to bump the nvecs here too, but we do not
-+/*
-+ * You would think we need to bump the nvecs here too, but we do not
-  * this number is used by recovery, and it gets confused by the boundary
-  * split here
-  *			nvecs++;
-@@ -346,6 +374,48 @@ xfs_buf_item_format(
- 		}
- 	}
- 	bip->bli_format.blf_size = nvecs;
-+	return vecp;
-+}
-+
-+/*
-+ * This is called to fill in the vector of log iovecs for the
-+ * given log buf item.  It fills the first entry with a buf log
-+ * format structure, and the rest point to contiguous chunks
-+ * within the buffer.
-+ */
-+STATIC void
-+xfs_buf_item_format(
-+	struct xfs_log_item	*lip,
-+	struct xfs_log_iovec	*vecp)
-+{
-+	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
-+	struct xfs_buf		*bp = bip->bli_buf;
-+	uint			offset = 0;
-+	int			i;
-+
-+	ASSERT(atomic_read(&bip->bli_refcount) > 0);
-+	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
-+	       (bip->bli_flags & XFS_BLI_STALE));
-+
-+	/*
-+	 * If it is an inode buffer, transfer the in-memory state to the
-+	 * format flags and clear the in-memory state. We do not transfer
-+	 * this state if the inode buffer allocation has not yet been committed
-+	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
-+	 * correct replay of the inode allocation.
-+	 */
-+	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
-+		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
-+		      xfs_log_item_in_current_chkpt(lip)))
-+			bip->bli_format.blf_flags |= XFS_BLF_INODE_BUF;
-+		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
-+	}
-+
-+	for (i = 0; i < bip->bli_format_count; i++) {
-+		vecp = xfs_buf_item_format_segment(bip, vecp, offset,
-+						&bip->bli_formats[i]);
-+		offset += bp->b_maps[i].bm_len;
-+	}
- 
- 	/*
- 	 * Check to make sure everything is consistent.
-@@ -621,6 +691,35 @@ static const struct xfs_item_ops xfs_buf_item_ops = {
- 	.iop_committing = xfs_buf_item_committing
- };
- 
 +STATIC int
-+xfs_buf_item_get_format(
-+	struct xfs_buf_log_item	*bip,
-+	int			count)
++xfs_dir2_leaf_readbuf(
++	struct xfs_inode	*dp,
++	size_t			bufsize,
++	struct _map_info	*mip,
++	struct _ra_info		*rap,
++	xfs_dir2_off_t		*curoff,
++	struct xfs_buf		**bpp)
 +{
-+	ASSERT(bip->bli_formats == NULL);
-+	bip->bli_format_count = count;
-+
-+	if (count == 1) {
-+		bip->bli_formats = &bip->bli_format;
-+		return 0;
-+	}
-+
-+	bip->bli_formats = kmem_zalloc(count * sizeof(struct xfs_buf_log_format),
-+				KM_SLEEP);
-+	if (!bip->bli_formats)
-+		return ENOMEM;
-+	return 0;
-+}
-+
-+STATIC void
-+xfs_buf_item_free_format(
-+	struct xfs_buf_log_item	*bip)
-+{
-+	if (bip->bli_formats != &bip->bli_format) {
-+		kmem_free(bip->bli_formats);
-+		bip->bli_formats = NULL;
-+	}
-+}
- 
- /*
-  * Allocate a new buf log item to go with the given buffer.
-@@ -638,6 +737,8 @@ xfs_buf_item_init(
- 	xfs_buf_log_item_t	*bip;
- 	int			chunks;
- 	int			map_size;
-+	int			error;
++	struct xfs_mount	*mp = dp->i_mount;
++	struct xfs_buf		*bp = *bpp;
++	struct xfs_bmbt_irec	*map = mip->map;
++	int			error = 0;
++	int			length;
 +	int			i;
- 
- 	/*
- 	 * Check to see if there is already a buf log item for
-@@ -649,25 +750,33 @@ xfs_buf_item_init(
- 	if (lip != NULL && lip->li_type == XFS_LI_BUF)
- 		return;
- 
--	/*
--	 * chunks is the number of XFS_BLF_CHUNK size pieces
--	 * the buffer can be divided into. Make sure not to
--	 * truncate any pieces.  map_size is the size of the
--	 * bitmap needed to describe the chunks of the buffer.
--	 */
--	chunks = (int)((BBTOB(bp->b_length) + (XFS_BLF_CHUNK - 1)) >>
--								XFS_BLF_SHIFT);
--	map_size = (int)((chunks + NBWORD) >> BIT_TO_WORD_SHIFT);
--
--	bip = (xfs_buf_log_item_t*)kmem_zone_zalloc(xfs_buf_item_zone,
--						    KM_SLEEP);
-+	bip = kmem_zone_zalloc(xfs_buf_item_zone, KM_SLEEP);
- 	xfs_log_item_init(mp, &bip->bli_item, XFS_LI_BUF, &xfs_buf_item_ops);
- 	bip->bli_buf = bp;
- 	xfs_buf_hold(bp);
--	bip->bli_format.blf_type = XFS_LI_BUF;
--	bip->bli_format.blf_blkno = (__int64_t)XFS_BUF_ADDR(bp);
--	bip->bli_format.blf_len = (ushort)bp->b_length;
--	bip->bli_format.blf_map_size = map_size;
++	int			j;
 +
 +	/*
-+	 * chunks is the number of XFS_BLF_CHUNK size pieces the buffer
-+	 * can be divided into. Make sure not to truncate any pieces.
-+	 * map_size is the size of the bitmap needed to describe the
-+	 * chunks of the buffer.
-+	 *
-+	 * Discontiguous buffer support follows the layout of the underlying
-+	 * buffer. This makes the implementation as simple as possible.
++	 * If we have a buffer, we need to release it and
++	 * take it out of the mapping.
 +	 */
-+	error = xfs_buf_item_get_format(bip, bp->b_map_count);
-+	ASSERT(error == 0);
 +
-+	for (i = 0; i < bip->bli_format_count; i++) {
-+		chunks = DIV_ROUND_UP(BBTOB(bp->b_maps[i].bm_len),
-+				      XFS_BLF_CHUNK);
-+		map_size = DIV_ROUND_UP(chunks, NBWORD);
-+
-+		bip->bli_formats[i].blf_type = XFS_LI_BUF;
-+		bip->bli_formats[i].blf_blkno = bp->b_maps[i].bm_bn;
-+		bip->bli_formats[i].blf_len = bp->b_maps[i].bm_len;
-+		bip->bli_formats[i].blf_map_size = map_size;
-+	}
- 
- #ifdef XFS_TRANS_DEBUG
- 	/*
-@@ -698,10 +807,11 @@ xfs_buf_item_init(
-  * item's bitmap.
-  */
- void
--xfs_buf_item_log(
--	xfs_buf_log_item_t	*bip,
-+xfs_buf_item_log_segment(
-+	struct xfs_buf_log_item	*bip,
- 	uint			first,
--	uint			last)
-+	uint			last,
-+	uint			*map)
- {
- 	uint		first_bit;
- 	uint		last_bit;
-@@ -714,12 +824,6 @@ xfs_buf_item_log(
- 	uint		mask;
- 
- 	/*
--	 * Mark the item as having some dirty data for
--	 * quick reference in xfs_buf_item_dirty.
--	 */
--	bip->bli_flags |= XFS_BLI_DIRTY;
--
--	/*
- 	 * Convert byte offsets to bit numbers.
- 	 */
- 	first_bit = first >> XFS_BLF_SHIFT;
-@@ -735,7 +839,7 @@ xfs_buf_item_log(
- 	 * to set a bit in.
- 	 */
- 	word_num = first_bit >> BIT_TO_WORD_SHIFT;
--	wordp = &(bip->bli_format.blf_data_map[word_num]);
-+	wordp = &map[word_num];
- 
- 	/*
- 	 * Calculate the starting bit in the first word.
-@@ -782,6 +886,51 @@ xfs_buf_item_log(
- 	xfs_buf_item_log_debug(bip, first, last);
- }
- 
-+/*
-+ * Mark bytes first through last inclusive as dirty in the buf
-+ * item's bitmap.
-+ */
-+void
-+xfs_buf_item_log(
-+	xfs_buf_log_item_t	*bip,
-+	uint			first,
-+	uint			last)
-+{
-+	int			i;
-+	uint			start;
-+	uint			end;
-+	struct xfs_buf		*bp = bip->bli_buf;
-+
-+	/*
-+	 * Mark the item as having some dirty data for
-+	 * quick reference in xfs_buf_item_dirty.
-+	 */
-+	bip->bli_flags |= XFS_BLI_DIRTY;
-+
-+	/*
-+	 * walk each buffer segment and mark them dirty appropriately.
-+	 */
-+	start = 0;
-+	for (i = 0; i < bip->bli_format_count; i++) {
-+		if (start > last)
-+			break;
-+		end = start + BBTOB(bp->b_maps[i].bm_len);
-+		if (first > end) {
-+			start += BBTOB(bp->b_maps[i].bm_len);
-+			continue;
++	if (bp) {
++		xfs_trans_brelse(NULL, bp);
++		bp = NULL;
++		mip->map_blocks -= mp->m_dirblkfsbs;
++		/*
++		 * Loop to get rid of the extents for the
++		 * directory block.
++		 */
++		for (i = mp->m_dirblkfsbs; i > 0; ) {
++			j = min_t(int, map->br_blockcount, i);
++			map->br_blockcount -= j;
++			map->br_startblock += j;
++			map->br_startoff += j;
++			/*
++			 * If mapping is done, pitch it from
++			 * the table.
++			 */
++			if (!map->br_blockcount && --mip->map_valid)
++				memmove(&map[0], &map[1],
++					sizeof(map[0]) * mip->map_valid);
++			i -= j;
 +		}
-+		if (first < start)
-+			first = start;
-+		if (end > last)
-+			end = last;
-+
-+		xfs_buf_item_log_segment(bip, first, end,
-+					 &bip->bli_formats[i].blf_data_map[0]);
-+
-+		start += bp->b_maps[i].bm_len;
 +	}
++
++	/*
++	 * Recalculate the readahead blocks wanted.
++	 */
++	rap->ra_want = howmany(bufsize + mp->m_dirblksize,
++			       mp->m_sb.sb_blocksize) - 1;
++	ASSERT(rap->ra_want >= 0);
++
++	/*
++	 * If we don't have as many as we want, and we haven't
++	 * run out of data blocks, get some more mappings.
++	 */
++	if (1 + rap->ra_want > mip->map_blocks &&
++	    mip->map_off < xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
++		/*
++		 * Get more bmaps, fill in after the ones
++		 * we already have in the table.
++		 */
++		mip->nmap = mip->map_size - mip->map_valid;
++		error = xfs_bmapi_read(dp, mip->map_off,
++				xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET) -
++								mip->map_off,
++				&map[mip->map_valid], &mip->nmap, 0);
++
++		/*
++		 * Don't know if we should ignore this or try to return an
++		 * error.  The trouble with returning errors is that readdir
++		 * will just stop without actually passing the error through.
++		 */
++		if (error)
++			goto out;	/* XXX */
++
++		/*
++		 * If we got all the mappings we asked for, set the final map
++		 * offset based on the last bmap value received.  Otherwise,
++		 * we've reached the end.
++		 */
++		if (mip->nmap == mip->map_size - mip->map_valid) {
++			i = mip->map_valid + mip->nmap - 1;
++			mip->map_off = map[i].br_startoff + map[i].br_blockcount;
++		} else
++			mip->map_off = xfs_dir2_byte_to_da(mp,
++							XFS_DIR2_LEAF_OFFSET);
++
++		/*
++		 * Look for holes in the mapping, and eliminate them.  Count up
++		 * the valid blocks.
++		 */
++		for (i = mip->map_valid; i < mip->map_valid + mip->nmap; ) {
++			if (map[i].br_startblock == HOLESTARTBLOCK) {
++				mip->nmap--;
++				length = mip->map_valid + mip->nmap - i;
++				if (length)
++					memmove(&map[i], &map[i + 1],
++						sizeof(map[i]) * length);
++			} else {
++				mip->map_blocks += map[i].br_blockcount;
++				i++;
++			}
++		}
++		mip->map_valid += mip->nmap;
++	}
++
++	/*
++	 * No valid mappings, so no more data blocks.
++	 */
++	if (!mip->map_valid) {
++		*curoff = xfs_dir2_da_to_byte(mp, mip->map_off);
++		goto out;
++	}
++
++	/*
++	 * Read the directory block starting at the first mapping.
++	 */
++	mip->curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
++	error = xfs_da_read_buf(NULL, dp, map->br_startoff,
++			map->br_blockcount >= mp->m_dirblkfsbs ?
++			    XFS_FSB_TO_DADDR(mp, map->br_startblock) : -1,
++			&bp, XFS_DATA_FORK);
++
++	/*
++	 * Should just skip over the data block instead of giving up.
++	 */
++	if (error)
++		goto out;	/* XXX */
++
++	/*
++	 * Adjust the current amount of read-ahead: we just read a block that
++	 * was previously ra.
++	 */
++	if (rap->ra_current)
++		rap->ra_current -= mp->m_dirblkfsbs;
++
++	/*
++	 * Do we need more readahead?
++	 */
++	for (rap->ra_index = rap->ra_offset = i = 0;
++	     rap->ra_want > rap->ra_current && i < mip->map_blocks;
++	     i += mp->m_dirblkfsbs) {
++		ASSERT(rap->ra_index < mip->map_valid);
++		/*
++		 * Read-ahead a contiguous directory block.
++		 */
++		if (i > rap->ra_current &&
++		    map[rap->ra_index].br_blockcount >= mp->m_dirblkfsbs) {
++			xfs_buf_readahead(mp->m_ddev_targp,
++				XFS_FSB_TO_DADDR(mp,
++					map[rap->ra_index].br_startblock +
++							rap->ra_offset),
++				(int)BTOBB(mp->m_dirblksize));
++			rap->ra_current = i;
++		}
++
++		/*
++		 * Read-ahead a non-contiguous directory block.  This doesn't
++		 * use our mapping, but this is a very rare case.
++		 */
++		else if (i > rap->ra_current) {
++			xfs_da_reada_buf(NULL, dp,
++					map[rap->ra_index].br_startoff +
++							rap->ra_offset,
++					XFS_DATA_FORK);
++			rap->ra_current = i;
++		}
++
++		/*
++		 * Advance offset through the mapping table.
++		 */
++		for (j = 0; j < mp->m_dirblkfsbs; j++) {
++			/*
++			 * The rest of this extent but not more than a dir
++			 * block.
++			 */
++			length = min_t(int, mp->m_dirblkfsbs,
++					map[rap->ra_index].br_blockcount -
++							rap->ra_offset);
++			j += length;
++			rap->ra_offset += length;
++
++			/*
++			 * Advance to the next mapping if this one is used up.
++			 */
++			if (rap->ra_offset == map[rap->ra_index].br_blockcount) {
++				rap->ra_offset = 0;
++				rap->ra_index++;
++			}
++		}
++	}
++
++out:
++	*bpp = bp;
++	return error;
 +}
 +
- 
  /*
-  * Return 1 if the buffer has some data that has been logged (at any
-@@ -803,6 +952,7 @@ xfs_buf_item_free(
- 	kmem_free(bip->bli_logged);
- #endif /* XFS_TRANS_DEBUG */
+  * Getdents (readdir) for leaf and node directories.
+  * This reads the data blocks only, so is the same for both forms.
+@@ -771,30 +987,19 @@ xfs_dir2_leaf_getdents(
+ 	xfs_off_t		*offset,
+ 	filldir_t		filldir)
+ {
+-	struct xfs_buf		*bp;		/* data block buffer */
+-	int			byteoff;	/* offset in current block */
+-	xfs_dir2_db_t		curdb;		/* db for current block */
+-	xfs_dir2_off_t		curoff;		/* current overall offset */
++	struct xfs_buf		*bp = NULL;	/* data block buffer */
+ 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
+ 	xfs_dir2_data_entry_t	*dep;		/* data entry */
+ 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
+ 	int			error = 0;	/* error return value */
+-	int			i;		/* temporary loop index */
+-	int			j;		/* temporary loop index */
+ 	int			length;		/* temporary length value */
+-	xfs_bmbt_irec_t		*map;		/* map vector for blocks */
+-	xfs_extlen_t		map_blocks;	/* number of fsbs in map */
+-	xfs_dablk_t		map_off;	/* last mapped file offset */
+-	int			map_size;	/* total entries in *map */
+-	int			map_valid;	/* valid entries in *map */
+ 	xfs_mount_t		*mp;		/* filesystem mount point */
++	int			byteoff;	/* offset in current block */
++	xfs_dir2_off_t		curoff;		/* current overall offset */
+ 	xfs_dir2_off_t		newoff;		/* new curoff after new blk */
+-	int			nmap;		/* mappings to ask xfs_bmapi */
+ 	char			*ptr = NULL;	/* pointer to current data */
+-	int			ra_current;	/* number of read-ahead blks */
+-	int			ra_index;	/* *map index for read-ahead */
+-	int			ra_offset;	/* map entry offset for ra */
+-	int			ra_want;	/* readahead count wanted */
++	struct _map_info	map_info = {};
++	struct _ra_info		ra_info = {};
  
-+	xfs_buf_item_free_format(bip);
- 	kmem_zone_free(xfs_buf_item_zone, bip);
- }
+ 	/*
+ 	 * If the offset is at or past the largest allowed value,
+@@ -810,10 +1015,10 @@ xfs_dir2_leaf_getdents(
+ 	 * buffer size, the directory block size, and the filesystem
+ 	 * block size.
+ 	 */
+-	map_size = howmany(bufsize + mp->m_dirblksize, mp->m_sb.sb_blocksize);
+-	map = kmem_alloc(map_size * sizeof(*map), KM_SLEEP);
+-	map_valid = ra_index = ra_offset = ra_current = map_blocks = 0;
+-	bp = NULL;
++	map_info.map_size = howmany(bufsize + mp->m_dirblksize,
++				     mp->m_sb.sb_blocksize);
++	map_info.map = kmem_zalloc(map_info.map_size *
++					sizeof(struct xfs_bmbt_irec), KM_SLEEP);
  
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index ff26867..6850f49 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -102,6 +102,8 @@ typedef struct xfs_buf_log_item {
- 	char			*bli_orig;	/* original buffer copy */
- 	char			*bli_logged;	/* bytes logged (bitmap) */
- #endif
-+	int			bli_format_count;	/* count of headers */
-+	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
- 	struct xfs_buf_log_format bli_format;	/* embedded in-log header */
- } xfs_buf_log_item_t;
+ 	/*
+ 	 * Inside the loop we keep the main offset value as a byte offset
+@@ -825,7 +1030,8 @@ xfs_dir2_leaf_getdents(
+ 	 * Force this conversion through db so we truncate the offset
+ 	 * down to get the start of the data block.
+ 	 */
+-	map_off = xfs_dir2_db_to_da(mp, xfs_dir2_byte_to_db(mp, curoff));
++	map_info.map_off = xfs_dir2_db_to_da(mp, xfs_dir2_byte_to_db(mp, curoff));
++
+ 	/*
+ 	 * Loop over directory entries until we reach the end offset.
+ 	 * Get more blocks and readahead as necessary.
+@@ -836,190 +1042,16 @@ xfs_dir2_leaf_getdents(
+ 		 * current buffer, need to get another one.
+ 		 */
+ 		if (!bp || ptr >= (char *)bp->b_addr + mp->m_dirblksize) {
+-			/*
+-			 * If we have a buffer, we need to release it and
+-			 * take it out of the mapping.
+-			 */
+-			if (bp) {
+-				xfs_trans_brelse(NULL, bp);
+-				bp = NULL;
+-				map_blocks -= mp->m_dirblkfsbs;
+-				/*
+-				 * Loop to get rid of the extents for the
+-				 * directory block.
+-				 */
+-				for (i = mp->m_dirblkfsbs; i > 0; ) {
+-					j = MIN((int)map->br_blockcount, i);
+-					map->br_blockcount -= j;
+-					map->br_startblock += j;
+-					map->br_startoff += j;
+-					/*
+-					 * If mapping is done, pitch it from
+-					 * the table.
+-					 */
+-					if (!map->br_blockcount && --map_valid)
+-						memmove(&map[0], &map[1],
+-							sizeof(map[0]) *
+-							map_valid);
+-					i -= j;
+-				}
+-			}
+-			/*
+-			 * Recalculate the readahead blocks wanted.
+-			 */
+-			ra_want = howmany(bufsize + mp->m_dirblksize,
+-					  mp->m_sb.sb_blocksize) - 1;
+-			ASSERT(ra_want >= 0);
  
+-			/*
+-			 * If we don't have as many as we want, and we haven't
+-			 * run out of data blocks, get some more mappings.
+-			 */
+-			if (1 + ra_want > map_blocks &&
+-			    map_off <
+-			    xfs_dir2_byte_to_da(mp, XFS_DIR2_LEAF_OFFSET)) {
+-				/*
+-				 * Get more bmaps, fill in after the ones
+-				 * we already have in the table.
+-				 */
+-				nmap = map_size - map_valid;
+-				error = xfs_bmapi_read(dp, map_off,
+-					xfs_dir2_byte_to_da(mp,
+-						XFS_DIR2_LEAF_OFFSET) - map_off,
+-					&map[map_valid], &nmap, 0);
+-				/*
+-				 * Don't know if we should ignore this or
+-				 * try to return an error.
+-				 * The trouble with returning errors
+-				 * is that readdir will just stop without
+-				 * actually passing the error through.
+-				 */
+-				if (error)
+-					break;	/* XXX */
+-				/*
+-				 * If we got all the mappings we asked for,
+-				 * set the final map offset based on the
+-				 * last bmap value received.
+-				 * Otherwise, we've reached the end.
+-				 */
+-				if (nmap == map_size - map_valid)
+-					map_off =
+-					map[map_valid + nmap - 1].br_startoff +
+-					map[map_valid + nmap - 1].br_blockcount;
+-				else
+-					map_off =
+-						xfs_dir2_byte_to_da(mp,
+-							XFS_DIR2_LEAF_OFFSET);
+-				/*
+-				 * Look for holes in the mapping, and
+-				 * eliminate them.  Count up the valid blocks.
+-				 */
+-				for (i = map_valid; i < map_valid + nmap; ) {
+-					if (map[i].br_startblock ==
+-					    HOLESTARTBLOCK) {
+-						nmap--;
+-						length = map_valid + nmap - i;
+-						if (length)
+-							memmove(&map[i],
+-								&map[i + 1],
+-								sizeof(map[i]) *
+-								length);
+-					} else {
+-						map_blocks +=
+-							map[i].br_blockcount;
+-						i++;
+-					}
+-				}
+-				map_valid += nmap;
+-			}
+-			/*
+-			 * No valid mappings, so no more data blocks.
+-			 */
+-			if (!map_valid) {
+-				curoff = xfs_dir2_da_to_byte(mp, map_off);
++			error = xfs_dir2_leaf_readbuf(dp, bufsize, &map_info,
++						&ra_info, &curoff, &bp);
++			if (error || !map_info.map_valid)
+ 				break;
+-			}
+-			/*
+-			 * Read the directory block starting at the first
+-			 * mapping.
+-			 */
+-			curdb = xfs_dir2_da_to_db(mp, map->br_startoff);
+-			error = xfs_da_read_buf(NULL, dp, map->br_startoff,
+-				map->br_blockcount >= mp->m_dirblkfsbs ?
+-				    XFS_FSB_TO_DADDR(mp, map->br_startblock) :
+-				    -1,
+-				&bp, XFS_DATA_FORK);
+-			/*
+-			 * Should just skip over the data block instead
+-			 * of giving up.
+-			 */
+-			if (error)
+-				break;	/* XXX */
+-			/*
+-			 * Adjust the current amount of read-ahead: we just
+-			 * read a block that was previously ra.
+-			 */
+-			if (ra_current)
+-				ra_current -= mp->m_dirblkfsbs;
+-			/*
+-			 * Do we need more readahead?
+-			 */
+-			for (ra_index = ra_offset = i = 0;
+-			     ra_want > ra_current && i < map_blocks;
+-			     i += mp->m_dirblkfsbs) {
+-				ASSERT(ra_index < map_valid);
+-				/*
+-				 * Read-ahead a contiguous directory block.
+-				 */
+-				if (i > ra_current &&
+-				    map[ra_index].br_blockcount >=
+-				    mp->m_dirblkfsbs) {
+-					xfs_buf_readahead(mp->m_ddev_targp,
+-						XFS_FSB_TO_DADDR(mp,
+-						   map[ra_index].br_startblock +
+-						   ra_offset),
+-						(int)BTOBB(mp->m_dirblksize));
+-					ra_current = i;
+-				}
+-				/*
+-				 * Read-ahead a non-contiguous directory block.
+-				 * This doesn't use our mapping, but this
+-				 * is a very rare case.
+-				 */
+-				else if (i > ra_current) {
+-					(void)xfs_da_reada_buf(NULL, dp,
+-						map[ra_index].br_startoff +
+-						ra_offset, XFS_DATA_FORK);
+-					ra_current = i;
+-				}
+-				/*
+-				 * Advance offset through the mapping table.
+-				 */
+-				for (j = 0; j < mp->m_dirblkfsbs; j++) {
+-					/*
+-					 * The rest of this extent but not
+-					 * more than a dir block.
+-					 */
+-					length = MIN(mp->m_dirblkfsbs,
+-						(int)(map[ra_index].br_blockcount -
+-						ra_offset));
+-					j += length;
+-					ra_offset += length;
+-					/*
+-					 * Advance to the next mapping if
+-					 * this one is used up.
+-					 */
+-					if (ra_offset ==
+-					    map[ra_index].br_blockcount) {
+-						ra_offset = 0;
+-						ra_index++;
+-					}
+-				}
+-			}
++
+ 			/*
+ 			 * Having done a read, we need to set a new offset.
+ 			 */
+-			newoff = xfs_dir2_db_off_to_byte(mp, curdb, 0);
++			newoff = xfs_dir2_db_off_to_byte(mp, map_info.curdb, 0);
+ 			/*
+ 			 * Start of the current block.
+ 			 */
+@@ -1030,7 +1062,7 @@ xfs_dir2_leaf_getdents(
+ 			 */
+ 			else if (curoff > newoff)
+ 				ASSERT(xfs_dir2_byte_to_db(mp, curoff) ==
+-				       curdb);
++				       map_info.curdb);
+ 			hdr = bp->b_addr;
+ 			xfs_dir2_data_check(dp, bp);
+ 			/*
+@@ -1113,7 +1145,7 @@ xfs_dir2_leaf_getdents(
+ 		*offset = XFS_DIR2_MAX_DATAPTR & 0x7fffffff;
+ 	else
+ 		*offset = xfs_dir2_byte_to_dataptr(mp, curoff) & 0x7fffffff;
+-	kmem_free(map);
++	kmem_free(map_info.map);
+ 	if (bp)
+ 		xfs_trans_brelse(NULL, bp);
+ 	return error;
 -- 
 1.7.10
 
