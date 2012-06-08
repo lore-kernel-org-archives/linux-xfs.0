@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58JYh5L249184 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:34:43 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FBB68F808F
-	for <xfs@oss.sgi.com>; Fri,  8 Jun 2012 12:34:40 -0700 (PDT)
-Received: from [134.15.95.99] (cf-vpn-hw-arenaud-2.corp.sgi.com [134.15.95.99])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 1683B7001A79
-	for <xfs@oss.sgi.com>; Fri,  8 Jun 2012 14:34:40 -0500 (CDT)
-Message-ID: <4FD253D6.9060909@sgi.com>
-Date: Fri, 08 Jun 2012 15:34:46 -0400
-From: Alain Renaud <arenaud@sgi.com>
+	q58Jaw82249707 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:36:58 -0500
+Received: from smtp.internet-sicherheit.de (smtp.internet-sicherheit.de
+	[194.94.127.56]) by cuda.sgi.com with ESMTP id nDik8BpHFR4QKz8l
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 08 Jun 2012 12:36:56 -0700 (PDT)
+Received: from [10.0.44.5] (unknown [10.0.44.5])
+	by smtp.internet-sicherheit.de (Postfix) with ESMTP id D1CF2EE0032
+	for <xfs@oss.sgi.com>; Fri,  8 Jun 2012 21:36:55 +0200 (CEST)
+Message-ID: <4FD2545A.40503@internet-sicherheit.de>
+Date: Fri, 08 Jun 2012 21:36:58 +0200
+From: "Christian J. Dietrich" <dietrich@internet-sicherheit.de>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: xfs_vm_writepage clear iomap_valid when !buffer_uptodate
-	(REV2)
-References: <20120601192207.D6DE99F997@arenaud-laptop>
-	<20120605114516.GM4347@dastard> <4FCDFCE5.5020702@sgi.com>
-In-Reply-To: <4FCDFCE5.5020702@sgi.com>
+Subject: Re: Repeated XFS corruption on RAID-10 on Adaptec 51245
+References: <4FD1C9B8.70907@internet-sicherheit.de>
+	<20120608125138.20c79cee@harpe.intellique.com>
+In-Reply-To: <20120608125138.20c79cee@harpe.intellique.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,70 +25,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
-   On filesytems with a block size smaller than PAGE_SIZE we currently have
-a problem with unwritten extents.  If a we have multi-block page for
-which an unwritten extent has been allocated, and only some of the
-buffers have been written to, and they are not contiguous, we can expose
-stale data from disk in the blocks between the writes after extent
-conversion.
+Emmanuel,
 
-Example of a page with unwritten and real data.
-buffer  content
-0       empty  b_state = 0
-1       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-2       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-3       empty  b_state = 0
-4       empty  b_state = 0
-5       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-6       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
-7       empty  b_state = 0
+Am 08.06.2012 12:51, schrieb Emmanuel Florac:
+> "Christian J. Dietrich" <dietrich@internet-sicherheit.de> =E9crivait:
+> =
 
-Buffers 1, 2, 5, and 6 have been written to, leaving 0, 3, 4, and 7 empty.
-Currently buffers 1, 2, 5, and 6 are added to a single ioend, and when IO has
-completed, extent conversion creates a real extent from block 1 through block
-6, leaving 0 and 7 unwritten.  However buffers 3 and 4 were not written to
-disk, so stale data is exposed from those blocks on a subsequent read.
+>> I am running CentOS 6.2 (=3DRHEL 6.2) with kernel
+>> 2.6.32-220.17.1.el6.x86_64 (most recent) and all OS updates installed.
+>> Controller Firmware is the most recent (18948), driver version is
+>> 1.1-5. HDDs are 2x WD2001FASS, 10x WD2002FAEX.
+>>
+> =
 
-Fix this by setting iomap_valid = 0 when we find a buffer that is not
-Uptodate.  This ensures that buffers 5 and 6 are not added to the same
-ioend as buffers 1 and 2.  Later these blocks will be converted into two
-separate real extents, leaving the blocks in between unwritten.
+> I currently manage many servers (about 50) with Adaptec 5xx5 raid
+> cards. The only case of data corruption I've met was with WD drives.
+> =
 
-Signed-off-by: Alain Renaud <arenaud@sgi.com>
+> Therefore it's most probably related to the WD drives. WD desktop
+> drives are well known for being (voluntarily) crippled for RAID
+> operation. They will almost always create all sort of weird problems
+> when running under high IO load.
+> =
 
----
-  fs/xfs/xfs_aops.c |   11     8 +    3 -    0 !
-  1 file changed, 8 insertions(+), 3 deletions(-)
+> It is of utmost importance that you at least take care of setting TLER
+> in the correct mode on the drives. Beware that apparently newer WD
+> drives don't even allow setting TLER properly anymore (I said
+> "crippled").
+> =
 
-Index: b/fs/xfs/xfs_aops.c
-===================================================================
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -981,10 +981,15 @@
-                  imap_valid = 0;
-              }
-          } else {
--            if (PageUptodate(page)) {
-+            if (PageUptodate(page))
-                  ASSERT(buffer_mapped(bh));
--                imap_valid = 0;
--            }
-+            /*
-+             * This buffer is not uptodate and will not be
-+             * written to disk.  Ensure that we will put any
-+             * subsequent writeable buffers into a new
-+             * ioend.
-+             */
-+            imap_valid = 0;
-              continue;
-          }
+> http://en.wikipedia.org/wiki/Time-Limited_Error_Recovery
+
+Indeed, it seems to be related to the WD HDDs, I am in contact with
+Adaptec support and will dig deeper. A couple of disks have comparably
+high CommandAborts.
+
+Probably, I will rebuild the RAID volume using disks with proper TLER
+support and activate TLER.
+
+Thanks for your help,
+Chris
+
+-- =
+
+Christian J. Dietrich
+Institute for Internet Security - if(is)
+Westf=E4lische Hochschule University of Applied Sciences
+https://www.internet-sicherheit.de
+
 
 _______________________________________________
 xfs mailing list
