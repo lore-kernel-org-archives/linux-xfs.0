@@ -1,23 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q580SXwI151478 for <xfs@oss.sgi.com>; Thu, 7 Jun 2012 19:28:33 -0500
+	q580vJML153038 for <xfs@oss.sgi.com>; Thu, 7 Jun 2012 19:57:19 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	qttgKKjT0KoB8nrE for <xfs@oss.sgi.com>;
-	Thu, 07 Jun 2012 17:28:30 -0700 (PDT)
-Date: Fri, 8 Jun 2012 10:28:26 +1000
+	hDo7PwOBMzPOTq9l for <xfs@oss.sgi.com>;
+	Thu, 07 Jun 2012 17:57:17 -0700 (PDT)
+Date: Fri, 8 Jun 2012 10:57:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-Message-ID: <20120608002826.GV4347@dastard>
-References: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
-	<CADLDEKsGtsw-rrSOE7gY4T81u+p41b34ixv0B7Dh07afJ73n2w@mail.gmail.com>
-	<CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
-	<20120605235447.GF22848@dastard> <4FCF5DB9.2000808@redhat.com>
-	<20120607013531.GP22848@dastard> <4FD0B7B6.3000704@redhat.com>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120608005700.GW4347@dastard>
+References: <20120518101210.GX25351@dastard>
+	<20120518133250.GC5589@quack.suse.cz>
+	<20120519014024.GZ25351@dastard>
+	<20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
+	<20120606000636.GG22848@dastard>
+	<20120606095827.GA6304@quack.suse.cz>
+	<20120606133616.GL22848@dastard>
+	<20120607215835.GB393@quack.suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FD0B7B6.3000704@redhat.com>
+In-Reply-To: <20120607215835.GB393@quack.suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,158 +35,167 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
 
-On Thu, Jun 07, 2012 at 10:16:22AM -0400, Brian Foster wrote:
-> On 06/06/2012 09:35 PM, Dave Chinner wrote:
-> > On Wed, Jun 06, 2012 at 09:40:09AM -0400, Brian Foster wrote:
-> >> On 06/05/2012 07:54 PM, Dave Chinner wrote:
-> >>> On Fri, May 25, 2012 at 01:03:04PM -0400, Peter Watkins wrote:
-> >>>> On Fri, May 25, 2012 at 2:28 AM, Juerg Haefliger <juergh@gmail.com> wrote:
-> >>
-> >> snip
-> >>
-> >>> At this point, running on a 3.5-rc1 kernel is what we need to get
-> >>> working reliably. Once we have the problems solved there, we can
-> >>> work out what set of patches need to be backported to 3.0-stable and
-> >>> other kernels to fix the problems in those supported kernels...
-> >>>
-> >>
-> >> Hi guys,
-> >>
-> >> I've been reproducing a similar stall in my testing of the 're-enable
-> >> xfsaild idle mode' patch/thread that only occurs for me in the xfs tree.
-> >> I was able to do a bisect from rc2 down to commit 43ff2122, though the
-> >> history of this issue makes me wonder if this commit just makes the
-> >> problem more reproducible as opposed to introducing it. Anyways, the
-> >> characteristics I observe so far:
+On Thu, Jun 07, 2012 at 11:58:35PM +0200, Jan Kara wrote:
+> On Wed 06-06-12 23:36:16, Dave Chinner wrote:
+> > On Wed, Jun 06, 2012 at 11:58:27AM +0200, Jan Kara wrote:
+> > > On Wed 06-06-12 10:06:36, Dave Chinner wrote:
+> > > > On Wed, Jun 06, 2012 at 01:15:30AM +0200, Jan Kara wrote:
+> > > > > On Tue 05-06-12 15:51:50, Dave Chinner wrote:
+> > > > > > On Thu, May 24, 2012 at 02:35:38PM +0200, Jan Kara wrote:
+> > > > > > > > To me the issue at hand is that we have no method of serialising
+> > > > > > > > multi-page operations on the mapping tree between the filesystem and
+> > > > > > > > the VM, and that seems to be the fundamental problem we face in this
+> > > > > > > > whole area of mmap/buffered/direct IO/truncate/holepunch coherency.
+> > > > > > > > Hence it might be better to try to work out how to fix this entire
+> > > > > > > > class of problems rather than just adding a complex kuldge that just
+> > > > > > > > papers over the current "hot" symptom....
+> > > > > > >   Yes, looking at the above table, the amount of different synchronization
+> > > > > > > mechanisms is really striking. So probably we should look at some
+> > > > > > > possibility of unifying at least some cases.
+> > > > > > 
+> > > > > > It seems to me that we need some thing in between the fine grained
+> > > > > > page lock and the entire-file IO exclusion lock. We need to maintain
+> > > > > > fine grained locking for mmap scalability, but we also need to be
+> > > > > > able to atomically lock ranges of pages.
+> > > > >   Yes, we also need to keep things fine grained to keep scalability of
+> > > > > direct IO and buffered reads...
+> > > > > 
+> > > > > > I guess if we were to nest a fine grained multi-state lock
+> > > > > > inside both the IO exclusion lock and the mmap_sem, we might be able
+> > > > > > to kill all problems in one go.
+> > > > > > 
+> > > > > > Exclusive access on a range needs to be granted to:
+> > > > > > 
+> > > > > > 	- direct IO
+> > > > > > 	- truncate
+> > > > > > 	- hole punch
+> > > > > > 
+> > > > > > so they can be serialised against mmap based page faults, writeback
+> > > > > > and concurrent buffered IO. Serialisation against themselves is an
+> > > > > > IO/fs exclusion problem.
+> > > > > > 
+> > > > > > Shared access for traversal or modification needs to be granted to:
+> > > > > > 
+> > > > > > 	- buffered IO
+> > > > > > 	- mmap page faults
+> > > > > > 	- writeback
+> > > > > > 
+> > > > > > Each of these cases can rely on the existing page locks or IO
+> > > > > > exclusion locks to provide safety for concurrent access to the same
+> > > > > > ranges. This means that once we have access granted to a range we
+> > > > > > can check truncate races once and ignore the problem until we drop
+> > > > > > the access.  And the case of taking a page fault within a buffered
+> > > > > > IO won't deadlock because both take a shared lock....
+> > > > >   You cannot just use a lock (not even a shared one) both above and under
+> > > > > mmap_sem. That is deadlockable in presence of other requests for exclusive
+> > > > > locking...
+> > > > 
+> > > > Well, that's assuming that exclusive lock requests form a barrier to
+> > > > new shared requests. Remember that I'm talking about a range lock
+> > > > here, which we can make up whatever semantics we'd need, including
+> > > > having "shared lock if already locked shared" nested locking
+> > > > semantics which avoids this page-fault-in-buffered-IO-copy-in/out
+> > > > problem....
+> > >   That's true. But if you have semantics like this, constant writing to
+> > > or reading from a file could starve e.g. truncate. So I'd prefer not to
+> > > open this can of worms and keep semantics of rw semaphores if possible.
 > > 
-> > More reproducable. See below.
-> > 
-> >> - Task blocked for more than 120s message in xlog_grant_head_wait(). I
-> >> see xfs_sync_worker() in my current bt, but I'm pretty sure I've seen
-> >> the same issue without it involved.
-> >> - The AIL is not empty/idle. It spins with a relatively small and
-> >> constant number of entries (I've seen ~8-40). These items are all always
-> >> marked as "flushing."
-> >> - Via crash, all the inodes in the ail appear to be marked as stale
-> >> (i.e. li_cb == xfs_istale_done). The inode flags are
-> >> XFS_ISTALE|XFS_IRECLAIMABLE|XFS_IFLOCK.
-> >> - The iflock in particular is why the ail marks these items 'flushing'
-> >> and why nothing seems to proceed any further (xfsaild just waits for
-> >> these to complete). I can kick the fs back into action with a 'sync.'
-> > 
-> > Right, I've seen this as well. What I analysed in the case I saw was
-> > that the underlying buffer is also stale - correctly - and it is
-> > pinned in memory so cannot be flushed. HEnce all the inodes are
-> > inteh same state. The reason they are pinned in memory is that they
-> > items were still active in the CIL, and a log force was need to
-> > checkpoint the CIL and cause the checkpoint to be committed. Once
-> > the CIL checkpoint is committed, the stale items are freed from the
-> > AIL, and everything goes onward. The problem is that with the
-> > xfs_sync_worker stalled, nothing triggers a log force because the
-> > inode is returning "flushing" to the AIL pushes.
-> > 
+> > Except truncate uses the i_mutex/i_iolock for exclusion, so it would
+> > never get held off any more than it already does by buffered IO in
+> > this case. i.e. the mapping tree range lock is inside the locks used
+> > for truncate serialisation, so we don't have a situation where other
+> > operations woul dbe held off by such an IO pattern...
+>   True. I was just hoping that i_mutex won't be needed if we get our new
+> lock right.
 > 
-> Makes sense, thanks.
-> 
-> > However, your analysis has allowed me to find what I think is the
-> > bug causing your problem - what I missed when I last saw this was
-> > the significance of the order of checks in xfs_inode_item_push().
-> > That is, we check for whether the inode is flush locked before we
-> > check if it is stale.
+> > > Furthermore, with direct IO you have to set in stone the ordering of
+> > > mmap_sem and range lock anyway because there we need an exclusive lock.
 > > 
-> 
-> Ok, I noticed that up in inode_item_push() simply because it looked
-> pretty clear that it could get things moving again, but hadn't
-> established enough context for myself to understand whether that was
-> correct.
-> 
-> > By definition, a dirty stale inode must be attached to the
-> > underlying stale buffer and that requires it to be flush locked, as
-> > can be seen in xfs_ifree_cluster:
-> > 
-> >>>>>>>                  xfs_iflock(ip);
-> >>>>>>>                  xfs_iflags_set(ip, XFS_ISTALE);
-> > 
-> >                         /*
-> >                          * we don't need to attach clean inodes or those only
-> >                          * with unlogged changes (which we throw away, anyway).
-> >                          */
-> >                         iip = ip->i_itemp;
-> >                         if (!iip || xfs_inode_clean(ip)) {
-> >                                 ASSERT(ip != free_ip);
-> >                                 xfs_ifunlock(ip);
-> >                                 xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> >                                 continue;
-> >                         }
-> > 
-> >                         iip->ili_last_fields = iip->ili_fields;
-> >                         iip->ili_fields = 0;
-> >                         iip->ili_logged = 1;
-> >                         xfs_trans_ail_copy_lsn(mp->m_ail, &iip->ili_flush_lsn,
-> >                                                 &iip->ili_item.li_lsn);
-> > 
-> >>>>>>>                  xfs_buf_attach_iodone(bp, xfs_istale_done,
-> >>>>>>>                                            &iip->ili_item);
-> > 
-> > 
-> > So basically, the problem is that we should be checking for stale
-> > before flushing in xfs_inode_item_push(). I'll send out a patch that
-> > fixes this in a few minutes.
-> > 
-> 
-> Ah! I had focused on the code a bit earlier in xfs_ifree_cluster() where
-> it iterates the inodes attached to the buffer and marks them stale. The
-> comment there indicates the buffers are iflocked, but I didn't quite
-> understand how/why. I now see that as part of the
-> xfs_buf_attach_iodone(). That and your description here help clear that up.
-> 
-> So is it reasonable to expect a situation where an inode is sitting in
-> the AIL, flush locked and marked stale? E.g., an inode is
-> created/modified, logged, committed, checkpointed and added to the AIL
-> pending writeout. Subsequently that and other inodes in the same buf are
-> deleted and the cluster removed, resulting in everything marked stale..?
+> > Yes, mmap basically requires exclusive mmap_sem->shared range lock ordering. For
+> > direct IO, we only need the mmap_sem for the get_user_pages() call
+> > IIRC, so that requires exclusive range lock-> shared mmap_sem
+> > ordering. Unless we can lift the range lock in the mmap path outside
+> > the mmap_sem, we're still in the same boat....
+>   Yes. Just as I said before it is not an unsolvable situation since for
+> direct IO we can grab our lock after get_user_pages() call. I was thinking
+> about it for a while and I realized, that if we have range lock that we
+> take during page fault, buffered IO, direct IO, truncate, punch hole, we
+> actually don't need a shared version of it. Just the fact it would be range
+> lock is enough to avoid serialization.
 
-Right - if the inodes are already in the AIL, and then there's a
-inode cluster free transaction, you can end up with stale inodes in
-the AIL that are flush locked.
+Well, we currently allow overlapping direct IO to the same range in
+XFS, The order of completion is underfined, just like concurrent IOs
+to the same sector of a disk, but it basically results in direct IO
+on an XFS file to behave exactly the same way as concurrent IO to a raw
+device would....
 
-> The part I'm still a bit hazy on is from the AIL perspective, it looks
-> like if the inode was flush locked, it should result in a buffer I/O
-> submission up in xfsaild in the same thread, which means I would expect
-> either the iflush_done() or istale_done() completion to fire. Is there
-> another code path where the inode flush lock is async from the buffer
-> I/O submission (it looks like reclaim leads into xfs_iflush()), or am I
-> off the rails somewhere..? :P
+Now, that does cause some problems for naive users of direct IO
+(just like those same naive users mix mmap, buffered and direct IO to
+the same file), but if we are going to make everything else coherent
+then I have no problems with dropping this functionality and ony
+allowing concurrency for non-overlapping requests.
 
-Good question. This is why I think the problem is related to the
-race condition described above xfs_inode_item_committed(). The
-things that I couldn't initially work out is why the inodes weren't
-pinned if they were stale.
+The other thing is that concurrent overlapping buffered reads to the
+same range will only serialise on page locks if the range can be
+lock shared, so there would be no change in behaviour. Making the
+range lock exclusive would serialise the overlapping reads at a much
+higher level and will result in a change of cached read behaviour
+and potentially a significant reduction in performance. This may be
+a corner case no-one cares about, but exclusive range locking will
+definitely impact such a workload....
 
-The reason for that is that is that if we add the inodes to the
-buffer in the manner I pointed out, they are not added to the final
-unlink transaction and hence are never pinned by the transaction.
-Hence we can have the situation where we have the buffer not in the
-AIL (only in the CIL and pinned in memory because it had just been
-written prior to the unlink of the final inode in the chunk) with
-the in-memory inodes only stale and flush locked in the AIL. No
-progress can be made until a log force occurs to checkpoint and
-commit and unpin the buffer in the CIL and run the buffer iodone
-completions which then removes the inodes from the AIL.
+> Also I was thinking that since lock ordering forces our new lock to be
+> relatively close to page lock and page lock is serializing quite some of
+> IO operations anyway,
 
-And because the inodes pin the tail of the AIL, there's not enough
-space in the log for the xfs_sync_worker to trigger a log force via
-the dummy transaction, and hence we deadlock.
+That's the observation that has led me to call it a "mapping
+tree" lock.
 
-FWIW, there's an argument that can be made here for an unconditional
-log force in xfs_sync_worker() to provide a "get out gaol free" card
-here. The thing is, I would prefer that the filesystems hang so that
-we find out about these issues and have to understand them and fix
-them. IMO, there is nothing harder to detect and debug than short
-duration, temporary stalls of the filesystem...
+> it might be workable (and actually reasonably easy
+> to grasp for developers) if the range lock is coupled with page lock - i.e.
+> locking a range will be equivalent to locking each page in a range, except
+> that this way you can "lock" pages which are not present and thus forbid
+> their creation.
+
+Nice idea, but I think that is introducing requirements and
+potential complexity way beyond what we need right now. It's already
+a complex problem, so lets not make it any harder to validate than
+it already will be... :/
+
+As it is, we can't "forbid" the creation of pages - we control
+access to the mapping tree, which allows us to prevent insertion or
+removal of pages from a given range.  That's exactly how it will
+serialise DIO against buffered/mmap IO, hole punch/truncate against
+mmap, and so on. It's a mapping tree access control mechanism, not a
+page serialisation mechanism...
+
+> Also we could implement the common case of locking a range
+> containing single page by just taking page lock so we save modification of
+> interval tree in the common case and generally make the tree smaller (of
+> course, at the cost of somewhat slowing down cases where we want to lock
+> larger ranges).
+
+That seems like premature optimistion to me, and all the cases I
+think we need to care about are locking large ranges of the tree.
+Let's measure what the overhead of tracking everything in a single
+tree is first so we can then see what needs optimising...
+
+Also, I don't think it can replace the page lock entirely because
+the page lock as that also serialises against other parts of the VM
+(e.g. memory reclaim). I'd prefer not to complicate the issue by
+trying to be fancy - it's going to be hard enough to validate that
+it works correctly without having to validate that it does not
+introduce races that were previously prevented by the page lock.
+
+> Using something like this in ext4 should be reasonably easy, we'd just need
+> to change some code to move page lock up in locking order to make locking
+> of ranges useful. Would it be also usable for XFS?
+
+I don't think we need to change the page locking at all - just
+inserting the range locks in the right place should.
 
 Cheers,
 
