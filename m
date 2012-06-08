@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58JXxH1249041 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:34:00 -0500
-Received: from smtp.internet-sicherheit.de (smtp.internet-sicherheit.de
-	[194.94.127.56]) by cuda.sgi.com with ESMTP id 1FNQWNqVCDr8dDon
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 08 Jun 2012 12:33:58 -0700 (PDT)
-Received: from [10.0.44.5] (unknown [10.0.44.5])
-	by smtp.internet-sicherheit.de (Postfix) with ESMTP id BCB97EE0032
-	for <xfs@oss.sgi.com>; Fri,  8 Jun 2012 21:33:55 +0200 (CEST)
-Message-ID: <4FD253A5.3080800@internet-sicherheit.de>
-Date: Fri, 08 Jun 2012 21:33:57 +0200
-From: "Christian J. Dietrich" <dietrich@internet-sicherheit.de>
+	q58JYh5L249184 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:34:43 -0500
+Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 6FBB68F808F
+	for <xfs@oss.sgi.com>; Fri,  8 Jun 2012 12:34:40 -0700 (PDT)
+Received: from [134.15.95.99] (cf-vpn-hw-arenaud-2.corp.sgi.com [134.15.95.99])
+	by estes.americas.sgi.com (Postfix) with ESMTP id 1683B7001A79
+	for <xfs@oss.sgi.com>; Fri,  8 Jun 2012 14:34:40 -0500 (CDT)
+Message-ID: <4FD253D6.9060909@sgi.com>
+Date: Fri, 08 Jun 2012 15:34:46 -0400
+From: Alain Renaud <arenaud@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Repeated XFS corruption on RAID-10 on Adaptec 51245
-References: <4FD1C9B8.70907@internet-sicherheit.de>
-	<4FD20483.2080105@sandeen.net>
-In-Reply-To: <4FD20483.2080105@sandeen.net>
+Subject: [PATCH] xfs: xfs_vm_writepage clear iomap_valid when !buffer_uptodate
+	(REV2)
+References: <20120601192207.D6DE99F997@arenaud-laptop>
+	<20120605114516.GM4347@dastard> <4FCDFCE5.5020702@sgi.com>
+In-Reply-To: <4FCDFCE5.5020702@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,57 +25,70 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
 
-Eric,
+   On filesytems with a block size smaller than PAGE_SIZE we currently have
+a problem with unwritten extents.  If a we have multi-block page for
+which an unwritten extent has been allocated, and only some of the
+buffers have been written to, and they are not contiguous, we can expose
+stale data from disk in the blocks between the writes after extent
+conversion.
 
-thanks for your suggestions.
+Example of a page with unwritten and real data.
+buffer  content
+0       empty  b_state = 0
+1       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+2       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+3       empty  b_state = 0
+4       empty  b_state = 0
+5       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+6       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+7       empty  b_state = 0
 
-Am 08.06.2012 15:56, schrieb Eric Sandeen:
->> Naive, I would assume that running xfs_repair once would fix all errors.
->> My guess is that the underlying RAID volume (Adaptec 51245 RAID 10) is
->> somehow invalid (although I can not find any indicators confirming
->> this). Any suggestions?
-> =
+Buffers 1, 2, 5, and 6 have been written to, leaving 0, 3, 4, and 7 empty.
+Currently buffers 1, 2, 5, and 6 are added to a single ioend, and when IO has
+completed, extent conversion creates a real extent from block 1 through block
+6, leaving 0 and 7 unwritten.  However buffers 3 and 4 were not written to
+disk, so stale data is exposed from those blocks on a subsequent read.
 
-> If you suspect a problem with repair, you can try:
-> =
+Fix this by setting iomap_valid = 0 when we find a buffer that is not
+Uptodate.  This ensures that buffers 5 and 6 are not added to the same
+ioend as buffers 1 and 2.  Later these blocks will be converted into two
+separate real extents, leaving the blocks in between unwritten.
 
-> # umount /dev/sda
-> # xfs_metadump -o /dev/sda - | xfs_mdrestore - filesystem.img
-> # xfs_repair filesystem.img
-> # xfs_repair filesystem.img
-> =
+Signed-off-by: Alain Renaud <arenaud@sgi.com>
 
-> The image shouldn't take too much space, but 12T might take a little while
-> to dump.
-> If repair doesn't fix everything the first time please let us know.
+---
+  fs/xfs/xfs_aops.c |   11     8 +    3 -    0 !
+  1 file changed, 8 insertions(+), 3 deletions(-)
 
-Thanks, I can confirm that xfs_repair fixes everything on the first run.
-
-> please make sure that you aren't running the old kmod-xfs (or was it
-> xfs-kmod?) rpm.
-
-No, I am using the default driver that comes with the distribution.
-
-Thanks again, I consider the problem to be related to the combination of
-controller and HDDs (and no longer to xfs) and will dig deeper into that
-direction.
-
-Chris
-
--- =
-
-Christian J. Dietrich
-Institute for Internet Security - if(is)
-Westf=E4lische Hochschule University of Applied Sciences
-https://www.internet-sicherheit.de
-
+Index: b/fs/xfs/xfs_aops.c
+===================================================================
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -981,10 +981,15 @@
+                  imap_valid = 0;
+              }
+          } else {
+-            if (PageUptodate(page)) {
++            if (PageUptodate(page))
+                  ASSERT(buffer_mapped(bh));
+-                imap_valid = 0;
+-            }
++            /*
++             * This buffer is not uptodate and will not be
++             * written to disk.  Ensure that we will put any
++             * subsequent writeable buffers into a new
++             * ioend.
++             */
++            imap_valid = 0;
+              continue;
+          }
 
 _______________________________________________
 xfs mailing list
