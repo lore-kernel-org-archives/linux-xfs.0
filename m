@@ -1,28 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58N6L3l014036 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 18:06:22 -0500
+	q58NDOG4014527 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 18:13:24 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6tWnCN5CfrfObN1Z for <xfs@oss.sgi.com>;
-	Fri, 08 Jun 2012 16:06:20 -0700 (PDT)
-Date: Sat, 9 Jun 2012 09:06:16 +1000
+	rkBcmZa0mJzRFEw3 for <xfs@oss.sgi.com>;
+	Fri, 08 Jun 2012 16:13:22 -0700 (PDT)
+Date: Sat, 9 Jun 2012 09:13:20 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120608230616.GA25389@dastard>
-References: <20120519014024.GZ25351@dastard>
-	<20120524123538.GA5632@quack.suse.cz>
-	<20120605055150.GF4347@dastard>
-	<20120605231530.GB4402@quack.suse.cz>
-	<20120606000636.GG22848@dastard>
-	<20120606095827.GA6304@quack.suse.cz>
-	<20120606133616.GL22848@dastard>
-	<20120607215835.GB393@quack.suse.cz>
-	<20120608005700.GW4347@dastard>
-	<20120608213629.GA1365@quack.suse.cz>
+Subject: Re: [PATCH] xfs: xfs_vm_writepage clear iomap_valid when
+	!buffer_uptodate (REV2)
+Message-ID: <20120608231320.GZ22848@dastard>
+References: <20120601192207.D6DE99F997@arenaud-laptop>
+	<20120605114516.GM4347@dastard> <4FCDFCE5.5020702@sgi.com>
+	<4FD253D6.9060909@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120608213629.GA1365@quack.suse.cz>
+In-Reply-To: <4FD253D6.9060909@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,56 +29,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-ext4@vger.kernel.org, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com
+To: Alain Renaud <arenaud@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 08, 2012 at 11:36:29PM +0200, Jan Kara wrote:
-> On Fri 08-06-12 10:57:00, Dave Chinner wrote:
-> > On Thu, Jun 07, 2012 at 11:58:35PM +0200, Jan Kara wrote:
-> > > On Wed 06-06-12 23:36:16, Dave Chinner wrote:
-> > > Also we could implement the common case of locking a range
-> > > containing single page by just taking page lock so we save modification of
-> > > interval tree in the common case and generally make the tree smaller (of
-> > > course, at the cost of somewhat slowing down cases where we want to lock
-> > > larger ranges).
-> > 
-> > That seems like premature optimistion to me, and all the cases I
-> > think we need to care about are locking large ranges of the tree.
-> > Let's measure what the overhead of tracking everything in a single
-> > tree is first so we can then see what needs optimising...
->   Umm, I agree that initially we probably want just to have the mapping
-> range lock ability, stick it somewhere to IO path and make things work.
-> Then we can look into making it faster / merging with page lock.
+On Fri, Jun 08, 2012 at 03:34:46PM -0400, Alain Renaud wrote:
 > 
-> However I disagree we care most about locking large ranges. For all
-> buffered IO and all page faults we need to lock a range containing just a
-> single page. We cannot lock more due to locking constraints with mmap_sem.
+>   On filesytems with a block size smaller than PAGE_SIZE we currently have
+> a problem with unwritten extents.  If a we have multi-block page for
+> which an unwritten extent has been allocated, and only some of the
+> buffers have been written to, and they are not contiguous, we can expose
+> stale data from disk in the blocks between the writes after extent
+> conversion.
+> 
+> Example of a page with unwritten and real data.
+> buffer  content
+> 0       empty  b_state = 0
+> 1       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 2       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 3       empty  b_state = 0
+> 4       empty  b_state = 0
+> 5       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 6       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 7       empty  b_state = 0
+> 
+> Buffers 1, 2, 5, and 6 have been written to, leaving 0, 3, 4, and 7 empty.
+> Currently buffers 1, 2, 5, and 6 are added to a single ioend, and when IO has
+> completed, extent conversion creates a real extent from block 1 through block
+> 6, leaving 0 and 7 unwritten.  However buffers 3 and 4 were not written to
+> disk, so stale data is exposed from those blocks on a subsequent read.
+> 
+> Fix this by setting iomap_valid = 0 when we find a buffer that is not
+> Uptodate.  This ensures that buffers 5 and 6 are not added to the same
+> ioend as buffers 1 and 2.  Later these blocks will be converted into two
+> separate real extents, leaving the blocks in between unwritten.
+> 
+> Signed-off-by: Alain Renaud <arenaud@sgi.com>
 
-Not sure I understand what that constraint is - I hav ebeen thinking
-that the buffered IO range lok would be across the entire IO, not
-individual pages.
+Looks good.
 
-As it is, if we want to do multipage writes (and we do), we have to
-be able to lock a range of the mapping in the buffered IO path at a
-time...
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-> So the places that will lock larger ranges are: direct IO, truncate, punch
-> hole. Writeback actually doesn't seem to need any additional protection at
-> least as I've sketched out things so far.
-
-AFAICT, writeback needs protection against punching holes, just like
-mmap does, because they use the same "avoid truncated pages"
-mechanism.
-
-> So single-page ranges matter at least as much as longer ranges. That's why
-> I came up with that page lock optimisation and merging...
-
-I agree they are common, but lets measure the overhead first before
-trying to optimise/special case certain behaviours....
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
