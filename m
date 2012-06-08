@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58Jc7h2249917 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:38:08 -0500
-Date: Fri, 8 Jun 2012 14:44:50 -0500
+	q58Jo4Co251092 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 14:50:04 -0500
+Date: Fri, 8 Jun 2012 14:56:47 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: use INIT_WORK_ONSTACK in xfs_alloc_vextent()
-Message-ID: <20120608194450.GP4721@sgi.com>
-References: <4FD2535A.3050302@redhat.com>
+Subject: Re: [PATCH] xfs: xfs_vm_writepage clear iomap_valid when
+	!buffer_uptodate (REV2)
+Message-ID: <20120608195647.GQ4721@sgi.com>
+References: <20120601192207.D6DE99F997@arenaud-laptop>
+	<20120605114516.GM4347@dastard> <4FCDFCE5.5020702@sgi.com>
+	<4FD253D6.9060909@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FD2535A.3050302@redhat.com>
+In-Reply-To: <4FD253D6.9060909@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,29 +25,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Alain Renaud <arenaud@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 08, 2012 at 02:32:42PM -0500, Eric Sandeen wrote:
-> w/o this change I was getting:
+On Fri, Jun 08, 2012 at 03:34:46PM -0400, Alain Renaud wrote:
 > 
-> [  742.376495] ODEBUG: object is on stack, but not annotated
-> [  742.377007] ------------[ cut here ]------------
-> [  742.377007] WARNING: at lib/debugobjects.c:302 __debug_object_init+0x1c0/0x3d0()
-> ...
-> [  742.377007] Call Trace:
-> [  742.377007]  [<ffffffff81060dbf>] warn_slowpath_common+0x7f/0xc0
-> [  742.377007]  [<ffffffff81060e1a>] warn_slowpath_null+0x1a/0x20
-> [  742.377007]  [<ffffffff81336640>] __debug_object_init+0x1c0/0x3d0
-> [  742.377007]  [<ffffffff8133689f>] debug_object_init+0x1f/0x30
-> [  742.377007]  [<ffffffff81081cd9>] __init_work+0x19/0x30
-> [  742.377007]  [<ffffffffa0299f81>] xfs_alloc_vextent+0x101/0x190 [xfs]
+>   On filesytems with a block size smaller than PAGE_SIZE we currently have
+> a problem with unwritten extents.  If a we have multi-block page for
+> which an unwritten extent has been allocated, and only some of the
+> buffers have been written to, and they are not contiguous, we can expose
+> stale data from disk in the blocks between the writes after extent
+> conversion.
 > 
-> on a debug 3.4 kernel.
+> Example of a page with unwritten and real data.
+> buffer  content
+> 0       empty  b_state = 0
+> 1       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 2       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 3       empty  b_state = 0
+> 4       empty  b_state = 0
+> 5       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 6       DATA   b_state = 0x1023 Uptodate,Dirty,Mapped,Unwritten
+> 7       empty  b_state = 0
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> Buffers 1, 2, 5, and 6 have been written to, leaving 0, 3, 4, and 7 empty.
+> Currently buffers 1, 2, 5, and 6 are added to a single ioend, and when IO has
+> completed, extent conversion creates a real extent from block 1 through block
+> 6, leaving 0 and 7 unwritten.  However buffers 3 and 4 were not written to
+> disk, so stale data is exposed from those blocks on a subsequent read.
+> 
+> Fix this by setting iomap_valid = 0 when we find a buffer that is not
+> Uptodate.  This ensures that buffers 5 and 6 are not added to the same
+> ioend as buffers 1 and 2.  Later these blocks will be converted into two
+> separate real extents, leaving the blocks in between unwritten.
+> 
+> Signed-off-by: Alain Renaud <arenaud@sgi.com>
 
-Looks pretty good.  ;)
+Looks good to me.  It was Dave who had the comments so we'll wait for his
+second round before pulling this in.  I think that cleaning up PageUptodate
+xfs_convert_page and here in xfs_vm_writepage are valid suggestions, but are
+better left for a separate patch.
+
 Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
