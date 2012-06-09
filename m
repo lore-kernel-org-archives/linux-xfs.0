@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58NEbhR014760 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 18:14:37 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id g3bBk4KCJlzhLNKV for
-	<xfs@oss.sgi.com>; Fri, 08 Jun 2012 16:14:37 -0700 (PDT)
-Message-ID: <4FD28759.9040600@redhat.com>
-Date: Fri, 08 Jun 2012 18:14:33 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: use INIT_WORK_ONSTACK in xfs_alloc_vextent()
-References: <4FD2535A.3050302@redhat.com> <20120608231227.GY22848@dastard>
-In-Reply-To: <20120608231227.GY22848@dastard>
+	q59DNhnM079202 for <xfs@oss.sgi.com>; Sat, 9 Jun 2012 08:23:43 -0500
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id bLGCQEhMb0DMshWk for
+	<xfs@oss.sgi.com>; Sat, 09 Jun 2012 06:23:40 -0700 (PDT)
+Date: Sat, 9 Jun 2012 15:23:11 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: Repeated XFS corruption on RAID-10 on Adaptec 51245
+Message-ID: <20120609152311.0523682c@galadriel.home>
+In-Reply-To: <4FD2545A.40503@internet-sicherheit.de>
+References: <4FD1C9B8.70907@internet-sicherheit.de>
+	<20120608125138.20c79cee@harpe.intellique.com>
+	<4FD2545A.40503@internet-sicherheit.de>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,50 +22,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: "Christian J. Dietrich" <dietrich@internet-sicherheit.de>
+Cc: xfs@oss.sgi.com
 
-On 6/8/12 6:12 PM, Dave Chinner wrote:
-> On Fri, Jun 08, 2012 at 02:32:42PM -0500, Eric Sandeen wrote:
->> w/o this change I was getting:
->>
->> [  742.376495] ODEBUG: object is on stack, but not annotated
->> [  742.377007] ------------[ cut here ]------------
->> [  742.377007] WARNING: at lib/debugobjects.c:302 __debug_object_init+0x1c0/0x3d0()
->> ...
->> [  742.377007] Call Trace:
->> [  742.377007]  [<ffffffff81060dbf>] warn_slowpath_common+0x7f/0xc0
->> [  742.377007]  [<ffffffff81060e1a>] warn_slowpath_null+0x1a/0x20
->> [  742.377007]  [<ffffffff81336640>] __debug_object_init+0x1c0/0x3d0
->> [  742.377007]  [<ffffffff8133689f>] debug_object_init+0x1f/0x30
->> [  742.377007]  [<ffffffff81081cd9>] __init_work+0x19/0x30
->> [  742.377007]  [<ffffffffa0299f81>] xfs_alloc_vextent+0x101/0x190 [xfs]
->>
->> on a debug 3.4 kernel.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> Already posted by Jeff twice - I picked this up and started testing
-> it a couple of days ago:
-> 
-> http://marc.info/?l=linux-fsdevel&m=133877118608852&w=2
-> http://oss.sgi.com/archives/xfs/2012-06/msg00081.html
-> 
-> Sorry to burst you bubble, Eric, but I think Jeff gets this one. ;)
-
-sigh.  Can't keep up.  But I try!
-
--Eric
-
-> Cheers,
-> 
-> Dave.
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgRnJpLCAwOCBKdW4gMjAxMiAyMTozNjo1OCArMDIwMCB2b3VzIMOpY3JpdmllejoKCj4gSW5k
+ZWVkLCBpdCBzZWVtcyB0byBiZSByZWxhdGVkIHRvIHRoZSBXRCBIRERzLCBJIGFtIGluIGNvbnRh
+Y3Qgd2l0aAo+IEFkYXB0ZWMgc3VwcG9ydCBhbmQgd2lsbCBkaWcgZGVlcGVyLiBBIGNvdXBsZSBv
+ZiBkaXNrcyBoYXZlIGNvbXBhcmFibHkKPiBoaWdoIENvbW1hbmRBYm9ydHMuCgpJJ20gYWZyYWlk
+IHRoZXJlJ3Mgbm90IG11Y2ggdGhleSBjYW4gZG8sIGJ1dCBsZXQgdXMga25vdyBpZiB0aGV5IGNv
+bWUKYmFjayB3aXRoIGFueSBjb25zdHJ1Y3RpdmUgc3VnZ2VzdGlvbi4KIAo+IFByb2JhYmx5LCBJ
+IHdpbGwgcmVidWlsZCB0aGUgUkFJRCB2b2x1bWUgdXNpbmcgZGlza3Mgd2l0aCBwcm9wZXIgVExF
+Ugo+IHN1cHBvcnQgYW5kIGFjdGl2YXRlIFRMRVIuCgpJIHN1cHBvc2UgeW91IG1heSB0dXJuIG9m
+ZiB0aGUgc3lzdGVtLCBjb25uZWN0IHRoZSBkcml2ZXMgdG8gc29tZSBQQwphbmQgcnVuIHRoZSBU
+TEVSIHRvb2w7IGFmdGVyIHRoYXQgaXQgc2hvdWxkIHdvcmsgYmV0dGVyIHdpdGhvdXQgZXZlbgpy
+ZWJ1aWxkaW5nIHRoZSBhcnJheS4KCmdvb2QgbHVjaywKLS0gCi0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQpFbW1h
+bnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVlCiAgICAgICAgICAgICAgICAg
+ICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8CTxlZmxvcmFjQGludGVsbGlx
+dWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3OCA5NCA4NCAwMgotLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
+bWFuL2xpc3RpbmZvL3hmcwo=
