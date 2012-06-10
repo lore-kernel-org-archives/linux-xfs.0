@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q58LiLu1003526 for <xfs@oss.sgi.com>; Fri, 8 Jun 2012 16:44:21 -0500
-Received: from mail-wi0-f179.google.com (mail-wi0-f179.google.com
-	[209.85.212.179]) by cuda.sgi.com with ESMTP id
-	MWFS3mtdKm6pMk9N (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 08 Jun 2012 14:44:19 -0700 (PDT)
-Received: by wibhr14 with SMTP id hr14so881581wib.14
-	for <xfs@oss.sgi.com>; Fri, 08 Jun 2012 14:44:18 -0700 (PDT)
+	q5A3wFxq172604 for <xfs@oss.sgi.com>; Sat, 9 Jun 2012 22:58:15 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 6T1iIsoHgWUi11X4
+	for <xfs@oss.sgi.com>; Sat, 09 Jun 2012 20:58:14 -0700 (PDT)
+Message-ID: <4FD41B53.3080509@hardwarefreak.com>
+Date: Sat, 09 Jun 2012 22:58:11 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <1339190930-17233-1-git-send-email-kirill.shutemov@linux.intel.com>
-References: <1339190930-17233-1-git-send-email-kirill.shutemov@linux.intel.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 8 Jun 2012 14:43:58 -0700
-Message-ID: <CA+55aFz_RpR+T3Yx-hMf3veW55xAu3GgtmefKs1ZUydp4hRu8w@mail.gmail.com>
-Subject: Re: [RFC, PATCH] fs: push rcu_barrier() from deactivate_locked_super()
-	to filesystems
+Subject: Re: Repeated XFS corruption on RAID-10 on Adaptec 51245
+References: <4FD1C9B8.70907@internet-sicherheit.de>
+	<20120608125138.20c79cee@harpe.intellique.com>
+	<4FD2545A.40503@internet-sicherheit.de>
+	<20120609152311.0523682c@galadriel.home>
+In-Reply-To: <20120609152311.0523682c@galadriel.home>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,41 +24,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>, Pekka Enberg <penberg@kernel.org>
-Cc: Latchesar Ionkov <lucho@ionkov.net>, Dave Kleikamp <shaggy@kernel.org>, jfs-discussion@lists.sourceforge.net, Phillip Lougher <phillip@squashfs.org.uk>, Jan Kara <jack@suse.cz>, Kai Bankett <chaosman@ontika.net>, logfs@logfs.org, Frederic Weisbecker <fweisbec@gmail.com>, Anders Larsen <al@alarsen.net>, Trond Myklebust <Trond.Myklebust@netapp.com>, William Irwin <wli@holomorphy.com>, "Dmitry V. Levin" <ldv@altlinux.org>, David Howells <dhowells@redhat.com>, Dustin Kirkland <dustin.kirkland@gazzang.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Mikulas Patocka <mikulas@artax.karlin.mff.cuni.cz>, KONISHI Ryusuke <konishi.ryusuke@lab.ntt.co.jp>, Petr Vandrovec <petr@vandrovec.name>, linux-afs@lists.infradead.org, Alexey Khoroshilov <khoroshilov@ispras.ru>, linux-cifs@vger.kernel.org, Namjae Jeon <linkinjeon@gmail.com>, linux-nilfs@vger.kernel.org, fuse-devel@lists.sourceforge.net, Miklos Szeredi <miklos@szeredi.hu>, linux-kernel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, coda@cs.cmu.edu, Chris Mason <chris.mason@oracle.com>, Boaz Harrosh <bharrosh@panasas.com>, linux-mtd@lists.infradead.org, v9fs-developer@lists.sourceforge.net, linux-ext4@vger.kernel.org, Prasad Joshi <prasadjoshi.linux@gmail.com>, osd-dev@open-osd.org, Evgeniy Dushistov <dushistov@mail.ru>, Nick Piggin <npiggin@kernel.dk>, Eric Van Hensbergen <ericvh@gmail.com>, Tao Ma <boyu.mt@taobao.com>, Joern Engel <joern@logfs.org>, ecryptfs@vger.kernel.org, reiserfs-devel@vger.kernel.org, xfs@oss.sgi.com, Seth Forshee <seth.forshee@canonical.com>, Ben Myers <bpm@sgi.com>, Josh Boyer <jwboyer@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Timo Warns <warns@pre-sense.de>, Ron Minnich <rminnich@sandia.gov>, ceph-devel@vger.kernel.org, Anton Altaparmakov <anton@tuxera.com>, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, codalist@TELEMANN.coda.cs.cmu.edu, Jan Harkes <jaharkes@cs.cmu.edu>, linux-nfs@vger.kernel.org, Alex Elder <elder@kernel.org>, Theodore Ts'o <tytso@mit.edu>, Artem Bityutskiy <dedekind1@gmail.com>, linux-ntfs-dev@lists.sourceforge.net, Mark Fasheh <mfasheh@suse.com>, "Tigran A. Aivazian" <tigran@aivazian.fsnet.co.uk>, samba-technical@lists.samba.org, Adrian Hunter <adrian.hunter@intel.com>, Tyler Hicks <tyhicks@canonical.com>, Steve French <sfrench@samba.org>, Benny Halevy <bhalevy@tonian.com>, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, Sage Weil <sage@newdream.net>, Andrew Morton <akpm@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>, David Woodhouse <dwmw2@infradead.org>, linux-btrfs@vger.kernel.org, Joel Becker <jlbec@evilplan.org>
+To: Emmanuel Florac <eflorac@intellique.com>
+Cc: "Christian J. Dietrich" <dietrich@internet-sicherheit.de>, xfs@oss.sgi.com
 
-On Fri, Jun 8, 2012 at 2:28 PM, Kirill A. Shutemov
-<kirill.shutemov@linux.intel.com> wrote:
-> From: "Kirill A. Shutemov" <kirill.shutemov@linux.intel.com>
->
-> There's no reason to call rcu_barrier() on every deactivate_locked_super().
-> We only need to make sure that all delayed rcu free inodes are flushed
-> before we destroy related cache.
->
-> Removing rcu_barrier() from deactivate_locked_super() affects some
-> fas paths. E.g. on my machine exit_group() of a last process in IPC
-> namespace takes 0.07538s. rcu_barrier() takes 0.05188s of that time.
+On 6/9/2012 8:23 AM, Emmanuel Florac wrote:
+> Le Fri, 08 Jun 2012 21:36:58 +0200 vous =E9criviez:
+> =
 
-I think we should just delete it.
+>> Indeed, it seems to be related to the WD HDDs, I am in contact with
+>> Adaptec support and will dig deeper. A couple of disks have comparably
+>> high CommandAborts.
+> =
 
-kmem_cache_destroy() (at least for SLUB) already has:
+> I'm afraid there's not much they can do, but let us know if they come
+> back with any constructive suggestion.
+>  =
 
-                if (s->flags & SLAB_DESTROY_BY_RCU)
-                        rcu_barrier();
+>> Probably, I will rebuild the RAID volume using disks with proper TLER
+>> support and activate TLER.
 
-in it. But I think it's too late - it gets called *after* we do
-kmem_cache_close(), and I get the feeling that we should do it before.
+There's nothing to activate.  If a drive has TLER/ERC/etc (any SAS or
+enterprise SATA) it's turned on/enabled at the factory.
 
-Shouldn't that be sufficient? And if other slab allocators don't have
-this, we should add it to them too.
+> I suppose you may turn off the system, connect the drives to some PC
+> and run the TLER tool; after that it should work better without even
+> rebuilding the array.
 
-Hmm?
+wdidle will only change the TLER timeout on firmware that allows it,
+which means older drives.  Many/most of WD's newer consumer drives
+apparently do not allow this.
 
-              Linus
+
+Worth noting, the price premium of the 1TB RE4 over the 1TB Black is
+currently ZERO at Newegg-- both drives are $120.  No premium for TLER,
+enterprise features.
+
+The 2TB RE4 is $230, the 2TB Black is $210, a $20 premium for enterprise
+features.
+
+I didn't compare to the WD Green drives because they are squarely low
+performance consumer junk designed NOT to be accesses more than TO be
+accessed.  WD's anticipated mode of operation for such drives is to be
+idle with the heads parked over 99% of the time.  This simply is not
+suitable for RAID use, and they boldly tell us that.  Many ignore the
+warning then shed tears when arrays die...
+
+At Newegg's current prices, likely other vendors as well, there is no
+meaningful price premium for a WD 7.2k enterprise SATA drive over a WD
+7.2K performance oriented consumer drive.  Thus, if the preference is
+for WD gear, no sysadmin has a valid excuse for not buying the RE series
+drives.
+
+-- =
+
+Stan
 
 _______________________________________________
 xfs mailing list
