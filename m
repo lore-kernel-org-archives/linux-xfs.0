@@ -1,18 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5BLBVOS138117 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 16:11:32 -0500
-Message-ID: <4FD65F00.1010309@sgi.com>
-Date: Mon, 11 Jun 2012 16:11:28 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q5BLPkwf139866 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 16:25:46 -0500
+Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	8GX9MRxHzl8gBlw9 (version=TLSv1 cipher=RC4-MD5 bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 11 Jun 2012 14:25:45 -0700 (PDT)
+Received: by yenl3 with SMTP id l3so3703489yen.26
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 14:25:45 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
-References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
-	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
-	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
-	<20120525204536.GA4721@sgi.com> <20120606042647.GK22848@dastard>
-	<20120611204516.GR4721@sgi.com>
-In-Reply-To: <20120611204516.GR4721@sgi.com>
+In-Reply-To: <20120611162102.GB18432@andromeda.usersys.redhat.com>
+References: <4FD5643F.5070801@tlinx.org>
+	<20120611132932.GA18432@andromeda.usersys.redhat.com>
+	<4FD606C1.1070103@hardwarefreak.com>
+	<20120611162102.GB18432@andromeda.usersys.redhat.com>
+Date: Mon, 11 Jun 2012 23:25:45 +0200
+Message-ID: <CAAxjCEysCwn869nnvVLFB8EG=YdhPwVr9TnEJ57n6FsM_kEMdg@mail.gmail.com>
+Subject: Re: block sizes > 4K ?? possible w/large page support?
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,64 +27,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 06/11/12 15:45, Ben Myers wrote:
-...
+> I know we can use hugepages with these sizes, but didn't know we can use this as
+> common usage. I tried to look at MM code and didn't find anything which would
+> make PAGE_SIZE greater than 4096 (at least in x86), but well, I'm not a MM
+> developer too.
 
-> That sounds pretty good.  In particular, I think that making the start
-> and stop of the workqueues correct should be the high priority.  I'm not
-> as concerned about the accuracy of the names, or cleaning up xfs_sync.c
-> and xfs_iget.c, but cleanups are worth doing too.
->
-> I hit a crash related to the xfslogd workqueue awhile back.  Mark has
-> taken it up, so there might be a little coordination to do with him.
->
-> Regards,
-> 	Ben
+Me neither, but so much I think I know. With rather recent kernels,
+huge pages are used automatically for "normal" memory. There's a
+background thread that tries to locate or create adjacent blocks of
+memory and create huge pages from these.
 
-To not leave a teaser out there:
-
-PID: 25879  TASK: ffff88012ac20340  CPU: 3   COMMAND: "kworker/3:3"
-  #0 [ffff8801a72af920] machine_kexec at ffffffff810244e9
-  #1 [ffff8801a72af990] crash_kexec at ffffffff8108d053
-  #2 [ffff8801a72afa60] oops_end at ffffffff813ad1b8
-  #3 [ffff8801a72afa90] no_context at ffffffff8102bd48
-  #4 [ffff8801a72afae0] __bad_area_nosemaphore at ffffffff8102c04d
-  #5 [ffff8801a72afb30] bad_area_nosemaphore at ffffffff8102c12e
-  #6 [ffff8801a72afb40] do_page_fault at ffffffff813afaee
-  #7 [ffff8801a72afc50] page_fault at ffffffff813ac635
-     [exception RIP: xlog_assign_tail_lsn_locked+72]
-     RIP: ffffffffa040da68  RSP: ffff8801a72afd00  RFLAGS: 00010246
-     RAX: 0000000000000000  RBX: 0000000000000000  RCX: dead000000200200
-     RDX: ffff88013b32d550  RSI: dead000000100100  RDI: ffff88013b32d550
-     RBP: ffff8801a72afd10   R8: ffff8801a72ae000   R9: 0000000000000000
-     R10: 0000000000000000  R11: 0000000000000000  R12: ffff88013b32d568
-     R13: 0000000000000001  R14: ffff8801a72afd90  R15: ffff88013b32d540
-     ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-  #8 [ffff8801a72afd18] xfs_trans_ail_delete_bulk at ffffffffa0414b2a [xfs]
-  #9 [ffff8801a72afd78] xfs_buf_iodone at ffffffffa04119c7 [xfs]
-#10 [ffff8801a72afdb8] xfs_buf_do_callbacks at ffffffffa041166c [xfs]
-#11 [ffff8801a72afdd8] xfs_buf_iodone_callbacks at ffffffffa04117de [xfs]
-#12 [ffff8801a72afdf8] xfs_buf_iodone_work at ffffffffa03ad7e1 [xfs]
-#13 [ffff8801a72afe18] process_one_work at ffffffff8104c53b
-#14 [ffff8801a72afe68] worker_thread at ffffffff8104f0e3
-#15 [ffff8801a72afee8] kthread at ffffffff8105395e
-#16 [ffff8801a72aff48] kernel_thread_helper at ffffffff813b3ae4
-
-I am just digging through that crash. It appears that xfs_umountfs() did 
-a good job in cleaning the AIL and the m_ddev_targp, but it needs to 
-wait for the xfslogd to be finished before deallocating the log.
-
-Since workqueues are cheap, maybe it would be smart to have a 
-per-filesystem xfslogd too.
-
---Mark.
+But the normal page size as a unit of allocation is still 4KB, and
+this will never change (with the current hardware). The page size of
+4KB is hard-wired into the architecture, and I'm not aware of any
+extension that allows to change that.
 
 _______________________________________________
 xfs mailing list
