@@ -1,29 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5BDTcES093785 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 08:29:38 -0500
+	q5BEe9bD102249 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 09:40:10 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id i3j2s1CdAWIxPxBI for
-	<xfs@oss.sgi.com>; Mon, 11 Jun 2012 06:29:37 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q5BDTapW007935
+	cuda.sgi.com with ESMTP id iXdNZqUHi2Q2l0nM for
+	<xfs@oss.sgi.com>; Mon, 11 Jun 2012 07:40:09 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q5BEe8e9030169
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 09:29:36 -0400
-Received: from andromeda.usersys.redhat.com (vpn-9-5.rdu.redhat.com
-	[10.11.9.5])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q5BDTXa6031020
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 09:29:36 -0400
-Date: Mon, 11 Jun 2012 10:29:32 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: block sizes > 4K ??  possible w/large page support?
-Message-ID: <20120611132932.GA18432@andromeda.usersys.redhat.com>
-References: <4FD5643F.5070801@tlinx.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <4FD5643F.5070801@tlinx.org>
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 10:40:08 -0400
+Received: from bfoster.bfoster (dhcp-187-76.bos.redhat.com [10.16.187.76])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q5BEe8KO010418
+	for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 10:40:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH] xfs: check for stale inode before acquiring iflock on push
+Date: Mon, 11 Jun 2012 10:39:43 -0400
+Message-Id: <1339425583-54949-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,44 +26,76 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi,
+An inode in the AIL can be flush locked and marked stale if
+a cluster free transaction occurs at the right time. The
+inode item is then marked as flushing, which causes xfsaild
+to spin and leaves the filesystem stalled. This is
+reproduced by running xfstests 273 in a loop for an
+extended period of time.
 
-> Is this something being thought about??
-> 
-> More than one of my hard disks:
-> 
-> /boot:                 130 files in     103112 4K blocks:    793.6 blks/file
-> /tmp:                 1401 files in     746715 4K blocks:    533.4 blks/file
-> /var/cache:           1438 files in      87858 4K blocks:     61.5 blks/file
-> /backups:              713 files in 2523985177 4K blocks: 3539951.6 blks/file
-> /var:                 9038 files in     746715 4K blocks:     83.1 blks/file
-> /var/cache/squid:      570 files in      90031 4K blocks:    158.4 blks/file
-> /Media:              51893 files in 1691400956 4K blocks:  32594.5 blks/file
-> /:                   37312 files in     506778 4K blocks:     14.0 blks/file
-> /usr/share:         320805 files in  195425485 4K blocks:    609.6 blks/file
-> /backups/Media:      50544 files in 1642550112 4K blocks:  32497.9 blks/file
-> /usr:               116650 files in    1389380 4K blocks:     12.4 blks/file
-> /Share:            1617995 files in  305269701 4K blocks:    189.1 blks/file
-> /home:             5822174 files in  195412389 4K blocks:     34.0 blks/file
-> 
-> All but 2 could benefit from a 16K block size, and 3 of them could benefit
-> from a 128K block size.  Wouldn't that benefit in  in freeing up some space
-> both on disk and in memory?  Just a thought.
+Check for stale inodes before the flush lock. This marks
+the inode as pinned, leads to a log flush and allows the
+filesystem to proceed.
 
-The maximum block size of a XFS filesystem is 64kiB. But in linux it's limited
-to the PAGE_SIZE value. so, on x86 architectures, the maximum block size is
-4kiB.
-although it could benefit from a 16kiB page size, you'll need to be running an
-operating system which supports this page size value.
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
+This patch resolves the stall I was reproducing with the 273 loop test.
+I repeated the test pretty much throughout the weekend. I still hit one
+hung task timeout message, but the test proceeded through it.
+
+Dave, I know you mentioned you were sending a similar patch. Either you
+didn't get to it or I missed it, but here's what I've been testing....
+
+Brian
+
+ fs/xfs/xfs_inode_item.c |   17 ++++++++---------
+ 1 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 0309c979..e6ba0ec 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -505,6 +505,14 @@ xfs_inode_item_push(
+ 	}
+ 
+ 	/*
++	 * Stale inode items should force out the iclog.
++	 */
++	if (ip->i_flags & XFS_ISTALE) {
++		rval = XFS_ITEM_PINNED;
++		goto out_unlock;
++	}
++
++	/*
+ 	 * Someone else is already flushing the inode.  Nothing we can do
+ 	 * here but wait for the flush to finish and remove the item from
+ 	 * the AIL.
+@@ -514,15 +522,6 @@ xfs_inode_item_push(
+ 		goto out_unlock;
+ 	}
+ 
+-	/*
+-	 * Stale inode items should force out the iclog.
+-	 */
+-	if (ip->i_flags & XFS_ISTALE) {
+-		xfs_ifunlock(ip);
+-		xfs_iunlock(ip, XFS_ILOCK_SHARED);
+-		return XFS_ITEM_PINNED;
+-	}
+-
+ 	ASSERT(iip->ili_fields != 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+ 	ASSERT(iip->ili_logged == 0 || XFS_FORCED_SHUTDOWN(ip->i_mount));
+ 
 -- 
---Carlos
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
