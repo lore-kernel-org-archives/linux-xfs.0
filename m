@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5BKx57F136499 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 15:59:05 -0500
-Message-ID: <4FD65C19.8080303@sgi.com>
-Date: Mon, 11 Jun 2012 15:59:05 -0500
+	q5BLBVOS138117 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 16:11:32 -0500
+Message-ID: <4FD65F00.1010309@sgi.com>
+Date: Mon, 11 Jun 2012 16:11:28 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: Still seeing hangs in xlog_grant_log_space
-References: <CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
-	<CADLDEKsGtsw-rrSOE7gY4T81u+p41b34ixv0B7Dh07afJ73n2w@mail.gmail.com>
-	<CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
-	<20120605235447.GF22848@dastard>
-In-Reply-To: <20120605235447.GF22848@dastard>
+Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
+References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
+	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
+	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
+	<20120525204536.GA4721@sgi.com> <20120606042647.GK22848@dastard>
+	<20120611204516.GR4721@sgi.com>
+In-Reply-To: <20120611204516.GR4721@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,59 +25,60 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Juerg Haefliger <juergh@gmail.com>, bpm@sgi.com, Peter Watkins <treestem@gmail.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 06/05/12 18:54, Dave Chinner wrote:
-
-
->> Reading bug #922 I see your test case reproduces in recent kernels, so
->> there must be a newer problem also.
->
-> Right, that's what we need to find - it appears to be a CIL
-> stall/accounting leak, completely unrelated to all the other AIL/log
-> space stalls that have been occurring. Last thing is that I was
-> waiting for more information on the stall that mark T @ sgi was able
-> to reproduce. I haven't heard anything from him since I asked for
-> more information on May 23....
->
+On 06/11/12 15:45, Ben Myers wrote:
 ...
 
+> That sounds pretty good.  In particular, I think that making the start
+> and stop of the workqueues correct should be the high priority.  I'm not
+> as concerned about the accuracy of the names, or cleaning up xfs_sync.c
+> and xfs_iget.c, but cleanups are worth doing too.
 >
-> Cheers,
+> I hit a crash related to the xfslogd workqueue awhile back.  Mark has
+> taken it up, so there might be a little coordination to do with him.
 >
-> Dave.
+> Regards,
+> 	Ben
 
-I am using the test instructions/programs in the above bug report
+To not leave a teaser out there:
 
-  1) Linux 3.5rc1
-  2) temporary band-aid of performing a xfs_log_force() before the
-     xfs_fs_log_dummy() in the xfs_sync_worker().
-   a) Even with a xfs_log_force(), it is still possible to hang the sync
-      worker.
-   b) or replacing the band-aid with Brian Foster's "xfs: check for stale
-      inode before acquiring iflock on push" patch also resulted in a
-      quick hard hang.
-      i) side note, printk routines in Linux 3.5rc1 has a "struct log"
-        item that crash wants to use instead of XFS's "struct log". I
-  3) small log (576K)
-   a) size of the log in important. The smaller the log, the easier it
-      is to hang. 2+MB logs are much harder to hang.
-  4) perl program that has multiple workers doing cp/rm.
+PID: 25879  TASK: ffff88012ac20340  CPU: 3   COMMAND: "kworker/3:3"
+  #0 [ffff8801a72af920] machine_kexec at ffffffff810244e9
+  #1 [ffff8801a72af990] crash_kexec at ffffffff8108d053
+  #2 [ffff8801a72afa60] oops_end at ffffffff813ad1b8
+  #3 [ffff8801a72afa90] no_context at ffffffff8102bd48
+  #4 [ffff8801a72afae0] __bad_area_nosemaphore at ffffffff8102c04d
+  #5 [ffff8801a72afb30] bad_area_nosemaphore at ffffffff8102c12e
+  #6 [ffff8801a72afb40] do_page_fault at ffffffff813afaee
+  #7 [ffff8801a72afc50] page_fault at ffffffff813ac635
+     [exception RIP: xlog_assign_tail_lsn_locked+72]
+     RIP: ffffffffa040da68  RSP: ffff8801a72afd00  RFLAGS: 00010246
+     RAX: 0000000000000000  RBX: 0000000000000000  RCX: dead000000200200
+     RDX: ffff88013b32d550  RSI: dead000000100100  RDI: ffff88013b32d550
+     RBP: ffff8801a72afd10   R8: ffff8801a72ae000   R9: 0000000000000000
+     R10: 0000000000000000  R11: 0000000000000000  R12: ffff88013b32d568
+     R13: 0000000000000001  R14: ffff8801a72afd90  R15: ffff88013b32d540
+     ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
+  #8 [ffff8801a72afd18] xfs_trans_ail_delete_bulk at ffffffffa0414b2a [xfs]
+  #9 [ffff8801a72afd78] xfs_buf_iodone at ffffffffa04119c7 [xfs]
+#10 [ffff8801a72afdb8] xfs_buf_do_callbacks at ffffffffa041166c [xfs]
+#11 [ffff8801a72afdd8] xfs_buf_iodone_callbacks at ffffffffa04117de [xfs]
+#12 [ffff8801a72afdf8] xfs_buf_iodone_work at ffffffffa03ad7e1 [xfs]
+#13 [ffff8801a72afe18] process_one_work at ffffffff8104c53b
+#14 [ffff8801a72afe68] worker_thread at ffffffff8104f0e3
+#15 [ffff8801a72afee8] kthread at ffffffff8105395e
+#16 [ffff8801a72aff48] kernel_thread_helper at ffffffff813b3ae4
 
-Sorry Dave, I did not realize you were waiting for more information from 
-me. I thought the fixing the sync worker was more important.
-I also was hoping empty AIL hang was a result of the band-aid
-xfs_log_force() and not a second problem.
+I am just digging through that crash. It appears that xfs_umountfs() did 
+a good job in cleaning the AIL and the m_ddev_targp, but it needs to 
+wait for the xfslogd to be finished before deallocating the log.
 
-I will use the above to try to recreate and core the hang on Linux 
-3.5rc1 where the AIL is empty.
+Since workqueues are cheap, maybe it would be smart to have a 
+per-filesystem xfslogd too.
 
-
-
-Thanks.
-
---Mark Tinguely.
+--Mark.
 
 _______________________________________________
 xfs mailing list
