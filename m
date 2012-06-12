@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5C4KVpH178848 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 23:20:31 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	CsnKJzk76hDmMGg6 for <xfs@oss.sgi.com>;
-	Mon, 11 Jun 2012 21:20:30 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SeIag-0005Yh-Kg
-	for xfs@oss.sgi.com; Tue, 12 Jun 2012 14:20:26 +1000
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1SeIag-0002iW-Ge
-	for xfs@oss.sgi.com; Tue, 12 Jun 2012 14:20:26 +1000
+	q5C8K3Pt205135 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 03:20:03 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	JMuaNKDpLxGSVj1G for <xfs@oss.sgi.com>;
+	Tue, 12 Jun 2012 01:20:00 -0700 (PDT)
+Date: Tue, 12 Jun 2012 18:19:57 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
-Date: Tue, 12 Jun 2012 14:20:26 +1000
-Message-Id: <1339474826-10414-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 1/7] xfs: remove xfs_ialloc_find_free
+Message-ID: <20120612081957.GM22848@dastard>
+References: <20120605144647.051012936@bombadil.infradead.org>
+	<20120605144835.503963603@bombadil.infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120605144835.503963603@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,40 +23,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jun 05, 2012 at 10:46:48AM -0400, Christoph Hellwig wrote:
+> This function is entirely trivial and only has one caller, so remove it to
+> simplify the code.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-When we fail to find an matching extent near the requested extent
-specification during a left-right distance search in
-xfs_alloc_ag_vextent_near, we fail to free the original cursor that
-we used to look up the XFS_BTNUM_CNT tree and hence leak it.
+*nod*
 
-Reported-by: Chris J Arges <chris.j.arges@canonical.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_alloc.c |    1 +
- 1 file changed, 1 insertion(+)
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 229641f..70878aa 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -1080,6 +1080,7 @@ restart:
- 			goto restart;
- 		}
- 
-+		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 		trace_xfs_alloc_size_neither(args);
- 		args->agbno = NULLAGBLOCK;
- 		return 0;
 -- 
-1.7.10
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
