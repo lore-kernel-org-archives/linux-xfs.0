@@ -1,20 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5C8K3Pt205135 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 03:20:03 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	JMuaNKDpLxGSVj1G for <xfs@oss.sgi.com>;
-	Tue, 12 Jun 2012 01:20:00 -0700 (PDT)
-Date: Tue, 12 Jun 2012 18:19:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/7] xfs: remove xfs_ialloc_find_free
-Message-ID: <20120612081957.GM22848@dastard>
-References: <20120605144647.051012936@bombadil.infradead.org>
-	<20120605144835.503963603@bombadil.infradead.org>
+	q5C8ukpV209081 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 03:56:46 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id HF40agiYJ3l7T65m (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 12 Jun 2012 01:56:44 -0700 (PDT)
+Date: Tue, 12 Jun 2012 10:56:39 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Hole punching and mmap races
+Message-ID: <20120612085639.GA6021@quack.suse.cz>
+References: <20120524123538.GA5632@quack.suse.cz>
+	<20120605055150.GF4347@dastard>
+	<20120605231530.GB4402@quack.suse.cz>
+	<20120606000636.GG22848@dastard>
+	<20120606095827.GA6304@quack.suse.cz>
+	<20120606133616.GL22848@dastard>
+	<20120607215835.GB393@quack.suse.cz>
+	<20120608005700.GW4347@dastard>
+	<20120608213629.GA1365@quack.suse.cz>
+	<20120608230616.GA25389@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120605144835.503963603@bombadil.infradead.org>
+In-Reply-To: <20120608230616.GA25389@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +35,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
 
-On Tue, Jun 05, 2012 at 10:46:48AM -0400, Christoph Hellwig wrote:
-> This function is entirely trivial and only has one caller, so remove it to
-> simplify the code.
+On Sat 09-06-12 09:06:16, Dave Chinner wrote:
+> On Fri, Jun 08, 2012 at 11:36:29PM +0200, Jan Kara wrote:
+> > On Fri 08-06-12 10:57:00, Dave Chinner wrote:
+> > > On Thu, Jun 07, 2012 at 11:58:35PM +0200, Jan Kara wrote:
+> > > > On Wed 06-06-12 23:36:16, Dave Chinner wrote:
+> > > > Also we could implement the common case of locking a range
+> > > > containing single page by just taking page lock so we save modification of
+> > > > interval tree in the common case and generally make the tree smaller (of
+> > > > course, at the cost of somewhat slowing down cases where we want to lock
+> > > > larger ranges).
+> > > 
+> > > That seems like premature optimistion to me, and all the cases I
+> > > think we need to care about are locking large ranges of the tree.
+> > > Let's measure what the overhead of tracking everything in a single
+> > > tree is first so we can then see what needs optimising...
+> >   Umm, I agree that initially we probably want just to have the mapping
+> > range lock ability, stick it somewhere to IO path and make things work.
+> > Then we can look into making it faster / merging with page lock.
+> > 
+> > However I disagree we care most about locking large ranges. For all
+> > buffered IO and all page faults we need to lock a range containing just a
+> > single page. We cannot lock more due to locking constraints with mmap_sem.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Not sure I understand what that constraint is - I hav ebeen thinking
+> that the buffered IO range lok would be across the entire IO, not
+> individual pages.
+> 
+> As it is, if we want to do multipage writes (and we do), we have to
+> be able to lock a range of the mapping in the buffered IO path at a
+> time...
+  The problem is that buffered IO path does (e.g. in
+generic_perform_write()):
+  iov_iter_fault_in_readable() - that faults in one page worth of buffers,
+    takes mmap_sem
+  ->write_begin()
+  copy data - iov_iter_copy_from_user_atomic()
+  ->write_end()
 
-*nod*
+  So we take mmap_sem before writing every page. We could fault in more,
+but that increases risk of iov_iter_copy_from_user_atomic() failing because
+the page got reclaimed before we got to it. So the amount we fault in would
+have to adapt to current memory pressure. That's certainly possible but not
+related to the problem we are trying to solve now so I'd prefer to handle
+it separately.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > So the places that will lock larger ranges are: direct IO, truncate, punch
+> > hole. Writeback actually doesn't seem to need any additional protection at
+> > least as I've sketched out things so far.
+> 
+> AFAICT, writeback needs protection against punching holes, just like
+> mmap does, because they use the same "avoid truncated pages"
+> mechanism.
+  If punching hole does:
+lock_mapping_range()
+evict all pages in a range
+punch blocks
+unlock_mapping_range()
 
+  Then we shouldn't race against writeback because there are no pages in
+the mapping range we punch and they cannot be created there because we
+hold the lock. I agree this might be unnecessary optimization, but the nice
+result is that we can clean dirty pages regardless of what others do with
+the mapping. So in case there would be problems with taking mapping lock from
+writeback, we could avoid that.
+
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
