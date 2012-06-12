@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5C0COT3154283 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 19:12:25 -0500
+	q5C0J1xf154795 for <xfs@oss.sgi.com>; Mon, 11 Jun 2012 19:19:02 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	DPTrWYdMgMgnFHMP for <xfs@oss.sgi.com>;
-	Mon, 11 Jun 2012 17:12:23 -0700 (PDT)
-Date: Tue, 12 Jun 2012 10:12:21 +1000
+	Rax2yLYfEnYQvztO for <xfs@oss.sgi.com>;
+	Mon, 11 Jun 2012 17:18:58 -0700 (PDT)
+Date: Tue, 12 Jun 2012 10:18:55 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] xfs: check for stale inode before acquiring iflock on push
-Message-ID: <20120612001221.GH22848@dastard>
+Message-ID: <20120612001855.GI22848@dastard>
 References: <1339425583-54949-1-git-send-email-bfoster@redhat.com>
+	<4FD63B60.3070708@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339425583-54949-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <4FD63B60.3070708@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,50 +27,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
 
-On Mon, Jun 11, 2012 at 10:39:43AM -0400, Brian Foster wrote:
-> An inode in the AIL can be flush locked and marked stale if
-> a cluster free transaction occurs at the right time. The
-> inode item is then marked as flushing, which causes xfsaild
-> to spin and leaves the filesystem stalled. This is
-> reproduced by running xfstests 273 in a loop for an
-> extended period of time.
+On Mon, Jun 11, 2012 at 01:39:28PM -0500, Mark Tinguely wrote:
+> On 06/11/12 09:39, Brian Foster wrote:
+> >An inode in the AIL can be flush locked and marked stale if
+> >a cluster free transaction occurs at the right time. The
+> >inode item is then marked as flushing, which causes xfsaild
+> >to spin and leaves the filesystem stalled. This is
+> >reproduced by running xfstests 273 in a loop for an
+> >extended period of time.
+> >
+> >Check for stale inodes before the flush lock. This marks
+> >the inode as pinned, leads to a log flush and allows the
+> >filesystem to proceed.
+> >
+> >Signed-off-by: Brian Foster<bfoster@redhat.com>
+> >---
+> >
+> >This patch resolves the stall I was reproducing with the 273 loop test.
+> >I repeated the test pretty much throughout the weekend. I still hit one
+> >hung task timeout message, but the test proceeded through it.
+> >
+> >Dave, I know you mentioned you were sending a similar patch. Either you
+> >didn't get to it or I missed it, but here's what I've been testing....
+> >
+> >Brian
+> >
 > 
-> Check for stale inodes before the flush lock. This marks
-> the inode as pinned, leads to a log flush and allows the
-> filesystem to proceed.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
+> Still hangs right away on Linux 3.5rc1 using a very small log and
+> the perl test program.
 > 
-> This patch resolves the stall I was reproducing with the 273 loop test.
-> I repeated the test pretty much throughout the weekend. I still hit one
-> hung task timeout message, but the test proceeded through it.
+> I will investigate more.
 > 
-> Dave, I know you mentioned you were sending a similar patch. Either you
-> didn't get to it or I missed it, but here's what I've been testing....
+> Darn, the printk routines in Linux 3.5 added a "struct log" and
+> crash is finding that definition.
 
-Just didn't get to sending it - it was a holiday yesterday. The
-patch is identical, though the commit message is a bit different:
+Luckily that's just an internal structure in printk.c. However, I've
+been waiting for such a namespace collision to happen for a long
+time so perhaps you could write a patch that renames the XFS one to
+"struct xlog" to match all the other XFS log codei to avoid
+potential problems in the future. Oh, and while you are there, kill
+the xlog_t typedef....
 
-    xfs: inode staleness more important than flushing for AIL
+Cheers,
 
-    When we have a dirty stale inode, it must be attached to the
-    underlying stale buffer and that means it is flush locked. This
-    means that the AIL pushing will only ever see flushing inodes, and
-    that means if enough of them are built up at the start of the AIL we
-    will never trigger a log force from the AIL to get them moving.
-
-    Hence consider the stale state of inodes more important to report
-    than whether they are flushing so as to trigger log forces from the
-    AIL more readily in this situation.
-
-Otherwise, consider it:
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
