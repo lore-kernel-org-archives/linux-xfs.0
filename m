@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5C8ukpV209081 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 03:56:46 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id HF40agiYJ3l7T65m (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 12 Jun 2012 01:56:44 -0700 (PDT)
-Date: Tue, 12 Jun 2012 10:56:39 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: Hole punching and mmap races
-Message-ID: <20120612085639.GA6021@quack.suse.cz>
-References: <20120524123538.GA5632@quack.suse.cz>
-	<20120605055150.GF4347@dastard>
-	<20120605231530.GB4402@quack.suse.cz>
-	<20120606000636.GG22848@dastard>
-	<20120606095827.GA6304@quack.suse.cz>
-	<20120606133616.GL22848@dastard>
-	<20120607215835.GB393@quack.suse.cz>
-	<20120608005700.GW4347@dastard>
-	<20120608213629.GA1365@quack.suse.cz>
-	<20120608230616.GA25389@dastard>
+	q5CDSTOg242982 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 08:28:29 -0500
+Received: from youngberry.canonical.com (youngberry.canonical.com
+	[91.189.89.112]) by cuda.sgi.com with ESMTP id p6J8FdhoGNfUVdtz
+	for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 06:28:28 -0700 (PDT)
+Message-ID: <4FD74406.7000602@canonical.com>
+Date: Tue, 12 Jun 2012 08:28:38 -0500
+From: Chris J Arges <chris.j.arges@canonical.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120608230616.GA25389@dastard>
+Subject: Re: Still seeing hangs in xlog_grant_log_space
+References: <CADLDEKsP4DsXf_G07ub+a-ODbrJbsiprRJUX1fJdaQ41TB7+Xg@mail.gmail.com>
+	<CAH4wwdGWHSZoveLJMxu5pjr22NEEeW7oG8TS+snoM8RY=ZeRmg@mail.gmail.com>
+	<CADLDEKsGtsw-rrSOE7gY4T81u+p41b34ixv0B7Dh07afJ73n2w@mail.gmail.com>
+	<CAH4wwdFu7DEkHFZ5Bf7_PtLPsG0hUyUDoov03q=82R6t+QkERg@mail.gmail.com>
+	<20120605235447.GF22848@dastard> <4FCF5DB9.2000808@redhat.com>
+	<4FCF9655.3070300@sgi.com> <33996217.post@talk.nabble.com>
+	<20120611235337.GE22848@dastard>
+In-Reply-To: <20120611235337.GE22848@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,77 +31,53 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, xfs@oss.sgi.com, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org
+Cc: xfs@oss.sgi.com
 
-On Sat 09-06-12 09:06:16, Dave Chinner wrote:
-> On Fri, Jun 08, 2012 at 11:36:29PM +0200, Jan Kara wrote:
-> > On Fri 08-06-12 10:57:00, Dave Chinner wrote:
-> > > On Thu, Jun 07, 2012 at 11:58:35PM +0200, Jan Kara wrote:
-> > > > On Wed 06-06-12 23:36:16, Dave Chinner wrote:
-> > > > Also we could implement the common case of locking a range
-> > > > containing single page by just taking page lock so we save modification of
-> > > > interval tree in the common case and generally make the tree smaller (of
-> > > > course, at the cost of somewhat slowing down cases where we want to lock
-> > > > larger ranges).
-> > > 
-> > > That seems like premature optimistion to me, and all the cases I
-> > > think we need to care about are locking large ranges of the tree.
-> > > Let's measure what the overhead of tracking everything in a single
-> > > tree is first so we can then see what needs optimising...
-> >   Umm, I agree that initially we probably want just to have the mapping
-> > range lock ability, stick it somewhere to IO path and make things work.
-> > Then we can look into making it faster / merging with page lock.
-> > 
-> > However I disagree we care most about locking large ranges. For all
-> > buffered IO and all page faults we need to lock a range containing just a
-> > single page. We cannot lock more due to locking constraints with mmap_sem.
+On 06/11/2012 06:53 PM, Dave Chinner wrote:
+> On Mon, Jun 11, 2012 at 01:42:31PM -0700, Chris J Arges wrote:
+>> Mark Tinguely-3 wrote:
+>>>
+>>> The perl script to recreate this problem is very similar to xfstest 273.
+>>> I use that because it avoids all the filesystem mount/unmount that
+>>> happen between the test 273 loops. You can build the log size that you
+>>> want to test, create the directories and let it run until it hangs.
+>>>
+>>
+>> I tested xfstest 273, and it looks like it exhibits a different issue than
+>> the OP in this thread.
+>> For example, if I run this test in a while [1] loop, I get the following
+>> backtrace:
+>>
+>> [16413.073946] XFS (sda5): Invalid block length (0xfffff48b) for buffer
 > 
-> Not sure I understand what that constraint is - I hav ebeen thinking
-> that the buffered IO range lok would be across the entire IO, not
-> individual pages.
+> That looks bad. How big is the log on this filesystem?
 > 
-> As it is, if we want to do multipage writes (and we do), we have to
-> be able to lock a range of the mapping in the buffered IO path at a
-> time...
-  The problem is that buffered IO path does (e.g. in
-generic_perform_write()):
-  iov_iter_fault_in_readable() - that faults in one page worth of buffers,
-    takes mmap_sem
-  ->write_begin()
-  copy data - iov_iter_copy_from_user_atomic()
-  ->write_end()
+The test and scratch partitions were created with the following commands:
+mkfs.xfs -b size=1024 -l size=576b /dev/sda5
+mkfs.xfs -b size=1024 -l size=576b /dev/sda6
 
-  So we take mmap_sem before writing every page. We could fault in more,
-but that increases risk of iov_iter_copy_from_user_atomic() failing because
-the page got reclaimed before we got to it. So the amount we fault in would
-have to adapt to current memory pressure. That's certainly possible but not
-related to the problem we are trying to solve now so I'd prefer to handle
-it separately.
-
-> > So the places that will lock larger ranges are: direct IO, truncate, punch
-> > hole. Writeback actually doesn't seem to need any additional protection at
-> > least as I've sketched out things so far.
+>> [16413.073963] BUG: unable to handle kernel NULL pointer dereference at
+>> 0000000000000130
+>> [16413.074274] IP: [<ffffffffa02bb870>] uuid_is_nil+0x10/0x50 [xfs]
 > 
-> AFAICT, writeback needs protection against punching holes, just like
-> mmap does, because they use the same "avoid truncated pages"
-> mechanism.
-  If punching hole does:
-lock_mapping_range()
-evict all pages in a range
-punch blocks
-unlock_mapping_range()
+> I can't really see how this function can get a null pointer
+> dereference. It checks the pointer passed in for being null before
+> doing anything, and otherwise it just increments and dereferences
+> the char pointer 16 times. I can't see how that results in a NULL
+> being dereferenced - I might just be blind though.
+> 
+Yea, this is odd. What I'm really trying to accomplish is seeing if this
+xfstest 273 produces a similar hang to Juerg's original bug. If you've
+already run this test and it produced a hang can you post the backtrace
+or let me know if it is similar?
 
-  Then we shouldn't race against writeback because there are no pages in
-the mapping range we punch and they cannot be created there because we
-hold the lock. I agree this might be unnecessary optimization, but the nice
-result is that we can clean dirty pages regardless of what others do with
-the mapping. So in case there would be problems with taking mapping lock from
-writeback, we could avoid that.
+Thanks,
+--chris
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+
+> Cheers,
+> 
+> Dave.
 
 _______________________________________________
 xfs mailing list
