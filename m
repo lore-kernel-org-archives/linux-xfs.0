@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5D1u5jI062005 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 20:56:06 -0500
+	q5D2GEMM063277 for <xfs@oss.sgi.com>; Tue, 12 Jun 2012 21:16:15 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	y2XCkIpKOqTaBbWV for <xfs@oss.sgi.com>;
-	Tue, 12 Jun 2012 18:56:03 -0700 (PDT)
-Date: Wed, 13 Jun 2012 11:55:53 +1000
+	nqeVGMQg76cUyMiq for <xfs@oss.sgi.com>;
+	Tue, 12 Jun 2012 19:16:13 -0700 (PDT)
+Date: Wed, 13 Jun 2012 12:16:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] vfs: add FALLOC_FL_ZERO_RANGE to fallocate
-Message-ID: <20120613015553.GP22848@dastard>
+Subject: Re: [PATCH 2/2] xfs: add FALLOC_FL_ZERO_RANGE to fallocate
+Message-ID: <20120613021610.GQ22848@dastard>
 References: <1339515364-17374-1-git-send-email-pbonzini@redhat.com>
-	<1339515364-17374-2-git-send-email-pbonzini@redhat.com>
+	<1339515364-17374-3-git-send-email-pbonzini@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339515364-17374-2-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <1339515364-17374-3-git-send-email-pbonzini@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,74 +28,63 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Paolo Bonzini <pbonzini@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, linux-kernel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Jun 12, 2012 at 05:36:03PM +0200, Paolo Bonzini wrote:
-> Add a new operation mode to fallocate, called FALLOC_FL_ZERO_RANGE.
-> It resembles the similarly named XFS ioctl.  Filesystems should
-> preallocate blocks for regions that span holes in the file, and convert
-> the entire range to unwritten extents. 
+On Tue, Jun 12, 2012 at 05:36:04PM +0200, Paolo Bonzini wrote:
+> This is implemented in the same way as the other fallocate modes.  All of
+> them map to XFS ioctls that are implemented by xfs_change_file_space.
+> 
+> However, we need to cap the length to the inode size if the user requested
+> FALLOC_FL_KEEP_SIZE.
 
-You've described filesystem implementation details, not a
-description of the functionality. The functionality is simply that
-after this call is made the range of the file specified will return
-zeros when read.  You need to write the addition to the fallocate()
-man page, and that will help you describe what the API is supposed
-to do, not how a filesystem implements it....
+That's done on purpose.  fallocate() explicitly allows preallocation
+beyond EOF and that's what the FALLOC_FL_KEEP_SIZE flag is for - to
+allow both offset and offset+len to lie beyond the current inode
+size and have the preallocation succeed without changing the file
+size.
 
-FWIW, It is up to the filesytem to optimise this as best they can.
-XFS, as you've described, implements with preallocation and
-real->unwritten conversion. Other filesystems might simply implement
-it as "hole punch + preallocation", for whatever those filesystems
-use for that functionality (for some, preallocation means "write
-zeros to disk").
+This is so that we can prevent fragmentation of slow growing
+append-only files like log files - we can preallocate way beyond EOF
+without changing EOF so as the file grows over days and weeks it
+does not fragment.
 
-> This operation is a fast method
-> of overwriting any from the range specified with zeros without removing
-> any blocks or having to write zeros to disk.
+Similarly, hole punch needs to be able to punch out such
+preallocated extents beyond EOF if requested, and it definitely must
+not change EOF. So capping/erroring out when offset/offset+len is
+definitely the wrong thing to do when FALLOC_FL_KEEP_SIZE is set.
 
-Well, that is the method XFS uses, but the idea is to avoid that if
-they can. i.e. be fast.  Think about that for a moment - if the
-range is fragmented or sparse, it may be faster makes sense to punch
-out the existing extents and preallocate a single new extent in this
-case that to have to allocate multiple (potentially hundreds or
-thousands) small extents to fill holes.
+> Cc: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+> ---
+>  fs/xfs/xfs_file.c |   36 ++++++++++++++++++++++++------------
+>  1 files changed, 24 insertions(+), 12 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> index 9f7ec15..c811cf9 100644
+> --- a/fs/xfs/xfs_file.c
+> +++ b/fs/xfs/xfs_file.c
+> @@ -818,33 +818,45 @@ xfs_file_fallocate(
+>  	loff_t		new_size = 0;
+>  	xfs_flock64_t	bf;
+>  	xfs_inode_t	*ip = XFS_I(inode);
+> -	int		cmd = XFS_IOC_RESVSP;
+> +	int		cmd;
+>  	int		attr_flags = XFS_ATTR_NOLOCK;
+>  
+> -	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE))
+> +	if (mode & ~(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |
+> +		     FALLOC_FL_ZERO_RANGE))
+>  		return -EOPNOTSUPP;
+>  
+> +	BUG_ON((mode & FALLOC_FL_PUNCH_HOLE) && (mode & FALLOC_FL_ZERO_RANGE));
 
-Just because I implemented it the easy way in XFS for the person
-that requested it (i.e. zeroing preallocated VM images that were
-already perfectly laid out) doesn't mean that is the only way it can
-be implemented.
-
-> Any subsequent read in the given range will return zeros until new
-> data is written.
-
-That should be the second sentence of the commit message.
-
-> This functionality requires filesystems to support unwritten extents.
-> If xfs_info(8) reports unwritten=1, then the filesystem was made to
-> flag unwritten extents.  It is okay to report EOPNOTSUPP and let the
-> application deal with the outcome, but it is not okay to succeed or
-> report EOPNOTSUPP for the same inode depending on the other arguments.
-
-I don't think that is true, nor necessary, for the commit message -
-filesystems without unwritten extents can implement this quite
-easily just by writing zeros to the range just like some do for
-preallocation.
-
-> FALLOC_FL_PUNCH_HOLE|FALLOC_FL_ZERO_RANGE is ruled out here, at the
-> vfs level, rather than leaving it to the filesystems.  This way, in the
-> future 0x6 could be used as a third mode.
-
-We have more than enough feature bits that we don't need to
-contemplate mixing various combinations to provide different
-features in future.
-
-Besides, a filesystem could interpret that pair as "punch the range,
-then preallocate it" rather than "convert to unwritten and hole fill
-with preallocation", so I do not see them as mutually exclusive. If
-the filesystem wants to treat them that way, then they are welcome
-to, but I can definitely see a use case for allowing them both to be
-set....
+Never put BUG_ON() or BUG() in XFS code that can return an error.
+Return EINVAL if we chose not to support it, and if it's really
+something we consider bad, emit a warning to syslog (i.e.
+xfs_warn()) and potentially add a ASSERT() case so that debug
+kernels will trip over it. Nobody should be panicing a production
+system just because a user supplied a set of incorrect syscall
+paramters....
 
 Cheers,
 
