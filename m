@@ -1,20 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5E5p6r4223908 for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 00:51:06 -0500
-Received: from LGEMRELSE1Q.lge.com (LGEMRELSE1Q.lge.com [156.147.1.111]) by
-	cuda.sgi.com with ESMTP id n6LhZ0xCLzWXgmjO for
-	<xfs@oss.sgi.com>; Wed, 13 Jun 2012 22:51:03 -0700 (PDT)
-Message-ID: <4FD97BC7.3080107@kernel.org>
-Date: Thu, 14 Jun 2012 14:51:03 +0900
-From: Minchan Kim <minchan@kernel.org>
+	q5E7VPXr231311 for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 02:31:25 -0500
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id dhnkixKvaBpFP96B (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 14 Jun 2012 00:31:22 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (h081217106014.dyn.cm.kabsi.at [81.217.106.14])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPSA id 2E5881828D99
+	for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 09:31:21 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	by mailsrv.i.zmi.at (Postfix) with ESMTP id 3E13ECD7C8C
+	for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 09:32:46 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: Re: XFS hangs and freezes with LSI 9265-8i controller on high i/o
+Date: Thu, 14 Jun 2012 09:31:20 +0200
+Message-ID: <9309089.RkWiC1Z3da@saturn>
+In-Reply-To: <4FD8BBDF.8060503@hardwarefreak.com>
+References: <4FD66513.2000108@xsnews.nl> <6637532.ZKYiNbq2uo@saturn>
+	<4FD8BBDF.8060503@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mm: add gfp_mask parameter to vm_map_ram()
-References: <20120612012134.GA7706@localhost> <20120613123932.GA1445@localhost>
-	<20120614012026.GL3019@devil.redhat.com>
-	<20120614014902.GB7289@localhost> <4FD94779.3030108@kernel.org>
-	<20120614033429.GD7339@dastard>
-In-Reply-To: <20120614033429.GD7339@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,158 +30,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============9223015200864803812=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Memory Management List <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>
-
-On 06/14/2012 12:34 PM, Dave Chinner wrote:
-
-> On Thu, Jun 14, 2012 at 11:07:53AM +0900, Minchan Kim wrote:
->> Hi Fengguang,
->>
->> On 06/14/2012 10:49 AM, Fengguang Wu wrote:
->>
->>> On Thu, Jun 14, 2012 at 11:20:26AM +1000, Dave Chinner wrote:
->>>> On Wed, Jun 13, 2012 at 08:39:32PM +0800, Fengguang Wu wrote:
->>>>> Hi Christoph, Dave,
->>>>>
->>>>> I got this lockdep warning on XFS when running the xfs tests:
-> 
-> [rant warning]
-> 
->>>> Bug in vm_map_ram - it does an unconditional GFP_KERNEL allocation
->>>> here, and we are in a GFP_NOFS context. We can't pass a gfp_mask to
->>>> vm_map_ram(), so until vm_map_ram() grows that we can't fix it...
->>>
->>> This trivial patch should fix it.
-> .....
->>
->> It shouldn't work because vmap_page_range still can allocate GFP_KERNEL by pud_alloc in vmap_pud_range.
->> For it, I tried [1] but other mm guys want to add WARNING [2] so let's avoiding gfp context passing.
-> 
-> Oh, wonderful, you're pulling the "it's not a MM issue, don't use
-> vmalloc" card.
-> 
->> [1] https://lkml.org/lkml/2012/4/23/77
-> 
-> https://lkml.org/lkml/2012/4/24/29
-> 
-> "vmalloc was never supposed to use gfp flags for allocation
-> "context" restriction. I.e., it was always supposed to have
-> blocking, fs, and io capable allocation context."
-> 
-> vmalloc always was a badly neglected, ugly step-sister of kmalloc
-> that was kept in the basement and only brought out when the tax
-> collector called.  But that inner ugliness doesn't change the fact
-> that beatiful things have been built around it. XFS has used
-> vm_map_ram() and it's predecessor since it was first ported to linux
-> some 13 or 14 years ago, so the above claim is way out of date. i.e.
-> vmalloc has been used in GFP_NOFS context since before that flag
-> even existed....
-> 
-> http://lkml.org/lkml/2012/4/24/67
-> 
-> "I would say add a bit of warnings and documentation, and see what
-> can be done about callers."
-> 
-> Wonderful. Well, there's about 2 years of work queued up for me
-> before I even get to the do the open heart surgery that would allow
-> XFS to handle memory allocation failures at this level without
-> causing the filesystem to shut down.
-> 
-> Andrew Morton's response:
-> 
-> https://lkml.org/lkml/2012/4/24/413
-> 
-> "There are gruesome problems in block/blk-throttle.c (thread
-> "mempool, percpu, blkcg: fix percpu stat allocation and remove
-> stats_lock").  It wants to do an alloc_percpu()->vmalloc() from the
-> IO submission path, under GFP_NOIO.
-> 
-> Changing vmalloc() to take a gfp_t does make lots of sense, although
-> I worry a bit about making vmalloc() easier to use!"
-> 
-> OK, so according to Andrew there is no technical reason why it can't
-> be done, it's just handwaving about "vmalloc is bad"....
-> 
-> 
->> [2] https://lkml.org/lkml/2012/5/2/340
-> 
-> https://lkml.org/lkml/2012/5/2/452
-> 
-> "> Where are these offending callsites?
-> 
-> dm:
-> ...
-> ubi:
-> ....
-> ext4:
-> ....
-> ntfs:
-> ....
-> ubifs:
-> ....
-> mm:
-> ....
-> ceph:
-> ...."
-> 
-> So, we've got a bunch of filesystems that require vmalloc under
-> GFP_NOFS conditions. Perhaps there's a reason for needing to be able
-> to do this in filesystem code? Like, perhaps, avoiding memory
-> reclaim deadlocks?
-> 
-> https://lkml.org/lkml/2012/5/3/27
-> 
-> "Note that in writeback paths, a "good citizen" filesystem should
-> not require any allocations, or at least it should be able to
-> tolerate allocation failures.  So fixing that would be a good idea
-> anyway."
-> 
-> Oh, please. I have been hearing this for years, and are we any
-> closer to it? No, we are further away from ever being able to
-> acheive this than ever. Face it, filesystems require memory
-> allocation to write dirty data to disk, and the amount is almost
-> impossible to define. Hence mempools can't be used because we can't
-> give any guarantees of forward progress. And for vmalloc?
-> 
-> Filesystems widely use vmalloc/vm_map_ram because kmalloc fails on
-> large contiguous allocations. This renders kmalloc unfit for
-> purpose, so we have to fall back to single page allocation and
-> vm_map_ram or vmalloc so that the filesystem can function properly.
-> And to avoid deadlocks, all memory allocation must be able to
-> specify GFP_NOFS to prevent the MM subsystem from recursing into the
-> filesystem. Therefore, vmalloc needs to support GFP_NOFS.
-> 
-> I don't care how you make it happen, just fix it. Trying to place
-> the blame on the filesystem folk for using vmalloc in GFP_NOFS
-> contexts is a total and utter cop-out, because mm folk of all people
-> should know that non-zero order kmalloc is not a reliable
-> alternative....
-> 
-> [end rant]
-> 
-> Cheers,
-> 
-> Dave.
+To: xfs@oss.sgi.com
 
 
-Again, hot potato.
+--===============9223015200864803812==
+Content-Type: multipart/signed; boundary="nextPart3346696.vH1IMt5REL"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
 
-I understand your claim and biased on you.
-Day by day, guys are adding their memory pool for avoiding this problem.
-IMHO, It's not good. If we can support context gfp passing in vmalloc, we could save many code.
-It means less error-prone as well as less code size.
-Ccing Nick. I hope we reach a agreement about this problem in this chance. 
 
--- 
-Kind regards,
-Minchan Kim
+--nextPart3346696.vH1IMt5REL
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+
+Am Mittwoch, 13. Juni 2012, 11:12:15 schrieb Stan Hoeppner:
+> This is the LSI/3ware firmware default policy Michael, so every user
+> is safe out-of-the-box.  If the BBU/FBU is not present (never
+> installed), or the control logic determines it is not functioning
+> properly, the firmware disables writeback caching.
+>=20
+> In absence of paying attention to logs/alerts, one will know pretty
+> quickly when the BBU has failed, as write performance with many/most
+> workloads will fall off a cliff.
+
+That's good, and I guess every serious raid with bbu behaves the same. =
+I=20
+just wanted to make a statement because many people read "maximum=20
+performance" and want this then, without understanding the downsides ak=
+a=20
+"all data can be gone if a crash destroys the right metadata".=20
+
+I get calls from people then whining, and they expect me not yell at=20=
+
+them but be friendly, which I don't like ;-)
+
+I prefer to not speak about max perf if it means "probably eats your=20=
+
+data". Maybe we should always write "set this for max performance" only=
+=20
+with secure values, and then extra "and set this for turbo boost, but i=
+t=20
+eats your data on a crash". Hopefully this helps keeping people from=20=
+
+just reading "max perf" and forget about the "eats your data" part.
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+
+--nextPart3346696.vH1IMt5REL
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAk/Zk0gACgkQzhSR9xwSCbRMKACffSqjJKNhf+FVfnOAPdrX2B49
+IqMAn0L1DTTyAy/1ZbQyN2YaNynAjxO/
+=YppU
+-----END PGP SIGNATURE-----
+
+--nextPart3346696.vH1IMt5REL--
+
+
+--===============9223015200864803812==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============9223015200864803812==--
