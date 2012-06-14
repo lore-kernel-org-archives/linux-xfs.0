@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5E3rjjT214218 for <xfs@oss.sgi.com>; Wed, 13 Jun 2012 22:53:46 -0500
-Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
-	[209.85.210.53]) by cuda.sgi.com with ESMTP id ZxsCgdjRtpPawKJv
-	(version=TLSv1 cipher=RC4-MD5 bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 13 Jun 2012 20:53:44 -0700 (PDT)
-Received: by dadg9 with SMTP id g9so2312370dad.26
-	for <xfs@oss.sgi.com>; Wed, 13 Jun 2012 20:53:44 -0700 (PDT)
-Date: Wed, 13 Jun 2012 20:53:42 -0700 (PDT)
-From: David Rientjes <rientjes@google.com>
+	q5E5p6r4223908 for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 00:51:06 -0500
+Received: from LGEMRELSE1Q.lge.com (LGEMRELSE1Q.lge.com [156.147.1.111]) by
+	cuda.sgi.com with ESMTP id n6LhZ0xCLzWXgmjO for
+	<xfs@oss.sgi.com>; Wed, 13 Jun 2012 22:51:03 -0700 (PDT)
+Message-ID: <4FD97BC7.3080107@kernel.org>
+Date: Thu, 14 Jun 2012 14:51:03 +0900
+From: Minchan Kim <minchan@kernel.org>
+MIME-Version: 1.0
 Subject: Re: [PATCH] mm: add gfp_mask parameter to vm_map_ram()
-In-Reply-To: <20120614033429.GD7339@dastard>
-Message-ID: <alpine.DEB.2.00.1206132049540.6126@chino.kir.corp.google.com>
 References: <20120612012134.GA7706@localhost> <20120613123932.GA1445@localhost>
 	<20120614012026.GL3019@devil.redhat.com>
 	<20120614014902.GB7289@localhost> <4FD94779.3030108@kernel.org>
 	<20120614033429.GD7339@dastard>
-MIME-Version: 1.0
+In-Reply-To: <20120614033429.GD7339@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,10 +28,112 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Memory Management List <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Minchan Kim <minchan@kernel.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, Tejun Heo <tj@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>
+Cc: Linux Memory Management List <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, Nick Piggin <npiggin@gmail.com>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>
 
-On Thu, 14 Jun 2012, Dave Chinner wrote:
+On 06/14/2012 12:34 PM, Dave Chinner wrote:
 
+> On Thu, Jun 14, 2012 at 11:07:53AM +0900, Minchan Kim wrote:
+>> Hi Fengguang,
+>>
+>> On 06/14/2012 10:49 AM, Fengguang Wu wrote:
+>>
+>>> On Thu, Jun 14, 2012 at 11:20:26AM +1000, Dave Chinner wrote:
+>>>> On Wed, Jun 13, 2012 at 08:39:32PM +0800, Fengguang Wu wrote:
+>>>>> Hi Christoph, Dave,
+>>>>>
+>>>>> I got this lockdep warning on XFS when running the xfs tests:
+> 
+> [rant warning]
+> 
+>>>> Bug in vm_map_ram - it does an unconditional GFP_KERNEL allocation
+>>>> here, and we are in a GFP_NOFS context. We can't pass a gfp_mask to
+>>>> vm_map_ram(), so until vm_map_ram() grows that we can't fix it...
+>>>
+>>> This trivial patch should fix it.
+> .....
+>>
+>> It shouldn't work because vmap_page_range still can allocate GFP_KERNEL by pud_alloc in vmap_pud_range.
+>> For it, I tried [1] but other mm guys want to add WARNING [2] so let's avoiding gfp context passing.
+> 
+> Oh, wonderful, you're pulling the "it's not a MM issue, don't use
+> vmalloc" card.
+> 
+>> [1] https://lkml.org/lkml/2012/4/23/77
+> 
+> https://lkml.org/lkml/2012/4/24/29
+> 
+> "vmalloc was never supposed to use gfp flags for allocation
+> "context" restriction. I.e., it was always supposed to have
+> blocking, fs, and io capable allocation context."
+> 
+> vmalloc always was a badly neglected, ugly step-sister of kmalloc
+> that was kept in the basement and only brought out when the tax
+> collector called.  But that inner ugliness doesn't change the fact
+> that beatiful things have been built around it. XFS has used
+> vm_map_ram() and it's predecessor since it was first ported to linux
+> some 13 or 14 years ago, so the above claim is way out of date. i.e.
+> vmalloc has been used in GFP_NOFS context since before that flag
+> even existed....
+> 
+> http://lkml.org/lkml/2012/4/24/67
+> 
+> "I would say add a bit of warnings and documentation, and see what
+> can be done about callers."
+> 
+> Wonderful. Well, there's about 2 years of work queued up for me
+> before I even get to the do the open heart surgery that would allow
+> XFS to handle memory allocation failures at this level without
+> causing the filesystem to shut down.
+> 
+> Andrew Morton's response:
+> 
+> https://lkml.org/lkml/2012/4/24/413
+> 
+> "There are gruesome problems in block/blk-throttle.c (thread
+> "mempool, percpu, blkcg: fix percpu stat allocation and remove
+> stats_lock").  It wants to do an alloc_percpu()->vmalloc() from the
+> IO submission path, under GFP_NOIO.
+> 
+> Changing vmalloc() to take a gfp_t does make lots of sense, although
+> I worry a bit about making vmalloc() easier to use!"
+> 
+> OK, so according to Andrew there is no technical reason why it can't
+> be done, it's just handwaving about "vmalloc is bad"....
+> 
+> 
+>> [2] https://lkml.org/lkml/2012/5/2/340
+> 
+> https://lkml.org/lkml/2012/5/2/452
+> 
+> "> Where are these offending callsites?
+> 
+> dm:
+> ...
+> ubi:
+> ....
+> ext4:
+> ....
+> ntfs:
+> ....
+> ubifs:
+> ....
+> mm:
+> ....
+> ceph:
+> ...."
+> 
+> So, we've got a bunch of filesystems that require vmalloc under
+> GFP_NOFS conditions. Perhaps there's a reason for needing to be able
+> to do this in filesystem code? Like, perhaps, avoiding memory
+> reclaim deadlocks?
+> 
+> https://lkml.org/lkml/2012/5/3/27
+> 
+> "Note that in writeback paths, a "good citizen" filesystem should
+> not require any allocations, or at least it should be able to
+> tolerate allocation failures.  So fixing that would be a good idea
+> anyway."
+> 
 > Oh, please. I have been hearing this for years, and are we any
 > closer to it? No, we are further away from ever being able to
 > acheive this than ever. Face it, filesystems require memory
@@ -56,16 +155,24 @@ On Thu, 14 Jun 2012, Dave Chinner wrote:
 > should know that non-zero order kmalloc is not a reliable
 > alternative....
 > 
+> [end rant]
+> 
+> Cheers,
+> 
+> Dave.
 
-I'd actually like to see a demonstrated problem (i.e. not theoretical) 
-where vmalloc() stalls indefinitely because its passed GFP_NOFS.  I've 
-never seen one reported.
 
-This is because the per-arch pte allocators have hardwired GFP_KERNEL 
-flags, but then again they also have __GFP_REPEAT which would cause them 
-to loop infinitely in the page allocator if a page was not reclaimed, 
-which has little success without __GFP_FS.  But nobody has ever reported a 
-livelock that was triaged back to passing !__GFP_FS to vmalloc().
+Again, hot potato.
+
+I understand your claim and biased on you.
+Day by day, guys are adding their memory pool for avoiding this problem.
+IMHO, It's not good. If we can support context gfp passing in vmalloc, we could save many code.
+It means less error-prone as well as less code size.
+Ccing Nick. I hope we reach a agreement about this problem in this chance. 
+
+-- 
+Kind regards,
+Minchan Kim
 
 _______________________________________________
 xfs mailing list
