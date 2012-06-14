@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5E2Fq37208975 for <xfs@oss.sgi.com>; Wed, 13 Jun 2012 21:15:53 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	mLcy8QmYYglfGjtL for <xfs@oss.sgi.com>;
-	Wed, 13 Jun 2012 19:15:51 -0700 (PDT)
-Date: Thu, 14 Jun 2012 12:15:47 +1000
-From: Dave Chinner <david@fromorbit.com>
+	q5E2LkwJ209284 for <xfs@oss.sgi.com>; Wed, 13 Jun 2012 21:21:46 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	jS6sws2X7UdSuAEl (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 13 Jun 2012 19:21:45 -0700 (PDT)
+Received: by obbuo19 with SMTP id uo19so1921906obb.26
+	for <xfs@oss.sgi.com>; Wed, 13 Jun 2012 19:21:44 -0700 (PDT)
+Date: Thu, 14 Jun 2012 11:21:32 +0900
+From: Tejun Heo <tj@kernel.org>
 Subject: Re: [PATCH] mm: add gfp_mask parameter to vm_map_ram()
-Message-ID: <20120614021547.GC7339@dastard>
+Message-ID: <20120614022132.GA3766@dhcp-172-17-108-109.mtv.corp.google.com>
 References: <20120612012134.GA7706@localhost> <20120613123932.GA1445@localhost>
 	<20120614012026.GL3019@devil.redhat.com>
-	<20120614014902.GB7289@localhost>
+	<20120614014902.GB7289@localhost> <4FD94779.3030108@kernel.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120614014902.GB7289@localhost>
+In-Reply-To: <4FD94779.3030108@kernel.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,42 +31,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Fengguang Wu <fengguang.wu@intel.com>
-Cc: Linux Memory Management List <linux-mm@kvack.org>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Tejun Heo <tj@kernel.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Minchan Kim <minchan@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, Linux Memory Management List <linux-mm@kvack.org>, Dave Chinner <dchinner@redhat.com>, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Fengguang Wu <fengguang.wu@intel.com>
 
-On Thu, Jun 14, 2012 at 09:49:02AM +0800, Fengguang Wu wrote:
-> On Thu, Jun 14, 2012 at 11:20:26AM +1000, Dave Chinner wrote:
-> > 
-> > Bug in vm_map_ram - it does an unconditional GFP_KERNEL allocation
-> > here, and we are in a GFP_NOFS context. We can't pass a gfp_mask to
-> > vm_map_ram(), so until vm_map_ram() grows that we can't fix it...
+Hello, guys.
+
+On Thu, Jun 14, 2012 at 11:07:53AM +0900, Minchan Kim wrote:
+> It shouldn't work because vmap_page_range still can allocate
+> GFP_KERNEL by pud_alloc in vmap_pud_range.  For it, I tried [1] but
+> other mm guys want to add WARNING [2] so let's avoiding gfp context
+> passing.
 > 
-> This trivial patch should fix it.
-> 
-> The only behavior change is the XFS part:
-> 
-> @@ -406,7 +406,7 @@ _xfs_buf_map_pages(
->  
->                 do {
->                         bp->b_addr = vm_map_ram(bp->b_pages, bp->b_page_count,
-> -                                               -1, PAGE_KERNEL);
-> +                                               -1, GFP_NOFS, PAGE_KERNEL);
+> [1] https://lkml.org/lkml/2012/4/23/77
+> [2] https://lkml.org/lkml/2012/5/2/340
 
-This function isn't always called in GFP_NOFS context - readahead
-uses different memory allocation semantics (no retry, no warn), so
-there are flags that tell it what to do. i.e.
+Yeah, vmalloc area doesn't support !GFP_KERNEL allocations and as
+Minchan said, changing this would require updating page table
+allocation functions on all archs.  This is the same reason why percpu
+allocator doesn't support !GFP_KERNEL allocations which in turn made
+blk-throttle implement its own private percpu pool.
 
--						-1, PAGE_KERNEL);
-+						-1, xb_to_gfp(flags), PAGE_KERNEL);
+If xfs can't live without GFP_NOFS vmalloc allocations, either it has
+to implement its own pool or maybe it's time to implement !GFP_KERNEL
+allocs for vmalloc area.  I don't know.
 
-Otherwise looks fine to me...
+Thanks.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+tejun
 
 _______________________________________________
 xfs mailing list
