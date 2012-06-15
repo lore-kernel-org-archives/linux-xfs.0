@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5ENux5h036503 for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 18:57:00 -0500
+	q5F0G7MU037873 for <xfs@oss.sgi.com>; Thu, 14 Jun 2012 19:16:07 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kwkwL4hv3ZYE2HOC for <xfs@oss.sgi.com>;
-	Thu, 14 Jun 2012 16:56:58 -0700 (PDT)
-Date: Fri, 15 Jun 2012 09:56:53 +1000
+	rBMG2vznSTqUu2AZ for <xfs@oss.sgi.com>;
+	Thu, 14 Jun 2012 17:16:05 -0700 (PDT)
+Date: Fri, 15 Jun 2012 10:16:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
-Message-ID: <20120614235653.GE7339@dastard>
-References: <20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
-	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
-	<20120525204536.GA4721@sgi.com> <20120606042647.GK22848@dastard>
-	<20120611204516.GR4721@sgi.com> <4FD65F00.1010309@sgi.com>
-	<20120611233618.GD22848@dastard> <4FDA1BA8.4080402@sgi.com>
+Subject: Re: XFS hangs and freezes with LSI 9265-8i controller on high i/o
+Message-ID: <20120615001602.GF7339@dastard>
+References: <4FD66513.2000108@xsnews.nl> <20120612011812.GK22848@dastard>
+	<4FD766A7.9030908@xsnews.nl> <20120613011950.GN22848@dastard>
+	<4FD8552C.4090208@xsnews.nl> <20120614000411.GY22848@dastard>
+	<4FD9F5B3.3040901@xsnews.nl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FDA1BA8.4080402@sgi.com>
+In-Reply-To: <4FD9F5B3.3040901@xsnews.nl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,90 +29,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Matthew Whittaker-Williams <matthew@xsnews.nl>
+Cc: xfs@oss.sgi.com
 
-On Thu, Jun 14, 2012 at 12:13:12PM -0500, Mark Tinguely wrote:
-> On 06/11/12 18:36, Dave Chinner wrote:
-> >On Mon, Jun 11, 2012 at 04:11:28PM -0500, Mark Tinguely wrote:
-> >>On 06/11/12 15:45, Ben Myers wrote:
-> >>...
-> >>
-> >>>That sounds pretty good.  In particular, I think that making the start
-> >>>and stop of the workqueues correct should be the high priority.  I'm not
-> >>>as concerned about the accuracy of the names, or cleaning up xfs_sync.c
-> >>>and xfs_iget.c, but cleanups are worth doing too.
-> >>>
-> >>>I hit a crash related to the xfslogd workqueue awhile back.  Mark has
-> >>>taken it up, so there might be a little coordination to do with him.
-> >>>
-> >>>Regards,
-> >>>	Ben
-> >>
-> >>To not leave a teaser out there:
-> >>
-> >>PID: 25879  TASK: ffff88012ac20340  CPU: 3   COMMAND: "kworker/3:3"
-> >>  #0 [ffff8801a72af920] machine_kexec at ffffffff810244e9
-> >>  #1 [ffff8801a72af990] crash_kexec at ffffffff8108d053
-> >>  #2 [ffff8801a72afa60] oops_end at ffffffff813ad1b8
-> >>  #3 [ffff8801a72afa90] no_context at ffffffff8102bd48
-> >>  #4 [ffff8801a72afae0] __bad_area_nosemaphore at ffffffff8102c04d
-> >>  #5 [ffff8801a72afb30] bad_area_nosemaphore at ffffffff8102c12e
-> >>  #6 [ffff8801a72afb40] do_page_fault at ffffffff813afaee
-> >>  #7 [ffff8801a72afc50] page_fault at ffffffff813ac635
-> >>     [exception RIP: xlog_assign_tail_lsn_locked+72]
-> >>     RIP: ffffffffa040da68  RSP: ffff8801a72afd00  RFLAGS: 00010246
-> >>     RAX: 0000000000000000  RBX: 0000000000000000  RCX: dead000000200200
-> >>     RDX: ffff88013b32d550  RSI: dead000000100100  RDI: ffff88013b32d550
-> >>     RBP: ffff8801a72afd10   R8: ffff8801a72ae000   R9: 0000000000000000
-> >>     R10: 0000000000000000  R11: 0000000000000000  R12: ffff88013b32d568
-> >>     R13: 0000000000000001  R14: ffff8801a72afd90  R15: ffff88013b32d540
-> >>     ORIG_RAX: ffffffffffffffff  CS: 0010  SS: 0018
-> >>  #8 [ffff8801a72afd18] xfs_trans_ail_delete_bulk at ffffffffa0414b2a [xfs]
-> >>  #9 [ffff8801a72afd78] xfs_buf_iodone at ffffffffa04119c7 [xfs]
-> >>#10 [ffff8801a72afdb8] xfs_buf_do_callbacks at ffffffffa041166c [xfs]
-> >>#11 [ffff8801a72afdd8] xfs_buf_iodone_callbacks at ffffffffa04117de [xfs]
-> >>#12 [ffff8801a72afdf8] xfs_buf_iodone_work at ffffffffa03ad7e1 [xfs]
-> >>#13 [ffff8801a72afe18] process_one_work at ffffffff8104c53b
-> >>#14 [ffff8801a72afe68] worker_thread at ffffffff8104f0e3
-> >>#15 [ffff8801a72afee8] kthread at ffffffff8105395e
-> >>#16 [ffff8801a72aff48] kernel_thread_helper at ffffffff813b3ae4
-> >>
-> >>I am just digging through that crash. It appears that xfs_umountfs()
-> >>did a good job in cleaning the AIL and the m_ddev_targp, but it
-> >>needs to wait for the xfslogd to be finished before deallocating the
-> >>log.
-> >
-> >It is supposed to be already idle before the log is torn down.  The
-> >log is forced synchronously while flushes remaining CIL items, then
-> >the AIL is emptied synchronously. That should result in no
-> >outstanding log operations to be run. Then xfs_log_unmount_write()
-> >is called, which is supposed to wait for the log write to complete
-> >before allowing the log to be torn down in xfs_log_unmount(). i.e.
-> >it is also synchronous.
-> >
-> >So the question that needs to be answered is this: what is the
-> >transaction/checkpoint that is being completed here?
-> >
-> >>Since workqueues are cheap, maybe it would be smart to have a
-> >>per-filesystem xfslogd too.
-> >
-> >That's overkill. If all we need is to ensure that we have emptied
-> >the logd wq, then a synchronous flush is all that is necessary. But
-> >first we need to find the cause of the above problem, and I'd
-> >suggest a new thread for that...
+On Thu, Jun 14, 2012 at 04:31:15PM +0200, Matthew Whittaker-Williams wrote:
+> iostat:
 > 
-> I know this should be a separate thread, but a quick FYI that the buffer
-> that is being flushed has the XFS_SB_MAGIC in it. A late dirty of the
-> superblock from the shutdown process?
+> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await  svctm  %util
+> sda               0.00     0.00   81.80    1.40    10.22     0.18 256.00   531.91 5349.11  12.02 100.00
+> sda               0.00     0.00   83.40    1.20    10.37     0.15 254.56   525.35 4350.67  11.82 100.00
+> sda               0.00     0.00   79.20    0.80     9.90     0.10 256.00   530.14 3153.38  12.50 100.00
+> sda               0.00     0.00   72.80    2.20     9.09     0.13 251.72   546.08 8709.54  13.33 100.00
+> sda               0.00     0.00   79.80    1.40     9.95     0.12 254.07   535.35 5172.22  12.32 100.00
+> sda               0.00     0.00   99.60    1.20    12.41     0.08 253.86   529.49 3560.89   9.92 100.00
+> sda               0.00     0.00   60.80    1.40     7.59     0.11 253.77   527.21 6545.50  16.08 100.00
+> sda               0.00     0.00   79.00    1.80     9.84     0.08 251.51   547.93 6400.42  12.38 100.00
+> sda               0.00     0.00   82.20    2.20    10.25     0.01 248.93   536.42 7415.77  11.85 100.00
+> sda               0.00     0.00   89.40    2.20    11.17     0.01 249.90   525.68 7232.96  10.92 100.00
+> sda               0.00     0.00   82.00    1.20    10.22     0.08 253.37   541.60 4170.95  12.02 100.00
+> sda               0.00     0.00   62.80    2.60     7.85     0.14 250.31   541.15 11260.81  15.29 100.00
+> sda               0.00     0.00   85.00    1.80    10.61     0.21 255.47   529.36 6514.85  11.52 100.00
+> sda               0.00     0.00   75.20    1.40     9.38     0.11 253.72   535.68 5416.70  13.05 100.00
+> sda               0.00     0.00   66.80    1.20     8.33     0.11 254.19   546.68 5459.11  14.71 100.00
+> sda               0.00     0.00   81.40    0.80    10.15     0.10 255.38   540.62 3171.57  12.17 100.00
+> sda               0.00     0.00   72.20    1.20     9.02     0.15 255.74   535.26 5345.51  13.62 100.00
+> sda               0.00     0.00   91.00    1.00    11.35     0.12 255.44   531.02 3637.72  10.87 100.00
+> sda               0.00     0.00   81.00    1.60    10.12     0.20 255.96   524.44 6513.22  12.11 100.00
+> sda               0.00     0.00   72.80    2.40     9.04     0.26 253.24   543.25 9071.66  13.30 100.00
+> sda               0.00     0.00   73.80    1.20     9.18     0.15 254.63   539.20 5087.91  13.33 100.00
+> sda               0.00     0.00   79.20    1.40     9.90     0.18 256.00   532.38 5592.38  12.41 100.00
+> sda               0.00     0.20   79.40    1.00     9.90     0.12 255.36   528.07 4091.22  12.44 100.00
+> sda               0.00     0.00   88.40    1.20    11.05     0.15 256.00   528.13 4349.35  11.16 100.00
+> sda               0.00     0.00   69.60    2.40     8.65     0.23 252.71   527.46 9334.37  13.89 100.00
 
-Oh, well that makes it easy to find the bug. Took me about 10s to
-work it out with that information, without even looking at the
-code. ;)
+So, the average service time for an IO is 10-16ms, which is a seek
+per IO. You're doing primarily 128k read IOs, and maybe one or 2
+writes a second. You have a very deep request queue: > 512 requests.
+Have you tuned /sys/block/sda/queue/nr_requests up from the default
+of 128? This is going to be one of the causes of your problems - you
+have 511 oustanding write requests, and only one read at a time.
+Reduce the ioscehduer queue depth, and potentially also the device
+CTQ depth.
 
-So, have a look at xfs_unmountfs(), what it does with the superblock
-and the tell me what the bug is. Hint: the superblock is an uncached
-buffer....
+That tends to indicate that the write requests are causing RMW
+cycles in the RAID when flushing the cache, otherwise they'd simply
+hit the BBWC and return immediately. The other possibility is that
+the BBWC is operating in write-through mode rather than write back,
+but this is typical of a writeback cache filling up and then having
+to flush and the flush being -extremely- slow due to RMW cycles....
+
+Oh, I just noticed you are might be using CFQ (it's the default in
+dmesg). Don't - CFQ is highly unsuited for hardware RAID - it's
+hueristically tuned to work well on sngle SATA drives. Use deadline,
+or preferably for hardware RAID, noop.
 
 Cheers,
 
