@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5FCYq5w089986 for <xfs@oss.sgi.com>; Fri, 15 Jun 2012 07:34:52 -0500
+	q5FCd7Ds090424 for <xfs@oss.sgi.com>; Fri, 15 Jun 2012 07:39:07 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	unyPgye2mrcwdQBf (version=TLSv1 cipher=AES256-SHA bits=256
+	oLHqNesA0VOHoWuJ (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 15 Jun 2012 05:34:49 -0700 (PDT)
-Date: Fri, 15 Jun 2012 08:34:46 -0400
+	Fri, 15 Jun 2012 05:39:06 -0700 (PDT)
+Date: Fri, 15 Jun 2012 08:39:05 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: duplicate e-mails from xfs mailing list
-Message-ID: <20120615123446.GA8151@infradead.org>
-References: <1501163.1F5vkodrHu@saturn>
- <20120615123211.GD19223@dastard>
+Subject: Re: [PATCH] xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
+Message-ID: <20120615123905.GB8151@infradead.org>
+References: <1339474826-10414-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120615123211.GD19223@dastard>
+In-Reply-To: <1339474826-10414-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,22 +29,24 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Michael Monnerie <michael.monnerie@is.it-management.at>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 15, 2012 at 10:32:11PM +1000, Dave Chinner wrote:
-> On Fri, Jun 15, 2012 at 12:11:06PM +0200, Michael Monnerie wrote:
-> > Is it only me getting some e-mails from this list twice? Since some days 
-> > I see this, only from the xfs list, and only from some e-mails. Now I 
-> > saw it for my own last posting, so I'd like to know if others have the 
-> > same or it's a local mail server problem.
+On Tue, Jun 12, 2012 at 02:20:26PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I wouldn't have a clue - I have a dup filter that ensures I only
-> ever get one copy of any mail delivered (instead of a copy from
-> every list and the CC)....
+> When we fail to find an matching extent near the requested extent
+> specification during a left-right distance search in
+> xfs_alloc_ag_vextent_near, we fail to free the original cursor that
+> we used to look up the XFS_BTNUM_CNT tree and hence leak it.
+> 
+> Reported-by: Chris J Arges <chris.j.arges@canonical.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Tons of duplicated mail here.  It's particular hickup I'm only seeing on
-the xfs list, and not even other lists on oss (pcp, and in the past kdb
-are others I read)
+Looks correct for now, but mid-term this function absolutely needs
+a restructuring with good exit labels and a posisble a split up into
+multiple helpers.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
