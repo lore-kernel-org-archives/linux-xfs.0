@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5IGmehp209495 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 11:48:40 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id dJFjMFN2KFaq9L0b for
-	<xfs@oss.sgi.com>; Mon, 18 Jun 2012 09:48:39 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q5IGmdK4001342
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 12:48:39 -0400
-Message-ID: <4FDF5BE5.3000507@redhat.com>
-Date: Mon, 18 Jun 2012 11:48:37 -0500
-From: Eric Sandeen <sandeen@redhat.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: filter out latest xfsdump version messages
-References: <1340034963-24932-1-git-send-email-bfoster@redhat.com>
-	<4FDF54BB.1060902@redhat.com> <4FDF583A.2040403@redhat.com>
-In-Reply-To: <4FDF583A.2040403@redhat.com>
+	q5IIPeUW221086 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 13:25:40 -0500
+Received: from idcmail-mo2no.shaw.ca (idcmail-mo2no.shaw.ca [64.59.134.9]) by
+	cuda.sgi.com with ESMTP id zwMgKtUD2HnszxnN for
+	<xfs@oss.sgi.com>; Mon, 18 Jun 2012 11:25:39 -0700 (PDT)
+Subject: Re: XFS status update for May 2012
+Mime-Version: 1.0 (Apple Message framework v1084)
+From: Andreas Dilger <adilger@dilger.ca>
+In-Reply-To: <20120618120853.GA15480@infradead.org>
+Date: Mon, 18 Jun 2012 12:25:37 -0600
+Message-Id: <AD997E9D-2C1E-4EE4-80D7-2A5C998B6E9E@dilger.ca>
+References: <20120618120853.GA15480@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,52 +24,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
-On 6/18/12 11:32 AM, Brian Foster wrote:
-> On 06/18/2012 12:18 PM, Eric Sandeen wrote:
->> On 6/18/12 10:56 AM, Brian Foster wrote:
->>> The latest version of xfsdump/restore (3.1.0) causes dump tests
->>> to complain. Fix up the filter to include a wider selection of
->>> version numbers.
->>
->> Looks good to me, thanks - I'll merge it, but I think I'll
->> add a "^version" to it to make it a little more selective,
->> if that's ok with you.
->>
-> 
-> Fine by me, thanks.
+On 2012-06-18, at 6:08 AM, Christoph Hellwig wrote:
+> May saw the release of Linux 3.4, including a decent sized XFS update.
+> Remarkable XFS features in Linux 3.4 include moving over all metadata
+> updates to use transactions, the addition of a work queue for the
+> low-level allocator code to avoid stack overflows due to extreme stack
+> use in the Linux VM/VFS call chain,
 
-actually that's wrong, because it puts executable name at the beginning!
-Sorry.  I'll merge it as is, thanks.
+This is essentially a workaround for too-small stacks in the kernel,
+which we've had to do at times as well, by doing work in a separate
+thread (with a new stack) and waiting for the results?  This is a
+generic problem that any reasonably-complex filesystem will have when
+running under memory pressure on a complex storage stack (e.g. LVM +
+iSCSI), but causes unnecessary context switching.
 
--Eric
+Any thoughts on a better way to handle this, or will there continue
+to be a 4kB stack limit and hack around this with repeated kmalloc
+on callpaths for any struct over a few tens of bytes, implementing
+memory pools all over the place, and "forking" over to other threads
+to continue the stack consumption for another 4kB to work around
+the small stack limit?
 
-> Brian
-> 
->> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
->>
->>> Signed-off-by: Brian Foster <bfoster@redhat.com>
->>> ---
->>>  common.dump |    2 +-
->>>  1 files changed, 1 insertions(+), 1 deletions(-)
->>>
->>> diff --git a/common.dump b/common.dump
->>> index ca09ec1..61d3f43 100644
->>> --- a/common.dump
->>> +++ b/common.dump
->>> @@ -863,7 +863,7 @@ _dump_filter_main()
->>>        -e 's/1048576/BLOCKSZ/'				\
->>>        -e 's/2097152/BLOCKSZ/'				\
->>>        -e 's/(pid[	 ]*[1-9][0-9]*)/\(pid PID\)/'	\
->>> -      -e '/version 3\.0/d'				\
->>> +      -e '/version [3-9]\.[0-9]/d'				\
->>>        -e 's/\/hw\/module.*$/SCRATCH_DEV/'		\
->>>        -e 's/xfsdump: ino map phase 1: .*/xfsdump: ino map <PHASES>/' \
->>>        -e '/xfsdump: ino map phase [2]/,1d'		\
->>
-> 
+Cheers, Andreas
+
+
+
+
 
 _______________________________________________
 xfs mailing list
