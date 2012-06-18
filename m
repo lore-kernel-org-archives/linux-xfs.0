@@ -1,17 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5IL6lW7240465 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 16:06:48 -0500
-Date: Mon, 18 Jun 2012 16:07:13 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
-Message-ID: <20120618210713.GY4721@sgi.com>
-References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-3-git-send-email-david@fromorbit.com>
-	<20120618204325.GX4721@sgi.com>
+	q5ILBsAT241002 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 16:11:54 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id QYOyuJ5BMKuFmghA for <xfs@oss.sgi.com>;
+	Mon, 18 Jun 2012 14:11:53 -0700 (PDT)
+Message-ID: <4FDF9998.6020205@sandeen.net>
+Date: Mon, 18 Jun 2012 16:11:52 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120618204325.GX4721@sgi.com>
+Subject: Re: XFS status update for May 2012
+References: <20120618120853.GA15480@infradead.org>
+	<AD997E9D-2C1E-4EE4-80D7-2A5C998B6E9E@dilger.ca>
+In-Reply-To: <AD997E9D-2C1E-4EE4-80D7-2A5C998B6E9E@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,25 +25,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
-On Mon, Jun 18, 2012 at 03:43:25PM -0500, Ben Myers wrote:
-> On Fri, Jun 08, 2012 at 03:38:27PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > While the external interface currently uses separate blockno/length
-> > variables, we need to move internal interfaces to passing and
-> > parsing vector maps. This will then allow us to add external
-> > interfaces to support discontiguous buffer maps as the internal code
-> > will already support them.
+On 6/18/12 1:25 PM, Andreas Dilger wrote:
+> On 2012-06-18, at 6:08 AM, Christoph Hellwig wrote:
+>> May saw the release of Linux 3.4, including a decent sized XFS update.
+>> Remarkable XFS features in Linux 3.4 include moving over all metadata
+>> updates to use transactions, the addition of a work queue for the
+>> low-level allocator code to avoid stack overflows due to extreme stack
+>> use in the Linux VM/VFS call chain,
 > 
-> This also doesn't apply.  Do you have some additional patches onto which these
-> need to be applied?
+> This is essentially a workaround for too-small stacks in the kernel,
+> which we've had to do at times as well, by doing work in a separate
+> thread (with a new stack) and waiting for the results?  This is a
+> generic problem that any reasonably-complex filesystem will have when
+> running under memory pressure on a complex storage stack (e.g. LVM +
+> iSCSI), but causes unnecessary context switching.
+> 
+> Any thoughts on a better way to handle this, or will there continue
+> to be a 4kB stack limit and hack around this with repeated kmalloc
 
-Ah.. it's Christoph's inode allocator refactoring.  Ok then.
+well, 8k on x86_64 (not 4k) right?   But still...
 
--Ben
+Maybe it's still a partial hack but it's more generic - should we have
+IRQ stacks like x86 has?  (I think I'm right that that only exists
+on x86 / 32-bit) - is there any downside to that?
+
+We could still get into trouble I'm sure but usually we seem to see
+these stack overflows when we take an IRQ while already deep-ish
+in the stack.
+
+-Eric
+
+> on callpaths for any struct over a few tens of bytes, implementing
+> memory pools all over the place, and "forking" over to other threads
+> to continue the stack consumption for another 4kB to work around
+> the small stack limit?
+> 
+> Cheers, Andreas
+> 
+> 
+> 
+> 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
