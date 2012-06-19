@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JCaSWf088618 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 07:36:28 -0500
-Date: Tue, 19 Jun 2012 07:36:24 -0500
-From: Geoffrey Wehrman <gwehrman@sgi.com>
-Subject: Re: No space left on device
-Message-ID: <20120619123624.GD16802@sgi.com>
-References: <CA+UH363THQXhT8bH8Mb8Hpz9kvMnWxhq4ToVg6uiwDFLN91VmA@mail.gmail.com>
+	q5JDGx8v094094 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 08:17:00 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 4ViFjdzfrvEMblff for
+	<xfs@oss.sgi.com>; Tue, 19 Jun 2012 06:16:58 -0700 (PDT)
+Date: Tue, 19 Jun 2012 09:16:49 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
+Message-ID: <20120619131649.GA6811@redhat.com>
+References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
+	<20120619031241.GA3884@redhat.com>
+	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CA+UH363THQXhT8bH8Mb8Hpz9kvMnWxhq4ToVg6uiwDFLN91VmA@mail.gmail.com>
+In-Reply-To: <alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,168 +23,61 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?iso-8859-1?Q?Andr=E9_=D8ien?= Langvand <andre.oien.langvand@wimpmusic.com>
-Cc: xfs@oss.sgi.com
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
 
-On Tue, Jun 19, 2012 at 02:05:34PM +0200, Andr=E9 =D8ien Langvand wrote:
-| Hi,
-| =
-
-| I know there are quite a few posts regarding similar issues around, but I
-| can't seem to find a solution or at least an answer to why this is
-| happening in my case, so I thought I'd try the mailing list and I hope
-| that's okay.
-| =
-
-| We have 2 file servers with identical hardware and identical configuration
-| (Dell R610's, H800 controllers, MD1200 DAS, RAID-5) set up with rsync to
-| mirror the contents. The content is music in several formats (from PCM WAV
-| to 64kbit AAC previews), which means file sizes of about 1 - 40mb. Both
-| systems running SLES 11 SP1. Same kernel (2.6.32.59-0.3-default), same
-| xfsprogs version (xfsprogs-3.1.1-0.1.36).
-| =
-
-| My example partition on the source now has 9.9G (of 9.1T) available space
-| and still doesn't report the drive as full. On the destination, however, =
-it
-| wont allow me to use any of the remaining 51G. This is obviously a problem
-| when trying to do mirroring.
-| =
-
-| Both file systems have been mounted with inode64 option since first mount,
-| there are plenty of inodes available and I've also verified that there are
-| noe sparse files (find -type f -printf "%S\t%p\n" 2>/dev/null | gawk '{if
-| ($1 < 1.0) print $1 $2}'), just in case.
-| =
-
-| I have tried repairing (xfs_repair), defragmenting (xfs_fsr) and alter
-| imaxpct without any luck. Rsync is run like this: # ionice -c3 rsync -rv
-| --size-only --progress --delete-before --inplace.
-| =
-
-| =
-
-| More detailed information on source file system:
-| =
-
-| # df -k | grep sdg1
-| /dev/sdg1            9762777052 9752457156  10319896 100% /content/raid31
-| =
-
-| # df -i | grep sdg1
-| /dev/sdg1            7471884 2311914 5159970   31% /content/raid31
-| =
-
-| # xfs_info /dev/sdg1
-| meta-data=3D/dev/sdg1              isize=3D2048   agcount=3D10, agsize=3D=
-268435424
-| blks
-|          =3D                       sectsz=3D512   attr=3D2
-| data     =3D                       bsize=3D4096   blocks=3D2441215991, im=
-axpct=3D5
-|          =3D                       sunit=3D16     swidth=3D80 blks
-| naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-| log      =3Dinternal               bsize=3D4096   blocks=3D521728, versio=
-n=3D2
-|          =3D                       sectsz=3D512   sunit=3D16 blks, lazy-c=
-ount=3D1
-| realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
-=3D0
-| =
-
-| # xfs_db -r "-c freesp -s" /dev/sdg1
-|    from      to extents  blocks    pct
-|       1       1   69981   69981   2.99
-|       2       3  246574  559149  23.86
-|       4       7  315038 1707929  72.88
-|       8      15     561    6374   0.27
-| total free extents 632154
-| total free blocks 2343433
-| average free extent size 3.70706
-| =
-
-| =
-
-| =
-
-| More detailed information on destination file system:
-| =
-
-| # df -k | grep sdj1
-| /dev/sdj1            9762777052 9710148076  52628976 100% /content/sg08/v=
-d08
-| =
-
-| # df -i | grep sdj1
-| /dev/sdj1            28622264 2307776 26314488    9% /content/sg08/vd08
-| =
-
-| # xfs_info /dev/sdj1
-| meta-data=3D/dev/sdj1              isize=3D2048   agcount=3D10, agsize=3D=
-268435424
-| blks
-|          =3D                       sectsz=3D512   attr=3D2
-| data     =3D                       bsize=3D4096   blocks=3D2441215991, im=
-axpct=3D5
-|          =3D                       sunit=3D16     swidth=3D80 blks
-| naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0
-| log      =3Dinternal               bsize=3D4096   blocks=3D521728, versio=
-n=3D2
-|          =3D                       sectsz=3D512   sunit=3D16 blks, lazy-c=
-ount=3D1
-| realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
-=3D0
-| =
-
-| # xfs_db -r "-c freesp -s" /dev/sdj1
-|    from      to extents  blocks    pct
-|       1       1   81761   81761   0.62
-|       2       3  530258 1147719   8.73
-|       4       7  675864 3551039  27.01
-|       8      15  743089 8363043  63.62
-|      16      31     102    1972   0.02
-| total free extents 2031074
-| total free blocks 13145534
-| average free extent size 6.47221
-| =
-
-| =
-
-| I would be grateful if anyone could shed some light on why this is
-| happening or maybe even provide a solution.
-
-You are using 2 KiB inodes, so an inode cluster (64 inodes) requires
-128 KiB of contiguous space on disk.  The freesp output above shows that
-the largest possible contiguous free space chunk available is 31 * 4 KiB
-or 4 KiB short of 128 KiB.  You don't have enough contiguous space to
-create a new inode cluster, and your existing inodes are likely all
-used.  This can be verified using xfs_db: =
-
-	xfs_db -r -c "sb" -c "p ifree" /dev/sdj1
-
-xfs_fsr does not defragment free space, it only makes the problem worse.
-A possible solution:
-  1.  mount the filesystem with the ikeep mount option
-  2.  delete a few large files to free up some contiguous space
-  3.  create a few thousand files to "preallocate" inodes
-  4.  delete the newly created files
-The ikeep mount option will prevent the space for inodes from being
-reused for other purposes.
-
-
--- =
-
-Geoffrey Wehrman
-SGI Building 10                             Office: (651)683-5496
-2750 Blue Water Road                           Fax: (651)683-5098
-Eagan, MN 55121                             E-mail: gwehrman@sgi.com
-	  http://www.sgi.com/products/storage/software/
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVHVlLCBKdW4gMTkgMjAxMiBhdCAgMjozMmFtIC0wNDAwLApMdWvDocWhIEN6ZXJuZXIgPGxj
+emVybmVyQHJlZGhhdC5jb20+IHdyb3RlOgoKPiBPbiBNb24sIDE4IEp1biAyMDEyLCBNaWtlIFNu
+aXR6ZXIgd3JvdGU6Cj4gCj4gPiBEYXRlOiBNb24sIDE4IEp1biAyMDEyIDIzOjEyOjQyIC0wNDAw
+Cj4gPiBGcm9tOiBNaWtlIFNuaXR6ZXIgPHNuaXR6ZXJAcmVkaGF0LmNvbT4KPiA+IFRvOiBEYXZl
+IENoaW5uZXIgPGRhdmlkQGZyb21vcmJpdC5jb20+Cj4gPiBDYzogU3BlbGljIDxzcGVsaWNAc2hp
+ZnRtYWlsLm9yZz4sCj4gPiAgICAgZGV2aWNlLW1hcHBlciBkZXZlbG9wbWVudCA8ZG0tZGV2ZWxA
+cmVkaGF0LmNvbT4sCj4gPiAgICAgbGludXgtZXh0NEB2Z2VyLmtlcm5lbC5vcmcsIHhmc0Bvc3Mu
+c2dpLmNvbQo+ID4gU3ViamVjdDogUmU6IEV4dDQgYW5kIHhmcyBwcm9ibGVtcyBpbiBkbS10aGlu
+IG9uIGFsbG9jYXRpb24gYW5kIGRpc2NhcmQKPiA+IAo+ID4gT24gTW9uLCBKdW4gMTggMjAxMiBh
+dCAgOTo1N3BtIC0wNDAwLAo+ID4gRGF2ZSBDaGlubmVyIDxkYXZpZEBmcm9tb3JiaXQuY29tPiB3
+cm90ZToKPiA+IAo+ID4gPiBPbiBNb24sIEp1biAxOCwgMjAxMiBhdCAxMTozMzo1MFBNICswMjAw
+LCBTcGVsaWMgd3JvdGU6Cj4gPiA+Cj4gPiA+ID4gUGxlYXNlIG5vdGUgdGhhdCBzaW5jZSBJIGFt
+IGFib3ZlIE1EIHJhaWQ1IChJIGJlbGlldmUgdGhpcyBpcyB0aGUKPiA+ID4gPiByZWFzb24pLCB0
+aGUgcGFzc2Rvd24gb2YgZGlzY2FyZHMgZG9lcyBub3Qgd29yaywgYXMgbXkgZG1lc2cgc2F5czoK
+PiA+ID4gPiBbMTYwNTA4LjQ5Nzg3OV0gZGV2aWNlLW1hcHBlcjogdGhpbjogRGlzY2FyZCB1bnN1
+cHBvcnRlZCBieSBkYXRhCj4gPiA+ID4gZGV2aWNlIChkbS0xKTogRGlzYWJsaW5nIGRpc2NhcmQg
+cGFzc2Rvd24uCj4gPiA+ID4gYnV0IEFGQUlVLCB1bmxlc3MgdGhlcmUgaXMgYSB0aGlucCBidWcs
+IHRoaXMgc2hvdWxkIG5vdCBhZmZlY3QgdGhlCj4gPiA+ID4gdW5tYXBwaW5nIG9mIHRoaW4gYmxv
+Y2tzIGJ5IGZzdHJpbW1pbmcgeGZzLi4uIGFuZCBpbiBmYWN0IGV4dDQgaXMKPiA+ID4gPiBhYmxl
+IHRvIGRvIHRoYXQuCj4gPiA+IAo+ID4gPiBEb2VzIGV4dDQgcmVwb3J0IHRoYXQgc2FtZSBlcnJv
+cj8KPiA+IAo+ID4gVGhhdCBtZXNzYWdlIHNheXMgdGhlIHVuZGVybHlpbmcgZGV2aWNlIGRvZXNu
+J3Qgc3VwcG9ydCBkaXNjYXJkcwo+ID4gKGJlY2F1c2UgaXQgaXMgYW4gTUQgZGV2aWNlKS4gIEJ1
+dCB0aGUgdGhpbnAgZGV2aWNlIHN0aWxsIGhhcyBkaXNjYXJkcwo+ID4gZW5hYmxlZCAtLSBpdCBq
+dXN0IHdvbid0IHBhc3MgdGhlIGRpc2NhcmRzIGRvd24gdG8gdGhlIHVuZGVybHlpbmcgZGF0YQo+
+ID4gZGV2aWNlLgo+ID4gCj4gPiBTbyB5ZXMsIGl0J2xsIGhhcHBlbiB3aXRoIGV4dDQgLS0gaXQg
+aXMgZ2VuZXJhdGVkIHdoZW4gdGhlIHRoaW4tcG9vbAo+ID4gZGV2aWNlIGlzIGxvYWRlZCAod2hp
+Y2ggaGFwcGVucyBpbmRlcGVuZGVudCBvZiB0aGUgZmlsZXN5c3RlbSB0aGF0IGlzCj4gPiBsYXll
+cmVkIG9udG9wKS4KPiA+IAo+ID4gVGhlIGRpc2NhcmRzIHN0aWxsIGluZm9ybSB0aGUgdGhpbi1w
+b29sIHRoYXQgdGhlIGNvcnJlc3BvbmRpbmcgZXh0ZW50cwo+ID4gYXJlIG5vIGxvbmdlciBhbGxv
+Y2F0ZWQuCj4gCj4gU28gZG8gSSB1bmRlcnN0YW5kIGNvcnJlY3RseSB0aGF0IGV2ZW4gdGhvdWdo
+IHRoZSBkaXNjYXJkIGNhbWUKPiB0aHJvdWdoIGFuZCB0aGlucCB0b29rIGFkdmFudGFnZSBvZiBp
+dCBpdCBzdGlsbCByZXR1cm5zIEVPUE5PVFNVUFAgPwoKTm8sIG5vdCBjb3JyZWN0LiAgV2h5IGFy
+ZSB5b3UgYXNzdW1pbmcgdGhpcz8gIEkgbXVzdCBiZSBtaXNzaW5nCnNvbWV0aGluZyBmcm9tIHRo
+aXMgZGlzY3Vzc2lvbiB0aGF0IGxlZCB5b3UgdGhlcmUuCgo+IFRoaXMgc2VlbXMgcmF0aGVyIHN1
+Ym9wdGltYWwuIElJUkMgdGhlcmUgd2FzIGEgZGlzY3Vzc2lvbiB0byBhZGQgYW4KPiBvcHRpb24g
+dG8gZW5hYmxlL2Rpc2FibGUgc2VuZGluZyBkaXNjYXJkIGluIHRoaW5wIHRhcmdldCBkb3duCj4g
+dG8gdGhlIGRldmljZS4KPiAKPiBTbyBtYXliZSBpdCBtaWdodCBiZSBhIGJpdCBzbWFydGVyIHRo
+YW4gdGhhdCBhbmQgYWN0dWFsbHkKPiBlbmFibGUvZGlzYWJsZSBkaXNjYXJkIHBhc3MgdGhyb3Vn
+aCBkZXBlbmRpbmcgb24gdGhlIHVuZGVybHlpbmcKPiBzdXBwb3J0LCBzbyB3ZSBkbyBub3QgYmxp
+bmRseSBzZW5kIGRpc2NhcmQgZG93biB0byB0aGUgZGV2aWNlIGV2ZW4KPiB0aG91Z2ggaXQgZG9l
+cyBub3Qgc3VwcG9ydCBpdC4KClllcywgdGhhdCBpcyB3aGF0IHdlIGRpZC4KCkRpc2NhcmRzIGFy
+ZSBlbmFibGVkIG15IGRlZmF1bHQgKGluY2x1ZGluZyBkaXNjYXJkIHBhc3Nkb3duKSwgYnV0IGlm
+IHRoZQp1bmRlcmx5aW5nIGRhdGEgZGV2aWNlIGRvZXNuJ3Qgc3VwcG9ydCBkaXNjYXJkcyB0aGVu
+IHRoZSBkaXNjYXJkcyB3aWxsCm5vdCBiZSBwYXNzZWQgZG93bi4KCkFuZCBoZXJlIGFyZSB0aGUg
+ZmVhdHVyZSBjb250cm9scyB0aGF0IGNhbiBiZSBwcm92aWRlZCB3aGVuIGxvYWRpbmcgdGhlCnRo
+aW4tcG9vbCdzIERNIHRhYmxlOgoKaWdub3JlX2Rpc2NhcmQ6IGRpc2FibGUgZGlzY2FyZApub19k
+aXNjYXJkX3Bhc3Nkb3duOiBkb24ndCBwYXNzIGRpc2NhcmRzIGRvd24gdG8gdGhlIGRhdGEgZGV2
+aWNlCgotRU9QTk9UU1VQUCBpcyBvbmx5IGV2ZXIgcmV0dXJuZWQgaWYgJ2lnbm9yZV9kaXNjYXJk
+JyBpcyBwcm92aWRlZC4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNv
+bS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
