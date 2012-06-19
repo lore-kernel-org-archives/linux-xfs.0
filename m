@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JHhL3O132478 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 12:43:21 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id VtQ6BXb2YUiL8km8
-	for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 10:43:20 -0700 (PDT)
-Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id 2999F6C0B6
-	for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 12:43:20 -0500 (CDT)
-Message-ID: <4FE0BA38.4010505@hardwarefreak.com>
-Date: Tue, 19 Jun 2012 12:43:20 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q5JIn8bN142604 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 13:49:08 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id DMwYDCyHpsfgH7jA for
+	<xfs@oss.sgi.com>; Tue, 19 Jun 2012 11:49:07 -0700 (PDT)
+Date: Tue, 19 Jun 2012 14:48:59 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
+Message-ID: <20120619184858.GA8841@redhat.com>
+References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
+	<20120619031241.GA3884@redhat.com>
+	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
+	<20120619131649.GA6811@redhat.com>
+	<alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
+	<20120619133041.GB6811@redhat.com> <4FE0840F.2050704@shiftmail.org>
+	<20120619144413.GA7225@redhat.com>
 MIME-Version: 1.0
-Subject: Re: wiki spam
-References: <20120618133323.GA11845@infradead.org>
-In-Reply-To: <20120618133323.GA11845@infradead.org>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20120619144413.GA7225@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +31,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Spelic <spelic@shiftmail.org>
+Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On 6/18/2012 8:33 AM, Christoph Hellwig wrote:
-> I just had to delete dozends of link farm spam entries on the xfs.org.
+On Tue, Jun 19 2012 at 10:44am -0400,
+Mike Snitzer <snitzer@redhat.com> wrote:
+
+> On Tue, Jun 19 2012 at  9:52am -0400,
+> Spelic <spelic@shiftmail.org> wrote:
+>
+> > I do not know what is the mechanism for which xfs cannot unmap
+> > blocks from dm-thin, but it really can't.
+> > If anyone has dm-thin installed he can try. This is 100%
+> > reproducible for me.
 > 
-> This is getting a bit out of control, so I'm wondring what we can do
-> about it.
+> I was initially surprised by this considering the thinp-test-suite does
+> test a compilebench workload against xfs and ext4 using online discard
+> (-o discard).
 > 
-> I wonder if it's reasonable only to hand out account if a user manually
-> contacts one of the admins.  I don't want the bar high, just proving
-> to be able to writing a human person mail basically.
+> But I just modified that test to use a thin-pool with 'ignore_discard'
+> and the test still passed on both ext4 and xfs.
+> 
+> So there is more work needed in the thinp-test-suite to use blktrace
+> hooks to verify that discards are occuring when the compilebench
+> generated files are removed.
+> 
+> I'll work through that and report back.
 
-Perfectly reasonable.  Quite frankly I was surprised long ago when I
-learned it was totally open, given the small size of the XFS community,
-and the opportunity for mischief, or just factual errors, ala many
-Wikipedia articles.
+blktrace shows discards for both xfs and ext4.
 
--- 
-Stan
+But in general xfs is issuing discards with much smaller extents than
+ext4 does, e.g.:
+
+to the thin device:
++ 128 vs + 32
+
+to the thin-pool's data device:
++ 120 vs + 16
 
 _______________________________________________
 xfs mailing list
