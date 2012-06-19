@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5J7PGfX051920 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 02:25:16 -0500
-Date: Tue, 19 Jun 2012 03:25:12 -0400
+	q5J7j7Aw054210 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 02:45:07 -0500
+Date: Tue, 19 Jun 2012 03:45:05 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC v5 PATCH 2/4] xfs: Add pquota fields where gquota is used.
-Message-ID: <20120619072512.GA2649@infradead.org>
-References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120314202636.17044.11836.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120502204903.GO16881@sgi.com>
+Subject: Re: [PATCH 1/2 v2] xfs: rename log structure and remove xlog_t
+	typedef.
+Message-ID: <20120619074505.GA30375@infradead.org>
+References: <20120614142214.445982138@sgi.com>
+	<20120614142430.963813265@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120502204903.GO16881@sgi.com>
+In-Reply-To: <20120614142430.963813265@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,13 +24,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
+To: tinguely@sgi.com
+Cc: xfs@oss.sgi.com
 
-Btw, what is the plan to get back to the separate group/project quotas?
+On Thu, Jun 14, 2012 at 09:22:15AM -0500, tinguely@sgi.com wrote:
+> From: Mark Tinguely <tinguely@sgi.com>
+> 
+> Rename the XFS log structure to xlog to help crash distinquish it from the
+> other logs in Linux.
 
-Seems like we dropped the ball on this, which is sad as 90% of the work
-is done.
+Please don't use the same subject for two patches, instead this one
+should be some thing like
+
+	xfs: rename struct log to struct xlog
+
+and the next one
+
+	xfs: remove the xlog_t typedef
+
+otherwise both patches look fine to me:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
