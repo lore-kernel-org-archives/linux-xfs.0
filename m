@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JKdh6b161088 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 15:39:43 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	QoR3kMy5Jx7MbK0I for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 13:39:41 -0700 (PDT)
-Date: Wed, 20 Jun 2012 06:39:38 +1000
-From: Dave Chinner <david@fromorbit.com>
+	q5JKia85161806 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 15:44:37 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id OAHvvZVNxWcOBZL8 for
+	<xfs@oss.sgi.com>; Tue, 19 Jun 2012 13:44:36 -0700 (PDT)
+Date: Tue, 19 Jun 2012 16:44:28 -0400
+From: Mike Snitzer <snitzer@redhat.com>
 Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
-Message-ID: <20120619203938.GM25389@dastard>
-References: <20120619031241.GA3884@redhat.com>
-	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
-	<20120619131649.GA6811@redhat.com>
-	<alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
-	<20120619133041.GB6811@redhat.com> <4FE0840F.2050704@shiftmail.org>
-	<20120619144413.GA7225@redhat.com>
-	<20120619184858.GA8841@redhat.com> <20120619200631.GL25389@dastard>
-	<20120619202130.GF22805@thunk.org>
+Message-ID: <20120619204428.GA9485@redhat.com>
+References: <4FDF9EBE.2030809@shiftmail.org>
+	<alpine.LFD.2.00.1206191601290.21961@dhcp-1-248.brq.redhat.com>
+	<20120619141933.GC10637@thunk.org>
+	<20120619144316.GD14208@agk-dp.fab.redhat.com>
+	<20120619152856.GB7225@redhat.com>
+	<20120619195834.GC22805@thunk.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120619202130.GF22805@thunk.org>
+In-Reply-To: <20120619195834.GC22805@thunk.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,61 +31,47 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Ted Ts'o <tytso@mit.edu>
-Cc: Mike Snitzer <snitzer@redhat.com>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Spelic <spelic@shiftmail.org>, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
+Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
 
-On Tue, Jun 19, 2012 at 04:21:30PM -0400, Ted Ts'o wrote:
-> On Wed, Jun 20, 2012 at 06:06:31AM +1000, Dave Chinner wrote:
-> > > But in general xfs is issuing discards with much smaller extents than
-> > > ext4 does, e.g.:
+On Tue, Jun 19 2012 at  3:58pm -0400,
+Ted Ts'o <tytso@mit.edu> wrote:
+
+> On Tue, Jun 19, 2012 at 11:28:56AM -0400, Mike Snitzer wrote:
 > > 
-> > THat's normal when you use -o discard - XFS sends extremely
-> > fine-grained discards as the have to be issued during the checkpoint
-> > commit that frees the extent. Hence they can't be aggregated like is
-> > done in ext4.
+> > That is an lvm2 BZ but there is further kernel work needed.
+> > 
+> > It should be noted that the "external origin" feature was added to the
+> > thinp target with this commit: 
+> > http://git.kernel.org/linus/2dd9c257fbc243aa76ee6d
+> > 
+> > It is start, but external origin is kept read-only and any writes
+> > trigger allocation of new blocks within the thin-pool.
 > 
-> Actually, ext4 is also sending the discards during (well, actually,
-> after) the commit which frees the extent/inode.  We do aggregate them
-> while the commit is open, but once the transaction is committed, we
-> send out the discards.  I suspect the difference is in the granularity
-> of the transactions between ext4 and xfs.
+> Hmm... maybe this is what I had been told.  I thought there was some
+> feature where you could take a read-only thinp snapshot of an external
+> volume (i.e., a pre-existing LVM2 volume, or a block device), and then
+> after that, make read-write snapshots using the read-only snapshot as
+> a base?  Is that something that works today, or is planned?  Or am I
+> totally confused?
 
-Exactly - XFS transactions are fine grained, checkpoints are coarse.
-We don't merge extents freed in fine grained transactions inside
-checkpoints. We probably could, but, well, it's complex to do in XFS
-and merging adjacent requests is something the block layer is
-supposed to do....
+The commit I referenced basically provides that capability.
 
-> > As it is, no-one really should be using -o discard - it is extremely
-> > inefficient compared to a background fstrim run given that discards
-> > are unqueued, blocking IOs. It's just a bad idea until the lower
-> > layers get fixed to allow asynchronous, vectored discards and SATA
-> > supports queued discards...
-> 
-> What Dave said.  :-) This is true for both ext4 and xfs.
-> 
-> As a result, I can very easily see there being a distinction made
-> between when we *do* want to pass the discards all the way down to the
-> device, and when we only want the thinp layer to process them ---
-> because for current devices, sending discards down to the physical
-> device is very heavyweight.
-> 
-> I'm not sure how we could do this without a nasty layering violation,
-> but some way in which we could label fstrim discards versus "we've
-> committed the unlink/truncate and so thinp can feel free to reuse
-> these blocks" discards would be interesting to consider.
+> And if it is something that works today, is there a web site or
+> documentation file that gives a recipe for how to use it if we want to
+> do some performance experiments (i.e., it doesn't have to be a user
+> friendly interface if that's not ready yet).
 
-I think if we had better discard support from the block layer, it
-wouldn't matter from a filesystem POV what discard support is
-present in the block layer below it. I think it's better to get the
-block layer interface fixed than to add new request types/labels to
-filesystems to work around the current deficiencies.
+Documentation/device-mapper/thin-provisioning.txt has details on how to
+use dmsetup to create a thin device that uses a read-only external
+origin volume (so all reads to unprovisioned areas of the thin device
+will be remapped to the external origin -- "external" meaning the volume
+outside of the thin-pool).
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The creation of a thin device w/ a read-only external origin gets you
+started with a thin device that is effectively a snapshot of the origin
+volume.  That thin device is read-write -- all writes are provisioned
+from the thin-pool that is backing the thin device.  And you can take
+snapshots (or recursive snapshots) of that thin device.
 
 _______________________________________________
 xfs mailing list
