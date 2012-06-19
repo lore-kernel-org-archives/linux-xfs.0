@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JIn8bN142604 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 13:49:08 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id DMwYDCyHpsfgH7jA for
-	<xfs@oss.sgi.com>; Tue, 19 Jun 2012 11:49:07 -0700 (PDT)
-Date: Tue, 19 Jun 2012 14:48:59 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
-Message-ID: <20120619184858.GA8841@redhat.com>
-References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
-	<20120619031241.GA3884@redhat.com>
-	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
-	<20120619131649.GA6811@redhat.com>
-	<alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
-	<20120619133041.GB6811@redhat.com> <4FE0840F.2050704@shiftmail.org>
-	<20120619144413.GA7225@redhat.com>
+	q5JJwfrr154675 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 14:58:42 -0500
+Received: from imap.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id ztVyQ0yuJISb4TBI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 12:58:40 -0700 (PDT)
+Date: Tue, 19 Jun 2012 15:58:34 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
+Subject: Re: [dm-devel] Ext4 and xfs problems in dm-thin on allocation and
+	discard
+Message-ID: <20120619195834.GC22805@thunk.org>
+References: <4FDF9EBE.2030809@shiftmail.org>
+	<alpine.LFD.2.00.1206191601290.21961@dhcp-1-248.brq.redhat.com>
+	<20120619141933.GC10637@thunk.org>
+	<20120619144316.GD14208@agk-dp.fab.redhat.com>
+	<20120619152856.GB7225@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120619144413.GA7225@redhat.com>
+In-Reply-To: <20120619152856.GB7225@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,43 +31,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Spelic <spelic@shiftmail.org>
-Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, Spelic <spelic@shiftmail.org>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com
 
-On Tue, Jun 19 2012 at 10:44am -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
-
-> On Tue, Jun 19 2012 at  9:52am -0400,
-> Spelic <spelic@shiftmail.org> wrote:
->
-> > I do not know what is the mechanism for which xfs cannot unmap
-> > blocks from dm-thin, but it really can't.
-> > If anyone has dm-thin installed he can try. This is 100%
-> > reproducible for me.
+On Tue, Jun 19, 2012 at 11:28:56AM -0400, Mike Snitzer wrote:
 > 
-> I was initially surprised by this considering the thinp-test-suite does
-> test a compilebench workload against xfs and ext4 using online discard
-> (-o discard).
+> That is an lvm2 BZ but there is further kernel work needed.
 > 
-> But I just modified that test to use a thin-pool with 'ignore_discard'
-> and the test still passed on both ext4 and xfs.
+> It should be noted that the "external origin" feature was added to the
+> thinp target with this commit: 
+> http://git.kernel.org/linus/2dd9c257fbc243aa76ee6d
 > 
-> So there is more work needed in the thinp-test-suite to use blktrace
-> hooks to verify that discards are occuring when the compilebench
-> generated files are removed.
-> 
-> I'll work through that and report back.
+> It is start, but external origin is kept read-only and any writes
+> trigger allocation of new blocks within the thin-pool.
 
-blktrace shows discards for both xfs and ext4.
+Hmm... maybe this is what I had been told.  I thought there was some
+feature where you could take a read-only thinp snapshot of an external
+volume (i.e., a pre-existing LVM2 volume, or a block device), and then
+after that, make read-write snapshots using the read-only snapshot as
+a base?  Is that something that works today, or is planned?  Or am I
+totally confused?
 
-But in general xfs is issuing discards with much smaller extents than
-ext4 does, e.g.:
+And if it is something that works today, is there a web site or
+documentation file that gives a recipe for how to use it if we want to
+do some performance experiments (i.e., it doesn't have to be a user
+friendly interface if that's not ready yet).
 
-to the thin device:
-+ 128 vs + 32
+Thanks,
 
-to the thin-pool's data device:
-+ 120 vs + 16
+						- Ted
 
 _______________________________________________
 xfs mailing list
