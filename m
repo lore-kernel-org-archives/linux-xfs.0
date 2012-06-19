@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JADSGB071837 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 05:13:28 -0500
-Received: from atlas.fiton.is (atlas.fiton.is [62.145.135.105]) by
-	cuda.sgi.com with ESMTP id qUts2N3wBLJ5Ccb8 (version=TLSv1
+	q5JBUPJT081163 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 06:30:26 -0500
+Received: from blade3.isti.cnr.it (blade3.isti.cnr.it [194.119.192.19]) by
+	cuda.sgi.com with ESMTP id GG7uTnjSTtQwI82y (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 03:13:26 -0700 (PDT)
-Received: from localhost ([127.0.0.1]) by atlas.fiton.is for xfs@oss.sgi.com;
-	Tue, 19 Jun 2012 10:13:35 +0000
-Message-ID: <4FE050C2.8060601@fiton.is>
-Date: Tue, 19 Jun 2012 10:13:22 +0000
-From: =?ISO-8859-1?Q?Svavar_=D6rn_Eysteinsson?= <svavar@fiton.is>
-MIME-Version: 1.0
-Subject: Recommendation on XFS Filesystem Creation, Lefthand P4500, iSCSI
- ?
+	Tue, 19 Jun 2012 04:30:24 -0700 (PDT)
+Received: from [192.168.6.232] ([155.253.6.254])
+	by mx.isti.cnr.it (PMDF V6.5-x6 #31988)
+	with ESMTPSA id <01OGVDYYQWV8ODSR3C@mx.isti.cnr.it> for xfs@oss.sgi.com;
+	Tue, 19 Jun 2012 13:29:19 +0200 (MEST)
+Date: Tue, 19 Jun 2012 13:29:55 +0200
+From: Spelic <spelic@shiftmail.org>
+Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
+In-reply-to: <alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
+Message-id: <4FE062B3.7080702@shiftmail.org>
+MIME-version: 1.0
+References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
+	<20120619031241.GA3884@redhat.com>
+	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,47 +27,38 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: =?windows-1252?Q?Luk=E1=9A_Czerner?= <lczerner@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Spelic <spelic@shiftmail.org>, linux-ext4@vger.kernel.org
 
-Hello List.
+On 06/19/12 08:32, Luk=E1=9A Czerner wrote:
+>
+> So do I understand correctly that even though the discard came
+> through and thinp took advantage of it it still returns EOPNOTSUPP ?
+> This seems rather suboptimal. IIRC there was a discussion to add an
+> option to enable/disable sending discard in thinp target down
+> to the device.
 
-We recently purchased HP Lefthand 4500 G2 24TB iSCSI SAN Box.
-The Box is configured in RAID6. (and yes, we are going to expand that with
-another boxes in near future).
+I'll ask this too...
+do I understand correctly that dm-thin returns EOPNOTSUPP to the =
 
-I'm running Centos 6.2 with the latest updates on the iSCSI initiator 
-machine.
-HP DL380 G7 with 24GB in RAM
+filesystem layer even though it is using the discard to unmap blocks, =
 
-I need to create a 7TB volume at the start, and grow it in near future.
+and at that point XFS stops sending discards down there (while ext4 =
 
-Are there any recommendation on creating that XFS volume ? Particularly 
-regarding
-iSCSI and that big ?
+keeps sending them)?
 
-This server will act as a fileserver for 50+ machines serving request 
-with netatalk
-and samba.
+This looks like a bug of dm-thin to me. Discards are "supported" in such =
 
-Surely I will need to use inode64 option. Right ?
+a scenario.
 
+Do you have a patch for dm-thin so to prevent it sending EOPTNOTSUPP ?
 
-Any recommendation would be much appreciated.
-
-Thanks allot people.
-Best regards,
-
-Svavar
-Reykjavik - Iceland
-
-
-
-
-
+Thank you
+S.
 
 _______________________________________________
 xfs mailing list
