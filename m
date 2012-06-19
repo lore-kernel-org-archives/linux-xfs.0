@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5J7FvSR050802 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 02:15:58 -0500
-Date: Tue, 19 Jun 2012 03:15:53 -0400
+	q5J7PGfX051920 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 02:25:16 -0500
+Date: Tue, 19 Jun 2012 03:25:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
-Message-ID: <20120619071552.GA23093@infradead.org>
-References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-3-git-send-email-david@fromorbit.com>
-	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
+Subject: Re: [RFC v5 PATCH 2/4] xfs: Add pquota fields where gquota is used.
+Message-ID: <20120619072512.GA2649@infradead.org>
+References: <20120314202623.17044.90045.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120314202636.17044.11836.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120502204903.GO16881@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120618210713.GY4721@sgi.com>
+In-Reply-To: <20120502204903.GO16881@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,14 +25,12 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: Chandra Seetharaman <sekharan@us.ibm.com>, xfs@oss.sgi.com
 
-On Mon, Jun 18, 2012 at 04:07:13PM -0500, Ben Myers wrote:
-> Ah.. it's Christoph's inode allocator refactoring.  Ok then.
+Btw, what is the plan to get back to the separate group/project quotas?
 
-The inode allocator changes need a small redo anyway, so let's
-concentrate on dave's buffer cache bits thay have been pending for a
-long time.  I'll try to find some time to review them soon, too.
+Seems like we dropped the ball on this, which is sad as 90% of the work
+is done.
 
 _______________________________________________
 xfs mailing list
