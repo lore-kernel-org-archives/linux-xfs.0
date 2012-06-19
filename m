@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5J0jTeu001182 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 19:45:29 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	vlKiw8IL4NpiROws (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 18 Jun 2012 17:45:28 -0700 (PDT)
-Received: by obbup19 with SMTP id up19so4179950obb.26
-	for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 17:45:28 -0700 (PDT)
+	q5J1ChZ7005019 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 20:12:43 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	gkrR9v4Wqjpxenw9 for <xfs@oss.sgi.com>;
+	Mon, 18 Jun 2012 18:12:41 -0700 (PDT)
+Date: Tue, 19 Jun 2012 11:11:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: XFS status update for May 2012
+Message-ID: <20120619011108.GF25389@dastard>
+References: <20120618120853.GA15480@infradead.org>
+	<AD997E9D-2C1E-4EE4-80D7-2A5C998B6E9E@dilger.ca>
 MIME-Version: 1.0
-Date: Tue, 19 Jun 2012 09:45:28 +0900
-Message-ID: <CABF-5Wryz4QXMzDb12zViPytSEi67Tm0ZwPkYLJaCbDix+91fg@mail.gmail.com>
-Subject: [QUESTION] Too much time to delete file on xfs filesystem
-From: Ryan Lee <ryanlee.lahk@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <AD997E9D-2C1E-4EE4-80D7-2A5C998B6E9E@dilger.ca>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,104 +23,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============5282372338543504146=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andreas Dilger <adilger@dilger.ca>
+Cc: Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
 
---===============5282372338543504146==
-Content-Type: multipart/alternative; boundary=e89a8ff1c4e64eeb8404c2c89959
+On Mon, Jun 18, 2012 at 12:25:37PM -0600, Andreas Dilger wrote:
+> On 2012-06-18, at 6:08 AM, Christoph Hellwig wrote:
+> > May saw the release of Linux 3.4, including a decent sized XFS update.
+> > Remarkable XFS features in Linux 3.4 include moving over all metadata
+> > updates to use transactions, the addition of a work queue for the
+> > low-level allocator code to avoid stack overflows due to extreme stack
+> > use in the Linux VM/VFS call chain,
+> 
+> This is essentially a workaround for too-small stacks in the kernel,
+> which we've had to do at times as well, by doing work in a separate
+> thread (with a new stack) and waiting for the results?  This is a
+> generic problem that any reasonably-complex filesystem will have when
+> running under memory pressure on a complex storage stack (e.g. LVM +
+> iSCSI), but causes unnecessary context switching.
 
---e89a8ff1c4e64eeb8404c2c89959
-Content-Type: text/plain; charset=ISO-8859-1
+I've seen no performance issues from the context switching.  The
+overhead of them is so small to be unmeasurable most cases, because
+a typical allocation already requires context switches for contended
+locks and metadata IO....
 
-Hi, My name is Ryan.
+> Any thoughts on a better way to handle this, or will there continue
+> to be a 4kB stack limit
 
- Nowadays, Our company product has a new problem which is taking too much
-time to delete file on xfs filesystem.
+We were blowing 8k stacks on x86-64 with alarming ease. Even the
+flusher threads were overflowing.
 
- When I try to delete the file (18GByte, It was just one file), it would
-take around 7 minutes 30 seconds.
+> and hack around this with repeated kmalloc
+> on callpaths for any struct over a few tens of bytes, implementing
+> memory pools all over the place, and "forking" over to other threads
+> to continue the stack consumption for another 4kB to work around
+> the small stack limit?
 
-I've known like this, the XFS filesystem's deleting time is less than other
-filesystems such as EXT3, EXT4 and reiserFS.
+I mentioned that we needed to consider 16k stacks at last years
+Kernel Summit and the response was along the lines of "you've got to
+be kidding - fix your broken filesystem". That's the perception you
+have to change, and i don't feel like having a 4k stacks battle
+again...
 
+Cheers,
 
- What I did here.
-
--rw-r--r--   1 root     root     18924699648 Jan  2  1971 hdd_write_test6.ts
-
-# time rm hdd_write_test6.ts
-
-
-
-real    7m 28.10s
-
-user    0m 0.00s
-
-sys     0m 9.79s
-
-#
-
- Again, I have an opinion about XFS.
-
-XFS is faster than other filesystem as I told you. and I've got this
-information from internet.
-
-But, the test result makes me confusing about that I've belived about XFS
-filesystem.
-
-
-
-Am I right??
-
- So, Please, give me any information about this what you have.
-
-Our product use this version like below.
-
-kernel  2.6.37
-
-xfsprogs 3.1.7
-
-
-
-Thanks, Ryan.
-
---e89a8ff1c4e64eeb8404c2c89959
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<p>Hi, My name is Ryan.</p><p>=A0Nowadays, Our company product has a new pr=
-oblem which is taking too much time to delete file on xfs filesystem.</p><p=
->=A0When=A0I try to delete the file (18GByte, It was just one file), it wou=
-ld take around 7 minutes 30 seconds.</p>
-<p>I&#39;ve known like this, the XFS filesystem&#39;s deleting time is less=
- than other filesystems such as EXT3, EXT4 and reiserFS.</p><p>=A0</p><div>=
-=A0What I did here.</div><div><br>-rw-r--r--=A0=A0 1 root=A0=A0=A0=A0 root=
-=A0=A0=A0=A0 18924699648 Jan=A0 2=A0 1971 hdd_write_test6.ts</div>
-<p># time rm hdd_write_test6.ts</p><p>=A0</p><p>real=A0=A0=A0 7m 28.10s</p>=
-<p>user=A0=A0=A0 0m 0.00s</p><p>sys=A0=A0=A0=A0 0m 9.79s</p><p>#</p><p>=A0A=
-gain, I have an opinion about XFS.</p><p>XFS is faster than other filesyste=
-m as I told you. and I&#39;ve got this information from internet.</p>
-<p>But, the test result makes me confusing about that I&#39;ve belived abou=
-t XFS filesystem.</p><p>=A0</p><p>Am I right??</p><p>=A0So, Please, give me=
- any information about this what you have.</p><div>=A0</div><div>Our produc=
-t use this version like below.</div>
-<p>kernel=A0 2.6.37</p><p>xfsprogs 3.1.7</p><p>=A0=A0</p><p>Thanks, Ryan.</=
-p>
-
---e89a8ff1c4e64eeb8404c2c89959--
-
-
---===============5282372338543504146==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============5282372338543504146==--
