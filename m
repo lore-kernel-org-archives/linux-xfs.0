@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JDUoGa095960 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 08:30:50 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id EeyD0JFEzhv3IGbC for
-	<xfs@oss.sgi.com>; Tue, 19 Jun 2012 06:30:49 -0700 (PDT)
-From: Mike Snitzer <msnitzer@redhat.com>
-Date: Tue, 19 Jun 2012 09:30:42 -0400
+	q5JDqaLl098948 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 08:52:36 -0500
+Received: from blade3.isti.cnr.it (blade3.isti.cnr.it [194.119.192.19]) by
+	cuda.sgi.com with ESMTP id KT5P4gD8pJAyrJfc (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 06:52:35 -0700 (PDT)
+Received: from [192.168.6.232] ([155.253.6.254])
+	by mx.isti.cnr.it (PMDF V6.5-x6 #31988)
+	with ESMTPSA id <01OGVIYF00W4ODSR3C@mx.isti.cnr.it> for xfs@oss.sgi.com;
+	Tue, 19 Jun 2012 15:51:39 +0200 (MEST)
+Date: Tue, 19 Jun 2012 15:52:15 +0200
+From: Spelic <spelic@shiftmail.org>
 Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
-Message-ID: <20120619133041.GB6811@redhat.com>
+In-reply-to: <20120619133041.GB6811@redhat.com>
+Message-id: <4FE0840F.2050704@shiftmail.org>
+MIME-version: 1.0
 References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
 	<20120619031241.GA3884@redhat.com>
 	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
 	<20120619131649.GA6811@redhat.com>
 	<alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
+	<20120619133041.GB6811@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,60 +30,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
+To: Mike Snitzer <msnitzer@redhat.com>
+Cc: xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Spelic <spelic@shiftmail.org>, =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-T24gVHVlLCBKdW4gMTkgMjAxMiBhdCAgOToyNWFtIC0wNDAwLApMdWvDocWhIEN6ZXJuZXIgPGxj
-emVybmVyQHJlZGhhdC5jb20+IHdyb3RlOgoKPiBPbiBUdWUsIDE5IEp1biAyMDEyLCBNaWtlIFNu
-aXR6ZXIgd3JvdGU6Cj4gCj4gPiBEYXRlOiBUdWUsIDE5IEp1biAyMDEyIDA5OjE2OjQ5IC0wNDAw
-Cj4gPiBGcm9tOiBNaWtlIFNuaXR6ZXIgPHNuaXR6ZXJAcmVkaGF0LmNvbT4KPiA+IFRvOiBMdWvD
-ocWhIEN6ZXJuZXIgPGxjemVybmVyQHJlZGhhdC5jb20+Cj4gPiBDYzogRGF2ZSBDaGlubmVyIDxk
-YXZpZEBmcm9tb3JiaXQuY29tPiwgU3BlbGljIDxzcGVsaWNAc2hpZnRtYWlsLm9yZz4sCj4gPiAg
-ICAgZGV2aWNlLW1hcHBlciBkZXZlbG9wbWVudCA8ZG0tZGV2ZWxAcmVkaGF0LmNvbT4sCj4gPiAg
-ICAgbGludXgtZXh0NEB2Z2VyLmtlcm5lbC5vcmcsIHhmc0Bvc3Muc2dpLmNvbQo+ID4gU3ViamVj
-dDogUmU6IEV4dDQgYW5kIHhmcyBwcm9ibGVtcyBpbiBkbS10aGluIG9uIGFsbG9jYXRpb24gYW5k
-IGRpc2NhcmQKPiA+IAo+ID4gT24gVHVlLCBKdW4gMTkgMjAxMiBhdCAgMjozMmFtIC0wNDAwLAo+
-ID4gTHVrw6HFoSBDemVybmVyIDxsY3plcm5lckByZWRoYXQuY29tPiB3cm90ZToKPiA+Cj4gPiA+
-IFNvIGRvIEkgdW5kZXJzdGFuZCBjb3JyZWN0bHkgdGhhdCBldmVuIHRob3VnaCB0aGUgZGlzY2Fy
-ZCBjYW1lCj4gPiA+IHRocm91Z2ggYW5kIHRoaW5wIHRvb2sgYWR2YW50YWdlIG9mIGl0IGl0IHN0
-aWxsIHJldHVybnMgRU9QTk9UU1VQUCA/Cj4gPiAKPiA+IE5vLCBub3QgY29ycmVjdC4gIFdoeSBh
-cmUgeW91IGFzc3VtaW5nIHRoaXM/ICBJIG11c3QgYmUgbWlzc2luZwo+ID4gc29tZXRoaW5nIGZy
-b20gdGhpcyBkaXNjdXNzaW9uIHRoYXQgbGVkIHlvdSB0aGVyZS4KPiAKPiBUaG9zZSB0d28gcGFy
-YWdyYXBocyBsZWQgbWUgdG8gdGhhdCBjb25jbHVzaW9uOgo+IAo+ICAgVGhhdCBtZXNzYWdlIHNh
-eXMgdGhlIHVuZGVybHlpbmcgZGV2aWNlIGRvZXNuJ3Qgc3VwcG9ydCBkaXNjYXJkcwo+ICAgKGJl
-Y2F1c2UgaXQgaXMgYW4gTUQgZGV2aWNlKS4gIEJ1dCB0aGUgdGhpbnAgZGV2aWNlIHN0aWxsIGhh
-cyBkaXNjYXJkcwo+ICAgZW5hYmxlZCAtLSBpdCBqdXN0IHdvbid0IHBhc3MgdGhlIGRpc2NhcmRz
-IGRvd24gdG8gdGhlIHVuZGVybHlpbmcgZGF0YQo+ICAgZGV2aWNlLgo+IAo+ICAgVGhlIGRpc2Nh
-cmRzIHN0aWxsIGluZm9ybSB0aGUgdGhpbi1wb29sIHRoYXQgdGhlIGNvcnJlc3BvbmRpbmcgZXh0
-ZW50cwo+ICAgYXJlIG5vIGxvbmdlciBhbGxvY2F0ZWQuCj4gCj4gc28gSSBhbSBhIGJpdCBjb25m
-dXNlZCBub3cuIFdoeSB0aGUgZG0tdGhpbiByZXR1cm5lZCBFT1BOT1RTVVBQIHRoZW4KPiA/IElz
-IHRoYXQgYmVjYXVzZSBpdCBoYXMgYmVlbiBjb25maWd1cmVkIHRvIGlnbm9yZV9kaXNjYXJkLCBv
-ciBpdAo+IGFjdHVhbGx5IHRha2VzIGFkdmFudGFnZSBvZiB0aGUgZGlzY2FyZCBidXQgdW5kZXJs
-eWluZyBkZXZpY2UgZG9lcwo+IG5vdCBzdXBwb3J0IGl0IChhbmQgbm9fZGlzY2FyZF9wYXNzZG93
-biBpcyBub3Qgc2V0KSBzbyBpdCByZXR1cm4KPiBFT1BOT1RTVVBQID8KPiAKPiA+IAo+ID4gPiBU
-aGlzIHNlZW1zIHJhdGhlciBzdWJvcHRpbWFsLiBJSVJDIHRoZXJlIHdhcyBhIGRpc2N1c3Npb24g
-dG8gYWRkIGFuCj4gPiA+IG9wdGlvbiB0byBlbmFibGUvZGlzYWJsZSBzZW5kaW5nIGRpc2NhcmQg
-aW4gdGhpbnAgdGFyZ2V0IGRvd24KPiA+ID4gdG8gdGhlIGRldmljZS4KPiA+ID4gCj4gPiA+IFNv
-IG1heWJlIGl0IG1pZ2h0IGJlIGEgYml0IHNtYXJ0ZXIgdGhhbiB0aGF0IGFuZCBhY3R1YWxseQo+
-ID4gPiBlbmFibGUvZGlzYWJsZSBkaXNjYXJkIHBhc3MgdGhyb3VnaCBkZXBlbmRpbmcgb24gdGhl
-IHVuZGVybHlpbmcKPiA+ID4gc3VwcG9ydCwgc28gd2UgZG8gbm90IGJsaW5kbHkgc2VuZCBkaXNj
-YXJkIGRvd24gdG8gdGhlIGRldmljZSBldmVuCj4gPiA+IHRob3VnaCBpdCBkb2VzIG5vdCBzdXBw
-b3J0IGl0Lgo+ID4gCj4gPiBZZXMsIHRoYXQgaXMgd2hhdCB3ZSBkaWQuCj4gPiAKPiA+IERpc2Nh
-cmRzIGFyZSBlbmFibGVkIG15IGRlZmF1bHQgKGluY2x1ZGluZyBkaXNjYXJkIHBhc3Nkb3duKSwg
-YnV0IGlmIHRoZQo+ID4gdW5kZXJseWluZyBkYXRhIGRldmljZSBkb2Vzbid0IHN1cHBvcnQgZGlz
-Y2FyZHMgdGhlbiB0aGUgZGlzY2FyZHMgd2lsbAo+ID4gbm90IGJlIHBhc3NlZCBkb3duLgo+ID4g
-Cj4gPiBBbmQgaGVyZSBhcmUgdGhlIGZlYXR1cmUgY29udHJvbHMgdGhhdCBjYW4gYmUgcHJvdmlk
-ZWQgd2hlbiBsb2FkaW5nIHRoZQo+ID4gdGhpbi1wb29sJ3MgRE0gdGFibGU6Cj4gPiAKPiA+IGln
-bm9yZV9kaXNjYXJkOiBkaXNhYmxlIGRpc2NhcmQKPiA+IG5vX2Rpc2NhcmRfcGFzc2Rvd246IGRv
-bid0IHBhc3MgZGlzY2FyZHMgZG93biB0byB0aGUgZGF0YSBkZXZpY2UKPiA+IAo+ID4gLUVPUE5P
-VFNVUFAgaXMgb25seSBldmVyIHJldHVybmVkIGlmICdpZ25vcmVfZGlzY2FyZCcgaXMgcHJvdmlk
-ZWQuCj4gCj4gT2ssIHNvIGluIHRoaXMgY2FzZSAnaWdub3JlX2Rpc2NhcmQnIGhhcyBiZWVuIGNv
-bmZpZ3VyZWQgPwoKSSBkb24ndCByZWNhbGwgU3BlbGljIHNheWluZyBhbnl0aGluZyBhYm91dCBF
-T1BOT1RTVVBQLiAgU28gd2hhdCBoYXMKbWFkZSB5b3UgemVybyBpbiBvbiBhbiAtRU9QTk9UU1VQ
-UCByZXR1cm4gKHdoaWNoIHNob3VsZCBub3QgYmUKaGFwcGVuaW5nKT8KCl9fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9z
-cy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 06/19/12 15:30, Mike Snitzer wrote:
+> I don't recall Spelic saying anything about EOPNOTSUPP. So what has 
+> made you zero in on an -EOPNOTSUPP return (which should not be 
+> happening)? 
+
+Exactly: I do not know if EOPNOTSUPP is being returned or not.
+
+If this helps, I have configured dm-thin via lvm2
+   LVM version:     2.02.95(2) (2012-03-06)
+   Library version: 1.02.74 (2012-03-06)
+   Driver version:  4.22.0
+
+from dmsetup table I only see one option : "skip_block_zeroing", if and 
+only if I configure it with -Zn . I do not see anything regarding 
+ignore_discard
+
+      vg1-pooltry1-tpool: 0 20971520 thin-pool 252:1 252:2 2048 0 1 
+skip_block_zeroing
+      vg1-pooltry1_tdata: 0 20971520 linear 9:20 62922752
+      vg1-pooltry1_tmeta: 0 8192 linear 9:20 83894272
+      vg1-thinlv1: 0 31457280 thin 252:3 1
+
+
+and in dmesg:
+[   33.685200] device-mapper: thin: Discard unsupported by data device 
+(dm-2): Disabling discard passdown.
+[   33.709586] device-mapper: thin: Discard unsupported by data device 
+(dm-6): Disabling discard passdown.
+
+
+I do not know what is the mechanism for which xfs cannot unmap blocks 
+from dm-thin, but it really can't.
+If anyone has dm-thin installed he can try. This is 100% reproducible 
+for me.
+
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
