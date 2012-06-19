@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JFT4cL112523 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 10:29:05 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Z20W6RlT5fmscnlh for
-	<xfs@oss.sgi.com>; Tue, 19 Jun 2012 08:29:03 -0700 (PDT)
-Date: Tue, 19 Jun 2012 11:28:56 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: Ext4 and xfs problems in dm-thin on allocation and	discard
-Message-ID: <20120619152856.GB7225@redhat.com>
-References: <4FDF9EBE.2030809@shiftmail.org>
-	<alpine.LFD.2.00.1206191601290.21961@dhcp-1-248.brq.redhat.com>
-	<20120619141933.GC10637@thunk.org>
-	<20120619144316.GD14208@agk-dp.fab.redhat.com>
+	q5JFxn4S116740 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 10:59:49 -0500
+Date: Tue, 19 Jun 2012 10:59:46 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
+Message-ID: <20120619155946.GA2676@sgi.com>
+References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
+	<1339133914-11148-3-git-send-email-david@fromorbit.com>
+	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
+	<20120619071552.GA23093@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120619144316.GD14208@agk-dp.fab.redhat.com>
+In-Reply-To: <20120619071552.GA23093@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,38 +25,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: device-mapper development <dm-devel@redhat.com>, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 19 2012 at 10:43am -0400,
-Alasdair G Kergon <agk@redhat.com> wrote:
+Hey Christoph,
 
-> On Tue, Jun 19, 2012 at 10:19:33AM -0400, Ted Ts'o wrote:
-> > One of the things which would be nice to be able to easily set up is a
-> > configuration where we get the benefits of thin provisioning with
-> > respect to snapshost, but where the underlying block device used by
-> > the file system is contiguous.  
+On Tue, Jun 19, 2012 at 03:15:53AM -0400, Christoph Hellwig wrote:
+> On Mon, Jun 18, 2012 at 04:07:13PM -0500, Ben Myers wrote:
+> > Ah.. it's Christoph's inode allocator refactoring.  Ok then.
 > 
-> We're tracking this requirement (for lvm2) here:
->   https://bugzilla.redhat.com/show_bug.cgi?id=814737
+> The inode allocator changes need a small redo anyway, so let's
+> concentrate on dave's buffer cache bits thay have been pending for a
+> long time.  I'll try to find some time to review them soon, too.
 
-That is an lvm2 BZ but there is further kernel work needed.
+How long before the inode allocator redo?  Maybe it would be best if Dave's
+buffer cache changes are rebased not to depend upon the inode allocator
+changes?
 
-It should be noted that the "external origin" feature was added to the
-thinp target with this commit: 
-http://git.kernel.org/linus/2dd9c257fbc243aa76ee6d
-
-It is start, but external origin is kept read-only and any writes
-trigger allocation of new blocks within the thin-pool.
-
-We've talked some about the desire to have a fully provisioned volume
-that only starts to get fragmented once snapshots are taken.  The idea
-is to move the origin into the data volume, via mapping, rather than
-copying:
-
-Dec 14 10:37:08 <ejt> we then build a data dev that consists of a linear mapping to that origin
-Dec 14 10:37:12 <ejt> plus some extra stuff
-Dec 14 10:37:23 <ejt> (the additonal free space for snapshots)
-Dec 14 10:37:49 <ejt> we then prepare thinp metadata with a mapping to that origin
+-Ben
 
 _______________________________________________
 xfs mailing list
