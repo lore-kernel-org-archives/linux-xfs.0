@@ -1,26 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5JK6bOp155846 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 15:06:37 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	lWvEFyvVNP6HIhtt for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 13:06:35 -0700 (PDT)
-Date: Wed, 20 Jun 2012 06:06:31 +1000
-From: Dave Chinner <david@fromorbit.com>
+	q5JKLeqZ158623 for <xfs@oss.sgi.com>; Tue, 19 Jun 2012 15:21:40 -0500
+Received: from imap.thunk.org (li9-11.members.linode.com [67.18.176.11]) by
+	cuda.sgi.com with ESMTP id IXsXLz0TsnnH0plk (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 13:21:39 -0700 (PDT)
+Date: Tue, 19 Jun 2012 16:21:30 -0400
+From: "Ted Ts'o" <tytso@mit.edu>
 Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
-Message-ID: <20120619200631.GL25389@dastard>
-References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
-	<20120619031241.GA3884@redhat.com>
+Message-ID: <20120619202130.GF22805@thunk.org>
+References: <20120619015745.GJ25389@dastard> <20120619031241.GA3884@redhat.com>
 	<alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
 	<20120619131649.GA6811@redhat.com>
 	<alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
 	<20120619133041.GB6811@redhat.com> <4FE0840F.2050704@shiftmail.org>
 	<20120619144413.GA7225@redhat.com>
-	<20120619184858.GA8841@redhat.com>
+	<20120619184858.GA8841@redhat.com> <20120619200631.GL25389@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120619184858.GA8841@redhat.com>
+In-Reply-To: <20120619200631.GL25389@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,56 +32,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, device-mapper development <dm-devel@redhat.com>, linux-ext4@vger.kernel.org, xfs@oss.sgi.com, Spelic <spelic@shiftmail.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Spelic <spelic@shiftmail.org>, =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-On Tue, Jun 19, 2012 at 02:48:59PM -0400, Mike Snitzer wrote:
-> On Tue, Jun 19 2012 at 10:44am -0400,
-> Mike Snitzer <snitzer@redhat.com> wrote:
+On Wed, Jun 20, 2012 at 06:06:31AM +1000, Dave Chinner wrote:
+> > But in general xfs is issuing discards with much smaller extents than
+> > ext4 does, e.g.:
 > 
-> > On Tue, Jun 19 2012 at  9:52am -0400,
-> > Spelic <spelic@shiftmail.org> wrote:
-> >
-> > > I do not know what is the mechanism for which xfs cannot unmap
-> > > blocks from dm-thin, but it really can't.
-> > > If anyone has dm-thin installed he can try. This is 100%
-> > > reproducible for me.
-> > 
-> > I was initially surprised by this considering the thinp-test-suite does
-> > test a compilebench workload against xfs and ext4 using online discard
-> > (-o discard).
-> > 
-> > But I just modified that test to use a thin-pool with 'ignore_discard'
-> > and the test still passed on both ext4 and xfs.
-> > 
-> > So there is more work needed in the thinp-test-suite to use blktrace
-> > hooks to verify that discards are occuring when the compilebench
-> > generated files are removed.
-> > 
-> > I'll work through that and report back.
-> 
-> blktrace shows discards for both xfs and ext4.
-> 
-> But in general xfs is issuing discards with much smaller extents than
-> ext4 does, e.g.:
+> THat's normal when you use -o discard - XFS sends extremely
+> fine-grained discards as the have to be issued during the checkpoint
+> commit that frees the extent. Hence they can't be aggregated like is
+> done in ext4.
 
-THat's normal when you use -o discard - XFS sends extremely
-fine-grained discards as the have to be issued during the checkpoint
-commit that frees the extent. Hence they can't be aggregated like is
-done in ext4.
+Actually, ext4 is also sending the discards during (well, actually,
+after) the commit which frees the extent/inode.  We do aggregate them
+while the commit is open, but once the transaction is committed, we
+send out the discards.  I suspect the difference is in the granularity
+of the transactions between ext4 and xfs.
 
-As it is, no-one really should be using -o discard - it is extremely
-inefficient compared to a background fstrim run given that discards
-are unqueued, blocking IOs. It's just a bad idea until the lower
-layers get fixed to allow asynchronous, vectored discards and SATA
-supports queued discards...
+> As it is, no-one really should be using -o discard - it is extremely
+> inefficient compared to a background fstrim run given that discards
+> are unqueued, blocking IOs. It's just a bad idea until the lower
+> layers get fixed to allow asynchronous, vectored discards and SATA
+> supports queued discards...
 
-Cheers,
+What Dave said.  :-) This is true for both ext4 and xfs.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+As a result, I can very easily see there being a distinction made
+between when we *do* want to pass the discards all the way down to the
+device, and when we only want the thinp layer to process them ---
+because for current devices, sending discards down to the physical
+device is very heavyweight.
+
+I'm not sure how we could do this without a nasty layering violation,
+but some way in which we could label fstrim discards versus "we've
+committed the unlink/truncate and so thinp can feel free to reuse
+these blocks" discards would be interesting to consider.
+
+     	  	     	     	      - Ted
 
 _______________________________________________
 xfs mailing list
