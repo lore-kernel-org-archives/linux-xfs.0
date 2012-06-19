@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5J1SJen006865 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 20:28:19 -0500
+	q5J1UkS5007660 for <xfs@oss.sgi.com>; Mon, 18 Jun 2012 20:30:46 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	YJtdCVAIJ5XaFMXd for <xfs@oss.sgi.com>;
-	Mon, 18 Jun 2012 18:28:17 -0700 (PDT)
-Date: Tue, 19 Jun 2012 11:27:00 +1000
+	yXTEi61sCBhmsZII for <xfs@oss.sgi.com>;
+	Mon, 18 Jun 2012 18:30:45 -0700 (PDT)
+Date: Tue, 19 Jun 2012 11:29:55 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS status update for May 2012
-Message-ID: <20120619012700.GH25389@dastard>
-References: <20120618120853.GA15480@infradead.org>
-	<AD997E9D-2C1E-4EE4-80D7-2A5C998B6E9E@dilger.ca>
-	<4FDF9998.6020205@sandeen.net>
+Subject: Re: wiki spam
+Message-ID: <20120619012955.GI25389@dastard>
+References: <20120618133323.GA11845@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FDF9998.6020205@sandeen.net>
+In-Reply-To: <20120618133323.GA11845@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,39 +26,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Andreas Dilger <adilger@dilger.ca>, Christoph Hellwig <hch@infradead.org>, "linux-fsdevel@vger.kernel.org Devel" <linux-fsdevel@vger.kernel.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jun 18, 2012 at 04:11:52PM -0500, Eric Sandeen wrote:
-> On 6/18/12 1:25 PM, Andreas Dilger wrote:
-> > On 2012-06-18, at 6:08 AM, Christoph Hellwig wrote:
-> >> May saw the release of Linux 3.4, including a decent sized XFS update.
-> >> Remarkable XFS features in Linux 3.4 include moving over all metadata
-> >> updates to use transactions, the addition of a work queue for the
-> >> low-level allocator code to avoid stack overflows due to extreme stack
-> >> use in the Linux VM/VFS call chain,
-> > 
-> > This is essentially a workaround for too-small stacks in the kernel,
-> > which we've had to do at times as well, by doing work in a separate
-> > thread (with a new stack) and waiting for the results?  This is a
-> > generic problem that any reasonably-complex filesystem will have when
-> > running under memory pressure on a complex storage stack (e.g. LVM +
-> > iSCSI), but causes unnecessary context switching.
-> > 
-> > Any thoughts on a better way to handle this, or will there continue
-> > to be a 4kB stack limit and hack around this with repeated kmalloc
+On Mon, Jun 18, 2012 at 09:33:23AM -0400, Christoph Hellwig wrote:
+> I just had to delete dozends of link farm spam entries on the xfs.org.
 > 
-> well, 8k on x86_64 (not 4k) right?   But still...
+> This is getting a bit out of control, so I'm wondring what we can do
+> about it.
 > 
-> Maybe it's still a partial hack but it's more generic - should we have
-> IRQ stacks like x86 has?  (I think I'm right that that only exists
-> on x86 / 32-bit) - is there any downside to that?
+> I wonder if it's reasonable only to hand out account if a user manually
+> contacts one of the admins.  I don't want the bar high, just proving
+> to be able to writing a human person mail basically.
 
-We already have irq stacks for x86-64 - the stackunwinder knows
-about them so when you get a stack trace from the interrupt stack is
-walks back across to the thread stack at the appropriate point...
-
-See dump_trace() in arch/x86/kernel/dumpstack_64.c
+Sounds fine to me, I went through about a month ago and deleted a
+bunch of spam myself. Even just requiring a confirmation email (i.e.
+wiki sends an email with a confirm link) would be sufficient to
+prevent most spam, I think....
 
 Cheers,
 
