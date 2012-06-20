@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K7FcNK257323 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 02:15:38 -0500
+	q5K7IJAh257765 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 02:18:19 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	JNI6GetouWDZ1xpo (version=TLSv1 cipher=AES256-SHA bits=256
+	6pscFJ65Uv0l51Nx (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Jun 2012 00:15:38 -0700 (PDT)
-Date: Wed, 20 Jun 2012 03:15:37 -0400
+	Wed, 20 Jun 2012 00:18:18 -0700 (PDT)
+Date: Wed, 20 Jun 2012 03:18:17 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/9] xfs: support discontiguous buffers in the
-	xfs_buf_log_item
-Message-ID: <20120620071536.GB8099@infradead.org>
+Subject: Re: [PATCH 7/9] xfs: use multiple irec xfs buf support in dabuf
+Message-ID: <20120620071817.GC8099@infradead.org>
 References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-7-git-send-email-david@fromorbit.com>
+	<1339133914-11148-8-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339133914-11148-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1339133914-11148-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,7 +33,6 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 Looks good,
-
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 
