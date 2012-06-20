@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K6aFag249605 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:36:15 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	zkYOTqx1on9JoySs (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 23:36:14 -0700 (PDT)
-Date: Wed, 20 Jun 2012 02:36:12 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 5/9] xfs: struct xfs_buf_log_format isn't variable sized.
-Message-ID: <20120620063612.GB5467@infradead.org>
+	q5K6bWe7249751 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:37:32 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	hE5oHRBSlDLW21qs for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 23:37:30 -0700 (PDT)
+Date: Wed, 20 Jun 2012 16:37:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
+Message-ID: <20120620063729.GE30705@dastard>
 References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-6-git-send-email-david@fromorbit.com>
+	<1339133914-11148-3-git-send-email-david@fromorbit.com>
+	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
+	<20120619071552.GA23093@infradead.org>
+	<20120619155946.GA2676@sgi.com>
+	<20120619170304.GC7554@infradead.org>
+	<20120619171153.GD2676@sgi.com>
+	<20120620062950.GA5467@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339133914-11148-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120620062950.GA5467@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,41 +33,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-I like this patch with two minor nitpicks below.  Given that it's a mostly
-unrelated cleanup I'd also propagate it to the first patch in the
-series.
+On Wed, Jun 20, 2012 at 02:29:50AM -0400, Christoph Hellwig wrote:
+> On Tue, Jun 19, 2012 at 12:11:53PM -0500, Ben Myers wrote:
+> >  I think that Jan
+> > is also going to repost his 'Fix overallocation in xfs_buf_allocate_memory()'
+> > based upon Dave's suggestions.
+> 
+> Given that the patch that this patch fixes already is in Linus tree
+> since 3.5-rc1 Jan's fix should be ontop of Linus' tree and be sent to
+> him ASAP.  Jan, can you resend it?
 
-> +	base_size = sizeof(struct xfs_buf_log_format) -
-> +		    ((XFS_BLF_DATAMAP_SIZE - bip->bli_format.blf_map_size) *
-> +								sizeof(uint));
+He already did that - I linked to the v2 version of the patch the
+previous email...
 
-I'd really move this calculation and the comment describing it into a
-macro/inline in the header, next to the defintion of struct xfs_buf_log_format.
+Cheers,
 
-Also I'd probably rewrite the expressions as:
-
-	offsetoff(struct xfs_buf_log_format, blf_map) +
-		(blf->blf_map_size * sizeof(blf->blf_data_map[0]));
-
->  /*
-> + * Minimum and maximum blocksize and sectorsize.
-> + * The blocksize upper limit is pretty much arbitrary.
-> + * The sectorsize upper limit is due to sizeof(sb_sectsize).
-> + */
-> +#define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
-> +#define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
-> +#define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
-> +#define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
-> +#define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
-> +#define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
-> +#define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
-> +#define XFS_MAX_SECTORSIZE	(1 << XFS_MAX_SECTORSIZE_LOG)
-
-While I agree with the move of these constants, what does it have to do
-with this patch?
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
