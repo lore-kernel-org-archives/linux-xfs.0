@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K7IJAh257765 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 02:18:19 -0500
+	q5K7KfAI258077 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 02:20:42 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	6pscFJ65Uv0l51Nx (version=TLSv1 cipher=AES256-SHA bits=256
+	RtQbMA4jn11kT4JZ (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Jun 2012 00:18:18 -0700 (PDT)
-Date: Wed, 20 Jun 2012 03:18:17 -0400
+	Wed, 20 Jun 2012 00:20:40 -0700 (PDT)
+Date: Wed, 20 Jun 2012 03:20:39 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 7/9] xfs: use multiple irec xfs buf support in dabuf
-Message-ID: <20120620071817.GC8099@infradead.org>
+Subject: Re: [PATCH 8/9] xfs: remove struct xfs_dabuf and infrastructure
+Message-ID: <20120620072039.GD8099@infradead.org>
 References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-8-git-send-email-david@fromorbit.com>
+	<1339133914-11148-9-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339133914-11148-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1339133914-11148-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
