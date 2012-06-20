@@ -1,22 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K6irVP251425 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:44:53 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	e0fjUWeQpVbqSP9H (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 23:44:52 -0700 (PDT)
-Date: Wed, 20 Jun 2012 02:44:51 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/9] xfs: separate buffer indexing from block map
-Message-ID: <20120620064451.GB14760@infradead.org>
-References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-2-git-send-email-david@fromorbit.com>
+	q5K6kGMt251702 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:46:16 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	Z4urySmG3lkULYTi for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 23:46:14 -0700 (PDT)
+Date: Wed, 20 Jun 2012 16:46:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
+Message-ID: <20120620064612.GG30705@dastard>
+References: <1339133914-11148-3-git-send-email-david@fromorbit.com>
+	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
+	<20120619071552.GA23093@infradead.org>
+	<20120619155946.GA2676@sgi.com>
+	<20120619170304.GC7554@infradead.org>
+	<20120619171153.GD2676@sgi.com> <20120620055619.GA30705@dastard>
+	<20120620060400.GA5617@infradead.org>
+	<20120620062931.GC30705@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339133914-11148-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120620062931.GC30705@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,77 +33,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Fri, Jun 08, 2012 at 03:38:26PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jun 20, 2012 at 04:29:31PM +1000, Dave Chinner wrote:
+> On Wed, Jun 20, 2012 at 02:04:00AM -0400, Christoph Hellwig wrote:
+> > On Wed, Jun 20, 2012 at 03:56:19PM +1000, Dave Chinner wrote:
+> > > > they are rebased not to require the inode allocator patchset.  I think that Jan
+> > > > is also going to repost his 'Fix overallocation in xfs_buf_allocate_memory()'
+> > > > based upon Dave's suggestions.  It's best not to depend upon that either.  What
+> > > > do you say, Dave?
+> > > 
+> > > I reorder my local patch set and repost it after running it through
+> > > some testing....
+> > 
+> > Sorry, I totally misunderstood the initial issue - I though Ben had my
+> > series applied, and thus yours didn't apply.
 > 
-> To support discontiguous buffers in the buffer cache, we need to
-> separate the cache index variables from the I/O map. While this is
-> currently a 1:1 mapping, discontiguous buffer support will break
-> this relationship.
+> No, other way around ;)
 > 
-> However, for caching purposes, we can still treat them the same as a
-> contiguous buffer - the block number of the first block and the
-> length of the buffer - as that is still a unique representation.
-> Also, the only way we will ever access the discontiguous regions of
-> buffers is via bulding the complete buffer in the first place, so
-> using the initial block number and entire buffer length is a sane
-> way to index the buffers.
+> But I'm going to leave Jan kara's buffer cache over-allocation bug
+> fix ahead my list, because that has to go into 3.5-rcX as it is a
+> regression fix....
 > 
-> Add a block mapping vector construct to the xfs_buf and use it in
-> the places where we are doing IO instead of the current
-> b_bn/b_length variables.
+> FWIW, Ben, there's a few reviewed bug fixes on the list that are
+> outstanding that need to go to Linus ASAP:
 > 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_buf.c |   21 ++++++++++++---------
->  fs/xfs/xfs_buf.h |   17 +++++++++++++----
->  2 files changed, 25 insertions(+), 13 deletions(-)
+> http://oss.sgi.com/archives/xfs/2012-06/msg00154.html
+> http://oss.sgi.com/archives/xfs/2012-06/msg00134.html
+> http://oss.sgi.com/archives/xfs/2012-06/msg00056.html (regression)
 > 
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index a4beb42..90c5b6a 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -199,9 +199,11 @@ xfs_buf_alloc(
->  	 * most cases but may be reset (e.g. XFS recovery).
->  	 */
->  	bp->b_length = numblks;
-> +	bp->b_map.bm_len = numblks;
->  	bp->b_io_length = numblks;
->  	bp->b_flags = flags;
->  	bp->b_bn = blkno;
-> +	bp->b_map.bm_bn = blkno;
+> Can you take care of them please?
 
-nipick: any reason not to initialize the two fields of b_map next
-to each other?
+Add to that:
 
-> -	bp->b_io_length = bp->b_length;
-> -
+http://oss.sgi.com/archives/xfs/2012-05/msg00352.html
 
-oh, I just mentioned that we can remove this in reply to Jan's patch,
-so this is already taken care of, too.
+which also needs to go to Linus to fix an issue introduced in the
+3.5-rc1 merge...
 
->  #ifdef XFS_BUF_LOCK_TRACKING
->  	int			b_last_holder;
->  #endif
-> @@ -233,8 +242,8 @@ void xfs_buf_stale(struct xfs_buf *bp);
->  #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
->  #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
->  
-> -#define XFS_BUF_ADDR(bp)		((bp)->b_bn)
-> -#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
-> +#define XFS_BUF_ADDR(bp)		((bp)->b_map.bm_bn)
-> +#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_map.bm_bn = (xfs_daddr_t)(bno))
+Cheers,
 
-It's not really obvious why XFS_BUF_SET_ADDR should not set b_bn from
-it's defintion.  Looking at the callers it seems because it's only used
-for uncached buffers, which never use b_bn, but it's still confusing.
-
-I'm fine with keeping it for now bith a big comment to get this series
-in, but XFS_BUF_SET_ADDR and b_io_length probably should go away ASAP in
-favor or a variant of xfs_buf_iorequest that takes a bn/len pair .
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
