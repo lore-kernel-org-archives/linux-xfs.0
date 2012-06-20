@@ -1,22 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K85QUl004299 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 03:05:26 -0500
+	q5K91NvZ014439 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 04:01:23 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	8EGqPe4tcZloj2hI (version=TLSv1 cipher=AES256-SHA bits=256
+	GGYPHQ5t01wKVB4u (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 20 Jun 2012 01:05:25 -0700 (PDT)
-Date: Wed, 20 Jun 2012 04:05:23 -0400
+	Wed, 20 Jun 2012 02:01:22 -0700 (PDT)
+Date: Wed, 20 Jun 2012 05:01:17 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2] xfs: re-enable xfsaild idle mode and fix associated
-	races
-Message-ID: <20120620080523.GA26167@infradead.org>
-References: <1339087793-45731-1-git-send-email-bfoster@redhat.com>
+Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
+Message-ID: <20120620090117.GA26764@infradead.org>
+References: <alpine.LFD.2.00.1206190816440.2241@dhcp-1-248.brq.redhat.com>
+	<20120619131649.GA6811@redhat.com>
+	<alpine.LFD.2.00.1206191519320.21961@dhcp-1-248.brq.redhat.com>
+	<20120619133041.GB6811@redhat.com> <4FE0840F.2050704@shiftmail.org>
+	<20120619144413.GA7225@redhat.com>
+	<20120619184858.GA8841@redhat.com> <20120619200631.GL25389@dastard>
+	<20120619202130.GF22805@thunk.org> <20120619203938.GM25389@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1339087793-45731-1-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20120619203938.GM25389@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,71 +34,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ted Ts'o <tytso@mit.edu>, Mike Snitzer <snitzer@redhat.com>, xfs@oss.sgi.com, device-mapper development <dm-devel@redhat.com>, Spelic <spelic@shiftmail.org>, Luk???? Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-On Thu, Jun 07, 2012 at 12:49:53PM -0400, Brian Foster wrote:
-> xfsaild idle mode logic currently leads to a couple hangs:
-> 
-> 1.) If xfsaild is rescheduled in during an incremental scan
->     (i.e., tout != 0) and the target has been updated since
->     the previous run, we can hit the new target and go into
->     idle mode with a still populated ail.
-> 2.) A wake up is only issued when the target is pushed forward.
->     The wake up can race with xfsaild if it is currently in the
->     process of entering idle mode, causing future wake up
->     events to be lost.
-> 
-> Both hangs are reproducible by running xfstests 273 in a loop.
-> Modify xfsaild to enter idle mode only when the ail is empty
-> and the push target has not been moved forward since the last
-> push.
+On Wed, Jun 20, 2012 at 06:39:38AM +1000, Dave Chinner wrote:
+> Exactly - XFS transactions are fine grained, checkpoints are coarse.
+> We don't merge extents freed in fine grained transactions inside
+> checkpoints. We probably could, but, well, it's complex to do in XFS
+> and merging adjacent requests is something the block layer is
+> supposed to do....
 
-What tree is this against?  The current XFS tree never fully idles,
-so something is missing here, probably just in the patch description.
+Last time I checked it actually tries to do that for discard requests,
+but then badly falls flat (=oopses).  That's the reason why the XFS
+transaction commit code still uses the highly suboptimal synchronous
+blkdev_issue_discard instead of the async variant I wrote when designing
+the code.
 
->  	spin_lock(&ailp->xa_lock);
-> +
-> +	/* barrier matches the xa_target update in xfs_ail_push() */
-> +	smp_rmb();
-> +	target = ailp->xa_target;
-> +	ailp->xa_target_prev = target;
-> +
->  	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
->  	if (!lip) {
->  		/*
-> +
-> +		spin_lock(&ailp->xa_lock);
-> +
-> +		/*
-> +		 * Idle if the AIL is empty and we are not racing with a target
-> +		 * update. The barrier matches the xa_target update in
-> +		 * xfs_ail_push().
-> +		 */
-> +		smp_rmb();
+Another "issue" with the XFS discard pattern and the current block
+layer implementation is that XFS frees a lot of small metadata like
+inode clusters and btree blocks and discards them as well.  If those
+simply fill one of the vectors in a range ATA TRIM command and/or a
+queueable command that's not much of an issue, but with the current
+combination of non-queueable, non-vetored TRIM that's a fairly nasty
+pattern.
 
-Given that both sides are under xa_lock I can't see any need for
-barriers here.
-
-> +		if (!xfs_ail_min(ailp) && (ailp->xa_target == ailp->xa_target_prev)) {
-> +			spin_unlock(&ailp->xa_lock);
-> +			schedule();
-> +			tout = 0;
-> +			continue;
-> +		}
-
-This seems to add the actual idling, but in a rather confusing way.
-
-Can you add the xfs_ail_min and target checks to the end of xfsaild_push
-so that they are in one place with the other decisions for the timeout.
-
-Please also add a comment explaining the conditions when we want to
-idle.
-
-Also two small style nipicks:
-
- - please make sure lines are shorter than 80 characters
- - no need for the braces around the target comparism above.
+So until the block layer is sorted out I can not recommend actually
+using -o dicard.  I planned to sort out the block layer issues ASAP
+when writing that code, but other things have kept me busy every since.
 
 _______________________________________________
 xfs mailing list
