@@ -1,26 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K6bWe7249751 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:37:32 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hE5oHRBSlDLW21qs for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 23:37:30 -0700 (PDT)
-Date: Wed, 20 Jun 2012 16:37:29 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
-Message-ID: <20120620063729.GE30705@dastard>
-References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-3-git-send-email-david@fromorbit.com>
-	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
-	<20120619071552.GA23093@infradead.org>
-	<20120619155946.GA2676@sgi.com>
-	<20120619170304.GC7554@infradead.org>
-	<20120619171153.GD2676@sgi.com>
-	<20120620062950.GA5467@infradead.org>
+	q5K6d5H8249913 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:39:05 -0500
+Date: Wed, 20 Jun 2012 02:39:01 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2] xfs: Fix overallocation in xfs_buf_allocate_memory()
+Message-ID: <20120620063901.GA14760@infradead.org>
+References: <1338935546-3914-1-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120620062950.GA5467@infradead.org>
+In-Reply-To: <1338935546-3914-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,28 +22,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Myers <bpm@sgi.com>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, David Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On Wed, Jun 20, 2012 at 02:29:50AM -0400, Christoph Hellwig wrote:
-> On Tue, Jun 19, 2012 at 12:11:53PM -0500, Ben Myers wrote:
-> >  I think that Jan
-> > is also going to repost his 'Fix overallocation in xfs_buf_allocate_memory()'
-> > based upon Dave's suggestions.
+On Wed, Jun 06, 2012 at 12:32:26AM +0200, Jan Kara wrote:
+> Commit de1cbee which removed b_file_offset in favor of b_bn introduced a bug
+> causing xfs_buf_allocate_memory() to overestimate the number of necessary
+> pages. The problem is that xfs_buf_alloc() sets b_bn to -1 and thus effectively
+> every buffer is straddling a page boundary which causes
+> xfs_buf_allocate_memory() to allocate two pages and use vmalloc() for access
+> which is unnecessary.
 > 
-> Given that the patch that this patch fixes already is in Linus tree
-> since 3.5-rc1 Jan's fix should be ontop of Linus' tree and be sent to
-> him ASAP.  Jan, can you resend it?
+> Dave says xfs_buf_alloc() doesn't need to set b_bn to -1 anymore since the
+> buffer is inserted into the cache only after being fully initialized now.
+> So just make xfs_buf_alloc() fill in proper block number from the beginning.
 
-He already did that - I linked to the v2 version of the patch the
-previous email...
+Looks good.  The b_io_length initialization in xfs_buf_get can also be
+removed, but as that's a cosmetic change it can way for 3.6.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
