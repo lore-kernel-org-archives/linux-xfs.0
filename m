@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5KHIRP1116545 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 12:18:27 -0500
-Date: Wed, 20 Jun 2012 12:18:38 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
-Message-ID: <20120620171838.GB10196@sgi.com>
-References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
-	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
-	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
-	<20120525204536.GA4721@sgi.com>
-	<20120620073600.GA4399@infradead.org>
+	q5KKewOt156178 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 15:40:59 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id RttuGZkAOZP0WoGs for
+	<xfs@oss.sgi.com>; Wed, 20 Jun 2012 13:40:57 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q5KKevoc006852
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 16:40:57 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q5KKerx5006294
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 16:40:56 -0400
+Message-ID: <4FE23555.7070606@redhat.com>
+Date: Wed, 20 Jun 2012 15:40:53 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120620073600.GA4399@infradead.org>
+Subject: [PATCH] xfs_db: Fix extent record printing on big endian
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,94 +33,57 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hey Christoph,
+Extent records which should have been printed as:
 
-On Wed, Jun 20, 2012 at 03:36:00AM -0400, Christoph Hellwig wrote:
-> On Fri, May 25, 2012 at 03:45:36PM -0500, Ben Myers wrote:
-> > Hey Dave,
-> > 
-> > On Thu, May 24, 2012 at 05:39:52PM -0500, Ben Myers wrote:
-> > > Anyway, I'll make some time to work on this tomorrow so I can test it over
-> > > the weekend.
-> > 
-> > This is going to spin over the weekend.  See what you think.
-> > 
-> > -----------
-> > 
-> > xfs:  shutdown xfs_sync_worker before the log
-> > 
-> > Revert commit 1307bbd, which uses the s_umount semaphore to provide
-> > exclusion between xfs_sync_worker and unmount, in favor of shutting down
-> > the sync worker before freeing the log in xfs_log_unmount.  This is a
-> > cleaner way of resolving the race between xfs_sync_worker and unmount
-> > than using s_umount.
-> 
-> I like the cancel_delayed_work_sync on unmount side of this, but I don't
-> really like the MS_ACTIVE check - why can't we only do the initial
-> xfs_syncd_queue_sync as the last thing in the mount process?
+a.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,12,17,0]
 
-There isn't a race on the mount side related to the MS_ACTIVE flag.  It's only
-on the unmount side.  I agree that we could get rid of the MS_ACTIVE check if
-we move xfs_syncd_queue_sync to the last thing in the mount process.
+for example, were instead being printed as:
 
-The patch as-is has been well tested and I feel it is ready for a 3.5 rc merge.
-I'd like to address the MS_ACTIVE check for the 3.6 merge window.  I do think
-it is a good idea.
+a.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,12884910592,0,0]
 
-> On just slightly related issue with m_sync_work: what does the force
-> flush of it from xfs_fs_sync_fs in laptop mode buys us?  The sync
-> just did the log_force and log coverage, so the only think it will do
-> is force out the AIL after we did the log force and thus guarantee to
-> keep the fs busy for a while.  I can't really see how that's actually
-> useful for batter life.  Note that ->sync_fs is only called for an
-> epxlicit sync (in addition to umount,remount ro and freeze), so for
-> normal desktop operation it's entirely irrelevant anyway.
+in xfs_db.  It was simply mis-parsing the extent records due to wrong
+#defines for big-endian machines.
 
-1001 STATIC int
-1002 xfs_fs_sync_fs(
-1003         struct super_block      *sb,
-1004         int                     wait)
-1005 {
-1006         struct xfs_mount        *mp = XFS_M(sb);
-1007         int                     error;
-1008 
-1009         /*
-1010          * Doing anything during the async pass would be counterproductive.
-1011          */
-1012         if (!wait)
-1013                 return 0;
-1014 
-1015         error = xfs_quiesce_data(mp);
-1016         if (error)
-1017                 return -error;
-1018 
-1019         if (laptop_mode) {
-1020                 /*
-1021                  * The disk must be active because we're syncing.
-1022                  * We schedule xfssyncd now (now that the disk is
-1023                  * active) instead of later (when it might not be).
-1024                  */
-1025                 flush_delayed_work_sync(&mp->m_sync_work);
-1026         }
-1027 
-1028         return 0;
-1029 }
+It's been broken since at least xfsprogs-2.6.13, causing xfstests 021
+to fail.
 
-Is that comment misleading?  I think it could be interpreted like this:
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-"We're currently syncing, so the disk must already be active.  Since it is
-already active, lets schedule xfssyncd now so that the work gets done
-immediately.  Otherwise the disk could be spun down between now and when xfssyncd
-would normally have been scheduled, only to be spun up once again by xfssyncd."
+Why this works is, um ...left as an exercise to the reviewer for now ;)
+TBH I get lost in xfs_db, and I'm not sure how endianness is handled,
+but it's pretty clearly not like this!
 
-Before removing this we should take a look at the commit where this was added
-and see what was up.  A bit of research to do.
-
-Regards,
-Ben
+diff --git a/db/btblock.c b/db/btblock.c
+index f6e8a68..2c199b2 100644
+--- a/db/btblock.c
++++ b/db/btblock.c
+@@ -250,23 +250,12 @@ const field_t	bmapbtd_key_flds[] = {
+ };
+ #undef KOFF
+ 
+-#ifndef XFS_NATIVE_HOST
+-
+ #define BMBT_EXNTFLAG_BITOFF	0
+ #define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF + BMBT_EXNTFLAG_BITLEN)
+ #define BMBT_STARTBLOCK_BITOFF	(BMBT_STARTOFF_BITOFF + BMBT_STARTOFF_BITLEN)
+ #define BMBT_BLOCKCOUNT_BITOFF	\
+ 	(BMBT_STARTBLOCK_BITOFF + BMBT_STARTBLOCK_BITLEN)
+ 
+-#else
+-
+-#define BMBT_EXNTFLAG_BITOFF	63
+-#define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF - BMBT_STARTOFF_BITLEN)
+-#define BMBT_STARTBLOCK_BITOFF	85 /* 128 - 43 (other 9 is in first word) */
+-#define BMBT_BLOCKCOUNT_BITOFF	64 /* Start of second 64 bit container */
+-
+-#endif /* XFS_NATIVE_HOST */
+-
+ const field_t	bmapbta_rec_flds[] = {
+ 	{ "startoff", FLDT_CFILEOFFA, OI(BMBT_STARTOFF_BITOFF), C1, 0,
+ 	  TYP_ATTR },
 
 _______________________________________________
 xfs mailing list
