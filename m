@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5KFpX6l099600 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 10:51:34 -0500
-Date: Wed, 20 Jun 2012 10:51:47 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
-Message-ID: <20120620155147.GL2676@sgi.com>
-References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-3-git-send-email-david@fromorbit.com>
-	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
-	<20120619071552.GA23093@infradead.org>
-	<20120619155946.GA2676@sgi.com>
-	<20120619170304.GC7554@infradead.org>
-	<20120619171153.GD2676@sgi.com>
-	<20120620062950.GA5467@infradead.org>
-	<20120620063729.GE30705@dastard>
+	q5KFxJu0100872 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 10:59:20 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6FjaN8e7AeCTuoik for
+	<xfs@oss.sgi.com>; Wed, 20 Jun 2012 08:59:19 -0700 (PDT)
+Message-ID: <4FE1F37E.6090706@redhat.com>
+Date: Wed, 20 Jun 2012 11:59:58 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120620063729.GE30705@dastard>
+Subject: Re: [PATCH v2] xfs: re-enable xfsaild idle mode and fix associated
+	races
+References: <1339087793-45731-1-git-send-email-bfoster@redhat.com>
+	<20120620080523.GA26167@infradead.org>
+In-Reply-To: <20120620080523.GA26167@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,28 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hey Dave,
-
-On Wed, Jun 20, 2012 at 04:37:29PM +1000, Dave Chinner wrote:
-> On Wed, Jun 20, 2012 at 02:29:50AM -0400, Christoph Hellwig wrote:
-> > On Tue, Jun 19, 2012 at 12:11:53PM -0500, Ben Myers wrote:
-> > >  I think that Jan
-> > > is also going to repost his 'Fix overallocation in xfs_buf_allocate_memory()'
-> > > based upon Dave's suggestions.
+On 06/20/2012 04:05 AM, Christoph Hellwig wrote:
+> On Thu, Jun 07, 2012 at 12:49:53PM -0400, Brian Foster wrote:
+[snip]
+>>  	spin_lock(&ailp->xa_lock);
+>> +
+>> +	/* barrier matches the xa_target update in xfs_ail_push() */
+>> +	smp_rmb();
+>> +	target = ailp->xa_target;
+>> +	ailp->xa_target_prev = target;
+>> +
+>>  	lip = xfs_trans_ail_cursor_first(ailp, &cur, ailp->xa_last_pushed_lsn);
+>>  	if (!lip) {
+>>  		/*
+>> +
+>> +		spin_lock(&ailp->xa_lock);
+>> +
+>> +		/*
+>> +		 * Idle if the AIL is empty and we are not racing with a target
+>> +		 * update. The barrier matches the xa_target update in
+>> +		 * xfs_ail_push().
+>> +		 */
+>> +		smp_rmb();
 > 
-> > Given that the patch that this patch fixes already is in Linus tree
-> > since 3.5-rc1 Jan's fix should be ontop of Linus' tree and be sent to
-> > him ASAP.  Jan, can you resend it?
+> Given that both sides are under xa_lock I can't see any need for
+> barriers here.
 > 
-> He already did that - I linked to the v2 version of the patch the
-> previous email...
 
-Great!  I missed that too.
+Actually now that I look at it, it appears xfs_trans_ail_copy_lsn() does
+not necessarily acquire the xa_lock...
 
--Ben
+Brian
 
 _______________________________________________
 xfs mailing list
