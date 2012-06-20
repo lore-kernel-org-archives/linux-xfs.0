@@ -1,11 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K6d5H8249913 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:39:05 -0500
-Date: Wed, 20 Jun 2012 02:39:01 -0400
-From: Christoph Hellwig <hch@infradead.org>
+	q5K6faof250858 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:41:36 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	W2GrTthFdFNsrAAC for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 23:41:34 -0700 (PDT)
+Date: Wed, 20 Jun 2012 16:41:33 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH v2] xfs: Fix overallocation in xfs_buf_allocate_memory()
-Message-ID: <20120620063901.GA14760@infradead.org>
+Message-ID: <20120620064133.GF30705@dastard>
 References: <1338935546-3914-1-git-send-email-jack@suse.cz>
 MIME-Version: 1.0
 Content-Disposition: inline
@@ -36,11 +40,23 @@ On Wed, Jun 06, 2012 at 12:32:26AM +0200, Jan Kara wrote:
 > Dave says xfs_buf_alloc() doesn't need to set b_bn to -1 anymore since the
 > buffer is inserted into the cache only after being fully initialized now.
 > So just make xfs_buf_alloc() fill in proper block number from the beginning.
+> 
+> CC: David Chinner <dchinner@redhat.com>
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Looks good.  The b_io_length initialization in xfs_buf_get can also be
-removed, but as that's a cosmetic change it can way for 3.6.
+Hmmm, the
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+I sent yesterday doesn't appear to have made it to the list. Oh
+well, try again...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
