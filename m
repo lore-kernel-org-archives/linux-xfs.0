@@ -1,26 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K6kGMt251702 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:46:16 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Z4urySmG3lkULYTi for <xfs@oss.sgi.com>;
-	Tue, 19 Jun 2012 23:46:14 -0700 (PDT)
-Date: Wed, 20 Jun 2012 16:46:12 +1000
-From: Dave Chinner <david@fromorbit.com>
+	q5K6mRNl252005 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 01:48:27 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	BEKloT8OHWk0MyQh (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 19 Jun 2012 23:48:25 -0700 (PDT)
+Date: Wed, 20 Jun 2012 02:48:24 -0400
+From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 2/9] xfs: convert internal buffer functions to pass maps
-Message-ID: <20120620064612.GG30705@dastard>
-References: <1339133914-11148-3-git-send-email-david@fromorbit.com>
-	<20120618204325.GX4721@sgi.com> <20120618210713.GY4721@sgi.com>
-	<20120619071552.GA23093@infradead.org>
-	<20120619155946.GA2676@sgi.com>
-	<20120619170304.GC7554@infradead.org>
-	<20120619171153.GD2676@sgi.com> <20120620055619.GA30705@dastard>
-	<20120620060400.GA5617@infradead.org>
-	<20120620062931.GC30705@dastard>
+Message-ID: <20120620064824.GC14760@infradead.org>
+References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
+	<1339133914-11148-3-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120620062931.GC30705@dastard>
+In-Reply-To: <1339133914-11148-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,51 +29,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jun 20, 2012 at 04:29:31PM +1000, Dave Chinner wrote:
-> On Wed, Jun 20, 2012 at 02:04:00AM -0400, Christoph Hellwig wrote:
-> > On Wed, Jun 20, 2012 at 03:56:19PM +1000, Dave Chinner wrote:
-> > > > they are rebased not to require the inode allocator patchset.  I think that Jan
-> > > > is also going to repost his 'Fix overallocation in xfs_buf_allocate_memory()'
-> > > > based upon Dave's suggestions.  It's best not to depend upon that either.  What
-> > > > do you say, Dave?
-> > > 
-> > > I reorder my local patch set and repost it after running it through
-> > > some testing....
-> > 
-> > Sorry, I totally misunderstood the initial issue - I though Ben had my
-> > series applied, and thus yours didn't apply.
-> 
-> No, other way around ;)
-> 
-> But I'm going to leave Jan kara's buffer cache over-allocation bug
-> fix ahead my list, because that has to go into 3.5-rcX as it is a
-> regression fix....
-> 
-> FWIW, Ben, there's a few reviewed bug fixes on the list that are
-> outstanding that need to go to Linus ASAP:
-> 
-> http://oss.sgi.com/archives/xfs/2012-06/msg00154.html
-> http://oss.sgi.com/archives/xfs/2012-06/msg00134.html
-> http://oss.sgi.com/archives/xfs/2012-06/msg00056.html (regression)
-> 
-> Can you take care of them please?
+> +STATIC int
+> +_xfs_buf_get_maps(
 
-Add to that:
+Should this really be STATIC which prevents inlining even if the
+compiler thinks that's a good idea?  (Same for the free side)
 
-http://oss.sgi.com/archives/xfs/2012-05/msg00352.html
+Also any reason for the underscore in the naming?
 
-which also needs to go to Linus to fix an issue introduced in the
-3.5-rc1 merge...
+> +	bp->b_bn = map[0].bm_bn;
+> +	bp->b_length = 0;
+> +	for (i = 0; i < nmaps; i++) {
+> +		bp->b_maps[i].bm_bn = map[i].bm_bn;
+> +		bp->b_maps[i].bm_len = map[i].bm_len;
+> +		bp->b_length += map[i].bm_len;
+> +	}
+> +	bp->b_io_length = bp->b_length;
+> +
 
-Cheers,
+> +	for (i = 0; i < nmaps; i++) {
+> +		numblks += map[i].bm_len;
+> +	}
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+no need for the curly braces here.
+
+> +	struct xfs_buf	*bp,
+> +	int		map,
+> +	int		*buf_offset,
+> +	int		*count,
+> +	int		rw)
+>  {
+> -	int			rw, map_i, total_nr_pages, nr_pages;
+> +	int			page_index;
+
+The indentation for the arguments and local variables doesn't seem to
+line up here.
 
 _______________________________________________
 xfs mailing list
