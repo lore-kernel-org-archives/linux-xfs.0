@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5K7fLnn261628 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 02:41:21 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jCCksiMmHUsJwcWU for <xfs@oss.sgi.com>;
-	Wed, 20 Jun 2012 00:41:19 -0700 (PDT)
-Date: Wed, 20 Jun 2012 17:41:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 9/9] xfs: factor buffer reading from xfs_dir2_leaf_getdents
-Message-ID: <20120620074117.GJ30705@dastard>
-References: <1339133914-11148-1-git-send-email-david@fromorbit.com>
-	<1339133914-11148-10-git-send-email-david@fromorbit.com>
-	<20120620072709.GA27358@infradead.org>
+	q5K7iQNb262029 for <xfs@oss.sgi.com>; Wed, 20 Jun 2012 02:44:27 -0500
+Date: Wed, 20 Jun 2012 03:44:24 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] xfs:  shutdown xfs_sync_worker before the log
+Message-ID: <20120620074424.GA9712@infradead.org>
+References: <20120323174327.GU7762@sgi.com> <20120514203449.GE16099@sgi.com>
+	<20120516015626.GN25351@dastard> <20120516170402.GD3963@sgi.com>
+	<20120517071658.GP25351@dastard> <20120524223952.GU16099@sgi.com>
+	<20120525204536.GA4721@sgi.com> <20120606042647.GK22848@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120620072709.GA27358@infradead.org>
+In-Reply-To: <20120606042647.GK22848@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +25,73 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Wed, Jun 20, 2012 at 03:27:10AM -0400, Christoph Hellwig wrote:
-> > +struct _map_info {
-> > +	xfs_bmbt_irec_t	*map;		/* map vector for blocks */
-> > +	xfs_extlen_t	map_blocks;	/* number of fsbs in map */
-> > +	xfs_dablk_t	map_off;	/* last mapped file offset */
-> > +	int		map_size;	/* total entries in *map */
-> > +	int		map_valid;	/* valid entries in *map */
-> > +	int		nmap;		/* mappings to ask xfs_bmapi */
-> > +	xfs_dir2_db_t	curdb;		/* db for current block */
-> > +};
-> > +
-> > +struct _ra_info {
-> 
-> Can you give these structure names xfs_dir2_leaf prefixes, please?
+On Wed, Jun 06, 2012 at 02:26:47PM +1000, Dave Chinner wrote:
+> I think starting by renaming the xfs-syncd workqueue to the
+> xfs_mount_wq because there's nothing "sync" related about it's
+> functionality any more.
 
-Sure.
+Is there any good reason to keep queueing different work items on the
+same queue now that workqueues are incredibly cheap? 
 
-> Also any reason the ra_info structure is kept entirely separate?
+> I'll then kill xfs_syncd_init/stop functions and open code the
+> intialisation of the work structures and start them in the
+> appropriate places for their functionality. e.g. reclaim work is
+> demand started and stops when there's nothing more to do or at
+> unmount, the flush work is demand started and we need to complete
+> them all at unmount, and the xfssync work is really now "periodic
+> log work" so should be started once we complete log recovery
+> successfullly and stopped before we tear down the log....
 
-Logical grouping, easy to validate.
+Sounds good.  You probably also want to kill off xfs_sync_fsdata as
+it doesn't make any sense with our current sync / ail pushing code
+before that.
 
-> While
-> I see a bit of a point to have a logical grouping, it still semes more
-> useful to just embedd it into the map_info.
+> Then I can move the xfs_sync_worker to xfs_log.c and rename it.
 
-Ok, I can do that.
+Before that you probably want to kill the xfs_ail_push_all in it in
+favour or xfsaild waking up periodically by itself if there is anything
+in the AIL.
 
-> > +	map_info.map_size = howmany(bufsize + mp->m_dirblksize,
-> > +				     mp->m_sb.sb_blocksize);
-> > +	map_info.map = kmem_zalloc(map_info.map_size *
-> > +					sizeof(struct xfs_bmbt_irec), KM_SLEEP);
-> 
-> I'd be tempted to say that the map field in the map_info should be a
-> variable sized array the end, and the whole structure should be
-> dynamically allocated to get a couple more variables off the stack.
+> If I then convert xfs_flush_worker to use the generic writeback code
+> (writeback_inodes_sb_if_idle) the xfs_sync_data() can go away.
 
-Makes sense, even though we aren't usually under stack pressure
-here.
+Good plan.  It'll still need the trylock changes for it that don't
+really seem to make forward progress on fsdevel.
 
-Cheers,
+> That
+> means the only user of xfs_inode_ag_iterator is the quotaoff code
+> (xfs_qm_dqrele_all_inodes), so it could be moved elsewhere (like
+> xfs_inode.c).
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+fair enough.
+
+> Then xfs_quiesce_data() can be moved to xfs-super.c where it can sit
+> alongside the two functions that call it, and the same can be done
+> for xfs_quiesce_attr().
+
+xfs_fs_remount shouldn't really need to call it, as do_remount_sb
+calls it just before entering ->remount_fs.  Although looking at it
+closter do_remount_sb probably needs to move the sync_filesystem
+call until after the check for r/o files and preventing new writes.
+
+Independent of that I think xfs_quiesce_data should be merged into
+xfs_fs_sync_fs - until do_remount_sb is fixed xfs_fs_remount should
+simply call xfs_fs_sync_fs.
+
+This also is a good opportunity to redo the maze of comments describing
+the freeze process, which is rather outdated and a bit confusing now.
+
+> That will leave only inode cache reclaim functions in xfs_sync.c.
+> These are closely aligned to the inode allocation, freeing and cache
+> lookup functions in xfs_iget.c, so I'm thinking of merging the two
+> into a single file named xfs_inode_cache.c so both xfs_sync.c and
+> xfs_iget.c go away.
+
+Sounds good, although I'd call the file xfs_icache.c - that seems to
+fit better with the general theme of naming schemes in XFS.
 
 _______________________________________________
 xfs mailing list
