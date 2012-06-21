@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5LGYDka094469 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 11:34:13 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	hLvGVccSWiKfhsAY (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Jun 2012 09:34:10 -0700 (PDT)
-Date: Thu, 21 Jun 2012 12:34:09 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [regression] stack overflow in xfs_buf_iodone_callbacks
-Message-ID: <20120621163409.GA7897@infradead.org>
-References: <20120621091803.GB10673@dastard>
+	q5LHB5TY100946 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 12:11:05 -0500
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id nJvgIdjkZ94aGTiV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Jun 2012 10:11:04 -0700 (PDT)
+Received: from telerig.nabble.com ([192.168.236.162])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1ShkuN-0004dG-MP
+	for xfs@oss.sgi.com; Thu, 21 Jun 2012 10:11:03 -0700
+Message-ID: <34049926.post@talk.nabble.com>
+Date: Thu, 21 Jun 2012 10:11:03 -0700 (PDT)
+From: pkamala <priya.kamala@perpetual-data.com>
+Subject: Re: Possible memory allocation deadlock - kernel 3.2.1
+In-Reply-To: <20120621161728.GD2503@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120621091803.GB10673@dastard>
+References: <34049469.post@talk.nabble.com> <20120621161728.GD2503@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,19 +29,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Jun 21, 2012 at 07:18:03PM +1000, Dave Chinner wrote:
-> Folks,
-> 
-> I just had a stack overflow in the delayed write buffer error
-> handling with a shut down filesystem:
 
-I've looked at this a bit more, and it seems the effect really can't
-be an XFS shutdown.  We never do the shutdown check inside
-xfs_buf_iorequest.  The issue obviously is real, but could it be that
-you had an actual persistent I/O error on the underlying device?
+Hi Ben,
+
+Thanks for the quick response. Yes, this does look like the problem I'm
+seeing. slabtop shows xfs_inode using 1683004K Cache Size just before I lose
+connection to the server. I'll check out the patches.
+
+Regards,
+Priya
+-- 
+View this message in context: http://old.nabble.com/Possible-memory-allocation-deadlock---kernel-3.2.1-tp34049469p34049926.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
