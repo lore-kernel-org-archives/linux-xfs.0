@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5L91GW5024207 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 04:01:16 -0500
+	q5L9I7nd027151 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 04:18:08 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	PzmFh6Z7EwioQaRs for <xfs@oss.sgi.com>;
-	Thu, 21 Jun 2012 02:01:14 -0700 (PDT)
-Date: Thu, 21 Jun 2012 19:01:11 +1000
+	IZ9EZZwjXZkMBmPf for <xfs@oss.sgi.com>;
+	Thu, 21 Jun 2012 02:18:06 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1ShdWd-00038B-I9
+	for xfs@oss.sgi.com; Thu, 21 Jun 2012 19:18:03 +1000
+Date: Thu, 21 Jun 2012 19:18:03 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Debugging file truncation problem
-Message-ID: <20120621090111.GA10673@dastard>
-References: <4FE27E2B.2060705@slac.stanford.edu>
-	<20120621060249.GR30705@dastard>
-	<4FE2BF74.9010406@slac.stanford.edu>
+Subject: [regression] stack overflow in xfs_buf_iodone_callbacks
+Message-ID: <20120621091803.GB10673@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FE2BF74.9010406@slac.stanford.edu>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,36 +27,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ling Ho <ling@slac.stanford.edu>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Wed, Jun 20, 2012 at 11:30:12PM -0700, Ling Ho wrote:
-> On 6/20/12 11:02 PM, Dave Chinner wrote:
-> >On Wed, Jun 20, 2012 at 06:51:39PM -0700, Ling Ho wrote:
-> >>Hello,
-> >>
-> >>I am trying to debug a problem that has bugged us for the last few months.
-> >>
-> >>We have set up a large storage system using GlusterFS, and XFS
-> >>underneath it. We have 5 RHEL6.2 servers (running
-> >>2.6.32-220.7.1.el6.x86_64 when problem last occurred), with LSI
-> >>9285-8e Raid Controller with Battery Backup Unit. System memory is
-> >>48GB.
-> >Perhaps you should report the problem to your RedHat support
-> >engineer and tell them to raise a bug - it's entire possible that
-> >the RH kernel needs this fix:
-> >
-> >be4f1ac xfs: log all dirty inodes in xfs_fs_sync_fs
-> >
-> >Cheers,
-> >
-> >Dave.
-> >
-> Ok. Is there a bug reference number or thread I can point to?
+Folks,
 
-The above commit is all that is needed - I'll be the person who
-fixes the bug in the RH kernel, anyway, so not much else is needed
-;)
+I just had a stack overflow in the delayed write buffer error
+handling with a shut down filesystem:
+
+.....
+[   20.712744]  [<ffffffff81448023>] xfs_buf_iodone_work+0x23/0x50
+[   20.712744]  [<ffffffff814481a0>] xfs_buf_ioend+0x70/0x180
+[   20.712744]  [<ffffffff814484c5>] _xfs_buf_ioend+0x25/0x30
+[   20.712744]  [<ffffffff81448788>] __xfs_buf_iorequest+0x98/0x130
+[   20.712744]  [<ffffffff81448836>] xfs_buf_iorequest+0x16/0x20
+[   20.712744]  [<ffffffff81448945>] xfs_bdstrat_cb+0x65/0x110
+[   20.712744]  [<ffffffff814b9d7c>] xfs_buf_iodone_callbacks+0x11c/0x290
+[   20.712744]  [<ffffffff81448023>] xfs_buf_iodone_work+0x23/0x50
+[   20.712744]  [<ffffffff814481a0>] xfs_buf_ioend+0x70/0x180
+[   20.712744]  [<ffffffff814484c5>] _xfs_buf_ioend+0x25/0x30
+[   20.712744]  [<ffffffff81448788>] __xfs_buf_iorequest+0x98/0x130
+[   20.712744]  [<ffffffff81448836>] xfs_buf_iorequest+0x16/0x20
+[   20.712744]  [<ffffffff81448945>] xfs_bdstrat_cb+0x65/0x110
+[   20.712744]  [<ffffffff814b9d7c>] xfs_buf_iodone_callbacks+0x11c/0x290
+[   20.712744]  [<ffffffff81448023>] xfs_buf_iodone_work+0x23/0x50
+[   20.712744]  [<ffffffff814481a0>] xfs_buf_ioend+0x70/0x180
+[   20.712744]  [<ffffffff814484c5>] _xfs_buf_ioend+0x25/0x30
+[   20.712744]  [<ffffffff81448788>] __xfs_buf_iorequest+0x98/0x130
+[   20.712744]  [<ffffffff81448836>] xfs_buf_iorequest+0x16/0x20
+[   20.712744]  [<ffffffff81448945>] xfs_bdstrat_cb+0x65/0x110
+[   20.712744]  [<ffffffff814b9d7c>] xfs_buf_iodone_callbacks+0x11c/0x290
+[   20.712744]  [<ffffffff81448023>] xfs_buf_iodone_work+0x23/0x50
+[   20.712744]  [<ffffffff814481a0>] xfs_buf_ioend+0x70/0x180
+[   20.712744]  [<ffffffff814484c5>] _xfs_buf_ioend+0x25/0x30
+[   20.712744]  [<ffffffff81448788>] __xfs_buf_iorequest+0x98/0x130
+[   20.712744]  [<ffffffff81448836>] xfs_buf_iorequest+0x16/0x20
+[   20.712744]  [<ffffffff81448945>] xfs_bdstrat_cb+0x65/0x110
+[   20.712744]  [<ffffffff81448c39>] __xfs_buf_delwri_submit+0x249/0x280
+[   20.712744]  [<ffffffff81449920>] xfs_buf_delwri_submit_nowait+0x20/0x30
+[   20.712744]  [<ffffffff814bc43e>] xfsaild+0x21e/0x750
+[   20.712744]  [<ffffffff810a0472>] kthread+0xa2/0xb0
+[   20.712744]  [<ffffffff81b83c64>] kernel_thread_helper+0x4/0x10
+
+Basically, the commit:
+
+43ff212 xfs: on-stack delayed write buffer lists
+
+took away the delay in resubmitting metadata buffers that have
+had a write error, and so the xfsbdstrat() resubmission immediately
+errors out on the shutdown flag, calling the io completion for teh
+buffer that then runs xfs_buf_iodone_callbacks(), that then calls
+xfs_bdstrat_cb(), that then errors out on the shutdown flag, calls
+io completion, and around it goes in a spiral of death.
+
+I did flag the change to an immediate xfsbdstrat() call as a problem
+in review, and mentioned a possible solution to the problem, but it
+looks like it fell through the cracks
+
+http://oss.sgi.com/archives/xfs/2012-04/msg00760.html
+
+	"This will just resubmit the IO immediately after it is
+	failed, while previously it will only be pushed again after
+	it ages out (15s later). Perhaps it can just be left to be
+	pushed by the aild next time it passes over it?"
+
+That would definitely prevent the Spiral of Stack Doom that I've
+just seen....
+
+I don't have time to come up with a fix for this right now, but it
+needs to be fixed before 3.5 releases. I don't have time because I'm
+going to be AFK next week, so I'd appreciate it if someone could
+look at fixing this in the mean time?
 
 Cheers,
 
