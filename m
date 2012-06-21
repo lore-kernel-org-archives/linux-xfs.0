@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5LFpd6Q088454 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 10:51:40 -0500
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id weM6l6eKKmT5vZXd (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 21 Jun 2012 08:51:38 -0700 (PDT)
-Received: from telerig.nabble.com ([192.168.236.162])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1ShjfW-0005Xb-84
-	for xfs@oss.sgi.com; Thu, 21 Jun 2012 08:51:38 -0700
-Message-ID: <34049469.post@talk.nabble.com>
-Date: Thu, 21 Jun 2012 08:51:38 -0700 (PDT)
-From: pkamala <priya.kamala@perpetual-data.com>
-Subject: Possible memory allocation deadlock - kernel 3.2.1
+	q5LGH4sW092005 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 11:17:04 -0500
+Date: Thu, 21 Jun 2012 11:17:28 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Possible memory allocation deadlock - kernel 3.2.1
+Message-ID: <20120621161728.GD2503@sgi.com>
+References: <34049469.post@talk.nabble.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <34049469.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +22,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: pkamala <priya.kamala@perpetual-data.com>
+Cc: xfs@oss.sgi.com
 
+Hi Priya,
 
-Hi all,
+On Thu, Jun 21, 2012 at 08:51:38AM -0700, pkamala wrote:
+> I am testing the kernel 3.2.1 (32-bit) XFS filesystem on a 1 TB LVM logical
+> volume. The volume currently has 3653816 files, 3655726 used inodes and 782G
+> free space. When the volume is mounted, quotacheck starts up and after about
+> 5 minutes the oom-killer is triggered and starts killing processes. From the
+> message log, it looks like the system is running out of Normal memory. After
+> a while I see the following messages after which I power cycle the system:
+> 
+> XFS: possible memory allocation deadlock in kmem_zone_alloc (mode: 0x2d0)
+> XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:
+> 0x250)
 
-I am testing the kernel 3.2.1 (32-bit) XFS filesystem on a 1 TB LVM logical
-volume. The volume currently has 3653816 files, 3655726 used inodes and 782G
-free space. When the volume is mounted, quotacheck starts up and after about
-5 minutes the oom-killer is triggered and starts killing processes. From the
-message log, it looks like the system is running out of Normal memory. After
-a while I see the following messages after which I power cycle the system:
+That sounds familiar.  Take a look at /proc/slabinfo and see if the
+xfs_inode cache is using up all of your memory.  If so, here is a fix
+for this from Dave that works by allowing inode reclaim to work during
+mount:
 
-XFS: possible memory allocation deadlock in kmem_zone_alloc (mode: 0x2d0)
-XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:
-0x250)
+commit 8a00ebe4cfc90eda9ecb575ba97e22021cd8cf70
+Author: Dave Chinner <david@fromorbit.com>
+Date:   Fri Apr 13 12:10:44 2012 +0000
 
-The kernel is configured for 2G/2G memory split. I tried setting
-vm.overcommit_memory to 2 and vm.overcommit_ratio first to 80 and then 50
-and that did not help.
+    xfs: Ensure inode reclaim can run during quotacheck
 
-The server has an Intel Quad core Xeon CPU X3450 @ 2.67GHz with 4 GB RAM.
-The swap partition is 8GB in size.
+There is a related fix that you will want:
 
-Is this a known issue and if so, is a patch available? Is there a kernel
-configuration parameter that can be adjusted to fix this?
+commit 1307bbd2af67283131728637e9489002adb26f10
+Author: Ben Myers <bpm@sgi.com>
+Date:   Tue May 15 14:26:55 2012 -0500
 
-Do let me know if you need additional information about the test setup or
-kernel configuration.
+    xfs: protect xfs_sync_worker with s_umount semaphore
 
-Thanks for your help.
+The above made the 3.5 merge window.  The latter commit is functional
+but we're not very happy with using the s_umount semaphore here, so it
+is being replaced with something that is a bit cleaner very soon.   I
+will propose them for the 3.2-stable branch.
 
-Priya
-
-
--- 
-View this message in context: http://old.nabble.com/Possible-memory-allocation-deadlock---kernel-3.2.1-tp34049469p34049469.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
