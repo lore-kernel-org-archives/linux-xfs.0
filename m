@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5LNU3jW165157 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 18:30:03 -0500
+	q5LNp3Q5168113 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 18:51:03 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	lLFrVQPmZ9GuJ602 for <xfs@oss.sgi.com>;
-	Thu, 21 Jun 2012 16:30:01 -0700 (PDT)
-Date: Fri, 22 Jun 2012 09:29:57 +1000
+	htmRfdpSaExHa7GJ for <xfs@oss.sgi.com>;
+	Thu, 21 Jun 2012 16:51:01 -0700 (PDT)
+Date: Fri, 22 Jun 2012 09:50:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Ext4 and xfs problems in dm-thin on allocation and discard
-Message-ID: <20120621232957.GE10673@dastard>
-References: <4FDF9EBE.2030809@shiftmail.org> <20120619015745.GJ25389@dastard>
-	<4FE1BDF3.4080702@shiftmail.org> <20120620225327.GL30705@dastard>
-	<20120621174742.GA27837@redhat.com>
+Subject: Re: [PATCH] xfs: force log before unmount
+Message-ID: <20120621235058.GF10673@dastard>
+References: <20120621192541.630212563@sgi.com>
+	<20120621192600.936441949@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120621174742.GA27837@redhat.com>
+In-Reply-To: <20120621192600.936441949@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,97 +27,108 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: axboe@kernel.dk, xfs@oss.sgi.com, hch@infradead.org, device-mapper development <dm-devel@redhat.com>, Spelic <spelic@shiftmail.org>, Paolo Bonzini <pbonzini@redhat.com>, linux-ext4@vger.kernel.org
+To: tinguely@sgi.com
+Cc: xfs@oss.sgi.com
 
-On Thu, Jun 21, 2012 at 01:47:43PM -0400, Mike Snitzer wrote:
-> On Wed, Jun 20 2012 at  6:53pm -0400,
-> Dave Chinner <david@fromorbit.com> wrote:
+On Thu, Jun 21, 2012 at 02:25:42PM -0500, tinguely@sgi.com wrote:
+> From: Mark Tinguely <tinguely@sgi.com>
 > 
-> > On Wed, Jun 20, 2012 at 02:11:31PM +0200, Spelic wrote:
-> > > Ok guys, I think I found the bug. One or more bugs.
-> > > 
-> > > 
-> > > Pool has chunksize 1MB.
-> > > In sysfs the thin volume has: queue/discard_max_bytes and
-> > > queue/discard_granularity are 1048576 .
-> > > And it has discard_alignment = 0, which based on sysfs-block
-> > > documentation is correct (a less misleading name would have been
-> > > discard_offset imho).
-> > > Here is the blktrace from ext4 fstrim:
-> > > ...
-> > > 252,9   17      498     0.030466556   841  Q   D 19898368 + 2048 [fstrim]
-> > > 252,9   17      499     0.030467501   841  Q   D 19900416 + 2048 [fstrim]
-> > > 252,9   17      500     0.030468359   841  Q   D 19902464 + 2048 [fstrim]
-....
-> > > Here is the blktrace from xfs fstrim:
-> > > 252,12  16        1     0.000000000   554  Q   D 96 + 2048 [fstrim]
-> > > 252,12  16        2     0.000010149   554  Q   D 2144 + 2048 [fstrim]
-> > > 252,12  16        3     0.000011349   554  Q   D 4192 + 2048 [fstrim]
-.....
-> > It looks like blkdev_issue_discard() has reduced each discard to
-> > bios of a single "granule" (1MB), and not aligned them, hence they
-> > are ignore by dm-thinp.
-> > 
-> > what are the discard parameters exposed by dm-thinp in
-> > /sys/block/<thinp-blkdev>/queue/discard*
-> > 
-> > It looks to me that dmthinp might be setting discard_max_bytes to
-> > 1MB rather than discard_granularity. Looking at dm-thin.c:
-> > 
-> > static void set_discard_limits(struct pool *pool, struct queue_limits *limits)
-> > {
-> >         /*
-> >          * FIXME: these limits may be incompatible with the pool's data device
-> >          */
-> >         limits->max_discard_sectors = pool->sectors_per_block;
-> > 
-> >         /*
-> >          * This is just a hint, and not enforced.  We have to cope with
-> >          * bios that overlap 2 blocks.
-> >          */
-> >         limits->discard_granularity = pool->sectors_per_block << SECTOR_SHIFT;
-> >         limits->discard_zeroes_data = pool->pf.zero_new_blocks;
-> > }
-> > 
-> > 
-> > Yes - discard_max_bytes == discard_granularity, and so
-> > blkdev_issue_discard fails to align the request properly. As it is,
-> > setting discard_max_bytes to the thinp block size is silly - it
-> > means you'll never get range requests, and we sent a discard for
-> > every single block in a range rather than having the thinp code
-> > iterate over a range itself.
+> Testing has found a few crashes of dereference of NULL in the
+> xlog_assign_tail_lsn_locked() and xlog_get_lowest_lsn() routines from
+> buf iodone callbacks. The filesystem is be shutdown. At the point of
+> the crash, the log has alreadly been freed which leads to the NULL pointer
+> dereference. 
 > 
-> So 2 different issues:
-> 1) blkdev_issue_discard isn't properly aligning
-> 2) thinp should accept larger discards (up to the stacked
->    discard_max_bytes rather than setting an override)
+> One crash still pointed to the buffer that was going through the iodone
+> path and that buffer had XFS_SB_MAGIC in it.
 
-Yes, in effect, but there's no real reason I can see why thinp can't
-accept large discard requests than the underlying stack and break
-them up appropriately itself....
+Which points to the problem, but you haven't quite worked out what
+the root cause of this is so the patch doesn't actually fix the
+problem, It changes the timing of IO, so it can certainly mke it
+seem like it fixed the race condition....
 
-> > i.e. this is not a filesystem bug that is causing the problem....
-> 
-> Paolo Bonzini fixed blkdev_issue_discard to properly align some time
-> ago; unfortunately the patches slipped through the cracks (cc'ing Paolo,
-> Jens, and Christoph).
-> 
-> Here are references to Paolo's patches:
-> 0/2 https://lkml.org/lkml/2012/3/14/323
-> 1/2 https://lkml.org/lkml/2012/3/14/324
-> 2/2 https://lkml.org/lkml/2012/3/14/325
-> 
-> Patch 2/2 specifically addresses the case where:
->  discard_max_bytes == discard_granularity 
-> 
-> Paolo, any chance you could resend to Jens (maybe with hch's comments on
-> patch#2 accounted for)?  Also, please add hch's Reviewed-by when
-> reposting.
-> 
-> (would love to see this fixed for 3.5-rcX but if not 3.6 it is?)
+> This patch sits on top of Ben's proposed patch to shutdown the sync worker.
+> Although it did not cause the crash I would like to be on the safe side, and
+> perform the shutdown of the sync worker to occur before the last write of the
+> superblock.
 
-That would be good...
+The sync worker is not an actor in this race condition - where it
+was placed in xfs_log_unmount() is the correct place for it.
+
+> Then force the log to get the superblock buffer into the AIL before
+> it is pushed for the last time..
+
+The superblock is already in the AIL - otherwise we wouldn't have
+crashed trying to remove it from the AIL after the log has been torn
+down. 
+
+> To the best of my searching, xfs_log_unmount_write() should not dirty the
+> superblock..
+
+It doesn't - it just writes an unmount record to the log.
+
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+>  fs/xfs/xfs_log.c   |    1 -
+>  fs/xfs/xfs_mount.c |    2 ++
+>  2 files changed, 2 insertions(+), 1 deletion(-)
+> 
+> Index: b/fs/xfs/xfs_log.c
+> ===================================================================
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -810,7 +810,6 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  void
+>  xfs_log_unmount(xfs_mount_t *mp)
+>  {
+> -	cancel_delayed_work_sync(&mp->m_sync_work);
+>  	xfs_trans_ail_destroy(mp);
+>  	xlog_dealloc_log(mp->m_log);
+>  }
+> Index: b/fs/xfs/xfs_mount.c
+> ===================================================================
+> --- a/fs/xfs/xfs_mount.c
+> +++ b/fs/xfs/xfs_mount.c
+> @@ -1517,6 +1517,7 @@ xfs_unmountfs(
+>  		xfs_warn(mp, "Unable to free reserved block pool. "
+>  				"Freespace may not be correct on next mount.");
+>  
+> +	cancel_delayed_work_sync(&mp->m_sync_work);
+>  	error = xfs_log_sbcount(mp);
+>  	if (error)
+>  		xfs_warn(mp, "Unable to update superblock counters. "
+> @@ -1526,6 +1527,7 @@ xfs_unmountfs(
+>  	 * At this point we might have modified the superblock again and thus
+>  	 * added an item to the AIL, thus flush it again.
+>  	 */
+> +	xfs_log_force(mp, XFS_LOG_SYNC);
+
+This is a no-op - xfs_log_sbcount() does a synchronous transaction,
+so the log has already been forced at this point and the superblock
+is not pinned in memory.
+
+>  	xfs_ail_push_all_sync(mp->m_ail);
+>  	xfs_wait_buftarg(mp->m_ddev_targp);
+
+So, what is different about the superblock buffer? It's an uncached
+buffer. What does that mean? It means that when xfs_wait_buftarg()
+walks the LRU, it never finds the superblock buffer because uncached
+buffers are never put on the LRU.
+
+Hence, when xfs_ail_push_all_sync() triggers an async write of the
+superblock, nobody ever waits for it to complete. Hence the log and
+AIL are torn down, and when the IO completes it goes to remove it
+from the AIL (which succeeds) and then move the log tail because it
+was the only item in the AIL, it goes kaboom.
+
+So the root cause is that we are not waiting for the superblock IO
+to complete i.e. it's not at all related to the xfs_sync_worker(), log
+forces, etc. What we really need to do is after the
+xfs_log_sbcount() call is write the superblock synchronously, and we
+can do that in xfs_log_sbcount() because all the callers of
+xfs_log_sbcount() have this same problem of not waiting for the SB
+to be written correctly. i.e. add the guts of xfs_sync_fsdata() to
+xfs_log_sbcount()....
 
 Cheers,
 
