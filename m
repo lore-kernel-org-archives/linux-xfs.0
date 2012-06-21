@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5LA6skK034328 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 05:06:54 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id jWPtFDgDSWfGZ5ky
-	for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 03:06:53 -0700 (PDT)
-Message-ID: <4FE2F23D.90303@hardwarefreak.com>
-Date: Thu, 21 Jun 2012 05:06:53 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q5LFW70C085500 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 10:32:07 -0500
+Date: Thu, 21 Jun 2012 10:32:32 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/2 v2] xfs: rename log structure and remove xlog_t
+	typedef.
+Message-ID: <20120621153232.GB2503@sgi.com>
+References: <20120614142214.445982138@sgi.com>
+	<20120614142430.963813265@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [regression] stack overflow in xfs_buf_iodone_callbacks
-References: <20120621091803.GB10673@dastard>
-	<20120621092104.GA3621@infradead.org>
-In-Reply-To: <20120621092104.GA3621@infradead.org>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <20120614142430.963813265@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,35 +24,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: tinguely@sgi.com
 Cc: xfs@oss.sgi.com
 
-On 6/21/2012 4:21 AM, Christoph Hellwig wrote:
-> On Thu, Jun 21, 2012 at 07:18:03PM +1000, Dave Chinner wrote:
->> I don't have time to come up with a fix for this right now, but it
->> needs to be fixed before 3.5 releases. I don't have time because I'm
->> going to be AFK next week, so I'd appreciate it if someone could
->> look at fixing this in the mean time?
+Mark,
+
+On Thu, Jun 14, 2012 at 09:22:15AM -0500, tinguely@sgi.com wrote:
+> From: Mark Tinguely <tinguely@sgi.com>
 > 
-> I'll handle it.
+> Rename the XFS log structure to xlog to help crash distinquish it from the
+> other logs in Linux.
 
-Reading this exchange, seeing the teamwork, is really cool, and struck a
-chord with me for some reason.  Especially considering that "I'll handle
-it" is probably a many hour (or day) commitment, made with 3 simple
-words, at the drop of a hat.
+This is another patch that I'm planning on adding to a 3.5-rc pull request.
+Being able to use crash on 3.5 dumps is essential for supportability.
 
-Being part of a list where both deep technical development and 'simple'
-end user issues are both handled, in a team fashion, is even cooler.
-
-We probably don't say it enough, so I'll do so now.
-
-Thank you guys, all the XFS developers, for the work you do that
-benefits us all.  And thanks to all my fellow XFS users, for helping
-make this list what I think is a great community, and an example for
-other lists to follow.
-
--- 
-Stan
+-Ben
 
 _______________________________________________
 xfs mailing list
