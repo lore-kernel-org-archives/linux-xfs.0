@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5LFW70C085500 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 10:32:07 -0500
-Date: Thu, 21 Jun 2012 10:32:32 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/2 v2] xfs: rename log structure and remove xlog_t
-	typedef.
-Message-ID: <20120621153232.GB2503@sgi.com>
-References: <20120614142214.445982138@sgi.com>
-	<20120614142430.963813265@sgi.com>
+	q5LFpd6Q088454 for <xfs@oss.sgi.com>; Thu, 21 Jun 2012 10:51:40 -0500
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id weM6l6eKKmT5vZXd (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 21 Jun 2012 08:51:38 -0700 (PDT)
+Received: from telerig.nabble.com ([192.168.236.162])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1ShjfW-0005Xb-84
+	for xfs@oss.sgi.com; Thu, 21 Jun 2012 08:51:38 -0700
+Message-ID: <34049469.post@talk.nabble.com>
+Date: Thu, 21 Jun 2012 08:51:38 -0700 (PDT)
+From: pkamala <priya.kamala@perpetual-data.com>
+Subject: Possible memory allocation deadlock - kernel 3.2.1
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120614142430.963813265@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,21 +27,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tinguely@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Mark,
 
-On Thu, Jun 14, 2012 at 09:22:15AM -0500, tinguely@sgi.com wrote:
-> From: Mark Tinguely <tinguely@sgi.com>
-> 
-> Rename the XFS log structure to xlog to help crash distinquish it from the
-> other logs in Linux.
+Hi all,
 
-This is another patch that I'm planning on adding to a 3.5-rc pull request.
-Being able to use crash on 3.5 dumps is essential for supportability.
+I am testing the kernel 3.2.1 (32-bit) XFS filesystem on a 1 TB LVM logical
+volume. The volume currently has 3653816 files, 3655726 used inodes and 782G
+free space. When the volume is mounted, quotacheck starts up and after about
+5 minutes the oom-killer is triggered and starts killing processes. From the
+message log, it looks like the system is running out of Normal memory. After
+a while I see the following messages after which I power cycle the system:
 
--Ben
+XFS: possible memory allocation deadlock in kmem_zone_alloc (mode: 0x2d0)
+XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:
+0x250)
+
+The kernel is configured for 2G/2G memory split. I tried setting
+vm.overcommit_memory to 2 and vm.overcommit_ratio first to 80 and then 50
+and that did not help.
+
+The server has an Intel Quad core Xeon CPU X3450 @ 2.67GHz with 4 GB RAM.
+The swap partition is 8GB in size.
+
+Is this a known issue and if so, is a patch available? Is there a kernel
+configuration parameter that can be adjusted to fix this?
+
+Do let me know if you need additional information about the test setup or
+kernel configuration.
+
+Thanks for your help.
+
+Priya
+
+
+-- 
+View this message in context: http://old.nabble.com/Possible-memory-allocation-deadlock---kernel-3.2.1-tp34049469p34049469.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
