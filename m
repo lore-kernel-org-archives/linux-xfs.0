@@ -1,11 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5MGbPo4070143 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 11:37:25 -0500
-Subject: [GIT PULL] XFS update for 3.5-rc4
-Message-Id: <20120622163804.3781F402055@whiskey.americas.sgi.com>
-Date: Fri, 22 Jun 2012 11:38:04 -0500 (CDT)
-From: bpm@sgi.com (Ben Myers)
+	q5MGfonp070942 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 11:41:50 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	LTDs1j2KrGa1hwlO (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 22 Jun 2012 09:41:49 -0700 (PDT)
+Date: Fri, 22 Jun 2012 12:41:47 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [regression] stack overflow in xfs_buf_iodone_callbacks
+Message-ID: <20120622164147.GA20617@infradead.org>
+References: <20120621091803.GB10673@dastard>
+	<20120621163409.GA7897@infradead.org>
+	<20120621232414.GD10673@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120621232414.GD10673@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,85 +26,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Hi Linus,
+On Fri, Jun 22, 2012 at 09:24:14AM +1000, Dave Chinner wrote:
+> It may have been - I didn't catch the initial cause of the problem
+> in my log because it hard-hung the VM and it wasn't in the
+> scrollback buffer on the console. All I saw was a corruption error,
+> a shutdown and the stack blowing up.
+> 
+> Still, I think there is a real problem here - any persistent device
+> error on IO submission can cause this problem to occur....
 
-   Please pull in these fixes for XFS for 3.5-rc4.  This includes:
+Yes, I was just trying to ask what actually happened as your original
+explanation didn't seem to be possible.
+I think the patch below should be enough as a minimal fix to avoid the
 
-   * Fix stale data exposure with unwritten extents
-   * Fix a warning in xfs_alloc_vextent with ODEBUG
-   * Fix overallocation and alignment of pages for xfs_bufs
-   * Fix a cursor leak
-   * Fix a log hang
-   * Fix a crash related to xfs_sync_worker
-   * Rename xfs log structure from struct log to struct xlog so we can
-     use crash dumps effectively
+stack overflow for 3.5. We'll need a much bigger overhaul of the buffer
+error handling after that, though.
 
-   I thought I'd try a signed tag this time around.  My key ID is D5ABA64E:
 
-   gpg --keyserver pgp.mit.edu --recv-keys D5ABA64E
-
-   Hopefully I got it right.
-
-Thanks,
-Ben
-
-The following changes since commit f8f5701bdaf9134b1f90e5044a82c66324d2073f:
-
-  Linux 3.5-rc1 (2012-06-02 18:29:26 -0700)
-
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs.git tags/for-linus-Jun-21-2012
-
-for you to fetch changes up to f7bdf03a99efc083608cd9c0c3e03abff311c79e:
-
-  xfs: rename log structure to xlog (2012-06-21 14:21:11 -0500)
-
-----------------------------------------------------------------
-Fixes for 3.5-rc
-
-----------------------------------------------------------------
-Alain Renaud (1):
-      xfs: xfs_vm_writepage clear iomap_valid when !buffer_uptodate (REV2)
-
-Ben Myers (1):
-      xfs: shutdown xfs_sync_worker before the log
-
-Brian Foster (1):
-      xfs: check for stale inode before acquiring iflock on push
-
-Dave Chinner (1):
-      xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
-
-Jan Kara (1):
-      xfs: Fix overallocation in xfs_buf_allocate_memory()
-
-Jeff Liu (1):
-      xfs: fix debug_object WARN at xfs_alloc_vextent()
-
-Mark Tinguely (1):
-      xfs: rename log structure to xlog
-
- fs/xfs/xfs_alloc.c       |  3 +-
- fs/xfs/xfs_aops.c        | 11 +++++--
- fs/xfs/xfs_buf.c         | 16 ++--------
- fs/xfs/xfs_inode_item.c  | 17 +++++------
- fs/xfs/xfs_log.c         | 77 ++++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_log_cil.c     | 22 +++++++-------
- fs/xfs/xfs_log_priv.h    | 46 +++++++++++++++++++----------
- fs/xfs/xfs_log_recover.c | 38 ++++++++++++------------
- fs/xfs/xfs_mount.h       |  4 +--
- fs/xfs/xfs_sync.c        | 32 ++++++++++----------
- fs/xfs/xfs_trace.h       | 18 +++++------
- 11 files changed, 153 insertions(+), 131 deletions(-)
+Index: xfs/fs/xfs/xfs_buf.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_buf.c	2012-06-22 14:20:46.696568355 +0200
++++ xfs/fs/xfs/xfs_buf.c	2012-06-22 14:21:37.733234717 +0200
+@@ -1255,7 +1255,7 @@ xfs_buf_iorequest(
+ 	 */
+ 	atomic_set(&bp->b_io_remaining, 1);
+ 	_xfs_buf_ioapply(bp);
+-	_xfs_buf_ioend(bp, 0);
++	_xfs_buf_ioend(bp, 1);
+ 
+ 	xfs_buf_rele(bp);
+ }
 
 _______________________________________________
 xfs mailing list
