@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5M8oPw2256999 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 03:50:25 -0500
+	q5M8oY15257064 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 03:50:34 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	yKjzUXakH1DjRlZI for <xfs@oss.sgi.com>;
-	Fri, 22 Jun 2012 01:50:23 -0700 (PDT)
+	VXy33AIoe7yIzCI0 for <xfs@oss.sgi.com>;
+	Fri, 22 Jun 2012 01:50:31 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1ShzZK-0005Rn-BI
-	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:18 +1000
+	(envelope-from <dave@fromorbit.com>) id 1ShzZU-0005Rw-GU
+	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:28 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1ShzZK-0006q7-7z
+	(envelope-from <dave@disappointment.disaster>) id 1ShzZK-0006qL-Dh
 	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/9] xfs: struct xfs_buf_log_format isn't variable sized.
-Date: Fri, 22 Jun 2012 18:50:07 +1000
-Message-Id: <1340355015-26250-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/9] xfs: support discontiguous buffers in the xfs_buf_log_item
+Date: Fri, 22 Jun 2012 18:50:12 +1000
+Message-Id: <1340355015-26250-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1340355015-26250-1-git-send-email-david@fromorbit.com>
 References: <1340355015-26250-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,195 +35,556 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The struct xfs_buf_log_format wants to think the dirty bitmap is
-variable sized.  In fact, it is variable size on disk simply due to
-the way we map it from the in-memory structure, but we still just
-use a fixed size memory allocation for the in-memory structure.
+>From the perspective of the log, we need to keep each segment of a
+discontigous buffer in separate buffer format structures. This means log
+recovery will recover all the changes on a per segment basis without
+requiring any knowledge of the fact that it was logged from a
+compound buffer.
 
-Hence it makes no sense to set the function up as a variable sized
-structure when we already know it's maximum size, and we always
-allocate it as such. Simplify the structure by making the dirty
-bitmap a fixed sized array and just using the size of the structure
-for the allocation size.
+To do this, we need to be able to determine what buffer segment any
+given offset into the compound buffer sits over. This enables us to
+translate the dirty bitmap in the number of separate buffer format
+structures required.
 
-This will make it much simpler to allocate and manipulate an array
-of format structures for discontiguous buffer support.
+We also need to be able to determine the number of bitmap elements
+that a given buffer segment has, as this determines the size of the
+buffer format structure. Hence we need to be able to determine the
+both the start offset into the buffer and the length of a given
+segment to be able to calculate this.
 
-The previous struct xfs_buf_log_item size according to
-/proc/slabinfo was 224 bytes. pahole doesn't give the same size
-because of the variable size definition. With this modification,
-pahole reports the same as /proc/slabinfo:
-
-	/* size: 224, cachelines: 4, members: 6 */
-
-Because the xfs_buf_log_item size is now determined by the maximum
-supported block size we introduce a dependency on xfs_alloc_btree.h.
-Avoid this dependency by moving the idefines for the maximum block
-sizes supported to xfs_types.h with all the other max/min type
-defines to avoid any new dependencies.
+With this information, we can preallocate, build and format the
+correct log vector array for each segment in a compound buffer to
+appear exactly the same as individually logged buffers in the log.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_alloc_btree.h |   14 --------------
- fs/xfs/xfs_buf_item.c    |   14 ++++++--------
- fs/xfs/xfs_buf_item.h    |   36 ++++++++++++++++++------------------
- fs/xfs/xfs_super.c       |    5 ++---
- fs/xfs/xfs_types.h       |   14 ++++++++++++++
- 5 files changed, 40 insertions(+), 43 deletions(-)
+ fs/xfs/xfs_buf_item.c |  335 +++++++++++++++++++++++++++++++++++--------------
+ fs/xfs/xfs_buf_item.h |    2 +
+ 2 files changed, 244 insertions(+), 93 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc_btree.h b/fs/xfs/xfs_alloc_btree.h
-index a6caa00..359fb86 100644
---- a/fs/xfs/xfs_alloc_btree.h
-+++ b/fs/xfs/xfs_alloc_btree.h
-@@ -51,20 +51,6 @@ typedef struct xfs_alloc_rec_incore {
- typedef __be32 xfs_alloc_ptr_t;
- 
- /*
-- * Minimum and maximum blocksize and sectorsize.
-- * The blocksize upper limit is pretty much arbitrary.
-- * The sectorsize upper limit is due to sizeof(sb_sectsize).
-- */
--#define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
--#define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
--#define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
--#define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
--#define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
--#define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
--#define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
--#define XFS_MAX_SECTORSIZE	(1 << XFS_MAX_SECTORSIZE_LOG)
--
--/*
-  * Block numbers in the AG:
-  * SB is sector 0, AGF is sector 1, AGI is sector 2, AGFL is sector 3.
-  */
 diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index 45df2b8..52cd8f8 100644
+index 52cd8f8..e4a6e4b 100644
 --- a/fs/xfs/xfs_buf_item.c
 +++ b/fs/xfs/xfs_buf_item.c
-@@ -240,15 +240,13 @@ xfs_buf_item_format(
- 	       (bip->bli_flags & XFS_BLI_STALE));
+@@ -153,33 +153,25 @@ STATIC void	xfs_buf_do_callbacks(struct xfs_buf *bp);
+  * If the XFS_BLI_STALE flag has been set, then log nothing.
+  */
+ STATIC uint
+-xfs_buf_item_size(
+-	struct xfs_log_item	*lip)
++xfs_buf_item_size_segment(
++	struct xfs_buf_log_item	*bip,
++	struct xfs_buf_log_format *blfp)
+ {
+-	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
+ 	struct xfs_buf		*bp = bip->bli_buf;
+ 	uint			nvecs;
+ 	int			next_bit;
+ 	int			last_bit;
+ 
+-	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+-	if (bip->bli_flags & XFS_BLI_STALE) {
+-		/*
+-		 * The buffer is stale, so all we need to log
+-		 * is the buf log format structure with the
+-		 * cancel flag in it.
+-		 */
+-		trace_xfs_buf_item_size_stale(bip);
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+-		return 1;
+-	}
++	last_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
++	if (last_bit == -1)
++		return 0;
++
++	/*
++	 * initial count for a dirty buffer is 2 vectors - the format structure
++	 * and the first dirty region.
++	 */
++	nvecs = 2;
+ 
+-	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
+-	nvecs = 1;
+-	last_bit = xfs_next_bit(bip->bli_format.blf_data_map,
+-					 bip->bli_format.blf_map_size, 0);
+-	ASSERT(last_bit != -1);
+-	nvecs++;
+ 	while (last_bit != -1) {
+ 		/*
+ 		 * This takes the bit number to start looking from and
+@@ -187,16 +179,15 @@ xfs_buf_item_size(
+ 		 * if there are no more bits set or the start bit is
+ 		 * beyond the end of the bitmap.
+ 		 */
+-		next_bit = xfs_next_bit(bip->bli_format.blf_data_map,
+-						 bip->bli_format.blf_map_size,
+-						 last_bit + 1);
++		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
++					last_bit + 1);
+ 		/*
+ 		 * If we run out of bits, leave the loop,
+ 		 * else if we find a new set of bits bump the number of vecs,
+ 		 * else keep scanning the current set of bits.
+ 		 */
+ 		if (next_bit == -1) {
+-			last_bit = -1;
++			break;
+ 		} else if (next_bit != last_bit + 1) {
+ 			last_bit = next_bit;
+ 			nvecs++;
+@@ -210,22 +201,73 @@ xfs_buf_item_size(
+ 		}
+ 	}
+ 
+-	trace_xfs_buf_item_size(bip);
+ 	return nvecs;
+ }
+ 
+ /*
+- * This is called to fill in the vector of log iovecs for the
+- * given log buf item.  It fills the first entry with a buf log
+- * format structure, and the rest point to contiguous chunks
+- * within the buffer.
++ * This returns the number of log iovecs needed to log the given buf log item.
++ *
++ * It calculates this as 1 iovec for the buf log format structure and 1 for each
++ * stretch of non-contiguous chunks to be logged.  Contiguous chunks are logged
++ * in a single iovec.
++ *
++ * Discontiguous buffers need a format structure per region that that is being
++ * logged. This makes the changes in the buffer appear to log recovery as though
++ * they came from separate buffers, just like would occur if multiple buffers
++ * were used instead of a single discontiguous buffer. This enables
++ * discontiguous buffers to be in-memory constructs, completely transparent to
++ * what ends up on disk.
++ *
++ * If the XFS_BLI_STALE flag has been set, then log nothing but the buf log
++ * format structures.
+  */
+-STATIC void
+-xfs_buf_item_format(
+-	struct xfs_log_item	*lip,
+-	struct xfs_log_iovec	*vecp)
++STATIC uint
++xfs_buf_item_size(
++	struct xfs_log_item	*lip)
+ {
+ 	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
++	uint			nvecs;
++	int			i;
++
++	ASSERT(atomic_read(&bip->bli_refcount) > 0);
++	if (bip->bli_flags & XFS_BLI_STALE) {
++		/*
++		 * The buffer is stale, so all we need to log
++		 * is the buf log format structure with the
++		 * cancel flag in it.
++		 */
++		trace_xfs_buf_item_size_stale(bip);
++		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
++		return bip->bli_format_count;
++	}
++
++	ASSERT(bip->bli_flags & XFS_BLI_LOGGED);
++
++	/*
++	 * the vector count is based on the number of buffer vectors we have
++	 * dirty bits in. This will only be greater than one when we have a
++	 * compound buffer with more than one segment dirty. Hence for compound
++	 * buffers we need to track which segment the dirty bits correspond to,
++	 * and when we move from one segment to the next increment the vector
++	 * count for the extra buf log format structure that will need to be
++	 * written.
++	 */
++	nvecs = 0;
++	for (i = 0; i < bip->bli_format_count; i++) {
++		nvecs += xfs_buf_item_size_segment(bip, &bip->bli_formats[i]);
++	}
++
++	trace_xfs_buf_item_size(bip);
++	return nvecs;
++}
++
++static struct xfs_log_iovec *
++xfs_buf_item_format_segment(
++	struct xfs_buf_log_item	*bip,
++	struct xfs_log_iovec	*vecp,
++	uint			offset,
++	struct xfs_buf_log_format *blfp)
++{
+ 	struct xfs_buf	*bp = bip->bli_buf;
+ 	uint		base_size;
+ 	uint		nvecs;
+@@ -235,9 +277,8 @@ xfs_buf_item_format(
+ 	uint		nbits;
+ 	uint		buffer_offset;
+ 
+-	ASSERT(atomic_read(&bip->bli_refcount) > 0);
+-	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
+-	       (bip->bli_flags & XFS_BLI_STALE));
++	/* copy the flags across from the base format item */
++	blfp->blf_flags = bip->bli_format.blf_flags;
  
  	/*
--	 * The size of the base structure is the size of the
--	 * declared structure plus the space for the extra words
--	 * of the bitmap.  We subtract one from the map size, because
--	 * the first element of the bitmap is accounted for in the
--	 * size of the base structure.
-+	 * Base size is the actual size of the ondisk structure - it reflects
-+	 * the actual size of the dirty bitmap rather than the size of the in
-+	 * memory structure.
+ 	 * Base size is the actual size of the ondisk structure - it reflects
+@@ -245,28 +286,13 @@ xfs_buf_item_format(
+ 	 * memory structure.
  	 */
--	base_size =
--		(uint)(sizeof(xfs_buf_log_format_t) +
--		       ((bip->bli_format.blf_map_size - 1) * sizeof(uint)));
-+	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
-+			(bip->bli_format.blf_map_size *
-+				sizeof(bip->bli_format.blf_data_map[0]));
- 	vecp->i_addr = &bip->bli_format;
+ 	base_size = offsetof(struct xfs_buf_log_format, blf_data_map) +
+-			(bip->bli_format.blf_map_size *
+-				sizeof(bip->bli_format.blf_data_map[0]));
+-	vecp->i_addr = &bip->bli_format;
++			(blfp->blf_map_size * sizeof(blfp->blf_data_map[0]));
++	vecp->i_addr = blfp;
  	vecp->i_len = base_size;
  	vecp->i_type = XLOG_REG_TYPE_BFORMAT;
-diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
-index b6ecd20..ff26867 100644
---- a/fs/xfs/xfs_buf_item.h
-+++ b/fs/xfs/xfs_buf_item.h
-@@ -21,23 +21,6 @@
- extern kmem_zone_t	*xfs_buf_item_zone;
+ 	vecp++;
+ 	nvecs = 1;
  
- /*
-- * This is the structure used to lay out a buf log item in the
-- * log.  The data map describes which 128 byte chunks of the buffer
-- * have been logged.
-- * For 6.2 and beyond, this is XFS_LI_BUF.  We use this to log everything.
-- */
--typedef struct xfs_buf_log_format {
--	unsigned short	blf_type;	/* buf log item type indicator */
--	unsigned short	blf_size;	/* size of this item */
--	ushort		blf_flags;	/* misc state */
--	ushort		blf_len;	/* number of blocks in this buf */
--	__int64_t	blf_blkno;	/* starting blkno of this buf */
--	unsigned int	blf_map_size;	/* size of data bitmap in words */
--	unsigned int	blf_data_map[1];/* variable size bitmap of */
--					/*   regions of buffer in this item */
--} xfs_buf_log_format_t;
+-	/*
+-	 * If it is an inode buffer, transfer the in-memory state to the
+-	 * format flags and clear the in-memory state. We do not transfer
+-	 * this state if the inode buffer allocation has not yet been committed
+-	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
+-	 * correct replay of the inode allocation.
+-	 */
+-	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
+-		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
+-		      xfs_log_item_in_current_chkpt(lip)))
+-			bip->bli_format.blf_flags |= XFS_BLF_INODE_BUF;
+-		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
+-	}
 -
--/*
-  * This flag indicates that the buffer contains on disk inodes
-  * and requires special recovery handling.
-  */
-@@ -61,6 +44,23 @@ typedef struct xfs_buf_log_format {
- #define	NBWORD			(NBBY * sizeof(unsigned int))
+ 	if (bip->bli_flags & XFS_BLI_STALE) {
+ 		/*
+ 		 * The buffer is stale, so all we need to log
+@@ -274,16 +300,15 @@ xfs_buf_item_format(
+ 		 * cancel flag in it.
+ 		 */
+ 		trace_xfs_buf_item_format_stale(bip);
+-		ASSERT(bip->bli_format.blf_flags & XFS_BLF_CANCEL);
+-		bip->bli_format.blf_size = nvecs;
+-		return;
++		ASSERT(blfp->blf_flags & XFS_BLF_CANCEL);
++		blfp->blf_size = nvecs;
++		return vecp;
+ 	}
  
- /*
-+ * This is the structure used to lay out a buf log item in the
-+ * log.  The data map describes which 128 byte chunks of the buffer
-+ * have been logged.
-+ */
-+#define XFS_BLF_DATAMAP_SIZE	((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) / NBWORD)
-+
-+typedef struct xfs_buf_log_format {
-+	unsigned short	blf_type;	/* buf log item type indicator */
-+	unsigned short	blf_size;	/* size of this item */
-+	ushort		blf_flags;	/* misc state */
-+	ushort		blf_len;	/* number of blocks in this buf */
-+	__int64_t	blf_blkno;	/* starting blkno of this buf */
-+	unsigned int	blf_map_size;	/* used size of data bitmap in words */
-+	unsigned int	blf_data_map[XFS_BLF_DATAMAP_SIZE]; /* dirty bitmap */
-+} xfs_buf_log_format_t;
+ 	/*
+ 	 * Fill in an iovec for each set of contiguous chunks.
+ 	 */
+-	first_bit = xfs_next_bit(bip->bli_format.blf_data_map,
+-					 bip->bli_format.blf_map_size, 0);
++	first_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size, 0);
+ 	ASSERT(first_bit != -1);
+ 	last_bit = first_bit;
+ 	nbits = 1;
+@@ -294,9 +319,8 @@ xfs_buf_item_format(
+ 		 * if there are no more bits set or the start bit is
+ 		 * beyond the end of the bitmap.
+ 		 */
+-		next_bit = xfs_next_bit(bip->bli_format.blf_data_map,
+-						 bip->bli_format.blf_map_size,
+-						 (uint)last_bit + 1);
++		next_bit = xfs_next_bit(blfp->blf_data_map, blfp->blf_map_size,
++					(uint)last_bit + 1);
+ 		/*
+ 		 * If we run out of bits fill in the last iovec and get
+ 		 * out of the loop.
+@@ -307,14 +331,14 @@ xfs_buf_item_format(
+ 		 * keep counting and scanning.
+ 		 */
+ 		if (next_bit == -1) {
+-			buffer_offset = first_bit * XFS_BLF_CHUNK;
++			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+ 			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+ 			nvecs++;
+ 			break;
+ 		} else if (next_bit != last_bit + 1) {
+-			buffer_offset = first_bit * XFS_BLF_CHUNK;
++			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+ 			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+@@ -323,14 +347,17 @@ xfs_buf_item_format(
+ 			first_bit = next_bit;
+ 			last_bit = next_bit;
+ 			nbits = 1;
+-		} else if (xfs_buf_offset(bp, next_bit << XFS_BLF_SHIFT) !=
+-			   (xfs_buf_offset(bp, last_bit << XFS_BLF_SHIFT) +
++		} else if (xfs_buf_offset(bp, offset +
++					      (next_bit << XFS_BLF_SHIFT)) !=
++			   (xfs_buf_offset(bp, offset +
++					       (last_bit << XFS_BLF_SHIFT)) +
+ 			    XFS_BLF_CHUNK)) {
+-			buffer_offset = first_bit * XFS_BLF_CHUNK;
++			buffer_offset = offset + first_bit * XFS_BLF_CHUNK;
+ 			vecp->i_addr = xfs_buf_offset(bp, buffer_offset);
+ 			vecp->i_len = nbits * XFS_BLF_CHUNK;
+ 			vecp->i_type = XLOG_REG_TYPE_BCHUNK;
+-/* You would think we need to bump the nvecs here too, but we do not
++/*
++ * You would think we need to bump the nvecs here too, but we do not
+  * this number is used by recovery, and it gets confused by the boundary
+  * split here
+  *			nvecs++;
+@@ -345,6 +372,48 @@ xfs_buf_item_format(
+ 		}
+ 	}
+ 	bip->bli_format.blf_size = nvecs;
++	return vecp;
++}
 +
 +/*
-  * buf log item flags
++ * This is called to fill in the vector of log iovecs for the
++ * given log buf item.  It fills the first entry with a buf log
++ * format structure, and the rest point to contiguous chunks
++ * within the buffer.
++ */
++STATIC void
++xfs_buf_item_format(
++	struct xfs_log_item	*lip,
++	struct xfs_log_iovec	*vecp)
++{
++	struct xfs_buf_log_item	*bip = BUF_ITEM(lip);
++	struct xfs_buf		*bp = bip->bli_buf;
++	uint			offset = 0;
++	int			i;
++
++	ASSERT(atomic_read(&bip->bli_refcount) > 0);
++	ASSERT((bip->bli_flags & XFS_BLI_LOGGED) ||
++	       (bip->bli_flags & XFS_BLI_STALE));
++
++	/*
++	 * If it is an inode buffer, transfer the in-memory state to the
++	 * format flags and clear the in-memory state. We do not transfer
++	 * this state if the inode buffer allocation has not yet been committed
++	 * to the log as setting the XFS_BLI_INODE_BUF flag will prevent
++	 * correct replay of the inode allocation.
++	 */
++	if (bip->bli_flags & XFS_BLI_INODE_BUF) {
++		if (!((bip->bli_flags & XFS_BLI_INODE_ALLOC_BUF) &&
++		      xfs_log_item_in_current_chkpt(lip)))
++			bip->bli_format.blf_flags |= XFS_BLF_INODE_BUF;
++		bip->bli_flags &= ~XFS_BLI_INODE_BUF;
++	}
++
++	for (i = 0; i < bip->bli_format_count; i++) {
++		vecp = xfs_buf_item_format_segment(bip, vecp, offset,
++						&bip->bli_formats[i]);
++		offset += bp->b_maps[i].bm_len;
++	}
+ 
+ 	/*
+ 	 * Check to make sure everything is consistent.
+@@ -620,6 +689,35 @@ static const struct xfs_item_ops xfs_buf_item_ops = {
+ 	.iop_committing = xfs_buf_item_committing
+ };
+ 
++STATIC int
++xfs_buf_item_get_format(
++	struct xfs_buf_log_item	*bip,
++	int			count)
++{
++	ASSERT(bip->bli_formats == NULL);
++	bip->bli_format_count = count;
++
++	if (count == 1) {
++		bip->bli_formats = &bip->bli_format;
++		return 0;
++	}
++
++	bip->bli_formats = kmem_zalloc(count * sizeof(struct xfs_buf_log_format),
++				KM_SLEEP);
++	if (!bip->bli_formats)
++		return ENOMEM;
++	return 0;
++}
++
++STATIC void
++xfs_buf_item_free_format(
++	struct xfs_buf_log_item	*bip)
++{
++	if (bip->bli_formats != &bip->bli_format) {
++		kmem_free(bip->bli_formats);
++		bip->bli_formats = NULL;
++	}
++}
+ 
+ /*
+  * Allocate a new buf log item to go with the given buffer.
+@@ -637,6 +735,8 @@ xfs_buf_item_init(
+ 	xfs_buf_log_item_t	*bip;
+ 	int			chunks;
+ 	int			map_size;
++	int			error;
++	int			i;
+ 
+ 	/*
+ 	 * Check to see if there is already a buf log item for
+@@ -648,25 +748,33 @@ xfs_buf_item_init(
+ 	if (lip != NULL && lip->li_type == XFS_LI_BUF)
+ 		return;
+ 
+-	/*
+-	 * chunks is the number of XFS_BLF_CHUNK size pieces
+-	 * the buffer can be divided into. Make sure not to
+-	 * truncate any pieces.  map_size is the size of the
+-	 * bitmap needed to describe the chunks of the buffer.
+-	 */
+-	chunks = (int)((BBTOB(bp->b_length) + (XFS_BLF_CHUNK - 1)) >>
+-								XFS_BLF_SHIFT);
+-	map_size = (int)((chunks + NBWORD) >> BIT_TO_WORD_SHIFT);
+-
+-	bip = (xfs_buf_log_item_t*)kmem_zone_zalloc(xfs_buf_item_zone,
+-						    KM_SLEEP);
++	bip = kmem_zone_zalloc(xfs_buf_item_zone, KM_SLEEP);
+ 	xfs_log_item_init(mp, &bip->bli_item, XFS_LI_BUF, &xfs_buf_item_ops);
+ 	bip->bli_buf = bp;
+ 	xfs_buf_hold(bp);
+-	bip->bli_format.blf_type = XFS_LI_BUF;
+-	bip->bli_format.blf_blkno = (__int64_t)XFS_BUF_ADDR(bp);
+-	bip->bli_format.blf_len = (ushort)bp->b_length;
+-	bip->bli_format.blf_map_size = map_size;
++
++	/*
++	 * chunks is the number of XFS_BLF_CHUNK size pieces the buffer
++	 * can be divided into. Make sure not to truncate any pieces.
++	 * map_size is the size of the bitmap needed to describe the
++	 * chunks of the buffer.
++	 *
++	 * Discontiguous buffer support follows the layout of the underlying
++	 * buffer. This makes the implementation as simple as possible.
++	 */
++	error = xfs_buf_item_get_format(bip, bp->b_map_count);
++	ASSERT(error == 0);
++
++	for (i = 0; i < bip->bli_format_count; i++) {
++		chunks = DIV_ROUND_UP(BBTOB(bp->b_maps[i].bm_len),
++				      XFS_BLF_CHUNK);
++		map_size = DIV_ROUND_UP(chunks, NBWORD);
++
++		bip->bli_formats[i].blf_type = XFS_LI_BUF;
++		bip->bli_formats[i].blf_blkno = bp->b_maps[i].bm_bn;
++		bip->bli_formats[i].blf_len = bp->b_maps[i].bm_len;
++		bip->bli_formats[i].blf_map_size = map_size;
++	}
+ 
+ #ifdef XFS_TRANS_DEBUG
+ 	/*
+@@ -697,10 +805,11 @@ xfs_buf_item_init(
+  * item's bitmap.
   */
- #define	XFS_BLI_HOLD		0x01
-@@ -102,7 +102,7 @@ typedef struct xfs_buf_log_item {
+ void
+-xfs_buf_item_log(
+-	xfs_buf_log_item_t	*bip,
++xfs_buf_item_log_segment(
++	struct xfs_buf_log_item	*bip,
+ 	uint			first,
+-	uint			last)
++	uint			last,
++	uint			*map)
+ {
+ 	uint		first_bit;
+ 	uint		last_bit;
+@@ -713,12 +822,6 @@ xfs_buf_item_log(
+ 	uint		mask;
+ 
+ 	/*
+-	 * Mark the item as having some dirty data for
+-	 * quick reference in xfs_buf_item_dirty.
+-	 */
+-	bip->bli_flags |= XFS_BLI_DIRTY;
+-
+-	/*
+ 	 * Convert byte offsets to bit numbers.
+ 	 */
+ 	first_bit = first >> XFS_BLF_SHIFT;
+@@ -734,7 +837,7 @@ xfs_buf_item_log(
+ 	 * to set a bit in.
+ 	 */
+ 	word_num = first_bit >> BIT_TO_WORD_SHIFT;
+-	wordp = &(bip->bli_format.blf_data_map[word_num]);
++	wordp = &map[word_num];
+ 
+ 	/*
+ 	 * Calculate the starting bit in the first word.
+@@ -781,6 +884,51 @@ xfs_buf_item_log(
+ 	xfs_buf_item_log_debug(bip, first, last);
+ }
+ 
++/*
++ * Mark bytes first through last inclusive as dirty in the buf
++ * item's bitmap.
++ */
++void
++xfs_buf_item_log(
++	xfs_buf_log_item_t	*bip,
++	uint			first,
++	uint			last)
++{
++	int			i;
++	uint			start;
++	uint			end;
++	struct xfs_buf		*bp = bip->bli_buf;
++
++	/*
++	 * Mark the item as having some dirty data for
++	 * quick reference in xfs_buf_item_dirty.
++	 */
++	bip->bli_flags |= XFS_BLI_DIRTY;
++
++	/*
++	 * walk each buffer segment and mark them dirty appropriately.
++	 */
++	start = 0;
++	for (i = 0; i < bip->bli_format_count; i++) {
++		if (start > last)
++			break;
++		end = start + BBTOB(bp->b_maps[i].bm_len);
++		if (first > end) {
++			start += BBTOB(bp->b_maps[i].bm_len);
++			continue;
++		}
++		if (first < start)
++			first = start;
++		if (end > last)
++			end = last;
++
++		xfs_buf_item_log_segment(bip, first, end,
++					 &bip->bli_formats[i].blf_data_map[0]);
++
++		start += bp->b_maps[i].bm_len;
++	}
++}
++
+ 
+ /*
+  * Return 1 if the buffer has some data that has been logged (at any
+@@ -802,6 +950,7 @@ xfs_buf_item_free(
+ 	kmem_free(bip->bli_logged);
+ #endif /* XFS_TRANS_DEBUG */
+ 
++	xfs_buf_item_free_format(bip);
+ 	kmem_zone_free(xfs_buf_item_zone, bip);
+ }
+ 
+diff --git a/fs/xfs/xfs_buf_item.h b/fs/xfs/xfs_buf_item.h
+index ff26867..6850f49 100644
+--- a/fs/xfs/xfs_buf_item.h
++++ b/fs/xfs/xfs_buf_item.h
+@@ -102,6 +102,8 @@ typedef struct xfs_buf_log_item {
  	char			*bli_orig;	/* original buffer copy */
  	char			*bli_logged;	/* bytes logged (bitmap) */
  #endif
--	xfs_buf_log_format_t	bli_format;	/* in-log header */
-+	struct xfs_buf_log_format bli_format;	/* embedded in-log header */
++	int			bli_format_count;	/* count of headers */
++	struct xfs_buf_log_format *bli_formats;	/* array of in-log header ptrs */
+ 	struct xfs_buf_log_format bli_format;	/* embedded in-log header */
  } xfs_buf_log_item_t;
  
- void	xfs_buf_item_init(struct xfs_buf *, struct xfs_mount *);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 0d9de41..425f6e9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1514,9 +1514,8 @@ xfs_init_zones(void)
- 	 * size possible under XFS.  This wastes a little bit of memory,
- 	 * but it is much faster.
- 	 */
--	xfs_buf_item_zone = kmem_zone_init((sizeof(xfs_buf_log_item_t) +
--				(((XFS_MAX_BLOCKSIZE / XFS_BLF_CHUNK) /
--				  NBWORD) * sizeof(int))), "xfs_buf_item");
-+	xfs_buf_item_zone = kmem_zone_init(sizeof(struct xfs_buf_log_item),
-+					   "xfs_buf_item");
- 	if (!xfs_buf_item_zone)
- 		goto out_destroy_log_item_desc_zone;
- 
-diff --git a/fs/xfs/xfs_types.h b/fs/xfs/xfs_types.h
-index 7e0639a..42e5216 100644
---- a/fs/xfs/xfs_types.h
-+++ b/fs/xfs/xfs_types.h
-@@ -122,6 +122,20 @@ typedef __uint64_t	xfs_filblks_t;	/* number of blocks in a file */
- #define	MAXAEXTNUM	((xfs_aextnum_t)0x7fff)		/* signed short */
- 
- /*
-+ * Minimum and maximum blocksize and sectorsize.
-+ * The blocksize upper limit is pretty much arbitrary.
-+ * The sectorsize upper limit is due to sizeof(sb_sectsize).
-+ */
-+#define XFS_MIN_BLOCKSIZE_LOG	9	/* i.e. 512 bytes */
-+#define XFS_MAX_BLOCKSIZE_LOG	16	/* i.e. 65536 bytes */
-+#define XFS_MIN_BLOCKSIZE	(1 << XFS_MIN_BLOCKSIZE_LOG)
-+#define XFS_MAX_BLOCKSIZE	(1 << XFS_MAX_BLOCKSIZE_LOG)
-+#define XFS_MIN_SECTORSIZE_LOG	9	/* i.e. 512 bytes */
-+#define XFS_MAX_SECTORSIZE_LOG	15	/* i.e. 32768 bytes */
-+#define XFS_MIN_SECTORSIZE	(1 << XFS_MIN_SECTORSIZE_LOG)
-+#define XFS_MAX_SECTORSIZE	(1 << XFS_MAX_SECTORSIZE_LOG)
-+
-+/*
-  * Min numbers of data/attr fork btree root pointers.
-  */
- #define MINDBTPTRS	3
 -- 
 1.7.10
 
