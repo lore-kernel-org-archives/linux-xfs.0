@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5M8oNBZ256985 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 03:50:23 -0500
+	q5M8oQtA257012 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 03:50:26 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	kBdrsm6MKA25curk for <xfs@oss.sgi.com>;
-	Fri, 22 Jun 2012 01:50:21 -0700 (PDT)
+	cs03d8FgCmi4J27D for <xfs@oss.sgi.com>;
+	Fri, 22 Jun 2012 01:50:23 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1ShzZK-0005Ro-C0
+	(envelope-from <dave@fromorbit.com>) id 1ShzZK-0005Rp-Dq
 	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:18 +1000
 Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1ShzZK-0006q9-8s
+	(envelope-from <dave@disappointment.disaster>) id 1ShzZK-0006qD-A0
 	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/9] xfs: separate buffer indexing from block map
-Date: Fri, 22 Jun 2012 18:50:08 +1000
-Message-Id: <1340355015-26250-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/9] xfs: convert internal buffer functions to pass maps
+Date: Fri, 22 Jun 2012 18:50:09 +1000
+Message-Id: <1340355015-26250-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1340355015-26250-1-git-send-email-david@fromorbit.com>
 References: <1340355015-26250-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,189 +35,427 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-To support discontiguous buffers in the buffer cache, we need to
-separate the cache index variables from the I/O map. While this is
-currently a 1:1 mapping, discontiguous buffer support will break
-this relationship.
-
-However, for caching purposes, we can still treat them the same as a
-contiguous buffer - the block number of the first block and the
-length of the buffer - as that is still a unique representation.
-Also, the only way we will ever access the discontiguous regions of
-buffers is via bulding the complete buffer in the first place, so
-using the initial block number and entire buffer length is a sane
-way to index the buffers.
-
-Add a block mapping vector construct to the xfs_buf and use it in
-the places where we are doing IO instead of the current
-b_bn/b_length variables.
+While the external interface currently uses separate blockno/length
+variables, we need to move internal interfaces to passing and
+parsing vector maps. This will then allow us to add external
+interfaces to support discontiguous buffer maps as the internal code
+will already support them.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c |   21 ++++++++++++---------
- fs/xfs/xfs_buf.h |   27 +++++++++++++++++++++++----
- 2 files changed, 35 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_buf.c |  202 +++++++++++++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_buf.h |   43 +++++++++---
+ 2 files changed, 191 insertions(+), 54 deletions(-)
 
 diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index a4beb42..a843873 100644
+index a843873..82bb812 100644
 --- a/fs/xfs/xfs_buf.c
 +++ b/fs/xfs/xfs_buf.c
-@@ -202,6 +202,8 @@ xfs_buf_alloc(
- 	bp->b_io_length = numblks;
- 	bp->b_flags = flags;
- 	bp->b_bn = blkno;
-+	bp->b_map.bm_bn = blkno;
-+	bp->b_map.bm_len = numblks;
+@@ -164,14 +164,49 @@ xfs_buf_stale(
+ 	ASSERT(atomic_read(&bp->b_hold) >= 1);
+ }
+ 
++static int
++xfs_buf_get_maps(
++	struct xfs_buf		*bp,
++	int			map_count)
++{
++	ASSERT(bp->b_maps == NULL);
++	bp->b_map_count = map_count;
++
++	if (map_count == 1) {
++		bp->b_maps = &bp->b_map;
++		return 0;
++	}
++
++	bp->b_maps = kmem_zalloc(map_count * sizeof(struct xfs_buf_map),
++				KM_NOFS);
++	if (!bp->b_maps)
++		return ENOMEM;
++	return 0;
++}
++
++/*
++ *	Frees b_pages if it was allocated.
++ */
++static void
++xfs_buf_free_maps(
++	struct xfs_buf	*bp)
++{
++	if (bp->b_maps != &bp->b_map) {
++		kmem_free(bp->b_maps);
++		bp->b_maps = NULL;
++	}
++}
++
+ struct xfs_buf *
+-xfs_buf_alloc(
++_xfs_buf_alloc(
+ 	struct xfs_buftarg	*target,
+-	xfs_daddr_t		blkno,
+-	size_t			numblks,
++	struct xfs_buf_map	*map,
++	int			nmaps,
+ 	xfs_buf_flags_t		flags)
+ {
+ 	struct xfs_buf		*bp;
++	int			error;
++	int			i;
+ 
+ 	bp = kmem_zone_zalloc(xfs_buf_zone, KM_NOFS);
+ 	if (unlikely(!bp))
+@@ -192,18 +227,28 @@ xfs_buf_alloc(
+ 	sema_init(&bp->b_sema, 0); /* held, no waiters */
+ 	XB_SET_OWNER(bp);
+ 	bp->b_target = target;
++	bp->b_flags = flags;
+ 
+ 	/*
+ 	 * Set length and io_length to the same value initially.
+ 	 * I/O routines should use io_length, which will be the same in
+ 	 * most cases but may be reset (e.g. XFS recovery).
+ 	 */
+-	bp->b_length = numblks;
+-	bp->b_io_length = numblks;
+-	bp->b_flags = flags;
+-	bp->b_bn = blkno;
+-	bp->b_map.bm_bn = blkno;
+-	bp->b_map.bm_len = numblks;
++	error = xfs_buf_get_maps(bp, nmaps);
++	if (error)  {
++		kmem_zone_free(xfs_buf_zone, bp);
++		return NULL;
++	}
++
++	bp->b_bn = map[0].bm_bn;
++	bp->b_length = 0;
++	for (i = 0; i < nmaps; i++) {
++		bp->b_maps[i].bm_bn = map[i].bm_bn;
++		bp->b_maps[i].bm_len = map[i].bm_len;
++		bp->b_length += map[i].bm_len;
++	}
++	bp->b_io_length = bp->b_length;
++
  	atomic_set(&bp->b_pin_count, 0);
  	init_waitqueue_head(&bp->b_waiters);
  
-@@ -327,8 +329,9 @@ xfs_buf_allocate_memory(
+@@ -282,6 +327,7 @@ xfs_buf_free(
+ 	} else if (bp->b_flags & _XBF_KMEM)
+ 		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
++	xfs_buf_free_maps(bp);
+ 	kmem_zone_free(xfs_buf_zone, bp);
+ }
+ 
+@@ -428,8 +474,8 @@ _xfs_buf_map_pages(
+ xfs_buf_t *
+ _xfs_buf_find(
+ 	struct xfs_buftarg	*btp,
+-	xfs_daddr_t		blkno,
+-	size_t			numblks,
++	struct xfs_buf_map	*map,
++	int			nmaps,
+ 	xfs_buf_flags_t		flags,
+ 	xfs_buf_t		*new_bp)
+ {
+@@ -438,7 +484,12 @@ _xfs_buf_find(
+ 	struct rb_node		**rbp;
+ 	struct rb_node		*parent;
+ 	xfs_buf_t		*bp;
++	xfs_daddr_t		blkno = map[0].bm_bn;
++	int			numblks = 0;
++	int			i;
+ 
++	for (i = 0; i < nmaps; i++)
++		numblks += map[i].bm_len;
+ 	numbytes = BBTOB(numblks);
+ 
+ 	/* Check for IOs smaller than the sector size / not sector aligned */
+@@ -539,22 +590,23 @@ xfs_buf_get(
+ 	struct xfs_buf		*bp;
+ 	struct xfs_buf		*new_bp;
+ 	int			error = 0;
++	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+ 
+-	bp = _xfs_buf_find(target, blkno, numblks, flags, NULL);
++	bp = _xfs_buf_find(target, &map, 1, flags, NULL);
+ 	if (likely(bp))
+ 		goto found;
+ 
+-	new_bp = xfs_buf_alloc(target, blkno, numblks, flags);
++	new_bp = _xfs_buf_alloc(target, &map, 1, flags);
+ 	if (unlikely(!new_bp))
+ 		return NULL;
+ 
+ 	error = xfs_buf_allocate_memory(new_bp, flags);
+ 	if (error) {
+-		kmem_zone_free(xfs_buf_zone, new_bp);
++		xfs_buf_free(new_bp);
+ 		return NULL;
  	}
  
- use_alloc_page:
--	start = BBTOB(bp->b_bn) >> PAGE_SHIFT;
--	end = (BBTOB(bp->b_bn + bp->b_length) + PAGE_SIZE - 1) >> PAGE_SHIFT;
-+	start = BBTOB(bp->b_map.bm_bn) >> PAGE_SHIFT;
-+	end = (BBTOB(bp->b_map.bm_bn + bp->b_length) + PAGE_SIZE - 1)
-+								>> PAGE_SHIFT;
- 	page_count = end - start;
- 	error = _xfs_buf_get_pages(bp, page_count, flags);
- 	if (unlikely(error))
-@@ -560,8 +563,6 @@ xfs_buf_get(
- 	if (bp != new_bp)
+-	bp = _xfs_buf_find(target, blkno, numblks, flags, new_bp);
++	bp = _xfs_buf_find(target, &map, 1, flags, new_bp);
+ 	if (!bp) {
  		xfs_buf_free(new_bp);
- 
--	bp->b_io_length = bp->b_length;
--
- found:
- 	if (!bp->b_addr) {
- 		error = _xfs_buf_map_pages(bp, flags);
-@@ -584,7 +585,7 @@ _xfs_buf_read(
- 	xfs_buf_flags_t		flags)
- {
- 	ASSERT(!(flags & XBF_WRITE));
--	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
-+	ASSERT(bp->b_map.bm_bn != XFS_BUF_DADDR_NULL);
- 
- 	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
-@@ -665,8 +666,8 @@ xfs_buf_read_uncached(
+ 		return NULL;
+@@ -666,7 +718,9 @@ xfs_buf_read_uncached(
  		return NULL;
  
  	/* set up the buffer for a read IO */
--	XFS_BUF_SET_ADDR(bp, daddr);
--	XFS_BUF_READ(bp);
-+	bp->b_map.bm_bn = daddr;
-+	bp->b_flags |= XBF_READ;
+-	bp->b_map.bm_bn = daddr;
++	ASSERT(bp->b_map_count == 1);
++	bp->b_bn = daddr;
++	bp->b_maps[0].bm_bn = daddr;
+ 	bp->b_flags |= XBF_READ;
  
  	xfsbdstrat(target->bt_mount, bp);
- 	error = xfs_buf_iowait(bp);
-@@ -695,6 +696,8 @@ xfs_buf_set_empty(
+@@ -695,9 +749,11 @@ xfs_buf_set_empty(
+ 	bp->b_addr = NULL;
  	bp->b_length = numblks;
  	bp->b_io_length = numblks;
++
++	ASSERT(bp->b_map_count == 1);
  	bp->b_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_map.bm_bn = XFS_BUF_DADDR_NULL;
-+	bp->b_map.bm_len = bp->b_length;
+-	bp->b_map.bm_bn = XFS_BUF_DADDR_NULL;
+-	bp->b_map.bm_len = bp->b_length;
++	bp->b_maps[0].bm_bn = XFS_BUF_DADDR_NULL;
++	bp->b_maps[0].bm_len = bp->b_length;
  }
  
  static inline struct page *
-@@ -1159,7 +1162,7 @@ _xfs_buf_ioapply(
- 	struct bio		*bio;
- 	int			offset = bp->b_offset;
- 	int			size = BBTOB(bp->b_io_length);
--	sector_t		sector = bp->b_bn;
-+	sector_t		sector = bp->b_map.bm_bn;
+@@ -761,9 +817,10 @@ xfs_buf_get_uncached(
+ {
+ 	unsigned long		page_count;
+ 	int			error, i;
+-	xfs_buf_t		*bp;
++	struct xfs_buf		*bp;
++	DEFINE_SINGLE_BUF_MAP(map, XFS_BUF_DADDR_NULL, numblks);
+ 
+-	bp = xfs_buf_alloc(target, XFS_BUF_DADDR_NULL, numblks, 0);
++	bp = _xfs_buf_alloc(target, &map, 1, 0);
+ 	if (unlikely(bp == NULL))
+ 		goto fail;
+ 
+@@ -794,6 +851,7 @@ xfs_buf_get_uncached(
+ 		__free_page(bp->b_pages[i]);
+ 	_xfs_buf_free_pages(bp);
+  fail_free_buf:
++	xfs_buf_free_maps(bp);
+ 	kmem_zone_free(xfs_buf_zone, bp);
+  fail:
+ 	return NULL;
+@@ -1154,36 +1212,39 @@ xfs_buf_bio_end_io(
+ 	bio_put(bio);
+ }
+ 
+-STATIC void
+-_xfs_buf_ioapply(
+-	xfs_buf_t		*bp)
++static void
++xfs_buf_ioapply_map(
++	struct xfs_buf	*bp,
++	int		map,
++	int		*buf_offset,
++	int		*count,
++	int		rw)
+ {
+-	int			rw, map_i, total_nr_pages, nr_pages;
+-	struct bio		*bio;
+-	int			offset = bp->b_offset;
+-	int			size = BBTOB(bp->b_io_length);
+-	sector_t		sector = bp->b_map.bm_bn;
++	int		page_index;
++	int		total_nr_pages = bp->b_page_count;
++	int		nr_pages;
++	struct bio	*bio;
++	sector_t	sector =  bp->b_maps[map].bm_bn;
++	int		size;
++	int		offset;
  
  	total_nr_pages = bp->b_page_count;
- 	map_i = 0;
-@@ -1564,7 +1567,7 @@ xfs_buf_cmp(
- 	struct xfs_buf	*bp = container_of(b, struct xfs_buf, b_list);
- 	xfs_daddr_t		diff;
+-	map_i = 0;
  
--	diff = ap->b_bn - bp->b_bn;
-+	diff = ap->b_map.bm_bn - bp->b_map.bm_bn;
- 	if (diff < 0)
- 		return -1;
- 	if (diff > 0)
+-	if (bp->b_flags & XBF_WRITE) {
+-		if (bp->b_flags & XBF_SYNCIO)
+-			rw = WRITE_SYNC;
+-		else
+-			rw = WRITE;
+-		if (bp->b_flags & XBF_FUA)
+-			rw |= REQ_FUA;
+-		if (bp->b_flags & XBF_FLUSH)
+-			rw |= REQ_FLUSH;
+-	} else if (bp->b_flags & XBF_READ_AHEAD) {
+-		rw = READA;
+-	} else {
+-		rw = READ;
++	/* skip the pages in the buffer before the start offset */
++	page_index = 0;
++	offset = *buf_offset;
++	while (offset >= PAGE_SIZE) {
++		page_index++;
++		offset -= PAGE_SIZE;
+ 	}
+ 
+-	/* we only use the buffer cache for meta-data */
+-	rw |= REQ_META;
++	/*
++	 * Limit the IO size to the length of the current vector, and update the
++	 * remaining IO count for the next time around.
++	 */
++	size = min_t(int, BBTOB(bp->b_maps[map].bm_len), *count);
++	*count -= size;
++	*buf_offset += size;
+ 
+ next_chunk:
+ 	atomic_inc(&bp->b_io_remaining);
+@@ -1198,13 +1259,14 @@ next_chunk:
+ 	bio->bi_private = bp;
+ 
+ 
+-	for (; size && nr_pages; nr_pages--, map_i++) {
++	for (; size && nr_pages; nr_pages--, page_index++) {
+ 		int	rbytes, nbytes = PAGE_SIZE - offset;
+ 
+ 		if (nbytes > size)
+ 			nbytes = size;
+ 
+-		rbytes = bio_add_page(bio, bp->b_pages[map_i], nbytes, offset);
++		rbytes = bio_add_page(bio, bp->b_pages[page_index], nbytes,
++				      offset);
+ 		if (rbytes < nbytes)
+ 			break;
+ 
+@@ -1226,6 +1288,54 @@ next_chunk:
+ 		xfs_buf_ioerror(bp, EIO);
+ 		bio_put(bio);
+ 	}
++
++}
++
++STATIC void
++_xfs_buf_ioapply(
++	struct xfs_buf	*bp)
++{
++	struct blk_plug	plug;
++	int		rw;
++	int		offset;
++	int		size;
++	int		i;
++
++	if (bp->b_flags & XBF_WRITE) {
++		if (bp->b_flags & XBF_SYNCIO)
++			rw = WRITE_SYNC;
++		else
++			rw = WRITE;
++		if (bp->b_flags & XBF_FUA)
++			rw |= REQ_FUA;
++		if (bp->b_flags & XBF_FLUSH)
++			rw |= REQ_FLUSH;
++	} else if (bp->b_flags & XBF_READ_AHEAD) {
++		rw = READA;
++	} else {
++		rw = READ;
++	}
++
++	/* we only use the buffer cache for meta-data */
++	rw |= REQ_META;
++
++	/*
++	 * Walk all the vectors issuing IO on them. Set up the initial offset
++	 * into the buffer and the desired IO size before we start -
++	 * _xfs_buf_ioapply_vec() will modify them appropriately for each
++	 * subsequent call.
++	 */
++	offset = bp->b_offset;
++	size = BBTOB(bp->b_io_length);
++	blk_start_plug(&plug);
++	for (i = 0; i < bp->b_map_count; i++) {
++		xfs_buf_ioapply_map(bp, i, &offset, &size, rw);
++		if (bp->b_error)
++			break;
++		if (size <= 0)
++			break;	/* all done */
++	}
++	blk_finish_plug(&plug);
+ }
+ 
+ void
 diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 7f1d139..c9c2ba9 100644
+index c9c2ba9..67d1349 100644
 --- a/fs/xfs/xfs_buf.h
 +++ b/fs/xfs/xfs_buf.h
-@@ -58,6 +58,7 @@ typedef enum {
- #define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
- #define _XBF_KMEM	(1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	(1 << 22)/* buffer on a delwri queue */
-+#define _XBF_COMPOUND	(1 << 23)/* compound buffer */
+@@ -105,6 +105,9 @@ struct xfs_buf_map {
+ 	int			bm_len;	/* size of I/O */
+ };
  
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -75,7 +76,8 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
--	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
-+	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-+	{ _XBF_COMPOUND,	"COMPOUND" }
- 
- typedef struct xfs_buftarg {
- 	dev_t			bt_dev;
-@@ -98,6 +100,11 @@ typedef void (*xfs_buf_iodone_t)(struct xfs_buf *);
- 
- #define XB_PAGES	2
- 
-+struct xfs_buf_map {
-+	xfs_daddr_t		bm_bn;	/* block number for I/O */
-+	int			bm_len;	/* size of I/O */
-+};
++#define DEFINE_SINGLE_BUF_MAP(map, blkno, numblk) \
++	struct xfs_buf_map (map) = { .bm_bn = (blkno), .bm_len = (numblk) };
 +
  typedef struct xfs_buf {
  	/*
  	 * first cacheline holds all the fields needed for an uncontended cache
-@@ -107,7 +114,7 @@ typedef struct xfs_buf {
- 	 * fast-path on locking.
- 	 */
- 	struct rb_node		b_rbnode;	/* rbtree node */
--	xfs_daddr_t		b_bn;		/* block number for I/O */
-+	xfs_daddr_t		b_bn;		/* block number of buffer */
- 	int			b_length;	/* size of buffer in BBs */
- 	atomic_t		b_hold;		/* reference count */
- 	atomic_t		b_lru_ref;	/* lru reclaim ref count */
-@@ -127,12 +134,14 @@ typedef struct xfs_buf {
+@@ -134,7 +137,9 @@ typedef struct xfs_buf {
  	struct xfs_trans	*b_transp;
  	struct page		**b_pages;	/* array of page pointers */
  	struct page		*b_page_array[XB_PAGES]; /* inline pages */
-+	struct xfs_buf_map	b_map;		/* compound buffer map */
+-	struct xfs_buf_map	b_map;		/* compound buffer map */
++	struct xfs_buf_map	*b_maps;	/* compound buffer map */
++	struct xfs_buf_map	b_map;		/* inline compound buffer map */
++	int			b_map_count;
  	int			b_io_length;	/* IO size in BBs */
  	atomic_t		b_pin_count;	/* pin count */
  	atomic_t		b_io_remaining;	/* #outstanding I/O requests */
- 	unsigned int		b_page_count;	/* size of page array */
- 	unsigned int		b_offset;	/* page offset in first page */
- 	unsigned short		b_error;	/* error code on I/O */
+@@ -149,11 +154,35 @@ typedef struct xfs_buf {
+ 
+ 
+ /* Finding and Reading Buffers */
+-struct xfs_buf *_xfs_buf_find(struct xfs_buftarg *target, xfs_daddr_t blkno,
+-				size_t numblks, xfs_buf_flags_t flags,
+-				struct xfs_buf *new_bp);
+-#define xfs_incore(buftarg,blkno,len,lockit) \
+-	_xfs_buf_find(buftarg, blkno ,len, lockit, NULL)
++struct xfs_buf *_xfs_buf_find(struct xfs_buftarg *target,
++			      struct xfs_buf_map *map, int nmaps,
++			      xfs_buf_flags_t flags, struct xfs_buf *new_bp);
 +
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
- #endif
-@@ -233,8 +242,18 @@ void xfs_buf_stale(struct xfs_buf *bp);
- #define XFS_BUF_UNWRITE(bp)	((bp)->b_flags &= ~XBF_WRITE)
- #define XFS_BUF_ISWRITE(bp)	((bp)->b_flags & XBF_WRITE)
++static inline struct xfs_buf *
++xfs_incore(
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		blkno,
++	size_t			numblks,
++	xfs_buf_flags_t		flags)
++{
++	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
++	return _xfs_buf_find(target, &map, 1, flags, NULL);
++}
++
++struct xfs_buf *_xfs_buf_alloc(struct xfs_buftarg *target,
++			       struct xfs_buf_map *map, int nmaps,
++			       xfs_buf_flags_t flags);
++
++static inline struct xfs_buf *
++xfs_buf_alloc(
++	struct xfs_buftarg	*target,
++	xfs_daddr_t		blkno,
++	size_t			numblks,
++	xfs_buf_flags_t		flags)
++{
++	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
++	return _xfs_buf_alloc(target, &map, 1, flags);
++}
  
--#define XFS_BUF_ADDR(bp)		((bp)->b_bn)
--#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_bn = (xfs_daddr_t)(bno))
-+/*
-+ * These macros use the IO block map rather than b_bn. b_bn is now really
-+ * just for the buffer cache index for cached buffers. As IO does not use b_bn
-+ * anymore, uncached buffers do not use b_bn at all and hence must modify the IO
-+ * map directly. Uncached buffers are not allowed to be discontiguous, so this
-+ * is safe to do.
-+ *
-+ * In future, uncached buffers will pass the block number directly to the io
-+ * request function and hence these macros will go away at that point.
-+ */
-+#define XFS_BUF_ADDR(bp)		((bp)->b_map.bm_bn)
-+#define XFS_BUF_SET_ADDR(bp, bno)	((bp)->b_map.bm_bn = (xfs_daddr_t)(bno))
+ struct xfs_buf *xfs_buf_get(struct xfs_buftarg *target, xfs_daddr_t blkno,
+ 				size_t numblks, xfs_buf_flags_t flags);
+@@ -163,8 +192,6 @@ void xfs_buf_readahead(struct xfs_buftarg *target, xfs_daddr_t blkno,
+ 				size_t numblks);
  
- static inline void xfs_buf_set_ref(struct xfs_buf *bp, int lru_ref)
- {
+ struct xfs_buf *xfs_buf_get_empty(struct xfs_buftarg *target, size_t numblks);
+-struct xfs_buf *xfs_buf_alloc(struct xfs_buftarg *target, xfs_daddr_t blkno,
+-				size_t numblks, xfs_buf_flags_t flags);
+ void xfs_buf_set_empty(struct xfs_buf *bp, size_t numblks);
+ int xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t length);
+ 
 -- 
 1.7.10
 
