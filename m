@@ -1,23 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5M8oOSk256992 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 03:50:24 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	IU5YHw5Z7e2KVXi7 for <xfs@oss.sgi.com>;
-	Fri, 22 Jun 2012 01:50:22 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1ShzZK-0005Rs-Fv
-	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:18 +1000
-Received: from dave by disappointment with local (Exim 4.77)
-	(envelope-from <dave@disappointment.disaster>) id 1ShzZK-0006qJ-C3
-	for xfs@oss.sgi.com; Fri, 22 Jun 2012 18:50:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/9] xfs: add discontiguous buffer support to transactions
-Date: Fri, 22 Jun 2012 18:50:11 +1000
-Message-Id: <1340355015-26250-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1340355015-26250-1-git-send-email-david@fromorbit.com>
-References: <1340355015-26250-1-git-send-email-david@fromorbit.com>
+	q5MGbPo4070143 for <xfs@oss.sgi.com>; Fri, 22 Jun 2012 11:37:25 -0500
+Subject: [GIT PULL] XFS update for 3.5-rc4
+Message-Id: <20120622163804.3781F402055@whiskey.americas.sgi.com>
+Date: Fri, 22 Jun 2012 11:38:04 -0500 (CDT)
+From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,228 +19,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: torvalds@linux-foundation.org
+Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi Linus,
 
-Now that the buffer cache supports discontiguous buffers, add
-support to the transaction buffer interface for getting and reading
-buffers.
+   Please pull in these fixes for XFS for 3.5-rc4.  This includes:
 
-Note that this patch does not convert the buffer item logging to
-support discontiguous buffers. That will be done as a separate
-commit.
+   * Fix stale data exposure with unwritten extents
+   * Fix a warning in xfs_alloc_vextent with ODEBUG
+   * Fix overallocation and alignment of pages for xfs_bufs
+   * Fix a cursor leak
+   * Fix a log hang
+   * Fix a crash related to xfs_sync_worker
+   * Rename xfs log structure from struct log to struct xlog so we can
+     use crash dumps effectively
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_trans.h     |   50 +++++++++++++++++++++++++++++++----
- fs/xfs/xfs_trans_buf.c |   68 ++++++++++++++++++++++++------------------------
- 2 files changed, 79 insertions(+), 39 deletions(-)
+   I thought I'd try a signed tag this time around.  My key ID is D5ABA64E:
 
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 7c37b53..bc2afd5 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -448,11 +448,51 @@ xfs_trans_t	*xfs_trans_dup(xfs_trans_t *);
- int		xfs_trans_reserve(xfs_trans_t *, uint, uint, uint,
- 				  uint, uint);
- void		xfs_trans_mod_sb(xfs_trans_t *, uint, int64_t);
--struct xfs_buf	*xfs_trans_get_buf(xfs_trans_t *, struct xfs_buftarg *, xfs_daddr_t,
--				   int, uint);
--int		xfs_trans_read_buf(struct xfs_mount *, xfs_trans_t *,
--				   struct xfs_buftarg *, xfs_daddr_t, int, uint,
--				   struct xfs_buf **);
-+
-+struct xfs_buf	*xfs_trans_get_buf_map(struct xfs_trans *tp,
-+				       struct xfs_buftarg *target,
-+				       struct xfs_buf_map *map, int nmaps,
-+				       uint flags);
-+
-+static inline struct xfs_buf *
-+xfs_trans_get_buf(
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	xfs_daddr_t		blkno,
-+	int			numblks,
-+	uint			flags)
-+{
-+	struct xfs_buf_map	map = {
-+		.bm_bn = blkno,
-+		.bm_len = numblks,
-+	};
-+	return xfs_trans_get_buf_map(tp, target, &map, 1, flags);
-+}
-+
-+int		xfs_trans_read_buf_map(struct xfs_mount *mp,
-+				       struct xfs_trans *tp,
-+				       struct xfs_buftarg *target,
-+				       struct xfs_buf_map *map, int nmaps,
-+				       xfs_buf_flags_t flags,
-+				       struct xfs_buf **bpp);
-+
-+static inline int
-+xfs_trans_read_buf(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	xfs_daddr_t		blkno,
-+	int			numblks,
-+	xfs_buf_flags_t		flags,
-+	struct xfs_buf		**bpp)
-+{
-+	struct xfs_buf_map	map = {
-+		.bm_bn = blkno,
-+		.bm_len = numblks,
-+	};
-+	return xfs_trans_read_buf_map(mp, tp, target, &map, 1, flags, bpp);
-+}
-+
- struct xfs_buf	*xfs_trans_getsb(xfs_trans_t *, struct xfs_mount *, int);
- 
- void		xfs_trans_brelse(xfs_trans_t *, struct xfs_buf *);
-diff --git a/fs/xfs/xfs_trans_buf.c b/fs/xfs/xfs_trans_buf.c
-index 21c5a5e..6311b99 100644
---- a/fs/xfs/xfs_trans_buf.c
-+++ b/fs/xfs/xfs_trans_buf.c
-@@ -41,20 +41,26 @@ STATIC struct xfs_buf *
- xfs_trans_buf_item_match(
- 	struct xfs_trans	*tp,
- 	struct xfs_buftarg	*target,
--	xfs_daddr_t		blkno,
--	int			len)
-+	struct xfs_buf_map	*map,
-+	int			nmaps)
- {
- 	struct xfs_log_item_desc *lidp;
- 	struct xfs_buf_log_item	*blip;
-+	int			len = 0;
-+	int			i;
-+
-+	for (i = 0; i < nmaps; i++)
-+		len += map[i].bm_len;
- 
--	len = BBTOB(len);
- 	list_for_each_entry(lidp, &tp->t_items, lid_trans) {
- 		blip = (struct xfs_buf_log_item *)lidp->lid_item;
- 		if (blip->bli_item.li_type == XFS_LI_BUF &&
- 		    blip->bli_buf->b_target == target &&
--		    XFS_BUF_ADDR(blip->bli_buf) == blkno &&
--		    BBTOB(blip->bli_buf->b_length) == len)
-+		    XFS_BUF_ADDR(blip->bli_buf) == map[0].bm_bn &&
-+		    blip->bli_buf->b_length == len) {
-+			ASSERT(blip->bli_buf->b_map_count == nmaps);
- 			return blip->bli_buf;
-+		}
- 	}
- 
- 	return NULL;
-@@ -128,21 +134,19 @@ xfs_trans_bjoin(
-  * If the transaction pointer is NULL, make this just a normal
-  * get_buf() call.
-  */
--xfs_buf_t *
--xfs_trans_get_buf(xfs_trans_t	*tp,
--		  xfs_buftarg_t	*target_dev,
--		  xfs_daddr_t	blkno,
--		  int		len,
--		  uint		flags)
-+struct xfs_buf *
-+xfs_trans_get_buf_map(
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	struct xfs_buf_map	*map,
-+	int			nmaps,
-+	xfs_buf_flags_t		flags)
- {
- 	xfs_buf_t		*bp;
- 	xfs_buf_log_item_t	*bip;
- 
--	/*
--	 * Default to a normal get_buf() call if the tp is NULL.
--	 */
--	if (tp == NULL)
--		return xfs_buf_get(target_dev, blkno, len, flags);
-+	if (!tp)
-+		return xfs_buf_get_map(target, map, nmaps, flags);
- 
- 	/*
- 	 * If we find the buffer in the cache with this transaction
-@@ -150,7 +154,7 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 	 * have it locked.  In this case we just increment the lock
- 	 * recursion count and return the buffer to the caller.
- 	 */
--	bp = xfs_trans_buf_item_match(tp, target_dev, blkno, len);
-+	bp = xfs_trans_buf_item_match(tp, target, map, nmaps);
- 	if (bp != NULL) {
- 		ASSERT(xfs_buf_islocked(bp));
- 		if (XFS_FORCED_SHUTDOWN(tp->t_mountp)) {
-@@ -167,7 +171,7 @@ xfs_trans_get_buf(xfs_trans_t	*tp,
- 		return (bp);
- 	}
- 
--	bp = xfs_buf_get(target_dev, blkno, len, flags);
-+	bp = xfs_buf_get_map(target, map, nmaps, flags);
- 	if (bp == NULL) {
- 		return NULL;
- 	}
-@@ -246,26 +250,22 @@ int	xfs_error_mod = 33;
-  * read_buf() call.
-  */
- int
--xfs_trans_read_buf(
--	xfs_mount_t	*mp,
--	xfs_trans_t	*tp,
--	xfs_buftarg_t	*target,
--	xfs_daddr_t	blkno,
--	int		len,
--	uint		flags,
--	xfs_buf_t	**bpp)
-+xfs_trans_read_buf_map(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_buftarg	*target,
-+	struct xfs_buf_map	*map,
-+	int			nmaps,
-+	xfs_buf_flags_t		flags,
-+	struct xfs_buf		**bpp)
- {
- 	xfs_buf_t		*bp;
- 	xfs_buf_log_item_t	*bip;
- 	int			error;
- 
- 	*bpp = NULL;
--
--	/*
--	 * Default to a normal get_buf() call if the tp is NULL.
--	 */
--	if (tp == NULL) {
--		bp = xfs_buf_read(target, blkno, len, flags);
-+	if (!tp) {
-+		bp = xfs_buf_read_map(target, map, nmaps, flags);
- 		if (!bp)
- 			return (flags & XBF_TRYLOCK) ?
- 					EAGAIN : XFS_ERROR(ENOMEM);
-@@ -303,7 +303,7 @@ xfs_trans_read_buf(
- 	 * If the buffer is not yet read in, then we read it in, increment
- 	 * the lock recursion count, and return it to the caller.
- 	 */
--	bp = xfs_trans_buf_item_match(tp, target, blkno, len);
-+	bp = xfs_trans_buf_item_match(tp, target, map, nmaps);
- 	if (bp != NULL) {
- 		ASSERT(xfs_buf_islocked(bp));
- 		ASSERT(bp->b_transp == tp);
-@@ -349,7 +349,7 @@ xfs_trans_read_buf(
- 		return 0;
- 	}
- 
--	bp = xfs_buf_read(target, blkno, len, flags);
-+	bp = xfs_buf_read_map(target, map, nmaps, flags);
- 	if (bp == NULL) {
- 		*bpp = NULL;
- 		return (flags & XBF_TRYLOCK) ?
--- 
-1.7.10
+   gpg --keyserver pgp.mit.edu --recv-keys D5ABA64E
+
+   Hopefully I got it right.
+
+Thanks,
+Ben
+
+The following changes since commit f8f5701bdaf9134b1f90e5044a82c66324d2073f:
+
+  Linux 3.5-rc1 (2012-06-02 18:29:26 -0700)
+
+are available in the git repository at:
+
+  git://oss.sgi.com/xfs/xfs.git tags/for-linus-Jun-21-2012
+
+for you to fetch changes up to f7bdf03a99efc083608cd9c0c3e03abff311c79e:
+
+  xfs: rename log structure to xlog (2012-06-21 14:21:11 -0500)
+
+----------------------------------------------------------------
+Fixes for 3.5-rc
+
+----------------------------------------------------------------
+Alain Renaud (1):
+      xfs: xfs_vm_writepage clear iomap_valid when !buffer_uptodate (REV2)
+
+Ben Myers (1):
+      xfs: shutdown xfs_sync_worker before the log
+
+Brian Foster (1):
+      xfs: check for stale inode before acquiring iflock on push
+
+Dave Chinner (1):
+      xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
+
+Jan Kara (1):
+      xfs: Fix overallocation in xfs_buf_allocate_memory()
+
+Jeff Liu (1):
+      xfs: fix debug_object WARN at xfs_alloc_vextent()
+
+Mark Tinguely (1):
+      xfs: rename log structure to xlog
+
+ fs/xfs/xfs_alloc.c       |  3 +-
+ fs/xfs/xfs_aops.c        | 11 +++++--
+ fs/xfs/xfs_buf.c         | 16 ++--------
+ fs/xfs/xfs_inode_item.c  | 17 +++++------
+ fs/xfs/xfs_log.c         | 77 ++++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_log_cil.c     | 22 +++++++-------
+ fs/xfs/xfs_log_priv.h    | 46 +++++++++++++++++++----------
+ fs/xfs/xfs_log_recover.c | 38 ++++++++++++------------
+ fs/xfs/xfs_mount.h       |  4 +--
+ fs/xfs/xfs_sync.c        | 32 ++++++++++----------
+ fs/xfs/xfs_trace.h       | 18 +++++------
+ 11 files changed, 153 insertions(+), 131 deletions(-)
 
 _______________________________________________
 xfs mailing list
