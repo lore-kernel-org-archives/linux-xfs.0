@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5ODI4kt023033 for <xfs@oss.sgi.com>; Sun, 24 Jun 2012 08:18:05 -0500
+	q5OF3qpB040003 for <xfs@oss.sgi.com>; Sun, 24 Jun 2012 10:03:53 -0500
 Received: from vserv.windfluechter.net (vserv.windfluechter.net
-	[178.63.83.104]) by cuda.sgi.com with ESMTP id qXHNEi0JT33FbMqO
+	[178.63.83.104]) by cuda.sgi.com with ESMTP id WZpgacjopujv9Y46
 	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Sun, 24 Jun 2012 06:18:02 -0700 (PDT)
+	<xfs@oss.sgi.com>; Sun, 24 Jun 2012 08:03:49 -0700 (PDT)
+Received: from [172.16.10.1] (helo=hro.bluespice.org)
+	by vserv.windfluechter.net with esmtps
+	(TLS1.0:DHE_RSA_AES_128_CBC_SHA1:16) (Exim 4.72)
+	(envelope-from <ij@2012.bluespice.org>) id 1SioLs-0008Bx-8r
+	for xfs@oss.sgi.com; Sun, 24 Jun 2012 17:03:48 +0200
+MIME-Version: 1.0
+Date: Sun, 24 Jun 2012 17:03:47 +0200
+From: =?UTF-8?Q?Ingo_J=C3=BCrgensmann?= <ij@2012.bluespice.org>
 Subject: Re: mkfs.xfs states log stripe unit is too large
-Mime-Version: 1.0 (Apple Message framework v1084)
-From: =?iso-8859-1?Q?Ingo_J=FCrgensmann?= <ij@2012.bluespice.org>
 In-Reply-To: <4FE710B7.5010704@hardwarefreak.com>
-Date: Sun, 24 Jun 2012 15:17:59 +0200
-Message-Id: <4954261F-D4FB-4589-BE18-2BFCEC05E9B4@2012.bluespice.org>
 References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
 	<20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net>
 	<4FE710B7.5010704@hardwarefreak.com>
+Message-ID: <d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,67 +28,40 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: stan@hardwarefreak.com
 
-Am 24.06.2012 um 15:05 schrieb Stan Hoeppner:
-
-> On 6/23/2012 9:20 PM, Eric Sandeen wrote:
->> On 6/23/12 6:44 PM, Dave Chinner wrote:
->>> On Sat, Jun 23, 2012 at 02:50:49PM +0200, Ingo J=FCrgensmann wrote:
->>>> muaddib:~# cat /proc/mdstat =
-
->>>> Personalities : [raid1] [raid6] [raid5] [raid4] =
-
->>>> md7 : active raid5 sdf4[3] sdd4[1] sde4[0]
->>>>      7811261440 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3=
-] [UUU]
->                                               ^^^^^^^^^^
-> =
+On 2012-06-24 15:05, Stan Hoeppner wrote:
 
 > The the log stripe unit mismatch error is a direct result of Ingo
-> manually choosing a rather large chunk size for his two stripe spindle
+> manually choosing a rather large chunk size for his two stripe 
+> spindle
 > md array, yielding a 1MB stripe, and using an internal log with it.
 > Maybe there is a good reason for this, but I'm going to challenge it.
 
-Correction: I did not manually choose that chunk size, but it was automatic=
-ally chosen by mdadm when creating the RAID5. =
+To cite man mdadm:
 
+        -c, --chunk=
+               Specify chunk size of kibibytes.  The  default  when
+               creating an array is 512KB.  To ensure compatibility
+               with earlier versions, the default when Building and
+               array  with no persistent metadata is 64KB.  This is
+               only meaningful for RAID0, RAID4, RAID5, RAID6,  and
+               RAID10.
 
-> The default md chunk size IIRC is 64KB, 8x smaller than Ingo's chunk.
+So, actually there's a mismatch with the default of mdadm an mkfs.xfs. 
+Maybe it's worthwhile to think of raising the log stripe maximum size to 
+at least 512 kiB? I don't know what implications this could have, 
+though...
 
-64k is the default for creating RAIDs with 0.90 format superblock. My RAID5=
- has a 1.2 format superblock. =
+-- 
+Ciao...          //    Fon: 0381-2744150
+.     Ingo     \X/     http://blog.windfluechter.net
 
-
-> Does backup PC perform better writing 2048 sectors per stripe write,
-> 1024 per spindle, with two spindles, than 256 sectors per stripe write,
-> 128 per spindle, using two spindles?
-
-Don't know how BackupPC actually writes the data, but it does make extensiv=
-e use of hardlinks to save some diskspace. Some sort of deduplicating, if y=
-ou like to say it that way. =
-
-
->> Rule of Silence: When a program has nothing surprising to say, it should=
- say nothing.
-> I think this goes to the heart of the matter.  Ingo chose an arbitrarily
-> large chunk size apparently without understanding the ramifications.
-
-That's wrong! I've just worked with the defaults.  =
-
-
--- =
-
-Ciao...            //      Fon: 0381-2744150
-      Ingo       \X/       http://blog.windfluechter.net
-
-
-gpg pubkey:  http://www.juergensmann.de/ij_public_key.asc
+gpg pubkey: http://www.juergensmann.de/ij_public_key.
 
 _______________________________________________
 xfs mailing list
