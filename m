@@ -1,17 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5PKo4ed019783 for <xfs@oss.sgi.com>; Mon, 25 Jun 2012 15:50:04 -0500
-Date: Mon, 25 Jun 2012 15:51:28 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: Strange case of deleting lots of files and "df" not
-	recognizing it....(unless I umount/mount) the disk...
-Message-ID: <20120625205128.GA29979@sgi.com>
-References: <4FE7FDF4.6080506@tlinx.org>
-	<20120625090211.3c5c2032@galadriel.home>
+	q5PLIe2f023538 for <xfs@oss.sgi.com>; Mon, 25 Jun 2012 16:18:40 -0500
+Received: from vserv.windfluechter.net (vserv.windfluechter.net
+	[178.63.83.104]) by cuda.sgi.com with ESMTP id zQZfGdkeW7ZN4KT1
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 25 Jun 2012 14:18:37 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120625090211.3c5c2032@galadriel.home>
+Date: Mon, 25 Jun 2012 23:18:34 +0200
+From: =?UTF-8?Q?Ingo_J=C3=BCrgensmann?= <ij@2012.bluespice.org>
+Subject: Re: mkfs.xfs states log stripe unit is too large
+In-Reply-To: <4FE8CEED.7070505@hardwarefreak.com>
+References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
+	<20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net>
+	<4FE710B7.5010704@hardwarefreak.com>
+	<4954261F-D4FB-4589-BE18-2BFCEC05E9B4@2012.bluespice.org>
+	<4FE76A50.2010902@hardwarefreak.com>
+	<563739BF-6A66-41F0-8EA2-CF2171E85B06@2012.bluespice.org>
+	<4FE7918C.5000203@hardwarefreak.com>
+	<a0714affeea45c1a62cd2f643f04b07d@muaddib.hro.localnet>
+	<4FE8CEED.7070505@hardwarefreak.com>
+Message-ID: <356be21697ca60cb8c51b9da3036923b@muaddib.hro.localnet>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,29 +29,63 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Emmanuel Florac <eflorac@intellique.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: stan@hardwarefreak.com
+Cc: xfs@oss.sgi.com
 
-On Mon, Jun 25, 2012 at 09:02:11AM +0200, Emmanuel Florac wrote:
-> Le Sun, 24 Jun 2012 22:58:12 -0700 vous =E9criviez:
-> =
+On 2012-06-25 22:49, Stan Hoeppner wrote:
 
-> > So when does it actually synchronize w/o me forcing it?  (I.e.
-> > umount/mount)?
-> > =
+> I've never understand exactly what this means, but it's apparently
+> involved with some of the arrays you've built with Stable and SID:
+>
+> "To ensure compatibility with earlier versions, the default when
+> Building and array with no persistent metadata is 64KB."
+>
+> How does one "build an array with no persistent metadata"?  Does this
+> simply mean forcing metadata .90 on the command line?
 
-> =
+IIRC, the metadata in 1.2 is populated over the RAID whereas in 0.90 it 
+was only at the beginning. But take that with care. I've no source for 
+that assumption. It's only somewhere in my mind that I think I might 
+have read about this somewhere, somewhen...
+Someone else will know better and correct me for sure. :-)
 
-> Yes, it happens sometimes and a umount/mount is needed to fix it.
+>> So, the question is: why did mdadm choose 1.2 format superblock this
+>> time? My guess is, that's because of GPT labelled disks instead of 
+>> MBR,
+>> but it's only a guess. Maybe it's because the new md device is 
+>> bigger in
+>> size. All of my other md devices on MBR labelled disks do have 0.90
+>> format superblock, all md devices on the GPT disks are of 1.2 
+>> format.
+>> Although it doesn't seem a new default in mdadm for me, your 
+>> assumption
+>> would still stand if the cause would turn out to be the GPT label. 
+>> More
+>> and more people will start using GPT labelled disks.
+> Ok this is really interesting as this is undocumented behavior, if
+> indeed this is occurring.  Would you mind firing up a thread about 
+> this
+> on the linux-raid list?
 
-You may find that this will get the job done:
-echo 3 > /proc/sys/vm/drop_caches
+I've talked to some guys on #debian.de in the meantime. I don't think 
+now that this has anything to do with GPT labels. According to 
+#debian.de the default behaviour in mdadm was changed after release of 
+Squeeze. Already before Squeeze, metadata format 0.90 was obsolete and 
+was only kept for Squeeze for backward compatibility reasons.
 
--Ben
+So, it's indeed a changed default within Debian, but nothing new for 
+upstream mdadm and it's likely that other distros have adopted the 
+upstream default way before Debian did.
+
+-- 
+Ciao...          //    Fon: 0381-2744150
+.     Ingo     \X/     http://blog.windfluechter.net
+
+gpg pubkey: http://www.juergensmann.de/ij_public_key.
 
 _______________________________________________
 xfs mailing list
