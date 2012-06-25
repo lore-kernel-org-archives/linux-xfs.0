@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5OMFfLG112935 for <xfs@oss.sgi.com>; Sun, 24 Jun 2012 17:15:41 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id qWdFEbX35pgJhyp7
-	for <xfs@oss.sgi.com>; Sun, 24 Jun 2012 15:15:40 -0700 (PDT)
-Message-ID: <4FE7918C.5000203@hardwarefreak.com>
-Date: Sun, 24 Jun 2012 17:15:40 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q5P5PB3k182451 for <xfs@oss.sgi.com>; Mon, 25 Jun 2012 00:25:11 -0500
+Received: from vserv.windfluechter.net (vserv.windfluechter.net
+	[178.63.83.104]) by cuda.sgi.com with ESMTP id OHbcTX3cJAFQYQOR
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Sun, 24 Jun 2012 22:25:08 -0700 (PDT)
 MIME-Version: 1.0
+Date: Mon, 25 Jun 2012 07:25:06 +0200
+From: =?UTF-8?Q?Ingo_J=C3=BCrgensmann?= <ij@2012.bluespice.org>
 Subject: Re: mkfs.xfs states log stripe unit is too large
+In-Reply-To: <4FE7918C.5000203@hardwarefreak.com>
 References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
 	<20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net>
 	<4FE710B7.5010704@hardwarefreak.com>
 	<4954261F-D4FB-4589-BE18-2BFCEC05E9B4@2012.bluespice.org>
 	<4FE76A50.2010902@hardwarefreak.com>
 	<563739BF-6A66-41F0-8EA2-CF2171E85B06@2012.bluespice.org>
-In-Reply-To: <563739BF-6A66-41F0-8EA2-CF2171E85B06@2012.bluespice.org>
-Reply-To: stan@hardwarefreak.com
+	<4FE7918C.5000203@hardwarefreak.com>
+Message-ID: <a0714affeea45c1a62cd2f643f04b07d@muaddib.hro.localnet>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,57 +27,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-1?Q?Ingo_J=FCrgensmann?= <ij@2012.bluespice.org>
+To: stan@hardwarefreak.com
 Cc: xfs@oss.sgi.com
 
-On 6/24/2012 2:51 PM, Ingo J=FCrgensmann wrote:
-> Am 24.06.2012 um 21:28 schrieb Stan Hoeppner:
-> =
-
->> Thus, I'd guess that the metadata format changed from 0.90 to 1.2 with a
->> very recent release of mdadm.  Are you using distro supplied mdadm, a
->> backported more recent mdadm, or did you build mdadm from the most
->> recent source?
-> =
-
-> As I already wrote, I'm using Debian unstable, therefore distro supplied =
-mdadm. Otherwise I'd have said this. =
-
-
-Yes, you did mention SID, and I missed it.
-
-SID is the problem here, or I should say, the cause of the error
-message.  SID is leading (better?) edge, and is obviously using a recent
-mdadm release, which defaults to metadata 1.2, and chunk of 512KB.
-
-As more distros adopt newer mdadm, reports of this will be more
-prevalent.  So Eric's idea is likely preferable than mine.  XFS making a
-recommendation against an md default would fly like a lead balloon...
-
-> I don't think that Debian unstable is bleeding edge. =
-
-
-It's apparently close enough in the case of mdadm, given you're the
-first to report this, AFAIK.
-
-> I find it strange that you've misinterpreted citing the mdadm man page as=
- "sandbagging us". =3D:-O
-
-Sandbagging simply means holding something back, withholding
-information.  Had you actually not mentioned your OS/version, this would
-have been an accurate take on the situation.  But again, youd did, and I
-simply missed it.  So again, my apologies for missing your mention of
-SID in your opening email.  That would have prevented my skeptical demeanor.
-
--- =
-
-Stan
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gMjAxMi0wNi0yNSAwMDoxNSwgU3RhbiBIb2VwcG5lciB3cm90ZToKCj4+IEFzIEkgYWxyZWFk
+eSB3cm90ZSwgSSdtIHVzaW5nIERlYmlhbiB1bnN0YWJsZSwgdGhlcmVmb3JlIGRpc3RybyAKPj4g
+c3VwcGxpZWQgbWRhZG0uIE90aGVyd2lzZSBJJ2QgaGF2ZSBzYWlkIHRoaXMuCj4gU0lEIGlzIHRo
+ZSBwcm9ibGVtIGhlcmUsIG9yIEkgc2hvdWxkIHNheSwgdGhlIGNhdXNlIG9mIHRoZSBlcnJvcgo+
+IG1lc3NhZ2UuICBTSUQgaXMgbGVhZGluZyAoYmV0dGVyPykgZWRnZSwgYW5kIGlzIG9idmlvdXNs
+eSB1c2luZyBhIAo+IHJlY2VudAo+IG1kYWRtIHJlbGVhc2UsIHdoaWNoIGRlZmF1bHRzIHRvIG1l
+dGFkYXRhIDEuMiwgYW5kIGNodW5rIG9mIDUxMktCLgo+IEFzIG1vcmUgZGlzdHJvcyBhZG9wdCBu
+ZXdlciBtZGFkbSwgcmVwb3J0cyBvZiB0aGlzIHdpbGwgYmUgbW9yZQo+IHByZXZhbGVudC4gIFNv
+IEVyaWMncyBpZGVhIGlzIGxpa2VseSBwcmVmZXJhYmxlIHRoYW4gbWluZS4gIFhGUyAKPiBtYWtp
+bmcgYQo+IHJlY29tbWVuZGF0aW9uIGFnYWluc3QgYW4gbWQgZGVmYXVsdCB3b3VsZCBmbHkgbGlr
+ZSBhIGxlYWQgYmFsbG9vbi4uLgoKQWN0dWFsbHksIGV2ZW4gbWFuIHBhZ2Ugb2YgRGViaWFuIHN0
+YWJsZSAoU3F1ZWV6ZSkgbWVudGlvbnM6CgogICAgICAgIC1jLCAtLWNodW5rPQogICAgICAgICAg
+ICAgICBTcGVjaWZ5IGNodW5rIHNpemUgb2Yga2liaWJ5dGVzLiAgVGhlIGRlZmF1bHQgd2hlbiAK
+Y3JlYXRpbmcgYW4gYXJyYXkgaXMgNTEyS0IuICBUbyBlbnN1cmUKICAgICAgICAgICAgICAgY29t
+cGF0aWJpbGl0eSB3aXRoIGVhcmxpZXIgdmVyc2lvbnMsIHRoZSBkZWZhdWx0IHdoZW4gCkJ1aWxk
+aW5nIGFuZCBhcnJheSB3aXRoIG5vICBwZXJzaXPigJAKICAgICAgICAgICAgICAgdGVudCAgbWV0
+YWRhdGEgIGlzICA2NEtCLiAgIFRoaXMgIGlzICBvbmx5IG1lYW5pbmdmdWwgZm9yIApSQUlEMCwg
+UkFJRDQsIFJBSUQ1LCBSQUlENiwgYW5kCiAgICAgICAgICAgICAgIFJBSUQxMC4KClNvLCB0aGUg
+cXVlc3Rpb24gaXM6IHdoeSBkaWQgbWRhZG0gY2hvb3NlIDEuMiBmb3JtYXQgc3VwZXJibG9jayB0
+aGlzIAp0aW1lPyBNeSBndWVzcyBpcywgdGhhdCdzIGJlY2F1c2Ugb2YgR1BUIGxhYmVsbGVkIGRp
+c2tzIGluc3RlYWQgb2YgTUJSLCAKYnV0IGl0J3Mgb25seSBhIGd1ZXNzLiBNYXliZSBpdCdzIGJl
+Y2F1c2UgdGhlIG5ldyBtZCBkZXZpY2UgaXMgYmlnZ2VyIGluIApzaXplLiBBbGwgb2YgbXkgb3Ro
+ZXIgbWQgZGV2aWNlcyBvbiBNQlIgbGFiZWxsZWQgZGlza3MgZG8gaGF2ZSAwLjkwIApmb3JtYXQg
+c3VwZXJibG9jaywgYWxsIG1kIGRldmljZXMgb24gdGhlIEdQVCBkaXNrcyBhcmUgb2YgMS4yIGZv
+cm1hdC4KQWx0aG91Z2ggaXQgZG9lc24ndCBzZWVtIGEgbmV3IGRlZmF1bHQgaW4gbWRhZG0gZm9y
+IG1lLCB5b3VyIGFzc3VtcHRpb24gCndvdWxkIHN0aWxsIHN0YW5kIGlmIHRoZSBjYXVzZSB3b3Vs
+ZCB0dXJuIG91dCB0byBiZSB0aGUgR1BUIGxhYmVsLiBNb3JlIAphbmQgbW9yZSBwZW9wbGUgd2ls
+bCBzdGFydCB1c2luZyBHUFQgbGFiZWxsZWQgZGlza3MuCgo+PiBJIGZpbmQgaXQgc3RyYW5nZSB0
+aGF0IHlvdSd2ZSBtaXNpbnRlcnByZXRlZCBjaXRpbmcgdGhlIG1kYWRtIG1hbiAKPj4gcGFnZSBh
+cyAic2FuZGJhZ2dpbmcgdXMiLiA9Oi1PCj4gU2FuZGJhZ2dpbmcgc2ltcGx5IG1lYW5zIGhvbGRp
+bmcgc29tZXRoaW5nIGJhY2ssIHdpdGhob2xkaW5nCj4gaW5mb3JtYXRpb24uCgpBcmUgb2ssIEkg
+bWlzcmVhZCAic2FuZGJveGluZyB1cyIgYXMgImJveGluZyBvbnRvIHVzIGxpa2UgYXQgYSAKc2Fu
+ZGJveCIuIFNvLCBteSBhcG9sb2dpZXMgaGVyZS4gOi0pCgotLSAKQ2lhby4uLiAgICAgICAgICAv
+LyAgICBGb246IDAzODEtMjc0NDE1MAouICAgICBJbmdvICAgICBcWC8gICAgIGh0dHA6Ly9ibG9n
+LndpbmRmbHVlY2h0ZXIubmV0CgpncGcgcHVia2V5OiBodHRwOi8vd3d3Lmp1ZXJnZW5zbWFubi5k
+ZS9pal9wdWJsaWNfa2V5LgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2ku
+Y29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
