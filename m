@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5Q82K0L074932 for <xfs@oss.sgi.com>; Tue, 26 Jun 2012 03:02:20 -0500
+	q5QAEGSb085896 for <xfs@oss.sgi.com>; Tue, 26 Jun 2012 05:14:16 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	cWXQWH0JVUJ5kn3N (version=TLSv1 cipher=AES256-SHA bits=256
+	wk6WokHn238smf9Z (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 Jun 2012 01:02:19 -0700 (PDT)
-Date: Tue, 26 Jun 2012 04:02:17 -0400
+	Tue, 26 Jun 2012 03:14:12 -0700 (PDT)
+Date: Tue, 26 Jun 2012 06:14:11 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: mkfs.xfs states log stripe unit is too large
-Message-ID: <20120626080217.GA30767@infradead.org>
-References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
-	<20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net>
-	<4FE710B7.5010704@hardwarefreak.com>
-	<d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
-	<20120626023059.GC19223@dastard>
+Subject: Re: [PATCH 1/9] xfs: struct xfs_buf_log_format isn't variable sized.
+Message-ID: <20120626101411.GA26241@infradead.org>
+References: <1340355015-26250-1-git-send-email-david@fromorbit.com>
+	<1340355015-26250-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120626023059.GC19223@dastard>
+In-Reply-To: <1340355015-26250-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,41 +30,43 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-raid@vger.kernel.org, Ingo J?rgensmann <ij@2012.bluespice.org>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Tue, Jun 26, 2012 at 12:30:59PM +1000, Dave Chinner wrote:
-> You can't, simple as that. The maximum supported is 256k. As it is,
-> a default chunk size of 512k is probably harmful to most workloads -
-> large chunk sizes mean that just about every write will trigger a
-> RMW cycle in the RAID because it is pretty much impossible to issue
-> full stripe writes. Writeback doesn't do any alignment of IO (the
-> generic page cache writeback path is the problem here), so we will
-> lamost always be doing unaligned IO to the RAID, and there will be
-> little opportunity for sequential IOs to merge and form full stripe
-> writes (24 disks @ 512k each on RAID6 is a 11MB full stripe write).
+On Fri, Jun 22, 2012 at 06:50:07PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> IOWs, every time you do a small isolated write, the MD RAID volume
-> will do a RMW cycle, reading 11MB and writing 12MB of data to disk.
-> Given that most workloads are not doing lots and lots of large
-> sequential writes this is, IMO, a pretty bad default given typical
-> RAID5/6 volume configurations we see....
+> The struct xfs_buf_log_format wants to think the dirty bitmap is
+> variable sized.  In fact, it is variable size on disk simply due to
+> the way we map it from the in-memory structure, but we still just
+> use a fixed size memory allocation for the in-memory structure.
+> 
+> Hence it makes no sense to set the function up as a variable sized
+> structure when we already know it's maximum size, and we always
+> allocate it as such. Simplify the structure by making the dirty
+> bitmap a fixed sized array and just using the size of the structure
+> for the allocation size.
+> 
+> This will make it much simpler to allocate and manipulate an array
+> of format structures for discontiguous buffer support.
+> 
+> The previous struct xfs_buf_log_item size according to
+> /proc/slabinfo was 224 bytes. pahole doesn't give the same size
+> because of the variable size definition. With this modification,
+> pahole reports the same as /proc/slabinfo:
+> 
+> 	/* size: 224, cachelines: 4, members: 6 */
+> 
+> Because the xfs_buf_log_item size is now determined by the maximum
+> supported block size we introduce a dependency on xfs_alloc_btree.h.
+> Avoid this dependency by moving the idefines for the maximum block
+> sizes supported to xfs_types.h with all the other max/min type
+> defines to avoid any new dependencies.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Not too long ago I benchmarked out mdraid stripe sizes, and at least
-for XFS 32kb was a clear winner, anything larger decreased performance.
+Looks good,
 
-ext4 didn't get hit that badly with larger stripe sizes, probably
-because they still internally bump the writeback size like crazy, but
-they did not actually get faster with larger stripes either.
-
-This was streaming data heavy workloads, anything more metadata heavy
-probably will suffer from larger stripes even more.
-
-Ccing the linux-raid list if there actually is any reason for these
-defaults, something I wanted to ask for a long time but never really got
-back to.
-
-Also I'm pretty sure back then the md default was 256kb writes, not 512
-so it seems the defaults further increased.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
