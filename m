@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5QAFP9N086144 for <xfs@oss.sgi.com>; Tue, 26 Jun 2012 05:15:25 -0500
+	q5QAGirx086257 for <xfs@oss.sgi.com>; Tue, 26 Jun 2012 05:16:44 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	hdUlTKsekVt5LC1L (version=TLSv1 cipher=AES256-SHA bits=256
+	uwxKyUUolhCaEd95 (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 26 Jun 2012 03:15:24 -0700 (PDT)
-Date: Tue, 26 Jun 2012 06:15:24 -0400
+	Tue, 26 Jun 2012 03:16:44 -0700 (PDT)
+Date: Tue, 26 Jun 2012 06:16:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/9] xfs: convert internal buffer functions to pass maps
-Message-ID: <20120626101524.GC26241@infradead.org>
+Subject: Re: [PATCH 9/9] xfs: factor buffer reading from xfs_dir2_leaf_getdents
+Message-ID: <20120626101643.GD26241@infradead.org>
 References: <1340355015-26250-1-git-send-email-david@fromorbit.com>
-	<1340355015-26250-4-git-send-email-david@fromorbit.com>
+	<1340355015-26250-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1340355015-26250-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1340355015-26250-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,14 +32,13 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jun 22, 2012 at 06:50:09PM +1000, Dave Chinner wrote:
+On Fri, Jun 22, 2012 at 06:50:15PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> While the external interface currently uses separate blockno/length
-> variables, we need to move internal interfaces to passing and
-> parsing vector maps. This will then allow us to add external
-> interfaces to support discontiguous buffer maps as the internal code
-> will already support them.
+> The buffer reading code in xfs_dir2_leaf_getdents is complex and difficult to
+> follow due to the readahead and all the context is carries. it is also badly
+> indented and so difficult to read. Factor it out into a separate function to
+> make it easier to understand and optimise in future patches.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
