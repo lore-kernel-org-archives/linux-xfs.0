@@ -1,20 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5RA9Zc1197088 for <xfs@oss.sgi.com>; Wed, 27 Jun 2012 05:09:35 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	ie3gFyhQae2OZ8dd for <xfs@oss.sgi.com>;
-	Wed, 27 Jun 2012 03:09:33 -0700 (PDT)
-Date: Wed, 27 Jun 2012 20:08:38 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: synchronously write the superblock on unmount
-Message-ID: <20120627100838.GH19223@dastard>
-References: <20120626160051.364635296@sgi.com>
-	<20120626160102.898671754@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120626160102.898671754@sgi.com>
+	q5RHe0i7222888 for <xfs@oss.sgi.com>; Wed, 27 Jun 2012 12:40:01 -0500
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id FVvKonaMNQEzkiic for
+	<xfs@oss.sgi.com>; Wed, 27 Jun 2012 10:39:57 -0700 (PDT)
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Subject: [PATCH] xfs: cleanup the mount options
+Date: Thu, 28 Jun 2012 00:57:23 +0800
+Message-Id: <1340816243-6177-1-git-send-email-gaowanlong@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,35 +17,840 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tinguely@sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: hch@infradead.org, bpm@sgi.com, Wanlong Gao <gaowanlong@cn.fujitsu.com>
 
-On Tue, Jun 26, 2012 at 11:00:52AM -0500, tinguely@sgi.com wrote:
-> xfs_wait_buftarg() does not wait for the completion of the write of the uncached
-> superblock. This write can race with the shutdown of the log and cause a panic if the
-> write does not win the race. Per Dave's suggestion, turn the final write of the
-> superblock into a syncronous write.
+remove the mount options macro, use tokens instead.
+Futher cleanup will use xfs_*_opt in xfs instead,
+but it may be hard to be merged in one patch.
 
-Not quite what I suggested. You removed the transaction that logs
-the changes first. That needs to stay, otherwise we are writing
-unlogged changes to the superblock, and have the possibility of a
-crash before the unmount record is written causing log recovery to
-modify the superblock and not have all the correct changes in the
-log.
+Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+---
+ fs/xfs/xfs_mount.h |    3 +
+ fs/xfs/xfs_super.c |  605 ++++++++++++++++++++++++++++------------------------
+ 2 files changed, 330 insertions(+), 278 deletions(-)
 
-So it first needs to log the changes (synchronously), then write the
-changes (synchronously).
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 8724336..af6b52e0 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -251,6 +251,9 @@ typedef struct xfs_mount {
+ 						   allocator */
+ #define XFS_MOUNT_NOATTR2	(1ULL << 25)	/* disable use of attr2 format */
+ 
++#define xfs_set_opt(o, opt)	((o)->m_flags |= XFS_MOUNT_##opt)
++#define xfs_clear_opt(o, opt)	((o)->m_flags &= ~XFS_MOUNT_##opt)
++#define xfs_test_opt(o, opt)	((o)->m_flags & XFS_MOUNT_##opt)
+ 
+ /*
+  * Default minimum read and write sizes.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0d9de41..3da1090 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -66,66 +66,74 @@ static const struct super_operations xfs_super_operations;
+ static kmem_zone_t *xfs_ioend_zone;
+ mempool_t *xfs_ioend_pool;
+ 
+-#define MNTOPT_LOGBUFS	"logbufs"	/* number of XFS log buffers */
+-#define MNTOPT_LOGBSIZE	"logbsize"	/* size of XFS log buffers */
+-#define MNTOPT_LOGDEV	"logdev"	/* log device */
+-#define MNTOPT_RTDEV	"rtdev"		/* realtime I/O device */
+-#define MNTOPT_BIOSIZE	"biosize"	/* log2 of preferred buffered io size */
+-#define MNTOPT_WSYNC	"wsync"		/* safe-mode nfs compatible mount */
+-#define MNTOPT_NOALIGN	"noalign"	/* turn off stripe alignment */
+-#define MNTOPT_SWALLOC	"swalloc"	/* turn on stripe width allocation */
+-#define MNTOPT_SUNIT	"sunit"		/* data volume stripe unit */
+-#define MNTOPT_SWIDTH	"swidth"	/* data volume stripe width */
+-#define MNTOPT_NOUUID	"nouuid"	/* ignore filesystem UUID */
+-#define MNTOPT_MTPT	"mtpt"		/* filesystem mount point */
+-#define MNTOPT_GRPID	"grpid"		/* group-ID from parent directory */
+-#define MNTOPT_NOGRPID	"nogrpid"	/* group-ID from current process */
+-#define MNTOPT_BSDGROUPS    "bsdgroups"    /* group-ID from parent directory */
+-#define MNTOPT_SYSVGROUPS   "sysvgroups"   /* group-ID from current process */
+-#define MNTOPT_ALLOCSIZE    "allocsize"    /* preferred allocation size */
+-#define MNTOPT_NORECOVERY   "norecovery"   /* don't run XFS recovery */
+-#define MNTOPT_BARRIER	"barrier"	/* use writer barriers for log write and
+-					 * unwritten extent conversion */
+-#define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
+-#define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
+-#define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
+-#define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
+-#define MNTOPT_LARGEIO	   "largeio"	/* report large I/O sizes in stat() */
+-#define MNTOPT_NOLARGEIO   "nolargeio"	/* do not report large I/O sizes
+-					 * in stat(). */
+-#define MNTOPT_ATTR2	"attr2"		/* do use attr2 attribute format */
+-#define MNTOPT_NOATTR2	"noattr2"	/* do not use attr2 attribute format */
+-#define MNTOPT_FILESTREAM  "filestreams" /* use filestreams allocator */
+-#define MNTOPT_QUOTA	"quota"		/* disk quotas (user) */
+-#define MNTOPT_NOQUOTA	"noquota"	/* no quotas */
+-#define MNTOPT_USRQUOTA	"usrquota"	/* user quota enabled */
+-#define MNTOPT_GRPQUOTA	"grpquota"	/* group quota enabled */
+-#define MNTOPT_PRJQUOTA	"prjquota"	/* project quota enabled */
+-#define MNTOPT_UQUOTA	"uquota"	/* user quota (IRIX variant) */
+-#define MNTOPT_GQUOTA	"gquota"	/* group quota (IRIX variant) */
+-#define MNTOPT_PQUOTA	"pquota"	/* project quota (IRIX variant) */
+-#define MNTOPT_UQUOTANOENF "uqnoenforce"/* user quota limit enforcement */
+-#define MNTOPT_GQUOTANOENF "gqnoenforce"/* group quota limit enforcement */
+-#define MNTOPT_PQUOTANOENF "pqnoenforce"/* project quota limit enforcement */
+-#define MNTOPT_QUOTANOENF  "qnoenforce"	/* same as uqnoenforce */
+-#define MNTOPT_DELAYLOG    "delaylog"	/* Delayed logging enabled */
+-#define MNTOPT_NODELAYLOG  "nodelaylog"	/* Delayed logging disabled */
+-#define MNTOPT_DISCARD	   "discard"	/* Discard unused blocks */
+-#define MNTOPT_NODISCARD   "nodiscard"	/* Do not discard unused blocks */
+-
+ /*
+  * Table driven mount option parser.
+- *
+- * Currently only used for remount, but it will be used for mount
+- * in the future, too.
+  */
+ enum {
+-	Opt_barrier, Opt_nobarrier, Opt_err
++	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
++	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth,
++	Opt_nouuid, Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups,
++	Opt_sysvgroups, Opt_allocsize, Opt_norecovery, Opt_barrier,
++	Opt_nobarrier, Opt_inode64, Opt_ikeep, Opt_noikeep, Opt_largeio,
++	Opt_nolargeio, Opt_attr2, Opt_noattr2, Opt_filestreams, Opt_quota,
++	Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota, Opt_uquota,
++	Opt_gquota, Opt_pquota, Opt_uqnoenf, Opt_gqnoenf, Opt_pqnoenf,
++	Opt_qnoenf, Opt_delaylog, Opt_nodelaylog, Opt_discard, Opt_nodiscard,
++	Opt_ihashsize, Opt_osyncisdsync, Opt_osyncisosync, Opt_irixsgid,
++	Opt_err
+ };
+ 
+ static const match_table_t tokens = {
+-	{Opt_barrier, "barrier"},
+-	{Opt_nobarrier, "nobarrier"},
++	{Opt_logbufs, "logbufs=%d"},	/* number of XFS log buffers */
++	{Opt_logbsize, "logbsize=%s"},	/* size of XFS log buffers */
++	{Opt_logdev, "logdev=%s"},	/* log device */
++	{Opt_rtdev, "rtdev=%s"},	/* realtime I/O device */
++	{Opt_biosize, "biosize=%d"},	/* log2 of preferred buffered io size */
++	{Opt_wsync, "wsync"},		/* safe-mode nfs compatible mount */
++	{Opt_noalign, "noalign"},	/* turn off stripe alignment */
++	{Opt_swalloc, "swalloc"},	/* turn on stripe width allocation */
++	{Opt_sunit, "sunit=%d"},	/* data volume stripe unit */
++	{Opt_swidth, "swidth=%d"},	/* data volume stripe width */
++	{Opt_nouuid, "nouuid"},		/* ignore filesystem UUID */
++	{Opt_mtpt, "mtpt"},		/* filesystem mount point */
++	{Opt_grpid, "grpid"},		/* group-ID from parent directory */
++	{Opt_nogrpid, "nogrpid"},	/* group-ID from current process */
++	{Opt_bsdgroups, "bsdgroups"},	/* group-ID from parent directory */
++	{Opt_sysvgroups, "sysvgroups"},	/* group-ID from current process */
++	{Opt_allocsize, "allocsize=%s"},/* preferred allocation size */
++	{Opt_norecovery, "norecovery"},	/* do not run XFS recovery */
++	{Opt_barrier, "barrier"},	/* use writer barrier for log write and
++					 * unwritten extent conversation */
++	{Opt_nobarrier, "nobarrier"},	/* .. disable */
++	{Opt_inode64, "inode64"},	/* inodes can be allocated anywhere */
++	{Opt_ikeep, "ikeep"},		/* do not free empty inode clusters */
++	{Opt_noikeep, "noikeep"},	/* free empty inode clusters */
++	{Opt_largeio, "largeio"},	/* report large I/O sizes in start() */
++	{Opt_nolargeio, "nolargeio"},	/* do not report large I/O sizes
++					 * in start() */
++	{Opt_attr2, "attr2"},		/* do use attr2 attribute format */
++	{Opt_noattr2, "noattr2"},	/* do not use attr2 attribute format */
++	{Opt_filestreams, "filestreams"}, /* use filestreams allocator */
++	{Opt_quota, "quota"},		/* disk quotas (user) */
++	{Opt_noquota, "noquota"},	/* no quotas */
++	{Opt_usrquota, "usrquota"},	/* user quota enabled */
++	{Opt_grpquota, "grpquota"},	/* group quota enabled */
++	{Opt_prjquota, "prjquota"},	/* project quota enabled */
++	{Opt_uquota, "uquota"},		/* user quota (IRIX variant) */
++	{Opt_gquota, "gquota"},		/* group quota (IRIX variant) */
++	{Opt_pquota, "pquota"},		/* project quota (IRIX variant) */
++	{Opt_uqnoenf, "uqnoenforce"},	/* user quota limit enforcement */
++	{Opt_gqnoenf, "gqnoenforce"},	/* group quota limit enforcement */
++	{Opt_pqnoenf, "pqnoenforce"},	/* project quota limit enforcement */
++	{Opt_qnoenf, "qnoenforce"},	/* same as uqnoenforce */
++	{Opt_delaylog, "delaylog"},	/* deprecated */
++	{Opt_nodelaylog, "nodelaylog"},	/* deprecated */
++	{Opt_discard, "discard"},	/* Discard unused blocks */
++	{Opt_nodiscard, "nodiscard"},	/* Do not discard unused blocks */
++	{Opt_ihashsize, "ihashsize"},	/* deprecated */
++	{Opt_osyncisdsync, "osyncisdsync"}, /* deprecated */
++	{Opt_osyncisosync, "osyncisosync"}, /* deprecated */
++	{Opt_irixsgid, "irixsgid"},	/* deprecated */
+ 	{Opt_err, NULL}
+ };
+ 
+@@ -166,11 +174,14 @@ xfs_parseargs(
+ 	char			*options)
+ {
+ 	struct super_block	*sb = mp->m_super;
+-	char			*this_char, *value, *eov;
++	char			*p, *string, *eov;
+ 	int			dsunit = 0;
+ 	int			dswidth = 0;
+-	int			iosize = 0;
+ 	__uint8_t		iosizelog = 0;
++	int			intarg;
++	substring_t		args[MAX_OPT_ARGS];
++	char			*orig = NULL;
++	int			ret = 0;
+ 
+ 	/*
+ 	 * set up the mount name first so all the errors will refer to the
+@@ -185,19 +196,19 @@ xfs_parseargs(
+ 	 * Copy binary VFS mount flags we are interested in.
+ 	 */
+ 	if (sb->s_flags & MS_RDONLY)
+-		mp->m_flags |= XFS_MOUNT_RDONLY;
++		xfs_set_opt(mp, RDONLY);
+ 	if (sb->s_flags & MS_DIRSYNC)
+-		mp->m_flags |= XFS_MOUNT_DIRSYNC;
++		xfs_set_opt(mp, DIRSYNC);
+ 	if (sb->s_flags & MS_SYNCHRONOUS)
+-		mp->m_flags |= XFS_MOUNT_WSYNC;
++		xfs_set_opt(mp, WSYNC);
+ 
+ 	/*
+ 	 * Set some default flags that could be cleared by the mount option
+ 	 * parsing.
+ 	 */
+-	mp->m_flags |= XFS_MOUNT_BARRIER;
+-	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+-	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
++	xfs_set_opt(mp, BARRIER);
++	xfs_set_opt(mp, COMPAT_IOSIZE);
++	xfs_set_opt(mp, SMALL_INUMS);
+ 
+ 	/*
+ 	 * These can be overridden by the mount option parsing.
+@@ -208,185 +219,233 @@ xfs_parseargs(
+ 	if (!options)
+ 		goto done;
+ 
+-	while ((this_char = strsep(&options, ",")) != NULL) {
+-		if (!*this_char)
++	ret = ENOMEM;
++	options = kstrdup(options, GFP_NOFS);
++	if (!options)
++		goto done;
++
++	orig = options;
++
++	while ((p = strsep(&orig, ",")) != NULL) {
++		int token;
++		if (!*p)
+ 			continue;
+-		if ((value = strchr(this_char, '=')) != NULL)
+-			*value++ = 0;
+-
+-		if (!strcmp(this_char, MNTOPT_LOGBUFS)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			mp->m_logbufs = simple_strtoul(value, &eov, 10);
+-		} else if (!strcmp(this_char, MNTOPT_LOGBSIZE)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			mp->m_logbsize = suffix_strtoul(value, &eov, 10);
+-		} else if (!strcmp(this_char, MNTOPT_LOGDEV)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			mp->m_logname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
++
++		token = match_token(p, tokens, args);
++		switch (token) {
++		case Opt_logbufs:
++			intarg = 0;
++			ret = EINVAL;
++			match_int(args, &intarg);
++			if (!intarg)
++				goto free_orig;
++			mp->m_logbufs = intarg;
++			break;
++		case Opt_logbsize:
++			ret = ENOMEM;
++			string = match_strdup(args);
++			if (!string)
++				goto free_orig;
++			ret = EINVAL;
++			intarg = suffix_strtoul(string, &eov, 0);
++			if (!intarg)
++				goto free_string;
++			mp->m_logbsize = intarg;
++			break;
++		case Opt_logdev:
++			ret = ENOMEM;
++			string = match_strdup(args);
++			if (!string)
++				goto free_orig;
++
++			mp->m_logname = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
+ 			if (!mp->m_logname)
+-				return ENOMEM;
+-		} else if (!strcmp(this_char, MNTOPT_MTPT)) {
+-			xfs_warn(mp, "%s option not allowed on this system",
+-				this_char);
+-			return EINVAL;
+-		} else if (!strcmp(this_char, MNTOPT_RTDEV)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			mp->m_rtname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
++				goto free_string;
++			break;
++		case Opt_mtpt:
++			ret = EINVAL;
++			xfs_warn(mp, "%s option not allowed on this system", p);
++			goto free_orig;
++		case Opt_rtdev:
++			ret = ENOMEM;
++			string = match_strdup(args);
++			if (!string)
++				goto free_orig;
++			mp->m_rtname = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
+ 			if (!mp->m_rtname)
+-				return ENOMEM;
+-		} else if (!strcmp(this_char, MNTOPT_BIOSIZE)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			iosize = simple_strtoul(value, &eov, 10);
+-			iosizelog = ffs(iosize) - 1;
+-		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			iosize = suffix_strtoul(value, &eov, 10);
+-			iosizelog = ffs(iosize) - 1;
+-		} else if (!strcmp(this_char, MNTOPT_GRPID) ||
+-			   !strcmp(this_char, MNTOPT_BSDGROUPS)) {
+-			mp->m_flags |= XFS_MOUNT_GRPID;
+-		} else if (!strcmp(this_char, MNTOPT_NOGRPID) ||
+-			   !strcmp(this_char, MNTOPT_SYSVGROUPS)) {
+-			mp->m_flags &= ~XFS_MOUNT_GRPID;
+-		} else if (!strcmp(this_char, MNTOPT_WSYNC)) {
+-			mp->m_flags |= XFS_MOUNT_WSYNC;
+-		} else if (!strcmp(this_char, MNTOPT_NORECOVERY)) {
+-			mp->m_flags |= XFS_MOUNT_NORECOVERY;
+-		} else if (!strcmp(this_char, MNTOPT_NOALIGN)) {
+-			mp->m_flags |= XFS_MOUNT_NOALIGN;
+-		} else if (!strcmp(this_char, MNTOPT_SWALLOC)) {
+-			mp->m_flags |= XFS_MOUNT_SWALLOC;
+-		} else if (!strcmp(this_char, MNTOPT_SUNIT)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			dsunit = simple_strtoul(value, &eov, 10);
+-		} else if (!strcmp(this_char, MNTOPT_SWIDTH)) {
+-			if (!value || !*value) {
+-				xfs_warn(mp, "%s option requires an argument",
+-					this_char);
+-				return EINVAL;
+-			}
+-			dswidth = simple_strtoul(value, &eov, 10);
+-		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
+-			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
++				goto free_string;
++			break;
++		case Opt_biosize:
++			intarg = 0;
++			ret = EINVAL;
++			intarg = match_int(args, &intarg);
++			if (!intarg)
++				goto free_orig;
++			iosizelog = ffs(intarg) - 1;
++			break;
++		case Opt_allocsize:
++			ret = ENOMEM;
++			string = match_strdup(args);
++			if (!string)
++				goto free_orig;
++			ret = EINVAL;
++			intarg = suffix_strtoul(string, &eov, 0);
++			if (!intarg)
++				goto free_string;
++			iosizelog = ffs(intarg) - 1;
++			break;
++		case Opt_grpid:
++		case Opt_bsdgroups:
++			xfs_set_opt(mp, GRPID);
++			break;
++		case Opt_nogrpid:
++		case Opt_sysvgroups:
++			xfs_clear_opt(mp, GRPID);
++			break;
++		case Opt_wsync:
++			xfs_set_opt(mp, WSYNC);
++			break;
++		case Opt_norecovery:
++			xfs_set_opt(mp, NORECOVERY);
++			break;
++		case Opt_noalign:
++			xfs_set_opt(mp, NOALIGN);
++			break;
++		case Opt_swalloc:
++			xfs_set_opt(mp, SWALLOC);
++			break;
++		case Opt_sunit:
++			ret = EINVAL;
++			dsunit = match_int(args, &intarg);
++			if (!dsunit)
++				goto free_orig;
++			break;
++		case Opt_swidth:
++			ret = EINVAL;
++			dswidth = match_int(args, &intarg);
++			if (!dswidth)
++				goto free_orig;
++		case Opt_inode64:
++			xfs_clear_opt(mp, SMALL_INUMS);
+ #if !XFS_BIG_INUMS
+-			xfs_warn(mp, "%s option not allowed on this system",
+-				this_char);
++			xfs_warn(mp, "%s options not allowed on this system", p);
+ 			return EINVAL;
+ #endif
+-		} else if (!strcmp(this_char, MNTOPT_NOUUID)) {
+-			mp->m_flags |= XFS_MOUNT_NOUUID;
+-		} else if (!strcmp(this_char, MNTOPT_BARRIER)) {
+-			mp->m_flags |= XFS_MOUNT_BARRIER;
+-		} else if (!strcmp(this_char, MNTOPT_NOBARRIER)) {
+-			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+-		} else if (!strcmp(this_char, MNTOPT_IKEEP)) {
+-			mp->m_flags |= XFS_MOUNT_IKEEP;
+-		} else if (!strcmp(this_char, MNTOPT_NOIKEEP)) {
+-			mp->m_flags &= ~XFS_MOUNT_IKEEP;
+-		} else if (!strcmp(this_char, MNTOPT_LARGEIO)) {
+-			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
+-		} else if (!strcmp(this_char, MNTOPT_NOLARGEIO)) {
+-			mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+-		} else if (!strcmp(this_char, MNTOPT_ATTR2)) {
+-			mp->m_flags |= XFS_MOUNT_ATTR2;
+-		} else if (!strcmp(this_char, MNTOPT_NOATTR2)) {
+-			mp->m_flags &= ~XFS_MOUNT_ATTR2;
+-			mp->m_flags |= XFS_MOUNT_NOATTR2;
+-		} else if (!strcmp(this_char, MNTOPT_FILESTREAM)) {
+-			mp->m_flags |= XFS_MOUNT_FILESTREAMS;
+-		} else if (!strcmp(this_char, MNTOPT_NOQUOTA)) {
++			break;
++		case Opt_nouuid:
++			xfs_set_opt(mp, NOUUID);
++			break;
++		case Opt_barrier:
++			xfs_set_opt(mp, BARRIER);
++			break;
++		case Opt_nobarrier:
++			xfs_clear_opt(mp, BARRIER);
++			break;
++		case Opt_ikeep:
++			xfs_set_opt(mp, IKEEP);
++			break;
++		case Opt_noikeep:
++			xfs_clear_opt(mp, IKEEP);
++			break;
++		case Opt_largeio:
++			xfs_clear_opt(mp, COMPAT_IOSIZE);
++			break;
++		case Opt_nolargeio:
++			xfs_set_opt(mp, COMPAT_IOSIZE);
++			break;
++		case Opt_attr2:
++			xfs_set_opt(mp, ATTR2);
++			break;
++		case Opt_noattr2:
++			xfs_clear_opt(mp, ATTR2);
++			xfs_set_opt(mp, NOATTR2);
++			break;
++		case Opt_filestreams:
++			xfs_set_opt(mp, FILESTREAMS);
++			break;
++		case Opt_noquota:
+ 			mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+ 			mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
+ 			mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
+-		} else if (!strcmp(this_char, MNTOPT_QUOTA) ||
+-			   !strcmp(this_char, MNTOPT_UQUOTA) ||
+-			   !strcmp(this_char, MNTOPT_USRQUOTA)) {
++			break;
++		case Opt_quota:
++		case Opt_uquota:
++		case Opt_usrquota:
+ 			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+ 					 XFS_UQUOTA_ENFD);
+-		} else if (!strcmp(this_char, MNTOPT_QUOTANOENF) ||
+-			   !strcmp(this_char, MNTOPT_UQUOTANOENF)) {
++			break;
++		case Opt_qnoenf:
++		case Opt_uqnoenf:
+ 			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
+ 			mp->m_qflags &= ~XFS_UQUOTA_ENFD;
+-		} else if (!strcmp(this_char, MNTOPT_PQUOTA) ||
+-			   !strcmp(this_char, MNTOPT_PRJQUOTA)) {
++			break;
++		case Opt_pquota:
++		case Opt_prjquota:
+ 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
+ 					 XFS_OQUOTA_ENFD);
+-		} else if (!strcmp(this_char, MNTOPT_PQUOTANOENF)) {
++			break;
++		case Opt_pqnoenf:
+ 			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+ 			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
+-		} else if (!strcmp(this_char, MNTOPT_GQUOTA) ||
+-			   !strcmp(this_char, MNTOPT_GRPQUOTA)) {
++			break;
++		case Opt_gquota:
++		case Opt_grpquota:
+ 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+ 					 XFS_OQUOTA_ENFD);
+-		} else if (!strcmp(this_char, MNTOPT_GQUOTANOENF)) {
++			break;
++		case Opt_gqnoenf:
+ 			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+ 			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
+-		} else if (!strcmp(this_char, MNTOPT_DELAYLOG)) {
++			break;
++		case Opt_delaylog:
+ 			xfs_warn(mp,
+-	"delaylog is the default now, option is deprecated.");
+-		} else if (!strcmp(this_char, MNTOPT_NODELAYLOG)) {
++		"delaylog is the default now, option is deprecated.");
++			break;
++		case Opt_nodelaylog:
+ 			xfs_warn(mp,
+-	"nodelaylog support has been removed, option is deprecated.");
+-		} else if (!strcmp(this_char, MNTOPT_DISCARD)) {
+-			mp->m_flags |= XFS_MOUNT_DISCARD;
+-		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
+-			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+-		} else if (!strcmp(this_char, "ihashsize")) {
++		"nodelaylog support has been removed, option is deprecated.");
++			break;
++		case Opt_discard:
++			xfs_set_opt(mp, DISCARD);
++			break;
++		case Opt_nodiscard:
++			xfs_clear_opt(mp, DISCARD);
++			break;
++		case Opt_ihashsize:
+ 			xfs_warn(mp,
+-	"ihashsize no longer used, option is deprecated.");
+-		} else if (!strcmp(this_char, "osyncisdsync")) {
++		"ihashsize no longer used, option is deprecated.");
++		case Opt_osyncisdsync:
+ 			xfs_warn(mp,
+-	"osyncisdsync has no effect, option is deprecated.");
+-		} else if (!strcmp(this_char, "osyncisosync")) {
++		"osyncisdsync has no effect, option is deprecated.");
++			break;
++		case Opt_osyncisosync:
+ 			xfs_warn(mp,
+-	"osyncisosync has no effect, option is deprecated.");
+-		} else if (!strcmp(this_char, "irixsgid")) {
++		"osyncisosync has no effect, option is deprecated.");
++			break;
++		case Opt_irixsgid:
+ 			xfs_warn(mp,
+-	"irixsgid is now a sysctl(2) variable, option is deprecated.");
+-		} else {
+-			xfs_warn(mp, "unknown mount option [%s].", this_char);
+-			return EINVAL;
++		"irixsgid is now a sysctl(2) variable, option is deprecated.");
++			break;
++		default:
++			xfs_warn(mp, "unknown mount option [%s].", p);
++			break;
+ 		}
++
++		kfree(string);
++		string = NULL;
+ 	}
+ 
++	kfree(orig);
++
+ 	/*
+ 	 * no recovery flag requires a read-only mount
+ 	 */
+-	if ((mp->m_flags & XFS_MOUNT_NORECOVERY) &&
+-	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
++	if (xfs_test_opt(mp, NORECOVERY) && !xfs_test_opt(mp, RDONLY)) {
+ 		xfs_warn(mp, "no-recovery mounts must be read-only.");
+ 		return EINVAL;
+ 	}
+ 
+-	if ((mp->m_flags & XFS_MOUNT_NOALIGN) && (dsunit || dswidth)) {
++	if (xfs_test_opt(mp, NOALIGN) && (dsunit || dswidth)) {
+ 		xfs_warn(mp,
+ 	"sunit and swidth options incompatible with the noalign option");
+ 		return EINVAL;
+@@ -418,7 +477,7 @@ xfs_parseargs(
+ 	}
+ 
+ done:
+-	if (!(mp->m_flags & XFS_MOUNT_NOALIGN)) {
++	if (!xfs_test_opt(mp, NOALIGN)) {
+ 		/*
+ 		 * At this point the superblock has not been read
+ 		 * in, therefore we do not know the block size.
+@@ -427,7 +486,7 @@ done:
+ 		 */
+ 		if (dsunit) {
+ 			mp->m_dalign = dsunit;
+-			mp->m_flags |= XFS_MOUNT_RETERR;
++			xfs_set_opt(mp, RETERR);
+ 		}
+ 
+ 		if (dswidth)
+@@ -462,98 +521,97 @@ done:
+ 			return XFS_ERROR(EINVAL);
+ 		}
+ 
+-		mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
++		xfs_set_opt(mp, DFLT_IOSIZE);
+ 		mp->m_readio_log = iosizelog;
+ 		mp->m_writeio_log = iosizelog;
+ 	}
+ 
+ 	return 0;
+-}
+ 
+-struct proc_xfs_info {
+-	int	flag;
+-	char	*str;
+-};
++free_string:
++	kfree(string);
++	string = NULL;
++free_orig:
++	kfree(orig);
++	return ret;
++}
+ 
+ STATIC int
+-xfs_showargs(
+-	struct xfs_mount	*mp,
+-	struct seq_file		*m)
++xfs_fs_show_options(
++	struct seq_file		*seq,
++	struct dentry		*dentry)
+ {
+-	static struct proc_xfs_info xfs_info_set[] = {
+-		/* the few simple ones we can get from the mount struct */
+-		{ XFS_MOUNT_IKEEP,		"," MNTOPT_IKEEP },
+-		{ XFS_MOUNT_WSYNC,		"," MNTOPT_WSYNC },
+-		{ XFS_MOUNT_NOALIGN,		"," MNTOPT_NOALIGN },
+-		{ XFS_MOUNT_SWALLOC,		"," MNTOPT_SWALLOC },
+-		{ XFS_MOUNT_NOUUID,		"," MNTOPT_NOUUID },
+-		{ XFS_MOUNT_NORECOVERY,		"," MNTOPT_NORECOVERY },
+-		{ XFS_MOUNT_ATTR2,		"," MNTOPT_ATTR2 },
+-		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
+-		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
+-		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
+-		{ 0, NULL }
+-	};
+-	static struct proc_xfs_info xfs_info_unset[] = {
+-		/* the few simple ones we can get from the mount struct */
+-		{ XFS_MOUNT_COMPAT_IOSIZE,	"," MNTOPT_LARGEIO },
+-		{ XFS_MOUNT_BARRIER,		"," MNTOPT_NOBARRIER },
+-		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_64BITINODE },
+-		{ 0, NULL }
+-	};
+-	struct proc_xfs_info	*xfs_infop;
+-
+-	for (xfs_infop = xfs_info_set; xfs_infop->flag; xfs_infop++) {
+-		if (mp->m_flags & xfs_infop->flag)
+-			seq_puts(m, xfs_infop->str);
+-	}
+-	for (xfs_infop = xfs_info_unset; xfs_infop->flag; xfs_infop++) {
+-		if (!(mp->m_flags & xfs_infop->flag))
+-			seq_puts(m, xfs_infop->str);
+-	}
++	struct xfs_mount	*mp = XFS_M(dentry->d_sb);
+ 
+-	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
+-		seq_printf(m, "," MNTOPT_ALLOCSIZE "=%dk",
++	if (xfs_test_opt(mp, IKEEP))
++		seq_puts(seq, ",ikeep");
++	if (xfs_test_opt(mp, WSYNC))
++		seq_puts(seq, ",wsync");
++	if (xfs_test_opt(mp, NOALIGN))
++		seq_puts(seq, ",noalign");
++	if (xfs_test_opt(mp, SWALLOC))
++		seq_puts(seq, ",swalloc");
++	if (xfs_test_opt(mp, NOUUID))
++		seq_puts(seq, ",nouuid");
++	if (xfs_test_opt(mp, NORECOVERY))
++		seq_puts(seq, ",norecovery");
++	if (xfs_test_opt(mp, ATTR2))
++		seq_puts(seq, ",attr2");
++	if (xfs_test_opt(mp, FILESTREAMS))
++		seq_puts(seq, ",filestreams");
++	if (xfs_test_opt(mp, GRPID))
++		seq_puts(seq, ",grpid");
++	if (xfs_test_opt(mp, DISCARD))
++		seq_puts(seq, ",discard");
++	if (!xfs_test_opt(mp, COMPAT_IOSIZE))
++		seq_puts(seq, ",largeio");
++	if (!xfs_test_opt(mp, BARRIER))
++		seq_puts(seq, ",nobarrier");
++	if (!xfs_test_opt(mp, SMALL_INUMS))
++		seq_puts(seq, ",inode64");
++
++	if (xfs_test_opt(mp, DFLT_IOSIZE))
++		seq_printf(seq, ",allocsize=%dk",
+ 				(int)(1 << mp->m_writeio_log) >> 10);
+ 
+ 	if (mp->m_logbufs > 0)
+-		seq_printf(m, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
++		seq_printf(seq, ",logbufs=%d", mp->m_logbufs);
+ 	if (mp->m_logbsize > 0)
+-		seq_printf(m, "," MNTOPT_LOGBSIZE "=%dk", mp->m_logbsize >> 10);
++		seq_printf(seq, ",logbsize=%dk", mp->m_logbsize >> 10);
+ 
+ 	if (mp->m_logname)
+-		seq_printf(m, "," MNTOPT_LOGDEV "=%s", mp->m_logname);
++		seq_printf(seq, ",logdev=%s", mp->m_logname);
+ 	if (mp->m_rtname)
+-		seq_printf(m, "," MNTOPT_RTDEV "=%s", mp->m_rtname);
++		seq_printf(seq, ",rtdev=%s", mp->m_rtname);
+ 
+ 	if (mp->m_dalign > 0)
+-		seq_printf(m, "," MNTOPT_SUNIT "=%d",
++		seq_printf(seq, ",sunit=%d",
+ 				(int)XFS_FSB_TO_BB(mp, mp->m_dalign));
+ 	if (mp->m_swidth > 0)
+-		seq_printf(m, "," MNTOPT_SWIDTH "=%d",
++		seq_printf(seq, ",swidth=%d",
+ 				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
+ 
+ 	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
+-		seq_puts(m, "," MNTOPT_USRQUOTA);
++		seq_puts(seq, ",usrquota");
+ 	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
+-		seq_puts(m, "," MNTOPT_UQUOTANOENF);
++		seq_puts(seq, ",uqnoenforce");
+ 
+ 	/* Either project or group quotas can be active, not both */
+ 
+ 	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
+ 		if (mp->m_qflags & XFS_OQUOTA_ENFD)
+-			seq_puts(m, "," MNTOPT_PRJQUOTA);
++			seq_puts(seq, ",prjquota");
+ 		else
+-			seq_puts(m, "," MNTOPT_PQUOTANOENF);
++			seq_puts(seq, ",pqnoenforce");
+ 	} else if (mp->m_qflags & XFS_GQUOTA_ACCT) {
+ 		if (mp->m_qflags & XFS_OQUOTA_ENFD)
+-			seq_puts(m, "," MNTOPT_GRPQUOTA);
++			seq_puts(seq, ",grpquota");
+ 		else
+-			seq_puts(m, "," MNTOPT_GQUOTANOENF);
++			seq_puts(seq, ",gqnoenforce");
+ 	}
+ 
+ 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
+-		seq_puts(m, "," MNTOPT_NOQUOTA);
++		seq_puts(seq, ",noquota");
+ 
+ 	return 0;
+ }
+@@ -1119,10 +1177,10 @@ xfs_fs_remount(
+ 		token = match_token(p, tokens, args);
+ 		switch (token) {
+ 		case Opt_barrier:
+-			mp->m_flags |= XFS_MOUNT_BARRIER;
++			xfs_set_opt(mp, BARRIER);
+ 			break;
+ 		case Opt_nobarrier:
+-			mp->m_flags &= ~XFS_MOUNT_BARRIER;
++			xfs_clear_opt(mp, BARRIER);
+ 			break;
+ 		default:
+ 			/*
+@@ -1152,8 +1210,8 @@ xfs_fs_remount(
+ 	}
+ 
+ 	/* ro -> rw */
+-	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & MS_RDONLY)) {
+-		mp->m_flags &= ~XFS_MOUNT_RDONLY;
++	if (xfs_test_opt(mp, RDONLY) && !(*flags & MS_RDONLY)) {
++		xfs_clear_opt(mp, RDONLY);
+ 
+ 		/*
+ 		 * If this is the first remount to writeable state we
+@@ -1176,7 +1234,7 @@ xfs_fs_remount(
+ 	}
+ 
+ 	/* rw -> ro */
+-	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
++	if (!xfs_test_opt(mp, RDONLY) && (*flags & MS_RDONLY)) {
+ 		/*
+ 		 * After we have synced the data but before we sync the
+ 		 * metadata, we need to free up the reserve block pool so that
+@@ -1189,7 +1247,7 @@ xfs_fs_remount(
+ 		xfs_quiesce_data(mp);
+ 		xfs_save_resvblks(mp);
+ 		xfs_quiesce_attr(mp);
+-		mp->m_flags |= XFS_MOUNT_RDONLY;
++		xfs_set_opt(mp, RDONLY);
+ 	}
+ 
+ 	return 0;
+@@ -1221,14 +1279,6 @@ xfs_fs_unfreeze(
+ 	return 0;
+ }
+ 
+-STATIC int
+-xfs_fs_show_options(
+-	struct seq_file		*m,
+-	struct dentry		*root)
+-{
+-	return -xfs_showargs(XFS_M(root->d_sb), m);
+-}
+-
+ /*
+  * This function fills in xfs_mount_t fields based on mount args.
+  * Note: the superblock _has_ now been read in.
+@@ -1237,7 +1287,7 @@ STATIC int
+ xfs_finish_flags(
+ 	struct xfs_mount	*mp)
+ {
+-	int			ronly = (mp->m_flags & XFS_MOUNT_RDONLY);
++	int			ronly = xfs_test_opt(mp, RDONLY);
+ 
+ 	/* Fail a mount where the logbuf is smaller than the log stripe */
+ 	if (xfs_sb_version_haslogv2(&mp->m_sb)) {
+@@ -1263,9 +1313,8 @@ xfs_finish_flags(
+ 	 * mkfs'ed attr2 will turn on attr2 mount unless explicitly
+ 	 * told by noattr2 to turn it off
+ 	 */
+-	if (xfs_sb_version_hasattr2(&mp->m_sb) &&
+-	    !(mp->m_flags & XFS_MOUNT_NOATTR2))
+-		mp->m_flags |= XFS_MOUNT_ATTR2;
++	if (xfs_sb_version_hasattr2(&mp->m_sb) && !xfs_test_opt(mp, NOATTR2))
++		xfs_set_opt(mp, ATTR2);
+ 
+ 	/*
+ 	 * prohibit r/w mounts of read-only filesystems
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.9.2.323.gf051a
 
 _______________________________________________
 xfs mailing list
