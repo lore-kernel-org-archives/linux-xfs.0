@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5QL6wE8145786 for <xfs@oss.sgi.com>; Tue, 26 Jun 2012 16:06:58 -0500
-Date: Tue, 26 Jun 2012 17:06:55 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: synchronously write the superblock on unmount
-Message-ID: <20120626210655.GA16140@infradead.org>
-References: <20120626160051.364635296@sgi.com>
-	<20120626160102.898671754@sgi.com>
+	q5R2736n161515 for <xfs@oss.sgi.com>; Tue, 26 Jun 2012 21:07:03 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6F433mD2dB6jHvIR for
+	<xfs@oss.sgi.com>; Tue, 26 Jun 2012 19:07:02 -0700 (PDT)
+Message-ID: <4FEA6AA4.1@redhat.com>
+Date: Tue, 26 Jun 2012 22:06:28 -0400
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120626160102.898671754@sgi.com>
+Subject: Re: mkfs.xfs states log stripe unit is too large
+References: <D3F781FA-CEB0-4896-9441-772A9E533354@2012.bluespice.org>
+	<20120623234445.GZ19223@dastard> <4FE67970.2030008@sandeen.net>
+	<4FE710B7.5010704@hardwarefreak.com>
+	<d71834a062ffd666ab53a4695eb643e9@muaddib.hro.localnet>
+	<20120626023059.GC19223@dastard>
+In-Reply-To: <20120626023059.GC19223@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,44 +28,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tinguely@sgi.com
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: =?ISO-8859-1?Q?Ingo_J=FCrgensmann?= <ij@2012.bluespice.org>, xfs@oss.sgi.com
 
->  /*
-> - * xfs_log_sbcount
-> + * xfs_write_sbcount
+On 6/25/12 10:30 PM, Dave Chinner wrote:
 
-Please drop these function name comment line in anything you touch.
+...
 
->   *
->   * Sync the superblock counters to disk.
->   *
-> - * Note this code can be called during the process of freezing, so
-> - * we may need to use the transaction allocator which does not
-> - * block when the transaction subsystem is in its frozen state.
->   */
+> Without the warning, nobody would have noticed this. I think the
+> warning has value - even if it is just to indicate MD now uses a
+> bad default value for common workloads..
 
-Can you add a little commt here on why we write it out synchronously?
-Basically a shortened version of the commit message.
+Fair enough.
 
->  	if (!xfs_sb_version_haslazysbcount(&mp->m_sb))
-> -		return 0;
-> +	return 0;
+log stripe unit (524288 bytes) is too large (maximum is 256KiB)
+log stripe unit adjusted to 32KiB
 
-As mentioned by carlos the indendation here got messed up a bit.
+It just tweaked me a little to complain about something the user didn't specify, but thinking about it from the perspective of letting the user know that the _device_ has a stripe unit larger than xfs can handle makes sense.
 
-> -extern int	xfs_log_sbcount(xfs_mount_t *);
-> +extern int
-> +xfs_write_sbcount(
-> +	struct xfs_mount *mp);
->  extern __uint64_t xfs_default_resblks(xfs_mount_t *mp);
-
-For the header I'd suggest to keep the simple indentation style.
-
-Otherwise the changes look good to, thanks a lot!
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-Eric
 
 _______________________________________________
 xfs mailing list
