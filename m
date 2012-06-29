@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q5TB7oKm123526 for <xfs@oss.sgi.com>; Fri, 29 Jun 2012 06:07:50 -0500
-Received: from uni-bonn.de (mail.uni-bonn.de [131.220.15.113]) by cuda.sgi.com
-	with ESMTP id 9dODMJkqJ12wcvRt for <xfs@oss.sgi.com>;
-	Fri, 29 Jun 2012 04:07:47 -0700 (PDT)
-Received: from [131.220.147.85] (account mmertes@uni-bonn.de HELO
-	[131.220.61.120]) by fe2.uni-bonn.de (CommuniGate Pro SMTP 5.4.4)
-	with ESMTPSA id 20167477 for xfs@oss.sgi.com;
-	Fri, 29 Jun 2012 13:07:46 +0200
-Message-ID: <4FED8C81.70703@uni-bonn.de>
-Date: Fri, 29 Jun 2012 13:07:45 +0200
-From: Marc Mertes <mertes@uni-bonn.de>
+	q5TBPBsW124674 for <xfs@oss.sgi.com>; Fri, 29 Jun 2012 06:25:11 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id MgK8u5HbRUXTEfxf (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 29 Jun 2012 04:25:09 -0700 (PDT)
+Date: Fri, 29 Jun 2012 12:25:06 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: [MMTests] IO metadata on XFS
+Message-ID: <20120629112505.GF14154@suse.de>
+References: <20120620113252.GE4011@suse.de>
+ <20120629111932.GA14154@suse.de>
 MIME-Version: 1.0
-Subject: xfs user quota differs from filesystem data
+Content-Disposition: inline
+In-Reply-To: <20120629111932.GA14154@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,87 +23,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-mm@kvack.org
+Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi everybody,
-I run into a problem and I don=B4t know how to solve that.
+Configuration:	global-dhp__io-metadata-xfs
+Benchmarks:	dbench3, fsmark-single, fsmark-threaded
 
-First my system infos:
+Summary
+=======
+Most of the figures look good and in general there has been consistent good
+performance from XFS. However, fsmark-single is showing a severe performance
+dip in a few cases somewhere between 3.1 and 3.4. fs-mark running a single
+thread took a particularly bad dive in 3.4 for two machines that is worth
+examining closer. Unfortunately it is harder to easy conclusions as the
+gains/losses are not consistent between machines which may be related to
+the available number of CPU threads.
 
-xfs_repair version 2.9.8
-Kernel: 2.6.26-2-amd64 on debian lenny (5.0.9)
-CPU: 2x Quad-Core AMD Opteron(tm) Processor 2378
-RAM: 16GB
-Hardisk:
-Volume /dev/drbd0 /data xfs rw,noatime,attr2,nobarrier,usrquota 0 0
-DRBD Version 8.3.7 (api:88/proto:86-91)
-Hardware RAID 5 with 6 SAS2 Seagate Cheetah (450GB) disks (5+1xHS) on =
+Benchmark notes
+===============
 
-LSI 9260-8i SAS Controller
+mkfs was run on system startup.
+mkfs parameters -f -d agcount=8
+mount options inode64,delaylog,logbsize=262144,nobarrier for the most part.
+	On kernels to old to support delaylog was removed. On kernels
+	where it was the default, it was specified and the warning ignored.
 
-xfs_info /dev/drbd0
-meta-data=3D/dev/drbd0             isize=3D256    agcount=3D4, =
+dbench3 was chosen as it's metadata intensive.
+  o Duration was 180 seconds
+  o OSYNC, OSYNC_DIRECTORY and FSYNC were all off
 
-agsize=3D109744873 blks
-          =3D                       sectsz=3D512   attr=3D2
-data     =3D                       bsize=3D4096   blocks=3D438979490, imaxp=
-ct=3D5
-          =3D                       sunit=3D0      swidth=3D0 blks
-naming   =3Dversion 2              bsize=3D4096
-log      =3Dinternal               bsize=3D4096   blocks=3D32768, version=
-=3D2
-          =3D                       sectsz=3D512   sunit=3D0 blks, lazy-cou=
-nt=3D0
-realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=3D0
+  As noted in the MMTests, dbench3 can be a random number generator
+  particularly when run in asynchronous mode. Even with the limitations,
+  it can be useful as an early warning system and as it's still used by
+  QA teams it's still worth keeping an eye on.
+
+FSMark
+  o Parallel directories were used
+  o 1 Thread per CPU
+  o 0 Filesize
+  o 225 directories
+  o 22500 files per directory
+  o 50000 files per iteration
+  o 15 iterations
+  Single: ./fs_mark  -d  /tmp/fsmark-9227/1  -D  225  -N  22500  -n  50000  -L  15  -S0  -s  0
+  Thread: ./fs_mark  -d  /tmp/fsmark-9407/1  -d  /tmp/fsmark-9407/2  -D  225  -N  22500  -n  25000  -L  15  -S0  -s  0
+ 
+  FSMark is a more realistic indicator of metadata intensive workloads.
 
 
-Now my problem:
-I defined a userquota (for each, it=B4s our login server) with a =
+===========================================================
+Machine:	arnold
+Result:		http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-metadata-xfs/arnold/comparison.html
+Arch:		x86
+CPUs:		1 socket, 2 threads
+Model:		Pentium 4
+Disk:		Single Rotary Disk
+Status:		Great
+===========================================================
 
-soft-/hardlimit of 10/12GB
-Now I have a few users where the listet used quota is different from the =
+dbench
+------
+  XFS is showing steady improvements with a large gain for single client
+  in 2.6.39 and more or less retained since then. This is also true for
+  higher number of clients although 64 clients was suspiciously poor even
+  though 128 clients looked better. I didn't re-examine the raw data to
+  see why.
 
-real amount of data in ther folders.
+  In general, dbench is looking very good.
 
-Example1: xfs_quota -x -c "quota -uh bthoma" /data
-Disk quotas for User bthoma (343)
-Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
-/dev/drbd0    10,1G    12G    15G  00 [------] /data
+fsmark-single
+-------------
+  Again, this is looking good. Files/sec has improved slightly with the
+  exception of a small dip in 3.2 and 3.3 which may be due to IO-Less
+  dirty throttling.
 
-but:
-du -csh /data/user/bthoma
-8,7G    /data/user/bthoma
-8,7G    insgesamt
+  Overhead measurements are a bit all over the place. Not clear if
+  this is cause for concern or not.
 
-Example2:
-xfs_quota -x -c "quota -uh lindau" /data
-Disk quotas for User lindau (320)
-Filesystem   Blocks  Quota  Limit Warn/Time    Mounted on
-/dev/drbd0    13,5G    20G    22G  00 [------] /data
+fsmark-threaded
+---------------
+  Improved since 2.6.32 and has been steadily good for some time. Overhead
+  measurements are all over the place. Again, not clear if this is a cause
+  for concern.
 
-but:
-du -csh /data/user/lindau
-17G     /data/user/lindau
-17G     insgesamt
+==========================================================
+Machine:	hydra
+Result:		http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-metadata-ext3/hydra/comparison.html
+Arch:		x86-64
+CPUs:		1 socket, 4 threads
+Model:		AMD Phenom II X4 940
+Disk:		Single Rotary Disk
+Status:		Ok
+==========================================================
 
-I have no clue how to "refresh" the quota database,
-the quick n dirty solution was to set a higher quota for the affected =
+dbench
+------
+  The results here look very different to the arnold machine. This is curious
+  because the disks have similar size and performance characteristics. It is
+  doubtful that the difference is between 32 bit and 64 bit architectures.
+  The discrepency may be more due to the different number of CPUs and how
+  XFS does locking. One possibility is that fewer CPUs has the side-effect
+  of better batching of some operations but this is a case.
 
-users, that they are able to continue with working.
-Some reached their quota limit (like in Example one)
+  Figures areis showing that throughput is worse and highly variable in
+  3.4 for single clients. For higher number of clients figures look better
+  overall. There was a dip in 3.1-based kernels though for an unknown
+  reason. This does not exactly correlate with the ext3 figures although
+  it showed a dip in performance at 3.2.
 
-at least:
-xfs_db frag -v:
-actual 3996075, ideal 3118453, fragmentation factor 21.96%
+fsmark-single
+-------------
+  While performance is better than 2.6.32, there was a dip in performance
+  in 3.3 and a very large dip in 3.4. 
 
-Any Ideas?
-Best regards
+fsmark-threaded
+---------------
+  The same dip in 3.4 is visibile when multiple threads are used but it is
+  not as severe.
 
-Marc
+==========================================================
+Machine:	sandy
+Result:		http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-metadata-ext3/sandy/comparison.html
+Arch:		x86-64
+CPUs:		1 socket, 8 threads
+Model:		Intel Core i7-2600
+Disk:		Single Rotary Disk
+Status:		Fine
+==========================================================
+
+dbench
+------
+ Like seen on other filesystems, this data shows that there was a large dip
+ in performance around 3.2 for single threads. Unlike the hydra machine,
+ this was recovered in 3.4. As higher number of threads are used the gains
+ and losses are inconsistent making it hard to draw a solid conclusion.
+
+fsmark-single
+-------------
+  This was doing great until 3.4 where there is a large drop.
+
+fsmark-threaded
+---------------
+  Unlike the single threaded case, things are looking great here.
+
+-- 
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
