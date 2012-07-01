@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q61NlDCC138286 for <xfs@oss.sgi.com>; Sun, 1 Jul 2012 18:47:13 -0500
+	q61Nt2n4138818 for <xfs@oss.sgi.com>; Sun, 1 Jul 2012 18:55:02 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	5XPx79RimKQj6UGO for <xfs@oss.sgi.com>;
-	Sun, 01 Jul 2012 16:47:11 -0700 (PDT)
-Date: Mon, 2 Jul 2012 09:47:07 +1000
+	zmxyQsbTijf9yZIm for <xfs@oss.sgi.com>;
+	Sun, 01 Jul 2012 16:55:01 -0700 (PDT)
+Date: Mon, 2 Jul 2012 09:54:58 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: rename xfs_fs_* to xfs_*
-Message-ID: <20120701234707.GL19223@dastard>
-References: <1340816243-6177-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<1340993202-5560-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<1340993202-5560-2-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: Re: [MMTests] IO metadata on XFS
+Message-ID: <20120701235458.GM19223@dastard>
+References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
+	<20120629112505.GF14154@suse.de>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1340993202-5560-2-git-send-email-gaowanlong@cn.fujitsu.com>
+In-Reply-To: <20120629112505.GF14154@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,82 +27,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, XFS <xfs@oss.sgi.com>
+To: Mel Gorman <mgorman@suse.de>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Sat, Jun 30, 2012 at 02:06:42AM +0800, Wanlong Gao wrote:
-> s/xfs_fs_/xfs_/
-> This too long name is unnecessary.
+On Fri, Jun 29, 2012 at 12:25:06PM +0100, Mel Gorman wrote:
+> Configuration:	global-dhp__io-metadata-xfs
+> Benchmarks:	dbench3, fsmark-single, fsmark-threaded
+> 
+> Summary
+> =======
+> Most of the figures look good and in general there has been consistent good
+> performance from XFS. However, fsmark-single is showing a severe performance
+> dip in a few cases somewhere between 3.1 and 3.4. fs-mark running a single
+> thread took a particularly bad dive in 3.4 for two machines that is worth
+> examining closer.
 
-NACK. Not the right way to approach the problem.
+That will be caused by the fact we changed all the metadata updates
+to be logged, which means a transaction every time .dirty_inode is
+called.
 
-Yes, there are a couple of places where this could be done, but most
-of the transformations, IMO, are wrong and remove critical
-information from the namespace.
+This should mostly go away when XFS is converted to use .update_time
+rather than .dirty_inode to only issue transactions when the VFS
+updates the atime rather than every .dirty_inode call...
 
-Firstly, we want to get rid of the xfs_fs_subr.c wrappers and
-replace them with the native linux functions, not move them around.
+> Unfortunately it is harder to easy conclusions as the
+> gains/losses are not consistent between machines which may be related to
+> the available number of CPU threads.
 
-Secondly, transformations like xfs_fs_geometry to xfs_geometry are
-incorrect - the function is returning the filesystem geometry, so
-the name "fs_geometry" is actually correct. Similar for
-xfs_fs_writeable, xfs_fs_show_options and so on.
-
-Finally:
-
->  const struct export_operations xfs_export_operations = {
-> -	.encode_fh		= xfs_fs_encode_fh,
-> -	.fh_to_dentry		= xfs_fs_fh_to_dentry,
-> -	.fh_to_parent		= xfs_fs_fh_to_parent,
-> -	.get_parent		= xfs_fs_get_parent,
-> -	.commit_metadata	= xfs_fs_nfs_commit_metadata,
-> +	.encode_fh		= xfs_encode_fh,
-> +	.fh_to_dentry		= xfs_fh_to_dentry,
-> +	.fh_to_parent		= xfs_fh_to_parent,
-> +	.get_parent		= xfs_get_parent,
-> +	.commit_metadata	= xfs_nfs_commit_metadata,
-
-....
-
->  static const struct super_operations xfs_super_operations = {
-> -	.alloc_inode		= xfs_fs_alloc_inode,
-> -	.destroy_inode		= xfs_fs_destroy_inode,
-> -	.dirty_inode		= xfs_fs_dirty_inode,
-> -	.evict_inode		= xfs_fs_evict_inode,
-> -	.drop_inode		= xfs_fs_drop_inode,
-> -	.put_super		= xfs_fs_put_super,
-> -	.sync_fs		= xfs_fs_sync_fs,
-> -	.freeze_fs		= xfs_fs_freeze,
-> -	.unfreeze_fs		= xfs_fs_unfreeze,
-> -	.statfs			= xfs_fs_statfs,
-> -	.remount_fs		= xfs_fs_remount,
-> -	.show_options		= xfs_fs_show_options,
-> -	.nr_cached_objects	= xfs_fs_nr_cached_objects,
-> -	.free_cached_objects	= xfs_fs_free_cached_objects,
-> +	.alloc_inode		= xfs_alloc_inode,
-> +	.destroy_inode		= xfs_destroy_inode,
-> +	.dirty_inode		= xfs_dirty_inode,
-> +	.evict_inode		= xfs_evict_inode,
-> +	.drop_inode		= xfs_drop_inode,
-> +	.put_super		= xfs_put_super,
-> +	.sync_fs		= xfs_sync_fs,
-> +	.freeze_fs		= xfs_freeze,
-> +	.unfreeze_fs		= xfs_unfreeze,
-> +	.statfs			= xfs_statfs,
-> +	.remount_fs		= xfs_remount,
-> +	.show_options		= xfs_show_options,
-> +	.nr_cached_objects	= xfs_nr_cached_objects,
-> +	.free_cached_objects	= xfs_free_cached_objects,
->  };
-
-These should indicate that there is a valid, consistent namespacing
-here to indicate layering of the the code. i.e. that xfs_fs_*
-functions are typically VFS method functions of some kind. 
-
-> -static struct file_system_type xfs_fs_type = {
-> +static struct file_system_type xfs_type = {
-
-And that is a clear demonstration of my second point....
+It increases the CPU overhead (dirty_inode can be called up to 4
+times per write(2) call, IIRC), so with limited numbers of
+threads/limited CPU power it will result in lower performance. Where
+you have lots of CPU power, there will be little difference in
+performance...
 
 Cheers,
 
