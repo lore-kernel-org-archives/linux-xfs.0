@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q623iiab155387 for <xfs@oss.sgi.com>; Sun, 1 Jul 2012 22:44:45 -0500
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id kfrHbb6hMOAr1whJ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 01 Jul 2012 20:44:43 -0700 (PDT)
-Message-ID: <4FF11925.10301@tlinx.org>
-Date: Sun, 01 Jul 2012 20:44:37 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	q626QS8F173508 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 01:26:28 -0500
+Date: Mon, 2 Jul 2012 02:26:25 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/2 V2] xfs: cleanup the mount options
+Message-ID: <20120702062625.GB20804@infradead.org>
+References: <1340816243-6177-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<1340993202-5560-1-git-send-email-gaowanlong@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: Re: Strange case of deleting lots of files and "df" not recognizing
-	it....(unless I umount/mount) the disk...
-References: <4FE7FDF4.6080506@tlinx.org> <20120626023302.GD19223@dastard>
-	<20120626093323.3cb0cc18@galadriel.home>
-	<20120702033014.GP19223@dastard>
-In-Reply-To: <20120702033014.GP19223@dastard>
+Content-Disposition: inline
+In-Reply-To: <1340993202-5560-1-git-send-email-gaowanlong@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,41 +19,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, XFS <xfs@oss.sgi.com>
 
-Well, in my case, may be a while, it is usually every few months when I
-clear out about 30% of a large (~11T) volume on my backup disk...
+On Sat, Jun 30, 2012 at 02:06:41AM +0800, Wanlong Gao wrote:
+> remove the mount options macro, use tokens instead.
+> 
+> CC: Ben Myers <bpm@sgi.com>
+> CC: Christoph Hellwig <hch@infradead.org>
+> CC: Dave Chinner <david@fromorbit.com>
+> CC: Zach Brown <zab@zabbo.net>
+> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+> ---
+>  fs/xfs/xfs_super.c |  523 ++++++++++++++++++++++++++++------------------------
+>  1 file changed, 287 insertions(+), 236 deletions(-)
 
-It only grows slowly as I make backups on it...then I delete maybe ...
-60-100 files worth of backups (xfsdumps)....but for me dropping
-the cache did work so it may not be the same problem.
+This looks pretty good, some minor comments below:
 
+>  /*
+>   * Table driven mount option parser.
+>   */
 
+This comment can go now that there is only a single mount option parser.
 
-Dave Chinner wrote:
-> On Tue, Jun 26, 2012 at 09:33:23AM +0200, Emmanuel Florac wrote:
->> Le Tue, 26 Jun 2012 12:33:02 +1000 vous =E9criviez:
->>
->>> As ben said, the last reference has to go away before the space is
->>> freed. lsof is your friend.
->> I just had the same problem recently, but lsof reported zero open files
->> on the volume. umount/mount worked though, I didn't thought the cache
->> trick would be enough.
-> =
+> +free_string:
+> +	kfree(string);
+> +	string = NULL;
+> +free_orig:
+> +	kfree(orig);
+> +	return ret;
+> +}
 
-> I think that we need a reproducable test case for this issue before
-> we'll be able to make any progress on it, then....
-> =
+no need to set string to NULL just before returning.
 
-> Cheers,
-> =
+> -	static struct proc_xfs_info xfs_info_set[] = {
+> -		/* the few simple ones we can get from the mount struct */
+> -		{ XFS_MOUNT_IKEEP,		"," MNTOPT_IKEEP },
+> -		{ XFS_MOUNT_WSYNC,		"," MNTOPT_WSYNC },
+> -		{ XFS_MOUNT_NOALIGN,		"," MNTOPT_NOALIGN },
+> -		{ XFS_MOUNT_SWALLOC,		"," MNTOPT_SWALLOC },
+> -		{ XFS_MOUNT_NOUUID,		"," MNTOPT_NOUUID },
+> -		{ XFS_MOUNT_NORECOVERY,		"," MNTOPT_NORECOVERY },
+> -		{ XFS_MOUNT_ATTR2,		"," MNTOPT_ATTR2 },
+> -		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
+> -		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
+> -		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
+> -		{ 0, NULL }
+> -	};
+> -	static struct proc_xfs_info xfs_info_unset[] = {
+> -		/* the few simple ones we can get from the mount struct */
+> -		{ XFS_MOUNT_COMPAT_IOSIZE,	"," MNTOPT_LARGEIO },
+> -		{ XFS_MOUNT_BARRIER,		"," MNTOPT_NOBARRIER },
+> -		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_64BITINODE },
+> -		{ 0, NULL }
+> -	};
 
-> Dave.
+I can't find any good reason to remove these tables, just replace the
+MNTOPT_ constants with the plain strings.
 
 _______________________________________________
 xfs mailing list
