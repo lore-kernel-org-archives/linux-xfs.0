@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q62DKcAX223983 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 08:20:38 -0500
-Received: from mail-wi0-f169.google.com (mail-wi0-f169.google.com
-	[209.85.212.169]) by cuda.sgi.com with ESMTP id
-	610vLj2gBcEq44iB (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 02 Jul 2012 06:20:37 -0700 (PDT)
-Received: by wibhm2 with SMTP id hm2so2854154wib.2
-	for <xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:36 -0700 (PDT)
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 3/3] block: split discard into aligned requests
-Date: Mon,  2 Jul 2012 15:20:25 +0200
-Message-Id: <1341235225-27551-4-git-send-email-pbonzini@redhat.com>
-In-Reply-To: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
-References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
+	q62DV2mt225034 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 08:31:02 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id 1TXT3ZRl7WgWpO5q (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 02 Jul 2012 06:31:01 -0700 (PDT)
+Date: Mon, 2 Jul 2012 14:30:57 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [MMTests] IO metadata on XFS
+Message-ID: <20120702133057.GR14154@suse.de>
+References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
+	<20120629112505.GF14154@suse.de> <20120701235458.GM19223@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120701235458.GM19223@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,120 +23,64 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, snitzer@redhat.com, martin.petersen@oracle.com, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-When a disk has large discard_granularity and small max_discard_sectors,
-discards are not split with optimal alignment.  In the limit case of
-discard_granularity == max_discard_sectors, all requests might end up
-with incorrect alignment, so that logical blocks are discarded at all.
+On Mon, Jul 02, 2012 at 09:54:58AM +1000, Dave Chinner wrote:
+> On Fri, Jun 29, 2012 at 12:25:06PM +0100, Mel Gorman wrote:
+> > Configuration:	global-dhp__io-metadata-xfs
+> > Benchmarks:	dbench3, fsmark-single, fsmark-threaded
+> > 
+> > Summary
+> > =======
+> > Most of the figures look good and in general there has been consistent good
+> > performance from XFS. However, fsmark-single is showing a severe performance
+> > dip in a few cases somewhere between 3.1 and 3.4. fs-mark running a single
+> > thread took a particularly bad dive in 3.4 for two machines that is worth
+> > examining closer.
+> 
+> That will be caused by the fact we changed all the metadata updates
+> to be logged, which means a transaction every time .dirty_inode is
+> called.
+> 
 
-Here is an example that shows the condition handled in the patch.
-Suppose discard_granularity == 64, max_discard_sectors == 128,
-discard_alignment == 0 (in sectors).  A request that is submitted for
-256 sectors 2..257 will be split in two: 2..129, 130..257.  However,
-only 2 aligned blocks out of 3 are included in the request; 128..191 may
-be left intact and not discarded.  With this patch, the first request
-will be truncated to ensure good alignment of what's left, and the split
-will be 2..127, 128..255, 256..257.
+Ok.
 
-At most one extra request will be introduced, because the first request
-will be reduced by at most granularity-1 sectors, and granularity
-must be less than max_discard_sectors.  Subsequent requests will run
-on round_down(max_discard_sectors, granularity) sectors, as in the
-current code.
+> This should mostly go away when XFS is converted to use .update_time
+> rather than .dirty_inode to only issue transactions when the VFS
+> updates the atime rather than every .dirty_inode call...
+> 
 
-The patch will also take into account the discard_alignment.
+Sound. I'll keep an eye out for it in the future.  If you want to
+use the same test configuration then be sure you set the partition
+configuration correctly. For example, these are the values I used for
+config-global-dhp__io-metadata configuration file.
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
-        v1->v2: fixed line length
+export TESTDISK_PARTITION=/dev/sda6
+export TESTDISK_FILESYSTEM=xfs
+export TESTDISK_MKFS_PARAM="-f -d agcount=8"
+export TESTDISK_MOUNT_ARGS=inode64,delaylog,logbsize=262144,nobarrier
 
- block/blk-lib.c |   34 ++++++++++++++++++++++++----------
- 1 files changed, 24 insertions(+), 10 deletions(-)
+> > Unfortunately it is harder to easy conclusions as the
+> > gains/losses are not consistent between machines which may be related to
+> > the available number of CPU threads.
+> 
+> It increases the CPU overhead (dirty_inode can be called up to 4
+> times per write(2) call, IIRC), so with limited numbers of
+> threads/limited CPU power it will result in lower performance. Where
+> you have lots of CPU power, there will be little difference in
+> performance...
+> 
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 16b06f6..b2bde5c 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -44,7 +44,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	struct request_queue *q = bdev_get_queue(bdev);
- 	int type = REQ_WRITE | REQ_DISCARD;
- 	unsigned int max_discard_sectors;
--	unsigned int granularity;
-+	unsigned int granularity, alignment, mask;
- 	struct bio_batch bb;
- 	struct bio *bio;
- 	int ret = 0;
-@@ -57,10 +57,12 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 
- 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
- 	granularity = max(q->limits.discard_granularity >> 9, 1U);
-+	mask = granularity - 1;
-+	alignment = (q->limits.discard_alignment >> 9) & mask;
- 
- 	/*
- 	 * Ensure that max_discard_sectors is of the proper
--	 * granularity
-+	 * granularity, so that requests stay aligned after a split.
- 	 */
- 	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
- 	max_discard_sectors = round_down(max_discard_sectors, granularity);
-@@ -80,25 +82,37 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	bb.wait = &wait;
- 
- 	while (nr_sects) {
-+		unsigned int req_sects;
-+		sector_t end_sect;
-+
- 		bio = bio_alloc(gfp_mask, 1);
- 		if (!bio) {
- 			ret = -ENOMEM;
- 			break;
- 		}
- 
-+		req_sects = min_t(sector_t, nr_sects, max_discard_sectors);
-+
-+		/*
-+		 * If splitting a request, and the next starting sector would be
-+		 * misaligned, stop the discard at the previous aligned sector.
-+		 */
-+		end_sect = sector + req_sects;
-+		if (req_sects < nr_sects && (end_sect & mask) != alignment) {
-+			end_sect =
-+				round_down(end_sect - alignment, granularity)
-+				+ alignment;
-+			req_sects = end_sect - sector;
-+		}
-+
- 		bio->bi_sector = sector;
- 		bio->bi_end_io = bio_batch_end_io;
- 		bio->bi_bdev = bdev;
- 		bio->bi_private = &bb;
- 
--		if (nr_sects > max_discard_sectors) {
--			bio->bi_size = max_discard_sectors << 9;
--			nr_sects -= max_discard_sectors;
--			sector += max_discard_sectors;
--		} else {
--			bio->bi_size = nr_sects << 9;
--			nr_sects = 0;
--		}
-+		bio->bi_size = req_sects << 9;
-+		nr_sects -= req_sects;
-+		sector = end_sect;
- 
- 		atomic_inc(&bb.done);
- 		submit_bio(type, bio);
+Thanks for that clarification.
+
 -- 
-1.7.1
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
