@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q62DKZxO223955 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 08:20:35 -0500
+	q62DKaZD223962 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 08:20:36 -0500
 Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
-	[74.125.82.51]) by cuda.sgi.com with ESMTP id K5vtpZsNVHdhsNg0
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id FCnt0s5Vk3L81FCN
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:34 -0700 (PDT)
-Received: by wgbed3 with SMTP id ed3so3692654wgb.32
-	for <xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:32 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:35 -0700 (PDT)
+Received: by wgbed3 with SMTP id ed3so3692674wgb.32
+	for <xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:34 -0700 (PDT)
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 1/3] block: add sysfs entry for discard_alignment
-Date: Mon,  2 Jul 2012 15:20:23 +0200
-Message-Id: <1341235225-27551-2-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 2/3] block: reorganize rounding of max_discard_sectors
+Date: Mon,  2 Jul 2012 15:20:24 +0200
+Message-Id: <1341235225-27551-3-git-send-email-pbonzini@redhat.com>
 In-Reply-To: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
 References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -30,51 +30,53 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: axboe@kernel.dk, snitzer@redhat.com, martin.petersen@oracle.com, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de
 
-The next patches will actually use the alignment, expose it in sysfs
-for ease of debugging.
+Mostly a preparation for the next patch.
+
+In principle this fixes an infinite loop if max_discard_sectors < granularity,
+but that really shouldn't happen.
 
 Cc: Jens Axboe <axboe@kernel.dk>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
 ---
- block/blk-sysfs.c |   11 +++++++++++
- 1 files changed, 11 insertions(+), 0 deletions(-)
+ block/blk-lib.c |    9 +++++----
+ 1 files changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index aa41b47..95e919c 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -146,6 +146,11 @@ static ssize_t queue_io_opt_show(struct request_queue *q, char *page)
- 	return queue_var_show(queue_io_opt(q), page);
- }
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index 2b461b4..16b06f6 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -44,6 +44,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	struct request_queue *q = bdev_get_queue(bdev);
+ 	int type = REQ_WRITE | REQ_DISCARD;
+ 	unsigned int max_discard_sectors;
++	unsigned int granularity;
+ 	struct bio_batch bb;
+ 	struct bio *bio;
+ 	int ret = 0;
+@@ -54,18 +55,18 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	if (!blk_queue_discard(q))
+ 		return -EOPNOTSUPP;
  
-+static ssize_t queue_discard_alignment_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->limits.discard_alignment, page);
-+}
++	/* Zero-sector (unknown) and one-sector granularities are the same.  */
++	granularity = max(q->limits.discard_granularity >> 9, 1U);
 +
- static ssize_t queue_discard_granularity_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show(q->limits.discard_granularity, page);
-@@ -343,6 +348,11 @@ static struct queue_sysfs_entry queue_io_opt_entry = {
- 	.show = queue_io_opt_show,
- };
+ 	/*
+ 	 * Ensure that max_discard_sectors is of the proper
+ 	 * granularity
+ 	 */
+ 	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
++	max_discard_sectors = round_down(max_discard_sectors, granularity);
+ 	if (unlikely(!max_discard_sectors)) {
+ 		/* Avoid infinite loop below. Being cautious never hurts. */
+ 		return -EOPNOTSUPP;
+-	} else if (q->limits.discard_granularity) {
+-		unsigned int disc_sects = q->limits.discard_granularity >> 9;
+-
+-		max_discard_sectors &= ~(disc_sects - 1);
+ 	}
  
-+static struct queue_sysfs_entry queue_discard_alignment_entry = {
-+	.attr = {.name = "discard_alignment", .mode = S_IRUGO },
-+	.show = queue_discard_alignment_show,
-+};
-+
- static struct queue_sysfs_entry queue_discard_granularity_entry = {
- 	.attr = {.name = "discard_granularity", .mode = S_IRUGO },
- 	.show = queue_discard_granularity_show,
-@@ -403,6 +413,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_io_min_entry.attr,
- 	&queue_io_opt_entry.attr,
- 	&queue_discard_granularity_entry.attr,
-+	&queue_discard_alignment_entry.attr,
- 	&queue_discard_max_entry.attr,
- 	&queue_discard_zeroes_data_entry.attr,
- 	&queue_nonrot_entry.attr,
+ 	if (flags & BLKDEV_DISCARD_SECURE) {
 -- 
 1.7.1
 
