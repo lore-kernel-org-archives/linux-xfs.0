@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q626QS8F173508 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 01:26:28 -0500
-Date: Mon, 2 Jul 2012 02:26:25 -0400
+	q626WUwV174486 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 01:32:31 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	628Xmx2ARpvro3oy (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 01 Jul 2012 23:32:30 -0700 (PDT)
+Date: Mon, 2 Jul 2012 02:32:26 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/2 V2] xfs: cleanup the mount options
-Message-ID: <20120702062625.GB20804@infradead.org>
-References: <1340816243-6177-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<1340993202-5560-1-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: Re: [MMTests] IO metadata on XFS
+Message-ID: <20120702063226.GA32151@infradead.org>
+References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
+	<20120629112505.GF14154@suse.de> <20120701235458.GM19223@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1340993202-5560-1-git-send-email-gaowanlong@cn.fujitsu.com>
+In-Reply-To: <20120701235458.GM19223@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,63 +29,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, XFS <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, xfs@oss.sgi.com, Mel Gorman <mgorman@suse.de>, linux-kernel@vger.kernel.org
 
-On Sat, Jun 30, 2012 at 02:06:41AM +0800, Wanlong Gao wrote:
-> remove the mount options macro, use tokens instead.
+On Mon, Jul 02, 2012 at 09:54:58AM +1000, Dave Chinner wrote:
+> That will be caused by the fact we changed all the metadata updates
+> to be logged, which means a transaction every time .dirty_inode is
+> called.
 > 
-> CC: Ben Myers <bpm@sgi.com>
-> CC: Christoph Hellwig <hch@infradead.org>
-> CC: Dave Chinner <david@fromorbit.com>
-> CC: Zach Brown <zab@zabbo.net>
-> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-> ---
->  fs/xfs/xfs_super.c |  523 ++++++++++++++++++++++++++++------------------------
->  1 file changed, 287 insertions(+), 236 deletions(-)
+> This should mostly go away when XFS is converted to use .update_time
+> rather than .dirty_inode to only issue transactions when the VFS
+> updates the atime rather than every .dirty_inode call...
 
-This looks pretty good, some minor comments below:
+I think the patch to do that conversion still needs review..
 
->  /*
->   * Table driven mount option parser.
->   */
+> It increases the CPU overhead (dirty_inode can be called up to 4
+> times per write(2) call, IIRC), so with limited numbers of
+> threads/limited CPU power it will result in lower performance. Where
+> you have lots of CPU power, there will be little difference in
+> performance...
 
-This comment can go now that there is only a single mount option parser.
-
-> +free_string:
-> +	kfree(string);
-> +	string = NULL;
-> +free_orig:
-> +	kfree(orig);
-> +	return ret;
-> +}
-
-no need to set string to NULL just before returning.
-
-> -	static struct proc_xfs_info xfs_info_set[] = {
-> -		/* the few simple ones we can get from the mount struct */
-> -		{ XFS_MOUNT_IKEEP,		"," MNTOPT_IKEEP },
-> -		{ XFS_MOUNT_WSYNC,		"," MNTOPT_WSYNC },
-> -		{ XFS_MOUNT_NOALIGN,		"," MNTOPT_NOALIGN },
-> -		{ XFS_MOUNT_SWALLOC,		"," MNTOPT_SWALLOC },
-> -		{ XFS_MOUNT_NOUUID,		"," MNTOPT_NOUUID },
-> -		{ XFS_MOUNT_NORECOVERY,		"," MNTOPT_NORECOVERY },
-> -		{ XFS_MOUNT_ATTR2,		"," MNTOPT_ATTR2 },
-> -		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
-> -		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
-> -		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
-> -		{ 0, NULL }
-> -	};
-> -	static struct proc_xfs_info xfs_info_unset[] = {
-> -		/* the few simple ones we can get from the mount struct */
-> -		{ XFS_MOUNT_COMPAT_IOSIZE,	"," MNTOPT_LARGEIO },
-> -		{ XFS_MOUNT_BARRIER,		"," MNTOPT_NOBARRIER },
-> -		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_64BITINODE },
-> -		{ 0, NULL }
-> -	};
-
-I can't find any good reason to remove these tables, just replace the
-MNTOPT_ constants with the plain strings.
+When I checked it it could only be called twice, and we'd already
+optimize away the second call.  I'd defintively like to track down where
+the performance changes happend, at least to a major version but even
+better to a -rc or git commit.
 
 _______________________________________________
 xfs mailing list
