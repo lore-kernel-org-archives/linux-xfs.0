@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q62DKXTA223946 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 08:20:33 -0500
-Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id Fl2vquLOejAq2gx6
+	q62DKZxO223955 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 08:20:35 -0500
+Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id K5vtpZsNVHdhsNg0
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:32 -0700 (PDT)
-Received: by werl57 with SMTP id l57so2168937wer.26
-	for <xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:31 -0700 (PDT)
+	<xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:34 -0700 (PDT)
+Received: by wgbed3 with SMTP id ed3so3692654wgb.32
+	for <xfs@oss.sgi.com>; Mon, 02 Jul 2012 06:20:32 -0700 (PDT)
 From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v2 0/3] block: improvements for discard alignment
-Date: Mon,  2 Jul 2012 15:20:22 +0200
-Message-Id: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
+Subject: [PATCH v2 1/3] block: add sysfs entry for discard_alignment
+Date: Mon,  2 Jul 2012 15:20:23 +0200
+Message-Id: <1341235225-27551-2-git-send-email-pbonzini@redhat.com>
+In-Reply-To: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
+References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,33 +30,54 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-kernel@vger.kernel.org
 Cc: axboe@kernel.dk, snitzer@redhat.com, martin.petersen@oracle.com, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de
 
-When a disk has a large discard_granularity, discards are not split with
-optimal alignment; the pessimization gets bigger as discard_granularity
-and max_discard_sectors become closer.
+The next patches will actually use the alignment, expose it in sysfs
+for ease of debugging.
 
-Take the limit case of discard_granularity == max_discard_sectors == 64.
-Then, if a request is submitted for 256 sectors 2..257 it will be split
-like this: 2..65, 66..129, 130..193, 194..257.  None of these requests
-is aligned, so in fact you might end up with no discarded logical blocks
-at all.  With this patch, the split will be 2..63, 64..127, 128..191,
-192..255, 256..257.  The patches also take the discard_alignment into
-consideration.
-
-For ease of debugging, patch 1 adds a sysfs entry for discard_alignment.
-Patch 2 adjusts the computation of the granularity-adjusted
-max_discard_sectors so that it prepares for the new code in patch 3,
-which 3 actually adjusts the split.
-
-v1->v2: added patch 1, fixed line length
-
-Paolo Bonzini (3):
-  block: add sysfs entry for discard_alignment
-  block: reorganize rounding of max_discard_sectors
-  block: split discard into aligned requests
-
- block/blk-lib.c   |   41 ++++++++++++++++++++++++++++-------------
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
+---
  block/blk-sysfs.c |   11 +++++++++++
- 2 files changed, 39 insertions(+), 13 deletions(-)
+ 1 files changed, 11 insertions(+), 0 deletions(-)
+
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index aa41b47..95e919c 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -146,6 +146,11 @@ static ssize_t queue_io_opt_show(struct request_queue *q, char *page)
+ 	return queue_var_show(queue_io_opt(q), page);
+ }
+ 
++static ssize_t queue_discard_alignment_show(struct request_queue *q, char *page)
++{
++	return queue_var_show(q->limits.discard_alignment, page);
++}
++
+ static ssize_t queue_discard_granularity_show(struct request_queue *q, char *page)
+ {
+ 	return queue_var_show(q->limits.discard_granularity, page);
+@@ -343,6 +348,11 @@ static struct queue_sysfs_entry queue_io_opt_entry = {
+ 	.show = queue_io_opt_show,
+ };
+ 
++static struct queue_sysfs_entry queue_discard_alignment_entry = {
++	.attr = {.name = "discard_alignment", .mode = S_IRUGO },
++	.show = queue_discard_alignment_show,
++};
++
+ static struct queue_sysfs_entry queue_discard_granularity_entry = {
+ 	.attr = {.name = "discard_granularity", .mode = S_IRUGO },
+ 	.show = queue_discard_granularity_show,
+@@ -403,6 +413,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_io_min_entry.attr,
+ 	&queue_io_opt_entry.attr,
+ 	&queue_discard_granularity_entry.attr,
++	&queue_discard_alignment_entry.attr,
+ 	&queue_discard_max_entry.attr,
+ 	&queue_discard_zeroes_data_entry.attr,
+ 	&queue_nonrot_entry.attr,
+-- 
+1.7.1
+
 
 _______________________________________________
 xfs mailing list
