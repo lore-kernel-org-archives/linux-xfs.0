@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q61Nt2n4138818 for <xfs@oss.sgi.com>; Sun, 1 Jul 2012 18:55:02 -0500
+	q6207G8i139731 for <xfs@oss.sgi.com>; Sun, 1 Jul 2012 19:07:16 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	zmxyQsbTijf9yZIm for <xfs@oss.sgi.com>;
-	Sun, 01 Jul 2012 16:55:01 -0700 (PDT)
-Date: Mon, 2 Jul 2012 09:54:58 +1000
+	sdSAcW9AUerZDvyY for <xfs@oss.sgi.com>;
+	Sun, 01 Jul 2012 17:07:15 -0700 (PDT)
+Date: Mon, 2 Jul 2012 10:07:12 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [MMTests] IO metadata on XFS
-Message-ID: <20120701235458.GM19223@dastard>
-References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
-	<20120629112505.GF14154@suse.de>
+Subject: Re: [PATCH v3] xfs: re-enable xfsaild idle mode and fix associated
+	races
+Message-ID: <20120702000712.GN19223@dastard>
+References: <1340880776-45730-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120629112505.GF14154@suse.de>
+In-Reply-To: <1340880776-45730-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,42 +27,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Jun 29, 2012 at 12:25:06PM +0100, Mel Gorman wrote:
-> Configuration:	global-dhp__io-metadata-xfs
-> Benchmarks:	dbench3, fsmark-single, fsmark-threaded
+On Thu, Jun 28, 2012 at 06:52:56AM -0400, Brian Foster wrote:
+> xfsaild idle mode logic currently leads to a couple hangs:
 > 
-> Summary
-> =======
-> Most of the figures look good and in general there has been consistent good
-> performance from XFS. However, fsmark-single is showing a severe performance
-> dip in a few cases somewhere between 3.1 and 3.4. fs-mark running a single
-> thread took a particularly bad dive in 3.4 for two machines that is worth
-> examining closer.
+> 1.) If xfsaild is rescheduled in during an incremental scan
+>     (i.e., tout != 0) and the target has been updated since
+>     the previous run, we can hit the new target and go into
+>     idle mode with a still populated ail.
+> 2.) A wake up is only issued when the target is pushed forward.
+>     The wake up can race with xfsaild if it is currently in the
+>     process of entering idle mode, causing future wake up
+>     events to be lost.
+> 
+> These hangs have been reproduced and verified as fixed by
+> running xfstests 273 in a loop on a slightly modified upstream
+> kernel. The kernel is modified to re-enable idle mode as
+> previously implemented (when count == 0) and with a revert of
+> commit 670ce93f, which includes performance improvements that
+> make this harder to reproduce.
+> 
+> The solution, the algorithm for which has been outlined by
+> Dave Chinner, is to modify xfsaild to enter idle mode only when
+> the ail is empty and the push target has not been moved forward
+> since the last push.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-That will be caused by the fact we changed all the metadata updates
-to be logged, which means a transaction every time .dirty_inode is
-called.
+Looks OK to me, and hasn't caused any problems here.
 
-This should mostly go away when XFS is converted to use .update_time
-rather than .dirty_inode to only issue transactions when the VFS
-updates the atime rather than every .dirty_inode call...
+Final question - did you confirm with powertop that the xfsaild is
+no longer causing wakeups a minute or two after you stop writing to
+the filesystem? (I haven't yet)
 
-> Unfortunately it is harder to easy conclusions as the
-> gains/losses are not consistent between machines which may be related to
-> the available number of CPU threads.
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-It increases the CPU overhead (dirty_inode can be called up to 4
-times per write(2) call, IIRC), so with limited numbers of
-threads/limited CPU power it will result in lower performance. Where
-you have lots of CPU power, there will be little difference in
-performance...
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
