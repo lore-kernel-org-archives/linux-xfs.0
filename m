@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q630T0bX030520 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 19:29:00 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	x858NabdElyq02RH for <xfs@oss.sgi.com>;
-	Mon, 02 Jul 2012 17:28:58 -0700 (PDT)
-Date: Tue, 3 Jul 2012 10:28:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: do not call xfs_bdstrat_cb in
-	xfs_buf_iodone_callbacks
-Message-ID: <20120703002857.GY19223@dastard>
-References: <20120702100003.960640484@bombadil.infradead.org>
-	<20120702100034.921366796@bombadil.infradead.org>
+	q631Qamn036407 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 20:26:37 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id YsNeJRT0GGypBo0O for
+	<xfs@oss.sgi.com>; Mon, 02 Jul 2012 18:26:35 -0700 (PDT)
+Date: Mon, 2 Jul 2012 21:26:28 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: xfs_btree_cur leak with 3.5-rc4
+Message-ID: <20120703012628.GA5710@redhat.com>
+References: <20120702191412.GA3617@redhat.com> <20120703002611.GW19223@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120702100034.921366796@bombadil.infradead.org>
+In-Reply-To: <20120703002611.GW19223@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,26 +25,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: dm-devel@redhat.com, xfs@oss.sgi.com
 
-On Mon, Jul 02, 2012 at 06:00:05AM -0400, Christoph Hellwig wrote:
-> xfs_bdstrat_cb only adds a check for a shutdown filesystem over xfs_buf_iorequest,
-> but xfs_buf_iodone_callbacks just checked for a shut down filesystem a little
-> earlier.  In addition the shutdown handling in xfs_bdstrat_cb is not very suitable
-> for this caller.
+On Mon, Jul 02 2012 at  8:26pm -0400,
+Dave Chinner <david@fromorbit.com> wrote:
 
-Makes sense - I have a patch locally that does this as part of a
-xfs_buf_iorequest(bp, blkno, length) conversion to get rid of
-XFS_BUF_SETADDR()....
+> On Mon, Jul 02, 2012 at 03:14:12PM -0400, Mike Snitzer wrote:
+> > I get kmemleak reports against XFS when I run the thinp-test-suite
+> > against 3.5-rc4.  I didn't see any XFS leaks with 3.4.
+> 
+> Already fixed in 3.5-rc5:
+> 
+> 76d0953 xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+Odd, I already have that fix (as it was included in 3.5-rc4).
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--- 
-Dave Chinner
-david@fromorbit.com
+I'll double check though I see the leak though.
 
 _______________________________________________
 xfs mailing list
