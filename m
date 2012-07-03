@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q63GK2dA105747 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 11:20:02 -0500
+	q63GLrCV105937 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 11:21:53 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	PUxboyFUaYtEyCK4 (version=TLSv1 cipher=AES256-SHA bits=256
+	3FMRHR5JBD26g3wc (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Jul 2012 09:20:01 -0700 (PDT)
-Date: Tue, 3 Jul 2012 12:20:00 -0400
+	Tue, 03 Jul 2012 09:21:52 -0700 (PDT)
+Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
+	Linux)) id 1Sm5rL-0004Np-3x
+	for xfs@oss.sgi.com; Tue, 03 Jul 2012 16:21:51 +0000
+Date: Tue, 3 Jul 2012 12:21:51 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH] xfs: handle EOF correctly in xfs_vm_writepage
-Message-ID: <20120703162000.GA13016@infradead.org>
+Subject: [PATCH 2/2] xfs: remove xfs_inotobp
+Message-ID: <20120703162151.GB16775@infradead.org>
+References: <20120703162122.GA16775@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20120703162122.GA16775@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,56 +32,126 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: linux-fsdevel@vger.kernel.org, Yongqiang Yang <xiaoqiangnk@gmail.com>
 
-We need to zero out part of a page which beyond EOF before setting uptodate,
-otherwise, mapread or write will see non-zero data beyond EOF.
-
-Based on the code in fs/buffer.c and the following ext4 commit:
-
-  ext4: handle EOF correctly in ext4_bio_write_page()
-
-And yes, I wish we had a good test case for it.
+There is no need to keep this helper around, opencoding it in the only
+caller is just as clear.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_aops.c |   19 +++++++++++++++++--
- 1 file changed, 17 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_inode.c |   70 ++++++++++++++---------------------------------------
+ fs/xfs/xfs_inode.h |    3 --
+ 2 files changed, 19 insertions(+), 54 deletions(-)
 
-Index: xfs/fs/xfs/xfs_aops.c
+Index: xfs/fs/xfs/xfs_inode.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_aops.c	2012-06-26 23:20:22.286407388 +0200
-+++ xfs/fs/xfs/xfs_aops.c	2012-06-26 23:21:49.323073534 +0200
-@@ -927,11 +927,26 @@ xfs_vm_writepage(
- 	end_index = offset >> PAGE_CACHE_SHIFT;
- 	last_index = (offset - 1) >> PAGE_CACHE_SHIFT;
- 	if (page->index >= end_index) {
--		if ((page->index >= end_index + 1) ||
--		    !(i_size_read(inode) & (PAGE_CACHE_SIZE - 1))) {
-+		unsigned offset_into_page = offset & (PAGE_CACHE_SIZE - 1);
-+
-+		/*
-+		 * Just skip the page if it is fully outside i_size, e.g. due
-+		 * to a truncate operation that is in progress.
-+		 */
-+		if (page->index >= end_index + 1 || offset_into_page == 0) {
- 			unlock_page(page);
- 			return 0;
- 		}
-+
-+		/*
-+		 * The page straddles i_size.  It must be zeroed out on each
-+		 * and every writepage invocation because it may be mmapped.
-+		 * "A file is mapped in multiples of the page size.  For a file
-+		 * that is not a multiple of the  page size, the remaining
-+		 * memory is zeroed when mapped, and writes to that region are
-+		 * not written out to the file."
-+		 */
-+		zero_user_segment(page, offset_into_page, PAGE_CACHE_SIZE);
- 	}
+--- xfs.orig/fs/xfs/xfs_inode.c	2012-07-02 12:14:10.165779019 +0200
++++ xfs/fs/xfs/xfs_inode.c	2012-07-02 12:14:13.402445667 +0200
+@@ -216,47 +216,6 @@ xfs_imap_to_bp(
+ }
  
- 	end_offset = min_t(unsigned long long,
+ /*
+- * This routine is called to map an inode number within a file
+- * system to the buffer containing the on-disk version of the
+- * inode.  It returns a pointer to the buffer containing the
+- * on-disk inode in the bpp parameter, and in the dip parameter
+- * it returns a pointer to the on-disk inode within that buffer.
+- *
+- * If a non-zero error is returned, then the contents of bpp and
+- * dipp are undefined.
+- *
+- * Use xfs_imap() to determine the size and location of the
+- * buffer to read from disk.
+- */
+-int
+-xfs_inotobp(
+-	xfs_mount_t	*mp,
+-	xfs_trans_t	*tp,
+-	xfs_ino_t	ino,
+-	xfs_dinode_t	**dipp,
+-	xfs_buf_t	**bpp,
+-	int		*offset,
+-	uint		imap_flags)
+-{
+-	struct xfs_imap	imap;
+-	xfs_buf_t	*bp;
+-	int		error;
+-
+-	imap.im_blkno = 0;
+-	error = xfs_imap(mp, tp, ino, &imap, imap_flags);
+-	if (error)
+-		return error;
+-
+-	error = xfs_imap_to_bp(mp, tp, &imap, dipp, &bp, 0, imap_flags);
+-	if (error)
+-		return error;
+-
+-	*bpp = bp;
+-	*offset = imap.im_boffset;
+-	return 0;
+-}
+-
+-/*
+  * Move inode type and inode format specific information from the
+  * on-disk inode to the in-core inode.  For fifos, devs, and sockets
+  * this means set if_rdev to the proper value.  For files, directories,
+@@ -1431,23 +1390,32 @@ xfs_iunlink_remove(
+ 		next_agino = be32_to_cpu(agi->agi_unlinked[bucket_index]);
+ 		last_ibp = NULL;
+ 		while (next_agino != agino) {
+-			/*
+-			 * If the last inode wasn't the one pointing to
+-			 * us, then release its buffer since we're not
+-			 * going to do anything with it.
+-			 */
+-			if (last_ibp != NULL) {
++			struct xfs_imap	imap;
++
++			if (last_ibp)
+ 				xfs_trans_brelse(tp, last_ibp);
+-			}
++
++			imap.im_blkno = 0;
+ 			next_ino = XFS_AGINO_TO_INO(mp, agno, next_agino);
+-			error = xfs_inotobp(mp, tp, next_ino, &last_dip,
+-					    &last_ibp, &last_offset, 0);
++
++			error = xfs_imap(mp, tp, next_ino, &imap, 0);
++			if (error) {
++				xfs_warn(mp,
++	"%s: xfs_imap returned error %d.",
++					 __func__, error);
++				return error;
++			}
++
++			error = xfs_imap_to_bp(mp, tp, &imap, &last_dip,
++					       &last_ibp, 0, 0);
+ 			if (error) {
+ 				xfs_warn(mp,
+-					"%s: xfs_inotobp() returned error %d.",
++	"%s: xfs_imap_to_bp returned error %d.",
+ 					__func__, error);
+ 				return error;
+ 			}
++
++			last_offset = imap.im_boffset;
+ 			next_agino = be32_to_cpu(last_dip->di_next_unlinked);
+ 			ASSERT(next_agino != NULLAGINO);
+ 			ASSERT(next_agino != 0);
+Index: xfs/fs/xfs/xfs_inode.h
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.h	2012-07-02 12:14:10.165779019 +0200
++++ xfs/fs/xfs/xfs_inode.h	2012-07-02 12:14:13.402445667 +0200
+@@ -557,9 +557,6 @@ do { \
+ #define XFS_IGET_UNTRUSTED	0x2
+ #define XFS_IGET_DONTCACHE	0x4
+ 
+-int		xfs_inotobp(struct xfs_mount *, struct xfs_trans *,
+-			    xfs_ino_t, struct xfs_dinode **,
+-			    struct xfs_buf **, int *, uint);
+ int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+ 			       struct xfs_imap *, struct xfs_dinode **,
+ 			       struct xfs_buf **, uint, uint);
 
 _______________________________________________
 xfs mailing list
