@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q638P6iO072433
-	for <linux-xfs@oss.sgi.com>; Tue, 3 Jul 2012 03:25:07 -0500
-Received: from plane.gmane.org (plane.gmane.org [80.91.229.3]) by cuda.sgi.com
-	with ESMTP id dL1i0vktdWosFtU7 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <linux-xfs@oss.sgi.com>;
-	Tue, 03 Jul 2012 01:25:05 -0700 (PDT)
-Received: from list by plane.gmane.org with local (Exim 4.69)
-	(envelope-from <sgi-linux-xfs@m.gmane.org>) id 1SlyPw-0003WT-Cy
-	for linux-xfs@oss.sgi.com; Tue, 03 Jul 2012 10:25:04 +0200
-Received: from 44-162.0-85.cust.bluewin.ch ([85.0.162.44])
-	by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-	id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 03 Jul 2012 10:25:04 +0200
-Received: from ramonhofer by 44-162.0-85.cust.bluewin.ch with local (Gmexim
-	0.1 (Debian)) id 1AlnuQ-0007hv-00
-	for <linux-xfs@oss.sgi.com>; Tue, 03 Jul 2012 10:25:04 +0200
-From: Ramon Hofer <ramonhofer@bluewin.ch>
+	q638l04l074111
+	for <linux-xfs@oss.sgi.com>; Tue, 3 Jul 2012 03:47:01 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id Rs852EWw9p3gEqbq
+	for <linux-xfs@oss.sgi.com>; Tue, 03 Jul 2012 01:46:59 -0700 (PDT)
+Message-ID: <4FF2B183.1050304@hardwarefreak.com>
+Date: Tue, 03 Jul 2012 03:46:59 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
 Subject: Re: Use whole disk
-Date: Tue, 3 Jul 2012 08:20:06 +0000 (UTC)
-Message-ID: <jsu9vm$t01$4@dough.gmane.org>
 References: <jsu88p$t01$1@dough.gmane.org>
-Mime-Version: 1.0
+In-Reply-To: <jsu88p$t01$1@dough.gmane.org>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,23 +26,54 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: Ramon Hofer <ramonhofer@bluewin.ch>
+Cc: linux-xfs@oss.sgi.com
 
-On Tue, 03 Jul 2012 07:50:49 +0000, Ramon Hofer wrote:
+On 7/3/2012 2:50 AM, Ramon Hofer wrote:
+> Hi all
 
-> Is it ok to use the disk instead of the partition or why do I have to
+Hi Ramon, welcome to XFS.
+
+> I hope this is the right place to ask this:
+
+It is.  But I could have answered this, and any of your XFS questions,
+off list as well. ;)
+
+> I wanted to use a 2 TB disk (as mythtv recordings drive) with the xfs 
+> filesystem. Until now I had jfs but I wanted to switch it.
+> 
+> Since I have two drives of the same type I formatted the new drive with 
+> xfs and copied the recordings onto it. Today I saw that I created the 
+> filesystem over the disk instead of the partition:
+
+Had you already put a partition on the disk?
+
+> ~# mkfs.xfs /dev/sdk
+
+If yes, did mkfs.xfs throw a warning about overwriting the partition table?
+
+> These are my two disks:
+> 
+> /dev/sdi1      jfs    1.9T  1.9T  3.9G 100% /mnt/recordings
+> /dev/sdk       xfs    1.9T  1.9T  3.3G 100% /mnt/recordings_temp
+> 
+> Is it ok to use the disk instead of the partition or why do I have to 
 > create the filesystem on a partition?
 
-I was told that it's possible to use the whole disk. But it's safer 
-because the user (me) and some tools see that the disk is already used 
-because of the valid partition table.
+It's not necessary to put a partition on the disk before formatting with
+XFS.  And in fact, when using Advanced Format drives, it's much easier
+to make sure XFS is sector aligned by directly formatting the disk.
 
-Another reason would be the filesystem alignment that could cause 
-performance issues.
+Partitioning an AF drive to get proper sector alignment can be tricky.
+If you don't get proper sector alignment of the partition, you end up
+with a read/modify/write cycle when a filesystem block is modified.
+This reduces the performance of the drive significantly.  For a write
+mostly mythTV recording drive this probably isn't critical.  But if you
+can avoid the misaligned sector problem it's best to do so.  And you
+easily can by directly formatting the disk device.
 
-
-Best regards
-Ramon
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
