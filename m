@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q63NBTLo139941 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 18:11:30 -0500
+	q63NTRoc141205 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 18:29:27 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	GxF6B04gUT4PaoP0 for <xfs@oss.sgi.com>;
-	Tue, 03 Jul 2012 16:11:27 -0700 (PDT)
-Date: Wed, 4 Jul 2012 09:11:22 +1000
+	drwNhPkpGqbwlKX2 for <xfs@oss.sgi.com>;
+	Tue, 03 Jul 2012 16:29:25 -0700 (PDT)
+Date: Wed, 4 Jul 2012 09:29:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Backporting the concurrent direct IO write fix to 3.4
-Message-ID: <20120703231122.GB19223@dastard>
-References: <4FF2F41F.5000504@gmail.com> <20120703160949.GD855@infradead.org>
+Subject: Re: [PATCH 2/2] xfs: do not call xfs_bdstrat_cb in
+	xfs_buf_iodone_callbacks
+Message-ID: <20120703232923.GC19223@dastard>
+References: <20120702100003.960640484@bombadil.infradead.org>
+	<20120702100034.921366796@bombadil.infradead.org>
+	<20120703002857.GY19223@dastard>
+	<20120703160531.GA855@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120703160949.GD855@infradead.org>
+In-Reply-To: <20120703160531.GA855@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,40 +31,41 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com, Kerin Millar <kerframil@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 03, 2012 at 12:09:49PM -0400, Christoph Hellwig wrote:
-> On Tue, Jul 03, 2012 at 02:31:11PM +0100, Kerin Millar wrote:
-> > Hi,
+On Tue, Jul 03, 2012 at 12:05:31PM -0400, Christoph Hellwig wrote:
+> On Tue, Jul 03, 2012 at 10:28:57AM +1000, Dave Chinner wrote:
+> > On Mon, Jul 02, 2012 at 06:00:05AM -0400, Christoph Hellwig wrote:
+> > > xfs_bdstrat_cb only adds a check for a shutdown filesystem over xfs_buf_iorequest,
+> > > but xfs_buf_iodone_callbacks just checked for a shut down filesystem a little
+> > > earlier.  In addition the shutdown handling in xfs_bdstrat_cb is not very suitable
+> > > for this caller.
 > > 
-> > I recently became aware of commit 507630b2 (use shared ilock mode for
-> > direct IO writes by default). I understand that this fixes a regression
-> > which can have a notable impact upon MySQL performance. This is of
-> > considerable interest to myself because my MySQL servers have to contend
-> > with a really tough workload.
-> > 
-> > The patch applies cleanly to 3.4 stable but is it actually safe to use
-> > it there? Or does it depend on other changes to XFS, such that I'd be
-> > better off holding out for 3.5? Any advice would be greatly appreciated.
+> > Makes sense - I have a patch locally that does this as part of a
+> > xfs_buf_iorequest(bp, blkno, length) conversion to get rid of
+> > XFS_BUF_SETADDR()....
 > 
-> You want the whole series starting at b4d05e3019692fc5a8c573fbce60de2d48c5b7a1
-> without the earlier patches there are potential problems when using
-> quotas.
-> 
-> On the one hand I'd love to see these patches go into 3.4-stable as it's
-> going to be a long term release,
+> Can you send these out ASAP?
 
-Is it? So we will have long term support kernels for 3.0.x, 3.2.x
-and now 3.4.x? 3.0.x is the long term stable kernel I'm targetting
-for backports and there's no way I can really handle more than
-that...
+It's not working yet - I found an issue with logging and writeback
+of uncached buffers through the AIL (i.e. the superblock). This only
+works by good fortune right now and requires uncached buffers to
+carry their block number internally, so I need to rethink and rework
+the patch.
 
-> on the other hand they are fairly
-> invasive.  If you can give a headsup after passing xfstests and heavy
-> mysql testing including benchmarks it might make sense to consider them.
+I think that I will make the superblock buffer a cached buffer once
+again, but keep the current shortcut to look it up. Doing so will
+enable me to keep the distinction I created between cached and
+uncached buffers. It will also solve the AIL flush waiting problem
+we currently also have with it on freeze/unmount.
 
-I've got to port them back to 3.0, so I'm not sure it makes
-sense to port them to 3.4.
+> I have another big batch of buffer error
+> handling changes for 3.6 I'm working on right now.
+
+How much does it change? I'm also trying to get all the read verify
+callback infrastructure changes done for 3.6, and i suspect these may
+step on each other. I've just about got those patches done - testing
+and bug fixing is happening at the moment....
 
 Cheers,
 
