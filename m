@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q630QFaw030144 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 19:26:15 -0500
+	q630RbAw030319 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 19:27:38 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	F6cYFz6hVgA0cyT9 for <xfs@oss.sgi.com>;
-	Mon, 02 Jul 2012 17:26:14 -0700 (PDT)
-Date: Tue, 3 Jul 2012 10:26:11 +1000
+	ABENPsURRLCy1iSo for <xfs@oss.sgi.com>;
+	Mon, 02 Jul 2012 17:27:36 -0700 (PDT)
+Date: Tue, 3 Jul 2012 10:27:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_btree_cur leak with 3.5-rc4
-Message-ID: <20120703002611.GW19223@dastard>
-References: <20120702191412.GA3617@redhat.com>
+Subject: Re: [PATCH 1/2] xfs: prevent recursion in xfs_buf_iorequest
+Message-ID: <20120703002716.GX19223@dastard>
+References: <20120702100003.960640484@bombadil.infradead.org>
+	<20120702100034.627510436@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120702191412.GA3617@redhat.com>
+In-Reply-To: <20120702100034.627510436@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,22 +27,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 02, 2012 at 03:14:12PM -0400, Mike Snitzer wrote:
-> I get kmemleak reports against XFS when I run the thinp-test-suite
-> against 3.5-rc4.  I didn't see any XFS leaks with 3.4.
+On Mon, Jul 02, 2012 at 06:00:04AM -0400, Christoph Hellwig wrote:
+> If the b_iodone handler is run in calling context in xfs_buf_iorequest we
+> can run into a recursion where xfs_buf_iodone_callbacks keeps calling back
+> into xfs_buf_iorequest because an I/O error happened, which keeps calling
+> back into xfs_buf_iorequest.  This chain will usually not take long
+> because the filesystem gets shut down because of log I/O errors, but even
+> over a short time it can cause stack overflows if run on the same context.
+> 
+> As a short term workaround make sure we always call the iodone handler in
+> workqueue context.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Already fixed in 3.5-rc5:
+Looks fine - final completion from io submission is a rare case so
+this shouldn't cause issues....
 
-76d0953 xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Thanks for reporting it, though, Mike.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
