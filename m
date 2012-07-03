@@ -1,20 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q63BpXCa086260 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 06:51:33 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id a8xOsGyfvwUUGtaX for
-	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 04:51:32 -0700 (PDT)
-Message-ID: <4FF2DCB1.2090704@redhat.com>
-Date: Tue, 03 Jul 2012 13:51:13 +0200
-From: Paolo Bonzini <pbonzini@redhat.com>
+	q63CVUW6090346 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 07:31:30 -0500
+Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id zlF1FmbEMgc81TRi
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 05:31:27 -0700 (PDT)
+Received: by wgbed3 with SMTP id ed3so4402943wgb.32
+	for <xfs@oss.sgi.com>; Tue, 03 Jul 2012 05:31:26 -0700 (PDT)
+Date: Tue, 3 Jul 2012 14:31:19 +0200
+From: Daniel Vetter <daniel@ffwll.ch>
+Subject: Re: [MMTests] IO metadata on XFS
+Message-ID: <20120703123119.GA5103@phenom.ffwll.local>
+References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
+	<20120629112505.GF14154@suse.de> <20120701235458.GM19223@dastard>
+	<20120702063226.GA32151@infradead.org>
+	<20120702143215.GS14154@suse.de> <20120702193516.GX14154@suse.de>
+	<20120703001928.GV19223@dastard> <20120703105951.GB14154@suse.de>
 MIME-Version: 1.0
-Subject: Re: [dm-devel] [PATCH v2 1/3] block: add sysfs entry for
-	discard_alignment
-References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
-	<1341235225-27551-2-git-send-email-pbonzini@redhat.com>
-	<20120703023442.GB3586@redhat.com>
-In-Reply-To: <20120703023442.GB3586@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20120703105951.GB14154@suse.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +32,78 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Vivek Goyal <vgoyal@redhat.com>
-Cc: axboe@kernel.dk, martin.petersen@oracle.com, snitzer@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de
+To: Mel Gorman <mgorman@suse.de>
+Cc: Keith Packard <keithp@keithp.com>, Chris Wilson <chris@chris-wilson.co.uk>, Daniel Vetter <daniel.vetter@ffwll.ch>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Eugeni Dodonov <eugeni.dodonov@intel.com>
 
-Il 03/07/2012 04:34, Vivek Goyal ha scritto:
->> > The next patches will actually use the alignment, expose it in sysfs
->> > for ease of debugging.
->> > 
-> Don't we already have discard_alignment exported as device attribute.
+On Tue, Jul 03, 2012 at 11:59:51AM +0100, Mel Gorman wrote:
+> On Tue, Jul 03, 2012 at 10:19:28AM +1000, Dave Chinner wrote:
+> > On Mon, Jul 02, 2012 at 08:35:16PM +0100, Mel Gorman wrote:
+> > > Adding dri-devel and a few others because an i915 patch contributed to
+> > > the regression.
+> > > 
+> > > On Mon, Jul 02, 2012 at 03:32:15PM +0100, Mel Gorman wrote:
+> > > > On Mon, Jul 02, 2012 at 02:32:26AM -0400, Christoph Hellwig wrote:
+> > > > > > It increases the CPU overhead (dirty_inode can be called up to 4
+> > > > > > times per write(2) call, IIRC), so with limited numbers of
+> > > > > > threads/limited CPU power it will result in lower performance. Where
+> > > > > > you have lots of CPU power, there will be little difference in
+> > > > > > performance...
+> > > > > 
+> > > > > When I checked it it could only be called twice, and we'd already
+> > > > > optimize away the second call.  I'd defintively like to track down where
+> > > > > the performance changes happend, at least to a major version but even
+> > > > > better to a -rc or git commit.
+> > > > > 
+> > > > 
+> > > > By all means feel free to run the test yourself and run the bisection :)
+> > > > 
+> > > > It's rare but on this occasion the test machine is idle so I started an
+> > > > automated git bisection. As you know the milage with an automated bisect
+> > > > varies so it may or may not find the right commit. Test machine is sandy so
+> > > > http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-metadata-xfs/sandy/comparison.html
+> > > > is the report of interest. The script is doing a full search between v3.3 and
+> > > > v3.4 for a point where average files/sec for fsmark-single drops below 25000.
+> > > > I did not limit the search to fs/xfs on the off-chance that it is an
+> > > > apparently unrelated patch that caused the problem.
+> > > > 
+> > > 
+> > > It was obvious very quickly that there were two distinct regression so I
+> > > ran two bisections. One led to a XFS and the other led to an i915 patch
+> > > that enables RC6 to reduce power usage.
+> > > 
+> > > [aa464191: drm/i915: enable plain RC6 on Sandy Bridge by default]
+> > 
+> > Doesn't seem to be the major cause of the regression. By itself, it
+> > has impact, but the majority comes from the XFS change...
+> > 
 > 
-> /sys/block/<dev>/discard_alignment
+> The fact it has an impact at all is weird but lets see what the DRI
+> folks think about it.
 
-Ah, interesting, I missed it completely.  I guess it's because queue/
-directories only exist for full disks, and the correct alignment varies
-for each partition.  So this patch is unnecessary.
+Well, presuming I understand things correctly the cpu die only goes into
+the lowest sleep state (which iirc switches off l3 caches and
+interconnects) when both the cpu and gpu are in the lowest sleep state.
+rc6 is that deep-sleep state for the gpu, so without that enabled your
+system won't go into these deep-sleep states.
 
-Paolo
+I guess the slight changes in wakeup latency, power consumption (cuts
+about 10W on an idle desktop snb with resulting big effect on what turbo
+boost can sustain for short amounts of time) and all the follow-on effects
+are good enough to massively change timing-critical things.
+
+So this having an effect isn't too weird.
+
+Obviously, if you also have X running while doing these tests there's the
+chance that the gpu dies because of an issue when waking up from rc6
+(we've known a few of these), but if no drm client is up, that shouldn't
+be possible. So please retest without X running if that hasn't been done
+already.
+
+Yours, Daniel
+-- 
+Daniel Vetter
+Mail: daniel@ffwll.ch
+Mobile: +41 (0)79 365 57 48
 
 _______________________________________________
 xfs mailing list
