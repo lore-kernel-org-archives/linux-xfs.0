@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q63D8MLW092628 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 08:08:22 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id FEYkcoZVBPX1fabm (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Jul 2012 06:08:20 -0700 (PDT)
-Date: Tue, 3 Jul 2012 14:08:16 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [MMTests] IO metadata on XFS
-Message-ID: <20120703130816.GE14154@suse.de>
-References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
-	<20120629112505.GF14154@suse.de> <20120701235458.GM19223@dastard>
-	<20120702063226.GA32151@infradead.org>
-	<20120702143215.GS14154@suse.de> <20120702193516.GX14154@suse.de>
-	<20120703001928.GV19223@dastard> <20120703105951.GB14154@suse.de>
-	<20120703123119.GA5103@phenom.ffwll.local>
+	q63DF0wf093094 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 08:15:00 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id M9qaF1AwxlIjw5ST for
+	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 06:14:59 -0700 (PDT)
+Message-ID: <4FF2F015.6090109@redhat.com>
+Date: Tue, 03 Jul 2012 09:13:57 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120703123119.GA5103@phenom.ffwll.local>
+Subject: Re: [PATCH v3] xfs: re-enable xfsaild idle mode and fix associated
+	races
+References: <1340880776-45730-1-git-send-email-bfoster@redhat.com>
+	<20120702000712.GN19223@dastard> <4FF1A324.7070603@redhat.com>
+	<20120702235106.GU19223@dastard>
+In-Reply-To: <20120702235106.GU19223@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,88 +27,82 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, dri-devel@lists.freedesktop.org, Keith Packard <keithp@keithp.com>, Eugeni Dodonov <eugeni.dodonov@intel.com>, Chris Wilson <chris@chris-wilson.co.uk>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 03, 2012 at 02:31:19PM +0200, Daniel Vetter wrote:
-> On Tue, Jul 03, 2012 at 11:59:51AM +0100, Mel Gorman wrote:
-> > On Tue, Jul 03, 2012 at 10:19:28AM +1000, Dave Chinner wrote:
-> > > On Mon, Jul 02, 2012 at 08:35:16PM +0100, Mel Gorman wrote:
-> > > > Adding dri-devel and a few others because an i915 patch contributed to
-> > > > the regression.
-> > > > 
-> > > > On Mon, Jul 02, 2012 at 03:32:15PM +0100, Mel Gorman wrote:
-> > > > > On Mon, Jul 02, 2012 at 02:32:26AM -0400, Christoph Hellwig wrote:
-> > > > > > > It increases the CPU overhead (dirty_inode can be called up to 4
-> > > > > > > times per write(2) call, IIRC), so with limited numbers of
-> > > > > > > threads/limited CPU power it will result in lower performance. Where
-> > > > > > > you have lots of CPU power, there will be little difference in
-> > > > > > > performance...
-> > > > > > 
-> > > > > > When I checked it it could only be called twice, and we'd already
-> > > > > > optimize away the second call.  I'd defintively like to track down where
-> > > > > > the performance changes happend, at least to a major version but even
-> > > > > > better to a -rc or git commit.
-> > > > > > 
-> > > > > 
-> > > > > By all means feel free to run the test yourself and run the bisection :)
-> > > > > 
-> > > > > It's rare but on this occasion the test machine is idle so I started an
-> > > > > automated git bisection. As you know the milage with an automated bisect
-> > > > > varies so it may or may not find the right commit. Test machine is sandy so
-> > > > > http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-metadata-xfs/sandy/comparison.html
-> > > > > is the report of interest. The script is doing a full search between v3.3 and
-> > > > > v3.4 for a point where average files/sec for fsmark-single drops below 25000.
-> > > > > I did not limit the search to fs/xfs on the off-chance that it is an
-> > > > > apparently unrelated patch that caused the problem.
-> > > > > 
-> > > > 
-> > > > It was obvious very quickly that there were two distinct regression so I
-> > > > ran two bisections. One led to a XFS and the other led to an i915 patch
-> > > > that enables RC6 to reduce power usage.
-> > > > 
-> > > > [aa464191: drm/i915: enable plain RC6 on Sandy Bridge by default]
-> > > 
-> > > Doesn't seem to be the major cause of the regression. By itself, it
-> > > has impact, but the majority comes from the XFS change...
-> > > 
-> > 
-> > The fact it has an impact at all is weird but lets see what the DRI
-> > folks think about it.
+On 07/02/2012 07:51 PM, Dave Chinner wrote:
+> On Mon, Jul 02, 2012 at 09:33:24AM -0400, Brian Foster wrote:
+>> On 07/01/2012 08:07 PM, Dave Chinner wrote:
+>>> On Thu, Jun 28, 2012 at 06:52:56AM -0400, Brian Foster wrote:
+>>>> xfsaild idle mode logic currently leads to a couple hangs:
+>>>>
+>>>> 1.) If xfsaild is rescheduled in during an incremental scan
+>>>>     (i.e., tout != 0) and the target has been updated since
+>>>>     the previous run, we can hit the new target and go into
+>>>>     idle mode with a still populated ail.
+>>>> 2.) A wake up is only issued when the target is pushed forward.
+>>>>     The wake up can race with xfsaild if it is currently in the
+>>>>     process of entering idle mode, causing future wake up
+>>>>     events to be lost.
+>>>>
+>>>> These hangs have been reproduced and verified as fixed by
+>>>> running xfstests 273 in a loop on a slightly modified upstream
+>>>> kernel. The kernel is modified to re-enable idle mode as
+>>>> previously implemented (when count == 0) and with a revert of
+>>>> commit 670ce93f, which includes performance improvements that
+>>>> make this harder to reproduce.
+>>>>
+>>>> The solution, the algorithm for which has been outlined by
+>>>> Dave Chinner, is to modify xfsaild to enter idle mode only when
+>>>> the ail is empty and the push target has not been moved forward
+>>>> since the last push.
+>>>>
+>>>> Signed-off-by: Brian Foster <bfoster@redhat.com>
+>>>
+>>> Looks OK to me, and hasn't caused any problems here.
+>>>
+>>> Final question - did you confirm with powertop that the xfsaild is
+>>> no longer causing wakeups a minute or two after you stop writing to
+>>> the filesystem? (I haven't yet)
+>>>
+>>
+>> I hadn't tested with powertop, but I had some tracepoints hacked in
+>> around the idle/wake cases to verify the thread was actually scheduling
+>> out.
 > 
-> Well, presuming I understand things correctly the cpu die only goes into
-> the lowest sleep state (which iirc switches off l3 caches and
-> interconnects) when both the cpu and gpu are in the lowest sleep state.
-
-I made a mistake in my previous mail. gdm and X were were *not* running.
-Once the screen blanked I would guess the GPU is in a low sleep state
-the majority of the time.
-
-> rc6 is that deep-sleep state for the gpu, so without that enabled your
-> system won't go into these deep-sleep states.
+> If you've added tracepoints that were useful for
+> debugging/verification, then send that as a patch as well. If users
+> have trouble then simply asking them for event traces is very easy
+> to do and gives us much better insight into what is happening....
 > 
-> I guess the slight changes in wakeup latency, power consumption (cuts
-> about 10W on an idle desktop snb with resulting big effect on what turbo
-> boost can sustain for short amounts of time) and all the follow-on effects
-> are good enough to massively change timing-critical things.
+> You can't have enough tracepoints when things are going wrong ;)
 > 
 
-Maybe. How aggressively is the lowest sleep state entered and how long
-does it take to exit?
+Ok, duly noted. What I have right now is scattered about a few branches
+and not immediately presentable. When I get some time I'll fix them up
+and post. If I remember correctly, I had covered: xfsaild end (count,
+skip, target, etc.), xfsaild idle, xa_target update (xfs_ail_push()) and
+xfsaild wake (which might be extraneous at this point).
 
-> So this having an effect isn't too weird.
+Brian
+
+>> FWIW, I just gave powertop a quick test and it appears to work as
+>> expected...
+>>
+>> With current upstream on my rhel6.3 VM, I see the following after
+>> running a 'touch /mnt/file;sync' and letting the fs idle for a bit:
+>>
+>>    0.5% ( 19.9)      xfsaild/vdb1 : xfsaild (process_timeout)
+>>
+>> and this drops off completely with the patch applied. Thanks for the tip.
 > 
-> Obviously, if you also have X running while doing these tests there's the
-> chance that the gpu dies because of an issue when waking up from rc6
-> (we've known a few of these), but if no drm client is up, that shouldn't
-> be possible. So please retest without X running if that hasn't been done
-> already.
+> Great, then it is working exactly as expected.
+> 
+> Cheers,
+> 
+> Dave.
 > 
 
-Again, sorry for the confusion but the posted results are without X running.
-
--- 
-Mel Gorman
-SUSE Labs
 
 _______________________________________________
 xfs mailing list
