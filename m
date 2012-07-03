@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q63BiUNY085758 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 06:44:30 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id h8pRdkwgxxRTLZ79 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 03 Jul 2012 04:44:29 -0700 (PDT)
-Date: Tue, 3 Jul 2012 12:44:24 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [MMTests] IO metadata on XFS
-Message-ID: <20120703114424.GC14154@suse.de>
-References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
-	<20120629112505.GF14154@suse.de> <20120701235458.GM19223@dastard>
-	<20120702063226.GA32151@infradead.org>
-	<20120702143215.GS14154@suse.de> <20120702193516.GX14154@suse.de>
-	<20120703001928.GV19223@dastard> <20120703105951.GB14154@suse.de>
+	q63BluGj085943 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 06:47:56 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rpmdqa1kWSsgewZV for
+	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 04:47:55 -0700 (PDT)
+Message-ID: <4FF2DBD3.4080800@redhat.com>
+Date: Tue, 03 Jul 2012 13:47:31 +0200
+From: Paolo Bonzini <pbonzini@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120703105951.GB14154@suse.de>
+Subject: Re: [dm-devel] [PATCH v2 2/3] block: reorganize rounding of
+	max_discard_sectors
+References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
+	<1341235225-27551-3-git-send-email-pbonzini@redhat.com>
+	<20120703024910.GC3586@redhat.com>
+In-Reply-To: <20120703024910.GC3586@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,33 +27,37 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Keith Packard <keithp@keithp.com>, Chris Wilson <chris@chris-wilson.co.uk>, Daniel Vetter <daniel.vetter@ffwll.ch>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Eugeni Dodonov <eugeni.dodonov@intel.com>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, snitzer@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de
 
-On Tue, Jul 03, 2012 at 11:59:51AM +0100, Mel Gorman wrote:
-> > Can you run latencytop to see
-> > if there is excessive starvation/wait times for allocation
-> > completion?
-> 
-> I'm not sure what format you are looking for.  latencytop is shit for
-> capturing information throughout a test and it does not easily allow you to
-> record a snapshot of a test. You can record all the console output of course
-> but that's a complete mess. I tried capturing /proc/latency_stats over time
-> instead because that can be trivially sorted on a system-wide basis but
-> as I write this I find that latency_stats was bust. It was just spitting out
-> 
-> Latency Top version : v0.1
-> 
-> and nothing else.  Either latency_stats is broken or my config is. Not sure
-> which it is right now and won't get enough time on this today to pinpoint it.
-> 
+Il 03/07/2012 04:49, Vivek Goyal ha scritto:
+>> > +	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+>> > +	granularity = max(q->limits.discard_granularity >> 9, 1U);
+>> > +
+>> >  	/*
+>> >  	 * Ensure that max_discard_sectors is of the proper
+>> >  	 * granularity
+>> >  	 */
+>> >  	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
+>> > +	max_discard_sectors = round_down(max_discard_sectors, granularity);
+>> >  	if (unlikely(!max_discard_sectors)) {
+>> >  		/* Avoid infinite loop below. Being cautious never hurts. */
+>> >  		return -EOPNOTSUPP;
+>> > -	} else if (q->limits.discard_granularity) {
+>> > -		unsigned int disc_sects = q->limits.discard_granularity >> 9;
+>> > -
+>> > -		max_discard_sectors &= ~(disc_sects - 1);
+> This is kind of odd. If discard_granularity is zero, we assume that
+> discards are supported and granularity is 1. But if max_discard_sectors
+> is zero, we assume discards are disabled. Not sure if we should treat
+> max_discard_sectors and discard_granularity in same way or not.
 
-PEBKAC. Script that monitored /proc/latency_stats was not enabling
-latency top via /proc/sys/kernel/latencytop
+Yes, this keeps the same behavior as before.  It is also the one that is
+consistent with drivers/scsi/sd.c.  sd_config_discard always sets
+limits.discard_granularity and then uses limits.max_discard_sectors to
+disable discards.
 
--- 
-Mel Gorman
-SUSE Labs
+Paolo
 
 _______________________________________________
 xfs mailing list
