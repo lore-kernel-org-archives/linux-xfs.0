@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q63E461q096376 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 09:04:06 -0500
-Received: from mail-we0-f181.google.com (mail-we0-f181.google.com
-	[74.125.82.181]) by cuda.sgi.com with ESMTP id nDSEg2Y5hOXnjSRD
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 07:04:05 -0700 (PDT)
-Received: by weyt57 with SMTP id t57so93959wey.26
-	for <xfs@oss.sgi.com>; Tue, 03 Jul 2012 07:04:04 -0700 (PDT)
-Date: Tue, 3 Jul 2012 16:04:01 +0200
-From: Daniel Vetter <daniel@ffwll.ch>
-Subject: Re: [MMTests] IO metadata on XFS
-Message-ID: <20120703140401.GB5103@phenom.ffwll.local>
-References: <20120620113252.GE4011@suse.de> <20120629111932.GA14154@suse.de>
-	<20120629112505.GF14154@suse.de> <20120701235458.GM19223@dastard>
-	<20120702063226.GA32151@infradead.org>
-	<20120702143215.GS14154@suse.de> <20120702193516.GX14154@suse.de>
-	<20120703130414.GD14154@suse.de>
+	q63EM2ps097574 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 09:22:03 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id n1lR0HvRBaMkhoco for
+	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 07:22:02 -0700 (PDT)
+Message-ID: <4FF2FFEE.4000401@redhat.com>
+Date: Tue, 03 Jul 2012 16:21:34 +0200
+From: Paolo Bonzini <pbonzini@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120703130414.GD14154@suse.de>
+Subject: Re: [dm-devel] [PATCH v2 1/3] block: add sysfs entry for
+	discard_alignment
+References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
+	<1341235225-27551-2-git-send-email-pbonzini@redhat.com>
+	<20120703023442.GB3586@redhat.com> <4FF2DCB1.2090704@redhat.com>
+	<20120703140048.GC11272@redhat.com>
+In-Reply-To: <20120703140048.GC11272@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,33 +28,61 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Keith Packard <keithp@keithp.com>, Chris Wilson <chris@chris-wilson.co.uk>, Daniel Vetter <daniel.vetter@ffwll.ch>, linux-kernel@vger.kernel.org, dri-devel@lists.freedesktop.org, xfs@oss.sgi.com, Christoph Hellwig <hch@infradead.org>, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org, Eugeni Dodonov <eugeni.dodonov@intel.com>
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, snitzer@redhat.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de
 
-On Tue, Jul 03, 2012 at 02:04:14PM +0100, Mel Gorman wrote:
-> On Mon, Jul 02, 2012 at 08:35:16PM +0100, Mel Gorman wrote:
-> > > <SNIP>
-> > >
-> > It was obvious very quickly that there were two distinct regression so I
-> > ran two bisections. One led to a XFS and the other led to an i915 patch
-> > that enables RC6 to reduce power usage.
-> > 
-> > [c999a223: xfs: introduce an allocation workqueue]
-> > [aa464191: drm/i915: enable plain RC6 on Sandy Bridge by default]
-> > 
-> > gdm was running on the machine so i915 would have been in use. 
-> 
-> Bah, more PEBKAC. gdm was *not* running on this machine. i915 is loaded
-> but X is not.
+Il 03/07/2012 16:00, Vivek Goyal ha scritto:
+>> > 
+>> > Ah, interesting, I missed it completely.  I guess it's because queue/
+>> > directories only exist for full disks, and the correct alignment varies
+>> > for each partition.  So this patch is unnecessary.
+> Partition discard_alignments are available in
+> /sys/block/<disk>/<partition>/discard_alignment.
 
-See my little explanation of rc6, just loading the driver will have
-effects. But I'm happy to know that the issue also happens without using
-it, makes it really unlikely it's an issue with the gpu or i915.ko ;-)
--Daniel
--- 
-Daniel Vetter
-Mail: daniel@ffwll.ch
-Mobile: +41 (0)79 365 57 48
+Yes.  If it were in queue/, it wouldn't be available.
+
+> That raises an interesting question for patch3. If the discard is happening to
+> a partition, shouldn't you be looking at partition discard_alignment
+> instead of always looking at queue discard_alignment?
+
+Good point!  Like this?
+
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index ba43f40..3530764 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1125,6 +1125,16 @@ static inline int queue_limit_discard_alignment(struct queue_limits *lim, sector
+ 		& (lim->discard_granularity - 1);
+ }
+ 
++static inline int bdev_discard_alignment(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (bdev != bdev->bd_contains)
++		return bdev->bd_part->discard_alignment;
++
++	return q->limits.discard_alignment;
++}
++
+ static inline unsigned int queue_discard_zeroes_data(struct request_queue *q)
+ {
+ 	if (q->limits.max_discard_sectors && q->limits.discard_zeroes_data == 1)
+diff --git a/block/blk-lib.c b/block/blk-lib.c
+index b2bde5c..77d8869 100644
+--- a/block/blk-lib.c
++++ b/block/blk-lib.c
+@@ -58,7 +58,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
+ 	/* Zero-sector (unknown) and one-sector granularities are the same.  */
+ 	granularity = max(q->limits.discard_granularity >> 9, 1U);
+ 	mask = granularity - 1;
+-	alignment = (q->limits.discard_alignment >> 9) & mask;
++	alignment = bdev_discard_alignment(bdev) >> 9;
+ 
+ 	/*
+ 	 * Ensure that max_discard_sectors is of the proper
+
+Paolo
 
 _______________________________________________
 xfs mailing list
