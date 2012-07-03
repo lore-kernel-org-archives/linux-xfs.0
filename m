@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q633LfTD046800 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 22:21:41 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	BPfY4dXHkB3TBVaD for <xfs@oss.sgi.com>;
-	Mon, 02 Jul 2012 20:21:39 -0700 (PDT)
-Date: Tue, 3 Jul 2012 13:21:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_btree_cur leak with 3.5-rc4
-Message-ID: <20120703032136.GZ19223@dastard>
-References: <20120702191412.GA3617@redhat.com> <20120703002611.GW19223@dastard>
-	<20120703012628.GA5710@redhat.com>
+	q633xfO8049598 for <xfs@oss.sgi.com>; Mon, 2 Jul 2012 22:59:42 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id kFOcFEsvsfLVKHMO for
+	<xfs@oss.sgi.com>; Mon, 02 Jul 2012 20:59:40 -0700 (PDT)
+Date: Mon, 2 Jul 2012 23:59:24 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v2 1/3] block: add sysfs entry for discard_alignment
+Message-ID: <20120703035924.GA6182@redhat.com>
+References: <1341235225-27551-1-git-send-email-pbonzini@redhat.com>
+	<1341235225-27551-2-git-send-email-pbonzini@redhat.com>
+	<20120703023442.GB3586@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120703012628.GA5710@redhat.com>
+In-Reply-To: <20120703023442.GB3586@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,69 +27,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, xfs@oss.sgi.com
+To: Vivek Goyal <vgoyal@redhat.com>
+Cc: axboe@kernel.dk, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, Paolo Bonzini <pbonzini@redhat.com>, hch@lst.de
 
-On Mon, Jul 02, 2012 at 09:26:28PM -0400, Mike Snitzer wrote:
-> On Mon, Jul 02 2012 at  8:26pm -0400,
-> Dave Chinner <david@fromorbit.com> wrote:
-> 
-> > On Mon, Jul 02, 2012 at 03:14:12PM -0400, Mike Snitzer wrote:
-> > > I get kmemleak reports against XFS when I run the thinp-test-suite
-> > > against 3.5-rc4.  I didn't see any XFS leaks with 3.4.
+On Mon, Jul 02 2012 at 10:34pm -0400,
+Vivek Goyal <vgoyal@redhat.com> wrote:
+
+> On Mon, Jul 02, 2012 at 03:20:23PM +0200, Paolo Bonzini wrote:
+> > The next patches will actually use the alignment, expose it in sysfs
+> > for ease of debugging.
 > > 
-> > Already fixed in 3.5-rc5:
-> > 
-> > 76d0953 xfs: fix allocbt cursor leak in xfs_alloc_ag_vextent_near
 > 
-> Odd, I already have that fix (as it was included in 3.5-rc4).
+> Don't we already have discard_alignment exported as device attribute.
+> 
+> /sys/block/<dev>/discard_alignment
 
-I misread the git describe as saying it was included after -rc4. My
-mistake. That indicates that the above fix wasn't quite correct...
+Yes we do.  It is documented in Documentation/ABI/testing/sysfs-block
 
-Try the patch below.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-
-xfs: really first cursor leak in xfs_alloc_ag_vextent_near
-
-From: Dave Chinner <dchinner@redhat.com>
-
-The current cursor is reallocated when retrying the allocation, so
-the exist cursor needs to be destroyed in both the restart and the
-failure case.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_alloc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 9d1aeb7..f654f51 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -1074,13 +1074,13 @@ restart:
- 	 * If we couldn't get anything, give up.
- 	 */
- 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
-+		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+
- 		if (!forced++) {
- 			trace_xfs_alloc_near_busy(args);
- 			xfs_log_force(args->mp, XFS_LOG_SYNC);
- 			goto restart;
- 		}
--
--		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 		trace_xfs_alloc_size_neither(args);
- 		args->agbno = NULLAGBLOCK;
- 		return 0;
+So this patch isn't needed.
 
 _______________________________________________
 xfs mailing list
