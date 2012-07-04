@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6482NCq182008 for <xfs@oss.sgi.com>; Wed, 4 Jul 2012 03:02:23 -0500
+	q648WdRg186227 for <xfs@oss.sgi.com>; Wed, 4 Jul 2012 03:32:39 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	voV2oAisDSyx3Sdb for <xfs@oss.sgi.com>;
-	Wed, 04 Jul 2012 01:02:21 -0700 (PDT)
-Date: Wed, 4 Jul 2012 18:02:17 +1000
+	Bcb85ZxTAXmtMkBv for <xfs@oss.sgi.com>;
+	Wed, 04 Jul 2012 01:32:38 -0700 (PDT)
+Date: Wed, 4 Jul 2012 18:32:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Backporting the concurrent direct IO write fix to 3.4
-Message-ID: <20120704080217.GF19223@dastard>
+Subject: Re: [PATCH 2/2] xfs: do not call xfs_bdstrat_cb in
+	xfs_buf_iodone_callbacks
+Message-ID: <20120704083234.GG19223@dastard>
+References: <20120702100003.960640484@bombadil.infradead.org>
+	<20120702100034.921366796@bombadil.infradead.org>
+	<20120703002857.GY19223@dastard>
+	<20120703160531.GA855@infradead.org>
+	<20120703232923.GC19223@dastard>
+	<20120704055723.GB27500@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120704055419.GA27500@infradead.org>
-	<CA+sTkh4jk5wAoD32jfe2stzhKpSyB_GCXHSZSp9zjPc+ZfR5Hw@mail.gmail.com>
+In-Reply-To: <20120704055723.GB27500@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,61 +32,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Igor M Podlesny <for.poige+xfs@gmail.com>, Christoph Hellwig <hch@infradead.org>
-Cc: Kerin Millar <kerframil@gmail.com>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 04, 2012 at 12:09:06PM +0800, Igor M Podlesny wrote:
-> On 4 July 2012 07:11, Dave Chinner <david@fromorbit.com> wrote:
-> [...]
-> >> On the one hand I'd love to see these patches go into 3.4-stable as it's
-> >> going to be a long term release,
-> >
-> > Is it? So we will have long term support kernels for 3.0.x, 3.2.x
-> > and now 3.4.x? 3.0.x is the long term stable kernel I'm targetting
-> > for backports and there's no way I can really handle more than
-> > that...
+On Wed, Jul 04, 2012 at 01:57:23AM -0400, Christoph Hellwig wrote:
+> On Wed, Jul 04, 2012 at 09:29:23AM +1000, Dave Chinner wrote:
+> > It's not working yet - I found an issue with logging and writeback
+> > of uncached buffers through the AIL (i.e. the superblock). This only
+> > works by good fortune right now and requires uncached buffers to
+> > carry their block number internally, so I need to rethink and rework
+> > the patch.
 > 
->    That's quite a pity! In production there's often even 2.6.32 since
-> it's chosen as RHEL6's kernel.
+> What is the problem with uncached buffers?  I'd hate having to move
+> the superblock buffer away from the uncached scheme.
 
-RHEL6 is using a 2.6.32 kernel only in name. The XFS code in RHEL6
-is only a few commits short of 3.0 in terms of functionality (i.e.
-RHEL 6.2 has full delaylog functionality), and most other supported
-subsystems and drivers are similarly advanced well past 2.6.32.
-Hence I'm looking at 3.0.x for long term stable maintenance of XFS,
-not 2.6.32.x...
+I'm not exactly sure yet - I last looked at it before I went on
+holidays last week. I was getting random ASSERT failures, always on
+the superblock buffer and always due ot trying to IO to
+XFS_BUF_DADDR_NULL because it was an uncached buffer. The path to it
+was always through the AIL flushing, so it was using
+xfs_buf_iorequest(bp) and getting the null blkno rather than
+xfs_buf_uncached_iorequest(bp, blkno, len) which supplies the blkno.
+Like I said, I need to rework is so that either
+xfs_buf_iorequest(bp) works with uncached buffers, or we don't use
+uncached buffers in transactions.
 
-On Wed, Jul 04, 2012 at 01:54:19AM -0400, Christoph Hellwig wrote:
-> On Wed, Jul 04, 2012 at 09:11:22AM +1000, Dave Chinner wrote:
-> > Is it? So we will have long term support kernels for 3.0.x, 3.2.x
-> > and now 3.4.x? 3.0.x is the long term stable kernel I'm targetting
-> > for backports and there's no way I can really handle more than
-> > that...
+IMO, using uncached buffers in transactions is dangerous because
+concurrent transactions can't find buffers uncached buffers at the
+same address and so such buffers need higher level synchronisation
+interfaces (as the superblock has).
+
+I'm happy to leave the superblock as uncached and work around it in
+some way, but it just seems wrong to me to have one buffer behaves
+differently to all the cached and other uncached buffers in the
+system. It doesn't sit well in my mind to do that when the problem
+simply goes away if we make the superblock a cached buffer again....
+
+> > How much does it change? I'm also trying to get all the read verify
+> > callback infrastructure changes done for 3.6, and i suspect these may
+> > step on each other. I've just about got those patches done - testing
+> > and bug fixing is happening at the moment....
 > 
-> I remember Greg announced 3.4 to be long term in addition to 3.0
-> recently.
-
-I missed that announcement - lost in the noise of lkml I guess...
-
-> 3.2 only is the Debian release kernel, for which the
-> maintainers offered to maintain it as a formal stable release
-> on kernel.org
-
-I know, but we're already seeing bug reports from people using that
-kernel...
-
-> And yes, it's getting not only confusing but also way to much work
-> for subsystem maintainers.
+> Basically a lot of impact around all callers of xfsbdstrat (which is
+> going away) and some impact in xfs_buf.c around the higher-level
+> read/write code.  I'm not entirely done with the plane I have so
+> other things might get in the way and make it more complicated in
+> the end.
 > 
-> I'm still happy to backport fixes to 3.0, but for more invasive work
-> it's getting a bit too old now.
+> Another thing it depends on is to only start the sync work item later
+> during mount so that the re-read of the superblock after recovery can
+> use normal buffer cache interfaces instead of xfsbdstrat.
 
-As RHEL6 and 3.0.x XFS code bases are almost the same I effectively
-have to maintain a 3.0 tree and backport the necessary (invasive,
-even) fixes to it.  It is comparitively little extra work for me to
-test and push fixes to both, and I'll get much earlier and wider
-deployment of the backports by pushing them to 3.0.x as well. It's a
-no-brainer AFAIC.
+Well, we've already got conflicts there, because all of the uncached
+IO changes I've made remove xfsbdstrat() from those paths....
 
 Cheers,
 
