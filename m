@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q648XuIo186501 for <xfs@oss.sgi.com>; Wed, 4 Jul 2012 03:33:56 -0500
+	q648aJhl187080 for <xfs@oss.sgi.com>; Wed, 4 Jul 2012 03:36:19 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	VHz2u2zWceg5lZFn for <xfs@oss.sgi.com>;
-	Wed, 04 Jul 2012 01:33:54 -0700 (PDT)
-Date: Wed, 4 Jul 2012 18:33:53 +1000
+	Egnf3ztMpfzTRDC0 for <xfs@oss.sgi.com>;
+	Wed, 04 Jul 2012 01:36:17 -0700 (PDT)
+Date: Wed, 4 Jul 2012 18:36:16 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: implement ->update_time
-Message-ID: <20120704083353.GH19223@dastard>
-References: <20120606210128.GA12819@infradead.org>
-	<20120704060606.GA7333@infradead.org>
+Subject: Re: [PATCH] xfstests: improve test 286 for repeated unwritten/hole
+	extents.
+Message-ID: <20120704083616.GI19223@dastard>
+References: <4FF29F94.6030702@oracle.com>
+ <4FF30A89.9010800@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120704060606.GA7333@infradead.org>
+In-Reply-To: <4FF30A89.9010800@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,21 +28,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: jeff.liu@oracle.com, xfs@oss.sgi.com
 
-On Wed, Jul 04, 2012 at 02:06:06AM -0400, Christoph Hellwig wrote:
-> ping?
+On Tue, Jul 03, 2012 at 10:06:49AM -0500, Mark Tinguely wrote:
+> On 07/03/12 02:30, Jeff Liu wrote:
+> >Hello,
+> >
+> >I'd like to enlarge the test coverage of 286 to includes file mapping with repeated hole/unwritten/unwritten_without_data/data intersections.
+> >
+> >Those two new sub-tests could help verifying the current seek_data/seek_hole improvements.
+> >
+> >Besides, I observed a weird thing at the diff of 286.full, look at the the sparse file creation output,  there seems to be a significant
+> >I/O degradation compare to the old test01/test02 IOPS results:
+> >
+> >-1 MiB, 256 ops; 0.0000 sec (1.242 GiB/sec and 325699.7455 ops/sec)
+> >+1 MiB, 256 ops; 0.0000 sec (70.161 MiB/sec and 17961.1310 ops/sec)
+> >
+> >I run the test on same machine and same partition, I recalled the old result is generated against around 3.4-rc2(not very sure), now is updated
+> >to 3.5-rc4, does anyone hit that?
+> >
+> >
 > 
-> On Wed, Jun 06, 2012 at 05:01:28PM -0400, Christoph Hellwig wrote:
-> > Use this new method to replace our hacky use of ->dirty_inode.  An additional
-> > benefit is that we can now propagate errors up the stack.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Quick feedback. I don't see any degradation.
+> 
+> OLD:  1 MiB, 256 ops; 0.0000 sec (484.027 MiB/sec and 123910.9390 ops/sec)
+> THIS: 1 MiB, 256 ops; 0.0000 sec (494.560 MiB/sec and 126607.3195 ops/sec)
+> 
+> All the tests are very close to the unpatched results.
 
-I've been testing it and haven't had any problems with it - I just
-haven't done a final review of it yet.  I'll try to do it tomorrow
-morning....
+Sounds like the change in size pushed the workload from running in
+memory under the dirty limit to being over the dirty limit and
+running at disk speed rather than page cache speed. i.e. the
+behaviour is RAM size dependent....
 
 Cheers,
 
