@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6439ZEa157346 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 22:09:35 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id xsIZGybGMkuLsDaL for <xfs@oss.sgi.com>;
-	Tue, 03 Jul 2012 20:09:34 -0700 (PDT)
-Message-ID: <4FF3B3EE.30005@sandeen.net>
-Date: Tue, 03 Jul 2012 22:09:34 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q6449dh9161019 for <xfs@oss.sgi.com>; Tue, 3 Jul 2012 23:09:39 -0500
+Received: from mail-wg0-f51.google.com (mail-wg0-f51.google.com
+	[74.125.82.51]) by cuda.sgi.com with ESMTP id 64U33lKA54bDL0IW
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 03 Jul 2012 21:09:37 -0700 (PDT)
+Received: by wgbed3 with SMTP id ed3so4908105wgb.32
+	for <xfs@oss.sgi.com>; Tue, 03 Jul 2012 21:09:36 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: common.attr: get block size of test fs not
-	root fs
-References: <1341226215-16674-1-git-send-email-eguan@redhat.com>
-In-Reply-To: <1341226215-16674-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <20120703231122.GB19223@dastard>
+References: <4FF2F41F.5000504@gmail.com> <20120703160949.GD855@infradead.org>
+	<20120703231122.GB19223@dastard>
+From: Igor M Podlesny <for.poige+xfs@gmail.com>
+Date: Wed, 4 Jul 2012 12:09:06 +0800
+Message-ID: <CA+sTkh4jk5wAoD32jfe2stzhKpSyB_GCXHSZSp9zjPc+ZfR5Hw@mail.gmail.com>
+Subject: Re: Backporting the concurrent direct IO write fix to 3.4
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,55 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eryu Guan <eguan@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Kerin Millar <kerframil@gmail.com>, xfs@oss.sgi.com
 
-On 7/2/12 5:50 AM, Eryu Guan wrote:
-> stat -f $TEST_DEV shows block size of the fs where $TEST_DEV
-> resides, usually it is the root fs. This will fail 020 on non-4096 block
-> size ext2/3/4, also 4096 block size ext2/3/4 on ppc64.
-> 
-> Instead, stat -f $TEST_DIR will show block size of the fs to be tested.
-> 
-> Tested and passed on ext2/3/4, xfs, btrfs with all supported block size.
-> 
-> Cc: Eric Sandeen <esandeen@redhat.com>
-> Signed-off-by: Eryu Guan <eguan@redhat.com>
+On 4 July 2012 07:11, Dave Chinner <david@fromorbit.com> wrote:
+[...]
+>> On the one hand I'd love to see these patches go into 3.4-stable as it's
+>> going to be a long term release,
+>
+> Is it? So we will have long term support kernels for 3.0.x, 3.2.x
+> and now 3.4.x? 3.0.x is the long term stable kernel I'm targetting
+> for backports and there's no way I can really handle more than
+> that...
 
-Whoops, thanks.
+   That's quite a pity! In production there's often even 2.6.32 since
+it's chosen as RHEL6's kernel.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-I'll merge it shortly
-
-> ---
->  common.attr |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/common.attr b/common.attr
-> index 0f1e789..6e2c004 100644
-> --- a/common.attr
-> +++ b/common.attr
-> @@ -187,7 +187,7 @@ _sort_getfattr_output()
->  if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" ]; then
->  	MAX_ATTRS=1000
->  else # Assume max ~1 block of attrs
-> -	BLOCK_SIZE=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-> +	BLOCK_SIZE=`stat -f $TEST_DIR | grep "Block size" | cut -d " " -f3`
->  	# user.attribute_XXX="value.XXX" is about 32 bytes; leave some overhead
->  	let MAX_ATTRS=$BLOCK_SIZE/40
->  fi
-> @@ -198,7 +198,7 @@ export MAX_ATTRS
->  if [ "$FSTYP" == "xfs" -o "$FSTYP" == "udf" -o "$FSTYP" == "btrfs" ]; then
->  	MAX_ATTRVAL_SIZE=64
->  else # Assume max ~1 block of attrs
-> -	BLOCK_SIZE=`stat -f $TEST_DEV | grep "Block size" | cut -d " " -f3`
-> +	BLOCK_SIZE=`stat -f $TEST_DIR | grep "Block size" | cut -d " " -f3`
->  	# leave a little overhead
->  	let MAX_ATTRVAL_SIZE=$BLOCK_SIZE-256
->  fi
-> 
-
+--
 
 _______________________________________________
 xfs mailing list
