@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q64FEj6E223609 for <xfs@oss.sgi.com>; Wed, 4 Jul 2012 10:14:45 -0500
+	q64FEju6223587 for <xfs@oss.sgi.com>; Wed, 4 Jul 2012 10:14:45 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	70ZhOBHB7a8djdJS (version=TLSv1 cipher=AES256-SHA bits=256
+	YGHA4QdseH380trH (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 04 Jul 2012 08:14:45 -0700 (PDT)
-Message-Id: <20120704151444.401872600@bombadil.infradead.org>
-Date: Wed, 04 Jul 2012 11:13:33 -0400
+	Wed, 04 Jul 2012 08:14:44 -0700 (PDT)
+Message-Id: <20120704151443.765745844@bombadil.infradead.org>
+Date: Wed, 04 Jul 2012 11:13:31 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH 5/5] xfs: remove iolock lock classes
+Subject: [PATCH 3/5] xfs: do not take the iolock in xfs_inactive
 References: <20120704151328.928543446@bombadil.infradead.org>
+Content-Disposition: inline; filename=xfs-dont-hold-iolock-during-eviction
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,126 +23,114 @@ List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============2178355642020433553=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: sage@newdream.net
 
---===============2178355642020433553==
-Content-Disposition: inline; filename=xfs-remove-iolock-classes
+An inode that enters xfs_inactive has been removed from all global
+lists but the inode hash, and can't be recycled in xfs_iget before
+it has been marked reclaimable.  Thus taking the iolock in here
+is not nessecary at all, and given the amount of lockdep false
+positives it has triggered already I'd rather remove the locking.
 
-Now that we never take the iolock during inode reclaim we don't need
-to play games with lock classes.
+The only change outside of xfs_inactive is relaxing an assert in
+xfs_itruncate_extents.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 ---
- fs/xfs/xfs_iget.c  |   15 ---------------
- fs/xfs/xfs_inode.h |    2 --
- fs/xfs/xfs_super.c |   18 ++----------------
- 3 files changed, 2 insertions(+), 33 deletions(-)
+ fs/xfs/xfs_inode.c    |    4 +++-
+ fs/xfs/xfs_vnodeops.c |   29 ++++++++++++-----------------
+ 2 files changed, 15 insertions(+), 18 deletions(-)
 
-Index: xfs/fs/xfs/xfs_iget.c
+Index: xfs/fs/xfs/xfs_vnodeops.c
 ===================================================================
---- xfs.orig/fs/xfs/xfs_iget.c	2012-06-04 13:45:36.000000000 +0200
-+++ xfs/fs/xfs/xfs_iget.c	2012-07-04 15:08:58.517051204 +0200
-@@ -41,17 +41,6 @@
+--- xfs.orig/fs/xfs/xfs_vnodeops.c	2012-07-04 09:51:01.347038413 +0200
++++ xfs/fs/xfs/xfs_vnodeops.c	2012-07-04 09:51:03.913705064 +0200
+@@ -554,7 +554,7 @@ xfs_inactive(
+ 		return VN_INACTIVE_CACHE;
+ 	}
  
+-	xfs_ilock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	xfs_trans_ijoin(tp, ip, 0);
  
- /*
-- * Define xfs inode iolock lockdep classes. We need to ensure that all active
-- * inodes are considered the same for lockdep purposes, including inodes that
-- * are recycled through the XFS_IRECLAIMABLE state. This is the the only way to
-- * guarantee the locks are considered the same when there are multiple lock
-- * initialisation siteѕ. Also, define a reclaimable inode class so it is
-- * obvious in lockdep reports which class the report is against.
-- */
--static struct lock_class_key xfs_iolock_active;
--struct lock_class_key xfs_iolock_reclaimable;
--
--/*
-  * Allocate and initialise an xfs_inode.
-  */
- STATIC struct xfs_inode *
-@@ -80,8 +69,6 @@ xfs_inode_alloc(
- 	ASSERT(ip->i_ino == 0);
+ 	if (S_ISLNK(ip->i_d.di_mode)) {
+@@ -591,21 +591,24 @@ xfs_inactive(
+ 		ASSERT(ip->i_d.di_forkoff != 0);
  
- 	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
--	lockdep_set_class_and_name(&ip->i_iolock.mr_lock,
--			&xfs_iolock_active, "xfs_iolock_active");
- 
- 	/* initialise the xfs inode */
- 	ip->i_ino = ino;
-@@ -250,8 +237,6 @@ xfs_iget_cache_hit(
- 
- 		ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
- 		mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
--		lockdep_set_class_and_name(&ip->i_iolock.mr_lock,
--				&xfs_iolock_active, "xfs_iolock_active");
- 
- 		spin_unlock(&ip->i_flags_lock);
- 		spin_unlock(&pag->pag_ici_lock);
-Index: xfs/fs/xfs/xfs_inode.h
-===================================================================
---- xfs.orig/fs/xfs/xfs_inode.h	2012-07-03 20:31:33.533706239 +0200
-+++ xfs/fs/xfs/xfs_inode.h	2012-07-04 15:08:51.413717911 +0200
-@@ -487,8 +487,6 @@ static inline int xfs_isiflocked(struct
- #define XFS_IOLOCK_DEP(flags)	(((flags) & XFS_IOLOCK_DEP_MASK) >> XFS_IOLOCK_SHIFT)
- #define XFS_ILOCK_DEP(flags)	(((flags) & XFS_ILOCK_DEP_MASK) >> XFS_ILOCK_SHIFT)
- 
--extern struct lock_class_key xfs_iolock_reclaimable;
--
- /*
-  * For multiple groups support: if S_ISGID bit is set in the parent
-  * directory, group of new file is set to that of the parent, and
-Index: xfs/fs/xfs/xfs_super.c
-===================================================================
---- xfs.orig/fs/xfs/xfs_super.c	2012-07-02 12:11:56.435779819 +0200
-+++ xfs/fs/xfs/xfs_super.c	2012-07-04 15:08:44.667051287 +0200
-@@ -929,6 +929,8 @@ xfs_fs_evict_inode(
- {
- 	xfs_inode_t		*ip = XFS_I(inode);
- 
-+	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
+ 		error = xfs_trans_commit(tp, XFS_TRANS_RELEASE_LOG_RES);
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 		if (error)
+-			goto error_unlock;
++			goto out_unlock;
 +
- 	trace_xfs_evict_inode(ip);
++		xfs_iunlock(ip, XFS_ILOCK_EXCL);
  
- 	truncate_inode_pages(&inode->i_data, 0);
-@@ -937,22 +939,6 @@ xfs_fs_evict_inode(
- 	XFS_STATS_INC(vn_remove);
- 	XFS_STATS_DEC(vn_active);
+ 		error = xfs_attr_inactive(ip);
+ 		if (error)
+-			goto error_unlock;
++			goto out;
  
--	/*
--	 * The iolock is used by the file system to coordinate reads,
--	 * writes, and block truncates.  Up to this point the lock
--	 * protected concurrent accesses by users of the inode.  But
--	 * from here forward we're doing some final processing of the
--	 * inode because we're done with it, and although we reuse the
--	 * iolock for protection it is really a distinct lock class
--	 * (in the lockdep sense) from before.  To keep lockdep happy
--	 * (and basically indicate what we are doing), we explicitly
--	 * re-init the iolock here.
--	 */
--	ASSERT(!rwsem_is_locked(&ip->i_iolock.mr_lock));
--	mrlock_init(&ip->i_iolock, MRLOCK_BARRIER, "xfsio", ip->i_ino);
--	lockdep_set_class_and_name(&ip->i_iolock.mr_lock,
--			&xfs_iolock_reclaimable, "xfs_iolock_reclaimable");
+ 		tp = xfs_trans_alloc(mp, XFS_TRANS_INACTIVE);
+ 		error = xfs_trans_reserve(tp, 0,
+ 					  XFS_IFREE_LOG_RES(mp),
+ 					  0, XFS_TRANS_PERM_LOG_RES,
+ 					  XFS_INACTIVE_LOG_COUNT);
+-		if (error)
+-			goto error_cancel;
++		if (error) {
++			xfs_trans_cancel(tp, 0);
++			goto out;
++		}
+ 
+ 		xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 		xfs_trans_ijoin(tp, ip, 0);
+@@ -658,21 +661,13 @@ xfs_inactive(
+ 	 * Release the dquots held by inode, if any.
+ 	 */
+ 	xfs_qm_dqdetach(ip);
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
 -
- 	xfs_inactive(ip);
++out_unlock:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out:
+ 	return VN_INACTIVE_CACHE;
+ out_cancel:
+ 	xfs_trans_cancel(tp, XFS_TRANS_RELEASE_LOG_RES | XFS_TRANS_ABORT);
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL);
+-	return VN_INACTIVE_CACHE;
+-
+-error_cancel:
+-	ASSERT(XFS_FORCED_SHUTDOWN(mp));
+-	xfs_trans_cancel(tp, 0);
+-error_unlock:
+-	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+-	return VN_INACTIVE_CACHE;
++	goto out_unlock;
  }
  
-
-
---===============2178355642020433553==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+ /*
+Index: xfs/fs/xfs/xfs_inode.c
+===================================================================
+--- xfs.orig/fs/xfs/xfs_inode.c	2012-07-04 09:40:04.413709004 +0200
++++ xfs/fs/xfs/xfs_inode.c	2012-07-04 09:51:03.913705064 +0200
+@@ -1123,7 +1123,9 @@ xfs_itruncate_extents(
+ 	int			error = 0;
+ 	int			done = 0;
+ 
+-	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
++	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
++	ASSERT(!atomic_read(&VFS_I(ip)->i_count) ||
++	       xfs_isilocked(ip, XFS_IOLOCK_EXCL));
+ 	ASSERT(new_size <= XFS_ISIZE(ip));
+ 	ASSERT(tp->t_flags & XFS_TRANS_PERM_LOG_RES);
+ 	ASSERT(ip->i_itemp != NULL);
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============2178355642020433553==--
