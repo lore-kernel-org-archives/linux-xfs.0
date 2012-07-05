@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q65G2DWw077999 for <xfs@oss.sgi.com>; Thu, 5 Jul 2012 11:02:13 -0500
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id aZmf0RMHVzMzHNtt
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 05 Jul 2012 09:02:12 -0700 (PDT)
-Received: by mail-pb0-f53.google.com with SMTP id rr13so16092919pbb.26
-	for <xfs@oss.sgi.com>; Thu, 05 Jul 2012 09:02:12 -0700 (PDT)
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: [PATCH v3 1/2] block: reorganize rounding of max_discard_sectors
-Date: Thu,  5 Jul 2012 18:01:43 +0200
-Message-Id: <1341504104-1674-2-git-send-email-pbonzini@redhat.com>
-In-Reply-To: <1341504104-1674-1-git-send-email-pbonzini@redhat.com>
-References: <1341504104-1674-1-git-send-email-pbonzini@redhat.com>
+	q65Lxjps102232 for <xfs@oss.sgi.com>; Thu, 5 Jul 2012 16:59:45 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	1xn5roWyhw2sX8Oi for <xfs@oss.sgi.com>;
+	Thu, 05 Jul 2012 14:59:43 -0700 (PDT)
+Date: Fri, 6 Jul 2012 07:59:40 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: 3.5.0-rc5: inconsistent lock state
+Message-ID: <20120705215940.GP19223@dastard>
+References: <alpine.DEB.2.01.1207041206390.5568@trent.utfs.org>
+	<20120705074307.GA28127@infradead.org>
+	<alpine.DEB.2.01.1207050535420.5568@trent.utfs.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.01.1207050535420.5568@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,63 +24,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, snitzer@redhat.com, martin.petersen@oracle.com, xfs@oss.sgi.com, dm-devel@redhat.com, hch@lst.de, vgoyal@redhat.com
+To: Christian Kujau <lists@nerdbynature.de>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-Mostly a preparation for the next patch.
+On Thu, Jul 05, 2012 at 05:44:50AM -0700, Christian Kujau wrote:
+> On Thu, 5 Jul 2012 at 03:43, Christoph Hellwig wrote:
+> > See my "do not take the iolock in inode reclaim context" series from
+> > yesterday, which should take care of this.
+> 
+> OK, good. I'll wait until this hits mainline then.
+> 
+> > Btw, if you hit this it's a sign you have out of the inode attributes,
+> > so if this isn't just a single inode with them you might be better off
+> > using larger inodes.
+> 
+> ..."(run) out of inode attributes" - not really sure what that means and 
+> why that would be the case.
 
-In principle this fixes an infinite loop if max_discard_sectors < granularity,
-but that really shouldn't happen.
+It means that you have enough attributes that they don't fit in the
+inode, so every time they are read or written you have to do an
+extra IO on top of reading/writing the inode. Performance can easily
+drop by an order of magnitude when the attributes are moved out of
+the inode....
 
-Cc: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Paolo Bonzini <pbonzini@redhat.com>
----
- block/blk-lib.c |    9 +++++----
- 1 files changed, 5 insertions(+), 4 deletions(-)
+Typically there is 50-70 bytes of attribute space available in 256
+byte inodes, larger attributes or lots of them will push them out of
+the inode....
 
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index 2b461b4..16b06f6 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -44,6 +44,7 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	struct request_queue *q = bdev_get_queue(bdev);
- 	int type = REQ_WRITE | REQ_DISCARD;
- 	unsigned int max_discard_sectors;
-+	unsigned int granularity;
- 	struct bio_batch bb;
- 	struct bio *bio;
- 	int ret = 0;
-@@ -54,18 +55,18 @@ int blkdev_issue_discard(struct block_device *bdev, sector_t sector,
- 	if (!blk_queue_discard(q))
- 		return -EOPNOTSUPP;
- 
-+	/* Zero-sector (unknown) and one-sector granularities are the same.  */
-+	granularity = max(q->limits.discard_granularity >> 9, 1U);
-+
- 	/*
- 	 * Ensure that max_discard_sectors is of the proper
- 	 * granularity
- 	 */
- 	max_discard_sectors = min(q->limits.max_discard_sectors, UINT_MAX >> 9);
-+	max_discard_sectors = round_down(max_discard_sectors, granularity);
- 	if (unlikely(!max_discard_sectors)) {
- 		/* Avoid infinite loop below. Being cautious never hurts. */
- 		return -EOPNOTSUPP;
--	} else if (q->limits.discard_granularity) {
--		unsigned int disc_sects = q->limits.discard_granularity >> 9;
--
--		max_discard_sectors &= ~(disc_sects - 1);
- 	}
- 
- 	if (flags & BLKDEV_DISCARD_SECURE) {
+> And "using larger inodes" sounds like a 
+> reformat with a larger "-i size=" option.
+
+Yes, inode size is defined at mkfs time.
+
+> Is there a way to find out my 
+> current inode size? "mkfs.xfs -N" does not print its default values on a 
+> mounted filesystem and I'm pretty sure I've used the default values when I 
+> created the filesystem a while ago (i.e. just plain "mkfs.xfs" w/o any 
+> options)
+
+xfs_info <mntpt>
+
+Cheers,
+
+Dave.
 -- 
-1.7.1
-
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
