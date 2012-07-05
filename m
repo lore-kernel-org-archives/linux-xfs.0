@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q65Lxjps102232 for <xfs@oss.sgi.com>; Thu, 5 Jul 2012 16:59:45 -0500
+	q65M8air102996 for <xfs@oss.sgi.com>; Thu, 5 Jul 2012 17:08:36 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	1xn5roWyhw2sX8Oi for <xfs@oss.sgi.com>;
-	Thu, 05 Jul 2012 14:59:43 -0700 (PDT)
-Date: Fri, 6 Jul 2012 07:59:40 +1000
+	C2Ds8yKocNQFEFHL for <xfs@oss.sgi.com>;
+	Thu, 05 Jul 2012 15:08:34 -0700 (PDT)
+Date: Fri, 6 Jul 2012 08:08:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: 3.5.0-rc5: inconsistent lock state
-Message-ID: <20120705215940.GP19223@dastard>
-References: <alpine.DEB.2.01.1207041206390.5568@trent.utfs.org>
-	<20120705074307.GA28127@infradead.org>
-	<alpine.DEB.2.01.1207050535420.5568@trent.utfs.org>
+Subject: Re: [PATCH 1/1] ACL: increase the #define XFS_ACL_MAX_ENTRIES to 128
+	The xfsprogs xfs_repair will have to be increased also if this is
+	okay.
+Message-ID: <20120705220832.GQ19223@dastard>
+References: <1341520391-9704-1-git-send-email-bradla8@yahoo.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1207050535420.5568@trent.utfs.org>
+In-Reply-To: <1341520391-9704-1-git-send-email-bradla8@yahoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +28,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Brad Arrington <bradla8@yahoo.com>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Thu, Jul 05, 2012 at 05:44:50AM -0700, Christian Kujau wrote:
-> On Thu, 5 Jul 2012 at 03:43, Christoph Hellwig wrote:
-> > See my "do not take the iolock in inode reclaim context" series from
-> > yesterday, which should take care of this.
+On Thu, Jul 05, 2012 at 01:33:11PM -0700, Brad Arrington wrote:
 > 
-> OK, good. I'll wait until this hits mainline then.
+> Signed-off-by: Brad Arrington <bradla8@yahoo.com>
+> ---
+>  fs/xfs/xfs_acl.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> > Btw, if you hit this it's a sign you have out of the inode attributes,
-> > so if this isn't just a single inode with them you might be better off
-> > using larger inodes.
-> 
-> ..."(run) out of inode attributes" - not really sure what that means and 
-> why that would be the case.
+> diff --git a/fs/xfs/xfs_acl.h b/fs/xfs/xfs_acl.h
+> index 39632d9..716d4d2 100644
+> --- a/fs/xfs/xfs_acl.h
+> +++ b/fs/xfs/xfs_acl.h
+> @@ -22,7 +22,7 @@ struct inode;
+>  struct posix_acl;
+>  struct xfs_inode;
+>  
+> -#define XFS_ACL_MAX_ENTRIES 25
+> +#define XFS_ACL_MAX_ENTRIES 128
 
-It means that you have enough attributes that they don't fit in the
-inode, so every time they are read or written you have to do an
-extra IO on top of reading/writing the inode. Performance can easily
-drop by an order of magnitude when the attributes are moved out of
-the inode....
+That's an on disk format change - you can't just increase it like
+that without some kind of superblock feature bit to indicate that
+the limit is 128 rather than 25 on that filesystem.
 
-Typically there is 50-70 bytes of attribute space available in 256
-byte inodes, larger attributes or lots of them will push them out of
-the inode....
-
-> And "using larger inodes" sounds like a 
-> reformat with a larger "-i size=" option.
-
-Yes, inode size is defined at mkfs time.
-
-> Is there a way to find out my 
-> current inode size? "mkfs.xfs -N" does not print its default values on a 
-> mounted filesystem and I'm pretty sure I've used the default values when I 
-> created the filesystem a while ago (i.e. just plain "mkfs.xfs" w/o any 
-> options)
-
-xfs_info <mntpt>
+As it is, if we are going to change it, it will get changed to allow
+the maximum number of ACLs an attribute can hold, not another
+arbitrary number like 128....
 
 Cheers,
 
