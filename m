@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6635caQ129171 for <xfs@oss.sgi.com>; Thu, 5 Jul 2012 22:05:38 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	0Hys0mJ7PxVBtPEK for <xfs@oss.sgi.com>;
-	Thu, 05 Jul 2012 20:05:35 -0700 (PDT)
-Date: Fri, 6 Jul 2012 13:05:32 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V3] xfs: cleanup the mount options
-Message-ID: <20120706030532.GU19223@dastard>
-References: <20120702062625.GB20804@infradead.org>
-	<1341212714-13508-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	q66J7D6p197119 for <xfs@oss.sgi.com>; Fri, 6 Jul 2012 14:07:13 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id zkJ5jsjb7QbC8o0i for <xfs@oss.sgi.com>;
+	Fri, 06 Jul 2012 12:07:11 -0700 (PDT)
+Message-ID: <4FF7375E.4060009@sandeen.net>
+Date: Fri, 06 Jul 2012 14:07:10 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1341212714-13508-1-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: Re: [PATCH] xfs_db: Fix extent record printing on big endian
+References: <4FE23555.7070606@redhat.com>
+In-Reply-To: <4FE23555.7070606@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,166 +24,95 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Mon, Jul 02, 2012 at 03:05:14PM +0800, Wanlong Gao wrote:
-> remove the mount options macro, use tokens instead.
+On 6/20/12 3:40 PM, Eric Sandeen wrote:
+> Extent records which should have been printed as:
 > 
-> CC: Ben Myers <bpm@sgi.com>
-> CC: Christoph Hellwig <hch@infradead.org>
-> CC: Dave Chinner <david@fromorbit.com>
-> CC: Zach Brown <zab@zabbo.net>
-> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+> a.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,12,17,0]
+> 
+> for example, were instead being printed as:
+> 
+> a.bmx[0] = [startoff,startblock,blockcount,extentflag] 0:[0,12884910592,0,0]
+> 
+> in xfs_db.  It was simply mis-parsing the extent records due to wrong
+> #defines for big-endian machines.
+> 
+> It's been broken since at least xfsprogs-2.6.13, causing xfstests 021
+> to fail.
+
+Ping on this one?  I'd like to get 021 passing on big-endian.  Do I need to
+do more due diligence on the correctness of it?
+
+addr_f
+	(*adf)(iocur_top->data, tfl->offset, next);
+		fa_cfsblock(obj, bit, next);
+			bno = (xfs_dfsbno_t)getbitval(obj, bit, BMBT_STARTBLOCK_BITLEN,
+				BVUNSIGNED);
+
+fa_cfsblock is getting the wrong "bit" passed to it due to the offset in this structure
+being wrong, because of the defines in question.  
+
+const field_t   bmapbta_rec_flds[] = {
+        { "startoff", FLDT_CFILEOFFA, OI(BMBT_STARTOFF_BITOFF), C1, 0,
+          TYP_ATTR },
+        { "startblock", FLDT_CFSBLOCK, OI(BMBT_STARTBLOCK_BITOFF), C1, 0,
+          TYP_ATTR },
+	...
+
+So we pass it an opaque "obj", and the bit offset into the on-disk inode for the extent
+data is the same whether we are on big endian or little endian - I think that is the
+issue here.
+
+getbitval() itself handles endian converions once we get to the right data.  We just need
+the proper offsets to it...
+
+Thanks,
+-Eric
+ 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
->  fs/xfs/xfs_super.c | 510 ++++++++++++++++++++++++++++++++---------------------
->  1 file changed, 307 insertions(+), 203 deletions(-)
-....
+> 
+> Why this works is, um ...left as an exercise to the reviewer for now ;)
+> TBH I get lost in xfs_db, and I'm not sure how endianness is handled,
+> but it's pretty clearly not like this!
+> 
+> diff --git a/db/btblock.c b/db/btblock.c
+> index f6e8a68..2c199b2 100644
+> --- a/db/btblock.c
+> +++ b/db/btblock.c
+> @@ -250,23 +250,12 @@ const field_t	bmapbtd_key_flds[] = {
+>  };
+>  #undef KOFF
+>  
+> -#ifndef XFS_NATIVE_HOST
+> -
+>  #define BMBT_EXNTFLAG_BITOFF	0
+>  #define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF + BMBT_EXNTFLAG_BITLEN)
+>  #define BMBT_STARTBLOCK_BITOFF	(BMBT_STARTOFF_BITOFF + BMBT_STARTOFF_BITLEN)
+>  #define BMBT_BLOCKCOUNT_BITOFF	\
+>  	(BMBT_STARTBLOCK_BITOFF + BMBT_STARTBLOCK_BITLEN)
+>  
+> -#else
+> -
+> -#define BMBT_EXNTFLAG_BITOFF	63
+> -#define BMBT_STARTOFF_BITOFF	(BMBT_EXNTFLAG_BITOFF - BMBT_STARTOFF_BITLEN)
+> -#define BMBT_STARTBLOCK_BITOFF	85 /* 128 - 43 (other 9 is in first word) */
+> -#define BMBT_BLOCKCOUNT_BITOFF	64 /* Start of second 64 bit container */
+> -
+> -#endif /* XFS_NATIVE_HOST */
+> -
+>  const field_t	bmapbta_rec_flds[] = {
+>  	{ "startoff", FLDT_CFILEOFFA, OI(BMBT_STARTOFF_BITOFF), C1, 0,
+>  	  TYP_ATTR },
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
-One thing about duplication:
-
-> +#define	MNTOPT_LOGBUFS		"logbufs"
-> +#define	MNTOPT_LOGBSIZE		"logbsize"
-> +#define	MNTOPT_LOGDEV		"logdev"
-
-....
-
->  static const match_table_t tokens = {
-> -	{Opt_barrier, "barrier"},
-> -	{Opt_nobarrier, "nobarrier"},
-> +	{Opt_logbufs, "logbufs=%d"},	/* number of XFS log buffers */
-> +	{Opt_logbsize, "logbsize=%s"},	/* size of XFS log buffers */
-> +	{Opt_logdev, "logdev=%s"},	/* log device */
-
-You're effectively defining each string twice, which is almost
-certainly going to lead to one but nothe other being updated in
-future.
-
-Can something like:
-
-	{Opt_logbufs, MNTOPT_LOGBUFS "=%d"},	/* number of XFS log buffers */
-	{Opt_logbsize,MNTOPT_LOGBSIZE "=%s"},	/* size of XFS log buffers */
-	{Opt_logdev,  MNTOPT_LOGDEV "=%s"},	/* log device */
-
-be done to avoid that duplication?
-
-> +		token = match_token(p, tokens, args);
-> +		switch (token) {
-> +		case Opt_logbufs:
-> +			intarg = 0;
-> +			ret = EINVAL;
-> +			match_int(args, &intarg);
-> +			if (!intarg)
-> +				goto free_orig;
-
-Why is a value of zero an error? match_int() returns an error if it
-fails....
-
-> +			mp->m_logbufs = intarg;
-> +			break;
-
-I don't really like the "set error, call function, jump to error"
-pattern. I'd prefer just to set the error value when an error
-returns as it makes the code much easier and more logical to read.
-i.e:
-
-		token = match_token(p, tokens, args);
-		switch (token) {
-		case Opt_logbufs:
-			ret = match_int(args, &intarg);
-			if (ret)
-				goto free_orig;
-			mp->m_logbufs = intarg;
-			break;
-
-> +		case Opt_logbsize:
-> +			ret = ENOMEM;
-> +			string = match_strdup(args);
-> +			if (!string)
-> +				goto free_orig;
-> +			ret = EINVAL;
-> +			intarg = suffix_strtoul(string, &eov, 0);
-> +			if (!intarg)
-> +				goto free_string;
-
-So this is just an open coded version of match_int() using the
-suffix_strtoul() rather than simple_strtoul() directly. Please write
-a "suffix_match_int()" wrapper for it, and that avoids all the messy
-error handling in this code....
-
-> +			break;
-> +		case Opt_logdev:
-> +			ret = ENOMEM;
-> +			string = match_strdup(args);
-> +			if (!string)
-> +				goto free_orig;
-> +
-> +			mp->m_logname = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
->  			if (!mp->m_logname)
-> +				goto free_string;
-
-and is consistent with this and other similar code.
-
-> +		case Opt_biosize:
-> +			intarg = 0;
-> +			ret = EINVAL;
-> +			intarg = match_int(args, &intarg);
-
-That's not valid. match_int() returns either 0 or -EINVAL/-ENOMEM,
-and that will overwrite whatever value match_int() writes into
-intarg when it decodes it.
-
-> +			if (!intarg)
-> +				goto free_orig;
-
-hence on a correct mount option with value, it will abort with no
-error.
-
-> +			iosizelog = ffs(intarg) - 1;
-
-And on a bad value, it will write something bad into iosizelog and
-continue.
-
-> +		case Opt_allocsize:
-> +			ret = ENOMEM;
-> +			string = match_strdup(args);
-> +			if (!string)
-> +				goto free_orig;
-> +			ret = EINVAL;
-> +			intarg = suffix_strtoul(string, &eov, 0);
-> +			if (!intarg)
-> +				goto free_string;
-
-Why is a value of zero an error?
-
-....
-
-> +		case Opt_delaylog:
->  			xfs_warn(mp,
-> +		"delaylog is the default now, option is deprecated.");
-> +			break;
-> +		case Opt_nodelaylog:
->  			xfs_warn(mp,
-> +		"nodelaylog support has been removed, option is deprecated.");
-
-Hard coding mount options here again.....
-
-> +			break;
-> +		case Opt_discard:
->  			mp->m_flags |= XFS_MOUNT_DISCARD;
-> +			break;
-> +		case Opt_nodiscard:
->  			mp->m_flags &= ~XFS_MOUNT_DISCARD;
-> +			break;
-
-Move these above all the deprecated options.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
