@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6A8WV3b066117 for <xfs@oss.sgi.com>; Tue, 10 Jul 2012 03:32:31 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 244278F8049
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2012 01:32:28 -0700 (PDT)
-Received: from [134.15.69.59] (cf-vpn-sw-corp-69-59.corp.sgi.com
-	[134.15.69.59])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 718757001D73
-	for <xfs@oss.sgi.com>; Tue, 10 Jul 2012 03:32:27 -0500 (CDT)
-Message-ID: <4FFBE89A.3070705@sgi.com>
-Date: Tue, 10 Jul 2012 10:32:26 +0200
-From: Alain Renaud <arenaud@sgi.com>
+	q6A4rMrm053299 for <xfs@oss.sgi.com>; Mon, 9 Jul 2012 23:53:22 -0500
+Received: from LGEMRELSE7Q.lge.com (LGEMRELSE7Q.lge.com [156.147.1.151]) by
+	cuda.sgi.com with ESMTP id bsh2EaDNEtWkoKoO for
+	<xfs@oss.sgi.com>; Mon, 09 Jul 2012 21:53:20 -0700 (PDT)
+From: Namhyung Kim <namhyung@kernel.org>
+Subject: Re: [PATCH 2/6] workqueue: factor out worker_pool from global_cwq
+References: <1341859315-17759-1-git-send-email-tj@kernel.org>
+	<1341859315-17759-3-git-send-email-tj@kernel.org>
+Date: Tue, 10 Jul 2012 13:48:44 +0900
+In-Reply-To: <1341859315-17759-3-git-send-email-tj@kernel.org> (Tejun Heo's
+	message of "Mon, 9 Jul 2012 11:41:51 -0700")
+Message-ID: <87ehok8bmb.fsf@sejong.aot.lge.com>
 MIME-Version: 1.0
-Subject: [PATCH v2] xfstest: test corruption with multi extent in PAGE.
-References: <20120710082318.685263546@sgi.com>
-In-Reply-To: <20120710082318.685263546@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,309 +22,132 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Tejun Heo <tj@kernel.org>
+Cc: axboe@kernel.dk, elder@kernel.org, rni@google.com, martin.petersen@oracle.com, linux-bluetooth@vger.kernel.org, torvalds@linux-foundation.org, marcel@holtmann.org, linux-kernel@vger.kernel.org, vwadekar@nvidia.com, swhiteho@redhat.com, herbert@gondor.hengli.com.au, bpm@sgi.com, linux-crypto@vger.kernel.org, gustavo@padovan.org, xfs@oss.sgi.com, joshhunt00@gmail.com, davem@davemloft.net, vgoyal@redhat.com, johan.hedberg@gmail.com
+
+Hi, Tejun
+
+Just nitpicks..
 
 
-   Test using extsize/resvspace to create a file with multiple extent in 
-one PAGE. This show an error in the block conversion from unwritten to 
-real. As a result we tag raw disk block as valid(3-4)
-and  valid data as unwritten(5-6)
+On Mon,  9 Jul 2012 11:41:51 -0700, Tejun Heo wrote:
+> Move worklist and all worker management fields from global_cwq into
+> the new struct worker_pool.  worker_pool points back to the containing
+> gcwq.  worker and cpu_workqueue_struct are updated to point to
+> worker_pool instead of gcwq too.
+>
+> This change is mechanical and doesn't introduce any functional
+> difference other than rearranging of fields and an added level of
+> indirection in some places.  This is to prepare for multiple pools per
+> gcwq.
+>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  include/trace/events/workqueue.h |    2 +-
+>  kernel/workqueue.c               |  216 ++++++++++++++++++++-----------------
+>  2 files changed, 118 insertions(+), 100 deletions(-)
+>
+> diff --git a/include/trace/events/workqueue.h b/include/trace/events/workqueue.h
+> index 4018f50..f28d1b6 100644
+> --- a/include/trace/events/workqueue.h
+> +++ b/include/trace/events/workqueue.h
+> @@ -54,7 +54,7 @@ TRACE_EVENT(workqueue_queue_work,
+>  		__entry->function	= work->func;
+>  		__entry->workqueue	= cwq->wq;
+>  		__entry->req_cpu	= req_cpu;
+> -		__entry->cpu		= cwq->gcwq->cpu;
+> +		__entry->cpu		= cwq->pool->gcwq->cpu;
+>  	),
+>  
+>  	TP_printk("work struct=%p function=%pf workqueue=%p req_cpu=%u cpu=%u",
+> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
+> index 27637c2..bc43a0c 100644
+> --- a/kernel/workqueue.c
+> +++ b/kernel/workqueue.c
+> @@ -115,6 +115,7 @@ enum {
+>   */
+>  
+>  struct global_cwq;
+> +struct worker_pool;
+>  
+>  /*
+>   * The poor guys doing the actual heavy lifting.  All on-duty workers
+> @@ -131,7 +132,7 @@ struct worker {
+>  	struct cpu_workqueue_struct *current_cwq; /* L: current_work's cwq */
+>  	struct list_head	scheduled;	/* L: scheduled works */
+>  	struct task_struct	*task;		/* I: worker task */
+> -	struct global_cwq	*gcwq;		/* I: the associated gcwq */
+> +	struct worker_pool	*pool;		/* I: the associated pool */
+>  	/* 64 bytes boundary on 64bit, 32 on 32bit */
+>  	unsigned long		last_active;	/* L: last active timestamp */
+>  	unsigned int		flags;		/* X: flags */
+> @@ -139,6 +140,21 @@ struct worker {
+>  	struct work_struct	rebind_work;	/* L: rebind worker to cpu */
+>  };
+>  
+> +struct worker_pool {
+> +	struct global_cwq	*gcwq;		/* I: the owning gcwq */
+> +
+> +	struct list_head	worklist;	/* L: list of pending works */
+> +	int			nr_workers;	/* L: total number of workers */
+> +	int			nr_idle;	/* L: currently idle ones */
+> +
+> +	struct list_head	idle_list;	/* X: list of idle workers */
+> +	struct timer_list	idle_timer;	/* L: worker idle timeout */
+> +	struct timer_list	mayday_timer;	/* L: SOS timer for dworkers */
 
-On an x86_64 machine the page should look like this.
+What is 'dworkers'?
 
-buffer  content
-0       empty  b_state = 0
-1       DATA   b_state = 0x1023
-2       DATA   b_state = 0x1023
-3       empty  b_state = 0
-4       empty  b_state = 0
-5       DATA   b_state = 0x1023
-6       DATA   b_state = 0x1023
-7       empty  b_state = 0
 
-Signed-off-by: Alain Renaud <arenaud@sgi.com>
+> +
+> +	struct ida		worker_ida;	/* L: for worker IDs */
+> +	struct worker		*first_idle;	/* L: first idle worker */
+> +};
+> +
+>  /*
+>   * Global per-cpu workqueue.  There's one and only one for each cpu
+>   * and all works are queued and processed here regardless of their
+> @@ -146,27 +162,18 @@ struct worker {
+>   */
+>  struct global_cwq {
+>  	spinlock_t		lock;		/* the gcwq lock */
+> -	struct list_head	worklist;	/* L: list of pending works */
+>  	unsigned int		cpu;		/* I: the associated cpu */
+>  	unsigned int		flags;		/* L: GCWQ_* flags */
+>  
+> -	int			nr_workers;	/* L: total number of workers */
+> -	int			nr_idle;	/* L: currently idle ones */
+> -
+> -	/* workers are chained either in the idle_list or busy_hash */
+> -	struct list_head	idle_list;	/* X: list of idle workers */
+> +	/* workers are chained either in busy_head or pool idle_list */
 
----
-  287     |  148 	148 +	0 -	0 !
-  287.out |  102 	102 +	0 -	0 !
-  group   |    1 	1 +	0 -	0 !
-  3 files changed, 251 insertions(+)
-  create mode 100755 287
-  create mode 100644 287.out
+s/busy_head/busy_hash/ ?
 
-Index: b/287
-===================================================================
---- /dev/null
-+++ b/287
-@@ -0,0 +1,148 @@
-+#! /bin/bash
-+# FS QA Test No. 287
-+#
-+# File corruption with multiple extent in a page.
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 SGI.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=arenaud@sgi.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+
-+_require_scratch
-+
-+pgsize=$($here/src/feature -s)
-+blksize=$(( ${pgsize} / 8))
-+
-+rm -f $seq.full
-+if ! _scratch_mkfs_xfs -b size=${blksize} >> $seq.full 2>&1
-+then
-+    echo "!!! failed to mkfs on $SCRATCH_DEV"
-+    exit ${status}
-+fi
-+
-+_scratch_mount
-+
-+# Test one create a file using extsize with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# U/R/R/U/U/R/R/U
-+echo "Testing page U/R/R/U/U/R/R/U with extsize"
-+testfile=${SCRATCH_MNT}/test_extsize_urrurru.data
-+rm -f ${testfile}
-+xfs_io -f -c "extsize $(( $pgsize * 5))" \
-+    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 2))" \
-+    -c "truncate $(( $pgsize * 3))" \
-+    -c stat -c "bmap -vp" \
-+    ${testfile} >> $seq.full 2>&1
-+
-+hexdump ${testfile}
-+echo
-+
-+# Test one create a file using resvsp with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# U/R/R/U/U/R/R/U
-+echo "Testing page U/R/R/U/U/R/R/U with resvsp"
-+testfile=${SCRATCH_MNT}/test_resvsp_urrurru.data
-+rm -f ${testfile}
-+xfs_io -f -c "resvsp 0 $(( $pgsize * 5))" \
-+    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 2))" \
-+    -c "truncate $(( $pgsize * 3))" \
-+    -c stat -c "bmap -vp" \
-+    ${testfile} >> $seq.full 2>&1
-+
-+hexdump ${testfile}
-+echo
-+
-+
-+# Test one create a file using resvsp with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# real overflow resvspace
-+# U/R/R/U/U/R/R/R R...
-+echo "Testing page U/R/R/U/U/R/R/R with resvsp"
-+testfile=${SCRATCH_MNT}/test_resvsp_urrurrr.data
-+rm -f ${testfile}
-+xfs_io -f -c "resvsp 0 $(( $pgsize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 4))" \
-+    -c "truncate $(( $pgsize * 5))" \
-+    -c stat -c "bmap -vp" \
-+   ${testfile} >> $seq.full 2>&1
-+
-+hexdump ${testfile}
-+echo
-+
-+# Test one create a file using resvsp with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# switch problem to cluster write.
-+#  R/R/R/R/R/R/R/R R/R/R/U/U/R/R/U
-+echo "Testing page R/R/R/U/U/R/R/U with resvsp"
-+testfile=${SCRATCH_MNT}/test_resvsp_rrrurru.data
-+rm -f ${testfile}
-+xfs_io -f -c "resvsp 0 $(( $pgsize * 10))" \
-+    -c "pwrite $(( $pgsize )) $(( $blksize * 10))" \
-+    -c "pwrite $(( $pgsize + $blksize * 12 )) $(( $blksize * 2))" \
-+    -c "truncate $(( $pgsize * 5))" \
-+    -c stat -c "bmap -vp" \
-+    ${testfile} >> $seq.full 2>&1
-+
-+hexdump ${testfile}
-+echo
-+
-+
-+_scratch_unmount
-+_scratch_mount
-+echo
-+# Dump all the file again after unmount making sure no
-+# pages can be cached.
-+
-+echo "dumping test_extsize_urrurru.data"
-+hexdump ${SCRATCH_MNT}/test_extsize_urrurru.data
-+
-+echo "dumping test_resvsp_urrurru.data"
-+hexdump ${SCRATCH_MNT}/test_resvsp_urrurru.data
-+
-+echo "dumping test_resvsp_urrurrr.data"
-+hexdump ${SCRATCH_MNT}/test_resvsp_urrurrr.data
-+
-+echo "dumping test_resvsp_rrrurru.data"
-+hexdump ${SCRATCH_MNT}/test_resvsp_rrrurru.data
-+
-+_scratch_unmount
-+
-+
-+# success, all done
-+status=0
-+exit
-Index: b/287.out
-===================================================================
---- /dev/null
-+++ b/287.out
-@@ -0,0 +1,102 @@
-+QA output created by 287
-+Testing page U/R/R/U/U/R/R/U with extsize
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+
-+Testing page U/R/R/U/U/R/R/U with resvsp
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+
-+Testing page U/R/R/U/U/R/R/R with resvsp
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002200 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-+
-+Testing page R/R/R/U/U/R/R/U with resvsp
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002400 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0002800 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002c00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-+
-+
-+dumping test_extsize_urrurru.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+dumping test_resvsp_urrurru.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+dumping test_resvsp_urrurrr.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002200 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-+dumping test_resvsp_rrrurru.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002400 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0002800 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002c00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-Index: b/group
-===================================================================
---- a/group
-+++ b/group
-@@ -405,3 +405,4 @@
-  284 auto
-  285 auto rw
-  286 other
-+287 auto rw
+Thanks,
+Namhyung
+
+
+>  	struct hlist_head	busy_hash[BUSY_WORKER_HASH_SIZE];
+>  						/* L: hash of busy workers */
+>  
+> -	struct timer_list	idle_timer;	/* L: worker idle timeout */
+> -	struct timer_list	mayday_timer;	/* L: SOS timer for dworkers */
+> -
+> -	struct ida		worker_ida;	/* L: for worker IDs */
+> +	struct worker_pool	pool;		/* the worker pools */
+>  
+>  	struct task_struct	*trustee;	/* L: for gcwq shutdown */
+>  	unsigned int		trustee_state;	/* L: trustee state */
+>  	wait_queue_head_t	trustee_wait;	/* trustee wait */
+> -	struct worker		*first_idle;	/* L: first idle worker */
+>  } ____cacheline_aligned_in_smp;
+>  
+>  /*
 
 _______________________________________________
 xfs mailing list
