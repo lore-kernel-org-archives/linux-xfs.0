@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6A4rMrm053299 for <xfs@oss.sgi.com>; Mon, 9 Jul 2012 23:53:22 -0500
-Received: from LGEMRELSE7Q.lge.com (LGEMRELSE7Q.lge.com [156.147.1.151]) by
-	cuda.sgi.com with ESMTP id bsh2EaDNEtWkoKoO for
-	<xfs@oss.sgi.com>; Mon, 09 Jul 2012 21:53:20 -0700 (PDT)
-From: Namhyung Kim <namhyung@kernel.org>
-Subject: Re: [PATCH 2/6] workqueue: factor out worker_pool from global_cwq
-References: <1341859315-17759-1-git-send-email-tj@kernel.org>
-	<1341859315-17759-3-git-send-email-tj@kernel.org>
-Date: Tue, 10 Jul 2012 13:48:44 +0900
-In-Reply-To: <1341859315-17759-3-git-send-email-tj@kernel.org> (Tejun Heo's
-	message of "Mon, 9 Jul 2012 11:41:51 -0700")
-Message-ID: <87ehok8bmb.fsf@sejong.aot.lge.com>
+	q6B2QGDb157204 for <xfs@oss.sgi.com>; Tue, 10 Jul 2012 21:26:16 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	7uRUbwToQDXI6cEr for <xfs@oss.sgi.com>;
+	Tue, 10 Jul 2012 19:26:14 -0700 (PDT)
+Date: Wed, 11 Jul 2012 12:26:09 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V4] xfs: cleanup the mount options
+Message-ID: <20120711022609.GX19223@dastard>
+References: <20120706030532.GU19223@dastard>
+	<1341747397-10649-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<20120709002218.GW19223@dastard> <4FFAA2B4.6090503@cn.fujitsu.com>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <4FFAA2B4.6090503@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,128 +28,84 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
-Cc: axboe@kernel.dk, elder@kernel.org, rni@google.com, martin.petersen@oracle.com, linux-bluetooth@vger.kernel.org, torvalds@linux-foundation.org, marcel@holtmann.org, linux-kernel@vger.kernel.org, vwadekar@nvidia.com, swhiteho@redhat.com, herbert@gondor.hengli.com.au, bpm@sgi.com, linux-crypto@vger.kernel.org, gustavo@padovan.org, xfs@oss.sgi.com, joshhunt00@gmail.com, davem@davemloft.net, vgoyal@redhat.com, johan.hedberg@gmail.com
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, XFS <xfs@oss.sgi.com>
 
-Hi, Tejun
+On Mon, Jul 09, 2012 at 05:21:56PM +0800, Wanlong Gao wrote:
+> On 07/09/2012 08:22 AM, Dave Chinner wrote:
+> > On Sun, Jul 08, 2012 at 07:36:37PM +0800, Wanlong Gao wrote:
+> >> remove the mount options macro, use tokens instead.
+> >>
+> >> CC: Ben Myers <bpm@sgi.com>
+> >> CC: Christoph Hellwig <hch@infradead.org>
+> >> CC: Dave Chinner <david@fromorbit.com>
+> >> CC: Zach Brown <zab@zabbo.net>
+> >> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+> >> ---
+> > 
+> > A "what's changed in this version" list would be handy here.
+> > 
+> >>  fs/xfs/xfs_super.c |  539 +++++++++++++++++++++++++++++++---------------------
+> >>  1 file changed, 320 insertions(+), 219 deletions(-)
+> > 
+> > ....
+> > 
+> >> -
+> >> -STATIC unsigned long
+> >> -suffix_strtoul(char *s, char **endp, unsigned int base)
+> >> +STATIC int
+> >> +suffix_match_int(substring_t *s, int *result)
+> > 
+> > I'm not sure ints are the best unit to use here....
+> > 
+> >>  {
+> >> -	int	last, shift_left_factor = 0;
+> >> -	char	*value = s;
+> >> +	int ret;
+> >> +	int last, shift_left_factor = 0;
+> >> +	char *value = s->to - 1;
+> >>  
+> >> -	last = strlen(value) - 1;
+> >> -	if (value[last] == 'K' || value[last] == 'k') {
+> >> +	if (*value == 'K' || *value == 'k') {
+> >>  		shift_left_factor = 10;
+> >> -		value[last] = '\0';
+> >> +		s->to--;
+> >>  	}
+> >> -	if (value[last] == 'M' || value[last] == 'm') {
+> >> +	if (*value == 'M' || *value == 'm') {
+> >>  		shift_left_factor = 20;
+> >> -		value[last] = '\0';
+> >> +		s->to--;
+> >>  	}
+> >> -	if (value[last] == 'G' || value[last] == 'g') {
+> >> +	if (*value == 'G' || *value == 'g') {
+> >>  		shift_left_factor = 30;
+> >> -		value[last] = '\0';
+> >> +		s->to--;
+> >>  	}
+> >>  
+> >> -	return simple_strtoul((const char *)s, endp, base) << shift_left_factor;
+> >> +	ret = match_number(s, result, 0);
+> >> +	*result = *result << shift_left_factor;
+> > 
+> > Because this overflows or gives the negative values for numbers like
+> > 2G far too easily. I think this function needs to return an unsigned
+> > long.
+> 
+> Do you mean the "result" should be "unsigned long" but not the return value?
+> Because the return value is a error state.
 
-Just nitpicks..
+result.
 
+BTW: *result <<= shift_left_factor;
 
-On Mon,  9 Jul 2012 11:41:51 -0700, Tejun Heo wrote:
-> Move worklist and all worker management fields from global_cwq into
-> the new struct worker_pool.  worker_pool points back to the containing
-> gcwq.  worker and cpu_workqueue_struct are updated to point to
-> worker_pool instead of gcwq too.
->
-> This change is mechanical and doesn't introduce any functional
-> difference other than rearranging of fields and an added level of
-> indirection in some places.  This is to prepare for multiple pools per
-> gcwq.
->
-> Signed-off-by: Tejun Heo <tj@kernel.org>
-> ---
->  include/trace/events/workqueue.h |    2 +-
->  kernel/workqueue.c               |  216 ++++++++++++++++++++-----------------
->  2 files changed, 118 insertions(+), 100 deletions(-)
->
-> diff --git a/include/trace/events/workqueue.h b/include/trace/events/workqueue.h
-> index 4018f50..f28d1b6 100644
-> --- a/include/trace/events/workqueue.h
-> +++ b/include/trace/events/workqueue.h
-> @@ -54,7 +54,7 @@ TRACE_EVENT(workqueue_queue_work,
->  		__entry->function	= work->func;
->  		__entry->workqueue	= cwq->wq;
->  		__entry->req_cpu	= req_cpu;
-> -		__entry->cpu		= cwq->gcwq->cpu;
-> +		__entry->cpu		= cwq->pool->gcwq->cpu;
->  	),
->  
->  	TP_printk("work struct=%p function=%pf workqueue=%p req_cpu=%u cpu=%u",
-> diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-> index 27637c2..bc43a0c 100644
-> --- a/kernel/workqueue.c
-> +++ b/kernel/workqueue.c
-> @@ -115,6 +115,7 @@ enum {
->   */
->  
->  struct global_cwq;
-> +struct worker_pool;
->  
->  /*
->   * The poor guys doing the actual heavy lifting.  All on-duty workers
-> @@ -131,7 +132,7 @@ struct worker {
->  	struct cpu_workqueue_struct *current_cwq; /* L: current_work's cwq */
->  	struct list_head	scheduled;	/* L: scheduled works */
->  	struct task_struct	*task;		/* I: worker task */
-> -	struct global_cwq	*gcwq;		/* I: the associated gcwq */
-> +	struct worker_pool	*pool;		/* I: the associated pool */
->  	/* 64 bytes boundary on 64bit, 32 on 32bit */
->  	unsigned long		last_active;	/* L: last active timestamp */
->  	unsigned int		flags;		/* X: flags */
-> @@ -139,6 +140,21 @@ struct worker {
->  	struct work_struct	rebind_work;	/* L: rebind worker to cpu */
->  };
->  
-> +struct worker_pool {
-> +	struct global_cwq	*gcwq;		/* I: the owning gcwq */
-> +
-> +	struct list_head	worklist;	/* L: list of pending works */
-> +	int			nr_workers;	/* L: total number of workers */
-> +	int			nr_idle;	/* L: currently idle ones */
-> +
-> +	struct list_head	idle_list;	/* X: list of idle workers */
-> +	struct timer_list	idle_timer;	/* L: worker idle timeout */
-> +	struct timer_list	mayday_timer;	/* L: SOS timer for dworkers */
+Cheers,
 
-What is 'dworkers'?
-
-
-> +
-> +	struct ida		worker_ida;	/* L: for worker IDs */
-> +	struct worker		*first_idle;	/* L: first idle worker */
-> +};
-> +
->  /*
->   * Global per-cpu workqueue.  There's one and only one for each cpu
->   * and all works are queued and processed here regardless of their
-> @@ -146,27 +162,18 @@ struct worker {
->   */
->  struct global_cwq {
->  	spinlock_t		lock;		/* the gcwq lock */
-> -	struct list_head	worklist;	/* L: list of pending works */
->  	unsigned int		cpu;		/* I: the associated cpu */
->  	unsigned int		flags;		/* L: GCWQ_* flags */
->  
-> -	int			nr_workers;	/* L: total number of workers */
-> -	int			nr_idle;	/* L: currently idle ones */
-> -
-> -	/* workers are chained either in the idle_list or busy_hash */
-> -	struct list_head	idle_list;	/* X: list of idle workers */
-> +	/* workers are chained either in busy_head or pool idle_list */
-
-s/busy_head/busy_hash/ ?
-
-Thanks,
-Namhyung
-
-
->  	struct hlist_head	busy_hash[BUSY_WORKER_HASH_SIZE];
->  						/* L: hash of busy workers */
->  
-> -	struct timer_list	idle_timer;	/* L: worker idle timeout */
-> -	struct timer_list	mayday_timer;	/* L: SOS timer for dworkers */
-> -
-> -	struct ida		worker_ida;	/* L: for worker IDs */
-> +	struct worker_pool	pool;		/* the worker pools */
->  
->  	struct task_struct	*trustee;	/* L: for gcwq shutdown */
->  	unsigned int		trustee_state;	/* L: trustee state */
->  	wait_queue_head_t	trustee_wait;	/* trustee wait */
-> -	struct worker		*first_idle;	/* L: first idle worker */
->  } ____cacheline_aligned_in_smp;
->  
->  /*
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
