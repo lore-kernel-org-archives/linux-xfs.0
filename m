@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6BLesFv240985 for <xfs@oss.sgi.com>; Wed, 11 Jul 2012 16:40:54 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	vEDY33OZyvvOs9Pn for <xfs@oss.sgi.com>;
-	Wed, 11 Jul 2012 14:40:52 -0700 (PDT)
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: don't defer metadata allocation to the workqueue
-Date: Thu, 12 Jul 2012 07:40:43 +1000
-Message-Id: <1342042843-1773-3-git-send-email-david@fromorbit.com>
-In-Reply-To: <1342042843-1773-1-git-send-email-david@fromorbit.com>
+	q6BMhDH8244885 for <xfs@oss.sgi.com>; Wed, 11 Jul 2012 17:43:14 -0500
+Date: Wed, 11 Jul 2012 17:48:22 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/2] xfs: regression fixes for 3.5-rc7
+Message-ID: <20120711224822.GQ10196@sgi.com>
 References: <1342042843-1773-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1342042843-1773-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,61 +18,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: bpm@sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hey Dave,
 
-Almost all metadata allocations come from shallow stack usage
-situations. Avoid the overhead of switching the allocation to a
-workqueue as we are not in danger of running out of stack when
-making these allocations. Metadata allocations are already marked
-through the args that are passed down, so this is trivial to do.
+On Thu, Jul 12, 2012 at 07:40:41AM +1000, Dave Chinner wrote:
+> These two patches need to go to Linus before 3.5 is released. The
+> first fixes the btree cursor leak properly, and the second fixes a
+> significant performance regression reported by Mel Gorman. Can you
+> review them and send them onwards to Linus?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reported-by: Mel Gorman <mgorman@suse.de>
-Tested-by: Mel Gorman <mgorman@suse.de>
----
- fs/xfs/xfs_alloc.c |   15 ++++++++++++---
- 1 file changed, 12 insertions(+), 3 deletions(-)
+I have some test exposure on the first one, but not on the second.  I'd rather
+have a known performance regression in 3.5 than start popping stacks again this
+late toward the end of the rc cycle.  I suggest that #2 go in for the 3.6 merge
+window and back to 3.5 via -stable.  Any other opinions?
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index f654f51..4f33c32 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -2434,13 +2434,22 @@ xfs_alloc_vextent_worker(
- 	current_restore_flags_nested(&pflags, PF_FSTRANS);
- }
- 
--
--int				/* error */
-+/*
-+ * Data allocation requests often come in with little stack to work on. Push
-+ * them off to a worker thread so there is lots of stack to use. Metadata
-+ * requests, OTOH, are generally from low stack usage paths, so avoid the
-+ * context switch overhead here.
-+ */
-+int
- xfs_alloc_vextent(
--	xfs_alloc_arg_t	*args)	/* allocation argument structure */
-+	struct xfs_alloc_arg	*args)
- {
- 	DECLARE_COMPLETION_ONSTACK(done);
- 
-+	if (!args->userdata)
-+		return __xfs_alloc_vextent(args);
-+
-+
- 	args->done = &done;
- 	INIT_WORK_ONSTACK(&args->work, xfs_alloc_vextent_worker);
- 	queue_work(xfs_alloc_wq, &args->work);
--- 
-1.7.10
+I'll feel better about if after some testing, so I'll get tests running asap.
+What testing have you and Mel done?
+
+IMO we should also consider "xfs: prevent recursion in xfs_buf_iorequest", from
+Christoph.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
