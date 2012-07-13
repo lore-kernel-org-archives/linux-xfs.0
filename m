@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6DA9WYQ139495 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:09:32 -0500
+	q6DAF6CY140216 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:15:06 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id BD5FD8F8049
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 03:09:29 -0700 (PDT)
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 61F738F8039
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 03:15:06 -0700 (PDT)
 Received: from [134.15.68.149] (cf-vpn-sw-corp-68-149.corp.sgi.com
 	[134.15.68.149])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 4718870017D6
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:09:29 -0500 (CDT)
-Message-ID: <4FFFF3D8.7060001@sgi.com>
-Date: Fri, 13 Jul 2012 12:09:28 +0200
+	by estes.americas.sgi.com (Postfix) with ESMTP id 7FD9370017D6
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:15:05 -0500 (CDT)
+Message-ID: <4FFFF528.8060909@sgi.com>
+Date: Fri, 13 Jul 2012 12:15:04 +0200
 From: Alain Renaud <arenaud@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: prevent xfs_bmap_extsize_align() to exceed maximum extent
-	size.
-References: <20120712154554.377970666@sgi.com>
-In-Reply-To: <20120712154554.377970666@sgi.com>
+Subject: [PATCH v2] xfstest: test corruption with multi extent in PAGE.
+References: <20120601185815.883227033@sgi.com>
+	<20120601185935.708235862@sgi.com>
+	<20120605091352.GL4347@dastard> <4FCDFA16.9050808@sgi.com>
+In-Reply-To: <4FCDFA16.9050808@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,58 +32,306 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs: prevent xfs_bmap_extsize_align() to exceed maximum extent size.
+Since I got no feedback on the updated version let me send it again.
 
-When trying to do preallocation that exceed the the maximum size of
-an extent, the extsize alignment can exceed this value.
-We are already trying to solve this issue for delay allocation but we
-have the same with prealloc. So I think the simple solution is to limit
-the size in xfs_bmap_extsize_align() and remove the code specific to
-delay allocation.
+xfstest: test corruption with multi extent in PAGE.
 
-We do have a simple test case to confirm that the problem exist.
+Test using extsize/resvspace to create a file with multiple extent in one PAGE.
+This show an error in the block conversion from unwritten to real.
+As a result we tag raw disk block as valid(3-4)
+and  valid data as unwritten(5-6)
 
-# cd /xfs_dir/
-# xfs_io -c 'extsize 4m' .
-# xfs_io -f -c 'resvsp 0 8g' test_file
-XFS_IOC_RESVSP64: No space left on device
+On an x86_64 machine the page should look like this.
+
+buffer  content
+0       empty  b_state = 0
+1       DATA   b_state = 0x1023
+2       DATA   b_state = 0x1023
+3       empty  b_state = 0
+4       empty  b_state = 0
+5       DATA   b_state = 0x1023
+6       DATA   b_state = 0x1023
+7       empty  b_state = 0
 
 Signed-off-by: Alain Renaud <arenaud@sgi.com>
 
 ---
-  fs/xfs/xfs_bmap.c |   12 +++++-------
-  1 file changed, 5 insertions(+), 7 deletions(-)
+  287     |  148     148 +    0 -    0 !
+  287.out |  102     102 +    0 -    0 !
+  group   |    1     1 +    0 -    0 !
+  3 files changed, 251 insertions(+)
+  create mode 100755 287
+  create mode 100644 287.out
 
-Index: b/fs/xfs/xfs_bmap.c
+Index: b/287
 ===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -1912,6 +1912,11 @@ xfs_bmap_extsize_align(
-  		align_alen += extsz - temp;
-  	}
-  	/*
-+	 * Make sure we do not exceed the maximum len of an extent.
-+	 */
-+	align_alen = XFS_FILBLKS_MIN(align_alen,
-+				     MAXEXTLEN - (MAXEXTLEN % extsz));
-+	/*
-  	 * If the previous block overlaps with this proposed allocation
-  	 * then move the start forward without adjusting the length.
-  	 */
-@@ -4450,13 +4455,6 @@ xfs_bmapi_reserve_delalloc(
-  	/* Figure out the extent size, adjust alen */
-  	extsz = xfs_get_extsz_hint(ip);
-  	if (extsz) {
--		/*
--		 * Make sure we don't exceed a single extent length when we
--		 * align the extent by reducing length we are going to
--		 * allocate by the maximum amount extent size aligment may
--		 * require.
--		 */
--		alen = XFS_FILBLKS_MIN(len, MAXEXTLEN - (2 * extsz - 1));
-  		error = xfs_bmap_extsize_align(mp, got, prev, extsz, rt, eof,
-  					       1, 0, &aoff, &alen);
-  		ASSERT(!error);
+--- /dev/null
++++ b/287
+@@ -0,0 +1,148 @@
++#! /bin/bash
++# FS QA Test No. 287
++#
++# File corruption with multiple extent in a page.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 SGI.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=arenaud@sgi.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++
++_require_scratch
++
++pgsize=$($here/src/feature -s)
++blksize=$(( ${pgsize} / 8))
++
++rm -f $seq.full
++if ! _scratch_mkfs_xfs -b size=${blksize} >> $seq.full 2>&1
++then
++    echo "!!! failed to mkfs on $SCRATCH_DEV"
++    exit ${status}
++fi
++
++_scratch_mount
++
++# Test one create a file using extsize with mix
++# real/unwritten extent in page. assume 8 blocks per page
++# U/R/R/U/U/R/R/U
++echo "Testing page U/R/R/U/U/R/R/U with extsize"
++testfile=${SCRATCH_MNT}/test_extsize_urrurru.data
++rm -f ${testfile}
++xfs_io -f -c "extsize $(( $pgsize * 5))" \
++    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
++    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 2))" \
++    -c "truncate $(( $pgsize * 3))" \
++    -c stat -c "bmap -vp" \
++    ${testfile} >> $seq.full 2>&1
++
++hexdump ${testfile}
++echo
++
++# Test one create a file using resvsp with mix
++# real/unwritten extent in page. assume 8 blocks per page
++# U/R/R/U/U/R/R/U
++echo "Testing page U/R/R/U/U/R/R/U with resvsp"
++testfile=${SCRATCH_MNT}/test_resvsp_urrurru.data
++rm -f ${testfile}
++xfs_io -f -c "resvsp 0 $(( $pgsize * 5))" \
++    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
++    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 2))" \
++    -c "truncate $(( $pgsize * 3))" \
++    -c stat -c "bmap -vp" \
++    ${testfile} >> $seq.full 2>&1
++
++hexdump ${testfile}
++echo
++
++
++# Test one create a file using resvsp with mix
++# real/unwritten extent in page. assume 8 blocks per page
++# real overflow resvspace
++# U/R/R/U/U/R/R/R R...
++echo "Testing page U/R/R/U/U/R/R/R with resvsp"
++testfile=${SCRATCH_MNT}/test_resvsp_urrurrr.data
++rm -f ${testfile}
++xfs_io -f -c "resvsp 0 $(( $pgsize * 2))" \
++    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
++    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 4))" \
++    -c "truncate $(( $pgsize * 5))" \
++    -c stat -c "bmap -vp" \
++   ${testfile} >> $seq.full 2>&1
++
++hexdump ${testfile}
++echo
++
++# Test one create a file using resvsp with mix
++# real/unwritten extent in page. assume 8 blocks per page
++# switch problem to cluster write.
++#  R/R/R/R/R/R/R/R R/R/R/U/U/R/R/U
++echo "Testing page R/R/R/U/U/R/R/U with resvsp"
++testfile=${SCRATCH_MNT}/test_resvsp_rrrurru.data
++rm -f ${testfile}
++xfs_io -f -c "resvsp 0 $(( $pgsize * 10))" \
++    -c "pwrite $(( $pgsize )) $(( $blksize * 10))" \
++    -c "pwrite $(( $pgsize + $blksize * 12 )) $(( $blksize * 2))" \
++    -c "truncate $(( $pgsize * 5))" \
++    -c stat -c "bmap -vp" \
++    ${testfile} >> $seq.full 2>&1
++
++hexdump ${testfile}
++echo
++
++
++_scratch_unmount
++_scratch_mount
++echo
++# Dump all the file again after unmount making sure no
++# pages can be cached.
++
++echo "dumping test_extsize_urrurru.data"
++hexdump ${SCRATCH_MNT}/test_extsize_urrurru.data
++
++echo "dumping test_resvsp_urrurru.data"
++hexdump ${SCRATCH_MNT}/test_resvsp_urrurru.data
++
++echo "dumping test_resvsp_urrurrr.data"
++hexdump ${SCRATCH_MNT}/test_resvsp_urrurrr.data
++
++echo "dumping test_resvsp_rrrurru.data"
++hexdump ${SCRATCH_MNT}/test_resvsp_rrrurru.data
++
++_scratch_unmount
++
++
++# success, all done
++status=0
++exit
+Index: b/287.out
+===================================================================
+--- /dev/null
++++ b/287.out
+@@ -0,0 +1,102 @@
++QA output created by 287
++Testing page U/R/R/U/U/R/R/U with extsize
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001600 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001e00 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0003000
++
++Testing page U/R/R/U/U/R/R/U with resvsp
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001600 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001e00 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0003000
++
++Testing page U/R/R/U/U/R/R/R with resvsp
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001600 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0002200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0005000
++
++Testing page R/R/R/U/U/R/R/U with resvsp
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0002400 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0002800 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0002c00 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0005000
++
++
++dumping test_extsize_urrurru.data
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001600 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001e00 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0003000
++dumping test_resvsp_urrurru.data
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001600 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001e00 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0003000
++dumping test_resvsp_urrurrr.data
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0001600 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0002200 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0005000
++dumping test_resvsp_rrrurru.data
++0000000 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0001000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0002400 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0002800 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
++*
++0002c00 0000 0000 0000 0000 0000 0000 0000 0000
++*
++0005000
+Index: b/group
+===================================================================
+--- a/group
++++ b/group
+@@ -405,3 +405,4 @@
+  284 auto
+  285 auto rw
+  286 other
++287 auto rw
 
 _______________________________________________
 xfs mailing list
