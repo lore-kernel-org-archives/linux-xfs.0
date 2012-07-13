@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6DAF6CY140216 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:15:06 -0500
+	q6DCRHZ7153319 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 07:27:17 -0500
 Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id 61F738F8039
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 03:15:06 -0700 (PDT)
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 821C230405F
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:27:14 -0700 (PDT)
 Received: from [134.15.68.149] (cf-vpn-sw-corp-68-149.corp.sgi.com
 	[134.15.68.149])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 7FD9370017D6
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 05:15:05 -0500 (CDT)
-Message-ID: <4FFFF528.8060909@sgi.com>
-Date: Fri, 13 Jul 2012 12:15:04 +0200
+	by estes.americas.sgi.com (Postfix) with ESMTP id C3A2970018B3
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 07:27:13 -0500 (CDT)
+Message-ID: <50001420.9020001@sgi.com>
+Date: Fri, 13 Jul 2012 14:27:12 +0200
 From: Alain Renaud <arenaud@sgi.com>
 MIME-Version: 1.0
-Subject: [PATCH v2] xfstest: test corruption with multi extent in PAGE.
-References: <20120601185815.883227033@sgi.com>
-	<20120601185935.708235862@sgi.com>
-	<20120605091352.GL4347@dastard> <4FCDFA16.9050808@sgi.com>
-In-Reply-To: <4FCDFA16.9050808@sgi.com>
+Subject: [PATCH] xfstest: preallocate file space greater then MAXEXTLEN
+References: <20120713122520.837966548@sgi.com>
+In-Reply-To: <20120713122520.837966548@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,46 +30,33 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Since I got no feedback on the updated version let me send it again.
+xfstest: preallocate file space greater then MAXEXTLEN
 
-xfstest: test corruption with multi extent in PAGE.
+This test is trying to reserve file space greater then the maximum size 
+allow per extent, this also using extsize to see if the extsize
+alignment does not overflow MAXEXTLEN.
 
-Test using extsize/resvspace to create a file with multiple extent in one PAGE.
-This show an error in the block conversion from unwritten to real.
-As a result we tag raw disk block as valid(3-4)
-and  valid data as unwritten(5-6)
-
-On an x86_64 machine the page should look like this.
-
-buffer  content
-0       empty  b_state = 0
-1       DATA   b_state = 0x1023
-2       DATA   b_state = 0x1023
-3       empty  b_state = 0
-4       empty  b_state = 0
-5       DATA   b_state = 0x1023
-6       DATA   b_state = 0x1023
-7       empty  b_state = 0
+You need to make sure that you are AG that are big enough to
+contain the entire extent.
 
 Signed-off-by: Alain Renaud <arenaud@sgi.com>
-
 ---
-  287     |  148     148 +    0 -    0 !
-  287.out |  102     102 +    0 -    0 !
-  group   |    1     1 +    0 -    0 !
-  3 files changed, 251 insertions(+)
-  create mode 100755 287
-  create mode 100644 287.out
+  288     |   88 	88 +	0 -	0 !
+  288.out |    2 	2 +	0 -	0 !
+  group   |    1 	1 +	0 -	0 !
+  3 files changed, 91 insertions(+)
+  create mode 100755 288
+  create mode 100644 288.out
 
-Index: b/287
+Index: b/288
 ===================================================================
 --- /dev/null
-+++ b/287
-@@ -0,0 +1,148 @@
++++ b/288
+@@ -0,0 +1,88 @@
 +#! /bin/bash
-+# FS QA Test No. 287
++# FS QA Test No. 288
 +#
-+# File corruption with multiple extent in a page.
++# test preallocation using value greater the maximum size for extent.
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2012 SGI.  All Rights Reserved.
@@ -99,7 +84,7 @@ Index: b/287
 +
 +here=`pwd`
 +tmp=/tmp/$$
-+status=1    # failure is the default!
++status=1	# failure is the default!
 +trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
 +
 +# get standard environment, filters and checks
@@ -112,11 +97,13 @@ Index: b/287
 +
 +_require_scratch
 +
-+pgsize=$($here/src/feature -s)
-+blksize=$(( ${pgsize} / 8))
-+
 +rm -f $seq.full
-+if ! _scratch_mkfs_xfs -b size=${blksize} >> $seq.full 2>&1
++# Use a small block size so we do not need to much disk
++# space to get more the 2^21 block. Since the AG size
++# also need to be bigger then 2^21 block. let's create
++# a 4Gig filesystem with 1 AG.
++if ! _scratch_mkfs_xfs -b size=512 \
++    -d agcount=1,size=4294967296 >> $seq.full 2>&1
 +then
 +    echo "!!! failed to mkfs on $SCRATCH_DEV"
 +    exit ${status}
@@ -124,214 +111,52 @@ Index: b/287
 +
 +_scratch_mount
 +
-+# Test one create a file using extsize with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# U/R/R/U/U/R/R/U
-+echo "Testing page U/R/R/U/U/R/R/U with extsize"
-+testfile=${SCRATCH_MNT}/test_extsize_urrurru.data
-+rm -f ${testfile}
-+xfs_io -f -c "extsize $(( $pgsize * 5))" \
-+    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 2))" \
-+    -c "truncate $(( $pgsize * 3))" \
-+    -c stat -c "bmap -vp" \
-+    ${testfile} >> $seq.full 2>&1
++if ! cd ${SCRATCH_MNT}
++then
++    echo "!!! failed to cd in SCRATCH_MNT"
++    exit ${status}
++fi
 +
-+hexdump ${testfile}
-+echo
-+
-+# Test one create a file using resvsp with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# U/R/R/U/U/R/R/U
-+echo "Testing page U/R/R/U/U/R/R/U with resvsp"
-+testfile=${SCRATCH_MNT}/test_resvsp_urrurru.data
-+rm -f ${testfile}
-+xfs_io -f -c "resvsp 0 $(( $pgsize * 5))" \
-+    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 2))" \
-+    -c "truncate $(( $pgsize * 3))" \
-+    -c stat -c "bmap -vp" \
-+    ${testfile} >> $seq.full 2>&1
-+
-+hexdump ${testfile}
-+echo
++mkdir testdir
++cd testdir
++xfs_io -c 'extsize 1m' .
++xfs_io -f -c 'resvsp 0 1g' testfile
++rm testfile
++xfs_io -f -c 'resvsp 512 1g' testfile
++rm testfile
 +
 +
-+# Test one create a file using resvsp with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# real overflow resvspace
-+# U/R/R/U/U/R/R/R R...
-+echo "Testing page U/R/R/U/U/R/R/R with resvsp"
-+testfile=${SCRATCH_MNT}/test_resvsp_urrurrr.data
-+rm -f ${testfile}
-+xfs_io -f -c "resvsp 0 $(( $pgsize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize )) $(( $blksize * 2))" \
-+    -c "pwrite $(( $pgsize + $blksize * 5 )) $(( $blksize * 4))" \
-+    -c "truncate $(( $pgsize * 5))" \
-+    -c stat -c "bmap -vp" \
-+   ${testfile} >> $seq.full 2>&1
++xfs_io -c 'extsize 4m' .
++xfs_io -f -c 'resvsp 0 1g' testfile
++rm testfile
++xfs_io -f -c 'resvsp 512 1g' testfile
++rm testfile
 +
-+hexdump ${testfile}
-+echo
 +
-+# Test one create a file using resvsp with mix
-+# real/unwritten extent in page. assume 8 blocks per page
-+# switch problem to cluster write.
-+#  R/R/R/R/R/R/R/R R/R/R/U/U/R/R/U
-+echo "Testing page R/R/R/U/U/R/R/U with resvsp"
-+testfile=${SCRATCH_MNT}/test_resvsp_rrrurru.data
-+rm -f ${testfile}
-+xfs_io -f -c "resvsp 0 $(( $pgsize * 10))" \
-+    -c "pwrite $(( $pgsize )) $(( $blksize * 10))" \
-+    -c "pwrite $(( $pgsize + $blksize * 12 )) $(( $blksize * 2))" \
-+    -c "truncate $(( $pgsize * 5))" \
-+    -c stat -c "bmap -vp" \
-+    ${testfile} >> $seq.full 2>&1
-+
-+hexdump ${testfile}
-+echo
-+
++cd "$here"
 +
 +_scratch_unmount
-+_scratch_mount
-+echo
-+# Dump all the file again after unmount making sure no
-+# pages can be cached.
-+
-+echo "dumping test_extsize_urrurru.data"
-+hexdump ${SCRATCH_MNT}/test_extsize_urrurru.data
-+
-+echo "dumping test_resvsp_urrurru.data"
-+hexdump ${SCRATCH_MNT}/test_resvsp_urrurru.data
-+
-+echo "dumping test_resvsp_urrurrr.data"
-+hexdump ${SCRATCH_MNT}/test_resvsp_urrurrr.data
-+
-+echo "dumping test_resvsp_rrrurru.data"
-+hexdump ${SCRATCH_MNT}/test_resvsp_rrrurru.data
-+
-+_scratch_unmount
-+
++echo "Silence is golden"
 +
 +# success, all done
 +status=0
 +exit
-Index: b/287.out
+Index: b/288.out
 ===================================================================
 --- /dev/null
-+++ b/287.out
-@@ -0,0 +1,102 @@
-+QA output created by 287
-+Testing page U/R/R/U/U/R/R/U with extsize
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+
-+Testing page U/R/R/U/U/R/R/U with resvsp
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+
-+Testing page U/R/R/U/U/R/R/R with resvsp
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002200 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-+
-+Testing page R/R/R/U/U/R/R/U with resvsp
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002400 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0002800 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002c00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-+
-+
-+dumping test_extsize_urrurru.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+dumping test_resvsp_urrurru.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001e00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0003000
-+dumping test_resvsp_urrurrr.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001200 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0001600 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001a00 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002200 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
-+dumping test_resvsp_rrrurru.data
-+0000000 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0001000 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002400 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0002800 cdcd cdcd cdcd cdcd cdcd cdcd cdcd cdcd
-+*
-+0002c00 0000 0000 0000 0000 0000 0000 0000 0000
-+*
-+0005000
++++ b/288.out
+@@ -0,0 +1,2 @@
++QA output created by 288
++Silence is golden
 Index: b/group
 ===================================================================
 --- a/group
 +++ b/group
-@@ -405,3 +405,4 @@
-  284 auto
+@@ -406,3 +406,4 @@
   285 auto rw
   286 other
-+287 auto rw
+  287 auto rw
++288 auto quick rw
 
 _______________________________________________
 xfs mailing list
