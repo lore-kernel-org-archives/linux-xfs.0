@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6E4RQmw227691 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 23:27:27 -0500
-Received: from mail-wg0-f41.google.com (mail-wg0-f41.google.com
-	[74.125.82.41]) by cuda.sgi.com with ESMTP id fqpD4xtHezuUir1H
+	q6E4ijaX229117 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 23:44:45 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id 3LX1fFmF0wz3W08j
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Jul 2012 21:27:25 -0700 (PDT)
-Received: by wgbds1 with SMTP id ds1so1076166wgb.2
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 21:27:24 -0700 (PDT)
-MIME-Version: 1.0
-In-Reply-To: <20120714035538.GB5638@dhcp-172-17-108-109.mtv.corp.google.com>
+	<xfs@oss.sgi.com>; Fri, 13 Jul 2012 21:44:44 -0700 (PDT)
+Received: by pbbrr13 with SMTP id rr13so8183453pbb.26
+	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 21:44:43 -0700 (PDT)
+Date: Fri, 13 Jul 2012 21:44:38 -0700
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH 5/6] workqueue: introduce NR_WORKER_POOLS and
+	for_each_worker_pool()
+Message-ID: <20120714044438.GA7718@dhcp-172-17-108-109.mtv.corp.google.com>
 References: <1341859315-17759-1-git-send-email-tj@kernel.org>
 	<1341859315-17759-6-git-send-email-tj@kernel.org>
 	<20120714035538.GB5638@dhcp-172-17-108-109.mtv.corp.google.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 13 Jul 2012 21:27:03 -0700
-Message-ID: <CA+55aFyeauqCqrWsx4U2TB2ENrugZXYj+4vw3Fd0kGaeWBP3RA@mail.gmail.com>
-Subject: Re: [PATCH 5/6] workqueue: introduce NR_WORKER_POOLS and
-	for_each_worker_pool()
+	<CA+55aFyeauqCqrWsx4U2TB2ENrugZXYj+4vw3Fd0kGaeWBP3RA@mail.gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <CA+55aFyeauqCqrWsx4U2TB2ENrugZXYj+4vw3Fd0kGaeWBP3RA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,54 +32,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tejun Heo <tj@kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: axboe@kernel.dk, elder@kernel.org, rni@google.com, martin.petersen@oracle.com, linux-bluetooth@vger.kernel.org, gustavo@padovan.org, marcel@holtmann.org, linux-kernel@vger.kernel.org, vwadekar@nvidia.com, swhiteho@redhat.com, herbert@gondor.hengli.com.au, bpm@sgi.com, linux-crypto@vger.kernel.org, xfs@oss.sgi.com, joshhunt00@gmail.com, davem@davemloft.net, vgoyal@redhat.com, johan.hedberg@gmail.com
 
-Seeing code like this
+Hello, Linus.
 
-+       return &(*nr_running)[0];
+On Fri, Jul 13, 2012 at 09:27:03PM -0700, Linus Torvalds wrote:
+> Seeing code like this
+> 
+> +       return &(*nr_running)[0];
+> 
+> just makes me go "WTF?"
 
-just makes me go "WTF?"
+I was going WTF too.  This was the smallest fix and I wanted to make
+it minimal because there's another stack of patches on top of it.
+Planning to just fold nr_running into worker_pool afterwards which
+will remove the whole function.
 
-Why are you taking the address of something you just dereferenced (the
-"& [0]" part).
+> Why are you taking the address of something you just dereferenced (the
+> "& [0]" part).
 
-And you actually do that *twice*, except the inner one is more
-complicated. When you assign nr_runing, you take the address of it, so
-the "*nr_running" is actually just the same kind of odd thing (except
-in reverse - you take dereference something you just took the
-address-of).
+nr_running is atomic_t (*nr_running)[2].  Ignoring the pointer to
+array part, it's just returning the address of N'th element of the
+array.  ARRAY + N == &ARRAY[N].
 
-Seriously, this to me is a sign of *deeply* confused code. And the
-fact that your first version of that code was buggy *EXACTLY* due to
-this confusion should have made you take a step back.
+> And you actually do that *twice*, except the inner one is more
+> complicated. When you assign nr_runing, you take the address of it, so
+> the "*nr_running" is actually just the same kind of odd thing (except
+> in reverse - you take dereference something you just took the
+> address-of).
+> 
+> Seriously, this to me is a sign of *deeply* confused code. And the
+> fact that your first version of that code was buggy *EXACTLY* due to
+> this confusion should have made you take a step back.
 
-As far as I can tell, what you actually want that function to do is:
+Type-wise, I don't think it's confused.  Ah okay, you're looking at
+the fifth patch in isolation.  Upto this point, the index is always 0.
+I'm puttin it in as a placeholder for the next patch which makes use
+of non-zero index.  This patch is supposed to prepare everything for
+multiple pools and thus non-zero index.
 
-  static atomic_t *get_pool_nr_running(struct worker_pool *pool)
-  {
-    int cpu = pool->gcwq->cpu;
+> As far as I can tell, what you actually want that function to do is:
+> 
+>   static atomic_t *get_pool_nr_running(struct worker_pool *pool)
+>   {
+>     int cpu = pool->gcwq->cpu;
+> 
+>     if (cpu != WORK_CPU_UNBOUND)
+>         return per_cpu(pool_nr_running, cpu);
+> 
+>     return unbound_pool_nr_running;
+>   }
 
-    if (cpu != WORK_CPU_UNBOUND)
-        return per_cpu(pool_nr_running, cpu);
+More like the folloiwng in the end.
 
-    return unbound_pool_nr_running;
-  }
+static atomic_t *get_pool_nr_running(struct worker_pool *pool)
+{
+	int cpu = pool->gcwq->cpu;
+	int is_highpri = pool_is_highpri(pool);
 
-Notice how there isn't an 'address-of' operator anywhere in sight
-there. Those things are arrays, they get turned into "atomic_t *"
-automatically. And there isn't a single dereference (not a '*', and
-not a "[0]" - they are the exact same thing, btw) in sight either.
+	if (cpu != WORK_CPU_UNBOUND)
+		return &per_cpu(pool_nr_running, cpu)[is_highpri];
 
-What am I missing? Are there some new drugs that all the cool kids
-chew that I should be trying? Because I really don't think the kinds
-of insane "take the address of a dereference" games are a good idea.
-They really look to me like somebody is having a really bad drug
-experience.
+	return &unbound_pool_nr_running[is_highpri];
+}
 
-I didn't test the code, btw. I just looked at the patch and went WTF.
+> I didn't test the code, btw. I just looked at the patch and went WTF.
 
-                Linus
+Eh... yeah, with or without [2], this is WTF.  I'll just refresh it
+with the above version.
+
+Thanks.
+
+-- 
+tejun
 
 _______________________________________________
 xfs mailing list
