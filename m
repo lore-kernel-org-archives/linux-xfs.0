@@ -1,23 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6E3uwUO225314 for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 22:56:58 -0500
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id hnmeUhXj5IDDNnNM
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 13 Jul 2012 20:56:56 -0700 (PDT)
-Received: by pbbrr13 with SMTP id rr13so8112108pbb.26
-	for <xfs@oss.sgi.com>; Fri, 13 Jul 2012 20:56:56 -0700 (PDT)
-Date: Fri, 13 Jul 2012 20:56:50 -0700
-From: Tejun Heo <tj@kernel.org>
-Subject: [PATCH UPDATED 6/6] workqueue: reimplement WQ_HIGHPRI using a
-	separate worker_pool
-Message-ID: <20120714035650.GC5638@dhcp-172-17-108-109.mtv.corp.google.com>
-References: <1341859315-17759-1-git-send-email-tj@kernel.org>
-	<1341859315-17759-7-git-send-email-tj@kernel.org>
+	q6G86lrk218936 for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 03:06:47 -0500
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id YzWEzoiEwVXUnqL3 for
+	<xfs@oss.sgi.com>; Mon, 16 Jul 2012 01:06:43 -0700 (PDT)
+Message-ID: <5003CB6E.9060609@cn.fujitsu.com>
+Date: Mon, 16 Jul 2012 16:06:06 +0800
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1341859315-17759-7-git-send-email-tj@kernel.org>
+Subject: Re: [PATCH V5] xfs: cleanup the mount options
+References: <20120711022609.GX19223@dastard>
+	<1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
+In-Reply-To: <1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
+Reply-To: gaowanlong@cn.fujitsu.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,440 +26,739 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-kernel@vger.kernel.org
-Cc: axboe@kernel.dk, Fengguang Wu <fengguang.wu@intel.com>, elder@kernel.org, rni@google.com, martin.petersen@oracle.com, linux-bluetooth@vger.kernel.org, torvalds@linux-foundation.org, marcel@holtmann.org, vwadekar@nvidia.com, swhiteho@redhat.com, herbert@gondor.hengli.com.au, bpm@sgi.com, Tony Luck <tony.luck@intel.com>, linux-crypto@vger.kernel.org, gustavo@padovan.org, xfs@oss.sgi.com, joshhunt00@gmail.com, davem@davemloft.net, vgoyal@redhat.com, johan.hedberg@gmail.com
+To: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, Wanlong Gao <gaowanlong@cn.fujitsu.com>
 
->From 12f804d130d966f2a094e8037e9f163215d13f23 Mon Sep 17 00:00:00 2001
-From: Tejun Heo <tj@kernel.org>
-Date: Fri, 13 Jul 2012 20:50:50 -0700
+On 07/11/2012 02:29 PM, Wanlong Gao wrote:
+> remove the mount options macro, use tokens instead.
+> 
+> change from V4: (as Dave suggested)
+> 1. suffix_match_int avoid overflow.
+> 2. convert the return style to be consistent with others.
+> 3. move the "intarg" init above the switch.
+> 4. move match_strdup to a help function.
+> 5. collapsed Opt_biosize and Opt_allocsize.
+> 6. make a consistent deprecated message.
+> 
 
-WQ_HIGHPRI was implemented by queueing highpri work items at the head
-of the global worklist.  Other than queueing at the head, they weren't
-handled differently; unfortunately, this could lead to execution
-latency of a few seconds on heavily loaded systems.
+Any more comments?
 
-Now that workqueue code has been updated to deal with multiple
-worker_pools per global_cwq, this patch reimplements WQ_HIGHPRI using
-a separate worker_pool.  NR_WORKER_POOLS is bumped to two and
-gcwq->pools[0] is used for normal pri work items and ->pools[1] for
-highpri.  Highpri workers get -20 nice level and has 'H' suffix in
-their names.  Note that this change increases the number of kworkers
-per cpu.
+Thanks,
+Wanlong Gao
 
-POOL_HIGHPRI_PENDING, pool_determine_ins_pos() and highpri chain
-wakeup code in process_one_work() are no longer used and removed.
+> CC: Ben Myers <bpm@sgi.com>
+> CC: Christoph Hellwig <hch@infradead.org>
+> CC: Dave Chinner <david@fromorbit.com>
+> CC: Zach Brown <zab@zabbo.net>
+> Signed-off-by: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+> ---
+>  fs/xfs/xfs_super.c | 551 +++++++++++++++++++++++++++++++----------------------
+>  1 file changed, 326 insertions(+), 225 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index 07f70e1..3b62354 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -66,91 +66,171 @@ static const struct super_operations xfs_super_operations;
+>  static kmem_zone_t *xfs_ioend_zone;
+>  mempool_t *xfs_ioend_pool;
+>  
+> -#define MNTOPT_LOGBUFS	"logbufs"	/* number of XFS log buffers */
+> -#define MNTOPT_LOGBSIZE	"logbsize"	/* size of XFS log buffers */
+> -#define MNTOPT_LOGDEV	"logdev"	/* log device */
+> -#define MNTOPT_RTDEV	"rtdev"		/* realtime I/O device */
+> -#define MNTOPT_BIOSIZE	"biosize"	/* log2 of preferred buffered io size */
+> -#define MNTOPT_WSYNC	"wsync"		/* safe-mode nfs compatible mount */
+> -#define MNTOPT_NOALIGN	"noalign"	/* turn off stripe alignment */
+> -#define MNTOPT_SWALLOC	"swalloc"	/* turn on stripe width allocation */
+> -#define MNTOPT_SUNIT	"sunit"		/* data volume stripe unit */
+> -#define MNTOPT_SWIDTH	"swidth"	/* data volume stripe width */
+> -#define MNTOPT_NOUUID	"nouuid"	/* ignore filesystem UUID */
+> -#define MNTOPT_MTPT	"mtpt"		/* filesystem mount point */
+> -#define MNTOPT_GRPID	"grpid"		/* group-ID from parent directory */
+> -#define MNTOPT_NOGRPID	"nogrpid"	/* group-ID from current process */
+> -#define MNTOPT_BSDGROUPS    "bsdgroups"    /* group-ID from parent directory */
+> -#define MNTOPT_SYSVGROUPS   "sysvgroups"   /* group-ID from current process */
+> -#define MNTOPT_ALLOCSIZE    "allocsize"    /* preferred allocation size */
+> -#define MNTOPT_NORECOVERY   "norecovery"   /* don't run XFS recovery */
+> -#define MNTOPT_BARRIER	"barrier"	/* use writer barriers for log write and
+> -					 * unwritten extent conversion */
+> -#define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
+> -#define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
+> -#define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
+> -#define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
+> -#define MNTOPT_LARGEIO	   "largeio"	/* report large I/O sizes in stat() */
+> -#define MNTOPT_NOLARGEIO   "nolargeio"	/* do not report large I/O sizes
+> -					 * in stat(). */
+> -#define MNTOPT_ATTR2	"attr2"		/* do use attr2 attribute format */
+> -#define MNTOPT_NOATTR2	"noattr2"	/* do not use attr2 attribute format */
+> -#define MNTOPT_FILESTREAM  "filestreams" /* use filestreams allocator */
+> -#define MNTOPT_QUOTA	"quota"		/* disk quotas (user) */
+> -#define MNTOPT_NOQUOTA	"noquota"	/* no quotas */
+> -#define MNTOPT_USRQUOTA	"usrquota"	/* user quota enabled */
+> -#define MNTOPT_GRPQUOTA	"grpquota"	/* group quota enabled */
+> -#define MNTOPT_PRJQUOTA	"prjquota"	/* project quota enabled */
+> -#define MNTOPT_UQUOTA	"uquota"	/* user quota (IRIX variant) */
+> -#define MNTOPT_GQUOTA	"gquota"	/* group quota (IRIX variant) */
+> -#define MNTOPT_PQUOTA	"pquota"	/* project quota (IRIX variant) */
+> -#define MNTOPT_UQUOTANOENF "uqnoenforce"/* user quota limit enforcement */
+> -#define MNTOPT_GQUOTANOENF "gqnoenforce"/* group quota limit enforcement */
+> -#define MNTOPT_PQUOTANOENF "pqnoenforce"/* project quota limit enforcement */
+> -#define MNTOPT_QUOTANOENF  "qnoenforce"	/* same as uqnoenforce */
+> -#define MNTOPT_DELAYLOG    "delaylog"	/* Delayed logging enabled */
+> -#define MNTOPT_NODELAYLOG  "nodelaylog"	/* Delayed logging disabled */
+> -#define MNTOPT_DISCARD	   "discard"	/* Discard unused blocks */
+> -#define MNTOPT_NODISCARD   "nodiscard"	/* Do not discard unused blocks */
+> +#define	MNTOPT_LOGBUFS		"logbufs"
+> +#define	MNTOPT_LOGBSIZE		"logbsize"
+> +#define	MNTOPT_LOGDEV		"logdev"
+> +#define	MNTOPT_RTDEV		"rtdev"
+> +#define	MNTOPT_BIOSIZE		"biosize"
+> +#define	MNTOPT_WSYNC		"wsync"
+> +#define	MNTOPT_NOALIGN		"noalign"
+> +#define	MNTOPT_SWALLOC		"swalloc"
+> +#define	MNTOPT_SUNIT		"sunit"
+> +#define	MNTOPT_SWIDTH		"swidth"
+> +#define	MNTOPT_NOUUID		"nouuid"
+> +#define	MNTOPT_MTPT		"mtpt"
+> +#define	MNTOPT_GRPID		"grpid"
+> +#define	MNTOPT_NOGRPID		"nogrpid"
+> +#define	MNTOPT_BSDGROUPS	"bsdgroups"
+> +#define	MNTOPT_SYSVGROUPS	"sysvgroups"
+> +#define	MNTOPT_ALLOCSIZE	"allocsize"
+> +#define	MNTOPT_NORECOVERY	"norecovery"
+> +#define	MNTOPT_BARRIER		"barrier"
+> +#define	MNTOPT_NOBARRIER	"nobarrier"
+> +#define	MNTOPT_64BITINODE	"inode64"
+> +#define	MNTOPT_IKEEP		"ikeep"
+> +#define	MNTOPT_NOIKEEP		"noikeep"
+> +#define	MNTOPT_LARGEIO		"largeio"
+> +#define	MNTOPT_NOLARGEIO	"nolargeio"
+> +#define	MNTOPT_ATTR2		"attr2"
+> +#define	MNTOPT_NOATTR2		"noattr2"
+> +#define	MNTOPT_FILESTREAM	"filestreams"
+> +#define	MNTOPT_QUOTA		"quota"
+> +#define	MNTOPT_NOQUOTA		"noquota"
+> +#define	MNTOPT_USRQUOTA		"usrquota"
+> +#define	MNTOPT_GRPQUOTA		"grpquota"
+> +#define	MNTOPT_PRJQUOTA		"prjquota"
+> +#define	MNTOPT_UQUOTA		"uquota"
+> +#define	MNTOPT_GQUOTA		"gquota"
+> +#define	MNTOPT_PQUOTA		"pquota"
+> +#define	MNTOPT_UQUOTANOENF	"uqnoenforce"
+> +#define	MNTOPT_GQUOTANOENF	"gqnoenforce"
+> +#define	MNTOPT_PQUOTANOENF	"pqnoenforce"
+> +#define	MNTOPT_QUOTANOENF	"qnoenforce"
+> +#define	MNTOPT_DISCARD		"discard"
+> +#define	MNTOPT_NODISCARD	"nodiscard"
+> +#define	MNTOPT_DELAYLOG		"delaylog"
+> +#define	MNTOPT_NODELAYLOG	"nodelaylog"
+> +#define	MNTOPT_IHASHSIZE	"ihashsize"
+> +#define	MNTOPT_OSYNCISDSYNC	"osyncisdsync"
+> +#define	MNTOPT_OSYNCISOSYNC	"osyncisosync"
+> +#define	MNTOPT_IRIXSGID		"irixsgid"
+> +
+> +#define MNTOPT_DEPRECATED "has no effect, option is deprecated"
+>  
+> -/*
+> - * Table driven mount option parser.
+> - *
+> - * Currently only used for remount, but it will be used for mount
+> - * in the future, too.
+> - */
+>  enum {
+> -	Opt_barrier, Opt_nobarrier, Opt_err
+> +	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
+> +	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth,
+> +	Opt_nouuid, Opt_mtpt, Opt_grpid, Opt_nogrpid, Opt_bsdgroups,
+> +	Opt_sysvgroups, Opt_allocsize, Opt_norecovery, Opt_barrier,
+> +	Opt_nobarrier, Opt_inode64, Opt_ikeep, Opt_noikeep, Opt_largeio,
+> +	Opt_nolargeio, Opt_attr2, Opt_noattr2, Opt_filestreams, Opt_quota,
+> +	Opt_noquota, Opt_usrquota, Opt_grpquota, Opt_prjquota, Opt_uquota,
+> +	Opt_gquota, Opt_pquota, Opt_uqnoenf, Opt_gqnoenf, Opt_pqnoenf,
+> +	Opt_qnoenf, Opt_discard, Opt_nodiscard, Opt_delaylog, Opt_nodelaylog,
+> +	Opt_ihashsize, Opt_osyncisdsync, Opt_osyncisosync, Opt_irixsgid,
+> +	Opt_err
+>  };
+>  
+>  static const match_table_t tokens = {
+> -	{Opt_barrier, "barrier"},
+> -	{Opt_nobarrier, "nobarrier"},
+> +	{Opt_logbufs, MNTOPT_LOGBUFS "=%d"},	/* number of XFS log buffers */
+> +	{Opt_logbsize, MNTOPT_LOGBSIZE "=%s"},	/* size of XFS log buffers */
+> +	{Opt_logdev, MNTOPT_LOGDEV "=%s"},	/* log device */
+> +	{Opt_rtdev, MNTOPT_RTDEV "=%s"},	/* realtime I/O device */
+> +	{Opt_biosize, MNTOPT_BIOSIZE "=%d"},	/* log2 of preferred buffered io size */
+> +	{Opt_wsync, MNTOPT_WSYNC},		/* safe-mode nfs compatible mount */
+> +	{Opt_noalign, MNTOPT_NOALIGN},		/* turn off stripe alignment */
+> +	{Opt_swalloc, MNTOPT_SWALLOC},		/* turn on stripe width allocation */
+> +	{Opt_sunit, MNTOPT_SUNIT "=%d"},	/* data volume stripe unit */
+> +	{Opt_swidth, MNTOPT_SWIDTH "=%d"},	/* data volume stripe width */
+> +	{Opt_nouuid, MNTOPT_NOUUID},		/* ignore filesystem UUID */
+> +	{Opt_mtpt, MNTOPT_MTPT},		/* filesystem mount point */
+> +	{Opt_grpid, MNTOPT_GRPID},		/* group-ID from parent directory */
+> +	{Opt_nogrpid, MNTOPT_NOGRPID},		/* group-ID from current process */
+> +	{Opt_bsdgroups, MNTOPT_BSDGROUPS},	/* group-ID from parent directory */
+> +	{Opt_sysvgroups, MNTOPT_SYSVGROUPS},	/* group-ID from current process */
+> +	{Opt_allocsize, MNTOPT_ALLOCSIZE "=%s"},/* preferred allocation size */
+> +	{Opt_norecovery, MNTOPT_NORECOVERY},	/* do not run XFS recovery */
+> +	{Opt_barrier, MNTOPT_BARRIER},		/* use writer barrier for log write and
+> +						 * unwritten extent conversation */
+> +	{Opt_nobarrier, MNTOPT_NOBARRIER},	/* .. disable */
+> +	{Opt_inode64, MNTOPT_64BITINODE},	/* inodes can be allocated anywhere */
+> +	{Opt_ikeep, MNTOPT_IKEEP},		/* do not free empty inode clusters */
+> +	{Opt_noikeep, MNTOPT_NOIKEEP},		/* free empty inode clusters */
+> +	{Opt_largeio, MNTOPT_LARGEIO},		/* report large I/O sizes in start() */
+> +	{Opt_nolargeio, MNTOPT_NOLARGEIO},	/* do not report large I/O sizes
+> +						 * in start() */
+> +	{Opt_attr2, MNTOPT_ATTR2},		/* do use attr2 attribute format */
+> +	{Opt_noattr2, MNTOPT_NOATTR2},		/* do not use attr2 attribute format */
+> +	{Opt_filestreams, MNTOPT_FILESTREAM}, 	/* use filestreams allocator */
+> +	{Opt_quota, MNTOPT_QUOTA},		/* disk quotas (user) */
+> +	{Opt_noquota, MNTOPT_NOQUOTA},		/* no quotas */
+> +	{Opt_usrquota, MNTOPT_USRQUOTA},	/* user quota enabled */
+> +	{Opt_grpquota, MNTOPT_GRPQUOTA},	/* group quota enabled */
+> +	{Opt_prjquota, MNTOPT_PRJQUOTA},	/* project quota enabled */
+> +	{Opt_uquota, MNTOPT_UQUOTA},		/* user quota (IRIX variant) */
+> +	{Opt_gquota, MNTOPT_GQUOTA},		/* group quota (IRIX variant) */
+> +	{Opt_pquota, MNTOPT_PQUOTA},		/* project quota (IRIX variant) */
+> +	{Opt_uqnoenf, MNTOPT_UQUOTANOENF},	/* user quota limit enforcement */
+> +	{Opt_gqnoenf, MNTOPT_GQUOTANOENF},	/* group quota limit enforcement */
+> +	{Opt_pqnoenf, MNTOPT_PQUOTANOENF},	/* project quota limit enforcement */
+> +	{Opt_qnoenf, MNTOPT_QUOTANOENF},	/* same as uqnoenforce */
+> +	{Opt_discard, MNTOPT_DISCARD},		/* Discard unused blocks */
+> +	{Opt_nodiscard, MNTOPT_NODISCARD},	/* Do not discard unused blocks */
+> +	{Opt_delaylog, MNTOPT_DELAYLOG},	/* deprecated */
+> +	{Opt_nodelaylog, MNTOPT_NODELAYLOG},	/* deprecated */
+> +	{Opt_ihashsize, MNTOPT_IHASHSIZE},	/* deprecated */
+> +	{Opt_osyncisdsync, MNTOPT_OSYNCISDSYNC},/* deprecated */
+> +	{Opt_osyncisosync, MNTOPT_OSYNCISOSYNC},/* deprecated */
+> +	{Opt_irixsgid, MNTOPT_IRIXSGID},	/* deprecated */
+>  	{Opt_err, NULL}
+>  };
+>  
+> -
+> -STATIC unsigned long
+> -suffix_strtoul(char *s, char **endp, unsigned int base)
+> +STATIC int
+> +suffix_match_int(substring_t *s, unsigned long *result)
+>  {
+> -	int	last, shift_left_factor = 0;
+> -	char	*value = s;
+> +	int shift_left_factor = 0;
+> +	char *value = s->to - 1;
+> +	char *string;
+>  
+> -	last = strlen(value) - 1;
+> -	if (value[last] == 'K' || value[last] == 'k') {
+> +	if (*value == 'K' || *value == 'k') {
+>  		shift_left_factor = 10;
+> -		value[last] = '\0';
+> +		s->to--;
+>  	}
+> -	if (value[last] == 'M' || value[last] == 'm') {
+> +	if (*value == 'M' || *value == 'm') {
+>  		shift_left_factor = 20;
+> -		value[last] = '\0';
+> +		s->to--;
+>  	}
+> -	if (value[last] == 'G' || value[last] == 'g') {
+> +	if (*value == 'G' || *value == 'g') {
+>  		shift_left_factor = 30;
+> -		value[last] = '\0';
+> +		s->to--;
+>  	}
+>  
+> -	return simple_strtoul((const char *)s, endp, base) << shift_left_factor;
+> +	string = match_strdup(s);
+> +	if (!string)
+> +		return ENOMEM;
+> +
+> +	*result = simple_strtoul((const char *)string, NULL, 0) <<
+> +			shift_left_factor;
+> +
+> +	kfree(string);
+> +	return 0;
+> +}
+> +
+> +STATIC int
+> +match_name_strdup(substring_t *s, char *name)
+> +{
+> +	char *string;
+> +	string = match_strdup(s);
+> +	if (!string)
+> +		return ENOMEM;
+> +
+> +	name = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
+> +	if (!name)
+> +		goto free;
+> +	return 0;
+> +free:
+> +	kfree(string);
+> +	return ENOMEM;
+>  }
+>  
+>  /*
+> @@ -166,11 +246,15 @@ xfs_parseargs(
+>  	char			*options)
+>  {
+>  	struct super_block	*sb = mp->m_super;
+> -	char			*this_char, *value, *eov;
+> +	char			*p;
+>  	int			dsunit = 0;
+>  	int			dswidth = 0;
+> -	int			iosize = 0;
+>  	__uint8_t		iosizelog = 0;
+> +	int			intarg;
+> +	unsigned long		ularg;
+> +	substring_t		args[MAX_OPT_ARGS];
+> +	char			*orig = NULL;
+> +	int			ret = 0;
+>  
+>  	/*
+>  	 * set up the mount name first so all the errors will refer to the
+> @@ -208,175 +292,192 @@ xfs_parseargs(
+>  	if (!options)
+>  		goto done;
+>  
+> -	while ((this_char = strsep(&options, ",")) != NULL) {
+> -		if (!*this_char)
+> +	options = kstrdup(options, GFP_NOFS);
+> +	if (!options) {
+> +		ret = ENOMEM;
+> +		goto done;
+> +	}
+> +
+> +	orig = options;
+> +
+> +	while ((p = strsep(&orig, ",")) != NULL) {
+> +		int token;
+> +		if (!*p)
+>  			continue;
+> -		if ((value = strchr(this_char, '=')) != NULL)
+> -			*value++ = 0;
+> -
+> -		if (!strcmp(this_char, MNTOPT_LOGBUFS)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			mp->m_logbufs = simple_strtoul(value, &eov, 10);
+> -		} else if (!strcmp(this_char, MNTOPT_LOGBSIZE)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			mp->m_logbsize = suffix_strtoul(value, &eov, 10);
+> -		} else if (!strcmp(this_char, MNTOPT_LOGDEV)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			mp->m_logname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
+> -			if (!mp->m_logname)
+> -				return ENOMEM;
+> -		} else if (!strcmp(this_char, MNTOPT_MTPT)) {
+> -			xfs_warn(mp, "%s option not allowed on this system",
+> -				this_char);
+> -			return EINVAL;
+> -		} else if (!strcmp(this_char, MNTOPT_RTDEV)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			mp->m_rtname = kstrndup(value, MAXNAMELEN, GFP_KERNEL);
+> -			if (!mp->m_rtname)
+> -				return ENOMEM;
+> -		} else if (!strcmp(this_char, MNTOPT_BIOSIZE)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			iosize = simple_strtoul(value, &eov, 10);
+> -			iosizelog = ffs(iosize) - 1;
+> -		} else if (!strcmp(this_char, MNTOPT_ALLOCSIZE)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			iosize = suffix_strtoul(value, &eov, 10);
+> -			iosizelog = ffs(iosize) - 1;
+> -		} else if (!strcmp(this_char, MNTOPT_GRPID) ||
+> -			   !strcmp(this_char, MNTOPT_BSDGROUPS)) {
+> +
+> +		token = match_token(p, tokens, args);
+> +		intarg = 0;
+> +		ularg = 0;
+> +		switch (token) {
+> +		case Opt_logbufs:
+> +			ret = match_int(args, &intarg);
+> +			if (ret)
+> +				goto free_orig;
+> +			mp->m_logbufs = intarg;
+> +			break;
+> +		case Opt_logbsize:
+> +			ret = suffix_match_int(args, &ularg);
+> +			if (ret)
+> +				goto free_orig;
+> +			mp->m_logbsize = ularg;
+> +			break;
+> +		case Opt_logdev:
+> +			ret = match_name_strdup(args, mp->m_logname);
+> +			if (ret)
+> +				goto free_orig;
+> +			break;
+> +		case Opt_mtpt:
+> +			xfs_warn(mp, "%s option not allowed on this system", p);
+> +			ret = EINVAL;
+> +			goto free_orig;
+> +		case Opt_rtdev:
+> +			ret = match_name_strdup(args, mp->m_rtname);
+> +			if (ret)
+> +				goto free_orig;
+> +			break;
+> +		case Opt_biosize:
+> +		case Opt_allocsize:
+> +			ret = suffix_match_int(args, &ularg);
+> +			if (ret)
+> +				goto free_orig;
+> +			iosizelog = ffs(ularg) - 1;
+> +			break;
+> +		case Opt_grpid:
+> +		case Opt_bsdgroups:
+>  			mp->m_flags |= XFS_MOUNT_GRPID;
+> -		} else if (!strcmp(this_char, MNTOPT_NOGRPID) ||
+> -			   !strcmp(this_char, MNTOPT_SYSVGROUPS)) {
+> +			break;
+> +		case Opt_nogrpid:
+> +		case Opt_sysvgroups:
+>  			mp->m_flags &= ~XFS_MOUNT_GRPID;
+> -		} else if (!strcmp(this_char, MNTOPT_WSYNC)) {
+> +			break;
+> +		case Opt_wsync:
+>  			mp->m_flags |= XFS_MOUNT_WSYNC;
+> -		} else if (!strcmp(this_char, MNTOPT_NORECOVERY)) {
+> +			break;
+> +		case Opt_norecovery:
+>  			mp->m_flags |= XFS_MOUNT_NORECOVERY;
+> -		} else if (!strcmp(this_char, MNTOPT_NOALIGN)) {
+> +			break;
+> +		case Opt_noalign:
+>  			mp->m_flags |= XFS_MOUNT_NOALIGN;
+> -		} else if (!strcmp(this_char, MNTOPT_SWALLOC)) {
+> +			break;
+> +		case Opt_swalloc:
+>  			mp->m_flags |= XFS_MOUNT_SWALLOC;
+> -		} else if (!strcmp(this_char, MNTOPT_SUNIT)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			dsunit = simple_strtoul(value, &eov, 10);
+> -		} else if (!strcmp(this_char, MNTOPT_SWIDTH)) {
+> -			if (!value || !*value) {
+> -				xfs_warn(mp, "%s option requires an argument",
+> -					this_char);
+> -				return EINVAL;
+> -			}
+> -			dswidth = simple_strtoul(value, &eov, 10);
+> -		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
+> +			break;
+> +		case Opt_sunit:
+> +			ret = match_int(args, &intarg);
+> +			if (ret)
+> +				goto free_orig;
+> +			dsunit = intarg;
+> +			break;
+> +		case Opt_swidth:
+> +			ret = match_int(args, &intarg);
+> +			if (ret)
+> +				goto free_orig;
+> +			dswidth = intarg;
+> +			break;
+> +		case Opt_inode64:
+>  			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+>  #if !XFS_BIG_INUMS
+> -			xfs_warn(mp, "%s option not allowed on this system",
+> -				this_char);
+> -			return EINVAL;
+> +			xfs_warn(mp, "%s options not allowed on this system", p);
+> +			ret = EINVAL;
+> +			goto free_orig;
+>  #endif
+> -		} else if (!strcmp(this_char, MNTOPT_NOUUID)) {
+> +			break;
+> +		case Opt_nouuid:
+>  			mp->m_flags |= XFS_MOUNT_NOUUID;
+> -		} else if (!strcmp(this_char, MNTOPT_BARRIER)) {
+> +			break;
+> +		case Opt_barrier:
+>  			mp->m_flags |= XFS_MOUNT_BARRIER;
+> -		} else if (!strcmp(this_char, MNTOPT_NOBARRIER)) {
+> +			break;
+> +		case Opt_nobarrier:
+>  			mp->m_flags &= ~XFS_MOUNT_BARRIER;
+> -		} else if (!strcmp(this_char, MNTOPT_IKEEP)) {
+> +			break;
+> +		case Opt_ikeep:
+>  			mp->m_flags |= XFS_MOUNT_IKEEP;
+> -		} else if (!strcmp(this_char, MNTOPT_NOIKEEP)) {
+> +			break;
+> +		case Opt_noikeep:
+>  			mp->m_flags &= ~XFS_MOUNT_IKEEP;
+> -		} else if (!strcmp(this_char, MNTOPT_LARGEIO)) {
+> +			break;
+> +		case Opt_largeio:
+>  			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
+> -		} else if (!strcmp(this_char, MNTOPT_NOLARGEIO)) {
+> +			break;
+> +		case Opt_nolargeio:
+>  			mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+> -		} else if (!strcmp(this_char, MNTOPT_ATTR2)) {
+> +			break;
+> +		case Opt_attr2:
+>  			mp->m_flags |= XFS_MOUNT_ATTR2;
+> -		} else if (!strcmp(this_char, MNTOPT_NOATTR2)) {
+> +			break;
+> +		case Opt_noattr2:
+>  			mp->m_flags &= ~XFS_MOUNT_ATTR2;
+>  			mp->m_flags |= XFS_MOUNT_NOATTR2;
+> -		} else if (!strcmp(this_char, MNTOPT_FILESTREAM)) {
+> +			break;
+> +		case Opt_filestreams:
+>  			mp->m_flags |= XFS_MOUNT_FILESTREAMS;
+> -		} else if (!strcmp(this_char, MNTOPT_NOQUOTA)) {
+> +			break;
+> +		case Opt_noquota:
+>  			mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+>  			mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
+>  			mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
+> -		} else if (!strcmp(this_char, MNTOPT_QUOTA) ||
+> -			   !strcmp(this_char, MNTOPT_UQUOTA) ||
+> -			   !strcmp(this_char, MNTOPT_USRQUOTA)) {
+> +			break;
+> +		case Opt_quota:
+> +		case Opt_uquota:
+> +		case Opt_usrquota:
+>  			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+>  					 XFS_UQUOTA_ENFD);
+> -		} else if (!strcmp(this_char, MNTOPT_QUOTANOENF) ||
+> -			   !strcmp(this_char, MNTOPT_UQUOTANOENF)) {
+> +			break;
+> +		case Opt_qnoenf:
+> +		case Opt_uqnoenf:
+>  			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
+>  			mp->m_qflags &= ~XFS_UQUOTA_ENFD;
+> -		} else if (!strcmp(this_char, MNTOPT_PQUOTA) ||
+> -			   !strcmp(this_char, MNTOPT_PRJQUOTA)) {
+> +			break;
+> +		case Opt_pquota:
+> +		case Opt_prjquota:
+>  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
+>  					 XFS_OQUOTA_ENFD);
+> -		} else if (!strcmp(this_char, MNTOPT_PQUOTANOENF)) {
+> +			break;
+> +		case Opt_pqnoenf:
+>  			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+>  			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
+> -		} else if (!strcmp(this_char, MNTOPT_GQUOTA) ||
+> -			   !strcmp(this_char, MNTOPT_GRPQUOTA)) {
+> +			break;
+> +		case Opt_gquota:
+> +		case Opt_grpquota:
+>  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+>  					 XFS_OQUOTA_ENFD);
+> -		} else if (!strcmp(this_char, MNTOPT_GQUOTANOENF)) {
+> +			break;
+> +		case Opt_gqnoenf:
+>  			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+>  			mp->m_qflags &= ~XFS_OQUOTA_ENFD;
+> -		} else if (!strcmp(this_char, MNTOPT_DELAYLOG)) {
+> -			xfs_warn(mp,
+> -	"delaylog is the default now, option is deprecated.");
+> -		} else if (!strcmp(this_char, MNTOPT_NODELAYLOG)) {
+> -			xfs_warn(mp,
+> -	"nodelaylog support has been removed, option is deprecated.");
+> -		} else if (!strcmp(this_char, MNTOPT_DISCARD)) {
+> +			break;
+> +		case Opt_discard:
+>  			mp->m_flags |= XFS_MOUNT_DISCARD;
+> -		} else if (!strcmp(this_char, MNTOPT_NODISCARD)) {
+> +			break;
+> +		case Opt_nodiscard:
+>  			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+> -		} else if (!strcmp(this_char, "ihashsize")) {
+> -			xfs_warn(mp,
+> -	"ihashsize no longer used, option is deprecated.");
+> -		} else if (!strcmp(this_char, "osyncisdsync")) {
+> -			xfs_warn(mp,
+> -	"osyncisdsync has no effect, option is deprecated.");
+> -		} else if (!strcmp(this_char, "osyncisosync")) {
+> -			xfs_warn(mp,
+> -	"osyncisosync has no effect, option is deprecated.");
+> -		} else if (!strcmp(this_char, "irixsgid")) {
+> -			xfs_warn(mp,
+> -	"irixsgid is now a sysctl(2) variable, option is deprecated.");
+> -		} else {
+> -			xfs_warn(mp, "unknown mount option [%s].", this_char);
+> -			return EINVAL;
+> +			break;
+> +		case Opt_delaylog:
+> +			xfs_warn(mp, MNTOPT_DELAYLOG MNTOPT_DEPRECATED);
+> +			break;
+> +		case Opt_nodelaylog:
+> +			xfs_warn(mp, MNTOPT_NODELAYLOG MNTOPT_DEPRECATED);
+> +			break;
+> +		case Opt_ihashsize:
+> +			xfs_warn(mp, MNTOPT_IHASHSIZE MNTOPT_DEPRECATED);
+> +		case Opt_osyncisdsync:
+> +			xfs_warn(mp, MNTOPT_OSYNCISDSYNC MNTOPT_DEPRECATED);
+> +			break;
+> +		case Opt_osyncisosync:
+> +			xfs_warn(mp, MNTOPT_OSYNCISOSYNC MNTOPT_DEPRECATED);
+> +			break;
+> +		case Opt_irixsgid:
+> +			xfs_warn(mp, MNTOPT_IRIXSGID MNTOPT_DEPRECATED);
+> +			break;
+> +		default:
+> +			xfs_warn(mp, "unknown mount option [%s].", p);
+> +			break;
+>  		}
+>  	}
+>  
+> +	kfree(orig);
+> +
+>  	/*
+>  	 * no recovery flag requires a read-only mount
+>  	 */
+> @@ -468,6 +569,10 @@ done:
+>  	}
+>  
+>  	return 0;
+> +
+> +free_orig:
+> +	kfree(orig);
+> +	return ret;
+>  }
+>  
+>  struct proc_xfs_info {
+> @@ -476,10 +581,12 @@ struct proc_xfs_info {
+>  };
+>  
+>  STATIC int
+> -xfs_showargs(
+> -	struct xfs_mount	*mp,
+> -	struct seq_file		*m)
+> +xfs_fs_show_options(
+> +	struct seq_file		*seq,
+> +	struct dentry		*dentry)
+>  {
+> +	struct xfs_mount	*mp = XFS_M(dentry->d_sb);
+> +
+>  	static struct proc_xfs_info xfs_info_set[] = {
+>  		/* the few simple ones we can get from the mount struct */
+>  		{ XFS_MOUNT_IKEEP,		"," MNTOPT_IKEEP },
+> @@ -505,58 +612,60 @@ xfs_showargs(
+>  
+>  	for (xfs_infop = xfs_info_set; xfs_infop->flag; xfs_infop++) {
+>  		if (mp->m_flags & xfs_infop->flag)
+> -			seq_puts(m, xfs_infop->str);
+> +			seq_puts(seq, xfs_infop->str);
+>  	}
+>  	for (xfs_infop = xfs_info_unset; xfs_infop->flag; xfs_infop++) {
+>  		if (!(mp->m_flags & xfs_infop->flag))
+> -			seq_puts(m, xfs_infop->str);
+> +			seq_puts(seq, xfs_infop->str);
+>  	}
+>  
+>  	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
+> -		seq_printf(m, "," MNTOPT_ALLOCSIZE "=%dk",
+> +		seq_printf(seq, "," MNTOPT_ALLOCSIZE "=%dk",
+>  				(int)(1 << mp->m_writeio_log) >> 10);
+>  
+>  	if (mp->m_logbufs > 0)
+> -		seq_printf(m, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
+> +		seq_printf(seq, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
+>  	if (mp->m_logbsize > 0)
+> -		seq_printf(m, "," MNTOPT_LOGBSIZE "=%dk", mp->m_logbsize >> 10);
+> +		seq_printf(seq, "," MNTOPT_LOGBSIZE "=%dk",
+> +				mp->m_logbsize >> 10);
+>  
+>  	if (mp->m_logname)
+> -		seq_printf(m, "," MNTOPT_LOGDEV "=%s", mp->m_logname);
+> +		seq_printf(seq, "," MNTOPT_LOGDEV "=%s", mp->m_logname);
+>  	if (mp->m_rtname)
+> -		seq_printf(m, "," MNTOPT_RTDEV "=%s", mp->m_rtname);
+> +		seq_printf(seq, "," MNTOPT_RTDEV "=%s", mp->m_rtname);
+>  
+>  	if (mp->m_dalign > 0)
+> -		seq_printf(m, "," MNTOPT_SUNIT "=%d",
+> +		seq_printf(seq, "," MNTOPT_SUNIT "=%d",
+>  				(int)XFS_FSB_TO_BB(mp, mp->m_dalign));
+>  	if (mp->m_swidth > 0)
+> -		seq_printf(m, "," MNTOPT_SWIDTH "=%d",
+> +		seq_printf(seq, "," MNTOPT_SWIDTH "=%d",
+>  				(int)XFS_FSB_TO_BB(mp, mp->m_swidth));
+>  
+>  	if (mp->m_qflags & (XFS_UQUOTA_ACCT|XFS_UQUOTA_ENFD))
+> -		seq_puts(m, "," MNTOPT_USRQUOTA);
+> +		seq_puts(seq, "," MNTOPT_USRQUOTA);
+>  	else if (mp->m_qflags & XFS_UQUOTA_ACCT)
+> -		seq_puts(m, "," MNTOPT_UQUOTANOENF);
+> +		seq_puts(seq, "," MNTOPT_UQUOTANOENF);
+>  
+>  	/* Either project or group quotas can be active, not both */
+>  
+>  	if (mp->m_qflags & XFS_PQUOTA_ACCT) {
+>  		if (mp->m_qflags & XFS_OQUOTA_ENFD)
+> -			seq_puts(m, "," MNTOPT_PRJQUOTA);
+> +			seq_puts(seq, "," MNTOPT_PRJQUOTA);
+>  		else
+> -			seq_puts(m, "," MNTOPT_PQUOTANOENF);
+> +			seq_puts(seq, "," MNTOPT_PQUOTANOENF);
+>  	} else if (mp->m_qflags & XFS_GQUOTA_ACCT) {
+>  		if (mp->m_qflags & XFS_OQUOTA_ENFD)
+> -			seq_puts(m, "," MNTOPT_GRPQUOTA);
+> +			seq_puts(seq, "," MNTOPT_GRPQUOTA);
+>  		else
+> -			seq_puts(m, "," MNTOPT_GQUOTANOENF);
+> +			seq_puts(seq, "," MNTOPT_GQUOTANOENF);
+>  	}
+>  
+>  	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
+> -		seq_puts(m, "," MNTOPT_NOQUOTA);
+> +		seq_puts(seq, "," MNTOPT_NOQUOTA);
+>  
+>  	return 0;
+>  }
+> +
+>  __uint64_t
+>  xfs_max_file_offset(
+>  	unsigned int		blockshift)
+> @@ -1221,14 +1330,6 @@ xfs_fs_unfreeze(
+>  	return 0;
+>  }
+>  
+> -STATIC int
+> -xfs_fs_show_options(
+> -	struct seq_file		*m,
+> -	struct dentry		*root)
+> -{
+> -	return -xfs_showargs(XFS_M(root->d_sb), m);
+> -}
+> -
+>  /*
+>   * This function fills in xfs_mount_t fields based on mount args.
+>   * Note: the superblock _has_ now been read in.
+> 
 
-This allows proper prioritization of highpri work items and removes
-high execution latency of highpri work items.
-
-v2: nr_running indexing bug in get_pool_nr_running() fixed.
-
-Signed-off-by: Tejun Heo <tj@kernel.org>
-Reported-by: Josh Hunt <joshhunt00@gmail.com>
-LKML-Reference: <CAKA=qzaHqwZ8eqpLNFjxnO2fX-tgAOjmpvxgBFjv6dJeQaOW1w@mail.gmail.com>
-Cc: Tony Luck <tony.luck@intel.com>
-Cc: Fengguang Wu <fengguang.wu@intel.com>
----
-git branch updated accordingly.  Thanks.
-
- Documentation/workqueue.txt |  103 ++++++++++++++++---------------------------
- kernel/workqueue.c          |  100 +++++++++++------------------------------
- 2 files changed, 65 insertions(+), 138 deletions(-)
-
-diff --git a/Documentation/workqueue.txt b/Documentation/workqueue.txt
-index a0b577d..a6ab4b6 100644
---- a/Documentation/workqueue.txt
-+++ b/Documentation/workqueue.txt
-@@ -89,25 +89,28 @@ called thread-pools.
- 
- The cmwq design differentiates between the user-facing workqueues that
- subsystems and drivers queue work items on and the backend mechanism
--which manages thread-pool and processes the queued work items.
-+which manages thread-pools and processes the queued work items.
- 
- The backend is called gcwq.  There is one gcwq for each possible CPU
--and one gcwq to serve work items queued on unbound workqueues.
-+and one gcwq to serve work items queued on unbound workqueues.  Each
-+gcwq has two thread-pools - one for normal work items and the other
-+for high priority ones.
- 
- Subsystems and drivers can create and queue work items through special
- workqueue API functions as they see fit. They can influence some
- aspects of the way the work items are executed by setting flags on the
- workqueue they are putting the work item on. These flags include
--things like CPU locality, reentrancy, concurrency limits and more. To
--get a detailed overview refer to the API description of
-+things like CPU locality, reentrancy, concurrency limits, priority and
-+more.  To get a detailed overview refer to the API description of
- alloc_workqueue() below.
- 
--When a work item is queued to a workqueue, the target gcwq is
--determined according to the queue parameters and workqueue attributes
--and appended on the shared worklist of the gcwq.  For example, unless
--specifically overridden, a work item of a bound workqueue will be
--queued on the worklist of exactly that gcwq that is associated to the
--CPU the issuer is running on.
-+When a work item is queued to a workqueue, the target gcwq and
-+thread-pool is determined according to the queue parameters and
-+workqueue attributes and appended on the shared worklist of the
-+thread-pool.  For example, unless specifically overridden, a work item
-+of a bound workqueue will be queued on the worklist of either normal
-+or highpri thread-pool of the gcwq that is associated to the CPU the
-+issuer is running on.
- 
- For any worker pool implementation, managing the concurrency level
- (how many execution contexts are active) is an important issue.  cmwq
-@@ -115,26 +118,26 @@ tries to keep the concurrency at a minimal but sufficient level.
- Minimal to save resources and sufficient in that the system is used at
- its full capacity.
- 
--Each gcwq bound to an actual CPU implements concurrency management by
--hooking into the scheduler.  The gcwq is notified whenever an active
--worker wakes up or sleeps and keeps track of the number of the
--currently runnable workers.  Generally, work items are not expected to
--hog a CPU and consume many cycles.  That means maintaining just enough
--concurrency to prevent work processing from stalling should be
--optimal.  As long as there are one or more runnable workers on the
--CPU, the gcwq doesn't start execution of a new work, but, when the
--last running worker goes to sleep, it immediately schedules a new
--worker so that the CPU doesn't sit idle while there are pending work
--items.  This allows using a minimal number of workers without losing
--execution bandwidth.
-+Each thread-pool bound to an actual CPU implements concurrency
-+management by hooking into the scheduler.  The thread-pool is notified
-+whenever an active worker wakes up or sleeps and keeps track of the
-+number of the currently runnable workers.  Generally, work items are
-+not expected to hog a CPU and consume many cycles.  That means
-+maintaining just enough concurrency to prevent work processing from
-+stalling should be optimal.  As long as there are one or more runnable
-+workers on the CPU, the thread-pool doesn't start execution of a new
-+work, but, when the last running worker goes to sleep, it immediately
-+schedules a new worker so that the CPU doesn't sit idle while there
-+are pending work items.  This allows using a minimal number of workers
-+without losing execution bandwidth.
- 
- Keeping idle workers around doesn't cost other than the memory space
- for kthreads, so cmwq holds onto idle ones for a while before killing
- them.
- 
- For an unbound wq, the above concurrency management doesn't apply and
--the gcwq for the pseudo unbound CPU tries to start executing all work
--items as soon as possible.  The responsibility of regulating
-+the thread-pools for the pseudo unbound CPU try to start executing all
-+work items as soon as possible.  The responsibility of regulating
- concurrency level is on the users.  There is also a flag to mark a
- bound wq to ignore the concurrency management.  Please refer to the
- API section for details.
-@@ -205,31 +208,22 @@ resources, scheduled and executed.
- 
-   WQ_HIGHPRI
- 
--	Work items of a highpri wq are queued at the head of the
--	worklist of the target gcwq and start execution regardless of
--	the current concurrency level.  In other words, highpri work
--	items will always start execution as soon as execution
--	resource is available.
-+	Work items of a highpri wq are queued to the highpri
-+	thread-pool of the target gcwq.  Highpri thread-pools are
-+	served by worker threads with elevated nice level.
- 
--	Ordering among highpri work items is preserved - a highpri
--	work item queued after another highpri work item will start
--	execution after the earlier highpri work item starts.
--
--	Although highpri work items are not held back by other
--	runnable work items, they still contribute to the concurrency
--	level.  Highpri work items in runnable state will prevent
--	non-highpri work items from starting execution.
--
--	This flag is meaningless for unbound wq.
-+	Note that normal and highpri thread-pools don't interact with
-+	each other.  Each maintain its separate pool of workers and
-+	implements concurrency management among its workers.
- 
-   WQ_CPU_INTENSIVE
- 
- 	Work items of a CPU intensive wq do not contribute to the
- 	concurrency level.  In other words, runnable CPU intensive
--	work items will not prevent other work items from starting
--	execution.  This is useful for bound work items which are
--	expected to hog CPU cycles so that their execution is
--	regulated by the system scheduler.
-+	work items will not prevent other work items in the same
-+	thread-pool from starting execution.  This is useful for bound
-+	work items which are expected to hog CPU cycles so that their
-+	execution is regulated by the system scheduler.
- 
- 	Although CPU intensive work items don't contribute to the
- 	concurrency level, start of their executions is still
-@@ -239,14 +233,6 @@ resources, scheduled and executed.
- 
- 	This flag is meaningless for unbound wq.
- 
--  WQ_HIGHPRI | WQ_CPU_INTENSIVE
--
--	This combination makes the wq avoid interaction with
--	concurrency management completely and behave as a simple
--	per-CPU execution context provider.  Work items queued on a
--	highpri CPU-intensive wq start execution as soon as resources
--	are available and don't affect execution of other work items.
--
- @max_active:
- 
- @max_active determines the maximum number of execution contexts per
-@@ -328,20 +314,7 @@ If @max_active == 2,
-  35		w2 wakes up and finishes
- 
- Now, let's assume w1 and w2 are queued to a different wq q1 which has
--WQ_HIGHPRI set,
--
-- TIME IN MSECS	EVENT
-- 0		w1 and w2 start and burn CPU
-- 5		w1 sleeps
-- 10		w2 sleeps
-- 10		w0 starts and burns CPU
-- 15		w0 sleeps
-- 15		w1 wakes up and finishes
-- 20		w2 wakes up and finishes
-- 25		w0 wakes up and burns CPU
-- 30		w0 finishes
--
--If q1 has WQ_CPU_INTENSIVE set,
-+WQ_CPU_INTENSIVE set,
- 
-  TIME IN MSECS	EVENT
-  0		w0 starts and burns CPU
-diff --git a/kernel/workqueue.c b/kernel/workqueue.c
-index 82eee34..30d014b 100644
---- a/kernel/workqueue.c
-+++ b/kernel/workqueue.c
-@@ -52,7 +52,6 @@ enum {
- 	/* pool flags */
- 	POOL_MANAGE_WORKERS	= 1 << 0,	/* need to manage workers */
- 	POOL_MANAGING_WORKERS	= 1 << 1,	/* managing workers */
--	POOL_HIGHPRI_PENDING	= 1 << 2,	/* highpri works on queue */
- 
- 	/* worker flags */
- 	WORKER_STARTED		= 1 << 0,	/* started */
-@@ -74,7 +73,7 @@ enum {
- 	TRUSTEE_RELEASE		= 3,		/* release workers */
- 	TRUSTEE_DONE		= 4,		/* trustee is done */
- 
--	NR_WORKER_POOLS		= 1,		/* # worker pools per gcwq */
-+	NR_WORKER_POOLS		= 2,		/* # worker pools per gcwq */
- 
- 	BUSY_WORKER_HASH_ORDER	= 6,		/* 64 pointers */
- 	BUSY_WORKER_HASH_SIZE	= 1 << BUSY_WORKER_HASH_ORDER,
-@@ -95,6 +94,7 @@ enum {
- 	 * all cpus.  Give -20.
- 	 */
- 	RESCUER_NICE_LEVEL	= -20,
-+	HIGHPRI_NICE_LEVEL	= -20,
- };
- 
- /*
-@@ -174,7 +174,7 @@ struct global_cwq {
- 	struct hlist_head	busy_hash[BUSY_WORKER_HASH_SIZE];
- 						/* L: hash of busy workers */
- 
--	struct worker_pool	pool;		/* the worker pools */
-+	struct worker_pool	pools[2];	/* normal and highpri pools */
- 
- 	struct task_struct	*trustee;	/* L: for gcwq shutdown */
- 	unsigned int		trustee_state;	/* L: trustee state */
-@@ -277,7 +277,8 @@ EXPORT_SYMBOL_GPL(system_nrt_freezable_wq);
- #include <trace/events/workqueue.h>
- 
- #define for_each_worker_pool(pool, gcwq)				\
--	for ((pool) = &(gcwq)->pool; (pool); (pool) = NULL)
-+	for ((pool) = &(gcwq)->pools[0];				\
-+	     (pool) < &(gcwq)->pools[NR_WORKER_POOLS]; (pool)++)
- 
- #define for_each_busy_worker(worker, i, pos, gcwq)			\
- 	for (i = 0; i < BUSY_WORKER_HASH_SIZE; i++)			\
-@@ -473,6 +474,11 @@ static atomic_t unbound_pool_nr_running[NR_WORKER_POOLS] = {
- 
- static int worker_thread(void *__worker);
- 
-+static int worker_pool_pri(struct worker_pool *pool)
-+{
-+	return pool - pool->gcwq->pools;
-+}
-+
- static struct global_cwq *get_gcwq(unsigned int cpu)
- {
- 	if (cpu != WORK_CPU_UNBOUND)
-@@ -491,7 +497,7 @@ static atomic_t *get_pool_nr_running(struct worker_pool *pool)
- 	else
- 		nr_running = &unbound_pool_nr_running;
- 
--	return &(*nr_running)[0];
-+	return &(*nr_running)[worker_pool_pri(pool)];
- }
- 
- static struct cpu_workqueue_struct *get_cwq(unsigned int cpu,
-@@ -588,15 +594,14 @@ static struct global_cwq *get_work_gcwq(struct work_struct *work)
- }
- 
- /*
-- * Policy functions.  These define the policies on how the global
-- * worker pool is managed.  Unless noted otherwise, these functions
-- * assume that they're being called with gcwq->lock held.
-+ * Policy functions.  These define the policies on how the global worker
-+ * pools are managed.  Unless noted otherwise, these functions assume that
-+ * they're being called with gcwq->lock held.
-  */
- 
- static bool __need_more_worker(struct worker_pool *pool)
- {
--	return !atomic_read(get_pool_nr_running(pool)) ||
--		(pool->flags & POOL_HIGHPRI_PENDING);
-+	return !atomic_read(get_pool_nr_running(pool));
- }
- 
- /*
-@@ -623,9 +628,7 @@ static bool keep_working(struct worker_pool *pool)
- {
- 	atomic_t *nr_running = get_pool_nr_running(pool);
- 
--	return !list_empty(&pool->worklist) &&
--		(atomic_read(nr_running) <= 1 ||
--		 (pool->flags & POOL_HIGHPRI_PENDING));
-+	return !list_empty(&pool->worklist) && atomic_read(nr_running) <= 1;
- }
- 
- /* Do we need a new worker?  Called from manager. */
-@@ -894,43 +897,6 @@ static struct worker *find_worker_executing_work(struct global_cwq *gcwq,
- }
- 
- /**
-- * pool_determine_ins_pos - find insertion position
-- * @pool: pool of interest
-- * @cwq: cwq a work is being queued for
-- *
-- * A work for @cwq is about to be queued on @pool, determine insertion
-- * position for the work.  If @cwq is for HIGHPRI wq, the work is
-- * queued at the head of the queue but in FIFO order with respect to
-- * other HIGHPRI works; otherwise, at the end of the queue.  This
-- * function also sets POOL_HIGHPRI_PENDING flag to hint @pool that
-- * there are HIGHPRI works pending.
-- *
-- * CONTEXT:
-- * spin_lock_irq(gcwq->lock).
-- *
-- * RETURNS:
-- * Pointer to inserstion position.
-- */
--static inline struct list_head *pool_determine_ins_pos(struct worker_pool *pool,
--					       struct cpu_workqueue_struct *cwq)
--{
--	struct work_struct *twork;
--
--	if (likely(!(cwq->wq->flags & WQ_HIGHPRI)))
--		return &pool->worklist;
--
--	list_for_each_entry(twork, &pool->worklist, entry) {
--		struct cpu_workqueue_struct *tcwq = get_work_cwq(twork);
--
--		if (!(tcwq->wq->flags & WQ_HIGHPRI))
--			break;
--	}
--
--	pool->flags |= POOL_HIGHPRI_PENDING;
--	return &twork->entry;
--}
--
--/**
-  * insert_work - insert a work into gcwq
-  * @cwq: cwq @work belongs to
-  * @work: work to insert
-@@ -1070,7 +1036,7 @@ static void __queue_work(unsigned int cpu, struct workqueue_struct *wq,
- 	if (likely(cwq->nr_active < cwq->max_active)) {
- 		trace_workqueue_activate_work(work);
- 		cwq->nr_active++;
--		worklist = pool_determine_ins_pos(cwq->pool, cwq);
-+		worklist = &cwq->pool->worklist;
- 	} else {
- 		work_flags |= WORK_STRUCT_DELAYED;
- 		worklist = &cwq->delayed_works;
-@@ -1387,6 +1353,7 @@ static struct worker *create_worker(struct worker_pool *pool, bool bind)
- {
- 	struct global_cwq *gcwq = pool->gcwq;
- 	bool on_unbound_cpu = gcwq->cpu == WORK_CPU_UNBOUND;
-+	const char *pri = worker_pool_pri(pool) ? "H" : "";
- 	struct worker *worker = NULL;
- 	int id = -1;
- 
-@@ -1408,15 +1375,17 @@ static struct worker *create_worker(struct worker_pool *pool, bool bind)
- 
- 	if (!on_unbound_cpu)
- 		worker->task = kthread_create_on_node(worker_thread,
--						      worker,
--						      cpu_to_node(gcwq->cpu),
--						      "kworker/%u:%d", gcwq->cpu, id);
-+					worker, cpu_to_node(gcwq->cpu),
-+					"kworker/%u:%d%s", gcwq->cpu, id, pri);
- 	else
- 		worker->task = kthread_create(worker_thread, worker,
--					      "kworker/u:%d", id);
-+					      "kworker/u:%d%s", id, pri);
- 	if (IS_ERR(worker->task))
- 		goto fail;
- 
-+	if (worker_pool_pri(pool))
-+		set_user_nice(worker->task, HIGHPRI_NICE_LEVEL);
-+
- 	/*
- 	 * A rogue worker will become a regular one if CPU comes
- 	 * online later on.  Make sure every worker has
-@@ -1763,10 +1732,9 @@ static void cwq_activate_first_delayed(struct cpu_workqueue_struct *cwq)
- {
- 	struct work_struct *work = list_first_entry(&cwq->delayed_works,
- 						    struct work_struct, entry);
--	struct list_head *pos = pool_determine_ins_pos(cwq->pool, cwq);
- 
- 	trace_workqueue_activate_work(work);
--	move_linked_works(work, pos, NULL);
-+	move_linked_works(work, &cwq->pool->worklist, NULL);
- 	__clear_bit(WORK_STRUCT_DELAYED_BIT, work_data_bits(work));
- 	cwq->nr_active++;
- }
-@@ -1882,21 +1850,6 @@ __acquires(&gcwq->lock)
- 	list_del_init(&work->entry);
- 
- 	/*
--	 * If HIGHPRI_PENDING, check the next work, and, if HIGHPRI,
--	 * wake up another worker; otherwise, clear HIGHPRI_PENDING.
--	 */
--	if (unlikely(pool->flags & POOL_HIGHPRI_PENDING)) {
--		struct work_struct *nwork = list_first_entry(&pool->worklist,
--					 struct work_struct, entry);
--
--		if (!list_empty(&pool->worklist) &&
--		    get_work_cwq(nwork)->wq->flags & WQ_HIGHPRI)
--			wake_up_worker(pool);
--		else
--			pool->flags &= ~POOL_HIGHPRI_PENDING;
--	}
--
--	/*
- 	 * CPU intensive works don't participate in concurrency
- 	 * management.  They're the scheduler's responsibility.
- 	 */
-@@ -3049,9 +3002,10 @@ struct workqueue_struct *__alloc_workqueue_key(const char *fmt,
- 	for_each_cwq_cpu(cpu, wq) {
- 		struct cpu_workqueue_struct *cwq = get_cwq(cpu, wq);
- 		struct global_cwq *gcwq = get_gcwq(cpu);
-+		int pool_idx = (bool)(flags & WQ_HIGHPRI);
- 
- 		BUG_ON((unsigned long)cwq & WORK_STRUCT_FLAG_MASK);
--		cwq->pool = &gcwq->pool;
-+		cwq->pool = &gcwq->pools[pool_idx];
- 		cwq->wq = wq;
- 		cwq->flush_color = -1;
- 		cwq->max_active = max_active;
--- 
-1.7.7.3
 
 _______________________________________________
 xfs mailing list
