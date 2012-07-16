@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6GG5f2V252256 for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 11:05:41 -0500
-Message-ID: <50043BD2.7080105@sgi.com>
-Date: Mon, 16 Jul 2012 11:05:38 -0500
+	q6GHYncx259591 for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 12:34:49 -0500
+Message-ID: <500450B6.7020201@sgi.com>
+Date: Mon, 16 Jul 2012 12:34:46 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: handle EOF correctly in xfs_vm_writepage
-References: <20120703162000.GA13016@infradead.org>
-In-Reply-To: <20120703162000.GA13016@infradead.org>
+Subject: Re: [PATCH 1/2] xfs: merge xfs_itobp into xfs_imap_to_bp
+References: <20120703162122.GA16775@infradead.org>
+In-Reply-To: <20120703162122.GA16775@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,21 +24,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On 07/03/12 11:20, Christoph Hellwig wrote:
-> We need to zero out part of a page which beyond EOF before setting uptodate,
-> otherwise, mapread or write will see non-zero data beyond EOF.
->
-> Based on the code in fs/buffer.c and the following ext4 commit:
->
->    ext4: handle EOF correctly in ext4_bio_write_page()
->
-> And yes, I wish we had a good test case for it.
+On 07/03/12 11:21, Christoph Hellwig wrote:
+> All callers of xfs_imap_to_bp want the dinode pointer, so let's calculate it
+> inside xfs_imap_to_bp.  Once that is done xfs_itobp becomes a fairly pointless
+> wrapper which can be replaced with direct calls to xfs_imap_to_bp.
 >
 > Signed-off-by: Christoph Hellwig<hch@lst.de>
 >
 > ---
 
-Looks good.
+Originally posted late March 2012. Still looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
