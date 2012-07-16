@@ -1,11 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6GEohvv248010 for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 09:50:43 -0500
-Subject: [GIT PULL] XFS update for 3.5-rc7
-Message-Id: <20120716145658.C58D54266DC@whiskey.americas.sgi.com>
-Date: Mon, 16 Jul 2012 09:56:58 -0500 (CDT)
-From: bpm@sgi.com (Ben Myers)
+	q6GF4MJd249259 for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 10:04:22 -0500
+Date: Mon, 16 Jul 2012 10:10:38 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: fix comment typo of struct xfs_da_blkinfo.
+Message-ID: <20120716151038.GI29979@sgi.com>
+References: <1342208293-3405-1-git-send-email-baozich@gmail.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1342208293-3405-1-git-send-email-baozich@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,58 +18,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: torvalds@linux-foundation.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Chen Baozi <baozich@gmail.com>
+Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-Hi Linus,
+Hey Chen,
 
-   Please pull these regression fixes for XFS.  Here we have a fix for a cursor
-   leak, a fix for a performance regression, a fix for recursion in
-   xfs_buf_iorequest which causes stack overflows, and a fix for error handling
-   in xfs_buf_iodone callbacks.
+On Sat, Jul 14, 2012 at 03:38:13AM +0800, Chen Baozi wrote:
+> Fix trivial typo error that has written "It" to "Is".
+> 
+> Signed-off-by: Chen Baozi <baozich@gmail.com>
 
-Thanks,
-	Ben
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
-The following changes since commit f7bdf03a99efc083608cd9c0c3e03abff311c79e:
+Thanks for the patch!  I'm happy you're working on XFS.  Do you have any
+time/interest in taking on a work item or two?  I have a few would-be-nices
+which I've made notes of, and I'm sure that Dave or Christoph could also think
+of a few if you're interested.
 
-  xfs: rename log structure to xlog (2012-06-21 14:21:11 -0500)
+Thanks again,
+-Ben
 
-are available in the git repository at:
-
-  git://oss.sgi.com/xfs/xfs tags/for-linus-v3.5-rc7
-
-for you to fetch changes up to 1632dcc93f55f9ab407b373da1957a727b1a7fe3:
-
-  xfs: do not call xfs_bdstrat_cb in xfs_buf_iodone_callbacks (2012-07-13 13:09:49 -0500)
-
-----------------------------------------------------------------
-xfs: regression fixes for 3.5-rc7
-
- - Really fix a cursor leak in xfs_alloc_ag_vextent_near
- - Fix a performance regression related to doing allocation in workqueues
- - Prevent recursion in xfs_buf_iorequest which is causing stack overflows
- - Don't call xfs_bdstrat_cb in xfs_buf_iodone callbacks
-
-----------------------------------------------------------------
-Christoph Hellwig (2):
-      xfs: prevent recursion in xfs_buf_iorequest
-      xfs: do not call xfs_bdstrat_cb in xfs_buf_iodone_callbacks
-
-Dave Chinner (2):
-      xfs: really fix the cursor leak in xfs_alloc_ag_vextent_near
-      xfs: don't defer metadata allocation to the workqueue
-
- fs/xfs/xfs_alloc.c    | 19 +++++++++++++-----
- fs/xfs/xfs_buf.c      | 53 ++++++++++++++++++++++-----------------------------
- fs/xfs/xfs_buf.h      |  1 -
- fs/xfs/xfs_buf_item.c |  2 +-
- 4 files changed, 38 insertions(+), 37 deletions(-)
+> ---
+>  fs/xfs/xfs_da_btree.h |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
+> index dbf7c07..be30bd4 100644
+> --- a/fs/xfs/xfs_da_btree.h
+> +++ b/fs/xfs/xfs_da_btree.h
+> @@ -32,7 +32,7 @@ struct zone;
+>  /*
+>   * This structure is common to both leaf nodes and non-leaf nodes in the Btree.
+>   *
+> - * Is is used to manage a doubly linked list of all blocks at the same
+> + * It is used to manage a doubly linked list of all blocks at the same
+>   * level in the Btree, and to identify which type of block this is.
+>   */
+>  #define XFS_DA_NODE_MAGIC	0xfebe	/* magic number: non-leaf blocks */
+> -- 
+> 1.7.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
