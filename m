@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6H3Xh7X040680 for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 22:33:44 -0500
-Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
-	[209.85.160.53]) by cuda.sgi.com with ESMTP id kj2o37NfiUEINENA
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Mon, 16 Jul 2012 20:33:42 -0700 (PDT)
-Received: by pbbrr13 with SMTP id rr13so85967pbb.26
-	for <xfs@oss.sgi.com>; Mon, 16 Jul 2012 20:33:42 -0700 (PDT)
-Subject: Re: [PATCH] xfs: fix comment typo of struct xfs_da_blkinfo.
-Mime-Version: 1.0 (Apple Message framework v1084)
-From: Chen Baozi <baozich@gmail.com>
-In-Reply-To: <20120716151038.GI29979@sgi.com>
-Date: Tue, 17 Jul 2012 11:33:33 +0800
-Message-Id: <5292013E-6FF3-47F6-BE9F-FD7BA2BB2AA9@gmail.com>
-References: <1342208293-3405-1-git-send-email-baozich@gmail.com>
-	<20120716151038.GI29979@sgi.com>
+	q6H5QR4B048968 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 00:26:28 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	6jIvIkzqRDOHddwP for <xfs@oss.sgi.com>;
+	Mon, 16 Jul 2012 22:26:25 -0700 (PDT)
+Date: Tue, 17 Jul 2012 15:26:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: A little RAID experiment
+Message-ID: <20120717052621.GB23387@dastard>
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+	<CAAxjCEzEiXv5Kna9zxZ-ePbhNg6nfRinkU=PCuyX3QHesq5qcg@mail.gmail.com>
+	<5004875D.1020305@hardwarefreak.com>
+	<CAAxjCEw-NJzZmX3Q5CJ+aZ_Q7Yo39pMU=-hiXk0ghTMq7q3PWA@mail.gmail.com>
+	<5004C243.6040404@hardwarefreak.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5004C243.6040404@hardwarefreak.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +26,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Stan Hoeppner <stan@hardwarefreak.com>
+Cc: xfs@oss.sgi.com
 
-SGkgQmVuLApPbiBKdWwgMTYsIDIwMTIsIGF0IDExOjEwIFBNLCBCZW4gTXllcnMgd3JvdGU6Cgo+
-IEhleSBDaGVuLAo+IAo+IE9uIFNhdCwgSnVsIDE0LCAyMDEyIGF0IDAzOjM4OjEzQU0gKzA4MDAs
-IENoZW4gQmFvemkgd3JvdGU6Cj4+IEZpeCB0cml2aWFsIHR5cG8gZXJyb3IgdGhhdCBoYXMgd3Jp
-dHRlbiAiSXQiIHRvICJJcyIuCj4+IAo+PiBTaWduZWQtb2ZmLWJ5OiBDaGVuIEJhb3ppIDxiYW96
-aWNoQGdtYWlsLmNvbT4KPiAKPiBSZXZpZXdlZC1ieTogQmVuIE15ZXJzIDxicG1Ac2dpLmNvbT4K
-PiAKPiBUaGFua3MgZm9yIHRoZSBwYXRjaCEgIEknbSBoYXBweSB5b3UncmUgd29ya2luZyBvbiBY
-RlMuICBEbyB5b3UgaGF2ZSBhbnkKPiB0aW1lL2ludGVyZXN0IGluIHRha2luZyBvbiBhIHdvcmsg
-aXRlbSBvciB0d28/ICBJIGhhdmUgYSBmZXcgd291bGQtYmUtbmljZXMKPiB3aGljaCBJJ3ZlIG1h
-ZGUgbm90ZXMgb2YsIGFuZCBJJ20gc3VyZSB0aGF0IERhdmUgb3IgQ2hyaXN0b3BoIGNvdWxkIGFs
-c28gdGhpbmsKPiBvZiBhIGZldyBpZiB5b3UncmUgaW50ZXJlc3RlZC4KSSdkIHJlYWxseSBsb3Zl
-IHRvLiBSaWdodCBub3csIEkgYW0gd29ya2luZyBvbiBzeXNsaW51eCB0byBzdXBwb3J0IGJvb3Rp
-bmcgb24geGZzIHBhcnRpdGlvbiAodW5kZXIgcGNhY2pyJ3MgbWVudG9yaW5nKe+8jCB3aGljaCBJ
-IHRob3VnaHQgd291bGQgYmUgYSBuaWNlIHN0YXJ0IHRvIGdldCBmYW1pbGlhciB3aXRoIHhmcyAo
-YW5kIEkgZGlkIGxlYXJuIGEgbG90IGZyb20gaXQpLiBTbyBJIHRoaW5rIHRoZXJlIHdvdWxkIGJl
-IG1vcmUgdGltZSAoYW5kIGV4cGVyaWVuY2Ugb24geGZzKSBhZnRlciBJIGZpbmlzaCB0aGUgeGZz
-IHN1cHBvcnQgb24gc3lzbGludXguIEFuZCBJJ20gcmVhbGx5IGxvb2tpbmcgZm9yd2FyZCB0byB5
-b3VyIGlkZWFzLiBTbyBkbyBwbGVhc2UgdGVsbCBtZSB3aGF0IEkgY2FuIGhlbHAsIEknbGwgdHJ5
-IG15IGJlc3QgdG8gZG8gaXQuIAoKVGhhbmtzIGEgbG90LgoKQmFvemkKPiAKPiBUaGFua3MgYWdh
-aW4sCj4gLUJlbgo+IAo+PiAtLS0KPj4gZnMveGZzL3hmc19kYV9idHJlZS5oIHwgICAgMiArLQo+
-PiAxIGZpbGVzIGNoYW5nZWQsIDEgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbnMoLSkKPj4gCj4+
-IGRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2RhX2J0cmVlLmggYi9mcy94ZnMveGZzX2RhX2J0cmVl
-LmgKPj4gaW5kZXggZGJmN2MwNy4uYmUzMGJkNCAxMDA2NDQKPj4gLS0tIGEvZnMveGZzL3hmc19k
-YV9idHJlZS5oCj4+ICsrKyBiL2ZzL3hmcy94ZnNfZGFfYnRyZWUuaAo+PiBAQCAtMzIsNyArMzIs
-NyBAQCBzdHJ1Y3Qgem9uZTsKPj4gLyoKPj4gICogVGhpcyBzdHJ1Y3R1cmUgaXMgY29tbW9uIHRv
-IGJvdGggbGVhZiBub2RlcyBhbmQgbm9uLWxlYWYgbm9kZXMgaW4gdGhlIEJ0cmVlLgo+PiAgKgo+
-PiAtICogSXMgaXMgdXNlZCB0byBtYW5hZ2UgYSBkb3VibHkgbGlua2VkIGxpc3Qgb2YgYWxsIGJs
-b2NrcyBhdCB0aGUgc2FtZQo+PiArICogSXQgaXMgdXNlZCB0byBtYW5hZ2UgYSBkb3VibHkgbGlu
-a2VkIGxpc3Qgb2YgYWxsIGJsb2NrcyBhdCB0aGUgc2FtZQo+PiAgKiBsZXZlbCBpbiB0aGUgQnRy
-ZWUsIGFuZCB0byBpZGVudGlmeSB3aGljaCB0eXBlIG9mIGJsb2NrIHRoaXMgaXMuCj4+ICAqLwo+
-PiAjZGVmaW5lIFhGU19EQV9OT0RFX01BR0lDCTB4ZmViZQkvKiBtYWdpYyBudW1iZXI6IG5vbi1s
-ZWFmIGJsb2NrcyAqLwo+PiAtLSAKPj4gMS43LjEKPj4gCj4+IF9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCj4+IHhmcyBtYWlsaW5nIGxpc3QKPj4geGZzQG9z
-cy5zZ2kuY29tCj4+IGh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwoKX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcg
-bGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8v
-eGZzCg==
+On Mon, Jul 16, 2012 at 08:39:15PM -0500, Stan Hoeppner wrote:
+> It depends on the one, and what the one expects.  Most people on this
+> list would never expect parity RAID to perform well with the workloads
+> you're throwing at it.  Your expectations are clearly different than
+> most on this list.
+
+Rule of thumb: don't use RAID5/6 for small random write workloads.
+
+> The kicker here is that most of the data you presented shows almost all
+> writes being acked by cache, in which case RAID level should be
+> irrelevant, but at the same time showing abysmal throughput.  When all
+> write hit cache, throughput should be through the roof.
+
+I bet it's single threaded, which means it is:
+
+	sysbench		kernel
+	write(2)
+				issue io
+				wait for completion
+	write(2)
+				issue io
+				wait for completion
+	write(2)
+	.....
+
+Which means throughput is limited by IO latency, not bandwidth.
+If it takes 10us to do the write(2), issue and process the IO
+completion, and it takes 10us for the hardware to do the IO, you're
+limited to 50,000 IOPS, or 200MB/s. Given that the best being seen
+is around 35MB/s, you're looking at around 10,000 IOPS of 100us
+round trip time. At 5MB/s, it's 1200 IOPS or around 800us round
+trip.
+
+That's why you get different performance from the different raid
+controllers - some process cache hits a lot faster than others.
+
+As to the one that stalled - when the cache hits a certain level of
+dirtiness (say 50%), it will start flushing cached writes and
+depending on the algorithm may start behaving like a FIFO to new
+requests. i.e. each new request coming in needs to wait for one to
+drain. At that point, the write rate will tank to maybe 50 IOPS,
+which will barely register on the benchmark throughput. (just look
+at what happens to the IO latency that is measured...)
+
+IOWs, welcome to Understanding RAID Controller Caching Behaviours
+101 :)
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
