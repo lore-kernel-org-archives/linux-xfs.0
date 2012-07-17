@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6HFkS5G088576 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 10:46:28 -0500
-Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
-	cuda.sgi.com with ESMTP id WWg9ghJ8GfmTuWei for
-	<xfs@oss.sgi.com>; Tue, 17 Jul 2012 08:46:27 -0700 (PDT)
-Date: Tue, 17 Jul 2012 08:46:26 -0700 (PDT)
-From: Sage Weil <sage@inktank.com>
-Subject: Re: [PATCH 0/5] do not take the iolock in inode reclaim context
-In-Reply-To: <20120717071923.GD15473@infradead.org>
-Message-ID: <alpine.DEB.2.00.1207170845060.30672@cobra.newdream.net>
-References: <20120704151328.928543446@bombadil.infradead.org>
-	<20120717071923.GD15473@infradead.org>
-MIME-Version: 1.0
+	q6HFrNQq088887 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 10:53:24 -0500
+Received: from smtp3-g21.free.fr (smtp3-g21.free.fr [212.27.42.3]) by
+	cuda.sgi.com with ESMTP id KqtjQmsIjW05CsiD for
+	<xfs@oss.sgi.com>; Tue, 17 Jul 2012 08:53:20 -0700 (PDT)
+Date: Tue, 17 Jul 2012 17:53:05 +0200
+From: Emmanuel Florac <eflorac@intellique.com>
+Subject: Re: xfs_repair failing.
+Message-ID: <20120717175305.1e0b7477@galadriel.home>
+In-Reply-To: <50048E2B.7060803@gmail.com>
+References: <20120716235154.0d9b7c45@galadriel.home>
+	<50048E2B.7060803@gmail.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,40 +21,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: sage@newdream.net, xfs@oss.sgi.com
+To: Joe Landman <joe.landman@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, 17 Jul 2012, Christoph Hellwig wrote:
-> ping/  I'd really like to get this queued up for 3.6
-
-I forget if I mentioned this before, but I pulled this series into our 
-testing branch and have had no problems (aside from the last patch not 
-applying to my tree) in qa (ceph on xfs) over the last couple of weeks.
-
-sage
-
-
-> 
-> On Wed, Jul 04, 2012 at 11:13:28AM -0400, Christoph Hellwig wrote:
-> > This series should fix the (false-positive) lockdep warnings Sage
-> > has seen while testing ceph workloads with heavy attr usage.
-> > 
-> > Btw, you probably should create the XFS filesystems for Ceph usage
-> > with large inodes to avoid going out of line for the attributes.
-> > 
-> > _______________________________________________
-> > xfs mailing list
-> > xfs@oss.sgi.com
-> > http://oss.sgi.com/mailman/listinfo/xfs
-> ---end quoted text---
-> 
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+TGUgTW9uLCAxNiBKdWwgMjAxMiAxNzo1Njo1OSAtMDQwMCB2b3VzIMOpY3JpdmllejoKCj4gQ2Fu
+IHlvdSB1cGRhdGUgdGhlIHhmcyB0b29scyB0byB0aGUgY3VycmVudCAoMy4xLjggSSB0aGluayk/
+ICBBbHNvLCAKPiB3aGljaCBrZXJuZWwgaXMgYmVpbmcgdXNlZD8KPiAKCkkgaGFkbid0IHRoZSBs
+YXRlc3QgdmVyc2lvbiBhdCBoYW5kLCBidXQgd2UgdHJpZWQgd2l0aCBhIDMuMS40IHZlcnNpb24K
+YW5kIGl0IGZhaWxlZCBpbiBleGFjdGx5IHRoZSBzYW1lIG1hbm5lci4gSSB0ZW5kIHRvIHN1c3Bl
+Y3QgYW4KaW5jb21wdGliaWxpdHkgYmV0d2VlbiB0aGUgMyBUQiBkcml2ZXMgYW5kIHRoZSBSQUlE
+IGNvbnRyb2xsZXIsIGJ1dCBJCmNhbid0IGJlIHN1cmUuIERpZCBhbnlvbmUgaGVhcmQgb2YgYW55
+IHN1Y2ggcHJvYmxlbT8KCkFwcGFyZW50bHkgb25seSB0aGUgWEZTIGZpbGVzeXN0ZW0gZmFpbHM7
+IGFub3RoZXIgKHJlaXNlcmZzKSBmaWxlc3lzdGVtCm9uIGFub3RoZXIgcGFydGl0aW9uIG9uIHRo
+ZSBzYW1lIFJBSUQgYXJyYXkgZGlkbid0IHN1ZmZlciBmcm9tIGFueQpwcm9ibGVtLgoKLS0gCi0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLQpFbW1hbnVlbCBGbG9yYWMgICAgIHwgICBEaXJlY3Rpb24gdGVjaG5pcXVl
+CiAgICAgICAgICAgICAgICAgICAgfCAgIEludGVsbGlxdWUKICAgICAgICAgICAgICAgICAgICB8
+CTxlZmxvcmFjQGludGVsbGlxdWUuY29tPgogICAgICAgICAgICAgICAgICAgIHwgICArMzMgMSA3
+OCA5NCA4NCAwMgotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6
+Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
