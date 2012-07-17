@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6HCj7rv077278 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 07:45:07 -0500
-Message-ID: <50055E21.6040705@oracle.com>
-Date: Tue, 17 Jul 2012 20:44:17 +0800
+	q6HCm3oR077483 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 07:48:03 -0500
+Message-ID: <50055ED5.5030405@oracle.com>
+Date: Tue, 17 Jul 2012 20:47:17 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/4] xfs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-References: <4FFFDDB8.6000406@oracle.com>
-	<20120717073221.GA24395@infradead.org>
-In-Reply-To: <20120717073221.GA24395@infradead.org>
+Subject: Re: [PATCH 2/4] xfs: Add pquota fields where gquota is used
+References: <4FFFDDE5.8010403@oracle.com>
+	<20120717073645.GB24395@infradead.org>
+In-Reply-To: <20120717073645.GB24395@infradead.org>
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,79 +24,61 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Myers <bpm@sgi.com>, Chandra Seetharaman <sekharan@us.ibm.com>, Mark Tinguely <tinguely@sgi.com>, Chris Mason <chris.mason@oracle.com>, xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, Chandra Seetharaman <sekharan@us.ibm.com>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-On 07/17/2012 03:32 PM, Christoph Hellwig wrote:
+On 07/17/2012 03:36 PM, Christoph Hellwig wrote:
 
->> +	if ((to->sb_qflags & (XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD)) &&
->> +	    (to->sb_qflags & (XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD |
->> +			      XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))) {
->> +		xfs_notice(mp, "Super block has XFS_OQUOTA bits along with "
->> +			"XFS_PQUOTA and/or XFS_GQUOTA bits. Fixing it.\n");
->> +	}
->> +	if (to->sb_qflags & XFS_OQUOTA_ENFD)
->> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
->> +					XFS_PQUOTA_ENFD : XFS_GQUOTA_ENFD;
->> +	if (to->sb_qflags & XFS_OQUOTA_CHKD)
->> +		to->sb_qflags |= (to->sb_qflags & XFS_PQUOTA_ACCT) ?
->> +					XFS_PQUOTA_CHKD : XFS_GQUOTA_CHKD;
->> +	to->sb_qflags &= ~(XFS_OQUOTA_ENFD | XFS_OQUOTA_CHKD);
+>>  		if (error) {
+>>  			if (uip)
+>>  				IRELE(uip);
+>> @@ -1421,9 +1474,24 @@ xfs_qm_init_quotainos(
+>>  			return XFS_ERROR(error);
+>>  		}
+>>  	}
+>> +	/* Why not define a XFS_SB_PQUOTINO? */
+>> +	if (XFS_IS_PQUOTA_ON(mp) && pip == NULL) {
+>> +		error = xfs_qm_qino_alloc(mp, &pip,
+>> +					  sbflags | XFS_SB_GQUOTINO,
+>> +					  flags | XFS_QMOPT_PQUOTA);
+>> +		if (error) {
+>> +			if (uip)
+>> +				IRELE(uip);
+>> +			if (gip)
+>> +				IRELE(gip);
+>> +
+>> +			return XFS_ERROR(error);
 > 
-> It's suggest factoring this into a xfs_quota_flags_from_disk helper,
-> which a) makes this code more clear, and b) can get a comment about what
-> is going on.
-
-Exactly!
-
+> It would probably be good to have return labels here so that each
+> IRELE statements only needs to be written once, e.g.
 > 
->> +			/*
->> +			 * The in-core version of sb_qflags do not have
->> +			 * XFS_OQUOTA_* flags, whereas the on-disk version
->> +			 * does.  Save the in-core sb_qflags temporarily,
->> +			 * removing the new XFS_{PG}QUOTA_* flags and re-apply
->> +			 * the old on-disk flags.
->> +			 */
->> +			tmp16 = from->sb_qflags &
->> +					~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
->> +					  XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
->> +			if (from->sb_qflags &
->> +					(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
->> +				tmp16 |= XFS_OQUOTA_CHKD;
->> +			*(__be16 *)(to_ptr + first) = cpu_to_be16(tmp16);
-> 
-> Same here for the other direction.
+> out_rele_uip:
+> 	if (uip)
+> 		IRELE(uip);
+> out_rele_gip:
+> 	if (gip)
+> 		IRELE(gip);
+> out:
+> 	return XFS_ERROR(error);
 
-Ok, I'll take care of it as well.
-
-> 
->> + * Start differentiating group quota and project quota in-core
->> + * using distinct flags, instread of using the combined OQUOTA flags.
->> + *
->> + * Conversion to and from the combined OQUOTA flag (if necessary)
->> + * is done only in xfs_sb{to, from}_disk()
->> + */
->> +#define XFS_GQUOTA_ENFD	0x0080	/* group quota limit enforced */
->> +#define XFS_GQUOTA_CHKD 0x0100	/* quotacheck run on group quotas */
->> +#define XFS_PQUOTA_ENFD	0x0200	/* project quota limits enforced */
->> +#define XFS_PQUOTA_CHKD	0x0800	/* quotacheck run on project quotas.
->> +				 * FIXME: here we cannot using 0x0400
->> +				 * because it is already reserved for
->> +				 * XFS_GQUOTA_ACTIVE.  Otherwise,
->> +				 * XFS_IS_GQUOTA_ON() is also true
->> +				 * although it does not enabled.
->> +				 */
-> 
-> Seems like all te 0x0?00 values are used for XFS_U?UOTA_ACTIVE flags.
-> Why not move it to the 0x?000 range?
-
-I have not took that previously because it will make the code looks a bit in-continuous, consider we have to skip all 0x0?00.
-But yes, move PQUOTA_ENFD/PQUOTA_CHKD to 0x?000 range is fine, thanks for the advice!
+This change will be reflected in the next post, thanks for the comments.
 
 -Jeff
- .
 
 > 
-> Otherwise these changes look good to me.
+>> +			if ((error = xfs_qm_dqget(mp, NULL, (xfs_dqid_t)uid,
+>> +						  XFS_DQ_USER,
+>> +						  XFS_QMOPT_DQALLOC |
+>> +						  XFS_QMOPT_DOWARN, &uq))) {
+> 
+> Please move assignments out of conditionals for all code touched, e.g.:
+> 
+> 			error = xfs_qm_dqget(mp, NULL, (xfs_dqid_t)uid,
+> 					     XFS_DQ_USER,
+> 					     XFS_QMOPT_DQALLOC |
+> 					     XFS_QMOPT_DOWARN, &uq);
+> 			if (error) {
+> 
+> Otherwise this looks good to me.
 
 
 _______________________________________________
