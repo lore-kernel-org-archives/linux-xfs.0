@@ -1,24 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6H70AU6054401 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 02:00:12 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	JDpNeSdt6M5hpT9P (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 17 Jul 2012 00:00:04 -0700 (PDT)
-Date: Tue, 17 Jul 2012 03:00:00 -0400
+	q6H76kR7054879 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 02:06:47 -0500
+Date: Tue, 17 Jul 2012 03:06:43 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3] xfs: re-enable xfsaild idle mode and fix associated
-	races
-Message-ID: <20120717065959.GA29748@infradead.org>
-References: <1340880776-45730-1-git-send-email-bfoster@redhat.com>
-	<20120702070502.GA25568@infradead.org>
-	<20120702082952.GR19223@dastard> <4FF1A74C.1070003@redhat.com>
+Subject: Re: [PATCH] xfs: fix comment typo of struct xfs_da_blkinfo.
+Message-ID: <20120717070643.GA4958@infradead.org>
+References: <1342208293-3405-1-git-send-email-baozich@gmail.com>
+	<20120716151038.GI29979@sgi.com>
+	<5292013E-6FF3-47F6-BE9F-FD7BA2BB2AA9@gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <4FF1A74C.1070003@redhat.com>
+In-Reply-To: <5292013E-6FF3-47F6-BE9F-FD7BA2BB2AA9@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +24,16 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Chen Baozi <baozich@gmail.com>
+Cc: Ben Myers <bpm@sgi.com>, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jul 02, 2012 at 09:51:08AM -0400, Brian Foster wrote:
-> Right... if we wanted to move this back into xfsaild_push(), the only
-> way I can see doing that correctly is to move the task state logic down
-> into that function as well, at which point the idle logic is now spread
-> across two functions. :/
-> 
-> Considering this patch introduces an independent check for the idle
-> logic from the timeout logic (i.e., we use xfs_ail_min() now instead of
-> the general scan state of xfsaild_push()), I personally find the
-> separation of idle from timeout to be a bit more clear, but of course
-> I'll try to implement whatever is most agreeable...
+On Tue, Jul 17, 2012 at 11:33:33AM +0800, Chen Baozi wrote:
+> I'd really love to. Right now, I am working on syslinux to support booting on xfs partition (under pcacjr's mentoring)??? which I thought would be a nice start to get familiar with xfs (and I did learn a lot from it). So I think there would be more time (and experience on xfs) after I finish the xfs support on syslinux. And I'm really looking forward to your ideas. So do please tell me what I can help, I'll try my best to do it. 
 
-Let's take the patch as-is for 3.6 as we have enough other work in that
-area queued.  We can clean it up later if needed.
+Btw, if you need more reviers for the syslinus support feel free to pass
+it by me (or the list).
+
+Thanks for working on this!
 
 _______________________________________________
 xfs mailing list
