@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6I7NvbU170396 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 02:23:57 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	qykNqIIfqtaoDtaY (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Jul 2012 00:23:56 -0700 (PDT)
-Received: by obbup19 with SMTP id up19so1922332obb.26
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 00:23:56 -0700 (PDT)
+	q6IAO6sO181551 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 05:24:06 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 6CL8LYzEfOMqFn58
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 03:24:05 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id C630C6C0A1
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 05:24:04 -0500 (CDT)
+Message-ID: <50068EC5.5020704@hardwarefreak.com>
+Date: Wed, 18 Jul 2012 05:24:05 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <50066115.7070807@hardwarefreak.com>
+Subject: Re: A little RAID experiment
 References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
 	<CAAxjCEzEiXv5Kna9zxZ-ePbhNg6nfRinkU=PCuyX3QHesq5qcg@mail.gmail.com>
 	<5004875D.1020305@hardwarefreak.com>
@@ -20,10 +22,9 @@ References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
 	<50061CEA.4070609@hardwarefreak.com>
 	<CAAxjCEwgDKLF=RY0aCCNTMsc1oefXWfyHKh+morYB9zVUrnH-A@mail.gmail.com>
 	<50066115.7070807@hardwarefreak.com>
-Date: Wed, 18 Jul 2012 09:22:34 +0200
-Message-ID: <CAAxjCExFUJOKaD-LMPfZvCrS34V1VHgtrhgvPP0jZ3Hm1YV=6g@mail.gmail.com>
-Subject: Re: A little RAID experiment
-From: Stefan Ring <stefanrin@gmail.com>
+	<CAAxjCExFUJOKaD-LMPfZvCrS34V1VHgtrhgvPP0jZ3Hm1YV=6g@mail.gmail.com>
+In-Reply-To: <CAAxjCExFUJOKaD-LMPfZvCrS34V1VHgtrhgvPP0jZ3Hm1YV=6g@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,23 +37,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-> *Gasp*  EXT3?  Not XFS?  Why are posting this thread on XFS?  The two
-> will likely have (significantly) different behavior.
+On 7/18/2012 2:22 AM, Stefan Ring wrote:
 
-Because it was XFS originally which hammered the controller with this
-disadvantageous pattern. Except for the concurrency, it doesn't matter
-much on which filesystem sysbench operates. I've previously verified
-this on another system.
+> Because it was XFS originally which hammered the controller with this
+> disadvantageous pattern. 
 
-> Also, to make any meaningful comparison, we kinda need to know which
-> controller was targeted by these 3 runs below. ;)
+Do you feel you have researched and tested this theory thoroughly enough
+to draw such a conclusion?  Note the LSI numbers with a single thread
+compared to the P400.  It seems at this point the LSI has no problem
+with the pattern.  How about threaded results?
 
-It was the Fibre Channel controller, the one with the collapsing
-throughput. (P2000 G3 MSA, QLogic Corp. ISP2532-based 8Gb Fibre
-Channel to PCI Express HBA)
+> Except for the concurrency, it doesn't matter
+> much on which filesystem sysbench operates. I've previously verified
+> this on another system.
+
+It's hard to believe a 4 generation old (6-7 years) LSI ASIC with
+256/512MB cache is able to sink this workload without ever stalling when
+flushing to rust, where the HP P2000 FC SAN array shows pretty sad
+performance.  I'd really like to see the threaded results for the LSI at
+this point.  I think that would be informative.
+
+> It was the Fibre Channel controller, the one with the collapsing
+> throughput. (P2000 G3 MSA, QLogic Corp. ISP2532-based 8Gb Fibre
+> Channel to PCI Express HBA)
+
+Given the LSI 1078 based RAID card with 1 thread runs circles around the
+P2000 with 4, 8, or 16 threads, and never stalls, with responses less
+than 1ms, meaning all writes hit cache, it would seem other workloads
+are hitting the P2000 simultaneously with your test, limiting your
+performance.  Either that or some kind of quotas have been set on the
+LUNs to prevent one host from saturating the controllers.  Or both.
+
+This is why I asked about exclusive access.  Without it your results for
+the P2000 are literally worthless.  Lacking complete configuration info
+puts you in the same boat.  You simply can't draw any realistic
+conclusions about the P2000 performance without having complete control
+of the device for dedicated testing purposes.
+
+You have such control of the P400 and LSI do you not?  Concentrate your
+testing and comparisons on those.
+
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
