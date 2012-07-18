@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6I2IJMq134737 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 21:18:19 -0500
+	q6I2VhET136289 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 21:31:43 -0500
 Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id 0hRUZ19I4NwbiJwL
-	for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 19:18:18 -0700 (PDT)
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id FZRLJBJnmKHE5kio
+	for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 19:31:42 -0700 (PDT)
 Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
-	by greer.hardwarefreak.com (Postfix) with ESMTP id B75AD6C1AF
-	for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 21:18:17 -0500 (CDT)
-Message-ID: <50061CEA.4070609@hardwarefreak.com>
-Date: Tue, 17 Jul 2012 21:18:18 -0500
+	by greer.hardwarefreak.com (Postfix) with ESMTP id E70486C1AF
+	for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 21:31:41 -0500 (CDT)
+Message-ID: <5006200E.6020408@hardwarefreak.com>
+Date: Tue, 17 Jul 2012 21:31:42 -0500
 From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-Subject: Re: A little RAID experiment
-References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
-	<CAAxjCEzEiXv5Kna9zxZ-ePbhNg6nfRinkU=PCuyX3QHesq5qcg@mail.gmail.com>
-	<5004875D.1020305@hardwarefreak.com>
-	<CAAxjCEw-NJzZmX3Q5CJ+aZ_Q7Yo39pMU=-hiXk0ghTMq7q3PWA@mail.gmail.com>
-	<5004C243.6040404@hardwarefreak.com>
-	<20120717052621.GB23387@dastard>
-In-Reply-To: <20120717052621.GB23387@dastard>
+Subject: Re: xfs/md filesystem hang on drive pull under IO with 2.6.35.13
+References: <5005D661.8030200@dolby.com>
+	<20120718000445.62135e1d@galadriel.home>
+In-Reply-To: <20120718000445.62135e1d@galadriel.home>
 Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -35,31 +31,17 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On 7/17/2012 12:26 AM, Dave Chinner wrote:
-...
-> I bet it's single threaded, which means it is:
+On 7/17/2012 5:04 PM, Emmanuel Florac wrote:
 
-The data given seems to strongly suggest a single thread.
+> So far it may be a good idea to upgrade to something better than
+> 2.6.35.13.
 
-> Which means throughput is limited by IO latency, not bandwidth.
-> If it takes 10us to do the write(2), issue and process the IO
-> completion, and it takes 10us for the hardware to do the IO, you're
-> limited to 50,000 IOPS, or 200MB/s. Given that the best being seen
-> is around 35MB/s, you're looking at around 10,000 IOPS of 100us
-> round trip time. At 5MB/s, it's 1200 IOPS or around 800us round
-> trip.
-> 
-> That's why you get different performance from the different raid
-> controllers - some process cache hits a lot faster than others.
-...
-> IOWs, welcome to Understanding RAID Controller Caching Behaviours
-> 101 :)
+XFS delaylog wasn't the default until 2.6.39.  I think it was introduced
+as experimental in 2.6.35.  It may not be relevant to your current
+issue, but were you mounting XFS with delaylog?
 
-It would be somewhat interesting to see Stefan's latency and throughput
-numbers for 4/8/16 threads.  Maybe the sysbench "--num-threads=" option
-is the ticket.  The docs state this is for testing scheduler
-performance, and it's not clear whether this actually does threaded IO.
- If not, time for a new IO benchmark.
+I agree with the others.  Upgrade to a much newer kernel.  Why are you
+using 2.6.35?  It's very old, it's an oddball.  AFAIK no distros use it.
 
 -- 
 Stan
