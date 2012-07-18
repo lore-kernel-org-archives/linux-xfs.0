@@ -1,17 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6IDkk0w194528 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 08:46:46 -0500
+	q6IEmAGq198566 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 09:48:11 -0500
 Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id DyfhFdD4YlqU4vHA (version=TLSv1
+	by cuda.sgi.com with ESMTP id lP5tFzgorHrG9mts (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Jul 2012 06:46:45 -0700 (PDT)
-Date: Wed, 18 Jul 2012 16:46:36 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: re: xfs: use discontiguous xfs_buf support in dabuf wrappers
-Message-ID: <20120718134636.GA17265@elgon.mountain>
+	Wed, 18 Jul 2012 07:48:10 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by acsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
+	ESMTP id q6IEm8ac029469
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 14:48:08 GMT
+Received: from acsmt358.oracle.com (acsmt358.oracle.com [141.146.40.158])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	q6IEm75O020869
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 14:48:08 GMT
+Received: from abhmt107.oracle.com (abhmt107.oracle.com [141.146.116.59])
+	by acsmt358.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	q6IEm7mJ014673 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 09:48:07 -0500
+Message-ID: <5006CC80.3070208@oracle.com>
+Date: Wed, 18 Jul 2012 22:47:28 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: [PATCH] xfs: Add readpage() check up for mmap file at xfs_file_mmap()
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,33 +37,42 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: dchinner@redhat.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hello Dave Chinner,
+Hello,
 
-This is a semi-automatic email about new static checker warnings.
+When studying XFS code, I found xfs_file_mmap() does not check whether a specific file has readpage() or not.
+Actually, I have no idea of which kind of file does not supply page reading function, but Btrfs/Ext4
+as well as generic_file_mmap() all do this check at first, do we also need a defense here?
 
-The patch 3605431fb973: "xfs: use discontiguous xfs_buf support in
-dabuf wrappers" from Jun 22, 2012, leads to the following Smatch
-complaint:
+Thanks,
+-Jeff
 
-fs/xfs/xfs_da_btree.c:2113 xfs_da_get_buf()
-	 error: we previously assumed 'bp' could be null (see line 2111)
 
-fs/xfs/xfs_da_btree.c
-  2110					    mapp, nmap, 0);
-  2111		error = bp ? bp->b_error : XFS_ERROR(EIO);
-  2112		if (error) {
-  2113			xfs_trans_brelse(trans, bp);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-If bp is NULL here then it causes an Oops.
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-  2114			goto out_free;
-  2115		}
+---
+ fs/xfs/xfs_file.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9f7ec15..92ad4a5 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -945,6 +945,11 @@ xfs_file_mmap(
+ 	struct file	*filp,
+ 	struct vm_area_struct *vma)
+ {
++	struct address_space *mapping = file->f_mapping;
++
++	if (!mapping->a_ops->readpage)
++		return -ENOEXEC;
++
+ 	vma->vm_ops = &xfs_file_vm_ops;
+ 	vma->vm_flags |= VM_CAN_NONLINEAR;
+ 
+-- 
+1.7.9
 
 _______________________________________________
 xfs mailing list
