@@ -1,16 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6HMhjmq118698 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 17:43:45 -0500
-Date: Tue, 17 Jul 2012 22:40:21 -0300 (BRT)
-Message-Id: <20120717.224021.707783566146599004.pcacjr@zytor.com>
-Subject: Re: [PATCH] xfs: fix comment typo of struct xfs_da_blkinfo.
-From: Paulo Alcantara <pcacjr@zytor.com>
-In-Reply-To: <20120717070643.GA4958@infradead.org>
-References: <20120716151038.GI29979@sgi.com>
-	<5292013E-6FF3-47F6-BE9F-FD7BA2BB2AA9@gmail.com>
-	<20120717070643.GA4958@infradead.org>
-Mime-Version: 1.0
+	q6I2IJMq134737 for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 21:18:19 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id 0hRUZ19I4NwbiJwL
+	for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 19:18:18 -0700 (PDT)
+Received: from [192.168.100.53] (gffx.hardwarefreak.com [192.168.100.53])
+	by greer.hardwarefreak.com (Postfix) with ESMTP id B75AD6C1AF
+	for <xfs@oss.sgi.com>; Tue, 17 Jul 2012 21:18:17 -0500 (CDT)
+Message-ID: <50061CEA.4070609@hardwarefreak.com>
+Date: Tue, 17 Jul 2012 21:18:18 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
+MIME-Version: 1.0
+Subject: Re: A little RAID experiment
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+	<CAAxjCEzEiXv5Kna9zxZ-ePbhNg6nfRinkU=PCuyX3QHesq5qcg@mail.gmail.com>
+	<5004875D.1020305@hardwarefreak.com>
+	<CAAxjCEw-NJzZmX3Q5CJ+aZ_Q7Yo39pMU=-hiXk0ghTMq7q3PWA@mail.gmail.com>
+	<5004C243.6040404@hardwarefreak.com>
+	<20120717052621.GB23387@dastard>
+In-Reply-To: <20120717052621.GB23387@dastard>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,41 +33,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: hch@infradead.org
-Cc: baozich@gmail.com, xfs@oss.sgi.com, bpm@sgi.com, linux-kernel@vger.kernel.org
+To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
-Date: Tue, 17 Jul 2012 03:06:43 -0400
+On 7/17/2012 12:26 AM, Dave Chinner wrote:
+...
+> I bet it's single threaded, which means it is:
 
-> Btw, if you need more reviers for the syslinus support feel free to pass
-> it by me (or the list).
+The data given seems to strongly suggest a single thread.
 
-This is the branch I'm maintaing for the XFS readonly driver:
+> Which means throughput is limited by IO latency, not bandwidth.
+> If it takes 10us to do the write(2), issue and process the IO
+> completion, and it takes 10us for the hardware to do the IO, you're
+> limited to 50,000 IOPS, or 200MB/s. Given that the best being seen
+> is around 35MB/s, you're looking at around 10,000 IOPS of 100us
+> round trip time. At 5MB/s, it's 1200 IOPS or around 800us round
+> trip.
+> 
+> That's why you get different performance from the different raid
+> controllers - some process cache hits a lot faster than others.
+...
+> IOWs, welcome to Understanding RAID Controller Caching Behaviours
+> 101 :)
 
-git://zytor.com/users/pcacjr/syslinux.git (branch: xfs)
+It would be somewhat interesting to see Stefan's latency and throughput
+numbers for 4/8/16 threads.  Maybe the sysbench "--num-threads=" option
+is the ticket.  The docs state this is for testing scheduler
+performance, and it's not clear whether this actually does threaded IO.
+ If not, time for a new IO benchmark.
 
-The current status is:
-
-    - We are able to find the root inode by reading rootino field from
-      superblock (xfs_iget_root() function).
-    - We are able to find inodes that have core's format set to "local" only at
-      the moment, which is by reading leaf entries from inode btrees. The
-      function that looks up for an inode is the xfs_iget() one. We're looking
-      forward to implement the handling of keys in inode btrees (extents) also.
-
-Baoszi is currently working on the inode btree's key part (extents), and I'm
-working on the data part of the file inode, which is the xfs_next_extent()
-function.
-
-The xfs_next_extent() function must be able to read the inode (cast to the data
-fork) and populate a structure that stores physical starting number sector and
-number of consecutive sectors that contain the inode's data so that Syslinux
-will know where to read from.
-
-Thanks for the interest in helping us!
-
-
-		Paulo
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
