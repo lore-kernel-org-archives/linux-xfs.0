@@ -1,32 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6ICbRZV189673 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 07:37:27 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	GF5y8068sOhg2rYE (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 18 Jul 2012 05:37:25 -0700 (PDT)
-Received: by obbup19 with SMTP id up19so2278381obb.26
-	for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 05:37:25 -0700 (PDT)
+	q6IDkk0w194528 for <xfs@oss.sgi.com>; Wed, 18 Jul 2012 08:46:46 -0500
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id DyfhFdD4YlqU4vHA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 18 Jul 2012 06:46:45 -0700 (PDT)
+Date: Wed, 18 Jul 2012 16:46:36 +0300
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: re: xfs: use discontiguous xfs_buf support in dabuf wrappers
+Message-ID: <20120718134636.GA17265@elgon.mountain>
 MIME-Version: 1.0
-In-Reply-To: <CAAxjCEy2Yj=XWctNg2gACbFy81aTu70YJ13Ee8G6-E3Tqvvs7g@mail.gmail.com>
-References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
-	<CAAxjCEzEiXv5Kna9zxZ-ePbhNg6nfRinkU=PCuyX3QHesq5qcg@mail.gmail.com>
-	<5004875D.1020305@hardwarefreak.com>
-	<CAAxjCEw-NJzZmX3Q5CJ+aZ_Q7Yo39pMU=-hiXk0ghTMq7q3PWA@mail.gmail.com>
-	<5004C243.6040404@hardwarefreak.com>
-	<20120717052621.GB23387@dastard>
-	<50061CEA.4070609@hardwarefreak.com>
-	<CAAxjCEwgDKLF=RY0aCCNTMsc1oefXWfyHKh+morYB9zVUrnH-A@mail.gmail.com>
-	<50066115.7070807@hardwarefreak.com>
-	<CAAxjCExFUJOKaD-LMPfZvCrS34V1VHgtrhgvPP0jZ3Hm1YV=6g@mail.gmail.com>
-	<50068EC5.5020704@hardwarefreak.com>
-	<CAAxjCEy2Yj=XWctNg2gACbFy81aTu70YJ13Ee8G6-E3Tqvvs7g@mail.gmail.com>
-Date: Wed, 18 Jul 2012 14:37:25 +0200
-Message-ID: <CAAxjCEzF3nTFoedyKf1o5Nv4yPUJkgvC8nCJcx_2dDx8xqWtWA@mail.gmail.com>
-Subject: Re: A little RAID experiment
-From: Stefan Ring <stefanrin@gmail.com>
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -39,21 +24,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: dchinner@redhat.com
+Cc: xfs@oss.sgi.com
 
-> At least I have some multi-threaded results from the other two machines:
->
-> LSI:
->
-> 4 threads
->
-> [   2s] reads: 0.00 MB/s writes: 63.08 MB/s fsyncs: 0.00/s response
-> time: 0.452ms (95%)
-> [   4s] reads: 0.00 MB/s writes: 34.26 MB/s fsyncs: 0.00/s response
-> time: 1.660ms (95%)
+Hello Dave Chinner,
 
-And because of the bad formatting:
-https://github.com/Ringdingcoder/sysbench/blob/master/mail2.txt
+This is a semi-automatic email about new static checker warnings.
+
+The patch 3605431fb973: "xfs: use discontiguous xfs_buf support in
+dabuf wrappers" from Jun 22, 2012, leads to the following Smatch
+complaint:
+
+fs/xfs/xfs_da_btree.c:2113 xfs_da_get_buf()
+	 error: we previously assumed 'bp' could be null (see line 2111)
+
+fs/xfs/xfs_da_btree.c
+  2110					    mapp, nmap, 0);
+  2111		error = bp ? bp->b_error : XFS_ERROR(EIO);
+  2112		if (error) {
+  2113			xfs_trans_brelse(trans, bp);
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+If bp is NULL here then it causes an Oops.
+
+  2114			goto out_free;
+  2115		}
+
+regards,
+dan carpenter
 
 _______________________________________________
 xfs mailing list
