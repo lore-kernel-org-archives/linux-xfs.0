@@ -1,20 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6JFrGIh024580 for <xfs@oss.sgi.com>; Thu, 19 Jul 2012 10:53:16 -0500
+	q6JG0gXL024828 for <xfs@oss.sgi.com>; Thu, 19 Jul 2012 11:00:42 -0500
 Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id lgfDdECna3jHs5Bu for <xfs@oss.sgi.com>;
-	Thu, 19 Jul 2012 08:53:15 -0700 (PDT)
-Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by mail.sandeen.net (Postfix) with ESMTP id 6DEEB4963345
-	for <xfs@oss.sgi.com>; Thu, 19 Jul 2012 10:53:15 -0500 (CDT)
-Message-ID: <50082D6A.30901@sandeen.net>
-Date: Thu, 19 Jul 2012 10:53:14 -0500
+	with ESMTP id IGFHduAVF5etNuKD for <xfs@oss.sgi.com>;
+	Thu, 19 Jul 2012 09:00:41 -0700 (PDT)
+Message-ID: <50082F28.8090905@sandeen.net>
+Date: Thu, 19 Jul 2012 11:00:40 -0500
 From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: wiki spam
+Subject: Re: Superblock restore takes too long
+References: <5C7FE4A5ADF52D46989166B4083DFF8F21ECE1C6@ilmbx02.IL.NDS.com>
+In-Reply-To: <5C7FE4A5ADF52D46989166B4083DFF8F21ECE1C6@ilmbx02.IL.NDS.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,11 +24,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: "Zak, Semion" <SZak@nds.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-We're back up to about a 3:1 ratio of spam to content on the wiki.
+On 7/19/12 4:30 AM, Zak, Semion wrote:
+> Hi,
+> 
+> Corrupted Superblock restore takes too long because xfs_restore searches the disc for reserved Superblock.
+> 
+> Is it possible accelerate the search, for example by giving to xfs_restore some hint (reserved Superblock LBA)?
+> 
 
-Constantly weeding it out is a poor use of our time... where are we at with this, have we required an account to create pages, at least?
+Often when I've seen this it's because the block device wasn't really even an xfs filesystem, and the search went on forever.
+
+Can you offer more details of what you've encountered?
+
+(btw, s/xfs_restore/xfs_repair/ I assume)
+
+-Eric
+  
+> 
+> Thanks,
+> 
+>  
+> 
+> Semion.  
+
+
 
 _______________________________________________
 xfs mailing list
