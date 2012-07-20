@@ -1,33 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6KN4NE1165505 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 18:04:23 -0500
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153]) by
-	cuda.sgi.com with ESMTP id UMVPE70DVGsT8oTA (version=TLSv1
+	q6KN3dSh165416 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 18:03:40 -0500
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id WHeS4Wr6MBvr5byA (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 20 Jul 2012 16:04:22 -0700 (PDT)
+	Fri, 20 Jul 2012 16:03:38 -0700 (PDT)
 Received: from /spool/local
-	by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Fri, 20 Jul 2012 17:04:21 -0600
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com
-	[9.17.195.227])
-	by d03dlp01.boulder.ibm.com (Postfix) with ESMTP id E72DBC40001
-	for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 23:04:17 +0000 (WET)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q6KN4JYr167790 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 17:04:19 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id q6KN4JZG007298
-	for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 17:04:19 -0600
+	Fri, 20 Jul 2012 19:03:36 -0400
+Received: from d01relay05.pok.ibm.com (d01relay05.pok.ibm.com [9.56.227.237])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 375676E8039
+	for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 19:03:34 -0400 (EDT)
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay05.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q6KN3Ysi290458 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 19:03:34 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	q6L4Y9kr018314 for <xfs@oss.sgi.com>; Sat, 21 Jul 2012 00:34:10 -0400
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-Date: Fri, 20 Jul 2012 18:04:18 -0500
-Message-Id: <20120720230418.20689.83435.sendpatchset@chandra-lucid.austin.ibm.com>
-In-Reply-To: <20120720230350.20689.40213.sendpatchset@chandra-lucid.austin.ibm.com>
-References: <20120720230350.20689.40213.sendpatchset@chandra-lucid.austin.ibm.com>
-Subject: [PATCH 3/4] xfsprogs: Add qs_pquota to the fs_quota
+Date: Fri, 20 Jul 2012 18:03:05 -0500
+Message-Id: <20120720230305.20477.41556.sendpatchset@chandra-lucid.austin.ibm.com>
+In-Reply-To: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
+References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
+Subject: [RFC v6 PATCH 5/5] xfs: Add a new field to fs_quota_stat to get
+	pquota information
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -44,62 +43,72 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Chandra Seetharaman <sekharan@us.ibm.com>
 
-Add a new field qs_pquota to the data structure fs_quota_stat and also
-define a new version for the same.
-
-Inform the kernel that the data structure is newer one and on return
-from kernel check the version and act accordingly.
+Use separate structure for filling the project quota information
+for the Q_XGETQSTAT quota command.
 
 Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
 ---
- include/xqm.h |    2 ++
- quota/state.c |    6 +++++-
- 2 files changed, 7 insertions(+), 1 deletions(-)
+ fs/xfs/xfs_qm_syscalls.c |   26 +++++++++++++-------------
+ 1 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/include/xqm.h b/include/xqm.h
-index 47f58a0..24e1ea0 100644
---- a/include/xqm.h
-+++ b/include/xqm.h
-@@ -124,6 +124,7 @@ typedef struct fs_disk_quota {
-  * incore.
-  */
- #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
-+#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
+diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+index f011cf3..482efc0 100644
+--- a/fs/xfs/xfs_qm_syscalls.c
++++ b/fs/xfs/xfs_qm_syscalls.c
+@@ -421,7 +421,6 @@ xfs_qm_scall_getqstat(
+ 	tempuqip = tempgqip = temppqip = B_FALSE;
+ 	memset(out, 0, sizeof(fs_quota_stat_t));
  
- /*
-  * Some basic information about 'quota files'.
-@@ -146,6 +147,7 @@ typedef struct fs_quota_stat {
- 	__s32		qs_rtbtimelimit;/* limit for rt blks timer */
- 	__u16		qs_bwarnlimit;	/* limit for num warnings */
- 	__u16		qs_iwarnlimit;	/* limit for num warnings */
-+	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
- } fs_quota_stat_t;
+-	out->qs_version = FS_QSTAT_VERSION;
+ 	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+ 		out->qs_uquota.qfs_ino = NULLFSINO;
+ 		out->qs_gquota.qfs_ino = NULLFSINO;
+@@ -434,8 +433,6 @@ xfs_qm_scall_getqstat(
+ 	out->qs_pad = 0;
+ 	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+ 	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+-	if (&out->qs_gquota != &out->qs_pquota)
+-		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
  
- #endif	/* __XQM_H__ */
-diff --git a/quota/state.c b/quota/state.c
-index 42bffc0..678699f 100644
---- a/quota/state.c
-+++ b/quota/state.c
-@@ -152,6 +152,8 @@ state_quotafile_mount(
- 	fs_quota_stat_t	s;
- 	char		*dev = mount->fs_name;
- 
-+	bzero(&s, sizeof(struct fs_quota_stat));
-+	s.qs_version = FS_QSTAT_VERSION_2;
- 	if (xfsquotactl(XFS_GETQSTAT, dev, type, 0, (void *)&s) < 0) {
- 		if (flags & VERBOSE_FLAG)
- 			fprintf(fp, _("%s quota are not enabled on %s\n"),
-@@ -168,7 +170,9 @@ state_quotafile_mount(
- 				s.qs_flags & XFS_QUOTA_GDQ_ACCT,
- 				s.qs_flags & XFS_QUOTA_GDQ_ENFD);
- 	if (type & XFS_PROJ_QUOTA)
--		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, &s.qs_gquota,
-+		state_qfilestat(fp, mount, XFS_PROJ_QUOTA, 
-+				(s.qs_version >= FS_QSTAT_VERSION_2) ?
-+				&s.qs_pquota : &s.qs_gquota,
- 				s.qs_flags & XFS_QUOTA_PDQ_ACCT,
- 				s.qs_flags & XFS_QUOTA_PDQ_ENFD);
- 
+ 	if (q) {
+ 		uip = q->qi_uquotaip;
+@@ -452,11 +449,6 @@ xfs_qm_scall_getqstat(
+ 					0, 0, &gip) == 0)
+ 			tempgqip = B_TRUE;
+ 	}
+-	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
+-		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+-					0, 0, &pip) == 0)
+-			temppqip = B_TRUE;
+-	}
+ 	if (uip) {
+ 		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+ 		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+@@ -469,11 +461,19 @@ xfs_qm_scall_getqstat(
+ 		if (tempgqip)
+ 			IRELE(gip);
+ 	}
+-	if (pip) {
+-		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+-		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+-		if (temppqip)
+-			IRELE(pip);
++	if (out->qs_version >= FS_QSTAT_VERSION_2) {
++		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
++		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
++			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
++						0, 0, &pip) == 0)
++				temppqip = B_TRUE;
++		}
++		if (pip) {
++			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
++			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
++			if (temppqip)
++				IRELE(pip);
++		}
+ 	}
+ 	if (q) {
+ 		out->qs_incoredqs = q->qi_dquots;
 -- 
 1.7.1
 
