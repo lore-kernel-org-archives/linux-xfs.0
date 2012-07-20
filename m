@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6KDM1xb118787 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 08:22:01 -0500
-Message-ID: <50095B77.7090203@sgi.com>
-Date: Fri, 20 Jul 2012 08:21:59 -0500
+	q6KIkXQn141475 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 13:46:33 -0500
+Message-ID: <5009A786.3080500@sgi.com>
+Date: Fri, 20 Jul 2012 13:46:30 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [RFC] xfs: wait for the write of the superblock on unmount
-References: <20120717215957.855744999@tinguelysgi.com>
-	<20120718220003.396849822@tinguelysgi.com>
-	<20120719015809.GC23387@dastard>
-In-Reply-To: <20120719015809.GC23387@dastard>
+Subject: Re: [PATCH v4] xfs: probe data buffer from page cache for unwritten
+	extents
+References: <50091696.4000903@oracle.com>
+In-Reply-To: <50091696.4000903@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,47 +22,37 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: jeff.liu@oracle.com
 Cc: xfs@oss.sgi.com
 
-On 07/18/12 20:58, Dave Chinner wrote:
-> On Wed, Jul 18, 2012 at 12:33:58PM -0500, tinguely@sgi.com wrote:
->> Sorry, I have been distracted away from this regression. This was previously
->> titled "xfs: synchronously write the superblock on unmount".
->>
->> xfs_wait_buftarg() does not wait for the completion of the write of the
->> uncached superblock. This write can race with the shutdown of the log and
->> causes a panic if the write does not win the race.
->>
->> The log write of the superblock is important for possible recovery, but a
->> second syncronous write of the same superblock seems redundant. Would just
->> waiting for the iodone() of the log write before tearing down the log be
->> enough?
+On 07/20/12 03:28, Jeff Liu wrote:
+> Hi All,
 >
-> Yes. i.e. something like:
+> According to Mark and Christoph's comments for v3, except optimizing xfs_seek_data() with unwritten extents
+> probing, the xfs_seek_hole() is also refined to that in this version.
 >
-> 	/*
-> 	 * The superblock buffer is uncached, so xfs_wait_buftarg()
-> 	 * will not wait for it. Hence we need to explicitly wait
-> 	 * for IO completion on the superblock to occur here.
-> 	 */
-> 	error = xfs_buf_iowait(mp->m_sb_bp);
-> 	if (error)
-> 		AAAAIEEEE!
->
-> This fix is also needed in xfs_quiesce_attr() for the freeze and
-> ro,remount cases as well.
->
-> Cheers,
->
-> Dave.
 >
 
-Thanks for the feedback.
+Just some feedback.
 
-I chose the ugly lock to block on the superblock buffer because it has 
-XBF_ASYNC set at that point and won't go through the complete() patch. I 
-will look at turning the XBF_ASYNC flag off and wait on a xfs_buf_iowait().
+Test program fragment:
+
+         ret = do_fallocate(fd, 512*1024, 256*1024, 0);
+         if (ret < 0)
+                 goto out;
+         pwrite(fd, buf, 4096, 1024*516);
+         lseek(fd, 800*1024, SEEK_SET);
+         ret = write(fd, buf, bufsz);
+         if (ret < 0)
+                 goto out;
+
+Output:
+
+HOLE/DATA at 512K 786432 / 528384   <- undiscovered hole here
+HOLE/DATA at 516K 786432 / 528384   <- okay, data but we should
+                                         return next page as hole.
+HOLE/DATA at 520K 532480 / 819200   <- hole is discovered because
+                                        there is no trailing data
 
 --Mark.
 
