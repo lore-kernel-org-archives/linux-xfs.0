@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6K7MbLA093130 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 02:22:37 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id aqqpCol3aeMyUwqw for
-	<xfs@oss.sgi.com>; Fri, 20 Jul 2012 00:22:36 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q6K7MaDm015767
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 03:22:36 -0400
-From: Eryu Guan <eguan@redhat.com>
-Subject: [PATCH] xfstests 274: test more code paths
-Date: Fri, 20 Jul 2012 15:20:41 +0800
-Message-Id: <1342768841-16821-1-git-send-email-eguan@redhat.com>
+	q6K856OL096342 for <xfs@oss.sgi.com>; Fri, 20 Jul 2012 03:05:06 -0500
+Message-ID: <5009112D.4090106@sgi.com>
+Date: Fri, 20 Jul 2012 10:05:01 +0200
+From: Alain Renaud <arenaud@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH V2] xfs: prevent xfs_bmap_extsize_align() to exceed maximum
+	extent size.
+References: <20120712154554.377970666@sgi.com> <4FFFF3D8.7060001@sgi.com>
+	<50059437.6070705@sgi.com> <20120719033027.GD23387@dastard>
+	<5007C33B.5010603@sgi.com> <20120720014454.GI23387@dastard>
+In-Reply-To: <20120720014454.GI23387@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,152 +20,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Eryu Guan <eguan@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Fill preallocated(update/keep size) space by buffered/direct IO
+On 12-07-20 03:44 AM, Dave Chinner wrote:
+>
+>>>
+>> If you look in the function where I put this code is it AFTER the
+>> head/len alignment so the HEAD is already align so I do not need to
+>> account for it.
+> No need to shout. I did look at the code, and IMO you do need to
+> account for both head and tail extension and you definitely can't do
+> it there.....
+Sorry for the cap I did not intend to shout.
 
-Also change the seek uplimit of last round dd from 1023 to 1024
-to completely fill preallocated space.
+However the problem does exist. the len limitation in xfs_bmapi_write is 
+not sufficient
+if you set the extsize.
 
-Signed-off-by: Eryu Guan <eguan@redhat.com>
----
- 274     |   95 ++++++++++++++++++++++++++++++++++++---------------------------
- 274.out |    7 +++--
- 2 files changed, 58 insertions(+), 44 deletions(-)
+Here is what I see.
 
-diff --git a/274 b/274
-index dcad90e..938232a 100755
---- a/274
-+++ b/274
-@@ -50,52 +50,65 @@ _supported_os IRIX Linux
- _require_scratch
- _require_xfs_io_falloc
- 
--echo "------------------------------"
--echo "preallocation test"
--echo "------------------------------"
--
- rm -f $seq.full
- 
--umount $SCRATCH_DEV 2>/dev/null
--_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
--_scratch_mount
-+do_test()
-+{
-+	local keep_size=""
-+	local dio=""
-+	[ $1 -eq 1 ] && keep_size="-k"
-+	[ $2 -eq 1 ] && dio="oflag=direct"
-+
-+	umount $SCRATCH_DEV 2>/dev/null
-+	_scratch_mkfs_sized $((1 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
-+	_scratch_mount
- 
--# Create a 4k file and Allocate 4M past EOF on that file
--xfs_io -F -f -c "pwrite 0 4k" -c "falloc -k 4k 4m" $SCRATCH_MNT/test \
--	>>$seq.full 2>&1 || _fail "failed to create test file"
-+	# Create a 4k file and Allocate 4M past EOF on that file
-+	xfs_io -F -f -c "pwrite 0 4k" -c "falloc $keep_size 4k 4m" $SCRATCH_MNT/test \
-+		>>$seq.full 2>&1 || _fail "failed to create test file"
- 
--# Fill the rest of the fs completely
--# Note, this will show ENOSPC errors in $seq.full, that's ok.
--echo "Fill fs with 1M IOs; ENOSPC expected" >> $seq.full
--dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M >>$seq.full 2>&1
--echo "Fill fs with 4K IOs; ENOSPC expected" >> $seq.full
--dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=4K >>$seq.full 2>&1
--sync
--# Last effort, use O_SYNC
--echo "Fill fs with 4K DIOs; ENOSPC expected" >> $seq.full
--dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K oflag=sync >>$seq.full 2>&1
--# Save space usage info
--echo "Post-fill space:" >> $seq.full
--df $SCRATCH_MNT >>$seq.full 2>&1
-+	# Fill the rest of the fs completely
-+	# Note, this will show ENOSPC errors in $seq.full, that's ok.
-+	echo "Fill fs with 1M IOs; ENOSPC expected" >> $seq.full
-+	dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=1M >>$seq.full 2>&1
-+	echo "Fill fs with 4K IOs; ENOSPC expected" >> $seq.full
-+	dd if=/dev/zero of=$SCRATCH_MNT/tmp2 bs=4K >>$seq.full 2>&1
-+	sync
-+	# Last effort, use O_SYNC
-+	echo "Fill fs with 4K DIOs; ENOSPC expected" >> $seq.full
-+	dd if=/dev/zero of=$SCRATCH_MNT/tmp3 bs=4K oflag=sync >>$seq.full 2>&1
-+	# Save space usage info
-+	echo "Post-fill space:" >> $seq.full
-+	df $SCRATCH_MNT >>$seq.full 2>&1
-+
-+	# Now attempt a write into all of the preallocated space -
-+	# in a very nasty way, badly fragmenting it and then filling it in.
-+	echo "Fill in prealloc space; fragment at offsets:" >> $seq.full
-+	for i in `seq 1 2 1023`; do
-+		echo -n "$i " >> $seq.full
-+		dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc $dio \
-+			>>$seq.full 2>/dev/null || _fail "failed to write to test file"
-+	done
-+	sync
-+	echo >> $seq.full
-+	echo "Fill in prealloc space; fill holes at offsets:" >> $seq.full
-+	for i in `seq 2 2 1024`; do
-+		echo -n "$i " >> $seq.full
-+		dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc $dio \
-+			>>$seq.full 2>/dev/null || _fail "failed to fill test file"
-+	done
-+	sync
-+	echo >> $seq.full
-+}
- 
--# Now attempt a write into all of the preallocated space -
--# in a very nasty way, badly fragmenting it and then filling it in.
--echo "Fill in prealloc space; fragment at offsets:" >> $seq.full
--for i in `seq 1 2 1023`; do
--	echo -n "$i " >> $seq.full
--	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
--		>>$seq.full 2>/dev/null || _fail "failed to write to test file"
--done
--sync
--echo >> $seq.full
--echo "Fill in prealloc space; fill holes at offsets:" >> $seq.full
--for i in `seq 2 2 1023`; do
--	echo -n "$i " >> $seq.full
--	dd if=/dev/zero of=$SCRATCH_MNT/test seek=$i bs=4K count=1 conv=notrunc \
--		>>$seq.full 2>/dev/null || _fail "failed to fill test file"
--done
--sync
--echo >> $seq.full
-+echo "preallocation test, update size/buffer IO"
-+do_test 0 0
-+echo "preallocation test, update size/direct IO"
-+do_test 0 1
-+echo "preallocation test, keep size/buffer IO"
-+do_test 1 0
-+echo "preallocation test, keep size/direct IO"
-+do_test 1 1
- 
- echo "done"
- exit
-diff --git a/274.out b/274.out
-index edbf3cc..b1473bc 100644
---- a/274.out
-+++ b/274.out
-@@ -1,5 +1,6 @@
- QA output created by 274
--------------------------------
--preallocation test
--------------------------------
-+preallocation test, update size/buffer IO
-+preallocation test, update size/direct IO
-+preallocation test, keep size/buffer IO
-+preallocation test, keep size/direct IO
- done
+xfs_bmapi_write() <= lenght limited to MAXEXTLEN;
+     xfs_bmapi_allocate()
+           xfs_bmap_alloc()
+                 xfs_bmap_btalloc()
+                       xfs_bmap_extsize_align()  <== Align the offest / len
+
+Since the alignment is outward like you explain bellow we return len > 
+MAXEXTLEN
+causing failure to report ENOSPC.
+
+You can reproduce the problem the following way.
+
+# uname -r
+3.5.0-rc1-0.2-default+
+
+# mkfs.xfs -f -b size=512 -d agcount=1,size=4294967296 /dev/sdb5
+
+meta-data=/dev/sdb5              isize=256    agcount=1, agsize=8388608 blks
+          =                       sectsz=512   attr=2, projid32bit=0
+data     =                       bsize=512    blocks=8388608, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0
+log      =internal log           bsize=512    blocks=20480, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+# mount /dev/sdb5 /a
+
+# xfs_io -f -c "extsize 2m" -c "resvsp 0 1g" /a/data1
+XFS_IOC_RESVSP64: No space left on device
+
+
+So Maybe the fix is to limit the bma.length in xfs_bmapi_write to MAXEXTLEN 
+- (2 * extsz - 1) like you do in xfs_bmapi_reserve_delalloc().
+
+
+Hope this is making sense.
+
+
+
+
 -- 
-1.7.10.4
+===============================================
+Alain Renaud     - Cluster File System Engineer
+arenaud@sgi.com  - SGI
+===============================================
+
+
 
 _______________________________________________
 xfs mailing list
