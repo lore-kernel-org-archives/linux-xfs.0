@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6NLPdAk233924 for <xfs@oss.sgi.com>; Mon, 23 Jul 2012 16:25:39 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id SqCfoHMCFxVtggX0 (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 23 Jul 2012 14:25:37 -0700 (PDT)
-Date: Mon, 23 Jul 2012 22:25:33 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: [MMTests] Threaded IO Performance on xfs
-Message-ID: <20120723212533.GJ9222@suse.de>
-References: <20120620113252.GE4011@suse.de>
- <20120629111932.GA14154@suse.de>
+	q6NNY972255124 for <xfs@oss.sgi.com>; Mon, 23 Jul 2012 18:34:10 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	FpFACZ7Sn85RaLCv for <xfs@oss.sgi.com>;
+	Mon, 23 Jul 2012 16:34:07 -0700 (PDT)
+Date: Tue, 24 Jul 2012 09:28:13 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V5] xfs: cleanup the mount options
+Message-ID: <20120723232813.GL23387@dastard>
+References: <20120711022609.GX19223@dastard>
+	<1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120629111932.GA14154@suse.de>
+In-Reply-To: <1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,112 +27,121 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-mm@kvack.org
-Cc: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, xfs@oss.sgi.com
+To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, xfs@oss.sgi.com
 
-Configuration:	global-dhp__io-threaded-xfs
-Result: 	http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-threaded-xfs
-Benchmarks:	tiobench
+On Wed, Jul 11, 2012 at 02:29:05PM +0800, Wanlong Gao wrote:
+> -	return simple_strtoul((const char *)s, endp, base) << shift_left_factor;
+> +	string = match_strdup(s);
 
-Summary
-=======
+GFP_KERNEL allocation....
 
-There have been many improvements in the sequential read/write case but
-3.4 is noticably worse than 3.3 in a number of cases.
+> +	if (!string)
+> +		return ENOMEM;
+> +
+> +	*result = simple_strtoul((const char *)string, NULL, 0) <<
+> +			shift_left_factor;
+> +
+> +	kfree(string);
+> +	return 0;
+> +}
+> +
+> +STATIC int
+> +match_name_strdup(substring_t *s, char *name)
+> +{
+> +	char *string;
+> +	string = match_strdup(s);
 
-Benchmark notes
-===============
+GFP_KERNEL allocation....
 
-mkfs was run on system startup.
-mkfs parameters -f -d agcount=8
-mount options inode64,delaylog,logbsize=262144,nobarrier for the most part.
-        On kernels to old to support delaylog was removed. On kernels
-        where it was the default, it was specified and the warning ignored.
+> +	if (!string)
+> +		return ENOMEM;
+> +
+> +	name = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
 
-The size parameter for tiobench was 2*RAM. This is barely sufficient for
-	this particular test where the size parameter should be multiple
-	times the size of memory. The running time of the benchmark is
-	already excessive and this is not likely to be changed.
+GFP_KERNEL allocation....
 
-===========================================================
-Machine:	arnold
-Result:		http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-threaded-xfs/arnold/comparison.html
-Arch:		x86
-CPUs:		1 socket, 2 threads
-Model:		Pentium 4
-Disk:		Single Rotary Disk
-==========================================================
+> +	if (!name)
+> +		goto free;
+> +	return 0;
 
-tiobench
---------
-  This is a mixed bag. For low numbers of clients, throughput on
-  sequential reads has improved.  For larger number of clients, there
-  are many regressions but this is not consistent.  This could be due to
-  weakness in the methodology due to both a small filesize and a small
-  number of iterations.
+Leaks string - it should always be freed.
 
-  Random read is generally bad.
+> +free:
+> +	kfree(string);
+> +	return ENOMEM;
+>  }
+>  
+>  /*
+> @@ -166,11 +246,15 @@ xfs_parseargs(
+>  	char			*options)
+>  {
+>  	struct super_block	*sb = mp->m_super;
+> -	char			*this_char, *value, *eov;
+> +	char			*p;
+>  	int			dsunit = 0;
+>  	int			dswidth = 0;
+> -	int			iosize = 0;
+>  	__uint8_t		iosizelog = 0;
+> +	int			intarg;
+> +	unsigned long		ularg;
+> +	substring_t		args[MAX_OPT_ARGS];
+> +	char			*orig = NULL;
+> +	int			ret = 0;
+>  
+>  	/*
+>  	 * set up the mount name first so all the errors will refer to the
+> @@ -208,175 +292,192 @@ xfs_parseargs(
+>  	if (!options)
+>  		goto done;
+>  
+> -	while ((this_char = strsep(&options, ",")) != NULL) {
+> -		if (!*this_char)
+> +	options = kstrdup(options, GFP_NOFS);
 
-  For many kernels sequential write is good with the notable exception
-  of 2.6.39 and 3.0 kernels.
+GFP_NOFS allocation. Why is this GFP_NOFS, and all the other
+allocations GFP_KERNEL? If it is not safe to use GFP_KERNEL
+allocations here, then all of the above allocations need to be
+GFP_NOFS, too.
 
-  There was unexpected swapping on 3.1 and 3.2 kernels.
 
-==========================================================
-Machine:	hydra
-Result:		http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-threaded-xfs/hydra/comparison.html
-Arch:		x86-64
-CPUs:		1 socket, 4 threads
-Model:		AMD Phenom II X4 940
-Disk:		Single Rotary Disk
-==========================================================
+> +	if (!options) {
+> +		ret = ENOMEM;
+> +		goto done;
+> +	}
+> +
+> +	orig = options;
 
-tiobench
---------
+Also, no need to set up orig like this. Just a simple:
 
-  Like arnold, performance for sequential read is good for low number
-  of clients.
+	orig = kstrdup(options, GFP_NOFS);
+	if (!orig) {
+		ret = ENOMEM;
+		goto done;
+	}
 
-  Random read looks good.
+will work fine.
 
-  With the exception of 3.0 in general and single threaded writes for all
-  kernels, sequential writes have generally improved.
+....
 
-  Random write has a number of regressions.
+>  	if (mp->m_logbufs > 0)
+> -		seq_printf(m, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
+> +		seq_printf(seq, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
+>  	if (mp->m_logbsize > 0)
+> -		seq_printf(m, "," MNTOPT_LOGBSIZE "=%dk", mp->m_logbsize >> 10);
+> +		seq_printf(seq, "," MNTOPT_LOGBSIZE "=%dk",
+> +				mp->m_logbsize >> 10);
 
-  Kernels 3.1 and 3.2 had unexpected swapping.
+Change of user visible output format here. That will break any
+scripts that are parsing the output and expecting numbers. Just
+leave it as a raw number.
 
-==========================================================
-Machine:	sandy
-Result:		http://www.csn.ul.ie/~mel/postings/mmtests-20120424/global-dhp__io-threaded-xfs/sandy/comparison.html
-Arch:		x86-64
-CPUs:		1 socket, 8 threads
-Model:		Intel Core i7-2600
-Disk:		Single Rotary Disk
-==========================================================
+Cheers,
 
-tiobench
---------
-
-  Like hydra, sequential reads were generally better for low numbers of
-  clients. 3.4 is notable in that it regressed and 3.1 was also bad which
-  is roughly similar to what was seen on ext3. There are differences in
-  the memory sizes and therefore the filesize and it implies that there
-  is not a single cause of the regression.
-
-  Random read has generally improved except with the obvious exception of
-  the single-threaded case.
-
-  Sequential writes have generally improved but it is interesting to note
-  that 3.4 is worse than 3.3 and this was also seen for ext3.
-
-  Random write is a mixed bad but again 3.4 is worse than 3.3.
-
-  Like the other machines, 3.1 and 3.2 saw unexpected swapping.
-
+Dave.
 -- 
-Mel Gorman
-SUSE Labs
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
