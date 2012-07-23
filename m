@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6NNY972255124 for <xfs@oss.sgi.com>; Mon, 23 Jul 2012 18:34:10 -0500
+	q6NNswHK258064 for <xfs@oss.sgi.com>; Mon, 23 Jul 2012 18:54:58 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	FpFACZ7Sn85RaLCv for <xfs@oss.sgi.com>;
-	Mon, 23 Jul 2012 16:34:07 -0700 (PDT)
-Date: Tue, 24 Jul 2012 09:28:13 +1000
+	fg21rtOmeu44Rr4t for <xfs@oss.sgi.com>;
+	Mon, 23 Jul 2012 16:54:56 -0700 (PDT)
+Date: Tue, 24 Jul 2012 09:54:42 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V5] xfs: cleanup the mount options
-Message-ID: <20120723232813.GL23387@dastard>
-References: <20120711022609.GX19223@dastard>
-	<1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
+Subject: Re: Assert in xfs_repair (Phase 7) and other xfs_restore problems
+Message-ID: <20120723235442.GM23387@dastard>
+References: <alpine.LRH.2.02.1207202022300.7993@floggle-toggle.damtp.cam.ac.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
+In-Reply-To: <alpine.LRH.2.02.1207202022300.7993@floggle-toggle.damtp.cam.ac.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,114 +26,91 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, xfs@oss.sgi.com
+To: Jon Peatfield <J.S.Peatfield@damtp.cam.ac.uk>
+Cc: xfs@oss.sgi.com
 
-On Wed, Jul 11, 2012 at 02:29:05PM +0800, Wanlong Gao wrote:
-> -	return simple_strtoul((const char *)s, endp, base) << shift_left_factor;
-> +	string = match_strdup(s);
+On Fri, Jul 20, 2012 at 09:59:11PM +0100, Jon Peatfield wrote:
+> I have been trying and failing to repair an xfs filesystem.
+> Originally I was using the Scientific-Linux (like RHEL) provided
+> xfs_repair (2.9.4) but when that failed I built the latest tarball
+> (3.1.8)...
 
-GFP_KERNEL allocation....
+So it's an old filesystem, and you had some unknown corruption
+event.
 
-> +	if (!string)
-> +		return ENOMEM;
-> +
-> +	*result = simple_strtoul((const char *)string, NULL, 0) <<
-> +			shift_left_factor;
-> +
-> +	kfree(string);
-> +	return 0;
-> +}
-> +
-> +STATIC int
-> +match_name_strdup(substring_t *s, char *name)
-> +{
-> +	char *string;
-> +	string = match_strdup(s);
+> Anyway all of the later runs now end with:
+> 
+> ...
+> disconnected dir inode 3892327224, moving to lost+found
+> disconnected dir inode 3892327225, moving to lost+found
+> disconnected dir inode 3892327226, moving to lost+found
+> disconnected dir inode 3892327227, moving to lost+found
+> disconnected dir inode 3892327229, moving to lost+found
+> disconnected dir inode 3892327231, moving to lost+found
+> Phase 7 - verify and correct link counts...
+> resetting inode 256 nlinks from 8 to 5
+> resetting inode 261 nlinks from 2 to 13006001
+> xfs_repair: phase7.c:47: set_nlinks: Assertion `fs_inode_nlink' failed.
 
-GFP_KERNEL allocation....
+It's trying to set the link count to ~13M.
 
-> +	if (!string)
-> +		return ENOMEM;
-> +
-> +	name = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
+> Now in phase7.c it asserts if nlinks is over 65536 which 13006001
+> clearly is:
+> 
+>            do_warn(_("resetting inode %" PRIu64 " nlinks from %u to %u\n"),
+>                    ino, dinoc->di_nlink, nrefs);
+> 
+>            if (dinoc->di_version == 1 && nrefs > XFS_MAXLINK_1)  {
+>                    ASSERT(fs_inode_nlink);
+>                    do_warn(
+> _("nlinks %u will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
+>                            nrefs, ino);
+> 
+>            }
+>            dinoc->di_nlink = nrefs;
 
-GFP_KERNEL allocation....
+And that is saying that your superblock does not have the NLINK
+feature bit set, so it can't use version 2 inodes which support link
+counts of up to 2^32.  Use xfs_db to set the NLINK bit, and re-run
+repair.
 
-> +	if (!name)
-> +		goto free;
-> +	return 0;
+FWIW, the mkfs default is to set the NLINK. That got changed some
+4-5 years ago, IIRC...
 
-Leaks string - it should always be freed.
+> Mounting the fs now shows almost nothing, and worryingly the df
+> output shows that the number of inodes in use has gone down by a lot
+> - was ~60M inodes in use and now shows as 49M though that may simply
+> be because 13M should be in lost+found ...
 
-> +free:
-> +	kfree(string);
-> +	return ENOMEM;
->  }
->  
->  /*
-> @@ -166,11 +246,15 @@ xfs_parseargs(
->  	char			*options)
->  {
->  	struct super_block	*sb = mp->m_super;
-> -	char			*this_char, *value, *eov;
-> +	char			*p;
->  	int			dsunit = 0;
->  	int			dswidth = 0;
-> -	int			iosize = 0;
->  	__uint8_t		iosizelog = 0;
-> +	int			intarg;
-> +	unsigned long		ularg;
-> +	substring_t		args[MAX_OPT_ARGS];
-> +	char			*orig = NULL;
-> +	int			ret = 0;
->  
->  	/*
->  	 * set up the mount name first so all the errors will refer to the
-> @@ -208,175 +292,192 @@ xfs_parseargs(
->  	if (!options)
->  		goto done;
->  
-> -	while ((this_char = strsep(&options, ",")) != NULL) {
-> -		if (!*this_char)
-> +	options = kstrdup(options, GFP_NOFS);
+Yes, those 13M inodes are still disconnected because lost+found
+couldn't reference them all.
 
-GFP_NOFS allocation. Why is this GFP_NOFS, and all the other
-allocations GFP_KERNEL? If it is not safe to use GFP_KERNEL
-allocations here, then all of the above allocations need to be
-GFP_NOFS, too.
+> Have I completely destroyed this filesystem or is there any hope of
+> getting any of the files back ? (all the error messages I have seen
+> were about problems with the directories so some or all of the files
+> and structures may still be present)...
 
+Possibly.
 
-> +	if (!options) {
-> +		ret = ENOMEM;
-> +		goto done;
-> +	}
-> +
-> +	orig = options;
+> If it is destroyed (it only contained backup trees so I can live
+> with it being lost), what should I have done differently?  ie what
+> was my first mistake ?
 
-Also, no need to set up orig like this. Just a simple:
+Always keep your filesystem tools up to date, and not running a
+trial reapir on a metadump image to find out what the damage was
+before your tried to repair it on your only copy. Indeed, if it's
+only 3TB of filesystem, you coul dhave easily spent a coupl eof
+hundred dollars on a single disk and imaged the entire broken
+filesystem before doing anything else....
 
-	orig = kstrdup(options, GFP_NOFS);
-	if (!orig) {
-		ret = ENOMEM;
-		goto done;
-	}
+> I ran an xfs_metadump but the result is pretty big - 12G - while
+> running it seems to only think there are going to be ~23M inodes in
+> the dump, maybe that number changes later.
+> 
+> Is there some fraction of this dump which would be of any use for
+> any debugging ?
 
-will work fine.
-
-....
-
->  	if (mp->m_logbufs > 0)
-> -		seq_printf(m, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
-> +		seq_printf(seq, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
->  	if (mp->m_logbsize > 0)
-> -		seq_printf(m, "," MNTOPT_LOGBSIZE "=%dk", mp->m_logbsize >> 10);
-> +		seq_printf(seq, "," MNTOPT_LOGBSIZE "=%dk",
-> +				mp->m_logbsize >> 10);
-
-Change of user visible output format here. That will break any
-scripts that are parsing the output and expecting numbers. Just
-leave it as a raw number.
+Probably not at this point.
 
 Cheers,
 
