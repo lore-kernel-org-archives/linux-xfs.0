@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6O019lx259184 for <xfs@oss.sgi.com>; Mon, 23 Jul 2012 19:01:09 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	rQoHeyfoOEHFBjIR for <xfs@oss.sgi.com>;
-	Mon, 23 Jul 2012 17:01:07 -0700 (PDT)
-Date: Tue, 24 Jul 2012 10:01:05 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Assert in xfs_repair (Phase 7) and other xfs_restore problems
-Message-ID: <20120724000105.GN23387@dastard>
-References: <alpine.LRH.2.02.1207202022300.7993@floggle-toggle.damtp.cam.ac.uk>
-	<alpine.LRH.2.02.1207231844560.7993@floggle-toggle.damtp.cam.ac.uk>
+	q6O22qlW014206 for <xfs@oss.sgi.com>; Mon, 23 Jul 2012 21:02:53 -0500
+Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
+	cuda.sgi.com with ESMTP id dlSsFWMr6rcArgjV for
+	<xfs@oss.sgi.com>; Mon, 23 Jul 2012 19:02:50 -0700 (PDT)
+Message-ID: <500E0217.90405@cn.fujitsu.com>
+Date: Tue, 24 Jul 2012 10:01:59 +0800
+From: Wanlong Gao <gaowanlong@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1207231844560.7993@floggle-toggle.damtp.cam.ac.uk>
+Subject: Re: [PATCH V5] xfs: cleanup the mount options
+References: <20120711022609.GX19223@dastard>
+	<1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
+	<20120723232813.GL23387@dastard>
+In-Reply-To: <20120723232813.GL23387@dastard>
+Reply-To: gaowanlong@cn.fujitsu.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,27 +27,137 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jon Peatfield <J.S.Peatfield@damtp.cam.ac.uk>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, xfs@oss.sgi.com
 
-On Mon, Jul 23, 2012 at 06:47:43PM +0100, Jon Peatfield wrote:
-> Just askign the last question again in case the earlier summary data
-> put people off reading it...
+On 07/24/2012 07:28 AM, Dave Chinner wrote:
+> On Wed, Jul 11, 2012 at 02:29:05PM +0800, Wanlong Gao wrote:
+>> -	return simple_strtoul((const char *)s, endp, base) << shift_left_factor;
+>> +	string = match_strdup(s);
+> 
+> GFP_KERNEL allocation....
+> 
+>> +	if (!string)
+>> +		return ENOMEM;
+>> +
+>> +	*result = simple_strtoul((const char *)string, NULL, 0) <<
+>> +			shift_left_factor;
+>> +
+>> +	kfree(string);
+>> +	return 0;
+>> +}
+>> +
+>> +STATIC int
+>> +match_name_strdup(substring_t *s, char *name)
+>> +{
+>> +	char *string;
+>> +	string = match_strdup(s);
+> 
+> GFP_KERNEL allocation....
+> 
+>> +	if (!string)
+>> +		return ENOMEM;
+>> +
+>> +	name = kstrndup(string, MAXNAMELEN, GFP_KERNEL);
+> 
+> GFP_KERNEL allocation....
+> 
+>> +	if (!name)
+>> +		goto free;
+>> +	return 0;
+> 
+> Leaks string - it should always be freed.
 
-Keep in mind when you sent it:
+Sorry, will update.
 
-Fri, 20 Jul 2012 21:59:11 +0100 (BST)
+> 
+>> +free:
+>> +	kfree(string);
+>> +	return ENOMEM;
+>>  }
+>>  
+>>  /*
+>> @@ -166,11 +246,15 @@ xfs_parseargs(
+>>  	char			*options)
+>>  {
+>>  	struct super_block	*sb = mp->m_super;
+>> -	char			*this_char, *value, *eov;
+>> +	char			*p;
+>>  	int			dsunit = 0;
+>>  	int			dswidth = 0;
+>> -	int			iosize = 0;
+>>  	__uint8_t		iosizelog = 0;
+>> +	int			intarg;
+>> +	unsigned long		ularg;
+>> +	substring_t		args[MAX_OPT_ARGS];
+>> +	char			*orig = NULL;
+>> +	int			ret = 0;
+>>  
+>>  	/*
+>>  	 * set up the mount name first so all the errors will refer to the
+>> @@ -208,175 +292,192 @@ xfs_parseargs(
+>>  	if (!options)
+>>  		goto done;
+>>  
+>> -	while ((this_char = strsep(&options, ",")) != NULL) {
+>> -		if (!*this_char)
+>> +	options = kstrdup(options, GFP_NOFS);
+> 
+> GFP_NOFS allocation. Why is this GFP_NOFS, and all the other
+> allocations GFP_KERNEL? If it is not safe to use GFP_KERNEL
+> allocations here, then all of the above allocations need to be
+> GFP_NOFS, too.
 
-Late on Friday evening. I, for one, like to get away from filesytems
-on my weekends and sometimes there's a lot on Monday to catch up
-on... :P
+Since strsep() will change the options, so we should make GFP_NOFS
+safely to dup the orig options, but the parse functions can safely
+use GFP_KERNEL.
 
-Cheers,
+> 
+> 
+>> +	if (!options) {
+>> +		ret = ENOMEM;
+>> +		goto done;
+>> +	}
+>> +
+>> +	orig = options;
+> 
+> Also, no need to set up orig like this. Just a simple:
+> 
+> 	orig = kstrdup(options, GFP_NOFS);
+> 	if (!orig) {
+> 		ret = ENOMEM;
+> 		goto done;
+> 	}
+> 
+> will work fine.
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yeah, thank you.
+
+> 
+> ....
+> 
+>>  	if (mp->m_logbufs > 0)
+>> -		seq_printf(m, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
+>> +		seq_printf(seq, "," MNTOPT_LOGBUFS "=%d", mp->m_logbufs);
+>>  	if (mp->m_logbsize > 0)
+>> -		seq_printf(m, "," MNTOPT_LOGBSIZE "=%dk", mp->m_logbsize >> 10);
+>> +		seq_printf(seq, "," MNTOPT_LOGBSIZE "=%dk",
+>> +				mp->m_logbsize >> 10);
+> 
+> Change of user visible output format here. That will break any
+> scripts that are parsing the output and expecting numbers. Just
+> leave it as a raw number.
+
+OK, defer to you.
+
+Thanks,
+Wanlong Gao
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
 _______________________________________________
 xfs mailing list
