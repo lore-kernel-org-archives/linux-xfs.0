@@ -1,25 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6ODMorf112235 for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 08:22:51 -0500
+	q6ODNu1x112439 for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 08:23:57 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	vbeq5KgViNyeRQbl (version=TLSv1 cipher=AES256-SHA bits=256
+	nDOlfCNgV0mlXrlW (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jul 2012 06:22:47 -0700 (PDT)
-Date: Tue, 24 Jul 2012 09:22:46 -0400
+	Tue, 24 Jul 2012 06:23:56 -0700 (PDT)
+Date: Tue, 24 Jul 2012 09:23:52 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3] xfs: re-enable xfsaild idle mode and fix associated
-	races
-Message-ID: <20120724132246.GA9142@infradead.org>
-References: <1340880776-45730-1-git-send-email-bfoster@redhat.com>
-	<20120702070502.GA25568@infradead.org>
-	<20120702082952.GR19223@dastard> <4FF1A74C.1070003@redhat.com>
-	<20120717065959.GA29748@infradead.org>
+Subject: Re: wiki spam
+Message-ID: <20120724132352.GB9142@infradead.org>
+References: <50082D6A.30901@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120717065959.GA29748@infradead.org>
+In-Reply-To: <50082D6A.30901@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,14 +28,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>, Russell Cattelan <cattelan@thebarn.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Jul 17, 2012 at 03:00:00AM -0400, Christoph Hellwig wrote:
-> Let's take the patch as-is for 3.6 as we have enough other work in that
-> area queued.  We can clean it up later if needed.
+On Thu, Jul 19, 2012 at 10:53:14AM -0500, Eric Sandeen wrote:
+> We're back up to about a 3:1 ratio of spam to content on the wiki.
+> 
+> Constantly weeding it out is a poor use of our time... where are we at with this, have we required an account to create pages, at least?
 
-Ben, any reason this never got picked up?
+I suspect Russell isn't reading the xfs list to actively any more.
+
+Russell, any chance to disabllow posting for users that don't have an
+account on the wiki?
 
 _______________________________________________
 xfs mailing list
