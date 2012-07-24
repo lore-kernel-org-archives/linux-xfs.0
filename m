@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6OLJ3QC196014 for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 16:19:04 -0500
+	q6OLf5ug198463 for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 16:41:05 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	A8mC6uQJyRmwQx98 for <xfs@oss.sgi.com>;
-	Tue, 24 Jul 2012 14:19:01 -0700 (PDT)
-Date: Wed, 25 Jul 2012 07:18:57 +1000
+	tJZhAlN58FWhbRhV for <xfs@oss.sgi.com>;
+	Tue, 24 Jul 2012 14:41:03 -0700 (PDT)
+Date: Wed, 25 Jul 2012 07:41:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V5] xfs: cleanup the mount options
-Message-ID: <20120724211857.GO23387@dastard>
-References: <20120711022609.GX19223@dastard>
-	<1341988145-12994-1-git-send-email-gaowanlong@cn.fujitsu.com>
-	<20120723232813.GL23387@dastard> <500E0217.90405@cn.fujitsu.com>
+Subject: Re: Assert in xfs_repair (Phase 7) and other xfs_restore problems
+Message-ID: <20120724214100.GP23387@dastard>
+References: <alpine.LRH.2.02.1207202022300.7993@floggle-toggle.damtp.cam.ac.uk>
+	<20120723235442.GM23387@dastard>
+	<alpine.LRH.2.02.1207241927350.7993@floggle-toggle.damtp.cam.ac.uk>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <500E0217.90405@cn.fujitsu.com>
+In-Reply-To: <alpine.LRH.2.02.1207241927350.7993@floggle-toggle.damtp.cam.ac.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,37 +28,89 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wanlong Gao <gaowanlong@cn.fujitsu.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, Zach Brown <zab@zabbo.net>, xfs@oss.sgi.com
+To: Jon Peatfield <J.S.Peatfield@damtp.cam.ac.uk>
+Cc: xfs@oss.sgi.com
 
-On Tue, Jul 24, 2012 at 10:01:59AM +0800, Wanlong Gao wrote:
-> On 07/24/2012 07:28 AM, Dave Chinner wrote:
-> > On Wed, Jul 11, 2012 at 02:29:05PM +0800, Wanlong Gao wrote:
-> >> @@ -208,175 +292,192 @@ xfs_parseargs(
-> >>  	if (!options)
-> >>  		goto done;
-> >>  
-> >> -	while ((this_char = strsep(&options, ",")) != NULL) {
-> >> -		if (!*this_char)
-> >> +	options = kstrdup(options, GFP_NOFS);
-> > 
-> > GFP_NOFS allocation. Why is this GFP_NOFS, and all the other
-> > allocations GFP_KERNEL? If it is not safe to use GFP_KERNEL
-> > allocations here, then all of the above allocations need to be
-> > GFP_NOFS, too.
+On Tue, Jul 24, 2012 at 07:28:48PM +0100, Jon Peatfield wrote:
+> On Tue, 24 Jul 2012, Dave Chinner wrote:
 > 
-> Since strsep() will change the options, so we should make GFP_NOFS
-> safely to dup the orig options, but the parse functions can safely
-> use GFP_KERNEL.
+> ...
+> >>Now in phase7.c it asserts if nlinks is over 65536 which 13006001
+> >>clearly is:
+> >>
+> >>           do_warn(_("resetting inode %" PRIu64 " nlinks from %u to %u\n"),
+> >>                   ino, dinoc->di_nlink, nrefs);
+> >>
+> >>           if (dinoc->di_version == 1 && nrefs > XFS_MAXLINK_1)  {
+> >>                   ASSERT(fs_inode_nlink);
+> >>                   do_warn(
+> >>_("nlinks %u will overflow v1 ino, ino %" PRIu64 " will be converted to version 2\n"),
+> >>                           nrefs, ino);
+> >>
+> >>           }
+> >>           dinoc->di_nlink = nrefs;
+> >
+> >And that is saying that your superblock does not have the NLINK
+> >feature bit set, so it can't use version 2 inodes which support link
+> >counts of up to 2^32.  Use xfs_db to set the NLINK bit, and re-run
+> >repair.
+> >
+> >FWIW, the mkfs default is to set the NLINK. That got changed some
+> >4-5 years ago, IIRC...
+> 
+> Thanks for this.
+> 
+> The original filesystem is about 8 years old so it would have been
+> created before that change even if we had the latest versions of the
+> xfsprogs at the time.
 
-I unerstand why you are using kstrdup(). My question is why are you
-using GFP_NOFS here? What filesystem recursion deadlock are you
-tryin gto avoid here, and why don't the other allocations in the
-string parsing need to avoid the same problem as they are called
-from the same context?
+....
 
-If there is no recursion deadlock (I can't see that there is one),
-then GFP_KERNEL is what you should be using here....
+> Am I missing the obvious way to set this bit?
+
+xfs_repair shouldn't set or clear feature bits unless asked, and
+this case is someting we haven't seen before. I can't recall ever
+having seen this, even when nlink wasn't set by default....
+
+xfs_db is the answer. i.e.
+
+# xfs_db -x -c version nlink <dev>
+versionnum [0xb584+0x8] = V4,ALIGN,DALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+
+take the first version 0xb584, and or the nlink bit in:
+
+#define XFS_SB_VERSION_NLINKBIT         0x0020
+
+to give 0xb5a4, and run the command:
+
+# xfs_db -x -c "sb 0" -c "write versionnum 0xb5a4" <dev>
+
+And that will set the bit in the superblock and allow repair to
+handle inodes with more than 64k links.
+
+> BTW on a fresh fs made with and older mkfs.xfs (the one from RHEL5)
+> the NLINK bit isn't set initially but seems to become set once I
+> cause an inode to have more than 65536 links...
+
+Right - that's the dynamic behaviour I mentioned.
+
+> # xfs_db -c version /dev/SpudSnaps/Test2
+> versionnum [0xb584+0x8] = V4,ALIGN,DALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+> # mount /dev/SpudSnaps/Test2 /mnt/testing/
+> # mkdir /mnt/testing/foo
+> # for i in $(seq 1 65537); do mkdir /mnt/testing/foo/$i; done
+> # umount /mnt/testing
+> # xfs_db -c version /dev/SpudSnaps/Test2
+> versionnum [0xb5b4+0x8] = V4,ATTR,NLINK,ALIGN,DALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2
+> 
+> So is it actually some other feature which needs to be set to allow
+> NLINK to be set?
+
+No, the kernel does it automatically. Like I said, old mkfs.xfs
+binaries did not set the bit, relying on the kernel to automatically
+add it when necessary. i.e. going back 15 years, you could upgrade
+your Irix kernel an magically get >64k link count support in XFS
+without doing anything else...
 
 Cheers,
 
