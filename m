@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6ODf1hp115495 for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 08:41:01 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	JowpNuyYcKUu9T3p (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 24 Jul 2012 06:41:00 -0700 (PDT)
-Date: Tue, 24 Jul 2012 09:40:59 -0400
+	q6ODvxHJ118516 for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 08:57:59 -0500
+Date: Tue, 24 Jul 2012 09:57:58 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for June 2012
-Message-ID: <20120724134059.GA25901@infradead.org>
+Subject: Re: [RFC] xfs: wait for the write of the superblock on unmount
+Message-ID: <20120724135758.GA6564@infradead.org>
+References: <20120717215957.855744999@tinguelysgi.com>
+	<20120718220003.396849822@tinguelysgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20120718220003.396849822@tinguelysgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,22 +23,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: tinguely@sgi.com
+Cc: xfs@oss.sgi.com
 
-June has been a pretty slow month for XFS in Linus tree, as June saw the
-stabilization of the Linux 3.5 and thus only a handful of important XFS
-fixes.  Development of the tree destined for the next merge window has been
-a bit more busy with the addition of discontinuous buffers that replace the
-dabuf layer which has performance issues and isn't easy to deal with in the
-upcoming metadata checksumming as well as a few smaller cleanups.
+On Wed, Jul 18, 2012 at 12:33:58PM -0500, tinguely@sgi.com wrote:
+> Sorry, I have been distracted away from this regression. This was previously
+> titled "xfs: synchronously write the superblock on unmount".
+> 
+> xfs_wait_buftarg() does not wait for the completion of the write of the
+> uncached superblock. This write can race with the shutdown of the log and
+> causes a panic if the write does not win the race.
+> 
+> The log write of the superblock is important for possible recovery, but a
+> second syncronous write of the same superblock seems redundant. Would just
+> waiting for the iodone() of the log write before tearing down the log be
+> enough?
 
-The list saw various other patches not applied yet, most notable a
-refactoring and speedup of the inode allocator, and a heavily discussed
-rewrite of the mount option parsing.
+This doesn't look beautiful, but I suspect there's no good way around
+it.  Can you add your explanation from the reply on why xfs_buf_iowait
+does not work here to the comment above the lock/unlock pair?
 
-On the user space side a small number of fixes to the handling of fragmented
-directories were applied to xfs_repair, and xfstests saw a fix for handling
-different versions of xfsdump.
+With that:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
