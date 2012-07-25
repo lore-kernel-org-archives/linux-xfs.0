@@ -1,15 +1,34 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6P69Grp036009 for <xfs@oss.sgi.com>; Wed, 25 Jul 2012 01:09:16 -0500
-Received: from mailrelay1.mail.syriatelisp.com.sy (relay1.syriatelisp.com.sy
-	[82.137.246.38]) by cuda.sgi.com with ESMTP id siuwLZNy5l8ClLhl
-	for <xfs@oss.sgi.com>; Tue, 24 Jul 2012 23:09:13 -0700 (PDT)
-Date: Wed, 25 Jul 2012 09:09:12 +0300
-From: Mail Delivery Subsystem <MAILER-DAEMON@syriatelisp.com.sy>
-Message-Id: <201207250609.q6P69CRB011514@mailrelay1.mail.syriatelisp.com.sy>
+	q6P9U0oE065447 for <xfs@oss.sgi.com>; Wed, 25 Jul 2012 04:30:00 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	a6HKVRDTx4fgd38R (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 25 Jul 2012 02:29:59 -0700 (PDT)
+Received: by obbup19 with SMTP id up19so925689obb.26
+	for <xfs@oss.sgi.com>; Wed, 25 Jul 2012 02:29:58 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Returned mail: see transcript for details
+In-Reply-To: <50077A34.5070304@hardwarefreak.com>
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+	<CAAxjCEzEiXv5Kna9zxZ-ePbhNg6nfRinkU=PCuyX3QHesq5qcg@mail.gmail.com>
+	<5004875D.1020305@hardwarefreak.com>
+	<CAAxjCEw-NJzZmX3Q5CJ+aZ_Q7Yo39pMU=-hiXk0ghTMq7q3PWA@mail.gmail.com>
+	<5004C243.6040404@hardwarefreak.com>
+	<20120717052621.GB23387@dastard>
+	<50061CEA.4070609@hardwarefreak.com>
+	<CAAxjCEwgDKLF=RY0aCCNTMsc1oefXWfyHKh+morYB9zVUrnH-A@mail.gmail.com>
+	<50066115.7070807@hardwarefreak.com>
+	<CAAxjCExFUJOKaD-LMPfZvCrS34V1VHgtrhgvPP0jZ3Hm1YV=6g@mail.gmail.com>
+	<50068EC5.5020704@hardwarefreak.com>
+	<CAAxjCEy2Yj=XWctNg2gACbFy81aTu70YJ13Ee8G6-E3Tqvvs7g@mail.gmail.com>
+	<CAAxjCEzF3nTFoedyKf1o5Nv4yPUJkgvC8nCJcx_2dDx8xqWtWA@mail.gmail.com>
+	<50077A34.5070304@hardwarefreak.com>
+Date: Wed, 25 Jul 2012 11:29:58 +0200
+Message-ID: <CAAxjCEy=N9ceAA5V6bnrcMc3961gs-Z2NgNyenPJ+gjE2mYUXQ@mail.gmail.com>
+Subject: Re: A little RAID experiment
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,88 +37,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============1265257376020626373=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-This is a MIME-encapsulated message
+There appears to be a bit of a tension in this thread, and I have the
+suspicion that it's a case of mismatched presumed expectations. The
+sole purpose of my activity here over the last months was to present
+some findings which I thought would be interesting to XFS developers.
+If I were working on XFS, I would be interested. From most of the
+answers, though, I get the impression that I am perceived as looking
+for help tuning my XFS setup, which is not the case at all. In fact,
+I'm quite happy with it. Let me recap just to give this thread the
+intended tone:
 
---===============1265257376020626373==
-Content-Type: multipart/report; report-type=delivery-status;
-	boundary="q6P69CRB011514.1343196552/mailrelay1.mail.syriatelisp.com.sy"
-Content-Transfer-Encoding: 8bit
+This episode of my journey with XFS started when I read that there had
+been recent significant performance improvements to XFS' metadata
+operations. Having tried XFS every couple of years or so before, and
+always with the same verdict -- horribly slow -- I was curious if it
+had finally become usable.
 
-This is a MIME-encapsulated message
+A new server machine arriving just at the right time would serve as
+the perfect testbed. I threw some workloads at it, which I hoped would
+resemble my typical workload, and I focussed especially on areas which
+bothered me the most on our current development server running ext3.
+Everything worked more or less satisfactorily, except for the case of
+un-tarring a metadata-heavy tarball in the presence of considerable
+free-space fragmentation.
 
---q6P69CRB011514.1343196552/mailrelay1.mail.syriatelisp.com.sy
+In this particular case, performance was conspicuously poor, and after
+some digging with blktrace and seekwatcher, I identified the cause of
+this slowness to be a write pattern that looked like this (in block
+numbers), where the step width (arbitrarily displayed as 10000 here
+for illustration purposes) was 1/4 of the size of the volume, clearly
+because the volume had 4 allocation groups (the default). Of course it
+was not entirely regular, but overall it was very similar to this:
 
-The original message was received at Wed, 25 Jul 2012 09:08:39 +0300
-from [202.164.62.11]
+10001
+20001
+30001
+40001
+10002
+20002
+30002
+40002
+10003
+20003
+...
 
-   ----- The following addresses had permanent fatal errors -----
-<d.doherty@afpc.net.sy>
-    (reason: 550 Malware found: WORM/Mydoom.O.1)
+I tuned and tweaked everything I could think of -- elevator settings,
+readahead, su/sw, barrier, RAID hardware cache --, but the behavior
+would always be the same. It just so happens that the RAID controller
+in this machine (HP SmartArray P400) doesn't cope very well with a
+write pattern like this. To it, the sequence appears to be random, and
+it performs even worse than it would if it were actually random.
 
-   ----- Transcript of session follows -----
-... while talking to mx-afpc-net.syriatelisp.com.sy.:
->>> DATA
-<<< 550 Malware found: WORM/Mydoom.O.1
-554 5.0.0 Service unavailable
+Going by what I think to know about the topic, it struck me as odd
+that blocks would be sent to disk in this very unfavorable order. To
+my mind, three entities had failed at sanitizing the write sequence:
+the filesystem, the block layer and the RAID controller. My opinion is
+still unchanged regarding the latter two.
 
---q6P69CRB011514.1343196552/mailrelay1.mail.syriatelisp.com.sy
-Content-Type: message/delivery-status
+The strikingly bad performance on the RAID controller piqued my
+interest, and I went on a different journey investigating this oddity
+and created a minor sysbench modification that would just measure
+performance for this particular pattern. Not many people helped with
+my experiment, and I was accused of wanting ponies. If I'm the only
+one who is curious about this, then so be it. I deemed it worthwile
+sharing my experience and pointing out that a sequence like the one
+above is a death blow to all HP gear I've got my hands on so far.
 
-Reporting-MTA: dns; mailrelay1.mail.syriatelisp.com.sy
-Received-From-MTA: DNS; [202.164.62.11]
-Arrival-Date: Wed, 25 Jul 2012 09:08:39 +0300
+It has been pointed out that XFS schedules the writes like this on
+purpose so that they can be done in parallel, and that I should create
+a concatenated volume with physical devices matching the allocation
+groups. I actually went through this exercise, and yes, it was very
+beneficial, but that's not the point. I don't want to (have to) do
+that. And it's not always feasible, anyway. What about home usage with
+a single SATA disk? Is it not worthwile to perform well on low-end
+devices?
 
-Final-Recipient: RFC822; d.doherty@afpc.net.sy
-Action: failed
-Status: 5.2.0
-Remote-MTA: DNS; mx-afpc-net.syriatelisp.com.sy
-Diagnostic-Code: SMTP; 550 Malware found: WORM/Mydoom.O.1
-Last-Attempt-Date: Wed, 25 Jul 2012 09:09:12 +0300
+You might ask then, why even bother using XFS instead of ext4?
 
---q6P69CRB011514.1343196552/mailrelay1.mail.syriatelisp.com.sy
-Content-Type: text/rfc822-headers
-Content-Transfer-Encoding: 8bit
+I care about the multi-user case. The problem I have with ext is that
+it is unbearably unresponsive when someone writes a semi-large amount
+of data (a few gigs) at once -- like extracting a large-ish tarball.
+Just using vim, even with :set nofsync, is almost impossible during
+that time. I have adopted various disgusting hacks like extracting to
+a ramdisk instead and rsyncing the lot over to the real disk with a
+very low --bwlimit, but I'm thoroughly fed up with this kind of crap,
+and in general, XFS works very well.
 
-Return-Path: <xfs@oss.sgi.com>
-Received: from oss.sgi.com ([202.164.62.11])
-	by mailrelay1.mail.syriatelisp.com.sy (8.13.8/8.13.8/Debian-3) with ESMTP id q6P68ORB011494
-	for <d.doherty@afpc.net.sy>; Wed, 25 Jul 2012 09:08:39 +0300
-Message-Id: <201207250608.q6P68ORB011494@mailrelay1.mail.syriatelisp.com.sy>
-From: xfs@oss.sgi.com
-To: d.doherty@afpc.net.sy
-Subject: Delivery failed
-Date: Wed, 25 Jul 2012 11:36:50 +0530
-MIME-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0011_9D7C5B7D.52601AB7"
-X-Priority: 3
-X-MSMail-Priority: Normal
-X-Mailer: Microsoft Outlook Express 6.00.2600.0000
-X-MIMEOLE: Produced By Microsoft MimeOLE V6.00.2600.0000
-X-Spam-Status: No, score=8.3 required=10.0 tests=FORGED_MUA_OUTLOOK,
-	NO_REAL_NAME,RCVD_IN_SORBS_WEB,RCVD_IN_XBL,UPPERCASE_25_50 
-	autolearn=disabled version=3.1.7-deb
-X-Spam-Level: ********
-X-Spam-Checker-Version: SpamAssassin 3.1.7-deb (2006-10-05) on Mailrelay1
-X-Synonym: Copied by Synonym (http://www.modulo.ro/synonym) to: logmail@aalami.sy
-
---q6P69CRB011514.1343196552/mailrelay1.mail.syriatelisp.com.sy--
-
-
---===============1265257376020626373==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+If noone cares about my findings, I will henceforth be quiet on this topic.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============1265257376020626373==--
