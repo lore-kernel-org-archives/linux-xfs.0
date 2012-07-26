@@ -1,15 +1,32 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6QFUtKF048280 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 10:30:55 -0500
-Message-ID: <501162B0.10806@sgi.com>
-Date: Thu, 26 Jul 2012 10:30:56 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	q6QFWdNk048635 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 10:32:39 -0500
+Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
+	by cuda.sgi.com with ESMTP id Xub2gOERx9totsSl (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 26 Jul 2012 08:32:38 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
+	by acsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
+	ESMTP id q6QFWajH016352
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 15:32:36 GMT
+Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	q6QFWZXI010506
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 15:32:36 GMT
+Received: from abhmt115.oracle.com (abhmt115.oracle.com [141.146.116.67])
+	by acsmt357.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	q6QFWZ6r013773 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 10:32:35 -0500
+Message-ID: <501162EB.7060004@oracle.com>
+Date: Thu, 26 Jul 2012 23:31:55 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/5] xfs: clean up xfs_inactive
-References: <20120704151328.928543446@bombadil.infradead.org>
-	<20120704151443.077344815@bombadil.infradead.org>
-In-Reply-To: <20120704151443.077344815@bombadil.infradead.org>
+Subject: [PATCH v5 0/4] xfs: seek_data/seek_hole refinements
+References: <501105EC.5050903@oracle.com>
+In-Reply-To: <501105EC.5050903@oracle.com>
+Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,28 +35,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 07/04/2012 10:13 AM, Christoph Hellwig wrote:
-> The code to reserve log space and join the inode to the transaction is
-> common for all cases, so don't duplicate it.  Also remove the trivial
-> xfs_inactive_symlink_local helper which can simply be opencode now.
->
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
->
-> ---
->  fs/xfs/xfs_vnodeops.c |  171 ++++++++++++--------------------------------------
->  1 file changed, 43 insertions(+), 128 deletions(-)
->
-As stated this patch cleans up duplicate code and removed local helper 
-function.  Looks good.
+Hello,
 
-Reviewed-by:	Rich Johnston <rjohnston@sgi.com>
+This is the v5 patch set for xfs_seek_data/xfs_seek_hole refinements with lookup the
+offset from page cache for desired type.
+
+I split those changes to 4 patches this time, maybe it could facilitate the review process.
+
+v4->v5:
+* Introduce a new routine xfs_find_get_desired_pgoff() to search the desired offset from page cache
+  for unwritten and delayed-allocation extents.  This function is mainly based on the original xfs_has_unwritten_buffer() but
+  revised to be able to fetch a hole offset directly for the refinement of xfs_seek_hole().
+* Remove type argument from xfs_seek_data()/xfs_seek_hole() as it is already indicated by those function naming explicitly.
+
+v3->v4:
+xfs_seek_hole() refinement, suggested by Mark and Christoph.
+* refine xfs_seek_hole() with unwritten extents search, treat it as a hole if no data buffer was found from page cache.
+* s/goto out/break/g, break out of the extent maps reading loop rather than 'go to', I must have got my head up in the clouds when writing v3.
+* xfs_has_unwritten_buffer(), remove 'offset <= XFS_FSB_TO_B(mp, last))' from BH state checking branch.
+  The page index offset might less than '*start', so we will miss a data extent if so.
+* xfs_has_unwritten_buffer(), don't reset '*offset' to ZERO if no data buffer was found because of xfs_seek_hole() will call this function to
+  examine an unwritten extent has data or not. If not, it will use the returned '*offset' as a hole offset.  So set '*offset' to zero in
+  xfs_has_unwritten_buffer() will lead to wrong result.
+* avoid re-starting the next round search in both xfs_seek_data() and xfs_seek_hole() if the end offset of the 2nd extent map is hit the EOF.
+  So for SEEK_DATA, it means there is no data extent beyond the current offset and return ENXIO, for SEEK_HOLE, return the file size to
+  indicate hitting EOF.   The comments were also changed(s/reading offset not beyond/reading offset not beyond or hit EOF/)accordingly.
+
+v2->v3:
+Tested by Mark, hit BUG() for continuous unwritten extents without data wrote.
+* xfs_seek_data(), remove BUG() and having extents map search in loop.
+
+v1->v2:
+suggested by Mark.
+* xfs_has_unwritten_buffer(), use the input offset instead of bmap->br_startoff to calculate page index for data buffer probing.
+
+Thanks,
+-Jeff
 
 _______________________________________________
 xfs mailing list
