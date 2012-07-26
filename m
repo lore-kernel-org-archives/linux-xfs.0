@@ -1,16 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6QHrkVn068384 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 12:53:46 -0500
-Message-ID: <5011842A.8020805@sgi.com>
-Date: Thu, 26 Jul 2012 12:53:46 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q6QLQNC3097316
+	for <linux-xfs@oss.sgi.com>; Thu, 26 Jul 2012 16:26:23 -0500
+Received: from jiggymail.net (vh4.jiggymail.net [173.224.222.56]) by
+	cuda.sgi.com with ESMTP id StUVUK5rjsVXGvFK for
+	<linux-xfs@oss.sgi.com>; Thu, 26 Jul 2012 14:26:21 -0700 (PDT)
+Subject: Using Facebook?
+Message-ID: <acd8371229108a8a10a5b79e55971dc8@www.jiggymail.net>
+Date: Thu, 26 Jul 2012 16:22:12 -0400
+From: "Cindy" <Cindy@jiggymail.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 6/7] xfs: do not read the AGI buffer in xfs_dialloc until
-	nessecary
-References: <20120704145444.863203951@bombadil.infradead.org>
-	<20120704145616.554825799@bombadil.infradead.org>
-In-Reply-To: <20120704145616.554825799@bombadil.infradead.org>
+Reply-To: Cindy@jiggymail.net
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,21 +24,14 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On 07/04/12 09:54, Christoph Hellwig wrote:
-> Refactor the AG selection loop in xfs_dialloc to operate on the in-memory
-> perag data as much as possible.  We only read the AGI buffer once we have
-> selected an AG to allocate inodes now instead of for every AG considered.
->
-> Reviewed-by: Dave Chinner<dchinner@redhat.com>
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
-
-
-Looks good.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Hi,
+Don't bore yourself in Facebook.
+Check out new Facebook for Singles and make this week much more
+interesting!
+Millions of people are already there.
+Click Here: http://shrturls.com/4ingles
 
 _______________________________________________
 xfs mailing list
