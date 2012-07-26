@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6Q9SJtr006731 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 04:28:19 -0500
+	q6Q9SMmD006784 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 04:28:22 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	7df7hHkQGtxFERdC for <xfs@oss.sgi.com>;
-	Thu, 26 Jul 2012 02:28:17 -0700 (PDT)
+	UTWRLqOlF2XVNCB0 for <xfs@oss.sgi.com>;
+	Thu, 26 Jul 2012 02:28:19 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SuKMh-0001AX-08
+	(envelope-from <dave@fromorbit.com>) id 1SuKMh-0001Ah-6D
 	for xfs@oss.sgi.com; Thu, 26 Jul 2012 19:28:15 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1SuKMg-0005Uv-SC
-	for xfs@oss.sgi.com; Thu, 26 Jul 2012 19:28:14 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SuKMh-0005VM-3R
+	for xfs@oss.sgi.com; Thu, 26 Jul 2012 19:28:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [RFC] [PATCH 0/18] xfstests: move tests out of top level
-Date: Thu, 26 Jul 2012 19:27:54 +1000
-Message-Id: <1343294892-20991-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/18] xfstests: clean up and simply check CLI option parsing
+Date: Thu, 26 Jul 2012 19:28:00 +1000
+Message-Id: <1343294892-20991-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1343294892-20991-1-git-send-email-david@fromorbit.com>
+References: <1343294892-20991-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,113 +33,552 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Alt-Subject: Games with Sed, Grep and Awk.
+From: Dave Chinner <dchinner@redhat.com>
 
-This series is based on top of the large filesystem test series.
+The option parise in a messy loop of option parsing and actions on
+secondary arguments. Turn it into something much neater and esay to
+understand rather than a mess of temporary variables and tortured
+logic...
 
-This moves all the tests into a ./tests subdirectory, and sorts them into
-classes of related tests. Those are:
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ check     |  414 ++++++++++++++++++++++---------------------------------------
+ common.rc |   19 +++
+ 2 files changed, 169 insertions(+), 264 deletions(-)
 
-	tests/generic:	valid for all filesystems
-	tests/shared:	valid for a limited number of filesystems
-	tests/xfs:	xfs specific tests
-	tests/btrfs	btrfs specific tests
-	tests/ext4	ext4 specific tests
-	tests/udf	udf specific tests
-
-Each directory has it's own group file to determine what groups the
-tests are associated with. Tests are run in exactly the same was as
-before, but when trying to run individual tests you need to specify
-the class as well. e.g. the old way:
-
-# ./check 001
-
-The new way:
-
-# ./check generic/001
-
-The output also indicates what class the test came from:
-
-$ sudo ./check -g auto
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 test-1 3.5.0-rc5-dgc+
-MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdb
-MOUNT_OPTIONS -- /dev/vdb /mnt/scratch
-
-generic/001      3s
-generic/002      0s
-generic/005      1s
-generic/006      10s
-generic/007      2s
-generic/010      [not run] dbtest was not built for this platform
-generic/011      15s
-generic/013      43s
-generic/014      2s
-generic/015      0s
-generic/020      3s
-generic/053      0s
-....
-
-[I'd post more example output, but a lightning strike took out power
-a little while ago and so all the output in my scrollback buffers
-went bye-bye...]
-
-The test classes that are run are generic, shared and $FSTYP, hence
-avoiding most "notrun, wrong filesystem" cases.
-
-Further, the test result/status files (e.g. 001.full) are also moved
-out of the top level directory into a new results directory. This
-defaults to ./results ($RESULT_BASE) and duplicates the heirarchy of
-the tests/ directory. It is created on demand. Each test is passed
-$RESULT_DIR which points to the directory it should dump it's output
-files in. i.e. "echo foo > $RESULT_DIR/$seq.full".
-
-There's a bunch of cleanup at the start of the series, removing
-stuff that I don't think has been used for years. e.g. i didn't even
-know the remake script existed, but it's usefulness is minimal are
-we rarely, if ever, regenerate every single .out file in the test
-suite. Hence stuff is removed to make it easy to convert the
-important stuff to use the new structure....
-
-Feel free to debate things like the renaming of variables - I just
-used sed scripts to do most of the conversion and most of them are
-in the commit messages so I can easily re-run them to do global
-search/replace if you've got better ideas for naming stuff ($seqres
-is pretty 'orrible)....
-
-Overall, this series shows the direction I want to take xfstests in.
-The next steps are:
-
-	- remove remaining limitations on test naming (i.e.  must be
-	  numbered) so that we can have descriptive names
-	- move all of the output into the results directory and
-	  enable it to be hosted externally so it can be archived
-	  and data mined easily
-	- move all the common* files to a subdirectory
-	- allow running of test classes, not just groups
-	- re-introduce the expunged file functionailty (which I
-	  didn't know existed) because I can see how useful that is
-	  for running regular QA with a current xfstests on an older
-	  distro (e.g. RHEL5) to avoid running tests that are known
-	  to fail or test features that aren't in old kernels...
-
-I sent the patches in git format for all the renames - you don't
-need to see a patchset that is this size:
-
-1280 files changed, 102397 insertions(+), 104307 deletions(-)
-
-When turning on rename detection makes it this size:
-
-686 files changed, 1722 insertions(+), 3632 deletions(-)
-
-Which is much more manageable to review....
-
-I'm certain there are problems still in there - I haven't done a lot
-of weird command line testing and really only just enough testing to
-make sure a typical auto group test run mostly passes.....
-
-Comments, additional ideas, new functionality, modifications, etc 
-are all welcome.
+diff --git a/check b/check
+index bccdc08..df962ae 100755
+--- a/check
++++ b/check
+@@ -28,45 +28,35 @@ n_bad=0
+ bad=""
+ notrun=""
+ interrupt=true
++diff="diff -u"
++showme=false
++expunge=true
++have_test_arg=false
++randomize=false
++here=`pwd`
++FSTYP=xfs
+ 
+-export QA_CHECK_FS=${QA_CHECK_FS:=true}
+-
+-# by default don't output timestamps
+-timestamp=${TIMESTAMP:=false}
++SUPPORTED_TESTS="[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]"
+ 
+ # generic initialization
+ iam=check
+ 
+-# we need common.config
+-if ! . ./common.config
+-then
+-    echo "$iam: failed to source common.config"
+-    exit 1
+-fi
++export QA_CHECK_FS=${QA_CHECK_FS:=true}
+ 
+-# argument parsing first - currently very messy, needs cleanup.
+-_setenvironment()
+-{
+-    MSGVERB="text:action"
+-    export MSGVERB
+-}
++# by default don't output timestamps
++timestamp=${TIMESTAMP:=false}
+ 
+ usage()
+ {
+     echo "Usage: $0 [options] [testlist]"'
+ 
+-common options
+-    -v			verbose
+-
+ check options
+     -xfs                test XFS (default)
+     -udf                test UDF
+     -nfs                test NFS
+     -l			line mode diff
+-    -xdiff		graphical mode diff
+     -udiff		show unified diff (default)
+     -n			show me, do not run tests
+-    -q			quick [deprecated]
+     -T			output timestamps
+     -r			randomize test order
+     --large-fs		optimise scratch device for large filesystems
+@@ -80,258 +70,181 @@ testlist options
+ 	    exit 0
+ }
+ 
+-here=`pwd`
+-rm -f $here/$iam.out
+-_setenvironment
+-
+-check=${check-true}
++_setenvironment()
++{
++    MSGVERB="text:action"
++    export MSGVERB
++}
+ 
+-diff="diff -u"
+-verbose=false
+-group=false
+-xgroup=false
+-showme=false
+-sortme=false
+-expunge=true
+-have_test_arg=false
+-randomize=false
+-rm -f $tmp.list $tmp.tmp $tmp.sed
++get_group_list()
++{
++	grp=$1
+ 
+-# Autodetect fs type based on what's on $TEST_DEV
+-if [ "$HOSTOS" == "Linux" ]
+-then
+-    export FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
+-else
+-    export FSTYP=xfs
+-fi
++	grpl=$(sed -n < group \
++		       -e 's/#.*//' \
++		       -e 's/$/ /' \
++		       -e "/^[0-9][0-9][0-9].* $grp /"'{ s/ .*//p }')
++	echo $grpl
++}
+ 
+-for r
+-do
++expand_test_numbers()
++{
++	# strip leading zeros, could be considered octal.
++	start=`echo $1 | sed 's/^0*//'`
++	end=`echo $2 | sed 's/^0*//'`
+ 
+-    if $group
+-    then
+-	# arg after -g
+-       group_list=$(sed -n < group \
+-                       -e 's/#.*//' \
+-                       -e 's/$/ /' \
+-                       -e "/^[0-9][0-9][0-9].* $r /"'{ s/ .*//p }')
+-	if [ -z "$group_list" ]
+-	then
+-	    echo "Group \"$r\" is empty or not defined?"
+-	    exit 1
+-	fi
+-	[ ! -s $tmp.list ] && touch $tmp.list
+-	for t in $group_list
++	$AWK_PROG </dev/null '
++BEGIN	{ for (t='$start'; t<='$end'; t++) printf "%03d\n",t }' \
++	| while read id
+ 	do
+-	    if grep -s "^$t\$" $tmp.list >/dev/null
+-	    then
+-		:
+-	    else
+-		echo "$t" >>$tmp.list
+-	    fi
++		if grep -s "^$id " group >/dev/null ; then
++			# in group file ... OK
++			echo $id >>$tmp.list
++		elif [ -f expunged ] && $expunge && \
++				egrep "^$id([ 	]|\$)" expunged >/dev/null ; then
++			# expunged ... will be reported, but not run, later
++			echo $id >>$tmp.list
++		else
++			# oops
++			echo "$id - unknown test, ignored"
++		fi
+ 	done
+-	group=false
+-	continue
++}
+ 
+-    elif $xgroup
+-    then
+-	# arg after -x
+-	[ ! -s $tmp.list ] && ls [0-9][0-9][0-9] [0-9][0-9][0-9][0-9] >$tmp.list 2>/dev/null
+-	group_list=`sed -n <group -e 's/$/ /' -e "/^[0-9][0-9][0-9].* $r /"'{
+-s/ .*//p
+-}'`
+-	if [ -z "$group_list" ]
+-	then
+-	    echo "Group \"$r\" is empty or not defined?"
+-	    exit 1
+-	fi
+-	numsed=0
+-	rm -f $tmp.sed
+-	for t in $group_list
+-	do
+-	    if [ $numsed -gt 100 ]
+-	    then
+-		sed -f $tmp.sed <$tmp.list >$tmp.tmp
+-		mv $tmp.tmp $tmp.list
+-		numsed=0
+-		rm -f $tmp.sed
+-	    fi
+-	    echo "/^$t\$/d" >>$tmp.sed
+-	    numsed=`expr $numsed + 1`
+-	done
+-	sed -f $tmp.sed <$tmp.list >$tmp.tmp
+-	mv $tmp.tmp $tmp.list
+-	xgroup=false
+-	continue
+-    fi
++_wallclock()
++{
++    date "+%H %M %S" | $AWK_PROG '{ print $1*3600 + $2*60 + $3 }'
++}
+ 
+-    xpand=true
+-    case "$r"
+-    in
++_timestamp()
++{
++    now=`date "+%T"`
++    echo -n " [$now]"
++}
+ 
+-	-\? | -h | --help)	# usage
+-	    usage
+-	    ;;
++# start the initialisation work now
++_setenvironment
+ 
+-	-udf)	# -udf ... set FSTYP to udf
+-	    FSTYP=udf
+-	    xpand=false
+-	    ;;
++rm -f $tmp.list $tmp.tmp $tmp.sed $here/$iam.out
+ 
+-	-xfs)	# -xfs ... set FSTYP to xfs
+-	    FSTYP=xfs
+-	    xpand=false
+-	    ;;
++# Autodetect fs type based on what's on $TEST_DEV
++if [ "$HOSTOS" == "Linux" ]; then
++    FSTYP=`blkid -c /dev/null -s TYPE -o value $TEST_DEV`
++fi
++export FSTYP
+ 
+-	-nfs)	# -nfs ... set FSTYP to nfs
+-	    FSTYP=nfs
+-	    xpand=false
+-	    ;;
++# we need common.config
++if ! . ./common.config
++then
++    echo "$iam: failed to source common.config"
++    exit 1
++fi
+ 
+-	-g)	# -g group ... pick from group file
+-	    group=true
+-	    xpand=false
+-	    ;;
++while [ $# -gt 0 ]; do
++	case "$1" in
++	-\? | -h | --help) usage ;;
+ 
+-	-l)	# line mode for diff, was default before
+-	    diff="diff"
+-	    xpand=false
+-	    ;;
++	-udf)	FSTYP=udf ;;
++	-xfs)	FSTYP=xfs ;;
++	-nfs)	FSTYP=nfs ;;
+ 
+-	-xdiff)	# graphical diff mode
+-	    xpand=false
++	-g)	group=$2 ; shift ;
++		group_list=$(get_group_list $group)
++		if [ -z "$group_list" ]; then
++		    echo "Group \"$group\" is empty or not defined?"
++		    exit 1
++		fi
+ 
+-	    if [ ! -z "$DISPLAY" ]
+-	    then
+-		which xdiff >/dev/null 2>&1 && diff=xdiff
+-		which gdiff >/dev/null 2>&1 && diff=gdiff
+-		which tkdiff >/dev/null 2>&1 && diff=tkdiff
+-		which xxdiff >/dev/null 2>&1 && diff=xxdiff
+-	    fi
+-	    ;;
+-
+-	-udiff) # show a unified diff, default now, keep for backward compat
+-	    xpand=false
+-	    diff="$diff -u"
+-	    ;;
+-
+-	-q)	# "quick", no longer used - always quick :-)
+-	    xpand=false
+-	    ;;
+-
+-	-n)	# show me, don't do it
+-	    showme=true
+-	    xpand=false
+-	    ;;
+-        -r)	# randomize test order
+-	    randomize=true
+-	    xpand=false
+-	    ;;
+-
+-	-T)	# turn on timestamp output
+-	    timestamp=true
+-	    xpand=false
+-	    ;;
+-
+-	-v)
+-	    verbose=true
+-	    xpand=false
+-	    ;;
+-	-x)	# -x group ... exclude from group file
+-	    xgroup=true
+-	    xpand=false
+-	    ;;
+-	'[0-9][0-9][0-9] [0-9][0-9][0-9][0-9]')
+-	    echo "No tests?"
+-	    status=1
+-	    exit $status
+-	    ;;
++		[ ! -s $tmp.list ] && touch $tmp.list
++		for t in $group_list; do
++			grep -s "^$t\$" $tmp.list >/dev/null || \
++							echo "$t" >>$tmp.list
++		done
+ 
+-	[0-9]*-[0-9]*)
+-	    eval `echo $r | sed -e 's/^/start=/' -e 's/-/ end=/'`
+-	    ;;
++		;;
+ 
+-	[0-9]*-)
+-	    eval `echo $r | sed -e 's/^/start=/' -e 's/-//'`
+-	    end=`echo [0-9][0-9][0-9] [0-9][0-9][0-9][0-9] | sed -e 's/\[0-9]//g' -e 's/  *$//' -e 's/.* //'`
+-	    if [ -z "$end" ]
+-	    then
+-		echo "No tests in range \"$r\"?"
+-		status=1
+-		exit $status
+-	    fi
+-	    ;;
++	-x)	xgroup=$2 ; shift ;
++		[ ! -s $tmp.list ] &&  ls $SUPPORTED_TESTS >$tmp.list 2>/dev/null
++		group_list=$(get_group_list $xgroup)
++		if [ -z "$group_list" ]; then
++		    echo "Group \"$xgroup\" is empty or not defined?"
++		    exit 1
++		fi
+ 
+-	--large-fs)
+-	    export LARGE_SCRATCH_DEV=yes
+-	    xpand=false
+-	    ;;
++		rm -f $tmp.sed
++		numsed=0
++		for t in $group_list
++		do
++		    if [ $numsed -gt 100 ]; then
++			sed -f $tmp.sed <$tmp.list >$tmp.tmp
++			mv $tmp.tmp $tmp.list
++			numsed=0
++			rm -f $tmp.sed
++		    fi
++		    echo "/^$t\$/d" >>$tmp.sed
++		    numsed=`expr $numsed + 1`
++		done
++		sed -f $tmp.sed <$tmp.list >$tmp.tmp
++		mv $tmp.tmp $tmp.list
++		;;
+ 
+-	-*)
+-	    usage
+-	    ;;
++	-l)	diff="diff" ;;
++	-udiff)	diff="$diff -u" ;;
+ 
+-	--extra-space=*)
+-	    export SCRATCH_DEV_EMPTY_SPACE=${r#*=}
+-	    xpand=false
+-	    ;;
++	-n)	showme=true ;;
++        -r)	randomize=true ;;
+ 
+-	*)
+-	    start=$r
+-	    end=$r
+-	    ;;
++	-T)	timestamp=true ;;
+ 
+-    esac
++	"$SUPPORTED_TESTS")
++		echo "No tests?"
++		status=1
++		exit $status
++		;;
+ 
+-    # get rid of leading 0s as can be interpreted as octal
+-    start=`echo $start | sed 's/^0*//'`
+-    end=`echo $end | sed 's/^0*//'`
++	[0-9]*-[0-9]*)
++		eval `echo $1 | sed -e 's/^/start=/' -e 's/-/ end=/'`
++		expand_test_numbers $start $end
++		have_test_arg=true
++		;;
+ 
+-    if $xpand
+-    then
+-	have_test_arg=true
+-	$AWK_PROG </dev/null '
+-BEGIN	{ for (t='$start'; t<='$end'; t++) printf "%03d\n",t }' \
+-	| while read id
+-	do
+-	    if grep -s "^$id " group >/dev/null
+-	    then
+-		# in group file ... OK
+-		echo $id >>$tmp.list
+-	    else
+-		if [ -f expunged ] && $expunge && egrep "^$id([ 	]|\$)" expunged >/dev/null
+-		then
+-		    # expunged ... will be reported, but not run, later
+-		    echo $id >>$tmp.list
+-		else
+-		    # oops
+-		    echo "$id - unknown test, ignored"
++	[0-9]*-)
++		eval `echo $1 | sed -e 's/^/start=/' -e 's/-//'`
++		end=`echo $SUPPORTED_TESTS | sed -e 's/\[0-9]//g' -e 's/  *$//' -e 's/.* //'`
++		if [ -z "$end" ]; then
++			echo "No tests in range \"$1\"?"
++			status=1
++			exit $status
+ 		fi
+-	    fi
+-	done
+-    fi
++		expand_test_numbers $start $end
++		have_test_arg=true
++		;;
++
++	--large-fs) export LARGE_SCRATCH_DEV=yes ;;
++	--extra-space=*) export SCRATCH_DEV_EMPTY_SPACE=${r#*=} ;;
+ 
++	-*)	usage ;;
++	*)	expand_test_numbers $1 $1 ;
++		have_test_arg=true
++		;;
++	esac
++
++	shift
+ done
+ 
+-if [ -s $tmp.list ]
+-then
++if [ -s $tmp.list ]; then
+     # found some valid test numbers ... this is good
+     :
+-else
+-    if $have_test_arg
+-    then
++elif $have_test_arg; then
+ 	# had test numbers, but none in group file ... do nothing
+ 	touch $tmp.list
+-    else
++else
+ 	# no test numbers, do everything from group file
+ 	sed -n -e '/^[0-9][0-9][0-9]*/s/[ 	].*//p' <group >$tmp.list
+-    fi
+ fi
+ 
+-# should be sort -n, but this did not work for Linux when this
+-# was ported from IRIX
+-#
+-list=`sort $tmp.list`
++# sort the list of tests into numeric order
++list=`sort -n $tmp.list`
+ rm -f $tmp.list $tmp.tmp $tmp.sed
+ 
+ if $randomize
+@@ -339,24 +252,6 @@ then
+     list=`echo $list | awk -f randomize.awk`
+ fi
+ 
+-case "$FSTYP" in
+-    xfs)
+-	 [ "$XFS_LOGPRINT_PROG" = "" ] && _fatal "xfs_logprint not found"
+-	 [ "$XFS_REPAIR_PROG" = "" ] && _fatal "xfs_repair not found"
+-	 [ "$XFS_CHECK_PROG" = "" ] && _fatal "xfs_check not found"
+-	 [ "$XFS_DB_PROG" = "" ] && _fatal "xfs_db not found"
+-	 [ "$MKFS_XFS_PROG" = "" ] && _fatal "mkfs_xfs not found" 
+-	 ;;
+-    udf)
+-	 [ "$MKFS_UDF_PROG" = "" ] && _fatal "mkfs_udf/mkudffs not found"
+-	 ;;
+-    btrfs)
+-	 [ "$MKFS_BTRFS_PROG" = "" ] && _fatal "mkfs.btrfs not found"
+-	 ;;
+-    nfs)
+-	 ;;
+-esac
+-
+ # we need common.rc
+ if ! . ./common.rc
+ then
+@@ -370,16 +265,7 @@ then
+     exit 1
+ fi
+ 
+-_wallclock()
+-{
+-    date "+%H %M %S" | $AWK_PROG '{ print $1*3600 + $2*60 + $3 }'
+-}
+-
+-_timestamp()
+-{
+-    now=`date "+%T"`
+-    echo -n " [$now]"
+-}
++# Ok, time to start running...
+ 
+ _wrapup()
+ {
+diff --git a/common.rc b/common.rc
+index 2ffff41..7d5a66d 100644
+--- a/common.rc
++++ b/common.rc
+@@ -161,6 +161,25 @@ then
+     fi
+ fi
+ 
++# check for correct setup
++case "$FSTYP" in
++    xfs)
++	 [ "$XFS_LOGPRINT_PROG" = "" ] && _fatal "xfs_logprint not found"
++	 [ "$XFS_REPAIR_PROG" = "" ] && _fatal "xfs_repair not found"
++	 [ "$XFS_CHECK_PROG" = "" ] && _fatal "xfs_check not found"
++	 [ "$XFS_DB_PROG" = "" ] && _fatal "xfs_db not found"
++	 [ "$MKFS_XFS_PROG" = "" ] && _fatal "mkfs_xfs not found" 
++	 ;;
++    udf)
++	 [ "$MKFS_UDF_PROG" = "" ] && _fatal "mkfs_udf/mkudffs not found"
++	 ;;
++    btrfs)
++	 [ "$MKFS_BTRFS_PROG" = "" ] && _fatal "mkfs.btrfs not found"
++	 ;;
++    nfs)
++	 ;;
++esac
++
+ # make sure we have a standard umask
+ umask 022
+ 
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
