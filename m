@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6Q8e4X4001371 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 03:40:04 -0500
+	q6Q8eHAH001489 for <xfs@oss.sgi.com>; Thu, 26 Jul 2012 03:40:17 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	kFrLr1VW3LFvEXiz for <xfs@oss.sgi.com>;
-	Thu, 26 Jul 2012 01:40:02 -0700 (PDT)
+	MkT7WmQB8tRMk2Jb for <xfs@oss.sgi.com>;
+	Thu, 26 Jul 2012 01:40:16 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1SuJbr-00013c-SQ
-	for xfs@oss.sgi.com; Thu, 26 Jul 2012 18:39:51 +1000
+	(envelope-from <dave@fromorbit.com>) id 1SuJc2-000141-3d
+	for xfs@oss.sgi.com; Thu, 26 Jul 2012 18:40:02 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1SuJbr-0003uc-Os
-	for xfs@oss.sgi.com; Thu, 26 Jul 2012 18:39:51 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1SuJc1-0003v7-VP
+	for xfs@oss.sgi.com; Thu, 26 Jul 2012 18:40:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/10] xfstests: rename RETAIN_AG_BYTES
-Date: Thu, 26 Jul 2012 18:39:42 +1000
-Message-Id: <1343291989-14987-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/10] xfstests: disable tests that typically fail on large
+	filesystems
+Date: Thu, 26 Jul 2012 18:39:48 +1000
+Message-Id: <1343291989-14987-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1343291989-14987-1-git-send-email-david@fromorbit.com>
 References: <1343291989-14987-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,31 +36,29 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Rename the $RETAIN_AG_BYTES variable to be more generic so that it
-reflects the fact that it is designed to retain a certain amount of
-extra free space above the default amount in the filesystem when
-doing large scratch device testing.
+Test 017 typically fails due to the OOM killer kicking in and
+killing everything but xfs_db so panics the machine.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- common.rc |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ 017 |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/common.rc b/common.rc
-index 9517904..b0af482 100644
---- a/common.rc
-+++ b/common.rc
-@@ -311,8 +311,8 @@ _scratch_mkfs_xfs()
-     rm -f $tmp_dir.mkfserr $tmp_dir.mkfsstd
+diff --git a/017 b/017
+index 0a3ede3..b3a7f9c 100755
+--- a/017
++++ b/017
+@@ -48,6 +48,10 @@ _supported_os Linux
  
-     if [ "$LARGE_SCRATCH_DEV" = yes ]; then
--        [ -z "$RETAIN_AG_BYTES" ] && RETAIN_AG_BYTES=0
--        ./tools/ag-wipe -q -r $RETAIN_AG_BYTES $SCRATCH_DEV
-+        [ -z "$SCRATCH_DEV_EMPTY_SPACE" ] && SCRATCH_DEV_EMPTY_SPACE=0
-+        ./tools/ag-wipe -q -r $SCRATCH_DEV_EMPTY_SPACE $SCRATCH_DEV
-     fi
+ _require_scratch
  
-     return $mkfs_status
++# xfs_db will OOM kill the machine if you don't have huge amounts of RAM, so
++# don't run this on large filesystems.
++_require_no_large_scratch_dev
++
+ echo "*** init FS"
+ 
+ rm -f $seq.full
 -- 
 1.7.10
 
