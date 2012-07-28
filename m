@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6S49YC2015736 for <xfs@oss.sgi.com>; Fri, 27 Jul 2012 23:09:35 -0500
-Subject: Re: [PATCH v5 3/4]xfs: xfs_seek_data() refinements with lookup data
-	buffer offset from page cache.
-Mime-Version: 1.0 (Apple Message framework v1084)
-From: Jeff liu <jeff.liu@oracle.com>
-In-Reply-To: <501308E6.3030207@sgi.com>
-Date: Sat, 28 Jul 2012 12:09:19 +0800
-Message-Id: <40E111A9-9BD0-4A48-8642-3B466004B8CA@oracle.com>
-References: <50110630.7020902@oracle.com> <50116322.2020005@oracle.com>
-	<501308E6.3030207@sgi.com>
+	q6SNvWex099675 for <xfs@oss.sgi.com>; Sat, 28 Jul 2012 18:57:32 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	88MsKpvDpg5VUw2s (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 28 Jul 2012 16:57:31 -0700 (PDT)
+Date: Sat, 28 Jul 2012 19:57:30 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/3] xfs_io: implement preadv for vectored reads
+Message-ID: <20120728235730.GB10920@infradead.org>
+References: <1343255450-28559-1-git-send-email-david@fromorbit.com>
+	<1343255450-28559-3-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1343255450-28559-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,58 +25,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-CtTaIDIwMTItNy0yOKOsyc/O5zU6MzKjrCBNYXJrIFRpbmd1ZWx5INC0tcCjugoKPiBPbiAwNy8y
-Ni8xMiAxMDozMiwgSmVmZiBMaXUgd3JvdGU6Cj4+IFNlYXJjaCBkYXRhIGJ1ZmZlciBvZmZzZXQg
-Zm9yIGdpdmVuIHJhbmdlIGZyb20gcGFnZSBjYWNoZS4KPj4gCj4+IFNpZ25lZC1vZmYtYnk6IEpp
-ZSBMaXU8amVmZi5saXVAb3JhY2xlLmNvbT4KPiAKPiAKPiAuLi4KPiAKPiBUaGlzIGlzIHRoZSBz
-YW1lIGFzIHZlcnNpb24gNC4KPiAKPiBJdCBsb29rcyBnb29kLgo+IAo+IFRoZXJlIGFyZSBhIGNv
-dXBsZSBwbGFjZXMgdGhlIGNvbW1lbnQgcHJlY2VkZXMgdGhlIHRlc3QgYW5kIGlzIG5vdCB5ZXQg
-dmFsaWQ6Cj4gCj4gCj4+ICAJCW9mZnNldCA9IG1heF90KGxvZmZfdCwgc3RhcnQsCj4+IC0JCQkg
-ICAgICAgWEZTX0ZTQl9UT19CKG1wLCBtYXBbMV0uYnJfc3RhcnRvZmYpKTsKPj4gKwkJCSAgICAg
-ICBYRlNfRlNCX1RPX0IobXAsIG1hcFswXS5icl9zdGFydG9mZikpOwo+PiArCQlpZiAobWFwWzBd
-LmJyX3N0YXRlID09IFhGU19FWFRfTk9STSYmCj4+ICsJCSAgICAhaXNudWxsc3RhcnRibG9jayht
-YXBbMF0uYnJfc3RhcnRibG9jaykpCj4+ICsJCQlicmVhazsKPj4gKwkJZWxzZSB7Cj4+ICsJCQkv
-Kgo+PiArCQkJICogTGFuZGVkIGluIGFuIHVud3JpdHRlbiBleHRlbnQsIHRyeSB0byBsb29rdXAg
-ZGF0YQo+PiArCQkJICogYnVmZmVyIGZyb20gdGhlIHBhZ2UgY2FjaGUgYmVmb3JlIHByb2NlZWRp
-bmcgdG8KPj4gKwkJCSAqIGNoZWNrIHRoZSBuZXh0IGV4dGVudCBtYXAuICBJdCdzIGEgaG9sZSBp
-ZiBub3RoaW5nCj4+ICsJCQkgKiB3YXMgZm91bmQuCj4+ICsJCQkgKi8KPiAKPiBvciBpdCBjb3Vs
-ZCBiZSBhIGhvbGUKPj4gKwkJCWlmIChtYXBbMF0uYnJfc3RhcnRibG9jayA9PSBERUxBWVNUQVJU
-QkxPQ0sgfHwKPj4gKwkJCSAgICBtYXBbMF0uYnJfc3RhdGUgPT0gWEZTX0VYVF9VTldSSVRURU4p
-IHsKPiAKPiBoZXJlIGlzIHdoZXJlIGl0IGlzIHVud3JpdHRlbiBleHRlbnQKPj4gKwkJCQkvKiBQ
-cm9iaW5nIHBhZ2UgY2FjaGUgc3RhcnQgZnJvbSBvZmZzZXQgKi8KPj4gKwkJCQlpZiAoeGZzX2Zp
-bmRfZ2V0X2Rlc2lyZWRfcGdvZmYoaW5vZGUsJm1hcFswXSwKPj4gKwkJCQkJCQlEQVRBX09GRiwm
-b2Zmc2V0KSkKPj4gKwkJCQkJYnJlYWs7Cj4+ICsJCQl9Cj4+ICsKPj4gKwkJCS8qCj4+ICsJCQkg
-KiBGb3VuZCBhIGhvbGUgaW4gbWFwWzBdIGFuZCBub3RoaW5nIGluIG1hcFsxXS4KPj4gKwkJCSAq
-IFByb2JhYmx5IG1lYW5zIHRoYXQgd2UgYXJlIHJlYWRpbmcgYWZ0ZXIgRU9GLgo+PiArCQkJICov
-Cj4gCj4gaGVyZSB3ZSBkaWQgZmluZCBhIGhvbGUKPj4gKwkJCWlmIChubWFwID09IDEpIHsKPiBo
-ZXJlIGlzIHdoZXJlIHRoZXJlIGlzIG5vdGhpbmcgaW4gbWFwWzFdIGFuZCAuLi4KPj4gKwkJCQll
-cnJvciA9IEVOWElPOwo+PiArCQkJCWdvdG8gb3V0X3VubG9jazsKPj4gKwkJCX0KPj4gKwo+PiAr
-CQkJLyoKPj4gKwkJCSAqIFdlIGhhdmUgdHdvIG1hcHBpbmdzLCBwcm9jZWVkIHRvIGNoZWNrIG1h
-cFsxXS4KPj4gKwkJCSAqLwo+PiArCQkJb2Zmc2V0ID0gbWF4X3QobG9mZl90LCBzdGFydCwKPj4g
-KwkJCQkgICAgICAgWEZTX0ZTQl9UT19CKG1wLCBtYXBbMV0uYnJfc3RhcnRvZmYpKTsKPj4gKwkJ
-CWlmIChtYXBbMV0uYnJfc3RhdGUgPT0gWEZTX0VYVF9OT1JNJiYKPj4gKwkJCSAgICAhaXNudWxs
-c3RhcnRibG9jayhtYXBbMV0uYnJfc3RhcnRibG9jaykpCj4+ICsJCQkJYnJlYWs7Cj4+ICsJCQll
-bHNlIHsKPj4gKwkJCQkvKgo+PiArCQkJCSAqIG1hcFsxXSBpcyBhbHNvIGFuIHVud3JpdHRlbiBl
-eHRlbnQsIGxvb2t1cAo+PiArCQkJCSAqIGRhdGEgYnVmZmVyIGZyb20gcGFnZSBjYWNoZSBub3cu
-Cj4+ICsJCQkJICovCj4gCj4gaXQgY291bGQgYmUgdW53cml0dGVuIG9yIGEgaG9sZQo+PiArCQkJ
-CWlmIChtYXBbMV0uYnJfc3RhcnRibG9jayA9PSBERUxBWVNUQVJUQkxPQ0sgfHwKPj4gKwkJCQkg
-ICAgbWFwWzFdLmJyX3N0YXRlID09IFhGU19FWFRfVU5XUklUVEVOKSB7Cj4gCj4gaGVyZSBpcyB3
-aGVyZSB3ZSBrbm93IGl0IGlzIHVud3JpdHRlbi4KPj4gKwkJCQkJaWYgKHhmc19maW5kX2dldF9k
-ZXNpcmVkX3Bnb2ZmKGlub2RlLAo+PiArCQkJCQkJJm1hcFsxXSwgREFUQV9PRkYsJm9mZnNldCkp
-Cj4+ICsJCQkJCQlicmVhazsKPj4gKwkJCQl9Cj4+ICsJCQl9Cj4+ICsJCX0KPiAKPiBJIGFtIGJl
-aW5nIHJlYWxseSBwaWNreSwgYnV0IGNvbW1lbnRzIHJlYWxseSBoZWxwIGEgcXVpY2sgcmVhZCBv
-ZiB0aGUgY29kZS4KVGhhbmtzIGZvciB5b3VyIHJldmlldy4gIEknbGwgZml4IGFib3ZlIGNvbW1l
-bnRzIGFzIHdlbGwgYXMgdGhlbSBpbiB4ZnNfc2Vla19ob2xlKCkgdG8gbWFrZSBwYXRjaCBiZXR0
-ZXIuCgpUaGFua3MsCi1KZWZmCj4gCj4gUmV2aWV3ZWQtYnk6IE1hcmsgVGluZ3VlbHkgPHRpbmd1
-ZWx5QHNnaS5jb20+Cj4gCj4gX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KPiB4ZnMgbWFpbGluZyBsaXN0Cj4geGZzQG9zcy5zZ2kuY29tCj4gaHR0cDovL29z
-cy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCgpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpo
-dHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On Thu, Jul 26, 2012 at 08:30:49AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When looking at KVM based direct IO patterns, I noticed that it was
+> using preadv and pwritev, and I could not use xfs_io to simulate
+> these IO patterns. Extend the pread command to be able to issue
+> vectored read IO to enable use to simulate KVM style direct IO.
+> 
+> Also document the new parameters as well as all the missing pread
+> command parameters in the xfs_io(8) man page.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
