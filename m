@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6SNvn5n099780 for <xfs@oss.sgi.com>; Sat, 28 Jul 2012 18:57:49 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	DvJbEAHe8NzM1Yph (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 28 Jul 2012 16:57:48 -0700 (PDT)
-Date: Sat, 28 Jul 2012 19:57:48 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 3/3] xfs_io: implement pwritev for vectored writes
-Message-ID: <20120728235748.GC10920@infradead.org>
-References: <1343255450-28559-1-git-send-email-david@fromorbit.com>
-	<1343255450-28559-4-git-send-email-david@fromorbit.com>
+	q6TKtVtk208875 for <xfs@oss.sgi.com>; Sun, 29 Jul 2012 15:55:31 -0500
+Date: Sun, 29 Jul 2012 15:55:27 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 2/7] xfs: split xfs_dialloc
+Message-ID: <20120729205527.GO29979@sgi.com>
+References: <20120704145444.863203951@bombadil.infradead.org>
+	<20120704145615.197446803@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1343255450-28559-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120704145615.197446803@bombadil.infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,23 +23,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 26, 2012 at 08:30:50AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jul 04, 2012 at 10:54:46AM -0400, Christoph Hellwig wrote:
+> Move the actual allocation once we have selected an allocation group into a
+> separate helper, and make xfs_dialloc a wrapper around it.
 > 
-> When looking at KVM based direct IO patterns, I noticed that it was
-> using preadv and pwritev, and I could not use xfs_io to simulate
-> these IO patterns. Extend the pwrite command to be able to issue
-> vectored write IO to enable use to simulate KVM style direct IO.
-> 
-> Also document the new parameters as well as all the missing pwrite
-> command parameters in the xfs_io(8) man page.
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks good,
+Looks fine.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ben Myers <bpm@sgi.com>
 
 _______________________________________________
 xfs mailing list
