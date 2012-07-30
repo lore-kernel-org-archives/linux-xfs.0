@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6U7Ni9o002646 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 02:23:44 -0500
-Received: from mail-gh0-f181.google.com (mail-gh0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	GTzrEszhEU4bvl7w (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Jul 2012 00:23:43 -0700 (PDT)
-Received: by ghbz13 with SMTP id z13so5601180ghb.26
-	for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 00:23:42 -0700 (PDT)
-Date: Mon, 30 Jul 2012 15:24:48 +0800
+	q6U7NebC002625 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 02:23:40 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id kU8CaHSI0jXt94fI
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 30 Jul 2012 00:23:39 -0700 (PDT)
+Received: by mail-pb0-f53.google.com with SMTP id rr13so11646742pbb.26
+	for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 00:23:39 -0700 (PDT)
+Date: Mon, 30 Jul 2012 15:24:52 +0800
 From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 7/8]fs/ocfs2: Evalue bio->bi_rw after calling bio_alloc() and
+Subject: [PATCH 8/8]fs/xfs: Evalue bio->bi_rw after calling bio_alloc() and
 	before calling bio_add_page().
 Mime-Version: 1.0
-Message-ID: <2012073015243906251018@gmail.com>
+Message-ID: <2012073015244959361219@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,49 +34,35 @@ bio_add_page used the bi_rw. So evalue bi_rw.
 
 Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 ---
- fs/ocfs2/cluster/heartbeat.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_aops.c |    2 ++
+ fs/xfs/xfs_buf.c  |    1 +
+ 2 files changed, 3 insertions(+)
 
-diff --git a/fs/ocfs2/cluster/heartbeat.c b/fs/ocfs2/cluster/heartbeat.c
-index a4e855e..50079d3 100644
---- a/fs/ocfs2/cluster/heartbeat.c
-+++ b/fs/ocfs2/cluster/heartbeat.c
-@@ -399,7 +399,8 @@ static void o2hb_bio_end_io(struct bio *bio,
- static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
- 				      struct o2hb_bio_wait_ctxt *wc,
- 				      unsigned int *current_slot,
--				      unsigned int max_slots)
-+				      unsigned int max_slots,
-+				      int rw)
- {
- 	int len, current_page;
- 	unsigned int vec_len, vec_start;
-@@ -425,6 +426,7 @@ static struct bio *o2hb_setup_one_bio(struct o2hb_region *reg,
- 	bio->bi_bdev = reg->hr_bdev;
- 	bio->bi_private = wc;
- 	bio->bi_end_io = o2hb_bio_end_io;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 8dad722..f69f4b2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -496,6 +496,8 @@ xfs_submit_ioend(
+ 			if (!bio) {
+  retry:
+ 				bio = xfs_alloc_ioend_bio(bh);
++				bio->bi_rw = (wbc->sync_mode == WB_SYNC_ALL
++						? WRITE_SYNC : WRITE);
+ 			} else if (bh->b_blocknr != lastblock + 1) {
+ 				xfs_submit_ioend_bio(wbc, ioend, bio);
+ 				goto retry;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 269b35c..744ec64 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1186,6 +1186,7 @@ next_chunk:
+ 	bio->bi_sector = sector;
+ 	bio->bi_end_io = xfs_buf_bio_end_io;
+ 	bio->bi_private = bp;
 +	bio->bi_rw = rw;
  
- 	vec_start = (cs << bits) % PAGE_CACHE_SIZE;
- 	while(cs < max_slots) {
-@@ -460,7 +462,7 @@ static int o2hb_read_slots(struct o2hb_region *reg,
- 	o2hb_bio_wait_init(&wc);
  
- 	while(current_slot < max_slots) {
--		bio = o2hb_setup_one_bio(reg, &wc, &current_slot, max_slots);
-+		bio = o2hb_setup_one_bio(reg, &wc, &current_slot, max_slots, READ);
- 		if (IS_ERR(bio)) {
- 			status = PTR_ERR(bio);
- 			mlog_errno(status);
-@@ -492,7 +494,7 @@ static int o2hb_issue_node_write(struct o2hb_region *reg,
- 
- 	slot = o2nm_this_node();
- 
--	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1);
-+	bio = o2hb_setup_one_bio(reg, write_wc, &slot, slot+1, WRITE);
- 	if (IS_ERR(bio)) {
- 		status = PTR_ERR(bio);
- 		mlog_errno(status);
+ 	for (; size && nr_pages; nr_pages--, map_i++) {
 -- 
 1.7.9.5
 _______________________________________________
