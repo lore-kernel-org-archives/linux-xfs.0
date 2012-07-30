@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6UM4Hrx096247 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 17:04:17 -0500
+	q6UM84gk096723 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 17:08:04 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	23jXhjESSZ4XYqpK for <xfs@oss.sgi.com>;
-	Mon, 30 Jul 2012 15:04:16 -0700 (PDT)
-Date: Tue, 31 Jul 2012 08:04:13 +1000
+	XueGDDQkp6lvOfRc for <xfs@oss.sgi.com>;
+	Mon, 30 Jul 2012 15:08:02 -0700 (PDT)
+Date: Tue, 31 Jul 2012 08:07:59 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: Change fstrim behaviour to be consistent with
-	upstream version
-Message-ID: <20120730220413.GI2877@dastard>
-References: <1343649963-14079-1-git-send-email-tracek@redhat.com>
+Subject: Re: xfs_repair no modify output
+Message-ID: <20120730220759.GJ2877@dastard>
+References: <769346391.171271.1343664034505.JavaMail.open-xchange@oxwebmail.registrar-servers.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1343649963-14079-1-git-send-email-tracek@redhat.com>
+In-Reply-To: <769346391.171271.1343664034505.JavaMail.open-xchange@oxwebmail.registrar-servers.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,26 +26,35 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tomas Racek <tracek@redhat.com>
-Cc: lczerner@redhat.com, xfs@oss.sgi.com
+To: "jamie@x-edit.co.uk" <jamie@x-edit.co.uk>
+Cc: xfs@oss.sgi.com
 
-On Mon, Jul 30, 2012 at 02:06:03PM +0200, Tomas Racek wrote:
-> Rename fstrim option from "-s" to "-o" and change output message when
-> verbose option is set.
+On Mon, Jul 30, 2012 at 06:00:34PM +0200, jamie@x-edit.co.uk wrote:
+> Hi List,
+> Sorry for the stupid question, just wanted a quick clarification on the
+> following excerpts from an xfs_repair no modify.
+> 
+> # xfs_repair -nv /dev/sdc1
+.....
+> entry "YYYY" in dir 4294967424 points to an already connected directory inode 145
+>         would clear entry "YYYY"
+......
+> disconnected dir inode 4294967424, would move to lost+found
+......
+> Does this in effect mean that the file YYYY will end up and lost+found
 
-Why modify a local utility program like this?  There's little point
-in trying to match some other utilities' command line parameters
-just for the sake of it...
+Yes.
 
-If we have duplicate code (i.e. a copy of the upstream utility) or
-the local tool can be completely replaced by the upstream tool,
-then we should use upstream and remove the local copy completely.
-Distros have been shipping fstrim for long enough now that most
-people running testing on upstream kernels will have it installed...
+> and
+> directory (and its contents) will end up in lost+found.
 
-Adding a _require_fstrim() function that checks for the upstream
-version of fstrim to be installed for each test that requires it
-would go along with this.
+Assuming you mean directory entry XXXX, no.
+
+> Namely easy enough to move back. Or will the contents of XXXX be lost?
+
+XXXX was an invalid directory entry. It got removed from the
+directory, and the directory is otherwise unmodified. FWIW, it was
+on inode 128, so it's probably an entry in the root directory....
 
 Cheers,
 
