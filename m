@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6UFnAIX057019 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 10:49:11 -0500
-Date: Mon, 30 Jul 2012 11:39:35 -0400
-From: Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>
-Subject: Re: [PATCH 0/8] Set bi_rw when alloc bio before call bio_add_page.
-Message-ID: <20120730153935.GE4547@phenom.dumpdata.com>
-References: <201207301514247032532@gmail.com>
+	q6UG0ZDb058548 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 11:00:35 -0500
+Received: from oxmail.registrar-servers.com (oxmail.registrar-servers.com
+	[64.22.89.133]) by cuda.sgi.com with ESMTP id GbsQafp5L1Ly9YtF
+	for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 09:00:34 -0700 (PDT)
+Received: from app1.ox.registrar-servers.com (app1.ox.registrar-servers.com
+	[172.20.180.3]) (using TLSv1 with cipher RC4-MD5 (128/128 bits))
+	(No client certificate requested)
+	by oxmail.registrar-servers.com (Postfix) with ESMTPSA id 7CB73C30001
+	for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 12:00:34 -0400 (EDT)
+Date: Mon, 30 Jul 2012 18:00:34 +0200 (CEST)
+From: "jamie@x-edit.co.uk" <jamie@x-edit.co.uk>
+Message-ID: <769346391.171271.1343664034505.JavaMail.open-xchange@oxwebmail.registrar-servers.com>
+Subject: xfs_repair no modify output
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <201207301514247032532@gmail.com>
+Reply-To: "jamie@x-edit.co.uk" <jamie@x-edit.co.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,65 +28,79 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: majianpeng <majianpeng@gmail.com>
-Cc: axboe <axboe@kernel.dk>, shaggy <shaggy@kernel.org>, "chris.mason" <chris.mason@fusionio.com>, elder <elder@kernel.org>, tytso <tytso@mit.edu>, ocfs2-devel <ocfs2-devel@oss.oracle.com>, mfasheh <mfasheh@suse.com>, linux-kernel <linux-kernel@vger.kernel.org>, xfs <xfs@oss.sgi.com>, bpm <bpm@sgi.com>, "adilger.kernel" <adilger.kernel@dilger.ca>, viro <viro@ZenIV.linux.org.uk>, jfs-discussion <jfs-discussion@lists.sourceforge.net>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>, jlbec <jlbec@evilplan.org>
+To: xfs@oss.sgi.com
 
-On Mon, Jul 30, 2012 at 03:14:28PM +0800, majianpeng wrote:
-> When exec bio_alloc, the bi_rw is zero.But after calling bio_add_page,
+Hi List,
+Sorry for the stupid question, just wanted a quick clarification on the
+following excerpts from an xfs_repair no modify.
 
-What about submit_bio? That sets the bi_rw as well?
-> it will use bi_rw.
-> Fox example, in functiion __bio_add_page,it will call merge_bvec_fn().
+# xfs_repair -nv /dev/sdc1
+Phase 1 - find and verify superblock...
+        - block cache size set to 115088 entries
+Phase 2 - using internal log
+        - scan filesystem freespace and inode maps...
+        - found root inode chunk
+Phase 3 - for each AG...
+        - scan (but don't clear) agi unlinked lists...
+        - process known inodes and perform inode discovery...
+        - agno = 0
+bad nblocks 717 for inode 146, would reset to 716
+bad nblocks 2 for inode 147, would reset to 1
+        - agno = 1
+ <SNIP>
+        - agno = 27
+        - process newly discovered inodes...
+Phase 4 - check for duplicate blocks...
+        - setting up duplicate extent list...
+        - check for inodes claiming duplicate blocks...
+        - agno = 0
+bad nblocks 717 for inode 146, would reset to 716
+bad nblocks 2 for inode 147, would reset to 1
+        - agno = 1
+ <SNIP>
+        - agno = 27
+No modify flag set, skipping phase 5
+Phase 6 - check inode connectivity...
+        - traversing filesystem ...
+        - agno = 0
+entry "xxxx" in directory inode 128 not consistent with .. value (8589934720) in
+inode 134,
+would junk entry
+        - agno = 1
+entry "YYYY" in dir 4294967424 points to an already connected directory inode
+145
+        would clear entry "YYYY"
+        - agno = 2
+ <SNIP>
+        - agno = 27
+        - traversal finished ...
+        - moving disconnected inodes to lost+found ...
+disconnected dir inode 4294967424, would move to lost+found
+Phase 7 - verify link counts...
+would have reset inode 128 nlinks from 6 to 5
+would have reset inode 146 nlinks from 1 to 2
+would have reset inode 147 nlinks from 1 to 2
+No modify flag set, skipping filesystem flush and exiting.
 
-function.
-> The merge_bvec_fn of raid456 will use the bi_rw to judge the merge.
-> >> if ((bvm->bi_rw & 1) == WRITE)
-> >> return biovec->bv_len; /* always allow writes to be mergeable */
+        XFS_REPAIR Summary    Mon Jul 30 12:58:03 2012
 
-So what does that mean? Without this patch what happens?
+Phase           Start           End             Duration
+Phase 1:        07/30 12:53:40  07/30 12:53:40
+Phase 2:        07/30 12:53:40  07/30 12:53:49  9 seconds
+Phase 3:        07/30 12:53:49  07/30 12:55:33  1 minute, 44 seconds
+Phase 4:        07/30 12:55:33  07/30 12:57:10  1 minute, 37 seconds
+Phase 5:        Skipped
+Phase 6:        07/30 12:57:10  07/30 12:58:03  53 seconds
+Phase 7:        07/30 12:58:03  07/30 12:58:03
 
-> 
-> 
-> Jianpeng Ma (8):
+Total run time: 4 minutes, 23 seconds
 
-Can you collapse all of this in just one patch?
+Does this in effect mean that the file YYYY will end up and lost+found and
+directory (and its contents) will end up in lost+found.
+Namely easy enough to move back. Or will the contents of XXXX be lost?
 
->   Evalue bio->bi_rw after calling bio_alloc() and before calling
-
-It is 'evaluate'
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
->   Evalue bio->bi_rw after calling bio_alloc() and before calling    
->     bio_add_page().
-> 
->  block/blk-lib.c                     |    1 +
->  drivers/block/xen-blkback/blkback.c |    1 +
-
-I am not really sure if that is correct. Does 'submit_bio' not do the
-job properly?
-
->  fs/btrfs/check-integrity.c          |    1 +
->  fs/direct-io.c                      |    1 +
->  fs/ext4/page-io.c                   |    1 +
->  fs/jfs/jfs_metapage.c               |    1 +
->  fs/ocfs2/cluster/heartbeat.c        |    8 +++++---
->  fs/xfs/xfs_aops.c                   |    2 ++
->  fs/xfs/xfs_buf.c                    |    1 +
->  9 files changed, 14 insertions(+), 3 deletions(-)
-> 
-> -- 
-> 1.7.9.5
+Cheers
+   Jamie
 
 _______________________________________________
 xfs mailing list
