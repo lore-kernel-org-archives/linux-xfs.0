@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6UMB9vd097107 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 17:11:09 -0500
+	q6UNhdQR108359 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 18:43:39 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	A2HaV4KMC1je2Zsg for <xfs@oss.sgi.com>;
-	Mon, 30 Jul 2012 15:11:06 -0700 (PDT)
-Date: Tue, 31 Jul 2012 08:11:05 +1000
+	vrsgPcwlcBKDpAn4 for <xfs@oss.sgi.com>;
+	Mon, 30 Jul 2012 16:43:35 -0700 (PDT)
+Date: Tue, 31 Jul 2012 09:43:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: followup on benchmarks of an xfs embedded system (without rt
-	section)
-Message-ID: <20120730221105.GK2877@dastard>
-References: <CAGou9Mhz-ez5nnzVAoRbp-E93NqBjT-wgGyHvrLkC7jEzJBagw@mail.gmail.com>
+Subject: Re: [PATCH v5 2/4]xfs: Introduce a new function to find the desired
+	type of offset from page cache
+Message-ID: <20120730234331.GL2877@dastard>
+References: <50110629.4090304@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAGou9Mhz-ez5nnzVAoRbp-E93NqBjT-wgGyHvrLkC7jEzJBagw@mail.gmail.com>
+In-Reply-To: <50110629.4090304@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +27,384 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jason Newton <nevion@gmail.com>
+To: Jeff Liu <jeff.liu@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Jul 27, 2012 at 03:35:40AM -0700, Jason Newton wrote:
-> I've attached my benchmark program but I use alot of boost c++ with a
-> little internal set of libraries... so you can see what I"m doing but it
-> likely won't compile for you.  I'll also mention that boost is a very low
-> overhead (if any) over all the normal system calls one would use (verified
-> by reading sourcecode in use).
+On Thu, Jul 26, 2012 at 04:56:09PM +0800, Jeff Liu wrote:
+> This function is called by xfs_seek_data() and xfs_seek_hole() to find
+> the desired offset from page cache.
+> 
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-I'd suggest rewriting it so we can compile and run it. If I can
-reproduce the problem, I can at least understand where the latency
-is coming from.
+BTW, when you make a significant modification to a patch set, it is
+customary to drop existing reviewed-by tags on modified/new patches
+so that the reviewers know that it is new code and that they need to
+review at it again...
 
-Cheers,
+> +/*
+> + * This routine is called to find out and return a data or hole offset
+> + * from the page cache for unwritten extents according to the desired
+> + * type for xfs_seek_data() or xfs_seek_hole().
+> + *
+> + * The argument offset is used to tell where we start to search from the
+> + * page cache, and it will be filled with the desired type of offset if
+> + * it was found, or it will keep unchanged.  map is used to figure out
+> + * the end points of the range to lookup pages.
 
-Dave.
+What's the return value? True for data, false for hole? Needs to be
+documented....
+
+> + */
+> +STATIC bool
+> +xfs_find_get_desired_pgoff(
+> +	struct inode		*inode,
+> +	struct xfs_bmbt_irec	*map,
+> +	unsigned int		type,
+> +	loff_t			*offset)
+> +{
+> +	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_mount	*mp = ip->i_mount;
+> +	struct pagevec		pvec;
+> +	pgoff_t			index;
+> +	pgoff_t			end;
+> +	loff_t			endoff;
+> +	loff_t			coff = *offset; /* current search offset */
+> +	bool			found = false;
+> +
+> +	pagevec_init(&pvec, 0);
+> +	index = XFS_FSB_TO_B(mp, XFS_B_TO_FSBT(mp, coff)) >> PAGE_CACHE_SHIFT;
+
+That's a very complex way to find the page index. You are basically
+doing this for a 4k FSB/page size combination;
+
+	index = ((coff >> 12) << 12) >> 12
+
+For smaller block sizes, the one that matters is the
+PAGE_CACHE_SHIFT at the end. i.e:
+
+	index = ((coff >> 9) << 9) >> 12
+	      = coff >> 12
+
+So why not just:
+
+	index = coff >> PAGE_CACHE_SHIFT;
+
+> +
+> +	/* The end offset to search for */
+> +	endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
+> +	end = endoff >> PAGE_CACHE_SHIFT;
+
+I think there's an off-by-one here.  Say we map fsb 0 for 2 blocks
+w/ 4k fsbs.  that means byte offsets 0-8191 are in the range of the
+mapping. The above gives:
+
+	endoff = (0 + 2) << 12 = 8192
+	end = 8192 >> 12 = 2
+
+so now we have start index 0, end index = 2. That's 3 pages, yes?
+
+> +	do {
+> +		unsigned int	i;
+> +		unsigned	nr_pages;
+> +		int		want = min_t(pgoff_t, end - index,
+> +					     (pgoff_t)PAGEVEC_SIZE - 1) + 1;
+
+And that means here we do:
+
+	want = min(2 - 0, 13) + 1
+	     = 3.
+
+So we are looking for 3 pages instead of only 2. And further down,
+the limits are (page->index > end) so this really does consider page
+index of 2 as part of the range asked for which it isn't....
+
+> +		nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
+> +					  want);
+> +		/*
+> +		 * No page mapped into given range.  If we are searching holes
+> +		 * and if this is the first time we got into the loop, it means
+> +		 * that the given offset is landed in a hole and return ture.
+                                                                        true
+
+> +		 *
+> +		 * If we have already stepped through some block buffers to find
+> +		 * holes but those buffers are all contains data, in this case,
+> +		 * the current search offset is already aligned to block buffer
+> +		 * unit boundary and pointed to the end of the last mapped page.
+> +		 * If it's location is less than the end range given for search,
+> +		 * that means there should be a hole between them, so return the
+> +		 * current search offset if we are searching hole.
+> +		 */
+> +		if (nr_pages == 0) {
+> +			if (type == HOLE_OFF) {
+> +				if (coff == *offset)
+> +					found = true;
+> +				if (coff < endoff) {
+> +					found = true;
+> +					*offset = coff;
+> +				}
+> +			}
+> +			/* Search data but nothing found */
+> +			break;
+> +		}
+
+I'd just write that as:
+			/* data search found nothing */
+			if (type == DATA_OFF)
+				break;
+
+			ASSERT(type == HOLE_OFF);
+			if (coff == *offset || coff < endoff) {
+				found = true;
+				*offset = coff;
+			}
+			break;
+
+> +
+> +		/*
+> +		 * At least we found one page.  If this the first time we step
+> +		 * into the loop, and if the first page index offset is greater
+> +		 * than the given search offset, a hole was found, return true
+> +		 * if we are searching holes.
+> +		 */
+> +		if ((type == HOLE_OFF) && (coff == *offset)) {
+
+No need for the extra () here....
+
+> +			if (coff < pvec.pages[0]->index << PAGE_CACHE_SHIFT) {
+
+... but that definitely needs them for clarity.
+
+> +				found = true;
+> +				break;
+> +			}
+> +		}
+
+		if (type == HOLE_OFF && coff == *offset &&
+		    coff < page_offset(pvec.pages[0])) {
+			found = true;
+			break;
+		}
+> +
+> +		for (i = 0; i < nr_pages; i++) {
+> +			struct page		*page = pvec.pages[i];
+> +			struct buffer_head	*bh;
+> +			struct buffer_head	*head;
+> +			xfs_fileoff_t		last;
+
+Indenting is starting to get excessive. Perhaps the page processing
+loop could be pushed into it's own function....
+
+> +
+> +			/*
+> +			 * Page index is out of range, we need to deal with
+> +			 * hole search condition in paticular if that is the
+> +			 * desired type for the lookup.
+> +			 * stepping into the block buffer checkup, it probably
+> +			 * means that there is no page mapped at all in the
+> +			 * specified range to search, so we found a hole.
+> +			 * If we have already done some block buffer checking
+> +			 * and found one or more data buffers before, in this
+> +			 * case, the coff is already updated and it point to
+> +			 * the end of the last data buffer, so the left range
+> +			 * behind it might be a hole.  In either case, we will
+> +			 * return the coff to indicate a hole's location because
+> +			 * it must be greater than or equal to the search start.
+> +			 */
+
+The comment could do with some work - it seems to be very verbose fo
+the amount of information it conveys. Perhaps:
+
+			/*
+			 * If the page index is out of range, then it means we
+			 * found a hole. If we have already found some data
+			 * buffers, we need to update the start location of the
+			 * hole before returning.
+			 */
+
+> +			if (page->index > end) {
+> +				if (type == HOLE_OFF && coff < endoff) {
+> +					*offset = coff;
+> +					found = true;
+> +				}
+> +				goto out;
+> +			}
+> +
+> +			if (!trylock_page(page))
+> +				goto out;
+
+Just lock the page - there is no deadlock we need to avoid and
+we really need to know the state of the page to be accurate. Also,
+once the page is locked you need to check against page->index again,
+as we could be racing with memory reclaim or truncate here. It is
+also worth checking page->mapping is still correctly set, too, for
+the same reason.
+
+> +
+> +			if (!page_has_buffers(page)) {
+> +				unlock_page(page);
+> +				continue;
+> +			}
+> +
+> +			last = XFS_B_TO_FSBT(mp,
+> +					     page->index << PAGE_CACHE_SHIFT);
+
+Why calculate the last offset in FSB?
+
+			last = page_offset(page);
+
+> +			bh = head = page_buffers(page);
+> +			do {
+> +				off_t		lastoff = 0;
+
+				off_t	lastoff = last;
+
+> +				/*
+> +				 * An extent in XFS_EXT_UNWRITTEN has disk
+> +				 * blocks already mapped to it, but no data
+> +				 * has been committed to them yet.  If it has
+> +				 * dirty data in the page cache it can be
+> +				 * identified by having BH_Unwritten set in
+> +				 * each buffers.  Also, the buffer head state
+> +				 * might be in BH_Uptodate too if the buffer
+> +				 * writeback procedure was fired, we have to
+> +				 * check it up as well.
+> +				 */
+
+buffer_uptodate() is also set in .commit_write when a page is fully written, and
+canbe set on read when mpage_readpages() gets confused and falls back to
+block_read_full_page. So that flag is no necessarily an indicator of
+dirty/writeback data. It is an indicator of data being present in the page
+cache, though, that may not be on disk. Hence the comment might be better
+written as:
+
+				/*
+				 * Unwritten extents that have data in the page
+				 * cache covering them can be identified by the
+				 * buffer_unwritten() state flag. Pages with
+				 * multiple buffers might have a mix of holes,
+				 * data and unwritten extents - any buffer with
+				 * valid data in it should have the
+				 * buffer_uptodate(bh) flag set on it.
+				 */
+
+> +				if (buffer_unwritten(bh) ||
+> +				    buffer_uptodate(bh)) {
+> +					/*
+> +					 * Found a data buffer and we are
+> +					 * searching data, great.
+> +					 */
+> +					if (type == DATA_OFF)
+> +						found = true;
+
+
+> +				} else {
+> +					/*
+> +					 * Nothing was found and we are
+> +					 * searching holes, great.
+> +					 */
+> +					if (type == HOLE_OFF)
+> +						found = true;
+> +				}
+> +				if (found) {
+> +					/*
+> +					 * Return if we found the desired
+> +					 * page offset.
+> +					 */
+> +					*offset = max_t(loff_t, coff, lastoff);
+
+When would lastoff < coff be true?
+
+> +					unlock_page(page);
+> +					goto out;
+> +				}
+> +				/*
+> +				 * We either searching data but nothing was
+> +				 * found, or searching hole but found a data
+> +				 * block buffer.  In either case, probably the
+> +				 * next block buffer is what we are desired,
+> +				 * so that we need to round up the current
+> +				 * offset to it.
+> +				 */
+> +				coff = round_up(lastoff + 1, bh->b_size);
+
+I don't see the point of this round_up call. It's just a complex way
+of saying:
+				coff = lastoff + bh->b_size;
+
+> +				last++;
+
+				last += bh->b_size;
+
+So by the time we get to this buffer loop we will always update coff, or return
+lastoff which is updated at the start of the loop. So why do we even need last
+and lastoff? can't you just use coff?
+
+i.e. you are doing this:
+
+				last = offset
+				do {
+					lastoff = last;
+					....
+					if (found)
+						return lastoff
+					...
+					coff = lastoff + bh->b_size;
+					last += bh->b_size
+				} while()
+
+Which is simply:
+
+				coff = offset
+				do {
+					....
+					if (found)
+						return coff
+					...
+					coff += bh->b_size
+				} while()
+
+> +			} while ((bh = bh->b_this_page) != head);
+> +			unlock_page(page);
+> +		}
+> +
+> +		/*
+> +		 * If the number of returned pages less than our desired,
+> +		 * there should no more pages mapped, search done.
+> +		 */
+> +		if (nr_pages < want)
+> +			break;
+> +
+> +		index = pvec.pages[i - 1]->index + 1;
+> +		pagevec_release(&pvec);
+> +	} while (index < end);
+> +
+> +out:
+> +	pagevec_release(&pvec);
+> +	return found;
+> +}
+> +
+>  STATIC loff_t
+>  xfs_seek_data(
+>  	struct file		*file,
+> -- 
+> 1.7.4.1
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> -- 
+> This message has been scanned for viruses and
+> dangerous content by MailScanner, and is
+> believed to be clean.
+> 
+> 
+
 -- 
 Dave Chinner
 david@fromorbit.com
