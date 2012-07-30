@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6U7NGCE002554 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 02:23:16 -0500
-Received: from mail-gg0-f181.google.com (mail-gg0-f181.google.com
-	[209.85.161.181]) by cuda.sgi.com with ESMTP id
-	GxfFTXVlRXefFqHC (version=TLSv1 cipher=RC4-SHA bits=128
+	q6U7Mupi002495 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 02:22:56 -0500
+Received: from mail-gh0-f181.google.com (mail-gh0-f181.google.com
+	[209.85.160.181]) by cuda.sgi.com with ESMTP id
+	qmVjOPgX7UYV1jOM (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 30 Jul 2012 00:23:16 -0700 (PDT)
-Received: by mail-gg0-f181.google.com with SMTP id v5so5594436ggn.26
-	for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 00:23:16 -0700 (PDT)
-Date: Mon, 30 Jul 2012 15:24:24 +0800
+	Mon, 30 Jul 2012 00:22:55 -0700 (PDT)
+Received: by ghbz13 with SMTP id z13so5600647ghb.26
+	for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 00:22:54 -0700 (PDT)
+Date: Mon, 30 Jul 2012 15:24:06 +0800
 From: majianpeng <majianpeng@gmail.com>
-Subject: [PATCH 5/8]fs/ext4: Evalue bio->bi_rw after calling bio_alloc() and
-	before calling bio_add_page().
+Subject: [PATCH 4/8] fs/direct-io.c:Evalue bio->bi_rw after calling
+	bio_alloc() and before calling bio_add_page().
 Mime-Version: 1.0
-Message-ID: <2012073015241559305016@gmail.com>
+Message-ID: <2012073015240404693715@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,21 +35,21 @@ bio_add_page used the bi_rw. So evalue bi_rw.
 
 Signed-off-by: Jianpeng Ma <majianpeng@gmail.com>
 ---
- fs/ext4/page-io.c |    1 +
+ fs/direct-io.c |    1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/fs/ext4/page-io.c b/fs/ext4/page-io.c
-index dcdeef1..c875502 100644
---- a/fs/ext4/page-io.c
-+++ b/fs/ext4/page-io.c
-@@ -304,6 +304,7 @@ static int io_submit_init(struct ext4_io_submit *io,
- 	io->io_bio = bio;
- 	io->io_op = (wbc->sync_mode == WB_SYNC_ALL ?  WRITE_SYNC : WRITE);
- 	io->io_next_block = bh->b_blocknr;
-+	bio->bi_rw = io->io_op;
- 	return 0;
- }
+diff --git a/fs/direct-io.c b/fs/direct-io.c
+index 1faf4cb..77f0bbf 100644
+--- a/fs/direct-io.c
++++ b/fs/direct-io.c
+@@ -349,6 +349,7 @@ dio_bio_alloc(struct dio *dio, struct dio_submit *sdio,
  
+ 	bio->bi_bdev = bdev;
+ 	bio->bi_sector = first_sector;
++	bio->bi_rw = dio->rw;
+ 	if (dio->is_async)
+ 		bio->bi_end_io = dio_bio_end_aio;
+ 	else
 -- 
 1.7.9.5
 _______________________________________________
