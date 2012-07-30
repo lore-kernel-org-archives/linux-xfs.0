@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6ULgK0K093651 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 16:42:20 -0500
+	q6ULnphG094398 for <xfs@oss.sgi.com>; Mon, 30 Jul 2012 16:49:51 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	HbALTg8NQY3edKYS for <xfs@oss.sgi.com>;
-	Mon, 30 Jul 2012 14:42:17 -0700 (PDT)
-Date: Tue, 31 Jul 2012 07:42:13 +1000
+	N68lPpnFHlKY237C for <xfs@oss.sgi.com>;
+	Mon, 30 Jul 2012 14:49:49 -0700 (PDT)
+Date: Tue, 31 Jul 2012 07:49:46 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/8] Set bi_rw when alloc bio before call bio_add_page.
-Message-ID: <20120730214213.GF2877@dastard>
-References: <201207301514247032532@gmail.com>
+Subject: Re: [PATCH 1/1] xfs: check for possible overflow in xfs_ioc_trim
+Message-ID: <20120730214946.GG2877@dastard>
+References: <1343636024-20123-1-git-send-email-tracek@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <201207301514247032532@gmail.com>
+In-Reply-To: <1343636024-20123-1-git-send-email-tracek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,32 +26,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: majianpeng <majianpeng@gmail.com>
-Cc: axboe <axboe@kernel.dk>, shaggy <shaggy@kernel.org>, "chris.mason" <chris.mason@fusionio.com>, elder <elder@kernel.org>, tytso <tytso@mit.edu>, "konrad.wilk" <konrad.wilk@oracle.com>, mfasheh <mfasheh@suse.com>, linux-ext4 <linux-ext4@vger.kernel.org>, jfs-discussion <jfs-discussion@lists.sourceforge.net>, linux-kernel <linux-kernel@vger.kernel.org>, ocfs2-devel <ocfs2-devel@oss.oracle.com>, bpm <bpm@sgi.com>, "adilger.kernel" <adilger.kernel@dilger.ca>, viro <viro@ZenIV.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <xfs@oss.sgi.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, jlbec <jlbec@evilplan.org>
+To: Tomas Racek <tracek@redhat.com>
+Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org, Ben Myers <bpm@sgi.com>, lczerner@redhat.com
 
-On Mon, Jul 30, 2012 at 03:14:28PM +0800, majianpeng wrote:
-> When exec bio_alloc, the bi_rw is zero.But after calling bio_add_page,
-> it will use bi_rw.
-> Fox example, in functiion __bio_add_page,it will call merge_bvec_fn().
-> The merge_bvec_fn of raid456 will use the bi_rw to judge the merge.
-> >> if ((bvm->bi_rw & 1) == WRITE)
-> >> return biovec->bv_len; /* always allow writes to be mergeable */
+On Mon, Jul 30, 2012 at 10:13:44AM +0200, Tomas Racek wrote:
+> If range.start argument was between ULLONG_MAX - BBSIZE and ULLONG_MAX,
+> BTOBB macro resulted in overflow which caused start to be set to 0.
+> Now, invalid argument error is returned instead.
+> 
+> Signed-off-by: Tomas Racek <tracek@redhat.com>
+> ---
+>  fs/xfs/xfs_discard.c |    4 ++++
+>  1 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> index f9c3fe3..0ef7dd4 100644
+> --- a/fs/xfs/xfs_discard.c
+> +++ b/fs/xfs/xfs_discard.c
+> @@ -179,6 +179,10 @@ xfs_ioc_trim(
+>  	 * used by the fstrim application.  In the end it really doesn't
+>  	 * matter as trimming blocks is an advisory interface.
+>  	 */
+> +
+> +	if (range.start > ULLONG_MAX - BBSIZE)
+> +		return -XFS_ERROR(EINVAL);
+> +
 
-So if bio_add_page() requires bi_rw to be set, then shouldn't it be
-set up for every caller? I noticed there are about 50 call sites for
-bio_add_page(), and you've only touched about 10 of them. Indeed, I
-notice that the RAID0/1 code uses bio_add_page, and as that can be
-stacked on top of RAID456, it also needs to set bi_rw correctly.
-As a result, your patch set is nowhere near complete, not does it
-document that bio_add_page requires that bi_rw be set before calling
-(which is the new API requirement, AFAICT).
+There's no point checking for overflow on the range start - what we
+need to check is whether it is larger than the size of the
+filesystem. We do that after the conversion of range.start to basic
+blocks, so that check needs to be promoted to before this. i.e.
 
-So, my question is whether the RAID456 code is doing something
-valid.  That write optimisation is clearly not enabled for a
-significant amount of code and filesystems, so the first thing to do
-is quantify the benefit of the optimisation. I can't evalute the
-merit of this change without data telling me it is worthwhile, and
-it's a lot of code to churn for no benefit....
+	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks))
+		return -XFS_ERROR(EINVAL);
+
+>  	start = BTOBB(range.start);
+>  	end = start + BTOBBT(range.len) - 1;
+>  	minlen = BTOBB(max_t(u64, granularity, range.minlen));
+
+And that will prevent the overflow in BTOBB() just as effectively...
 
 Cheers,
 
