@@ -1,12 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6VAWb3e167930 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 05:32:37 -0500
-Date: Tue, 31 Jul 2012 06:32:34 -0400 (EDT)
+	q6VAfE14168431 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 05:41:14 -0500
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id UxPG5uBbw4vZjAIi for
+	<xfs@oss.sgi.com>; Tue, 31 Jul 2012 03:41:13 -0700 (PDT)
+Date: Tue, 31 Jul 2012 06:41:12 -0400 (EDT)
 From: Tomas Racek <tracek@redhat.com>
-Message-ID: <1945505398.1250534.1343730754291.JavaMail.root@redhat.com>
-In-Reply-To: <20120730214946.GG2877@dastard>
-Subject: Re: [PATCH 1/1] xfs: check for possible overflow in xfs_ioc_trim
+Message-ID: <483754529.1252527.1343731272189.JavaMail.root@redhat.com>
+In-Reply-To: <20120730215630.GH2877@dastard>
+Subject: Re: [PATCH] xfstests: Don't require to set $TEST_DEV and $TEST_DIR
+	when creating new script
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,30 +25,31 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org, Ben Myers <bpm@sgi.com>, lczerner@redhat.com
+Cc: lczerner@redhat.com, xfs@oss.sgi.com
 
-> > +
-> > +	if (range.start > ULLONG_MAX - BBSIZE)
-> > +		return -XFS_ERROR(EINVAL);
-> > +
+> > 
+> >    #  Mandatory Config values.
+> >    MC=""
+> > -  [ -z "$EMAIL" ]          && MC="$MC EMAIL"
+> > -  [ -z "$TEST_DIR" ]       && MC="$MC TEST_DIR"
+> > -  [ -z "$TEST_DEV" ]       && MC="$MC TEST_DEV"
+> > +  [ -z "$EMAIL" ]                           && MC="$MC EMAIL"
+> > +  [ -z "$TEST_DIR" ] && [ "$iam" != "new" ] && MC="$MC TEST_DIR"
+> > +  [ -z "$TEST_DEV" ] && [ "$iam" != "new" ] && MC="$MC TEST_DEV"
 > 
-> There's no point checking for overflow on the range start - what we
-> need to check is whether it is larger than the size of the
-> filesystem. We do that after the conversion of range.start to basic
-> blocks, so that check needs to be promoted to before this. i.e.
-> 
-> 	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks))
-> 		return -XFS_ERROR(EINVAL);
-> 
-> >  	start = BTOBB(range.start);
-> >  	end = start + BTOBBT(range.len) - 1;
-> >  	minlen = BTOBB(max_t(u64, granularity, range.minlen));
-> 
-> And that will prevent the overflow in BTOBB() just as effectively...
+> Given that I'm currently in the process of killing $iam as I
+> rework the structure of xfstests, I really don't like the idea of
+> introducing new dependencies on it.
 
-You're right, that's a far better way, I'll change it so.
+OK, I didn't know that. ;-)
 
-Thanks!
+> Also, I prefer to know that someone writing a new test is developing
+> it in a configured, working test environment. After all, you have to
+> test your new test as you write it... :p
+
+I thought that is not necessary to depend on those if new script doesn't require them but I can see your point.
+
+Thanks for comments!
 
 Tomas
 
