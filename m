@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6VDv14B184246 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 08:57:02 -0500
-Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
-	cuda.sgi.com with ESMTP id zmS7P6opRPEjA2Kv (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 31 Jul 2012 06:56:59 -0700 (PDT)
-Message-ID: <5017E426.2040709@profihost.ag>
-Date: Tue, 31 Jul 2012 15:56:54 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	q6VGwKo5200664 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 11:58:21 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id oTnBkdZ6mOsZyVkH for <xfs@oss.sgi.com>;
+	Tue, 31 Jul 2012 09:58:19 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mail.sandeen.net (Postfix) with ESMTP id 660D34963292
+	for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 11:58:19 -0500 (CDT)
+Message-ID: <50180EAB.8030008@sandeen.net>
+Date: Tue, 31 Jul 2012 11:58:19 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: xfs_growfs / planned resize / performance impact
+Subject: xfstests git trees are drifting a little
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,33 +23,39 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
-Hello list,
+kernel.org & oss.sgi.com have gotten a bit out of sync, I think.
 
-i'm planning to create a couple of VMs with just 30GB of space while 
-using xfs as the main filesystem.
+Are there plans to address this soon, on either side?
 
-Now i alreay know that some of the VMs will grow up to 250GB while 
-resizing the block device and using xfs_growfs.
+xfstests vs. xfstests-dev:
 
-Should i take care of that and format these disks with special parameters?
+ 016                    |    9 
+ 030                    |    3 
+ 030.out.linux          |    1 
+ 273                    |   10 
+ 274                    |   70 ++---
+ 285                    |   58 ----
+ 285.full               |  116 --------
+ 285.out                |    1 
+ 286                    |  114 --------
+ 286.full               |   70 -----
+ 286.out                |    1 
+ README                 |    4 
+ common.attr            |    4 
+ common.dump            |    2 
+ group                  |    2 
+ src/Makefile           |    3 
+ src/seek_copy_test.c   |  249 -----------------
+ src/seek_sanity_test.c |  683 -------------------------------------------------
 
-I've discovered that a 500GB volume has agcount=4 and 64000 blocks of 
-internal log - while a 300GB volume resized to 500GB has agcount 7 ad 
-only 40960 blocks of internal log.
 
-Is it a problem if this grow will happen in small portions (30GB => 50GB 
-=> 75GB => 100GB => ... 300GB)?
-
-Thanks!
-
-Greets,
-Stefan
+-Eric
 
 _______________________________________________
 xfs mailing list
