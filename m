@@ -1,23 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6VA0WiA166039 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 05:00:33 -0500
-Received: from vps.kramerican.dk (vps.kramerican.dk [78.46.75.101]) by
-	cuda.sgi.com with ESMTP id nr4H9AxBoFBtOlQN for
-	<xfs@oss.sgi.com>; Tue, 31 Jul 2012 03:00:28 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by vps.kramerican.dk (Postfix) with ESMTP id 84A21382C90
-	for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 12:00:27 +0200 (CEST)
-Received: from vps.kramerican.dk ([127.0.0.1])
-	by localhost (vps.kramerican.dk [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id Pw9sdCorxxLK for <xfs@oss.sgi.com>;
-	Tue, 31 Jul 2012 12:00:27 +0200 (CEST)
-Subject: Validate your email address now..
-From: EMSE Systems Administrator <email@administrator.com>
+	q6VAOUWJ167417 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 05:24:30 -0500
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id 7Xk5mF1JSbEtppz2 for
+	<xfs@oss.sgi.com>; Tue, 31 Jul 2012 03:24:28 -0700 (PDT)
+Date: Tue, 31 Jul 2012 06:24:26 -0400 (EDT)
+From: Tomas Racek <tracek@redhat.com>
+Message-ID: <1148424756.1249426.1343730266948.JavaMail.root@redhat.com>
+In-Reply-To: <20120730220413.GI2877@dastard>
+Subject: Re: [PATCH] xfstests: Change fstrim behaviour to be consistent with
+	upstream version
 MIME-Version: 1.0
-Message-Id: <20120731100026.2C938382C97@vps.kramerican.dk>
-Date: Tue, 31 Jul 2012 12:00:26 +0200 (CEST)
-Reply-To: email@administrator.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,18 +24,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: lczerner@redhat.com, xfs@oss.sgi.com
 
+> If we have duplicate code (i.e. a copy of the upstream utility) or
+> the local tool can be completely replaced by the upstream tool,
+> then we should use upstream and remove the local copy completely.
+> Distros have been shipping fstrim for long enough now that most
+> people running testing on upstream kernels will have it installed...
+> 
 
-Dear account user
-Your mailbox has exceeded the limit of 30 GB, which is as set by your manager, you are currently at 30.9GB, very soon you will not be able to create new e-mail to send or receive again until you validate your mailbox.To re-validate your mailbox, click on the link below and follow the instruction for your upgrade
+OK, I'll create the patch which drops local version.
 
-http://www.decofusta.org/form/use/emse,,/form1.html
+> Adding a _require_fstrim() function that checks for the upstream
+> version of fstrim to be installed for each test that requires it
+> would go along with this.
 
+Did you mean something like
 
-Sincerely,
-Email Administrator
+_require_fstrim()
+{
+         which fstrim &>/dev/null || _notrun "This test requires fstrim utility."
+}
 
+in common.rc or locally in each test?
+
+Thanks for comments!
+
+Tomas
 
 _______________________________________________
 xfs mailing list
