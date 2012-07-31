@@ -1,16 +1,12 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q6VAOUWJ167417 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 05:24:30 -0500
-Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
-	cuda.sgi.com with ESMTP id 7Xk5mF1JSbEtppz2 for
-	<xfs@oss.sgi.com>; Tue, 31 Jul 2012 03:24:28 -0700 (PDT)
-Date: Tue, 31 Jul 2012 06:24:26 -0400 (EDT)
+	q6VAWb3e167930 for <xfs@oss.sgi.com>; Tue, 31 Jul 2012 05:32:37 -0500
+Date: Tue, 31 Jul 2012 06:32:34 -0400 (EDT)
 From: Tomas Racek <tracek@redhat.com>
-Message-ID: <1148424756.1249426.1343730266948.JavaMail.root@redhat.com>
-In-Reply-To: <20120730220413.GI2877@dastard>
-Subject: Re: [PATCH] xfstests: Change fstrim behaviour to be consistent with
-	upstream version
+Message-ID: <1945505398.1250534.1343730754291.JavaMail.root@redhat.com>
+In-Reply-To: <20120730214946.GG2877@dastard>
+Subject: Re: [PATCH 1/1] xfs: check for possible overflow in xfs_ioc_trim
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -25,31 +21,30 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: lczerner@redhat.com, xfs@oss.sgi.com
+Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, linux-xfs@vger.kernel.org, Ben Myers <bpm@sgi.com>, lczerner@redhat.com
 
-> If we have duplicate code (i.e. a copy of the upstream utility) or
-> the local tool can be completely replaced by the upstream tool,
-> then we should use upstream and remove the local copy completely.
-> Distros have been shipping fstrim for long enough now that most
-> people running testing on upstream kernels will have it installed...
+> > +
+> > +	if (range.start > ULLONG_MAX - BBSIZE)
+> > +		return -XFS_ERROR(EINVAL);
+> > +
 > 
+> There's no point checking for overflow on the range start - what we
+> need to check is whether it is larger than the size of the
+> filesystem. We do that after the conversion of range.start to basic
+> blocks, so that check needs to be promoted to before this. i.e.
+> 
+> 	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks))
+> 		return -XFS_ERROR(EINVAL);
+> 
+> >  	start = BTOBB(range.start);
+> >  	end = start + BTOBBT(range.len) - 1;
+> >  	minlen = BTOBB(max_t(u64, granularity, range.minlen));
+> 
+> And that will prevent the overflow in BTOBB() just as effectively...
 
-OK, I'll create the patch which drops local version.
+You're right, that's a far better way, I'll change it so.
 
-> Adding a _require_fstrim() function that checks for the upstream
-> version of fstrim to be installed for each test that requires it
-> would go along with this.
-
-Did you mean something like
-
-_require_fstrim()
-{
-         which fstrim &>/dev/null || _notrun "This test requires fstrim utility."
-}
-
-in common.rc or locally in each test?
-
-Thanks for comments!
+Thanks!
 
 Tomas
 
