@@ -1,11 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q71Dk6Oe030517 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 08:46:06 -0500
-From: Tomas Racek <tracek@redhat.com>
-Subject: [PATCH v2] xfs: check for possible overflow in xfs_ioc_trim
-Date: Wed,  1 Aug 2012 15:45:37 +0200
-Message-Id: <1343828737-5324-1-git-send-email-tracek@redhat.com>
+	q71EuvvR036483 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 09:56:57 -0500
+Received: from mail-gg0-f181.google.com (mail-gg0-f181.google.com
+	[209.85.161.181]) by cuda.sgi.com with ESMTP id
+	IAgfz0jw0WTBOApD (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 01 Aug 2012 07:56:55 -0700 (PDT)
+Received: by ggnv5 with SMTP id v5so9005368ggn.26
+	for <xfs@oss.sgi.com>; Wed, 01 Aug 2012 07:56:55 -0700 (PDT)
+Message-ID: <501943B5.4030309@inktank.com>
+Date: Wed, 01 Aug 2012 09:56:53 -0500
+From: Alex Elder <elder@inktank.com>
+MIME-Version: 1.0
+Subject: [PATCH] xfs: minor inode64 mount option cleanup
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -14,48 +22,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@vger.kernel.org
-Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, Tomas Racek <tracek@redhat.com>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, lczerner@redhat.com
+To: xfs@oss.sgi.com
 
-If range.start points behind the filesystem, return invalid value error.
-This fixes possible overflow in
+Supplying the "inode64" mount option means inode allocations should
+not be restricted to "small" inode numbers (within a 32 bit range).
+So in xfs_parseargs(), the XFS_MOUNT_SMALL_INUMS flag is cleared if
+"inode64" is requested.
 
-start = BTOBB(range.start)
+If a kernel does not support 64-bit inodes (which may be because it
+doesn't support 64-bit block addresses), the "inode64" mount option
+is not allowed.  But even though it's treated as an invalid mount
+option xfs_parseargs() still clears SMALL_INUMS flag if "inode64" is
+requested.
 
-when range.start is nearly ULLONG_MAX.
+The end result may not actually matter, but I think we should not be
+changing any state (clearing the SMALL_INUMS flag) when an invalid
+mount option is supplied.
 
-Signed-off-by: Tomas Racek <tracek@redhat.com>
+So this just makes sure the SMALL_INUMS flag is only cleared if the
+kernel supports big inode numbers.
+
+Signed-off-by: Alex Elder <elder@inktank.com>
 ---
- fs/xfs/xfs_discard.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_super.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index f9c3fe3..33d367f 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -179,12 +179,13 @@ xfs_ioc_trim(
- 	 * used by the fstrim application.  In the end it really doesn't
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
-+	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks))
-+		return -XFS_ERROR(EINVAL);
-+
- 	start = BTOBB(range.start);
- 	end = start + BTOBBT(range.len) - 1;
- 	minlen = BTOBB(max_t(u64, granularity, range.minlen));
- 
--	if (XFS_BB_TO_FSB(mp, start) >= mp->m_sb.sb_dblocks)
--		return -XFS_ERROR(EINVAL);
- 	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
- 		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)- 1;
- 
--- 
-1.7.7.6
+Index: b/fs/xfs/xfs_super.c
+===================================================================
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -295,12 +295,13 @@ xfs_parseargs(
+ 			}
+ 			dswidth = simple_strtoul(value, &eov, 10);
+ 		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
++#if XFS_BIG_INUMS
+ 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+-#if !XFS_BIG_INUMS
++#else /* !XFS_BIG_INUMS */
+ 			xfs_warn(mp, "%s option not allowed on this system",
+ 				this_char);
+ 			return EINVAL;
+-#endif
++#endif /* !XFS_BIG_INUMS */
+ 		} else if (!strcmp(this_char, MNTOPT_NOUUID)) {
+ 			mp->m_flags |= XFS_MOUNT_NOUUID;
+ 		} else if (!strcmp(this_char, MNTOPT_BARRIER)) {
 
 _______________________________________________
 xfs mailing list
