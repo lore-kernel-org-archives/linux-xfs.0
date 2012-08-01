@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q71EuvvR036483 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 09:56:57 -0500
-Received: from mail-gg0-f181.google.com (mail-gg0-f181.google.com
-	[209.85.161.181]) by cuda.sgi.com with ESMTP id
-	IAgfz0jw0WTBOApD (version=TLSv1 cipher=RC4-SHA bits=128
+	q71Eur09036474 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 09:56:53 -0500
+Received: from mail-yx0-f181.google.com (mail-yx0-f181.google.com
+	[209.85.213.181]) by cuda.sgi.com with ESMTP id
+	dBo3SNOPeFdUUEdm (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Aug 2012 07:56:55 -0700 (PDT)
-Received: by ggnv5 with SMTP id v5so9005368ggn.26
-	for <xfs@oss.sgi.com>; Wed, 01 Aug 2012 07:56:55 -0700 (PDT)
-Message-ID: <501943B5.4030309@inktank.com>
-Date: Wed, 01 Aug 2012 09:56:53 -0500
+	Wed, 01 Aug 2012 07:56:52 -0700 (PDT)
+Received: by yenl3 with SMTP id l3so9040749yen.26
+	for <xfs@oss.sgi.com>; Wed, 01 Aug 2012 07:56:52 -0700 (PDT)
+Message-ID: <501943B1.5090300@inktank.com>
+Date: Wed, 01 Aug 2012 09:56:49 -0500
 From: Alex Elder <elder@inktank.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfs: minor inode64 mount option cleanup
+Subject: [PATCH] xfs: kill struct declarations in xfs_mount.h
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,49 +28,51 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Supplying the "inode64" mount option means inode allocations should
-not be restricted to "small" inode numbers (within a 32 bit range).
-So in xfs_parseargs(), the XFS_MOUNT_SMALL_INUMS flag is cleared if
-"inode64" is requested.
+I noticed that "struct xfs_mount_args" was still declared in
+"fs/xfs/xfs_mount.h".  That struct doesn't even exist any more (and
+is obviously not referenced elsewhere in that header file).  While
+in there, delete four other unneeded struct declarations in that
+file.
 
-If a kernel does not support 64-bit inodes (which may be because it
-doesn't support 64-bit block addresses), the "inode64" mount option
-is not allowed.  But even though it's treated as an invalid mount
-option xfs_parseargs() still clears SMALL_INUMS flag if "inode64" is
-requested.
-
-The end result may not actually matter, but I think we should not be
-changing any state (clearing the SMALL_INUMS flag) when an invalid
-mount option is supplied.
-
-So this just makes sure the SMALL_INUMS flag is only cleared if the
-kernel supports big inode numbers.
+Doing so highlights that "fs/xfs/xfs_trace.h" was relying indirectly
+on "xfs_mount.h" to be #included in order to declare "struct
+xfs_bmbt_irec", so add that declaration to resolve that issue.
 
 Signed-off-by: Alex Elder <elder@inktank.com>
 ---
- fs/xfs/xfs_super.c |    5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.h |    5 -----
+ fs/xfs/xfs_trace.h |    1 +
+ 2 files changed, 1 insertion(+), 5 deletions(-)
 
-Index: b/fs/xfs/xfs_super.c
+Index: b/fs/xfs/xfs_mount.h
 ===================================================================
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -295,12 +295,13 @@ xfs_parseargs(
- 			}
- 			dswidth = simple_strtoul(value, &eov, 10);
- 		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
-+#if XFS_BIG_INUMS
- 			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
--#if !XFS_BIG_INUMS
-+#else /* !XFS_BIG_INUMS */
- 			xfs_warn(mp, "%s option not allowed on this system",
- 				this_char);
- 			return EINVAL;
--#endif
-+#endif /* !XFS_BIG_INUMS */
- 		} else if (!strcmp(this_char, MNTOPT_NOUUID)) {
- 			mp->m_flags |= XFS_MOUNT_NOUUID;
- 		} else if (!strcmp(this_char, MNTOPT_BARRIER)) {
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -54,12 +54,7 @@ typedef struct xfs_trans_reservations {
+ #include "xfs_sync.h"
+
+ struct xlog;
+-struct xfs_mount_args;
+ struct xfs_inode;
+-struct xfs_bmbt_irec;
+-struct xfs_bmap_free;
+-struct xfs_extdelta;
+-struct xfs_swapext;
+ struct xfs_mru_cache;
+ struct xfs_nameops;
+ struct xfs_ail;
+Index: b/fs/xfs/xfs_trace.h
+===================================================================
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -37,6 +37,7 @@ struct xlog_recover;
+ struct xlog_recover_item;
+ struct xfs_buf_log_format;
+ struct xfs_inode_log_format;
++struct xfs_bmbt_irec;
+
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
 
 _______________________________________________
 xfs mailing list
