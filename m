@@ -1,18 +1,11 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q71DeZMI029981 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 08:40:35 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id opNk2sA4k7End3LR for
-	<xfs@oss.sgi.com>; Wed, 01 Aug 2012 06:40:34 -0700 (PDT)
-Date: Wed, 1 Aug 2012 09:40:18 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v3 0/2] block: improvements for discard alignment
-Message-ID: <20120801134018.GC20830@redhat.com>
-References: <1341504104-1674-1-git-send-email-pbonzini@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1341504104-1674-1-git-send-email-pbonzini@redhat.com>
+	q71Dk6Oe030517 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 08:46:06 -0500
+From: Tomas Racek <tracek@redhat.com>
+Subject: [PATCH v2] xfs: check for possible overflow in xfs_ioc_trim
+Date: Wed,  1 Aug 2012 15:45:37 +0200
+Message-Id: <1343828737-5324-1-git-send-email-tracek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,53 +14,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: axboe@kernel.dk
-Cc: martin.petersen@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, Paolo Bonzini <pbonzini@redhat.com>, hch@lst.de, vgoyal@redhat.com
+To: linux-xfs@vger.kernel.org
+Cc: Alex Elder <elder@kernel.org>, open list <linux-kernel@vger.kernel.org>, Tomas Racek <tracek@redhat.com>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>, Ben Myers <bpm@sgi.com>, lczerner@redhat.com
 
-On Thu, Jul 05 2012 at 12:01pm -0400,
-Paolo Bonzini <pbonzini@redhat.com> wrote:
+If range.start points behind the filesystem, return invalid value error.
+This fixes possible overflow in
 
-> When a disk has a large discard_granularity, discards are not split with
-> optimal alignment; the pessimization gets bigger as discard_granularity
-> and max_discard_sectors become closer.
-> 
-> Take the limit case of discard_granularity == max_discard_sectors == 64.
-> Then, if a request is submitted for 256 sectors 2..257 it will be split
-> like this: 2..65, 66..129, 130..193, 194..257.  None of these requests
-> is aligned, so in fact you might end up with no discarded logical blocks
-> at all.  With this patch, the split will be 2..63, 64..127, 128..191,
-> 192..255, 256..257.  The patches also take the discard_alignment into
-> consideration.
-> 
-> Patch 1 adjusts the computation of the granularity-adjusted
-> max_discard_sectors so that it prepares for the new code in patch 2,
-> which actually adjusts the split.
-> 
-> v2->v3: drop addition of queue/discard_alignment to sysfs, use
->   correct alignment for partitions
-> 
-> Paolo Bonzini (2):
->   block: reorganize rounding of max_discard_sectors
->   block: split discard into aligned requests
-> 
->  block/blk-lib.c        |   41 ++++++++++++++++++++++++++++-------------
->  include/linux/blkdev.h |   10 ++++++++++
->  2 files changed, 38 insertions(+), 13 deletions(-)
+start = BTOBB(range.start)
 
-Hey Jens,
+when range.start is nearly ULLONG_MAX.
 
-Would be great to get these discard fixes in.  I know both Christoph and
-Vivek have reviewed these changes but that isn't reflected in the patch
-headers.
+Signed-off-by: Tomas Racek <tracek@redhat.com>
+---
+ fs/xfs/xfs_discard.c |    5 +++--
+ 1 files changed, 3 insertions(+), 2 deletions(-)
 
-These patches eliminate misaligned discard from being sent to the
-dm-thinp target.
-
-Tested-by: Mike Snitzer <snitzer@redhat.com>
+diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+index f9c3fe3..33d367f 100644
+--- a/fs/xfs/xfs_discard.c
++++ b/fs/xfs/xfs_discard.c
+@@ -179,12 +179,13 @@ xfs_ioc_trim(
+ 	 * used by the fstrim application.  In the end it really doesn't
+ 	 * matter as trimming blocks is an advisory interface.
+ 	 */
++	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks))
++		return -XFS_ERROR(EINVAL);
++
+ 	start = BTOBB(range.start);
+ 	end = start + BTOBBT(range.len) - 1;
+ 	minlen = BTOBB(max_t(u64, granularity, range.minlen));
+ 
+-	if (XFS_BB_TO_FSB(mp, start) >= mp->m_sb.sb_dblocks)
+-		return -XFS_ERROR(EINVAL);
+ 	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
+ 		end = XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks)- 1;
+ 
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
