@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q71Fo96f040311 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 10:50:10 -0500
-Received: from merlin.infradead.org (merlin.infradead.org [205.233.59.134]) by
-	cuda.sgi.com with ESMTP id DUQoUmPM5X8tM4wI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 01 Aug 2012 08:50:08 -0700 (PDT)
-Message-ID: <50195026.4030901@kernel.dk>
-Date: Wed, 01 Aug 2012 17:49:58 +0200
-From: Jens Axboe <axboe@kernel.dk>
+	q720CluB091874 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 19:12:47 -0500
+Received: from pavilion.ashurst.eu.org (pavilion.ashurst.eu.org
+	[85.119.82.45]) by cuda.sgi.com with ESMTP id Wph9vdq5KiPMyDIy
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 01 Aug 2012 17:12:45 -0700 (PDT)
+Received: from 79.70.112.87.dyn.plus.net ([87.112.70.79] helo=[192.168.1.155])
+	by pavilion.ashurst.eu.org with esmtpsa
+	(TLS1.0:RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
+	(envelope-from <andyjpb@ashurst.eu.org>) id 1Swj1u-0004rG-K2
+	for xfs@oss.sgi.com; Thu, 02 Aug 2012 01:12:44 +0100
+Message-ID: <5019C5F9.1080302@ashurst.eu.org>
+Date: Thu, 02 Aug 2012 01:12:41 +0100
+From: Andy Bennett <andyjpb@ashurst.eu.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 0/2] block: improvements for discard alignment
-References: <1341504104-1674-1-git-send-email-pbonzini@redhat.com>
-	<20120801134018.GC20830@redhat.com>
-In-Reply-To: <20120801134018.GC20830@redhat.com>
+Subject: XFS Recovery Behaviour
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,55 +28,123 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: martin.petersen@oracle.com, linux-kernel@vger.kernel.org, xfs@oss.sgi.com, dm-devel@redhat.com, Paolo Bonzini <pbonzini@redhat.com>, hch@lst.de, vgoyal@redhat.com
+To: xfs@oss.sgi.com
 
-On 08/01/2012 03:40 PM, Mike Snitzer wrote:
-> On Thu, Jul 05 2012 at 12:01pm -0400,
-> Paolo Bonzini <pbonzini@redhat.com> wrote:
-> 
->> When a disk has a large discard_granularity, discards are not split with
->> optimal alignment; the pessimization gets bigger as discard_granularity
->> and max_discard_sectors become closer.
->>
->> Take the limit case of discard_granularity == max_discard_sectors == 64.
->> Then, if a request is submitted for 256 sectors 2..257 it will be split
->> like this: 2..65, 66..129, 130..193, 194..257.  None of these requests
->> is aligned, so in fact you might end up with no discarded logical blocks
->> at all.  With this patch, the split will be 2..63, 64..127, 128..191,
->> 192..255, 256..257.  The patches also take the discard_alignment into
->> consideration.
->>
->> Patch 1 adjusts the computation of the granularity-adjusted
->> max_discard_sectors so that it prepares for the new code in patch 2,
->> which actually adjusts the split.
->>
->> v2->v3: drop addition of queue/discard_alignment to sysfs, use
->>   correct alignment for partitions
->>
->> Paolo Bonzini (2):
->>   block: reorganize rounding of max_discard_sectors
->>   block: split discard into aligned requests
->>
->>  block/blk-lib.c        |   41 ++++++++++++++++++++++++++++-------------
->>  include/linux/blkdev.h |   10 ++++++++++
->>  2 files changed, 38 insertions(+), 13 deletions(-)
-> 
-> Hey Jens,
-> 
-> Would be great to get these discard fixes in.  I know both Christoph and
-> Vivek have reviewed these changes but that isn't reflected in the patch
-> headers.
-> 
-> These patches eliminate misaligned discard from being sent to the
-> dm-thinp target.
-> 
-> Tested-by: Mike Snitzer <snitzer@redhat.com>
+Hi,
 
-Sure, I'll get it in for this series. Thanks.
+This post isn't going to be too detailed as I ended up in a recovery
+situation and was focused on checking the integrity of my files rather
+than recording every step as I went.
+
+I thought it was worth reporting as the file system seemed to recover in
+an odd way.
+
+I am not expecting any assistance as I was able to recover all my data.
+
+
+
+I am using an XFS partition for storing my digital camera photos. I have
+2 cards, card-1 and card-2. On any day when I injest the contents of the
+cards I make directories import-YYYY-MM-DD/card-{1,2}/
+I have a script that creates the directories and performs the injesting.
+
+I had previously (2012/07/04) injested import-2012-07-04/card-1/
+
+On 2012-07-28 I went into import-2012-07-04/ and created a thumbnail
+gallery with my thumbnail script. This involved creating a directory
+import-2012-07-05/gal-card-1 and populating it with files. The directory
+entry for import-2012-07-04 was now dirty.
+
+Simultaneously, I began a fresh injest session into
+import-2012-07-28/card-2/.
+
+Whilst these two jobs were running I suffered a hard power failure as I
+unplugged the thing (it's a laptop) not realising that my battery was
+flat. :-(
+
+When I rebooted I noticed that import-2012-07-04 was showing up somewhat
+thusly in 'ls -la':
+-----
+?????????? ? ? ?   ?? ???  ? ??:?? import-2012-07-04
+-----
+
+I could not 'cd' into it nor could I 'cat' it.
+I thought the directory was lost and resolved to restore it from backups
+when I returned home.
+
+I didn't pay much attention at the time to the contents of
+import-2012-07-28/
+
+Over the course of the day I injested a few more things into
+import-2012-07-28/
+
+
+
+When I returned home I looked into restoring the backups. To my
+surprise, import-2012-07-04/ was showing up as a valid directory again.
+Even more surprisingly it contained a (somewhat corrupt) card-2/
+directory that should have been in import-2012-07-28/. It did not
+contain the card-1/ directory.
+
+There is anecdotal evidence that import-2012-07-28/card-2/ was no longer
+present.
+
+I recovered import-2012-07-04/card-1/ from an xfsdump.
+
+I recovered import-2012-07-28/card-2/ because I hadn't gotten around to
+verifying the injest so didn't format the card before I reused it. It
+wasn't full so I added more shots to it and injested it again later in
+the day.
+
+
+Today, I deleted import-2012-07-04/card-2/ after much to-ing and
+fro-ing. It was a subset of import-2012-07-28/card-2b/ (an injest of the
+same card later in the day, albeit with extra files) and some of the
+overlapping files were corrupt or empty in 2012-07-04/card-2/. (My
+injest script records checksums and I used a visual verification of the
+images I was concerned about.)
+The corrupt & missing files were the ones towards the end of the injest:
+they had high numbered filenames, so would have been the ones in flight
+at the time of the power failure.
+
+
+
+I'm running XFS on Debian Testing (Wheezy)
+
+-----
+$ dpkg -l |grep xfs | grep -v x11
+ii  xfsdump     3.0.6    Administrative utilities for the XFS filesystem
+ii  xfslibs-dev 3.1.7+b1 XFS filesystem-specific static libraries and
+headers
+ii  xfsprogs    3.1.7+b1 Utilities for managing the XFS filesystem
+-----
+
+-----
+$ uname -a
+Linux lago 3.2.0-3-amd64 #1 SMP Thu Jun 28 09:07:26 UTC 2012 x86_64
+GNU/Linux
+-----
+
+I have "defaults" under "options" in /etc/fstab.
+
+I'm using Debian defaults on a Lenovo Thinkpad X200 laptop.
+
+
+I didn't expect to see the import-2012-07-04/ directory again and I
+certainly didn't expect to see it populated with the card-2/ subdirectory.
+
+
+
+
+
+
+Regards,
+@ndy
 
 -- 
-Jens Axboe
+andyjpb@ashurst.eu.org
+http://www.ashurst.eu.org/
+0x7EBA75FF
 
 _______________________________________________
 xfs mailing list
