@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q720O27F092950 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 19:24:02 -0500
-Received: from pavilion.ashurst.eu.org (pavilion.ashurst.eu.org
-	[85.119.82.45]) by cuda.sgi.com with ESMTP id o2EtOb8v0FIISzMx
-	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
-	<xfs@oss.sgi.com>; Wed, 01 Aug 2012 17:24:01 -0700 (PDT)
-Received: from 79.70.112.87.dyn.plus.net ([87.112.70.79] helo=[192.168.1.155])
-	by pavilion.ashurst.eu.org with esmtpsa
-	(TLS1.0:RSA_AES_256_CBC_SHA1:32) (Exim 4.72)
-	(envelope-from <andyjpb@ashurst.eu.org>) id 1SwjCo-0004s8-CJ
-	for xfs@oss.sgi.com; Thu, 02 Aug 2012 01:23:59 +0100
-Message-ID: <5019C89D.2020303@ashurst.eu.org>
-Date: Thu, 02 Aug 2012 01:23:57 +0100
-From: Andy Bennett <andyjpb@ashurst.eu.org>
+	q720dGYx094039 for <xfs@oss.sgi.com>; Wed, 1 Aug 2012 19:39:17 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id F0NvYbYDymVv5b4I
+	for <xfs@oss.sgi.com>; Wed, 01 Aug 2012 17:39:15 -0700 (PDT)
+Message-ID: <5019CC34.5050003@hardwarefreak.com>
+Date: Wed, 01 Aug 2012 19:39:16 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-References: <5019C5F9.1080302@ashurst.eu.org>
-In-Reply-To: <5019C5F9.1080302@ashurst.eu.org>
-Subject: Re: XFS Recovery Behaviour
+Subject: Re: realtime section bugs still around
+References: <CAGou9MgezsS=2+SngGWBJv5Npsuqacx1VPJwvMuf0FS+XnXt8A@mail.gmail.com>
+	<20120730030333.GE2877@dastard>
+	<CAGou9MheeBWxajd65szNfDB2L+VVoZ7SypEdUKj7np3L0H8fHA@mail.gmail.com>
+	<CAGou9MgMHbTPebFUDXdyLvrUr4T9wo-geNtaPUft9uUmOaju6Q@mail.gmail.com>
+	<50186E51.1020107@hardwarefreak.com>
+	<CAGou9MhneejOuhX4c8G06c3Zh7dxF-OtZ+=mT-7fho_u1Q3zWw@mail.gmail.com>
+	<5018A8C7.8050406@hardwarefreak.com>
+	<CAGou9Mj=8xcF4YwaSQYp0_BbJW_Ms1sasDDRNxL1oh0oR7zupw@mail.gmail.com>
+In-Reply-To: <CAGou9Mj=8xcF4YwaSQYp0_BbJW_Ms1sasDDRNxL1oh0oR7zupw@mail.gmail.com>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,85 +32,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jason Newton <nevion@gmail.com>
+Cc: xfs@oss.sgi.com
 
-Hi,
+On 8/1/2012 12:55 AM, Jason Newton wrote:
 
-> I didn't expect to see the import-2012-07-04/ directory again and I
-> certainly didn't expect to see it populated with the card-2/ subdirectory.
+>> Just to figure out for sure what the bottlenecks are and whether they can
+> be dealt with rather than looking at it as opaque system and assuming
+> nothing can be done.  Also as a learning experience.
 
-I've been moving the files to my archive disk and now import-2012-07-28/
-seems to be in a pickle:
+Jason, have you considered something like this to solve your problems?
 
+RAM is cheap.  Far cheaper than attacking this problem with any other
+hardware type.  And you can't easily solve it by rewriting to use AIO,
+given the effort involved with that.
 
------
-$ ls -la import-2012-07-28/
-total 0
+You should be able to fit 32GB of RAM on the board.  Create a 24GB RAM
+disk and use that for writing your 5.7MB frame files in real time.  This
+eliminates any latency and stutter issues during capture.  Treat the RAM
+disk as a FIFO, taking each new file and copying it out to SSD after
+it's been closed, then delete the original.  This gives you in essence a
+very fast buffer.  If my math is correct, 24,000MB / 300MB/s = roughly
+80 seconds of buffer at a 300MB/s streaming capture rate, 40 seconds at
+600MB/s.
 
-$ rmdir import-2012-07-28/
-rmdir: failed to remove `import-2012-07-28/': Directory not empty
-
-$ rm -fr import-2012-07-28/
-rm: cannot remove `import-2012-07-28': Directory not empty
-
-$ cd import-2012-07-28/
-
-$ ls -la
-total 0
-
-$ touch hello
-touch: cannot touch `hello': No such file or directory
-
-$ cd .
-
-$ cd ..
-
-$
------
-
-
-I can't seem to remove it. It doesn't seem to contain '.' or '..'
-entries but I do seem to be able to 'cd' in and out of it with bash
-4.2.36(1). I also seem to be able to 'cd .' whilst I am in it.
-
-
-
-
-... I tried 'umount'ing and 'mount'ing the filesystem.
-Now it shows up thusly in 'ls -la':
-
------
-??????????  ? ?       ?             ?            ? import-2012-07-28
------
-
-'umount'ing and 'mount'ing again results in the same thing.
-
-
-dmesg shows this for the two "re"mounts:
-
------
-[48160.832197] XFS (sda10): Mounting Filesystem
-[48161.047407] XFS (sda10): Ending clean mount
-[48247.692309] XFS (sda10): Mounting Filesystem
-[48247.844421] XFS (sda10): Ending clean mount
------
-
-
-
-
-Does anyone have any idea how I can remove this entry?
-
-
-
-
-
-Regards,
-@ndy
+This should be very easy to implement, and cheaper than all other
+alternatives.  It should eliminate all possible latency issues, though
+it will increase CPU cycles due to the data movement to/from the RAM
+disk, though how much I can't guess at this point.  8GB RAM disk will
+give you 26 seconds of buffering at 300MB/s, and a 4GB RAM disk will
+give you 13 seconds of buffering.  If 13 seconds is sufficient, you can
+implement this on a machine with only 8GB RAM, assuming you need no more
+than 4GB for kernel/user space/application.
 
 -- 
-andyjpb@ashurst.eu.org
-http://www.ashurst.eu.org/
-0x7EBA75FF
+Stan
 
 _______________________________________________
 xfs mailing list
