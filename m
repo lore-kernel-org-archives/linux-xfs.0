@@ -1,28 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q73BSTpa088411 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 06:28:29 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id tCLj45WquCDhF3VC
-	for <xfs@oss.sgi.com>; Fri, 03 Aug 2012 04:28:28 -0700 (PDT)
-Message-ID: <501BB5DD.1000302@hardwarefreak.com>
-Date: Fri, 03 Aug 2012 06:28:29 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q73DkFeL108636 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 08:46:15 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id BSXXqJ67PqTzrKgu for <xfs@oss.sgi.com>;
+	Fri, 03 Aug 2012 06:46:13 -0700 (PDT)
+Message-ID: <501BD625.9000505@sandeen.net>
+Date: Fri, 03 Aug 2012 08:46:13 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: realtime section bugs still around
-References: <CAGou9MgezsS=2+SngGWBJv5Npsuqacx1VPJwvMuf0FS+XnXt8A@mail.gmail.com>
-	<20120730030333.GE2877@dastard>
-	<CAGou9MheeBWxajd65szNfDB2L+VVoZ7SypEdUKj7np3L0H8fHA@mail.gmail.com>
-	<CAGou9MgMHbTPebFUDXdyLvrUr4T9wo-geNtaPUft9uUmOaju6Q@mail.gmail.com>
-	<50186E51.1020107@hardwarefreak.com>
-	<CAGou9MhneejOuhX4c8G06c3Zh7dxF-OtZ+=mT-7fho_u1Q3zWw@mail.gmail.com>
-	<5018A8C7.8050406@hardwarefreak.com>
-	<CAGou9Mj=8xcF4YwaSQYp0_BbJW_Ms1sasDDRNxL1oh0oR7zupw@mail.gmail.com>
-	<5019CC34.5050003@hardwarefreak.com>
-	<CAGou9Mg4teJU3VHWxDK3-y1MMxN_FQ-Dpk3E1KzX0pNdLEHNOQ@mail.gmail.com>
-	<501A58DB.7070801@hardwarefreak.com>
-In-Reply-To: <501A58DB.7070801@hardwarefreak.com>
-Reply-To: stan@hardwarefreak.com
+Subject: Re: xfs_growfs / planned resize / performance impact
+References: <5017E426.2040709@profihost.ag> <501B4D7E.1000303@sandeen.net>
+	<501B6B04.2090002@profihost.ag>
+In-Reply-To: <501B6B04.2090002@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,34 +25,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Jason Newton <nevion@gmail.com>, xfs@oss.sgi.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 8/2/2012 5:39 AM, Stan Hoeppner wrote:
-
-> We already gave you the biggest cause of your latency, which is garbage
-> collection/wear leveling.  You can't see inside the SSDs, but you can
-> see the latency jump with either top (%wa) or iostat (await,
-> milliseconds).  Run
+On 8/3/12 1:09 AM, Stefan Priebe - Profihost AG wrote:
+> Am 03.08.2012 06:03, schrieb Eric Sandeen:
+>> On 7/31/12 8:56 AM, Stefan Priebe - Profihost AG wrote:
+>>> Hello list,
+>>> 
+>>> i'm planning to create a couple of VMs with just 30GB of space
+>>> while using xfs as the main filesystem.
+>>> 
+>>> Now i alreay know that some of the VMs will grow up to 250GB
+>>> while resizing the block device and using xfs_growfs.
+>>> 
+>>> Should i take care of that and format these disks with special
+>>> parameters?
+>>> 
+>>> I've discovered that a 500GB volume has agcount=4 and 64000
+>>> blocks of internal log - while a 300GB volume resized to 500GB
+>>> has agcount 7 ad only 40960 blocks of internal log.
+>>> 
+>>> Is it a problem if this grow will happen in small portions (30GB
+>>> => 50GB => 75GB => 100GB => ... 300GB)?
+>> 
+>> This incremental part doesn't matter a bit.  The first mkfs will
+>> choose the AG count & size according to defaults; further growth
+>> after this will add new (possibly partial) AGs of that pre-chosen
+>> size.
 > 
-> iostat -x -d 1 20
+> OK thanks for your reply. But does this influence performance? Should
+> i perhaps start creating the 30GB with agcount 1 so that while
+> raising the disk i don't end up with such a high agcount value? Does
+> it make sense to create a bigger internal log from he beginning?
+
+You can't make a single-AG filesystem, for starters.
+
+I'd really suggest that you just do some testing, and see if your
+proposed mkfs/growth plan impacts your VM performance in any 
+significant way.
+
+-Eric
+ 
+> Thanks
 > 
-> and you get 20 reports 1 second apart.  1s is minimum granularity.  This
-> should clearly show the latency spikes caused by the SSDs.  Maybe even
-> execute it for 60 seconds and pipe to a file.
+> Stefan
+> 
 
-The above assumes Linux can see the individual devices.  I've never used
-Intel's fakeraid.  If its driver presents a single device to the kernel
-instead of both SSD devices, iostat won't show which SSD's garbage
-collection is kicking in and/or when.  It would be most beneficial if
-you could see the iostat data for both SSD devices as it would tell you
-exactly when each drive's GC/leveling kicks in.  If the Intel fakeraid
-doesn't allow you to see both devices, you'll need to switch to md/RAID.
- I'm sure that will be problematic as you're very likely booting from
-the Intel RAIDed SSD device.
-
--- 
-Stan
 
 
 _______________________________________________
