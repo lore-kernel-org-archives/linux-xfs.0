@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q736BS1B044797 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 01:11:29 -0500
+	q736BxoL044888 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 01:11:59 -0500
 Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
-	cuda.sgi.com with ESMTP id rqAQtTDi12giH3eA (version=TLSv1
+	cuda.sgi.com with ESMTP id Pb4r7ZXuCZxQ7agP (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 02 Aug 2012 23:11:28 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	Thu, 02 Aug 2012 23:11:58 -0700 (PDT)
+Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
 	by rcsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id q736BQBa006213
+	ESMTP id q736BvDx006544
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 06:11:27 GMT
+	for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 06:11:58 GMT
 Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	q736BP3F029351
+	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	q736Bv6g022424
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 06:11:26 GMT
-Received: from abhmt120.oracle.com (abhmt120.oracle.com [141.146.116.72])
+	for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 06:11:57 GMT
+Received: from abhmt117.oracle.com (abhmt117.oracle.com [141.146.116.69])
 	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	q736BP3l019175 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 01:11:25 -0500
-Message-ID: <501B6B62.7040303@oracle.com>
-Date: Fri, 03 Aug 2012 14:10:42 +0800
+	q736Bu4M019467 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 01:11:56 -0500
+Message-ID: <501B6B82.10405@oracle.com>
+Date: Fri, 03 Aug 2012 14:11:14 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v6 1/4] xfs: Remove type argument from
-	xfs_seek_data()/xfs_seek_hole()
+Subject: [PATCH v6 4/4] xfs: xfs_seek_hole()  refinement with lookup hole
+	offset from page cache
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -40,50 +40,120 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-The type is already indicated by the function naming explicitly, so this argument
-can be omitted from those calls.
+xfs_seek_hole() refinement with hole searching from page cache for unwritten extent.
+
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+
 ---
- fs/xfs/xfs_file.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_file.c |   79 ++++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 files changed, 69 insertions(+), 10 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 9f7ec15..98642cf 100644
+index e852e52..0ab27eb 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -969,8 +969,7 @@ xfs_vm_page_mkwrite(
- STATIC loff_t
- xfs_seek_data(
- 	struct file		*file,
--	loff_t			start,
--	u32			type)
-+	loff_t			start)
- {
- 	struct inode		*inode = file->f_mapping->host;
+@@ -1295,9 +1295,9 @@ xfs_seek_hole(
  	struct xfs_inode	*ip = XFS_I(inode);
-@@ -1036,8 +1035,7 @@ out_unlock:
- STATIC loff_t
- xfs_seek_hole(
- 	struct file		*file,
--	loff_t			start,
--	u32			type)
-+	loff_t			start)
- {
- 	struct inode		*inode = file->f_mapping->host;
- 	struct xfs_inode	*ip = XFS_I(inode);
-@@ -1099,9 +1097,9 @@ xfs_file_llseek(
- 	case SEEK_SET:
- 		return generic_file_llseek(file, offset, origin);
- 	case SEEK_DATA:
--		return xfs_seek_data(file, offset, origin);
-+		return xfs_seek_data(file, offset);
- 	case SEEK_HOLE:
--		return xfs_seek_hole(file, offset, origin);
-+		return xfs_seek_hole(file, offset);
- 	default:
- 		return -EINVAL;
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	loff_t			uninitialized_var(offset);
+-	loff_t			holeoff;
+ 	xfs_fsize_t		isize;
+ 	xfs_fileoff_t		fsbno;
++	xfs_filblks_t		end;
+ 	uint			lock;
+ 	int			error;
+ 
+@@ -1313,21 +1313,80 @@ xfs_seek_hole(
  	}
+ 
+ 	fsbno = XFS_B_TO_FSBT(mp, start);
+-	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
+-	if (error)
+-		goto out_unlock;
++	end = XFS_B_TO_FSB(mp, isize);
++
++	for (;;) {
++		struct xfs_bmbt_irec	map[2];
++		int			nmap = 2;
++
++		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
++				       XFS_BMAPI_ENTIRE);
++		if (error)
++			goto out_unlock;
++
++		/* No extents at given offset, must be beyond EOF */
++		if (nmap == 0) {
++			error = ENXIO;
++			goto out_unlock;
++		}
+ 
+-	holeoff = XFS_FSB_TO_B(mp, fsbno);
+-	if (holeoff <= start)
+ 		offset = start;
+-	else {
++		/* Landed in a hole */
++		if (map[0].br_startblock == HOLESTARTBLOCK)
++			break;
++
+ 		/*
+-		 * xfs_bmap_first_unused() could return a value bigger than
+-		 * isize if there are no more holes past the supplied offset.
++		 * Landed in an unwritten extent, try to search hole from
++		 * page cache.
+ 		 */
+-		offset = min_t(loff_t, holeoff, isize);
++		if (map[0].br_state == XFS_EXT_UNWRITTEN) {
++			if (xfs_find_get_desired_pgoff(inode, &map[0],
++						       HOLE_OFF, &offset))
++				break;
++		}
++
++		/*
++		 * map[0] contains data or its unwritten but contains
++		 * data in page cache, probably means that we are
++		 * reading after EOF.  We should fix offset to point
++		 * to the end of the file(i.e., there is an implicit
++		 * hole at the end of any file).
++		 */
++		if (nmap == 1) {
++			offset = isize;
++			break;
++		}
++
++		/* We have two mappings, proceed to check map[1] */
++		offset = XFS_FSB_TO_B(mp, map[1].br_startoff);
++		if (map[1].br_startblock == HOLESTARTBLOCK)
++			break;
++
++		if (map[1].br_state == XFS_EXT_UNWRITTEN) {
++			if (xfs_find_get_desired_pgoff(inode, &map[1],
++						       HOLE_OFF, &offset))
++				break;
++		}
++
++		/*
++		 * Both mappings contains data, proceed to the next round of
++		 * search if the current reading offset not beyond or hit EOF.
++		 */
++		fsbno = map[1].br_startoff + map[1].br_blockcount;
++		start = XFS_FSB_TO_B(mp, fsbno);
++		if (start >= isize) {
++			offset = isize;
++			break;
++		}
+ 	}
+ 
++	/*
++	 * At this point, we must have found a hole.  However, the returned
++	 * offset may be bigger than the file size as it may be aligned to
++	 * page boundary for unwritten extents, we need to deal with this
++	 * situation in particular.
++	 */
++	offset = min_t(loff_t, offset, isize);
+ 	if (offset != file->f_pos)
+ 		file->f_pos = offset;
+ 
 -- 
 1.7.4.1
 
