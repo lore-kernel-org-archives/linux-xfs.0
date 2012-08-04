@@ -1,35 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q73Npl7l181779 for <xfs@oss.sgi.com>; Fri, 3 Aug 2012 18:51:48 -0500
-Received: from kyle.its.monash.edu.au (kyle.its.monash.edu.au
-	[130.194.13.163]) by cuda.sgi.com with ESMTP id
-	YSzqoFCt5RZ8ubot for <xfs@oss.sgi.com>;
-	Fri, 03 Aug 2012 16:51:45 -0700 (PDT)
-Received: from palin.its.monash.edu.au ([130.194.13.83])
-	by kyle.its.monash.edu.au
-	(Sun Java System Messaging Server 6.2-4.03 (built Sep 22 2005))
-	with ESMTP id <0M87009T7E8PEG10@kyle.its.monash.edu.au> for
-	xfs@oss.sgi.com; Sat, 04 Aug 2012 09:50:49 +1000 (EST)
-Received: from palin.its.monash.edu.au (localhost.localdomain [127.0.0.1])
-	by localhost (Postfix) with SMTP id 69D29546C94	for <xfs@oss.sgi.com>;
-	Sat, 04 Aug 2012 09:50:49 +1000 (EST)
-Received: from mail-pb0-f54.google.com
-	(mail-pb0-f54.google.com [209.85.160.54])
-	(using TLSv1 with cipher RC4-SHA (128/128 bits))
-	(No client certificate requested)	by palin.its.monash.edu.au (Postfix)
-	with ESMTPS id ECC23546C89	for <xfs@oss.sgi.com>; Sat,
-	04 Aug 2012 09:50:48 +1000 (EST)
-Received: by pbbro2 with SMTP id ro2so1927317pbb.41 for <xfs@oss.sgi.com>; Fri,
-	03 Aug 2012 16:50:45 -0700 (PDT)
-Date: Sat, 04 Aug 2012 09:50:45 +1000
-From: Nathan Scott <nathans@debian.org>
-Subject: Re: [PATCH] German translation for xfsdump
-In-reply-to: <CAAxjCEzx7PAQ0wL5=hJtMsK=WNKNY=n7g_+vW6otVK-VqQQiOA@mail.gmail.com>
-Message-id: <CAAp5ZgNVc+CA+Lfr20WsB4WgFPj=WMbkiNUVFsNS_GUFwgVLJA@mail.gmail.com>
-MIME-version: 1.0
-References: <CAAp5ZgNeJq0Tuv5e-zKHxuUCavwXGJfWzZROypSzsXNwwbtd+w@mail.gmail.com>
-	<CAAxjCEzx7PAQ0wL5=hJtMsK=WNKNY=n7g_+vW6otVK-VqQQiOA@mail.gmail.com>
+	q74MhfbH087858 for <xfs@oss.sgi.com>; Sat, 4 Aug 2012 17:43:41 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	7X60LU8MCsUk8Rt9 for <xfs@oss.sgi.com>;
+	Sat, 04 Aug 2012 15:43:40 -0700 (PDT)
+Date: Sun, 5 Aug 2012 08:43:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_growfs / planned resize / performance impact
+Message-ID: <20120804224336.GS2877@dastard>
+References: <5017E426.2040709@profihost.ag>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <5017E426.2040709@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -38,41 +22,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Stefan Ring <stefanrin@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Stefan,
+On Tue, Jul 31, 2012 at 03:56:54PM +0200, Stefan Priebe - Profihost AG wrote:
+> Hello list,
+> 
+> i'm planning to create a couple of VMs with just 30GB of space while
+> using xfs as the main filesystem.
+> 
+> Now i alreay know that some of the VMs will grow up to 250GB while
+> resizing the block device and using xfs_growfs.
 
-On 2 August 2012 23:14, Stefan Ring <stefanrin@gmail.com> wrote:
-> On Wed, Aug 1, 2012 at 2:31 AM, Nathan Scott <nathans@debian.org> wrote:
->> Thanks to Chris Leick <c.leick@vollbio.de>, reported via Debian BTS as
->> bug #576257.
->
-> I wonder why anyone would even want that translated.
+Just use thin provisioning and make it 250GB to begin with. Thin
+provisioning mades filsystem grow/shrink pretty much redundant....
 
-I imagine it might be of some use for non-English speakers?
-Some kind soul has gone to the trouble of translating it (maybe for
-his mum? or Aunt Tillie?) and the infrastructure is there to support
-such translations, so I'm all for it.
+> Should i take care of that and format these disks with special parameters?
+> 
+> I've discovered that a 500GB volume has agcount=4 and 64000 blocks
+> of internal log - while a 300GB volume resized to 500GB has agcount
+> 7 ad only 40960 blocks of internal log.
 
-> ... and still I find it mentally disturbing to read through
-> the messages.
+I doubt you'll ever notice the difference.
 
-If you want mentally disturbing, you should try reading the code. :)
+> Is it a problem if this grow will happen in small portions (30GB =>
+> 50GB => 75GB => 100GB => ... 300GB)?
 
-> One random error I caught: Schlu=DFdialog -> Schlussdialog
-> "ausrangieren" for "discarding"? Hehe ;). Maybe rather "verwerfen"?
+Growing a filesystem by an order of magnitude is the limit of what
+I'd suggest is sane. Growing it by two orders of magnitude
+(espcially if you start with a 16 AG filesystem because of stripe
+alignment) is going to cause problems with the number of AGs and
+the subsequent freespace management scale issue....
 
-Please send a follow-up patch, thanks!
+Cheers,
 
-cheers.
-
---
-Nathan
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
