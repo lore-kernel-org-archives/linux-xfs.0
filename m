@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q75DnPH2217390 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 08:49:25 -0500
-Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id 1HsLd443iQo2QHWu for
-	<xfs@oss.sgi.com>; Sun, 05 Aug 2012 06:49:23 -0700 (PDT)
-From: Martin Steigerwald <Martin@lichtvoll.de>
-Subject: Re: xfs_growfs / planned resize / performance impact
-Date: Sun, 5 Aug 2012 15:49:22 +0200
-References: <5017E426.2040709@profihost.ag>
-	<201208051303.09337.Martin@lichtvoll.de>
-	<501E6872.6000503@hardwarefreak.com>
-	(sfid-20120805_153826_573731_00E594B5)
-In-Reply-To: <501E6872.6000503@hardwarefreak.com>
+	q75FsLHC234451 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 10:54:21 -0500
+Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
+	cuda.sgi.com with ESMTP id gmr3GN4AhJVchg53 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 05 Aug 2012 08:54:20 -0700 (PDT)
+Message-ID: <501E9734.8020905@profihost.ag>
+Date: Sun, 05 Aug 2012 17:54:28 +0200
+From: Stefan Priebe <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Message-Id: <201208051549.22830.Martin@lichtvoll.de>
+Subject: Re: xfs_growfs / planned resize / performance impact
+References: <5017E426.2040709@profihost.ag> <501B4D7E.1000303@sandeen.net>
+	<501B6B04.2090002@profihost.ag>
+	(sfid-20120803_140801_426027_0A33D973)
+	<201208051303.09337.Martin@lichtvoll.de>
+In-Reply-To: <201208051303.09337.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,50 +24,29 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>, Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Martin Steigerwald <Martin@lichtvoll.de>
+Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
 
-Am Sonntag, 5. August 2012 schrieb Stan Hoeppner:
-> On 8/5/2012 6:03 AM, Martin Steigerwald wrote:
-> > Well the default was 16 AGs for volumes < 2 TiB AFAIR. And it has
-> > been reduced to 4 for as I remember exactly performance reasons. Too
-> > many AGs on a single device can incur too much parallelity. Thats at
-> > least is what I have understood back then.
-> =
-
-> For striped md/RAID or LVM volumes mkfs.xfs will create 16 AGs by
-> default because it reads the configuration and finds a striped volume.
-> The theory here is that more AGs offers better performance in the
-> average case on a striped volume.
-> =
-
-> With hardware RAID or a single drive, or any storage configuration for
-> which mkfs.xfs is unable to query the parameters, mkfs.xfs creates 4
-> AGs by default.  The 4 AG default has been with us for a very long
-> time.  It was never reduced.
-
-That does not match my memory, but I=B4d have to look it up. Maybe next =
-
-week.
-
-I am pretty sure mkfs.xfs on a single partition on a single harddisk upto =
-
-2 TiB used 16 AGs for quite some time and now uses 4 AGs since quite some =
-
-time already. I think I have noted the exact xfsprogs version where it was =
-
-changed in my training slides.
-
--- =
-
-Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
-GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+QW0gMDUuMDguMjAxMiAxMzowMywgc2NocmllYiBNYXJ0aW4gU3RlaWdlcndhbGQ6Cj4gQW0gRnJl
+aXRhZywgMy4gQXVndXN0IDIwMTIgc2NocmllYiBTdGVmYW4gUHJpZWJlIC0gUHJvZmlob3N0IEFH
+Ogo+IEJ1dCB0aGVuIHlvdSBkaWRuwrR0IGRlc2NyaWJlIHdoZXJlIHRob3NlIFZNIGRpc2tzIGFy
+ZSBsb2NhdGVkLiBJZiB0aGF0Cj4gbG9jYXRpb24gaGFzIG1hbnkgc3BpbmRsZXMgaXQgbWlnaHQg
+bm90IG1hdHRlciBhdCBhbGwgb3IgZXZlbiBpbXByb3ZlCj4gcGVyZm9ybWFuY2UuCjMwIGRpc2tz
+IHJhaWQgNTAgdmlhIExJTyBpU0NTSSBhbmQgTFZNLgoKPiBBbnl3YXksIEkgZG8gbm90IHNlZSBt
+dWNoIHNlbnNlIHRvIG1ha2UgdGhlbSAzMCBHaUIgd2hlbiB0aGV5IGNhbiBncm93IHRvCj4gNTAw
+IEdpQiDigJMgYXQgbGVhc3QgcHJvdmlkZWQgdGhhdCB5b3UgdXNlIHRoaW4gcHJvdmlzaW9uaW5n
+LiBDYXVzZQo+IHhmc19ncm93ZnMgYW5kIHJlc2l6aW5nIHRoZSBpbWFnZSB3aWxsIGxpa2VseSBi
+ZSBhIG1hbnVhbCBzdGVwIHdoaWxlIHRoaW4KPiBwcm92aXNpb25pbmcgZ29lcyBhdXRvbWF0aWNh
+bGx5IGFuZCBvbmx5IG5lZWRzIHRvIGJlIG1vbml0b3JlZC4KSSBkbyBub3QgdXNlIHRoaW4gcHJv
+dmlzaW9uaW5nIGFzIGRtIHRoaW4gaXMgbm90IHByb2R1Y3Rpb24gcmVhZHkgaXNuJ3QgaXQ/Cgo+
+IFRoYXQgbWFudWFsIHN0ZXAgbWFrZXMgc2Vuc2UgdG91Z2ggaWYgeW91IHdhbnQgdG8gZ3VhcmVu
+dGVlIGFsbCB0aGUgc3BhY2UKPiB0aGF0cyB2aXNpYmx5IGluIGRmIG91dHB1dCBpcyByZWFsbHkg
+cGh5c2ljYWxseSBhdmFpbGFibGUsIHdpdGhvdXQKPiBwcm92aWRpbmcgZm9yIHggdGltZXMgNTAw
+IEdpQiBpbml0aWFsbHkuCk9oIGkgY2FuIGVhc2lseSBhdXRvbWF0ZSB0aGUgd2hvbGUgcmVzaXpp
+bmcgc3R1ZmYuCgpTdGVmYW4KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dp
+LmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
