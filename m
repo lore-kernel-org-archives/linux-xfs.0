@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q755kgJD137431 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 00:46:42 -0500
-Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
-	cuda.sgi.com with ESMTP id VIPK5aYHzIWrdsGB (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 04 Aug 2012 22:46:39 -0700 (PDT)
-References: <5017E426.2040709@profihost.ag> <20120804224336.GS2877@dastard>
-In-Reply-To: <20120804224336.GS2877@dastard>
-Mime-Version: 1.0 (1.0)
-Message-Id: <C4E0639A-87DE-4D38-8097-9B71D0947ABE@profihost.ag>
-From: Stefan Priebe <s.priebe@profihost.ag>
+	q75B3EEF194641 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 06:03:14 -0500
+Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
+	cuda.sgi.com with ESMTP id XCJiWnWL5FSfBtdS for
+	<xfs@oss.sgi.com>; Sun, 05 Aug 2012 04:03:10 -0700 (PDT)
+From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: xfs_growfs / planned resize / performance impact
-Date: Sun, 5 Aug 2012 07:46:33 +0200
+Date: Sun, 5 Aug 2012 13:03:09 +0200
+References: <5017E426.2040709@profihost.ag> <501B4D7E.1000303@sandeen.net>
+	<501B6B04.2090002@profihost.ag>
+	(sfid-20120803_140801_426027_0A33D973)
+In-Reply-To: <501B6B04.2090002@profihost.ag>
+MIME-Version: 1.0
+Message-Id: <201208051303.09337.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,111 +22,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3385456761802703068=="
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
+Cc: Eric Sandeen <sandeen@sandeen.net>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-
---===============3385456761802703068==
-Content-Transfer-Encoding: 7bit
-Content-Type: multipart/alternative;
-	boundary=Apple-Mail-3FC41BFA-C889-4588-9DF4-F1334EB3CD1B
-
-
---Apple-Mail-3FC41BFA-C889-4588-9DF4-F1334EB3CD1B
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
-
-Am 05.08.2012 um 00:43 schrieb Dave Chinner <david@fromorbit.com>:
-
-> On Tue, Jul 31, 2012 at 03:56:54PM +0200, Stefan Priebe - Profihost AG wro=
-te:
->> Hello list,
->>=20
->> i'm planning to create a couple of VMs with just 30GB of space while
->> using xfs as the main filesystem.
->>=20
->> Now i alreay know that some of the VMs will grow up to 250GB while
->> resizing the block device and using xfs_growfs.
->=20
-> Just use thin provisioning and make it 250GB to begin with. Thin
-> provisioning mades filsystem grow/shrink pretty much redundant....
-
-But dm thin isn't stable isn't it? Does xfs reallocate used parts of the blo=
-ck
-Device before using new parts? Otherwise deleting and recreating files will r=
-esult in full used space pretty fast.
-
->> Is it a problem if this grow will happen in small portions (30GB =3D>
->> 50GB =3D> 75GB =3D> 100GB =3D> ... 300GB)?
->=20
-> Growing a filesystem by an order of magnitude is the limit of what
-> I'd suggest is sane. Growing it by two orders of magnitude
-> (espcially if you start with a 16 AG filesystem because of stripe
-> alignment) is going to cause problems with the number of AGs and
-> the subsequent freespace management scale issue....
-I would start with ag=3D4 and end up in ag 48 in my tests.
-
-> Growing it by two orders of magnitude
-what does that mean? (sorry no native speaker)
-
-Thanks!
-
-Stefan=
-
---Apple-Mail-3FC41BFA-C889-4588-9DF4-F1334EB3CD1B
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/html;
-	charset=utf-8
-
-<html><head></head><body bgcolor=3D"#FFFFFF"><div>Am 05.08.2012 um 00:43 sch=
-rieb Dave Chinner &lt;<a href=3D"mailto:david@fromorbit.com">david@fromorbit=
-.com</a>&gt;:<br><br></div><div></div><blockquote type=3D"cite"><div><span>O=
-n Tue, Jul 31, 2012 at 03:56:54PM +0200, Stefan Priebe - Profihost AG wrote:=
-</span><br><blockquote type=3D"cite"><span>Hello list,</span><br></blockquot=
-e><blockquote type=3D"cite"><span></span><br></blockquote><blockquote type=3D=
-"cite"><span>i'm planning to create a couple of VMs with just 30GB of space w=
-hile</span><br></blockquote><blockquote type=3D"cite"><span>using xfs as the=
- main filesystem.</span><br></blockquote><blockquote type=3D"cite"><span></s=
-pan><br></blockquote><blockquote type=3D"cite"><span>Now i alreay know that s=
-ome of the VMs will grow up to 250GB while</span><br></blockquote><blockquot=
-e type=3D"cite"><span>resizing the block device and using xfs_growfs.</span>=
-<br></blockquote><span></span><br><span>Just use thin provisioning and make i=
-t 250GB to begin with. Thin</span><br><span>provisioning mades filsystem gro=
-w/shrink pretty much redundant....</span><br></div></blockquote><div><br></d=
-iv><div>But dm thin isn't stable isn't it? Does xfs reallocate used parts of=
- the block</div><div>Device before using new parts? Otherwise deleting and r=
-ecreating files will result in full used space pretty fast.</div><br><blockq=
-uote type=3D"cite"><div><span></span><blockquote type=3D"cite"><span>Is it a=
- problem if this grow will happen in small portions (30GB =3D&gt;</span><br>=
-</blockquote><blockquote type=3D"cite"><span>50GB =3D&gt; 75GB =3D&gt; 100GB=
- =3D&gt; ... 300GB)?</span><br></blockquote><span></span><br><span>Growing a=
- filesystem by an order of magnitude is the limit of what</span><br><span>I'=
-d suggest is sane. Growing it by two orders of magnitude</span><br><span>(es=
-pcially if you start with a 16 AG filesystem because of stripe</span><br><sp=
-an>alignment) is going to cause problems with the number of AGs and</span><b=
-r><span>the subsequent freespace management scale issue....</span><br></div>=
-</blockquote>I would start with ag=3D4 and end up in ag 48 in my tests.<div>=
-<br></div><div><blockquote type=3D"cite"><div><font class=3D"Apple-style-spa=
-n" color=3D"#000000">Growing it by two orders of magnitude</font></div></blo=
-ckquote>what does that mean? (sorry no native speaker)</div><div><br></div><=
-div>Thanks!<br><br><div>Stefan</div></div></body></html>=
-
---Apple-Mail-3FC41BFA-C889-4588-9DF4-F1334EB3CD1B--
-
-
---===============3385456761802703068==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3385456761802703068==--
+QW0gRnJlaXRhZywgMy4gQXVndXN0IDIwMTIgc2NocmllYiBTdGVmYW4gUHJpZWJlIC0gUHJvZmlo
+b3N0IEFHOgo+IEFtIDAzLjA4LjIwMTIgMDY6MDMsIHNjaHJpZWIgRXJpYyBTYW5kZWVuOgo+ID4g
+T24gNy8zMS8xMiA4OjU2IEFNLCBTdGVmYW4gUHJpZWJlIC0gUHJvZmlob3N0IEFHIHdyb3RlOgo+
+ID4+IEhlbGxvIGxpc3QsCj4gPj4gCj4gPj4gaSdtIHBsYW5uaW5nIHRvIGNyZWF0ZSBhIGNvdXBs
+ZSBvZiBWTXMgd2l0aCBqdXN0IDMwR0Igb2Ygc3BhY2Ugd2hpbGUKPiA+PiB1c2luZyB4ZnMgYXMg
+dGhlIG1haW4gZmlsZXN5c3RlbS4KPiA+PiAKPiA+PiBOb3cgaSBhbHJlYXkga25vdyB0aGF0IHNv
+bWUgb2YgdGhlIFZNcyB3aWxsIGdyb3cgdXAgdG8gMjUwR0Igd2hpbGUKPiA+PiByZXNpemluZyB0
+aGUgYmxvY2sgZGV2aWNlIGFuZCB1c2luZyB4ZnNfZ3Jvd2ZzLgo+ID4+IAo+ID4+IFNob3VsZCBp
+IHRha2UgY2FyZSBvZiB0aGF0IGFuZCBmb3JtYXQgdGhlc2UgZGlza3Mgd2l0aCBzcGVjaWFsCj4g
+Pj4gcGFyYW1ldGVycz8KPiA+PiAKPiA+PiBJJ3ZlIGRpc2NvdmVyZWQgdGhhdCBhIDUwMEdCIHZv
+bHVtZSBoYXMgYWdjb3VudD00IGFuZCA2NDAwMCBibG9ja3MKPiA+PiBvZiBpbnRlcm5hbCBsb2cg
+LSB3aGlsZSBhIDMwMEdCIHZvbHVtZSByZXNpemVkIHRvIDUwMEdCIGhhcyBhZ2NvdW50Cj4gPj4g
+NyBhZCBvbmx5IDQwOTYwIGJsb2NrcyBvZiBpbnRlcm5hbCBsb2cuCj4gPj4gCj4gPj4gSXMgaXQg
+YSBwcm9ibGVtIGlmIHRoaXMgZ3JvdyB3aWxsIGhhcHBlbiBpbiBzbWFsbCBwb3J0aW9ucyAoMzBH
+QiA9Pgo+ID4+IDUwR0IgPT4gNzVHQiA9PiAxMDBHQiA9PiAuLi4gMzAwR0IpPwo+ID4gCj4gPiBU
+aGlzIGluY3JlbWVudGFsIHBhcnQgZG9lc24ndCBtYXR0ZXIgYSBiaXQuICBUaGUgZmlyc3QgbWtm
+cyB3aWxsCj4gPiBjaG9vc2UgdGhlIEFHIGNvdW50ICYgc2l6ZSBhY2NvcmRpbmcgdG8gZGVmYXVs
+dHM7Cj4gPiAKPiAgPiBmdXJ0aGVyIGdyb3d0aCBhZnRlciB0aGlzIHdpbGwgYWRkIG5ldyAocG9z
+c2libHkgcGFydGlhbCkgQUdzIG9mCj4gID4gdGhhdAo+IAo+IHByZS1jaG9zZW4gc2l6ZS4KPiAK
+PiBPSyB0aGFua3MgZm9yIHlvdXIgcmVwbHkuIEJ1dCBkb2VzIHRoaXMgaW5mbHVlbmNlIHBlcmZv
+cm1hbmNlPyBTaG91bGQgaQo+IHBlcmhhcHMgc3RhcnQgY3JlYXRpbmcgdGhlIDMwR0Igd2l0aCBh
+Z2NvdW50IDEgc28gdGhhdCB3aGlsZSByYWlzaW5nCj4gdGhlIGRpc2sgaSBkb24ndCBlbmQgdXAg
+d2l0aCBzdWNoIGEgaGlnaCBhZ2NvdW50IHZhbHVlPyBEb2VzIGl0IG1ha2UKPiBzZW5zZSB0byBj
+cmVhdGUgYSBiaWdnZXIgaW50ZXJuYWwgbG9nIGZyb20gaGUgYmVnaW5uaW5nPwoKV2VsbCB0aGUg
+ZGVmYXVsdCB3YXMgMTYgQUdzIGZvciB2b2x1bWVzIDwgMiBUaUIgQUZBSVIuIEFuZCBpdCBoYXMg
+YmVlbiAKcmVkdWNlZCB0byA0IGZvciBhcyBJIHJlbWVtYmVyIGV4YWN0bHkgcGVyZm9ybWFuY2Ug
+cmVhc29ucy4gVG9vIG1hbnkgQUdzIApvbiBhIHNpbmdsZSBkZXZpY2UgY2FuIGluY3VyIHRvbyBt
+dWNoIHBhcmFsbGVsaXR5LiBUaGF0cyBhdCBsZWFzdCBpcyB3aGF0IApJIGhhdmUgdW5kZXJzdG9v
+ZCBiYWNrIHRoZW4uCgpCdXQgdGhlbiB5b3UgZGlkbsK0dCBkZXNjcmliZSB3aGVyZSB0aG9zZSBW
+TSBkaXNrcyBhcmUgbG9jYXRlZC4gSWYgdGhhdCAKbG9jYXRpb24gaGFzIG1hbnkgc3BpbmRsZXMg
+aXQgbWlnaHQgbm90IG1hdHRlciBhdCBhbGwgb3IgZXZlbiBpbXByb3ZlIApwZXJmb3JtYW5jZS4K
+CkFueXdheSwgSSBkbyBub3Qgc2VlIG11Y2ggc2Vuc2UgdG8gbWFrZSB0aGVtIDMwIEdpQiB3aGVu
+IHRoZXkgY2FuIGdyb3cgdG8gCjUwMCBHaUIg4oCTIGF0IGxlYXN0IHByb3ZpZGVkIHRoYXQgeW91
+IHVzZSB0aGluIHByb3Zpc2lvbmluZy4gQ2F1c2UgCnhmc19ncm93ZnMgYW5kIHJlc2l6aW5nIHRo
+ZSBpbWFnZSB3aWxsIGxpa2VseSBiZSBhIG1hbnVhbCBzdGVwIHdoaWxlIHRoaW4gCnByb3Zpc2lv
+bmluZyBnb2VzIGF1dG9tYXRpY2FsbHkgYW5kIG9ubHkgbmVlZHMgdG8gYmUgbW9uaXRvcmVkLgoK
+VGhhdCBtYW51YWwgc3RlcCBtYWtlcyBzZW5zZSB0b3VnaCBpZiB5b3Ugd2FudCB0byBndWFyZW50
+ZWUgYWxsIHRoZSBzcGFjZSAKdGhhdHMgdmlzaWJseSBpbiBkZiBvdXRwdXQgaXMgcmVhbGx5IHBo
+eXNpY2FsbHkgYXZhaWxhYmxlLCB3aXRob3V0IApwcm92aWRpbmcgZm9yIHggdGltZXMgNTAwIEdp
+QiBpbml0aWFsbHkuCgpBcyB5b3Ugc2VlIG11Y2ggZ3Vlc3N3b3JrIGluIGhlcmUsIGNhdXNlIHRo
+ZSBkYXRhIHlvdSBwcm92aWRlZCB3YXMgbm90IAplbm91Z2ggZm9yIGFueSBjbGVhciByZWNvbW1l
+bmRhdGlvbi4KCi0tIApNYXJ0aW4gJ0hlbGlvcycgU3RlaWdlcndhbGQgLSBodHRwOi8vd3d3Lkxp
+Y2h0dm9sbC5kZQpHUEc6IDAzQjAgMEQ2QyAwMDQwIDA3MTAgNEFGQSAgQjgyRiA5OTFCIEVBQUMg
+QTU5OSA4NEM3CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
+bG1hbi9saXN0aW5mby94ZnMK
