@@ -1,22 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q75KQ7iv002896 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 15:26:08 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id LyTwVzvfE1Un1xpw
-	for <xfs@oss.sgi.com>; Sun, 05 Aug 2012 13:26:06 -0700 (PDT)
-Message-ID: <501ED6E0.802@hardwarefreak.com>
-Date: Sun, 05 Aug 2012 15:26:08 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
-MIME-Version: 1.0
+	q75KvXq9006389 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 15:57:34 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	NIVS3jejaKBQwQSA for <xfs@oss.sgi.com>;
+	Sun, 05 Aug 2012 13:57:32 -0700 (PDT)
+Date: Mon, 6 Aug 2012 06:57:28 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: xfs_growfs / planned resize / performance impact
-References: <5017E426.2040709@profihost.ag>
-	<201208051303.09337.Martin@lichtvoll.de>
-	<501E6872.6000503@hardwarefreak.com>
-	(sfid-20120805_153826_573731_00E594B5)
-	<201208051549.22830.Martin@lichtvoll.de>
-In-Reply-To: <201208051549.22830.Martin@lichtvoll.de>
-Reply-To: stan@hardwarefreak.com
+Message-ID: <20120805205728.GT2877@dastard>
+References: <5017E426.2040709@profihost.ag> <20120804224336.GS2877@dastard>
+	<C4E0639A-87DE-4D38-8097-9B71D0947ABE@profihost.ag>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <C4E0639A-87DE-4D38-8097-9B71D0947ABE@profihost.ag>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,64 +23,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Steigerwald <Martin@lichtvoll.de>
-Cc: xfs@oss.sgi.com, Eric Sandeen <sandeen@sandeen.net>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Stefan Priebe <s.priebe@profihost.ag>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 8/5/2012 8:49 AM, Martin Steigerwald wrote:
-> Am Sonntag, 5. August 2012 schrieb Stan Hoeppner:
->> On 8/5/2012 6:03 AM, Martin Steigerwald wrote:
->>> Well the default was 16 AGs for volumes < 2 TiB AFAIR. And it has
->>> been reduced to 4 for as I remember exactly performance reasons. Too
->>> many AGs on a single device can incur too much parallelity. Thats at
->>> least is what I have understood back then.
->>
->> For striped md/RAID or LVM volumes mkfs.xfs will create 16 AGs by
->> default because it reads the configuration and finds a striped volume.
->> The theory here is that more AGs offers better performance in the
->> average case on a striped volume.
->>
->> With hardware RAID or a single drive, or any storage configuration for
->> which mkfs.xfs is unable to query the parameters, mkfs.xfs creates 4
->> AGs by default.  The 4 AG default has been with us for a very long
->> time.  It was never reduced.
-> =
+On Sun, Aug 05, 2012 at 07:46:33AM +0200, Stefan Priebe wrote:
+> Am 05.08.2012 um 00:43 schrieb Dave Chinner <david@fromorbit.com>:
+> 
+> > On Tue, Jul 31, 2012 at 03:56:54PM +0200, Stefan Priebe - Profihost AG wrote:
+> >> Hello list,
+> >> 
+> >> i'm planning to create a couple of VMs with just 30GB of space while
+> >> using xfs as the main filesystem.
+> >> 
+> >> Now i alreay know that some of the VMs will grow up to 250GB while
+> >> resizing the block device and using xfs_growfs.
+> > 
+> > Just use thin provisioning and make it 250GB to begin with. Thin
+> > provisioning mades filsystem grow/shrink pretty much redundant....
+> 
+> But dm thin isn't stable isn't it?
 
-> That does not match my memory, but I=B4d have to look it up. Maybe next =
+AFAIK, It's mostly stable.
 
-> week.
-> =
+> Does xfs reallocate used parts of the block
+> Device before using new parts?
 
-> I am pretty sure mkfs.xfs on a single partition on a single harddisk upto =
+Sometimes. Depends on workload, locality of reference,  patterns of
+freeing and allocation, etc.
 
-> 2 TiB used 16 AGs for quite some time and now uses 4 AGs since quite some =
+> Otherwise deleting and recreating files will result in full used space pretty fast.
 
-> time already. I think I have noted the exact xfsprogs version where it wa=
-s =
+fstrim. dm-thinp supports discard commands just fine.
 
-> changed in my training slides.
+Cheers,
 
->From 'man mkfs.xfs' of xfsprogs 3.1.4 (probably not the latest)
-
-"The data section of the filesystem is divided into _value_ allocation
-groups (default value is scaled automatically based on the underlying
-device size)."
-
-It's not stated in man but the minimum is 4 AGs, unless that has changed
-in the last couple of years.  This is what I was referring to previously
-when I stated 4 AGs is the default.
-
-What you likely did was format a 2TB device and saw 16 AGs due to the
-automatic scaling, then shortly thereafter formatted a much smaller
-device and saw the default minimum 4 AGs.  Assuming agcount was
-statically defined, you assumed the default value had been decreased.
-
--- =
-
-Stan
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
