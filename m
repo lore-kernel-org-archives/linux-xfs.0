@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q75B3EEF194641 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 06:03:14 -0500
+	q75B6xaw195460 for <xfs@oss.sgi.com>; Sun, 5 Aug 2012 06:06:59 -0500
 Received: from mail.lichtvoll.de (mondschein.lichtvoll.de [194.150.191.11]) by
-	cuda.sgi.com with ESMTP id XCJiWnWL5FSfBtdS for
-	<xfs@oss.sgi.com>; Sun, 05 Aug 2012 04:03:10 -0700 (PDT)
+	cuda.sgi.com with ESMTP id KdousH1z6UI1aGkV for
+	<xfs@oss.sgi.com>; Sun, 05 Aug 2012 04:06:58 -0700 (PDT)
 From: Martin Steigerwald <Martin@lichtvoll.de>
 Subject: Re: xfs_growfs / planned resize / performance impact
-Date: Sun, 5 Aug 2012 13:03:09 +0200
-References: <5017E426.2040709@profihost.ag> <501B4D7E.1000303@sandeen.net>
-	<501B6B04.2090002@profihost.ag>
-	(sfid-20120803_140801_426027_0A33D973)
-In-Reply-To: <501B6B04.2090002@profihost.ag>
+Date: Sun, 5 Aug 2012 13:06:56 +0200
+References: <5017E426.2040709@profihost.ag> <20120804224336.GS2877@dastard>
+	<C4E0639A-87DE-4D38-8097-9B71D0947ABE@profihost.ag>
+	(sfid-20120805_095300_150817_93C5E635)
+In-Reply-To: <C4E0639A-87DE-4D38-8097-9B71D0947ABE@profihost.ag>
 MIME-Version: 1.0
-Message-Id: <201208051303.09337.Martin@lichtvoll.de>
+Message-Id: <201208051306.56937.Martin@lichtvoll.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,56 +22,56 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
-Cc: Eric Sandeen <sandeen@sandeen.net>, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+Cc: Stefan Priebe <s.priebe@profihost.ag>
 
-QW0gRnJlaXRhZywgMy4gQXVndXN0IDIwMTIgc2NocmllYiBTdGVmYW4gUHJpZWJlIC0gUHJvZmlo
-b3N0IEFHOgo+IEFtIDAzLjA4LjIwMTIgMDY6MDMsIHNjaHJpZWIgRXJpYyBTYW5kZWVuOgo+ID4g
-T24gNy8zMS8xMiA4OjU2IEFNLCBTdGVmYW4gUHJpZWJlIC0gUHJvZmlob3N0IEFHIHdyb3RlOgo+
-ID4+IEhlbGxvIGxpc3QsCj4gPj4gCj4gPj4gaSdtIHBsYW5uaW5nIHRvIGNyZWF0ZSBhIGNvdXBs
-ZSBvZiBWTXMgd2l0aCBqdXN0IDMwR0Igb2Ygc3BhY2Ugd2hpbGUKPiA+PiB1c2luZyB4ZnMgYXMg
-dGhlIG1haW4gZmlsZXN5c3RlbS4KPiA+PiAKPiA+PiBOb3cgaSBhbHJlYXkga25vdyB0aGF0IHNv
-bWUgb2YgdGhlIFZNcyB3aWxsIGdyb3cgdXAgdG8gMjUwR0Igd2hpbGUKPiA+PiByZXNpemluZyB0
-aGUgYmxvY2sgZGV2aWNlIGFuZCB1c2luZyB4ZnNfZ3Jvd2ZzLgo+ID4+IAo+ID4+IFNob3VsZCBp
-IHRha2UgY2FyZSBvZiB0aGF0IGFuZCBmb3JtYXQgdGhlc2UgZGlza3Mgd2l0aCBzcGVjaWFsCj4g
-Pj4gcGFyYW1ldGVycz8KPiA+PiAKPiA+PiBJJ3ZlIGRpc2NvdmVyZWQgdGhhdCBhIDUwMEdCIHZv
-bHVtZSBoYXMgYWdjb3VudD00IGFuZCA2NDAwMCBibG9ja3MKPiA+PiBvZiBpbnRlcm5hbCBsb2cg
-LSB3aGlsZSBhIDMwMEdCIHZvbHVtZSByZXNpemVkIHRvIDUwMEdCIGhhcyBhZ2NvdW50Cj4gPj4g
-NyBhZCBvbmx5IDQwOTYwIGJsb2NrcyBvZiBpbnRlcm5hbCBsb2cuCj4gPj4gCj4gPj4gSXMgaXQg
-YSBwcm9ibGVtIGlmIHRoaXMgZ3JvdyB3aWxsIGhhcHBlbiBpbiBzbWFsbCBwb3J0aW9ucyAoMzBH
-QiA9Pgo+ID4+IDUwR0IgPT4gNzVHQiA9PiAxMDBHQiA9PiAuLi4gMzAwR0IpPwo+ID4gCj4gPiBU
-aGlzIGluY3JlbWVudGFsIHBhcnQgZG9lc24ndCBtYXR0ZXIgYSBiaXQuICBUaGUgZmlyc3QgbWtm
-cyB3aWxsCj4gPiBjaG9vc2UgdGhlIEFHIGNvdW50ICYgc2l6ZSBhY2NvcmRpbmcgdG8gZGVmYXVs
-dHM7Cj4gPiAKPiAgPiBmdXJ0aGVyIGdyb3d0aCBhZnRlciB0aGlzIHdpbGwgYWRkIG5ldyAocG9z
-c2libHkgcGFydGlhbCkgQUdzIG9mCj4gID4gdGhhdAo+IAo+IHByZS1jaG9zZW4gc2l6ZS4KPiAK
-PiBPSyB0aGFua3MgZm9yIHlvdXIgcmVwbHkuIEJ1dCBkb2VzIHRoaXMgaW5mbHVlbmNlIHBlcmZv
-cm1hbmNlPyBTaG91bGQgaQo+IHBlcmhhcHMgc3RhcnQgY3JlYXRpbmcgdGhlIDMwR0Igd2l0aCBh
-Z2NvdW50IDEgc28gdGhhdCB3aGlsZSByYWlzaW5nCj4gdGhlIGRpc2sgaSBkb24ndCBlbmQgdXAg
-d2l0aCBzdWNoIGEgaGlnaCBhZ2NvdW50IHZhbHVlPyBEb2VzIGl0IG1ha2UKPiBzZW5zZSB0byBj
-cmVhdGUgYSBiaWdnZXIgaW50ZXJuYWwgbG9nIGZyb20gaGUgYmVnaW5uaW5nPwoKV2VsbCB0aGUg
-ZGVmYXVsdCB3YXMgMTYgQUdzIGZvciB2b2x1bWVzIDwgMiBUaUIgQUZBSVIuIEFuZCBpdCBoYXMg
-YmVlbiAKcmVkdWNlZCB0byA0IGZvciBhcyBJIHJlbWVtYmVyIGV4YWN0bHkgcGVyZm9ybWFuY2Ug
-cmVhc29ucy4gVG9vIG1hbnkgQUdzIApvbiBhIHNpbmdsZSBkZXZpY2UgY2FuIGluY3VyIHRvbyBt
-dWNoIHBhcmFsbGVsaXR5LiBUaGF0cyBhdCBsZWFzdCBpcyB3aGF0IApJIGhhdmUgdW5kZXJzdG9v
-ZCBiYWNrIHRoZW4uCgpCdXQgdGhlbiB5b3UgZGlkbsK0dCBkZXNjcmliZSB3aGVyZSB0aG9zZSBW
-TSBkaXNrcyBhcmUgbG9jYXRlZC4gSWYgdGhhdCAKbG9jYXRpb24gaGFzIG1hbnkgc3BpbmRsZXMg
-aXQgbWlnaHQgbm90IG1hdHRlciBhdCBhbGwgb3IgZXZlbiBpbXByb3ZlIApwZXJmb3JtYW5jZS4K
-CkFueXdheSwgSSBkbyBub3Qgc2VlIG11Y2ggc2Vuc2UgdG8gbWFrZSB0aGVtIDMwIEdpQiB3aGVu
-IHRoZXkgY2FuIGdyb3cgdG8gCjUwMCBHaUIg4oCTIGF0IGxlYXN0IHByb3ZpZGVkIHRoYXQgeW91
-IHVzZSB0aGluIHByb3Zpc2lvbmluZy4gQ2F1c2UgCnhmc19ncm93ZnMgYW5kIHJlc2l6aW5nIHRo
-ZSBpbWFnZSB3aWxsIGxpa2VseSBiZSBhIG1hbnVhbCBzdGVwIHdoaWxlIHRoaW4gCnByb3Zpc2lv
-bmluZyBnb2VzIGF1dG9tYXRpY2FsbHkgYW5kIG9ubHkgbmVlZHMgdG8gYmUgbW9uaXRvcmVkLgoK
-VGhhdCBtYW51YWwgc3RlcCBtYWtlcyBzZW5zZSB0b3VnaCBpZiB5b3Ugd2FudCB0byBndWFyZW50
-ZWUgYWxsIHRoZSBzcGFjZSAKdGhhdHMgdmlzaWJseSBpbiBkZiBvdXRwdXQgaXMgcmVhbGx5IHBo
-eXNpY2FsbHkgYXZhaWxhYmxlLCB3aXRob3V0IApwcm92aWRpbmcgZm9yIHggdGltZXMgNTAwIEdp
-QiBpbml0aWFsbHkuCgpBcyB5b3Ugc2VlIG11Y2ggZ3Vlc3N3b3JrIGluIGhlcmUsIGNhdXNlIHRo
-ZSBkYXRhIHlvdSBwcm92aWRlZCB3YXMgbm90IAplbm91Z2ggZm9yIGFueSBjbGVhciByZWNvbW1l
-bmRhdGlvbi4KCi0tIApNYXJ0aW4gJ0hlbGlvcycgU3RlaWdlcndhbGQgLSBodHRwOi8vd3d3Lkxp
-Y2h0dm9sbC5kZQpHUEc6IDAzQjAgMEQ2QyAwMDQwIDA3MTAgNEFGQSAgQjgyRiA5OTFCIEVBQUMg
-QTU5OSA4NEM3CgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+Am Sonntag, 5. August 2012 schrieb Stefan Priebe:
+> Am 05.08.2012 um 00:43 schrieb Dave Chinner <david@fromorbit.com>:
+> > On Tue, Jul 31, 2012 at 03:56:54PM +0200, Stefan Priebe - Profihost AG 
+wrote:
+> >> Hello list,
+> >> 
+> >> i'm planning to create a couple of VMs with just 30GB of space while
+> >> using xfs as the main filesystem.
+> >> 
+> >> Now i alreay know that some of the VMs will grow up to 250GB while
+> >> resizing the block device and using xfs_growfs.
+> > 
+> > Just use thin provisioning and make it 250GB to begin with. Thin
+> > provisioning mades filsystem grow/shrink pretty much redundant....
+> 
+> But dm thin isn't stable isn't it? Does xfs reallocate used parts of
+> the block Device before using new parts? Otherwise deleting and
+> recreating files will result in full used space pretty fast.
+
+A periodic fstrim might help if the TRIM/DISCARD is supported in all 
+layers. And whether it is is a good question that depends on well where 
+your data is stored and what layers in the kernel are involved in storing 
+it and the kernel version of course.
+
+> >> Is it a problem if this grow will happen in small portions (30GB =>
+> >> 50GB => 75GB => 100GB => ... 300GB)?
+> > 
+> > Growing a filesystem by an order of magnitude is the limit of what
+> > I'd suggest is sane. Growing it by two orders of magnitude
+> > (espcially if you start with a 16 AG filesystem because of stripe
+> > alignment) is going to cause problems with the number of AGs and
+> > the subsequent freespace management scale issue....
+> 
+> I would start with ag=4 and end up in ag 48 in my tests.
+
+Thats IMHO quite much for upto 500 GiB. But it still depends on what kind 
+of storage this is located.
+
+-- 
+Martin 'Helios' Steigerwald - http://www.Lichtvoll.de
+GPG: 03B0 0D6C 0040 0710 4AFA  B82F 991B EAAC A599 84C7
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
