@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q78KNf0h062019 for <xfs@oss.sgi.com>; Wed, 8 Aug 2012 15:23:41 -0500
-Message-ID: <5022CAC9.4010209@sgi.com>
-Date: Wed, 08 Aug 2012 15:23:37 -0500
+	q78LLHFq069265 for <xfs@oss.sgi.com>; Wed, 8 Aug 2012 16:21:17 -0500
+Message-ID: <5022D848.9050103@sgi.com>
+Date: Wed, 08 Aug 2012 16:21:12 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v6 1/4] xfs: Remove type argument from
-	xfs_seek_data()/xfs_seek_hole()
-References: <501B6B62.7040303@oracle.com>
-In-Reply-To: <501B6B62.7040303@oracle.com>
+Subject: Re: [PATCH v6 3/4] xfs: xfs_seek_data() refinement with lookup data
+	buffer offset from page cache
+References: <501B6B7B.5040602@oracle.com>
+In-Reply-To: <501B6B7B.5040602@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,14 +25,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: jeff.liu@oracle.com
 Cc: xfs@oss.sgi.com
 
-On 08/03/12 01:10, Jeff Liu wrote:
-> The type is already indicated by the function naming explicitly, so this argument
-> can be omitted from those calls.
+On 08/03/12 01:11, Jeff Liu wrote:
+> Refine xfs_seek_data() to check up data buffer offset from page cache for unwritten extents.
+>
 >
 > Signed-off-by: Jie Liu<jeff.liu@oracle.com>
+>
 > ---
 
-Same as v5.
+Looks great.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
