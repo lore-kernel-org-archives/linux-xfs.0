@@ -1,16 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7A8RkWL038149 for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 03:27:46 -0500
-Message-ID: <5024C5F6.30706@oracle.com>
-Date: Fri, 10 Aug 2012 16:27:34 +0800
-From: Jie Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v6 2/4] xfs: Introduce a new function to find the desired
-	type of offset from page cache
-References: <501B6B6F.2090101@oracle.com> <5023CC01.3060201@sgi.com>
-	<5024C020.5080404@oracle.com>
-In-Reply-To: <5024C020.5080404@oracle.com>
+	q7AI21HU114399 for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 13:02:01 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 6sOkVUR7QLDTpS5f for
+	<xfs@oss.sgi.com>; Fri, 10 Aug 2012 11:02:00 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7AI1x1B004988
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 14:02:00 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH] xfs: fix race while discarding buffers [V4]
+Date: Fri, 10 Aug 2012 15:01:51 -0300
+Message-Id: <1344621711-8049-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,241 +22,156 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Carlos Maiolino <cmaiolino@redhat.com>
 
-On 08/10/12 16:02, Jie Liu wrote:
-> On 08/09/12 22:41, Mark Tinguely wrote:
->> On 08/03/12 01:10, Jeff Liu wrote:
->>> Introduce helpers to probe data or hole offset from page cache for
->>> unwritten extents.
->>>
->>> ---
->>>   fs/xfs/xfs_file.c |  213
->>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
->>>   1 files changed, 213 insertions(+), 0 deletions(-)
->>>
->>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
->>> index 98642cf..aff0c30 100644
->>> --- a/fs/xfs/xfs_file.c
->>> +++ b/fs/xfs/xfs_file.c
->>> @@ -36,6 +36,7 @@
->>>
->>
->>> + * keep the offset argument unchanged.
->>> + */
->>> +STATIC bool
->>> +xfs_lookup_buffer_offset(
->> I am fine with this helper routine.
->>
->>
->>> +
->>> +/*
->>> + * This routine is called to find out and return a data or hole offset
->>> + * from the page cache for unwritten extents according to the desired
->>> + * type for xfs_seek_data() or xfs_seek_hole().
->>> + *
->>> + * The argument offset is used to tell where we start to search from
->>> the
->>> + * page cache.  Map is used to figure out the end points of the
->>> range to
->>> + * lookup pages.
->>> + *
->>> + * Return true if the desired type of offset was found, and the
->>> argument
->>> + * offset is filled with that address.  Otherwise, return false and
->>> keep
->>> + * offset unchanged.
->>> + */
->>> +STATIC bool
->>> +xfs_find_get_desired_pgoff(
->>> +    struct inode        *inode,
->>> +    struct xfs_bmbt_irec    *map,
->>> +    unsigned int        type,
->>> +    loff_t            *offset)
->>> +{
->>> +    struct xfs_inode    *ip = XFS_I(inode);
->>> +    struct xfs_mount    *mp = ip->i_mount;
->>> +    struct pagevec        pvec;
->>> +    pgoff_t            index;
->>> +    pgoff_t            end;
->>> +    loff_t            endoff;
->>> +    loff_t            startoff = *offset;
->>> +    loff_t            lastoff = startoff;
->>> +    bool            found = false;
->>> +
->>> +    pagevec_init(&pvec, 0);
->>> +
->>> +    index = startoff>>  PAGE_CACHE_SHIFT;
->>> +    endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
->>> +    end = endoff>>  PAGE_CACHE_SHIFT;
->>> +    do {
->>> +        int        want;
->>> +        unsigned    nr_pages;
->>> +        unsigned int    i;
->>> +
->>> +        want = min_t(pgoff_t, end - index, (pgoff_t)PAGEVEC_SIZE);
->>> +        nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
->>> +                      want);
->>> +        /*
->>> +         * No page mapped into given range.  If we are searching holes
->>> +         * and if this is the first time we got into the loop, it means
->>> +         * that the given offset is landed in a hole, return it.
->>> +         *
->>> +         * If we have already stepped through some block buffers to
->>> find
->>> +         * holes but they all contains data.  In this case, the last
->>> +         * offset is already updated and pointed to the end of the last
->>> +         * mapped page, if it does not reach the endpoint to search,
->>> +         * that means there should be a hole between them.
->>> +         */
->>> +        if (nr_pages == 0) {
->>> +            /* Data search found nothing */
->>> +            if (type == DATA_OFF)
->>> +                break;
->>> +
->>> +            ASSERT(type == HOLE_OFF);
->>> +            if (lastoff == startoff || lastoff<  endoff) {
->>> +                found = true;
->>> +                *offset = lastoff;
->>> +            }
->>> +            break;
->>> +        }
->>> +
->>> +        /*
->>> +         * At lease we found one page.  If this is the first time we
->>> +         * step into the loop, and if the first page index offset is
->>> +         * greater than the given search offset, a hole was found.
->>> +         */
->>> +        if (type == HOLE_OFF&&  lastoff == startoff&&
->>> +            lastoff<  page_offset(pvec.pages[0])) {
->>> +            found = true;
->>> +            break;
->>> +        }
->> I played with the code and appreciate the trickiness of the startoff.
->> I this can be refined a bit more. see below.
->>
->>> +
->>> +        for (i = 0; i<  nr_pages; i++) {
->>> +            struct page    *page = pvec.pages[i];
->>> +            loff_t        b_offset;
->>> +
->>> +            /*
->>> +             * Page index is out of range, searching done.
->>> +             * If the current offset is not reaches the end
->>> +             * of the specified search range, there should
->>> +             * be a hole between them.
->>> +             */
->>> +            if (page->index>  end) {
->>> +                if (type == HOLE_OFF&&  lastoff<  endoff) {
->>> +                    *offset = lastoff;
->>> +                    found = true;
->>> +                }
->>> +                goto out;
->>> +            }
->> Before we take the lock, we can check to see if the page starts later
->> than expected (a hole). The pre-loop start check can be removed and
->> something like the follow added:
->>
->>             /* Skip over this page if it precedes the start offset */
->>                         if (page_offset(page) + PAGE_SIZE < startoff)
->>                                 continue;
->>
->>                         if (type == HOLE_OFF && page_offset(page) >
->> lastoff) {
->>                                 *offset = lastoff;
->>                                 found = true;
->>                                 goto out;
->>                         }
->>
->> My experiment passes your newest, more extensive tests. I can give you
->> the
->> complete experiment patch if you want.
-> It's better to show me your code, this really optimize the logic a bit
-> than me.
->>
->>> +
->>> +            lock_page(page);
->>> +            /*
->>> +             * Page truncated or invalidated(page->mapping == NULL).
->>> +             * We can freely skip it and proceed to check the next
->>> +             * page.
->>> +             */
->>> +            if (unlikely(page->mapping != inode->i_mapping)) {
->>> +                unlock_page(page);
->>> +                continue;
->>> +            }
->>> +
->>> +            if (!page_has_buffers(page)) {
->>> +                unlock_page(page);
->>> +                continue;
->>> +            }
->> Would this be a hole condition? I suppose the next iteration of the
->> loop will figure this out.
-> This is a fuzzy point to me.  If there is no buffer heads associated
-> with a page, can we treat it as an invalid page like the mapping check
-> up above?
-In other words,  an unwritten extent have real block numbers on disk.
-Hence a valid page mapping to that exent should have BHs associated
-with, Am I right?
+While xfs_buftarg_shrink() is freeing buffers from the dispose list (filled with
+buffers from lru list), there is a possibility to have xfs_buf_stale() racing
+with it, and removing buffers from dispose list before xfs_buftarg_shrink() does
+it.
 
-Thanks,
--Jeff
->>> +
->>> +            found = xfs_lookup_buffer_offset(page,&b_offset, type);
->>> +            if (found) {
->>> +                /*
->>> +                 * The found offset may be less than the start
->>> +                 * point to search if this is the first time to
->>> +                 * come here.
->>> +                 */
->>> +                *offset = max_t(loff_t, startoff, b_offset);
->>> +                goto out;
->>> +            }
->>> +
->>> +            /*
->>> +             * We either searching data but nothing was found, or
->>> +             * searching hole but found a data buffer.  In either
->>> +             * case, probably the next page contains the desired
->>> +             * things, update the last offset to it so.
->>> +             */
->>> +            lastoff = page_offset(page) + PAGE_SIZE;
->>> +            unlock_page(page);
->>> +        }
->>> +
->>> +        /*
->>> +         * The number of returned pages less than our desired, search
->>> +         * done.  In this case, nothing was found for searching data,
->>> +         * but we found a hole behind the last offset.
->>> +         */
->>> +        if (nr_pages<  want) {
->>> +            if (type == HOLE_OFF) {
->>> +                *offset = lastoff;
->>> +                found = true;
->>> +            }
->>> +            break;
->>> +        }
->>> +
->>> +        index = pvec.pages[i - 1]->index + 1;
->>> +        pagevec_release(&pvec);
->>> +    } while (index<  end);
->>> +
->>> +out:
->>> +    pagevec_release(&pvec);
->>> +    return found;
->>> +}
->>> +
->>>   STATIC loff_t
->>>   xfs_seek_data(
->>>       struct file        *file,
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
+This happens because xfs_buftarg_shrink() handle the dispose list without
+locking and the test condition in xfs_buf_stale() checks for the buffer being in
+*any* list:
+
+if (!list_empty(&bp->b_lru)
+
+If the buffer happens to be on dispose list, this causes the buffer counter of
+lru list (btp->bt_lru_nr) to be decremented twice (once in xfs_buftarg_shrink()
+and another in xfs_buf_stale()) causing a wrong account usage of the lru list.
+
+This may cause xfs_buftarg_shrink() to return a wrong value to the memory
+shrinker shrink_slab(), and such account error may also cause an underflowed
+value to be returned; since the counter is lower than the current number of
+items in the lru list, a decrement may happen when the counter is 0, causing
+an underflow on the counter.
+
+The fix uses a new flag field (and a new buffer flag) to serialize buffer
+handling during the shrink process. The new flag field has been designed to use
+btp->bt_lru_lock/unlock instead of xfs_buf_lock/unlock mechanism.
+
+dchinner, sandeen, aquini and aris also deserve credits for this.
+
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_buf.c |  5 ++++-
+ fs/xfs/xfs_buf.h | 41 ++++++++++++++++++++++++-----------------
+ 2 files changed, 28 insertions(+), 18 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index d7a9dd7..933b793 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -96,6 +96,7 @@ xfs_buf_lru_add(
+ 		atomic_inc(&bp->b_hold);
+ 		list_add_tail(&bp->b_lru, &btp->bt_lru);
+ 		btp->bt_lru_nr++;
++		bp->b_lru_flags &= ~_XBF_LRU_DISPOSE;
+ 	}
+ 	spin_unlock(&btp->bt_lru_lock);
+ }
+@@ -154,7 +155,8 @@ xfs_buf_stale(
+ 		struct xfs_buftarg *btp = bp->b_target;
+ 
+ 		spin_lock(&btp->bt_lru_lock);
+-		if (!list_empty(&bp->b_lru)) {
++		if (!list_empty(&bp->b_lru) &&
++		    !(bp->b_lru_flags & _XBF_LRU_DISPOSE)) {
+ 			list_del_init(&bp->b_lru);
+ 			btp->bt_lru_nr--;
+ 			atomic_dec(&bp->b_hold);
+@@ -1501,6 +1503,7 @@ xfs_buftarg_shrink(
+ 		 */
+ 		list_move(&bp->b_lru, &dispose);
+ 		btp->bt_lru_nr--;
++		bp->b_lru_flags |= _XBF_LRU_DISPOSE;
+ 	}
+ 	spin_unlock(&btp->bt_lru_lock);
+ 
+diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+index d03b73b..7c0b6a0 100644
+--- a/fs/xfs/xfs_buf.h
++++ b/fs/xfs/xfs_buf.h
+@@ -38,27 +38,28 @@ typedef enum {
+ 	XBRW_ZERO = 3,			/* Zero target memory */
+ } xfs_buf_rw_t;
+ 
+-#define XBF_READ	(1 << 0) /* buffer intended for reading from device */
+-#define XBF_WRITE	(1 << 1) /* buffer intended for writing to device */
+-#define XBF_READ_AHEAD	(1 << 2) /* asynchronous read-ahead */
+-#define XBF_ASYNC	(1 << 4) /* initiator will not wait for completion */
+-#define XBF_DONE	(1 << 5) /* all pages in the buffer uptodate */
+-#define XBF_STALE	(1 << 6) /* buffer has been staled, do not find it */
++#define XBF_READ	 (1 << 0) /* buffer intended for reading from device */
++#define XBF_WRITE	 (1 << 1) /* buffer intended for writing to device */
++#define XBF_READ_AHEAD	 (1 << 2) /* asynchronous read-ahead */
++#define XBF_ASYNC	 (1 << 4) /* initiator will not wait for completion */
++#define XBF_DONE	 (1 << 5) /* all pages in the buffer uptodate */
++#define XBF_STALE	 (1 << 6) /* buffer has been staled, do not find it */
+ 
+ /* I/O hints for the BIO layer */
+-#define XBF_SYNCIO	(1 << 10)/* treat this buffer as synchronous I/O */
+-#define XBF_FUA		(1 << 11)/* force cache write through mode */
+-#define XBF_FLUSH	(1 << 12)/* flush the disk cache before a write */
++#define XBF_SYNCIO	 (1 << 10)/* treat this buffer as synchronous I/O */
++#define XBF_FUA		 (1 << 11)/* force cache write through mode */
++#define XBF_FLUSH	 (1 << 12)/* flush the disk cache before a write */
+ 
+ /* flags used only as arguments to access routines */
+-#define XBF_TRYLOCK	(1 << 16)/* lock requested, but do not wait */
+-#define XBF_UNMAPPED	(1 << 17)/* do not map the buffer */
++#define XBF_TRYLOCK	 (1 << 16)/* lock requested, but do not wait */
++#define XBF_UNMAPPED	 (1 << 17)/* do not map the buffer */
+ 
+ /* flags used only internally */
+-#define _XBF_PAGES	(1 << 20)/* backed by refcounted pages */
+-#define _XBF_KMEM	(1 << 21)/* backed by heap memory */
+-#define _XBF_DELWRI_Q	(1 << 22)/* buffer on a delwri queue */
+-#define _XBF_COMPOUND	(1 << 23)/* compound buffer */
++#define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
++#define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
++#define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
++#define _XBF_COMPOUND	 (1 << 23)/* compound buffer */
++#define _XBF_LRU_DISPOSE (1 << 24)/* buffer being discarded */
+ 
+ typedef unsigned int xfs_buf_flags_t;
+ 
+@@ -72,12 +73,13 @@ typedef unsigned int xfs_buf_flags_t;
+ 	{ XBF_SYNCIO,		"SYNCIO" }, \
+ 	{ XBF_FUA,		"FUA" }, \
+ 	{ XBF_FLUSH,		"FLUSH" }, \
+-	{ XBF_TRYLOCK,		"TRYLOCK" }, 	/* should never be set */\
++	{ XBF_TRYLOCK,		"TRYLOCK" },	/* should never be set */\
+ 	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+ 	{ _XBF_PAGES,		"PAGES" }, \
+ 	{ _XBF_KMEM,		"KMEM" }, \
+ 	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+-	{ _XBF_COMPOUND,	"COMPOUND" }
++	{ _XBF_COMPOUND,	"COMPOUND" }, \
++	{ _XBF_LRU_DISPOSE,	"LRU_DISPOSE" }
+ 
+ typedef struct xfs_buftarg {
+ 	dev_t			bt_dev;
+@@ -124,7 +126,12 @@ typedef struct xfs_buf {
+ 	xfs_buf_flags_t		b_flags;	/* status flags */
+ 	struct semaphore	b_sema;		/* semaphore for lockables */
+ 
++	/*
++	 * concurrent access to b_lru and b_lru_flags are protected by
++	 * bt_lru_lock and not by b_sema
++	 */
+ 	struct list_head	b_lru;		/* lru list */
++	xfs_buf_flags_t		b_lru_flags;	/* internal lru status flags */
+ 	wait_queue_head_t	b_waiters;	/* unpin waiters */
+ 	struct list_head	b_list;
+ 	struct xfs_perag	*b_pag;		/* contains rbtree root */
+-- 
+1.7.11.2
 
 _______________________________________________
 xfs mailing list
