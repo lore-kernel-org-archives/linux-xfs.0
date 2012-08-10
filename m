@@ -1,19 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7A8N6t8037570 for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 03:23:06 -0500
-Received: from mail-wg0-f41.google.com (mail-wg0-f41.google.com
-	[74.125.82.41]) by cuda.sgi.com with ESMTP id QuRCarHDpxEFAd59
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Fri, 10 Aug 2012 01:23:04 -0700 (PDT)
-Received: by wgbds1 with SMTP id ds1so1006504wgb.2
-	for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 01:23:03 -0700 (PDT)
+	q7A8RkWL038149 for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 03:27:46 -0500
+Message-ID: <5024C5F6.30706@oracle.com>
+Date: Fri, 10 Aug 2012 16:27:34 +0800
+From: Jie Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Date: Fri, 10 Aug 2012 10:23:03 +0200
-Message-ID: <CADcDJaR52zwL+aMaUuQTvbYx2d11LRmzdURE2Ok8z0tKsYTv8A@mail.gmail.com>
-Subject: xfs_repair - segemnation fault | git error
-From: Velimir Galic <veli.galic@gmail.com>
-Content-Type: multipart/mixed; boundary=f46d04428de88544fa04c6e50d78
+Subject: Re: [PATCH v6 2/4] xfs: Introduce a new function to find the desired
+	type of offset from page cache
+References: <501B6B6F.2090101@oracle.com> <5023CC01.3060201@sgi.com>
+	<5024C020.5080404@oracle.com>
+In-Reply-To: <5024C020.5080404@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,170 +19,243 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
---f46d04428de88544fa04c6e50d78
-Content-Type: multipart/alternative; boundary=f46d04428de88544eb04c6e50d76
+On 08/10/12 16:02, Jie Liu wrote:
+> On 08/09/12 22:41, Mark Tinguely wrote:
+>> On 08/03/12 01:10, Jeff Liu wrote:
+>>> Introduce helpers to probe data or hole offset from page cache for
+>>> unwritten extents.
+>>>
+>>> ---
+>>>   fs/xfs/xfs_file.c |  213
+>>> +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>>   1 files changed, 213 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+>>> index 98642cf..aff0c30 100644
+>>> --- a/fs/xfs/xfs_file.c
+>>> +++ b/fs/xfs/xfs_file.c
+>>> @@ -36,6 +36,7 @@
+>>>
+>>
+>>> + * keep the offset argument unchanged.
+>>> + */
+>>> +STATIC bool
+>>> +xfs_lookup_buffer_offset(
+>> I am fine with this helper routine.
+>>
+>>
+>>> +
+>>> +/*
+>>> + * This routine is called to find out and return a data or hole offset
+>>> + * from the page cache for unwritten extents according to the desired
+>>> + * type for xfs_seek_data() or xfs_seek_hole().
+>>> + *
+>>> + * The argument offset is used to tell where we start to search from
+>>> the
+>>> + * page cache.  Map is used to figure out the end points of the
+>>> range to
+>>> + * lookup pages.
+>>> + *
+>>> + * Return true if the desired type of offset was found, and the
+>>> argument
+>>> + * offset is filled with that address.  Otherwise, return false and
+>>> keep
+>>> + * offset unchanged.
+>>> + */
+>>> +STATIC bool
+>>> +xfs_find_get_desired_pgoff(
+>>> +    struct inode        *inode,
+>>> +    struct xfs_bmbt_irec    *map,
+>>> +    unsigned int        type,
+>>> +    loff_t            *offset)
+>>> +{
+>>> +    struct xfs_inode    *ip = XFS_I(inode);
+>>> +    struct xfs_mount    *mp = ip->i_mount;
+>>> +    struct pagevec        pvec;
+>>> +    pgoff_t            index;
+>>> +    pgoff_t            end;
+>>> +    loff_t            endoff;
+>>> +    loff_t            startoff = *offset;
+>>> +    loff_t            lastoff = startoff;
+>>> +    bool            found = false;
+>>> +
+>>> +    pagevec_init(&pvec, 0);
+>>> +
+>>> +    index = startoff>>  PAGE_CACHE_SHIFT;
+>>> +    endoff = XFS_FSB_TO_B(mp, map->br_startoff + map->br_blockcount);
+>>> +    end = endoff>>  PAGE_CACHE_SHIFT;
+>>> +    do {
+>>> +        int        want;
+>>> +        unsigned    nr_pages;
+>>> +        unsigned int    i;
+>>> +
+>>> +        want = min_t(pgoff_t, end - index, (pgoff_t)PAGEVEC_SIZE);
+>>> +        nr_pages = pagevec_lookup(&pvec, inode->i_mapping, index,
+>>> +                      want);
+>>> +        /*
+>>> +         * No page mapped into given range.  If we are searching holes
+>>> +         * and if this is the first time we got into the loop, it means
+>>> +         * that the given offset is landed in a hole, return it.
+>>> +         *
+>>> +         * If we have already stepped through some block buffers to
+>>> find
+>>> +         * holes but they all contains data.  In this case, the last
+>>> +         * offset is already updated and pointed to the end of the last
+>>> +         * mapped page, if it does not reach the endpoint to search,
+>>> +         * that means there should be a hole between them.
+>>> +         */
+>>> +        if (nr_pages == 0) {
+>>> +            /* Data search found nothing */
+>>> +            if (type == DATA_OFF)
+>>> +                break;
+>>> +
+>>> +            ASSERT(type == HOLE_OFF);
+>>> +            if (lastoff == startoff || lastoff<  endoff) {
+>>> +                found = true;
+>>> +                *offset = lastoff;
+>>> +            }
+>>> +            break;
+>>> +        }
+>>> +
+>>> +        /*
+>>> +         * At lease we found one page.  If this is the first time we
+>>> +         * step into the loop, and if the first page index offset is
+>>> +         * greater than the given search offset, a hole was found.
+>>> +         */
+>>> +        if (type == HOLE_OFF&&  lastoff == startoff&&
+>>> +            lastoff<  page_offset(pvec.pages[0])) {
+>>> +            found = true;
+>>> +            break;
+>>> +        }
+>> I played with the code and appreciate the trickiness of the startoff.
+>> I this can be refined a bit more. see below.
+>>
+>>> +
+>>> +        for (i = 0; i<  nr_pages; i++) {
+>>> +            struct page    *page = pvec.pages[i];
+>>> +            loff_t        b_offset;
+>>> +
+>>> +            /*
+>>> +             * Page index is out of range, searching done.
+>>> +             * If the current offset is not reaches the end
+>>> +             * of the specified search range, there should
+>>> +             * be a hole between them.
+>>> +             */
+>>> +            if (page->index>  end) {
+>>> +                if (type == HOLE_OFF&&  lastoff<  endoff) {
+>>> +                    *offset = lastoff;
+>>> +                    found = true;
+>>> +                }
+>>> +                goto out;
+>>> +            }
+>> Before we take the lock, we can check to see if the page starts later
+>> than expected (a hole). The pre-loop start check can be removed and
+>> something like the follow added:
+>>
+>>             /* Skip over this page if it precedes the start offset */
+>>                         if (page_offset(page) + PAGE_SIZE < startoff)
+>>                                 continue;
+>>
+>>                         if (type == HOLE_OFF && page_offset(page) >
+>> lastoff) {
+>>                                 *offset = lastoff;
+>>                                 found = true;
+>>                                 goto out;
+>>                         }
+>>
+>> My experiment passes your newest, more extensive tests. I can give you
+>> the
+>> complete experiment patch if you want.
+> It's better to show me your code, this really optimize the logic a bit
+> than me.
+>>
+>>> +
+>>> +            lock_page(page);
+>>> +            /*
+>>> +             * Page truncated or invalidated(page->mapping == NULL).
+>>> +             * We can freely skip it and proceed to check the next
+>>> +             * page.
+>>> +             */
+>>> +            if (unlikely(page->mapping != inode->i_mapping)) {
+>>> +                unlock_page(page);
+>>> +                continue;
+>>> +            }
+>>> +
+>>> +            if (!page_has_buffers(page)) {
+>>> +                unlock_page(page);
+>>> +                continue;
+>>> +            }
+>> Would this be a hole condition? I suppose the next iteration of the
+>> loop will figure this out.
+> This is a fuzzy point to me.  If there is no buffer heads associated
+> with a page, can we treat it as an invalid page like the mapping check
+> up above?
+In other words,  an unwritten extent have real block numbers on disk.
+Hence a valid page mapping to that exent should have BHs associated
+with, Am I right?
 
---f46d04428de88544eb04c6e50d76
-Content-Type: text/plain; charset=ISO-8859-1
-
-hi Guys,
-
-I hope you are able to help me, because i think that i
-tried everything that i know off to repair my raid after a disk failure.
-
-Systemspecs:
-
-   - HP N40L
-      - CPU: AMD Turion II @ 1,5GHZ
-      - 8GB ECC RAM
-      - Disks:
-         - 250GB | OS
-         - 4x2GB | RAID 5 | Softraid
-      - OS: Openmediavault @ 3.0.20 (last version)
-
-
-Problem:
-
-In my raid a disk was fault so mdadm kicked the disk out of the raid. I put
-a replacement in the box and started a resync of the raid and than
-is happened, a second disk got lost in the raid. The raidsync wasn't
-finished and now i'm fighting 3 weeks or more i don't no any more :-( to
-repair the file system.
-
-I tried a lot of different versions of xfs_repair (2.9.4, 2.9.8, 2.10.2,
-3.0.4, 3.1.2, 3.1.6, 3.1,8), but every precompiled version got an
-"segmentation fault" or hung at phase 3 with 100% cpu load for few day. I
-also tried different distros like ubuntu, debian, redhat, gentoo (yes, i'm
-a little bit desperate :-) )  Than i tried the git version and at first it
-looked good but than i got an another error but i don't understand what the
-problem is.
-
-tried options without any luck: xfs_repair -v -P | xfs_repair -v -P -m 6144
-| xfs_repair -v -P -L
-
-Metadump of the filesystem isn't possible at this moment, but i could
-bootup a live cd and give it a try with it. I'm pretty stuck and don't no
-what to do any more.
-
-
-with kind regards
-Veli
-
---f46d04428de88544eb04c6e50d76
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-hi Guys,<div><br></div><div>I hope you are able to help me, because i think=
- that i tried=A0everything=A0that i=A0know=A0off to repair my raid after a =
-disk=A0failure.</div><div><br></div><div>Systemspecs:</div><div><ul><li>HP =
-N40L</li>
-<ul><li>CPU: AMD Turion II @ 1,5GHZ</li><li>8GB ECC RAM</li><li>Disks:</li>=
-<ul><li>250GB | OS</li><li>4x2GB | RAID 5 | Softraid</li></ul><li>OS: Openm=
-ediavault @ 3.0.20 (last version)</li></ul></ul><div><br></div></div><div>
-Problem:</div><div><br></div><div>In my raid a disk was fault so mdadm kick=
-ed the disk out of the raid. I put a replacement in the box and started a r=
-esync of the raid and than is=A0happened, a second disk got lost in the rai=
-d. The raidsync wasn&#39;t finished and now i&#39;m fighting 3 weeks or mor=
-e i don&#39;t no any more :-( to repair the=A0file system.=A0</div>
-<div><br></div><div>I=A0tried a lot of different versions of xfs_repair (2.=
-9.4, 2.9.8, 2.10.2, 3.0.4, 3.1.2, 3.1.6, 3.1,8), but every precompiled vers=
-ion got an &quot;segmentation fault&quot; or hung at phase 3 with 100% cpu =
-load for few day. I also tried different distros like ubuntu, debian, redha=
-t, gentoo (yes, i&#39;m a=A0little=A0bit=A0desperate=A0:-) )=A0 Than i trie=
-d the git version and at first it looked good but than i got an another err=
-or but i don&#39;t understand what the problem is.</div>
-<div><br></div><div>tried options without any luck: xfs_repair -v -P | xfs_=
-repair -v -P -m 6144 | xfs_repair -v -P -L=A0</div><div><br></div><div>Meta=
-dump of the filesystem isn&#39;t possible at this moment, but i could bootu=
-p a live cd and give it a try with it. I&#39;m pretty stuck and don&#39;t n=
-o what to do any more.</div>
-<div><br></div><div><br></div><div>with kind regards</div><div>Veli</div><d=
-iv><br></div><div><br></div><div><br></div><div><br></div><div><br></div>
-
---f46d04428de88544eb04c6e50d76--
-
---f46d04428de88544fa04c6e50d78
-Content-Type: application/octet-stream; name="md127.metadump.err"
-Content-Disposition: attachment; filename="md127.metadump.err"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h5ozhx8e0
-
-cm9vdEBocGJveDp+IyB4ZnNfbWV0YWR1bXAgL2Rldi9tZDEyNyAvbWVkaWEvbG9jYWxoZGQvbWQx
-MjcubWV0YWR1bXAKKioqIGdsaWJjIGRldGVjdGVkICoqKiB4ZnNfZGI6IGRvdWJsZSBmcmVlIG9y
-IGNvcnJ1cHRpb24gKCFwcmV2KTogMHgwMDAwMDAwMDAxY2NiMDAwICoqKgo9PT09PT09IEJhY2t0
-cmFjZTogPT09PT09PT09Ci9saWIvbGliYy5zby42KCsweDcxYmQ2KVsweDdmNWUzNGI1NWJkNl0K
-L2xpYi9saWJjLnNvLjYoY2ZyZWUrMHg2YylbMHg3ZjVlMzRiNWE5NGNdCnhmc19kYlsweDQxYThl
-M10KeGZzX2RiWzB4NDFjM2VjXQp4ZnNfZGJbMHg0MWUyYmNdCnhmc19kYlsweDQxYzE1Ml0KeGZz
-X2RiWzB4NDFkZmQ0XQp4ZnNfZGJbMHg0MWMxNTJdCnhmc19kYlsweDQxZWVkYl0KeGZzX2RiWzB4
-NDE4ZDA4XQovbGliL2xpYmMuc28uNihfX2xpYmNfc3RhcnRfbWFpbisweGZkKVsweDdmNWUzNGIw
-MmM4ZF0KeGZzX2RiWzB4NDAyN2Q5XQo9PT09PT09IE1lbW9yeSBtYXA6ID09PT09PT09CjAwNDAw
-MDAwLTAwNDc1MDAwIHIteHAgMDAwMDAwMDAgMDg6NDEgMjMzOCAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAvdXNyL3NiaW4veGZzX2RiCjAwNjc1MDAwLTAwNjc2MDAwIHJ3LXAgMDAwNzUw
-MDAgMDg6NDEgMjMzOCAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAvdXNyL3NiaW4veGZz
-X2RiCjAwNjc2MDAwLTAwNjg5MDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAgMCAKMDFjODMwMDAtMDFm
-MWQwMDAgcnctcCAwMDAwMDAwMCAwMDowMCAwICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIFtoZWFwXQo3ZjVlMzAwMDAwMDAtN2Y1ZTMwMDIxMDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAg
-MCAKN2Y1ZTMwMDIxMDAwLTdmNWUzNDAwMDAwMCAtLS1wIDAwMDAwMDAwIDAwOjAwIDAgCjdmNWUz
-NDhjNzAwMC03ZjVlMzQ4ZGQwMDAgci14cCAwMDAwMDAwMCAwODo0MSAyMTEwNSAgICAgICAgICAg
-ICAgICAgICAgICAvbGliL2xpYmdjY19zLnNvLjEKN2Y1ZTM0OGRkMDAwLTdmNWUzNGFkYzAwMCAt
-LS1wIDAwMDE2MDAwIDA4OjQxIDIxMTA1ICAgICAgICAgICAgICAgICAgICAgIC9saWIvbGliZ2Nj
-X3Muc28uMQo3ZjVlMzRhZGMwMDAtN2Y1ZTM0YWRkMDAwIHJ3LXAgMDAwMTUwMDAgMDg6NDEgMjEx
-MDUgICAgICAgICAgICAgICAgICAgICAgL2xpYi9saWJnY2Nfcy5zby4xCjdmNWUzNGFlNDAwMC03
-ZjVlMzRjM2QwMDAgci14cCAwMDAwMDAwMCAwODo0MSAzMjIyICAgICAgICAgICAgICAgICAgICAg
-ICAvbGliL2xpYmMtMi4xMS4zLnNvCjdmNWUzNGMzZDAwMC03ZjVlMzRlM2MwMDAgLS0tcCAwMDE1
-OTAwMCAwODo0MSAzMjIyICAgICAgICAgICAgICAgICAgICAgICAvbGliL2xpYmMtMi4xMS4zLnNv
-CjdmNWUzNGUzYzAwMC03ZjVlMzRlNDAwMDAgci0tcCAwMDE1ODAwMCAwODo0MSAzMjIyICAgICAg
-ICAgICAgICAgICAgICAgICAvbGliL2xpYmMtMi4xMS4zLnNvCjdmNWUzNGU0MDAwMC03ZjVlMzRl
-NDEwMDAgcnctcCAwMDE1YzAwMCAwODo0MSAzMjIyICAgICAgICAgICAgICAgICAgICAgICAvbGli
-L2xpYmMtMi4xMS4zLnNvCjdmNWUzNGU0MTAwMC03ZjVlMzRlNDYwMDAgcnctcCAwMDAwMDAwMCAw
-MDowMCAwIAo3ZjVlMzRlNDYwMDAtN2Y1ZTM0ZTVkMDAwIHIteHAgMDAwMDAwMDAgMDg6NDEgMzIx
-NyAgICAgICAgICAgICAgICAgICAgICAgL2xpYi9saWJwdGhyZWFkLTIuMTEuMy5zbwo3ZjVlMzRl
-NWQwMDAtN2Y1ZTM1MDVjMDAwIC0tLXAgMDAwMTcwMDAgMDg6NDEgMzIxNyAgICAgICAgICAgICAg
-ICAgICAgICAgL2xpYi9saWJwdGhyZWFkLTIuMTEuMy5zbwo3ZjVlMzUwNWMwMDAtN2Y1ZTM1MDVk
-MDAwIHItLXAgMDAwMTYwMDAgMDg6NDEgMzIxNyAgICAgICAgICAgICAgICAgICAgICAgL2xpYi9s
-aWJwdGhyZWFkLTIuMTEuMy5zbwo3ZjVlMzUwNWQwMDAtN2Y1ZTM1MDVlMDAwIHJ3LXAgMDAwMTcw
-MDAgMDg6NDEgMzIxNyAgICAgICAgICAgICAgICAgICAgICAgL2xpYi9saWJwdGhyZWFkLTIuMTEu
-My5zbwo3ZjVlMzUwNWUwMDAtN2Y1ZTM1MDYyMDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAgMCAKN2Y1
-ZTM1MDYyMDAwLTdmNWUzNTA2OTAwMCByLXhwIDAwMDAwMDAwIDA4OjQxIDMyMTkgICAgICAgICAg
-ICAgICAgICAgICAgIC9saWIvbGlicnQtMi4xMS4zLnNvCjdmNWUzNTA2OTAwMC03ZjVlMzUyNjgw
-MDAgLS0tcCAwMDAwNzAwMCAwODo0MSAzMjE5ICAgICAgICAgICAgICAgICAgICAgICAvbGliL2xp
-YnJ0LTIuMTEuMy5zbwo3ZjVlMzUyNjgwMDAtN2Y1ZTM1MjY5MDAwIHItLXAgMDAwMDYwMDAgMDg6
-NDEgMzIxOSAgICAgICAgICAgICAgICAgICAgICAgL2xpYi9saWJydC0yLjExLjMuc28KN2Y1ZTM1
-MjY5MDAwLTdmNWUzNTI2YTAwMCBydy1wIDAwMDA3MDAwIDA4OjQxIDMyMTkgICAgICAgICAgICAg
-ICAgICAgICAgIC9saWIvbGlicnQtMi4xMS4zLnNvCjdmNWUzNTI2YTAwMC03ZjVlMzUyNmUwMDAg
-ci14cCAwMDAwMDAwMCAwODo0MSAyMTE5NSAgICAgICAgICAgICAgICAgICAgICAvbGliL2xpYnV1
-aWQuc28uMS4zLjAKN2Y1ZTM1MjZlMDAwLTdmNWUzNTQ2ZDAwMCAtLS1wIDAwMDA0MDAwIDA4OjQx
-IDIxMTk1ICAgICAgICAgICAgICAgICAgICAgIC9saWIvbGlidXVpZC5zby4xLjMuMAo3ZjVlMzU0
-NmQwMDAtN2Y1ZTM1NDZlMDAwIHJ3LXAgMDAwMDMwMDAgMDg6NDEgMjExOTUgICAgICAgICAgICAg
-ICAgICAgICAgL2xpYi9saWJ1dWlkLnNvLjEuMy4wCjdmNWUzNTQ2ZTAwMC03ZjVlMzU0OGMwMDAg
-ci14cCAwMDAwMDAwMCAwODo0MSAzMjE4ICAgICAgICAgICAgICAgICAgICAgICAvbGliL2xkLTIu
-MTEuMy5zbwo3ZjVlMzU0YzcwMDAtN2Y1ZTM1NTA5MDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAgMCAK
-N2Y1ZTM1NTA5MDAwLTdmNWUzNTY3ZTAwMCByLS1wIDAwMDAwMDAwIDA4OjQxIDIxMDQgICAgICAg
-ICAgICAgICAgICAgICAgIC91c3IvbGliL2xvY2FsZS9sb2NhbGUtYXJjaGl2ZQo3ZjVlMzU2N2Uw
-MDAtN2Y1ZTM1NjgyMDAwIHJ3LXAgMDAwMDAwMDAgMDA6MDAgMCAKN2Y1ZTM1Njg5MDAwLTdmNWUz
-NTY4YjAwMCBydy1wIDAwMDAwMDAwIDAwOjAwIDAgCjdmNWUzNTY4YjAwMC03ZjVlMzU2OGMwMDAg
-ci0tcCAwMDAxZDAwMCAwODo0MSAzMjE4ICAgICAgICAgICAgICAgICAgICAgICAvbGliL2xkLTIu
-MTEuMy5zbwo3ZjVlMzU2OGMwMDAtN2Y1ZTM1NjhkMDAwIHJ3LXAgMDAwMWUwMDAgMDg6NDEgMzIx
-OCAgICAgICAgICAgICAgICAgICAgICAgL2xpYi9sZC0yLjExLjMuc28KN2Y1ZTM1NjhkMDAwLTdm
-NWUzNTY4ZTAwMCBydy1wIDAwMDAwMDAwIDAwOjAwIDAgCjdmZmYzM2I1MjAwMC03ZmZmMzNiNzMw
-MDAgcnctcCAwMDAwMDAwMCAwMDowMCAwICAgICAgICAgICAgICAgICAgICAgICAgICBbc3RhY2td
-CjdmZmYzM2JmZjAwMC03ZmZmMzNjMDAwMDAgci14cCAwMDAwMDAwMCAwMDowMCAwICAgICAgICAg
-ICAgICAgICAgICAgICAgICBbdmRzb10KZmZmZmZmZmZmZjYwMDAwMC1mZmZmZmZmZmZmNjAxMDAw
-IHIteHAgMDAwMDAwMDAgMDA6MDAgMCAgICAgICAgICAgICAgICAgIFt2c3lzY2FsbF0KQWJvcnRl
-ZAo=
---f46d04428de88544fa04c6e50d78
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Thanks,
+-Jeff
+>>> +
+>>> +            found = xfs_lookup_buffer_offset(page,&b_offset, type);
+>>> +            if (found) {
+>>> +                /*
+>>> +                 * The found offset may be less than the start
+>>> +                 * point to search if this is the first time to
+>>> +                 * come here.
+>>> +                 */
+>>> +                *offset = max_t(loff_t, startoff, b_offset);
+>>> +                goto out;
+>>> +            }
+>>> +
+>>> +            /*
+>>> +             * We either searching data but nothing was found, or
+>>> +             * searching hole but found a data buffer.  In either
+>>> +             * case, probably the next page contains the desired
+>>> +             * things, update the last offset to it so.
+>>> +             */
+>>> +            lastoff = page_offset(page) + PAGE_SIZE;
+>>> +            unlock_page(page);
+>>> +        }
+>>> +
+>>> +        /*
+>>> +         * The number of returned pages less than our desired, search
+>>> +         * done.  In this case, nothing was found for searching data,
+>>> +         * but we found a hole behind the last offset.
+>>> +         */
+>>> +        if (nr_pages<  want) {
+>>> +            if (type == HOLE_OFF) {
+>>> +                *offset = lastoff;
+>>> +                found = true;
+>>> +            }
+>>> +            break;
+>>> +        }
+>>> +
+>>> +        index = pvec.pages[i - 1]->index + 1;
+>>> +        pagevec_release(&pvec);
+>>> +    } while (index<  end);
+>>> +
+>>> +out:
+>>> +    pagevec_release(&pvec);
+>>> +    return found;
+>>> +}
+>>> +
+>>>   STATIC loff_t
+>>>   xfs_seek_data(
+>>>       struct file        *file,
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---f46d04428de88544fa04c6e50d78--
