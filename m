@@ -1,17 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7BAvOI2219309 for <xfs@oss.sgi.com>; Sat, 11 Aug 2012 05:57:24 -0500
-Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
-	cuda.sgi.com with ESMTP id uwUnlOSaKnOCEnLD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 11 Aug 2012 03:57:22 -0700 (PDT)
-From: Michael Monnerie <michael.monnerie@is.it-management.at>
-Subject: Re: xfs_repair - segemnation fault | git error
-Date: Sat, 11 Aug 2012 12:57:21 +0200
-Message-ID: <1488479.ZDGdaNpFNb@saturn>
-In-Reply-To: <CADcDJaR52zwL+aMaUuQTvbYx2d11LRmzdURE2Ok8z0tKsYTv8A@mail.gmail.com>
-References: <CADcDJaR52zwL+aMaUuQTvbYx2d11LRmzdURE2Ok8z0tKsYTv8A@mail.gmail.com>
+	q7BExHHZ242777 for <xfs@oss.sgi.com>; Sat, 11 Aug 2012 09:59:17 -0500
+Received: from mx4.geneon.de (76.reverse.geneon.de [89.244.16.76]) by
+	cuda.sgi.com with ESMTP id 6DMM7kDEA2qlb0ct for
+	<xfs@oss.sgi.com>; Sat, 11 Aug 2012 07:59:15 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mx4.geneon.de (Postfix) with ESMTP id 876DD18F9BC
+	for <xfs@oss.sgi.com>; Sat, 11 Aug 2012 16:53:23 +0200 (CEST)
+Received: from mx4.geneon.de ([127.0.0.1])
+	by localhost (mx4 [127.0.0.1]) (amavisd-new, port 10024) with LMTP
+	id 10109-01-8 for <xfs@oss.sgi.com>;
+	Sat, 11 Aug 2012 16:53:23 +0200 (CEST)
+Received: from galaxy.nbg.geneon.de (backupnas [89.244.16.77])
+	by mx4.geneon.de (Postfix) with ESMTP id 6C6BD96281
+	for <xfs@oss.sgi.com>; Sat, 11 Aug 2012 16:53:23 +0200 (CEST)
+From: Andreas Vogler <andreas.vogler@geneon.de>
+Date: Sat, 11 Aug 2012 16:59:11 +0200
+Subject: bad version from xfs_repair after raid crash
+Message-ID: <27CE2179D1925A4F9F4874725C3B4E0F0C5EFB6E94@COSMOS.nbg.geneon.de>
+Content-Language: de-DE
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -21,76 +29,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4804152890922315483=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Velimir Galic <veli.galic@gmail.com>
+To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
+Hi all,
 
---===============4804152890922315483==
-Content-Type: multipart/signed; boundary="nextPart2695753.F6Iyytry71"; micalg="pgp-sha1"; protocol="application/pgp-signature"
-Content-Transfer-Encoding: quoted-printable
+we had a crash of a raid 5 system. After rebuilding we could access one of  two partitions. Upon mounting the second parttion we got an error "mount: Structure needs cleaning". So we tried using xfs_repair.
 
+Xfs_repair returns: "bad primary superblock - bad version number !!!"
 
---nextPart2695753.F6Iyytry71
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
+and tries to find a secondary superblock but gives up after scanning the volume.
 
-Am Freitag, 10. August 2012, 10:23:03 schrieb Velimir Galic:
-> a second disk got lost in the raid. The raidsync wasn't finished and
-> now i'm fighting 3 weeks or more i don't no any more :-( to repair
-> the file system.=20
+Looking at the superblock with xfs_db looks good as far as I can tell. Can anybody give me a hint what "bad version number" means?
 
-How far did the recovery go when it broke? If it was on 10% when the 2n=
-d=20
-disk broke, you can stop to try to get anything. If it was 90% finished=
-,=20
-you might have a chance...
+Thank you very much in advance.
 
-> 4x2GB | RAID 5 | Softraid
-
-This is a 6GB net RAID 5 device? Which devices?
-
-> I tried a lot of different versions of xfs_repair
-
-I hope you got a copy of all disks before you even tried to repair?=20
-Otherwise it might be too late now, when repair wrote something on that=
-=20
-device.
-
---=20
-mit freundlichen Gr=C3=BCssen,
-Michael Monnerie, Ing. BSc
-
-it-management Internet Services: Prot=C3=A9ger
-http://proteger.at [gesprochen: Prot-e-schee]
-Tel: +43 660 / 415 6531
-
---nextPart2695753.F6Iyytry71
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.18 (GNU/Linux)
-
-iEYEABECAAYFAlAmOpEACgkQzhSR9xwSCbRnIQCdEsWsFeCXRM0FrURAf37CMhSl
-V40An0fWDjIBBK3sFu/ykslgudcIqLIC
-=Ytoe
------END PGP SIGNATURE-----
-
---nextPart2695753.F6Iyytry71--
-
-
---===============4804152890922315483==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+  Andreas Vogler
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4804152890922315483==--
