@@ -1,28 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7C7nwcV084781 for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 02:49:58 -0500
-Received: from mx4.geneon.de (76.reverse.geneon.de [89.244.16.76]) by
-	cuda.sgi.com with ESMTP id qAq77m051TApREPe for
-	<xfs@oss.sgi.com>; Sun, 12 Aug 2012 00:49:56 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by mx4.geneon.de (Postfix) with ESMTP id 6CE3B209C77
-	for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 09:44:03 +0200 (CEST)
-Received: from mx4.geneon.de ([127.0.0.1])
-	by localhost (mx4 [127.0.0.1]) (amavisd-new, port 10024) with LMTP
-	id 31601-02-2 for <xfs@oss.sgi.com>;
-	Sun, 12 Aug 2012 09:44:03 +0200 (CEST)
-Received: from galaxy.nbg.geneon.de (backupnas [89.244.16.77])
-	by mx4.geneon.de (Postfix) with ESMTP id 50F2A87431
-	for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 09:44:03 +0200 (CEST)
-From: Andreas Vogler <andreas.vogler@geneon.de>
-Date: Sun, 12 Aug 2012 09:49:48 +0200
-Subject: AW: bad version from xfs_repair after raid crash
-Message-ID: <27CE2179D1925A4F9F4874725C3B4E0F0C5EFB6E98@COSMOS.nbg.geneon.de>
-References: <27CE2179D1925A4F9F4874725C3B4E0F0C5EFB6E94@COSMOS.nbg.geneon.de>
-	<5026D290.10209@sandeen.net>
-In-Reply-To: <5026D290.10209@sandeen.net>
-Content-Language: de-DE
+	q7C9EXNa091900 for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 04:14:33 -0500
+Received: from mailsrv14.zmi.at (mailsrv14.zmi.at [212.69.164.54]) by
+	cuda.sgi.com with ESMTP id udVuUe0WDnnIAwsn (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 12 Aug 2012 02:14:30 -0700 (PDT)
+Received: from mailsrv.i.zmi.at (mailgate.i.zmi.at [10.72.17.3])
+	(using TLSv1 with cipher DHE-RSA-CAMELLIA256-SHA (256/256 bits))
+	(Client CN "mailsrv2.i.zmi.at", Issuer "power4u.zmi.at" (not verified))
+	by mailsrv14.zmi.at (Postfix) with ESMTPS id E99B31800185
+	for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 11:14:27 +0200 (CEST)
+Received: from saturn.localnet (saturn.i.zmi.at [10.72.27.2])
+	by mailsrv.i.zmi.at (Postfix) with ESMTP id B14B0C8C449
+	for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 11:14:36 +0200 (CEST)
+From: Michael Monnerie <michael.monnerie@is.it-management.at>
+Subject: howto keep xfs directory searches fast for a long time
+Date: Sun, 12 Aug 2012 11:14:22 +0200
+Message-ID: <6344220.LKveJofnHA@saturn>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -32,71 +27,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8584240910641599949=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
+To: xfs-oss <xfs@oss.sgi.com>
 
 
-> Is your xfsprogs version up to date?
+--===============8584240910641599949==
+Content-Type: multipart/signed; boundary="nextPart1406184.WAYbJTnMsq"; micalg="pgp-sha1"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: quoted-printable
 
 
-I guess the xfsprogs are rather old but they should be on the same level as the filesystem as they are part oft he same distro (OpenFiler 2.3, package is called xfsprogs=2.6.25-4-0.1).
+--nextPart1406184.WAYbJTnMsq
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-> You could also include another email with the output from xfs_db -c "sb 0" -c "p" /dev/blah
+I need a VMware VM that has 8TB storage. As I can at max create a 2TB=20=
 
-Here ist he output of xfs_db:
+disk, I need to add 4 disks, and use lvm to concat these. All is on top=
+=20
+of a RAID5 or RAID6 store.
 
-magicnum = 0x58465342
-blocksize = 4096
-dblocks = 332800000
-rblocks = 0
-rextents = 0
-uuid = 567f4c2f-ce9a-42a3-bbc2-e791cf43f8ae
-logstart = 268435460
-rootino = 128
-rbmino = 129
-rsumino = 130
-rextsize = 1
-agblocks = 83200000
-agcount = 4
-rbmblocks = 0
-logblocks = 32768
-versionnum = 0xb4a4
-sectsize = 512
-inodesize = 256
-inopblock = 16
-fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-blocklog = 12
-sectlog = 9
-inodelog = 8
-inopblog = 4
-agblklog = 27
-rextslog = 0
-inprogress = 0
-imax_pct = 5
-icount = 1079360
-ifree = 80
-fdblocks = 178779506
-frextents = 0
-uquotino = 131
-gquotino = 132
-qflags = 0x77
-flags = 0
-shared_vn = 0
-inoalignmt = 2
-unit = 0
-width = 0
-dirblklog = 0
-logsectlog = 0
-logsectsize = 0
-logsunit = 1
-features2 = 0x8
+The workload will be storage of mostly large media files (5TB mkv Video=
+=20
++ 1TB mp3), plus backup of normal documents (1TB .odt,.doc,.pdf etc).=20=
 
-But I have already experimented a little bit, originally versionnum was 0xb4f4 but the next superblock (sb 1) contained 0xb4a4, so I tried to set it with xfs_db to this value, but it didn't make a difference.
+The server should be able to find files quickly, transfer speed is not=20=
+
+important. There won't be many deletes to media files, mostly uploads=20=
+
+and searching for files. Only when it grows full, old files will be=20
+removed. But normal documents will be rsynced (used as backup=20
+destination) regularly.
+I will set vm.vfs_cache_pressure =3D 10, this helps at least keeping=20=
+
+inodes cached when they were read once.
+
+- What is the best setup to get high speed on directory searches? Find,=
+=20
+ls, du, etc. should be quick.=20
+- Should I use inode64 or not?
+- If that's an 8 disk RAID-6, should I mkfs.xfs with 6*4 AGs? Or what=20=
+
+would be a good start, or wouldn't it matter at all?
+
+And as it'll be mostly big media files, should I use sunit/swidth set t=
+o=20
+64KB/6*64KB, does that make sense?
+
+I'm asking because I had such a VM setup once, and while it was fairly=20=
+
+quick in the beginning, over time it felt much slower on traversing=20
+directories, very seek bound. That xfs was only 80% filled, so shouldn'=
+t=20
+have had a fragmentation problem. And I know nothing to fix that apart=20=
+
+from backup/restore, so maybe there's something to prevent that?
+
+--=20
+mit freundlichen Gr=C3=BCssen,
+Michael Monnerie, Ing. BSc
+
+it-management Internet Services: Prot=C3=A9ger
+http://proteger.at [gesprochen: Prot-e-schee]
+Tel: +43 660 / 415 6531
+--nextPart1406184.WAYbJTnMsq
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.18 (GNU/Linux)
+
+iEYEABECAAYFAlAnc/MACgkQzhSR9xwSCbTSGACeNOZQbhwltGIBGBV9RpZrxKLr
+zowAn1c6ykB4P+cBakkV0Hot3rNETdOJ
+=fW71
+-----END PGP SIGNATURE-----
+
+--nextPart1406184.WAYbJTnMsq--
+
+
+--===============8584240910641599949==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8584240910641599949==--
