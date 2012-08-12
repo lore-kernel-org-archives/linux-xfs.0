@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7AFNjb0092452 for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 10:23:45 -0500
-Received: from mail-vc0-f181.google.com (mail-vc0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	XOHacTrIv2NTnj29 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 10 Aug 2012 08:23:42 -0700 (PDT)
-Received: by vcbfl17 with SMTP id fl17so1780313vcb.26
-	for <xfs@oss.sgi.com>; Fri, 10 Aug 2012 08:23:41 -0700 (PDT)
+	q7CJZRCS158853 for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 14:35:27 -0500
+Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
+	[65.41.216.221]) by cuda.sgi.com with ESMTP id mM11A216F7N5fGRq
+	for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 12:35:26 -0700 (PDT)
+Message-ID: <5028057F.3090007@hardwarefreak.com>
+Date: Sun, 12 Aug 2012 14:35:27 -0500
+From: Stan Hoeppner <stan@hardwarefreak.com>
 MIME-Version: 1.0
-In-Reply-To: <20120731011457.GO2877@dastard>
-References: <201207301514247032532@gmail.com> <20120730214213.GF2877@dastard>
-	<201207310855556258267@gmail.com> <20120731011457.GO2877@dastard>
-Date: Fri, 10 Aug 2012 08:23:41 -0700
-Message-ID: <CAFR8uef=7BxCv3obxq8vHFKXGYMJe3F3Qw2C8JAp4_qENmC0xg@mail.gmail.com>
-Subject: Re: Re: [PATCH 0/8] Set bi_rw when alloc bio before call bio_add_page.
-From: Muthu Kumar <muthu.lkml@gmail.com>
+Subject: Re: howto keep xfs directory searches fast for a long time
+References: <6344220.LKveJofnHA@saturn>
+In-Reply-To: <6344220.LKveJofnHA@saturn>
+Reply-To: stan@hardwarefreak.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,207 +21,88 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3925919617393211457=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: axboe <axboe@kernel.dk>, shaggy <shaggy@kernel.org>, "chris.mason" <chris.mason@fusionio.com>, elder <elder@kernel.org>, tytso <tytso@mit.edu>, "konrad.wilk" <konrad.wilk@oracle.com>, Neil Brown <neilb@suse.de>, mfasheh <mfasheh@suse.com>, linux-btrfs <linux-btrfs@vger.kernel.org>, jfs-discussion <jfs-discussion@lists.sourceforge.net>, majianpeng <majianpeng@gmail.com>, linux-raid <linux-raid@vger.kernel.org>, bpm <bpm@sgi.com>, "adilger.kernel" <adilger.kernel@dilger.ca>, viro <viro@zeniv.linux.org.uk>, linux-ext4 <linux-ext4@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <xfs@oss.sgi.com>, linux-kernel <linux-kernel@vger.kernel.org>, jlbec <jlbec@evilplan.org>
+To: Michael Monnerie <michael.monnerie@is.it-management.at>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---===============3925919617393211457==
-Content-Type: multipart/alternative; boundary=047d7b676c88d771e404c6eaed7a
+On 8/12/2012 4:14 AM, Michael Monnerie wrote:
+> I need a VMware VM that has 8TB storage. As I can at max create a 2TB 
+> disk, I need to add 4 disks, and use lvm to concat these. All is on top 
+> of a RAID5 or RAID6 store.
 
---047d7b676c88d771e404c6eaed7a
-Content-Type: text/plain; charset=ISO-8859-1
+So the problem here is max vmdk size?  Just use an RDM.  IIRC there's no
+size restriction on RDMs.  And, using an RDM will avoid any alignment
+issues that you may likely get when sticking XFS atop LVM atop a thin
+disk file atop VMFS atop parity RAID.  With RDM you get XFS directly
+atop the storage LUN.  This can be achieved with either an FC/iSCSI SAN
+LUN or with a LUN exported/exposed from a hardware RAID controller.
 
-Hi,
+> The workload will be storage of mostly large media files (5TB mkv Video 
+> + 1TB mp3), plus backup of normal documents (1TB .odt,.doc,.pdf etc). 
+> The server should be able to find files quickly, transfer speed is not 
+> important. There won't be many deletes to media files, mostly uploads 
+> and searching for files. Only when it grows full, old files will be 
+> removed. But normal documents will be rsynced (used as backup 
+> destination) regularly.
+> I will set vm.vfs_cache_pressure = 10, this helps at least keeping 
+> inodes cached when they were read once.
+> 
+> - What is the best setup to get high speed on directory searches? Find, 
+> ls, du, etc. should be quick.
 
-On Mon, Jul 30, 2012 at 6:14 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Jul 31, 2012 at 08:55:59AM +0800, majianpeng wrote:
->> On 2012-07-31 05:42 Dave Chinner <david@fromorbit.com> Wrote:
->> >On Mon, Jul 30, 2012 at 03:14:28PM +0800, majianpeng wrote:
->> >> When exec bio_alloc, the bi_rw is zero.But after calling bio_add_page,
->> >> it will use bi_rw.
->> >> Fox example, in functiion __bio_add_page,it will call merge_bvec_fn().
->> >> The merge_bvec_fn of raid456 will use the bi_rw to judge the merge.
->> >> >> if ((bvm->bi_rw & 1) == WRITE)
->> >> >> return biovec->bv_len; /* always allow writes to be mergeable */
->> >
->> >So if bio_add_page() requires bi_rw to be set, then shouldn't it be
->> >set up for every caller? I noticed there are about 50 call sites for
->> >bio_add_page(), and you've only touched about 10 of them. Indeed, I
->> >notice that the RAID0/1 code uses bio_add_page, and as that can be
->> >stacked on top of RAID456, it also needs to set bi_rw correctly.
->> >As a result, your patch set is nowhere near complete, not does it
->> >document that bio_add_page requires that bi_rw be set before calling
->> >(which is the new API requirement, AFAICT).
->> There are many place call bio_add_page and I send some of those. Because
-my abilty, so I only send
->> some patchs which i understand clearly.
->
-> Sure, but my point is that there is no point changing only a few and
-> ignoring the great majority of callers. Either fix them all, fix it
-> some other way (e.g. API change), or remove the code from the RAID5
-> function that requires it.
->
+How many directory entries are we talking about?  Directory searching is
+seek latency sensitive, so the spindle speed of the disks and read-ahead
+cache of the controller may likely play as large, or larger, a role than
+XFS parms.
 
+> - Should I use inode64 or not?
 
-A while back, we tried to address this by changing the alloc functions to
-take rw argument and set it (as per Jens suggestion). I guess the patch did
-not make it in. Please check:
+Given your mixed large media and normal "office" file rsync workloads,
+it's difficult to predict.  I would think inode64 would slow down
+searching a bit due to extra seek latency accessing directory trees.
 
-https://lkml.org/lkml/2011/7/11/275
+This is a VM environment, thus this guest and its XFS filesystem will be
+competing for seeks with other VMs/workloads.  So anything that
+decreases head seeks in XFS is a good thing.
 
-And the follow ups. If needed, I can dust up that patch and resend it.
+> - If that's an 8 disk RAID-6, should I mkfs.xfs with 6*4 AGs? Or what 
+> would be a good start, or wouldn't it matter at all?
 
+Thus, I'd think the fewer AGs the better, as in as few as you can get
+away with, especially if most of this VM's workload is large media files.
 
->> In __bio_add_page:
->> >>if (q->merge_bvec_fn) {
->> >>                            struct bvec_merge_data bvm = {
->> >>                                    /* prev_bvec is already charged in
->> >>                                       bi_size, discharge it in order
-to
->> >>                                       simulate merging updated
-prev_bvec
->> >>                                       as new bvec. */
->> >>                                    .bi_bdev = bio->bi_bdev,
->> >>                                    .bi_sector = bio->bi_sector,
->> >>                                    .bi_size = bio->bi_size -
-prev_bv_len,
->> >>                                    .bi_rw = bio->bi_rw,
->> >>                            };
->> it used bio->bi_rw.
->> Before raid5_mergeable_bvec appearing, in kernel 'merge_bvec_fn' did not
-use bio->bi_rw.
->
+> And as it'll be mostly big media files, should I use sunit/swidth set to 
+> 64KB/6*64KB, does that make sense?
 
-<snip>
+If you can use an RDM on your existing storage array, match su/sw to
+what's there.  If you can't and must add 4 disks, simply attach them to
+your RAID controller, create a new RAID5 array.  Given large media
+files, I'd probably use a strip of 256KB, times 3 spindles = 768KB
+stripe.  But this will depend on your RAID controller.  Strip size may
+be irrelevant to a degree with some BBWC controllers.
 
+> I'm asking because I had such a VM setup once, and while it was fairly 
+> quick in the beginning, over time it felt much slower on traversing 
+> directories, very seek bound. 
 
-> It's entirely possible that when bi_rw was added to struct
-> bvec_merge_data, the person who added it was mistaken that bi_rw was
-> set at this point in time when in fact it never has been. Hence it's
-> presence and reliance on it would be a bug.
->
-> That's what I'm asking - is this actually beneificial, or should it
-> simply be removed from struct bvec_merge_data? Data is needed to
-> answer that question....
+This suggests directory fragmentation.
 
+> That xfs was only 80% filled, so shouldn't 
+> have had a fragmentation problem. And I know nothing to fix that apart 
+> from backup/restore, so maybe there's something to prevent that?
 
-There are cases where we found it really beneficial to know the rw field to
-decide if the can be really merged or not.
+The files may not have been badly fragmented, but even at only 80% full,
+if the FS got over 90% full and/or saw many deletes over its lifespan,
+you could have had a decent amount of both directory and free space
+fragmentation.  Depends on how it aged.
 
-Regards,
-Muthu
-
-
->
-> Cheers,
->
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> Please read the FAQ at  http://www.tux.org/lkml/
-
---047d7b676c88d771e404c6eaed7a
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hi,<br><br>On Mon, Jul 30, 2012 at 6:14 PM, Dave Chinner &lt;<a href=3D"mai=
-lto:david@fromorbit.com">david@fromorbit.com</a>&gt; wrote:<br>&gt; On Tue,=
- Jul 31, 2012 at 08:55:59AM +0800, majianpeng wrote:<br>&gt;&gt; On 2012-07=
--31 05:42 Dave Chinner &lt;<a href=3D"mailto:david@fromorbit.com">david@fro=
-morbit.com</a>&gt; Wrote:<br>
-&gt;&gt; &gt;On Mon, Jul 30, 2012 at 03:14:28PM +0800, majianpeng wrote:<br=
->&gt;&gt; &gt;&gt; When exec bio_alloc, the bi_rw is zero.But after calling=
- bio_add_page,<br>&gt;&gt; &gt;&gt; it will use bi_rw.<br>&gt;&gt; &gt;&gt;=
- Fox example, in functiion __bio_add_page,it will call merge_bvec_fn().<br>
-&gt;&gt; &gt;&gt; The merge_bvec_fn of raid456 will use the bi_rw to judge =
-the merge.<br>&gt;&gt; &gt;&gt; &gt;&gt; if ((bvm-&gt;bi_rw &amp; 1) =3D=3D=
- WRITE)<br>&gt;&gt; &gt;&gt; &gt;&gt; return biovec-&gt;bv_len; /* always a=
-llow writes to be mergeable */<br>
-&gt;&gt; &gt;<br>&gt;&gt; &gt;So if bio_add_page() requires bi_rw to be set=
-, then shouldn&#39;t it be<br>&gt;&gt; &gt;set up for every caller? I notic=
-ed there are about 50 call sites for<br>&gt;&gt; &gt;bio_add_page(), and yo=
-u&#39;ve only touched about 10 of them. Indeed, I<br>
-&gt;&gt; &gt;notice that the RAID0/1 code uses bio_add_page, and as that ca=
-n be<br>&gt;&gt; &gt;stacked on top of RAID456, it also needs to set bi_rw =
-correctly.<br>&gt;&gt; &gt;As a result, your patch set is nowhere near comp=
-lete, not does it<br>
-&gt;&gt; &gt;document that bio_add_page requires that bi_rw be set before c=
-alling<br>&gt;&gt; &gt;(which is the new API requirement, AFAICT).<br>&gt;&=
-gt; There are many place call bio_add_page and I send some of those. Becaus=
-e my abilty, so I only send<br>
-&gt;&gt; some patchs which i understand clearly.<br>&gt;<br>&gt; Sure, but =
-my point is that there is no point changing only a few and<br>&gt; ignoring=
- the great majority of callers. Either fix them all, fix it<br>&gt; some ot=
-her way (e.g. API change), or remove the code from the RAID5<br>
-&gt; function that requires it.<br>&gt;<br><br><br>A while back, we tried t=
-o address this by changing the alloc functions to take rw argument and set =
-it (as per Jens suggestion). I guess the patch did not make it in. Please c=
-heck:<br>
-<br><a href=3D"https://lkml.org/lkml/2011/7/11/275">https://lkml.org/lkml/2=
-011/7/11/275</a><br><br>And the follow ups. If needed, I can dust up that p=
-atch and resend it.<br><br><br>&gt;&gt; In __bio_add_page:<br>&gt;&gt; &gt;=
-&gt;if (q-&gt;merge_bvec_fn) {<br>
-&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0st=
-ruct bvec_merge_data bvm =3D {<br>&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0/* prev_bvec is already cha=
-rged in<br>&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 bi_size, discharge it in order to<br>
-&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 simulate merging updated prev_bvec<br>&gt;&gt; &gt;&gt;=
- =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 as new bvec. */<br>&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0.bi_bdev =3D bio-&gt;bi_bdev,<br>
-&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0.bi_sector =3D bio-&gt;bi_sector,<br>&gt;&gt; &gt;&gt; =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0.bi_size=
- =3D bio-&gt;bi_size - prev_bv_len,<br>&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =
-=A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0.bi_rw =3D bio-&gt;b=
-i_rw,<br>
-&gt;&gt; &gt;&gt; =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0 =A0};=
-<br>&gt;&gt; it used bio-&gt;bi_rw.<br>&gt;&gt; Before raid5_mergeable_bvec=
- appearing, in kernel &#39;merge_bvec_fn&#39; did not use bio-&gt;bi_rw.<br=
->&gt;<br><br>&lt;snip&gt;<br>
-<br><br>&gt; It&#39;s entirely possible that when bi_rw was added to struct=
-<br>&gt; bvec_merge_data, the person who added it was mistaken that bi_rw w=
-as<br>&gt; set at this point in time when in fact it never has been. Hence =
-it&#39;s<br>
-&gt; presence and reliance on it would be a bug.<br>&gt;<br>&gt; That&#39;s=
- what I&#39;m asking - is this actually beneificial, or should it<br>&gt; s=
-imply be removed from struct bvec_merge_data? Data is needed to<br>&gt; ans=
-wer that question....<br>
-<br><br>There are cases where we found it really beneficial to know the rw =
-field to decide if the can be really merged or not.<br><br>Regards,<br>Muth=
-u<br><br><br>&gt;<br>&gt; Cheers,<br>&gt;<br>&gt; Dave.<br>&gt; --<br>&gt; =
-Dave Chinner<br>
-&gt; <a href=3D"mailto:david@fromorbit.com">david@fromorbit.com</a><br>&gt;=
- --<br>&gt; To unsubscribe from this list: send the line &quot;unsubscribe =
-linux-kernel&quot; in<br>&gt; the body of a message to <a href=3D"mailto:ma=
-jordomo@vger.kernel.org">majordomo@vger.kernel.org</a><br>
-&gt; More majordomo info at =A0<a href=3D"http://vger.kernel.org/majordomo-=
-info.html">http://vger.kernel.org/majordomo-info.html</a><br>&gt; Please re=
-ad the FAQ at =A0<a href=3D"http://www.tux.org/lkml/">http://www.tux.org/lk=
-ml/</a><br>
-<br>
-
---047d7b676c88d771e404c6eaed7a--
-
-
---===============3925919617393211457==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+Stan
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3925919617393211457==--
