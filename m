@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7CJZRCS158853 for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 14:35:27 -0500
-Received: from greer.hardwarefreak.com (mo-65-41-216-221.sta.embarqhsd.net
-	[65.41.216.221]) by cuda.sgi.com with ESMTP id mM11A216F7N5fGRq
-	for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 12:35:26 -0700 (PDT)
-Message-ID: <5028057F.3090007@hardwarefreak.com>
-Date: Sun, 12 Aug 2012 14:35:27 -0500
-From: Stan Hoeppner <stan@hardwarefreak.com>
+	q7CLbUMR170128 for <xfs@oss.sgi.com>; Sun, 12 Aug 2012 16:37:31 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	4JtM4ioaWYmRYTpz for <xfs@oss.sgi.com>;
+	Sun, 12 Aug 2012 14:37:28 -0700 (PDT)
+Date: Mon, 13 Aug 2012 07:37:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: bad version from xfs_repair after raid crash
+Message-ID: <20120812213719.GI2877@dastard>
+References: <27CE2179D1925A4F9F4874725C3B4E0F0C5EFB6E94@COSMOS.nbg.geneon.de>
+	<5026D290.10209@sandeen.net>
+	<27CE2179D1925A4F9F4874725C3B4E0F0C5EFB6E98@COSMOS.nbg.geneon.de>
 MIME-Version: 1.0
-Subject: Re: howto keep xfs directory searches fast for a long time
-References: <6344220.LKveJofnHA@saturn>
-In-Reply-To: <6344220.LKveJofnHA@saturn>
-Reply-To: stan@hardwarefreak.com
+Content-Disposition: inline
+In-Reply-To: <27CE2179D1925A4F9F4874725C3B4E0F0C5EFB6E98@COSMOS.nbg.geneon.de>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,82 +28,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Andreas Vogler <andreas.vogler@geneon.de>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On 8/12/2012 4:14 AM, Michael Monnerie wrote:
-> I need a VMware VM that has 8TB storage. As I can at max create a 2TB 
-> disk, I need to add 4 disks, and use lvm to concat these. All is on top 
-> of a RAID5 or RAID6 store.
-
-So the problem here is max vmdk size?  Just use an RDM.  IIRC there's no
-size restriction on RDMs.  And, using an RDM will avoid any alignment
-issues that you may likely get when sticking XFS atop LVM atop a thin
-disk file atop VMFS atop parity RAID.  With RDM you get XFS directly
-atop the storage LUN.  This can be achieved with either an FC/iSCSI SAN
-LUN or with a LUN exported/exposed from a hardware RAID controller.
-
-> The workload will be storage of mostly large media files (5TB mkv Video 
-> + 1TB mp3), plus backup of normal documents (1TB .odt,.doc,.pdf etc). 
-> The server should be able to find files quickly, transfer speed is not 
-> important. There won't be many deletes to media files, mostly uploads 
-> and searching for files. Only when it grows full, old files will be 
-> removed. But normal documents will be rsynced (used as backup 
-> destination) regularly.
-> I will set vm.vfs_cache_pressure = 10, this helps at least keeping 
-> inodes cached when they were read once.
+On Sun, Aug 12, 2012 at 09:49:48AM +0200, Andreas Vogler wrote:
 > 
-> - What is the best setup to get high speed on directory searches? Find, 
-> ls, du, etc. should be quick.
+> > Is your xfsprogs version up to date?
+> 
+> 
+> I guess the xfsprogs are rather old but they should be on the same level as the filesystem as they are part oft he same distro (OpenFiler 2.3, package is called xfsprogs=2.6.25-4-0.1).
 
-How many directory entries are we talking about?  Directory searching is
-seek latency sensitive, so the spindle speed of the disks and read-ahead
-cache of the controller may likely play as large, or larger, a role than
-XFS parms.
+That's -very- old:
 
-> - Should I use inode64 or not?
+-- Nathan Scott <nathans@debian.org>  Tue, 29 Mar 2005 11:57:57 +1000
 
-Given your mixed large media and normal "office" file rsync workloads,
-it's difficult to predict.  I would think inode64 would slow down
-searching a bit due to extra seek latency accessing directory trees.
+xfsprogs (2.6.26-1) unstable; urgency=low
 
-This is a VM environment, thus this guest and its XFS filesystem will be
-competing for seeks with other VMs/workloads.  So anything that
-decreases head seeks in XFS is a good thing.
+  * New upstream release.
+  * Man page updates (closes: #295397)
+  * Fix compilation with gcc version 4 (closes: #297876)
+  * Switch build dependency from readline4 to readline5.
 
-> - If that's an 8 disk RAID-6, should I mkfs.xfs with 6*4 AGs? Or what 
-> would be a good start, or wouldn't it matter at all?
 
-Thus, I'd think the fewer AGs the better, as in as few as you can get
-away with, especially if most of this VM's workload is large media files.
+> > You could also include another email with the output from xfs_db -c "sb 0" -c "p" /dev/blah
+> 
+> Here ist he output of xfs_db:
+> 
+> magicnum = 0x58465342
+> blocksize = 4096
+> dblocks = 332800000
+> rblocks = 0
+> rextents = 0
+> uuid = 567f4c2f-ce9a-42a3-bbc2-e791cf43f8ae
+> logstart = 268435460
+> rootino = 128
+> rbmino = 129
+> rsumino = 130
+> rextsize = 1
+> agblocks = 83200000
+> agcount = 4
+> rbmblocks = 0
+> logblocks = 32768
+> versionnum = 0xb4a4
+.....
+> features2 = 0x8
 
-> And as it'll be mostly big media files, should I use sunit/swidth set to 
-> 64KB/6*64KB, does that make sense?
+So it's got the ATTR2 feature bit set.
 
-If you can use an RDM on your existing storage array, match su/sw to
-what's there.  If you can't and must add 4 disks, simply attach them to
-your RAID controller, create a new RAID5 array.  Given large media
-files, I'd probably use a strip of 256KB, times 3 spindles = 768KB
-stripe.  But this will depend on your RAID controller.  Strip size may
-be irrelevant to a degree with some BBWC controllers.
+ -- Nathan Scott <nathans@debian.org>  Tue, 31 Jan 2006 13:35:39 +1100
 
-> I'm asking because I had such a VM setup once, and while it was fairly 
-> quick in the beginning, over time it felt much slower on traversing 
-> directories, very seek bound. 
+xfsprogs (2.7.7-1) unstable; urgency=low
 
-This suggests directory fragmentation.
+  * New upstream release.
+  * Add support for (optional) ATTR2 format extension (closes: #336350)
+  * Allow gcc -pedantic option for C++ <xfs.h> users (closes: #249429)
+  * Fix segv in xfs_db frag command (closes: #338207)
 
-> That xfs was only 80% filled, so shouldn't 
-> have had a fragmentation problem. And I know nothing to fix that apart 
-> from backup/restore, so maybe there's something to prevent that?
+So, yeah, upgrade your userspace to something recent, and it will
+just work.
 
-The files may not have been badly fragmented, but even at only 80% full,
-if the FS got over 90% full and/or saw many deletes over its lifespan,
-you could have had a decent amount of both directory and free space
-fragmentation.  Depends on how it aged.
+> But I have already experimented a little bit, originally
+> versionnum was 0xb4f4 but the next superblock (sb 1) contained
+> 0xb4a4, so I tried to set it with xfs_db to this value, but it
+> didn't make a difference.
 
+Don't stuff around with feature bits if you don't know what they
+mean - you'll render parts of your filesystem
+unusable/corrupt/unreadable by doing so.
+
+Cheers,
+
+Dave.
 -- 
-Stan
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
