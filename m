@@ -1,29 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7DD8Fiq004103 for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 08:08:16 -0500
+	q7DD8hr1004137 for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 08:08:43 -0500
 Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
-	cuda.sgi.com with ESMTP id iuK2RJvRq28SfRxa (version=TLSv1
+	cuda.sgi.com with ESMTP id 7h44xCptqt0qAMiR (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 13 Aug 2012 06:08:15 -0700 (PDT)
-Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
+	Mon, 13 Aug 2012 06:08:42 -0700 (PDT)
+Received: from acsinet21.oracle.com (acsinet21.oracle.com [141.146.126.237])
 	by rcsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id q7DD8D1N016121
+	ESMTP id q7DD8fbA016548
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 13:08:14 GMT
-Received: from acsmt357.oracle.com (acsmt357.oracle.com [141.146.40.157])
-	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	q7DD8D6u014905
+	for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 13:08:42 GMT
+Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
+	by acsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	q7DD8ffH028091
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 13:08:13 GMT
-Received: from abhmt118.oracle.com (abhmt118.oracle.com [141.146.116.70])
-	by acsmt357.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	q7DD8DZZ007016 for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 08:08:13 -0500
-Message-ID: <5028FC0D.6030302@oracle.com>
-Date: Mon, 13 Aug 2012 21:07:25 +0800
+	for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 13:08:41 GMT
+Received: from abhmt119.oracle.com (abhmt119.oracle.com [141.146.116.71])
+	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	q7DD8fJm022862 for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 08:08:41 -0500
+Message-ID: <5028FC29.60508@oracle.com>
+Date: Mon, 13 Aug 2012 21:07:53 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v7 0/4] xfs: seek_data/seek_hole refinements
+Subject: [PATCH v7 1/4] xfs: Remove type argument from
+	xfs_seek_data()/xfs_seek_hole()
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -39,43 +40,54 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hello,
+The type is explicitly indicated by the function naming. Hence, we can omit it from both routines.
 
-Here is the updated patch set for improving SEEK_DATA/SEEK_HOLE with page cache probing for unwritten
-extents, it fixes a couple of issues according to Dave and Mark's review comments towards v6.
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Dave Chinner <david@fromorbit.com>
 
-Changes from v7 to v6:
+---
+ fs/xfs/xfs_file.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
-- xfs_lookup_buffer_offset(), remove page unlock out of it, fix comments for this routine.
-
-- xfs_find_get_pgoff(), sample the next page index while the page is locked.
-
-- xfs_seek_data()/xfs_seek_hole(), move extent state check up stuff to a loop in both routines.
-
-
-Old version:
-
-Version 6 of this posting can be found at
-http://oss.sgi.com/archives/xfs/2012-08/msg00028.html
-
-Version 5 of this posting can be found at
-http://www.spinics.net/lists/xfs/msg12987.html
-
-Version 4 of this posting can be found at
-http://oss.sgi.com/archives/xfs/2012-07/msg00279.html
-
-Version 3 of this posting can be found at
-http://oss.sgi.com/archives/xfs/2012-07/msg00050.html
-
-Version 2 of this posting can be found at
-http://oss.sgi.com/archives/xfs/2012-06/msg00407.html
-
-Version 1 of this posting can be found at
-http://www.digipedia.pl/usenet/thread/11980/26875/
-
-
-Thanks,
--Jeff
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 9f7ec15..98642cf 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -969,8 +969,7 @@ xfs_vm_page_mkwrite(
+ STATIC loff_t
+ xfs_seek_data(
+ 	struct file		*file,
+-	loff_t			start,
+-	u32			type)
++	loff_t			start)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -1036,8 +1035,7 @@ out_unlock:
+ STATIC loff_t
+ xfs_seek_hole(
+ 	struct file		*file,
+-	loff_t			start,
+-	u32			type)
++	loff_t			start)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -1099,9 +1097,9 @@ xfs_file_llseek(
+ 	case SEEK_SET:
+ 		return generic_file_llseek(file, offset, origin);
+ 	case SEEK_DATA:
+-		return xfs_seek_data(file, offset, origin);
++		return xfs_seek_data(file, offset);
+ 	case SEEK_HOLE:
+-		return xfs_seek_hole(file, offset, origin);
++		return xfs_seek_hole(file, offset);
+ 	default:
+ 		return -EINVAL;
+ 	}
+-- 
+1.7.4.1
 
 _______________________________________________
 xfs mailing list
