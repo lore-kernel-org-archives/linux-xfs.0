@@ -1,13 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7D8GmfN237301 for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 03:16:48 -0500
-Date: Mon, 13 Aug 2012 04:16:42 -0400 (EDT)
-From: Tomas Racek <tracek@redhat.com>
-Message-ID: <793053708.1130825.1344845802020.JavaMail.root@redhat.com>
-In-Reply-To: <20120809234758.GE2877@dastard>
-Subject: Re: [PATCH v3] xfs: check for possible overflow in xfs_ioc_trim
+	q7D9FIvd243166 for <xfs@oss.sgi.com>; Mon, 13 Aug 2012 04:15:21 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	i8EBkEymCivPVmid (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 13 Aug 2012 02:15:17 -0700 (PDT)
+Date: Mon, 13 Aug 2012 05:15:17 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: XFS status update for July 2012
+Message-ID: <20120813091517.GA27609@infradead.org>
 MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,60 +26,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: lczerner@redhat.com, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, "supporter:XFS FILESYSTEM" <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
+July saw the release of Linux 3.5, which included an average sized XFS
+update:
 
-> [ Trimmed lkml from cc list.  There's no need to cc lkml on XFS
-> specific stuff. ]
-> 
-> [ Trimmed linux-xfs@vger.kernel.org as that is not a list any XFS
-> developer is subscribed to. ]
+    81 files changed, 2633 insertions(+), 3004 deletions(-)
 
-Oh, it's good to know (I used get_maintainer script before).
+Noteworthy updates in Linux 3.5 include the removal of the xfsbufd
+background thread which writes metadata buffers, background processing
+of CIL flushes and thus lower average latency for metadata heavy
+workloads, as well a a reduction of lock hold times and frequency during
+reads and writes.  The large XFS update for the Linux 3.6 merge window
+did not get merged yet by the end of July, but will bring better support
+for large directory block sizes, a faster inode allocator and a large
+amount of bug fixes in different areas of the code.  Development on the list
+has been fairly busy on the patchsets to support group and project quotas
+at the same time, as well as improved SEEK_HOLE/SEEK_DATA support but
+otherwise mostly limited to bug fixes and smaller cleanups.
 
-> 
-> On Thu, Aug 09, 2012 at 11:07:09AM +0200, Tomas Racek wrote:
-> > If range.start or range.minlen is bigger than filesystem size,
-> > return
-> > invalid value error. This fixes possible overflow in BTOBB macro
-> > when
-> > passed value was nearly ULLONG_MAX.
-> > 
-> > Signed-off-by: Tomas Racek <tracek@redhat.com>
-> > ---
-> >  fs/xfs/xfs_discard.c |    6 ++++--
-> >  1 files changed, 4 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> > index f9c3fe3..4e07a56 100644
-> > --- a/fs/xfs/xfs_discard.c
-> > +++ b/fs/xfs/xfs_discard.c
-> > @@ -179,12 +179,14 @@ xfs_ioc_trim(
-> >  	 * used by the fstrim application.  In the end it really doesn't
-> >  	 * matter as trimming blocks is an advisory interface.
-> >  	 */
-> > +	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
-> > +	    range.minlen > XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks))
-> > +		return -XFS_ERROR(EINVAL);
-> 
-> That's not correct for minlen. The maximum minlen we can
-> support is the length of the largest freespace extent in the
-> filesystem, and that is limited to the size of an AG. i.e.
-> XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp))
-
-Will do, thank you!
-
-Tomas
-
-> 
-> Cheers,
-> 
-> Dave.
-> --
-> Dave Chinner
-> david@fromorbit.com
-> 
+Userpace development has been rather slow with a single fix for xfs_db
+and another single fix in xfstests.
 
 _______________________________________________
 xfs mailing list
