@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7ELda4A011566 for <xfs@oss.sgi.com>; Tue, 14 Aug 2012 16:39:36 -0500
+	q7ELe9Zk011771 for <xfs@oss.sgi.com>; Tue, 14 Aug 2012 16:40:09 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	E4LZ6RCgxsTDGzfs for <xfs@oss.sgi.com>;
-	Tue, 14 Aug 2012 14:39:34 -0700 (PDT)
-Date: Wed, 15 Aug 2012 07:39:11 +1000
+	g09DmXxQ3DrpDzD5 for <xfs@oss.sgi.com>;
+	Tue, 14 Aug 2012 14:40:08 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1T1OqM-0006yT-ST
+	for xfs@oss.sgi.com; Wed, 15 Aug 2012 07:40:06 +1000
+Date: Wed, 15 Aug 2012 07:40:06 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfstests: Use upstream version of fstrim instead of
-	the local one
-Message-ID: <20120814213911.GM2877@dastard>
-References: <1344937201-17389-1-git-send-email-tracek@redhat.com>
+Subject: Re: [PATCH 0/10] xfstests: rework large filesystem testing
+Message-ID: <20120814214006.GP2877@dastard>
+References: <1343291989-14987-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1344937201-17389-1-git-send-email-tracek@redhat.com>
+In-Reply-To: <1343291989-14987-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,24 +29,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tomas Racek <tracek@redhat.com>
-Cc: lczerner@redhat.com, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Tue, Aug 14, 2012 at 11:40:01AM +0200, Tomas Racek wrote:
-> Local version of fstrim was dropped so that we depend on upstream
-> version now. _require_fstrim was added to check if fstrim is available
-> in the system and _test_batched_discard to check if we can run fstrim
-> on certain mountpoint.
+ping?
+
+On Thu, Jul 26, 2012 at 06:39:39PM +1000, Dave Chinner wrote:
+> This is a resend of a series that has been sitting inmy local
+> workarea for months. It reworks the large filesystem testing
+> infrastructure for XFS to allow it to use xfs_repair by switching
+> the filesystem filling to using preallocation rather than xfs_db
+> hacks.
 > 
-> Also tests 251 and 260 were modified to reflect this change.
+> It also introduces support for ext4 testing, also via preallocation
+> to fill the filesystem. btrfs isn't yet supported because I haven't
+> worked out how to reliably get the size of the filesystem and
+> calculate how much space is actually available in it.
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+> -- 
+> This message has been scanned for viruses and
+> dangerous content by MailScanner, and is
+> believed to be clean.
+> 
+> 
 
-Looks OK, but the only thing I'd suggest is using a $FSTRIM_PROG
-variable rather than fsttrim directly. see how $XFS_IO_PROG is set
-up in common.rc and copy that.
-
-Cheers,
-
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
