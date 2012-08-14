@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7ELpS11014180 for <xfs@oss.sgi.com>; Tue, 14 Aug 2012 16:51:28 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	GhuIgXwNF6zrZHz3 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 14 Aug 2012 14:51:27 -0700 (PDT)
-Received: by obbup19 with SMTP id up19so1216532obb.26
-	for <xfs@oss.sgi.com>; Tue, 14 Aug 2012 14:51:26 -0700 (PDT)
+	q7EMkomU024450 for <xfs@oss.sgi.com>; Tue, 14 Aug 2012 17:46:50 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	inw7900tnhFosJ7H for <xfs@oss.sgi.com>;
+	Tue, 14 Aug 2012 15:46:48 -0700 (PDT)
+Date: Wed, 15 Aug 2012 08:46:45 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC v6 PATCH 1/5] xfs: Remove incore use of XFS_OQUOTA_ENFD and
+	XFS_OQUOTA_CHKD
+Message-ID: <20120814224645.GQ2877@dastard>
+References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120720230208.20477.49663.sendpatchset@chandra-lucid.austin.ibm.com>
 MIME-Version: 1.0
-In-Reply-To: <20120814213535.GK2877@dastard>
-References: <502AB82D.9090408@profihost.ag>
-	<20120814213535.GK2877@dastard>
-Date: Wed, 15 Aug 2012 07:51:26 +1000
-Message-ID: <CAN05THQA8m=diOVodSyq48FVkmeOqz4KbApEP2D=wznWvD-7NQ@mail.gmail.com>
-Subject: Re: aborted SCSI commands while discarding/unmapping via mkfs.xfs
-From: ronnie sahlberg <ronniesahlberg@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20120720230208.20477.49663.sendpatchset@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,87 +28,127 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>, Christoph Hellwig <hch@lst.de>, dchinner@redhat.com, Stefan Priebe <s.priebe@profihost.ag>
+To: Chandra Seetharaman <sekharan@us.ibm.com>
+Cc: xfs@oss.sgi.com
 
-On Wed, Aug 15, 2012 at 7:35 AM, Dave Chinner <david@fromorbit.com> wrote:
-> On Tue, Aug 14, 2012 at 10:42:21PM +0200, Stefan Priebe wrote:
->> Hello list,
->>
->> i'm testing KVM with qemu, libiscsi, virtio-scsi-pci and
->> scsi-general on top of a nexenta storage solution. While doing
->> mkfs.xfs on an already used LUN / block device i discovered that the
->> unmapping / discard commands mkfs.xfs sends take a long time which
->> results in a lot of aborted scsi commands.
->
-> Sounds like a problem with your storage being really slow at
-> discards.
->
->> Would it make sense to let mkfs.xfs send these unmapping commands in
->> small portations (f.e. 100MB)
->
-> No, because the underlying implementation (blkdev_issue_discard())
-> already breaks the discard request up into the granularity that is
-> supported by the underlying storage.....
->
->> or is there another problem in the
->> patch to the block device? Any suggestions or ideas?
->
-> .... which, of course, had bugs in it so is a muchmore likely cause
-> of your problems.
->
-> That said,the discard granularity is derived from information the
-> storage supplies the kernel in it's SCSI mode page, so if the
-> discard granularity is too large, that's a storage problem, not a
-> linux problem at all, let alone a mkfs.xfs problem.
+On Fri, Jul 20, 2012 at 06:02:08PM -0500, Chandra Seetharaman wrote:
+> Remove all incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
+> start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts for GQUOTA nd
+> PQUOTA respectively.
+> 
+> No changes are made to the on-disk version of the superblock yet. On-disk
+> copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
+> 
+> Read and write of the superblock does the conversion from *OQUOTA*
+> to *[PG]QUOTA*.
 
-Hi Dave,
-That is true.
+Couple of minor style things....
 
-But this particular issue seen in the network traces show that on this
-particular storage array,
-when a huge train of discards are sent, to basically discard the entire LUN,
-the storage array may take many minutes to perform these discards,
-during which time the array is unresponsive to any other I/O, on the
-same LUN or on other LUNs.
+> @@ -622,6 +636,7 @@ xfs_sb_to_disk(
+>  	xfs_sb_field_t	f;
+>  	int		first;
+>  	int		size;
+> +	 __uint16_t	tmp16;
 
-This is definitely an issue with the i/o scheduler in the storage
-array and not strictly in the linux kernel or mkfs.xfs.
-
-And this basically means that for these kind of arrays with this
-discard behaviour, running a command that performs
-a huge number of discards to discard the entire device will basically
-act as a full denial-of-service attack,
-since every lun and every host that is attached to the array will
-experience a full outage for minutes.
+tmp16 is a bad name for a temporary variable. Move it to the scope
+that uses it, and name it for it's purpose. i.e:
 
 
-This is definitely an issue with the array, BUT linux kernel and/or
-userspace utilities can, and very often are,
-implement tweaks to be more firendly towards and avoid triggering
-unfortunate hw behaviour.
+>  
+>  	ASSERT(fields);
+>  	if (!fields)
+> @@ -636,6 +651,26 @@ xfs_sb_to_disk(
+>  
+>  		if (size == 1 || xfs_sb_info[f].type == 1) {
+>  			memcpy(to_ptr + first, from_ptr + first, size);
+> +		} else if (f == XFS_SBS_QFLAGS) {
 
-For example, linux kernel contains a "fix" for the pentium FDIV bug,
-eventhoug there was never any issue in linux that needed fixing.
+			__uint16_t	qflags;
 
+> +			/*
+> +			 * The in-core version of sb_qflags do not have
+> +			 * XFS_OQUOTA_* flags, whereas the on-disk version
+> +			 * does.  Save the in-core sb_qflags temporarily,
+> +			 * removing the new XFS_{PG}QUOTA_* flags and re-apply
+> +			 * the old on-disk flags.
+> +			 */
+> +			tmp16 = from->sb_qflags &
 
-The only other realistic alternative is to provide warnings such as :
-"Some storage arrays may have major performance problems if you run
-mkfs.xfs that can cause a full outage for every single lun on that
-array that lasts for many minutes.  Unless you KNOW that your storage
-arrray does not have such issue for a fact, you should never run
-mkfs.xfs on a production system outside of a full scheduled outage
-window. The full set of storage arrays where this is a potential issue
-is not known".
+			qflags = from->sb_qflags & ....
 
+> +					~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
+> +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
+> +
+> +			if (from->sb_qflags &
+> +					(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
+> +				tmp16 |= XFS_OQUOTA_ENFD;
+> +			if (from->sb_qflags &
+> +					(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
+> +				tmp16 |= XFS_OQUOTA_CHKD;
+> +
+> +			*(__be16 *)(to_ptr + first) = cpu_to_be16(tmp16);
+>  		} else {
+>  			switch (size) {
+>  			case 2:
 
-I think it would be more storage array friendly to implement tweaks to
-avoid triggering such issue son this, and possibly other arrays.
+....
 
+> @@ -339,9 +339,11 @@ xfs_qm_scall_quotaon(
+>  	    ||
+>  	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
+>  	    (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+> -	    (flags & XFS_GQUOTA_ACCT) == 0 &&
+> +	    (flags & XFS_PQUOTA_ENFD))
+> +	    ||
+> +	    ((flags & XFS_GQUOTA_ACCT) == 0 &&
+>  	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+> -	    (flags & XFS_OQUOTA_ENFD))) {
+> +	    (flags & XFS_GQUOTA_ENFD))) {
 
+Can you fix the flat indenting here at the same time so that the
+logic is obvious at a glance and consistent with the rest of the XFS
+code? i.e.
 
-regards
-ronnie sahlberg
+	if (((flags & XFS_UQUOTA_ACCT) == 0 &&
+	     (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
+	     (flags & XFS_UQUOTA_ENFD)) ||
+	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
+	     (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+	     (flags & XFS_PQUOTA_ENFD)) ||
+	    (flags & XFS_GQUOTA_ACCT) == 0 &&
+	     (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+	     (flags & XFS_GQUOTA_ENFD))) {
+
+>  		xfs_debug(mp,
+>  			"%s: Can't enforce without acct, flags=%x sbflags=%x\n",
+>  			__func__, flags, mp->m_sb.sb_qflags);
+> @@ -771,8 +773,10 @@ xfs_qm_scall_getquota(
+>  	 * so return zeroes in that case.
+>  	 */
+>  	if ((!XFS_IS_UQUOTA_ENFORCED(mp) && dqp->q_core.d_flags == XFS_DQ_USER) ||
+> -	    (!XFS_IS_OQUOTA_ENFORCED(mp) &&
+> -			(dqp->q_core.d_flags & (XFS_DQ_PROJ | XFS_DQ_GROUP)))) {
+> +	    (!XFS_IS_PQUOTA_ENFORCED(mp)
+> +			&& dqp->q_core.d_flags == XFS_DQ_PROJ) ||
+> +	    (!XFS_IS_GQUOTA_ENFORCED(mp)
+> +			&& dqp->q_core.d_flags == XFS_DQ_GROUP)) {
+
+Same here:
+
+	if ((!XFS_IS_UQUOTA_ENFORCED(mp) &&
+	     dqp->q_core.d_flags == XFS_DQ_USER) ||
+	    (!XFS_IS_PQUOTA_ENFORCED(mp) &&
+	     dqp->q_core.d_flags == XFS_DQ_PROJ) ||
+	    (!XFS_IS_GQUOTA_ENFORCED(mp) &&
+	     dqp->q_core.d_flags == XFS_DQ_GROUP)) {
+
+Otherwise it looks good. Fix the above and you can add a
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
