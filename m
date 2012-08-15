@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7F9EqcD104101 for <xfs@oss.sgi.com>; Wed, 15 Aug 2012 04:14:52 -0500
-Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
-	cuda.sgi.com with ESMTP id qL8YyMGHBsQkNeMm (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 15 Aug 2012 02:14:50 -0700 (PDT)
-Message-ID: <502B6884.2010402@profihost.ag>
-Date: Wed, 15 Aug 2012 11:14:44 +0200
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+	q7F9MRDb104959 for <xfs@oss.sgi.com>; Wed, 15 Aug 2012 04:22:27 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	m7d9N7i5k61mVItP (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 15 Aug 2012 02:22:26 -0700 (PDT)
+Received: by obbup19 with SMTP id up19so2086131obb.26
+	for <xfs@oss.sgi.com>; Wed, 15 Aug 2012 02:22:25 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: aborted SCSI commands while discarding/unmapping via mkfs.xfs
+In-Reply-To: <502B6884.2010402@profihost.ag>
 References: <502AB82D.9090408@profihost.ag> <1850094.RmMErZaXcJ@saturn>
-In-Reply-To: <1850094.RmMErZaXcJ@saturn>
+	<502B6884.2010402@profihost.ag>
+Date: Wed, 15 Aug 2012 11:22:25 +0200
+Message-ID: <CAAxjCEw+PY569Hz79_JFWBxg662CtAqciKU=w+fh76oiNHbZ0A@mail.gmail.com>
+Subject: Re: aborted SCSI commands while discarding/unmapping via mkfs.xfs
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,24 +25,16 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Michael Monnerie <michael.monnerie@is.it-management.at>
-Cc: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-Am 15.08.2012 11:13, schrieb Michael Monnerie:
-> Am Dienstag, 14. August 2012, 22:42:21 schrieb Stefan Priebe:
->> top of a nexenta storage solution
->
-> I'd be interested to know which storage exactly that is?
+> right now a self build test system running http://www.nexenta.com/corp/.
 
-right now a self build test system running http://www.nexenta.com/corp/.
-
-Greets
-Stefan
-
+With SAS disks or SATA? This seems to make a big difference regarding
+how much a long-running operation can lock out concurrent accesses.
 
 _______________________________________________
 xfs mailing list
