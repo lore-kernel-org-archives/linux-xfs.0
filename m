@@ -1,21 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7F2bjs6054150 for <xfs@oss.sgi.com>; Tue, 14 Aug 2012 21:37:45 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	UWha9qrNmectP8kC for <xfs@oss.sgi.com>;
-	Tue, 14 Aug 2012 19:37:43 -0700 (PDT)
-Date: Wed, 15 Aug 2012 12:37:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC v6 PATCH 5/5] xfs: Add a new field to fs_quota_stat to get
-	pquota information
-Message-ID: <20120815023742.GU2877@dastard>
-References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120720230305.20477.41556.sendpatchset@chandra-lucid.austin.ibm.com>
+	q7F6VNJB087678 for <xfs@oss.sgi.com>; Wed, 15 Aug 2012 01:31:23 -0500
+Received: from mail.profihost.ag (mail.profihost.ag [85.158.179.208]) by
+	cuda.sgi.com with ESMTP id 9qGBChsp0ZEhqDN1 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 14 Aug 2012 23:31:21 -0700 (PDT)
+Message-ID: <502B4232.7090308@profihost.ag>
+Date: Wed, 15 Aug 2012 08:31:14 +0200
+From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120720230305.20477.41556.sendpatchset@chandra-lucid.austin.ibm.com>
+Subject: Re: aborted SCSI commands while discarding/unmapping via mkfs.xfs
+References: <502AB82D.9090408@profihost.ag> <20120814213535.GK2877@dastard>
+In-Reply-To: <20120814213535.GK2877@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,89 +21,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: dchinner@redhat.com, Christoph Hellwig <hch@lst.de>, Ronnie Sahlberg <ronniesahlberg@gmail.com>, "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-On Fri, Jul 20, 2012 at 06:03:05PM -0500, Chandra Seetharaman wrote:
-> Use separate structure for filling the project quota information
-> for the Q_XGETQSTAT quota command.
-> 
-> Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> ---
->  fs/xfs/xfs_qm_syscalls.c |   26 +++++++++++++-------------
->  1 files changed, 13 insertions(+), 13 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> index f011cf3..482efc0 100644
-> --- a/fs/xfs/xfs_qm_syscalls.c
-> +++ b/fs/xfs/xfs_qm_syscalls.c
-> @@ -421,7 +421,6 @@ xfs_qm_scall_getqstat(
->  	tempuqip = tempgqip = temppqip = B_FALSE;
->  	memset(out, 0, sizeof(fs_quota_stat_t));
->  
-> -	out->qs_version = FS_QSTAT_VERSION;
->  	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
->  		out->qs_uquota.qfs_ino = NULLFSINO;
->  		out->qs_gquota.qfs_ino = NULLFSINO;
-> @@ -434,8 +433,6 @@ xfs_qm_scall_getqstat(
->  	out->qs_pad = 0;
->  	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
->  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
-> -	if (&out->qs_gquota != &out->qs_pquota)
-> -		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
->  
->  	if (q) {
->  		uip = q->qi_uquotaip;
-> @@ -452,11 +449,6 @@ xfs_qm_scall_getqstat(
->  					0, 0, &gip) == 0)
->  			tempgqip = B_TRUE;
->  	}
-> -	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
-> -		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
-> -					0, 0, &pip) == 0)
-> -			temppqip = B_TRUE;
-> -	}
->  	if (uip) {
->  		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
->  		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
-> @@ -469,11 +461,19 @@ xfs_qm_scall_getqstat(
->  		if (tempgqip)
->  			IRELE(gip);
->  	}
-> -	if (pip) {
-> -		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-> -		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-> -		if (temppqip)
-> -			IRELE(pip);
-> +	if (out->qs_version >= FS_QSTAT_VERSION_2) {
-> +		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-> +		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
-> +			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
-> +						0, 0, &pip) == 0)
-> +				temppqip = B_TRUE;
-> +		}
-> +		if (pip) {
-> +			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-> +			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-> +			if (temppqip)
-> +				IRELE(pip);
-> +		}
+Am 14.08.2012 23:35, schrieb Dave Chinner:
+> On Tue, Aug 14, 2012 at 10:42:21PM +0200, Stefan Priebe wrote:
+>> Hello list,
+>>
+>> i'm testing KVM with qemu, libiscsi, virtio-scsi-pci and
+>> scsi-general on top of a nexenta storage solution. While doing
+>> mkfs.xfs on an already used LUN / block device i discovered that the
+>> unmapping / discard commands mkfs.xfs sends take a long time which
+>> results in a lot of aborted scsi commands.
+>
+> Sounds like a problem with your storage being really slow at
+> discards.
+>
+>> Would it make sense to let mkfs.xfs send these unmapping commands in
+>> small portations (f.e. 100MB)
+>
+> No, because the underlying implementation (blkdev_issue_discard())
+> already breaks the discard request up into the granularity that is
+> supported by the underlying storage.....
+>
+>> or is there another problem in the
+>> patch to the block device? Any suggestions or ideas?
+>
+> .... which, of course, had bugs in it so is a muchmore likely cause
+> of your problems.
+>
+> That said,the discard granularity is derived from information the
+> storage supplies the kernel in it's SCSI mode page, so if the
+> discard granularity is too large, that's a storage problem, not a
+> linux problem at all, let alone a mkfs.xfs problem.
 
-Doesn't this mean that we'll never report project quota for
-FS_QSTAT_VERSION structures and the old quota format? i.e. existing
-tools with a new kernel won't return the project quota info in the
-group quota fields?
+Thanks for this excelent explanation.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Stefan
 
 _______________________________________________
 xfs mailing list
