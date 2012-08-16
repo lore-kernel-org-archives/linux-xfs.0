@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7GIZEmS178117 for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 13:35:14 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id zL8Br5jQXzYQx9ap for
-	<xfs@oss.sgi.com>; Thu, 16 Aug 2012 11:35:13 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7GIZCLM011588
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 14:35:12 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] Make inode64 a remountable option
-Date: Thu, 16 Aug 2012 15:35:10 -0300
-Message-Id: <1345142110-6412-1-git-send-email-cmaiolino@redhat.com>
+	q7GJGUiL181648 for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 14:16:30 -0500
+Message-ID: <502D4719.9030906@sgi.com>
+Date: Thu, 16 Aug 2012 14:16:41 -0500
+From: Rich Johnston <rjohnston@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [PATCH 4/4] xfstests: speed up 227 by using preallocation
+References: <1343291706-14882-1-git-send-email-david@fromorbit.com>
+	<1343291706-14882-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1343291706-14882-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,78 +18,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Carlos Maiolino <cmaiolino@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Actually, there is no reason about why a user must umount and mount a XFS
-filesystem to enable 'inode64' option. So, this patch makes this a remountable
-option.
+On 07/26/2012 03:35 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>
+> Test 227 (fsr test) creates fragmented fre space by doing lots of
+> small writes to sparse offsets ni a file. This seeks the disk heads
+> around a lot writing data. We don't need to write data - just
+> trigger allocation. Hence use preallocation instead of data writes
+> and run at allocation speed rather than data write speed.
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>   227 |   46 +++++++++++++++++++++++++++++++++-------------
+>   1 file changed, 33 insertions(+), 13 deletions(-)
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_super.c | 18 +++++++++++++++++-
- 1 file changed, 17 insertions(+), 1 deletion(-)
+Looks good to me.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bdaf4cb..4dad567 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -120,12 +120,13 @@ mempool_t *xfs_ioend_pool;
-  * in the future, too.
-  */
- enum {
--	Opt_barrier, Opt_nobarrier, Opt_err
-+	Opt_barrier, Opt_nobarrier, Opt_inode64, Opt_err
- };
- 
- static const match_table_t tokens = {
- 	{Opt_barrier, "barrier"},
- 	{Opt_nobarrier, "nobarrier"},
-+	{Opt_inode64, "inode64"},
- 	{Opt_err, NULL}
- };
- 
-@@ -1038,11 +1039,15 @@ xfs_fs_remount(
- {
- 	struct xfs_mount	*mp = XFS_M(sb);
- 	substring_t		args[MAX_OPT_ARGS];
-+	xfs_sb_t		*sbp = &(mp->m_sb);
-+	xfs_perag_t		*pag;
- 	char			*p;
- 	int			error;
- 
- 	while ((p = strsep(&options, ",")) != NULL) {
- 		int token;
-+		int agcount = sbp->sb_agcount;
-+		int index = 0;
- 
- 		if (!*p)
- 			continue;
-@@ -1055,6 +1060,17 @@ xfs_fs_remount(
- 		case Opt_nobarrier:
- 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
- 			break;
-+		case Opt_inode64:
-+
-+			for (index = 0; index < agcount; index++) {
-+				pag = xfs_perag_get(mp, index);
-+				pag->pagi_inodeok = 1;
-+				xfs_perag_put(pag);
-+			}
-+			mp->m_flags &= ~XFS_MOUNT_32BITINODES;
-+			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-+			mp->m_maxagi = index;
-+			break;
- 		default:
- 			/*
- 			 * Logically we would return an error here to prevent
--- 
-1.7.11.2
+Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+
 
 _______________________________________________
 xfs mailing list
