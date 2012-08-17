@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7HHXvaE068391 for <xfs@oss.sgi.com>; Fri, 17 Aug 2012 12:33:58 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	aRm4E2RiNWe3Cv2o (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Aug 2012 10:33:51 -0700 (PDT)
-Date: Fri, 17 Aug 2012 13:33:46 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V3] Make inode64 a remountable option
-Message-ID: <20120817173346.GA18347@infradead.org>
-References: <1345171178-10447-1-git-send-email-cmaiolino@redhat.com>
+	q7HIFjpN074655 for <xfs@oss.sgi.com>; Fri, 17 Aug 2012 13:15:45 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id 61d5NdRTgIeprSoE for <xfs@oss.sgi.com>;
+	Fri, 17 Aug 2012 11:15:44 -0700 (PDT)
+Received: from macmini.sandeen.net (macmini.sandeen.net [10.0.0.61])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested) (Authenticated sender: sandeen)
+	by mail.sandeen.net (Postfix) with ESMTP id 39EB14F32D84
+	for <xfs@oss.sgi.com>; Fri, 17 Aug 2012 13:15:44 -0500 (CDT)
+Message-ID: <502E8A4F.9050105@sandeen.net>
+Date: Fri, 17 Aug 2012 13:15:43 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1345171178-10447-1-git-send-email-cmaiolino@redhat.com>
+Subject: Re: XFS regression: Oops in xfs_buf_do_callbacks on xfstest 137
+References: <501ABC84.6030708@sandeen.net>
+	<20120817180254.GA15382@infradead.org>
+In-Reply-To: <20120817180254.GA15382@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,30 +26,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Aug 16, 2012 at 11:39:38PM -0300, Carlos Maiolino wrote:
-> +		case Opt_inode64:
-> +
-> +			for (i = 0; i < mp->m_sb.sb_agcount; i++) {
-> +				struct xfs_perag	*pag;
-> +
-> +				pag = xfs_perag_get(mp, i);
-> +				pag->pagi_inodeok = 1;
-> +				pag->pagf_metadata = 0;
-> +				xfs_perag_put(pag);
-> +			}
-> +			mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
-> +					 XFS_MOUNT_SMALL_INUMS);
-> +			mp->m_maxagi = i;
+On 8/17/12 1:02 PM, Christoph Hellwig wrote:
+> I'd be this is my new code added to xfs_buf_item_unpin, but I don't
+> quite understand why.  It's been a long time since I wrote that code,
+> but I had to add that code to make sure we clear all buffers during
+> a forced shutdown.  Can you test if things go away if you just remove it
+> (even if causes other hangs?)
 
-Can you factor this into a little helper?  I hate having lots of code
-and especially loops inside of deep switch statements.
+It does go away AFAIK, since the bisect found it.
+
+Sadly it's been on the back burner for me, under other deadline pressure.
+
+-Eric
 
 _______________________________________________
 xfs mailing list
