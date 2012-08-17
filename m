@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7GN43rG201615 for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 18:04:03 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	gdr5EjK4g7PCwz6O for <xfs@oss.sgi.com>;
-	Thu, 16 Aug 2012 16:04:01 -0700 (PDT)
-Date: Fri, 17 Aug 2012 09:04:00 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests: Provide test whether fs supports direct IO and
-	use it
-Message-ID: <20120816230400.GZ2877@dastard>
-References: <1345125391-15055-1-git-send-email-jack@suse.cz>
+	q7H0l5ir218210 for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 19:47:05 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id rNJTEVH5SYQHbbkQ for
+	<xfs@oss.sgi.com>; Thu, 16 Aug 2012 17:47:03 -0700 (PDT)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7H0l3OB005134
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 20:47:03 -0400
+Received: from orion.usersys.redhat.com (vpn1-6-11.gru2.redhat.com
+	[10.97.6.11])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q7H0kxV5014977
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 16 Aug 2012 20:47:02 -0400
+Date: Thu, 16 Aug 2012 21:46:59 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] Make inode64 a remountable option
+Message-ID: <20120817004659.GA16013@orion.usersys.redhat.com>
+References: <1345142110-6412-1-git-send-email-cmaiolino@redhat.com>
+	<20120816224030.GX2877@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1345125391-15055-1-git-send-email-jack@suse.cz>
+In-Reply-To: <20120816224030.GX2877@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,64 +37,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Aug 16, 2012 at 03:56:31PM +0200, Jan Kara wrote:
-> ext3 in data=journal mode does not support direct IO. Tests which use
-> direct IO fail due to that. Provide function checking whether direct IO
-> is supported and skip tests needing direct IO if it's not.
-> 
-> There are a few tests which use direct IO but would be meaningful even
-> without it since they test several different things. Making these tests
-> useful for filesystems without dio support is left for future if somebody
-> is interested...
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 
-So this is just for the generic tests? There's a lot more XFS
-specific tests that require direct IO that aren't in this patch. ;)
+Thanks Dave, I'll change these, and re-send a V2.
 
-Also, I suspect that you've missed all the tests that run fsstress,
-because that uses direct IO as well. There's probably others as
-well. No doub they didn't produce test failures, but it's entirely
-possible that they are not testing what they are supposed to be
-testing as a result of direct IO failing silently...
-
-> --- a/198
-> +++ b/198
-> @@ -44,6 +44,7 @@ _cleanup()
->  
->  _supported_fs generic
->  _supported_os Linux
-> +_require_direct_io
->  _require_aiodio aiodio_sparse2
-
-For all the tests are already call _require_aiodio, just embed the
-_require_dio test inside that one.
-
->  
-> +#
-> +# Check if the filesystem supports direct IO
-> +#
-> +_require_direct_io()
-> +{
-> +	testfile=$TEST_DIR/$$.dio
-> +	testio=`$XFS_IO_PROG -F -f -d -c "" $testfile 2>&1`
-
-This assumes that both the test device and the scratch device are
-both using the same mount options, right?
-
-Some tests use the scratch device with different mount options, so
-may actually allow direct IO to work even though the test device
-fails. I haven't looked at whether any of the tests in this patch do
-that, but if they do then you might also need a _require_scratch_dio
-function for those tests....
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+--Carlos
 
 _______________________________________________
 xfs mailing list
