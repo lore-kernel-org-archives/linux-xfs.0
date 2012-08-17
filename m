@@ -1,26 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7HHYr1f068481 for <xfs@oss.sgi.com>; Fri, 17 Aug 2012 12:34:53 -0500
+	q7HI2wNq072351 for <xfs@oss.sgi.com>; Fri, 17 Aug 2012 13:02:58 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	nHJbCNaWhwX0wX7V (version=TLSv1 cipher=AES256-SHA bits=256
+	8B5c930vTtiUFIWP (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 17 Aug 2012 10:34:51 -0700 (PDT)
-Received: from hch by bombadil.infradead.org with local (Exim 4.76 #1 (Red Hat
-	Linux)) id 1T2QRd-0004vC-N3
-	for xfs@oss.sgi.com; Fri, 17 Aug 2012 17:34:49 +0000
-Date: Fri, 17 Aug 2012 13:34:49 -0400
+	Fri, 17 Aug 2012 11:02:57 -0700 (PDT)
+Date: Fri, 17 Aug 2012 14:02:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH V3] Make inode64 a remountable option
-Message-ID: <20120817173449.GB18347@infradead.org>
-References: <1345171178-10447-1-git-send-email-cmaiolino@redhat.com>
-	<20120817122437.GC2502@infradead.org>
-	<20120817144950.GA17092@orion.usersys.redhat.com>
+Subject: Re: XFS regression: Oops in xfs_buf_do_callbacks on xfstest 137
+Message-ID: <20120817180254.GA15382@infradead.org>
+References: <501ABC84.6030708@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120817144950.GA17092@orion.usersys.redhat.com>
+In-Reply-To: <501ABC84.6030708@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,19 +28,14 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Aug 17, 2012 at 11:49:50AM -0300, Carlos Maiolino wrote:
-> I don't think there is any lock protection around m_flags, I did a search on the
-> code and couldn't find anything protecting it. At a first glance though, I don't
-> think there is a need to protect it once this flag is managed only during super
-> operations - mount/umount/remount -
-> Also, I *think* the sb->s_umount rw_semaphore is enough for protection, once it
-> protects the whole mount/umount operation, but I'm 100% sure of it.
-
-Seems like rw_semaphore takes care of it, and we already have a trace
-when setting XFS_MOUNT_FS_SHUTDOWN.  I guess it's fine as is for now,
-but I'd love to have comment explaining why it's safe.
+I'd be this is my new code added to xfs_buf_item_unpin, but I don't
+quite understand why.  It's been a long time since I wrote that code,
+but I had to add that code to make sure we clear all buffers during
+a forced shutdown.  Can you test if things go away if you just remove it
+(even if causes other hangs?)
 
 _______________________________________________
 xfs mailing list
