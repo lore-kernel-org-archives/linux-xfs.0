@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7KILcNc250718 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 13:21:38 -0500
-Message-ID: <50328032.20102@sgi.com>
-Date: Mon, 20 Aug 2012 13:21:38 -0500
+	q7KILCXi250683 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 13:21:12 -0500
+Message-ID: <50328015.9000602@sgi.com>
+Date: Mon, 20 Aug 2012 13:21:09 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v7 4/4] xfs: xfs_seek_hole() refinement with hole searching
-	from page cache for unwritten extent
-References: <5028FC3D.8000007@oracle.com>
-In-Reply-To: <5028FC3D.8000007@oracle.com>
+Subject: Re: [PATCH v7 3/4] xfs: xfs_seek_data() refinement with unwritten
+	extents check up from page cache
+References: <5028FC39.5060809@oracle.com>
+In-Reply-To: <5028FC39.5060809@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,10 +26,11 @@ To: jeff.liu@oracle.com
 Cc: xfs@oss.sgi.com
 
 On 08/13/12 08:08, Jeff Liu wrote:
-> Improve xfs_seek_hole() to search hole offset from page cache for unwritten extents.
+> Improve xfs_seek_data() to search data offset from page cache for unwritten extents.
 >
 > Signed-off-by: Jie Liu<jeff.liu@oracle.com>
-
+>
+> ---
 
 Looks good.
 
