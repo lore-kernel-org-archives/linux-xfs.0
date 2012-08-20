@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7KMhBea009937 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 17:43:12 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	xZtIX8XhfH0AAZNN for <xfs@oss.sgi.com>;
-	Mon, 20 Aug 2012 15:43:10 -0700 (PDT)
-Date: Tue, 21 Aug 2012 08:43:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC] [PATCH 0/18] xfstests: move tests out of top level
-Message-ID: <20120820224306.GF19235@dastard>
-References: <1343294892-20991-1-git-send-email-david@fromorbit.com>
-	<5032ABBD.80504@sgi.com>
+	q7KMluOn010308 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 17:47:56 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Zga2QXaYoyzaHmql for
+	<xfs@oss.sgi.com>; Mon, 20 Aug 2012 15:47:55 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7KMltr3007704
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:47:55 -0400
+Received: from orion.usersys.redhat.com (vpn1-6-42.gru2.redhat.com
+	[10.97.6.42])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q7KMlq9Z029367
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:47:54 -0400
+Date: Mon, 20 Aug 2012 19:47:51 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: fix race while discarding buffers [V4]
+Message-ID: <20120820224751.GA22096@orion.usersys.redhat.com>
+References: <1344621711-8049-1-git-send-email-cmaiolino@redhat.com>
+	<20120820205134.GB29979@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5032ABBD.80504@sgi.com>
+In-Reply-To: <20120820205134.GB29979@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,97 +37,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 20, 2012 at 04:27:25PM -0500, Mark Tinguely wrote:
-> On 07/26/12 04:27, Dave Chinner wrote:
-> >Alt-Subject: Games with Sed, Grep and Awk.
-> >
-> >This series is based on top of the large filesystem test series.
-> >
-> >This moves all the tests into a ./tests subdirectory, and sorts them into
-> >classes of related tests. Those are:
-> >
-> >	tests/generic:	valid for all filesystems
-> >	tests/shared:	valid for a limited number of filesystems
-> >	tests/xfs:	xfs specific tests
-> >	tests/btrfs	btrfs specific tests
-> >	tests/ext4	ext4 specific tests
-> >	tests/udf	udf specific tests
+Hi Ben,
 > 
-> The SGI XFS group talked about your proposed changes to xfstests and
-> the response is very positive.
 > 
-> The couple concerns are:
+Thanks for the comments.
 > 
-> 1) There is a consensus in the group that the benchmark framework
->    should remain until there is a common benchmark available.
+> What was the symptom that led to the discovery of this problem?
 > 
->    Could the benchmark infrastructure be placed into its own directory
->    until a new common benchmark framework has been adopted?
-
-Keeping it just complicates things. The benchmark infrastructure
-is bitrotted and was largely just a hack tacked on to the side of
-the regression test suite.
-
-For it to be useful in an automated test environment, it would need
-to be re-implemented from scratch with reliable recording of results
-and the ability to determine if a result is unusual or not. None of
-this exists - it's just a framework to run a couple of benchmarks
-and dump some output to stdout using the xfstests machine config
-files....
-
-I have tried integrating other benchmarks into xfstests a while back
-(e.g. compile bench, fsmark, etc) and using the results for some
-kind of meaningful performance regression test. I rapidly came to
-the conclusion that the infrastructure was not up to scratch and
-that my simple handwritten standalone test scripts to iterate
-through benchmarks and capture results was much easier to use and
-modify than to jump through the weird bench infrastructure hoops.
-
-So, no, I don't think it's worth keeping at all.
-
-> 2) Could there be a single result directory rather than mirroring the
->    test hierarchy? A single directory can eventually become uniquely
->    identified and also be easier to upload to a result depository.
-
-One of the features requested for splitting up the test
-directories is to allow duplicate test names in different test
-directories. You can't have a single result directory if you allow
-duplicate test names....
-
-> Lastly, there are a couple minor link issues:
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 > 
-> 1) In tests xfs/071, xfs/096 and generic/097 the links are missing the
->    $RESULT_DIR and the links are being made on the top directory. For
->    example in generic/097:
-> 
-> - rm -rf $seq.out
-> + rm -rf $RESULT_DIR/$seq.out
-> if [ "$FSTYP" == "xfs" ]; then
-> -     ln -s $seq.out.xfs $seq.out
-> +     ln -s $RESULT_DIR/$seq.out.xfs $RESULT_DIR/$seq.out
-> else
-> -     ln -s -$seq.out.udf $seq.out
-> +     ln -s $RESULT_DIR/$seq.out.udf $RESULT_DIR/$seq.out
-> fi
 
-Yeah, I missed them because they don't use _link_out_file() and sed
-is only as smart as it's user....
+It started with the messages like the example below being logged by syslog:
 
-> 2) In patch 18, the old link needs to be removed in _link_out_file()
->    routine to prevent "File exists" errors on subsequent runs of the
->    scripts.
+shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-61993820
+shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-146
+shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-240601220
+shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-152
+shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-2921236993
 
-Sure. I fixed this about 5 minutes after I posted the series.
+These messages came from shrink_slab().
 
-Cheers,
+After that I've added a second counter into the xfs_buftarg_shrink() to check
+the amount of elements in list (via list_for_each() macro) to confirm the
+discrepancy between the counter and the real number of elements in list, and
+last, Eric added a second and local counter to xfs_buftarg_shrink, to account
+the number of buffers being added and removed from the dispose list into each
+call to xfs_buftarg_shrink(), where, when the problem started, we could see a
+wrong number of buffers beind added and/or removed from the dispose list.
 
-Dave.
+Cheers.
+
 -- 
-Dave Chinner
-david@fromorbit.com
+--Carlos
 
 _______________________________________________
 xfs mailing list
