@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7KNDiQS012188 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:13:44 -0500
+	q7KNGACk012377 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:16:10 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Z247BPPCBcQFmK9K for <xfs@oss.sgi.com>;
-	Mon, 20 Aug 2012 16:13:42 -0700 (PDT)
-Date: Tue, 21 Aug 2012 09:13:09 +1000
+	SjBK6iredvu0ycf0 for <xfs@oss.sgi.com>;
+	Mon, 20 Aug 2012 16:16:09 -0700 (PDT)
+Date: Tue, 21 Aug 2012 09:16:07 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v7 2/4] xfs: Introduce a helper routine to probe data or
-	hole offset from page cache
-Message-ID: <20120820231309.GJ19235@dastard>
-References: <5028FC2E.2010802@oracle.com>
+Subject: Re: [PATCH v7 3/4] xfs: xfs_seek_data() refinement with unwritten
+	extents check up from page cache
+Message-ID: <20120820231607.GK19235@dastard>
+References: <5028FC39.5060809@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5028FC2E.2010802@oracle.com>
+In-Reply-To: <5028FC39.5060809@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,50 +30,47 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Jeff Liu <jeff.liu@oracle.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 13, 2012 at 09:07:58PM +0800, Jeff Liu wrote:
-> helper routine to lookup data or hole offset from page cache for unwritten extents.
+On Mon, Aug 13, 2012 at 09:08:09PM +0800, Jeff Liu wrote:
+> Improve xfs_seek_data() to search data offset from page cache for unwritten extents.
 > 
 > Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+
+One minor addition, otherwise
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
 ....
-> +		unsigned int	i;
 > +
-> +		want = min_t(pgoff_t, end - index, (pgoff_t)PAGEVEC_SIZE);
+> +		/*
+> +		 * map[0] is hole or its an unwritten extent but
+> +		 * without data in page cache.  Probably means that
+> +		 * we are reading after EOF if nothing in map[1].
+> +		 */
+>  		if (nmap == 1) {
+>  			error = ENXIO;
+>  			goto out_unlock;
+>  		}
+>  
+> -		offset = max_t(loff_t, start,
+> -			       XFS_FSB_TO_B(mp, map[1].br_startoff));
+> +		/*
+> +		 * Nothing was found, proceed to the next round of search
+> +		 * if reading offset not beyond or hit EOF.
+> +		 */
 
-No need for the cast to (pgoff_t) here. That's what the min_t()
-macro does for you.
+		ASSERT(i > 1);
 
-> +		for (i = 0; i < nr_pages; i++) {
-> +			struct page	*page = pvec.pages[i];
-> +			loff_t		b_offset;
-> +
-> +			/*
-> +			 * Page index is out of range, searching done.
-> +			 * If the current offset is not reaches the end
-> +			 * of the specified search range, there should
-> +			 * be a hole between them.
-> +			 */
-> +			if (page->index > end) {
-> +				if (type == HOLE_OFF && lastoff < endoff) {
-> +					*offset = lastoff;
-> +					found = true;
-> +				}
-> +				goto out;
-> +			}
-> +
-> +			lock_page(page);
-> +			/*
-> +			 * Page truncated or invalidated(page->mapping == NULL).
-> +			 * We can freely skip it and proceed to check the next
-> +			 * page.
-> +			 */
-> +			if (unlikely(page->mapping != inode->i_mapping)) {
-> +				unlock_page(page);
-> +				continue;
-> +			}
-
-Still need to check page->index again after locking the page. As
-this isn't performance critical, I don't think you need the check
-before the page is locked, anyway....
+> +		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+> +		start = XFS_FSB_TO_B(mp, fsbno);
+> +		if (start >= isize) {
+> +			error = ENXIO;
+> +			goto out_unlock;
+> +		}
+>  	}
+>  
+> +out:
+>  	if (offset != file->f_pos)
+>  		file->f_pos = offset;
 
 Cheers,
 
