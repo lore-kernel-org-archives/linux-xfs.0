@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7KNGACk012377 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:16:10 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	SjBK6iredvu0ycf0 for <xfs@oss.sgi.com>;
-	Mon, 20 Aug 2012 16:16:09 -0700 (PDT)
-Date: Tue, 21 Aug 2012 09:16:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v7 3/4] xfs: xfs_seek_data() refinement with unwritten
-	extents check up from page cache
-Message-ID: <20120820231607.GK19235@dastard>
-References: <5028FC39.5060809@oracle.com>
+	q7KNH2ZD012461 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:17:02 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Jg736bsqFLzvP3pi for
+	<xfs@oss.sgi.com>; Mon, 20 Aug 2012 16:17:02 -0700 (PDT)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7KNH1tx012857
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 19:17:01 -0400
+Received: from orion.usersys.redhat.com (vpn1-6-42.gru2.redhat.com
+	[10.97.6.42])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q7KNGweV019762
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 19:17:01 -0400
+Date: Mon, 20 Aug 2012 20:16:58 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH V4] Make inode64 a remountable option
+Message-ID: <20120820231658.GB22096@orion.usersys.redhat.com>
+References: <1345238378-10123-1-git-send-email-cmaiolino@redhat.com>
+	<20120820230501.GH19235@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5028FC39.5060809@oracle.com>
+In-Reply-To: <20120820230501.GH19235@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +37,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Liu <jeff.liu@oracle.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Aug 13, 2012 at 09:08:09PM +0800, Jeff Liu wrote:
-> Improve xfs_seek_data() to search data offset from page cache for unwritten extents.
+> Looks good.
 > 
-> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Next up - make inode64 the default mount option....
+> 
+On my todo list
+ 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-One minor addition, otherwise
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
-....
-> +
-> +		/*
-> +		 * map[0] is hole or its an unwritten extent but
-> +		 * without data in page cache.  Probably means that
-> +		 * we are reading after EOF if nothing in map[1].
-> +		 */
->  		if (nmap == 1) {
->  			error = ENXIO;
->  			goto out_unlock;
->  		}
->  
-> -		offset = max_t(loff_t, start,
-> -			       XFS_FSB_TO_B(mp, map[1].br_startoff));
-> +		/*
-> +		 * Nothing was found, proceed to the next round of search
-> +		 * if reading offset not beyond or hit EOF.
-> +		 */
-
-		ASSERT(i > 1);
-
-> +		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
-> +		start = XFS_FSB_TO_B(mp, fsbno);
-> +		if (start >= isize) {
-> +			error = ENXIO;
-> +			goto out_unlock;
-> +		}
->  	}
->  
-> +out:
->  	if (offset != file->f_pos)
->  		file->f_pos = offset;
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+--Carlos
 
 _______________________________________________
 xfs mailing list
