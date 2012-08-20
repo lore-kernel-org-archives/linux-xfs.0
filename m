@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7KNH2ZD012461 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:17:02 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Jg736bsqFLzvP3pi for
-	<xfs@oss.sgi.com>; Mon, 20 Aug 2012 16:17:02 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7KNH1tx012857
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 19:17:01 -0400
-Received: from orion.usersys.redhat.com (vpn1-6-42.gru2.redhat.com
-	[10.97.6.42])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q7KNGweV019762
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 19:17:01 -0400
-Date: Mon, 20 Aug 2012 20:16:58 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH V4] Make inode64 a remountable option
-Message-ID: <20120820231658.GB22096@orion.usersys.redhat.com>
-References: <1345238378-10123-1-git-send-email-cmaiolino@redhat.com>
-	<20120820230501.GH19235@dastard>
+	q7KNHahg012552 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 18:17:36 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	MSfGrkaQzmZQj5FQ for <xfs@oss.sgi.com>;
+	Mon, 20 Aug 2012 16:17:34 -0700 (PDT)
+Date: Tue, 21 Aug 2012 09:17:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v7 4/4] xfs: xfs_seek_hole() refinement with hole
+	searching from page cache for unwritten extent
+Message-ID: <20120820231733.GL19235@dastard>
+References: <5028FC3D.8000007@oracle.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120820230501.GH19235@dastard>
+In-Reply-To: <5028FC3D.8000007@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,30 +27,52 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-> Looks good.
+On Mon, Aug 13, 2012 at 09:08:13PM +0800, Jeff Liu wrote:
+> Improve xfs_seek_hole() to search hole offset from page cache for unwritten extents.
 > 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> 
-> Next up - make inode64 the default mount option....
-> 
-On my todo list
- 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
+same as previous patch.
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+> +		 */
+> +		if (nmap == 1) {
+> +			offset = isize;
+> +			break;
+> +		}
+>  
+> -	holeoff = XFS_FSB_TO_B(mp, fsbno);
+> -	if (holeoff <= start)
+> -		offset = start;
+> -	else {
+>  		/*
+> -		 * xfs_bmap_first_unused() could return a value bigger than
+> -		 * isize if there are no more holes past the supplied offset.
+> +		 * Both mappings contains data, proceed to the next round of
+> +		 * search if the current reading offset not beyond or hit EOF.
+>  		 */
+> -		offset = min_t(loff_t, holeoff, isize);
+
+		ASSERT(i > 1);
+
+> +		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
+> +		start = XFS_FSB_TO_B(mp, fsbno);
+> +		if (start >= isize) {
+> +			offset = isize;
+> +			break;
+> +		}
+>  	}
+
+Cheers,
+
+Dave.
 -- 
---Carlos
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
