@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7KGMHKK242728 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 11:22:17 -0500
+	q7KGekTX243850 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 11:40:46 -0500
 Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 0GLL8XqBuPcd8ZNq (version=TLSv1 cipher=AES256-SHA
+	with ESMTP id qvvN7K66uxXBc3kl (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 20 Aug 2012 09:22:15 -0700 (PDT)
-Date: Mon, 20 Aug 2012 18:22:12 +0200
+	Mon, 20 Aug 2012 09:40:44 -0700 (PDT)
+Date: Mon, 20 Aug 2012 18:40:42 +0200
 From: Jan Kara <jack@suse.cz>
-Subject: Re: Test 272 fails for ext3
-Message-ID: <20120820162212.GA17354@quack.suse.cz>
-References: <20120816092808.GA9057@quack.suse.cz>
-	<20120816093757.GA11519@quack.suse.cz>
-	<20120816224858.GY2877@dastard>
+Subject: Re: [PATCH] xfstests: Provide test whether fs supports direct IO
+	and use it
+Message-ID: <20120820164042.GB17354@quack.suse.cz>
+References: <1345125391-15055-1-git-send-email-jack@suse.cz>
+	<20120816230400.GZ2877@dastard>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="+QahgC5+KEYLbs62"
 Content-Disposition: inline
-In-Reply-To: <20120816224858.GY2877@dastard>
+In-Reply-To: <20120816230400.GZ2877@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,105 +24,80 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-ext4@vger.kernel.org, dmonakhov@openvz.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+Cc: Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
 
-
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-
-On Fri 17-08-12 08:48:58, Dave Chinner wrote:
-> On Thu, Aug 16, 2012 at 11:37:57AM +0200, Jan Kara wrote:
-> >   Hello,
+On Fri 17-08-12 09:04:00, Dave Chinner wrote:
+> On Thu, Aug 16, 2012 at 03:56:31PM +0200, Jan Kara wrote:
+> > ext3 in data=journal mode does not support direct IO. Tests which use
+> > direct IO fail due to that. Provide function checking whether direct IO
+> > is supported and skip tests needing direct IO if it's not.
 > > 
-> >   I was looking into why test 272 from xfstests fails for ext3 and the
-> > reason is that ext3 does not support direct IO to file with enabled data
-> > journalling (open returns EINVAL because ->direct_IO callback is not
-> > specified). So I was thinking how to accomodate this fact in the test -
-> > the best I found was to just check using xfs_io whether O_DIRECT open
-> > succeeds and perform the test only in that case. Attached patch does this
-> > or do people have other ideas?
+> > There are a few tests which use direct IO but would be meaningful even
+> > without it since they test several different things. Making these tests
+> > useful for filesystems without dio support is left for future if somebody
+> > is interested...
 > 
+> So this is just for the generic tests? There's a lot more XFS
+> specific tests that require direct IO that aren't in this patch. ;)
+  Right but I was a lazy bastard and went just through the tests that
+failed for me, checked that they failed due to direct IO, and added the
+requirement. I can go through the XFS specific tests and add the
+requirement but frankly I find a little use in that.
+
+> Also, I suspect that you've missed all the tests that run fsstress,
+> because that uses direct IO as well. There's probably others as
+> well. No doub they didn't produce test failures, but it's entirely
+> possible that they are not testing what they are supposed to be
+> testing as a result of direct IO failing silently...
+  It's not failing silently. For ext3 we return EINVAL from open so I'd
+expect reasonably written tests to complain.
+
+> > --- a/198
+> > +++ b/198
+> > @@ -44,6 +44,7 @@ _cleanup()
+> >  
+> >  _supported_fs generic
+> >  _supported_os Linux
+> > +_require_direct_io
+> >  _require_aiodio aiodio_sparse2
 > 
-> # ext3 doesn't support direct IO in journalling mode
-> ext3_write_opt_list="iflag=noatime conv=notrunc conv=fsync"
-> ext4_write_opt_list="iflag=noatime conv=notrunc conv=fsync oflag=direct"
+> For all the tests are already call _require_aiodio, just embed the
+> _require_dio test inside that one.
+  OK, will do.
+
+> > +#
+> > +# Check if the filesystem supports direct IO
+> > +#
+> > +_require_direct_io()
+> > +{
+> > +	testfile=$TEST_DIR/$$.dio
+> > +	testio=`$XFS_IO_PROG -F -f -d -c "" $testfile 2>&1`
 > 
-> if [ $FSTYP = "ext3" ]; then
-> 	write_opt_list="$ext3_write_opt_list"
-> else
-> 	write_opt_list="$ext4_write_opt_list"
-> fi
-  Yeah, this is probably simpler. Thanks for suggestion. BTW, ext4 also
-does not support direct IO and data journalling but it silently falls back
-to buffered IO. Anyway new patch is attached.
+> This assumes that both the test device and the scratch device are
+> both using the same mount options, right?
+> 
+> Some tests use the scratch device with different mount options, so
+> may actually allow direct IO to work even though the test device
+> fails. I haven't looked at whether any of the tests in this patch do
+> that, but if they do then you might also need a _require_scratch_dio
+> function for those tests....
+  I went through all the changed tests and none of them seem to play tricks
+with mount options so _require_direct_io should be fine for all of them.
+
+  Thanks for review, I'll send a new version of the patch after a test run
+finishes.
 
 								Honza
 -- 
 Jan Kara <jack@suse.cz>
 SUSE Labs, CR
 
---+QahgC5+KEYLbs62
-Content-Type: text/x-patch; charset=us-ascii
-Content-Disposition: attachment; filename="0001-Make-test-272-work-for-ext3.patch"
-
->From 563edb54e3f3a45b5c92ab21bbe41deacef0ae39 Mon Sep 17 00:00:00 2001
-From: Jan Kara <jack@suse.cz>
-Date: Thu, 16 Aug 2012 11:14:35 +0200
-Subject: [PATCH v2] Make test 272 work for ext3
-
-ext3 does not support direct IO for files with data journalling. This
-confuses test 272. Make the test check whether open succeeds and perform
-the writing only if it does.
-
-Thanks for Dave Chinner for suggesting a simpler way to fix the test.
-
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- 272 |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
-
-diff --git a/272 b/272
-index 26dfa3b..7b142e2 100755
---- a/272
-+++ b/272
-@@ -32,6 +32,12 @@ tmp=/tmp/$$
- status=1	# failure is the default!
- trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
- 
-+write_opt_list="iflag=noatime conv=notrunc conv=fsync oflag=direct"
-+if [ $FSTYP = "ext3" ]; then
-+	# ext3 doesn't support direct IO in journalling mode
-+	write_opt_list="iflag=noatime conv=notrunc conv=fsync"
-+fi
-+
- # get standard environment, filters and checks
- . ./common.rc
- . ./common.filter
-@@ -40,7 +46,6 @@ _workout()
- 	echo ""
- 	echo " Switch data journalling mode"
- 	echo ""
--	write_opt_list="iflag=noatime conv=notrunc conv=fsync oflag=direct"
- 	chattr_opt_list="+j -j +jS -j"
- 	idx=0
- 	#
--- 
-1.7.1
-
-
---+QahgC5+KEYLbs62
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---+QahgC5+KEYLbs62--
