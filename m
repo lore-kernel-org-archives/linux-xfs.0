@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7L4t5QJ035998 for <xfs@oss.sgi.com>; Mon, 20 Aug 2012 23:55:06 -0500
-Message-ID: <5033149C.5090401@oracle.com>
-Date: Tue, 21 Aug 2012 12:54:52 +0800
+	q7L5515P038898 for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 00:05:01 -0500
+Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
+	cuda.sgi.com with ESMTP id xA8ACLrwatfpDdB4 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 20 Aug 2012 22:05:00 -0700 (PDT)
+Message-ID: <503316F2.9050704@oracle.com>
+Date: Tue, 21 Aug 2012 13:04:50 +0800
 From: Jie Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH v7 2/4] xfs: Introduce a helper routine to probe data
 	or hole offset from page cache
-References: <5028FC2E.2010802@oracle.com> <5032583F.6050207@sgi.com>
-In-Reply-To: <5032583F.6050207@sgi.com>
+References: <5028FC2E.2010802@oracle.com> <20120820231309.GJ19235@dastard>
+In-Reply-To: <20120820231309.GJ19235@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,72 +26,65 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 08/20/12 23:31, Mark Tinguely wrote:
-> On 08/13/12 08:07, Jeff Liu wrote:
->> helper routine to lookup data or hole offset from page cache for
->> unwritten extents.
+On 08/21/12 07:13, Dave Chinner wrote:
+> On Mon, Aug 13, 2012 at 09:07:58PM +0800, Jeff Liu wrote:
+>> helper routine to lookup data or hole offset from page cache for unwritten extents.
 >>
->> Signed-off-by: Jie Liu<jeff.liu@oracle.com>
->>
->> ---
->>   fs/xfs/xfs_file.c |  213
->> +++++++++++++++++++++++++++++++++++++++++++++++++++++
->>   1 files changed, 213 insertions(+), 0 deletions(-)
->> +STATIC bool
->> +xfs_find_get_desired_pgoff(
->> +    struct inode        *inode,
->> +    struct xfs_bmbt_irec    *map,
->> +    unsigned int        type,
->> +    loff_t            *offset)
->> +{
->
-> ...
->
->> +        for (i = 0; i<  nr_pages; i++) {
->> +            struct page    *page = pvec.pages[i];
->> +            loff_t        b_offset;
+>> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+> ....
+>> +		unsigned int	i;
 >> +
->> +            /*
->> +             * Page index is out of range, searching done.
->> +             * If the current offset is not reaches the end
->> +             * of the specified search range, there should
->> +             * be a hole between them.
->> +             */
->> +            if (page->index>  end) {
+>> +		want = min_t(pgoff_t, end - index, (pgoff_t)PAGEVEC_SIZE);
+> No need for the cast to (pgoff_t) here. That's what the min_t()
+> macro does for you.
+Thanks for pointing this out.
 >
-> Shouldn't this sample of the index also be locked?
-Thanks for the review.  Yes, it should be locked in concert with the
-sample of index below.
-
-However, as I have mentioned at v6,
-http://oss.sgi.com/archives/xfs/2012-08/msg00028.html
-I really don't understand why page->index will be changed as those pages
-returned from pagevec_lookup() should
-have refcount > 0.  Hence,  those pages can not be removed out of VM
-cache upon memory reclaim IMHO.
-If so, both sample of index could be performed without page lock.
+>> +		for (i = 0; i < nr_pages; i++) {
+>> +			struct page	*page = pvec.pages[i];
+>> +			loff_t		b_offset;
+>> +
+>> +			/*
+>> +			 * Page index is out of range, searching done.
+>> +			 * If the current offset is not reaches the end
+>> +			 * of the specified search range, there should
+>> +			 * be a hole between them.
+>> +			 */
+>> +			if (page->index > end) {
+>> +				if (type == HOLE_OFF && lastoff < endoff) {
+>> +					*offset = lastoff;
+>> +					found = true;
+>> +				}
+>> +				goto out;
+>> +			}
+>> +
+>> +			lock_page(page);
+>> +			/*
+>> +			 * Page truncated or invalidated(page->mapping == NULL).
+>> +			 * We can freely skip it and proceed to check the next
+>> +			 * page.
+>> +			 */
+>> +			if (unlikely(page->mapping != inode->i_mapping)) {
+>> +				unlock_page(page);
+>> +				continue;
+>> +			}
+> Still need to check page->index again after locking the page. As
+> this isn't performance critical, I don't think you need the check
+> before the page is locked, anyway....
+I understand that we have to check page->mapping with page locked
+because race against inode truncation.
+But could you teaching me why page->index will be changed in either
+memory reclaim or truncates even if
+the page returned with refcount > 0?
 
 Thanks,
 -Jeff
 >
->> +                if (type == HOLE_OFF&&  lastoff<  endoff) {
->> +                    *offset = lastoff;
->> +                    found = true;
->> +                }
->> +                goto out;
->> +            }
->> +
->> +            lock_page(page);
+> Cheers,
 >
-> --Mark.
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+> Dave.
 
 _______________________________________________
 xfs mailing list
