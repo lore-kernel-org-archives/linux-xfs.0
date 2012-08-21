@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7L9DCrQ060268 for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 04:13:12 -0500
+	q7L9CfTN060193 for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 04:12:41 -0500
 Received: from acsinet15.oracle.com (acsinet15.oracle.com [141.146.126.227])
-	by cuda.sgi.com with ESMTP id 7W8js0yPQPtN7MTf (version=TLSv1
+	by cuda.sgi.com with ESMTP id t3NO0rbFu4lJyabM (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 21 Aug 2012 02:13:11 -0700 (PDT)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	Tue, 21 Aug 2012 02:12:40 -0700 (PDT)
+Received: from acsinet22.oracle.com (acsinet22.oracle.com [141.146.126.238])
 	by acsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id q7L9D8Zf026632
+	ESMTP id q7L9CcWl026018
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 09:13:09 GMT
-Received: from acsmt358.oracle.com (acsmt358.oracle.com [141.146.40.158])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	q7L9D8VZ022305
+	for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 09:12:39 GMT
+Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
+	by acsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	q7L9CcJ1004563
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 09:13:08 GMT
-Received: from abhmt114.oracle.com (abhmt114.oracle.com [141.146.116.66])
-	by acsmt358.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	q7L9D8Fm018543 for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 04:13:08 -0500
-Message-ID: <503350F2.10001@oracle.com>
-Date: Tue, 21 Aug 2012 17:12:18 +0800
+	for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 09:12:38 GMT
+Received: from abhmt109.oracle.com (abhmt109.oracle.com [141.146.116.61])
+	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	q7L9CcKn017676 for <xfs@oss.sgi.com>; Tue, 21 Aug 2012 04:12:38 -0500
+Message-ID: <503350D1.8010902@oracle.com>
+Date: Tue, 21 Aug 2012 17:11:45 +0800
 From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Subject: [PATCH v8 4/4] xfs: xfs_seek_hole() refinement with hole searching
-	from page cache for unwritten extents
+Subject: [PATCH v8 1/4] xfs: Remove type argument from
+	xfs_seek_data()/xfs_seek_hole()
 Reply-To: jeff.liu@oracle.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -40,119 +40,53 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_seek_hole() refinement with hole searching from page cache for unwritten extent.
+The type is already indicated by the function naming explicitly, so this argument
+can be omitted from those calls.
 
 Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 ---
- fs/xfs/xfs_file.c |   78 +++++++++++++++++++++++++++++++++++++++++++++-------
- 1 files changed, 67 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_file.c |   10 ++++------
+ 1 files changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3f91074..1eaeb8b 100644
+index 56afcdb..92ba18f 100644
 --- a/fs/xfs/xfs_file.c
 +++ b/fs/xfs/xfs_file.c
-@@ -1289,9 +1289,9 @@ xfs_seek_hole(
+@@ -962,8 +962,7 @@ xfs_vm_page_mkwrite(
+ STATIC loff_t
+ xfs_seek_data(
+ 	struct file		*file,
+-	loff_t			start,
+-	u32			type)
++	loff_t			start)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
  	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 	loff_t			uninitialized_var(offset);
--	loff_t			holeoff;
- 	xfs_fsize_t		isize;
- 	xfs_fileoff_t		fsbno;
-+	xfs_filblks_t		end;
- 	uint			lock;
- 	int			error;
- 
-@@ -1307,21 +1307,77 @@ xfs_seek_hole(
+@@ -1029,8 +1028,7 @@ out_unlock:
+ STATIC loff_t
+ xfs_seek_hole(
+ 	struct file		*file,
+-	loff_t			start,
+-	u32			type)
++	loff_t			start)
+ {
+ 	struct inode		*inode = file->f_mapping->host;
+ 	struct xfs_inode	*ip = XFS_I(inode);
+@@ -1092,9 +1090,9 @@ xfs_file_llseek(
+ 	case SEEK_SET:
+ 		return generic_file_llseek(file, offset, origin);
+ 	case SEEK_DATA:
+-		return xfs_seek_data(file, offset, origin);
++		return xfs_seek_data(file, offset);
+ 	case SEEK_HOLE:
+-		return xfs_seek_hole(file, offset, origin);
++		return xfs_seek_hole(file, offset);
+ 	default:
+ 		return -EINVAL;
  	}
- 
- 	fsbno = XFS_B_TO_FSBT(mp, start);
--	error = xfs_bmap_first_unused(NULL, ip, 1, &fsbno, XFS_DATA_FORK);
--	if (error)
--		goto out_unlock;
-+	end = XFS_B_TO_FSB(mp, isize);
-+
-+	for (;;) {
-+		struct xfs_bmbt_irec	map[2];
-+		int			nmap = 2;
-+		unsigned int		i;
-+
-+		error = xfs_bmapi_read(ip, fsbno, end - fsbno, map, &nmap,
-+				       XFS_BMAPI_ENTIRE);
-+		if (error)
-+			goto out_unlock;
-+
-+		/* No extents at given offset, must be beyond EOF */
-+		if (nmap == 0) {
-+			error = ENXIO;
-+			goto out_unlock;
-+		}
-+
-+		for (i = 0; i < nmap; i++) {
-+			offset = max_t(loff_t, start,
-+				       XFS_FSB_TO_B(mp, map[i].br_startoff));
-+
-+			/* Landed in a hole */
-+			if (map[i].br_startblock == HOLESTARTBLOCK)
-+				goto out;
-+
-+			/*
-+			 * Landed in an unwritten extent, try to search hole
-+			 * from page cache.
-+			 */
-+			if (map[i].br_state == XFS_EXT_UNWRITTEN) {
-+				if (xfs_find_get_desired_pgoff(inode, &map[i],
-+							HOLE_OFF, &offset))
-+					goto out;
-+			}
-+		}
- 
--	holeoff = XFS_FSB_TO_B(mp, fsbno);
--	if (holeoff <= start)
--		offset = start;
--	else {
- 		/*
--		 * xfs_bmap_first_unused() could return a value bigger than
--		 * isize if there are no more holes past the supplied offset.
-+		 * map[0] contains data or its unwritten but contains
-+		 * data in page cache, probably means that we are
-+		 * reading after EOF.  We should fix offset to point
-+		 * to the end of the file(i.e., there is an implicit
-+		 * hole at the end of any file).
- 		 */
--		offset = min_t(loff_t, holeoff, isize);
-+		if (nmap == 1) {
-+			offset = isize;
-+			break;
-+		}
-+
-+		ASSERT(i > 1);
-+
-+		/*
-+		 * Both mappings contains data, proceed to the next round of
-+		 * search if the current reading offset not beyond or hit EOF.
-+		 */
-+		fsbno = map[i - 1].br_startoff + map[i - 1].br_blockcount;
-+		start = XFS_FSB_TO_B(mp, fsbno);
-+		if (start >= isize) {
-+			offset = isize;
-+			break;
-+		}
- 	}
- 
-+out:
-+	/*
-+	 * At this point, we must have found a hole.  However, the returned
-+	 * offset may be bigger than the file size as it may be aligned to
-+	 * page boundary for unwritten extents, we need to deal with this
-+	 * situation in particular.
-+	 */
-+	offset = min_t(loff_t, offset, isize);
- 	if (offset != file->f_pos)
- 		file->f_pos = offset;
- 
 -- 
 1.7.4.1
 
