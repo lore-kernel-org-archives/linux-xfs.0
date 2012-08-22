@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from tinguely (eagdhcp-232-196.americas.sgi.com [128.162.232.196])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7MJpURO040383 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 14:51:30 -0500
-Received: from tinguely (localhost [127.0.0.1])
-	by tinguely (8.14.5/8.14.5) with ESMTP id q7MJqEOG005965
-	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 14:52:14 -0500 (CDT)
-	(envelope-from rjohnston@sgi.com)
-Received: (from tinguely@localhost)
-	by tinguely (8.14.5/8.14.5/Submit) id q7MJqEpX005964
-	for xfs@oss.sgi.com; Wed, 22 Aug 2012 14:52:14 -0500 (CDT)
-	(envelope-from rjohnston@sgi.com)
-Message-Id: <20120822194928.493451995@sgi.com>
-Date: Wed, 22 Aug 2012 14:49:06 -0500
-From: Rich Johnston <rjohnston@sgi.com>
-Subject: [PATCH] xfstests: Replace lstat64 with cat in test 120
+	q7MJMCoq038888 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 14:22:12 -0500
+Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
+	[128.162.236.41])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 7A12B304064
+	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 12:22:58 -0700 (PDT)
+Message-Id: <20120822190628.493351994@sgi.com>
+Date: Wed, 22 Aug 2012 14:06:06 -0500
+From: rjohnston@sgi.com
+Subject: xfstests: Replace lstat64 with cat in test 120
 References: <20120822190605.279843301@sgi.com>
 Content-Disposition: inline; filename=replace_lstat64_with_cat.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
