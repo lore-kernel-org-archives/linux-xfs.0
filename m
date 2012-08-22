@@ -1,21 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7MKwQI2051228 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 15:58:26 -0500
-Received: from mail-gh0-f181.google.com (mail-gh0-f181.google.com
-	[209.85.160.181]) by cuda.sgi.com with ESMTP id
-	jET0oR1TRrzjll9p (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 13:59:12 -0700 (PDT)
-Received: by ghz3 with SMTP id 3so41828ghz.26
-	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 13:59:11 -0700 (PDT)
-Message-ID: <5035481C.5050503@inktank.com>
-Date: Wed, 22 Aug 2012 15:59:08 -0500
-From: Alex Elder <elder@inktank.com>
-MIME-Version: 1.0
-Subject: Re: xfstests: Replace lstat64 with cat in test 120
-References: <20120822185456.4F189B010E6D@gulag1.americas.sgi.com>
-In-Reply-To: <20120822185456.4F189B010E6D@gulag1.americas.sgi.com>
+	q7MMqgmk071101 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:52:43 -0500
+Received: from e5.ny.us.ibm.com (e5.ny.us.ibm.com [32.97.182.145]) by
+	cuda.sgi.com with ESMTP id VMWDsYvsmc5sRTcA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 15:53:28 -0700 (PDT)
+Received: from /spool/local
+	by e5.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Wed, 22 Aug 2012 18:53:28 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by d01dlp02.pok.ibm.com (Postfix) with ESMTP id 73DFA6E803A
+	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 18:53:25 -0400 (EDT)
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q7MMrP5m172386 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 18:53:25 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	q7MMrNGR025541 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 19:53:25 -0300
+Subject: Re: [RFC v6 PATCH 1/5] xfs: Remove incore use of XFS_OQUOTA_ENFD
+	and XFS_OQUOTA_CHKD
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20120814224645.GQ2877@dastard>
+References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120720230208.20477.49663.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120814224645.GQ2877@dastard>
+Date: Wed, 22 Aug 2012 17:53:22 -0500
+Message-ID: <1345676002.2260.0.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,66 +43,131 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 08/22/2012 01:54 PM, Rich Johnston wrote:
-> The later versions of libtool (i.e.2.4+) create a wrapper (bash script) for
-> lstat64 in the src directory.  The wrapper calls the real binary created by
-> libtool (.libs/lstat64)
-> 
-> Test 120 only copies src/lstat64 to $SCRATCH_MNT.  If a later version of
-> libtool is used then only the wrapper is copied to $SCRATCH_MNT and the wrapper
-> will fail to find .libs/lstat64.
-> 
->    ~/xfstests # diff 120.out 120.out.bad
->    /mnt/scratch/lstat64: error: `/mnt/scratch/.libs/lstat64' does not exist
->    This script is just a wrapper for lstat64.
->    See the libtool documentation for more information.
-> 
-> This patch copies /usr/bin/cat (which is readily availible on unix systems) to
-> $SCRATCH_MNT instead of src/lstat64.
+will fix them as suggested.
 
-I was going to suggest you use /bin/cat instead, but it appears
-the actual patch does.
+Thanks for the review.
 
-Please update your description.  Otherwise, looks good to me.
+Chandra
+On Wed, 2012-08-15 at 08:46 +1000, Dave Chinner wrote:
+> On Fri, Jul 20, 2012 at 06:02:08PM -0500, Chandra Seetharaman wrote:
+> > Remove all incore use of XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD. Instead,
+> > start using XFS_GQUOTA_.* XFS_PQUOTA_.* counterparts for GQUOTA nd
+> > PQUOTA respectively.
+> > 
+> > No changes are made to the on-disk version of the superblock yet. On-disk
+> > copy still uses XFS_OQUOTA_ENFD and XFS_OQUOTA_CHKD.
+> > 
+> > Read and write of the superblock does the conversion from *OQUOTA*
+> > to *[PG]QUOTA*.
+> 
+> Couple of minor style things....
+> 
+> > @@ -622,6 +636,7 @@ xfs_sb_to_disk(
+> >  	xfs_sb_field_t	f;
+> >  	int		first;
+> >  	int		size;
+> > +	 __uint16_t	tmp16;
+> 
+> tmp16 is a bad name for a temporary variable. Move it to the scope
+> that uses it, and name it for it's purpose. i.e:
+> 
+> 
+> >  
+> >  	ASSERT(fields);
+> >  	if (!fields)
+> > @@ -636,6 +651,26 @@ xfs_sb_to_disk(
+> >  
+> >  		if (size == 1 || xfs_sb_info[f].type == 1) {
+> >  			memcpy(to_ptr + first, from_ptr + first, size);
+> > +		} else if (f == XFS_SBS_QFLAGS) {
+> 
+> 			__uint16_t	qflags;
+> 
+> > +			/*
+> > +			 * The in-core version of sb_qflags do not have
+> > +			 * XFS_OQUOTA_* flags, whereas the on-disk version
+> > +			 * does.  Save the in-core sb_qflags temporarily,
+> > +			 * removing the new XFS_{PG}QUOTA_* flags and re-apply
+> > +			 * the old on-disk flags.
+> > +			 */
+> > +			tmp16 = from->sb_qflags &
+> 
+> 			qflags = from->sb_qflags & ....
+> 
+> > +					~(XFS_PQUOTA_ENFD | XFS_PQUOTA_CHKD |
+> > +					XFS_GQUOTA_ENFD | XFS_GQUOTA_CHKD);
+> > +
+> > +			if (from->sb_qflags &
+> > +					(XFS_PQUOTA_ENFD | XFS_GQUOTA_ENFD))
+> > +				tmp16 |= XFS_OQUOTA_ENFD;
+> > +			if (from->sb_qflags &
+> > +					(XFS_PQUOTA_CHKD | XFS_GQUOTA_CHKD))
+> > +				tmp16 |= XFS_OQUOTA_CHKD;
+> > +
+> > +			*(__be16 *)(to_ptr + first) = cpu_to_be16(tmp16);
+> >  		} else {
+> >  			switch (size) {
+> >  			case 2:
+> 
+> ....
+> 
+> > @@ -339,9 +339,11 @@ xfs_qm_scall_quotaon(
+> >  	    ||
+> >  	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
+> >  	    (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+> > -	    (flags & XFS_GQUOTA_ACCT) == 0 &&
+> > +	    (flags & XFS_PQUOTA_ENFD))
+> > +	    ||
+> > +	    ((flags & XFS_GQUOTA_ACCT) == 0 &&
+> >  	    (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+> > -	    (flags & XFS_OQUOTA_ENFD))) {
+> > +	    (flags & XFS_GQUOTA_ENFD))) {
+> 
+> Can you fix the flat indenting here at the same time so that the
+> logic is obvious at a glance and consistent with the rest of the XFS
+> code? i.e.
+> 
+> 	if (((flags & XFS_UQUOTA_ACCT) == 0 &&
+> 	     (mp->m_sb.sb_qflags & XFS_UQUOTA_ACCT) == 0 &&
+> 	     (flags & XFS_UQUOTA_ENFD)) ||
+> 	    ((flags & XFS_PQUOTA_ACCT) == 0 &&
+> 	     (mp->m_sb.sb_qflags & XFS_PQUOTA_ACCT) == 0 &&
+> 	     (flags & XFS_PQUOTA_ENFD)) ||
+> 	    (flags & XFS_GQUOTA_ACCT) == 0 &&
+> 	     (mp->m_sb.sb_qflags & XFS_GQUOTA_ACCT) == 0 &&
+> 	     (flags & XFS_GQUOTA_ENFD))) {
+> 
+> >  		xfs_debug(mp,
+> >  			"%s: Can't enforce without acct, flags=%x sbflags=%x\n",
+> >  			__func__, flags, mp->m_sb.sb_qflags);
+> > @@ -771,8 +773,10 @@ xfs_qm_scall_getquota(
+> >  	 * so return zeroes in that case.
+> >  	 */
+> >  	if ((!XFS_IS_UQUOTA_ENFORCED(mp) && dqp->q_core.d_flags == XFS_DQ_USER) ||
+> > -	    (!XFS_IS_OQUOTA_ENFORCED(mp) &&
+> > -			(dqp->q_core.d_flags & (XFS_DQ_PROJ | XFS_DQ_GROUP)))) {
+> > +	    (!XFS_IS_PQUOTA_ENFORCED(mp)
+> > +			&& dqp->q_core.d_flags == XFS_DQ_PROJ) ||
+> > +	    (!XFS_IS_GQUOTA_ENFORCED(mp)
+> > +			&& dqp->q_core.d_flags == XFS_DQ_GROUP)) {
+> 
+> Same here:
+> 
+> 	if ((!XFS_IS_UQUOTA_ENFORCED(mp) &&
+> 	     dqp->q_core.d_flags == XFS_DQ_USER) ||
+> 	    (!XFS_IS_PQUOTA_ENFORCED(mp) &&
+> 	     dqp->q_core.d_flags == XFS_DQ_PROJ) ||
+> 	    (!XFS_IS_GQUOTA_ENFORCED(mp) &&
+> 	     dqp->q_core.d_flags == XFS_DQ_GROUP)) {
+> 
+> Otherwise it looks good. Fix the above and you can add a
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
 
-Reviewed-by: Alex Elder <elder@inktank.com>
-
-> 
-> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-> 
-> ---
->  120 |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> Index: b/120
-> ===================================================================
-> --- a/120
-> +++ b/120
-> @@ -68,12 +68,12 @@ fi
->  
->  #executable file
->  echo "*** copying file ***"
-> -cp src/lstat64 $SCRATCH_MNT
-> -src/lstat64 $SCRATCH_MNT/lstat64 >$tmp.out
-> +cp /bin/cat $SCRATCH_MNT
-> +src/lstat64 $SCRATCH_MNT/cat >$tmp.out
->  sleep 5
->  echo "*** executing file ***"
-> -$SCRATCH_MNT/lstat64 $SCRATCH_MNT/lstat64 >/dev/null
-> -_compare_access_times $SCRATCH_MNT/lstat64 "executing file"
-> +$SCRATCH_MNT/cat $SCRATCH_MNT/cat >/dev/null
-> +_compare_access_times $SCRATCH_MNT/cat "executing file"
->  
->  #reading file
->  echo "*** creating file ***"
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
 
 _______________________________________________
 xfs mailing list
