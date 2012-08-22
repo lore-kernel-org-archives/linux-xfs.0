@@ -1,38 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7MNe0nW081016 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 18:40:01 -0500
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
-	cuda.sgi.com with ESMTP id Tr9ZAIFPeQIZq6gI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 16:40:46 -0700 (PDT)
-Received: from /spool/local
-	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
-	Violators will be prosecuted
-	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 22 Aug 2012 17:40:46 -0600
-Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
-	[9.17.195.107])
-	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3D1C419D8040
-	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:40:43 -0600 (MDT)
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q7MNedpO099070 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:40:40 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
-	id q7MNedEE026798
-	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:40:39 -0600
-Subject: Re: [RFC v6 PATCH 5/5] xfs: Add a new field to fs_quota_stat to
-	get pquota information
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20120815023742.GU2877@dastard>
-References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120720230305.20477.41556.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120815023742.GU2877@dastard>
-Date: Wed, 22 Aug 2012 18:40:38 -0500
-Message-ID: <1345678838.2260.34.camel@chandra-lucid.austin.ibm.com>
-Mime-Version: 1.0
-Reply-To: sekharan@us.ibm.com
+	q7MNfcNG081238 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 18:41:39 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	BEN5v5nVnuJo1zid for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 16:42:22 -0700 (PDT)
+Date: Thu, 23 Aug 2012 09:42:19 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC] [PATCH 0/18] xfstests: move tests out of top level
+Message-ID: <20120822234219.GR19235@dastard>
+References: <1343294892-20991-1-git-send-email-david@fromorbit.com>
+	<5032ABBD.80504@sgi.com> <20120820224306.GF19235@dastard>
+	<20120821163337.GC29979@sgi.com> <20120821220926.GP19235@dastard>
+	<20120822191642.GF29979@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20120822191642.GF29979@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -45,90 +29,188 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-Thanks for the review..
-
-On Wed, 2012-08-15 at 12:37 +1000, Dave Chinner wrote:
-> On Fri, Jul 20, 2012 at 06:03:05PM -0500, Chandra Seetharaman wrote:
-> > Use separate structure for filling the project quota information
-> > for the Q_XGETQSTAT quota command.
+On Wed, Aug 22, 2012 at 02:16:42PM -0500, Ben Myers wrote:
+> Dave,
+> 
+> On Wed, Aug 22, 2012 at 08:09:26AM +1000, Dave Chinner wrote:
+> > On Tue, Aug 21, 2012 at 11:33:37AM -0500, Ben Myers wrote:
+> > > On Tue, Aug 21, 2012 at 08:43:06AM +1000, Dave Chinner wrote:
+> > > > On Mon, Aug 20, 2012 at 04:27:25PM -0500, Mark Tinguely wrote:
+> > > > > On 07/26/12 04:27, Dave Chinner wrote:
+> > > > > >Alt-Subject: Games with Sed, Grep and Awk.
+> > > > > >
+> > > > > >This series is based on top of the large filesystem test series.
+> > > > > >
+> > > > > >This moves all the tests into a ./tests subdirectory, and sorts them into
+> > > > > >classes of related tests. Those are:
+> > > > > >
+> > > > > >	tests/generic:	valid for all filesystems
+> > > > > >	tests/shared:	valid for a limited number of filesystems
+> > > > > >	tests/xfs:	xfs specific tests
+> > > > > >	tests/btrfs	btrfs specific tests
+> > > > > >	tests/ext4	ext4 specific tests
+> > > > > >	tests/udf	udf specific tests
+> > > > > 
+> > > > > The SGI XFS group talked about your proposed changes to xfstests and
+> > > > > the response is very positive.
+> > > > > 
+> > > > > The couple concerns are:
+> > > > > 
+> > > > > 1) There is a consensus in the group that the benchmark framework
+> > > > >    should remain until there is a common benchmark available.
+> > > > > 
+> > > > >    Could the benchmark infrastructure be placed into its own directory
+> > > > >    until a new common benchmark framework has been adopted?
+> > > > 
+> > > > Keeping it just complicates things. The benchmark infrastructure
+> > > > is bitrotted and was largely just a hack tacked on to the side of
+> > > > the regression test suite.
+> > > > 
+> > > > For it to be useful in an automated test environment, it would need
+> > > > to be re-implemented from scratch with reliable recording of results
+> > > > and the ability to determine if a result is unusual or not. None of
+> > > > this exists - it's just a framework to run a couple of benchmarks
+> > > > and dump some output to stdout using the xfstests machine config
+> > > > files....
+> > > > 
+> > > > I have tried integrating other benchmarks into xfstests a while back
+> > > > (e.g. compile bench, fsmark, etc) and using the results for some
+> > > > kind of meaningful performance regression test. I rapidly came to
+> > > > the conclusion that the infrastructure was not up to scratch and
+> > > > that my simple handwritten standalone test scripts to iterate
+> > > > through benchmarks and capture results was much easier to use and
+> > > > modify than to jump through the weird bench infrastructure hoops.
+> > > > 
+> > > > So, no, I don't think it's worth keeping at all.
+> > > 
+> > > You've already made it clear that you feel the current bench implementation is
+> > > not worth keeping.  Once a suitable replacement for the bench infrastructure
+> > > has been implemented we can remove the old one.  Until then we prefer to keep
+> > > what we have in the tree.
 > > 
-> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
-> > ---
-> >  fs/xfs/xfs_qm_syscalls.c |   26 +++++++++++++-------------
-> >  1 files changed, 13 insertions(+), 13 deletions(-)
+> > That's not how the process works 
+> 
+> That is exactly how the process works.  You posted an RFC and Mark and the XFS
+> team at SGI walked through your patch set.  Mark subsequently posted the
+> commentary in reply to your RFC.  Cruft or not, the removal of a feature goes
+> through the same review process as everything else.
+
+Sure, but you need to justify your arguments for keeping something
+with evidence and logic - handwaving about wanting something is, and
+always has been, insufficient justification. That's the part of the
+process I'm talking about - that statements of need require
+evidence, especially when you agreed to the removal at LSF in San
+Fransisco a few months ago. My arguments at the time were:
+
+	a) nobody is actually using it,
+	b) it has effectively been unmaintained since 2003
+	c) it has no regression analysis or detection capability
+	d) it shares *very little* of xfstests
+	e) it gets in the way of cleaning up xfstests
+	f) there are far better workload generators that are being
+	actively maintained.
+
+And AFAIA, nothing has changed in the past few months.
+
+> In this case, SGI would
+> like to keep the benchmark capability in xfstests in order have a better chance
+> of catching performance regressions.
+....
+> > i.e. are you trying to tell us that SGI uses it internally without
+> > actually saying so? If so, why not just say that straight up? If
+> > not, then why is removing an unused hack a problem?
+
+You haven't answered the most important question I've asked (i.e.
+provided any evidence that bench is valuable as it stands).
+You've skirted around answering this question, so I'm left to read
+between the lines and hearing this:
+
+	a) We think that we might use bench in the future,
+	b) but we don't really know if bench is useful or not,
+	c) and we don't really know what something useful might look
+	like, either,
+	d) so just move it out of the way into a subdir for now
+
+It's all just indecisive handwaving with a (IMO) silly conclusion
+because you have no clear plan what you want to do for performance
+regression testing, except for the thought that "bench might be
+useful".
+
+The thing is - all I've done is:
+
+	d) so just move it out of the way
+
+It's in a git repository - deleted files are not lost! They are
+simply moved into revision history where they can still be accessed
+at will. i.e. the file(s), all their contents and history are still
+preserved, you just need to run a git command to get them back.
+
+IMO, that's a far better solution that moving bitrotted code to
+another directory and just leaving it in an even more bitrotted (and
+now broken) state for people to trip over.
+
+> > As it is, I've been removing hacky functionality and then
+> > re-implementing it in a sane manner after everything has been moved
+> > about if it is still useful (e.g. expunged tests). The bench stuff
+> > is no different - I just don't see it as a useful addition to
+> > xfstests, so I haven't readded it.
 > > 
-> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-> > index f011cf3..482efc0 100644
-> > --- a/fs/xfs/xfs_qm_syscalls.c
-> > +++ b/fs/xfs/xfs_qm_syscalls.c
-> > @@ -421,7 +421,6 @@ xfs_qm_scall_getqstat(
-> >  	tempuqip = tempgqip = temppqip = B_FALSE;
-> >  	memset(out, 0, sizeof(fs_quota_stat_t));
-> >  
-> > -	out->qs_version = FS_QSTAT_VERSION;
-> >  	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
-> >  		out->qs_uquota.qfs_ino = NULLFSINO;
-> >  		out->qs_gquota.qfs_ino = NULLFSINO;
-> > @@ -434,8 +433,6 @@ xfs_qm_scall_getqstat(
-> >  	out->qs_pad = 0;
-> >  	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
-> >  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
-> > -	if (&out->qs_gquota != &out->qs_pquota)
-> > -		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-> >  
-> >  	if (q) {
-> >  		uip = q->qi_uquotaip;
-> > @@ -452,11 +449,6 @@ xfs_qm_scall_getqstat(
-> >  					0, 0, &gip) == 0)
-> >  			tempgqip = B_TRUE;
-> >  	}
-> > -	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
-> > -		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
-> > -					0, 0, &pip) == 0)
-> > -			temppqip = B_TRUE;
-> > -	}
-> >  	if (uip) {
-> >  		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
-> >  		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
-> > @@ -469,11 +461,19 @@ xfs_qm_scall_getqstat(
-> >  		if (tempgqip)
-> >  			IRELE(gip);
-> >  	}
-> > -	if (pip) {
-> > -		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-> > -		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-> > -		if (temppqip)
-> > -			IRELE(pip);
-> > +	if (out->qs_version >= FS_QSTAT_VERSION_2) {
-> > +		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
-> > +		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
-> > +			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
-> > +						0, 0, &pip) == 0)
-> > +				temppqip = B_TRUE;
-> > +		}
-> > +		if (pip) {
-> > +			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
-> > +			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
-> > +			if (temppqip)
-> > +				IRELE(pip);
-> > +		}
+> > Hence, if you really want to keep the bench functionality as viable,
+> > long term supported fucntionality, then send me patches that
+> > re-implement it cleanly on top of the patchset I posted. There's
+> > nothing stopping you from helping with this re-org of xfstests by
+> > contributing patches to provide the functionality you'd like to
+> > have....
 > 
-> Doesn't this mean that we'll never report project quota for
-> FS_QSTAT_VERSION structures and the old quota format? i.e. existing
-> tools with a new kernel won't return the project quota info in the
-> group quota fields?
+> Your point is well taken here.  SGI would like to keep the bench functionality
+> and we're prepared to spend time on keeping it viable.  Phil White has agreed
+> to take point on that effort.  The current thinking is to move the benchmark
+> code out of the way into a subdirectory first, and then set about improving (or
+> replacing) it.
 
-Good catch. I will add additional code to check the qs_version and the
-new pquota flag to cover that combination.
+OK, so moving it to revision history will be just fine until patches
+are written some time in the future to make it work again in a
+subdirectory.
 
-> 
-> Cheers,
-> 
-> Dave.
+But before anything major gets done with bench, there needs to be a
+coherent development plan produced. What is it that you intend to do
+with bench? You made no mention of this at LSF, so I'm completely in
+the dark here about your intentions. If you are going to develop
+bench into a performance regression suite, then we first need a
+discussion (and document) cwonstating what it is and isn't going to
+do, how regressions are going to be detected, how the results are
+going to be stored for trend analysis and presentation, etc.
 
+For example, the first feature on my list for any new performance
+regression test suite is PCP integration. If you can't monitor the
+system behaviour effectively during performance tests, then they are
+effectively useless for analysing the root cause of regressions. A
+lot of what I do is performance related, and modifcations live and
+die by what such monitoring shows of the system behaviour.
+Therefore, any new performance regression suite needs to generate
+PCP archives of system and XFS level behaviour....
+
+Then, once we have an idea of what is going to be done, the white
+elephant can then be addressed: is xfstests the right place for this
+functionality?
+
+FWIW, this is the sort of reporting that a performance regression
+test suite should produce:
+
+http://lists.linux.hp.com/~enw/ext4/3.2/
+
+Indeed, why start with bench when you can start with something far
+more advanced....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
