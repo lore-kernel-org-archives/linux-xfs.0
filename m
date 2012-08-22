@@ -1,34 +1,36 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7MNVpx1079541 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 18:31:51 -0500
-Received: from e8.ny.us.ibm.com (e8.ny.us.ibm.com [32.97.182.138]) by
-	cuda.sgi.com with ESMTP id 5knq95fT5dA1fmoQ (version=TLSv1
+	q7MNe0nW081016 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 18:40:01 -0500
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154]) by
+	cuda.sgi.com with ESMTP id Tr9ZAIFPeQIZq6gI (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 16:32:37 -0700 (PDT)
+	Wed, 22 Aug 2012 16:40:46 -0700 (PDT)
 Received: from /spool/local
-	by e8.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
 	Violators will be prosecuted
 	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
-	Wed, 22 Aug 2012 19:32:37 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by d01dlp03.pok.ibm.com (Postfix) with ESMTP id 33FADC90042
-	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 19:32:34 -0400 (EDT)
-Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
-	q7MNWXuV163610 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 19:32:33 -0400
-Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
-	by d01av01.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
-	q7MNWX9G022992 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 19:32:33 -0400
-Subject: Re: [RFC v6 PATCH 4/5] xfs: Add proper versioning support to
-	fs_quota_stat
+	Wed, 22 Aug 2012 17:40:46 -0600
+Received: from d03relay05.boulder.ibm.com (d03relay05.boulder.ibm.com
+	[9.17.195.107])
+	by d03dlp03.boulder.ibm.com (Postfix) with ESMTP id 3D1C419D8040
+	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:40:43 -0600 (MDT)
+Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
+	by d03relay05.boulder.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q7MNedpO099070 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:40:40 -0600
+Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av03.boulder.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP
+	id q7MNedEE026798
+	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 17:40:39 -0600
+Subject: Re: [RFC v6 PATCH 5/5] xfs: Add a new field to fs_quota_stat to
+	get pquota information
 From: Chandra Seetharaman <sekharan@us.ibm.com>
-In-Reply-To: <20120815023206.GT2877@dastard>
+In-Reply-To: <20120815023742.GU2877@dastard>
 References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120720230247.20477.68011.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120815023206.GT2877@dastard>
-Date: Wed, 22 Aug 2012 18:32:32 -0500
-Message-ID: <1345678352.2260.32.camel@chandra-lucid.austin.ibm.com>
+	<20120720230305.20477.41556.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120815023742.GU2877@dastard>
+Date: Wed, 22 Aug 2012 18:40:38 -0500
+Message-ID: <1345678838.2260.34.camel@chandra-lucid.austin.ibm.com>
 Mime-Version: 1.0
 Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -46,157 +48,86 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
+Thanks for the review..
 
-Will change as suggested.
+On Wed, 2012-08-15 at 12:37 +1000, Dave Chinner wrote:
+> On Fri, Jul 20, 2012 at 06:03:05PM -0500, Chandra Seetharaman wrote:
+> > Use separate structure for filling the project quota information
+> > for the Q_XGETQSTAT quota command.
+> > 
+> > Signed-off-by: Chandra Seetharaman <sekharan@us.ibm.com>
+> > ---
+> >  fs/xfs/xfs_qm_syscalls.c |   26 +++++++++++++-------------
+> >  1 files changed, 13 insertions(+), 13 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
+> > index f011cf3..482efc0 100644
+> > --- a/fs/xfs/xfs_qm_syscalls.c
+> > +++ b/fs/xfs/xfs_qm_syscalls.c
+> > @@ -421,7 +421,6 @@ xfs_qm_scall_getqstat(
+> >  	tempuqip = tempgqip = temppqip = B_FALSE;
+> >  	memset(out, 0, sizeof(fs_quota_stat_t));
+> >  
+> > -	out->qs_version = FS_QSTAT_VERSION;
+> >  	if (!xfs_sb_version_hasquota(&mp->m_sb)) {
+> >  		out->qs_uquota.qfs_ino = NULLFSINO;
+> >  		out->qs_gquota.qfs_ino = NULLFSINO;
+> > @@ -434,8 +433,6 @@ xfs_qm_scall_getqstat(
+> >  	out->qs_pad = 0;
+> >  	out->qs_uquota.qfs_ino = mp->m_sb.sb_uquotino;
+> >  	out->qs_gquota.qfs_ino = mp->m_sb.sb_gquotino;
+> > -	if (&out->qs_gquota != &out->qs_pquota)
+> > -		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+> >  
+> >  	if (q) {
+> >  		uip = q->qi_uquotaip;
+> > @@ -452,11 +449,6 @@ xfs_qm_scall_getqstat(
+> >  					0, 0, &gip) == 0)
+> >  			tempgqip = B_TRUE;
+> >  	}
+> > -	if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
+> > -		if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+> > -					0, 0, &pip) == 0)
+> > -			temppqip = B_TRUE;
+> > -	}
+> >  	if (uip) {
+> >  		out->qs_uquota.qfs_nblks = uip->i_d.di_nblocks;
+> >  		out->qs_uquota.qfs_nextents = uip->i_d.di_nextents;
+> > @@ -469,11 +461,19 @@ xfs_qm_scall_getqstat(
+> >  		if (tempgqip)
+> >  			IRELE(gip);
+> >  	}
+> > -	if (pip) {
+> > -		out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+> > -		out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+> > -		if (temppqip)
+> > -			IRELE(pip);
+> > +	if (out->qs_version >= FS_QSTAT_VERSION_2) {
+> > +		out->qs_pquota.qfs_ino = mp->m_sb.sb_pquotino;
+> > +		if (!pip && mp->m_sb.sb_pquotino != NULLFSINO) {
+> > +			if (xfs_iget(mp, NULL, mp->m_sb.sb_pquotino,
+> > +						0, 0, &pip) == 0)
+> > +				temppqip = B_TRUE;
+> > +		}
+> > +		if (pip) {
+> > +			out->qs_pquota.qfs_nblks = pip->i_d.di_nblocks;
+> > +			out->qs_pquota.qfs_nextents = pip->i_d.di_nextents;
+> > +			if (temppqip)
+> > +				IRELE(pip);
+> > +		}
+> 
+> Doesn't this mean that we'll never report project quota for
+> FS_QSTAT_VERSION structures and the old quota format? i.e. existing
+> tools with a new kernel won't return the project quota info in the
+> group quota fields?
 
-Thanks for the review and clarification.
-On Wed, 2012-08-15 at 12:32 +1000, Dave Chinner wrote:
-> On Fri, Jul 20, 2012 at 06:02:47PM -0500, Chandra Seetharaman wrote:
-> > Add proper versioning support for fs_quota_stat.
-> > 
-> > Leave the earlier version as version 1 and add version 2 to add a new
-> > field "fs_qfilestat_t qs_pquota"
-> > 
-> > Callers of the system call have to just set the version of the data
-> > structure being passed, and kernel will fill as much data as possible.
-> 
-> Userspace Interface Traps for the Unwary 101, below.
-> 
-> >  /*
-> >   * Disk quota - quotactl(2) commands for the XFS Quota Manager (XQM).
-> > @@ -139,6 +140,7 @@ typedef struct fs_disk_quota {
-> >   * incore.
-> >   */
-> >  #define FS_QSTAT_VERSION	1	/* fs_quota_stat.qs_version */
-> > +#define FS_QSTAT_VERSION_2	2	/* new field qs_pquota */
-> >  
-> >  /*
-> >   * Some basic information about 'quota files'.
-> > @@ -155,13 +157,37 @@ typedef struct fs_quota_stat {
-> >  	__s8		qs_pad;		/* unused */
-> >  	fs_qfilestat_t	qs_uquota;	/* user quota storage information */
-> >  	fs_qfilestat_t	qs_gquota;	/* group quota storage information */
-> > -#define qs_pquota	qs_gquota
-> >  	__u32		qs_incoredqs;	/* number of dquots incore */
-> >  	__s32		qs_btimelimit;  /* limit for blks timer */	
-> >  	__s32		qs_itimelimit;  /* limit for inodes timer */	
-> >  	__s32		qs_rtbtimelimit;/* limit for rt blks timer */	
-> >  	__u16		qs_bwarnlimit;	/* limit for num warnings */
-> >  	__u16		qs_iwarnlimit;	/* limit for num warnings */
-> > +	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
-> >  } fs_quota_stat_t;
-> >  
-> > +#define FS_QSTAT_V1_SIZE	(offsetof(fs_quota_stat_t, qs_pquota))
-> > +#define FS_QSTAT_V2_SIZE	(FS_QSTAT_V1_SIZE + sizeof (fs_qfilestat_t))
-> 
-> I don't expect that will work on all arches. pahole (everyone needs
-> to know about pahole!) tells me the original structure on x86_64
-> looks like:
-> 
-> struct fs_quota_stat {
->         __s8                       qs_version;           /*     0     1 */
-> 
->         /* XXX 1 byte hole, try to pack */
-> 
->         __u16                      qs_flags;             /*     2     2 */
->         __s8                       qs_pad;               /*     4     1 */
-> 
->         /* XXX 3 bytes hole, try to pack */
-> 
->         fs_qfilestat_t             qs_uquota;            /*     8    24 */
->         fs_qfilestat_t             qs_gquota;            /*    32    24 */
->         __u32                      qs_incoredqs;         /*    56     4 */
->         __s32                      qs_btimelimit;        /*    60     4 */
->         /* --- cacheline 1 boundary (64 bytes) --- */
->         __s32                      qs_itimelimit;        /*    64     4 */
->         __s32                      qs_rtbtimelimit;      /*    68     4 */
->         __u16                      qs_bwarnlimit;        /*    72     2 */
->         __u16                      qs_iwarnlimit;        /*    74     2 */
-> 
->         /* size: 80, cachelines: 2, members: 11 */
->         /* sum members: 72, holes: 2, sum holes: 4 */
->         /* padding: 4 */
->         /* last cacheline: 16 bytes */
-> }
-> 
-> and that qs_iwarnlimit does not end on a 8 byte boundary. If we then
-> look at fs_qfilestat:
-> 
-> typedef struct fs_qfilestat {
->         __u64           qfs_ino;        /* inode number */
->         __u64           qfs_nblks;      /* number of BBs 512-byte-blks */
->         __u32           qfs_nextents;   /* number of extents */
-> } fs_qfilestat_t;
-> 
-> it has an 8 byte alignment, so the above FS_QSTAT_V2_SIZE
-> calculation is wrong because it doesn't take into account holes in
-> the structure and there is 4 bytes of hole between qs_iwarnlimit and
-> qs_pquota. It's entirely possible that this might require a compat
-> handler as some platforms might pack the structure differently in 32
-> vs 64 bit binaries..
-> 
-> IOWs, you ned to explicitly add padding to thie structure, like
-> someone tried to do in the past a screwed it up completely.
-> Basically, the structure needs to be padded like this:
-> 
-> typedef struct fs_quota_stat {
-> 	__s8            qs_version;     /* version number for future changes */
-> 	__u8		qs_pad1;	/* unused */
-> 	__u16           qs_flags;       /* FS_QUOTA_{U,P,G}DQ_{ACCT,ENFD} */
-> 	__u8            qs_pad2[3];     /* unused */
-> 	fs_qfilestat_t  qs_uquota;      /* user quota storage information */
-> 	fs_qfilestat_t  qs_gquota;      /* group quota storage information */
-> 	__u32           qs_incoredqs;   /* number of dquots incore */
-> 	__s32           qs_btimelimit;  /* limit for blks timer */
-> 	__s32           qs_itimelimit;  /* limit for inodes timer */
-> 	__s32           qs_rtbtimelimit;/* limit for rt blks timer */
-> 	__u16           qs_bwarnlimit;  /* limit for num warnings */
-> 	__u16           qs_iwarnlimit;  /* limit for num warnings */
-> 	__u8		qs_pad3[4];	/* unused */
-> 	fs_qfilestat_t	qs_pquota;	/* project quota storage information */
-> } fs_quota_stat_t;
-> 
-> > +
-> > +static inline int valid_qstat_version(int version)
-> > +{
-> > +	switch (version) {
-> > +	case FS_QSTAT_VERSION:
-> > +	case FS_QSTAT_VERSION_2:
-> > +		return 1;
-> > +	default:
-> > +		return 0;
-> > +	}
-> > +}
-> > +static inline int qstatsize(int version)
-> > +{
-> > +	switch (version) {
-> > +	case FS_QSTAT_VERSION_2:
-> > +		return FS_QSTAT_V2_SIZE;
-> > +	case FS_QSTAT_VERSION:
-> > +	default:
-> > +		return FS_QSTAT_V1_SIZE;
-> > +	}
-> > +}
-> 
-> I don't see much point in these helpers - just put them in line in
-> the quota_getxstate() code. i.e.
-> 
-> 	switch (version) {
-> 	case FS_QSTAT_VERSION_2:
-> 		size = FS_QSTAT_V2_SIZE;
-> 		break;
-> 	default:
-> 		version = FS_QSTAT_VERSION;
-> 		/* fallthrough */
-> 	case FS_QSTAT_VERSION:
-> 		size = FS_QSTAT_V1_SIZE;
-> 		break;
-> 	}
+Good catch. I will add additional code to check the qs_version and the
+new pquota flag to cover that combination.
+
 > 
 > Cheers,
 > 
 > Dave.
-> 
 
 
 _______________________________________________
