@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7MJMCoq038888 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 14:22:12 -0500
+	q7MIsDDl038389 for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 13:54:13 -0500
 Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
 	[128.162.236.41])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 7A12B304064
-	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 12:22:58 -0700 (PDT)
-Message-Id: <20120822190628.493351994@sgi.com>
-Date: Wed, 22 Aug 2012 14:06:06 -0500
-From: rjohnston@sgi.com
+	by relay1.corp.sgi.com (Postfix) with ESMTP id 64A938F8084
+	for <xfs@oss.sgi.com>; Wed, 22 Aug 2012 11:54:56 -0700 (PDT)
 Subject: xfstests: Replace lstat64 with cat in test 120
-References: <20120822190605.279843301@sgi.com>
-Content-Disposition: inline; filename=replace_lstat64_with_cat.patch
+Message-Id: <20120822185456.4F189B010E6D@gulag1.americas.sgi.com>
+Date: Wed, 22 Aug 2012 13:54:56 -0500 (CDT)
+From: rjohnston@sgi.com (Rich Johnston)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,7 +23,6 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
 
 The later versions of libtool (i.e.2.4+) create a wrapper (bash script) for
 lstat64 in the src directory.  The wrapper calls the real binary created by
@@ -70,7 +67,6 @@ Index: b/120
  
  #reading file
  echo "*** creating file ***"
-
 
 _______________________________________________
 xfs mailing list
