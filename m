@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54X2h135812 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:33 -0500
+	q7N558HJ136055 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:08 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	fc4lvSzluptddHDs for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:18 -0700 (PDT)
+	fqctkBGa2jsTQCZB for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:54 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbV-0003Jf-5c
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:13 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4Pbf-0003Jt-4n
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:23 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbV-0003iY-1g
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:13 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pbf-0003ib-2X
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:23 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 086/102] xfs: Properly exclude IO type flags from buffer flags
-Date: Thu, 23 Aug 2012 15:02:44 +1000
-Message-Id: <1345698180-13612-87-git-send-email-david@fromorbit.com>
+Subject: [PATCH 087/102] xfs: flush outstanding buffers on log mount failure
+Date: Thu, 23 Aug 2012 15:02:45 +1000
+Message-Id: <1345698180-13612-88-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,40 +35,59 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 12bcb3f7d4371f74bd25372e98e0d2da978e82b2
+Upstream commit: d4f3512b0891658b6b4d5fc99567242b3fc2d6b7
 
-Recent event tracing during a debugging session showed that flags
-that define the IO type for a buffer are leaking into the flags on
-the buffer incorrectly. Fix the flag exclusion mask in
-xfs_buf_alloc() to avoid problems that may be caused by such
-leakage.
+When we fail to mount the log in xfs_mountfs(), we tear down all the
+infrastructure we have already allocated. However, the process of
+mounting the log may have progressed to the point of reading,
+caching and modifying buffers in memory. Hence before we can free
+all the infrastructure, we have to flush and remove all the buffers
+from memory.
+
+Problem first reported by Eric Sandeen, later a different incarnation
+was reported by Ben Myers.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_mount.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 522ab83..a87b93a 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -175,9 +175,11 @@ xfs_buf_alloc(
- 		return NULL;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 2f011fd..beb9968 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1297,7 +1297,7 @@ xfs_mountfs(
+ 			      XFS_FSB_TO_BB(mp, sbp->sb_logblocks));
+ 	if (error) {
+ 		xfs_warn(mp, "log mount failed");
+-		goto out_free_perag;
++		goto out_fail_wait;
+ 	}
  
  	/*
--	 * We don't want certain flags to appear in b_flags.
-+	 * We don't want certain flags to appear in b_flags unless they are
-+	 * specifically set by later operations on the buffer.
- 	 */
--	flags &= ~(XBF_LOCK|XBF_MAPPED|XBF_DONT_BLOCK|XBF_READ_AHEAD);
-+	flags &= ~(XBF_LOCK | XBF_MAPPED | XBF_DONT_BLOCK |
-+		   XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
+@@ -1324,7 +1324,7 @@ xfs_mountfs(
+ 	     !mp->m_sb.sb_inprogress) {
+ 		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
+ 		if (error)
+-			goto out_free_perag;
++			goto out_fail_wait;
+ 	}
  
- 	atomic_set(&bp->b_hold, 1);
- 	atomic_set(&bp->b_lru_ref, 1);
+ 	/*
+@@ -1448,6 +1448,10 @@ xfs_mountfs(
+ 	IRELE(rip);
+  out_log_dealloc:
+ 	xfs_log_unmount(mp);
++ out_fail_wait:
++	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
++		xfs_wait_buftarg(mp->m_logdev_targp);
++	xfs_wait_buftarg(mp->m_ddev_targp);
+  out_free_perag:
+ 	xfs_free_perag(mp);
+  out_remove_uuid:
 -- 
 1.7.10
 
