@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N558HJ136055 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:08 -0500
+	q7N55Ahf136063 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:10 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	fqctkBGa2jsTQCZB for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:54 -0700 (PDT)
+	plmJ0MfdDwCnlStW for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:55 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Pbf-0003Jt-4n
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:23 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4Pbp-0003K7-Bu
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:33 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pbf-0003ib-2X
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:23 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pbp-0003j7-95
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 087/102] xfs: flush outstanding buffers on log mount failure
-Date: Thu, 23 Aug 2012 15:02:45 +1000
-Message-Id: <1345698180-13612-88-git-send-email-david@fromorbit.com>
+Subject: [PATCH 093/102] xfs: fix debug_object WARN at xfs_alloc_vextent()
+Date: Thu, 23 Aug 2012 15:02:51 +1000
+Message-Id: <1345698180-13612-94-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,61 +33,49 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jeff Liu <jeff.liu@oracle.com>
 
-Upstream commit: d4f3512b0891658b6b4d5fc99567242b3fc2d6b7
+Upstream commit: 3b876c8f2a361ceeed3fed894980c69066f903a0
 
-When we fail to mount the log in xfs_mountfs(), we tear down all the
-infrastructure we have already allocated. However, the process of
-mounting the log may have progressed to the point of reading,
-caching and modifying buffers in memory. Hence before we can free
-all the infrastructure, we have to flush and remove all the buffers
-from memory.
+Fengguang reports:
 
-Problem first reported by Eric Sandeen, later a different incarnation
-was reported by Ben Myers.
+[  780.529603] XFS (vdd): Ending clean mount
+[  781.454590] ODEBUG: object is on stack, but not annotated
+[  781.455433] ------------[ cut here ]------------
+[  781.455433] WARNING: at /c/kernel-tests/sound/lib/debugobjects.c:301 __debug_object_init+0x173/0x1f1()
+[  781.455433] Hardware name: Bochs
+[  781.455433] Modules linked in:
+[  781.455433] Pid: 26910, comm: kworker/0:2 Not tainted 3.4.0+ #51
+[  781.455433] Call Trace:
+[  781.455433]  [<ffffffff8106bc84>] warn_slowpath_common+0x83/0x9b
+[  781.455433]  [<ffffffff8106bcb6>] warn_slowpath_null+0x1a/0x1c
+[  781.455433]  [<ffffffff814919a5>] __debug_object_init+0x173/0x1f1
+[  781.455433]  [<ffffffff81491c65>] debug_object_init+0x14/0x16
+[  781.455433]  [<ffffffff8108842a>] __init_work+0x20/0x22
+[  781.455433]  [<ffffffff8134ea56>] xfs_alloc_vextent+0x6c/0xd5
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Use INIT_WORK_ONSTACK in xfs_alloc_vextent instead of INIT_WORK.
+
+Reported-by: Wu Fengguang <wfg@linux.intel.com>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_mount.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_alloc.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 2f011fd..beb9968 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1297,7 +1297,7 @@ xfs_mountfs(
- 			      XFS_FSB_TO_BB(mp, sbp->sb_logblocks));
- 	if (error) {
- 		xfs_warn(mp, "log mount failed");
--		goto out_free_perag;
-+		goto out_fail_wait;
- 	}
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index dfa9454..726418e 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -2448,7 +2448,7 @@ xfs_alloc_vextent(
+ 	DECLARE_COMPLETION_ONSTACK(done);
  
- 	/*
-@@ -1324,7 +1324,7 @@ xfs_mountfs(
- 	     !mp->m_sb.sb_inprogress) {
- 		error = xfs_initialize_perag_data(mp, sbp->sb_agcount);
- 		if (error)
--			goto out_free_perag;
-+			goto out_fail_wait;
- 	}
- 
- 	/*
-@@ -1448,6 +1448,10 @@ xfs_mountfs(
- 	IRELE(rip);
-  out_log_dealloc:
- 	xfs_log_unmount(mp);
-+ out_fail_wait:
-+	if (mp->m_logdev_targp && mp->m_logdev_targp != mp->m_ddev_targp)
-+		xfs_wait_buftarg(mp->m_logdev_targp);
-+	xfs_wait_buftarg(mp->m_ddev_targp);
-  out_free_perag:
- 	xfs_free_perag(mp);
-  out_remove_uuid:
+ 	args->done = &done;
+-	INIT_WORK(&args->work, xfs_alloc_vextent_worker);
++	INIT_WORK_ONSTACK(&args->work, xfs_alloc_vextent_worker);
+ 	queue_work(xfs_alloc_wq, &args->work);
+ 	wait_for_completion(&done);
+ 	return args->result;
 -- 
 1.7.10
 
