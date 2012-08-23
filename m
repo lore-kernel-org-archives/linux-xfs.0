@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N52Vlu134493 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:02:31 -0500
+	q7N52ms7134687 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:02:48 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	9ioAXMGseojTgVkg for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:03:11 -0700 (PDT)
+	dbhmaqAW1x0vZM2E for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:03:33 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PZQ-0003Dx-Kj
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:04 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4PZq-0003FJ-AX
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:30 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PZQ-0003bN-IM
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:04 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PZq-0003cx-7X
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 003/102] xfs: defer AIO/DIO completions
-Date: Thu, 23 Aug 2012 15:01:21 +1000
-Message-Id: <1345698180-13612-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 022/102] xfs: fix allocation length overflow in
+	xfs_bmapi_write()
+Date: Thu, 23 Aug 2012 15:01:40 +1000
+Message-Id: <1345698180-13612-23-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,92 +34,60 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: c859cdd1da008b3825555be3242908088a3de366
+Upstream commit: a99ebf43f49f4499ab0e2a8a9132ad6ed6ba2409
 
-We really shouldn't complete AIO or DIO requests until we have finished
-the unwritten extent conversion and size update.  This means fsync never
-has to pick up any ioends as all work has been completed when signalling
-I/O completion.
+When testing the new xfstests --large-fs option that does very large
+file preallocations, this assert was tripped deep in
+xfs_alloc_vextent():
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Alex Elder <aelder@sgi.com>
+XFS: Assertion failed: args->minlen <= args->maxlen, file: fs/xfs/xfs_alloc.c, line: 2239
+
+The allocation was trying to allocate a zero length extent because
+the lower 32 bits of the allocation length was zero. The remaining
+length of the allocation to be done was an exact multiple of 2^32 -
+the first case I saw was at 496TB remaining to be allocated.
+
+This turns out to be an overflow when converting the allocation
+length (a 64 bit quantity) into the extent length to allocate (a 32
+bit quantity), and it requires the length to be allocated an exact
+multiple of 2^32 blocks to trip the assert.
+
+Fix it by limiting the extent lenth to allocate to MAXEXTLEN.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |   21 ++++++++-------------
- fs/xfs/linux-2.6/xfs_aops.h |    1 +
- 2 files changed, 9 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_bmap.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 05df3a8..68ac1ce 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -122,6 +122,10 @@ xfs_destroy_ioend(
- 		bh->b_end_io(bh, !ioend->io_error);
- 	}
- 
-+	if (ioend->io_iocb) {
-+		if (ioend->io_isasync)
-+			aio_complete(ioend->io_iocb, ioend->io_result, 0);
-+	}
- 	xfs_ioend_wake(ip);
- 	mempool_free(ioend, xfs_ioend_pool);
- }
-@@ -235,8 +239,6 @@ xfs_end_io(
- 		/* ensure we don't spin on blocked ioends */
- 		delay(1);
- 	} else {
--		if (ioend->io_iocb)
--			aio_complete(ioend->io_iocb, ioend->io_result, 0);
- 		xfs_destroy_ioend(ioend);
- 	}
- }
-@@ -273,6 +275,7 @@ xfs_alloc_ioend(
- 	 * all the I/O from calling the completion routine too early.
- 	 */
- 	atomic_set(&ioend->io_remaining, 1);
-+	ioend->io_isasync = 0;
- 	ioend->io_error = 0;
- 	ioend->io_list = NULL;
- 	ioend->io_type = type;
-@@ -1309,21 +1312,13 @@ xfs_end_io_direct_write(
- 
- 	ioend->io_offset = offset;
- 	ioend->io_size = size;
-+	ioend->io_iocb = iocb;
-+	ioend->io_result = ret;
- 	if (private && size > 0)
- 		ioend->io_type = IO_UNWRITTEN;
- 
- 	if (is_async) {
--		/*
--		 * If we are converting an unwritten extent we need to delay
--		 * the AIO completion until after the unwrittent extent
--		 * conversion has completed, otherwise do it ASAP.
--		 */
--		if (ioend->io_type == IO_UNWRITTEN) {
--			ioend->io_iocb = iocb;
--			ioend->io_result = ret;
--		} else {
--			aio_complete(iocb, ret, 0);
--		}
-+		ioend->io_isasync = 1;
- 		xfs_finish_ioend(ioend);
- 	} else {
- 		xfs_finish_ioend_sync(ioend);
-diff --git a/fs/xfs/linux-2.6/xfs_aops.h b/fs/xfs/linux-2.6/xfs_aops.h
-index 71f721e..ce3dcb5 100644
---- a/fs/xfs/linux-2.6/xfs_aops.h
-+++ b/fs/xfs/linux-2.6/xfs_aops.h
-@@ -47,6 +47,7 @@ typedef struct xfs_ioend {
- 	unsigned int		io_type;	/* delalloc / unwritten */
- 	int			io_error;	/* I/O error code */
- 	atomic_t		io_remaining;	/* hold count */
-+	unsigned int		io_isasync : 1;	/* needs aio_complete */
- 	struct inode		*io_inode;	/* file being written to */
- 	struct buffer_head	*io_buffer_head;/* buffer linked list head */
- 	struct buffer_head	*io_buffer_tail;/* buffer linked list tail */
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 8193ee5..05ea68f 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -4454,8 +4454,18 @@ xfs_bmapi(
+ 					xfs_bmbt_get_all(ep, &prev);
+ 				}
+ 			} else {
+-				alen = (xfs_extlen_t)
+-					XFS_FILBLKS_MIN(len, MAXEXTLEN);
++				/*
++				 * There's a 32/64 bit type mismatch between the
++				 * allocation length request (which can be 64
++				 * bits in length) and the bma length request,
++				 * which is xfs_extlen_t and therefore 32 bits.
++				 * Hence we have to check for 32-bit overflows
++				 * and handle them here.
++				 */
++				if (len > (xfs_filblks_t)MAXEXTLEN)
++					alen = MAXEXTLEN;
++				else
++					alen = len;
+ 				if (!eof)
+ 					alen = (xfs_extlen_t)
+ 						XFS_FILBLKS_MIN(alen,
 -- 
 1.7.10
 
