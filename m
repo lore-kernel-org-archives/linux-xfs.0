@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N542fo135498 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:02 -0500
+	q7N547QM135545 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:07 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	TfPkOGfgzzRHXQWr for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:04:47 -0700 (PDT)
+	d3VovNoMu1sTj1Y3 for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:04:53 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Paz-0003Hw-P2
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:41 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4Pap-0003Hd-Jf
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:31 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pap-0003g9-Kl
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pap-0003fp-Gn
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 060/102] xfs: Fix open flag handling in open_by_handle code
-Date: Thu, 23 Aug 2012 15:02:18 +1000
-Message-Id: <1345698180-13612-61-git-send-email-david@fromorbit.com>
+Subject: [PATCH 056/102] xfs: reimplement fdatasync support
+Date: Thu, 23 Aug 2012 15:02:14 +1000
+Message-Id: <1345698180-13612-57-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,65 +33,98 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
 
-Upstream commit: 1a1d772433d42aaff7315b3468fef5951604f5c6
+Upstream commit: 8f639ddea0c4978ae9b4e46ea041c9e5afe0ee8d
 
-Sparse identified some unsafe handling of open flags in the xfs open
-by handle ioctl code. Update the code to use the correct access
-macros to ensure that we handle the open flags correctly.
+Add an in-memory only flag to say we logged timestamps only, and use it to
+check if fdatasync can optimize away the log force.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_ioctl.c |   14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ fs/xfs/linux-2.6/xfs_file.c  |    7 +++++--
+ fs/xfs/linux-2.6/xfs_super.c |    2 +-
+ fs/xfs/xfs_inode_item.c      |    3 ++-
+ fs/xfs/xfs_inode_item.h      |   11 ++++++++++-
+ 4 files changed, 18 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
-index ada7da9..b27fb6d 100644
---- a/fs/xfs/linux-2.6/xfs_ioctl.c
-+++ b/fs/xfs/linux-2.6/xfs_ioctl.c
-@@ -209,6 +209,7 @@ xfs_open_by_handle(
- 	struct file		*filp;
- 	struct inode		*inode;
- 	struct dentry		*dentry;
-+	fmode_t			fmode;
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index a575a63..1dbd1d8 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -191,8 +191,11 @@ xfs_file_fsync(
+ 	 * to flush the log up to the latest LSN that touched the inode.
+ 	 */
+ 	xfs_ilock(ip, XFS_ILOCK_SHARED);
+-	if (xfs_ipincount(ip))
+-		lsn = ip->i_itemp->ili_last_lsn;
++	if (xfs_ipincount(ip)) {
++		if (!datasync ||
++		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
++			lsn = ip->i_itemp->ili_last_lsn;
++	}
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
  
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -XFS_ERROR(EPERM);
-@@ -228,26 +229,21 @@ xfs_open_by_handle(
- 	hreq->oflags |= O_LARGEFILE;
- #endif
+ 	if (lsn)
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index c12df49..ec5ca7b 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -944,7 +944,7 @@ xfs_fs_dirty_inode(
+ 	ip->i_d.di_mtime.t_nsec = (__int32_t)inode->i_mtime.tv_nsec;
  
--	/* Put open permission in namei format. */
- 	permflag = hreq->oflags;
--	if ((permflag+1) & O_ACCMODE)
--		permflag++;
--	if (permflag & O_TRUNC)
--		permflag |= 2;
--
-+	fmode = OPEN_FMODE(permflag);
- 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
--	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
-+	    (fmode & FMODE_WRITE) && IS_APPEND(inode)) {
- 		error = -XFS_ERROR(EPERM);
- 		goto out_dput;
- 	}
+ 	xfs_trans_ijoin(tp, ip);
+-	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
++	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
+ 	error = xfs_trans_commit(tp, 0);
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ 	if (error)
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index 45514c5..a76d1b9 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -438,7 +438,8 @@ out:
+ 	 * games in recovery easier, which isn't a big deal as just about any
+ 	 * transaction would dirty it anyway.
+ 	 */
+-	iip->ili_format.ilf_fields = XFS_ILOG_CORE | iip->ili_fields;
++	iip->ili_format.ilf_fields = XFS_ILOG_CORE |
++		(iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
+ 	ASSERT(nvecs == lip->li_desc->lid_size);
+ 	iip->ili_format.ilf_size = nvecs;
+ }
+diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
+index bc183d8..41d61c3 100644
+--- a/fs/xfs/xfs_inode_item.h
++++ b/fs/xfs/xfs_inode_item.h
+@@ -86,6 +86,15 @@ typedef struct xfs_inode_log_format_64 {
+ #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
+ #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
  
--	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
-+	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
- 		error = -XFS_ERROR(EACCES);
- 		goto out_dput;
- 	}
++
++/*
++ * The timestamps are dirty, but not necessarily anything else in the inode
++ * core.  Unlike the other fields above this one must never make it to disk
++ * in the ilf_fields of the inode_log_format, but is purely store in-memory in
++ * ili_fields in the inode_log_item.
++ */
++#define XFS_ILOG_TIMESTAMP	0x4000
++
+ #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
+ 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
+ 				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
+@@ -101,7 +110,7 @@ typedef struct xfs_inode_log_format_64 {
+ 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
+ 				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
+ 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
+-				 XFS_ILOG_ABROOT)
++				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
  
- 	/* Can't write directories. */
--	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
-+	if (S_ISDIR(inode->i_mode) && (fmode & FMODE_WRITE)) {
- 		error = -XFS_ERROR(EISDIR);
- 		goto out_dput;
- 	}
+ static inline int xfs_ilog_fbroot(int w)
+ {
 -- 
 1.7.10
 
