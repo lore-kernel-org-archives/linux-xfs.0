@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N55FSN136141 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:16 -0500
+	q7N55Eoq136125 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:14 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	H1IRt4X3xVlj3pWv for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:06:00 -0700 (PDT)
+	sQjn7dlAVbMDq8Cm for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:59 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Pbp-0003KJ-Hi
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:33 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4Pbz-0003Kc-Ia
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:43 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pbp-0003jX-F4
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:33 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pbz-0003jb-Fu
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:43 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 099/102] xfs: really fix the cursor leak in
-	xfs_alloc_ag_vextent_near
-Date: Thu, 23 Aug 2012 15:02:57 +1000
-Message-Id: <1345698180-13612-100-git-send-email-david@fromorbit.com>
+Subject: [PATCH 100/102] xfs: don't defer metadata allocation to the workqueue
+Date: Thu, 23 Aug 2012 15:02:58 +1000
+Message-Id: <1345698180-13612-101-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,39 +35,52 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: e3a746f5aab71f2dd0a83116772922fb37ae29d6
+Upstream commit: aa292847b9fc6e187547110de833a7d3131bbddf
 
-The current cursor is reallocated when retrying the allocation, so
-the existing cursor needs to be destroyed in both the restart and
-the failure cases.
+Almost all metadata allocations come from shallow stack usage
+situations. Avoid the overhead of switching the allocation to a
+workqueue as we are not in danger of running out of stack when
+making these allocations. Metadata allocations are already marked
+through the args that are passed down, so this is trivial to do.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Tested-by: Mike Snitzer <snitzer@redhat.com>
+Reported-by: Mel Gorman <mgorman@suse.de>
+Tested-by: Mel Gorman <mgorman@suse.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_alloc.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_alloc.c |   15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 679c049..de5a353 100644
+index de5a353..5d830cf 100644
 --- a/fs/xfs/xfs_alloc.c
 +++ b/fs/xfs/xfs_alloc.c
-@@ -1081,13 +1081,13 @@ restart:
- 	 * If we couldn't get anything, give up.
- 	 */
- 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
-+		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
-+
- 		if (!forced++) {
- 			trace_xfs_alloc_near_busy(args);
- 			xfs_log_force(args->mp, XFS_LOG_SYNC);
- 			goto restart;
- 		}
+@@ -2441,13 +2441,22 @@ xfs_alloc_vextent_worker(
+ 	current_restore_flags_nested(&pflags, PF_FSTRANS);
+ }
+ 
 -
--		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
- 		trace_xfs_alloc_size_neither(args);
- 		args->agbno = NULLAGBLOCK;
- 		return 0;
+-int				/* error */
++/*
++ * Data allocation requests often come in with little stack to work on. Push
++ * them off to a worker thread so there is lots of stack to use. Metadata
++ * requests, OTOH, are generally from low stack usage paths, so avoid the
++ * context switch overhead here.
++ */
++int
+ xfs_alloc_vextent(
+-	xfs_alloc_arg_t	*args)	/* allocation argument structure */
++	struct xfs_alloc_arg	*args)
+ {
+ 	DECLARE_COMPLETION_ONSTACK(done);
+ 
++	if (!args->userdata)
++		return __xfs_alloc_vextent(args);
++
++
+ 	args->done = &done;
+ 	INIT_WORK_ONSTACK(&args->work, xfs_alloc_vextent_worker);
+ 	queue_work(xfs_alloc_wq, &args->work);
 -- 
 1.7.10
 
