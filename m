@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N547QM135545 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:07 -0500
+	q7N53xNt135459 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:59 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	d3VovNoMu1sTj1Y3 for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:04:53 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Pap-0003Hd-Jf
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:31 +1000
+	UrNQFul74gHcxETc for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:04:44 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1T4Paz-0003Hl-LA
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:41 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pap-0003fp-Gn
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pap-0003g4-Js
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 056/102] xfs: reimplement fdatasync support
-Date: Thu, 23 Aug 2012 15:02:14 +1000
-Message-Id: <1345698180-13612-57-git-send-email-david@fromorbit.com>
+Subject: [PATCH 059/102] xfs: fix deadlock in xfs_rtfree_extent
+Date: Thu, 23 Aug 2012 15:02:17 +1000
+Message-Id: <1345698180-13612-60-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,98 +34,76 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Kamal Dasu <kdasu.kdev@gmail.com>
 
-Upstream commit: 8f639ddea0c4978ae9b4e46ea041c9e5afe0ee8d
+Upstream commit: 5575acc7807595687288b3bbac15103f2a5462e1
 
-Add an in-memory only flag to say we logged timestamps only, and use it to
-check if fdatasync can optimize away the log force.
+To fix the deadlock caused by repeatedly calling xfs_rtfree_extent
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+ - removed xfs_ilock() and xfs_trans_ijoin() from xfs_rtfree_extent(),
+   instead added asserts that the inode is locked and has an inode_item
+   attached to it.
+ - in xfs_bunmapi() when dealing with an inode with the rt flag
+   call xfs_ilock() and xfs_trans_ijoin() so that the
+   reference count is bumped on the inode and attached it to the
+   transaction before calling into xfs_bmap_del_extent, similar to
+   what we do in xfs_bmap_rtalloc.
+
+Signed-off-by: Kamal Dasu <kdasu.kdev@gmail.com>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_file.c  |    7 +++++--
- fs/xfs/linux-2.6/xfs_super.c |    2 +-
- fs/xfs/xfs_inode_item.c      |    3 ++-
- fs/xfs/xfs_inode_item.h      |   11 ++++++++++-
- 4 files changed, 18 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_bmap.c    |    9 +++++++++
+ fs/xfs/xfs_rtalloc.c |    9 ++++-----
+ 2 files changed, 13 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index a575a63..1dbd1d8 100644
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -191,8 +191,11 @@ xfs_file_fsync(
- 	 * to flush the log up to the latest LSN that touched the inode.
- 	 */
- 	xfs_ilock(ip, XFS_ILOCK_SHARED);
--	if (xfs_ipincount(ip))
--		lsn = ip->i_itemp->ili_last_lsn;
-+	if (xfs_ipincount(ip)) {
-+		if (!datasync ||
-+		    (ip->i_itemp->ili_fields & ~XFS_ILOG_TIMESTAMP))
-+			lsn = ip->i_itemp->ili_last_lsn;
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 2af58c4..8f3b730 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5039,6 +5039,15 @@ xfs_bunmapi(
+ 		cur->bc_private.b.flags = 0;
+ 	} else
+ 		cur = NULL;
++
++	if (isrt) {
++		/*
++		 * Synchronize by locking the bitmap inode.
++		 */
++		xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
++		xfs_trans_ijoin(tp, mp->m_rbmip);
 +	}
- 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
- 
- 	if (lsn)
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index c12df49..ec5ca7b 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -944,7 +944,7 @@ xfs_fs_dirty_inode(
- 	ip->i_d.di_mtime.t_nsec = (__int32_t)inode->i_mtime.tv_nsec;
- 
- 	xfs_trans_ijoin(tp, ip);
--	xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
-+	xfs_trans_log_inode(tp, ip, XFS_ILOG_TIMESTAMP);
- 	error = xfs_trans_commit(tp, 0);
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	if (error)
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index 45514c5..a76d1b9 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -438,7 +438,8 @@ out:
- 	 * games in recovery easier, which isn't a big deal as just about any
- 	 * transaction would dirty it anyway.
- 	 */
--	iip->ili_format.ilf_fields = XFS_ILOG_CORE | iip->ili_fields;
-+	iip->ili_format.ilf_fields = XFS_ILOG_CORE |
-+		(iip->ili_fields & ~XFS_ILOG_TIMESTAMP);
- 	ASSERT(nvecs == lip->li_desc->lid_size);
- 	iip->ili_format.ilf_size = nvecs;
++
+ 	extno = 0;
+ 	while (bno != (xfs_fileoff_t)-1 && bno >= start && lastx >= 0 &&
+ 	       (nexts == 0 || extno < nexts)) {
+diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
+index 8f76fdf..7c62363 100644
+--- a/fs/xfs/xfs_rtalloc.c
++++ b/fs/xfs/xfs_rtalloc.c
+@@ -183,6 +183,7 @@ error_cancel:
+ 		oblocks = map.br_startoff + map.br_blockcount;
+ 	}
+ 	return 0;
++
+ error:
+ 	return error;
  }
-diff --git a/fs/xfs/xfs_inode_item.h b/fs/xfs/xfs_inode_item.h
-index bc183d8..41d61c3 100644
---- a/fs/xfs/xfs_inode_item.h
-+++ b/fs/xfs/xfs_inode_item.h
-@@ -86,6 +86,15 @@ typedef struct xfs_inode_log_format_64 {
- #define	XFS_ILOG_AEXT	0x080	/* log i_af.if_extents */
- #define	XFS_ILOG_ABROOT	0x100	/* log i_af.i_broot */
+@@ -2149,11 +2150,9 @@ xfs_rtfree_extent(
+ 	xfs_buf_t	*sumbp;		/* summary file block buffer */
  
+ 	mp = tp->t_mountp;
+-	/*
+-	 * Synchronize by locking the bitmap inode.
+-	 */
+-	xfs_ilock(mp->m_rbmip, XFS_ILOCK_EXCL);
+-	xfs_trans_ijoin_ref(tp, mp->m_rbmip, XFS_ILOCK_EXCL);
 +
-+/*
-+ * The timestamps are dirty, but not necessarily anything else in the inode
-+ * core.  Unlike the other fields above this one must never make it to disk
-+ * in the ilf_fields of the inode_log_format, but is purely store in-memory in
-+ * ili_fields in the inode_log_item.
-+ */
-+#define XFS_ILOG_TIMESTAMP	0x4000
-+
- #define	XFS_ILOG_NONCORE	(XFS_ILOG_DDATA | XFS_ILOG_DEXT | \
- 				 XFS_ILOG_DBROOT | XFS_ILOG_DEV | \
- 				 XFS_ILOG_UUID | XFS_ILOG_ADATA | \
-@@ -101,7 +110,7 @@ typedef struct xfs_inode_log_format_64 {
- 				 XFS_ILOG_DEXT | XFS_ILOG_DBROOT | \
- 				 XFS_ILOG_DEV | XFS_ILOG_UUID | \
- 				 XFS_ILOG_ADATA | XFS_ILOG_AEXT | \
--				 XFS_ILOG_ABROOT)
-+				 XFS_ILOG_ABROOT | XFS_ILOG_TIMESTAMP)
++	ASSERT(mp->m_rbmip->i_itemp != NULL);
++	ASSERT(xfs_isilocked(mp->m_rbmip, XFS_ILOCK_EXCL));
  
- static inline int xfs_ilog_fbroot(int w)
- {
+ #if defined(__KERNEL__) && defined(DEBUG)
+ 	/*
 -- 
 1.7.10
 
