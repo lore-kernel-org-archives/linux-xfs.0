@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54TGf135759 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:29 -0500
+	q7N54Uoa135774 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:31 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	wsq7mygrIDHkXqni for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:15 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbK-0003Iv-Jy
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
+	BAbMpKdkwb0hsB8W for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:16 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1T4PbU-0003JB-NG
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:12 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbA-0003hT-8x
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:52 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PbK-0003i2-L7
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 074/102] xfs: using GFP_NOFS for blkdev_issue_flush
-Date: Thu, 23 Aug 2012 15:02:32 +1000
-Message-Id: <1345698180-13612-75-git-send-email-david@fromorbit.com>
+Subject: [PATCH 080/102] xfs: Use preallocation for inodes with extsz hints
+Date: Thu, 23 Aug 2012 15:02:38 +1000
+Message-Id: <1345698180-13612-81-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,34 +34,57 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Shaohua Li <shli@kernel.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 7582df516c93046b8d2111a780c69de77f9882fb
+Upstream commit: aff3a9edb7080f69f07fe76a8bd089b3dfa4cb5d
 
-Issuing a block device flush request in transaction context using GFP_KERNEL
-directly can cause deadlocks due to memory reclaim recursion. Use GFP_NOFS to
-avoid recursion from reclaim context.
+xfstest 229 exposes a problem with buffered IO, delayed allocation
+and extent size hints. That is when we do delayed allocation during
+buffered IO, we reserve space for the extent size hint alignment and
+allocate the physical space to align the extent, but we do not zero
+the regions of the extent that aren't written by the write(2)
+syscall. The result is that we expose stale data in unwritten
+regions of the extent size hints.
 
-Signed-off-by: Shaohua Li <shli@fusionio.com>
+There are two ways to fix this. The first is to detect that we are
+doing unaligned writes, check if there is already a mapping or data
+over the extent size hint range, and if not zero the page cache
+first before then doing the real write. This can be very expensive
+for large extent size hints, especially if the subsequent writes
+fill then entire extent size before the data is written to disk.
+
+The second, and simpler way, is simply to turn off delayed
+allocation when the extent size hint is set and use preallocation
+instead. This results in unwritten extents being laid down on disk
+and so only the written portions will be converted. This matches the
+behaviour for direct IO, and will also work for the real time
+device. The disadvantage of this approach is that for small extent
+size hints we can get file fragmentation, but in general extent size
+hints are fairly large (e.g. stripe width sized) so this isn't a big
+deal.
+
+Implement the second approach as it is simple and effective.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_super.c |    2 +-
+ fs/xfs/linux-2.6/xfs_aops.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
-index 9c7f4b9..2cf0967 100644
---- a/fs/xfs/linux-2.6/xfs_super.c
-+++ b/fs/xfs/linux-2.6/xfs_super.c
-@@ -631,7 +631,7 @@ void
- xfs_blkdev_issue_flush(
- 	xfs_buftarg_t		*buftarg)
- {
--	blkdev_issue_flush(buftarg->bt_bdev, GFP_KERNEL, NULL);
-+	blkdev_issue_flush(buftarg->bt_bdev, GFP_NOFS, NULL);
- }
- 
- STATIC void
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index e4acb6b..33abd52 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -1223,7 +1223,7 @@ __xfs_get_blocks(
+ 	    (!nimaps ||
+ 	     (imap.br_startblock == HOLESTARTBLOCK ||
+ 	      imap.br_startblock == DELAYSTARTBLOCK))) {
+-		if (direct) {
++		if (direct || xfs_get_extsz_hint(ip)) {
+ 			/*
+ 			 * Drop the ilock in preparation for starting the block
+ 			 * allocation transaction.  It will be retaken
 -- 
 1.7.10
 
