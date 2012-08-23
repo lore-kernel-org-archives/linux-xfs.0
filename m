@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N53xI2135461 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:00 -0500
+	q7N53JBV135020 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:19 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	66MYM36WqptWFMan for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:04:45 -0700 (PDT)
+	HHcFLEY3PdGK7YaZ for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:04:04 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Paz-0003Hi-LH
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:41 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4PaK-0003GQ-O1
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:00 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pap-0003fz-Iq
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:31 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PaA-0003dy-Kd
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 058/102] xfs: fallback to vmalloc for large buffers in
-	xfs_getbmap
-Date: Thu, 23 Aug 2012 15:02:16 +1000
-Message-Id: <1345698180-13612-59-git-send-email-david@fromorbit.com>
+Subject: [PATCH 034/102] xfs: show uuid when mount fails due to duplicate uuid
+Date: Thu, 23 Aug 2012 15:01:52 +1000
+Message-Id: <1345698180-13612-35-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,53 +33,36 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 
-Upstream commit: f074211f6041305b645669464343d504f4e6a290
+Upstream commit: 021000e59c0db2d3a8113e906bde3183c33fa84b
 
-xfs_getbmap uses for a large buffer for extents, which is kmalloc'd.
-This can fail after the system has been running for some time as it
-is a high order allocation. Add a fallback to vmalloc so that it
-doesn't require contiguous memory and so won't randomly fail on
-files with large extent lists.
+When a system tries to mount a filesystem (FS) using UUID, the xfs
+returns -EINVAL and shows a message if a FS with the same UUID has
+been already mounted. It is useful to output the duplicate UUID
+with it.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Mitsuo Hayasaka <mitsuo.hayasaka.hu@hitachi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Cc: Ben Myers <bpm@sgi.com>
+Cc: Alex Elder <elder@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_bmap.c |   13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_mount.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 51b3489..2af58c4 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -5455,8 +5455,12 @@ xfs_getbmap(
- 	if (bmv->bmv_count > ULONG_MAX / sizeof(struct getbmapx))
- 		return XFS_ERROR(ENOMEM);
- 	out = kmem_zalloc(bmv->bmv_count * sizeof(struct getbmapx), KM_MAYFAIL);
--	if (!out)
--		return XFS_ERROR(ENOMEM);
-+	if (!out) {
-+		out = kmem_zalloc_large(bmv->bmv_count *
-+					sizeof(struct getbmapx));
-+		if (!out)
-+			return XFS_ERROR(ENOMEM);
-+	}
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3effa7f..2f011fd 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -158,7 +158,7 @@ xfs_uuid_mount(
  
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
-@@ -5581,7 +5585,10 @@ xfs_getbmap(
- 			break;
- 	}
- 
--	kmem_free(out);
-+	if (is_vmalloc_addr(out))
-+		kmem_free_large(out);
-+	else
-+		kmem_free(out);
- 	return error;
+  out_duplicate:
+ 	mutex_unlock(&xfs_uuid_table_mutex);
+-	xfs_warn(mp, "Filesystem has duplicate UUID - can't mount");
++	xfs_warn(mp, "Filesystem has duplicate UUID %pU - can't mount", uuid);
+ 	return XFS_ERROR(EINVAL);
  }
  
 -- 
