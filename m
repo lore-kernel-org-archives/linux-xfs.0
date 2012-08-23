@@ -1,26 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7NGpotJ026349 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 11:51:50 -0500
-Received: from estes.americas.sgi.com (estes.americas.sgi.com [128.162.236.10])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id 2F7E2304067
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 09:52:37 -0700 (PDT)
-Received: from [134.15.95.102] (cf-vpn-hw-arenaud-5.corp.sgi.com
-	[134.15.95.102])
-	by estes.americas.sgi.com (Postfix) with ESMTP id AE0E87001AB1
-	for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 11:52:36 -0500 (CDT)
-Message-ID: <50365FD1.7000304@sgi.com>
-Date: Thu, 23 Aug 2012 12:52:33 -0400
-From: Alain Renaud <arenaud@sgi.com>
+	q7NGxgPv027859 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 11:59:42 -0500
+Date: Thu, 23 Aug 2012 12:00:25 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [RFC] [PATCH 0/18] xfstests: move tests out of top level
+Message-ID: <20120823170025.GG29979@sgi.com>
+References: <1343294892-20991-1-git-send-email-david@fromorbit.com>
+	<5032ABBD.80504@sgi.com> <20120820224306.GF19235@dastard>
+	<20120821163337.GC29979@sgi.com> <20120821220926.GP19235@dastard>
+	<20120822191642.GF29979@sgi.com> <20120822234219.GR19235@dastard>
 MIME-Version: 1.0
-Subject: [PATCH V3] xfs: prevent xfs_bmapi_write() to exceed maximum extent
-	size.
-References: <20120712154554.377970666@sgi.com> <4FFFF3D8.7060001@sgi.com>
-	<50059437.6070705@sgi.com> <20120719033027.GD23387@dastard>
-	<5007C33B.5010603@sgi.com> <20120720014454.GI23387@dastard>
-	<5009112D.4090106@sgi.com>
-In-Reply-To: <5009112D.4090106@sgi.com>
-Content-Type: multipart/mixed; boundary="------------070107000404040908060209"
+Content-Disposition: inline
+In-Reply-To: <20120822234219.GR19235@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,309 +21,222 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-This is a multi-part message in MIME format.
---------------070107000404040908060209
-Content-Type: multipart/alternative;
- boundary="------------020008050105080902090308"
+Dave,
 
+On Thu, Aug 23, 2012 at 09:42:19AM +1000, Dave Chinner wrote:
+> On Wed, Aug 22, 2012 at 02:16:42PM -0500, Ben Myers wrote:
+> > On Wed, Aug 22, 2012 at 08:09:26AM +1000, Dave Chinner wrote:
+> > > On Tue, Aug 21, 2012 at 11:33:37AM -0500, Ben Myers wrote:
+> > > > On Tue, Aug 21, 2012 at 08:43:06AM +1000, Dave Chinner wrote:
+> > > > > On Mon, Aug 20, 2012 at 04:27:25PM -0500, Mark Tinguely wrote:
+> > > > > > On 07/26/12 04:27, Dave Chinner wrote:
+> > > > > > >Alt-Subject: Games with Sed, Grep and Awk.
+> > > > > > >
+> > > > > > >This series is based on top of the large filesystem test series.
+> > > > > > >
+> > > > > > >This moves all the tests into a ./tests subdirectory, and sorts them into
+> > > > > > >classes of related tests. Those are:
+> > > > > > >
+> > > > > > >	tests/generic:	valid for all filesystems
+> > > > > > >	tests/shared:	valid for a limited number of filesystems
+> > > > > > >	tests/xfs:	xfs specific tests
+> > > > > > >	tests/btrfs	btrfs specific tests
+> > > > > > >	tests/ext4	ext4 specific tests
+> > > > > > >	tests/udf	udf specific tests
+> > > > > > 
+> > > > > > The SGI XFS group talked about your proposed changes to xfstests and
+> > > > > > the response is very positive.
+> > > > > > 
+> > > > > > The couple concerns are:
+> > > > > > 
+> > > > > > 1) There is a consensus in the group that the benchmark framework
+> > > > > >    should remain until there is a common benchmark available.
+> > > > > > 
+> > > > > >    Could the benchmark infrastructure be placed into its own directory
+> > > > > >    until a new common benchmark framework has been adopted?
+> > > > > 
+> > > > > Keeping it just complicates things. The benchmark infrastructure
+> > > > > is bitrotted and was largely just a hack tacked on to the side of
+> > > > > the regression test suite.
+> > > > > 
+> > > > > For it to be useful in an automated test environment, it would need
+> > > > > to be re-implemented from scratch with reliable recording of results
+> > > > > and the ability to determine if a result is unusual or not. None of
+> > > > > this exists - it's just a framework to run a couple of benchmarks
+> > > > > and dump some output to stdout using the xfstests machine config
+> > > > > files....
+> > > > > 
+> > > > > I have tried integrating other benchmarks into xfstests a while back
+> > > > > (e.g. compile bench, fsmark, etc) and using the results for some
+> > > > > kind of meaningful performance regression test. I rapidly came to
+> > > > > the conclusion that the infrastructure was not up to scratch and
+> > > > > that my simple handwritten standalone test scripts to iterate
+> > > > > through benchmarks and capture results was much easier to use and
+> > > > > modify than to jump through the weird bench infrastructure hoops.
+> > > > > 
+> > > > > So, no, I don't think it's worth keeping at all.
+> > > > 
+> > > > You've already made it clear that you feel the current bench implementation is
+> > > > not worth keeping.  Once a suitable replacement for the bench infrastructure
+> > > > has been implemented we can remove the old one.  Until then we prefer to keep
+> > > > what we have in the tree.
+> > > 
+> > > That's not how the process works 
+> > 
+> > That is exactly how the process works.  You posted an RFC and Mark and the XFS
+> > team at SGI walked through your patch set.  Mark subsequently posted the
+> > commentary in reply to your RFC.  Cruft or not, the removal of a feature goes
+> > through the same review process as everything else.
+> 
+> Sure, but you need to justify your arguments for keeping something
+> with evidence and logic - handwaving about wanting something is, and
+> always has been, insufficient justification. That's the part of the
+> process I'm talking about - that statements of need require
+> evidence, especially when you agreed to the removal at LSF in San
+> Fransisco a few months ago. My arguments at the time were:
+> 
+> 	a) nobody is actually using it,
+> 	b) it has effectively been unmaintained since 2003
+> 	c) it has no regression analysis or detection capability
+> 	d) it shares *very little* of xfstests
+> 	e) it gets in the way of cleaning up xfstests
+> 	f) there are far better workload generators that are being
+> 	actively maintained.
+> 
+> And AFAIA, nothing has changed in the past few months.
 
---------------020008050105080902090308
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+"In this case, SGI would like to keep the benchmark capability in xfstests in
+order have a better chance of catching performance regressions."  There has
+been a been performance regression in the past few months (and there will be
+more in the future), we have had performance regressions internally too, and
+this has brought the value of having benchmarks in xfstests into sharp focus.
 
-xfs: prevent xfs_bmapi_write() to exceed maximum extent size.
+> > In this case, SGI would
+> > like to keep the benchmark capability in xfstests in order have a better chance
+> > of catching performance regressions.
+> ....
+> > > i.e. are you trying to tell us that SGI uses it internally without
+> > > actually saying so? If so, why not just say that straight up? If
+> > > not, then why is removing an unused hack a problem?
+> 
+> You haven't answered the most important question I've asked (i.e.
+> provided any evidence that bench is valuable as it stands).
+> You've skirted around answering this question, so I'm left to read
+> between the lines and hearing this:
+> 
+> 	a) We think that we might use bench in the future,
+> 	b) but we don't really know if bench is useful or not,
+> 	c) and we don't really know what something useful might look
+> 	like, either,
+> 	d) so just move it out of the way into a subdir for now
+> 
+> It's all just indecisive handwaving with a (IMO) silly conclusion
+> because you have no clear plan what you want to do for performance
+> regression testing, except for the thought that "bench might be
+> useful".
+> 
+> The thing is - all I've done is:
+> 
+> 	d) so just move it out of the way
+> 
+> It's in a git repository - deleted files are not lost! They are
+> simply moved into revision history where they can still be accessed
+> at will. i.e. the file(s), all their contents and history are still
+> preserved, you just need to run a git command to get them back.
+> 
+> IMO, that's a far better solution that moving bitrotted code to
+> another directory and just leaving it in an even more bitrotted (and
+> now broken) state for people to trip over.
+>
+> > > As it is, I've been removing hacky functionality and then
+> > > re-implementing it in a sane manner after everything has been moved
+> > > about if it is still useful (e.g. expunged tests). The bench stuff
+> > > is no different - I just don't see it as a useful addition to
+> > > xfstests, so I haven't readded it.
+> > > 
+> > > Hence, if you really want to keep the bench functionality as viable,
+> > > long term supported fucntionality, then send me patches that
+> > > re-implement it cleanly on top of the patchset I posted. There's
+> > > nothing stopping you from helping with this re-org of xfstests by
+> > > contributing patches to provide the functionality you'd like to
+> > > have....
+> > 
+> > Your point is well taken here.  SGI would like to keep the bench functionality
+> > and we're prepared to spend time on keeping it viable.  Phil White has agreed
+> > to take point on that effort.  The current thinking is to move the benchmark
+> > code out of the way into a subdirectory first, and then set about improving (or
+> > replacing) it.
+> 
+> OK, so moving it to revision history will be just fine until patches
+> are written some time in the future to make it work again in a
+> subdirectory.
+> 
+> But before anything major gets done with bench, there needs to be a
+> coherent development plan produced.
 
+Doesn't removing bench fall in to the category 'major'?  Did you develop a
+coherent development plan on how to replace it with something better?
 
-When trying to do preallocation that exceed the the maximum size of
-an extent, the extsize alignment can exceed the MAXEXTLEN.
+Great, lets do that then!
 
-We are already solving this issue for delay allocation but we
-have the same with prealloc. So the Solution is to limit the bma.length
-we send to xfs_bmapi_allocate() in xfs_bmapi_write().
+> What is it that you intend to do
+> with bench? You made no mention of this at LSF, so I'm completely in
+> the dark here about your intentions. If you are going to develop
+> bench into a performance regression suite, then we first need a
+> discussion (and document) cwonstating what it is and isn't going to
+> do, how regressions are going to be detected, how the results are
+> going to be stored for trend analysis and presentation, etc.
+> 
+> For example, the first feature on my list for any new performance
+> regression test suite is PCP integration. If you can't monitor the
+> system behaviour effectively during performance tests, then they are
+> effectively useless for analysing the root cause of regressions. A
+> lot of what I do is performance related, and modifcations live and
+> die by what such monitoring shows of the system behaviour.
+> Therefore, any new performance regression suite needs to generate
+> PCP archives of system and XFS level behaviour....
 
-We do have a simple test case to confirm that the problem exist.
+PCP is awesome.  ;)
 
-# mkfs.xfs -f -b size=512 -d agcount=1,size=4294967296  /dev/sdb1
-meta-data=/dev/sdb1              isize=256    agcount=1, agsize=8388608 blks
-          =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=512    blocks=8388608, imaxpct=25
-          =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=512    blocks=20480, version=2
-          =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-# mount /dev/sdb1 /xfs_dir
-# cd/xfs_dir/
-# xfs_io -c 'extsize 4m' .
-# xfs_io -f -c 'resvsp 0 1g' test_file
-XFS_IOC_RESVSP64: No space left on device
+> Then, once we have an idea of what is going to be done, the white
+> elephant can then be addressed: is xfstests the right place for this
+> functionality?
 
-Signed-off-by: Alain Renaud<arenaud@sgi.com>
+I think it is the perfect place.  xfstests already has a wide following with
+linux filesystems folks, so if we get bench cleaned up everyone will have
+access to the same suite automatically.  I'd really like the focus to stay on
+improving xfstests as opposed to some other suite, and I prefer not to be doing
+SGI internal-only test suites for benchmarking and testing where possible.
 
----
-    This is the 3rd version of the patch. In the previous version we were
-making the change in xfs_bmap_extsize_align() but like Dave mention
-we were breaking the function definition.
+> FWIW, this is the sort of reporting that a performance regression
+> test suite should produce:
+> 
+> http://lists.linux.hp.com/~enw/ext4/3.2/
 
-    Limiting the length in xfs_bmapi_write() seem more logical and should
-avoid any unexpected side effect.
+Yeah, that's really nice.  Do you happen to know what tool created it?
 
-  fs/xfs/xfs_bmap.c |   27 ++++++++++++++++-----------
-  1 file changed, 16 insertions(+), 11 deletions(-)
+> Indeed, why start with bench when you can start with something far
+> more advanced....
 
-Index: b/fs/xfs/xfs_bmap.c
-===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4915,22 +4915,27 @@ xfs_bmapi_write(
-  		 * that we found, if any.
-  		 */
-  		if (inhole || wasdelay) {
-+			xfs_extlen_t	extsz;
-  			bma.eof = eof;
-  			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
-  			bma.wasdel = wasdelay;
-  			bma.offset = bno;
-  
--			/*
--			 * There's a 32/64 bit type mismatch between the
--			 * allocation length request (which can be 64 bits in
--			 * length) and the bma length request, which is
--			 * xfs_extlen_t and therefore 32 bits. Hence we have to
--			 * check for 32-bit overflows and handle them here.
--			 */
--			if (len > (xfs_filblks_t)MAXEXTLEN)
--				bma.length = MAXEXTLEN;
--			else
--				bma.length = len;
-+			/* Figure out the extent size, set bma.length */
-+			extsz = xfs_get_extsz_hint(ip);
-+			if (extsz) {
-+				/*
-+				 * Make sure we don't exceed the maximum extent
-+				 * length when we align the extent.  Reduce the
-+				 * length we are going to allocate by the
-+				 * maximum adjustment extent size aligment may
-+				 * require.
-+				 */
-+				bma.length = XFS_FILBLKS_MIN(len,
-+					     MAXEXTLEN - (2 * extsz - 1));
-+			} else {
-+				bma.length = XFS_FILBLKS_MIN(len, MAXEXTLEN);
-+			}
-  
-  			ASSERT(len > 0);
-  			ASSERT(bma.length > 0);
+I understand that bench is bitrotted, but it still has some value even today.
+Phil has agreed to take this on as a project so the bitrot will be addressed.
+You have good points about needing a better plan in this area.  But we should
+come up with a plan before taking the major step of removing benchmarking from
+xfstests entirely.  That's not handwaving, it's good sense.  ;)
 
+Lets stay focused on improving xfstests...
 
-Alain Renaud
-
-
---------------020008050105080902090308
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-
-<html>
-  <head>
-    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
-  </head>
-  <body text="#000000" bgcolor="#FFFFFF">
-    <div class="moz-text-plain" wrap="true" graphical-quote="true"
-      style="font-family: -moz-fixed; font-size: 12px;" lang="x-unicode">
-      <pre wrap="">xfs: prevent xfs_bmapi_write() to exceed maximum extent size.
-
-
-When trying to do preallocation that exceed the the maximum size of
-an extent, the extsize alignment can exceed the MAXEXTLEN. 
-
-We are already solving this issue for delay allocation but we
-have the same with prealloc. So the Solution is to limit the bma.length
-we send to xfs_bmapi_allocate() in xfs_bmapi_write().
-
-We do have a simple test case to confirm that the problem exist.
-
-# mkfs.xfs -f -b size=512 -d agcount=1,size=4294967296  /dev/sdb1
-meta-data=/dev/sdb1              isize=256    agcount=1, agsize=8388608 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=512    blocks=8388608, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=512    blocks=20480, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-# mount /dev/sdb1 /xfs_dir
-# cd <i class="moz-txt-slash"><span class="moz-txt-tag">/</span>xfs_dir<span class="moz-txt-tag">/</span></i>
-# xfs_io -c 'extsize 4m' .
-# xfs_io -f -c 'resvsp 0 1g' test_file
-XFS_IOC_RESVSP64: No space left on device
-
-Signed-off-by: Alain Renaud <a class="moz-txt-link-rfc2396E" href="mailto:arenaud@sgi.com">&lt;arenaud@sgi.com&gt;</a>
-
----
-   This is the 3rd version of the patch. In the previous version we were
-making the change in xfs_bmap_extsize_align() but like Dave mention
-we were breaking the function definition.
-
-   Limiting the length in xfs_bmapi_write() seem more logical and should
-avoid any unexpected side effect.
-
- fs/xfs/xfs_bmap.c |   27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
-
-Index: b/fs/xfs/xfs_bmap.c
-===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4915,22 +4915,27 @@ xfs_bmapi_write(
- 		 * that we found, if any.
- 		 */
- 		if (inhole || wasdelay) {
-+			xfs_extlen_t	extsz;
- 			bma.eof = eof;
- 			bma.conv = !!(flags &amp; XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
- 			bma.offset = bno;
- 
--			/*
--			 * There's a 32/64 bit type mismatch between the
--			 * allocation length request (which can be 64 bits in
--			 * length) and the bma length request, which is
--			 * xfs_extlen_t and therefore 32 bits. Hence we have to
--			 * check for 32-bit overflows and handle them here.
--			 */
--			if (len &gt; (xfs_filblks_t)MAXEXTLEN)
--				bma.length = MAXEXTLEN;
--			else
--				bma.length = len;
-+			/* Figure out the extent size, set bma.length */
-+			extsz = xfs_get_extsz_hint(ip);
-+			if (extsz) {
-+				/*
-+				 * Make sure we don't exceed the maximum extent
-+				 * length when we align the extent.  Reduce the
-+				 * length we are going to allocate by the
-+				 * maximum adjustment extent size aligment may
-+				 * require.
-+				 */
-+				bma.length = XFS_FILBLKS_MIN(len,
-+					     MAXEXTLEN - (2 * extsz - 1));
-+			} else {
-+				bma.length = XFS_FILBLKS_MIN(len, MAXEXTLEN);
-+			}
- 
- 			ASSERT(len &gt; 0);
- 			ASSERT(bma.length &gt; 0);
-
-
-Alain Renaud 
-</pre>
-    </div>
-  </body>
-</html>
-
---------------020008050105080902090308--
-
---------------070107000404040908060209
-Content-Type: text/x-patch;
- name="xfs:avoid_bmap_len_overflow_xfs_bmap_extsize_align.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
- filename="xfs:avoid_bmap_len_overflow_xfs_bmap_extsize_align.patch"
-
-When trying to do preallocation that exceed the the maximum size of
-an extent, the extsize alignment can exceed the MAXEXTLEN. 
-
-We are already solving this issue for delay allocation but we
-have the same with prealloc. So the Solution is to limit the bma.length
-we send to xfs_bmapi_allocate() in xfs_bmapi_write().
-
-We do have a simple test case to confirm that the problem exist.
-
-# mkfs.xfs -f -b size=512 -d agcount=1,size=4294967296  /dev/sdb1
-meta-data=/dev/sdb1              isize=256    agcount=1, agsize=8388608 blks
-         =                       sectsz=512   attr=2, projid32bit=0
-data     =                       bsize=512    blocks=8388608, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal log           bsize=512    blocks=20480, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-# mount /dev/sdb1 /xfs_dir
-# cd /xfs_dir/
-# xfs_io -c 'extsize 4m' .
-# xfs_io -f -c 'resvsp 0 1g' test_file
-XFS_IOC_RESVSP64: No space left on device
-
-Signed-off-by: Alain Renaud <arenaud@sgi.com>
-
----
-   This is the 3rd version of the patch. In the previous version we were
-making the change in xfs_bmap_extsize_align() but like Dave mention
-we were breaking the function definition.
-
-   Limiting the length in xfs_bmapi_write() seem more logical and should
-avoid any unexpected side effect.
-
- fs/xfs/xfs_bmap.c |   27 ++++++++++++++++-----------
- 1 file changed, 16 insertions(+), 11 deletions(-)
-
-Index: b/fs/xfs/xfs_bmap.c
-===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4915,22 +4915,27 @@ xfs_bmapi_write(
- 		 * that we found, if any.
- 		 */
- 		if (inhole || wasdelay) {
-+			xfs_extlen_t	extsz;
- 			bma.eof = eof;
- 			bma.conv = !!(flags & XFS_BMAPI_CONVERT);
- 			bma.wasdel = wasdelay;
- 			bma.offset = bno;
- 
--			/*
--			 * There's a 32/64 bit type mismatch between the
--			 * allocation length request (which can be 64 bits in
--			 * length) and the bma length request, which is
--			 * xfs_extlen_t and therefore 32 bits. Hence we have to
--			 * check for 32-bit overflows and handle them here.
--			 */
--			if (len > (xfs_filblks_t)MAXEXTLEN)
--				bma.length = MAXEXTLEN;
--			else
--				bma.length = len;
-+			/* Figure out the extent size, set bma.length */
-+			extsz = xfs_get_extsz_hint(ip);
-+			if (extsz) {
-+				/*
-+				 * Make sure we don't exceed the maximum extent
-+				 * length when we align the extent.  Reduce the
-+				 * length we are going to allocate by the
-+				 * maximum adjustment extent size aligment may
-+				 * require.
-+				 */
-+				bma.length = XFS_FILBLKS_MIN(len,
-+					     MAXEXTLEN - (2 * extsz - 1));
-+			} else {
-+				bma.length = XFS_FILBLKS_MIN(len, MAXEXTLEN);
-+			}
- 
- 			ASSERT(len > 0);
- 			ASSERT(bma.length > 0);
-
---------------070107000404040908060209
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---------------070107000404040908060209--
