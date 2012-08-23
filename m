@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N5361I134923 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:06 -0500
+	q7N53VEJ135127 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:31 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	hRWouPdn1I2qdP5G for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:03:51 -0700 (PDT)
+	Amx0zGzdF8hO5QnZ for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:04:16 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Pa0-0003Fk-Eq
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:40 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4PaK-0003GR-O7
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:00 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pa0-0003dK-Bd
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:40 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PaA-0003e2-LF
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 026/102] xfs: simplify xfs_qm_detach_gdquots
-Date: Thu, 23 Aug 2012 15:01:44 +1000
-Message-Id: <1345698180-13612-27-git-send-email-david@fromorbit.com>
+Subject: [PATCH 035/102] xfs: xfs_trans_add_item() - don't assign in ASSERT()
+	when compare is intended
+Date: Thu, 23 Aug 2012 15:01:53 +1000
+Message-Id: <1345698180-13612-36-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,61 +34,36 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Jesper Juhl <jj@chaosbits.net>
 
-Upstream commit: 28fb588c9bd810dec273d96e80591392f6ce1e1c
+Upstream commit: f65020a83ad570c1788f7d8ece67f3487166576b
 
-There is no reason to drop qi_dqlist_lock around calls to xfs_qm_dqrele
-because the free list lock now nests inside qi_dqlist_lock and the
-dquot lock.
+It looks to me like the two ASSERT()s in xfs_trans_add_item() really
+want to do a compare (==) rather than assignment (=).
+This patch changes it from the latter to the former.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Jesper Juhl <jj@chaosbits.net>
 Signed-off-by: Ben Myers <bpm@sgi.com>
----
- fs/xfs/quota/xfs_qm.c |   23 +++++------------------
- 1 file changed, 5 insertions(+), 18 deletions(-)
 
-diff --git a/fs/xfs/quota/xfs_qm.c b/fs/xfs/quota/xfs_qm.c
-index 0785984..eacf7e0 100644
---- a/fs/xfs/quota/xfs_qm.c
-+++ b/fs/xfs/quota/xfs_qm.c
-@@ -518,31 +518,18 @@ xfs_qm_detach_gdquots(
+(cherry picked from commit 05293485a0b6b1f803e8a3c0ff188c38f6969985)
+---
+ fs/xfs/xfs_trans.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index efc147f..9b4437d 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -1151,8 +1151,8 @@ xfs_trans_add_item(
  {
- 	struct xfs_quotainfo	*q = mp->m_quotainfo;
- 	struct xfs_dquot	*dqp, *gdqp;
--	int			nrecl;
+ 	struct xfs_log_item_desc *lidp;
  
-- again:
- 	ASSERT(mutex_is_locked(&q->qi_dqlist_lock));
- 	list_for_each_entry(dqp, &q->qi_dqlist, q_mplist) {
- 		xfs_dqlock(dqp);
--		if ((gdqp = dqp->q_gdquot)) {
--			xfs_dqlock(gdqp);
-+
-+		gdqp = dqp->q_gdquot;
-+		if (gdqp)
- 			dqp->q_gdquot = NULL;
--		}
- 		xfs_dqunlock(dqp);
-+		if (gdqp)
-+			xfs_qm_dqrele(gdqp);
+-	ASSERT(lip->li_mountp = tp->t_mountp);
+-	ASSERT(lip->li_ailp = tp->t_mountp->m_ail);
++	ASSERT(lip->li_mountp == tp->t_mountp);
++	ASSERT(lip->li_ailp == tp->t_mountp->m_ail);
  
--		if (gdqp) {
--			/*
--			 * Can't hold the mplist lock across a dqput.
--			 * XXXmust convert to marker based iterations here.
--			 */
--			nrecl = q->qi_dqreclaims;
--			mutex_unlock(&q->qi_dqlist_lock);
--			xfs_qm_dqput(gdqp);
--
--			mutex_lock(&q->qi_dqlist_lock);
--			if (nrecl != q->qi_dqreclaims)
--				goto again;
--		}
- 	}
- }
+ 	lidp = kmem_zone_zalloc(xfs_log_item_desc_zone, KM_SLEEP | KM_NOFS);
  
 -- 
 1.7.10
