@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N53dMj135207 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:39 -0500
+	q7N542fo135498 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:02 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NpATqfmvwf3Id0CR for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:04:24 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Paf-0003H0-Bf
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:21 +1000
+	TfPkOGfgzzRHXQWr for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:04:47 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1T4Paz-0003Hw-P2
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:41 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PaV-0003fG-AU
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:11 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pap-0003g9-Kl
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:31 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 050/102] xfs: do not require an ioend for new EOF calculation
-Date: Thu, 23 Aug 2012 15:02:08 +1000
-Message-Id: <1345698180-13612-51-git-send-email-david@fromorbit.com>
+Subject: [PATCH 060/102] xfs: Fix open flag handling in open_by_handle code
+Date: Thu, 23 Aug 2012 15:02:18 +1000
+Message-Id: <1345698180-13612-61-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,106 +33,65 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 6923e686f19cb7017fc9777a10e06c2e2b2a2936
+Upstream commit: 1a1d772433d42aaff7315b3468fef5951604f5c6
 
-Replace xfs_ioend_new_eof with a new inline xfs_new_eof helper that
-doesn't require and ioend, and is available also outside of xfs_aops.c.
+Sparse identified some unsafe handling of open flags in the xfs open
+by handle ioctl code. Update the code to use the correct access
+macros to ensure that we handle the open flags correctly.
 
-Also make the code a bit more clear by using a normal if statement
-instead of a slightly misleading MIN().
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |   24 ++++--------------------
- fs/xfs/xfs_inode.h          |   14 ++++++++++++++
- 2 files changed, 18 insertions(+), 20 deletions(-)
+ fs/xfs/linux-2.6/xfs_ioctl.c |   14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 6a3cafc..5297866 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -133,23 +133,6 @@ xfs_destroy_ioend(
- }
+diff --git a/fs/xfs/linux-2.6/xfs_ioctl.c b/fs/xfs/linux-2.6/xfs_ioctl.c
+index ada7da9..b27fb6d 100644
+--- a/fs/xfs/linux-2.6/xfs_ioctl.c
++++ b/fs/xfs/linux-2.6/xfs_ioctl.c
+@@ -209,6 +209,7 @@ xfs_open_by_handle(
+ 	struct file		*filp;
+ 	struct inode		*inode;
+ 	struct dentry		*dentry;
++	fmode_t			fmode;
  
- /*
-- * If the end of the current ioend is beyond the current EOF,
-- * return the new EOF value, otherwise zero.
-- */
--STATIC xfs_fsize_t
--xfs_ioend_new_eof(
--	xfs_ioend_t		*ioend)
--{
--	xfs_inode_t		*ip = XFS_I(ioend->io_inode);
--	xfs_fsize_t		isize;
--	xfs_fsize_t		bsize;
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -XFS_ERROR(EPERM);
+@@ -228,26 +229,21 @@ xfs_open_by_handle(
+ 	hreq->oflags |= O_LARGEFILE;
+ #endif
+ 
+-	/* Put open permission in namei format. */
+ 	permflag = hreq->oflags;
+-	if ((permflag+1) & O_ACCMODE)
+-		permflag++;
+-	if (permflag & O_TRUNC)
+-		permflag |= 2;
 -
--	bsize = ioend->io_offset + ioend->io_size;
--	isize = MIN(i_size_read(VFS_I(ip)), bsize);
--	return isize > ip->i_d.di_size ? isize : 0;
--}
--
--/*
-  * Fast and loose check if this write could update the on-disk inode size.
-  */
- static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
-@@ -169,7 +152,7 @@ xfs_setfilesize(
- 	xfs_fsize_t		isize;
++	fmode = OPEN_FMODE(permflag);
+ 	if ((!(permflag & O_APPEND) || (permflag & O_TRUNC)) &&
+-	    (permflag & FMODE_WRITE) && IS_APPEND(inode)) {
++	    (fmode & FMODE_WRITE) && IS_APPEND(inode)) {
+ 		error = -XFS_ERROR(EPERM);
+ 		goto out_dput;
+ 	}
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	isize = xfs_ioend_new_eof(ioend);
-+	isize = xfs_new_eof(ip, ioend->io_offset + ioend->io_size);
- 	if (isize) {
- 		ip->i_d.di_size = isize;
- 		xfs_mark_inode_dirty(ip);
-@@ -391,6 +374,7 @@ xfs_submit_ioend_bio(
- 	xfs_ioend_t		*ioend,
- 	struct bio		*bio)
- {
-+	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	atomic_inc(&ioend->io_remaining);
- 	bio->bi_private = ioend;
- 	bio->bi_end_io = xfs_end_bio;
-@@ -399,8 +383,8 @@ xfs_submit_ioend_bio(
- 	 * If the I/O is beyond EOF we mark the inode dirty immediately
- 	 * but don't update the inode size until I/O completion.
- 	 */
--	if (xfs_ioend_new_eof(ioend))
--		xfs_mark_inode_dirty(XFS_I(ioend->io_inode));
-+	if (xfs_new_eof(ip, ioend->io_offset + ioend->io_size))
-+		xfs_mark_inode_dirty(ip);
+-	if ((permflag & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
++	if ((fmode & FMODE_WRITE) && IS_IMMUTABLE(inode)) {
+ 		error = -XFS_ERROR(EACCES);
+ 		goto out_dput;
+ 	}
  
- 	submit_bio(wbc->sync_mode == WB_SYNC_ALL ? WRITE_SYNC : WRITE, bio);
- }
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index d3bbc93..ec81926 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -287,6 +287,20 @@ static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
- }
- 
- /*
-+ * If this I/O goes past the on-disk inode size update it unless it would
-+ * be past the current in-core inode size.
-+ */
-+static inline xfs_fsize_t
-+xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
-+{
-+	xfs_fsize_t i_size = i_size_read(VFS_I(ip));
-+
-+	if (new_size > i_size)
-+		new_size = i_size;
-+	return new_size > ip->i_d.di_size ? new_size : 0;
-+}
-+
-+/*
-  * i_flags helper functions
-  */
- static inline void
+ 	/* Can't write directories. */
+-	if (S_ISDIR(inode->i_mode) && (permflag & FMODE_WRITE)) {
++	if (S_ISDIR(inode->i_mode) && (fmode & FMODE_WRITE)) {
+ 		error = -XFS_ERROR(EISDIR);
+ 		goto out_dput;
+ 	}
 -- 
 1.7.10
 
