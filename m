@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N55FBE136146 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:16 -0500
+	q7N55FSN136141 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:05:16 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	xySGVt6iZzOi52LY for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:06:01 -0700 (PDT)
+	H1IRt4X3xVlj3pWv for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:06:00 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Pc9-0003KW-DV
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:53 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4Pbp-0003KJ-Hi
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:33 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pbp-0003jD-AL
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pbp-0003jX-F4
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:33 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 094/102] xfs: m_maxioffset is redundant
-Date: Thu, 23 Aug 2012 15:02:52 +1000
-Message-Id: <1345698180-13612-95-git-send-email-david@fromorbit.com>
+Subject: [PATCH 099/102] xfs: really fix the cursor leak in
+	xfs_alloc_ag_vextent_near
+Date: Thu, 23 Aug 2012 15:02:57 +1000
+Message-Id: <1345698180-13612-100-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,102 +36,39 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: d2c2819117176e139dc761873c664aaa770c79c9
+Upstream commit: e3a746f5aab71f2dd0a83116772922fb37ae29d6
 
-The m_maxioffset field in the struct xfs_mount contains the same
-value as the superblock s_maxbytes field. There is no need to carry
-two copies of this limit around, so use the VFS superblock version.
+The current cursor is reallocated when retrying the allocation, so
+the existing cursor needs to be destroyed in both the restart and
+the failure cases.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Tested-by: Mike Snitzer <snitzer@redhat.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |   12 ++++++------
- fs/xfs/xfs_iomap.c          |    4 ++--
- fs/xfs/xfs_mount.c          |    2 --
- fs/xfs/xfs_mount.h          |    3 +--
- 4 files changed, 9 insertions(+), 12 deletions(-)
+ fs/xfs/xfs_alloc.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index c16caf2..42eaf00 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -362,10 +362,10 @@ xfs_map_blocks(
- 
- 	ASSERT(ip->i_d.di_format != XFS_DINODE_FMT_BTREE ||
- 	       (ip->i_df.if_flags & XFS_IFEXTENTS));
--	ASSERT(offset <= mp->m_maxioffset);
-+	ASSERT(offset <= mp->m_super->s_maxbytes);
- 
--	if (offset + count > mp->m_maxioffset)
--		count = mp->m_maxioffset - offset;
-+	if (offset + count > mp->m_super->s_maxbytes)
-+		count = mp->m_super->s_maxbytes - offset;
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + count);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	error = xfs_bmapi(NULL, ip, offset_fsb, end_fsb - offset_fsb,
-@@ -1213,9 +1213,9 @@ __xfs_get_blocks(
- 		lockmode = xfs_ilock_map_shared(ip);
- 	}
- 
--	ASSERT(offset <= mp->m_maxioffset);
--	if (offset + size > mp->m_maxioffset)
--		size = mp->m_maxioffset - offset;
-+	ASSERT(offset <= mp->m_super->s_maxbytes);
-+	if (offset + size > mp->m_super->s_maxbytes)
-+		size = mp->m_super->s_maxbytes - offset;
- 	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)offset + size);
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 121309f..1a7b2e7 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -422,8 +422,8 @@ retry:
- 	 * Make sure preallocation does not create extents beyond the range we
- 	 * actually support in this filesystem.
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index 679c049..de5a353 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -1081,13 +1081,13 @@ restart:
+ 	 * If we couldn't get anything, give up.
  	 */
--	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_maxioffset))
--		last_fsb = XFS_B_TO_FSB(mp, mp->m_maxioffset);
-+	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes))
-+		last_fsb = XFS_B_TO_FSB(mp, mp->m_super->s_maxbytes);
- 
- 	ASSERT(last_fsb > offset_fsb);
- 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index beb9968..2119389 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1209,8 +1209,6 @@ xfs_mountfs(
- 
- 	xfs_set_maxicount(mp);
- 
--	mp->m_maxioffset = xfs_max_file_offset(sbp->sb_blocklog);
+ 	if (bno_cur_lt == NULL && bno_cur_gt == NULL) {
++		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
++
+ 		if (!forced++) {
+ 			trace_xfs_alloc_near_busy(args);
+ 			xfs_log_force(args->mp, XFS_LOG_SYNC);
+ 			goto restart;
+ 		}
 -
- 	error = xfs_uuid_mount(mp);
- 	if (error)
- 		goto out;
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index fdcb826..a666de7 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -176,7 +176,6 @@ typedef struct xfs_mount {
- 	uint			m_qflags;	/* quota status flags */
- 	xfs_trans_reservations_t m_reservations;/* precomputed res values */
- 	__uint64_t		m_maxicount;	/* maximum inode count */
--	__uint64_t		m_maxioffset;	/* maximum inode offset */
- 	__uint64_t		m_resblks;	/* total reserved blocks */
- 	__uint64_t		m_resblks_avail;/* available reserved blocks */
- 	__uint64_t		m_resblks_save;	/* reserved blks @ remount,ro */
-@@ -299,7 +298,7 @@ xfs_preferred_iosize(xfs_mount_t *mp)
- 			PAGE_CACHE_SIZE));
- }
- 
--#define XFS_MAXIOFFSET(mp)	((mp)->m_maxioffset)
-+#define XFS_MAXIOFFSET(mp)	((mp)->m_super->s_maxbytes)
- 
- #define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
- 				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
+-		xfs_btree_del_cursor(cnt_cur, XFS_BTREE_NOERROR);
+ 		trace_xfs_alloc_size_neither(args);
+ 		args->agbno = NULLAGBLOCK;
+ 		return 0;
 -- 
 1.7.10
 
