@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54VsS135792 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:32 -0500
+	q7N54X2h135812 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:33 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kT707sTTdkYIoqME for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:17 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbU-0003JM-Uo
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:12 +1000
+	fc4lvSzluptddHDs for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:18 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1T4PbV-0003Jf-5c
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:13 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbK-0003iF-Rm
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PbV-0003iY-1g
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:13 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 083/102] xfs: fix incorrect b_offset initialisation
-Date: Thu, 23 Aug 2012 15:02:41 +1000
-Message-Id: <1345698180-13612-84-git-send-email-david@fromorbit.com>
+Subject: [PATCH 086/102] xfs: Properly exclude IO type flags from buffer flags
+Date: Thu, 23 Aug 2012 15:02:44 +1000
+Message-Id: <1345698180-13612-87-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,46 +35,40 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: ead360c50d33772f45943792893a58865adf3638
+Upstream commit: 12bcb3f7d4371f74bd25372e98e0d2da978e82b2
 
-Because we no longer use the page cache for buffering, there is no
-direct block number to page offset relationship anymore.
-xfs_buf_get_pages is still setting up b_offset as if there was some
-relationship, and that is leading to incorrectly setting up
-*uncached* buffers that don't overwrite b_offset once they've had
-pages allocated.
-
-For cached buffers, the first block of the buffer is always at offset
-zero into the allocated memory. This is true for sub-page sized
-buffers, as well as for multiple-page buffers.
-
-For uncached buffers, b_offset is only non-zero when we are
-associating specific memory to the buffers, and that is set
-correctly by the code setting up the buffer.
-
-Hence remove the setting of b_offset in xfs_buf_get_pages, because
-it is now always the wrong thing to do.
+Recent event tracing during a debugging session showed that flags
+that define the IO type for a buffer are leaking into the flags on
+the buffer incorrectly. Fix the flag exclusion mask in
+xfs_buf_alloc() to avoid problems that may be caused by such
+leakage.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |    1 -
- 1 file changed, 1 deletion(-)
+ fs/xfs/linux-2.6/xfs_buf.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
 diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 5487eaa..3e9946c 100644
+index 522ab83..a87b93a 100644
 --- a/fs/xfs/linux-2.6/xfs_buf.c
 +++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -219,7 +219,6 @@ _xfs_buf_get_pages(
- {
- 	/* Make sure that we have a page list */
- 	if (bp->b_pages == NULL) {
--		bp->b_offset = xfs_buf_poff(bp->b_file_offset);
- 		bp->b_page_count = page_count;
- 		if (page_count <= XB_PAGES) {
- 			bp->b_pages = bp->b_page_array;
+@@ -175,9 +175,11 @@ xfs_buf_alloc(
+ 		return NULL;
+ 
+ 	/*
+-	 * We don't want certain flags to appear in b_flags.
++	 * We don't want certain flags to appear in b_flags unless they are
++	 * specifically set by later operations on the buffer.
+ 	 */
+-	flags &= ~(XBF_LOCK|XBF_MAPPED|XBF_DONT_BLOCK|XBF_READ_AHEAD);
++	flags &= ~(XBF_LOCK | XBF_MAPPED | XBF_DONT_BLOCK |
++		   XBF_TRYLOCK | XBF_ASYNC | XBF_READ_AHEAD);
+ 
+ 	atomic_set(&bp->b_hold, 1);
+ 	atomic_set(&bp->b_lru_ref, 1);
 -- 
 1.7.10
 
