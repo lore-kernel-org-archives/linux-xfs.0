@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N537IG134931 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:07 -0500
+	q7N535s8134910 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:05 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	31x3zFN0IjNAFHLu for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:03:52 -0700 (PDT)
+	D0nTPxbLBCdC8t8W for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:03:50 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4Pa0-0003Fs-KK
+	(envelope-from <dave@fromorbit.com>) id 1T4Pa0-0003FY-5k
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:40 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pa0-0003df-HT
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:40 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PZl-0003cY-1P
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:25 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 031/102] xfs: always return with the iolock held from
-Date: Thu, 23 Aug 2012 15:01:49 +1000
-Message-Id: <1345698180-13612-32-git-send-email-david@fromorbit.com>
+Subject: [PATCH 018/102] xfs: do not flush data workqueues in xfs_flush_buftarg
+Date: Thu, 23 Aug 2012 15:01:36 +1000
+Message-Id: <1345698180-13612-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,44 +35,51 @@ To: xfs@oss.sgi.com
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Upstream commit: 5bf1f26227a59b9634e95eb3c7c012b766e5e6a0
- xfs_file_aio_write_checks
+Upstream commit: 5a93a064d27b42e4af1772b0599b53e3241191ac
 
-While xfs_iunlock is fine with 0 lockflags the calling conventions are much
-cleaner if xfs_file_aio_write_checks never returns without the iolock held.
+When we call xfs_flush_buftarg (generally from sync or umount) it already
+is too late to flush the data workqueues, as I/O completion is signalled
+for them and we are thus already done with the data we would flush here.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+There are places where flushing them might be useful, but the current
+sync interface doesn't give us that opportunity.
+
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Alex Elder <aelder@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_file.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/linux-2.6/xfs_buf.c |   11 +----------
+ 1 file changed, 1 insertion(+), 10 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index e3076f0..b9e3101 100644
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -631,7 +631,9 @@ out_lock:
- /*
-  * Common pre-write limit and setup checks.
-  *
-- * Returns with iolock held according to @iolock.
-+ * Called with the iolocked held either shared and exclusive according to
-+ * @iolock, and returns with it held.  Might upgrade the iolock to exclusive
-+ * if called for a direct write beyond i_size.
-  */
- STATIC ssize_t
- xfs_file_aio_write_checks(
-@@ -648,8 +650,7 @@ xfs_file_aio_write_checks(
- restart:
- 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
- 	if (error) {
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
--		*iolock = 0;
-+		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
- 		return error;
- 	}
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 82fe480..4508ec2 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -1670,13 +1670,6 @@ xfs_buf_delwri_promote(
+ 	spin_unlock(&btp->bt_delwrite_lock);
+ }
  
+-STATIC void
+-xfs_buf_runall_queues(
+-	struct workqueue_struct	*queue)
+-{
+-	flush_workqueue(queue);
+-}
+-
+ /*
+  * Move as many buffers as specified to the supplied list
+  * idicating if we skipped any buffers to prevent deadlocks.
+@@ -1811,9 +1804,7 @@ xfs_flush_buftarg(
+ 	LIST_HEAD(wait_list);
+ 	struct blk_plug plug;
+ 
+-	xfs_buf_runall_queues(xfsconvertd_workqueue);
+-	xfs_buf_runall_queues(xfsdatad_workqueue);
+-	xfs_buf_runall_queues(xfslogd_workqueue);
++	flush_workqueue(xfslogd_workqueue);
+ 
+ 	set_bit(XBT_FORCE_FLUSH, &target->bt_flags);
+ 	pincount = xfs_buf_delwri_split(target, &tmp_list, 0);
 -- 
 1.7.10
 
