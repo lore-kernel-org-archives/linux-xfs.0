@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54Usl135775 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:31 -0500
+	q7N54VsS135792 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:32 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	qogUOk1zedi833W9 for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:16 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbU-0003JO-NC
+	kT707sTTdkYIoqME for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:17 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1T4PbU-0003JM-Uo
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:12 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbK-0003hx-Jv
+	(envelope-from <dave@disappointment.disaster>) id 1T4PbK-0003iF-Rm
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 079/102] xfs: limit specualtive delalloc to maxioffset
-Date: Thu, 23 Aug 2012 15:02:37 +1000
-Message-Id: <1345698180-13612-80-git-send-email-david@fromorbit.com>
+Subject: [PATCH 083/102] xfs: fix incorrect b_offset initialisation
+Date: Thu, 23 Aug 2012 15:02:41 +1000
+Message-Id: <1345698180-13612-84-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,45 +36,46 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 3ed9116e8a3e9c0870b2076340b3da9b8f900f3b
+Upstream commit: ead360c50d33772f45943792893a58865adf3638
 
-Speculative delayed allocation beyond EOF near the maximum supported
-file offset can result in creating delalloc extents beyond
-mp->m_maxioffset (8EB). These can never be trimmed during
-xfs_free_eof_blocks() because they are beyond mp->m_maxioffset, and
-that results in assert failures in xfs_fs_destroy_inode() due to
-delalloc blocks still being present. xfstests 071 exposes this
-problem.
+Because we no longer use the page cache for buffering, there is no
+direct block number to page offset relationship anymore.
+xfs_buf_get_pages is still setting up b_offset as if there was some
+relationship, and that is leading to incorrectly setting up
+*uncached* buffers that don't overwrite b_offset once they've had
+pages allocated.
 
-Limit speculative delalloc to mp->m_maxioffset to avoid this
-problem.
+For cached buffers, the first block of the buffer is always at offset
+zero into the allocated memory. This is true for sub-page sized
+buffers, as well as for multiple-page buffers.
+
+For uncached buffers, b_offset is only non-zero when we are
+associating specific memory to the buffers, and that is set
+correctly by the code setting up the buffer.
+
+Hence remove the setting of b_offset in xfs_buf_get_pages, because
+it is now always the wrong thing to do.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_iomap.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ fs/xfs/linux-2.6/xfs_buf.c |    1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 29e2d85..121309f 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -418,6 +418,15 @@ retry:
- 			return error;
- 	}
- 
-+	/*
-+	 * Make sure preallocation does not create extents beyond the range we
-+	 * actually support in this filesystem.
-+	 */
-+	if (last_fsb > XFS_B_TO_FSB(mp, mp->m_maxioffset))
-+		last_fsb = XFS_B_TO_FSB(mp, mp->m_maxioffset);
-+
-+	ASSERT(last_fsb > offset_fsb);
-+
- 	nimaps = XFS_WRITE_IMAPS;
- 	firstblock = NULLFSBLOCK;
- 	error = xfs_bmapi(NULL, ip, offset_fsb,
+diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
+index 5487eaa..3e9946c 100644
+--- a/fs/xfs/linux-2.6/xfs_buf.c
++++ b/fs/xfs/linux-2.6/xfs_buf.c
+@@ -219,7 +219,6 @@ _xfs_buf_get_pages(
+ {
+ 	/* Make sure that we have a page list */
+ 	if (bp->b_pages == NULL) {
+-		bp->b_offset = xfs_buf_poff(bp->b_file_offset);
+ 		bp->b_page_count = page_count;
+ 		if (page_count <= XB_PAGES) {
+ 			bp->b_pages = bp->b_page_array;
 -- 
 1.7.10
 
