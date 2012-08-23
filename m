@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54Vvm135787 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:32 -0500
+	q7N54Ue3135764 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:30 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	175zH96H64vHSllW for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:16 -0700 (PDT)
+	u9TthrDOAN1pKpBG for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:15 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbU-0003JQ-QY
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:12 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4PbK-0003JA-MP
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbK-0003iA-OG
+	(envelope-from <dave@disappointment.disaster>) id 1T4PbK-0003hk-DT
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 082/102] xfs: check for buffer errors before waiting
-Date: Thu, 23 Aug 2012 15:02:40 +1000
-Message-Id: <1345698180-13612-83-git-send-email-david@fromorbit.com>
+Subject: [PATCH 078/102] xfs: don't assert on delalloc regions beyond EOF
+Date: Thu, 23 Aug 2012 15:02:36 +1000
+Message-Id: <1345698180-13612-79-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,142 +35,55 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Upstream commit: 0e95f19ad983e72a9cb93a67b3290b58f0467b36
+Upstream commit: 58e20770646932fe9b758c94e8c278ea9ec93878
 
-If we call xfs_buf_iowait() on a buffer that failed dispatch due to
-an IO error, it will wait forever for an Io that does not exist.
-This is hndled in xfs_buf_read, but there is other code that calls
-xfs_buf_iowait directly that doesn't.
+When we are doing speculative delayed allocation beyond EOF,
+conversion of the region allocated beyond EOF is dependent on the
+largest free space extent available. If the largest free extent is
+smaller than the delalloc range, then after allocation we leave
+a delalloc extent that starts beyond EOF. This extent cannot *ever*
+be converted by flushing data, and so will remain there until either
+the EOF moves into the extent or it is truncated away.
 
-Rather than make the call sites have to handle checking for dispatch
-errors and then checking for completion errors, make
-xfs_buf_iowait() check for dispatch errors on the buffer before
-waiting. This means we handle both dispatch and completion errors
-with one set of error handling at the caller sites.
+Hence if xfs_getbmap() runs on such an inode and is asked to return
+extents beyond EOF, it will assert fail on this extent even though
+there is nothing xfs_getbmap() can do to convert it to a real
+extent. Hence we should simply report these delalloc extents rather
+than assert that there should be none.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_buf.c |   24 +++++++++++-------------
- fs/xfs/linux-2.6/xfs_buf.h |    2 +-
- fs/xfs/xfs_log_recover.c   |    2 ++
- 3 files changed, 14 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_bmap.c |   16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_buf.c b/fs/xfs/linux-2.6/xfs_buf.c
-index 0858fe1..5487eaa 100644
---- a/fs/xfs/linux-2.6/xfs_buf.c
-+++ b/fs/xfs/linux-2.6/xfs_buf.c
-@@ -597,8 +597,6 @@ _xfs_buf_read(
- 	xfs_buf_t		*bp,
- 	xfs_buf_flags_t		flags)
- {
--	int			status;
--
- 	ASSERT(!(flags & (XBF_DELWRI|XBF_WRITE)));
- 	ASSERT(bp->b_bn != XFS_BUF_DADDR_NULL);
- 
-@@ -607,9 +605,9 @@ _xfs_buf_read(
- 	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | \
- 			XBF_READ_AHEAD | _XBF_RUN_QUEUES);
- 
--	status = xfs_buf_iorequest(bp);
--	if (status || XFS_BUF_ISERROR(bp) || (flags & XBF_ASYNC))
--		return status;
-+	xfs_buf_iorequest(bp);
-+	if (flags & XBF_ASYNC)
-+		return 0;
- 	return xfs_buf_iowait(bp);
- }
- 
-@@ -696,7 +694,7 @@ xfs_buf_read_uncached(
- 
- 	xfsbdstrat(mp, bp);
- 	error = xfs_buf_iowait(bp);
--	if (error || bp->b_error) {
-+	if (error) {
- 		xfs_buf_relse(bp);
- 		return NULL;
- 	}
-@@ -1288,7 +1286,7 @@ next_chunk:
- 	}
- }
- 
--int
-+void
- xfs_buf_iorequest(
- 	xfs_buf_t		*bp)
- {
-@@ -1296,7 +1294,7 @@ xfs_buf_iorequest(
- 
- 	if (bp->b_flags & XBF_DELWRI) {
- 		xfs_buf_delwri_queue(bp, 1);
--		return 0;
-+		return;
- 	}
- 
- 	if (bp->b_flags & XBF_WRITE) {
-@@ -1314,13 +1312,12 @@ xfs_buf_iorequest(
- 	_xfs_buf_ioend(bp, 0);
- 
- 	xfs_buf_rele(bp);
--	return 0;
- }
- 
- /*
-- *	Waits for I/O to complete on the buffer supplied.
-- *	It returns immediately if no I/O is pending.
-- *	It returns the I/O error code, if any, or 0 if there was no error.
-+ * Waits for I/O to complete on the buffer supplied.  It returns immediately if
-+ * no I/O is pending or there is already a pending error on the buffer.  It
-+ * returns the I/O error code, if any, or 0 if there was no error.
-  */
- int
- xfs_buf_iowait(
-@@ -1328,7 +1325,8 @@ xfs_buf_iowait(
- {
- 	trace_xfs_buf_iowait(bp, _RET_IP_);
- 
--	wait_for_completion(&bp->b_iowait);
-+	if (!bp->b_error)
-+		wait_for_completion(&bp->b_iowait);
- 
- 	trace_xfs_buf_iowait_done(bp, _RET_IP_);
- 	return bp->b_error;
-diff --git a/fs/xfs/linux-2.6/xfs_buf.h b/fs/xfs/linux-2.6/xfs_buf.h
-index 71d6698..edb8d7c 100644
---- a/fs/xfs/linux-2.6/xfs_buf.h
-+++ b/fs/xfs/linux-2.6/xfs_buf.h
-@@ -208,7 +208,7 @@ extern int xfs_bdstrat_cb(struct xfs_buf *);
- extern void xfs_buf_ioend(xfs_buf_t *,	int);
- extern void xfs_buf_ioerror(xfs_buf_t *, int);
- extern void xfs_buf_ioerror_alert(struct xfs_buf *, const char *func);
--extern int xfs_buf_iorequest(xfs_buf_t *);
-+extern void xfs_buf_iorequest(xfs_buf_t *);
- extern int xfs_buf_iowait(xfs_buf_t *);
- extern void xfs_buf_iomove(xfs_buf_t *, size_t, size_t, void *,
- 				xfs_buf_rw_t);
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 82f7d18..13c057b 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -177,6 +177,7 @@ xlog_bread_noalign(
- 	XFS_BUF_BUSY(bp);
- 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
- 	XFS_BUF_SET_TARGET(bp, log->l_mp->m_logdev_targp);
-+	bp->b_error = 0;
- 
- 	xfsbdstrat(log->l_mp, bp);
- 	error = xfs_buf_iowait(bp);
-@@ -266,6 +267,7 @@ xlog_bwrite(
- 	XFS_BUF_PSEMA(bp, PRIBIO);
- 	XFS_BUF_SET_COUNT(bp, BBTOB(nbblks));
- 	XFS_BUF_SET_TARGET(bp, log->l_mp->m_logdev_targp);
-+	bp->b_error = 0;
- 
- 	error = xfs_bwrite(log->l_mp, bp);
- 	if (error)
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 8f3b730..2b4e8d2 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5541,8 +5541,20 @@ xfs_getbmap(
+ 				XFS_FSB_TO_BB(mp, map[i].br_blockcount);
+ 			out[cur_ext].bmv_unused1 = 0;
+ 			out[cur_ext].bmv_unused2 = 0;
+-			ASSERT(((iflags & BMV_IF_DELALLOC) != 0) ||
+-			      (map[i].br_startblock != DELAYSTARTBLOCK));
++
++			/*
++			 * delayed allocation extents that start beyond EOF can
++			 * occur due to speculative EOF allocation when the
++			 * delalloc extent is larger than the largest freespace
++			 * extent at conversion time. These extents cannot be
++			 * converted by data writeback, so can exist here even
++			 * if we are not supposed to be finding delalloc
++			 * extents.
++			 */
++			if (map[i].br_startblock == DELAYSTARTBLOCK &&
++			    map[i].br_startoff <= XFS_B_TO_FSB(mp, XFS_ISIZE(ip)))
++				ASSERT((iflags & BMV_IF_DELALLOC) != 0);
++
+                         if (map[i].br_startblock == HOLESTARTBLOCK &&
+ 			    whichfork == XFS_ATTR_FORK) {
+ 				/* came to the end of attribute fork */
 -- 
 1.7.10
 
