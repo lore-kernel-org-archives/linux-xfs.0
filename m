@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54KP1135666 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:20 -0500
+	q7N54KgU135667 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:20 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	ot92hAf3qOE1MDtE for <xfs@oss.sgi.com>;
+	7Jlvp8gQsoPhD8tV for <xfs@oss.sgi.com>;
 	Wed, 22 Aug 2012 22:05:05 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbK-0003Ib-8C
+	(envelope-from <dave@fromorbit.com>) id 1T4PbK-0003J5-KY
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbA-0003hD-1y
+	(envelope-from <dave@disappointment.disaster>) id 1T4PbA-0003hY-9u
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:52 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 071/102] xfs: push the ilock into xfs_zero_eof
-Date: Thu, 23 Aug 2012 15:02:29 +1000
-Message-Id: <1345698180-13612-72-git-send-email-david@fromorbit.com>
+Subject: [PATCH 075/102] xfs: page type check in writeback only checks last
+	buffer
+Date: Thu, 23 Aug 2012 15:02:33 +1000
+Message-Id: <1345698180-13612-76-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -33,297 +34,82 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@infradead.org>
+Upstream commit: 6ffc4db5de61d36e969a26bc94509c59246c81f8
 
-Upstream commit: 193aec10504e4c24521449c46317282141fb36e8
+xfs_is_delayed_page() checks to see if a page has buffers matching
+the given IO type passed in. It does so by walking the buffer heads
+on the page and checking if the state flags match the IO type.
 
-Instead of calling xfs_zero_eof with the ilock held only take it internally
-for the minimall required critical section around xfs_bmapi_read.  This
-also requires changing the calling convention for xfs_zero_last_block
-slightly.  The actual zeroing operation is still serialized by the iolock,
-which must be taken exclusively over the call to xfs_zero_eof.
+However, the "acceptable" variable that is calculated is overwritten
+every time a new buffer is checked. Hence if the first buffer on the
+page is of the right type, this state is lost if the second buffer
+is not of the correct type. This means that xfs_aops_discard_page()
+may not discard delalloc regions when it is supposed to, and
+xfs_convert_page() may not cluster IO as efficiently as possible.
 
-We could in fact use a shared lock for the xfs_bmapi_read calls as long as
-the extent list has been read in, but given that we already hold the iolock
-exclusively there is little reason to micro optimize this further.
+This problem only occurs on filesystems with a block size smaller
+than page size.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Also, rename xfs_is_delayed_page() to xfs_check_page_type() to
+better describe what it is doing - it is not delalloc specific
+anymore.
+
+The problem was first noticed by Peter Watkins.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_file.c |  164 +++++++++++++++++--------------------------
- fs/xfs/xfs_vnodeops.c       |    2 -
- 2 files changed, 64 insertions(+), 102 deletions(-)
+ fs/xfs/linux-2.6/xfs_aops.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index d0239cf..642554b8 100644
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -390,116 +390,99 @@ xfs_file_splice_write(
- }
- 
- /*
-- * This routine is called to handle zeroing any space in the last
-- * block of the file that is beyond the EOF.  We do this since the
-- * size is being increased without writing anything to that block
-- * and we don't want anyone to read the garbage on the disk.
-+ * This routine is called to handle zeroing any space in the last block of the
-+ * file that is beyond the EOF.  We do this since the size is being increased
-+ * without writing anything to that block and we don't want to read the
-+ * garbage on the disk.
+diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
+index d2d3c84..51f7db1 100644
+--- a/fs/xfs/linux-2.6/xfs_aops.c
++++ b/fs/xfs/linux-2.6/xfs_aops.c
+@@ -660,7 +660,7 @@ xfs_map_at_offset(
+  * or delayed allocate extent.
   */
- STATIC int				/* error (positive) */
- xfs_zero_last_block(
--	xfs_inode_t	*ip,
--	xfs_fsize_t	offset,
--	xfs_fsize_t	isize)
-+	struct xfs_inode	*ip,
-+	xfs_fsize_t		offset,
-+	xfs_fsize_t		isize)
+ STATIC int
+-xfs_is_delayed_page(
++xfs_check_page_type(
+ 	struct page		*page,
+ 	unsigned int		type)
  {
--	xfs_fileoff_t	last_fsb;
--	xfs_mount_t	*mp = ip->i_mount;
--	int		nimaps;
--	int		zero_offset;
--	int		zero_len;
--	int		error = 0;
--	xfs_bmbt_irec_t	imap;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
--
--	zero_offset = XFS_B_FSB_OFFSET(mp, isize);
--	if (zero_offset == 0) {
--		/*
--		 * There are no extra bytes in the last block on disk to
--		 * zero, so return.
--		 */
--		return 0;
--	}
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		last_fsb = XFS_B_TO_FSBT(mp, isize);
-+	int			zero_offset = XFS_B_FSB_OFFSET(mp, isize);
-+	int			zero_len;
-+	int			nimaps = 1;
-+	int			error = 0;
-+	struct xfs_bmbt_irec	imap;
- 
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	last_fsb = XFS_B_TO_FSBT(mp, isize);
- 	nimaps = 1;
- 	error = xfs_bmapi(NULL, ip, last_fsb, 1, 0, NULL, 0, &imap,
- 			  &nimaps, NULL);
--	if (error) {
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+	if (error)
- 		return error;
--	}
-+
- 	ASSERT(nimaps > 0);
-+
- 	/*
- 	 * If the block underlying isize is just a hole, then there
- 	 * is nothing to zero.
- 	 */
--	if (imap.br_startblock == HOLESTARTBLOCK) {
-+	if (imap.br_startblock == HOLESTARTBLOCK)
- 		return 0;
--	}
--	/*
--	 * Zero the part of the last block beyond the EOF, and write it
--	 * out sync.  We need to drop the ilock while we do this so we
--	 * don't deadlock when the buffer cache calls back to us.
--	 */
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	zero_len = mp->m_sb.sb_blocksize - zero_offset;
- 	if (isize + zero_len > offset)
- 		zero_len = offset - isize;
--	error = xfs_iozero(ip, isize, zero_len);
--
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	ASSERT(error >= 0);
--	return error;
-+	return xfs_iozero(ip, isize, zero_len);
- }
- 
- /*
-- * Zero any on disk space between the current EOF and the new,
-- * larger EOF.  This handles the normal case of zeroing the remainder
-- * of the last block in the file and the unusual case of zeroing blocks
-- * out beyond the size of the file.  This second case only happens
-- * with fixed size extents and when the system crashes before the inode
-- * size was updated but after blocks were allocated.  If fill is set,
-- * then any holes in the range are filled and zeroed.  If not, the holes
-- * are left alone as holes.
-+ * Zero any on disk space between the current EOF and the new, larger EOF.
-+ *
-+ * This handles the normal case of zeroing the remainder of the last block in
-+ * the file and the unusual case of zeroing blocks out beyond the size of the
-+ * file.  This second case only happens with fixed size extents and when the
-+ * system crashes before the inode size was updated but after blocks were
-+ * allocated.
-+ *
-+ * Expects the iolock to be held exclusive, and will take the ilock internally.
-  */
--
- int					/* error (positive) */
- xfs_zero_eof(
--	xfs_inode_t	*ip,
--	xfs_off_t	offset,		/* starting I/O offset */
--	xfs_fsize_t	isize)		/* current inode size */
-+	struct xfs_inode	*ip,
-+	xfs_off_t		offset,		/* starting I/O offset */
-+	xfs_fsize_t		isize)		/* current inode size */
- {
--	xfs_mount_t	*mp = ip->i_mount;
--	xfs_fileoff_t	start_zero_fsb;
--	xfs_fileoff_t	end_zero_fsb;
--	xfs_fileoff_t	zero_count_fsb;
--	xfs_fileoff_t	last_fsb;
--	xfs_fileoff_t	zero_off;
--	xfs_fsize_t	zero_len;
--	int		nimaps;
--	int		error = 0;
--	xfs_bmbt_irec_t	imap;
--
--	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-+	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_fileoff_t		start_zero_fsb;
-+	xfs_fileoff_t		end_zero_fsb;
-+	xfs_fileoff_t		zero_count_fsb;
-+	xfs_fileoff_t		last_fsb;
-+	xfs_fileoff_t		zero_off;
-+	xfs_fsize_t		zero_len;
-+	int			nimaps;
-+	int			error = 0;
-+	struct xfs_bmbt_irec	imap;
-+
-+	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
- 	ASSERT(offset > isize);
+@@ -674,11 +674,11 @@ xfs_is_delayed_page(
+ 		bh = head = page_buffers(page);
+ 		do {
+ 			if (buffer_unwritten(bh))
+-				acceptable = (type == IO_UNWRITTEN);
++				acceptable += (type == IO_UNWRITTEN);
+ 			else if (buffer_delay(bh))
+-				acceptable = (type == IO_DELALLOC);
++				acceptable += (type == IO_DELALLOC);
+ 			else if (buffer_dirty(bh) && buffer_mapped(bh))
+-				acceptable = (type == IO_OVERWRITE);
++				acceptable += (type == IO_OVERWRITE);
+ 			else
+ 				break;
+ 		} while ((bh = bh->b_this_page) != head);
+@@ -721,7 +721,7 @@ xfs_convert_page(
+ 		goto fail_unlock_page;
+ 	if (page->mapping != inode->i_mapping)
+ 		goto fail_unlock_page;
+-	if (!xfs_is_delayed_page(page, (*ioendp)->io_type))
++	if (!xfs_check_page_type(page, (*ioendp)->io_type))
+ 		goto fail_unlock_page;
  
  	/*
- 	 * First handle zeroing the block on which isize resides.
-+	 *
- 	 * We only zero a part of that block so it is handled specially.
- 	 */
--	error = xfs_zero_last_block(ip, offset, isize);
--	if (error) {
--		ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
--		return error;
-+	if (XFS_B_FSB_OFFSET(mp, isize) != 0) {
-+		error = xfs_zero_last_block(ip, offset, isize);
-+		if (error)
-+			return error;
- 	}
+@@ -871,7 +871,7 @@ xfs_aops_discard_page(
+ 	struct buffer_head	*bh, *head;
+ 	loff_t			offset = page_offset(page);
  
- 	/*
--	 * Calculate the range between the new size and the old
--	 * where blocks needing to be zeroed may exist.  To get the
--	 * block where the last byte in the file currently resides,
--	 * we need to subtract one from the size and truncate back
--	 * to a block boundary.  We subtract 1 in case the size is
--	 * exactly on a block boundary.
-+	 * Calculate the range between the new size and the old where blocks
-+	 * needing to be zeroed may exist.
-+	 *
-+	 * To get the block where the last byte in the file currently resides,
-+	 * we need to subtract one from the size and truncate back to a block
-+	 * boundary.  We subtract 1 in case the size is exactly on a block
-+	 * boundary.
- 	 */
- 	last_fsb = isize ? XFS_B_TO_FSBT(mp, isize - 1) : (xfs_fileoff_t)-1;
- 	start_zero_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)isize);
-@@ -517,23 +500,18 @@ xfs_zero_eof(
- 	while (start_zero_fsb <= end_zero_fsb) {
- 		nimaps = 1;
- 		zero_count_fsb = end_zero_fsb - start_zero_fsb + 1;
-+
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		error = xfs_bmapi(NULL, ip, start_zero_fsb, zero_count_fsb,
- 				  0, NULL, 0, &imap, &nimaps, NULL);
--		if (error) {
--			ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
-+		xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+		if (error)
- 			return error;
--		}
-+
- 		ASSERT(nimaps > 0);
+-	if (!xfs_is_delayed_page(page, IO_DELALLOC))
++	if (!xfs_check_page_type(page, IO_DELALLOC))
+ 		goto out_invalidate;
  
- 		if (imap.br_state == XFS_EXT_UNWRITTEN ||
- 		    imap.br_startblock == HOLESTARTBLOCK) {
--			/*
--			 * This loop handles initializing pages that were
--			 * partially initialized by the code below this
--			 * loop. It basically zeroes the part of the page
--			 * that sits on a hole and sets the page as P_HOLE
--			 * and calls remapf if it is a mapped file.
--			 */
- 			start_zero_fsb = imap.br_startoff + imap.br_blockcount;
- 			ASSERT(start_zero_fsb <= (end_zero_fsb + 1));
- 			continue;
-@@ -541,11 +519,7 @@ xfs_zero_eof(
- 
- 		/*
- 		 * There are blocks we need to zero.
--		 * Drop the inode lock while we're doing the I/O.
--		 * We'll still have the iolock to protect us.
- 		 */
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--
- 		zero_off = XFS_FSB_TO_B(mp, start_zero_fsb);
- 		zero_len = XFS_FSB_TO_B(mp, imap.br_blockcount);
- 
-@@ -553,22 +527,14 @@ xfs_zero_eof(
- 			zero_len = offset - zero_off;
- 
- 		error = xfs_iozero(ip, zero_off, zero_len);
--		if (error) {
--			goto out_lock;
--		}
-+		if (error)
-+			return error;
- 
- 		start_zero_fsb = imap.br_startoff + imap.br_blockcount;
- 		ASSERT(start_zero_fsb <= (end_zero_fsb + 1));
--
--		xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	}
- 
- 	return 0;
--
--out_lock:
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	ASSERT(error >= 0);
--	return error;
- }
- 
- /*
-@@ -608,9 +574,7 @@ restart:
- 			xfs_rw_ilock(ip, *iolock);
- 			goto restart;
- 		}
--		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
- 		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
- 		if (error)
- 			return error;
- 	}
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index b156e46..3988584 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -231,9 +231,7 @@ restart:
- 			 * need to do this before the inode is joined to the
- 			 * transaction to modify the i_size.
- 			 */
--			xfs_ilock(ip, XFS_ILOCK_EXCL);
- 			code = xfs_zero_eof(ip, iattr->ia_size, old_size);
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 			if (code)
- 				goto error_return;
- 		}
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
 -- 
 1.7.10
 
