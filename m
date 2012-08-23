@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N53Jrg135024 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:20 -0500
+	q7N53bVj135186 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:03:37 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	e89mEnjA0bxFlqMF for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:04:03 -0700 (PDT)
+	O83L49QvFCapBRlx for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:04:22 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PaA-0003G8-IM
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:50 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4PaV-0003Gk-0O
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:11 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4Pa0-0003dY-F7
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:03:40 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4PaK-0003eV-TX
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:00 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 029/102] xfs: remove the i_size field in struct xfs_inode
-Date: Thu, 23 Aug 2012 15:01:47 +1000
-Message-Id: <1345698180-13612-30-git-send-email-david@fromorbit.com>
+Subject: [PATCH 041/102] xfs: add the xlog_grant_head structure
+Date: Thu, 23 Aug 2012 15:01:59 +1000
+Message-Id: <1345698180-13612-42-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,601 +35,391 @@ To: xfs@oss.sgi.com
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Upstream commit: ce7ae151ddada3dbf67301464343c154903166b3
+Upstream commit: 28496968a6ac37c8b8c44b5156e633c581bb8378
 
-There is no fundamental need to keep an in-memory inode size copy in the XFS
-inode.  We already have the on-disk value in the dinode, and the separate
-in-memory copy that we need for regular files only in the XFS inode.
+Add a new data structure to allow sharing code between the log grant and
+regrant code.
 
-Remove the xfs_inode i_size field and change the XFS_ISIZE macro to use the
-VFS inode i_size field for regular files.  Switch code that was directly
-accessing the i_size field in the xfs_inode to XFS_ISIZE, or in cases where
-we are limited to regular files direct access of the VFS inode i_size field.
-
-This also allows dropping some fairly complicated code in the write path
-which dealt with keeping the xfs_inode i_size uptodate with the VFS i_size
-that is getting updated inside ->write_end.
-
-Note that we do not bother resetting the VFS i_size when truncating a file
-that gets freed to zero as there is no point in doing so because the VFS inode
-is no longer in use at this point.  Just relax the assert in xfs_ifree to
-only check the on-disk size instead.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c    |    2 +-
- fs/xfs/linux-2.6/xfs_file.c    |   45 ++++++++++------------------------------
- fs/xfs/linux-2.6/xfs_fs_subr.c |    2 +-
- fs/xfs/xfs_bmap.c              |   15 ++++++--------
- fs/xfs/xfs_iget.c              |    1 -
- fs/xfs/xfs_inode.c             |   20 +++++++-----------
- fs/xfs/xfs_inode.h             |   16 ++++++++++----
- fs/xfs/xfs_iomap.c             |   14 ++++++-------
- fs/xfs/xfs_vnodeops.c          |   39 +++++++++++++++++-----------------
- 9 files changed, 65 insertions(+), 89 deletions(-)
+ fs/xfs/linux-2.6/xfs_trace.h |    8 +--
+ fs/xfs/xfs_log.c             |  112 +++++++++++++++++++++---------------------
+ fs/xfs/xfs_log_priv.h        |   23 ++++-----
+ fs/xfs/xfs_log_recover.c     |    4 +-
+ 4 files changed, 74 insertions(+), 73 deletions(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 2426ecd..a284ea7 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -145,7 +145,7 @@ xfs_ioend_new_eof(
- 	xfs_fsize_t		bsize;
+diff --git a/fs/xfs/linux-2.6/xfs_trace.h b/fs/xfs/linux-2.6/xfs_trace.h
+index 70c7739..cc7311c 100644
+--- a/fs/xfs/linux-2.6/xfs_trace.h
++++ b/fs/xfs/linux-2.6/xfs_trace.h
+@@ -786,12 +786,12 @@ DECLARE_EVENT_CLASS(xfs_loggrant_class,
+ 		__entry->curr_res = tic->t_curr_res;
+ 		__entry->unit_res = tic->t_unit_res;
+ 		__entry->flags = tic->t_flags;
+-		__entry->reserveq = list_empty(&log->l_reserveq);
+-		__entry->writeq = list_empty(&log->l_writeq);
+-		xlog_crack_grant_head(&log->l_grant_reserve_head,
++		__entry->reserveq = list_empty(&log->l_reserve_head.waiters);
++		__entry->writeq = list_empty(&log->l_write_head.waiters);
++		xlog_crack_grant_head(&log->l_reserve_head.grant,
+ 				&__entry->grant_reserve_cycle,
+ 				&__entry->grant_reserve_bytes);
+-		xlog_crack_grant_head(&log->l_grant_write_head,
++		xlog_crack_grant_head(&log->l_write_head.grant,
+ 				&__entry->grant_write_cycle,
+ 				&__entry->grant_write_bytes);
+ 		__entry->curr_cycle = log->l_curr_cycle;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index fc2b84b..5c5aa54 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -158,7 +158,7 @@ xlog_reserveq_wake(
+ 	struct xlog_ticket	*tic;
+ 	int			need_bytes;
  
- 	bsize = ioend->io_offset + ioend->io_size;
--	isize = MAX(ip->i_size, ip->i_new_size);
-+	isize = MAX(i_size_read(VFS_I(ip)), ip->i_new_size);
- 	isize = MIN(isize, bsize);
- 	return isize > ip->i_d.di_size ? isize : 0;
- }
-diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
-index 185a337..78a9cf4 100644
---- a/fs/xfs/linux-2.6/xfs_file.c
-+++ b/fs/xfs/linux-2.6/xfs_file.c
-@@ -320,7 +320,7 @@ xfs_file_aio_read(
- 				mp->m_rtdev_targp : mp->m_ddev_targp;
- 		if ((iocb->ki_pos & target->bt_smask) ||
- 		    (size & target->bt_smask)) {
--			if (iocb->ki_pos == ip->i_size)
-+			if (iocb->ki_pos == i_size_read(inode))
- 				return 0;
- 			return -XFS_ERROR(EINVAL);
- 		}
-@@ -405,30 +405,6 @@ xfs_file_splice_read(
- 	return ret;
- }
+-	list_for_each_entry(tic, &log->l_reserveq, t_queue) {
++	list_for_each_entry(tic, &log->l_reserve_head.waiters, t_queue) {
+ 		if (tic->t_flags & XLOG_TIC_PERM_RESERV)
+ 			need_bytes = tic->t_unit_res * tic->t_cnt;
+ 		else
+@@ -183,7 +183,7 @@ xlog_writeq_wake(
+ 	struct xlog_ticket	*tic;
+ 	int			need_bytes;
  
--STATIC void
--xfs_aio_write_isize_update(
--	struct inode	*inode,
--	loff_t		*ppos,
--	ssize_t		bytes_written)
--{
--	struct xfs_inode	*ip = XFS_I(inode);
--	xfs_fsize_t		isize = i_size_read(inode);
--
--	if (bytes_written > 0)
--		XFS_STATS_ADD(xs_write_bytes, bytes_written);
--
--	if (unlikely(bytes_written < 0 && bytes_written != -EFAULT &&
--					*ppos > isize))
--		*ppos = isize;
--
--	if (*ppos > ip->i_size) {
--		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
--		if (*ppos > ip->i_size)
--			ip->i_size = *ppos;
--		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
--	}
--}
--
- /*
-  * If this was a direct or synchronous I/O that failed (such as ENOSPC) then
-  * part of the I/O may have been written to disk before the error occurred.  In
-@@ -444,8 +420,8 @@ xfs_aio_write_newsize_update(
- 		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
- 		if (new_size == ip->i_new_size)
- 			ip->i_new_size = 0;
--		if (ip->i_d.di_size > ip->i_size)
--			ip->i_d.di_size = ip->i_size;
-+		if (ip->i_d.di_size > i_size_read(VFS_I(ip)))
-+			ip->i_d.di_size = i_size_read(VFS_I(ip));
- 		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
- 	}
- }
-@@ -485,15 +461,16 @@ xfs_file_splice_write(
- 	new_size = *ppos + count;
+-	list_for_each_entry(tic, &log->l_writeq, t_queue) {
++	list_for_each_entry(tic, &log->l_write_head.waiters, t_queue) {
+ 		ASSERT(tic->t_flags & XLOG_TIC_PERM_RESERV);
  
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (new_size > ip->i_size)
-+	if (new_size > i_size_read(inode))
- 		ip->i_new_size = new_size;
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
- 	trace_xfs_file_splice_write(ip, count, *ppos, ioflags);
- 
- 	ret = generic_file_splice_write(pipe, outfilp, ppos, count, flags);
-+	if (ret > 0)
-+		XFS_STATS_ADD(xs_write_bytes, ret);
- 
--	xfs_aio_write_isize_update(inode, ppos, ret);
- 	xfs_aio_write_newsize_update(ip, new_size);
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 	return ret;
-@@ -723,14 +700,14 @@ restart:
- 	 * values are still valid.
- 	 */
- 	if ((ip->i_new_size && *pos > ip->i_new_size) ||
--	    (!ip->i_new_size && *pos > ip->i_size)) {
-+	    (!ip->i_new_size && *pos > i_size_read(inode))) {
- 		if (*iolock == XFS_IOLOCK_SHARED) {
- 			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
- 			*iolock = XFS_IOLOCK_EXCL;
- 			xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
- 			goto restart;
- 		}
--		error = -xfs_zero_eof(ip, *pos, ip->i_size);
-+		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
- 	}
- 
- 	/*
-@@ -739,7 +716,7 @@ restart:
- 	 * ip->i_new_size if this IO ends beyond any other in-flight writes.
- 	 */
- 	new_size = *pos + *count;
--	if (new_size > ip->i_size) {
-+	if (new_size > i_size_read(inode)) {
- 		if (new_size > ip->i_new_size)
- 			ip->i_new_size = new_size;
- 		*new_sizep = new_size;
-@@ -952,11 +929,11 @@ xfs_file_aio_write(
- 		ret = xfs_file_buffered_aio_write(iocb, iovp, nr_segs, pos,
- 						ocount, &new_size, &iolock);
- 
--	xfs_aio_write_isize_update(inode, &iocb->ki_pos, ret);
--
- 	if (ret <= 0)
- 		goto out_unlock;
- 
-+	XFS_STATS_ADD(xs_write_bytes, ret);
-+
- 	/* Handle various SYNC-type writes */
- 	if ((file->f_flags & O_DSYNC) || IS_SYNC(inode)) {
- 		loff_t end = pos + ret - 1;
-diff --git a/fs/xfs/linux-2.6/xfs_fs_subr.c b/fs/xfs/linux-2.6/xfs_fs_subr.c
-index ed88ed1..652b875 100644
---- a/fs/xfs/linux-2.6/xfs_fs_subr.c
-+++ b/fs/xfs/linux-2.6/xfs_fs_subr.c
-@@ -90,7 +90,7 @@ xfs_wait_on_pages(
- 
- 	if (mapping_tagged(mapping, PAGECACHE_TAG_WRITEBACK)) {
- 		return -filemap_fdatawait_range(mapping, first,
--					last == -1 ? ip->i_size - 1 : last);
-+					last == -1 ? XFS_ISIZE(ip) - 1 : last);
- 	}
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 05ea68f..51b3489 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -4045,11 +4045,8 @@ xfs_bmap_one_block(
- 	xfs_bmbt_irec_t	s;		/* internal version of extent */
- 
- #ifndef DEBUG
--	if (whichfork == XFS_DATA_FORK) {
--		return ((ip->i_d.di_mode & S_IFMT) == S_IFREG) ?
--			(ip->i_size == ip->i_mount->m_sb.sb_blocksize) :
--			(ip->i_d.di_size == ip->i_mount->m_sb.sb_blocksize);
--	}
-+	if (whichfork == XFS_DATA_FORK)
-+		return XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize;
- #endif	/* !DEBUG */
- 	if (XFS_IFORK_NEXTENTS(ip, whichfork) != 1)
- 		return 0;
-@@ -4061,7 +4058,7 @@ xfs_bmap_one_block(
- 	xfs_bmbt_get_all(ep, &s);
- 	rval = s.br_startoff == 0 && s.br_blockcount == 1;
- 	if (rval && whichfork == XFS_DATA_FORK)
--		ASSERT(ip->i_size == ip->i_mount->m_sb.sb_blocksize);
-+		ASSERT(XFS_ISIZE(ip) == ip->i_mount->m_sb.sb_blocksize);
- 	return rval;
- }
- 
-@@ -5346,7 +5343,7 @@ xfs_getbmapx_fix_eof_hole(
- 	if (startblock == HOLESTARTBLOCK) {
- 		mp = ip->i_mount;
- 		out->bmv_block = -1;
--		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, ip->i_size));
-+		fixlen = XFS_FSB_TO_BB(mp, XFS_B_TO_FSB(mp, XFS_ISIZE(ip)));
- 		fixlen -= out->bmv_offset;
- 		if (prealloced && out->bmv_offset + out->bmv_length == end) {
- 			/* Came to hole at EOF. Trim it. */
-@@ -5434,7 +5431,7 @@ xfs_getbmap(
- 			fixlen = XFS_MAXIOFFSET(mp);
- 		} else {
- 			prealloced = 0;
--			fixlen = ip->i_size;
-+			fixlen = XFS_ISIZE(ip);
- 		}
- 	}
- 
-@@ -5463,7 +5460,7 @@ xfs_getbmap(
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
--		if (ip->i_delayed_blks || ip->i_size > ip->i_d.di_size) {
-+		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
- 			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
- 			if (error)
- 				goto out_unlock_iolock;
-diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
-index ca752f0..4c8df0b 100644
---- a/fs/xfs/xfs_iget.c
-+++ b/fs/xfs/xfs_iget.c
-@@ -96,7 +96,6 @@ xfs_inode_alloc(
- 	ip->i_update_core = 0;
- 	ip->i_delayed_blks = 0;
- 	memset(&ip->i_d, 0, sizeof(xfs_icdinode_t));
--	ip->i_size = 0;
- 	ip->i_new_size = 0;
- 
- 	return ip;
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 2966b4d..1c6788a 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -357,7 +357,6 @@ xfs_iformat(
- 			return XFS_ERROR(EFSCORRUPTED);
- 		}
- 		ip->i_d.di_size = 0;
--		ip->i_size = 0;
- 		ip->i_df.if_u2.if_rdev = xfs_dinode_get_rdev(dip);
- 		break;
- 
-@@ -868,7 +867,6 @@ xfs_iread(
- 	}
- 
- 	ip->i_delayed_blks = 0;
--	ip->i_size = ip->i_d.di_size;
- 
- 	/*
- 	 * Mark the buffer containing the inode as something to keep
-@@ -1058,7 +1056,6 @@ xfs_ialloc(
- 	}
- 
- 	ip->i_d.di_size = 0;
--	ip->i_size = 0;
- 	ip->i_d.di_nextents = 0;
- 	ASSERT(ip->i_d.di_nblocks == 0);
- 
-@@ -1257,7 +1254,7 @@ xfs_file_last_byte(
- 	} else {
- 		last_block = 0;
- 	}
--	size_last_block = XFS_B_TO_FSB(mp, (xfs_ufsize_t)ip->i_size);
-+	size_last_block = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
- 	last_block = XFS_FILEOFF_MAX(last_block, size_last_block);
- 
- 	last_byte = XFS_FSB_TO_B(mp, last_block);
-@@ -1314,14 +1311,14 @@ xfs_itruncate_start(
- 	int		error = 0;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_IOLOCK_EXCL));
--	ASSERT((new_size == 0) || (new_size <= ip->i_size));
-+	ASSERT(new_size == 0 || new_size <= XFS_ISIZE(ip));
- 	ASSERT((flags == XFS_ITRUNC_DEFINITE) ||
- 	       (flags == XFS_ITRUNC_MAYBE));
- 
- 	mp = ip->i_mount;
- 
- 	/* wait for the completion of any pending DIOs */
--	if (new_size == 0 || new_size < ip->i_size)
-+	if (new_size == 0 || new_size < XFS_ISIZE(ip))
- 		xfs_ioend_wait(ip);
- 
- 	/*
-@@ -1438,7 +1435,7 @@ xfs_itruncate_finish(
- 	int		error;
- 
- 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL|XFS_IOLOCK_EXCL));
--	ASSERT((new_size == 0) || (new_size <= ip->i_size));
-+	ASSERT(new_size == 0 || new_size <= XFS_ISIZE(ip));
- 	ASSERT(*tp != NULL);
- 	ASSERT((*tp)->t_flags & XFS_TRANS_PERM_LOG_RES);
- 	ASSERT(ip->i_transp == *tp);
-@@ -1522,9 +1519,8 @@ xfs_itruncate_finish(
- 			 * flushed to disk then the files may be full of
- 			 * holes (ie NULL files bug).
- 			 */
--			if (ip->i_size != new_size) {
-+			if (ip->i_d.di_size != new_size) {
- 				ip->i_d.di_size = new_size;
--				ip->i_size = new_size;
- 				xfs_trans_log_inode(ntp, ip, XFS_ILOG_CORE);
- 			}
- 		}
-@@ -1648,9 +1644,8 @@ xfs_itruncate_finish(
- 		 * flushed to disk then the files may be full of
- 		 * holes (ie NULL files bug).
- 		 */
--		if (ip->i_size != new_size) {
-+		if (ip->i_d.di_size != new_size) {
- 			ip->i_d.di_size = new_size;
--			ip->i_size = new_size;
- 		}
- 	}
- 	xfs_trans_log_inode(ntp, ip, XFS_ILOG_CORE);
-@@ -2085,8 +2080,7 @@ xfs_ifree(
- 	ASSERT(ip->i_d.di_nlink == 0);
- 	ASSERT(ip->i_d.di_nextents == 0);
- 	ASSERT(ip->i_d.di_anextents == 0);
--	ASSERT((ip->i_d.di_size == 0 && ip->i_size == 0) ||
--	       ((ip->i_d.di_mode & S_IFMT) != S_IFREG));
-+	ASSERT(ip->i_d.di_size == 0 || !S_ISREG(ip->i_d.di_mode));
- 	ASSERT(ip->i_d.di_nblocks == 0);
- 
- 	/*
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 8a0979a..ed1c89e 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -256,7 +256,6 @@ typedef struct xfs_inode {
- 
- 	xfs_icdinode_t		i_d;		/* most of ondisk inode */
- 
--	xfs_fsize_t		i_size;		/* in-memory size */
- 	xfs_fsize_t		i_new_size;	/* size when write completes */
- 	atomic_t		i_iocount;	/* outstanding I/O count */
- 
-@@ -264,9 +263,6 @@ typedef struct xfs_inode {
- 	struct inode		i_vnode;	/* embedded VFS inode */
- } xfs_inode_t;
- 
--#define XFS_ISIZE(ip)	(((ip)->i_d.di_mode & S_IFMT) == S_IFREG) ? \
--				(ip)->i_size : (ip)->i_d.di_size;
--
- /* Convert from vfs inode to xfs inode */
- static inline struct xfs_inode *XFS_I(struct inode *inode)
+ 		need_bytes = tic->t_unit_res;
+@@ -205,7 +205,7 @@ xlog_reserveq_wait(
+ 	struct xlog_ticket	*tic,
+ 	int			need_bytes)
  {
-@@ -280,6 +276,18 @@ static inline struct inode *VFS_I(struct xfs_inode *ip)
+-	list_add_tail(&tic->t_queue, &log->l_reserveq);
++	list_add_tail(&tic->t_queue, &log->l_reserve_head.waiters);
+ 
+ 	do {
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+@@ -213,7 +213,7 @@ xlog_reserveq_wait(
+ 		xlog_grant_push_ail(log, need_bytes);
+ 
+ 		__set_current_state(TASK_UNINTERRUPTIBLE);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 
+@@ -221,10 +221,10 @@ xlog_reserveq_wait(
+ 		schedule();
+ 		trace_xfs_log_grant_wake(log, tic);
+ 
+-		spin_lock(&log->l_grant_reserve_lock);
++		spin_lock(&log->l_reserve_head.lock);
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+ 			goto shutdown;
+-	} while (xlog_space_left(log, &log->l_grant_reserve_head) < need_bytes);
++	} while (xlog_space_left(log, &log->l_reserve_head.grant) < need_bytes);
+ 
+ 	list_del_init(&tic->t_queue);
+ 	return 0;
+@@ -239,7 +239,7 @@ xlog_writeq_wait(
+ 	struct xlog_ticket	*tic,
+ 	int			need_bytes)
+ {
+-	list_add_tail(&tic->t_queue, &log->l_writeq);
++	list_add_tail(&tic->t_queue, &log->l_write_head.waiters);
+ 
+ 	do {
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+@@ -247,7 +247,7 @@ xlog_writeq_wait(
+ 		xlog_grant_push_ail(log, need_bytes);
+ 
+ 		__set_current_state(TASK_UNINTERRUPTIBLE);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 
+ 		XFS_STATS_INC(xs_sleep_logspace);
+ 
+@@ -255,10 +255,10 @@ xlog_writeq_wait(
+ 		schedule();
+ 		trace_xfs_log_regrant_write_wake(log, tic);
+ 
+-		spin_lock(&log->l_grant_write_lock);
++		spin_lock(&log->l_write_head.lock);
+ 		if (XLOG_FORCED_SHUTDOWN(log))
+ 			goto shutdown;
+-	} while (xlog_space_left(log, &log->l_grant_write_head) < need_bytes);
++	} while (xlog_space_left(log, &log->l_write_head.grant) < need_bytes);
+ 
+ 	list_del_init(&tic->t_queue);
+ 	return 0;
+@@ -811,22 +811,22 @@ xfs_log_space_wake(
+ 	if (XLOG_FORCED_SHUTDOWN(log))
+ 		return;
+ 
+-	if (!list_empty_careful(&log->l_writeq)) {
++	if (!list_empty_careful(&log->l_write_head.waiters)) {
+ 		ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
+ 
+-		spin_lock(&log->l_grant_write_lock);
+-		free_bytes = xlog_space_left(log, &log->l_grant_write_head);
++		spin_lock(&log->l_write_head.lock);
++		free_bytes = xlog_space_left(log, &log->l_write_head.grant);
+ 		xlog_writeq_wake(log, &free_bytes);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 	}
+ 
+-	if (!list_empty_careful(&log->l_reserveq)) {
++	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
+ 		ASSERT(!(log->l_flags & XLOG_ACTIVE_RECOVERY));
+ 
+-		spin_lock(&log->l_grant_reserve_lock);
+-		free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
++		spin_lock(&log->l_reserve_head.lock);
++		free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+ 		xlog_reserveq_wake(log, &free_bytes);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 	}
  }
  
+@@ -1108,12 +1108,12 @@ xlog_alloc_log(xfs_mount_t	*mp,
+ 	xlog_assign_atomic_lsn(&log->l_tail_lsn, 1, 0);
+ 	xlog_assign_atomic_lsn(&log->l_last_sync_lsn, 1, 0);
+ 	log->l_curr_cycle  = 1;	    /* 0 is bad since this is initial value */
+-	xlog_assign_grant_head(&log->l_grant_reserve_head, 1, 0);
+-	xlog_assign_grant_head(&log->l_grant_write_head, 1, 0);
+-	INIT_LIST_HEAD(&log->l_reserveq);
+-	INIT_LIST_HEAD(&log->l_writeq);
+-	spin_lock_init(&log->l_grant_reserve_lock);
+-	spin_lock_init(&log->l_grant_write_lock);
++	xlog_assign_grant_head(&log->l_reserve_head.grant, 1, 0);
++	xlog_assign_grant_head(&log->l_write_head.grant, 1, 0);
++	INIT_LIST_HEAD(&log->l_reserve_head.waiters);
++	INIT_LIST_HEAD(&log->l_write_head.waiters);
++	spin_lock_init(&log->l_reserve_head.lock);
++	spin_lock_init(&log->l_write_head.lock);
+ 
+ 	error = EFSCORRUPTED;
+ 	if (xfs_sb_version_hassector(&mp->m_sb)) {
+@@ -1293,7 +1293,7 @@ xlog_grant_push_ail(
+ 
+ 	ASSERT(BTOBB(need_bytes) < log->l_logBBsize);
+ 
+-	free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
++	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
+ 	free_blocks = BTOBBT(free_bytes);
+ 
+ 	/*
+@@ -1427,8 +1427,8 @@ xlog_sync(xlog_t		*log,
+ 		 roundoff < BBTOB(1)));
+ 
+ 	/* move grant heads by roundoff in sync */
+-	xlog_grant_add_space(log, &log->l_grant_reserve_head, roundoff);
+-	xlog_grant_add_space(log, &log->l_grant_write_head, roundoff);
++	xlog_grant_add_space(log, &log->l_reserve_head.grant, roundoff);
++	xlog_grant_add_space(log, &log->l_write_head.grant, roundoff);
+ 
+ 	/* put cycle number in every block */
+ 	xlog_pack_data(log, iclog, roundoff); 
+@@ -2595,8 +2595,8 @@ restart:
+  * path. Hence any lock will be globally hot if we take it unconditionally on
+  * every pass.
+  *
+- * As tickets are only ever moved on and off the reserveq under the
+- * l_grant_reserve_lock, we only need to take that lock if we are going to add
++ * As tickets are only ever moved on and off the l_reserve.waiters under the
++ * l_reserve.lock, we only need to take that lock if we are going to add
+  * the ticket to the queue and sleep. We can avoid taking the lock if the ticket
+  * was never added to the reserveq because the t_queue list head will be empty
+  * and we hold the only reference to it so it can safely be checked unlocked.
+@@ -2622,23 +2622,23 @@ xlog_grant_log_space(
+ 	need_bytes = tic->t_unit_res;
+ 	if (tic->t_flags & XFS_LOG_PERM_RESERV)
+ 		need_bytes *= tic->t_ocnt;
+-	free_bytes = xlog_space_left(log, &log->l_grant_reserve_head);
+-	if (!list_empty_careful(&log->l_reserveq)) {
+-		spin_lock(&log->l_grant_reserve_lock);
++	free_bytes = xlog_space_left(log, &log->l_reserve_head.grant);
++	if (!list_empty_careful(&log->l_reserve_head.waiters)) {
++		spin_lock(&log->l_reserve_head.lock);
+ 		if (!xlog_reserveq_wake(log, &free_bytes) ||
+ 		    free_bytes < need_bytes)
+ 			error = xlog_reserveq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 	} else if (free_bytes < need_bytes) {
+-		spin_lock(&log->l_grant_reserve_lock);
++		spin_lock(&log->l_reserve_head.lock);
+ 		error = xlog_reserveq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_reserve_lock);
++		spin_unlock(&log->l_reserve_head.lock);
+ 	}
+ 	if (error)
+ 		return error;
+ 
+-	xlog_grant_add_space(log, &log->l_grant_reserve_head, need_bytes);
+-	xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
++	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
++	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
+ 	trace_xfs_log_grant_exit(log, tic);
+ 	xlog_verify_grant_tail(log);
+ 	return 0;
+@@ -2675,23 +2675,23 @@ xlog_regrant_write_log_space(
+ 	 * otherwise try to get some space for this transaction.
+ 	 */
+ 	need_bytes = tic->t_unit_res;
+-	free_bytes = xlog_space_left(log, &log->l_grant_write_head);
+-	if (!list_empty_careful(&log->l_writeq)) {
+-		spin_lock(&log->l_grant_write_lock);
++	free_bytes = xlog_space_left(log, &log->l_write_head.grant);
++	if (!list_empty_careful(&log->l_write_head.waiters)) {
++		spin_lock(&log->l_write_head.lock);
+ 		if (!xlog_writeq_wake(log, &free_bytes) ||
+ 		    free_bytes < need_bytes)
+ 			error = xlog_writeq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 	} else if (free_bytes < need_bytes) {
+-		spin_lock(&log->l_grant_write_lock);
++		spin_lock(&log->l_write_head.lock);
+ 		error = xlog_writeq_wait(log, tic, need_bytes);
+-		spin_unlock(&log->l_grant_write_lock);
++		spin_unlock(&log->l_write_head.lock);
+ 	}
+ 
+ 	if (error)
+ 		return error;
+ 
+-	xlog_grant_add_space(log, &log->l_grant_write_head, need_bytes);
++	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
+ 	trace_xfs_log_regrant_write_exit(log, tic);
+ 	xlog_verify_grant_tail(log);
+ 	return 0;
+@@ -2713,9 +2713,9 @@ xlog_regrant_reserve_log_space(xlog_t	     *log,
+ 	if (ticket->t_cnt > 0)
+ 		ticket->t_cnt--;
+ 
+-	xlog_grant_sub_space(log, &log->l_grant_reserve_head,
++	xlog_grant_sub_space(log, &log->l_reserve_head.grant,
+ 					ticket->t_curr_res);
+-	xlog_grant_sub_space(log, &log->l_grant_write_head,
++	xlog_grant_sub_space(log, &log->l_write_head.grant,
+ 					ticket->t_curr_res);
+ 	ticket->t_curr_res = ticket->t_unit_res;
+ 	xlog_tic_reset_res(ticket);
+@@ -2726,7 +2726,7 @@ xlog_regrant_reserve_log_space(xlog_t	     *log,
+ 	if (ticket->t_cnt > 0)
+ 		return;
+ 
+-	xlog_grant_add_space(log, &log->l_grant_reserve_head,
++	xlog_grant_add_space(log, &log->l_reserve_head.grant,
+ 					ticket->t_unit_res);
+ 
+ 	trace_xfs_log_regrant_reserve_exit(log, ticket);
+@@ -2772,8 +2772,8 @@ xlog_ungrant_log_space(xlog_t	     *log,
+ 		bytes += ticket->t_unit_res*ticket->t_cnt;
+ 	}
+ 
+-	xlog_grant_sub_space(log, &log->l_grant_reserve_head, bytes);
+-	xlog_grant_sub_space(log, &log->l_grant_write_head, bytes);
++	xlog_grant_sub_space(log, &log->l_reserve_head.grant, bytes);
++	xlog_grant_sub_space(log, &log->l_write_head.grant, bytes);
+ 
+ 	trace_xfs_log_ungrant_exit(log, ticket);
+ 
+@@ -3400,7 +3400,7 @@ xlog_verify_grant_tail(
+ 	int		tail_cycle, tail_blocks;
+ 	int		cycle, space;
+ 
+-	xlog_crack_grant_head(&log->l_grant_write_head, &cycle, &space);
++	xlog_crack_grant_head(&log->l_write_head.grant, &cycle, &space);
+ 	xlog_crack_atomic_lsn(&log->l_tail_lsn, &tail_cycle, &tail_blocks);
+ 	if (tail_cycle != cycle) {
+ 		if (cycle - 1 != tail_cycle &&
+@@ -3670,15 +3670,15 @@ xfs_log_force_umount(
+ 	 * we don't enqueue anything once the SHUTDOWN flag is set, and this
+ 	 * action is protected by the grant locks.
+ 	 */
+-	spin_lock(&log->l_grant_reserve_lock);
+-	list_for_each_entry(tic, &log->l_reserveq, t_queue)
++	spin_lock(&log->l_reserve_head.lock);
++	list_for_each_entry(tic, &log->l_reserve_head.waiters, t_queue)
+ 		wake_up_process(tic->t_task);
+-	spin_unlock(&log->l_grant_reserve_lock);
++	spin_unlock(&log->l_reserve_head.lock);
+ 
+-	spin_lock(&log->l_grant_write_lock);
+-	list_for_each_entry(tic, &log->l_writeq, t_queue)
++	spin_lock(&log->l_write_head.lock);
++	list_for_each_entry(tic, &log->l_write_head.waiters, t_queue)
+ 		wake_up_process(tic->t_task);
+-	spin_unlock(&log->l_grant_write_lock);
++	spin_unlock(&log->l_write_head.lock);
+ 
+ 	if (!(log->l_iclog->ic_state & XLOG_STATE_IOERROR)) {
+ 		ASSERT(!logerror);
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index d8c5e47..eba4ec9 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -470,6 +470,16 @@ struct xfs_cil {
+ #define XLOG_CIL_HARD_SPACE_LIMIT(log)	(3 * (log->l_logsize >> 4))
+ 
  /*
-+ * For regular files we only update the on-disk filesize when actually
-+ * writing data back to disk.  Until then only the copy in the VFS inode
-+ * is uptodate.
++ * ticket grant locks, queues and accounting have their own cachlines
++ * as these are quite hot and can be operated on concurrently.
 + */
-+static inline xfs_fsize_t XFS_ISIZE(struct xfs_inode *ip)
-+{
-+	if (S_ISREG(ip->i_d.di_mode))
-+		return i_size_read(VFS_I(ip));
-+	return ip->i_d.di_size;
-+}
++struct xlog_grant_head {
++	spinlock_t		lock ____cacheline_aligned_in_smp;
++	struct list_head	waiters;
++	atomic64_t		grant;
++};
 +
 +/*
-  * i_flags helper functions
-  */
- static inline void
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 091d82b..4460beb 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -68,14 +68,14 @@ xfs_iomap_eof_align_last_fsb(
- 	 * stripe width and we are allocating past the allocation eof.
- 	 */
- 	else if (mp->m_swidth && (mp->m_flags & XFS_MOUNT_SWALLOC) &&
--	        (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_swidth)))
-+	        (XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, mp->m_swidth)))
- 		new_last_fsb = roundup_64(*last_fsb, mp->m_swidth);
- 	/*
- 	 * Roundup the allocation request to a stripe unit (m_dalign) boundary
- 	 * if the file size is >= stripe unit size, and we are allocating past
- 	 * the allocation eof.
- 	 */
--	else if (mp->m_dalign && (ip->i_size >= XFS_FSB_TO_B(mp, mp->m_dalign)))
-+	else if (mp->m_dalign && (XFS_ISIZE(ip) >= XFS_FSB_TO_B(mp, mp->m_dalign)))
- 		new_last_fsb = roundup_64(*last_fsb, mp->m_dalign);
+  * The reservation head lsn is not made up of a cycle number and block number.
+  * Instead, it uses a cycle number and byte number.  Logs don't expect to
+  * overflow 31 bits worth of byte offset, so using a byte number will mean
+@@ -520,17 +530,8 @@ typedef struct log {
+ 	/* lsn of 1st LR with unflushed * buffers */
+ 	atomic64_t		l_tail_lsn ____cacheline_aligned_in_smp;
+ 
+-	/*
+-	 * ticket grant locks, queues and accounting have their own cachlines
+-	 * as these are quite hot and can be operated on concurrently.
+-	 */
+-	spinlock_t		l_grant_reserve_lock ____cacheline_aligned_in_smp;
+-	struct list_head	l_reserveq;
+-	atomic64_t		l_grant_reserve_head;
+-
+-	spinlock_t		l_grant_write_lock ____cacheline_aligned_in_smp;
+-	struct list_head	l_writeq;
+-	atomic64_t		l_grant_write_head;
++	struct xlog_grant_head	l_reserve_head;
++	struct xlog_grant_head	l_write_head;
+ 
+ 	/* The following field are used for debugging; need to hold icloglock */
+ #ifdef DEBUG
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index eead6dd..687bc9f 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -964,9 +964,9 @@ xlog_find_tail(
+ 		log->l_curr_cycle++;
+ 	atomic64_set(&log->l_tail_lsn, be64_to_cpu(rhead->h_tail_lsn));
+ 	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(rhead->h_lsn));
+-	xlog_assign_grant_head(&log->l_grant_reserve_head, log->l_curr_cycle,
++	xlog_assign_grant_head(&log->l_reserve_head.grant, log->l_curr_cycle,
+ 					BBTOB(log->l_curr_block));
+-	xlog_assign_grant_head(&log->l_grant_write_head, log->l_curr_cycle,
++	xlog_assign_grant_head(&log->l_write_head.grant, log->l_curr_cycle,
+ 					BBTOB(log->l_curr_block));
  
  	/*
-@@ -154,7 +154,7 @@ xfs_iomap_write_direct(
- 
- 	offset_fsb = XFS_B_TO_FSBT(mp, offset);
- 	last_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)(offset + count)));
--	if ((offset + count) > ip->i_size) {
-+	if ((offset + count) > XFS_ISIZE(ip)) {
- 		error = xfs_iomap_eof_align_last_fsb(mp, ip, extsz, &last_fsb);
- 		if (error)
- 			goto error_out;
-@@ -211,7 +211,7 @@ xfs_iomap_write_direct(
- 	xfs_trans_ijoin(tp, ip);
- 
- 	bmapi_flag = XFS_BMAPI_WRITE;
--	if (offset < ip->i_size || extsz)
-+	if (offset < XFS_ISIZE(ip) || extsz)
- 		bmapi_flag |= XFS_BMAPI_PREALLOC;
- 
- 	/*
-@@ -288,7 +288,7 @@ xfs_iomap_eof_want_preallocate(
- 	int		found_delalloc = 0;
- 
- 	*prealloc = 0;
--	if ((offset + count) <= ip->i_size)
-+	if (offset + count <= XFS_ISIZE(ip))
- 		return 0;
- 
- 	/*
-@@ -342,7 +342,7 @@ xfs_iomap_prealloc_size(
- 		 * if we pass in alloc_blocks = 0. Hence the "+ 1" to
- 		 * ensure we always pass in a non-zero value.
- 		 */
--		alloc_blocks = XFS_B_TO_FSB(mp, ip->i_size) + 1;
-+		alloc_blocks = XFS_B_TO_FSB(mp, XFS_ISIZE(ip)) + 1;
- 		alloc_blocks = XFS_FILEOFF_MIN(MAXEXTLEN,
- 					rounddown_pow_of_two(alloc_blocks));
- 
-@@ -571,7 +571,7 @@ xfs_iomap_write_allocate(
- 			 * back....
- 			 */
- 			nimaps = 1;
--			end_fsb = XFS_B_TO_FSB(mp, ip->i_size);
-+			end_fsb = XFS_B_TO_FSB(mp, XFS_ISIZE(ip));
- 			error = xfs_bmap_last_offset(NULL, ip, &last_block,
- 							XFS_DATA_FORK);
- 			if (error)
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 44f780c..23a25e6 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -179,9 +179,11 @@ xfs_setattr(
- 	 * Truncate file.  Must have write permission and not be a directory.
- 	 */
- 	if (mask & ATTR_SIZE) {
-+		loff_t	old_size = XFS_ISIZE(ip);
-+
- 		/* Short circuit the truncate case for zero length files */
- 		if (iattr->ia_size == 0 &&
--		    ip->i_size == 0 && ip->i_d.di_nextents == 0) {
-+		    old_size == 0 && ip->i_d.di_nextents == 0) {
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 			lock_flags &= ~XFS_ILOCK_EXCL;
- 			if (mask & ATTR_CTIME) {
-@@ -216,14 +218,14 @@ xfs_setattr(
- 		 * to the transaction, because the inode cannot be unlocked
- 		 * once it is a part of the transaction.
- 		 */
--		if (iattr->ia_size > ip->i_size) {
-+		if (iattr->ia_size > old_size) {
- 			/*
- 			 * Do the first part of growing a file: zero any data
- 			 * in the last block that is beyond the old EOF.  We
- 			 * need to do this before the inode is joined to the
- 			 * transaction to modify the i_size.
- 			 */
--			code = xfs_zero_eof(ip, iattr->ia_size, ip->i_size);
-+			code = xfs_zero_eof(ip, iattr->ia_size, old_size);
- 			if (code)
- 				goto error_return;
- 		}
-@@ -242,7 +244,7 @@ xfs_setattr(
- 		 * really care about here and prevents waiting for other data
- 		 * not within the range we care about here.
- 		 */
--		if (ip->i_size != ip->i_d.di_size &&
-+		if (old_size != ip->i_d.di_size &&
- 		    iattr->ia_size > ip->i_d.di_size) {
- 			code = xfs_flush_pages(ip,
- 					ip->i_d.di_size, iattr->ia_size,
-@@ -287,18 +289,17 @@ xfs_setattr(
- 		 * VFS set these flags explicitly if it wants a timestamp
- 		 * update.
- 		 */
--		if (iattr->ia_size != ip->i_size &&
-+		if (iattr->ia_size != old_size &&
- 		    (!(mask & (ATTR_CTIME | ATTR_MTIME)))) {
- 			iattr->ia_ctime = iattr->ia_mtime =
- 				current_fs_time(inode->i_sb);
- 			mask |= ATTR_CTIME | ATTR_MTIME;
- 		}
- 
--		if (iattr->ia_size > ip->i_size) {
-+		if (iattr->ia_size > old_size) {
- 			ip->i_d.di_size = iattr->ia_size;
--			ip->i_size = iattr->ia_size;
- 			xfs_trans_log_inode(tp, ip, XFS_ILOG_CORE);
--		} else if (iattr->ia_size <= ip->i_size ||
-+		} else if (iattr->ia_size <= old_size ||
- 			   (iattr->ia_size == 0 && ip->i_d.di_nextents)) {
- 			/*
- 			 * signal a sync transaction unless
-@@ -598,7 +599,7 @@ xfs_free_eofblocks(
- 	 * Figure out if there are any blocks beyond the end
- 	 * of the file.  If not, then there is nothing to do.
- 	 */
--	end_fsb = XFS_B_TO_FSB(mp, ((xfs_ufsize_t)ip->i_size));
-+	end_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_ISIZE(ip));
- 	last_fsb = XFS_B_TO_FSB(mp, (xfs_ufsize_t)XFS_MAXIOFFSET(mp));
- 	if (last_fsb <= end_fsb)
- 		return 0;
-@@ -643,7 +644,7 @@ xfs_free_eofblocks(
- 			xfs_ilock(ip, XFS_IOLOCK_EXCL);
- 		}
- 		error = xfs_itruncate_start(ip, XFS_ITRUNC_DEFINITE,
--				    ip->i_size);
-+				    XFS_ISIZE(ip));
- 		if (error) {
- 			xfs_trans_cancel(tp, 0);
- 			xfs_iunlock(ip, XFS_IOLOCK_EXCL);
-@@ -665,7 +666,7 @@ xfs_free_eofblocks(
- 		xfs_trans_ijoin(tp, ip);
- 
- 		error = xfs_itruncate_finish(&tp, ip,
--					     ip->i_size,
-+					     XFS_ISIZE(ip),
- 					     XFS_DATA_FORK,
- 					     0);
- 		/*
-@@ -981,7 +982,7 @@ xfs_release(
- 		return 0;
- 
- 	if ((((ip->i_d.di_mode & S_IFMT) == S_IFREG) &&
--	     ((ip->i_size > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
-+	     ((XFS_ISIZE(ip) > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
- 	       ip->i_delayed_blks > 0)) &&
- 	     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
- 	    (!(ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
-@@ -1059,7 +1060,7 @@ xfs_inactive(
- 	 * only one with a reference to the inode.
- 	 */
- 	truncate = ((ip->i_d.di_nlink == 0) &&
--	    ((ip->i_d.di_size != 0) || (ip->i_size != 0) ||
-+	    ((ip->i_d.di_size != 0) || XFS_ISIZE(ip) != 0 ||
- 	     (ip->i_d.di_nextents > 0) || (ip->i_delayed_blks > 0)) &&
- 	    ((ip->i_d.di_mode & S_IFMT) == S_IFREG));
- 
-@@ -1073,7 +1074,7 @@ xfs_inactive(
- 
- 	if (ip->i_d.di_nlink != 0) {
- 		if ((((ip->i_d.di_mode & S_IFMT) == S_IFREG) &&
--                     ((ip->i_size > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
-+                     ((XFS_ISIZE(ip) > 0) || (VN_CACHED(VFS_I(ip)) > 0 ||
-                        ip->i_delayed_blks > 0)) &&
- 		      (ip->i_df.if_flags & XFS_IFEXTENTS) &&
- 		     (!(ip->i_d.di_flags &
-@@ -2431,11 +2432,11 @@ xfs_zero_remaining_bytes(
- 	 * since nothing can read beyond eof.  The space will
- 	 * be zeroed when the file is extended anyway.
- 	 */
--	if (startoff >= ip->i_size)
-+	if (startoff >= XFS_ISIZE(ip))
- 		return 0;
- 
--	if (endoff > ip->i_size)
--		endoff = ip->i_size;
-+	if (endoff > XFS_ISIZE(ip))
-+		endoff = XFS_ISIZE(ip);
- 
- 	bp = xfs_buf_get_uncached(XFS_IS_REALTIME_INODE(ip) ?
- 					mp->m_rtdev_targp : mp->m_ddev_targp,
-@@ -2729,7 +2730,7 @@ xfs_change_file_space(
- 		bf->l_start += offset;
- 		break;
- 	case 2: /*SEEK_END*/
--		bf->l_start += ip->i_size;
-+		bf->l_start += XFS_ISIZE(ip);
- 		break;
- 	default:
- 		return XFS_ERROR(EINVAL);
-@@ -2746,7 +2747,7 @@ xfs_change_file_space(
- 	bf->l_whence = 0;
- 
- 	startoffset = bf->l_start;
--	fsize = ip->i_size;
-+	fsize = XFS_ISIZE(ip);
- 
- 	/*
- 	 * XFS_IOC_RESVSP and XFS_IOC_UNRESVSP will reserve or unreserve
 -- 
 1.7.10
 
