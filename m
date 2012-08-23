@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54ABx135583 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:10 -0500
+	q7N54IaO135641 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:18 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	kUgC5BforWE2HwzR for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:04:55 -0700 (PDT)
+	SB2fG4JqVKXSJAPe for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:03 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbA-0003IV-7S
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:52 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T4PbK-0003IU-2S
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:05:02 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbA-0003h9-0z
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:52 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4Pb9-0003gu-WF
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:51 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 070/102] xfs: reduce ilock hold times in xfs_setattr_size
-Date: Thu, 23 Aug 2012 15:02:28 +1000
-Message-Id: <1345698180-13612-71-git-send-email-david@fromorbit.com>
+Subject: [PATCH 069/102] xfs: reduce ilock hold times in
+	xfs_file_aio_write_checks
+Date: Thu, 23 Aug 2012 15:02:27 +1000
+Message-Id: <1345698180-13612-70-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,83 +36,77 @@ To: xfs@oss.sgi.com
 
 From: Christoph Hellwig <hch@infradead.org>
 
-Upstream commit: f38996f5768713fb60e1d2de66c097367d54bb6a
+Upstream commit: 467f78992a0743e0e71729e4faa20b67b0f25289
 
-We do not need the ilock for most checks done in the beginning of
-xfs_setattr_size.  Replace the long critical section before starting the
-transaction with a smaller one around xfs_zero_eof and an optional one
-inside xfs_qm_dqattach that isn't entered unless using quotas.  While
-this isn't a big optimization for xfs_setattr_size itself it will allow
-pushing the ilock into xfs_zero_eof itself later.
+We do not need the ilock for generic_write_checks and the i_size_read,
+which are protected by i_mutex and/or iolock, so reduce the ilock
+critical section to just the call to xfs_zero_eof.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/xfs_vnodeops.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
+ fs/xfs/linux-2.6/xfs_file.c |   23 +++++++++--------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 0e94d59..b156e46 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -61,7 +61,7 @@ xfs_setattr(
- 	int			mask = iattr->ia_valid;
- 	xfs_trans_t		*tp;
- 	int			code;
--	uint			lock_flags;
-+	uint			lock_flags = 0;
- 	uint			commit_flags=0;
- 	uid_t			uid=0, iuid=0;
- 	gid_t			gid=0, igid=0;
-@@ -126,7 +126,7 @@ xfs_setattr(
- 	 */
- 	tp = NULL;
+diff --git a/fs/xfs/linux-2.6/xfs_file.c b/fs/xfs/linux-2.6/xfs_file.c
+index 1dbd1d8..d0239cf 100644
+--- a/fs/xfs/linux-2.6/xfs_file.c
++++ b/fs/xfs/linux-2.6/xfs_file.c
+@@ -589,35 +589,31 @@ xfs_file_aio_write_checks(
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	int			error = 0;
+ 
+-	xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
  restart:
--	lock_flags = XFS_ILOCK_EXCL;
-+	lock_flags = 0;
- 	if (flags & XFS_ATTR_NOLOCK)
- 		need_iolock = 0;
- 	if (!(mask & ATTR_SIZE)) {
-@@ -139,6 +139,7 @@ restart:
- 			lock_flags = 0;
- 			goto error_return;
- 		}
-+		lock_flags = XFS_ILOCK_EXCL;
- 	} else {
- 		if (need_iolock)
- 			lock_flags |= XFS_IOLOCK_EXCL;
-@@ -186,8 +187,6 @@ restart:
- 		/* Short circuit the truncate case for zero length files */
- 		if (iattr->ia_size == 0 &&
- 		    old_size == 0 && ip->i_d.di_nextents == 0) {
--			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			lock_flags &= ~XFS_ILOCK_EXCL;
- 			if (mask & ATTR_CTIME) {
- 				/* need to log timestamp changes */
- 				iattr->ia_ctime = iattr->ia_mtime =
-@@ -213,7 +212,7 @@ restart:
- 		/*
- 		 * Make sure that the dquots are attached to the inode.
- 		 */
--		code = xfs_qm_dqattach_locked(ip, 0);
-+		code = xfs_qm_dqattach(ip, 0);
- 		if (code)
- 			goto error_return;
+ 	error = generic_write_checks(file, pos, count, S_ISBLK(inode->i_mode));
+-	if (error) {
+-		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
++	if (error)
+ 		return error;
+-	}
  
-@@ -232,12 +231,12 @@ restart:
- 			 * need to do this before the inode is joined to the
- 			 * transaction to modify the i_size.
- 			 */
-+			xfs_ilock(ip, XFS_ILOCK_EXCL);
- 			code = xfs_zero_eof(ip, iattr->ia_size, old_size);
-+			xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 			if (code)
- 				goto error_return;
+ 	/*
+ 	 * If the offset is beyond the size of the file, we need to zero any
+ 	 * blocks that fall between the existing EOF and the start of this
+ 	 * write.  If zeroing is needed and we are currently holding the
+-	 * iolock shared, we need to update it to exclusive which involves
+-	 * dropping all locks and relocking to maintain correct locking order.
+-	 * If we do this, restart the function to ensure all checks and values
+-	 * are still valid.
++	 * iolock shared, we need to update it to exclusive which implies
++	 * having to redo all checks before.
+ 	 */
+ 	if (*pos > i_size_read(inode)) {
+ 		if (*iolock == XFS_IOLOCK_SHARED) {
+-			xfs_rw_iunlock(ip, XFS_ILOCK_EXCL | *iolock);
++			xfs_rw_iunlock(ip, *iolock);
+ 			*iolock = XFS_IOLOCK_EXCL;
+-			xfs_rw_ilock(ip, XFS_ILOCK_EXCL | *iolock);
++			xfs_rw_ilock(ip, *iolock);
+ 			goto restart;
  		}
--		xfs_iunlock(ip, XFS_ILOCK_EXCL);
--		lock_flags &= ~XFS_ILOCK_EXCL;
++		xfs_rw_ilock(ip, XFS_ILOCK_EXCL);
+ 		error = -xfs_zero_eof(ip, *pos, i_size_read(inode));
++		xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
++		if (error)
++			return error;
+ 	}
+-	xfs_rw_iunlock(ip, XFS_ILOCK_EXCL);
+-	if (error)
+-		return error;
  
- 		/*
- 		 * We are going to log the inode size change in this
+ 	/*
+ 	 * Updating the timestamps will grab the ilock again from
+@@ -634,7 +630,6 @@ restart:
+ 	 * people from modifying setuid and setgid binaries.
+ 	 */
+ 	return file_remove_suid(file);
+-
+ }
+ 
+ /*
 -- 
 1.7.10
 
