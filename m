@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7N54Seq135752 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:29 -0500
+	q7N54IQq135650 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 00:04:18 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NUNfvUodCyHHL6Vr for <xfs@oss.sgi.com>;
-	Wed, 22 Aug 2012 22:05:14 -0700 (PDT)
+	qEuyMSXHRcFn3KnY for <xfs@oss.sgi.com>;
+	Wed, 22 Aug 2012 22:05:04 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T4PbA-0003Ih-BP
+	(envelope-from <dave@fromorbit.com>) id 1T4PbA-0003ID-2G
 	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:52 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T4PbA-0003hP-7o
-	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:52 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T4Paz-0003gg-SK
+	for xfs@oss.sgi.com; Thu, 23 Aug 2012 15:04:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 073/102] xfs: punch all delalloc blocks beyond EOF on write
-	failure.
-Date: Thu, 23 Aug 2012 15:02:31 +1000
-Message-Id: <1345698180-13612-74-git-send-email-david@fromorbit.com>
+Subject: [PATCH 066/102] xfs: don't fill statvfs with project quota for a
+	directory
+Date: Thu, 23 Aug 2012 15:02:24 +1000
+Message-Id: <1345698180-13612-67-git-send-email-david@fromorbit.com>
 In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,128 +34,34 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Jie Liu <jeff.liu@oracle.com>
 
-Upstream commit: 01c84d2dc1311fb76ea217dadfd5b3a5f3cab563
+Upstream commit: da5bf95e3cdca348327c82568c2860229c0daaa2
+ if it was not enabled.
 
-I've been seeing regular ASSERT failures in xfstests when running
-fsstress based tests over the past month. xfs_getbmap() has been
-failing this test:
+Check if the project quota is running or not before performing
+xfs_qm_statvfs(), just return if not.  Otherwise the ASSERT
+XFS_IS_QUOTA_RUNNING in xfs_qm_dqget will be popped.
 
-XFS: Assertion failed: ((iflags & BMV_IF_DELALLOC) != 0) ||
-(map[i].br_startblock != DELAYSTARTBLOCK), file: fs/xfs/xfs_bmap.c,
-line: 5650
-
-where it is encountering a delayed allocation extent after writing
-all the dirty data to disk and then walking the extent map
-atomically by holding the XFS_IOLOCK_SHARED to prevent new delayed
-allocation extents from being created.
-
-Test 083 on a 512 byte block size filesystem was used to reproduce
-the problem, because it only had a 5s run timeand would usually fail
-every 3-4 runs. This test is exercising ENOSPC behaviour by running
-fsstress on a nearly full filesystem. The following trace extract
-shows the final few events on the inode that tripped the assert:
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_setfilesize
- xfs_setfilesize:       isize 0x180000 disize 0x12d400 offset 0x17e200 count 7680
-
-file size updated to 0x180000 by IO completion
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_iomap_write_delay
- xfs_iext_insert:       state  idx 3 offset 3072 block 4503599627239432 count 1 flag 0 caller xfs_bmap_add_extent_hole_delay
- xfs_get_blocks_alloc:  size 0x180000 offset 0x180000 count 512 type  startoff 0xc00 startblock -1 blockcount 0x1
- xfs_ilock:             flags ILOCK_EXCL caller __xfs_get_blocks
-
-delalloc write, adding a single block at offset 0x180000
-
- xfs_delalloc_enospc:   isize 0x180000 disize 0x180000 offset 0x180200 count 512
-
-ENOSPC trying to allocate a dellalloc block at offset 0x180200
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_iomap_write_delay
- xfs_get_blocks_alloc:  size 0x180000 offset 0x180200 count 512 type  startoff 0xc00 startblock -1 blockcount 0x2
-
-And succeeding on retry after flushing dirty inodes.
-
- xfs_ilock:             flags ILOCK_EXCL caller __xfs_get_blocks
- xfs_delalloc_enospc:   isize 0x180000 disize 0x180000 offset 0x180400 count 512
-
-ENOSPC trying to allocate a dellalloc block at offset 0x180400
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_iomap_write_delay
- xfs_delalloc_enospc:   isize 0x180000 disize 0x180000 offset 0x180400 count 512
-
-And failing the retry, giving a real ENOSPC error.
-
- xfs_ilock:             flags ILOCK_EXCL caller xfs_vm_write_failed
-                                                ^^^^^^^^^^^^^^^^^^^
-The smoking gun - the write being failed and cleaning up delalloc
-blocks beyond EOF allocated by the failed write.
-
- xfs_getattr:
- xfs_ilock:             flags IOLOCK_SHARED caller xfs_getbmap
- xfs_ilock:             flags ILOCK_SHARED caller xfs_ilock_map_shared
-
-And that's where we died almost immediately afterwards.
-xfs_bmapi_read() found delalloc extent beyond current file in memory
-file size. Some debug I added to xfs_getbmap() showed the state just
-before the assert failure:
-
- ino 0x80e48: off 0xc00, fsb 0xffffffffffffffff, len 0x1, size 0x180000
- start_fsb 0x106, end_fsb 0x638
- ino flags 0x2 nex 0xd bmvcnt 0x555, len 0x3c58a6f23c0bf1, start 0xc00
- ext 0: off 0x1fc, fsb 0x24782, len 0x254
- ext 1: off 0x450, fsb 0x40851, len 0x30
- ext 2: off 0x480, fsb 0xd99, len 0x1b8
- ext 3: off 0x92f, fsb 0x4099a, len 0x3b
- ext 4: off 0x96d, fsb 0x41844, len 0x98
- ext 5: off 0xbf1, fsb 0x408ab, len 0xf
-
-which shows that we found a single delalloc block beyond EOF (first
-line of output) when we were returning the map for a length
-somewhere around 10^16 bytes long (second line), and the on-disk
-extents showed they didn't go past EOF (last lines).
-
-Further debug added to xfs_vm_write_failed() showed this happened
-when punching out delalloc blocks beyond the end of the file after
-the failed write:
-
-[  132.606693] ino 0x80e48: vwf to 0x181000, sze 0x180000
-[  132.609573] start_fsb 0xc01, end_fsb 0xc08
-
-It punched the range 0xc01 -> 0xc08, but the range we really need to
-punch is 0xc00 -> 0xc07 (8 blocks from 0xc00) as this testing was
-run on a 512 byte block size filesystem (8 blocks per page).
-the punch from is 0xc00. So end_fsb is correct, but start_fsb is
-wrong as we punch from start_fsb for (end_fsb - start_fsb) blocks.
-Hence we are not punching the delalloc block beyond EOF in the case.
-
-The fix is simple - it's a silly off-by-one mistake in calculating
-the range. It's especially silly because the macro used to calculate
-the start_fsb already takes into account the case where the inode
-size is an exact multiple of the filesystem block size...
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 ---
- fs/xfs/linux-2.6/xfs_aops.c |    2 +-
+ fs/xfs/linux-2.6/xfs_super.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/linux-2.6/xfs_aops.c b/fs/xfs/linux-2.6/xfs_aops.c
-index 2ce0e07..d2d3c84 100644
---- a/fs/xfs/linux-2.6/xfs_aops.c
-+++ b/fs/xfs/linux-2.6/xfs_aops.c
-@@ -1482,7 +1482,7 @@ xfs_vm_write_failed(
- 		 * Check if there are any blocks that are outside of i_size
- 		 * that need to be trimmed back.
- 		 */
--		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size) + 1;
-+		start_fsb = XFS_B_TO_FSB(ip->i_mount, inode->i_size);
- 		end_fsb = XFS_B_TO_FSB(ip->i_mount, to);
- 		if (end_fsb <= start_fsb)
- 			return;
+diff --git a/fs/xfs/linux-2.6/xfs_super.c b/fs/xfs/linux-2.6/xfs_super.c
+index d687329..b86c460 100644
+--- a/fs/xfs/linux-2.6/xfs_super.c
++++ b/fs/xfs/linux-2.6/xfs_super.c
+@@ -1106,7 +1106,7 @@ xfs_fs_statfs(
+ 
+ 	spin_unlock(&mp->m_sb_lock);
+ 
+-	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) ||
++	if ((ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT) &&
+ 	    ((mp->m_qflags & (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))) ==
+ 			      (XFS_PQUOTA_ACCT|XFS_OQUOTA_ENFD))
+ 		xfs_qm_statvfs(ip, statp);
 -- 
 1.7.10
 
