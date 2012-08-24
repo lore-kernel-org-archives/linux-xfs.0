@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7O1fOVp125030 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 20:41:25 -0500
+	q7O1fGAw125000 for <xfs@oss.sgi.com>; Thu, 23 Aug 2012 20:41:17 -0500
 Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id chnpR92f1KojEy7w for
-	<xfs@oss.sgi.com>; Thu, 23 Aug 2012 18:42:10 -0700 (PDT)
-Message-ID: <5036DBD6.4040301@cn.fujitsu.com>
-Date: Fri, 24 Aug 2012 09:41:42 +0800
+	cuda.sgi.com with ESMTP id 4uEtS1WbsHpByi9x for
+	<xfs@oss.sgi.com>; Thu, 23 Aug 2012 18:42:01 -0700 (PDT)
+Message-ID: <5036DBC8.9000207@cn.fujitsu.com>
+Date: Fri, 24 Aug 2012 09:41:28 +0800
 From: Miao Xie <miaox@cn.fujitsu.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/3] xfstests: fix double set for SCRATCH_DEV when
-	SCRATCH_DEV_POOL is set
+Subject: [PATCH 1/3] xfstests: fix interference output of the balance program
+	in case 265
 Reply-To: miaox@cn.fujitsu.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,35 +27,38 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linux Btrfs <linux-btrfs@vger.kernel.org>, xfs@oss.sgi.com
 Cc: anand.jain@oracle.com
 
-check script has moved the first device of SCRATCH_DEV_POOL and used it to set
-SCRATCH_DEV. But the case 265 does the same thing again when it includes
-common.rc. Fix it by setting SCRATCH_DEV just by check script.
+The balance program of btrfs outputs the result after it is done, but it
+will make the test program fail because the test program thinks it is
+not the expected result. So we just throw that information away to fix this
+problem.
 
 Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
 ---
- common.config |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+ 265 |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/common.config b/common.config
-index 7bed1c5..a35954b 100644
---- a/common.config
-+++ b/common.config
-@@ -232,12 +232,13 @@ fi
+diff --git a/265 b/265
+index 10f214f..ec8410c 100755
+--- a/265
++++ b/265
+@@ -110,7 +110,7 @@ _test_add()
+ 	for i in `seq 1 $n`; do
+ 		btrfs device add ${devs[$i]} $SCRATCH_MNT > /dev/null 2>&1 || _fail "device add failed"
+ 	done
+-	btrfs filesystem balance $SCRATCH_MNT || _fail "balance failed"
++	btrfs filesystem balance $SCRATCH_MNT 1> /dev/null || _fail "balance failed"
+ 	umount $SCRATCH_MNT
+ }
  
- # a btrfs tester will set only SCRATCH_DEV_POOL, we will put first of its dev
- # to SCRATCH_DEV and rest to SCRATCH_DEV_POOL to maintain the backward compatibility
--if [ ! -z "$SCRATCH_DEV_POOL" ]; then
-+if [ "$iam" == "check" -a ! -z "$SCRATCH_DEV_POOL" ]; then
-     if [ ! -z "$SCRATCH_DEV" ]; then
-         echo "common.config: Error: \$SCRATCH_DEV should be unset when \$SCRATCH_DEV_POOL is set"
-         exit 1
-     fi
--    SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
-+    # the user may forget to export SCRATCH_DEV when he/she set SCRATCH_DEV_POOL.
-+    export SCRATCH_DEV=`echo $SCRATCH_DEV_POOL | awk '{print $1}'`
-     SCRATCH_DEV_POOL=`echo $SCRATCH_DEV_POOL | awk '{ for (i = 2; i <= NF; i++) print $i}'`
- fi
+@@ -153,7 +153,7 @@ _test_replace()
+ 	# in some system balance fails if there is no delay (a bug)
+ 	# putting sleep 10 to work around as of now
+ 	# sleep 10
+-	btrfs fi balance $SCRATCH_MNT || _fail "dev balance failed"
++	btrfs fi balance $SCRATCH_MNT 1> /dev/null || _fail "dev balance failed"
  
+ 	# cleaup. add the removed disk
+ 	umount $SCRATCH_MNT
 -- 
 1.7.6.5
 
