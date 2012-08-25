@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7OIhvVJ097341 for <xfs@oss.sgi.com>; Fri, 24 Aug 2012 13:43:57 -0500
-Date: Fri, 24 Aug 2012 13:44:41 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfs: fix race while discarding buffers [V4]
-Message-ID: <20120824184441.GA3274@sgi.com>
-References: <1344621711-8049-1-git-send-email-cmaiolino@redhat.com>
-	<20120820205134.GB29979@sgi.com>
-	<20120820224751.GA22096@orion.usersys.redhat.com>
-	<20120820232110.GM19235@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120820232110.GM19235@dastard>
+	q7PN6SSf176656 for <xfs@oss.sgi.com>; Sat, 25 Aug 2012 18:06:28 -0500
+Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
+	cuda.sgi.com with ESMTP id Okz9hZ8LH7FH3tLw (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Sat, 25 Aug 2012 16:07:16 -0700 (PDT)
+Received: from localhost.localdomain (localhost [127.0.0.1])
+	by smtp.gentoo.org (Postfix) with ESMTP id AEBAB33D3E6
+	for <xfs@oss.sgi.com>; Sat, 25 Aug 2012 23:07:13 +0000 (UTC)
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: [PATCH] libxcmd: link against readline
+Date: Sat, 25 Aug 2012 19:07:30 -0400
+Message-Id: <1345936050-15139-1-git-send-email-vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,45 +21,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Carlos and Dave,
+This library uses readline funcs (the input.c file), so we need to link
+this shared library against it.
 
-On Tue, Aug 21, 2012 at 09:21:10AM +1000, Dave Chinner wrote:
-> On Mon, Aug 20, 2012 at 07:47:51PM -0300, Carlos Maiolino wrote:
-> > Thanks for the comments.
-> > > 
-> > > What was the symptom that led to the discovery of this problem?
-> > > 
-> > > Reviewed-by: Ben Myers <bpm@sgi.com>
-> > > 
-> > 
-> > It started with the messages like the example below being logged by syslog:
-> > 
-> > shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-61993820
-> > shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-146
-> > shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-240601220
-> > shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-152
-> > shrink_slab: xfs_buftarg_shrink+0x0/0x160 [xfs] negative objects to delete nr=-2921236993
-> > 
-> > These messages came from shrink_slab().
-> 
-> Worth noting is that this warning came from a RHEL kernel, not a
-> mainline kernel. The mainline kernels don't screw up the nr_to_scan
-> calculations when a negative object count is returned to them.
-> Hence mainline kernels are not impacted by the accounting bug at
-> all...
+URL: https://bugs.gentoo.org/432644
+Reported-by: David Badia <dbadia@gmail.com>
+Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+---
+ libxcmd/Makefile |    2 ++
+ 1 file changed, 2 insertions(+)
 
-Thanks for the additional information.  Sometimes it is helpful to know the
-symptom along with the fix.
-
-Regards,
-Ben
+diff --git a/libxcmd/Makefile b/libxcmd/Makefile
+index b3544f4..ce082a5 100644
+--- a/libxcmd/Makefile
++++ b/libxcmd/Makefile
+@@ -22,10 +22,12 @@ endif
+ 
+ ifeq ($(ENABLE_READLINE),yes)
+ LCFLAGS += -DENABLE_READLINE
++LTLIBS += $(LIBREADLINE) $(LIBTERMCAP)
+ endif
+ 
+ ifeq ($(ENABLE_EDITLINE),yes)
+ LCFLAGS += -DENABLE_EDITLINE
++LTLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
+ endif
+ 
+ default: ltdepend $(LTLIBRARY)
+-- 
+1.7.9.7
 
 _______________________________________________
 xfs mailing list
