@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7PN6SSf176656 for <xfs@oss.sgi.com>; Sat, 25 Aug 2012 18:06:28 -0500
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id Okz9hZ8LH7FH3tLw (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 25 Aug 2012 16:07:16 -0700 (PDT)
-Received: from localhost.localdomain (localhost [127.0.0.1])
-	by smtp.gentoo.org (Postfix) with ESMTP id AEBAB33D3E6
-	for <xfs@oss.sgi.com>; Sat, 25 Aug 2012 23:07:13 +0000 (UTC)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: [PATCH] libxcmd: link against readline
-Date: Sat, 25 Aug 2012 19:07:30 -0400
-Message-Id: <1345936050-15139-1-git-send-email-vapier@gentoo.org>
+	q7Q9VDJi043291 for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 04:31:13 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	1NDNyvilMfyTpMLv (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 26 Aug 2012 02:32:02 -0700 (PDT)
+Received: by obbwd18 with SMTP id wd18so3991316obb.26
+	for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 02:32:01 -0700 (PDT)
+MIME-Version: 1.0
+Date: Sun, 26 Aug 2012 11:32:01 +0200
+Message-ID: <CAAxjCEwdYbcDoUvcAV1n8281HCCvrCvReaG2oM5+h+WV5yDZvA@mail.gmail.com>
+Subject: umount doesn't seem to really unmount
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,42 +22,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-This library uses readline funcs (the input.c file), so we need to link
-this shared library against it.
+Today I had some data loss with an XFS filesystem, apparently because
+it does not write everything to disk during unmount. Yesterday, I shut
+down my machine for the night. My XFS lives on an iSCSI volume which I
+shut down shortly, but not instantly, after unmounting the XFS
+filesystem. There has been no noticable disk activity after the
+umount. Today, some recently written files all had size zero.
+Additional indicators that something is amiss is, that during startup,
+when mounting the XFS filesystem, it would often claim that it has
+done log recovery, which should not be the case if it had been
+unmounted correctly. Also, when I just mount and unmount the
+filesystem repeatedly, I would at least expect "ending clean mount"
+messages in dmesg, like I get on CentOS 6. Not so on my system.
 
-URL: https://bugs.gentoo.org/432644
-Reported-by: David Badia <dbadia@gmail.com>
-Signed-off-by: Mike Frysinger <vapier@gentoo.org>
----
- libxcmd/Makefile |    2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/libxcmd/Makefile b/libxcmd/Makefile
-index b3544f4..ce082a5 100644
---- a/libxcmd/Makefile
-+++ b/libxcmd/Makefile
-@@ -22,10 +22,12 @@ endif
- 
- ifeq ($(ENABLE_READLINE),yes)
- LCFLAGS += -DENABLE_READLINE
-+LTLIBS += $(LIBREADLINE) $(LIBTERMCAP)
- endif
- 
- ifeq ($(ENABLE_EDITLINE),yes)
- LCFLAGS += -DENABLE_EDITLINE
-+LTLIBS += $(LIBEDITLINE) $(LIBTERMCAP)
- endif
- 
- default: ltdepend $(LTLIBRARY)
--- 
-1.7.9.7
+This is with kernel 3.5.2-3.fc17 from Fedora. Is there a known problem?
 
 _______________________________________________
 xfs mailing list
