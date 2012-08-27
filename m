@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7R3Ql91235001 for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 22:26:47 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id ObUs8pdQzz1swZ4H for <xfs@oss.sgi.com>;
-	Sun, 26 Aug 2012 20:27:36 -0700 (PDT)
-Message-ID: <503AE924.2000106@sandeen.net>
-Date: Sun, 26 Aug 2012 22:27:32 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q7R6kfJX008168 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 01:46:41 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	YANfdUOLF9A5Kg9A (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Sun, 26 Aug 2012 23:47:30 -0700 (PDT)
+Received: by obbwd18 with SMTP id wd18so5044182obb.26
+	for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 23:47:30 -0700 (PDT)
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: test dump/restore of 32-bit projids
-References: <503ABD37.7090006@redhat.com>
-In-Reply-To: <503ABD37.7090006@redhat.com>
+In-Reply-To: <1104CDC2-47D2-40CF-8294-A17E33125D54@sandeen.net>
+References: <CAAxjCEwdYbcDoUvcAV1n8281HCCvrCvReaG2oM5+h+WV5yDZvA@mail.gmail.com>
+	<1104CDC2-47D2-40CF-8294-A17E33125D54@sandeen.net>
+Date: Mon, 27 Aug 2012 08:47:29 +0200
+Message-ID: <CAAxjCExx8LB3PyMUR8T215hMYps17D+Lvg4C0aOwLwD=d-NOMQ@mail.gmail.com>
+Subject: Re: umount doesn't seem to really unmount
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,120 +29,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Bill Kendall <wkendall@sgi.com>, =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWM=?=@oss.sgi.com, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-Test that xfsdump/xfsrestore properly restores more than the
-bottom 16 bits of a 32-bit projid.
+> Do you have barriers on and does iscsi pass them through to the target, and does the target propagate them to the disk itself?
 
-Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
----
+Regardless of the barriers, it doesn't explain this:
 
-diff --git a/285 b/285
-new file mode 100755
-index 0000000..2804e5d
---- /dev/null
-+++ b/285
-@@ -0,0 +1,81 @@
-+#! /bin/bash
-+# FS QA Test No. 285
-+#
-+# Test projid32: persist 32 bit projids thorugh dump/restore
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Eric Sandeen.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@sandeen.net
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+. ./common.dump
-+. ./common.quota
-+
-+_require_scratch
-+_require_xfs_quota
-+
-+# real QA test starts here
-+
-+_supported_fs xfs
-+_supported_os IRIX Linux
-+
-+_scratch_mkfs_xfs -i projid32bit=1 >> $seq.full || _fail "mkfs failed"
-+
-+export MOUNT_OPTIONS="-opquota"
-+_qmount
-+_require_prjquota $SCRATCH_DEV
-+
-+# > 16 bit project ID
-+PROJID=2123456789
-+
-+# Put a project quota on a dir
-+mkdir $SCRATCH_MNT/dir
-+xfs_quota -x -c "project -s -p $SCRATCH_MNT/dir $PROJID" $SCRATCH_MNT >> $seq.full || _fail "dir pquota failed"
-+
-+# Dump it then restore it to a fresh fs, and check the projid
-+rm -f $tmp.dumpfile
-+xfsdump -L label -M media -f $tmp.dumpfile $SCRATCH_MNT >> $seq.full || _fail "dump failed"
-+umount $SCRATCH_DEV
-+
-+_scratch_mkfs_xfs -i projid32bit=1 >> $seq.full || _fail "re-mkfs failed"
-+_qmount
-+xfsrestore -f $tmp.dumpfile $SCRATCH_MNT >> $seq.full || _fail "restore failed"
-+
-+# check (-c) that we got the correct project ID back post-restore
-+xfs_quota -x -c "project -s -c -p $SCRATCH_MNT/dir $PROJID" $SCRATCH_MNT
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/285.out b/285.out
-new file mode 100644
-index 0000000..daf4e4c
---- /dev/null
-+++ b/285.out
-@@ -0,0 +1,3 @@
-+QA output created by 285
-+Checking project 2123456790 (path /mnt/scratch/dir)...
-+Processed 1 (/etc/projects and cmdline) paths for project 2123456790 with recursion depth infinite (-1).
-diff --git a/group b/group
-index 104ed35..bbc74fe 100644
---- a/group
-+++ b/group
-@@ -403,3 +403,4 @@ deprecated
- 282 dump ioctl auto quick
- 283 dump ioctl auto quick
- 284 auto
-+285 auto dump quota
+$ sudo mount -o barrier=1,inode64 /dev/mapper/vg_xfs2-lvxfs1 /xfs1
+$ sudo umount /xfs1
+$ sudo xfs_logprint /dev/mapper/vg_xfs2-lvxfs1
+xfs_logprint:
+xfs_logprint: /dev/mapper/vg_xfs2-lvxfs1 contains a mounted and
+writable filesystem
+    data device: 0xfd01
+    log device: 0xfd01 daddr: 83882016 length: 81912
+
+It also happens in kernel 3.4.3-1.fc17. There are no other machines
+which access the iSCSI target.
+
+Right after boot, I can mount and umount it all that I want, and it
+will work normally, i.e., say "Mounting Filesystem / Ending clean
+mount" in dmesg, xfs_logprint NOT saying "... contains a mounted and
+writable filesystem".
+
+As crazy as that sounds, I've just found out what triggers the
+situation. The weird behavior only manifests itself after this:
+
+$ sudo service mysqld start
+
+>From then on, it behaves as described earlier. Not that mysqld has
+anything to do with XFS. It's just the plain package from Fedora, with
+everything in the default place on the root filesystem, which is ext4.
+As I've just found out, the behavior even returns to normal when I
+shut down mysqld. So for now, my workaround is shutting down mysqld
+myself before rebooting.
+
+I'll try and see if this is easily reproducible inside a clean F17
+install inside a KVM guest.
 
 _______________________________________________
 xfs mailing list
