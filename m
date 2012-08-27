@@ -1,20 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7R8nrOj024596 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 03:49:53 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id tgTltpEeBZxonNCs (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 27 Aug 2012 01:50:40 -0700 (PDT)
-Date: Mon, 27 Aug 2012 10:50:34 +0200
-From: Jan Kara <jack@suse.cz>
+	q7R8wrcv026083 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 03:58:53 -0500
 Subject: Re: [REVIEW][PATCH 13/15] userns: Add basic quota support
-Message-ID: <20120827085034.GA8998@quack.suse.cz>
-References: <87lih2h6i4.fsf@xmission.com>
- <87harqecvk.fsf@xmission.com>
-MIME-Version: 1.0
-Content-Disposition: inline
+From: Steven Whitehouse <swhiteho@redhat.com>
 In-Reply-To: <87harqecvk.fsf@xmission.com>
+References: <87lih2h6i4.fsf@xmission.com>  <87harqecvk.fsf@xmission.com>
+Date: Mon, 27 Aug 2012 09:58:06 +0100
+Message-ID: <1346057886.2703.5.camel@menhir>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,39 +21,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "Eric W. Biederman" <ebiederm@xmission.com>
-Cc: Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>, cluster-devel@redhat.com, Ben Myers <bpm@sgi.com>, Dmitry Monakhov <dmonakhov@openvz.org>, Joel Becker <jlbec@evilplan.org>, Mark Fasheh <mfasheh@suse.com>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, Steven Whitehouse <swhiteho@redhat.com>, ocfs2-devel@oss.oracle.com, "Serge E. Hallyn" <serge@hallyn.com>
+To: "Eric W. Biederman" <ebiederm@xmission.com>, Abhijith Das <adas@redhat.com>
+Cc: Alex Elder <elder@kernel.org>, Jan Kara <jack@suse.cz>, netdev@vger.kernel.org, linux-kernel@vger.kernel.org, David@oss.sgi.com, cluster-devel@redhat.com, Ben Myers <bpm@sgi.com>, Monakhov <dmonakhov@openvz.org>, Joel Becker <jlbec@evilplan.org>, Dmitry@oss.sgi.com, Mark Fasheh <mfasheh@suse.com>, linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com, Miller <davem@davemloft.net>, ocfs2-devel@oss.oracle.com, "Serge E. Hallyn" <serge@hallyn.com>
 
-  Hello,
+Hi,
 
-On Sat 25-08-12 17:05:35, Eric W. Biederman wrote:
+On Sat, 2012-08-25 at 17:05 -0700, Eric W. Biederman wrote:
 > Two helper are added dqgetusr and dqgetgrp to allow the quota
 > infrastructure to be called with a kuid and a kgid respectively.  This
 > creates type safe variants of dqget and leads to shorter more
 > comprehensible code.
-  It would look more comprehensible to me to have functions like:
-kuid2qown() and kgid2qown() and then call dqget(sb, kuid2qown(attr->uid))
-(see below for qown_t change proposal). The code then at the first look
-explains what is going on... Hmm?
-
+> 
 > Place the USRQUOTA and GRPQUOTA defines into enum quota_type.  This
 > brings with it the ability for the compiler to check that switch
 > statements handle every quota type, and the ability to mark which
 > values store the type of a quota entry.
-  OK, makes sense.
-
+> 
 > Add the data type qown_t a union of kuid_t and kgid_t. qown_t is a
 > replacement for the implicit union of uid and gid stored in an
 > unsigned int that is was used in the quota data structures.  Making
 > the data type explicit allows the kuid_t and kgid_t type safety to
 > propogate more thoroughly through the code, revealing more places
 > where uid/gid conversions need be made.
-  Hum, when we already do this, wouldn't it make more sense to embed quota
-type in qown_t? Because with the union thing you have no meaningful way of
-accessing that type without having quota type anyway. So having that in a
-single structure makes a lot of sense, plus it makes prototypes shorter...
-And you have to call make_qown() anyway...
-
+> 
 > Allong with the data type qown_t comes the helper functions
 > qown_eq, from_qown, from_qown_munged, qown_valid, and make_qown.
 > 
@@ -72,11 +56,16 @@ And you have to call make_qown() anyway...
 > in quota structures and signatures.  The ocfs2 changes are larger than
 > most because of the extensive tracing throughout the ocfs2 quota code
 > that prints out dq_id.
-  Otherwise the changes look OK to me, although I didn't check them in
-detail yet (as above suggestions will change the code anyway).
-
-								Honza
 > 
+
+I think this is ok from the GFS2 perspective. Abhi, does it look ok to
+you?
+
+Steve.
+
+
+
+
 > Cc: Steven Whitehouse <swhiteho@redhat.com>
 > Cc: cluster-devel@redhat.com
 > Cc: Mark Fasheh <mfasheh@suse.com>
@@ -851,7 +840,7 @@ detail yet (as above suggestions will change the code anyway).
 > +++ b/fs/xfs/xfs_quotaops.c
 > @@ -29,7 +29,7 @@
 >  
->  
+> 
 >  STATIC int
 > -xfs_quota_type(int type)
 > +xfs_quota_type(enum quota_type type)
@@ -1117,12 +1106,7 @@ detail yet (as above suggestions will change the code anyway).
 >  
 >  	# Networking
 >  	depends on NET_9P = n
-> -- 
-> 1.7.5.4
-> 
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+
 
 _______________________________________________
 xfs mailing list
