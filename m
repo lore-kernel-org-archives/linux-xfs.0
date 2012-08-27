@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7RHNnZ5223376 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 12:23:49 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id KfsE4K3ibJ91r2RV for <xfs@oss.sgi.com>;
-	Mon, 27 Aug 2012 10:24:39 -0700 (PDT)
-Message-ID: <503BAD56.3060402@sandeen.net>
-Date: Mon, 27 Aug 2012 12:24:38 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q7RIGtPv228101 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 13:16:56 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	f1OdDHW00tx0E90D (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 27 Aug 2012 11:17:44 -0700 (PDT)
+Date: Mon, 27 Aug 2012 14:17:42 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 020/102] xfs: warn if direct reclaim tries to writeback
+	pages
+Message-ID: <20120827181742.GA13970@infradead.org>
+References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
+	<1345698180-13612-21-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: test dump/restore of 32-bit projids
-References: <CAFZPdfhbMU3uNDt8wWA3KbsgPg2s0g6e0LUGkHCmdn0vryB8kQ@mail.gmail.com>
-In-Reply-To: <CAFZPdfhbMU3uNDt8wWA3KbsgPg2s0g6e0LUGkHCmdn0vryB8kQ@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <1345698180-13612-21-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,25 +30,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boris Ranto <ranto.boris@gmail.com>
-Cc: Bill Kendall <wkendall@sgi.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Mel Gorman <mgorman@suse.de>, xfs@oss.sgi.com
 
-On 8/27/12 4:52 AM, Boris Ranto wrote:
-> On Sun, 2012-08-26 at 22:27 -0500, Eric Sandeen wrote:
->>Test that xfsdump/xfsrestore properly restores more than the
->> bottom 16 bits of a 32-bit projid.
->>
->> Signed-off-by: Eric Sandeen <sandeen@sandeen.net <mailto:sandeen@sandeen.net>>
->> ---
+On Thu, Aug 23, 2012 at 03:01:38PM +1000, Dave Chinner wrote:
+> From: Mel Gorman <mgorman@suse.de>
+> 
+> Upstream commit: 94054fa3fca1fd78db02cb3d68d5627120f0a1d4
+> 
+> Direct reclaim should never writeback pages.  For now, handle the
+> situation and warn about it.  Ultimately, this will be a BUG_ON.
 
-...
-
-> I've been working on a xfstests projid32bit test case, too. It covers this area + few others. I'll post that one, soon.
-
-Ok, if yours tests more we should just use it when it's ready, I think.
-
-Thanks,
--Eric
+Is this actually the case on 3.0-stable?
 
 _______________________________________________
 xfs mailing list
