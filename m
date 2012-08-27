@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7R0Z866205134 for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 19:35:08 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	Dj5B4UZU2Dzuhsx9 for <xfs@oss.sgi.com>;
-	Sun, 26 Aug 2012 17:35:56 -0700 (PDT)
-Date: Mon, 27 Aug 2012 10:35:55 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsdump: save & restore 32-bit projids
-Message-ID: <20120827003555.GB13691@dastard>
-References: <503ABD37.7090006@redhat.com>
+	q7R3Ql91235001 for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 22:26:47 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id ObUs8pdQzz1swZ4H for <xfs@oss.sgi.com>;
+	Sun, 26 Aug 2012 20:27:36 -0700 (PDT)
+Message-ID: <503AE924.2000106@sandeen.net>
+Date: Sun, 26 Aug 2012 22:27:32 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
+Subject: [PATCH] xfstests: test dump/restore of 32-bit projids
+References: <503ABD37.7090006@redhat.com>
 In-Reply-To: <503ABD37.7090006@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -22,29 +20,126 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@redhat.com>
 Cc: Bill Kendall <wkendall@sgi.com>, =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWM=?=@oss.sgi.com, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-T24gU3VuLCBBdWcgMjYsIDIwMTIgYXQgMDc6MjA6MDdQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IEN1cnJlbnQgeGZzZHVtcC94ZnNyZXN0b3JlIG9ubHkgcmVjb2duaXplIHRoZSBsb3dl
-ciAxNiBiaXRzIG9mIHRoZSBwcm9qaWQuCj4gV2l0aCB0aGlzIHBhdGNoLCB0aGUgZnVsbCAzMiBi
-aXRzIGFyZSBkdW1wZWQgJiByZXN0b3JlZC4KPiAKPiBSZXBvcnRlZC1ieTogQm9yaXMgUmFudG8g
-PGJyYW50b0ByZWRoYXQuY29tPgo+IENjOiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1h
-dmVuLnBsPgo+IFNpZ25lZC1vZmYtYnk6IEVyaWMgU2FuZGVlbiA8c2FuZGVlbkByZWRoYXQuY29t
-Pgo+IC0tLQo+IAo+IFRoaXMgYWxzbyBhZGRzIGEgZGVmaW5pdGlvbiBmb3IgYnNfZm9ya29mZiwg
-YnV0IEkgZG9uJ3QgdGhpbmsKPiB0aGF0IGlzIHNvbWV0aGluZyB3aGljaCBzaG91bGQgZ2V0IHNh
-dmVkICYgcmVzdG9yZWQsIGNvcnJlY3Q/CgpSaWdodCAtIGl0J3MgYSBrZXJuZWwgY29udHJvbGxl
-ZCBmaWVsZCwgb25seSBleHBvcnRlZCBhcyBhIGhpbnQgdG8KaGVscCB4ZnNfZnNyIGJ1aWxkIHNp
-bWlsYXJseSBmb3JtYXR0ZWQgaW5vZGVzLgoKPiBUQkggSSd2ZSBkb25lIHZlcnkgbGl0dGxlIGhh
-Y2tpbmcgb24geGZzZHVtcC4gIEkgdGhpbmsgdGhpcwo+IHJlcXVpcmVzIGEgbmV3IHZlcnNpb24s
-IGJ1dCBub3Qgc3VyZS4gIFRoaXMgc2VlbXMgdG8gd29yayBidXQKPiBtYXkgbmVlZCBzYW5pdHkg
-Y2hlY2tzICYgZml4dXBzLiAgQW5kLCBvZiBjb3Vyc2UsIGFuIHhmc3Rlc3QuCgpMb29rcyBvaywg
-YnV0IEknbSBpbiB0aGUgc2FtZSBib2F0IGFzIHlvdSBvbiB4ZnNkdW1wLiBBIFFBIHRlc3QKd291
-bGQgYmUgZ29vZCB0byBnbyBhbG9uZyB3aXRoIHRoaXMuIDspCgpDaGVlcnMsCgpEYXZlLgotLSAK
-RGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29t
-Cmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Test that xfsdump/xfsrestore properly restores more than the
+bottom 16 bits of a 32-bit projid.
+
+Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
+---
+
+diff --git a/285 b/285
+new file mode 100755
+index 0000000..2804e5d
+--- /dev/null
++++ b/285
+@@ -0,0 +1,81 @@
++#! /bin/bash
++# FS QA Test No. 285
++#
++# Test projid32: persist 32 bit projids thorugh dump/restore
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 Eric Sandeen.  All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#-----------------------------------------------------------------------
++#
++# creator
++owner=sandeen@sandeen.net
++
++seq=`basename $0`
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++    cd /
++    rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.dump
++. ./common.quota
++
++_require_scratch
++_require_xfs_quota
++
++# real QA test starts here
++
++_supported_fs xfs
++_supported_os IRIX Linux
++
++_scratch_mkfs_xfs -i projid32bit=1 >> $seq.full || _fail "mkfs failed"
++
++export MOUNT_OPTIONS="-opquota"
++_qmount
++_require_prjquota $SCRATCH_DEV
++
++# > 16 bit project ID
++PROJID=2123456789
++
++# Put a project quota on a dir
++mkdir $SCRATCH_MNT/dir
++xfs_quota -x -c "project -s -p $SCRATCH_MNT/dir $PROJID" $SCRATCH_MNT >> $seq.full || _fail "dir pquota failed"
++
++# Dump it then restore it to a fresh fs, and check the projid
++rm -f $tmp.dumpfile
++xfsdump -L label -M media -f $tmp.dumpfile $SCRATCH_MNT >> $seq.full || _fail "dump failed"
++umount $SCRATCH_DEV
++
++_scratch_mkfs_xfs -i projid32bit=1 >> $seq.full || _fail "re-mkfs failed"
++_qmount
++xfsrestore -f $tmp.dumpfile $SCRATCH_MNT >> $seq.full || _fail "restore failed"
++
++# check (-c) that we got the correct project ID back post-restore
++xfs_quota -x -c "project -s -c -p $SCRATCH_MNT/dir $PROJID" $SCRATCH_MNT
++
++# success, all done
++status=0
++exit
+diff --git a/285.out b/285.out
+new file mode 100644
+index 0000000..daf4e4c
+--- /dev/null
++++ b/285.out
+@@ -0,0 +1,3 @@
++QA output created by 285
++Checking project 2123456790 (path /mnt/scratch/dir)...
++Processed 1 (/etc/projects and cmdline) paths for project 2123456790 with recursion depth infinite (-1).
+diff --git a/group b/group
+index 104ed35..bbc74fe 100644
+--- a/group
++++ b/group
+@@ -403,3 +403,4 @@ deprecated
+ 282 dump ioctl auto quick
+ 283 dump ioctl auto quick
+ 284 auto
++285 auto dump quota
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
