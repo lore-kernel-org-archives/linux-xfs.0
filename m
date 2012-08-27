@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7RJo1Nm237167 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 14:50:02 -0500
+	q7RJo3dv237189 for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 14:50:03 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id LNhBy5lc1yEriim8 for
+	cuda.sgi.com with ESMTP id uQRF56q19Hfgwd1Y for
 	<xfs@oss.sgi.com>; Mon, 27 Aug 2012 12:50:52 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7RJopxt029042
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q7RJopWB027451
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 15:50:51 -0400
 Received: from bfoster.bfoster ([10.16.225.83])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q7RJopfL032581
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q7RJopjn023823
 	for <xfs@oss.sgi.com>; Mon, 27 Aug 2012 15:50:51 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [RFC PATCH 4/4] xfs: add background scanning to clear EOFBLOCKS inodes
-Date: Mon, 27 Aug 2012 15:51:51 -0400
-Message-Id: <1346097111-4476-5-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
+Subject: [RFC PATCH 0/4] xfs: add support for tracking inodes with post-EOF
+	speculative preallocation
+Date: Mon, 27 Aug 2012 15:51:47 -0400
+Message-Id: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,114 +34,60 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Create a delayed_work to enable background scanning and freeing
-of EOFBLOCKS inodes. The scanner kicks in once speculative
-preallocation occurs and stops requeueing itself when no EOFBLOCKS
-inodes exist.
+Hi all,
 
-Scans are queued on the existing syncd workqueue and the interval
-is tied to the syncd interval, which is a default of 30s. The
-minimum file size for a background scan is hardcoded to 100MB.
+The following patchset adds support for tracking and clearing inodes with
+post-EOF space due to speculative preallocation. The purpose of this work is to
+add some flexibility and management control over inodes in this state. The
+specific impetus for this work is to support improved quota management in the
+glusterfs cluster filesystem. For example, this provides the ability to
+potentially free up a significant amount of unwritten space when at or near
+EDQUOT (FWIW, I'm also working on a patch to support prealloc throttling near
+EDQUOT, but I'm considering that separate). Despite the motivation, this work is
+intended to be generic and hopefully useful for other XFS users.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_mount.h |    2 ++
- fs/xfs/xfs_sync.c  |   33 +++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sync.h  |    3 +++
- 3 files changed, 38 insertions(+), 0 deletions(-)
+We track inodes with post-EOF space via a new tag in the per-ag inode radix
+tree. The tag management, introduced in patch 1, is generally lazy in an
+attempt to keep things simple. Patch 2 implements scanning functionality to
+locate and potentially trim inodes with post-EOF space. Patch 3 adds a new
+ioctl() to extend support to userspace. Patch 4 adds background scanning based
+on the existing syncd workqueue. 
 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 05a05a7..a966bf4 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -204,6 +204,8 @@ typedef struct xfs_mount {
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
- 	struct delayed_work	m_sync_work;	/* background sync work */
- 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
-+	struct delayed_work	m_eofblocks_work; /* background eof blocks
-+						     trimming */
- 	struct work_struct	m_flush_work;	/* background inode flush */
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 27c3c46..bd1ca90 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -489,6 +489,34 @@ xfs_flush_worker(
- 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
- }
- 
-+/*
-+ * Background scanning to trim post-EOF preallocated space. This is queued
-+ * based on the syncd tunable (30s by default).
-+ *
-+ * TODO: Do we want an independent tunable (and default.. off by default)?
-+ */
-+STATIC void
-+xfs_queue_eofblocks(
-+	struct xfs_mount *mp)
-+{
-+	rcu_read_lock();
-+	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
-+		queue_delayed_work(xfs_syncd_wq, &mp->m_eofblocks_work,
-+			msecs_to_jiffies(xfs_syncd_centisecs * 10));
-+	rcu_read_unlock();
-+}
-+
-+STATIC void
-+xfs_eofblocks_worker(
-+	struct work_struct *work)
-+{
-+	struct xfs_mount *mp = container_of(to_delayed_work(work),
-+				struct xfs_mount, m_eofblocks_work);
-+	xfs_inodes_free_eofblocks(mp, XFS_DQ_PROJ, XFS_PROJID_DEFAULT,
-+		XFS_EOFBLOCKS_DEFAULT_MINFILESIZE, 0);
-+	xfs_queue_eofblocks(mp);
-+}
-+
- int
- xfs_syncd_init(
- 	struct xfs_mount	*mp)
-@@ -496,6 +524,7 @@ xfs_syncd_init(
- 	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
- 	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-+	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 
- 	xfs_syncd_queue_sync(mp);
- 
-@@ -508,6 +537,7 @@ xfs_syncd_stop(
- {
- 	cancel_delayed_work_sync(&mp->m_sync_work);
- 	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_delayed_work_sync(&mp->m_eofblocks_work);
- 	cancel_work_sync(&mp->m_flush_work);
- }
- 
-@@ -1159,6 +1189,9 @@ __xfs_inode_set_eofblocks_tag(
- 				   XFS_ICI_EOFBLOCKS_TAG);
- 		spin_unlock(&ip->i_mount->m_perag_lock);
- 
-+		/* kick off background trimming */
-+		xfs_queue_eofblocks(ip->i_mount);
-+
- 		trace_xfs_perag_set_eofblocks(ip->i_mount, pag->pag_agno,
- 					      -1, _RET_IP_);
- 	}
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 78aca41..3ce8c3f 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -45,6 +45,9 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
- 
- #define EOFBLOCKS_WAIT		0x0001
- 
-+/* TODO: should we have a tunable? */
-+#define XFS_EOFBLOCKS_DEFAULT_MINFILESIZE 1024 * 1024 * 100
-+
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
- int xfs_inodes_free_eofblocks(struct xfs_mount *, int, uint32_t, uint64_t, int);
+This patchset is marked RFC because aside from general review, I have some
+questions on the best approach for several bits (marked with 'TODO' comments),
+most notably whether we should include new tunables for the background scanning.
+Some further testing is warranted, but I suspect that using the syncd default of
+30s might be a bit too aggressive for large files.
+
+These patches have been lightly unit tested and run through xfstests. Thoughts
+appreciated.
+
+Brian
+
+P.S., Credit to Dave Chinner for early review and guidance on design.
+
+Brian Foster (4):
+  xfs: add EOFBLOCKS inode tagging/untagging
+  xfs: create function to scan and clear EOFBLOCKS inodes
+  xfs: add FREE_EOFBLOCKS ioctl
+  xfs: add background scanning to clear EOFBLOCKS inodes
+
+ fs/xfs/xfs_ag.h       |    1 +
+ fs/xfs/xfs_fs.h       |   10 ++
+ fs/xfs/xfs_inode.h    |    8 ++-
+ fs/xfs/xfs_ioctl.c    |   25 +++++
+ fs/xfs/xfs_iomap.c    |    7 ++
+ fs/xfs/xfs_iops.c     |    3 +
+ fs/xfs/xfs_mount.h    |    2 +
+ fs/xfs/xfs_quota.h    |    1 +
+ fs/xfs/xfs_quotaops.c |    2 +-
+ fs/xfs/xfs_sync.c     |  277 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sync.h     |    9 ++
+ fs/xfs/xfs_trace.h    |    5 +
+ fs/xfs/xfs_vnodeops.c |   16 ++-
+ fs/xfs/xfs_vnodeops.h |    2 +
+ 14 files changed, 362 insertions(+), 6 deletions(-)
+
 -- 
 1.7.7.6
 
