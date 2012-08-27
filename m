@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7R0JR6P202508 for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 19:19:27 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 8niCBK4iV2m6x62F for
-	<xfs@oss.sgi.com>; Sun, 26 Aug 2012 17:20:16 -0700 (PDT)
-Message-ID: <503ABD37.7090006@redhat.com>
-Date: Sun, 26 Aug 2012 19:20:07 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q7R0U361204215 for <xfs@oss.sgi.com>; Sun, 26 Aug 2012 19:30:03 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	YcCZHHbipH9PEn0O for <xfs@oss.sgi.com>;
+	Sun, 26 Aug 2012 17:30:51 -0700 (PDT)
+Date: Mon, 27 Aug 2012 10:30:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: lockdep warning with sb_internal#2
+Message-ID: <20120827003047.GA13691@dastard>
+References: <alpine.DEB.2.00.1208260924310.13468@cobra.newdream.net>
 MIME-Version: 1.0
-Subject: [PATCH] xfsdump: save & restore 32-bit projids
+Content-Disposition: inline
+In-Reply-To: <alpine.DEB.2.00.1208260924310.13468@cobra.newdream.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,121 +22,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWM=?=@oss.sgi.com, Bill Kendall <wkendall@sgi.com>, Boris Ranto <branto@redhat.com>
+To: Sage Weil <sage@inktank.com>
+Cc: xfs@oss.sgi.com
 
-Q3VycmVudCB4ZnNkdW1wL3hmc3Jlc3RvcmUgb25seSByZWNvZ25pemUgdGhlIGxvd2VyIDE2IGJp
-dHMgb2YgdGhlIHByb2ppZC4KV2l0aCB0aGlzIHBhdGNoLCB0aGUgZnVsbCAzMiBiaXRzIGFyZSBk
-dW1wZWQgJiByZXN0b3JlZC4KClJlcG9ydGVkLWJ5OiBCb3JpcyBSYW50byA8YnJhbnRvQHJlZGhh
-dC5jb20+CkNjOiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1hdmVuLnBsPgpTaWduZWQt
-b2ZmLWJ5OiBFcmljIFNhbmRlZW4gPHNhbmRlZW5AcmVkaGF0LmNvbT4KLS0tCgpUaGlzIGFsc28g
-YWRkcyBhIGRlZmluaXRpb24gZm9yIGJzX2ZvcmtvZmYsIGJ1dCBJIGRvbid0IHRoaW5rCnRoYXQg
-aXMgc29tZXRoaW5nIHdoaWNoIHNob3VsZCBnZXQgc2F2ZWQgJiByZXN0b3JlZCwgY29ycmVjdD8K
-ClRCSCBJJ3ZlIGRvbmUgdmVyeSBsaXR0bGUgaGFja2luZyBvbiB4ZnNkdW1wLiAgSSB0aGluayB0
-aGlzCnJlcXVpcmVzIGEgbmV3IHZlcnNpb24sIGJ1dCBub3Qgc3VyZS4gIFRoaXMgc2VlbXMgdG8g
-d29yayBidXQKbWF5IG5lZWQgc2FuaXR5IGNoZWNrcyAmIGZpeHVwcy4gIEFuZCwgb2YgY291cnNl
-LCBhbiB4ZnN0ZXN0LgoKVGhhbmtzLAotRXJpYwoKCmRpZmYgLS1naXQgYS9jb21tb24vYXJjaF94
-bGF0ZS5jIGIvY29tbW9uL2FyY2hfeGxhdGUuYwppbmRleCBjMTU2MzEzLi5lNDJhYmQ1IDEwMDY0
-NAotLS0gYS9jb21tb24vYXJjaF94bGF0ZS5jCisrKyBiL2NvbW1vbi9hcmNoX3hsYXRlLmMKQEAg
-LTM3Niw3ICszNzYsOCBAQCB4bGF0ZV9ic3RhdChic3RhdF90ICpiczEsIGJzdGF0X3QgKmJzMiwg
-aW50IGRpcikKIAlJWExBVEUoYnMxLCBiczIsIGJzX2V4dHNpemUpOwogCUlYTEFURShiczEsIGJz
-MiwgYnNfZXh0ZW50cyk7CiAJSVhMQVRFKGJzMSwgYnMyLCBic19nZW4pOwotCUlYTEFURShiczEs
-IGJzMiwgYnNfcHJvamlkKTsKKwlJWExBVEUoYnMxLCBiczIsIGJzX3Byb2ppZF9sbyk7CisJSVhM
-QVRFKGJzMSwgYnMyLCBic19wcm9qaWRfaGkpOwogCUlYTEFURShiczEsIGJzMiwgYnNfZG1ldm1h
-c2spOwogCUlYTEFURShiczEsIGJzMiwgYnNfZG1zdGF0ZSk7CiAKZGlmZiAtLWdpdCBhL2NvbW1v
-bi9jb250ZW50X2lub2RlLmggYi9jb21tb24vY29udGVudF9pbm9kZS5oCmluZGV4IGEyNWI2NmUu
-LjhmMDM5MGMgMTAwNjQ0Ci0tLSBhL2NvbW1vbi9jb250ZW50X2lub2RlLmgKKysrIGIvY29tbW9u
-L2NvbnRlbnRfaW5vZGUuaApAQCAtMTczLDggKzE3MywxMCBAQCBzdHJ1Y3QgYnN0YXQgewkJCQkv
-KgkJICAgICBieXRlcyBhY2N1bSAqLwogCWludDMyX3QJCWJzX2V4dHNpemU7CS8qIGV4dGVudCBz
-aXplCQkgNCAgICA1MCAqLwogCWludDMyX3QJCWJzX2V4dGVudHM7CS8qIG51bWJlciBvZiBleHRl
-bnRzCSA0ICAgIDU0ICovCiAJdV9pbnQzMl90CWJzX2dlbjsJCS8qIGdlbmVyYXRpb24gY291bnQJ
-IDQgICAgNTggKi8KLQl1X2ludDE2X3QJYnNfcHJvamlkOwkvKiBwcm9qZWN0IGlkCQkgMiAgICA1
-YSAqLwotCWNoYXIJCWJzX3BhZFsgMTQgXTsJLyogZm9yIGV4cGFuc2lvbgkgZSAgICA2OCAqLwor
-CXVfaW50MTZfdAlic19wcm9qaWRfbG87CS8qIGxvdyAxNiBvZiBwcm9qZWN0IGlkCSAyICAgIDVh
-ICovCisJdV9pbnQxNl90CWJzX2ZvcmtvZmY7CS8qIGlub2RlIGZvcmsgb2Zmc2V0CSAyICAgIDVj
-ICovCisJdV9pbnQxNl90CWJzX3Byb2ppZF9oaTsJLyogaGkgMTYgb2YgcHJvamVjdCBpZAkgMiAg
-ICA1ZSAqLworCWNoYXIJCWJzX3BhZFsgMTAgXTsJLyogZm9yIGV4cGFuc2lvbgkgZSAgICA2OCAq
-LwogCXVfaW50MzJfdAlic19kbWV2bWFzazsJLyogRE1JIGV2ZW50IG1hc2sgICAgICAgIDQgICAg
-NmMgKi8KIAl1X2ludDE2X3QJYnNfZG1zdGF0ZTsJLyogRE1JIHN0YXRlIGluZm8gICAgICAgIDIg
-ICAgNmUgKi8KIAljaGFyCQlic19wYWQxWyAxOCBdOwkvKiBmb3IgZXhwYW5zaW9uICAgICAgICAx
-MiAgICA4MCAqLwpAQCAtMTg0LDYgKzE4NiwxOCBAQCBzdHJ1Y3QgYnN0YXQgewkJCQkvKgkJICAg
-ICBieXRlcyBhY2N1bSAqLwogCiB0eXBlZGVmIHN0cnVjdCBic3RhdCBic3RhdF90OwogCisvKgor
-ICogUHJvamVjdCBxdW90YSBpZCBoZWxwZXJzIChwcmV2aW91c2x5IHByb2ppZCB3YXMgMTZiaXQg
-b25seQorICogYW5kIHVzaW5nIHR3byAxNmJpdCB2YWx1ZXMgdG8gaG9sZCBuZXcgMzJiaXQgcHJv
-amlkIHdhcyBjaG9vc2VuCisgKiB0byByZXRhaW4gY29tcGF0aWJpbGl0eSB3aXRoICJvbGQiIGZp
-bGVzeXN0ZW1zKS4KKyAqLworc3RhdGljIGlubGluZSBfX3VpbnQzMl90Citic3RhdF9wcm9qaWQo
-c3RydWN0IGJzdGF0ICpicykKK3sKKyAgICAgICAgcmV0dXJuIChfX3VpbnQzMl90KWJzLT5ic19w
-cm9qaWRfaGkgPDwgMTYgfCBicy0+YnNfcHJvamlkX2xvOworfQorCisKIC8qIGV4dGVuZGVkIGlu
-b2RlIGZsYWdzIHRoYXQgY2FuIG9ubHkgYmUgc2V0IGFmdGVyIGFsbCBkYXRhCiAgKiBoYXMgYmVl
-biByZXN0b3JlZCB0byBhIGZpbGUuCiAgKi8KZGlmZiAtLWdpdCBhL2NvbW1vbi9nbG9iYWwuYyBi
-L2NvbW1vbi9nbG9iYWwuYwppbmRleCA4ZTQ5ZDhiLi4xNzkzZmY0IDEwMDY0NAotLS0gYS9jb21t
-b24vZ2xvYmFsLmMKKysrIGIvY29tbW9uL2dsb2JhbC5jCkBAIC0yODEsNiArMjgxLDcgQEAgZ2xv
-YmFsX3ZlcnNpb25fY2hlY2soIHVfaW50MzJfdCB2ZXJzaW9uICkKIAkJY2FzZSBHTE9CQUxfSERS
-X1ZFUlNJT05fMToKIAkJY2FzZSBHTE9CQUxfSERSX1ZFUlNJT05fMjoKIAkJY2FzZSBHTE9CQUxf
-SERSX1ZFUlNJT05fMzoKKwkJY2FzZSBHTE9CQUxfSERSX1ZFUlNJT05fNDoKIAkJCXJldHVybiBC
-T09MX1RSVUU7CiAJCWRlZmF1bHQ6CiAJCQlyZXR1cm4gQk9PTF9GQUxTRTsKZGlmZiAtLWdpdCBh
-L2NvbW1vbi9nbG9iYWwuaCBiL2NvbW1vbi9nbG9iYWwuaAppbmRleCA2NTU2YTY4Li41MTM4ZWQ4
-IDEwMDY0NAotLS0gYS9jb21tb24vZ2xvYmFsLmgKKysrIGIvY29tbW9uL2dsb2JhbC5oCkBAIC0y
-OCwxMyArMjgsMTUgQEAKICNkZWZpbmUgR0xPQkFMX0hEUl9WRVJTSU9OXzEJMQogI2RlZmluZSBH
-TE9CQUxfSERSX1ZFUlNJT05fMgkyCiAjZGVmaW5lIEdMT0JBTF9IRFJfVkVSU0lPTl8zCTMKLQkv
-KiB2ZXJzaW9uIDMgdXNlcyB0aGUgZnVsbCAzMi1iaXQgaW5vZGUgZ2VuZXJhdGlvbiBudW1iZXIg
-aW4gZGlyZW50aGRyX3QuCisjZGVmaW5lIEdMT0JBTF9IRFJfVkVSU0lPTl80CTQKKwkvKiB2ZXJz
-aW9uIDQgYWRkcyAzMi1iaXQgcHJvamlkIChwcm9qaWRfaGkpCisJICogdmVyc2lvbiAzIHVzZXMg
-dGhlIGZ1bGwgMzItYml0IGlub2RlIGdlbmVyYXRpb24gbnVtYmVyIGluIGRpcmVudGhkcl90Lgog
-CSAqIHZlcnNpb24gMiBhZGRzIGVuY29kaW5nIG9mIGhvbGVzIGFuZCBhIGNoYW5nZSB0byBvbi10
-YXBlIGludmVudG9yeSBmb3JtYXQuCiAJICogdmVyc2lvbiAxIGFkZHMgZXh0ZW5kZWQgZmlsZSBh
-dHRyaWJ1dGUgZHVtcGluZy4KIAkgKiB2ZXJzaW9uIDAgeGZzcmVzdG9yZSBjYW4ndCBoYW5kbGUg
-bWVkaWEgcHJvZHVjZWQKIAkgKiBieSB2ZXJzaW9uIDEgeGZzZHVtcC4gCiAJICovCi0jZGVmaW5l
-IEdMT0JBTF9IRFJfVkVSU0lPTglHTE9CQUxfSERSX1ZFUlNJT05fMworI2RlZmluZSBHTE9CQUxf
-SERSX1ZFUlNJT04JR0xPQkFMX0hEUl9WRVJTSU9OXzQKIAogI2RlZmluZSBHTE9CQUxfSERSX1NU
-UklOR19TWgkweDEwMAogI2RlZmluZSBHTE9CQUxfSERSX1RJTUVfU1oJNApkaWZmIC0tZ2l0IGEv
-ZHVtcC9jb250ZW50LmMgYi9kdW1wL2NvbnRlbnQuYwppbmRleCA0ODEyOTdhLi5lYzVlOTU0IDEw
-MDY0NAotLS0gYS9kdW1wL2NvbnRlbnQuYworKysgYi9kdW1wL2NvbnRlbnQuYwpAQCAtNDkyNyw3
-ICs0OTI3LDggQEAgY29weV94ZnNfYnN0YXQoYnN0YXRfdCAqZHN0LCB4ZnNfYnN0YXRfdCAqc3Jj
-KQogCWRzdC0+YnNfZXh0c2l6ZSA9IHNyYy0+YnNfZXh0c2l6ZTsKIAlkc3QtPmJzX2V4dGVudHMg
-PSBzcmMtPmJzX2V4dGVudHM7CiAJZHN0LT5ic19nZW4gPSBzcmMtPmJzX2dlbjsKLQlkc3QtPmJz
-X3Byb2ppZCA9IHNyYy0+YnNfcHJvamlkOworCWRzdC0+YnNfcHJvamlkX2xvID0gc3JjLT5ic19w
-cm9qaWRfbG87CisJZHN0LT5ic19wcm9qaWRfaGkgPSBzcmMtPmJzX3Byb2ppZF9oaTsKIAlkc3Qt
-PmJzX2RtZXZtYXNrID0gc3JjLT5ic19kbWV2bWFzazsKIAlkc3QtPmJzX2Rtc3RhdGUgPSBzcmMt
-PmJzX2Rtc3RhdGU7CiB9CmRpZmYgLS1naXQgYS9yZXN0b3JlL2NvbnRlbnQuYyBiL3Jlc3RvcmUv
-Y29udGVudC5jCmluZGV4IDMxMTBjZGYuLmVkZDAwZWQgMTAwNjQ0Ci0tLSBhL3Jlc3RvcmUvY29u
-dGVudC5jCisrKyBiL3Jlc3RvcmUvY29udGVudC5jCkBAIC03NDUxLDcgKzc0NTEsNyBAQCByZXN0
-b3JlX3JlZyggZHJpdmVfdCAqZHJpdmVwLAogCQltZW1zZXQoKHZvaWQgKikmZnN4YXR0ciwgMCwg
-c2l6ZW9mKCBmc3hhdHRyICkpOwogCQlmc3hhdHRyLmZzeF94ZmxhZ3MgPSBic3RhdHAtPmJzX3hm
-bGFncyAmIH5QT1NUX0RBVEFfWEZMQUdTOwogCQlmc3hhdHRyLmZzeF9leHRzaXplID0gKHVfaW50
-MzJfdCkgYnN0YXRwLT5ic19leHRzaXplOwotCQlmc3hhdHRyLmZzeF9wcm9qaWQgPSBic3RhdHAt
-PmJzX3Byb2ppZDsKKwkJZnN4YXR0ci5mc3hfcHJvamlkID0gYnN0YXRfcHJvamlkKGJzdGF0cCk7
-CiAKIAkJcnZhbCA9IGlvY3RsKCAqZmRwLCBYRlNfSU9DX0ZTU0VUWEFUVFIsICh2b2lkICopJmZz
-eGF0dHIpOwogCQlpZiAoIHJ2YWwgPCAwICkgewpAQCAtNzcwMiw3ICs3NzAyLDcgQEAgcmVzdG9y
-ZV9jb21wbGV0ZV9yZWcoc3RyZWFtX2NvbnRleHRfdCAqc3RyY3h0cCkKIAkJbWVtc2V0KCh2b2lk
-ICopJmZzeGF0dHIsIDAsIHNpemVvZiggZnN4YXR0ciApKTsKIAkJZnN4YXR0ci5mc3hfeGZsYWdz
-ID0gYnN0YXRwLT5ic194ZmxhZ3M7CiAJCWZzeGF0dHIuZnN4X2V4dHNpemUgPSAodV9pbnQzMl90
-KWJzdGF0cC0+YnNfZXh0c2l6ZTsKLQkJZnN4YXR0ci5mc3hfcHJvamlkID0gYnN0YXRwLT5ic19w
-cm9qaWQ7CisJCWZzeGF0dHIuZnN4X3Byb2ppZCA9IGJzdGF0X3Byb2ppZChic3RhdHApOwogCiAJ
-CXJ2YWwgPSBpb2N0bCggZmQsIFhGU19JT0NfRlNTRVRYQVRUUiwgKHZvaWQgKikmZnN4YXR0ciAp
-OwogCQlpZiAoIHJ2YWwgPCAwICkgewpkaWZmIC0tZ2l0IGEvcmVzdG9yZS9kaXJhdHRyLmMgYi9y
-ZXN0b3JlL2RpcmF0dHIuYwppbmRleCA2OGQxYjQ5Li44YTFmYjA2IDEwMDY0NAotLS0gYS9yZXN0
-b3JlL2RpcmF0dHIuYworKysgYi9yZXN0b3JlL2RpcmF0dHIuYwpAQCAtNDM0LDcgKzQzNCw3IEBA
-IGRpcmF0dHJfYWRkKCBmaWxlaGRyX3QgKmZoZHJwICkKIAlkaXJhdHRyLmRfY3RpbWUgPSAoIHRp
-bWUzMl90IClmaGRycC0+Zmhfc3RhdC5ic19jdGltZS50dl9zZWM7CiAJZGlyYXR0ci5kX3hmbGFn
-cyA9IGZoZHJwLT5maF9zdGF0LmJzX3hmbGFnczsKIAlkaXJhdHRyLmRfZXh0c2l6ZSA9ICggdV9p
-bnQzMl90IClmaGRycC0+Zmhfc3RhdC5ic19leHRzaXplOwotCWRpcmF0dHIuZF9wcm9qaWQgPSBm
-aGRycC0+Zmhfc3RhdC5ic19wcm9qaWQ7CisJZGlyYXR0ci5kX3Byb2ppZCA9IGJzdGF0X3Byb2pp
-ZCgmKGZoZHJwLT5maF9zdGF0KSk7CiAJZGlyYXR0ci5kX2RtZXZtYXNrID0gZmhkcnAtPmZoX3N0
-YXQuYnNfZG1ldm1hc2s7CiAJZGlyYXR0ci5kX2Rtc3RhdGUgPSAoIHVfaW50MzJfdCApZmhkcnAt
-PmZoX3N0YXQuYnNfZG1zdGF0ZTsKICNpZmRlZiBESVJBVFRSQ0hLCkBAIC04MTIsNyArODEyLDcg
-QEAgZGlyYXR0cl91cGRhdGUoIGRhaF90IGRhaCwgZmlsZWhkcl90ICpmaGRycCApCiAJZGlyYXR0
-ci5kX2N0aW1lID0gKCB0aW1lMzJfdCApZmhkcnAtPmZoX3N0YXQuYnNfY3RpbWUudHZfc2VjOwog
-CWRpcmF0dHIuZF94ZmxhZ3MgPSBmaGRycC0+Zmhfc3RhdC5ic194ZmxhZ3M7CiAJZGlyYXR0ci5k
-X2V4dHNpemUgPSAoIHVfaW50MzJfdCApZmhkcnAtPmZoX3N0YXQuYnNfZXh0c2l6ZTsKLQlkaXJh
-dHRyLmRfcHJvamlkID0gZmhkcnAtPmZoX3N0YXQuYnNfcHJvamlkOworCWRpcmF0dHIuZF9wcm9q
-aWQgPSBic3RhdF9wcm9qaWQoJihmaGRycC0+Zmhfc3RhdCkpOwogCWRpcmF0dHIuZF9kbWV2bWFz
-ayA9IGZoZHJwLT5maF9zdGF0LmJzX2RtZXZtYXNrOwogCWRpcmF0dHIuZF9kbXN0YXRlID0gKCB1
-X2ludDMyX3QgKWZoZHJwLT5maF9zdGF0LmJzX2Rtc3RhdGU7CiAJZGlyYXR0ci5kX2V4dGF0dHJv
-ZmYgPSBESVJBVFRSX0VYVEFUVFJPRkZOVUxMOwoKCl9fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0
-dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On Sun, Aug 26, 2012 at 09:25:50AM -0700, Sage Weil wrote:
+> In case nobody has seen this yet:
+
+No, I haven't, but I haven't done a TOT lockdep run recently.
+
+> [10777.847108] ======================================================
+> [10777.873747] [ INFO: possible circular locking dependency detected ]
+> [10777.900948] 3.6.0-rc2-ceph-00143-g995fc06 #1 Not tainted
+> [10777.928082] -------------------------------------------------------
+> [10777.956154] fill2/17839 is trying to acquire lock:
+> [10777.982362]  ((&mp->m_flush_work)){+.+.+.}, at: [<ffffffff81072060>] wait_on_work+0x0/0x160
+> [10778.033864] 
+> [10778.033864] but task is already holding lock:
+> [10778.080206]  (sb_internal#2){.+.+.+}, at: [<ffffffffa03dde5d>] xfs_trans_alloc+0x2d/0x50 [xfs]
+> [10778.132743] 
+> [10778.132743] which lock already depends on the new lock.
+
+To tell the truth, I'm having trouble understanding what this means,
+because:
+
+> [10778.205654] the existing dependency chain (in reverse order) is:
+> [10778.257150] 
+> [10778.257150] -> #1 (sb_internal#2){.+.+.+}:
+> [10778.306678]        [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
+> [10778.336430]        [<ffffffff816350dd>] _raw_spin_lock_irq+0x3d/0x50
+> [10778.367408]        [<ffffffff81633740>] wait_for_common+0x30/0x160
+> [10778.398486]        [<ffffffff8163394d>] wait_for_completion+0x1d/0x20
+> [10778.429780]        [<ffffffffa038b86d>] xfs_buf_iowait+0x6d/0xf0 [xfs]
+> [10778.461388]        [<ffffffffa038ba20>] _xfs_buf_read+0x40/0x50 [xfs]
+> [10778.493170]        [<ffffffffa038bad3>] xfs_buf_read_map+0xa3/0x110 [xfs]
+> [10778.525708]        [<ffffffffa03e7f7d>] xfs_trans_read_buf_map+0x1fd/0x4a0 [xfs]
+> [10778.585740]        [<ffffffffa03a4a18>] xfs_read_agf+0x78/0x1c0 [xfs]
+> [10778.619869]        [<ffffffffa03a4b9a>] xfs_alloc_read_agf+0x3a/0xf0 [xfs]
+> [10778.654683]        [<ffffffffa03a511a>] xfs_alloc_pagf_init+0x1a/0x40 [xfs]
+> [10778.688992]        [<ffffffffa03af034>] xfs_bmap_btalloc_nullfb+0x224/0x370 [xfs]
+> [10778.749210]        [<ffffffffa03af5b6>] xfs_bmap_btalloc+0x436/0x830 [xfs]
+> [10778.783502]        [<ffffffffa03af9d4>] xfs_bmap_alloc+0x24/0x40 [xfs]
+> [10778.816807]        [<ffffffffa03b4e6e>] xfs_bmapi_allocate+0xce/0x2d0 [xfs]
+> [10778.850048]        [<ffffffffa03b7a8b>] xfs_bmapi_write+0x47b/0x7a0 [xfs]
+> [10778.882237]        [<ffffffffa03c1128>] xfs_da_grow_inode_int+0xc8/0x2e0 [xfs]
+> [10778.940695]        [<ffffffffa03c3d8c>] xfs_dir2_grow_inode+0x6c/0x140 [xfs]
+> [10778.974521]        [<ffffffffa03c603d>] xfs_dir2_sf_to_block+0xbd/0x530 [xfs]
+> [10779.007733]        [<ffffffffa03cc873>] xfs_dir2_sf_addname+0x3a3/0x520 [xfs]
+> [10779.041104]        [<ffffffffa03c472c>] xfs_dir_createname+0x14c/0x1a0 [xfs]
+
+sb_internal#2 reference is taken here:
+
+> [10779.074438]        [<ffffffffa039dec3>] xfs_rename+0x4f3/0x6f0 [xfs]
+> [10779.107092]        [<ffffffffa0396776>] xfs_vn_rename+0x66/0x70 [xfs]
+> [10779.140318]        [<ffffffff8118a68d>] vfs_rename+0x31d/0x4f0
+> [10779.172667]        [<ffffffff8118d026>] sys_renameat+0x1f6/0x230
+> [10779.204781]        [<ffffffff8118d07b>] sys_rename+0x1b/0x20
+> [10779.236289]        [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
+
+but this path doesn't touch mp->m_flush_work at all, and while it is in
+a transaction context (i.e. holds sb_internal#2), it is blocked
+waiting for an IO completion on a private completion queue. i.e:
+
+	wait_for_completion(&bp->b_iowait);
+
+> [10779.268294] 
+> [10779.268294] -> #0 ((&mp->m_flush_work)){+.+.+.}:
+> [10779.323093]        [<ffffffff810b25e8>] __lock_acquire+0x1ac8/0x1b90
+> [10779.356168]        [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
+> [10779.388639]        [<ffffffff810720a1>] wait_on_work+0x41/0x160
+> [10779.420860]        [<ffffffff81072203>] flush_work_sync+0x43/0x90
+> [10779.453189]        [<ffffffffa039cc7f>] xfs_flush_inodes+0x2f/0x40 [xfs]
+
+sb_internal#2 reference is taken here:
+
+> [10779.486315]        [<ffffffffa039fd2e>] xfs_create+0x3be/0x640 [xfs]
+> [10779.518341]        [<ffffffffa039688f>] xfs_vn_mknod+0x8f/0x1c0 [xfs]
+> [10779.549954]        [<ffffffffa03969f3>] xfs_vn_create+0x13/0x20 [xfs]
+> [10779.581458]        [<ffffffff8118aeb5>] vfs_create+0xb5/0x120
+> [10779.611999]        [<ffffffff8118bcc0>] do_last+0xda0/0xf00
+> [10779.642156]        [<ffffffff8118bed3>] path_openat+0xb3/0x4c0
+> [10779.671827]        [<ffffffff8118c6f2>] do_filp_open+0x42/0xa0
+> [10779.700768]        [<ffffffff8117b040>] do_sys_open+0x100/0x1e0
+> [10779.729733]        [<ffffffff8117b141>] sys_open+0x21/0x30
+> [10779.758038]        [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
+
+but this path doesn't hit buffer IO wait queues at all - it has
+blocked at:
+
+	flush_work_sync(&mp->m_flush_work);
+
+Which is serviced by a work queue that is completely separate to the
+buffer IO completion work queues.  So apart from both threads
+holding sb_internal#2, I can't see how they can deadlock.
+
+It seems to me that lockdep is messed up internally if it thinks
+mp->m_flush_work and bp->b_iowait are the same....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
