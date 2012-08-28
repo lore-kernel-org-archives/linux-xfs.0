@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7SJqLrj141864 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 14:52:21 -0500
+	q7SJq5vo141835 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 14:52:05 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	huzCgb7n6etVXk4s (version=TLSv1 cipher=AES256-SHA bits=256
+	Bari7qnPmFHbPSVo (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Aug 2012 12:53:12 -0700 (PDT)
-Date: Tue, 28 Aug 2012 15:53:10 -0400
+	Tue, 28 Aug 2012 12:52:56 -0700 (PDT)
+Date: Tue, 28 Aug 2012 15:52:54 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 07/18] xfstests: kill hangcheck stuff from check
-Message-ID: <20120828195310.GF15060@infradead.org>
+Subject: Re: [PATCH 06/18] xfstests: clean up and simply check CLI option
+	parsing
+Message-ID: <20120828195254.GE15060@infradead.org>
 References: <1343294892-20991-1-git-send-email-david@fromorbit.com>
-	<1343294892-20991-8-git-send-email-david@fromorbit.com>
+	<1343294892-20991-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1343294892-20991-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1343294892-20991-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,13 +33,15 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Jul 26, 2012 at 07:28:01PM +1000, Dave Chinner wrote:
+On Thu, Jul 26, 2012 at 07:28:00PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> This is an old script from the auto-qa days back at SGI. It no
-> longer is in use or, AFAIK, ever been used for xfstests. If anyone
-> needs it, they can pull it back out of git, so lets remove it to
-> simplify check.
+> The option parise in a messy loop of option parsing and actions on
+> secondary arguments. Turn it into something much neater and esay to
+> understand rather than a mess of temporary variables and tortured
+> logic...
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
 Looks good,
 
