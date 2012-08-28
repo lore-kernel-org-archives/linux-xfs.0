@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7S99Ve8071992 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 04:09:31 -0500
+	q7SCv4Pf097255 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 07:57:04 -0500
 Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
 	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	5axl6jmHU8ZE0t8A (version=TLSv1 cipher=RC4-SHA bits=128
+	lSW22UKkKRo68VUl (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Aug 2012 02:10:22 -0700 (PDT)
-Received: by obbwd18 with SMTP id wd18so7694602obb.26
-	for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 02:10:21 -0700 (PDT)
+	Tue, 28 Aug 2012 05:57:55 -0700 (PDT)
+Received: by obbwd18 with SMTP id wd18so8031306obb.26
+	for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 05:57:54 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <CAAp5ZgNVc+CA+Lfr20WsB4WgFPj=WMbkiNUVFsNS_GUFwgVLJA@mail.gmail.com>
-References: <CAAp5ZgNeJq0Tuv5e-zKHxuUCavwXGJfWzZROypSzsXNwwbtd+w@mail.gmail.com>
-	<CAAxjCEzx7PAQ0wL5=hJtMsK=WNKNY=n7g_+vW6otVK-VqQQiOA@mail.gmail.com>
-	<CAAp5ZgNVc+CA+Lfr20WsB4WgFPj=WMbkiNUVFsNS_GUFwgVLJA@mail.gmail.com>
-Date: Tue, 28 Aug 2012 11:10:21 +0200
-Message-ID: <CAAxjCEy7-LcCuskWXgRgeCZh1Q2JcZFxWC_xBQRS08VkUL30Dg@mail.gmail.com>
-Subject: Re: [PATCH] German translation for xfsdump
-From: Stefan Ring <stefanrin@gmail.com>
-Content-Type: multipart/mixed; boundary=e89a8fb1f116d8c99a04c84fcf5a
+In-Reply-To: <503C07F4.2080706@sandeen.net>
+References: <CAFZPdfjeDGXfhAP4hnnrdA6Fpr18pEq6vH726HpfduPp6vw3-A@mail.gmail.com>
+	<503C07F4.2080706@sandeen.net>
+Date: Tue, 28 Aug 2012 14:57:54 +0200
+Message-ID: <CAFZPdfgfh_Qt5O452vgbAW4ZvLWcC839RRs_PdAtJ8=fR8ZN3w@mail.gmail.com>
+Subject: Re: [PATCH] xfstests: Add test case to test xfs projid32bit
+	functionality a bit more extensively.
+From: Boris Ranto <ranto.boris@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,156 +26,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
---e89a8fb1f116d8c99a04c84fcf5a
-Content-Type: text/plain; charset=UTF-8
+On Tue, Aug 28, 2012 at 1:51 AM, Eric Sandeen <sandeen@sandeen.net> wrote:
+> On 8/27/12 5:04 AM, Boris Ranto wrote:
+>>  The test covers several areas including enabling projid32bit functionality dynamically by xfs_admin, dumping, restoring, quota reporting and xfs_db projid values reporting.
+>>  At the time of creation, the test hit two bugs: one for broken xfsdump/xfsrestore functionality and one for enabling projid32bit functionality with xfs_admin on a LVM device (SCRATCH_DEV must be an LVM device to hit this).
+>
+> FWIW, with a bit of investigation I think the lvm behavior may be an lvm bug.  IOW this should never happen;
+> somehow buffered IO to the LVM device seems to be getting lost:
+>
+> # xfs_db -r -c version  /dev/mapper/vg-01-xfscratch
+> versionnum [0xb4a4+0x8a] = V4,NLINK,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT,PROJID32BIT
+>
+> # echo 3 > /proc/sys/vm/drop_caches
+>
+> # xfs_db -r -c version  /dev/mapper/vg-01-xfscratch
+> versionnum [0xb4e4+0xa] = V4,NLINK,QUOTA,ALIGN,DIRV2,LOGV2,EXTFLG,MOREBITS,ATTR2,LAZYSBCOUNT
+>
+> But I guess the test itself doesn't explicitly require lvm, so no big deal there.
+>
+> What is the point of using loopback during dump & restore?  Why not just dump to $tmp
+> and restore to $SCRATCH_DEV, either after a fresh mkfs, or to a subdir of the existing
+> filesystem?
+>
+> I get nervous about the loopback handling complexity....
+>
 
-On Sat, Aug 4, 2012 at 1:50 AM, Nathan Scott <nathans@debian.org> wrote:
-> Please send a follow-up patch, thanks!
+I just wanted to keep the original data and compare them with diff.
+The subdirectory dump will work fine, as well. I'll post the reworked
+version of the patch, soon.
 
---e89a8fb1f116d8c99a04c84fcf5a
-Content-Type: application/octet-stream; name="xfsdump-de-followup1.patch"
-Content-Disposition: attachment; filename="xfsdump-de-followup1.patch"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_h6erz7770
+Boris
 
-ZGlmZiAtLWdpdCBhL3BvL2RlLnBvIGIvcG8vZGUucG8KaW5kZXggMGU2MDA1MS4uODgxMTM1NiAx
-MDA2NDQKLS0tIGEvcG8vZGUucG8KKysrIGIvcG8vZGUucG8KQEAgLTcsNyArNyw3IEBAIG1zZ3N0
-ciAiIgogIlByb2plY3QtSWQtVmVyc2lvbjogeGZzZHVtcCAzLjAuNFxuIgogIlJlcG9ydC1Nc2dp
-ZC1CdWdzLVRvOiBOYXRoYW4gU2NvdHQgbmF0aGFuc0BkZWJpYW4ub3JnXG4iCiAiUE9ULUNyZWF0
-aW9uLURhdGU6IDIwMTAtMDEtMTQgMTM6NDIrMTEwMFxuIgotIlBPLVJldmlzaW9uLURhdGU6IDIw
-MTAtMDQtMDEgMTk6MTErMDEwMFxuIgorIlBPLVJldmlzaW9uLURhdGU6IDIwMTItMDgtMjggMTA6
-NTgrMDIwMFxuIgogIkxhc3QtVHJhbnNsYXRvcjogQ2hyaXMgTGVpY2sgPGMubGVpY2tAdm9sbGJp
-by5kZT5cbiIKICJMYW5ndWFnZS1UZWFtOiBHZXJtYW4gPGRlYmlhbi1sMTBuLWdlcm1hbkBsaXN0
-cy5kZWJpYW4ub3JnPlxuIgogIk1JTUUtVmVyc2lvbjogMS4wXG4iCkBAIC02NSw3ICs2NSw3IEBA
-IG1zZ3N0ciAiVGFzdGF0dXItVW50ZXJicmVjaHVuZ1xuIgogIzogLi4vLi9jb21tb24vbWFpbi5j
-OjIyMTYgLi4vLi9yZXN0b3JlL3RyZWUuYzoyNjg0IC4uLy4vcmVzdG9yZS90cmVlLmM6MjcyNQog
-IzogLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo2ODcxIC4uLy4vcmVzdG9yZS9jb250ZW50LmM6Njkw
-NwogbXNnaWQgImVuZCBkaWFsb2ciCi1tc2dzdHIgIlNjaGx1w59kaWFsb2ciCittc2dzdHIgIlNj
-aGx1c3NkaWFsb2ciCiAKICM6IC4uLy4vY29tbW9uL2Rsb2cuYzoxMDkKICMsIGMtZm9ybWF0CkBA
-IC0xMjIwLDExICsxMjIwLDExIEBAIG1zZ3N0ciAiUHJvdG9rb2xsbmFjaHJpY2h0ZW5zdHVmZW4g
-YW56ZWlnZW4iCiAKICM6IC4uLy4vY29tbW9uL21haW4uYzoyMDkwCiBtc2dpZCAiaGlkZSBsb2cg
-bWVzc2FnZSBzdWJzeXN0ZW1zIgotbXNnc3RyICJQcm90b2tvbGxuYWNocmljaHRlbiBkZXMgVW50
-ZXJzeXN0ZW1zIHZlcmJlcmdlbiIKK21zZ3N0ciAiUHJvdG9rb2xsbmFjaHJpY2h0ZW51bnRlcnN5
-c3RlbWUgdmVyYmVyZ2VuIgogCiAjOiAuLi8uL2NvbW1vbi9tYWluLmM6MjA5MgogbXNnaWQgInNo
-b3cgbG9nIG1lc3NhZ2Ugc3Vic3lzdGVtcyIKLW1zZ3N0ciAiUHJvdG9rb2xsbmFjaHJpY2h0ZW4g
-ZGVzIFVudGVyc3lzdGVtcyBhbnplaWdlbiIKK21zZ3N0ciAiUHJvdG9rb2xsbmFjaHJpY2h0ZW51
-bnRlcnN5c3RlbWUgYW56ZWlnZW4iCiAKICM6IC4uLy4vY29tbW9uL21haW4uYzoyMDk2CiBtc2dp
-ZCAiaGlkZSBsb2cgbWVzc2FnZSB0aW1lc3RhbXBzIgpAQCAtMTI2NiwxMSArMTI2NiwxMSBAQCBt
-c2dzdHIgIlByb3Rva29sbG5hY2hyaWNodGVuc3R1ZmVuIHdlcmRlbiB2ZXJib3JnZW5cbiIKIAog
-IzogLi4vLi9jb21tb24vbWFpbi5jOjIxOTUKIG1zZ2lkICJzaG93aW5nIGxvZyBtZXNzYWdlIHN1
-YnN5c3RlbXNcbiIKLW1zZ3N0ciAiUHJvdG9rb2xsbmFjaHJpY2h0ZW4gZGVzIFVudGVyc3lzdGVt
-cyB3ZXJkZW4gYW5nZXplaWd0XG4iCittc2dzdHIgIlByb3Rva29sbG5hY2hyaWNodGVudW50ZXJz
-eXN0ZW1lIHdlcmRlbiBhbmdlemVpZ3RcbiIKIAogIzogLi4vLi9jb21tb24vbWFpbi5jOjIxOTcK
-IG1zZ2lkICJoaWRpbmcgbG9nIG1lc3NhZ2Ugc3Vic3lzdGVtc1xuIgotbXNnc3RyICJQcm90b2tv
-bGxuYWNocmljaHRlbiBkZXMgVW50ZXJzeXN0ZW1zIHdlcmRlbiB2ZXJib3JnZW5cbiIKK21zZ3N0
-ciAiUHJvdG9rb2xsbmFjaHJpY2h0ZW51bnRlcnN5c3RlbWUgd2VyZGVuIHZlcmJvcmdlblxuIgog
-CiAjOiAuLi8uL2NvbW1vbi9tYWluLmM6MjIwMgogbXNnaWQgInNob3dpbmcgbG9nIG1lc3NhZ2Ug
-dGltZXN0YW1wc1xuIgpAQCAtMTM5MiwxMyArMTM5MiwxMyBAQCBtc2dzdHIgIiIKICMsIGMtZm9y
-bWF0CiBtc2dpZCAidW5hYmxlIHRvIGFsbG9jYXRlIHNoYXJlZCBhcmVuYSBmb3IgdGhyZWFkIGxv
-Y2tzOiAlc1xuIgogbXNnc3RyICIiCi0iZXMga2FubiBrZWluIGdlbWVpbnNhbWVyIFNjaGF1cGxh
-dHogZsO8ciBUaHJlYWQtU3BlcnJlbiByZXNlcnZpZXJ0IHdlcmRlbjogIgorImVzIGthbm4ga2Vp
-biBnZW1laW5zYW1lciBTcGVpY2hlcnBsYXR6IGbDvHIgVGhyZWFkLVNwZXJyZW4gcmVzZXJ2aWVy
-dCB3ZXJkZW46ICIKICIlc1xuIgogCiAjOiAuLi8uL2NvbW1vbi9xbG9jay5jOjIxNQogIywgYy1m
-b3JtYXQKIG1zZ2lkICJ1bmFibGUgdG8gYWRkIHRocmVhZCB0byBzaGFyZWQgYXJlbmE6ICVzXG4i
-Ci1tc2dzdHIgImVzIGthbm4ga2VpbiBUaHJlYWQgenUgZ2VtZWluc2FtZW0gU2NoYXVwbGF0eiBo
-aW56dWdlZsO8Z3Qgd2VyZGVuOiAlc1xuIgorbXNnc3RyICJlcyBrYW5uIGtlaW4gVGhyZWFkIHp1
-IGdlbWVpbnNhbWVtIFNwZWljaGVycGxhdHogaGluenVnZWbDvGd0IHdlcmRlbjogJXNcbiIKIAog
-IzogLi4vLi9jb21tb24vcWxvY2suYzozMDEKICMsIGMtZm9ybWF0CkBAIC0xNDEzLDEyICsxNDEz
-LDEyIEBAIG1zZ3N0ciAiT3JkaW5hbGUgVmVybGV0enVuZyBkZXIgU3BlcnJlOiBUaHJkICVkIFBJ
-RCAlZCBPcmQgJWQgTWFwICV4XG4iCiAjOiAuLi8uL2NvbW1vbi9xbG9jay5jOjQ0NgogIywgYy1m
-b3JtYXQKIG1zZ2lkICJ1bmFibGUgdG8gXCJQXCIgc2VtYXBob3JlOiBydmFsID09ICVkLCBlcnJu
-byA9PSAlZCAoJXMpXG4iCi1tc2dzdHIgIsK7UMKrLVNlbWFwaG9yIG5pY2h0IG3DtmdsaWNoOiBS
-dmFsID09ICVkLCBGZWhsZXJudW1tZXIgPT0gJWQgKCVzKVxuIgorbXNnc3RyICLCu1DCqyBhdWYg
-U2VtYXBob3IgbmljaHQgbcO2Z2xpY2g6IFJ2YWwgPT0gJWQsIEZlaGxlcm51bW1lciA9PSAlZCAo
-JXMpXG4iCiAKICM6IC4uLy4vY29tbW9uL3Fsb2NrLmM6NDczCiAjLCBjLWZvcm1hdAogbXNnaWQg
-InVuYWJsZSB0byBcIlZcIiBzZW1hcGhvcmU6IHJ2YWwgPT0gJWQsIGVycm5vID09ICVkICglcylc
-biIKLW1zZ3N0ciAiwrtWwqstU2VtYXBob3JlIG5pY2h0IG3DtmdsaWNoOiBSdmFsID09ICVkLCBG
-ZWhsZXJudW1tZXIgPT0gJWQgKCVzKVxuIgorbXNnc3RyICLCu1bCqyBhdWYgU2VtYXBob3Igbmlj
-aHQgbcO2Z2xpY2g6IFJ2YWwgPT0gJWQsIEZlaGxlcm51bW1lciA9PSAlZCAoJXMpXG4iCiAKICM6
-IC4uLy4vY29tbW9uL3V0aWwuYzoxODggLi4vLi9kdW1wL2NvbnRlbnQuYzoyOTQzCiAjLCBjLWZv
-cm1hdApAQCAtMTQyOSw3ICsxNDI5LDcgQEAgbXNnc3RyICJCdWxrc3RhdC1JbmZvcm1hdGlvbmVu
-IGbDvHIgSW5vZGUgJWxsdSBhYmZyYWdlbiBmZWhsZ2VzY2hsYWdlblxuIgogIywgYy1mb3JtYXQK
-IG1zZ2lkICJmYWlsZWQgdG8gZ2V0IHZhbGlkIGJ1bGtzdGF0IGluZm9ybWF0aW9uIGZvciBpbm9k
-ZSAlbGx1XG4iCiBtc2dzdHIgIiIKLSJnw7xsdGlnZSBCdWxrc3RhdC1JbmZvcm1hdGlvbmVuIGbD
-vHIgSW5vZGUgJWxsdSBhYmZyYWdlbiBmZWhsZ2VzY2hsYWdlblxuIgorImfDvGx0aWdlIEJ1bGtz
-dGF0LUluZm9ybWF0aW9uZW4gZsO8ciBJbm9kZSAlbGx1IGvDtm5uZW4gbmljaHQgYWJnZWZyYWd0
-IHdlcmRlblxuIgogCiAjOiAuLi8uL2NvbW1vbi91dGlsLmM6MjQzCiAjLCBjLWZvcm1hdApAQCAt
-MjczNCw3ICsyNzM0LDcgQEAgbXNnc3RyICIiCiBtc2dpZCAidW5hYmxlIHRvIHVubGluayBjdXJy
-ZW50IGZpbGUgcHJpb3IgdG8gcmVzdG9yZTogJXM6ICVzOiBkaXNjYXJkaW5nXG4iCiBtc2dzdHIg
-IiIKICJha3R1ZWxsZSBEYXRlaSBrYW5uIG5pY2h0IHZvciBkZXIgV2llZGVyaGVyc3RlbGx1bmcg
-Z2Vsw7ZzY2h0IHdlcmRlbjogJXM6ICVzOiAiCi0iV2lyZCBhdXNyYW5naWVydFxuIgorIldpcmQg
-dmVyd29yZmVuXG4iCiAKICM6IC4uLy4vcmVzdG9yZS90cmVlLmM6MTg3MQogIywgYy1mb3JtYXQK
-QEAgLTM0NTgsNyArMzQ1OCw3IEBAIG1zZ3N0ciAiJXMgKFZlcnNhdHogJWxsZClcbiIKICM6IC4u
-Ly4vcmVzdG9yZS9jb250ZW50LmM6NzI5MgogIywgYy1mb3JtYXQKIG1zZ2lkICJvcGVuIG9mICVz
-IGZhaWxlZDogJXM6IGRpc2NhcmRpbmcgaW5vICVsbHVcbiIKLW1zZ3N0ciAiw5ZmZm5lbiB2b24g
-JXMgZmVobGdlc2NobGFnZW46ICVzOiBJbm8gJWxsdSB3aXJkIGF1c3JhbmdpZXJ0XG4iCittc2dz
-dHIgIsOWZmZuZW4gdm9uICVzIGZlaGxnZXNjaGxhZ2VuOiAlczogSW5vICVsbHUgd2lyZCB2ZXJ3
-b3JmZW5cbiIKIAogIzogLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo3MzAyCiAjLCBjLWZvcm1hdApA
-QCAtMzU0NSwzMCArMzU0NSwzMCBAQCBtc2dzdHIgIiVzOiBVbmJla2FubnRlciBEYXRlaXR5cDog
-TW9kdXMgMHgleCBJbm8gJWxsdVxuIgogIzogLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo3NjY0IC4u
-Ly4vcmVzdG9yZS9jb250ZW50LmM6NzcxNAogIywgYy1mb3JtYXQKIG1zZ2lkICJ1bmFibGUgdG8g
-Y3JlYXRlICVzIGlubyAlbGx1ICVzOiAlczogZGlzY2FyZGluZ1xuIgotbXNnc3RyICIgJXMgSW5v
-ICVsbHUgJXMga2FubiBuaWNodCBlcnN0ZWxsdCB3ZXJkZW46ICVzOiBXaXJkIGF1c3JhbmdpZXJ0
-XG4iCittc2dzdHIgIiAlcyBJbm8gJWxsdSAlcyBrYW5uIG5pY2h0IGVyc3RlbGx0IHdlcmRlbjog
-JXM6IFdpcmQgdmVyd29yZmVuXG4iCiAKICM6IC4uLy4vcmVzdG9yZS9jb250ZW50LmM6NzY3Ngog
-IywgYy1mb3JtYXQKIG1zZ2lkICJwYXRobmFtZSB0b28gbG9uZyBmb3IgYmluZCBvZiAlcyBpbm8g
-JWxsdSAlczogJXM6IGRpc2NhcmRpbmdcbiIKIG1zZ3N0ciAiIgotIlBmYWRuYW1lIHp1IGxhbmcg
-ZsO8ciBWZXJiaW5kdW5nIHZvbiAlcyBJbm8gJWxsdSAlczogJXM6IFdpcmQgYXVzcmFuZ2llcnRc
-biIKKyJQZmFkbmFtZSB6dSBsYW5nIGbDvHIgVmVyYmluZHVuZyB2b24gJXMgSW5vICVsbHUgJXM6
-ICVzOiBXaXJkIHZlcndvcmZlblxuIgogCiAjOiAuLi8uL3Jlc3RvcmUvY29udGVudC5jOjc2OTMK
-ICMsIGMtZm9ybWF0CiBtc2dpZCAidW5hYmxlIHRvIGJpbmQgJXMgaW5vICVsbHUgJXM6ICVzOiBk
-aXNjYXJkaW5nXG4iCi1tc2dzdHIgIiVzIElubyAlbGx1ICVzIGthbm4gbmljaHQgdmVyYnVuZGVu
-IHdlcmRlbjogJXM6IFdpcmQgYXVzcmFuZ2llcnRcbiIKK21zZ3N0ciAiJXMgSW5vICVsbHUgJXMg
-a2FubiBuaWNodCB2ZXJidW5kZW4gd2VyZGVuOiAlczogV2lyZCB2ZXJ3b3JmZW5cbiIKIAogIzog
-Li4vLi9yZXN0b3JlL2NvbnRlbnQuYzo3ODQ5CiAjLCBjLWZvcm1hdAogbXNnaWQgInVuYWJsZSB0
-byBjcmVhdGUgc3ltbGluayBpbm8gJWxsdSAlczogc3JjIHRvbyBsb25nOiBkaXNjYXJkaW5nXG4i
-CiBtc2dzdHIgIiIKICJTeW1saW5rIElubyAlbGx1ICVzIGthbm4gbmljaHQgZXJzdGVsbHQgd2Vy
-ZGVuOiBTcmMgenUgbGFuZzogV2lyZCAiCi0iYXVzcmFuZ2llcnRcbiIKKyJ2ZXJ3b3JmZW5cbiIK
-IAogIzogLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo3ODczCiAjLCBjLWZvcm1hdAogbXNnaWQgInVu
-YWJsZSB0byBjcmVhdGUgc3ltbGluayBpbm8gJWxsdSAlczogJXM6IGRpc2NhcmRpbmdcbiIKLW1z
-Z3N0ciAiU3ltbGluayBJbm8gJWxsdSAlcyBrYW5uIG5pY2h0IGVyc3RlbGx0IHdlcmRlbjogJXM6
-IFdpcmQgYXVzcmFuZ2llcnRcbiIKK21zZ3N0ciAiU3ltbGluayBJbm8gJWxsdSAlcyBrYW5uIG5p
-Y2h0IGVyc3RlbGx0IHdlcmRlbjogJXM6IFdpcmQgdmVyd29yZmVuXG4iCiAKICM6IC4uLy4vcmVz
-dG9yZS9jb250ZW50LmM6Nzk2NgogbXNnaWQgImNvcnJ1cHQgZmlsZSBoZWFkZXJcbiIKQEAgLTM2
-MTQsNyArMzYxNCw3IEBAIG1zZ3N0ciAiIgogIzogLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo4MzAz
-CiAjLCBjLWZvcm1hdAogbXNnaWQgImRpb2luZm8gJXMgZmFpbGVkOiAlczogZGlzY2FyZGluZyBp
-bm8gJWxsdVxuIgotbXNnc3RyICLCu2Rpb2luZm8gJXPCqyBmZWhsZ2VzY2hsYWdlbjogJXM6IElu
-byAlbGx1IHdpcmQgYXVzcmFuZ2llcnRcbiIKK21zZ3N0ciAiwrtkaW9pbmZvICVzwqsgZmVobGdl
-c2NobGFnZW46ICVzOiBJbm8gJWxsdSB3aXJkIHZlcndvcmZlblxuIgogCiAjOiAuLi8uL3Jlc3Rv
-cmUvY29udGVudC5jOjgzMzEgLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo4MzQ3CiAjOiAuLi8uL3Jl
-c3RvcmUvY29udGVudC5jOjgzNTEKQEAgLTM2NDAsNyArMzY0MCw3IEBAIG1zZ3N0ciAiQXVzZ2Fi
-ZSBkZXMgS2VybnMiCiAjOiAuLi8uL3Jlc3RvcmUvY29udGVudC5jOjgzNjAKICMsIGMtZm9ybWF0
-CiBtc2dpZCAiYXR0ZW1wdCB0byByZWFkICV1IGJ5dGVzIGZhaWxlZDogJXNcbiIKLW1zZ3N0ciAi
-VmVyc3VjaCwgJXUgQnl0ZSB6dSBsZXNlbiBmZWhsZ2VzY2hsYWdlbjogJXNcbiIKK21zZ3N0ciAi
-VmVyc3VjaCwgJXUgQnl0ZXMgenUgbGVzZW4sIGZlaGxnZXNjaGxhZ2VuOiAlc1xuIgogCiAjOiAu
-Li8uL3Jlc3RvcmUvY29udGVudC5jOjg0NDcgLi4vLi9yZXN0b3JlL2NvbnRlbnQuYzo4NDgyCiAj
-LCBjLWZvcm1hdApAQCAtMzY2OSw4ICszNjY5LDggQEAgbXNnc3RyICJlcndlaXRlcnRlcyBBdHRy
-aWJ1dCAlcyBmw7xyICVzIGthbm4gbmljaHQgZ2VzZXR6dCB3ZXJkZW46ICVzICglZClcbiIKICM6
-IC4uLy4vcmVzdG9yZS9jb250ZW50LmM6ODg4NAogbXNnaWQgInBhcnRpYWxfcmVnOiBPdXQgb2Yg
-cmVjb3Jkcy4gRXh0ZW5kIGF0dHJzIGFwcGxpZWQgZWFybHkuXG4iCiBtc2dzdHIgIiIKLSJwYXJ0
-aWFsX3JlZzogQXXDn2VyaGFsYiBkZXIgRGF0ZW5zw6R0emUuIEVyd2VpdGVydGUgwrthdHRyc8Kr
-IGZyw7xoemVpdGlnICIKLSJhbmdlZ2ViZW4uXG4iCisicGFydGlhbF9yZWc6IEtlaW5lIHZlcmJs
-ZWliZW5kZW4gRGF0ZW5zw6R0emUuIEVyd2VpdGVydGUgwrthdHRyc8KrIGZyw7xoemVpdGlnICIK
-KyJhbmdld2VuZGV0LlxuIgogCiAjOiAuLi8uL3Jlc3RvcmUvY29udGVudC5jOjkwNTEKIG1zZ2lk
-ICJvdmVyd3JpdGVzIGluaGliaXRlZCIKQEAgLTM5MTgsNyArMzkxOCw3IEBAIG1zZ2lkICIiCiBt
-c2dzdHIgIiIKICJcbiIKICJlcyBnaWJ0IG5pY2h0IGlkZW50aWZpemllcnRlIE1lZGllbm9iamVr
-dGUsIGRpZSBNZWRpZW5kYXRlaWVuIGVudGhhbHRlbiwgYmVpICIKLSJkZW5lbiBub2NoIG5pY2h0
-IHZlcnN1Y2h0IHd1cmRlLiBkaWUgVmVyemVpY2huaXNoaWVyYXJjaGllICIKKyJkZW5lbiBub2No
-IG5pY2h0IHZlcnN1Y2h0IHd1cmRlLCBkaWUgVmVyemVpY2huaXNoaWVyYXJjaGllICIKICJ3aWVk
-ZXJoZXJ6dXN0ZWxsZW46XG4iCiAKICM6IC4uLy4vcmVzdG9yZS9jb250ZW50LmM6OTQ5MQo=
---e89a8fb1f116d8c99a04c84fcf5a
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> -Eric
+>
+>> Signed-off-by: Boris Ranto <ranto.boris@gmail.com <mailto:ranto.boris@gmail.com>>
+>> ---
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---e89a8fb1f116d8c99a04c84fcf5a--
