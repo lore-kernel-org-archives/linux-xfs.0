@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7SHSbu0126082 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 12:28:37 -0500
+	q7SHSemV126104 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 12:28:40 -0500
 Received: from cxfsxe4.americas.sgi.com (cxfsxe4.americas.sgi.com
 	[128.162.240.177])
-	by estes.americas.sgi.com (Postfix) with ESMTP id 3810F7001AB0;
+	by estes.americas.sgi.com (Postfix) with ESMTP id 10D7B7001AAF;
 	Tue, 28 Aug 2012 12:29:29 -0500 (CDT)
 Received: by cxfsxe4.americas.sgi.com (Postfix, from userid 48222)
-	id 2F593CDA81; Tue, 28 Aug 2012 12:29:29 -0500 (CDT)
-Message-Id: <20120828172928.999971219@sgi.com>
-Date: Tue, 28 Aug 2012 12:26:07 -0500
+	id F1DBCCDA81; Tue, 28 Aug 2012 12:29:28 -0500 (CDT)
+Message-Id: <20120828172928.785762590@sgi.com>
+Date: Tue, 28 Aug 2012 12:26:06 -0500
 From: Rich Johnston <rjohnston@sgi.com>
-Subject: [PATCH 2/5] xfstests: Use libtool to install applications
+Subject: [PATCH 1/5] xfstests: Use libtool to install lstat64
 References: <20120828172605.607853317@sgi.com>
 Content-Disposition: inline;
-	filename=2-5-xftests-use-libtool-to-install-applications.patch
+	filename=1-5-xfstests-use-libtool-to-install-lstat64.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,50 +31,31 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Rich Johnston <rjohnston@sgi.com>
 Cc: xfs@oss.sgi.com
 
-This patch replaces the INSTALL macro with LTINSTALL so that libtool is used
-to install the applications.  Libtool will install the binary from the proper
-location and display a warning if any shared library dependancies are not
-properly installed.  This ensures that a libtool wrapper shell script is not
-installed in place of application when libtool wrappers are being used.
-
+Use libtool to install lstat64 on $SCRATCH_MNT instead of cp.  Libtool will
+install the binary from the proper location and display a warning if any
+shared library dependancies are not properly installed.  This ensures that a
+libtool wrapper shell script is not installed in place of lstat64 when libtool
+wrappers are being used. 
 
 Signed-off-by: Rich Johnston <rjohnston@sgi.com>
 
 ---
- ltp/Makefile |    2 +-
- src/Makefile |    6 +++---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ 120 |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Index: b/ltp/Makefile
+Index: b/120
 ===================================================================
---- a/ltp/Makefile
-+++ b/ltp/Makefile
-@@ -44,7 +44,7 @@ $(TARGETS): $(LIBTEST)
+--- a/120
++++ b/120
+@@ -68,7 +68,7 @@ fi
  
- install: default
- 	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/ltp
--	$(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/ltp
-+	$(LTINSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/ltp
- 	$(INSTALL) -m 755 $(SCRIPTS) $(PKG_LIB_DIR)/ltp
- 
- -include .dep
-Index: b/src/Makefile
-===================================================================
---- a/src/Makefile
-+++ b/src/Makefile
-@@ -74,9 +74,9 @@ LINKTEST = $(LTLINK) $@.c -o $@ $(CFLAGS
- 
- install: default $(addsuffix -install,$(SUBDIRS))
- 	$(INSTALL) -m 755 -d $(PKG_LIB_DIR)/src
--	$(INSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/src
--	$(INSTALL) -m 755 fill2attr fill2fs fill2fs_check scaleread.sh $(PKG_LIB_DIR)/src
--	$(INSTALL) -m 644 dumpfile $(PKG_LIB_DIR)/src
-+	$(LTINSTALL) -m 755 $(TARGETS) $(PKG_LIB_DIR)/src
-+	$(LTINSTALL) -m 755 fill2attr fill2fs fill2fs_check scaleread.sh $(PKG_LIB_DIR)/src
-+	$(LTINSTALL) -m 644 dumpfile $(PKG_LIB_DIR)/src
- 
- %-install:
- 	$(MAKE) -C $* install
+ #executable file
+ echo "*** copying file ***"
+-cp src/lstat64 $SCRATCH_MNT
++libtool --mode=install install src/lstat64 $SCRATCH_MNT/lstat64
+ src/lstat64 $SCRATCH_MNT/lstat64 >$tmp.out
+ sleep 5
+ echo "*** executing file ***"
 
 _______________________________________________
 xfs mailing list
