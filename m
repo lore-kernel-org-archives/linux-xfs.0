@@ -1,22 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7SK753G144201 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 15:07:05 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	pLDGbs7R4kiLCbvZ (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 28 Aug 2012 13:07:56 -0700 (PDT)
-Date: Tue, 28 Aug 2012 16:07:55 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/4] xfstests: speed up 227 by using preallocation
-Message-ID: <20120828200755.GD31348@infradead.org>
+	q7SKJJao145500 for <xfs@oss.sgi.com>; Tue, 28 Aug 2012 15:19:19 -0500
+Date: Tue, 28 Aug 2012 15:20:07 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 1/4] xfstests: test 110 sometimes fails to unmount
+	scratch dev
+Message-ID: <20120828202007.GF3274@sgi.com>
 References: <1343291706-14882-1-git-send-email-david@fromorbit.com>
-	<1343291706-14882-5-git-send-email-david@fromorbit.com>
+	<1343291706-14882-2-git-send-email-david@fromorbit.com>
+	<20120828200611.GA31348@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1343291706-14882-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <20120828200611.GA31348@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,12 +25,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+Hey Christoph,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Tue, Aug 28, 2012 at 04:06:11PM -0400, Christoph Hellwig wrote:
+> On Thu, Jul 26, 2012 at 06:35:03PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > It runs a bunch of rm processes in the background, then immediately
+> > calls _check_scratch_fs without waiting for them to complete, hence
+> > the unmount can fail with a busy filesystem error.
+> 
+> Looks good,
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+
+These four are in the oss xfstests master branch... just a heads up.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
