@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7U5ogVD142096 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 00:50:42 -0500
-Received: from song.cn.fujitsu.com (cn.fujitsu.com [222.73.24.84]) by
-	cuda.sgi.com with ESMTP id GBXt3BWaXwiaMW7p for
-	<xfs@oss.sgi.com>; Wed, 29 Aug 2012 22:51:34 -0700 (PDT)
-Message-ID: <503EFF4D.2020900@cn.fujitsu.com>
-Date: Thu, 30 Aug 2012 13:51:09 +0800
-From: Miao Xie <miaox@cn.fujitsu.com>
+	q7U7dYgf155472 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 02:39:34 -0500
+Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
+	[209.85.210.53]) by cuda.sgi.com with ESMTP id LTpZpHGxDY8wa1XN
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Thu, 30 Aug 2012 00:40:20 -0700 (PDT)
+Received: by dadg9 with SMTP id g9so1361370dad.26
+	for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 00:40:20 -0700 (PDT)
+Date: Thu, 30 Aug 2012 07:39:46 +0800
+From: Chen Baozi <baozich@gmail.com>
+Subject: xfstest fails at 018
+Message-ID: <20120829233946.GA30212@centos-guest>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests: add btrfs device add-del test
-Reply-To: miaox@cn.fujitsu.com
+Content-Type: multipart/mixed; boundary="HcAYCG3uE/tztfnV"
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,507 +23,4579 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, Linux Btrfs <linux-btrfs@vger.kernel.org>
+To: xfs@oss.sgi.com
 
-This patch adds btrfs device add/delete test to xfstests. Though case 265 also
-does device add/delete test, it is too simple. Compare with case 265, this case
-is more complex.
 
-First, this case test the basic function on different storage profiles, on different
-number of the devices.
+--HcAYCG3uE/tztfnV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Second, this case check the file is corrupted or not after the device is added or removed.
+Hi, all!
 
-Third, we designed some special cases to test the bugs which were reported before.
+I tried to run xfstest on my machine and failed when running 018.
+I've no idea where I'm wrong. Or it is already a reported failure. 
+I'm wondering if someone could show me any clues about this. Here 
+are some details:
 
-Signed-off-by: Miao Xie <miaox@cn.fujitsu.com>
+FSTYP         -- xfs (non-debug)
+PLATFORM      -- Linux/x86_64 centos-guest 3.6.0-rc1+
+MKFS_OPTIONS  -- -f -bsize=4096 /dev/sdc1
+MOUNT_OPTIONS -- /dev/sdc1 /mnt/sdc1
+
+018      - output mismatch (see 018.out.bad)
+--- 018.out     2012-08-28 14:32:33.034895208 +0800
++++ 018.out.bad 2012-08-30 07:12:05.753944304 +0800
+@@ -1,17 +1,6 @@
+QA output created by 018
+*** init FS
+*** compare logprint: 018.op with
+018.fulldir/op.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=1.filtered
+-*** compare logprint: 018.trans_inode with
+018.fulldir/trans_inode.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=1.filtered
+-*** compare logprint: 018.trans_buf with
+018.fulldir/trans_buf.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=1.filtered
+-*** compare logprint: 018.op with
+018.fulldir/op.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_inode with
+018.fulldir/trans_inode.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_buf with
+018.fulldir/trans_buf.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.op with
+018.fulldir/op.mnt-onoalign,logbsize=64k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_inode with
+018.fulldir/trans_inode.mnt-onoalign,logbsize=64k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_buf with
+018.fulldir/trans_buf.mnt-onoalign,logbsize=64k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.op with
+018.fulldir/op.mnt-onoalign,logbsize=128k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_inode with
+018.fulldir/trans_inode.mnt-onoalign,logbsize=128k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_buf with
+018.fulldir/trans_buf.mnt-onoalign,logbsize=128k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.op with
+018.fulldir/op.mnt-onoalign,logbsize=256k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_inode with
+018.fulldir/trans_inode.mnt-onoalign,logbsize=256k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
+-*** compare logprint: 018.trans_buf with
+018.fulldir/trans_buf.mnt-onoalign,logbsize=256k.mkfs-lsize=2000b-llazy-count=1-lversion=2.filtered
++0  split(s) found prior to diff cmd:  37c22
++logprint output 018.op differs to
+018.fulldir/op.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=1.filtered
+considering splits
++(see 018.full for details)
+Ran: 018
+Failures: 018
+Failed 1 of 1 tests
+
+Thanks.
+
+        Baozi
+
+--HcAYCG3uE/tztfnV
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: attachment; filename="op.mnt-onoalign,logbsize=32k.mkfs-lsize=2000b-llazy-count=1-lversion=1.filtered.diff"
+
+9,24c9
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x3c newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
 ---
-This patch is against the bug fix patches of 265 which were sent several days ago. 
-http://marc.info/?l=linux-btrfs&m=134577252108328&w=2
-http://marc.info/?l=linux-btrfs&m=134577253308329&w=2
-http://marc.info/?l=linux-btrfs&m=134579572613601&w=2
+> TRAN: type: CHECKPOINT tid: <TID> num_items: 282
+37c22
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 16
 ---
- 285       |  415 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 285.out   |    2 +
- common.rc |   16 +++
- group     |    1 +
- 4 files changed, 434 insertions(+), 0 deletions(-)
- create mode 100755 285
- create mode 100644 285.out
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+41,42c26,27
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+44c29
+< size 0xf nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+48,69d32
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 15
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x3b newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+81c44
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 24
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+85,86c48,49
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+88c51
+< size 0x18 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+92,113d54
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 24
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x3a newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+125c66
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 36
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+129,130c70,71
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+132c73
+< size 0x21 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+136,157d76
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 33
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x39 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+169c88
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 44
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+173,174c92,93
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+176c95
+< size 0x2a nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+180,201d98
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 42
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x38 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+213c110
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 52
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+217,218c114,115
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+220c117
+< size 0x33 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+224,245d120
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 51
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x37 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+257c132
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 60
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+261,262c136,137
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+264c139
+< size 0x3c nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+268,289d142
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 60
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x36 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+301c154
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 72
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+305,306c158,159
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+308c161
+< size 0x45 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+312,333d164
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 69
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x35 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+345c176
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 80
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+349,350c180,181
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+352c183
+< size 0x4e nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+356,377d186
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 78
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x34 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+389c198
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 88
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+393,394c202,203
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+396c205
+< size 0x57 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+400,421d208
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 87
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x33 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+433c220
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 96
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+437,438c224,225
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+440c227
+< size 0x60 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+444,462c231,232
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 96
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x32 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+464c234,240
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+477c253
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 108
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+481,482c257,258
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+484c260
+< size 0x69 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+488,509d263
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 105
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x31 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+521c275
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 116
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+525,526c279,280
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+528c282
+< size 0x72 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+532,553d285
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 114
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x30 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+565c297
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 124
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+569,570c301,302
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+572c304
+< size 0x7b nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+576,597d307
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 123
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x2f newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+609c319
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 132
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+613,614c323,324
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+616c326
+< size 0x84 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+620,641d329
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 132
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x2e newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+653c341
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 144
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+657,658c345,346
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+660c348
+< size 0x8d nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+664,685d351
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 141
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 4
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x2d newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+697c363
+< INODE: #regs:R ino: <INO> flags: 0x3 dsize: 152
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+701,702c367,368
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+704c370
+< size 0x96 nblocks 0x0 extsize 0x0 nextents 0x0
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+708,729d373
+< LOCAL inode data
+< SHORTFORM DIRECTORY size 150
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 8
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x2c newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+741c385
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+745,746c389,390
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+748c392
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+752,792d395
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGF Buffer: XAGF
+< ver: 1 seq#: 0 len:<LEN>
+< root BNO: 1 CNT: 2
+< level BNO: 1 CNT: 1
+< 1st:<NUM> last:<NUM> cnt:<COUNT> freeblks:<COUNT> longest:<NUM>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x2b newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+804c407
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+808,809c411,412
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+811c414
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+815,839d417
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x2a newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+851c429
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+855,856c433,434
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+858c436
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+862,883c440,441
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x29 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+885c443,449
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+898c462
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+902,903c466,467
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+905c469
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+909c473,474
+< EXTENTS inode data
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+911,932c476,482
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x28 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+945c495
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+949,950c499,500
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+952c502
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+956,980d505
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x27 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+992c517
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+996,997c521,522
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+999c524
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1003,1027d527
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x26 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1039c539
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1043,1044c543,544
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1046c546
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1050,1074d549
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x25 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1086c561
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1090,1091c565,566
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1093c568
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1097,1107c572,573
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1109,1116c575,581
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x24 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1118c583,584
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1120c586,592
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1133c605
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1137,1138c609,610
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1140c612
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1144c616,617
+< EXTENTS inode data
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1146c619,625
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1148,1150c627,628
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1152c630,636
+< TRAN: type: CREATE tid: <TID> num_items: 5
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1154c638,639
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1156,1163c641,647
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x23 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1165c649,650
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1167c652,658
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1180c671
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1184,1185c675,676
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1187c678
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1191c682
+< EXTENTS inode data
+---
+> BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+1193c684,688
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> AGF Buffer: XAGF
+> ver: 1 seq#: 0 len:<LEN>
+> root BNO: 1 CNT: 2
+> level BNO: 1 CNT: 1
+> 1st:<NUM> last:<NUM> cnt:<COUNT> freeblks:<COUNT> longest:<NUM>
+1195,1197c690
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+---
+> BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+1199c692
+< TRAN: type: CREATE tid: <TID> num_items: 5
+---
+> BUF DATA
+1203,1210c696,700
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x22 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+---
+> BUF DATA
+> Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+> BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+> Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+> BUF DATA
+1227c717
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1231,1232c721,722
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1234c724
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1238,1262d727
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x21 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1274c739
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1277,1302c742,748
+< Not printing rest
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Left over region from split log item
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x20 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1315c761
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1319,1320c765,766
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1322c768
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1326,1350d771
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1f newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1362c783
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1366,1367c787,788
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1369c790
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1373,1397d793
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1e newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1409c805
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1413,1414c809,810
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1416c812
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1420,1444d815
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1d newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1456c827
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1460,1461c831,832
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1463c834
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1467,1491d837
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1c newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1503c849
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1507,1508c853,854
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1510c856
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1514,1538d859
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1b newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+1550c871
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1554,1555c875,876
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1557c878
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1561,1571c882,883
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1573,1580c885,891
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1a newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1582c893,894
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+>  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+1584c896,902
+< BUF DATA
+---
+> INODE CORE
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+> atime <TIME> mtime <TIME> ctime <TIME>
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+1597c915
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+1601,1602c919,920
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+1604c922
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+1608,4108d925
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x19 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x18 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x17 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x16 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x15 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x14 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x13 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x12 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x11 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x10 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Not printing rest
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0xf newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0xe newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0xd newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0xc newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0xb newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0xa newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x9 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x8 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x7 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x6 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x5 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x4 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x3 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Not printing rest
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x1 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 64 root: 3
+< level: 1 free#: 0x0 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 7
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x40 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGF Buffer: XAGF
+< ver: 1 seq#: 0 len:<LEN>
+< root BNO: 1 CNT: 2
+< level BNO: 1 CNT: 1
+< 1st:<NUM> last:<NUM> cnt:<COUNT> freeblks:<COUNT> longest:<NUM>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 3
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 3
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x3f newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x3e newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x3d newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x3c newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x3b newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x3a newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Not printing rest
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Left over region from split log item
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x39 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x38 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x37 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x36 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x35 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x34 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x33 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x32 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x31 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x30 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x2f newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x2e newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Left over region from split log item
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x2d newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x2c newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x2b newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x2a newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x29 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x28 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x27 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x26 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x25 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4120,4155d936
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x24 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4167,4204d947
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Not printing rest
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Left over region from split log item
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x23 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4216,4251d958
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x22 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4260,4297c967,968
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x21 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+---
+> naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+> flags 0x0 gen <GEN>
+4310c981
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4314,4315c985,986
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4317c988
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4321,4345d991
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x20 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4357c1003
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4361,4362c1007,1008
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4364c1010
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4368,4392d1013
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x1f newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4404c1025
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4408,4409c1029,1030
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4411c1032
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4415,4439d1035
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x1e newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4451c1047
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4455,4456c1051,1052
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4458c1054
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4462,4486d1057
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x1d newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4498c1069
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4502,4503c1073,1074
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4505c1076
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4509,4533d1079
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x1c newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4545c1091
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4549,4550c1095,1096
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4552c1098
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4556,4580d1101
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x1b newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4592c1113
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+---
+> INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+4596,4597c1117,1118
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+---
+> magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+> nlink 1 uid 0 gid 0
+4599c1120
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+---
+> size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+4603,4612d1123
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4617c1128
+< level: 1 free#: 0x1a newino: <INO>
+---
+> level: 1 free#: 0x19 newino: <INO>
+4624c1135
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+---
+> BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+4628,4638d1138
+< INODE: #regs:R ino: <INO> flags: 0x1 dsize: 0
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 0100644 version <VERS> format <FORMAT>
+< nlink 1 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x0 nblocks 0x0 extsize 0x0 nextents 0x0
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4652,4661d1151
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Not printing rest
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< Left over region from split log item
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: COMMIT
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: START
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< TRAN: type: CREATE tid: <TID> num_items: 5
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4664,4674d1153
+< AGI Buffer: XAGI
+< ver: 1 seq#: 0 len:<LEN> cnt: 128 root: 3
+< level: 1 free#: 0x19 newino: <INO>
+< bucket[0 - 3]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[4 - 7]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[8 - 11]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[12 - 15]: 0xffffffff 0xffffffff 0xffffffff 0xffffffff
+< bucket[16 - 19]: 0xffffffff
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+4687,4703d1165
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE: #regs:R ino: <INO> flags: 0x5 dsize: 16
+<  blkno: <BLKNO> len:<LEN> boff: <BOFF>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< INODE CORE
+< magic 0x494e mode 040755 version <VERS> format <FORMAT>
+< nlink 2 uid 0 gid 0
+< atime <TIME> mtime <TIME> ctime <TIME>
+< size 0x1000 nblocks 0x1 extsize 0x0 nextents 0x1
+< naextents 0x0 forkoff 0 dmevmask 0x0 dmstate 0x0
+< flags 0x0 gen <GEN>
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< EXTENTS inode data
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 2
+< Oper (OPNUM): tid: <TID> len:<LEN> clientid: TRANS flags: none
+< BUF DATA
+4706a1169
+> TRAN: type: CHECKPOINT tid: <TID> num_items: 2
+4707a1171
+> BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+4708a1173,1174
+> SUPER BLOCK Buffer:
+> icount:<COUNT> ifree:<FREE> fdblks:<BLOCKS> frext:<COUNT>
+4711a1178
+> TRAN: type: CHECKPOINT tid: <TID> num_items: 2
+4712a1180
+> BUF: #regs:R start blkno: <BLKNO> (<BLKNO>) len:<LEN> bmap size: 1
+4713a1182,1183
+> SUPER BLOCK Buffer:
+> icount:<COUNT> ifree:<FREE> fdblks:<BLOCKS> frext:<COUNT>
+4714a1185,1189
+> Oper (OPNUM): tid: <TID> len:<LEN> clientid: LOG flags: UNMOUNT
+> Unmount filesystem
+> xfs_logprint: skipped <COUNT> zeroed blocks in range: <COUNT> - <COUNT>
+> xfs_logprint: physical end of log
+> xfs_logprint: logical end of log
 
-diff --git a/285 b/285
-new file mode 100755
-index 0000000..7160aed
---- /dev/null
-+++ b/285
-@@ -0,0 +1,415 @@
-+#! /bin/bash
-+# FS QA Test No. 285
-+#
-+# btrfs add-del device tests
-+# Compare with case 265, this case is more complex. We test the basic
-+# function on different profiles, on different number of devices, we
-+# also check the file in the test fs is corrupted or not. And beside that,
-+# we designed some special cases to test the bugs which were reported before.
-+# such as: delete-add mounted device.
-+#
-+# Note: This test needs five devices.
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Fujitsu.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=miaox@cn.fujitsu.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+detail_info="$here/$seq.full"
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+FS_SIZE=`expr 5 \* 1024 \* 1024 \* 1024` # Filesystem size is 5G
-+num=1
-+
-+stress_run=0
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	if [ $stress_run -ne 0 ]; then
-+		_kill_background_operation
-+	fi
-+	_scratch_unmount &> /dev/null
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+_need_to_be_root
-+_supported_fs btrfs
-+_supported_os Linux
-+_require_scratch
-+_require_scratch_dev_pool 5
-+_require_big_scratch_dev_pool 5	# We require every device is bigger than 5G
-+
-+
-+devs=( $SCRATCH_DEV_POOL )
-+ndevs=${#devs[@]}
-+
-+orphan_dev=
-+fs_devs=
-+inner_dev=
-+
-+checkfile="tmp_checkfile"
-+stress_pid=
-+
-+_raid_to_min_devs()
-+{
-+	case $1 in
-+	raid0|raid1)
-+		return 2
-+	;;
-+	raid10)
-+		return 4
-+	;;
-+	*)
-+		return 1
-+	;;
-+	esac
-+}
-+
-+_prepare_test()
-+{
-+	local nr_devs=$1
-+	local profile=$2
-+	local min_devs
-+
-+	_raid_to_min_devs $profile
-+	min_devs=$?
-+
-+	if [ $nr_devs -eq 0 -o $nr_devs -lt $min_devs ]; then
-+		_fail "Case $num is wrong, we need at least more devices to create fs"
-+	fi
-+
-+	nr_devs=$(($nr_devs - 1))
-+	if [ $nr_devs -eq 0 ]; then
-+		fs_devs=""
-+		inner_dev=$SCRATCH_DEV
-+		orphan_dev=${devs[@]:0:1}
-+	elif [ $nr_devs -gt 0 -a $nr_devs -le $ndevs ]; then
-+		fs_devs=${devs[@]:0:$nr_devs}
-+		inner_dev=${devs[@]:0:1}
-+		orphan_dev=${devs[@]:$nr_devs:1}
-+	elif [ $nr_devs -gt $ndevs ]; then
-+		_fail "Case $num is wrong, the devices we need is more then we have"
-+	fi
-+}
-+
-+_make_fs()
-+{
-+	local nr_devs=$1
-+	local profile=$2
-+
-+	export MKFS_OPTIONS="-d $profile -m $profile -b $(($FS_SIZE / $nr_devs))"
-+	_scratch_mkfs "$fs_devs" >> $detail_info 2>&1 || _fail "case $num failed, mkfs failed"
-+	_scratch_mount
-+}
-+
-+_test_add()
-+{
-+	local obj_dev=$1
-+	local expected_ret=$2
-+	local ret=
-+
-+	btrfs device add $obj_dev $SCRATCH_MNT >> $detail_info 2>&1
-+	ret=$?
-+	if [ $ret -ne 0 -a $expected_ret -eq 0 ]; then
-+		_fail "case $num failed, adding device $1 failed"
-+	elif [ $ret -eq 0 -a $expected_ret -eq 1 ]; then
-+		_fail "case $num failed, device $1 was added successfully"
-+	fi
-+}
-+
-+# _test_del 0|1|... If the parameter is 0, it means we expect this operation
-+# can complete successfully, if the parameter is 1, it means we expect this
-+# operation should fail. Other number means we need not check the result.
-+_test_del()
-+{
-+	local obj_dev=$1
-+	local expected_ret=$2
-+	local ret=
-+
-+	btrfs device del $obj_dev $SCRATCH_MNT >> $detail_info 2>&1
-+	ret=$?
-+	if [ $ret -ne 0 -a $expected_ret -eq 0 ]; then
-+		_fail "case $num failed, removing device $1 failed"
-+	elif [ $ret -eq 0 -a $expected_ret -eq 1 ]; then
-+		_fail "case $num failed, device $1 was removed successfully"
-+	fi
-+	# When we do stress test, it is hard to know if the operation will be
-+	# successful or not. So we do not check the result. All things we want
-+	# to do is to make sure the fs is not corrupted(btrfsck check), and
-+	# the kernel don't crash.
-+}
-+
-+# _fill_fs 1|2|3
-+# 1 - just create a empty file
-+# 2 - fill < 30% of the fs
-+# 3 - fill > 50% of the fs
-+_fill_fs()
-+{
-+	case "$1" in
-+	"1")
-+		touch $SCRATCH_MNT/foo
-+	;;
-+	"2")
-+		#fill half of the filesystem
-+		dd if=/dev/urandom of=$SCRATCH_MNT/foo bs=1M count=50 &> /dev/null
-+	;;
-+	"3")
-+		#fill full of the filesystem
-+		dd if=/dev/urandom of=$SCRATCH_MNT/foo bs=4M count=1000 &> /dev/null
-+	;;
-+	*)
-+		_fail "Case $num passes wrong parameter into _fill_fs()"
-+	;;
-+	esac
-+
-+	md5sum $SCRATCH_MNT/foo > $SCRATCH_MNT/$checkfile 2>> $detail_info
-+	if [ $? -ne 0 ]; then
-+		_fail "Case $num failed to compute md5sum"
-+	fi
-+}
-+
-+_check_files()
-+{
-+	if [ -f $SCRATCH_MNT/$checkfile ]; then
-+		md5sum -c $SCRATCH_MNT/$checkfile >> $detail_info 2>&1
-+		if [ $? -ne 0 ]; then
-+			_fail "Case $num test file has been modified"
-+		fi
-+	else
-+		_fail "There is no checkfile"
-+	fi
-+}
-+
-+# add_del order operation
-+_add_del_dev()
-+{
-+	_test_add $1 0
-+	_test_del $1 0
-+}
-+
-+# del_add order operation
-+_del_add_dev()
-+{
-+	_test_del $1 0
-+	_test_add $1 0
-+}
-+
-+# for stress test
-+_background_operation()
-+{
-+	local stress_out="$SCRATCH_MNT/fsstress.$$"
-+	local args="-p8 -n100000 -d $stress_out"
-+
-+	$FSSTRESS_PROG $args &> /dev/null &
-+	stress_pid=$!
-+	stress_run=1
-+}
-+
-+_kill_background_operation()
-+{
-+	kill $stress_pid > /dev/null 2>&1
-+	wait $stress_pid > /dev/null 2>&1
-+	stress_run=0
-+}
-+
-+_test_process()
-+{
-+	local nr_devs=$1
-+	local profile=$2
-+	local fill_type=$3
-+	local obj_dev_type=$4	# 0 - inner device
-+				# 1 - mounted device
-+				# 2 - outer device
-+	local operation_type=$5	# 0 - add device
-+				# 1 - del device
-+				# 2 - add-del device
-+				# 3 - del-add device
-+	local expected_result=$6
-+	local obj_dev=
-+	local operation=
-+
-+	_prepare_test $nr_devs $profile
-+
-+	case $obj_dev_type in
-+	0)
-+		obj_dev=$inner_dev
-+	;;
-+	1)
-+		obj_dev=$SCRATCH_DEV
-+	;;
-+	2)
-+		obj_dev=$orphan_dev
-+	;;
-+	*)
-+		_fail "Wrong device type for add/del"
-+	;;
-+	esac
-+
-+	if [ "$obj_dev" == "" ]; then
-+		_fail "Case $num is wrong, no device to add/del"
-+	fi
-+
-+	case $operation_type in
-+	0)
-+		operation="_test_add"
-+	;;
-+	1)
-+		operation="_test_del"
-+	;;
-+	2)
-+		operation="_add_del_dev"
-+	;;
-+	3)
-+		operation="_del_add_dev"
-+	;;
-+	*)
-+		_fail "The operation is not supported"
-+	;;
-+	esac
-+
-+	_make_fs $nr_devs $profile
-+	_fill_fs $fill_type
-+
-+	$operation $obj_dev $expected_result
-+
-+	_check_files
-+	_scratch_unmount
-+	_check_scratch_fs
-+
-+	num=$[num+1]
-+}
-+
-+_stress_test_process()
-+{
-+	local nr_devs=$1
-+	local profile=$2
-+	local add_first=$3
-+
-+	_prepare_test $nr_devs $profile
-+	_make_fs $nr_devs $profile
-+	_background_operation
-+
-+	for ((i=0; i<20; i++))
-+	do
-+		if [ $add_first -ne 0 ]; then
-+			_test_add $orphan_dev 2
-+			_test_del $orphan_dev 2
-+		else
-+			_test_del $inner_dev 2
-+			_test_add $inner_dev 2
-+		fi
-+	done
-+	_kill_background_operation
-+	_scratch_unmount
-+	_check_scratch_fs
-+	num=$[num+1]
-+}
-+
-+rm -rf $seq.full
-+
-+# case 1-4
-+# * | * | a little data | inner device | add device | fail
-+_test_process 1 single 2 0 0 1
-+_test_process 2 raid0 2 0 0 1
-+_test_process 2 raid1 2 0 0 1
-+_test_process 4 raid10 2 0 0 1
-+
-+# case 5-8
-+# * | * | a little data | outer device | add device | success
-+_test_process 1 single 2 2 0 0
-+_test_process 2 raid0 2 2 0 0
-+_test_process 2 raid1 2 2 0 0
-+_test_process 4 raid10 2 2 0 0
-+
-+# case 9-12
-+# * | * | a little data | outer device | del device | fail
-+_test_process 1 single 2 2 1 1
-+_test_process 2 raid0 2 2 1 1
-+_test_process 2 raid1 2 2 1 1
-+_test_process 4 raid10 2 2 1 1
-+
-+# case 13-16
-+# * | * | a little data | inner device | del device | *
-+_test_process 1 single 2 0 1 1
-+_test_process 2 raid0 2 0 1 0	# special case
-+_test_process 2 raid1 2 0 1 1
-+_test_process 4 raid10 2 0 1 1
-+
-+# case 17-20
-+# * | * | full fs | outer device | add device | success
-+_test_process 1 single 3 2 0 0
-+_test_process 2 raid0 3 2 0 0
-+_test_process 2 raid1 3 2 0 0
-+_test_process 4 raid10 3 2 0 0
-+
-+# case 21-24
-+# * | * | full fs | inner device | del device | fail
-+_test_process 2 single 3 0 1 1
-+_test_process 3 raid0 3 0 1 1
-+_test_process 3 raid1 3 0 1 1
-+_test_process 5 raid10 3 0 1 1
-+
-+# case 25-28
-+# * | * | a little data | outer device | add-del device | *
-+_test_process 1 single 2 2 2 0
-+_test_process 2 raid0 2 2 2 0
-+_test_process 2 raid1 2 2 2 0
-+_test_process 4 raid10 2 2 2 0
-+
-+# case 29-32
-+# * | * | a little data | inner device | del-add device | *
-+_test_process 2 single 2 0 3 0
-+_test_process 3 raid0 2 0 3 0
-+_test_process 3 raid1 2 0 3 0
-+_test_process 5 raid10 2 0 3 0
-+
-+# case 33-36
-+# * | * | a little data | mounted device | del-add device | *
-+_test_process 2 single 2 1 3 0
-+_test_process 3 raid0 2 1 3 0
-+_test_process 3 raid1 2 1 3 0
-+_test_process 5 raid10 2 1 3 0
-+
-+# case 37
-+# * | * | a little data | inner device | del-add device | *
-+_test_process 2 raid0 2 0 3 0
-+
-+# stress case 38-41
-+_stress_test_process 1 single 1
-+_stress_test_process 2 raid0 1
-+_stress_test_process 2 raid1 1
-+_stress_test_process 4 raid10 1
-+
-+# stress case 42-45
-+_stress_test_process 2 single 0
-+_stress_test_process 3 raid0 0
-+_stress_test_process 3 raid1 0
-+_stress_test_process 5 raid10 0
-+
-+# special stress case 46
-+_stress_test_process 2 raid0 0
-+
-+echo "Silence is golden"
-+status=0; exit
-diff --git a/285.out b/285.out
-new file mode 100644
-index 0000000..ab12da9
---- /dev/null
-+++ b/285.out
-@@ -0,0 +1,2 @@
-+QA output created by 285
-+Silence is golden
-diff --git a/common.rc b/common.rc
-index a254e0e..74ad14b 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1735,6 +1735,22 @@ _require_scratch_dev_pool()
- 	done
- }
- 
-+# Check all the devices in the pool if the size of each one is bigger than
-+# the size we required.
-+# The parameter is the size we required, and the unit is GB(1024 * 1024 * 1024)
-+_require_big_scratch_dev_pool()
-+{
-+	local i
-+	local expected_size=$1
-+	local dev_size
-+	for i in $SCRATCH_DEV_POOL; do
-+		dev_size=$((`fdisk -s $i` / 1024 / 1024))
-+		if [ $dev_size -lt $expected_size ]; then
-+			_notrun "The size of $i ($dev_size G) is less than $expected_size G."
-+		fi
-+	done
-+}
-+
- # We will check if the device is deletable. 
- _require_deletable_scratch_dev_pool()
- {
-diff --git a/group b/group
-index 104ed35..0b33178 100644
---- a/group
-+++ b/group
-@@ -403,3 +403,4 @@ deprecated
- 282 dump ioctl auto quick
- 283 dump ioctl auto quick
- 284 auto
-+285 auto
--- 
-1.7.6.5
+--HcAYCG3uE/tztfnV
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--HcAYCG3uE/tztfnV--
