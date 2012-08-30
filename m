@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7UAuxXY182346 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 05:56:59 -0500
+	q7UAv6fq182390 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 05:57:06 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	YD5WyJj5xwiNKzTw for <xfs@oss.sgi.com>;
-	Thu, 30 Aug 2012 03:57:50 -0700 (PDT)
+	mLPWOgWAi7jH6aQ1 for <xfs@oss.sgi.com>;
+	Thu, 30 Aug 2012 03:57:58 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T72RX-0003hq-G1
-	for xfs@oss.sgi.com; Thu, 30 Aug 2012 20:57:47 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T72Rh-0003hp-F6
+	for xfs@oss.sgi.com; Thu, 30 Aug 2012 20:57:57 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T72RX-00005x-C1
+	(envelope-from <dave@disappointment.disaster>) id 1T72RX-00005u-Ao
 	for xfs@oss.sgi.com; Thu, 30 Aug 2012 20:57:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/13] xfs: xfs_syncd_stop must die
-Date: Thu, 30 Aug 2012 20:57:30 +1000
-Message-Id: <1346324262-32724-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1346324262-32724-1-git-send-email-david@fromorbit.com>
-References: <1346324262-32724-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/13] xfs: remove the xfssyncd mess
+Date: Thu, 30 Aug 2012 20:57:29 +1000
+Message-Id: <1346324262-32724-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,168 +31,52 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Folks,
 
-xfs_syncd_start and xfs_syncd_stop tie a bunch of unrelated
-functionailty together that actually have different start and stop
-requirements. Kill these functions and open code the start/stop
-methods for each of the background functions.
+Here's the patchset I talked about here:
 
-Subsequent patches will move the start/stop functions around to the
-correct places to avoid races and shutdown issues.
+http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_super.c |   25 ++++++++++++++++++-------
- fs/xfs/xfs_sync.c  |   30 ++++--------------------------
- fs/xfs/xfs_sync.h  |    6 ++++--
- 3 files changed, 26 insertions(+), 35 deletions(-)
+to sort out the syncd start/stop unmount race/panic mess once and
+for all. I've only smoke tested it so far, but it hasn't let any out
+yet.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index bdaf4cb..116fcb8 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -920,7 +920,11 @@ xfs_fs_put_super(
- 
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
--	xfs_syncd_stop(mp);
-+
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_work_sync(&mp->m_flush_work);
-+
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_destroy_mount_workqueues(mp);
-@@ -1290,9 +1294,11 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
- 
--	error = xfs_syncd_init(mp);
--	if (error)
--		goto out_filestream_unmount;
-+	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
-+	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
-+	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-+
-+	xfs_syncd_queue_sync(mp);
- 
- 	error = xfs_mountfs(mp);
- 	if (error)
-@@ -1315,8 +1321,10 @@ xfs_fs_fill_super(
- 
- 	return 0;
-  out_syncd_stop:
--	xfs_syncd_stop(mp);
-- out_filestream_unmount:
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_work_sync(&mp->m_flush_work);
-+
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
- 	xfs_freesb(mp);
-@@ -1335,7 +1343,10 @@ out_destroy_workqueues:
-  out_unmount:
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
--	xfs_syncd_stop(mp);
-+
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_work_sync(&mp->m_flush_work);
- 	goto out_free_sb;
- }
- 
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 9654817..13830e4 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -370,7 +370,7 @@ xfs_quiesce_attr(
- 	xfs_buf_unlock(mp->m_sb_bp);
- }
- 
--static void
-+void
- xfs_syncd_queue_sync(
- 	struct xfs_mount        *mp)
- {
-@@ -383,7 +383,7 @@ xfs_syncd_queue_sync(
-  * disk quotas.  We might need to cover the log to indicate that the
-  * filesystem is idle and not frozen.
-  */
--STATIC void
-+void
- xfs_sync_worker(
- 	struct work_struct *work)
- {
-@@ -445,7 +445,7 @@ xfs_syncd_queue_reclaim(
-  * goes low. It scans as quickly as possible avoiding locked inodes or those
-  * already being flushed, and once done schedules a future pass.
-  */
--STATIC void
-+void
- xfs_reclaim_worker(
- 	struct work_struct *work)
- {
-@@ -478,7 +478,7 @@ xfs_flush_inodes(
- 	flush_work_sync(&mp->m_flush_work);
- }
- 
--STATIC void
-+void
- xfs_flush_worker(
- 	struct work_struct *work)
- {
-@@ -489,28 +489,6 @@ xfs_flush_worker(
- 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
- }
- 
--int
--xfs_syncd_init(
--	struct xfs_mount	*mp)
--{
--	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
--	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
--	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
--
--	xfs_syncd_queue_sync(mp);
--
--	return 0;
--}
--
--void
--xfs_syncd_stop(
--	struct xfs_mount	*mp)
--{
--	cancel_delayed_work_sync(&mp->m_sync_work);
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
--	cancel_work_sync(&mp->m_flush_work);
--}
--
- void
- __xfs_inode_set_reclaim_tag(
- 	struct xfs_perag	*pag,
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 941202e..3f59e5b 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -26,8 +26,10 @@ struct xfs_perag;
- 
- extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
- 
--int xfs_syncd_init(struct xfs_mount *mp);
--void xfs_syncd_stop(struct xfs_mount *mp);
-+void xfs_syncd_queue_sync(struct xfs_mount *mp);
-+void xfs_sync_worker(struct work_struct *work);
-+void xfs_flush_worker(struct work_struct *work);
-+void xfs_reclaim_worker(struct work_struct *work);
- 
- int xfs_quiesce_data(struct xfs_mount *mp);
- void xfs_quiesce_attr(struct xfs_mount *mp);
--- 
-1.7.10
+The overall diffstat is:
+
+ fs/xfs/Makefile                     |    3 +-
+ fs/xfs/{xfs_sync.c => xfs_icache.c} |  694 +++++++++++++++++++++-------------
+ fs/xfs/{xfs_sync.h => xfs_icache.h} |   14 +-
+ fs/xfs/xfs_iget.c                   |  705 -----------------------------------
+ fs/xfs/xfs_inode.c                  |  250 +++++++++++++
+ fs/xfs/xfs_inode.h                  |   10 +-
+ fs/xfs/xfs_iomap.c                  |    3 +-
+ fs/xfs/xfs_log.c                    |   83 ++++-
+ fs/xfs/xfs_log.h                    |    4 +
+ fs/xfs/xfs_log_priv.h               |    1 +
+ fs/xfs/xfs_mount.c                  |   32 +-
+ fs/xfs/xfs_mount.h                  |    6 +-
+ fs/xfs/xfs_qm_syscalls.c            |    1 +
+ fs/xfs/xfs_super.c                  |   93 +++--
+ fs/xfs/xfs_vnodeops.c               |    3 +-
+ 15 files changed, 840 insertions(+), 1062 deletions(-)
+
+So it removes a couple of hundred lines of code whilst still
+providing exactly the same functionality and fixing some bugs.
+
+e.g. xfs_attr_quiesce() isn't waiting for metadata IO completion
+before writing the unmount record, which explains why occasionally
+freeze results in a log with more than just an unmount and dummy
+record in it.
+
+Comments?
+
+Cheers,
+
+Dave.
+
+PS: it just let the smoke out caused by the
+writeback_inodes_sb_if_idle() change in xfs_create(). I think I used
+the wrong inode to get the superblock....
 
 _______________________________________________
 xfs mailing list
