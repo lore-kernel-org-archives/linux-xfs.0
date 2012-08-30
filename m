@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7UMoHcV036433 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 17:50:17 -0500
+	q7UMvuYS037383 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 17:57:56 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	JqmUKWf3NRc5Esfp for <xfs@oss.sgi.com>;
-	Thu, 30 Aug 2012 15:51:10 -0700 (PDT)
-Date: Fri, 31 Aug 2012 08:51:08 +1000
+	1G19aXfoBDqQ69aJ for <xfs@oss.sgi.com>;
+	Thu, 30 Aug 2012 15:58:48 -0700 (PDT)
+Date: Fri, 31 Aug 2012 08:58:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2 00/13] xfs: remove the xfssyncd mess
-Message-ID: <20120830225108.GF15292@dastard>
-References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<20120830121516.GA285@x4>
+Subject: Re: XFS Mount Recovery Failed on Root File System After Power Outage
+Message-ID: <20120830225826.GG15292@dastard>
+References: <0e85aee5ff82e567e872230ef416766a.squirrel@emailmg.netfirms.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120830121516.GA285@x4>
+In-Reply-To: <0e85aee5ff82e567e872230ef416766a.squirrel@emailmg.netfirms.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,50 +26,69 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Markus Trippelsdorf <markus@trippelsdorf.de>
+To: Chin Gim Leong <CHIN_Gim_Leong@performance-computing.net>
 Cc: xfs@oss.sgi.com
 
-On Thu, Aug 30, 2012 at 02:15:16PM +0200, Markus Trippelsdorf wrote:
-> On 2012.08.30 at 22:00 +1000, Dave Chinner wrote:
-> > Version 2 of the patchset I described here:
-> > 
-> > http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
-> > 
-> > This version has run through xfstests completely once, so it's
-> > less likely to let smoke out....
+On Thu, Aug 30, 2012 at 10:08:38PM +0800, Chin Gim Leong wrote:
+> Hi
 > 
-> Is there a publicly accessible git tree available where one could pull
-> from? (This would be way easier than saving and hand-applying 13
-> patches.)
+> 
+> I apologize first if this message appears a number of times, but my two
+> yahoo email accounts do not seem to be able to deliver to the mailing list
+> from afternoon till now and I have to use this account.
+> 
+> I just had a power outage and my Acer notebook computer running openSUSE
+> 11.4 x86_64 with kernel 2.6.37 stopped as a result.
 
-No.
+What mount options? What is the output of /proc/mounts? What are the
+messages in dmesg when you mount a partition?
 
-Instead, save all the patches to a single mbox format file, then run:
+> I then tried again to mount the root file system to /mnt.
+> 
+> Aug 30 14:21:59 Rescue kernel: [  811.166914] XFS mounting filesystem sdb2
+> Aug 30 14:21:59 Rescue kernel: [  811.212169] Starting XFS recovery on
+> filesystem: sdb2 (logdev: internal)
+> Aug 30 14:21:59 Rescue kernel: [  811.334157] XFS: Invalid block length
+> (0xfffffffc) given for buffer
 
-$ git checkout -b umount-fix-test
-$ git am <mbox file>
+The log is definitely corrupted if it is asking for a length that
+large.
 
-And it will apply all the patches as separate commits to the
-umount-fix-test branch. This is how I take patch sets from my inbox
-to git. You can build and testing them from there.
+> Aug 30 14:21:59 Rescue kernel: [  811.334175] XFS: log mount/recovery
+> failed: error 117
 
-I, personally, convert them to a guilt series first, usually
-integrating them into my working/test branch to test them along with
-everything else I'm working on at the same time. To do this, I
-generally do:
+EUCLEAN: structure needs cleaning.
 
-$ git checkout -b umount-fix-test working
-$ git am <mbox file>
-$ git checkout working
-$ git log --pretty=oneline working..umount-fix-test
-<record first and last commit id in applied series>
-$ guilt import-commits <first-commit..last-commit>
+Yup, the log is considered corrupt.
 
-And that adds the commits from the umount-fix-test branch into
-individual patches in the guilt series preserving all the metadata
-from the original sender in them. i.e. if I then patchbomb them back
-to the mailing list, they will have the correct "From:" attribution
-and dates as found in the original emails....
+> Aug 30 14:21:59 Rescue kernel: [  811.334230] XFS: log mount failed
+> 
+> XFS Check will not run since log recovery mount has not been done.
+> 
+> What is the cause of the recovery failure and what is the recommended
+> course of action?
+> 
+> I have tried the metadump and restore, then do a xfs_repair -L on the
+> metadump image, with xfs_repair version 3.1.8.  The repair is successful
+> and there are also some files copied to lost+found.
+
+That's your only option for recovery.
+
+> I would like to know the cause of this log recovery failure and if there
+
+You've got an old, unsupported kernel that was going through
+significant changes to the log code at the time, so it may not be
+possible to work out what the problem was. It seems likely that the
+power loss caused the disk not to write everything it should have to
+the log - laptops are not supposed to just lose power because
+they have a built in UPS (i.e. battery)....
+
+> is another alternative to xfs_repair -L, since I do not really know what
+> files I would lose with the inodes being changed, and also I do not know
+> what the files in lost+found are.
+
+The files in lost+found are numbered by their inode number. You need
+to look at the contents of them to determine where they came from.
 
 Cheers,
 
