@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7UAvHJ9182492 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 05:57:17 -0500
+	q7UAvRSl182538 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 05:57:27 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	6EQl7jHE1MfCR6Fb for <xfs@oss.sgi.com>;
-	Thu, 30 Aug 2012 03:58:09 -0700 (PDT)
+	BHRYgdkTmZfkqRtI for <xfs@oss.sgi.com>;
+	Thu, 30 Aug 2012 03:58:14 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T72Rh-0003iE-Lj
+	(envelope-from <dave@fromorbit.com>) id 1T72Rh-0003iG-Mu
 	for xfs@oss.sgi.com; Thu, 30 Aug 2012 20:57:57 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T72RX-00006Q-IU
+	(envelope-from <dave@disappointment.disaster>) id 1T72RX-00006V-Jj
 	for xfs@oss.sgi.com; Thu, 30 Aug 2012 20:57:47 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/13] xfs: xfs_sync_data is redundant.
-Date: Thu, 30 Aug 2012 20:57:36 +1000
-Message-Id: <1346324262-32724-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/13] xfs: xfs_sync_fsdata is redundant
+Date: Thu, 30 Aug 2012 20:57:37 +1000
+Message-Id: <1346324262-32724-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1346324262-32724-1-git-send-email-david@fromorbit.com>
 References: <1346324262-32724-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,203 +35,166 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We don't do any data writeback from XFS any more - the VFS is
-completely responsible for that, including for freeze. We can
-replace the remaining caller with the VFS level function that
-achieves the same thing, but without conflicting with current
-writeback work - writeback_inodes_sb_if_idle().
+Why do we need to write the superblock to disk once we've written
+all the data?  We don't actually - the reasons for doing this are
+lost in the mists of time, and go back to the way Irix used to drive
+VFS flushing.
 
-This means we can remove the flush_work and xfs_flush_inodes() - the
-VFS functionality completely replaces the internal flush queue for
-doing this writeback work in a separate context to avoid stack
-overruns..
+On linux, this code is only called from two contexts: remount and
+.sync_fs. In the remount case, the call is followed by a metadata
+sync, which unpins and writes the superblock.  In the sync_fs case,
+we only need to force the log to disk to ensure that the superblock
+is correctly on disk, so we don't actually need to write it. Hence
+the functionality is either redundant or superfluous and thus can be
+removed.
+
+Seeing as xfs_quiesce_data is essentially now just a log force,
+remove it as well and fold the code back into the two callers.
+Neither of them need the log covering check, either, as that is
+redundant for the remount case, and unnecessary for the .sync_fs
+case.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_iomap.c    |    3 +-
- fs/xfs/xfs_mount.h    |    1 -
- fs/xfs/xfs_super.c    |    3 --
- fs/xfs/xfs_sync.c     |   78 -------------------------------------------------
- fs/xfs/xfs_sync.h     |    3 --
- fs/xfs/xfs_vnodeops.c |    3 +-
- 6 files changed, 4 insertions(+), 87 deletions(-)
+ fs/xfs/xfs_super.c |   19 +++++----------
+ fs/xfs/xfs_sync.c  |   67 +++++++---------------------------------------------
+ 2 files changed, 14 insertions(+), 72 deletions(-)
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 973dff6..b3351d6 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -446,7 +446,8 @@ retry:
- 
- 		if (error == ENOSPC) {
- 			xfs_iunlock(ip, XFS_ILOCK_EXCL);
--			xfs_flush_inodes(ip);
-+			writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb,
-+						    WB_REASON_FS_FREE_SPACE);
- 			xfs_ilock(ip, XFS_ILOCK_EXCL);
- 		}
- 
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 10e17d5..4959c5c 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -200,7 +200,6 @@ typedef struct xfs_mount {
- #endif
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
- 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
--	struct work_struct	m_flush_work;	/* background inode flush */
- 	__int64_t		m_update_flags;	/* sb flags we need to update
- 						   on the next remount,rw */
- 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 15946a9..787dd79 100644
+index 787dd79..2d053fb 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -918,8 +918,6 @@ xfs_fs_put_super(
+@@ -934,7 +934,6 @@ xfs_fs_sync_fs(
+ 	int			wait)
  {
  	struct xfs_mount	*mp = XFS_M(sb);
+-	int			error;
  
--	cancel_work_sync(&mp->m_flush_work);
+ 	/*
+ 	 * Doing anything during the async pass would be counterproductive.
+@@ -942,10 +941,7 @@ xfs_fs_sync_fs(
+ 	if (!wait)
+ 		return 0;
+ 
+-	error = xfs_quiesce_data(mp);
+-	if (error)
+-		return -error;
 -
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
- 	xfs_freesb(mp);
-@@ -1230,7 +1228,6 @@ xfs_fs_fill_super(
- 	spin_lock_init(&mp->m_sb_lock);
- 	mutex_init(&mp->m_growlock);
- 	atomic_set(&mp->m_active_trans, 0);
--	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
- 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 
- 	mp->m_super = sb;
++	xfs_log_force(mp, XFS_LOG_SYNC);
+ 	if (laptop_mode) {
+ 		/*
+ 		 * The disk must be active because we're syncing.
+@@ -1109,15 +1105,12 @@ xfs_fs_remount(
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+ 		/*
+-		 * After we have synced the data but before we sync the
+-		 * metadata, we need to free up the reserve block pool so that
+-		 * the used block count in the superblock on disk is correct at
+-		 * the end of the remount. Stash the current reserve pool size
+-		 * so that if we get remounted rw, we can return it to the same
+-		 * size.
++		 * Before we sync the metadata, we need to free up the reserve
++		 * block pool so that the used block count in the superblock on
++		 * disk is correct at the end of the remount. Stash the current
++		 * reserve pool size so that if we get remounted rw, we can
++		 * return it to the same size.
+ 		 */
+-
+-		xfs_quiesce_data(mp);
+ 		xfs_save_resvblks(mp);
+ 		xfs_quiesce_attr(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
 diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index c4c9301..e5ee24a 100644
+index e5ee24a..7092276 100644
 --- a/fs/xfs/xfs_sync.c
 +++ b/fs/xfs/xfs_sync.c
-@@ -216,51 +216,6 @@ xfs_inode_ag_iterator(
+@@ -215,70 +215,16 @@ xfs_inode_ag_iterator(
+ 	return XFS_ERROR(last_error);
  }
  
- STATIC int
--xfs_sync_inode_data(
--	struct xfs_inode	*ip,
--	struct xfs_perag	*pag,
--	int			flags)
+-STATIC int
+-xfs_sync_fsdata(
+-	struct xfs_mount	*mp)
 -{
--	struct inode		*inode = VFS_I(ip);
--	struct address_space *mapping = inode->i_mapping;
--	int			error = 0;
+-	struct xfs_buf		*bp;
+-	int			error;
 -
--	if (!mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
--		return 0;
--
--	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
--		if (flags & SYNC_TRYLOCK)
--			return 0;
--		xfs_ilock(ip, XFS_IOLOCK_SHARED);
--	}
--
--	error = xfs_flush_pages(ip, 0, -1, (flags & SYNC_WAIT) ?
--				0 : XBF_ASYNC, FI_NONE);
--	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-	/*
+-	 * If the buffer is pinned then push on the log so we won't get stuck
+-	 * waiting in the write for someone, maybe ourselves, to flush the log.
+-	 *
+-	 * Even though we just pushed the log above, we did not have the
+-	 * superblock buffer locked at that point so it can become pinned in
+-	 * between there and here.
+-	 */
+-	bp = xfs_getsb(mp, 0);
+-	if (xfs_buf_ispinned(bp))
+-		xfs_log_force(mp, 0);
+-	error = xfs_bwrite(bp);
+-	xfs_buf_relse(bp);
 -	return error;
 -}
 -
 -/*
-- * Write out pagecache data for the whole filesystem.
+- * When remounting a filesystem read-only or freezing the filesystem, we have
+- * two phases to execute. This first phase is syncing the data before we
+- * quiesce the filesystem, and the second is flushing all the inodes out after
+- * we've waited for all the transactions created by the first phase to
+- * complete. The second phase ensures that the inodes are written to their
+- * location on disk rather than just existing in transactions in the log. This
+- * means after a quiesce there is no log replay required to write the inodes to
+- * disk (this is the main difference between a sync and a quiesce).
 - */
--STATIC int
--xfs_sync_data(
--	struct xfs_mount	*mp,
--	int			flags)
--{
--	int			error;
--
--	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
--
--	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags);
--	if (error)
--		return XFS_ERROR(error);
--
--	xfs_log_force(mp, (flags & SYNC_WAIT) ? XFS_LOG_SYNC : 0);
--	return 0;
--}
--
--STATIC int
- xfs_sync_fsdata(
- 	struct xfs_mount	*mp)
- {
-@@ -414,39 +369,6 @@ xfs_reclaim_worker(
- 	xfs_reclaim_queue_work(mp);
- }
- 
 -/*
-- * Flush delayed allocate data, attempting to free up reserved space
-- * from existing allocations.  At this point a new allocation attempt
-- * has failed with ENOSPC and we are in the process of scratching our
-- * heads, looking about for more room.
-- *
-- * Queue a new data flush if there isn't one already in progress and
-- * wait for completion of the flush. This means that we only ever have one
-- * inode flush in progress no matter how many ENOSPC events are occurring and
-- * so will prevent the system from bogging down due to every concurrent
-- * ENOSPC event scanning all the active inodes in the system for writeback.
+- * First stage of freeze - no writers will make progress now we are here,
+- * so we flush delwri and delalloc buffers here, then wait for all I/O to
+- * complete.  Data is frozen at that point. Metadata is not frozen,
+- * transactions can still occur here so don't bother emptying the AIL
+- * because it'll just get dirty again.
 - */
--void
--xfs_flush_inodes(
--	struct xfs_inode	*ip)
+-int
+-xfs_quiesce_data(
+-	struct xfs_mount	*mp)
 -{
--	struct xfs_mount	*mp = ip->i_mount;
+-	int			error, error2 = 0;
 -
--	queue_work(xfs_mount_wq, &mp->m_flush_work);
--	flush_work_sync(&mp->m_flush_work);
+-	/* force out the log */
+-	xfs_log_force(mp, XFS_LOG_SYNC);
+-
+-	/* write superblock and hoover up shutdown errors */
+-	error = xfs_sync_fsdata(mp);
+-
+-	/* mark the log as covered if needed */
+-	if (xfs_log_need_covered(mp))
+-		error2 = xfs_fs_log_dummy(mp);
+-
+-	return error ? error : error2;
 -}
 -
--void
--xfs_flush_worker(
--	struct work_struct *work)
--{
--	struct xfs_mount *mp = container_of(work,
--					struct xfs_mount, m_flush_work);
--
--	xfs_sync_data(mp, SYNC_TRYLOCK);
--	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
--}
--
- void
- __xfs_inode_set_reclaim_tag(
- 	struct xfs_perag	*pag,
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 707c46e..0beabea 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -24,14 +24,11 @@ struct xfs_perag;
- #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
- #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
+ /*
+  * Second stage of a quiesce. The data is already synced, now we have to take
+  * care of the metadata. New transactions are already blocked, so we need to
+  * wait for any remaining transactions to drain out before proceeding.
+  *
++ * The second phase ensures that the inodes are written to their
++ * location on disk rather than just existing in transactions in the log. This
++ * means after a quiesce there is no log replay required to write the inodes to
++ * disk (this is the main difference between a sync and a quiesce).
++ *
+  * Note: this stops background sync work - the callers must ensure it is started
+  * again when appropriate.
+  */
+@@ -292,6 +238,9 @@ xfs_quiesce_attr(
+ 	while (atomic_read(&mp->m_active_trans) > 0)
+ 		delay(100);
  
--void xfs_flush_worker(struct work_struct *work);
- void xfs_reclaim_worker(struct work_struct *work);
- 
- int xfs_quiesce_data(struct xfs_mount *mp);
- void xfs_quiesce_attr(struct xfs_mount *mp);
- 
--void xfs_flush_inodes(struct xfs_inode *ip);
--
- int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
- int xfs_reclaim_inodes_count(struct xfs_mount *mp);
- void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 2a5c6373..04fe077 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -777,7 +777,8 @@ xfs_create(
- 			XFS_TRANS_PERM_LOG_RES, log_count);
- 	if (error == ENOSPC) {
- 		/* flush outstanding delalloc blocks and retry */
--		xfs_flush_inodes(dp);
-+		writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb,
-+					    WB_REASON_FS_FREE_SPACE);
- 		error = xfs_trans_reserve(tp, resblks, log_res, 0,
- 				XFS_TRANS_PERM_LOG_RES, log_count);
- 	}
++	/* force the log to unpin objects from the now complete transactions */
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
+ 	/* reclaim inodes to do any IO before the freeze completes */
+ 	xfs_reclaim_inodes(mp, 0);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
 -- 
 1.7.10
 
