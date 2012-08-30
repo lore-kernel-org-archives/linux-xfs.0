@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7UBxUad192300 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 06:59:30 -0500
+	q7UBxc4r192383 for <xfs@oss.sgi.com>; Thu, 30 Aug 2012 06:59:39 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	I6o1aZsNmpGUNzi5 for <xfs@oss.sgi.com>;
-	Thu, 30 Aug 2012 05:00:22 -0700 (PDT)
+	pchwrCLn042qyXhw for <xfs@oss.sgi.com>;
+	Thu, 30 Aug 2012 05:00:31 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1T73Q4-0003qD-1Q
-	for xfs@oss.sgi.com; Thu, 30 Aug 2012 22:00:20 +1000
+	(envelope-from <dave@fromorbit.com>) id 1T73QE-0003qZ-4r
+	for xfs@oss.sgi.com; Thu, 30 Aug 2012 22:00:30 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1T73Q3-0000k8-RK
-	for xfs@oss.sgi.com; Thu, 30 Aug 2012 22:00:19 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1T73QE-0000kb-22
+	for xfs@oss.sgi.com; Thu, 30 Aug 2012 22:00:30 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH V2 00/13] xfs: remove the xfssyncd mess
-Date: Thu, 30 Aug 2012 22:00:04 +1000
-Message-Id: <1346328017-2795-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/13] xfs: Bring some sanity to log unmounting
+Date: Thu, 30 Aug 2012 22:00:10 +1000
+Message-Id: <1346328017-2795-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1346328017-2795-1-git-send-email-david@fromorbit.com>
+References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,16 +33,115 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Version 2 of the patchset I described here:
+From: Dave Chinner <dchinner@redhat.com>
 
-http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
+When unmounting the filesystem, there are lots of operations that
+need to be done in a specific order, and they are spread across
+across a couple of functions. We have to drain the AIL before we
+write the unmount record, and we have to shut down the background
+log work before we do either of them.
 
-This version has run through xfstests completely once, so it's
-less likely to let smoke out....
+But this is all split haphazardly across xfs_unmountfs() and
+xfs_log_unmount(). Move all the AIL flushing and log manipulations
+to xfs_log_unmount() so that the responisbilities of each function
+is clear and the operations they perform obvious.
 
-Version 2:
-- fix writeback_inodes_sb_if_idle call in xfs_create()
-- refreshed patch 13 before sending.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c   |   29 ++++++++++++++++++++++++++---
+ fs/xfs/xfs_mount.c |   24 ------------------------
+ 2 files changed, 26 insertions(+), 27 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 598f279..4de160a 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -853,15 +853,38 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ }	/* xfs_log_unmount_write */
+ 
+ /*
+- * Deallocate log structures for unmount/relocation.
++ * Shut down and release the AIL and Log.
+  *
+- * We need to stop the aild from running before we destroy
+- * and deallocate the log as the aild references the log.
++ * During unmount, we need to ensure we flush all the dirty metadata objects
++ * from the AIL so that the log is empty before we write the unmount record to
++ * the log.
++ *
++ * To do this, we first need to shut down the background log work so it is not
++ * trying to cover the log as we clean up. We then need to unpin all objects in
++ * the log so we can then flush them out. Once they have completed their IO and
++ * run the callbacks removing themselves from the AIL, we can write the unmount
++ * record, tear down the AIL and finally free the log.
+  */
+ void
+ xfs_log_unmount(xfs_mount_t *mp)
+ {
+ 	cancel_delayed_work_sync(&mp->m_log->l_work);
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
++	/*
++	 * The superblock buffer is uncached and while xfs_ail_push_all_sync()
++	 * will push it, xfs_wait_buftarg() will not wait for it. Further,
++	 * xfs_buf_iowait() cannot be used because it was pushed with the
++	 * XBF_ASYNC flag set, so we need to use a lock/unlock pair to wait for
++	 * the IO to complete.
++	 */
++	xfs_ail_push_all_sync(mp->m_ail);
++	xfs_wait_buftarg(mp->m_ddev_targp);
++	xfs_buf_lock(mp->m_sb_bp);
++	xfs_buf_unlock(mp->m_sb_bp);
++
++	xfs_log_unmount_write(mp);
++
+ 	xfs_trans_ail_destroy(mp);
+ 	xlog_dealloc_log(mp->m_log);
+ }
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 62106e2..9b56511 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1494,13 +1494,6 @@ xfs_unmountfs(
+ 	xfs_qm_unmount(mp);
+ 
+ 	/*
+-	 * Flush out the log synchronously so that we know for sure
+-	 * that nothing is pinned.  This is important because bflush()
+-	 * will skip pinned buffers.
+-	 */
+-	xfs_log_force(mp, XFS_LOG_SYNC);
+-
+-	/*
+ 	 * Unreserve any blocks we have so that when we unmount we don't account
+ 	 * the reserved free space as used. This is really only necessary for
+ 	 * lazy superblock counting because it trusts the incore superblock
+@@ -1525,23 +1518,6 @@ xfs_unmountfs(
+ 		xfs_warn(mp, "Unable to update superblock counters. "
+ 				"Freespace may not be correct on next mount.");
+ 
+-	/*
+-	 * At this point we might have modified the superblock again and thus
+-	 * added an item to the AIL, thus flush it again.
+-	 */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-	xfs_wait_buftarg(mp->m_ddev_targp);
+-
+-	/*
+-	 * The superblock buffer is uncached and xfsaild_push() will lock and
+-	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
+-	 * here but a lock on the superblock buffer will block until iodone()
+-	 * has completed.
+-	 */
+-	xfs_buf_lock(mp->m_sb_bp);
+-	xfs_buf_unlock(mp->m_sb_bp);
+-
+-	xfs_log_unmount_write(mp);
+ 	xfs_log_unmount(mp);
+ 	xfs_uuid_unmount(mp);
+ 
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
