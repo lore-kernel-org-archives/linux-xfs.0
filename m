@@ -1,16 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7VMLMZT241504 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 17:21:23 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id Vz28YavgN1ZFBOeE for
-	<xfs@oss.sgi.com>; Fri, 31 Aug 2012 15:22:17 -0700 (PDT)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH 04/15 v2] xfs: implement invalidatepage_range aop
-Date: Fri, 31 Aug 2012 18:21:40 -0400
-Message-Id: <1346451711-1931-5-git-send-email-lczerner@redhat.com>
-In-Reply-To: <1346451711-1931-1-git-send-email-lczerner@redhat.com>
-References: <1346451711-1931-1-git-send-email-lczerner@redhat.com>
+	q7VNU1AE251121 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 18:30:01 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	gNF3e7bsrnFgb5vb for <xfs@oss.sgi.com>;
+	Fri, 31 Aug 2012 16:30:55 -0700 (PDT)
+Date: Sat, 1 Sep 2012 09:30:51 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/10] xfstests: rename USE_BIG_LOOPFS to be more generic
+Message-ID: <20120831233051.GE13691@dastard>
+References: <1343291989-14987-1-git-send-email-david@fromorbit.com>
+	<1343291989-14987-3-git-send-email-david@fromorbit.com>
+	<503CCF3F.5050608@sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <503CCF3F.5050608@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,124 +24,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-fsdevel@vger.kernel.org
-Cc: tytso@mit.edu, hughd@google.com, xfs@oss.sgi.com, linux-mm@kvack.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
-
-mm now supports invalidatepage_range address space operation which is
-useful to allow truncating page range which is not aligned to the end of
-the page. This will help in punch hole implementation once
-truncate_inode_pages_range() is modify to allow this as well.
-
-With this commit xfs now register only invalidatepage_range.
-Additionally we also update the respective trace point.
-
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+To: Rich Johnston <rjohnston@sgi.com>
 Cc: xfs@oss.sgi.com
----
- fs/xfs/xfs_aops.c  |   14 ++++++++------
- fs/xfs/xfs_trace.h |   41 ++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 48 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index e562dd4..c395f9e 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -813,12 +813,14 @@ xfs_cluster_write(
- }
- 
- STATIC void
--xfs_vm_invalidatepage(
-+xfs_vm_invalidatepage_range(
- 	struct page		*page,
--	unsigned long		offset)
-+	unsigned int		offset,
-+	unsigned int		length)
- {
--	trace_xfs_invalidatepage(page->mapping->host, page, offset);
--	block_invalidatepage(page, offset);
-+	trace_xfs_invalidatepage_range(page->mapping->host, page, offset,
-+				       length);
-+	block_invalidatepage_range(page, offset, length);
- }
- 
- /*
-@@ -882,7 +884,7 @@ next_buffer:
- 
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- out_invalidate:
--	xfs_vm_invalidatepage(page, 0);
-+	xfs_vm_invalidatepage_range(page, 0, PAGE_CACHE_SIZE);
- 	return;
- }
- 
-@@ -1646,7 +1648,7 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.writepage		= xfs_vm_writepage,
- 	.writepages		= xfs_vm_writepages,
- 	.releasepage		= xfs_vm_releasepage,
--	.invalidatepage		= xfs_vm_invalidatepage,
-+	.invalidatepage_range	= xfs_vm_invalidatepage_range,
- 	.write_begin		= xfs_vm_write_begin,
- 	.write_end		= xfs_vm_write_end,
- 	.bmap			= xfs_vm_bmap,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index e5795dd..e716754 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -981,7 +981,46 @@ DEFINE_EVENT(xfs_page_class, name,	\
- 	TP_ARGS(inode, page, off))
- DEFINE_PAGE_EVENT(xfs_writepage);
- DEFINE_PAGE_EVENT(xfs_releasepage);
--DEFINE_PAGE_EVENT(xfs_invalidatepage);
-+
-+TRACE_EVENT(xfs_invalidatepage_range,
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned int off,
-+		 unsigned int len),
-+	TP_ARGS(inode, page, off, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(xfs_ino_t, ino)
-+		__field(pgoff_t, pgoff)
-+		__field(loff_t, size)
-+		__field(unsigned int, offset)
-+		__field(unsigned int, length)
-+		__field(int, delalloc)
-+		__field(int, unwritten)
-+	),
-+	TP_fast_assign(
-+		int delalloc = -1, unwritten = -1;
-+
-+		if (page_has_buffers(page))
-+			xfs_count_page_state(page, &delalloc, &unwritten);
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = XFS_I(inode)->i_ino;
-+		__entry->pgoff = page_offset(page);
-+		__entry->size = i_size_read(inode);
-+		__entry->offset = off;
-+		__entry->length = len;
-+		__entry->delalloc = delalloc;
-+		__entry->unwritten = unwritten;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %x "
-+		  "length %x delalloc %d unwritten %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->pgoff,
-+		  __entry->size,
-+		  __entry->offset,
-+		  __entry->length,
-+		  __entry->delalloc,
-+		  __entry->unwritten)
-+)
- 
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
+On Tue, Aug 28, 2012 at 09:01:35AM -0500, Rich Johnston wrote:
+> On 07/26/2012 03:39 AM, Dave Chinner wrote:
+> >From: Dave Chinner <dchinner@redhat.com>
+> >
+> >USE_BIG_LOOPFS is really misnamed - it can be used on real devices just as
+> >easily as loop devices. It really means we are testing a large scratch device
+> >and that we should enable the special filesystem filling and checking options
+> >that enable xfstests to be run sanely on large XFS filesystems.
+> >
+> >Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> >---
+> >  004       |    2 +-
+> >  015       |    2 +-
+> >  030       |    2 +-
+> >  031       |    2 +-
+> >  032       |    2 +-
+> >  033       |    4 ++--
+> >  041       |    2 +-
+> >  049       |    2 +-
+> >  083       |    2 +-
+> >  092       |    2 +-
+> >  148       |    2 +-
+> >  149       |    2 +-
+> >  common    |    2 +-
+> >  common.rc |   12 ++++++------
+> >  setup     |    5 +++--
+> >  15 files changed, 23 insertions(+), 22 deletions(-)
+> >
+> 
+> >  MOUNT_OPTIONS="$MOUNT_OPTIONS -o inode64"
+> >  _scratch_mkfs_xfs | _filter_mkfs 2>/dev/null
+> >diff --git a/148 b/148
+> >index 76cbf37..7bb1722 100755
+> >--- a/148
+> >+++ b/148
+> >@@ -66,8 +66,8 @@ _check_ag()
+> >  _supported_fs xfs
+> >  _supported_os IRIX Linux
+> 
+> #RCJ As long as you are making changes to this file, please remove
+> Linux from the _supported_os as xfs_prepair64 is an IRIX specific
+> binary.
+
+Such a change belongs in a separate patch, not intermingled with a
+patch in a series that has nothing to do with xfs_prepair64....
+
+Cheers,
+
+Dave.
 -- 
-1.7.7.6
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
