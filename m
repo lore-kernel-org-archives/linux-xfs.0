@@ -1,15 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7VJWdrR220251 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 14:32:39 -0500
-Received: from nm38-vm4.bullet.mail.bf1.yahoo.com
-	(nm38-vm4.bullet.mail.bf1.yahoo.com [72.30.239.20]) by
-	cuda.sgi.com with SMTP id DFxV8h3P7ggdAWoW for
-	<xfs@oss.sgi.com>; Thu, 30 Aug 2012 06:43:50 -0700 (PDT)
-Message-ID: <1346334229.58787.YahooMailClassic@web140702.mail.bf1.yahoo.com>
-Date: Thu, 30 Aug 2012 06:43:49 -0700 (PDT)
-From: Gim Leong Chin <chin_gim_leong@yahoo.com>
-Subject: XFS Mount Recovery Failed on Root File System After Power Outage
+	q7VKHfGM224429 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 15:17:41 -0500
+Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
+	cuda.sgi.com with ESMTP id OfKkNElf7vLbBCqc for
+	<xfs@oss.sgi.com>; Fri, 31 Aug 2012 13:18:35 -0700 (PDT)
+Received: from cobra.newdream.net (localhost [127.0.0.1])
+	by cobra.newdream.net (Postfix) with ESMTP id CCE7E800BB
+	for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 13:18:34 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by cobra.newdream.net (Postfix) with ESMTP id A4D8D800BB
+	for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 13:18:34 -0700 (PDT)
+Date: Fri, 31 Aug 2012 13:18:34 -0700 (PDT)
+From: Sage Weil <sage@inktank.com>
+Subject: xfs sb_internal#2 lockdep splat
+Message-ID: <alpine.DEB.2.00.1208311318140.19947@cobra.newdream.net>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -19,328 +24,114 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============7237441943493730872=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
---===============7237441943493730872==
-Content-Type: multipart/alternative; boundary="-589800495-399632349-1346334229=:58787"
+This may be old news, but:
 
----589800495-399632349-1346334229=:58787
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hi
-
-
-I just had a power outage and my Acer notebook computer running openSUSE 11=
-.4 x86_64 with kernel 2.6.37 stopped as a result.
-
-After I reset the circuit breaker I was unable to boot the OS.
-
-I booted up the openSUSE 11.4 rescue disk (installation media).=A0 I ran th=
-e S.M.A.R.T. short self-test with smartctl on the W.D. Caviar Black 320 GB =
-drive and there were no errors.=A0 The S.M.A.R.T. parameters all look OK.=
-=A0 I have not run the long self test though.
-
-I am able to mount the /home to /mnt on the rescue session and I see no err=
-or in /var/log/messages.
-
-I then tried again to mount the root file system to /mnt.=A0=A0
-
-Aug 30 14:21:59 Rescue kernel: [=A0 811.166914] XFS mounting filesystem sdb=
-2
-Aug 30 14:21:59 Rescue kernel: [=A0 811.212169] Starting XFS recovery on fi=
-lesystem: sdb2 (logdev: internal)
-Aug 30 14:21:59 Rescue kernel: [=A0 811.334157] XFS: Invalid block length (=
-0xfffffffc) given for buffer
-Aug 30 14:21:59 Rescue kernel: [=A0 811.334175] XFS: log mount/recovery fai=
-led: error 117
-Aug 30 14:21:59 Rescue kernel: [=A0 811.334230] XFS: log mount failed
-
-XFS Check will not run since log recovery mount has not been done.
-
-What is the cause of the recovery failure and what is the recommended cours=
-e of action?
-
-The XFS Check and XFS Repair versions on the rescue disk are 3.1.4.=A0 Are =
-they sufficient to do any repair?
-
-If I need a newer version of XFS Check and XFS Repair I will need to think =
-of something since there is no compiler on the Rescue system and my openSUS=
-E 11.4 desktop is down with hardware failure.
-
-Thank you for your assistance.
-
-
-
-GL
----589800495-399632349-1346334229=:58787
-Content-Type: text/html; charset=iso-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<table cellspacing=3D"0" cellpadding=3D"0" border=3D"0" ><tr><td valign=3D"=
-top" style=3D"font: inherit;"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: non=
-e; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !i=
-mportant; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT=
-: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webk=
-it-text-size-adjust: auto; -webkit-text-stroke-width: 0px">Hi</SPAN><BR sty=
-le=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); =
-TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH=
-: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTE=
-R-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-=
-adjust: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT-=
-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTL=
-INE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/1=
-6px
- monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR:=
- rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-tex=
-t-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROU=
-ND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-=
-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPAC=
-E: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPAC=
-ING: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><=
-SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,25=
-5,255); TEXT-INDENT: 0px; DISPLAY: inline !important; FONT: 14px/16px monos=
-pace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT: none; LETTER-SPACING: normal;=
- COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -web=
-kit-text-stroke-width: 0px">I just had a power outage and my Acer notebook =
-computer running openSUSE 11.4 x86_64 with kernel 2.6.37 stopped as a
- result.</SPAN><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COL=
-OR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR:=
- invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: nor=
-mal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0=
-px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><BR sty=
-le=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); =
-TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH=
-: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTE=
-R-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-=
-adjust: auto; -webkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEX=
-T-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DI=
-SPLAY: inline !important; FONT: 14px/16px monospace; WHITE-SPACE: normal; O=
-RPHANS: 2; FLOAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0);
- WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-wid=
-th: 0px">After I reset the circuit breaker I was unable to boot the OS.</SP=
-AN><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,=
-255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUT=
-LINE-WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS=
-: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-=
-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS=
-: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT:=
- 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FO=
-NT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: n=
-ormal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto=
-; -webkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM:=
- none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY:
- inline !important; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS=
-: 2; FLOAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: =
-0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px">I boot=
-ed up the openSUSE 11.4 rescue disk (installation media).&nbsp; I ran the S=
-.M.A.R.T. short self-test with smartctl on the W.D. Caviar Black 320 GB dri=
-ve and there were no errors.&nbsp; The S.M.A.R.T. parameters all look OK.&n=
-bsp; I have not run the long self test though.</SPAN><BR style=3D"WIDOWS: 2=
-; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0p=
-x; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT:=
- 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: norm=
-al; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -=
-webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none=
-; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE:
- none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monosp=
-ace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,=
-0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-strok=
-e-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-CO=
-LOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !important; FONT: =
-14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT: none; LETTER-S=
-PACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adj=
-ust: auto; -webkit-text-stroke-width: 0px">I am able to mount the /home to =
-/mnt on the rescue session and I see no error in /var/log/messages.</SPAN><=
-BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,=
-255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE=
--WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2;=
- LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px;
- -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><BR style=
-=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TE=
-XT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: =
-medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-=
-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-ad=
-just: auto; -webkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-=
-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISP=
-LAY: inline !important; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORP=
-HANS: 2; FLOAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACI=
-NG: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px">I =
-then tried again to mount the root file system to /mnt.&nbsp;<SPAN class=3D=
-Apple-converted-space>&nbsp;</SPAN></SPAN><BR style=3D"WIDOWS: 2; TEXT-TRAN=
-SFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px;
- OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 1=
-4px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal=
-; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -we=
-bkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; =
-BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; =
-OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monospace; WH=
-ITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); W=
-ORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width=
-: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rg=
-b(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !important; FONT: 14px/16=
-px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT: none; LETTER-SPACING:=
- normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: au=
-to; -webkit-text-stroke-width: 0px">Aug 30 14:21:59 Rescue kernel:
- [&nbsp; 811.166914] XFS mounting filesystem sdb2</SPAN><BR style=3D"WIDOWS=
-: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT:=
- 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FO=
-NT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: n=
-ormal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto=
-; -webkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM:=
- none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inlin=
-e !important; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; F=
-LOAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -=
-webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px">Aug 30 14:21=
-:59 Rescue kernel: [&nbsp; 811.212169] Starting XFS recovery on filesystem:=
- sdb2 (logdev: internal)</SPAN><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none=
-; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE:
- none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monosp=
-ace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,=
-0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-strok=
-e-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-CO=
-LOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !important; FONT: =
-14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT: none; LETTER-S=
-PACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adj=
-ust: auto; -webkit-text-stroke-width: 0px">Aug 30 14:21:59 Rescue kernel: [=
-&nbsp; 811.334157] XFS: Invalid block length (0xfffffffc) given for buffer<=
-/SPAN><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(2=
-55,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; =
-OUTLINE-WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPH=
-ANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px;
- -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><SPAN styl=
-e=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); T=
-EXT-INDENT: 0px; DISPLAY: inline !important; FONT: 14px/16px monospace; WHI=
-TE-SPACE: normal; ORPHANS: 2; FLOAT: none; LETTER-SPACING: normal; COLOR: r=
-gb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-=
-stroke-width: 0px">Aug 30 14:21:59 Rescue kernel: [&nbsp; 811.334175] XFS: =
-log mount/recovery failed: error 117</SPAN><BR style=3D"WIDOWS: 2; TEXT-TRA=
-NSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE=
--STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px=
- monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR:=
- rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-tex=
-t-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGR=
-OUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline
- !important; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FL=
-OAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -w=
-ebkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px">Aug 30 14:21:=
-59 Rescue kernel: [&nbsp; 811.334230] XFS: log mount failed</SPAN><BR style=
-=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TE=
-XT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: =
-medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-=
-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-ad=
-just: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT-TR=
-ANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLIN=
-E-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16p=
-x monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR=
-: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto;
- -webkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: =
-none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline=
- !important; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FL=
-OAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -w=
-ebkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px">XFS Check wil=
-l not run since log recovery mount has not been done.</SPAN><BR style=3D"WI=
-DOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-IND=
-ENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium=
-; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACIN=
-G: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: =
-auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT-TRANSFOR=
-M: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYL=
-E: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px
- monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR:=
- rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-tex=
-t-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGR=
-OUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !important;=
- FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT: none; L=
-ETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-s=
-ize-adjust: auto; -webkit-text-stroke-width: 0px">What is the cause of the =
-recovery failure and what is the recommended course of action?</SPAN><BR st=
-yle=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255);=
- TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDT=
-H: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETT=
-ER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size=
--adjust: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2;
- TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px=
-; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: =
-14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: norma=
-l; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -w=
-ebkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: non=
-e; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !i=
-mportant; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT=
-: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webk=
-it-text-size-adjust: auto; -webkit-text-stroke-width: 0px">The XFS Check an=
-d XFS Repair versions on the rescue disk are 3.1.4.&nbsp; Are they sufficie=
-nt to do any repair?</SPAN><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BA=
-CKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OU=
-TLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monospace;
- WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0)=
-; WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-wi=
-dth: 0px"><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: r=
-gb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: inve=
-rt; OUTLINE-WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; =
-ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -=
-webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><SPAN style=
-=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TE=
-XT-INDENT: 0px; DISPLAY: inline !important; FONT: 14px/16px monospace; WHIT=
-E-SPACE: normal; ORPHANS: 2; FLOAT: none; LETTER-SPACING: normal; COLOR: rg=
-b(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-s=
-troke-width: 0px">If I need a newer version of XFS Check and XFS Repair I w=
-ill need to think of something since there is no compiler on the Rescue
- system and my openSUSE 11.4 desktop is down with hardware failure.</SPAN><=
-BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,=
-255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE=
--WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2;=
- LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text=
--size-adjust: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2;=
- TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px=
-; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: =
-14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: norma=
-l; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -w=
-ebkit-text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: non=
-e; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !i=
-mportant; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2;
- FLOAT: none; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px;=
- -webkit-text-size-adjust: auto; -webkit-text-stroke-width: 0px">Thank you =
-for your assistance.</SPAN><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BA=
-CKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OU=
-TLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/16px monospace; WHIT=
-E-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WOR=
-D-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit-text-stroke-width: =
-0px"><BR style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(25=
-5,255,255); TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; O=
-UTLINE-WIDTH: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHA=
-NS: 2; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webki=
-t-text-size-adjust: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDO=
-WS: 2; TEXT-TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255);
- TEXT-INDENT: 0px; OUTLINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDT=
-H: medium; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETT=
-ER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size=
--adjust: auto; -webkit-text-stroke-width: 0px"><BR style=3D"WIDOWS: 2; TEXT=
--TRANSFORM: none; BACKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; OUT=
-LINE-STYLE: none; OUTLINE-COLOR: invert; OUTLINE-WIDTH: medium; FONT: 14px/=
-16px monospace; WHITE-SPACE: normal; ORPHANS: 2; LETTER-SPACING: normal; CO=
-LOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-text-size-adjust: auto; -webkit=
--text-stroke-width: 0px"><SPAN style=3D"WIDOWS: 2; TEXT-TRANSFORM: none; BA=
-CKGROUND-COLOR: rgb(255,255,255); TEXT-INDENT: 0px; DISPLAY: inline !import=
-ant; FONT: 14px/16px monospace; WHITE-SPACE: normal; ORPHANS: 2; FLOAT: non=
-e; LETTER-SPACING: normal; COLOR: rgb(0,0,0); WORD-SPACING: 0px; -webkit-te=
-xt-size-adjust: auto; -webkit-text-stroke-width:
- 0px">GL</SPAN></td></tr></table>
----589800495-399632349-1346334229=:58787--
-
-
---===============7237441943493730872==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+[23405.556763] ======================================================
+[23405.584315] [ INFO: possible circular locking dependency detected ]
+[23405.611861] 3.6.0-rc2-ceph-00143-g995fc06 #1 Not tainted
+[23405.638127] -------------------------------------------------------
+[23405.638129] fill2/7976 is trying to acquire lock:
+[23405.638139]  ((&mp->m_flush_work)){+.+.+.}, at: [<ffffffff81072060>] wait_on_work+0x0/0x160
+[23405.638140] 
+[23405.638140] but task is already holding lock:
+[23405.638174]  (sb_internal#2){.+.+.+}, at: [<ffffffffa03afe5d>] xfs_trans_alloc+0x2d/0x50 [xfs]
+[23405.638175] 
+[23405.638175] which lock already depends on the new lock.
+[23405.638175] 
+[23405.638175] 
+[23405.638175] the existing dependency chain (in reverse order) is:
+[23405.638179] 
+[23405.638179] -> #1 (sb_internal#2){.+.+.+}:
+[23405.638183]        [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
+[23405.638186]        [<ffffffff816318eb>] mutex_lock_nested+0x4b/0x320
+[23405.638210]        [<ffffffffa03aee89>] xfs_icsb_modify_counters+0x119/0x1b0 [xfs]
+[23405.638228]        [<ffffffffa0363346>] xfs_reserve_blocks+0x96/0x170 [xfs]
+[23405.638252]        [<ffffffffa03aec75>] xfs_unmountfs+0x95/0x190 [xfs]
+[23405.638268]        [<ffffffffa036cd95>] xfs_fs_put_super+0x25/0x70 [xfs]
+[23405.638273]        [<ffffffff8117de12>] generic_shutdown_super+0x62/0xf0
+[23405.638276]        [<ffffffff8117ded0>] kill_block_super+0x30/0x80
+[23405.638279]        [<ffffffff8117e1a5>] deactivate_locked_super+0x45/0x70
+[23405.638283]        [<ffffffff8117ee4e>] deactivate_super+0x4e/0x70
+[23405.638287]        [<ffffffff8119b1d6>] mntput_no_expire+0x106/0x160
+[23405.638289]        [<ffffffff8119c1fe>] sys_umount+0x6e/0x3b0
+[23405.638293]        [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
+[23405.638296] 
+[23405.638296] -> #0 ((&mp->m_flush_work)){+.+.+.}:
+[23405.638298]        [<ffffffff810b25e8>] __lock_acquire+0x1ac8/0x1b90
+[23405.638301]        [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
+[23405.638304]        [<ffffffff810720a1>] wait_on_work+0x41/0x160
+[23405.638307]        [<ffffffff81072203>] flush_work_sync+0x43/0x90
+[23405.638323]        [<ffffffffa036ec7f>] xfs_flush_inodes+0x2f/0x40 [xfs]
+[23405.638341]        [<ffffffffa0371d2e>] xfs_create+0x3be/0x640 [xfs]
+[23405.638357]        [<ffffffffa036888f>] xfs_vn_mknod+0x8f/0x1c0 [xfs]
+[23405.638372]        [<ffffffffa03689f3>] xfs_vn_create+0x13/0x20 [xfs]
+[23405.638375]        [<ffffffff8118aeb5>] vfs_create+0xb5/0x120
+[23405.638378]        [<ffffffff8118bcc0>] do_last+0xda0/0xf00
+[23405.638380]        [<ffffffff8118bed3>] path_openat+0xb3/0x4c0
+[23405.638383]        [<ffffffff8118c6f2>] do_filp_open+0x42/0xa0
+[23405.638386]        [<ffffffff8117b040>] do_sys_open+0x100/0x1e0
+[23405.638389]        [<ffffffff8117b141>] sys_open+0x21/0x30
+[23405.638391]        [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
+[23405.638392] 
+[23405.638392] other info that might help us debug this:
+[23405.638392] 
+[23405.638393]  Possible unsafe locking scenario:
+[23405.638393] 
+[23405.638394]        CPU0                    CPU1
+[23405.638394]        ----                    ----
+[23405.638396]   lock(sb_internal#2);
+[23405.638398]                                lock((&mp->m_flush_work));
+[23405.638400]                                lock(sb_internal#2);
+[23405.638402]   lock((&mp->m_flush_work));
+[23405.638402] 
+[23405.638402]  *** DEADLOCK ***
+[23405.638402] 
+[23405.638404] 3 locks held by fill2/7976:
+[23405.638409]  #0:  (sb_writers#14){.+.+.+}, at: [<ffffffff8119b5b4>] mnt_want_write+0x24/0x50
+[23405.638414]  #1:  (&type->i_mutex_dir_key#9){+.+.+.}, at: [<ffffffff8118b22b>] do_last+0x30b/0xf00
+[23405.638440]  #2:  (sb_internal#2){.+.+.+}, at: [<ffffffffa03afe5d>] xfs_trans_alloc+0x2d/0x50 [xfs]
+[23405.638441] 
+[23405.638441] stack backtrace:
+[23405.638443] Pid: 7976, comm: fill2 Not tainted 3.6.0-rc2-ceph-00143-g995fc06 #1
+[23405.638444] Call Trace:
+[23405.638448]  [<ffffffff8162a77c>] print_circular_bug+0x1fb/0x20c
+[23405.638451]  [<ffffffff810b25e8>] __lock_acquire+0x1ac8/0x1b90
+[23405.638455]  [<ffffffff81050500>] ? __mmdrop+0x60/0x90
+[23405.638459]  [<ffffffff8108494a>] ? finish_task_switch+0x10a/0x110
+[23405.638463]  [<ffffffff81072060>] ? busy_worker_rebind_fn+0x100/0x100
+[23405.638465]  [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
+[23405.638468]  [<ffffffff81072060>] ? busy_worker_rebind_fn+0x100/0x100
+[23405.638472]  [<ffffffff81634c30>] ? _raw_spin_unlock_irq+0x30/0x40
+[23405.638475]  [<ffffffff810720a1>] wait_on_work+0x41/0x160
+[23405.638477]  [<ffffffff81072060>] ? busy_worker_rebind_fn+0x100/0x100
+[23405.638480]  [<ffffffff810710a8>] ? start_flush_work+0x108/0x180
+[23405.638483]  [<ffffffff81634e5f>] ? _raw_spin_unlock_irqrestore+0x3f/0x80
+[23405.638486]  [<ffffffff81072203>] flush_work_sync+0x43/0x90
+[23405.638488]  [<ffffffff810b379d>] ? trace_hardirqs_on+0xd/0x10
+[23405.638491]  [<ffffffff810706c4>] ? __queue_work+0xe4/0x3b0
+[23405.638509]  [<ffffffffa036ec7f>] xfs_flush_inodes+0x2f/0x40 [xfs]
+[23405.638527]  [<ffffffffa0371d2e>] xfs_create+0x3be/0x640 [xfs]
+[23405.638529]  [<ffffffff81192254>] ? d_rehash+0x24/0x40
+[23405.638545]  [<ffffffffa036888f>] xfs_vn_mknod+0x8f/0x1c0 [xfs]
+[23405.638561]  [<ffffffffa03689f3>] xfs_vn_create+0x13/0x20 [xfs]
+[23405.638564]  [<ffffffff8118aeb5>] vfs_create+0xb5/0x120
+[23405.638567]  [<ffffffff8118bcc0>] do_last+0xda0/0xf00
+[23405.638570]  [<ffffffff8118bed3>] path_openat+0xb3/0x4c0
+[23405.638573]  [<ffffffff8118c6f2>] do_filp_open+0x42/0xa0
+[23405.638577]  [<ffffffff8132babd>] ? do_raw_spin_unlock+0x5d/0xb0
+[23405.638579]  [<ffffffff81634c6b>] ? _raw_spin_unlock+0x2b/0x40
+[23405.638582]  [<ffffffff81199a22>] ? alloc_fd+0xd2/0x120
+[23405.638585]  [<ffffffff8117b040>] do_sys_open+0x100/0x1e0
+[23405.638588]  [<ffffffff8117b141>] sys_open+0x21/0x30
+[23405.638590]  [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============7237441943493730872==--
