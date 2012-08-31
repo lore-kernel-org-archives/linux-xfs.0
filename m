@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7VKHfGM224429 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 15:17:41 -0500
-Received: from cobra.newdream.net (cobra.newdream.net [66.33.216.30]) by
-	cuda.sgi.com with ESMTP id OfKkNElf7vLbBCqc for
-	<xfs@oss.sgi.com>; Fri, 31 Aug 2012 13:18:35 -0700 (PDT)
-Received: from cobra.newdream.net (localhost [127.0.0.1])
-	by cobra.newdream.net (Postfix) with ESMTP id CCE7E800BB
-	for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 13:18:34 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by cobra.newdream.net (Postfix) with ESMTP id A4D8D800BB
-	for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 13:18:34 -0700 (PDT)
-Date: Fri, 31 Aug 2012 13:18:34 -0700 (PDT)
-From: Sage Weil <sage@inktank.com>
-Subject: xfs sb_internal#2 lockdep splat
-Message-ID: <alpine.DEB.2.00.1208311318140.19947@cobra.newdream.net>
-MIME-Version: 1.0
+	q7VMLMZT241504 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 17:21:23 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Vz28YavgN1ZFBOeE for
+	<xfs@oss.sgi.com>; Fri, 31 Aug 2012 15:22:17 -0700 (PDT)
+From: Lukas Czerner <lczerner@redhat.com>
+Subject: [PATCH 04/15 v2] xfs: implement invalidatepage_range aop
+Date: Fri, 31 Aug 2012 18:21:40 -0400
+Message-Id: <1346451711-1931-5-git-send-email-lczerner@redhat.com>
+In-Reply-To: <1346451711-1931-1-git-send-email-lczerner@redhat.com>
+References: <1346451711-1931-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,112 +19,124 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: linux-fsdevel@vger.kernel.org
+Cc: tytso@mit.edu, hughd@google.com, xfs@oss.sgi.com, linux-mm@kvack.org, Lukas Czerner <lczerner@redhat.com>, linux-ext4@vger.kernel.org
 
-This may be old news, but:
+mm now supports invalidatepage_range address space operation which is
+useful to allow truncating page range which is not aligned to the end of
+the page. This will help in punch hole implementation once
+truncate_inode_pages_range() is modify to allow this as well.
 
-[23405.556763] ======================================================
-[23405.584315] [ INFO: possible circular locking dependency detected ]
-[23405.611861] 3.6.0-rc2-ceph-00143-g995fc06 #1 Not tainted
-[23405.638127] -------------------------------------------------------
-[23405.638129] fill2/7976 is trying to acquire lock:
-[23405.638139]  ((&mp->m_flush_work)){+.+.+.}, at: [<ffffffff81072060>] wait_on_work+0x0/0x160
-[23405.638140] 
-[23405.638140] but task is already holding lock:
-[23405.638174]  (sb_internal#2){.+.+.+}, at: [<ffffffffa03afe5d>] xfs_trans_alloc+0x2d/0x50 [xfs]
-[23405.638175] 
-[23405.638175] which lock already depends on the new lock.
-[23405.638175] 
-[23405.638175] 
-[23405.638175] the existing dependency chain (in reverse order) is:
-[23405.638179] 
-[23405.638179] -> #1 (sb_internal#2){.+.+.+}:
-[23405.638183]        [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
-[23405.638186]        [<ffffffff816318eb>] mutex_lock_nested+0x4b/0x320
-[23405.638210]        [<ffffffffa03aee89>] xfs_icsb_modify_counters+0x119/0x1b0 [xfs]
-[23405.638228]        [<ffffffffa0363346>] xfs_reserve_blocks+0x96/0x170 [xfs]
-[23405.638252]        [<ffffffffa03aec75>] xfs_unmountfs+0x95/0x190 [xfs]
-[23405.638268]        [<ffffffffa036cd95>] xfs_fs_put_super+0x25/0x70 [xfs]
-[23405.638273]        [<ffffffff8117de12>] generic_shutdown_super+0x62/0xf0
-[23405.638276]        [<ffffffff8117ded0>] kill_block_super+0x30/0x80
-[23405.638279]        [<ffffffff8117e1a5>] deactivate_locked_super+0x45/0x70
-[23405.638283]        [<ffffffff8117ee4e>] deactivate_super+0x4e/0x70
-[23405.638287]        [<ffffffff8119b1d6>] mntput_no_expire+0x106/0x160
-[23405.638289]        [<ffffffff8119c1fe>] sys_umount+0x6e/0x3b0
-[23405.638293]        [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
-[23405.638296] 
-[23405.638296] -> #0 ((&mp->m_flush_work)){+.+.+.}:
-[23405.638298]        [<ffffffff810b25e8>] __lock_acquire+0x1ac8/0x1b90
-[23405.638301]        [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
-[23405.638304]        [<ffffffff810720a1>] wait_on_work+0x41/0x160
-[23405.638307]        [<ffffffff81072203>] flush_work_sync+0x43/0x90
-[23405.638323]        [<ffffffffa036ec7f>] xfs_flush_inodes+0x2f/0x40 [xfs]
-[23405.638341]        [<ffffffffa0371d2e>] xfs_create+0x3be/0x640 [xfs]
-[23405.638357]        [<ffffffffa036888f>] xfs_vn_mknod+0x8f/0x1c0 [xfs]
-[23405.638372]        [<ffffffffa03689f3>] xfs_vn_create+0x13/0x20 [xfs]
-[23405.638375]        [<ffffffff8118aeb5>] vfs_create+0xb5/0x120
-[23405.638378]        [<ffffffff8118bcc0>] do_last+0xda0/0xf00
-[23405.638380]        [<ffffffff8118bed3>] path_openat+0xb3/0x4c0
-[23405.638383]        [<ffffffff8118c6f2>] do_filp_open+0x42/0xa0
-[23405.638386]        [<ffffffff8117b040>] do_sys_open+0x100/0x1e0
-[23405.638389]        [<ffffffff8117b141>] sys_open+0x21/0x30
-[23405.638391]        [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
-[23405.638392] 
-[23405.638392] other info that might help us debug this:
-[23405.638392] 
-[23405.638393]  Possible unsafe locking scenario:
-[23405.638393] 
-[23405.638394]        CPU0                    CPU1
-[23405.638394]        ----                    ----
-[23405.638396]   lock(sb_internal#2);
-[23405.638398]                                lock((&mp->m_flush_work));
-[23405.638400]                                lock(sb_internal#2);
-[23405.638402]   lock((&mp->m_flush_work));
-[23405.638402] 
-[23405.638402]  *** DEADLOCK ***
-[23405.638402] 
-[23405.638404] 3 locks held by fill2/7976:
-[23405.638409]  #0:  (sb_writers#14){.+.+.+}, at: [<ffffffff8119b5b4>] mnt_want_write+0x24/0x50
-[23405.638414]  #1:  (&type->i_mutex_dir_key#9){+.+.+.}, at: [<ffffffff8118b22b>] do_last+0x30b/0xf00
-[23405.638440]  #2:  (sb_internal#2){.+.+.+}, at: [<ffffffffa03afe5d>] xfs_trans_alloc+0x2d/0x50 [xfs]
-[23405.638441] 
-[23405.638441] stack backtrace:
-[23405.638443] Pid: 7976, comm: fill2 Not tainted 3.6.0-rc2-ceph-00143-g995fc06 #1
-[23405.638444] Call Trace:
-[23405.638448]  [<ffffffff8162a77c>] print_circular_bug+0x1fb/0x20c
-[23405.638451]  [<ffffffff810b25e8>] __lock_acquire+0x1ac8/0x1b90
-[23405.638455]  [<ffffffff81050500>] ? __mmdrop+0x60/0x90
-[23405.638459]  [<ffffffff8108494a>] ? finish_task_switch+0x10a/0x110
-[23405.638463]  [<ffffffff81072060>] ? busy_worker_rebind_fn+0x100/0x100
-[23405.638465]  [<ffffffff810b2c82>] lock_acquire+0xa2/0x140
-[23405.638468]  [<ffffffff81072060>] ? busy_worker_rebind_fn+0x100/0x100
-[23405.638472]  [<ffffffff81634c30>] ? _raw_spin_unlock_irq+0x30/0x40
-[23405.638475]  [<ffffffff810720a1>] wait_on_work+0x41/0x160
-[23405.638477]  [<ffffffff81072060>] ? busy_worker_rebind_fn+0x100/0x100
-[23405.638480]  [<ffffffff810710a8>] ? start_flush_work+0x108/0x180
-[23405.638483]  [<ffffffff81634e5f>] ? _raw_spin_unlock_irqrestore+0x3f/0x80
-[23405.638486]  [<ffffffff81072203>] flush_work_sync+0x43/0x90
-[23405.638488]  [<ffffffff810b379d>] ? trace_hardirqs_on+0xd/0x10
-[23405.638491]  [<ffffffff810706c4>] ? __queue_work+0xe4/0x3b0
-[23405.638509]  [<ffffffffa036ec7f>] xfs_flush_inodes+0x2f/0x40 [xfs]
-[23405.638527]  [<ffffffffa0371d2e>] xfs_create+0x3be/0x640 [xfs]
-[23405.638529]  [<ffffffff81192254>] ? d_rehash+0x24/0x40
-[23405.638545]  [<ffffffffa036888f>] xfs_vn_mknod+0x8f/0x1c0 [xfs]
-[23405.638561]  [<ffffffffa03689f3>] xfs_vn_create+0x13/0x20 [xfs]
-[23405.638564]  [<ffffffff8118aeb5>] vfs_create+0xb5/0x120
-[23405.638567]  [<ffffffff8118bcc0>] do_last+0xda0/0xf00
-[23405.638570]  [<ffffffff8118bed3>] path_openat+0xb3/0x4c0
-[23405.638573]  [<ffffffff8118c6f2>] do_filp_open+0x42/0xa0
-[23405.638577]  [<ffffffff8132babd>] ? do_raw_spin_unlock+0x5d/0xb0
-[23405.638579]  [<ffffffff81634c6b>] ? _raw_spin_unlock+0x2b/0x40
-[23405.638582]  [<ffffffff81199a22>] ? alloc_fd+0xd2/0x120
-[23405.638585]  [<ffffffff8117b040>] do_sys_open+0x100/0x1e0
-[23405.638588]  [<ffffffff8117b141>] sys_open+0x21/0x30
-[23405.638590]  [<ffffffff8163d569>] system_call_fastpath+0x16/0x1b
+With this commit xfs now register only invalidatepage_range.
+Additionally we also update the respective trace point.
+
+Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
+---
+ fs/xfs/xfs_aops.c  |   14 ++++++++------
+ fs/xfs/xfs_trace.h |   41 ++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 48 insertions(+), 7 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e562dd4..c395f9e 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -813,12 +813,14 @@ xfs_cluster_write(
+ }
+ 
+ STATIC void
+-xfs_vm_invalidatepage(
++xfs_vm_invalidatepage_range(
+ 	struct page		*page,
+-	unsigned long		offset)
++	unsigned int		offset,
++	unsigned int		length)
+ {
+-	trace_xfs_invalidatepage(page->mapping->host, page, offset);
+-	block_invalidatepage(page, offset);
++	trace_xfs_invalidatepage_range(page->mapping->host, page, offset,
++				       length);
++	block_invalidatepage_range(page, offset, length);
+ }
+ 
+ /*
+@@ -882,7 +884,7 @@ next_buffer:
+ 
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out_invalidate:
+-	xfs_vm_invalidatepage(page, 0);
++	xfs_vm_invalidatepage_range(page, 0, PAGE_CACHE_SIZE);
+ 	return;
+ }
+ 
+@@ -1646,7 +1648,7 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.writepage		= xfs_vm_writepage,
+ 	.writepages		= xfs_vm_writepages,
+ 	.releasepage		= xfs_vm_releasepage,
+-	.invalidatepage		= xfs_vm_invalidatepage,
++	.invalidatepage_range	= xfs_vm_invalidatepage_range,
+ 	.write_begin		= xfs_vm_write_begin,
+ 	.write_end		= xfs_vm_write_end,
+ 	.bmap			= xfs_vm_bmap,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index e5795dd..e716754 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -981,7 +981,46 @@ DEFINE_EVENT(xfs_page_class, name,	\
+ 	TP_ARGS(inode, page, off))
+ DEFINE_PAGE_EVENT(xfs_writepage);
+ DEFINE_PAGE_EVENT(xfs_releasepage);
+-DEFINE_PAGE_EVENT(xfs_invalidatepage);
++
++TRACE_EVENT(xfs_invalidatepage_range,
++	TP_PROTO(struct inode *inode, struct page *page, unsigned int off,
++		 unsigned int len),
++	TP_ARGS(inode, page, off, len),
++	TP_STRUCT__entry(
++		__field(dev_t, dev)
++		__field(xfs_ino_t, ino)
++		__field(pgoff_t, pgoff)
++		__field(loff_t, size)
++		__field(unsigned int, offset)
++		__field(unsigned int, length)
++		__field(int, delalloc)
++		__field(int, unwritten)
++	),
++	TP_fast_assign(
++		int delalloc = -1, unwritten = -1;
++
++		if (page_has_buffers(page))
++			xfs_count_page_state(page, &delalloc, &unwritten);
++		__entry->dev = inode->i_sb->s_dev;
++		__entry->ino = XFS_I(inode)->i_ino;
++		__entry->pgoff = page_offset(page);
++		__entry->size = i_size_read(inode);
++		__entry->offset = off;
++		__entry->length = len;
++		__entry->delalloc = delalloc;
++		__entry->unwritten = unwritten;
++	),
++	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %x "
++		  "length %x delalloc %d unwritten %d",
++		  MAJOR(__entry->dev), MINOR(__entry->dev),
++		  __entry->ino,
++		  __entry->pgoff,
++		  __entry->size,
++		  __entry->offset,
++		  __entry->length,
++		  __entry->delalloc,
++		  __entry->unwritten)
++)
+ 
+ DECLARE_EVENT_CLASS(xfs_imap_class,
+ 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
