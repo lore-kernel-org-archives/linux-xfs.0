@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q7V5wW19109004 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 00:58:33 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	eEnjxY3wp7aYmHoT for <xfs@oss.sgi.com>;
-	Thu, 30 Aug 2012 22:59:25 -0700 (PDT)
-Date: Fri, 31 Aug 2012 15:59:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS Mount Recovery Failed on Root File System After Power Outage
-Message-ID: <20120831055917.GI15292@dastard>
-References: <0e85aee5ff82e567e872230ef416766a.squirrel@emailmg.netfirms.com>
-	<20120830225826.GG15292@dastard>
-	<5c63bed077c12fe7f7ad64237c767101.squirrel@emailmg.netfirms.com>
+	q7V6HYtt112394 for <xfs@oss.sgi.com>; Fri, 31 Aug 2012 01:17:34 -0500
+Received: from mail.ud10.udmedia.de (ud10.udmedia.de [194.117.254.50]) by
+	cuda.sgi.com with ESMTP id WTosLpZWSryDDaFS (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 30 Aug 2012 23:18:27 -0700 (PDT)
+Date: Fri, 31 Aug 2012 08:18:25 +0200
+From: Markus Trippelsdorf <markus@trippelsdorf.de>
+Subject: Re: [PATCH V2 00/13] xfs: remove the xfssyncd mess
+Message-ID: <20120831061825.GA7143@x4>
+References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
+	<20120830121516.GA285@x4> <20120830225108.GF15292@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5c63bed077c12fe7f7ad64237c767101.squirrel@emailmg.netfirms.com>
+In-Reply-To: <20120830225108.GF15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,115 +27,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chin Gim Leong <CHIN_Gim_Leong@performance-computing.net>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Aug 31, 2012 at 12:24:21PM +0800, Chin Gim Leong wrote:
-> Thanks Dave for the reply.
+On 2012.08.31 at 08:51 +1000, Dave Chinner wrote:
+> On Thu, Aug 30, 2012 at 02:15:16PM +0200, Markus Trippelsdorf wrote:
+> > On 2012.08.30 at 22:00 +1000, Dave Chinner wrote:
+> > > Version 2 of the patchset I described here:
+> > > 
+> > > http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
+> > > 
+> > > This version has run through xfstests completely once, so it's
+> > > less likely to let smoke out....
+> > 
+> > Is there a publicly accessible git tree available where one could pull
+> > from? (This would be way easier than saving and hand-applying 13
+> > patches.)
 > 
-> >> I just had a power outage and my Acer notebook computer running openSUSE
-> >> 11.4 x86_64 with kernel 2.6.37 stopped as a result.
-> >
-> > What mount options? What is the output of /proc/mounts? What are the
-> > messages in dmesg when you mount a partition?
-> >
+> No.
 > 
-> The dmesg messages after the mount failure are exactly as in
-> /var/log/messages:
+> Instead, save all the patches to a single mbox format file, then run:
 > 
-> XFS: Invalid block length (0xfffffffc) given for buffer
-> XFS: log mount/recovery failed: error 117
+> $ git checkout -b umount-fix-test
+> $ git am <mbox file>
 > 
-> The mount options I used, I do not remember the fstab options I put in for
-> root, but any way, whether with fstab or a manual mount, the mount fails.
-> The OS actually starts with a read-only mount of root file system, and the
-> rest of the system refuses to start of course.
+> And it will apply all the patches as separate commits to the
+> umount-fix-test branch. This is how I take patch sets from my inbox
+> to git. You can build and testing them from there.
 
-You misunderstood. I was asking for the messages when it
-successfully mounts and the contents of /proc/mounts is when it is
-mounted to see if barriers were disabled or not supported on your
-hardware.
+Yeah. That works if you're using mbox format files. But if you're are a
+Maildir user like myself you're basically screwed, because 
+ $ git am <Maildir> 
+expects the Maildir to be *sorted* and because mails normally don't
+arrive in the right order, git-am will therefore try to apply the
+patches in the wrong order. (Maybe this should be reported to the git
+mailing-list)
 
-> I will put in an upddate to this thread after I repair the file system,
-> maybe tomorrow, about the mount options in fstab.
-> 
-> I can do a manual mount with ready only and no recovery option, and I can
-> traverse the directories.  In fact the /var/log/message is still there and
-> readable with entries up to 5 min before the power outage.
-> 
-> >
-> >> I would like to know the cause of this log recovery failure and if there
-> >
-> > You've got an old, unsupported kernel that was going through
-> > significant changes to the log code at the time, so it may not be
-> > possible to work out what the problem was. It seems likely that the
-> > power loss caused the disk not to write everything it should have to
-> > the log - laptops are not supposed to just lose power because
-> > they have a built in UPS (i.e. battery)....
-> 
-> My note book is connected to the mains, and there is no battery.  The Acer
-> user manual advises removing the battery when one is connected to the
-> mains, since repeated charging of battery will shorten its life span.
+So if there are mutt users out there who use "mbox_type=Maildir" and
+know how to save a thread to a single mbox file, then please let me
+know.
+Thanks.
 
-It's not charging Li-ion batteries that shortens their life - it's
-high temperatures that shorten it. IOWs, the reason for removing the
-battery when on AC is to prevent heat soak and the battery
-sustaining elevated temperatures over long periods of time.
-
-Even so, properly designed laptops don't suffer from heat soak or
-charge cycle related battery life problems, and environmental
-conditions play more of a part in determining battery life than
-usage/charge patterns...
-
-> > The files in lost+found are numbered by their inode number. You need
-> > to look at the contents of them to determine where they came from.
-> 
-> Inode numbers are not informative, right?
-
-Sure, but when you've had a directory corruption and the names have
-been lost, what do you name the files and directories that are
-found? All we can do is name them something unique, hence the use of
-the inode number.
-
-> Text files are readable, but binaries......, I will have no clue, and if I
-> delete them, who knows if I am deleting some thing really important?
-
-Only by looking at them can you know. Regardless of what filesystem
-you are using, recovery of files and directories from lost+found is
-the same process. e.g. do an rpm check to see if allteh installed
-packages are intact. that will narrow down where all your binaries
-came from. use of strings can also tell you what the binary is. e.g:
-
-$ strings /sbin/xfs_repair |grep xfs_repair
-re-running xfs_repair.  If you are unable to mount the filesystem, then use
-Please run a more recent version of xfs_repair.
-$
-
-> Intuitively, the only files in root file system (by the way, root also
-> contains /boot) that are open for writing are those in logs and /tmp and
-> /var/tmp, I hope that is the case and I can safely discard those in
-> lost+found.
-> 
-> I also hope that the inode link clean-ups done by xfs_repair do not
-> actually remove any files that are really there.
-
-Define "really there" when important metadata (i.e. the log) has
-been corrupted and is not available any more.  Indeed, if things
-like btree splits of merges occurred in the log, and they are
-partially written to disk, it's entirely possible that you could
-lose directory references to inodes that haven't been modified for
-some time....
-
-Remember, like all fsck programs, xfs_repair is a best effort
-attempt at correcting the problems found  - there are no guarantees
-given about what it can and can't recover when it runs...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Markus
 
 _______________________________________________
 xfs mailing list
