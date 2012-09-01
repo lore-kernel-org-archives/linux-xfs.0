@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q81NQ9UD197184 for <xfs@oss.sgi.com>; Sat, 1 Sep 2012 18:26:09 -0500
+	q81NQZ4X197313 for <xfs@oss.sgi.com>; Sat, 1 Sep 2012 18:26:35 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	YCwydoxWY8K2xivM (version=TLSv1 cipher=AES256-SHA bits=256
+	FeVkcErEdTBFeqkz (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 01 Sep 2012 16:27:04 -0700 (PDT)
-Date: Sat, 1 Sep 2012 19:27:04 -0400
+	Sat, 01 Sep 2012 16:27:30 -0700 (PDT)
+Date: Sat, 1 Sep 2012 19:27:30 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 08/13] xfs: xfs_sync_fsdata is redundant
-Message-ID: <20120901232704.GC31634@infradead.org>
+Subject: Re: [PATCH 09/13] xfs: move xfs_quiesce_attr() into xfs_super.c
+Message-ID: <20120901232730.GD31634@infradead.org>
 References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-9-git-send-email-david@fromorbit.com>
+	<1346328017-2795-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1346328017-2795-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1346328017-2795-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
