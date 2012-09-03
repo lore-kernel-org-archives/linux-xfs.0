@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q835RoW8146960 for <xfs@oss.sgi.com>; Mon, 3 Sep 2012 00:27:50 -0500
+	q835UIT4147304 for <xfs@oss.sgi.com>; Mon, 3 Sep 2012 00:30:18 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	KPHZ8CRO3UWrFEpg for <xfs@oss.sgi.com>;
-	Sun, 02 Sep 2012 22:28:46 -0700 (PDT)
-Date: Mon, 3 Sep 2012 15:28:42 +1000
+	WDjOU2lEMsl0YJu9 for <xfs@oss.sgi.com>;
+	Sun, 02 Sep 2012 22:31:14 -0700 (PDT)
+Date: Mon, 3 Sep 2012 15:31:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 4/4] xfs: add background scanning to clear EOFBLOCKS
-	inodes
-Message-ID: <20120903052842.GT15292@dastard>
-References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-	<1346097111-4476-5-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 1/5] xfstests: Use libtool to install lstat64
+Message-ID: <20120903053111.GU15292@dastard>
+References: <20120828172605.607853317@sgi.com>
+	<20120828172928.785762590@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1346097111-4476-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <20120828172928.785762590@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,31 +27,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Rich Johnston <rjohnston@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Aug 27, 2012 at 03:51:51PM -0400, Brian Foster wrote:
-> Create a delayed_work to enable background scanning and freeing
-> of EOFBLOCKS inodes. The scanner kicks in once speculative
-> preallocation occurs and stops requeueing itself when no EOFBLOCKS
-> inodes exist.
-> 
-> Scans are queued on the existing syncd workqueue and the interval
-> is tied to the syncd interval, which is a default of 30s. The
-> minimum file size for a background scan is hardcoded to 100MB.
+On Tue, Aug 28, 2012 at 12:26:06PM -0500, Rich Johnston wrote:
+> Use libtool to install lstat64 on $SCRATCH_MNT instead of cp.  Libtool will
+> install the binary from the proper location and display a warning if any
+> shared library dependancies are not properly installed.  This ensures that a
+> libtool wrapper shell script is not installed in place of lstat64 when libtool
+> wrappers are being used. 
 
-I'd set it to be much longer than the xfs_syncd_centisecs period.
-The data may not be written back for a long while, and a file that
-is open, written and closed repeatedly (NFS write patterns for large
-and/or slowly written files) should not have it's preallocation
-truncated every 30s.
-
-I'd suggest that a 5 minute sweep is probably sufficiently frequent
-to avoid most fragmentation issues and long term buildup of speculative
-preallocation whilst not perturbing large/slow writers too much....
-
-Apart from that, there isn't anything wrong with the code, except
-I'll note again that it conflicts with my syncd removal patchset....
+This patch is unnecessary if the configure script does the right
+thing and refuse to build is library dependencies are not correct.
 
 Cheers,
 
