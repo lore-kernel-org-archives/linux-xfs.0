@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8339BXc124771 for <xfs@oss.sgi.com>; Sun, 2 Sep 2012 22:09:11 -0500
+	q833Zgsf128463 for <xfs@oss.sgi.com>; Sun, 2 Sep 2012 22:35:42 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	RC71uXW4V7VE6hnq for <xfs@oss.sgi.com>;
-	Sun, 02 Sep 2012 20:10:06 -0700 (PDT)
-Date: Mon, 3 Sep 2012 13:09:58 +1000
+	BJcsmJOm2Refgv9d for <xfs@oss.sgi.com>;
+	Sun, 02 Sep 2012 20:36:37 -0700 (PDT)
+Date: Mon, 3 Sep 2012 13:36:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 02/13] xfs: rename the xfs_syncd workqueue
-Message-ID: <20120903030958.GN15292@dastard>
+Subject: Re: [PATCH 05/13] xfs: sync work is now only periodic log work
+Message-ID: <20120903033626.GO15292@dastard>
 References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-3-git-send-email-david@fromorbit.com>
-	<20120901231722.GB27456@infradead.org>
+	<1346328017-2795-6-git-send-email-david@fromorbit.com>
+	<20120901232343.GA31634@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120901231722.GB27456@infradead.org>
+In-Reply-To: <20120901232343.GA31634@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,23 +31,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Sat, Sep 01, 2012 at 07:17:22PM -0400, Christoph Hellwig wrote:
-> On Thu, Aug 30, 2012 at 10:00:06PM +1000, Dave Chinner wrote:
+On Sat, Sep 01, 2012 at 07:23:43PM -0400, Christoph Hellwig wrote:
+> On Thu, Aug 30, 2012 at 10:00:09PM +1000, Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > There is nothing "sync" realted to this work queue any more. It is a general
-> > purpose per-filesystem work queue. Rename it appropriately, and remove the
-> > "syncd" naming from various functions.
+> > The only thing the periodic sync work does now is flush the AIL and
+> > idle the log. These are really functions of the log code, so move
+> > the work to xfs_log.c and rename it appropriately.
 > > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > The only wart that this leaves behind is the xfssyncd_centisecs
+> > sysctl, otherwise the xfssyncd is dead. Clean up any comments that
+> > related to xfssyncd to reflect it's passing.
 > 
-> With the current leight-weight workqueues I don't see why we'd even want
-> a shared one for the different callers.  Let's move the patch until
-> after killing xfs_flush_worker & co, and then add a workqueue for
-> background and the log sync individually.
+> FYI: A while ago I looked into folding the work here into xfsaild.
+> While soing the periodic ail push there aka just waking up with a
+> timeout which we did more often anyway at that point was easy, getting
+> the log force / dummy log never really worked out.
+> 
+> I think at least the former probably should be dropped here as well.
 
-OK. It starts to make workqueues like slab caches - all the cool
-kids have got one. :)
+Perhaps. We've always had a periodic log force as a get out gaol
+free card for issues with pinned objects, so I'm not really inclined
+to remove it/change that behaviour in this series.
+
+IOWs, while I do agree that the log covering and AIL pushing code
+should be more tightly integrated so that we can get the filesystem
+to an idle state much faster than we do now, I don't think this
+patchset is the place to start doing bits of that work.
 
 Cheers,
 
