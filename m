@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q83AI2m0184642 for <xfs@oss.sgi.com>; Mon, 3 Sep 2012 05:18:02 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id qMHSglRpQSBdVEFY (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 03 Sep 2012 03:18:58 -0700 (PDT)
-Date: Mon, 3 Sep 2012 12:18:54 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: xfs sb_internal#2 lockdep splat
-Message-ID: <20120903101854.GD21109@quack.suse.cz>
-References: <alpine.DEB.2.00.1208311318140.19947@cobra.newdream.net>
-	<20120901230425.GA6896@infradead.org>
-	<20120902003731.GK15292@dastard>
+	q840CsW7004490 for <xfs@oss.sgi.com>; Mon, 3 Sep 2012 19:12:54 -0500
+Message-ID: <504547BC.3000907@sgi.com>
+Date: Mon, 03 Sep 2012 19:13:48 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120902003731.GK15292@dastard>
+Subject: Re: [PATCH V2 00/13] xfs: remove the xfssyncd mess
+References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
+	<5040C3A0.2050107@sgi.com> <20120903040523.GP15292@dastard>
+In-Reply-To: <20120903040523.GP15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,87 +18,131 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jan Kara <jack@suse.cz>, Sage Weil <sage@inktank.com>, xfs@oss.sgi.com
+Cc: xfs@oss.sgi.com
 
-On Sun 02-09-12 10:37:31, Dave Chinner wrote:
-> On Sat, Sep 01, 2012 at 07:04:26PM -0400, Christoph Hellwig wrote:
-> > I've had some time to look at this issue and it seems to be due to the
-> > brand new filesystem freezing code in the VFS which (ab-)uses lockdep
-> > in a creative way.
-> 
-> Yes. It's interacting strangely with other lockdep abuses like the
-> work queue annotations, which is where this one is coming from.
-> Basically, freeze counters and work queue flushes are *not locks*,
-> but lockdep is being told they are locks and it's not smart enough
-> to know the difference. It just sees different orders in different
-> contexts and complains.
-  Well, freeze counters are locks (if we didn't care for performance they
-would be rw semaphores) but their usage is rather specific so not everything
-lockdep thinks is possible is really possible. But that has always been the
-problem with lockdep and more unusual lock usage.
- 
-> > In short the XFS code to flush pending delalloc data when running into
-> > ENOSPC conditions.  I don't understand the fsfreeze code and its usage
-> > of lockdep enough to confirm if the warning is correct, but Dave has
-> > patches to rip this code path out in the current from and replace it
-> > with the VM layer code used by ext4 and btrfs.  I suspect that should
-> > sort out this issue.
-> 
-> Right, after a couple of days of thinking, I think the root of the
-> issue is that lockdep sees that the data writeback done by the
-> xfs_flush_worker can run transactions, but does so while holding an
-> open transaction. So we have a wait synchronous with an open
-> transaction that is dependent on other transactions being started.
-> 
-> However, this is a false positive warning because of freeze
-> behaviour (context) that lockdep is not aware of and cannot be told
-> about. That is, the inode flush will always be completed before the
-> freeze can progress past the FREEZE_WRITE stage, and the
-> transactions are in the FREEZE_FS context. IOWs:
-> 
-> > > [23405.638393]  Possible unsafe locking scenario:
-> > > [23405.638393] 
-> > > [23405.638394]        CPU0                    CPU1
-> > > [23405.638394]        ----                    ----
-> > > [23405.638396]   lock(sb_internal#2);
-> > > [23405.638398]                                lock((&mp->m_flush_work));
-> > > [23405.638400]                                lock(sb_internal#2);
-> > > [23405.638402]   lock((&mp->m_flush_work));
-> 
-> ignores the fact the CPU0 lock order is actually:
-> 
-> 	lock(sb_internal#0);		<< FREEZE_WRITE
-> 	lock(sb_internal#2);		<< FREEZE_FS
-> 	lock((&mp->m_flush_work));
-> 
-> And that it is safe to do any sort of dependent lock of
-> sb_internal#2 while a sb_internal#0 lock is held and that nested
-> dependent sb_internal#2 lock levels is also safe for the same
-> reason. Inversions/nesting of FREEZE_FS only matter outside
-> FREEZE_WRITE/FREEZE_PAGECACHE context, not when they are inside that
-> context.
-> 
-> Indeed, changing the code to use the VFS flush functions doesn't
-> change this at all - we still block waiting for IO submission and
-> hence allocation transactions whilst holding the same "locks". We'll
-> just avoid lockdep false positives because the VFS writeback code
-> doesn't use the workqueue infrastructure and hence has no lockdep
-> annotations to make waiting for the IO submission look like a
-> lock...
-  Yeah. If locking annotations for freeze locks show up doing more bad than
-good we can remove them (at least at innermost level which seems to be
-the most problematic for XFS) but they caught quite some problems when I was
-developing the code so I believe there is a value in them.
+On 09/02/12 23:05, Dave Chinner wrote:
+> On Fri, Aug 31, 2012 at 09:01:04AM -0500, Mark Tinguely wrote:
+>> On 08/30/12 07:00, Dave Chinner wrote:
+>>> Version 2 of the patchset I described here:
+>>>
+>>> http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
+>>>
+>>> This version has run through xfstests completely once, so it's
+>>> less likely to let smoke out....
+>>>
+>>> Version 2:
+>>> - fix writeback_inodes_sb_if_idle call in xfs_create()
+>>> - refreshed patch 13 before sending.
+>>>
+>>> _______________________________________________
+>>> xfs mailing list
+>>> xfs@oss.sgi.com
+>>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>> I wanted to get a fast look at your patch series. I am getting the
+>> following ASSERT on xfstest 179 when running the series with the
+>> latest OSS soruces.The ASSERT appears to start at patch number 3.
+>> Sorry these boxes won't kdump the top of tree kernels:
+>>
+>> [17474.545964] XFS: Assertion failed: atomic_read(&bp->b_hold)>  0,
+>> file: /root/xfs/fs/xfs/xfs_buf.c, line: 896
+>
+> FWIW, when you paste stack traces, can you turn off line wrapping
+> when you paste it so the crash is simple to quote in reply? (use
+> :set paste in mutt, the :set nopaste when finished pasting it in).
+>
+>> [17474.559784] Process umount (pid: 26427, threadinfo
+> ...
+>> [17474.559784] Call Trace:
+>> [17474.559784]  [<ffffffffa05b4ed4>] xfs_buf_rele+0xa4/0x1b0 [xfs]
+>> [17474.559784]  [<ffffffffa05b5b86>] xfs_buf_iodone_work+0x46/0x50 [xfs]
+>> [17474.559784]  [<ffffffffa05b5c26>] xfs_buf_ioend+0x96/0x120 [xfs]
+>> [17474.559784]  [<ffffffffa061e939>] xfs_buf_iodone_callbacks+0x59/0x230 [xfs]
+>> [17474.559784]  [<ffffffffa05b5b61>] xfs_buf_iodone_work+0x21/0x50 [xfs]
+>> [17474.559784]  [<ffffffffa05b5c26>] xfs_buf_ioend+0x96/0x120 [xfs]
+>> [17474.559784]  [<ffffffffa061f7e9>] xfs_buf_item_unpin+0x289/0x2d0 [xfs]
+>> [17474.559784]  [<ffffffffa0617c33>] xfs_trans_committed_bulk+0x213/0x300 [xfs]
+>> [17474.559784]  [<ffffffffa061dde6>] xlog_cil_committed+0x36/0x130 [xfs]
+>> [17474.559784]  [<ffffffffa061e1e8>] xlog_cil_push+0x308/0x430 [xfs]
+>> [17474.559784]  [<ffffffffa061e466>] xlog_cil_force_lsn+0x146/0x1b0 [xfs]
+>> [17474.559784]  [<ffffffffa061c1e4>] _xfs_log_force+0x64/0x280 [xfs]
+>> [17474.559784]  [<ffffffffa061c454>] xfs_log_force+0x54/0x80 [xfs]
+>> [17474.559784]  [<ffffffffa05c65dd>] xfs_fs_sync_fs+0x2d/0x50 [xfs]
+>> [17474.559784]  [<ffffffff8118c00b>] __sync_filesystem+0x2b/0x50
+>> [17474.559784]  [<ffffffff8118c073>] sync_filesystem+0x43/0x60
+>> [17474.559784]  [<ffffffff81160846>] generic_shutdown_super+0x36/0xe0
+>> [17474.559784]  [<ffffffff8116091c>] kill_block_super+0x2c/0x80
+>> [17474.559784]  [<ffffffff81160e78>] deactivate_locked_super+0x38/0x90
+>> [17474.559784]  [<ffffffff81161951>] deactivate_super+0x61/0x70
+>> [17474.559784]  [<ffffffff8117c659>] mntput_no_expire+0x149/0x1b0
+>> [17474.559784]  [<ffffffff8117d10e>] sys_umount+0x6e/0xd0
+>
+> Nothing has been shut down in XFS at this point (i.e. .put_super()
+> has not yet been called) so none of the shutdown changes could have
+> caused this problem.
+>
+> Indeed, it looks like this is during a forced shutdown here in
+> xfs_buf_item_unpin:
+>
+>          } else if (freed&&  remove) {
+>                  xfs_buf_lock(bp);
+>                  xfs_buf_ioerror(bp, EIO);
+>                  XFS_BUF_UNDONE(bp);
+>                  xfs_buf_stale(bp);
+>>>>>>>           xfs_buf_ioend(bp, 0);
+>          }
+>
+> Now, xfs_buf_stale() does this:
+>
+> 	ASSERT(atomic_read(&bp->b_hold)>= 1);
+>
+> Which means that in calling xfs_buf_ioend(), at least two references
+> to the buffer are being dropped. Working out why that is occurring
+> will find the root cause of this problem.
+>
+> All that I can say at this point is that I find it highly unlikely
+> that it is caused by the changes in this patchset.
+>
+>> I got this ASSERT when I ran it on the 8/27 OSS sources:
+>>
+>> [188646.952426] XFS: Assertion failed:
+>> atomic_read(&iclog->ic_refcnt) == 0, file:
+>>   /root/xfs/fs/xfs/xfs_log.c, line: 2590
+>
+>> [188646.967020] Process kworker/2:1H (pid: 356, threadinfo ffff8808396a4000, task ffff88083a9aa1c0)
+>> [188646.967020] Call Trace:
+>> [188646.967020]  [<ffffffffa01dd2bf>] xlog_state_done_syncing+0x7f/0x110 [xfs]
+>> [188646.967020]  [<ffffffffa01ddbde>] xlog_iodone+0x7e/0x100 [xfs]
+>> [188646.967020]  [<ffffffffa0179b51>] xfs_buf_iodone_work+0x21/0x50 [xfs]
+>> [188646.967020]  [<ffffffff8105d6b3>] process_one_work+0x1d3/0x370
+>> [188646.967020]  [<ffffffff810603e3>] worker_thread+0x133/0x390
+>> [188646.967020]  [<ffffffff810651ce>] kthread+0x9e/0xb0
+>> [188646.967020]  [<ffffffff8143e504>] kernel_thread_helper+0x4/0x10
+>
+> I've never seen that ASSERT fire. That implies we've got a log
+> buffer that is being actively modified under IO, but I cannot see
+> how that would happen. Was this during an unmount? What test?
+>
+> /me is starting to wonder about memory errors...
+>
+> Cheers,
+>
+> Dave.
 
-								Honza
--- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+
+
+all panic on xfstest 179 - 3 different machines: 2 are x86_64 and one is 
+x86_32. I believe all have XFS debug turned.
+
+I will see what else I can find out.
+
+--Mark.
+
 
 _______________________________________________
 xfs mailing list
