@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q840CsW7004490 for <xfs@oss.sgi.com>; Mon, 3 Sep 2012 19:12:54 -0500
-Message-ID: <504547BC.3000907@sgi.com>
-Date: Mon, 03 Sep 2012 19:13:48 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q84E8qSa104824 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 09:08:52 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id WqeKSwbIrVdGcXOZ for
+	<xfs@oss.sgi.com>; Tue, 04 Sep 2012 07:09:49 -0700 (PDT)
+Message-ID: <50460BDB.40806@redhat.com>
+Date: Tue, 04 Sep 2012 10:10:35 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH V2 00/13] xfs: remove the xfssyncd mess
-References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<5040C3A0.2050107@sgi.com> <20120903040523.GP15292@dastard>
-In-Reply-To: <20120903040523.GP15292@dastard>
+Subject: Re: [RFC PATCH 3/4] xfs: add FREE_EOFBLOCKS ioctl
+References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
+	<1346097111-4476-4-git-send-email-bfoster@redhat.com>
+	<20120903051742.GS15292@dastard>
+In-Reply-To: <20120903051742.GS15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,131 +22,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/02/12 23:05, Dave Chinner wrote:
-> On Fri, Aug 31, 2012 at 09:01:04AM -0500, Mark Tinguely wrote:
->> On 08/30/12 07:00, Dave Chinner wrote:
->>> Version 2 of the patchset I described here:
->>>
->>> http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
->>>
->>> This version has run through xfstests completely once, so it's
->>> less likely to let smoke out....
->>>
->>> Version 2:
->>> - fix writeback_inodes_sb_if_idle call in xfs_create()
->>> - refreshed patch 13 before sending.
->>>
->>> _______________________________________________
->>> xfs mailing list
->>> xfs@oss.sgi.com
->>> http://oss.sgi.com/mailman/listinfo/xfs
+On 09/03/2012 01:17 AM, Dave Chinner wrote:
+> On Mon, Aug 27, 2012 at 03:51:50PM -0400, Brian Foster wrote:
+>> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
+>> scan. The xfs_eofblocks structure is defined to support the command
+>> parameters (quota type/id and minimum file size).
 >>
->> I wanted to get a fast look at your patch series. I am getting the
->> following ASSERT on xfstest 179 when running the series with the
->> latest OSS soruces.The ASSERT appears to start at patch number 3.
->> Sorry these boxes won't kdump the top of tree kernels:
+>> Signed-off-by: Brian Foster <bfoster@redhat.com>
+>> ---
+>>  fs/xfs/xfs_fs.h       |   10 ++++++++++
+>>  fs/xfs/xfs_ioctl.c    |   25 +++++++++++++++++++++++++
+>>  fs/xfs/xfs_quota.h    |    1 +
+>>  fs/xfs/xfs_quotaops.c |    2 +-
+>>  4 files changed, 37 insertions(+), 1 deletions(-)
 >>
->> [17474.545964] XFS: Assertion failed: atomic_read(&bp->b_hold)>  0,
->> file: /root/xfs/fs/xfs/xfs_buf.c, line: 896
->
-> FWIW, when you paste stack traces, can you turn off line wrapping
-> when you paste it so the crash is simple to quote in reply? (use
-> :set paste in mutt, the :set nopaste when finished pasting it in).
->
->> [17474.559784] Process umount (pid: 26427, threadinfo
-> ...
->> [17474.559784] Call Trace:
->> [17474.559784]  [<ffffffffa05b4ed4>] xfs_buf_rele+0xa4/0x1b0 [xfs]
->> [17474.559784]  [<ffffffffa05b5b86>] xfs_buf_iodone_work+0x46/0x50 [xfs]
->> [17474.559784]  [<ffffffffa05b5c26>] xfs_buf_ioend+0x96/0x120 [xfs]
->> [17474.559784]  [<ffffffffa061e939>] xfs_buf_iodone_callbacks+0x59/0x230 [xfs]
->> [17474.559784]  [<ffffffffa05b5b61>] xfs_buf_iodone_work+0x21/0x50 [xfs]
->> [17474.559784]  [<ffffffffa05b5c26>] xfs_buf_ioend+0x96/0x120 [xfs]
->> [17474.559784]  [<ffffffffa061f7e9>] xfs_buf_item_unpin+0x289/0x2d0 [xfs]
->> [17474.559784]  [<ffffffffa0617c33>] xfs_trans_committed_bulk+0x213/0x300 [xfs]
->> [17474.559784]  [<ffffffffa061dde6>] xlog_cil_committed+0x36/0x130 [xfs]
->> [17474.559784]  [<ffffffffa061e1e8>] xlog_cil_push+0x308/0x430 [xfs]
->> [17474.559784]  [<ffffffffa061e466>] xlog_cil_force_lsn+0x146/0x1b0 [xfs]
->> [17474.559784]  [<ffffffffa061c1e4>] _xfs_log_force+0x64/0x280 [xfs]
->> [17474.559784]  [<ffffffffa061c454>] xfs_log_force+0x54/0x80 [xfs]
->> [17474.559784]  [<ffffffffa05c65dd>] xfs_fs_sync_fs+0x2d/0x50 [xfs]
->> [17474.559784]  [<ffffffff8118c00b>] __sync_filesystem+0x2b/0x50
->> [17474.559784]  [<ffffffff8118c073>] sync_filesystem+0x43/0x60
->> [17474.559784]  [<ffffffff81160846>] generic_shutdown_super+0x36/0xe0
->> [17474.559784]  [<ffffffff8116091c>] kill_block_super+0x2c/0x80
->> [17474.559784]  [<ffffffff81160e78>] deactivate_locked_super+0x38/0x90
->> [17474.559784]  [<ffffffff81161951>] deactivate_super+0x61/0x70
->> [17474.559784]  [<ffffffff8117c659>] mntput_no_expire+0x149/0x1b0
->> [17474.559784]  [<ffffffff8117d10e>] sys_umount+0x6e/0xd0
->
-> Nothing has been shut down in XFS at this point (i.e. .put_super()
-> has not yet been called) so none of the shutdown changes could have
-> caused this problem.
->
-> Indeed, it looks like this is during a forced shutdown here in
-> xfs_buf_item_unpin:
->
->          } else if (freed&&  remove) {
->                  xfs_buf_lock(bp);
->                  xfs_buf_ioerror(bp, EIO);
->                  XFS_BUF_UNDONE(bp);
->                  xfs_buf_stale(bp);
->>>>>>>           xfs_buf_ioend(bp, 0);
->          }
->
-> Now, xfs_buf_stale() does this:
->
-> 	ASSERT(atomic_read(&bp->b_hold)>= 1);
->
-> Which means that in calling xfs_buf_ioend(), at least two references
-> to the buffer are being dropped. Working out why that is occurring
-> will find the root cause of this problem.
->
-> All that I can say at this point is that I find it highly unlikely
-> that it is caused by the changes in this patchset.
->
->> I got this ASSERT when I ran it on the 8/27 OSS sources:
->>
->> [188646.952426] XFS: Assertion failed:
->> atomic_read(&iclog->ic_refcnt) == 0, file:
->>   /root/xfs/fs/xfs/xfs_log.c, line: 2590
->
->> [188646.967020] Process kworker/2:1H (pid: 356, threadinfo ffff8808396a4000, task ffff88083a9aa1c0)
->> [188646.967020] Call Trace:
->> [188646.967020]  [<ffffffffa01dd2bf>] xlog_state_done_syncing+0x7f/0x110 [xfs]
->> [188646.967020]  [<ffffffffa01ddbde>] xlog_iodone+0x7e/0x100 [xfs]
->> [188646.967020]  [<ffffffffa0179b51>] xfs_buf_iodone_work+0x21/0x50 [xfs]
->> [188646.967020]  [<ffffffff8105d6b3>] process_one_work+0x1d3/0x370
->> [188646.967020]  [<ffffffff810603e3>] worker_thread+0x133/0x390
->> [188646.967020]  [<ffffffff810651ce>] kthread+0x9e/0xb0
->> [188646.967020]  [<ffffffff8143e504>] kernel_thread_helper+0x4/0x10
->
-> I've never seen that ASSERT fire. That implies we've got a log
-> buffer that is being actively modified under IO, but I cannot see
-> how that would happen. Was this during an unmount? What test?
->
-> /me is starting to wonder about memory errors...
->
+>> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+>> index c13fed8..6f93db9 100644
+>> --- a/fs/xfs/xfs_fs.h
+>> +++ b/fs/xfs/xfs_fs.h
+>> @@ -339,6 +339,15 @@ typedef struct xfs_error_injection {
+>>  
+>>  
+>>  /*
+>> + * Speculative preallocation trimming.
+>> + */
+>> +typedef struct xfs_eofblocks {
+>> +	__u32		id;		/* quota id */
+>> +	__u32		qtype;		/* quota type */
+>> +	__u64		min_file_size;	/* minimum file size */
+>> +} xfs_eofblocks_t;
+> 
+> No typedefs.
+> 
+
+This is something I see throughout the code that I haven't quite
+followed (i.e., using the _t typedefs vs. not). Is the general consensus
+to move away from typedefs when possible?
+
+...
+>> +	case XFS_IOC_FREE_EOFBLOCKS: {
+>> +		struct xfs_eofblocks eofb;
+>> +		int qtype;
+>> +
+>> +		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+>> +			return -XFS_ERROR(EFAULT);
+>> +
+>> +		qtype = xfs_quota_type(eofb.qtype);
+>> +
+>> +		/*
+>> +		 * TODO: The filtering code currently uses the id in the inode.
+>> +		 * Therefore, I don't think it really matters whether the
+>> +		 * particular quota type is enabled (and the dquot is attached).
+>> +		 *
+>> +		 * Alternatively, we could filter by dquot type. This would
+>> +		 * mean we might have to make sure dquot's are attached during
+>> +		 * the scan and that the particular quota type is enabled. I'm
+>> +		 * not sure that this buys us anything.
+>> +		 */
+> 
+> If quota is not enabled, then a request to free blocks determined by
+> a quota ID is invalid and should be rejected. It's a user API - what
+> is and isn't supported needs to be written down in black and white
+> (i.e. in the xfsctl man page).
+> 
+
+Ok. I was thinking that we could support the ability to scan by uid/gid
+regardless of whether quota is enabled, but perhaps there's no purpose
+to that if a quota isn't enabled.
+
+Brian
+
+>> +		/* TODO: might want to just use the eofb structure here */
+>> +		error = xfs_inodes_free_eofblocks(mp, qtype, eofb.id, eofb.min_file_size, EOFBLOCKS_WAIT);
+> 
+> Yes, just pass the structure - it means it can be passed all the way
+> down to the execute function, and only that code needs to handle
+> different versions of the structure.
+> 
 > Cheers,
->
+> 
 > Dave.
-
-
-
-all panic on xfstest 179 - 3 different machines: 2 are x86_64 and one is 
-x86_32. I believe all have XFS debug turned.
-
-I will see what else I can find out.
-
---Mark.
-
+> 
 
 _______________________________________________
 xfs mailing list
