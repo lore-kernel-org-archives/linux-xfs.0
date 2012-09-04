@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q84L6uZa162201 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 16:06:56 -0500
-Message-ID: <50466DA8.2020802@sgi.com>
-Date: Tue, 04 Sep 2012 16:07:52 -0500
+	q84LA4TJ162687 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 16:10:04 -0500
+Message-ID: <50466E65.3040500@sgi.com>
+Date: Tue, 04 Sep 2012 16:11:01 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 12/13] xfs: move inode locking functions to xfs_inode.c
+Subject: Re: [PATCH 13/13] xfs: remove xfs_iget.c
 References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-13-git-send-email-david@fromorbit.com>
-In-Reply-To: <1346328017-2795-13-git-send-email-david@fromorbit.com>
+	<1346328017-2795-14-git-send-email-david@fromorbit.com>
+In-Reply-To: <1346328017-2795-14-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,15 +28,13 @@ Cc: xfs@oss.sgi.com
 On 08/30/12 07:00, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> xfs_ilock() and friends really aren't related to the inode cache in
-> any way, so move them to xfs_inode.c with all the other inode
-> related functionality.
+> The inode cache functions remaining in xfs_iget.c can be moved to xfs_icache.c
+> along with the other inode cache functions. This removes all functionality from
+> xfs_iget.c, so the file can simply be removed.
 >
-> While doing this move, move the xfs_ilock() tracepoints to *before*
-> the lock is taken so that when a hang on a lock occurs we have
-> events to indicate which process and what inode we were trying to
-> lock when the hang occurred. This is much better than the current
-> silence we get on a hang...
+> This move results in various functions now only having the scope of a single
+> file (e.g. xfs_inode_free()), so clean up all the definitions and exported
+> prototypes in xfs_icache.[ch] and xfs_inode.h appropriately.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
