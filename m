@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q84GD2tF121598 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 11:13:02 -0500
-Message-ID: <504628C6.8020106@sgi.com>
-Date: Tue, 04 Sep 2012 11:13:58 -0500
+	q84GDtrO121668 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 11:13:55 -0500
+Message-ID: <504628FB.5080304@sgi.com>
+Date: Tue, 04 Sep 2012 11:14:51 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 04/13] xfs: don't run the sync work if the filesyste is
-	read-only
+Subject: Re: [PATCH 05/13] xfs: sync work is now only periodic log work
 References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1346328017-2795-5-git-send-email-david@fromorbit.com>
+	<1346328017-2795-6-git-send-email-david@fromorbit.com>
+In-Reply-To: <1346328017-2795-6-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,20 +26,36 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
 On 08/30/12 07:00, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> If the filesytem is mounted or remounted read-only, stop the sync
-> worker that tries to flush or cover the log if the filesystem is
-> dirty. It's read-only, so it isn't dirty. Restart it on a remount,rw
-> as necessary. This avoids the need for RO checks in the work.
->
-> Similarly, stop the sync work when the filesystem is frozen, and
-> start it again when the filesysetm is thawed. This avoids the need
-> for special freeze checks in the work.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> + * Every sync period we need to unpin all items in the AIL and push them to
+> + * disk. If there is nothing dirty, then we might need to cover the log to
+> + * indicate that the filesystem is idle.
+> + */
+> +void
+> +xfs_log_worker(
+> +	struct work_struct	*work)
+> +{
+> +	struct xlog		*log = container_of(to_delayed_work(work),
+> +						struct xlog, l_work);
+> +	struct xfs_mount	*mp = log->l_mp;
+> +
+> +	/* dgc: errors ignored - not fatal and nowhere to report them */
+> +	if (xfs_log_need_covered(mp))
+> +		xfs_fs_log_dummy(mp);
+> +	else
+> +		xfs_log_force(mp, 0);
+> +
+> +	/* start pushing all the metadata that is currently dirty */
+> +	xfs_ail_push_all(mp->m_ail);
+> +
+> +	/* queue us up again */
+> +	xfs_log_work_queue(mp);
+> +}
 
-Looks good.
+Having log space for the xfs_fs_log_dummy() is the weak point in the 
+remaining log hang problems.
+
+I agree with Dave and the above should remain in this series and log 
+issue handled in another series.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
