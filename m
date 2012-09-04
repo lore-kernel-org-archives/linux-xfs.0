@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q84Iuj8t143963 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 13:56:45 -0500
-Message-ID: <50464F22.2030308@sgi.com>
-Date: Tue, 04 Sep 2012 13:57:38 -0500
+	q84JAa20146418 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 14:10:36 -0500
+Message-ID: <50465261.8010207@sgi.com>
+Date: Tue, 04 Sep 2012 14:11:29 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 05/13] xfs: sync work is now only periodic log work
+Subject: Re: [PATCH 06/13] xfs: Bring some sanity to log unmounting
 References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-6-git-send-email-david@fromorbit.com>
-In-Reply-To: <1346328017-2795-6-git-send-email-david@fromorbit.com>
+	<1346328017-2795-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1346328017-2795-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,48 +28,25 @@ Cc: xfs@oss.sgi.com
 On 08/30/12 07:00, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The only thing the periodic sync work does now is flush the AIL and
-> idle the log. These are really functions of the log code, so move
-> the work to xfs_log.c and rename it appropriately.
+> When unmounting the filesystem, there are lots of operations that
+> need to be done in a specific order, and they are spread across
+> across a couple of functions. We have to drain the AIL before we
+> write the unmount record, and we have to shut down the background
+> log work before we do either of them.
 >
-> The only wart that this leaves behind is the xfssyncd_centisecs
-> sysctl, otherwise the xfssyncd is dead. Clean up any comments that
-> related to xfssyncd to reflect it's passing.
+> But this is all split haphazardly across xfs_unmountfs() and
+> xfs_log_unmount(). Move all the AIL flushing and log manipulations
+> to xfs_log_unmount() so that the responisbilities of each function
+> is clear and the operations they perform obvious.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-...
+Looks good.
 
->
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 7f4f937..598f279 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -34,6 +34,7 @@
->   #include "xfs_dinode.h"
->   #include "xfs_inode.h"
->   #include "xfs_trace.h"
-> +#include "xfs_fsops.h"
->
->   kmem_zone_t	*xfs_log_ticket_zone;
->
-> @@ -698,6 +699,8 @@ xfs_log_mount_finish(xfs_mount_t *mp)
->   		ASSERT(mp->m_flags&  XFS_MOUNT_RDONLY);
->   	}
->
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
-Looking at this closer, shouldn't there be a check for recovery failure. 
-If it did, the mount will stop:
 
-	if (!error)
-
-> +	xfs_log_work_queue(mp);
-> +
->   	return error;
->   }
-
---Mark.
 
 _______________________________________________
 xfs mailing list
