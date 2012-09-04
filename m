@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q84E8qSa104824 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 09:08:52 -0500
+	q84E8H5O104756 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 09:08:17 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id WqeKSwbIrVdGcXOZ for
-	<xfs@oss.sgi.com>; Tue, 04 Sep 2012 07:09:49 -0700 (PDT)
-Message-ID: <50460BDB.40806@redhat.com>
-Date: Tue, 04 Sep 2012 10:10:35 -0400
+	cuda.sgi.com with ESMTP id OcXHDXzYv3PkNKWD for
+	<xfs@oss.sgi.com>; Tue, 04 Sep 2012 07:09:15 -0700 (PDT)
+Message-ID: <50460BB8.1060701@redhat.com>
+Date: Tue, 04 Sep 2012 10:10:00 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 3/4] xfs: add FREE_EOFBLOCKS ioctl
+Subject: Re: [RFC PATCH 2/4] xfs: create function to scan and clear EOFBLOCKS
+	inodes
 References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-	<1346097111-4476-4-git-send-email-bfoster@redhat.com>
-	<20120903051742.GS15292@dastard>
-In-Reply-To: <20120903051742.GS15292@dastard>
+	<1346097111-4476-3-git-send-email-bfoster@redhat.com>
+	<20120903050612.GR15292@dastard>
+In-Reply-To: <20120903050612.GR15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,82 +30,224 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/03/2012 01:17 AM, Dave Chinner wrote:
-> On Mon, Aug 27, 2012 at 03:51:50PM -0400, Brian Foster wrote:
->> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
->> scan. The xfs_eofblocks structure is defined to support the command
->> parameters (quota type/id and minimum file size).
->>
->> Signed-off-by: Brian Foster <bfoster@redhat.com>
->> ---
->>  fs/xfs/xfs_fs.h       |   10 ++++++++++
->>  fs/xfs/xfs_ioctl.c    |   25 +++++++++++++++++++++++++
->>  fs/xfs/xfs_quota.h    |    1 +
->>  fs/xfs/xfs_quotaops.c |    2 +-
->>  4 files changed, 37 insertions(+), 1 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
->> index c13fed8..6f93db9 100644
->> --- a/fs/xfs/xfs_fs.h
->> +++ b/fs/xfs/xfs_fs.h
->> @@ -339,6 +339,15 @@ typedef struct xfs_error_injection {
->>  
->>  
->>  /*
->> + * Speculative preallocation trimming.
->> + */
->> +typedef struct xfs_eofblocks {
->> +	__u32		id;		/* quota id */
->> +	__u32		qtype;		/* quota type */
->> +	__u64		min_file_size;	/* minimum file size */
->> +} xfs_eofblocks_t;
-> 
-> No typedefs.
-> 
-
-This is something I see throughout the code that I haven't quite
-followed (i.e., using the _t typedefs vs. not). Is the general consensus
-to move away from typedefs when possible?
-
+On 09/03/2012 01:06 AM, Dave Chinner wrote:
+> On Mon, Aug 27, 2012 at 03:51:49PM -0400, Brian Foster wrote:
 ...
->> +	case XFS_IOC_FREE_EOFBLOCKS: {
->> +		struct xfs_eofblocks eofb;
->> +		int qtype;
+>> +/*
+>> + * Handle an EOFBLOCKS tagged inode. If this is a forced scan, we wait on the
+>> + * iolock ourselves rather than rely on the trylock in xfs_free_eofblocks(). 
+>> + *
+>> + * We rely on the output parameter from xfs_free_eofblocks() to determine
+>> + * whether we should clear the tag because in the trylock case, it could have
+>> + * skipped the inode due to lock contention.
+>> + */
+>> +STATIC int
+>> +xfs_inode_free_eofblocks(
+>> +	struct xfs_inode	*ip,
+>> +	int			flags)
+>> +{
+>> +	int ret = 0;
+>> +	bool freed = false;
+>> +	bool wait_iolock = (flags & EOFBLOCKS_WAIT) ? true : false;
 >> +
->> +		if (copy_from_user(&eofb, arg, sizeof(eofb)))
->> +			return -XFS_ERROR(EFAULT);
->> +
->> +		qtype = xfs_quota_type(eofb.qtype);
->> +
->> +		/*
->> +		 * TODO: The filtering code currently uses the id in the inode.
->> +		 * Therefore, I don't think it really matters whether the
->> +		 * particular quota type is enabled (and the dquot is attached).
->> +		 *
->> +		 * Alternatively, we could filter by dquot type. This would
->> +		 * mean we might have to make sure dquot's are attached during
->> +		 * the scan and that the particular quota type is enabled. I'm
->> +		 * not sure that this buys us anything.
->> +		 */
+>> +	if (wait_iolock)
+>> +		xfs_ilock(ip, XFS_IOLOCK_EXCL);
 > 
-> If quota is not enabled, then a request to free blocks determined by
-> a quota ID is invalid and should be rejected. It's a user API - what
-> is and isn't supported needs to be written down in black and white
-> (i.e. in the xfsctl man page).
+> Why do we need the IO lock here? xfs_free_eofblocks() does all the
+> necessary locking....
 > 
 
-Ok. I was thinking that we could support the ability to scan by uid/gid
-regardless of whether quota is enabled, but perhaps there's no purpose
-to that if a quota isn't enabled.
+This was for the wait case (e.g., xfs_free_eofblocks() does a trylock
+on the IO lock and we want to wait for the lock in this case).
 
 Brian
 
->> +		/* TODO: might want to just use the eofb structure here */
->> +		error = xfs_inodes_free_eofblocks(mp, qtype, eofb.id, eofb.min_file_size, EOFBLOCKS_WAIT);
+>> +
+>> +	if ((S_ISREG(ip->i_d.di_mode) &&
+>> +	     (VFS_I(ip)->i_size > 0 ||
+>> +	     (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
+>> +	     (ip->i_df.if_flags & XFS_IFEXTENTS)) &&
+>> +	    (!(ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
 > 
-> Yes, just pass the structure - it means it can be passed all the way
-> down to the execute function, and only that code needs to handle
-> different versions of the structure.
+> This check is now repeated in 3 places - xfs_inactive, xfs_release
+> and now here. I think it needs a helper.
+> 
+>> +		/* !wait_iolock == need_iolock in xfs_free_eofblocks() */
+>> +		ret = xfs_free_eofblocks(ip->i_mount, ip, !wait_iolock, &freed);
+>> +		if (freed)
+>> +			xfs_inode_clear_eofblocks_tag(ip);
+> 
+> If you move xfs_inode_clear_eofblocks_tag() inside
+> xfs_free_eofblocks(), there's no need for this extra return value.
+> 
+>> +	} else {
+>> +		/* inode could be preallocated or append-only */
+>> +		xfs_inode_clear_eofblocks_tag(ip);
+> 
+> This should be a rare event - it's probably worth adding a pair of
+> trace events here for the two cases so we can see if there is ever a
+> significant number of inodes being scanned for prealloc that can't
+> be cleared...
+> 
+> (e.g 'perf top -e xfs:xfs_i*' to count all the inode events)
+> 
+>> +	}
+>> +
+>> +	if (wait_iolock)
+>> +		xfs_iunlock(ip, XFS_IOLOCK_EXCL);
+>> +
+>> +	return ret;
+>> +}
+>> +
+>> +/*
+>> + * Determine whether an inode matches a particular qouta id.
+>> + */
+>> +STATIC int
+>> +xfs_inode_match_quota_id(
+>> +	struct xfs_inode	*ip,
+>> +	int			qtype,
+>> +	uint32_t		id)
+>> +{
+>> +	switch (qtype) {
+>> +	case XFS_DQ_USER:
+>> +		return ip->i_d.di_uid == id;
+>> +	case XFS_DQ_GROUP:
+>> +		return ip->i_d.di_gid == id;
+>> +	default:
+>> +		return xfs_get_projid(ip) == id;
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+> 
+> There's nothing really quota specific about this scan. I'd leave
+> this functionality to a separate patch once all the core
+> infrastructure is in place.
+> 
+>> +
+>> +/*
+>> + * This is mostly copied from xfs_reclaim_inodes_ag().
+>> + *
+>> + * TODO:
+>> + * - Could we enhance ag_iterator to support a tag and use it instead of this?
+> 
+> Yes. This code is too tricky to duplicate for every use case, and
+> this doesn't have special case requirements like the reclaim code.
+> 
+> i.e. the xfs_inode_free_eofblocks() becomes the execute function
+> (and the quota checks move inside that eventually). Passing a tag of
+> "-1" would indicate a non-tag lookup, otherwise use a tag based
+> lookup. Given the extra fields that this version uses, passing a
+> void *args is probably necessary so that a structure can be passed
+> to the execute function along with the flags....
+> 
+> I'd suggest this conversion should be done in a patch prior to
+> introducing this scanner.
+> 
+> FWIW, this is going to conflict with my "get rid of xfs-sync.c patch
+> series, so we'll need to work out who rebases what at some point.
+> 
+>> + */
+>> +int
+>> +xfs_inodes_free_eofblocks(
+>> +	struct xfs_mount	*mp,
+>> +	int			qtype,
+>> +	uint32_t		id,
+>> +	uint64_t		min_file_size,
+>> +	int			flags)
+>> +{
+> .....
+>> +			for (i = 0; i < nr_found; i++) {
+>> +				if (!batch[i])
+>> +					continue;
+>> +
+>> +				/* default projid represents a full scan */
+> 
+> I don't think thats a good idea. From a normal users perspective,
+> the background trimming will occur irrespective of the quota groups
+> the inode is part of. Background trimming defines the default
+> behaviour, because that's what 99.99% of users will see active, not
+> quota/application specific events driven through ioctls.
+> 
+> IOWs, selecting inodes by quota type/id for pruning is a secondary
+> function of the execute implementation, not a primary concern of the
+> infrastructure.
+> 
+>> +				if ((!(qtype == XFS_DQ_PROJ &&
+>> +				       id == XFS_PROJID_DEFAULT) &&
+>> +				     !xfs_inode_match_quota_id(batch[i], qtype,
+>> +							       id)) ||
+>> +				    (min_file_size && XFS_ISIZE(batch[i]) < 
+>> +								min_file_size)
+> 
+>> +				   ) {
+>> +					IRELE(batch[i]);
+>> +					continue;
+>> +				}
+> 
+> Moving this check to the execute function will get rid of the indent
+> mess....
+> 
+>> +
+>> +				error = xfs_inode_free_eofblocks(batch[i], flags);
+>> +				IRELE(batch[i]);
+>> +				if (error)
+>> +					last_error = error;
+>> +			}
+>> +
+>> +			cond_resched();
+>> +
+>> +		} while (nr_found && !done);
+>> +
+>> +		xfs_perag_put(pag);
+>> +	}
+>> +
+>> +	return XFS_ERROR(last_error);
+>> +}
+>> +
+>>  STATIC void
+>>  __xfs_inode_set_eofblocks_tag(
+>>  	struct xfs_perag	*pag,
+>> diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
+>> index 4486491..78aca41 100644
+>> --- a/fs/xfs/xfs_sync.h
+>> +++ b/fs/xfs/xfs_sync.h
+>> @@ -43,8 +43,11 @@ void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
+>>  void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+>>  				struct xfs_inode *ip);
+>>  
+>> +#define EOFBLOCKS_WAIT		0x0001
+> 
+> I'd just reuse SYNC_WAIT and SYNC_TRYLOCK which are already defined
+> and used by the sync and reclaim iterators.
+> 
+>> +
+>>  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+>>  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+>> +int xfs_inodes_free_eofblocks(struct xfs_mount *, int, uint32_t, uint64_t, int);
+>>  
+>>  int xfs_sync_inode_grab(struct xfs_inode *ip);
+>>  int xfs_inode_ag_iterator(struct xfs_mount *mp,
+>> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+>> index 658ee2e..53460f3 100644
+>> --- a/fs/xfs/xfs_vnodeops.c
+>> +++ b/fs/xfs/xfs_vnodeops.c
+>> @@ -150,11 +150,12 @@ xfs_readlink(
+>>   * when the link count isn't zero and by xfs_dm_punch_hole() when
+>>   * punching a hole to EOF.
+>>   */
+>> -STATIC int
+>> +int
+>>  xfs_free_eofblocks(
+>>  	xfs_mount_t	*mp,
+>>  	xfs_inode_t	*ip,
+>> -	bool		need_iolock)
+>> +	bool		need_iolock,
+>> +	bool		*blocks_freed)
+> 
+> I don't really see a point to adding this. Either we removed all the
+> EOF blocks or we didn't, and that means we should just clear the
+> tags directly in this function if it is appropriate.
 > 
 > Cheers,
 > 
