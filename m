@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q856xFrZ259846 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 01:59:15 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	rCWWjbQwMd1tGeaD for <xfs@oss.sgi.com>;
-	Wed, 05 Sep 2012 00:00:13 -0700 (PDT)
-Date: Wed, 5 Sep 2012 17:00:11 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 4/4] xfs: add background scanning to clear EOFBLOCKS
-	inodes
-Message-ID: <20120905070011.GI15292@dastard>
-References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-	<1346097111-4476-5-git-send-email-bfoster@redhat.com>
-	<20120903052842.GT15292@dastard> <50460BF1.3070100@redhat.com>
+	q85BVmOu037264 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 06:31:48 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id fcaD39MqOrnKr7zV (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 05 Sep 2012 04:32:46 -0700 (PDT)
+Date: Wed, 5 Sep 2012 12:32:42 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH 020/102] xfs: warn if direct reclaim tries to writeback
+	pages
+Message-ID: <20120905113242.GL11266@suse.de>
+References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
+	<1345698180-13612-21-git-send-email-david@fromorbit.com>
+	<20120827181742.GA13970@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50460BF1.3070100@redhat.com>
+In-Reply-To: <20120827181742.GA13970@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,54 +29,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 04, 2012 at 10:10:57AM -0400, Brian Foster wrote:
-> On 09/03/2012 01:28 AM, Dave Chinner wrote:
-> > On Mon, Aug 27, 2012 at 03:51:51PM -0400, Brian Foster wrote:
-> >> Create a delayed_work to enable background scanning and freeing
-> >> of EOFBLOCKS inodes. The scanner kicks in once speculative
-> >> preallocation occurs and stops requeueing itself when no EOFBLOCKS
-> >> inodes exist.
-> >>
-> >> Scans are queued on the existing syncd workqueue and the interval
-> >> is tied to the syncd interval, which is a default of 30s. The
-> >> minimum file size for a background scan is hardcoded to 100MB.
+On Mon, Aug 27, 2012 at 02:17:42PM -0400, Christoph Hellwig wrote:
+> On Thu, Aug 23, 2012 at 03:01:38PM +1000, Dave Chinner wrote:
+> > From: Mel Gorman <mgorman@suse.de>
 > > 
-> > I'd set it to be much longer than the xfs_syncd_centisecs period.
-> > The data may not be written back for a long while, and a file that
-> > is open, written and closed repeatedly (NFS write patterns for large
-> > and/or slowly written files) should not have it's preallocation
-> > truncated every 30s.
+> > Upstream commit: 94054fa3fca1fd78db02cb3d68d5627120f0a1d4
 > > 
-> > I'd suggest that a 5 minute sweep is probably sufficiently frequent
-> > to avoid most fragmentation issues and long term buildup of speculative
-> > preallocation whilst not perturbing large/slow writers too much....
-> > 
+> > Direct reclaim should never writeback pages.  For now, handle the
+> > situation and warn about it.  Ultimately, this will be a BUG_ON.
 > 
-> Any thoughts on having tunables for both values (time and min size?) on
-> the background scanning?
+> Is this actually the case on 3.0-stable?
+> 
 
-Well, my suggestion for timing is as per above (xfs_syncd_centisecs
-* 100), but I don't really have any good rule of thumb for the
-minimum size. What threshold do people start to notice this?
+No, it is not. AFAIK, 3.0-stable does not contain [ee72886d: mm: vmscan:
+do not writeback filesystem pages in direct reclaim] which is the absolute
+minimum required for commit [94054fa3: xfs: warn if direct reclaim tries
+to writeback pages] to make sense.
 
-I'd SWAG that something like 32MB is a good size to start at because
-most IO subsystems will still be able to reach full bandwidth with
-extents of this size when reading files.
-
-Alternatively, if you can determine if the inode is still in use at
-the time of the scan (e.g. elevated reference count due to an open
-fd) and skip the truncation for those inodes, then a minimum size is
-not really needed, right?
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
