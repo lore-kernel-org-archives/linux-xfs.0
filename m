@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q854YKLO232829 for <xfs@oss.sgi.com>; Tue, 4 Sep 2012 23:34:20 -0500
+	q856f8uk256318 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 01:41:08 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	2ONEihmrw5JHvvTx for <xfs@oss.sgi.com>;
-	Tue, 04 Sep 2012 21:35:17 -0700 (PDT)
-Date: Wed, 5 Sep 2012 14:35:16 +1000
+	282AOIydbbNdG6H7 for <xfs@oss.sgi.com>;
+	Tue, 04 Sep 2012 23:42:05 -0700 (PDT)
+Date: Wed, 5 Sep 2012 16:42:02 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 05/13] xfs: sync work is now only periodic log work
-Message-ID: <20120905043516.GF15292@dastard>
-References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-6-git-send-email-david@fromorbit.com>
-	<50464F22.2030308@sgi.com>
+Subject: Re: [RFC PATCH 2/4] xfs: create function to scan and clear EOFBLOCKS
+	inodes
+Message-ID: <20120905064202.GG15292@dastard>
+References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
+	<1346097111-4476-3-git-send-email-bfoster@redhat.com>
+	<20120903050612.GR15292@dastard> <50460BB8.1060701@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50464F22.2030308@sgi.com>
+In-Reply-To: <50460BB8.1060701@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,56 +29,51 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 04, 2012 at 01:57:38PM -0500, Mark Tinguely wrote:
-> On 08/30/12 07:00, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >The only thing the periodic sync work does now is flush the AIL and
-> >idle the log. These are really functions of the log code, so move
-> >the work to xfs_log.c and rename it appropriately.
-> >
-> >The only wart that this leaves behind is the xfssyncd_centisecs
-> >sysctl, otherwise the xfssyncd is dead. Clean up any comments that
-> >related to xfssyncd to reflect it's passing.
-> >
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >---
-> 
+On Tue, Sep 04, 2012 at 10:10:00AM -0400, Brian Foster wrote:
+> On 09/03/2012 01:06 AM, Dave Chinner wrote:
+> > On Mon, Aug 27, 2012 at 03:51:49PM -0400, Brian Foster wrote:
 > ...
+> >> +/*
+> >> + * Handle an EOFBLOCKS tagged inode. If this is a forced scan, we wait on the
+> >> + * iolock ourselves rather than rely on the trylock in xfs_free_eofblocks(). 
+> >> + *
+> >> + * We rely on the output parameter from xfs_free_eofblocks() to determine
+> >> + * whether we should clear the tag because in the trylock case, it could have
+> >> + * skipped the inode due to lock contention.
+> >> + */
+> >> +STATIC int
+> >> +xfs_inode_free_eofblocks(
+> >> +	struct xfs_inode	*ip,
+> >> +	int			flags)
+> >> +{
+> >> +	int ret = 0;
+> >> +	bool freed = false;
+> >> +	bool wait_iolock = (flags & EOFBLOCKS_WAIT) ? true : false;
+> >> +
+> >> +	if (wait_iolock)
+> >> +		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+> > 
+> > Why do we need the IO lock here? xfs_free_eofblocks() does all the
+> > necessary locking....
+> > 
 > 
-> >
-> >diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> >index 7f4f937..598f279 100644
-> >--- a/fs/xfs/xfs_log.c
-> >+++ b/fs/xfs/xfs_log.c
-> >@@ -34,6 +34,7 @@
-> >  #include "xfs_dinode.h"
-> >  #include "xfs_inode.h"
-> >  #include "xfs_trace.h"
-> >+#include "xfs_fsops.h"
-> >
-> >  kmem_zone_t	*xfs_log_ticket_zone;
-> >
-> >@@ -698,6 +699,8 @@ xfs_log_mount_finish(xfs_mount_t *mp)
-> >  		ASSERT(mp->m_flags&  XFS_MOUNT_RDONLY);
-> >  	}
-> >
-> 
-> Looking at this closer, shouldn't there be a check for recovery
-> failure. If it did, the mount will stop:
-> 
-> 	if (!error)
-> 
-> >+	xfs_log_work_queue(mp);
-> >+
-> >  	return error;
+> This was for the wait case (e.g., xfs_free_eofblocks() does a trylock
+> on the IO lock and we want to wait for the lock in this case).
 
-Probably should, but the error handling for a xfs_log_mount_finish()
-failure calls xfs_log_unmount() and that shuts down the worker
-correctly even if this failure occurs.
+Does it really matter if we can't get the iolock and skip the inode?
+
+Note that xfs_inode_ag_walk() will keep a skipped count if you
+return EAGAIN, and re-run the walk on the AG if any inodes are
+skipped. This is done to prevent blocking on locks slowing down the
+scan - instead of blocking we move on to the next inode, and revist
+the blocked inodes again in a later pass.
+
+IOWs, if you convert the code to use the generic walk and make
+xfs_free_eofblocks() return EAGAIN when it can't get the io lock,
+you get the retry for free...
 
 Cheers,
 
