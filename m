@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q85MJHPq144789 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 17:19:17 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id QiTPvO8x8CQ5hSZK for
-	<xfs@oss.sgi.com>; Wed, 05 Sep 2012 15:20:16 -0700 (PDT)
-Message-ID: <5047D01E.1070104@redhat.com>
-Date: Wed, 05 Sep 2012 17:20:14 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q85MPkd3146216 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 17:25:46 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	J0xml6GhfBGEeMVa for <xfs@oss.sgi.com>;
+	Wed, 05 Sep 2012 15:26:44 -0700 (PDT)
+Date: Thu, 6 Sep 2012 08:26:41 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/10] xfstests: rework large filesystem testing - add
+	golden output
+Message-ID: <20120905222641.GJ15292@dastard>
+References: <20120831194326.741195404@sgi.com>
+	<1343291989-14987-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: [PATCH] xfstests 285: verify extN statfs f_blocks
+Content-Disposition: inline
+In-Reply-To: <1343291989-14987-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,150 +28,126 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>, ext4 development <linux-ext4@vger.kernel.org>
+To: rjohnston@sgi.com
+Cc: xfs@oss.sgi.com
 
-extN can report f_blocks in statfs in 2 different ways, based
-on whether or not metadata overhead is counted.  This has broken
-in the past, so here's a test for it.
+On Fri, Aug 31, 2012 at 02:43:27PM -0500, rjohnston@sgi.com wrote:
+> Patch "rework large filesystem testing" introduces a new option --large-fs
+> which creates a new file $SCRATCH_MNT/.use_space.  If this 10 part patchset is
+> applied, the following tests will fail:
+> 	019 026 027 028 046 047 050 056 059 060 062 063 064 065 066
 
-It looks at dumpe2fs output to get total blocks and free blocks
-right after mkfs.  The difference should be, by definition, the
-exact amount of metadata overhead.
+That's a lot more tests than I see failing. 
 
-It then compares this to what's reported via stat -f for f_blocks.
-For "minix" df, it should be exactly equal to the total blocks,
-and for "bsd" df, it should be total blocks less overhead.
+> This patch accounts for the following new output when testing xfs filesystems with
+> the --large-fs option by creating new output file to compare against
+> ($seq.largefs.out):
 
-It tests that the latter is accurate to within a 1% tolerance.
+Creating new output files is the absolute last resort.  Indeed, what
+happens when you get different output for tests that already select
+an output file based on, say, platform or some other criteria? We
+get a combinatorial explosion of golden output files, and that is
+simply not manageable.
 
-Today the journal doesn't count as overhead in the statfs call;
-this should be fixed kernelside but for many filesystems it'll be
-within the threshold anyway.
+The usual thing to do is update the necessary filters or change the
+way the tests run to avoid trivial output file differences e.g. use
+a subdir rather than SCRATCH_MNT directly. Or, for example the
+filters that munge different standard error messages from different
+platforms to be the same...
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> 1. The following four lines appear in test 019. 
+> 	 File: "./.use_space"
+> 	 Size: 6312890368 Filetype: Regular File
+> 	Mode: (0600/-rw-------) Uid: (0) Gid: (0)
+> 	Device: <DEVICE> Inode: <INODE> Links: 1
 
-diff --git a/285 b/285
-new file mode 100755
-index 0000000..cda8531
---- /dev/null
-+++ b/285
-@@ -0,0 +1,97 @@
-+#! /bin/bash
-+# FS QA Test No. 286
-+#
-+# Test overhead & df output for extN filesystems
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Red Hat, Inc.  All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=sandeen@redhat.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+    cd /
-+    rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.filter
-+
-+# real QA test starts here
-+
-+# Modify as appropriate.
-+_supported_fs ext2 ext3 ext4
-+_supported_os Linux
-+_require_scratch
-+
-+rm -f $seq.full
-+
-+_scratch_mkfs >> $seq.full 2>&1
-+
-+TOTAL_BLOCKS=`dumpe2fs -h $SCRATCH_DEV 2>/dev/null \
-+		| awk '/Block count:/{print $3}'`
-+
-+FREE_BLOCKS=`dumpe2fs -h $SCRATCH_DEV 2>/dev/null \
-+		| awk '/Free blocks:/{print $3}'`
-+
-+# nb: kernels today don't count journal blocks  as overhead, but should.
-+# For most fileystems this will still be within tolerance.
-+OVERHEAD=$(($TOTAL_BLOCKS-$FREE_BLOCKS))
-+
-+#  bsddf|minixdf
-+#         Set the behaviour  for  the  statfs  system  call.  The  minixdf
-+#         behaviour is to return in the f_blocks field the total number of
-+#         blocks of the filesystem, while the bsddf  behaviour  (which  is
-+#         the default) is to subtract the overhead blocks used by the ext2
-+#         filesystem and not available for file storage.
-+
-+# stat -f output looks like; we get f_blocks from that, which
-+# varies depending on the df mount options used below:
-+
-+# Filesystem           4K-blocks      Used Available Use% Mounted on
-+# /dev/sda8              2405312   2208933    196379  92% /
-+
-+_scratch_mount "-o minixdf"
-+MINIX_F_BLOCKS=`stat -f $SCRATCH_MNT | awk '/^Blocks/{print $3}'`
-+umount $SCRATCH_MNT
-+
-+_scratch_mount "-o bsddf"
-+BSD_F_BLOCKS=`stat -f $SCRATCH_MNT | awk '/^Blocks/{print $3}'`
-+umount $SCRATCH_MNT
-+
-+echo "Overhead is $OVERHEAD out of $TOTAL_BLOCKS" >> $seq.full
-+echo "BSD blocks $BSD_F_BLOCKS" >> $seq.full
-+echo "MINIX blocks $MINIX_F_BLOCKS" >> $seq.full
-+
-+# minix should be exactly equal (hence 0)
-+_within_tolerance "minix f_blocks" $MINIX_F_BLOCKS $TOTAL_BLOCKS 0 -v
-+# bsd should be within ... we'll say 1%
-+_within_tolerance "bsd f_blocks" $BSD_F_BLOCKS $(($TOTAL_BLOCKS-$OVERHEAD)) 1% -v
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/285.out b/285.out
-new file mode 100644
-index 0000000..2075e21
---- /dev/null
-+++ b/285.out
-@@ -0,0 +1,3 @@
-+QA output created by 285
-+minix f_blocks is in range
-+bsd f_blocks is in range
-diff --git a/group b/group
-index 104ed35..0b33178 100644
---- a/group
-+++ b/group
-@@ -403,3 +403,4 @@ deprecated
- 282 dump ioctl auto quick
- 283 dump ioctl auto quick
- 284 auto
-+285 auto
+This test doesn't really need to be run for large filesystems -
+running it on large filesystems doesn't improve the coverage of or
+our confidence in the code it is testing, so I'd just add a
+_require_no_large_scratch_dev to it.
+
+> 2. When the nodump attribute is set, the xfsdump -e option will cause the
+>    following additional lines to appear.
+> 	xfsdump: NOTE: pruned 1 files: skip attribute set
+> 	Only in SCRATCH_MNT: .use_space
+> 	SCRATCH_MNT/.use_space
+
+Ok, those are the errors I haven't seen - not sure why. I'll have to
+look into that.
+
+However, this is definitely a case of updating the dump output
+filter to remove these messages from the output stream.  The
+alternative is to change the common dump code to use a subdirectory
+rather than the root directory so it doesn't see these files at all.
+
+> 3. Number of files off by one.
+> 	xfsrestore: # directories and (off by 1) entries processed
+
+That would be fixed by using a subdir for the dump tests. I don't
+recommend that the number should be filtered, as having dump report
+the correct number of files scanned is important.
+
+> 	[ROOT] 0 0 0 00 [--------] (off by 1) 0 0 00 [--------] 0 0 0 00 [--------]
+
+Perhaps the usre/group of the use_space file needs to be changed so
+it doesn't impact on the test results. Alternatively, a filter could
+be written/modified to fix the number appropriately.
+
+> This patch also modifies check and common.quota to use the new output file
+> $seq.largefs.out when the --large-fs option is used (LARGE_SCRATCH_DEV = yes)
+> or  $seq.out when the --large-fs option is NOT used (LARGE_SCRATCH_DEV != yes).
+> 
+> Signed-off-by: Rich Johnston <rjohnston@sgi.com>
+> 
+> ---
+>  019.largefs.out |    5 +++
+>  026.largefs.out |    4 ++-
+>  027.largefs.out |    2 -
+>  028.largefs.out |    5 +++
+>  046.largefs.out |    3 +-
+>  047.largefs.out |    5 +++
+>  050.largefs.out |   72 ++++++++++++++++++++++++++++----------------------------
+>  056.largefs.out |    3 +-
+>  059.largefs.out |    2 +
+>  060.largefs.out |    4 ++-
+>  062.largefs.out |    2 +
+>  063.largefs.out |    3 +-
+>  064.largefs.out |   41 ++++++++++++++++---------------
+>  065.largefs.out |   29 +++++++++++-----------
+>  066.largefs.out |    3 +-
+>  check           |   12 +++++++--
+>  common.quota    |   20 ++++++++++-----
+>  17 files changed, 128 insertions(+), 87 deletions(-)
+
+FWIW, this patch is supposed to add these *.largefs.out files, right? The
+patch, however:
+
+> Index: b/019.largefs.out
+> ===================================================================
+> --- a/019.largefs.out
+> +++ b/019.largefs.out
+> @@ -9,6 +9,11 @@ Wrote 2048.00Kb (value 0x2c)
+>   Mode: (0777/drwxrwxrwx) Uid: (3) Gid: (1)
+>  Device: <DEVICE> Inode: <INODE> Links: 3 
+>  
+> + File: "./.use_space"
+> + Size: 6312890368 Filetype: Regular File
+> + Mode: (0600/-rw-------) Uid: (0) Gid: (0)
+> +Device: <DEVICE> Inode: <INODE> Links: 1
+> +
+>   File: "./bigfile"
+>   Size: 2097152 Filetype: Regular File
+>   Mode: (0666/-rw-rw-rw-) Uid: (3) Gid: (0)
+
+... assumes they already exist...
+
+Cheers,
+
+Dave.
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
