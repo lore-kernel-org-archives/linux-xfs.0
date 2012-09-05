@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q85CMcMC044473 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 07:22:38 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UizVgI7HwApTgTgT for
-	<xfs@oss.sgi.com>; Wed, 05 Sep 2012 05:23:36 -0700 (PDT)
-Message-ID: <504743F0.1050802@redhat.com>
-Date: Wed, 05 Sep 2012 08:22:08 -0400
-From: Brian Foster <bfoster@redhat.com>
+	q85DG6DV052524 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 08:16:06 -0500
+Message-ID: <504750CB.2090907@sgi.com>
+Date: Wed, 05 Sep 2012 08:16:59 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 3/4] xfs: add FREE_EOFBLOCKS ioctl
-References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-	<1346097111-4476-4-git-send-email-bfoster@redhat.com>
-	<20120903051742.GS15292@dastard> <50460BDB.40806@redhat.com>
-	<20120905064944.GH15292@dastard>
-In-Reply-To: <20120905064944.GH15292@dastard>
+Subject: Re: [PATCH 03/13] xfs: rationalise xfs_mount_wq users
+References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
+	<1346328017-2795-4-git-send-email-david@fromorbit.com>
+	<504622C1.20201@sgi.com> <20120905043000.GE15292@dastard>
+In-Reply-To: <20120905043000.GE15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,52 +19,67 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/05/2012 02:49 AM, Dave Chinner wrote:
-> On Tue, Sep 04, 2012 at 10:10:35AM -0400, Brian Foster wrote:
->> On 09/03/2012 01:17 AM, Dave Chinner wrote:
->>> On Mon, Aug 27, 2012 at 03:51:50PM -0400, Brian Foster wrote:
-...
->> This is something I see throughout the code that I haven't quite
->> followed (i.e., using the _t typedefs vs. not). Is the general consensus
->> to move away from typedefs when possible?
-> 
-> Yes. The Irix code that XFS came from was full of typedefs - part
-> of it was to try to strictly type check things that were the same
-> storage size or on-disk vs in-memory. We've got other ways of doing
-> that better (e.g. the endian checking sparse does), and typedefs
-> are generally frowned upon in the main kernel code because they
-> often obfuscate the code rather than improve it, so we're
-> removing them as we modify code or write new code.
-> 
-
-Good to know.
-
-...
->> Ok. I was thinking that we could support the ability to scan by uid/gid
->> regardless of whether quota is enabled, but perhaps there's no purpose
->> to that if a quota isn't enabled.
-> 
-> I can't really think of a use case for doing this. Making the API
-> more expansive in future if someone needs this can be done - it's
-> removing stuff that is really hard to do. Hence, don't add it if it
-> is not going to be used immediately. :)
-> 
-
-Ok.
-
-Brian
-
+On 09/04/12 23:30, Dave Chinner wrote:
+> On Tue, Sep 04, 2012 at 10:48:17AM -0500, Mark Tinguely wrote:
+>> On 08/30/12 07:00, Dave Chinner wrote:
+>>> -	/*
+>>> -	 * We shouldn't write/force the log if we are in the mount/unmount
+>>> -	 * process or on a read only filesystem. The workqueue still needs to be
+>>> -	 * active in both cases, however, because it is used for inode reclaim
+>>> -	 * during these times.  Use the MS_ACTIVE flag to avoid doing anything
+>>> -	 * during mount.  Doing work during unmount is avoided by calling
+>>> -	 * cancel_delayed_work_sync on this work queue before tearing down
+>>> -	 * the ail and the log in xfs_log_unmount.
+>>> -	 */
+>>> -	if (!(mp->m_super->s_flags&   MS_ACTIVE)&&
+>>> -	    !(mp->m_flags&   XFS_MOUNT_RDONLY)) {
+>>> +	if (!(mp->m_flags&   XFS_MOUNT_RDONLY)) {
+>>>   		/* dgc: errors ignored here */
+>>>   		if (mp->m_super->s_writers.frozen == SB_UNFROZEN&&
+>>>   		xfs_log_need_covered(mp))
+>>> @@ -408,8 +398,7 @@ xfs_sync_worker(
+>>>   		else
+>>>   			xfs_log_force(mp, 0);
+>>>
+>>> -		/* start pushing all the metadata that is currently
+>>> -		 * dirty */
+>>> +		/* start pushing all the metadata that is currently dirty */
+>>>   		xfs_ail_push_all(mp->m_ail);
+>>>   	}
+>>>
+>>
+>> It appears that the removal of the MS_ACTIVE flag is causing the
+>> "atomic_read(&bp->b_hold)>   0," ASSERT.
+>
+> I must be being slow today - I don't see why that would cause any
+> problems. The worker is not started at the end of the mount process
+> after everything is set up (i.e. just before MS_ACTIVE is removed),
+> and the worker is stopped before anything is torn down. That should
+> effectively replicate what the MS_ACTIVE flag is providing in the
+> old code.
+>
+> Can you explain in more detail what lead you to this conclusion?
+>
 > Cheers,
-> 
+>
 > Dave.
-> 
+
+You are correct, it does not make sense, but with the
+  !(mp->m_super->s_flags &  MS_ACTIVE)
+test removed, test 107 causes the above assert on
+different machines/architectures. Place the test in, the
+assert does not happen.
+
+I will see if I can get it to dump on the x86_32 machine.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
