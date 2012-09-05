@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q85CMijU044486 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 07:22:44 -0500
+	q85CMVsm044460 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 07:22:31 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id GT6iYikn4raURAe6 for
-	<xfs@oss.sgi.com>; Wed, 05 Sep 2012 05:23:43 -0700 (PDT)
-Message-ID: <504743F6.8040606@redhat.com>
-Date: Wed, 05 Sep 2012 08:22:14 -0400
+	cuda.sgi.com with ESMTP id rRTuB6H5fV3553fT for
+	<xfs@oss.sgi.com>; Wed, 05 Sep 2012 05:23:29 -0700 (PDT)
+Message-ID: <504743E8.7040500@redhat.com>
+Date: Wed, 05 Sep 2012 08:22:00 -0400
 From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [RFC PATCH 4/4] xfs: add background scanning to clear EOFBLOCKS
+Subject: Re: [RFC PATCH 2/4] xfs: create function to scan and clear EOFBLOCKS
 	inodes
 References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-	<1346097111-4476-5-git-send-email-bfoster@redhat.com>
-	<20120903052842.GT15292@dastard> <50460BF1.3070100@redhat.com>
-	<20120905070011.GI15292@dastard>
-In-Reply-To: <20120905070011.GI15292@dastard>
+	<1346097111-4476-3-git-send-email-bfoster@redhat.com>
+	<20120903050612.GR15292@dastard> <50460BB8.1060701@redhat.com>
+	<20120905064202.GG15292@dastard>
+In-Reply-To: <20120905064202.GG15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,48 +31,56 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/05/2012 03:00 AM, Dave Chinner wrote:
-> On Tue, Sep 04, 2012 at 10:10:57AM -0400, Brian Foster wrote:
->> On 09/03/2012 01:28 AM, Dave Chinner wrote:
->>> On Mon, Aug 27, 2012 at 03:51:51PM -0400, Brian Foster wrote:
-...
+On 09/05/2012 02:42 AM, Dave Chinner wrote:
+> On Tue, Sep 04, 2012 at 10:10:00AM -0400, Brian Foster wrote:
+>> On 09/03/2012 01:06 AM, Dave Chinner wrote:
+>>> On Mon, Aug 27, 2012 at 03:51:49PM -0400, Brian Foster wrote:
+>> ...
+>>>> +/*
+>>>> + * Handle an EOFBLOCKS tagged inode. If this is a forced scan, we wait on the
+>>>> + * iolock ourselves rather than rely on the trylock in xfs_free_eofblocks(). 
+>>>> + *
+>>>> + * We rely on the output parameter from xfs_free_eofblocks() to determine
+>>>> + * whether we should clear the tag because in the trylock case, it could have
+>>>> + * skipped the inode due to lock contention.
+>>>> + */
+>>>> +STATIC int
+>>>> +xfs_inode_free_eofblocks(
+>>>> +	struct xfs_inode	*ip,
+>>>> +	int			flags)
+>>>> +{
+>>>> +	int ret = 0;
+>>>> +	bool freed = false;
+>>>> +	bool wait_iolock = (flags & EOFBLOCKS_WAIT) ? true : false;
+>>>> +
+>>>> +	if (wait_iolock)
+>>>> +		xfs_ilock(ip, XFS_IOLOCK_EXCL);
+>>>
+>>> Why do we need the IO lock here? xfs_free_eofblocks() does all the
+>>> necessary locking....
+>>>
 >>
->> Any thoughts on having tunables for both values (time and min size?) on
->> the background scanning?
+>> This was for the wait case (e.g., xfs_free_eofblocks() does a trylock
+>> on the IO lock and we want to wait for the lock in this case).
 > 
-> Well, my suggestion for timing is as per above (xfs_syncd_centisecs
-> * 100), but I don't really have any good rule of thumb for the
-> minimum size. What threshold do people start to notice this?
+> Does it really matter if we can't get the iolock and skip the inode?
 > 
 
-For the testing I've done so far, I'm hitting EDQUOT with 20-30GB of
-space left while sequentially writing to many large files. I'm really
-just trying to get used space before failure more in the ball park of
-the limit, so I'm not going to complain too much over leaving a few
-hundred MB or so around on an otherwise full quota. ;) From where I sit,
-the problem is more when we extend a file by 2, 4, 8GB and consume a
-large amount of limited available space.
+Well I thought that was the point of the force/wait scan as opposed to
+the best effort scan. But...
 
-I suppose for the background scanning, it's more about just using a
-value that doesn't get in the way of general behavior/performance. I'll
-do some more testing in this area.
-
-> I'd SWAG that something like 32MB is a good size to start at because
-> most IO subsystems will still be able to reach full bandwidth with
-> extents of this size when reading files.
+> Note that xfs_inode_ag_walk() will keep a skipped count if you
+> return EAGAIN, and re-run the walk on the AG if any inodes are
+> skipped. This is done to prevent blocking on locks slowing down the
+> scan - instead of blocking we move on to the next inode, and revist
+> the blocked inodes again in a later pass.
 > 
-> Alternatively, if you can determine if the inode is still in use at
-> the time of the scan (e.g. elevated reference count due to an open
-> fd) and skip the truncation for those inodes, then a minimum size is
-> not really needed, right?
+> IOWs, if you convert the code to use the generic walk and make
+> xfs_free_eofblocks() return EAGAIN when it can't get the io lock,
+> you get the retry for free...
 > 
 
-Hmm, good idea. Though perhaps I can use the min_size as a force
-parameter (i.e., trim anything over this size), and the inode in use
-check allows a more conservative default. I'll have to play around with
-the right time/size values some more to get a better feel for it. I'll
-probably include tunables at least for testing purposes, and they can
-always be removed later. Thanks.
+This sounds more efficient. ;) I'll move it to this approach. Thanks.
 
 Brian
 
