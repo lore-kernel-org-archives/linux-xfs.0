@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q85EXDZt067172 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 09:33:13 -0500
-Message-ID: <504762DD.4090205@sgi.com>
-Date: Wed, 05 Sep 2012 09:34:05 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q85GQ8UH086908 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 11:26:08 -0500
+Message-ID: <50477D60.8000604@sgi.com>
+Date: Wed, 5 Sep 2012 11:27:12 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/13] xfs: rationalise xfs_mount_wq users
-References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-4-git-send-email-david@fromorbit.com>
-	<504622C1.20201@sgi.com> <20120905043000.GE15292@dastard>
-	<504750CB.2090907@sgi.com>
-In-Reply-To: <504750CB.2090907@sgi.com>
+Subject: Re: [PATCH 08/10] xfstests: enable large fs testing on ext4
+References: <1343291989-14987-1-git-send-email-david@fromorbit.com>
+	<1343291989-14987-9-git-send-email-david@fromorbit.com>
+In-Reply-To: <1343291989-14987-9-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,67 +25,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/05/12 08:16, Mark Tinguely wrote:
-> On 09/04/12 23:30, Dave Chinner wrote:
->> On Tue, Sep 04, 2012 at 10:48:17AM -0500, Mark Tinguely wrote:
->>> On 08/30/12 07:00, Dave Chinner wrote:
->>>> - /*
->>>> - * We shouldn't write/force the log if we are in the mount/unmount
->>>> - * process or on a read only filesystem. The workqueue still needs
->>>> to be
->>>> - * active in both cases, however, because it is used for inode reclaim
->>>> - * during these times. Use the MS_ACTIVE flag to avoid doing anything
->>>> - * during mount. Doing work during unmount is avoided by calling
->>>> - * cancel_delayed_work_sync on this work queue before tearing down
->>>> - * the ail and the log in xfs_log_unmount.
->>>> - */
->>>> - if (!(mp->m_super->s_flags& MS_ACTIVE)&&
->>>> - !(mp->m_flags& XFS_MOUNT_RDONLY)) {
->>>> + if (!(mp->m_flags& XFS_MOUNT_RDONLY)) {
->>>> /* dgc: errors ignored here */
->>>> if (mp->m_super->s_writers.frozen == SB_UNFROZEN&&
->>>> xfs_log_need_covered(mp))
->>>> @@ -408,8 +398,7 @@ xfs_sync_worker(
->>>> else
->>>> xfs_log_force(mp, 0);
->>>>
->>>> - /* start pushing all the metadata that is currently
->>>> - * dirty */
->>>> + /* start pushing all the metadata that is currently dirty */
->>>> xfs_ail_push_all(mp->m_ail);
->>>> }
->>>>
->>>
->>> It appears that the removal of the MS_ACTIVE flag is causing the
->>> "atomic_read(&bp->b_hold)> 0," ASSERT.
->>
->> I must be being slow today - I don't see why that would cause any
->> problems. The worker is not started at the end of the mount process
->> after everything is set up (i.e. just before MS_ACTIVE is removed),
->> and the worker is stopped before anything is torn down. That should
->> effectively replicate what the MS_ACTIVE flag is providing in the
->> old code.
->>
->> Can you explain in more detail what lead you to this conclusion?
->>
->> Cheers,
->>
->> Dave.
+On 07/26/2012 03:39 AM, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 >
-> You are correct, it does not make sense, but with the
-> !(mp->m_super->s_flags & MS_ACTIVE)
-> test removed, test 107 causes the above assert on
-> different machines/architectures. Place the test in, the
-> assert does not happen.
+> Now that setting up large filesystem testing on sparse loopback
+> devices uses a generic method for filling the filesystem, extent
+> support to ext4 filesystems.
 >
-> I will see if I can get it to dump on the x86_32 machine.
+> ext4 is slightly more complex to fill as it does not support files
+> larger than 16TB. Hence a slightly more complex method of using
+> multiple smaller files to fill the space is necessary.
 >
-> --Mark.
+> WARNING: be prepeared for ext4 to take forever to prepare large
+> filesystems as allocation of large amounts of space (especially as
+> it approaches ENOSPC) is can take minutes rather than milliseconds
+>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>   common.rc |   90 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 90 insertions(+)
+>
 
-Make that xfstest 179. The ASSERT happens right away. I have a dump from 
-x86_32 machine. I will take a quick look at it.
+Looks good.
 
---Mark.
+Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+
+Regards
+--Rich
 
 _______________________________________________
 xfs mailing list
