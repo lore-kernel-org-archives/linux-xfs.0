@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q856mnnF258180 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 01:48:49 -0500
+	q856xFrZ259846 for <xfs@oss.sgi.com>; Wed, 5 Sep 2012 01:59:15 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	K5UVu4YQDtCTaHvZ for <xfs@oss.sgi.com>;
-	Tue, 04 Sep 2012 23:49:46 -0700 (PDT)
-Date: Wed, 5 Sep 2012 16:49:44 +1000
+	rCWWjbQwMd1tGeaD for <xfs@oss.sgi.com>;
+	Wed, 05 Sep 2012 00:00:13 -0700 (PDT)
+Date: Wed, 5 Sep 2012 17:00:11 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH 3/4] xfs: add FREE_EOFBLOCKS ioctl
-Message-ID: <20120905064944.GH15292@dastard>
+Subject: Re: [RFC PATCH 4/4] xfs: add background scanning to clear EOFBLOCKS
+	inodes
+Message-ID: <20120905070011.GI15292@dastard>
 References: <1346097111-4476-1-git-send-email-bfoster@redhat.com>
-	<1346097111-4476-4-git-send-email-bfoster@redhat.com>
-	<20120903051742.GS15292@dastard> <50460BDB.40806@redhat.com>
+	<1346097111-4476-5-git-send-email-bfoster@redhat.com>
+	<20120903052842.GT15292@dastard> <50460BF1.3070100@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50460BDB.40806@redhat.com>
+In-Reply-To: <50460BF1.3070100@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,78 +32,44 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Tue, Sep 04, 2012 at 10:10:35AM -0400, Brian Foster wrote:
-> On 09/03/2012 01:17 AM, Dave Chinner wrote:
-> > On Mon, Aug 27, 2012 at 03:51:50PM -0400, Brian Foster wrote:
-> >> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
-> >> scan. The xfs_eofblocks structure is defined to support the command
-> >> parameters (quota type/id and minimum file size).
+On Tue, Sep 04, 2012 at 10:10:57AM -0400, Brian Foster wrote:
+> On 09/03/2012 01:28 AM, Dave Chinner wrote:
+> > On Mon, Aug 27, 2012 at 03:51:51PM -0400, Brian Foster wrote:
+> >> Create a delayed_work to enable background scanning and freeing
+> >> of EOFBLOCKS inodes. The scanner kicks in once speculative
+> >> preallocation occurs and stops requeueing itself when no EOFBLOCKS
+> >> inodes exist.
 > >>
-> >> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> >> ---
-> >>  fs/xfs/xfs_fs.h       |   10 ++++++++++
-> >>  fs/xfs/xfs_ioctl.c    |   25 +++++++++++++++++++++++++
-> >>  fs/xfs/xfs_quota.h    |    1 +
-> >>  fs/xfs/xfs_quotaops.c |    2 +-
-> >>  4 files changed, 37 insertions(+), 1 deletions(-)
-> >>
-> >> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> >> index c13fed8..6f93db9 100644
-> >> --- a/fs/xfs/xfs_fs.h
-> >> +++ b/fs/xfs/xfs_fs.h
-> >> @@ -339,6 +339,15 @@ typedef struct xfs_error_injection {
-> >>  
-> >>  
-> >>  /*
-> >> + * Speculative preallocation trimming.
-> >> + */
-> >> +typedef struct xfs_eofblocks {
-> >> +	__u32		id;		/* quota id */
-> >> +	__u32		qtype;		/* quota type */
-> >> +	__u64		min_file_size;	/* minimum file size */
-> >> +} xfs_eofblocks_t;
+> >> Scans are queued on the existing syncd workqueue and the interval
+> >> is tied to the syncd interval, which is a default of 30s. The
+> >> minimum file size for a background scan is hardcoded to 100MB.
 > > 
-> > No typedefs.
+> > I'd set it to be much longer than the xfs_syncd_centisecs period.
+> > The data may not be written back for a long while, and a file that
+> > is open, written and closed repeatedly (NFS write patterns for large
+> > and/or slowly written files) should not have it's preallocation
+> > truncated every 30s.
+> > 
+> > I'd suggest that a 5 minute sweep is probably sufficiently frequent
+> > to avoid most fragmentation issues and long term buildup of speculative
+> > preallocation whilst not perturbing large/slow writers too much....
 > > 
 > 
-> This is something I see throughout the code that I haven't quite
-> followed (i.e., using the _t typedefs vs. not). Is the general consensus
-> to move away from typedefs when possible?
+> Any thoughts on having tunables for both values (time and min size?) on
+> the background scanning?
 
-Yes. The Irix code that XFS came from was full of typedefs - part
-of it was to try to strictly type check things that were the same
-storage size or on-disk vs in-memory. We've got other ways of doing
-that better (e.g. the endian checking sparse does), and typedefs
-are generally frowned upon in the main kernel code because they
-often obfuscate the code rather than improve it, so we're
-removing them as we modify code or write new code.
+Well, my suggestion for timing is as per above (xfs_syncd_centisecs
+* 100), but I don't really have any good rule of thumb for the
+minimum size. What threshold do people start to notice this?
 
-> >> +
-> >> +		/*
-> >> +		 * TODO: The filtering code currently uses the id in the inode.
-> >> +		 * Therefore, I don't think it really matters whether the
-> >> +		 * particular quota type is enabled (and the dquot is attached).
-> >> +		 *
-> >> +		 * Alternatively, we could filter by dquot type. This would
-> >> +		 * mean we might have to make sure dquot's are attached during
-> >> +		 * the scan and that the particular quota type is enabled. I'm
-> >> +		 * not sure that this buys us anything.
-> >> +		 */
-> > 
-> > If quota is not enabled, then a request to free blocks determined by
-> > a quota ID is invalid and should be rejected. It's a user API - what
-> > is and isn't supported needs to be written down in black and white
-> > (i.e. in the xfsctl man page).
-> > 
-> 
-> Ok. I was thinking that we could support the ability to scan by uid/gid
-> regardless of whether quota is enabled, but perhaps there's no purpose
-> to that if a quota isn't enabled.
+I'd SWAG that something like 32MB is a good size to start at because
+most IO subsystems will still be able to reach full bandwidth with
+extents of this size when reading files.
 
-I can't really think of a use case for doing this. Making the API
-more expansive in future if someone needs this can be done - it's
-removing stuff that is really hard to do. Hence, don't add it if it
-is not going to be used immediately. :)
+Alternatively, if you can determine if the inode is still in use at
+the time of the scan (e.g. elevated reference count due to an open
+fd) and skip the truncation for those inodes, then a minimum size is
+not really needed, right?
 
 Cheers,
 
