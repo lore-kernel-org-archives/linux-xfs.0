@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q86EuEkO097110 for <xfs@oss.sgi.com>; Thu, 6 Sep 2012 09:56:14 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id 54ViTVFWpmeZEI5C (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Sep 2012 07:57:10 -0700 (PDT)
-Date: Thu, 6 Sep 2012 16:57:08 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: xfs freeze annotation problem on 3.6.0-rc3+ kernel
-Message-ID: <20120906145708.GB12539@quack.suse.cz>
-References: <20120906063921.749a850a@corrin.poochiereds.net>
+	q86F7oJs099419 for <xfs@oss.sgi.com>; Thu, 6 Sep 2012 10:07:50 -0500
+Message-ID: <5048BC7F.3060607@sgi.com>
+Date: Thu, 06 Sep 2012 10:08:47 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120906063921.749a850a@corrin.poochiereds.net>
+Subject: Re: [PATCH 03/13] xfs: rationalise xfs_mount_wq users
+References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
+	<1346328017-2795-4-git-send-email-david@fromorbit.com>
+	<504622C1.20201@sgi.com> <20120905043000.GE15292@dastard>
+	<504750CB.2090907@sgi.com> <20120906004607.GN15292@dastard>
+In-Reply-To: <20120906004607.GN15292@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,58 +20,98 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jeff Layton <jlayton@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, Jan Kara <jack@suse.cz>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Thu 06-09-12 06:39:21, Jeff Layton wrote:
-> I got the following xfs-related lockdep pop on a 3.6.0-rc3+ kernel. 
-> I've been able to reproduce this twice now by doing a kernel build on
-> xfs.
-> 
-> The last commit from Linus' tree in this kernel is 9acb172. It also has
-> a pile of my own and Al Viro's patches on top, but I don't think any of
-> them would affect this. I should be able to test patches for this if
-> you come up with one, but since I've only seen it twice I'm not sure
-> how reproducible it is yet.
-> 
-> [ 4175.887865] 
-> [ 4175.888032] =========================================================
-> [ 4175.888032] [ INFO: possible irq lock inversion dependency detected ]
-> [ 4175.888032] 3.6.0-rc3+ #11 Not tainted
-> [ 4175.888032] ---------------------------------------------------------
-> [ 4175.888032] kswapd0/41 just changed the state of lock:
-> [ 4175.888032]  (sb_internal){.+.+.?}, at: [<ffffffffa00f60ad>] xfs_trans_alloc+0x2d/0x50 [xfs]
-> [ 4175.888032] but this lock took another, RECLAIM_FS-unsafe lock in the past:
-> [ 4175.888032]  (&(&ip->i_lock)->mr_lock/1){+.+.+.}
-> [ 4175.888032] 
-> [ 4175.888032] and interrupts could create inverse lock ordering between them.
-> [ 4175.888032] 
-> [ 4175.888032] 
-> [ 4175.888032] other info that might help us debug this:
-> [ 4175.888032]  Possible interrupt unsafe locking scenario:
-> [ 4175.888032] 
-> [ 4175.888032]        CPU0                    CPU1
-> [ 4175.888032]        ----                    ----
-> [ 4175.888032]   lock(&(&ip->i_lock)->mr_lock/1);
-> [ 4175.888032]                                local_irq_disable();
-> [ 4175.888032]                                lock(sb_internal);
-> [ 4175.888032]                                lock(&(&ip->i_lock)->mr_lock/1);
-> [ 4175.888032]   <Interrupt>
-> [ 4175.888032]     lock(sb_internal);
-> [ 4175.888032] 
-> [ 4175.888032]  *** DEADLOCK ***
-  This is actually known and has nothing to do with fs freezeing AFAICT.
-The problem is tham vm_map_ram() can do GFP_KERNEL allocation from deep
-inside XFS and that can cause deadlocks...
+On 09/05/12 19:46, Dave Chinner wrote:
+> On Wed, Sep 05, 2012 at 08:16:59AM -0500, Mark Tinguely wrote:
+>> On 09/04/12 23:30, Dave Chinner wrote:
+>>> On Tue, Sep 04, 2012 at 10:48:17AM -0500, Mark Tinguely wrote:
+>>>> On 08/30/12 07:00, Dave Chinner wrote:
+>>>>> -	/*
+>>>>> -	 * We shouldn't write/force the log if we are in the mount/unmount
+>>>>> -	 * process or on a read only filesystem. The workqueue still needs to be
+>>>>> -	 * active in both cases, however, because it is used for inode reclaim
+>>>>> -	 * during these times.  Use the MS_ACTIVE flag to avoid doing anything
+>>>>> -	 * during mount.  Doing work during unmount is avoided by calling
+>>>>> -	 * cancel_delayed_work_sync on this work queue before tearing down
+>>>>> -	 * the ail and the log in xfs_log_unmount.
+>>>>> -	 */
+>>>>> -	if (!(mp->m_super->s_flags&    MS_ACTIVE)&&
+>>>>> -	    !(mp->m_flags&    XFS_MOUNT_RDONLY)) {
+>>>>> +	if (!(mp->m_flags&    XFS_MOUNT_RDONLY)) {
+>>>>>   		/* dgc: errors ignored here */
+>>>>>   		if (mp->m_super->s_writers.frozen == SB_UNFROZEN&&
+>>>>>   		xfs_log_need_covered(mp))
+>>>>> @@ -408,8 +398,7 @@ xfs_sync_worker(
+>>>>>   		else
+>>>>>   			xfs_log_force(mp, 0);
+>>>>>
+>>>>> -		/* start pushing all the metadata that is currently
+>>>>> -		 * dirty */
+>>>>> +		/* start pushing all the metadata that is currently dirty */
+>>>>>   		xfs_ail_push_all(mp->m_ail);
+>>>>>   	}
+>>>>>
+>>>>
+>>>> It appears that the removal of the MS_ACTIVE flag is causing the
+>>>> "atomic_read(&bp->b_hold)>    0," ASSERT.
+>>>
+>>> I must be being slow today - I don't see why that would cause any
+>>> problems. The worker is not started at the end of the mount process
+>>> after everything is set up (i.e. just before MS_ACTIVE is removed),
+>>> and the worker is stopped before anything is torn down. That should
+>>> effectively replicate what the MS_ACTIVE flag is providing in the
+>>> old code.
+>>>
+>>> Can you explain in more detail what lead you to this conclusion?
+>>>
+>>> Cheers,
+>>>
+>>> Dave.
+>>
+>> You are correct, it does not make sense, but with the
+>>   !(mp->m_super->s_flags&   MS_ACTIVE)
+>> test removed, test 107 causes the above assert on
+>> different machines/architectures. Place the test in, the
+>> assert does not happen.
+>
+> test 107 is not in the auto group. That means it is generally
+> unreliable as a regression test, so I don't run it. That said, I
+> don't see anything unusual in that test that would cause problems...
+>
+> Cheers,
+>
+> Dave.
 
-It has been discussed here https://lkml.org/lkml/2012/6/13/582, but mm guys
-have some issues with the simple solution.
+I misspoke, it is xfs test 179. I hit it doing a "check -g auto".
 
-								Honza
+My test boxes had CONFIG_XFS_DEBUG=y which may be a factor. The
+test ran fine on a box without the debug enabled and assert as
+soon as I added it back.
+
+The buffer with zero b_hold count is the freelist buffer (XAGF)
+for AG0. The buffer is marked STALE, it has already gone through
+the release code, so there is no transaction pointer nor log item
+pointer. The xlog_cil_committed() is being called with the
+XFS_LI_ABORTED flag.
+
+The X86_32 machine is now asserting with:
+   XFS: Assertion failed: fs_is_ok, file: /xfs/fs/xfs/xfs_alloc.c, line: 
+1503
+The X86_64 machines are still asserting on the zero b_hold.
+
+Adding back the MS_ACTIVE or (it appears) not compiling with the
+CONFIG_XFS_DEBUG option seems to make the problem go away too.
+Timing? Does not explain the removal of the XFS_DEBUG.
+
+Sorry if this is a wild goose chase.
+
+--Mark T.
 
 _______________________________________________
 xfs mailing list
