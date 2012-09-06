@@ -1,17 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q86F7oJs099419 for <xfs@oss.sgi.com>; Thu, 6 Sep 2012 10:07:50 -0500
-Message-ID: <5048BC7F.3060607@sgi.com>
-Date: Thu, 06 Sep 2012 10:08:47 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q86FMdTE103240 for <xfs@oss.sgi.com>; Thu, 6 Sep 2012 10:22:39 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	0vDRiS38qvNpMh0r (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 06 Sep 2012 08:23:38 -0700 (PDT)
+Received: by obbwd18 with SMTP id wd18so2747227obb.26
+	for <xfs@oss.sgi.com>; Thu, 06 Sep 2012 08:23:38 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: [PATCH 03/13] xfs: rationalise xfs_mount_wq users
-References: <1346328017-2795-1-git-send-email-david@fromorbit.com>
-	<1346328017-2795-4-git-send-email-david@fromorbit.com>
-	<504622C1.20201@sgi.com> <20120905043000.GE15292@dastard>
-	<504750CB.2090907@sgi.com> <20120906004607.GN15292@dastard>
-In-Reply-To: <20120906004607.GN15292@dastard>
+Date: Thu, 6 Sep 2012 17:23:37 +0200
+Message-ID: <CAFZPdfjKfZP85f8zCLxCOf__ZyBd=tKsvqRGS-_bcaR0P_JuWA@mail.gmail.com>
+Subject: [PATCH v3] Add test case to test xfs projid32bit functionality a bit
+	more extensively.
+From: Boris Ranto <ranto.boris@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,98 +23,218 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>
 
-On 09/05/12 19:46, Dave Chinner wrote:
-> On Wed, Sep 05, 2012 at 08:16:59AM -0500, Mark Tinguely wrote:
->> On 09/04/12 23:30, Dave Chinner wrote:
->>> On Tue, Sep 04, 2012 at 10:48:17AM -0500, Mark Tinguely wrote:
->>>> On 08/30/12 07:00, Dave Chinner wrote:
->>>>> -	/*
->>>>> -	 * We shouldn't write/force the log if we are in the mount/unmount
->>>>> -	 * process or on a read only filesystem. The workqueue still needs to be
->>>>> -	 * active in both cases, however, because it is used for inode reclaim
->>>>> -	 * during these times.  Use the MS_ACTIVE flag to avoid doing anything
->>>>> -	 * during mount.  Doing work during unmount is avoided by calling
->>>>> -	 * cancel_delayed_work_sync on this work queue before tearing down
->>>>> -	 * the ail and the log in xfs_log_unmount.
->>>>> -	 */
->>>>> -	if (!(mp->m_super->s_flags&    MS_ACTIVE)&&
->>>>> -	    !(mp->m_flags&    XFS_MOUNT_RDONLY)) {
->>>>> +	if (!(mp->m_flags&    XFS_MOUNT_RDONLY)) {
->>>>>   		/* dgc: errors ignored here */
->>>>>   		if (mp->m_super->s_writers.frozen == SB_UNFROZEN&&
->>>>>   		xfs_log_need_covered(mp))
->>>>> @@ -408,8 +398,7 @@ xfs_sync_worker(
->>>>>   		else
->>>>>   			xfs_log_force(mp, 0);
->>>>>
->>>>> -		/* start pushing all the metadata that is currently
->>>>> -		 * dirty */
->>>>> +		/* start pushing all the metadata that is currently dirty */
->>>>>   		xfs_ail_push_all(mp->m_ail);
->>>>>   	}
->>>>>
->>>>
->>>> It appears that the removal of the MS_ACTIVE flag is causing the
->>>> "atomic_read(&bp->b_hold)>    0," ASSERT.
->>>
->>> I must be being slow today - I don't see why that would cause any
->>> problems. The worker is not started at the end of the mount process
->>> after everything is set up (i.e. just before MS_ACTIVE is removed),
->>> and the worker is stopped before anything is torn down. That should
->>> effectively replicate what the MS_ACTIVE flag is providing in the
->>> old code.
->>>
->>> Can you explain in more detail what lead you to this conclusion?
->>>
->>> Cheers,
->>>
->>> Dave.
->>
->> You are correct, it does not make sense, but with the
->>   !(mp->m_super->s_flags&   MS_ACTIVE)
->> test removed, test 107 causes the above assert on
->> different machines/architectures. Place the test in, the
->> assert does not happen.
->
-> test 107 is not in the auto group. That means it is generally
-> unreliable as a regression test, so I don't run it. That said, I
-> don't see anything unusual in that test that would cause problems...
->
-> Cheers,
->
-> Dave.
+   The test covers several areas including enabling projid32bit
+functionality dynamically by xfs_admin, dumping, restoring, quota
+reporting and xfs_db projid values reporting.
+  This test case hits a bug with xfsdump/xfsrestore process on a
+projid32bit enabled filesystem.
 
-I misspoke, it is xfs test 179. I hit it doing a "check -g auto".
+Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
+---
+ 285     |  144 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 285.out |   23 ++++++++++
+ group   |    1 +
+ 3 files changed, 168 insertions(+), 0 deletions(-)
+ create mode 100644 285
+ create mode 100644 285.out
 
-My test boxes had CONFIG_XFS_DEBUG=y which may be a factor. The
-test ran fine on a box without the debug enabled and assert as
-soon as I added it back.
-
-The buffer with zero b_hold count is the freelist buffer (XAGF)
-for AG0. The buffer is marked STALE, it has already gone through
-the release code, so there is no transaction pointer nor log item
-pointer. The xlog_cil_committed() is being called with the
-XFS_LI_ABORTED flag.
-
-The X86_32 machine is now asserting with:
-   XFS: Assertion failed: fs_is_ok, file: /xfs/fs/xfs/xfs_alloc.c, line: 
-1503
-The X86_64 machines are still asserting on the zero b_hold.
-
-Adding back the MS_ACTIVE or (it appears) not compiling with the
-CONFIG_XFS_DEBUG option seems to make the problem go away too.
-Timing? Does not explain the removal of the XFS_DEBUG.
-
-Sorry if this is a wild goose chase.
-
---Mark T.
+diff --git a/285 b/285
+new file mode 100644
+index 0000000..a1e497d
+--- /dev/null
++++ b/285
+@@ -0,0 +1,144 @@
++#! /bin/bash
++# FS QA Test No. 285
++#
++# Test to verify project quota xfs_admin, xfsdump/xfsrestore and
++# xfs_db functionality
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=ranto.boris@gmail.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++tmp=/tmp/$$
++here=`pwd`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++rm -f $seq.full
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.quota
++
++_cleanup()
++{
++	cd /
++	umount $SCRATCH_MNT 2>/dev/null
++	rm -rf $tmp.*
++}
++
++_print_projid()
++{
++	$XFS_DB_PROG -c "inode $1" \
++		-c "print core.projid_lo" \
++		-c "print core.projid_hi" \
++		$SCRATCH_DEV
++}
++
++# real QA test starts here
++_supported_fs xfs
++_require_xfs_quota
++_require_scratch
++_require_projid32bit
++
++# create xfs fs without projid32bit ability, will be gained by xfs_admin
++_scratch_mkfs_xfs -i projid32bit=0 -d size=200m >> $seq.full \
++		|| _fail "mkfs failed"
++_qmount_option "pquota"
++_qmount
++# require project quotas
++_require_prjquota $SCRATCH_DEV
++
++dir=$SCRATCH_MNT/pquota
++
++status=1
++
++mkdir -p $dir
++touch $dir/{16,32}less
++inode16a=$(ls -i $dir/16less|cut -d ' ' -f 1)
++inode32a=$(ls -i $dir/32less|cut -d ' ' -f 1)
++$XFS_QUOTA_PROG -x -c "project -s -p $dir/16less 1234" $SCRATCH_DEV \
++		>> $seq.full
++$XFS_QUOTA_PROG -x -c "project -s -p $dir/32less 2123456789" $SCRATCH_DEV \
++		>> $seq.full 2>&1
++
++echo "No 32bit project quotas:"
++$XFS_IO_PROG -r -c "lsproj" $dir/16less
++$XFS_IO_PROG -r -c "lsproj" $dir/32less
++
++umount $SCRATCH_MNT
++
++# Now, enable projid32bit support by xfs_admin
++xfs_admin -p $SCRATCH_DEV >> $seq.full 2>&1 || _fail "xfs_admin failed"
++
++# Now mount the fs, 32bit project quotas shall be supported, now
++_qmount_option "pquota"
++_qmount
++$XFS_QUOTA_PROG -x -c "project -s -p $dir/32less 2123456789" $SCRATCH_DEV \
++		>> $seq.full
++
++# These will be checked by $seq.out
++echo "With 32bit project quota support:"
++$XFS_IO_PROG -r -c "lsproj" $dir/16less
++$XFS_IO_PROG -r -c "lsproj" $dir/32less
++
++# Dump the fs to a temporary file
++rm -f $tmp.dump.img
++$XFSDUMP_PROG -f $tmp.dump -L label -M media -l 0 $SCRATCH_MNT >> $seq.full \
++		|| _fail "dump failed"
++
++# Prepare the device to restore the dumped file system
++restore_dir=$SCRATCH_MNT/restore/pquota
++
++# Just make the restore dir, the pquota dir will be created by xfsrestore
++mkdir -p $SCRATCH_MNT/restore
++
++# Restore
++$XFSRESTORE_PROG -f $tmp.dump $SCRATCH_MNT/restore >> $seq.full 2>&1 \
++		|| _fail "xfsrestore failed"
++
++# Check that they are the same
++diff -urpN $SCRATCH_MNT/{,restore}/pquota || _fail "diff failed"
++
++touch $restore_dir/32lessv2
++inode16b=$(ls -i $restore_dir/16less|cut -d ' ' -f 1)
++inode32b=$(ls -i $restore_dir/32less|cut -d ' ' -f 1)
++inode32v2=$(ls -i $restore_dir/32lessv2|cut -d ' ' -f 1)
++$XFS_QUOTA_PROG -x -c "project -s -p $restore_dir/32lessv2 2123456789" \
++		$SCRATCH_MNT >> $seq.full
++echo "The restored file system + one additional file:"
++$XFS_IO_PROG -r -c "lsproj" $restore_dir/16less
++$XFS_IO_PROG -r -c "lsproj" $restore_dir/32less
++$XFS_IO_PROG -r -c "lsproj" $restore_dir/32lessv2
++
++umount $SCRATCH_MNT
++
++# Now, we can examine the file systems with xfs_db
++echo "These two values of 16bit project quota ids shall be the same"
++_print_projid $inode16a
++_print_projid $inode16b
++
++echo "These three values of 32bit project quota ids shall be the same"
++_print_projid $inode32b
++_print_projid $inode32a
++_print_projid $inode32v2
++
++status=0
++exit
+diff --git a/285.out b/285.out
+new file mode 100644
+index 0000000..e5cc325
+--- /dev/null
++++ b/285.out
+@@ -0,0 +1,23 @@
++QA output created by 285
++No 32bit project quotas:
++projid = 1234
++projid = 0
++With 32bit project quota support:
++projid = 1234
++projid = 2123456789
++The restored file system + one additional file:
++projid = 1234
++projid = 2123456789
++projid = 2123456789
++These two values of 16bit project quota ids shall be the same
++core.projid_lo = 1234
++core.projid_hi = 0
++core.projid_lo = 1234
++core.projid_hi = 0
++These three values of 32bit project quota ids shall be the same
++core.projid_lo = 24853
++core.projid_hi = 32401
++core.projid_lo = 24853
++core.projid_hi = 32401
++core.projid_lo = 24853
++core.projid_hi = 32401
+diff --git a/group b/group
+index 104ed35..bbc74fe 100644
+--- a/group
++++ b/group
+@@ -403,3 +403,4 @@ deprecated
+ 282 dump ioctl auto quick
+ 283 dump ioctl auto quick
+ 284 auto
++285 auto dump quota
+-- 
+1.7.1
 
 _______________________________________________
 xfs mailing list
