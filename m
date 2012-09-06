@@ -1,20 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q86FMdTE103240 for <xfs@oss.sgi.com>; Thu, 6 Sep 2012 10:22:39 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	0vDRiS38qvNpMh0r (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 06 Sep 2012 08:23:38 -0700 (PDT)
-Received: by obbwd18 with SMTP id wd18so2747227obb.26
-	for <xfs@oss.sgi.com>; Thu, 06 Sep 2012 08:23:38 -0700 (PDT)
+	q86Ff1xK106762 for <xfs@oss.sgi.com>; Thu, 6 Sep 2012 10:41:01 -0500
+Date: Thu, 6 Sep 2012 10:41:58 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Oops from unlock in xfs_trans_ail_delete_bulk()
+Message-ID: <20120906154158.GM3274@sgi.com>
+References: <504891EB.2090202@inktank.com>
 MIME-Version: 1.0
-Date: Thu, 6 Sep 2012 17:23:37 +0200
-Message-ID: <CAFZPdfjKfZP85f8zCLxCOf__ZyBd=tKsvqRGS-_bcaR0P_JuWA@mail.gmail.com>
-Subject: [PATCH v3] Add test case to test xfs projid32bit functionality a bit
-	more extensively.
-From: Boris Ranto <ranto.boris@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <504891EB.2090202@inktank.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,214 +22,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>
+To: Alex Elder <elder@inktank.com>
+Cc: xfs@oss.sgi.com
 
-   The test covers several areas including enabling projid32bit
-functionality dynamically by xfs_admin, dumping, restoring, quota
-reporting and xfs_db projid values reporting.
-  This test case hits a bug with xfsdump/xfsrestore process on a
-projid32bit enabled filesystem.
+Hi Alex,
 
-Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
----
- 285     |  144 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 285.out |   23 ++++++++++
- group   |    1 +
- 3 files changed, 168 insertions(+), 0 deletions(-)
- create mode 100644 285
- create mode 100644 285.out
+On Thu, Sep 06, 2012 at 07:07:07AM -0500, Alex Elder wrote:
+> I'm trying to capture something useful here because I need to move
+> on with what I'm doing.  I was running xfstests using a kernel with
+> this as the latest commit affecting fs/xfs:
+> 
+>     commit a0e881b7c189fa2bd76c024dbff91e79511c971d
+>     Merge: eff0d13 dbc6e02
+>     Author: Linus Torvalds <torvalds@linux-foundation.org>
+>     Date:   Wed Aug 1 10:26:23 2012 -0700
+> 
+>     Merge branch 'for-linus' of
+> git://git.kernel.org/pub/scm/linux/kernel/git/vi
+> 
+> While running test 135 (it had started but its completion time had
+> not yet been reported) I got an oops whose details I'll include below.
+> 
+> My console window isn't properly wrapping long lines so some info
+> has been truncated below.  The fault address is at
+> __ticket_spin_is_locked+0x10, called via xfs_trans_ail_delete_bulk().
+> 
+> I may be able to offer a little more information if someone is
+> interested, and if I find this is repeatable I will certainly
+> report it.
 
-diff --git a/285 b/285
-new file mode 100644
-index 0000000..a1e497d
---- /dev/null
-+++ b/285
-@@ -0,0 +1,144 @@
-+#! /bin/bash
-+# FS QA Test No. 285
-+#
-+# Test to verify project quota xfs_admin, xfsdump/xfsrestore and
-+# xfs_db functionality
-+#
-+#-----------------------------------------------------------------------
-+# Copyright (c) 2012 Red Hat, Inc. All Rights Reserved.
-+#
-+# This program is free software; you can redistribute it and/or
-+# modify it under the terms of the GNU General Public License as
-+# published by the Free Software Foundation.
-+#
-+# This program is distributed in the hope that it would be useful,
-+# but WITHOUT ANY WARRANTY; without even the implied warranty of
-+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+# GNU General Public License for more details.
-+#
-+# You should have received a copy of the GNU General Public License
-+# along with this program; if not, write the Free Software Foundation,
-+# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+#
-+#-----------------------------------------------------------------------
-+#
-+# creator
-+owner=ranto.boris@gmail.com
-+
-+seq=`basename $0`
-+echo "QA output created by $seq"
-+tmp=/tmp/$$
-+here=`pwd`
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+rm -f $seq.full
-+
-+# get standard environment, filters and checks
-+. ./common.rc
-+. ./common.quota
-+
-+_cleanup()
-+{
-+	cd /
-+	umount $SCRATCH_MNT 2>/dev/null
-+	rm -rf $tmp.*
-+}
-+
-+_print_projid()
-+{
-+	$XFS_DB_PROG -c "inode $1" \
-+		-c "print core.projid_lo" \
-+		-c "print core.projid_hi" \
-+		$SCRATCH_DEV
-+}
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_require_xfs_quota
-+_require_scratch
-+_require_projid32bit
-+
-+# create xfs fs without projid32bit ability, will be gained by xfs_admin
-+_scratch_mkfs_xfs -i projid32bit=0 -d size=200m >> $seq.full \
-+		|| _fail "mkfs failed"
-+_qmount_option "pquota"
-+_qmount
-+# require project quotas
-+_require_prjquota $SCRATCH_DEV
-+
-+dir=$SCRATCH_MNT/pquota
-+
-+status=1
-+
-+mkdir -p $dir
-+touch $dir/{16,32}less
-+inode16a=$(ls -i $dir/16less|cut -d ' ' -f 1)
-+inode32a=$(ls -i $dir/32less|cut -d ' ' -f 1)
-+$XFS_QUOTA_PROG -x -c "project -s -p $dir/16less 1234" $SCRATCH_DEV \
-+		>> $seq.full
-+$XFS_QUOTA_PROG -x -c "project -s -p $dir/32less 2123456789" $SCRATCH_DEV \
-+		>> $seq.full 2>&1
-+
-+echo "No 32bit project quotas:"
-+$XFS_IO_PROG -r -c "lsproj" $dir/16less
-+$XFS_IO_PROG -r -c "lsproj" $dir/32less
-+
-+umount $SCRATCH_MNT
-+
-+# Now, enable projid32bit support by xfs_admin
-+xfs_admin -p $SCRATCH_DEV >> $seq.full 2>&1 || _fail "xfs_admin failed"
-+
-+# Now mount the fs, 32bit project quotas shall be supported, now
-+_qmount_option "pquota"
-+_qmount
-+$XFS_QUOTA_PROG -x -c "project -s -p $dir/32less 2123456789" $SCRATCH_DEV \
-+		>> $seq.full
-+
-+# These will be checked by $seq.out
-+echo "With 32bit project quota support:"
-+$XFS_IO_PROG -r -c "lsproj" $dir/16less
-+$XFS_IO_PROG -r -c "lsproj" $dir/32less
-+
-+# Dump the fs to a temporary file
-+rm -f $tmp.dump.img
-+$XFSDUMP_PROG -f $tmp.dump -L label -M media -l 0 $SCRATCH_MNT >> $seq.full \
-+		|| _fail "dump failed"
-+
-+# Prepare the device to restore the dumped file system
-+restore_dir=$SCRATCH_MNT/restore/pquota
-+
-+# Just make the restore dir, the pquota dir will be created by xfsrestore
-+mkdir -p $SCRATCH_MNT/restore
-+
-+# Restore
-+$XFSRESTORE_PROG -f $tmp.dump $SCRATCH_MNT/restore >> $seq.full 2>&1 \
-+		|| _fail "xfsrestore failed"
-+
-+# Check that they are the same
-+diff -urpN $SCRATCH_MNT/{,restore}/pquota || _fail "diff failed"
-+
-+touch $restore_dir/32lessv2
-+inode16b=$(ls -i $restore_dir/16less|cut -d ' ' -f 1)
-+inode32b=$(ls -i $restore_dir/32less|cut -d ' ' -f 1)
-+inode32v2=$(ls -i $restore_dir/32lessv2|cut -d ' ' -f 1)
-+$XFS_QUOTA_PROG -x -c "project -s -p $restore_dir/32lessv2 2123456789" \
-+		$SCRATCH_MNT >> $seq.full
-+echo "The restored file system + one additional file:"
-+$XFS_IO_PROG -r -c "lsproj" $restore_dir/16less
-+$XFS_IO_PROG -r -c "lsproj" $restore_dir/32less
-+$XFS_IO_PROG -r -c "lsproj" $restore_dir/32lessv2
-+
-+umount $SCRATCH_MNT
-+
-+# Now, we can examine the file systems with xfs_db
-+echo "These two values of 16bit project quota ids shall be the same"
-+_print_projid $inode16a
-+_print_projid $inode16b
-+
-+echo "These three values of 32bit project quota ids shall be the same"
-+_print_projid $inode32b
-+_print_projid $inode32a
-+_print_projid $inode32v2
-+
-+status=0
-+exit
-diff --git a/285.out b/285.out
-new file mode 100644
-index 0000000..e5cc325
---- /dev/null
-+++ b/285.out
-@@ -0,0 +1,23 @@
-+QA output created by 285
-+No 32bit project quotas:
-+projid = 1234
-+projid = 0
-+With 32bit project quota support:
-+projid = 1234
-+projid = 2123456789
-+The restored file system + one additional file:
-+projid = 1234
-+projid = 2123456789
-+projid = 2123456789
-+These two values of 16bit project quota ids shall be the same
-+core.projid_lo = 1234
-+core.projid_hi = 0
-+core.projid_lo = 1234
-+core.projid_hi = 0
-+These three values of 32bit project quota ids shall be the same
-+core.projid_lo = 24853
-+core.projid_hi = 32401
-+core.projid_lo = 24853
-+core.projid_hi = 32401
-+core.projid_lo = 24853
-+core.projid_hi = 32401
-diff --git a/group b/group
-index 104ed35..bbc74fe 100644
---- a/group
-+++ b/group
-@@ -403,3 +403,4 @@ deprecated
- 282 dump ioctl auto quick
- 283 dump ioctl auto quick
- 284 auto
-+285 auto dump quota
--- 
-1.7.1
+Thanks for the report.  This is one we've been struggling with for a little
+while.
+
+Mark has a patch in this thread that seems to work ok:
+http://oss.sgi.com/archives/xfs/2012-08/msg00463.html
+
+And Dave is also working toward a fix in this thread:
+http://oss.sgi.com/archives/xfs/2012-08/threads.html#00493
+
+I think that this will be resolved soon.  For now there are a few options that
+seem to work around the problem, as described in the first thread.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
