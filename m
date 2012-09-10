@@ -1,23 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8AIZlZ0175861 for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 13:35:47 -0500
+	q8AIZkxK175855 for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 13:35:47 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id W2ARPpQ9sxwGSG5R for
+	cuda.sgi.com with ESMTP id 3vJj9wSSB9nkMrLv for
 	<xfs@oss.sgi.com>; Mon, 10 Sep 2012 11:36:50 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8AIaoCk020894
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8AIaonv024921
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 14:36:50 -0400
 Received: from bfoster.bfoster ([10.16.225.83])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8AIancN027942
-	for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 14:36:50 -0400
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q8AIanXC026130
+	for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 14:36:49 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 5/8] xfs: create function to scan and clear EOFBLOCKS inodes
-Date: Mon, 10 Sep 2012 14:37:23 -0400
-Message-Id: <1347302246-52710-6-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 4/8] xfs: export xfs_free_eofblocks() and return EAGAIN on
+	trylock failure
+Date: Mon, 10 Sep 2012 14:37:22 -0400
+Message-Id: <1347302246-52710-5-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1347302246-52710-1-git-send-email-bfoster@redhat.com>
 References: <1347302246-52710-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,94 +36,58 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_inodes_free_eofblocks() implements scanning functionality for
-EOFBLOCKS inodes. It uses the AG iterator to walk the tagged inodes
-and free post-EOF blocks via the xfs_inode_free_eofblocks() execute
-function. The scan can be invoked in best-effort mode or wait
-(force) mode.
-
-A best-effort scan (default) handles all inodes for which we
-successfully acquire the io lock via trylock. In wait mode, we
-continue to cycle through an AG until all inodes are handled.
+Turn xfs_free_eofblocks() into a non-static function, return EAGAIN to
+indicate trylock failure and make sure this error is not propagated in
+xfs_release().
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_sync.c  |   36 ++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sync.h  |    1 +
- fs/xfs/xfs_trace.h |    1 +
- 3 files changed, 38 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_vnodeops.c |    6 +++---
+ fs/xfs/xfs_vnodeops.h |    1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 0da93c9..a248a52 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -1014,6 +1014,42 @@ xfs_reclaim_inodes_count(
- 	return reclaimable;
- }
- 
-+STATIC int
-+xfs_inode_free_eofblocks(
-+	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
-+	int			flags,
-+	void			*args)
-+{
-+	int ret;
-+	bool force = flags & SYNC_WAIT;
-+
-+	if (!xfs_can_free_eofblocks(ip, false)) {
-+		/* inode could be preallocated or append-only */
-+		trace_xfs_inode_free_eofblocks_invalid(ip);
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
-+	}
-+
-+	ret = xfs_free_eofblocks(ip->i_mount, ip, false);
-+
-+	/* ignore EAGAIN on a best effort scan */
-+	if (!force && (ret == EAGAIN))
-+		ret = 0;
-+
-+	return ret;
-+}
-+
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 12f5087..a61e852 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -150,7 +150,7 @@ xfs_readlink(
+  * when the link count isn't zero and by xfs_dm_punch_hole() when
+  * punching a hole to EOF.
+  */
+-STATIC int
 +int
-+xfs_inodes_free_eofblocks(
-+	struct xfs_mount	*mp,
-+	int			flags)
-+{
-+	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
-+	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
-+					 NULL, XFS_ICI_EOFBLOCKS_TAG);
-+}
-+
- void
- xfs_inode_set_eofblocks_tag(
- 	xfs_inode_t	*ip)
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 463ea0a..307654a 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -45,6 +45,7 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+ xfs_free_eofblocks(
+ 	xfs_mount_t	*mp,
+ 	xfs_inode_t	*ip,
+@@ -199,7 +199,7 @@ xfs_free_eofblocks(
+ 		if (need_iolock) {
+ 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
+ 				xfs_trans_cancel(tp, 0);
+-				return 0;
++				return EAGAIN;
+ 			}
+ 		}
  
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
-+int xfs_inodes_free_eofblocks(struct xfs_mount *, int);
+@@ -462,7 +462,7 @@ xfs_release(
+ 			return 0;
  
- int xfs_sync_inode_grab(struct xfs_inode *ip);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index d081f3e..9c810f7 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -588,6 +588,7 @@ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
+ 		error = xfs_free_eofblocks(mp, ip, true);
+-		if (error)
++		if (error && error != EAGAIN)
+ 			return error;
  
- DEFINE_INODE_EVENT(xfs_inode_set_eofblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
-+DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+ 		/* delalloc blocks after truncation means it really is dirty */
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index f4e7ec8..97424d4 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -78,5 +78,6 @@ int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
+ int xfs_wait_on_pages(struct xfs_inode *ip, xfs_off_t first, xfs_off_t last);
  
- DECLARE_EVENT_CLASS(xfs_iref_class,
- 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+ int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
++int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
+ 
+ #endif /* _XFS_VNODEOPS_H */
 -- 
 1.7.7.6
 
