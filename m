@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8B3luME006180 for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 22:47:56 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id NwiaiWtSY16kT2qh for <xfs@oss.sgi.com>;
-	Mon, 10 Sep 2012 20:49:00 -0700 (PDT)
-Message-ID: <504EB4AB.4050100@sandeen.net>
-Date: Mon, 10 Sep 2012 22:48:59 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q8B5R6hg020767 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 00:27:06 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	yxDwd8szJv4moqnt for <xfs@oss.sgi.com>;
+	Mon, 10 Sep 2012 22:28:08 -0700 (PDT)
+Date: Tue, 11 Sep 2012 15:27:43 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 3/8] xfs: create helper to check whether to free
+	eofblocks on inode
+Message-ID: <20120911052743.GB11511@dastard>
+References: <1347302246-52710-1-git-send-email-bfoster@redhat.com>
+	<1347302246-52710-4-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] Add test case to test xfs projid32bit functionality
-	a bit more extensively.
-References: <CAFZPdfjKfZP85f8zCLxCOf__ZyBd=tKsvqRGS-_bcaR0P_JuWA@mail.gmail.com>
-	<504EA627.2050906@sandeen.net> <20120911034510.GA11511@dastard>
-In-Reply-To: <20120911034510.GA11511@dastard>
+Content-Disposition: inline
+In-Reply-To: <1347302246-52710-4-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,65 +28,83 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Boris Ranto <ranto.boris@gmail.com>, xfs-oss <xfs@oss.sgi.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 9/10/12 10:45 PM, Dave Chinner wrote:
-> On Mon, Sep 10, 2012 at 09:47:03PM -0500, Eric Sandeen wrote:
->> On 9/6/12 10:23 AM, Boris Ranto wrote:
->>>    The test covers several areas including enabling projid32bit
->>> functionality dynamically by xfs_admin, dumping, restoring, quota
->>> reporting and xfs_db projid values reporting.
->>>   This test case hits a bug with xfsdump/xfsrestore process on a
->>> projid32bit enabled filesystem.
->>>
->>> Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
->>
->> there are just a couple things below, but I think we can get it
->> checked in unless Dave has further concerns - please see below.
-> ....
->>> +dir=$SCRATCH_MNT/pquota
->>> +
->>> +status=1
->>> +
->>> +mkdir -p $dir
->>> +touch $dir/{16,32}less
->>
->> Although I understand it ok, I might add a comment here saying:
->>
->> # create files to hold 16 and 32-bit project IDs
->>
->> In retrospect I might use 16bit and 32bit to make more sense.
->> Sorry, should have suggested that earlier.
->>
->> I could just change the names on checkin with a note if that's ok with you.
+On Mon, Sep 10, 2012 at 02:37:21PM -0400, Brian Foster wrote:
+> This check is used in multiple places to determine whether we
+> should check for (and potentially free) post EOF blocks on an
+> inode. Add a helper to consolidate the check.
 > 
-> With that change to 16bit/32bit, it's fine by me.
+> Note that when we remove an inode from the cache (xfs_inactive()),
+> we are required to trim post-EOF blocks even if the inode is marked
+> preallocated or append-only to maintain correct space accounting.
+> The 'force' parameter to xfs_can_free_eofblocks() specifies whether
+> we should ignore the prealloc/append-only status of the inode.
 > 
->>> @@ -403,3 +403,4 @@ deprecated
->>>  282 dump ioctl auto quick
->>>  283 dump ioctl auto quick
->>>  284 auto
->>> +285 auto dump quota
-> 
-> Like I mentione dfirst time around, it needs to be added to the
-> quick group as well.
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-oops missed that.
+Just quickly, I'd rewrite this convoluted logic:
 
-> If you make those changes, Eric, then consider it:
-> 
-> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> +/*
+> + * Test whether it is appropriate to check an inode for and free post EOF
+> + * blocks. The 'force' parameter determines whether we should also consider
+> + * regular files that are marked preallocated or append-only.
+> + */
+> +static inline bool
+> +xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+> +{
+> +	if (S_ISREG(ip->i_d.di_mode) &&
+> +	    (VFS_I(ip)->i_size > 0 ||
+> +	     (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
+> +	    (ip->i_df.if_flags & XFS_IFEXTENTS)  &&
+> +	    (!(ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
+> +	     (force && ip->i_delayed_blks != 0)))
+> +		return true;
+> +
+> +	return false;
+> +}
 
-I'll fix those up & commit.
+in a manner that can means it no longer has to be analysed from first principles
+every time it is read. e.g.:
 
-thanks,
--Eric
+static inline bool
+xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
+{
+	/* prealloc/delalloc exists only on regular files */
+	if (!S_ISREG(ip->i_d.di_mode))
+		return false;
+	/*
+	 * Zero sized files with no cached page or delalloc blocks will not have
+	 * any speculative prealloc/delalloc to remove.
+	 */
+	if (VFS_I(ip)->i_size == 0 &&
+	    VFS_I(ip)->i_mapping->nr_pages == 0 &&
+	    ip->i_delayed_blks == 0)
+		return false;
 
-> Cheers,
-> 
-> Dave.
-> 
+	/* If we haven't read in the extent list, then don't do it now. */
+	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
+		return false;
+
+	/*
+	 * Real preallocation or append only files do not get EOF blocks freed
+	 * unless there are also delalloc blocks and we are forced to remove
+	 * them.
+	 */
+	if ((ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) {
+		if (!ip->i_delayed_blks)
+			return false;
+		if (!force)
+			return false;
+	}
+
+	return true;
+}
+
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
