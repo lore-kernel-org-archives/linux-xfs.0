@@ -1,30 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8BGaZDi121554 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 11:36:35 -0500
-Received: from mail-oa0-f53.google.com (mail-oa0-f53.google.com
-	[209.85.219.53]) by cuda.sgi.com with ESMTP id soC9LdHlgB4FNXC1
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 11 Sep 2012 09:37:39 -0700 (PDT)
-Received: by oagi18 with SMTP id i18so434137oag.26
-	for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 09:37:38 -0700 (PDT)
+	q8BGk8l8122618 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 11:46:08 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Gyjm3i1vHkL0F23C for
+	<xfs@oss.sgi.com>; Tue, 11 Sep 2012 09:47:12 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8BGlB6k001471
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 12:47:12 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-109.phx2.redhat.com
+	[10.3.113.109])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8BGl72d007466
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 12:47:10 -0400
+Date: Tue, 11 Sep 2012 13:47:06 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH v5] Stop xfs_do_force_shutdown / messages fron
+	xfs_log_force if filesystem is already shutdown.
+Message-ID: <20120911164706.GA15252@andromeda.usersys.redhat.com>
+References: <76577fa31ab2aa750994c1bc6a1b6f44beb03116.1347002369.git.rprabhu@wnohang.net>
 MIME-Version: 1.0
-In-Reply-To: <20120726083242.GA2877@dastard>
-References: <20120717052621.GB23387@dastard>
-	<50061CEA.4070609@hardwarefreak.com>
-	<CAAxjCEwgDKLF=RY0aCCNTMsc1oefXWfyHKh+morYB9zVUrnH-A@mail.gmail.com>
-	<50066115.7070807@hardwarefreak.com>
-	<CAAxjCExFUJOKaD-LMPfZvCrS34V1VHgtrhgvPP0jZ3Hm1YV=6g@mail.gmail.com>
-	<50068EC5.5020704@hardwarefreak.com>
-	<CAAxjCEy2Yj=XWctNg2gACbFy81aTu70YJ13Ee8G6-E3Tqvvs7g@mail.gmail.com>
-	<CAAxjCEzF3nTFoedyKf1o5Nv4yPUJkgvC8nCJcx_2dDx8xqWtWA@mail.gmail.com>
-	<50077A34.5070304@hardwarefreak.com>
-	<CAAxjCEy=N9ceAA5V6bnrcMc3961gs-Z2NgNyenPJ+gjE2mYUXQ@mail.gmail.com>
-	<20120726083242.GA2877@dastard>
-Date: Tue, 11 Sep 2012 18:37:38 +0200
-Message-ID: <CAAxjCEy7_1b1vqiC-Ru9JmUawv1TK9JkVLjwJeR6f1js+j60kQ@mail.gmail.com>
-Subject: Re: A little RAID experiment
-From: Stefan Ring <stefanrin@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <76577fa31ab2aa750994c1bc6a1b6f44beb03116.1347002369.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,44 +37,107 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linux fs XFS <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Jul 26, 2012, Dave Chinner <david@fromorbit.com> wrote:
->> 10001
->> 20001
->> 30001
->> 40001
->> 10002
->> 20002
->> 30002
->> 40002
->> 10003
->> 20003
->> ...
->
-> That's the problem you should have reported.
+Hi, particularly, these messages are annoying to me too, and it's great to see
+this patch, have some comments though.
 
-I did, but then I got bashed for using RAID 5/6 and about the
-specifics of hardware and everything, which shouldn't even matter, but
-I let myself get dragged into this discussion.
+> This is to prevent xfs_log_force from printing error message continuously (due
+> to xfs_sync and others) till umount if the disk has been forcefully unplugged.
+> 
+> This is to prevent messages like these from being displayed repeatedly.
+> 
+> [ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
+> 
+> Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
+> doesn't stop till the filesystem has been unmounted (and it keeps printing
+> "error 5 returned" to kernel log). Also, xfs_do_force_shutdown is called
+> repeatedly on an already shutdown filesystem through xfs_fs_sync_fs.
+> 
+> To fix this, added condition over XFS_FORCED_SHUTDOWN to xfs_log_force and
+> xfs_fs_sync_fs.
+> 
+> To simulate it, mount an xfs filesystem located on external disk, and then pull
+> the power to the disk.
+> 
+> Now, the dmesg looks,
+> 
+> [  268.307303] XFS (sdb2): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+> [  268.307318] XFS (sdb2): I/O Error Detected. Shutting down filesystem
+> [  268.307323] XFS (sdb2): Please umount the filesystem and rectify the problem(s)
+> 
 
-Anyway, in the meantime I had a closer look at the actual block trace,
-and it looks a bit different than the way I interpreted it at first.
-It sends runs of 30-50 writes with holes in them, like so:
+To be honest this commit message looks a little confusing to me, I'd prefer
+something a little more direct and clear, but this is just my humble opinion.
 
-2, 4-5, 7, 10-12, 14, 16-17
+I'd say something like:
 
-and so on. These holes seem to be caused by the free space
-fragmentation. Every once in a while -- somewhat frequently, after 30
-or so blocks, as mentioned -- it switches to another allocation group.
-If these blocks were contiguous, then the elevator should be able to
-merge them, but the tiny holes make this impossible. So I guess
-there's nothing that can be substantially improved here. The frequent
-ag switches are a bit difficult for the controller to handle, but
-different controllers struggle under different work loads, and there's
-nothing that can be done about that. I noticed just today that the HP
-SmartArray controllers handle truly random writes better than the
-MegaRAID variety that I praised so much in my postings.
+Prevents xfs_log_force from print continuously error messages after filesystem
+has been shutdown:
+
+[ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
+
+> ---
+> 
+> Version 1: Removed calling xfs_syncd_stop from xfs_sync_worker.
+> Version 2: Removed calling xfs_fs_writable in xfs_sync_worker and xfs_flush_worker.
+> Version 3: Removed calling xfs_syncd_stop in xfs_bwrite.
+> Version 4: Added return statements to xfs_log_force and xfs_fs_sync_fs.
+> Version 5: As per suggestion, added xfs_warn to xfs_fs_sync_fs and removed EIO
+> return in xfs_log_force
+> 
+>  Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>  Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+> ---
+>  fs/xfs/xfs_log.c   | 5 ++++-
+>  fs/xfs/xfs_super.c | 5 +++++
+>  2 files changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 7f4f937..161c925 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -3002,7 +3002,10 @@ xfs_log_force(
+>  
+>  	trace_xfs_log_force(mp, 0);
+>  	error = _xfs_log_force(mp, flags, NULL);
+> -	if (error)
+> +	/*
+> +	 * Avoid warning when the filesystem has already shutdown.
+> +	 */
+> +	if (error && !XFS_FORCED_SHUTDOWN(mp))
+>  		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index bdaf4cb..ebafc99 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -943,6 +943,11 @@ xfs_fs_sync_fs(
+>  	if (!wait)
+>  		return 0;
+>  
+> +	if (XFS_FORCED_SHUTDOWN(mp)) {
+> +		xfs_warn(mp, "Sync called: filesystem already shutdown");
+> +		return XFS_ERROR(EIO);
+> +	}
+> +
+
+Looks like this will keep printing error messages every time a sync() happens,
+either via flusher threads or manually by user once xfs_fs_sync_fs() will
+still be called for it.
+
+I would suggest to add some static variable here to check if the filesystem has
+been already shutted down before print the message again, to also avoid message
+flooding due xfs_fs_sync_fs() calls although I'm not sure another people will
+agree with it.
+
+Despit my comments, this looks good for me
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+
+-- 
+--Carlos
 
 _______________________________________________
 xfs mailing list
