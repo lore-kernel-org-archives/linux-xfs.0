@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8BKnUEu152434 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 15:49:30 -0500
+	q8BKvq8S153274 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 15:57:52 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	ZMuo7EXP5xYAGWIM for <xfs@oss.sgi.com>;
-	Tue, 11 Sep 2012 13:50:33 -0700 (PDT)
-Date: Wed, 12 Sep 2012 06:50:29 +1000
+	BoQQNpRyRhfhHJag for <xfs@oss.sgi.com>;
+	Tue, 11 Sep 2012 13:58:56 -0700 (PDT)
+Date: Wed, 12 Sep 2012 06:58:27 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: slow xfs writes on loopback mounted xfs with dd + seek
-Message-ID: <20120911205029.GC11511@dastard>
-References: <504F08E8.6020500@canonical.com>
- <504F5027.9080503@redhat.com>
+Subject: Re: Internal error xfs_trans_cancel at line 1467 of file
+	fs/xfs/xfs_trans.c
+Message-ID: <20120911205827.GD11511@dastard>
+References: <CADDYkjRbji4swSOm7gz907-iXFoZwEycLgUGgDV3JZtQaBbieg@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <504F5027.9080503@redhat.com>
+In-Reply-To: <CADDYkjRbji4swSOm7gz907-iXFoZwEycLgUGgDV3JZtQaBbieg@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,73 +27,50 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Colin Ian King <colin.king@canonical.com>, xfs@oss.sgi.com
+To: Jacek Luczak <difrost.kernel@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Tue, Sep 11, 2012 at 10:52:23AM -0400, Brian Foster wrote:
-> On 09/11/2012 05:48 AM, Colin Ian King wrote:
-> > Hi,
-> > 
-> > I've seeing really slow I/O writes on xfs when doing a dd with a seek
-> > offset to a file on an xfs file system which is loop mounted.
-> > 
-> > Reproduced on Linux 3.6.0-rc5 and 3.4
-> > 
-> > How to reproduce:
-> > 
-> > dd if=/dev/zero of=xfs.img bs=1M count=1024
-> > mkfs.xfs -f xfs.img
-> > sudo mount -o loop -t xfs xfs.img /mnt/test
-> > 
-> > First create a large file, write performance is excellent:
-> > 
-> > sudo dd if=/dev/zero of=/mnt/test/big bs=1M count=500
-> > 500+0 records in
-> > 500+0 records out
-> > 524288000 bytes (524 MB) copied, 1.69451 s, 309 MB/s
-> > 
-> > ..next seek and write some more blocks, write performance is poor:
-> > 
-> > sudo dd if=/dev/zero of=/mnt/test/big obs=4K count=8192 seek=131072
-> > 8192+0 records in
-> > 1024+0 records out
-> > 4194304 bytes (4.2 MB) copied, 47.0644 s, 89.1 kB/s
-> > 
+On Tue, Sep 11, 2012 at 09:47:49AM +0200, Jacek Luczak wrote:
+> Hi All,
 > 
-> Hi Colin,
+> got this during heavy IO (parallel checkout of few large projects from SVN):
 > 
-> I reproduced this behavior with a 1GB filesystem on a loop device. I
-> think the problem you're seeing could be circumstantial to the fact that
-> you're writing to a point where you are close to filling the fs.
+> XFS (dm-8): Corruption detected. Unmount and run xfs_repair
+> XFS (dm-8): Internal error xfs_trans_cancel at line 1467 of file
+> fs/xfs/xfs_trans.c.  Caller 0xffffffffa03c9974
 > 
-> Taking a look at the tracepoint data when running your second dd alone
-> vs. in succession to the first, I see a fairly clean
-> buffered_write->get_blocks pattern vs. a
-> buffered_write->enospc->log_force->get_blocks pattern.
-> 
-> In other words, you're triggering an internal space allocation failure
-> and flush sequence intended to free up space. Somebody else might be
-> able to chime in and more ably explain why that occurs following a
-> truncate (perhaps the space isn't freed until the change hits the log),
-> but regardless this doesn't seem to occur if you increase the size of
-> the fs.
+> Pid: 11930, comm: svn Not tainted 3.4.10-1 #1
+> Call Trace:
+>  [<ffffffffa03f758b>] ? xfs_trans_cancel+0x56/0xd7 [xfs]
+>  [<ffffffffa03c9974>] ? xfs_create+0x467/0x4cf [xfs]
+>  [<ffffffffa03c1777>] ? xfs_vn_mknod+0xcb/0x160 [xfs]
+>  [<ffffffff81101a30>] ? vfs_create+0x6e/0xc7
+>  [<ffffffff81102487>] ? do_last+0x3a5/0x745
+>  [<ffffffff811028f5>] ? path_openat+0xce/0x35f
+>  [<ffffffff81102c53>] ? do_filp_open+0x2c/0x72
+>  [<ffffffffa03ca5d7>] ? xfs_release+0x1ac/0x1cc [xfs]
+>  [<ffffffff8110c169>] ? alloc_fd+0x69/0xf2
+>  [<ffffffff810f588e>] ? do_sys_open+0x107/0x18e
+>  [<ffffffff813cb3f9>] ? system_call_fastpath+0x16/0x1b
 
-The space is considered "busy" and won't be reused until the
-truncate transaction hits the log and the space is free on disk. See
-xfs_busy_extent.c
+That won't tell us what caused the problem. FWIW:
 
-Basically, testing XFS performance on tiny filesystems is going to
-show false behaviours. XFS is optimised for large filesystems and
-will typically shows low space artifacts on small filesystems,
-especially when you are doing things like filling most of the free
-filesystem space with 1 file.
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-e.g.  1GB free on at 100TB filesystem will throttle behaviours (say
-speculative preallocation) much more effectively because itis within
-1% of ENOSPC. That same 1GB free on a 1GB filesystem won't throttle
-preallocation at all, and so that one file when it reaches a little
-over 500MB will try to preallocate half the remaining space in the
-filesystem because the filesystem is only 50% full....
+i.e. mount options, filesystem size, geometry, space usage on the
+filesystem, etc are all relevant.
+
+Indeed, this issue is often caused by fragmented free space andnot
+being able to allocate inodes, though that usually just results in
+ENOSPC.  Use the xfs_db "freespace" command to dump the freespace
+histogram when the error occurs and you've unmounted the filesystem.
+
+> Is it a known issue? I have not - yet - enabled this host in CI thus
+> can't tell if this can be reproduced.
+> 
+> I've done repair but did not saved output.
+
+Were there any errors that were fixed?
 
 Cheers,
 
