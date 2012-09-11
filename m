@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8B39qeS262008 for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 22:09:52 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id g6lGJCprHcUCKKvg for <xfs@oss.sgi.com>;
-	Mon, 10 Sep 2012 20:10:55 -0700 (PDT)
-Message-ID: <504EABBF.3080008@sandeen.net>
-Date: Mon, 10 Sep 2012 22:10:55 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH v3] Add test case to test xfs projid32bit functionality
-	a bit more extensively.
+	q8B3iB3V005630 for <xfs@oss.sgi.com>; Mon, 10 Sep 2012 22:44:11 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	AORYEHo54uLActOL for <xfs@oss.sgi.com>;
+	Mon, 10 Sep 2012 20:45:14 -0700 (PDT)
+Date: Tue, 11 Sep 2012 13:45:10 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] Add test case to test xfs projid32bit functionality a
+	bit more extensively.
+Message-ID: <20120911034510.GA11511@dastard>
 References: <CAFZPdfjKfZP85f8zCLxCOf__ZyBd=tKsvqRGS-_bcaR0P_JuWA@mail.gmail.com>
 	<504EA627.2050906@sandeen.net>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <504EA627.2050906@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,110 +28,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Boris Ranto <ranto.boris@gmail.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Boris Ranto <ranto.boris@gmail.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 9/10/12 9:47 PM, Eric Sandeen wrote:
+On Mon, Sep 10, 2012 at 09:47:03PM -0500, Eric Sandeen wrote:
 > On 9/6/12 10:23 AM, Boris Ranto wrote:
->>    The test covers several areas including enabling projid32bit
->> functionality dynamically by xfs_admin, dumping, restoring, quota
->> reporting and xfs_db projid values reporting.
->>   This test case hits a bug with xfsdump/xfsrestore process on a
->> projid32bit enabled filesystem.
->>
->> Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
+> >    The test covers several areas including enabling projid32bit
+> > functionality dynamically by xfs_admin, dumping, restoring, quota
+> > reporting and xfs_db projid values reporting.
+> >   This test case hits a bug with xfsdump/xfsrestore process on a
+> > projid32bit enabled filesystem.
+> > 
+> > Signed-off-by: Boris Ranto <ranto.boris@gmail.com>
 > 
 > there are just a couple things below, but I think we can get it
 > checked in unless Dave has further concerns - please see below.
-> 
->> ---
->>  285     |  144 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>  285.out |   23 ++++++++++
->>  group   |    1 +
->>  3 files changed, 168 insertions(+), 0 deletions(-)
->>  create mode 100644 285
->>  create mode 100644 285.out
->>
->> diff --git a/285 b/285
->> new file mode 100644
->> index 0000000..a1e497d
->> --- /dev/null
->> +++ b/285
->> @@ -0,0 +1,144 @@
->> +#! /bin/bash
->> +# FS QA Test No. 285
->> +#
->> +# Test to verify project quota xfs_admin, xfsdump/xfsrestore and
->> +# xfs_db functionality
->> +#
->> +#-----------------------------------------------------------------------
->> +# Copyright (c) 2012 Red Hat, Inc. All Rights Reserved.
->> +#
->> +# This program is free software; you can redistribute it and/or
->> +# modify it under the terms of the GNU General Public License as
->> +# published by the Free Software Foundation.
->> +#
->> +# This program is distributed in the hope that it would be useful,
->> +# but WITHOUT ANY WARRANTY; without even the implied warranty of
->> +# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
->> +# GNU General Public License for more details.
->> +#
->> +# You should have received a copy of the GNU General Public License
->> +# along with this program; if not, write the Free Software Foundation,
->> +# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
->> +#
->> +#-----------------------------------------------------------------------
->> +#
->> +# creator
->> +owner=ranto.boris@gmail.com
->> +
->> +seq=`basename $0`
->> +echo "QA output created by $seq"
->> +tmp=/tmp/$$
->> +here=`pwd`
->> +status=1	# failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->> +rm -f $seq.full
->> +
->> +# get standard environment, filters and checks
->> +. ./common.rc
->> +. ./common.quota
->> +
->> +_cleanup()
->> +{
->> +	cd /
->> +	umount $SCRATCH_MNT 2>/dev/null
->> +	rm -rf $tmp.*
->> +}
->> +
->> +_print_projid()
->> +{
->> +	$XFS_DB_PROG -c "inode $1" \
->> +		-c "print core.projid_lo" \
->> +		-c "print core.projid_hi" \
->> +		$SCRATCH_DEV
->> +}
->> +
->> +# real QA test starts here
->> +_supported_fs xfs
->> +_require_xfs_quota
->> +_require_scratch
->> +_require_projid32bit
->> +
->> +# create xfs fs without projid32bit ability, will be gained by xfs_admin
->> +_scratch_mkfs_xfs -i projid32bit=0 -d size=200m >> $seq.full \
->> +		|| _fail "mkfs failed"
->> +_qmount_option "pquota"
->> +_qmount
->> +# require project quotas
->> +_require_prjquota $SCRATCH_DEV
->> +
->> +dir=$SCRATCH_MNT/pquota
->> +
->> +status=1
->> +
->> +mkdir -p $dir
->> +touch $dir/{16,32}less
+....
+> > +dir=$SCRATCH_MNT/pquota
+> > +
+> > +status=1
+> > +
+> > +mkdir -p $dir
+> > +touch $dir/{16,32}less
 > 
 > Although I understand it ok, I might add a comment here saying:
 > 
@@ -139,31 +59,28 @@ On 9/10/12 9:47 PM, Eric Sandeen wrote:
 > Sorry, should have suggested that earlier.
 > 
 > I could just change the names on checkin with a note if that's ok with you.
-> 
->> +inode16a=$(ls -i $dir/16less|cut -d ' ' -f 1)
->> +inode32a=$(ls -i $dir/32less|cut -d ' ' -f 1)
->> +$XFS_QUOTA_PROG -x -c "project -s -p $dir/16less 1234" $SCRATCH_DEV \
->> +		>> $seq.full
->> +$XFS_QUOTA_PROG -x -c "project -s -p $dir/32less 2123456789" $SCRATCH_DEV \
->> +		>> $seq.full 2>&1
-> 
-> It's a little weird to set project quota on a regular file, but I guess it works,
-> so I guess it's ok.  :)
 
-I take it back, Dave explained why this makes sense, inheritance from a dir
-isn't the only way to assign a quota to a project....
+With that change to 16bit/32bit, it's fine by me.
 
-> So with those caveats I can do:
-> 
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> and unless Dave has further comments I'll check it in in a bit.
-> 
-> Thanks,
-> -Eric
-> 
+> > @@ -403,3 +403,4 @@ deprecated
+> >  282 dump ioctl auto quick
+> >  283 dump ioctl auto quick
+> >  284 auto
+> > +285 auto dump quota
 
+Like I mentione dfirst time around, it needs to be added to the
+quick group as well.
 
+If you make those changes, Eric, then consider it:
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
