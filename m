@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8BNL1ff169689 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 18:21:01 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	4zfwq964Tx51ITjv for <xfs@oss.sgi.com>;
-	Tue, 11 Sep 2012 16:22:04 -0700 (PDT)
-Date: Wed, 12 Sep 2012 09:21:44 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 3/3] XFS: Print error when unable to allocate inodes or
-	out of free inodes.
-Message-ID: <20120911232144.GH11511@dastard>
+	q8C3LaMU190896 for <xfs@oss.sgi.com>; Tue, 11 Sep 2012 22:21:36 -0500
+Received: from labridge.com (perches-mx.perches.com [206.117.179.246]) by
+	cuda.sgi.com with ESMTP id FmyfP9w7iN57E0Sz (version=SSLv3
+	cipher=DES-CBC3-SHA bits=168 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 11 Sep 2012 20:22:40 -0700 (PDT)
+Message-ID: <1347420159.2456.15.camel@joe2Laptop>
+Subject: Re: [PATCH 1/3] Add ratelimited printk for different alert levels
+From: Joe Perches <joe@perches.com>
+Date: Tue, 11 Sep 2012 20:22:39 -0700
+In-Reply-To: <ef779779fdfb84c7c1216b374216246d4de83233.1347396641.git.rprabhu@wnohang.net>
 References: <cover.1347396641.git.rprabhu@wnohang.net>
-	<93d9b37ce9ad720e14e2f9311e623a8e3e3139f5.1347396641.git.rprabhu@wnohang.net>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <93d9b37ce9ad720e14e2f9311e623a8e3e3139f5.1347396641.git.rprabhu@wnohang.net>
+	<ef779779fdfb84c7c1216b374216246d4de83233.1347396641.git.rprabhu@wnohang.net>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,99 +27,38 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: raghu.prabhu13@gmail.com
-Cc: open list <linux-kernel@vger.kernel.org>, Raghavendra D Prabhu <rprabhu@wnohang.net>, Alex Elder <elder@kernel.org>, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+Cc: Alex Elder <elder@kernel.org>, Ben Myers <bpm@sgi.com>, open list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Raghavendra D Prabhu <rprabhu@wnohang.net>
 
-On Wed, Sep 12, 2012 at 03:43:24AM +0530, raghu.prabhu13@gmail.com wrote:
-> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> 
-> When xfs_dialloc is unable to allocate required number of inodes or there are no
-> AGs with free inodes, printk the error in ratelimited manner.
-> 
-> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> ---
->  fs/xfs/xfs_ialloc.c | 19 +++++++++++++++----
->  1 file changed, 15 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-> index e75a39d..034131b 100644
-> --- a/fs/xfs/xfs_ialloc.c
-> +++ b/fs/xfs/xfs_ialloc.c
-> @@ -990,8 +990,11 @@ xfs_dialloc(
->  				goto out_error;
+On Wed, 2012-09-12 at 03:43 +0530, raghu.prabhu13@gmail.com wrote:
+> Ratelimited printk will be useful in printing xfs messages which are otherwise
+> not required to be printed always due to their high rate (to prevent kernel ring
+> buffer from overflowing), while at the same time required to be printed.
+[]
+> diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+[]
+> @@ -30,6 +32,32 @@ void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
+>  }
+>  #endif
 >  
->  			xfs_perag_put(pag);
-> -			*inop = NULLFSINO;
-> -			return 0;
-> +
-> +			xfs_err_ratelimited(mp,
-> +				"Unable to allocate inodes in AG %d: Required %d, Current %llu, Maximum %llu",
-> +				agno, XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
-> +			goto out_spc;
+> +#define xfs_printk_ratelimited(xfs_printk, dev, fmt, ...)		\
+> +do {									\
+> +	static DEFINE_RATELIMIT_STATE(_rs,				\
+> +				      DEFAULT_RATELIMIT_INTERVAL,	\
+> +				      DEFAULT_RATELIMIT_BURST);		\
+> +	if (__ratelimit(&_rs))						\
+> +		xfs_printk(dev, fmt, ##__VA_ARGS__);			\
+> +} while (0)
 
-This changes the error to be returned from 0 to ENOSPC. Adding error
-messages shouldn't change the logic of the code.
+It might be better to use an xfs singleton RATELIMIT_STATE
 
-Also, you might want tolook at how ENOSPC is returned from
-xfs_ialloc_ag_alloc(). it only occurs when:
+DEFINE_RATELIMIT_STATE(xfs_rs);
+...
+#define xfs_printk_ratelimited(xfs_printk, dev, fmt, ...)		\
+do {									\
+	if (__ratelimit(&xfs_rs))					\
+		xfs_printk(dev, fmt, ##__VA_ARGS__);			\
+} while (0)
 
-	if (mp->m_maxicount &&
-            mp->m_sb.sb_icount + newlen > mp->m_maxicount) {
-
-i.e. it is exactly the same error case as the "noroom" error below.
-It has nothing to do with being unable to allocate inodes in the
-specific AG - the global inode count is too high. IOWs, the error
-message is not correct.
-
-Also, 80 columns.
-
->  		}
->  
->  		if (ialloced) {
-> @@ -1016,11 +1019,19 @@ nextag:
->  		if (++agno == mp->m_sb.sb_agcount)
->  			agno = 0;
->  		if (agno == start_agno) {
-> -			*inop = NULLFSINO;
-> -			return noroom ? ENOSPC : 0;
-> +			if (noroom) {
-> +				xfs_err_ratelimited(mp,
-> +					"Out of AGs with free inodes: Required %d, Current %llu, Maximum %llu",
-> +					 XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
-
-The error message here is misleading - the error is that we've
-exceeded the maximum inode count for the filesystem (same as the
-above error message case), so no further allocations are allowed.
-
-What about the !noroom case? Isn't that a real ENOSPC condition?
-i.e. we've tried to allocate inodes in every AG and yet we've failed
-in all of them because there is no aligned, contiguous free space in
-any of the AGs. Shouldn't that emit an appropriate warning?
-
-> +				goto out_spc;
-> +			}
-> +			return 0;
->  		}
->  	}
->  
-> +out_spc:
-> +	*inop = NULLFSINO;
-> +	return ENOSPC;
->  out_alloc:
->  	*IO_agbp = NULL;
->  	return xfs_dialloc_ag(tp, agbp, parent, inop);
-
-Default behaviour on a loop break is to allocate inodes, not return
-ENOSPC.
-
-BTW, there's no need to cc LKML for XFS specific patches. LKML is
-noisy enough as it is without unnecessary cross-posts....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
