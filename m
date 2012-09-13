@@ -1,19 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8D8Gd8d115752 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 03:16:39 -0500
-Date: Thu, 13 Sep 2012 04:17:42 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfs: stop the sync worker before xfs_unmountfs
-Message-ID: <20120913081742.GA23181@infradead.org>
-References: <20120829134624.316257238@sgi.com>
-	<20120829134628.835024558@sgi.com> <20120830002335.GB15292@dastard>
-	<20120830172549.GG3274@sgi.com> <20120830223504.GE15292@dastard>
-	<5040FF25.1010501@sgi.com> <20120901230824.GB6896@infradead.org>
-	<20120912183347.GO3274@sgi.com>
+	q8DELQcp168655 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 09:21:27 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id hGoVBkbR5IVVeM5w for
+	<xfs@oss.sgi.com>; Thu, 13 Sep 2012 07:22:33 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8DEMWFW015567
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 10:22:33 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-109.phx2.redhat.com
+	[10.3.113.109])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q8DEMTdQ024866
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 10:22:32 -0400
+Date: Thu, 13 Sep 2012 11:22:29 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: userspace trees
+Message-ID: <20120913142229.GA4382@andromeda.usersys.redhat.com>
+References: <20120913075026.GA27256@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120912183347.GO3274@sgi.com>
+In-Reply-To: <20120913075026.GA27256@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,29 +36,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Sep 12, 2012 at 01:33:47PM -0500, Ben Myers wrote:
-> See what you think of this.  Not heavily tested yet, and not pretty... but it
-> is fairly minimal. 
+On Thu, Sep 13, 2012 at 03:50:26AM -0400, Christoph Hellwig wrote:
+> It seems with the kernel.org account purge last year and me being way to
+> busy it seems like the -dev trees of the XFS userspace get very little
+> attention.  What do people think about retiring them and using the oss
+> trees exclusively again for now?  Right now the trees are getting a bit
+> out of sync which isn't a good thing.
 > 
-> Pull startup and shutdown of the sync worker out of xfs_syncd_init and
-> xfs_syncd_stop into their callers.  In the case of unmount, move shutdown of
-> the xfs_sync_worker before teardown of the log in xfs_unmountfs.  This prevents
-> occasional crashes on unmount like so:
-> 
-> PID: 21602  TASK: ee9df060  CPU: 0   COMMAND: "kworker/0:3"                                                                                                                               
->  #0 [c5377d28] crash_kexec at c0292c94                                                                                                                                                    
+Maintaining oss only looks easier to me and less error prone (in regards on keep
+trees synchronized) than still keep the kernel.org xfs tree.
 
-Can you remove the trailing whitespaces in these lines?  They make
-reading the changelog on a normal 80 character wide terminal pretty
-hard.
+To be honest I've never used the kernel.org xfs trees, so, at least for me this
+makes sense.
 
-The changes look fine to me,
-
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-- 
+--Carlos
 
 _______________________________________________
 xfs mailing list
