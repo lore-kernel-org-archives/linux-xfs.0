@@ -1,19 +1,35 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8DKBxoF212017 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 15:11:59 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id jRmefg6m2dVMcC9n for <xfs@oss.sgi.com>;
-	Thu, 13 Sep 2012 13:13:05 -0700 (PDT)
-Message-ID: <50523E50.6020105@sandeen.net>
-Date: Thu, 13 Sep 2012 15:13:04 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: userspace trees
-References: <20120913075026.GA27256@infradead.org>
-	<5052142B.3010601@sandeen.net> <20120913175316.GR3274@sgi.com>
-	<50521DCE.7020203@sandeen.net> <20120913201029.GZ25175@sgi.com>
-In-Reply-To: <20120913201029.GZ25175@sgi.com>
+	q8DKabYi215122 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 15:36:37 -0500
+Received: from e7.ny.us.ibm.com (e7.ny.us.ibm.com [32.97.182.137]) by
+	cuda.sgi.com with ESMTP id N6oQipncSXFjqfa3 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Sep 2012 13:37:43 -0700 (PDT)
+Received: from /spool/local
+	by e7.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only!
+	Violators will be prosecuted
+	for <xfs@oss.sgi.com> from <sekharan@us.ibm.com>;
+	Thu, 13 Sep 2012 16:37:41 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v10.0) with ESMTP id
+	q8DKbYxm122910 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 16:37:35 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.14.4/8.13.1/NCO v10.0 AVout) with ESMTP id
+	q8DKbX3V012311 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 17:37:34 -0300
+Subject: Re: [RFC v6 PATCH 1/5] xfs: Remove incore use of XFS_OQUOTA_ENFD
+	and XFS_OQUOTA_CHKD
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+In-Reply-To: <20120913075613.GA32120@infradead.org>
+References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120720230208.20477.49663.sendpatchset@chandra-lucid.austin.ibm.com>
+	<20120814224645.GQ2877@dastard>
+	<1345676002.2260.0.camel@chandra-lucid.austin.ibm.com>
+	<20120913075613.GA32120@infradead.org>
+Date: Thu, 13 Sep 2012 15:37:31 -0500
+Message-ID: <1347568651.2191.4720.camel@chandra-lucid.austin.ibm.com>
+Mime-Version: 1.0
+Reply-To: sekharan@us.ibm.com
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,87 +42,27 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 9/13/12 3:10 PM, Ben Myers wrote:
-> Hey Eric & Christoph,
+On Thu, 2012-09-13 at 03:56 -0400, Christoph Hellwig wrote:
+> On Wed, Aug 22, 2012 at 05:53:22PM -0500, Chandra Seetharaman wrote:
+> > will fix them as suggested.
+> > 
+> > Thanks for the review.
 > 
-> On Thu, Sep 13, 2012 at 12:54:22PM -0500, Eric Sandeen wrote:
->> On 9/13/12 12:53 PM, Ben Myers wrote:
->>> Hi Eric,
->>>
->>> On Thu, Sep 13, 2012 at 12:13:15PM -0500, Eric Sandeen wrote:
->>>> On 9/13/12 2:50 AM, Christoph Hellwig wrote:
->>>>> It seems with the kernel.org account purge last year and me being way to
->>>>> busy it seems like the -dev trees of the XFS userspace get very little
->>>>> attention.  What do people think about retiring them and using the oss
->>>>> trees exclusively again for now?  Right now the trees are getting a bit
->>>>> out of sync which isn't a good thing.
->>>>
->>>> ISTR it was done in response to a .... fear of SGI being less responsive after
->>>> a different type of account purge.  ;)  
->>>>
->>>> If SGI wants to be responsible for merging all userspace patches as they
->>>> come in on the list, I'm fine with going back to one tree on oss.
->>>
->>> I discussed this with management.  SGI is willing to take on the responsibility
->>> of merging all userspace patches.
->>>
->>> I think retiring the -dev trees will resolve the out-of-sync issues we've been
->>> having, and be less confusing for all involved.
->>
->> Sounds like a plan.  Will you make sure everything gets re-synced from kernel.org
->> so nothing is lost?
-> 
-> ~/dmapi$ git pull korg master
-> From git://git.kernel.org/pub/scm/fs/xfs/dmapi-dev
->  * branch            master     -> FETCH_HEAD
->  Already up-to-date.
-> 
-> ~/xfsdump$ git pull korg master
-> From git://git.kernel.org/pub/scm/fs/xfs/xfsdump-dev
->  * branch            master     -> FETCH_HEAD
->  Already up-to-date.
-> 
-> ~/xfsprogs$ git pull kernel.org master
-> From git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev
->  * branch            master     -> FETCH_HEAD
-> Updating a8decaf..7db1e7b
-> Fast-forward
->  db/bmap.c       |    4 ++--
->  db/btblock.c    |   11 -----------
->  mkfs/xfs_mkfs.c |   15 +++++++++------
->  repair/bmap.c   |   28 ++++++++++++++++++++++++----
->  repair/dir2.c   |    6 +++++-
->  5 files changed, 40 insertions(+), 24 deletions(-)
-> 
-> I've brought xfsprogs master branch uptodate here
-> git://oss.sgi.com/xfs/cmds/xfsprogs.git
-> 
-> ~/xfstests # git pull korg master
-> From git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev
->  * branch            master     -> FETCH_HEAD
-> Auto-merging group
-> CONFLICT (content): Merge conflict in group
-> Auto-merging 285.out
-> CONFLICT (add/add): Merge conflict in 285.out
-> Auto-merging 285
-> CONFLICT (add/add): Merge conflict in 285
-> Automatic merge failed; fix conflicts and then commit the result.
-> 
-> I've merged and brought xfstests master branch uptodate here
-> git://oss.sgi.com/xfs/cmds/xfstests.git
-> 
-> Did I miss anything?  Any other branches to copy over?
+> Any updates on reposting the series?
 
-I've not done anything except with the master branch.
+Sorry, got busy with other things. Will get back to this next week.
 
--Eric
-
-> Thanks,
-> Ben
+Chandra
 > 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
+
 
 _______________________________________________
 xfs mailing list
