@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8DHrGbP193553 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 12:53:17 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id yDvYT9lJfV2kH54A for <xfs@oss.sgi.com>;
-	Thu, 13 Sep 2012 10:54:22 -0700 (PDT)
-Message-ID: <50521DCE.7020203@sandeen.net>
-Date: Thu, 13 Sep 2012 12:54:22 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q8DIVs2Y199335 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 13:31:54 -0500
+Message-ID: <505226CF.2030608@sgi.com>
+Date: Thu, 13 Sep 2012 13:32:47 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: userspace trees
-References: <20120913075026.GA27256@infradead.org>
-	<5052142B.3010601@sandeen.net> <20120913175316.GR3274@sgi.com>
-In-Reply-To: <20120913175316.GR3274@sgi.com>
+Subject: Re: [RFC, PATCH 0/102]: xfs: 3.0.x stable kernel update
+References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1345698180-13612-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,47 +17,34 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 9/13/12 12:53 PM, Ben Myers wrote:
-> Hi Eric,
-> 
-> On Thu, Sep 13, 2012 at 12:13:15PM -0500, Eric Sandeen wrote:
->> On 9/13/12 2:50 AM, Christoph Hellwig wrote:
->>> It seems with the kernel.org account purge last year and me being way to
->>> busy it seems like the -dev trees of the XFS userspace get very little
->>> attention.  What do people think about retiring them and using the oss
->>> trees exclusively again for now?  Right now the trees are getting a bit
->>> out of sync which isn't a good thing.
->>
->> ISTR it was done in response to a .... fear of SGI being less responsive after
->> a different type of account purge.  ;)  
->>
->> If SGI wants to be responsible for merging all userspace patches as they
->> come in on the list, I'm fine with going back to one tree on oss.
-> 
-> I discussed this with management.  SGI is willing to take on the responsibility
-> of merging all userspace patches.
-> 
-> I think retiring the -dev trees will resolve the out-of-sync issues we've been
-> having, and be less confusing for all involved.
+On 08/23/12 00:01, Dave Chinner wrote:
 
-Sounds like a plan.  Will you make sure everything gets re-synced from kernel.org
-so nothing is lost?
+> For all the XFS developers that have copious amounts of free time
+> available, I'd appreciate an eye run over the patch list to see if
+> there's any potential bug fixes that I missed or have made glaring
+> errors in backporting. Some of the fixes are dependent on cleanups I
+> haven't included, so some of the patches are a bit different to what
+> is in mainline (e.g. anything that touches setattr). Most important
+> to look at is probably the inode i_size changes and the logging of
+> all metadata changes.
 
-hch, you want to remove or somehow deprecate the kernel.org trees?
 
-Thanks,
--Eric
+I think Brian Foster's log hang patch would be a good candidate:
+xfs: check for stale inode before acquiring iflock on push
+http://oss.sgi.com/archives/xfs/2012-06/msg00134.html
 
-> Regards,
-> 	Ben
-> 
+This hang can happen in Linux 2.6.x version of XFS.
+
+Thanks for the work.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
