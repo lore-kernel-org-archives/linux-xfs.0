@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8D0oFgf075647 for <xfs@oss.sgi.com>; Wed, 12 Sep 2012 19:50:15 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	xTDvKyqVGJfcCusV for <xfs@oss.sgi.com>;
-	Wed, 12 Sep 2012 17:51:20 -0700 (PDT)
-Date: Thu, 13 Sep 2012 10:51:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] Add ratelimited printk for different alert levels
-Message-ID: <20120913005112.GK11511@dastard>
-References: <cover.1347396641.git.rprabhu@wnohang.net>
-	<ef779779fdfb84c7c1216b374216246d4de83233.1347396641.git.rprabhu@wnohang.net>
-	<1347420159.2456.15.camel@joe2Laptop>
+	q8D1oLYJ090891 for <xfs@oss.sgi.com>; Wed, 12 Sep 2012 20:50:21 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id Reei4iSlWRUmENfr for
+	<xfs@oss.sgi.com>; Wed, 12 Sep 2012 18:51:26 -0700 (PDT)
+Message-ID: <50513C1A.9020504@redhat.com>
+Date: Wed, 12 Sep 2012 20:51:22 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1347420159.2456.15.camel@joe2Laptop>
+Subject: Re: Ubuntu Ext4 regression testing
+References: <50511241.2090603@canonical.com> <5051142D.1050603@redhat.com>
+	<5051177E.6000903@canonical.com> <505126D4.5030106@redhat.com>
+	<50512BB1.5010605@canonical.com>
+In-Reply-To: <50512BB1.5010605@canonical.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +26,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Joe Perches <joe@perches.com>
-Cc: Alex Elder <elder@kernel.org>, Ben Myers <bpm@sgi.com>, open list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Raghavendra D Prabhu <rprabhu@wnohang.net>, raghu.prabhu13@gmail.com
+To: Brad Figg <brad.figg@canonical.com>
+Cc: linux-ext4@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Sep 11, 2012 at 08:22:39PM -0700, Joe Perches wrote:
-> On Wed, 2012-09-12 at 03:43 +0530, raghu.prabhu13@gmail.com wrote:
-> > Ratelimited printk will be useful in printing xfs messages which are otherwise
-> > not required to be printed always due to their high rate (to prevent kernel ring
-> > buffer from overflowing), while at the same time required to be printed.
-> []
-> > diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
-> []
-> > @@ -30,6 +32,32 @@ void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
-> >  }
-> >  #endif
-> >  
-> > +#define xfs_printk_ratelimited(xfs_printk, dev, fmt, ...)		\
-> > +do {									\
-> > +	static DEFINE_RATELIMIT_STATE(_rs,				\
-> > +				      DEFAULT_RATELIMIT_INTERVAL,	\
-> > +				      DEFAULT_RATELIMIT_BURST);		\
-> > +	if (__ratelimit(&_rs))						\
-> > +		xfs_printk(dev, fmt, ##__VA_ARGS__);			\
-> > +} while (0)
+On 9/12/12 7:41 PM, Brad Figg wrote:
+
+> Eric,
 > 
-> It might be better to use an xfs singleton RATELIMIT_STATE
+> Thanks for taking the time to point this out. We will adjust our testing accordingly.
+> We initially tried to run xfstest against ext2, ext3, ext4, xfs and btrfs. We are also
+> trying to get these tests to run on several different kernel versions as you can
+> see from our test results. We were running into issues on different kernels and various
+> file-systems while getting our act together, we did this as a band-aid.
+
+I see.
+
+> I accept that we have some things to learn w.r.t. running this test suite. We will work
+> to run the xfstests "as is" without any outside "intelligence". We do recognise that
+> is a dynamic set of tests that people are adding to regularly.
 > 
-> DEFINE_RATELIMIT_STATE(xfs_rs);
-> ...
-> #define xfs_printk_ratelimited(xfs_printk, dev, fmt, ...)		\
-> do {									\
-> 	if (__ratelimit(&xfs_rs))					\
-> 		xfs_printk(dev, fmt, ##__VA_ARGS__);			\
-> } while (0)
+> I am not attempting to get just a series of "pass" results. If that were my goal
+> I could accomplish it much easier and would not have engaged with the community
+> on the mailing list. We want to help where we can and will accept constructive
+> criticism.
 
-Which would then result in ratelimiting dropping potentially
-important, unique messages. I think it's much better to guarantee
-ratelimited messages get emitted at least once, especially as there
-is the potential for multiple filesystems to emit messages
-simultaneously.
+Sorry, it sounds like I came across too strong there - it was just a little worrying to see failing or problematic tests disabled or otherwise artificially restricted.
 
-I think per-location rate limiting is fine for the current usage -
-ratelimiting is not widespread so there isn't a massive increase in
-size as a result of this. If we do start to use ratelimiting in lots
-of places in XFS, then we might have to revisit this, but it's OK
-for now.
+I'm actually very excited to see you setting up ongoing, public testing using xfstests, I think it'll be a great benefit, especially if there's a way to see a particular test's results across several kernel versions and/or filesystems and/or architectures, so that patterns of failure can emerge.
 
-Cheers,
+If you find that xfstests is missing some feature or behavior which would facilitate testing in the automated environment, please do let us know what you need - or send patches.  :)
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Eric
+
+> Brad
+> 
 
 _______________________________________________
 xfs mailing list
