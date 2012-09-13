@@ -1,25 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8D7tA9v113965 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 02:55:10 -0500
+	q8D83FjC114553 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 03:03:15 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	17J3tXHCZKBw089J (version=TLSv1 cipher=AES256-SHA bits=256
+	dnSBOjRMnsD7O14L (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Sep 2012 00:56:16 -0700 (PDT)
-Date: Thu, 13 Sep 2012 03:56:13 -0400
+	Thu, 13 Sep 2012 01:04:21 -0700 (PDT)
+Date: Thu, 13 Sep 2012 04:04:20 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC v6 PATCH 1/5] xfs: Remove incore use of XFS_OQUOTA_ENFD and
-	XFS_OQUOTA_CHKD
-Message-ID: <20120913075613.GA32120@infradead.org>
-References: <20120720230202.20477.69766.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120720230208.20477.49663.sendpatchset@chandra-lucid.austin.ibm.com>
-	<20120814224645.GQ2877@dastard>
-	<1345676002.2260.0.camel@chandra-lucid.austin.ibm.com>
+Subject: XFS status update for August 2012
+Message-ID: <20120913080420.GA9775@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1345676002.2260.0.camel@chandra-lucid.austin.ibm.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +26,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Chandra Seetharaman <sekharan@us.ibm.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Aug 22, 2012 at 05:53:22PM -0500, Chandra Seetharaman wrote:
-> will fix them as suggested.
-> 
-> Thanks for the review.
+After the release of Linux 3.5 in July, August saw the big XFS merge for
+the Linux 3.6 merge window.  In the meantime the XFS tree has seen low
+activity, with refined support for SEEK_HOLE/SEEK_DATA that takes unwritten
+extents into account as the main feature.  A couple of fixes also went in
+and mostly got back ported to mainline for Linux 3.5 as well.
 
-Any updates on reposting the series?
+The mailing list had a lot of traffic about interesting updates that didn't
+make it into the tree yet, with the most interesting being: remount support
+for the inode64 option, a patch series allowing to trim back large
+preallocations when the filesystem is out of space, and a large rewrite
+of the XFS-internal sync code.
+
+On the user land side xfs_db saw a fix for a very long standing bug go into
+the tree and xfstests saw a few fixes.  The mailing list list saw various other
+interesting updates including a German translation for the xfsdump messages,
+32-bit project ID support in xfsdump, a lot of xfstests updates including a
+patch to use the upstream util-linux version of fstrim in xfstests, support
+for tmpfs in xfstests, various ext3 and btrfs updates, but none of them
+made it into the git tree.  There also was a lot of discussion of older
+patch to reorganize the xfstests source tree.
 
 _______________________________________________
 xfs mailing list
