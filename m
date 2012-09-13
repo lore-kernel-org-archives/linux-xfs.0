@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8D83FjC114553 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 03:03:15 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	dnSBOjRMnsD7O14L (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Sep 2012 01:04:21 -0700 (PDT)
-Date: Thu, 13 Sep 2012 04:04:20 -0400
+	q8D8Gd8d115752 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 03:16:39 -0500
+Date: Thu, 13 Sep 2012 04:17:42 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: XFS status update for August 2012
-Message-ID: <20120913080420.GA9775@infradead.org>
+Subject: Re: xfs: stop the sync worker before xfs_unmountfs
+Message-ID: <20120913081742.GA23181@infradead.org>
+References: <20120829134624.316257238@sgi.com>
+	<20120829134628.835024558@sgi.com> <20120830002335.GB15292@dastard>
+	<20120830172549.GG3274@sgi.com> <20120830223504.GE15292@dastard>
+	<5040FF25.1010501@sgi.com> <20120901230824.GB6896@infradead.org>
+	<20120912183347.GO3274@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
+In-Reply-To: <20120912183347.GO3274@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,28 +26,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
-After the release of Linux 3.5 in July, August saw the big XFS merge for
-the Linux 3.6 merge window.  In the meantime the XFS tree has seen low
-activity, with refined support for SEEK_HOLE/SEEK_DATA that takes unwritten
-extents into account as the main feature.  A couple of fixes also went in
-and mostly got back ported to mainline for Linux 3.5 as well.
+On Wed, Sep 12, 2012 at 01:33:47PM -0500, Ben Myers wrote:
+> See what you think of this.  Not heavily tested yet, and not pretty... but it
+> is fairly minimal. 
+> 
+> Pull startup and shutdown of the sync worker out of xfs_syncd_init and
+> xfs_syncd_stop into their callers.  In the case of unmount, move shutdown of
+> the xfs_sync_worker before teardown of the log in xfs_unmountfs.  This prevents
+> occasional crashes on unmount like so:
+> 
+> PID: 21602  TASK: ee9df060  CPU: 0   COMMAND: "kworker/0:3"                                                                                                                               
+>  #0 [c5377d28] crash_kexec at c0292c94                                                                                                                                                    
 
-The mailing list had a lot of traffic about interesting updates that didn't
-make it into the tree yet, with the most interesting being: remount support
-for the inode64 option, a patch series allowing to trim back large
-preallocations when the filesystem is out of space, and a large rewrite
-of the XFS-internal sync code.
+Can you remove the trailing whitespaces in these lines?  They make
+reading the changelog on a normal 80 character wide terminal pretty
+hard.
 
-On the user land side xfs_db saw a fix for a very long standing bug go into
-the tree and xfstests saw a few fixes.  The mailing list list saw various other
-interesting updates including a German translation for the xfsdump messages,
-32-bit project ID support in xfsdump, a lot of xfstests updates including a
-patch to use the upstream util-linux version of fstrim in xfstests, support
-for tmpfs in xfstests, various ext3 and btrfs updates, but none of them
-made it into the git tree.  There also was a lot of discussion of older
-patch to reorganize the xfstests source tree.
+The changes look fine to me,
+
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
