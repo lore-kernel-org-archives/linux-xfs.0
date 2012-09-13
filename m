@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8D0eNVe072699 for <xfs@oss.sgi.com>; Wed, 12 Sep 2012 19:40:23 -0500
-Received: from youngberry.canonical.com (youngberry.canonical.com
-	[91.189.89.112]) by cuda.sgi.com with ESMTP id 7yQmbAvsauuoNd9u
-	for <xfs@oss.sgi.com>; Wed, 12 Sep 2012 17:41:28 -0700 (PDT)
-Message-ID: <50512BB1.5010605@canonical.com>
-Date: Wed, 12 Sep 2012 17:41:21 -0700
-From: Brad Figg <brad.figg@canonical.com>
+	q8D0oFgf075647 for <xfs@oss.sgi.com>; Wed, 12 Sep 2012 19:50:15 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	xTDvKyqVGJfcCusV for <xfs@oss.sgi.com>;
+	Wed, 12 Sep 2012 17:51:20 -0700 (PDT)
+Date: Thu, 13 Sep 2012 10:51:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/3] Add ratelimited printk for different alert levels
+Message-ID: <20120913005112.GK11511@dastard>
+References: <cover.1347396641.git.rprabhu@wnohang.net>
+	<ef779779fdfb84c7c1216b374216246d4de83233.1347396641.git.rprabhu@wnohang.net>
+	<1347420159.2456.15.camel@joe2Laptop>
 MIME-Version: 1.0
-Subject: Re: Ubuntu Ext4 regression testing
-References: <50511241.2090603@canonical.com> <5051142D.1050603@redhat.com>
-	<5051177E.6000903@canonical.com> <505126D4.5030106@redhat.com>
-In-Reply-To: <505126D4.5030106@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1347420159.2456.15.camel@joe2Laptop>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,67 +28,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-ext4@vger.kernel.org, xfs-oss <xfs@oss.sgi.com>
+To: Joe Perches <joe@perches.com>
+Cc: Alex Elder <elder@kernel.org>, Ben Myers <bpm@sgi.com>, open list <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, Raghavendra D Prabhu <rprabhu@wnohang.net>, raghu.prabhu13@gmail.com
 
-On 09/12/2012 05:20 PM, Eric Sandeen wrote:
-> On 9/12/12 6:15 PM, Brad Figg wrote:
->> I'm going to be doing some new runs so anything I find will be reported.
+On Tue, Sep 11, 2012 at 08:22:39PM -0700, Joe Perches wrote:
+> On Wed, 2012-09-12 at 03:43 +0530, raghu.prabhu13@gmail.com wrote:
+> > Ratelimited printk will be useful in printing xfs messages which are otherwise
+> > not required to be printed always due to their high rate (to prevent kernel ring
+> > buffer from overflowing), while at the same time required to be printed.
+> []
+> > diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+> []
+> > @@ -30,6 +32,32 @@ void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
+> >  }
+> >  #endif
+> >  
+> > +#define xfs_printk_ratelimited(xfs_printk, dev, fmt, ...)		\
+> > +do {									\
+> > +	static DEFINE_RATELIMIT_STATE(_rs,				\
+> > +				      DEFAULT_RATELIMIT_INTERVAL,	\
+> > +				      DEFAULT_RATELIMIT_BURST);		\
+> > +	if (__ratelimit(&_rs))						\
+> > +		xfs_printk(dev, fmt, ##__VA_ARGS__);			\
+> > +} while (0)
 > 
-> Dave Chinner also pointed out that i.e.
+> It might be better to use an xfs singleton RATELIMIT_STATE
 > 
-> http://kernel.ubuntu.com/beta/testing/test-results/statler.2012-09-11_22-42-47/xfstests/default/control
-> 
-> seems to redefine, re-group, exclude etc various tests, and is taking "intelligence" out of the test suite itself.
-> 
-> I'd be wary of that; xfstests is dynamic - things get fixed, tests get added, groups changed, etc.
-> 
-> If you hard code for example "this test is for xfs" somewhere else, you might miss updates which add coverage.
-> 
-> Another example :
-> 
-> 	    #'197' : ['xfs'],# This test is only valid on 32 bit machines
-> 
-> but the test handles that gracefully:
-> 
-> bitsperlong=`src/feature -w`
-> if [ "$bitsperlong" -ne 32 ]; then
->         _notrun "This test is only valid on 32 bit machines"
-> fi
-> 
-> In general any test should be runnable; it may then issue 'not run' for some reason or other, but there's no harm in it - not as much harm as skipping regression tests because some config file got out of date...
-> 
-> and:
-> 
-> 	    #'275' : ['generic'] # ext4 fails
-> 
-> but I just fixed that one up, and it should pass now.  Who will update the 3rd party config?
-> 
-> Failing tests absolutely should be run as well.  That information is as valuable as passing tests.  The goal is getting a complete picture, not just a series of "pass" results.  :)
-> 
-> -Eric
-> 
+> DEFINE_RATELIMIT_STATE(xfs_rs);
+> ...
+> #define xfs_printk_ratelimited(xfs_printk, dev, fmt, ...)		\
+> do {									\
+> 	if (__ratelimit(&xfs_rs))					\
+> 		xfs_printk(dev, fmt, ##__VA_ARGS__);			\
+> } while (0)
 
-Eric,
+Which would then result in ratelimiting dropping potentially
+important, unique messages. I think it's much better to guarantee
+ratelimited messages get emitted at least once, especially as there
+is the potential for multiple filesystems to emit messages
+simultaneously.
 
-Thanks for taking the time to point this out. We will adjust our testing accordingly.
-We initially tried to run xfstest against ext2, ext3, ext4, xfs and btrfs. We are also
-trying to get these tests to run on several different kernel versions as you can
-see from our test results. We were running into issues on different kernels and various
-file-systems while getting our act together, we did this as a band-aid.
+I think per-location rate limiting is fine for the current usage -
+ratelimiting is not widespread so there isn't a massive increase in
+size as a result of this. If we do start to use ratelimiting in lots
+of places in XFS, then we might have to revisit this, but it's OK
+for now.
 
-I accept that we have some things to learn w.r.t. running this test suite. We will work
-to run the xfstests "as is" without any outside "intelligence". We do recognise that
-is a dynamic set of tests that people are adding to regularly.
+Cheers,
 
-I am not attempting to get just a series of "pass" results. If that were my goal
-I could accomplish it much easier and would not have engaged with the community
-on the mailing list. We want to help where we can and will accept constructive
-criticism.
-
-Brad
+Dave.
 -- 
-Brad Figg brad.figg@canonical.com http://www.canonical.com
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
