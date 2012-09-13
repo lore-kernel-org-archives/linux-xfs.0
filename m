@@ -1,20 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8DLIrOC223140 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 16:18:53 -0500
-Date: Thu, 13 Sep 2012 16:19:57 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: xfs: stop the sync worker before xfs_unmountfs
-Message-ID: <20120913211957.GT3274@sgi.com>
-References: <20120829134624.316257238@sgi.com>
-	<20120829134628.835024558@sgi.com> <20120830002335.GB15292@dastard>
-	<20120830172549.GG3274@sgi.com> <20120830223504.GE15292@dastard>
-	<5040FF25.1010501@sgi.com> <20120901230824.GB6896@infradead.org>
-	<20120912183347.GO3274@sgi.com>
-	<20120913081742.GA23181@infradead.org>
+	q8DNMXaM235891 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 18:22:33 -0500
+Received: from exprod7og119.obsmtp.com (exprod7og119.obsmtp.com [64.18.2.16])
+	by cuda.sgi.com with SMTP id vwjdLd0azbUSDzli (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 13 Sep 2012 16:23:38 -0700 (PDT)
+Message-ID: <50526AF5.50201@genband.com>
+Date: Thu, 13 Sep 2012 17:23:33 -0600
+From: Chris Friesen <chris.friesen@genband.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120913081742.GA23181@infradead.org>
+Subject: global serialization points in XFS circa 2.6.27?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,40 +19,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
 
-On Thu, Sep 13, 2012 at 04:17:42AM -0400, Christoph Hellwig wrote:
-> On Wed, Sep 12, 2012 at 01:33:47PM -0500, Ben Myers wrote:
-> > See what you think of this.  Not heavily tested yet, and not pretty... but it
-> > is fairly minimal. 
-> > 
-> > Pull startup and shutdown of the sync worker out of xfs_syncd_init and
-> > xfs_syncd_stop into their callers.  In the case of unmount, move shutdown of
-> > the xfs_sync_worker before teardown of the log in xfs_unmountfs.  This prevents
-> > occasional crashes on unmount like so:
-> > 
-> > PID: 21602  TASK: ee9df060  CPU: 0   COMMAND: "kworker/0:3"                                                                                                                               
-> >  #0 [c5377d28] crash_kexec at c0292c94                                                                                                                                                    
-> 
-> Can you remove the trailing whitespaces in these lines?  They make
-> reading the changelog on a normal 80 character wide terminal pretty
-> hard.
 
-Yeah.  Sorry about that.  Cleaned up.
+Hi,
 
-> The changes look fine to me,
-> 
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+I've got an embedded system running a modified 2.6.27 (yes, we're trying 
+to upgrade) and we're running into a scenario where something is 
+happening that causes accesses to *all* XFS filesystems to hang or be 
+delayed for some time.
 
-Thanks,
-	Ben
+I know it may be a bit of a stretch since the kernel is old, but I was 
+wondering if you might have any suggestions as to what I might look at 
+as far as locks/algorithms within XFS that would affect all filesystems.
 
+In case it matters, the hardware is fairly beefy-- 32 threads of Sandy 
+Bridge CPU, 64GB RAM, SAS drives, etc.
+
+Chris
+
+-- 
+
+Chris Friesen
+Software Designer
+
+3500 Carling Avenue
+Ottawa, Ontario K2H 8E9
+www.genband.com
 
 _______________________________________________
 xfs mailing list
