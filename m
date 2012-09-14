@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8ECIJAu092238 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 07:18:19 -0500
+	q8ECIINI092210 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 07:18:18 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id UotuQiwrBEnPn67s for
+	cuda.sgi.com with ESMTP id i8orCk9HMvWOVqdG for
 	<xfs@oss.sgi.com>; Fri, 14 Sep 2012 05:19:25 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8ECJP2o006862
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8ECJPxd029331
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 08:19:25 -0400
 Received: from bfoster.bfoster ([10.16.225.83])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q8ECJPBQ022248
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8ECJPMA022219
 	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 08:19:25 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 5/8] xfs: create function to scan and clear EOFBLOCKS inodes
-Date: Fri, 14 Sep 2012 08:19:52 -0400
-Message-Id: <1347625195-6369-6-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 1/8] xfs: add EOFBLOCKS inode tagging/untagging
+Date: Fri, 14 Sep 2012 08:19:48 -0400
+Message-Id: <1347625195-6369-2-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 References: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,99 +35,195 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_inodes_free_eofblocks() implements scanning functionality for
-EOFBLOCKS inodes. It uses the AG iterator to walk the tagged inodes
-and free post-EOF blocks via the xfs_inode_free_eofblocks() execute
-function. The scan can be invoked in best-effort mode or wait
-(force) mode.
+Add the XFS_ICI_EOFBLOCKS_TAG inode tag to identify inodes with
+speculatively preallocated blocks beyond EOF. An inode is tagged
+when speculative preallocation occurs and untagged either via
+truncate down or when post-EOF blocks are freed via release or
+reclaim.
 
-A best-effort scan (default) handles all inodes that do not have a
-dirty cache and we successfully acquire the io lock via trylock. In
-wait mode, we continue to cycle through an AG until all inodes are
-handled.
+The tag management is intentionally not aggressive to prefer
+simplicity over the complexity of handling all the corner cases
+under which post-EOF blocks could be freed (i.e., forward
+truncation, fallocate, write error conditions, etc.). This means
+that a tagged inode may or may not have post-EOF blocks after a
+period of time. The tag is eventually cleared when the inode is
+released or reclaimed.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_sync.c  |   40 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sync.h  |    1 +
- fs/xfs/xfs_trace.h |    1 +
- 3 files changed, 42 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_ag.h       |    1 +
+ fs/xfs/xfs_iomap.c    |    7 +++++
+ fs/xfs/xfs_iops.c     |    3 ++
+ fs/xfs/xfs_sync.c     |   62 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sync.h     |    3 ++
+ fs/xfs/xfs_trace.h    |    5 ++++
+ fs/xfs/xfs_vnodeops.c |    2 +
+ 7 files changed, 83 insertions(+), 0 deletions(-)
 
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index 44d65c1..22bd4db 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -233,6 +233,7 @@ typedef struct xfs_perag {
+ #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
+ 					   in xfs_inode_ag_iterator */
+ #define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
++#define XFS_ICI_EOFBLOCKS_TAG	1	/* inode has blocks beyond EOF */
+ 
+ #define	XFS_AG_MAXLEVELS(mp)		((mp)->m_ag_maxlevels)
+ #define	XFS_MIN_FREELIST_RAW(bl,cl,mp)	\
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 973dff6..2968ee8 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -459,6 +459,13 @@ retry:
+ 	if (!(imap[0].br_startblock || XFS_IS_REALTIME_INODE(ip)))
+ 		return xfs_alert_fsblock_zero(ip, &imap[0]);
+ 
++	/*
++	 * Tag the inode as speculatively preallocated so we can reclaim this
++	 * space on demand, if necessary.
++	 */
++	if (prealloc)
++		xfs_inode_set_eofblocks_tag(ip);
++
+ 	*ret_imap = imap[0];
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 4e00cf0..dcd1d5f 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -854,6 +854,9 @@ xfs_setattr_size(
+ 		 * and do not wait the usual (long) time for writeout.
+ 		 */
+ 		xfs_iflags_set(ip, XFS_ITRUNCATED);
++
++		/* A truncate down always removes post-EOF blocks. */
++		xfs_inode_clear_eofblocks_tag(ip);
+ 	}
+ 
+ 	if (mask & ATTR_CTIME) {
 diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 0da93c9..48cab9f 100644
+index 9654817..00c6224 100644
 --- a/fs/xfs/xfs_sync.c
 +++ b/fs/xfs/xfs_sync.c
-@@ -1014,6 +1014,46 @@ xfs_reclaim_inodes_count(
+@@ -971,3 +971,65 @@ xfs_reclaim_inodes_count(
  	return reclaimable;
  }
  
-+STATIC int
-+xfs_inode_free_eofblocks(
-+	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
-+	int			flags,
-+	void			*args)
++void
++xfs_inode_set_eofblocks_tag(
++	xfs_inode_t	*ip)
 +{
-+	int ret;
-+	bool force = flags & SYNC_WAIT;
++	struct xfs_mount *mp = ip->i_mount;
++	struct xfs_perag *pag;
++	int tagged;
 +
-+	if (!xfs_can_free_eofblocks(ip, false)) {
-+		/* inode could be preallocated or append-only */
-+		trace_xfs_inode_free_eofblocks_invalid(ip);
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++	spin_lock(&pag->pag_ici_lock);
++	trace_xfs_inode_set_eofblocks_tag(ip);
++
++	tagged = radix_tree_tagged(&pag->pag_ici_root,
++				   XFS_ICI_EOFBLOCKS_TAG);
++	radix_tree_tag_set(&pag->pag_ici_root,
++			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
++			   XFS_ICI_EOFBLOCKS_TAG);
++	if (!tagged) {
++		/* propagate the eofblocks tag up into the perag radix tree */
++		spin_lock(&ip->i_mount->m_perag_lock);
++		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
++				   XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				   XFS_ICI_EOFBLOCKS_TAG);
++		spin_unlock(&ip->i_mount->m_perag_lock);
++
++		trace_xfs_perag_set_eofblocks(ip->i_mount, pag->pag_agno,
++					      -1, _RET_IP_);
 +	}
 +
-+	if (!force && mapping_tagged(VFS_I(ip)->i_mapping,
-+				     PAGECACHE_TAG_DIRTY))
-+		return 0;
-+
-+	ret = xfs_free_eofblocks(ip->i_mount, ip, false);
-+
-+	/* ignore EAGAIN on a best effort scan */
-+	if (!force && (ret == EAGAIN))
-+		ret = 0;
-+
-+	return ret;
++	spin_unlock(&pag->pag_ici_lock);
++	xfs_perag_put(pag);
 +}
 +
-+int
-+xfs_inodes_free_eofblocks(
-+	struct xfs_mount	*mp,
-+	int			flags)
++void
++xfs_inode_clear_eofblocks_tag(
++	xfs_inode_t	*ip)
 +{
-+	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
-+	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
-+					 NULL, XFS_ICI_EOFBLOCKS_TAG);
++	struct xfs_mount *mp = ip->i_mount;
++	struct xfs_perag *pag;
++
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++	spin_lock(&pag->pag_ici_lock);
++	trace_xfs_inode_clear_eofblocks_tag(ip);
++
++	radix_tree_tag_clear(&pag->pag_ici_root,
++			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
++			     XFS_ICI_EOFBLOCKS_TAG);
++	if (!radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_EOFBLOCKS_TAG)) {
++		/* clear the eofblocks tag from the perag radix tree */
++		spin_lock(&ip->i_mount->m_perag_lock);
++		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
++				     XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				     XFS_ICI_EOFBLOCKS_TAG);
++		spin_unlock(&ip->i_mount->m_perag_lock);
++		trace_xfs_perag_clear_eofblocks(ip->i_mount, pag->pag_agno,
++					       -1, _RET_IP_);
++	}
++
++	spin_unlock(&pag->pag_ici_lock);
++	xfs_perag_put(pag);
 +}
 +
- void
- xfs_inode_set_eofblocks_tag(
- 	xfs_inode_t	*ip)
 diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 463ea0a..307654a 100644
+index 941202e..4486491 100644
 --- a/fs/xfs/xfs_sync.h
 +++ b/fs/xfs/xfs_sync.h
-@@ -45,6 +45,7 @@ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+@@ -43,6 +43,9 @@ void __xfs_inode_set_reclaim_tag(struct xfs_perag *pag, struct xfs_inode *ip);
+ void __xfs_inode_clear_reclaim_tag(struct xfs_mount *mp, struct xfs_perag *pag,
+ 				struct xfs_inode *ip);
  
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
-+int xfs_inodes_free_eofblocks(struct xfs_mount *, int);
- 
++void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
++void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
++
  int xfs_sync_inode_grab(struct xfs_inode *ip);
  int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 6f46e03..cb52346 100644
+index 7d36ccf..6f46e03 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -589,6 +589,7 @@ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
+@@ -130,6 +130,8 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_set_reclaim);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_clear_reclaim);
++DEFINE_PERAG_REF_EVENT(xfs_perag_set_eofblocks);
++DEFINE_PERAG_REF_EVENT(xfs_perag_clear_eofblocks);
  
- DEFINE_INODE_EVENT(xfs_inode_set_eofblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
-+DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+ TRACE_EVENT(xfs_attr_list_node_descend,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx,
+@@ -585,6 +587,9 @@ DEFINE_INODE_EVENT(xfs_update_time);
+ DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
+ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
  
++DEFINE_INODE_EVENT(xfs_inode_set_eofblocks_tag);
++DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
++
  DECLARE_EVENT_CLASS(xfs_iref_class,
  	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+ 	TP_ARGS(ip, caller_ip),
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 2a5c6373..d883881 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -237,6 +237,8 @@ xfs_free_eofblocks(
+ 		} else {
+ 			error = xfs_trans_commit(tp,
+ 						XFS_TRANS_RELEASE_LOG_RES);
++			if (!error)
++				xfs_inode_clear_eofblocks_tag(ip);
+ 		}
+ 
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 -- 
 1.7.7.6
 
