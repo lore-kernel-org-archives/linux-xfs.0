@@ -1,24 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8ECIIBF092218 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 07:18:18 -0500
+	q8ECIIXh092205 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 07:18:18 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id K1Dmg2XggIN6U3KJ for
+	cuda.sgi.com with ESMTP id p9guEGphEpUUfV5f for
 	<xfs@oss.sgi.com>; Fri, 14 Sep 2012 05:19:25 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8ECJPpp006865
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8ECJPkm024937
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 08:19:25 -0400
 Received: from bfoster.bfoster ([10.16.225.83])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8ECJPVh022223
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8ECJPhB030671
 	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 08:19:25 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 4/8] xfs: export xfs_free_eofblocks() and return EAGAIN on
-	trylock failure
-Date: Fri, 14 Sep 2012 08:19:51 -0400
-Message-Id: <1347625195-6369-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v3 6/8] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+Date: Fri, 14 Sep 2012 08:19:53 -0400
+Message-Id: <1347625195-6369-7-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 References: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,58 +35,71 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Turn xfs_free_eofblocks() into a non-static function, return EAGAIN to
-indicate trylock failure and make sure this error is not propagated in
-xfs_release().
+The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
+scan. The xfs_eofblocks structure is defined to support the command
+parameters (scan mode).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_vnodeops.c |    6 +++---
- fs/xfs/xfs_vnodeops.h |    1 +
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_fs.h    |   14 ++++++++++++++
+ fs/xfs/xfs_ioctl.c |   12 ++++++++++++
+ 2 files changed, 26 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 12f5087..a61e852 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -150,7 +150,7 @@ xfs_readlink(
-  * when the link count isn't zero and by xfs_dm_punch_hole() when
-  * punching a hole to EOF.
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index c13fed8..32bb2e8 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -339,6 +339,19 @@ typedef struct xfs_error_injection {
+ 
+ 
+ /*
++ * Speculative preallocation trimming.
++ */
++struct xfs_eofblocks {
++	__u32		eof_flags;
++	__s32		version;
++	unsigned char	pad[12];
++};
++
++/* eof_flags values */
++#define XFS_EOF_FLAGS_FORCE		0x01	/* force/wait mode scan */
++
++
++/*
+  * The user-level Handle Request interface structure.
   */
--STATIC int
-+int
- xfs_free_eofblocks(
- 	xfs_mount_t	*mp,
- 	xfs_inode_t	*ip,
-@@ -199,7 +199,7 @@ xfs_free_eofblocks(
- 		if (need_iolock) {
- 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
- 				xfs_trans_cancel(tp, 0);
--				return 0;
-+				return EAGAIN;
- 			}
- 		}
+ typedef struct xfs_fsop_handlereq {
+@@ -456,6 +469,7 @@ typedef struct xfs_handle {
+ /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+ #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
++#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
  
-@@ -462,7 +462,7 @@ xfs_release(
- 			return 0;
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0e0232c..216ca7a 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1602,6 +1602,18 @@ xfs_file_ioctl(
+ 		error = xfs_errortag_clearall(mp, 1);
+ 		return -error;
  
- 		error = xfs_free_eofblocks(mp, ip, true);
--		if (error)
-+		if (error && error != EAGAIN)
- 			return error;
- 
- 		/* delalloc blocks after truncation means it really is dirty */
-diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-index d5701e3..1e03c4b 100644
---- a/fs/xfs/xfs_vnodeops.h
-+++ b/fs/xfs/xfs_vnodeops.h
-@@ -95,5 +95,6 @@ int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
- int xfs_wait_on_pages(struct xfs_inode *ip, xfs_off_t first, xfs_off_t last);
- 
- int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
-+int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
- 
- #endif /* _XFS_VNODEOPS_H */
++	case XFS_IOC_FREE_EOFBLOCKS: {
++		struct xfs_eofblocks eofb;
++		int flags;
++
++		if (copy_from_user(&eofb, arg, sizeof(eofb)))
++			return -XFS_ERROR(EFAULT);
++
++		flags = (eofb.eof_flags & XFS_EOF_FLAGS_FORCE) ? SYNC_WAIT : SYNC_TRYLOCK;
++		error = xfs_inodes_free_eofblocks(mp, flags);
++		return -error;
++	}
++
+ 	default:
+ 		return -ENOTTY;
+ 	}
 -- 
 1.7.7.6
 
