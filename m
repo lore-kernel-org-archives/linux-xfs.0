@@ -1,25 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8EGmrYZ147441 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 11:48:53 -0500
+	q8EGmtP7147458 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 11:48:55 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id g6DWNMXp4ra0LHhx for
-	<xfs@oss.sgi.com>; Fri, 14 Sep 2012 09:50:00 -0700 (PDT)
+	cuda.sgi.com with ESMTP id r23RJHV9qSKZAeQI for
+	<xfs@oss.sgi.com>; Fri, 14 Sep 2012 09:50:02 -0700 (PDT)
 Received: from int-mx12.intmail.prod.int.phx2.redhat.com
 	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8EGnxUD006301
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8EGo2la027667
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 12:50:00 -0400
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 12:50:02 -0400
 Received: from andromeda.usersys.redhat.com (ovpn-113-109.phx2.redhat.com
 	[10.3.113.109])
 	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8EGnk0W019005
-	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 12:49:59 -0400
+	id q8EGnk0X019005
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 12:50:01 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 3/4] xfs: set xfs_initialize_perag() to use
-	xfs_set_inode32/64()
-Date: Fri, 14 Sep 2012 13:49:40 -0300
-Message-Id: <1347641381-30050-4-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 4/4] xfs: Make inode32 a remountable option
+Date: Fri, 14 Sep 2012 13:49:41 -0300
+Message-Id: <1347641381-30050-5-git-send-email-cmaiolino@redhat.com>
 In-Reply-To: <1347641381-30050-1-git-send-email-cmaiolino@redhat.com>
 References: <1347641381-30050-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,75 +36,48 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Set xfs_initialize_perag() to use xfs_set_inode32() and xfs_set_inode64()
-functions, removing duplicated code
+As inode64 is the default option now, and was also made remountable previously,
+inode32 can also be remounted on-the-fly when it is needed.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_mount.c | 43 +++++--------------------------------------
- 1 file changed, 5 insertions(+), 38 deletions(-)
+ fs/xfs/xfs_super.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 29c2f83..b2bd3a0 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -440,7 +440,7 @@ xfs_initialize_perag(
- 	xfs_agnumber_t	agcount,
- 	xfs_agnumber_t	*maxagi)
- {
--	xfs_agnumber_t	index, max_metadata;
-+	xfs_agnumber_t	index;
- 	xfs_agnumber_t	first_initialised = 0;
- 	xfs_perag_t	*pag;
- 	xfs_agino_t	agino;
-@@ -500,43 +500,10 @@ xfs_initialize_perag(
- 	else
- 		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index c4899d3..052dccb 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -122,13 +122,18 @@ mempool_t *xfs_ioend_pool;
+  * in the future, too.
+  */
+ enum {
+-	Opt_barrier, Opt_nobarrier, Opt_inode64, Opt_err
++	Opt_barrier,
++	Opt_nobarrier,
++	Opt_inode64,
++	Opt_inode32,
++	Opt_err
+ };
  
--	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
--		/*
--		 * Calculate how much should be reserved for inodes to meet
--		 * the max inode percentage.
--		 */
--		if (mp->m_maxicount) {
--			__uint64_t	icount;
--
--			icount = sbp->sb_dblocks * sbp->sb_imax_pct;
--			do_div(icount, 100);
--			icount += sbp->sb_agblocks - 1;
--			do_div(icount, sbp->sb_agblocks);
--			max_metadata = icount;
--		} else {
--			max_metadata = agcount;
--		}
--
--		for (index = 0; index < agcount; index++) {
--			ino = XFS_AGINO_TO_INO(mp, index, agino);
--			if (ino > XFS_MAXINUMBER_32) {
--				index++;
--				break;
--			}
--
--			pag = xfs_perag_get(mp, index);
--			pag->pagi_inodeok = 1;
--			if (index < max_metadata)
--				pag->pagf_metadata = 1;
--			xfs_perag_put(pag);
--		}
--	} else {
--		for (index = 0; index < agcount; index++) {
--			pag = xfs_perag_get(mp, index);
--			pag->pagi_inodeok = 1;
--			xfs_perag_put(pag);
--		}
--	}
-+	if (mp->m_flags & XFS_MOUNT_32BITINODES)
-+		index = xfs_set_inode32(mp);
-+	else
-+		index = xfs_set_inode64(mp);
+ static const match_table_t tokens = {
+ 	{Opt_barrier, "barrier"},
+ 	{Opt_nobarrier, "nobarrier"},
+ 	{Opt_inode64, "inode64"},
++	{Opt_inode32, "inode32"},
+ 	{Opt_err, NULL}
+ };
  
- 	if (maxagi)
- 		*maxagi = index;
+@@ -1145,6 +1150,9 @@ xfs_fs_remount(
+ 		case Opt_inode64:
+ 			xfs_set_inode64(mp);
+ 			break;
++		case Opt_inode32:
++			xfs_set_inode32(mp);
++			break;
+ 		default:
+ 			/*
+ 			 * Logically we would return an error here to prevent
 -- 
 1.7.11.4
 
