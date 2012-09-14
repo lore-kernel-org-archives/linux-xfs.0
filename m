@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8DNMXaM235891 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 18:22:33 -0500
-Received: from exprod7og119.obsmtp.com (exprod7og119.obsmtp.com [64.18.2.16])
-	by cuda.sgi.com with SMTP id vwjdLd0azbUSDzli (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 13 Sep 2012 16:23:38 -0700 (PDT)
-Message-ID: <50526AF5.50201@genband.com>
-Date: Thu, 13 Sep 2012 17:23:33 -0600
-From: Chris Friesen <chris.friesen@genband.com>
+	q8E16VdZ246047 for <xfs@oss.sgi.com>; Thu, 13 Sep 2012 20:06:31 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	ah0GB5GSQCrVBrOs for <xfs@oss.sgi.com>;
+	Thu, 13 Sep 2012 18:07:37 -0700 (PDT)
+Date: Fri, 14 Sep 2012 11:07:29 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: stop the sync worker before xfs_unmountfs
+Message-ID: <20120914010729.GQ11511@dastard>
+References: <20120829134628.835024558@sgi.com> <20120830002335.GB15292@dastard>
+	<20120830172549.GG3274@sgi.com> <20120830223504.GE15292@dastard>
+	<5040FF25.1010501@sgi.com> <20120901230824.GB6896@infradead.org>
+	<20120912183347.GO3274@sgi.com> <20120912231406.GJ11511@dastard>
+	<20120913164344.GV25175@sgi.com> <20120913211847.GS3274@sgi.com>
 MIME-Version: 1.0
-Subject: global serialization points in XFS circa 2.6.27?
+Content-Disposition: inline
+In-Reply-To: <20120913211847.GS3274@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,37 +26,24 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
 
+On Thu, Sep 13, 2012 at 04:18:47PM -0500, Ben Myers wrote:
+> Cancel work of the xfs_sync_worker before teardown of the log in
+> xfs_unmountfs.  This prevents occasional crashes on unmount like so:
 
-Hi,
+Looks OK.
 
-I've got an embedded system running a modified 2.6.27 (yes, we're trying 
-to upgrade) and we're running into a scenario where something is 
-happening that causes accesses to *all* XFS filesystems to hang or be 
-delayed for some time.
-
-I know it may be a bit of a stretch since the kernel is old, but I was 
-wondering if you might have any suggestions as to what I might look at 
-as far as locks/algorithms within XFS that would affect all filesystems.
-
-In case it matters, the hardware is fairly beefy-- 32 threads of Sandy 
-Bridge CPU, 64GB RAM, SAS drives, etc.
-
-Chris
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
 -- 
-
-Chris Friesen
-Software Designer
-
-3500 Carling Avenue
-Ottawa, Ontario K2H 8E9
-www.genband.com
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
