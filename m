@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8EDgpCH110833 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 08:42:51 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id ZBKDdIv325v02IIG for <xfs@oss.sgi.com>;
-	Fri, 14 Sep 2012 06:43:57 -0700 (PDT)
-Message-ID: <5053349C.20106@sandeen.net>
-Date: Fri, 14 Sep 2012 08:43:56 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q8EGHTOm143573 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 11:17:29 -0500
+Message-ID: <505358CD.4060609@sgi.com>
+Date: Fri, 14 Sep 2012 11:18:21 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfstests: 275, Don't remove all the files in SCRATCH_MNT.
-References: <1347620592-3420-1-git-send-email-tm@tao.ma>
-In-Reply-To: <1347620592-3420-1-git-send-email-tm@tao.ma>
+Subject: Re: [PATCH 020/102] xfs: warn if direct reclaim tries to writeback
+	pages
+References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
+	<1345698180-13612-21-git-send-email-david@fromorbit.com>
+	<20120827181742.GA13970@infradead.org>
+	<20120905113242.GL11266@suse.de> <50523E20.5000508@sgi.com>
+	<20120914094523.GD11266@suse.de> <50532979.2070002@sgi.com>
+In-Reply-To: <50532979.2070002@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,51 +22,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tao Ma <tm@tao.ma>
-Cc: xfs@oss.sgi.com
+To: Mel Gorman <mgorman@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
 
-On 9/14/12 6:03 AM, Tao Ma wrote:
-> From: Tao Ma <boyu.mt@taobao.com>
-> 
-> After the volume is mkfsed, it should have no other files that
-> need to be rmed. And what's more, it makes ext4 complain since
-> lost+found is also removed.
-> 
-> So remove this useless "rm -rf $SCRATCH_MNT/*".
+On 09/14/12 07:56, Mark Tinguely wrote:
+> On 09/14/12 04:45, Mel Gorman wrote:
+>> On Thu, Sep 13, 2012 at 03:12:16PM -0500, Mark Tinguely wrote:
 
-Oh, sigh, after all the review how did I miss that :/
+>>> WARNING: at fs/xfs/linux-2.6/xfs_aops.c:961
+>>> xfs_vm_writepage+0x63c/0x6a0()
+>>> Hardware name: S2721-533 Thunder i7501 Pro
+>>> Modules linked in: ext4 jbd2 crc16
+>>> Pid: 12122, comm: cp Not tainted 3.0.42 #2
+>>
+>> I ask because on 3.0.42 this warning is not present. This patch should
+>> not be merged to 3.0-stable.
+>>
+>
+> Correct. Linux-3.0.42 with Dave 102 patches, I removed patch 94 and 95
+> per list comments. I added Brian Foster's patch as 103 <below>
+>
+> I am testing xfstest 109 and 273 in a loop for shutdown worker races -
+> none found yet. That message happened in the first loop, and never
+> occurred again.
+>
+> And the machine was a x86_32 not 64.
 
-Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
+PS. of course it reports only once... that is what the patch does.
+     reboot the machine and it displays on first call to test 273.
 
-SGI: I won't be pushing this to kernel.org trees per the emails yesterday.
+  Does not happen on the x86_64 machine. Until I can duplicate it on
+  another x86_32, less us assume there is something weird with that
+  machine.
 
-Thanks,
--Eric
-
-> Cc: Eric Sandeen <sandeen@sandeen.net>
-> Signed-off-by: Tao Ma <boyu.mt@taobao.com>
-> ---
->  275 |    2 --
->  1 files changed, 0 insertions(+), 2 deletions(-)
-> 
-> diff --git a/275 b/275
-> index 69b2895..06db775 100755
-> --- a/275
-> +++ b/275
-> @@ -57,8 +57,6 @@ umount $SCRATCH_DEV 2>/dev/null
->  _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
->  _scratch_mount
->  
-> -rm -rf $SCRATCH_MNT/*
-> -
->  dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=256K count=1 >>$seq.full 2>&1
->  [ $? -ne 0 ] && _fail "Error creating file"
->  
-> 
+--Mark.
 
 _______________________________________________
 xfs mailing list
