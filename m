@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8ECtXpg098734 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 07:55:33 -0500
-Message-ID: <50532979.2070002@sgi.com>
-Date: Fri, 14 Sep 2012 07:56:25 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q8EDgpCH110833 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 08:42:51 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id ZBKDdIv325v02IIG for <xfs@oss.sgi.com>;
+	Fri, 14 Sep 2012 06:43:57 -0700 (PDT)
+Message-ID: <5053349C.20106@sandeen.net>
+Date: Fri, 14 Sep 2012 08:43:56 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 020/102] xfs: warn if direct reclaim tries to writeback
-	pages
-References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
-	<1345698180-13612-21-git-send-email-david@fromorbit.com>
-	<20120827181742.GA13970@infradead.org>
-	<20120905113242.GL11266@suse.de> <50523E20.5000508@sgi.com>
-	<20120914094523.GD11266@suse.de>
-In-Reply-To: <20120914094523.GD11266@suse.de>
+Subject: Re: [PATCH] xfstests: 275, Don't remove all the files in SCRATCH_MNT.
+References: <1347620592-3420-1-git-send-email-tm@tao.ma>
+In-Reply-To: <1347620592-3420-1-git-send-email-tm@tao.ma>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,123 +20,51 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: Tao Ma <tm@tao.ma>
+Cc: xfs@oss.sgi.com
 
-On 09/14/12 04:45, Mel Gorman wrote:
-> On Thu, Sep 13, 2012 at 03:12:16PM -0500, Mark Tinguely wrote:
->> On 09/05/12 06:32, Mel Gorman wrote:
->>> On Mon, Aug 27, 2012 at 02:17:42PM -0400, Christoph Hellwig wrote:
->>>> On Thu, Aug 23, 2012 at 03:01:38PM +1000, Dave Chinner wrote:
->>>>> From: Mel Gorman<mgorman@suse.de>
->>>>>
->>>>> Upstream commit: 94054fa3fca1fd78db02cb3d68d5627120f0a1d4
->>>>>
->>>>> Direct reclaim should never writeback pages.  For now, handle the
->>>>> situation and warn about it.  Ultimately, this will be a BUG_ON.
->>>>
->>>> Is this actually the case on 3.0-stable?
->>>>
->>>
->>> No, it is not. AFAIK, 3.0-stable does not contain [ee72886d: mm: vmscan:
->>> do not writeback filesystem pages in direct reclaim] which is the absolute
->>> minimum required for commit [94054fa3: xfs: warn if direct reclaim tries
->>> to writeback pages] to make sense.
->>>
->>
->> I hit this warning testing on a linux-30.42 with a x86_64.
->>
->
-> Just to be clear, this was linux 3.0.42 with this series of patches
-> applied on top, right?
->
->> WARNING: at fs/xfs/linux-2.6/xfs_aops.c:961 xfs_vm_writepage+0x63c/0x6a0()
->> Hardware name: S2721-533 Thunder i7501 Pro
->> Modules linked in: ext4 jbd2 crc16
->> Pid: 12122, comm: cp Not tainted 3.0.42 #2
->
-> I ask because on 3.0.42 this warning is not present. This patch should
-> not be merged to 3.0-stable.
->
+On 9/14/12 6:03 AM, Tao Ma wrote:
+> From: Tao Ma <boyu.mt@taobao.com>
+> 
+> After the volume is mkfsed, it should have no other files that
+> need to be rmed. And what's more, it makes ext4 complain since
+> lost+found is also removed.
+> 
+> So remove this useless "rm -rf $SCRATCH_MNT/*".
 
-Correct. Linux-3.0.42 with Dave 102 patches, I removed patch 94 and 95 
-per list comments. I added Brian Foster's patch as 103 <below>
+Oh, sigh, after all the review how did I miss that :/
 
-I am testing xfstest 109 and 273 in a loop for shutdown worker races - 
-none found yet. That message happened in the first loop, and never 
-occurred again.
+Reviewed-by: Eric Sandeen <sandeen@sandeen.net>
 
-And the machine was a x86_32 not 64.
+SGI: I won't be pushing this to kernel.org trees per the emails yesterday.
 
-patch 103:
+Thanks,
+-Eric
 
-
-Subject: xfs: check for stale inode before acquiring iflock on push
-From: Brian Foster <bfoster@redhat.com>
-Upstream commit: 9a3a5dab63461b84213052888bf38a962b22d035
-
-     An inode in the AIL can be flush locked and marked stale if
-     a cluster free transaction occurs at the right time. The
-     inode item is then marked as flushing, which causes xfsaild
-     to spin and leaves the filesystem stalled. This is
-     reproduced by running xfstests 273 in a loop for an
-     extended period of time.
-
-     Check for stale inodes before the flush lock. This marks
-     the inode as pinned, leads to a log flush and allows the
-     filesystem to proceed.
-
-     Signed-off-by: Brian Foster <bfoster@redhat.com>
-     Reviewed-by: Dave Chinner <dchinner@redhat.com>
-     Reviewed-by: Christoph Hellwig <hch@lst.de>
-     Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-     Signed-off-by: Ben Myers <bpm@sgi.com>
-
-
-Index: linux-3.0.42/fs/xfs/xfs_inode_item.c
-===================================================================
---- linux-3.0.42.orig/fs/xfs/xfs_inode_item.c
-+++ linux-3.0.42/fs/xfs/xfs_inode_item.c
-@@ -507,6 +507,21 @@ xfs_inode_item_trylock(
-  	if (!xfs_ilock_nowait(ip, XFS_ILOCK_SHARED))
-  		return XFS_ITEM_LOCKED;
-
-+	/*
-+	 * Re-check the pincount now that we stabilized the value by
-+	 * taking the ilock.
-+	 */
-+	if (xfs_ipincount(ip) > 0) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+		return XFS_ITEM_PINNED;
-+	}
-+
-+	/* Stale items should force out the iclog */
-+	if (ip->i_flags & XFS_ISTALE) {
-+		xfs_iunlock(ip, XFS_ILOCK_SHARED);
-+		return XFS_ITEM_PINNED;
-+	}
-+
-  	if (!xfs_iflock_nowait(ip)) {
-  		/*
-  		 * inode has already been flushed to the backing buffer,
-@@ -516,13 +531,6 @@ xfs_inode_item_trylock(
-  		return XFS_ITEM_PUSHBUF;
-  	}
-
--	/* Stale items should force out the iclog */
--	if (ip->i_flags & XFS_ISTALE) {
--		xfs_ifunlock(ip);
--		xfs_iunlock(ip, XFS_ILOCK_SHARED);
--		return XFS_ITEM_PINNED;
--	}
--
-  #ifdef DEBUG
-  	if (!XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-  		ASSERT(iip->ili_fields != 0);
+> Cc: Eric Sandeen <sandeen@sandeen.net>
+> Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+> ---
+>  275 |    2 --
+>  1 files changed, 0 insertions(+), 2 deletions(-)
+> 
+> diff --git a/275 b/275
+> index 69b2895..06db775 100755
+> --- a/275
+> +++ b/275
+> @@ -57,8 +57,6 @@ umount $SCRATCH_DEV 2>/dev/null
+>  _scratch_mkfs_sized $((2 * 1024 * 1024 * 1024)) >>$seq.full 2>&1
+>  _scratch_mount
+>  
+> -rm -rf $SCRATCH_MNT/*
+> -
+>  dd if=/dev/zero of=$SCRATCH_MNT/tmp1 bs=256K count=1 >>$seq.full 2>&1
+>  [ $? -ne 0 ] && _fail "Error creating file"
+>  
+> 
 
 _______________________________________________
 xfs mailing list
