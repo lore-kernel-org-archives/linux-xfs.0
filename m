@@ -1,19 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8EGHTOm143573 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 11:17:29 -0500
-Message-ID: <505358CD.4060609@sgi.com>
-Date: Fri, 14 Sep 2012 11:18:21 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH 020/102] xfs: warn if direct reclaim tries to writeback
-	pages
-References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
-	<1345698180-13612-21-git-send-email-david@fromorbit.com>
-	<20120827181742.GA13970@infradead.org>
-	<20120905113242.GL11266@suse.de> <50523E20.5000508@sgi.com>
-	<20120914094523.GD11266@suse.de> <50532979.2070002@sgi.com>
-In-Reply-To: <50532979.2070002@sgi.com>
+	q8EGmo5K147432 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 11:48:50 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id U5dxPBEF261Eht9v for
+	<xfs@oss.sgi.com>; Fri, 14 Sep 2012 09:49:57 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8EGnvbQ027642
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 12:49:57 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-109.phx2.redhat.com
+	[10.3.113.109])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8EGnk0V019005
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 12:49:56 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 2/4] xfs: add xfs_set_inode32()
+Date: Fri, 14 Sep 2012 13:49:39 -0300
+Message-Id: <1347641381-30050-3-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1347641381-30050-1-git-send-email-cmaiolino@redhat.com>
+References: <1347641381-30050-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,44 +29,160 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mel Gorman <mgorman@suse.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <dchinner@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 09/14/12 07:56, Mark Tinguely wrote:
-> On 09/14/12 04:45, Mel Gorman wrote:
->> On Thu, Sep 13, 2012 at 03:12:16PM -0500, Mark Tinguely wrote:
+xfs_set_inode32() can be used to enable inode32 allocation mode. this will
+reduce the amount of duplicated code needed to mount/remount a filesystem with
+inode32 option.
+This patch also enable xfs_set_inode64() to return a xfs_agnumber_t value to
+also be used during mount/remount, instead of duplicate code
 
->>> WARNING: at fs/xfs/linux-2.6/xfs_aops.c:961
->>> xfs_vm_writepage+0x63c/0x6a0()
->>> Hardware name: S2721-533 Thunder i7501 Pro
->>> Modules linked in: ext4 jbd2 crc16
->>> Pid: 12122, comm: cp Not tainted 3.0.42 #2
->>
->> I ask because on 3.0.42 this warning is not present. This patch should
->> not be merged to 3.0-stable.
->>
->
-> Correct. Linux-3.0.42 with Dave 102 patches, I removed patch 94 and 95
-> per list comments. I added Brian Foster's patch as 103 <below>
->
-> I am testing xfstest 109 and 273 in a loop for shutdown worker races -
-> none found yet. That message happened in the first loop, and never
-> occurred again.
->
-> And the machine was a x86_32 not 64.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
+ fs/xfs/xfs_super.c | 102 ++++++++++++++++++++++++++++++++++++++++-------------
+ fs/xfs/xfs_super.h |   2 ++
+ 2 files changed, 80 insertions(+), 24 deletions(-)
 
-PS. of course it reports only once... that is what the patch does.
-     reboot the machine and it displays on first call to test 273.
-
-  Does not happen on the x86_64 machine. Until I can duplicate it on
-  another x86_32, less us assume there is something weird with that
-  machine.
-
---Mark.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 967d024..c4899d3 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -600,6 +600,84 @@ xfs_max_file_offset(
+ 	return (((__uint64_t)pagefactor) << bitshift) - 1;
+ }
+ 
++xfs_agnumber_t
++xfs_set_inode64(struct xfs_mount *mp)
++{
++	xfs_agnumber_t index = 0;
++
++	for (index = 0; index < mp->m_sb.sb_agcount; index++) {
++		struct xfs_perag	*pag;
++
++		pag = xfs_perag_get(mp, index);
++		pag->pagi_inodeok = 1;
++		pag->pagf_metadata = 0;
++		xfs_perag_put(pag);
++	}
++
++	/* There is no need for lock protection on m_flags,
++	 * the rw_semaphore of the VFS superblock is locked
++	 * during mount/umount/remount operations, so this is
++	 * enough to avoid concurency on the m_flags field
++	 */
++	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
++			 XFS_MOUNT_SMALL_INUMS);
++	mp->m_maxagi = index;
++
++	return index;
++}
++
++xfs_agnumber_t
++xfs_set_inode32(struct xfs_mount *mp)
++{
++	xfs_agnumber_t	index;
++	xfs_agnumber_t	i = 0;
++	xfs_sb_t	*sbp = &mp->m_sb;
++	xfs_agnumber_t	max_metadata;
++	xfs_agino_t	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks -1, 0);
++	xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, sbp->sb_agcount -1, agino);
++	xfs_perag_t	*pag;
++
++	/* Calculate how much should be reserved for inodes to meet
++	 * the max inode percentage.
++	 */
++	if (mp->m_maxicount) {
++		__uint64_t	icount;
++
++		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
++		do_div(icount, 100);
++		icount += sbp->sb_agblocks - 1;
++		do_div(icount, sbp->sb_agblocks);
++		max_metadata = icount;
++	} else {
++		max_metadata = sbp->sb_agcount;
++	}
++
++	for (index = 0; index < sbp->sb_agcount; index++) {
++		ino = XFS_AGINO_TO_INO(mp, index, agino);
++
++		if (ino > XFS_MAXINUMBER_32) {
++			i++;
++			pag = xfs_perag_get(mp, index);
++			pag->pagi_inodeok = 0;
++			pag->pagf_metadata = 1;
++			xfs_perag_put(pag);
++			continue;
++		}
++
++		pag = xfs_perag_get(mp, index);
++		pag->pagi_inodeok = 1;
++		if (index < max_metadata)
++			pag->pagf_metadata = 1;
++
++		xfs_perag_put(pag);
++	}
++
++	index -= i;
++	mp->m_flags |= (XFS_MOUNT_32BITINODES |
++			XFS_MOUNT_SMALL_INUMS);
++	return index;
++}
++
+ STATIC int
+ xfs_blkdev_get(
+ 	xfs_mount_t		*mp,
+@@ -1039,30 +1117,6 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+ 	xfs_reserve_blocks(mp, &resblks, NULL);
+ }
+ 
+-STATIC void
+-xfs_set_inode64(struct xfs_mount *mp)
+-{
+-	int i = 0;
+-
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+-		struct xfs_perag	*pag;
+-
+-		pag = xfs_perag_get(mp, i);
+-		pag->pagi_inodeok = 1;
+-		pag->pagf_metadata = 0;
+-		xfs_perag_put(pag);
+-	}
+-
+-	/* There is no need for lock protection on m_flags,
+-	 * the rw_semaphore of the VFS superblock is locked
+-	 * during mount/umount/remount operations, so this is
+-	 * enough to avoid concurency on the m_flags field
+-	 */
+-	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
+-			 XFS_MOUNT_SMALL_INUMS);
+-	mp->m_maxagi = i;
+-}
+-
+ STATIC int
+ xfs_fs_remount(
+ 	struct super_block	*sb,
+diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+index 09b0c26..9de4a92 100644
+--- a/fs/xfs/xfs_super.h
++++ b/fs/xfs/xfs_super.h
+@@ -75,6 +75,8 @@ struct block_device;
+ extern __uint64_t xfs_max_file_offset(unsigned int);
+ 
+ extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
++extern xfs_agnumber_t xfs_set_inode32(struct xfs_mount *);
++extern xfs_agnumber_t xfs_set_inode64(struct xfs_mount *);
+ 
+ extern const struct export_operations xfs_export_operations;
+ extern const struct xattr_handler *xfs_xattr_handlers[];
+-- 
+1.7.11.4
 
 _______________________________________________
 xfs mailing list
