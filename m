@@ -1,18 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8EI5RR9155930 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 13:05:27 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id sO9f4Ld6SYoKi32N for <xfs@oss.sgi.com>;
-	Fri, 14 Sep 2012 11:06:33 -0700 (PDT)
-Message-ID: <50537229.1000801@sandeen.net>
-Date: Fri, 14 Sep 2012 13:06:33 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q8F2GMsN253757 for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 21:16:22 -0500
+Received: from mail-pz0-f53.google.com (mail-pz0-f53.google.com
+	[209.85.210.53]) by cuda.sgi.com with ESMTP id YzfoWDNZL9PRiEB3
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 14 Sep 2012 19:17:29 -0700 (PDT)
+Received: by dadg9 with SMTP id g9so3980436dad.26
+	for <xfs@oss.sgi.com>; Fri, 14 Sep 2012 19:17:28 -0700 (PDT)
+Date: Sat, 15 Sep 2012 07:47:23 +0530
+From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
+Subject: Re:  Re: [PATCH v5] Stop xfs_do_force_shutdown / messages fron
+	xfs_log_force if filesystem is already shutdown.
+Message-ID: <20120915021723.GA58426@Archie.local>
+References: <76577fa31ab2aa750994c1bc6a1b6f44beb03116.1347002369.git.rprabhu@wnohang.net>
+	<20120911210512.GE11511@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/4] xfs: make inode64 as the default allocation mode
-References: <1347641381-30050-1-git-send-email-cmaiolino@redhat.com>
-	<1347641381-30050-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1347641381-30050-2-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <20120911210512.GE11511@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,99 +25,149 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============4056814384227440089=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 9/14/12 11:49 AM, Carlos Maiolino wrote:
-> since 64-bit inodes can be accessed while using inode32, and these can also be
-> used on 32-bit kernels, there is no reason to still keep inode32 as the default
-> mount option.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_super.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f1f2968..967d024 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -88,6 +88,8 @@ mempool_t *xfs_ioend_pool;
->  					 * unwritten extent conversion */
->  #define MNTOPT_NOBARRIER "nobarrier"	/* .. disable */
->  #define MNTOPT_64BITINODE   "inode64"	/* inodes can be allocated anywhere */
-> +#define MNTOPT_32BITINODE   "inode32"	/* inode allocation limited to
-> +					 * XFS_MAXINUMBER_32 */
->  #define MNTOPT_IKEEP	"ikeep"		/* do not free empty inode clusters */
->  #define MNTOPT_NOIKEEP	"noikeep"	/* free empty inode clusters */
->  #define MNTOPT_LARGEIO	   "largeio"	/* report large I/O sizes in stat() */
-> @@ -198,7 +200,6 @@ xfs_parseargs(
->  	 */
->  	mp->m_flags |= XFS_MOUNT_BARRIER;
->  	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
-> -	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
 
-Self-note-taking.
+--===============4056814384227440089==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="6c2NcOVqGQ03X4Wi"
+Content-Disposition: inline
 
-XFS_BIG_INUMS means the kernel itself is capable of > 32 bit inode nrs in struct inode.
 
-XFS_MOUNT_SMALL_INUMS is "users wants 32bit inodes "
+--6c2NcOVqGQ03X4Wi
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-XFS_MOUNT_32BITINODES is "do not create inodes above 32 bits"
+Hi,
 
-MNTOPT_32BITINODE is the actual mount option string "inode32"
 
-I think rather than removing the line above, you might need to keep it under
-#if !XFS_BIG_INUMS
-	mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-#endif
+* On Wed, Sep 12, 2012 at 07:05:12AM +1000, Dave Chinner <david@fromorbit.c=
+om> wrote:
+>On Sat, Sep 08, 2012 at 03:28:11AM +0530, raghu.prabhu13@gmail.com wrote:
+>> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+=2E....
+=2E...
+=2E..
 
-so that "small" systems continue to enforce <= 32 bit inodes.
+>>
+>> Version 1: Removed calling xfs_syncd_stop from xfs_sync_worker.
+>> Version 2: Removed calling xfs_fs_writable in xfs_sync_worker and xfs_fl=
+ush_worker.
+>> Version 3: Removed calling xfs_syncd_stop in xfs_bwrite.
+>> Version 4: Added return statements to xfs_log_force and xfs_fs_sync_fs.
+>> Version 5: As per suggestion, added xfs_warn to xfs_fs_sync_fs and remov=
+ed EIO
+>> return in xfs_log_force
+>>
+>>  Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>>  Tested-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>
+>Signed-off-by implies you tested it. Tested-by is used to
+>acknowledge third party testers, usually in the case to acknowledge
+>the fix was Tested-by the Reported-by...
+Sorry about that, I meant to add only the Signed-off part.
 
->  	/*
->  	 * These can be overridden by the mount option parsing.
-> @@ -295,6 +296,13 @@ xfs_parseargs(
->  				return EINVAL;
->  			}
->  			dswidth = simple_strtoul(value, &eov, 10);
-> +		} else if (!strcmp(this_char, MNTOPT_32BITINODE)) {
-> +			mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> +#if !XFS_BIG_INUMS
-> +			xfs_warn(mp, "%s option not allowed on this system",
-> +				this_char);
-> +			return EINVAL;
-> +#endif
+>
+>And the signed-off-by belongs in the commit message (i.e. about the
+>first ---) not in the section after the commit message that is
+>stripped by the git tools.
 
-This looks wrong.  If a user has a system which cannot handle 64 bit inodes,
-you reject a request to mount with 32-bit inodes?
+I will fix that.
 
--Eric
+>
+>> ---
+>>  fs/xfs/xfs_log.c   | 5 ++++-
+>>  fs/xfs/xfs_super.c | 5 +++++
+>>  2 files changed, 9 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+>> index 7f4f937..161c925 100644
+>> --- a/fs/xfs/xfs_log.c
+>> +++ b/fs/xfs/xfs_log.c
+>> @@ -3002,7 +3002,10 @@ xfs_log_force(
+>>
+>>  	trace_xfs_log_force(mp, 0);
+>>  	error =3D _xfs_log_force(mp, flags, NULL);
+>> -	if (error)
+>> +	/*
+>> +	 * Avoid warning when the filesystem has already shutdown.
+>> +	 */
+>> +	if (error && !XFS_FORCED_SHUTDOWN(mp))
+>>  		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+>>  }
+>>
+>> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+>> index bdaf4cb..ebafc99 100644
+>> --- a/fs/xfs/xfs_super.c
+>> +++ b/fs/xfs/xfs_super.c
+>> @@ -943,6 +943,11 @@ xfs_fs_sync_fs(
+>>  	if (!wait)
+>>  		return 0;
+>>
+>> +	if (XFS_FORCED_SHUTDOWN(mp)) {
+>> +		xfs_warn(mp, "Sync called: filesystem already shutdown");
+>> +		return XFS_ERROR(EIO);
+>> +	}
+>
+>Why should we emit a warning here? There's already information in the
+>log to indicate the filesystem is shut down...
 
->  		} else if (!strcmp(this_char, MNTOPT_64BITINODE)) {
->  			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
->  #if !XFS_BIG_INUMS
-> @@ -493,13 +501,13 @@ xfs_showargs(
->  		{ XFS_MOUNT_FILESTREAMS,	"," MNTOPT_FILESTREAM },
->  		{ XFS_MOUNT_GRPID,		"," MNTOPT_GRPID },
->  		{ XFS_MOUNT_DISCARD,		"," MNTOPT_DISCARD },
-> +		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_32BITINODE },
->  		{ 0, NULL }
->  	};
->  	static struct proc_xfs_info xfs_info_unset[] = {
->  		/* the few simple ones we can get from the mount struct */
->  		{ XFS_MOUNT_COMPAT_IOSIZE,	"," MNTOPT_LARGEIO },
->  		{ XFS_MOUNT_BARRIER,		"," MNTOPT_NOBARRIER },
-> -		{ XFS_MOUNT_SMALL_INUMS,	"," MNTOPT_64BITINODE },
->  		{ 0, NULL }
->  	};
->  	struct proc_xfs_info	*xfs_infop;
-> 
+Actually in a previous review, you had suggested to add=20
+information about it since 'sync' is called manually/less=20
+often, so better to have more verbosity about it and user gets=20
+feedback on it. So, is this fine?
+
+>
+>Cheers,
+>
+>Dave.
+>--=20
+>Dave Chinner
+>david@fromorbit.com
+>
+
+
+
+
+Regards,
+--=20
+Raghavendra Prabhu
+GPG Id : 0xD72BE977
+Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
+www: wnohang.net
+
+--6c2NcOVqGQ03X4Wi
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJQU+UzAAoJEKYW3KHXK+l3Gz0H/1NTy3T5VE1LEcJC9n5aLqXU
+2Om+wg9ogw8yJFOSTRStOj3G758yheQk3ldQs0PS5OxHN0oZvmRdpDjSZJmAK8we
+jG+uZ8de6BdrfkiHvvYkd9r58AEqUz4EyI3r54mzQYG36UOhzbl1ayK9o59ITmQQ
+WynYywVqkc09/xcAvltmHaHLtCSchrlpEaRZfi1rSjjw1NUXoxP9uz9pDNo7HRC1
+syWSXXvlPazM8vVkkgWbvFAwzWenwnerlb0EGDpPNtsO3DDpOo0shzkINt3P6JsB
+DH5CrmDgJeqfcJOzC/258kp42GZyygGdEOejcCuQe5iQ5B6KyVA7vgRpB44p+TY=
+=vbE/
+-----END PGP SIGNATURE-----
+
+--6c2NcOVqGQ03X4Wi--
+
+
+--===============4056814384227440089==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============4056814384227440089==--
