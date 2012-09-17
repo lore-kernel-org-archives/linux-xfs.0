@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8HGoqc6186663 for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 11:50:53 -0500
+	q8HGofKJ186611 for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 11:50:42 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9URdQQOjOd0IdLjc for
-	<xfs@oss.sgi.com>; Mon, 17 Sep 2012 09:52:02 -0700 (PDT)
+	cuda.sgi.com with ESMTP id pYigfHC2IIBdGhFH for
+	<xfs@oss.sgi.com>; Mon, 17 Sep 2012 09:51:51 -0700 (PDT)
 Received: from int-mx02.intmail.prod.int.phx2.redhat.com
 	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8HGq15K009319
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8HGpps3002742
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 12:52:01 -0400
+	for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 12:51:51 -0400
 Received: from andromeda.usersys.redhat.com (ovpn-113-119.phx2.redhat.com
 	[10.3.113.119])
 	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q8HGpopI016371
-	for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 12:52:01 -0400
+	id q8HGpopG016371
+	for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 12:51:50 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 2/4] xfs: add xfs_set_inode32()
-Date: Mon, 17 Sep 2012 13:51:40 -0300
-Message-Id: <1347900702-23421-3-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1347900702-23421-1-git-send-email-cmaiolino@redhat.com>
-References: <1347900702-23421-1-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 0/4 V2] inode32/inode64 allocation changes 
+Date: Mon, 17 Sep 2012 13:51:38 -0300
+Message-Id: <1347900702-23421-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,151 +34,23 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_set_inode32() can be used to enable inode32 allocation mode. this will
-reduce the amount of duplicated code needed to mount/remount a filesystem with
-inode32 option.
-This patch also enable xfs_set_inode64() to return a xfs_agnumber_t value to
-also be used during mount/remount, instead of duplicate code
+This patch set adds inode64 as the default allocation mode, but also includes 2
+patches to remove duplicated code and another one to make inode32 able to be
+remounted.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_super.c | 102 ++++++++++++++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_super.h |   2 ++
- 2 files changed, 80 insertions(+), 24 deletions(-)
+NOTE: This patch has as dependency "Make inode64 a remountable option" patch.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b1aa2db..2d7a0d9 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -598,6 +598,84 @@ xfs_max_file_offset(
- 	return (((__uint64_t)pagefactor) << bitshift) - 1;
- }
- 
-+xfs_agnumber_t
-+xfs_set_inode64(struct xfs_mount *mp)
-+{
-+	xfs_agnumber_t index = 0;
-+
-+	for (index = 0; index < mp->m_sb.sb_agcount; index++) {
-+		struct xfs_perag	*pag;
-+
-+		pag = xfs_perag_get(mp, index);
-+		pag->pagi_inodeok = 1;
-+		pag->pagf_metadata = 0;
-+		xfs_perag_put(pag);
-+	}
-+
-+	/* There is no need for lock protection on m_flags,
-+	 * the rw_semaphore of the VFS superblock is locked
-+	 * during mount/umount/remount operations, so this is
-+	 * enough to avoid concurency on the m_flags field
-+	 */
-+	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
-+			 XFS_MOUNT_SMALL_INUMS);
-+	mp->m_maxagi = index;
-+
-+	return index;
-+}
-+
-+xfs_agnumber_t
-+xfs_set_inode32(struct xfs_mount *mp)
-+{
-+	xfs_agnumber_t	index;
-+	xfs_agnumber_t	i = 0;
-+	xfs_sb_t	*sbp = &mp->m_sb;
-+	xfs_agnumber_t	max_metadata;
-+	xfs_agino_t	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks -1, 0);
-+	xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, sbp->sb_agcount -1, agino);
-+	xfs_perag_t	*pag;
-+
-+	/* Calculate how much should be reserved for inodes to meet
-+	 * the max inode percentage.
-+	 */
-+	if (mp->m_maxicount) {
-+		__uint64_t	icount;
-+
-+		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
-+		do_div(icount, 100);
-+		icount += sbp->sb_agblocks - 1;
-+		do_div(icount, sbp->sb_agblocks);
-+		max_metadata = icount;
-+	} else {
-+		max_metadata = sbp->sb_agcount;
-+	}
-+
-+	for (index = 0; index < sbp->sb_agcount; index++) {
-+		ino = XFS_AGINO_TO_INO(mp, index, agino);
-+
-+		if (ino > XFS_MAXINUMBER_32) {
-+			i++;
-+			pag = xfs_perag_get(mp, index);
-+			pag->pagi_inodeok = 0;
-+			pag->pagf_metadata = 1;
-+			xfs_perag_put(pag);
-+			continue;
-+		}
-+
-+		pag = xfs_perag_get(mp, index);
-+		pag->pagi_inodeok = 1;
-+		if (index < max_metadata)
-+			pag->pagf_metadata = 1;
-+
-+		xfs_perag_put(pag);
-+	}
-+
-+	index -= i;
-+	mp->m_flags |= (XFS_MOUNT_32BITINODES |
-+			XFS_MOUNT_SMALL_INUMS);
-+	return index;
-+}
-+
- STATIC int
- xfs_blkdev_get(
- 	xfs_mount_t		*mp,
-@@ -1037,30 +1115,6 @@ xfs_restore_resvblks(struct xfs_mount *mp)
- 	xfs_reserve_blocks(mp, &resblks, NULL);
- }
- 
--STATIC void
--xfs_set_inode64(struct xfs_mount *mp)
--{
--	int i = 0;
--
--	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
--		struct xfs_perag	*pag;
--
--		pag = xfs_perag_get(mp, i);
--		pag->pagi_inodeok = 1;
--		pag->pagf_metadata = 0;
--		xfs_perag_put(pag);
--	}
--
--	/* There is no need for lock protection on m_flags,
--	 * the rw_semaphore of the VFS superblock is locked
--	 * during mount/umount/remount operations, so this is
--	 * enough to avoid concurency on the m_flags field
--	 */
--	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
--			 XFS_MOUNT_SMALL_INUMS);
--	mp->m_maxagi = i;
--}
--
- STATIC int
- xfs_fs_remount(
- 	struct super_block	*sb,
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 09b0c26..9de4a92 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -75,6 +75,8 @@ struct block_device;
- extern __uint64_t xfs_max_file_offset(unsigned int);
- 
- extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
-+extern xfs_agnumber_t xfs_set_inode32(struct xfs_mount *);
-+extern xfs_agnumber_t xfs_set_inode64(struct xfs_mount *);
- 
- extern const struct export_operations xfs_export_operations;
- extern const struct xattr_handler *xfs_xattr_handlers[];
+Carlos Maiolino (4):
+  xfs: make inode64 as the default allocation mode
+  xfs: add xfs_set_inode32()
+  xfs: set xfs_initialize_perag() to use xfs_set_inode32/64()
+  xfs: Make inode32 a remountable option
+
+ fs/xfs/xfs_mount.c |  43 +++----------------
+ fs/xfs/xfs_super.c | 120 +++++++++++++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_super.h |   2 +
+ 3 files changed, 101 insertions(+), 64 deletions(-)
+
 -- 
 1.7.11.4
 
