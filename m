@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8HMmpNO230432 for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 17:48:52 -0500
+	q8HNn3eJ237057 for <xfs@oss.sgi.com>; Mon, 17 Sep 2012 18:49:03 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	vhPC8a34M3osCZSL for <xfs@oss.sgi.com>;
-	Mon, 17 Sep 2012 15:50:00 -0700 (PDT)
-Date: Tue, 18 Sep 2012 08:49:57 +1000
+	o6ffGvYOpwoMY1nc for <xfs@oss.sgi.com>;
+	Mon, 17 Sep 2012 16:50:12 -0700 (PDT)
+Date: Tue, 18 Sep 2012 09:49:26 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: given a pointer to xfs_inode_t, how to determine path?
-Message-ID: <20120917224957.GI13691@dastard>
-References: <50574709.9000301@genband.com>
- <20120917162120.GG25175@sgi.com>
+Subject: Re: XFS (sdd1): Internal error xfs_da_do_buf(2) at line 2097 of file
+	/usr/src/packages/BUILD/kernel-default-3.3.6/linux-3.3/fs/xfs/xfs_da_btree.c.
+Message-ID: <20120917234926.GJ13691@dastard>
+References: <50573A13.7000206@cape-horn-eng.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120917162120.GG25175@sgi.com>
+In-Reply-To: <50573A13.7000206@cape-horn-eng.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,57 +27,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Chris Friesen <chris.friesen@genband.com>, Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
+To: Richard Ems <richard.ems@cape-horn-eng.com>
+Cc: xfs@oss.sgi.com
 
-On Mon, Sep 17, 2012 at 11:21:20AM -0500, Ben Myers wrote:
-> Hi Chris,
+On Mon, Sep 17, 2012 at 04:56:19PM +0200, Richard Ems wrote:
+> Hi all,
 > 
-> On Mon, Sep 17, 2012 at 09:51:37AM -0600, Chris Friesen wrote:
-> > We're running 2.6.27 (upgrading not currently possible, embedded product).
-> >
-> > We had a situation arise where we could see in stack traces that a
-> > number of tasks were stuck in vn_iowait().  That function takes a
-> > pointer to xfs_inode_t.  Given that, would it be possible to work
-> > backwards to determine a filesystem path corresponding to that
-> > inode?  I realize it would likely only go back to the head of the
-> > filesystem, but that would be fine.
+> saturday morning one hard disc on our RAID6 failed. About one hour later,
+>  the XFS running on that device reported the following error:
 > 
-> Yep, it's possible.
+> XFS (sdd1): Internal error xfs_da_do_buf(2) at line 2097 of file /usr/src/packages/BUILD/kernel-default-3.3.6/linux-3.3/fs/xfs/xfs_da_btree.c.
+.....
+> Sep 15 07:30:51 fs1 kernel: [7369085.792619] XFS (sdd1): Corruption detected. Unmount and run xfs_repair
 > 
-> echo t > /proc/sysrq-trigger won't give you the full stack, but you may be able
-> to get an idea of what is going on, well enough to make some guesses as to the
-> culprit.  That's probably your best first step.
-
-Doesn't give you the path of the inode, or anything that can tell
-you what the inode number is so you could run "find <dir> -inum
-<num>" after the system has recovered.
-
-> If you have crash installed:
 > 
-> 1) disassemble vn_iowait and find out which register the xfs_inode_t pointer is in.
-> 2) print out the full stacks of all the processes in the system. 'bt -f', I think.
+> And this repeating again and again ...
+> 
+> This system has been running fine for 87 days, no power outages or such.
+> It's connected to an UPS, and the H800 Raid Controller has a BBU installed.
+.....
+> Why could this have happened?
 
-'bt -F <pid>' tells you what entries on the stack are of a
-particular symbol. i.e. they'll show up as [xfs_inode] instead of a
-number for all addresses from inside the xfs inode slab cache.
-comapring the output of 'bt -F' and 'bt -f' will get you the inode
-address without needing to be able to read x86-64 assembly
-language...
+Something went wrong at the RAID level (i.e. your hardware) in
+handling the disk failure and recovering the array. It corrupted
+blocks in the volume rather than recovering them cleanly without
+errors. The corrupted blocks happened to be in a directory block,
+and a frequently accessed one according to the errors in the log.
 
-> 3) grep for the xfs_inode_t pointer on those stacks.
+What you found in lost+found was the recoverable fragments of the
+directory and whatever else was corrupted during the disk failure
+incident.
 
-Which doesn't get you the path, either. From there, follow to the
-struct inode, and from there to the struct dentry and grab the file
-name, then walk the d_parent dentry links back up to the root and
-construct the path that way.
+> What more info can I provide to understand this issue and avoid
+> this to happen again?
 
-Alternatively, I think you can walk from the top down by looking
-that the open files that a given process has and working down to the
-xfs_inode, but it's been a long time since I've had to come from
-that direction. Indeed, you might even be able to use lsof to do
-this and get an idea from userspace what files are currently
-open on the hung processes.
+I'd be asking your hardware vendor about why it corrupted the
+volume on a single disk failure when it is supposed to be able to
+transparently handle double disk failures without losing/corrupting
+data.
 
 Cheers,
 
