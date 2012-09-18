@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8I8U3fq027978 for <xfs@oss.sgi.com>; Tue, 18 Sep 2012 03:30:04 -0500
-Received: from smtprelay05.ispgateway.de (smtprelay05.ispgateway.de
-	[80.67.31.100]) by cuda.sgi.com with ESMTP id wg3waMfkfLVcTWFP
-	for <xfs@oss.sgi.com>; Tue, 18 Sep 2012 01:31:14 -0700 (PDT)
-Message-ID: <5058314F.7000102@cape-horn-eng.com>
-Date: Tue, 18 Sep 2012 10:31:11 +0200
-From: Richard Ems <richard.ems@cape-horn-eng.com>
+	q8I8mG1X029166 for <xfs@oss.sgi.com>; Tue, 18 Sep 2012 03:48:16 -0500
+Received: from mescalin.tbi.univie.ac.at (mescalin.tbi.univie.ac.at
+	[131.130.44.61]) by cuda.sgi.com with ESMTP id O8f3KDLU1io2X6kN
+	(version=TLSv1 cipher=AES256-SHA bits=256 verify=NO) for
+	<xfs@oss.sgi.com>; Tue, 18 Sep 2012 01:49:25 -0700 (PDT)
+Received: from h082218137050.host.wavenet.at ([82.218.137.50]:59615
+	helo=BD-MacBook.local) by mescalin.tbi.univie.ac.at with esmtpsa
+	(TLS1.0:DHE_RSA_AES_256_CBC_SHA1:32) (Exim 4.71)
+	(envelope-from <hawk@tbi.univie.ac.at>) id 1TDtUf-0001n6-Tb
+	for xfs@oss.sgi.com; Tue, 18 Sep 2012 10:49:24 +0200
+Message-ID: <50583590.7060702@tbi.univie.ac.at>
+Date: Tue, 18 Sep 2012 10:49:20 +0200
+From: Richard Neuboeck <hawk@tbi.univie.ac.at>
 MIME-Version: 1.0
-Subject: Re: XFS (sdd1): Internal error xfs_da_do_buf(2) at line 2097 of file
-	/usr/src/packages/BUILD/kernel-default-3.3.6/linux-3.3/fs/xfs/xfs_da_btree.c.
-References: <50573A13.7000206@cape-horn-eng.com>
-	<20120917234926.GJ13691@dastard>
-In-Reply-To: <20120917234926.GJ13691@dastard>
+Subject: xfs mount fails 'can't read superblock'
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,82 +24,152 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: multipart/mixed; boundary="===============3049703918064033394=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 09/18/2012 01:49 AM, Dave Chinner wrote:
-> On Mon, Sep 17, 2012 at 04:56:19PM +0200, Richard Ems wrote:
->> Hi all,
->>
->> saturday morning one hard disc on our RAID6 failed. About one hour later,
->>  the XFS running on that device reported the following error:
->>
->> XFS (sdd1): Internal error xfs_da_do_buf(2) at line 2097 of file /usr/sr=
-c/packages/BUILD/kernel-default-3.3.6/linux-3.3/fs/xfs/xfs_da_btree.c.
-> .....
->> Sep 15 07:30:51 fs1 kernel: [7369085.792619] XFS (sdd1): Corruption dete=
-cted. Unmount and run xfs_repair
->>
->>
->> And this repeating again and again ...
->>
->> This system has been running fine for 87 days, no power outages or such.
->> It's connected to an UPS, and the H800 Raid Controller has a BBU install=
-ed.
-> .....
->> Why could this have happened?
-> =
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--===============3049703918064033394==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig970F8637FCEB805773DF9AA0"
 
-> Something went wrong at the RAID level (i.e. your hardware) in
-> handling the disk failure and recovering the array. It corrupted
-> blocks in the volume rather than recovering them cleanly without
-> errors. The corrupted blocks happened to be in a directory block,
-> and a frequently accessed one according to the errors in the log.
-> =
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig970F8637FCEB805773DF9AA0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
-> What you found in lost+found was the recoverable fragments of the
-> directory and whatever else was corrupted during the disk failure
-> incident.
-> =
+Hi XFS gurus,
 
->> What more info can I provide to understand this issue and avoid
->> this to happen again?
-> =
+I've a XFS related problem that boggles my find and I couldn't find a
+solution yet.
 
-> I'd be asking your hardware vendor about why it corrupted the
-> volume on a single disk failure when it is supposed to be able to
-> transparently handle double disk failures without losing/corrupting
-> data.
-> =
+I've got a virtual machine (huddle) that gets a ~66TB logical volume
+from the host handed as (virtio) block device (/dev/vdb). For ease of
+maintenance I didn't partition the device but formatted it directly with
+xfs. The system at the time of formatting was Ubuntu Lucid 64bit.
 
-> Cheers,
-> =
-
-> Dave.
-> =
+A few days ago I upgraded the virtual machine to Ubuntu LTS 'precise',
+Kernel 3.2, and got the following error while trying to mount the device:=
 
 
-Ok, many thanks Dave. I will forward this conversation to the DELL guys ...
+root@huddle:~# mount /dev/vdb /mnt/storage
+mount: /dev/vdb: can't read superblock
 
-Thanks again,
+dmesg shows some more info:
+root@huddle:~# dmesg | tail
+[  672.774206] end_request: I/O error, dev vdb, sector 0
+[  672.774393] XFS (vdb): SB buffer read failed
+
+At first I thought the block device had some error and checked the
+virtual machine configuration and host system.
+
+=46rom the host system (Ubuntu lucid 64bit, Kernel 2.6) I can still mount=
+
+the xfs formatted device without problems. I also ran xfs_repair -n that
+didn't show any problem.
+
+I tried to hand the virual machine a different ext4 formated block
+device (also without partition and preformatted). This didn't yield any
+mount problems.
+
+The Ubuntu 'precise' machine has an older kernel (2.6.32-42) too.
+Booting this kernel the xfs formatted block device gets mounted without
+error.
+
+The curious part is that it is still possible to mount the volume under
+Kernel 3.2 without error using the loop option:
+
+root@huddle:~# mount -v -t xfs -o loop /dev/vdb /mnt/storage/
+
+Trying xfs_repair also brings up the I/O Error unless I use it with the
+-f option under Kernel 3.2.
+
+Obviously the problem is Kernel 3.2 related. I'm not sure if I'm at the
+right place in the XFS Mailinglist but thought it would make a good
+starting point since I couldn't find anything related in bugzilla or the
+web in general and the problem didn't show up using ext4 (so may not be
+a generic kernel problem).
+
+Any suggestion for a solution (without partitioning the device) would be
+greatly appreciated since the use of the loop back device doesn't
+support quotas and I guess brings a performance penalty as well (but I
+haven't tested it yet).
+
+Here is some more information about the virtual machine:
+
+It's using Ubuntu LTS 'precise' 64bit
+root@huddle:~# uname -a
+Linux huddle 3.2.0-30-generic #48-Ubuntu SMP Fri Aug 24 16:52:48 UTC
+2012 x86_64 x86_64 x86_64 GNU/Linux
+
+The XFS tools are the following version, though using kernel 2.6.32 the
+same tools work without problem.
+root@huddle:~# xfs_repair -V
+xfs_repair version 3.1.7
+
+That's how the logical volume from the host looks inside the virtual
+machine:
+root@huddle:~# ls -l /dev/vdb
+brw-rw---- 1 root disk 253, 16 Sep 17 19:36 /dev/vdb
+
+Running any kernel, blkid still identifies the device correctly as xfs
+volume:
+root@huddle:~# blkid /dev/vdb
+/dev/vdb: UUID=3D"5adcd575-d3f2-48c3-81de-104f125b275e" TYPE=3D"xfs"
+
+Thanks in advance.
 Richard
 
+--=20
+---------------------------------------------------------------------
+    Systemadministration
+[a] Department for Theoretical Chemistry
+    University of Vienna
+    Waehringer Strasse 17/3/304, 1090 Wien, Austria
+[p] +43 664 920 32 95
+[m] hawk@tbi.univie.ac.at
+[w] http://www.tbi.univie.ac.at/~hawk
+---------------------------------------------------------------------
 
--- =
 
-Richard Ems       mail: Richard.Ems@Cape-Horn-Eng.com
 
-Cape Horn Engineering S.L.
-C/ Dr. J.J. D=F3mine 1, 5=BA piso
-46011 Valencia
-Tel : +34 96 3242923 / Fax 924
-http://www.cape-horn-eng.com
+
+
+
+
+
+
+
+
+
+--------------enig970F8637FCEB805773DF9AA0
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG/MacGPG2 v2.0.18 (Darwin)
+Comment: Using GnuPG with Mozilla - http://www.enigmail.net/
+
+iEYEARECAAYFAlBYNZAACgkQnGohgOrO9GFA1ACfYJlUZoxrxZOPN1KudYcKHzqN
+btIAoKdUk+spDW8L1eF4EYWVPUuBmzcW
+=O+hY
+-----END PGP SIGNATURE-----
+
+--------------enig970F8637FCEB805773DF9AA0--
+
+
+--===============3049703918064033394==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3049703918064033394==--
