@@ -1,15 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8IKhcCX100331 for <xfs@oss.sgi.com>; Tue, 18 Sep 2012 15:43:38 -0500
-Date: Tue, 18 Sep 2012 15:44:43 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfsdump: save & restore 32-bit projids
-Message-ID: <20120918204443.GV3274@sgi.com>
-References: <503ABD37.7090006@redhat.com>
+	q8IKs3Bw101100 for <xfs@oss.sgi.com>; Tue, 18 Sep 2012 15:54:03 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	qi0E6d0ZsPBDdhWL for <xfs@oss.sgi.com>;
+	Tue, 18 Sep 2012 13:55:12 -0700 (PDT)
+Date: Wed, 19 Sep 2012 06:55:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs mount fails 'can't read superblock'
+Message-ID: <20120918205508.GA31501@dastard>
+References: <50583590.7060702@tbi.univie.ac.at>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <503ABD37.7090006@redhat.com>
+In-Reply-To: <50583590.7060702@tbi.univie.ac.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,127 +22,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Bill Kendall <wkendall@sgi.com>, =?UTF-8?B?QXJrYWRpdXN6IE1pxZtraWV3aWM=?=@oss.sgi.com, Boris Ranto <branto@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Richard Neuboeck <hawk@tbi.univie.ac.at>
+Cc: xfs@oss.sgi.com
 
-SGV5IEVyaWMsCgpPbiBTdW4sIEF1ZyAyNiwgMjAxMiBhdCAwNzoyMDowN1BNIC0wNTAwLCBFcmlj
-IFNhbmRlZW4gd3JvdGU6Cj4gQ3VycmVudCB4ZnNkdW1wL3hmc3Jlc3RvcmUgb25seSByZWNvZ25p
-emUgdGhlIGxvd2VyIDE2IGJpdHMgb2YgdGhlIHByb2ppZC4KPiBXaXRoIHRoaXMgcGF0Y2gsIHRo
-ZSBmdWxsIDMyIGJpdHMgYXJlIGR1bXBlZCAmIHJlc3RvcmVkLgo+IAo+IFJlcG9ydGVkLWJ5OiBC
-b3JpcyBSYW50byA8YnJhbnRvQHJlZGhhdC5jb20+Cj4gQ2M6IEFya2FkaXVzeiBNacWba2lld2lj
-eiA8YXJla21AbWF2ZW4ucGw+Cj4gU2lnbmVkLW9mZi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVu
-QHJlZGhhdC5jb20+Cj4gLS0tCj4gCj4gVGhpcyBhbHNvIGFkZHMgYSBkZWZpbml0aW9uIGZvciBi
-c19mb3Jrb2ZmLCBidXQgSSBkb24ndCB0aGluawo+IHRoYXQgaXMgc29tZXRoaW5nIHdoaWNoIHNo
-b3VsZCBnZXQgc2F2ZWQgJiByZXN0b3JlZCwgY29ycmVjdD8KPiAKPiBUQkggSSd2ZSBkb25lIHZl
-cnkgbGl0dGxlIGhhY2tpbmcgb24geGZzZHVtcC4gIEkgdGhpbmsgdGhpcwo+IHJlcXVpcmVzIGEg
-bmV3IHZlcnNpb24sIGJ1dCBub3Qgc3VyZS4gIFRoaXMgc2VlbXMgdG8gd29yayBidXQKPiBtYXkg
-bmVlZCBzYW5pdHkgY2hlY2tzICYgZml4dXBzLiAgQW5kLCBvZiBjb3Vyc2UsIGFuIHhmc3Rlc3Qu
-CgpJIGhhdmUgdHdvIHZlcnNpb25lZCBkdW1wIGZpbGVzIH4vZHVtcC12MyBhbmQgfi9kdW1wLXY0
-LiAgdjMgaXMgcHJpb3IgdG8geW91cgpwYXRjaCBhbmQgdjQgd2FzIHdpdGggdGhpcyBwYXRjaC4K
-CkhlcmUgaXMgYSB2ZXJzaW9uIDMgeGZzcmVzdG9yZSBvZiBhIHZlcnNpb24gNCBkdW1wOgoKfi94
-ZnNkdW1wICMgeGZzcmVzdG9yZSAtZiB+L2R1bXAtdjQgIC9tbnQvc2NyYXRjaAp4ZnNyZXN0b3Jl
-OiB1c2luZyBmaWxlIGR1bXAgKGRyaXZlX3NpbXBsZSkgc3RyYXRlZ3kKeGZzcmVzdG9yZTogdmVy
-c2lvbiAzLjEuMCAoZHVtcCBmb3JtYXQgMy4wKSAtIHR5cGUgXkMgZm9yIHN0YXR1cyBhbmQgY29u
-dHJvbAoJCQkgICBeXl5eXl5eXl5eXl5eXl4gdmVyc2lvbiAzCnhmc3Jlc3RvcmU6IHNlYXJjaGlu
-ZyBtZWRpYSBmb3IgZHVtcAp4ZnNyZXN0b3JlOiBFUlJPUjogdW5yZWNvZ25pemVkIG1lZGlhIGZp
-bGUgaGVhZGVyIHZlcnNpb24gKDQpCnhmc3Jlc3RvcmU6IHJlc3RvcmUgY29tcGxldGU6IDAgc2Vj
-b25kcyBlbGFwc2VkCnhmc3Jlc3RvcmU6IFJlc3RvcmUgU3VtbWFyeToKeGZzcmVzdG9yZTogICBz
-dHJlYW0gMCAvcm9vdC9kdW1wLXY0IE9LIChzdWNjZXNzKQp4ZnNyZXN0b3JlOiBSZXN0b3JlIFN0
-YXR1czogU1VDQ0VTUwkJCTwtLS0tIEZBSUw/CgpXZSBzaG91bGQgY29uc2lkZXIgd2hldGhlciBm
-YWlsdXJlIGlzIHRoZSBjb3JyZWN0IHRoaW5nIHRvIGRvIHdoZW4gdHJ5aW5nIHRvCnJlc3RvcmUg
-ZnJvbSBhbiBpbmNvbXBhdGlibGUgZHVtcCBmaWxlLiAgVGhhdCBpcyBub3QgYSBwcm9ibGVtIHdp
-dGggdGhpcyBwYXRjaC4KCk5vdyBhIHZlcnNpb24gNCB4ZnNyZXN0b3JlIHdpdGggYSB2ZXJzaW9u
-IDMgZHVtcDoKCn4veGZzZHVtcCAjIHhmc3Jlc3RvcmUgLWYgfi9kdW1wLXYzICAvbW50L3NjcmF0
-Y2gKeGZzcmVzdG9yZTogdXNpbmcgZmlsZSBkdW1wIChkcml2ZV9zaW1wbGUpIHN0cmF0ZWd5Cnhm
-c3Jlc3RvcmU6IHZlcnNpb24gMy4xLjAgKGR1bXAgZm9ybWF0IDQuMCkgLSB0eXBlIF5DIGZvciBz
-dGF0dXMgYW5kIGNvbnRyb2wKCQkJICAgXl5eXl5eXl5eXl5eXl5eIHZlcnNpb24gNCwgbG9va3Mg
-Z29vZAp4ZnNyZXN0b3JlOiBzZWFyY2hpbmcgbWVkaWEgZm9yIGR1bXAKeGZzcmVzdG9yZTogZXhh
-bWluaW5nIG1lZGlhIGZpbGUgMAp4ZnNyZXN0b3JlOiBkdW1wIGRlc2NyaXB0aW9uOiAKeGZzcmVz
-dG9yZTogaG9zdG5hbWU6IGZvbwp4ZnNyZXN0b3JlOiBtb3VudCBwb2ludDogL21udC9zY3JhdGNo
-Cnhmc3Jlc3RvcmU6IHZvbHVtZTogL2Rldi9zZGIxCnhmc3Jlc3RvcmU6IHNlc3Npb24gdGltZTog
-VHVlIFNlcCAxOCAxNDo0NTozNiAyMDEyCnhmc3Jlc3RvcmU6IGxldmVsOiAwCnhmc3Jlc3RvcmU6
-IHNlc3Npb24gbGFiZWw6ICJrIgp4ZnNyZXN0b3JlOiBtZWRpYSBsYWJlbDogImsiCnhmc3Jlc3Rv
-cmU6IGZpbGUgc3lzdGVtIGlkOiA5ODNmODVmMi05YTExLTQ2MGQtYTI3Ni05YWVjNDJmYmQ4ZjcK
-eGZzcmVzdG9yZTogc2Vzc2lvbiBpZDogNGZiZmJkM2QtNmY0YS00YWQ1LTkwOWItYmRmNDc0MmU4
-NDlkCnhmc3Jlc3RvcmU6IG1lZGlhIGlkOiA0MWY4ZTc3Yy03YjkzLTQ5YzUtYTllZC1jNjZhMzkx
-Nzc4ZTcKeGZzcmVzdG9yZTogdXNpbmcgb25saW5lIHNlc3Npb24gaW52ZW50b3J5Cnhmc3Jlc3Rv
-cmU6IHNlYXJjaGluZyBtZWRpYSBmb3IgZGlyZWN0b3J5IGR1bXAKeGZzcmVzdG9yZTogcmVhZGlu
-ZyBkaXJlY3Rvcmllcwp4ZnNyZXN0b3JlOiA0IGRpcmVjdG9yaWVzIGFuZCA5IGVudHJpZXMgcHJv
-Y2Vzc2VkCnhmc3Jlc3RvcmU6IGRpcmVjdG9yeSBwb3N0LXByb2Nlc3NpbmcKeGZzcmVzdG9yZTog
-cmVzdG9yaW5nIG5vbi1kaXJlY3RvcnkgZmlsZXMKeGZzcmVzdG9yZTogcmVzdG9yZSBjb21wbGV0
-ZTogMCBzZWNvbmRzIGVsYXBzZWQKeGZzcmVzdG9yZTogUmVzdG9yZSBTdW1tYXJ5Ogp4ZnNyZXN0
-b3JlOiAgIHN0cmVhbSAwIC9yb290L2R1bXAtdjMgT0sgKHN1Y2Nlc3MpCnhmc3Jlc3RvcmU6IFJl
-c3RvcmUgU3RhdHVzOiBTVUNDRVNTCgpTbyB0aGUgYmVoYXZpb3Igd2l0aCByZXNwZWN0IHRvIHZl
-cnNpb25pbmcgaXM6ICBZb3UgY2FuIHJlc3RvcmUgZnJvbSBkdW1wcyB0aGF0CmhhdmUgYSBzbWFs
-bGVyIG9yIGVxdWFsIGR1bXAgdmVyc2lvbiB0aGFuIHlvdXIgeGZzcmVzdG9yZSwgYnV0IG5vdCBm
-cm9tIGR1bXBzCndpdGggdmVyc2lvbnMgZ3JlYXRlciB0aGFuIHlvdXIgeGZzcmVzdG9yZS4gIE5v
-dyBJJ2QgbGlrZSB0byBzZWUgdGhlIGJlaGF2aW9yCndpdGggc29tZSBwcm9qZWN0IGlkcyBzZXQg
-YW5kIGEgdmVyc2lvbiAzIGR1bXAgd2l0aCB2ZXJzaW9uIDQgeGZzcmVzdG9yZS4KCkEgdmVyc2lv
-biA0IHhmc3Jlc3RvcmUgd2l0aCBhIHZlcnNpb24gMyBkdW1wOgoKfi94ZnNkdW1wICMgeGZzcmVz
-dG9yZSAtZiB+L2R1bXAtdjMtMyAvbW50L3NjcmF0Y2gvcmVzdG9yZS8KeGZzcmVzdG9yZTogdXNp
-bmcgZmlsZSBkdW1wIChkcml2ZV9zaW1wbGUpIHN0cmF0ZWd5Cnhmc3Jlc3RvcmU6IHZlcnNpb24g
-My4xLjAgKGR1bXAgZm9ybWF0IDQuMCkgLSB0eXBlIF5DIGZvciBzdGF0dXMgYW5kIGNvbnRyb2wK
-eGZzcmVzdG9yZTogc2VhcmNoaW5nIG1lZGlhIGZvciBkdW1wCnhmc3Jlc3RvcmU6IGV4YW1pbmlu
-ZyBtZWRpYSBmaWxlIDAKeGZzcmVzdG9yZTogZHVtcCBkZXNjcmlwdGlvbjoKeGZzcmVzdG9yZTog
-aG9zdG5hbWU6IGZvbwp4ZnNyZXN0b3JlOiBtb3VudCBwb2ludDogL21udC9zY3JhdGNoCnhmc3Jl
-c3RvcmU6IHZvbHVtZTogL2Rldi9zZGIxCnhmc3Jlc3RvcmU6IHNlc3Npb24gdGltZTogVHVlIFNl
-cCAxOCAxNToxODoxNiAyMDEyCnhmc3Jlc3RvcmU6IGxldmVsOiAwCnhmc3Jlc3RvcmU6IHNlc3Np
-b24gbGFiZWw6ICJsIgp4ZnNyZXN0b3JlOiBtZWRpYSBsYWJlbDogImwiCnhmc3Jlc3RvcmU6IGZp
-bGUgc3lzdGVtIGlkOiA5ODNmODVmMi05YTExLTQ2MGQtYTI3Ni05YWVjNDJmYmQ4ZjcKeGZzcmVz
-dG9yZTogc2Vzc2lvbiBpZDogOWFkMjkwOWMtMzU0Mi00MjhiLTlmNzMtMGJmMjA3Yjc3ODg4Cnhm
-c3Jlc3RvcmU6IG1lZGlhIGlkOiA1MjllNDdiYy1iNmZhLTQyN2MtYTBmNS1kY2Q0Yzk3MDdhZGMK
-eGZzcmVzdG9yZTogdXNpbmcgb25saW5lIHNlc3Npb24gaW52ZW50b3J5Cnhmc3Jlc3RvcmU6IHNl
-YXJjaGluZyBtZWRpYSBmb3IgZGlyZWN0b3J5IGR1bXAKeGZzcmVzdG9yZTogcmVhZGluZyBkaXJl
-Y3Rvcmllcwp4ZnNyZXN0b3JlOiA0IGRpcmVjdG9yaWVzIGFuZCA4IGVudHJpZXMgcHJvY2Vzc2Vk
-Cnhmc3Jlc3RvcmU6IGRpcmVjdG9yeSBwb3N0LXByb2Nlc3NpbmcKeGZzcmVzdG9yZTogcmVzdG9y
-aW5nIG5vbi1kaXJlY3RvcnkgZmlsZXMKeGZzcmVzdG9yZTogcHJvamVjdCBxdW90YSBpbmZvcm1h
-dGlvbiB3cml0dGVuIHRvICcvbW50L3NjcmF0Y2gvcmVzdG9yZS8veGZzZHVtcF9xdW90YXNfcHJv
-aicKeGZzcmVzdG9yZTogdXNlICd4ZnNfcXVvdGEnIHRvIHJlc3RvcmUgcXVvdGFzCnhmc3Jlc3Rv
-cmU6IHJlc3RvcmUgY29tcGxldGU6IDAgc2Vjb25kcyBlbGFwc2VkCnhmc3Jlc3RvcmU6IFJlc3Rv
-cmUgU3VtbWFyeToKeGZzcmVzdG9yZTogICBzdHJlYW0gMCAvcm9vdC9kdW1wLXYzLTMgT0sgKHN1
-Y2Nlc3MpCnhmc3Jlc3RvcmU6IFJlc3RvcmUgU3RhdHVzOiBTVUNDRVNTCgpBbmQgYSB2ZXJzaW9u
-IDQgeGZzcmVzdG9yZSB3aXRoIGEgdmVyc2lvbiA0IGR1bXA6Cgp+L3hmc2R1bXAgIyB4ZnNyZXN0
-b3JlIC1mIH4vZHVtcC12NC0zIC9tbnQvc2NyYXRjaC9yZXN0b3JlMgp4ZnNyZXN0b3JlOiB1c2lu
-ZyBmaWxlIGR1bXAgKGRyaXZlX3NpbXBsZSkgc3RyYXRlZ3kKeGZzcmVzdG9yZTogdmVyc2lvbiAz
-LjEuMCAoZHVtcCBmb3JtYXQgNC4wKSAtIHR5cGUgXkMgZm9yIHN0YXR1cyBhbmQgY29udHJvbAp4
-ZnNyZXN0b3JlOiBzZWFyY2hpbmcgbWVkaWEgZm9yIGR1bXAKeGZzcmVzdG9yZTogZXhhbWluaW5n
-IG1lZGlhIGZpbGUgMAp4ZnNyZXN0b3JlOiBkdW1wIGRlc2NyaXB0aW9uOgp4ZnNyZXN0b3JlOiBo
-b3N0bmFtZTogZm9vCnhmc3Jlc3RvcmU6IG1vdW50IHBvaW50OiAvbW50L3NjcmF0Y2gKeGZzcmVz
-dG9yZTogdm9sdW1lOiAvZGV2L3NkYjEKeGZzcmVzdG9yZTogc2Vzc2lvbiB0aW1lOiBUdWUgU2Vw
-IDE4IDE1OjIwOjE4IDIwMTIKeGZzcmVzdG9yZTogbGV2ZWw6IDAKeGZzcmVzdG9yZTogc2Vzc2lv
-biBsYWJlbDogImwiCnhmc3Jlc3RvcmU6IG1lZGlhIGxhYmVsOiAibCIKeGZzcmVzdG9yZTogZmls
-ZSBzeXN0ZW0gaWQ6IDk4M2Y4NWYyLTlhMTEtNDYwZC1hMjc2LTlhZWM0MmZiZDhmNwp4ZnNyZXN0
-b3JlOiBzZXNzaW9uIGlkOiBlNWQwN2RhZi0zYmZjLTRhYjgtYjEzYy1hZDQ4ZGI4MTM4MDcKeGZz
-cmVzdG9yZTogbWVkaWEgaWQ6IDlkMDQzOTk0LTlhYmItNGZkMC04Y2M5LWVkYTY4YzYyNjQxYwp4
-ZnNyZXN0b3JlOiB1c2luZyBvbmxpbmUgc2Vzc2lvbiBpbnZlbnRvcnkKeGZzcmVzdG9yZTogc2Vh
-cmNoaW5nIG1lZGlhIGZvciBkaXJlY3RvcnkgZHVtcAp4ZnNyZXN0b3JlOiByZWFkaW5nIGRpcmVj
-dG9yaWVzCnhmc3Jlc3RvcmU6IDQgZGlyZWN0b3JpZXMgYW5kIDggZW50cmllcyBwcm9jZXNzZWQK
-eGZzcmVzdG9yZTogZGlyZWN0b3J5IHBvc3QtcHJvY2Vzc2luZwp4ZnNyZXN0b3JlOiByZXN0b3Jp
-bmcgbm9uLWRpcmVjdG9yeSBmaWxlcwp4ZnNyZXN0b3JlOiBwcm9qZWN0IHF1b3RhIGluZm9ybWF0
-aW9uIHdyaXR0ZW4gdG8gJy9tbnQvc2NyYXRjaC9yZXN0b3JlMi94ZnNkdW1wX3F1b3Rhc19wcm9q
-Jwp4ZnNyZXN0b3JlOiB1c2UgJ3hmc19xdW90YScgdG8gcmVzdG9yZSBxdW90YXMKeGZzcmVzdG9y
-ZTogcmVzdG9yZSBjb21wbGV0ZTogMCBzZWNvbmRzIGVsYXBzZWQKeGZzcmVzdG9yZTogUmVzdG9y
-ZSBTdW1tYXJ5Ogp4ZnNyZXN0b3JlOiAgIHN0cmVhbSAwIC9yb290L2R1bXAtdjQtMyBPSyAoc3Vj
-Y2VzcykKeGZzcmVzdG9yZTogUmVzdG9yZSBTdGF0dXM6IFNVQ0NFU1MKCkhlcmUgYXJlIHRoZSBm
-aWxlcyB3aXRoIHByb2plY3QgcXVvdGFzOgoKb3JpZ2luYWxzOgp+L3hmc2R1bXAgIyB4ZnNfaW8g
-LXIgLWMgImxzcHJvaiIgL21udC9zY3JhdGNoL2R1bXBtZS8xNmJpdCAKcHJvamlkID0gMTIzNAp+
-L3hmc2R1bXAgIyB4ZnNfaW8gLXIgLWMgImxzcHJvaiIgL21udC9zY3JhdGNoL2R1bXBtZS8zMmJp
-dCAKcHJvamlkID0gMjEyMzQ1Njc4OQoKZnJvbSB0aGUgdjMgZHVtcDoKfi94ZnNkdW1wICMgeGZz
-X2lvIC1yIC1jICJsc3Byb2oiIC9tbnQvc2NyYXRjaC9yZXN0b3JlL2R1bXBtZS8xNmJpdCAKcHJv
-amlkID0gMTIzNAp+L3hmc2R1bXAgIyB4ZnNfaW8gLXIgLWMgImxzcHJvaiIgL21udC9zY3JhdGNo
-L3Jlc3RvcmUvZHVtcG1lLzMyYml0IApwcm9qaWQgPSAyNDg1MwkJPC0tLSBub3RlIHRoYXQgaXQg
-aXMgbXVuZ2VkIGp1c3QgYXMgaW4gdGVzdCAyODcKCmZyb20gdGhlIHY0IGR1bXA6Cn4veGZzZHVt
-cCAjIHhmc19pbyAtciAtYyAibHNwcm9qIiAvbW50L3NjcmF0Y2gvcmVzdG9yZTIvZHVtcG1lLzE2
-Yml0IApwcm9qaWQgPSAxMjM0Cn4veGZzZHVtcCAjIHhmc19pbyAtciAtYyAibHNwcm9qIiAvbW50
-L3NjcmF0Y2gvcmVzdG9yZTIvZHVtcG1lLzMyYml0IApwcm9qaWQgPSAyMTIzNDU2Nzg5CgpUaGUg
-Y29kZSBsb29rcyBnb29kLCB0aGUgeGZzdGVzdCAyODcgbG9va3MgZ29vZCwgYW5kIHRoZSBhYm92
-ZSBzaG93cyB0aGF0IHdlCmhhdmUgdGhlIGRlc2lyZWQgYmVoYXZpb3Igd2l0aCByZXNwZWN0IHRv
-IGR1bXAgdmVyc2lvbmluZy4KClJldmlld2VkLWJ5OiBCZW4gTXllcnMgPGJwbUBzZ2kuY29tPgoK
-Q29tbWl0dGVkIHRvIGdpdDovL29zcy5zZ2kuY29tL3hmcy9jbWRzL3hmc2R1bXAuZ2l0LCBtYXN0
-ZXIgYnJhbmNoLgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Sep 18, 2012 at 10:49:20AM +0200, Richard Neuboeck wrote:
+> Hi XFS gurus,
+> 
+> I've a XFS related problem that boggles my find and I couldn't find a
+> solution yet.
+> 
+> I've got a virtual machine (huddle) that gets a ~66TB logical volume
+> from the host handed as (virtio) block device (/dev/vdb). For ease of
+> maintenance I didn't partition the device but formatted it directly with
+> xfs. The system at the time of formatting was Ubuntu Lucid 64bit.
+
+virtio configuration? (i.e. cache=none?)
+
+> A few days ago I upgraded the virtual machine to Ubuntu LTS 'precise',
+> Kernel 3.2, and got the following error while trying to mount the device:
+
+Upgraded from what?
+
+> root@huddle:~# mount /dev/vdb /mnt/storage
+> mount: /dev/vdb: can't read superblock
+> 
+> dmesg shows some more info:
+> root@huddle:~# dmesg | tail
+> [  672.774206] end_request: I/O error, dev vdb, sector 0
+> [  672.774393] XFS (vdb): SB buffer read failed
+> 
+> At first I thought the block device had some error and checked the
+> virtual machine configuration and host system.
+> 
+> From the host system (Ubuntu lucid 64bit, Kernel 2.6) I can still mount
+> the xfs formatted device without problems. I also ran xfs_repair -n that
+> didn't show any problem.
+
+So the filesystem is accesible via direct IO from the host. What's
+the xfs_info output once it is mounted?
+
+> I tried to hand the virual machine a different ext4 formated block
+> device (also without partition and preformatted). This didn't yield any
+> mount problems.
+> 
+> The Ubuntu 'precise' machine has an older kernel (2.6.32-42) too.
+> Booting this kernel the xfs formatted block device gets mounted without
+> error.
+
+The newer kernel has a different buffer cache implementation, so
+sector sized IO (such as superblocks) is cached and issued
+differently.
+
+> The curious part is that it is still possible to mount the volume under
+> Kernel 3.2 without error using the loop option:
+> 
+> root@huddle:~# mount -v -t xfs -o loop /dev/vdb /mnt/storage/
+
+Turns all IO into pagecache based IO, so 4k aligned. Will avoid any
+sector size mismatch issues.
+
+> Trying xfs_repair also brings up the I/O Error unless I use it with the
+> -f option under Kernel 3.2.
+
+-f can turn direct IO into buffered IO is there is a sector size
+mismatch between the filesystem and the underlying storage.
+
+> Obviously the problem is Kernel 3.2 related. I'm not sure if I'm at the
+> right place in the XFS Mailinglist but thought it would make a good
+> starting point since I couldn't find anything related in bugzilla or the
+> web in general and the problem didn't show up using ext4 (so may not be
+> a generic kernel problem).
+
+Sounds like a sector size based problem to me - direct Io does
+sector aligned and sized IO, buffered IO does page sized IO. So my
+initial thought is that you've got a 512 byte sector filesystem on a
+4k sector device....
+
+> Running any kernel, blkid still identifies the device correctly as xfs
+> volume:
+> root@huddle:~# blkid /dev/vdb
+> /dev/vdb: UUID="5adcd575-d3f2-48c3-81de-104f125b275e" TYPE="xfs"
+
+Buffered IO, again.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
