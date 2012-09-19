@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8J6AKoZ158729 for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 01:10:20 -0500
+	q8J6ARr4158756 for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 01:10:27 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VGcPML11SYrbrmDM for
-	<xfs@oss.sgi.com>; Tue, 18 Sep 2012 23:11:31 -0700 (PDT)
+	cuda.sgi.com with ESMTP id Pyt7g5GSvgQlK6gU for
+	<xfs@oss.sgi.com>; Tue, 18 Sep 2012 23:11:39 -0700 (PDT)
 Received: from int-mx11.intmail.prod.int.phx2.redhat.com
 	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8J6BVKW009412
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8J6BcHN020832
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 02:11:31 -0400
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 02:11:38 -0400
 Received: from andromeda.usersys.redhat.com (vpn1-7-14.gru2.redhat.com
 	[10.97.7.14])
 	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8J6BDjZ014802
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 02:11:30 -0400
+	id q8J6BDjb014802
+	for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 02:11:37 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 4/6] xfs: Fix mp->m_maxagi update during inode64 remount
-Date: Wed, 19 Sep 2012 03:11:03 -0300
-Message-Id: <1348035065-6934-5-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 6/6] xfs: Make inode32 a remountable option
+Date: Wed, 19 Sep 2012 03:11:05 -0300
+Message-Id: <1348035065-6934-7-git-send-email-cmaiolino@redhat.com>
 In-Reply-To: <1348035065-6934-1-git-send-email-cmaiolino@redhat.com>
 References: <1348035065-6934-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +36,48 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-With the changes made on xfs_set_inode64(), to make it behave as
-xfs_set_inode32() (now leaving to the caller the responsibility to update
-mp->m_maxagi), we use the return value of xfs_set_inode64() to update
-mp->m_maxagi during remount.
+As inode64 is the default option now, and was also made remountable previously,
+inode32 can also be remounted on-the-fly when it is needed.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_super.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 0c2e06f..966f56c 100644
+index 40984912..324bb9b 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1129,7 +1129,7 @@ xfs_fs_remount(
- 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
- 			break;
+@@ -122,13 +122,18 @@ mempool_t *xfs_ioend_pool;
+  * in the future, too.
+  */
+ enum {
+-	Opt_barrier, Opt_nobarrier, Opt_inode64, Opt_err
++	Opt_barrier,
++	Opt_nobarrier,
++	Opt_inode64,
++	Opt_inode32,
++	Opt_err
+ };
+ 
+ static const match_table_t tokens = {
+ 	{Opt_barrier, "barrier"},
+ 	{Opt_nobarrier, "nobarrier"},
+ 	{Opt_inode64, "inode64"},
++	{Opt_inode32, "inode32"},
+ 	{Opt_err, NULL}
+ };
+ 
+@@ -1140,6 +1145,9 @@ xfs_fs_remount(
  		case Opt_inode64:
--			xfs_set_inode64(mp);
-+			mp->m_maxagi = xfs_set_inode64(mp);
+ 			mp->m_maxagi = xfs_set_inode64(mp);
  			break;
++		case Opt_inode32:
++			mp->m_maxagi = xfs_set_inode32(mp);
++			break;
  		default:
  			/*
+ 			 * Logically we would return an error here to prevent
 -- 
 1.7.11.4
 
