@@ -1,26 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8J6A94q158686 for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 01:10:09 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id okfhjHAhamApxNC1 for
-	<xfs@oss.sgi.com>; Tue, 18 Sep 2012 23:11:20 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8J6BKgA020803
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 02:11:20 -0400
-Received: from andromeda.usersys.redhat.com (vpn1-7-14.gru2.redhat.com
-	[10.97.7.14])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8J6BDjW014802
-	for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 02:11:20 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 1/6] xfs: Fix m_agirotor reset during AG selection
-Date: Wed, 19 Sep 2012 03:11:00 -0300
-Message-Id: <1348035065-6934-2-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1348035065-6934-1-git-send-email-cmaiolino@redhat.com>
-References: <1348035065-6934-1-git-send-email-cmaiolino@redhat.com>
+	q8JDDaT4202705 for <xfs@oss.sgi.com>; Wed, 19 Sep 2012 08:13:36 -0500
+Message-ID: <5059C541.7090202@sgi.com>
+Date: Wed, 19 Sep 2012 08:14:41 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+MIME-Version: 1.0
+Subject: Re: [RFC, PATCH 0/102]: xfs: 3.0.x stable kernel update
+References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
+	<50587E28.7090704@sgi.com> <20120918235049.GB31501@dastard>
+In-Reply-To: <20120918235049.GB31501@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,49 +18,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-xfs_ialloc_next_ag() currently resets m_agirotor when it is equal to m_maxagi:
+On 09/18/12 18:50, Dave Chinner wrote:
+> On Tue, Sep 18, 2012 at 08:59:04AM -0500, Mark Tinguely wrote:
+>> This looks great. Like I said earlier, I did not find Brian Foster's
+>> log patch:
+>>    xfs: check for stale inode before acquiring iflock on push
+>>    Upstream commit: 9a3a5dab63461b84213052888bf38a962b22d035
+>> sample implementation listed on:
+>>    http://oss.sgi.com/archives/xfs/2012-09/msg00188.html
+>>
+>> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+>
+> Thatnks for looking over this, Mark.
+>
+> The above patch does not directly apply to the 3.0.x branch because
+> the rework of the log item lock/push logic in the AIL was not
+> included in the series. Hence I'm not sure that backportingthis
+> patch is necessary because the problem only arose after we change
+> the locking/push logic...
+>
+> Cheers,
+>
+> Dave.
 
-         if (++mp->m_agirotor == mp->m_maxagi)
-	         mp->m_agirotor = 0;
+Hi Dave.
 
-But, if for some reason mp->m_maxagi changes to a lower value than current
-m_agirotor, this condition will never be true, causing m_agirotor to exceed the
-maximum allowed value (m_maxagi).
+The original problem was in Linux 2.6.X.
 
-This implies mainly during lookups for xfs_perag structs in its radix tree,
-since the agno value used for the lookup is based on m_agirotor. An out-of-range
-m_agirotor may cause a lookup failure which in case will return NULL.
+The patch in the above link is a 3.0.42 port of Brian's top of tree
+patch. This version places the tests in AIL trylock routine. We have
+been using it on Linux 3.0.x for a couple months and it has avoided
+the hangs that we used to get before.
 
-As an example, the value of m_maxagi is decreased during inode64->inode32
-remount process, case where I've found this problem.
+Thank-you again for the work.
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_ialloc.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 5aceb3f..445bf1a 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -431,7 +431,7 @@ xfs_ialloc_next_ag(
- 
- 	spin_lock(&mp->m_agirotor_lock);
- 	agno = mp->m_agirotor;
--	if (++mp->m_agirotor == mp->m_maxagi)
-+	if (++mp->m_agirotor >= mp->m_maxagi)
- 		mp->m_agirotor = 0;
- 	spin_unlock(&mp->m_agirotor_lock);
- 
--- 
-1.7.11.4
+--Mark T.
 
 _______________________________________________
 xfs mailing list
