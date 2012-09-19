@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8INngHe116886 for <xfs@oss.sgi.com>; Tue, 18 Sep 2012 18:49:43 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	qVIdwAG5a4QThBGR for <xfs@oss.sgi.com>;
-	Tue, 18 Sep 2012 16:50:52 -0700 (PDT)
-Date: Wed, 19 Sep 2012 09:50:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC, PATCH 0/102]: xfs: 3.0.x stable kernel update
-Message-ID: <20120918235049.GB31501@dastard>
-References: <1345698180-13612-1-git-send-email-david@fromorbit.com>
-	<50587E28.7090704@sgi.com>
+	q8J1FFaj123809
+	for <linux-xfs@oss.sgi.com>; Tue, 18 Sep 2012 20:15:15 -0500
+Received: from notomys.init7.net (notomys.init7.net [77.109.141.5]) by
+	cuda.sgi.com with ESMTP id n4yygQsZErzby81r (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for
+	<linux-xfs@oss.sgi.com>; Tue, 18 Sep 2012 18:16:24 -0700 (PDT)
+Received: from localhost ([::1] helo=notomys.init7.net)
+	by notomys.init7.net with esmtp (Exim 4.72)
+	(envelope-from <swinog-bounces@lists.swinog.ch>) id 1TE8tr-000491-4k
+	for linux-xfs@oss.sgi.com; Wed, 19 Sep 2012 03:16:23 +0200
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50587E28.7090704@sgi.com>
+Subject: Your message to swinog awaits moderator approval
+From: swinog-bounces@lists.swinog.ch
+Message-ID: <mailman.52459.1348017376.2582.swinog@lists.swinog.ch>
+Date: Wed, 19 Sep 2012 03:16:16 +0200
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,33 +28,23 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: linux-xfs@oss.sgi.com
 
-On Tue, Sep 18, 2012 at 08:59:04AM -0500, Mark Tinguely wrote:
-> This looks great. Like I said earlier, I did not find Brian Foster's
-> log patch:
->   xfs: check for stale inode before acquiring iflock on push
->   Upstream commit: 9a3a5dab63461b84213052888bf38a962b22d035
-> sample implementation listed on:
->   http://oss.sgi.com/archives/xfs/2012-09/msg00188.html
-> 
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Your mail to 'swinog' with the subject
 
-Thatnks for looking over this, Mark.
+    Message could not be delivered
 
-The above patch does not directly apply to the 3.0.x branch because
-the rework of the log item lock/push logic in the AIL was not
-included in the series. Hence I'm not sure that backportingthis
-patch is necessary because the problem only arose after we change
-the locking/push logic...
+Is being held until the list moderator can review it for approval.
 
-Cheers,
+The reason it is being held:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+    Post by non-member to a members-only list
+
+Either the message will get posted to the list, or you will receive
+notification of the moderator's decision.  If you would like to cancel
+this posting, please visit the following URL:
+
+    http://lists.swinog.ch/cgi-bin/mailman/confirm/swinog/8f6eeb9349a9c9c0291272fcaf7a031be340bca8
 
 _______________________________________________
 xfs mailing list
