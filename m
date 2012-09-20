@@ -1,28 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8KIL5Lm121041 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 13:21:05 -0500
-Received: from eagdhcp-232-125.americas.sgi.com
-	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id DD7C6304062
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 11:22:15 -0700 (PDT)
-Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	q8KIM9At013398
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 13:22:09 -0500 (CDT)
-	(envelope-from tinguely@sgi.com)
-Received: (from tinguely@localhost)
-	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5/Submit) id
-	q8KIM9gq013397
-	for xfs@oss.sgi.com; Thu, 20 Sep 2012 13:22:09 -0500 (CDT)
-	(envelope-from tinguely@sgi.com)
-Message-Id: <20120920181650.041917183@sgi.com>
-Date: Thu, 20 Sep 2012 13:16:45 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH 3/3 v2] xfs: zero allocation_args on the kernel stack
-References: <20120919163133.097340199@sgi.com>
-	<20120919163145.587098223@sgi.com>
-Content-Disposition: inline; filename=3-3-v2_xfs-zero_allocation_args.patch
+	q8KMbiF0142679 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 17:37:45 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	NMbxkNtwwFhV4LHs for <xfs@oss.sgi.com>;
+	Thu, 20 Sep 2012 15:38:56 -0700 (PDT)
+Date: Fri, 21 Sep 2012 08:38:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: Questions on RAID alignment
+Message-ID: <20120920223852.GI31501@dastard>
+References: <505AF9EA.7030603@shiftmail.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <505AF9EA.7030603@shiftmail.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,76 +22,52 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Spelic <spelic@shiftmail.org>
+Cc: xfs@oss.sgi.com
 
-Zero the kernel stack space that makes up the xfs_alloc_arg structures.
+On Thu, Sep 20, 2012 at 01:11:38PM +0200, Spelic wrote:
+> Hello list
+> a few questions
+> 
+> 1- Does XFS support alignment to concatenation RAIDs (e.g. linear
+> over raid1) similarly to striped ones?
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+No. It's being considered and I know how to do it, but it's lower
+priority than other stuff I'm working on at the moment. 
 
----
- fs/xfs/xfs_alloc.c  |    1 +
- fs/xfs/xfs_bmap.c   |    3 +++
- fs/xfs/xfs_ialloc.c |    1 +
- 3 files changed, 5 insertions(+)
+> I am guessing probably su and
+> sw should not be specified and the agcount should be multiple of the
+> number of the concatenated devices, is that correct?
 
-Index: b/fs/xfs/xfs_alloc.c
-===================================================================
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -1866,6 +1866,7 @@ xfs_alloc_fix_freelist(
- 	/*
- 	 * Initialize the args structure.
- 	 */
-+	memset(&targs, 0, sizeof(targs));
- 	targs.tp = tp;
- 	targs.mp = mp;
- 	targs.agbp = agbp;
-Index: b/fs/xfs/xfs_bmap.c
-===================================================================
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -2437,6 +2437,7 @@ xfs_bmap_btalloc(
- 	 * Normal allocation, done through xfs_alloc_vextent.
- 	 */
- 	tryagain = isaligned = 0;
-+	memset(&args, 0, sizeof(args));
- 	args.tp = ap->tp;
- 	args.mp = mp;
- 	args.fsbno = ap->blkno;
-@@ -3082,6 +3083,7 @@ xfs_bmap_extents_to_btree(
- 	 * Convert to a btree with two levels, one record in root.
- 	 */
- 	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_BTREE);
-+	memset(&args, 0, sizeof(args));
- 	args.tp = tp;
- 	args.mp = mp;
- 	args.firstblock = *firstblock;
-@@ -3237,6 +3239,7 @@ xfs_bmap_local_to_extents(
- 		xfs_buf_t	*bp;	/* buffer for extent block */
- 		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
- 
-+		memset(&args, 0, sizeof(args));
- 		args.tp = tp;
- 		args.mp = ip->i_mount;
- 		args.firstblock = *firstblock;
-Index: b/fs/xfs/xfs_ialloc.c
-===================================================================
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -250,6 +250,7 @@ xfs_ialloc_ag_alloc(
- 					/* boundary */
- 	struct xfs_perag *pag;
- 
-+	memset(&args, 0, sizeof(args));
- 	args.tp = tp;
- 	args.mp = tp->t_mountp;
- 
+If you are concatenating RAID0/5/6, then you shoul duse su/sw as per
+the alignment of the volumes being concatenated.
 
+> 2- Can mkfs parameters be altered after creation, e.g. after growing
+> a RAID and then growing the XFS fs, can I also alter su, sw, agcount
+> somehow?
+
+You can alter su/sw as a mount option if the filesystem was made
+with them initially.
+
+> 3- I seem to remember there was an xattr that one could attach to
+> /home (if /home was under XFS) so that every user (subdir of /home)
+> would get a different AG in a different RAID device. I cannot find
+> that information anymore on the internet; could you refresh my mind?
+
+Nothing of the sort. if you are using the inode64 allocator, then
+each new directory is placed i a different AG. That's as good as it
+gets right now.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
