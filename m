@@ -1,18 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8K9V8jc063970 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 04:31:08 -0500
-Received: from vwp1161.webpack.hosteurope.de (vwp1161.webpack.hosteurope.de
-	[87.230.104.173]) by cuda.sgi.com with ESMTP id
-	QglUBGERLNuCVxez for <xfs@oss.sgi.com>;
-	Thu, 20 Sep 2012 02:32:19 -0700 (PDT)
-Message-ID: <505AE2A1.5060703@blafoo.org>
-Date: Thu, 20 Sep 2012 11:32:17 +0200
-From: Volker <mail@blafoo.org>
+	q8KBAQWt071462 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 06:10:26 -0500
+Received: from srv2.trombetti.net (srv2.trombetti.net [65.254.53.252]) by
+	cuda.sgi.com with ESMTP id Y43bB3woemPFuKWY for
+	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 04:11:38 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested) (Authenticated sender: SASL)
+	by srv2.trombetti.net (Postfix) with ESMTPSA id DFBF3543B7
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 07:11:37 -0400 (EDT)
+Message-ID: <505AF9EA.7030603@shiftmail.org>
+Date: Thu, 20 Sep 2012 13:11:38 +0200
+From: Spelic <spelic@shiftmail.org>
 MIME-Version: 1.0
-Subject: Re: OOM on quotacheck (again?)
-References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
-In-Reply-To: <20120919205924.GC31501@dastard>
+Subject: Questions on RAID alignment
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,51 +23,30 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi,
+Hello list
+a few questions
 
-> Which implies you are running a 32 bit kernel even on 64 bit CPUs
-> (e.g. R710).
+1- Does XFS support alignment to concatenation RAIDs (e.g. linear over 
+raid1) similarly to striped ones? I am guessing probably su and sw 
+should not be specified and the agcount should be multiple of the number 
+of the concatenated devices, is that correct?
 
-My mistake. That is not yet the case, but the plan for the future.
-Thanks for pointing that out.
+2- Can mkfs parameters be altered after creation, e.g. after growing a 
+RAID and then growing the XFS fs, can I also alter su, sw, agcount somehow?
 
-> No surprise if you are running an i686 kernel (32 bit). You've got
-> way more inodes than can fit in the kernel memory segment.
+3- I seem to remember there was an xattr that one could attach to /home 
+(if /home was under XFS) so that every user (subdir of /home) would get 
+a different AG in a different RAID device. I cannot find that 
+information anymore on the internet; could you refresh my mind?
 
-Could you slightly elaborate on that or give me a link or two which
-explain the matter?
-
-If a 32bit kernel is not supposed to work because of the number of
-inodes, why does the 2.6.39.4-kernel work flawlessy on quota-checks on
-the same filesystem a 3.6.0-rc5 32bit (which is supposed to work) fails on?
-
-Doesn't that imply, that the fix submitted for 2.6.39.4 fixed a problem
-which was "reinvented" by the later patch, which is now being worked
-around by using a 64bit kernel for more memory?
-
-> Running on a x86-64 kernel will make the vmalloc problem go away.
-> There's very little we can do about the limited vmalloc address
-> space on i686 kernels. As it is, the known recent regression in this
-> space:
-> 
-> bcf62ab xfs: Fix overallocation in xfs_buf_allocate_memory()
-> 
-> $ git describe --contains bcf62ab
-> v3.6-rc1~42^2~35
-> 
-> was fixed in 3.6-rc1, 
-
-Confirmed. The current 3.6.0-rc5 in 64bit works doing the quota-check.
-I'll do some more testing with xfs_fsr etc. and report back.
-
-best regards
-volker
+Thank you
+Spelic
 
 _______________________________________________
 xfs mailing list
