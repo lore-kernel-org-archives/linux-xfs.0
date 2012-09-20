@@ -1,17 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8KC4TXT077508 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 07:04:29 -0500
-Received: from smtp4-g21.free.fr (smtp4-g21.free.fr [212.27.42.4]) by
-	cuda.sgi.com with ESMTP id ubhZsJejWrQYrhQB for
-	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 05:05:40 -0700 (PDT)
-Date: Thu, 20 Sep 2012 14:05:37 +0200
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: Questions on RAID alignment
-Message-ID: <20120920140537.11a50638@harpe.intellique.com>
-In-Reply-To: <505AF9EA.7030603@shiftmail.org>
-References: <505AF9EA.7030603@shiftmail.org>
-Mime-Version: 1.0
+	q8KDWItr088882 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 08:32:18 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 8BH3K5FyYnIRY43R for
+	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 06:33:30 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8KDXUt4020074
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:33:30 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-73.phx2.redhat.com
+	[10.3.113.73])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8KDXRt2019074
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:33:29 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 0/6 V4] inode32/inode64 allocation changes 
+Date: Thu, 20 Sep 2012 10:32:35 -0300
+Message-Id: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,53 +27,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Spelic <spelic@shiftmail.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le Thu, 20 Sep 2012 13:11:38 +0200
-Spelic <spelic@shiftmail.org> =E9crivait:
+This patch set adds inode64 as the default allocation mode, but also includes 2
+patches to remove duplicated code and another one to make inode32 able to be
+remounted.
 
-> 1- Does XFS support alignment to concatenation RAIDs (e.g. linear
-> over raid1) similarly to striped ones? I am guessing probably su and
-> sw should not be specified and the agcount should be multiple of the
-> number of the concatenated devices, is that correct?
+NOTE: This patch has as dependency "Make inode64 a remountable option" patch.
 
-No, it's better to set your sw/su accordingly to your RAID setup
-(example: 8 drives RAID-10 256k stripe -> su=3D256k,sw=3D4) and let
-mkfs.xfs determine itself how many ag it wants, to adapt it both to the
-striping and filesystem size. =
+V4 properly set pagf_metadata in patch 5
 
+V3 has a better factoring of each patch goal, including other dchinner's
+suggestions in V2. 
+Also it contains a fix in how m_agirotor reset is made (patch 01) that I've
+found while doing tests with these patches.
 
-> 2- Can mkfs parameters be altered after creation, e.g. after growing
-> a RAID and then growing the XFS fs, can I also alter su, sw, agcount
-> somehow?
+Carlos Maiolino (6):
+  xfs: Fix m_agirotor reset during AG selection
+  xfs: make inode64 as the default allocation mode
+  xfs: reduce code duplication handling inode32/64 options
+  xfs: Fix mp->m_maxagi update during inode64 remount
+  xfs: add inode64->inode32 transition into xfs_set_inode32()
+  xfs: Make inode32 a remountable option
 
-agcount will be adjusted by xfs_growfs AFAIK. For the other parameters,
-not so much.
- =
+ fs/xfs/xfs_ialloc.c |   2 +-
+ fs/xfs/xfs_mount.c  |  43 +++----------------
+ fs/xfs/xfs_super.c  | 117 ++++++++++++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_super.h  |   2 +
+ 4 files changed, 99 insertions(+), 65 deletions(-)
 
-> 3- I seem to remember there was an xattr that one could attach
-> to /home (if /home was under XFS) so that every user (subdir
-> of /home) would get a different AG in a different RAID device. I
-> cannot find that information anymore on the internet; could you
-> refresh my mind?
-> =
-
-
-I really have no idea on this.
-
--- =
-
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+-- 
+1.7.11.4
 
 _______________________________________________
 xfs mailing list
