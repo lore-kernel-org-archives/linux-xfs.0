@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8KDWMdQ088933 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 08:32:22 -0500
+	q8KDWLuT088916 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 08:32:21 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VbswWVpnWUvzDB9R for
-	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 06:33:34 -0700 (PDT)
+	cuda.sgi.com with ESMTP id bnqqPYM6oeoM7SD0 for
+	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 06:33:33 -0700 (PDT)
 Received: from int-mx10.intmail.prod.int.phx2.redhat.com
 	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8KDXY9l016416
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8KDXXV5016404
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:33:34 -0400
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:33:33 -0400
 Received: from andromeda.usersys.redhat.com (ovpn-113-73.phx2.redhat.com
 	[10.3.113.73])
 	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8KDXRt6019074
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:33:33 -0400
+	id q8KDXRt5019074
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:33:32 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 4/6] xfs: Fix mp->m_maxagi update during inode64 remount
-Date: Thu, 20 Sep 2012 10:32:39 -0300
-Message-Id: <1348147961-7520-5-git-send-email-cmaiolino@redhat.com>
+Subject: [PATCH 3/6] xfs: reduce code duplication handling inode32/64 options
+Date: Thu, 20 Sep 2012 10:32:38 -0300
+Message-Id: <1348147961-7520-4-git-send-email-cmaiolino@redhat.com>
 In-Reply-To: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
 References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,29 +36,203 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-With the changes made on xfs_set_inode64(), to make it behave as
-xfs_set_inode32() (now leaving to the caller the responsibility to update
-mp->m_maxagi), we use the return value of xfs_set_inode64() to update
-mp->m_maxagi during remount.
+Add xfs_set_inode32() to be used to enable inode32 allocation mode. this will
+reduce the amount of duplicated code needed to mount/remount a filesystem with
+inode32 option.
+This patch also changes xfs_set_inode64() to return the maximum AG number that
+inodes can be allocated instead of set mp->m_maxagi by itself, so that the
+behaviour is the same as xfs_set_inode32().
+This simplifies code that calls these functions and needs to know the maximum
+AG that inodes can be allocated in.
 
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/xfs/xfs_super.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ fs/xfs/xfs_mount.c | 43 +++-----------------------
+ fs/xfs/xfs_super.c | 89 +++++++++++++++++++++++++++++++++++++++---------------
+ fs/xfs/xfs_super.h |  2 ++
+ 3 files changed, 72 insertions(+), 62 deletions(-)
 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 29c2f83..b2bd3a0 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -440,7 +440,7 @@ xfs_initialize_perag(
+ 	xfs_agnumber_t	agcount,
+ 	xfs_agnumber_t	*maxagi)
+ {
+-	xfs_agnumber_t	index, max_metadata;
++	xfs_agnumber_t	index;
+ 	xfs_agnumber_t	first_initialised = 0;
+ 	xfs_perag_t	*pag;
+ 	xfs_agino_t	agino;
+@@ -500,43 +500,10 @@ xfs_initialize_perag(
+ 	else
+ 		mp->m_flags &= ~XFS_MOUNT_32BITINODES;
+ 
+-	if (mp->m_flags & XFS_MOUNT_32BITINODES) {
+-		/*
+-		 * Calculate how much should be reserved for inodes to meet
+-		 * the max inode percentage.
+-		 */
+-		if (mp->m_maxicount) {
+-			__uint64_t	icount;
+-
+-			icount = sbp->sb_dblocks * sbp->sb_imax_pct;
+-			do_div(icount, 100);
+-			icount += sbp->sb_agblocks - 1;
+-			do_div(icount, sbp->sb_agblocks);
+-			max_metadata = icount;
+-		} else {
+-			max_metadata = agcount;
+-		}
+-
+-		for (index = 0; index < agcount; index++) {
+-			ino = XFS_AGINO_TO_INO(mp, index, agino);
+-			if (ino > XFS_MAXINUMBER_32) {
+-				index++;
+-				break;
+-			}
+-
+-			pag = xfs_perag_get(mp, index);
+-			pag->pagi_inodeok = 1;
+-			if (index < max_metadata)
+-				pag->pagf_metadata = 1;
+-			xfs_perag_put(pag);
+-		}
+-	} else {
+-		for (index = 0; index < agcount; index++) {
+-			pag = xfs_perag_get(mp, index);
+-			pag->pagi_inodeok = 1;
+-			xfs_perag_put(pag);
+-		}
+-	}
++	if (mp->m_flags & XFS_MOUNT_32BITINODES)
++		index = xfs_set_inode32(mp);
++	else
++		index = xfs_set_inode64(mp);
+ 
+ 	if (maxagi)
+ 		*maxagi = index;
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 0c2e06f..966f56c 100644
+index 7686eee..0c2e06f 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1129,7 +1129,7 @@ xfs_fs_remount(
- 			mp->m_flags &= ~XFS_MOUNT_BARRIER;
- 			break;
- 		case Opt_inode64:
--			xfs_set_inode64(mp);
-+			mp->m_maxagi = xfs_set_inode64(mp);
- 			break;
- 		default:
- 			/*
+@@ -599,6 +599,71 @@ xfs_max_file_offset(
+ 	return (((__uint64_t)pagefactor) << bitshift) - 1;
+ }
+ 
++xfs_agnumber_t
++xfs_set_inode32(struct xfs_mount *mp)
++{
++	xfs_agnumber_t	index = 0;
++	xfs_sb_t	*sbp = &mp->m_sb;
++	xfs_agnumber_t	max_metadata;
++	xfs_agino_t	agino =	XFS_OFFBNO_TO_AGINO(mp, sbp->sb_agblocks -1, 0);
++	xfs_ino_t	ino = XFS_AGINO_TO_INO(mp, sbp->sb_agcount -1, agino);
++	xfs_perag_t	*pag;
++
++	/* Calculate how much should be reserved for inodes to meet
++	 * the max inode percentage.
++	 */
++	if (mp->m_maxicount) {
++		__uint64_t	icount;
++
++		icount = sbp->sb_dblocks * sbp->sb_imax_pct;
++		do_div(icount, 100);
++		icount += sbp->sb_agblocks - 1;
++		do_div(icount, sbp->sb_agblocks);
++		max_metadata = icount;
++	} else {
++		max_metadata = sbp->sb_agcount;
++	}
++
++	for (index = 0; index < sbp->sb_agcount; index++) {
++		ino = XFS_AGINO_TO_INO(mp, index, agino);
++		if (ino > XFS_MAXINUMBER_32) {
++			index++;
++			break;
++		}
++
++		pag = xfs_perag_get(mp, index);
++		pag->pagi_inodeok = 1;
++		if (index < max_metadata)
++			pag->pagf_metadata = 1;
++		xfs_perag_put(pag);
++	}
++	return index;
++}
++
++xfs_agnumber_t
++xfs_set_inode64(struct xfs_mount *mp)
++{
++	xfs_agnumber_t index = 0;
++
++	for (index = 0; index < mp->m_sb.sb_agcount; index++) {
++		struct xfs_perag	*pag;
++
++		pag = xfs_perag_get(mp, index);
++		pag->pagi_inodeok = 1;
++		pag->pagf_metadata = 0;
++		xfs_perag_put(pag);
++	}
++
++	/* There is no need for lock protection on m_flags,
++	 * the rw_semaphore of the VFS superblock is locked
++	 * during mount/umount/remount operations, so this is
++	 * enough to avoid concurency on the m_flags field
++	 */
++	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
++			 XFS_MOUNT_SMALL_INUMS);
++	return index;
++}
++
+ STATIC int
+ xfs_blkdev_get(
+ 	xfs_mount_t		*mp,
+@@ -1038,30 +1103,6 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+ 	xfs_reserve_blocks(mp, &resblks, NULL);
+ }
+ 
+-STATIC void
+-xfs_set_inode64(struct xfs_mount *mp)
+-{
+-	int i = 0;
+-
+-	for (i = 0; i < mp->m_sb.sb_agcount; i++) {
+-		struct xfs_perag	*pag;
+-
+-		pag = xfs_perag_get(mp, i);
+-		pag->pagi_inodeok = 1;
+-		pag->pagf_metadata = 0;
+-		xfs_perag_put(pag);
+-	}
+-
+-	/* There is no need for lock protection on m_flags,
+-	 * the rw_semaphore of the VFS superblock is locked
+-	 * during mount/umount/remount operations, so this is
+-	 * enough to avoid concurency on the m_flags field
+-	 */
+-	mp->m_flags &= ~(XFS_MOUNT_32BITINODES |
+-			 XFS_MOUNT_SMALL_INUMS);
+-	mp->m_maxagi = i;
+-}
+-
+ STATIC int
+ xfs_fs_remount(
+ 	struct super_block	*sb,
+diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
+index 09b0c26..9de4a92 100644
+--- a/fs/xfs/xfs_super.h
++++ b/fs/xfs/xfs_super.h
+@@ -75,6 +75,8 @@ struct block_device;
+ extern __uint64_t xfs_max_file_offset(unsigned int);
+ 
+ extern void xfs_blkdev_issue_flush(struct xfs_buftarg *);
++extern xfs_agnumber_t xfs_set_inode32(struct xfs_mount *);
++extern xfs_agnumber_t xfs_set_inode64(struct xfs_mount *);
+ 
+ extern const struct export_operations xfs_export_operations;
+ extern const struct xattr_handler *xfs_xattr_handlers[];
 -- 
 1.7.11.4
 
