@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8KDmpHp090996 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 08:48:51 -0500
-Message-ID: <505B1F03.4070004@sgi.com>
-Date: Thu, 20 Sep 2012 08:49:55 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q8KDnvTp091203 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 08:49:57 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id t3ACvieab6etwZX5 for
+	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 06:51:09 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8KDp99G028246
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 09:51:09 -0400
+Message-ID: <505B1F62.30105@redhat.com>
+Date: Thu, 20 Sep 2012 09:51:30 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] xfs: allocation worker causes freelist buffer lock
-	hang
-References: <20120919163133.097340199@sgi.com> <20120919233435.GF31501@dastard>
-In-Reply-To: <20120919233435.GF31501@dastard>
+Subject: Re: [PATCH 0/6 V4] inode32/inode64 allocation changes
+References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,30 +25,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 09/19/12 18:34, Dave Chinner wrote:
-> I suspect the only way to fix this is to re-use the old workqueue
-> method of avoiding blocking on the workqueue indefinitely. That is,
-> if we fail to get the lock in this case, we return with EGAIN and
-> requeue the work. __xfs_alloc_vextent() and xfs_alloc_fix_freelist()
-> already have trylock support, so this should be fairly easy to do.
-> If I also convert the work to delayed work, I can easily add a
-> backoff that will prevent busy looping on the workqueue.
->
-> I'll have a quick look at this and see what falls out....
+On 09/20/2012 09:32 AM, Carlos Maiolino wrote:
+> This patch set adds inode64 as the default allocation mode, but also includes 2
+> patches to remove duplicated code and another one to make inode32 able to be
+> remounted.
+> 
+> NOTE: This patch has as dependency "Make inode64 a remountable option" patch.
+> 
+> V4 properly set pagf_metadata in patch 5
+> 
 
-Okay.
+Hi Carlos,
 
-Many of these paths are not using an allocator worker (userdata==0)
-and/or the loops are done within a new transaction.
+With that fix, this patchset looks good to me, thanks.
 
---Mark.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Brian
+
+> V3 has a better factoring of each patch goal, including other dchinner's
+> suggestions in V2. 
+> Also it contains a fix in how m_agirotor reset is made (patch 01) that I've
+> found while doing tests with these patches.
+> 
+> Carlos Maiolino (6):
+>   xfs: Fix m_agirotor reset during AG selection
+>   xfs: make inode64 as the default allocation mode
+>   xfs: reduce code duplication handling inode32/64 options
+>   xfs: Fix mp->m_maxagi update during inode64 remount
+>   xfs: add inode64->inode32 transition into xfs_set_inode32()
+>   xfs: Make inode32 a remountable option
+> 
+>  fs/xfs/xfs_ialloc.c |   2 +-
+>  fs/xfs/xfs_mount.c  |  43 +++----------------
+>  fs/xfs/xfs_super.c  | 117 ++++++++++++++++++++++++++++++++++++++++------------
+>  fs/xfs/xfs_super.h  |   2 +
+>  4 files changed, 99 insertions(+), 65 deletions(-)
+> 
 
 _______________________________________________
 xfs mailing list
