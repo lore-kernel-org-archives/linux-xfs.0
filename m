@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8LK7ETB245033 for <xfs@oss.sgi.com>; Fri, 21 Sep 2012 15:07:14 -0500
-Date: Fri, 21 Sep 2012 15:08:25 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfstests: 275, Don't remove all the files in SCRATCH_MNT.
-Message-ID: <20120921200825.GC1140@sgi.com>
-References: <1347620592-3420-1-git-send-email-tm@tao.ma>
+	q8LKJX2t245847 for <xfs@oss.sgi.com>; Fri, 21 Sep 2012 15:19:34 -0500
+Message-ID: <505CCC1D.4000203@redhat.com>
+Date: Fri, 21 Sep 2012 15:20:45 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1347620592-3420-1-git-send-email-tm@tao.ma>
+Subject: Re: [PATCH] xfstests: add _require_freeze and minor cleanups
+References: <505A4D04.2080105@redhat.com> <20120921163827.GA1140@sgi.com>
+	<505C9A35.5000404@redhat.com> <20120921195921.GB1140@sgi.com>
+In-Reply-To: <20120921195921.GB1140@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,22 +22,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tao Ma <tm@tao.ma>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Fri, Sep 14, 2012 at 07:03:12PM +0800, Tao Ma wrote:
-> From: Tao Ma <boyu.mt@taobao.com>
-> 
-> After the volume is mkfsed, it should have no other files that
-> need to be rmed. And what's more, it makes ext4 complain since
-> lost+found is also removed.
-> 
-> So remove this useless "rm -rf $SCRATCH_MNT/*".
-> 
-> Cc: Eric Sandeen <sandeen@sandeen.net>
-> Signed-off-by: Tao Ma <boyu.mt@taobao.com>
+On 9/21/12 2:59 PM, Ben Myers wrote:
+> On Fri, Sep 21, 2012 at 11:47:49AM -0500, Eric Sandeen wrote:
+>> On 9/21/12 11:38 AM, Ben Myers wrote:
+>>> Hey Eric,
+>>>
 
-Committed to git://oss.sgi.com/xfs/cmds/xfstests.git, master branch.
+...
+
+>>> Pretty good idea to generalize _require_freeze.  It looks like xfs_freeze is a
+>>> script that uses xfs_io which uses xfsctl XFS_IOC_FREEZE.  So isn't what you
+>>> have here xfs specific?  It wouldn't work for the other filesystems that
+>>> implement s_op.freeze_fs:
+>>
+>> It got elevated to a generic ioctl:
+>>
+>> fs/xfs/xfs_fs.h:
+>> /*      XFS_IOC_FREEZE            -- FIFREEZE   119      */
+>> /*      XFS_IOC_THAW              -- FITHAW     120      */
+>>
+>> to:
+>>
+>> include/linux/fs.h:
+>> #define FIFREEZE        _IOWR('X', 119, int)    /* Freeze */
+>> #define FITHAW          _IOWR('X', 120, int)    /* Thaw */
+> 
+> Ah, great.  I see it now.  It looks like test 119 is also using freeze.  Should
+> that one also _require_freeze?
+
+Since it's xfs-specific, I didn't think it was necessary, but it could.
+
+-Eric
+
+> Reviewed-by: Ben Myers <bpm@sgi.com>
+> 
 
 _______________________________________________
 xfs mailing list
