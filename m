@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8L4x0MN173752 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 23:59:01 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id oKJ1D3u6JIoIFnWO for <xfs@oss.sgi.com>;
-	Thu, 20 Sep 2012 22:00:13 -0700 (PDT)
-Message-ID: <505BF45D.5050909@sandeen.net>
-Date: Fri, 21 Sep 2012 00:00:13 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q8L7FdcJ183968 for <xfs@oss.sgi.com>; Fri, 21 Sep 2012 02:15:39 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id B3uFLi0CDBnxEwOP
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Fri, 21 Sep 2012 00:16:52 -0700 (PDT)
+Received: by pbbrp16 with SMTP id rp16so7879903pbb.26
+	for <xfs@oss.sgi.com>; Fri, 21 Sep 2012 00:16:51 -0700 (PDT)
+Date: Fri, 21 Sep 2012 12:46:44 +0530
+From: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
+Subject: Re: Re: [PATCH 3/3] XFS: Print error when unable to allocate inodes
+	or out of free inodes.
+Message-ID: <20120921071644.GA20650@Archie>
+References: <cover.1347396641.git.rprabhu@wnohang.net>
+	<93d9b37ce9ad720e14e2f9311e623a8e3e3139f5.1347396641.git.rprabhu@wnohang.net>
+	<20120911232144.GH11511@dastard>
 MIME-Version: 1.0
-Subject: Re: xfs_repair deleting realtime files.
-References: <CAHt31_9K_vrzoqwSVsz-6VNVmMUzMyGCFEZfviRV-xPcUqv8-w@mail.gmail.com>
-In-Reply-To: <CAHt31_9K_vrzoqwSVsz-6VNVmMUzMyGCFEZfviRV-xPcUqv8-w@mail.gmail.com>
+In-Reply-To: <20120911232144.GH11511@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,139 +26,204 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============8737285214134156598=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Anand Tiwari <tiwarikanand@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, xfs@oss.sgi.com
 
-On 9/20/12 7:40 PM, Anand Tiwari wrote:
-> Hi All,
-> 
-> I have been looking into an issue with xfs_repair with realtime sub volume. some times while running xfs_repair I see following errors
-> 
-> ----------------------------
-> data fork in rt inode 134 claims used rt block 19607
-> bad data fork in inode 134
-> would have cleared inode 134
-> data fork in rt inode 135 claims used rt block 29607
-> bad data fork in inode 135
-> would have cleared inode 135
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
->         - agno = 2
->         - agno = 3
-> entry "test-011" in shortform directory 128 references free inode 134
-> would have junked entry "test-011" in directory inode 128
-> entry "test-0" in shortform directory 128 references free inode 135
-> would have junked entry "test-0" in directory inode 128
-> data fork in rt ino 134 claims dup rt extent,off - 0, start - 7942144, count 2097000
-> bad data fork in inode 134
-> would have cleared inode 134
-> data fork in rt ino 135 claims dup rt extent,off - 0, start - 13062144, count 2097000
-> bad data fork in inode 135
-> would have cleared inode 135
-> No modify flag set, skipping phase 5
-> ------------------------
-> 
-> Here is the bmap for both inodes.
-> 
-> xfs_db> inode 135
-> xfs_db> bmap
-> data offset 0 startblock 13062144 (12/479232) count 2097000 flag 0
-> data offset 2097000 startblock 15159144 (14/479080) count 2097000 flag 0
-> data offset 4194000 startblock 17256144 (16/478928) count 2097000 flag 0
-> data offset 6291000 startblock 19353144 (18/478776) count 2097000 flag 0
-> data offset 8388000 startblock 21450144 (20/478624) count 2097000 flag 0
-> data offset 10485000 startblock 23547144 (22/478472) count 2097000 flag 0
-> data offset 12582000 startblock 25644144 (24/478320) count 2097000 flag 0
-> data offset 14679000 startblock 27741144 (26/478168) count 2097000 flag 0
-> data offset 16776000 startblock 29838144 (28/478016) count 2097000 flag 0
-> data offset 18873000 startblock 31935144 (30/477864) count 1607000 flag 0
-> xfs_db> inode 134
-> xfs_db> bmap
-> data offset 0 startblock 7942144 (7/602112) count 2097000 flag 0
-> data offset 2097000 startblock 10039144 (9/601960) count 2097000 flag 0
-> data offset 4194000 startblock 12136144 (11/601808) count 926000 flag 0
 
-It's been a while since I thought about realtime, but -
+--===============8737285214134156598==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="opJtzjQTFsWo+cga"
+Content-Disposition: inline
 
-That all seems fine, I don't see anything overlapping there, they are
-all perfectly adjacent, though of interesting size.
 
-> 
-> by looking into xfs_repair code, it looks like repair does not handle
-> a case where we have more than one extent in a real-time extent. 
-> following is code from repair/dinode.c: process_rt_rec
+--opJtzjQTFsWo+cga
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-"more than one extent in a real-time extent?"  I'm not sure what that means.
+Hi,
 
-Every extent above is length 2097000 blocks, and they are adjacent.
-But you say your realtime extent size is 512 blocks ... which doesn't go
-into 2097000 evenly.   So that's odd, at least.
 
-Can you provide your xfs_info output for this fs?
-Or maybe better yet an xfs_metadump image.
+* On Wed, Sep 12, 2012 at 09:21:44AM +1000, Dave Chinner <david@fromorbit.c=
+om> wrote:
+>On Wed, Sep 12, 2012 at 03:43:24AM +0530, raghu.prabhu13@gmail.com wrote:
+>> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>>
+>> When xfs_dialloc is unable to allocate required number of inodes or ther=
+e are no
+>> AGs with free inodes, printk the error in ratelimited manner.
+>>
+>> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>> ---
+>>  fs/xfs/xfs_ialloc.c | 19 +++++++++++++++----
+>>  1 file changed, 15 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+>> index e75a39d..034131b 100644
+>> --- a/fs/xfs/xfs_ialloc.c
+>> +++ b/fs/xfs/xfs_ialloc.c
+>> @@ -990,8 +990,11 @@ xfs_dialloc(
+>>  				goto out_error;
+>>
+>>  			xfs_perag_put(pag);
+>> -			*inop =3D NULLFSINO;
+>> -			return 0;
+>> +
+>> +			xfs_err_ratelimited(mp,
+>> +				"Unable to allocate inodes in AG %d: Required %d, Current %llu, Max=
+imum %llu",
+>> +				agno, XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
+>> +			goto out_spc;
+>
+>This changes the error to be returned from 0 to ENOSPC. Adding error
+>messages shouldn't change the logic of the code.
 
-> -----
->      for (b = irec->br_startblock; b < irec->br_startblock +                                                                                                                
->                         irec->br_blockcount; b += mp->m_sb.sb_rextsize)  {                                                                                                     
->                 ext = (xfs_drtbno_t) b / mp->m_sb.sb_rextsize;                                                                                                                 
->                 pwe = xfs_sb_version_hasextflgbit(&mp->m_sb) &&                                                                                                                
->                                 irec->br_state == XFS_EXT_UNWRITTEN &&                                                                                                         
->                                 (b % mp->m_sb.sb_rextsize != 0);               
-> -----
-> 
-> In my case rextsize is 512 (512 * 4096 = 2mb). So we have multiple
-> extents (written extents to be precise, thanks dchinner for that),
-> value of "ext" will be same for all of them and xfs_repair does not
-> like it. thus the error message ""data fork in rt inode XX claims
-> used rt block XX".
+1) Yes, there is a confusion regarding that. =20
 
-"ext" should not be the same for all of them; ext is the realtime extent
-number in the fs, based on the physical start, br_startblock,
-divided by the rt extent size.  There shouldn't be duplicate values
-of "ext" based on the bmaps above.
+>
+>Also, you might want tolook at how ENOSPC is returned from
+>xfs_ialloc_ag_alloc(). it only occurs when:
+>
+>	if (mp->m_maxicount &&
+>            mp->m_sb.sb_icount + newlen > mp->m_maxicount) {
+>
+>i.e. it is exactly the same error case as the "noroom" error below.
+>It has nothing to do with being unable to allocate inodes in the
+>specific AG - the global inode count is too high. IOWs, the error
+>message is not correct.
 
-The error comes from search_rt_dup_extent() which looks for overlaps
-elsewhere in the fs...
+Now, in xfs_dialloc=20
 
-If you can provide a metadump of the fs it might be easier to see what's going on.
 
--Eric
+	if (mp->m_maxicount &&
+	    mp->m_sb.sb_icount + XFS_IALLOC_INODES(mp) > mp->m_maxicount) {
+		noroom =3D 1;
+		okalloc =3D 0;
+	}
 
-> If I ignore this failure condition, xfs_repairs seems to be happy.
-> (FYI: this file-system is cleanly umounted) But in my opinion, its
-> not good as these multiple extents can overlap too.
+why does it not make sense to bail out with ENOSPC then itself? I=20
+mean, what is the point of the loop when there is no room=20
+(noroom=3D1) and no allocations are allowed (okalloc =3D 0), also=20
+since the xfs_ialloc_ag_alloc in the loop uses same global logic=20
+to return.
 
-> Should we be using XR_E_MULT to flag and keep track of duplicated
-> real-time extents. (maybe use the present API for adding/detecting
-> duplicate extents)
-> 
-> I am open of suggestion or comments on how to fix this.
-> 
-> xfs_repair version is 3.1.8 and kernel 2.6.37.
-> 
-> thanks,
-> Anand
-> 
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+
+
+>
+>Also, 80 columns.
+>
+>>  		}
+>>
+>>  		if (ialloced) {
+>> @@ -1016,11 +1019,19 @@ nextag:
+>>  		if (++agno =3D=3D mp->m_sb.sb_agcount)
+>>  			agno =3D 0;
+>>  		if (agno =3D=3D start_agno) {
+>> -			*inop =3D NULLFSINO;
+>> -			return noroom ? ENOSPC : 0;
+>> +			if (noroom) {
+>> +				xfs_err_ratelimited(mp,
+>> +					"Out of AGs with free inodes: Required %d, Current %llu, Maximum %=
+llu",
+>> +					 XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
+>
+>The error message here is misleading - the error is that we've
+>exceeded the maximum inode count for the filesystem (same as the
+>above error message case), so no further allocations are allowed.
+>
+>What about the !noroom case? Isn't that a real ENOSPC condition?
+>i.e. we've tried to allocate inodes in every AG and yet we've failed
+>in all of them because there is no aligned, contiguous free space in
+>any of the AGs. Shouldn't that emit an appropriate warning?
+
+The warning is already emitted in call to xfs_ialloc_ag_select.=20
+
+Now, what does inop =3D NULLFSINO, noroom =3D 0 and return value of 0 mean,=
+=20
+
+=66rom the call chain of xfs_dir_ialloc -> xfs_ialloc ->=20
+xfs_dialloc=20
+
+I see that, it is a true ENOSPC only if both the buffer pointed=20
+by ialloc_context and the inode are NULL or there is an error=20
+returned, in former case (noroom=3D0)  xfs_dir_ialloc retries the=20
+allocation (ie.  when AGI buffer is non-NULL).
+
+Now, in case of global inode exhaustion, it is hard error which=20
+can be fixed only by remounting with inode64 and nothing else=20
+will do, hence, I think ENOSPC must be returned as error instead=20
+of 0. (also in case of point #1 above)
+
+So, are the assumptions made above correct?
+
+>
+>> +				goto out_spc;
+>> +			}
+>> +			return 0;
+>>  		}
+>>  	}
+>>
+>> +out_spc:
+>> +	*inop =3D NULLFSINO;
+>> +	return ENOSPC;
+>>  out_alloc:
+>>  	*IO_agbp =3D NULL;
+>>  	return xfs_dialloc_ag(tp, agbp, parent, inop);
+>
+>Default behaviour on a loop break is to allocate inodes, not return
+>ENOSPC.
+>
+>BTW, there's no need to cc LKML for XFS specific patches. LKML is
+>noisy enough as it is without unnecessary cross-posts....
+>
+>Cheers,
+>
+>Dave.
+>--=20
+>Dave Chinner
+>david@fromorbit.com
+>
+
+
+
+
+Regards,
+--=20
+Raghavendra Prabhu
+GPG Id : 0xD72BE977
+Fingerprint: B93F EBCB 8E05 7039 CD3C A4B8 A616 DCA1 D72B E977
+www: wnohang.net
+
+--opJtzjQTFsWo+cga
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.19 (GNU/Linux)
+
+iQEcBAEBAgAGBQJQXBRcAAoJEKYW3KHXK+l3tWgIALJwOy5vXU8YC8r9K4cfuHVQ
+KtDNVgEYI/gbEHNhSzl21KuYvQes4fE1qwH/orx+IvSv7zZJDvRBVBVrPeQaL0UE
+Tlz5PASy8sqv/OvaoBhq/JpUzNw5vDMFbc8x4k0FPzqg7dmvVWQPi04m/a8Gkb4H
+4n1pTCKK1T/s2TOwuqMyI/CCjaCUz1Jpvup55B3aD+CZxHdDnEmwrpQgmh/e2kmq
+SywZTEwzxgnhX8YwvRzpq+WMSnj30ISAKA4eBTSi7ifpYXlJj5CEjX5ELc2WXYul
+wOhk13n2oiYP8OQAfx6NH/tdl864oYvo4XSdwi9t1TMNBlDApy1N22mF8LHXBd8=
+=EAyN
+-----END PGP SIGNATURE-----
+
+--opJtzjQTFsWo+cga--
+
+
+--===============8737285214134156598==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============8737285214134156598==--
