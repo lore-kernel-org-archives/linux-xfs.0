@@ -1,18 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8L0dkeN151324 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 19:39:46 -0500
-Received: from mail-vb0-f53.google.com (mail-vb0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id vxPMHxojC1DnYc3D
+	q8L4r0ur173209 for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 23:53:00 -0500
+Received: from mail-pb0-f53.google.com (mail-pb0-f53.google.com
+	[209.85.160.53]) by cuda.sgi.com with ESMTP id nTnDKFqdNcVQUAtf
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 17:40:59 -0700 (PDT)
-Received: by vbbfc21 with SMTP id fc21so3299675vbb.26
-	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 17:40:58 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 20 Sep 2012 18:40:58 -0600
-Message-ID: <CAHt31_9K_vrzoqwSVsz-6VNVmMUzMyGCFEZfviRV-xPcUqv8-w@mail.gmail.com>
-Subject: xfs_repair deleting realtime files.
-From: Anand Tiwari <tiwarikanand@gmail.com>
+	<xfs@oss.sgi.com>; Thu, 20 Sep 2012 21:54:13 -0700 (PDT)
+Received: by pbbrp16 with SMTP id rp16so7563526pbb.26
+	for <xfs@oss.sgi.com>; Thu, 20 Sep 2012 21:54:12 -0700 (PDT)
+From: raghu.prabhu13@gmail.com
+Subject: [PATCH v6] Stop periodic syncing if filesystem is already shutdown.
+Date: Fri, 21 Sep 2012 10:24:04 +0530
+Message-Id: <143becf0f8266fbc8025ec97c8f44476d8fcafc5.1348203015.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,243 +20,86 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0999267451964543093=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: david@fromorbit.com
+Cc: Raghavendra D Prabhu <rprabhu@wnohang.net>, xfs@oss.sgi.com
 
---===============0999267451964543093==
-Content-Type: multipart/alternative; boundary=20cf307ca01c50e6ce04ca2b7e4b
+From: Raghavendra D Prabhu <rprabhu@wnohang.net>
 
---20cf307ca01c50e6ce04ca2b7e4b
-Content-Type: text/plain; charset=ISO-8859-1
+This is to prevent xfs_log_force from printing error message continuously (due
+to xfs_sync and others) till umount if the disk has been forcefully unplugged.
 
-Hi All,
+This is to prevent messages like these from being displayed repeatedly.
 
-I have been looking into an issue with xfs_repair with realtime sub volume.
-some times while running xfs_repair I see following errors
+[ 3873.009329] XFS (sdb3): xfs_log_force: error 5 returned.
 
-----------------------------
-data fork in rt inode 134 claims used rt block 19607
-bad data fork in inode 134
-would have cleared inode 134
-data fork in rt inode 135 claims used rt block 29607
-bad data fork in inode 135
-would have cleared inode 135
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-entry "test-011" in shortform directory 128 references free inode 134
-would have junked entry "test-011" in directory inode 128
-entry "test-0" in shortform directory 128 references free inode 135
-would have junked entry "test-0" in directory inode 128
-data fork in rt ino 134 claims dup rt extent,off - 0, start - 7942144,
-count 2097000
-bad data fork in inode 134
-would have cleared inode 134
-data fork in rt ino 135 claims dup rt extent,off - 0, start - 13062144,
-count 2097000
-bad data fork in inode 135
-would have cleared inode 135
-No modify flag set, skipping phase 5
-------------------------
+Note, that even after xfs_do_force_shutdown has been called, xfs_log_force
+doesn't stop till the filesystem has been unmounted (and it keeps printing
+"error 5 returned" to kernel log).
 
-Here is the bmap for both inodes.
+To fix this, added condition over XFS_FORCED_SHUTDOWN to xfs_log_force and
+xfs_fs_sync_fs.
 
-xfs_db> inode 135
-xfs_db> bmap
-data offset 0 startblock 13062144 (12/479232) count 2097000 flag 0
-data offset 2097000 startblock 15159144 (14/479080) count 2097000 flag 0
-data offset 4194000 startblock 17256144 (16/478928) count 2097000 flag 0
-data offset 6291000 startblock 19353144 (18/478776) count 2097000 flag 0
-data offset 8388000 startblock 21450144 (20/478624) count 2097000 flag 0
-data offset 10485000 startblock 23547144 (22/478472) count 2097000 flag 0
-data offset 12582000 startblock 25644144 (24/478320) count 2097000 flag 0
-data offset 14679000 startblock 27741144 (26/478168) count 2097000 flag 0
-data offset 16776000 startblock 29838144 (28/478016) count 2097000 flag 0
-data offset 18873000 startblock 31935144 (30/477864) count 1607000 flag 0
-xfs_db> inode 134
-xfs_db> bmap
-data offset 0 startblock 7942144 (7/602112) count 2097000 flag 0
-data offset 2097000 startblock 10039144 (9/601960) count 2097000 flag 0
-data offset 4194000 startblock 12136144 (11/601808) count 926000 flag 0
+To simulate it, mount an xfs filesystem located on external disk, and then pull
+the power to the disk.
 
+Now, the dmesg looks,
 
-by looking into xfs_repair code, it looks like repair does not handle a
-case where we have more than one extent in a real-time extent.
-following is code from repair/dinode.c: process_rt_rec
+[  268.307303] XFS (sdb2): xfs_do_force_shutdown(0x1) called from line 1031 of file fs/xfs/xfs_buf.c.  Return address = 0xffffffff8127c13a
+[  268.307318] XFS (sdb2): I/O Error Detected. Shutting down filesystem
+[  268.307323] XFS (sdb2): Please umount the filesystem and rectify the problem(s)
 
------
-     for (b = irec->br_startblock; b < irec->br_startblock
+Version 1: Removed calling xfs_syncd_stop from xfs_sync_worker.
+Version 2: Removed calling xfs_fs_writable in xfs_sync_worker and xfs_flush_worker.
+Version 3: Removed calling xfs_syncd_stop in xfs_bwrite.
+Version 4: Added return statements to xfs_log_force and xfs_fs_sync_fs.
+Version 5: As per suggestion, removed EIO return in xfs_log_force.
+
+Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+---
+ fs/xfs/xfs_log.c   | 5 ++++-
+ fs/xfs/xfs_super.c | 4 ++++
+ 2 files changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 7f4f937..161c925 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -3002,7 +3002,10 @@ xfs_log_force(
+ 
+ 	trace_xfs_log_force(mp, 0);
+ 	error = _xfs_log_force(mp, flags, NULL);
+-	if (error)
++	/*
++	 * Avoid warning when the filesystem has already shutdown.
++	 */
++	if (error && !XFS_FORCED_SHUTDOWN(mp))
+ 		xfs_warn(mp, "%s: error %d returned.", __func__, error);
+ }
+ 
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 19e2380..8df3387 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -944,6 +944,10 @@ xfs_fs_sync_fs(
+ 	if (!wait)
+ 		return 0;
+ 
++	if (XFS_FORCED_SHUTDOWN(mp)) {
++		return XFS_ERROR(EIO);
++	}
 +
-
-                        irec->br_blockcount; b += mp->m_sb.sb_rextsize)
-{
-
-                ext = (xfs_drtbno_t) b /
-mp->m_sb.sb_rextsize;
-
-                pwe = xfs_sb_version_hasextflgbit(&mp->m_sb)
-&&
-
-                                irec->br_state == XFS_EXT_UNWRITTEN
-&&
-
-                                (b % mp->m_sb.sb_rextsize !=
-0);
------
-
-In my case rextsize is 512 (512 * 4096 = 2mb). So we have multiple extents
-(written extents to be precise, thanks dchinner for that), value of "ext"
-will be same for all of them and xfs_repair does not like it. thus the
-error message ""data fork in rt inode XX claims used rt block XX".
-
-If I ignore this failure condition, xfs_repairs seems to be happy. (FYI:
-this file-system is cleanly umounted)
-But in my opinion, its not good as these multiple extents can overlap too.
-
-Should we be using XR_E_MULT to flag and keep track of duplicated real-time
-extents. (maybe use the present API for adding/detecting duplicate extents)
-
-I am open of suggestion or comments on how to fix this.
-
-xfs_repair version is 3.1.8 and kernel 2.6.37.
-
-thanks,
-Anand
-
---20cf307ca01c50e6ce04ca2b7e4b
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-Hi All,<br><br>I have been looking into an issue with xfs_repair with realt=
-ime sub volume. some times while running xfs_repair I see following errors =
-<br><br>----------------------------<br>data fork in rt inode 134 claims us=
-ed rt block 19607<br>
-
-bad data fork in inode 134<br>would have cleared inode 134<br>data fork in =
-rt inode 135 claims used rt block 29607<br>bad data fork in inode 135<br>wo=
-uld have cleared inode 135<br>=A0=A0=A0=A0=A0=A0=A0 - agno =3D 1<br>=A0=A0=
-=A0=A0=A0=A0=A0 - agno =3D 2<br>
-
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 3<br>=A0=A0=A0=A0=A0=A0=A0 - process newly=
- discovered inodes...<br>Phase 4 - check for duplicate blocks...<br>=A0=A0=
-=A0=A0=A0=A0=A0 - setting up duplicate extent list...<br>=A0=A0=A0=A0=A0=A0=
-=A0 - check for inodes claiming duplicate blocks...<br>
-
-=A0=A0=A0=A0=A0=A0=A0 - agno =3D 0<br>=A0=A0=A0=A0=A0=A0=A0 - agno =3D 1<br=
->=A0=A0=A0=A0=A0=A0=A0 - agno =3D 2<br>=A0=A0=A0=A0=A0=A0=A0 - agno =3D 3<b=
-r>entry &quot;test-011&quot; in shortform directory 128 references free ino=
-de 134<br>would have junked entry &quot;test-011&quot; in directory inode 1=
-28<br>
-
-entry &quot;test-0&quot; in shortform directory 128 references free inode 1=
-35<br>would have junked entry &quot;test-0&quot; in directory inode 128<br>=
-data fork in rt ino 134 claims dup rt extent,off - 0, start - 7942144, coun=
-t 2097000<br>
-
-bad data fork in inode 134<br>would have cleared inode 134<br>data fork in =
-rt ino 135 claims dup rt extent,off - 0, start - 13062144, count 2097000<br=
->bad data fork in inode 135<br>would have cleared inode 135<br>No modify fl=
-ag set, skipping phase 5<br>
-
-------------------------<br><br>Here is the bmap for both inodes. <br><br>x=
-fs_db&gt; inode 135<br>xfs_db&gt; bmap<br>data offset 0 startblock 13062144=
- (12/479232) count 2097000 flag 0<br>data offset 2097000 startblock 1515914=
-4 (14/479080) count 2097000 flag 0<br>
-
-data offset 4194000 startblock 17256144 (16/478928) count 2097000 flag 0<br=
->data offset 6291000 startblock 19353144 (18/478776) count 2097000 flag 0<b=
-r>data offset 8388000 startblock 21450144 (20/478624) count 2097000 flag 0<=
-br>
-
-data offset 10485000 startblock 23547144 (22/478472) count 2097000 flag 0<b=
-r>data offset 12582000 startblock 25644144 (24/478320) count 2097000 flag 0=
-<br>data offset 14679000 startblock 27741144 (26/478168) count 2097000 flag=
- 0<br>
-
-data offset 16776000 startblock 29838144 (28/478016) count 2097000 flag 0<b=
-r>data offset 18873000 startblock 31935144 (30/477864) count 1607000 flag 0=
-<br>xfs_db&gt; inode 134<br>xfs_db&gt; bmap<br>data offset 0 startblock 794=
-2144 (7/602112) count 2097000 flag 0<br>
-
-data offset 2097000 startblock 10039144 (9/601960) count 2097000 flag 0<br>=
-data offset 4194000 startblock 12136144 (11/601808) count 926000 flag 0<br>=
-<br><br>by looking into xfs_repair code, it looks like repair does not hand=
-le a case where we have more than one extent in a real-time extent. <br>
-
-following is code from repair/dinode.c: process_rt_rec<br><br>-----<br>=A0=
-=A0=A0=A0 for (b =3D irec-&gt;br_startblock; b &lt; irec-&gt;br_startblock =
-+=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 <br>
-
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 irec-=
-&gt;br_blockcount; b +=3D mp-&gt;m_sb.sb_rextsize)=A0 {=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 <br>=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 ext =3D (xfs_drtbno_t) b / mp-&gt;m_sb=
-.sb_rextsize;=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 <br>
-
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pwe =3D xfs_sb_version_hasext=
-flgbit(&amp;mp-&gt;m_sb) &amp;&amp;=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 <b=
-r>=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0 irec-&gt;br_state =3D=3D XFS_EXT_UNWRITTEN &amp;&amp;=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0 <br>
-
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0 (b % mp-&gt;m_sb.sb_rextsize !=3D 0);=A0=A0=A0=A0=A0=A0=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0 <br>-----<br><br>In my case rextsize is 512 (51=
-2 * 4096 =3D 2mb). So we have multiple extents (written extents to be preci=
-se, thanks dchinner for that), value of &quot;ext&quot; will be same for al=
-l of them and xfs_repair does not like it. thus the error message &quot;&qu=
-ot;data fork in rt inode XX claims used rt block XX&quot;. <br>
-
-<br>If I ignore this failure condition, xfs_repairs seems to be happy. (FYI=
-: this file-system is cleanly umounted)<br>But in my opinion, its not good =
-as these multiple extents can overlap too. <br><br>Should we be using XR_E_=
-MULT to flag and keep track of duplicated real-time extents. (maybe use the=
- present API for adding/detecting duplicate extents) <br>
-
-<br>I am open of suggestion or comments on how to fix this. <br><br>xfs_rep=
-air version is 3.1.8 and kernel 2.6.37. <br><br>thanks,<br>Anand<br><br>
-
---20cf307ca01c50e6ce04ca2b7e4b--
-
-
---===============0999267451964543093==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+ 	error = xfs_quiesce_data(mp);
+ 	if (error)
+ 		return -error;
+-- 
+1.7.12.1
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0999267451964543093==--
