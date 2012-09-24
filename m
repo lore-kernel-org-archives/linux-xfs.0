@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8O7sdWu114914 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 02:54:39 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	262TFSLHBAGqJxFS for <xfs@oss.sgi.com>;
-	Mon, 24 Sep 2012 00:55:54 -0700 (PDT)
-Date: Mon, 24 Sep 2012 17:55:51 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair deleting realtime files.
-Message-ID: <20120924075551.GF20960@dastard>
-References: <CAHt31_9K_vrzoqwSVsz-6VNVmMUzMyGCFEZfviRV-xPcUqv8-w@mail.gmail.com>
-	<505BF45D.5050909@sandeen.net>
+	q8OA2V5q129001 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 05:02:31 -0500
+Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
+	[209.85.217.181]) by cuda.sgi.com with ESMTP id
+	pDL8Y5tV9YDVrITv (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 24 Sep 2012 03:03:46 -0700 (PDT)
+Received: by lbbgg6 with SMTP id gg6so1724518lbb.26
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 03:03:45 -0700 (PDT)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: Re: [PATCH 1/6] xfstest: add fio git submodule
+In-Reply-To: <505FD0A9.3090601@redhat.com>
+References: <a> <1348428276-13161-1-git-send-email-dmonakhov@openvz.org>
+	<505FD0A9.3090601@redhat.com>
+Date: Mon, 24 Sep 2012 14:03:42 +0400
+Message-ID: <87lifzd9fl.fsf@openvz.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <505BF45D.5050909@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,74 +29,150 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Anand Tiwari <tiwarikanand@gmail.com>, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de, xfs@oss.sgi.com
 
-On Fri, Sep 21, 2012 at 12:00:13AM -0500, Eric Sandeen wrote:
-> On 9/20/12 7:40 PM, Anand Tiwari wrote:
-> > Hi All,
+On Sun, 23 Sep 2012 22:16:57 -0500, Eric Sandeen <sandeen@redhat.com> wrote:
+> On 9/23/12 2:24 PM, Dmitry Monakhov wrote:
+> > FIO is very flexible io generator, i would call it IO swiss knife.
+> > Currently we have tonnes of hardcoded application which reproduces
+> > some predefined scenario. This approach has obvious dissadvantages
+> > 1) Lack of flexability: once written it is hard to modify it in future
+> > 2) Code base is large, many routines written again and again
 > > 
-> > I have been looking into an issue with xfs_repair with realtime sub volume. some times while running xfs_repair I see following errors
+> > At the same time add new fio based tast is just add simle INI file.
+> > This greatly simplify code review. I do beleve that some day we will
+> > replace most of hardcoded io binaries with fio.
+> 
+> The submodule approach is interesting, but I wonder - we have quite a few
+> dependencies on other binaries already; what are the pros and cons of creating
+> this as a git submodule vs. simply expecting fio to be installed on the
+> system like any of the other dependencies we have today?
+Pro:
+ P1) allow to specify exact commit as a submodule HEAD this guarantee
+     that we will have known version and functionality regardless to
+     distribution package manager (which are known to be very conservative)
+ P2) Prevent duplicating of source code (fsstress.c/aio-stress.c and
+     etc).  If some one want to add new feature to submodule he
+     simply push it to official submodule repo and move submodule HEAD
+     In that both parties(submodule maintainer and project maintainer)
+     will benefit because new features will be available to every
+     submodule user
+Cons:
+ C1) New dependencies
+ C2) Learn people how to work with submodules
+
+I'll not assume (C2) as a serious argument because this is just one more
+git's command. For most users should just add new option to clone:
+git clone --recursive git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+
+(C1) Is not big deal in case of Fio because we already depends from
+libaio.
+
+(P2) Makes xfstest coverage larger because all new tests which use new 
+     submodules functionality will start to work by default (today it
+      silently ignored). As i already told fio is under rapid
+     development Jens Axboe does very good job so (P2) really works for
+     me, new features i need for xfstets was reviewed and accepted by Jens
+http://git.kernel.dk/?p=fio.git;a=commit;h=8b28bd41375930664a0ff9ff9b101a88ac416ac5
+http://git.kernel.dk/?p=fio.git;a=commit;h=9c25d2e3f498707c4fd5a4bb0adf9867ecb17768
+http://git.kernel.dk/?p=fio.git;a=commit;h=e615ceafbe3962a35b7a7e06a0c8f4e2c0652c65
+
+> 
+> (I package fio for Fedora, is it not commonly available on other
+> distros?)
+> 
+> -Eric
+> 
+> > Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> > ---
+> >  .gitmodules                  |    3 +++
+> >  common.config                |    3 +++
+> >  src/Makefile                 |    8 +++++---
+> >  src/aio-dio-regress/Makefile |    4 ++--
+> >  src/fio                      |    1 +
+> >  5 files changed, 14 insertions(+), 5 deletions(-)
+> >  create mode 100644 .gitmodules
+> >  create mode 160000 src/fio
 > > 
-> > ----------------------------
-> > data fork in rt inode 134 claims used rt block 19607
-> > bad data fork in inode 134
-> > would have cleared inode 134
-> > data fork in rt inode 135 claims used rt block 29607
-> > bad data fork in inode 135
-> > would have cleared inode 135
-.....
-> > xfs_db> inode 135
-> > xfs_db> bmap
-> > data offset 0 startblock 13062144 (12/479232) count 2097000 flag 0
-> > data offset 2097000 startblock 15159144 (14/479080) count 2097000 flag 0
-> > data offset 4194000 startblock 17256144 (16/478928) count 2097000 flag 0
-> > data offset 6291000 startblock 19353144 (18/478776) count 2097000 flag 0
-> > data offset 8388000 startblock 21450144 (20/478624) count 2097000 flag 0
-> > data offset 10485000 startblock 23547144 (22/478472) count 2097000 flag 0
-> > data offset 12582000 startblock 25644144 (24/478320) count 2097000 flag 0
-> > data offset 14679000 startblock 27741144 (26/478168) count 2097000 flag 0
-> > data offset 16776000 startblock 29838144 (28/478016) count 2097000 flag 0
-> > data offset 18873000 startblock 31935144 (30/477864) count 1607000 flag 0
-> > xfs_db> inode 134
-> > xfs_db> bmap
-> > data offset 0 startblock 7942144 (7/602112) count 2097000 flag 0
-> > data offset 2097000 startblock 10039144 (9/601960) count 2097000 flag 0
-> > data offset 4194000 startblock 12136144 (11/601808) count 926000 flag 0
+> > diff --git a/.gitmodules b/.gitmodules
+> > new file mode 100644
+> > index 0000000..f0481ea
+> > --- /dev/null
+> > +++ b/.gitmodules
+> > @@ -0,0 +1,3 @@
+> > +[submodule "src/fio"]
+> > +	path = src/fio
+> > +	url = git://git.kernel.dk/fio.git
+> > diff --git a/common.config b/common.config
+> > index 7bed1c5..25cddb4 100644
+> > --- a/common.config
+> > +++ b/common.config
+> > @@ -138,6 +138,9 @@ export DF_PROG="`set_prog_path df`"
+> >  [ "$DF_PROG" = "" ] && _fatal "df not found"
+> >  [ "$HOSTOS" = "Linux" ] && export DF_PROG="$DF_PROG -T"
+> >  
+> > +export FIO_PROG="`set_prog_path $PWD/src/fio/fio`"
+> > +[ "$FIO_PROG" = "" ] && _fatal "fio not found"
+> > +
+> >  export XFS_LOGPRINT_PROG="`set_prog_path xfs_logprint`"
+> >  export XFS_REPAIR_PROG="`set_prog_path xfs_repair`"
+> >  export XFS_CHECK_PROG="`set_prog_path xfs_check`"
+> > diff --git a/src/Makefile b/src/Makefile
+> > index 67250ee..255bdd4 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -52,16 +52,18 @@ LLDLIBS += $(LIBGDBM)
+> >  endif
+> >  
+> >  ifeq ($(HAVE_AIO), true)
+> > -SUBDIRS += aio-dio-regress
+> > +SUBDIRS += aio-dio-regress \
+> > +		fio
+> > +
+> >  endif
+> >  
+> >  CFILES = $(TARGETS:=.c)
+> >  LDIRT = $(TARGETS)
+> >  
+> >  
+> > -default: depend $(TARGETS) $(SUBDIRS)
+> > +default: .depend $(TARGETS) $(SUBDIRS)
+> >  
+> > -depend: .dep
+> > +.depend: .dep
+> >  
+> >  include $(BUILDRULES)
+> >  
+> > diff --git a/src/aio-dio-regress/Makefile b/src/aio-dio-regress/Makefile
+> > index 79dd55d..fcead9a 100644
+> > --- a/src/aio-dio-regress/Makefile
+> > +++ b/src/aio-dio-regress/Makefile
+> > @@ -8,9 +8,9 @@ LDIRT = $(TARGETS)
+> >  
+> >  LLDLIBS = -laio -lpthread
+> >  
+> > -default: depend $(TARGETS)
+> > +default: .depend $(TARGETS)
+> >  
+> > -depend: .dep
+> > +.depend: .dep
+> >  
+> >  include $(BUILDRULES)
+> >  
+> > diff --git a/src/fio b/src/fio
+> > new file mode 160000
+> > index 0000000..e12d280
+> > --- /dev/null
+> > +++ b/src/fio
+> > @@ -0,0 +1 @@
+> > +Subproject commit e12d2800f811cb64d376cfdaed9a1257f3fa9c99
+> > 
 > 
-> It's been a while since I thought about realtime, but -
-> 
-> That all seems fine, I don't see anything overlapping there, they are
-> all perfectly adjacent, though of interesting size.
-
-Yeah, the size is the problem.
-
-....
-> Every extent above is length 2097000 blocks, and they are adjacent.
-> But you say your realtime extent size is 512 blocks ... which doesn't go
-> into 2097000 evenly.   So that's odd, at least.
-
-Once you realise that the bmapbt is recording multiples of FSB (4k)
-rather than rtextsz (2MB), it becomes more obvious what the problem
-is: rounding of the extent size at MAXEXTLEN - 2097000 is only 152
-blocks short of 2^21 (2097152).
-
-I haven't looked at the kernel code yet to work out why it is
-rounding to a non-rtextsz multiple, but that is the source of the
-problem.
-
-The repair code is detecting that extents are not of the
-correct granularity, but the error message indicates that this was
-only ever expected for duplicate blocks occurring rather than a
-kernel bug. So "fixing repair" is not what is needd here - finding
-and fixing the kernel bug is what you shoul be looking at.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ext4" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 _______________________________________________
 xfs mailing list
