@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8OEMC26155691 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 09:22:12 -0500
+	q8OEMA1P155678 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 09:22:10 -0500
 Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
 	[209.85.217.181]) by cuda.sgi.com with ESMTP id
-	ZG4uBKbxqFRMrA5e (version=TLSv1 cipher=RC4-SHA bits=128
+	VnsOCAyrAVCZxxgl (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Sep 2012 07:23:28 -0700 (PDT)
-Received: by lbbgg6 with SMTP id gg6so2080818lbb.26
-	for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 07:23:27 -0700 (PDT)
+	Mon, 24 Sep 2012 07:23:26 -0700 (PDT)
+Received: by lbbgg6 with SMTP id gg6so2080779lbb.26
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 07:23:25 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 2/6] xfstest: add configurable load factors
-Date: Mon, 24 Sep 2012 18:23:17 +0400
-Message-Id: <1348496601-32637-2-git-send-email-dmonakhov@openvz.org>
-In-Reply-To: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
-References: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 1/6] xfstests: add fio requirement V2
+Date: Mon, 24 Sep 2012 18:23:16 +0400
+Message-Id: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,40 +29,64 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, hch@lst.de, xfs@oss.sgi.com
 
-Most stress test has probable behaviour, the longer test run the
-larger corner cases will be cover. It is reasonable to allow
-user to provide some sort of system load factor.
-This patch introduce two global variables
-LOAD_FACTOR: Usually means factor number of running tasks
-TIME_FACTOR: Usually means factor of run time, or number of operations
-If not speficied both variables defined to 1, so original behaviour
-preserved.
+FIO is very flexible io generator, i would call it IO swiss knife.
+Currently we have tonns of hardcoded application which reproduces
+some predefined scenario. This approach has obvious dissadvantages
+1) Lack of flexability: one written it is hard to modify it in future
+2) Code base is large, many routines written again and again
 
-TODO: Change all stress tests to use this variables
+At the same time add new fio based tast is just add simle INI file.
+This greatly simplify code review. I do beleve that some day we will
+replace most of hardcoded io binaries with fio.
+
+One who is planning to run $FIO_PROG should first check that system
+contains appropriate version which is able to handle jobfile
+for example:  _require_fio 286-job.fio
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- common.config |    8 ++++++++
- 1 files changed, 8 insertions(+), 0 deletions(-)
+ common.config |    1 +
+ common.rc     |   15 +++++++++++++++
+ 2 files changed, 16 insertions(+), 0 deletions(-)
 
 diff --git a/common.config b/common.config
-index d5c8956..cfa7bde 100644
+index 7bed1c5..d5c8956 100644
 --- a/common.config
 +++ b/common.config
-@@ -253,5 +253,13 @@ if [ ! -z "$SCRATCH_MNT" -a ! -d "$SCRATCH_MNT" ]; then
-     exit 1
- fi
+@@ -158,6 +158,7 @@ export XFS_QUOTA_PROG="`set_prog_path xfs_quota`"
+ export KILLALL_PROG="`set_prog_path killall`"
+ export INDENT_PROG="`set_prog_path indent`"
+ export XFS_COPY_PROG="`set_prog_path xfs_copy`"
++export FIO_PROG="`set_prog_path fio`"
  
-+if [ -z "$LOAD_FACTOR" ]; then
-+    LOAD_FACTOR=1
-+fi
+ # Generate a comparable xfsprogs version number in the form of
+ # major * 10000 + minor * 100 + release
+diff --git a/common.rc b/common.rc
+index 602513a..f5027e7 100644
+--- a/common.rc
++++ b/common.rc
+@@ -1758,6 +1758,21 @@ _require_btrfs()
+ 	[ $? -eq 0 ] || _notrun "$BTRFS_UTIL_PROG too old (must support $cmd)"
+ }
+ 
++# Check that fio is present, and it is able to execute given jobfile
++_require_fio()
++{
++	job=$1
 +
-+if [ -z "$TIME_FACTOR" ]; then
-+    TIME_FACTOR=1
-+fi
++	_require_command $FIO_PROG
++	if [ -z "$1" ]; then
++		return 1;
++	fi
++	
++	$FIO_PROG --warnings-fatal --showcmd $job >/dev/null 2>&1
++	[ $? -eq 0 ] || _notrun "$FIO_PROG too old"
++}
 +
- # make sure this script returns success
- /bin/true
++
+ # arg 1 is dev to remove and is output of the below eg.
+ # ls -l /sys/class/block/sdd | rev | cut -d "/" -f 3 | rev
+ _devmgt_remove()
 -- 
 1.7.7.6
 
