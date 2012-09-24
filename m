@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8OLo2Uq216516 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 16:50:02 -0500
-Message-ID: <5060D5D5.80602@sgi.com>
-Date: Mon, 24 Sep 2012 16:51:17 -0500
+	q8OLs1Qu217487 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 16:54:01 -0500
+Message-ID: <5060D6C4.3000406@sgi.com>
+Date: Mon, 24 Sep 2012 16:55:16 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] xfs_io: new functions
-References: <1343255450-28559-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1343255450-28559-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH] libxcmd: link against readline
+References: <1345936050-15139-1-git-send-email-vapier@gentoo.org>
+In-Reply-To: <1345936050-15139-1-git-send-email-vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,24 +21,21 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Mike Frysinger <vapier@gentoo.org>
 Cc: xfs@oss.sgi.com
 
-On 07/25/12 17:30, Dave Chinner wrote:
-> This is just a couple of additional functions for xfs_io I have had
-> sitting around for a while. The first is an interface to
-> sync_file_range() for better control of file writeback.  The second
-> and third introduce vectored pread/pwrite so that I could simulate
-> the same style of vectored IO that KVM does via direct IO (hint -
-> tracing indicated that the generic direct IO code doesn't handle
-> this particularly efficiently).
+On 08/25/12 18:07, Mike Frysinger wrote:
+> This library uses readline funcs (the input.c file), so we need to link
+> this shared library against it.
 >
-> _____________________________________________
+> URL: https://bugs.gentoo.org/432644
+> Reported-by: David Badia<dbadia@gmail.com>
+> Signed-off-by: Mike Frysinger<vapier@gentoo.org>
+ > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
-This series has been committed to
-    git://oss.sgi.com/xfs/cmds/xfsprogs.git
+Committed to git://oss.sgi.com/xfs/cmds/xfsprogs.git master branch.
 
--Mark.
+--Mark.
 
 _______________________________________________
 xfs mailing list
