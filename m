@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8OAn2Uk132464 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 05:49:02 -0500
+	q8OBa7Cr136635 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 06:36:07 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oUUdWpAbzHmEu6Lh for <xfs@oss.sgi.com>;
-	Mon, 24 Sep 2012 03:50:17 -0700 (PDT)
-Date: Mon, 24 Sep 2012 20:50:00 +1000
+	nj79asy0QfNAUqJd for <xfs@oss.sgi.com>;
+	Mon, 24 Sep 2012 04:37:21 -0700 (PDT)
+Date: Mon, 24 Sep 2012 21:37:18 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xlog_space_left: head behind tail ?
-Message-ID: <20120924105000.GI20960@dastard>
-References: <CAJzjPKm+g9g7qQrvQr+Jy2Gjbj5NZpRY2LyfMQQCi519uqGx=g@mail.gmail.com>
-	<20120924072600.GE20960@dastard>
-	<CAJzjPK=cvXZKdxhPeCjNO0QCGM7KRqJH8gy6B=EHH_xC-UkwkQ@mail.gmail.com>
+Subject: Re: [PATCH 1/6] xfstest: add fio git submodule
+Message-ID: <20120924113718.GK20960@dastard>
+References: <a> <1348428276-13161-1-git-send-email-dmonakhov@openvz.org>
+	<505FD0A9.3090601@redhat.com> <87lifzd9fl.fsf@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CAJzjPK=cvXZKdxhPeCjNO0QCGM7KRqJH8gy6B=EHH_xC-UkwkQ@mail.gmail.com>
+In-Reply-To: <87lifzd9fl.fsf@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +27,103 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Gregory Machin <gdm@linuxpro.co.za>
-Cc: xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, linux-ext4@vger.kernel.org, hch@lst.de, xfs@oss.sgi.com
 
-[ please leave the mailing list CC on responses. thanks. ]
+On Mon, Sep 24, 2012 at 02:03:42PM +0400, Dmitry Monakhov wrote:
+> On Sun, 23 Sep 2012 22:16:57 -0500, Eric Sandeen <sandeen@redhat.com> wrote:
+> > On 9/23/12 2:24 PM, Dmitry Monakhov wrote:
+> > > FIO is very flexible io generator, i would call it IO swiss knife.
+> > > Currently we have tonnes of hardcoded application which reproduces
+> > > some predefined scenario. This approach has obvious dissadvantages
+> > > 1) Lack of flexability: once written it is hard to modify it in future
+> > > 2) Code base is large, many routines written again and again
+> > > 
+> > > At the same time add new fio based tast is just add simle INI file.
+> > > This greatly simplify code review. I do beleve that some day we will
+> > > replace most of hardcoded io binaries with fio.
+> > 
+> > The submodule approach is interesting, but I wonder - we have quite a few
+> > dependencies on other binaries already; what are the pros and cons of creating
+> > this as a git submodule vs. simply expecting fio to be installed on the
+> > system like any of the other dependencies we have today?
+> Pro:
+>  P1) allow to specify exact commit as a submodule HEAD this guarantee
+>      that we will have known version and functionality regardless to
+>      distribution package manager (which are known to be very conservative)
 
-[Fixed up the top posting mess, too]
+You haven't provided a method to do this in this patch. All
+you've provided is a submodule that tracks the fio tree head.
+All this needs to be properly documented in the README file, at
+minimum.
 
-On Mon, Sep 24, 2012 at 09:29:04PM +1200, Gregory Machin wrote:
-> On Mon, Sep 24, 2012 at 7:26 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Sep 24, 2012 at 04:49:43PM +1200, Gregory Machin wrote:
-> >> Hi.
-> >>
-> >> Since I started using Acronis backup software I have the following in my logs :
-> >
-> > What kernel?
->
-> The Kernel : Linux nzhmlfpr04 2.6.32-279.5.2.el6.x86_64 #1 SMP Fri Aug
-> 24 01:07:11 UTC 2012 x86_64 x86_64 x86_64 GNU/Linux
-> OS CentOS : 6.3
+And conservative is good, too. I don't want tests to fail because of
+rapid changes in the fio tree causing regressions in fio itself. The
+tools that xfstests depends on need to be stable and relatively
+unchanging, because we're not testing them - we're testing the
+filesystem. The less the environemnt changes around the things we're
+actually supposed to be regression testing, the better.
 
-So, it doesn't have the fix. You'll have to upgrade to 3.4 or
-backport the patch yourself.
+>  P2) Prevent duplicating of source code (fsstress.c/aio-stress.c and
+>      etc).  If some one want to add new feature to submodule he
+>      simply push it to official submodule repo and move submodule HEAD
+>      In that both parties(submodule maintainer and project maintainer)
+>      will benefit because new features will be available to every
+>      submodule user
+> Cons:
+>  C1) New dependencies
+>  C2) Learn people how to work with submodules
+> 
+> I'll not assume (C2) as a serious argument because this is just one more
+> git's command. For most users should just add new option to clone:
+> git clone --recursive git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
 
-> >> Sep 22 20:17:54 nzhmlfpr04 kernel: XFS (dm-3): xlog_space_left: head behind tail
-> >                                           ^^^^
-> >> Sep 22 20:17:54 nzhmlfpr04 kernel:  tail_cycle = 125, tail_bytes = 489472
-> >> Sep 22 20:17:54 nzhmlfpr04 kernel:  GH   cycle = 125, GH   bytes = 468080
-> >> Sep 22 20:19:07 nzhmlfpr04 kernel: XFS (snumbd11d): Corruption
-> >                                           ^^^^^^^^^
-> >> detected. Unmount and run xfs_repair
-> >
-> > Note the different device names the errors are for? So the log space
-> > warnings are from different filesystems to the one that corruption
-> > has been found on. IOWs, unrelated.
->
-> There are 4 xfs filesystems mounted on that machine.
+Doesn't work for me. I keep local mirrors of all git trees that I
+use regularly and update them by cron jobs so that I don't have to
+go to the internet for every local tree that I clone or update.
 
-According to the logs, there are at least 5: dm-{2,3,4,5} and
-snumbd11d.
+That's particularly important for me because I'm a *long* way from
+the US or Europe and cloning from scratch over the internet takes a
+long time and suck up a lot of bandwidth. I don't even allow my test
+machines to access the internet - they only know about the local
+network and mirrors. I'd have to overide the fio submodule URL in
+the xfstests repository on every test machine, and that gets messy
+in a hurry.
 
-> >> and what else
-> >> could have cause the 2nd ?
-> >
-> > Don't know. There's no stack trace in the error message, so I don't
-> > even know where it came from. have you modified the xfs_error_level
-> > sysctl to turn off verbose reporting?
->
-> sysctl.conf is default for CentOS.
+Also, we distribute xfstests as a tarball, and there has been talk of
+proper packaging (rpm/deb) as well. In those cases, the git
+submodule approach does not work as we have to depend on the distro
+supplied fio packages...
 
-So there's an error that isn't reporting a stack by default. That
-means it is probably a directory read that is triggering it -
-knowing what errors xfs_repair reported would help narrow it down.
+> (C1) Is not big deal in case of Fio because we already depends from
+> libaio.
+
+There's also a fio version dependency. i.e. _require_fio has to
+detect whether the currently installed fio is of sufficiently recent
+version for the tests to run.
+
+> (P2) Makes xfstest coverage larger because all new tests which use new 
+>      submodules functionality will start to work by default (today it
+>       silently ignored). As i already told fio is under rapid
+>      development Jens Axboe does very good job so (P2) really works for
+>      me, new features i need for xfstets was reviewed and accepted by Jens
+> http://git.kernel.dk/?p=fio.git;a=commit;h=8b28bd41375930664a0ff9ff9b101a88ac416ac5
+> http://git.kernel.dk/?p=fio.git;a=commit;h=9c25d2e3f498707c4fd5a4bb0adf9867ecb17768
+> http://git.kernel.dk/?p=fio.git;a=commit;h=e615ceafbe3962a35b7a7e06a0c8f4e2c0652c65
+
+For me, that's not a "pro" - that's a "con" as i explained above.
+
+> > (I package fio for Fedora, is it not commonly available on other
+> > distros?)
+
+Available for Debian, which means all it's derivatives also have it.
+
+In short, I'd prefer we continue to use package level dependencies
+detected through configure/_require_foo infrastructure than using
+source tree level dependencies. Package level dependencies are much,
+much easier to manage for most people and don't require everyone to
+have internet access on the machines that xfstests is being built
+on....
 
 Cheers,
 
