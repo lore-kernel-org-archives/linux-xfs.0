@@ -1,18 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8OEMH7f155740 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 09:22:17 -0500
+	q8OEMEpH155716 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 09:22:14 -0500
 Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
 	[209.85.217.181]) by cuda.sgi.com with ESMTP id
-	cyIG7Gp4ecevPiKs (version=TLSv1 cipher=RC4-SHA bits=128
+	I4B5iGuRBcVdt1ok (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 24 Sep 2012 07:23:32 -0700 (PDT)
+	Mon, 24 Sep 2012 07:23:30 -0700 (PDT)
 Received: by mail-lb0-f181.google.com with SMTP id gg6so2080818lbb.26
-	for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 07:23:32 -0700 (PDT)
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 07:23:30 -0700 (PDT)
 From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: [PATCH 6/6] add defragmentation stress test for ext4
-Date: Mon, 24 Sep 2012 18:23:21 +0400
-Message-Id: <1348496601-32637-6-git-send-email-dmonakhov@openvz.org>
+Subject: [PATCH 4/6] add  fallocate/truncate vs AIO/DIO stress test
+Date: Mon, 24 Sep 2012 18:23:19 +0400
+Message-Id: <1348496601-32637-4-git-send-email-dmonakhov@openvz.org>
 In-Reply-To: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
 References: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -31,38 +31,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
 Cc: Dmitry Monakhov <dmonakhov@openvz.org>, hch@lst.de, xfs@oss.sgi.com
 
-Perform various regression tests for ext4defrag  subsystem
+Run  DIO, fallocate and truncate threads on a common file in parallel.
+If race exist old dio request may rewrite blocks after it was allocated
+to another file, we will catch that by verifying blocks content.
 
- Test1: Defragment file while other task does direct AIO
- Test2: Perform defragmentation on file under buffered AIO
- 	while third task does direct AIO to donor file
- Test3: Two defrag tasks use common donor file.
- Test4: Stress defragmentation. Several threads pefrorm
- 	fragmentation at random position use inplace=1 will
-	allocate and free blocks inside defrag event improve
-	load pressure.
-
-This test known to caught most known e4defrag bugs.
+this patch known to catch deadlock for ext4
+http://lists.openwall.net/linux-ext4/2012/09/06/3
 
 Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 ---
- 288     |  278 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 288.out |    4 +
+ 286     |  154 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 286.out |    5 ++
  group   |    1 +
- 3 files changed, 283 insertions(+), 0 deletions(-)
- create mode 100755 288
- create mode 100644 288.out
+ 3 files changed, 160 insertions(+), 0 deletions(-)
+ create mode 100755 286
+ create mode 100644 286.out
 
-diff --git a/288 b/288
+diff --git a/286 b/286
 new file mode 100755
-index 0000000..c51f563
+index 0000000..8802c56
 --- /dev/null
-+++ b/288
-@@ -0,0 +1,278 @@
++++ b/286
+@@ -0,0 +1,154 @@
 +#! /bin/bash
-+# FSQA Test No. 288
++# FSQA Test No. 286
 +#
-+# Ext4 defragmentatio stress test
++# Test various aio dio vs truncate
 +#
 +#-----------------------------------------------------------------------
 +# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
@@ -105,223 +99,99 @@ index 0000000..c51f563
 +
 +NUM_JOBS=$((4*LOAD_FACTOR))
 +BLK_DEV_SIZE=`blockdev --getsz $SCRATCH_DEV`
-+# We need space for 8 files 
-+FILE_SIZE=$((BLK_DEV_SIZE * (512 /12)))
++FILE_SIZE=$((BLK_DEV_SIZE * 512))
 +
 +cat >$tmp-$seq.fio <<EOF
-+# Various e4defrag regression tests
++###########
++# $seq test fio activity
 +[global]
-+ioengine=ioe_e4defrag
-+iodepth=1
++ioengine=libaio
++bs=128k
 +directory=${SCRATCH_MNT}
 +filesize=${FILE_SIZE}
 +size=999G
++iodepth=128*${LOAD_FACTOR}
++continue_on_error=write
++ignore_error=,ENOSPC
++error_dump=0
++create_on_open=1
++fallocate=none
++exitall=1
++
++## Perform direct aio, to files which may be truncated
++## by external task
++[direct_aio]
++direct=1
 +buffered=0
-+fadvise_hint=0
-+group_reporting
-+
-+#################################
-+# Test1
-+# Defragment file while other task does direct io
-+
-+# Continious sequential defrag activity
-+[defrag-4k]
-+ioengine=e4defrag
-+iodepth=1
-+bs=128k
-+donorname=test1.def
-+filename=test1
-+inplace=0
-+rw=write
-+numjobs=1
-+runtime=30
++numjobs=${NUM_JOBS}
++rw=randwrite
++runtime=100*${TIME_FACTOR}
 +time_based
 +
-+# Verifier
++# Perform direct aio and verify data
 +[aio-dio-verifier]
-+ioengine=libaio 
-+iodepth=128*${LOAD_FACTOR}
 +numjobs=1
 +verify=crc32c-intel
 +verify_fatal=1
 +verify_dump=1
 +verify_backlog=1024
-+verify_async=1
++verify_async=4
 +verifysort=1
 +direct=1
-+bs=64k
-+rw=randwrite
-+filename=test1
-+runtime=30
-+time_based
-+
-+##########################################
-+# Test2 
-+# Perform defragmentation on file under buffered io
-+# while third task does direct io to donor file
-+#
-+# Continious sequential defrag activity
-+[defrag-4k]
-+stonewall
-+ioengine=e4defrag
-+iodepth=1
-+bs=128k
-+donorname=test2.def
-+filename=test2
-+inplace=0
-+rw=write
-+numjobs=1
-+runtime=30
-+time_based
-+
-+# Run DIO/AIO for donor file
-+[donor-file-fuzzer]
-+ioengine=libaio 
-+iodepth=128*${LOAD_FACTOR}
-+numjobs=1
-+verify=0
-+direct=1
-+bs=64k
-+rw=randwrite
-+filename=test2.def
-+runtime=30
-+time_based
-+
-+# Verifier thread
-+[aio-dio-verifier]
-+ioengine=libaio 
-+iodepth=128*${LOAD_FACTOR}
-+numjobs=1
-+verify=crc32c-intel
-+verify_fatal=1
-+verify_dump=1
-+verify_backlog=1024
-+verify_async=1
-+verifysort=1
-+buffered=1
-+bs=64k
++bs=4k
 +rw=randrw
-+filename=test2
-+runtime=30
-+time_based
++filename=aio-dio-verifier
 +
-+#################################
-+# Test3
-+# Two defrag tasks use common donor file
-+
-+[defrag-1]
-+ioengine=e4defrag
-+iodepth=1
-+bs=128k
-+donorname=test3.def
-+filename=test31
-+inplace=0
-+rw=write
-+numjobs=1
-+runtime=30
-+time_based
-+
-+[defrag-2]
-+ioengine=e4defrag
-+iodepth=1
-+bs=128k
-+donorname=test3.def
-+filename=test32
-+inplace=0
-+rw=write
-+numjobs=1
-+runtime=30
-+time_based
-+
-+[aio-dio-verifier-1]
-+ioengine=libaio 
-+iodepth=128*${LOAD_FACTOR}
++# Perform buffered aio and verify data
++[buffered-aio-verifier]
 +numjobs=1
 +verify=crc32c-intel
 +verify_fatal=1
 +verify_dump=1
 +verify_backlog=1024
-+verify_async=1
++verify_async=4
 +verifysort=1
-+direct=1
-+bs=64k
-+rw=write
-+filename=test31
-+runtime=30
-+time_based
-+
-+[aio-buffer-verifier-2]
-+ioengine=libaio 
-+numjobs=1
-+verify=crc32c-intel
-+verify_fatal=1
-+verify_dump=1
-+verify_backlog=1024
-+verify_async=1
-+verifysort=1
++direct=0
 +buffered=1
-+bs=64k
++bs=4k
 +rw=randrw
-+filename=test32
-+runtime=30
-+time_based
-+
-+#################################
-+# Test4
-+# Stress test defragmentation
-+# Several threads pefrorm defragmentatin at random position
-+# use inplace=1 will allocate and free blocks inside defrag event
-+# improve load pressure
-+[defrag-fuzzer]
-+ioengine=e4defrag
-+iodepth=1
-+bs=8k
-+donorname=test4.def
-+filename=test4
-+inplace=1
-+rw=randwrite
-+numjobs=4*${LOAD_FACTOR}
-+runtime=30
-+time_based
-+
-+[aio-dio-verifier]
-+ioengine=libaio 
-+iodepth=128
-+iomem_align=4k
-+numjobs=1
-+verify=crc32c-intel
-+verify_fatal=1
-+verify_dump=1
-+verify_backlog=1024
-+verify_async=1
-+verifysort=1
-+direct=1
-+bs=64k
-+rw=write
-+filename=test4
-+runtime=30
-+time_based
-+
++filename=buffered-aio-verifier
 +EOF
 +
 +_workout()
 +{
 +	echo ""
-+	echo " Start defragment activity "
++	echo "Run fio with random aio-dio pattern"
 +	echo ""
 +	cat $tmp-$seq.fio >>  $seq.full
-+	run_check $FIO_PROG $tmp-$seq.fio >>  $seq.full
++	run_check $FIO_PROG $tmp-$seq.fio >>  $seq.full &
++	pid=$!
++	echo "Start fallocate/truncate loop"
++	for ((i=0; ; i++))
++	do
++	    for ((k=1; k <= NUM_JOBS; k++))
++	    do
++		fallocate -l $FILE_SIZE $SCRATCH_MNT/direct_aio.$k.0 \
++		    	>> $seq.full 2>&1
++	    done
++	    for ((k=1; k <= NUM_JOBS; k++))
++	    do
++		truncate -s 0 $SCRATCH_MNT/direct_aio.$k.0
++	    done
++	    # One fio exit we can stop fallocate/truncate loop
++	    kill -0 $pid > /dev/null 2>&1 || break
++	done
++	wait $pid
 +}
 +
 +# real QA test starts here
 +_supported_fs generic
 +_supported_os Linux
-+_supported_fs ext4
 +_need_to_be_root
 +_require_scratch
 +_require_fio $tmp-$seq.fio
 +
-+_scratch_mkfs  >> $seq.full 2>&1
++_scratch_mkfs >> $seq.full 2>&1
 +_scratch_mount
 +
 +if ! _workout; then
@@ -337,25 +207,26 @@ index 0000000..c51f563
 +_check_scratch_fs
 +status=$?
 +exit
-diff --git a/288.out b/288.out
+diff --git a/286.out b/286.out
 new file mode 100644
-index 0000000..b215a3f
+index 0000000..d721996
 --- /dev/null
-+++ b/288.out
-@@ -0,0 +1,4 @@
-+QA output created by 288
++++ b/286.out
+@@ -0,0 +1,5 @@
++QA output created by 286
 +
-+ Start defragment activity 
++Run fio with random aio-dio pattern
 +
++Start fallocate/truncate loop
 diff --git a/group b/group
-index 37f3256..8bd5c21 100644
+index 697269b..2469f80 100644
 --- a/group
 +++ b/group
-@@ -406,3 +406,4 @@ deprecated
+@@ -404,3 +404,4 @@ deprecated
+ 283 dump ioctl auto quick
+ 284 auto
  285 auto dump quota quick
- 286 auto rw enospc aio
- 287 auto rw enospc aio prealloc
-+288 auto rw aio
++286 auto rw enospc aio
 -- 
 1.7.7.6
 
