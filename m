@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8ODqMet152330 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 08:52:23 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HH4A8JO3YGmb9YgL for <xfs@oss.sgi.com>;
-	Mon, 24 Sep 2012 06:53:37 -0700 (PDT)
-Date: Mon, 24 Sep 2012 23:53:34 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/6] xfstest: add fio git submodule
-Message-ID: <20120924135334.GN20960@dastard>
-References: <a> <1348428276-13161-1-git-send-email-dmonakhov@openvz.org>
-	<505FD0A9.3090601@redhat.com> <87lifzd9fl.fsf@openvz.org>
-	<20120924113718.GK20960@dastard> <87txun1tqv.fsf@openvz.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <87txun1tqv.fsf@openvz.org>
+	q8OEMDl2155699 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 09:22:13 -0500
+Received: from mail-lb0-f181.google.com (mail-lb0-f181.google.com
+	[209.85.217.181]) by cuda.sgi.com with ESMTP id
+	ERlFbNZCOHcDS2HF (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 24 Sep 2012 07:23:28 -0700 (PDT)
+Received: by mail-lb0-f181.google.com with SMTP id gg6so2080779lbb.26
+	for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 07:23:28 -0700 (PDT)
+From: Dmitry Monakhov <dmonakhov@openvz.org>
+Subject: [PATCH 3/6] xfstest: allow fsstress to use load factor where
+	appropriate
+Date: Mon, 24 Sep 2012 18:23:18 +0400
+Message-Id: <1348496601-32637-3-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
+References: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,158 +24,298 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dmitry Monakhov <dmonakhov@openvz.org>
-Cc: linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, linux-ext4@vger.kernel.org, hch@lst.de, xfs@oss.sgi.com
+To: linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: Dmitry Monakhov <dmonakhov@openvz.org>, hch@lst.de, xfs@oss.sgi.com
 
-On Mon, Sep 24, 2012 at 04:38:00PM +0400, Dmitry Monakhov wrote:
-> On Mon, 24 Sep 2012 21:37:18 +1000, Dave Chinner <david@fromorbit.com> wrote:
-> > On Mon, Sep 24, 2012 at 02:03:42PM +0400, Dmitry Monakhov wrote:
-> > > On Sun, 23 Sep 2012 22:16:57 -0500, Eric Sandeen <sandeen@redhat.com> wrote:
-> > > > On 9/23/12 2:24 PM, Dmitry Monakhov wrote:
-> > > > > FIO is very flexible io generator, i would call it IO swiss knife.
-> > > > > Currently we have tonnes of hardcoded application which reproduces
-> > > > > some predefined scenario. This approach has obvious dissadvantages
-> > > > > 1) Lack of flexability: once written it is hard to modify it in future
-> > > > > 2) Code base is large, many routines written again and again
-> > > > > 
-> > > > > At the same time add new fio based tast is just add simle INI file.
-> > > > > This greatly simplify code review. I do beleve that some day we will
-> > > > > replace most of hardcoded io binaries with fio.
-> > > > 
-> > > > The submodule approach is interesting, but I wonder - we have quite a few
-> > > > dependencies on other binaries already; what are the pros and cons of creating
-> > > > this as a git submodule vs. simply expecting fio to be installed on the
-> > > > system like any of the other dependencies we have today?
-> > > Pro:
-> > >  P1) allow to specify exact commit as a submodule HEAD this guarantee
-> > >      that we will have known version and functionality regardless to
-> > >      distribution package manager (which are known to be very conservative)
-> > 
-> > You haven't provided a method to do this in this patch. All
-> > you've provided is a submodule that tracks the fio tree head.
-> > All this needs to be properly documented in the README file, at
-> > minimum.
-> > 
-> > And conservative is good, too. I don't want tests to fail because of
-> > rapid changes in the fio tree causing regressions in fio itself. The
-> > tools that xfstests depends on need to be stable and relatively
-> > unchanging, because we're not testing them - we're testing the
-> > filesystem. The less the environemnt changes around the things we're
-> > actually supposed to be regression testing, the better.
-> Yes, but we do not have to advance submodule update unless we need it.
-> Project may goes forward but we still can use old commit if needed.
 
-Sure, but that them means we need to track fio closely enough and
-commit changes to the upstream xfstests repository whenever someone
-needs to move it forward. It's a centralised solution that doesn't
-improve the workflow of significant users of xfstests.
+Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+---
+ 017 |    5 ++++-
+ 068 |    4 ++--
+ 070 |    4 +++-
+ 076 |    5 ++++-
+ 083 |    4 ++--
+ 087 |   10 ++++++----
+ 104 |    4 ++--
+ 114 |    5 +++--
+ 167 |    4 ++--
+ 232 |    5 +++--
+ 233 |    5 +++--
+ 269 |    7 ++++---
+ 270 |    7 ++++---
+ 276 |   11 ++++++-----
+ 14 files changed, 48 insertions(+), 32 deletions(-)
 
-Indeed, what happens if we take this and run it on an old distro or
-platform that a current fio hasn't even been tested on (e.g. RHEL
-5.x, SLES10.x, MIPSEL or SH)? i.e. what happens when the blessed
-xfstests fio version doesn't even compile on the test target? It
-gets messy in a hurry because the xfstests maintainers have to solve
-that problem.
-
-I *much* prefer to have external dependencies handled the same way
-for all external tools and libraries: if the distro doesn't supply
-it, then the user needs to download it, install it and get it
-working themselves. If they don't install it or the installed
-version is too old, then the tests get skipped. That moves the
-burden of dealing with fio integration issues to the end user, not
-onto the xfstests maintainers. End users are scalable, maintainers
-are not.
-
-> > >  P2) Prevent duplicating of source code (fsstress.c/aio-stress.c and
-> > >      etc).  If some one want to add new feature to submodule he
-> > >      simply push it to official submodule repo and move submodule HEAD
-> > >      In that both parties(submodule maintainer and project maintainer)
-> > >      will benefit because new features will be available to every
-> > >      submodule user
-> > > Cons:
-> > >  C1) New dependencies
-> > >  C2) Learn people how to work with submodules
-> > > 
-> > > I'll not assume (C2) as a serious argument because this is just one more
-> > > git's command. For most users should just add new option to clone:
-> > > git clone --recursive git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
-> > 
-> > Doesn't work for me. I keep local mirrors of all git trees that I
-> > use regularly and update them by cron jobs so that I don't have to
-> > go to the internet for every local tree that I clone or update.
-> > 
-> > That's particularly important for me because I'm a *long* way from
-> > the US or Europe and cloning from scratch over the internet takes a
-> > long time and suck up a lot of bandwidth. I don't even allow my test
-> > machines to access the internet - they only know about the local
-> > network and mirrors. I'd have to overide the fio submodule URL in
-> > the xfstests repository on every test machine, and that gets messy
-> > in a hurry.
-> > 
-> > Also, we distribute xfstests as a tarball, and there has been talk of
-> > proper packaging (rpm/deb) as well. In those cases, the git
-> > submodule approach does not work as we have to depend on the distro
-> > supplied fio packages...
-> Yes, if this is mandatory. it makes packaging harder but not too
-> complex.
-
-IMO, the submodule approach is an all-or-nothing approach that is
-difficult to opt-out of or work around. Making it harder to maintain
-a working test environment for a significant percentage of the
-xfstests userbase is not a win, IMO.
-
-> > > (C1) Is not big deal in case of Fio because we already depends from
-> > > libaio.
-> > 
-> > There's also a fio version dependency. i.e. _require_fio has to
-> > detect whether the currently installed fio is of sufficiently recent
-> > version for the tests to run.
-> > 
-> > > (P2) Makes xfstest coverage larger because all new tests which use new 
-> > >      submodules functionality will start to work by default (today it
-> > >       silently ignored). As i already told fio is under rapid
-> > >      development Jens Axboe does very good job so (P2) really works for
-> > >      me, new features i need for xfstets was reviewed and accepted by Jens
-> > > http://git.kernel.dk/?p=fio.git;a=commit;h=8b28bd41375930664a0ff9ff9b101a88ac416ac5
-> > > http://git.kernel.dk/?p=fio.git;a=commit;h=9c25d2e3f498707c4fd5a4bb0adf9867ecb17768
-> > > http://git.kernel.dk/?p=fio.git;a=commit;h=e615ceafbe3962a35b7a7e06a0c8f4e2c0652c65
-> > 
-> > For me, that's not a "pro" - that's a "con" as i explained above.
-> > 
-> > > > (I package fio for Fedora, is it not commonly available on other
-> > > > distros?)
-> > 
-> > Available for Debian, which means all it's derivatives also have it.
-> > 
-> > In short, I'd prefer we continue to use package level dependencies
-> > detected through configure/_require_foo infrastructure than using
-> > source tree level dependencies. Package level dependencies are much,
-> > much easier to manage for most people and don't require everyone to
-> > have internet access on the machines that xfstests is being built
-> > on....
-> Ok i'll go back to _require_fio $VER approach, but it is reasonable to
-> add prep script which will fetch or install all necessary packages
-> so user can explicitly run it if internet is available.
-
-I don't think that a "fetch and build this tool" script is really
-something that is part of xfstests. Having the configure scripts
-warn that the required version of fio was not found and giving a
-pointer to the repository is consistent with the way we curently
-handle missing external build dependencies. Yes, I dislike autoconf
-at times, too, but I think it's a better solution to external
-dependencies at the source level for xfstests than git
-submodules.....
-
-Cheers,
-
-Dave.
+diff --git a/017 b/017
+index 9ca0e72..8d35ee8 100755
+--- a/017
++++ b/017
+@@ -67,7 +67,10 @@ echo "*** test"
+ for l in 0 1 2 3 4
+ do
+         echo "    *** test $l"
+-        $FSSTRESS_PROG -d $SCRATCH_MNT -n 1000 $FSSTRESS_AVOID >>$seq.full
++	NUM=$((1000 * TIME_FACTOR))
++	CPU=$((1 * LOAD_FACTOR))
++        $FSSTRESS_PROG -d $SCRATCH_MNT -n $NUM -p $CPU \
++	    $FSSTRESS_AVOID >>$seq.full
+ 
+         _scratch_mount -o remount,ro \
+             || _fail "remount ro failed"
+diff --git a/068 b/068
+index b595d1d..9a01100 100755
+--- a/068
++++ b/068
+@@ -75,8 +75,8 @@ touch $tmp.running
+     STRESS_DIR="$SCRATCH_MNT/fsstress_test_dir"
+     mkdir "$STRESS_DIR"
+ 
+-    procs=2
+-    nops=200
++    procs=$((2 * LOAD_FACTOR))
++    nops=$((200 * TIME_FACTOR))
+     while [ -f "$tmp.running" ]
+       do
+       # We do both read & write IO - not only is this more realistic,
+diff --git a/070 b/070
+index f48c33c..286ae90 100755
+--- a/070
++++ b/070
+@@ -62,7 +62,9 @@ $FSSTRESS_PROG \
+ 	-f unresvsp=0 \
+ 	-f attr_set=100 \
+ 	-f attr_remove=100 \
+-        -p 1 -n 10000 -S c >$seq.full 2>&1
++        -p $((LOAD_FACTOR)) \
++    	-n $((10000 * TIME_FACTOR)) \
++    	-S c >$seq.full 2>&1
+ 
+ status=$?
+ exit
+diff --git a/076 b/076
+index e472b26..fa1a916 100755
+--- a/076
++++ b/076
+@@ -74,7 +74,10 @@ echo "*** test concurrent block/fs access"
+ cat $SCRATCH_DEV >/dev/null &
+ pid=$!
+ 
+-$FSSTRESS_PROG -d $SCRATCH_MNT -p 2 -n 2000 $FSSTRESS_AVOID >>$seq.full
++num=$((2000 * TIME_FACTOR))
++proc=$((2 * LOAD_FACTOR))
++
++$FSSTRESS_PROG -d $SCRATCH_MNT -p $proc -n $num $FSSTRESS_AVOID >>$seq.full
+ 
+ _lets_get_pidst
+ _check_scratch_fs
+diff --git a/083 b/083
+index e0670b9..7af7c08 100755
+--- a/083
++++ b/083
+@@ -66,8 +66,8 @@ workout()
+ {
+ 	fsz=$1
+ 	ags=$2
+-	procs=$3
+-	nops=$4
++	procs=$(($3 * LOAD_FACTOR))
++	nops=$(($4 * TIME_FACTOR))
+ 
+ 	umount $SCRATCH_DEV >/dev/null 2>&1
+ 	echo "*** mkfs -dsize=$fsz,agcount=$ags"    >>$seq.full
+diff --git a/087 b/087
+index 48e5eaa..5c67f5e 100755
+--- a/087
++++ b/087
+@@ -43,11 +43,13 @@ trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+ _do_meta()
+ {
+     out=$SCRATCH_MNT/fsstress
+-    count=10000
+-    param="-p 4 -z -f rmdir=10 -f link=10 -f creat=10 -f mkdir=10 \
++    count=$((10000 * TIME_FACTOR))
++    proc=$((4 * LOAD_FACTOR))
++    param="-z -f rmdir=10 -f link=10 -f creat=10 -f mkdir=10 \
+            -f rename=30 -f stat=30 -f unlink=30 -f truncate=20"
+-    _echofull "calling fsstress $param -m8 -n $count"
+-    if ! $FSSTRESS_PROG $param $FSSTRESS_AVOID -m 8 -n $count -d $out >>$seq.full 2>&1
++    _echofull "calling fsstress $param -m8 -p $proc -n $count"
++    if ! $FSSTRESS_PROG $param $FSSTRESS_AVOID -m 8 -p $proc \
++		-n $count -d $out >>$seq.full 2>&1
+     then
+ 	_echofull "fsstress failed"
+     fi
+diff --git a/104 b/104
+index 14f2669..abc9705 100755
+--- a/104
++++ b/104
+@@ -61,8 +61,8 @@ _fill_scratch()
+ 
+ _stress_scratch()
+ {
+-	procs=3
+-	nops=1000
++	procs=$((3 * LOAD_FACTOR))
++	nops=$((1000 * TIME_FACTOR))
+ 	# -w ensures that the only ops are ones which cause write I/O
+ 	$FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n $nops $FSSTRESS_AVOID > /dev/null &
+ }
+diff --git a/114 b/114
+index 7679222..348f992 100755
+--- a/114
++++ b/114
+@@ -245,12 +245,13 @@ _test_fsstress()
+ 	echo ""
+ 
+ 	out=$SCRATCH_MNT/fsstress.$$
+-	count=1000
++	count=$((1000 * TIME_FACTOR))
++	proc=$((3 * LOAD_FACTOR))
+ 	args="-z \
+ -f rmdir=10 -f link=10 -f creat=10 \
+ -f mkdir=10 -f rename=30 -f unlink=10 \
+ -f symlink=10 \
+--n $count -d $out -p 3"
++-n $count -d $out -p $proc"
+ 
+ 	echo "fsstress $args" | sed -e "s#$out#outdir#"
+ 	if ! $FSSTRESS_PROG $args | _filter_num
+diff --git a/167 b/167
+index ccb6c2a..ad5fcd0 100755
+--- a/167
++++ b/167
+@@ -42,8 +42,8 @@ _cleanup()
+ 
+ workout()
+ {
+-	procs=100
+-	nops=15000
++	procs=$((100 * LOAD_FACTOR))
++	nops=$((15000 * TIME_FACTOR))
+ 	$FSSTRESS_PROG -d $SCRATCH_MNT -p $procs -n $nops $FSSTRESS_AVOID \
+ 		>>$seq.full &
+ 	sleep 2
+diff --git a/232 b/232
+index 2795da7..6cd0171 100755
+--- a/232
++++ b/232
+@@ -53,8 +53,9 @@ _fsstress()
+ 	echo ""
+ 
+ 	out=$SCRATCH_MNT/fsstress.$$
+-	count=2000
+-	args="-n $count -d $out -p 7"
++	count=$((2000*TIME_FACTOR))
++	CPU=$((7 * LOAD_FACTOR))
++	args="-n $count -d $out -p $CPU"
+ 
+ 	echo "fsstress $args" | tee -a $here/$seq.full | sed -e "s#$out#outdir#"
+ 	if ! $FSSTRESS_PROG $args | tee -a $here/$seq.full | _filter_num
+diff --git a/233 b/233
+index 28e6ac7..e30d9cc 100755
+--- a/233
++++ b/233
+@@ -57,11 +57,12 @@ _fsstress()
+ 	echo ""
+ 
+ 	out=$SCRATCH_MNT/fsstress.$$
+-	count=5000
++	count=$((5000 * TIME_FACTOR))
++	proc=$((7 * LOAD_FACTOR))
+ 	args="-z \
+ -f rmdir=20 -f link=10 -f creat=10 -f mkdir=10 -f unlink=20 -f symlink=10 \
+ -f rename=10 -f fsync=2 -f write=15 -f dwrite=15 \
+--n $count -d $out -p 7"
++-n $count -d $out -p $proc"
+ 
+ 	echo "fsstress $args" | tee -a $here/$seq.full | sed -e "s#$out#outdir#"
+ 	if ! su $qa_user -c "$FSSTRESS_PROG $args" | tee -a $here/$seq.full | _filter_num
+diff --git a/269 b/269
+index 7e13ed9..ca2700c 100755
+--- a/269
++++ b/269
+@@ -42,10 +42,11 @@ _workout()
+ 	echo ""
+ 	echo "Run fsstress"
+ 	echo ""
+-	num_iterations=10
+-	enospc_time=2
++	num_iterations=$((10 * TIME_FACTOR))
++	enospc_time=$((2 * TIME_FACTOR))
++	proc=$((128 * LOAD_FACTOR))
+ 	out=$SCRATCH_MNT/fsstress.$$
+-	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
++	args="-p $proc -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
+ 	echo "fsstress $args" >> $here/$seq.full
+ 	$FSSTRESS_PROG $args > /dev/null 2>&1 &
+ 	pid=$!
+diff --git a/270 b/270
+index b9ada27..5197910 100755
+--- a/270
++++ b/270
+@@ -45,10 +45,11 @@ _workout()
+ 	echo ""
+ 	echo "Run fsstress"
+ 	echo ""
+-	num_iterations=10
+-	enospc_time=2
++	num_iterations=$((10 * TIME_FACTOR))
++	enospc_time=$((2 * TIME_FACTOR))
++	proc=$((128 * LOAD_FACTOR))
+ 	out=$SCRATCH_MNT/fsstress.$$
+-	args="-p128 -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
++	args="-p$proc -n999999999 -f setattr=1 $FSSTRESS_AVOID -d $out"
+ 	echo "fsstress $args" >> $here/$seq.full
+ 	# Grant chown capability 
+ 	cp $FSSTRESS_PROG  $tmp.fsstress.bin
+diff --git a/276 b/276
+index 082f943..551bef7 100755
+--- a/276
++++ b/276
+@@ -175,7 +175,8 @@ workout()
+ {
+ 	fsz=$1
+ 	nfiles=$2
+-	procs=$3
++	procs=$(($3 * LOAD_FACTOR))
++	num=$((1000* TIME_FACTOR))
+ 	snap_name=$4
+ 
+ 	umount $SCRATCH_DEV >/dev/null 2>&1
+@@ -185,8 +186,8 @@ workout()
+ 		|| _fail "size=$fsz mkfs failed"
+ 	run_check _scratch_mount
+ 	# -w ensures that the only ops are ones which cause write I/O
+-	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n 1000 \
+-		$FSSTRESS_AVOID
++	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -w -p $procs -n $num \
++	    	$FSSTRESS_AVOID
+ 
+ 	run_check $BTRFS_UTIL_PROG subvol snap $SCRATCH_MNT \
+ 		$SCRATCH_MNT/$snap_name
+@@ -196,13 +197,13 @@ workout()
+ 
+ 	# make some noise but ensure we're not touching existing data
+ 	# extents.
+-	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -p $procs -n 2000 \
++	run_check $FSSTRESS_PROG -d $SCRATCH_MNT -p $procs -n $((num*2)) \
+ 		-z -f chown=3 -f link=1 -f mkdir=2 -f mknod=2 \
+ 		-f rename=2 -f setxattr=1 -f symlink=2
+ 	clean_dir="$SCRATCH_MNT/next"
+ 	mkdir $clean_dir
+ 	# now make more files to get a higher tree
+-	run_check $FSSTRESS_PROG -d $clean_dir -w -p $procs -n 2000 \
++	run_check $FSSTRESS_PROG -d $clean_dir -w -p $procs -n $((num*2)) \
+ 		$FSSTRESS_AVOID
+ 	run_check umount $SCRATCH_DEV >/dev/null 2>&1
+ 	run_check _scratch_mount "-o atime"
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
