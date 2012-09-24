@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8ODORVA149102 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 08:24:27 -0500
+	q8ODqMet152330 for <xfs@oss.sgi.com>; Mon, 24 Sep 2012 08:52:23 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	yaDUQdGf6Px8qjM6 for <xfs@oss.sgi.com>;
-	Mon, 24 Sep 2012 06:25:42 -0700 (PDT)
-Date: Mon, 24 Sep 2012 23:25:19 +1000
+	HH4A8JO3YGmb9YgL for <xfs@oss.sgi.com>;
+	Mon, 24 Sep 2012 06:53:37 -0700 (PDT)
+Date: Mon, 24 Sep 2012 23:53:34 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/3] xfs: allocation worker causes freelist buffer lock
-	hang
-Message-ID: <20120924132519.GM20960@dastard>
-References: <20120919163133.097340199@sgi.com> <20120919233435.GF31501@dastard>
+Subject: Re: [PATCH 1/6] xfstest: add fio git submodule
+Message-ID: <20120924135334.GN20960@dastard>
+References: <a> <1348428276-13161-1-git-send-email-dmonakhov@openvz.org>
+	<505FD0A9.3090601@redhat.com> <87lifzd9fl.fsf@openvz.org>
+	<20120924113718.GK20960@dastard> <87txun1tqv.fsf@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120919233435.GF31501@dastard>
+In-Reply-To: <87txun1tqv.fsf@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,72 +28,147 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: tinguely@sgi.com
-Cc: xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, linux-ext4@vger.kernel.org, hch@lst.de, xfs@oss.sgi.com
 
-On Thu, Sep 20, 2012 at 09:34:35AM +1000, Dave Chinner wrote:
-> On Wed, Sep 19, 2012 at 11:31:33AM -0500, tinguely@sgi.com wrote:
-> > We have experience file system hangs on the IA64, X86_32 and X86_64
-> > environments caused by a deadlock on AGF buffers.
+On Mon, Sep 24, 2012 at 04:38:00PM +0400, Dmitry Monakhov wrote:
+> On Mon, 24 Sep 2012 21:37:18 +1000, Dave Chinner <david@fromorbit.com> wrote:
+> > On Mon, Sep 24, 2012 at 02:03:42PM +0400, Dmitry Monakhov wrote:
+> > > On Sun, 23 Sep 2012 22:16:57 -0500, Eric Sandeen <sandeen@redhat.com> wrote:
+> > > > On 9/23/12 2:24 PM, Dmitry Monakhov wrote:
+> > > > > FIO is very flexible io generator, i would call it IO swiss knife.
+> > > > > Currently we have tonnes of hardcoded application which reproduces
+> > > > > some predefined scenario. This approach has obvious dissadvantages
+> > > > > 1) Lack of flexability: once written it is hard to modify it in future
+> > > > > 2) Code base is large, many routines written again and again
+> > > > > 
+> > > > > At the same time add new fio based tast is just add simle INI file.
+> > > > > This greatly simplify code review. I do beleve that some day we will
+> > > > > replace most of hardcoded io binaries with fio.
+> > > > 
+> > > > The submodule approach is interesting, but I wonder - we have quite a few
+> > > > dependencies on other binaries already; what are the pros and cons of creating
+> > > > this as a git submodule vs. simply expecting fio to be installed on the
+> > > > system like any of the other dependencies we have today?
+> > > Pro:
+> > >  P1) allow to specify exact commit as a submodule HEAD this guarantee
+> > >      that we will have known version and functionality regardless to
+> > >      distribution package manager (which are known to be very conservative)
 > > 
-> > The below stack frames is a simple example of the deadlock. This example
-> > was taken from the current OSS Linux 3.6 sources on a x86_32 machine that
-> > was suffering from a daemon storm at the time:
-> 
-> I hit it last night via test 113 on a RHEL6 backport that has the
-> old workqueue implementation and so only has one worker per CPU.
-.....
-> > I traced the callers of xfs_alloc_vextent(), noting transaction creation,
-> > commits and cancels; I noted loops in the callers and which were marked
-> > as metadata/userdata. I can send this document to reviewers.
-> 
-> No need, I can see the (generic) problem now that it has been
-> pointed out.
-> 
-> Basically, this is what the rescuer thread is kind of for - it works
-> around the inability to allocate a new worker thread due to a OOM
-> situation. This doesn't help us here because that rescuer would
-> simply block like the others. Hence a rescuer thread concept doesn't
-> solve the problem at all.
-> 
-> So lets go back to the case at hand. We block because this is the
-> first attempt to lock the AGF in an allocation, and the
-> XFS_ALLOC_FLAG_TRYLOCK flag is not set. This indicates we are asking
-> for allocation in a specific AG from __xfs_alloc_vextent(), and we
-> can't do that until some other allocation completes. Given that AGF
-> locking orders are strictly enforced, we know that the holder of the
-> AGF will not deadlock as long as it can be scheduled to run.
-> 
-> IOWs, it is not safe to block forever on a lock in a worker thread
-> when there are outside dependencies on that lock being released to
-> make progress. To me that's not really a deadlock in the traditional
-> sense - it's more akin to a priority inversion that prevents the
-> resource holder from making progress. i.e. blocked threads hold the
-> worker resources, which prevent the lock holder from being able to
-> run and release the lock.
-> 
-> Hmmm. I think there are other ways to trigger this as well.
-> Anything that holds the AGF locked for a period of time is going to
-> cause allocations to back up like this, regardless of whether we
-> queue at xfs_alloc_vexent() or xfs_bmapi_write(). For example,
-> FITRIM holds the AGF locked for as long as it takes to issue all the
-> discard operations. That could stall enough allocations to run us
-> out of worker threads and hence effectively stop data allocations
-> from being run for some period of time. It won't deadlock, but it
-> certainly is sub-optimal behaviour.
-> 
-> I suspect the only way to fix this is to re-use the old workqueue
-> method of avoiding blocking on the workqueue indefinitely. That is,
-> if we fail to get the lock in this case, we return with EGAIN and
-> requeue the work. __xfs_alloc_vextent() and xfs_alloc_fix_freelist()
-> already have trylock support, so this should be fairly easy to do.
-> If I also convert the work to delayed work, I can easily add a
-> backoff that will prevent busy looping on the workqueue.
-> 
-> I'll have a quick look at this and see what falls out....
+> > You haven't provided a method to do this in this patch. All
+> > you've provided is a submodule that tracks the fio tree head.
+> > All this needs to be properly documented in the README file, at
+> > minimum.
+> > 
+> > And conservative is good, too. I don't want tests to fail because of
+> > rapid changes in the fio tree causing regressions in fio itself. The
+> > tools that xfstests depends on need to be stable and relatively
+> > unchanging, because we're not testing them - we're testing the
+> > filesystem. The less the environemnt changes around the things we're
+> > actually supposed to be regression testing, the better.
+> Yes, but we do not have to advance submodule update unless we need it.
+> Project may goes forward but we still can use old commit if needed.
 
-Here's what fell out. I've smoke tested it on a couple of different
-machines with xfstests, and all seems fine so far.
+Sure, but that them means we need to track fio closely enough and
+commit changes to the upstream xfstests repository whenever someone
+needs to move it forward. It's a centralised solution that doesn't
+improve the workflow of significant users of xfstests.
+
+Indeed, what happens if we take this and run it on an old distro or
+platform that a current fio hasn't even been tested on (e.g. RHEL
+5.x, SLES10.x, MIPSEL or SH)? i.e. what happens when the blessed
+xfstests fio version doesn't even compile on the test target? It
+gets messy in a hurry because the xfstests maintainers have to solve
+that problem.
+
+I *much* prefer to have external dependencies handled the same way
+for all external tools and libraries: if the distro doesn't supply
+it, then the user needs to download it, install it and get it
+working themselves. If they don't install it or the installed
+version is too old, then the tests get skipped. That moves the
+burden of dealing with fio integration issues to the end user, not
+onto the xfstests maintainers. End users are scalable, maintainers
+are not.
+
+> > >  P2) Prevent duplicating of source code (fsstress.c/aio-stress.c and
+> > >      etc).  If some one want to add new feature to submodule he
+> > >      simply push it to official submodule repo and move submodule HEAD
+> > >      In that both parties(submodule maintainer and project maintainer)
+> > >      will benefit because new features will be available to every
+> > >      submodule user
+> > > Cons:
+> > >  C1) New dependencies
+> > >  C2) Learn people how to work with submodules
+> > > 
+> > > I'll not assume (C2) as a serious argument because this is just one more
+> > > git's command. For most users should just add new option to clone:
+> > > git clone --recursive git://git.kernel.org/pub/scm/fs/xfs/xfstests-dev.git
+> > 
+> > Doesn't work for me. I keep local mirrors of all git trees that I
+> > use regularly and update them by cron jobs so that I don't have to
+> > go to the internet for every local tree that I clone or update.
+> > 
+> > That's particularly important for me because I'm a *long* way from
+> > the US or Europe and cloning from scratch over the internet takes a
+> > long time and suck up a lot of bandwidth. I don't even allow my test
+> > machines to access the internet - they only know about the local
+> > network and mirrors. I'd have to overide the fio submodule URL in
+> > the xfstests repository on every test machine, and that gets messy
+> > in a hurry.
+> > 
+> > Also, we distribute xfstests as a tarball, and there has been talk of
+> > proper packaging (rpm/deb) as well. In those cases, the git
+> > submodule approach does not work as we have to depend on the distro
+> > supplied fio packages...
+> Yes, if this is mandatory. it makes packaging harder but not too
+> complex.
+
+IMO, the submodule approach is an all-or-nothing approach that is
+difficult to opt-out of or work around. Making it harder to maintain
+a working test environment for a significant percentage of the
+xfstests userbase is not a win, IMO.
+
+> > > (C1) Is not big deal in case of Fio because we already depends from
+> > > libaio.
+> > 
+> > There's also a fio version dependency. i.e. _require_fio has to
+> > detect whether the currently installed fio is of sufficiently recent
+> > version for the tests to run.
+> > 
+> > > (P2) Makes xfstest coverage larger because all new tests which use new 
+> > >      submodules functionality will start to work by default (today it
+> > >       silently ignored). As i already told fio is under rapid
+> > >      development Jens Axboe does very good job so (P2) really works for
+> > >      me, new features i need for xfstets was reviewed and accepted by Jens
+> > > http://git.kernel.dk/?p=fio.git;a=commit;h=8b28bd41375930664a0ff9ff9b101a88ac416ac5
+> > > http://git.kernel.dk/?p=fio.git;a=commit;h=9c25d2e3f498707c4fd5a4bb0adf9867ecb17768
+> > > http://git.kernel.dk/?p=fio.git;a=commit;h=e615ceafbe3962a35b7a7e06a0c8f4e2c0652c65
+> > 
+> > For me, that's not a "pro" - that's a "con" as i explained above.
+> > 
+> > > > (I package fio for Fedora, is it not commonly available on other
+> > > > distros?)
+> > 
+> > Available for Debian, which means all it's derivatives also have it.
+> > 
+> > In short, I'd prefer we continue to use package level dependencies
+> > detected through configure/_require_foo infrastructure than using
+> > source tree level dependencies. Package level dependencies are much,
+> > much easier to manage for most people and don't require everyone to
+> > have internet access on the machines that xfstests is being built
+> > on....
+> Ok i'll go back to _require_fio $VER approach, but it is reasonable to
+> add prep script which will fetch or install all necessary packages
+> so user can explicitly run it if internet is available.
+
+I don't think that a "fetch and build this tool" script is really
+something that is part of xfstests. Having the configure scripts
+warn that the required version of fio was not found and giving a
+pointer to the repository is consistent with the way we curently
+handle missing external build dependencies. Yes, I dislike autoconf
+at times, too, but I think it's a better solution to external
+dependencies at the source level for xfstests than git
+submodules.....
 
 Cheers,
 
@@ -100,235 +176,6 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
-
-xfs: don't block xfs_alloc_wq on AGF locks
-
-From: Dave Chinner <dchinner@redhat.com>
-
-When the workqueue runs out of worker threads because all the
-allocations are blockd on the AGF lock, the AGF lock holder cannot
-run to complete the allocation transaction that will unlock the AGF.
-As a result, allocations stop making progress.  Raising the
-workqueue concurrency limit does not solve the problem, just raises
-the number of allocations that need to block before we hit the
-starvation issue.
-
-To avoid workqueue starvation, instead of blocking on the AGF lock
-only try to lock the AGF when caled from worker thread context. If
-we fail to get the lock on all the AGs we are allowed to try, return
-an EAGAIN error and have the worker requeue the allocation work for
-a short time in the future when progress has been made. Because we
-no longer block worker threads, we avoid the issue of starving
-allocations requests of service and hence will always make progress.
-
-Because the trylock semantics are now slightly different, add a
-"try-harder" flag to ensure that we avoid conflating the new
-"trylock" with the existing "avoid allocating data in a metadata
-prefered AG" semantics. The "try-harder" flag is now used to
-indicate data allocation in metadata-preferred AGs is allowed.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_alloc.c |   65 +++++++++++++++++++++++++++++++++++++---------------
- fs/xfs/xfs_alloc.h |    3 ++-
- 2 files changed, 48 insertions(+), 20 deletions(-)
-
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index 4f33c32..37cd31d 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -1764,9 +1764,9 @@ xfs_alloc_fix_freelist(
- 	xfs_trans_t	*tp;	/* transaction pointer */
- 
- 	mp = args->mp;
--
- 	pag = args->pag;
- 	tp = args->tp;
-+
- 	if (!pag->pagf_init) {
- 		if ((error = xfs_alloc_read_agf(mp, tp, args->agno, flags,
- 				&agbp)))
-@@ -1775,7 +1775,7 @@ xfs_alloc_fix_freelist(
- 			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
- 			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
- 			args->agbp = NULL;
--			return 0;
-+			return EAGAIN;
- 		}
- 	} else
- 		agbp = NULL;
-@@ -1786,7 +1786,7 @@ xfs_alloc_fix_freelist(
- 	 * try harder at this point
- 	 */
- 	if (pag->pagf_metadata && args->userdata &&
--	    (flags & XFS_ALLOC_FLAG_TRYLOCK)) {
-+	    (flags & XFS_ALLOC_FLAG_TRYHARD)) {
- 		ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
- 		args->agbp = NULL;
- 		return 0;
-@@ -1822,7 +1822,7 @@ xfs_alloc_fix_freelist(
- 			ASSERT(flags & XFS_ALLOC_FLAG_TRYLOCK);
- 			ASSERT(!(flags & XFS_ALLOC_FLAG_FREEING));
- 			args->agbp = NULL;
--			return 0;
-+			return EAGAIN;
- 		}
- 	}
- 	/*
-@@ -2208,7 +2208,8 @@ xfs_alloc_read_agf(
-  */
- int				/* error */
- __xfs_alloc_vextent(
--	xfs_alloc_arg_t	*args)	/* allocation argument structure */
-+	xfs_alloc_arg_t	*args,
-+	bool		trylock)
- {
- 	xfs_agblock_t	agsize;	/* allocation group size */
- 	int		error;
-@@ -2249,6 +2250,7 @@ __xfs_alloc_vextent(
- 	}
- 	minleft = args->minleft;
- 
-+	flags = trylock ? XFS_ALLOC_FLAG_TRYLOCK : 0;
- 	switch (type) {
- 	case XFS_ALLOCTYPE_THIS_AG:
- 	case XFS_ALLOCTYPE_NEAR_BNO:
-@@ -2259,7 +2261,7 @@ __xfs_alloc_vextent(
- 		args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
- 		args->pag = xfs_perag_get(mp, args->agno);
- 		args->minleft = 0;
--		error = xfs_alloc_fix_freelist(args, 0);
-+		error = xfs_alloc_fix_freelist(args, flags);
- 		args->minleft = minleft;
- 		if (error) {
- 			trace_xfs_alloc_vextent_nofix(args);
-@@ -2309,7 +2311,7 @@ __xfs_alloc_vextent(
- 			args->agno = XFS_FSB_TO_AGNO(mp, args->fsbno);
- 			args->type = XFS_ALLOCTYPE_THIS_AG;
- 			sagno = 0;
--			flags = 0;
-+			flags |= XFS_ALLOC_FLAG_TRYHARD;
- 		} else {
- 			if (type == XFS_ALLOCTYPE_START_AG)
- 				args->type = XFS_ALLOCTYPE_THIS_AG;
-@@ -2328,7 +2330,7 @@ __xfs_alloc_vextent(
- 			if (no_min) args->minleft = 0;
- 			error = xfs_alloc_fix_freelist(args, flags);
- 			args->minleft = minleft;
--			if (error) {
-+			if (error && error != EAGAIN) {
- 				trace_xfs_alloc_vextent_nofix(args);
- 				goto error0;
- 			}
-@@ -2374,8 +2376,16 @@ __xfs_alloc_vextent(
- 				}
- 				if (flags == 0) {
- 					no_min = 1;
-+				} else if (trylock &&
-+					 flags == XFS_ALLOC_FLAG_TRYLOCK) {
-+					flags |= XFS_ALLOC_FLAG_TRYHARD;
-+				} else if (trylock &&
-+					   (flags & XFS_ALLOC_FLAG_TRYHARD)) {
-+					error = EAGAIN;
-+					trace_xfs_alloc_vextent_noagbp(args);
-+					goto error0;
- 				} else {
--					flags = 0;
-+					flags = XFS_ALLOC_FLAG_TRYHARD;
- 					if (type == XFS_ALLOCTYPE_START_BNO) {
- 						args->agbno = XFS_FSB_TO_AGBNO(mp,
- 							args->fsbno);
-@@ -2417,28 +2427,45 @@ error0:
- 	return error;
- }
- 
-+/*
-+ * The worker is not allowed to block indefinitely on AGF locks. This prevents
-+ * worker thread starvation from preventing allocation progress from being made.
-+ * This occurs when the transaction holding the AGF cannot be scheduled to run
-+ * in a worker because all worker threads are blocked on the AGF lock and no
-+ * more can be allocated.
-+ */
- static void
- xfs_alloc_vextent_worker(
- 	struct work_struct	*work)
- {
--	struct xfs_alloc_arg	*args = container_of(work,
-+	struct delayed_work	*dwork = container_of(work,
-+						struct delayed_work, work);
-+	struct xfs_alloc_arg	*args = container_of(dwork,
- 						struct xfs_alloc_arg, work);
- 	unsigned long		pflags;
-+	int			result;
- 
- 	/* we are in a transaction context here */
- 	current_set_flags_nested(&pflags, PF_FSTRANS);
- 
--	args->result = __xfs_alloc_vextent(args);
--	complete(args->done);
-+	result = __xfs_alloc_vextent(args, true);
-+	if (result == EAGAIN) {
-+		/* requeue for a later retry */
-+		queue_delayed_work(xfs_alloc_wq, &args->work,
-+				   msecs_to_jiffies(10));
-+	} else {
-+		args->result = result;
-+		complete(args->done);
-+	}
- 
- 	current_restore_flags_nested(&pflags, PF_FSTRANS);
- }
- 
- /*
-  * Data allocation requests often come in with little stack to work on. Push
-- * them off to a worker thread so there is lots of stack to use. Metadata
-- * requests, OTOH, are generally from low stack usage paths, so avoid the
-- * context switch overhead here.
-+ * them off to a worker thread so there is lots of stack to use if we are not
-+ * already in a worker thread context. Metadata requests, OTOH, are generally
-+ * from low stack usage paths, so avoid the context switch overhead here.
-  */
- int
- xfs_alloc_vextent(
-@@ -2446,13 +2473,13 @@ xfs_alloc_vextent(
- {
- 	DECLARE_COMPLETION_ONSTACK(done);
- 
--	if (!args->userdata)
--		return __xfs_alloc_vextent(args);
-+	if (!args->userdata || (current->flags & PF_WQ_WORKER))
-+		return __xfs_alloc_vextent(args, false);
- 
- 
- 	args->done = &done;
--	INIT_WORK_ONSTACK(&args->work, xfs_alloc_vextent_worker);
--	queue_work(xfs_alloc_wq, &args->work);
-+	INIT_DELAYED_WORK_ONSTACK(&args->work, xfs_alloc_vextent_worker);
-+	queue_delayed_work(xfs_alloc_wq, &args->work, 0);
- 	wait_for_completion(&done);
- 	return args->result;
- }
-diff --git a/fs/xfs/xfs_alloc.h b/fs/xfs/xfs_alloc.h
-index 93be4a6..047a239 100644
---- a/fs/xfs/xfs_alloc.h
-+++ b/fs/xfs/xfs_alloc.h
-@@ -54,6 +54,7 @@ typedef unsigned int xfs_alloctype_t;
-  */
- #define	XFS_ALLOC_FLAG_TRYLOCK	0x00000001  /* use trylock for buffer locking */
- #define	XFS_ALLOC_FLAG_FREEING	0x00000002  /* indicate caller is freeing extents*/
-+#define XFS_ALLOC_FLAG_TRYHARD	0x00000004  /* also use metadata AGs for data */
- 
- /*
-  * In order to avoid ENOSPC-related deadlock caused by
-@@ -121,7 +122,7 @@ typedef struct xfs_alloc_arg {
- 	char		userdata;	/* set if this is user data */
- 	xfs_fsblock_t	firstblock;	/* io first block allocated */
- 	struct completion *done;
--	struct work_struct work;
-+	struct delayed_work work;
- 	int		result;
- } xfs_alloc_arg_t;
- 
 
 _______________________________________________
 xfs mailing list
