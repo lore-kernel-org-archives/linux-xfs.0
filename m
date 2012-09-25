@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8P9X62q037428 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 04:33:06 -0500
+	q8P9WS31037359 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 04:32:28 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	hajdFx7KWKkKv5pw (version=TLSv1 cipher=AES256-SHA bits=256
+	UyhC6smPXp7dxhBo (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Sep 2012 02:34:22 -0700 (PDT)
-Date: Tue, 25 Sep 2012 05:34:21 -0400
+	Tue, 25 Sep 2012 02:33:46 -0700 (PDT)
+Date: Tue, 25 Sep 2012 05:33:44 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/6] xfs: Fix m_agirotor reset during AG selection
-Message-ID: <20120925093421.GC9189@infradead.org>
-References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
-	<1348147961-7520-2-git-send-email-cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfstests: add _require_freeze and minor cleanups
+Message-ID: <20120925093344.GB9189@infradead.org>
+References: <505A4D04.2080105@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348147961-7520-2-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <505A4D04.2080105@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,8 +28,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
 Looks good,
 
