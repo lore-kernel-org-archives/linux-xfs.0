@@ -1,17 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8PKJeLF103358 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 15:19:40 -0500
-Date: Tue, 25 Sep 2012 15:20:54 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 3/3 v2] xfs: zero allocation_args on the kernel stack
-Message-ID: <20120925202054.GA13214@sgi.com>
-References: <20120919163133.097340199@sgi.com>
-	<20120919163145.587098223@sgi.com>
-	<20120920181650.041917183@sgi.com>
+	q8PLNThP107761 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 16:23:29 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	atwxy6mQGfyCjJg6 for <xfs@oss.sgi.com>;
+	Tue, 25 Sep 2012 14:24:45 -0700 (PDT)
+Date: Wed, 26 Sep 2012 07:24:42 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_repair: enabling lazy sb counters
+Message-ID: <20120925212442.GE29154@dastard>
+References: <CAH4wwdG4j_53UYUtU-h3uwaqMOwDz+EsvXLojWKgCx5i7Ftndw@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120920181650.041917183@sgi.com>
+In-Reply-To: <CAH4wwdG4j_53UYUtU-h3uwaqMOwDz+EsvXLojWKgCx5i7Ftndw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,94 +26,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Peter Watkins <treestem@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 20, 2012 at 01:16:45PM -0500, Mark Tinguely wrote:
-> Zero the kernel stack space that makes up the xfs_alloc_arg structures.
+On Tue, Sep 25, 2012 at 11:40:33AM -0400, Peter Watkins wrote:
+> Hello,
 > 
-> Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+> Has anyone noticed that phase1 updates the lazy count flag in the
+> superblock, and then writes out the sb before the traversal in phase5
+> counts btree blocks consumed and sets agf_btreeblks?
 
-I'll just double check that you got all usages of xfs_alloc_arg_t:
+Not until now. :/
 
-xfs_inobt_alloc_block... fixed in f5eb8e7c by HCH
-xfs_ialloc_ag_alloc... fixed below
-xfs_bmbt_alloc_block... also fixed in f5eb8e7c
-xfs_bmap_local_to_extents... fixed below
-xfs_bmap_extents_to_btree... fixed below
-xfs_bmap_btalloc... fixed below
-xfs_free_extent... fixed in 0e1edbd9 by Nathan Scott
-xfs_alloc_fix_freelist... fixed below
+> Seems like if xfs_repair is interrupted or crashes at the wrong time,
+> you'd have enabled lazy count but not set agf_btreeblks, which would
+> trigger the corruption check in xfs_alloc.c:xfs_read_agf().
 
-Looks good!
+Which tells you to run xfs_repair, right?
 
-Reviewed-by: Ben Myers <bpm@sgi.com>
+> If you just re-run xfs_repair to enable lazy counts, it would stop
+> early saying they're already enabled. You'd have to disable them, and
+> then enable again to get a consistent state.
 
-> 
-> ---
->  fs/xfs/xfs_alloc.c  |    1 +
->  fs/xfs/xfs_bmap.c   |    3 +++
->  fs/xfs/xfs_ialloc.c |    1 +
->  3 files changed, 5 insertions(+)
-> 
-> Index: b/fs/xfs/xfs_alloc.c
-> ===================================================================
-> --- a/fs/xfs/xfs_alloc.c
-> +++ b/fs/xfs/xfs_alloc.c
-> @@ -1866,6 +1866,7 @@ xfs_alloc_fix_freelist(
->  	/*
->  	 * Initialize the args structure.
->  	 */
-> +	memset(&targs, 0, sizeof(targs));
->  	targs.tp = tp;
->  	targs.mp = mp;
->  	targs.agbp = agbp;
-> Index: b/fs/xfs/xfs_bmap.c
-> ===================================================================
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -2437,6 +2437,7 @@ xfs_bmap_btalloc(
->  	 * Normal allocation, done through xfs_alloc_vextent.
->  	 */
->  	tryagain = isaligned = 0;
-> +	memset(&args, 0, sizeof(args));
->  	args.tp = ap->tp;
->  	args.mp = mp;
->  	args.fsbno = ap->blkno;
-> @@ -3082,6 +3083,7 @@ xfs_bmap_extents_to_btree(
->  	 * Convert to a btree with two levels, one record in root.
->  	 */
->  	XFS_IFORK_FMT_SET(ip, whichfork, XFS_DINODE_FMT_BTREE);
-> +	memset(&args, 0, sizeof(args));
->  	args.tp = tp;
->  	args.mp = mp;
->  	args.firstblock = *firstblock;
-> @@ -3237,6 +3239,7 @@ xfs_bmap_local_to_extents(
->  		xfs_buf_t	*bp;	/* buffer for extent block */
->  		xfs_bmbt_rec_host_t *ep;/* extent record pointer */
->  
-> +		memset(&args, 0, sizeof(args));
->  		args.tp = tp;
->  		args.mp = ip->i_mount;
->  		args.firstblock = *firstblock;
-> Index: b/fs/xfs/xfs_ialloc.c
-> ===================================================================
-> --- a/fs/xfs/xfs_ialloc.c
-> +++ b/fs/xfs/xfs_ialloc.c
-> @@ -250,6 +250,7 @@ xfs_ialloc_ag_alloc(
->  					/* boundary */
->  	struct xfs_perag *pag;
->  
-> +	memset(&args, 0, sizeof(args));
->  	args.tp = tp;
->  	args.mp = tp->t_mountp;
->  
-> 
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+Or you just run xfs_repair without trying to change the lazy count
+state - that will recalculate the btreeblks count as part of the
+normal repair process....
+
+> Second, is it possible to enable lazy counts without doing the
+> full repair traversal, i.e. a cheap and easy way to set
+> agf_btreeblks if the fs is already consistent?  On some systems,
+> the whole repair enchilada can take a long time!
+
+The current process is that xfs_repair -rebuilds- the freespace
+trees from it's in memory state, and it takes until phase 5 for
+xfs_repair to have a full picture of the freespace in the filesystem
+after fixing up possible errors.
+
+So basically when you enable lazy counters, repair essentially
+verifies all the freespace is correct before enabling it. That's a
+necessary pre-requisite for lazy-counters to work correctly, and the
+only way to ensure it is to walk the filesystem first.
+
+That said, if you really want to avoid running a full xfs_repair,
+you can always count the btree blocks manually with xfs_db and set
+the btreeblk count fields yourself. You get to keep the broken
+pieces when something goes wrong, though. :/
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
