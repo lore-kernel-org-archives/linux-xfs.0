@@ -1,17 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8P9SKEN036866 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 04:28:20 -0500
-Date: Tue, 25 Sep 2012 05:29:35 -0400
+	q8P9X62q037428 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 04:33:06 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	hajdFx7KWKkKv5pw (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Sep 2012 02:34:22 -0700 (PDT)
+Date: Tue, 25 Sep 2012 05:34:21 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: userspace trees
-Message-ID: <20120925092935.GA9189@infradead.org>
-References: <20120913075026.GA27256@infradead.org>
-	<5052142B.3010601@sandeen.net> <20120913175316.GR3274@sgi.com>
-	<50521DCE.7020203@sandeen.net>
+Subject: Re: [PATCH 1/6] xfs: Fix m_agirotor reset during AG selection
+Message-ID: <20120925093421.GC9189@infradead.org>
+References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
+	<1348147961-7520-2-git-send-email-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50521DCE.7020203@sandeen.net>
+In-Reply-To: <1348147961-7520-2-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,14 +29,12 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Christoph Hellwig <hch@infradead.org>, Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Sep 13, 2012 at 12:54:22PM -0500, Eric Sandeen wrote:
-> hch, you want to remove or somehow deprecate the kernel.org trees?
+Looks good,
 
-I'll replace them with a Checkin that just has a file mentioning that
-the trees have moved.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
