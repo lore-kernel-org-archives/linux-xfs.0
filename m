@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8PFdHT1072451 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 10:39:17 -0500
-Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
-	[209.85.214.181]) by cuda.sgi.com with ESMTP id
-	Tu3yMridPTHAgK2F (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 25 Sep 2012 08:40:34 -0700 (PDT)
-Received: by obbun3 with SMTP id un3so2406131obb.26
-	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 08:40:34 -0700 (PDT)
+	q8PGbRSB079475 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 11:37:27 -0500
+Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
+	cuda.sgi.com with ESMTP id zpT2LvLGwx8RFgrV (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 25 Sep 2012 09:38:41 -0700 (PDT)
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: Re: [PATCH 1/3] rename configure.in to configure.ac
+Date: Tue, 25 Sep 2012 12:38:39 -0400
+References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+	<20120925094113.GJ9189@infradead.org>
+In-Reply-To: <20120925094113.GJ9189@infradead.org>
 MIME-Version: 1.0
-Date: Tue, 25 Sep 2012 11:40:33 -0400
-Message-ID: <CAH4wwdG4j_53UYUtU-h3uwaqMOwDz+EsvXLojWKgCx5i7Ftndw@mail.gmail.com>
-Subject: xfs_repair: enabling lazy sb counters
-From: Peter Watkins <treestem@gmail.com>
+Message-Id: <201209251238.40010.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,37 +22,82 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============3903269219482569026=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hello,
+--===============3903269219482569026==
+Content-Type: multipart/signed;
+  boundary="nextPart3574428.dq1uN1LbaO";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-Has anyone noticed that phase1 updates the lazy count flag in the
-superblock, and then writes out the sb before the traversal in phase5
-counts btree blocks consumed and sets agf_btreeblks?
+--nextPart3574428.dq1uN1LbaO
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 
-Seems like if xfs_repair is interrupted or crashes at the wrong time,
-you'd have enabled lazy count but not set agf_btreeblks, which would
-trigger the corruption check in xfs_alloc.c:xfs_read_agf().
+On Tuesday 25 September 2012 05:41:13 Christoph Hellwig wrote:
+> On Mon, Sep 24, 2012 at 07:39:36PM -0400, Mike Frysinger wrote:
+> > Newer autotools warn and start to error with the older name.
+> >=20
+> > Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+> > ---
+> >=20
+> >  configure.in =3D> configure.ac | 0
+> >  1 file changed, 0 insertions(+), 0 deletions(-)
+> >  rename configure.in =3D> configure.ac (100%)
+> >=20
+> > diff --git a/configure.in b/configure.ac
+> > similarity index 100%
+> > rename from configure.in
+> > rename to configure.ac
+>=20
+> Is there a patch version that can track this now?
 
-If you just re-run xfs_repair to enable lazy counts, it would stop
-early saying they're already enabled. You'd have to disable them, and
-then enable again to get a consistent state.
+`git am` should do the right thing.  patch-2.7 should also process this=20
+correctly (although you might want to get the latest 2.7 snapshot since it=
+=20
+fixes a few bugs in the 2.7 release).
+=2Dmike
 
-Second, is it possible to enable lazy counts without doing the full
-repair traversal, i.e. a cheap and easy way to set agf_btreeblks if
-the fs is already consistent? On some systems, the whole repair
-enchilada can take a long time!
+--nextPart3574428.dq1uN1LbaO
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
 
-Lazy counts are a great feature, and I'd like to enable them on some
-older systems.
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
 
--Peter
+iQIcBAABAgAGBQJQYd4PAAoJEEFjO5/oN/WBAi0QAMTxxEOGp8MHuLn7p/xgsoMq
+S+k9LGJvmVEJ7PaA6QzTuQpAwM/62ttszZmHy22o7lLUAEC3yH4gg4GVycE5MdBB
+kaoiYZVXzOfcgq8fMNy52DK1kthOor/gkxUQnc+V/gr/wQqE2uv1GYqZMNEQLx7y
+bmHIyrMf9SlkP2a6oBRdXGpbQUTIy9rn08SXogrryCTEQLjGjB/qfrIBmVQa/xD1
+O7/9R5CP+6nt9CbZvor1yJgh+syXA1m2o1z1uOCkmQDFzWbKRCUDbCbHaoDFrCAc
+sgw2608LAmxB/zG0mgIwV7unyYUTuLEIaC/inw1RIhRF1pfjJM9T37MNInsVPbx0
+yJS7p+3fJZtF0VdzbyJn/UgZUZM4Lfqq+Hx7K+uqg1D0gEtblPXrv7kvhvGvZuW+
+xss4sxCpqvv2cy3yWx1Djkr20fGUK7cUKLhrAGyMctVoYU3/KuMaC299Uqg+zRRN
+Cw1dRDcC2+0unki1uXm1eLMLLyldF1z+/Rssc1QEAWQrrOFBnXkRwxd+E4CSvEik
+okZQoTfU5WaTYiECHnvIVd15IVR2nwSPH8ZItk8L2zDBRVzaTTzKfhjG9o/wju2b
+O5+y8mvHZxdL41FcReJPzdKRnsfewqU5+3vSg1b+lyeX/gaxNw72TkjaZ+sHEjCe
+LcBHvurQK2+qUcDKNxgn
+=i7pe
+-----END PGP SIGNATURE-----
+
+--nextPart3574428.dq1uN1LbaO--
+
+
+--===============3903269219482569026==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============3903269219482569026==--
