@@ -1,30 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8PDWGSp060375 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 08:32:16 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PJNBml3iq3PoEmYw for
-	<xfs@oss.sgi.com>; Tue, 25 Sep 2012 06:33:33 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8PDXWuk017299
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 09:33:33 -0400
-Received: from andromeda.usersys.redhat.com ([10.3.113.16])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8PDXTxQ029176
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 09:33:32 -0400
-Date: Tue, 25 Sep 2012 10:33:29 -0300
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 4/6] xfs: Fix mp->m_maxagi update during inode64 remount
-Message-ID: <20120925133329.GA10780@andromeda.usersys.redhat.com>
-References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
-	<1348147961-7520-5-git-send-email-cmaiolino@redhat.com>
-	<20120925093715.GF9189@infradead.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120925093715.GF9189@infradead.org>
+	q8PEVOr1064347 for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 09:31:24 -0500
+Received: from eagdhcp-232-125.americas.sgi.com
+	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 17CCD304032
+	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 07:32:39 -0700 (PDT)
+Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	q8PEWZp6004643
+	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 09:32:35 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Received: (from tinguely@localhost)
+	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5/Submit) id
+	q8PEWZZ1004642
+	for xfs@oss.sgi.com; Tue, 25 Sep 2012 09:32:35 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20120925142421.398175185@sgi.com>
+Date: Tue, 25 Sep 2012 09:24:15 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfsprog: remove duplicate vector memalign from xfs_io
+References: <20120925142414.660506845@sgi.com>
+Content-Disposition: inline;
+	filename=xfsprogs-io_remove_duplicate_vector_memalign.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,36 +31,36 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Tue, Sep 25, 2012 at 05:37:15AM -0400, Christoph Hellwig wrote:
-> On Thu, Sep 20, 2012 at 10:32:39AM -0300, Carlos Maiolino wrote:
-> > With the changes made on xfs_set_inode64(), to make it behave as
-> > xfs_set_inode32() (now leaving to the caller the responsibility to update
-> > mp->m_maxagi), we use the return value of xfs_set_inode64() to update
-> > mp->m_maxagi during remount.
-> > 
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> 
-> Shouldn;t this be part of the previous patch?
-> 
-> Otherwise looks good.
-> 
-dchinner suggested to keep small changes into different patches, once the
-xfs_set_inode64() was added previously, adding a separate patche to add
-xfs_set_inode32() and another one to change the behaviour of both functions
-looks reasonable to me
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+The vector feature of xfs_io uses its own memory buffer in the iov structure
+and does not use the buffer entry. Remove the duplicate memalign.
 
--- 
---Carlos
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+---
+ io/pread.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+Index: b/io/pread.c
+===================================================================
+--- a/io/pread.c
++++ b/io/pread.c
+@@ -76,8 +76,7 @@ alloc_iovec(
+ 	buffersize = 0;
+ 	for (i = 0; i < vectors; i++) {
+ 		iov[i].iov_base = memalign(pagesize, bsize);
+-		buffer = memalign(pagesize, bsize);
+-		if (!buffer) {
++		if (!iov[i].iov_base) {
+ 			perror("memalign");
+ 			goto unwind;
+ 		}
+
 
 _______________________________________________
 xfs mailing list
