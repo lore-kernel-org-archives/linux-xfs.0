@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8QIBAF9236080 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 13:11:10 -0500
-Message-ID: <50634585.3030400@sgi.com>
-Date: Wed, 26 Sep 2012 13:12:21 -0500
+	q8QKHg3C249572 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 15:17:42 -0500
+Message-ID: <5063632C.70905@sgi.com>
+Date: Wed, 26 Sep 2012 15:18:52 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs: Set a clean output in case of invalid inode size
-References: <1334609816-8473-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1334609816-8473-1-git-send-email-cmaiolino@redhat.com>
+Subject: Re: [PATCH V4] Make inode64 a remountable option
+References: <1345238378-10123-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1345238378-10123-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,21 +24,17 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 04/16/12 15:56, Carlos Maiolino wrote:
-> Remove an unnecessary usage() call after a mkfs failure due an invalid inode
-> size.
-> A call to usage() at this point confuses the output message which may cause the
-> user to think it used wrong arguments to mkfs, instead of an invalid inode size.
+On 08/17/12 16:19, Carlos Maiolino wrote:
+> Actually, there is no reason about why a user must umount and mount a XFS
+> filesystem to enable 'inode64' option. So, this patch makes this a remountable
+> option.
 >
 > Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
 > ---
 
+Looks good.
 
-Found that this patch was reviewed but not committed.
-
-Committed to git://oss.sgi.com/xfs/cmds/xfsprogs.git, master branch.
-
---Mark.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
