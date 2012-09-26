@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8Q6ti9U168140 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 01:55:44 -0500
-Received: from mail-pa0-f53.google.com (mail-pa0-f53.google.com
-	[209.85.220.53]) by cuda.sgi.com with ESMTP id y1oPoSwA5hY0GeDn
+	q8Q6tnAN168155 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 01:55:49 -0500
+Received: from mail-da0-f53.google.com (mail-da0-f53.google.com
+	[209.85.210.53]) by cuda.sgi.com with ESMTP id SOZEaavOU5BjmjzC
 	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Tue, 25 Sep 2012 23:57:01 -0700 (PDT)
-Received: by padbj3 with SMTP id bj3so305745pad.26
-	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 23:57:01 -0700 (PDT)
+	<xfs@oss.sgi.com>; Tue, 25 Sep 2012 23:57:07 -0700 (PDT)
+Received: by dadg9 with SMTP id g9so108296dad.26
+	for <xfs@oss.sgi.com>; Tue, 25 Sep 2012 23:57:06 -0700 (PDT)
 From: raghu.prabhu13@gmail.com
-Subject: [PATCH v3 0/3] Print when ENOSPC due to lack of inodes.
-Date: Wed, 26 Sep 2012 12:26:46 +0530
-Message-Id: <cover.1348639531.git.rprabhu@wnohang.net>
+Subject: [PATCH v3 1/3] xfs: Add ratelimited printk for different alert levels
+Date: Wed, 26 Sep 2012 12:26:47 +0530
+Message-Id: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
+In-Reply-To: <cover.1348639531.git.rprabhu@wnohang.net>
+References: <cover.1348639531.git.rprabhu@wnohang.net>
+In-Reply-To: <cover.1348641483.git.rprabhu@wnohang.net>
+References: <cover.1348641483.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,34 +34,65 @@ Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>
 
 From: Raghavendra D Prabhu <rprabhu@wnohang.net>
 
-Currently, when there are no free inodes left / free space to allocate them (usually
-without inode64), there is no indication anywhere of this case, making it harder
-to diagnose this case.
+Ratelimited printk will be useful in printing xfs messages which are otherwise
+not required to be printed always due to their high rate (to prevent kernel ring
+buffer from overflowing), while at the same time required to be printed.
 
-Hence, this series prints the causes/reasons to kernel log in a ratelimited
-manner, when such a situation arises.
-
-Regarding why it is printed at callee location instead at caller, it gives
-greater granularity in expressing the precise reason and give more details, and
-also some along the path are not ENOSPC (such in xfs_ialloc where ialloc_context is not NULL but
-ino is) along with the fact that it (xfs_ialloc) is called at multiple sites, so to avoid duplication.
-
-Version 1: Initial series.
-Version 2: Added ratelimited printing to xfs_message and used that.
-Version 3: Kept the logic intact in few places, fixed the column requirement. 
-
-Raghavendra D Prabhu (3):
-  xfs: Add ratelimited printk for different alert levels
-  xfs: Print error when xfs_ialloc_ag_select fails to find continuous
-    free space.
-  xfs: Print error when unable to allocate inodes or out of free
-    inodes.
-
- fs/xfs/xfs_ialloc.c  | 31 ++++++++++++++++++++++++++++---
+Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+---
  fs/xfs/xfs_linux.h   |  1 +
  fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
- 3 files changed, 55 insertions(+), 3 deletions(-)
+ 2 files changed, 27 insertions(+)
 
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 828662f..49f8505 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -71,6 +71,7 @@
+ #include <linux/kthread.h>
+ #include <linux/freezer.h>
+ #include <linux/list_sort.h>
++#include <linux/ratelimit.h>
+ 
+ #include <asm/page.h>
+ #include <asm/div64.h>
+diff --git a/fs/xfs/xfs_message.h b/fs/xfs/xfs_message.h
+index 56dc0c1..76c8198 100644
+--- a/fs/xfs/xfs_message.h
++++ b/fs/xfs/xfs_message.h
+@@ -30,6 +30,32 @@ void xfs_debug(const struct xfs_mount *mp, const char *fmt, ...)
+ }
+ #endif
+ 
++#define xfs_printk_ratelimited(func, dev, fmt, ...)		\
++do {									\
++	static DEFINE_RATELIMIT_STATE(_rs,				\
++				      DEFAULT_RATELIMIT_INTERVAL,	\
++				      DEFAULT_RATELIMIT_BURST);		\
++	if (__ratelimit(&_rs))						\
++		func(dev, fmt, ##__VA_ARGS__);			\
++} while (0)
++
++#define xfs_emerg_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_emerg, dev, fmt, ##__VA_ARGS__)
++#define xfs_alert_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_alert, dev, fmt, ##__VA_ARGS__)
++#define xfs_crit_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_crit, dev, fmt, ##__VA_ARGS__)
++#define xfs_err_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_err, dev, fmt, ##__VA_ARGS__)
++#define xfs_warn_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_warn, dev, fmt, ##__VA_ARGS__)
++#define xfs_notice_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_notice, dev, fmt, ##__VA_ARGS__)
++#define xfs_info_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_info, dev, fmt, ##__VA_ARGS__)
++#define xfs_debug_ratelimited(dev, fmt, ...)				\
++	xfs_printk_ratelimited(xfs_debug, dev, fmt, ##__VA_ARGS__)
++
+ extern void assfail(char *expr, char *f, int l);
+ 
+ extern void xfs_hex_dump(void *p, int length);
 -- 
 1.7.12.1
 
