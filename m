@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8QKJ6JS249706 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 15:19:06 -0500
-Message-ID: <50636384.1010803@sgi.com>
-Date: Wed, 26 Sep 2012 15:20:20 -0500
+	q8QKK8vg249908 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 15:20:08 -0500
+Message-ID: <506363C1.7080500@sgi.com>
+Date: Wed, 26 Sep 2012 15:21:21 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/6] xfs: make inode64 as the default allocation mode
+Subject: Re: [PATCH 5/6] xfs: add inode64->inode32 transition into
+	xfs_set_inode32()
 References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
-	<1348147961-7520-3-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1348147961-7520-3-git-send-email-cmaiolino@redhat.com>
+	<1348147961-7520-6-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1348147961-7520-6-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,12 +27,8 @@ To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
 On 09/20/12 08:32, Carlos Maiolino wrote:
-> since 64-bit inodes can be accessed while using inode32, and these can also be
-> used on 32-bit kernels, there is no reason to still keep inode32 as the default
-> mount option.
-> If the filesystem cannot handle 64bit inode numbers (i.e CONFIG_LBDAF is not
-> enabled and BITS_PER_LONG == 32), XFS_MOUNT_SMALL_INUMS will still be set by
-> default, so inode64 is not an unconditional default value.
+> To make inode32 a remountable option, xfs_set_inode32() should be able to make a
+> transition from inode64 option, disabling inode allocation on higher AGs.
 >
 > Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
 > ---
