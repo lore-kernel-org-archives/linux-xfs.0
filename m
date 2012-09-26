@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8QED4VE214576 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 09:13:04 -0500
-Message-ID: <50630DB6.4070405@sgi.com>
-Date: Wed, 26 Sep 2012 09:14:14 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q8QFI8BJ219032 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 10:18:08 -0500
+Date: Wed, 26 Sep 2012 10:19:23 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v3 0/8] speculative preallocation inode tracking
+Message-ID: <20120926151923.GB13214@sgi.com>
+References: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] xfs: allocation worker causes freelist buffer lock
-	hang
-References: <20120924171159.GG1140@sgi.com>
-	<201209241809.q8OI94s3003323@eagdhcp-232-125.americas.sgi.com>
-	<20120925005632.GB23520@dastard> <5061CA48.3040202@sgi.com>
-	<20120925220110.GF29154@dastard>
-In-Reply-To: <20120925220110.GF29154@dastard>
+Content-Disposition: inline
+In-Reply-To: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,101 +18,68 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: bpm@sgi.com, xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 09/25/12 17:01, Dave Chinner wrote:
-> On Tue, Sep 25, 2012 at 10:14:16AM -0500, Mark Tinguely wrote:
+Hi Brian,
 
-<deletes>
+On Fri, Sep 14, 2012 at 08:19:47AM -0400, Brian Foster wrote:
+> This is v3 of the speculative preallocation inode tracking patchset. This
+> functionality tracks inodes with post-EOF speculative preallocation for the
+> purpose of background and on-demand trimming.
+> 
+> Background scanning occurs on a longish interval (5 minutes by default) and in
+> a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
+> cache). The intent is to clear up post-EOF blocks on inodes that might have
+> allocations hanging around due to open-write-close sequences (NFS).
+> 
+> On demand scanning is provided via a new ioctl and supports various parameters
+> such as scan mode, filtering by quota id and minimum file size. A pending use
+> case for on demand scanning is for accurate quota accounting via the gluster
+> scale out filesystem (i.e., to free up preallocated space when near a usage
+> limit).
 
->>>>
->>>> As a bonus, consolidating the loops into one worker actually gives a slight
->>>> performance advantage.
->>>
->>> Can you quantify it?
->>
->> I was comparing the bonnie and iozone benchmarks outputs. I will see
->> if someone can enlighten me on how to quantify those numbers.
->
-> Ugh.
->
-> Don't bother. Those are two of the worst offenders in the "useless
-> benchmarks for regression testing" category. Yeah, they *look* like
-> they give decent numbers, but I've wasted so much time looking at
-> results from these benhmarks only to find they do basic things wrong
-> and give numbers that vary simple because you've made a change that
-> increases or decreases the CPU cache footprint of a code path.
->
-> e.g. IOZone uses the same memory buffer as the source/destination of
-> all it's IO, and does not touch the contents of it at all. Hence for
-> small IO, the buffer stays resident in the CPU caches and gives
-> unrealsitically high throughput results. Worse is the fact that CPU
-> cache residency of the buffer can change according to the kernel
-> code path taken, so you can get massive changes in throughput just
-> by changing the layout of the code without changing any logic....
->
-> IOZone can be useful if you know exactly what you are doing and
-> using it to test a specific code path with a specific set of
-> configurations. e.g. comparing ext3/4/xfs/btrfs on the same kernel
-> and storage is fine. However, the moment you start using it to
-> compare different kernels, it's a total crap shoot....
+[33084.794491] XFS (sda2): Ending clean mount
+[33170.400045] XFS: Assertion failed: !atomic_read(&VFS_I(ip)->i_count) || xfs_isilocked(ip, XFS_IOLOCK_EXCL), file: /root/xfs/fs/xfs/xfs_inode.c, line: 1128
+[33170.41422[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Linux version 3.6.0-rc1-1.2-desktop+ (root@nfs7) (gcc version 4.6.2 (SUSE Linux) ) #26 SMP PREEMPT Fri Sep 21 18:26:16 CDT 2012
+[    0.000000] e820: BIOS-provided physical RAM map:
+[    0.000000] BIOS-e820: [mem 0x0000000000000100-0x000000000009fbff] usable
 
-does anyone have a good benchmark XFS should use to share performance 
-results? A number that we can agree a series does not degrade the 
-filesystem..
+crash> bt
+PID: 1289   TASK: f38d71d0  CPU: 1   COMMAND: "kworker/1:2"
+ #0 [f17c9b88] crash_kexec at c0295045
+ #1 [f17c9be0] oops_end at c06ab2f2
+ #2 [f17c9bf8] die at c020539a
+ #3 [f17c9c10] do_trap at c06aadc1
+ #4 [f17c9c28] do_invalid_op at c0202eb1
+ #5 [f17c9cc4] error_code (via invalid_op) at c06aab7c
+    EAX: 0000008e  EBX: ec3d9400  ECX: 0000071e  EDX: 00000046  EBP: f17c9d18 
+    DS:  007b      ESI: ec3d9400  ES:  007b      EDI: ef973d00  GS:  2e30
+    CS:  0060      EIP: f9d1dbb6  ERR: ffffffff  EFLAGS: 00010292 
+ #6 [f17c9cf8] assfail at f9d1dbb6 [xfs]
+ #7 [f17c9d1c] xfs_itruncate_extents at f9d6335f [xfs]
+ #8 [f17c9d98] xfs_free_eofblocks at f9d237d9 [xfs]
+ #9 [f17c9df8] xfs_inode_free_eofblocks at f9d221b4 [xfs]
+#10 [f17c9e14] xfs_inode_ag_walk at f9d20ab9 [xfs]
+#11 [f17c9ee4] xfs_inode_ag_iterator_tag at f9d20d6b [xfs]
+#12 [f17c9f18] xfs_inodes_free_eofblocks at f9d21c95 [xfs]
+#13 [f17c9f34] xfs_eofblocks_worker at f9d21cc3 [xfs]
+#14 [f17c9f40] process_one_work at c0251ea5
+#15 [f17c9f84] worker_thread at c0252504
+#16 [f17c9fbc] kthread at c025672b
+#17 [f17c9fe8] kernel_thread_helper at c06b06f4
 
-lies, damn lies, statistics and then filesystem benchmarks?! :)
+It seems that test 133 was running at the time of the crash in two cases.  This
+is a neat patch set but we need to resolve this before pulling it in.
 
-
-> I guess I don't understand what you mean by "loop on
-> xfs_alloc_vextent()" then.
->
-> The problem I see above is this:
->
-> thread 1		worker 1		worker 2..max
-> xfs_bmapi_write(userdata)
-
-     loops here calling xfs_bmapi_alloc()
-
->    xfs_bmapi_allocate(user)
->      xfs_alloc_vextent(user)
->        wait
->
-> 			_xfs_alloc_vextent()
-> 			locks AGF
-
-			 first loop it takes the lock
-			 one of the next times through the above
-			 loop it cannot get a worker. deadlock here.
-
-			 I saved the xfs_bmalloca and fs_alloc_arg when
-			 allocating a buffer to verify the paths.
-
-> 						_xfs_alloc_vextent()
-> 						blocks on AGF lock
-
-> 			completes allocation
->
->        <returns with AGF locked in transaction>
->      xfs_bmap_add_extent_hole_real
->        xfs_bmap_extents_to_btree
->          xfs_alloc_vextent(user)
->            wait
-
-	   this does not need a worker, and since in the same
-            transaction all locks to the AGF buffer are recursive locks.
-	   no wait here.
->
-> <deadlock as no more workers available>
-
-<deletes>
-
---Mark.
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
