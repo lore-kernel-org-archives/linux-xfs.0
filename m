@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8QKJnKI249878 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 15:19:49 -0500
-Message-ID: <506363AF.9080601@sgi.com>
-Date: Wed, 26 Sep 2012 15:21:03 -0500
+	q8QKKfhn250052 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 15:20:41 -0500
+Message-ID: <506363E2.8080804@sgi.com>
+Date: Wed, 26 Sep 2012 15:21:54 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 4/6] xfs: Fix mp->m_maxagi update during inode64 remount
+Subject: Re: [PATCH 6/6] xfs: Make inode32 a remountable option
 References: <1348147961-7520-1-git-send-email-cmaiolino@redhat.com>
-	<1348147961-7520-5-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1348147961-7520-5-git-send-email-cmaiolino@redhat.com>
+	<1348147961-7520-7-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1348147961-7520-7-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,13 +26,12 @@ To: Carlos Maiolino <cmaiolino@redhat.com>
 Cc: xfs@oss.sgi.com
 
 On 09/20/12 08:32, Carlos Maiolino wrote:
-> With the changes made on xfs_set_inode64(), to make it behave as
-> xfs_set_inode32() (now leaving to the caller the responsibility to update
-> mp->m_maxagi), we use the return value of xfs_set_inode64() to update
-> mp->m_maxagi during remount.
+> As inode64 is the default option now, and was also made remountable previously,
+> inode32 can also be remounted on-the-fly when it is needed.
 >
 > Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
 > ---
+
 
 Looks good.
 
