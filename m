@@ -1,15 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8QFbvlN220549 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 10:37:57 -0500
-Date: Wed, 26 Sep 2012 10:39:13 -0500
-From: Ben Myers <bpm@sgi.com>
+	q8QFg7wn220911 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 10:42:07 -0500
+Message-ID: <50632302.2070406@redhat.com>
+Date: Wed, 26 Sep 2012 11:45:06 -0400
+From: Brian Foster <bfoster@redhat.com>
+MIME-Version: 1.0
 Subject: Re: [PATCH v3 0/8] speculative preallocation inode tracking
-Message-ID: <20120926153912.GC13214@sgi.com>
 References: <1347625195-6369-1-git-send-email-bfoster@redhat.com>
 	<20120926151923.GB13214@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
 In-Reply-To: <20120926151923.GB13214@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -23,36 +22,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Hey Brian,
-
-On Wed, Sep 26, 2012 at 10:19:23AM -0500, Ben Myers wrote:
+On 09/26/2012 11:19 AM, Ben Myers wrote:
+> Hi Brian,
+> 
 > On Fri, Sep 14, 2012 at 08:19:47AM -0400, Brian Foster wrote:
-> > This is v3 of the speculative preallocation inode tracking patchset. This
-> > functionality tracks inodes with post-EOF speculative preallocation for the
-> > purpose of background and on-demand trimming.
-> > 
-> > Background scanning occurs on a longish interval (5 minutes by default) and in
-> > a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
-> > cache). The intent is to clear up post-EOF blocks on inodes that might have
-> > allocations hanging around due to open-write-close sequences (NFS).
-> > 
-> > On demand scanning is provided via a new ioctl and supports various parameters
-> > such as scan mode, filtering by quota id and minimum file size. A pending use
-> > case for on demand scanning is for accurate quota accounting via the gluster
-> > scale out filesystem (i.e., to free up preallocated space when near a usage
-> > limit).
-
-Maybe it would help if I would give you some context!  I was running your patch
-set along side with the inode64 related patch set from Carlos on an i386 box
-and hit this assert on two subsequent test runs... both happened to be in test
-133 at the time of the crash.
-
-Regards,
-	Ben
-
+>> This is v3 of the speculative preallocation inode tracking patchset. This
+>> functionality tracks inodes with post-EOF speculative preallocation for the
+>> purpose of background and on-demand trimming.
+>>
+>> Background scanning occurs on a longish interval (5 minutes by default) and in
+>> a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
+>> cache). The intent is to clear up post-EOF blocks on inodes that might have
+>> allocations hanging around due to open-write-close sequences (NFS).
+>>
+>> On demand scanning is provided via a new ioctl and supports various parameters
+>> such as scan mode, filtering by quota id and minimum file size. A pending use
+>> case for on demand scanning is for accurate quota accounting via the gluster
+>> scale out filesystem (i.e., to free up preallocated space when near a usage
+>> limit).
+> 
 > [33084.794491] XFS (sda2): Ending clean mount
 > [33170.400045] XFS: Assertion failed: !atomic_read(&VFS_I(ip)->i_count) || xfs_isilocked(ip, XFS_IOLOCK_EXCL), file: /root/xfs/fs/xfs/xfs_inode.c, line: 1128
 > [33170.41422[    0.000000] Initializing cgroup subsys cpuset
@@ -88,13 +79,20 @@ Regards,
 > It seems that test 133 was running at the time of the crash in two cases.  This
 > is a neat patch set but we need to resolve this before pulling it in.
 > 
+
+Indeed. It looks like I botched the need_iolock parameter to
+xfs_free_eofblocks() when I migrated to rely on EAGAIN rather than a
+blocking lock. Thanks for the report.
+
+I'm surprised I didn't reproduce this. I will try and do so before I
+submit an updated set so I can verify a fix. Was this a repeated 133
+test or full xfstests run? Thanks again.
+
+Brian
+
 > Regards,
 > Ben
 > 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
