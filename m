@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8R05LwX012226 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 19:05:21 -0500
+	q8R0I3nB013312 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 19:18:03 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	aqMXcDUiSGtSpHBy for <xfs@oss.sgi.com>;
-	Wed, 26 Sep 2012 17:06:39 -0700 (PDT)
-Date: Thu, 27 Sep 2012 10:06:38 +1000
+	xZOoBJBJTizmyo2Z for <xfs@oss.sgi.com>;
+	Wed, 26 Sep 2012 17:19:21 -0700 (PDT)
+Date: Thu, 27 Sep 2012 10:19:19 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/6] xfstest: add configurable load factors
-Message-ID: <20120927000638.GC15236@dastard>
+Subject: Re: [PATCH 3/6] xfstest: allow fsstress to use load factor where
+	appropriate
+Message-ID: <20120927001919.GD15236@dastard>
 References: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
-	<1348496601-32637-2-git-send-email-dmonakhov@openvz.org>
+	<1348496601-32637-3-git-send-email-dmonakhov@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348496601-32637-2-git-send-email-dmonakhov@openvz.org>
+In-Reply-To: <1348496601-32637-3-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,45 +31,72 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dmitry Monakhov <dmonakhov@openvz.org>
 Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de, xfs@oss.sgi.com
 
-On Mon, Sep 24, 2012 at 06:23:17PM +0400, Dmitry Monakhov wrote:
-> Most stress test has probable behaviour, the longer test run the
-> larger corner cases will be cover. It is reasonable to allow
-> user to provide some sort of system load factor.
-> This patch introduce two global variables
-> LOAD_FACTOR: Usually means factor number of running tasks
-> TIME_FACTOR: Usually means factor of run time, or number of operations
-> If not speficied both variables defined to 1, so original behaviour
-> preserved.
-> 
-> TODO: Change all stress tests to use this variables
+On Mon, Sep 24, 2012 at 06:23:18PM +0400, Dmitry Monakhov wrote:
 > 
 > Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
 > ---
->  common.config |    8 ++++++++
->  1 files changed, 8 insertions(+), 0 deletions(-)
+>  017 |    5 ++++-
+>  068 |    4 ++--
+>  070 |    4 +++-
+>  076 |    5 ++++-
+>  083 |    4 ++--
+>  087 |   10 ++++++----
+>  104 |    4 ++--
+>  114 |    5 +++--
+>  167 |    4 ++--
+>  232 |    5 +++--
+>  233 |    5 +++--
+>  269 |    7 ++++---
+>  270 |    7 ++++---
+>  276 |   11 ++++++-----
+>  14 files changed, 48 insertions(+), 32 deletions(-)
 > 
-> diff --git a/common.config b/common.config
-> index d5c8956..cfa7bde 100644
-> --- a/common.config
-> +++ b/common.config
-> @@ -253,5 +253,13 @@ if [ ! -z "$SCRATCH_MNT" -a ! -d "$SCRATCH_MNT" ]; then
->      exit 1
->  fi
->  
-> +if [ -z "$LOAD_FACTOR" ]; then
-> +    LOAD_FACTOR=1
-> +fi
-> +
-> +if [ -z "$TIME_FACTOR" ]; then
-> +    TIME_FACTOR=1
-> +fi
+> diff --git a/017 b/017
+> index 9ca0e72..8d35ee8 100755
+> --- a/017
+> +++ b/017
+> @@ -67,7 +67,10 @@ echo "*** test"
+>  for l in 0 1 2 3 4
+>  do
+>          echo "    *** test $l"
+> -        $FSSTRESS_PROG -d $SCRATCH_MNT -n 1000 $FSSTRESS_AVOID >>$seq.full
+> +	NUM=$((1000 * TIME_FACTOR))
 
-They probably need to be exparted variables set up through the
-check script, not somthing sourced via common.config. i.e. something
-like this in check where the environment is being set up:
+$TIME_FACTOR, perhaps?
 
-export TIME_FACTOR=${TIME_FACTOR:=1}
-export LOAD_FACTOR=${LOAD_FACTOR:=1}
+> +	CPU=$((1 * LOAD_FACTOR))
+> +        $FSSTRESS_PROG -d $SCRATCH_MNT -n $NUM -p $CPU \
+> +	    $FSSTRESS_AVOID >>$seq.full
+
+I'd much prefer a wrapper around fsstress than have to code this
+into every test. Something like:
+
+run_fstress()
+{
+	args=""
+
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		-n) args="$args $1 $(($2 * $TIME_FACTOR))"; shift ;;
+		-p) args="$args $1 $(($2 * $LOAD_FACTOR))"; shift ;;
+		*) args="$args $1" ;;
+		esac
+
+		shift
+	done
+
+	$FSSTRESS_PROG $args
+}
+
+And so all you need to do is something like:
+
+$ sed -i 's/\$FSSTRESS_PROG/run_fsstress/' [0-9][0-9][0-9]
+
+To convert all tests that use fsstress to do this.
+
+You might also want to do this for the tests that run dirstress as
+well, and create a "stress" group so that you can run just
+the stress tests easily....
 
 Cheers,
 
