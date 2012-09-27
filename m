@@ -1,15 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8RFWx2B111503 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 10:32:59 -0500
-Date: Thu, 27 Sep 2012 10:34:15 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: more efficient way to print out inode->block mappings?
-Message-ID: <20120927153415.GI13214@sgi.com>
-References: <50643AF7.7060106@tlinx.org>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50643AF7.7060106@tlinx.org>
+	q8RHgsS7121759 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 12:42:54 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id sT6cKrrW3XfPqQ5r for
+	<xfs@oss.sgi.com>; Thu, 27 Sep 2012 10:44:13 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8RHiD6A013480
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:13 -0400
+Received: from bfoster.bfoster ([10.16.225.83])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8RHiC9q026808
+	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:12 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v4 0/8] speculative preallocation inode tracking
+Date: Thu, 27 Sep 2012 13:45:44 -0400
+Message-Id: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,92 +26,84 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-Hey Linda,
+Hi all,
 
-On Thu, Sep 27, 2012 at 04:39:35AM -0700, Linda Walsh wrote:
-> I want to be able to rapidly determine the diffs between 2 volumes.
-> 
-> Special note 1 is an active lvm snapshot of the other -- meaning it is
-> frozen in time, but otherwise should look identical the the file system
-> as it was when it was snapped.
-> 
-> Sooo... a way of speeding checks is finding out what blocks allocated to the indoes
-> are different, since as the new volume gets used, I had hoped that differing
-> block numbers might give me a clue as to what had changed..
+This is v3 of the speculative preallocation inode tracking patchset. This
+functionality tracks inodes with post-EOF speculative preallocation for the
+purpose of background and on-demand trimming.
 
-Differing block maps for the same inode on the two filesystems will give you a
-clue that there are changes but it isn't perfect:
+Background scanning occurs on a longish interval (5 minutes by default) and in
+a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
+cache). The intent is to clear up post-EOF blocks on inodes that might have
+allocations hanging around due to open-write-close sequences (NFS).
 
-Consider xfs_fsr.  This might change block numbers for a file but the contents
-stayed the same.
+On demand scanning is provided via a new ioctl and supports various parameters
+such as scan mode, filtering by quota id and minimum file size. A pending use
+case for on demand scanning is for accurate quota accounting via the gluster
+scale out filesystem (i.e., to free up preallocated space when near a usage
+limit).
 
-Also consider an overwrite situation.  The contents of the file are overwritten
-and have changed but the block map stayed the same.  To detect that we'd need
-some kind of generation number on every extent, and we don't have that.
+Brian
 
-At this time I don't think we have a solid way to tell you which blocks of a
-file are different without actually comparing them.  I think you are stuck
-looking at the mtime and then doing a full comparison.
+v4:
+- Fix the broken need_iolock parameter to the xfs_free_eofblocks() call in
+  patch 5 (thanks to Ben M. for testing). This is a one line change. All
+  other patches equivalent to v3. This version survives an xfstests run (with
+  XFS_DEBUG enabled this time :P).
 
-Have you looked into using the xfs bulkstat ioctl interfaces?
-XFS_IOC_FSBULKSTAT won't get you the block map, but maybe it would be useful to
-you.  xfs_bmap is using XFS_IOC_GETBMAP*, but it sounds like you've already
-considered that.  Maybe a creative invocation of xfsdump?
+v3:
+- Pushed dirty cache check up into patch 5 (minor clean up).
+- Reworked xfs_can_free_eofblocks() in patch 3 as per Dave C.'s review.
+- Rebased from linus' tree to the XFS tree.
 
-Let me know if I misunderstood and went off the rails.  ;)
+v2:
+- Remove unnecessary inode flag clear helper.
+- Condense eofblocks set/clear tag functions.
+- Move clear tag call into xfs_free_eofblocks().
+- Modify AG walk infrastructure to support tag-based walk and utilize this
+  functionality for the eofblocks scan (as opposed to the previous code
+  duplicated from reclaim scanning).
+- Improve ioctl functionality: new data structure fields/flags, validate quota
+  is enabled.
+- Increase default background scanning interval to 5 minutes, add tunable.
 
-HTH,
-Ben
+Brian Foster (8):
+  xfs: add EOFBLOCKS inode tagging/untagging
+  xfs: support a tag-based inode_ag_iterator
+  xfs: create helper to check whether to free eofblocks on inode
+  xfs: export xfs_free_eofblocks() and return EAGAIN on trylock failure
+  xfs: create function to scan and clear EOFBLOCKS inodes
+  xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+  xfs: add enhanced filtering to EOFBLOCKS scan
+  xfs: add background scanning to clear EOFBLOCKS inodes
 
-> Nevertheless, trying to read the blocks allocated/inode with bmap is sorta slow.
-> I've tried to optimize it by starting a pty session to xfs_db and issuing inode/bmap
-> commands -- but I have to wait for a prompt to come back to know that the command
-> has finished, and I'm not really sure it's really returning more than 1 line
-> for any file. -- though interactively, I can find a file with a large ACL, and see
-> it has both a data and attr bmap.  I also haven't seen what output would look like
-> if the file(or dir) was split -- as, so far, have only seen
-> files/dirs returned that
-> have 1 allocation/file,
-> 
-> So what the means is that I'm not sure about synchronization between commands output
-> and the input I read in -- even though I read in the input after
-> every command. -- but even with
-> a minimal timeout of 1ms, and keeping track of commands outstanding
-> and replies (as measured
-> by 'prompts' recieved, I'm far from convinced it's doing the right
-> thing -- and it still
-> slow going 1 inode at a time over a pty interface.
-> 
-> I thought of trying to use blockget -v and parsing the output.  I
-> figured that would
-> have the least latency and likely be the fastest way to dump the mappings -- BUT
-> it seems I can't get it to work on an active file system.  So how
-> can I get that block
-> info dumped without blockget?  I've already told blockget it's in -r
-> only mode... so it
-> shouldn't try to repair inconsistencies...and 99.999% is going to be
-> what I want and any
-> inconsistencies, I can check manually be checking the files through
-> the mounted interface.
-> 
-> Oddly, and likely I'm confused about something, but when  i try to
-> print the log/log_print,
-> it says it is an invalid log 1 byte long, so even if it were played out, I don't
-> think it would make much difference in the final results.
-> 
-> Is it possible to do what I want w/o writing a special util/C prog to dump this?
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
+ fs/xfs/xfs_ag.h          |    1 +
+ fs/xfs/xfs_fs.h          |   23 +++++
+ fs/xfs/xfs_globals.c     |    1 +
+ fs/xfs/xfs_ioctl.c       |   20 ++++
+ fs/xfs/xfs_iomap.c       |    7 ++
+ fs/xfs/xfs_iops.c        |    3 +
+ fs/xfs/xfs_linux.h       |    1 +
+ fs/xfs/xfs_mount.h       |    2 +
+ fs/xfs/xfs_qm_syscalls.c |    5 +-
+ fs/xfs/xfs_sync.c        |  215 ++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_sync.h        |   11 ++-
+ fs/xfs/xfs_sysctl.c      |    9 ++
+ fs/xfs/xfs_sysctl.h      |    1 +
+ fs/xfs/xfs_trace.h       |    6 ++
+ fs/xfs/xfs_vnodeops.c    |   27 +++---
+ fs/xfs/xfs_vnodeops.h    |   41 +++++++++-
+ 16 files changed, 344 insertions(+), 29 deletions(-)
+
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
