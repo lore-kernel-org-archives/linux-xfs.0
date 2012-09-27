@@ -1,23 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8RHgsS7121759 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 12:42:54 -0500
+	q8RHgs41121758 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 12:42:54 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id sT6cKrrW3XfPqQ5r for
+	cuda.sgi.com with ESMTP id eajfm4B8h0kWZfZP for
 	<xfs@oss.sgi.com>; Thu, 27 Sep 2012 10:44:13 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8RHiD6A013480
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8RHiDKJ022929
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:13 -0400
 Received: from bfoster.bfoster ([10.16.225.83])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q8RHiC9q026808
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q8RHiCVR013609
 	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:12 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 0/8] speculative preallocation inode tracking
-Date: Thu, 27 Sep 2012 13:45:44 -0400
-Message-Id: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 3/8] xfs: create helper to check whether to free eofblocks
+	on inode
+Date: Thu, 27 Sep 2012 13:45:47 -0400
+Message-Id: <1348767952-24229-4-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
+References: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,75 +36,118 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+This check is used in multiple places to determine whether we
+should check for (and potentially free) post EOF blocks on an
+inode. Add a helper to consolidate the check.
 
-This is v3 of the speculative preallocation inode tracking patchset. This
-functionality tracks inodes with post-EOF speculative preallocation for the
-purpose of background and on-demand trimming.
+Note that when we remove an inode from the cache (xfs_inactive()),
+we are required to trim post-EOF blocks even if the inode is marked
+preallocated or append-only to maintain correct space accounting.
+The 'force' parameter to xfs_can_free_eofblocks() specifies whether
+we should ignore the prealloc/append-only status of the inode.
 
-Background scanning occurs on a longish interval (5 minutes by default) and in
-a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
-cache). The intent is to clear up post-EOF blocks on inodes that might have
-allocations hanging around due to open-write-close sequences (NFS).
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_vnodeops.c |   19 +++++++------------
+ fs/xfs/xfs_vnodeops.h |   40 +++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 46 insertions(+), 13 deletions(-)
 
-On demand scanning is provided via a new ioctl and supports various parameters
-such as scan mode, filtering by quota id and minimum file size. A pending use
-case for on demand scanning is for accurate quota accounting via the gluster
-scale out filesystem (i.e., to free up preallocated space when near a usage
-limit).
-
-Brian
-
-v4:
-- Fix the broken need_iolock parameter to the xfs_free_eofblocks() call in
-  patch 5 (thanks to Ben M. for testing). This is a one line change. All
-  other patches equivalent to v3. This version survives an xfstests run (with
-  XFS_DEBUG enabled this time :P).
-
-v3:
-- Pushed dirty cache check up into patch 5 (minor clean up).
-- Reworked xfs_can_free_eofblocks() in patch 3 as per Dave C.'s review.
-- Rebased from linus' tree to the XFS tree.
-
-v2:
-- Remove unnecessary inode flag clear helper.
-- Condense eofblocks set/clear tag functions.
-- Move clear tag call into xfs_free_eofblocks().
-- Modify AG walk infrastructure to support tag-based walk and utilize this
-  functionality for the eofblocks scan (as opposed to the previous code
-  duplicated from reclaim scanning).
-- Improve ioctl functionality: new data structure fields/flags, validate quota
-  is enabled.
-- Increase default background scanning interval to 5 minutes, add tunable.
-
-Brian Foster (8):
-  xfs: add EOFBLOCKS inode tagging/untagging
-  xfs: support a tag-based inode_ag_iterator
-  xfs: create helper to check whether to free eofblocks on inode
-  xfs: export xfs_free_eofblocks() and return EAGAIN on trylock failure
-  xfs: create function to scan and clear EOFBLOCKS inodes
-  xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-  xfs: add enhanced filtering to EOFBLOCKS scan
-  xfs: add background scanning to clear EOFBLOCKS inodes
-
- fs/xfs/xfs_ag.h          |    1 +
- fs/xfs/xfs_fs.h          |   23 +++++
- fs/xfs/xfs_globals.c     |    1 +
- fs/xfs/xfs_ioctl.c       |   20 ++++
- fs/xfs/xfs_iomap.c       |    7 ++
- fs/xfs/xfs_iops.c        |    3 +
- fs/xfs/xfs_linux.h       |    1 +
- fs/xfs/xfs_mount.h       |    2 +
- fs/xfs/xfs_qm_syscalls.c |    5 +-
- fs/xfs/xfs_sync.c        |  215 ++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_sync.h        |   11 ++-
- fs/xfs/xfs_sysctl.c      |    9 ++
- fs/xfs/xfs_sysctl.h      |    1 +
- fs/xfs/xfs_trace.h       |    6 ++
- fs/xfs/xfs_vnodeops.c    |   27 +++---
- fs/xfs/xfs_vnodeops.h    |   41 +++++++++-
- 16 files changed, 344 insertions(+), 29 deletions(-)
-
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index d883881..12f5087 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -435,11 +435,7 @@ xfs_release(
+ 	if (ip->i_d.di_nlink == 0)
+ 		return 0;
+ 
+-	if ((S_ISREG(ip->i_d.di_mode) &&
+-	     (VFS_I(ip)->i_size > 0 ||
+-	      (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
+-	     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
+-	    (!(ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
++	if (xfs_can_free_eofblocks(ip, false)) {
+ 
+ 		/*
+ 		 * If we can't get the iolock just skip truncating the blocks
+@@ -515,13 +511,12 @@ xfs_inactive(
+ 		goto out;
+ 
+ 	if (ip->i_d.di_nlink != 0) {
+-		if ((S_ISREG(ip->i_d.di_mode) &&
+-		    (VFS_I(ip)->i_size > 0 ||
+-		     (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
+-		    (ip->i_df.if_flags & XFS_IFEXTENTS) &&
+-		    (!(ip->i_d.di_flags &
+-				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
+-		     ip->i_delayed_blks != 0))) {
++		/*
++		 * force is true because we are evicting an inode from the
++		 * cache. Post-eof blocks must be freed, lest we end up with
++		 * broken free space accounting.
++		 */
++		if (xfs_can_free_eofblocks(ip, true)) {
+ 			error = xfs_free_eofblocks(mp, ip, false);
+ 			if (error)
+ 				return VN_INACTIVE_CACHE;
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index 447e146..d5701e3 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -1,6 +1,10 @@
+ #ifndef _XFS_VNODEOPS_H
+ #define _XFS_VNODEOPS_H 1
+ 
++#include "xfs_bmap_btree.h"
++#include "xfs_dinode.h"
++#include "xfs_inode.h"
++
+ struct attrlist_cursor_kern;
+ struct file;
+ struct iattr;
+@@ -9,8 +13,42 @@ struct iovec;
+ struct kiocb;
+ struct pipe_inode_info;
+ struct uio;
+-struct xfs_inode;
+ 
++/*
++ * Test whether it is appropriate to check an inode for and free post EOF
++ * blocks. The 'force' parameter determines whether we should also consider
++ * regular files that are marked preallocated or append-only.
++ */
++static inline bool
++xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
++{
++	/* prealloc/delalloc exists only on regular files */
++	if (!S_ISREG(ip->i_d.di_mode))
++		return false;
++
++	/*
++	 * Zero sized files with no cached pages and delalloc blocks will not
++	 * have speculative prealloc/delalloc blocks to remove.
++	 */
++	if (VFS_I(ip)->i_size == 0 &&
++	    VN_CACHED(VFS_I(ip)) == 0 &&
++	    ip->i_delayed_blks == 0)
++		return false;
++
++	/* If we haven't read in the extent list, then don't do it now. */
++	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
++		return false;
++
++	/*
++	 * Do not free real preallocated or append-only files unless the file
++	 * has delalloc blocks and we are forced to remove them.
++	 */
++	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
++		if (!force || ip->i_delayed_blks == 0)
++			return false;
++
++	return true;
++}
+ 
+ int xfs_setattr_nonsize(struct xfs_inode *ip, struct iattr *vap, int flags);
+ int xfs_setattr_size(struct xfs_inode *ip, struct iattr *vap, int flags);
 -- 
 1.7.7.6
 
