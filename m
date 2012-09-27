@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8RHgsdG121760 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 12:42:54 -0500
+	q8RHgsVh121765 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 12:42:54 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id ydlLaXPKwVaouame for
+	cuda.sgi.com with ESMTP id gaWGl1jovTUpsFVN for
 	<xfs@oss.sgi.com>; Thu, 27 Sep 2012 10:44:13 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8RHiDFA008552
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q8RHiDiR013486
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:13 -0400
 Received: from bfoster.bfoster ([10.16.225.83])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q8RHiCpN029677
-	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:12 -0400
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q8RHiDEk018642
+	for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 13:44:13 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v4 2/8] xfs: support a tag-based inode_ag_iterator
-Date: Thu, 27 Sep 2012 13:45:46 -0400
-Message-Id: <1348767952-24229-3-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v4 8/8] xfs: add background scanning to clear EOFBLOCKS inodes
+Date: Thu, 27 Sep 2012 13:45:52 -0400
+Message-Id: <1348767952-24229-9-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
 References: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,172 +35,155 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Genericize xfs_inode_ag_walk() to support an optional radix tree tag
-and args argument for the execute function. Create a new wrapper
-called xfs_inode_ag_iterator_tag() that performs a tag based walk
-of perag's and inodes.
+Create a delayed_work to enable background scanning and freeing
+of EOFBLOCKS inodes. The scanner kicks in once speculative
+preallocation occurs and stops requeueing itself when no EOFBLOCKS
+inodes exist.
+
+Scans are queued on the existing syncd workqueue and the interval
+is based on the new eofb_timer tunable (default to 5m). The
+background scanner performs unfiltered, best effort scans (which
+skips inodes under lock contention or with a dirty cache mapping).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_qm_syscalls.c |    5 ++-
- fs/xfs/xfs_sync.c        |   61 +++++++++++++++++++++++++++++++++++++++-------
- fs/xfs/xfs_sync.h        |    7 ++++-
- 3 files changed, 60 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_globals.c |    1 +
+ fs/xfs/xfs_linux.h   |    1 +
+ fs/xfs/xfs_mount.h   |    2 ++
+ fs/xfs/xfs_sync.c    |   30 ++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sysctl.c  |    9 +++++++++
+ fs/xfs/xfs_sysctl.h  |    1 +
+ 6 files changed, 44 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index 858a3b1..848bd8e 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -845,7 +845,8 @@ STATIC int
- xfs_dqrele_inode(
- 	struct xfs_inode	*ip,
- 	struct xfs_perag	*pag,
--	int			flags)
-+	int			flags,
-+	void			*args)
- {
- 	/* skip quota inodes */
- 	if (ip == ip->i_mount->m_quotainfo->qi_uquotaip ||
-@@ -881,5 +882,5 @@ xfs_qm_dqrele_all_inodes(
- 	uint		 flags)
- {
- 	ASSERT(mp->m_quotainfo);
--	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags);
-+	xfs_inode_ag_iterator(mp, xfs_dqrele_inode, flags, NULL);
- }
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index 76e81cf..fda9a66 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -40,4 +40,5 @@ xfs_param_t xfs_params = {
+ 	.rotorstep	= {	1,		1,		255	},
+ 	.inherit_nodfrg	= {	0,		1,		1	},
+ 	.fstrm_timer	= {	1,		30*100,		3600*100},
++	.eofb_timer	= {	1*100,		300*100,	7200*100},
+ };
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 828662f..bbad99b 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -118,6 +118,7 @@
+ #define xfs_rotorstep		xfs_params.rotorstep.val
+ #define xfs_inherit_nodefrag	xfs_params.inherit_nodfrg.val
+ #define xfs_fstrm_centisecs	xfs_params.fstrm_timer.val
++#define xfs_eofb_centisecs	xfs_params.eofb_timer.val
+ 
+ #define current_cpu()		(raw_smp_processor_id())
+ #define current_pid()		(current->pid)
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index deee09e..bf5ecfa 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -199,6 +199,8 @@ typedef struct xfs_mount {
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+ 	struct delayed_work	m_sync_work;	/* background sync work */
+ 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
++	struct delayed_work	m_eofblocks_work; /* background eof blocks
++						     trimming */
+ 	struct work_struct	m_flush_work;	/* background inode flush */
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
 diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 00c6224..0da93c9 100644
+index c9e1c16..31f678a 100644
 --- a/fs/xfs/xfs_sync.c
 +++ b/fs/xfs/xfs_sync.c
-@@ -101,8 +101,11 @@ xfs_inode_ag_walk(
- 	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
- 	int			(*execute)(struct xfs_inode *ip,
--					   struct xfs_perag *pag, int flags),
--	int			flags)
-+					   struct xfs_perag *pag, int flags,
-+					   void *args),
-+	int			flags,
-+	void			*args,
-+	int			tag)
- {
- 	uint32_t		first_index;
- 	int			last_error = 0;
-@@ -121,9 +124,17 @@ restart:
- 		int		i;
+@@ -532,6 +532,31 @@ xfs_flush_worker(
+ 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
+ }
  
- 		rcu_read_lock();
--		nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
-+
-+		if (tag == -1) 
-+			nr_found = radix_tree_gang_lookup(&pag->pag_ici_root,
- 					(void **)batch, first_index,
- 					XFS_LOOKUP_BATCH);
-+		else
-+			nr_found = radix_tree_gang_lookup_tag(
-+					&pag->pag_ici_root,
-+					(void **) batch, first_index,
-+					XFS_LOOKUP_BATCH, tag);
-+
- 		if (!nr_found) {
- 			rcu_read_unlock();
- 			break;
-@@ -164,7 +175,7 @@ restart:
- 		for (i = 0; i < nr_found; i++) {
- 			if (!batch[i])
- 				continue;
--			error = execute(batch[i], pag, flags);
-+			error = execute(batch[i], pag, flags, args);
- 			IRELE(batch[i]);
- 			if (error == EAGAIN) {
- 				skipped++;
-@@ -193,8 +204,10 @@ int
- xfs_inode_ag_iterator(
- 	struct xfs_mount	*mp,
- 	int			(*execute)(struct xfs_inode *ip,
--					   struct xfs_perag *pag, int flags),
--	int			flags)
-+					   struct xfs_perag *pag, int flags,
-+					   void *args),
-+	int			flags,
-+	void			*args)
- {
- 	struct xfs_perag	*pag;
- 	int			error = 0;
-@@ -204,7 +217,36 @@ xfs_inode_ag_iterator(
- 	ag = 0;
- 	while ((pag = xfs_perag_get(mp, ag))) {
- 		ag = pag->pag_agno + 1;
--		error = xfs_inode_ag_walk(mp, pag, execute, flags);
-+		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, -1);
-+		xfs_perag_put(pag);
-+		if (error) {
-+			last_error = error;
-+			if (error == EFSCORRUPTED)
-+				break;
-+		}
-+	}
-+	return XFS_ERROR(last_error);
++/*
++ * Background scanning to trim post-EOF preallocated space. This is queued
++ * based on the 'eofb_centisecs' tunable (5m by default).
++ */
++STATIC void
++xfs_queue_eofblocks(
++	struct xfs_mount *mp)
++{
++	rcu_read_lock();
++	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_EOFBLOCKS_TAG))
++		queue_delayed_work(xfs_syncd_wq, &mp->m_eofblocks_work,
++			msecs_to_jiffies(xfs_eofb_centisecs * 10));
++	rcu_read_unlock();
 +}
 +
-+int
-+xfs_inode_ag_iterator_tag(
-+	struct xfs_mount	*mp,
-+	int			(*execute)(struct xfs_inode *ip,
-+					   struct xfs_perag *pag, int flags,
-+					   void *args),
-+	int			flags,
-+	void			*args,
-+	int			tag)
++STATIC void
++xfs_eofblocks_worker(
++struct work_struct *work)
 +{
-+	struct xfs_perag	*pag;
-+	int			error = 0;
-+	int			last_error = 0;
-+	xfs_agnumber_t		ag;
++	struct xfs_mount *mp = container_of(to_delayed_work(work),
++				struct xfs_mount, m_eofblocks_work);
++	xfs_inodes_free_eofblocks(mp, SYNC_TRYLOCK, NULL);
++	xfs_queue_eofblocks(mp);
++}
 +
-+	ag = 0;
-+	while ((pag = xfs_perag_get_tag(mp, ag, tag))) {
-+		ag = pag->pag_agno + 1;
-+		error = xfs_inode_ag_walk(mp, pag, execute, flags, args, tag);
- 		xfs_perag_put(pag);
- 		if (error) {
- 			last_error = error;
-@@ -219,7 +261,8 @@ STATIC int
- xfs_sync_inode_data(
- 	struct xfs_inode	*ip,
- 	struct xfs_perag	*pag,
--	int			flags)
-+	int			flags,
-+	void			*args)
+ int
+ xfs_syncd_init(
+ 	struct xfs_mount	*mp)
+@@ -539,6 +564,7 @@ xfs_syncd_init(
+ 	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
+ 	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
++	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
+ 
+ 	xfs_syncd_queue_sync(mp);
+ 
+@@ -551,6 +577,7 @@ xfs_syncd_stop(
  {
- 	struct inode		*inode = VFS_I(ip);
- 	struct address_space *mapping = inode->i_mapping;
-@@ -252,7 +295,7 @@ xfs_sync_data(
+ 	cancel_delayed_work_sync(&mp->m_sync_work);
+ 	cancel_delayed_work_sync(&mp->m_reclaim_work);
++	cancel_delayed_work_sync(&mp->m_eofblocks_work);
+ 	cancel_work_sync(&mp->m_flush_work);
+ }
  
- 	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+@@ -1101,6 +1128,9 @@ xfs_inode_set_eofblocks_tag(
+ 				   XFS_ICI_EOFBLOCKS_TAG);
+ 		spin_unlock(&ip->i_mount->m_perag_lock);
  
--	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags);
-+	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags, NULL);
- 	if (error)
- 		return XFS_ERROR(error);
++		/* kick off background trimming */
++		xfs_queue_eofblocks(ip->i_mount);
++
+ 		trace_xfs_perag_set_eofblocks(ip->i_mount, pag->pag_agno,
+ 					      -1, _RET_IP_);
+ 	}
+diff --git a/fs/xfs/xfs_sysctl.c b/fs/xfs/xfs_sysctl.c
+index ee2d2ad..45d74fc 100644
+--- a/fs/xfs/xfs_sysctl.c
++++ b/fs/xfs/xfs_sysctl.c
+@@ -202,6 +202,15 @@ static ctl_table xfs_table[] = {
+ 		.extra1		= &xfs_params.fstrm_timer.min,
+ 		.extra2		= &xfs_params.fstrm_timer.max,
+ 	},
++	{
++		.procname	= "eofb_centisecs",
++		.data		= &xfs_params.eofb_timer.val,
++		.maxlen		= sizeof(int),
++		.mode		= 0644,
++		.proc_handler	= proc_dointvec_minmax,
++		.extra1		= &xfs_params.eofb_timer.min,
++		.extra2		= &xfs_params.eofb_timer.max,
++	},
+ 	/* please keep this the last entry */
+ #ifdef CONFIG_PROC_FS
+ 	{
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index b9937d4..bd8e157 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -47,6 +47,7 @@ typedef struct xfs_param {
+ 	xfs_sysctl_val_t rotorstep;	/* inode32 AG rotoring control knob */
+ 	xfs_sysctl_val_t inherit_nodfrg;/* Inherit the "nodefrag" inode flag. */
+ 	xfs_sysctl_val_t fstrm_timer;	/* Filestream dir-AG assoc'n timeout. */
++	xfs_sysctl_val_t eofb_timer;	/* Interval between eofb scan wakeups */
+ } xfs_param_t;
  
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 4486491..463ea0a 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -48,7 +48,10 @@ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
- 
- int xfs_sync_inode_grab(struct xfs_inode *ip);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
--	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
--	int flags);
-+	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags, void *args),
-+	int flags, void *args);
-+int xfs_inode_ag_iterator_tag(struct xfs_mount *mp,
-+	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags, void *args),
-+	int flags, void *args, int tag);
- 
- #endif
+ /*
 -- 
 1.7.7.6
 
