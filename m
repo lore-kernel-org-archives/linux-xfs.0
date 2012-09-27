@@ -1,25 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8RClwco094718 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 07:47:58 -0500
-Received: from josefsipek.net (josefsipek.net [64.9.206.49]) by cuda.sgi.com
-	with ESMTP id syAgvXlLnOdw4QE8 for <xfs@oss.sgi.com>;
-	Thu, 27 Sep 2012 05:49:17 -0700 (PDT)
-Date: Thu, 27 Sep 2012 08:49:15 -0400
-From: "Josef 'Jeff' Sipek" <jeffpc@josefsipek.net>
-Subject: Re: task blocked for more than 120 seconds
-Message-ID: <20120927124914.GD28852@poseidon>
-References: <20120418151139.GC4652@poseidon.cudanet.local>
-	<20120418234821.GR6734@dastard>
-	<20120419154601.GB8230@poseidon.cudanet.local>
-	<20120419225603.GA9541@dastard>
-	<20120420135820.GB9189@poseidon.cudanet.local>
-	<20120421002932.GG9541@dastard>
-	<20120423202441.GD21260@poseidon.cudanet.local>
-	<20120423232759.GO9541@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20120423232759.GO9541@dastard>
+	q8RD91PS097861 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 08:09:02 -0500
+Message-Id: <20120927124742.695778439@sgi.com>
+Date: Thu, 27 Sep 2012 07:47:36 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v2] xfsprog: remove duplicate vector memalign from xfs_io
+References: <20120925142414.660506845@sgi.com>
+	<20120925142421.398175185@sgi.com> <20120926220434.GG13214@sgi.com>
+Content-Disposition: inline;
+	filename=v2-xfsprogs-io_remove_duplicate_vector_memalign.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +18,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>
 
-On Tue, Apr 24, 2012 at 09:27:59AM +1000, Dave Chinner wrote:
-...
-> So, yes, your hangs are definitely due to inode buffer RMW cycles
-> when trying to flush dirty inodes from the cache. I have a few
-> ideas on how to fix this - but I'm not sure whether a current TOT
-> solution will be easily back-portable. The simplest solution is a
-> readahead based solution - AIL pushing is async, and will cycle back
-> to inodes that it failed to flush the first time past, so triggering
-> readahead on the first pass might work just fine.
+The vector feature of xfs_io uses its own memory buffer in the iov structure
+and does not use the buffer entry. Remove the duplicate memalign.
 
-Have you had time to look at this?  (We got bitten by this again and I
-really don't want to go back to ext4.)  Is there anything I can help with?
+v2: removed global buffer in __dump_buffer() and use passed buf pointer per
+    Ben's detection.
 
-Jeff.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com>
+Reviewed-by: Ben Myers <bpm@sgi.com>
+---
+ io/pread.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
--- 
-Evolution, n.:
-  A hypothetical process whereby infinitely improbable events occur with
-  alarming frequency, order arises from chaos, and no one is given credit.
+Index: b/io/pread.c
+===================================================================
+--- a/io/pread.c
++++ b/io/pread.c
+@@ -76,8 +76,7 @@ alloc_iovec(
+ 	buffersize = 0;
+ 	for (i = 0; i < vectors; i++) {
+ 		iov[i].iov_base = memalign(pagesize, bsize);
+-		buffer = memalign(pagesize, bsize);
+-		if (!buffer) {
++		if (!iov[i].iov_base) {
+ 			perror("memalign");
+ 			goto unwind;
+ 		}
+@@ -130,7 +129,7 @@ __dump_buffer(
+ 	int		i, j;
+ 	char		*p;
+ 
+-	for (i = 0, p = (char *)buffer; i < len; i += 16) {
++	for (i = 0, p = (char *)buf; i < len; i += 16) {
+ 		char	*s = p;
+ 
+ 		printf("%08llx:  ", (unsigned long long)offset + i);
+
 
 _______________________________________________
 xfs mailing list
