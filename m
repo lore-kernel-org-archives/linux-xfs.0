@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8QNxja9011735 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 18:59:45 -0500
+	q8R05LwX012226 for <xfs@oss.sgi.com>; Wed, 26 Sep 2012 19:05:21 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	AoY6wvjwEjpqMEFq for <xfs@oss.sgi.com>;
-	Wed, 26 Sep 2012 17:01:03 -0700 (PDT)
-Date: Thu, 27 Sep 2012 10:01:01 +1000
+	aqMXcDUiSGtSpHBy for <xfs@oss.sgi.com>;
+	Wed, 26 Sep 2012 17:06:39 -0700 (PDT)
+Date: Thu, 27 Sep 2012 10:06:38 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfsprog: remove duplicate vector memalign from xfs_io
-Message-ID: <20120927000101.GB15236@dastard>
-References: <20120925142414.660506845@sgi.com>
-	<20120925142421.398175185@sgi.com> <20120926220434.GG13214@sgi.com>
+Subject: Re: [PATCH 2/6] xfstest: add configurable load factors
+Message-ID: <20120927000638.GC15236@dastard>
+References: <1348496601-32637-1-git-send-email-dmonakhov@openvz.org>
+	<1348496601-32637-2-git-send-email-dmonakhov@openvz.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20120926220434.GG13214@sgi.com>
+In-Reply-To: <1348496601-32637-2-git-send-email-dmonakhov@openvz.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,33 +27,48 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Mark Tinguely <tinguely@sgi.com>, xfs@oss.sgi.com
+To: Dmitry Monakhov <dmonakhov@openvz.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, hch@lst.de, xfs@oss.sgi.com
 
-On Wed, Sep 26, 2012 at 05:04:34PM -0500, Ben Myers wrote:
-> On Tue, Sep 25, 2012 at 09:24:15AM -0500, Mark Tinguely wrote:
-> > The vector feature of xfs_io uses its own memory buffer in the iov structure
-> > and does not use the buffer entry. Remove the duplicate memalign.
+On Mon, Sep 24, 2012 at 06:23:17PM +0400, Dmitry Monakhov wrote:
+> Most stress test has probable behaviour, the longer test run the
+> larger corner cases will be cover. It is reasonable to allow
+> user to provide some sort of system load factor.
+> This patch introduce two global variables
+> LOAD_FACTOR: Usually means factor number of running tasks
+> TIME_FACTOR: Usually means factor of run time, or number of operations
+> If not speficied both variables defined to 1, so original behaviour
+> preserved.
 > 
-> Looks to me that there is a usage of buffer in __dump_buffer.  However,
-> I suspect there shouldn't be.  I suggest (untested,ymmv,ianal,etc):
+> TODO: Change all stress tests to use this variables
 > 
-> :!quilt di
-> Index: xfsprogs/io/pread.c
-> ===================================================================
-> --- xfsprogs.orig/io/pread.c
-> +++ xfsprogs/io/pread.c
-> @@ -130,7 +130,7 @@ __dump_buffer(
->         int             i, j;
->         char            *p;
+> Signed-off-by: Dmitry Monakhov <dmonakhov@openvz.org>
+> ---
+>  common.config |    8 ++++++++
+>  1 files changed, 8 insertions(+), 0 deletions(-)
+> 
+> diff --git a/common.config b/common.config
+> index d5c8956..cfa7bde 100644
+> --- a/common.config
+> +++ b/common.config
+> @@ -253,5 +253,13 @@ if [ ! -z "$SCRATCH_MNT" -a ! -d "$SCRATCH_MNT" ]; then
+>      exit 1
+>  fi
 >  
-> -       for (i = 0, p = (char *)buffer; i < len; i += 16) {
-> +       for (i = 0, p = (char *)buf; i < len; i += 16) {
->                 char    *s = p;
->  
->                 printf("%08llx:  ", (unsigned long long)offset + i);
+> +if [ -z "$LOAD_FACTOR" ]; then
+> +    LOAD_FACTOR=1
+> +fi
+> +
+> +if [ -z "$TIME_FACTOR" ]; then
+> +    TIME_FACTOR=1
+> +fi
 
-Can you post that as a proper patch?
+They probably need to be exparted variables set up through the
+check script, not somthing sourced via common.config. i.e. something
+like this in check where the environment is being set up:
+
+export TIME_FACTOR=${TIME_FACTOR:=1}
+export LOAD_FACTOR=${LOAD_FACTOR:=1}
 
 Cheers,
 
