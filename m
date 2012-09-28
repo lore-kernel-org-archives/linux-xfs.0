@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S4i4ws174869 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:04 -0500
+	q8S4i6UP174902 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:06 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Le2PVH5ZcPm3s0LL for <xfs@oss.sgi.com>;
-	Thu, 27 Sep 2012 21:45:22 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1THSRf-0007LW-FU
+	oFNRRX73ykJIxzzg for <xfs@oss.sgi.com>;
+	Thu, 27 Sep 2012 21:45:24 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1THSRf-0007Ld-JU
 	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:59 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1THSRV-0005GK-27
+	(envelope-from <dave@disappointment.disaster>) id 1THSRV-0005GY-59
 	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/13] xfs: don't run the sync work if the filesystem is
-	read-only
-Date: Fri, 28 Sep 2012 14:44:35 +1000
-Message-Id: <1348807485-20165-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/13] xfs: xfs_sync_data is redundant.
+Date: Fri, 28 Sep 2012 14:44:38 +1000
+Message-Id: <1348807485-20165-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -37,104 +35,283 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If the filesystem is mounted or remounted read-only, stop the sync
-worker that tries to flush or cover the log if the filesystem is
-dirty. It's read-only, so it isn't dirty. Restart it on a remount,rw
-as necessary. This avoids the need for RO checks in the work.
+We don't do any data writeback from XFS any more - the VFS is
+completely responsible for that, including for freeze. We can
+replace the remaining caller with the VFS level function that
+achieves the same thing, but without conflicting with current
+writeback work - writeback_inodes_sb_if_idle().
 
-Similarly, stop the sync work when the filesystem is frozen, and
-start it again when the filesysetm is thawed. This avoids the need
-for special freeze checks in the work.
+This means we can remove the flush_work and xfs_flush_inodes() - the
+VFS functionality completely replaces the internal flush queue for
+doing this writeback work in a separate context to avoid stack
+overruns.
+
+This does have one complication - it cannot be called with page
+locks held.  Hence move the flushing of delalloc space when ENOSPC
+occurs back up into xfs_file_aio_buffered_write when we don't hold
+any locks that will stall writeback.
+
+Note that we always need to pass a count of zero to
+generic_file_buffered_write() as the previously written byte count.
+We only do this by accident before this patch by the virtue of ret
+always being zero when there are no errors. Make this explicit
+rather than needing to specifically zero ret in the ENOSPC retry
+case.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_super.c |    2 ++
- fs/xfs/xfs_sync.c  |   29 ++++++++++++++++-------------
- 2 files changed, 18 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_file.c  |   13 +++++----
+ fs/xfs/xfs_inode.h |   10 +++++++
+ fs/xfs/xfs_iomap.c |   23 +++++-----------
+ fs/xfs/xfs_mount.h |    1 -
+ fs/xfs/xfs_super.c |    3 --
+ fs/xfs/xfs_sync.c  |   78 ----------------------------------------------------
+ fs/xfs/xfs_sync.h  |    3 --
+ 7 files changed, 24 insertions(+), 107 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 935b2c7..f6147ae 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1107,6 +1107,7 @@ xfs_fs_remount(
- 		 * value if it is non-zero, otherwise go with the default.
- 		 */
- 		xfs_restore_resvblks(mp);
-+		xfs_syncd_queue_sync(mp);
- 	}
- 
- 	/* rw -> ro */
-@@ -1152,6 +1153,7 @@ xfs_fs_unfreeze(
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
- 	xfs_restore_resvblks(mp);
-+	xfs_syncd_queue_sync(mp);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 509190f..5d69f23 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -323,6 +323,9 @@ xfs_quiesce_data(
-  * Second stage of a quiesce. The data is already synced, now we have to take
-  * care of the metadata. New transactions are already blocked, so we need to
-  * wait for any remaining transactions to drain out before proceeding.
-+ *
-+ * Note: this stops background sync work - the callers must ensure it is started
-+ * again when appropriate.
-  */
- void
- xfs_quiesce_attr(
-@@ -341,6 +344,9 @@ xfs_quiesce_attr(
- 	/* flush all pending changes from the AIL */
- 	xfs_ail_push_all_sync(mp->m_ail);
- 
-+	/* stop background sync work */
-+	cancel_delayed_work_sync(&mp->m_sync_work);
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 1eaeb8b..2cadcf7 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -728,16 +728,17 @@ xfs_file_buffered_aio_write(
+ write_retry:
+ 	trace_xfs_file_buffered_write(ip, count, iocb->ki_pos, 0);
+ 	ret = generic_file_buffered_write(iocb, iovp, nr_segs,
+-			pos, &iocb->ki_pos, count, ret);
++			pos, &iocb->ki_pos, count, 0);
 +
  	/*
- 	 * Just warn here till VFS can correctly support
- 	 * read-only remount without racing.
-@@ -379,9 +385,8 @@ xfs_syncd_queue_sync(
+-	 * if we just got an ENOSPC, flush the inode now we aren't holding any
+-	 * page locks and retry *once*
++	 * If we just got an ENOSPC, try to write back all dirty inodes to
++	 * convert delalloc space to free up some of the excess reserved
++	 * metadata space.
+ 	 */
+ 	if (ret == -ENOSPC && !enospc) {
+ 		enospc = 1;
+-		ret = -xfs_flush_pages(ip, 0, -1, 0, FI_NONE);
+-		if (!ret)
+-			goto write_retry;
++		xfs_flush_inodes(ip);
++		goto write_retry;
+ 	}
+ 
+ 	current->backing_dev_info = NULL;
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 94b32f9..a12fe18 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -288,6 +288,16 @@ xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
  }
  
  /*
-- * Every sync period we need to unpin all items in the AIL and push them to
-- * disk. If there is nothing dirty, then we might need to cover the log to
-- * indicate that the filesystem is idle and not frozen.
-+ * Every sync period we need to push dirty metadata and try to cover the log
-+ * to indicate the filesystem is idle and not frozen.
++ * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
++ * or a page lock.
++ */
++static inline void
++xfs_flush_inodes(struct xfs_inode *ip)
++{
++	writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb, WB_REASON_FS_FREE_SPACE);
++}
++
++/*
+  * i_flags helper functions
   */
- void
- xfs_sync_worker(
-@@ -391,17 +396,15 @@ xfs_sync_worker(
- 					struct xfs_mount, m_sync_work);
+ static inline void
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 973dff6..f858b90 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -373,7 +373,7 @@ xfs_iomap_write_delay(
+ 	xfs_extlen_t	extsz;
+ 	int		nimaps;
+ 	xfs_bmbt_irec_t imap[XFS_WRITE_IMAPS];
+-	int		prealloc, flushed = 0;
++	int		prealloc;
  	int		error;
  
--	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
--		/* dgc: errors ignored here */
--		if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
--		    xfs_log_need_covered(mp))
--			error = xfs_fs_log_dummy(mp);
--		else
--			xfs_log_force(mp, 0);
-+	/* dgc: errors ignored here */
-+	if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
-+	    xfs_log_need_covered(mp))
-+		error = xfs_fs_log_dummy(mp);
-+	else
-+		xfs_log_force(mp, 0);
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
+@@ -434,26 +434,17 @@ retry:
+ 	}
  
--		/* start pushing all the metadata that is currently dirty */
--		xfs_ail_push_all(mp->m_ail);
+ 	/*
+-	 * If bmapi returned us nothing, we got either ENOSPC or EDQUOT.  For
+-	 * ENOSPC, * flush all other inodes with delalloc blocks to free up
+-	 * some of the excess reserved metadata space. For both cases, retry
++	 * If bmapi returned us nothing, we got either ENOSPC or EDQUOT. Retry
+ 	 * without EOF preallocation.
+ 	 */
+ 	if (nimaps == 0) {
+ 		trace_xfs_delalloc_enospc(ip, offset, count);
+-		if (flushed)
+-			return XFS_ERROR(error ? error : ENOSPC);
+-
+-		if (error == ENOSPC) {
+-			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-			xfs_flush_inodes(ip);
+-			xfs_ilock(ip, XFS_ILOCK_EXCL);
++		if (prealloc) {
++			prealloc = 0;
++			error = 0;
++			goto retry;
+ 		}
+-
+-		flushed = 1;
+-		error = 0;
+-		prealloc = 0;
+-		goto retry;
++		return XFS_ERROR(error ? error : ENOSPC);
+ 	}
+ 
+ 	if (!(imap[0].br_startblock || XFS_IS_REALTIME_INODE(ip)))
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 26e46ae..a54b5aa 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -198,7 +198,6 @@ typedef struct xfs_mount {
+ #endif
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+ 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+-	struct work_struct	m_flush_work;	/* background inode flush */
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
+ 						   on the next remount,rw */
+ 	struct shrinker		m_inode_shrink;	/* inode reclaim shrinker */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index b85ca2d..fed1eb2 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -918,8 +918,6 @@ xfs_fs_put_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+-	cancel_work_sync(&mp->m_flush_work);
+-
+ 	xfs_filestream_unmount(mp);
+ 	xfs_unmountfs(mp);
+ 
+@@ -1231,7 +1229,6 @@ xfs_fs_fill_super(
+ 	spin_lock_init(&mp->m_sb_lock);
+ 	mutex_init(&mp->m_growlock);
+ 	atomic_set(&mp->m_active_trans, 0);
+-	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 
+ 	mp->m_super = sb;
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index 7527610..6a2ada3 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -217,51 +217,6 @@ xfs_inode_ag_iterator(
+ }
+ 
+ STATIC int
+-xfs_sync_inode_data(
+-	struct xfs_inode	*ip,
+-	struct xfs_perag	*pag,
+-	int			flags)
+-{
+-	struct inode		*inode = VFS_I(ip);
+-	struct address_space *mapping = inode->i_mapping;
+-	int			error = 0;
+-
+-	if (!mapping_tagged(mapping, PAGECACHE_TAG_DIRTY))
+-		return 0;
+-
+-	if (!xfs_ilock_nowait(ip, XFS_IOLOCK_SHARED)) {
+-		if (flags & SYNC_TRYLOCK)
+-			return 0;
+-		xfs_ilock(ip, XFS_IOLOCK_SHARED);
 -	}
-+	/* start pushing all the metadata that is currently dirty */
-+	xfs_ail_push_all(mp->m_ail);
+-
+-	error = xfs_flush_pages(ip, 0, -1, (flags & SYNC_WAIT) ?
+-				0 : XBF_ASYNC, FI_NONE);
+-	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+-	return error;
+-}
+-
+-/*
+- * Write out pagecache data for the whole filesystem.
+- */
+-STATIC int
+-xfs_sync_data(
+-	struct xfs_mount	*mp,
+-	int			flags)
+-{
+-	int			error;
+-
+-	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+-
+-	error = xfs_inode_ag_iterator(mp, xfs_sync_inode_data, flags);
+-	if (error)
+-		return XFS_ERROR(error);
+-
+-	xfs_log_force(mp, (flags & SYNC_WAIT) ? XFS_LOG_SYNC : 0);
+-	return 0;
+-}
+-
+-STATIC int
+ xfs_sync_fsdata(
+ 	struct xfs_mount	*mp)
+ {
+@@ -415,39 +370,6 @@ xfs_reclaim_worker(
+ 	xfs_syncd_queue_reclaim(mp);
+ }
  
- 	/* queue us up again */
- 	xfs_syncd_queue_sync(mp);
+-/*
+- * Flush delayed allocate data, attempting to free up reserved space
+- * from existing allocations.  At this point a new allocation attempt
+- * has failed with ENOSPC and we are in the process of scratching our
+- * heads, looking about for more room.
+- *
+- * Queue a new data flush if there isn't one already in progress and
+- * wait for completion of the flush. This means that we only ever have one
+- * inode flush in progress no matter how many ENOSPC events are occurring and
+- * so will prevent the system from bogging down due to every concurrent
+- * ENOSPC event scanning all the active inodes in the system for writeback.
+- */
+-void
+-xfs_flush_inodes(
+-	struct xfs_inode	*ip)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-
+-	queue_work(xfs_syncd_wq, &mp->m_flush_work);
+-	flush_work_sync(&mp->m_flush_work);
+-}
+-
+-void
+-xfs_flush_worker(
+-	struct work_struct *work)
+-{
+-	struct xfs_mount *mp = container_of(work,
+-					struct xfs_mount, m_flush_work);
+-
+-	xfs_sync_data(mp, SYNC_TRYLOCK);
+-	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
+-}
+-
+ void
+ __xfs_inode_set_reclaim_tag(
+ 	struct xfs_perag	*pag,
+diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
+index 8d58fab..0018e84 100644
+--- a/fs/xfs/xfs_sync.h
++++ b/fs/xfs/xfs_sync.h
+@@ -26,14 +26,11 @@ struct xfs_perag;
+ 
+ extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
+ 
+-void xfs_flush_worker(struct work_struct *work);
+ void xfs_reclaim_worker(struct work_struct *work);
+ 
+ int xfs_quiesce_data(struct xfs_mount *mp);
+ void xfs_quiesce_attr(struct xfs_mount *mp);
+ 
+-void xfs_flush_inodes(struct xfs_inode *ip);
+-
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ int xfs_reclaim_inodes_count(struct xfs_mount *mp);
+ void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
 -- 
 1.7.10
 
