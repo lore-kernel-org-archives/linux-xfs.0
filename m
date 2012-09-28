@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8SCQ5Qs221610 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 07:26:05 -0500
+	q8SCU4Zb222109 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 07:30:04 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	t7BTQAPP5Ba6GvtM (version=TLSv1 cipher=AES256-SHA bits=256
+	jxEPxrQ9P1VNtGAz (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Sep 2012 05:27:20 -0700 (PDT)
-Date: Fri, 28 Sep 2012 08:27:18 -0400
+	Fri, 28 Sep 2012 05:31:24 -0700 (PDT)
+Date: Fri, 28 Sep 2012 08:31:23 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 02/13] xfs: rationalise xfs_mount_wq users
-Message-ID: <20120928122718.GA14284@infradead.org>
+Subject: Re: [PATCH 04/13] xfs: sync work is now only periodic log work
+Message-ID: <20120928123122.GC14284@infradead.org>
 References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
-	<1348807485-20165-3-git-send-email-david@fromorbit.com>
+	<1348807485-20165-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348807485-20165-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1348807485-20165-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,9 +32,38 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Looks good,
+On Fri, Sep 28, 2012 at 02:44:36PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> The only thing the periodic sync work does now is flush the AIL and
+> idle the log. These are really functions of the log code, so move
+> the work to xfs_log.c and rename it appropriately.
+> 
+> The only wart that this leaves behind is the xfssyncd_centisecs
+> sysctl, otherwise the xfssyncd is dead. Clean up any comments that
+> related to xfssyncd to reflect it's passing.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+You'll get an OK for me as I'd like this series in 3.7, but I'd really
+prefer if we could stop waking up xfsaild from here ASAP, and instead
+just do a schedule_timeout in xfsaild where we currently sleep forever.
+
+Any chance to get a follow on patch for that?
+
+
+> +#include "xfs_fsops.h"
+>  
+>  kmem_zone_t	*xfs_log_ticket_zone;
+>  
+> @@ -698,6 +699,8 @@ xfs_log_mount_finish(xfs_mount_t *mp)
+>  		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+>  	}
+>  
+> +	xfs_log_work_queue(mp);
+> +
+>  	return error;
+
+I think this should only be called when xlog_recover_finish didn't
+return an error.
 
 _______________________________________________
 xfs mailing list
