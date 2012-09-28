@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S4i4wH174880 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:04 -0500
+	q8S4i7TM174925 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:07 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	49BdAec9UXXrOHOn for <xfs@oss.sgi.com>;
-	Thu, 27 Sep 2012 21:45:23 -0700 (PDT)
+	ORPtTwbEIF7LSEHA for <xfs@oss.sgi.com>;
+	Thu, 27 Sep 2012 21:45:26 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1THSRf-0007Lv-IF
-	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:59 +1000
+	(envelope-from <dave@fromorbit.com>) id 1THSRp-0007M5-NX
+	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:45:09 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1THSRV-0005GT-4D
+	(envelope-from <dave@disappointment.disaster>) id 1THSRV-0005Gq-9H
 	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/13] xfs: Bring some sanity to log unmounting
-Date: Fri, 28 Sep 2012 14:44:37 +1000
-Message-Id: <1348807485-20165-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 10/13] xfs: xfs_quiesce_attr() should quiesce the log like
+	unmount
+Date: Fri, 28 Sep 2012 14:44:42 +1000
+Message-Id: <1348807485-20165-11-git-send-email-david@fromorbit.com>
 In-Reply-To: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,100 +36,139 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When unmounting the filesystem, there are lots of operations that
-need to be done in a specific order, and they are spread across
-across a couple of functions. We have to drain the AIL before we
-write the unmount record, and we have to shut down the background
-log work before we do either of them.
-
-But this is all split haphazardly across xfs_unmountfs() and
-xfs_log_unmount(). Move all the AIL flushing and log manipulations
-to xfs_log_unmount() so that the responisbilities of each function
-is clear and the operations they perform obvious.
+xfs_quiesce_attr() is supposed to leave the log empty with an
+unmount record written. Right now it does not wait for the AIL to be
+emptied before writing the unmount record, not does it wait for
+metadata IO completion, either. Fix it to use the same method and
+code as xfs_log_unmount().
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_log.c   |   29 ++++++++++++++++++++++++++---
- fs/xfs/xfs_mount.c |   24 ------------------------
- 2 files changed, 26 insertions(+), 27 deletions(-)
+ fs/xfs/xfs_log.c   |   25 ++++++++++++++++++-------
+ fs/xfs/xfs_log.h   |    1 +
+ fs/xfs/xfs_super.c |   41 ++++++++---------------------------------
+ 3 files changed, 27 insertions(+), 40 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a1fe7a7..a400e71 100644
+index 96ea9ed..67d63f6 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -853,15 +853,38 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+@@ -853,20 +853,17 @@ xfs_log_unmount_write(xfs_mount_t *mp)
  }	/* xfs_log_unmount_write */
  
  /*
-- * Deallocate log structures for unmount/relocation.
-+ * Shut down and release the AIL and Log.
+- * Shut down and release the AIL and Log.
+- *
+- * During unmount, we need to ensure we flush all the dirty metadata objects
+- * from the AIL so that the log is empty before we write the unmount record to
+- * the log.
++ * Empty the log for unmount/freeze.
   *
-- * We need to stop the aild from running before we destroy
-- * and deallocate the log as the aild references the log.
-+ * During unmount, we need to ensure we flush all the dirty metadata objects
-+ * from the AIL so that the log is empty before we write the unmount record to
-+ * the log.
-+ *
-+ * To do this, we first need to shut down the background log work so it is not
-+ * trying to cover the log as we clean up. We then need to unpin all objects in
-+ * the log so we can then flush them out. Once they have completed their IO and
-+ * run the callbacks removing themselves from the AIL, we can write the unmount
-+ * record, tear down the AIL and finally free the log.
+  * To do this, we first need to shut down the background log work so it is not
+  * trying to cover the log as we clean up. We then need to unpin all objects in
+  * the log so we can then flush them out. Once they have completed their IO and
+  * run the callbacks removing themselves from the AIL, we can write the unmount
+- * record, tear down the AIL and finally free the log.
++ * record.
   */
  void
- xfs_log_unmount(xfs_mount_t *mp)
+-xfs_log_unmount(xfs_mount_t *mp)
++xfs_log_quiesce(
++	struct xfs_mount	*mp)
  {
  	cancel_delayed_work_sync(&mp->m_log->l_work);
-+	xfs_log_force(mp, XFS_LOG_SYNC);
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+@@ -884,6 +881,20 @@ xfs_log_unmount(xfs_mount_t *mp)
+ 	xfs_buf_unlock(mp->m_sb_bp);
+ 
+ 	xfs_log_unmount_write(mp);
++}
 +
-+	/*
-+	 * The superblock buffer is uncached and while xfs_ail_push_all_sync()
-+	 * will push it, xfs_wait_buftarg() will not wait for it. Further,
-+	 * xfs_buf_iowait() cannot be used because it was pushed with the
-+	 * XBF_ASYNC flag set, so we need to use a lock/unlock pair to wait for
-+	 * the IO to complete.
-+	 */
-+	xfs_ail_push_all_sync(mp->m_ail);
-+	xfs_wait_buftarg(mp->m_ddev_targp);
-+	xfs_buf_lock(mp->m_sb_bp);
-+	xfs_buf_unlock(mp->m_sb_bp);
-+
-+	xfs_log_unmount_write(mp);
-+
++/*
++ * Shut down and release the AIL and Log.
++ *
++ * During unmount, we need to ensure we flush all the dirty metadata objects
++ * from the AIL so that the log is empty before we write the unmount record to
++ * the log. Once this is done, we can tear down the AIL and the log.
++ */
++void
++xfs_log_unmount(
++	struct xfs_mount	*mp)
++{
++	xfs_log_quiesce(mp);
+ 
  	xfs_trans_ail_destroy(mp);
  	xlog_dealloc_log(mp->m_log);
- }
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 3152924..149b601 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -1493,13 +1493,6 @@ xfs_unmountfs(
- 	xfs_qm_unmount(mp);
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 26ed7de..5caee96 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -183,6 +183,7 @@ bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
  
- 	/*
--	 * Flush out the log synchronously so that we know for sure
--	 * that nothing is pinned.  This is important because bflush()
--	 * will skip pinned buffers.
--	 */
--	xfs_log_force(mp, XFS_LOG_SYNC);
+ void	xfs_log_work_queue(struct xfs_mount *mp);
+ void	xfs_log_worker(struct work_struct *work);
++void	xfs_log_quiesce(struct xfs_mount *mp);
+ 
+ #endif
+ #endif	/* __XFS_LOG_H__ */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 4806e46..81de924 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1048,15 +1048,11 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+  *
+  * This ensures that the metadata is written to their location on disk rather
+  * than just existing in transactions in the log. This means after a quiesce
+- * there is no log replay required to write the inodes to disk (this is the main
+- * difference between a sync and a quiesce).
++ * there is no log replay required to write the inodes to disk - this is the
++ * primary difference between a sync and a quiesce.
+  *
+- * This shoul deffectively mimic the code in xfs_unmountfs() and
+- * xfs_log_umount() but without tearing down any structures.
+- * XXX: bug fixes needed!
+- *
+- * Note: this stops background log work - the callers must ensure it is started
+- * again when appropriate.
++ * Note: xfs_log_quiesce() stops background log work - the callers must ensure
++ * it is started again when appropriate.
+  */
+ void
+ xfs_quiesce_attr(
+@@ -1075,39 +1071,18 @@ xfs_quiesce_attr(
+ 	xfs_reclaim_inodes(mp, 0);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
+ 
+-	/* flush all pending changes from the AIL */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-
+-	/* stop background log work */
+-	cancel_delayed_work_sync(&mp->m_log->l_work);
 -
 -	/*
- 	 * Unreserve any blocks we have so that when we unmount we don't account
- 	 * the reserved free space as used. This is really only necessary for
- 	 * lazy superblock counting because it trusts the incore superblock
-@@ -1524,23 +1517,6 @@ xfs_unmountfs(
- 		xfs_warn(mp, "Unable to update superblock counters. "
- 				"Freespace may not be correct on next mount.");
- 
--	/*
+-	 * Just warn here till VFS can correctly support
+-	 * read-only remount without racing.
+-	 */
+-	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
+-
+ 	/* Push the superblock and write an unmount record */
+ 	error = xfs_log_sbcount(mp);
+ 	if (error)
+ 		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
+ 				"Frozen image may not be consistent.");
+-	xfs_log_unmount_write(mp);
+-
+ 	/*
 -	 * At this point we might have modified the superblock again and thus
 -	 * added an item to the AIL, thus flush it again.
--	 */
++	 * Just warn here till VFS can correctly support
++	 * read-only remount without racing.
+ 	 */
 -	xfs_ail_push_all_sync(mp->m_ail);
--	xfs_wait_buftarg(mp->m_ddev_targp);
--
++	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
+ 
 -	/*
 -	 * The superblock buffer is uncached and xfsaild_push() will lock and
 -	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
@@ -137,11 +177,10 @@ index 3152924..149b601 100644
 -	 */
 -	xfs_buf_lock(mp->m_sb_bp);
 -	xfs_buf_unlock(mp->m_sb_bp);
--
--	xfs_log_unmount_write(mp);
- 	xfs_log_unmount(mp);
- 	xfs_uuid_unmount(mp);
++	xfs_log_quiesce(mp);
+ }
  
+ STATIC int
 -- 
 1.7.10
 
