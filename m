@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S7JvYL197937 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 02:19:57 -0500
+	q8S7OXLG198271 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 02:24:33 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	nLh0agEU32l1OHHD for <xfs@oss.sgi.com>;
-	Fri, 28 Sep 2012 00:21:16 -0700 (PDT)
-Date: Fri, 28 Sep 2012 17:21:03 +1000
+	EHxuTOpCxA3LdFo8 for <xfs@oss.sgi.com>;
+	Fri, 28 Sep 2012 00:25:52 -0700 (PDT)
+Date: Fri, 28 Sep 2012 17:25:50 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 5/8] xfs: create function to scan and clear EOFBLOCKS
-	inodes
-Message-ID: <20120928072103.GJ25626@dastard>
+Subject: Re: [PATCH v4 6/8] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+Message-ID: <20120928072550.GK25626@dastard>
 References: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
-	<1348767952-24229-6-git-send-email-bfoster@redhat.com>
+	<1348767952-24229-7-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348767952-24229-6-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1348767952-24229-7-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,104 +30,74 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 27, 2012 at 01:45:49PM -0400, Brian Foster wrote:
-> xfs_inodes_free_eofblocks() implements scanning functionality for
-> EOFBLOCKS inodes. It uses the AG iterator to walk the tagged inodes
-> and free post-EOF blocks via the xfs_inode_free_eofblocks() execute
-> function. The scan can be invoked in best-effort mode or wait
-> (force) mode.
-> 
-> A best-effort scan (default) handles all inodes that do not have a
-> dirty cache and we successfully acquire the io lock via trylock. In
-> wait mode, we continue to cycle through an AG until all inodes are
-> handled.
+On Thu, Sep 27, 2012 at 01:45:50PM -0400, Brian Foster wrote:
+> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
+> scan. The xfs_eofblocks structure is defined to support the command
+> parameters (scan mode).
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
-
-xfs_icache.c rebase, and...
-
 > ---
->  fs/xfs/xfs_sync.c  |   40 ++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_sync.h  |    1 +
->  fs/xfs/xfs_trace.h |    1 +
->  3 files changed, 42 insertions(+), 0 deletions(-)
+>  fs/xfs/xfs_fs.h    |   14 ++++++++++++++
+>  fs/xfs/xfs_ioctl.c |   12 ++++++++++++
+>  2 files changed, 26 insertions(+), 0 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-> index 0da93c9..6854800 100644
-> --- a/fs/xfs/xfs_sync.c
-> +++ b/fs/xfs/xfs_sync.c
-> @@ -1014,6 +1014,46 @@ xfs_reclaim_inodes_count(
->  	return reclaimable;
->  }
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index c13fed8..32bb2e8 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -339,6 +339,19 @@ typedef struct xfs_error_injection {
 >  
-> +STATIC int
-> +xfs_inode_free_eofblocks(
-> +	struct xfs_inode	*ip,
-> +	struct xfs_perag	*pag,
-> +	int			flags,
-> +	void			*args)
-> +{
-> +	int ret;
-> +	bool force = flags & SYNC_WAIT;
+>  
+>  /*
+> + * Speculative preallocation trimming.
+> + */
+> +struct xfs_eofblocks {
+> +	__u32		eof_flags;
+> +	__s32		version;
+        __u32
+
+> +	unsigned char	pad[12];
+> +};
 > +
-> +	if (!xfs_can_free_eofblocks(ip, false)) {
-> +		/* inode could be preallocated or append-only */
-> +		trace_xfs_inode_free_eofblocks_invalid(ip);
-> +		xfs_inode_clear_eofblocks_tag(ip);
-> +		return 0;
-> +	}
+> +/* eof_flags values */
+> +#define XFS_EOF_FLAGS_FORCE		0x01	/* force/wait mode scan */
+
+Might be better defined as XFS_EOF_FLAGS_SYNC as that is more
+consistent with what users see as a blocking operation that waits
+for completion to occur.
+
+Also, you need to define the structure version here as well (i.e. v1).
+
 > +
-> +	if (!force && mapping_tagged(VFS_I(ip)->i_mapping,
-> +				     PAGECACHE_TAG_DIRTY))
-> +		return 0;
-
-This reads rather strangely. I'd prefer that you don't use a "force"
-variable because we're not really "forcing" anything. SYNC_WAIT is
-telling us if we should block (wait) or not. i.e.
-
-	/*
-	 * if the mapping is dirty the operation can block and wait
-	 * for some time. So unless we are waiting, skip it.
-	 */
-	if (!(flags & SYNC_WAIT) &&
-	    (mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY)) 
-		return 0;
-
-makes more sense and is consistent with xfs_reclaim_inode() usage.
-
-> +	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
 > +
-> +	/* ignore EAGAIN on a best effort scan */
-> +	if (!force && (ret == EAGAIN))
-> +		ret = 0;
-
-	/* don't revisit the inode if we not waiting */
-	if (ret == EAGAIN && !(flags & SYNC_WAIT))
-		return 0;
-	return ret;
+> +/*
+>   * The user-level Handle Request interface structure.
+>   */
+>  typedef struct xfs_fsop_handlereq {
+> @@ -456,6 +469,7 @@ typedef struct xfs_handle {
+>  /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+>  #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+>  #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+> +#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
+>  
+>  /*
+>   * ioctl commands that replace IRIX syssgi()'s
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 0e0232c..216ca7a 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1602,6 +1602,18 @@ xfs_file_ioctl(
+>  		error = xfs_errortag_clearall(mp, 1);
+>  		return -error;
+>  
+> +	case XFS_IOC_FREE_EOFBLOCKS: {
+> +		struct xfs_eofblocks eofb;
+> +		int flags;
 > +
-> +	return ret;
-> +}
-> +
-> +int
-> +xfs_inodes_free_eofblocks(
-> +	struct xfs_mount	*mp,
-> +	int			flags)
-> +{
-> +	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
-> +	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
-> +					 NULL, XFS_ICI_EOFBLOCKS_TAG);
-> +}
+> +		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+> +			return -XFS_ERROR(EFAULT);
 
-TWo functions very similarly named. Perhaps the latter would be
-better named xfs_icache_free_eofblocks() to indicate it is an inode
-cache operation, rather than an inode operation.
-
-Then at some point in another patch set we can rename
-xfs_reclaim_inodes* to xfs_icache_reclaim_* and
-xfs_inode_ag_iterator* to xfs_icache_iterator* and so one so that
-there is a clear naming difference between operations on the inode
-cache and individual inodes...
+And check the version here, too.
 
 Cheers,
 
