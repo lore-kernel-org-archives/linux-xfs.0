@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S4i2Qe174851 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:02 -0500
+	q8S4i4ws174869 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:04 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NUiE1yebVWjQK4Kq for <xfs@oss.sgi.com>;
-	Thu, 27 Sep 2012 21:45:21 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1THSRf-0007Lu-FB
+	Le2PVH5ZcPm3s0LL for <xfs@oss.sgi.com>;
+	Thu, 27 Sep 2012 21:45:22 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1THSRf-0007LW-FU
 	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:59 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1THSRU-0005GB-Vn
-	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:48 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1THSRV-0005GK-27
+	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/13] xfs: xfs_syncd_stop must die
-Date: Fri, 28 Sep 2012 14:44:33 +1000
-Message-Id: <1348807485-20165-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 03/13] xfs: don't run the sync work if the filesystem is
+	read-only
+Date: Fri, 28 Sep 2012 14:44:35 +1000
+Message-Id: <1348807485-20165-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,166 +37,104 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-xfs_syncd_start and xfs_syncd_stop tie a bunch of unrelated
-functionailty together that actually have different start and stop
-requirements. Kill these functions and open code the start/stop
-methods for each of the background functions.
+If the filesystem is mounted or remounted read-only, stop the sync
+worker that tries to flush or cover the log if the filesystem is
+dirty. It's read-only, so it isn't dirty. Restart it on a remount,rw
+as necessary. This avoids the need for RO checks in the work.
 
-Subsequent patches will move the start/stop functions around to the
-correct places to avoid races and shutdown issues.
+Similarly, stop the sync work when the filesystem is frozen, and
+start it again when the filesysetm is thawed. This avoids the need
+for special freeze checks in the work.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_super.c |   25 ++++++++++++++++++-------
- fs/xfs/xfs_sync.c  |   30 ++++--------------------------
- fs/xfs/xfs_sync.h  |    6 ++++--
- 3 files changed, 26 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_super.c |    2 ++
+ fs/xfs/xfs_sync.c  |   29 ++++++++++++++++-------------
+ 2 files changed, 18 insertions(+), 13 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 19e2380..59d76bd 100644
+index 935b2c7..f6147ae 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -921,7 +921,11 @@ xfs_fs_put_super(
- 	xfs_filestream_unmount(mp);
- 	cancel_delayed_work_sync(&mp->m_sync_work);
- 	xfs_unmountfs(mp);
--	xfs_syncd_stop(mp);
-+
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_work_sync(&mp->m_flush_work);
-+
- 	xfs_freesb(mp);
- 	xfs_icsb_destroy_counters(mp);
- 	xfs_destroy_mount_workqueues(mp);
-@@ -1291,9 +1295,11 @@ xfs_fs_fill_super(
- 	sb->s_time_gran = 1;
- 	set_posix_acl_flag(sb);
+@@ -1107,6 +1107,7 @@ xfs_fs_remount(
+ 		 * value if it is non-zero, otherwise go with the default.
+ 		 */
+ 		xfs_restore_resvblks(mp);
++		xfs_syncd_queue_sync(mp);
+ 	}
  
--	error = xfs_syncd_init(mp);
--	if (error)
--		goto out_filestream_unmount;
-+	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
-+	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
-+	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-+
+ 	/* rw -> ro */
+@@ -1152,6 +1153,7 @@ xfs_fs_unfreeze(
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+ 	xfs_restore_resvblks(mp);
 +	xfs_syncd_queue_sync(mp);
- 
- 	error = xfs_mountfs(mp);
- 	if (error)
-@@ -1316,8 +1322,10 @@ xfs_fs_fill_super(
- 
  	return 0;
-  out_syncd_stop:
--	xfs_syncd_stop(mp);
-- out_filestream_unmount:
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_work_sync(&mp->m_flush_work);
-+
- 	xfs_filestream_unmount(mp);
-  out_free_sb:
- 	xfs_freesb(mp);
-@@ -1336,7 +1344,10 @@ out_destroy_workqueues:
-  out_unmount:
- 	xfs_filestream_unmount(mp);
- 	xfs_unmountfs(mp);
--	xfs_syncd_stop(mp);
-+
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+	cancel_delayed_work_sync(&mp->m_reclaim_work);
-+	cancel_work_sync(&mp->m_flush_work);
- 	goto out_free_sb;
  }
  
 diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 9654817..13830e4 100644
+index 509190f..5d69f23 100644
 --- a/fs/xfs/xfs_sync.c
 +++ b/fs/xfs/xfs_sync.c
-@@ -370,7 +370,7 @@ xfs_quiesce_attr(
- 	xfs_buf_unlock(mp->m_sb_bp);
- }
- 
--static void
-+void
- xfs_syncd_queue_sync(
- 	struct xfs_mount        *mp)
- {
-@@ -383,7 +383,7 @@ xfs_syncd_queue_sync(
-  * disk quotas.  We might need to cover the log to indicate that the
-  * filesystem is idle and not frozen.
+@@ -323,6 +323,9 @@ xfs_quiesce_data(
+  * Second stage of a quiesce. The data is already synced, now we have to take
+  * care of the metadata. New transactions are already blocked, so we need to
+  * wait for any remaining transactions to drain out before proceeding.
++ *
++ * Note: this stops background sync work - the callers must ensure it is started
++ * again when appropriate.
   */
--STATIC void
-+void
- xfs_sync_worker(
- 	struct work_struct *work)
- {
-@@ -445,7 +445,7 @@ xfs_syncd_queue_reclaim(
-  * goes low. It scans as quickly as possible avoiding locked inodes or those
-  * already being flushed, and once done schedules a future pass.
-  */
--STATIC void
-+void
- xfs_reclaim_worker(
- 	struct work_struct *work)
- {
-@@ -478,7 +478,7 @@ xfs_flush_inodes(
- 	flush_work_sync(&mp->m_flush_work);
- }
- 
--STATIC void
-+void
- xfs_flush_worker(
- 	struct work_struct *work)
- {
-@@ -489,28 +489,6 @@ xfs_flush_worker(
- 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
- }
- 
--int
--xfs_syncd_init(
--	struct xfs_mount	*mp)
--{
--	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
--	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
--	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
--
--	xfs_syncd_queue_sync(mp);
--
--	return 0;
--}
--
--void
--xfs_syncd_stop(
--	struct xfs_mount	*mp)
--{
--	cancel_delayed_work_sync(&mp->m_sync_work);
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
--	cancel_work_sync(&mp->m_flush_work);
--}
--
  void
- __xfs_inode_set_reclaim_tag(
- 	struct xfs_perag	*pag,
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 941202e..3f59e5b 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -26,8 +26,10 @@ struct xfs_perag;
+ xfs_quiesce_attr(
+@@ -341,6 +344,9 @@ xfs_quiesce_attr(
+ 	/* flush all pending changes from the AIL */
+ 	xfs_ail_push_all_sync(mp->m_ail);
  
- extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
++	/* stop background sync work */
++	cancel_delayed_work_sync(&mp->m_sync_work);
++
+ 	/*
+ 	 * Just warn here till VFS can correctly support
+ 	 * read-only remount without racing.
+@@ -379,9 +385,8 @@ xfs_syncd_queue_sync(
+ }
  
--int xfs_syncd_init(struct xfs_mount *mp);
--void xfs_syncd_stop(struct xfs_mount *mp);
-+void xfs_syncd_queue_sync(struct xfs_mount *mp);
-+void xfs_sync_worker(struct work_struct *work);
-+void xfs_flush_worker(struct work_struct *work);
-+void xfs_reclaim_worker(struct work_struct *work);
+ /*
+- * Every sync period we need to unpin all items in the AIL and push them to
+- * disk. If there is nothing dirty, then we might need to cover the log to
+- * indicate that the filesystem is idle and not frozen.
++ * Every sync period we need to push dirty metadata and try to cover the log
++ * to indicate the filesystem is idle and not frozen.
+  */
+ void
+ xfs_sync_worker(
+@@ -391,17 +396,15 @@ xfs_sync_worker(
+ 					struct xfs_mount, m_sync_work);
+ 	int		error;
  
- int xfs_quiesce_data(struct xfs_mount *mp);
- void xfs_quiesce_attr(struct xfs_mount *mp);
+-	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
+-		/* dgc: errors ignored here */
+-		if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
+-		    xfs_log_need_covered(mp))
+-			error = xfs_fs_log_dummy(mp);
+-		else
+-			xfs_log_force(mp, 0);
++	/* dgc: errors ignored here */
++	if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
++	    xfs_log_need_covered(mp))
++		error = xfs_fs_log_dummy(mp);
++	else
++		xfs_log_force(mp, 0);
+ 
+-		/* start pushing all the metadata that is currently dirty */
+-		xfs_ail_push_all(mp->m_ail);
+-	}
++	/* start pushing all the metadata that is currently dirty */
++	xfs_ail_push_all(mp->m_ail);
+ 
+ 	/* queue us up again */
+ 	xfs_syncd_queue_sync(mp);
 -- 
 1.7.10
 
