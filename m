@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S9uw7P209715 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 04:56:58 -0500
+	q8SCQR6J221667 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 07:26:27 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	aqiSoUJIbC6j89b6 (version=TLSv1 cipher=AES256-SHA bits=256
+	SnJdjyF7JwZgdTjH (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Sep 2012 02:58:16 -0700 (PDT)
-Date: Fri, 28 Sep 2012 05:58:15 -0400
+	Fri, 28 Sep 2012 05:27:46 -0700 (PDT)
+Date: Fri, 28 Sep 2012 08:27:46 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfstests 068: Add mmap load
-Message-ID: <20120928095815.GA14240@infradead.org>
-References: <50651A99.1070307@redhat.com>
+Subject: Re: [PATCH 03/13] xfs: don't run the sync work if the filesystem is
+	read-only
+Message-ID: <20120928122746.GB14284@infradead.org>
+References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
+	<1348807485-20165-4-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50651A99.1070307@redhat.com>
+In-Reply-To: <1348807485-20165-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,18 +30,8 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
-
-On Thu, Sep 27, 2012 at 10:33:45PM -0500, Eric Sandeen wrote:
-> Test 068 is the go-to test for freeze deadlock coverage;
-> unfortunately it only uses fsstress, which doesn't do any mmap
-> IO.
-> 
-> Using the existing fstest binary gets us a cheap mmap exerciser
-> as well.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
 Looks good,
 
