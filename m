@@ -1,22 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S4a822174405 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:36:08 -0500
+	q8S4i78V174929 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:44:08 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	BQnAFpKVsfmrGTfI for <xfs@oss.sgi.com>;
-	Thu, 27 Sep 2012 21:37:27 -0700 (PDT)
+	EVBPPibfgRnR6Iao for <xfs@oss.sgi.com>;
+	Thu, 27 Sep 2012 21:45:26 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1THSKH-0007JE-2e
-	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:37:21 +1000
+	(envelope-from <dave@fromorbit.com>) id 1THSRV-0007Lh-Me
+	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:49 +1000
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1THSKB-0005EZ-JG
-	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:37:15 +1000
+	(envelope-from <dave@disappointment.disaster>) id 1THSRV-0005Gl-8E
+	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:44:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: only update the last_sync_lsn when a transaction
-	completes
-Date: Fri, 28 Sep 2012 14:37:15 +1000
-Message-Id: <1348807035-20087-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/13] xfs: move xfs_quiesce_attr() into xfs_super.c
+Date: Fri, 28 Sep 2012 14:44:41 +1000
+Message-Id: <1348807485-20165-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1348807485-20165-1-git-send-email-david@fromorbit.com>
+References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -34,83 +35,188 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The log write code stamps each iclog with the current tail LSN in
-the iclog header so that recovery knows where to find the tail of
-thelog once it has found the head. Normally this is taken from the
-first item on the AIL - the log item that corresponds to the oldest
-active item in the log.
-
-The problem is that when the AIL is empty, the tail lsn is dervied
-from the the l_last_sync_lsn, which is the LSN of the last iclog to
-be written to the log. In most cases this doesn't happen, because
-the AIL is rarely empty on an active filesystem. However, when it
-does, it opens up an interesting case when the transaction being
-committed to the iclog spans multiple iclogs.
-
-That is, the first iclog is stamped with the l_last_sync_lsn, and IO
-is issued. Then the next iclog is setup, the changes copied into the
-iclog (takes some time), and then the l_last_sync_lsn is stamped
-into the header and IO is issued. This is still the same
-transaction, so the tail lsn of both iclogs must be the same for log
-recovery to find the entire transaction to be able to replay it.
-
-The problem arises in that the iclog buffer IO completion updates
-the l_last_sync_lsn with it's own LSN. Therefore, If the first iclog
-completes it's IO before the second iclog is filled and has the tail
-lsn stamped in it, it will stamp the LSN of the first iclog into
-it's tail lsn field. If the system fails at this point, log recovery
-will not see a complete transaction, so the transaction will no be
-replayed.
-
-The fix is simple - the l_last_sync_lsn is updated when a iclog
-buffer IO completes, and this is incorrect. The l_last_sync_lsn
-shoul dbe updated when a transaction is completed by a iclog buffer
-IO. That is, only iclog buffers that have transaction commit
-callbacks attached to them should update the l_last_sync_lsn. This
-means that the last_sync_lsn will only move forward when a commit
-record it written, not in the middle of a large transaction that is
-rolling through multiple iclog buffers.
+Both callers of xfs_quiesce_attr() are in xfs_super.c, and there's
+nothing really sync-specific about this functionality so it doesn't
+really matter where it lives. Move it to benext to it's callers, so
+all the remount/sync_fs code is in the one place.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_log.c |   19 ++++++++++++++++---
- 1 file changed, 16 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_super.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sync.c  |   65 --------------------------------------------------
+ fs/xfs/xfs_sync.h  |    3 ---
+ 3 files changed, 67 insertions(+), 68 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 67d63f6..2ec2e0b 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2459,14 +2459,27 @@ xlog_state_do_callback(
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 1ee7b09..4806e46 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1043,6 +1043,73 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+ 	xfs_reserve_blocks(mp, &resblks, NULL);
+ }
  
++/*
++ * Trigger writeback of all the dirty metadata in the file system.
++ *
++ * This ensures that the metadata is written to their location on disk rather
++ * than just existing in transactions in the log. This means after a quiesce
++ * there is no log replay required to write the inodes to disk (this is the main
++ * difference between a sync and a quiesce).
++ *
++ * This shoul deffectively mimic the code in xfs_unmountfs() and
++ * xfs_log_umount() but without tearing down any structures.
++ * XXX: bug fixes needed!
++ *
++ * Note: this stops background log work - the callers must ensure it is started
++ * again when appropriate.
++ */
++void
++xfs_quiesce_attr(
++	struct xfs_mount	*mp)
++{
++	int	error = 0;
++
++	/* wait for all modifications to complete */
++	while (atomic_read(&mp->m_active_trans) > 0)
++		delay(100);
++
++	/* force the log to unpin objects from the now complete transactions */
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
++	/* reclaim inodes to do any IO before the freeze completes */
++	xfs_reclaim_inodes(mp, 0);
++	xfs_reclaim_inodes(mp, SYNC_WAIT);
++
++	/* flush all pending changes from the AIL */
++	xfs_ail_push_all_sync(mp->m_ail);
++
++	/* stop background log work */
++	cancel_delayed_work_sync(&mp->m_log->l_work);
++
++	/*
++	 * Just warn here till VFS can correctly support
++	 * read-only remount without racing.
++	 */
++	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
++
++	/* Push the superblock and write an unmount record */
++	error = xfs_log_sbcount(mp);
++	if (error)
++		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
++				"Frozen image may not be consistent.");
++	xfs_log_unmount_write(mp);
++
++	/*
++	 * At this point we might have modified the superblock again and thus
++	 * added an item to the AIL, thus flush it again.
++	 */
++	xfs_ail_push_all_sync(mp->m_ail);
++
++	/*
++	 * The superblock buffer is uncached and xfsaild_push() will lock and
++	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
++	 * here but a lock on the superblock buffer will block until iodone()
++	 * has completed.
++	 */
++	xfs_buf_lock(mp->m_sb_bp);
++	xfs_buf_unlock(mp->m_sb_bp);
++}
++
+ STATIC int
+ xfs_fs_remount(
+ 	struct super_block	*sb,
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index 581eb59..7b63028 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -215,71 +215,6 @@ xfs_inode_ag_iterator(
+ }
  
- 				/*
--				 * update the last_sync_lsn before we drop the
-+				 * Completion of a iclog IO does not imply that
-+				 * a transaction has completed, as transactions
-+				 * can be large enough to span many iclogs. We
-+				 * cannot change the tail of the log half way
-+				 * through a transaction as this may be the only
-+				 * transaction in the log and moving th etail to
-+				 * point to the middle of it will prevent
-+				 * recovery from finding the start of the
-+				 * transaction. Hence we should only update the
-+				 * last_sync_lsn if this iclog contains
-+				 * transaction completion callbacks on it.
-+				 *
-+				 * We have to do this before we drop the
- 				 * icloglock to ensure we are the only one that
- 				 * can update it.
- 				 */
- 				ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
- 					be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
--				atomic64_set(&log->l_last_sync_lsn,
--					be64_to_cpu(iclog->ic_header.h_lsn));
-+				if (iclog->ic_callback)
-+					atomic64_set(&log->l_last_sync_lsn,
-+						be64_to_cpu(iclog->ic_header.h_lsn));
+ /*
+- * Second stage of a quiesce. The data is already synced, now we have to take
+- * care of the metadata. New transactions are already blocked, so we need to
+- * wait for any remaining transactions to drain out before proceeding.
+- *
+- * The second phase ensures that the inodes are written to their
+- * location on disk rather than just existing in transactions in the log. This
+- * means after a quiesce there is no log replay required to write the inodes to
+- * disk (this is the main difference between a sync and a quiesce).
+- *
+- * Note: this stops background sync work - the callers must ensure it is started
+- * again when appropriate.
+- */
+-void
+-xfs_quiesce_attr(
+-	struct xfs_mount	*mp)
+-{
+-	int	error = 0;
+-
+-	/* wait for all modifications to complete */
+-	while (atomic_read(&mp->m_active_trans) > 0)
+-		delay(100);
+-
+-	/* force the log to unpin objects from the now complete transactions */
+-	xfs_log_force(mp, XFS_LOG_SYNC);
+-
+-	/* reclaim inodes to do any IO before the freeze completes */
+-	xfs_reclaim_inodes(mp, 0);
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
+-
+-	/* flush all pending changes from the AIL */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-
+-	/* stop background log work */
+-	cancel_delayed_work_sync(&mp->m_log->l_work);
+-
+-	/*
+-	 * Just warn here till VFS can correctly support
+-	 * read-only remount without racing.
+-	 */
+-	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
+-
+-	/* Push the superblock and write an unmount record */
+-	error = xfs_log_sbcount(mp);
+-	if (error)
+-		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
+-				"Frozen image may not be consistent.");
+-	xfs_log_unmount_write(mp);
+-
+-	/*
+-	 * At this point we might have modified the superblock again and thus
+-	 * added an item to the AIL, thus flush it again.
+-	 */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-
+-	/*
+-	 * The superblock buffer is uncached and xfsaild_push() will lock and
+-	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
+-	 * here but a lock on the superblock buffer will block until iodone()
+-	 * has completed.
+-	 */
+-	xfs_buf_lock(mp->m_sb_bp);
+-	xfs_buf_unlock(mp->m_sb_bp);
+-}
+-
+-/*
+  * Queue a new inode reclaim pass if there are reclaimable inodes and there
+  * isn't a reclaim pass already in progress. By default it runs every 5s based
+  * on the xfs periodic sync default of 30s. Perhaps this should have it's own
+diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
+index 0beabea..0ba9c89 100644
+--- a/fs/xfs/xfs_sync.h
++++ b/fs/xfs/xfs_sync.h
+@@ -26,9 +26,6 @@ struct xfs_perag;
  
- 			} else
- 				ioerrors++;
+ void xfs_reclaim_worker(struct work_struct *work);
+ 
+-int xfs_quiesce_data(struct xfs_mount *mp);
+-void xfs_quiesce_attr(struct xfs_mount *mp);
+-
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ int xfs_reclaim_inodes_count(struct xfs_mount *mp);
+ void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
 -- 
 1.7.10
 
