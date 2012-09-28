@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S4YkVP174269 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:34:46 -0500
+	q8S4a822174405 for <xfs@oss.sgi.com>; Thu, 27 Sep 2012 23:36:08 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	XxnqLwKmCNRRqw1L for <xfs@oss.sgi.com>;
-	Thu, 27 Sep 2012 21:36:05 -0700 (PDT)
-Date: Fri, 28 Sep 2012 14:36:02 +1000
+	BQnAFpKVsfmrGTfI for <xfs@oss.sgi.com>;
+	Thu, 27 Sep 2012 21:37:27 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1THSKH-0007JE-2e
+	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:37:21 +1000
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1THSKB-0005EZ-JG
+	for xfs@oss.sgi.com; Fri, 28 Sep 2012 14:37:15 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfstests 068: Add mmap load
-Message-ID: <20120928043602.GD25626@dastard>
-References: <50651A99.1070307@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50651A99.1070307@redhat.com>
+Subject: [PATCH] xfs: only update the last_sync_lsn when a transaction
+	completes
+Date: Fri, 28 Sep 2012 14:37:15 +1000
+Message-Id: <1348807035-20087-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,63 +25,94 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On Thu, Sep 27, 2012 at 10:33:45PM -0500, Eric Sandeen wrote:
-> Test 068 is the go-to test for freeze deadlock coverage;
-> unfortunately it only uses fsstress, which doesn't do any mmap
-> IO.
-> 
-> Using the existing fstest binary gets us a cheap mmap exerciser
-> as well.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> I think it's fair to modify this test vs. making a new one -
-> it's never passed yet, and will only start passing in kernel 3.6,
-> so it shouldn't cause new test regressions to add mmap ops.
-> 
-> And I can verify that this finds mmap bugs; I had a backport
-> which messed up ext4's freeze vs. mmap handling, and this exposes
-> it.  :)
-> 
-> 
-> diff --git a/068 b/068
-> index 617420c..a0bf425 100755
-> --- a/068
-> +++ b/068
-> @@ -90,6 +90,21 @@ touch $tmp.running
->      rmdir $STRESS_DIR
->  } &
->  
-> +# start fstest -m loop in a background block; this gets us mmap coverage
-> +{
-> +    FSTEST_DIR="$SCRATCH_MNT/fstest_test_dir"
-> +    mkdir "$FSTEST_DIR"
-> +
-> +    procs=2
-> +    while [ -f "$tmp.running" ]
-> +      do
-> +      src/fstest -m -p $FSTEST_DIR  -n $procs -f 4 > /dev/null 2>&1
-> +    done
-> +
-> +    rm -rf $FSTEST_DIR/*
-> +    rmdir $FSTEST_DIR
-> +} &
+From: Dave Chinner <dchinner@redhat.com>
 
-Looks good.
+The log write code stamps each iclog with the current tail LSN in
+the iclog header so that recovery knows where to find the tail of
+thelog once it has found the head. Normally this is taken from the
+first item on the AIL - the log item that corresponds to the oldest
+active item in the log.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+The problem is that when the AIL is empty, the tail lsn is dervied
+from the the l_last_sync_lsn, which is the LSN of the last iclog to
+be written to the log. In most cases this doesn't happen, because
+the AIL is rarely empty on an active filesystem. However, when it
+does, it opens up an interesting case when the transaction being
+committed to the iclog spans multiple iclogs.
 
+That is, the first iclog is stamped with the l_last_sync_lsn, and IO
+is issued. Then the next iclog is setup, the changes copied into the
+iclog (takes some time), and then the l_last_sync_lsn is stamped
+into the header and IO is issued. This is still the same
+transaction, so the tail lsn of both iclogs must be the same for log
+recovery to find the entire transaction to be able to replay it.
+
+The problem arises in that the iclog buffer IO completion updates
+the l_last_sync_lsn with it's own LSN. Therefore, If the first iclog
+completes it's IO before the second iclog is filled and has the tail
+lsn stamped in it, it will stamp the LSN of the first iclog into
+it's tail lsn field. If the system fails at this point, log recovery
+will not see a complete transaction, so the transaction will no be
+replayed.
+
+The fix is simple - the l_last_sync_lsn is updated when a iclog
+buffer IO completes, and this is incorrect. The l_last_sync_lsn
+shoul dbe updated when a transaction is completed by a iclog buffer
+IO. That is, only iclog buffers that have transaction commit
+callbacks attached to them should update the l_last_sync_lsn. This
+means that the last_sync_lsn will only move forward when a commit
+record it written, not in the middle of a large transaction that is
+rolling through multiple iclog buffers.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c |   19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 67d63f6..2ec2e0b 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2459,14 +2459,27 @@ xlog_state_do_callback(
+ 
+ 
+ 				/*
+-				 * update the last_sync_lsn before we drop the
++				 * Completion of a iclog IO does not imply that
++				 * a transaction has completed, as transactions
++				 * can be large enough to span many iclogs. We
++				 * cannot change the tail of the log half way
++				 * through a transaction as this may be the only
++				 * transaction in the log and moving th etail to
++				 * point to the middle of it will prevent
++				 * recovery from finding the start of the
++				 * transaction. Hence we should only update the
++				 * last_sync_lsn if this iclog contains
++				 * transaction completion callbacks on it.
++				 *
++				 * We have to do this before we drop the
+ 				 * icloglock to ensure we are the only one that
+ 				 * can update it.
+ 				 */
+ 				ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
+ 					be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
+-				atomic64_set(&log->l_last_sync_lsn,
+-					be64_to_cpu(iclog->ic_header.h_lsn));
++				if (iclog->ic_callback)
++					atomic64_set(&log->l_last_sync_lsn,
++						be64_to_cpu(iclog->ic_header.h_lsn));
+ 
+ 			} else
+ 				ioerrors++;
 -- 
-Dave Chinner
-david@fromorbit.com
+1.7.10
 
 _______________________________________________
 xfs mailing list
