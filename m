@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S72ii5196711 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 02:02:44 -0500
+	q8S73keY196838 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 02:03:46 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	im4ojcAM2IItR4G5 for <xfs@oss.sgi.com>;
-	Fri, 28 Sep 2012 00:04:02 -0700 (PDT)
-Date: Fri, 28 Sep 2012 17:04:01 +1000
+	SYsPtxJDW4X7GNrx for <xfs@oss.sgi.com>;
+	Fri, 28 Sep 2012 00:05:05 -0700 (PDT)
+Date: Fri, 28 Sep 2012 17:05:04 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 1/8] xfs: add EOFBLOCKS inode tagging/untagging
-Message-ID: <20120928070401.GH25626@dastard>
+Subject: Re: [PATCH v4 2/8] xfs: support a tag-based inode_ag_iterator
+Message-ID: <20120928070503.GI25626@dastard>
 References: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
-	<1348767952-24229-2-git-send-email-bfoster@redhat.com>
+	<1348767952-24229-3-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348767952-24229-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1348767952-24229-3-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,29 +30,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 27, 2012 at 01:45:45PM -0400, Brian Foster wrote:
-> Add the XFS_ICI_EOFBLOCKS_TAG inode tag to identify inodes with
-> speculatively preallocated blocks beyond EOF. An inode is tagged
-> when speculative preallocation occurs and untagged either via
-> truncate down or when post-EOF blocks are freed via release or
-> reclaim.
-> 
-> The tag management is intentionally not aggressive to prefer
-> simplicity over the complexity of handling all the corner cases
-> under which post-EOF blocks could be freed (i.e., forward
-> truncation, fallocate, write error conditions, etc.). This means
-> that a tagged inode may or may not have post-EOF blocks after a
-> period of time. The tag is eventually cleared when the inode is
-> released or reclaimed.
+On Thu, Sep 27, 2012 at 01:45:46PM -0400, Brian Foster wrote:
+> Genericize xfs_inode_ag_walk() to support an optional radix tree tag
+> and args argument for the execute function. Create a new wrapper
+> called xfs_inode_ag_iterator_tag() that performs a tag based walk
+> of perag's and inodes.
 > 
 > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_qm_syscalls.c |    5 ++-
+>  fs/xfs/xfs_sync.c        |   61 +++++++++++++++++++++++++++++++++++++++-------
+>  fs/xfs/xfs_sync.h        |    7 ++++-
+>  3 files changed, 60 insertions(+), 13 deletions(-)
 
-Apart from the fact this conflicts with my xfssyncd killing patchset
-and xfs_sync.c no longer exists, it looks fine.
-
-Can you rebase this on top of my patch series? Mostly it is simply
-making your changes to xfs_icache.c rather than xfs_sync.c as that's
-where all this inode cache radix tree walking code is now.....
+Looks fine, but needs the same xfs_icache.c rebase...
 
 Cheers,
 
