@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8SHjfmc010108 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 12:45:41 -0500
-Message-ID: <5065E288.8060403@sgi.com>
-Date: Fri, 28 Sep 2012 12:46:48 -0500
+	q8SIFxje014252 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 13:15:59 -0500
+Message-ID: <5065E9A3.3040707@sgi.com>
+Date: Fri, 28 Sep 2012 13:17:07 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: only update the last_sync_lsn when a transaction
-	completes
-References: <1348807035-20087-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1348807035-20087-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 07/13] xfs: syncd workqueue is no more
+References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
+	<1348807485-20165-8-git-send-email-david@fromorbit.com>
+In-Reply-To: <1348807485-20165-8-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,51 +25,42 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 09/27/12 23:37, Dave Chinner wrote:
+On 09/27/12 23:44, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> The log write code stamps each iclog with the current tail LSN in
-> the iclog header so that recovery knows where to find the tail of
-> thelog once it has found the head. Normally this is taken from the
-> first item on the AIL - the log item that corresponds to the oldest
-> active item in the log.
+> With the syncd functions moved to the log and/or removed, the syncd
+> workqueue is the only remaining bit left. It is used by the log
+> covering/ail pushing work, as well as by the inode reclaim work.
 >
-> The problem is that when the AIL is empty, the tail lsn is dervied
-> from the the l_last_sync_lsn, which is the LSN of the last iclog to
-> be written to the log. In most cases this doesn't happen, because
-> the AIL is rarely empty on an active filesystem. However, when it
-> does, it opens up an interesting case when the transaction being
-> committed to the iclog spans multiple iclogs.
->
-> That is, the first iclog is stamped with the l_last_sync_lsn, and IO
-> is issued. Then the next iclog is setup, the changes copied into the
-> iclog (takes some time), and then the l_last_sync_lsn is stamped
-> into the header and IO is issued. This is still the same
-> transaction, so the tail lsn of both iclogs must be the same for log
-> recovery to find the entire transaction to be able to replay it.
->
-> The problem arises in that the iclog buffer IO completion updates
-> the l_last_sync_lsn with it's own LSN. Therefore, If the first iclog
-> completes it's IO before the second iclog is filled and has the tail
-> lsn stamped in it, it will stamp the LSN of the first iclog into
-> it's tail lsn field. If the system fails at this point, log recovery
-> will not see a complete transaction, so the transaction will no be
-> replayed.
->
-> The fix is simple - the l_last_sync_lsn is updated when a iclog
-> buffer IO completes, and this is incorrect. The l_last_sync_lsn
-> shoul dbe updated when a transaction is completed by a iclog buffer
-> IO. That is, only iclog buffers that have transaction commit
-> callbacks attached to them should update the l_last_sync_lsn. This
-> means that the last_sync_lsn will only move forward when a commit
-> record it written, not in the middle of a large transaction that is
-> rolling through multiple iclog buffers.
+> Given how cheap workqueues are these days, give the log and inode
+> reclaim work their own work queues and kill the syncd work queue.
 >
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
 
-Makes a lot of sense. Seems to clean up wrap warnings
-and hangs that I started to see in xfstest 273.
+<deleted info>
+
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index fed1eb2..65cf42c 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -776,8 +776,23 @@ xfs_init_mount_workqueues(
+>   			WQ_MEM_RECLAIM, 0, mp->m_fsname);
+>   	if (!mp->m_cil_workqueue)
+>   		goto out_destroy_unwritten;
+> +
+> +	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
+> +			WQ_NON_REENTRANT, 0, mp->m_fsname);
+> +	if (!mp->m_reclaim_workqueue)
+> +		goto out_destroy_cil;
+> +
+> +	mp->m_log_workqueue = alloc_workqueue("xfs-reclaim/%s",
+> +			WQ_NON_REENTRANT, 0, mp->m_fsname);
+
+
+Cut/paste error for the worker name?
+
+Looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
