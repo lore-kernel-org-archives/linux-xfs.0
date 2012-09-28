@@ -1,22 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8SCdJCl223371 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 07:39:19 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Kto5O5FuFfRTheI1 (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 28 Sep 2012 05:40:39 -0700 (PDT)
-Date: Fri, 28 Sep 2012 08:40:38 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: only update the last_sync_lsn when a transaction
-	completes
-Message-ID: <20120928124038.GA25262@infradead.org>
-References: <1348807035-20087-1-git-send-email-david@fromorbit.com>
+	q8SGbYNg258857 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 11:37:34 -0500
+Message-ID: <5065D292.4090600@sgi.com>
+Date: Fri, 28 Sep 2012 11:38:42 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1348807035-20087-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH v2] xfsprog: remove duplicate vector memalign from xfs_io
+References: <20120925142414.660506845@sgi.com>
+	<20120925142421.398175185@sgi.com> <20120926220434.GG13214@sgi.com>
+	<20120927124742.695778439@sgi.com> <20120927225248.GB25626@dastard>
+In-Reply-To: <20120927225248.GB25626@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,18 +19,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
+
+On 09/27/12 17:52, Dave Chinner wrote:
+> On Thu, Sep 27, 2012 at 07:47:36AM -0500, Mark Tinguely wrote:
+>> The vector feature of xfs_io uses its own memory buffer in the iov structure
+>> and does not use the buffer entry. Remove the duplicate memalign.
+>>
+>> v2: removed global buffer in __dump_buffer() and use passed buf pointer per
+>>      Ben's detection.
+>>
+>> Signed-off-by: Mark Tinguely<tinguely@sgi.com>
+>> Reviewed-by: Ben Myers<bpm@sgi.com>
+>
+> Looks good, Thanks for fixing this.
+>
+> Reviewed-by: Dave Chinner<dchinner@redhat.com>
+>
 
 
-Looks good.
+Committed to git://oss.sgi.com/xfs/cmds/xfsprogs.git, master branch.
 
-Do you have any testcase for this?  It doesn't look like an issue found
-by code inspection.
+--Mark.
 
 _______________________________________________
 xfs mailing list
