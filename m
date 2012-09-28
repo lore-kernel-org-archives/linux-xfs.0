@@ -1,24 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8SGgUom259594
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Sep 2012 11:42:30 -0500
-Received: from relay2.transip.nl (relay2.transip.nl [80.69.67.73]) by
-	cuda.sgi.com with ESMTP id fhwvxMTDpMciEYVY for
-	<linux-xfs@oss.sgi.com>; Fri, 28 Sep 2012 09:43:48 -0700 (PDT)
-Received: from EuroShopGigant (mail.biceva.com [87.253.151.130])
-	by relay2.transip.nl (Postfix) with SMTP id 478E422C0E4E
-	for <linux-xfs@oss.sgi.com>; Fri, 28 Sep 2012 18:43:47 +0200 (CEST)
+	q8SHjfmc010108 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 12:45:41 -0500
+Message-ID: <5065E288.8060403@sgi.com>
+Date: Fri, 28 Sep 2012 12:46:48 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-From: "1 .......Crazy $600 per day with
-	MOBILE......................................................................"
-	<mobilemonopoly1@gmail.com>
-Subject: Uw vriend(in) 1 .......Crazy $600 per day with
-	MOBILE......................................................................
-	raad dit artikel aan EuroShopGigant - Alles voor in huis en
-	tuin - SCHERPE prijzen
-Message-Id: <20120928164350.C47C2A42121@cuda.sgi.com>
-Date: Fri, 28 Sep 2012 09:43:50 -0700 (PDT)
+Subject: Re: [PATCH] xfs: only update the last_sync_lsn when a transaction
+	completes
+References: <1348807035-20087-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <1348807035-20087-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,77 +18,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: ".......Good day and Pleasant Greetings!..........Start earning TODAY $600
-	per day with Your Breakthrough Mobile Domination access ...CLICK HERE NOW
-	http://supremewealthproz.co.cc/aff/item.php?usn=rpa2&i=it_cbrpa&e=linux-xfs@oss.sgi.com" <linux-xfs@oss.>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hallo .......Good day and Pleasant Greetings!..........Start earning TODAY =
-$600 per day with Your Breakthrough Mobile Domination access ...CLICK HERE =
-NOW http://supremewealthproz.co.cc/aff/item.php?usn=3Drpa2&i=3Dit_cbrpa&e=
-=3Dlinux-xfs@oss.sgi.com!
+On 09/27/12 23:37, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> The log write code stamps each iclog with the current tail LSN in
+> the iclog header so that recovery knows where to find the tail of
+> thelog once it has found the head. Normally this is taken from the
+> first item on the AIL - the log item that corresponds to the oldest
+> active item in the log.
+>
+> The problem is that when the AIL is empty, the tail lsn is dervied
+> from the the l_last_sync_lsn, which is the LSN of the last iclog to
+> be written to the log. In most cases this doesn't happen, because
+> the AIL is rarely empty on an active filesystem. However, when it
+> does, it opens up an interesting case when the transaction being
+> committed to the iclog spans multiple iclogs.
+>
+> That is, the first iclog is stamped with the l_last_sync_lsn, and IO
+> is issued. Then the next iclog is setup, the changes copied into the
+> iclog (takes some time), and then the l_last_sync_lsn is stamped
+> into the header and IO is issued. This is still the same
+> transaction, so the tail lsn of both iclogs must be the same for log
+> recovery to find the entire transaction to be able to replay it.
+>
+> The problem arises in that the iclog buffer IO completion updates
+> the l_last_sync_lsn with it's own LSN. Therefore, If the first iclog
+> completes it's IO before the second iclog is filled and has the tail
+> lsn stamped in it, it will stamp the LSN of the first iclog into
+> it's tail lsn field. If the system fails at this point, log recovery
+> will not see a complete transaction, so the transaction will no be
+> replayed.
+>
+> The fix is simple - the l_last_sync_lsn is updated when a iclog
+> buffer IO completes, and this is incorrect. The l_last_sync_lsn
+> shoul dbe updated when a transaction is completed by a iclog buffer
+> IO. That is, only iclog buffers that have transaction commit
+> callbacks attached to them should update the l_last_sync_lsn. This
+> means that the last_sync_lsn will only move forward when a commit
+> record it written, not in the middle of a large transaction that is
+> rolling through multiple iclog buffers.
+>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
-Uw vriend(in), 1 .......Crazy $600 per day with MOBILE.....................=
-................................................., denkt dat u wel ge=EFnte=
-resseerd zou zijn in Duikpak surfpak neopreenpak wetsuit 3 mm neopreen van =
-EuroShopGigant - Alles voor in huis en tuin - SCHERPE prijzen.
+Makes a lot of sense. Seems to clean up wrap warnings
+and hangs that I started to see in xfstest 273.
 
-Hey,
-
-This video puts every mobile "breakthrough"
-I=92ve seen to shame=85
-
-http://supremewealthproz.co.cc/aff/item.php?usn=3Drpa2&i=3Dit_cbrpa&e=3Dlin=
-ux-xfs@oss.sgi.com
-
-
-a truly automated method that finally puts
-the full potential of fast =96 even 100% FREE =96
-mobile traffic at your fingertips=85
-
-AND=85
-
-At the same time, serves you up a "done-for-you"
-means to profit from all that traffic from day
-one, and I'll show you real time proof of that
-in just a second.
-
-
-http://supremewealthproz.co.cc/aff/item.php?usn=3Drpa2&i=3Dit_cbrpa&e=3Dlin=
-ux-xfs@oss.sgi.com
-
-But it's not just the profits alone =96 up to
-$632.83 in one day =96 that make this so different
-from anything you've seen=85
-
-Even crazier is that the White House was impressed
-enough to honor the 20-year-old marketing maverick
-who created it=85
-
-Check it out:
-
-http://supremewealthproz.co.cc/aff/item.php?usn=3Drpa2&i=3Dit_cbrpa&e=3Dlin=
-ux-xfs@oss.sgi.com
-
-
-Talk soon,
-
-Jason S.
-USA-CA
-
-Om het artikel te zien klikt u gewoon op de onderstaande link of kopieert e=
-n plakt u de link in uw web browser:
-
-http://www.euroshopgigant.nl/product_info.php?products_id=3D381
-
-Groet,
-
-EuroShopGigant - Alles voor in huis en tuin - SCHERPE prijzen
-http://www.euroshopgigant.nl/
-
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
