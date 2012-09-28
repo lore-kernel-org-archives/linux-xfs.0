@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q8S6xYan196390 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 01:59:34 -0500
+	q8S72ii5196711 for <xfs@oss.sgi.com>; Fri, 28 Sep 2012 02:02:44 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	FIrJuBuwGBSKLAk7 for <xfs@oss.sgi.com>;
-	Fri, 28 Sep 2012 00:00:53 -0700 (PDT)
-Date: Fri, 28 Sep 2012 17:00:52 +1000
+	im4ojcAM2IItR4G5 for <xfs@oss.sgi.com>;
+	Fri, 28 Sep 2012 00:04:02 -0700 (PDT)
+Date: Fri, 28 Sep 2012 17:04:01 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v4 4/8] xfs: export xfs_free_eofblocks() and return
-	EAGAIN on trylock failure
-Message-ID: <20120928070052.GG25626@dastard>
+Subject: Re: [PATCH v4 1/8] xfs: add EOFBLOCKS inode tagging/untagging
+Message-ID: <20120928070401.GH25626@dastard>
 References: <1348767952-24229-1-git-send-email-bfoster@redhat.com>
-	<1348767952-24229-5-git-send-email-bfoster@redhat.com>
+	<1348767952-24229-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348767952-24229-5-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1348767952-24229-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,20 +30,33 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Sep 27, 2012 at 01:45:48PM -0400, Brian Foster wrote:
-> Turn xfs_free_eofblocks() into a non-static function, return EAGAIN to
-> indicate trylock failure and make sure this error is not propagated in
-> xfs_release().
+On Thu, Sep 27, 2012 at 01:45:45PM -0400, Brian Foster wrote:
+> Add the XFS_ICI_EOFBLOCKS_TAG inode tag to identify inodes with
+> speculatively preallocated blocks beyond EOF. An inode is tagged
+> when speculative preallocation occurs and untagged either via
+> truncate down or when post-EOF blocks are freed via release or
+> reclaim.
+> 
+> The tag management is intentionally not aggressive to prefer
+> simplicity over the complexity of handling all the corner cases
+> under which post-EOF blocks could be freed (i.e., forward
+> truncation, fallocate, write error conditions, etc.). This means
+> that a tagged inode may or may not have post-EOF blocks after a
+> period of time. The tag is eventually cleared when the inode is
+> released or reclaimed.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-You might want to change the title of the patch - "export" when
-talking about functions in kernel code has specific meaning i.e.
-EXPORT_SYMBOL() and that's different to making something
-non-static...
+Apart from the fact this conflicts with my xfssyncd killing patchset
+and xfs_sync.c no longer exists, it looks fine.
 
-Otherwise looks ok.
+Can you rebase this on top of my patch series? Mostly it is simply
+making your changes to xfs_icache.c rather than xfs_sync.c as that's
+where all this inode cache radix tree walking code is now.....
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
