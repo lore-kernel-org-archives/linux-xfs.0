@@ -1,19 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92IeXac074943 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 13:40:33 -0500
-Received: from p01c12o147.mxlogic.net (p01c12o147.mxlogic.net [208.65.145.70])
-	by cuda.sgi.com with ESMTP id dEp3GPxgIdjT22Hb (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 11:41:56 -0700 (PDT)
-From: "Kinzel, David" <David.Kinzel@encana.com>
-Subject: RE: Why xfs_<utils> not 'readline' w/line-edit & history enabled?
-Date: Tue, 2 Oct 2012 18:41:30 +0000
-Message-ID: <A233B8D667A4114D983511EE6E8C438948CE43A6@CGYEX1041>
-References: <506B1A03.7030600@tlinx.org>
-In-Reply-To: <506B1A03.7030600@tlinx.org>
-Content-Language: en-US
+	q92IjqB4075570 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 13:45:52 -0500
+Received: from vwp1161.webpack.hosteurope.de (vwp1161.webpack.hosteurope.de
+	[87.230.104.173]) by cuda.sgi.com with ESMTP id
+	B8oRD8ENkbWtehD5 for <xfs@oss.sgi.com>;
+	Tue, 02 Oct 2012 11:47:14 -0700 (PDT)
+Message-ID: <506B1667.4010203@blafoo.org>
+Date: Tue, 02 Oct 2012 18:29:27 +0200
+From: Volker <mail@blafoo.org>
 MIME-Version: 1.0
+Subject: Re: OOM on quotacheck (again?)
+References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
+	<505AE2A1.5060703@blafoo.org> <20120924132113.GL20960@dastard>
+	<5060727D.4000009@blafoo.org>
+In-Reply-To: <5060727D.4000009@blafoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,40 +27,58 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: 'xfs-oss' <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
->From: xfs-bounces@oss.sgi.com [mailto:xfs-bounces@oss.sgi.com] On Behalf Of
->Linda Walsh
->Something I've long wished for and wondered why it wasn't
->there -- was the ability to edit or re-edit a typed line,
->or recall a previous line from history.
->
->I'd really find it useful to even have the ability for it to
->save previous command sessions / tool.
->
+Hi again,
 
-You can use the utility rlwrap to mimic this behaviour if you need it that bad.
+> Great! That answered all my questions! Thanks a lot!
+> 
+> 3.6.0-rc6-x64 ist currently running fine on 6 machines.
 
->Given the usefulness of such, I was wondering why it had
->never been done?   Just it never rose to the top of some
->task list?  Or was there some desire to keep the tools
->less friendly and thus make them more difficult to use for
->casual use (i.e. it might have been a conscious design
->decision at some point).  Is that reasoning still a strong
->enough factor to keep things like that out of the mainline
->code?
->
+just as a follow up i would like to share some info.
 
+The six machines mentioned above are still running fine. So are few more
+we tested with the new kernel. All of the servers tested so far, were
+rebooted immediately after the new 3.6 kernel was installed.
 
+Because of that, we decided to roll out the new kernel to all our
+servers (approximately 330) and have the kernel "sink in" over the next
+few days if the machines get rebooted.
 
-This email communication and any files transmitted with it may contain
-confidential and or proprietary information and is provided for the use of the
-intended recipient only. Any review, retransmission or dissemination of this
-information by anyone other than the intended recipient is prohibited. If you
-receive this email in error, please contact the sender and delete this
-communication and any copies immediately. Thank you.
+This morning we experienced some problems with the superblock being
+corrupted on 6 machines that had been rebooted during the night. For all
+of them, the following was true:
 
-http://www.encana.com
+a) the server was still running the old buggy 2.6.37 and had
+filesystem-troubles on heavy i/o (that was our problem to begin with
+besides the OOM)
+
+b) because of the filesystem-troubles the server had been rebooted by
+our hardware-support-team (sadly not necessarily using sys-requests)
+because the xfs-partition was unresponsive
+
+c) after being rebooted with the new 3.6 kernel, the server complained
+about the super-block of the xfs-partition being corrupted and was not
+able to mount the partition
+
+d) by running xfs_repair -L -P <device> we were able to fix the problem
+
+e) trying a remount of the fixed partition caused a quota-check which
+always ended in a stack-trace, after a reboot, the quota-check was fine
+and the partition successfully mounted
+
+Has anyone ever experienced problems like this updating from an older
+kernel to the current 3.6?
+
+Any Idea what could have caused the bad superblock the 3.6 kernel
+complained about?
+
+Is it possible that the 2.6.37 kernel left a superblock behing that
+could not be recognized by the 3.6 kernel?
+
+If its of any interest, i can supply the stack-traces.
+
+- volker
 
 _______________________________________________
 xfs mailing list
