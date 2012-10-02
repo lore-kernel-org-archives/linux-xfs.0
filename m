@@ -1,27 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q920vkOJ221601 for <xfs@oss.sgi.com>; Mon, 1 Oct 2012 19:57:46 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	SujTblMXivnLT5K9 for <xfs@oss.sgi.com>;
-	Mon, 01 Oct 2012 17:59:08 -0700 (PDT)
-Date: Tue, 2 Oct 2012 10:59:06 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_repair deleting realtime files.
-Message-ID: <20121002005906.GL23520@dastard>
-References: <505BF45D.5050909@sandeen.net> <20120924075551.GF20960@dastard>
-	<CAHt31_8rEc93vpnbbKngY4uS0kAct3Z5A+2G0LmBzv5rWKdSfA@mail.gmail.com>
-	<CAHt31__s2TNhXPa9JfDLdWPqr60Te9VDPKb4ieORF8JAL07YmQ@mail.gmail.com>
-	<20120926024403.GH29154@dastard>
-	<CAHt31__FPLsDdVCVwwLO0Sh9v_KK2pzU577nywFPAmf_C-gRcQ@mail.gmail.com>
-	<20120926061732.GI29154@dastard>
-	<CAHt31__59_XJw9EF7MniiYH5sS6CX44q9gGwxiqxx43k5OFZ4A@mail.gmail.com>
-	<20120928064742.GE25626@dastard>
-	<alpine.DEB.2.02.1209291645330.7208@artemis>
+	q921pmOA227990 for <xfs@oss.sgi.com>; Mon, 1 Oct 2012 20:51:48 -0500
+Received: from moltke.seatribe.se (moltke.seatribe.se [178.63.100.209]) by
+	cuda.sgi.com with ESMTP id nb5e0CWsX5tfbuJM (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 01 Oct 2012 18:53:11 -0700 (PDT)
+Received: from [2002:5c20:fa6c::1] (helo=nerv.dolda2000.com)
+	by moltke.seatribe.se with esmtp (Exim 4.72)
+	(envelope-from <fredrik@dolda2000.com>) id 1TIrfZ-00043Y-Qm
+	for xfs@oss.sgi.com; Tue, 02 Oct 2012 03:53:10 +0200
+Received: from [2002:5c20:fa6c:200:ca60:ff:fe16:97ac]
+	([IPv6:2002:5c20:fa6c:200:ca60:ff:fe16:97ac]) (authenticated bits=0)
+	by nerv.dolda2000.com (8.14.3/8.14.3/Debian-9.4) with ESMTP id
+	q921r8bQ013372
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 03:53:09 +0200
+Date: Tue, 2 Oct 2012 03:53:08 +0200 (CEST)
+From: Fredrik Tolf <fredrik@dolda2000.com>
+Subject: Extreme I/O latency
+Message-ID: <alpine.DEB.2.02.1210020338580.3390@shack.dolda2000.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.02.1209291645330.7208@artemis>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,137 +29,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Anand Tiwari <tiwarikanand@gmail.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sat, Sep 29, 2012 at 04:49:03PM -0600, Anand Tiwari wrote:
-> Subject: [PATCH] xfs_repair: detect realtime extent shared by multiple
->  records in extent map
-> 
-> XFS currently can have records in extent map, which starts from unaligned start block w.r.t rextsize.
-> xfs_repair considers this as a bug (multiple claims for a real-time extent) and deletes the file.
-> This patch addresses the issue, by comparing current and previous records and make sure they are
-> contiguous and not overlapped.
-> 
-> Signed-off-by: Anand Tiwari <anand.tiwari@linux.com>
-> ---
->  repair/dinode.c |   37 ++++++++++++++++++++++++++++++++++---
->  1 file changed, 34 insertions(+), 3 deletions(-)
-> 
-> diff --git a/repair/dinode.c b/repair/dinode.c
-> index 5a2da39..5537f1c 100644
-> --- a/repair/dinode.c
-> +++ b/repair/dinode.c
-> @@ -406,6 +406,7 @@ verify_agbno(xfs_mount_t	*mp,
->  static int
->  process_rt_rec(
->  	xfs_mount_t		*mp,
-> +	xfs_bmbt_irec_t 	*prev,
->  	xfs_bmbt_irec_t 	*irec,
->  	xfs_ino_t		ino,
->  	xfs_drfsbno_t		*tot,
-> @@ -413,8 +414,11 @@ process_rt_rec(
->  {
->  	xfs_dfsbno_t		b;
->  	xfs_drtbno_t		ext;
-> +	xfs_drtbno_t		start_block;
-> +	xfs_filblks_t		block_count;
->  	int			state;
->  	int			pwe;		/* partially-written extent */
-> +	int 			rtext_remainder;	/* start block is not aligned w.r.t rextsize */
-> 
->  	/*
->  	 * check numeric validity of the extent
-> @@ -461,12 +465,32 @@ _("malformed rt inode extent [%" PRIu64 " %" PRIu64 "] (fs rtext size = %u)\n"),
->  		return 1;
->  	}
-> 
-> +	/* If we have start of record unaligned w.r.t to rextsize, see
-> +	 * if we are sharing this realtime extent with previous record. sharing is only
-> +	 * allowed with previous extent. fail otherwise.
-> +	 * Also, we above condition is true, align start block and block count
-> +	 */
+Dear list,
 
-Comment format is:
+I'm having some problems with a Linux system using XFS filesystems, on top 
+of LVM, on top of mdraid, and I'm lacking ideas for how to proceed with 
+debugging it. The problem manifests itself in that certain, simple I/O 
+operations sometimes take extremely long to complete -- not seldomly up to 
+20-30 seconds!
 
-/*
- * this is a
- * multiline comment
- */
+I used to have lesser problems of a similar kind previously, but this 
+extremeness only started showing up since I upgraded the system from 
+Debian Lenny (using Linux 2.6.26) to Squeeze (using 2.6.32). I've since 
+upgraded to 3.2.0, and now to 3.5.4, and they all exhibit the same 
+problem.
 
-> +	rtext_remainder = irec->br_startblock % mp->m_sb.sb_rextsize;
-> +	if (rtext_remainder) {
-> +		do_warn(
-> +_("data fork in rt ino %" PRIu64 " has unalinged start block %"PRIu64 "\n"),
-                                          unaligned 
+The process having the worst problems with it usually sees them when it 
+calls upon Berkeley DB, the stack traces in which seems to tell me that 
+it's trying to do mmap'ed I/O in its region files, so I can only assume 
+that the stop happens when it's pulling in pages from disk. I can't say I 
+know for sure, but I'm getting the feeling that it happens when some other 
+process calls fdatasync() or somesuch operation. I get this feeling 
+because the problems very often seem to happen exactly when I fetch a 
+MySQL-backed webpage from the system's HTTP server (at which point mysqld 
+syncs its data to disk after some session table update or the like).
 
-> +		ino,
-> +		irec->br_startblock);
+Does anyone have any clue as to what might cause symptoms like these, or, 
+if not, how I can debug the issue further? Admittedly, it's not as if I 
+can be sure that the problem belongs with XFS proper rather than LVM or 
+mdraid, but I have to being somewhere. At least XFS is the direct 
+interface that my programs call before getting stuck. :)
 
-indent these a bit so the fact they are part of the do_warn function
-call is obvious. i.e.
-
-		do_warn(
-				<format string>
-			ino, irec->br_startblock);
-
-> +		if ((prev->br_startoff + prev->br_blockcount == irec->br_startoff) &&
-> +		    (prev->br_startblock + prev->br_blockcount == irec->br_startblock)) {
-> +			start_block = irec->br_startblock + (mp->m_sb.sb_rextsize - rtext_remainder);
-> +			block_count = irec->br_blockcount - (mp->m_sb.sb_rextsize - rtext_remainder);
-> +		}
-> +	} else {
-> +		start_block = irec->br_startblock;
-> +		block_count = irec->br_blockcount;
-> +	}
-
-So this just changes the loop below not to check the first part of
-the new extent and therefore avoid the duplicate extent usage
-detection?
-
-Any plans to correct the bmapbt extents so that repeated repair runs
-don't keep warning about the same problem?
-
-> +
->  	/*
->  	 * set the appropriate number of extents
->  	 * this iterates block by block, this can be optimised using extents
->  	 */
-> -	for (b = irec->br_startblock; b < irec->br_startblock +
-> -			irec->br_blockcount; b += mp->m_sb.sb_rextsize)  {
-> +	for (b = start_block; b < start_block + block_count; b += mp->m_sb.sb_rextsize)  {
->  		ext = (xfs_drtbno_t) b / mp->m_sb.sb_rextsize;
->  		pwe = xfs_sb_version_hasextflgbit(&mp->m_sb) &&
->  				irec->br_state == XFS_EXT_UNWRITTEN &&
-> @@ -548,6 +572,7 @@ process_bmbt_reclist_int(
->  	int			check_dups,
->  	int			whichfork)
->  {
-> +	xfs_bmbt_irec_t		prev;
->  	xfs_bmbt_irec_t		irec;
->  	xfs_dfilblks_t		cp = 0;		/* prev count */
->  	xfs_dfsbno_t		sp = 0;		/* prev start */
-> @@ -574,6 +599,11 @@ process_bmbt_reclist_int(
->  	else
->  		ftype = _("regular");
-> 
-> +	prev.br_startoff = 0;
-> +	prev.br_blockcount = 0;
-> +	prev.br_startblock = 0;
-> +	prev.br_state = 0;
-
-	memset(&prev, 0, sizeof(prev));
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Your most obt. St. &c&c,
+Fredrik Tolf
 
 _______________________________________________
 xfs mailing list
