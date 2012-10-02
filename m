@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92MEVIF094944 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 17:14:31 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	olqH946jKUqF45Fy for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 15:15:54 -0700 (PDT)
-Date: Wed, 3 Oct 2012 08:15:25 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: OOM on quotacheck (again?)
-Message-ID: <20121002221525.GU23520@dastard>
-References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
-	<505AE2A1.5060703@blafoo.org> <20120924132113.GL20960@dastard>
-	<5060727D.4000009@blafoo.org> <506B1667.4010203@blafoo.org>
-	<20121002200946.GP23520@dastard> <506B5357.6060609@blafoo.org>
+	q92Morsu100714 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 17:50:53 -0500
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id bhHVxt76tBUh81Fp (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 02 Oct 2012 15:52:13 -0700 (PDT)
+Message-ID: <506B7018.7040000@tlinx.org>
+Date: Tue, 02 Oct 2012 15:52:08 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <506B5357.6060609@blafoo.org>
+Subject: Re: Why xfs_<utils> not 'readline' w/line-edit & history enabled?
+	(+attachment)
+References: <506B1A03.7030600@tlinx.org> <20121002201748.GQ23520@dastard>
+	<506B5DE1.4020000@tlinx.org> <20121002215253.GT23520@dastard>
+In-Reply-To: <20121002215253.GT23520@dastard>
+Content-Type: multipart/mixed; boundary="------------090200020400080301040904"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,67 +24,91 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Volker <mail@blafoo.org>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 02, 2012 at 10:49:27PM +0200, Volker wrote:
-> Hi,
+This is a multi-part message in MIME format.
+--------------090200020400080301040904
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+Dave Chinner wrote:
+> Patches welcome.
 > 
-> >> If its of any interest, i can supply the stack-traces.
-> > 
-> > Yes, it is of interest, can you post everything you found out about
-> > the problem? (dmesg, stack traces, repair output, etc).
+> Cheers,
 > 
-> Everything posted here is from a single server and its chronologically
-> top to bottom. Without having checked each and every stacktrace, it
-> looked quite similar on the other servers.
-> 
-> http://pastebin.com/PXquE4sM
+> Dave.
+---
+Gee, that's a hard one... (build and tested that it was included)...
 
-So you had a hang on 2.6.37 to do with dquot reclaim, you rebooted
-the server into what I think is a 3.6 kernel.
+--------------090200020400080301040904
+Content-Type: text/plain;
+ name="config.diff"
+Content-Transfer-Encoding: base64
+Content-Disposition: inline;
+ filename="config.diff"
 
-Log recovery failed with "bad clientid 0x0", so no superblock
-problem. It does tend to indicate that 2.6.37 wrote bad data to the
-log, though. If you reboot into 2.6.37, does log recovery run
-successfully? i.e. does the failure only occur on 2.6.37 -> 3.6
-with a dirty log?
-
-You then ran xfs_repair -P -L, which threw lots of metadata
-away and moved lots of stuff to lost+found.
-
-You them mounted the filesystem on the same kernel (has
-xfs_trans_read_buf_map() in the trace, hence the 3.6 version), and
-it appears to be hung waiting for IO to complete on a dquot buffer.
-That tends to indicate that maybe there's a problem with IO
-completion somewhere below the XFS layer.
-
-And if there's a problem below XFS w.r.t. IO compeltion, that also
-makes me wonder if the log recovery problem isn't also caused by
-something below XFS...
-
-What mount options are you using on the 2.6.37 kernel?
-
-> Sidenote:
-> The xfs_repair would not finish without supplying -P, otherwise the
-> repair hang in phase 6 (might be related to this bug:
-> http://oss.sgi.com/archives/xfs-masters/2011-01/msg00009.html)
-
-If you are upgrading your kernel, you should also upgrade your
-xfsprogs installation as well.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+LS0tIGNvbmZpZ3VyZS5pbgkyMDExLTA4LTA0IDA3OjA0OjQ0LjAwMDAwMDAwMCAtMDcwMAor
+KysgY29uZmlndXJlLmluCTIwMTItMTAtMDIgMTU6Mjg6MjMuMzQyMDkwMDM4IC0wNzAwCkBA
+IC0xOCwyMSArMTgsMjEgQEAKIEFDX1NVQlNUKGVuYWJsZV9nZXR0ZXh0KQogCiBBQ19BUkdf
+RU5BQkxFKHJlYWRsaW5lLAotWyAtLWVuYWJsZS1yZWFkbGluZT1beWVzL25vXSBFbmFibGUg
+cmVhZGxpbmUgY29tbWFuZCBlZGl0aW5nIFtkZWZhdWx0PW5vXV0sCitbIC0tZW5hYmxlLXJl
+YWRsaW5lPVt5ZXMvbm9dIEVuYWJsZSByZWFkbGluZSBjb21tYW5kIGVkaXRpbmcgW2RlZmF1
+bHQ9eWVzXV0sCiAJdGVzdCAkZW5hYmxlX3JlYWRsaW5lID0geWVzICYmIGxpYnJlYWRsaW5l
+PSItbHJlYWRsaW5lIiwKIAllbmFibGVfcmVhZGxpbmU9bm8pCiBBQ19TVUJTVChsaWJyZWFk
+bGluZSkKIEFDX1NVQlNUKGVuYWJsZV9yZWFkbGluZSkKIAogQUNfQVJHX0VOQUJMRShlZGl0
+bGluZSwKLVsgLS1lbmFibGUtZWRpdGxpbmU9W3llcy9ub10gRW5hYmxlIGVkaXRsaW5lIGNv
+bW1hbmQgZWRpdGluZyBbZGVmYXVsdD1ub11dLAorWyAtLWVuYWJsZS1lZGl0bGluZT1beWVz
+L25vXSBFbmFibGUgZWRpdGxpbmUgY29tbWFuZCBlZGl0aW5nIFtkZWZhdWx0PXllc11dLAog
+CXRlc3QgJGVuYWJsZV9lZGl0bGluZSA9IHllcyAmJiBsaWJlZGl0bGluZT0iLWxlZGl0IiwK
+IAllbmFibGVfZWRpdGxpbmU9bm8pCiBBQ19TVUJTVChsaWJlZGl0bGluZSkKIEFDX1NVQlNU
+KGVuYWJsZV9lZGl0bGluZSkKIAogQUNfQVJHX0VOQUJMRSh0ZXJtY2FwLAotWyAtLWVuYWJs
+ZS10ZXJtY2FwPVt5ZXMvbm9dIEVuYWJsZSB0ZXJtaW5hbCBjYXBhYmlsaXRpZXMgbGlicmFy
+eSBbZGVmYXVsdD1ub11dLAorWyAtLWVuYWJsZS10ZXJtY2FwPVt5ZXMvbm9dIEVuYWJsZSB0
+ZXJtaW5hbCBjYXBhYmlsaXRpZXMgbGlicmFyeSBbZGVmYXVsdD15ZXNdXSwKIAl0ZXN0ICRl
+bmFibGVfdGVybWNhcCA9IHllcyAmJiBsaWJ0ZXJtY2FwPSItbHRlcm1jYXAiLCkKIEFDX1NV
+QlNUKGxpYnRlcm1jYXApCiAKCi0tLSBjb25maWd1cmUJMjAxMS0wOS0yNyAwODozNjoxMC4w
+MDAwMDAwMDAgLTA3MDAKKysrIGNvbmZpZ3VyZQkyMDEyLTEwLTAyIDE1OjQ1OjA3LjkxMTgw
+NzAyOCAtMDcwMApAQCAtMTUzMiw5ICsxNTMyLDkgQEAKICAgLS1kaXNhYmxlLWxpYnRvb2wt
+bG9jayAgYXZvaWQgbG9ja2luZyAobWlnaHQgYnJlYWsgcGFyYWxsZWwgYnVpbGRzKQogIC0t
+ZW5hYmxlLXNoYXJlZD15ZXMvbm8gRW5hYmxlIHVzZSBvZiBzaGFyZWQgbGlicmFyaWVzIGRl
+ZmF1bHQ9eWVzCiAgLS1lbmFibGUtZ2V0dGV4dD15ZXMvbm8gRW5hYmxlIGFsdGVybmF0ZSBs
+YW5ndWFnZSBzdXBwb3J0IGRlZmF1bHQ9eWVzCi0gLS1lbmFibGUtcmVhZGxpbmU9eWVzL25v
+IEVuYWJsZSByZWFkbGluZSBjb21tYW5kIGVkaXRpbmcgZGVmYXVsdD1ubwotIC0tZW5hYmxl
+LWVkaXRsaW5lPXllcy9ubyBFbmFibGUgZWRpdGxpbmUgY29tbWFuZCBlZGl0aW5nIGRlZmF1
+bHQ9bm8KLSAtLWVuYWJsZS10ZXJtY2FwPXllcy9ubyBFbmFibGUgdGVybWluYWwgY2FwYWJp
+bGl0aWVzIGxpYnJhcnkgZGVmYXVsdD1ubworIC0tZW5hYmxlLXJlYWRsaW5lPXllcy9ubyBF
+bmFibGUgcmVhZGxpbmUgY29tbWFuZCBlZGl0aW5nIGRlZmF1bHQ9eWVzCisgLS1lbmFibGUt
+ZWRpdGxpbmU9eWVzL25vIEVuYWJsZSBlZGl0bGluZSBjb21tYW5kIGVkaXRpbmcgZGVmYXVs
+dD15ZXMKKyAtLWVuYWJsZS10ZXJtY2FwPXllcy9ubyBFbmFibGUgdGVybWluYWwgY2FwYWJp
+bGl0aWVzIGxpYnJhcnkgZGVmYXVsdD15ZXMKICAtLWVuYWJsZS1ibGtpZD15ZXMvbm8gRW5h
+YmxlIGJsb2NrIGRldmljZSBpZCBsaWJyYXJ5IGRlZmF1bHQ9eWVzCiAgLS1lbmFibGUtbGli
+NjQ9eWVzL25vIEVuYWJsZSBsaWI2NCBzdXBwb3J0IGRlZmF1bHQ9eWVzCiAKQEAgLTk5NzEs
+NyArOTk3MSw4IEBACiBpZiB0ZXN0ICIke2VuYWJsZV9yZWFkbGluZStzZXR9IiA9IHNldDsg
+dGhlbiA6CiAgIGVuYWJsZXZhbD0kZW5hYmxlX3JlYWRsaW5lOyB0ZXN0ICRlbmFibGVfcmVh
+ZGxpbmUgPSB5ZXMgJiYgbGlicmVhZGxpbmU9Ii1scmVhZGxpbmUiCiBlbHNlCi0gIGVuYWJs
+ZV9yZWFkbGluZT1ubworICBlbmFibGVfcmVhZGxpbmU9eWVzCisJbGlicmVhZGxpbmU9Ii1s
+cmVhZGxpbmUiCiBmaQogCiAKQEAgLTk5ODEsNyArOTk4Miw4IEBACiBpZiB0ZXN0ICIke2Vu
+YWJsZV9lZGl0bGluZStzZXR9IiA9IHNldDsgdGhlbiA6CiAgIGVuYWJsZXZhbD0kZW5hYmxl
+X2VkaXRsaW5lOyB0ZXN0ICRlbmFibGVfZWRpdGxpbmUgPSB5ZXMgJiYgbGliZWRpdGxpbmU9
+Ii1sZWRpdCIKIGVsc2UKLSAgZW5hYmxlX2VkaXRsaW5lPW5vCisgIGVuYWJsZV9lZGl0bGlu
+ZT15ZXMKKwlsaWJlZGl0bGluZT0iLWxlZGl0IgogZmkKIAogCkBAIC05OTkwLDYgKzk5OTIs
+OSBAQAogIyBDaGVjayB3aGV0aGVyIC0tZW5hYmxlLXRlcm1jYXAgd2FzIGdpdmVuLgogaWYg
+dGVzdCAiJHtlbmFibGVfdGVybWNhcCtzZXR9IiA9IHNldDsgdGhlbiA6CiAgIGVuYWJsZXZh
+bD0kZW5hYmxlX3Rlcm1jYXA7IHRlc3QgJGVuYWJsZV90ZXJtY2FwID0geWVzICYmIGxpYnRl
+cm1jYXA9Ii1sdGVybWNhcCIKK2Vsc2UgCisJZW5hYmxlX3Rlcm1jYXA9eWVzCisJbGlidGVy
+bWNhcD0iLWx0ZXJtY2FwIgogZmkKIAogCg==
+--------------090200020400080301040904
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--------------090200020400080301040904--
