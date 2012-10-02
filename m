@@ -1,20 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92IvFxt076489 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 13:57:15 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id 9SLBtFpWdGutXwOW for
-	<xfs@oss.sgi.com>; Tue, 02 Oct 2012 11:58:39 -0700 (PDT)
-Message-ID: <506AE5AD.60509@redhat.com>
-Date: Tue, 02 Oct 2012 09:01:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-MIME-Version: 1.0
+	q92Jcc2u081348 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 14:38:38 -0500
+Date: Tue, 2 Oct 2012 14:39:59 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [PATCH 06/13] xfs: xfs_sync_data is redundant.
+Message-ID: <20121002193959.GM13214@sgi.com>
 References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
 	<1348807485-20165-7-git-send-email-david@fromorbit.com>
-	<5069F9B0.50804@redhat.com> <20121002001021.GJ23520@dastard>
-	<506A38D1.6090204@redhat.com>
-In-Reply-To: <506A38D1.6090204@redhat.com>
+	<20120928123443.GD14284@infradead.org>
+	<20121001174410.GK13214@sgi.com> <20121002001403.GK23520@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20121002001403.GK23520@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,54 +26,57 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On 10/01/2012 08:44 PM, Brian Foster wrote:
-> On 10/01/2012 08:10 PM, Dave Chinner wrote:
-...
+Hey Dave,
+
+On Tue, Oct 02, 2012 at 10:14:03AM +1000, Dave Chinner wrote:
+> On Mon, Oct 01, 2012 at 12:44:10PM -0500, Ben Myers wrote:
+> > Hi Dave,
+> > 
+> > On Fri, Sep 28, 2012 at 08:34:43AM -0400, Christoph Hellwig wrote:
+> > > >  /*
+> > > > + * Flush all dirty data to disk. Must not be called while holding an XFS_ILOCK
+> > > 
+> > > slightly too long line.
+> > 
+> > It comes out at 78 columns when the patch is applied.  Not a problem.
+> > 
+> > > > + * or a page lock.
+> > > > + */
+> > > > +static inline void
+> > > > +xfs_flush_inodes(struct xfs_inode *ip)
+> > > > +{
+> > > > +	writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb, WB_REASON_FS_FREE_SPACE);
+> > > > +}
+> > > 
+> > > Passing an inode here seems very odd, an xfs_mount would be the proper
+> > > interface. 
+> > > 
+> > > Looks fine modulo these cosmetic changes, so:
+> > >
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > 
+> > I cleaned up these cosmetic changes on your behalf.  Here is the result:
 > 
-> I gave this a quick couple runs against 273 and it passes (on top of
-> the entire die-xfssyncd-die patchset). I'll kick off another full run
-> on this box overnight. Thanks!
-> 
+> Looks good. Thanks for doing this, Ben.
 
-And I spoke a bit too soon... I hit the following warning with this change:
+No problem.  I wanted to pull this in before the merge window opened.
+Otherwise I'd have let you go after it.
 
-WARNING: at fs/fs-writeback.c:1401 sync_inodes_sb+0xc0/0xd0()
+> FWIW, The patch I just posted to change
+> writeback_inodes_sb_if_idle() to sync_inodes_sb() will need
+> massaging to apply to your tree now. I'll update it if you push your
+> tree out to oss.sgi.com before taking it...
 
-The inline patch addresses it. I also see the following message during
-273 but it doesn't appear related to this set:
+Sure.  You can find it here:
 
-kernel: XFS (dm-4): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
+git://oss.sgi.com/xfs/xfs.git, tmp-for-dave-worker-changes branch
 
-Brian
+Can you repost the full patch rather than a delta?  That would be cleaner.
 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index da69c18..f11133b 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -294,7 +294,9 @@ xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
- static inline void
- xfs_flush_inodes(struct xfs_inode *ip)
- {
--	writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb, WB_REASON_FS_FREE_SPACE);
-+	down_read(&VFS_I(ip)->i_sb->s_umount);
-+	sync_inodes_sb(VFS_I(ip)->i_sb);
-+	up_read(&VFS_I(ip)->i_sb->s_umount);
- }
-
- /*
-
-> Brian
-> 
->> Cheers,
->> 
->> Dave.
->> 
-> 
-> _______________________________________________ xfs mailing list 
-> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
