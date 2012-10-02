@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92LRjRg087991 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 16:27:45 -0500
+	q92LTdkO088143 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 16:29:39 -0500
 Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id Y3VzD4tKgMJvAprw (version=TLSv1
+	cuda.sgi.com with ESMTP id gwLkSKO8FwBhHzdj (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 14:29:09 -0700 (PDT)
-Message-ID: <506B5CA0.7050306@tlinx.org>
-Date: Tue, 02 Oct 2012 14:29:04 -0700
+	Tue, 02 Oct 2012 14:31:02 -0700 (PDT)
+Message-ID: <506B5D11.4030107@tlinx.org>
+Date: Tue, 02 Oct 2012 14:30:57 -0700
 From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
 Subject: Re: Why xfs_<utils> not 'readline' w/line-edit & history enabled?
@@ -29,20 +29,22 @@ To: Dave Chinner <david@fromorbit.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
 
+> 
+> xfsprogs has had this support via readline since, well, before I
+> started working on XFS....
+---
+ok... I know this isn't in my version...
+> which xfs_db
+/usr/sbin/xfs_db
+Ishtar:law> ldd /usr/sbin/xfs_db
+         linux-vdso.so.1 (0x00007fffbcb07000)
+         libuuid.so.1 => /lib64/libuuid.so.1 (0x0000003007200000)
+         libpthread.so.0 => /lib64/libpthread.so.0 (0x0000003001000000)
+         libc.so.6 => /lib64/libc.so.6 (0x0000003000400000)
+         /lib64/ld-linux-x86-64.so.2 (0x0000003000000000)
+--- there is no libreadline
 
-Dave Chinner wrote:
-> $ sudo xfs_db -r /dev/vdb
-> xfs_db> inode 128
-> (reverse-i-search)`in': inode 128
-----
-Um...When I press up-arrow, I get nothing.
-
-When I press down arrow -- also nothing.
-
-Try hitting home for beginning of line --
-nothing.   Tried ESC to re-edit line -- nothing. (enters ^[).
-
-What are you typing to get the above?  does it require a config somewhere?
+Hmmm....maybe it's a distro bug...but can't figure out why they'd turn it off...
 
 _______________________________________________
 xfs mailing list
