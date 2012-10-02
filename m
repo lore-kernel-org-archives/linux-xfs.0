@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q91N97f1209640 for <xfs@oss.sgi.com>; Mon, 1 Oct 2012 18:09:07 -0500
+	q92092ZP217763 for <xfs@oss.sgi.com>; Mon, 1 Oct 2012 19:09:02 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	f4jcBxzeSgMBAFdp for <xfs@oss.sgi.com>;
-	Mon, 01 Oct 2012 16:10:29 -0700 (PDT)
-Date: Tue, 2 Oct 2012 09:10:27 +1000
+	SbTlvMwPwPe6MXFZ for <xfs@oss.sgi.com>;
+	Mon, 01 Oct 2012 17:10:24 -0700 (PDT)
+Date: Tue, 2 Oct 2012 10:10:22 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/3] xfs: allocation worker causes freelist buffer lock
-Message-ID: <20121001231027.GI23520@dastard>
-References: <20120924171159.GG1140@sgi.com>
-	<201209241809.q8OI94s3003323@eagdhcp-232-125.americas.sgi.com>
-	<20120925005632.GB23520@dastard> <5061CA48.3040202@sgi.com>
-	<20120928030847.GC25626@dastard> <20121001221028.766035076@sgi.com>
+Subject: Re: [PATCH 06/13] xfs: xfs_sync_data is redundant.
+Message-ID: <20121002001021.GJ23520@dastard>
+References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
+	<1348807485-20165-7-git-send-email-david@fromorbit.com>
+	<5069F9B0.50804@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121001221028.766035076@sgi.com>
+In-Reply-To: <5069F9B0.50804@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,97 +28,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Oct 01, 2012 at 05:10:23PM -0500, Mark Tinguely wrote:
->  v2 remove the architecture conditional.
+Hi, Brian.
 
-Version stuff goes after the first --- line where the diffstat lies.
-It doesn't belong inteh commit messages.
+On Mon, Oct 01, 2012 at 04:14:40PM -0400, Brian Foster wrote:
+> Warning: This message has had one or more attachments removed
+> Warning: (273.out.bad).
+> Warning: Please read the "boprocket-Attachment-Warning.txt" attachment(s) for more information.
 
-> The AGF hang is caused when the process that holds the AGF buffer
-> lock cannot get a worker. The allocation worker pool are blocked
-> waiting to take the AGF buffer lock.
+Which says:
+
+> At Mon Oct  1 20:14:58 2012 the virus scanner said:                
+>    MailScanner: Attempt to hide real filename extension (273.out.bad)
+
+Looks like your mailer did something wrong with the attachment....
+
+
+> Heads up... I was doing some testing against my eofblocks set rebased
+> against this patchset and I'm reproducing a new 273 failure. The failure
+> bisects down to this patch.
 > 
-> Move the allocation worker call so that multiple calls to
-> xfs_alloc_vextent() for a particular transaction are contained
-> within a single worker.
-> 			---
-> With the xfs_alloc_arg structure zeroed, the AGF hang occurs in 
-> xfs_bmap_btalloc() due to a secondary call to xfs_alloc_vextent().
+> With the bisection, I'm running xfs top of tree plus the following patch:
+> 
+> xfs: only update the last_sync_lsn when a transaction completes
+> 
+> ... and patches 1-6 of this set on top of that. i.e.:
+> 
+> xfs: xfs_sync_data is redundant.
+> xfs: Bring some sanity to log unmounting
+> xfs: sync work is now only periodic log work
+> xfs: don't run the sync work if the filesystem is read-only
+> xfs: rationalise xfs_mount_wq users
+> xfs: xfs_syncd_stop must die
+> xfs: only update the last_sync_lsn when a transaction completes
+> xfs: Make inode32 a remountable option
+> 
+> This is on a 16p (according to /proc/cpuinfo) x86-64 system with 32GB
+> RAM. The test and scratch volumes are both 500GB lvm volumes on top of a
+> hardware raid.
+> I haven't looked into this at all yet but I wanted to
+> drop it on the list for now. The 273 output is attached.
 
-How, exactly? You need to describe the exact hang so that everyone
-understands what the problem is that is being fixed. This doesn't
-tell me what the hang is that is being fixed. Document it in a call
-timeline that shows when the locks are taken, and where they
-subsequently hang....
+I bet you had writes fail with ENOSPC - 201 * 426
+= 85626 files of 8k each, that gives 685MB. When the test is
+running, I see upwards of 1.5GB of space consumed, which then slowly
+drops again as data files are closed and data is written.
 
-> These calls to xfs_alloc_vextent() try different strategies to
-> allocate the extent if the previous allocation attempt failed.
+Some of that space is specualtive preallocation (4k per file, I
+think), but also a significant amount of it is metadata reservation
+for delayed allocation (4 blocks per file, IIRC). If I've only got
+2GB RAM on my machine, then writeback starts at 200MB written, and
+so well before the fs runs out of space the metadata reservations
+are being released.
 
-I suspect you are talking about this code chain:
+I just upped the VM to 8GB RAM, and immediately I see the test
+starting to fail. And this is in 273.full:
 
-        if ((error = xfs_alloc_vextent(&args)))
-                return error;
-        if (tryagain && args.fsbno == NULLFSBLOCK) {
+cp: cannot create regular file `/mnt/scratch/sub_198/origin/file_141': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_198/origin/file_142': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_198/origin/file_1cp: cannot create regular filcp: cannot create regular file `/mnt/scratch/sub_198/origin/file_147': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_198/origin/file_1cp: cannot create regular filcp: writing `/mnt/scratch/sub_198/origin/file_149': No space left cp: writing `/mnt/scratch/sub_156/origin/file_275': No space left on device
+cp: failed to extencp: writing `/mnt/scratch/sub_198/origin/file_150': No space left cp: writing `/mnt/scratch/sub_156/origin/file_276': No space left on device
+cp: failed to extencp: cannot create regular file `/mnt/scratch/sub_124/origin/file_3cp: cannot create regular filcp: writing `/mnt/scratch/sub_124/origin/file_378': No space left cp: writing `/mnt/scratch/sub_173/origin/file_250': No space left on device
+cp: failed to extencp: writing `/mnt/scratch/sub_124/origin/file_379': No space left cp: cannot create regular file `/mnt/scratch/sub_173/origin/file_2cp: cannot create regular file `/mnt/scratch/sub_134/origin/file_337': No space left on device
+cp: cannot create regular filcp: cannot create regular filcp: writing `/mnt/scratch/sub_159/origin/file_307': No space left on device
+cp: failed to extend `/mnt/scratch/sub_159/origin/file_307': No space left on device
+cp: writing `/mnt/scratch/sub_159/origin/file_308': No space left on device
+cp: failed to extend `/mnt/scratch/sub_159/origin/file_308': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_159/origin/file_309': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_159/origin/file_310': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_159/origin/file_311': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_159/origin/file_312': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_159/origin/file_313': No space left on device
+cp: cannot create regular file `/mnt/scratch/sub_159/origin/file_314': No space left on device
 .....
-                if ((error = xfs_alloc_vextent(&args)))
-                        return error;
-        }
-        if (isaligned && args.fsbno == NULLFSBLOCK) {
-.....
-                if ((error = xfs_alloc_vextent(&args)))
-                        return error;
-        }
-.....
 
-but I can't be certain from the description...
+So, turning off speculative preallocation via the allocsize mount
+option doesn't fix the problem. IOWs, the problem is too much active
+metadata reservation.  If we are caching 685MB, that's less than the
+writeback thresholds of a large memory machine, so the metadata
+reservations won't be trimmed at all until ENOSPC actually occurs
+and writeback is then started.
 
-> I still prefer this patch's approach. It also limits the number
-> worker context switches when xfs_alloc_ventent() is called multiple
-> times within a transaction. The intent of the patch is to move the
-> allocation worker as reasonably close to the xfs_trans_alloc() -
-> xfs_trans_commit / xfs_trans_cancel() calls as possible.
+The problem is that writeback_inodes_sb_if_idle() does not block if
+there is already writeback in progress, so the callers just keep
+hitting ENOSPC rather than being throttled waiting for delalloc
+conversion.
 
-Except, as I've said before, it also adds context switches to
-unwritten extent conversion that already occurs in a worker thread
-that has no stack pressure (i.e. adds unnecessary latency via
-context switches to IO completion), and it also pushes all realtime
-device allocation into a worker thread. Once again, that will add
-unpredictable latency to the allocation path (bad for realtime) when
-no stack pressure actually exists.
-
-These were particular concerns for placing the stack switch in
-xfs_alloc_vextent() in the first place - to only switch stacks when
-allocation was going to occur for allocations that are likely to
-smash the stack.  xfs_bmapi_write() is too high level to avoid
-this problem in xfs_bmap_btalloc() with minimum impact because it
-also captures operations that don't pass through the typical worst
-case stack path or don't have stack pressure.
-
-If we need to avoid the above problem in xfs_bmap_btalloc() for user
-data allocation, then move the worker hand-off up one function from
-xfs_alloc_vextent() to xfs_bmap_btalloc() - it's a precise fit for
-the problem that (I think) has been described above. It's also a
-simpler patch because it doesn't need to create a new worker args
-structure - just add the completion to the struct xfs_bmalloca ....
-
-> I have ported this patch to Linux 3.0.x. Linux 2.6.x will be the same
-> as the Linux 3.0 port.
-
-Not really relevant to a TOT commit, especially as the underlying
-patch isn't in 3.0.x or 2.6.x. Indeed, if you want to back port it
-and this fix to anything prior to 2.6.38, then you are going to need
-the EAGAIN version I posted because the workqueue infrastructure is
-vastly different and blocking workers on locks is guaranteed to have
-serious performance impact, even if it doesn't deadlock.
-
-> This patch allows an easy addition of an architecture limit on the
-> allocation worker for those that choose to do so.
-
-Not relevant. It's no different to the xfs_alloc_vextent
-worker code that it replaces.
+The patch below should fix this - it changes xfs_flush_inodes() to
+us sync_inodes_sb(), which will issue IO and block waiting for it to
+complete, just like xfs_flush_inodes() used to. Indeed, it passes
+again on my VM with 8GB RAM....
 
 Cheers,
 
@@ -127,6 +128,35 @@ Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
+
+xfs: make inode writeback at ENOSPC blocking.
+
+From: Dave Chinner <dchinner@redhat.com>
+
+writeback_inodes_sb_if_idle() is not sufficient to trigger delalloc
+conversion fast enough to prevent spurious ENOSPC whent here are
+hundreds of writers, thousands of small files and GBs of free RAM.
+Change this to use sync_sb_inodes() to block callers while we wait
+for writeback like the previous xfs_flush_inodes implementation did.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_inode.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index da69c18..0ec7a46 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -294,7 +294,7 @@ xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
+ static inline void
+ xfs_flush_inodes(struct xfs_inode *ip)
+ {
+-	writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb, WB_REASON_FS_FREE_SPACE);
++	sync_inodes_sb(VFS_I(ip)->i_sb);
+ }
+ 
+ /*
 
 _______________________________________________
 xfs mailing list
