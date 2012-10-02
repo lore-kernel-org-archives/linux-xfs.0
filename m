@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92KNjNL083777 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 15:23:45 -0500
-Date: Tue, 2 Oct 2012 15:25:06 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 06/13] xfs: xfs_sync_data is redundant.
-Message-ID: <20121002202506.GN13214@sgi.com>
-References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
-	<1348807485-20165-7-git-send-email-david@fromorbit.com>
-	<5069F9B0.50804@redhat.com>
+	q92KmBKx085184 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 15:48:12 -0500
+Received: from vwp1161.webpack.hosteurope.de (vwp1161.webpack.hosteurope.de
+	[87.230.104.173]) by cuda.sgi.com with ESMTP id
+	P80yJ1vAVTcFFWdC for <xfs@oss.sgi.com>;
+	Tue, 02 Oct 2012 13:49:33 -0700 (PDT)
+Message-ID: <506B5357.6060609@blafoo.org>
+Date: Tue, 02 Oct 2012 22:49:27 +0200
+From: Volker <mail@blafoo.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5069F9B0.50804@redhat.com>
+Subject: Re: OOM on quotacheck (again?)
+References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
+	<505AE2A1.5060703@blafoo.org> <20120924132113.GL20960@dastard>
+	<5060727D.4000009@blafoo.org> <506B1667.4010203@blafoo.org>
+	<20121002200946.GP23520@dastard>
+In-Reply-To: <20121002200946.GP23520@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,46 +28,34 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Oct 01, 2012 at 04:14:40PM -0400, Brian Foster wrote:
-> On 09/28/2012 12:44 AM, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > We don't do any data writeback from XFS any more - the VFS is
-> > completely responsible for that, including for freeze. We can
-> > replace the remaining caller with the VFS level function that
-> > achieves the same thing, but without conflicting with current
-> > writeback work - writeback_inodes_sb_if_idle().
-> > 
-> > This means we can remove the flush_work and xfs_flush_inodes() - the
-> > VFS functionality completely replaces the internal flush queue for
-> > doing this writeback work in a separate context to avoid stack
-> > overruns.
-> > 
-> > This does have one complication - it cannot be called with page
-> > locks held.  Hence move the flushing of delalloc space when ENOSPC
-> > occurs back up into xfs_file_aio_buffered_write when we don't hold
-> > any locks that will stall writeback.
-> > 
-> > Note that we always need to pass a count of zero to
-> > generic_file_buffered_write() as the previously written byte count.
-> > We only do this by accident before this patch by the virtue of ret
-> > always being zero when there are no errors. Make this explicit
-> > rather than needing to specifically zero ret in the ENOSPC retry
-> > case.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi,
+
+>> If its of any interest, i can supply the stack-traces.
 > 
-> Heads up... I was doing some testing against my eofblocks set rebased
-> against this patchset and I'm reproducing a new 273 failure. The failure
-> bisects down to this patch.
+> Yes, it is of interest, can you post everything you found out about
+> the problem? (dmesg, stack traces, repair output, etc).
 
-Nice catch Brian!
+Everything posted here is from a single server and its chronologically
+top to bottom. Without having checked each and every stacktrace, it
+looked quite similar on the other servers.
 
-Regards,
-	Ben
+http://pastebin.com/PXquE4sM
+
+Sidenote:
+The xfs_repair would not finish without supplying -P, otherwise the
+repair hang in phase 6 (might be related to this bug:
+http://oss.sgi.com/archives/xfs-masters/2011-01/msg00009.html)
+
+Hope it helps! Since we have about 300 servers left to go from 2.6.37 to
+3.6, i'd be happy to do some testing as long we are not gambling with
+our customers data :-)
+
+- volker
+
+
 
 _______________________________________________
 xfs mailing list
