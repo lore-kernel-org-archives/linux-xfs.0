@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92JjvXp081960 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 14:45:58 -0500
-Received: from moltke.seatribe.se (moltke.seatribe.se [178.63.100.209]) by
-	cuda.sgi.com with ESMTP id gfDRkWlIMIJKtx7O (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 12:47:20 -0700 (PDT)
-Date: Tue, 2 Oct 2012 16:31:48 +0200 (CEST)
-From: Fredrik Tolf <fredrik@dolda2000.com>
-Subject: Re: Extreme I/O latency
-In-Reply-To: <20121002050806.GO23520@dastard>
-Message-ID: <alpine.DEB.2.02.1210021629090.3390@shack.dolda2000.com>
-References: <alpine.DEB.2.02.1210020338580.3390@shack.dolda2000.com>
-	<20121002022041.GN23520@dastard>
-	<alpine.DEB.2.02.1210020422540.3390@shack.dolda2000.com>
-	<20121002050806.GO23520@dastard>
+	q92K8QZJ082859 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 15:08:26 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	2erhmDwPBt5RELwv for <xfs@oss.sgi.com>;
+	Tue, 02 Oct 2012 13:09:49 -0700 (PDT)
+Date: Wed, 3 Oct 2012 06:09:46 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: OOM on quotacheck (again?)
+Message-ID: <20121002200946.GP23520@dastard>
+References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
+	<505AE2A1.5060703@blafoo.org> <20120924132113.GL20960@dastard>
+	<5060727D.4000009@blafoo.org> <506B1667.4010203@blafoo.org>
 MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <506B1667.4010203@blafoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,36 +24,72 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Volker <mail@blafoo.org>
 Cc: xfs@oss.sgi.com
 
-On Tue, 2 Oct 2012, Dave Chinner wrote:
-> On Tue, Oct 02, 2012 at 05:25:53AM +0200, Fredrik Tolf wrote:
->> On Tue, 2 Oct 2012, Dave Chinner wrote:
->>> On Tue, Oct 02, 2012 at 03:53:08AM +0200, Fredrik Tolf wrote:
->>> What is a "simple IO operation"?
->>
->> Sorry, what I meant by "simple" is mostly on the interface level.
->> Like, a single syscall (with far less than a page of data in the
->> case of read or write), or, in this case, reading a single mmap'ed
->> page.
->
-> Which might be "simple" by themselves, but when an application is
-> doing thousands of such operations a second, the result is far from
-> simple....
+On Tue, Oct 02, 2012 at 06:29:27PM +0200, Volker wrote:
+> Hi again,
+> 
+> > Great! That answered all my questions! Thanks a lot!
+> > 
+> > 3.6.0-rc6-x64 ist currently running fine on 6 machines.
+> 
+> just as a follow up i would like to share some info.
+> 
+> The six machines mentioned above are still running fine. So are few more
+> we tested with the new kernel. All of the servers tested so far, were
+> rebooted immediately after the new 3.6 kernel was installed.
+> 
+> Because of that, we decided to roll out the new kernel to all our
+> servers (approximately 330) and have the kernel "sink in" over the next
+> few days if the machines get rebooted.
+> 
+> This morning we experienced some problems with the superblock being
+> corrupted on 6 machines that had been rebooted during the night. For all
+> of them, the following was true:
+> 
+> a) the server was still running the old buggy 2.6.37 and had
+> filesystem-troubles on heavy i/o (that was our problem to begin with
+> besides the OOM)
+> 
+> b) because of the filesystem-troubles the server had been rebooted by
+> our hardware-support-team (sadly not necessarily using sys-requests)
+> because the xfs-partition was unresponsive
+> 
+> c) after being rebooted with the new 3.6 kernel, the server complained
+> about the super-block of the xfs-partition being corrupted and was not
+> able to mount the partition
+> 
+> d) by running xfs_repair -L -P <device> we were able to fix the problem
+> 
+> e) trying a remount of the fixed partition caused a quota-check which
+> always ended in a stack-trace, after a reboot, the quota-check was fine
+> and the partition successfully mounted
+> 
+> Has anyone ever experienced problems like this updating from an older
+> kernel to the current 3.6?
+> 
+> Any Idea what could have caused the bad superblock the 3.6 kernel
+> complained about?
+> 
+> Is it possible that the 2.6.37 kernel left a superblock behing that
+> could not be recognized by the 3.6 kernel?
+> 
+> If its of any interest, i can supply the stack-traces.
 
-Certainly; though I seem to be bad at communicating it, the point I was 
-trying to make is that it is, from the point of view of userspace, 
-individual calls that take extremely long, rather than total throughput 
-being poor. :)
+Yes, it is of interest, can you post everything you found out about
+the problem? (dmesg, stack traces, repair output, etc).
 
---
+Cheers,
 
-Fredrik Tolf
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
