@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92IjqB4075570 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 13:45:52 -0500
-Received: from vwp1161.webpack.hosteurope.de (vwp1161.webpack.hosteurope.de
-	[87.230.104.173]) by cuda.sgi.com with ESMTP id
-	B8oRD8ENkbWtehD5 for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 11:47:14 -0700 (PDT)
-Message-ID: <506B1667.4010203@blafoo.org>
-Date: Tue, 02 Oct 2012 18:29:27 +0200
-From: Volker <mail@blafoo.org>
+	q92IvFxt076489 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 13:57:15 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 9SLBtFpWdGutXwOW for
+	<xfs@oss.sgi.com>; Tue, 02 Oct 2012 11:58:39 -0700 (PDT)
+Message-ID: <506AE5AD.60509@redhat.com>
+Date: Tue, 02 Oct 2012 09:01:33 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: OOM on quotacheck (again?)
-References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
-	<505AE2A1.5060703@blafoo.org> <20120924132113.GL20960@dastard>
-	<5060727D.4000009@blafoo.org>
-In-Reply-To: <5060727D.4000009@blafoo.org>
+Subject: Re: [PATCH 06/13] xfs: xfs_sync_data is redundant.
+References: <1348807485-20165-1-git-send-email-david@fromorbit.com>
+	<1348807485-20165-7-git-send-email-david@fromorbit.com>
+	<5069F9B0.50804@redhat.com> <20121002001021.GJ23520@dastard>
+	<506A38D1.6090204@redhat.com>
+In-Reply-To: <506A38D1.6090204@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,58 +27,55 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Hi again,
-
-> Great! That answered all my questions! Thanks a lot!
+On 10/01/2012 08:44 PM, Brian Foster wrote:
+> On 10/01/2012 08:10 PM, Dave Chinner wrote:
+...
 > 
-> 3.6.0-rc6-x64 ist currently running fine on 6 machines.
+> I gave this a quick couple runs against 273 and it passes (on top of
+> the entire die-xfssyncd-die patchset). I'll kick off another full run
+> on this box overnight. Thanks!
+> 
 
-just as a follow up i would like to share some info.
+And I spoke a bit too soon... I hit the following warning with this change:
 
-The six machines mentioned above are still running fine. So are few more
-we tested with the new kernel. All of the servers tested so far, were
-rebooted immediately after the new 3.6 kernel was installed.
+WARNING: at fs/fs-writeback.c:1401 sync_inodes_sb+0xc0/0xd0()
 
-Because of that, we decided to roll out the new kernel to all our
-servers (approximately 330) and have the kernel "sink in" over the next
-few days if the machines get rebooted.
+The inline patch addresses it. I also see the following message during
+273 but it doesn't appear related to this set:
 
-This morning we experienced some problems with the superblock being
-corrupted on 6 machines that had been rebooted during the night. For all
-of them, the following was true:
+kernel: XFS (dm-4): xlog_verify_grant_tail: space > BBTOB(tail_blocks)
 
-a) the server was still running the old buggy 2.6.37 and had
-filesystem-troubles on heavy i/o (that was our problem to begin with
-besides the OOM)
+Brian
 
-b) because of the filesystem-troubles the server had been rebooted by
-our hardware-support-team (sadly not necessarily using sys-requests)
-because the xfs-partition was unresponsive
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index da69c18..f11133b 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -294,7 +294,9 @@ xfs_new_eof(struct xfs_inode *ip, xfs_fsize_t new_size)
+ static inline void
+ xfs_flush_inodes(struct xfs_inode *ip)
+ {
+-	writeback_inodes_sb_if_idle(VFS_I(ip)->i_sb, WB_REASON_FS_FREE_SPACE);
++	down_read(&VFS_I(ip)->i_sb->s_umount);
++	sync_inodes_sb(VFS_I(ip)->i_sb);
++	up_read(&VFS_I(ip)->i_sb->s_umount);
+ }
 
-c) after being rebooted with the new 3.6 kernel, the server complained
-about the super-block of the xfs-partition being corrupted and was not
-able to mount the partition
+ /*
 
-d) by running xfs_repair -L -P <device> we were able to fix the problem
-
-e) trying a remount of the fixed partition caused a quota-check which
-always ended in a stack-trace, after a reboot, the quota-check was fine
-and the partition successfully mounted
-
-Has anyone ever experienced problems like this updating from an older
-kernel to the current 3.6?
-
-Any Idea what could have caused the bad superblock the 3.6 kernel
-complained about?
-
-Is it possible that the 2.6.37 kernel left a superblock behing that
-could not be recognized by the 3.6 kernel?
-
-If its of any interest, i can supply the stack-traces.
-
-- volker
+> Brian
+> 
+>> Cheers,
+>> 
+>> Dave.
+>> 
+> 
+> _______________________________________________ xfs mailing list 
+> xfs@oss.sgi.com http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
