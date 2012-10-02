@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92K8QZJ082859 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 15:08:26 -0500
+	q92KGQjH083349 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 15:16:26 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	2erhmDwPBt5RELwv for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 13:09:49 -0700 (PDT)
-Date: Wed, 3 Oct 2012 06:09:46 +1000
+	xUIAfQiLbYhboVwT for <xfs@oss.sgi.com>;
+	Tue, 02 Oct 2012 13:17:49 -0700 (PDT)
+Date: Wed, 3 Oct 2012 06:17:48 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: OOM on quotacheck (again?)
-Message-ID: <20121002200946.GP23520@dastard>
-References: <5059D2B4.8010300@blafoo.org> <20120919205924.GC31501@dastard>
-	<505AE2A1.5060703@blafoo.org> <20120924132113.GL20960@dastard>
-	<5060727D.4000009@blafoo.org> <506B1667.4010203@blafoo.org>
+Subject: Re: Why xfs_<utils> not 'readline' w/line-edit & history enabled?
+Message-ID: <20121002201748.GQ23520@dastard>
+References: <506B1A03.7030600@tlinx.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <506B1667.4010203@blafoo.org>
+In-Reply-To: <506B1A03.7030600@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,61 +26,33 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Volker <mail@blafoo.org>
-Cc: xfs@oss.sgi.com
+To: Linda Walsh <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 02, 2012 at 06:29:27PM +0200, Volker wrote:
-> Hi again,
+On Tue, Oct 02, 2012 at 09:44:51AM -0700, Linda Walsh wrote:
+> Something I've long wished for and wondered why it wasn't
+> there -- was the ability to edit or re-edit a typed line,
+> or recall a previous line from history.
 > 
-> > Great! That answered all my questions! Thanks a lot!
-> > 
-> > 3.6.0-rc6-x64 ist currently running fine on 6 machines.
+> I'd really find it useful to even have the ability for it to
+> save previous command sessions / tool.
 > 
-> just as a follow up i would like to share some info.
-> 
-> The six machines mentioned above are still running fine. So are few more
-> we tested with the new kernel. All of the servers tested so far, were
-> rebooted immediately after the new 3.6 kernel was installed.
-> 
-> Because of that, we decided to roll out the new kernel to all our
-> servers (approximately 330) and have the kernel "sink in" over the next
-> few days if the machines get rebooted.
-> 
-> This morning we experienced some problems with the superblock being
-> corrupted on 6 machines that had been rebooted during the night. For all
-> of them, the following was true:
-> 
-> a) the server was still running the old buggy 2.6.37 and had
-> filesystem-troubles on heavy i/o (that was our problem to begin with
-> besides the OOM)
-> 
-> b) because of the filesystem-troubles the server had been rebooted by
-> our hardware-support-team (sadly not necessarily using sys-requests)
-> because the xfs-partition was unresponsive
-> 
-> c) after being rebooted with the new 3.6 kernel, the server complained
-> about the super-block of the xfs-partition being corrupted and was not
-> able to mount the partition
-> 
-> d) by running xfs_repair -L -P <device> we were able to fix the problem
-> 
-> e) trying a remount of the fixed partition caused a quota-check which
-> always ended in a stack-trace, after a reboot, the quota-check was fine
-> and the partition successfully mounted
-> 
-> Has anyone ever experienced problems like this updating from an older
-> kernel to the current 3.6?
-> 
-> Any Idea what could have caused the bad superblock the 3.6 kernel
-> complained about?
-> 
-> Is it possible that the 2.6.37 kernel left a superblock behing that
-> could not be recognized by the 3.6 kernel?
-> 
-> If its of any interest, i can supply the stack-traces.
+> Given the usefulness of such, I was wondering why it had
+> never been done?   Just it never rose to the top of some
+> task list?  Or was there some desire to keep the tools
+> less friendly and thus make them more difficult to use for
+> casual use (i.e. it might have been a conscious design
+> decision at some point).  Is that reasoning still a strong
+> enough factor to keep things like that out of the mainline
+> code?
 
-Yes, it is of interest, can you post everything you found out about
-the problem? (dmesg, stack traces, repair output, etc).
+xfsprogs has had this support via readline since, well, before I
+started working on XFS....
+
+$ sudo xfs_db -r /dev/vdb
+xfs_db> inode 128
+(reverse-i-search)`in': inode 128
+....
 
 Cheers,
 
