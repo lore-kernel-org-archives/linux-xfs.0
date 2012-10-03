@@ -1,23 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q92NnKKx109649 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 18:49:20 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7o2taF07GaHbObjO for <xfs@oss.sgi.com>;
-	Tue, 02 Oct 2012 16:50:44 -0700 (PDT)
-Date: Wed, 3 Oct 2012 09:50:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Why xfs_<utils> not 'readline' w/line-edit & history enabled?
-	(+attachment)
-Message-ID: <20121002235042.GW23520@dastard>
-References: <506B1A03.7030600@tlinx.org> <20121002201748.GQ23520@dastard>
-	<506B5DE1.4020000@tlinx.org> <20121002215253.GT23520@dastard>
-	<506B7018.7040000@tlinx.org> <20121002231359.GV23520@dastard>
-	<506B7A1C.3000001@tlinx.org>
+	q9324hKc122481 for <xfs@oss.sgi.com>; Tue, 2 Oct 2012 21:04:43 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id NfhT45eOHlx6BwFA for <xfs@oss.sgi.com>;
+	Tue, 02 Oct 2012 19:06:06 -0700 (PDT)
+Message-ID: <506B9D98.6040808@sandeen.net>
+Date: Tue, 02 Oct 2012 21:06:16 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <506B7A1C.3000001@tlinx.org>
+Subject: Re: Why xfs_<utils> not 'readline' w/line-edit & history enabled?
+References: <506B1A03.7030600@tlinx.org> <20121002201748.GQ23520@dastard>
+	<506B5CA0.7050306@tlinx.org>
+In-Reply-To: <506B5CA0.7050306@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,72 +28,34 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linda Walsh <xfs@tlinx.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 02, 2012 at 04:34:52PM -0700, Linda Walsh wrote:
+On 10/2/12 4:29 PM, Linda Walsh wrote:
 > 
 > 
 > Dave Chinner wrote:
-> >On Tue, Oct 02, 2012 at 03:52:08PM -0700, Linda Walsh wrote:
-> >>Dave Chinner wrote:
-> >>>Patches welcome.
-> >>>
-> >>>Cheers,
-> >>>
-> >>>Dave.
-> >>---
-> >>Gee, that's a hard one... (build and tested that it was included)...
-> >
-> >Actually, it's a lot more than just changing the default. If the
-> >build system doesn't have libreadline/libedit/libtermcap installed,
-> >the build will fail.
-> >
-> >You need to add detection of the libraries' presence on the build
-> >system, and then the "--enable-*" options can go away entirely.
-> >See, for example, the way libuuid is detected in
-> >m4/package_uuiddev.m4...
+>> $ sudo xfs_db -r /dev/vdb
+>> xfs_db> inode 128
+>> (reverse-i-search)`in': inode 128
 > ----
-> Hmmm...Oh...I thought configure did that detection.. Now I see that
-> was never put it and it was basically a 'manual' on/off switch
-> that was available.
-
-Yup.
-
-> Urk.
+> Um...When I press up-arrow, I get nothing.
 > 
-> On top of matters, my local distrib had readline installed in a way that
-> it wouldn't link had libreadline.so.x.y, libreadline.so.x => libreadline.so.x.y in
-> /usr/lib64 but libreadline.so=>libreadline.so.x was in
-> /usr/lib64/readline/libreadline.so.
+> When I press down arrow -- also nothing.
 > 
-> ???
-> Will have to figure out why that is and where it is supposed to be (I just
-> moved the soft-link from /usr/lib64/readline/libreadline.so to one dir up -- same
-> with libeditline...
+> Try hitting home for beginning of line --
+> nothing.   Tried ESC to re-edit line -- nothing. (enters ^[).
+> 
+> What are you typing to get the above?  does it require a config somewhere?
 
-Check what your /etc/ld.so.conf looks at - it might just be fine.
+Do you build your own pkgs or use a distro?  IF distro, I'd file a bug.
 
-> >Also, libedit is only supposed to be used as a fallback option if
-> >libreadline is not available.
-> ---
-> Oh... thought readline did the history part and edit did the edit part...
-> Oi vey...
+Agreed that defaulting to on would be nice, but in Fedora & RHEL:
 
-$ gl -n 1 d4b9ebd
-commit d4b9ebda67cabf50ba9865880403a89e6b4bc3e7
-Author: Nathan Scott <nathans@sgi.com>
-Date:   Wed Apr 16 23:38:03 2003 +0000
+%configure \
+        --enable-readline=yes	\
+...
 
-    Add editline support in for cases where readline is unavailable.
+just FWIW.
 
-> Sigh.  That I actually thought something might be simple... what an idiot!
-
-TANSTAAFL. :/
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+-Eric
 
 _______________________________________________
 xfs mailing list
