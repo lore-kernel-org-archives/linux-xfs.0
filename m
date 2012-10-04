@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q94G5QOB166487 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 11:05:26 -0500
-Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
-	cuda.sgi.com with ESMTP id f1vDt9aeo6fhcMVD (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 04 Oct 2012 09:06:52 -0700 (PDT)
-Received: from [192.168.3.12] (Athenae [192.168.3.12])
-	by Ishtar.sc.tlinx.org (8.14.5/8.14.4/SuSE Linux 0.8) with ESMTP id
-	q94G6nGe027218 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 09:06:51 -0700
-Message-ID: <506DB419.2030902@tlinx.org>
-Date: Thu, 04 Oct 2012 09:06:49 -0700
-From: Linda Walsh <xfs@tlinx.org>
+	q94I0otO187653 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 13:00:50 -0500
+Received: from mail-vc0-f181.google.com (mail-vc0-f181.google.com
+	[209.85.220.181]) by cuda.sgi.com with ESMTP id
+	szaKFH2dU2XgZQZS (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 04 Oct 2012 11:02:15 -0700 (PDT)
+Received: by mail-vc0-f181.google.com with SMTP id n11so933772vch.26
+	for <xfs@oss.sgi.com>; Thu, 04 Oct 2012 11:02:15 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: how to replay log of a fs that has no log: is this supposed to
-	work? SW Defect?
-References: <506DAF66.2030507@tlinx.org>
-In-Reply-To: <506DAF66.2030507@tlinx.org>
+In-Reply-To: <506DAB8C.9000601@tlinx.org>
+References: <506DAB8C.9000601@tlinx.org>
+From: Greg Freemyer <greg.freemyer@gmail.com>
+Date: Thu, 4 Oct 2012 14:01:43 -0400
+Message-ID: <CAGpXXZJuWRAMnJfZKJMZ3N=0EwcfYOEwX+iteyk9hY7ojWA+XA@mail.gmail.com>
+Subject: Re: get filename->inode mappings in bulk for a live fs?
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,59 +24,99 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Linda Walsh <xfs@tlinx.org>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
+On Thu, Oct 4, 2012 at 11:30 AM, Linda Walsh <xfs@tlinx.org> wrote:
+> I notice that attempts to use utils to get name->inode mappings
+> (xfs_ncheck) seem to have no option to operate on a mounted filesystem.
+>
+> Is it practical to xfs_freeze such a file system and then ncheck it? or
+> would
+> freezing it simply freeze the fact that it is open and provide no benefit?
+>
+> So how can I get an inode->block mapping on a live fs.
+>
+> I'm not worried about some smallish number of cases that might be
+> inaccurate.
+>
+> Out of ~5M files on my most populous volume, having even 1000 files w/wrong
+> info would be less than .02% -- which would be bad if I wanted an exact
+> backup,
+> but for purposes a quick-fuzzy look at files that have changed and are
+> finished
+> being changed (vs. the ones being changed right now),
+>
+> The man page for xfs_freeze mentions using it to make snapshots -- how long
+> does such a snapshot usually take?  I.e. how long would a file system be
+> frozen?
+> Is it something that would take a few ms, few seconds, or multiple minutes?
+>
+> This may be a weird idea, but I seem to remember when lvm takes a snapshot
+> it moves the live volume aside and begins to use COW segments to hold
+> changes.
+>
+> Is it possible to xfs-freeze a COW copy so access to the original FS isn't
+> suspended thus making the time period of an xfs_freeze/dump_names less
+> critical?
 
+I think you're missing some of the basics.
 
-Linda Walsh wrote:
-(blah blah blah)...
+Conceptually it is typically:
 
-or more specifically:
+- quiesce system
+- make snapshot
+- release system (to accept future filesystem changes)
+- use snapshot as a source of point-in-time data (often for backups)
 
-xfs_freeze -f /home/.snapdir/\@GMT-2012.10.04-03.06.17
-Ishtar:/# xfs_ncheck /dev/Home+Space/Home-2012.10.04-03.06.17  
+Since this solution is designed for Enterprise nightly backup use the
+various aspects are designed to have minimal impact on the user.  When
+Oracle as an example is quiesced it maintains a RAM based transaction
+log that it replays after it is released to talk to the filesystem
+again.
 
-    ERROR: The filesystem has valuable metadata changes in a log which needs to
-    be replayed.  Mount the filesystem to replay the log, and unmount it before
-    re-running xfs_ncheck.  If you are unable to mount the filesystem, then use
-    the xfs_repair -L option to destroy the log and attempt a repair.
-    Note that destroying the log may cause corruption -- please attempt a mount
-    of the filesystem before doing this.
-    must run blockget -n first
+So quiesce system is typically:
+   - quiesce apps (many enterprise apps provide a API call for this)
+   - quiesce filesystem (xfs_freeze can do this, but I'm pretty sure
+the kernel freeze is also automatically called by lvm's snapshot
+function.)
 
-ok -- lets mount/umount it:
-Ishtar:/# mount -o ro,nouuid /dev/Home+Space/Home-2012.10.04-03.06.17 
-/home/.snapdir/@GMT-2012.10.04-03.06.17
-Ishtar:/# umount /home/.snapdir/@GMT-2012.10.04-03.06.17
-Ishtar:/# xfs_ncheck /dev/Home+Space/Home-2012.10.04-03.06.17  
+make snapshot:
+     - If you're using LVM, you can do this with it,
+     - or many raid arrays have API's to do this at your command
+     - or some filesystems (not xfs) have snapshot functionality built-in
 
-    ERROR: The filesystem has valuable metadata changes in a log which needs to
-    be replayed.  Mount the filesystem to replay the log, and unmount it before
-    re-running xfs_ncheck.  If you are unable to mount the filesystem, then use
-    the xfs_repair -L option to destroy the log and attempt a repair.
-    Note that destroying the log may cause corruption -- please attempt a mount
-    of the filesystem before doing this.
-    must run blockget -n first
+release system:
+     - if you called xfs_freeze, you need to call it again to release
+the file i/o to occur again.
+     - Release any apps you quiesced (again enterprise apps may have
+an API for this).
 
----
-Um... looking at the above it would appear that I froze a fs.
-ncheck claimed the freeze didn't result in the logfile being written being put
-into a consistent state, but said to remount the fs to allow it to play then
-umount...
+Now you can take as long as you want to dump the names from the snapshot.
 
-So... did that.
-Log file is still in a corrupt state.
+At least for me none of the above takes longer than a few seconds
+each.  If you have lots of data-in-flight (or write-cache) I could
+imagine the freeze taking longer since it has to ensure that all
+filesystem caches and buffers have been fully written to the lower
+level.
 
-Am I wrong in assuming that doing xfs_repair -L to destroy the log on this
-dev, might be a bad thing to do and might screw up it's "Origin" file
-system (i.e. the current 'live' /home partition)?
+FYI: I have seen ext4 maintainer Ted T'so recommend that with ext4 you
+occasionally make a snapshot like the above and then do fsck on the
+snapshot to see if the snapshot filesystem structure is valid.  If
+errors are detect, then have the cron script send a e-mail to the
+admin so he/she can schedule downtime to run fsck on the main
+filesystem.  I don't know if xfs maintainers have a similar
+recommendation for xfs.
 
+FYI2: I think opensuse's snapper app has a framework to support a lot
+of the above built in, but I'm not sure it supports anything but btrfs
+snapshots.
 
-  
+Greg
 
 _______________________________________________
 xfs mailing list
