@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q94NUfS1237770 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 18:30:41 -0500
+	q94NaV7n238500 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 18:36:31 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	MIsOioxfcYa2JTXt for <xfs@oss.sgi.com>;
-	Thu, 04 Oct 2012 16:32:06 -0700 (PDT)
-Date: Fri, 5 Oct 2012 09:32:04 +1000
+	wrahEAIt05FSznqH for <xfs@oss.sgi.com>;
+	Thu, 04 Oct 2012 16:37:56 -0700 (PDT)
+Date: Fri, 5 Oct 2012 09:37:54 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_freeze same as umount?   How is that helpful?
-Message-ID: <20121004233204.GB23644@dastard>
-References: <506DAB8C.9000601@tlinx.org>
-	<CAGpXXZJuWRAMnJfZKJMZ3N=0EwcfYOEwX+iteyk9hY7ojWA+XA@mail.gmail.com>
-	<506E1025.8050605@tlinx.org>
+Subject: Re: how to replay log of a fs that has no log: is this supposed to
+	work? SW Defect?
+Message-ID: <20121004233754.GC23644@dastard>
+References: <506DAF66.2030507@tlinx.org>
+ <506DB419.2030902@tlinx.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <506E1025.8050605@tlinx.org>
+In-Reply-To: <506DB419.2030902@tlinx.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,39 +31,55 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Linda Walsh <xfs@tlinx.org>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Oct 04, 2012 at 03:39:33PM -0700, Linda Walsh wrote:
-> Greg Freemyer wrote:
-> >Conceptually it is typically:
-> >- quiesce system
-> ----
-> 	Um... it seems that this is equivalent to being
-> able to umount the disk?
+On Thu, Oct 04, 2012 at 09:06:49AM -0700, Linda Walsh wrote:
+> 
+> 
+> Linda Walsh wrote:
+> (blah blah blah)...
+> 
+> or more specifically:
+> 
+> xfs_freeze -f /home/.snapdir/\@GMT-2012.10.04-03.06.17
+> Ishtar:/# xfs_ncheck /dev/Home+Space/Home-2012.10.04-03.06.17
+> 
+>    ERROR: The filesystem has valuable metadata changes in a log which needs to
+>    be replayed.  Mount the filesystem to replay the log, and unmount it before
+>    re-running xfs_ncheck.  If you are unable to mount the filesystem, then use
+>    the xfs_repair -L option to destroy the log and attempt a repair.
+>    Note that destroying the log may cause corruption -- please attempt a mount
+>    of the filesystem before doing this.
+>    must run blockget -n first
+> 
+> ok -- lets mount/umount it:
+> Ishtar:/# mount -o ro,nouuid
+> /dev/Home+Space/Home-2012.10.04-03.06.17
+> /home/.snapdir/@GMT-2012.10.04-03.06.17
 
-NO, it's not. freeze intentionally leaves the log dirty, whereas
-unmount leaves it clean.
+So, a read only snapshot? If so what makes you think that recovery
+can run and modify the filesystem/log?
 
-> When I tried xfs_freeze / fs_freeze got fs-busy -- same as I would
-> if I tried to umount it.
+THe whole point of freeze creating a consistent disk image is so you
+can mount it without needing recovery to run. i.e:
 
-Of course - it's got to write all the dirty data andmetadata in
-memory to disk. Freeze is about providing a stable, consistent disk
-image of the filesystem, so it must flush dirty objects from memory
-to disk to provide that.
+# mount -o ro,nouuid,norecovery ....
 
-> I thought the point of xfs_freeze was to allow it to be brought to
-> a consistent state without unmounting it?
+> ---
+> Um... looking at the above it would appear that I froze a fs.
+> ncheck claimed the freeze didn't result in the logfile being written being put
+> into a consistent state, but said to remount the fs to allow it to play then
+> umount...
+> 
+> So... did that.
+> Log file is still in a corrupt state.
 
-Exactly.
+The log is not corrupt, just dirty.
 
-> Coincidentally, after trying a few freezes, the system froze.
+> Am I wrong in assuming that doing xfs_repair -L to destroy the log on this
+> dev, might be a bad thing to do and might screw up it's "Origin" file
+> system (i.e. the current 'live' /home partition)?
 
-Entirely possible if you froze the root filesystem and something you
-rely on tried to write to the filesystem.
-
-Anyway, a one-line "it froze" report doesn't tell us anything about
-the problem you saw. So:
-
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+It will try to write to the snapshot. If it is a read-only
+snapshot...
 
 Cheers,
 
