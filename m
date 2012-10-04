@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q948GR9d118655 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 03:16:27 -0500
-Received: from strike.wu.ac.at (strike.wu-wien.ac.at [137.208.89.120]) by
-	cuda.sgi.com with ESMTP id s8ESfWvwPG5qAs28 for
-	<xfs@oss.sgi.com>; Thu, 04 Oct 2012 01:17:50 -0700 (PDT)
-Message-ID: <506D462D.3030709@strike.wu.ac.at>
-Date: Thu, 04 Oct 2012 10:17:49 +0200
-From: "Alexander 'Leo' Bergolth" <leo@strike.wu.ac.at>
+	q948kV2w121008 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 03:46:31 -0500
+Received: from mx3-phx2.redhat.com (mx3-phx2.redhat.com [209.132.183.24]) by
+	cuda.sgi.com with ESMTP id Q9aoaxqq3znuSXRW for
+	<xfs@oss.sgi.com>; Thu, 04 Oct 2012 01:47:55 -0700 (PDT)
+Date: Thu, 4 Oct 2012 04:47:54 -0400 (EDT)
+From: Tomas Racek <tracek@redhat.com>
+Message-ID: <894268998.1833300.1349340474783.JavaMail.root@redhat.com>
+In-Reply-To: <alpine.LFD.2.00.1210031241110.18540@localhost>
+Subject: Re: [PATCH v3] xfstests: Use upstream version of fstrim instead of
+	the local one
 MIME-Version: 1.0
-Subject: sparse files
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,86 +24,631 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Hi!
+----- Original Message -----
+> On Wed, 15 Aug 2012, Tomas Racek wrote:
+> 
+> > Date: Wed, 15 Aug 2012 15:00:45 +0200
+> > From: Tomas Racek <tracek@redhat.com>
+> > To: xfs@oss.sgi.com
+> > Cc: lczerner@redhat.com, Tomas Racek <tracek@redhat.com>
+> > Subject: [PATCH v3] xfstests: Use upstream version of fstrim
+> > instead of the
+> >     local one
+> > 
+> > Local version of fstrim was dropped so that we depend on upstream
+> > version which is now available via $FSTRIM_PROG. _require_fstrim
+> > was
+> > added to check if fstrim is available in the system and
+> > _test_batched_discard to check if we can run fstrim on certain
+> > mountpoint.
+> > 
+> > Also tests 251 and 260 were modified to reflect this change.
+> > 
+> > Signed-off-by: Tomas Racek <tracek@redhat.com>
+> > ---
+> >  .gitignore    |    1 -
+> >  251           |   14 +--
+> >  260           |   36 +++++----
+> >  260.out       |    8 +-
+> >  common.config |    1 +
+> >  common.rc     |   13 +++
+> >  src/Makefile  |    2 +-
+> >  src/fstrim.c  |  257
+> >  ---------------------------------------------------------
+> >  8 files changed, 45 insertions(+), 287 deletions(-)
+> >  delete mode 100644 src/fstrim.c
+> > 
+> > diff --git a/.gitignore b/.gitignore
+> > index 900ff95..c0e0e4c 100644
+> > --- a/.gitignore
+> > +++ b/.gitignore
+> > @@ -37,7 +37,6 @@ src/fill
+> >  src/fill2
+> >  src/fs_perms
+> >  src/fstest
+> > -src/fstrim
+> >  src/ftrunc
+> >  src/genhashnames
+> >  src/getdevicesize
+> > diff --git a/251 b/251
+> > index f46b6e2..dbb6ba7 100755
+> > --- a/251
+> > +++ b/251
+> > @@ -44,6 +44,7 @@ mypid=$$
+> >  _supported_fs generic
+> >  _supported_os Linux
+> >  _require_scratch
+> > +_require_fstrim
+> >  _scratch_mkfs >/dev/null 2>&1
+> >  _scratch_mount
+> >  
+> > @@ -71,16 +72,11 @@ _fail()
+> >  	kill $mypid 2> /dev/null
+> >  }
+> >  
+> > -_check_fstrim_support()
+> > -{
+> > -	$here/src/fstrim -l 10M $SCRATCH_MNT &> /dev/null
+> > -}
+> 
+> Good to see that you've replaced this with generic check.
+> 
+> > -
+> >  _guess_max_minlen()
+> >  {
+> >  	mmlen=100000
+> >  	while [ $mmlen -gt 1 ]; do
+> > -		$here/src/fstrim -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &>
+> > /dev/null && break
+> > +		$FSTRIM_PROG -l $(($mmlen*2))k -m ${mmlen}k $SCRATCH_MNT &>
+> > /dev/null && break
+> >  		mmlen=$(($mmlen/2))
+> >  	done
+> >  	echo $mmlen
+> > @@ -102,12 +98,12 @@ fstrim_loop()
+> >  		minlen=$(((RANDOM*($RANDOM%2+1))%$mmlen))
+> >  		start=$RANDOM
+> >  		if [ $((RANDOM%10)) -gt 7 ]; then
+> > -			$here/src/fstrim $SCRATCH_MNT &
+> > +			$FSTRIM_PROG $SCRATCH_MNT &
+> >  			fpid=$!
+> >  			wait $fpid
+> >  		fi
+> >  		while [ $start -lt $fsize ] ; do
+> > -			$here/src/fstrim -m ${minlen}k -s ${start}k -l ${step}k
+> > $SCRATCH_MNT &
+> > +			$FSTRIM_PROG -m ${minlen}k -o ${start}k -l ${step}k
+> > $SCRATCH_MNT &
+> >  			fpid=$!
+> >  			wait $fpid
+> >  			start=$(( $start + $step ))
+> > @@ -157,7 +153,7 @@ content=$here
+> >  
+> >  # Check for FITRIM support
+> >  echo -n "Checking FITRIM support: "
+> > -_check_fstrim_support || _notrun "FSTRIM is not supported"
+> > +_test_batched_discard $SCRATCH_MNT || _notrun "FITRIM not
+> > supported on $SCRATCH_DEV"
+> 
+> good
+> 
+> >  echo "done."
+> >  
+> >  mkdir -p $tmp
+> > diff --git a/260 b/260
+> > index b005cd3..21aa866 100755
+> > --- a/260
+> > +++ b/260
+> > @@ -41,13 +41,13 @@ mypid=$$
+> >  _supported_fs generic
+> >  _supported_os Linux
+> >  _require_math
+> > +_require_fstrim
+> >  
+> >  _require_scratch
+> >  _scratch_mkfs >/dev/null 2>&1
+> >  _scratch_mount
+> >  
+> > -FSTRIM="$here/src/fstrim"
+> > -"$FSTRIM" -l 10M $SCRATCH_MNT &> /dev/null || _notrun "FSTRIM is
+> > not supported"
+> > +_test_batched_discard $SCRATCH_MNT || _notrun "FITRIM not
+> > supported on $SCRATCH_DEV"
+> >  
+> >  fssize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk
+> >  '{print $2}')
+> >  
+> > @@ -59,20 +59,24 @@ max_64bit=$(_math "2^64 - 1")
+> >  # the file system
+> >  
+> >  echo "[+] Start beyond the end of fs (should fail)"
+> > -"$FSTRIM" -s $beyond_eofs $SCRATCH_MNT
+> > +out=$($FSTRIM_PROG -o $beyond_eofs $SCRATCH_MNT 2>&1)
+> >  [ $? -eq 0 ] && status=1
+> > +echo -n $out | cut -d ":" -f3-
+> 
+> I am not sure what is the point of this change ? Simply
+> s/FSTRIM/FSTRIM_PROG/ should be fine right ? Also you change some of
+> it but not all of it.
 
-I am trying to create a sparse qemu qcow2 image on xfs. (Centos 6.3)
-Unfortunately this doesn't produce the expected results:
-Creating a 10G file results in 16GB of disk usage!
-Doing the same on ext4 produces a 10G sparse file with only 1.8M allocated...
-(See the block bitmaps below.)
+The reason for this is that upstream fstrim prefixes error message with path, that is:
 
-Is this related to dynamic speculative preallocation?
-http://serverfault.com/questions/406069/why-are-my-xfs-filesystems-suddenly-consuming-more-space-and-full-of-sparse-file
+# fstrim -v -o `echo 2^64-1 | bc` /mnt/test/
+fstrim: /mnt/test/: FITRIM ioctl failed: Invalid argument
 
-Are there any recommended filesystem options that optimize xfs behavior for hosting (sparse) virtual disk images?
+vs original:
 
-Cheers,
---leo
+# ./fstrim -v -s `echo 2^64-1 | bc` /mnt/test/
+fstrim: FSTRIM: Invalid argument
 
--------------------- 8< --------------------
-$  qemu-img create -f qcow2 -o 'preallocation=metadata' onxfs.img 10G
-Formatting 'onxfs.img', fmt=qcow2 size=10737418240 encryption=off cluster_size=65536 preallocation='metadata' 
-$ du -hs onxfs.img 16G     onxfs.img
+And simple "$FSTRIM_PROG ... | cut ..." doesn't preserve (error) return value.
 
-$ ls -ls onxfs.img 16253692 -rw-r--r-- 1 leo users 10739318784 Oct  2 14:22 onxfs.img
+"should succeed" calls weren't changed because no output is expected.
 
-# xfs_bmap -v onxfs.img onxfs.img:
- EXT: FILE-OFFSET           BLOCK-RANGE          AG AG-OFFSET              TOTAL
-   0: [0..1023]:            168294344..168295367  3 (11007944..11008967)    1024
-   1: [1024..1049215]:      hole                                         1048192
-   2: [1049216..1049727]:   168295368..168295879  3 (11008968..11009479)     512
-   3: [1049728..2097919]:   hole                                         1048192
-   4: [2097920..3146495]:   165668600..166717175  3 (8382200..9430775)   1048576
-   5: [3146496..3146623]:   hole                                             128
-   6: [3146624..5243775]:   163571448..165668599  3 (6285048..8382199)   2097152
-   7: [5243776..5244159]:   hole                                             384
-   8: [5244160..9438463]:   159377144..163571447  3 (2090744..6285047)   4194304
-   9: [9438464..9439103]:   hole                                             640
-  10: [9439104..17827711]:  52616968..61005575    1 (188168..8576775)    8388608
-  11: [17827712..17828991]: hole                                            1280
-  12: [17828992..20975231]: 105886128..109032367  2 (1028528..4174767)   3146240
+> >  
+> >  echo "[+] Start beyond the end of fs with len set (should fail)"
+> > -"$FSTRIM" -s $beyond_eofs -l1M $SCRATCH_MNT
+> > +out=$($FSTRIM_PROG -o $beyond_eofs -l1M $SCRATCH_MNT 2>&1)
+> >  [ $? -eq 0 ] && status=1
+> > +echo -n $out | cut -d ":" -f3-
+> 
+> same here
+> 
+> >  
+> >  echo "[+] Start = 2^64-1 (should fail)"
+> > -"$FSTRIM" -s $max_64bit $SCRATCH_MNT
+> > +out=$($FSTRIM_PROG -o $max_64bit $SCRATCH_MNT 2>&1)
+> >  [ $? -eq 0 ] && status=1
+> > +echo -n $out | cut -d ":" -f3-
+> 
+> here
+> 
+> >  
+> >  echo "[+] Start = 2^64-1 and len is set (should fail)"
+> > -"$FSTRIM" -s $max_64bit -l1M $SCRATCH_MNT
+> > +out=$($FSTRIM_PROG -o $max_64bit -l1M $SCRATCH_MNT 2>&1)
+> >  [ $? -eq 0 ] && status=1
+> > +echo -n $out | cut -d ":" -f3-
+> 
+> and here.
+> 
+> >  
+> >  _scratch_unmount
+> >  _scratch_mkfs >/dev/null 2>&1
+> > @@ -82,16 +86,16 @@ _scratch_mount
+> >  # since the length should be truncated
+> >  
+> >  echo "[+] Default length (should succeed)"
+> > -"$FSTRIM" $SCRATCH_MNT
+> > +$FSTRIM_PROG $SCRATCH_MNT
+> >  [ $? -ne 0 ] && status=1
+> >  echo "[+] Default length with start set (should succeed)"
+> > -"$FSTRIM" -s10M $SCRATCH_MNT
+> > +$FSTRIM_PROG -o10M $SCRATCH_MNT
+> >  [ $? -ne 0 ] && status=1
+> >  echo "[+] Length beyond the end of fs (should succeed)"
+> > -"$FSTRIM" -l $beyond_eofs $SCRATCH_MNT
+> > +$FSTRIM_PROG -l $beyond_eofs $SCRATCH_MNT
+> >  [ $? -ne 0 ] && status=1
+> >  echo "[+] Length beyond the end of fs with start set (should
+> >  succeed)"
+> > -"$FSTRIM" -s10M -l $beyond_eofs $SCRATCH_MNT
+> > +$FSTRIM_PROG -o10M -l $beyond_eofs $SCRATCH_MNT
+> >  [ $? -ne 0 ] && status=1
+> >  
+> >  _scratch_unmount
+> > @@ -101,8 +105,9 @@ _scratch_mount
+> >  # This is a bit fuzzy, but since the file system is fresh
+> >  # there should be at least (fssize/2) free space to trim.
+> >  # This is supposed to catch wrong FITRIM argument handling
+> > -out=$("$FSTRIM" -v -s10M $SCRATCH_MNT)
+> > -bytes=${out%% *}
+> > +out=$($FSTRIM_PROG -v -o10M $SCRATCH_MNT)
+> > +nopref=${out##*: }
+> > +bytes=${nopref%% *}
 
-# xfs_info /srv
-meta-data=/dev/mapper/vg_1-lv_srv isize=256    agcount=4, agsize=6553600 blks
-         =                       sectsz=512   attr=2
-data     =                       bsize=4096   blocks=26214400, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0
-log      =internal               bsize=4096   blocks=12800, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+It's similar here, just strip the path from the output.
 
--------------------- 8< --------------------
-$ qemu-img create -f qcow2 -o 'preallocation=metadata' onext4.img 10G
-Formatting 'onext4.img', fmt=qcow2 size=10737418240 encryption=off cluster_size=65536 preallocation='metadata' 
-$ du -h onext4.img 1.8M    onext4.img
+> >  
+> >  if [ $bytes -gt $(_math "$fssize*1024") ]; then
+> >  	status=1
+> > @@ -155,7 +160,7 @@ _scratch_unmount
+> >  _scratch_mkfs >/dev/null 2>&1
+> >  _scratch_mount
+> >  # It should fail since $start is beyond the end of file system
+> > -"$FSTRIM" -s$start -l10M $SCRATCH_MNT &> /dev/null
+> > +$FSTRIM_PROG -o$start -l10M $SCRATCH_MNT &> /dev/null
+> >  if [ $? -eq 0 ]; then
+> >  	status=1
+> >  	echo "It seems that fs logic handling start"\
+> > @@ -173,8 +178,9 @@ _scratch_mount
+> >  # It is because btrfs does not have not-yet-used parts of the
+> >  device
+> >  # mapped and since we got here right after the mkfs, there is not
+> >  # enough free extents in the root tree.
+> > -out=$("$FSTRIM" -v -l$len $SCRATCH_MNT)
+> > -bytes=${out%% *}
+> > +out=$($FSTRIM_PROG -v -l$len $SCRATCH_MNT)
+> > +nopref=${out##*: }
+> > +bytes=${nopref%% *}
+> >  if [ $bytes -le $(_math "$fssize*512") ] && [ $FSTYP != "btrfs" ];
+> >  then
+> >  	status=1
+> >  	echo "It seems that fs logic handling len argument overflows"
+> > diff --git a/260.out b/260.out
+> > index 199320a..cf0b14e 100644
+> > --- a/260.out
+> > +++ b/260.out
+> > @@ -1,12 +1,12 @@
+> >  QA output created by 260
+> >  [+] Start beyond the end of fs (should fail)
+> > -fstrim: FSTRIM: Invalid argument
+> > + FITRIM ioctl failed: Invalid argument
+> >  [+] Start beyond the end of fs with len set (should fail)
+> > -fstrim: FSTRIM: Invalid argument
+> > + FITRIM ioctl failed: Invalid argument
+> >  [+] Start = 2^64-1 (should fail)
+> > -fstrim: FSTRIM: Invalid argument
+> > + FITRIM ioctl failed: Invalid argument
+> >  [+] Start = 2^64-1 and len is set (should fail)
+> > -fstrim: FSTRIM: Invalid argument
+> > + FITRIM ioctl failed: Invalid argument
+> >  [+] Default length (should succeed)
+> >  [+] Default length with start set (should succeed)
+> >  [+] Length beyond the end of fs (should succeed)
+> > diff --git a/common.config b/common.config
+> > index 7bed1c5..57f505d 100644
+> > --- a/common.config
+> > +++ b/common.config
+> > @@ -158,6 +158,7 @@ export XFS_QUOTA_PROG="`set_prog_path
+> > xfs_quota`"
+> >  export KILLALL_PROG="`set_prog_path killall`"
+> >  export INDENT_PROG="`set_prog_path indent`"
+> >  export XFS_COPY_PROG="`set_prog_path xfs_copy`"
+> > +export FSTRIM_PROG="`set_prog_path fstrim`"
+> >  
+> >  # Generate a comparable xfsprogs version number in the form of
+> >  # major * 10000 + minor * 100 + release
+> > diff --git a/common.rc b/common.rc
+> > index 602513a..0d2f712 100644
+> > --- a/common.rc
+> > +++ b/common.rc
+> > @@ -1778,6 +1778,19 @@ _devmgt_add()
+> >  	echo ${tdl} >  /sys/class/scsi_host/host${h}/scan || _fail "Add
+> >  	disk failed"
+> >  }
+> >  
+> > +_require_fstrim()
+> > +{
+> > +	if [ -z "$FSTRIM_PROG" ]; then
+> > +		_notrun "This test requires fstrim utility."
+> > +	fi
+> > +}
+> > +
+> > +_test_batched_discard()
+> > +{
+> 
+> Something like this should be here:
+> 
+> if [ $# -ne 1 ]
+> then
+> 	echo "Usage: _test_batched_discard mount_point" 1>&2
+> 	exit 1
+> fi
 
-$ ls -ls onext4.img 1744 -rw-r--r-- 1 leo users 10739318784 Oct  2 14:25 onext4.img
-
-debugfs:  stat /leo/onext4.img
-Inode: 1048578   Type: regular    Mode:  0644   Flags: 0x80000
-Generation: 3370152928    Version: 0x00000000:00000001
-User:   501   Group:   100   Size: 10739318784
-File ACL: 0    Directory ACL: 0
-Links: 1   Blockcount: 3488
-Fragment:  Address: 0    Number: 0    Size: 0
- ctime: 0x506add38:7909fe14 -- Tue Oct  2 14:25:28 2012
- atime: 0x506add38:731c2ccc -- Tue Oct  2 14:25:28 2012
- mtime: 0x506add38:7909fe14 -- Tue Oct  2 14:25:28 2012
-crtime: 0x506add36:5320b76c -- Tue Oct  2 14:25:26 2012
-Size of extra inode fields: 28
-EXTENTS:
-(0): 33856, (16): 33872, (32-79): 33888-33935, (131152-131167): 34896-34911, (262240-262255): 36960-36975, (393328-393343): 39024-39039, (524416-524447): 41088-41119, (655520-655535): 43168-43183, (786608-786623): 45232-45247, (917696-917711): 47296-47311, (1048784-1048815)
-: 49360-49391, (1179888-1179903): 51440-51455, (1310976-1310991): 53504-53519, (1442064-1442079): 55568-55583, (1573152-1573183): 57632-5
-7663, (1704256-1704271): 59712-59727, (1835344-1835359): 61776-61791, (1966432-1966447): 63840-63855, (2097520-2097551): 65904-65935, (22
-28624-2228639): 67984-67999, (2359712-2359727): 70048-70063, (2490800-2490815): 72112-72127, (2621887-2621903): 74175-74191
+OK, I will add this.
 
 
--- 
-e-mail   ::: Leo.Bergolth (at) wu.ac.at   fax      ::: +43-1-31336-906050
-location ::: IT-Services | Vienna University of Economics | Austria
+Tom
+
+> 
+> > +	_require_fstrim
+> > +	$FSTRIM_PROG ${1} &>/dev/null
+> 
+> It is ok I guess, we do not really need to specify the length
+> argument
+> since it should not take too long to discard the whole file system.
+> 
+> Thanks!
+> -Lukas
+> 
+> > +}
+> > +
+> >  ################################################################################
+> >  
+> >  if [ "$iam" != new -a "$iam" != bench ]
+> > diff --git a/src/Makefile b/src/Makefile
+> > index 67250ee..9671a38 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -17,7 +17,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize
+> > preallo_rw_pattern_reader \
+> >  	preallo_rw_pattern_writer ftrunc trunc fs_perms testx looptest \
+> >  	locktest unwritten_mmap bulkstat_unlink_test t_stripealign \
+> >  	bulkstat_unlink_test_modified t_dir_offset t_futimens t_immutable
+> >  	\
+> > -	stale_handle pwrite_mmap_blocked fstrim t_dir_offset2
+> > +	stale_handle pwrite_mmap_blocked t_dir_offset2
+> >  
+> >  SUBDIRS =
+> >  
+> > diff --git a/src/fstrim.c b/src/fstrim.c
+> > deleted file mode 100644
+> > index e23bcb3..0000000
+> > --- a/src/fstrim.c
+> > +++ /dev/null
+> > @@ -1,257 +0,0 @@
+> > -/*
+> > - * fstrim.c -- discard the part (or whole) of mounted filesystem.
+> > - *
+> > - * Copyright (C) 2010 Red Hat, Inc., Lukas Czerner
+> > <lczerner@redhat.com>
+> > - *
+> > - * This program is free software: you can redistribute it and/or
+> > modify
+> > - * it under the terms of the GNU General Public License as
+> > published by
+> > - * the Free Software Foundation, either version 2 of the License,
+> > or
+> > - * (at your option) any later version.
+> > - *
+> > - * This program is distributed in the hope that it will be useful,
+> > - * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> > - * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> > - * GNU General Public License for more details.
+> > - *
+> > - * You should have received a copy of the GNU General Public
+> > License
+> > - * along with this program.  If not, see
+> > <http://www.gnu.org/licenses/>.
+> > - *
+> > - * This program uses FITRIM ioctl to discard parts or the whole
+> > filesystem
+> > - * online (mounted). You can specify range (start and lenght) to
+> > be
+> > - * discarded, or simply discard while filesystem.
+> > - *
+> > - * Usage: fstrim [options] <mount point>
+> > - */
+> > -
+> > -#include <string.h>
+> > -#include <unistd.h>
+> > -#include <stdlib.h>
+> > -#include <errno.h>
+> > -#include <stdio.h>
+> > -#include <stdint.h>
+> > -#include <fcntl.h>
+> > -#include <limits.h>
+> > -#include <stdarg.h>
+> > -#include <getopt.h>
+> > -
+> > -#include <sys/ioctl.h>
+> > -#include <sys/stat.h>
+> > -#include <linux/fs.h>
+> > -
+> > -#ifndef FITRIM
+> > -struct fstrim_range {
+> > -	uint64_t start;
+> > -	uint64_t len;
+> > -	uint64_t minlen;
+> > -};
+> > -#define FITRIM		_IOWR('X', 121, struct fstrim_range)
+> > -#endif
+> > -
+> > -const char *program_name = "fstrim";
+> > -
+> > -struct options {
+> > -	struct fstrim_range *range;
+> > -	char mpoint[PATH_MAX];
+> > -	char verbose;
+> > -};
+> > -
+> > -static void usage(void)
+> > -{
+> > -	fprintf(stderr,
+> > -		"Usage: %s [-s start] [-l length] [-m minimum-extent]"
+> > -		" [-v] {mountpoint}\n\t"
+> > -		"-s Starting Byte to discard from\n\t"
+> > -		"-l Number of Bytes to discard from the start\n\t"
+> > -		"-m Minimum extent length to discard\n\t"
+> > -		"-v Verbose - number of discarded bytes\n",
+> > -		program_name);
+> > -}
+> > -
+> > -static void err_exit(const char *fmt, ...)
+> > -{
+> > -	va_list pvar;
+> > -	va_start(pvar, fmt);
+> > -	vfprintf(stderr, fmt, pvar);
+> > -	va_end(pvar);
+> > -	usage();
+> > -	exit(EXIT_FAILURE);
+> > -}
+> > -
+> > -/**
+> > - * Get the number from argument. It can be number followed by
+> > - * units: k|K, m|M, g|G, t|T
+> > - */
+> > -static unsigned long long get_number(char **optarg)
+> > -{
+> > -	char *opt, *end;
+> > -	unsigned long long number, max;
+> > -
+> > -	/* get the max to avoid overflow */
+> > -	max = ULLONG_MAX / 1024;
+> > -	number = 0;
+> > -	opt = *optarg;
+> > -
+> > -	if (*opt == '-') {
+> > -		err_exit("%s: %s (%s)\n", program_name,
+> > -			 strerror(ERANGE), *optarg);
+> > -	}
+> > -
+> > -	errno = 0;
+> > -	number = strtoull(opt, &end , 0);
+> > -	if (errno)
+> > -		err_exit("%s: %s (%s)\n", program_name,
+> > -			 strerror(errno), *optarg);
+> > -
+> > -	/*
+> > -	 * Convert units to numbers. Fall-through stack is used for units
+> > -	 * so absence of breaks is intentional.
+> > -	 */
+> > -	switch (*end) {
+> > -	case 'T': /* terabytes */
+> > -	case 't':
+> > -		if (number > max)
+> > -			err_exit("%s: %s (%s)\n", program_name,
+> > -				 strerror(ERANGE), *optarg);
+> > -		number *= 1024;
+> > -	case 'G': /* gigabytes */
+> > -	case 'g':
+> > -		if (number > max)
+> > -			err_exit("%s: %s (%s)\n", program_name,
+> > -				 strerror(ERANGE), *optarg);
+> > -		number *= 1024;
+> > -	case 'M': /* megabytes */
+> > -	case 'm':
+> > -		if (number > max)
+> > -			err_exit("%s: %s (%s)\n", program_name,
+> > -				 strerror(ERANGE), *optarg);
+> > -		number *= 1024;
+> > -	case 'K': /* kilobytes */
+> > -	case 'k':
+> > -		if (number > max)
+> > -			err_exit("%s: %s (%s)\n", program_name,
+> > -				 strerror(ERANGE), *optarg);
+> > -		number *= 1024;
+> > -		end++;
+> > -	case '\0': /* end of the string */
+> > -		break;
+> > -	default:
+> > -		err_exit("%s: %s (%s)\n", program_name,
+> > -			 strerror(EINVAL), *optarg);
+> > -		return 0;
+> > -	}
+> > -
+> > -	if (*end != '\0') {
+> > -		err_exit("%s: %s (%s)\n", program_name,
+> > -			 strerror(EINVAL), *optarg);
+> > -	}
+> > -
+> > -	return number;
+> > -}
+> > -
+> > -static int parse_opts(int argc, char **argv, struct options *opts)
+> > -{
+> > -	int c;
+> > -
+> > -	while ((c = getopt(argc, argv, "s:l:m:v")) != EOF) {
+> > -		switch (c) {
+> > -		case 's': /* starting point */
+> > -			opts->range->start = get_number(&optarg);
+> > -			break;
+> > -		case 'l': /* length */
+> > -			opts->range->len = get_number(&optarg);
+> > -			break;
+> > -		case 'm': /* minlen */
+> > -			opts->range->minlen = get_number(&optarg);
+> > -			break;
+> > -		case 'v': /* verbose */
+> > -			opts->verbose = 1;
+> > -			break;
+> > -		default:
+> > -			return EXIT_FAILURE;
+> > -		}
+> > -	}
+> > -
+> > -	return 0;
+> > -}
+> > -
+> > -int main(int argc, char **argv)
+> > -{
+> > -	struct options *opts;
+> > -	struct stat sb;
+> > -	int fd, err = 0, ret = EXIT_FAILURE;
+> > -
+> > -	opts = malloc(sizeof(struct options));
+> > -	if (!opts)
+> > -		err_exit("%s: malloc(): %s\n", program_name, strerror(errno));
+> > -
+> > -	opts->range = NULL;
+> > -	opts->verbose = 0;
+> > -
+> > -	if (argc > 1)
+> > -		strncpy(opts->mpoint, argv[argc - 1], sizeof(opts->mpoint));
+> > -
+> > -	opts->range = calloc(1, sizeof(struct fstrim_range));
+> > -	if (!opts->range) {
+> > -		fprintf(stderr, "%s: calloc(): %s\n", program_name,
+> > -			strerror(errno));
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	opts->range->len = ULLONG_MAX;
+> > -
+> > -	if (argc > 2)
+> > -		err = parse_opts(argc, argv, opts);
+> > -
+> > -	if (err) {
+> > -		usage();
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	if (strnlen(opts->mpoint, 1) < 1) {
+> > -		fprintf(stderr, "%s: You have to specify mount point.\n",
+> > -			program_name);
+> > -		usage();
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	if (stat(opts->mpoint, &sb) == -1) {
+> > -		fprintf(stderr, "%s: %s: %s\n", program_name,
+> > -			opts->mpoint, strerror(errno));
+> > -		usage();
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	if (!S_ISDIR(sb.st_mode)) {
+> > -		fprintf(stderr, "%s: %s: (%s)\n", program_name,
+> > -			opts->mpoint, strerror(ENOTDIR));
+> > -		usage();
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	fd = open(opts->mpoint, O_RDONLY);
+> > -	if (fd < 0) {
+> > -		fprintf(stderr, "%s: open(%s): %s\n", program_name,
+> > -			opts->mpoint, strerror(errno));
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	if (ioctl(fd, FITRIM, opts->range)) {
+> > -		fprintf(stderr, "%s: FSTRIM: %s\n", program_name,
+> > -			strerror(errno));
+> > -		goto free_opts;
+> > -	}
+> > -
+> > -	if ((opts->verbose) && (opts->range))
+> > -		fprintf(stdout, "%llu Bytes were trimmed\n", (unsigned long
+> > long)opts->range->len);
+> > -
+> > -	ret = EXIT_SUCCESS;
+> > -
+> > -free_opts:
+> > -	if (opts) {
+> > -		if (opts->range)
+> > -			free(opts->range);
+> > -		free(opts);
+> > -	}
+> > -
+> > -	return ret;
+> > -}
+> > 
+> 
 
 _______________________________________________
 xfs mailing list
