@@ -1,23 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95Er7Fq058129 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:53:07 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id kweXw2xdRpHBaAVC for
-	<xfs@oss.sgi.com>; Fri, 05 Oct 2012 07:54:34 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EsWXS011893
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:54:33 -0400
-Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q95EFaMG019552
-	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:36 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 00/10] speculative preallocation inode tracking
-Date: Fri,  5 Oct 2012 10:17:06 -0400
-Message-Id: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
+	q95HIKtR071556 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:20 -0500
+Message-Id: <20121005171946.986182808@sgi.com>
+Date: Fri, 05 Oct 2012 12:19:02 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: [patch v4 09/13] [PATCH 09/13] xfs: move xfs_quiesce_attr() into
+	xfs_super.c
+References: <20121005171853.985930109@sgi.com>
+Content-Disposition: inline;
+	filename=xfs-move-xfs_quiesce_attr-into-xfs_super.c.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,99 +23,201 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Hi all,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is v3 of the speculative preallocation inode tracking patchset. This
-functionality tracks inodes with post-EOF speculative preallocation for the
-purpose of background and on-demand trimming.
+Both callers of xfs_quiesce_attr() are in xfs_super.c, and there's
+nothing really sync-specific about this functionality so it doesn't
+really matter where it lives. Move it to benext to it's callers, so
+all the remount/sync_fs code is in the one place.
 
-Background scanning occurs on a longish interval (5 minutes by default) and in
-a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
-cache). The intent is to clear up post-EOF blocks on inodes that might have
-allocations hanging around due to open-write-close sequences (NFS).
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+---
+ fs/xfs/xfs_super.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_sync.c  |   65 --------------------------------------------------
+ fs/xfs/xfs_sync.h  |    3 ---
+ 3 files changed, 67 insertions(+), 68 deletions(-)
 
-On demand scanning is provided via a new ioctl and supports various parameters
-such as scan mode, filtering by quota id and minimum file size. A pending use
-case for on demand scanning is for accurate quota accounting via the gluster
-scale out filesystem (i.e., to free up preallocated space when near a usage
-limit).
-
-Brian
-
-v5:
-- Rebased against the die-xfssyncd-die patchset.
-- Renamed xfs_inodes_free_eofblocks() to xfs_icache_free_eofblocks().
-- Migrated xfs_can_free_eofblocks() from static inline to xfs_inode.c.
-- Fixed xfs_eofblocks version field and added version check to ioctl().
-- Reworked quota filtering to use standard quota fields. Added patch 7 to
-  support.
-- Split min. file size filtering into a separate patch.
-- Reworked background scanning based on rebase. Created a new eofblocks
-  workqueue, renamed the tunable and based its value in seconds.
-
-v4:
-- Fix the broken need_iolock parameter to the xfs_free_eofblocks() call in
-  patch 5 (thanks to Ben M. for testing). This is a one line change. All
-  other patches equivalent to v3. This version survives an xfstests run (with
-  XFS_DEBUG enabled this time :P).
-
-v3:
-- Pushed dirty cache check up into patch 5 (minor clean up).
-- Reworked xfs_can_free_eofblocks() in patch 3 as per Dave C.'s review.
-- Rebased from linus' tree to the XFS tree.
-
-v2:
-- Remove unnecessary inode flag clear helper.
-- Condense eofblocks set/clear tag functions.
-- Move clear tag call into xfs_free_eofblocks().
-- Modify AG walk infrastructure to support tag-based walk and utilize this
-  functionality for the eofblocks scan (as opposed to the previous code
-  duplicated from reclaim scanning).
-- Improve ioctl functionality: new data structure fields/flags, validate quota
-  is enabled.
-- Increase default background scanning interval to 5 minutes, add tunable.
-
-Brian Foster (10):
-  xfs: add EOFBLOCKS inode tagging/untagging
-  xfs: support a tag-based inode_ag_iterator
-  xfs: create helper to check whether to free eofblocks on inode
-  xfs: make xfs_free_eofblocks() non-static, return EAGAIN on trylock
-    failure
-  xfs: create function to scan and clear EOFBLOCKS inodes
-  xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-  xfs: make xfs_quota_type() non-static
-  xfs: add quota id filtering to eofblocks scan
-  xfs: add minimum file size filtering to eofblocks scan
-  xfs: add background scanning to clear eofblocks inodes
-
- fs/xfs/xfs_ag.h          |    1 +
- fs/xfs/xfs_fs.h          |   20 ++++
- fs/xfs/xfs_globals.c     |    1 +
- fs/xfs/xfs_icache.c      |  220 ++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_icache.h      |   12 ++-
- fs/xfs/xfs_inode.c       |   37 ++++++++
- fs/xfs/xfs_inode.h       |    1 +
- fs/xfs/xfs_ioctl.c       |   24 +++++
- fs/xfs/xfs_iomap.c       |    8 ++
- fs/xfs/xfs_iops.c        |    4 +
- fs/xfs/xfs_linux.h       |    1 +
- fs/xfs/xfs_mount.c       |    2 +
- fs/xfs/xfs_mount.h       |    3 +
- fs/xfs/xfs_qm_syscalls.c |    5 +-
- fs/xfs/xfs_quota.h       |    1 +
- fs/xfs/xfs_quotaops.c    |    2 +-
- fs/xfs/xfs_super.c       |    9 ++
- fs/xfs/xfs_sysctl.c      |    9 ++
- fs/xfs/xfs_sysctl.h      |    1 +
- fs/xfs/xfs_trace.h       |    6 ++
- fs/xfs/xfs_vnodeops.c    |   27 +++---
- fs/xfs/xfs_vnodeops.h    |    1 +
- 22 files changed, 368 insertions(+), 27 deletions(-)
-
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 1ee7b09..4806e46 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1043,6 +1043,73 @@ xfs_restore_resvblks(struct xfs_mount *mp)
+ 	xfs_reserve_blocks(mp, &resblks, NULL);
+ }
+ 
++/*
++ * Trigger writeback of all the dirty metadata in the file system.
++ *
++ * This ensures that the metadata is written to their location on disk rather
++ * than just existing in transactions in the log. This means after a quiesce
++ * there is no log replay required to write the inodes to disk (this is the main
++ * difference between a sync and a quiesce).
++ *
++ * This shoul deffectively mimic the code in xfs_unmountfs() and
++ * xfs_log_umount() but without tearing down any structures.
++ * XXX: bug fixes needed!
++ *
++ * Note: this stops background log work - the callers must ensure it is started
++ * again when appropriate.
++ */
++void
++xfs_quiesce_attr(
++	struct xfs_mount	*mp)
++{
++	int	error = 0;
++
++	/* wait for all modifications to complete */
++	while (atomic_read(&mp->m_active_trans) > 0)
++		delay(100);
++
++	/* force the log to unpin objects from the now complete transactions */
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
++	/* reclaim inodes to do any IO before the freeze completes */
++	xfs_reclaim_inodes(mp, 0);
++	xfs_reclaim_inodes(mp, SYNC_WAIT);
++
++	/* flush all pending changes from the AIL */
++	xfs_ail_push_all_sync(mp->m_ail);
++
++	/* stop background log work */
++	cancel_delayed_work_sync(&mp->m_log->l_work);
++
++	/*
++	 * Just warn here till VFS can correctly support
++	 * read-only remount without racing.
++	 */
++	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
++
++	/* Push the superblock and write an unmount record */
++	error = xfs_log_sbcount(mp);
++	if (error)
++		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
++				"Frozen image may not be consistent.");
++	xfs_log_unmount_write(mp);
++
++	/*
++	 * At this point we might have modified the superblock again and thus
++	 * added an item to the AIL, thus flush it again.
++	 */
++	xfs_ail_push_all_sync(mp->m_ail);
++
++	/*
++	 * The superblock buffer is uncached and xfsaild_push() will lock and
++	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
++	 * here but a lock on the superblock buffer will block until iodone()
++	 * has completed.
++	 */
++	xfs_buf_lock(mp->m_sb_bp);
++	xfs_buf_unlock(mp->m_sb_bp);
++}
++
+ STATIC int
+ xfs_fs_remount(
+ 	struct super_block	*sb,
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index 581eb59..7b63028 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -215,71 +215,6 @@ xfs_inode_ag_iterator(
+ }
+ 
+ /*
+- * Second stage of a quiesce. The data is already synced, now we have to take
+- * care of the metadata. New transactions are already blocked, so we need to
+- * wait for any remaining transactions to drain out before proceeding.
+- *
+- * The second phase ensures that the inodes are written to their
+- * location on disk rather than just existing in transactions in the log. This
+- * means after a quiesce there is no log replay required to write the inodes to
+- * disk (this is the main difference between a sync and a quiesce).
+- *
+- * Note: this stops background sync work - the callers must ensure it is started
+- * again when appropriate.
+- */
+-void
+-xfs_quiesce_attr(
+-	struct xfs_mount	*mp)
+-{
+-	int	error = 0;
+-
+-	/* wait for all modifications to complete */
+-	while (atomic_read(&mp->m_active_trans) > 0)
+-		delay(100);
+-
+-	/* force the log to unpin objects from the now complete transactions */
+-	xfs_log_force(mp, XFS_LOG_SYNC);
+-
+-	/* reclaim inodes to do any IO before the freeze completes */
+-	xfs_reclaim_inodes(mp, 0);
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
+-
+-	/* flush all pending changes from the AIL */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-
+-	/* stop background log work */
+-	cancel_delayed_work_sync(&mp->m_log->l_work);
+-
+-	/*
+-	 * Just warn here till VFS can correctly support
+-	 * read-only remount without racing.
+-	 */
+-	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
+-
+-	/* Push the superblock and write an unmount record */
+-	error = xfs_log_sbcount(mp);
+-	if (error)
+-		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
+-				"Frozen image may not be consistent.");
+-	xfs_log_unmount_write(mp);
+-
+-	/*
+-	 * At this point we might have modified the superblock again and thus
+-	 * added an item to the AIL, thus flush it again.
+-	 */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-
+-	/*
+-	 * The superblock buffer is uncached and xfsaild_push() will lock and
+-	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
+-	 * here but a lock on the superblock buffer will block until iodone()
+-	 * has completed.
+-	 */
+-	xfs_buf_lock(mp->m_sb_bp);
+-	xfs_buf_unlock(mp->m_sb_bp);
+-}
+-
+-/*
+  * Queue a new inode reclaim pass if there are reclaimable inodes and there
+  * isn't a reclaim pass already in progress. By default it runs every 5s based
+  * on the xfs periodic sync default of 30s. Perhaps this should have it's own
+diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
+index 0beabea..0ba9c89 100644
+--- a/fs/xfs/xfs_sync.h
++++ b/fs/xfs/xfs_sync.h
+@@ -26,9 +26,6 @@ struct xfs_perag;
+ 
+ void xfs_reclaim_worker(struct work_struct *work);
+ 
+-int xfs_quiesce_data(struct xfs_mount *mp);
+-void xfs_quiesce_attr(struct xfs_mount *mp);
+-
+ int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
+ int xfs_reclaim_inodes_count(struct xfs_mount *mp);
+ void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
 -- 
-1.7.7.6
+1.7.10
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
 
 _______________________________________________
 xfs mailing list
