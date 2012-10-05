@@ -1,15 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95HIKtR071556 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:20 -0500
-Message-Id: <20121005171946.986182808@sgi.com>
-Date: Fri, 05 Oct 2012 12:19:02 -0500
+	q95HIJSn071533 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:19 -0500
+Message-Id: <20121005171946.754462037@sgi.com>
+Date: Fri, 05 Oct 2012 12:19:01 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch v4 09/13] [PATCH 09/13] xfs: move xfs_quiesce_attr() into
-	xfs_super.c
+Subject: [patch v4 08/13] [PATCH 08/13] xfs: xfs_sync_fsdata is redundant
 References: <20121005171853.985930109@sgi.com>
-Content-Disposition: inline;
-	filename=xfs-move-xfs_quiesce_attr-into-xfs_super.c.patch
+Content-Disposition: inline; filename=xfs-xfs_sync_fsdata-is-redundant.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,188 +26,168 @@ Cc: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Both callers of xfs_quiesce_attr() are in xfs_super.c, and there's
-nothing really sync-specific about this functionality so it doesn't
-really matter where it lives. Move it to benext to it's callers, so
-all the remount/sync_fs code is in the one place.
+Why do we need to write the superblock to disk once we've written
+all the data?  We don't actually - the reasons for doing this are
+lost in the mists of time, and go back to the way Irix used to drive
+VFS flushing.
+
+On linux, this code is only called from two contexts: remount and
+.sync_fs. In the remount case, the call is followed by a metadata
+sync, which unpins and writes the superblock.  In the sync_fs case,
+we only need to force the log to disk to ensure that the superblock
+is correctly on disk, so we don't actually need to write it. Hence
+the functionality is either redundant or superfluous and thus can be
+removed.
+
+Seeing as xfs_quiesce_data is essentially now just a log force,
+remove it as well and fold the code back into the two callers.
+Neither of them need the log covering check, either, as that is
+redundant for the remount case, and unnecessary for the .sync_fs
+case.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_super.c |   67 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_sync.c  |   65 --------------------------------------------------
- fs/xfs/xfs_sync.h  |    3 ---
- 3 files changed, 67 insertions(+), 68 deletions(-)
+ fs/xfs/xfs_super.c |   19 +++++----------
+ fs/xfs/xfs_sync.c  |   67 +++++++---------------------------------------------
+ 2 files changed, 14 insertions(+), 72 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 1ee7b09..4806e46 100644
+index 65cf42c..1ee7b09 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1043,6 +1043,73 @@ xfs_restore_resvblks(struct xfs_mount *mp)
- 	xfs_reserve_blocks(mp, &resblks, NULL);
- }
+@@ -952,7 +952,6 @@ xfs_fs_sync_fs(
+ 	int			wait)
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
+-	int			error;
  
-+/*
-+ * Trigger writeback of all the dirty metadata in the file system.
-+ *
-+ * This ensures that the metadata is written to their location on disk rather
-+ * than just existing in transactions in the log. This means after a quiesce
-+ * there is no log replay required to write the inodes to disk (this is the main
-+ * difference between a sync and a quiesce).
-+ *
-+ * This shoul deffectively mimic the code in xfs_unmountfs() and
-+ * xfs_log_umount() but without tearing down any structures.
-+ * XXX: bug fixes needed!
-+ *
-+ * Note: this stops background log work - the callers must ensure it is started
-+ * again when appropriate.
-+ */
-+void
-+xfs_quiesce_attr(
-+	struct xfs_mount	*mp)
-+{
-+	int	error = 0;
-+
-+	/* wait for all modifications to complete */
-+	while (atomic_read(&mp->m_active_trans) > 0)
-+		delay(100);
-+
-+	/* force the log to unpin objects from the now complete transactions */
+ 	/*
+ 	 * Doing anything during the async pass would be counterproductive.
+@@ -960,10 +959,7 @@ xfs_fs_sync_fs(
+ 	if (!wait)
+ 		return 0;
+ 
+-	error = xfs_quiesce_data(mp);
+-	if (error)
+-		return -error;
+-
 +	xfs_log_force(mp, XFS_LOG_SYNC);
-+
-+	/* reclaim inodes to do any IO before the freeze completes */
-+	xfs_reclaim_inodes(mp, 0);
-+	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+
-+	/* flush all pending changes from the AIL */
-+	xfs_ail_push_all_sync(mp->m_ail);
-+
-+	/* stop background log work */
-+	cancel_delayed_work_sync(&mp->m_log->l_work);
-+
-+	/*
-+	 * Just warn here till VFS can correctly support
-+	 * read-only remount without racing.
-+	 */
-+	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
-+
-+	/* Push the superblock and write an unmount record */
-+	error = xfs_log_sbcount(mp);
-+	if (error)
-+		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
-+				"Frozen image may not be consistent.");
-+	xfs_log_unmount_write(mp);
-+
-+	/*
-+	 * At this point we might have modified the superblock again and thus
-+	 * added an item to the AIL, thus flush it again.
-+	 */
-+	xfs_ail_push_all_sync(mp->m_ail);
-+
-+	/*
-+	 * The superblock buffer is uncached and xfsaild_push() will lock and
-+	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
-+	 * here but a lock on the superblock buffer will block until iodone()
-+	 * has completed.
-+	 */
-+	xfs_buf_lock(mp->m_sb_bp);
-+	xfs_buf_unlock(mp->m_sb_bp);
-+}
-+
- STATIC int
- xfs_fs_remount(
- 	struct super_block	*sb,
+ 	if (laptop_mode) {
+ 		/*
+ 		 * The disk must be active because we're syncing.
+@@ -1127,15 +1123,12 @@ xfs_fs_remount(
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & MS_RDONLY)) {
+ 		/*
+-		 * After we have synced the data but before we sync the
+-		 * metadata, we need to free up the reserve block pool so that
+-		 * the used block count in the superblock on disk is correct at
+-		 * the end of the remount. Stash the current reserve pool size
+-		 * so that if we get remounted rw, we can return it to the same
+-		 * size.
++		 * Before we sync the metadata, we need to free up the reserve
++		 * block pool so that the used block count in the superblock on
++		 * disk is correct at the end of the remount. Stash the current
++		 * reserve pool size so that if we get remounted rw, we can
++		 * return it to the same size.
+ 		 */
+-
+-		xfs_quiesce_data(mp);
+ 		xfs_save_resvblks(mp);
+ 		xfs_quiesce_attr(mp);
+ 		mp->m_flags |= XFS_MOUNT_RDONLY;
 diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 581eb59..7b63028 100644
+index 15be21f..581eb59 100644
 --- a/fs/xfs/xfs_sync.c
 +++ b/fs/xfs/xfs_sync.c
-@@ -215,71 +215,6 @@ xfs_inode_ag_iterator(
+@@ -214,70 +214,16 @@ xfs_inode_ag_iterator(
+ 	return XFS_ERROR(last_error);
  }
  
- /*
-- * Second stage of a quiesce. The data is already synced, now we have to take
-- * care of the metadata. New transactions are already blocked, so we need to
-- * wait for any remaining transactions to drain out before proceeding.
-- *
-- * The second phase ensures that the inodes are written to their
-- * location on disk rather than just existing in transactions in the log. This
-- * means after a quiesce there is no log replay required to write the inodes to
-- * disk (this is the main difference between a sync and a quiesce).
-- *
-- * Note: this stops background sync work - the callers must ensure it is started
-- * again when appropriate.
-- */
--void
--xfs_quiesce_attr(
+-STATIC int
+-xfs_sync_fsdata(
 -	struct xfs_mount	*mp)
 -{
--	int	error = 0;
--
--	/* wait for all modifications to complete */
--	while (atomic_read(&mp->m_active_trans) > 0)
--		delay(100);
--
--	/* force the log to unpin objects from the now complete transactions */
--	xfs_log_force(mp, XFS_LOG_SYNC);
--
--	/* reclaim inodes to do any IO before the freeze completes */
--	xfs_reclaim_inodes(mp, 0);
--	xfs_reclaim_inodes(mp, SYNC_WAIT);
--
--	/* flush all pending changes from the AIL */
--	xfs_ail_push_all_sync(mp->m_ail);
--
--	/* stop background log work */
--	cancel_delayed_work_sync(&mp->m_log->l_work);
+-	struct xfs_buf		*bp;
+-	int			error;
 -
 -	/*
--	 * Just warn here till VFS can correctly support
--	 * read-only remount without racing.
+-	 * If the buffer is pinned then push on the log so we won't get stuck
+-	 * waiting in the write for someone, maybe ourselves, to flush the log.
+-	 *
+-	 * Even though we just pushed the log above, we did not have the
+-	 * superblock buffer locked at that point so it can become pinned in
+-	 * between there and here.
 -	 */
--	WARN_ON(atomic_read(&mp->m_active_trans) != 0);
--
--	/* Push the superblock and write an unmount record */
--	error = xfs_log_sbcount(mp);
--	if (error)
--		xfs_warn(mp, "xfs_attr_quiesce: failed to log sb changes. "
--				"Frozen image may not be consistent.");
--	xfs_log_unmount_write(mp);
--
--	/*
--	 * At this point we might have modified the superblock again and thus
--	 * added an item to the AIL, thus flush it again.
--	 */
--	xfs_ail_push_all_sync(mp->m_ail);
--
--	/*
--	 * The superblock buffer is uncached and xfsaild_push() will lock and
--	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
--	 * here but a lock on the superblock buffer will block until iodone()
--	 * has completed.
--	 */
--	xfs_buf_lock(mp->m_sb_bp);
--	xfs_buf_unlock(mp->m_sb_bp);
+-	bp = xfs_getsb(mp, 0);
+-	if (xfs_buf_ispinned(bp))
+-		xfs_log_force(mp, 0);
+-	error = xfs_bwrite(bp);
+-	xfs_buf_relse(bp);
+-	return error;
 -}
 -
 -/*
-  * Queue a new inode reclaim pass if there are reclaimable inodes and there
-  * isn't a reclaim pass already in progress. By default it runs every 5s based
-  * on the xfs periodic sync default of 30s. Perhaps this should have it's own
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 0beabea..0ba9c89 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -26,9 +26,6 @@ struct xfs_perag;
- 
- void xfs_reclaim_worker(struct work_struct *work);
- 
--int xfs_quiesce_data(struct xfs_mount *mp);
--void xfs_quiesce_attr(struct xfs_mount *mp);
+- * When remounting a filesystem read-only or freezing the filesystem, we have
+- * two phases to execute. This first phase is syncing the data before we
+- * quiesce the filesystem, and the second is flushing all the inodes out after
+- * we've waited for all the transactions created by the first phase to
+- * complete. The second phase ensures that the inodes are written to their
+- * location on disk rather than just existing in transactions in the log. This
+- * means after a quiesce there is no log replay required to write the inodes to
+- * disk (this is the main difference between a sync and a quiesce).
+- */
+-/*
+- * First stage of freeze - no writers will make progress now we are here,
+- * so we flush delwri and delalloc buffers here, then wait for all I/O to
+- * complete.  Data is frozen at that point. Metadata is not frozen,
+- * transactions can still occur here so don't bother emptying the AIL
+- * because it'll just get dirty again.
+- */
+-int
+-xfs_quiesce_data(
+-	struct xfs_mount	*mp)
+-{
+-	int			error, error2 = 0;
 -
- int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
- int xfs_reclaim_inodes_count(struct xfs_mount *mp);
- void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+-	/* force out the log */
+-	xfs_log_force(mp, XFS_LOG_SYNC);
+-
+-	/* write superblock and hoover up shutdown errors */
+-	error = xfs_sync_fsdata(mp);
+-
+-	/* mark the log as covered if needed */
+-	if (xfs_log_need_covered(mp))
+-		error2 = xfs_fs_log_dummy(mp);
+-
+-	return error ? error : error2;
+-}
+-
+ /*
+  * Second stage of a quiesce. The data is already synced, now we have to take
+  * care of the metadata. New transactions are already blocked, so we need to
+  * wait for any remaining transactions to drain out before proceeding.
+  *
++ * The second phase ensures that the inodes are written to their
++ * location on disk rather than just existing in transactions in the log. This
++ * means after a quiesce there is no log replay required to write the inodes to
++ * disk (this is the main difference between a sync and a quiesce).
++ *
+  * Note: this stops background sync work - the callers must ensure it is started
+  * again when appropriate.
+  */
+@@ -291,6 +237,9 @@ xfs_quiesce_attr(
+ 	while (atomic_read(&mp->m_active_trans) > 0)
+ 		delay(100);
+ 
++	/* force the log to unpin objects from the now complete transactions */
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
+ 	/* reclaim inodes to do any IO before the freeze completes */
+ 	xfs_reclaim_inodes(mp, 0);
+ 	xfs_reclaim_inodes(mp, SYNC_WAIT);
 -- 
 1.7.10
 
