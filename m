@@ -1,13 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95HIJpX071532 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:19 -0500
-Message-Id: <20121005171946.545918929@sgi.com>
-Date: Fri, 05 Oct 2012 12:19:00 -0500
+	q95HILro071579 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:21 -0500
+Message-Id: <20121005171947.657506861@sgi.com>
+Date: Fri, 05 Oct 2012 12:19:05 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch v4 07/13] [PATCH 07/13] xfs: syncd workqueue is no more
+Subject: [patch v4 12/13] [PATCH 12/13] xfs: move inode locking functions to
+	xfs_inode.c
 References: <20121005171853.985930109@sgi.com>
-Content-Disposition: inline; filename=xfs-syncd-workqueue-is-no-more-2.patch
+Content-Disposition: inline;
+	filename=xfs-move-inode-locking-functions-to-xfs_inode.c.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,227 +28,544 @@ Cc: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-With the syncd functions moved to the log and/or removed, the syncd
-workqueue is the only remaining bit left. It is used by the log
-covering/ail pushing work, as well as by the inode reclaim work.
+xfs_ilock() and friends really aren't related to the inode cache in
+any way, so move them to xfs_inode.c with all the other inode
+related functionality.
 
-Given how cheap workqueues are these days, give the log and inode
-reclaim work their own work queues and kill the syncd work queue.
+While doing this move, move the xfs_ilock() tracepoints to *before*
+the lock is taken so that when a hang on a lock occurs we have
+events to indicate which process and what inode we were trying to
+lock when the hang occurred. This is much better than the current
+silence we get on a hang...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
+ fs/xfs/xfs_iget.c  |  251 ----------------------------------------------------
+ fs/xfs/xfs_inode.c |  250 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 250 insertions(+), 251 deletions(-)
 
-v2: changed the name of the log_workqueue from 'xfs-reclaim' to
-'xfs-log' -bpm
-
- fs/xfs/xfs_log.c   |    2 +-
- fs/xfs/xfs_mount.h |    2 ++
- fs/xfs/xfs_super.c |   38 ++++++++++++++++++--------------------
- fs/xfs/xfs_sync.c  |   20 +++++++++-----------
- fs/xfs/xfs_sync.h  |    2 --
- 5 files changed, 30 insertions(+), 34 deletions(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a400e71..96ea9ed 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1191,7 +1191,7 @@ void
- xfs_log_work_queue(
- 	struct xfs_mount        *mp)
- {
--	queue_delayed_work(xfs_syncd_wq, &mp->m_log->l_work,
-+	queue_delayed_work(mp->m_log_workqueue, &mp->m_log->l_work,
- 				msecs_to_jiffies(xfs_syncd_centisecs * 10));
+diff --git a/fs/xfs/xfs_iget.c b/fs/xfs/xfs_iget.c
+index 069c5ce..ea9a5fa 100644
+--- a/fs/xfs/xfs_iget.c
++++ b/fs/xfs/xfs_iget.c
+@@ -453,254 +453,3 @@ out_error_or_again:
+ 	return error;
  }
  
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a54b5aa..7c417b6 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -207,6 +207,8 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_data_workqueue;
- 	struct workqueue_struct	*m_unwritten_workqueue;
- 	struct workqueue_struct	*m_cil_workqueue;
-+	struct workqueue_struct	*m_reclaim_workqueue;
-+	struct workqueue_struct	*m_log_workqueue;
- } xfs_mount_t;
- 
- /*
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index fed1eb2..65cf42c 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -776,8 +776,23 @@ xfs_init_mount_workqueues(
- 			WQ_MEM_RECLAIM, 0, mp->m_fsname);
- 	if (!mp->m_cil_workqueue)
- 		goto out_destroy_unwritten;
-+
-+	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
-+			WQ_NON_REENTRANT, 0, mp->m_fsname);
-+	if (!mp->m_reclaim_workqueue)
-+		goto out_destroy_cil;
-+
-+	mp->m_log_workqueue = alloc_workqueue("xfs-reclaim/%s",
-+			WQ_NON_REENTRANT, 0, mp->m_fsname);
-+	if (!mp->m_log_workqueue)
-+		goto out_destroy_reclaim;
-+
- 	return 0;
- 
-+out_destroy_reclaim:
-+	destroy_workqueue(mp->m_reclaim_workqueue);
-+out_destroy_cil:
-+	destroy_workqueue(mp->m_cil_workqueue);
- out_destroy_unwritten:
- 	destroy_workqueue(mp->m_unwritten_workqueue);
- out_destroy_data_iodone_queue:
-@@ -790,6 +805,8 @@ STATIC void
- xfs_destroy_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
-+	destroy_workqueue(mp->m_log_workqueue);
-+	destroy_workqueue(mp->m_reclaim_workqueue);
- 	destroy_workqueue(mp->m_cil_workqueue);
- 	destroy_workqueue(mp->m_data_workqueue);
- 	destroy_workqueue(mp->m_unwritten_workqueue);
-@@ -1280,10 +1297,6 @@ xfs_fs_fill_super(
- 	/*
- 	 * we must configure the block size in the superblock before we run the
- 	 * full mount process as the mount process can lookup and cache inodes.
--	 * For the same reason we must also initialise the syncd and register
--	 * the inode cache shrinker so that inodes can be reclaimed during
--	 * operations like a quotacheck that iterate all inodes in the
--	 * filesystem.
- 	 */
- 	sb->s_magic = XFS_SB_MAGIC;
- 	sb->s_blocksize = mp->m_sb.sb_blocksize;
-@@ -1523,16 +1536,6 @@ STATIC int __init
- xfs_init_workqueues(void)
- {
- 	/*
--	 * We never want to the same work item to run twice, reclaiming inodes
--	 * or idling the log is not going to get any faster by multiple CPUs
--	 * competing for ressources.  Use the default large max_active value
--	 * so that even lots of filesystems can perform these task in parallel.
--	 */
--	xfs_syncd_wq = alloc_workqueue("xfssyncd", WQ_NON_REENTRANT, 0);
--	if (!xfs_syncd_wq)
--		return -ENOMEM;
+-/*
+- * This is a wrapper routine around the xfs_ilock() routine
+- * used to centralize some grungy code.  It is used in places
+- * that wish to lock the inode solely for reading the extents.
+- * The reason these places can't just call xfs_ilock(SHARED)
+- * is that the inode lock also guards to bringing in of the
+- * extents from disk for a file in b-tree format.  If the inode
+- * is in b-tree format, then we need to lock the inode exclusively
+- * until the extents are read in.  Locking it exclusively all
+- * the time would limit our parallelism unnecessarily, though.
+- * What we do instead is check to see if the extents have been
+- * read in yet, and only lock the inode exclusively if they
+- * have not.
+- *
+- * The function returns a value which should be given to the
+- * corresponding xfs_iunlock_map_shared().  This value is
+- * the mode in which the lock was actually taken.
+- */
+-uint
+-xfs_ilock_map_shared(
+-	xfs_inode_t	*ip)
+-{
+-	uint	lock_mode;
 -
+-	if ((ip->i_d.di_format == XFS_DINODE_FMT_BTREE) &&
+-	    ((ip->i_df.if_flags & XFS_IFEXTENTS) == 0)) {
+-		lock_mode = XFS_ILOCK_EXCL;
+-	} else {
+-		lock_mode = XFS_ILOCK_SHARED;
+-	}
+-
+-	xfs_ilock(ip, lock_mode);
+-
+-	return lock_mode;
+-}
+-
+-/*
+- * This is simply the unlock routine to go with xfs_ilock_map_shared().
+- * All it does is call xfs_iunlock() with the given lock_mode.
+- */
+-void
+-xfs_iunlock_map_shared(
+-	xfs_inode_t	*ip,
+-	unsigned int	lock_mode)
+-{
+-	xfs_iunlock(ip, lock_mode);
+-}
+-
+-/*
+- * The xfs inode contains 2 locks: a multi-reader lock called the
+- * i_iolock and a multi-reader lock called the i_lock.  This routine
+- * allows either or both of the locks to be obtained.
+- *
+- * The 2 locks should always be ordered so that the IO lock is
+- * obtained first in order to prevent deadlock.
+- *
+- * ip -- the inode being locked
+- * lock_flags -- this parameter indicates the inode's locks
+- *       to be locked.  It can be:
+- *		XFS_IOLOCK_SHARED,
+- *		XFS_IOLOCK_EXCL,
+- *		XFS_ILOCK_SHARED,
+- *		XFS_ILOCK_EXCL,
+- *		XFS_IOLOCK_SHARED | XFS_ILOCK_SHARED,
+- *		XFS_IOLOCK_SHARED | XFS_ILOCK_EXCL,
+- *		XFS_IOLOCK_EXCL | XFS_ILOCK_SHARED,
+- *		XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL
+- */
+-void
+-xfs_ilock(
+-	xfs_inode_t		*ip,
+-	uint			lock_flags)
+-{
 -	/*
- 	 * The allocation workqueue can be used in memory reclaim situations
- 	 * (writepage path), and parallelism is only limited by the number of
- 	 * AGs in all the filesystems mounted. Hence use the default large
-@@ -1540,20 +1543,15 @@ xfs_init_workqueues(void)
- 	 */
- 	xfs_alloc_wq = alloc_workqueue("xfsalloc", WQ_MEM_RECLAIM, 0);
- 	if (!xfs_alloc_wq)
--		goto out_destroy_syncd;
-+		return -ENOMEM;
- 
+-	 * You can't set both SHARED and EXCL for the same lock,
+-	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
+-	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
+-	 */
+-	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+-	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+-	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+-	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+-	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
+-
+-	if (lock_flags & XFS_IOLOCK_EXCL)
+-		mrupdate_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
+-	else if (lock_flags & XFS_IOLOCK_SHARED)
+-		mraccess_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
+-
+-	if (lock_flags & XFS_ILOCK_EXCL)
+-		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+-	else if (lock_flags & XFS_ILOCK_SHARED)
+-		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
+-
+-	trace_xfs_ilock(ip, lock_flags, _RET_IP_);
+-}
+-
+-/*
+- * This is just like xfs_ilock(), except that the caller
+- * is guaranteed not to sleep.  It returns 1 if it gets
+- * the requested locks and 0 otherwise.  If the IO lock is
+- * obtained but the inode lock cannot be, then the IO lock
+- * is dropped before returning.
+- *
+- * ip -- the inode being locked
+- * lock_flags -- this parameter indicates the inode's locks to be
+- *       to be locked.  See the comment for xfs_ilock() for a list
+- *	 of valid values.
+- */
+-int
+-xfs_ilock_nowait(
+-	xfs_inode_t		*ip,
+-	uint			lock_flags)
+-{
+-	/*
+-	 * You can't set both SHARED and EXCL for the same lock,
+-	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
+-	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
+-	 */
+-	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+-	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+-	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+-	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+-	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
+-
+-	if (lock_flags & XFS_IOLOCK_EXCL) {
+-		if (!mrtryupdate(&ip->i_iolock))
+-			goto out;
+-	} else if (lock_flags & XFS_IOLOCK_SHARED) {
+-		if (!mrtryaccess(&ip->i_iolock))
+-			goto out;
+-	}
+-	if (lock_flags & XFS_ILOCK_EXCL) {
+-		if (!mrtryupdate(&ip->i_lock))
+-			goto out_undo_iolock;
+-	} else if (lock_flags & XFS_ILOCK_SHARED) {
+-		if (!mrtryaccess(&ip->i_lock))
+-			goto out_undo_iolock;
+-	}
+-	trace_xfs_ilock_nowait(ip, lock_flags, _RET_IP_);
+-	return 1;
+-
+- out_undo_iolock:
+-	if (lock_flags & XFS_IOLOCK_EXCL)
+-		mrunlock_excl(&ip->i_iolock);
+-	else if (lock_flags & XFS_IOLOCK_SHARED)
+-		mrunlock_shared(&ip->i_iolock);
+- out:
+-	return 0;
+-}
+-
+-/*
+- * xfs_iunlock() is used to drop the inode locks acquired with
+- * xfs_ilock() and xfs_ilock_nowait().  The caller must pass
+- * in the flags given to xfs_ilock() or xfs_ilock_nowait() so
+- * that we know which locks to drop.
+- *
+- * ip -- the inode being unlocked
+- * lock_flags -- this parameter indicates the inode's locks to be
+- *       to be unlocked.  See the comment for xfs_ilock() for a list
+- *	 of valid values for this parameter.
+- *
+- */
+-void
+-xfs_iunlock(
+-	xfs_inode_t		*ip,
+-	uint			lock_flags)
+-{
+-	/*
+-	 * You can't set both SHARED and EXCL for the same lock,
+-	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
+-	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
+-	 */
+-	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
+-	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
+-	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
+-	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
+-	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
+-	ASSERT(lock_flags != 0);
+-
+-	if (lock_flags & XFS_IOLOCK_EXCL)
+-		mrunlock_excl(&ip->i_iolock);
+-	else if (lock_flags & XFS_IOLOCK_SHARED)
+-		mrunlock_shared(&ip->i_iolock);
+-
+-	if (lock_flags & XFS_ILOCK_EXCL)
+-		mrunlock_excl(&ip->i_lock);
+-	else if (lock_flags & XFS_ILOCK_SHARED)
+-		mrunlock_shared(&ip->i_lock);
+-
+-	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
+-}
+-
+-/*
+- * give up write locks.  the i/o lock cannot be held nested
+- * if it is being demoted.
+- */
+-void
+-xfs_ilock_demote(
+-	xfs_inode_t		*ip,
+-	uint			lock_flags)
+-{
+-	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL));
+-	ASSERT((lock_flags & ~(XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
+-
+-	if (lock_flags & XFS_ILOCK_EXCL)
+-		mrdemote(&ip->i_lock);
+-	if (lock_flags & XFS_IOLOCK_EXCL)
+-		mrdemote(&ip->i_iolock);
+-
+-	trace_xfs_ilock_demote(ip, lock_flags, _RET_IP_);
+-}
+-
+-#ifdef DEBUG
+-int
+-xfs_isilocked(
+-	xfs_inode_t		*ip,
+-	uint			lock_flags)
+-{
+-	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
+-		if (!(lock_flags & XFS_ILOCK_SHARED))
+-			return !!ip->i_lock.mr_writer;
+-		return rwsem_is_locked(&ip->i_lock.mr_lock);
+-	}
+-
+-	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
+-		if (!(lock_flags & XFS_IOLOCK_SHARED))
+-			return !!ip->i_iolock.mr_writer;
+-		return rwsem_is_locked(&ip->i_iolock.mr_lock);
+-	}
+-
+-	ASSERT(0);
+-	return 0;
+-}
+-#endif
+-
+-void
+-__xfs_iflock(
+-	struct xfs_inode	*ip)
+-{
+-	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IFLOCK_BIT);
+-	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_IFLOCK_BIT);
+-
+-	do {
+-		prepare_to_wait_exclusive(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
+-		if (xfs_isiflocked(ip))
+-			io_schedule();
+-	} while (!xfs_iflock_nowait(ip));
+-
+-	finish_wait(wq, &wait.wait);
+-}
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 2778258..ba404e4 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -74,6 +74,256 @@ xfs_get_extsz_hint(
  	return 0;
--
--out_destroy_syncd:
--	destroy_workqueue(xfs_syncd_wq);
--	return -ENOMEM;
  }
  
- STATIC void
- xfs_destroy_workqueues(void)
- {
- 	destroy_workqueue(xfs_alloc_wq);
--	destroy_workqueue(xfs_syncd_wq);
- }
- 
- STATIC int __init
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 6a2ada3..15be21f 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -40,8 +40,6 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
- 
--struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
--
++/*
++ * This is a wrapper routine around the xfs_ilock() routine used to centralize
++ * some grungy code.  It is used in places that wish to lock the inode solely
++ * for reading the extents.  The reason these places can't just call
++ * xfs_ilock(SHARED) is that the inode lock also guards to bringing in of the
++ * extents from disk for a file in b-tree format.  If the inode is in b-tree
++ * format, then we need to lock the inode exclusively until the extents are read
++ * in.  Locking it exclusively all the time would limit our parallelism
++ * unnecessarily, though.  What we do instead is check to see if the extents
++ * have been read in yet, and only lock the inode exclusively if they have not.
++ *
++ * The function returns a value which should be given to the corresponding
++ * xfs_iunlock_map_shared().  This value is the mode in which the lock was
++ * actually taken.
++ */
++uint
++xfs_ilock_map_shared(
++	xfs_inode_t	*ip)
++{
++	uint	lock_mode;
++
++	if ((ip->i_d.di_format == XFS_DINODE_FMT_BTREE) &&
++	    ((ip->i_df.if_flags & XFS_IFEXTENTS) == 0)) {
++		lock_mode = XFS_ILOCK_EXCL;
++	} else {
++		lock_mode = XFS_ILOCK_SHARED;
++	}
++
++	xfs_ilock(ip, lock_mode);
++
++	return lock_mode;
++}
++
++/*
++ * This is simply the unlock routine to go with xfs_ilock_map_shared().
++ * All it does is call xfs_iunlock() with the given lock_mode.
++ */
++void
++xfs_iunlock_map_shared(
++	xfs_inode_t	*ip,
++	unsigned int	lock_mode)
++{
++	xfs_iunlock(ip, lock_mode);
++}
++
++/*
++ * The xfs inode contains 2 locks: a multi-reader lock called the
++ * i_iolock and a multi-reader lock called the i_lock.  This routine
++ * allows either or both of the locks to be obtained.
++ *
++ * The 2 locks should always be ordered so that the IO lock is
++ * obtained first in order to prevent deadlock.
++ *
++ * ip -- the inode being locked
++ * lock_flags -- this parameter indicates the inode's locks
++ *       to be locked.  It can be:
++ *		XFS_IOLOCK_SHARED,
++ *		XFS_IOLOCK_EXCL,
++ *		XFS_ILOCK_SHARED,
++ *		XFS_ILOCK_EXCL,
++ *		XFS_IOLOCK_SHARED | XFS_ILOCK_SHARED,
++ *		XFS_IOLOCK_SHARED | XFS_ILOCK_EXCL,
++ *		XFS_IOLOCK_EXCL | XFS_ILOCK_SHARED,
++ *		XFS_IOLOCK_EXCL | XFS_ILOCK_EXCL
++ */
++void
++xfs_ilock(
++	xfs_inode_t		*ip,
++	uint			lock_flags)
++{
++	trace_xfs_ilock(ip, lock_flags, _RET_IP_);
++
++	/*
++	 * You can't set both SHARED and EXCL for the same lock,
++	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
++	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
++	 */
++	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
++	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
++	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
++	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
++
++	if (lock_flags & XFS_IOLOCK_EXCL)
++		mrupdate_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
++	else if (lock_flags & XFS_IOLOCK_SHARED)
++		mraccess_nested(&ip->i_iolock, XFS_IOLOCK_DEP(lock_flags));
++
++	if (lock_flags & XFS_ILOCK_EXCL)
++		mrupdate_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
++	else if (lock_flags & XFS_ILOCK_SHARED)
++		mraccess_nested(&ip->i_lock, XFS_ILOCK_DEP(lock_flags));
++}
++
++/*
++ * This is just like xfs_ilock(), except that the caller
++ * is guaranteed not to sleep.  It returns 1 if it gets
++ * the requested locks and 0 otherwise.  If the IO lock is
++ * obtained but the inode lock cannot be, then the IO lock
++ * is dropped before returning.
++ *
++ * ip -- the inode being locked
++ * lock_flags -- this parameter indicates the inode's locks to be
++ *       to be locked.  See the comment for xfs_ilock() for a list
++ *	 of valid values.
++ */
++int
++xfs_ilock_nowait(
++	xfs_inode_t		*ip,
++	uint			lock_flags)
++{
++	trace_xfs_ilock_nowait(ip, lock_flags, _RET_IP_);
++
++	/*
++	 * You can't set both SHARED and EXCL for the same lock,
++	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
++	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
++	 */
++	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
++	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
++	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
++	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
++
++	if (lock_flags & XFS_IOLOCK_EXCL) {
++		if (!mrtryupdate(&ip->i_iolock))
++			goto out;
++	} else if (lock_flags & XFS_IOLOCK_SHARED) {
++		if (!mrtryaccess(&ip->i_iolock))
++			goto out;
++	}
++	if (lock_flags & XFS_ILOCK_EXCL) {
++		if (!mrtryupdate(&ip->i_lock))
++			goto out_undo_iolock;
++	} else if (lock_flags & XFS_ILOCK_SHARED) {
++		if (!mrtryaccess(&ip->i_lock))
++			goto out_undo_iolock;
++	}
++	return 1;
++
++ out_undo_iolock:
++	if (lock_flags & XFS_IOLOCK_EXCL)
++		mrunlock_excl(&ip->i_iolock);
++	else if (lock_flags & XFS_IOLOCK_SHARED)
++		mrunlock_shared(&ip->i_iolock);
++ out:
++	return 0;
++}
++
++/*
++ * xfs_iunlock() is used to drop the inode locks acquired with
++ * xfs_ilock() and xfs_ilock_nowait().  The caller must pass
++ * in the flags given to xfs_ilock() or xfs_ilock_nowait() so
++ * that we know which locks to drop.
++ *
++ * ip -- the inode being unlocked
++ * lock_flags -- this parameter indicates the inode's locks to be
++ *       to be unlocked.  See the comment for xfs_ilock() for a list
++ *	 of valid values for this parameter.
++ *
++ */
++void
++xfs_iunlock(
++	xfs_inode_t		*ip,
++	uint			lock_flags)
++{
++	/*
++	 * You can't set both SHARED and EXCL for the same lock,
++	 * and only XFS_IOLOCK_SHARED, XFS_IOLOCK_EXCL, XFS_ILOCK_SHARED,
++	 * and XFS_ILOCK_EXCL are valid values to set in lock_flags.
++	 */
++	ASSERT((lock_flags & (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL)) !=
++	       (XFS_IOLOCK_SHARED | XFS_IOLOCK_EXCL));
++	ASSERT((lock_flags & (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL)) !=
++	       (XFS_ILOCK_SHARED | XFS_ILOCK_EXCL));
++	ASSERT((lock_flags & ~(XFS_LOCK_MASK | XFS_LOCK_DEP_MASK)) == 0);
++	ASSERT(lock_flags != 0);
++
++	if (lock_flags & XFS_IOLOCK_EXCL)
++		mrunlock_excl(&ip->i_iolock);
++	else if (lock_flags & XFS_IOLOCK_SHARED)
++		mrunlock_shared(&ip->i_iolock);
++
++	if (lock_flags & XFS_ILOCK_EXCL)
++		mrunlock_excl(&ip->i_lock);
++	else if (lock_flags & XFS_ILOCK_SHARED)
++		mrunlock_shared(&ip->i_lock);
++
++	trace_xfs_iunlock(ip, lock_flags, _RET_IP_);
++}
++
++/*
++ * give up write locks.  the i/o lock cannot be held nested
++ * if it is being demoted.
++ */
++void
++xfs_ilock_demote(
++	xfs_inode_t		*ip,
++	uint			lock_flags)
++{
++	ASSERT(lock_flags & (XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL));
++	ASSERT((lock_flags & ~(XFS_IOLOCK_EXCL|XFS_ILOCK_EXCL)) == 0);
++
++	if (lock_flags & XFS_ILOCK_EXCL)
++		mrdemote(&ip->i_lock);
++	if (lock_flags & XFS_IOLOCK_EXCL)
++		mrdemote(&ip->i_iolock);
++
++	trace_xfs_ilock_demote(ip, lock_flags, _RET_IP_);
++}
++
++#ifdef DEBUG
++int
++xfs_isilocked(
++	xfs_inode_t		*ip,
++	uint			lock_flags)
++{
++	if (lock_flags & (XFS_ILOCK_EXCL|XFS_ILOCK_SHARED)) {
++		if (!(lock_flags & XFS_ILOCK_SHARED))
++			return !!ip->i_lock.mr_writer;
++		return rwsem_is_locked(&ip->i_lock.mr_lock);
++	}
++
++	if (lock_flags & (XFS_IOLOCK_EXCL|XFS_IOLOCK_SHARED)) {
++		if (!(lock_flags & XFS_IOLOCK_SHARED))
++			return !!ip->i_iolock.mr_writer;
++		return rwsem_is_locked(&ip->i_iolock.mr_lock);
++	}
++
++	ASSERT(0);
++	return 0;
++}
++#endif
++
++void
++__xfs_iflock(
++	struct xfs_inode	*ip)
++{
++	wait_queue_head_t *wq = bit_waitqueue(&ip->i_flags, __XFS_IFLOCK_BIT);
++	DEFINE_WAIT_BIT(wait, &ip->i_flags, __XFS_IFLOCK_BIT);
++
++	do {
++		prepare_to_wait_exclusive(wq, &wait.wait, TASK_UNINTERRUPTIBLE);
++		if (xfs_isiflocked(ip))
++			io_schedule();
++	} while (!xfs_iflock_nowait(ip));
++
++	finish_wait(wq, &wait.wait);
++}
++
+ #ifdef DEBUG
  /*
-  * The inode lookup is done in batches to keep the amount of lock traffic and
-  * radix tree lookups to a minimum. The batch size is a trade off between
-@@ -335,18 +333,18 @@ xfs_quiesce_attr(
- /*
-  * Queue a new inode reclaim pass if there are reclaimable inodes and there
-  * isn't a reclaim pass already in progress. By default it runs every 5s based
-- * on the xfs syncd work default of 30s. Perhaps this should have it's own
-+ * on the xfs periodic sync default of 30s. Perhaps this should have it's own
-  * tunable, but that can be done if this method proves to be ineffective or too
-  * aggressive.
-  */
- static void
--xfs_syncd_queue_reclaim(
-+xfs_reclaim_work_queue(
- 	struct xfs_mount        *mp)
- {
- 
- 	rcu_read_lock();
- 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
--		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
-+		queue_delayed_work(mp->m_reclaim_workqueue, &mp->m_reclaim_work,
- 			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
- 	}
- 	rcu_read_unlock();
-@@ -367,7 +365,7 @@ xfs_reclaim_worker(
- 					struct xfs_mount, m_reclaim_work);
- 
- 	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
--	xfs_syncd_queue_reclaim(mp);
-+	xfs_reclaim_work_queue(mp);
- }
- 
- void
-@@ -388,7 +386,7 @@ __xfs_inode_set_reclaim_tag(
- 		spin_unlock(&ip->i_mount->m_perag_lock);
- 
- 		/* schedule periodic background inode reclaim */
--		xfs_syncd_queue_reclaim(ip->i_mount);
-+		xfs_reclaim_work_queue(ip->i_mount);
- 
- 		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
- 							-1, _RET_IP_);
-@@ -646,9 +644,9 @@ out:
- 	/*
- 	 * We could return EAGAIN here to make reclaim rescan the inode tree in
- 	 * a short while. However, this just burns CPU time scanning the tree
--	 * waiting for IO to complete and xfssyncd never goes back to the idle
--	 * state. Instead, return 0 to let the next scheduled background reclaim
--	 * attempt to reclaim the inode again.
-+	 * waiting for IO to complete and the reclaim work never goes back to
-+	 * the idle state. Instead, return 0 to let the next scheduled
-+	 * background reclaim attempt to reclaim the inode again.
- 	 */
- 	return 0;
- }
-@@ -804,7 +802,7 @@ xfs_reclaim_inodes_nr(
- 	int			nr_to_scan)
- {
- 	/* kick background reclaimer and push the AIL */
--	xfs_syncd_queue_reclaim(mp);
-+	xfs_reclaim_work_queue(mp);
- 	xfs_ail_push_all(mp->m_ail);
- 
- 	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
-diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 0018e84..0beabea 100644
---- a/fs/xfs/xfs_sync.h
-+++ b/fs/xfs/xfs_sync.h
-@@ -24,8 +24,6 @@ struct xfs_perag;
- #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
- #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
- 
--extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
--
- void xfs_reclaim_worker(struct work_struct *work);
- 
- int xfs_quiesce_data(struct xfs_mount *mp);
+  * Make sure that the extents in the given memory buffer
 -- 
 1.7.10
 
