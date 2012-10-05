@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95EEAgI053207 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:14:10 -0500
+	q95EEB6M053236 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:14:11 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yFAMsYsfuqDTqlLt for
+	cuda.sgi.com with ESMTP id n0IBYiWOV1GBrGsH for
 	<xfs@oss.sgi.com>; Fri, 05 Oct 2012 07:15:37 -0700 (PDT)
 Received: from int-mx09.intmail.prod.int.phx2.redhat.com
 	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EFadX011976
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EFbDS025355
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:37 -0400
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
 	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q95EFaRK008177
-	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:36 -0400
+	id q95EFa2U008184
+	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:37 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 04/10] xfs: make xfs_free_eofblocks() non-static,
-	return EAGAIN on trylock failure
-Date: Fri,  5 Oct 2012 10:17:10 -0400
-Message-Id: <1349446636-8611-5-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 09/10] xfs: add minimum file size filtering to eofblocks
+	scan
+Date: Fri,  5 Oct 2012 10:17:15 -0400
+Message-Id: <1349446636-8611-10-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
 References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,59 +36,51 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Turn xfs_free_eofblocks() into a non-static function, return EAGAIN to
-indicate trylock failure and make sure this error is not propagated in
-xfs_release().
+Support minimum file size filtering in the eofblocks scan. The
+caller must set the XFS_EOF_FLAGS_MINFILESIZE flags bit and minimum
+file size value in bytes.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_vnodeops.c |    6 +++---
- fs/xfs/xfs_vnodeops.h |    1 +
- 2 files changed, 4 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_fs.h     |    2 ++
+ fs/xfs/xfs_icache.c |    5 +++++
+ 2 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index 1f3c53d8..21665fa 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -151,7 +151,7 @@ xfs_readlink(
-  * when the link count isn't zero and by xfs_dm_punch_hole() when
-  * punching a hole to EOF.
-  */
--STATIC int
-+int
- xfs_free_eofblocks(
- 	xfs_mount_t	*mp,
- 	xfs_inode_t	*ip,
-@@ -200,7 +200,7 @@ xfs_free_eofblocks(
- 		if (need_iolock) {
- 			if (!xfs_ilock_nowait(ip, XFS_IOLOCK_EXCL)) {
- 				xfs_trans_cancel(tp, 0);
--				return 0;
-+				return EAGAIN;
- 			}
- 		}
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index 6ef9111..6d42b0d 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -347,12 +347,14 @@ struct xfs_eofblocks {
+ 	__u32		eof_flags;
+ 	__u32		eof_q_id;
+ 	__u32		eof_q_type;
++	__u32		eof_min_file_size;
+ 	unsigned char	pad[12];
+ };
  
-@@ -463,7 +463,7 @@ xfs_release(
+ /* eof_flags values */
+ #define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
+ #define XFS_EOF_FLAGS_QUOTA		0x02	/* filter by quota id */
++#define XFS_EOF_FLAGS_MINFILESIZE	0x04	/* filter by min file size */
+ 
+ 
+ /*
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index b39970b..ffd7f86 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1216,6 +1216,11 @@ xfs_inode_free_eofblocks(
+ 		if (eofb->eof_flags & XFS_EOF_FLAGS_QUOTA &&
+ 		    !xfs_inode_match_quota_id(ip, eofb))
  			return 0;
++
++		/* skip the inode if the file size is too small */
++		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
++		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
++			return 0;
+ 	}
  
- 		error = xfs_free_eofblocks(mp, ip, true);
--		if (error)
-+		if (error && error != EAGAIN)
- 			return error;
- 
- 		/* delalloc blocks after truncation means it really is dirty */
-diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-index 447e146..52fafc4 100644
---- a/fs/xfs/xfs_vnodeops.h
-+++ b/fs/xfs/xfs_vnodeops.h
-@@ -57,5 +57,6 @@ int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
- int xfs_wait_on_pages(struct xfs_inode *ip, xfs_off_t first, xfs_off_t last);
- 
- int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
-+int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
- 
- #endif /* _XFS_VNODEOPS_H */
+ 	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
 -- 
 1.7.7.6
 
