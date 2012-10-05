@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95EEB6M053236 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:14:11 -0500
+	q95Er7PK058127 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:53:07 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id n0IBYiWOV1GBrGsH for
-	<xfs@oss.sgi.com>; Fri, 05 Oct 2012 07:15:37 -0700 (PDT)
-Received: from int-mx09.intmail.prod.int.phx2.redhat.com
-	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EFbDS025355
+	cuda.sgi.com with ESMTP id BV9MTO97etdytC87 for
+	<xfs@oss.sgi.com>; Fri, 05 Oct 2012 07:54:33 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EsXfc008125
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:37 -0400
+	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:54:33 -0400
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q95EFa2U008184
-	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:37 -0400
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q95EFa4a027043
+	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:36 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 09/10] xfs: add minimum file size filtering to eofblocks
-	scan
-Date: Fri,  5 Oct 2012 10:17:15 -0400
-Message-Id: <1349446636-8611-10-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 05/10] xfs: create function to scan and clear EOFBLOCKS
+	inodes
+Date: Fri,  5 Oct 2012 10:17:11 -0400
+Message-Id: <1349446636-8611-6-git-send-email-bfoster@redhat.com>
 In-Reply-To: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
 References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,51 +36,102 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Support minimum file size filtering in the eofblocks scan. The
-caller must set the XFS_EOF_FLAGS_MINFILESIZE flags bit and minimum
-file size value in bytes.
+xfs_inodes_free_eofblocks() implements scanning functionality for
+EOFBLOCKS inodes. It uses the AG iterator to walk the tagged inodes
+and free post-EOF blocks via the xfs_inode_free_eofblocks() execute
+function. The scan can be invoked in best-effort mode or wait
+(force) mode.
+
+A best-effort scan (default) handles all inodes that do not have a
+dirty cache and we successfully acquire the io lock via trylock. In
+wait mode, we continue to cycle through an AG until all inodes are
+handled.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_fs.h     |    2 ++
- fs/xfs/xfs_icache.c |    5 +++++
- 2 files changed, 7 insertions(+), 0 deletions(-)
+ fs/xfs/xfs_icache.c |   43 +++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_icache.h |    1 +
+ fs/xfs/xfs_trace.h  |    1 +
+ 3 files changed, 45 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 6ef9111..6d42b0d 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -347,12 +347,14 @@ struct xfs_eofblocks {
- 	__u32		eof_flags;
- 	__u32		eof_q_id;
- 	__u32		eof_q_type;
-+	__u32		eof_min_file_size;
- 	unsigned char	pad[12];
- };
- 
- /* eof_flags values */
- #define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
- #define XFS_EOF_FLAGS_QUOTA		0x02	/* filter by quota id */
-+#define XFS_EOF_FLAGS_MINFILESIZE	0x04	/* filter by min file size */
- 
- 
- /*
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index b39970b..ffd7f86 100644
+index 878eb24..b02a3df 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -1216,6 +1216,11 @@ xfs_inode_free_eofblocks(
- 		if (eofb->eof_flags & XFS_EOF_FLAGS_QUOTA &&
- 		    !xfs_inode_match_quota_id(ip, eofb))
- 			return 0;
-+
-+		/* skip the inode if the file size is too small */
-+		if (eofb->eof_flags & XFS_EOF_FLAGS_MINFILESIZE &&
-+		    XFS_ISIZE(ip) < eofb->eof_min_file_size)
-+			return 0;
- 	}
+@@ -1170,6 +1170,49 @@ xfs_reclaim_inodes_count(
+ 	return reclaimable;
+ }
  
- 	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
++STATIC int
++xfs_inode_free_eofblocks(
++	struct xfs_inode	*ip,
++	struct xfs_perag	*pag,
++	int			flags,
++	void			*args)
++{
++	int ret;
++
++	if (!xfs_can_free_eofblocks(ip, false)) {
++		/* inode could be preallocated or append-only */
++		trace_xfs_inode_free_eofblocks_invalid(ip);
++		xfs_inode_clear_eofblocks_tag(ip);
++		return 0;
++	}
++
++	/*
++	 * If the mapping is dirty the operation can block and wait for some
++	 * time. Unless we are waiting, skip it.
++	 */
++	if (!(flags & SYNC_WAIT) &&
++	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
++		return 0;
++
++	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
++
++	/* don't revisit the inode if we're not waiting */
++	if (ret == EAGAIN && !(flags & SYNC_WAIT))
++		ret = 0;
++
++	return ret;
++}
++
++int
++xfs_icache_free_eofblocks(
++	struct xfs_mount	*mp,
++	int			flags)
++{
++	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
++	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
++					 NULL, XFS_ICI_EOFBLOCKS_TAG);
++}
++
+ void
+ xfs_inode_set_eofblocks_tag(
+ 	xfs_inode_t	*ip)
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index bb80237..abca9fb 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -37,6 +37,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+ 
+ void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
++int xfs_icache_free_eofblocks(struct xfs_mount *, int);
+ 
+ int xfs_sync_inode_grab(struct xfs_inode *ip);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 6f46e03..cb52346 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -589,6 +589,7 @@ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
+ 
+ DEFINE_INODE_EVENT(xfs_inode_set_eofblocks_tag);
+ DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
++DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
+ 
+ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
 -- 
 1.7.7.6
 
