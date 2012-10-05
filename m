@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95HIL4W071606 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:21 -0500
-Message-Id: <20121005171945.678198252@sgi.com>
-Date: Fri, 05 Oct 2012 12:18:56 -0500
+	q95HIKgw071557 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:20 -0500
+Message-Id: <20121005171946.108003705@sgi.com>
+Date: Fri, 05 Oct 2012 12:18:58 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch v4 03/13] [PATCH 03/13] xfs: dont run the sync work if the
-	filesystem is
+Subject: [patch v4 05/13] [PATCH 05/13] xfs: Bring some sanity to log
+	unmounting
 References: <20121005171853.985930109@sgi.com>
 Content-Disposition: inline;
-	filename=xfs-don-t-run-the-sync-work-if-the-filesystem-is.patch
-	read-only
+	filename=xfs-bring-some-sanity-to-log-unmounting.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,107 +28,115 @@ Cc: Dave Chinner <dchinner@redhat.com>
 
 From: Dave Chinner <dchinner@redhat.com>
 
-If the filesystem is mounted or remounted read-only, stop the sync
-worker that tries to flush or cover the log if the filesystem is
-dirty. It's read-only, so it isn't dirty. Restart it on a remount,rw
-as necessary. This avoids the need for RO checks in the work.
+When unmounting the filesystem, there are lots of operations that
+need to be done in a specific order, and they are spread across
+across a couple of functions. We have to drain the AIL before we
+write the unmount record, and we have to shut down the background
+log work before we do either of them.
 
-Similarly, stop the sync work when the filesystem is frozen, and
-start it again when the filesysetm is thawed. This avoids the need
-for special freeze checks in the work.
+But this is all split haphazardly across xfs_unmountfs() and
+xfs_log_unmount(). Move all the AIL flushing and log manipulations
+to xfs_log_unmount() so that the responisbilities of each function
+is clear and the operations they perform obvious.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 
 ---
- fs/xfs/xfs_super.c |    2 ++
- fs/xfs/xfs_sync.c  |   29 ++++++++++++++++-------------
- 2 files changed, 18 insertions(+), 13 deletions(-)
+ fs/xfs/xfs_log.c   |   29 ++++++++++++++++++++++++++---
+ fs/xfs/xfs_mount.c |   24 ------------------------
+ 2 files changed, 26 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 935b2c7..f6147ae 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1107,6 +1107,7 @@ xfs_fs_remount(
- 		 * value if it is non-zero, otherwise go with the default.
- 		 */
- 		xfs_restore_resvblks(mp);
-+		xfs_syncd_queue_sync(mp);
- 	}
- 
- 	/* rw -> ro */
-@@ -1152,6 +1153,7 @@ xfs_fs_unfreeze(
- 	struct xfs_mount	*mp = XFS_M(sb);
- 
- 	xfs_restore_resvblks(mp);
-+	xfs_syncd_queue_sync(mp);
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 509190f..5d69f23 100644
---- a/fs/xfs/xfs_sync.c
-+++ b/fs/xfs/xfs_sync.c
-@@ -323,6 +323,9 @@ xfs_quiesce_data(
-  * Second stage of a quiesce. The data is already synced, now we have to take
-  * care of the metadata. New transactions are already blocked, so we need to
-  * wait for any remaining transactions to drain out before proceeding.
-+ *
-+ * Note: this stops background sync work - the callers must ensure it is started
-+ * again when appropriate.
-  */
- void
- xfs_quiesce_attr(
-@@ -341,6 +344,9 @@ xfs_quiesce_attr(
- 	/* flush all pending changes from the AIL */
- 	xfs_ail_push_all_sync(mp->m_ail);
- 
-+	/* stop background sync work */
-+	cancel_delayed_work_sync(&mp->m_sync_work);
-+
- 	/*
- 	 * Just warn here till VFS can correctly support
- 	 * read-only remount without racing.
-@@ -379,9 +385,8 @@ xfs_syncd_queue_sync(
- }
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index a1fe7a7..a400e71 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -853,15 +853,38 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ }	/* xfs_log_unmount_write */
  
  /*
-- * Every sync period we need to unpin all items in the AIL and push them to
-- * disk. If there is nothing dirty, then we might need to cover the log to
-- * indicate that the filesystem is idle and not frozen.
-+ * Every sync period we need to push dirty metadata and try to cover the log
-+ * to indicate the filesystem is idle and not frozen.
+- * Deallocate log structures for unmount/relocation.
++ * Shut down and release the AIL and Log.
+  *
+- * We need to stop the aild from running before we destroy
+- * and deallocate the log as the aild references the log.
++ * During unmount, we need to ensure we flush all the dirty metadata objects
++ * from the AIL so that the log is empty before we write the unmount record to
++ * the log.
++ *
++ * To do this, we first need to shut down the background log work so it is not
++ * trying to cover the log as we clean up. We then need to unpin all objects in
++ * the log so we can then flush them out. Once they have completed their IO and
++ * run the callbacks removing themselves from the AIL, we can write the unmount
++ * record, tear down the AIL and finally free the log.
   */
  void
- xfs_sync_worker(
-@@ -391,17 +396,15 @@ xfs_sync_worker(
- 					struct xfs_mount, m_sync_work);
- 	int		error;
+ xfs_log_unmount(xfs_mount_t *mp)
+ {
+ 	cancel_delayed_work_sync(&mp->m_log->l_work);
++	xfs_log_force(mp, XFS_LOG_SYNC);
++
++	/*
++	 * The superblock buffer is uncached and while xfs_ail_push_all_sync()
++	 * will push it, xfs_wait_buftarg() will not wait for it. Further,
++	 * xfs_buf_iowait() cannot be used because it was pushed with the
++	 * XBF_ASYNC flag set, so we need to use a lock/unlock pair to wait for
++	 * the IO to complete.
++	 */
++	xfs_ail_push_all_sync(mp->m_ail);
++	xfs_wait_buftarg(mp->m_ddev_targp);
++	xfs_buf_lock(mp->m_sb_bp);
++	xfs_buf_unlock(mp->m_sb_bp);
++
++	xfs_log_unmount_write(mp);
++
+ 	xfs_trans_ail_destroy(mp);
+ 	xlog_dealloc_log(mp->m_log);
+ }
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 3152924..149b601 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -1493,13 +1493,6 @@ xfs_unmountfs(
+ 	xfs_qm_unmount(mp);
  
--	if (!(mp->m_flags & XFS_MOUNT_RDONLY)) {
--		/* dgc: errors ignored here */
--		if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
--		    xfs_log_need_covered(mp))
--			error = xfs_fs_log_dummy(mp);
--		else
--			xfs_log_force(mp, 0);
-+	/* dgc: errors ignored here */
-+	if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
-+	    xfs_log_need_covered(mp))
-+		error = xfs_fs_log_dummy(mp);
-+	else
-+		xfs_log_force(mp, 0);
+ 	/*
+-	 * Flush out the log synchronously so that we know for sure
+-	 * that nothing is pinned.  This is important because bflush()
+-	 * will skip pinned buffers.
+-	 */
+-	xfs_log_force(mp, XFS_LOG_SYNC);
+-
+-	/*
+ 	 * Unreserve any blocks we have so that when we unmount we don't account
+ 	 * the reserved free space as used. This is really only necessary for
+ 	 * lazy superblock counting because it trusts the incore superblock
+@@ -1524,23 +1517,6 @@ xfs_unmountfs(
+ 		xfs_warn(mp, "Unable to update superblock counters. "
+ 				"Freespace may not be correct on next mount.");
  
--		/* start pushing all the metadata that is currently dirty */
--		xfs_ail_push_all(mp->m_ail);
--	}
-+	/* start pushing all the metadata that is currently dirty */
-+	xfs_ail_push_all(mp->m_ail);
+-	/*
+-	 * At this point we might have modified the superblock again and thus
+-	 * added an item to the AIL, thus flush it again.
+-	 */
+-	xfs_ail_push_all_sync(mp->m_ail);
+-	xfs_wait_buftarg(mp->m_ddev_targp);
+-
+-	/*
+-	 * The superblock buffer is uncached and xfsaild_push() will lock and
+-	 * set the XBF_ASYNC flag on the buffer. We cannot do xfs_buf_iowait()
+-	 * here but a lock on the superblock buffer will block until iodone()
+-	 * has completed.
+-	 */
+-	xfs_buf_lock(mp->m_sb_bp);
+-	xfs_buf_unlock(mp->m_sb_bp);
+-
+-	xfs_log_unmount_write(mp);
+ 	xfs_log_unmount(mp);
+ 	xfs_uuid_unmount(mp);
  
- 	/* queue us up again */
- 	xfs_syncd_queue_sync(mp);
 -- 
 1.7.10
 
