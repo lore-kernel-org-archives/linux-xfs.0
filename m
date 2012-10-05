@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q94NaV7n238500 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 18:36:31 -0500
-Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
-	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	wrahEAIt05FSznqH for <xfs@oss.sgi.com>;
-	Thu, 04 Oct 2012 16:37:56 -0700 (PDT)
-Date: Fri, 5 Oct 2012 09:37:54 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: how to replay log of a fs that has no log: is this supposed to
-	work? SW Defect?
-Message-ID: <20121004233754.GC23644@dastard>
-References: <506DAF66.2030507@tlinx.org>
- <506DB419.2030902@tlinx.org>
+	q9508eu2242228 for <xfs@oss.sgi.com>; Thu, 4 Oct 2012 19:08:40 -0500
+Received: from Ishtar.sc.tlinx.org (ishtar.tlinx.org [173.164.175.65]) by
+	cuda.sgi.com with ESMTP id okOEoOVEB3kZGeGn (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 04 Oct 2012 17:10:05 -0700 (PDT)
+Message-ID: <506E2558.2050003@tlinx.org>
+Date: Thu, 04 Oct 2012 17:10:00 -0700
+From: Linda Walsh <xfs@tlinx.org>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <506DB419.2030902@tlinx.org>
+Subject: Re: xfs_freeze same as umount?   How is that helpful?
+References: <506DAB8C.9000601@tlinx.org>
+	<CAGpXXZJuWRAMnJfZKJMZ3N=0EwcfYOEwX+iteyk9hY7ojWA+XA@mail.gmail.com>
+	<506E1025.8050605@tlinx.org> <20121004233204.GB23644@dastard>
+In-Reply-To: <20121004233204.GB23644@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,69 +23,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Linda Walsh <xfs@tlinx.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Thu, Oct 04, 2012 at 09:06:49AM -0700, Linda Walsh wrote:
+Dave Chinner wrote:
+> On Thu, Oct 04, 2012 at 03:39:33PM -0700, Linda Walsh wrote:
+>> Greg Freemyer wrote:
+>>> Conceptually it is typically:
+>>> - quiesce system
+>> ----
+>> 	Um... it seems that this is equivalent to being
+>> able to umount the disk?
 > 
+> NO, it's not. freeze intentionally leaves the log dirty, whereas
+> unmount leaves it clean.
+----
+	That's what I thought!
+
+
 > 
-> Linda Walsh wrote:
-> (blah blah blah)...
+>> When I tried xfs_freeze / fs_freeze got fs-busy -- same as I would
+>> if I tried to umount it.
 > 
-> or more specifically:
+> Of course - it's got to write all the dirty data andmetadata in
+> memory to disk. Freeze is about providing a stable, consistent disk
+> image of the filesystem, so it must flush dirty objects from memory
+> to disk to provide that.
+----
+	But it says the freeze failed.... huh.
+
+Just tried it again .. ( first time after reboot.. froze it no
+messages or complaints) ?!?!  I don't get it.
+
+
+It gave me a file system busy message before and as near as I could tell --
+it wouldn't allow me to xfs_freeze it.
+
+Trying the same thing now -- no prob.
+
+(though I am ALSO on a newer kernel -- had another problem I solved
+in looking through the logs for hints about the freeze.
+
+
 > 
-> xfs_freeze -f /home/.snapdir/\@GMT-2012.10.04-03.06.17
-> Ishtar:/# xfs_ncheck /dev/Home+Space/Home-2012.10.04-03.06.17
+>> I thought the point of xfs_freeze was to allow it to be brought to
+>> a consistent state without unmounting it?
 > 
->    ERROR: The filesystem has valuable metadata changes in a log which needs to
->    be replayed.  Mount the filesystem to replay the log, and unmount it before
->    re-running xfs_ncheck.  If you are unable to mount the filesystem, then use
->    the xfs_repair -L option to destroy the log and attempt a repair.
->    Note that destroying the log may cause corruption -- please attempt a mount
->    of the filesystem before doing this.
->    must run blockget -n first
+> Exactly.
 > 
-> ok -- lets mount/umount it:
-> Ishtar:/# mount -o ro,nouuid
-> /dev/Home+Space/Home-2012.10.04-03.06.17
-> /home/.snapdir/@GMT-2012.10.04-03.06.17
-
-So, a read only snapshot? If so what makes you think that recovery
-can run and modify the filesystem/log?
-
-THe whole point of freeze creating a consistent disk image is so you
-can mount it without needing recovery to run. i.e:
-
-# mount -o ro,nouuid,norecovery ....
-
-> ---
-> Um... looking at the above it would appear that I froze a fs.
-> ncheck claimed the freeze didn't result in the logfile being written being put
-> into a consistent state, but said to remount the fs to allow it to play then
-> umount...
+>> Coincidentally, after trying a few freezes, the system froze.
 > 
-> So... did that.
-> Log file is still in a corrupt state.
+> Entirely possible if you froze the root filesystem and something you
+> rely on tried to write to the filesystem.
+---
+	Nep... "/home", and running as root, in root partition with
+/home elements removed from PATH.   trying to be careful.  Notice
+I did say   'Coincidentally' -- (w no/quotes in original).  If I was
+thought there might be a connection or problem, at the very least I would
+have put 'coincidentally' in quotes.. :-)..
 
-The log is not corrupt, just dirty.
 
-> Am I wrong in assuming that doing xfs_repair -L to destroy the log on this
-> dev, might be a bad thing to do and might screw up it's "Origin" file
-> system (i.e. the current 'live' /home partition)?
+> 
+> Anyway, a one-line "it froze" report doesn't tell us anything about
+> the problem you saw. So:
+----
+	Wasn't sure what I saw or that it was related -- exactly...
 
-It will try to write to the snapshot. If it is a read-only
-snapshot...
+A possible theory... but nothing I'd blaim on xfs,  -- last message in log was:
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Oct  4 13:52:50 Ishtar kernel: [985735.911825] INFO: task fetchmail:25872 blocke
+d for more than 120 seconds.
+Oct  4 13:52:50 Ishtar kernel: [985735.918777] "echo 0 > /proc/sys/kernel/hung_t
+ask_timeout_secs" disables this message.
+
+
+My kernel *was* setup to panic on a hung task.... instead it just froze...
+but why fetchmail hung... well if the xfs_freeze "partly took" and just issued
+the error "because", then that process might have froze trying to write log messages
+to /home partition.... but 120 secs?  seems like it might have been going down 
+before
+I tried anything with xfs_freeze...
+
+
+But not sure what to report now, as it's not doing the same things.
+
+Was running 3.2.29, am running 3.5.4 now.... but 3.2.29 had been up for over 10
+days... so maybe something else was going on there...
+
+Sorry, when I said corrupt... mis-statement on my part... dirty was what
+I meant -- but corrupt from the standpoint that the data lacked sufficient integrity
+for a blockget type operation.  But dirty would be more accurate in FS-lingo.
+
+(still had my data-integrity hat on)...
+
+So if I xfs-freeze something, then take a snapshot, -- I don't see that any of that
+would help in doing an xfs_blockget o get a dump of inodes->blocks, as it sounds
+like it would still be dirty...
+
+Hey, I think xfs walks on water, so don't think I'm complaining...just
+trying to figure things out.   It's been a good fs for me for over 10 years on
+my home systems.
+
 
 _______________________________________________
 xfs mailing list
