@@ -1,11 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95HIMr1071613 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:22 -0500
-Message-Id: <20121005171853.985930109@sgi.com>
-Date: Fri, 05 Oct 2012 12:18:53 -0500
+	q95HIMhR071614 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 12:18:22 -0500
+Message-Id: <20121005171945.270844586@sgi.com>
+Date: Fri, 05 Oct 2012 12:18:54 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch v4 00/13] xfs: remove the xfssyncd mess
+Subject: [patch v4 01/13] [PATCH 01/13] xfs: xfs_syncd_stop must die
+References: <20121005171853.985930109@sgi.com>
+Content-Disposition: inline; filename=xfs-xfs_syncd_stop-must-die.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,58 +21,181 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>, xfs@oss.sgi.com
+Cc: Dave Chinner <dchinner@redhat.com>
 
-Hi Dave,
+From: Dave Chinner <dchinner@redhat.com>
 
-Here I am reposting your xfssyncd series.  I want to make sure that
-we're all on the same page.  In particular, are we all happy with patch
-6, 'xfs: xfs_sync_data is redundant'?
+xfs_syncd_start and xfs_syncd_stop tie a bunch of unrelated
+functionailty together that actually have different start and stop
+requirements. Kill these functions and open code the start/stop
+methods for each of the background functions.
 
-Version 4:
-- updated 'xfs: xfs_sync_data is redundant' with cleanups to the 
-  xfs_flush_inodes interface as per Christoph's request,
-- updated 'xfs: xfs_sync_data is redundant', folding in changes from 
-  http://oss.sgi.com/archives/xfs/2012-10/msg00036.html 
-- fixed a minor typo in xfs: 'syncd workqueue is no more', renaming the 
-  log worker from 'xfs-reclaim' to 'xfs-log'.
+Subsequent patches will move the start/stop functions around to the
+correct places to avoid races and shutdown issues.
 
-I was going to rush this in for the 3.7 merge window.  However in the
-light of the issues with patch 6 and Linus's comment here:
-http://lkml.org/lkml/2012/9/30/152 and Stephen's comment here:
-https://lkml.org/lkml/2012/9/23/144, I think it wiser to behave.  3.7
-is stable without this series, so I will merge it for 3.8.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Once we have an agreement that patch 6 is ready I will pull this in to the
-master branch first thing after the 3.7-rc1 merge from upstream.
+---
+ fs/xfs/xfs_super.c |   25 ++++++++++++++++++-------
+ fs/xfs/xfs_sync.c  |   30 ++++--------------------------
+ fs/xfs/xfs_sync.h  |    6 ++++--
+ 3 files changed, 26 insertions(+), 35 deletions(-)
 
-Regards,
-Ben
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 19e2380..59d76bd 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -921,7 +921,11 @@ xfs_fs_put_super(
+ 	xfs_filestream_unmount(mp);
+ 	cancel_delayed_work_sync(&mp->m_sync_work);
+ 	xfs_unmountfs(mp);
+-	xfs_syncd_stop(mp);
++
++	cancel_delayed_work_sync(&mp->m_sync_work);
++	cancel_delayed_work_sync(&mp->m_reclaim_work);
++	cancel_work_sync(&mp->m_flush_work);
++
+ 	xfs_freesb(mp);
+ 	xfs_icsb_destroy_counters(mp);
+ 	xfs_destroy_mount_workqueues(mp);
+@@ -1291,9 +1295,11 @@ xfs_fs_fill_super(
+ 	sb->s_time_gran = 1;
+ 	set_posix_acl_flag(sb);
+ 
+-	error = xfs_syncd_init(mp);
+-	if (error)
+-		goto out_filestream_unmount;
++	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
++	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
++	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
++
++	xfs_syncd_queue_sync(mp);
+ 
+ 	error = xfs_mountfs(mp);
+ 	if (error)
+@@ -1316,8 +1322,10 @@ xfs_fs_fill_super(
+ 
+ 	return 0;
+  out_syncd_stop:
+-	xfs_syncd_stop(mp);
+- out_filestream_unmount:
++	cancel_delayed_work_sync(&mp->m_sync_work);
++	cancel_delayed_work_sync(&mp->m_reclaim_work);
++	cancel_work_sync(&mp->m_flush_work);
++
+ 	xfs_filestream_unmount(mp);
+  out_free_sb:
+ 	xfs_freesb(mp);
+@@ -1336,7 +1344,10 @@ out_destroy_workqueues:
+  out_unmount:
+ 	xfs_filestream_unmount(mp);
+ 	xfs_unmountfs(mp);
+-	xfs_syncd_stop(mp);
++
++	cancel_delayed_work_sync(&mp->m_sync_work);
++	cancel_delayed_work_sync(&mp->m_reclaim_work);
++	cancel_work_sync(&mp->m_flush_work);
+ 	goto out_free_sb;
+ }
+ 
+diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
+index 9654817..13830e4 100644
+--- a/fs/xfs/xfs_sync.c
++++ b/fs/xfs/xfs_sync.c
+@@ -370,7 +370,7 @@ xfs_quiesce_attr(
+ 	xfs_buf_unlock(mp->m_sb_bp);
+ }
+ 
+-static void
++void
+ xfs_syncd_queue_sync(
+ 	struct xfs_mount        *mp)
+ {
+@@ -383,7 +383,7 @@ xfs_syncd_queue_sync(
+  * disk quotas.  We might need to cover the log to indicate that the
+  * filesystem is idle and not frozen.
+  */
+-STATIC void
++void
+ xfs_sync_worker(
+ 	struct work_struct *work)
+ {
+@@ -445,7 +445,7 @@ xfs_syncd_queue_reclaim(
+  * goes low. It scans as quickly as possible avoiding locked inodes or those
+  * already being flushed, and once done schedules a future pass.
+  */
+-STATIC void
++void
+ xfs_reclaim_worker(
+ 	struct work_struct *work)
+ {
+@@ -478,7 +478,7 @@ xfs_flush_inodes(
+ 	flush_work_sync(&mp->m_flush_work);
+ }
+ 
+-STATIC void
++void
+ xfs_flush_worker(
+ 	struct work_struct *work)
+ {
+@@ -489,28 +489,6 @@ xfs_flush_worker(
+ 	xfs_sync_data(mp, SYNC_TRYLOCK | SYNC_WAIT);
+ }
+ 
+-int
+-xfs_syncd_init(
+-	struct xfs_mount	*mp)
+-{
+-	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
+-	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
+-	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+-
+-	xfs_syncd_queue_sync(mp);
+-
+-	return 0;
+-}
+-
+-void
+-xfs_syncd_stop(
+-	struct xfs_mount	*mp)
+-{
+-	cancel_delayed_work_sync(&mp->m_sync_work);
+-	cancel_delayed_work_sync(&mp->m_reclaim_work);
+-	cancel_work_sync(&mp->m_flush_work);
+-}
+-
+ void
+ __xfs_inode_set_reclaim_tag(
+ 	struct xfs_perag	*pag,
+diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
+index 941202e..3f59e5b 100644
+--- a/fs/xfs/xfs_sync.h
++++ b/fs/xfs/xfs_sync.h
+@@ -26,8 +26,10 @@ struct xfs_perag;
+ 
+ extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
+ 
+-int xfs_syncd_init(struct xfs_mount *mp);
+-void xfs_syncd_stop(struct xfs_mount *mp);
++void xfs_syncd_queue_sync(struct xfs_mount *mp);
++void xfs_sync_worker(struct work_struct *work);
++void xfs_flush_worker(struct work_struct *work);
++void xfs_reclaim_worker(struct work_struct *work);
+ 
+ int xfs_quiesce_data(struct xfs_mount *mp);
+ void xfs_quiesce_attr(struct xfs_mount *mp);
+-- 
+1.7.10
 
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
 
-Version 3 of the patchset I described here:
-
-http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
-
-This patchset reliably exposed the log->l_last_sync_lsn problem I
-just posted a fix for.
-
-Version 3:
-- per-mount log and reclaim workqueues instead of a generic mount
-  workqueue.
-- reordering of some of the patches as Christoph requested.
-- fixed the writeback_inodes_sb_if_idle deadlock by moving it all
-  the way back up the write stack to xfs_file_aio_buffered_write
-  where we were just flushing the current file to avoid deadlocking
-  on it anyway.
-- reintroduced xfs_flush_inodes() as a wrapper for
-  writeback_inodes_sb_if_idle().
-- rebased on a current TOT.
-
-Version 2:
-- fix writeback_inodes_sb_if_idle call in xfs_create()
-- refreshed patch 13 before sending.
 
 _______________________________________________
 xfs mailing list
