@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q95Er7PK058127 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:53:07 -0500
+	q95Er7Fq058129 for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 09:53:07 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id BV9MTO97etdytC87 for
-	<xfs@oss.sgi.com>; Fri, 05 Oct 2012 07:54:33 -0700 (PDT)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EsXfc008125
+	cuda.sgi.com with ESMTP id kweXw2xdRpHBaAVC for
+	<xfs@oss.sgi.com>; Fri, 05 Oct 2012 07:54:34 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q95EsWXS011893
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:54:33 -0400
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q95EFa4a027043
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q95EFaMG019552
 	for <xfs@oss.sgi.com>; Fri, 5 Oct 2012 10:15:36 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v5 05/10] xfs: create function to scan and clear EOFBLOCKS
-	inodes
-Date: Fri,  5 Oct 2012 10:17:11 -0400
-Message-Id: <1349446636-8611-6-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
-References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v5 00/10] speculative preallocation inode tracking
+Date: Fri,  5 Oct 2012 10:17:06 -0400
+Message-Id: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,102 +33,95 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-xfs_inodes_free_eofblocks() implements scanning functionality for
-EOFBLOCKS inodes. It uses the AG iterator to walk the tagged inodes
-and free post-EOF blocks via the xfs_inode_free_eofblocks() execute
-function. The scan can be invoked in best-effort mode or wait
-(force) mode.
+Hi all,
 
-A best-effort scan (default) handles all inodes that do not have a
-dirty cache and we successfully acquire the io lock via trylock. In
-wait mode, we continue to cycle through an AG until all inodes are
-handled.
+This is v3 of the speculative preallocation inode tracking patchset. This
+functionality tracks inodes with post-EOF speculative preallocation for the
+purpose of background and on-demand trimming.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/xfs_icache.c |   43 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_icache.h |    1 +
- fs/xfs/xfs_trace.h  |    1 +
- 3 files changed, 45 insertions(+), 0 deletions(-)
+Background scanning occurs on a longish interval (5 minutes by default) and in
+a best-effort mode (i.e., inodes are skipped due to lock contention or dirty
+cache). The intent is to clear up post-EOF blocks on inodes that might have
+allocations hanging around due to open-write-close sequences (NFS).
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 878eb24..b02a3df 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1170,6 +1170,49 @@ xfs_reclaim_inodes_count(
- 	return reclaimable;
- }
- 
-+STATIC int
-+xfs_inode_free_eofblocks(
-+	struct xfs_inode	*ip,
-+	struct xfs_perag	*pag,
-+	int			flags,
-+	void			*args)
-+{
-+	int ret;
-+
-+	if (!xfs_can_free_eofblocks(ip, false)) {
-+		/* inode could be preallocated or append-only */
-+		trace_xfs_inode_free_eofblocks_invalid(ip);
-+		xfs_inode_clear_eofblocks_tag(ip);
-+		return 0;
-+	}
-+
-+	/*
-+	 * If the mapping is dirty the operation can block and wait for some
-+	 * time. Unless we are waiting, skip it.
-+	 */
-+	if (!(flags & SYNC_WAIT) &&
-+	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
-+		return 0;
-+
-+	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
-+
-+	/* don't revisit the inode if we're not waiting */
-+	if (ret == EAGAIN && !(flags & SYNC_WAIT))
-+		ret = 0;
-+
-+	return ret;
-+}
-+
-+int
-+xfs_icache_free_eofblocks(
-+	struct xfs_mount	*mp,
-+	int			flags)
-+{
-+	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
-+	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
-+					 NULL, XFS_ICI_EOFBLOCKS_TAG);
-+}
-+
- void
- xfs_inode_set_eofblocks_tag(
- 	xfs_inode_t	*ip)
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index bb80237..abca9fb 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -37,6 +37,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
- 
- void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
- void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
-+int xfs_icache_free_eofblocks(struct xfs_mount *, int);
- 
- int xfs_sync_inode_grab(struct xfs_inode *ip);
- int xfs_inode_ag_iterator(struct xfs_mount *mp,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 6f46e03..cb52346 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -589,6 +589,7 @@ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
- 
- DEFINE_INODE_EVENT(xfs_inode_set_eofblocks_tag);
- DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
-+DEFINE_INODE_EVENT(xfs_inode_free_eofblocks_invalid);
- 
- DECLARE_EVENT_CLASS(xfs_iref_class,
- 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+On demand scanning is provided via a new ioctl and supports various parameters
+such as scan mode, filtering by quota id and minimum file size. A pending use
+case for on demand scanning is for accurate quota accounting via the gluster
+scale out filesystem (i.e., to free up preallocated space when near a usage
+limit).
+
+Brian
+
+v5:
+- Rebased against the die-xfssyncd-die patchset.
+- Renamed xfs_inodes_free_eofblocks() to xfs_icache_free_eofblocks().
+- Migrated xfs_can_free_eofblocks() from static inline to xfs_inode.c.
+- Fixed xfs_eofblocks version field and added version check to ioctl().
+- Reworked quota filtering to use standard quota fields. Added patch 7 to
+  support.
+- Split min. file size filtering into a separate patch.
+- Reworked background scanning based on rebase. Created a new eofblocks
+  workqueue, renamed the tunable and based its value in seconds.
+
+v4:
+- Fix the broken need_iolock parameter to the xfs_free_eofblocks() call in
+  patch 5 (thanks to Ben M. for testing). This is a one line change. All
+  other patches equivalent to v3. This version survives an xfstests run (with
+  XFS_DEBUG enabled this time :P).
+
+v3:
+- Pushed dirty cache check up into patch 5 (minor clean up).
+- Reworked xfs_can_free_eofblocks() in patch 3 as per Dave C.'s review.
+- Rebased from linus' tree to the XFS tree.
+
+v2:
+- Remove unnecessary inode flag clear helper.
+- Condense eofblocks set/clear tag functions.
+- Move clear tag call into xfs_free_eofblocks().
+- Modify AG walk infrastructure to support tag-based walk and utilize this
+  functionality for the eofblocks scan (as opposed to the previous code
+  duplicated from reclaim scanning).
+- Improve ioctl functionality: new data structure fields/flags, validate quota
+  is enabled.
+- Increase default background scanning interval to 5 minutes, add tunable.
+
+Brian Foster (10):
+  xfs: add EOFBLOCKS inode tagging/untagging
+  xfs: support a tag-based inode_ag_iterator
+  xfs: create helper to check whether to free eofblocks on inode
+  xfs: make xfs_free_eofblocks() non-static, return EAGAIN on trylock
+    failure
+  xfs: create function to scan and clear EOFBLOCKS inodes
+  xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+  xfs: make xfs_quota_type() non-static
+  xfs: add quota id filtering to eofblocks scan
+  xfs: add minimum file size filtering to eofblocks scan
+  xfs: add background scanning to clear eofblocks inodes
+
+ fs/xfs/xfs_ag.h          |    1 +
+ fs/xfs/xfs_fs.h          |   20 ++++
+ fs/xfs/xfs_globals.c     |    1 +
+ fs/xfs/xfs_icache.c      |  220 ++++++++++++++++++++++++++++++++++++++++++++--
+ fs/xfs/xfs_icache.h      |   12 ++-
+ fs/xfs/xfs_inode.c       |   37 ++++++++
+ fs/xfs/xfs_inode.h       |    1 +
+ fs/xfs/xfs_ioctl.c       |   24 +++++
+ fs/xfs/xfs_iomap.c       |    8 ++
+ fs/xfs/xfs_iops.c        |    4 +
+ fs/xfs/xfs_linux.h       |    1 +
+ fs/xfs/xfs_mount.c       |    2 +
+ fs/xfs/xfs_mount.h       |    3 +
+ fs/xfs/xfs_qm_syscalls.c |    5 +-
+ fs/xfs/xfs_quota.h       |    1 +
+ fs/xfs/xfs_quotaops.c    |    2 +-
+ fs/xfs/xfs_super.c       |    9 ++
+ fs/xfs/xfs_sysctl.c      |    9 ++
+ fs/xfs/xfs_sysctl.h      |    1 +
+ fs/xfs/xfs_trace.h       |    6 ++
+ fs/xfs/xfs_vnodeops.c    |   27 +++---
+ fs/xfs/xfs_vnodeops.h    |    1 +
+ 22 files changed, 368 insertions(+), 27 deletions(-)
+
 -- 
 1.7.7.6
 
