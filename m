@@ -1,21 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q98Bu0wl063470 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 06:56:00 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	C22pCK1F08YeT91H for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 04:57:28 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLBxe-0000di-LM
-	for xfs@oss.sgi.com; Mon, 08 Oct 2012 22:57:26 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLBxU-0003he-Gw
-	for xfs@oss.sgi.com; Mon, 08 Oct 2012 22:57:16 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH] xfs: growfs: don't read garbage for new secondary superblocks
-Date: Mon,  8 Oct 2012 22:57:16 +1100
-Message-Id: <1349697436-14203-1-git-send-email-david@fromorbit.com>
+	q98EQxCV079811 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 09:26:59 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id u4NujWUHx7LUhmkd (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 07:28:28 -0700 (PDT)
+Date: Mon, 8 Oct 2012 15:28:23 +0100
+From: Mel Gorman <mgorman@suse.de>
+Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
+	s390
+Message-ID: <20121008142823.GL29125@suse.de>
+References: <1349108796-32161-1-git-send-email-jack@suse.cz>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <1349108796-32161-1-git-send-email-jack@suse.cz>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,70 +23,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-mm@kvack.org, linux-s390@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, Oct 01, 2012 at 06:26:36PM +0200, Jan Kara wrote:
+> On s390 any write to a page (even from kernel itself) sets architecture
+> specific page dirty bit. Thus when a page is written to via standard write, HW
+> dirty bit gets set and when we later map and unmap the page, page_remove_rmap()
+> finds the dirty bit and calls set_page_dirty().
+> 
+> Dirtying of a page which shouldn't be dirty can cause all sorts of problems to
+> filesystems. The bug we observed in practice is that buffers from the page get
+> freed, so when the page gets later marked as dirty and writeback writes it, XFS
+> crashes due to an assertion BUG_ON(!PagePrivate(page)) in page_buffers() called
+> from xfs_count_page_state().
+> 
+> Similar problem can also happen when zero_user_segment() call from
+> xfs_vm_writepage() (or block_write_full_page() for that matter) set the
+> hardware dirty bit during writeback, later buffers get freed, and then page
+> unmapped.
+> 
+> Fix the issue by ignoring s390 HW dirty bit for page cache pages in
+> page_mkclean() and page_remove_rmap(). This is safe because when a page gets
+> marked as writeable in PTE it is also marked dirty in do_wp_page() or
+> do_page_fault(). When the dirty bit is cleared by clear_page_dirty_for_io(),
+> the page gets writeprotected in page_mkclean(). So pagecache page is writeable
+> if and only if it is dirty.
+> 
+> CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
+> CC: Mel Gorman <mgorman@suse.de>
+> CC: linux-s390@vger.kernel.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
 
-When updating new secondary superblocks in a growfs operation, the
-sueprblock buffer is read from the newly grown region of the
-underlying device. This is not guaranteed to be zero, so violates
-the underlying assumption that the unused parts of superblocks are
-zero filled. Get a new buffer for these secondary superblocks to
-ensure that the unused regions are zero filled correctly.
+Acked-by: Mel Gorman <mgorman@suse.de>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_fsops.c |   21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index c25b094..4beaede 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -399,9 +399,26 @@ xfs_growfs_data_private(
- 
- 	/* update secondary superblocks. */
- 	for (agno = 1; agno < nagcount; agno++) {
--		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-+		error = 0;
-+		/*
-+		 * new secondary superblocks need to be zeroed, not read from
-+		 * disk as the contents of the new area we are growing into is
-+		 * completely unknown.
-+		 */
-+		if (agno < oagcount) {
-+			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
- 				  XFS_FSS_TO_BB(mp, 1), 0, &bp);
-+		} else {
-+			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
-+				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-+				  XFS_FSS_TO_BB(mp, 1), 0);
-+			if (bp)
-+				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-+			else
-+				error = ENOMEM;
-+		}
-+
- 		if (error) {
- 			xfs_warn(mp,
- 		"error %d reading secondary superblock for ag %d",
-@@ -423,7 +440,7 @@ xfs_growfs_data_private(
- 			break; /* no point in continuing */
- 		}
- 	}
--	return 0;
-+	return error;
- 
-  error0:
- 	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
 -- 
-1.7.10
+Mel Gorman
+SUSE Labs
 
 _______________________________________________
 xfs mailing list
