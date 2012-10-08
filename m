@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q98LDeJj144475 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 16:13:40 -0500
-Date: Mon, 8 Oct 2012 16:15:05 -0500
+	q98MbtIS154010 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 17:37:55 -0500
+Date: Mon, 8 Oct 2012 17:39:21 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: Polish translation for xfsdump
-Message-ID: <20121008211505.GR13214@sgi.com>
-References: <20121007125534.GB21669@stranger.qboosh.pl>
+Subject: Re: [PATCH 00/14 V5]: xfs: remove the xfssyncd mess
+Message-ID: <20121008223921.GS13214@sgi.com>
+References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121007125534.GB21669@stranger.qboosh.pl>
+In-Reply-To: <1349693772-8064-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,19 +22,60 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jakub Bogusz <qboosh@pld-linux.org>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-Hey Jakub,
+Hi Dave,
 
-On Sun, Oct 07, 2012 at 02:55:34PM +0200, Jakub Bogusz wrote:
-> I've made an initial Polish translation for xfsdump (3.1.0).
-> It's available at http://qboosh.pl/pl.po/xfsdump-3.1.0.pl.po
+On Mon, Oct 08, 2012 at 09:55:58PM +1100, Dave Chinner wrote:
+> Hopefully the final version.
 
-Thanks!  This will be applied in the next release.
+I am testing this new rev now... My v4 run over the weekend crashed but
+unfortunately I wasn't able to get a stack trace.  We'll see what shakes out.
 
 Regards,
 	Ben
+
+> Version 5:
+> - move initial queuing of log work so it isn't started on log mount
+>   error
+> - move xfs_flush_inodes() to xfs_super.c
+> - pass xfs_mount to xfs_flush_inodes()
+> - rewrite commit message for xfs_flush_inodes() changes
+> - added last_sync_lsn fix to series as the problem it fixes is
+>   reliably exposed by the changes in this series
+> 
+> Version 4:
+> - updated 'xfs: xfs_sync_data is redundant' with cleanups to the
+>   xfs_flush_inodes interface as per Christoph's request,
+> - updated 'xfs: xfs_sync_data is redundant', folding in changes from
+>   http://oss.sgi.com/archives/xfs/2012-10/msg00036.html
+> - fixed a minor typo in xfs: 'syncd workqueue is no more', renaming the
+>   log worker from 'xfs-reclaim' to 'xfs-log'.
+> 
+> Version 3:
+> - per-mount log and reclaim workqueues instead of a generic mount
+>   workqueue.
+> - reordering of some of the patches as Christoph requested.
+> - fixed the writeback_inodes_sb_if_idle deadlock by moving it all
+>   the way back up the write stack to xfs_file_aio_buffered_write
+>   where we were just flushing the current file to avoid deadlocking
+>   on it anyway.
+> - reintroduced xfs_flush_inodes() as a wrapper for
+>   writeback_inodes_sb_if_idle().
+> - rebased on a current TOT.
+> 
+> Version 2:
+> - fix writeback_inodes_sb_if_idle call in xfs_create()
+> - refreshed patch 13 before sending.
+> 
+> Initial version:
+> - http://oss.sgi.com/archives/xfs/2012-06/msg00064.html
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
