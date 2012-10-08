@@ -1,20 +1,30 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q98EQxCV079811 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 09:26:59 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id u4NujWUHx7LUhmkd (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 07:28:28 -0700 (PDT)
-Date: Mon, 8 Oct 2012 15:28:23 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
-	s390
-Message-ID: <20121008142823.GL29125@suse.de>
-References: <1349108796-32161-1-git-send-email-jack@suse.cz>
+	q98HAKFD117920 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 12:10:20 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id wI91z4jadPGYlAUI for
+	<xfs@oss.sgi.com>; Mon, 08 Oct 2012 10:11:49 -0700 (PDT)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q98HBmhx009398
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 13:11:49 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-140.phx2.redhat.com
+	[10.3.113.140])
+	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q98HBjEW013360
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 13:11:47 -0400
+Date: Mon, 8 Oct 2012 14:11:44 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: growfs: don't read garbage for new secondary
+	superblocks
+Message-ID: <20121008171144.GA8313@andromeda.usersys.redhat.com>
+References: <1349697436-14203-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1349108796-32161-1-git-send-email-jack@suse.cz>
+In-Reply-To: <1349697436-14203-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +37,74 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Jan Kara <jack@suse.cz>
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>, linux-mm@kvack.org, linux-s390@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Mon, Oct 01, 2012 at 06:26:36PM +0200, Jan Kara wrote:
-> On s390 any write to a page (even from kernel itself) sets architecture
-> specific page dirty bit. Thus when a page is written to via standard write, HW
-> dirty bit gets set and when we later map and unmap the page, page_remove_rmap()
-> finds the dirty bit and calls set_page_dirty().
+On Mon, Oct 08, 2012 at 10:57:16PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Dirtying of a page which shouldn't be dirty can cause all sorts of problems to
-> filesystems. The bug we observed in practice is that buffers from the page get
-> freed, so when the page gets later marked as dirty and writeback writes it, XFS
-> crashes due to an assertion BUG_ON(!PagePrivate(page)) in page_buffers() called
-> from xfs_count_page_state().
+> When updating new secondary superblocks in a growfs operation, the
+> sueprblock buffer is read from the newly grown region of the
+> underlying device. This is not guaranteed to be zero, so violates
+> the underlying assumption that the unused parts of superblocks are
+> zero filled. Get a new buffer for these secondary superblocks to
+> ensure that the unused regions are zero filled correctly.
 > 
-> Similar problem can also happen when zero_user_segment() call from
-> xfs_vm_writepage() (or block_write_full_page() for that matter) set the
-> hardware dirty bit during writeback, later buffers get freed, and then page
-> unmapped.
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_fsops.c |   21 +++++++++++++++++++--
+>  1 file changed, 19 insertions(+), 2 deletions(-)
 > 
-> Fix the issue by ignoring s390 HW dirty bit for page cache pages in
-> page_mkclean() and page_remove_rmap(). This is safe because when a page gets
-> marked as writeable in PTE it is also marked dirty in do_wp_page() or
-> do_page_fault(). When the dirty bit is cleared by clear_page_dirty_for_io(),
-> the page gets writeprotected in page_mkclean(). So pagecache page is writeable
-> if and only if it is dirty.
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index c25b094..4beaede 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -399,9 +399,26 @@ xfs_growfs_data_private(
+>  
+>  	/* update secondary superblocks. */
+>  	for (agno = 1; agno < nagcount; agno++) {
+> -		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+> +		error = 0;
+> +		/*
+> +		 * new secondary superblocks need to be zeroed, not read from
+> +		 * disk as the contents of the new area we are growing into is
+> +		 * completely unknown.
+> +		 */
+> +		if (agno < oagcount) {
+> +			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
+>  				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+>  				  XFS_FSS_TO_BB(mp, 1), 0, &bp);
+> +		} else {
+> +			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
+> +				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
+> +				  XFS_FSS_TO_BB(mp, 1), 0);
+> +			if (bp)
+> +				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
+> +			else
+> +				error = ENOMEM;
+> +		}
+> +
+>  		if (error) {
+>  			xfs_warn(mp,
+>  		"error %d reading secondary superblock for ag %d",
+> @@ -423,7 +440,7 @@ xfs_growfs_data_private(
+>  			break; /* no point in continuing */
+>  		}
+>  	}
+> -	return 0;
+> +	return error;
+>  
+>   error0:
+>  	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
+> -- 
+> 1.7.10
 > 
-> CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
-> CC: Mel Gorman <mgorman@suse.de>
-> CC: linux-s390@vger.kernel.org
-> Signed-off-by: Jan Kara <jack@suse.cz>
 
-Acked-by: Mel Gorman <mgorman@suse.de>
+Looks good.
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 -- 
-Mel Gorman
-SUSE Labs
+--Carlos
 
 _______________________________________________
 xfs mailing list
