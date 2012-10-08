@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q98At1k1055582 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 05:55:01 -0500
+	q98AsrJo055538 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 05:54:53 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	EgOQweWXWCU0q2aB for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 03:56:29 -0700 (PDT)
+	92NbaFT6CiSklcxs for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 03:56:20 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLB0c-0000VK-4I
-	for xfs@oss.sgi.com; Mon, 08 Oct 2012 21:56:26 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLB0S-00027d-1D
+	(envelope-from <dave@fromorbit.com>) id 1TLB0S-0000VE-1Y
 	for xfs@oss.sgi.com; Mon, 08 Oct 2012 21:56:16 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TLB0R-00027Q-Uc
+	for xfs@oss.sgi.com; Mon, 08 Oct 2012 21:56:15 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/14] xfs: syncd workqueue is no more
-Date: Mon,  8 Oct 2012 21:56:05 +1100
-Message-Id: <1349693772-8064-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/14] xfs: sync work is now only periodic log work
+Date: Mon,  8 Oct 2012 21:56:02 +1100
+Message-Id: <1349693772-8064-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349693772-8064-1-git-send-email-david@fromorbit.com>
 References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,224 +35,318 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-With the syncd functions moved to the log and/or removed, the syncd
-workqueue is the only remaining bit left. It is used by the log
-covering/ail pushing work, as well as by the inode reclaim work.
+The only thing the periodic sync work does now is flush the AIL and
+idle the log. These are really functions of the log code, so move
+the work to xfs_log.c and rename it appropriately.
 
-Given how cheap workqueues are these days, give the log and inode
-reclaim work their own work queues and kill the syncd work queue.
+The only wart that this leaves behind is the xfssyncd_centisecs
+sysctl, otherwise the xfssyncd is dead. Clean up any comments that
+related to xfssyncd to reflect it's passing.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
- fs/xfs/xfs_log.c   |    2 +-
- fs/xfs/xfs_mount.h |    2 ++
- fs/xfs/xfs_super.c |   38 ++++++++++++++++++--------------------
- fs/xfs/xfs_sync.c  |   20 +++++++++-----------
- fs/xfs/xfs_sync.h  |    2 --
- 5 files changed, 30 insertions(+), 34 deletions(-)
+ fs/xfs/xfs_log.c      |   61 +++++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_log.h      |    3 +++
+ fs/xfs/xfs_log_priv.h |    1 +
+ fs/xfs/xfs_mount.h    |    1 -
+ fs/xfs/xfs_super.c    |   16 ++++---------
+ fs/xfs/xfs_sync.c     |   39 +++----------------------------
+ fs/xfs/xfs_sync.h     |    2 --
+ 7 files changed, 62 insertions(+), 61 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index e788f39..b6ce4d4 100644
+index 7f4f937..efea12b 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -1193,7 +1193,7 @@ void
- xfs_log_work_queue(
- 	struct xfs_mount        *mp)
- {
--	queue_delayed_work(xfs_syncd_wq, &mp->m_log->l_work,
-+	queue_delayed_work(mp->m_log_workqueue, &mp->m_log->l_work,
- 				msecs_to_jiffies(xfs_syncd_centisecs * 10));
+@@ -34,6 +34,7 @@
+ #include "xfs_dinode.h"
+ #include "xfs_inode.h"
+ #include "xfs_trace.h"
++#include "xfs_fsops.h"
+ 
+ kmem_zone_t	*xfs_log_ticket_zone;
+ 
+@@ -679,25 +680,29 @@ out:
  }
  
+ /*
+- * Finish the recovery of the file system.  This is separate from
+- * the xfs_log_mount() call, because it depends on the code in
+- * xfs_mountfs() to read in the root and real-time bitmap inodes
+- * between calling xfs_log_mount() and here.
++ * Finish the recovery of the file system.  This is separate from the
++ * xfs_log_mount() call, because it depends on the code in xfs_mountfs() to read
++ * in the root and real-time bitmap inodes between calling xfs_log_mount() and
++ * here.
+  *
+- * mp		- ubiquitous xfs mount point structure
++ * If we finish recovery successfully, start the background log work. If we are
++ * not doing recovery, then we have a RO filesystem and we don't need to start
++ * it.
+  */
+ int
+ xfs_log_mount_finish(xfs_mount_t *mp)
+ {
+-	int	error;
++	int	error = 0;
+ 
+-	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY))
++	if (!(mp->m_flags & XFS_MOUNT_NORECOVERY)) {
+ 		error = xlog_recover_finish(mp->m_log);
+-	else {
+-		error = 0;
++		if (!error)
++			xfs_log_work_queue(mp);
++	} else {
+ 		ASSERT(mp->m_flags & XFS_MOUNT_RDONLY);
+ 	}
+ 
++
+ 	return error;
+ }
+ 
+@@ -858,7 +863,7 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+ void
+ xfs_log_unmount(xfs_mount_t *mp)
+ {
+-	cancel_delayed_work_sync(&mp->m_sync_work);
++	cancel_delayed_work_sync(&mp->m_log->l_work);
+ 	xfs_trans_ail_destroy(mp);
+ 	xlog_dealloc_log(mp->m_log);
+ }
+@@ -1161,6 +1166,40 @@ done:
+ }	/* xlog_get_iclog_buffer_size */
+ 
+ 
++void
++xfs_log_work_queue(
++	struct xfs_mount        *mp)
++{
++	queue_delayed_work(xfs_syncd_wq, &mp->m_log->l_work,
++				msecs_to_jiffies(xfs_syncd_centisecs * 10));
++}
++
++/*
++ * Every sync period we need to unpin all items in the AIL and push them to
++ * disk. If there is nothing dirty, then we might need to cover the log to
++ * indicate that the filesystem is idle.
++ */
++void
++xfs_log_worker(
++	struct work_struct	*work)
++{
++	struct xlog		*log = container_of(to_delayed_work(work),
++						struct xlog, l_work);
++	struct xfs_mount	*mp = log->l_mp;
++
++	/* dgc: errors ignored - not fatal and nowhere to report them */
++	if (xfs_log_need_covered(mp))
++		xfs_fs_log_dummy(mp);
++	else
++		xfs_log_force(mp, 0);
++
++	/* start pushing all the metadata that is currently dirty */
++	xfs_ail_push_all(mp->m_ail);
++
++	/* queue us up again */
++	xfs_log_work_queue(mp);
++}
++
+ /*
+  * This routine initializes some of the log structure for a given mount point.
+  * Its primary purpose is to fill in enough, so recovery can occur.  However,
+@@ -1195,6 +1234,7 @@ xlog_alloc_log(
+ 	log->l_logBBsize   = num_bblks;
+ 	log->l_covered_state = XLOG_STATE_COVER_IDLE;
+ 	log->l_flags	   |= XLOG_ACTIVE_RECOVERY;
++	INIT_DELAYED_WORK(&log->l_work, xfs_log_worker);
+ 
+ 	log->l_prev_block  = -1;
+ 	/* log->l_tail_lsn = 0x100000000LL; cycle = 1; current block = 0 */
+@@ -3700,3 +3740,4 @@ xlog_iclogs_empty(
+ 	} while (iclog != log->l_iclog);
+ 	return 1;
+ }
++
+diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+index 748d312..26ed7de 100644
+--- a/fs/xfs/xfs_log.h
++++ b/fs/xfs/xfs_log.h
+@@ -181,5 +181,8 @@ int	xfs_log_commit_cil(struct xfs_mount *mp, struct xfs_trans *tp,
+ 				xfs_lsn_t *commit_lsn, int flags);
+ bool	xfs_log_item_in_current_chkpt(struct xfs_log_item *lip);
+ 
++void	xfs_log_work_queue(struct xfs_mount *mp);
++void	xfs_log_worker(struct work_struct *work);
++
+ #endif
+ #endif	/* __XFS_LOG_H__ */
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 18a801d..9a4e0e5 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -495,6 +495,7 @@ struct xlog {
+ 	struct xfs_buf		*l_xbuf;        /* extra buffer for log
+ 						 * wrapping */
+ 	struct xfs_buftarg	*l_targ;        /* buftarg of log */
++	struct delayed_work	l_work;		/* background flush work */
+ 	uint			l_flags;
+ 	uint			l_quotaoffs_flag; /* XFS_DQ_*, for QUOTAOFFs */
+ 	struct list_head	*l_buf_cancel_table;
 diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a54b5aa..7c417b6 100644
+index deee09e..26e46ae 100644
 --- a/fs/xfs/xfs_mount.h
 +++ b/fs/xfs/xfs_mount.h
-@@ -207,6 +207,8 @@ typedef struct xfs_mount {
- 	struct workqueue_struct	*m_data_workqueue;
- 	struct workqueue_struct	*m_unwritten_workqueue;
- 	struct workqueue_struct	*m_cil_workqueue;
-+	struct workqueue_struct	*m_reclaim_workqueue;
-+	struct workqueue_struct	*m_log_workqueue;
- } xfs_mount_t;
- 
- /*
+@@ -197,7 +197,6 @@ typedef struct xfs_mount {
+ 	struct mutex		m_icsb_mutex;	/* balancer sync lock */
+ #endif
+ 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+-	struct delayed_work	m_sync_work;	/* background sync work */
+ 	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
+ 	struct work_struct	m_flush_work;	/* background inode flush */
+ 	__int64_t		m_update_flags;	/* sb flags we need to update
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 89e3bc1..f45ebc5 100644
+index ebba0c8..69093e9 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -863,8 +863,23 @@ xfs_init_mount_workqueues(
- 			WQ_MEM_RECLAIM, 0, mp->m_fsname);
- 	if (!mp->m_cil_workqueue)
- 		goto out_destroy_unwritten;
-+
-+	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
-+			WQ_NON_REENTRANT, 0, mp->m_fsname);
-+	if (!mp->m_reclaim_workqueue)
-+		goto out_destroy_cil;
-+
-+	mp->m_log_workqueue = alloc_workqueue("xfs-log/%s",
-+			WQ_NON_REENTRANT, 0, mp->m_fsname);
-+	if (!mp->m_log_workqueue)
-+		goto out_destroy_reclaim;
-+
- 	return 0;
+@@ -1005,7 +1005,6 @@ xfs_fs_put_super(
+ {
+ 	struct xfs_mount	*mp = XFS_M(sb);
  
-+out_destroy_reclaim:
-+	destroy_workqueue(mp->m_reclaim_workqueue);
-+out_destroy_cil:
-+	destroy_workqueue(mp->m_cil_workqueue);
- out_destroy_unwritten:
- 	destroy_workqueue(mp->m_unwritten_workqueue);
- out_destroy_data_iodone_queue:
-@@ -877,6 +892,8 @@ STATIC void
- xfs_destroy_mount_workqueues(
- 	struct xfs_mount	*mp)
- {
-+	destroy_workqueue(mp->m_log_workqueue);
-+	destroy_workqueue(mp->m_reclaim_workqueue);
- 	destroy_workqueue(mp->m_cil_workqueue);
- 	destroy_workqueue(mp->m_data_workqueue);
- 	destroy_workqueue(mp->m_unwritten_workqueue);
-@@ -1391,10 +1408,6 @@ xfs_fs_fill_super(
- 	/*
- 	 * we must configure the block size in the superblock before we run the
- 	 * full mount process as the mount process can lookup and cache inodes.
--	 * For the same reason we must also initialise the syncd and register
--	 * the inode cache shrinker so that inodes can be reclaimed during
--	 * operations like a quotacheck that iterate all inodes in the
--	 * filesystem.
- 	 */
- 	sb->s_magic = XFS_SB_MAGIC;
- 	sb->s_blocksize = mp->m_sb.sb_blocksize;
-@@ -1634,16 +1647,6 @@ STATIC int __init
- xfs_init_workqueues(void)
- {
- 	/*
--	 * We never want to the same work item to run twice, reclaiming inodes
--	 * or idling the log is not going to get any faster by multiple CPUs
--	 * competing for ressources.  Use the default large max_active value
--	 * so that even lots of filesystems can perform these task in parallel.
--	 */
--	xfs_syncd_wq = alloc_workqueue("xfssyncd", WQ_NON_REENTRANT, 0);
--	if (!xfs_syncd_wq)
--		return -ENOMEM;
--
+-	cancel_delayed_work_sync(&mp->m_sync_work);
+ 	cancel_work_sync(&mp->m_flush_work);
+ 
+ 	xfs_filestream_unmount(mp);
+@@ -1040,10 +1039,10 @@ xfs_fs_sync_fs(
+ 	if (laptop_mode) {
+ 		/*
+ 		 * The disk must be active because we're syncing.
+-		 * We schedule xfssyncd now (now that the disk is
++		 * We schedule log work now (now that the disk is
+ 		 * active) instead of later (when it might not be).
+ 		 */
+-		flush_delayed_work_sync(&mp->m_sync_work);
++		flush_delayed_work_sync(&mp->m_log->l_work);
+ 	}
+ 
+ 	return 0;
+@@ -1200,7 +1199,7 @@ xfs_fs_remount(
+ 		 * value if it is non-zero, otherwise go with the default.
+ 		 */
+ 		xfs_restore_resvblks(mp);
+-		xfs_syncd_queue_sync(mp);
++		xfs_log_work_queue(mp);
+ 	}
+ 
+ 	/* rw -> ro */
+@@ -1246,7 +1245,7 @@ xfs_fs_unfreeze(
+ 	struct xfs_mount	*mp = XFS_M(sb);
+ 
+ 	xfs_restore_resvblks(mp);
+-	xfs_syncd_queue_sync(mp);
++	xfs_log_work_queue(mp);
+ 	return 0;
+ }
+ 
+@@ -1326,7 +1325,6 @@ xfs_fs_fill_super(
+ 	mutex_init(&mp->m_growlock);
+ 	atomic_set(&mp->m_active_trans, 0);
+ 	INIT_WORK(&mp->m_flush_work, xfs_flush_worker);
+-	INIT_DELAYED_WORK(&mp->m_sync_work, xfs_sync_worker);
+ 	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
+ 
+ 	mp->m_super = sb;
+@@ -1410,12 +1408,6 @@ xfs_fs_fill_super(
+ 		goto out_unmount;
+ 	}
+ 
 -	/*
- 	 * The allocation workqueue can be used in memory reclaim situations
- 	 * (writepage path), and parallelism is only limited by the number of
- 	 * AGs in all the filesystems mounted. Hence use the default large
-@@ -1651,20 +1654,15 @@ xfs_init_workqueues(void)
- 	 */
- 	xfs_alloc_wq = alloc_workqueue("xfsalloc", WQ_MEM_RECLAIM, 0);
- 	if (!xfs_alloc_wq)
--		goto out_destroy_syncd;
-+		return -ENOMEM;
- 
- 	return 0;
+-	 * The filesystem is successfully mounted, so we can start background
+-	 * sync work now.
+-	 */
+-	xfs_syncd_queue_sync(mp);
 -
--out_destroy_syncd:
--	destroy_workqueue(xfs_syncd_wq);
--	return -ENOMEM;
- }
+ 	return 0;
  
- STATIC void
- xfs_destroy_workqueues(void)
- {
- 	destroy_workqueue(xfs_alloc_wq);
--	destroy_workqueue(xfs_syncd_wq);
- }
- 
- STATIC int __init
+  out_filestream_unmount:
 diff --git a/fs/xfs/xfs_sync.c b/fs/xfs/xfs_sync.c
-index 6a2ada3..15be21f 100644
+index 5d69f23..7527610 100644
 --- a/fs/xfs/xfs_sync.c
 +++ b/fs/xfs/xfs_sync.c
-@@ -40,8 +40,6 @@
- #include <linux/kthread.h>
- #include <linux/freezer.h>
+@@ -19,6 +19,7 @@
+ #include "xfs_fs.h"
+ #include "xfs_types.h"
+ #include "xfs_log.h"
++#include "xfs_log_priv.h"
+ #include "xfs_inum.h"
+ #include "xfs_trans.h"
+ #include "xfs_trans_priv.h"
+@@ -344,8 +345,8 @@ xfs_quiesce_attr(
+ 	/* flush all pending changes from the AIL */
+ 	xfs_ail_push_all_sync(mp->m_ail);
  
--struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
+-	/* stop background sync work */
+-	cancel_delayed_work_sync(&mp->m_sync_work);
++	/* stop background log work */
++	cancel_delayed_work_sync(&mp->m_log->l_work);
+ 
+ 	/*
+ 	 * Just warn here till VFS can correctly support
+@@ -376,40 +377,6 @@ xfs_quiesce_attr(
+ 	xfs_buf_unlock(mp->m_sb_bp);
+ }
+ 
+-void
+-xfs_syncd_queue_sync(
+-	struct xfs_mount        *mp)
+-{
+-	queue_delayed_work(xfs_syncd_wq, &mp->m_sync_work,
+-				msecs_to_jiffies(xfs_syncd_centisecs * 10));
+-}
 -
- /*
-  * The inode lookup is done in batches to keep the amount of lock traffic and
-  * radix tree lookups to a minimum. The batch size is a trade off between
-@@ -335,18 +333,18 @@ xfs_quiesce_attr(
+-/*
+- * Every sync period we need to push dirty metadata and try to cover the log
+- * to indicate the filesystem is idle and not frozen.
+- */
+-void
+-xfs_sync_worker(
+-	struct work_struct *work)
+-{
+-	struct xfs_mount *mp = container_of(to_delayed_work(work),
+-					struct xfs_mount, m_sync_work);
+-	int		error;
+-
+-	/* dgc: errors ignored here */
+-	if (mp->m_super->s_writers.frozen == SB_UNFROZEN &&
+-	    xfs_log_need_covered(mp))
+-		error = xfs_fs_log_dummy(mp);
+-	else
+-		xfs_log_force(mp, 0);
+-
+-	/* start pushing all the metadata that is currently dirty */
+-	xfs_ail_push_all(mp->m_ail);
+-
+-	/* queue us up again */
+-	xfs_syncd_queue_sync(mp);
+-}
+-
  /*
   * Queue a new inode reclaim pass if there are reclaimable inodes and there
   * isn't a reclaim pass already in progress. By default it runs every 5s based
-- * on the xfs syncd work default of 30s. Perhaps this should have it's own
-+ * on the xfs periodic sync default of 30s. Perhaps this should have it's own
-  * tunable, but that can be done if this method proves to be ineffective or too
-  * aggressive.
-  */
- static void
--xfs_syncd_queue_reclaim(
-+xfs_reclaim_work_queue(
- 	struct xfs_mount        *mp)
- {
- 
- 	rcu_read_lock();
- 	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
--		queue_delayed_work(xfs_syncd_wq, &mp->m_reclaim_work,
-+		queue_delayed_work(mp->m_reclaim_workqueue, &mp->m_reclaim_work,
- 			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
- 	}
- 	rcu_read_unlock();
-@@ -367,7 +365,7 @@ xfs_reclaim_worker(
- 					struct xfs_mount, m_reclaim_work);
- 
- 	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
--	xfs_syncd_queue_reclaim(mp);
-+	xfs_reclaim_work_queue(mp);
- }
- 
- void
-@@ -388,7 +386,7 @@ __xfs_inode_set_reclaim_tag(
- 		spin_unlock(&ip->i_mount->m_perag_lock);
- 
- 		/* schedule periodic background inode reclaim */
--		xfs_syncd_queue_reclaim(ip->i_mount);
-+		xfs_reclaim_work_queue(ip->i_mount);
- 
- 		trace_xfs_perag_set_reclaim(ip->i_mount, pag->pag_agno,
- 							-1, _RET_IP_);
-@@ -646,9 +644,9 @@ out:
- 	/*
- 	 * We could return EAGAIN here to make reclaim rescan the inode tree in
- 	 * a short while. However, this just burns CPU time scanning the tree
--	 * waiting for IO to complete and xfssyncd never goes back to the idle
--	 * state. Instead, return 0 to let the next scheduled background reclaim
--	 * attempt to reclaim the inode again.
-+	 * waiting for IO to complete and the reclaim work never goes back to
-+	 * the idle state. Instead, return 0 to let the next scheduled
-+	 * background reclaim attempt to reclaim the inode again.
- 	 */
- 	return 0;
- }
-@@ -804,7 +802,7 @@ xfs_reclaim_inodes_nr(
- 	int			nr_to_scan)
- {
- 	/* kick background reclaimer and push the AIL */
--	xfs_syncd_queue_reclaim(mp);
-+	xfs_reclaim_work_queue(mp);
- 	xfs_ail_push_all(mp->m_ail);
- 
- 	xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
 diff --git a/fs/xfs/xfs_sync.h b/fs/xfs/xfs_sync.h
-index 0018e84..0beabea 100644
+index 3f59e5b..8d58fab 100644
 --- a/fs/xfs/xfs_sync.h
 +++ b/fs/xfs/xfs_sync.h
-@@ -24,8 +24,6 @@ struct xfs_perag;
- #define SYNC_WAIT		0x0001	/* wait for i/o to complete */
- #define SYNC_TRYLOCK		0x0002  /* only try to lock inodes */
+@@ -26,8 +26,6 @@ struct xfs_perag;
  
--extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
--
+ extern struct workqueue_struct	*xfs_syncd_wq;	/* sync workqueue */
+ 
+-void xfs_syncd_queue_sync(struct xfs_mount *mp);
+-void xfs_sync_worker(struct work_struct *work);
+ void xfs_flush_worker(struct work_struct *work);
  void xfs_reclaim_worker(struct work_struct *work);
  
- int xfs_quiesce_data(struct xfs_mount *mp);
 -- 
 1.7.10
 
