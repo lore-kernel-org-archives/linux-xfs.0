@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99FIwmN060137 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 10:18:58 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id IIrY7iaMDl4xlKyr for
-	<xfs@oss.sgi.com>; Tue, 09 Oct 2012 08:20:28 -0700 (PDT)
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com
-	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q99FKRga011242
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 11:20:27 -0400
-From: Tomas Racek <tracek@redhat.com>
-Subject: [PATCH] xfstests: 251,
-	260: Use loopdev as fallback if $SCRATCH_DEV doesn't support FITRIM
-Date: Tue,  9 Oct 2012 17:20:00 +0200
-Message-Id: <1349796000-27776-1-git-send-email-tracek@redhat.com>
+	q99GJe11067914 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 11:19:40 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id aby4DfMlCFSEG443 (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 09 Oct 2012 09:21:09 -0700 (PDT)
+Date: Tue, 9 Oct 2012 18:21:07 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
+	s390
+Message-ID: <20121009162107.GE15790@quack.suse.cz>
+References: <1349108796-32161-1-git-send-email-jack@suse.cz>
+	<alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,137 +24,153 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: lczerner@redhat.com, Tomas Racek <tracek@redhat.com>
+To: Hugh Dickins <hughd@google.com>
+Cc: linux-s390@vger.kernel.org, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-This patch adds an option to test FITRIM even if it's not supported on $SCRATCH_DEV. 
+On Mon 08-10-12 21:24:40, Hugh Dickins wrote:
+> On Mon, 1 Oct 2012, Jan Kara wrote:
+> 
+> > On s390 any write to a page (even from kernel itself) sets architecture
+> > specific page dirty bit. Thus when a page is written to via standard write, HW
+> > dirty bit gets set and when we later map and unmap the page, page_remove_rmap()
+> > finds the dirty bit and calls set_page_dirty().
+> > 
+> > Dirtying of a page which shouldn't be dirty can cause all sorts of problems to
+> > filesystems. The bug we observed in practice is that buffers from the page get
+> > freed, so when the page gets later marked as dirty and writeback writes it, XFS
+> > crashes due to an assertion BUG_ON(!PagePrivate(page)) in page_buffers() called
+> > from xfs_count_page_state().
+> 
+> What changed recently?  Was XFS hardly used on s390 until now?
+  The problem was originally hit on SLE11-SP2 which is 3.0 based after
+migration of our s390 build machines from SLE11-SP1 (2.6.32 based). I think
+XFS just started to be more peevish about what pages it gets between these
+two releases ;) (e.g. ext3 or ext4 just says "oh, well" and fixes things
+up).
 
-Also introduces _create_loop_device and _destroy_loop_device functions to
-unify loopback handling.
+> > Similar problem can also happen when zero_user_segment() call from
+> > xfs_vm_writepage() (or block_write_full_page() for that matter) set the
+> > hardware dirty bit during writeback, later buffers get freed, and then page
+> > unmapped.
+> > 
+> > Fix the issue by ignoring s390 HW dirty bit for page cache pages in
+> > page_mkclean() and page_remove_rmap(). This is safe because when a page gets
+> > marked as writeable in PTE it is also marked dirty in do_wp_page() or
+> > do_page_fault(). When the dirty bit is cleared by clear_page_dirty_for_io(),
+> > the page gets writeprotected in page_mkclean(). So pagecache page is writeable
+> > if and only if it is dirty.
+> 
+> Very interesting patch...
+  Originally, I even wanted to rip out pte dirty bit handling for shared
+file pages but in the end that seemed too bold and unnecessary for my
+problem ;)
 
-(depends on patch "Use upstream version of fstrim...")
+> > CC: linux-s390@vger.kernel.org
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> 
+> but I think it's wrong.
+  Thanks for having a look.
 
-Signed-off-by: Tomas Racek <tracek@redhat.com>
----
- 251       | 18 ++++++++++++++++--
- 260       | 22 ++++++++++++++++++++--
- common.rc | 14 ++++++++++++++
- 3 files changed, 50 insertions(+), 4 deletions(-)
+> > ---
+> >  mm/rmap.c |   16 ++++++++++++++--
+> >  1 files changed, 14 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/mm/rmap.c b/mm/rmap.c
+> > index 0f3b7cd..6ce8ddb 100644
+> > --- a/mm/rmap.c
+> > +++ b/mm/rmap.c
+> > @@ -973,7 +973,15 @@ int page_mkclean(struct page *page)
+> >  		struct address_space *mapping = page_mapping(page);
+> >  		if (mapping) {
+> >  			ret = page_mkclean_file(mapping, page);
+> > -			if (page_test_and_clear_dirty(page_to_pfn(page), 1))
+> > +			/*
+> > +			 * We ignore dirty bit for pagecache pages. It is safe
+> > +			 * as page is marked dirty iff it is writeable (page is
+> > +			 * marked as dirty when it is made writeable and
+> > +			 * clear_page_dirty_for_io() writeprotects the page
+> > +			 * again).
+> > +			 */
+> > +			if (PageSwapCache(page) &&
+> > +			    page_test_and_clear_dirty(page_to_pfn(page), 1))
+> >  				ret = 1;
+> 
+> This part you could cut out: page_mkclean() is not used on SwapCache pages.
+> I believe you are safe to remove the page_test_and_clear_dirty() from here.
+  OK, will do.
 
-diff --git a/251 b/251
-index dbb6ba7..fb88f2a 100755
---- a/251
-+++ b/251
-@@ -51,13 +51,18 @@ _scratch_mount
- _cleanup()
- {
- 	rm -rf $tmp
-+	if [ -n "$loop" ]; then
-+		_scratch_unmount
-+		_destroy_loop_device $loop
-+		rm $img_file
-+	fi
- }
- 
- _destroy()
- {
- 	kill $pids $fstrim_pid 2> /dev/null
- 	wait $pids $fstrim_pid 2> /dev/null
--	rm -rf $tmp
-+	_cleanup
- }
- 
- _destroy_fstrim()
-@@ -153,7 +158,16 @@ content=$here
- 
- # Check for FITRIM support
- echo -n "Checking FITRIM support: "
--_test_batched_discard $SCRATCH_MNT || _notrun "FITRIM not supported on $SCRATCH_DEV"
-+if ! _test_batched_discard $SCRATCH_MNT; then
-+	_scratch_unmount
-+	img_file=$TEST_DIR/$$.fs
-+	_require_fs_space $TEST_DIR 1048576
-+	$XFS_IO_PROG -f -c "truncate 1G" $img_file || _fail "Cannot allocate space for $img_file"
-+	loop=$(_create_loop_device $img_file)
-+	SCRATCH_DEV=$loop
-+	_scratch_mkfs >/dev/null 2>&1
-+	_scratch_mount
-+fi
- echo "done."
- 
- mkdir -p $tmp
-diff --git a/260 b/260
-index ae4740a..cce5137 100755
---- a/260
-+++ b/260
-@@ -29,7 +29,7 @@ echo "QA output created by $seq"
- here=`pwd`
- tmp=`mktemp -d`
- status=0
--trap "exit \$status" 0 1 2 3 15
-+trap "_cleanup; exit \$status" 0 1 3
- chpid=0
- mypid=$$
- 
-@@ -47,7 +47,25 @@ _require_scratch
- _scratch_mkfs >/dev/null 2>&1
- _scratch_mount
- 
--_test_batched_discard $SCRATCH_MNT || _notrun "FITRIM not supported on $SCRATCH_DEV"
-+_cleanup()
-+{
-+	if [ -n "$loop" ]; then
-+		_scratch_unmount
-+		_destroy_loop_device $loop
-+		rm $img_file
-+	fi
-+}
-+
-+if ! _test_batched_discard $SCRATCH_MNT; then
-+	_scratch_unmount
-+	img_file=$TEST_DIR/$$.fs
-+	_require_fs_space $TEST_DIR 1048576
-+	$XFS_IO_PROG -f -c "truncate 1G" $img_file || _fail "Cannot allocate space for $img_file"
-+	loop=$(_create_loop_device $img_file)
-+	SCRATCH_DEV=$loop
-+	_scratch_mkfs >/dev/null 2>&1
-+	_scratch_mount
-+fi
- 
- fssize=$(df -k | grep "$SCRATCH_MNT" | grep "$SCRATCH_DEV"  | awk '{print $2}')
- 
-diff --git a/common.rc b/common.rc
-index 966fc93..62b982b 100644
---- a/common.rc
-+++ b/common.rc
-@@ -1804,6 +1804,20 @@ _test_batched_discard()
- 	$FSTRIM_PROG ${1} &>/dev/null
- }
- 
-+_create_loop_device()
-+{
-+	file=$1
-+	dev=`losetup -f`
-+	losetup $dev $file || _fail "Cannot associate $file with $dev"
-+	echo $dev
-+}
-+
-+_destroy_loop_device()
-+{
-+	dev=$1
-+	losetup -d $dev || _fail "Cannot destroy loop device $dev"
-+}
-+
- ################################################################################
- 
- if [ "$iam" != new -a "$iam" != bench ]
--- 
-1.7.11.4
+> >  		}
+> >  	}
+> > @@ -1183,8 +1191,12 @@ void page_remove_rmap(struct page *page)
+> >  	 * this if the page is anon, so about to be freed; but perhaps
+> >  	 * not if it's in swapcache - there might be another pte slot
+> >  	 * containing the swap entry, but page not yet written to swap.
+> > +	 * For pagecache pages, we don't care about dirty bit in storage
+> > +	 * key because the page is writeable iff it is dirty (page is marked
+> > +	 * as dirty when it is made writeable and clear_page_dirty_for_io()
+> > +	 * writeprotects the page again).
+> >  	 */
+> > -	if ((!anon || PageSwapCache(page)) &&
+> > +	if (PageSwapCache(page) &&
+> >  	    page_test_and_clear_dirty(page_to_pfn(page), 1))
+> >  		set_page_dirty(page);
+> 
+> But here's where I think the problem is.  You're assuming that all
+> filesystems go the same mapping_cap_account_writeback_dirty() (yeah,
+> there's no such function, just a confusing maze of three) route as XFS.
+> 
+> But filesystems like tmpfs and ramfs (perhaps they're the only two
+> that matter here) don't participate in that, and wait for an mmap'ed
+> page to be seen modified by the user (usually via pte_dirty, but that's
+> a no-op on s390) before page is marked dirty; and page reclaim throws
+> away undirtied pages.
+  I admit I haven't thought of tmpfs and similar. After some discussion Mel
+pointed me to the code in mmap which makes a difference. So if I get it
+right, the difference which causes us problems is that on tmpfs we map the
+page writeably even during read-only fault. OK, then if I make the above
+code in page_remove_rmap():
+	if ((PageSwapCache(page) ||
+	     (!anon && !mapping_cap_account_dirty(page->mapping))) &&
+	    page_test_and_clear_dirty(page_to_pfn(page), 1))
+		set_page_dirty(page);
+
+  Things should be ok (modulo the ugliness of this condition), right?
+
+> So, if I'm understanding right, with this change s390 would be in danger
+> of discarding shm, and mmap'ed tmpfs and ramfs pages - whereas pages
+> written with the write system call would already be PageDirty and secure.
+> 
+> You mention above that even the kernel writing to the page would mark
+> the s390 storage key dirty.  I think that means that these shm and
+> tmpfs and ramfs pages would all have dirty storage keys just from the
+> clear_highpage() used to prepare them originally, and so would have
+> been found dirty anyway by the existing code here in page_remove_rmap(),
+> even though other architectures would regard them as clean and removable.
+  Yes, except as Martin notes, SetPageUptodate() clears them again so that
+doesn't work for us.
+
+> If that's the case, then maybe we'd do better just to mark them dirty
+> when faulted in the s390 case.  Then your patch above should (I think)
+> be safe.  Though I'd then be VERY tempted to adjust the SwapCache case
+> too (I've not thought through exactly what that patch would be, just
+> one or two suitably placed SetPageDirtys, I think), and eliminate
+> page_test_and_clear_dirty() altogether - no tears shed by any of us!
+  If we want to get rid of page_test_and_clear_dirty() completely (and a
+hack in SetPageUptodate()) it should be possible. But we would have to
+change mmap to map pages read-only for read-only faults of tmpfs pages at
+least on s390 and then somehow fix the SwapCache handling...
+
+> A separate worry came to mind as I thought about your patch: where
+> in page migration is s390's dirty storage key migrated from old page
+> to new?  And if there is a problem there, that too should be fixed
+> by what I propose in the previous paragraph.
+  I'd think so but I'll let Martin comment on this.
+
+								Honza
 
 _______________________________________________
 xfs mailing list
