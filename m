@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993o6Os212939 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:06 -0500
+	q993nwJZ212853 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:49:58 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	isB8qCMcd7bpXPy8 for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:35 -0700 (PDT)
+	X9sqNLu0BnP1MzOr for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:26 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQqq-0002PA-CH
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TLQqg-0002PD-EG
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008Os-9M
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008P2-BC
 	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 03/19] xfs: uncached buffer reads need to return an error
-Date: Tue,  9 Oct 2012 14:50:54 +1100
-Message-Id: <1349754670-32009-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 05/19] xfs: verify AGF blocks as they are read from disk
+Date: Tue,  9 Oct 2012 14:50:56 +1100
+Message-Id: <1349754670-32009-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,112 +35,105 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-With verification being done as an IO completion callback, different
-errors can be returned from a read. Uncached reads only return a
-buffer or NULL on failure, which means the verification error cannot
-be returned to the caller.
-
-Split the error handling for these reads into two - a failure to get
-a buffer will still return NULL, but a read error will return a
-referenced buffer with b_error set rather than NULL. The caller is
-responsible for checking the error state of the buffer returned.
+Add an AGF block verify callback function and pass it into the
+buffer read functions. This replaces the existing verification that
+is done after the read completes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf.c     |    9 ++-------
- fs/xfs/xfs_fsops.c   |    5 +++++
- fs/xfs/xfs_mount.c   |    6 ++++++
- fs/xfs/xfs_rtalloc.c |    9 ++++++++-
- 4 files changed, 21 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_alloc.c |   60 +++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 34 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 7cab1b3..62b7e89 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -715,8 +715,7 @@ xfs_buf_read_uncached(
- 	int			flags,
- 	xfs_buf_iodone_t	verify)
- {
--	xfs_buf_t		*bp;
--	int			error;
-+	struct xfs_buf		*bp;
- 
- 	bp = xfs_buf_get_uncached(target, numblks, flags);
- 	if (!bp)
-@@ -730,11 +729,7 @@ xfs_buf_read_uncached(
- 	bp->b_iodone = verify;
- 
- 	xfsbdstrat(target->bt_mount, bp);
--	error = xfs_buf_iowait(bp);
--	if (error) {
--		xfs_buf_relse(bp);
--		return NULL;
--	}
-+	xfs_buf_iowait(bp);
- 	return bp;
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index 21c3db0..bd565a2 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -2091,6 +2091,39 @@ xfs_alloc_put_freelist(
+ 	return 0;
  }
  
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index 917e121..dee14eb 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -149,6 +149,11 @@ xfs_growfs_data_private(
- 				XFS_FSS_TO_BB(mp, 1), 0, NULL);
- 	if (!bp)
- 		return EIO;
-+	if (bp->b_error) {
-+		int	error = bp->b_error;
-+		xfs_buf_relse(bp);
-+		return error;
++static void
++xfs_agf_read_verify(
++	struct xfs_buf	*bp)
++ {
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_agf	*agf;
++	int		agf_ok;
++
++	agf = XFS_BUF_TO_AGF(bp);
++
++	agf_ok = agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
++		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
++		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
++		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
++		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
++		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
++		be32_to_cpu(agf->agf_seqno) == bp->b_pag->pag_agno;
++
++	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
++		agf_ok = agf_ok && be32_to_cpu(agf->agf_btreeblks) <=
++						be32_to_cpu(agf->agf_length);
++
++	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
++			XFS_RANDOM_ALLOC_READ_AGF))) {
++		XFS_CORRUPTION_ERROR("xfs_alloc_read_agf",
++				     XFS_ERRLEVEL_LOW, mp, agf);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
- 	xfs_buf_relse(bp);
++
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
++}
++
+ /*
+  * Read in the allocation group header (free/alloc section).
+  */
+@@ -2102,44 +2135,19 @@ xfs_read_agf(
+ 	int			flags,	/* XFS_BUF_ */
+ 	struct xfs_buf		**bpp)	/* buffer for the ag freelist header */
+ {
+-	struct xfs_agf	*agf;		/* ag freelist header */
+-	int		agf_ok;		/* set if agf is consistent */
+ 	int		error;
  
- 	new = nb;	/* use new as a temporary here */
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index d39ad72..dc51e32 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -658,6 +658,12 @@ reread:
- 			xfs_warn(mp, "SB buffer read failed");
- 		return EIO;
- 	}
-+	if (bp->b_error) {
-+		error = bp->b_error;
-+		if (loud)
-+			xfs_warn(mp, "SB validate failed");
-+		goto release_buf;
-+	}
+ 	ASSERT(agno != NULLAGNUMBER);
+ 	error = xfs_trans_read_buf(
+ 			mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), flags, bpp, NULL);
++			XFS_FSS_TO_BB(mp, 1), flags, bpp, xfs_agf_read_verify);
+ 	if (error)
+ 		return error;
+ 	if (!*bpp)
+ 		return 0;
  
- 	/*
- 	 * Initialize the mount structure from the superblock.
-diff --git a/fs/xfs/xfs_rtalloc.c b/fs/xfs/xfs_rtalloc.c
-index b271ed9..98dc670 100644
---- a/fs/xfs/xfs_rtalloc.c
-+++ b/fs/xfs/xfs_rtalloc.c
-@@ -1876,6 +1876,11 @@ xfs_growfs_rt(
- 				XFS_FSB_TO_BB(mp, 1), 0, NULL);
- 	if (!bp)
- 		return EIO;
-+	if (bp->b_error) {
-+		error = bp->b_error;
-+		xfs_buf_relse(bp);
-+		return error;
-+	}
- 	xfs_buf_relse(bp);
- 
- 	/*
-@@ -2221,8 +2226,10 @@ xfs_rtmount_init(
- 	bp = xfs_buf_read_uncached(mp->m_rtdev_targp,
- 					d - XFS_FSB_TO_BB(mp, 1),
- 					XFS_FSB_TO_BB(mp, 1), 0, NULL);
--	if (!bp) {
-+	if (!bp || bp->b_error) {
- 		xfs_warn(mp, "realtime device size check failed");
-+		if (bp)
-+			xfs_buf_relse(bp);
- 		return EIO;
- 	}
- 	xfs_buf_relse(bp);
+ 	ASSERT(!(*bpp)->b_error);
+-	agf = XFS_BUF_TO_AGF(*bpp);
+-
+-	/*
+-	 * Validate the magic number of the agf block.
+-	 */
+-	agf_ok =
+-		agf->agf_magicnum == cpu_to_be32(XFS_AGF_MAGIC) &&
+-		XFS_AGF_GOOD_VERSION(be32_to_cpu(agf->agf_versionnum)) &&
+-		be32_to_cpu(agf->agf_freeblks) <= be32_to_cpu(agf->agf_length) &&
+-		be32_to_cpu(agf->agf_flfirst) < XFS_AGFL_SIZE(mp) &&
+-		be32_to_cpu(agf->agf_fllast) < XFS_AGFL_SIZE(mp) &&
+-		be32_to_cpu(agf->agf_flcount) <= XFS_AGFL_SIZE(mp) &&
+-		be32_to_cpu(agf->agf_seqno) == agno;
+-	if (xfs_sb_version_haslazysbcount(&mp->m_sb))
+-		agf_ok = agf_ok && be32_to_cpu(agf->agf_btreeblks) <=
+-						be32_to_cpu(agf->agf_length);
+-	if (unlikely(XFS_TEST_ERROR(!agf_ok, mp, XFS_ERRTAG_ALLOC_READ_AGF,
+-			XFS_RANDOM_ALLOC_READ_AGF))) {
+-		XFS_CORRUPTION_ERROR("xfs_alloc_read_agf",
+-				     XFS_ERRLEVEL_LOW, mp, agf);
+-		xfs_trans_brelse(tp, *bpp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+ 	xfs_buf_set_ref(*bpp, XFS_AGF_REF);
+ 	return 0;
+ }
 -- 
 1.7.10
 
