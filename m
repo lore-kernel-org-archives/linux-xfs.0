@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993o0cS212887 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:00 -0500
+	q993oJ6b213040 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:19 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	S3SYrJLTHEu6YJmd for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:28 -0700 (PDT)
+	Khx4kXmqWFGToUHT for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:47 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQqq-0002PB-DC
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TLQr0-0002Pt-Ml
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:34 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008Ox-AI
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008Ph-JP
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/19] xfs: verify superblocks as they are read from disk
-Date: Tue,  9 Oct 2012 14:50:55 +1100
-Message-Id: <1349754670-32009-5-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/19] xfs: verify dir2 block format buffers
+Date: Tue,  9 Oct 2012 14:51:04 +1100
+Message-Id: <1349754670-32009-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,273 +35,237 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a superblock verify callback function and pass it into the
-buffer read functions. Remove the now redundant verification code
-that is currently in use.
-
-Adding verification shows that secondary superblocks never have
-their "sb_inprogress" flag cleared by mkfs.xfs, so when validating
-the secondary superblocks during a grow operation we have to avoid
-checking this field. Even if we fix mkfs, we will still have to
-ignore this field for verification purposes unless a version of mkfs
-that does not have this bug was used.
+Add a dir2 block format read verifier. To fully verify every block
+when read, call xfs_dir2_data_check() on them. Change
+xfs_dir2_data_check() to do runtime checking, convert ASSERT()
+checks to XFS_WANT_CORRUPTED_RETURN(), which will trigger an ASSERT
+failure on debug kernels, but on production kernels will dump an
+error to dmesg and return EFSCORRUPTED to the caller.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fsops.c       |    4 ++-
- fs/xfs/xfs_log_recover.c |    5 ++--
- fs/xfs/xfs_mount.c       |   73 +++++++++++++++++++++++-----------------------
- fs/xfs/xfs_mount.h       |    3 +-
- 4 files changed, 44 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_dir2_block.c |   22 +++++++++++++-
+ fs/xfs/xfs_dir2_data.c  |   73 ++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_dir2_priv.h  |    4 ++-
+ 3 files changed, 68 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index dee14eb..302b99c 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -413,7 +413,8 @@ xfs_growfs_data_private(
- 		if (agno < oagcount) {
- 			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--				  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-+				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-+				  xfs_sb_read_verify);
- 		} else {
- 			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-@@ -431,6 +432,7 @@ xfs_growfs_data_private(
- 			break;
- 		}
- 		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
-+
- 		/*
- 		 * If we get an error writing out the alternate superblocks,
- 		 * just issue a warning and continue.  The real work is
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 757688a..4cf7ae8 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3692,13 +3692,14 @@ xlog_do_recover(
- 
- 	/*
- 	 * Now that we've finished replaying all buffer and inode
--	 * updates, re-read in the superblock.
-+	 * updates, re-read in the superblock and reverify it.
- 	 */
- 	bp = xfs_getsb(log->l_mp, 0);
- 	XFS_BUF_UNDONE(bp);
- 	ASSERT(!(XFS_BUF_ISWRITE(bp)));
- 	XFS_BUF_READ(bp);
- 	XFS_BUF_UNASYNC(bp);
-+	bp->b_iodone = xfs_sb_read_verify;
- 	xfsbdstrat(log->l_mp, bp);
- 	error = xfs_buf_iowait(bp);
- 	if (error) {
-@@ -3710,7 +3711,7 @@ xlog_do_recover(
- 
- 	/* Convert superblock from on-disk format */
- 	sbp = &log->l_mp->m_sb;
--	xfs_sb_from_disk(log->l_mp, XFS_BUF_TO_SBP(bp));
-+	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
- 	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
- 	ASSERT(xfs_sb_good_version(sbp));
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index dc51e32..f8aef84 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -304,9 +304,8 @@ STATIC int
- xfs_mount_validate_sb(
- 	xfs_mount_t	*mp,
- 	xfs_sb_t	*sbp,
--	int		flags)
-+	bool		check_inprogress)
- {
--	int		loud = !(flags & XFS_MFSI_QUIET);
- 
- 	/*
- 	 * If the log device and data device have the
-@@ -316,21 +315,18 @@ xfs_mount_validate_sb(
- 	 * a volume filesystem in a non-volume manner.
- 	 */
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
--		if (loud)
--			xfs_warn(mp, "bad magic number");
-+		xfs_warn(mp, "bad magic number");
- 		return XFS_ERROR(EWRONGFS);
- 	}
- 
- 	if (!xfs_sb_good_version(sbp)) {
--		if (loud)
--			xfs_warn(mp, "bad version");
-+		xfs_warn(mp, "bad version");
- 		return XFS_ERROR(EWRONGFS);
- 	}
- 
- 	if (unlikely(
- 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"filesystem is marked as having an external log; "
- 		"specify logdev on the mount command line.");
- 		return XFS_ERROR(EINVAL);
-@@ -338,8 +334,7 @@ xfs_mount_validate_sb(
- 
- 	if (unlikely(
- 	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"filesystem is marked as having an internal log; "
- 		"do not specify logdev on the mount command line.");
- 		return XFS_ERROR(EINVAL);
-@@ -373,8 +368,7 @@ xfs_mount_validate_sb(
- 	    sbp->sb_dblocks == 0					||
- 	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
- 	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
--		if (loud)
--			XFS_CORRUPTION_ERROR("SB sanity check failed",
-+		XFS_CORRUPTION_ERROR("SB sanity check failed",
- 				XFS_ERRLEVEL_LOW, mp, sbp);
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
-@@ -383,12 +377,10 @@ xfs_mount_validate_sb(
- 	 * Until this is fixed only page-sized or smaller data blocks work.
- 	 */
- 	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
--		if (loud) {
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"File system with blocksize %d bytes. "
- 		"Only pagesize (%ld) or less will currently work.",
- 				sbp->sb_blocksize, PAGE_SIZE);
--		}
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
-@@ -402,23 +394,20 @@ xfs_mount_validate_sb(
- 	case 2048:
- 		break;
- 	default:
--		if (loud)
--			xfs_warn(mp, "inode size of %d bytes not supported",
-+		xfs_warn(mp, "inode size of %d bytes not supported",
- 				sbp->sb_inodesize);
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
- 	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
- 	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"file system too large to be mounted on this system.");
- 		return XFS_ERROR(EFBIG);
- 	}
- 
--	if (unlikely(sbp->sb_inprogress)) {
--		if (loud)
--			xfs_warn(mp, "file system busy");
-+	if (check_inprogress && sbp->sb_inprogress) {
-+		xfs_warn(mp, "Offline file system operation in progress!");
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
- 
-@@ -426,9 +415,7 @@ xfs_mount_validate_sb(
- 	 * Version 1 directory format has never worked on Linux.
- 	 */
- 	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
--		if (loud)
--			xfs_warn(mp,
--				"file system using version 1 directory format");
-+		xfs_warn(mp, "file system using version 1 directory format");
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
-@@ -521,11 +508,9 @@ out_unwind:
- 
- void
- xfs_sb_from_disk(
--	struct xfs_mount	*mp,
-+	struct xfs_sb	*to,
- 	xfs_dsb_t	*from)
- {
--	struct xfs_sb *to = &mp->m_sb;
--
- 	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
- 	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
- 	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
-@@ -627,6 +612,27 @@ xfs_sb_to_disk(
- 	}
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 25ce409..599fefe 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -56,6 +56,26 @@ xfs_dir_startup(void)
+ 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
  }
  
-+void
-+xfs_sb_read_verify(
-+	struct xfs_buf	*bp)
++static void
++xfs_dir2_block_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_sb	sb;
-+	int		error;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
++	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
++	block_ok |= __xfs_dir2_data_check(NULL, bp);
 +
-+	/*
-+	 * Only check the in progress field for the primary superblock as
-+	 * mkfs.xfs doesn't clear it from secondary superblocks.
-+	 */
-+	error = xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
-+	if (error)
-+		xfs_buf_ioerror(bp, error);
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
+ static int
+ xfs_dir2_block_read(
+ 	struct xfs_trans	*tp,
+@@ -65,7 +85,7 @@ xfs_dir2_block_read(
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 
+ 	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
+-					XFS_DATA_FORK, NULL);
++					XFS_DATA_FORK, xfs_dir2_block_verify);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 44ffd4d..c45107d 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -34,14 +34,13 @@
+ STATIC xfs_dir2_data_free_t *
+ xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
+ 
+-#ifdef DEBUG
  /*
-  * xfs_readsb
-  *
-@@ -652,7 +658,7 @@ xfs_readsb(xfs_mount_t *mp, int flags)
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+- * Pop an assert if we find anything bad.
++ * Return 0 is the buffer is good, otherwise an error.
+  */
+-void
+-xfs_dir2_data_check(
++bool
++__xfs_dir2_data_check(
+ 	struct xfs_inode	*dp,		/* incore inode pointer */
+ 	struct xfs_buf		*bp)		/* data block's buffer */
+ {
+@@ -64,18 +63,23 @@ xfs_dir2_data_check(
+ 	int			stale;		/* count of stale leaves */
+ 	struct xfs_name		name;
  
- reread:
- 	bp = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
--					BTOBB(sector_size), 0, NULL);
-+				   BTOBB(sector_size), 0, xfs_sb_read_verify);
- 	if (!bp) {
- 		if (loud)
- 			xfs_warn(mp, "SB buffer read failed");
-@@ -667,15 +673,8 @@ reread:
+-	mp = dp->i_mount;
++	mp = bp->b_target->bt_mount;
+ 	hdr = bp->b_addr;
+ 	bf = hdr->bestfree;
+ 	p = (char *)(hdr + 1);
  
- 	/*
- 	 * Initialize the mount structure from the superblock.
--	 * But first do some basic consistency checking.
+-	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
++	switch (hdr->magic) {
++	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+ 		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endp = (char *)lep;
+-	} else {
+-		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
++		break;
++	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+ 		endp = (char *)hdr + mp->m_dirblksize;
++		break;
++	default:
++		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
++		return EFSCORRUPTED;
+ 	}
+ 
+ 	count = lastfree = freeseen = 0;
+@@ -83,19 +87,22 @@ xfs_dir2_data_check(
+ 	 * Account for zero bestfree entries.
  	 */
--	xfs_sb_from_disk(mp, XFS_BUF_TO_SBP(bp));
--	error = xfs_mount_validate_sb(mp, &(mp->m_sb), flags);
--	if (error) {
--		if (loud)
--			xfs_warn(mp, "SB validate failed");
--		goto release_buf;
--	}
-+	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
- 
+ 	if (!bf[0].length) {
+-		ASSERT(!bf[0].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[0].offset);
+ 		freeseen |= 1 << 0;
+ 	}
+ 	if (!bf[1].length) {
+-		ASSERT(!bf[1].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[1].offset);
+ 		freeseen |= 1 << 1;
+ 	}
+ 	if (!bf[2].length) {
+-		ASSERT(!bf[2].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[2].offset);
+ 		freeseen |= 1 << 2;
+ 	}
+-	ASSERT(be16_to_cpu(bf[0].length) >= be16_to_cpu(bf[1].length));
+-	ASSERT(be16_to_cpu(bf[1].length) >= be16_to_cpu(bf[2].length));
++
++	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[0].length) >=
++						be16_to_cpu(bf[1].length));
++	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[1].length) >=
++						be16_to_cpu(bf[2].length));
  	/*
- 	 * We must be able to do sector-sized and sector-aligned IO.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a631ca3..82b8fda 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -382,10 +382,11 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+ 	 * Loop over the data/unused entries.
+ 	 */
+@@ -107,17 +114,20 @@ xfs_dir2_data_check(
+ 		 * doesn't need to be there.
+ 		 */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			ASSERT(lastfree == 0);
+-			ASSERT(be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+-			       (char *)dup - (char *)hdr);
++			XFS_WANT_CORRUPTED_RETURN(lastfree == 0);
++			XFS_WANT_CORRUPTED_RETURN(
++				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
++					       (char *)dup - (char *)hdr);
+ 			dfp = xfs_dir2_data_freefind(hdr, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+-				ASSERT((freeseen & (1 << i)) == 0);
++				XFS_WANT_CORRUPTED_RETURN(
++					(freeseen & (1 << i)) == 0);
+ 				freeseen |= 1 << i;
+ 			} else {
+-				ASSERT(be16_to_cpu(dup->length) <=
+-				       be16_to_cpu(bf[2].length));
++				XFS_WANT_CORRUPTED_RETURN(
++					be16_to_cpu(dup->length) <=
++						be16_to_cpu(bf[2].length));
+ 			}
+ 			p += be16_to_cpu(dup->length);
+ 			lastfree = 1;
+@@ -130,10 +140,12 @@ xfs_dir2_data_check(
+ 		 * The linear search is crude but this is DEBUG code.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)p;
+-		ASSERT(dep->namelen != 0);
+-		ASSERT(xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)) == 0);
+-		ASSERT(be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
+-		       (char *)dep - (char *)hdr);
++		XFS_WANT_CORRUPTED_RETURN(dep->namelen != 0);
++		XFS_WANT_CORRUPTED_RETURN(
++			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
++		XFS_WANT_CORRUPTED_RETURN(
++			be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
++					       (char *)dep - (char *)hdr);
+ 		count++;
+ 		lastfree = 0;
+ 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+@@ -148,27 +160,30 @@ xfs_dir2_data_check(
+ 				    be32_to_cpu(lep[i].hashval) == hash)
+ 					break;
+ 			}
+-			ASSERT(i < be32_to_cpu(btp->count));
++			XFS_WANT_CORRUPTED_RETURN(i < be32_to_cpu(btp->count));
+ 		}
+ 		p += xfs_dir2_data_entsize(dep->namelen);
+ 	}
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+ 	 */
+-	ASSERT(freeseen == 7);
++	XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+ 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
+ 			if (lep[i].address ==
+ 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 				stale++;
+ 			if (i > 0)
+-				ASSERT(be32_to_cpu(lep[i].hashval) >= be32_to_cpu(lep[i - 1].hashval));
++				XFS_WANT_CORRUPTED_RETURN(
++					be32_to_cpu(lep[i].hashval) >=
++						be32_to_cpu(lep[i - 1].hashval));
+ 		}
+-		ASSERT(count == be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
+-		ASSERT(stale == be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(count ==
++			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(stale == be32_to_cpu(btp->stale));
+ 	}
++	return 0;
+ }
+-#endif
  
- #endif	/* __KERNEL__ */
+ /*
+  * Given a data block and an unused entry from that block,
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 3523d3e..e1c02ca 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -41,10 +41,12 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
  
-+extern void	xfs_sb_read_verify(struct xfs_buf *);
- extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
- extern int	xfs_initialize_perag(struct xfs_mount *, xfs_agnumber_t,
- 					xfs_agnumber_t *);
--extern void	xfs_sb_from_disk(struct xfs_mount *, struct xfs_dsb *);
-+extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
- extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
- 
- #endif	/* __XFS_MOUNT_H__ */
+ /* xfs_dir2_data.c */
+ #ifdef DEBUG
+-extern void xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++#define	xfs_dir2_data_check(dp,bp) __xfs_dir2_data_check(dp, bp);
+ #else
+ #define	xfs_dir2_data_check(dp,bp)
+ #endif
++extern bool __xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++
+ extern struct xfs_dir2_data_free *
+ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
+ 		struct xfs_dir2_data_unused *dup, int *loghead);
 -- 
 1.7.10
 
