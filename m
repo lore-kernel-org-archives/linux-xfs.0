@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993nmGF212768 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:49:48 -0500
+	q993o7cO212947 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:07 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sxh01KKkbEoNcE0l for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:17 -0700 (PDT)
+	5kQ2622CK6lkoKI0 for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:36 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQqg-0002P8-Ai
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TLQqq-0002PW-G5
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008Oj-6l
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008PC-D2
 	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/19] xfs: growfs: don't read garbage for new secondary
-	superblocks
-Date: Tue,  9 Oct 2012 14:50:52 +1100
-Message-Id: <1349754670-32009-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 07/19] xfs: verify AGFL blocks as they are read from disk
+Date: Tue,  9 Oct 2012 14:50:58 +1100
+Message-Id: <1349754670-32009-8-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,59 +35,58 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When updating new secondary superblocks in a growfs operation, the
-sueprblock buffer is read from the newly grown region of the
-underlying device. This is not guaranteed to be zero, so violates
-the underlying assumption that the unused parts of superblocks are
-zero filled. Get a new buffer for these secondary superblocks to
-ensure that the unused regions are zero filled correctly.
+Add an AGFL block verify callback function and pass it into the
+buffer read functions. Add a debug only check for valid block
+numbers in the AGFL.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fsops.c |   21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_alloc.c |   25 ++++++++++++++++++++++++-
+ 1 file changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index c25b094..4beaede 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -399,9 +399,26 @@ xfs_growfs_data_private(
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index bd565a2..75c5d82 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -430,6 +430,29 @@ xfs_alloc_fixup_trees(
+ 	return 0;
+ }
  
- 	/* update secondary superblocks. */
- 	for (agno = 1; agno < nagcount; agno++) {
--		error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
-+		error = 0;
-+		/*
-+		 * new secondary superblocks need to be zeroed, not read from
-+		 * disk as the contents of the new area we are growing into is
-+		 * completely unknown.
-+		 */
-+		if (agno < oagcount) {
-+			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
- 				  XFS_FSS_TO_BB(mp, 1), 0, &bp);
-+		} else {
-+			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
-+				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-+				  XFS_FSS_TO_BB(mp, 1), 0);
-+			if (bp)
-+				xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
-+			else
-+				error = ENOMEM;
-+		}
++void
++xfs_agfl_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_agfl	*agfl = XFS_BUF_TO_AGFL(bp);
++	int		agfl_ok = 1;
++	int		i;
 +
- 		if (error) {
- 			xfs_warn(mp,
- 		"error %d reading secondary superblock for ag %d",
-@@ -423,7 +440,7 @@ xfs_growfs_data_private(
- 			break; /* no point in continuing */
- 		}
- 	}
--	return 0;
-+	return error;
- 
-  error0:
- 	xfs_trans_cancel(tp, XFS_TRANS_ABORT);
++	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
++		if (agfl->agfl_bno[i] == 0)
++			agfl = 0;
++	}
++
++	if (!agfl_ok) {
++		XFS_CORRUPTION_ERROR("xfs_agfl_read_verify",
++				     XFS_ERRLEVEL_LOW, mp, agfl);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
++}
++
+ /*
+  * Read in the allocation group free block array.
+  */
+@@ -447,7 +470,7 @@ xfs_alloc_read_agfl(
+ 	error = xfs_trans_read_buf(
+ 			mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
++			XFS_FSS_TO_BB(mp, 1), 0, &bp, xfs_agfl_read_verify);
+ 	if (error)
+ 		return error;
+ 	ASSERT(!xfs_buf_geterror(bp));
 -- 
 1.7.10
 
