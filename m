@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993o8Qr212965 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:08 -0500
+	q993oA8T212983 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:10 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	2f9EeSYpn0ZlBz65 for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:37 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQr0-0002Pe-JW
+	wFmwkHAXbRQ2ZxcT for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:38 -0700 (PDT)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TLQr0-0002Po-Ty
 	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:34 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008PP-GB
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008Ps-RE
 	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/19] xfs: verify dquot blocks as they are read from disk
-Date: Tue,  9 Oct 2012 14:51:01 +1100
-Message-Id: <1349754670-32009-11-git-send-email-david@fromorbit.com>
+Subject: [PATCH 16/19] xfs: factor dir2 leaf read
+Date: Tue,  9 Oct 2012 14:51:07 +1100
+Message-Id: <1349754670-32009-17-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,166 +36,147 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a dquot buffer verify callback function and pass it into the
-buffer read functions. This checks all the dquots in a buffer, but
-cannot completely verify the dquot ids are correct. Also, errors
-cannot be repaired, so an additional function is added to repair bad
-dquots in the buffer if such an error is detected in a context where
-repair is allowed.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dquot.c |  117 ++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 95 insertions(+), 22 deletions(-)
+ fs/xfs/xfs_dir2_leaf.c |   73 ++++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_dir2_node.c |    6 ++--
+ fs/xfs/xfs_dir2_priv.h |    2 ++
+ 3 files changed, 67 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index e95f800..2e18382 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -360,6 +360,89 @@ xfs_qm_dqalloc(
- 	return (error);
- }
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 0fdf765..a510af5 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -48,6 +48,62 @@ static void xfs_dir2_leaf_log_bests(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				    int first, int last);
+ static void xfs_dir2_leaf_log_tail(struct xfs_trans *tp, struct xfs_buf *bp);
  
-+STATIC void
-+xfs_dquot_read_verify(
-+	struct xfs_buf		*bp)
++static void
++xfs_dir2_leaf_verify(
++	struct xfs_buf		*bp,
++	__be16			magic)
 +{
 +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
-+	struct xfs_disk_dquot	*ddq;
-+	xfs_dqid_t		id = 0;
-+	int			i;
++	struct xfs_dir2_leaf_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	/*
-+	 * On the first read of the buffer, verify that each dquot is valid.
-+	 * We don't know what the id of the dquot is supposed to be, just that
-+	 * they should be increasing monotonically within the buffer. If the
-+	 * first id is corrupt, then it will fail on the second dquot in the
-+	 * buffer so corruptions could point to the wrong dquot in this case.
-+	 */
-+	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
-+		int	error;
-+
-+		ddq = &d[i].dd_diskdq;
-+
-+		if (i == 0)
-+			id = be32_to_cpu(ddq->d_id);
-+
-+		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
-+					"xfs_dquot_read_verify");
-+		if (error) {
-+			XFS_CORRUPTION_ERROR("xfs_dquot_read_verify",
-+					     XFS_ERRLEVEL_LOW, mp, d);
-+			xfs_buf_ioerror(bp, EFSCORRUPTED);
-+			break;
-+		}
++	block_ok = hdr->info.magic == magic;
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
-+STATIC int
-+xfs_qm_dqrepair(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_dquot	*dqp,
-+	xfs_dqid_t		firstid,
-+	struct xfs_buf		**bpp)
++static void
++xfs_dir2_leaf1_verify(
++	struct xfs_buf		*bp)
 +{
-+	int			error;
-+	struct xfs_disk_dquot	*ddq;
-+	struct xfs_dqblk	*d;
-+	int			i;
-+
-+	/*
-+	 * Read the buffer without verification so we get the corrupted
-+	 * buffer returned to us.
-+	 */
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
-+				   mp->m_quotainfo->qi_dqchunklen,
-+				   0, bpp, NULL);
-+
-+	if (error) {
-+		ASSERT(*bpp == NULL);
-+		return XFS_ERROR(error);
-+	}
-+
-+	ASSERT(xfs_buf_islocked(*bpp));
-+	d = (struct xfs_dqblk *)(*bpp)->b_addr;
-+
-+	/* Do the actual repair of dquots in this buffer */
-+	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
-+		ddq = &d[i].dd_diskdq;
-+		error = xfs_qm_dqcheck(mp, ddq, firstid + i,
-+				       dqp->dq_flags & XFS_DQ_ALLTYPES,
-+				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
-+		if (error) {
-+			/* repair failed, we're screwed */
-+			xfs_trans_brelse(tp, *bpp);
-+			return XFS_ERROR(EIO);
-+		}
-+	}
-+
-+	return 0;
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
 +}
 +
++static void
++xfs_dir2_leafn_verify(
++	struct xfs_buf		*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAFN_MAGIC));
++}
++
++static int
++xfs_dir2_leaf_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dir2_db_t		fbno,
++	int			map_type,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, fbno, map_type, bpp,
++					XFS_DATA_FORK, xfs_dir2_leaf1_verify);
++}
++
++int
++xfs_dir2_leafn_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dir2_db_t		fbno,
++	int			map_type,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, fbno, map_type, bpp,
++					XFS_DATA_FORK, xfs_dir2_leafn_verify);
++}
+ 
  /*
-  * Maps a dquot to the buffer containing its on-disk version.
-  * This returns a ptr to the buffer containing the on-disk dquot
-@@ -378,7 +461,6 @@ xfs_qm_dqtobp(
- 	xfs_buf_t	*bp;
- 	xfs_inode_t	*quotip = XFS_DQ_TO_QIP(dqp);
- 	xfs_mount_t	*mp = dqp->q_mount;
--	xfs_disk_dquot_t *ddq;
- 	xfs_dqid_t	id = be32_to_cpu(dqp->q_core.d_id);
- 	xfs_trans_t	*tp = (tpp ? *tpp : NULL);
- 
-@@ -439,33 +521,24 @@ xfs_qm_dqtobp(
- 		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 					   dqp->q_blkno,
- 					   mp->m_quotainfo->qi_dqchunklen,
--					   0, &bp, NULL);
--		if (error || !bp)
--			return XFS_ERROR(error);
--	}
-+					   0, &bp, xfs_dquot_read_verify);
- 
--	ASSERT(xfs_buf_islocked(bp));
--
+  * Convert a block form directory to a leaf form directory.
+@@ -311,14 +367,11 @@ xfs_dir2_leaf_addname(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
 -	/*
--	 * calculate the location of the dquot inside the buffer.
+-	 * Read the leaf block.
 -	 */
--	ddq = bp->b_addr + dqp->q_bufoffset;
-+		if (error == EFSCORRUPTED && (flags & XFS_QMOPT_DQREPAIR)) {
-+			xfs_dqid_t firstid = (xfs_dqid_t)map.br_startoff *
-+						mp->m_quotainfo->qi_dqperchunk;
-+			ASSERT(bp == NULL);
-+			error = xfs_qm_dqrepair(mp, tp, dqp, firstid, &bp);
-+		}
- 
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
+-				XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
+ 	if (error)
+ 		return error;
+-	ASSERT(lbp != NULL);
++
+ 	/*
+ 	 * Look up the entry by hash value and name.
+ 	 * We know it's not there, our caller has already done a lookup.
+@@ -1369,13 +1422,11 @@ xfs_dir2_leaf_lookup_int(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
 -	/*
--	 * A simple sanity check in case we got a corrupted dquot...
+-	 * Read the leaf block into the buffer.
 -	 */
--	error = xfs_qm_dqcheck(mp, ddq, id, dqp->dq_flags & XFS_DQ_ALLTYPES,
--			   flags & (XFS_QMOPT_DQREPAIR|XFS_QMOPT_DOWARN),
--			   "dqtobp");
--	if (error) {
--		if (!(flags & XFS_QMOPT_DQREPAIR)) {
--			xfs_trans_brelse(tp, bp);
--			return XFS_ERROR(EIO);
-+		if (error) {
-+			ASSERT(bp == NULL);
-+			return XFS_ERROR(error);
- 		}
- 	}
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
+-							XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
+ 	if (error)
+ 		return error;
++
+ 	*lbpp = lbp;
+ 	leaf = lbp->b_addr;
+ 	xfs_dir2_leaf_check(dp, lbp);
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index e585c71..08fbba1 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1232,11 +1232,11 @@ xfs_dir2_leafn_toosmall(
+ 		/*
+ 		 * Read the sibling leaf block.
+ 		 */
+-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
+-					blkno, -1, &bp, XFS_DATA_FORK, NULL);
++		error = xfs_dir2_leafn_read(state->args->trans, state->args->dp,
++					    blkno, -1, &bp);
+ 		if (error)
+ 			return error;
+-		ASSERT(bp != NULL);
++
+ 		/*
+ 		 * Count bytes in the two blocks combined.
+ 		 */
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 9c238e8..986c654 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -70,6 +70,8 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
  
-+	ASSERT(xfs_buf_islocked(bp));
- 	*O_bpp = bp;
--	*O_ddpp = ddq;
-+	*O_ddpp = bp->b_addr + dqp->q_bufoffset;
- 
- 	return (0);
- }
+ /* xfs_dir2_leaf.c */
++extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dir2_db_t fbno, int map_type, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
+ 		struct xfs_buf *dbp);
+ extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
 -- 
 1.7.10
 
