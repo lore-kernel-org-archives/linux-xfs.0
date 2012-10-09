@@ -1,19 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99JkvgD094617 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:46:57 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	jEp37GJdknNp8u1p for <xfs@oss.sgi.com>;
-	Tue, 09 Oct 2012 12:48:26 -0700 (PDT)
-Date: Wed, 10 Oct 2012 06:48:25 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfsprogs: add PROJID32 geom feature flag
-Message-ID: <20121009194825.GN23644@dastard>
-References: <50747753.6040105@redhat.com>
+	q99KjoPY102264 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 15:45:50 -0500
+Message-ID: <50748D54.4000702@sgi.com>
+Date: Tue, 09 Oct 2012 15:47:16 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50747753.6040105@redhat.com>
+Subject: Re: [PATCH 0/3] xfs_io: new functions
+References: <1343255450-28559-1-git-send-email-david@fromorbit.com>
+	<5060D5D5.80602@sgi.com> <5074760D.7000300@sandeen.net>
+In-Reply-To: <5074760D.7000300@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,39 +18,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs@oss.sgi.com
 
-On Tue, Oct 09, 2012 at 02:13:23PM -0500, Eric Sandeen wrote:
-> Matches new flag added to kernel.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> ---
-> 
-> diff --git a/include/xfs_fs.h b/include/xfs_fs.h
-> index faac5af..0dd3afd 100644
-> --- a/include/xfs_fs.h
-> +++ b/include/xfs_fs.h
-> @@ -233,7 +233,8 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
->  #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
->  #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
-> -#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
-> +#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
-> +#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
->  #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+On 10/09/12 14:07, Eric Sandeen wrote:
+> On 9/24/12 4:51 PM, Mark Tinguely wrote:
+>> On 07/25/12 17:30, Dave Chinner wrote:
+>>> This is just a couple of additional functions for xfs_io I have had
+>>> sitting around for a while. The first is an interface to
+>>> sync_file_range() for better control of file writeback.  The second
+>>> and third introduce vectored pread/pwrite so that I could simulate
+>>> the same style of vectored IO that KVM does via direct IO (hint -
+>>> tracing indicated that the generic direct IO code doesn't handle
+>>> this particularly efficiently).
+>>>
+>>> _____________________________________________
+>>
+>> This series has been committed to
+>>     git://oss.sgi.com/xfs/cmds/xfsprogs.git
+>>
+>> -Mark.
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
+>>
+>
+> Looks like this might need some config-fu:
+>
+> pread.o: In function `do_pread':
+> /src/git/xfsprogs/io/pread.c:198: undefined reference to `preadv'
+> /src/git/xfsprogs/io/pread.c:198: undefined reference to `preadv'
+> pwrite.o: In function `do_pwrite':
+> /src/git/xfsprogs/io/pwrite.c:85: undefined reference to `pwritev'
+> /src/git/xfsprogs/io/pwrite.c:85: undefined reference to `pwritev'
+> sync_file_range.o: In function `sync_range_f':
+> /src/git/xfsprogs/io/sync_file_range.c:87: undefined reference to `sync_file_range'
+>
+>
+> (on a Centos5 box)
 
-That's an easy one ;)
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Thanks Eric, I will take a look at it.
 
--- 
-Dave Chinner
-david@fromorbit.com
+--Mark.
 
 _______________________________________________
 xfs mailing list
