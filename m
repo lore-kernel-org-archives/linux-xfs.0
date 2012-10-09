@@ -1,23 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993oMc0213067 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:22 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	MyM5BsyXEJVzZZ4d for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:49 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQr1-0002Q8-1a
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:35 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQr0-0008Q1-TI
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:34 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 18/19] xfs: add xfs_da_node verification
-Date: Tue,  9 Oct 2012 14:51:09 +1100
-Message-Id: <1349754670-32009-19-git-send-email-david@fromorbit.com>
-In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
-References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
+	q994NN3f217280 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 23:23:23 -0500
+Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com
+	[209.85.223.181]) by cuda.sgi.com with ESMTP id
+	CIsc25q9rQFnnY3V (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 21:24:51 -0700 (PDT)
+Received: by mail-ie0-f181.google.com with SMTP id 16so11249780iea.26
+	for <xfs@oss.sgi.com>; Mon, 08 Oct 2012 21:24:51 -0700 (PDT)
+Date: Mon, 8 Oct 2012 21:24:40 -0700 (PDT)
+From: Hugh Dickins <hughd@google.com>
+Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
+	s390
+In-Reply-To: <1349108796-32161-1-git-send-email-jack@suse.cz>
+Message-ID: <alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
+References: <1349108796-32161-1-git-send-email-jack@suse.cz>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,408 +25,134 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jan Kara <jack@suse.cz>
+Cc: linux-s390@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+On Mon, 1 Oct 2012, Jan Kara wrote:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_attr.c      |   22 ++++------
- fs/xfs/xfs_attr_leaf.c |   12 +++---
- fs/xfs/xfs_attr_leaf.h |    6 ++-
- fs/xfs/xfs_da_btree.c  |  108 ++++++++++++++++++++++++++++++++++++------------
- fs/xfs/xfs_da_btree.h  |    3 ++
- fs/xfs/xfs_dir2_leaf.c |    2 +-
- fs/xfs/xfs_dir2_priv.h |    1 +
- 7 files changed, 105 insertions(+), 49 deletions(-)
+> On s390 any write to a page (even from kernel itself) sets architecture
+> specific page dirty bit. Thus when a page is written to via standard write, HW
+> dirty bit gets set and when we later map and unmap the page, page_remove_rmap()
+> finds the dirty bit and calls set_page_dirty().
+> 
+> Dirtying of a page which shouldn't be dirty can cause all sorts of problems to
+> filesystems. The bug we observed in practice is that buffers from the page get
+> freed, so when the page gets later marked as dirty and writeback writes it, XFS
+> crashes due to an assertion BUG_ON(!PagePrivate(page)) in page_buffers() called
+> from xfs_count_page_state().
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 548e910..4b862ed 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -1688,10 +1688,10 @@ xfs_attr_refillstate(xfs_da_state_t *state)
- 	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
- 	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
- 		if (blk->disk_blkno) {
--			error = xfs_da_read_buf(state->args->trans,
-+			error = xfs_da_node_read(state->args->trans,
- 						state->args->dp,
- 						blk->blkno, blk->disk_blkno,
--						&blk->bp, XFS_ATTR_FORK, NULL);
-+						&blk->bp, XFS_ATTR_FORK);
- 			if (error)
- 				return(error);
- 		} else {
-@@ -1707,10 +1707,10 @@ xfs_attr_refillstate(xfs_da_state_t *state)
- 	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
- 	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
- 		if (blk->disk_blkno) {
--			error = xfs_da_read_buf(state->args->trans,
-+			error = xfs_da_node_read(state->args->trans,
- 						state->args->dp,
- 						blk->blkno, blk->disk_blkno,
--						&blk->bp, XFS_ATTR_FORK, NULL);
-+						&blk->bp, XFS_ATTR_FORK);
- 			if (error)
- 				return(error);
- 		} else {
-@@ -1795,8 +1795,8 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 	 */
- 	bp = NULL;
- 	if (cursor->blkno > 0) {
--		error = xfs_da_read_buf(NULL, context->dp, cursor->blkno, -1,
--					      &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_da_node_read(NULL, context->dp, cursor->blkno, -1,
-+					      &bp, XFS_ATTR_FORK);
- 		if ((error != 0) && (error != EFSCORRUPTED))
- 			return(error);
- 		if (bp) {
-@@ -1837,17 +1837,11 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 	if (bp == NULL) {
- 		cursor->blkno = 0;
- 		for (;;) {
--			error = xfs_da_read_buf(NULL, context->dp,
-+			error = xfs_da_node_read(NULL, context->dp,
- 						      cursor->blkno, -1, &bp,
--						      XFS_ATTR_FORK, NULL);
-+						      XFS_ATTR_FORK);
- 			if (error)
- 				return(error);
--			if (unlikely(bp == NULL)) {
--				XFS_ERROR_REPORT("xfs_attr_node_list(2)",
--						 XFS_ERRLEVEL_LOW,
--						 context->dp->i_mount);
--				return(XFS_ERROR(EFSCORRUPTED));
--			}
- 			node = bp->b_addr;
- 			if (node->hdr.info.magic ==
- 			    cpu_to_be16(XFS_ATTR_LEAF_MAGIC))
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index 2069b53..10e699e 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -87,7 +87,7 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
- 					 xfs_mount_t *mp);
- STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
- 
--static void
-+void
- xfs_attr_leaf_verify(
- 	struct xfs_buf		*bp)
- {
-@@ -2742,7 +2742,7 @@ xfs_attr_root_inactive(xfs_trans_t **trans, xfs_inode_t *dp)
- 	 * the extents in reverse order the extent containing
- 	 * block 0 must still be there.
- 	 */
--	error = xfs_da_read_buf(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK, NULL);
-+	error = xfs_da_node_read(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK);
- 	if (error)
- 		return(error);
- 	blkno = XFS_BUF_ADDR(bp);
-@@ -2827,8 +2827,8 @@ xfs_attr_node_inactive(
- 		 * traversal of the tree so we may deal with many blocks
- 		 * before we come back to this one.
- 		 */
--		error = xfs_da_read_buf(*trans, dp, child_fsb, -2, &child_bp,
--						XFS_ATTR_FORK, NULL);
-+		error = xfs_da_node_read(*trans, dp, child_fsb, -2, &child_bp,
-+						XFS_ATTR_FORK);
- 		if (error)
- 			return(error);
- 		if (child_bp) {
-@@ -2868,8 +2868,8 @@ xfs_attr_node_inactive(
- 		 * child block number.
- 		 */
- 		if ((i+1) < count) {
--			error = xfs_da_read_buf(*trans, dp, 0, parent_blkno,
--				&bp, XFS_ATTR_FORK, NULL);
-+			error = xfs_da_node_read(*trans, dp, 0, parent_blkno,
-+						 &bp, XFS_ATTR_FORK);
- 			if (error)
- 				return(error);
- 			child_fsb = be32_to_cpu(node->btree[i+1].before);
-diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
-index e05babc..33639db 100644
---- a/fs/xfs/xfs_attr_leaf.h
-+++ b/fs/xfs/xfs_attr_leaf.h
-@@ -227,8 +227,6 @@ int	xfs_attr_leaf_to_shortform(struct xfs_buf *bp,
- int	xfs_attr_leaf_clearflag(struct xfs_da_args *args);
- int	xfs_attr_leaf_setflag(struct xfs_da_args *args);
- int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
--int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
--			xfs_dablk_t bno, int map_type, struct xfs_buf **bpp);
- 
- /*
-  * Routines used for growing the Btree.
-@@ -263,4 +261,8 @@ int	xfs_attr_leaf_order(struct xfs_buf *leaf1_bp,
- 				   struct xfs_buf *leaf2_bp);
- int	xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize,
- 					int *local);
-+int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+			xfs_dablk_t bno, int map_type, struct xfs_buf **bpp);
-+void	xfs_attr_leaf_verify(struct xfs_buf *bp);
-+
- #endif	/* __XFS_ATTR_LEAF_H__ */
-diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
-index a46035b..0c152c6 100644
---- a/fs/xfs/xfs_da_btree.c
-+++ b/fs/xfs/xfs_da_btree.c
-@@ -91,6 +91,67 @@ STATIC int	xfs_da_blk_unlink(xfs_da_state_t *state,
- 				  xfs_da_state_blk_t *save_blk);
- STATIC void	xfs_da_state_kill_altpath(xfs_da_state_t *state);
- 
-+static void
-+__xfs_da_node_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_da_node_hdr *hdr = bp->b_addr;
-+	int			block_ok = 0;
-+
-+	block_ok = hdr->info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC);
-+	block_ok |= hdr->level > 0;
-+	block_ok |= hdr->count > 0;
-+	if (!block_ok) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
-+
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
-+}
-+
-+static void
-+xfs_da_node_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_da_blkinfo	*info = bp->b_addr;
-+
-+	switch (be16_to_cpu(info->magic)) {
-+		case XFS_DA_NODE_MAGIC:
-+			__xfs_da_node_verify(bp);
-+			return;
-+		case XFS_ATTR_LEAF_MAGIC:
-+			xfs_attr_leaf_verify(bp);
-+			return;
-+		case XFS_DIR2_LEAFN_MAGIC:
-+			xfs_dir2_leafn_verify(bp);
-+			return;
-+		default:
-+			break;
-+	}
-+
-+	XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, info);
-+	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
-+}
-+
-+int
-+xfs_da_node_read(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dablk_t		bno,
-+	int			map_type,
-+	struct xfs_buf		**bpp,
-+	int			which_fork)
-+{
-+	return xfs_da_read_buf(tp, dp, bno, map_type, bpp,
-+					which_fork, xfs_da_node_verify);
-+}
-+
- /*========================================================================
-  * Routines used for growing the Btree.
-  *========================================================================*/
-@@ -746,8 +807,8 @@ xfs_da_root_join(xfs_da_state_t *state, xfs_da_state_blk_t *root_blk)
- 	 */
- 	child = be32_to_cpu(oldroot->btree[0].before);
- 	ASSERT(child != 0);
--	error = xfs_da_read_buf(args->trans, args->dp, child, -1, &bp,
--					     args->whichfork, NULL);
-+	error = xfs_da_node_read(args->trans, args->dp, child, -1, &bp,
-+					     args->whichfork);
- 	if (error)
- 		return(error);
- 	ASSERT(bp != NULL);
-@@ -835,9 +896,8 @@ xfs_da_node_toosmall(xfs_da_state_t *state, int *action)
- 			blkno = be32_to_cpu(info->back);
- 		if (blkno == 0)
- 			continue;
--		error = xfs_da_read_buf(state->args->trans, state->args->dp,
--					blkno, -1, &bp, state->args->whichfork,
--					NULL);
-+		error = xfs_da_node_read(state->args->trans, state->args->dp,
-+					blkno, -1, &bp, state->args->whichfork);
- 		if (error)
- 			return(error);
- 		ASSERT(bp != NULL);
-@@ -1080,8 +1140,8 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
- 		 * Read the next node down in the tree.
- 		 */
- 		blk->blkno = blkno;
--		error = xfs_da_read_buf(args->trans, args->dp, blkno,
--					-1, &blk->bp, args->whichfork, NULL);
-+		error = xfs_da_node_read(args->trans, args->dp, blkno,
-+					-1, &blk->bp, args->whichfork);
- 		if (error) {
- 			blk->blkno = 0;
- 			state->path.active--;
-@@ -1242,9 +1302,9 @@ xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
- 		new_info->forw = cpu_to_be32(old_blk->blkno);
- 		new_info->back = old_info->back;
- 		if (old_info->back) {
--			error = xfs_da_read_buf(args->trans, args->dp,
-+			error = xfs_da_node_read(args->trans, args->dp,
- 						be32_to_cpu(old_info->back),
--						-1, &bp, args->whichfork, NULL);
-+						-1, &bp, args->whichfork);
- 			if (error)
- 				return(error);
- 			ASSERT(bp != NULL);
-@@ -1263,9 +1323,9 @@ xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
- 		new_info->forw = old_info->forw;
- 		new_info->back = cpu_to_be32(old_blk->blkno);
- 		if (old_info->forw) {
--			error = xfs_da_read_buf(args->trans, args->dp,
-+			error = xfs_da_node_read(args->trans, args->dp,
- 						be32_to_cpu(old_info->forw),
--						-1, &bp, args->whichfork, NULL);
-+						-1, &bp, args->whichfork);
- 			if (error)
- 				return(error);
- 			ASSERT(bp != NULL);
-@@ -1363,9 +1423,9 @@ xfs_da_blk_unlink(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
- 		trace_xfs_da_unlink_back(args);
- 		save_info->back = drop_info->back;
- 		if (drop_info->back) {
--			error = xfs_da_read_buf(args->trans, args->dp,
-+			error = xfs_da_node_read(args->trans, args->dp,
- 						be32_to_cpu(drop_info->back),
--						-1, &bp, args->whichfork, NULL);
-+						-1, &bp, args->whichfork);
- 			if (error)
- 				return(error);
- 			ASSERT(bp != NULL);
-@@ -1380,9 +1440,9 @@ xfs_da_blk_unlink(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
- 		trace_xfs_da_unlink_forward(args);
- 		save_info->forw = drop_info->forw;
- 		if (drop_info->forw) {
--			error = xfs_da_read_buf(args->trans, args->dp,
-+			error = xfs_da_node_read(args->trans, args->dp,
- 						be32_to_cpu(drop_info->forw),
--						-1, &bp, args->whichfork, NULL);
-+						-1, &bp, args->whichfork);
- 			if (error)
- 				return(error);
- 			ASSERT(bp != NULL);
-@@ -1464,8 +1524,8 @@ xfs_da_path_shift(xfs_da_state_t *state, xfs_da_state_path_t *path,
- 		 * Read the next child block.
- 		 */
- 		blk->blkno = blkno;
--		error = xfs_da_read_buf(args->trans, args->dp, blkno, -1,
--					&blk->bp, args->whichfork, NULL);
-+		error = xfs_da_node_read(args->trans, args->dp, blkno, -1,
-+					&blk->bp, args->whichfork);
- 		if (error)
- 			return(error);
- 		ASSERT(blk->bp != NULL);
-@@ -1728,7 +1788,7 @@ xfs_da_swap_lastblock(
- 	 * Read the last block in the btree space.
- 	 */
- 	last_blkno = (xfs_dablk_t)lastoff - mp->m_dirblkfsbs;
--	error = xfs_da_read_buf(tp, ip, last_blkno, -1, &last_buf, w, NULL);
-+	error = xfs_da_node_read(tp, ip, last_blkno, -1, &last_buf, w);
- 	if (error)
- 		return error;
- 	/*
-@@ -1755,8 +1815,7 @@ xfs_da_swap_lastblock(
- 	 * If the moved block has a left sibling, fix up the pointers.
- 	 */
- 	if ((sib_blkno = be32_to_cpu(dead_info->back))) {
--		error = xfs_da_read_buf(tp, ip, sib_blkno, -1, &sib_buf, w,
--					NULL);
-+		error = xfs_da_node_read(tp, ip, sib_blkno, -1, &sib_buf, w);
- 		if (error)
- 			goto done;
- 		sib_info = sib_buf->b_addr;
-@@ -1778,8 +1837,7 @@ xfs_da_swap_lastblock(
- 	 * If the moved block has a right sibling, fix up the pointers.
- 	 */
- 	if ((sib_blkno = be32_to_cpu(dead_info->forw))) {
--		error = xfs_da_read_buf(tp, ip, sib_blkno, -1, &sib_buf, w,
--					NULL);
-+		error = xfs_da_node_read(tp, ip, sib_blkno, -1, &sib_buf, w);
- 		if (error)
- 			goto done;
- 		sib_info = sib_buf->b_addr;
-@@ -1803,8 +1861,7 @@ xfs_da_swap_lastblock(
- 	 * Walk down the tree looking for the parent of the moved block.
- 	 */
- 	for (;;) {
--		error = xfs_da_read_buf(tp, ip, par_blkno, -1, &par_buf, w,
--					NULL);
-+		error = xfs_da_node_read(tp, ip, par_blkno, -1, &par_buf, w);
- 		if (error)
- 			goto done;
- 		par_node = par_buf->b_addr;
-@@ -1855,8 +1912,7 @@ xfs_da_swap_lastblock(
- 			error = XFS_ERROR(EFSCORRUPTED);
- 			goto done;
- 		}
--		error = xfs_da_read_buf(tp, ip, par_blkno, -1, &par_buf, w,
--					NULL);
-+		error = xfs_da_node_read(tp, ip, par_blkno, -1, &par_buf, w);
- 		if (error)
- 			goto done;
- 		par_node = par_buf->b_addr;
-diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
-index bf8bfaa..622dca8 100644
---- a/fs/xfs/xfs_da_btree.h
-+++ b/fs/xfs/xfs_da_btree.h
-@@ -213,6 +213,9 @@ int	xfs_da_path_shift(xfs_da_state_t *state, xfs_da_state_path_t *path,
-  */
- int	xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
- 				       xfs_da_state_blk_t *new_blk);
-+int	xfs_da_node_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+			 xfs_dablk_t bno, int map_type, struct xfs_buf **bpp,
-+			 int which_fork);
- 
- /*
-  * Utility routines.
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index a510af5..65bf0e0 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -74,7 +74,7 @@ xfs_dir2_leaf1_verify(
- 	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
- }
- 
--static void
-+void
- xfs_dir2_leafn_verify(
- 	struct xfs_buf		*bp)
- {
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 986c654..686779e 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -72,6 +72,7 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
- /* xfs_dir2_leaf.c */
- extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
- 		xfs_dir2_db_t fbno, int map_type, struct xfs_buf **bpp);
-+extern void xfs_dir2_leafn_verify(struct xfs_buf *bp);
- extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
- 		struct xfs_buf *dbp);
- extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
--- 
-1.7.10
+What changed recently?  Was XFS hardly used on s390 until now?
+
+> 
+> Similar problem can also happen when zero_user_segment() call from
+> xfs_vm_writepage() (or block_write_full_page() for that matter) set the
+> hardware dirty bit during writeback, later buffers get freed, and then page
+> unmapped.
+> 
+> Fix the issue by ignoring s390 HW dirty bit for page cache pages in
+> page_mkclean() and page_remove_rmap(). This is safe because when a page gets
+> marked as writeable in PTE it is also marked dirty in do_wp_page() or
+> do_page_fault(). When the dirty bit is cleared by clear_page_dirty_for_io(),
+> the page gets writeprotected in page_mkclean(). So pagecache page is writeable
+> if and only if it is dirty.
+
+Very interesting patch...
+
+> 
+> CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
+
+which I'd very much like Martin's opinion on...
+
+> CC: Mel Gorman <mgorman@suse.de>
+
+and I'm grateful to Mel's ack for reawakening me to it...
+
+> CC: linux-s390@vger.kernel.org
+> Signed-off-by: Jan Kara <jack@suse.cz>
+
+but I think it's wrong.
+
+> ---
+>  mm/rmap.c |   16 ++++++++++++++--
+>  1 files changed, 14 insertions(+), 2 deletions(-)
+> 
+> diff --git a/mm/rmap.c b/mm/rmap.c
+> index 0f3b7cd..6ce8ddb 100644
+> --- a/mm/rmap.c
+> +++ b/mm/rmap.c
+> @@ -973,7 +973,15 @@ int page_mkclean(struct page *page)
+>  		struct address_space *mapping = page_mapping(page);
+>  		if (mapping) {
+>  			ret = page_mkclean_file(mapping, page);
+> -			if (page_test_and_clear_dirty(page_to_pfn(page), 1))
+> +			/*
+> +			 * We ignore dirty bit for pagecache pages. It is safe
+> +			 * as page is marked dirty iff it is writeable (page is
+> +			 * marked as dirty when it is made writeable and
+> +			 * clear_page_dirty_for_io() writeprotects the page
+> +			 * again).
+> +			 */
+> +			if (PageSwapCache(page) &&
+> +			    page_test_and_clear_dirty(page_to_pfn(page), 1))
+>  				ret = 1;
+
+This part you could cut out: page_mkclean() is not used on SwapCache pages.
+I believe you are safe to remove the page_test_and_clear_dirty() from here.
+
+>  		}
+>  	}
+> @@ -1183,8 +1191,12 @@ void page_remove_rmap(struct page *page)
+>  	 * this if the page is anon, so about to be freed; but perhaps
+>  	 * not if it's in swapcache - there might be another pte slot
+>  	 * containing the swap entry, but page not yet written to swap.
+> +	 * For pagecache pages, we don't care about dirty bit in storage
+> +	 * key because the page is writeable iff it is dirty (page is marked
+> +	 * as dirty when it is made writeable and clear_page_dirty_for_io()
+> +	 * writeprotects the page again).
+>  	 */
+> -	if ((!anon || PageSwapCache(page)) &&
+> +	if (PageSwapCache(page) &&
+>  	    page_test_and_clear_dirty(page_to_pfn(page), 1))
+>  		set_page_dirty(page);
+
+But here's where I think the problem is.  You're assuming that all
+filesystems go the same mapping_cap_account_writeback_dirty() (yeah,
+there's no such function, just a confusing maze of three) route as XFS.
+
+But filesystems like tmpfs and ramfs (perhaps they're the only two
+that matter here) don't participate in that, and wait for an mmap'ed
+page to be seen modified by the user (usually via pte_dirty, but that's
+a no-op on s390) before page is marked dirty; and page reclaim throws
+away undirtied pages.
+
+So, if I'm understanding right, with this change s390 would be in danger
+of discarding shm, and mmap'ed tmpfs and ramfs pages - whereas pages
+written with the write system call would already be PageDirty and secure.
+
+You mention above that even the kernel writing to the page would mark
+the s390 storage key dirty.  I think that means that these shm and
+tmpfs and ramfs pages would all have dirty storage keys just from the
+clear_highpage() used to prepare them originally, and so would have
+been found dirty anyway by the existing code here in page_remove_rmap(),
+even though other architectures would regard them as clean and removable.
+
+If that's the case, then maybe we'd do better just to mark them dirty
+when faulted in the s390 case.  Then your patch above should (I think)
+be safe.  Though I'd then be VERY tempted to adjust the SwapCache case
+too (I've not thought through exactly what that patch would be, just
+one or two suitably placed SetPageDirtys, I think), and eliminate
+page_test_and_clear_dirty() altogether - no tears shed by any of us!
+
+A separate worry came to mind as I thought about your patch: where
+in page migration is s390's dirty storage key migrated from old page
+to new?  And if there is a problem there, that too should be fixed
+by what I propose in the previous paragraph.
+
+Hugh
 
 _______________________________________________
 xfs mailing list
