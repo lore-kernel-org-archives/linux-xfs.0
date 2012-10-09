@@ -1,26 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99M0d39112994 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 17:00:39 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id V2zEU85L9ve5MXH9 for
-	<xfs@oss.sgi.com>; Tue, 09 Oct 2012 15:02:10 -0700 (PDT)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q99M29Xl019936
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 18:02:09 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id q99M28Zl006946
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 18:02:09 -0400
-Message-ID: <50749EE2.6070408@redhat.com>
-Date: Tue, 09 Oct 2012 17:02:10 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q99M6vNT113791 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 17:06:57 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id DUXsFTsRGmiCjXnp for <xfs@oss.sgi.com>;
+	Tue, 09 Oct 2012 15:08:24 -0700 (PDT)
+Received: from liberator.sandeen.net (liberator.sandeen.net [10.0.0.4])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested) (Authenticated sender: sandeen)
+	by mail.sandeen.net (Postfix) with ESMTP id AA3C04964603
+	for <xfs@oss.sgi.com>; Tue,  9 Oct 2012 17:08:24 -0500 (CDT)
+Message-ID: <5074A05A.6000709@sandeen.net>
+Date: Tue, 09 Oct 2012 17:08:26 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: [PATCH 1/2] xfs_io: include headers for preadv/pwritev
+Subject: [PATCH 2/2] xfs_io: configure tests for preadv/pwritev &
+	sync_file_range
+References: <50749EE2.6070408@redhat.com>
+In-Reply-To: <50749EE2.6070408@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,52 +26,266 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-We need to include uio.h to avoid:
+On older systems we may not have preadv/pwritev and/or
+sync_file_range.
 
-    [CC]     pread.o
-pread.c: In function =91do_pread=92:
-pread.c:198: warning: implicit declaration of function =91preadv=92
-    [CC]     pwrite.o
-pwrite.c: In function =91do_pwrite=92:
-pwrite.c:85: warning: implicit declaration of function =91pwritev=92
+Add the configure magic, and stub out the code
+where needed.
+
+(sync_file_range just needed a better test; preadv/pwritev
+took a little more rearranging)
+
+And fix a couple typos ("numberic") while we're at it.
 
 Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
 
+diff --git a/configure.in b/configure.in
+index 664c0e9..b927c32 100644
+--- a/configure.in
++++ b/configure.in
+@@ -108,6 +108,8 @@ AC_HAVE_GETMNTENT
+ AC_HAVE_GETMNTINFO
+ AC_HAVE_FALLOCATE
+ AC_HAVE_FIEMAP
++AC_HAVE_PREADV
++AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_BLKID_TOPO($enable_blkid)
+ 
+ AC_TYPE_PSINT
+diff --git a/include/builddefs.in b/include/builddefs.in
+index 81ebfcd..4a0e910 100644
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -101,6 +101,8 @@ HAVE_GETMNTENT = @have_getmntent@
+ HAVE_GETMNTINFO = @have_getmntinfo@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_FIEMAP = @have_fiemap@
++HAVE_PREADV = @have_preadv@
++HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
+ #	   -Wbitwise -Wno-transparent-union -Wno-old-initializer -Wno-decl
+diff --git a/io/Makefile b/io/Makefile
+index bf46d56..23cd90b 100644
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -58,7 +58,7 @@ CFILES += inject.c resblks.c
+ LCFLAGS += -DHAVE_INJECT -DHAVE_RESBLKS
+ endif
+ 
+-ifeq ($(PKG_PLATFORM),linux)
++ifeq ($(HAVE_SYNC_FILE_RANGE),yes)
+ CFILES += sync_file_range.c
+ LCFLAGS += -DHAVE_SYNC_FILE_RANGE
+ endif
+@@ -75,6 +75,10 @@ ifeq ($(HAVE_FALLOCATE),yes)
+ LCFLAGS += -DHAVE_FALLOCATE
+ endif
+ 
++ifeq ($(HAVE_PREADV),yes)
++LCFLAGS += -DHAVE_PREADV
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
 diff --git a/io/pread.c b/io/pread.c
-index 0b9454b..9fad373 100644
+index 9fad373..9d3720e 100644
 --- a/io/pread.c
 +++ b/io/pread.c
-@@ -16,6 +16,8 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- =
-
-+#define _BSD_SOURCE 	/* for preadv */
-+#include <sys/uio.h>
- #include <xfs/xfs.h>
- #include <xfs/command.h>
- #include <xfs/input.h>
+@@ -48,7 +48,9 @@ pread_help(void)
+ " -R   -- read at random offsets in the range of bytes\n"
+ " -Z N -- zeed the random number generator (used when reading randomly)\n"
+ "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
++#ifdef HAVE_PREADV
+ " -V N -- use vectored IO with N iovecs of blocksize each (preadv)\n"
++#endif
+ "\n"
+ " When in \"random\" mode, the number of read operations will equal the\n"
+ " number required to do a complete forward/backward scan of the range.\n"
+@@ -169,8 +171,9 @@ dump_buffer(
+ 	}
+ }
+ 
++#ifdef HAVE_PREADV
+ static int
+-do_pread(
++do_preadv(
+ 	int		fd,
+ 	off64_t		offset,
+ 	ssize_t		count,
+@@ -180,10 +183,6 @@ do_pread(
+ 	ssize_t		oldlen = 0;
+ 	ssize_t		bytes = 0;
+ 
+-
+-	if (!vectors)
+-		return pread64(fd, buffer, min(count, buffer_size), offset);
+-
+ 	/* trim the iovec if necessary */
+ 	if (count < buffersize) {
+ 		size_t	len = 0;
+@@ -205,6 +204,22 @@ do_pread(
+ 
+ 	return bytes;
+ }
++#else
++#define do_preadv(fd, offset, count, buffer_size) (0)
++#endif
++
++static int
++do_pread(
++	int		fd,
++	off64_t		offset,
++	ssize_t		count,
++	ssize_t		buffer_size)
++{
++	if (!vectors)
++		return pread64(fd, buffer, min(count, buffer_size), offset);
++
++	return do_preadv(fd, offset, count, buffer_size);
++}
+ 
+ static int
+ read_random(
+@@ -407,14 +422,16 @@ pread_f(
+ 		case 'v':
+ 			vflag = 1;
+ 			break;
++#ifdef HAVE_PREADV
+ 		case 'V':
+ 			vectors = strtoul(optarg, &sp, 0);
+ 			if (!sp || sp == optarg) {
+-				printf(_("non-numberic vector count == %s\n"),
++				printf(_("non-numeric vector count == %s\n"),
+ 					optarg);
+ 				return 0;
+ 			}
+ 			break;
++#endif
+ 		case 'Z':
+ 			zeed = strtoul(optarg, &sp, 0);
+ 			if (!sp || sp == optarg) {
 diff --git a/io/pwrite.c b/io/pwrite.c
-index 3689960..848b990 100644
+index 848b990..22a3827 100644
 --- a/io/pwrite.c
 +++ b/io/pwrite.c
-@@ -16,6 +16,8 @@
-  * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-  */
- =
-
-+#define _BSD_SOURCE 	/* for pwritev */
+@@ -52,24 +52,23 @@ pwrite_help(void)
+ " -R   -- write at random offsets in the specified range of bytes\n"
+ " -Z N -- zeed the random number generator (used when writing randomly)\n"
+ "         (heh, zorry, the -s/-S arguments were already in use in pwrite)\n"
++#ifdef HAVE_PREADV
+ " -V N -- use vectored IO with N iovecs of blocksize each (pwritev)\n"
++#endif
+ "\n"));
+ }
+ 
++#ifdef HAVE_PREADV
+ static int
+-do_pwrite(
++do_pwritev(
+ 	int		fd,
+ 	off64_t		offset,
+ 	ssize_t		count,
+ 	ssize_t		buffer_size)
+ {
+-	int		vecs = 0;
+-	ssize_t		oldlen = 0;
+-	ssize_t		bytes = 0;
+-
+-
+-	if (!vectors)
+-		return pwrite64(fd, buffer, min(count, buffer_size), offset);
++	int vecs = 0;
++	ssize_t oldlen = 0;
++	ssize_t bytes = 0;
+ 
+ 	/* trim the iovec if necessary */
+ 	if (count < buffersize) {
+@@ -92,6 +91,23 @@ do_pwrite(
+ 
+ 	return bytes;
+ }
++#else
++#define do_pwritev(fd, offset, count, buffer_size) (0)
++#endif
++
++static int
++do_pwrite(
++	int		fd,
++	off64_t		offset,
++	ssize_t		count,
++	ssize_t		buffer_size)
++{
++	if (!vectors)
++		return pwrite64(fd, buffer, min(count, buffer_size), offset);
++
++	return do_pwritev(fd, offset, count, buffer_size);
++}
++
+ static int
+ write_random(
+ 	off64_t		offset,
+@@ -298,7 +314,7 @@ pwrite_f(
+ 		case 'V':
+ 			vectors = strtoul(optarg, &sp, 0);
+ 			if (!sp || sp == optarg) {
+-				printf(_("non-numberic vector count == %s\n"),
++				printf(_("non-numeric vector count == %s\n"),
+ 					optarg);
+ 				return 0;
+ 			}
+diff --git a/m4/package_libcdev.m4 b/m4/package_libcdev.m4
+index 1e2c256..f489f52 100644
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -135,3 +135,38 @@ AC_DEFUN([AC_HAVE_FIEMAP],
+        AC_MSG_RESULT(no))
+     AC_SUBST(have_fiemap)
+   ])
++
++#
++# Check if we have a preadv libc call (Linux)
++#
++AC_DEFUN([AC_HAVE_PREADV],
++  [ AC_MSG_CHECKING([for preadv])
++    AC_TRY_LINK([
++#define _FILE_OFFSET_BITS 64
++#define _BSD_SOURCE
 +#include <sys/uio.h>
- #include <xfs/xfs.h>
- #include <xfs/command.h>
- #include <xfs/input.h>
++    ], [
++         preadv(0, 0, 0, 0);
++    ], have_preadv=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_preadv)
++  ])
++
++#
++# Check if we have a sync_file_range libc call (Linux)
++#
++AC_DEFUN([AC_HAVE_SYNC_FILE_RANGE],
++  [ AC_MSG_CHECKING([for sync_file_range])
++    AC_TRY_LINK([
++#define _GNU_SOURCE
++#define _FILE_OFFSET_BITS 64
++#include <fcntl.h>
++    ], [
++         sync_file_range(0, 0, 0, 0);
++    ], have_sync_file_range=yes
++       AC_MSG_RESULT(yes),
++       AC_MSG_RESULT(no))
++    AC_SUBST(have_sync_file_range)
++  ])
++
+
 
 _______________________________________________
 xfs mailing list
