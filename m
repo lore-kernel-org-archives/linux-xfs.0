@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99MNWdR116011 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 17:23:32 -0500
-Message-ID: <5074A3DB.7010007@redhat.com>
-Date: Tue, 09 Oct 2012 18:23:23 -0400
-From: Brian Foster <bfoster@redhat.com>
+	q99MQs5h116402 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 17:26:54 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	sGyXovscvyveLYVd for <xfs@oss.sgi.com>;
+	Tue, 09 Oct 2012 15:28:23 -0700 (PDT)
+Date: Wed, 10 Oct 2012 09:28:06 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs_io: configure tests for preadv/pwritev &
+	sync_file_range
+Message-ID: <20121009222806.GS23644@dastard>
+References: <50749EE2.6070408@redhat.com>
+ <5074A05A.6000709@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 06/14] xfs: xfs_sync_data is redundant.
-References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
-	<1349693772-8064-7-git-send-email-david@fromorbit.com>
-	<20121009210124.GT13214@sgi.com> <20121009212851.GP23644@dastard>
-	<20121009214144.GU13214@sgi.com>
-In-Reply-To: <20121009214144.GU13214@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <5074A05A.6000709@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +28,49 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 10/09/2012 05:41 PM, Ben Myers wrote:
-> Hey,
+On Tue, Oct 09, 2012 at 05:08:26PM -0500, Eric Sandeen wrote:
+> On older systems we may not have preadv/pwritev and/or
+> sync_file_range.
 > 
-> On Wed, Oct 10, 2012 at 08:28:51AM +1100, Dave Chinner wrote:
->> On Tue, Oct 09, 2012 at 04:01:24PM -0500, Ben Myers wrote:
->>> Hi Brain,
->>
->> [Pinky: "Gee, Brain, what do you want to do tonight?"
->>  Brain: "The same thing we do every night, Pinky - try to take over
->>         the world!"]
+> Add the configure magic, and stub out the code
+> where needed.
 > 
-> Wish I could say I called him 'brain' on purpose.  Will you be playing the part
-> of Pinky in today's show?  ;)
->
-
-Heh, it happens more than you would think. ;)
-
->>> Given that you found the regression in the output of xfstest 273, could you
->>> do us a favor and review the fix and provide your Reviewed-by, and/or
->>> Tested-by?
->>
->> Brian did test it, just as separate patches:
->>
->> http://oss.sgi.com/archives/xfs/2012-10/msg00037.html
+> (sync_file_range just needed a better test; preadv/pwritev
+> took a little more rearranging)
 > 
-> Brian, would you mind extending your Tested-by?
+> And fix a couple typos ("numberic") while we're at it.
 > 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Sure, I tested Dave's change to xfs_flush_inodes() against 273 and ran
-another full test against the entire v3 set on that hardware, without
-any further noticeable issues.
+Looks fine, though the "HAVE_PREADV" in the pwritev case is a bit
+wierd. Perhaps doing this:
 
-Tested-by: Brian Foster <bfoster@redhat.com>
+> diff --git a/include/builddefs.in b/include/builddefs.in
+> index 81ebfcd..4a0e910 100644
+> --- a/include/builddefs.in
+> +++ b/include/builddefs.in
+> @@ -101,6 +101,8 @@ HAVE_GETMNTENT = @have_getmntent@
+>  HAVE_GETMNTINFO = @have_getmntinfo@
+>  HAVE_FALLOCATE = @have_fallocate@
+>  HAVE_FIEMAP = @have_fiemap@
+> +HAVE_PREADV = @have_preadv@
 
-Brian
+HAVE_PWRITEV = @have_preadv@
 
-> Regards,
-> 	Ben
-> 
+Would reduce that wierdness a bit when looking at the pwritev
+code....
+
+Otherwise everything else looks ok.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
