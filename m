@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99MK7B9115636 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 17:20:07 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	7ixCcYYDvsKwzCGZ for <xfs@oss.sgi.com>;
-	Tue, 09 Oct 2012 15:21:37 -0700 (PDT)
-Date: Wed, 10 Oct 2012 09:21:30 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs_io: include headers for preadv/pwritev
-Message-ID: <20121009222130.GR23644@dastard>
-References: <50749EE2.6070408@redhat.com>
+	q99MNWdR116011 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 17:23:32 -0500
+Message-ID: <5074A3DB.7010007@redhat.com>
+Date: Tue, 09 Oct 2012 18:23:23 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50749EE2.6070408@redhat.com>
+Subject: Re: [PATCH 06/14] xfs: xfs_sync_data is redundant.
+References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
+	<1349693772-8064-7-git-send-email-david@fromorbit.com>
+	<20121009210124.GT13214@sgi.com> <20121009212851.GP23644@dastard>
+	<20121009214144.GU13214@sgi.com>
+In-Reply-To: <20121009214144.GU13214@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,23 +20,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-T24gVHVlLCBPY3QgMDksIDIwMTIgYXQgMDU6MDI6MTBQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IFdlIG5lZWQgdG8gaW5jbHVkZSB1aW8uaCB0byBhdm9pZDoKPiAKPiAgICAgW0NDXSAg
-ICAgcHJlYWQubwo+IHByZWFkLmM6IEluIGZ1bmN0aW9uIOKAmGRvX3ByZWFk4oCZOgo+IHByZWFk
-LmM6MTk4OiB3YXJuaW5nOiBpbXBsaWNpdCBkZWNsYXJhdGlvbiBvZiBmdW5jdGlvbiDigJhwcmVh
-ZHbigJkKPiAgICAgW0NDXSAgICAgcHdyaXRlLm8KPiBwd3JpdGUuYzogSW4gZnVuY3Rpb24g4oCY
-ZG9fcHdyaXRl4oCZOgo+IHB3cml0ZS5jOjg1OiB3YXJuaW5nOiBpbXBsaWNpdCBkZWNsYXJhdGlv
-biBvZiBmdW5jdGlvbiDigJhwd3JpdGV24oCZCgpGdW5ueSwgSSBkb24ndCByZWNhbGwgZXZlciBz
-ZWVpbmcgdGhhdCBlcnJvciB3aGVuIEkgd3JvdGUgdGhlc2UKcGF0Y2hlcy4gQnV0LCB5ZWFoLCBJ
-IHNlZSB0aGVtIG5vdy4KCj4gU2lnbmVkLW9mZi1ieTogRXJpYyBTYW5kZWVuIDxzYW5kZWVuQHJl
-ZGhhdC5jb20+CgpSZXZpZXdlZC1ieTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29t
-PgoKLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Mu
-c2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
+On 10/09/2012 05:41 PM, Ben Myers wrote:
+> Hey,
+> 
+> On Wed, Oct 10, 2012 at 08:28:51AM +1100, Dave Chinner wrote:
+>> On Tue, Oct 09, 2012 at 04:01:24PM -0500, Ben Myers wrote:
+>>> Hi Brain,
+>>
+>> [Pinky: "Gee, Brain, what do you want to do tonight?"
+>>  Brain: "The same thing we do every night, Pinky - try to take over
+>>         the world!"]
+> 
+> Wish I could say I called him 'brain' on purpose.  Will you be playing the part
+> of Pinky in today's show?  ;)
+>
+
+Heh, it happens more than you would think. ;)
+
+>>> Given that you found the regression in the output of xfstest 273, could you
+>>> do us a favor and review the fix and provide your Reviewed-by, and/or
+>>> Tested-by?
+>>
+>> Brian did test it, just as separate patches:
+>>
+>> http://oss.sgi.com/archives/xfs/2012-10/msg00037.html
+> 
+> Brian, would you mind extending your Tested-by?
+> 
+
+Sure, I tested Dave's change to xfs_flush_inodes() against 273 and ran
+another full test against the entire v3 set on that hardware, without
+any further noticeable issues.
+
+Tested-by: Brian Foster <bfoster@redhat.com>
+
+Brian
+
+> Regards,
+> 	Ben
+> 
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
