@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99JkOOA094584 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:46:24 -0500
+	q99JkvgD094617 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:46:57 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	8gJf2EFLAQ4j7v6N for <xfs@oss.sgi.com>;
-	Tue, 09 Oct 2012 12:47:54 -0700 (PDT)
-Date: Wed, 10 Oct 2012 06:47:52 +1100
+	jEp37GJdknNp8u1p for <xfs@oss.sgi.com>;
+	Tue, 09 Oct 2012 12:48:26 -0700 (PDT)
+Date: Wed, 10 Oct 2012 06:48:25 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfsprogs: report projid32 status in growfs output
-Message-ID: <20121009194752.GM23644@dastard>
+Subject: Re: [PATCH 1/2] xfsprogs: add PROJID32 geom feature flag
+Message-ID: <20121009194825.GN23644@dastard>
 References: <50747753.6040105@redhat.com>
- <5074792A.2080509@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5074792A.2080509@sandeen.net>
+In-Reply-To: <50747753.6040105@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,28 +26,29 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 09, 2012 at 02:21:14PM -0500, Eric Sandeen wrote:
-> With the projid32 flag now in the FSGEOM ioctl results we
-> can report projid32 status in xfs_growfs / xfs_info output,
-> to match the mkfs.xfs output.
-> 
-> However, since the flag was only recently added to the kernel,
-> we may get some incorrect reports of "projid32bit=0"
+On Tue, Oct 09, 2012 at 02:13:23PM -0500, Eric Sandeen wrote:
+> Matches new flag added to kernel.
 > 
 > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > ---
 > 
-> ... and I don't know how big a problem those incorrect reports
-> might be ...
+> diff --git a/include/xfs_fs.h b/include/xfs_fs.h
+> index faac5af..0dd3afd 100644
+> --- a/include/xfs_fs.h
+> +++ b/include/xfs_fs.h
+> @@ -233,7 +233,8 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+>  #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+>  #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
+> -#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
+> +#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
+> +#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+>  #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
 
-I doubt it will be a problem - the 32bit projid is pretty
-self-contained, and we can still get the info from xfs_db if we
-really need to confirm that it is set.
-
-Code looks good.
+That's an easy one ;)
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
