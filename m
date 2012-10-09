@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99J6SJr089317 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:06:28 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id BDWucjDBOeIdnsYk for <xfs@oss.sgi.com>;
-	Tue, 09 Oct 2012 12:07:58 -0700 (PDT)
-Message-ID: <5074760D.7000300@sandeen.net>
-Date: Tue, 09 Oct 2012 14:07:57 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q99JAGQS089817 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:10:16 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ZNwvEV7GBtRE57lF for
+	<xfs@oss.sgi.com>; Tue, 09 Oct 2012 12:11:47 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q99JBkaw011347
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 15:11:46 -0400
+Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
+	[10.5.9.1])
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q99JBjjR012890
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 15:11:46 -0400
+Message-ID: <507476F1.3080503@redhat.com>
+Date: Tue, 09 Oct 2012 14:11:45 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] xfs_io: new functions
-References: <1343255450-28559-1-git-send-email-david@fromorbit.com>
-	<5060D5D5.80602@sgi.com>
-In-Reply-To: <5060D5D5.80602@sgi.com>
+Subject: [PATCH] xfs: report projid32bit feature in geometry call
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,45 +33,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs-oss <xfs@oss.sgi.com>
 
-On 9/24/12 4:51 PM, Mark Tinguely wrote:
-> On 07/25/12 17:30, Dave Chinner wrote:
->> This is just a couple of additional functions for xfs_io I have had
->> sitting around for a while. The first is an interface to
->> sync_file_range() for better control of file writeback.  The second
->> and third introduce vectored pread/pwrite so that I could simulate
->> the same style of vectored IO that KVM does via direct IO (hint -
->> tracing indicated that the generic direct IO code doesn't handle
->> this particularly efficiently).
->>
->> _____________________________________________
-> 
-> This series has been committed to
->    git://oss.sgi.com/xfs/cmds/xfsprogs.git
-> 
-> -Mark.
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+When xfs gained the projid32bit feature, it was never added to
+the FSGEOMETRY ioctl feature flags, so it's not queryable without
+this patch.
 
-Looks like this might need some config-fu:
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-pread.o: In function `do_pread':
-/src/git/xfsprogs/io/pread.c:198: undefined reference to `preadv'
-/src/git/xfsprogs/io/pread.c:198: undefined reference to `preadv'
-pwrite.o: In function `do_pwrite':
-/src/git/xfsprogs/io/pwrite.c:85: undefined reference to `pwritev'
-/src/git/xfsprogs/io/pwrite.c:85: undefined reference to `pwritev'
-sync_file_range.o: In function `sync_range_f':
-/src/git/xfsprogs/io/sync_file_range.c:87: undefined reference to `sync_file_range'
+note1: is there a reason we had gaps in the flags?
+note2: I don't *think* this requires a new version for the ioctl
 
-
-(on a Centos5 box)
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index c13fed8..0948c04 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -233,7 +233,8 @@ typedef struct xfs_fsop_resblks {
+ #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+ #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+ #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
+-#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
++#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
++#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+ #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+ 
+ 
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index c25b094..89ad847 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -97,7 +97,9 @@ xfs_fs_geometry(
+ 			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
+ 				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
+ 			(xfs_sb_version_hasattr2(&mp->m_sb) ?
+-				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0);
++				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
++			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
++				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0);
+ 		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+ 				mp->m_sb.sb_logsectsize : BBSIZE;
+ 		geo->rtsectsize = mp->m_sb.sb_blocksize;
 
 _______________________________________________
 xfs mailing list
