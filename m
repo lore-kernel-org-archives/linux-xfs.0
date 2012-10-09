@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993o0We212885 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:00 -0500
+	q993oA8C212985 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:10 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	gn4eaEx9fz8dAxfk for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:29 -0700 (PDT)
+	HUgGYE8URVkwngol for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:38 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQqg-0002PH-Ho
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TLQr1-0002Q7-16
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:35 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008PH-E3
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008Px-SQ
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/19] xfs: verify inode buffers as they are read from disk
-Date: Tue,  9 Oct 2012 14:50:59 +1100
-Message-Id: <1349754670-32009-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/19] xfs: factor and verify attr leaf reads
+Date: Tue,  9 Oct 2012 14:51:08 +1100
+Message-Id: <1349754670-32009-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,152 +35,335 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an inode buffer verify callback function and pass it into the
-buffer read functions. Inodes are special in that the verbose checks
-will be done when reading the inode, but we still need to sanity
-check the buffer when that is first read. Always verify the magic
-numbers in all inodes in the buffer, rather than jus ton debug
-kernels.
+Some reads are not converted yet because it isn't obvious ahead of
+time what the format of the block is going to be. Need to determine
+how to tell if the first block in the tree is a node or leaf format
+block. That will be done in later patches.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c |  100 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 51 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_attr.c      |   70 +++++++++++--------------------------------
+ fs/xfs/xfs_attr_leaf.c |   78 ++++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_attr_leaf.h |    2 ++
+ 3 files changed, 65 insertions(+), 85 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0b03578..5baf6cb 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -382,6 +382,46 @@ xfs_inobp_check(
- }
- #endif
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 956c2ba..548e910 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -903,11 +903,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 	 */
+ 	dp = args->dp;
+ 	args->blkno = 0;
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+ 	if (error)
+-		return(error);
+-	ASSERT(bp != NULL);
++		return error;
+ 
+ 	/*
+ 	 * Look up the given attribute in the leaf block.  Figure out if
+@@ -1031,12 +1029,12 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		 * Read in the block containing the "old" attr, then
+ 		 * remove the "old" attr from that block (neat, huh!)
+ 		 */
+-		error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1,
+-						     &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno,
++					   -1, &bp);
+ 		if (error)
+-			return(error);
+-		ASSERT(bp != NULL);
+-		(void)xfs_attr_leaf_remove(bp, args);
++			return error;
++
++		xfs_attr_leaf_remove(bp, args);
+ 
+ 		/*
+ 		 * If the result is small enough, shrink it all into the inode.
+@@ -1100,20 +1098,17 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 	 */
+ 	dp = args->dp;
+ 	args->blkno = 0;
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
+-		return(error);
+-	}
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
++	if (error)
++		return error;
+ 
+-	ASSERT(bp != NULL);
+ 	error = xfs_attr_leaf_lookup_int(bp, args);
+ 	if (error == ENOATTR) {
+ 		xfs_trans_brelse(args->trans, bp);
+ 		return(error);
+ 	}
+ 
+-	(void)xfs_attr_leaf_remove(bp, args);
++	xfs_attr_leaf_remove(bp, args);
+ 
+ 	/*
+ 	 * If the result is small enough, shrink it all into the inode.
+@@ -1156,11 +1151,9 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+ 	int error;
+ 
+ 	args->blkno = 0;
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+ 	if (error)
+-		return(error);
+-	ASSERT(bp != NULL);
++		return error;
+ 
+ 	error = xfs_attr_leaf_lookup_int(bp, args);
+ 	if (error != EEXIST)  {
+@@ -1181,23 +1174,13 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+ STATIC int
+ xfs_attr_leaf_list(xfs_attr_list_context_t *context)
+ {
+-	xfs_attr_leafblock_t *leaf;
+ 	int error;
+ 	struct xfs_buf *bp;
+ 
+ 	context->cursor->blkno = 0;
+-	error = xfs_da_read_buf(NULL, context->dp, 0, -1, &bp, XFS_ATTR_FORK,
+-				NULL);
++	error = xfs_attr_leaf_read(NULL, context->dp, 0, -1, &bp);
+ 	if (error)
+ 		return XFS_ERROR(error);
+-	ASSERT(bp != NULL);
+-	leaf = bp->b_addr;
+-	if (unlikely(leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
+-		XFS_CORRUPTION_ERROR("xfs_attr_leaf_list", XFS_ERRLEVEL_LOW,
+-				     context->dp->i_mount, leaf);
+-		xfs_trans_brelse(NULL, bp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+ 
+ 	error = xfs_attr_leaf_list_int(bp, context);
+ 	xfs_trans_brelse(NULL, bp);
+@@ -1601,12 +1584,9 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 		ASSERT(state->path.blk[0].bp);
+ 		state->path.blk[0].bp = NULL;
+ 
+-		error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp,
+-						     XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp);
+ 		if (error)
+ 			goto out;
+-		ASSERT((((xfs_attr_leafblock_t *)bp->b_addr)->hdr.info.magic) ==
+-		       cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 
+ 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+ 			xfs_bmap_init(args->flist, args->firstblock);
+@@ -1908,14 +1888,6 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+ 	 */
+ 	for (;;) {
+ 		leaf = bp->b_addr;
+-		if (unlikely(leaf->hdr.info.magic !=
+-			     cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
+-			XFS_CORRUPTION_ERROR("xfs_attr_node_list(4)",
+-					     XFS_ERRLEVEL_LOW,
+-					     context->dp->i_mount, leaf);
+-			xfs_trans_brelse(NULL, bp);
+-			return(XFS_ERROR(EFSCORRUPTED));
+-		}
+ 		error = xfs_attr_leaf_list_int(bp, context);
+ 		if (error) {
+ 			xfs_trans_brelse(NULL, bp);
+@@ -1925,16 +1897,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+ 			break;
+ 		cursor->blkno = be32_to_cpu(leaf->hdr.info.forw);
+ 		xfs_trans_brelse(NULL, bp);
+-		error = xfs_da_read_buf(NULL, context->dp, cursor->blkno, -1,
+-					      &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(NULL, context->dp, cursor->blkno, -1,
++					   &bp);
+ 		if (error)
+-			return(error);
+-		if (unlikely((bp == NULL))) {
+-			XFS_ERROR_REPORT("xfs_attr_node_list(5)",
+-					 XFS_ERRLEVEL_LOW,
+-					 context->dp->i_mount);
+-			return(XFS_ERROR(EFSCORRUPTED));
+-		}
++			return error;
+ 	}
+ 	xfs_trans_brelse(NULL, bp);
+ 	return(0);
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index f2b698e..2069b53 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -87,6 +87,36 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
+ 					 xfs_mount_t *mp);
+ STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
  
 +static void
-+xfs_inode_buf_verify(
-+	struct xfs_buf	*bp)
++xfs_attr_leaf_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	int		i;
-+	int		ni;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_attr_leaf_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	/*
-+	 * Validate the magic number and version of every inode in the buffer
-+	 */
-+	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
-+	for (i = 0; i < ni; i++) {
-+		int		di_ok;
-+		xfs_dinode_t	*dip;
-+
-+		dip = (struct xfs_dinode *)xfs_buf_offset(bp,
-+					(i << mp->m_sb.sb_inodelog));
-+		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
-+			    XFS_DINODE_GOOD_VERSION(dip->di_version);
-+		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
-+						XFS_ERRTAG_ITOBP_INOTOBP,
-+						XFS_RANDOM_ITOBP_INOTOBP))) {
-+			xfs_buf_ioerror(bp, EFSCORRUPTED);
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
-+					     mp, dip);
-+#ifdef DEBUG
-+			xfs_emerg(mp,
-+				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
-+				(unsigned long long)bp->b_bn, i,
-+				be16_to_cpu(dip->di_magic));
-+			ASSERT(0);
-+#endif
-+		}
++	block_ok = hdr->info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC);
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
-+	xfs_inobp_check(mp, bp);
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
- /*
-  * This routine is called to map an inode to the buffer containing the on-disk
-  * version of the inode.  It returns a pointer to the buffer containing the
-@@ -396,71 +436,33 @@ xfs_imap_to_bp(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	struct xfs_imap		*imap,
--	struct xfs_dinode	**dipp,
-+	struct xfs_dinode       **dipp,
- 	struct xfs_buf		**bpp,
- 	uint			buf_flags,
- 	uint			iget_flags)
- {
- 	struct xfs_buf		*bp;
- 	int			error;
--	int			i;
--	int			ni;
++int
++xfs_attr_leaf_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		bno,
++	int			map_type,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, bno, map_type, bpp,
++					XFS_ATTR_FORK, xfs_attr_leaf_verify);
++}
++
+ /*========================================================================
+  * Namespace helper routines
+  *========================================================================*/
+@@ -869,11 +899,10 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
+ 	error = xfs_da_grow_inode(args, &blkno);
+ 	if (error)
+ 		goto out;
+-	error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp1,
+-					     XFS_ATTR_FORK, NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp1);
+ 	if (error)
+ 		goto out;
+-	ASSERT(bp1 != NULL);
++
+ 	bp2 = NULL;
+ 	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp2,
+ 					    XFS_ATTR_FORK);
+@@ -1620,18 +1649,16 @@ xfs_attr_leaf_toosmall(xfs_da_state_t *state, int *action)
+ 			blkno = be32_to_cpu(info->back);
+ 		if (blkno == 0)
+ 			continue;
+-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
+-					blkno, -1, &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(state->args->trans, state->args->dp,
++					blkno, -1, &bp);
+ 		if (error)
+ 			return(error);
+-		ASSERT(bp != NULL);
  
- 	buf_flags |= XBF_UNMAPPED;
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
--				   (int)imap->im_len, buf_flags, &bp, NULL);
-+				   (int)imap->im_len, buf_flags, &bp,
-+				   xfs_inode_buf_verify);
- 	if (error) {
--		if (error != EAGAIN) {
--			xfs_warn(mp,
--				"%s: xfs_trans_read_buf() returned error %d.",
--				__func__, error);
--		} else {
-+		if (error == EAGAIN) {
- 			ASSERT(buf_flags & XBF_TRYLOCK);
-+			return error;
- 		}
--		return error;
+ 		leaf = (xfs_attr_leafblock_t *)info;
+ 		count  = be16_to_cpu(leaf->hdr.count);
+ 		bytes  = state->blocksize - (state->blocksize>>2);
+ 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
+ 		leaf = bp->b_addr;
+-		ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 		count += be16_to_cpu(leaf->hdr.count);
+ 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
+ 		bytes -= count * sizeof(xfs_attr_leaf_entry_t);
+@@ -2495,15 +2522,11 @@ xfs_attr_leaf_clearflag(xfs_da_args_t *args)
+ 	/*
+ 	 * Set up the operation.
+ 	 */
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
++	if (error)
+ 		return(error);
 -	}
+-	ASSERT(bp != NULL);
  
--	/*
--	 * Validate the magic number and version of every inode in the buffer
--	 * (if DEBUG kernel) or the first inode in the buffer, otherwise.
--	 */
--#ifdef DEBUG
--	ni = BBTOB(imap->im_len) >> mp->m_sb.sb_inodelog;
--#else	/* usual case */
--	ni = 1;
--#endif
-+		if (error == EFSCORRUPTED &&
-+		    (iget_flags & XFS_IGET_UNTRUSTED))
-+			return XFS_ERROR(EINVAL);
+ 	leaf = bp->b_addr;
+-	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
+ 	ASSERT(args->index >= 0);
+ 	entry = &leaf->entries[ args->index ];
+@@ -2560,15 +2583,11 @@ xfs_attr_leaf_setflag(xfs_da_args_t *args)
+ 	/*
+ 	 * Set up the operation.
+ 	 */
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
++	if (error)
+ 		return(error);
+-	}
+-	ASSERT(bp != NULL);
  
--	for (i = 0; i < ni; i++) {
--		int		di_ok;
--		xfs_dinode_t	*dip;
--
--		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
--					(i << mp->m_sb.sb_inodelog));
--		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
--			    XFS_DINODE_GOOD_VERSION(dip->di_version);
--		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
--						XFS_ERRTAG_ITOBP_INOTOBP,
--						XFS_RANDOM_ITOBP_INOTOBP))) {
--			if (iget_flags & XFS_IGET_UNTRUSTED) {
--				xfs_trans_brelse(tp, bp);
--				return XFS_ERROR(EINVAL);
--			}
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
--					     mp, dip);
--#ifdef DEBUG
--			xfs_emerg(mp,
--				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
--				(unsigned long long)imap->im_blkno, i,
--				be16_to_cpu(dip->di_magic));
--			ASSERT(0);
--#endif
--			xfs_trans_brelse(tp, bp);
--			return XFS_ERROR(EFSCORRUPTED);
--		}
-+		xfs_warn(mp, "%s: xfs_trans_read_buf() returned error %d.",
-+			__func__, error);
+ 	leaf = bp->b_addr;
+-	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
+ 	ASSERT(args->index >= 0);
+ 	entry = &leaf->entries[ args->index ];
+@@ -2617,35 +2636,28 @@ xfs_attr_leaf_flipflags(xfs_da_args_t *args)
+ 	/*
+ 	 * Read the block containing the "old" attr
+ 	 */
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp1,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
+-		return(error);
+-	}
+-	ASSERT(bp1 != NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp1);
++	if (error)
 +		return error;
+ 
+ 	/*
+ 	 * Read the block containing the "new" attr, if it is different
+ 	 */
+ 	if (args->blkno2 != args->blkno) {
+-		error = xfs_da_read_buf(args->trans, args->dp, args->blkno2,
+-					-1, &bp2, XFS_ATTR_FORK, NULL);
+-		if (error) {
+-			return(error);
+-		}
+-		ASSERT(bp2 != NULL);
++		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno2,
++					   -1, &bp2);
++		if (error)
++			return error;
+ 	} else {
+ 		bp2 = bp1;
  	}
  
--	xfs_inobp_check(mp, bp);
--
- 	*bpp = bp;
- 	*dipp = (struct xfs_dinode *)xfs_buf_offset(bp, imap->im_boffset);
- 	return 0;
+ 	leaf1 = bp1->b_addr;
+-	ASSERT(leaf1->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index < be16_to_cpu(leaf1->hdr.count));
+ 	ASSERT(args->index >= 0);
+ 	entry1 = &leaf1->entries[ args->index ];
+ 
+ 	leaf2 = bp2->b_addr;
+-	ASSERT(leaf2->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index2 < be16_to_cpu(leaf2->hdr.count));
+ 	ASSERT(args->index2 >= 0);
+ 	entry2 = &leaf2->entries[ args->index2 ];
+diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
+index dea1772..e05babc 100644
+--- a/fs/xfs/xfs_attr_leaf.h
++++ b/fs/xfs/xfs_attr_leaf.h
+@@ -227,6 +227,8 @@ int	xfs_attr_leaf_to_shortform(struct xfs_buf *bp,
+ int	xfs_attr_leaf_clearflag(struct xfs_da_args *args);
+ int	xfs_attr_leaf_setflag(struct xfs_da_args *args);
+ int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
++int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
++			xfs_dablk_t bno, int map_type, struct xfs_buf **bpp);
+ 
+ /*
+  * Routines used for growing the Btree.
 -- 
 1.7.10
 
