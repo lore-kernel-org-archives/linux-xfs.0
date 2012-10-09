@@ -1,17 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99JJi9M090955 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:19:44 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id N1yTpOtJEdpG5k7f for <xfs@oss.sgi.com>;
-	Tue, 09 Oct 2012 12:21:14 -0700 (PDT)
-Message-ID: <5074792A.2080509@sandeen.net>
-Date: Tue, 09 Oct 2012 14:21:14 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q99JRSrh092018 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 14:27:28 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 0QmZ5G73QVm3EM3j for
+	<xfs@oss.sgi.com>; Tue, 09 Oct 2012 12:28:58 -0700 (PDT)
+Received: from int-mx10.intmail.prod.int.phx2.redhat.com
+	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q99JSwUx024771
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 15:28:58 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-88.phx2.redhat.com
+	[10.3.113.88])
+	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id q99JSte2013254
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 15:28:57 -0400
+Date: Tue, 9 Oct 2012 16:28:54 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: report projid32bit feature in geometry call
+Message-ID: <20121009192854.GA5312@andromeda.usersys.redhat.com>
+References: <507476F1.3080503@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 2/2] xfsprogs: report projid32 status in growfs output
-References: <50747753.6040105@redhat.com>
-In-Reply-To: <50747753.6040105@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <507476F1.3080503@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,80 +36,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-With the projid32 flag now in the FSGEOM ioctl results we
-can report projid32 status in xfs_growfs / xfs_info output,
-to match the mkfs.xfs output.
+On Tue, Oct 09, 2012 at 02:11:45PM -0500, Eric Sandeen wrote:
+> When xfs gained the projid32bit feature, it was never added to
+> the FSGEOMETRY ioctl feature flags, so it's not queryable without
+> this patch.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> note1: is there a reason we had gaps in the flags?
+> note2: I don't *think* this requires a new version for the ioctl
+> 
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index c13fed8..0948c04 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -233,7 +233,8 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+>  #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+>  #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
+> -#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
+> +#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
+> +#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+>  #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
+>  
+>  
+> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+> index c25b094..89ad847 100644
+> --- a/fs/xfs/xfs_fsops.c
+> +++ b/fs/xfs/xfs_fsops.c
+> @@ -97,7 +97,9 @@ xfs_fs_geometry(
+>  			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
+>  				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
+>  			(xfs_sb_version_hasattr2(&mp->m_sb) ?
+> -				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0);
+> +				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
+> +			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
+> +				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0);
+>  		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
+>  				mp->m_sb.sb_logsectsize : BBSIZE;
+>  		geo->rtsectsize = mp->m_sb.sb_blocksize;
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-However, since the flag was only recently added to the kernel,
-we may get some incorrect reports of "projid32bit=0"
+Looks good,
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-... and I don't know how big a problem those incorrect reports
-might be ...
-
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index a6d298b..ca5adcf 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -62,11 +62,12 @@ report_info(
- 	int		dirversion,
- 	int		logversion,
- 	int		attrversion,
--	int		cimode)
-+	int		cimode,
-+	int		projid32)
- {
- 	printf(_(
- 	    "meta-data=%-22s isize=%-6u agcount=%u, agsize=%u blks\n"
--	    "         =%-22s sectsz=%-5u attr=%u\n"
-+	    "         =%-22s sectsz=%-5u attr=%u, projid32bit=%u\n"
- 	    "data     =%-22s bsize=%-6u blocks=%llu, imaxpct=%u\n"
- 	    "         =%-22s sunit=%-6u swidth=%u blks\n"
- 	    "naming   =version %-14u bsize=%-6u ascii-ci=%d\n"
-@@ -75,7 +76,7 @@ report_info(
- 	    "realtime =%-22s extsz=%-6u blocks=%llu, rtextents=%llu\n"),
- 
- 		mntpoint, geo.inodesize, geo.agcount, geo.agblocks,
--		"", geo.sectsize, attrversion,
-+		"", geo.sectsize, attrversion, projid32,
- 		"", geo.blocksize, (unsigned long long)geo.datablocks,
- 			geo.imaxpct,
- 		"", geo.sunit, geo.swidth,
-@@ -117,6 +118,7 @@ main(int argc, char **argv)
- 	long long		rsize;	/* new rt size in fs blocks */
- 	int			ci;	/* ASCII case-insensitive fs */
- 	int			lazycount; /* lazy superblock counters */
-+	int			projid32; /* 32-bit project IDs */
- 	int			xflag;	/* -x flag */
- 	char			*fname;	/* mount point name */
- 	char			*datadev; /* data device name */
-@@ -243,10 +245,11 @@ main(int argc, char **argv)
- 	attrversion = geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR2 ? 2 : \
- 			(geo.flags & XFS_FSOP_GEOM_FLAGS_ATTR ? 1 : 0);
- 	ci = geo.flags & XFS_FSOP_GEOM_FLAGS_DIRV2CI ? 1 : 0;
-+	projid32 = geo.flags & XFS_FSOP_GEOM_FLAGS_PROJID32 ? 1 : 0;
- 	if (nflag) {
- 		report_info(geo, datadev, isint, logdev, rtdev,
- 				lazycount, dirversion, logversion,
--				attrversion, ci);
-+				attrversion, ci, projid32);
- 		exit(0);
- 	}
- 
-@@ -283,7 +286,7 @@ main(int argc, char **argv)
- 
- 	report_info(geo, datadev, isint, logdev, rtdev,
- 			lazycount, dirversion, logversion,
--			attrversion, ci);
-+			attrversion, ci, projid32);
- 
- 	ddsize = xi.dsize;
- 	dlsize = ( xi.logBBsize? xi.logBBsize :
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+-- 
+--Carlos
 
 _______________________________________________
 xfs mailing list
