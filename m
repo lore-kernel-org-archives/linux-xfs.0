@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993o8PU212962 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:08 -0500
+	q993o9x8212975 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:09 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	LPdHYtHL1KEW0GJ0 for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:36 -0700 (PDT)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQqq-0002PJ-HR
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
+	hqaI0Xi7U5yeRLKV for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:37 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TLQr0-0002Ps-LP
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:34 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqg-0008PL-FH
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:14 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008Pc-IB
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/19] xfs: verify btree blocks as they are read from disk
-Date: Tue,  9 Oct 2012 14:51:00 +1100
-Message-Id: <1349754670-32009-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 12/19] xfs: factor dir2 block read operations
+Date: Tue,  9 Oct 2012 14:51:03 +1100
+Message-Id: <1349754670-32009-13-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -36,610 +35,479 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an btree block verify callback function and pass it into the
-buffer read functions. Because each different btree block type
-requires different verification, add a function to the ops structure
-that is called from the generic code.
-
-Also, propagate the verification callback functions through the
-readahead functions, and into the external bmap and bulkstat inode
-readahead code that uses the generic btree buffer read functions.
+In preparation for verifying dir2 block format buffers, factor
+the read operations out of the block operations (lookup, addname,
+getdents) and some of the additional logic to make it easier to
+understand an dmodify the code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_alloc_btree.c  |   49 +++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap.c         |   60 ++++++++++++++++++++++++-----------------
- fs/xfs/xfs_bmap_btree.c   |   47 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_bmap_btree.h   |    1 +
- fs/xfs/xfs_btree.c        |   66 +++++++++++++++++++++++----------------------
- fs/xfs/xfs_btree.h        |   10 ++++---
- fs/xfs/xfs_ialloc_btree.c |   40 +++++++++++++++++++++++++++
- fs/xfs/xfs_inode.c        |    2 +-
- fs/xfs/xfs_inode.h        |    1 +
- fs/xfs/xfs_itable.c       |    3 ++-
- 10 files changed, 218 insertions(+), 61 deletions(-)
+ fs/xfs/xfs_dir2_block.c |  386 +++++++++++++++++++++++++----------------------
+ 1 file changed, 209 insertions(+), 177 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
-index f1647ca..4dbe323 100644
---- a/fs/xfs/xfs_alloc_btree.c
-+++ b/fs/xfs/xfs_alloc_btree.c
-@@ -270,6 +270,54 @@ xfs_allocbt_key_diff(
- 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 53666ca..25ce409 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -56,6 +56,178 @@ xfs_dir_startup(void)
+ 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
  }
  
-+void
-+xfs_allocbt_read_verify(
-+	struct xfs_buf		*bp)
++static int
++xfs_dir2_block_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	struct xfs_buf		**bpp)
 +{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	struct xfs_perag	*pag = bp->b_pag;
-+	unsigned int		level;
-+	int			sblock_ok; /* block passes checks */
++	struct xfs_mount	*mp = dp->i_mount;
 +
-+	/* magic number and level verification */
-+	level = be16_to_cpu(block->bb_level);
-+	switch (block->bb_magic) {
-+	case cpu_to_be32(XFS_ABTB_MAGIC):
-+		sblock_ok = level < pag->pagf_levels[XFS_BTNUM_BNOi];
-+		break;
-+	case cpu_to_be32(XFS_ABTC_MAGIC):
-+		sblock_ok = level < pag->pagf_levels[XFS_BTNUM_CNTi];
-+		break;
-+	default:
-+		sblock_ok = 0;
-+		break;
-+	}
-+
-+	/* numrecs verification */
-+	sblock_ok = sblock_ok &&
-+		be16_to_cpu(block->bb_numrecs) <= mp->m_alloc_mxr[level != 0];
-+
-+	/* sibling pointer verification */
-+	sblock_ok = sblock_ok &&
-+		(block->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) ||
-+		 be32_to_cpu(block->bb_u.s.bb_leftsib) < mp->m_sb.sb_agblocks) &&
-+		block->bb_u.s.bb_leftsib &&
-+		(block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK) ||
-+		 be32_to_cpu(block->bb_u.s.bb_rightsib) < mp->m_sb.sb_agblocks) &&
-+		block->bb_u.s.bb_rightsib;
-+
-+	if (!sblock_ok) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		XFS_CORRUPTION_ERROR("xfs_allocbt_read_verify",
-+					XFS_ERRLEVEL_LOW, mp, block);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
-+
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
++	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
++					XFS_DATA_FORK, NULL);
 +}
 +
- #ifdef DEBUG
- STATIC int
- xfs_allocbt_keys_inorder(
-@@ -325,6 +373,7 @@ static const struct xfs_btree_ops xfs_allocbt_ops = {
- 	.init_rec_from_cur	= xfs_allocbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_allocbt_init_ptr_from_cur,
- 	.key_diff		= xfs_allocbt_key_diff,
-+	.read_verify		= xfs_allocbt_read_verify,
- #ifdef DEBUG
- 	.keys_inorder		= xfs_allocbt_keys_inorder,
- 	.recs_inorder		= xfs_allocbt_recs_inorder,
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 83d0cf3..8e944bb 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -2662,8 +2662,9 @@ xfs_bmap_btree_to_extents(
- 	if ((error = xfs_btree_check_lptr(cur, cbno, 1)))
- 		return error;
- #endif
--	if ((error = xfs_btree_read_bufl(mp, tp, cbno, 0, &cbp,
--			XFS_BMAP_BTREE_REF)))
-+	error = xfs_btree_read_bufl(mp, tp, cbno, 0, &cbp, XFS_BMAP_BTREE_REF,
-+				xfs_bmbt_read_verify);
-+	if (error)
- 		return error;
- 	cblock = XFS_BUF_TO_BLOCK(cbp);
- 	if ((error = xfs_btree_check_block(cur, cblock, 0, cbp)))
-@@ -4078,8 +4079,9 @@ xfs_bmap_read_extents(
- 	 * pointer (leftmost) at each level.
- 	 */
- 	while (level-- > 0) {
--		if ((error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
--				XFS_BMAP_BTREE_REF)))
-+		error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
-+				XFS_BMAP_BTREE_REF, xfs_bmbt_read_verify);
-+		if (error)
- 			return error;
- 		block = XFS_BUF_TO_BLOCK(bp);
- 		XFS_WANT_CORRUPTED_GOTO(
-@@ -4124,7 +4126,8 @@ xfs_bmap_read_extents(
- 		 */
- 		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
- 		if (nextbno != NULLFSBLOCK)
--			xfs_btree_reada_bufl(mp, nextbno, 1);
-+			xfs_btree_reada_bufl(mp, nextbno, 1,
-+					     xfs_bmbt_read_verify);
- 		/*
- 		 * Copy records into the extent records.
- 		 */
-@@ -4156,8 +4159,9 @@ xfs_bmap_read_extents(
- 		 */
- 		if (bno == NULLFSBLOCK)
- 			break;
--		if ((error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
--				XFS_BMAP_BTREE_REF)))
-+		error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
-+				XFS_BMAP_BTREE_REF, xfs_bmbt_read_verify);
-+		if (error)
- 			return error;
- 		block = XFS_BUF_TO_BLOCK(bp);
- 	}
-@@ -5868,15 +5872,16 @@ xfs_bmap_check_leaf_extents(
- 	 */
- 	while (level-- > 0) {
- 		/* See if buf is in cur first */
-+		bp_release = 0;
- 		bp = xfs_bmap_get_bp(cur, XFS_FSB_TO_DADDR(mp, bno));
--		if (bp) {
--			bp_release = 0;
--		} else {
-+		if (!bp) {
- 			bp_release = 1;
-+			error = xfs_btree_read_bufl(mp, NULL, bno, 0, &bp,
-+						XFS_BMAP_BTREE_REF,
-+						xfs_bmbt_read_verify);
-+			if (error)
-+				goto error_norelse;
- 		}
--		if (!bp && (error = xfs_btree_read_bufl(mp, NULL, bno, 0, &bp,
--				XFS_BMAP_BTREE_REF)))
--			goto error_norelse;
- 		block = XFS_BUF_TO_BLOCK(bp);
- 		XFS_WANT_CORRUPTED_GOTO(
- 			xfs_bmap_sanity_check(mp, bp, level),
-@@ -5953,15 +5958,16 @@ xfs_bmap_check_leaf_extents(
- 		if (bno == NULLFSBLOCK)
- 			break;
- 
-+		bp_release = 0;
- 		bp = xfs_bmap_get_bp(cur, XFS_FSB_TO_DADDR(mp, bno));
--		if (bp) {
--			bp_release = 0;
--		} else {
-+		if (!bp) {
- 			bp_release = 1;
-+			error = xfs_btree_read_bufl(mp, NULL, bno, 0, &bp,
-+						XFS_BMAP_BTREE_REF,
-+						xfs_bmbt_read_verify);
-+			if (error)
-+				goto error_norelse;
- 		}
--		if (!bp && (error = xfs_btree_read_bufl(mp, NULL, bno, 0, &bp,
--				XFS_BMAP_BTREE_REF)))
--			goto error_norelse;
- 		block = XFS_BUF_TO_BLOCK(bp);
- 	}
- 	if (bp_release) {
-@@ -6052,7 +6058,9 @@ xfs_bmap_count_tree(
- 	struct xfs_btree_block	*block, *nextblock;
- 	int			numrecs;
- 
--	if ((error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF)))
-+	error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp, XFS_BMAP_BTREE_REF,
-+						xfs_bmbt_read_verify);
-+	if (error)
- 		return error;
- 	*count += 1;
- 	block = XFS_BUF_TO_BLOCK(bp);
-@@ -6061,8 +6069,10 @@ xfs_bmap_count_tree(
- 		/* Not at node above leaves, count this level of nodes */
- 		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
- 		while (nextbno != NULLFSBLOCK) {
--			if ((error = xfs_btree_read_bufl(mp, tp, nextbno,
--				0, &nbp, XFS_BMAP_BTREE_REF)))
-+			error = xfs_btree_read_bufl(mp, tp, nextbno, 0, &nbp,
-+						XFS_BMAP_BTREE_REF,
-+						xfs_bmbt_read_verify);
-+			if (error)
- 				return error;
- 			*count += 1;
- 			nextblock = XFS_BUF_TO_BLOCK(nbp);
-@@ -6091,8 +6101,10 @@ xfs_bmap_count_tree(
- 			if (nextbno == NULLFSBLOCK)
- 				break;
- 			bno = nextbno;
--			if ((error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
--				XFS_BMAP_BTREE_REF)))
-+			error = xfs_btree_read_bufl(mp, tp, bno, 0, &bp,
-+						XFS_BMAP_BTREE_REF,
-+						xfs_bmbt_read_verify);
-+			if (error)
- 				return error;
- 			*count += 1;
- 			block = XFS_BUF_TO_BLOCK(bp);
-diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
-index 862084a..bddca9b 100644
---- a/fs/xfs/xfs_bmap_btree.c
-+++ b/fs/xfs/xfs_bmap_btree.c
-@@ -36,6 +36,7 @@
- #include "xfs_bmap.h"
- #include "xfs_error.h"
- #include "xfs_quota.h"
-+#include "xfs_trace.h"
- 
- /*
-  * Determine the extent state.
-@@ -707,6 +708,51 @@ xfs_bmbt_key_diff(
- 				      cur->bc_rec.b.br_startoff;
- }
- 
-+void
-+xfs_bmbt_read_verify(
-+	struct xfs_buf		*bp)
++static void
++xfs_dir2_block_need_space(
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_block_tail	*btp,
++	struct xfs_dir2_leaf_entry	*blp,
++	__be16				**tagpp,
++	struct xfs_dir2_data_unused	**dupp,
++	struct xfs_dir2_data_unused	**enddupp,
++	int				*compact,
++	int				len)
 +{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	unsigned int		level;
-+	int			lblock_ok; /* block passes checks */
++	struct xfs_dir2_data_free	*bf;
++	__be16				*tagp = NULL;
++	struct xfs_dir2_data_unused	*dup = NULL;
++	struct xfs_dir2_data_unused	*enddup = NULL;
 +
-+	/* magic number and level verification.
-+	 *
-+	 * We don't know waht fork we belong to, so just verify that the level
-+	 * is less than the maximum of the two. Later checks will be more
-+	 * precise.
++	*compact = 0;
++	bf = hdr->bestfree;
++
++	/*
++	 * If there are stale entries we'll use one for the leaf.
 +	 */
-+	level = be16_to_cpu(block->bb_level);
-+	lblock_ok = block->bb_magic == cpu_to_be32(XFS_BMAP_MAGIC) &&
-+		    level < max(mp->m_bm_maxlevels[0], mp->m_bm_maxlevels[1]);
++	if (btp->stale) {
++		if (be16_to_cpu(bf[0].length) >= len) {
++			/*
++			 * The biggest entry enough to avoid compaction.
++			 */
++			dup = (xfs_dir2_data_unused_t *)
++			      ((char *)hdr + be16_to_cpu(bf[0].offset));
++			goto out;
++		}
 +
-+	/* numrecs verification */
-+	lblock_ok = lblock_ok &&
-+		be16_to_cpu(block->bb_numrecs) <= mp->m_bmap_dmxr[level != 0];
++		/*
++		 * Will need to compact to make this work.
++		 * Tag just before the first leaf entry.
++		 */
++		*compact = 1;
++		tagp = (__be16 *)blp - 1;
 +
-+	/* sibling pointer verification */
-+	lblock_ok = lblock_ok &&
-+		block->bb_u.l.bb_leftsib &&
-+		(block->bb_u.l.bb_leftsib == cpu_to_be64(NULLDFSBNO) ||
-+		 XFS_FSB_SANITY_CHECK(mp,
-+			be64_to_cpu(block->bb_u.l.bb_leftsib))) &&
-+		block->bb_u.l.bb_rightsib &&
-+		(block->bb_u.l.bb_rightsib == cpu_to_be64(NULLDFSBNO) ||
-+		 XFS_FSB_SANITY_CHECK(mp,
-+			be64_to_cpu(block->bb_u.l.bb_rightsib)));
++		/* Data object just before the first leaf entry.  */
++		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
 +
-+	if (!lblock_ok) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		XFS_CORRUPTION_ERROR("xfs_bmbt_read_verify",
-+					XFS_ERRLEVEL_LOW, mp, block);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
++		/*
++		 * If it's not free then the data will go where the
++		 * leaf data starts now, if it works at all.
++		 */
++		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
++			    (uint)sizeof(*blp) < len)
++				dup = NULL;
++		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
++			dup = NULL;
++		else
++			dup = (xfs_dir2_data_unused_t *)blp;
++		goto out;
 +	}
 +
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
++	/*
++	 * no stale entries, so just use free space.
++	 * Tag just before the first leaf entry.
++	 */
++	tagp = (__be16 *)blp - 1;
++
++	/* Data object just before the first leaf entry.  */
++	enddup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
++
++	/*
++	 * If it's not free then can't do this add without cleaning up:
++	 * the space before the first leaf entry needs to be free so it
++	 * can be expanded to hold the pointer to the new entry.
++	 */
++	if (be16_to_cpu(enddup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++		/*
++		 * Check out the biggest freespace and see if it's the same one.
++		 */
++		dup = (xfs_dir2_data_unused_t *)
++		      ((char *)hdr + be16_to_cpu(bf[0].offset));
++		if (dup != enddup) {
++			/*
++			 * Not the same free entry, just check its length.
++			 */
++			if (be16_to_cpu(dup->length) < len)
++				dup = NULL;
++			goto out;
++		}
++
++		/*
++		 * It is the biggest freespace, can it hold the leaf too?
++		 */
++		if (be16_to_cpu(dup->length) < len + (uint)sizeof(*blp)) {
++			/*
++			 * Yes, use the second-largest entry instead if it works.
++			 */
++			if (be16_to_cpu(bf[1].length) >= len)
++				dup = (xfs_dir2_data_unused_t *)
++				      ((char *)hdr + be16_to_cpu(bf[1].offset));
++			else
++				dup = NULL;
++		}
++	}
++out:
++	*tagpp = tagp;
++	*dupp = dup;
++	*enddupp = enddup;
 +}
 +
- #ifdef DEBUG
- STATIC int
- xfs_bmbt_keys_inorder(
-@@ -746,6 +792,7 @@ static const struct xfs_btree_ops xfs_bmbt_ops = {
- 	.init_rec_from_cur	= xfs_bmbt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_bmbt_init_ptr_from_cur,
- 	.key_diff		= xfs_bmbt_key_diff,
-+	.read_verify		= xfs_bmbt_read_verify,
- #ifdef DEBUG
- 	.keys_inorder		= xfs_bmbt_keys_inorder,
- 	.recs_inorder		= xfs_bmbt_recs_inorder,
-diff --git a/fs/xfs/xfs_bmap_btree.h b/fs/xfs/xfs_bmap_btree.h
-index 0e66c4e..1d00fbe 100644
---- a/fs/xfs/xfs_bmap_btree.h
-+++ b/fs/xfs/xfs_bmap_btree.h
-@@ -232,6 +232,7 @@ extern void xfs_bmbt_to_bmdr(struct xfs_mount *, struct xfs_btree_block *, int,
- extern int xfs_bmbt_get_maxrecs(struct xfs_btree_cur *, int level);
- extern int xfs_bmdr_maxrecs(struct xfs_mount *, int blocklen, int leaf);
- extern int xfs_bmbt_maxrecs(struct xfs_mount *, int blocklen, int leaf);
-+extern void xfs_bmbt_read_verify(struct xfs_buf *bp);
- 
- extern struct xfs_btree_cur *xfs_bmbt_init_cursor(struct xfs_mount *,
- 		struct xfs_trans *, struct xfs_inode *, int);
-diff --git a/fs/xfs/xfs_btree.c b/fs/xfs/xfs_btree.c
-index 1937c9b..b680949 100644
---- a/fs/xfs/xfs_btree.c
-+++ b/fs/xfs/xfs_btree.c
-@@ -270,7 +270,8 @@ xfs_btree_dup_cursor(
- 		if (bp) {
- 			error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 						   XFS_BUF_ADDR(bp), mp->m_bsize,
--						   0, &bp, NULL);
-+						   0, &bp,
-+						   cur->bc_ops->read_verify);
- 			if (error) {
- 				xfs_btree_del_cursor(new, error);
- 				*ncur = NULL;
-@@ -612,23 +613,24 @@ xfs_btree_offsets(
-  * Get a buffer for the block, return it read in.
-  * Long-form addressing.
++/*
++ * compact the leaf entries.
++ * Leave the highest-numbered stale entry stale.
++ * XXX should be the one closest to mid but mid is not yet computed.
++ */
++static void
++xfs_dir2_block_compact(
++	struct xfs_trans		*tp,
++	struct xfs_buf			*bp,
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_block_tail	*btp,
++	struct xfs_dir2_leaf_entry	*blp,
++	int				*needlog,
++	int				*lfloghigh,
++	int				*lfloglow)
++{
++	int			fromidx;	/* source leaf index */
++	int			toidx;		/* target leaf index */
++	int			needscan = 0;
++	int			highstale;	/* high stale index */
++
++	fromidx = toidx = be32_to_cpu(btp->count) - 1;
++	highstale = *lfloghigh = -1;
++	for (; fromidx >= 0; fromidx--) {
++		if (blp[fromidx].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR)) {
++			if (highstale == -1)
++				highstale = toidx;
++			else {
++				if (*lfloghigh == -1)
++					*lfloghigh = toidx;
++				continue;
++			}
++		}
++		if (fromidx < toidx)
++			blp[toidx] = blp[fromidx];
++		toidx--;
++	}
++	*lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
++	*lfloghigh -= be32_to_cpu(btp->stale) - 1;
++	be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
++	xfs_dir2_data_make_free(tp, bp,
++		(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
++		(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
++		needlog, &needscan);
++	blp += be32_to_cpu(btp->stale) - 1;
++	btp->stale = cpu_to_be32(1);
++	/*
++	 * If we now need to rebuild the bestfree map, do so.
++	 * This needs to happen before the next call to use_free.
++	 */
++	if (needscan)
++		xfs_dir2_data_freescan(tp->t_mountp, hdr, needlog);
++}
++
+ /*
+  * Add an entry to a block directory.
   */
--int					/* error */
-+int
- xfs_btree_read_bufl(
--	xfs_mount_t	*mp,		/* file system mount point */
--	xfs_trans_t	*tp,		/* transaction pointer */
--	xfs_fsblock_t	fsbno,		/* file system block number */
--	uint		lock,		/* lock flags for read_buf */
--	xfs_buf_t	**bpp,		/* buffer for fsbno */
--	int		refval)		/* ref count value for buffer */
--{
--	xfs_buf_t	*bp;		/* return value */
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	struct xfs_trans	*tp,		/* transaction pointer */
-+	xfs_fsblock_t		fsbno,		/* file system block number */
-+	uint			lock,		/* lock flags for read_buf */
-+	struct xfs_buf		**bpp,		/* buffer for fsbno */
-+	int			refval,		/* ref count value for buffer */
-+	xfs_buf_iodone_t	verify)
-+{
-+	struct xfs_buf		*bp;		/* return value */
- 	xfs_daddr_t		d;		/* real disk block address */
--	int		error;
-+	int			error;
- 
- 	ASSERT(fsbno != NULLFSBLOCK);
- 	d = XFS_FSB_TO_DADDR(mp, fsbno);
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, d,
--				   mp->m_bsize, lock, &bp, NULL);
-+				   mp->m_bsize, lock, &bp, verify);
+@@ -63,7 +235,6 @@ int						/* error */
+ xfs_dir2_block_addname(
+ 	xfs_da_args_t		*args)		/* directory op arguments */
+ {
+-	xfs_dir2_data_free_t	*bf;		/* bestfree table in block */
+ 	xfs_dir2_data_hdr_t	*hdr;		/* block header */
+ 	xfs_dir2_leaf_entry_t	*blp;		/* block leaf entries */
+ 	struct xfs_buf		*bp;		/* buffer for block */
+@@ -94,134 +265,44 @@ xfs_dir2_block_addname(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the (one and only) directory block into dabuf bp.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, &bp,
+-				XFS_DATA_FORK, NULL);
++
++	/* Read the (one and only) directory block into bp. */
++	error = xfs_dir2_block_read(tp, dp, &bp);
  	if (error)
  		return error;
- 	ASSERT(!xfs_buf_geterror(bp));
-@@ -645,15 +647,16 @@ xfs_btree_read_bufl(
- /* ARGSUSED */
- void
- xfs_btree_reada_bufl(
--	xfs_mount_t	*mp,		/* file system mount point */
--	xfs_fsblock_t	fsbno,		/* file system block number */
--	xfs_extlen_t	count)		/* count of filesystem blocks */
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	xfs_fsblock_t		fsbno,		/* file system block number */
-+	xfs_extlen_t		count,		/* count of filesystem blocks */
-+	xfs_buf_iodone_t	verify)
- {
- 	xfs_daddr_t		d;
- 
- 	ASSERT(fsbno != NULLFSBLOCK);
- 	d = XFS_FSB_TO_DADDR(mp, fsbno);
--	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, NULL);
-+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, verify);
- }
- 
- /*
-@@ -663,17 +666,18 @@ xfs_btree_reada_bufl(
- /* ARGSUSED */
- void
- xfs_btree_reada_bufs(
--	xfs_mount_t	*mp,		/* file system mount point */
--	xfs_agnumber_t	agno,		/* allocation group number */
--	xfs_agblock_t	agbno,		/* allocation group block number */
--	xfs_extlen_t	count)		/* count of filesystem blocks */
-+	struct xfs_mount	*mp,		/* file system mount point */
-+	xfs_agnumber_t		agno,		/* allocation group number */
-+	xfs_agblock_t		agbno,		/* allocation group block number */
-+	xfs_extlen_t		count,		/* count of filesystem blocks */
-+	xfs_buf_iodone_t	verify)
- {
- 	xfs_daddr_t		d;
- 
- 	ASSERT(agno != NULLAGNUMBER);
- 	ASSERT(agbno != NULLAGBLOCK);
- 	d = XFS_AGB_TO_DADDR(mp, agno, agbno);
--	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, NULL);
-+	xfs_buf_readahead(mp->m_ddev_targp, d, mp->m_bsize * count, verify);
- }
- 
- STATIC int
-@@ -687,12 +691,14 @@ xfs_btree_readahead_lblock(
- 	xfs_dfsbno_t		right = be64_to_cpu(block->bb_u.l.bb_rightsib);
- 
- 	if ((lr & XFS_BTCUR_LEFTRA) && left != NULLDFSBNO) {
--		xfs_btree_reada_bufl(cur->bc_mp, left, 1);
-+		xfs_btree_reada_bufl(cur->bc_mp, left, 1,
-+				     cur->bc_ops->read_verify);
- 		rval++;
- 	}
- 
- 	if ((lr & XFS_BTCUR_RIGHTRA) && right != NULLDFSBNO) {
--		xfs_btree_reada_bufl(cur->bc_mp, right, 1);
-+		xfs_btree_reada_bufl(cur->bc_mp, right, 1,
-+				     cur->bc_ops->read_verify);
- 		rval++;
- 	}
- 
-@@ -712,13 +718,13 @@ xfs_btree_readahead_sblock(
- 
- 	if ((lr & XFS_BTCUR_LEFTRA) && left != NULLAGBLOCK) {
- 		xfs_btree_reada_bufs(cur->bc_mp, cur->bc_private.a.agno,
--				     left, 1);
-+				     left, 1, cur->bc_ops->read_verify);
- 		rval++;
- 	}
- 
- 	if ((lr & XFS_BTCUR_RIGHTRA) && right != NULLAGBLOCK) {
- 		xfs_btree_reada_bufs(cur->bc_mp, cur->bc_private.a.agno,
--				     right, 1);
-+				     right, 1, cur->bc_ops->read_verify);
- 		rval++;
- 	}
- 
-@@ -1001,19 +1007,15 @@ xfs_btree_read_buf_block(
- 
- 	d = xfs_btree_ptr_to_daddr(cur, ptr);
- 	error = xfs_trans_read_buf(mp, cur->bc_tp, mp->m_ddev_targp, d,
--				   mp->m_bsize, flags, bpp, NULL);
-+				   mp->m_bsize, flags, bpp,
-+				   cur->bc_ops->read_verify);
- 	if (error)
- 		return error;
- 
- 	ASSERT(!xfs_buf_geterror(*bpp));
--
- 	xfs_btree_set_refs(cur, *bpp);
- 	*block = XFS_BUF_TO_BLOCK(*bpp);
--
--	error = xfs_btree_check_block(cur, *block, level, *bpp);
--	if (error)
--		xfs_trans_brelse(cur->bc_tp, *bpp);
--	return error;
-+	return 0;
- }
- 
- /*
-diff --git a/fs/xfs/xfs_btree.h b/fs/xfs/xfs_btree.h
-index 5b240de..7c3cb8d 100644
---- a/fs/xfs/xfs_btree.h
-+++ b/fs/xfs/xfs_btree.h
-@@ -188,6 +188,7 @@ struct xfs_btree_ops {
- 	__int64_t (*key_diff)(struct xfs_btree_cur *cur,
- 			      union xfs_btree_key *key);
- 
-+	void	(*read_verify)(struct xfs_buf *bp);
- #ifdef DEBUG
- 	/* check that k1 is lower than k2 */
- 	int	(*keys_inorder)(struct xfs_btree_cur *cur,
-@@ -355,7 +356,8 @@ xfs_btree_read_bufl(
- 	xfs_fsblock_t		fsbno,	/* file system block number */
- 	uint			lock,	/* lock flags for read_buf */
- 	struct xfs_buf		**bpp,	/* buffer for fsbno */
--	int			refval);/* ref count value for buffer */
-+	int			refval,	/* ref count value for buffer */
-+	xfs_buf_iodone_t	verify);
- 
- /*
-  * Read-ahead the block, don't wait for it, don't return a buffer.
-@@ -365,7 +367,8 @@ void					/* error */
- xfs_btree_reada_bufl(
- 	struct xfs_mount	*mp,	/* file system mount point */
- 	xfs_fsblock_t		fsbno,	/* file system block number */
--	xfs_extlen_t		count);	/* count of filesystem blocks */
-+	xfs_extlen_t		count,	/* count of filesystem blocks */
-+	xfs_buf_iodone_t	verify);
- 
- /*
-  * Read-ahead the block, don't wait for it, don't return a buffer.
-@@ -376,7 +379,8 @@ xfs_btree_reada_bufs(
- 	struct xfs_mount	*mp,	/* file system mount point */
- 	xfs_agnumber_t		agno,	/* allocation group number */
- 	xfs_agblock_t		agbno,	/* allocation group block number */
--	xfs_extlen_t		count);	/* count of filesystem blocks */
-+	xfs_extlen_t		count,	/* count of filesystem blocks */
-+	xfs_buf_iodone_t	verify);
- 
- 
- /*
-diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
-index 2b8b7a3..11306c6 100644
---- a/fs/xfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/xfs_ialloc_btree.c
-@@ -33,6 +33,7 @@
- #include "xfs_ialloc.h"
- #include "xfs_alloc.h"
- #include "xfs_error.h"
-+#include "xfs_trace.h"
- 
- 
- STATIC int
-@@ -181,6 +182,44 @@ xfs_inobt_key_diff(
- 			  cur->bc_rec.i.ir_startino;
- }
- 
-+void
-+xfs_inobt_read_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
-+	unsigned int		level;
-+	int			sblock_ok; /* block passes checks */
+-	ASSERT(bp != NULL);
+-	hdr = bp->b_addr;
+-	/*
+-	 * Check the magic number, corrupted if wrong.
+-	 */
+-	if (unlikely(hdr->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))) {
+-		XFS_CORRUPTION_ERROR("xfs_dir2_block_addname",
+-				     XFS_ERRLEVEL_LOW, mp, hdr);
+-		xfs_trans_brelse(tp, bp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
 +
-+	/* magic number and level verification */
-+	level = be16_to_cpu(block->bb_level);
-+	sblock_ok = block->bb_magic == cpu_to_be32(XFS_IBT_MAGIC) &&
-+		    level < mp->m_in_maxlevels;
+ 	len = xfs_dir2_data_entsize(args->namelen);
 +
-+	/* numrecs verification */
-+	sblock_ok = sblock_ok &&
-+		be16_to_cpu(block->bb_numrecs) <= mp->m_inobt_mxr[level != 0];
+ 	/*
+ 	 * Set up pointers to parts of the block.
+ 	 */
+-	bf = hdr->bestfree;
++	hdr = bp->b_addr;
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
+ 	blp = xfs_dir2_block_leaf_p(btp);
 +
-+	/* sibling pointer verification */
-+	sblock_ok = sblock_ok &&
-+		(block->bb_u.s.bb_leftsib == cpu_to_be32(NULLAGBLOCK) ||
-+		 be32_to_cpu(block->bb_u.s.bb_leftsib) < mp->m_sb.sb_agblocks) &&
-+		block->bb_u.s.bb_leftsib &&
-+		(block->bb_u.s.bb_rightsib == cpu_to_be32(NULLAGBLOCK) ||
-+		 be32_to_cpu(block->bb_u.s.bb_rightsib) < mp->m_sb.sb_agblocks) &&
-+		block->bb_u.s.bb_rightsib;
+ 	/*
+-	 * No stale entries?  Need space for entry and new leaf.
+-	 */
+-	if (!btp->stale) {
+-		/*
+-		 * Tag just before the first leaf entry.
+-		 */
+-		tagp = (__be16 *)blp - 1;
+-		/*
+-		 * Data object just before the first leaf entry.
+-		 */
+-		enddup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
+-		/*
+-		 * If it's not free then can't do this add without cleaning up:
+-		 * the space before the first leaf entry needs to be free so it
+-		 * can be expanded to hold the pointer to the new entry.
+-		 */
+-		if (be16_to_cpu(enddup->freetag) != XFS_DIR2_DATA_FREE_TAG)
+-			dup = enddup = NULL;
+-		/*
+-		 * Check out the biggest freespace and see if it's the same one.
+-		 */
+-		else {
+-			dup = (xfs_dir2_data_unused_t *)
+-			      ((char *)hdr + be16_to_cpu(bf[0].offset));
+-			if (dup == enddup) {
+-				/*
+-				 * It is the biggest freespace, is it too small
+-				 * to hold the new leaf too?
+-				 */
+-				if (be16_to_cpu(dup->length) < len + (uint)sizeof(*blp)) {
+-					/*
+-					 * Yes, we use the second-largest
+-					 * entry instead if it works.
+-					 */
+-					if (be16_to_cpu(bf[1].length) >= len)
+-						dup = (xfs_dir2_data_unused_t *)
+-						      ((char *)hdr +
+-						       be16_to_cpu(bf[1].offset));
+-					else
+-						dup = NULL;
+-				}
+-			} else {
+-				/*
+-				 * Not the same free entry,
+-				 * just check its length.
+-				 */
+-				if (be16_to_cpu(dup->length) < len) {
+-					dup = NULL;
+-				}
+-			}
+-		}
+-		compact = 0;
+-	}
+-	/*
+-	 * If there are stale entries we'll use one for the leaf.
+-	 * Is the biggest entry enough to avoid compaction?
+-	 */
+-	else if (be16_to_cpu(bf[0].length) >= len) {
+-		dup = (xfs_dir2_data_unused_t *)
+-		      ((char *)hdr + be16_to_cpu(bf[0].offset));
+-		compact = 0;
+-	}
+-	/*
+-	 * Will need to compact to make this work.
++	 * Find out if we can reuse stale entries or whether we need extra
++	 * space for entry and new leaf.
+ 	 */
+-	else {
+-		/*
+-		 * Tag just before the first leaf entry.
+-		 */
+-		tagp = (__be16 *)blp - 1;
+-		/*
+-		 * Data object just before the first leaf entry.
+-		 */
+-		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
+-		/*
+-		 * If it's not free then the data will go where the
+-		 * leaf data starts now, if it works at all.
+-		 */
+-		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
+-			    (uint)sizeof(*blp) < len)
+-				dup = NULL;
+-		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
+-			dup = NULL;
+-		else
+-			dup = (xfs_dir2_data_unused_t *)blp;
+-		compact = 1;
+-	}
++	xfs_dir2_block_need_space(hdr, btp, blp, &tagp, &dup,
++				  &enddup, &compact, len);
 +
-+	if (!sblock_ok) {
-+		trace_xfs_btree_corrupt(bp, _RET_IP_);
-+		XFS_CORRUPTION_ERROR("xfs_inobt_read_verify",
-+					XFS_ERRLEVEL_LOW, mp, block);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	/*
+-	 * If this isn't a real add, we're done with the buffer.
++	 * Done everything we need for a space check now.
+ 	 */
+-	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
++	if (args->op_flags & XFS_DA_OP_JUSTCHECK) {
+ 		xfs_trans_brelse(tp, bp);
++		if (!dup)
++			return XFS_ERROR(ENOSPC);
++		return 0;
 +	}
 +
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
-+}
+ 	/*
+ 	 * If we don't have space for the new entry & leaf ...
+ 	 */
+ 	if (!dup) {
+-		/*
+-		 * Not trying to actually do anything, or don't have
+-		 * a space reservation: return no-space.
+-		 */
+-		if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
++		/* Don't have a space reservation: return no-space.  */
++		if (args->total == 0)
+ 			return XFS_ERROR(ENOSPC);
+ 		/*
+ 		 * Convert to the next larger format.
+@@ -232,65 +313,24 @@ xfs_dir2_block_addname(
+ 			return error;
+ 		return xfs_dir2_leaf_addname(args);
+ 	}
+-	/*
+-	 * Just checking, and it would work, so say so.
+-	 */
+-	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
+-		return 0;
 +
- #ifdef DEBUG
- STATIC int
- xfs_inobt_keys_inorder(
-@@ -218,6 +257,7 @@ static const struct xfs_btree_ops xfs_inobt_ops = {
- 	.init_rec_from_cur	= xfs_inobt_init_rec_from_cur,
- 	.init_ptr_from_cur	= xfs_inobt_init_ptr_from_cur,
- 	.key_diff		= xfs_inobt_key_diff,
-+	.read_verify		= xfs_inobt_read_verify,
- #ifdef DEBUG
- 	.keys_inorder		= xfs_inobt_keys_inorder,
- 	.recs_inorder		= xfs_inobt_recs_inorder,
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 5baf6cb..0905e72 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -382,7 +382,7 @@ xfs_inobp_check(
- }
- #endif
+ 	needlog = needscan = 0;
++
+ 	/*
+ 	 * If need to compact the leaf entries, do it now.
+-	 * Leave the highest-numbered stale entry stale.
+-	 * XXX should be the one closest to mid but mid is not yet computed.
+-	 */
+-	if (compact) {
+-		int	fromidx;		/* source leaf index */
+-		int	toidx;			/* target leaf index */
+-
+-		for (fromidx = toidx = be32_to_cpu(btp->count) - 1,
+-			highstale = lfloghigh = -1;
+-		     fromidx >= 0;
+-		     fromidx--) {
+-			if (blp[fromidx].address ==
+-			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR)) {
+-				if (highstale == -1)
+-					highstale = toidx;
+-				else {
+-					if (lfloghigh == -1)
+-						lfloghigh = toidx;
+-					continue;
+-				}
+-			}
+-			if (fromidx < toidx)
+-				blp[toidx] = blp[fromidx];
+-			toidx--;
+-		}
+-		lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
+-		lfloghigh -= be32_to_cpu(btp->stale) - 1;
+-		be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
+-		xfs_dir2_data_make_free(tp, bp,
+-			(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
+-			(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
+-			&needlog, &needscan);
+-		blp += be32_to_cpu(btp->stale) - 1;
+-		btp->stale = cpu_to_be32(1);
+-		/*
+-		 * If we now need to rebuild the bestfree map, do so.
+-		 * This needs to happen before the next call to use_free.
+-		 */
+-		if (needscan) {
+-			xfs_dir2_data_freescan(mp, hdr, &needlog);
+-			needscan = 0;
+-		}
+-	}
+-	/*
+-	 * Set leaf logging boundaries to impossible state.
+-	 * For the no-stale case they're set explicitly.
+ 	 */
++	if (compact)
++		xfs_dir2_block_compact(tp, bp, hdr, btp, blp, &needlog,
++				      &lfloghigh, &lfloglow);
+ 	else if (btp->stale) {
++		/*
++		 * Set leaf logging boundaries to impossible state.
++		 * For the no-stale case they're set explicitly.
++		 */
+ 		lfloglow = be32_to_cpu(btp->count);
+ 		lfloghigh = -1;
+ 	}
++
+ 	/*
+ 	 * Find the slot that's first lower than our hash value, -1 if none.
+ 	 */
+@@ -450,18 +490,13 @@ xfs_dir2_block_getdents(
+ 	/*
+ 	 * If the block number in the offset is out of range, we're done.
+ 	 */
+-	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk) {
++	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
+ 		return 0;
+-	}
+-	/*
+-	 * Can't read the block, give up, else get dabuf in bp.
+-	 */
+-	error = xfs_da_read_buf(NULL, dp, mp->m_dirdatablk, -1,
+-				&bp, XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_block_read(NULL, dp, &bp);
+ 	if (error)
+ 		return error;
  
--static void
-+void
- xfs_inode_buf_verify(
- 	struct xfs_buf	*bp)
- {
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1fc2065..3c1d831 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -554,6 +554,7 @@ int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
- 			       struct xfs_buf **, uint, uint);
- int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
- 			  struct xfs_inode *, uint);
-+void		xfs_inode_buf_verify(struct xfs_buf *);
- void		xfs_dinode_to_disk(struct xfs_dinode *,
- 				   struct xfs_icdinode *);
- void		xfs_idestroy_fork(struct xfs_inode *, int);
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 3998fd2..0f18d41 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -396,7 +396,8 @@ xfs_bulkstat(
- 					if (xfs_inobt_maskn(chunkidx, nicluster)
- 							& ~r.ir_free)
- 						xfs_btree_reada_bufs(mp, agno,
--							agbno, nbcluster);
-+							agbno, nbcluster,
-+							xfs_inode_buf_verify);
- 				}
- 				irbp->ir_startino = r.ir_startino;
- 				irbp->ir_freecount = r.ir_freecount;
+-	ASSERT(bp != NULL);
+ 	/*
+ 	 * Extract the byte offset we start at from the seek pointer.
+ 	 * We'll skip entries before this.
+@@ -637,14 +672,11 @@ xfs_dir2_block_lookup_int(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the buffer, return error if we can't get it.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, &bp,
+-				XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_block_read(tp, dp, &bp);
+ 	if (error)
+ 		return error;
+-	ASSERT(bp != NULL);
++
+ 	hdr = bp->b_addr;
+ 	xfs_dir2_data_check(dp, bp);
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
 -- 
 1.7.10
 
