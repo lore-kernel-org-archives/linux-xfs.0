@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99CEQgB028312 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 07:14:27 -0500
+	q99CFTG2028580 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 07:15:29 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id cB6DzOa0bN75koEh for
-	<xfs@oss.sgi.com>; Tue, 09 Oct 2012 05:15:57 -0700 (PDT)
+	cuda.sgi.com with ESMTP id 2ntOcSurlOvUYfYI for
+	<xfs@oss.sgi.com>; Tue, 09 Oct 2012 05:16:59 -0700 (PDT)
 From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
-Date: Tue,  9 Oct 2012 14:15:45 +0200
-Message-Id: <1349784945-28399-1-git-send-email-lczerner@redhat.com>
+Subject: [PATCH] 260: Add another corner case where length is zero
+Date: Tue,  9 Oct 2012 14:16:52 +0200
+Message-Id: <1349785012-28588-1-git-send-email-lczerner@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,41 +25,41 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Lukas Czerner <lczerner@redhat.com>
 
-Currently if len argument in xfs_ioc_trim() is smaller than one BB
-(basic block) the 'end' variable underflow. Avoid that by bailing out if
-len is smaller than BB.
+This commit adds another corner case to test FITRIM argument handling.
+In this case we set length to zero and we expect the number of discarded
+bytes to be obviously zero, however we've had bug in both ext4 and xfs
+where the internal variable would underflow. This test case will be able
+to catch that in future.
 
 Signed-off-by: Lukas Czerner <lczerner@redhat.com>
 ---
- fs/xfs/xfs_discard.c |    7 ++++++-
- 1 files changed, 6 insertions(+), 1 deletions(-)
+ 260 |   13 +++++++++++++
+ 1 files changed, 13 insertions(+), 0 deletions(-)
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 69cf4fc..54dc58a 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -183,8 +183,12 @@ xfs_ioc_trim(
- 	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)))
- 		return -XFS_ERROR(EINVAL);
+diff --git a/260 b/260
+index b005cd3..2ade9b3 100755
+--- a/260
++++ b/260
+@@ -98,6 +98,19 @@ _scratch_unmount
+ _scratch_mkfs >/dev/null 2>&1
+ _scratch_mount
  
-+	end = BTOBBT(range.len);
-+	if (0 == end)
-+		goto out;
++# This should return zero
++out=$("$FSTRIM" -v -s0 -l0 $SCRATCH_MNT)
++bytes=${out%% *}
++if [ $bytes -ne 0 ]; then
++	status=1
++	echo "We requested zero bytes to be discarded, however $bytes bytes"\
++	     "were discarded instead. Length handling probably underflowed."
++fi
 +
- 	start = BTOBB(range.start);
--	end = start + BTOBBT(range.len) - 1;
-+	end += start - 1;
- 	minlen = BTOBB(max_t(u64, granularity, range.minlen));
- 
- 	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
-@@ -203,6 +207,7 @@ xfs_ioc_trim(
- 	if (last_error)
- 		return last_error;
- 
-+out:
- 	range.len = XFS_FSB_TO_B(mp, blocks_trimmed);
- 	if (copy_to_user(urange, &range, sizeof(range)))
- 		return -XFS_ERROR(EFAULT);
++_scratch_unmount
++_scratch_mkfs >/dev/null 2>&1
++_scratch_mount
++
+ # This is a bit fuzzy, but since the file system is fresh
+ # there should be at least (fssize/2) free space to trim.
+ # This is supposed to catch wrong FITRIM argument handling
 -- 
 1.7.7.6
 
