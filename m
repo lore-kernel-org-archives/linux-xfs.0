@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q993oA8C212985 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:10 -0500
+	q993o1Sj212895 for <xfs@oss.sgi.com>; Mon, 8 Oct 2012 22:50:01 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HUgGYE8URVkwngol for <xfs@oss.sgi.com>;
-	Mon, 08 Oct 2012 20:51:38 -0700 (PDT)
+	8jb2Rf8YFHp3qtZS for <xfs@oss.sgi.com>;
+	Mon, 08 Oct 2012 20:51:29 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TLQr1-0002Q7-16
-	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:35 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TLQqq-0002Pn-Sp
+	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008Px-SQ
+	(envelope-from <dave@disappointment.disaster>) id 1TLQqq-0008Pl-KJ
 	for xfs@oss.sgi.com; Tue, 09 Oct 2012 14:51:24 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/19] xfs: factor and verify attr leaf reads
-Date: Tue,  9 Oct 2012 14:51:08 +1100
-Message-Id: <1349754670-32009-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/19] xfs: factor dir2 free block reading
+Date: Tue,  9 Oct 2012 14:51:05 +1100
+Message-Id: <1349754670-32009-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,186 +35,50 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Some reads are not converted yet because it isn't obvious ahead of
-time what the format of the block is going to be. Need to determine
-how to tell if the first block in the tree is a node or leaf format
-block. That will be done in later patches.
+Also factor out the updating of the free block when removing entries
+from leaf blocks, and add a verifier callback for reads.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr.c      |   70 +++++++++++--------------------------------
- fs/xfs/xfs_attr_leaf.c |   78 ++++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_attr_leaf.h |    2 ++
- 3 files changed, 65 insertions(+), 85 deletions(-)
+ fs/xfs/xfs_dir2_leaf.c |    3 +-
+ fs/xfs/xfs_dir2_node.c |  218 +++++++++++++++++++++++++++++++-----------------
+ fs/xfs/xfs_dir2_priv.h |    2 +
+ 3 files changed, 143 insertions(+), 80 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 956c2ba..548e910 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -903,11 +903,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 	 */
- 	dp = args->dp;
- 	args->blkno = 0;
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
- 	if (error)
--		return(error);
--	ASSERT(bp != NULL);
-+		return error;
- 
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 86e3dc1..6c1359d 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -1863,8 +1863,7 @@ xfs_dir2_node_to_leaf(
  	/*
- 	 * Look up the given attribute in the leaf block.  Figure out if
-@@ -1031,12 +1029,12 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 		 * Read in the block containing the "old" attr, then
- 		 * remove the "old" attr from that block (neat, huh!)
- 		 */
--		error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1,
--						     &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno,
-+					   -1, &bp);
- 		if (error)
--			return(error);
--		ASSERT(bp != NULL);
--		(void)xfs_attr_leaf_remove(bp, args);
-+			return error;
-+
-+		xfs_attr_leaf_remove(bp, args);
- 
- 		/*
- 		 * If the result is small enough, shrink it all into the inode.
-@@ -1100,20 +1098,17 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 	 * Read the freespace block.
  	 */
- 	dp = args->dp;
- 	args->blkno = 0;
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
--		return(error);
--	}
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-+	if (error)
-+		return error;
- 
--	ASSERT(bp != NULL);
- 	error = xfs_attr_leaf_lookup_int(bp, args);
- 	if (error == ENOATTR) {
- 		xfs_trans_brelse(args->trans, bp);
- 		return(error);
- 	}
- 
--	(void)xfs_attr_leaf_remove(bp, args);
-+	xfs_attr_leaf_remove(bp, args);
- 
- 	/*
- 	 * If the result is small enough, shrink it all into the inode.
-@@ -1156,11 +1151,9 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
- 	int error;
- 
- 	args->blkno = 0;
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+-	error = xfs_da_read_buf(tp, dp,  mp->m_dirfreeblk, -1, &fbp,
+-				XFS_DATA_FORK, NULL);
++	error = xfs_dir2_free_read(tp, dp,  mp->m_dirfreeblk, &fbp);
  	if (error)
--		return(error);
--	ASSERT(bp != NULL);
-+		return error;
- 
- 	error = xfs_attr_leaf_lookup_int(bp, args);
- 	if (error != EEXIST)  {
-@@ -1181,23 +1174,13 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
- STATIC int
- xfs_attr_leaf_list(xfs_attr_list_context_t *context)
- {
--	xfs_attr_leafblock_t *leaf;
- 	int error;
- 	struct xfs_buf *bp;
- 
- 	context->cursor->blkno = 0;
--	error = xfs_da_read_buf(NULL, context->dp, 0, -1, &bp, XFS_ATTR_FORK,
--				NULL);
-+	error = xfs_attr_leaf_read(NULL, context->dp, 0, -1, &bp);
- 	if (error)
- 		return XFS_ERROR(error);
--	ASSERT(bp != NULL);
--	leaf = bp->b_addr;
--	if (unlikely(leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
--		XFS_CORRUPTION_ERROR("xfs_attr_leaf_list", XFS_ERRLEVEL_LOW,
--				     context->dp->i_mount, leaf);
--		xfs_trans_brelse(NULL, bp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
- 
- 	error = xfs_attr_leaf_list_int(bp, context);
- 	xfs_trans_brelse(NULL, bp);
-@@ -1601,12 +1584,9 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 		ASSERT(state->path.blk[0].bp);
- 		state->path.blk[0].bp = NULL;
- 
--		error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp,
--						     XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp);
- 		if (error)
- 			goto out;
--		ASSERT((((xfs_attr_leafblock_t *)bp->b_addr)->hdr.info.magic) ==
--		       cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 
- 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
- 			xfs_bmap_init(args->flist, args->firstblock);
-@@ -1908,14 +1888,6 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 	 */
- 	for (;;) {
- 		leaf = bp->b_addr;
--		if (unlikely(leaf->hdr.info.magic !=
--			     cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
--			XFS_CORRUPTION_ERROR("xfs_attr_node_list(4)",
--					     XFS_ERRLEVEL_LOW,
--					     context->dp->i_mount, leaf);
--			xfs_trans_brelse(NULL, bp);
--			return(XFS_ERROR(EFSCORRUPTED));
--		}
- 		error = xfs_attr_leaf_list_int(bp, context);
- 		if (error) {
- 			xfs_trans_brelse(NULL, bp);
-@@ -1925,16 +1897,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 			break;
- 		cursor->blkno = be32_to_cpu(leaf->hdr.info.forw);
- 		xfs_trans_brelse(NULL, bp);
--		error = xfs_da_read_buf(NULL, context->dp, cursor->blkno, -1,
--					      &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(NULL, context->dp, cursor->blkno, -1,
-+					   &bp);
- 		if (error)
--			return(error);
--		if (unlikely((bp == NULL))) {
--			XFS_ERROR_REPORT("xfs_attr_node_list(5)",
--					 XFS_ERRLEVEL_LOW,
--					 context->dp->i_mount);
--			return(XFS_ERROR(EFSCORRUPTED));
--		}
-+			return error;
- 	}
- 	xfs_trans_brelse(NULL, bp);
- 	return(0);
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index f2b698e..2069b53 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -87,6 +87,36 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
- 					 xfs_mount_t *mp);
- STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
+ 		return error;
+ 	free = fbp->b_addr;
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 290c2b1..e9b0bce 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -55,6 +55,57 @@ static int xfs_dir2_leafn_remove(xfs_da_args_t *args, struct xfs_buf *bp,
+ static int xfs_dir2_node_addname_int(xfs_da_args_t *args,
+ 				     xfs_da_state_blk_t *fblk);
  
 +static void
-+xfs_attr_leaf_verify(
++xfs_dir2_free_verify(
 +	struct xfs_buf		*bp)
 +{
 +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_attr_leaf_hdr *hdr = bp->b_addr;
++	struct xfs_dir2_free_hdr *hdr = bp->b_addr;
 +	int			block_ok = 0;
 +
-+	block_ok = hdr->info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC);
++	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC);
 +	if (!block_ok) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		XFS_CORRUPTION_ERROR("xfs_dir2_free_verify magic",
++				     XFS_ERRLEVEL_LOW, mp, hdr);
 +		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
 +
@@ -222,148 +86,285 @@ index f2b698e..2069b53 100644
 +	xfs_buf_ioend(bp, 0);
 +}
 +
-+int
-+xfs_attr_leaf_read(
++static int
++__xfs_dir2_free_read(
 +	struct xfs_trans	*tp,
 +	struct xfs_inode	*dp,
-+	xfs_dablk_t		bno,
++	xfs_dir2_db_t		fbno,
 +	int			map_type,
 +	struct xfs_buf		**bpp)
 +{
-+	return xfs_da_read_buf(tp, dp, bno, map_type, bpp,
-+					XFS_ATTR_FORK, xfs_attr_leaf_verify);
++	return xfs_da_read_buf(tp, dp, fbno, map_type, bpp,
++					XFS_DATA_FORK, xfs_dir2_free_verify);
 +}
 +
- /*========================================================================
-  * Namespace helper routines
-  *========================================================================*/
-@@ -869,11 +899,10 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
- 	error = xfs_da_grow_inode(args, &blkno);
- 	if (error)
- 		goto out;
--	error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp1,
--					     XFS_ATTR_FORK, NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp1);
- 	if (error)
- 		goto out;
--	ASSERT(bp1 != NULL);
++int
++xfs_dir2_free_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dir2_db_t		fbno,
++	struct xfs_buf		**bpp)
++{
++	return __xfs_dir2_free_read(tp, dp, fbno, -1, bpp);
++}
 +
- 	bp2 = NULL;
- 	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp2,
- 					    XFS_ATTR_FORK);
-@@ -1620,18 +1649,16 @@ xfs_attr_leaf_toosmall(xfs_da_state_t *state, int *action)
- 			blkno = be32_to_cpu(info->back);
- 		if (blkno == 0)
- 			continue;
--		error = xfs_da_read_buf(state->args->trans, state->args->dp,
--					blkno, -1, &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(state->args->trans, state->args->dp,
-+					blkno, -1, &bp);
++static int
++xfs_dir2_free_try_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dir2_db_t		fbno,
++	struct xfs_buf		**bpp)
++{
++	return __xfs_dir2_free_read(tp, dp, fbno, -2, bpp);
++}
++
+ /*
+  * Log entries from a freespace block.
+  */
+@@ -394,12 +445,10 @@ xfs_dir2_leafn_lookup_for_addname(
+ 				 */
+ 				if (curbp)
+ 					xfs_trans_brelse(tp, curbp);
+-				/*
+-				 * Read the free block.
+-				 */
+-				error = xfs_da_read_buf(tp, dp,
++
++				error = xfs_dir2_free_read(tp, dp,
+ 						xfs_dir2_db_to_da(mp, newfdb),
+-						-1, &curbp, XFS_DATA_FORK, NULL);
++						&curbp);
+ 				if (error)
+ 					return error;
+ 				free = curbp->b_addr;
+@@ -825,6 +874,77 @@ xfs_dir2_leafn_rebalance(
+ 	}
+ }
+ 
++static int
++xfs_dir2_data_block_free(
++	xfs_da_args_t		*args,
++	struct xfs_dir2_data_hdr *hdr,
++	struct xfs_dir2_free	*free,
++	xfs_dir2_db_t		fdb,
++	int			findex,
++	struct xfs_buf		*fbp,
++	int			longest)
++{
++	struct xfs_trans	*tp = args->trans;
++	int			logfree = 0;
++
++	if (!hdr) {
++		/* One less used entry in the free table.  */
++		be32_add_cpu(&free->hdr.nused, -1);
++		xfs_dir2_free_log_header(tp, fbp);
++
++		/*
++		 * If this was the last entry in the table, we can trim the
++		 * table size back.  There might be other entries at the end
++		 * referring to non-existent data blocks, get those too.
++		 */
++		if (findex == be32_to_cpu(free->hdr.nvalid) - 1) {
++			int	i;		/* free entry index */
++
++			for (i = findex - 1; i >= 0; i--) {
++				if (free->bests[i] != cpu_to_be16(NULLDATAOFF))
++					break;
++			}
++			free->hdr.nvalid = cpu_to_be32(i + 1);
++			logfree = 0;
++		} else {
++			/* Not the last entry, just punch it out.  */
++			free->bests[findex] = cpu_to_be16(NULLDATAOFF);
++			logfree = 1;
++		}
++		/*
++		 * If there are no useful entries left in the block,
++		 * get rid of the block if we can.
++		 */
++		if (!free->hdr.nused) {
++			int error;
++
++			error = xfs_dir2_shrink_inode(args, fdb, fbp);
++			if (error == 0) {
++				fbp = NULL;
++				logfree = 0;
++			} else if (error != ENOSPC || args->total != 0)
++				return error;
++			/*
++			 * It's possible to get ENOSPC if there is no
++			 * space reservation.  In this case some one
++			 * else will eventually get rid of this block.
++			 */
++		}
++	} else {
++		/*
++		 * Data block is not empty, just set the free entry to the new
++		 * value.
++		 */
++		free->bests[findex] = cpu_to_be16(longest);
++		logfree = 1;
++	}
++
++	/* Log the free entry that changed, unless we got rid of it.  */
++	if (logfree)
++		xfs_dir2_free_log_bests(tp, fbp, findex, findex);
++	return 0;
++}
++
+ /*
+  * Remove an entry from a node directory.
+  * This removes the leaf entry and the data entry,
+@@ -908,15 +1028,14 @@ xfs_dir2_leafn_remove(
+ 		xfs_dir2_db_t	fdb;		/* freeblock block number */
+ 		int		findex;		/* index in freeblock entries */
+ 		xfs_dir2_free_t	*free;		/* freeblock structure */
+-		int		logfree;	/* need to log free entry */
+ 
+ 		/*
+ 		 * Convert the data block number to a free block,
+ 		 * read in the free block.
+ 		 */
+ 		fdb = xfs_dir2_db_to_fdb(mp, db);
+-		error = xfs_da_read_buf(tp, dp, xfs_dir2_db_to_da(mp, fdb),
+-					-1, &fbp, XFS_DATA_FORK, NULL);
++		error = xfs_dir2_free_read(tp, dp, xfs_dir2_db_to_da(mp, fdb),
++					   &fbp);
  		if (error)
- 			return(error);
--		ASSERT(bp != NULL);
- 
- 		leaf = (xfs_attr_leafblock_t *)info;
- 		count  = be16_to_cpu(leaf->hdr.count);
- 		bytes  = state->blocksize - (state->blocksize>>2);
- 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
- 		leaf = bp->b_addr;
--		ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 		count += be16_to_cpu(leaf->hdr.count);
- 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
- 		bytes -= count * sizeof(xfs_attr_leaf_entry_t);
-@@ -2495,15 +2522,11 @@ xfs_attr_leaf_clearflag(xfs_da_args_t *args)
- 	/*
- 	 * Set up the operation.
- 	 */
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-+	if (error)
- 		return(error);
--	}
--	ASSERT(bp != NULL);
- 
- 	leaf = bp->b_addr;
--	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
- 	ASSERT(args->index >= 0);
- 	entry = &leaf->entries[ args->index ];
-@@ -2560,15 +2583,11 @@ xfs_attr_leaf_setflag(xfs_da_args_t *args)
- 	/*
- 	 * Set up the operation.
- 	 */
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-+	if (error)
- 		return(error);
--	}
--	ASSERT(bp != NULL);
- 
- 	leaf = bp->b_addr;
--	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
- 	ASSERT(args->index >= 0);
- 	entry = &leaf->entries[ args->index ];
-@@ -2617,35 +2636,28 @@ xfs_attr_leaf_flipflags(xfs_da_args_t *args)
- 	/*
- 	 * Read the block containing the "old" attr
- 	 */
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp1,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
--		return(error);
--	}
--	ASSERT(bp1 != NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp1);
-+	if (error)
-+		return error;
- 
- 	/*
- 	 * Read the block containing the "new" attr, if it is different
- 	 */
- 	if (args->blkno2 != args->blkno) {
--		error = xfs_da_read_buf(args->trans, args->dp, args->blkno2,
--					-1, &bp2, XFS_ATTR_FORK, NULL);
--		if (error) {
--			return(error);
+ 			return error;
+ 		free = fbp->b_addr;
+@@ -954,68 +1073,12 @@ xfs_dir2_leafn_remove(
+ 		 * If we got rid of the data block, we can eliminate that entry
+ 		 * in the free block.
+ 		 */
+-		if (hdr == NULL) {
+-			/*
+-			 * One less used entry in the free table.
+-			 */
+-			be32_add_cpu(&free->hdr.nused, -1);
+-			xfs_dir2_free_log_header(tp, fbp);
+-			/*
+-			 * If this was the last entry in the table, we can
+-			 * trim the table size back.  There might be other
+-			 * entries at the end referring to non-existent
+-			 * data blocks, get those too.
+-			 */
+-			if (findex == be32_to_cpu(free->hdr.nvalid) - 1) {
+-				int	i;		/* free entry index */
+-
+-				for (i = findex - 1;
+-				     i >= 0 &&
+-				     free->bests[i] == cpu_to_be16(NULLDATAOFF);
+-				     i--)
+-					continue;
+-				free->hdr.nvalid = cpu_to_be32(i + 1);
+-				logfree = 0;
+-			}
+-			/*
+-			 * Not the last entry, just punch it out.
+-			 */
+-			else {
+-				free->bests[findex] = cpu_to_be16(NULLDATAOFF);
+-				logfree = 1;
+-			}
+-			/*
+-			 * If there are no useful entries left in the block,
+-			 * get rid of the block if we can.
+-			 */
+-			if (!free->hdr.nused) {
+-				error = xfs_dir2_shrink_inode(args, fdb, fbp);
+-				if (error == 0) {
+-					fbp = NULL;
+-					logfree = 0;
+-				} else if (error != ENOSPC || args->total != 0)
+-					return error;
+-				/*
+-				 * It's possible to get ENOSPC if there is no
+-				 * space reservation.  In this case some one
+-				 * else will eventually get rid of this block.
+-				 */
+-			}
 -		}
--		ASSERT(bp2 != NULL);
-+		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno2,
-+					   -1, &bp2);
+-		/*
+-		 * Data block is not empty, just set the free entry to
+-		 * the new value.
+-		 */
+-		else {
+-			free->bests[findex] = cpu_to_be16(longest);
+-			logfree = 1;
+-		}
+-		/*
+-		 * Log the free entry that changed, unless we got rid of it.
+-		 */
+-		if (logfree)
+-			xfs_dir2_free_log_bests(tp, fbp, findex, findex);
++		error = xfs_dir2_data_block_free(args, hdr, free,
++						 fdb, findex, fbp, longest);
 +		if (error)
 +			return error;
- 	} else {
- 		bp2 = bp1;
  	}
++
+ 	xfs_dir2_leafn_check(dp, bp);
+ 	/*
+ 	 * Return indication of whether this leaf block is empty enough
+@@ -1453,9 +1516,9 @@ xfs_dir2_node_addname_int(
+ 			 * This should be really rare, so there's no reason
+ 			 * to avoid it.
+ 			 */
+-			error = xfs_da_read_buf(tp, dp,
+-						xfs_dir2_db_to_da(mp, fbno), -2,
+-						&fbp, XFS_DATA_FORK, NULL);
++			error = xfs_dir2_free_try_read(tp, dp,
++						xfs_dir2_db_to_da(mp, fbno),
++						&fbp);
+ 			if (error)
+ 				return error;
+ 			if (!fbp)
+@@ -1518,8 +1581,9 @@ xfs_dir2_node_addname_int(
+ 		 * that was just allocated.
+ 		 */
+ 		fbno = xfs_dir2_db_to_fdb(mp, dbno);
+-		error = xfs_da_read_buf(tp, dp, xfs_dir2_db_to_da(mp, fbno), -2,
+-					&fbp, XFS_DATA_FORK, NULL);
++		error = xfs_dir2_free_try_read(tp, dp,
++					       xfs_dir2_db_to_da(mp, fbno),
++					       &fbp);
+ 		if (error)
+ 			return error;
  
- 	leaf1 = bp1->b_addr;
--	ASSERT(leaf1->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index < be16_to_cpu(leaf1->hdr.count));
- 	ASSERT(args->index >= 0);
- 	entry1 = &leaf1->entries[ args->index ];
+@@ -1915,17 +1979,15 @@ xfs_dir2_node_trim_free(
+ 	/*
+ 	 * Read the freespace block.
+ 	 */
+-	error = xfs_da_read_buf(tp, dp, (xfs_dablk_t)fo, -2, &bp,
+-				XFS_DATA_FORK, NULL);
++	error = xfs_dir2_free_try_read(tp, dp, fo, &bp);
+ 	if (error)
+ 		return error;
+ 	/*
+ 	 * There can be holes in freespace.  If fo is a hole, there's
+ 	 * nothing to do.
+ 	 */
+-	if (bp == NULL) {
++	if (!bp)
+ 		return 0;
+-	}
+ 	free = bp->b_addr;
+ 	ASSERT(free->hdr.magic == cpu_to_be32(XFS_DIR2_FREE_MAGIC));
+ 	/*
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index e1c02ca..35f87d4 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -117,6 +117,8 @@ extern int xfs_dir2_node_removename(struct xfs_da_args *args);
+ extern int xfs_dir2_node_replace(struct xfs_da_args *args);
+ extern int xfs_dir2_node_trim_free(struct xfs_da_args *args, xfs_fileoff_t fo,
+ 		int *rvalp);
++extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dir2_db_t fbno, struct xfs_buf **bpp);
  
- 	leaf2 = bp2->b_addr;
--	ASSERT(leaf2->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index2 < be16_to_cpu(leaf2->hdr.count));
- 	ASSERT(args->index2 >= 0);
- 	entry2 = &leaf2->entries[ args->index2 ];
-diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
-index dea1772..e05babc 100644
---- a/fs/xfs/xfs_attr_leaf.h
-+++ b/fs/xfs/xfs_attr_leaf.h
-@@ -227,6 +227,8 @@ int	xfs_attr_leaf_to_shortform(struct xfs_buf *bp,
- int	xfs_attr_leaf_clearflag(struct xfs_da_args *args);
- int	xfs_attr_leaf_setflag(struct xfs_da_args *args);
- int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
-+int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+			xfs_dablk_t bno, int map_type, struct xfs_buf **bpp);
- 
- /*
-  * Routines used for growing the Btree.
+ /* xfs_dir2_sf.c */
+ extern xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *sfp);
 -- 
 1.7.10
 
