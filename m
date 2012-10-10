@@ -1,18 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9AETj8K054451 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 09:29:45 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id 4CQ1DJeqB7Jve73e for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 07:31:16 -0700 (PDT)
-Message-ID: <507586B4.6010201@sandeen.net>
-Date: Wed, 10 Oct 2012 09:31:16 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q9AEuHYB058616 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 09:56:17 -0500
+Received: from mail-ob0-f181.google.com (mail-ob0-f181.google.com
+	[209.85.214.181]) by cuda.sgi.com with ESMTP id
+	mpJAv7t4ntC9rlrr (version=TLSv1 cipher=RC4-SHA bits=128
+	verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Oct 2012 07:57:48 -0700 (PDT)
+Received: by mail-ob0-f181.google.com with SMTP id un3so625036obb.26
+	for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 07:57:48 -0700 (PDT)
 MIME-Version: 1.0
-Subject: Re: Performance degradation over time
-References: <20121010105142.148519ca@booking.com>
-	<50757583.9000901@hardwarefreak.com>
-In-Reply-To: <50757583.9000901@hardwarefreak.com>
+In-Reply-To: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+Date: Wed, 10 Oct 2012 16:57:47 +0200
+Message-ID: <CAAxjCEwYyzTLTJk7SU0t=1SnT-V=7VadtKd0v9qj0soXtJ8XTg@mail.gmail.com>
+Subject: Re: A little RAID experiment
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,90 +28,44 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: stan@hardwarefreak.com
-Cc: xfs@oss.sgi.com
+To: Linux fs XFS <xfs@oss.sgi.com>
 
-On 10/10/12 8:17 AM, Stan Hoeppner wrote:
-> On 10/10/2012 3:51 AM, Marcin Deranek wrote:
->> Hi,
->>
->> We are running XFS filesystem on one of out machines which is a big
->> store (~3TB) of different data files (mostly images). Quite recently we
->> experienced some performance problems - machine wasn't able to keep up
->> with updates. After some investigation it turned out that open()
->> syscalls (open for writing) were taking significantly more time than
->> they should eg. 15-20ms vs 100-150us.
->> Some more info about our workload as I think it's important here:
->> our XFS filesystem is exclusively used as data store, so we only
->> read and write our data (we mostly write). When new update comes it's
->> written to a temporary file eg.
->>
->> /mountpoint/some/path/.tmp/file
->>
->> When file is completely stored we move it to final location eg.
->>
->> /mountpoint/some/path/different/subdir/newname
->>
->> That means that we create lots of files in /mountpoint/some/path/.tmp
->> directory, but directory is empty as they are moved (rename() syscall)
->> shortly after file creation to a different directory on the same
->> filesystem.
->> The workaround which I found so far is to remove that directory
->> (/mountpoint/some/path/.tmp in our case) with its content and re-create
->> it. After this operation open() syscall goes down to 100-150us again.
->> Is this a known problem ?
->> Information regarding our system:
->> CentOS 5.8 / kernel 2.6.18-308.el5 / kmod-xfs-0.4-2
->> Let me know if you need to know anything more.
-> 
-> Hi Marcin,
-> 
-> I'll begin where you ended:  kmod-xfs.  DO NOT USE THAT.  Use the kernel
-> driver.  Eric Sandeen can point you to the why.  AIUI that XFS module
-> hasn't been supported for many many years.
+Btw, one of our customers recently aquired new gear with HP SmartArray
+Gen8 controllers. Now they are something to get excited about! This is
+the kind of write performance I would expect from an expensive server
+product. Check this out (this is again my artificial benchmark as well
+as random write of 4K blocks):
 
-Yep.  Ditch that; it overrides the maintained module that comes with the
-kernel itself.  See if that helps, first, I suppose.
+SmartArray P400, 6 300G disks (10k, SAS) RAID 6, 256M BBWC:
 
-I've been asking Centos for a while to find some way to deprecate that,
-but it's like night of the living dead xfs modules.
+ag4
+Read 0b  Written 161.56Mb  Total transferred 161.56Mb  (5.3853Mb/sec)
+ 1378.63 Requests/sec executed
 
-(modinfo xfs will tell you for sure which xfs.ko is getting loaded I suppose).
+random write
+Read 0b  Written 97.578Mb  Total transferred 97.578Mb  (3.2526Mb/sec)
+  832.66 Requests/sec executed
 
-> Regarding your problem, I can't state some of the following with
-> authority, though it might read that way.  I'm making an educated guess
-> based on what I do know of XFS and the behavior you're seeing.  Dave
-> will clobber and correct me if I'm wrong here. ;)
-> 
-> XFS filesystems are divided into multiple equal sized allocation groups
-> on the underlying storage device (single disk, RAID, LVM volume, etc).
-> With inode32 each directory that is created has its files store in only
-> one AG, with some exceptions, which you appear to bumping up against.
-> If you're using inode64 the directories, along with their files, go into
-> the AGs round robin.
+SmartArray Gen8, 8 300G disks (15k, SAS) RAID 5, 2GB FBWC:
 
-Agreed that it would be good to know whether inode64 is in use.
+ag4
+Read 0b  Written 2.4575Gb  Total transferred 2.4575Gb  (83.883Mb/sec)
+21474.03 Requests/sec executed
 
-Let's start there (and with a modern xfs.ko) before we speculate further.
+random write
+Read 0b  Written 343.86Mb  Total transferred 343.86Mb  (11.462Mb/sec)
+ 2934.24 Requests/sec executed
 
-> Educated guessing:  When you use rename(2) to move the files, the file
-> contents are not being moved, only the directory entry, as with EXTx
-> etc.  Thus the file data is still in the ".tmp" directory AG, but that
-> AG is no longer its home.  Once this temp dir AG gets full of these
-> "phantom" file contents (you can only see them with XFS tools), the AG
-> spills over.  At that point XFS starts moving the phantom contents of
-> the rename(2) files into the AG which owns the directory of the
-> rename(2) target.  I believe this is the source of your additional
-> latency.  Each time you do an open(2) call to write a new file, XFS is
-> moving a file's contents (extents) to its new/correct parent AG, causing
-> much additional IO, especially if these are large files.
+So yeah, the disks are a bit faster. But what does that matter when
+there is such a huge difference otherwise?
 
-Nope, don't think so ;) Nothing is going to be moving file contents
-behind your back on a rename.
+Unfortunately, while composing this text, I noticed that the new one
+is configured as RAID 5, and I cannot change it because of HP's
+licensing policy. That makes it not a meaningful comparison, although
+extrapolation from previous SmartArray controllers would suggest that
+the RAID5 and RAID6 performance is comparable.
 
-<snip>
-
--Eric
+My subjective impression is still a very good one!
 
 _______________________________________________
 xfs mailing list
