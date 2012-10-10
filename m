@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9AMtgxJ179670 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 17:55:42 -0500
+	q9ANLCxJ187832 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 18:21:12 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	xF1Hd8nnC24C4hCX for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 15:57:12 -0700 (PDT)
-Date: Thu, 11 Oct 2012 09:57:00 +1100
+	U0y7IMQd63aTa2Pz for <xfs@oss.sgi.com>;
+	Wed, 10 Oct 2012 16:22:43 -0700 (PDT)
+Date: Thu, 11 Oct 2012 10:22:41 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 14/14] xfs: only update the last_sync_lsn when a
-	transaction completes
-Message-ID: <20121010225700.GY23644@dastard>
-References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
-	<1349693772-8064-15-git-send-email-david@fromorbit.com>
-	<20121010142841.GV13214@sgi.com>
+Subject: Re: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
+Message-ID: <20121010232241.GZ23644@dastard>
+References: <1349784945-28399-1-git-send-email-lczerner@redhat.com>
+	<20121009193908.GI23644@dastard>
+	<alpine.LFD.2.00.1210100924180.2326@(none)>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121010142841.GV13214@sgi.com>
+In-Reply-To: <alpine.LFD.2.00.1210100924180.2326@(none)>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,73 +24,83 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: =?utf-8?B?THVrw6HFoQ==?= Czerner <lczerner@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 10, 2012 at 09:28:41AM -0500, Ben Myers wrote:
-> Hey Dave,
-> 
-> On Mon, Oct 08, 2012 at 09:56:12PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > The log write code stamps each iclog with the current tail LSN in
-> > the iclog header so that recovery knows where to find the tail of
-> > thelog once it has found the head. Normally this is taken from the
-> > first item on the AIL - the log item that corresponds to the oldest
-> > active item in the log.
-> > 
-> > The problem is that when the AIL is empty, the tail lsn is dervied
-> > from the the l_last_sync_lsn, which is the LSN of the last iclog to
-> > be written to the log. In most cases this doesn't happen, because
-> > the AIL is rarely empty on an active filesystem. However, when it
-> > does, it opens up an interesting case when the transaction being
-> > committed to the iclog spans multiple iclogs.
-> > 
-> > That is, the first iclog is stamped with the l_last_sync_lsn, and IO
-> > is issued. Then the next iclog is setup, the changes copied into the
-> > iclog (takes some time), and then the l_last_sync_lsn is stamped
-> > into the header and IO is issued. This is still the same
-> > transaction, so the tail lsn of both iclogs must be the same for log
-> > recovery to find the entire transaction to be able to replay it.
-> > 
-> > The problem arises in that the iclog buffer IO completion updates
-> > the l_last_sync_lsn with it's own LSN. Therefore, If the first iclog
-> > completes it's IO before the second iclog is filled and has the tail
-> > lsn stamped in it, it will stamp the LSN of the first iclog into
-> > it's tail lsn field. If the system fails at this point, log recovery
-> > will not see a complete transaction, so the transaction will no be
-> > replayed.
-> > 
-> > The fix is simple - the l_last_sync_lsn is updated when a iclog
-> > buffer IO completes, and this is incorrect. The l_last_sync_lsn
-> > shoul dbe updated when a transaction is completed by a iclog buffer
-> > IO. That is, only iclog buffers that have transaction commit
-> > callbacks attached to them should update the l_last_sync_lsn. This
-> > means that the last_sync_lsn will only move forward when a commit
-> > record it written, not in the middle of a large transaction that is
-> > rolling through multiple iclog buffers.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> 
-> I think this one is appropriate for the 3.7 release.  What say you?
-
-Yes, if you want. It's not a common or high risk problem without the
-preceeding changes, though, so I'm not concerned if it stays with
-this patchset....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gV2VkLCBPY3QgMTAsIDIwMTIgYXQgMDk6NTA6MzhBTSArMDIwMCwgTHVrw6HFoSBDemVybmVy
+IHdyb3RlOgo+IE9uIFdlZCwgMTAgT2N0IDIwMTIsIERhdmUgQ2hpbm5lciB3cm90ZToKPiAKPiA+
+IERhdGU6IFdlZCwgMTAgT2N0IDIwMTIgMDY6Mzk6MDggKzExMDAKPiA+IEZyb206IERhdmUgQ2hp
+bm5lciA8ZGF2aWRAZnJvbW9yYml0LmNvbT4KPiA+IFRvOiBMdWthcyBDemVybmVyIDxsY3plcm5l
+ckByZWRoYXQuY29tPgo+ID4gQ2M6IHhmc0Bvc3Muc2dpLmNvbQo+ID4gU3ViamVjdDogUmU6IFtQ
+QVRDSF0geGZzOiBhdm9pZCB1bmRlcmZsb3cgaW4geGZzX2lvY190cmltKCkKPiA+IAo+ID4gT24g
+VHVlLCBPY3QgMDksIDIwMTIgYXQgMDI6MTU6NDVQTSArMDIwMCwgTHVrYXMgQ3plcm5lciB3cm90
+ZToKPiA+ID4gQ3VycmVudGx5IGlmIGxlbiBhcmd1bWVudCBpbiB4ZnNfaW9jX3RyaW0oKSBpcyBz
+bWFsbGVyIHRoYW4gb25lIEJCCj4gPiA+IChiYXNpYyBibG9jaykgdGhlICdlbmQnIHZhcmlhYmxl
+IHVuZGVyZmxvdy4gQXZvaWQgdGhhdCBieSBiYWlsaW5nIG91dCBpZgo+ID4gPiBsZW4gaXMgc21h
+bGxlciB0aGFuIEJCLgo+ID4gPiAKPiA+ID4gU2lnbmVkLW9mZi1ieTogTHVrYXMgQ3plcm5lciA8
+bGN6ZXJuZXJAcmVkaGF0LmNvbT4KPiA+ID4gLS0tCj4gPiA+ICBmcy94ZnMveGZzX2Rpc2NhcmQu
+YyB8ICAgIDcgKysrKysrLQo+ID4gPiAgMSBmaWxlcyBjaGFuZ2VkLCA2IGluc2VydGlvbnMoKyks
+IDEgZGVsZXRpb25zKC0pCj4gPiA+IAo+ID4gPiBkaWZmIC0tZ2l0IGEvZnMveGZzL3hmc19kaXNj
+YXJkLmMgYi9mcy94ZnMveGZzX2Rpc2NhcmQuYwo+ID4gPiBpbmRleCA2OWNmNGZjLi41NGRjNThh
+IDEwMDY0NAo+ID4gPiAtLS0gYS9mcy94ZnMveGZzX2Rpc2NhcmQuYwo+ID4gPiArKysgYi9mcy94
+ZnMveGZzX2Rpc2NhcmQuYwo+ID4gPiBAQCAtMTgzLDggKzE4MywxMiBAQCB4ZnNfaW9jX3RyaW0o
+Cj4gPiA+ICAJICAgIHJhbmdlLm1pbmxlbiA+IFhGU19GU0JfVE9fQihtcCwgWEZTX0FMTE9DX0FH
+X01BWF9VU0FCTEUobXApKSkKPiA+ID4gIAkJcmV0dXJuIC1YRlNfRVJST1IoRUlOVkFMKTsKPiA+
+ID4gIAo+ID4gPiArCWVuZCA9IEJUT0JCVChyYW5nZS5sZW4pOwo+ID4gPiArCWlmICgwID09IGVu
+ZCkKPiA+ID4gKwkJZ290byBvdXQ7Cj4gPiAKPiA+IFVnZ2guICJpZiAoZW5kID09IDApIiwgcGxl
+YXNlLgo+IAo+IE5vdCBhIFN0YXIgV2FycyBmYW4gdGhlbiA/IDspLiBPaywgSSdsbCBjaGFuZ2Ug
+dGhhdC4KCkkgbWlnaHQgYmUsIGJ1dCBJIGRvbid0IGdldCB0aGUgcmVmZXJlbmNlIC0gc29tZXRo
+aW5nIHRvIGRvIHdpdGggdGhlCnNlY29uZCBtb29uIG9mIEVuZG9yLCBvciBqdXN0IGxldHRpbmcg
+dGhlIHdvb2tpZSB3aW4gc28geW91IGRvbid0CmNvbWUgdG8gYW4gYXJtbGVzcyBlbmQ/IDopCgpB
+cyBpdCBpcywgSSBkb24ndCBsaWtlIHJldmVyc2UgbG9naWMgbm90YXRpb24gYmVjYXVzZSBpdCBt
+YWtlcyBjb2RlCnN0cmFuZ2UgYW5kIHVucmVhZGFibGUuIEl0IGRvZXNuJ3QgcHJvdmlkZSBhbnkg
+cmVhbCBiZW5lZml0IGJlY2F1c2UKdGhlIGNvbXBpbGVyIHdpbGwgd2FybiBhYm91dCB0eXBvcyB0
+aGF0IHJlc3VsdCBpbiBhc3NpZ25tZW50cyBpbgpzdWNoIHN0YXRlbWVudHMgKGkuZS4gIGlmIChl
+bmQgPSAwKSkuIEhlbmNlIHdyaXRpbmcgY29kZSBzbyB0aGF0IHRoZQpjb21waWxhdGlvbiB3aWxs
+IGZhaWwgaWYgeW91IG1ha2UgYSB0eXBvIGlzbid0IG5lY2Vzc2FyeSAtIENsZWFyLApjb25zaXN0
+ZW50IGFuZCBlYXNpbHkgcmVhZGFibGUgY29kZSBpcyBtdWNoIG1vcmUgaW1wb3J0YW50Li4uLgoK
+PiA+ID4gKwo+ID4gPiAgCXN0YXJ0ID0gQlRPQkIocmFuZ2Uuc3RhcnQpOwo+ID4gPiAtCWVuZCA9
+IHN0YXJ0ICsgQlRPQkJUKHJhbmdlLmxlbikgLSAxOwo+ID4gPiArCWVuZCArPSBzdGFydCAtIDE7
+Cj4gPiAKPiA+IEJldHRlciB3b3VsZCBiZSB0byBjaGVjayBpZiBlbmQgPD0gc3RhcnQuIFRoYXQg
+d2F5IGl0IGFsc28gY2F0Y2hlcwo+ID4gc3RhcnQrbGVuIG92ZXJmbG93cy4KPiAKPiBUaGF0J3Mg
+bm90IHBvc3NpYmxlLiBFdmVuIGlmIHJhbmdlLnN0YXJ0IGFuZCByYW5nZS5sZW4gd291bGQgYmUK
+PiAyXjY0LTEgKHdoaWNoIGlzIG5vdCBwb3NzaWJsZSBmb3IgcmFuZ2Uuc3RhcnQpIHdlIGFsd2F5
+cyBkbyB0aGUKPiBCVE9CQiBjb252ZXJzaW9uIGFuZCAoKDJeNjQtMSkgLyA1MTIpICogMiBhbHdh
+eXMgZml0cyB0aGUgX3M2NAo+IHR5cGUuCgpSZWdhcmRsZXNzLCBjaGVja2luZyB0aGF0IHRoZSBl
+bmQgb2YgdGhlIHJhbmdlIGlzIGFmdGVyIHRoZSBzdGFydCBpcyBhCm11Y2ggbW9yZSByb2J1c3Qg
+Y2hlY2sgdGhhbiBpbmRpdmlkdWFsIHVuZGVyZmxvdy9vdmVyZmxvdyB0ZXN0cy4gV2UKZG8gdGhh
+dCBhbGwgb3ZlciB0aGUgcGxhY2UgaW4gWEZTIHdoZW4gY29udmVydGluZyBieXRlIHJhbmdlcyB0
+bwpibG9jayBiYXNlZCBzdGFydC9lbmQgcGFpcnMuCgo+ID4gPiAgCW1pbmxlbiA9IEJUT0JCKG1h
+eF90KHU2NCwgZ3JhbnVsYXJpdHksIHJhbmdlLm1pbmxlbikpOwo+ID4gPiAgCj4gPiA+ICAJaWYg
+KGVuZCA+IFhGU19GU0JfVE9fQkIobXAsIG1wLT5tX3NiLnNiX2RibG9ja3MpIC0gMSkKPiA+ID4g
+QEAgLTIwMyw2ICsyMDcsNyBAQCB4ZnNfaW9jX3RyaW0oCj4gPiA+ICAJaWYgKGxhc3RfZXJyb3Ip
+Cj4gPiA+ICAJCXJldHVybiBsYXN0X2Vycm9yOwo+ID4gPiAgCj4gPiA+ICtvdXQ6Cj4gPiA+ICAJ
+cmFuZ2UubGVuID0gWEZTX0ZTQl9UT19CKG1wLCBibG9ja3NfdHJpbW1lZCk7Cj4gPiA+ICAJaWYg
+KGNvcHlfdG9fdXNlcih1cmFuZ2UsICZyYW5nZSwgc2l6ZW9mKHJhbmdlKSkpCj4gPiA+ICAJCXJl
+dHVybiAtWEZTX0VSUk9SKEVGQVVMVCk7Cj4gPiAKPiA+IEkgdGhpbmsgaXQgc2hvdWxkIHJldHVy
+biBFSU5WQUwsIG5vdCBzaWxlbnRseSBkbyBub3RoaW5nLiBJZiB0aGUKPiA+IHVzZXIgYXBwbGlj
+YXRpb24gdXNlcyBhIGxvb3AgdGhhdCBpbmNyZW1lbnRzIHN0YXJ0L2xlbiBiYXNlZCBvbiB0aGUK
+PiA+IHJldHVybmVkIGFtb3VudCBvZiBibG9ja3MgdHJpbW1lZCwgcmV0dXJuaW5nIHplcm8gY291
+bGQgc2VuZCBpdCBpbnRvCj4gPiBhbiBlbmRsZXNzIGxvb3AuCj4gCj4gVGhhdCdzIG5vdCB3aGF0
+IHRoZSBhcHBsaWNhdGlvbiB3b3VsZCBkby4gQXQgbGVhc3QgaXQgd291bGQgbm90IHNldAo+IGxl
+biB0byB3aGF0J3MgcmV0dXJuZWQgYXMgbnVtYmVyIG9mIGJsb2NzIGRpc2NhcmRlZCwgaXQgZG9l
+cyBub3QKPiBtYWtlIHNlbnNlLgoKT2gsIHJpZ2h0LCBteSBtaXN0YWtlLgoKPiBIb3dldmVyIGlm
+IHVzZXIgc3BlY2lmeSBsZW5ndGggc21hbGxlciB0aGFuIHdoYXQgd2UncmUgYWJsZSB0bwo+IGRp
+c2NhcmQgKGluIHhmcyBpdCBpcyBCQlNJWkUgaWYgSSBhbSBub3QgbWlzdGFrZW4/KSwgdGhlbiBp
+dAo+IHByb2JhYmx5IG1ha2Ugc2Vuc2UgdG8gcmV0dXJuIC1FSU5WQUwuIEl0IGlzIHNpbWlsYXIg
+c2l0dWF0aW9uIG9mCj4gbWlubGVuLCB3aGVyZSB3ZSByZXR1cm4gLUVJTlZBTCBpZiBpdCBpcyBi
+aWdnZXIgdGhhbiBBRy4gSG93ZXZlcgo+IHRoaXMgd2lsbCBtYWtlIGl0IHRvIGZhaWwgYXQgZGlm
+ZmVyZW50IHRocmVzaG9sZCBvbiBkaWZmZXJlbnQgZmlsZQo+IHN5c3RlbSAvIGJsb2NrIHNpemVz
+IHNvIEkgYW0gb24gdGhlIGZlbmNlIGFib3V0IGl0LiBXaGF0IGRvIHlvdQo+IHRoaW5rLCBpcyBp
+dCB3b3J0aCBpdCA/CgpBY3R1YWxseSwgdGhlIG1pbmltdW0gbGVuZ3RoIHRoYXQgY2FuIGJlIGRp
+c2NhcmRlZCBpcyB0aGUgZmlsZXN5c3RlbQpibG9jayBzaXplLCBhbmQgYXBwbGljYXRpb25zIGNh
+biBnZXQgdGhhdCBlYXNpbHkgZW5vdWdoIGZyb20Kc3RhdCgyKS4gIElPV3MsIHdlIHByb2JhYmx5
+IHNob3VsZCBiZSByZWplY3RpbmcgbWlubGVuIDwgMSBGU0IsCnJhbmdlIDwgMSBGU0Igd2l0aCBF
+SU5WQUwuLi4uCgpDaGVlcnMsCgpEYXZlLgotLSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJp
+dC5jb20KCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhm
+cyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFu
+L2xpc3RpbmZvL3hmcwo=
