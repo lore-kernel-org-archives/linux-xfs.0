@@ -1,25 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9ALuJw6167090 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 16:56:19 -0500
-Received: from mail-ia0-f181.google.com (mail-ia0-f181.google.com
-	[209.85.210.181]) by cuda.sgi.com with ESMTP id
-	ttULKoqzFbIWTO2t (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 14:57:51 -0700 (PDT)
-Received: by mail-ia0-f181.google.com with SMTP id x2so829484iad.26
-	for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 14:57:50 -0700 (PDT)
-Date: Wed, 10 Oct 2012 14:57:48 -0700 (PDT)
-From: Hugh Dickins <hughd@google.com>
-Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
-	s390
-In-Reply-To: <alpine.LSU.2.00.1210091600450.30446@eggly.anvils>
-Message-ID: <alpine.LSU.2.00.1210101428470.1939@eggly.anvils>
-References: <1349108796-32161-1-git-send-email-jack@suse.cz>
-	<alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
-	<20121009101822.79bdcb65@mschwide>
-	<alpine.LSU.2.00.1210091600450.30446@eggly.anvils>
+	q9AM065a167837 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 17:00:06 -0500
+Received: from mail-oa0-f53.google.com (mail-oa0-f53.google.com
+	[209.85.219.53]) by cuda.sgi.com with ESMTP id NmksmdGHWa4cPDYF
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 10 Oct 2012 15:01:38 -0700 (PDT)
+Received: by mail-oa0-f53.google.com with SMTP id j6so1159188oag.26
+	for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 15:01:37 -0700 (PDT)
 MIME-Version: 1.0
+In-Reply-To: <20121010212733.GW23644@dastard>
+References: <CAAxjCEzh3+doupD=LmgqSbCeYWzn9Ru-vE4T8tOJmoud+28FDQ@mail.gmail.com>
+	<CAAxjCEwYyzTLTJk7SU0t=1SnT-V=7VadtKd0v9qj0soXtJ8XTg@mail.gmail.com>
+	<20121010212733.GW23644@dastard>
+Date: Thu, 11 Oct 2012 00:01:37 +0200
+Message-ID: <CAAxjCEzV+7yqpd5x_VbnAxiWptkF3Wp6zdpH-k7sk-jg+auoYA@mail.gmail.com>
+Subject: Re: A little RAID experiment
+From: Stefan Ring <stefanrin@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,54 +29,18 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: linux-s390@vger.kernel.org, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linux fs XFS <xfs@oss.sgi.com>
 
-On Tue, 9 Oct 2012, Hugh Dickins wrote:
-> On Tue, 9 Oct 2012, Martin Schwidefsky wrote:
-> > On Mon, 8 Oct 2012 21:24:40 -0700 (PDT)
-> > Hugh Dickins <hughd@google.com> wrote:
-> > 
-> > > A separate worry came to mind as I thought about your patch: where
-> > > in page migration is s390's dirty storage key migrated from old page
-> > > to new?  And if there is a problem there, that too should be fixed
-> > > by what I propose in the previous paragraph.
-> > 
-> > That is covered by the SetPageUptodate() in migrate_page_copy().
-> 
-> I don't think so: that makes sure that the newpage is not marked
-> dirty in storage key just because of the copy_highpage to it; but
-> I see nothing to mark the newpage dirty in storage key when the
-> old page was dirty there.
+> Just inidicates that the working set for your test is much more
+> resident in the controller cache - has nothing to do with the disk
+> speeds. Tun a larger set of files/workload and the results will end
+> up a lot closer to disk speed instead of cache speed...
 
-I went to prepare a patch to fix this, and ended up finding no such
-problem to fix - which fits with how no such problem has been reported.
-
-Most of it is handled by page migration's unmap_and_move() having to
-unmap the old page first: so the old page will pass through the final
-page_remove_rmap(), which will transfer storage key to page_dirty in
-those cases which it deals with (with the old code, any file or swap
-page; with the new code, any unaccounted file or swap page, now that
-we realize the accounted files don't even need this); and page_dirty
-is already properly migrated to the new page.
-
-But that does leave one case behind: an anonymous page not yet in
-swapcache, migrated via a swap-like migration entry.  But this case
-is not a problem because PageDirty doesn't actually affect anything
-for an anonymous page not in swapcache.  There are various places
-where we set it, and its life-history is hard to make sense of, but
-in fact it's meaningless in 2.6, where page reclaim adds anon to swap
-(and sets PageDirty) whether the page was marked dirty before or not
-(which makes sense when we use the ZERO_PAGE for anon read faults).
-
-2.4 did behave differently: it was liable to free anon pages not
-marked dirty, and I think most of our anon SetPageDirtys are just a
-relic of those days - I do have a patch from 18 months ago to remove
-them (adding PG_dirty to the flags which should not be set when a
-page is freed), but there are usually more urgent things to attend
-to than rebase and retest that.
-
-Hugh
+That's indeed a valid objection, but I just verified that with the
+working set size multiplied by the relative cache size difference
+(64GB instead of 8GB), the performance stays exactly the same. The new
+controller seems to run much better cache control algorithms.
 
 _______________________________________________
 xfs mailing list
