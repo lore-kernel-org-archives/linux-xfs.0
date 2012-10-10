@@ -1,20 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9ANNEba188518 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 18:23:14 -0500
+	q9ANPEsK189432 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 18:25:14 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	o2j8Sc7Tv37EhiP5 for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 16:24:45 -0700 (PDT)
-Date: Thu, 11 Oct 2012 10:24:43 +1100
+	6lGpZ4aZEgmzZtuy for <xfs@oss.sgi.com>;
+	Wed, 10 Oct 2012 16:26:44 -0700 (PDT)
+Date: Thu, 11 Oct 2012 10:25:53 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2 V2] xfs_io: include headers for preadv/pwritev
-Message-ID: <20121010232443.GA23644@dastard>
-References: <50749EE2.6070408@redhat.com>
- <5074ED75.6060106@sandeen.net>
+Subject: Re: [PATCH 2/2 V2] xfs_io: configure tests for preadv/pwritev &
+	sync_file_range
+Message-ID: <20121010232553.GB23644@dastard>
+References: <50749EE2.6070408@redhat.com> <5074A05A.6000709@sandeen.net>
+	<5074EE1B.3090600@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5074ED75.6060106@sandeen.net>
+In-Reply-To: <5074EE1B.3090600@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,22 +24,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-T24gVHVlLCBPY3QgMDksIDIwMTIgYXQgMTA6Mzc6MjVQTSAtMDUwMCwgRXJpYyBTYW5kZWVuIHdy
-b3RlOgo+IFdlIG5lZWQgdG8gaW5jbHVkZSB1aW8uaCB0byBhdm9pZDoKPiAKPiAgICAgW0NDXSAg
-ICAgcHJlYWQubwo+IHByZWFkLmM6IEluIGZ1bmN0aW9uIOKAmGRvX3ByZWFk4oCZOgo+IHByZWFk
-LmM6MTk4OiB3YXJuaW5nOiBpbXBsaWNpdCBkZWNsYXJhdGlvbiBvZiBmdW5jdGlvbiDigJhwcmVh
-ZHbigJkKPiAgICAgW0NDXSAgICAgcHdyaXRlLm8KPiBwd3JpdGUuYzogSW4gZnVuY3Rpb24g4oCY
-ZG9fcHdyaXRl4oCZOgo+IHB3cml0ZS5jOjg1OiB3YXJuaW5nOiBpbXBsaWNpdCBkZWNsYXJhdGlv
-biBvZiBmdW5jdGlvbiDigJhwd3JpdGV24oCZCj4gCj4gU2lnbmVkLW9mZi1ieTogRXJpYyBTYW5k
-ZWVuIDxzYW5kZWVuQHJlZGhhdC5jb20+CgpMb29rcyBnb29kLgoKUmV2aWV3ZWQtYnk6IERhdmUg
-Q2hpbm5lciA8ZGNoaW5uZXJAcmVkaGF0LmNvbT4KCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJv
-bW9yYml0LmNvbQoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21h
-aWxtYW4vbGlzdGluZm8veGZzCg==
+On Tue, Oct 09, 2012 at 10:40:11PM -0500, Eric Sandeen wrote:
+> On older systems we may not have preadv/pwritev and/or
+> sync_file_range.
+> 
+> Add the configure magic, and stub out the code
+> where needed.
+> 
+> (sync_file_range just needed a better test; preadv/pwritev
+> took a little more rearranging)
+> 
+> And fix a couple typos ("numberic") while we're at it.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> V2: add -DHAVE_PWRITEV and use that test in io/pwrite.c
+> rather than HAVE_PREADV
+.....
+
+> +# Also implies PWRITEV
+> +ifeq ($(HAVE_PREADV),yes)
+> +LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+> +endif
+
+Nice solution ;)
+
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+
+-- 
+Dave Chinner
+david@fromorbit.com
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
