@@ -1,23 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q99NJvi0123587 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 18:19:57 -0500
+	q9A2Hnas149744 for <xfs@oss.sgi.com>; Tue, 9 Oct 2012 21:17:49 -0500
 Received: from mail-ie0-f181.google.com (mail-ie0-f181.google.com
 	[209.85.223.181]) by cuda.sgi.com with ESMTP id
-	xAcAS6VwGUDe49Oq (version=TLSv1 cipher=RC4-SHA bits=128
+	4yUPgtovIJw6AZtY (version=TLSv1 cipher=RC4-SHA bits=128
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 09 Oct 2012 16:21:27 -0700 (PDT)
-Received: by mail-ie0-f181.google.com with SMTP id 16so13118312iea.26
-	for <xfs@oss.sgi.com>; Tue, 09 Oct 2012 16:21:27 -0700 (PDT)
-Date: Tue, 9 Oct 2012 16:21:24 -0700 (PDT)
+	Tue, 09 Oct 2012 19:19:19 -0700 (PDT)
+Received: by mail-ie0-f181.google.com with SMTP id 16so51330iea.26
+	for <xfs@oss.sgi.com>; Tue, 09 Oct 2012 19:19:18 -0700 (PDT)
+Date: Tue, 9 Oct 2012 19:19:09 -0700 (PDT)
 From: Hugh Dickins <hughd@google.com>
 Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
 	s390
-In-Reply-To: <20121009101822.79bdcb65@mschwide>
-Message-ID: <alpine.LSU.2.00.1210091600450.30446@eggly.anvils>
+In-Reply-To: <20121009162107.GE15790@quack.suse.cz>
+Message-ID: <alpine.LSU.2.00.1210091824390.30802@eggly.anvils>
 References: <1349108796-32161-1-git-send-email-jack@suse.cz>
 	<alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
-	<20121009101822.79bdcb65@mschwide>
+	<20121009162107.GE15790@quack.suse.cz>
 MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -31,12 +31,11 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Martin Schwidefsky <schwidefsky@de.ibm.com>
-Cc: linux-s390@vger.kernel.org, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>
+To: Jan Kara <jack@suse.cz>
+Cc: linux-s390@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-On Tue, 9 Oct 2012, Martin Schwidefsky wrote:
-> On Mon, 8 Oct 2012 21:24:40 -0700 (PDT)
-> Hugh Dickins <hughd@google.com> wrote:
+On Tue, 9 Oct 2012, Jan Kara wrote:
+> On Mon 08-10-12 21:24:40, Hugh Dickins wrote:
 > > On Mon, 1 Oct 2012, Jan Kara wrote:
 > > 
 > > > On s390 any write to a page (even from kernel itself) sets architecture
@@ -51,134 +50,140 @@ On Tue, 9 Oct 2012, Martin Schwidefsky wrote:
 > > > from xfs_count_page_state().
 > > 
 > > What changed recently?  Was XFS hardly used on s390 until now?
+>   The problem was originally hit on SLE11-SP2 which is 3.0 based after
+> migration of our s390 build machines from SLE11-SP1 (2.6.32 based). I think
+> XFS just started to be more peevish about what pages it gets between these
+> two releases ;) (e.g. ext3 or ext4 just says "oh, well" and fixes things
+> up).
+
+Right, in 2.6.32 xfs_vm_writepage() had a !page_has_buffers(page) case,
+whereas by 3.0 that had become ASSERT(page_has_buffers(page)), with the
+ASSERT usually compiled out, stumbling later in page_buffers() as you say.
+
 > 
-> One thing that changed is that the zero_user_segment for the remaining bytes between
-> i_size and the end of the page has been moved to block_write_full_page_endio, see
-> git commit eebd2aa355692afa. That changed the timing of the race window in regard
-> to map/unmap of the page by user space. And yes XFS is in use on s390.
-
-February 2008: I think we have different ideas of "recently" ;)
-
->  
-> > > 
 > > > Similar problem can also happen when zero_user_segment() call from
 > > > xfs_vm_writepage() (or block_write_full_page() for that matter) set the
 > > > hardware dirty bit during writeback, later buffers get freed, and then page
 > > > unmapped.
-> > > 
-> > > Fix the issue by ignoring s390 HW dirty bit for page cache pages in
-> > > page_mkclean() and page_remove_rmap(). This is safe because when a page gets
-> > > marked as writeable in PTE it is also marked dirty in do_wp_page() or
-> > > do_page_fault(). When the dirty bit is cleared by clear_page_dirty_for_io(),
-> > > the page gets writeprotected in page_mkclean(). So pagecache page is writeable
-> > > if and only if it is dirty.
+
+Similar problem, or is that the whole of the problem?  Where else does
+the page get written to, after clearing page dirty?  (It may not be worth
+spending time to answer me, I feel I'm wasting too much time on this.)
+
+I keep trying to put my finger on the precise bug.  I said in earlier
+mails to Mel and to Martin that we're mixing a bugfix and an optimization,
+but I cannot quite point to the bug.  Could one say that it's precisely at
+the "page straddles i_size" zero_user_segment(), in XFS or in other FSes?
+that the storage key ought to be re-cleaned after that?
+
+What if one day I happened to copy that code into shmem_writepage()?
+I've no intention to do so!  And it wouldn't cause a BUG.  Ah, and we
+never write shmem to swap while it's still mapped, so it wouldn't even
+have a chance to redirty the page in page_remove_rmap().
+
+I guess I'm worrying too much; but it's not crystal clear to me why any
+!mapping_cap_account_dirty mapping would necessarily not have the problem.
+
+> > But here's where I think the problem is.  You're assuming that all
+> > filesystems go the same mapping_cap_account_writeback_dirty() (yeah,
+> > there's no such function, just a confusing maze of three) route as XFS.
 > > 
-> > Very interesting patch...
+> > But filesystems like tmpfs and ramfs (perhaps they're the only two
+> > that matter here) don't participate in that, and wait for an mmap'ed
+> > page to be seen modified by the user (usually via pte_dirty, but that's
+> > a no-op on s390) before page is marked dirty; and page reclaim throws
+> > away undirtied pages.
+>   I admit I haven't thought of tmpfs and similar. After some discussion Mel
+> pointed me to the code in mmap which makes a difference. So if I get it
+> right, the difference which causes us problems is that on tmpfs we map the
+> page writeably even during read-only fault. OK, then if I make the above
+> code in page_remove_rmap():
+> 	if ((PageSwapCache(page) ||
+> 	     (!anon && !mapping_cap_account_dirty(page->mapping))) &&
+> 	    page_test_and_clear_dirty(page_to_pfn(page), 1))
+> 		set_page_dirty(page);
 > 
-> Yes, it is an interesting idea. I really like the part that we'll use less storage
-> key operations, as these are freaking expensive.
+>   Things should be ok (modulo the ugliness of this condition), right?
 
-As I said to Mel and will repeat to Jan, though an optimization would
-be nice, I don't think we should necessarily mix it with the bugfix.
+(Setting aside my reservations above...) That's almost exactly right, but
+I think the issue of a racing truncation (which could reset page->mapping
+to NULL at any moment) means we have to be a bit more careful.  Usually
+we guard against that with page lock, but here we can rely on mapcount.
 
-> 
-> > > 
-> > > CC: Martin Schwidefsky <schwidefsky@de.ibm.com>
-> > 
-> > which I'd very much like Martin's opinion on...
-> 
-> Until you pointed out the short-comings of the patch I really liked it ..
-> 
-> > > ---
-> > >  mm/rmap.c |   16 ++++++++++++++--
-> > >  1 files changed, 14 insertions(+), 2 deletions(-)
-> > > 
-> > > diff --git a/mm/rmap.c b/mm/rmap.c
-> > > index 0f3b7cd..6ce8ddb 100644
-> > > --- a/mm/rmap.c
-> > > +++ b/mm/rmap.c
-> > > @@ -973,7 +973,15 @@ int page_mkclean(struct page *page)
-> > >  		struct address_space *mapping = page_mapping(page);
-> > >  		if (mapping) {
-> > >  			ret = page_mkclean_file(mapping, page);
-> > > -			if (page_test_and_clear_dirty(page_to_pfn(page), 1))
-> > > +			/*
-> > > +			 * We ignore dirty bit for pagecache pages. It is safe
-> > > +			 * as page is marked dirty iff it is writeable (page is
-> > > +			 * marked as dirty when it is made writeable and
-> > > +			 * clear_page_dirty_for_io() writeprotects the page
-> > > +			 * again).
-> > > +			 */
-> > > +			if (PageSwapCache(page) &&
-> > > +			    page_test_and_clear_dirty(page_to_pfn(page), 1))
-> > >  				ret = 1;
-> > 
-> > This part you could cut out: page_mkclean() is not used on SwapCache pages.
-> > I believe you are safe to remove the page_test_and_clear_dirty() from here.
-> 
-> Hmm, who guarantees that page_mkclean won't be used for SwapCache in the
-> future? At least we should add a comment there.
+page_mapping(page), with its built-in PageSwapCache check, actually ends
+up making the condition look less ugly; and so far as I could tell,
+the extra code does get optimized out on x86 (unless CONFIG_DEBUG_VM,
+when we are left with its VM_BUG_ON(PageSlab(page))).
 
-I set out to do so, to add a comment there; but honestly, it's a strange
-place for such a comment when there's no longer even the code to comment
-upon.  And page_mkclean_file(), called in the line above, already says
-BUG_ON(PageAnon(page)), so it would soon fire if we ever make a change
-that sends PageSwapCache pages this way.  It is possible that one day we
-shall want to send tmpfs and swapcache down this route, I'm not ruling
-that out; but then we shall have to extend page_mkclean(), yes.
+But please look this over very critically and test (and if you like it,
+please adopt it as your own): I'm not entirely convinced yet myself.
 
-> 
-> The patch relies on the software dirty bit tracking for file backed pages,
-> if dirty bit tracking is not done for tmpfs and ramfs we are borked.
->  
-> > You mention above that even the kernel writing to the page would mark
-> > the s390 storage key dirty.  I think that means that these shm and
-> > tmpfs and ramfs pages would all have dirty storage keys just from the
-> > clear_highpage() used to prepare them originally, and so would have
-> > been found dirty anyway by the existing code here in page_remove_rmap(),
-> > even though other architectures would regard them as clean and removable.
-> 
-> No, the clear_highpage() will set the dirty bit in the storage key but
-> the SetPageUptodate will clear the complete storage key including the
-> dirty bit.
-
-Ah, thank you Martin, that clears that up...
-
->  
-> > If that's the case, then maybe we'd do better just to mark them dirty
-> > when faulted in the s390 case.  Then your patch above should (I think)
-> > be safe.  Though I'd then be VERY tempted to adjust the SwapCache case
-> > too (I've not thought through exactly what that patch would be, just
-> > one or two suitably placed SetPageDirtys, I think), and eliminate
-> > page_test_and_clear_dirty() altogether - no tears shed by any of us!
-
-... so I should not hurt your performance with a change of that kind.
-
-> 
-> I am seriously tempted to switch to pure software dirty bits by using
-> page protection for writable but clean pages. The worry is the number of
-> additional protection faults we would get. But as we do software dirty
-> bit tracking for the most part anyway this might not be as bad as it
-> used to be.
-
-That's exactly the same reason why tmpfs opts out of dirty tracking, fear
-of unnecessary extra faults.  Anomalous as s390 is here, tmpfs is being
-anomalous too, and I'd be a hypocrite to push for you to make that change.
-
-> 
-> > A separate worry came to mind as I thought about your patch: where
-> > in page migration is s390's dirty storage key migrated from old page
-> > to new?  And if there is a problem there, that too should be fixed
-> > by what I propose in the previous paragraph.
-> 
-> That is covered by the SetPageUptodate() in migrate_page_copy().,> 
-
-I don't think so: that makes sure that the newpage is not marked
-dirty in storage key just because of the copy_highpage to it; but
-I see nothing to mark the newpage dirty in storage key when the
-old page was dirty there.
+(One day, I do want to move that block further down page_remove_rmap(),
+outside the mem_cgroup_[begin,end]_update_stat() bracketing: I don't think
+there's an actual problem at present in calling set_page_dirty() there,
+but I have seen patches which could give it a lock-ordering issue, so
+better to untangle them.  No reason to muddle that in with your fix,
+but I thought I'd mention it while we're all staring at this.)
 
 Hugh
+
+---
+
+ mm/rmap.c |   20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
+
+--- 3.6.0+/mm/rmap.c	2012-10-09 14:01:12.356379322 -0700
++++ linux/mm/rmap.c	2012-10-09 14:58:48.160445605 -0700
+@@ -56,6 +56,7 @@
+ #include <linux/mmu_notifier.h>
+ #include <linux/migrate.h>
+ #include <linux/hugetlb.h>
++#include <linux/backing-dev.h>
+ 
+ #include <asm/tlbflush.h>
+ 
+@@ -926,11 +927,8 @@ int page_mkclean(struct page *page)
+ 
+ 	if (page_mapped(page)) {
+ 		struct address_space *mapping = page_mapping(page);
+-		if (mapping) {
++		if (mapping)
+ 			ret = page_mkclean_file(mapping, page);
+-			if (page_test_and_clear_dirty(page_to_pfn(page), 1))
+-				ret = 1;
+-		}
+ 	}
+ 
+ 	return ret;
+@@ -1116,6 +1114,7 @@ void page_add_file_rmap(struct page *pag
+  */
+ void page_remove_rmap(struct page *page)
+ {
++	struct address_space *mapping = page_mapping(page);
+ 	bool anon = PageAnon(page);
+ 	bool locked;
+ 	unsigned long flags;
+@@ -1138,8 +1137,19 @@ void page_remove_rmap(struct page *page)
+ 	 * this if the page is anon, so about to be freed; but perhaps
+ 	 * not if it's in swapcache - there might be another pte slot
+ 	 * containing the swap entry, but page not yet written to swap.
++	 *
++	 * And we can skip it on file pages, so long as the filesystem
++	 * participates in dirty tracking; but need to catch shm and tmpfs
++	 * and ramfs pages which have been modified since creation by read
++	 * fault.
++	 *
++	 * Note that mapping must be decided above, before decrementing
++	 * mapcount (which luckily provides a barrier): once page is unmapped,
++	 * it could be truncated and page->mapping reset to NULL at any moment.
++	 * Note also that we are relying on page_mapping(page) to set mapping
++	 * to &swapper_space when PageSwapCache(page).
+ 	 */
+-	if ((!anon || PageSwapCache(page)) &&
++	if (mapping && !mapping_cap_account_dirty(mapping) &&
+ 	    page_test_and_clear_dirty(page_to_pfn(page), 1))
+ 		set_page_dirty(page);
+ 	/*
 
 _______________________________________________
 xfs mailing list
