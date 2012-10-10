@@ -1,18 +1,26 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9A7nCOr240617 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 02:49:13 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id KwEYkIxqh65eBbw8 for
-	<xfs@oss.sgi.com>; Wed, 10 Oct 2012 00:50:43 -0700 (PDT)
-Date: Wed, 10 Oct 2012 09:50:38 +0200 (CEST)
-From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
-Subject: Re: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
-In-Reply-To: <20121009193908.GI23644@dastard>
-Message-ID: <alpine.LFD.2.00.1210100924180.2326@(none)>
-References: <1349784945-28399-1-git-send-email-lczerner@redhat.com>
-	<20121009193908.GI23644@dastard>
-MIME-Version: 1.0
+	q9A8oAfr248536 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 03:50:10 -0500
+Received: from mail-out3.booking.com (mail-out3.booking.com [91.195.237.20])
+	by cuda.sgi.com with ESMTP id tcfGWwfj0YYkRy8w (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Wed, 10 Oct 2012 01:51:39 -0700 (PDT)
+Received: from corpds-101.ams4.corp.booking.com ([10.196.68.22]:59621)
+	by mtx-101.ams4.prod.booking.com with esmtps (TLSv1:AES256-SHA:256)
+	(Exim 4.76) (envelope-from <marcin.deranek@booking.com>)
+	id 1TLs0w-0006Oa-Ad
+	for xfs@oss.sgi.com; Wed, 10 Oct 2012 10:51:38 +0200
+Received: from [10.155.73.76] (port=35202 helo=localhost)
+	by corpds-101.ams4.corp.booking.com with esmtps (TLSv1:AES128-SHA:128)
+	(Exim 4.76) (envelope-from <marcin.deranek@booking.com>)
+	id 1TLs0w-0004y6-98
+	for xfs@oss.sgi.com; Wed, 10 Oct 2012 10:51:38 +0200
+Date: Wed, 10 Oct 2012 10:51:42 +0200
+From: Marcin Deranek <marcin.deranek@booking.com>
+Subject: Performance degradation over time
+Message-ID: <20121010105142.148519ca@booking.com>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,95 +33,41 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Lukas Czerner <lczerner@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, 10 Oct 2012, Dave Chinner wrote:
+Hi,
 
-> Date: Wed, 10 Oct 2012 06:39:08 +1100
-> From: Dave Chinner <david@fromorbit.com>
-> To: Lukas Czerner <lczerner@redhat.com>
-> Cc: xfs@oss.sgi.com
-> Subject: Re: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
-> 
-> On Tue, Oct 09, 2012 at 02:15:45PM +0200, Lukas Czerner wrote:
-> > Currently if len argument in xfs_ioc_trim() is smaller than one BB
-> > (basic block) the 'end' variable underflow. Avoid that by bailing out if
-> > len is smaller than BB.
-> > 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_discard.c |    7 ++++++-
-> >  1 files changed, 6 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-> > index 69cf4fc..54dc58a 100644
-> > --- a/fs/xfs/xfs_discard.c
-> > +++ b/fs/xfs/xfs_discard.c
-> > @@ -183,8 +183,12 @@ xfs_ioc_trim(
-> >  	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)))
-> >  		return -XFS_ERROR(EINVAL);
-> >  
-> > +	end = BTOBBT(range.len);
-> > +	if (0 == end)
-> > +		goto out;
-> 
-> Uggh. "if (end == 0)", please.
+We are running XFS filesystem on one of out machines which is a big
+store (~3TB) of different data files (mostly images). Quite recently we
+experienced some performance problems - machine wasn't able to keep up
+with updates. After some investigation it turned out that open()
+syscalls (open for writing) were taking significantly more time than
+they should eg. 15-20ms vs 100-150us.
+Some more info about our workload as I think it's important here:
+our XFS filesystem is exclusively used as data store, so we only
+read and write our data (we mostly write). When new update comes it's
+written to a temporary file eg.
 
-Not a Star Wars fan then ? ;). Ok, I'll change that.
+/mountpoint/some/path/.tmp/file
 
-> > +
-> >  	start = BTOBB(range.start);
-> > -	end = start + BTOBBT(range.len) - 1;
-> > +	end += start - 1;
-> 
-> Better would be to check if end <= start. That way it also catches
-> start+len overflows.
+When file is completely stored we move it to final location eg.
 
-That's not possible. Even if range.start and range.len would be
-2^64-1 (which is not possible for range.start) we always do the
-BTOBB conversion and ((2^64-1) / 512) * 2 always fits the _s64
-type.
+/mountpoint/some/path/different/subdir/newname
 
-> 
-> 
-> >  	minlen = BTOBB(max_t(u64, granularity, range.minlen));
-> >  
-> >  	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
-> > @@ -203,6 +207,7 @@ xfs_ioc_trim(
-> >  	if (last_error)
-> >  		return last_error;
-> >  
-> > +out:
-> >  	range.len = XFS_FSB_TO_B(mp, blocks_trimmed);
-> >  	if (copy_to_user(urange, &range, sizeof(range)))
-> >  		return -XFS_ERROR(EFAULT);
-> 
-> I think it should return EINVAL, not silently do nothing. If the
-> user application uses a loop that increments start/len based on the
-> returned amount of blocks trimmed, returning zero could send it into
-> an endless loop.
+That means that we create lots of files in /mountpoint/some/path/.tmp
+directory, but directory is empty as they are moved (rename() syscall)
+shortly after file creation to a different directory on the same
+filesystem.
+The workaround which I found so far is to remove that directory
+(/mountpoint/some/path/.tmp in our case) with its content and re-create
+it. After this operation open() syscall goes down to 100-150us again.
+Is this a known problem ?
+Information regarding our system:
+CentOS 5.8 / kernel 2.6.18-308.el5 / kmod-xfs-0.4-2
+Let me know if you need to know anything more.
+Cheers,
 
-That's not what the application would do. At least it would not set
-len to what's returned as number of blocs discarded, it does not
-make sense.
-
-However if user specify length smaller than what we're able to
-discard (in xfs it is BBSIZE if I am not mistaken?), then it
-probably make sense to return -EINVAL. It is similar situation of
-minlen, where we return -EINVAL if it is bigger than AG. However
-this will make it to fail at different threshold on different file
-system / block sizes so I am on the fence about it. What do you
-think, is it worth it ?
-
-Thanks!
--Lukas
-
-> 
-> Cheers,
-> 
-> Dave.
-> 
+Marcin
 
 _______________________________________________
 xfs mailing list
