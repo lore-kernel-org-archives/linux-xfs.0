@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BC7ZLU108443 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 07:07:35 -0500
-Message-ID: <5076B6DF.3090308@sgi.com>
-Date: Thu, 11 Oct 2012 07:09:03 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q9BEC6US132516 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 09:12:06 -0500
+Date: Thu, 11 Oct 2012 09:13:35 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH v5 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+Message-ID: <20121011141335.GY13214@sgi.com>
+References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
+	<1349446636-8611-7-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 00/19] xfs: buffer read verifier infrastructure
-References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
-In-Reply-To: <1349754670-32009-1-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1349446636-8611-7-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,135 +19,141 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 10/08/12 22:50, Dave Chinner wrote:
-> Hi folks,
->
-> This is the next step along the road to metadata CRC checking. What
-> the series does is add an iodone callback to most metadata buffer
-> read operations that is only executed when the buffer is physically
-> read from disk.  Read operations that hit the cache do no trigger a
-> verification, as CRCs only protect the on-disk metadata and the
-> in-memory buffer can be changed at any time after it is read without
-> recalculating the CRC of the buffer.
->
-> Hence we need infrastructure that only triggers verification as a
-> result of a physical read IO. We can do that easily enough via the
-> existing b_iodone callback infrastructure. This callback is
-> currently only used by writes, and callbacks clear themselves from
-> the buffer b_iodone function pointer once they are run. By following
-> this same usage pattern, we can attach a verifier callback to the
-> buffer when it is first read from disk and clear it from the
-> b_iodone callback once it has been executed, preserving the existing
-> behaviour for buffers that are cached in memory.
->
-> To do this, we nee dto add a verifier function to all the buffer
-> read functions that can be attached to the buffer if we are going to
-> execute a physical read to fill the buffer. The iodone callback is
-> only passed the buffer, so the only context for verification we have
-> is the function being called.
->
-> Hence the initial verifier functions simply check the buffer for
-> valid contents according to the type that is expected in the buffer.
-> In future, more targetted verifiers could be implmented to verify
-> that buffers are in certain states or with certain constraints, but
-> that is not a focus of this patch set.
->
-> If a verifier function detects an inconsistency or corruption, the
-> only way it can pass that error to waiters is via placing an error
-> on the buffer itself via xfs_buf_ioerror(). A validation error
-> should set the error to EFSCORRUPTED, so that a validation error can
-> be distinguished from an IO failure, which will result in an EIO
-> being set on the buffer. Once processing is complete, the iodone
-> function is cleared and the next stage of ioend processing is
-> triggered by calling xfs_buf_ioend(). This is typically done like
-> this:
->
-> void verifier_fn(struct xfs_buf *bp)
-> {
-> 	// check buffer
->
-> 	if (!buf_ok) {
-> 		xfs_error_report();
-> 		xfs_buf_ioerror(bp, EFSCORRUPTED);
-> 	}
->
-> 	bp->b_iodone = NULL;
-> 	xfs_buf_ioend(bp);
-> }
->
->
-> Hence callers that are returned a buffer need to check the buffer
-> for a validation error before using it. If special error handling
-> for a validation error is necessary, it needs to catch a
-> EFSCORRUPTED error. In most cases (e.g.  xfs_trans_read_buf_map())
-> this checking is already done, so there's relatively few places that
-> need modifications to their error handling to handle this.
->
->
-> The verifiers still emit error reports with stack traces, but they
-> are probably less useful than they were because the stack trace will
-> simply point to the IO completion stack. It is an open question as
-> to whether the error report should be in the verifier or issued by
-> the waiting context - I'm happy to have reports in the waiting
-> context in the places where there isn't already an error report if
-> necessary.
->
-> The next step in this process (i.e. the next patch set) is to add a
-> pre-write callback to verify the contents of the buffer just before
-> it is issued to disk.  This will allow us to verify that detectable
-> in-memory corruption is not being propagated to disk, and will use
-> the same verifier function as the read code.  Once these verifiers
-> are in place, the infrastructure for enabling CRC validation of
-> metadata buffers will be in place.
->
-> These write verifiers will initially be identical to these read
-> verifiers, but once CRC verification and calculation is added, the
-> callbacks will be different but the verifier identical.
->
-> It should be noted that this patch set does not quite cover all
-> metadata types - remote attribute and symlink blocks are not
-> currently handled because there is no way to validate those buffers
-> are good or bad because all they contain is user data. Verifiers for
-> these types of metadata buffers will be added when CRC protection is
-> added to these types.
->
-> Comments, flames and rants about how to do this better are welcome :)
->
-> Cheers,
->
-> Dave.
->
-> PS: you can now see how I found the bug fixed in the first patch. ;)
->
+Hey Brian,
+
+On Fri, Oct 05, 2012 at 10:17:12AM -0400, Brian Foster wrote:
+> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
+> scan. The xfs_eofblocks structure is defined to support the command
+> parameters (scan mode).
+
+It would help to have an xfstest to exercise this ioctl to pull in with this
+series.  Do you have any code that could be wrangled into a test case?
+
+Regards,
+	Ben
+
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_fs.h     |   15 +++++++++++++++
+>  fs/xfs/xfs_icache.c |    5 +++--
+>  fs/xfs/xfs_icache.h |    2 +-
+>  fs/xfs/xfs_ioctl.c  |   16 ++++++++++++++++
+>  4 files changed, 35 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index c13fed8..5f48b3e 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -339,6 +339,20 @@ typedef struct xfs_error_injection {
+>  
+>  
+>  /*
+> + * Speculative preallocation trimming.
+> + */
+> +#define XFS_EOFBLOCKS_VERSION		1
+> +struct xfs_eofblocks {
+> +	__u32		eof_version;
+> +	__u32		eof_flags;
+> +	unsigned char	pad[12];
+> +};
+> +
+> +/* eof_flags values */
+> +#define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
+> +
+> +
+> +/*
+>   * The user-level Handle Request interface structure.
+>   */
+>  typedef struct xfs_fsop_handlereq {
+> @@ -456,6 +470,7 @@ typedef struct xfs_handle {
+>  /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+>  #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+>  #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+> +#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
+>  
+>  /*
+>   * ioctl commands that replace IRIX syssgi()'s
+> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+> index b02a3df..35efdda 100644
+> --- a/fs/xfs/xfs_icache.c
+> +++ b/fs/xfs/xfs_icache.c
+> @@ -1206,11 +1206,12 @@ xfs_inode_free_eofblocks(
+>  int
+>  xfs_icache_free_eofblocks(
+>  	struct xfs_mount	*mp,
+> -	int			flags)
+> +	int			flags,
+> +	struct xfs_eofblocks	*eofb)
+>  {
+>  	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+>  	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
+> -					 NULL, XFS_ICI_EOFBLOCKS_TAG);
+> +					 eofb, XFS_ICI_EOFBLOCKS_TAG);
+>  }
+>  
+>  void
+> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+> index abca9fb..b46716c 100644
+> --- a/fs/xfs/xfs_icache.h
+> +++ b/fs/xfs/xfs_icache.h
+> @@ -37,7 +37,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+>  
+>  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+>  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+> -int xfs_icache_free_eofblocks(struct xfs_mount *, int);
+> +int xfs_icache_free_eofblocks(struct xfs_mount *, int, struct xfs_eofblocks *);
+>  
+>  int xfs_sync_inode_grab(struct xfs_inode *ip);
+>  int xfs_inode_ag_iterator(struct xfs_mount *mp,
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 0e0232c..ad4352f 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -42,6 +42,7 @@
+>  #include "xfs_inode_item.h"
+>  #include "xfs_export.h"
+>  #include "xfs_trace.h"
+> +#include "xfs_icache.h"
+>  
+>  #include <linux/capability.h>
+>  #include <linux/dcache.h>
+> @@ -1602,6 +1603,21 @@ xfs_file_ioctl(
+>  		error = xfs_errortag_clearall(mp, 1);
+>  		return -error;
+>  
+> +	case XFS_IOC_FREE_EOFBLOCKS: {
+> +		struct xfs_eofblocks eofb;
+> +		int flags;
+> +
+> +		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+> +			return -XFS_ERROR(EFAULT);
+> +
+> +		if (eofb.eof_version != XFS_EOFBLOCKS_VERSION)
+> +			return -XFS_ERROR(EINVAL);
+> +
+> +		flags = (eofb.eof_flags & XFS_EOF_FLAGS_SYNC) ? SYNC_WAIT : SYNC_TRYLOCK;
+> +		error = xfs_icache_free_eofblocks(mp, flags, &eofb);
+> +		return -error;
+> +	}
+> +
+>  	default:
+>  		return -ENOTTY;
+>  	}
+> -- 
+> 1.7.7.6
+> 
 > _______________________________________________
 > xfs mailing list
 > xfs@oss.sgi.com
 > http://oss.sgi.com/mailman/listinfo/xfs
-
-
-"Don't shoot me, I am only the piano player" -Joe Walsh
-
-I put in the series on top of the previous worker mover series.
-I know this is sketchy in details. I get one of the below on xfstest
-076:
-
-  1) XFS: Assertion failed: atomic_read(&bp->b_hold) > 0
-     from [PATCH 02/14] xfs: rationalise xfs_mount_wq users
-  2) filesystem hang. One process is in inode reclaim waiting on
-     the superblock buffer lock, and the umount doing the same.
-
-I need to convert my machines for internal use for the rest of the week.
-I hit one or the other 100% time with test 076.
-
---Mark.
-
 
 _______________________________________________
 xfs mailing list
