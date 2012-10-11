@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BL6Dpx239088 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:06:13 -0500
+	q9BLVsHs242485 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:31:54 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	0G8zCXLXotGDgSws for <xfs@oss.sgi.com>;
-	Thu, 11 Oct 2012 14:07:45 -0700 (PDT)
-Date: Fri, 12 Oct 2012 08:07:41 +1100
+	iuNUiba0i1Nb4ooH for <xfs@oss.sgi.com>;
+	Thu, 11 Oct 2012 14:33:25 -0700 (PDT)
+Date: Fri, 12 Oct 2012 08:33:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: File system corruption
-Message-ID: <20121011210741.GC2739@dastard>
-References: <5077077A.3040608@crossroads.com>
+Subject: Re: possible memory allocation deadlock in xfs_buf_allocate_memory
+Message-ID: <20121011213323.GD2739@dastard>
+References: <alpine.DEB.2.01.1210111048170.10880@trent.utfs.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5077077A.3040608@crossroads.com>
+In-Reply-To: <alpine.DEB.2.01.1210111048170.10880@trent.utfs.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +26,97 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Wayne Walker <wwalker@crossroads.com>
+To: Christian Kujau <lists@nerdbynature.de>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 11, 2012 at 12:52:58PM -0500, Wayne Walker wrote:
-> In short, I am able to:  mkfs...; mount...; cp 1gbfile...; sync; cp
-> 1gbfile...; sync  # and now the xfs is corrupt
+On Thu, Oct 11, 2012 at 11:13:14AM -0700, Christian Kujau wrote:
+> Hi,
 > 
-> I see multiple bugs
+> since Linux 3.5 I'm seeing these "inconsistent lock state" lockdep 
+> warnings [0]. They show up in 3.6 as well [1]. I was being told[2] that I 
+> may have run out of inode attributes. This may well be the case, but I 
+> cannot reformat the disk right now and will have to live with that warning 
+> a while longer.
 > 
-> 1. very simple, non-corner-case actions create a corrupted file system
-> 2. corrupt data is knowingly written to the file system.
-> 3. the file system stays online and writable
-> 4. future write operations to the file system return success.
+> I got the warning again today, but 8h later the system hung and eventually 
+> shutdown. The last message from the box was received via netconsole:
 > 
-> Details:
-.....
-
-Nothing unusual there in the hardware. Seems sane to me.
-
-> The exact commands to create the failure:
+>  XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
 > 
-> /sbin/mkfs.xfs -f -l logdev=/dev/sda5 -b size=4096 -d su=1024k,sw=4
-> /dev/sde1
-> cat /etc/fstab
-> mount -t xfs -o defaults,noatime,logdev=/dev/sda5 /dev/sde1 /dtfs_data/data1
-> cp random_data.1G /dtfs_data/data1
-> # returns 0
-> sync
-> # file system reported no failure yet
-> cp random_data.1G /dtfs_data/data1
-> # returns 0
-> sync
-> # file system reports stack trace, bad agf, and page discard
+> This has been reported[3] for 3.2.1, but when the message was printed I 
+> was not around and could not watch /proc/slabinfo.
+> 
+> The last -MARK- message (some kind of heartbeat message from syslog, 
+> printing "MARK" every 5min) has been received 07:55 local time, the
+> netconsole message above was received 08:09, so two -MARK- messages were 
+> lost. sar(1) stopped recording at 08:05.
+> 
+> These two incidents (the lockdep warning and the final lockup) may be 
+> unrelated (and timestamp-wise, they seem to be), but I thought I'd 
+> better report it.
+> 
+> Full dmesg and .config: http://nerdbynature.de/bits/3.6.0/xfs/o
 
-Ok, so having looked at the stack trace, the AGF block taht was read
-contained zeros, not valid metadata, which is why the allocation
-failed.
+The inconsistent lock state is this path:
 
-Can you remake the filesystem at will? If so, can you run mkfs.xfs
-as per above, then run the following command?
+Oct 11 00:18:27 alice kernel: [261506.767190] [e5e2fc70] [c00b5d44] vm_map_ram+0x228/0x5a0
+Oct 11 00:18:27 alice kernel: [261506.768354] [e5e2fcf0] [c01a6f9c] _xfs_buf_map_pages+0x44/0x104
+Oct 11 00:18:27 alice kernel: [261506.769522] [e5e2fd10] [c01a8090] xfs_buf_get_map+0x74/0x11c
+Oct 11 00:18:27 alice kernel: [261506.770698] [e5e2fd30] [c01ffad8] xfs_trans_get_buf_map+0xc0/0xdc
+Oct 11 00:18:27 alice kernel: [261506.772106] [e5e2fd50] [c01e9504] xfs_ifree_cluster+0x3f4/0x5b0
+Oct 11 00:18:27 alice kernel: [261506.773309] [e5e2fde0] [c01eabc0] xfs_ifree+0xec/0xf0
+Oct 11 00:18:27 alice kernel: [261506.774493] [e5e2fe20] [c01bd5c0] xfs_inactive+0x274/0x448
+Oct 11 00:18:27 alice kernel: [261506.775672] [e5e2fe60] [c01b8450] xfs_fs_evict_inode+0x60/0x74
+Oct 11 00:18:27 alice kernel: [261506.776863] [e5e2fe70] [c00dfa88] evict+0xc0/0x1b4
+Oct 11 00:18:27 alice kernel: [261506.778046] [e5e2fe90] [c00db968] d_delete+0x1b0/0x1ec
+Oct 11 00:18:27 alice kernel: [261506.779235] [e5e2feb0] [c00d2e24] vfs_rmdir+0x124/0x128
+Oct 11 00:18:27 alice kernel: [261506.780425] [e5e2fed0] [c00d2f10] do_rmdir+0xe8/0x110
+Oct 11 00:18:27 alice kernel: [261506.781619] [e5e2ff40] [c0010aac] ret_from_syscall+0x0/0x38
 
-# echo 3 > /proc/sys/vm/drop_caches
-# for i in `seq 0 4`; do
-> xfs_db -l /dev/sda5 -c "sb $i" -c p -c "agf $i" -c p /dev/sde1
-> done
 
-So that we can see what mkfs put on disk? Can you then mount the
-filesystem, unmount it again, and run the same commands? Then mount
-the filesystem, run the copy/sync to trigger the error, then unmount
-and run the commands again?
+Which indicates that it is this:
 
-What I'm interested in if whether xfs_db sees the AGF (which ever
-one it is) as zero, or whether only the kernel is seeing that.
+> [1] http://oss.sgi.com/archives/xfs/2012-09/msg00305.html
+
+which is a real bug in the VM code that the VM developers refuse to
+fix even though it is simple to do and patches have been posted
+several times to fix it.
+
+/me points to his recent rant rather than repeating it:
+
+https://lkml.org/lkml/2012/6/13/628
+
+However, that is unrelated to this message:
+
+XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
+
+which triggers when memory cannot be allocated. mode 0x250 is
+
+	___GFP_NOWARN | ___GFP_IO | ___GFP_WAIT
+
+or more commonly known as:
+
+	GFP_NOFS
+
+with warnings turned off. Basically the warning is saying "we're
+trying really hard to allocate memory, but we're not making
+progress". If it was only emitted once, however, it means that
+progress was made, as the message is emitted every 100 times through
+the loop and so only one message means it looped less than 200
+times...
+
+What it does imply, however, is that vm_map_ram() is being called
+from GFP_NOFS context quite regularly and might be blocking there,
+and so the lockdep warning is more than just a nuisance - your
+system may indeed have hung there, but I don't have enough
+information to say for sure.
+
+When it hangs next time, can you get a blocked task dump from sysrq
+(i.e. sysrq-w, or "echo w > /proc/sysrq-trigger")? That's the only
+way we're going to know where the system hung. You might also want
+to ensure the hung task functionality is built into you kernel, so
+it automatically dumps stack traces for tasks hung longer than
+120s...
 
 Cheers,
 
