@@ -1,19 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9ANZabZ193099 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 18:35:36 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	zZiiE5CxU4uDtj0D for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 16:37:07 -0700 (PDT)
-Date: Thu, 11 Oct 2012 10:37:04 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Performance degradation over time
-Message-ID: <20121010233704.GC23644@dastard>
-References: <20121010105142.148519ca@booking.com>
+	q9ANx7kN203692 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 18:59:07 -0500
+Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
+	with ESMTP id vDvpMRWS52BYmbJW for <xfs@oss.sgi.com>;
+	Wed, 10 Oct 2012 17:00:38 -0700 (PDT)
+Message-ID: <50760C26.1040802@sandeen.net>
+Date: Wed, 10 Oct 2012 19:00:38 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121010105142.148519ca@booking.com>
+Subject: Re: [PATCH 1/2] xfsprogs: add PROJID32 geom feature flag
+References: <50747753.6040105@redhat.com>
+In-Reply-To: <50747753.6040105@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,59 +24,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Marcin Deranek <marcin.deranek@booking.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 10, 2012 at 10:51:42AM +0200, Marcin Deranek wrote:
-> Hi,
+On 10/9/12 2:13 PM, Eric Sandeen wrote:
+> Matches new flag added to kernel.
 > 
-> We are running XFS filesystem on one of out machines which is a big
-> store (~3TB) of different data files (mostly images). Quite recently we
-> experienced some performance problems - machine wasn't able to keep up
-> with updates. After some investigation it turned out that open()
-> syscalls (open for writing) were taking significantly more time than
-> they should eg. 15-20ms vs 100-150us.
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Which is clearly an IO latency vs cache hit latency.
+SGI, can you please add a :
 
-> Some more info about our workload as I think it's important here:
-> our XFS filesystem is exclusively used as data store, so we only
-> read and write our data (we mostly write). When new update comes it's
-> written to a temporary file eg.
+Cc: stable@vger.kernel.org
+
+when this is committed?  New stuff will be depending on this and it'd be good to get it munged into stable kernels as well.
+
+Thanks,
+-Eric
+
+> ---
 > 
-> /mountpoint/some/path/.tmp/file
+> diff --git a/include/xfs_fs.h b/include/xfs_fs.h
+> index faac5af..0dd3afd 100644
+> --- a/include/xfs_fs.h
+> +++ b/include/xfs_fs.h
+> @@ -233,7 +233,8 @@ typedef struct xfs_fsop_resblks {
+>  #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
+>  #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
+>  #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
+> -#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
+> +#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
+> +#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
+>  #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
 > 
-> When file is completely stored we move it to final location eg.
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 > 
-> /mountpoint/some/path/different/subdir/newname
-> 
-> That means that we create lots of files in /mountpoint/some/path/.tmp
-> directory, but directory is empty as they are moved (rename() syscall)
-> shortly after file creation to a different directory on the same
-> filesystem.
-> The workaround which I found so far is to remove that directory
-> (/mountpoint/some/path/.tmp in our case) with its content and re-create
-> it. After this operation open() syscall goes down to 100-150us again.
-> Is this a known problem ?
-
-By emptying the directory, you are making it smaller and likely
-causing it to be cached in memory again as new files are added to
-it. Over time, blocks will be removed from the cache due to memory
-pressure, and latencies will be seen again.
-
-> Information regarding our system:
-> CentOS 5.8 / kernel 2.6.18-308.el5 / kmod-xfs-0.4-2
-
-Use a more recent distro. I reworked the metadata caching algorithms
-a couple of years ago to avoid these sorts of problems with memory
-reclaim.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
