@@ -1,18 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9B8egG9073228 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 03:40:43 -0500
-Received: from mail-out3.booking.com (mail-out3.booking.com [91.195.237.20])
-	by cuda.sgi.com with ESMTP id M2uy6nIGINxlTNZm (version=TLSv1
+	q9B9DVCh079077 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 04:13:31 -0500
+Received: from mail-out4.booking.com (mail-out4.booking.com [91.195.237.21])
+	by cuda.sgi.com with ESMTP id Y4ZvLDORu42ipi6X (version=TLSv1
 	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 11 Oct 2012 01:42:14 -0700 (PDT)
-Date: Thu, 11 Oct 2012 10:42:20 +0200
+	Thu, 11 Oct 2012 02:15:02 -0700 (PDT)
+Date: Thu, 11 Oct 2012 11:15:09 +0200
 From: Marcin Deranek <marcin.deranek@booking.com>
 Subject: Re: Performance degradation over time
-Message-ID: <20121011104220.133383dc@booking.com>
-In-Reply-To: <20121010233704.GC23644@dastard>
+Message-ID: <20121011111509.0a57372a@booking.com>
+In-Reply-To: <20121011103352.4ed8bbf5@booking.com>
 References: <20121010105142.148519ca@booking.com>
-	<20121010233704.GC23644@dastard>
+	<50757583.9000901@hardwarefreak.com> <507586B4.6010201@sandeen.net>
+	<20121011103352.4ed8bbf5@booking.com>
 Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,17 +27,21 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Marcin Deranek <marcin.deranek@booking.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, stan@hardwarefreak.com, xfs@oss.sgi.com
 
-On Thu, 11 Oct 2012 10:37:04 +1100
-Dave Chinner <david@fromorbit.com> wrote:
+On Thu, 11 Oct 2012 10:33:52 +0200
+Marcin Deranek <marcin.deranek@booking.com> wrote:
 
-> Use a more recent distro. I reworked the metadata caching algorithms
-> a couple of years ago to avoid these sorts of problems with memory
-> reclaim.
+> I guess next step would be to use inode64..
 
-I can give a shot CentOS 6.x although that might take some time..
+After mounting XFS with inode64 I see performance improvement (open()
+now takes ~3ms vs ~15ms previous) although it's still not something I
+would expect (~150us.) On Dave's suggestion I will give a shot CentOS
+6.x and see if that makes any difference although this needs to be
+monitored over longer period of time to reliably tell if that make a
+difference.
+Regards,
 
 Marcin
 
