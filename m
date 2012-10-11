@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BMQcA4249476 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 17:26:38 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	KZOtKr4SDK2LJS0Q for <xfs@oss.sgi.com>;
-	Thu, 11 Oct 2012 15:28:10 -0700 (PDT)
-Date: Fri, 12 Oct 2012 09:28:08 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 04/19] xfs: verify superblocks as they are read from disk
-Message-ID: <20121011222808.GK2739@dastard>
-References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
-	<1349754670-32009-5-git-send-email-david@fromorbit.com>
-	<20121011214139.GD6346@infradead.org>
+	q9BMZL0o252269 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 17:35:21 -0500
+Message-ID: <507749A2.4020206@redhat.com>
+Date: Thu, 11 Oct 2012 18:35:14 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121011214139.GD6346@infradead.org>
+Subject: Re: [PATCH v5 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
+	<1349446636-8611-7-git-send-email-bfoster@redhat.com>
+	<20121011141335.GY13214@sgi.com>
+In-Reply-To: <20121011141335.GY13214@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,81 +23,152 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 11, 2012 at 05:41:39PM -0400, Christoph Hellwig wrote:
-> On Tue, Oct 09, 2012 at 02:50:55PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Add a superblock verify callback function and pass it into the
-> > buffer read functions. Remove the now redundant verification code
-> > that is currently in use.
-> > 
-> > Adding verification shows that secondary superblocks never have
-> > their "sb_inprogress" flag cleared by mkfs.xfs, so when validating
-> > the secondary superblocks during a grow operation we have to avoid
-> > checking this field. Even if we fix mkfs, we will still have to
-> > ignore this field for verification purposes unless a version of mkfs
-> > that does not have this bug was used.
+On 10/11/2012 10:13 AM, Ben Myers wrote:
+> Hey Brian,
 > 
-> > @@ -304,9 +304,8 @@ STATIC int
-> >  xfs_mount_validate_sb(
-> >  	xfs_mount_t	*mp,
-> >  	xfs_sb_t	*sbp,
-> > -	int		flags)
-> > +	bool		check_inprogress)
-> >  {
-> > -	int		loud = !(flags & XFS_MFSI_QUIET);
+> On Fri, Oct 05, 2012 at 10:17:12AM -0400, Brian Foster wrote:
+>> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
+>> scan. The xfs_eofblocks structure is defined to support the command
+>> parameters (scan mode).
 > 
-> I don't think removing this is a good idea.  The quiet flag is used
-> to silence all filesystem warnings when the kernel is blindly trying
-> all filesystem types when searching for the correct root fs type.
+> It would help to have an xfstest to exercise this ioctl to pull in with this
+> series.  Do you have any code that could be wrangled into a test case?
 > 
-> If we always print warnings here people will get annoying messages
-> when that happens for a non-XFS rootfs that we're asked to verify.
+
+Yes, makes sense. I have some very basic test code I could put somewhere
+to invoke the ioctl(). One of the questions I've been meaning to ask is
+whether it would be relevant for that code to live in a common tool,
+such as adding a new command to xfs_io. Then perhaps create an xfstests
+test using that. Thoughts?
+
+FYI, I have a few other things on my plate at the moment so
+unfortunately it will be a bit before I can get back to XFS work... But
+I'm fine with the set pending until I can come up with some test
+coverage if that is preferable, of course.
+
+Brian
+
+> Regards,
+> 	Ben
 > 
-> I'd rather make check_inprogress another flag here.
-
-It's a little more complex than that - I'd like to have the warnings
-emitted on every superblock read (primary or secondary), but only
-some of them come through the mount path. e.g. we re-read the
-superblock during the log recovery sequence, so even if it is a
-silent mount, I want to know that log recovery corrupted the
-superblock and what it corrupted....
-
-Indeed, if the kernel is trying random filesystem mounts on a block
-device, then we'll fail the magic number check and abort
-immediately, so I think that's really the only message we need "loud"
-protection on. If you agree that's all we'll need to check, then I
-can write a couple of simple wrappers that do:
-
-xfs_sb_read_verify()
-{
-	/* validate contents of superblock loudly */
-}
-
-xfs_sb_quiet_read_verify()
-{
-
-	if (!magic num mismatch) {
-		/* XFS filesystem, be loud now */
-		xfs_sb_read_verify();
-		return;
-	}
-	/* quitely fail now */
-	xfs_buf_ioerror(bp, EFSCORRUPTED);
-	....
-}
-
-Would that solve the problem?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>>
+>> Signed-off-by: Brian Foster <bfoster@redhat.com>
+>> ---
+>>  fs/xfs/xfs_fs.h     |   15 +++++++++++++++
+>>  fs/xfs/xfs_icache.c |    5 +++--
+>>  fs/xfs/xfs_icache.h |    2 +-
+>>  fs/xfs/xfs_ioctl.c  |   16 ++++++++++++++++
+>>  4 files changed, 35 insertions(+), 3 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+>> index c13fed8..5f48b3e 100644
+>> --- a/fs/xfs/xfs_fs.h
+>> +++ b/fs/xfs/xfs_fs.h
+>> @@ -339,6 +339,20 @@ typedef struct xfs_error_injection {
+>>  
+>>  
+>>  /*
+>> + * Speculative preallocation trimming.
+>> + */
+>> +#define XFS_EOFBLOCKS_VERSION		1
+>> +struct xfs_eofblocks {
+>> +	__u32		eof_version;
+>> +	__u32		eof_flags;
+>> +	unsigned char	pad[12];
+>> +};
+>> +
+>> +/* eof_flags values */
+>> +#define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
+>> +
+>> +
+>> +/*
+>>   * The user-level Handle Request interface structure.
+>>   */
+>>  typedef struct xfs_fsop_handlereq {
+>> @@ -456,6 +470,7 @@ typedef struct xfs_handle {
+>>  /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+>>  #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+>>  #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+>> +#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
+>>  
+>>  /*
+>>   * ioctl commands that replace IRIX syssgi()'s
+>> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+>> index b02a3df..35efdda 100644
+>> --- a/fs/xfs/xfs_icache.c
+>> +++ b/fs/xfs/xfs_icache.c
+>> @@ -1206,11 +1206,12 @@ xfs_inode_free_eofblocks(
+>>  int
+>>  xfs_icache_free_eofblocks(
+>>  	struct xfs_mount	*mp,
+>> -	int			flags)
+>> +	int			flags,
+>> +	struct xfs_eofblocks	*eofb)
+>>  {
+>>  	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
+>>  	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
+>> -					 NULL, XFS_ICI_EOFBLOCKS_TAG);
+>> +					 eofb, XFS_ICI_EOFBLOCKS_TAG);
+>>  }
+>>  
+>>  void
+>> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+>> index abca9fb..b46716c 100644
+>> --- a/fs/xfs/xfs_icache.h
+>> +++ b/fs/xfs/xfs_icache.h
+>> @@ -37,7 +37,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+>>  
+>>  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+>>  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+>> -int xfs_icache_free_eofblocks(struct xfs_mount *, int);
+>> +int xfs_icache_free_eofblocks(struct xfs_mount *, int, struct xfs_eofblocks *);
+>>  
+>>  int xfs_sync_inode_grab(struct xfs_inode *ip);
+>>  int xfs_inode_ag_iterator(struct xfs_mount *mp,
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index 0e0232c..ad4352f 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -42,6 +42,7 @@
+>>  #include "xfs_inode_item.h"
+>>  #include "xfs_export.h"
+>>  #include "xfs_trace.h"
+>> +#include "xfs_icache.h"
+>>  
+>>  #include <linux/capability.h>
+>>  #include <linux/dcache.h>
+>> @@ -1602,6 +1603,21 @@ xfs_file_ioctl(
+>>  		error = xfs_errortag_clearall(mp, 1);
+>>  		return -error;
+>>  
+>> +	case XFS_IOC_FREE_EOFBLOCKS: {
+>> +		struct xfs_eofblocks eofb;
+>> +		int flags;
+>> +
+>> +		if (copy_from_user(&eofb, arg, sizeof(eofb)))
+>> +			return -XFS_ERROR(EFAULT);
+>> +
+>> +		if (eofb.eof_version != XFS_EOFBLOCKS_VERSION)
+>> +			return -XFS_ERROR(EINVAL);
+>> +
+>> +		flags = (eofb.eof_flags & XFS_EOF_FLAGS_SYNC) ? SYNC_WAIT : SYNC_TRYLOCK;
+>> +		error = xfs_icache_free_eofblocks(mp, flags, &eofb);
+>> +		return -error;
+>> +	}
+>> +
+>>  	default:
+>>  		return -ENOTTY;
+>>  	}
+>> -- 
+>> 1.7.7.6
+>>
+>> _______________________________________________
+>> xfs mailing list
+>> xfs@oss.sgi.com
+>> http://oss.sgi.com/mailman/listinfo/xfs
 
 _______________________________________________
 xfs mailing list
