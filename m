@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BLoUdD244944 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:50:30 -0500
+	q9BLsHvK245379 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:54:17 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	BeYZejYxi3Fgnn1p for <xfs@oss.sgi.com>;
-	Thu, 11 Oct 2012 14:52:01 -0700 (PDT)
-Date: Fri, 12 Oct 2012 08:52:00 +1100
+	zqTumEGyeLLfZhJK for <xfs@oss.sgi.com>;
+	Thu, 11 Oct 2012 14:55:49 -0700 (PDT)
+Date: Fri, 12 Oct 2012 08:55:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/19] xfs: verify AGFL blocks as they are read from disk
-Message-ID: <20121011215200.GG2739@dastard>
+Subject: Re: [PATCH 08/19] xfs: verify inode buffers as they are read from disk
+Message-ID: <20121011215547.GH2739@dastard>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
-	<1349754670-32009-8-git-send-email-david@fromorbit.com>
-	<20121011214421.GG6346@infradead.org>
+	<1349754670-32009-9-git-send-email-david@fromorbit.com>
+	<20121011214555.GH6346@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121011214421.GG6346@infradead.org>
+In-Reply-To: <20121011214555.GH6346@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,26 +31,32 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 11, 2012 at 05:44:21PM -0400, Christoph Hellwig wrote:
-> On Tue, Oct 09, 2012 at 02:50:58PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Add an AGFL block verify callback function and pass it into the
-> > buffer read functions. Add a debug only check for valid block
-> > numbers in the AGFL.
+On Thu, Oct 11, 2012 at 05:45:56PM -0400, Christoph Hellwig wrote:
+> > +		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+> > +						XFS_ERRTAG_ITOBP_INOTOBP,
+> > +						XFS_RANDOM_ITOBP_INOTOBP))) {
+> > +			xfs_buf_ioerror(bp, EFSCORRUPTED);
+> > +			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+> > +					     mp, dip);
+> > +#ifdef DEBUG
+> > +			xfs_emerg(mp,
+> > +				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+> > +				(unsigned long long)bp->b_bn, i,
+> > +				be16_to_cpu(dip->di_magic));
+> > +			ASSERT(0);
+> > +#endif
 > 
-> The check isn't executed only for debug builds, but rather all
-> the time.  I'm not sure that this actually is a good idea.
+> Is there any point in having this additional output in addition to the
+> high error level corruption report above?
 
-RIght, I need to update the commit message to indicate that the
-debug only checks are being made unconditional. That is, we're going
-to detect the AGFL being invalid on production systems now.
+IMO, yes. It has the block number in it and it stops the operation
+immediately, so you can look at it with xfs_db and see the current
+state on disk without it being further modified. Otherwise all we
+know is that an inode failed validation without any specific
+information as to where it is.
 
-Realistically, I'd much prefer that we have more robust verification
-of on-disk structures when we pull them into memory regardless of
-CRC functionality. We don't verify the AGFL at all, and given that
-it generally stays resident in memory, a small amount of iextra
-overhead when they are read isn't going to be noticable.
+It's quite a way down my list of things to do before I get to the
+"put lots more information in failure messages" line item....
 
 Cheers,
 
