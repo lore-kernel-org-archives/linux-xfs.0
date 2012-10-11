@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9B58nrW033509 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 00:08:50 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	aSXHJ18R3265iwLY for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 22:10:20 -0700 (PDT)
-Date: Thu, 11 Oct 2012 16:09:55 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: task xfssyncd blocked while raid5 was in recovery
-Message-ID: <20121011050955.GB2739@dastard>
-References: <CAE-xvygu7j4zTBVRmm93-VbzhwiU2enEqwnFOPy5gbVHBn1CEQ@mail.gmail.com>
+	q9B63xAg045684 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 01:03:59 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id zn07EWpsu3ZuTSzO for
+	<xfs@oss.sgi.com>; Wed, 10 Oct 2012 23:05:31 -0700 (PDT)
+Date: Thu, 11 Oct 2012 08:05:25 +0200 (CEST)
+From: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>
+Subject: Re: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
+In-Reply-To: <20121010232241.GZ23644@dastard>
+Message-ID: <alpine.LFD.2.00.1210110759000.27001@localhost>
+References: <1349784945-28399-1-git-send-email-lczerner@redhat.com>
+	<20121009193908.GI23644@dastard>
+	<alpine.LFD.2.00.1210100924180.2326@(none)>
+	<20121010232241.GZ23644@dastard>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CAE-xvygu7j4zTBVRmm93-VbzhwiU2enEqwnFOPy5gbVHBn1CEQ@mail.gmail.com>
+Content-Type: MULTIPART/MIXED;
+	BOUNDARY="571107329-1014084701-1349935528=:27001"
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,77 +25,159 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?utf-8?B?6Z+p5Zu95Lit?= <vincent.han.megan@gmail.com>
-Cc: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: =?ISO-8859-15?Q?Luk=E1=A8_Czerner?= <lczerner@redhat.com>, xfs@oss.sgi.com
 
-T24gVGh1LCBPY3QgMTEsIDIwMTIgYXQgMTE6NTU6MDFBTSArMDgwMCwg6Z+p5Zu95LitIHdyb3Rl
-Ogo+ICBIZWxsbywgZXZlcnkgb25lOgo+IAo+IFJlY2VudGx5LCBhIHByb2JsZW0gaGFzIHRyb3Vi
-bGVkIG1lIGZvciBhIGxvbmcgdGltZS4KPiAKPiBJIGNyZWF0ZWQgYSA0KjJUIChzZGEsIHNkYiwg
-c2RjLCBzZGQpIHJhaWQ1IHdpdGggWEZTIGZpbGUgc3lzdGVtLCAxMjhLCj4gY2h1Y2sgc2l6ZSBh
-bmQgMjA0OCBzdHJpcF9jYWNoZV9zaXplLiBUaGUgbWRhZG0gMy4yLjIsIGtlcm5lbCAyLjYuMzgK
-PiBhbmQgbWtmcy54ZnMgMy4xLjEgd2VyZSB1c2VkLiBXaGVuIHRoZSByYWlkNSB3YXMgaW4gcmVj
-b3ZlcnkgYW5kIHRoZQo+IHNjaGVkdWxlIHJlYWNoZWQgNDclLCBJL08gZXJyb3JzIG9jY3VycmVk
-IGluIHNkYi4gVGhlIGZvbGxvd2luZyB3YXMKPiB0aGUgb3V0cHV0Ogo+IAo+IC4uLi4uLgo+IAo+
-IGF0YTI6IHRyYW5zbGF0ZWQgQVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVND
-USAweGIvMDAvMDAKPiAKPiBhdGEyOiBzdGF0dXM9MHg0MSB7IERyaXZlUmVhZHkgRXJyb3IgfQoK
-TG9va3MgbGlrZSB5b3UndmUgaGFkIGEgZHJpdmUgZmFpbCBkdXJpbmcgcmVidWlsZC4KCj4gVGhl
-biwgdGhlcmUgd2VyZSBsb3RzIG9mIGVycm9yIG1lc3NhZ2VzIGFib3V0IHRoZSBmaWxlIHN5c3Rl
-bS4gVGhlCj4gZm9sbG93aW5nIHdhcyB0aGUgb3V0cHV0Ogo+IAo+IAo+IAo+IC4uLi4uLgo+IAo+
-IElORk86IHRhc2sgeGZzc3luY2QvbWQxMjc6MTA1OCBibG9ja2VkIGZvciBtb3JlIHRoYW4gMTIw
-IHNlY29uZHMuCj4gCj4gImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVv
-dXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLgo+IHhmc3N5bmNkL21kMTI3ICBEIGZmZmZm
-ZmY3MDAwMjE2ZDAgICAgIDAgIDEwNTggICAgICAyIDB4MDAwMDAwMDAKPiAgIGZyYW1lIDA6IDB4
-ZmZmZmZmZjcwMDAyMDU3MCBfX3N3aXRjaF90bysweDFiOC8weDFjMCAoc3AgMHhmZmZmZmUwMDhk
-N2ZmOTAwKQo+ICAgZnJhbWUgMTogMHhmZmZmZmZmNzAwMDIxNmQwIHNjaGVkdWxlKzB4OTE4LzB4
-MTUzOCAoc3AgMHhmZmZmZmUwMDhkN2ZmOWQwKQo+ICAgZnJhbWUgMjogMHhmZmZmZmZmNzAwMDIy
-YTkwIHNjaGVkdWxlX3RpbWVvdXQrMHgyNjgvMHg1YjAgKHNwIDB4ZmZmZmZlMDA4ZDdmZmQxOCkK
-PiAgIGZyYW1lIDM6IDB4ZmZmZmZmZjcwMDAyNGVlMCBfX2Rvd24rMHhkOC8weDE1OCAoc3AgMHhm
-ZmZmZmUwMDhkN2ZmZGE4KQo+ICAgZnJhbWUgNDogMHhmZmZmZmZmNzAwODVkYTc4IGRvd24uY29s
-ZCsweDgvMHgyOCAoc3AgMHhmZmZmZmUwMDhkN2ZmZTE4KQo+ICAgZnJhbWUgNTogMHhmZmZmZmZm
-NzAwNzUwNzg4IHhmc19idWZfbG9jaysweGQwLzB4MTIwIChzcCAweGZmZmZmZTAwOGQ3ZmZlMzgp
-Cj4gICBmcmFtZSA2OiAweGZmZmZmZmY3MDA4MjFiNDAgeGZzX2dldHNiKzB4MzgvMHg3OCAoc3Ag
-MHhmZmZmZmUwMDhkN2ZmZTUwKQo+ICAgZnJhbWUgNzogMHhmZmZmZmZmNzAwNzdlMjMwIHhmc190
-cmFuc19nZXRzYisweGUwLzB4MTAwIChzcCAweGZmZmZmZTAwOGQ3ZmZlNjgpCj4gICBmcmFtZSA4
-OiAweGZmZmZmZmY3MDA2YmFiYzAgeGZzX21vZF9zYisweDg4LzB4MTk4IChzcCAweGZmZmZmZTAw
-OGQ3ZmZlODgpCj4gICBmcmFtZSA5OiAweGZmZmZmZmY3MDA3YTY0ODAgeGZzX2ZzX2xvZ19kdW1t
-eSsweDY4LzB4ZTAgKHNwIDB4ZmZmZmZlMDA4ZDdmZmViOCkKPiAgIGZyYW1lIDEwOiAweGZmZmZm
-ZmY3MDA3OWM2YzAgeGZzX3N5bmNfd29ya2VyKzB4ZTAvMHhlOCAoc3AgMHhmZmZmZmUwMDhkN2Zm
-ZWQ4KQo+ICAgZnJhbWUgMTE6IDB4ZmZmZmZmZjcwMDU3MGEwMCB4ZnNzeW5jZCsweDI0MC8weDMy
-OCAoc3AgMHhmZmZmZmUwMDhkN2ZmZWYwKQo+ICAgZnJhbWUgMTI6IDB4ZmZmZmZmZjcwMDBmMDUz
-MCBrdGhyZWFkKzB4ZTAvMHhlOCAoc3AgMHhmZmZmZmUwMDhkN2ZmZjgwKQo+ICAgZnJhbWUgMTM6
-IDB4ZmZmZmZmZjcwMDBiYWIzOCBzdGFydF9rZXJuZWxfdGhyZWFkKzB4MTgvMHgyMCAoc3AgMHhm
-ZmZmZmUwMDhkN2ZmZmU4KQoKV2hpY2ggaXMgYmFzaWNhbGx5IHNheWluZyB0aGF0IHRoZSBzdXBl
-cmJsb2NrIGJ1ZmZlciBpcyB1bmRlciBJTyAtCnRoYXQncyB0aGUgb25seSByZWFzb24gaXQgZXZl
-ciBnZXRzIGxvY2tlZC4KCj4gVGhlIG91dHB1dCBzYWlkIOKAnElORk86IHRhc2sgeGZzc3luY2Qv
-bWQxMjc6MTA1OCBibG9ja2VkIGZvciBtb3JlIHRoYW4KPiAxMjAgc2Vjb25kcz8gV2hhdCBkaWQg
-dGhhdCBtZWFuPyBJIHVzZWQg4oCcY2F0IC9wcm9jL21kc3RhdD90byBzZWUgdGhlCj4gc3RhdGUg
-b2YgdGhlIHJhaWQ1LiBUaGUgb3V0cHV0IHdhczoKPiAKPiBQZXJzb25hbGl0aWVzIDogW3JhaWQw
-XSBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XQo+IAo+IG1kMTI3IDogYWN0aXZlIHJhaWQ1IHNkZFsz
-XSBzZGNbMl0gc2RiWzFdKEYpIHNkYVswXQo+IAo+ICAgICAgIDU4NjA1NDAwMzIgYmxvY2tzIHN1
-cGVyIDEuMiBsZXZlbCA1LCAxMjhrIGNodW5rLCBhbGdvcml0aG0gMiBbNC8zXSBbVV9VVV0KPiAK
-PiAgICAgICAgIHJlc3luYz1QRU5ESU5HCj4gCj4gdW51c2VkIGRldmljZXM6IDxub25lPgo+IAo+
-IAo+ICAgICAgVGhlIHN0YXRlIG9mIHRoZSByYWlkNSB3YXMg4oCcUEVORElORz8gSSBoYWQgbmV2
-ZXIgc2VlbiBzdWNoIGEKPiBzdGF0ZSBvZiByYWlkNSB3aGVuIEkgdXNlZCBleHQ0LiBBZnRlciB0
-aGF0LCBJIHdyb3RlIGEgcHJvZ3JhbSB0byBhY2Nlc3MgdGhlCj4gcmFpZDUsIHRoZXJlIHdhcyBu
-byByZXNwb25zZSBhbnkgbW9yZS4KCldhaXRpbmcgb24gSU8gdG8gY29tcGxldGUsIGJ1dCB3aXRo
-IHRoZSBNRCBkZXZpY2UgZG93biwgaXQgd2lsbAplbnZlciBjb21wbGV0ZS4KCj4gVGhlbiBJIHVz
-ZWQg4oCccHMgYXV4fCB0YXNrCj4geGZzc3luY2Q/dG8gc2VlIHRoZSBzdGF0ZSBvZiDigJx4ZnNz
-eW5jZD8gVW5mb3J0dW5hdGVseSwgdGhlcmUgd2FzIG5vCj4gcmVzcG9uc2UgeWV0LiBUaGVuIEkg
-dHJpZWQg4oCccHMgYXV4PyBUaGVyZSB3ZXJlIG91dHB1dHMsIGJ1dCB0aGUKPiBwcm9ncmFtIGNv
-dWxkIGV4aXQgd2l0aCDigJxDdHJsK2Q/IG9yIOKAnEN0cmwrej8gQW5kIHdoZW4gSSB0ZXN0ZWQg
-dGhlCj4gd3JpdGUgcGVyZm9ybWFuY2UgZm9yIHJhaWQ1LCBJL08gZXJyb3JzIG9mdGVuIG9jY3Vy
-cmVkLiBJIGRpZCBub3Qga25vdwo+IHdoeSB0aGlzIEkvTyBlcnJvcnMgb2NjdXJyZWQgc28gZnJl
-cXVlbnRseS4KPiAKPiAgICAgIFdoYXQgd2FzIHRoZSBwcm9ibGVtPyBDYW4gYW55IG9uZSBoZWxw
-IG1lPwoKQnJva2VuIGhhcmR3YXJlIGNhdXNpbmcgTUQgdG8gZ28gaW50byBhIGJhZCBzdGF0ZSwg
-d2hpY2ggY2F1c2VzIFhGUwp0byBzdGFsbCBiZWNhdXNlIGl0IGNhbid0IG1ha2UgcHJvZ3Jlc3Mu
-CgpCb3R0b20gbGluZTogcmVwbGFjZSB0aGUgYnJva2VuIGRpc2ssIHRob3VnaCBnaXZlbiB0aGF0
-IE1EIHdhcwphbHJlYWR5IHJlYnVpbGRpbmcgYSBSQUlENSB3aGVuIHRoZSBkaXNrIGRpZWQsIHlv
-dSBwcm9iYWJseSBoYXZlCmxvc3QgZXZlcnl0aGluZyBvbiB0aGUgZmlsZXN5c3RlbS4uLi4KCkNo
-ZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
-dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
-Cg==
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--571107329-1014084701-1349935528=:27001
+Content-Type: TEXT/PLAIN; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+
+On Thu, 11 Oct 2012, Dave Chinner wrote:
+
+> Date: Thu, 11 Oct 2012 10:22:41 +1100
+> From: Dave Chinner <david@fromorbit.com>
+> To: Lukáš Czerner <lczerner@redhat.com>
+> Cc: xfs@oss.sgi.com
+> Subject: Re: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
+> 
+> On Wed, Oct 10, 2012 at 09:50:38AM +0200, Lukáš Czerner wrote:
+> > On Wed, 10 Oct 2012, Dave Chinner wrote:
+> > 
+> > > Date: Wed, 10 Oct 2012 06:39:08 +1100
+> > > From: Dave Chinner <david@fromorbit.com>
+> > > To: Lukas Czerner <lczerner@redhat.com>
+> > > Cc: xfs@oss.sgi.com
+> > > Subject: Re: [PATCH] xfs: avoid underflow in xfs_ioc_trim()
+> > > 
+> > > On Tue, Oct 09, 2012 at 02:15:45PM +0200, Lukas Czerner wrote:
+> > > > Currently if len argument in xfs_ioc_trim() is smaller than one BB
+> > > > (basic block) the 'end' variable underflow. Avoid that by bailing out if
+> > > > len is smaller than BB.
+> > > > 
+> > > > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_discard.c |    7 ++++++-
+> > > >  1 files changed, 6 insertions(+), 1 deletions(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
+> > > > index 69cf4fc..54dc58a 100644
+> > > > --- a/fs/xfs/xfs_discard.c
+> > > > +++ b/fs/xfs/xfs_discard.c
+> > > > @@ -183,8 +183,12 @@ xfs_ioc_trim(
+> > > >  	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)))
+> > > >  		return -XFS_ERROR(EINVAL);
+> > > >  
+> > > > +	end = BTOBBT(range.len);
+> > > > +	if (0 == end)
+> > > > +		goto out;
+> > > 
+> > > Uggh. "if (end == 0)", please.
+> > 
+> > Not a Star Wars fan then ? ;). Ok, I'll change that.
+> 
+> I might be, but I don't get the reference - something to do with the
+> second moon of Endor, or just letting the wookie win so you don't
+> come to an armless end? :)
+
+I know it under the name "yoda notation", or "yoda condition",
+probably based on the Yoda's strange sentence composition which is
+usually kind of backwards :).
+
+> 
+> As it is, I don't like reverse logic notation because it makes code
+> strange and unreadable. It doesn't provide any real benefit because
+> the compiler will warn about typos that result in assignments in
+> such statements (i.e.  if (end = 0)). Hence writing code so that the
+> compilation will fail if you make a typo isn't necessary - Clear,
+> consistent and easily readable code is much more important....
+
+Good point.
+
+> 
+> > > > +
+> > > >  	start = BTOBB(range.start);
+> > > > -	end = start + BTOBBT(range.len) - 1;
+> > > > +	end += start - 1;
+> > > 
+> > > Better would be to check if end <= start. That way it also catches
+> > > start+len overflows.
+> > 
+> > That's not possible. Even if range.start and range.len would be
+> > 2^64-1 (which is not possible for range.start) we always do the
+> > BTOBB conversion and ((2^64-1) / 512) * 2 always fits the _s64
+> > type.
+> 
+> Regardless, checking that the end of the range is after the start is a
+> much more robust check than individual underflow/overflow tests. We
+> do that all over the place in XFS when converting byte ranges to
+> block based start/end pairs.
+
+Fair enough.
+
+> 
+> > > >  	minlen = BTOBB(max_t(u64, granularity, range.minlen));
+> > > >  
+> > > >  	if (end > XFS_FSB_TO_BB(mp, mp->m_sb.sb_dblocks) - 1)
+> > > > @@ -203,6 +207,7 @@ xfs_ioc_trim(
+> > > >  	if (last_error)
+> > > >  		return last_error;
+> > > >  
+> > > > +out:
+> > > >  	range.len = XFS_FSB_TO_B(mp, blocks_trimmed);
+> > > >  	if (copy_to_user(urange, &range, sizeof(range)))
+> > > >  		return -XFS_ERROR(EFAULT);
+> > > 
+> > > I think it should return EINVAL, not silently do nothing. If the
+> > > user application uses a loop that increments start/len based on the
+> > > returned amount of blocks trimmed, returning zero could send it into
+> > > an endless loop.
+> > 
+> > That's not what the application would do. At least it would not set
+> > len to what's returned as number of blocs discarded, it does not
+> > make sense.
+> 
+> Oh, right, my mistake.
+> 
+> > However if user specify length smaller than what we're able to
+> > discard (in xfs it is BBSIZE if I am not mistaken?), then it
+> > probably make sense to return -EINVAL. It is similar situation of
+> > minlen, where we return -EINVAL if it is bigger than AG. However
+> > this will make it to fail at different threshold on different file
+> > system / block sizes so I am on the fence about it. What do you
+> > think, is it worth it ?
+> 
+> Actually, the minimum length that can be discarded is the filesystem
+> block size, and applications can get that easily enough from
+> stat(2).  IOWs, we probably should be rejecting minlen < 1 FSB,
+> range < 1 FSB with EINVAL....
+
+Agreed, we should return EINVAL when range < 1 FSB. However 'minlen'
+is a different case, when minlen < 1 FSB. Minlen says that we should
+not discard ranges smaller than certain value which is perfectly
+feasible with minlen < 1 FSB.
+
+I'll resend the patch, thanks!
+-Lukas
+
+> 
+> Cheers,
+> 
+> Dave.
+> 
+--571107329-1014084701-1349935528=:27001
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
+
+--571107329-1014084701-1349935528=:27001--
