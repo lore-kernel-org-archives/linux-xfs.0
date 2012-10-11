@@ -1,19 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BLVsHs242485 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:31:54 -0500
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	iuNUiba0i1Nb4ooH for <xfs@oss.sgi.com>;
-	Thu, 11 Oct 2012 14:33:25 -0700 (PDT)
-Date: Fri, 12 Oct 2012 08:33:23 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: possible memory allocation deadlock in xfs_buf_allocate_memory
-Message-ID: <20121011213323.GD2739@dastard>
-References: <alpine.DEB.2.01.1210111048170.10880@trent.utfs.org>
+	q9BLWrvQ242633 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:32:53 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	kQGhxQx1nuyg4TD3 (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 11 Oct 2012 14:34:24 -0700 (PDT)
+Date: Thu, 11 Oct 2012 17:34:23 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/19] xfs: growfs: don't read garbage for new secondary
+	superblocks
+Message-ID: <20121011213423.GA6346@infradead.org>
+References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
+	<1349754670-32009-2-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.01.1210111048170.10880@trent.utfs.org>
+In-Reply-To: <1349754670-32009-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,104 +30,24 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christian Kujau <lists@nerdbynature.de>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 11, 2012 at 11:13:14AM -0700, Christian Kujau wrote:
-> Hi,
+On Tue, Oct 09, 2012 at 02:50:52PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> since Linux 3.5 I'm seeing these "inconsistent lock state" lockdep 
-> warnings [0]. They show up in 3.6 as well [1]. I was being told[2] that I 
-> may have run out of inode attributes. This may well be the case, but I 
-> cannot reformat the disk right now and will have to live with that warning 
-> a while longer.
+> When updating new secondary superblocks in a growfs operation, the
+> sueprblock buffer is read from the newly grown region of the
+> underlying device. This is not guaranteed to be zero, so violates
+> the underlying assumption that the unused parts of superblocks are
+> zero filled. Get a new buffer for these secondary superblocks to
+> ensure that the unused regions are zero filled correctly.
 > 
-> I got the warning again today, but 8h later the system hung and eventually 
-> shutdown. The last message from the box was received via netconsole:
-> 
->  XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-> 
-> This has been reported[3] for 3.2.1, but when the message was printed I 
-> was not around and could not watch /proc/slabinfo.
-> 
-> The last -MARK- message (some kind of heartbeat message from syslog, 
-> printing "MARK" every 5min) has been received 07:55 local time, the
-> netconsole message above was received 08:09, so two -MARK- messages were 
-> lost. sar(1) stopped recording at 08:05.
-> 
-> These two incidents (the lockdep warning and the final lockup) may be 
-> unrelated (and timestamp-wise, they seem to be), but I thought I'd 
-> better report it.
-> 
-> Full dmesg and .config: http://nerdbynature.de/bits/3.6.0/xfs/o
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-The inconsistent lock state is this path:
+Looks good,
 
-Oct 11 00:18:27 alice kernel: [261506.767190] [e5e2fc70] [c00b5d44] vm_map_ram+0x228/0x5a0
-Oct 11 00:18:27 alice kernel: [261506.768354] [e5e2fcf0] [c01a6f9c] _xfs_buf_map_pages+0x44/0x104
-Oct 11 00:18:27 alice kernel: [261506.769522] [e5e2fd10] [c01a8090] xfs_buf_get_map+0x74/0x11c
-Oct 11 00:18:27 alice kernel: [261506.770698] [e5e2fd30] [c01ffad8] xfs_trans_get_buf_map+0xc0/0xdc
-Oct 11 00:18:27 alice kernel: [261506.772106] [e5e2fd50] [c01e9504] xfs_ifree_cluster+0x3f4/0x5b0
-Oct 11 00:18:27 alice kernel: [261506.773309] [e5e2fde0] [c01eabc0] xfs_ifree+0xec/0xf0
-Oct 11 00:18:27 alice kernel: [261506.774493] [e5e2fe20] [c01bd5c0] xfs_inactive+0x274/0x448
-Oct 11 00:18:27 alice kernel: [261506.775672] [e5e2fe60] [c01b8450] xfs_fs_evict_inode+0x60/0x74
-Oct 11 00:18:27 alice kernel: [261506.776863] [e5e2fe70] [c00dfa88] evict+0xc0/0x1b4
-Oct 11 00:18:27 alice kernel: [261506.778046] [e5e2fe90] [c00db968] d_delete+0x1b0/0x1ec
-Oct 11 00:18:27 alice kernel: [261506.779235] [e5e2feb0] [c00d2e24] vfs_rmdir+0x124/0x128
-Oct 11 00:18:27 alice kernel: [261506.780425] [e5e2fed0] [c00d2f10] do_rmdir+0xe8/0x110
-Oct 11 00:18:27 alice kernel: [261506.781619] [e5e2ff40] [c0010aac] ret_from_syscall+0x0/0x38
-
-
-Which indicates that it is this:
-
-> [1] http://oss.sgi.com/archives/xfs/2012-09/msg00305.html
-
-which is a real bug in the VM code that the VM developers refuse to
-fix even though it is simple to do and patches have been posted
-several times to fix it.
-
-/me points to his recent rant rather than repeating it:
-
-https://lkml.org/lkml/2012/6/13/628
-
-However, that is unrelated to this message:
-
-XFS: possible memory allocation deadlock in xfs_buf_allocate_memory (mode:0x250)
-
-which triggers when memory cannot be allocated. mode 0x250 is
-
-	___GFP_NOWARN | ___GFP_IO | ___GFP_WAIT
-
-or more commonly known as:
-
-	GFP_NOFS
-
-with warnings turned off. Basically the warning is saying "we're
-trying really hard to allocate memory, but we're not making
-progress". If it was only emitted once, however, it means that
-progress was made, as the message is emitted every 100 times through
-the loop and so only one message means it looped less than 200
-times...
-
-What it does imply, however, is that vm_map_ram() is being called
-from GFP_NOFS context quite regularly and might be blocking there,
-and so the lockdep warning is more than just a nuisance - your
-system may indeed have hung there, but I don't have enough
-information to say for sure.
-
-When it hangs next time, can you get a blocked task dump from sysrq
-(i.e. sysrq-w, or "echo w > /proc/sysrq-trigger")? That's the only
-way we're going to know where the system hung. You might also want
-to ensure the hung task functionality is built into you kernel, so
-it automatically dumps stack traces for tasks hung longer than
-120s...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
 _______________________________________________
 xfs mailing list
