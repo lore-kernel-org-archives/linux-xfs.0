@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9B51mVc032005 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 00:01:48 -0500
+	q9B58nrW033509 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 00:08:50 -0500
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	cv57JaMgfu8sO6Fk for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 22:03:17 -0700 (PDT)
-Date: Thu, 11 Oct 2012 16:03:15 +1100
+	aSXHJ18R3265iwLY for <xfs@oss.sgi.com>;
+	Wed, 10 Oct 2012 22:10:20 -0700 (PDT)
+Date: Thu, 11 Oct 2012 16:09:55 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/14 V5]: xfs: remove the xfssyncd mess
-Message-ID: <20121011050314.GA2739@dastard>
-References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
-	<20121008223921.GS13214@sgi.com> <20121011023155.GX13214@sgi.com>
+Subject: Re: task xfssyncd blocked while raid5 was in recovery
+Message-ID: <20121011050955.GB2739@dastard>
+References: <CAE-xvygu7j4zTBVRmm93-VbzhwiU2enEqwnFOPy5gbVHBn1CEQ@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121011023155.GX13214@sgi.com>
+In-Reply-To: <CAE-xvygu7j4zTBVRmm93-VbzhwiU2enEqwnFOPy5gbVHBn1CEQ@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,121 +22,77 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: =?utf-8?B?6Z+p5Zu95Lit?= <vincent.han.megan@gmail.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Oct 10, 2012 at 09:31:55PM -0500, Ben Myers wrote:
-> Hey Dave,
-> 
-> On Mon, Oct 08, 2012 at 05:39:21PM -0500, Ben Myers wrote:
-> > On Mon, Oct 08, 2012 at 09:55:58PM +1100, Dave Chinner wrote:
-> > > Hopefully the final version.
-> > 
-> > I am testing this new rev now... My v4 run over the weekend crashed but
-> > unfortunately I wasn't able to get a stack trace.  We'll see what shakes out.
-> 
-> I'm still not sure what happened with the v4 run I mentioned.  Subsequent
-> testing has shown this series to be solid with the new changes.  It is ready to
-> go.
-> 
-> However, pulling this in right now will result in a merge commit from the
-> upstream tree to ours later in the rc1 merge.  My understanding is that if
-> Linus were to subsequently pull from our tree, the merge commit would cause
-> some ugliness in upstream commit history.  See:
-> 
-> http://oss.sgi.com/archives/xfs/2009-04/msg00014.html
-
-
-I'm not sure that's relevant. The problem ther was this sort of
-behaviour:
-
-	- merge mainline into XFS tree.
-	- commit XFS stuff
-	- merge mainline into XFS tree
-	- commit XFS stuff
-	.....
-	- merge mainline into XFS tree
-	- commit XFS stuff
-	- pull request
-	- merge mainline into XFS tree
-	- commit XFS stuff
-	<loop>
-
-And so the changes in the XFS tree where not easy to discern from
-the changes pull in from mainline. Indeed, look at the pull request
-to see exactly waht Linus was complaining about:
-
-http://oss.sgi.com/archives/xfs/2009-04/msg00009.html
-
-Felix Blyakher (25):
-     Merge branch 'master' of git+ssh://oss.sgi.com/oss/git/xfs/xfs
-     [XFS] Warn on transaction in flight on read-only remount
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     xfs: Update maintainers
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     Merge branch 'master' of git://git.kernel.org/pub/scm/fs/xfs/xfs
-     Merge branch 'master' of git://git.kernel.org/pub/scm/fs/xfs/xfs
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     Merge branch 'master' of git://git.kernel.org/pub/scm/fs/xfs/xfs
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     Revert "[XFS] use scalable vmap API"
-     Revert "[XFS] remove old vmap cache"
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     Fix xfs debug build breakage by pushing xfs_error.h after
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     Merge branch 'master' of git://git.kernel.org/pub/scm/fs/xfs/xfs
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     xfs: increase the maximum number of supported ACL entries
-     Merge branch 'master' of git://git.kernel.org/.../torvalds/ linux-2.6 
-     Merge branch 'master' of git://git.kernel.org/pub/scm/fs/xfs/xfs
-     Revert "xfs: increase the maximum number of supported ACL entries"
-
-This is the mess that Linus was complaining about - not about a
-single merge per release that is used to keep the tree tracking
-mainlinei having a conflict in it.
-
-Having a dev tree history something like:
-
-	- commit XFS stuff
-	- commit XFS stuff
-	- merge -rc1 from mainline
-	- commit XFS stuff
-	- commit XFS stuff
-	- commit XFS stuff
-	......
-	- commit XFS stuff
-	- pull request
-	- commit XFS stuff
-	- commit XFS stuff
-	<loop per release>
-
-Isn't really the problem that Linus was talking about. Indeed, one
-mainline merge per release is pretty much as expected, especially if
-you have a tree that you do not rebase that is consistently
-committed to....
-
-> I haven't found a way around this, so that's why we're waiting until after the
-> -rc1 fast-forward to pull this in.
-
-Merges by themselves aren't bad - it's excessive, unnecessary
-use of them that causes problems. :/
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBPY3QgMTEsIDIwMTIgYXQgMTE6NTU6MDFBTSArMDgwMCwg6Z+p5Zu95LitIHdyb3Rl
+Ogo+ICBIZWxsbywgZXZlcnkgb25lOgo+IAo+IFJlY2VudGx5LCBhIHByb2JsZW0gaGFzIHRyb3Vi
+bGVkIG1lIGZvciBhIGxvbmcgdGltZS4KPiAKPiBJIGNyZWF0ZWQgYSA0KjJUIChzZGEsIHNkYiwg
+c2RjLCBzZGQpIHJhaWQ1IHdpdGggWEZTIGZpbGUgc3lzdGVtLCAxMjhLCj4gY2h1Y2sgc2l6ZSBh
+bmQgMjA0OCBzdHJpcF9jYWNoZV9zaXplLiBUaGUgbWRhZG0gMy4yLjIsIGtlcm5lbCAyLjYuMzgK
+PiBhbmQgbWtmcy54ZnMgMy4xLjEgd2VyZSB1c2VkLiBXaGVuIHRoZSByYWlkNSB3YXMgaW4gcmVj
+b3ZlcnkgYW5kIHRoZQo+IHNjaGVkdWxlIHJlYWNoZWQgNDclLCBJL08gZXJyb3JzIG9jY3VycmVk
+IGluIHNkYi4gVGhlIGZvbGxvd2luZyB3YXMKPiB0aGUgb3V0cHV0Ogo+IAo+IC4uLi4uLgo+IAo+
+IGF0YTI6IHRyYW5zbGF0ZWQgQVRBIHN0YXQvZXJyIDB4NDEvMDQgdG8gU0NTSSBTSy9BU0MvQVND
+USAweGIvMDAvMDAKPiAKPiBhdGEyOiBzdGF0dXM9MHg0MSB7IERyaXZlUmVhZHkgRXJyb3IgfQoK
+TG9va3MgbGlrZSB5b3UndmUgaGFkIGEgZHJpdmUgZmFpbCBkdXJpbmcgcmVidWlsZC4KCj4gVGhl
+biwgdGhlcmUgd2VyZSBsb3RzIG9mIGVycm9yIG1lc3NhZ2VzIGFib3V0IHRoZSBmaWxlIHN5c3Rl
+bS4gVGhlCj4gZm9sbG93aW5nIHdhcyB0aGUgb3V0cHV0Ogo+IAo+IAo+IAo+IC4uLi4uLgo+IAo+
+IElORk86IHRhc2sgeGZzc3luY2QvbWQxMjc6MTA1OCBibG9ja2VkIGZvciBtb3JlIHRoYW4gMTIw
+IHNlY29uZHMuCj4gCj4gImVjaG8gMCA+IC9wcm9jL3N5cy9rZXJuZWwvaHVuZ190YXNrX3RpbWVv
+dXRfc2VjcyIgZGlzYWJsZXMgdGhpcyBtZXNzYWdlLgo+IHhmc3N5bmNkL21kMTI3ICBEIGZmZmZm
+ZmY3MDAwMjE2ZDAgICAgIDAgIDEwNTggICAgICAyIDB4MDAwMDAwMDAKPiAgIGZyYW1lIDA6IDB4
+ZmZmZmZmZjcwMDAyMDU3MCBfX3N3aXRjaF90bysweDFiOC8weDFjMCAoc3AgMHhmZmZmZmUwMDhk
+N2ZmOTAwKQo+ICAgZnJhbWUgMTogMHhmZmZmZmZmNzAwMDIxNmQwIHNjaGVkdWxlKzB4OTE4LzB4
+MTUzOCAoc3AgMHhmZmZmZmUwMDhkN2ZmOWQwKQo+ICAgZnJhbWUgMjogMHhmZmZmZmZmNzAwMDIy
+YTkwIHNjaGVkdWxlX3RpbWVvdXQrMHgyNjgvMHg1YjAgKHNwIDB4ZmZmZmZlMDA4ZDdmZmQxOCkK
+PiAgIGZyYW1lIDM6IDB4ZmZmZmZmZjcwMDAyNGVlMCBfX2Rvd24rMHhkOC8weDE1OCAoc3AgMHhm
+ZmZmZmUwMDhkN2ZmZGE4KQo+ICAgZnJhbWUgNDogMHhmZmZmZmZmNzAwODVkYTc4IGRvd24uY29s
+ZCsweDgvMHgyOCAoc3AgMHhmZmZmZmUwMDhkN2ZmZTE4KQo+ICAgZnJhbWUgNTogMHhmZmZmZmZm
+NzAwNzUwNzg4IHhmc19idWZfbG9jaysweGQwLzB4MTIwIChzcCAweGZmZmZmZTAwOGQ3ZmZlMzgp
+Cj4gICBmcmFtZSA2OiAweGZmZmZmZmY3MDA4MjFiNDAgeGZzX2dldHNiKzB4MzgvMHg3OCAoc3Ag
+MHhmZmZmZmUwMDhkN2ZmZTUwKQo+ICAgZnJhbWUgNzogMHhmZmZmZmZmNzAwNzdlMjMwIHhmc190
+cmFuc19nZXRzYisweGUwLzB4MTAwIChzcCAweGZmZmZmZTAwOGQ3ZmZlNjgpCj4gICBmcmFtZSA4
+OiAweGZmZmZmZmY3MDA2YmFiYzAgeGZzX21vZF9zYisweDg4LzB4MTk4IChzcCAweGZmZmZmZTAw
+OGQ3ZmZlODgpCj4gICBmcmFtZSA5OiAweGZmZmZmZmY3MDA3YTY0ODAgeGZzX2ZzX2xvZ19kdW1t
+eSsweDY4LzB4ZTAgKHNwIDB4ZmZmZmZlMDA4ZDdmZmViOCkKPiAgIGZyYW1lIDEwOiAweGZmZmZm
+ZmY3MDA3OWM2YzAgeGZzX3N5bmNfd29ya2VyKzB4ZTAvMHhlOCAoc3AgMHhmZmZmZmUwMDhkN2Zm
+ZWQ4KQo+ICAgZnJhbWUgMTE6IDB4ZmZmZmZmZjcwMDU3MGEwMCB4ZnNzeW5jZCsweDI0MC8weDMy
+OCAoc3AgMHhmZmZmZmUwMDhkN2ZmZWYwKQo+ICAgZnJhbWUgMTI6IDB4ZmZmZmZmZjcwMDBmMDUz
+MCBrdGhyZWFkKzB4ZTAvMHhlOCAoc3AgMHhmZmZmZmUwMDhkN2ZmZjgwKQo+ICAgZnJhbWUgMTM6
+IDB4ZmZmZmZmZjcwMDBiYWIzOCBzdGFydF9rZXJuZWxfdGhyZWFkKzB4MTgvMHgyMCAoc3AgMHhm
+ZmZmZmUwMDhkN2ZmZmU4KQoKV2hpY2ggaXMgYmFzaWNhbGx5IHNheWluZyB0aGF0IHRoZSBzdXBl
+cmJsb2NrIGJ1ZmZlciBpcyB1bmRlciBJTyAtCnRoYXQncyB0aGUgb25seSByZWFzb24gaXQgZXZl
+ciBnZXRzIGxvY2tlZC4KCj4gVGhlIG91dHB1dCBzYWlkIOKAnElORk86IHRhc2sgeGZzc3luY2Qv
+bWQxMjc6MTA1OCBibG9ja2VkIGZvciBtb3JlIHRoYW4KPiAxMjAgc2Vjb25kcz8gV2hhdCBkaWQg
+dGhhdCBtZWFuPyBJIHVzZWQg4oCcY2F0IC9wcm9jL21kc3RhdD90byBzZWUgdGhlCj4gc3RhdGUg
+b2YgdGhlIHJhaWQ1LiBUaGUgb3V0cHV0IHdhczoKPiAKPiBQZXJzb25hbGl0aWVzIDogW3JhaWQw
+XSBbcmFpZDZdIFtyYWlkNV0gW3JhaWQ0XQo+IAo+IG1kMTI3IDogYWN0aXZlIHJhaWQ1IHNkZFsz
+XSBzZGNbMl0gc2RiWzFdKEYpIHNkYVswXQo+IAo+ICAgICAgIDU4NjA1NDAwMzIgYmxvY2tzIHN1
+cGVyIDEuMiBsZXZlbCA1LCAxMjhrIGNodW5rLCBhbGdvcml0aG0gMiBbNC8zXSBbVV9VVV0KPiAK
+PiAgICAgICAgIHJlc3luYz1QRU5ESU5HCj4gCj4gdW51c2VkIGRldmljZXM6IDxub25lPgo+IAo+
+IAo+ICAgICAgVGhlIHN0YXRlIG9mIHRoZSByYWlkNSB3YXMg4oCcUEVORElORz8gSSBoYWQgbmV2
+ZXIgc2VlbiBzdWNoIGEKPiBzdGF0ZSBvZiByYWlkNSB3aGVuIEkgdXNlZCBleHQ0LiBBZnRlciB0
+aGF0LCBJIHdyb3RlIGEgcHJvZ3JhbSB0byBhY2Nlc3MgdGhlCj4gcmFpZDUsIHRoZXJlIHdhcyBu
+byByZXNwb25zZSBhbnkgbW9yZS4KCldhaXRpbmcgb24gSU8gdG8gY29tcGxldGUsIGJ1dCB3aXRo
+IHRoZSBNRCBkZXZpY2UgZG93biwgaXQgd2lsbAplbnZlciBjb21wbGV0ZS4KCj4gVGhlbiBJIHVz
+ZWQg4oCccHMgYXV4fCB0YXNrCj4geGZzc3luY2Q/dG8gc2VlIHRoZSBzdGF0ZSBvZiDigJx4ZnNz
+eW5jZD8gVW5mb3J0dW5hdGVseSwgdGhlcmUgd2FzIG5vCj4gcmVzcG9uc2UgeWV0LiBUaGVuIEkg
+dHJpZWQg4oCccHMgYXV4PyBUaGVyZSB3ZXJlIG91dHB1dHMsIGJ1dCB0aGUKPiBwcm9ncmFtIGNv
+dWxkIGV4aXQgd2l0aCDigJxDdHJsK2Q/IG9yIOKAnEN0cmwrej8gQW5kIHdoZW4gSSB0ZXN0ZWQg
+dGhlCj4gd3JpdGUgcGVyZm9ybWFuY2UgZm9yIHJhaWQ1LCBJL08gZXJyb3JzIG9mdGVuIG9jY3Vy
+cmVkLiBJIGRpZCBub3Qga25vdwo+IHdoeSB0aGlzIEkvTyBlcnJvcnMgb2NjdXJyZWQgc28gZnJl
+cXVlbnRseS4KPiAKPiAgICAgIFdoYXQgd2FzIHRoZSBwcm9ibGVtPyBDYW4gYW55IG9uZSBoZWxw
+IG1lPwoKQnJva2VuIGhhcmR3YXJlIGNhdXNpbmcgTUQgdG8gZ28gaW50byBhIGJhZCBzdGF0ZSwg
+d2hpY2ggY2F1c2VzIFhGUwp0byBzdGFsbCBiZWNhdXNlIGl0IGNhbid0IG1ha2UgcHJvZ3Jlc3Mu
+CgpCb3R0b20gbGluZTogcmVwbGFjZSB0aGUgYnJva2VuIGRpc2ssIHRob3VnaCBnaXZlbiB0aGF0
+IE1EIHdhcwphbHJlYWR5IHJlYnVpbGRpbmcgYSBSQUlENSB3aGVuIHRoZSBkaXNrIGRpZWQsIHlv
+dSBwcm9iYWJseSBoYXZlCmxvc3QgZXZlcnl0aGluZyBvbiB0aGUgZmlsZXN5c3RlbS4uLi4KCkNo
+ZWVycywKCkRhdmUuCi0tIApEYXZlIENoaW5uZXIKZGF2aWRAZnJvbW9yYml0LmNvbQoKX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlz
+dAp4ZnNAb3NzLnNnaS5jb20KaHR0cDovL29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZz
+Cg==
