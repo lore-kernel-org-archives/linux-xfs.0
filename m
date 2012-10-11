@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9B00bA9204691 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 19:00:37 -0500
-Received: from mail.sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com
-	with ESMTP id 7f3u7gp8laeRgAhs for <xfs@oss.sgi.com>;
-	Wed, 10 Oct 2012 17:02:09 -0700 (PDT)
-Message-ID: <50760C80.3030105@sandeen.net>
-Date: Wed, 10 Oct 2012 19:02:08 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q9B1nYcx226441 for <xfs@oss.sgi.com>; Wed, 10 Oct 2012 20:49:34 -0500
+Date: Wed, 10 Oct 2012 20:51:03 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 00/14 V5]: xfs: remove the xfssyncd mess
+Message-ID: <20121011015103.GW13214@sgi.com>
+References: <1349693772-8064-1-git-send-email-david@fromorbit.com>
+	<20121010213346.GA30760@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: report projid32bit feature in geometry call
-References: <507476F1.3080503@redhat.com>
-In-Reply-To: <507476F1.3080503@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20121010213346.GA30760@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,63 +23,25 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 10/9/12 2:11 PM, Eric Sandeen wrote:
-> When xfs gained the projid32bit feature, it was never added to
-> the FSGEOMETRY ioctl feature flags, so it's not queryable without
-> this patch.
+Hey Christoph,
+
+On Wed, Oct 10, 2012 at 05:33:46PM -0400, Christoph Hellwig wrote:
+> This version looks good to me, and I agree that the last_sync_lsn
+> fix probably is a 3.7 candidate.
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-SGI, can you please add a :
-
-Cc: stable@vger.kernel.org
-
-when this is committed?  New stuff will be depending on this and it'd be good to get it munged into stable kernels as well.
-
-
-> ---
+> Feel free to add a:
 > 
-> note1: is there a reason we had gaps in the flags?
-> note2: I don't *think* this requires a new version for the ioctl
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index c13fed8..0948c04 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -233,7 +233,8 @@ typedef struct xfs_fsop_resblks {
->  #define XFS_FSOP_GEOM_FLAGS_LOGV2	0x0100	/* log format version 2	*/
->  #define XFS_FSOP_GEOM_FLAGS_SECTOR	0x0200	/* sector sizes >1BB	*/
->  #define XFS_FSOP_GEOM_FLAGS_ATTR2	0x0400	/* inline attributes rework */
-> -#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names */
-> +#define XFS_FSOP_GEOM_FLAGS_PROJID32	0x0800  /* 32-bit project IDs	*/
-> +#define XFS_FSOP_GEOM_FLAGS_DIRV2CI	0x1000	/* ASCII only CI names	*/
->  #define XFS_FSOP_GEOM_FLAGS_LAZYSB	0x4000	/* lazy superblock counters */
->  
->  
-> diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-> index c25b094..89ad847 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -97,7 +97,9 @@ xfs_fs_geometry(
->  			(xfs_sb_version_haslazysbcount(&mp->m_sb) ?
->  				XFS_FSOP_GEOM_FLAGS_LAZYSB : 0) |
->  			(xfs_sb_version_hasattr2(&mp->m_sb) ?
-> -				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0);
-> +				XFS_FSOP_GEOM_FLAGS_ATTR2 : 0) |
-> +			(xfs_sb_version_hasprojid32bit(&mp->m_sb) ?
-> +				XFS_FSOP_GEOM_FLAGS_PROJID32 : 0);
->  		geo->logsectsize = xfs_sb_version_hassector(&mp->m_sb) ?
->  				mp->m_sb.sb_logsectsize : BBSIZE;
->  		geo->rtsectsize = mp->m_sb.sb_blocksize;
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+> to the patches that don't have it yet.
+
+Will do.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
