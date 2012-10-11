@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BLaUgF243187 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:36:31 -0500
+	q9BLe82r243539 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 16:40:09 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	VeE9jJinFHWJtxWr (version=TLSv1 cipher=AES256-SHA bits=256
+	df5bIPyFW7Y7Q0Lv (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 11 Oct 2012 14:38:02 -0700 (PDT)
-Date: Thu, 11 Oct 2012 17:38:02 -0400
+	Thu, 11 Oct 2012 14:41:40 -0700 (PDT)
+Date: Thu, 11 Oct 2012 17:41:39 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 03/19] xfs: uncached buffer reads need to return an error
-Message-ID: <20121011213802.GC6346@infradead.org>
+Subject: Re: [PATCH 04/19] xfs: verify superblocks as they are read from disk
+Message-ID: <20121011214139.GD6346@infradead.org>
 References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
-	<1349754670-32009-4-git-send-email-david@fromorbit.com>
+	<1349754670-32009-5-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1349754670-32009-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1349754670-32009-5-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,44 +32,37 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-> index 917e121..dee14eb 100644
-> --- a/fs/xfs/xfs_fsops.c
-> +++ b/fs/xfs/xfs_fsops.c
-> @@ -149,6 +149,11 @@ xfs_growfs_data_private(
->  				XFS_FSS_TO_BB(mp, 1), 0, NULL);
->  	if (!bp)
->  		return EIO;
-> +	if (bp->b_error) {
-> +		int	error = bp->b_error;
-> +		xfs_buf_relse(bp);
-> +		return error;
-> +	}
->  	xfs_buf_relse(bp);
+On Tue, Oct 09, 2012 at 02:50:55PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Add a superblock verify callback function and pass it into the
+> buffer read functions. Remove the now redundant verification code
+> that is currently in use.
+> 
+> Adding verification shows that secondary superblocks never have
+> their "sb_inprogress" flag cleared by mkfs.xfs, so when validating
+> the secondary superblocks during a grow operation we have to avoid
+> checking this field. Even if we fix mkfs, we will still have to
+> ignore this field for verification purposes unless a version of mkfs
+> that does not have this bug was used.
 
-> +	if (bp->b_error) {
-> +		error = bp->b_error;
-> +		if (loud)
-> +			xfs_warn(mp, "SB validate failed");
-> +		goto release_buf;
-> +	}
+> @@ -304,9 +304,8 @@ STATIC int
+>  xfs_mount_validate_sb(
+>  	xfs_mount_t	*mp,
+>  	xfs_sb_t	*sbp,
+> -	int		flags)
+> +	bool		check_inprogress)
+>  {
+> -	int		loud = !(flags & XFS_MFSI_QUIET);
 
-> +	if (bp->b_error) {
-> +		error = bp->b_error;
-> +		xfs_buf_relse(bp);
-> +		return error;
-> +	}
+I don't think removing this is a good idea.  The quiet flag is used
+to silence all filesystem warnings when the kernel is blindly trying
+all filesystem types when searching for the correct root fs type.
 
-> +	if (!bp || bp->b_error) {
->  		xfs_warn(mp, "realtime device size check failed");
-> +		if (bp)
-> +			xfs_buf_relse(bp);
->  		return EIO;
->  	}
->  	xfs_buf_relse(bp);
+If we always print warnings here people will get annoying messages
+when that happens for a non-XFS rootfs that we're asked to verify.
 
-It seems like all these callers would be a lot cleaner if we'd just
-return the error as the return value, and a buffer as an indirect
-pointer if and only if the read succeeded.
+I'd rather make check_inprogress another flag here.
 
 _______________________________________________
 xfs mailing list
