@@ -1,14 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9B8WUIS071623 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 03:32:30 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id h9nPl4e2ete5ZHWn for
-	<xfs@oss.sgi.com>; Thu, 11 Oct 2012 01:34:02 -0700 (PDT)
-From: Lukas Czerner <lczerner@redhat.com>
-Subject: [PATCH v2] xfs: avoid underflow in xfs_ioc_trim()
-Date: Thu, 11 Oct 2012 10:33:52 +0200
-Message-Id: <1349944432-13776-1-git-send-email-lczerner@redhat.com>
+	q9B8egG9073228 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 03:40:43 -0500
+Received: from mail-out3.booking.com (mail-out3.booking.com [91.195.237.20])
+	by cuda.sgi.com with ESMTP id M2uy6nIGINxlTNZm (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 11 Oct 2012 01:42:14 -0700 (PDT)
+Date: Thu, 11 Oct 2012 10:42:20 +0200
+From: Marcin Deranek <marcin.deranek@booking.com>
+Subject: Re: Performance degradation over time
+Message-ID: <20121011104220.133383dc@booking.com>
+In-Reply-To: <20121010233704.GC23644@dastard>
+References: <20121010105142.148519ca@booking.com>
+	<20121010233704.GC23644@dastard>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,41 +22,23 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Lukas Czerner <lczerner@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-Currently if len argument in xfs_ioc_trim() is smaller than one FSB
-the 'end' variable underflow. Avoid that by returning EINVAL when
-range is smaller than FSB.
+On Thu, 11 Oct 2012 10:37:04 +1100
+Dave Chinner <david@fromorbit.com> wrote:
 
-Signed-off-by: Lukas Czerner <lczerner@redhat.com>
----
-v2: reworked, return EINVAL if len < FSB
+> Use a more recent distro. I reworked the metadata caching algorithms
+> a couple of years ago to avoid these sorts of problems with memory
+> reclaim.
 
- fs/xfs/xfs_discard.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+I can give a shot CentOS 6.x although that might take some time..
 
-diff --git a/fs/xfs/xfs_discard.c b/fs/xfs/xfs_discard.c
-index 69cf4fc..04ddbbb 100644
---- a/fs/xfs/xfs_discard.c
-+++ b/fs/xfs/xfs_discard.c
-@@ -180,7 +180,8 @@ xfs_ioc_trim(
- 	 * matter as trimming blocks is an advisory interface.
- 	 */
- 	if (range.start >= XFS_FSB_TO_B(mp, mp->m_sb.sb_dblocks) ||
--	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)))
-+	    range.minlen > XFS_FSB_TO_B(mp, XFS_ALLOC_AG_MAX_USABLE(mp)) ||
-+	    range.len < XFS_FSB_TO_B(mp, 1))
- 		return -XFS_ERROR(EINVAL);
- 
- 	start = BTOBB(range.start);
--- 
-1.7.7.6
+Marcin
 
 _______________________________________________
 xfs mailing list
