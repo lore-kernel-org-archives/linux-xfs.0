@@ -1,16 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9BMZL0o252269 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 17:35:21 -0500
-Message-ID: <507749A2.4020206@redhat.com>
-Date: Thu, 11 Oct 2012 18:35:14 -0400
-From: Brian Foster <bfoster@redhat.com>
+	q9C2R0b6037564 for <xfs@oss.sgi.com>; Thu, 11 Oct 2012 21:27:00 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	3z8aNTivZhgYyUed for <xfs@oss.sgi.com>;
+	Thu, 11 Oct 2012 19:28:32 -0700 (PDT)
+Date: Fri, 12 Oct 2012 13:28:29 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 03/19] xfs: uncached buffer reads need to return an error
+Message-ID: <20121012022829.GL2739@dastard>
+References: <1349754670-32009-1-git-send-email-david@fromorbit.com>
+	<1349754670-32009-4-git-send-email-david@fromorbit.com>
+	<20121011213802.GC6346@infradead.org>
+	<20121011221137.GJ2739@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH v5 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
-	<1349446636-8611-7-git-send-email-bfoster@redhat.com>
-	<20121011141335.GY13214@sgi.com>
-In-Reply-To: <20121011141335.GY13214@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <20121011221137.GJ2739@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,152 +29,75 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: xfs@oss.sgi.com
 
-On 10/11/2012 10:13 AM, Ben Myers wrote:
-> Hey Brian,
+On Fri, Oct 12, 2012 at 09:11:37AM +1100, Dave Chinner wrote:
+> On Thu, Oct 11, 2012 at 05:38:02PM -0400, Christoph Hellwig wrote:
+> > > index 917e121..dee14eb 100644
+> > > --- a/fs/xfs/xfs_fsops.c
+> > > +++ b/fs/xfs/xfs_fsops.c
+> > > @@ -149,6 +149,11 @@ xfs_growfs_data_private(
+> > >  				XFS_FSS_TO_BB(mp, 1), 0, NULL);
+> > >  	if (!bp)
+> > >  		return EIO;
+> > > +	if (bp->b_error) {
+> > > +		int	error = bp->b_error;
+> > > +		xfs_buf_relse(bp);
+> > > +		return error;
+> > > +	}
+> > >  	xfs_buf_relse(bp);
+> > 
+> > > +	if (bp->b_error) {
+> > > +		error = bp->b_error;
+> > > +		if (loud)
+> > > +			xfs_warn(mp, "SB validate failed");
+> > > +		goto release_buf;
+> > > +	}
+> > 
+> > > +	if (bp->b_error) {
+> > > +		error = bp->b_error;
+> > > +		xfs_buf_relse(bp);
+> > > +		return error;
+> > > +	}
+> > 
+> > > +	if (!bp || bp->b_error) {
+> > >  		xfs_warn(mp, "realtime device size check failed");
+> > > +		if (bp)
+> > > +			xfs_buf_relse(bp);
+> > >  		return EIO;
+> > >  	}
+> > >  	xfs_buf_relse(bp);
+> > 
+> > It seems like all these callers would be a lot cleaner if we'd just
+> > return the error as the return value, and a buffer as an indirect
+> > pointer if and only if the read succeeded.
 > 
-> On Fri, Oct 05, 2012 at 10:17:12AM -0400, Brian Foster wrote:
->> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
->> scan. The xfs_eofblocks structure is defined to support the command
->> parameters (scan mode).
-> 
-> It would help to have an xfstest to exercise this ioctl to pull in with this
-> series.  Do you have any code that could be wrangled into a test case?
-> 
+> The number of callers is relatively small, and the knock-on effect
+> through the subsequent patches isn't that bad, so changing the
+> interface is probably the right thing to do here. I'll rework this
+> patch appropriately.
 
-Yes, makes sense. I have some very basic test code I could put somewhere
-to invoke the ioctl(). One of the questions I've been meaning to ask is
-whether it would be relevant for that code to live in a common tool,
-such as adding a new command to xfs_io. Then perhaps create an xfstests
-test using that. Thoughts?
+Then again, maybe I won't. I just remembered the main reason for
+returning a buffer with an error set on it. That is that there are
+circumstances in which we might want to attempt repair of a buffer
+that failed verification, and we cannot do that without returning
+the buffer.
 
-FYI, I have a few other things on my plate at the moment so
-unfortunately it will be a bit before I can get back to XFS work... But
-I'm fine with the set pending until I can come up with some test
-coverage if that is preferable, of course.
+So even if we return the buffer as an indirect pointer, we'd still
+need to return it when particular types of errors are detected on
+the buffer (i.e. EFSCORRUPTED from the verifier). Hence the error
+handling in xfs_buf_read_uncached() would become more complex and
+difficult to get right (e.g. different EIO vs EFSCORRUPTED vs ...
+handling) and it wouldn't simplify the error handling at the call
+site, either.
 
-Brian
+Cheers,
 
-> Regards,
-> 	Ben
-> 
->>
->> Signed-off-by: Brian Foster <bfoster@redhat.com>
->> ---
->>  fs/xfs/xfs_fs.h     |   15 +++++++++++++++
->>  fs/xfs/xfs_icache.c |    5 +++--
->>  fs/xfs/xfs_icache.h |    2 +-
->>  fs/xfs/xfs_ioctl.c  |   16 ++++++++++++++++
->>  4 files changed, 35 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
->> index c13fed8..5f48b3e 100644
->> --- a/fs/xfs/xfs_fs.h
->> +++ b/fs/xfs/xfs_fs.h
->> @@ -339,6 +339,20 @@ typedef struct xfs_error_injection {
->>  
->>  
->>  /*
->> + * Speculative preallocation trimming.
->> + */
->> +#define XFS_EOFBLOCKS_VERSION		1
->> +struct xfs_eofblocks {
->> +	__u32		eof_version;
->> +	__u32		eof_flags;
->> +	unsigned char	pad[12];
->> +};
->> +
->> +/* eof_flags values */
->> +#define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
->> +
->> +
->> +/*
->>   * The user-level Handle Request interface structure.
->>   */
->>  typedef struct xfs_fsop_handlereq {
->> @@ -456,6 +470,7 @@ typedef struct xfs_handle {
->>  /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
->>  #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
->>  #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
->> +#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
->>  
->>  /*
->>   * ioctl commands that replace IRIX syssgi()'s
->> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
->> index b02a3df..35efdda 100644
->> --- a/fs/xfs/xfs_icache.c
->> +++ b/fs/xfs/xfs_icache.c
->> @@ -1206,11 +1206,12 @@ xfs_inode_free_eofblocks(
->>  int
->>  xfs_icache_free_eofblocks(
->>  	struct xfs_mount	*mp,
->> -	int			flags)
->> +	int			flags,
->> +	struct xfs_eofblocks	*eofb)
->>  {
->>  	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
->>  	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
->> -					 NULL, XFS_ICI_EOFBLOCKS_TAG);
->> +					 eofb, XFS_ICI_EOFBLOCKS_TAG);
->>  }
->>  
->>  void
->> diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
->> index abca9fb..b46716c 100644
->> --- a/fs/xfs/xfs_icache.h
->> +++ b/fs/xfs/xfs_icache.h
->> @@ -37,7 +37,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
->>  
->>  void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
->>  void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
->> -int xfs_icache_free_eofblocks(struct xfs_mount *, int);
->> +int xfs_icache_free_eofblocks(struct xfs_mount *, int, struct xfs_eofblocks *);
->>  
->>  int xfs_sync_inode_grab(struct xfs_inode *ip);
->>  int xfs_inode_ag_iterator(struct xfs_mount *mp,
->> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
->> index 0e0232c..ad4352f 100644
->> --- a/fs/xfs/xfs_ioctl.c
->> +++ b/fs/xfs/xfs_ioctl.c
->> @@ -42,6 +42,7 @@
->>  #include "xfs_inode_item.h"
->>  #include "xfs_export.h"
->>  #include "xfs_trace.h"
->> +#include "xfs_icache.h"
->>  
->>  #include <linux/capability.h>
->>  #include <linux/dcache.h>
->> @@ -1602,6 +1603,21 @@ xfs_file_ioctl(
->>  		error = xfs_errortag_clearall(mp, 1);
->>  		return -error;
->>  
->> +	case XFS_IOC_FREE_EOFBLOCKS: {
->> +		struct xfs_eofblocks eofb;
->> +		int flags;
->> +
->> +		if (copy_from_user(&eofb, arg, sizeof(eofb)))
->> +			return -XFS_ERROR(EFAULT);
->> +
->> +		if (eofb.eof_version != XFS_EOFBLOCKS_VERSION)
->> +			return -XFS_ERROR(EINVAL);
->> +
->> +		flags = (eofb.eof_flags & XFS_EOF_FLAGS_SYNC) ? SYNC_WAIT : SYNC_TRYLOCK;
->> +		error = xfs_icache_free_eofblocks(mp, flags, &eofb);
->> +		return -error;
->> +	}
->> +
->>  	default:
->>  		return -ENOTTY;
->>  	}
->> -- 
->> 1.7.7.6
->>
->> _______________________________________________
->> xfs mailing list
->> xfs@oss.sgi.com
->> http://oss.sgi.com/mailman/listinfo/xfs
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
