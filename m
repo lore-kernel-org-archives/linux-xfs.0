@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9DFoYut203097 for <xfs@oss.sgi.com>; Sat, 13 Oct 2012 10:50:35 -0500
+	q9DG0djB205106 for <xfs@oss.sgi.com>; Sat, 13 Oct 2012 11:00:39 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	1P6UPiOGXBvalFk5 (version=TLSv1 cipher=AES256-SHA bits=256
+	ZlQqH3pe8mPyIJwT (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Sat, 13 Oct 2012 08:52:07 -0700 (PDT)
-Date: Sat, 13 Oct 2012 11:52:05 -0400
+	Sat, 13 Oct 2012 09:02:13 -0700 (PDT)
+Date: Sat, 13 Oct 2012 12:02:12 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_quota: XFS_XFLAG_PROJINHERIT is only for dirs
-Message-ID: <20121013155205.GA11037@infradead.org>
-References: <5078432B.6050501@redhat.com>
+Subject: Re: [PATCH 22/23] xfs: add pre-write metadata buffer verifier
+	callbacks
+Message-ID: <20121013160212.GA24337@infradead.org>
+References: <1350020669-19504-1-git-send-email-david@fromorbit.com>
+	<1350020669-19504-23-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5078432B.6050501@redhat.com>
+In-Reply-To: <1350020669-19504-23-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,27 +30,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: nscott@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 12, 2012 at 11:19:55AM -0500, Eric Sandeen wrote:
-> xfs_quota has long set XFS_XFLAG_PROJINHERIT on all files,
-> and tested for presence on all files.  However, Dave's semi-recent
-> xfs_repair update is now flagging this as an error:
+> +xfs_agfl_write_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	xfs_agfl_verify(bp);
+> +}
+> +
+> +void
+> +xfs_agfl_read_verify(
+> +	struct xfs_buf	*bp)
+> +{
+> +	xfs_agfl_verify(bp);
+> +	bp->b_pre_io = xfs_agfl_write_verify;
+>  	bp->b_iodone = NULL;
+>  	xfs_buf_ioend(bp, 0);
 
-I think we should rever that part of the repair patch.  While there
-really is not point to have XFS_XFLAG_PROJINHERIT set on non-directory
-files we have been setting it for year, so repair should cope with that.
+I have to say I hate the way the API works for the buffer callbacks
+even more now that I see the write side.  I know you're a bit annoyed
+about churn from review requests, but I'd really prefer if this
+was redone.
 
-I'd also like to have a test checking that repair does not complain
-about XFS_XFLAG_PROJINHERIT being set on a non-directory to verify this.
+Two ways to do this nicer come to mind:
 
-For the future I'm fine with not setting it on non-directories anymore,
-so:
+ - Have one commone b_verify callback, which gets a bool for_write
+   argument to key of differences.  The xfs_buf_ioend call for reads
+   remains in the caller, b_iodone is not touched at all.  This will
+   remove the boilerplate code a lot in the current version.
+ - Expecting to have some more difference between the read and the
+   write side when we actually do the crcs from my work on the previous
+   iteration of it it might make sense to have two callbacks, but I'd
+   again prefer to not overload b_iodone.  Maybe just pass a:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+struct xfs_buf_ops {
+	int (*verify_read)(struct xfs_buf *);
+	int (*verify_write)(struct xfs_buf *);
+};
 
-for this patch after a slight update to the commit message.
+to all the buffer read/write API calls, and let that deal with it.
 
 _______________________________________________
 xfs mailing list
