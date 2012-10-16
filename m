@@ -1,19 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9GKFCee217170 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 15:15:12 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	pyYD28DHhSUAYtmY for <xfs@oss.sgi.com>;
-	Tue, 16 Oct 2012 13:16:48 -0700 (PDT)
-Date: Wed, 17 Oct 2012 07:16:45 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] 286: Test FITRIM where length is smaller than FSB
-Message-ID: <20121016201645.GJ2739@dastard>
-References: <1350380494-17482-1-git-send-email-lczerner@redhat.com>
+	q9GKGJ69217308 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 15:16:19 -0500
+Date: Tue, 16 Oct 2012 15:17:52 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs_quota: XFS_XFLAG_PROJINHERIT is only for dirs
+Message-ID: <20121016201752.GD1377@sgi.com>
+References: <5078432B.6050501@redhat.com>
+	<20121013155205.GA11037@infradead.org>
+	<20121013233431.GQ2739@dastard> <507A01DF.1070105@redhat.com>
+	<20121014001412.GS2739@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1350380494-17482-1-git-send-email-lczerner@redhat.com>
+In-Reply-To: <20121014001412.GS2739@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,35 +25,66 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, nscott@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On Tue, Oct 16, 2012 at 11:41:33AM +0200, Lukas Czerner wrote:
-> This tests corner case in FITRIM implementation where range size is
-> smaller than file system block or zero. In this case FITRIM should fail
-> with EINVAL.
+Hey Eric,
+
+On Sun, Oct 14, 2012 at 11:14:12AM +1100, Dave Chinner wrote:
+> On Sat, Oct 13, 2012 at 07:05:51PM -0500, Eric Sandeen wrote:
+> > On 10/13/12 6:34 PM, Dave Chinner wrote:
+> > > On Sat, Oct 13, 2012 at 11:52:05AM -0400, Christoph Hellwig wrote:
+> > >> On Fri, Oct 12, 2012 at 11:19:55AM -0500, Eric Sandeen wrote:
+> > >>> xfs_quota has long set XFS_XFLAG_PROJINHERIT on all files,
+> > >>> and tested for presence on all files.  However, Dave's semi-recent
+> > >>> xfs_repair update is now flagging this as an error:
+> > >>
+> > >> I think we should rever that part of the repair patch.  While there
+> > >> really is not point to have XFS_XFLAG_PROJINHERIT set on non-directory
+> > >> files we have been setting it for year, so repair should cope with that.
+> > > 
+> > > Repair does cope with it - it issues a warning and clears the flag.
+> > > It doesn't stop, it simply fixes an inconsistency in the inode flags.
+> > > 
+> > > The main problem, by the sounds of it, is that repair issues a
+> > > warning that it is clearing the flags that should not be set. This
+> > > is what makes check_scratch_fs fail because of the extra output.
+> > > That's easy to fix - filter the line from the repair output and be
+> > > done with it. In future (with Eric's patch) this situation won't
+> > > occur.
+> > > 
+> > > So, really, I think the only thing that needs modifying to handle
+> > > this situation is a filter update to xfstests...
+> > 
+> > I must be missing something; quota will continue to set it and repair
+> > will continue to clear it.  One should probably match the other right?
+> > So one or the other should change.
 > 
-> The problem was spotted in xfs and ext4 where in case of length = 0 the
-> 'end' variable underflowed. In case of length smaller than 1 FSB FITRIM
-> finished successfully, but we really should rather return EINVAL in both
-> cases.
-> 
-> (This patch has to be applied after 'Use upstream version of fstrim
-> instead of the local one')
-> 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> ---
->  286     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  286.out |    6 ++++++
+> Sorry, I wasn't particularly clear - if your patch to quota goes in,
+> the problem goes away in future and we should simply filter the
+> warning in xfstests to handle the present issue....
 
-We've already got 286 (and 287), so this should probably be 288...
+I think Dave has an interesting idea here. 
 
-Otherwise, it looks good.
+You already have:
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+1) only set XFS_XFLAG_PROJINHERIT on directories in setup_project,
+
+2) update check_project to print the right warning based upon the above,
+
+Now all you need is:
+
+3) update _check_scratch_fs to filter
+	"directory flags set on non-directory inode %llu"
+
+I guess the downside of that is the test might subsequently miss other
+related failure modes of xfs_repair.  Maybe it would be better to make
+xfs_repair have a separate error message for this specific case, and
+then filter that out of the test output.  How would you know when it's
+ok to remove the filter?
+
+Regards,
+Ben
 
 _______________________________________________
 xfs mailing list
