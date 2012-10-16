@@ -1,20 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9GKGrGM217430 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 15:16:54 -0500
+	q9GKWbEq219004 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 15:32:37 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Gzh0HZOcYsoKnQxj for <xfs@oss.sgi.com>;
-	Tue, 16 Oct 2012 13:18:30 -0700 (PDT)
-Date: Wed, 17 Oct 2012 07:18:29 +1100
+	jLuIrmjXH3DBvajQ for <xfs@oss.sgi.com>;
+	Tue, 16 Oct 2012 13:34:13 -0700 (PDT)
+Date: Wed, 17 Oct 2012 07:34:12 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] 251: Do not allow step to be zero
-Message-ID: <20121016201829.GK2739@dastard>
-References: <1350380494-17482-1-git-send-email-lczerner@redhat.com>
-	<1350380494-17482-2-git-send-email-lczerner@redhat.com>
+Subject: Re: [PATCH] xfs_quota: XFS_XFLAG_PROJINHERIT is only for dirs
+Message-ID: <20121016203412.GL2739@dastard>
+References: <5078432B.6050501@redhat.com>
+	<20121013155205.GA11037@infradead.org>
+	<20121013233431.GQ2739@dastard> <507A01DF.1070105@redhat.com>
+	<20121014001412.GS2739@dastard> <20121016201752.GD1377@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1350380494-17482-2-git-send-email-lczerner@redhat.com>
+In-Reply-To: <20121016201752.GD1377@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,23 +29,86 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>, nscott@redhat.com
 
-On Tue, Oct 16, 2012 at 11:41:34AM +0200, Lukas Czerner wrote:
-> Currently 'step' variable which is used as length of the range to
-> discard can be zero. However it would result in error returned by the
-> fstrim.
+On Tue, Oct 16, 2012 at 03:17:52PM -0500, Ben Myers wrote:
+> Hey Eric,
 > 
-> Fix this by forcing 'step' to be at least 4KB.
+> On Sun, Oct 14, 2012 at 11:14:12AM +1100, Dave Chinner wrote:
+> > On Sat, Oct 13, 2012 at 07:05:51PM -0500, Eric Sandeen wrote:
+> > > On 10/13/12 6:34 PM, Dave Chinner wrote:
+> > > > On Sat, Oct 13, 2012 at 11:52:05AM -0400, Christoph Hellwig wrote:
+> > > >> On Fri, Oct 12, 2012 at 11:19:55AM -0500, Eric Sandeen wrote:
+> > > >>> xfs_quota has long set XFS_XFLAG_PROJINHERIT on all files,
+> > > >>> and tested for presence on all files.  However, Dave's semi-recent
+> > > >>> xfs_repair update is now flagging this as an error:
+> > > >>
+> > > >> I think we should rever that part of the repair patch.  While there
+> > > >> really is not point to have XFS_XFLAG_PROJINHERIT set on non-directory
+> > > >> files we have been setting it for year, so repair should cope with that.
+> > > > 
+> > > > Repair does cope with it - it issues a warning and clears the flag.
+> > > > It doesn't stop, it simply fixes an inconsistency in the inode flags.
+> > > > 
+> > > > The main problem, by the sounds of it, is that repair issues a
+> > > > warning that it is clearing the flags that should not be set. This
+> > > > is what makes check_scratch_fs fail because of the extra output.
+> > > > That's easy to fix - filter the line from the repair output and be
+> > > > done with it. In future (with Eric's patch) this situation won't
+> > > > occur.
+> > > > 
+> > > > So, really, I think the only thing that needs modifying to handle
+> > > > this situation is a filter update to xfstests...
+> > > 
+> > > I must be missing something; quota will continue to set it and repair
+> > > will continue to clear it.  One should probably match the other right?
+> > > So one or the other should change.
+> > 
+> > Sorry, I wasn't particularly clear - if your patch to quota goes in,
+> > the problem goes away in future and we should simply filter the
+> > warning in xfstests to handle the present issue....
 > 
-> Signed-off-by: Lukas Czerner <lczerner@redhat.com>
+> I think Dave has an interesting idea here. 
+> 
+> You already have:
+> 
+> 1) only set XFS_XFLAG_PROJINHERIT on directories in setup_project,
+> 
+> 2) update check_project to print the right warning based upon the above,
+> 
+> Now all you need is:
+> 
+> 3) update _check_scratch_fs to filter
+> 	"directory flags set on non-directory inode %llu"
+> 
+> I guess the downside of that is the test might subsequently miss other
+> related failure modes of xfs_repair.  Maybe it would be better to make
+> xfs_repair have a separate error message for this specific case, and
+> then filter that out of the test output.  How would you know when it's
+> ok to remove the filter?
 
-Looks fine. It may not be perfect for large block filesystems (e.g.
-on ppc or ia64) but it's better than nothing right now.
+I don't think it ever would be removed, because xfstests is used for
+testing older versions of XFS as well as TOT.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+As it is, I don't think that the warning from repair is really
+sufficient to warrant a test failure. We've never really cared about
+this problem, it certainly isn't fatal to the filesystem, and the
+kernel ensures that directory specific flags only affect directory
+inodes so we aren't getting strange behaviour because of it. So I
+don't really see any problem with just filtering it out
+unconditionally from repair in xfstests.
 
+If we really want to ensure that we don't have directory flags set
+on a regular file in future, we should write a test that
+specifically tries to do this and run repair with a custom filter on
+the filesystem.  i.e.  make sure the kernel rejects directory only
+flags being set on non-directories, followed by adding them via
+xfs_db and ensuring that xfs_repair warns about them.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
