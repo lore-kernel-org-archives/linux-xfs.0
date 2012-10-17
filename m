@@ -1,15 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9HCpCNI063821 for <xfs@oss.sgi.com>; Wed, 17 Oct 2012 07:51:12 -0500
-Message-ID: <507EAA1C.4010508@sgi.com>
-Date: Wed, 17 Oct 2012 07:52:44 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q9HFrE16075869 for <xfs@oss.sgi.com>; Wed, 17 Oct 2012 10:53:14 -0500
+Message-ID: <507ED4C0.1050400@redhat.com>
+Date: Wed, 17 Oct 2012 10:54:40 -0500
+From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: Re: xfstests: SEEK_HOLE/SEEK_DATA advanced tests
-References: <20121016204240.142425319@sgi.com>
-	<20121016204244.997819918@sgi.com> <20121017023439.GB26797@dastard>
-In-Reply-To: <20121017023439.GB26797@dastard>
+Subject: Re: [PATCH] xfs_quota: XFS_XFLAG_PROJINHERIT is only for dirs
+References: <5078432B.6050501@redhat.com>
+	<20121013155205.GA11037@infradead.org>
+	<20121013233431.GQ2739@dastard> <507A01DF.1070105@redhat.com>
+	<20121014001412.GS2739@dastard> <20121016201752.GD1377@sgi.com>
+In-Reply-To: <20121016201752.GD1377@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,166 +20,78 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, nscott@redhat.com, Dave Chinner <dchinner@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 10/16/12 21:34, Dave Chinner wrote:
-> On Tue, Oct 16, 2012 at 03:42:41PM -0500, Mark Tinguely wrote:
->> This is the test of the advanced SEEK_HOLE and SEEK_DATA features
->> of the lseek() function call.
+On 10/16/12 3:17 PM, Ben Myers wrote:
+> Hey Eric,
+> 
+> On Sun, Oct 14, 2012 at 11:14:12AM +1100, Dave Chinner wrote:
+>> On Sat, Oct 13, 2012 at 07:05:51PM -0500, Eric Sandeen wrote:
+>>> On 10/13/12 6:34 PM, Dave Chinner wrote:
+>>>> On Sat, Oct 13, 2012 at 11:52:05AM -0400, Christoph Hellwig wrote:
+>>>>> On Fri, Oct 12, 2012 at 11:19:55AM -0500, Eric Sandeen wrote:
+>>>>>> xfs_quota has long set XFS_XFLAG_PROJINHERIT on all files,
+>>>>>> and tested for presence on all files.  However, Dave's semi-recent
+>>>>>> xfs_repair update is now flagging this as an error:
+>>>>>
+>>>>> I think we should rever that part of the repair patch.  While there
+>>>>> really is not point to have XFS_XFLAG_PROJINHERIT set on non-directory
+>>>>> files we have been setting it for year, so repair should cope with that.
+>>>>
+>>>> Repair does cope with it - it issues a warning and clears the flag.
+>>>> It doesn't stop, it simply fixes an inconsistency in the inode flags.
+>>>>
+>>>> The main problem, by the sounds of it, is that repair issues a
+>>>> warning that it is clearing the flags that should not be set. This
+>>>> is what makes check_scratch_fs fail because of the extra output.
+>>>> That's easy to fix - filter the line from the repair output and be
+>>>> done with it. In future (with Eric's patch) this situation won't
+>>>> occur.
+>>>>
+>>>> So, really, I think the only thing that needs modifying to handle
+>>>> this situation is a filter update to xfstests...
+>>>
+>>> I must be missing something; quota will continue to set it and repair
+>>> will continue to clear it.  One should probably match the other right?
+>>> So one or the other should change.
 >>
->> Jie Liu<jeff.liu@oracle.com>  wrote the C code, I converted it to
->> a test with his permission.
->
-> Jie, can you sign-off on this patch as well as it has Oracle
-> copyright statements in it?
->
->> Signed-off-by: Mark Tinguely<tinguely@sgi.com
->
-> Typo - missing closing ">"
->
->> +
->> +[ -x $here/src/seek_advance_test ] || _notrun "seek_advance_test not built"
->> +
->> +_cleanup()
->> +{
->> +	rm -f $src1 $src2
->> +}
->> +
->> +	echo "Silence is golden..."
->> +	rm -f $src1 $src2
->
-> Rather strange indenting here and for the rest of the test...
->
->> +        write_cmd1="-c \"falloc 512k 256k\" -c \"pwrite 516k 4k\" -c \
->> +		    \"pwrite 800k 4k\""
->> +        write_cmd2="-c \"falloc 512k 256k\" -c \"pwrite 600k 16k\""
->
-> That reminds me of line noise :/
->
->> +
->> +        eval ${XFS_IO_PROG} -F -f "${write_cmd1}" $src1>  $seq.full 2>&1 ||
->> +                _fail "create test1 file failed!"
->> +        echo "*** create test1 file done ***">>$seq.full
->> +        eval ${XFS_IO_PROG} -F -f "${write_cmd2}" $src2>>$seq.full 2>&1 ||
->> +                _fail "create test2 file failed!"
->> +        echo "*** create test2 file done ***">>$seq.full
->
->
-> The way that you're executing xfs_io to create the files is,
-> well, convoluted. It doesn't need -F anymore, either. Just run:
->
-> $XFS_IO_PROG -f -c "falloc 512k 256k" \
-> 		-c "pwrite 516k 4k" \
-> 		-c "pwrite 800k 4k" \
-> 		$src1 | _filter_xfs_io
->
-> And allow the golden output match to detect failures to create the
-> file correctly. The filter/golden output test is designed to avoid
-> all this "did it work" detection around simple operations.  Indeed,
-> seek_advance_test checks the file exists (via the open parameters)
-> and errors out with an error message so there is no need to check it
-> ahead of time and specifically fail the test.
->
-> Further, with the xfs_io output in the golden output, you don't need
-> the intermediate "echo<redundant information>" lines to determine
-> what failed, either....
->
->> +        echo>>$seq.full
->> +        $here/src/seek_advance_test $dir>>  $seq.full || _fail "test failed"
->
-> Pass in the file names, not the directory. That way you only encode
-> the filename in one place, not have ot keep the test and .c code in
-> step.
->
->> +
->> +status=0
->> +exit
->> +
->> Index: b/288.out
->> ===================================================================
->> --- /dev/null
->> +++ b/288.out
->> @@ -0,0 +1,2 @@
->> +QA output created by 288
->> +Silence is golden...
->
-> Not when you should be using the golden output to detect failures
-> instead of convouted code....
->
->> Index: b/group
->> ===================================================================
->> --- a/group
->> +++ b/group
->> @@ -406,3 +406,4 @@ deprecated
->>   285 auto rw
->>   286 other
->>   287 auto dump quota quick
->> +288 other
->
-> Why? it's a test that is quick and should always be run. If you are
-> worried about it failing on systems that don't support
-> SEEK_HOLE/DATA, then add a _requires_seek_hole function....
->
->> +#include<assert.h>
->> +
->> +#ifndef SEEK_DATA
->> +#define SEEK_DATA	3
->> +#define SEEK_HOLE	4
->> +#endif
->> +
->> +char *base_file_path;
->> +
->> +int
->> +verify(
->> +	off_t offset,
->> +	off_t exp_hoff,
->> +	off_t exp_doff,
->> +	off_t hoff,
->> +	off_t doff)
->
-> I don't really understand what the variables are supposed to mean
-> or what is being verified here.
->
->> +{
->> +	fprintf(stdout, "SEEK start %lu expect %ld/%ld got %ld/%ld [%s]\n",
->> +	offset, exp_hoff, exp_doff, hoff, doff,
->> +	(hoff == exp_hoff&&  doff == exp_doff) ? "PASS" : "FAIL");
->> +
->> +	return(hoff != exp_hoff || doff != exp_doff);
->
->
-> Why are you even determining pass/fail here?
->
-> This is what golden output matching is for. Dump some numbers out,
-> and if they match the golden output the test passed. If they don't,
-> the test fails. We can't filter this output if necessary, nor
-> support different block size filesystems, etc. because the
-> verification is done within the C code rather than by the filters
-> and test harness.
->
-> Indeed, if you add SEEK_HOLE/SEEK_DATA to xfs_io to dump the next
-> offset of that type given a start offset, then this can all be
-> implemented in a single script using filtering golden output
-> matching, and can easily be made to support different block sizes.
-> This code is just going to be fragile and hard to maintain....
->
-> Cheers,
->
-> Dave.
+>> Sorry, I wasn't particularly clear - if your patch to quota goes in,
+>> the problem goes away in future and we should simply filter the
+>> warning in xfstests to handle the present issue....
+> 
+> I think Dave has an interesting idea here. 
+> 
+> You already have:
+> 
+> 1) only set XFS_XFLAG_PROJINHERIT on directories in setup_project,
+> 
+> 2) update check_project to print the right warning based upon the above,
+> 
+> Now all you need is:
+> 
+> 3) update _check_scratch_fs to filter
+> 	"directory flags set on non-directory inode %llu"
 
-I borrowed the test (with its test group) from an early SEEK_* test and 
-I did not clean the test file well enough.
+Well, there is no project ID test which runs _check_scratch_fs anyway.
 
-Adding SEEK_HOLE/SEEK_DATA to xfs_io is an excellent idea.
+So at least for today, it's not an issue.
 
-Thanks for the feedback.
+-Eric
 
---Mark.
+> I guess the downside of that is the test might subsequently miss other
+> related failure modes of xfs_repair.  Maybe it would be better to make
+> xfs_repair have a separate error message for this specific case, and
+> then filter that out of the test output.  How would you know when it's
+> ok to remove the filter?
+> 
+> Regards,
+> Ben
+> 
 
 _______________________________________________
 xfs mailing list
