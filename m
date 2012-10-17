@@ -1,16 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9GKkpdi220697 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 15:46:51 -0500
-Date: Tue, 16 Oct 2012 15:48:25 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/2] 286: Test FITRIM where length is smaller than FSB
-Message-ID: <20121016204825.GE1377@sgi.com>
-References: <1350380494-17482-1-git-send-email-lczerner@redhat.com>
-	<20121016201645.GJ2739@dastard>
+	q9H0fRWx243335 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 19:41:27 -0500
+Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
+	with ESMTP id p2mrmxCGc2P8npjz (version=TLSv1 cipher=AES256-SHA
+	bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 16 Oct 2012 17:43:03 -0700 (PDT)
+Date: Wed, 17 Oct 2012 02:43:00 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
+	s390
+Message-ID: <20121017004300.GH13227@quack.suse.cz>
+References: <1349108796-32161-1-git-send-email-jack@suse.cz>
+	<alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
+	<20121009162107.GE15790@quack.suse.cz>
+	<alpine.LSU.2.00.1210091824390.30802@eggly.anvils>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121016201645.GJ2739@dastard>
+In-Reply-To: <alpine.LSU.2.00.1210091824390.30802@eggly.anvils>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,38 +30,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Lukas Czerner <lczerner@redhat.com>
-Cc: xfs@oss.sgi.com
+To: Hugh Dickins <hughd@google.com>
+Cc: linux-s390@vger.kernel.org, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
-Hey Lukas,
-
-On Wed, Oct 17, 2012 at 07:16:45AM +1100, Dave Chinner wrote:
-> On Tue, Oct 16, 2012 at 11:41:33AM +0200, Lukas Czerner wrote:
-> > This tests corner case in FITRIM implementation where range size is
-> > smaller than file system block or zero. In this case FITRIM should fail
-> > with EINVAL.
+On Tue 09-10-12 19:19:09, Hugh Dickins wrote:
+> On Tue, 9 Oct 2012, Jan Kara wrote:
+<snip a lot>
+> > > But here's where I think the problem is.  You're assuming that all
+> > > filesystems go the same mapping_cap_account_writeback_dirty() (yeah,
+> > > there's no such function, just a confusing maze of three) route as XFS.
+> > > 
+> > > But filesystems like tmpfs and ramfs (perhaps they're the only two
+> > > that matter here) don't participate in that, and wait for an mmap'ed
+> > > page to be seen modified by the user (usually via pte_dirty, but that's
+> > > a no-op on s390) before page is marked dirty; and page reclaim throws
+> > > away undirtied pages.
+> >   I admit I haven't thought of tmpfs and similar. After some discussion Mel
+> > pointed me to the code in mmap which makes a difference. So if I get it
+> > right, the difference which causes us problems is that on tmpfs we map the
+> > page writeably even during read-only fault. OK, then if I make the above
+> > code in page_remove_rmap():
+> > 	if ((PageSwapCache(page) ||
+> > 	     (!anon && !mapping_cap_account_dirty(page->mapping))) &&
+> > 	    page_test_and_clear_dirty(page_to_pfn(page), 1))
+> > 		set_page_dirty(page);
 > > 
-> > The problem was spotted in xfs and ext4 where in case of length = 0 the
-> > 'end' variable underflowed. In case of length smaller than 1 FSB FITRIM
-> > finished successfully, but we really should rather return EINVAL in both
-> > cases.
-> > 
-> > (This patch has to be applied after 'Use upstream version of fstrim
-> > instead of the local one')
-> > 
-> > Signed-off-by: Lukas Czerner <lczerner@redhat.com>
-> > ---
-> >  286     |   58 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  286.out |    6 ++++++
+> >   Things should be ok (modulo the ugliness of this condition), right?
 > 
-> We've already got 286 (and 287), so this should probably be 288...
+> (Setting aside my reservations above...) That's almost exactly right, but
+> I think the issue of a racing truncation (which could reset page->mapping
+> to NULL at any moment) means we have to be a bit more careful.  Usually
+> we guard against that with page lock, but here we can rely on mapcount.
+> 
+> page_mapping(page), with its built-in PageSwapCache check, actually ends
+> up making the condition look less ugly; and so far as I could tell,
+> the extra code does get optimized out on x86 (unless CONFIG_DEBUG_VM,
+> when we are left with its VM_BUG_ON(PageSlab(page))).
+> 
+> But please look this over very critically and test (and if you like it,
+> please adopt it as your own): I'm not entirely convinced yet myself.
+  Just to followup on this. The new version of the patch runs fine for
+several days on our s390 build machines. I was also running fsx-linux on
+tmpfs while pushing the machine to swap. fsx ran fine but I hit
+WARN_ON(delalloc) in xfs_vm_releasepage(). The exact stack trace is:
+ [<000003c008edb38e>] xfs_vm_releasepage+0xc6/0xd4 [xfs]
+ [<0000000000213326>] shrink_page_list+0x6ba/0x734
+ [<0000000000213924>] shrink_inactive_list+0x230/0x578
+ [<0000000000214148>] shrink_list+0x6c/0x120
+ [<00000000002143ee>] shrink_zone+0x1f2/0x238
+ [<0000000000215482>] balance_pgdat+0x5f6/0x86c
+ [<00000000002158b8>] kswapd+0x1c0/0x248
+ [<000000000017642a>] kthread+0xa6/0xb0
+ [<00000000004e58be>] kernel_thread_starter+0x6/0xc
+ [<00000000004e58b8>] kernel_thread_starter+0x0/0xc
 
-Unless you've got something else to fix, don't worry about reposting to update
-the test number...  We sometimes have collisions and it is just easiest if we
-update it at commit time.
+I don't think it is really related but I'll hold off the patch for a while
+to investigate what's going on...
 
-Thanks,
-	Ben
+								Honza
+-- 
+Jan Kara <jack@suse.cz>
+SUSE Labs, CR
 
 _______________________________________________
 xfs mailing list
