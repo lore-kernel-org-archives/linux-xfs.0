@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9H0fRWx243335 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 19:41:27 -0500
-Received: from mx2.suse.de (cantor2.suse.de [195.135.220.15]) by cuda.sgi.com
-	with ESMTP id p2mrmxCGc2P8npjz (version=TLSv1 cipher=AES256-SHA
-	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 16 Oct 2012 17:43:03 -0700 (PDT)
-Date: Wed, 17 Oct 2012 02:43:00 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] mm: Fix XFS oops due to dirty pages without buffers on
-	s390
-Message-ID: <20121017004300.GH13227@quack.suse.cz>
-References: <1349108796-32161-1-git-send-email-jack@suse.cz>
-	<alpine.LSU.2.00.1210082029190.2237@eggly.anvils>
-	<20121009162107.GE15790@quack.suse.cz>
-	<alpine.LSU.2.00.1210091824390.30802@eggly.anvils>
+	q9H2XECI000722 for <xfs@oss.sgi.com>; Tue, 16 Oct 2012 21:33:14 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	VBgUCpwLInF5Bg2M for <xfs@oss.sgi.com>;
+	Tue, 16 Oct 2012 19:34:50 -0700 (PDT)
+Date: Wed, 17 Oct 2012 13:34:39 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfstests: SEEK_HOLE/SEEK_DATA advanced tests
+Message-ID: <20121017023439.GB26797@dastard>
+References: <20121016204240.142425319@sgi.com>
+	<20121016204244.997819918@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <alpine.LSU.2.00.1210091824390.30802@eggly.anvils>
+In-Reply-To: <20121016204244.997819918@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,67 +27,155 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Hugh Dickins <hughd@google.com>
-Cc: linux-s390@vger.kernel.org, Jan Kara <jack@suse.cz>, LKML <linux-kernel@vger.kernel.org>, xfs@oss.sgi.com, linux-mm@kvack.org, Mel Gorman <mgorman@suse.de>, Martin Schwidefsky <schwidefsky@de.ibm.com>
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Tue 09-10-12 19:19:09, Hugh Dickins wrote:
-> On Tue, 9 Oct 2012, Jan Kara wrote:
-<snip a lot>
-> > > But here's where I think the problem is.  You're assuming that all
-> > > filesystems go the same mapping_cap_account_writeback_dirty() (yeah,
-> > > there's no such function, just a confusing maze of three) route as XFS.
-> > > 
-> > > But filesystems like tmpfs and ramfs (perhaps they're the only two
-> > > that matter here) don't participate in that, and wait for an mmap'ed
-> > > page to be seen modified by the user (usually via pte_dirty, but that's
-> > > a no-op on s390) before page is marked dirty; and page reclaim throws
-> > > away undirtied pages.
-> >   I admit I haven't thought of tmpfs and similar. After some discussion Mel
-> > pointed me to the code in mmap which makes a difference. So if I get it
-> > right, the difference which causes us problems is that on tmpfs we map the
-> > page writeably even during read-only fault. OK, then if I make the above
-> > code in page_remove_rmap():
-> > 	if ((PageSwapCache(page) ||
-> > 	     (!anon && !mapping_cap_account_dirty(page->mapping))) &&
-> > 	    page_test_and_clear_dirty(page_to_pfn(page), 1))
-> > 		set_page_dirty(page);
-> > 
-> >   Things should be ok (modulo the ugliness of this condition), right?
+On Tue, Oct 16, 2012 at 03:42:41PM -0500, Mark Tinguely wrote:
+> This is the test of the advanced SEEK_HOLE and SEEK_DATA features
+> of the lseek() function call.
 > 
-> (Setting aside my reservations above...) That's almost exactly right, but
-> I think the issue of a racing truncation (which could reset page->mapping
-> to NULL at any moment) means we have to be a bit more careful.  Usually
-> we guard against that with page lock, but here we can rely on mapcount.
-> 
-> page_mapping(page), with its built-in PageSwapCache check, actually ends
-> up making the condition look less ugly; and so far as I could tell,
-> the extra code does get optimized out on x86 (unless CONFIG_DEBUG_VM,
-> when we are left with its VM_BUG_ON(PageSlab(page))).
-> 
-> But please look this over very critically and test (and if you like it,
-> please adopt it as your own): I'm not entirely convinced yet myself.
-  Just to followup on this. The new version of the patch runs fine for
-several days on our s390 build machines. I was also running fsx-linux on
-tmpfs while pushing the machine to swap. fsx ran fine but I hit
-WARN_ON(delalloc) in xfs_vm_releasepage(). The exact stack trace is:
- [<000003c008edb38e>] xfs_vm_releasepage+0xc6/0xd4 [xfs]
- [<0000000000213326>] shrink_page_list+0x6ba/0x734
- [<0000000000213924>] shrink_inactive_list+0x230/0x578
- [<0000000000214148>] shrink_list+0x6c/0x120
- [<00000000002143ee>] shrink_zone+0x1f2/0x238
- [<0000000000215482>] balance_pgdat+0x5f6/0x86c
- [<00000000002158b8>] kswapd+0x1c0/0x248
- [<000000000017642a>] kthread+0xa6/0xb0
- [<00000000004e58be>] kernel_thread_starter+0x6/0xc
- [<00000000004e58b8>] kernel_thread_starter+0x0/0xc
+> Jie Liu <jeff.liu@oracle.com> wrote the C code, I converted it to
+> a test with his permission.
 
-I don't think it is really related but I'll hold off the patch for a while
-to investigate what's going on...
+Jie, can you sign-off on this patch as well as it has Oracle
+copyright statements in it?
 
-								Honza
+> Signed-off-by: Mark Tinguely <tinguely@sgi.com
+
+Typo - missing closing ">"
+
+> +
+> +[ -x $here/src/seek_advance_test ] || _notrun "seek_advance_test not built"
+> +
+> +_cleanup()
+> +{
+> +	rm -f $src1 $src2
+> +}
+> +
+> +	echo "Silence is golden..."
+> +	rm -f $src1 $src2
+
+Rather strange indenting here and for the rest of the test...
+
+> +        write_cmd1="-c \"falloc 512k 256k\" -c \"pwrite 516k 4k\" -c \
+> +		    \"pwrite 800k 4k\""
+> +        write_cmd2="-c \"falloc 512k 256k\" -c \"pwrite 600k 16k\""
+
+That reminds me of line noise :/
+
+> +
+> +        eval ${XFS_IO_PROG} -F -f "${write_cmd1}" $src1 > $seq.full 2>&1 ||
+> +                _fail "create test1 file failed!"
+> +        echo "*** create test1 file done ***" >>$seq.full
+> +        eval ${XFS_IO_PROG} -F -f "${write_cmd2}" $src2 >>$seq.full 2>&1 ||
+> +                _fail "create test2 file failed!"
+> +        echo "*** create test2 file done ***" >>$seq.full
+
+
+The way that you're executing xfs_io to create the files is,
+well, convoluted. It doesn't need -F anymore, either. Just run:
+
+$XFS_IO_PROG -f -c "falloc 512k 256k" \
+		-c "pwrite 516k 4k" \
+		-c "pwrite 800k 4k" \
+		$src1 | _filter_xfs_io
+
+And allow the golden output match to detect failures to create the
+file correctly. The filter/golden output test is designed to avoid
+all this "did it work" detection around simple operations.  Indeed,
+seek_advance_test checks the file exists (via the open parameters)
+and errors out with an error message so there is no need to check it
+ahead of time and specifically fail the test.
+
+Further, with the xfs_io output in the golden output, you don't need
+the intermediate "echo <redundant information>" lines to determine
+what failed, either....
+
+> +        echo >>$seq.full
+> +        $here/src/seek_advance_test $dir >> $seq.full || _fail "test failed"
+
+Pass in the file names, not the directory. That way you only encode
+the filename in one place, not have ot keep the test and .c code in
+step.
+
+> +
+> +status=0
+> +exit
+> +
+> Index: b/288.out
+> ===================================================================
+> --- /dev/null
+> +++ b/288.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 288
+> +Silence is golden...
+
+Not when you should be using the golden output to detect failures
+instead of convouted code....
+
+> Index: b/group
+> ===================================================================
+> --- a/group
+> +++ b/group
+> @@ -406,3 +406,4 @@ deprecated
+>  285 auto rw
+>  286 other
+>  287 auto dump quota quick
+> +288 other
+
+Why? it's a test that is quick and should always be run. If you are
+worried about it failing on systems that don't support
+SEEK_HOLE/DATA, then add a _requires_seek_hole function....
+
+> +#include <assert.h>
+> +
+> +#ifndef SEEK_DATA
+> +#define SEEK_DATA	3
+> +#define SEEK_HOLE	4
+> +#endif
+> +
+> +char *base_file_path;
+> +
+> +int
+> +verify(
+> +	off_t offset,
+> +	off_t exp_hoff,
+> +	off_t exp_doff,
+> +	off_t hoff,
+> +	off_t doff)
+
+I don't really understand what the variables are supposed to mean
+or what is being verified here.
+
+> +{
+> +	fprintf(stdout, "SEEK start %lu expect %ld/%ld got %ld/%ld [%s]\n",
+> +	offset, exp_hoff, exp_doff, hoff, doff,
+> +	(hoff == exp_hoff && doff == exp_doff) ? "PASS" : "FAIL");
+> +
+> +	return(hoff != exp_hoff || doff != exp_doff);
+
+
+Why are you even determining pass/fail here?
+
+This is what golden output matching is for. Dump some numbers out,
+and if they match the golden output the test passed. If they don't,
+the test fails. We can't filter this output if necessary, nor
+support different block size filesystems, etc. because the
+verification is done within the C code rather than by the filters
+and test harness.
+
+Indeed, if you add SEEK_HOLE/SEEK_DATA to xfs_io to dump the next
+offset of that type given a start offset, then this can all be
+implemented in a single script using filtering golden output
+matching, and can easily be made to support different block sizes.
+This code is just going to be fragile and hard to maintain....
+
+Cheers,
+
+Dave.
 -- 
-Jan Kara <jack@suse.cz>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
