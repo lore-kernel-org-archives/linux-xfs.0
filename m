@@ -1,14 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9IFmlM4198921 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 10:48:47 -0500
-Message-ID: <5080253A.9060906@sgi.com>
-Date: Thu, 18 Oct 2012 10:50:18 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q9IFwpq7199413 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 10:58:51 -0500
+Received: from ppsw-51.csi.cam.ac.uk (ppsw-51.csi.cam.ac.uk [131.111.8.151])
+	by cuda.sgi.com with ESMTP id K2exAFJELJ4NarpQ for
+	<xfs@oss.sgi.com>; Thu, 18 Oct 2012 09:00:29 -0700 (PDT)
+Received: from mail.mrc-lmb.cam.ac.uk ([131.111.85.9]:58456
+	helo=mail.lmb.internal)
+	by ppsw-51.csi.cam.ac.uk (ppsw.cam.ac.uk [131.111.8.138]:25)
+	with esmtp id 1TOsWL-00057n-Wn (Exim 4.72) for xfs@oss.sgi.com
+	(return-path <dhoworth@mrc-lmb.cam.ac.uk>);
+	Thu, 18 Oct 2012 17:00:29 +0100
+Received: from cpepc210-3.lmb.internal ([10.14.0.2])
+	by mail.lmb.internal with esmtp (Exim 4.63)
+	(envelope-from <dhoworth@mrc-lmb.cam.ac.uk>) id 1TOsWL-00070j-1Z
+	for xfs@oss.sgi.com; Thu, 18 Oct 2012 17:00:29 +0100
+Message-ID: <5080279C.8030702@mrc-lmb.cam.ac.uk>
+Date: Thu, 18 Oct 2012 17:00:28 +0100
+From: Dave Howorth <dhoworth@mrc-lmb.cam.ac.uk>
 MIME-Version: 1.0
 Subject: Re: [PATCH] xfs: Update mount options documentation
 References: <1350574138-30305-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1350574138-30305-1-git-send-email-cmaiolino@redhat.com>
+	<5080253A.9060906@sgi.com>
+In-Reply-To: <5080253A.9060906@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,54 +31,19 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 10/18/12 10:28, Carlos Maiolino wrote:
-> Once inode64 is the default allocation mode now, kernel documentation should be
-> updated to match this behaviour.
->
-> Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
-> ---
->   Documentation/filesystems/xfs.txt | 11 +++++++++--
->   1 file changed, 9 insertions(+), 2 deletions(-)
->
-> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
-> index 3fc0c31..1718775 100644
-> --- a/Documentation/filesystems/xfs.txt
-> +++ b/Documentation/filesystems/xfs.txt
-> @@ -72,8 +72,15 @@ When mounting an XFS filesystem, the following options are accepted.
->   	Indicates that XFS is allowed to create inodes at any location
->   	in the filesystem, including those which will result in inode
->   	numbers occupying more than 32 bits of significance.  This is
-> -	provided for backwards compatibility, but causes problems for
-> -	backup applications that cannot handle large inode numbers.
-> +	the default allocation option. Applications which do not handle
-> +	inode numbers bigger than 32 bits, should use inode32 option.
-> +
-> +  inode32
-> +	Indicates that XFS is limited to create inodes at locations which
-> +	will not result in inode numbers with more than 32 bits of
-> +	significance. This is provided for backwards compatibility, since
-> +	64 bits inode numbers might cause problems for some applications
-> +	that cannot handle large inode numbers.
->
->     largeio/nolargeio
->   	If "nolargeio" is specified, the optimal I/O reported in
+Mark Tinguely wrote:
+> Would "Indicates that XFS is allowed to create inodes at locations up to
+> 32 bits of significance .."
 
-An engineer that documents!
-
-Would "Indicates that XFS is allowed to create inodes at locations up to
-32 bits of significance .."
-
-Do you want to add that it can still read/write/unlink the inodes 
-numbered > 32 bits that were created via inode64?
-
---Mark Tinguely.
+I prefer the original wording. Your suggestion says something about what
+XFS can do, but nothing about what it is not allowed to do, which is
+rather more important.
 
 _______________________________________________
 xfs mailing list
