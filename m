@@ -1,19 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9HMcTUu107084 for <xfs@oss.sgi.com>; Wed, 17 Oct 2012 17:38:29 -0500
-Date: Wed, 17 Oct 2012 17:40:04 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v5 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-Message-ID: <20121017224004.GG1377@sgi.com>
-References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
-	<1349446636-8611-7-git-send-email-bfoster@redhat.com>
-	<20121011141335.GY13214@sgi.com> <507749A2.4020206@redhat.com>
-	<20121015224626.GU24986@sgi.com> <20121015234902.GH2739@dastard>
-	<20121016013901.GI2739@dastard>
+	q9I1Y5EP129215 for <xfs@oss.sgi.com>; Wed, 17 Oct 2012 20:34:05 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	fxDhGQJ5GleU3OEC for <xfs@oss.sgi.com>;
+	Wed, 17 Oct 2012 18:35:41 -0700 (PDT)
+Date: Thu, 18 Oct 2012 12:35:38 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: master branch fast-forwarded to v3.7-rc1
+Message-ID: <20121018013538.GN2739@dastard>
+References: <20121016155640.GA1377@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121016013901.GI2739@dastard>
+In-Reply-To: <20121016155640.GA1377@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,81 +26,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+To: Ben Myers <bpm@sgi.com>
 Cc: xfs@oss.sgi.com
 
-Hi Fellas,
-
-On Tue, Oct 16, 2012 at 12:39:01PM +1100, Dave Chinner wrote:
-> On Tue, Oct 16, 2012 at 10:49:02AM +1100, Dave Chinner wrote:
-> > On Mon, Oct 15, 2012 at 05:46:26PM -0500, Ben Myers wrote:
-> > > Hey Brian,
-> > > 
-> > > On Thu, Oct 11, 2012 at 06:35:14PM -0400, Brian Foster wrote:
-> > > > On 10/11/2012 10:13 AM, Ben Myers wrote:
-> > > > > Hey Brian,
-> > > > > 
-> > > > > On Fri, Oct 05, 2012 at 10:17:12AM -0400, Brian Foster wrote:
-> > > > >> The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
-> > > > >> scan. The xfs_eofblocks structure is defined to support the command
-> > > > >> parameters (scan mode).
-> > > > > 
-> > > > > It would help to have an xfstest to exercise this ioctl to pull in with this
-> > > > > series.  Do you have any code that could be wrangled into a test case?
-> > > > > 
-> > > > 
-> > > > Yes, makes sense. I have some very basic test code I could put somewhere
-> > > > to invoke the ioctl(). One of the questions I've been meaning to ask is
-> > > > whether it would be relevant for that code to live in a common tool,
-> > > > such as adding a new command to xfs_io. Then perhaps create an xfstests
-> > > > test using that. Thoughts?
-> > > 
-> > > IMO you are right on the mark.  xfs_io is a great place for this.
-> > > 
-> > > > FYI, I have a few other things on my plate at the moment so
-> > > > unfortunately it will be a bit before I can get back to XFS work... But
-> > > > I'm fine with the set pending until I can come up with some test
-> > > > coverage if that is preferable, of course.
-> > > 
-> > > I do think it is preferable to have a test case go in with the code where
-> > > possible.  Since you don't mind waiting a bit, that seems to be the way to go.
-> > > The other option could be to look for a volunteer to work on the test.  ;)
-> > 
-> > FWIW, given the background cleanup code can be trivially verified to
-> > work (open, apend, close, repeat, wait 5 minutes) and is the
-> > functionality that is needed in mainline, having something to test
-> > the ioctls should not stop the patchset from being merged.
-
-Can we be assured that we'll get an xfstest for it eventually?
-
-I think we can pull this in if Brian is willing post his test code.  Initially
-it needn't be posted as an xfstest, that's fine.  As it stands today it appears
-that Brian is the only one to ever use the ioctl and there is no way for anyone
-else to test it.  Not an ideal situation.
-
-I think this is a reasonable request.  Usually it's Christoph who asks for a
-test case.  ;)
-
-> i.e.:
+On Tue, Oct 16, 2012 at 10:56:40AM -0500, Ben Myers wrote:
+> Hi XFS Folks,
 > 
-> $ for i in `seq 0 512`; do
-> > xfs_io -f -c "pwrite $((i * 4096)) 4096" /mnt/scratch/foo
-> > done
-> $ stat -c %b /mnt/scratch/foo
-> 8192
-> $ sync; stat -c %b /mnt/scratch/foo
-> 8192
-> $ sleep 30; stat -c %b /mnt/scratch/foo
-> 8192
-> $ sleep 300; stat -c %b /mnt/scratch/foo
-> 4104
+> Linux v3.7-rc1 is out.  The XFS master branch
+> (git://oss.sgi.com/xfs/xfs.git) has been fast-forwarded to v3.7-rc1.
 > 
-> It works. ;)
+> We'd like to take a moment and let you all know that we at SGI are going
+> to make an effort to communicate more from our end.  Your contribution
+> is appreciated whether it be features, testing, reviews, docs,
+> refactoring, cheerleading, or otherwise.  We want you here, and we want
+> your help!  We'll continue to try to be as responsive as possible.
 
-Nice!
+"we at SGI".
 
-Regards,
-Ben
+Curious. Has the XFS maintainer been replaced with a corporate
+plurality? :/
+
+FWIW:
+
+http://lwn.net/SubscriberLink/519919/01a4caa1a34465f5/
+
+"Developing in the community has a lot of rewards, including the
+fact that credit for the work stays with the developer rather than
+accruing to the sponsoring company.
+
+> Please bear in mind that the master branch is a shared resource.  We XFS
+> developers need a stable and bug free environment to work in and test
+> our changes.  We simply cannot pull in work with known regressions
+> because that can stop _all_ development until the problems are resolved.
+
+I disagreed when you first indicated this is what you wanted to do a
+couple of weeks ago:
+
+http://oss.sgi.com/archives/xfs/2012-10/msg00124.html
+
+but you didn't respond. I still disagree with it.
+
+FYI, I don't need a stable and bug free environment to work in - I
+haven't had one for years. That's because finding and fixing bugs is
+what I do every day. I create tens of XFS bugs a day and I fix that
+many as well. If the dev tree has bugs in it, then I'll find and fix
+those as I trip over them. And I don't care whose bug the code is in
+- if it stops me from continuing my line of development then my job
+is to immediately find and fix that bug.  This is what *everyone*
+use the dev tree should be doing - we are all responsible for finding
+and fixing bugs in the XFS tree.
+
+Regardless, instituting new development policies by decree is not
+the best way to win friends and influence people in an open
+development environment. You cannot force people to agree to new
+policies, even as the maintainer. Change is made via discussion and
+concensus, but you haven't engaged in disussion of this subject at
+all.
+
+Indeed, the development history of Linux and OSS in general points
+to this policy change being the precisely the wrong direction to
+take. At minimum, the benefits to developer productivity need to be
+demonstrated before such a change should be made. Show us why this
+is the right direction to take - tell us how you came to this
+decision and how it will improve my productivity....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
