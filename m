@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9IMb7IT217655 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 17:37:07 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id EDr9O7hXa0wCPgKQ for <xfs@oss.sgi.com>;
-	Thu, 18 Oct 2012 15:38:46 -0700 (PDT)
-Message-ID: <508084F5.5020602@sandeen.net>
-Date: Thu, 18 Oct 2012 17:38:45 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q9IMo0H4218613 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 17:50:00 -0500
+Date: Thu, 18 Oct 2012 17:51:36 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 0/2] xfs: fix AGF/alloc workqueue deadlock.
+Message-ID: <20121018225136.GJ1377@sgi.com>
+References: <1349399219-13024-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] mkfs: update manpage to match current inode allocation
-	behaviour
-References: <1350574957-1044-1-git-send-email-cmaiolino@redhat.com>
-In-Reply-To: <1350574957-1044-1-git-send-email-cmaiolino@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1349399219-13024-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,58 +22,38 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Carlos Maiolino <cmaiolino@redhat.com>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 10/18/12 10:42 AM, Carlos Maiolino wrote:
-> Once inode64 is the default allocator, mkfs man page needs to be updated to
-> match the current behaviour.
+Hi Dave,
+
+On Fri, Oct 05, 2012 at 11:06:57AM +1000, Dave Chinner wrote:
+> This is a followup from the last conversation with Mark about this
+> deadlock. I haven't heard anything in the last coupl eof days, so I
+> figured I'd just write the patches that did what I thought is
+> needed.
 > 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  man/man8/mkfs.xfs.8 | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+> Basically, the stack switch is only needed for userdata in the
+> delayed allocation path, and nowhere else at this point in time. To
+> make it so we switch stacks only at this point in time, I introduced
+> a flag to pass to xfs_bmapi_write(). This means we don't switch
+> stacks during direct IO, unwritten extent conversion or
+> preallocation via fallocate/XFS_IOC_RESVSP.
 > 
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index fa52152..c33cfb2 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -309,16 +309,17 @@ can be allocated to inodes. The default
->  is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
->  for filesystems over 50TB.
->  .IP
-> -In the default inode allocation mode, inode blocks are chosen such
-> +In the inode32 inode allocation mode, inode blocks are chosen such
->  that inode numbers will not exceed 32 bits, which restricts the inode
->  blocks to the lower portion of the filesystem. The data block
->  allocator will avoid these low blocks to accommodate the specified
->  maxpct, so a high value may result in a filesystem with nothing but
->  inodes in a significant portion of the lower blocks of the filesystem.
-> -(This restriction is not present when the filesystem is mounted with
-> +(This restriction is not present in the default inode allocation mode,
-> +i.e. when the filesystem is mounted with
->  the
->  .I "inode64"
-> -option on 64-bit platforms).
-> +option).
-
-This is a little confusing - the "default" mode when "mounted with the -o inode64 option?"
-
-If you mount with -o anything that's not quite default - or at best restating defaults.
-
-How about:
-
-(This restriction is not present in the default inode allocation mode,
-i.e. when the filesystem is mounted without the
- .I "inode32"
-option).
-
--Eric
-
->  .IP
->  Setting the value to 0 means that essentially all of the filesystem
->  can become inode blocks, subject to inode32 restrictions.
+> I then moved the stack switch to xfs_bmapi_allocate(), which is
+> where allocation happens. All the allocation calls within a single
+> userdata extent allocation occur in this function (both data extent
+> and bmap btree blocks), so switching stacks here will ensure that
+> only mapping calls that require allocation will have the stack
+> switched.
 > 
+> Comments welcome...
+
+These two patches have been committed to git://oss.sgi.com/xfs/xfs.git, master
+and for-next branches.
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
