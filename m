@@ -1,20 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9IFidHI198712 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 10:44:39 -0500
-Date: Thu, 18 Oct 2012 10:46:15 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v5 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-Message-ID: <20121018154615.GH1377@sgi.com>
-References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
-	<1349446636-8611-7-git-send-email-bfoster@redhat.com>
-	<20121011141335.GY13214@sgi.com> <507749A2.4020206@redhat.com>
-	<20121015224626.GU24986@sgi.com> <20121015234902.GH2739@dastard>
-	<20121016013901.GI2739@dastard> <20121017224004.GG1377@sgi.com>
-	<507FF339.8020208@redhat.com>
+	q9IFmlM4198921 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 10:48:47 -0500
+Message-ID: <5080253A.9060906@sgi.com>
+Date: Thu, 18 Oct 2012 10:50:18 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <507FF339.8020208@redhat.com>
+Subject: Re: [PATCH] xfs: Update mount options documentation
+References: <1350574138-30305-1-git-send-email-cmaiolino@redhat.com>
+In-Reply-To: <1350574138-30305-1-git-send-email-cmaiolino@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,64 +17,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: tinguely@sgi.com, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-Hey Brian,
+On 10/18/12 10:28, Carlos Maiolino wrote:
+> Once inode64 is the default allocation mode now, kernel documentation should be
+> updated to match this behaviour.
+>
+> Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
+> ---
+>   Documentation/filesystems/xfs.txt | 11 +++++++++--
+>   1 file changed, 9 insertions(+), 2 deletions(-)
+>
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.txt
+> index 3fc0c31..1718775 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.txt
+> @@ -72,8 +72,15 @@ When mounting an XFS filesystem, the following options are accepted.
+>   	Indicates that XFS is allowed to create inodes at any location
+>   	in the filesystem, including those which will result in inode
+>   	numbers occupying more than 32 bits of significance.  This is
+> -	provided for backwards compatibility, but causes problems for
+> -	backup applications that cannot handle large inode numbers.
+> +	the default allocation option. Applications which do not handle
+> +	inode numbers bigger than 32 bits, should use inode32 option.
+> +
+> +  inode32
+> +	Indicates that XFS is limited to create inodes at locations which
+> +	will not result in inode numbers with more than 32 bits of
+> +	significance. This is provided for backwards compatibility, since
+> +	64 bits inode numbers might cause problems for some applications
+> +	that cannot handle large inode numbers.
+>
+>     largeio/nolargeio
+>   	If "nolargeio" is specified, the optimal I/O reported in
 
-On Thu, Oct 18, 2012 at 08:16:57AM -0400, Brian Foster wrote:
-> On 10/17/2012 06:40 PM, Ben Myers wrote:
-> > On Tue, Oct 16, 2012 at 12:39:01PM +1100, Dave Chinner wrote:
-> >> On Tue, Oct 16, 2012 at 10:49:02AM +1100, Dave Chinner wrote:
-> >>> On Mon, Oct 15, 2012 at 05:46:26PM -0500, Ben Myers wrote:
-> >>>> Hey Brian,
-> >>>>
-> ...
-> >>>> I do think it is preferable to have a test case go in with the code where
-> >>>> possible.  Since you don't mind waiting a bit, that seems to be the way to go.
-> >>>> The other option could be to look for a volunteer to work on the test.  ;)
-> >>>
-> >>> FWIW, given the background cleanup code can be trivially verified to
-> >>> work (open, apend, close, repeat, wait 5 minutes) and is the
-> >>> functionality that is needed in mainline, having something to test
-> >>> the ioctls should not stop the patchset from being merged.
-> > 
-> > Can we be assured that we'll get an xfstest for it eventually?
-> > 
-> 
-> Absolutely. Getting a command into xfs_io to support such a test is now
-> the top of my todo list with regard to XFS. :)
+An engineer that documents!
 
-Excellent!
+Would "Indicates that XFS is allowed to create inodes at locations up to
+32 bits of significance .."
 
-> > I think we can pull this in if Brian is willing post his test code.  Initially
-> > it needn't be posted as an xfstest, that's fine.  As it stands today it appears
-> > that Brian is the only one to ever use the ioctl and there is no way for anyone
-> > else to test it.  Not an ideal situation.
-> > 
-> 
-> The impetus for this work was some prototype quota work for the gluster
-> distributed filesystem.
+Do you want to add that it can still read/write/unlink the inodes 
+numbered > 32 bits that were created via inode64?
 
-Now I'm curious where you're coming from.  Is gluster your primary project?
-
-> Beyond testing via that, I just had a very
-> simple/stupid program with the command and data structure bits
-> copy/pasted in to open a file and invoke an xfsctl() with hardcoded
-> parameters. I don't consider it post-worthy or very useful, but attached
-> nonetheless since I have a couple things to deal with before I get a
-> chance to play with xfs_io.
-
-Thanks for posting it anyway.  That's enough for an interested party to do a
-little fooling.  I believe Mark is finishing up a review of this series, so
-we'll get it in soon.
-
-Regards,
-	Ben
+--Mark Tinguely.
 
 _______________________________________________
 xfs mailing list
