@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9IL5c32213335 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 16:05:38 -0500
+	q9IL8Mr0213514 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 16:08:22 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	gshr6Qg8FVx7MIdJ for <xfs@oss.sgi.com>;
-	Thu, 18 Oct 2012 14:07:16 -0700 (PDT)
-Date: Fri, 19 Oct 2012 08:07:13 +1100
+	sG1hICg42ECriVZ3 for <xfs@oss.sgi.com>;
+	Thu, 18 Oct 2012 14:10:00 -0700 (PDT)
+Date: Fri, 19 Oct 2012 08:09:59 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC, PATCH 0/2] fiemap: filesystem free space mapping
-Message-ID: <20121018210713.GT2739@dastard>
+Subject: Re: [RFC, PATCH 3/2] xfsprogs: space management tool
+Message-ID: <20121018210958.GU2739@dastard>
 References: <1350537079-16246-1-git-send-email-david@fromorbit.com>
-	<F8483A1E-AFBD-46C0-BE4E-1C84F65FB29A@dilger.ca>
+	<20121018052713.GS2739@dastard> <201210181148.01311.arekm@maven.pl>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <F8483A1E-AFBD-46C0-BE4E-1C84F65FB29A@dilger.ca>
+In-Reply-To: <201210181148.01311.arekm@maven.pl>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,88 +23,27 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andreas Dilger <adilger@dilger.ca>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Arkadiusz =?utf-8?Q?Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Cc: xfs@oss.sgi.com
 
-On Thu, Oct 18, 2012 at 02:10:59AM -0600, Andreas Dilger wrote:
-> On 2012-10-17, at 11:11 PM, Dave Chinner wrote:
-> > So, I was bored a few days ago, and I was sick of having to run
-> > xfs_db incorrectly report free space extents when the filesytem is
-> > mounted, so I decided to extend fiemap to export freespace mappings
-> > to userspace so I could get the information coherently through the
-> > mounted filesystem.
-> > 
-> > Yes, this could probably be considered interface abuse but, well, it
-> > was simple to do because extent mapping is exactly what fiemap is
-> > designed to do. Hence I didn't have to write new walkers/formatters
-> > and I was using code I knew worked correctly.
-> 
-> One question about the usage of this interface - is the ioctl()
-> called on an open fd for the root inode, or is it called on any
-> open fd in the filesystem?  In some sense, getting the free space
-> on the root (or preferably block dev inode if that would work)
-> would make the most sense, since FIEMAP is intended to be related
-> to a specific file.
-
-fiemap in XFs is currently only hooked up to files, not directories.
-I didn't change that, so it needs an open regular file in the
-filesystem to work. I need to change that for it to work on
-directories - I think that having it work on the root dir of a
-filesystem is the right thing to do, but really having it behave
-like fstatfs(2) is where it shoul dend up, I think.
-
-> That said, it is a lot easier to use if it can be on any open file
-> handle in the filesystem, and one could consider the free space as
-> being related to every file in the filesystem (e.g. for the next
-> block allocation or defrag migration).
-
-*nod*
-
-> > There are two methods of mapping - one is reporting free space in
-> > ascending extent start offset order, then other in ascending extent
-> > length order. Both a useful to have (e.g. defragmenter might want to
-> > know about the nearest free block to given offset or the largest
-> > free extent in a given region). Either way, XFS keeps indexes
-> > ordered in both ways, so they can be exported directly with minimal
-> > overhead.
-> > 
-> > The only "interesting" abuse of the interface is really the use of
-> > FIEMAP_EXTENT_LAST. This means that the last extent in a freespace
-> > index is being returned, rather than the last freespace extent. This
-> > is done because filesystems often have multiple free space indexes,
-> > and it may be difficult to sort/scan over multiple indexes in a
-> > single map.
-> 
-> I'm not sure I understand the distinction you are trying to convey here.
-> Could you elaborate?
-
-XFs has multiple Allocation Groups with separate indexes in each AG.
-It only make sense for filesystem tools to be finding free space in
-a specific region (i.e. the AG they want to allocate in). xfs-fsr
-already controls the AG that the new extents are allocated in, but
-it has no idea of whether that is the best AG to relocate the data
-to - it just follows the kernel allocation rules based on the
-location of the inode. If we want to select a new AG based on, say,
-largest free extent size, then we need to know what the largest
-sizes in each AG are. Hence we want to know when we reach the end of
-an AG index when pulling the freespace data out of the kernel so we
-categorise it by AG.
-
-I suspect a similar thing might be useful for btrfs, with per-device
-freespace mappings...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gVGh1LCBPY3QgMTgsIDIwMTIgYXQgMTE6NDg6MDBBTSArMDIwMCwgQXJrYWRpdXN6IE1pxZtr
+aWV3aWN6IHdyb3RlOgo+IE9uIFRodXJzZGF5IDE4IG9mIE9jdG9iZXIgMjAxMiwgRGF2ZSBDaGlu
+bmVyIHdyb3RlOgo+ID4gRnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgo+
+ID4gCj4gPiB4ZnNfc3BhY2VtYW4gaXMgaW50ZW5kZWQgYXMgYSBkaWFnbm9zdGljIGFuZCBjb250
+cm9sIHRvb2wgZm9yIHNwYWNlCj4gPiBtYW5hZ2VtZW50IG9wZXJhdGlvbnMgd2l0aGluIFhGUy4g
+T3BlcmF0aW9ucyBsaWtlIGV4YW1pbmluZyBmcmVlCj4gPiBzcGFjZSwgbWFuYWdpbmcgYWxsb2Nh
+dGlvbiBwb2xpY2llcywgaXNzdWluZyBibG9jayBkaXNjYXJkcyBvbiBmcmVlCj4gPiBzcGFjZSwg
+ZXRjLgo+ID4gCj4gPiBUaGUgdG9vbCBpcyBtb2RlbGxlZCBvbiB0aGUgeGZzX2lvIGludGVyZmFj
+ZSwgYWxsb3dpbmcgYm90aAo+ID4gaW50ZXJhY3RpdmUgYW5kIGNvbW1hbmQgbGluZSBjb250cm9s
+IG9mIHRoZSB0b29sLCBlbmFibGluZyBpdCB0byBiZQo+ID4gdXNlZCBpbiBzY3JpcHRzIGFuZCBh
+dXRvbWF0ZWQgbWFuYWdlbWVudCB0b29scy4KPiAKPiBNYW51YWwgcGFnZSBzZWVtcyB0byBiZSBt
+aXNzaW5nLgoKU3VyZSwgSSBoYXZlbid0IHdyaXR0ZW4gb25lLiBXYXkgb2ZmIHRoZSByYWRhciBh
+dCB0aGUgbW9tZW50IC0gdGhpcwppcyBqdXN0IGEgcHJvdG90eXBlIHRvb2wuIEkgd29uJ3Qgd3Jp
+dGUgYSBtYW4gcGFnZSB1bnRpbCBpdCdzIHJlYWR5CmZvciBnbmVyYWwgdXNlLi4uLgoKQ2hlZXJz
+LAoKRGF2ZS4KLS0gCkRhdmUgQ2hpbm5lcgpkYXZpZEBmcm9tb3JiaXQuY29tCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwp4ZnMgbWFpbGluZyBsaXN0Cnhm
+c0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFpbG1hbi9saXN0aW5mby94ZnMK
