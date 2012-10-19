@@ -1,20 +1,31 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9J57FcO236451 for <xfs@oss.sgi.com>; Fri, 19 Oct 2012 00:07:15 -0500
-Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
-	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	cReX8NOWOIRxHYZD for <xfs@oss.sgi.com>;
-	Thu, 18 Oct 2012 22:08:53 -0700 (PDT)
-Date: Fri, 19 Oct 2012 16:08:50 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: master branch fast-forwarded to v3.7-rc1, and corp-speak mumble
-Message-ID: <20121019050850.GW2739@dastard>
-References: <20121016155640.GA1377@sgi.com> <507F132B.30000@sandeen.net>
-	<20121018222838.GI1377@sgi.com>
+	q9JDmd9T259120 for <xfs@oss.sgi.com>; Fri, 19 Oct 2012 08:48:40 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id 1NlTSe7itIrs5Gpm for
+	<xfs@oss.sgi.com>; Fri, 19 Oct 2012 06:50:19 -0700 (PDT)
+Received: from int-mx02.intmail.prod.int.phx2.redhat.com
+	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q9JDoGPr023251
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 19 Oct 2012 09:50:18 -0400
+Received: from andromeda.usersys.redhat.com (ovpn-113-113.phx2.redhat.com
+	[10.3.113.113])
+	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id q9JDoBLe002520
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES128-SHA bits=128 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 19 Oct 2012 09:50:15 -0400
+Date: Fri, 19 Oct 2012 10:50:11 -0300
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] mkfs: update manpage to match current inode allocation
+	behaviour
+Message-ID: <20121019135010.GA15588@andromeda.usersys.redhat.com>
+References: <1350574957-1044-1-git-send-email-cmaiolino@redhat.com>
+	<508084F5.5020602@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121018222838.GI1377@sgi.com>
+In-Reply-To: <508084F5.5020602@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,171 +38,80 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Eric Sandeen <sandeen@sandeen.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Thu, Oct 18, 2012 at 05:28:38PM -0500, Ben Myers wrote:
-> On Wed, Oct 17, 2012 at 03:20:59PM -0500, Eric Sandeen wrote:
-> > Dave had concerns that a regression, which, although quickly fixed, was
-> > cited as the reason for missing a merge window.
-> >
-> > This concerns me too, because it's not just SGI's timetables that matter
-> > here; others are also depending on this work getting upstream within certain
-> > deadlines as well.
-> >
-> > Reading back through the list, I'm alarmed that SGI wants some unspecified
-> > "soak time," but not upstream, for new work.  There's no better place than an
-> > -rc1 to get soak & exposure for tested patches.  Bugs get found and fixed.
+On Thu, Oct 18, 2012 at 05:38:45PM -0500, Eric Sandeen wrote:
+> On 10/18/12 10:42 AM, Carlos Maiolino wrote:
+> > Once inode64 is the default allocator, mkfs man page needs to be updated to
+> > match the current behaviour.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  man/man8/mkfs.xfs.8 | 7 ++++---
+> >  1 file changed, 4 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+> > index fa52152..c33cfb2 100644
+> > --- a/man/man8/mkfs.xfs.8
+> > +++ b/man/man8/mkfs.xfs.8
+> > @@ -309,16 +309,17 @@ can be allocated to inodes. The default
+> >  is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
+> >  for filesystems over 50TB.
+> >  .IP
+> > -In the default inode allocation mode, inode blocks are chosen such
+> > +In the inode32 inode allocation mode, inode blocks are chosen such
+> >  that inode numbers will not exceed 32 bits, which restricts the inode
+> >  blocks to the lower portion of the filesystem. The data block
+> >  allocator will avoid these low blocks to accommodate the specified
+> >  maxpct, so a high value may result in a filesystem with nothing but
+> >  inodes in a significant portion of the lower blocks of the filesystem.
+> > -(This restriction is not present when the filesystem is mounted with
+> > +(This restriction is not present in the default inode allocation mode,
+> > +i.e. when the filesystem is mounted with
+> >  the
+> >  .I "inode64"
+> > -option on 64-bit platforms).
+> > +option).
 > 
-> I think you are referring to my comment in this message:
-> http://oss.sgi.com/archives/xfs/2012-10/msg00122.html
+> This is a little confusing - the "default" mode when "mounted with the -o inode64 option?"
 > 
-> My soak time comment was with regard to a specific patch set that had a history
-> of problems.  My comment was not meant to indicate that SGI plans to soak every
-> patch before we pull it in.  We do run the regression test suite on new patches
-> before pulling them in though.
-
-I think the misunderstanding stems from the approach taken to
-resolve this particular case combined it with abstract references to
-stabilty and avoiding all regressions in the dev tree.  We need to
-keep communication clear and direct...
-
-> > I don't think the XFS developer community needs a lecture on patch submission
-> > processes and quality expectations.
+> If you mount with -o anything that's not quite default - or at best restating defaults.
 > 
-> Sorry it came off that way.  Maybe not everyone else sees it, but we have had a
-> few situations recently where a patch was posted which clearly hadn't been
-> adequately tested by the developer.  E.g. something crashes right away, hits an
-> assert, or whatever.
-
-This is something that the review process is supposed to cover. If
-you don't think a patch set is adequately tested, then that should
-be part of your review feedback.
-
-i.e. timely communication is very helpful here, so we all should be
-trying to review code within a couple of days of it being posted and
-not leaving it for a week or two to rot before looking at it....
-
-> It's not a huge deal, but that's why we wanted to remind
-> everyone to test before posting.  I hope that most everyone is not running into
-> those kinds of problems because they are usually caught before commit time.
-
-Developers do test their code - they test them to the best of their
-ability and available hardware. That doesn't mean the code is
-perfect or bug free - we know from years of experience that a change
-that passes xfstests on several developers machines might cause a
-repeated ASSERT failure on one specific machine with a specific
-configuration somewhere else.
-
-Such a problem is not the devloper's fault, though, and keeping the
-code out of the dev tree because of such a problem is a harsh
-penalty. And it's apenalty that just places more burden on
-developers and reviewers.
-
-i.e. Instead of having to just review/track a single patch for the
-regression, the entire patch set has to be kept under management and
-reposted and updated over and over again while the regression is
-triaged and fixes are tested.  Reviewers have to look at the whole
-patch series to see what they need to re-review, it needs to be
-retested, etc. It's messy and time consuming and reduces developer
-productivity because of the additional overhead it imposes on them.
-Dealing with such problems post-integration is much more efficient
-for everyone.
-
-> > If maintainers get too conservative all it's going to do is slow development,
-> > and slow the discovery & fixes for bugs which will inevitably occur in the
-> > course of active development.
+> How about:
 > 
-> Yep, I understand.  I don't want to slow development either.  I do want to try
-> to get the relevent content in before -rc7 and play by the rules with the
-> upstream tree.  And, I understand that bugs slip through.
-
-Then, please, say exactly that.  Tell us what your merge cycle plan
-is so we can organise our work flows around that.  It'll make
-everyone's life easier if we know what targets we need to work
-towards.  I know I sound like a broken record, but it's that
-communication thing again...  :/
-
-> > The master branch is a shared *development* resource.  If SGI is treating it
-> > as something which must never be broken under any circumstances, then I
-> > humbly submit that you're doing it wrong.  It may date me, but I'll point out
-> > that it's meant to be a bazaar, not a cathedral, and that release early,
-> > release often is not a new idea.
+> (This restriction is not present in the default inode allocation mode,
+> i.e. when the filesystem is mounted without the
+>  .I "inode32"
+> option).
 > 
-> I think we're treating the master branch correctly.  If a patch is 1)
-> adequately reviewed and 2) doesn't regress something, we're good to go.  I'll
-> grant you the statement "We simply cannot pull in work with known regressions"
-> was a bit strong.  There are probably some good reasons to pull in known broken
-> code, e.g. the new breakage is preferable to the old, but usually it should be
-> fixed first.
+Fair enough.
 
-Sure. But the crux of the concern is that "2) doesn't regress
-something" is new merge criteria because "something" has been
-redefined to have a much wider scope.
+How about:
 
-What it comes down to is that minor or isolated regressions in the
-dev tree are an acceptible trade-off for getting code into the dev
-tree quickly and efficiently. Getting the code into the tree fast
-has much wider benefits to the dev community than ensuring that
-merged code does not have any regressions at all.
+"i.e. using inode64" or "i.e. inode64 mode"
 
-> > If you need something solid and slow-moving, that's what forks and branches
-> > and -stable trees are for.
+or even, rephasing everything:
+
+"This restriction is not present in the default (inode64) inode allocation mode
+
+I was thinking in something that would highlight inode64 as the default
+allocation mode
+
+
+> -Eric
 > 
-> I take your point but I think we also have to be careful not to break stuff
-> that will affect a lot of people.  When we break the master branch it affects
-> maybe tens of people.
+> >  .IP
+> >  Setting the value to 0 means that essentially all of the filesystem
+> >  can become inode blocks, subject to inode32 restrictions.
+> > 
+> 
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-Development trees are for developers. Development trees, by
-definition, are unstable. Developers understand this, and so expect
-to find regressions and breakages in the developement tree.
-
-> I really don't know how many people use the -rc releases
-> upstream.
-
-Tens of thousands. Maybe even hundreds of thousands of developer and
-test machines are running -rc kernels. Machines that expect -rc
-kernels to have problems and are running -rc kernels to find those
-problems and get them fixed.  Again, regressions in -rc1 are not the
-end of the world.
-
-> So here's Ben at v3.6, considering pulling in a broken patchset with
-> a challenging history, along with a one-day-old fix, without much testing, for
-> something that is already fixed in 3.6, in the middle of the merge window,
-> shortly after being told not to do that, when a mistake will affect a lot of
-> people.
-
-I'm not going get into a he-said, she-said argument over this,
-because....
-
-> Does that make things any clearer?  Make it worse?
-
-... the problem was very clear: a lack of communication.
-
-(<smash> Oh, look, another broken record. :)
-
-In the above case, an early "I don't think this is ready for merge"
-statement would have resulted in discussing the issue immediately
-and deciding the way to progress. No surprises, and everyone ends up
-happy with the outcome because they know exactly what is going on.
-
-The maintainer role is not just being a code monkey - that's the
-easy part. You also have to be a release manager, a front line
-support engineer, a QA manager and - last but not least - a very
-good developer.  All of these tasks require close communication with
-affected parties, so the maintainer must also be able to communicate
-quickly and effectively.
-
-Put simply, the #1 job of the maintainer is communication and
-co-ordination. If the maintainer is not communicating and/or
-co-ordinating well then everything else breaks down.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+--Carlos
 
 _______________________________________________
 xfs mailing list
