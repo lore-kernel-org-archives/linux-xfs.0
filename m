@@ -1,26 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9J40Rdr231407 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 23:00:28 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id FHWvMFD5kUlukRXz for
-	<xfs@oss.sgi.com>; Thu, 18 Oct 2012 21:02:07 -0700 (PDT)
-Received: from int-mx01.intmail.prod.int.phx2.redhat.com
-	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id q9J4269N012065
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Fri, 19 Oct 2012 00:02:06 -0400
-Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
-	[10.5.9.1])
-	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id q9J42518012386
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Fri, 19 Oct 2012 00:02:06 -0400
-Message-ID: <5080D0BD.3000304@redhat.com>
-Date: Thu, 18 Oct 2012 23:02:05 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q9J4KHCG232557 for <xfs@oss.sgi.com>; Thu, 18 Oct 2012 23:20:18 -0500
+Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
+	cuda.sgi.com with ESMTP id i3dOaNrmkCv3hpRA (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 18 Oct 2012 21:21:56 -0700 (PDT)
+From: Mike Frysinger <vapier@gentoo.org>
+Subject: Re: [PATCH 2/3] respect DESTDIR when installing
+Date: Fri, 19 Oct 2012 00:21:58 -0400
+References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+	<1348529978-30048-2-git-send-email-vapier@gentoo.org>
+	<20120925094139.GK9189@infradead.org>
+In-Reply-To: <20120925094139.GK9189@infradead.org>
 MIME-Version: 1.0
-Subject: [PATCH] xfsdump:fill in bs_forkoff
+Message-Id: <201210190021.59105.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,57 +23,65 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary="===============5222996563211103580=="
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Upstream, the structure containing bs_forkoff is actually zeroed
-prior to these functions, but when pulling the patch back to an
-older xfsdump, we got checksum errors due to an uninitialized
-bs_forkoff not matching in dump vs. restore.
+--===============5222996563211103580==
+Content-Type: multipart/signed;
+  boundary="nextPart1591937.2YnSkFMkGj";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
 
-So even though forkoff won't be explicitly restored from
-a dump, do explicitly set it in these routines to keep checksums
-happy.
+--nextPart1591937.2YnSkFMkGj
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+On Tuesday 25 September 2012 05:41:39 Christoph Hellwig wrote:
+> Looks good.  I guess this is for xfstests as it should be working for
+> the real tools?
 
-Tested w/ ./check -g dump on a 3.6.0 kernel, no failures.
+hmm, these don't appear to have been merged.  is there something i should do ?
+-mike
 
-Setting to 0 would work too, if that would be better?
-It just looked odd.
+--nextPart1591937.2YnSkFMkGj
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.17 (GNU/Linux)
+
+iQIcBAABAgAGBQJQgNVnAAoJEEFjO5/oN/WBzLAQAKoZv0ZJBpv7f9p327swUeXd
+t/GtUEkH8D3UHuqO1AHlBvY+YEfri+FaVkKI13FpHnvVxlpVQ5ylBZpa9Z7O7iVq
+XwDiDLZlJsL2cOHVh0z0KMYneW9UW2VcY7e3JOW3KOIxk6JJ1ViTRv2vTEfvCVLv
+kJFRq2aDyai+Jmud2H9HnIDvvozLpQYFYYumtesqOCzTu9olyg7//OzPlwPIzLsP
+6FJArzc8T8p5ptA9oNLlnsVox9O7+O0zhbeiD9lHO00TD2YjAVfivyOV8O8JdWgw
+jsVSZ3oqV7tJ6NdQUJy70gchc04YaI4By3arMl4jQ+xvX5wmKR3yj5lEx/65kW5r
+7vpNrqke1CL0fgUqCXZbwEYAhCshbcn3hzQKNfhRAyKZTcQQPEUACJ2nUrQ7TYQj
+Srq4kEvpDqzpK0OwawWcPJFXgXPkR6dvlCrf223O5+qZc88MERXQmMH3xMykCPwf
+KohqlkSj4zYrZpixPj8aBMmsqqbKHsTiIDaJtyr7oq2Fykqs58CTGuAwz7Bmly3i
+mJn9i2I78/JUsfG1m/K70E65uFrlS8LYeirUyo4PD/TnFXIrTJra/aRZJqM2US36
+tW76N3DMs4C8cyg511t3y31+Um58DgzO2s4RVxiTeFNt2Ixr4r5M60BSIS6jF90b
+sG4NO8NIcgguYtVbt40O
+=UZwa
+-----END PGP SIGNATURE-----
+
+--nextPart1591937.2YnSkFMkGj--
 
 
-
-Index: xfsdump-3.0.4/common/arch_xlate.c
-===================================================================
---- xfsdump-3.0.4.orig/common/arch_xlate.c
-+++ xfsdump-3.0.4/common/arch_xlate.c
-@@ -377,6 +377,7 @@ xlate_bstat(bstat_t *bs1, bstat_t *bs2, 
- 	IXLATE(bs1, bs2, bs_extents);
- 	IXLATE(bs1, bs2, bs_gen);
- 	IXLATE(bs1, bs2, bs_projid_lo);
-+	IXLATE(bs1, bs2, bs_forkoff);
- 	IXLATE(bs1, bs2, bs_projid_hi);
- 	IXLATE(bs1, bs2, bs_dmevmask);
- 	IXLATE(bs1, bs2, bs_dmstate);
-Index: xfsdump-3.0.4/dump/content.c
-===================================================================
---- xfsdump-3.0.4.orig/dump/content.c
-+++ xfsdump-3.0.4/dump/content.c
-@@ -5072,6 +5072,7 @@ copy_xfs_bstat(bstat_t *dst, xfs_bstat_t
- 	dst->bs_extents = src->bs_extents;
- 	dst->bs_gen = src->bs_gen;
- 	dst->bs_projid_lo = src->bs_projid_lo;
-+	dst->bs_forkoff = src->bs_forkoff;
- 	dst->bs_projid_hi = src->bs_projid_hi;
- 	dst->bs_dmevmask = src->bs_dmevmask;
- 	dst->bs_dmstate = src->bs_dmstate;
+--===============5222996563211103580==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
+
+--===============5222996563211103580==--
