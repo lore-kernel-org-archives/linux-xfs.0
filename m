@@ -1,18 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9LDBiiA212460 for <xfs@oss.sgi.com>; Sun, 21 Oct 2012 08:11:44 -0500
-Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
-	cuda.sgi.com with ESMTP id 64AqHq4EV5cwN2kJ (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 21 Oct 2012 06:13:26 -0700 (PDT)
-Message-ID: <5083F4DD.1090600@oracle.com>
-Date: Sun, 21 Oct 2012 21:13:01 +0800
-From: Jie Liu <jeff.liu@oracle.com>
+	q9LE0aS8214772 for <xfs@oss.sgi.com>; Sun, 21 Oct 2012 09:00:36 -0500
+Message-ID: <50840003.406@redhat.com>
+Date: Sun, 21 Oct 2012 10:00:35 -0400
+From: Brian Foster <bfoster@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: get return value in seek_sanity_test
-References: <1350825309-30733-1-git-send-email-wenqing.lz@taobao.com>
-In-Reply-To: <1350825309-30733-1-git-send-email-wenqing.lz@taobao.com>
+Subject: Re: [PATCH v5 00/10] speculative preallocation inode tracking
+References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
+	<5081BFFF.70603@sgi.com>
+In-Reply-To: <5081BFFF.70603@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,50 +22,59 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "wenqing.lz" <gnehzuil.liu@gmail.com>
-Cc: Zheng Liu <wenqing.lz@taobao.com>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 10/21/12 21:15, wenqing.lz wrote:
-> From: Zheng Liu <wenqing.lz@taobao.com>
->
-> In seek_sanity_test getting return value is missing.  Thus we couldn't get the
-> result unless someone read the log file (e.g. # 285).
->
-> CC: Jeff Liu <jeff.liu@oracle.com>
-> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
-> ---
-> v2 <- v1:
-> 	* put return value check below the run_test()
->
-> Hi Jeff,
->
-> Could you please review this patch again?  Thanks.
->
-> Regards,
-> Zheng
->
->  src/seek_sanity_test.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->
-> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
-> index 34f5508..3897f02 100644
-> --- a/src/seek_sanity_test.c
-> +++ b/src/seek_sanity_test.c
-> @@ -674,9 +674,9 @@ int main(int argc, char **argv)
->  		goto out;
->  
->  	for (i = 0; i < numtests; ++i) {
-> +		ret = run_test(&seek_tests[i]);
->  		if (ret)
-> -			goto out;
-> -		run_test(&seek_tests[i]);
-> +			break;
->  	}
->  
->  out:
-Looks good to me, thank you!
+On 10/19/2012 05:02 PM, Mark Tinguely wrote:
+> On 10/05/12 09:17, Brian Foster wrote:
+>> Hi all,
+>>
+>> This is v3 of the speculative preallocation inode tracking patchset. This
+>> functionality tracks inodes with post-EOF speculative preallocation
+>> for the
+>> purpose of background and on-demand trimming.
+>>
+>> Background scanning occurs on a longish interval (5 minutes by
+>> default) and in
+>> a best-effort mode (i.e., inodes are skipped due to lock contention or
+>> dirty
+>> cache). The intent is to clear up post-EOF blocks on inodes that might
+>> have
+>> allocations hanging around due to open-write-close sequences (NFS).
+>>
+>> On demand scanning is provided via a new ioctl and supports various
+>> parameters
+>> such as scan mode, filtering by quota id and minimum file size. A
+>> pending use
+>> case for on demand scanning is for accurate quota accounting via the
+>> gluster
+>> scale out filesystem (i.e., to free up preallocated space when near a
+>> usage
+>> limit).
+>>
+>> Brian
+> 
+> The series looks great.
+> 
 
--Jeff
+Hi Mark,
+
+Thanks for the review.
+
+> I am just curious, what is the reason for the padding in the
+> xfs_eofblocks structure?
+> 
+
+I added the padding in response to review on an early revision of the set:
+
+http://oss.sgi.com/archives/xfs/2012-09/msg00024.html
+
+The purpose is to allow adding fields to the control structure down the
+road without breaking existing binaries.
+
+Brian
+
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
