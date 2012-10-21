@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9LHpkA1236445 for <xfs@oss.sgi.com>; Sun, 21 Oct 2012 12:51:46 -0500
-Message-ID: <5084368F.3000204@sgi.com>
-Date: Sun, 21 Oct 2012 12:53:19 -0500
+	q9LKTaBr245167 for <xfs@oss.sgi.com>; Sun, 21 Oct 2012 15:29:36 -0500
+Message-ID: <50845B8C.4050203@sgi.com>
+Date: Sun, 21 Oct 2012 15:31:08 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
 Subject: Re: [PATCH v5 00/10] speculative preallocation inode tracking
 References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
 	<5081BFFF.70603@sgi.com> <50840003.406@redhat.com>
-In-Reply-To: <50840003.406@redhat.com>
+	<5084368F.3000204@sgi.com>
+In-Reply-To: <5084368F.3000204@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,72 +26,16 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On 10/21/12 09:00, Brian Foster wrote:
-> On 10/19/2012 05:02 PM, Mark Tinguely wrote:
->> On 10/05/12 09:17, Brian Foster wrote:
->>> Hi all,
->>>
->>> This is v3 of the speculative preallocation inode tracking patchset. This
->>> functionality tracks inodes with post-EOF speculative preallocation
->>> for the
->>> purpose of background and on-demand trimming.
->>>
->>> Background scanning occurs on a longish interval (5 minutes by
->>> default) and in
->>> a best-effort mode (i.e., inodes are skipped due to lock contention or
->>> dirty
->>> cache). The intent is to clear up post-EOF blocks on inodes that might
->>> have
->>> allocations hanging around due to open-write-close sequences (NFS).
->>>
->>> On demand scanning is provided via a new ioctl and supports various
->>> parameters
->>> such as scan mode, filtering by quota id and minimum file size. A
->>> pending use
->>> case for on demand scanning is for accurate quota accounting via the
->>> gluster
->>> scale out filesystem (i.e., to free up preallocated space when near a
->>> usage
->>> limit).
->>>
->>> Brian
->>
->> The series looks great.
->>
+On 10/21/12 12:53, Mark Tinguely wrote:
+
 >
-> Hi Mark,
->
-> Thanks for the review.
->
->> I am just curious, what is the reason for the padding in the
->> xfs_eofblocks structure?
->>
->
-> I added the padding in response to review on an early revision of the set:
->
-> http://oss.sgi.com/archives/xfs/2012-09/msg00024.html
->
-> The purpose is to allow adding fields to the control structure down the
-> road without breaking existing binaries.
->
-> Brian
->
->> Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+> Not at all a big deal, (16 used and 12 padding = ) 28 bytes was an
+> odd number and it got my curiosity up. I suspected it was part a plan
+> of yours and Pinky to take over the world. :)
 >
 
-Thank-you for the information.
-
-I would think that changing the number of arguments would also
-involving changing the version number. The kernel should know
-that version 1 copies in 16 bytes, version 2 copies in 16+t bytes,
-version n copies in 16+n bytes...
-
-Not at all a big deal, (16 used and 12 padding = ) 28 bytes was an
-odd number and it got my curiosity up. I suspected it was part a plan
-of yours and Pinky to take over the world. :)
-
-Nice feature. I jury-rigged a ioctl to test and it works great. I look
-forwarded to seeing this in xfs_io.
+Ha-ha. never-mind. I am foiled again by my inability to count past 4, or 
+stupidity of counting using diff files.
 
 --Mark.
 
