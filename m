@@ -1,21 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9LMQxK2255183 for <xfs@oss.sgi.com>; Sun, 21 Oct 2012 17:26:59 -0500
+	q9LMUnmV255495 for <xfs@oss.sgi.com>; Sun, 21 Oct 2012 17:30:49 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	UQrPB6TJppL6XIqt for <xfs@oss.sgi.com>;
-	Sun, 21 Oct 2012 15:28:35 -0700 (PDT)
-Date: Mon, 22 Oct 2012 09:28:32 +1100
+	dqQQORk1qYdovgvV for <xfs@oss.sgi.com>;
+	Sun, 21 Oct 2012 15:32:29 -0700 (PDT)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1TQ43q-0002QT-Et
+	for xfs@oss.sgi.com; Mon, 22 Oct 2012 09:31:58 +1100
+Date: Mon, 22 Oct 2012 09:31:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 00/10] speculative preallocation inode tracking
-Message-ID: <20121021222832.GZ2739@dastard>
-References: <1349446636-8611-1-git-send-email-bfoster@redhat.com>
-	<5081BFFF.70603@sgi.com> <50840003.406@redhat.com>
-	<5084368F.3000204@sgi.com>
+Subject: Re: xfstests 250 fail on newer kernels
+Message-ID: <20121021223158.GA2739@dastard>
+References: <20121019173730.GA23018@andromeda.usersys.redhat.com>
+	<20121019215343.GX2739@dastard>
+	<20121020112405.GA652@andromeda.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5084368F.3000204@sgi.com>
+In-Reply-To: <20121020112405.GA652@andromeda.usersys.redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,67 +31,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Brian Foster <bfoster@redhat.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Oct 21, 2012 at 12:53:19PM -0500, Mark Tinguely wrote:
-> On 10/21/12 09:00, Brian Foster wrote:
-> >On 10/19/2012 05:02 PM, Mark Tinguely wrote:
-> >>I am just curious, what is the reason for the padding in the
-> >>xfs_eofblocks structure?
-> >>
-> >
-> >I added the padding in response to review on an early revision of the set:
-> >
-> >http://oss.sgi.com/archives/xfs/2012-09/msg00024.html
-> >
-> >The purpose is to allow adding fields to the control structure down the
-> >road without breaking existing binaries.
+On Sat, Oct 20, 2012 at 08:24:05AM -0300, Carlos Maiolino wrote:
+> On Sat, Oct 20, 2012 at 08:53:43AM +1100, Dave Chinner wrote:
+> > On Fri, Oct 19, 2012 at 02:37:30PM -0300, Carlos Maiolino wrote:
+> > > Hi,
+> > > 
+> > > reviewing a patch to xfstests250, I ran it against newer kernels (3.6.0+ and
+> > > 3.7.0-rc1) and noticed it is failing. i.e. btree is getting corrupted. 
+> > 
+> > It's been failing on mainline kernels for a long time. In fact, i
+> > think it's been failing since it was created. But it's not failing
+> > due to btree corruption - it's failing because mkfs is not leaving
+> > enough space in the AG that contains the log for sanity checks to
+> > pass. i.e. that there are always a minimum of 4 blocks of freespace
+> > in an AG.
+> > 
+> > This is not actually a problem - the log takes the entire AG, so
+> > allocation will never occur in it, so having less than 4 blocks of
+> > free space in the AG is just noise in this case. It's never bubbled
+> > to the top of my list to fix...
+> > 
+> > > I'm going to take a look at it, but let me know if anybody has already
+> > > found/fixed it.
+> > 
+> > If it is failing the check_scratch_fs stage, then it is most likely
+> > the above issue. The corrupted btree problem that the test was
+> > writen for caused the system to ASSERT fail or crash - i.e. it
+> > didn't even run to the point of checking the fs....
+> > 
+> Yep, that was my point, it's failing on check_scratch_fs stage. The btree
+> problem has been fixed since it is not triggering the ASSERT. Didn't know it is
+> failing since its creation :)
 > 
-> Thank-you for the information.
-> 
-> I would think that changing the number of arguments would also
-> involving changing the version number.
+> I can add it to my todo list if you want some stuff out of yours
 
-Yes, it usually does.
-
-> The kernel should know
-> that version 1 copies in 16 bytes, version 2 copies in 16+t bytes,
-> version n copies in 16+n bytes...
-
-Gets messy, pretty quickly.  Versioning and padding user facing
-structures makes life a lot easy when it comes to extending
-interfaces. 15-20 years of support for an ioctl is a long time, and
-that's the sort of time frame we need to think about. How to make it
-easy to maintain and extend over a long period of time. We should
-always version and pad user facing ioctl structures for this reason.
-
-Further, assuming that userspace knows exactly the right size for a
-given feature is problematic.  If there's only one structure type
-for userspace to use, then it's likely they'll get it right. If
-there's a different structure for every version of the ioctl, then
-it's likely they'll get it wrong.
-
-And we get validation wrong in the kernel, too. The kernel must
-validate the size of the structure as being correct given the
-version number, and that gets hard to validate and easy to get wrong
-when you have a different structure for every version that exists.
-
-See, for example, struct xfs_fsop_geom_t, and XFS_IOC_FSGEOMETRY_V1/
-XFS_IOC_FSGEOMETRY. The originaly was an unversioned structure with
-no padding, and when the V2 log format came along, the structure had
-to be extended and a new ioctl added to support it. Internally they
-both used the same struture, but the copy-in/out were different and
-initialisation was different. The result was leaking unitialised
-data to userspace because we didn't get it right.  (c4d0c3b "xfs:
-prevent leaking uninitialized stack memory in FSGEOMETRY_V1")
-
-At least the new xfs_fsops_geom structure has a version number in it
-so we don't have to add a new ioctl to extend it further. However,
-it still doesn't have any padding so any further extensions will
-have to be very careful to avoid structure size mismatches. This
-could have been avoided is some padding was added as the time the
-version number was added....
+You can - the simplest thing to do might be just to fix the log size
+for the mkfs command to 15MB (i.e. smaller than the AG size) so that
+mkfs doesn't use all the space in the AG...
 
 Cheers,
 
