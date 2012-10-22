@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9MLadFl146697 for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 16:36:39 -0500
-Received: from eagdhcp-232-125.americas.sgi.com
-	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
-	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B5FFAC006
-	for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 14:38:19 -0700 (PDT)
-Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
-	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
-	q9MLcAl0012608
-	for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 16:38:10 -0500 (CDT)
-	(envelope-from tinguely@sgi.com)
-Message-Id: <20121022213804.616209844@sgi.com>
-Date: Mon, 22 Oct 2012 16:38:00 -0500
-From: Mark Tinguely <tinguely@sgi.com>
-Subject: [PATCH] xfs_io: add the lseek() SEEK_DATA/SEEK_HOLE support
-References: <20121022213759.033667921@sgi.com>
-Content-Disposition: inline; filename=xfs_io-support-SEEK_DATA-SEEK_HOLE.patch
+	q9MML5lZ156956 for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 17:21:05 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	3Ip7PogHBQxBQVui for <xfs@oss.sgi.com>;
+	Mon, 22 Oct 2012 15:22:46 -0700 (PDT)
+Date: Tue, 23 Oct 2012 09:22:28 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v5 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+Message-ID: <20121022222228.GB4291@dastard>
+References: <1349446636-8611-7-git-send-email-bfoster@redhat.com>
+	<20121011141335.GY13214@sgi.com> <507749A2.4020206@redhat.com>
+	<20121015224626.GU24986@sgi.com> <20121015234902.GH2739@dastard>
+	<20121016013901.GI2739@dastard> <20121017224004.GG1377@sgi.com>
+	<507FF339.8020208@redhat.com> <20121022073422.GC2739@dastard>
+	<508548BF.9090103@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <508548BF.9090103@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,253 +27,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-Add the lseek() SEEK_DATA/SEEK_HOLE support into xfs_io.
-The result from the lseek() call is printed to the output:
-  xfs_io> lseek -h 609k
-  lseek for hole starting at offset 623616 result offset 630784
+On Mon, Oct 22, 2012 at 09:23:11AM -0400, Brian Foster wrote:
+> On 10/22/2012 03:34 AM, Dave Chinner wrote:
+> > On Thu, Oct 18, 2012 at 08:16:57AM -0400, Brian Foster wrote:
+> >> On 10/17/2012 06:40 PM, Ben Myers wrote:
+> >>>>> FWIW, given the background cleanup code can be trivially verified to
+> >>>>> work (open, apend, close, repeat, wait 5 minutes) and is the
+> >>>>> functionality that is needed in mainline, having something to test
+> >>>>> the ioctls should not stop the patchset from being merged.
+> >>>
+> >>> Can we be assured that we'll get an xfstest for it eventually?
+> >>
+> >> Absolutely. Getting a command into xfs_io to support such a test is now
+> >> the top of my todo list with regard to XFS. :)
+> > 
+> > Here's a patch to the new xfs_spaceman program I'm writing that adds
+> > control for these ioctls.
+> > 
+> 
+> Very cool, thanks. Catchy name for the tool as well, btw ;).
+> 
+> For some reason my mailer is stripping out the patch,
 
-Configure this feature only on Linux distributions that support
-SEEK_DATA/SEEK_HOLE.
+Probably because I simply added it inline below my sig. The mailer
+is probably dropping everything below the /^-- $/ line that marks
+the sig...
+>
+> but my only
+> comment is with regard to minlen. Shouldn't that variable be handled as
+> an unsigned?
 
-Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
----
- configure.in          |    1 
- include/builddefs.in  |    1 
- io/Makefile           |    5 ++
- io/init.c             |    1 
- io/io.h               |    6 ++
- io/lseek.c            |  101 ++++++++++++++++++++++++++++++++++++++++++++++++++
- m4/package_libcdev.m4 |   15 +++++++
- man/man8/xfs_io.8     |    7 +++
- 8 files changed, 137 insertions(+)
+Probably, but a ssize_t would be better, and ....
 
-Index: b/configure.in
-===================================================================
---- a/configure.in
-+++ b/configure.in
-@@ -109,6 +109,7 @@ AC_HAVE_GETMNTINFO
- AC_HAVE_FALLOCATE
- AC_HAVE_FIEMAP
- AC_HAVE_PREADV
-+AC_HAVE_LSEEK_DATA
- AC_HAVE_SYNC_FILE_RANGE
- AC_HAVE_BLKID_TOPO($enable_blkid)
- 
-Index: b/include/builddefs.in
-===================================================================
---- a/include/builddefs.in
-+++ b/include/builddefs.in
-@@ -102,6 +102,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
- HAVE_FALLOCATE = @have_fallocate@
- HAVE_FIEMAP = @have_fiemap@
- HAVE_PREADV = @have_preadv@
-+HAVE_LSEEK_DATA = @have_lseek_data@
- HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
- 
- GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
-Index: b/io/Makefile
-===================================================================
---- a/io/Makefile
-+++ b/io/Makefile
-@@ -80,6 +80,11 @@ ifeq ($(HAVE_PREADV),yes)
- LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
- endif
- 
-+ifeq ($(HAVE_LSEEK_DATA),yes)
-+LCFLAGS += -DHAVE_LSEEK_DATA
-+CFILES += lseek.c
-+endif
-+
- default: depend $(LTCOMMAND)
- 
- include $(BUILDRULES)
-Index: b/io/init.c
-===================================================================
---- a/io/init.c
-+++ b/io/init.c
-@@ -64,6 +64,7 @@ init_commands(void)
- 	help_init();
- 	imap_init();
- 	inject_init();
-+	lseek_init();
- 	madvise_init();
- 	mincore_init();
- 	mmap_init();
-Index: b/io/io.h
-===================================================================
---- a/io/io.h
-+++ b/io/io.h
-@@ -108,6 +108,12 @@ extern void		quit_init(void);
- extern void		shutdown_init(void);
- extern void		truncate_init(void);
- 
-+#ifdef HAVE_LSEEK_DATA
-+extern void		lseek_init(void);
-+#else
-+#define lseek_init()	do { } while (0)
-+#endif
-+
- #ifdef HAVE_FADVISE
- extern void		fadvise_init(void);
- #else
-Index: b/io/lseek.c
-===================================================================
---- /dev/null
-+++ b/io/lseek.c
-@@ -0,0 +1,101 @@
-+/*
-+ * Copyright (c) 2012 SGI
-+ * All Rights Reserved.
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License as
-+ * published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it would be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write the Free Software Foundation,
-+ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-+ */
-+
-+#define _LARGEFILE64_SOURCE     /* See feature_test_macros(7) */
-+#include <sys/types.h>
-+#include <unistd.h>
-+#include <linux/fs.h>
-+
-+#include <sys/uio.h>
-+#include <xfs/xfs.h>
-+#include <xfs/command.h>
-+#include <xfs/input.h>
-+#include <ctype.h>
-+#include "init.h"
-+#include "io.h"
-+
-+static cmdinfo_t lseek_cmd;
-+
-+static void
-+lseek_help(void)
-+{
-+	printf(_(
-+"\n"
-+" returns the next hole or data offset at or after the specified offset\n"
-+"\n"
-+" Example:\n"
-+" 'lseek -d 512'  - offset of data at or following offset 512\n"
-+"\n"
-+" Repositions and returns the offset of either the next data or hole.\n"
-+" There is an implied hole at the end of file. If the specified offset is\n"
-+" past end of file, or there is no data past the specied offset, the offset\n"
-+" -1 is returned.\n"
-+" -d   -- search for data starting at the specified offset.\n"
-+" -h   -- search for a hole starting at the specified offset.\n"
-+"\n"));
-+}
-+
-+static int
-+lseek_f(
-+	int		argc,
-+	char		**argv)
-+{
-+	off64_t		offset, res_off;
-+	size_t          fsblocksize, fssectsize;
-+	int		flag;
-+	int		c;
-+
-+	flag = 0;
-+	init_cvtnum(&fsblocksize, &fssectsize);
-+
-+	while ((c = getopt(argc, argv, "dh")) != EOF) {
-+		switch (c) {
-+		case 'd':
-+			flag = SEEK_DATA;
-+			break;
-+		case 'h':
-+			flag = SEEK_HOLE;
-+			break;
-+		default:
-+			return command_usage(&lseek_cmd);
-+		}
-+	}
-+	if (!flag  || optind > 2)
-+		return command_usage(&lseek_cmd);
-+	offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
-+	res_off = lseek64(file->fd, offset, flag);
-+	printf("lseek for %s starting at offset %lld result offset %lld\n",
-+		(flag == SEEK_DATA) ? "data" : "hole",	offset, res_off);
-+	return 0;
-+}
-+
-+void
-+lseek_init(void)
-+{
-+	lseek_cmd.name = "lseek";
-+	lseek_cmd.altname = "seek";
-+	lseek_cmd.cfunc = lseek_f;
-+	lseek_cmd.argmin = 2;
-+	lseek_cmd.argmax = 2;
-+	lseek_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	lseek_cmd.args = _("[-d | -h] off");
-+	lseek_cmd.oneline = _("locate and postition to next data or hole");
-+	lseek_cmd.help = lseek_help;
-+
-+	add_command(&lseek_cmd);
-+}
-Index: b/m4/package_libcdev.m4
-===================================================================
---- a/m4/package_libcdev.m4
-+++ b/m4/package_libcdev.m4
-@@ -153,6 +153,21 @@ AC_DEFUN([AC_HAVE_PREADV],
-     AC_SUBST(have_preadv)
-   ])
- 
-+# 
-+# Check if we have a working fadvise system call
-+# 
-+AC_DEFUN([AC_HAVE_LSEEK_DATA],
-+  [ AC_MSG_CHECKING([for lseek SEEK_DATA])
-+    AC_TRY_COMPILE([
-+#include <linux/fs.h>
-+    ], [
-+	lseek(0, 0, SEEK_DATA);
-+    ],	have_lseek_data=yes
-+	AC_MSG_RESULT(yes),
-+	AC_MSG_RESULT(no))
-+    AC_SUBST(have_lseek_data)
-+  ])
-+
- #
- # Check if we have a sync_file_range libc call (Linux)
- #
-Index: b/man/man8/xfs_io.8
-===================================================================
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -377,6 +377,13 @@ must be specified as another open file
- .RB ( \-f )
- or by path
- .RB ( \-i ).
-+.TP
-+.BI "lseek [ \-b " offset " | \-h " offset " ]
-+Repositions and prints the file pointer to the next offset containing data
-+.RB ( \-d )
-+or next offset containing a hole 
-+.RB ( \-h )
-+.TP
- 
- .SH MEMORY MAPPED I/O COMMANDS
- .TP
+> Now that I think of it, that makes me wonder if I should
+> make that a 64-bit unsigned in xfs_eofblocks..?
 
+... yes, a __u64 would be better.
+
+I've got a couple more comments now I've actually used and tested
+it, so I'll do that today....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
