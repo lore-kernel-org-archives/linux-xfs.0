@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9MKSRi1137930 for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 15:28:28 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id fcMNuyV4oA5hqMw5 for <xfs@oss.sgi.com>;
-	Mon, 22 Oct 2012 13:30:09 -0700 (PDT)
-Message-ID: <5085ACD1.7050404@sandeen.net>
-Date: Mon, 22 Oct 2012 15:30:09 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
-MIME-Version: 1.0
-Subject: Re: [PATCH 0/3] xfsdump: more projid32bit fixes
-References: <50788C50.40600@redhat.com> <508559DE.3060203@sandeen.net>
-	<20121022155604.GL1377@sgi.com> <508572D4.7080101@sandeen.net>
-	<20121022202435.GM1377@sgi.com>
-In-Reply-To: <20121022202435.GM1377@sgi.com>
+	q9MLadFl146697 for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 16:36:39 -0500
+Received: from eagdhcp-232-125.americas.sgi.com
+	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
+	by relay3.corp.sgi.com (Postfix) with ESMTP id 6B5FFAC006
+	for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 14:38:19 -0700 (PDT)
+Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	q9MLcAl0012608
+	for <xfs@oss.sgi.com>; Mon, 22 Oct 2012 16:38:10 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20121022213804.616209844@sgi.com>
+Date: Mon, 22 Oct 2012 16:38:00 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH] xfs_io: add the lseek() SEEK_DATA/SEEK_HOLE support
+References: <20121022213759.033667921@sgi.com>
+Content-Disposition: inline; filename=xfs_io-support-SEEK_DATA-SEEK_HOLE.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,166 +25,253 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 10/22/12 3:24 PM, Ben Myers wrote:
-> Hey Eric,
-> 
-> On Mon, Oct 22, 2012 at 11:22:44AM -0500, Eric Sandeen wrote:
->> On 10/22/12 10:56 AM, Ben Myers wrote:
->>> On Mon, Oct 22, 2012 at 09:36:14AM -0500, Eric Sandeen wrote:
->>>> On 10/12/12 4:32 PM, Eric Sandeen wrote:
->>>>> I recently sent a patch for 32-bit project IDs for xfsdump, to properly
->>>>> restore the top 16 bits, which otherwise get lost.  This forced a new
->>>>> dump format version 4 (we were currently at 3).
->>>>>
->>>>> One thing missing is that we should not restore a dump with 32-bit
->>>>> project IDs onto a filesystem w/o that format; the restore will fail
->>>>> to restore the top 16 bits (but otherwise it returns success; attribute
->>>>> setting failures are not fatal (!?))
->>>>>
->>>>> Also, 32-bit project ID is a bit uncommon; bumping the format (and making
->>>>> older restore incompatible) is a bit draconian.
->>>>>
->>>>> 3 patches here:
->>>>>
->>>>> 1/3: extend fs info call to get fs flags as well
->>>>> 2/3: default back to V3 and go to V4 only if the projid32 flag is set
->>>>> 3/3: fail restore if the target XFS fs doesn't have projid32 set
->>>>>
->>>>> I have to say, I'm not super happy with this.  I have nagging fear
->>>>> of feature-flag-itis, and I'm not sure how extensible this is as newer
->>>>> versions may appear.  But anyway, here's a place to start.
->>>>>
->>>>> (p.s. anybody have wkendall's new email?)  ;)
->>>>
->>>> I spoke with Bill, and he actually didn't feel that a new version was
->>>> needed for the projid32 fix.  I'd like to get some discussion here,
->>>> and reach an agreement.  *NOT* bumping the version simplifies a whole
->>>> lot of things.
->>>
->>> Can you post a list of things that it simplifies?  That would help with the
->>> discussion.
->>>
->>>> Here's what I'd said to Bill:
->>>>
->>>>>> If we restore old dumps w/ new xfsdump, nothing special is needed;
->>>>>> 0 gets restored for the top 16 bits (vs. garbage, which WOULD be
->>>>>> bad).
->>>>>>
->>>>>> So bumping the version really only prevents old restore from
->>>>>> restoring newer dumps.
->>>>>>
->>>>>> If I *didn't* bump the version, then old restore would work, and
->>>>>> would simply not restore the top 16 bits - just like an old
->>>>>> dump+restore option did.
->>>>
->>>> And Bill replied:
->>>>
->>>>> Had a look at xfsdump, and I agree, there's no need to bump the format
->>>>> version. Nice of someone to leave some zeroed pad bytes next to the
->>>>> project id. 
->>>>
->>>> so what are people's thoughts?  Moving to a new version has complexity
->>>> & compatibility consequences...
->>>
->>> Initially I think that moving to the new version was the right thing to do.
->>> It's good for users to have some warning when there are consequences of
->>> upgrading to a new release of xfsdump.
->>>
->>> A new dump format version will make old xfs_restore fail with an error if a v4
->>> dump is encountered, rather than do the restore and chop off the top 16 bits of
->>> the project id silently.  I think that for a user it is reasonable to expect to
->>> be notified if project ids are going to be lost.  Looks like there is no way
->>> for an older xfsrestore to force an override, so if there is to be some level
->>> of compatability between versions, newer xfsdump would have to still be able to
->>> create v3 dumps.
->>>
->>> What other complexity/compat issues are there?
->>
->> Well, I started putting in some feature flag detection.  So in a super-perfect world
->> we could:
->>
->> * Dump to to V4 only if the PROJID32 flag is set on the fs being dumped, else V3
-> 
-> It might be better to just do v4 always (except if -K is specified).  I guess I
-> don't understand what the additional level of complexity buys us.
+Add the lseek() SEEK_DATA/SEEK_HOLE support into xfs_io.
+The result from the lseek() call is printed to the output:
+  xfs_io> lseek -h 609k
+  lseek for hole starting at offset 623616 result offset 630784
 
-Because then "V4" signifies "top 16 bits are set in projid"
+Configure this feature only on Linux distributions that support
+SEEK_DATA/SEEK_HOLE.
 
->> * Refuse / warn if restoring a < V4 dump onto a fs w/ the PROJID32 set
-> 
-> Lets see if I understand...
-> 
-> In this case we're warning the user because we are concerned that they may have
-> been running with projid32 and dumped the filesystem with an older xfsdump
-> which didn't capture the top 16 bits of the projid.  The restore of the
-> filesystem would result in the loss of those top 16 bits.
+Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
+---
+ configure.in          |    1 
+ include/builddefs.in  |    1 
+ io/Makefile           |    5 ++
+ io/init.c             |    1 
+ io/io.h               |    6 ++
+ io/lseek.c            |  101 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   15 +++++++
+ man/man8/xfs_io.8     |    7 +++
+ 8 files changed, 137 insertions(+)
 
-right
+Index: b/configure.in
+===================================================================
+--- a/configure.in
++++ b/configure.in
+@@ -109,6 +109,7 @@ AC_HAVE_GETMNTINFO
+ AC_HAVE_FALLOCATE
+ AC_HAVE_FIEMAP
+ AC_HAVE_PREADV
++AC_HAVE_LSEEK_DATA
+ AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_BLKID_TOPO($enable_blkid)
+ 
+Index: b/include/builddefs.in
+===================================================================
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -102,6 +102,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_PREADV = @have_preadv@
++HAVE_LSEEK_DATA = @have_lseek_data@
+ HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
+Index: b/io/Makefile
+===================================================================
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -80,6 +80,11 @@ ifeq ($(HAVE_PREADV),yes)
+ LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+ endif
+ 
++ifeq ($(HAVE_LSEEK_DATA),yes)
++LCFLAGS += -DHAVE_LSEEK_DATA
++CFILES += lseek.c
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+Index: b/io/init.c
+===================================================================
+--- a/io/init.c
++++ b/io/init.c
+@@ -64,6 +64,7 @@ init_commands(void)
+ 	help_init();
+ 	imap_init();
+ 	inject_init();
++	lseek_init();
+ 	madvise_init();
+ 	mincore_init();
+ 	mmap_init();
+Index: b/io/io.h
+===================================================================
+--- a/io/io.h
++++ b/io/io.h
+@@ -108,6 +108,12 @@ extern void		quit_init(void);
+ extern void		shutdown_init(void);
+ extern void		truncate_init(void);
+ 
++#ifdef HAVE_LSEEK_DATA
++extern void		lseek_init(void);
++#else
++#define lseek_init()	do { } while (0)
++#endif
++
+ #ifdef HAVE_FADVISE
+ extern void		fadvise_init(void);
+ #else
+Index: b/io/lseek.c
+===================================================================
+--- /dev/null
++++ b/io/lseek.c
+@@ -0,0 +1,101 @@
++/*
++ * Copyright (c) 2012 SGI
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#define _LARGEFILE64_SOURCE     /* See feature_test_macros(7) */
++#include <sys/types.h>
++#include <unistd.h>
++#include <linux/fs.h>
++
++#include <sys/uio.h>
++#include <xfs/xfs.h>
++#include <xfs/command.h>
++#include <xfs/input.h>
++#include <ctype.h>
++#include "init.h"
++#include "io.h"
++
++static cmdinfo_t lseek_cmd;
++
++static void
++lseek_help(void)
++{
++	printf(_(
++"\n"
++" returns the next hole or data offset at or after the specified offset\n"
++"\n"
++" Example:\n"
++" 'lseek -d 512'  - offset of data at or following offset 512\n"
++"\n"
++" Repositions and returns the offset of either the next data or hole.\n"
++" There is an implied hole at the end of file. If the specified offset is\n"
++" past end of file, or there is no data past the specied offset, the offset\n"
++" -1 is returned.\n"
++" -d   -- search for data starting at the specified offset.\n"
++" -h   -- search for a hole starting at the specified offset.\n"
++"\n"));
++}
++
++static int
++lseek_f(
++	int		argc,
++	char		**argv)
++{
++	off64_t		offset, res_off;
++	size_t          fsblocksize, fssectsize;
++	int		flag;
++	int		c;
++
++	flag = 0;
++	init_cvtnum(&fsblocksize, &fssectsize);
++
++	while ((c = getopt(argc, argv, "dh")) != EOF) {
++		switch (c) {
++		case 'd':
++			flag = SEEK_DATA;
++			break;
++		case 'h':
++			flag = SEEK_HOLE;
++			break;
++		default:
++			return command_usage(&lseek_cmd);
++		}
++	}
++	if (!flag  || optind > 2)
++		return command_usage(&lseek_cmd);
++	offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++	res_off = lseek64(file->fd, offset, flag);
++	printf("lseek for %s starting at offset %lld result offset %lld\n",
++		(flag == SEEK_DATA) ? "data" : "hole",	offset, res_off);
++	return 0;
++}
++
++void
++lseek_init(void)
++{
++	lseek_cmd.name = "lseek";
++	lseek_cmd.altname = "seek";
++	lseek_cmd.cfunc = lseek_f;
++	lseek_cmd.argmin = 2;
++	lseek_cmd.argmax = 2;
++	lseek_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	lseek_cmd.args = _("[-d | -h] off");
++	lseek_cmd.oneline = _("locate and postition to next data or hole");
++	lseek_cmd.help = lseek_help;
++
++	add_command(&lseek_cmd);
++}
+Index: b/m4/package_libcdev.m4
+===================================================================
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -153,6 +153,21 @@ AC_DEFUN([AC_HAVE_PREADV],
+     AC_SUBST(have_preadv)
+   ])
+ 
++# 
++# Check if we have a working fadvise system call
++# 
++AC_DEFUN([AC_HAVE_LSEEK_DATA],
++  [ AC_MSG_CHECKING([for lseek SEEK_DATA])
++    AC_TRY_COMPILE([
++#include <linux/fs.h>
++    ], [
++	lseek(0, 0, SEEK_DATA);
++    ],	have_lseek_data=yes
++	AC_MSG_RESULT(yes),
++	AC_MSG_RESULT(no))
++    AC_SUBST(have_lseek_data)
++  ])
++
+ #
+ # Check if we have a sync_file_range libc call (Linux)
+ #
+Index: b/man/man8/xfs_io.8
+===================================================================
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -377,6 +377,13 @@ must be specified as another open file
+ .RB ( \-f )
+ or by path
+ .RB ( \-i ).
++.TP
++.BI "lseek [ \-b " offset " | \-h " offset " ]
++Repositions and prints the file pointer to the next offset containing data
++.RB ( \-d )
++or next offset containing a hole 
++.RB ( \-h )
++.TP
+ 
+ .SH MEMORY MAPPED I/O COMMANDS
+ .TP
 
->> * Refuse / warn if restoring a >= V4 dump onto a non-PROJID32 fs
-> 
-> In this case we're warning the user because... the filesystem would drop the
-> top 16 bits of the valid project ids in the dump?
-
-well, I think dump would continue but would issue failures/warnings when
-it tries to set the high bits of projid.  Failing to set attrs isn't fatal
-to the restore process, IIRC.
-
->> * Extend the -K option to allow specifying/forcing arbitrary dump levels
-> 
-> This would allow the newer xfsdump to create a v3 dump level.
-
-yeah.
-
->> But:
->>
->> * No released kernel yet reports the feature flag, so we don't have guarantees
->>   about feature presence
->>  - So going to V4 only if flag found will silently fail prior to kernel 3.7,
->>    since no feature flag is available there.
->>  - so then we should default to V4 regardless of feature flag test
->>   ~ so then we can't make restore of V4 require the feature flag on the fs
->> * Older dump/restore already has the silent failure problem
->> * By the time you are restoring a <V4 dump onto a PROJID32 fs, it's unlikely
->>   that you have further options anyway (you're possibly in recovery, can't go
->>   back & make V4 dumps to restore from)
-> 
-> xfsdump/restore aren't just for those recovery situations:  some people might
-> dump on one machine and pipe it to another host during an upgrade.
-
-fair enough.
-
->> * Warning on >= V4 dump to non-PROJID32 fs only makes sense if V4 is contingent
->>   on feature set/recognized at dump time but we cant' reliably detect that.
->> * projid32bit is a non-default option today, so it's an infrequent case...
-> 
-> It sounds like the super-perfect world needs to have kernel support for
-> reporting whether a filesystem has the projid32 feature flag set.  Are there
-> other options for getting that data?  xfs_db?
-
-I suppose, but do you really want xfsdump to shell out to xfs_db, or .. ?
-
-> In this somewhat-less-than-perfect world, I think it might be ok to extend the
-> -K option to have some backward compatability in the near term, and then work
-> toward improved warnings once your fsgeom series hits upstream.  Maybe I'm
-> missing something.
-
-I think it's too many knobs with too many caveats, and too much work, for very
-little gain.  Bear in mind this dump/restore bug has never even been reported
-in the wild.
-
--Eric
-
-> Regards,
-> 	Ben
-> 
 
 _______________________________________________
 xfs mailing list
