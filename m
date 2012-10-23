@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9NCMwf8044296 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 07:22:59 -0500
+	q9NCO4D6044603 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 07:24:04 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	53rDN0ba3DVEaUOq (version=TLSv1 cipher=AES256-SHA bits=256
+	QMWRnn4kxysrG0Qg (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Oct 2012 05:24:41 -0700 (PDT)
-Date: Tue, 23 Oct 2012 08:24:40 -0400
+	Tue, 23 Oct 2012 05:25:47 -0700 (PDT)
+Date: Tue, 23 Oct 2012 08:25:46 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: xfstests 250 fail on newer kernels
-Message-ID: <20121023122440.GC7341@infradead.org>
-References: <20121019173730.GA23018@andromeda.usersys.redhat.com>
-	<20121019215343.GX2739@dastard>
-	<20121020112405.GA652@andromeda.usersys.redhat.com>
-	<20121021223158.GA2739@dastard>
+Subject: Re: [PATCH 2/3] respect DESTDIR when installing
+Message-ID: <20121023122546.GD7341@infradead.org>
+References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+	<1348529978-30048-2-git-send-email-vapier@gentoo.org>
+	<20120925094139.GK9189@infradead.org>
+	<201210190021.59105.vapier@gentoo.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121021223158.GA2739@dastard>
+In-Reply-To: <201210190021.59105.vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,15 +31,20 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Mon, Oct 22, 2012 at 09:31:58AM +1100, Dave Chinner wrote:
-> You can - the simplest thing to do might be just to fix the log size
-> for the mkfs command to 15MB (i.e. smaller than the AG size) so that
-> mkfs doesn't use all the space in the AG...
+On Fri, Oct 19, 2012 at 12:21:58AM -0400, Mike Frysinger wrote:
+> On Tuesday 25 September 2012 05:41:39 Christoph Hellwig wrote:
+> > Looks good.  I guess this is for xfstests as it should be working for
+> > the real tools?
+> 
+> hmm, these don't appear to have been merged.  is there something i should do ?
 
-I'd love to still have another test for the mkfs issue, though.
+No, but I stopped applying patches to the kernel.org repos, with the SGI
+people pickingup the slack using the oss.sgi.com repos.
+
+Ben, any chance you could re-review the series and apply it?
 
 _______________________________________________
 xfs mailing list
