@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9NE72XK058424 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 09:07:02 -0500
-Message-ID: <5086A4E0.7040008@sgi.com>
-Date: Tue, 23 Oct 2012 09:08:32 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	q9NEKRun060441 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 09:20:27 -0500
+Message-ID: <5086A86C.5090107@sgi.com>
+Date: Tue, 23 Oct 2012 09:23:40 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs_io: add the lseek() SEEK_DATA/SEEK_HOLE support
-References: <20121022213759.033667921@sgi.com>
-	<20121022213804.616209844@sgi.com> <20121022232931.GD4291@dastard>
-In-Reply-To: <20121022232931.GD4291@dastard>
+Subject: Re: [PATCH 2/3] respect DESTDIR when installing
+References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+	<1348529978-30048-2-git-send-email-vapier@gentoo.org>
+	<20120925094139.GK9189@infradead.org>
+	<201210190021.59105.vapier@gentoo.org>
+	<20121023122546.GD7341@infradead.org>
+In-Reply-To: <20121023122546.GD7341@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,85 +25,34 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Mike Frysinger <vapier@gentoo.org>, xfs@oss.sgi.com
 
-On 10/22/12 18:29, Dave Chinner wrote:
-> On Mon, Oct 22, 2012 at 04:38:00PM -0500, Mark Tinguely wrote:
-
-> Type		Offset
-> HOLE		630784
+On 10/23/2012 07:25 AM, Christoph Hellwig wrote:
+> On Fri, Oct 19, 2012 at 12:21:58AM -0400, Mike Frysinger wrote:
+>> On Tuesday 25 September 2012 05:41:39 Christoph Hellwig wrote:
+>>> Looks good.  I guess this is for xfstests as it should be working for
+>>> the real tools?
+>>
+>> hmm, these don't appear to have been merged.  is there something i should do ?
 >
-
-> xfs_io>  lseek -r -d 0
-> Type		Offset
-> DATA		0
-> DATA		65536
-> DATA		524288
-> xfs_io>  lseek -r -h 0
-> Type		Offset
-> HOLE		16384
-> HOLE		131072
-> HOLE		1049576
+> No, but I stopped applying patches to the kernel.org repos, with the SGI
+> people pickingup the slack using the oss.sgi.com repos.
 >
-
-> xfs_io>  lseek -r -a 0
-> DATA		0
-> HOLE		16384
-> DATA		65536
-> HOLE		131072
-> DATA		524288
-> HOLE		1049576
-
-Good idea.
-
->> +#define _LARGEFILE64_SOURCE     /* See feature_test_macros(7) */
+> Ben, any chance you could re-review the series and apply it?
 >
-> That's defined by _GNU_SOURCE, which is set in the makefiles, so not
-> necessary here.
-
-Okay, I think a couple of the header files are redundantly redundant too.
-
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 >
->> +static void
->> +lseek_help(void)
->> +{
->> +	printf(_(
->> +"\n"
->> +" returns the next hole or data offset at or after the specified offset\n"
->> +"\n"
->> +" Example:\n"
->> +" 'lseek -d 512'  - offset of data at or following offset 512\n"
->> +"\n"
->> +" Repositions and returns the offset of either the next data or hole.\n"
->> +" There is an implied hole at the end of file. If the specified offset is\n"
->> +" past end of file, or there is no data past the specied offset, the offset\n"
->> +" -1 is returned.\n"
->
-> I'd prefer that "EOF" rather than "-1" is printed in this case.
+Mike/Christoph,
 
-sounds good.
+I am in the process of going through patchworks and cleaning up the 
+list.  I will make sure to include this.
 
-<deleted mess of things to clean up>
-
->
-> Given that we only support pread and pwrite operations, the
-> repositioning of the file pointer is irrelevant so probably should
-> not be mentioned. If it was relevant, then we'd also need to support
-> the other seek modes to reposition the file pointer. So jsut
-> mentioning that it returns the offset of the next ... is probably
-> sufficient here.
-
-agreed. I did not the other lseek() whence options for that very reason.
-
->
-> Cheers,
->
-> Dave.
-
-Thanks for the feedback.
-
-PS. To Christoph: Yes, a test will be added.
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
