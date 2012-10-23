@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9NCX3ep046254 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 07:33:03 -0500
+	q9NCZ5g7046749 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 07:35:05 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	pdLVRS6QtJC47OHJ (version=TLSv1 cipher=AES256-SHA bits=256
+	ygeLVgHRcoHGeXLu (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Oct 2012 05:34:46 -0700 (PDT)
-Date: Tue, 23 Oct 2012 08:34:44 -0400
+	Tue, 23 Oct 2012 05:36:48 -0700 (PDT)
+Date: Tue, 23 Oct 2012 08:36:47 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_quota: XFS_XFLAG_PROJINHERIT is only for dirs
-Message-ID: <20121023123444.GI7341@infradead.org>
-References: <5078432B.6050501@redhat.com>
-	<20121013155205.GA11037@infradead.org>
-	<20121013233431.GQ2739@dastard> <507A01DF.1070105@redhat.com>
-	<20121014001412.GS2739@dastard>
+Subject: Re: [PATCH 24/23] xfs: convert buffer verifiers to an ops structure.
+Message-ID: <20121023123646.GJ7341@infradead.org>
+References: <1350020669-19504-1-git-send-email-david@fromorbit.com>
+	<1350020669-19504-23-git-send-email-david@fromorbit.com>
+	<20121013160212.GA24337@infradead.org>
+	<20121014001219.GR2739@dastard> <20121018045028.GQ2739@dastard>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121014001412.GS2739@dastard>
+In-Reply-To: <20121018045028.GQ2739@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,16 +32,35 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>, nscott@redhat.com
+Cc: Christoph Hellwig <hch@infradead.org>, xfs@oss.sgi.com
 
-On Sun, Oct 14, 2012 at 11:14:12AM +1100, Dave Chinner wrote:
-> Sorry, I wasn't particularly clear - if your patch to quota goes in,
-> the problem goes away in future and we should simply filter the
-> warning in xfstests to handle the present issue....
+On Thu, Oct 18, 2012 at 03:50:28PM +1100, Dave Chinner wrote:
+> Here's a patch that does this. It adds on top of the series, and
+> points out more changes needed to growfs to support CRC checking
+> properly.
 
-I'd suggest to stil clear it but not warn.  It's something that is a)
-harmless and b) could be set in normal operation for a long time.  Just
-clear it silently and add a comment.
+I like this a lot, and I'm fine with having this at the end of the
+series if it makes your life easier.
+
+> -xfs_agfl_write_verify(
+> +xfs_agfl_read_verify(
+>  	struct xfs_buf	*bp)
+>  {
+>  	xfs_agfl_verify(bp);
+>  }
+>  
+>  static void
+> -xfs_agfl_read_verify(
+> +xfs_agfl_write_verify(
+>  	struct xfs_buf	*bp)
+>  {
+>  	xfs_agfl_verify(bp);
+> -	bp->b_pre_io = xfs_agfl_write_verify;
+> -	bp->b_iodone = NULL;
+> -	xfs_buf_ioend(bp, 0);
+>  }
+
+Any good reason to keep all these no-op wrappers?
 
 _______________________________________________
 xfs mailing list
