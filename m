@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9NCT3s9045503 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 07:29:03 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	Ta0WLHDHm30NrIt0 (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 23 Oct 2012 05:30:45 -0700 (PDT)
-Date: Tue, 23 Oct 2012 08:30:44 -0400
+	q9NCUboW045790 for <xfs@oss.sgi.com>; Tue, 23 Oct 2012 07:30:37 -0500
+Date: Tue, 23 Oct 2012 08:32:19 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [RFC, PATCH 0/2] fiemap: filesystem free space mapping
-Message-ID: <20121023123044.GG7341@infradead.org>
-References: <1350537079-16246-1-git-send-email-david@fromorbit.com>
+Subject: Re: master branch fast-forwarded to v3.7-rc1, and corp-speak mumble
+Message-ID: <20121023123219.GH7341@infradead.org>
+References: <20121016155640.GA1377@sgi.com>
+ <507F132B.30000@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1350537079-16246-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <507F132B.30000@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,25 +23,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Thu, Oct 18, 2012 at 04:11:17PM +1100, Dave Chinner wrote:
-> So, I was bored a few days ago, and I was sick of having to run
-> xfs_db incorrectly report free space extents when the filesytem is
-> mounted, so I decided to extend fiemap to export freespace mappings
-> to userspace so I could get the information coherently through the
-> mounted filesystem.
+On Wed, Oct 17, 2012 at 03:20:59PM -0500, Eric Sandeen wrote:
+> Dave had concerns that a regression, which, although quickly fixed, was
+> cited as the reason for missing a merge window.
 > 
-> Yes, this could probably be considered interface abuse but, well, it
-> was simple to do because extent mapping is exactly what fiemap is
-> designed to do. Hence I didn't have to write new walkers/formatters
-> and I was using code I knew worked correctly.
+> This concerns me too, because it's not just SGI's timetables that matter
+> here; others are also depending on this work getting upstream within certain
+> deadlines as well.
+> 
+> Reading back through the list, I'm alarmed that SGI wants some unspecified
+> "soak time," but not upstream, for new work.  There's no better place than
+> an -rc1 to get soak & exposure for tested patches.  Bugs get found and fixed.
+> I don't think the XFS developer community needs a lecture on patch submission
+> processes and quality expectations.
 
-I think the right way to handle this is to introduce a new ioctl which
-uses the same structures.  That way we have a reasonable interface,
-without issue like which file does it need to be called on because the
-VFS glue can turn it into a superblock op.
+The best place is the for-next branch.  We should aim for getting
+patches in early in the window rather than last minute, which is way to
+common in XFS land.
 
 _______________________________________________
 xfs mailing list
