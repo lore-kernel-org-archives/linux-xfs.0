@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9OKmb5T054320 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 15:48:37 -0500
-Message-ID: <508854E9.7010809@sgi.com>
-Date: Wed, 24 Oct 2012 15:51:53 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	q9OKnu6v054462 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 15:49:56 -0500
+Date: Wed, 24 Oct 2012 15:51:40 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH 2/3] respect DESTDIR when installing
+Message-ID: <20121024205140.GR1377@sgi.com>
+References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+	<1348529978-30048-2-git-send-email-vapier@gentoo.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3] xfstests: Use upstream version of fstrim instead of
-	the local one
-References: <241834517.1979252.1349381614990.JavaMail.root@redhat.com>
-In-Reply-To: <241834517.1979252.1349381614990.JavaMail.root@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <1348529978-30048-2-git-send-email-vapier@gentoo.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,43 +19,25 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Tomas Racek <tracek@redhat.com>
-Cc: =?UTF-8?B?THVrw6HFoSBDemVybmVy?= <lczerner@redhat.com>, xfs@oss.sgi.com
+To: Mike Frysinger <vapier@gentoo.org>
+Cc: xfs@oss.sgi.com
 
-Thomas,
+Hey Mike,
 
-On 10/04/2012 03:13 PM, Tomas Racek wrote:
-> ----- Original Message -----
->> On Thu, 4 Oct 2012, Tomas Racek wrote:
->>
+On Mon, Sep 24, 2012 at 07:39:37PM -0400, Mike Frysinger wrote:
+> This makes the `make install DESTDIR=...` form work.  It keeps support
+> for all previous forms too (like DIST_ROOT).
 
->> Ok, so the reason is to strip the variable mount point from the
->> error message. It sounds ok than.
->>
->> This makes me think that we maybe want to have a filter function to
->> filter out all the variables such as SCRATCH_MNT, SCRATCH_DEV,
->> TEST_DIR,
->> TEST_DEV and maybe more and replace then with the some appropriate
->> strings
->> (SCRATCH_MNT etc. maybe?). I am sure more tests can benefit from this
->> not
->> needing to to the filtering on their own.
->
-> Oh, thanks for reminding me -- they already exist (see common.filter), I forgot about them. I will use them in next version. ;-)
->
->
-> Tom
->
+This doesn't seem to work for me.  I do a make install DESTDIR=/some/odd/path
+and it all still goes into /usr.  What sort of system did you try this on?
+Maybe it just doesn't like opensuse 12.2?
 
-
-V4 has been committed to git://oss.sgi.com/xfs/cmds/xfstests, master branch.
-
-Regards
---Rich
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
