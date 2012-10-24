@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9OM4Z00058191 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 17:04:35 -0500
-Date: Wed, 24 Oct 2012 17:06:17 -0500
+	q9OM8k6P058359 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 17:08:46 -0500
+Date: Wed, 24 Oct 2012 17:10:31 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 1/3] rename configure.in to configure.ac
-Message-ID: <20121024220616.GT1377@sgi.com>
-References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+Subject: Re: [PATCH v6] Stop periodic syncing if filesystem is already
+	shutdown.
+Message-ID: <20121024221030.GU1377@sgi.com>
+References: <143becf0f8266fbc8025ec97c8f44476d8fcafc5.1348203015.git.rprabhu@wnohang.net>
+	<20120925094013.GI9189@infradead.org>
+	<CAEtq3tNGSatvn2XGXg=O+OQGPPMVGhDcFN9szBoSZtRQ8XggmA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
+In-Reply-To: <CAEtq3tNGSatvn2XGXg=O+OQGPPMVGhDcFN9szBoSZtRQ8XggmA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,25 +25,19 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: xfs@oss.sgi.com
+To: Raghavendra Prabhu <raghu.prabhu13@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Raghavendra D Prabhu <rprabhu@wnohang.net>, xfs@oss.sgi.com
 
-On Mon, Sep 24, 2012 at 07:39:36PM -0400, Mike Frysinger wrote:
-> Newer autotools warn and start to error with the older name.
-> 
-> Signed-off-by: Mike Frysinger <vapier@gentoo.org>
+Hi Raghavendra,
 
-I have pulled this series into xfsdump and xfsprogs repos on oss.  xfstests has
-a little hiccup that I need to sort through first:
+On Thu, Oct 25, 2012 at 02:27:31AM +0530, Raghavendra Prabhu wrote:
+> Thank you. Are there any comments on this patch or has is it been acked?
 
-~/xfstests # make
-make: *** No rule to make target `configure.in', needed by `configure'.  Stop.
+This patch no longer applies cleanly on the master brach.  Could you resolve
+the conflicts and repost?
 
-I haven't forgotten dmapi.
-
-Thanks Mike!
-
--Ben
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
