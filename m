@@ -1,16 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9OKnu6v054462 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 15:49:56 -0500
-Date: Wed, 24 Oct 2012 15:51:40 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 2/3] respect DESTDIR when installing
-Message-ID: <20121024205140.GR1377@sgi.com>
-References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
-	<1348529978-30048-2-git-send-email-vapier@gentoo.org>
+	q9OKsJVl054795 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 15:54:19 -0500
+Received: from mail-vb0-f53.google.com (mail-vb0-f53.google.com
+	[209.85.212.53]) by cuda.sgi.com with ESMTP id 1DBXtONGhyDTUAUQ
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Wed, 24 Oct 2012 13:56:03 -0700 (PDT)
+Received: by mail-vb0-f53.google.com with SMTP id fc21so1080669vbb.26
+	for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 13:56:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1348529978-30048-2-git-send-email-vapier@gentoo.org>
+In-Reply-To: <cover.1348639531.git.rprabhu@wnohang.net>
+References: <cover.1348639531.git.rprabhu@wnohang.net>
+Date: Thu, 25 Oct 2012 02:26:02 +0530
+Message-ID: <CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
+Subject: Re: [PATCH v3 0/3] Print when ENOSPC due to lack of inodes.
+From: Raghavendra Prabhu <raghu.prabhu13@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,21 +27,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mike Frysinger <vapier@gentoo.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Dave Chinner <david@fromorbit.com>
 
-Hey Mike,
+Hi,
 
-On Mon, Sep 24, 2012 at 07:39:37PM -0400, Mike Frysinger wrote:
-> This makes the `make install DESTDIR=...` form work.  It keeps support
-> for all previous forms too (like DIST_ROOT).
+Checking back on this, whether it has been reviewed and if so, any comments.
 
-This doesn't seem to work for me.  I do a make install DESTDIR=/some/odd/path
-and it all still goes into /usr.  What sort of system did you try this on?
-Maybe it just doesn't like opensuse 12.2?
-
-Regards,
-	Ben
+On Wed, Sep 26, 2012 at 12:26 PM,  <raghu.prabhu13@gmail.com> wrote:
+> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>
+> Currently, when there are no free inodes left / free space to allocate them (usually
+> without inode64), there is no indication anywhere of this case, making it harder
+> to diagnose this case.
+>
+> Hence, this series prints the causes/reasons to kernel log in a ratelimited
+> manner, when such a situation arises.
+>
+> Regarding why it is printed at callee location instead at caller, it gives
+> greater granularity in expressing the precise reason and give more details, and
+> also some along the path are not ENOSPC (such in xfs_ialloc where ialloc_context is not NULL but
+> ino is) along with the fact that it (xfs_ialloc) is called at multiple sites, so to avoid duplication.
+>
+> Version 1: Initial series.
+> Version 2: Added ratelimited printing to xfs_message and used that.
+> Version 3: Kept the logic intact in few places, fixed the column requirement.
+>
+> Raghavendra D Prabhu (3):
+>   xfs: Add ratelimited printk for different alert levels
+>   xfs: Print error when xfs_ialloc_ag_select fails to find continuous
+>     free space.
+>   xfs: Print error when unable to allocate inodes or out of free
+>     inodes.
+>
+>  fs/xfs/xfs_ialloc.c  | 31 ++++++++++++++++++++++++++++---
+>  fs/xfs/xfs_linux.h   |  1 +
+>  fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
+>  3 files changed, 55 insertions(+), 3 deletions(-)
+>
+> --
+> 1.7.12.1
+>
 
 _______________________________________________
 xfs mailing list
