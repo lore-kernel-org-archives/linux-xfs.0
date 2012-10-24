@@ -1,19 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9OMKRlR058757 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 17:20:27 -0500
-Received: from smtp.gentoo.org (smtp.gentoo.org [140.211.166.183]) by
-	cuda.sgi.com with ESMTP id EFku4hYGUa0fkzFo (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 15:22:08 -0700 (PDT)
-From: Mike Frysinger <vapier@gentoo.org>
-Subject: Re: [PATCH 1/3] rename configure.in to configure.ac
-Date: Wed, 24 Oct 2012 18:22:08 -0400
-References: <1348529978-30048-1-git-send-email-vapier@gentoo.org>
-	<20121024220616.GT1377@sgi.com>
-In-Reply-To: <20121024220616.GT1377@sgi.com>
+	q9OMo9Tp059818 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 17:50:09 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	34YZ9jXfYFxZSd0i for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 15:51:52 -0700 (PDT)
+Date: Thu, 25 Oct 2012 09:51:48 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: File system corruption
+Message-ID: <20121024225148.GA29378@dastard>
+References: <5077077A.3040608@crossroads.com> <20121011210741.GC2739@dastard>
+	<50789076.7040402@crossroads.com> <20121013001425.GN2739@dastard>
+	<50885B60.9050904@crossroads.com>
 MIME-Version: 1.0
-Message-Id: <201210241822.09175.vapier@gentoo.org>
+Content-Disposition: inline
+In-Reply-To: <50885B60.9050904@crossroads.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,91 +24,62 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============3409157419777059254=="
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Wayne Walker <wwalker@crossroads.com>
 Cc: xfs@oss.sgi.com
 
---===============3409157419777059254==
-Content-Type: multipart/signed;
-  boundary="nextPart3425262.cxrDjrcstJ";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+On Wed, Oct 24, 2012 at 04:19:28PM -0500, Wayne Walker wrote:
+> On 10/12/2012 07:14 PM, Dave Chinner wrote:
+> <snip>
+> >And SB/AGF 3 and 4 are ok, too. So, the filesystem headers just
+> >beyond the 2TB offset are zero. That tends to point to a block
+> >device problem, as an offset of 2TB is where a 32 bit sector count
+> >will overflow (i.e. 2^32). Next step is to run blktrace/blkparse
+> >on the cp workload that generates the error to see if anything
+> >actually writes to the 2TB offset region, and if so, where it
+> >comes from. Probably best to compress the resultant blkparse
+> >output file - it might be quite large but the text will compress
+> >well. Cheers, Dave.
+> 
+> Dave,
+> 
+> Thank you for your help.
+> 
+> 10 MB .gz file at http://rx-7.bybent.com/blktrace.sde1.out.gz
+> 
+> What I can see seems to have most of the writes are around 2^31.
 
---nextPart3425262.cxrDjrcstJ
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Which is 2^31 sectors of just above 1TB. i.e. writing the data into
+AG #1. The writes stop a short way into #AG1. The filesystem does
+not issue any writes to the AG#2 headers, only a single read. IOWs,
+the filesystem is not overwriting it's own metadata during the
+workload, so that implies a problem at a lower storage layer....
 
-On Wednesday 24 October 2012 18:06:17 Ben Myers wrote:
-> On Mon, Sep 24, 2012 at 07:39:36PM -0400, Mike Frysinger wrote:
-> > Newer autotools warn and start to error with the older name.
-> >=20
-> > Signed-off-by: Mike Frysinger <vapier@gentoo.org>
->=20
-> I have pulled this series into xfsdump and xfsprogs repos on oss.  xfstes=
-ts
-> has a little hiccup that I need to sort through first:
->=20
-> ~/xfstests # make
-> make: *** No rule to make target `configure.in', needed by `configure'.=20
-> Stop.
+IOWs, I can't see the filesystem doing anything wrong here.
 
-yeah, i forgot to update Makefile to look for configure.ac.  i think all th=
-e=20
-repos will need that fix.  xfsprogs for example:
-diff --git a/Makefile b/Makefile
-index 80fec1e..7ef3e84 100644
-=2D-- a/Makefile
-+++ b/Makefile
-@@ -28,7 +28,7 @@ SRCDIR =3D $(PKG_NAME)-$(PKG_VERSION)
- SRCTAR =3D $(PKG_NAME)-$(PKG_VERSION).tar.gz
-=20
- CONFIGURE =3D aclocal.m4 configure config.guess config.sub install-sh ltma=
-in.sh
-=2DLSRCFILES =3D configure.in release.sh README VERSION $(CONFIGURE)
-+LSRCFILES =3D configure.ac release.sh README VERSION $(CONFIGURE)
-=20
- LDIRT =3D config.log .ltdep .dep config.status config.cache confdefs.h \
- 	conftest* built .census install.* install-dev.* *.gz \
-=2Dmike
+FWIW, can you pattern the block device around the 2TB offset and
+re-run the test, and see if the sb/agf 2 are zeroed via xfs_db after
+the failure occurs? i.e. do something like:
 
---nextPart3425262.cxrDjrcstJ
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
+# xfs_io -F -f -c "pwrite 2047g 2g" -c fsync /dev/sde1
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.17 (GNU/Linux)
+the mkfs, run xfs_db to dump sb 2 and agf 2, then run the test and
+dump sb 2/agf 2 again after the test? use the same xfs-db scripts as
+the previous time (i.e. including the drop caches commands) if you
+can.
 
-iQIcBAABAgAGBQJQiGoRAAoJEEFjO5/oN/WBdDMQAIammOhkFO81DylN+xA0Irzo
-jvUaH5JkgSG2plYYjSRXZviBiGkXU3OEbnK70hmiIPDoQk0ZUb5tcu9oWZVaOpWw
-PUJAE2DBryGVB/W+t8aFzIzCm8xAV06CO63qBTRCfUoMUEsxktN+j7AW3PMKQPSA
-JX8UqSizt2mxyfmUqNIGXNJfFjzhGUeudAodiCyWgYDUSI8ReoQQ2CnQiYA42uel
-yIrdXNBj+qjbffDU5ySds/xOeJpdh04UVIuNAUACDxq9Uj60LkGgEpg4lnFFA3tf
-ed4x4174fffis6gCGiNWXSsAcJ/8wqCspNZMBYoadKr1sTVSkVS4dz7GliLGpcMZ
-RUI84P89lPeRue+CkcNpAiWqPaULZzt5ri4CQ2wtMh9uqPbks+W0NMmJNb4T63LY
-9UuxEnXeTnFwkuAr2AfJZqw0E5PAP6BzKJ7eMgjosKtRaJxSdb5TsvIAHx6d49sP
-zogDrQdsv9V3j5+mo+jILIlcLAM4mlTEIXBV+UaMlU2BnZlJBgMUZSl/Vi1Bf+3Z
-q6M/J1aD8VdDNyN0vnDxqIlwAPO2lhY0naDAXJgeRoaJVlPKvUhwXBwsOnZDliXM
-oqLzRJXwlsMQGtfyjtXXs+eYFXQYXOIA79c9mTyF0bj1uMmUM3vN2zXpcTrZPj12
-qdX147Ob/WqH8MssHRES
-=s6uo
------END PGP SIGNATURE-----
+Cheers,
 
---nextPart3425262.cxrDjrcstJ--
+Dave.
 
-
---===============3409157419777059254==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============3409157419777059254==--
