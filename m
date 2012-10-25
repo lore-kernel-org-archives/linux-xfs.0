@@ -1,14 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9PIZiql136896 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 13:35:44 -0500
-Message-Id: <20121025183727.098366289@sgi.com>
-Date: Thu, 25 Oct 2012 13:36:37 -0500
+	q9PIZjXc136915 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 13:35:45 -0500
+Message-Id: <20121025183727.315188527@sgi.com>
+Date: Thu, 25 Oct 2012 13:36:38 -0500
 From: bpm@sgi.com
-Subject: [patch 3/4] [PATCH] xfsprogs: rename configure.in to configure.ac
+Subject: [patch 4/4] [PATCH] xfsdump: rename configure.in to configure.ac
 References: <20121025183634.486901001@sgi.com>
 Content-Disposition: inline;
-	filename=0001-xfsprogs-rename-configure.in-to-configure.ac.patch
+	filename=0001-xfsdump-rename-configure.in-to-configure.ac.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,7 +33,7 @@ Signed-off-by: Ben Myers <bpm@sgi.com>
  1 files changed, 1 insertions(+), 1 deletions(-)
 
 diff --git a/Makefile b/Makefile
-index c40fb2c..0bdc5e8 100644
+index b1a7350..39881af 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -28,7 +28,7 @@ SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
