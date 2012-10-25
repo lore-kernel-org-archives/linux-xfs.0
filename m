@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9P6Wr9g102391 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:53 -0500
+	q9P6X2v6102561 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:33:02 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	X7QmjMSNhtXqptjt for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 23:34:37 -0700 (PDT)
+	hIZa00AziatAATVK for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 23:34:46 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TRH1V-0000AB-So
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:33 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TRH1f-0000Ac-RU
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:43 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TRH1Q-00054R-Eh
+	(envelope-from <dave@disappointment.disaster>) id 1TRH1Q-00054g-NO
 	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 14/25] xfs: verify dir2 block format buffers
-Date: Thu, 25 Oct 2012 17:34:03 +1100
-Message-Id: <1351146854-19343-15-git-send-email-david@fromorbit.com>
+Subject: [PATCH 17/25] xfs: factor dir2 leaf read
+Date: Thu, 25 Oct 2012 17:34:06 +1100
+Message-Id: <1351146854-19343-18-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,39 +35,31 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a dir2 block format read verifier. To fully verify every block
-when read, call xfs_dir2_data_check() on them. Change
-xfs_dir2_data_check() to do runtime checking, convert ASSERT()
-checks to XFS_WANT_CORRUPTED_RETURN(), which will trigger an ASSERT
-failure on debug kernels, but on production kernels will dump an
-error to dmesg and return EFSCORRUPTED to the caller.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dir2_block.c |   22 +++++++++++++-
- fs/xfs/xfs_dir2_data.c  |   73 ++++++++++++++++++++++++++++-------------------
- fs/xfs/xfs_dir2_priv.h  |    4 ++-
- 3 files changed, 68 insertions(+), 31 deletions(-)
+ fs/xfs/xfs_dir2_leaf.c |   73 ++++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_dir2_node.c |    6 ++--
+ fs/xfs/xfs_dir2_priv.h |    2 ++
+ 3 files changed, 67 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 25ce409..57351b8 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -56,6 +56,26 @@ xfs_dir_startup(void)
- 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
- }
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 0fdf765..97408e3 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -48,6 +48,62 @@ static void xfs_dir2_leaf_log_bests(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				    int first, int last);
+ static void xfs_dir2_leaf_log_tail(struct xfs_trans *tp, struct xfs_buf *bp);
  
 +static void
-+xfs_dir2_block_verify(
-+	struct xfs_buf		*bp)
++xfs_dir2_leaf_verify(
++	struct xfs_buf		*bp,
++	__be16			magic)
 +{
 +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
++	struct xfs_dir2_leaf_hdr *hdr = bp->b_addr;
 +	int			block_ok = 0;
 +
-+	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
-+	block_ok = block_ok && __xfs_dir2_data_check(NULL, bp) == 0;
-+
++	block_ok = hdr->info.magic == magic;
 +	if (!block_ok) {
 +		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
 +		xfs_buf_ioerror(bp, EFSCORRUPTED);
@@ -77,195 +69,113 @@ index 25ce409..57351b8 100644
 +	xfs_buf_ioend(bp, 0);
 +}
 +
- static int
- xfs_dir2_block_read(
- 	struct xfs_trans	*tp,
-@@ -65,7 +85,7 @@ xfs_dir2_block_read(
- 	struct xfs_mount	*mp = dp->i_mount;
- 
- 	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
--					XFS_DATA_FORK, NULL);
-+					XFS_DATA_FORK, xfs_dir2_block_verify);
- }
- 
- static void
-diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
-index 44ffd4d..c45107d 100644
---- a/fs/xfs/xfs_dir2_data.c
-+++ b/fs/xfs/xfs_dir2_data.c
-@@ -34,14 +34,13 @@
- STATIC xfs_dir2_data_free_t *
- xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
- 
--#ifdef DEBUG
- /*
-  * Check the consistency of the data block.
-  * The input can also be a block-format directory.
-- * Pop an assert if we find anything bad.
-+ * Return 0 is the buffer is good, otherwise an error.
-  */
--void
--xfs_dir2_data_check(
-+bool
-+__xfs_dir2_data_check(
- 	struct xfs_inode	*dp,		/* incore inode pointer */
- 	struct xfs_buf		*bp)		/* data block's buffer */
- {
-@@ -64,18 +63,23 @@ xfs_dir2_data_check(
- 	int			stale;		/* count of stale leaves */
- 	struct xfs_name		name;
- 
--	mp = dp->i_mount;
-+	mp = bp->b_target->bt_mount;
- 	hdr = bp->b_addr;
- 	bf = hdr->bestfree;
- 	p = (char *)(hdr + 1);
- 
--	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
-+	switch (hdr->magic) {
-+	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
- 		btp = xfs_dir2_block_tail_p(mp, hdr);
- 		lep = xfs_dir2_block_leaf_p(btp);
- 		endp = (char *)lep;
--	} else {
--		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
-+		break;
-+	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
- 		endp = (char *)hdr + mp->m_dirblksize;
-+		break;
-+	default:
-+		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
-+		return EFSCORRUPTED;
- 	}
- 
- 	count = lastfree = freeseen = 0;
-@@ -83,19 +87,22 @@ xfs_dir2_data_check(
- 	 * Account for zero bestfree entries.
- 	 */
- 	if (!bf[0].length) {
--		ASSERT(!bf[0].offset);
-+		XFS_WANT_CORRUPTED_RETURN(!bf[0].offset);
- 		freeseen |= 1 << 0;
- 	}
- 	if (!bf[1].length) {
--		ASSERT(!bf[1].offset);
-+		XFS_WANT_CORRUPTED_RETURN(!bf[1].offset);
- 		freeseen |= 1 << 1;
- 	}
- 	if (!bf[2].length) {
--		ASSERT(!bf[2].offset);
-+		XFS_WANT_CORRUPTED_RETURN(!bf[2].offset);
- 		freeseen |= 1 << 2;
- 	}
--	ASSERT(be16_to_cpu(bf[0].length) >= be16_to_cpu(bf[1].length));
--	ASSERT(be16_to_cpu(bf[1].length) >= be16_to_cpu(bf[2].length));
++static void
++xfs_dir2_leaf1_verify(
++	struct xfs_buf		*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
++}
 +
-+	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[0].length) >=
-+						be16_to_cpu(bf[1].length));
-+	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[1].length) >=
-+						be16_to_cpu(bf[2].length));
- 	/*
- 	 * Loop over the data/unused entries.
- 	 */
-@@ -107,17 +114,20 @@ xfs_dir2_data_check(
- 		 * doesn't need to be there.
- 		 */
- 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			ASSERT(lastfree == 0);
--			ASSERT(be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
--			       (char *)dup - (char *)hdr);
-+			XFS_WANT_CORRUPTED_RETURN(lastfree == 0);
-+			XFS_WANT_CORRUPTED_RETURN(
-+				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
-+					       (char *)dup - (char *)hdr);
- 			dfp = xfs_dir2_data_freefind(hdr, dup);
- 			if (dfp) {
- 				i = (int)(dfp - bf);
--				ASSERT((freeseen & (1 << i)) == 0);
-+				XFS_WANT_CORRUPTED_RETURN(
-+					(freeseen & (1 << i)) == 0);
- 				freeseen |= 1 << i;
- 			} else {
--				ASSERT(be16_to_cpu(dup->length) <=
--				       be16_to_cpu(bf[2].length));
-+				XFS_WANT_CORRUPTED_RETURN(
-+					be16_to_cpu(dup->length) <=
-+						be16_to_cpu(bf[2].length));
- 			}
- 			p += be16_to_cpu(dup->length);
- 			lastfree = 1;
-@@ -130,10 +140,12 @@ xfs_dir2_data_check(
- 		 * The linear search is crude but this is DEBUG code.
- 		 */
- 		dep = (xfs_dir2_data_entry_t *)p;
--		ASSERT(dep->namelen != 0);
--		ASSERT(xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)) == 0);
--		ASSERT(be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
--		       (char *)dep - (char *)hdr);
-+		XFS_WANT_CORRUPTED_RETURN(dep->namelen != 0);
-+		XFS_WANT_CORRUPTED_RETURN(
-+			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
-+		XFS_WANT_CORRUPTED_RETURN(
-+			be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
-+					       (char *)dep - (char *)hdr);
- 		count++;
- 		lastfree = 0;
- 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
-@@ -148,27 +160,30 @@ xfs_dir2_data_check(
- 				    be32_to_cpu(lep[i].hashval) == hash)
- 					break;
- 			}
--			ASSERT(i < be32_to_cpu(btp->count));
-+			XFS_WANT_CORRUPTED_RETURN(i < be32_to_cpu(btp->count));
- 		}
- 		p += xfs_dir2_data_entsize(dep->namelen);
- 	}
- 	/*
- 	 * Need to have seen all the entries and all the bestfree slots.
- 	 */
--	ASSERT(freeseen == 7);
-+	XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
- 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
- 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
- 			if (lep[i].address ==
- 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
- 				stale++;
- 			if (i > 0)
--				ASSERT(be32_to_cpu(lep[i].hashval) >= be32_to_cpu(lep[i - 1].hashval));
-+				XFS_WANT_CORRUPTED_RETURN(
-+					be32_to_cpu(lep[i].hashval) >=
-+						be32_to_cpu(lep[i - 1].hashval));
- 		}
--		ASSERT(count == be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
--		ASSERT(stale == be32_to_cpu(btp->stale));
-+		XFS_WANT_CORRUPTED_RETURN(count ==
-+			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
-+		XFS_WANT_CORRUPTED_RETURN(stale == be32_to_cpu(btp->stale));
- 	}
-+	return 0;
- }
--#endif
++static void
++xfs_dir2_leafn_verify(
++	struct xfs_buf		*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAFN_MAGIC));
++}
++
++static int
++xfs_dir2_leaf_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		fbno,
++	xfs_daddr_t		mappedbno,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++					XFS_DATA_FORK, xfs_dir2_leaf1_verify);
++}
++
++int
++xfs_dir2_leafn_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		fbno,
++	xfs_daddr_t		mappedbno,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++					XFS_DATA_FORK, xfs_dir2_leafn_verify);
++}
  
  /*
-  * Given a data block and an unused entry from that block,
+  * Convert a block form directory to a leaf form directory.
+@@ -311,14 +367,11 @@ xfs_dir2_leaf_addname(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the leaf block.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
+-				XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
+ 	if (error)
+ 		return error;
+-	ASSERT(lbp != NULL);
++
+ 	/*
+ 	 * Look up the entry by hash value and name.
+ 	 * We know it's not there, our caller has already done a lookup.
+@@ -1369,13 +1422,11 @@ xfs_dir2_leaf_lookup_int(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the leaf block into the buffer.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
+-							XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
+ 	if (error)
+ 		return error;
++
+ 	*lbpp = lbp;
+ 	leaf = lbp->b_addr;
+ 	xfs_dir2_leaf_check(dp, lbp);
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 67b811c..7c6f956 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1232,11 +1232,11 @@ xfs_dir2_leafn_toosmall(
+ 		/*
+ 		 * Read the sibling leaf block.
+ 		 */
+-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
+-					blkno, -1, &bp, XFS_DATA_FORK, NULL);
++		error = xfs_dir2_leafn_read(state->args->trans, state->args->dp,
++					    blkno, -1, &bp);
+ 		if (error)
+ 			return error;
+-		ASSERT(bp != NULL);
++
+ 		/*
+ 		 * Count bytes in the two blocks combined.
+ 		 */
 diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 3523d3e..e1c02ca 100644
+index 7d8c302a..ecf75d9 100644
 --- a/fs/xfs/xfs_dir2_priv.h
 +++ b/fs/xfs/xfs_dir2_priv.h
-@@ -41,10 +41,12 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+@@ -70,6 +70,8 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
  
- /* xfs_dir2_data.c */
- #ifdef DEBUG
--extern void xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-+#define	xfs_dir2_data_check(dp,bp) __xfs_dir2_data_check(dp, bp);
- #else
- #define	xfs_dir2_data_check(dp,bp)
- #endif
-+extern bool __xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-+
- extern struct xfs_dir2_data_free *
- xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
- 		struct xfs_dir2_data_unused *dup, int *loghead);
+ /* xfs_dir2_leaf.c */
++extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
+ 		struct xfs_buf *dbp);
+ extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
 -- 
 1.7.10
 
