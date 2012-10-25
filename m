@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9PL9EUG163948 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 16:09:14 -0500
+	q9PMRZYf166843 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 17:27:36 -0500
 Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
 	[150.101.137.145]) by cuda.sgi.com with ESMTP id
-	8emDfAG4QwxU4sGk for <xfs@oss.sgi.com>;
-	Thu, 25 Oct 2012 14:10:58 -0700 (PDT)
-Date: Fri, 26 Oct 2012 08:10:47 +1100
+	OG6EdizthUJNhZ3a for <xfs@oss.sgi.com>;
+	Thu, 25 Oct 2012 15:29:16 -0700 (PDT)
+Date: Fri, 26 Oct 2012 09:29:14 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
-	filestreams option toxic ?)
-Message-ID: <20121025211047.GD29378@dastard>
-References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
-	<508958FF.4000007@univ-nantes.fr>
+Subject: Re: [PATCH v3] xfs_io: [v3] add the lseek() SEEK_DATA/SEEK_HOLE
+	support
+Message-ID: <20121025222914.GE29378@dastard>
+References: <20121022213759.033667921@sgi.com>
+	<20121022213804.616209844@sgi.com> <20121022232931.GD4291@dastard>
+	<20121023200144.515107339@sgi.com>
+	<20121025141450.995788000@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <508958FF.4000007@univ-nantes.fr>
+In-Reply-To: <20121025141450.995788000@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,125 +26,200 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 25, 2012 at 05:21:35PM +0200, Yann Dupont wrote:
-> Le 23/10/2012 10:24, Yann Dupont a =E9crit :
-> >Le 22/10/2012 16:14, Yann Dupont a =E9crit :
-> >
-> >Hello. This mail is a follow up of a message on XFS mailing list.
-> >I had hang with 3.6.1, and then , damage on XFS filesystem.
-> >
-> >3.6.1 is not alone. Tried 3.6.2, and had another hang with quite a
-> >different trace this time , so not really sure the 2 problems are
-> >related .
-> >Anyway the problem is maybe not XFS, but is just a consequence of
-> >what seems more like kernel problems.
-> >
-> >cc: to linux-kernel
-> Hello.
-> There is definitively something wrong in 3.6.xx with XFS, in
-> particular after an abrupt stop of the machine :
-> =
+On Thu, Oct 25, 2012 at 09:14:44AM -0500, Mark Tinguely wrote:
+> Add the lseek SEEK_DATA/SEEK_HOLE support into xfs_io.
+> The result from the lseek() call will be printed to the output.
+> For example:
+> 
+> xfs_io> lseek -h 609k
+> Type	Offset
+> hole	630784
+> 
+> v1 -> v2 Add "-a" and "-r" options.
+> 	 Simplify the output.
+> v2 -> v3 Refactor for configure.in -> configure.ac change.
+> 	 SEEK_DATA with -1 offset behaves badly on older Linux.
+> 	 Display error message as "ERR <errno>".
+....
+> +
+> +#include <linux/fs.h>
 
-> I now have corruption on a 3rd machine (not involved with ceph).
-> The machine was just rebooting from 3.6.2 kernel to 3.6.3 kernel.
-> =
+I missed this first time around - why is this include necessary?
 
-> This machine isn't under heavy load, but it's a machine we use for
-> tests & compilations. We often crash it. For 2 years, we didn't have
-> problems. XFS always was reliable, even in hard conditions (hard
-> reset, loss of power, etc)
-> =
+> +#define	LSEEK_DFLAG	1 << 0
+> +#define	LSEEK_HFLAG	1 << 1
+> +#define	LSEEK_RFLAG	1 << 2
 
-> This time, after 3.6.3 boot, one of my xfs volume refuse to mount :
-> =
+Need parenthesis there, i.e. "(1 << 0)", so we don't get weird bugs
+due to operator precendence causing unintended behaviour, but....
 
-> mount: /dev/mapper/LocalDisk-debug--git: can't read superblock
-> =
+> +static int
+> +lseek_f(
+> +	int		argc,
+> +	char		**argv)
+> +{
+> +	off64_t		offset, roff;
+> +	size_t          fsblocksize, fssectsize;
+> +	int		cseg;
+> +	int		flag;
+> +	int		i, c;
+> +
+> +	flag = 0;
+> +	init_cvtnum(&fsblocksize, &fssectsize);
+> +
+> +	while ((c = getopt(argc, argv, "adhr")) != EOF) {
+> +		switch (c) {
+> +		case 'a':
+> +			flag |= LSEEK_HFLAG;
+> +			/* fall through to pick up the DFLAG */
 
-> 276596.189363] XFS (dm-1): Mounting Filesystem
-> [276596.270614] XFS (dm-1): Starting recovery (logdev: internal)
-> [276596.711295] XFS (dm-1): xlog_recover_process_data: bad clientid 0x0
-> [276596.711329] XFS (dm-1): log mount/recovery failed: error 5
-> [276596.711516] XFS (dm-1): log mount failed
+I'd just set the flags directly - much more obvious, less likely to
+go wrong in the future...
 
-That's an indication that zeros are being read from the journal
-rather than valid transaction data. It may well be caused by an XFS
-bug, but from experience it is equally likely to be a lower layer
-storage problem. More information is needed.
+> +	offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
+> +
+> +	/* recursively display all information, decide where to start. */
+> +	roff = lseek64(file->fd, offset, SEEK_DATA);
+> +	if (roff == offset)
+> +		cseg = LSEEK_DFLAG;
+> +	else
+> +		cseg = LSEEK_HFLAG;
 
-Firstly:
+I'm not really sure what these variables mean. "roff" is returned
+offset, "cseg" is current segment? Perhaps a comment or a better
+names is in order because right now I'm guessing at what a segment
+is as it is not referenced in any of the comments...
 
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
-reporting_a_problem.3F
+> +	
+> +	printf("Type	offset\n");
+> +
+> +	/* loop to handle the data / hole entries in assending order.
+> +	 * Only display the EOF when the initial offset was greater
+> +	 * the end of file.
+> +	 */
+> +	for (i = 0; flag & LSEEK_RFLAG || i < 2; i++) {
 
-Secondly, is the system still in this state? If so, dump the log to
-a file using xfs_logprint, zip it up and send it to me so I can have
-a look at where the log is intact (i.e. likely xfs bug) or contains
-zero (likely storage bug).
+I'm very surprised gcc doesn't warn here about lack of parenthesis.
 
-If the system is not still in this state, then I'm afraid there's
-nothing that can be done to understand the problem.
+As it is, I think the code would be much clearer if you separated
+the non-recursive case from the recursive case given it took me 20
+minutes to work out whether this loop worked correctly for both
+cases (e.g. why does it need 2 loops instead of 1 for the non
+recursive case, and does the double loop behaviour give the right
+results?). Something like:
 
-> I'm not even sure the reboot was after a crash or just a clean
-> reboot. (I'm not the only one to use this machine). I have nothing
-> suspect on my remote syslog.
-> =
+	if (!(flags & RECURSIVE))
+		return seek_single(offset, flags);
 
-> Anyway, it's the 3rd XFS crashed volume in a row with 3.6 kernel.
-> Different machines, different contexts. Looks suspicious.
+	return seek_recursive(offset, flags);
 
-You've had two machines crash with problems in the mm subsystem, and
-one filesystem problem that might be hardware realted. Bit early to
-be blaming XFS for all your problems, I think....
+makes the simple case is easy to verify correct (it's just a
+single seek), and the recursive case doesn't get complicated by the
+requirements of the single seek case. That results in code that is
+much easier to maintain and modify in future....
 
-> xfs_repair -n seems to show volume is quite broken :
+> +		if (cseg == LSEEK_DFLAG) {
+> +			if (flag & LSEEK_DFLAG) {
+> +				roff = lseek64(file->fd, offset, SEEK_DATA);
+> +				if (roff == -1) {
+> +					if (i < 2) {
+> +						if (errno == ENXIO)
+> +							printf("data	EOF\n");
+> +						else
+> +							printf("data	ERR %d\n",
+> +								errno);
+> +					}
 
-Sure, if the log hasn't been replayed then it will be - the
-filesystem will only be consistent after log recovery has been run.
+Why would you only print a seek error for the first seek? I
+would have thought that the recursive case also needs differentiate
+between an error and EOF detection.
 
-> I won't try to repair this volume right now.
-> =
+> +				} else
+> +					printf("data	%lld\n", roff);
+> +			}
+> +			/* set the offset and type for the next iteration */
+> +			cseg = LSEEK_HFLAG;
+> +			roff = lseek64(file->fd, offset, SEEK_HOLE);
+> +			if (roff != -1)
+> +				offset = roff;
+> +			continue;
 
-> This time, volume is small enough to make an image (it's a 100 GB
-> lvm volume). I'll try to image it before making anything else.
-> =
+This extra seek only needs to be done if LSEEK_HFLAG is not set
+to move the offset to the point where the next SEEK_DATA will find
+the next data extent....
 
-> 1st question : I saw there is ext4 corruption reported too with 3.6
-> kernel, but as far as I can see, problem seems to be jbd related, so
-> it shouldn't affect xfs ?
+> +		}
+> +
+> +		/* cseg == LSEEK_HFLAG */
+> +		if (flag & LSEEK_HFLAG) {
+> +			roff = lseek64(file->fd, offset, SEEK_HOLE);
 
-No relationship at all.
+But if LSEEK_HFLAG is set, we do the same seek anyway on the next
+loop iteration. The logic currently is:
 
-> 2nd question : Am I the only one to see this ?? I saw problems
-> reported with 2.6.37, but here, the kernel is 3.6.xx
+	loop {
+		if (in data) {
+			if (seek data) {
+				move to next data
+				print
+			}
+			move to next hole
+			update offset
+			continue
+		}
+		/* in hole */
+		if (seek hole) {
+			move to next hole
+			print
+		}
+		move to next data
+		update offset
+	}
 
-Yes, you're the only one to report such problems on 3.6. Anything
-reported on 2.6.37 is likely to be completely unrelated.
+Effectively, the loop is only dealing with a data extent or a hole
+extent in each loop. But given that holes and data always alternate,
+the same canbe acheived in a single loop:
 
-> 3rd question : If you suspect the problem may be lying in XFS , what
-> should I supply to help debugging the problem ?
+	loop {
+		move to next data
+		if (data)
+			print
+		update offset
+		move to next hole
+		if (hole)
+			print
+		update offset
+	}
 
-See above.
+And the initial loop start (i.e. offset starts in a hole or data)
+can be handled with a simple "skip data" variable that is cleared on
+the first pass through the loop. This gets rid of needing to track
+the current segment type and gets rid of the redundant seeks to the
+same offset when dumping both data and holes....
 
-> Not CC:ing linux kernel list right now, as I'm really not sure where
-> the problem is right now.
+And the printing can become a simple functions that takes a "data"
+or "hole" string and can be common for all callers (single and
+recursive)...
 
-You should report the mm problems to linux-mm@kvack.org to make sure
-the right people see them and they don't get lost in the noise of
-lkml....
+> +lseek_init(void)
+> +{
+> +	lseek_cmd.name = "lseek";
+> +	lseek_cmd.altname = "seek";
+
+I'd just call them both "seek" - the "l" part of the lseek() call is
+an implementation detail.
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
