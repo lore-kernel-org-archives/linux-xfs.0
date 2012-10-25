@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9P6X0LN102552 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:33:00 -0500
+	q9P6WlbO102339 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:47 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	oNeutqtMDQ9wXBYx for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 23:34:45 -0700 (PDT)
+	yjKryhLI1WjCRiVl for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 23:34:31 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TRH1f-0000A3-DE
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:43 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TRH1Q-00009u-DC
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:28 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TRH1L-00053x-8p
+	(envelope-from <dave@disappointment.disaster>) id 1TRH1L-000542-9n
 	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:23 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/25] xfs: verify AGFL blocks as they are read from disk
-Date: Thu, 25 Oct 2012 17:33:57 +1100
-Message-Id: <1351146854-19343-9-git-send-email-david@fromorbit.com>
+Subject: [PATCH 09/25] xfs: verify inode buffers as they are read from disk
+Date: Thu, 25 Oct 2012 17:33:58 +1100
+Message-Id: <1351146854-19343-10-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,79 +35,152 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an AGFL block verify callback function and pass it into the
-buffer read functions.
-
-While this commit adds verification code to the AGFL, it cannot be
-used reliably until the CRC format change comes along as mkfs does
-not initialise the full AGFL. Hence it can be full of garbage at the
-first mount and will fail verification right now. CRC enabled
-filesystems won't have this problem, so leave the code that has
-already been written ifdef'd out until the proper time.
+Add an inode buffer verify callback function and pass it into the
+buffer read functions. Inodes are special in that the verbose checks
+will be done when reading the inode, but we still need to sanity
+check the buffer when that is first read. Always verify the magic
+numbers in all inodes in the buffer, rather than jus ton debug
+kernels.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_alloc.c |   40 +++++++++++++++++++++++++++++++++++++++-
- 1 file changed, 39 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_inode.c |  100 +++++++++++++++++++++++++++-------------------------
+ 1 file changed, 51 insertions(+), 49 deletions(-)
 
-diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
-index bd565a2..0fa37a7 100644
---- a/fs/xfs/xfs_alloc.c
-+++ b/fs/xfs/xfs_alloc.c
-@@ -430,6 +430,44 @@ xfs_alloc_fixup_trees(
- 	return 0;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 0b03578..5baf6cb 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -382,6 +382,46 @@ xfs_inobp_check(
  }
+ #endif
  
-+void
-+xfs_agfl_read_verify(
++static void
++xfs_inode_buf_verify(
 +	struct xfs_buf	*bp)
 +{
-+#ifdef WHEN_CRCS_COME_ALONG
-+	/*
-+	 * we cannot actually do any verification of the AGFL because mkfs does
-+	 * not initialise the AGFL to zero or NULL. Hence the only valid part of
-+	 * the AGFL is what the AGF says is active. We can't get to the AGF, so
-+	 * we can't verify just those entries are valid.
-+	 *
-+	 * This problem goes away when the CRC format change comes along as that
-+	 * requires the AGFL to be initialised by mkfs. At that point, we can
-+	 * verify the blocks in the agfl -active or not- lie within the bounds
-+	 * of the AG. Until then, just leave this check ifdef'd out.
-+	 */
 +	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_agfl	*agfl = XFS_BUF_TO_AGFL(bp);
-+	int		agfl_ok = 1;
-+
 +	int		i;
++	int		ni;
 +
-+	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
-+		if (be32_to_cpu(agfl->agfl_bno[i]) == NULLAGBLOCK ||
-+		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
-+			agfl_ok = 0;
-+	}
++	/*
++	 * Validate the magic number and version of every inode in the buffer
++	 */
++	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
++	for (i = 0; i < ni; i++) {
++		int		di_ok;
++		xfs_dinode_t	*dip;
 +
-+	if (!agfl_ok) {
-+		XFS_CORRUPTION_ERROR("xfs_agfl_read_verify",
-+				     XFS_ERRLEVEL_LOW, mp, agfl);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
++		dip = (struct xfs_dinode *)xfs_buf_offset(bp,
++					(i << mp->m_sb.sb_inodelog));
++		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
++			    XFS_DINODE_GOOD_VERSION(dip->di_version);
++		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
++						XFS_ERRTAG_ITOBP_INOTOBP,
++						XFS_RANDOM_ITOBP_INOTOBP))) {
++			xfs_buf_ioerror(bp, EFSCORRUPTED);
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
++					     mp, dip);
++#ifdef DEBUG
++			xfs_emerg(mp,
++				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
++				(unsigned long long)bp->b_bn, i,
++				be16_to_cpu(dip->di_magic));
++			ASSERT(0);
 +#endif
++		}
++	}
++	xfs_inobp_check(mp, bp);
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
  /*
-  * Read in the allocation group free block array.
-  */
-@@ -447,7 +485,7 @@ xfs_alloc_read_agfl(
- 	error = xfs_trans_read_buf(
- 			mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-+			XFS_FSS_TO_BB(mp, 1), 0, &bp, xfs_agfl_read_verify);
- 	if (error)
- 		return error;
- 	ASSERT(!xfs_buf_geterror(bp));
+  * This routine is called to map an inode to the buffer containing the on-disk
+  * version of the inode.  It returns a pointer to the buffer containing the
+@@ -396,71 +436,33 @@ xfs_imap_to_bp(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_trans	*tp,
+ 	struct xfs_imap		*imap,
+-	struct xfs_dinode	**dipp,
++	struct xfs_dinode       **dipp,
+ 	struct xfs_buf		**bpp,
+ 	uint			buf_flags,
+ 	uint			iget_flags)
+ {
+ 	struct xfs_buf		*bp;
+ 	int			error;
+-	int			i;
+-	int			ni;
+ 
+ 	buf_flags |= XBF_UNMAPPED;
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+-				   (int)imap->im_len, buf_flags, &bp, NULL);
++				   (int)imap->im_len, buf_flags, &bp,
++				   xfs_inode_buf_verify);
+ 	if (error) {
+-		if (error != EAGAIN) {
+-			xfs_warn(mp,
+-				"%s: xfs_trans_read_buf() returned error %d.",
+-				__func__, error);
+-		} else {
++		if (error == EAGAIN) {
+ 			ASSERT(buf_flags & XBF_TRYLOCK);
++			return error;
+ 		}
+-		return error;
+-	}
+ 
+-	/*
+-	 * Validate the magic number and version of every inode in the buffer
+-	 * (if DEBUG kernel) or the first inode in the buffer, otherwise.
+-	 */
+-#ifdef DEBUG
+-	ni = BBTOB(imap->im_len) >> mp->m_sb.sb_inodelog;
+-#else	/* usual case */
+-	ni = 1;
+-#endif
++		if (error == EFSCORRUPTED &&
++		    (iget_flags & XFS_IGET_UNTRUSTED))
++			return XFS_ERROR(EINVAL);
+ 
+-	for (i = 0; i < ni; i++) {
+-		int		di_ok;
+-		xfs_dinode_t	*dip;
+-
+-		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
+-					(i << mp->m_sb.sb_inodelog));
+-		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
+-			    XFS_DINODE_GOOD_VERSION(dip->di_version);
+-		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
+-						XFS_ERRTAG_ITOBP_INOTOBP,
+-						XFS_RANDOM_ITOBP_INOTOBP))) {
+-			if (iget_flags & XFS_IGET_UNTRUSTED) {
+-				xfs_trans_brelse(tp, bp);
+-				return XFS_ERROR(EINVAL);
+-			}
+-			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
+-					     mp, dip);
+-#ifdef DEBUG
+-			xfs_emerg(mp,
+-				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
+-				(unsigned long long)imap->im_blkno, i,
+-				be16_to_cpu(dip->di_magic));
+-			ASSERT(0);
+-#endif
+-			xfs_trans_brelse(tp, bp);
+-			return XFS_ERROR(EFSCORRUPTED);
+-		}
++		xfs_warn(mp, "%s: xfs_trans_read_buf() returned error %d.",
++			__func__, error);
++		return error;
+ 	}
+ 
+-	xfs_inobp_check(mp, bp);
+-
+ 	*bpp = bp;
+ 	*dipp = (struct xfs_dinode *)xfs_buf_offset(bp, imap->im_boffset);
+ 	return 0;
 -- 
 1.7.10
 
