@@ -1,33 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9PKrMXg163298 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 15:53:22 -0500
-Received: from smtp-tls.univ-nantes.fr (smtptls1-loi.cpub.univ-nantes.fr
-	[193.52.103.112]) by cuda.sgi.com with ESMTP id
-	5ov53dxQxaNmAm4V for <xfs@oss.sgi.com>;
-	Thu, 25 Oct 2012 13:55:06 -0700 (PDT)
-Received: from localhost (localhost [127.0.0.1])
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTP id 6122D4016EC
-	for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 22:55:06 +0200 (CEST)
-Received: from smtp-tls.univ-nantes.fr ([127.0.0.1])
-	by localhost (smtptls1-loi.cpub.univ-nantes.fr [127.0.0.1])
-	(amavisd-new, port 10024)
-	with LMTP id xITnfNJ+veKZ for <xfs@oss.sgi.com>;
-	Thu, 25 Oct 2012 22:55:06 +0200 (CEST)
-Received: from [IPv6:2001:660:7220:0:ad47:bf7c:e044:a015] (unknown
-	[IPv6:2001:660:7220:0:ad47:bf7c:e044:a015])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(No client certificate requested)
-	by smtp-tls.univ-nantes.fr (Postfix) with ESMTPSA id 3FC084016E0
-	for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 22:55:06 +0200 (CEST)
-Message-ID: <5089A729.8030207@univ-nantes.fr>
-Date: Thu, 25 Oct 2012 22:55:05 +0200
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-MIME-Version: 1.0
+	q9PL9EUG163948 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 16:09:14 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	8emDfAG4QwxU4sGk for <xfs@oss.sgi.com>;
+	Thu, 25 Oct 2012 14:10:58 -0700 (PDT)
+Date: Fri, 26 Oct 2012 08:10:47 +1100
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
 	filestreams option toxic ?)
+Message-ID: <20121025211047.GD29378@dastard>
 References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
 	<508958FF.4000007@univ-nantes.fr>
+MIME-Version: 1.0
+Content-Disposition: inline
 In-Reply-To: <508958FF.4000007@univ-nantes.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -37,81 +24,127 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+Cc: xfs@oss.sgi.com
 
-Le 25/10/2012 17:21, Yann Dupont a =E9crit :
+On Thu, Oct 25, 2012 at 05:21:35PM +0200, Yann Dupont wrote:
+> Le 23/10/2012 10:24, Yann Dupont a =E9crit :
+> >Le 22/10/2012 16:14, Yann Dupont a =E9crit :
+> >
+> >Hello. This mail is a follow up of a message on XFS mailing list.
+> >I had hang with 3.6.1, and then , damage on XFS filesystem.
+> >
+> >3.6.1 is not alone. Tried 3.6.2, and had another hang with quite a
+> >different trace this time , so not really sure the 2 problems are
+> >related .
+> >Anyway the problem is maybe not XFS, but is just a consequence of
+> >what seems more like kernel problems.
+> >
+> >cc: to linux-kernel
 > Hello.
-> There is definitively something wrong in 3.6.xx with XFS, in =
-
+> There is definitively something wrong in 3.6.xx with XFS, in
 > particular after an abrupt stop of the machine :
->
+> =
+
 > I now have corruption on a 3rd machine (not involved with ceph).
 > The machine was just rebooting from 3.6.2 kernel to 3.6.3 kernel.
->
-> This machine isn't under heavy load, but it's a machine we use for =
+> =
 
-> tests & compilations. We often crash it. For 2 years, we didn't have =
-
-> problems. XFS always was reliable, even in hard conditions (hard =
-
+> This machine isn't under heavy load, but it's a machine we use for
+> tests & compilations. We often crash it. For 2 years, we didn't have
+> problems. XFS always was reliable, even in hard conditions (hard
 > reset, loss of power, etc)
->
+> =
+
 > This time, after 3.6.3 boot, one of my xfs volume refuse to mount :
->
+> =
+
 > mount: /dev/mapper/LocalDisk-debug--git: can't read superblock
->
+> =
+
 > 276596.189363] XFS (dm-1): Mounting Filesystem
 > [276596.270614] XFS (dm-1): Starting recovery (logdev: internal)
 > [276596.711295] XFS (dm-1): xlog_recover_process_data: bad clientid 0x0
 > [276596.711329] XFS (dm-1): log mount/recovery failed: error 5
 > [276596.711516] XFS (dm-1): log mount failed
->
 
-Just found something interesting :
+That's an indication that zeros are being read from the journal
+rather than valid transaction data. It may well be caused by an XFS
+bug, but from experience it is equally likely to be a lower layer
+storage problem. More information is needed.
 
-I was rebooting with 3.4.15 to make a backup of this volume. As I said =
+Firstly:
 
-in previous message, I didn't did xfs_repair on it.
-Before reboot, I forgot to edit fstab to prevent the mount.
-To my surprise, under 3.4.15 the volume mounts like a charm !!!
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
+reporting_a_problem.3F
 
-[   37.958374] XFS (dm-1): Mounting Filesystem
-[   38.050374] XFS (dm-1): Starting recovery (logdev: internal)
-[   69.596892] XFS (dm-1): Ending recovery (logdev: internal)
+Secondly, is the system still in this state? If so, dump the log to
+a file using xfs_logprint, zip it up and send it to me so I can have
+a look at where the log is intact (i.e. likely xfs bug) or contains
+zero (likely storage bug).
 
-As far as I can say, there is no corruption, no problems, all my files =
+If the system is not still in this state, then I'm afraid there's
+nothing that can be done to understand the problem.
 
-are here !!!
+> I'm not even sure the reboot was after a crash or just a clean
+> reboot. (I'm not the only one to use this machine). I have nothing
+> suspect on my remote syslog.
+> =
 
-So far here is the scenario :
+> Anyway, it's the 3rd XFS crashed volume in a row with 3.6 kernel.
+> Different machines, different contexts. Looks suspicious.
 
-You have to hard reset your machine with 3.6 (maybe kernel version isn't =
+You've had two machines crash with problems in the mm subsystem, and
+one filesystem problem that might be hardware realted. Bit early to
+be blaming XFS for all your problems, I think....
 
-important here). As I encoutered others 3.6 Bugs (exit_mm and =
+> xfs_repair -n seems to show volume is quite broken :
 
-rwsem_down_failed_common) , I had to do that.
+Sure, if the log hasn't been replayed then it will be - the
+filesystem will only be consistent after log recovery has been run.
 
-So XFS is not clean.
+> I won't try to repair this volume right now.
+> =
 
-2) boot with 3.6.xx
-Mounting volume fails, bacause log replay fails for an unkwown reason
+> This time, volume is small enough to make an image (it's a 100 GB
+> lvm volume). I'll try to image it before making anything else.
+> =
 
-3) You think your FS is broken, so you start an xfs_repair, which is =
+> 1st question : I saw there is ext4 corruption reported too with 3.6
+> kernel, but as far as I can see, problem seems to be jbd related, so
+> it shouldn't affect xfs ?
 
-somehow fooled and definitively broke your filesystem
+No relationship at all.
 
-I hope it's reproductible. Will try tomorrow morning.
+> 2nd question : Am I the only one to see this ?? I saw problems
+> reported with 2.6.37, but here, the kernel is 3.6.xx
+
+Yes, you're the only one to report such problems on 3.6. Anything
+reported on 2.6.37 is likely to be completely unrelated.
+
+> 3rd question : If you suspect the problem may be lying in XFS , what
+> should I supply to help debugging the problem ?
+
+See above.
+
+> Not CC:ing linux kernel list right now, as I'm really not sure where
+> the problem is right now.
+
+You should report the mm problems to linux-mm@kvack.org to make sure
+the right people see them and they don't get lost in the noise of
+lkml....
 
 Cheers,
 
+Dave.
 -- =
 
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
