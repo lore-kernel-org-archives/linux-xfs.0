@@ -1,30 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9P4RhE5094307 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 23:27:43 -0500
-Received: from rcsinet15.oracle.com (rcsinet15.oracle.com [148.87.113.117]) by
-	cuda.sgi.com with ESMTP id C03FAHZUVcDHFlRu (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 21:29:28 -0700 (PDT)
-Received: from ucsinet21.oracle.com (ucsinet21.oracle.com [156.151.31.93])
-	by rcsinet15.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id q9P4TRP6017473
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 04:29:28 GMT
-Received: from acsmt358.oracle.com (acsmt358.oracle.com [141.146.40.158])
-	by ucsinet21.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	q9P4TQ4Q023393
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 04:29:27 GMT
-Received: from abhmt112.oracle.com (abhmt112.oracle.com [141.146.116.64])
-	by acsmt358.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	q9P4TQ3p027363 for <xfs@oss.sgi.com>; Wed, 24 Oct 2012 23:29:26 -0500
-Message-ID: <5088BFD5.8060906@oracle.com>
-Date: Thu, 25 Oct 2012 12:28:05 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs: Remove redundant return error from xfs_difree()
-Reply-To: jeff.liu@oracle.com
+	q9P6LE64101819 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:21:14 -0500
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	DMD8fq5Si3710hKg for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 23:22:58 -0700 (PDT)
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: silence uninitialised f.file warning.
+Date: Thu, 25 Oct 2012 17:22:30 +1100
+Message-Id: <1351146150-19113-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,51 +18,41 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: viro@ZenIV.linux.org.uk
 
-If we can not fetch the related a.g. info when freeing a disk inode, it mostly like a
-fatal issue was occurred and with ASSERT(0) is fine, however, return XFS_ERROR(EINVAL)
-does not make sense here.
+From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
+Uninitialised variable build warning introduced by 2903ff0 ("switch
+simple cases of fget_light to fdget"), gcc is not smart enough to
+work out that the variable is not used uninitialised, and the commit
+removed the initialisation at declaration that the old variable had.
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_ialloc.c |    3 ---
- 1 files changed, 0 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_ioctl.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 445bf1a..b7ea965 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1065,7 +1065,6 @@ xfs_difree(
- 		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
- 			__func__, agno, mp->m_sb.sb_agcount);
- 		ASSERT(0);
--		return XFS_ERROR(EINVAL);
- 	}
- 	agino = XFS_INO_TO_AGINO(mp, inode);
- 	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
-@@ -1073,14 +1072,12 @@ xfs_difree(
- 			__func__, (unsigned long long)inode,
- 			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
- 		ASSERT(0);
--		return XFS_ERROR(EINVAL);
- 	}
- 	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
- 	if (agbno >= mp->m_sb.sb_agblocks)  {
- 		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
- 			__func__, agbno, mp->m_sb.sb_agblocks);
- 		ASSERT(0);
--		return XFS_ERROR(EINVAL);
- 	}
- 	/*
- 	 * Get the allocation group header.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 8305f2a..c1df3c6 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -70,7 +70,7 @@ xfs_find_handle(
+ 	int			hsize;
+ 	xfs_handle_t		handle;
+ 	struct inode		*inode;
+-	struct fd		f;
++	struct fd		f = {0};
+ 	struct path		path;
+ 	int			error;
+ 	struct xfs_inode	*ip;
 -- 
-1.7.4.1
+1.7.10
 
 _______________________________________________
 xfs mailing list
