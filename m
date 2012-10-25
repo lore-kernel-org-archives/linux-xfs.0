@@ -1,11 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9PIZi7u136886 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 13:35:44 -0500
-Message-Id: <20121025183634.486901001@sgi.com>
-Date: Thu, 25 Oct 2012 13:36:34 -0500
+	q9PIZiql136896 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 13:35:44 -0500
+Message-Id: <20121025183727.098366289@sgi.com>
+Date: Thu, 25 Oct 2012 13:36:37 -0500
 From: bpm@sgi.com
-Subject: [patch 0/4] update userspace Makefiles for renamed configure.in 
+Subject: [patch 3/4] [PATCH] xfsprogs: rename configure.in to configure.ac
+References: <20121025183634.486901001@sgi.com>
+Content-Disposition: inline;
+	filename=0001-xfsprogs-rename-configure.in-to-configure.ac.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,11 +25,29 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Mike Frysinger <vapier@gentoo.org>
 
-configure.in was renamed to configure.ac, and we need to also update the
-Makefile in each case.  This series takes care of dmapi, xfsdump, xfsprogs, and
-xfstests
+configure.in has been renamed to configure.ac.  Update the Makefile.
 
--Ben
+Signed-off-by: Ben Myers <bpm@sgi.com>
+---
+ Makefile |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index c40fb2c..0bdc5e8 100644
+--- a/Makefile
++++ b/Makefile
+@@ -28,7 +28,7 @@ SRCDIR = $(PKG_NAME)-$(PKG_VERSION)
+ SRCTAR = $(PKG_NAME)-$(PKG_VERSION).tar.gz
+ 
+ CONFIGURE = aclocal.m4 configure config.guess config.sub install-sh ltmain.sh
+-LSRCFILES = configure.in release.sh README VERSION $(CONFIGURE)
++LSRCFILES = configure.ac release.sh README VERSION $(CONFIGURE)
+ 
+ LDIRT = config.log .ltdep .dep config.status config.cache confdefs.h \
+ 	conftest* built .census install.* install-dev.* *.gz \
+-- 
+1.7.7
+
 
 _______________________________________________
 xfs mailing list
