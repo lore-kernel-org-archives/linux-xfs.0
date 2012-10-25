@@ -1,19 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9PDhRVk122752
-	for <linux-xfs@oss.sgi.com>; Thu, 25 Oct 2012 08:43:27 -0500
-Received: from mail-la0-f53.google.com (mail-la0-f53.google.com
-	[209.85.215.53]) by cuda.sgi.com with ESMTP id WFunnCWVPJorb7ll
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<linux-xfs@oss.sgi.com>; Thu, 25 Oct 2012 06:45:12 -0700 (PDT)
-Received: by mail-la0-f53.google.com with SMTP id l5so1654207lah.26
-	for <linux-xfs@oss.sgi.com>; Thu, 25 Oct 2012 06:45:11 -0700 (PDT)
-MIME-Version: 1.0
-Date: Thu, 25 Oct 2012 09:45:10 -0400
-Message-ID: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
-Subject: xfs filesystem corruption with kernel 2.6.37
-From: Kamal Dasu <kdasu.kdev@gmail.com>
+	q9PEKaMM124611 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 09:20:36 -0500
+Received: from eagdhcp-232-125.americas.sgi.com
+	(eagdhcp-232-125.americas.sgi.com [128.162.232.125])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 8E781304067
+	for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 07:22:19 -0700 (PDT)
+Received: from eagdhcp-232-125.americas.sgi.com (localhost [127.0.0.1])
+	by eagdhcp-232-125.americas.sgi.com (8.14.5/8.14.5) with ESMTP id
+	q9PEMFTR005410
+	for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 09:22:15 -0500 (CDT)
+	(envelope-from tinguely@sgi.com)
+Message-Id: <20121025141450.995788000@sgi.com>
+Date: Thu, 25 Oct 2012 09:14:44 -0500
+From: Mark Tinguely <tinguely@sgi.com>
+Subject: [PATCH v3] xfs_io: [v3] add the lseek() SEEK_DATA/SEEK_HOLE support
+References: <20121022213759.033667921@sgi.com>
+	<20121022213804.616209844@sgi.com> <20121022232931.GD4291@dastard>
+	<20121023200144.515107339@sgi.com>
+Content-Disposition: inline;
+	filename=v3-xfs_io-support-SEEK_DATA-SEEK_HOLE.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,129 +28,355 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: linux-xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-I am trying to understand how to get out of a failing  mount
-gracefully to be able to repair the disk.
-(dev/sda2 is log parition and dev/sda/3 is used as  rt subvolume partition)
-I have a corrupted disk that is used for recording video constantly.
-Using xfs on 2.6.37 kernel with all the knwn rt subvolume patches, the
-mount appears to hang, however it gets  into an infinite loop in
-xfs_itruncate_finish():xfs_inode.c.  :
+Add the lseek SEEK_DATA/SEEK_HOLE support into xfs_io.
+The result from the lseek() call will be printed to the output.
+For example:
 
-#4  0x801bd180 in xfs_bunmapi (tp=0xe83476cf, ip=0x80a386cf,
-bno=4278648832, len=72057594054705152, flags=0, nexts=33554432,
-firstblock=0xb0bbcdcf, flist=0xb8bbcdcf, done=0xa8bbcdcf)
-    at fs/xfs/xfs_bmap.c:5266
-#5  0x801dd3f8 in xfs_itruncate_finish (tp=0x1cbccdcf, ip=0x80a386cf,
-new_size=<optimized out>, fork=0, sync=16777216) at
-fs/xfs/xfs_inode.c:1585                        <=== never gets done
-..
-..
+xfs_io> lseek -h 609k
+Type	Offset
+hole	630784
 
-with  "CONFIG_XFS_DEBUG=y" I get the following assertion:
+v1 -> v2 Add "-a" and "-r" options.
+	 Simplify the output.
+v2 -> v3 Refactor for configure.in -> configure.ac change.
+	 SEEK_DATA with -1 offset behaves badly on older Linux.
+	 Display error message as "ERR <errno>".
+      
+Signed-off-by: Mark Tinguely <tinguely@sgi.com> 
+---
+ configure.ac          |    1 
+ include/builddefs.in  |    1 
+ io/Makefile           |    5 +
+ io/init.c             |    1 
+ io/io.h               |    6 +
+ io/lseek.c            |  169 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ m4/package_libcdev.m4 |   15 ++++
+ man/man8/xfs_io.8     |   35 ++++++++++
+ 8 files changed, 233 insertions(+)
 
-Assertion failed: prev.br_state == XFS_EXT_NORM, file:
-fs/xfs/xfs_bmap.c, line: 5192
- ...
-Call Trace:
-[<80234c04>] assfail+0x28/0x2c
-[<801cb57c>] xfs_bunmapi+0x1234/0x144c
-[<801f6540>] xfs_itruncate_finish+0x3e8/0x7f4
-[<8021deb4>] xfs_inactive+0x47c/0x4f0
-[<800dcd64>] evict+0x28/0xd0
-[<800dd310>] iput+0x19c/0x2d8
-[<8020e27c>] xlog_recover_process_one_iunlink+0x150/0x198
-[<8020e36c>] xlog_recover_process_iunlinks+0xa8/0x108
-[<8020f3f8>] xlog_recover_finish+0x58/0x110
-[<80213944>] xfs_mountfs+0x478/0x69c
-[<80232ae8>] xfs_fs_fill_super+0x1dc/0x304
-[<800c5fe8>] mount_bdev+0x21c/0x258
-[<8022ff64>] xfs_fs_mount+0x18/0x24
-[<800c4860>] vfs_kern_mount+0x64/0x1b8
-[<800c4a08>] do_kern_mount+0x44/0x120
-[<800e3f08>] do_mount+0x1b0/0x7cc
-[<800e49d0>] sys_mount+0x84/0xf0
-[<80011ebc>] stack_done+0x20/0x40
+Index: b/configure.ac
+===================================================================
+--- a/configure.ac
++++ b/configure.ac
+@@ -109,6 +109,7 @@ AC_HAVE_GETMNTINFO
+ AC_HAVE_FALLOCATE
+ AC_HAVE_FIEMAP
+ AC_HAVE_PREADV
++AC_HAVE_LSEEK_DATA
+ AC_HAVE_SYNC_FILE_RANGE
+ AC_HAVE_BLKID_TOPO($enable_blkid)
+ 
+Index: b/include/builddefs.in
+===================================================================
+--- a/include/builddefs.in
++++ b/include/builddefs.in
+@@ -102,6 +102,7 @@ HAVE_GETMNTINFO = @have_getmntinfo@
+ HAVE_FALLOCATE = @have_fallocate@
+ HAVE_FIEMAP = @have_fiemap@
+ HAVE_PREADV = @have_preadv@
++HAVE_LSEEK_DATA = @have_lseek_data@
+ HAVE_SYNC_FILE_RANGE = @have_sync_file_range@
+ 
+ GCCFLAGS = -funsigned-char -fno-strict-aliasing -Wall 
+Index: b/io/Makefile
+===================================================================
+--- a/io/Makefile
++++ b/io/Makefile
+@@ -80,6 +80,11 @@ ifeq ($(HAVE_PREADV),yes)
+ LCFLAGS += -DHAVE_PREADV -DHAVE_PWRITEV
+ endif
+ 
++ifeq ($(HAVE_LSEEK_DATA),yes)
++LCFLAGS += -DHAVE_LSEEK_DATA
++CFILES += lseek.c
++endif
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+Index: b/io/init.c
+===================================================================
+--- a/io/init.c
++++ b/io/init.c
+@@ -64,6 +64,7 @@ init_commands(void)
+ 	help_init();
+ 	imap_init();
+ 	inject_init();
++	lseek_init();
+ 	madvise_init();
+ 	mincore_init();
+ 	mmap_init();
+Index: b/io/io.h
+===================================================================
+--- a/io/io.h
++++ b/io/io.h
+@@ -108,6 +108,12 @@ extern void		quit_init(void);
+ extern void		shutdown_init(void);
+ extern void		truncate_init(void);
+ 
++#ifdef HAVE_LSEEK_DATA
++extern void		lseek_init(void);
++#else
++#define lseek_init()	do { } while (0)
++#endif
++
+ #ifdef HAVE_FADVISE
+ extern void		fadvise_init(void);
+ #else
+Index: b/io/lseek.c
+===================================================================
+--- /dev/null
++++ b/io/lseek.c
+@@ -0,0 +1,169 @@
++/*
++ * Copyright (c) 2012 SGI
++ * All Rights Reserved.
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License as
++ * published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it would be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write the Free Software Foundation,
++ * Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++ */
++
++#include <linux/fs.h>
++
++#include <sys/uio.h>
++#include <xfs/xfs.h>
++#include <xfs/command.h>
++#include <xfs/input.h>
++#include <ctype.h>
++#include "init.h"
++#include "io.h"
++
++static cmdinfo_t lseek_cmd;
++
++static void
++lseek_help(void)
++{
++	printf(_(
++"\n"
++" returns the next hole and/or data offset at or after the specified offset\n"
++"\n"
++" Example:\n"
++" 'lseek -d 512'   - offset of data at or following offset 512\n"
++" 'lseek -a -r 0'  - offsets of all data and hole in entire file\n"
++"\n"
++" Returns the offset of the next data and/or hole. There is an implied hole\n"
++" at the end of file. If the specified offset is past end of file, or there\n"
++" is no data past the specied offset, EOF is returned.\n"
++" -a   -- return the next data and hole starting at the specified offset.\n"
++" -d   -- return the next data starting at the specified offset.\n"
++" -h   -- return the next hole starting at the specified offset.\n"
++" -r   -- return all remaining type(s) starting at the specified offset.\n"
++"\n"));
++}
++
++#define	LSEEK_DFLAG	1 << 0
++#define	LSEEK_HFLAG	1 << 1
++#define	LSEEK_RFLAG	1 << 2
++
++static int
++lseek_f(
++	int		argc,
++	char		**argv)
++{
++	off64_t		offset, roff;
++	size_t          fsblocksize, fssectsize;
++	int		cseg;
++	int		flag;
++	int		i, c;
++
++	flag = 0;
++	init_cvtnum(&fsblocksize, &fssectsize);
++
++	while ((c = getopt(argc, argv, "adhr")) != EOF) {
++		switch (c) {
++		case 'a':
++			flag |= LSEEK_HFLAG;
++			/* fall through to pick up the DFLAG */
++		case 'd':
++			flag |= LSEEK_DFLAG;
++			break;
++		case 'h':
++			flag |= LSEEK_HFLAG;
++			break;
++		case 'r':
++			flag |= LSEEK_RFLAG;
++			break;
++		default:
++			return command_usage(&lseek_cmd);
++		}
++	}
++		/* must have hole or data specified and an offset */
++	if (!(flag & (LSEEK_DFLAG | LSEEK_HFLAG)) ||
++             optind != argc - 1)
++		return command_usage(&lseek_cmd);
++
++	offset = cvtnum(fsblocksize, fssectsize, argv[optind]);
++
++	/* recursively display all information, decide where to start. */
++	roff = lseek64(file->fd, offset, SEEK_DATA);
++	if (roff == offset)
++		cseg = LSEEK_DFLAG;
++	else
++		cseg = LSEEK_HFLAG;
++	
++	printf("Type	offset\n");
++
++	/* loop to handle the data / hole entries in assending order.
++	 * Only display the EOF when the initial offset was greater
++	 * the end of file.
++	 */
++	for (i = 0; flag & LSEEK_RFLAG || i < 2; i++) {
++		if (cseg == LSEEK_DFLAG) {
++			if (flag & LSEEK_DFLAG) {
++				roff = lseek64(file->fd, offset, SEEK_DATA);
++				if (roff == -1) {
++					if (i < 2) {
++						if (errno == ENXIO)
++							printf("data	EOF\n");
++						else
++							printf("data	ERR %d\n",
++								errno);
++					}
++					break;
++				} else
++					printf("data	%lld\n", roff);
++			}
++			/* set the offset and type for the next iteration */
++			cseg = LSEEK_HFLAG;
++			roff = lseek64(file->fd, offset, SEEK_HOLE);
++			if (roff != -1)
++				offset = roff;
++			continue;
++		}
++
++		/* cseg == LSEEK_HFLAG */
++		if (flag & LSEEK_HFLAG) {
++			roff = lseek64(file->fd, offset, SEEK_HOLE);
++			if (roff == -1) {
++				if (i < 2) {
++					if (errno == ENXIO)
++						printf("hole	EOF\n");
++					else
++						printf("hole	ERR %d\n", errno);
++				}
++				break;
++			} else
++				printf("hole	%lld\n", roff);
++		}
++		/* set the offset and type for the next iteration */
++		cseg = LSEEK_DFLAG;
++		roff = lseek64(file->fd, offset, SEEK_DATA);
++		if (roff != -1)
++			offset = roff;
++	}
++	return 0;
++}
++
++void
++lseek_init(void)
++{
++	lseek_cmd.name = "lseek";
++	lseek_cmd.altname = "seek";
++	lseek_cmd.cfunc = lseek_f;
++	lseek_cmd.argmin = 2;
++	lseek_cmd.argmax = 5;
++	lseek_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	lseek_cmd.args = _("-a | -d | -h [-r] off");
++	lseek_cmd.oneline = _("locate the next data and/or hole");
++	lseek_cmd.help = lseek_help;
++
++	add_command(&lseek_cmd);
++}
+Index: b/m4/package_libcdev.m4
+===================================================================
+--- a/m4/package_libcdev.m4
++++ b/m4/package_libcdev.m4
+@@ -153,6 +153,21 @@ AC_DEFUN([AC_HAVE_PREADV],
+     AC_SUBST(have_preadv)
+   ])
+ 
++# 
++# Check if we have a working fadvise system call
++# 
++AC_DEFUN([AC_HAVE_LSEEK_DATA],
++  [ AC_MSG_CHECKING([for lseek SEEK_DATA])
++    AC_TRY_COMPILE([
++#include <linux/fs.h>
++    ], [
++	lseek(0, 0, SEEK_DATA);
++    ],	have_lseek_data=yes
++	AC_MSG_RESULT(yes),
++	AC_MSG_RESULT(no))
++    AC_SUBST(have_lseek_data)
++  ])
++
+ #
+ # Check if we have a sync_file_range libc call (Linux)
+ #
+Index: b/man/man8/xfs_io.8
+===================================================================
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -377,6 +377,41 @@ must be specified as another open file
+ .RB ( \-f )
+ or by path
+ .RB ( \-i ).
++.TP
++.BI "lseek  \-a | \-d | \-h [ \-r ] offset"
++On platforms that support the
++.BR lseek (2)
++.B SEEK_DATA
++and
++.B SEEK_HOLE
++options, display the offsets of the specified segments.
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.B \-a
++Display both
++.B data
++and
++.B hole
++segments starting at the specified
++.B offset.
++.TP
++.B \-d
++Display the 
++.B data
++segment starting at the specified
++.B offset.
++.TP
++.B \-h
++Display the 
++.B hole
++segment starting at the specified
++.B offset.
++.TP
++.B \-r
++Recursively display all the specified segments starting at the specified
++.B offset.
++.TP
+ 
+ .SH MEMORY MAPPED I/O COMMANDS
+ .TP
 
-xfs_check, xfs_repair
-
-# xfs_check /dev/sda2
-ERROR: The filesystem has valuable metadata changes in a log which needs to
-be replayed.  Mount the filesystem to replay the log, and unmount it before
-re-running xfs_check.  If you are unable to mount the filesystem, then use
-the xfs_repair -L option to destroy the log and attempt a repair.
-Note that destroying the log may cause corruption -- please attempt a mount
-of the filesystem before doing this.
-
-sh-3.1# xfs_repair -n /dev/sda2 -r /dev/sda3
-Phase 1 - find and verify superblock...
-Phase 2 - using internal log
-        - scan filesystem freespace and inode maps...
-agi unlinked bucket 33 is 743329 in ag 2 (inode=34297761)
-sb_icount 5184, counted 39040
-sb_ifree 1315, counted 86
-sb_fdblocks 3836812, counted 3644217
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - process known inodes and perform inode discovery...
-        - agno = 0
-inode 6776 - bad rt extent start block number 3518437212496384, offset 4216781
-bad data fork in inode 6776
-would have cleared inode 6776
-        - agno = 1
-771a3500: Badness in key lookup (length)
-bp=(bno 16107312, len 16384 bytes) key=(bno 16107312, len 8192 bytes)
-        - agno = 2
-bad nblocks 5120 for inode 33701135, would reset to 4096
-inode 34297761 - bad rt extent start block number 2392537303836672,
-offset 6627188
-bad data fork in inode 34297761
-would have cleared inode 34297761
-        - agno = 3
-        - process newly discovered inodes...
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-inode 6776 - bad rt extent start block number 3518437212496384, offset 4216781
-bad data fork in inode 6776
-would have cleared inode 6776
-        - agno = 1
-        - agno = 2
-entry "0000000000754974720" at block 0 offset 1488 in directory inode
-33700909 references free inode 6776
-        would clear inode number in entry at offset 1488...
-bad nblocks 5120 for inode 33701135, would reset to 4096
-inode 34297761 - bad rt extent start block number 2392537303836672,
-offset 6627188
-bad data fork in inode 34297761
-would have cleared inode 34297761
-        - agno = 3
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ...
-entry "0000000000754974720" in directory inode 33700909 points to free
-inode 6776, would junk entry
-bad hash table for directory inode 33700909 (no data entry): would rebuild
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-No modify flag set, skipping filesystem flush and exiting.
-#
-
-Currently would like to know how to gracefully get out of this
-situation with error returned to mount so that we can repair the disk
-also if there is something that can be done to avoid this situation in
-the first place.
-
-Thanks
-Kamal
 
 _______________________________________________
 xfs mailing list
