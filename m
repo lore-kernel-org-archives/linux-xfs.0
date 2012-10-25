@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9P6WlbO102339 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:47 -0500
+	q9P6Wr9g102391 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:53 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	yjKryhLI1WjCRiVl for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 23:34:31 -0700 (PDT)
+	X7QmjMSNhtXqptjt for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 23:34:37 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TRH1Q-00009u-DC
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:28 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TRH1V-0000AB-So
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:33 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TRH1L-000542-9n
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:23 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TRH1Q-00054R-Eh
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/25] xfs: verify inode buffers as they are read from disk
-Date: Thu, 25 Oct 2012 17:33:58 +1100
-Message-Id: <1351146854-19343-10-git-send-email-david@fromorbit.com>
+Subject: [PATCH 14/25] xfs: verify dir2 block format buffers
+Date: Thu, 25 Oct 2012 17:34:03 +1100
+Message-Id: <1351146854-19343-15-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,152 +35,237 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an inode buffer verify callback function and pass it into the
-buffer read functions. Inodes are special in that the verbose checks
-will be done when reading the inode, but we still need to sanity
-check the buffer when that is first read. Always verify the magic
-numbers in all inodes in the buffer, rather than jus ton debug
-kernels.
+Add a dir2 block format read verifier. To fully verify every block
+when read, call xfs_dir2_data_check() on them. Change
+xfs_dir2_data_check() to do runtime checking, convert ASSERT()
+checks to XFS_WANT_CORRUPTED_RETURN(), which will trigger an ASSERT
+failure on debug kernels, but on production kernels will dump an
+error to dmesg and return EFSCORRUPTED to the caller.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_inode.c |  100 +++++++++++++++++++++++++++-------------------------
- 1 file changed, 51 insertions(+), 49 deletions(-)
+ fs/xfs/xfs_dir2_block.c |   22 +++++++++++++-
+ fs/xfs/xfs_dir2_data.c  |   73 ++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_dir2_priv.h  |    4 ++-
+ 3 files changed, 68 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 0b03578..5baf6cb 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -382,6 +382,46 @@ xfs_inobp_check(
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 25ce409..57351b8 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -56,6 +56,26 @@ xfs_dir_startup(void)
+ 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
  }
- #endif
  
 +static void
-+xfs_inode_buf_verify(
-+	struct xfs_buf	*bp)
++xfs_dir2_block_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	int		i;
-+	int		ni;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	/*
-+	 * Validate the magic number and version of every inode in the buffer
-+	 */
-+	ni = XFS_BB_TO_FSB(mp, bp->b_length) * mp->m_sb.sb_inopblock;
-+	for (i = 0; i < ni; i++) {
-+		int		di_ok;
-+		xfs_dinode_t	*dip;
++	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
++	block_ok = block_ok && __xfs_dir2_data_check(NULL, bp) == 0;
 +
-+		dip = (struct xfs_dinode *)xfs_buf_offset(bp,
-+					(i << mp->m_sb.sb_inodelog));
-+		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
-+			    XFS_DINODE_GOOD_VERSION(dip->di_version);
-+		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
-+						XFS_ERRTAG_ITOBP_INOTOBP,
-+						XFS_RANDOM_ITOBP_INOTOBP))) {
-+			xfs_buf_ioerror(bp, EFSCORRUPTED);
-+			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
-+					     mp, dip);
-+#ifdef DEBUG
-+			xfs_emerg(mp,
-+				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
-+				(unsigned long long)bp->b_bn, i,
-+				be16_to_cpu(dip->di_magic));
-+			ASSERT(0);
-+#endif
-+		}
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
-+	xfs_inobp_check(mp, bp);
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
- /*
-  * This routine is called to map an inode to the buffer containing the on-disk
-  * version of the inode.  It returns a pointer to the buffer containing the
-@@ -396,71 +436,33 @@ xfs_imap_to_bp(
- 	struct xfs_mount	*mp,
+ static int
+ xfs_dir2_block_read(
  	struct xfs_trans	*tp,
- 	struct xfs_imap		*imap,
--	struct xfs_dinode	**dipp,
-+	struct xfs_dinode       **dipp,
- 	struct xfs_buf		**bpp,
- 	uint			buf_flags,
- 	uint			iget_flags)
+@@ -65,7 +85,7 @@ xfs_dir2_block_read(
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 
+ 	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
+-					XFS_DATA_FORK, NULL);
++					XFS_DATA_FORK, xfs_dir2_block_verify);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 44ffd4d..c45107d 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -34,14 +34,13 @@
+ STATIC xfs_dir2_data_free_t *
+ xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
+ 
+-#ifdef DEBUG
+ /*
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+- * Pop an assert if we find anything bad.
++ * Return 0 is the buffer is good, otherwise an error.
+  */
+-void
+-xfs_dir2_data_check(
++bool
++__xfs_dir2_data_check(
+ 	struct xfs_inode	*dp,		/* incore inode pointer */
+ 	struct xfs_buf		*bp)		/* data block's buffer */
  {
- 	struct xfs_buf		*bp;
- 	int			error;
--	int			i;
--	int			ni;
+@@ -64,18 +63,23 @@ xfs_dir2_data_check(
+ 	int			stale;		/* count of stale leaves */
+ 	struct xfs_name		name;
  
- 	buf_flags |= XBF_UNMAPPED;
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
--				   (int)imap->im_len, buf_flags, &bp, NULL);
-+				   (int)imap->im_len, buf_flags, &bp,
-+				   xfs_inode_buf_verify);
- 	if (error) {
--		if (error != EAGAIN) {
--			xfs_warn(mp,
--				"%s: xfs_trans_read_buf() returned error %d.",
--				__func__, error);
--		} else {
-+		if (error == EAGAIN) {
- 			ASSERT(buf_flags & XBF_TRYLOCK);
-+			return error;
- 		}
--		return error;
--	}
+-	mp = dp->i_mount;
++	mp = bp->b_target->bt_mount;
+ 	hdr = bp->b_addr;
+ 	bf = hdr->bestfree;
+ 	p = (char *)(hdr + 1);
  
--	/*
--	 * Validate the magic number and version of every inode in the buffer
--	 * (if DEBUG kernel) or the first inode in the buffer, otherwise.
--	 */
--#ifdef DEBUG
--	ni = BBTOB(imap->im_len) >> mp->m_sb.sb_inodelog;
--#else	/* usual case */
--	ni = 1;
--#endif
-+		if (error == EFSCORRUPTED &&
-+		    (iget_flags & XFS_IGET_UNTRUSTED))
-+			return XFS_ERROR(EINVAL);
- 
--	for (i = 0; i < ni; i++) {
--		int		di_ok;
--		xfs_dinode_t	*dip;
--
--		dip = (xfs_dinode_t *)xfs_buf_offset(bp,
--					(i << mp->m_sb.sb_inodelog));
--		di_ok = dip->di_magic == cpu_to_be16(XFS_DINODE_MAGIC) &&
--			    XFS_DINODE_GOOD_VERSION(dip->di_version);
--		if (unlikely(XFS_TEST_ERROR(!di_ok, mp,
--						XFS_ERRTAG_ITOBP_INOTOBP,
--						XFS_RANDOM_ITOBP_INOTOBP))) {
--			if (iget_flags & XFS_IGET_UNTRUSTED) {
--				xfs_trans_brelse(tp, bp);
--				return XFS_ERROR(EINVAL);
--			}
--			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_HIGH,
--					     mp, dip);
--#ifdef DEBUG
--			xfs_emerg(mp,
--				"bad inode magic/vsn daddr %lld #%d (magic=%x)",
--				(unsigned long long)imap->im_blkno, i,
--				be16_to_cpu(dip->di_magic));
--			ASSERT(0);
--#endif
--			xfs_trans_brelse(tp, bp);
--			return XFS_ERROR(EFSCORRUPTED);
--		}
-+		xfs_warn(mp, "%s: xfs_trans_read_buf() returned error %d.",
-+			__func__, error);
-+		return error;
+-	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
++	switch (hdr->magic) {
++	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+ 		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endp = (char *)lep;
+-	} else {
+-		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
++		break;
++	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+ 		endp = (char *)hdr + mp->m_dirblksize;
++		break;
++	default:
++		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
++		return EFSCORRUPTED;
  	}
  
--	xfs_inobp_check(mp, bp);
--
- 	*bpp = bp;
- 	*dipp = (struct xfs_dinode *)xfs_buf_offset(bp, imap->im_boffset);
- 	return 0;
+ 	count = lastfree = freeseen = 0;
+@@ -83,19 +87,22 @@ xfs_dir2_data_check(
+ 	 * Account for zero bestfree entries.
+ 	 */
+ 	if (!bf[0].length) {
+-		ASSERT(!bf[0].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[0].offset);
+ 		freeseen |= 1 << 0;
+ 	}
+ 	if (!bf[1].length) {
+-		ASSERT(!bf[1].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[1].offset);
+ 		freeseen |= 1 << 1;
+ 	}
+ 	if (!bf[2].length) {
+-		ASSERT(!bf[2].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[2].offset);
+ 		freeseen |= 1 << 2;
+ 	}
+-	ASSERT(be16_to_cpu(bf[0].length) >= be16_to_cpu(bf[1].length));
+-	ASSERT(be16_to_cpu(bf[1].length) >= be16_to_cpu(bf[2].length));
++
++	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[0].length) >=
++						be16_to_cpu(bf[1].length));
++	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[1].length) >=
++						be16_to_cpu(bf[2].length));
+ 	/*
+ 	 * Loop over the data/unused entries.
+ 	 */
+@@ -107,17 +114,20 @@ xfs_dir2_data_check(
+ 		 * doesn't need to be there.
+ 		 */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			ASSERT(lastfree == 0);
+-			ASSERT(be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+-			       (char *)dup - (char *)hdr);
++			XFS_WANT_CORRUPTED_RETURN(lastfree == 0);
++			XFS_WANT_CORRUPTED_RETURN(
++				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
++					       (char *)dup - (char *)hdr);
+ 			dfp = xfs_dir2_data_freefind(hdr, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+-				ASSERT((freeseen & (1 << i)) == 0);
++				XFS_WANT_CORRUPTED_RETURN(
++					(freeseen & (1 << i)) == 0);
+ 				freeseen |= 1 << i;
+ 			} else {
+-				ASSERT(be16_to_cpu(dup->length) <=
+-				       be16_to_cpu(bf[2].length));
++				XFS_WANT_CORRUPTED_RETURN(
++					be16_to_cpu(dup->length) <=
++						be16_to_cpu(bf[2].length));
+ 			}
+ 			p += be16_to_cpu(dup->length);
+ 			lastfree = 1;
+@@ -130,10 +140,12 @@ xfs_dir2_data_check(
+ 		 * The linear search is crude but this is DEBUG code.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)p;
+-		ASSERT(dep->namelen != 0);
+-		ASSERT(xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)) == 0);
+-		ASSERT(be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
+-		       (char *)dep - (char *)hdr);
++		XFS_WANT_CORRUPTED_RETURN(dep->namelen != 0);
++		XFS_WANT_CORRUPTED_RETURN(
++			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
++		XFS_WANT_CORRUPTED_RETURN(
++			be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
++					       (char *)dep - (char *)hdr);
+ 		count++;
+ 		lastfree = 0;
+ 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+@@ -148,27 +160,30 @@ xfs_dir2_data_check(
+ 				    be32_to_cpu(lep[i].hashval) == hash)
+ 					break;
+ 			}
+-			ASSERT(i < be32_to_cpu(btp->count));
++			XFS_WANT_CORRUPTED_RETURN(i < be32_to_cpu(btp->count));
+ 		}
+ 		p += xfs_dir2_data_entsize(dep->namelen);
+ 	}
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+ 	 */
+-	ASSERT(freeseen == 7);
++	XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+ 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
+ 			if (lep[i].address ==
+ 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 				stale++;
+ 			if (i > 0)
+-				ASSERT(be32_to_cpu(lep[i].hashval) >= be32_to_cpu(lep[i - 1].hashval));
++				XFS_WANT_CORRUPTED_RETURN(
++					be32_to_cpu(lep[i].hashval) >=
++						be32_to_cpu(lep[i - 1].hashval));
+ 		}
+-		ASSERT(count == be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
+-		ASSERT(stale == be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(count ==
++			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(stale == be32_to_cpu(btp->stale));
+ 	}
++	return 0;
+ }
+-#endif
+ 
+ /*
+  * Given a data block and an unused entry from that block,
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 3523d3e..e1c02ca 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -41,10 +41,12 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ 
+ /* xfs_dir2_data.c */
+ #ifdef DEBUG
+-extern void xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++#define	xfs_dir2_data_check(dp,bp) __xfs_dir2_data_check(dp, bp);
+ #else
+ #define	xfs_dir2_data_check(dp,bp)
+ #endif
++extern bool __xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++
+ extern struct xfs_dir2_data_free *
+ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
+ 		struct xfs_dir2_data_unused *dup, int *loghead);
 -- 
 1.7.10
 
