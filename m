@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9PJIaD7140311 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 14:18:36 -0500
-Message-ID: <508990EF.3090207@sgi.com>
-Date: Thu, 25 Oct 2012 14:20:15 -0500
+	q9PJK7C9140609 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 14:20:07 -0500
+Message-ID: <5089914D.8020400@sgi.com>
+Date: Thu, 25 Oct 2012 14:21:49 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [patch 2/4] [PATCH] xfstests: rename configure.in to configure.ac
+Subject: Re: [patch 4/4] [PATCH] xfsdump: rename configure.in to configure.ac
 References: <20121025183634.486901001@sgi.com>
-	<20121025183726.890367820@sgi.com>
-In-Reply-To: <20121025183726.890367820@sgi.com>
+	<20121025183727.315188527@sgi.com>
+In-Reply-To: <20121025183727.315188527@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,13 +30,11 @@ On 10/25/12 13:36, bpm@sgi.com wrote:
 >
 > Signed-off-by: Ben Myers<bpm@sgi.com>
 > ---
->   Makefile |    4 ++--
->   1 files changed, 2 insertions(+), 2 deletions(-)
 
-The configure.in -> configure.ac has not yet been done on xfstests nor
-dmapi.
 
---Mark Tinguely.
+Looks good/applies/builds.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
