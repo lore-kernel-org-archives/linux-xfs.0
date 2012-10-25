@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9P6Wqtd102365 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:52 -0500
+	q9P6X7wP102622 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:33:07 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ggVPXjPeieW0SGXg for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 23:34:36 -0700 (PDT)
+	fuRJ6HI8DMaqMVgW for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 23:34:50 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TRH1L-00009t-AV
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:23 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TRH1V-0000AH-Vm
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:34 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TRH1L-00053s-6g
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:23 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TRH1V-00054j-S8
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/25] xfs: verify AGI blocks as they are read from disk
-Date: Thu, 25 Oct 2012 17:33:56 +1100
-Message-Id: <1351146854-19343-8-git-send-email-david@fromorbit.com>
+Subject: [PATCH 18/25] xfs: factor and verify attr leaf reads
+Date: Thu, 25 Oct 2012 17:34:07 +1100
+Message-Id: <1351146854-19343-19-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,92 +35,336 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an AGI block verify callback function and pass it into the
-buffer read functions. Remove the now redundant verification code
-that is currently in use.
+Some reads are not converted yet because it isn't obvious ahead of
+time what the format of the block is going to be. Need to determine
+how to tell if the first block in the tree is a node or leaf format
+block. That will be done in later patches.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_ialloc.c |   47 ++++++++++++++++++++++++++---------------------
- 1 file changed, 26 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_attr.c      |   70 +++++++++++--------------------------------
+ fs/xfs/xfs_attr_leaf.c |   78 ++++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_attr_leaf.h |    3 ++
+ 3 files changed, 66 insertions(+), 85 deletions(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 7c944e1..9311ae5 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1472,6 +1472,31 @@ xfs_check_agi_unlinked(
- #define xfs_check_agi_unlinked(agi)
- #endif
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 956c2ba..548e910 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -903,11 +903,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 	 */
+ 	dp = args->dp;
+ 	args->blkno = 0;
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+ 	if (error)
+-		return(error);
+-	ASSERT(bp != NULL);
++		return error;
+ 
+ 	/*
+ 	 * Look up the given attribute in the leaf block.  Figure out if
+@@ -1031,12 +1029,12 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
+ 		 * Read in the block containing the "old" attr, then
+ 		 * remove the "old" attr from that block (neat, huh!)
+ 		 */
+-		error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1,
+-						     &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno,
++					   -1, &bp);
+ 		if (error)
+-			return(error);
+-		ASSERT(bp != NULL);
+-		(void)xfs_attr_leaf_remove(bp, args);
++			return error;
++
++		xfs_attr_leaf_remove(bp, args);
+ 
+ 		/*
+ 		 * If the result is small enough, shrink it all into the inode.
+@@ -1100,20 +1098,17 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
+ 	 */
+ 	dp = args->dp;
+ 	args->blkno = 0;
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
+-		return(error);
+-	}
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
++	if (error)
++		return error;
+ 
+-	ASSERT(bp != NULL);
+ 	error = xfs_attr_leaf_lookup_int(bp, args);
+ 	if (error == ENOATTR) {
+ 		xfs_trans_brelse(args->trans, bp);
+ 		return(error);
+ 	}
+ 
+-	(void)xfs_attr_leaf_remove(bp, args);
++	xfs_attr_leaf_remove(bp, args);
+ 
+ 	/*
+ 	 * If the result is small enough, shrink it all into the inode.
+@@ -1156,11 +1151,9 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+ 	int error;
+ 
+ 	args->blkno = 0;
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
+ 	if (error)
+-		return(error);
+-	ASSERT(bp != NULL);
++		return error;
+ 
+ 	error = xfs_attr_leaf_lookup_int(bp, args);
+ 	if (error != EEXIST)  {
+@@ -1181,23 +1174,13 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
+ STATIC int
+ xfs_attr_leaf_list(xfs_attr_list_context_t *context)
+ {
+-	xfs_attr_leafblock_t *leaf;
+ 	int error;
+ 	struct xfs_buf *bp;
+ 
+ 	context->cursor->blkno = 0;
+-	error = xfs_da_read_buf(NULL, context->dp, 0, -1, &bp, XFS_ATTR_FORK,
+-				NULL);
++	error = xfs_attr_leaf_read(NULL, context->dp, 0, -1, &bp);
+ 	if (error)
+ 		return XFS_ERROR(error);
+-	ASSERT(bp != NULL);
+-	leaf = bp->b_addr;
+-	if (unlikely(leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
+-		XFS_CORRUPTION_ERROR("xfs_attr_leaf_list", XFS_ERRLEVEL_LOW,
+-				     context->dp->i_mount, leaf);
+-		xfs_trans_brelse(NULL, bp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+ 
+ 	error = xfs_attr_leaf_list_int(bp, context);
+ 	xfs_trans_brelse(NULL, bp);
+@@ -1601,12 +1584,9 @@ xfs_attr_node_removename(xfs_da_args_t *args)
+ 		ASSERT(state->path.blk[0].bp);
+ 		state->path.blk[0].bp = NULL;
+ 
+-		error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp,
+-						     XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp);
+ 		if (error)
+ 			goto out;
+-		ASSERT((((xfs_attr_leafblock_t *)bp->b_addr)->hdr.info.magic) ==
+-		       cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 
+ 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
+ 			xfs_bmap_init(args->flist, args->firstblock);
+@@ -1908,14 +1888,6 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+ 	 */
+ 	for (;;) {
+ 		leaf = bp->b_addr;
+-		if (unlikely(leaf->hdr.info.magic !=
+-			     cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
+-			XFS_CORRUPTION_ERROR("xfs_attr_node_list(4)",
+-					     XFS_ERRLEVEL_LOW,
+-					     context->dp->i_mount, leaf);
+-			xfs_trans_brelse(NULL, bp);
+-			return(XFS_ERROR(EFSCORRUPTED));
+-		}
+ 		error = xfs_attr_leaf_list_int(bp, context);
+ 		if (error) {
+ 			xfs_trans_brelse(NULL, bp);
+@@ -1925,16 +1897,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+ 			break;
+ 		cursor->blkno = be32_to_cpu(leaf->hdr.info.forw);
+ 		xfs_trans_brelse(NULL, bp);
+-		error = xfs_da_read_buf(NULL, context->dp, cursor->blkno, -1,
+-					      &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(NULL, context->dp, cursor->blkno, -1,
++					   &bp);
+ 		if (error)
+-			return(error);
+-		if (unlikely((bp == NULL))) {
+-			XFS_ERROR_REPORT("xfs_attr_node_list(5)",
+-					 XFS_ERRLEVEL_LOW,
+-					 context->dp->i_mount);
+-			return(XFS_ERROR(EFSCORRUPTED));
+-		}
++			return error;
+ 	}
+ 	xfs_trans_brelse(NULL, bp);
+ 	return(0);
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index f2b698e..7891d06 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -87,6 +87,36 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
+ 					 xfs_mount_t *mp);
+ STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
  
 +static void
-+xfs_agi_read_verify(
-+	struct xfs_buf	*bp)
++xfs_attr_leaf_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
-+	int		agi_ok;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_attr_leaf_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	/*
-+	 * Validate the magic number of the agi block.
-+	 */
-+	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
-+		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
-+		be32_to_cpu(agi->agi_seqno) == bp->b_pag->pag_agno;
-+	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
-+			XFS_RANDOM_IALLOC_READ_AGI))) {
-+		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
-+				     mp, agi);
++	block_ok = hdr->info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC);
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
 +		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
-+	xfs_check_agi_unlinked(agi);
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
- /*
-  * Read in the allocation group header (inode allocation section)
-  */
-@@ -1482,38 +1507,18 @@ xfs_read_agi(
- 	xfs_agnumber_t		agno,	/* allocation group number */
- 	struct xfs_buf		**bpp)	/* allocation group hdr buf */
- {
--	struct xfs_agi		*agi;	/* allocation group header */
--	int			agi_ok;	/* agi is consistent */
- 	int			error;
- 
- 	ASSERT(agno != NULLAGNUMBER);
- 
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, bpp, NULL);
-+			XFS_FSS_TO_BB(mp, 1), 0, bpp, xfs_agi_read_verify);
++int
++xfs_attr_leaf_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		bno,
++	xfs_daddr_t		mappedbno,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
++					XFS_ATTR_FORK, xfs_attr_leaf_verify);
++}
++
+ /*========================================================================
+  * Namespace helper routines
+  *========================================================================*/
+@@ -869,11 +899,10 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
+ 	error = xfs_da_grow_inode(args, &blkno);
  	if (error)
- 		return error;
+ 		goto out;
+-	error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp1,
+-					     XFS_ATTR_FORK, NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp1);
+ 	if (error)
+ 		goto out;
+-	ASSERT(bp1 != NULL);
++
+ 	bp2 = NULL;
+ 	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp2,
+ 					    XFS_ATTR_FORK);
+@@ -1620,18 +1649,16 @@ xfs_attr_leaf_toosmall(xfs_da_state_t *state, int *action)
+ 			blkno = be32_to_cpu(info->back);
+ 		if (blkno == 0)
+ 			continue;
+-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
+-					blkno, -1, &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_attr_leaf_read(state->args->trans, state->args->dp,
++					blkno, -1, &bp);
+ 		if (error)
+ 			return(error);
+-		ASSERT(bp != NULL);
  
- 	ASSERT(!xfs_buf_geterror(*bpp));
--	agi = XFS_BUF_TO_AGI(*bpp);
--
--	/*
--	 * Validate the magic number of the agi block.
--	 */
--	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
--		be32_to_cpu(agi->agi_seqno) == agno;
--	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
--			XFS_RANDOM_IALLOC_READ_AGI))) {
--		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
--				     mp, agi);
--		xfs_trans_brelse(tp, *bpp);
--		return XFS_ERROR(EFSCORRUPTED);
+ 		leaf = (xfs_attr_leafblock_t *)info;
+ 		count  = be16_to_cpu(leaf->hdr.count);
+ 		bytes  = state->blocksize - (state->blocksize>>2);
+ 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
+ 		leaf = bp->b_addr;
+-		ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 		count += be16_to_cpu(leaf->hdr.count);
+ 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
+ 		bytes -= count * sizeof(xfs_attr_leaf_entry_t);
+@@ -2495,15 +2522,11 @@ xfs_attr_leaf_clearflag(xfs_da_args_t *args)
+ 	/*
+ 	 * Set up the operation.
+ 	 */
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
++	if (error)
+ 		return(error);
 -	}
--
- 	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
--
--	xfs_check_agi_unlinked(agi);
- 	return 0;
- }
+-	ASSERT(bp != NULL);
  
+ 	leaf = bp->b_addr;
+-	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
+ 	ASSERT(args->index >= 0);
+ 	entry = &leaf->entries[ args->index ];
+@@ -2560,15 +2583,11 @@ xfs_attr_leaf_setflag(xfs_da_args_t *args)
+ 	/*
+ 	 * Set up the operation.
+ 	 */
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
++	if (error)
+ 		return(error);
+-	}
+-	ASSERT(bp != NULL);
+ 
+ 	leaf = bp->b_addr;
+-	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
+ 	ASSERT(args->index >= 0);
+ 	entry = &leaf->entries[ args->index ];
+@@ -2617,35 +2636,28 @@ xfs_attr_leaf_flipflags(xfs_da_args_t *args)
+ 	/*
+ 	 * Read the block containing the "old" attr
+ 	 */
+-	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp1,
+-					     XFS_ATTR_FORK, NULL);
+-	if (error) {
+-		return(error);
+-	}
+-	ASSERT(bp1 != NULL);
++	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp1);
++	if (error)
++		return error;
+ 
+ 	/*
+ 	 * Read the block containing the "new" attr, if it is different
+ 	 */
+ 	if (args->blkno2 != args->blkno) {
+-		error = xfs_da_read_buf(args->trans, args->dp, args->blkno2,
+-					-1, &bp2, XFS_ATTR_FORK, NULL);
+-		if (error) {
+-			return(error);
+-		}
+-		ASSERT(bp2 != NULL);
++		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno2,
++					   -1, &bp2);
++		if (error)
++			return error;
+ 	} else {
+ 		bp2 = bp1;
+ 	}
+ 
+ 	leaf1 = bp1->b_addr;
+-	ASSERT(leaf1->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index < be16_to_cpu(leaf1->hdr.count));
+ 	ASSERT(args->index >= 0);
+ 	entry1 = &leaf1->entries[ args->index ];
+ 
+ 	leaf2 = bp2->b_addr;
+-	ASSERT(leaf2->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
+ 	ASSERT(args->index2 < be16_to_cpu(leaf2->hdr.count));
+ 	ASSERT(args->index2 >= 0);
+ 	entry2 = &leaf2->entries[ args->index2 ];
+diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
+index dea1772..8f7ab98 100644
+--- a/fs/xfs/xfs_attr_leaf.h
++++ b/fs/xfs/xfs_attr_leaf.h
+@@ -227,6 +227,9 @@ int	xfs_attr_leaf_to_shortform(struct xfs_buf *bp,
+ int	xfs_attr_leaf_clearflag(struct xfs_da_args *args);
+ int	xfs_attr_leaf_setflag(struct xfs_da_args *args);
+ int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
++int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
++			xfs_dablk_t bno, xfs_daddr_t mappedbno,
++			struct xfs_buf **bpp);
+ 
+ /*
+  * Routines used for growing the Btree.
 -- 
 1.7.10
 
