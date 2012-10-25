@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9P6Wp3c102358 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:51 -0500
+	q9P6Wtst102412 for <xfs@oss.sgi.com>; Thu, 25 Oct 2012 01:32:55 -0500
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	ChyDKBDVKB8yqjAI for <xfs@oss.sgi.com>;
-	Wed, 24 Oct 2012 23:34:34 -0700 (PDT)
+	vEnePgiEF0AwnhiY for <xfs@oss.sgi.com>;
+	Wed, 24 Oct 2012 23:34:38 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TRH1Q-00009z-59
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:28 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TRH1W-0000AJ-3R
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:34 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TRH1G-00053i-1F
-	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:18 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TRH1V-00054o-TJ
+	for xfs@oss.sgi.com; Thu, 25 Oct 2012 17:34:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 05/25] xfs: verify superblocks as they are read from disk
-Date: Thu, 25 Oct 2012 17:33:54 +1100
-Message-Id: <1351146854-19343-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 19/25] xfs: add xfs_da_node verification
+Date: Thu, 25 Oct 2012 17:34:08 +1100
+Message-Id: <1351146854-19343-20-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,298 +35,399 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a superblock verify callback function and pass it into the
-buffer read functions. Remove the now redundant verification code
-that is currently in use.
-
-Adding verification shows that secondary superblocks never have
-their "sb_inprogress" flag cleared by mkfs.xfs, so when validating
-the secondary superblocks during a grow operation we have to avoid
-checking this field. Even if we fix mkfs, we will still have to
-ignore this field for verification purposes unless a version of mkfs
-that does not have this bug was used.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_fsops.c       |    4 +-
- fs/xfs/xfs_log_recover.c |    5 ++-
- fs/xfs/xfs_mount.c       |   98 +++++++++++++++++++++++++++++-----------------
- fs/xfs/xfs_mount.h       |    3 +-
- 4 files changed, 69 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_attr.c      |   22 ++++------
+ fs/xfs/xfs_attr_leaf.c |   12 +++---
+ fs/xfs/xfs_attr_leaf.h |    8 ++--
+ fs/xfs/xfs_da_btree.c  |  108 ++++++++++++++++++++++++++++++++++++------------
+ fs/xfs/xfs_da_btree.h  |    3 ++
+ fs/xfs/xfs_dir2_leaf.c |    2 +-
+ fs/xfs/xfs_dir2_priv.h |    1 +
+ 7 files changed, 106 insertions(+), 50 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index dee14eb..302b99c 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -413,7 +413,8 @@ xfs_growfs_data_private(
- 		if (agno < oagcount) {
- 			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--				  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-+				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-+				  xfs_sb_read_verify);
+diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
+index 548e910..4b862ed 100644
+--- a/fs/xfs/xfs_attr.c
++++ b/fs/xfs/xfs_attr.c
+@@ -1688,10 +1688,10 @@ xfs_attr_refillstate(xfs_da_state_t *state)
+ 	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
+ 	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
+ 		if (blk->disk_blkno) {
+-			error = xfs_da_read_buf(state->args->trans,
++			error = xfs_da_node_read(state->args->trans,
+ 						state->args->dp,
+ 						blk->blkno, blk->disk_blkno,
+-						&blk->bp, XFS_ATTR_FORK, NULL);
++						&blk->bp, XFS_ATTR_FORK);
+ 			if (error)
+ 				return(error);
  		} else {
- 			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-@@ -431,6 +432,7 @@ xfs_growfs_data_private(
- 			break;
- 		}
- 		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
-+
- 		/*
- 		 * If we get an error writing out the alternate superblocks,
- 		 * just issue a warning and continue.  The real work is
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 757688a..4cf7ae8 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3692,13 +3692,14 @@ xlog_do_recover(
- 
- 	/*
- 	 * Now that we've finished replaying all buffer and inode
--	 * updates, re-read in the superblock.
-+	 * updates, re-read in the superblock and reverify it.
+@@ -1707,10 +1707,10 @@ xfs_attr_refillstate(xfs_da_state_t *state)
+ 	ASSERT((path->active >= 0) && (path->active < XFS_DA_NODE_MAXDEPTH));
+ 	for (blk = path->blk, level = 0; level < path->active; blk++, level++) {
+ 		if (blk->disk_blkno) {
+-			error = xfs_da_read_buf(state->args->trans,
++			error = xfs_da_node_read(state->args->trans,
+ 						state->args->dp,
+ 						blk->blkno, blk->disk_blkno,
+-						&blk->bp, XFS_ATTR_FORK, NULL);
++						&blk->bp, XFS_ATTR_FORK);
+ 			if (error)
+ 				return(error);
+ 		} else {
+@@ -1795,8 +1795,8 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
  	 */
- 	bp = xfs_getsb(log->l_mp, 0);
- 	XFS_BUF_UNDONE(bp);
- 	ASSERT(!(XFS_BUF_ISWRITE(bp)));
- 	XFS_BUF_READ(bp);
- 	XFS_BUF_UNASYNC(bp);
-+	bp->b_iodone = xfs_sb_read_verify;
- 	xfsbdstrat(log->l_mp, bp);
- 	error = xfs_buf_iowait(bp);
- 	if (error) {
-@@ -3710,7 +3711,7 @@ xlog_do_recover(
+ 	bp = NULL;
+ 	if (cursor->blkno > 0) {
+-		error = xfs_da_read_buf(NULL, context->dp, cursor->blkno, -1,
+-					      &bp, XFS_ATTR_FORK, NULL);
++		error = xfs_da_node_read(NULL, context->dp, cursor->blkno, -1,
++					      &bp, XFS_ATTR_FORK);
+ 		if ((error != 0) && (error != EFSCORRUPTED))
+ 			return(error);
+ 		if (bp) {
+@@ -1837,17 +1837,11 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
+ 	if (bp == NULL) {
+ 		cursor->blkno = 0;
+ 		for (;;) {
+-			error = xfs_da_read_buf(NULL, context->dp,
++			error = xfs_da_node_read(NULL, context->dp,
+ 						      cursor->blkno, -1, &bp,
+-						      XFS_ATTR_FORK, NULL);
++						      XFS_ATTR_FORK);
+ 			if (error)
+ 				return(error);
+-			if (unlikely(bp == NULL)) {
+-				XFS_ERROR_REPORT("xfs_attr_node_list(2)",
+-						 XFS_ERRLEVEL_LOW,
+-						 context->dp->i_mount);
+-				return(XFS_ERROR(EFSCORRUPTED));
+-			}
+ 			node = bp->b_addr;
+ 			if (node->hdr.info.magic ==
+ 			    cpu_to_be16(XFS_ATTR_LEAF_MAGIC))
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index 7891d06..5ba92eb 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -87,7 +87,7 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
+ 					 xfs_mount_t *mp);
+ STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
  
- 	/* Convert superblock from on-disk format */
- 	sbp = &log->l_mp->m_sb;
--	xfs_sb_from_disk(log->l_mp, XFS_BUF_TO_SBP(bp));
-+	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
- 	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
- 	ASSERT(xfs_sb_good_version(sbp));
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index dc51e32..8699e5e 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -304,9 +304,8 @@ STATIC int
- xfs_mount_validate_sb(
- 	xfs_mount_t	*mp,
- 	xfs_sb_t	*sbp,
--	int		flags)
-+	bool		check_inprogress)
- {
--	int		loud = !(flags & XFS_MFSI_QUIET);
- 
- 	/*
- 	 * If the log device and data device have the
-@@ -316,21 +315,18 @@ xfs_mount_validate_sb(
- 	 * a volume filesystem in a non-volume manner.
- 	 */
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
--		if (loud)
--			xfs_warn(mp, "bad magic number");
-+		xfs_warn(mp, "bad magic number");
- 		return XFS_ERROR(EWRONGFS);
- 	}
- 
- 	if (!xfs_sb_good_version(sbp)) {
--		if (loud)
--			xfs_warn(mp, "bad version");
-+		xfs_warn(mp, "bad version");
- 		return XFS_ERROR(EWRONGFS);
- 	}
- 
- 	if (unlikely(
- 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"filesystem is marked as having an external log; "
- 		"specify logdev on the mount command line.");
- 		return XFS_ERROR(EINVAL);
-@@ -338,8 +334,7 @@ xfs_mount_validate_sb(
- 
- 	if (unlikely(
- 	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"filesystem is marked as having an internal log; "
- 		"do not specify logdev on the mount command line.");
- 		return XFS_ERROR(EINVAL);
-@@ -373,8 +368,7 @@ xfs_mount_validate_sb(
- 	    sbp->sb_dblocks == 0					||
- 	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
- 	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
--		if (loud)
--			XFS_CORRUPTION_ERROR("SB sanity check failed",
-+		XFS_CORRUPTION_ERROR("SB sanity check failed",
- 				XFS_ERRLEVEL_LOW, mp, sbp);
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
-@@ -383,12 +377,10 @@ xfs_mount_validate_sb(
- 	 * Until this is fixed only page-sized or smaller data blocks work.
- 	 */
- 	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
--		if (loud) {
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"File system with blocksize %d bytes. "
- 		"Only pagesize (%ld) or less will currently work.",
- 				sbp->sb_blocksize, PAGE_SIZE);
--		}
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
-@@ -402,23 +394,20 @@ xfs_mount_validate_sb(
- 	case 2048:
- 		break;
- 	default:
--		if (loud)
--			xfs_warn(mp, "inode size of %d bytes not supported",
-+		xfs_warn(mp, "inode size of %d bytes not supported",
- 				sbp->sb_inodesize);
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
- 	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
- 	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"file system too large to be mounted on this system.");
- 		return XFS_ERROR(EFBIG);
- 	}
- 
--	if (unlikely(sbp->sb_inprogress)) {
--		if (loud)
--			xfs_warn(mp, "file system busy");
-+	if (check_inprogress && sbp->sb_inprogress) {
-+		xfs_warn(mp, "Offline file system operation in progress!");
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
- 
-@@ -426,9 +415,7 @@ xfs_mount_validate_sb(
- 	 * Version 1 directory format has never worked on Linux.
- 	 */
- 	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
--		if (loud)
--			xfs_warn(mp,
--				"file system using version 1 directory format");
-+		xfs_warn(mp, "file system using version 1 directory format");
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
-@@ -521,11 +508,9 @@ out_unwind:
- 
- void
- xfs_sb_from_disk(
--	struct xfs_mount	*mp,
-+	struct xfs_sb	*to,
- 	xfs_dsb_t	*from)
- {
--	struct xfs_sb *to = &mp->m_sb;
--
- 	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
- 	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
- 	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
-@@ -627,6 +612,50 @@ xfs_sb_to_disk(
- 	}
- }
- 
+-static void
 +void
-+xfs_sb_read_verify(
-+	struct xfs_buf	*bp)
+ xfs_attr_leaf_verify(
+ 	struct xfs_buf		*bp)
+ {
+@@ -2742,7 +2742,7 @@ xfs_attr_root_inactive(xfs_trans_t **trans, xfs_inode_t *dp)
+ 	 * the extents in reverse order the extent containing
+ 	 * block 0 must still be there.
+ 	 */
+-	error = xfs_da_read_buf(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK, NULL);
++	error = xfs_da_node_read(*trans, dp, 0, -1, &bp, XFS_ATTR_FORK);
+ 	if (error)
+ 		return(error);
+ 	blkno = XFS_BUF_ADDR(bp);
+@@ -2827,8 +2827,8 @@ xfs_attr_node_inactive(
+ 		 * traversal of the tree so we may deal with many blocks
+ 		 * before we come back to this one.
+ 		 */
+-		error = xfs_da_read_buf(*trans, dp, child_fsb, -2, &child_bp,
+-						XFS_ATTR_FORK, NULL);
++		error = xfs_da_node_read(*trans, dp, child_fsb, -2, &child_bp,
++						XFS_ATTR_FORK);
+ 		if (error)
+ 			return(error);
+ 		if (child_bp) {
+@@ -2868,8 +2868,8 @@ xfs_attr_node_inactive(
+ 		 * child block number.
+ 		 */
+ 		if ((i+1) < count) {
+-			error = xfs_da_read_buf(*trans, dp, 0, parent_blkno,
+-				&bp, XFS_ATTR_FORK, NULL);
++			error = xfs_da_node_read(*trans, dp, 0, parent_blkno,
++						 &bp, XFS_ATTR_FORK);
+ 			if (error)
+ 				return(error);
+ 			child_fsb = be32_to_cpu(node->btree[i+1].before);
+diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
+index 8f7ab98..098e9a5 100644
+--- a/fs/xfs/xfs_attr_leaf.h
++++ b/fs/xfs/xfs_attr_leaf.h
+@@ -227,9 +227,6 @@ int	xfs_attr_leaf_to_shortform(struct xfs_buf *bp,
+ int	xfs_attr_leaf_clearflag(struct xfs_da_args *args);
+ int	xfs_attr_leaf_setflag(struct xfs_da_args *args);
+ int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
+-int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+-			xfs_dablk_t bno, xfs_daddr_t mappedbno,
+-			struct xfs_buf **bpp);
+ 
+ /*
+  * Routines used for growing the Btree.
+@@ -264,4 +261,9 @@ int	xfs_attr_leaf_order(struct xfs_buf *leaf1_bp,
+ 				   struct xfs_buf *leaf2_bp);
+ int	xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize,
+ 					int *local);
++int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
++			xfs_dablk_t bno, xfs_daddr_t mappedbno,
++			struct xfs_buf **bpp);
++void	xfs_attr_leaf_verify(struct xfs_buf *bp);
++
+ #endif	/* __XFS_ATTR_LEAF_H__ */
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index a46035b..e950192 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -91,6 +91,67 @@ STATIC int	xfs_da_blk_unlink(xfs_da_state_t *state,
+ 				  xfs_da_state_blk_t *save_blk);
+ STATIC void	xfs_da_state_kill_altpath(xfs_da_state_t *state);
+ 
++static void
++__xfs_da_node_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_sb	sb;
-+	int		error;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_da_node_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
++	block_ok = hdr->info.magic == cpu_to_be16(XFS_DA_NODE_MAGIC);
++	block_ok |= hdr->level > 0;
++	block_ok |= hdr->count > 0;
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
 +
-+	/*
-+	 * Only check the in progress field for the primary superblock as
-+	 * mkfs.xfs doesn't clear it from secondary superblocks.
-+	 */
-+	error = xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
-+	if (error)
-+		xfs_buf_ioerror(bp, error);
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
-+/*
-+ * We may be probed for a filesystem match, so we may not want to emit
-+ * messages when the superblock buffer is not actually an XFS superblock.
-+ * If we find an XFS superblock, the run a normal, noisy mount because we are
-+ * really going to mount it and want to know about errors.
-+ */
-+void
-+xfs_sb_quiet_read_verify(
-+	struct xfs_buf	*bp)
++static void
++xfs_da_node_verify(
++	struct xfs_buf		*bp)
 +{
-+	struct xfs_sb	sb;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_da_blkinfo	*info = bp->b_addr;
 +
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-+
-+	if (sb.sb_magicnum == XFS_SB_MAGIC) {
-+		/* XFS filesystem, verify noisily! */
-+		xfs_sb_read_verify(bp);
-+		return;
++	switch (be16_to_cpu(info->magic)) {
++		case XFS_DA_NODE_MAGIC:
++			__xfs_da_node_verify(bp);
++			return;
++		case XFS_ATTR_LEAF_MAGIC:
++			xfs_attr_leaf_verify(bp);
++			return;
++		case XFS_DIR2_LEAFN_MAGIC:
++			xfs_dir2_leafn_verify(bp);
++			return;
++		default:
++			break;
 +	}
-+	/* quietly fail */
++
++	XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, info);
 +	xfs_buf_ioerror(bp, EFSCORRUPTED);
++
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
 +}
 +
- /*
-  * xfs_readsb
-  *
-@@ -652,7 +681,9 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 
- reread:
- 	bp = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
--					BTOBB(sector_size), 0, NULL);
-+				   BTOBB(sector_size), 0,
-+				   loud ? xfs_sb_read_verify
-+				        : xfs_sb_quiet_read_verify);
- 	if (!bp) {
- 		if (loud)
- 			xfs_warn(mp, "SB buffer read failed");
-@@ -667,15 +698,8 @@ reread:
- 
- 	/*
- 	 * Initialize the mount structure from the superblock.
--	 * But first do some basic consistency checking.
++int
++xfs_da_node_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		bno,
++	xfs_daddr_t		mappedbno,
++	struct xfs_buf		**bpp,
++	int			which_fork)
++{
++	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
++					which_fork, xfs_da_node_verify);
++}
++
+ /*========================================================================
+  * Routines used for growing the Btree.
+  *========================================================================*/
+@@ -746,8 +807,8 @@ xfs_da_root_join(xfs_da_state_t *state, xfs_da_state_blk_t *root_blk)
  	 */
--	xfs_sb_from_disk(mp, XFS_BUF_TO_SBP(bp));
--	error = xfs_mount_validate_sb(mp, &(mp->m_sb), flags);
--	if (error) {
--		if (loud)
--			xfs_warn(mp, "SB validate failed");
--		goto release_buf;
--	}
-+	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
- 
+ 	child = be32_to_cpu(oldroot->btree[0].before);
+ 	ASSERT(child != 0);
+-	error = xfs_da_read_buf(args->trans, args->dp, child, -1, &bp,
+-					     args->whichfork, NULL);
++	error = xfs_da_node_read(args->trans, args->dp, child, -1, &bp,
++					     args->whichfork);
+ 	if (error)
+ 		return(error);
+ 	ASSERT(bp != NULL);
+@@ -835,9 +896,8 @@ xfs_da_node_toosmall(xfs_da_state_t *state, int *action)
+ 			blkno = be32_to_cpu(info->back);
+ 		if (blkno == 0)
+ 			continue;
+-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
+-					blkno, -1, &bp, state->args->whichfork,
+-					NULL);
++		error = xfs_da_node_read(state->args->trans, state->args->dp,
++					blkno, -1, &bp, state->args->whichfork);
+ 		if (error)
+ 			return(error);
+ 		ASSERT(bp != NULL);
+@@ -1080,8 +1140,8 @@ xfs_da_node_lookup_int(xfs_da_state_t *state, int *result)
+ 		 * Read the next node down in the tree.
+ 		 */
+ 		blk->blkno = blkno;
+-		error = xfs_da_read_buf(args->trans, args->dp, blkno,
+-					-1, &blk->bp, args->whichfork, NULL);
++		error = xfs_da_node_read(args->trans, args->dp, blkno,
++					-1, &blk->bp, args->whichfork);
+ 		if (error) {
+ 			blk->blkno = 0;
+ 			state->path.active--;
+@@ -1242,9 +1302,9 @@ xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
+ 		new_info->forw = cpu_to_be32(old_blk->blkno);
+ 		new_info->back = old_info->back;
+ 		if (old_info->back) {
+-			error = xfs_da_read_buf(args->trans, args->dp,
++			error = xfs_da_node_read(args->trans, args->dp,
+ 						be32_to_cpu(old_info->back),
+-						-1, &bp, args->whichfork, NULL);
++						-1, &bp, args->whichfork);
+ 			if (error)
+ 				return(error);
+ 			ASSERT(bp != NULL);
+@@ -1263,9 +1323,9 @@ xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
+ 		new_info->forw = old_info->forw;
+ 		new_info->back = cpu_to_be32(old_blk->blkno);
+ 		if (old_info->forw) {
+-			error = xfs_da_read_buf(args->trans, args->dp,
++			error = xfs_da_node_read(args->trans, args->dp,
+ 						be32_to_cpu(old_info->forw),
+-						-1, &bp, args->whichfork, NULL);
++						-1, &bp, args->whichfork);
+ 			if (error)
+ 				return(error);
+ 			ASSERT(bp != NULL);
+@@ -1363,9 +1423,9 @@ xfs_da_blk_unlink(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
+ 		trace_xfs_da_unlink_back(args);
+ 		save_info->back = drop_info->back;
+ 		if (drop_info->back) {
+-			error = xfs_da_read_buf(args->trans, args->dp,
++			error = xfs_da_node_read(args->trans, args->dp,
+ 						be32_to_cpu(drop_info->back),
+-						-1, &bp, args->whichfork, NULL);
++						-1, &bp, args->whichfork);
+ 			if (error)
+ 				return(error);
+ 			ASSERT(bp != NULL);
+@@ -1380,9 +1440,9 @@ xfs_da_blk_unlink(xfs_da_state_t *state, xfs_da_state_blk_t *drop_blk,
+ 		trace_xfs_da_unlink_forward(args);
+ 		save_info->forw = drop_info->forw;
+ 		if (drop_info->forw) {
+-			error = xfs_da_read_buf(args->trans, args->dp,
++			error = xfs_da_node_read(args->trans, args->dp,
+ 						be32_to_cpu(drop_info->forw),
+-						-1, &bp, args->whichfork, NULL);
++						-1, &bp, args->whichfork);
+ 			if (error)
+ 				return(error);
+ 			ASSERT(bp != NULL);
+@@ -1464,8 +1524,8 @@ xfs_da_path_shift(xfs_da_state_t *state, xfs_da_state_path_t *path,
+ 		 * Read the next child block.
+ 		 */
+ 		blk->blkno = blkno;
+-		error = xfs_da_read_buf(args->trans, args->dp, blkno, -1,
+-					&blk->bp, args->whichfork, NULL);
++		error = xfs_da_node_read(args->trans, args->dp, blkno, -1,
++					&blk->bp, args->whichfork);
+ 		if (error)
+ 			return(error);
+ 		ASSERT(blk->bp != NULL);
+@@ -1728,7 +1788,7 @@ xfs_da_swap_lastblock(
+ 	 * Read the last block in the btree space.
+ 	 */
+ 	last_blkno = (xfs_dablk_t)lastoff - mp->m_dirblkfsbs;
+-	error = xfs_da_read_buf(tp, ip, last_blkno, -1, &last_buf, w, NULL);
++	error = xfs_da_node_read(tp, ip, last_blkno, -1, &last_buf, w);
+ 	if (error)
+ 		return error;
  	/*
- 	 * We must be able to do sector-sized and sector-aligned IO.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index a631ca3..82b8fda 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -382,10 +382,11 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+@@ -1755,8 +1815,7 @@ xfs_da_swap_lastblock(
+ 	 * If the moved block has a left sibling, fix up the pointers.
+ 	 */
+ 	if ((sib_blkno = be32_to_cpu(dead_info->back))) {
+-		error = xfs_da_read_buf(tp, ip, sib_blkno, -1, &sib_buf, w,
+-					NULL);
++		error = xfs_da_node_read(tp, ip, sib_blkno, -1, &sib_buf, w);
+ 		if (error)
+ 			goto done;
+ 		sib_info = sib_buf->b_addr;
+@@ -1778,8 +1837,7 @@ xfs_da_swap_lastblock(
+ 	 * If the moved block has a right sibling, fix up the pointers.
+ 	 */
+ 	if ((sib_blkno = be32_to_cpu(dead_info->forw))) {
+-		error = xfs_da_read_buf(tp, ip, sib_blkno, -1, &sib_buf, w,
+-					NULL);
++		error = xfs_da_node_read(tp, ip, sib_blkno, -1, &sib_buf, w);
+ 		if (error)
+ 			goto done;
+ 		sib_info = sib_buf->b_addr;
+@@ -1803,8 +1861,7 @@ xfs_da_swap_lastblock(
+ 	 * Walk down the tree looking for the parent of the moved block.
+ 	 */
+ 	for (;;) {
+-		error = xfs_da_read_buf(tp, ip, par_blkno, -1, &par_buf, w,
+-					NULL);
++		error = xfs_da_node_read(tp, ip, par_blkno, -1, &par_buf, w);
+ 		if (error)
+ 			goto done;
+ 		par_node = par_buf->b_addr;
+@@ -1855,8 +1912,7 @@ xfs_da_swap_lastblock(
+ 			error = XFS_ERROR(EFSCORRUPTED);
+ 			goto done;
+ 		}
+-		error = xfs_da_read_buf(tp, ip, par_blkno, -1, &par_buf, w,
+-					NULL);
++		error = xfs_da_node_read(tp, ip, par_blkno, -1, &par_buf, w);
+ 		if (error)
+ 			goto done;
+ 		par_node = par_buf->b_addr;
+diff --git a/fs/xfs/xfs_da_btree.h b/fs/xfs/xfs_da_btree.h
+index bf8bfaa..2d1bec4 100644
+--- a/fs/xfs/xfs_da_btree.h
++++ b/fs/xfs/xfs_da_btree.h
+@@ -213,6 +213,9 @@ int	xfs_da_path_shift(xfs_da_state_t *state, xfs_da_state_path_t *path,
+  */
+ int	xfs_da_blk_link(xfs_da_state_t *state, xfs_da_state_blk_t *old_blk,
+ 				       xfs_da_state_blk_t *new_blk);
++int	xfs_da_node_read(struct xfs_trans *tp, struct xfs_inode *dp,
++			 xfs_dablk_t bno, xfs_daddr_t mappedbno,
++			 struct xfs_buf **bpp, int which_fork);
  
- #endif	/* __KERNEL__ */
+ /*
+  * Utility routines.
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 97408e3..67cc21c 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -74,7 +74,7 @@ xfs_dir2_leaf1_verify(
+ 	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
+ }
  
-+extern void	xfs_sb_read_verify(struct xfs_buf *);
- extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
- extern int	xfs_initialize_perag(struct xfs_mount *, xfs_agnumber_t,
- 					xfs_agnumber_t *);
--extern void	xfs_sb_from_disk(struct xfs_mount *, struct xfs_dsb *);
-+extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
- extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
+-static void
++void
+ xfs_dir2_leafn_verify(
+ 	struct xfs_buf		*bp)
+ {
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index ecf75d9..1f42e81 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -70,6 +70,7 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
  
- #endif	/* __XFS_MOUNT_H__ */
+ /* xfs_dir2_leaf.c */
++extern void xfs_dir2_leafn_verify(struct xfs_buf *bp);
+ extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
 -- 
 1.7.10
 
