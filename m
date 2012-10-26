@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9QJ03Yp250696 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 14:00:03 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id 6ZG1Fpxy9eqpAgGy for <xfs@oss.sgi.com>;
-	Fri, 26 Oct 2012 12:01:49 -0700 (PDT)
-Message-ID: <508ADE1C.40208@sandeen.net>
-Date: Fri, 26 Oct 2012 14:01:48 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q9QKTkYJ254610 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 15:29:46 -0500
+Date: Fri, 26 Oct 2012 15:31:29 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfsdump: Revert dump version bump for 32bit projid fix
+Message-ID: <20121026203129.GA405@sgi.com>
+References: <5085AB70.2060904@redhat.com>
 MIME-Version: 1.0
-Subject: Re: Enabling quota on XFS filesystem with many files hangs
-References: <20121026191540.ca9ee64db2a51e7166b7fadc@mjh.name>
-In-Reply-To: <20121026191540.ca9ee64db2a51e7166b7fadc@mjh.name>
+Content-Disposition: inline
+In-Reply-To: <5085AB70.2060904@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,84 +18,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: =?ISO-8859-1?Q?Milan_Holz=E4pfel?= <listen@mjh.name>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 10/26/12 12:15 PM, Milan Holz=E4pfel wrote:
-> Hello all, =
+Hey Eric,
 
-> =
+On Mon, Oct 22, 2012 at 03:24:16PM -0500, Eric Sandeen wrote:
+> commit 1e309da7a4f7e2a2f456bf6b7cea4c5f1181cd36 fixed xfsdump to
+> properly save & restore the top 16 bits of a 32-bit projid, which
+> otherwise was being dropped (and restored as 0) in older xfsdump.
+> 
+> The original thought was to bump the dump version, so that we know
+> whether the dump (may) have the top 16 bits filled in.  In practice
+> this would prevent older restores from restoring newer dumps, and
+> losing the top 16 bits contained in these newer dumps.
+> 
+> However, in hindsight this appears to be of limited value.  I
+> propose that the dump version change is unuseful/unwanted for a
+> couple reasons:
+> 
+> * There is no actual dump *format* change; the structure size
+>   is the same, and the top 16 bits were properly zeroed before; old
+>   restores will read these fixed dumps without problems and without
+>   restoring garbage.  IOW, they will behave exactly as buggily as
+>   they did before.  And worst case, if a dump containing the top 16
+>   bits is mangled by an old restore, this can be easily remedied by
+>   simply re-restoring with updated userspace.
+> 
+> * We have no reliable method to know whether 32 bit project IDs are
+>   in use; the feature flag was not added to the GEOM call at the time
+>   of implementation.  Therefore we cannot reliably bump to V4 only
+>   for projid32bit filesystems, and we cannot restrict V4 restores
+>   only to projid32bit filesystems.  So the dump version is not
+>   useful for feature cross-checking purposes.
+> 
+> I spoke with wkendall via email, and although he may not have given
+> it the most scrutiny (having moved on from xfsdump-land), he also
+> felt that a version dump may not be warranted.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+    
+Pulled this into git://oss.sgi.com/xfs/cmds/xfsdump.git, master branch.
 
-> I have an XFS filesystem of size 1.2 TiB with 101 GiB free space and 14
-> million inodes in use. Quotas are disabled on the filesystem. I try to
-> enable user and group quotas by mounting with
-> =
-
-> mount /dev/xfs_device /mnt -o uquota,gquota
-> =
-
-> I first tried this with the 3.2.0 Kernel from Ubuntu 12.04 and hit an
-> OOM [1, 2]. In [1], it is said that the OOM is fixed in 3.5, so I tried
-> 3.5.7 and 3.6.3 from http://kernel.ubuntu.com/~kernel-ppa/mainline/ (I
-> believe these are vanilla kernel.org kernels compiled with Ubuntu's
-> configuration). =
-
-> =
-
-> With 3.5.7 and 3.6.3, the OOM does not occur. For some time after
-> issuing the mount command, there is much I/O activity with xfs_inode
-> in /proc/slabinfo growing up to ~ 500k entries, which is just fine. At
-> some point, the I/O activity stops, but the mount does not terminate.
-> The system is completely idle. (The mount was the only activity on the
-> system.) =
-
-> =
-
-> In dmesg, I find
-> =
-
-> INFO: task mount:8806 blocked for more than 120 seconds.
-
-And then what?  Probably a backtrace, right?
-
-sysrq-w to get hung tasks or sysrq-t to get all task traces might
-help.
-
-The sysrqs are one of the things suggested in:
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_=
-reporting_a_problem.3F
-
-Thanks,
--Eric
-
-> in regular intervals. =
-
-> =
-
-> Can you help me with this? Thanks in advance. =
-
-> =
-
-> Regards,
-> Milan Holz=E4pfel
-> =
-
-> =
-
-> =
-
-> [1]: http://oss.sgi.com/archives/xfs/2012-06/msg00362.html
-> [2]: http://oss.sgi.com/archives/xfs/2012-09/msg00260.html
-> =
-
-> =
-
-> =
-
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
