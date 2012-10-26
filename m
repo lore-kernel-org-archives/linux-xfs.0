@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9QKTkYJ254610 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 15:29:46 -0500
-Date: Fri, 26 Oct 2012 15:31:29 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfsdump: Revert dump version bump for 32bit projid fix
-Message-ID: <20121026203129.GA405@sgi.com>
-References: <5085AB70.2060904@redhat.com>
+	q9QKTPrX254588 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 15:29:25 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	KNKAqP4Dm35K8XQH for <xfs@oss.sgi.com>;
+	Fri, 26 Oct 2012 13:31:11 -0700 (PDT)
+Date: Sat, 27 Oct 2012 07:31:07 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 25/25] xfs: add write verifiers to log recovery
+Message-ID: <20121026203107.GJ29378@dastard>
+References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
+	<1351146854-19343-26-git-send-email-david@fromorbit.com>
+	<20121026085448.GD3035@infradead.org>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5085AB70.2060904@redhat.com>
+In-Reply-To: <20121026085448.GD3035@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,50 +28,45 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hey Eric,
+On Fri, Oct 26, 2012 at 04:54:48AM -0400, Christoph Hellwig wrote:
+> > +	 * during log recovery, we don't have a quotainfo structure to
+> > +	 * pull the number of dquots per buffer out of, so we have to calculate
+> > +	 * it directly.
+> > +	 */
+> > +	if (mp->m_log->l_flags & XLOG_ACTIVE_RECOVERY) {
+> > +		dquots_per_buf = BBTOB(bp->b_length);
+> > +		do_div(dquots_per_buf, sizeof(xfs_dqblk_t));
+> 
+> No need for do_div when dividing a 32-bit value by a constant.
+> 
+> I'd be almost tempted to do the calculation unconditionally to make the
+> code cleaner, too.
 
-On Mon, Oct 22, 2012 at 03:24:16PM -0500, Eric Sandeen wrote:
-> commit 1e309da7a4f7e2a2f456bf6b7cea4c5f1181cd36 fixed xfsdump to
-> properly save & restore the top 16 bits of a 32-bit projid, which
-> otherwise was being dropped (and restored as 0) in older xfsdump.
-> 
-> The original thought was to bump the dump version, so that we know
-> whether the dump (may) have the top 16 bits filled in.  In practice
-> this would prevent older restores from restoring newer dumps, and
-> losing the top 16 bits contained in these newer dumps.
-> 
-> However, in hindsight this appears to be of limited value.  I
-> propose that the dump version change is unuseful/unwanted for a
-> couple reasons:
-> 
-> * There is no actual dump *format* change; the structure size
->   is the same, and the top 16 bits were properly zeroed before; old
->   restores will read these fixed dumps without problems and without
->   restoring garbage.  IOW, they will behave exactly as buggily as
->   they did before.  And worst case, if a dump containing the top 16
->   bits is mangled by an old restore, this can be easily remedied by
->   simply re-restoring with updated userspace.
-> 
-> * We have no reliable method to know whether 32 bit project IDs are
->   in use; the feature flag was not added to the GEOM call at the time
->   of implementation.  Therefore we cannot reliably bump to V4 only
->   for projid32bit filesystems, and we cannot restrict V4 restores
->   only to projid32bit filesystems.  So the dump version is not
->   useful for feature cross-checking purposes.
-> 
-> I spoke with wkendall via email, and although he may not have given
-> it the most scrutiny (having moved on from xfsdump-land), he also
-> felt that a version dump may not be warranted.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-    
-Pulled this into git://oss.sgi.com/xfs/cmds/xfsdump.git, master branch.
+Ok.
 
-Regards,
-	Ben
+> > + * There is no easy way to do this except for trying a bunch of magic
+> > + * number matches....
+> 
+> How do we make sure buffers used for the symlink or attr payload don't
+> match this?
+
+Remote attr buffers aren't logged - they are written sycnhronously
+during the transaction - so won't get found by this. As for remote
+symlink buffers, yeah, that might be a problem. Ultimately, both of
+these buffer types are going to grow headers for CRCs, so this
+problem will go away. I'm not sure how to address this problem
+in the mean time short of putting the buffer content type into all
+the buf_log_format headers. Do you have any better ideas?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
