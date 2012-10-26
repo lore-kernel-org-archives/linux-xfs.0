@@ -1,21 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9QKTPrX254588 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 15:29:25 -0500
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	KNKAqP4Dm35K8XQH for <xfs@oss.sgi.com>;
-	Fri, 26 Oct 2012 13:31:11 -0700 (PDT)
-Date: Sat, 27 Oct 2012 07:31:07 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 25/25] xfs: add write verifiers to log recovery
-Message-ID: <20121026203107.GJ29378@dastard>
-References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
-	<1351146854-19343-26-git-send-email-david@fromorbit.com>
-	<20121026085448.GD3035@infradead.org>
+	q9QLtvmj259871 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 16:55:57 -0500
+Received: from whiskey.americas.sgi.com (eagdhcp-232-197.americas.sgi.com
+	[128.162.232.197])
+	by relay2.corp.sgi.com (Postfix) with ESMTP id 67456304053
+	for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 14:57:41 -0700 (PDT)
+Date: Fri, 26 Oct 2012 16:57:41 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: status of userspace release
+Message-ID: <20121026215741.GB405@sgi.com>
+References: <20121025151501.GV1377@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121026085448.GD3035@infradead.org>
+In-Reply-To: <20121025151501.GV1377@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,45 +26,40 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Fri, Oct 26, 2012 at 04:54:48AM -0400, Christoph Hellwig wrote:
-> > +	 * during log recovery, we don't have a quotainfo structure to
-> > +	 * pull the number of dquots per buffer out of, so we have to calculate
-> > +	 * it directly.
-> > +	 */
-> > +	if (mp->m_log->l_flags & XLOG_ACTIVE_RECOVERY) {
-> > +		dquots_per_buf = BBTOB(bp->b_length);
-> > +		do_div(dquots_per_buf, sizeof(xfs_dqblk_t));
+Hi,
+
+On Thu, Oct 25, 2012 at 10:15:01AM -0500, Ben Myers wrote:
+> We're working toward a userspace release this month.  There are several patches
+> that need to go in first, including backing out the xfsdump format version bump
+> from Eric, fixes for the makefiles from Mike, and the Polish language update
+> for xfsdump from Jakub.  If anyone knows of something else we need, now is the
+> time to flame about it.  I will take a look around for other important patches
+> too.
 > 
-> No need for do_div when dividing a 32-bit value by a constant.
-> 
-> I'd be almost tempted to do the calculation unconditionally to make the
-> code cleaner, too.
+> This time I'm going to tag an -rc1 (probably later today or tomorrow).  We'll
+> give everyone a few working days to do a final test and/or pipe up if we have
+> missed something important.  Then if all goes well we'll cut the release next
+> Tuesday.
 
-Ok.
+I've tagged -rc1 for the upcoming releases of dmapi, xfsprogs, and xfsdump.  If
+we missed something important now is the time to speak up.
 
-> > + * There is no easy way to do this except for trying a bunch of magic
-> > + * number matches....
-> 
-> How do we make sure buffers used for the symlink or attr payload don't
-> match this?
+Currently there are two items of which I'm aware:
 
-Remote attr buffers aren't logged - they are written sycnhronously
-during the transaction - so won't get found by this. As for remote
-symlink buffers, yeah, that might be a problem. Ultimately, both of
-these buffer types are going to grow headers for CRCs, so this
-problem will go away. I'm not sure how to address this problem
-in the mean time short of putting the buffer content type into all
-the buf_log_format headers. Do you have any better ideas?
+1) the Polish (and German) translations of xfsdump are not working.  I'll start
+a separate thread for that issue.
 
-Cheers,
+2) Christoph has pointed out this patch series:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+http://oss.sgi.com/archives/xfs/2012-05/msg00323.html
+http://oss.sgi.com/archives/xfs/2012-10/msg00541.html
+
+Please take a look.
+
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
