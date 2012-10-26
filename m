@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9QDCT5f228048 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 08:12:29 -0500
-Message-ID: <508A8D05.2060805@sgi.com>
-Date: Fri, 26 Oct 2012 08:15:49 -0500
+	q9QDFZjP228414 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 08:15:35 -0500
+Message-ID: <508A8DC3.3020500@sgi.com>
+Date: Fri, 26 Oct 2012 08:18:59 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [v3, 2/3] xfs: Print error when xfs_ialloc_ag_select fails to
-	find continuous free space.
-References: <9acdfb22ee7a1fbf777f866182d01009a3bea879.1348641483.git.rprabhu@wnohang.net>
-In-Reply-To: <9acdfb22ee7a1fbf777f866182d01009a3bea879.1348641483.git.rprabhu@wnohang.net>
+Subject: Re: [PATCH v3 0/3] Print when ENOSPC due to lack of inodes.
+References: <cover.1348639531.git.rprabhu@wnohang.net>
+	<CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
+In-Reply-To: <CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,24 +22,61 @@ Content-Transfer-Encoding: 7bit
 Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Raghavendra D Prabhu <raghu.prabhu13@gmail.com>
-Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com, Ben Myers <bpm@sgi.com>
 
-On 09/26/2012 01:56 AM, Raghavendra D Prabhu wrote:
-> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+On 10/24/2012 03:56 PM, Raghavendra Prabhu wrote:
+> Hi,
 >
-> When xfs_ialloc_ag_select fails to find any AG with continuous free blocks
-> required for inode allocation, printk the error in ratelimited manner.
+> Checking back on this, whether it has been reviewed and if so, any comments.
 >
-> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+> On Wed, Sep 26, 2012 at 12:26 PM,  <raghu.prabhu13@gmail.com> wrote:
+>> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+>>
+>> Currently, when there are no free inodes left / free space to allocate them (usually
+>> without inode64), there is no indication anywhere of this case, making it harder
+>> to diagnose this case.
+>>
+>> Hence, this series prints the causes/reasons to kernel log in a ratelimited
+>> manner, when such a situation arises.
+>>
+>> Regarding why it is printed at callee location instead at caller, it gives
+>> greater granularity in expressing the precise reason and give more details, and
+>> also some along the path are not ENOSPC (such in xfs_ialloc where ialloc_context is not NULL but
+>> ino is) along with the fact that it (xfs_ialloc) is called at multiple sites, so to avoid duplication.
+>>
+>> Version 1: Initial series.
+>> Version 2: Added ratelimited printing to xfs_message and used that.
+>> Version 3: Kept the logic intact in few places, fixed the column requirement.
+>>
+>> Raghavendra D Prabhu (3):
+>>    xfs: Add ratelimited printk for different alert levels
+>>    xfs: Print error when xfs_ialloc_ag_select fails to find continuous
+>>      free space.
+>>    xfs: Print error when unable to allocate inodes or out of free
+>>      inodes.
+>>
+>>   fs/xfs/xfs_ialloc.c  | 31 ++++++++++++++++++++++++++++---
+>>   fs/xfs/xfs_linux.h   |  1 +
+>>   fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
+>>   3 files changed, 55 insertions(+), 3 deletions(-)
+>>
+>> --
+>> 1.7.12.1
+>>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 >
 
+Ben,
 
-Thanks Raghavendra,
+When you have a chance can you pull this series in.  I have tested it 
+and it looks good.
 
-Looks good.
-
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
