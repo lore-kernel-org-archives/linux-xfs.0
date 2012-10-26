@@ -1,14 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9QDCN1K228031 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 08:12:23 -0500
-Message-ID: <508A8CFF.70302@sgi.com>
-Date: Fri, 26 Oct 2012 08:15:43 -0500
+	q9QDCT5f228048 for <xfs@oss.sgi.com>; Fri, 26 Oct 2012 08:12:29 -0500
+Message-ID: <508A8D05.2060805@sgi.com>
+Date: Fri, 26 Oct 2012 08:15:49 -0500
 From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [v3,1/3] xfs: Add ratelimited printk for different alert levels
-References: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
-In-Reply-To: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
+Subject: Re: [v3, 2/3] xfs: Print error when xfs_ialloc_ag_select fails to
+	find continuous free space.
+References: <9acdfb22ee7a1fbf777f866182d01009a3bea879.1348641483.git.rprabhu@wnohang.net>
+In-Reply-To: <9acdfb22ee7a1fbf777f866182d01009a3bea879.1348641483.git.rprabhu@wnohang.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,12 +28,13 @@ Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>, x
 On 09/26/2012 01:56 AM, Raghavendra D Prabhu wrote:
 > From: Raghavendra D Prabhu <rprabhu@wnohang.net>
 >
-> Ratelimited printk will be useful in printing xfs messages which are otherwise
-> not required to be printed always due to their high rate (to prevent kernel ring
-> buffer from overflowing), while at the same time required to be printed.
+> When xfs_ialloc_ag_select fails to find any AG with continuous free blocks
+> required for inode allocation, printk the error in ratelimited manner.
 >
 > Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
 >
+
+
 Thanks Raghavendra,
 
 Looks good.
