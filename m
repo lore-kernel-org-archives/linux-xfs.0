@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9SCIAkB244637 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 07:18:10 -0500
+	q9SCIe8l244712 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 07:18:40 -0500
 Received: from two.mjh.name (two.mjh.name [78.47.207.35]) by cuda.sgi.com with
-	ESMTP id zfCTELbZ1I9czRJb (version=TLSv1 cipher=AES256-SHA
+	ESMTP id XHFeuG5gZGcAwDGf (version=TLSv1 cipher=AES256-SHA
 	bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Sun, 28 Oct 2012 05:19:56 -0700 (PDT)
+	Sun, 28 Oct 2012 05:20:27 -0700 (PDT)
 Received: from jamaica.site (p4FEB89A6.dip0.t-ipconnect.de [79.235.137.166])
 	(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by two.mjh.name (Postfix) with ESMTPSA id C7CD8C02C7AA
-	for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 12:19:54 +0000 (UTC)
-Date: Sun, 28 Oct 2012 13:20:50 +0100
+	by two.mjh.name (Postfix) with ESMTPSA id 80439C02C7AA
+	for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 12:20:26 +0000 (UTC)
+Date: Sun, 28 Oct 2012 13:22:25 +0100
 From: Milan =?ISO-8859-1?Q?Holz=E4pfel?= <listen@mjh.name>
 Subject: Re: Enabling quota on XFS filesystem with many files hangs
-Message-Id: <20121028132050.c8d143729cd565307fcee279@mjh.name>
+Message-Id: <20121028132225.09020f73d2f3dc69b3f92e77@mjh.name>
 In-Reply-To: <508ADE1C.40208@sandeen.net>
 References: <20121026191540.ca9ee64db2a51e7166b7fadc@mjh.name>
 	<508ADE1C.40208@sandeen.net>
