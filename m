@@ -1,21 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9SNJh3V080051 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 18:19:43 -0500
+	q9SNkIrG084496 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 18:46:18 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Z8QUWTOABfjJCjjl for <xfs@oss.sgi.com>;
-	Sun, 28 Oct 2012 16:21:30 -0700 (PDT)
-Date: Mon, 29 Oct 2012 10:21:24 +1100
+	BYH1yq0kRlqZHD59 for <xfs@oss.sgi.com>;
+	Sun, 28 Oct 2012 16:48:04 -0700 (PDT)
+Date: Mon, 29 Oct 2012 10:48:02 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 3/3] xfs: Print error when unable to allocate inodes
-	or out of free inodes.
-Message-ID: <20121028232124.GD4353@dastard>
-References: <cover.1348641483.git.rprabhu@wnohang.net>
-	<f0a97d0a46ee8f8bbc42a742274dde7a4c76801b.1348641483.git.rprabhu@wnohang.net>
+Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
+	filestreams option toxic ?)
+Message-ID: <20121028234802.GE4353@dastard>
+References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
+	<508958FF.4000007@univ-nantes.fr> <20121025211047.GD29378@dastard>
+	<508A600C.1020109@univ-nantes.fr> <508B092E.6070209@univ-nantes.fr>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <f0a97d0a46ee8f8bbc42a742274dde7a4c76801b.1348641483.git.rprabhu@wnohang.net>
+In-Reply-To: <508B092E.6070209@univ-nantes.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,134 +25,102 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: raghu.prabhu13@gmail.com
-Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>, xfs@oss.sgi.com
+To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+Cc: xfs@oss.sgi.com
 
-On Wed, Sep 26, 2012 at 12:26:49PM +0530, raghu.prabhu13@gmail.com wrote:
-> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> 
-> When xfs_dialloc is unable to allocate required number of inodes due to global
-> ceiling, or AGs are out of free inodes but not allowed to allocate inodes or
-> unable to allocate without continguous free space, printk the error in
-> ratelimited manner.
-> 
-> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> ---
->  fs/xfs/xfs_ialloc.c | 26 ++++++++++++++++++++++++--
->  1 file changed, 24 insertions(+), 2 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-> index e75a39d..e9f911b2 100644
-> --- a/fs/xfs/xfs_ialloc.c
-> +++ b/fs/xfs/xfs_ialloc.c
-> @@ -991,7 +991,7 @@ xfs_dialloc(
->  
->  			xfs_perag_put(pag);
->  			*inop = NULLFSINO;
-> -			return 0;
-> +			goto out_spc;
->  		}
+On Sat, Oct 27, 2012 at 12:05:34AM +0200, Yann Dupont wrote:
+> Le 26/10/2012 12:03, Yann Dupont a =E9crit :
+> >Le 25/10/2012 23:10, Dave Chinner a =E9crit :
+> >
+> >I'll try now to reproduce this kind of behaviour on a verry little
+> >volume (10 GB for exemple) so I can confirm or inform the given
+> >scenario .
+> >
+> =
 
-So this is the case where noroom = 0, okalloc = 1, error = ENOSPC.
+> This is reproductible. Here is how to do it :
+> =
 
-This means we selected an AG that we could allocate new inodes in,
-but xfs_ialloc_ag_alloc() failed because we are now over the
-mp->m_maxicount. That's the only way it can return ENOSPC. More
-below....
+> - Started a 3.6.2 kernel.
+> =
 
->  
->  		if (ialloced) {
-> @@ -1017,7 +1017,7 @@ nextag:
->  			agno = 0;
->  		if (agno == start_agno) {
->  			*inop = NULLFSINO;
-> -			return noroom ? ENOSPC : 0;
-> +			goto out_spc;
->  		}
->  	}
->  
-> @@ -1027,6 +1027,28 @@ out_alloc:
->  out_error:
->  	xfs_perag_put(pag);
->  	return XFS_ERROR(error);
-> +out_spc:
+> - I created a fresh lvm volume on localdisk of 20 GB.
 
-Irrelevant given my next comments, but shouldn't that have been
-called "out_nospace"?
+Can you reproduce the problem without LVM?
 
-> +	if (noroom) {
-> +		xfs_err_ratelimited(mp, "Hit global inode ceiling:");
-> +		error = ENOSPC;
-> +	} else if (!okalloc) {
-> +		/*
-> +		 * implies noroom=0 && (!pag->pagi_freecount && !okalloc) for
-> +		 * all pag
-> +		 */
-> +		xfs_err_ratelimited(mp,
-> +			"No AGs with free inodes and allocation not allowed:");
-> +		error = 0;
-> +	} else {
-> +		xfs_err_ratelimited(mp,
-> +			"Unable to allocate continguous space for inodes:");
-> +		error = 0;
-> +	}
+> - mkfs.xfs on it, with default options
+> - mounted with default options
+> - launch something that hammers this volume. I launched compilebench
+> 0.6  on it
+> - wait some time to fill memory,buffers, and be sure your disks are
+> really busy. I waited some minutes after the initial 30 kernel
+> unpacking in compilebench
+> - hard reset the server (I'm using the Idrac of the server to
+> generate a power cycle)
+> - After some try, I finally had the impossibility to mount the xfs
+> volume, with the error reported in previous mails. So far this is
+> normal .
 
-So for the first case we always get "Unable to allocate
-continguous space for inodes:". That's wrong (see above) because
-we've got the same error as if we were in the noroom case -
-allocation is not allowed as we are above the max inode count. i.e:
+So it doesn't happen every time, and it may be power cycle related.
+What is your "local disk"?
 
-"Unable to locate free inodes. Allocation failure reason:"
-"Over global inode limit"
+> =
 
-I think it is much better to issue the error message immediately and
-returning instead of jumping to this code. That way we'll know
-*exactly* what error occurred and it is simple to verify the message
-is, in fact, correct.
+> xfs_logprint don't say much :
+> =
 
-In the second case, for both noroom states the second message (the
-!okalloc message) is appropriate. We can be above the global inode
-ceiling and still have free inodes available for allocation, and we
-only fail if we are unable to locate free inodes for allocation.
-i.e:
+> xfs_logprint:
+>     data device: 0xfe02
+>     log device: 0xfe02 daddr: 10485792 length: 20480
+> =
 
-"Unable to locate free inodes. Allocation failure reason:"
-if (noroom) {
-	"Over global inode limit"
-	error = ENOSPC;
-else if (!okalloc)
-	"Not allowed by caller"
-else
-	"Insufficient contiguous free space is available"
+> Header 0x7c wanted 0xfeedbabe
+> **********************************************************************
+> * ERROR: header cycle=3D124         block=3D5414 *
+> **********************************************************************
 
-This is where separating the error messages from the location that
-they are generated at is a bad idea - it's taken me 20 minutes of
-code reading to get to this point, and for a patch that adds a
-couple of error messages that's just, well, wrong.
+You didn't look past the initial error, did you? The file is only
+482280 lines long, and 482200 lines of that are decoded log data....
+:)
 
-If you are going to separate them write a small wrapper function
-that has the above code snippet in it and takes a couple of boolean
-flags to select the allocation failure reason....
+> I tried xfs_logprint -c , it gaves a 22M file. You can grab it here :
+> http://filex.univ-nantes.fr/get?k=3DQnBXivz2J3LmzJ18uBV
 
-> +
-> +	xfs_err_ratelimited(mp, "Required %d, Current %llu, Maximum %llu",
-> +		XFS_IALLOC_INODES(mp), mp->m_sb.sb_icount, mp->m_maxicount);
+I really need the raw log data, not the parsed output. The logprint
+command to do that is "-C <file>", not "-c".
 
-That's not completely correct, as we only require a single inode to
-be allocated during this call. We only try to allocate an inode
-chunk when there are no existing free inodes, but we still only
-require 1 inode to be allocated to the caller. Hence I don't think
-this is necessary information - we can get if from the superblock if
-we really need it....
+> - Rebooted 3.4.15
+> - xfs_logprint gives the exact same result that with 3.6.2 (diff
+> tells no differences)
+
+Given that it's generated by the logprint application, I'd expect it
+to be identical.
+
+> but on 3.4.15, I can mount the volume without problem, log is
+> replayed.
+
+> for information here is xfs_info of the volume :
+> =
+
+> here is xfs_info output
+> =
+
+> root@label5:/mnt/debug# xfs_info /mnt/tempo
+> meta-data=3D/dev/mapper/LocalDisk-crashdisk isize=3D256    agcount=3D8,
+> agsize=3D655360 blks
+
+How did you get a default of 8 AGs? That seems wrong.  What version
+of mkfs.xfs are you using?
 
 Cheers,
 
 Dave.
--- 
+-- =
+
 Dave Chinner
 david@fromorbit.com
 
