@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9SM4Bhk068324 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 17:04:11 -0500
+	q9SM42lZ068287 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 17:04:02 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	sdXU2bG4FgBu9We4 for <xfs@oss.sgi.com>;
-	Sun, 28 Oct 2012 15:05:59 -0700 (PDT)
-Date: Mon, 29 Oct 2012 09:05:45 +1100
+	bw564RAEjNRqqBZ5 for <xfs@oss.sgi.com>;
+	Sun, 28 Oct 2012 15:05:49 -0700 (PDT)
+Date: Mon, 29 Oct 2012 09:05:16 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3 1/3] xfs: Add ratelimited printk for different alert
-	levels
-Message-ID: <20121028220545.GB4353@dastard>
-References: <cover.1348641483.git.rprabhu@wnohang.net>
-	<ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
+Subject: Re: [PATCH v3 0/3] Print when ENOSPC due to lack of inodes.
+Message-ID: <20121028220516.GA4353@dastard>
+References: <cover.1348639531.git.rprabhu@wnohang.net>
+	<CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
+	<508A8DC3.3020500@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <ca71153845539b0c76ba3e3aab9611ad6c5cf72b.1348641483.git.rprabhu@wnohang.net>
+In-Reply-To: <508A8DC3.3020500@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,22 +28,67 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: raghu.prabhu13@gmail.com
-Cc: bpm@sgi.com, elder@kernel.org, Raghavendra D Prabhu <rprabhu@wnohang.net>, xfs@oss.sgi.com
+To: Rich Johnston <rjohnston@sgi.com>
+Cc: Ben Myers <bpm@sgi.com>, xfs@oss.sgi.com
 
-On Wed, Sep 26, 2012 at 12:26:47PM +0530, raghu.prabhu13@gmail.com wrote:
-> From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+On Fri, Oct 26, 2012 at 08:18:59AM -0500, Rich Johnston wrote:
+> On 10/24/2012 03:56 PM, Raghavendra Prabhu wrote:
+> >Hi,
+> >
+> >Checking back on this, whether it has been reviewed and if so, any comments.
+> >
+> >On Wed, Sep 26, 2012 at 12:26 PM,  <raghu.prabhu13@gmail.com> wrote:
+> >>From: Raghavendra D Prabhu <rprabhu@wnohang.net>
+> >>
+> >>Currently, when there are no free inodes left / free space to allocate them (usually
+> >>without inode64), there is no indication anywhere of this case, making it harder
+> >>to diagnose this case.
+> >>
+> >>Hence, this series prints the causes/reasons to kernel log in a ratelimited
+> >>manner, when such a situation arises.
+> >>
+> >>Regarding why it is printed at callee location instead at caller, it gives
+> >>greater granularity in expressing the precise reason and give more details, and
+> >>also some along the path are not ENOSPC (such in xfs_ialloc where ialloc_context is not NULL but
+> >>ino is) along with the fact that it (xfs_ialloc) is called at multiple sites, so to avoid duplication.
+> >>
+> >>Version 1: Initial series.
+> >>Version 2: Added ratelimited printing to xfs_message and used that.
+> >>Version 3: Kept the logic intact in few places, fixed the column requirement.
+> >>
+> >>Raghavendra D Prabhu (3):
+> >>   xfs: Add ratelimited printk for different alert levels
+> >>   xfs: Print error when xfs_ialloc_ag_select fails to find continuous
+> >>     free space.
+> >>   xfs: Print error when unable to allocate inodes or out of free
+> >>     inodes.
+> >>
+> >>  fs/xfs/xfs_ialloc.c  | 31 ++++++++++++++++++++++++++++---
+> >>  fs/xfs/xfs_linux.h   |  1 +
+> >>  fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
+> >>  3 files changed, 55 insertions(+), 3 deletions(-)
+> >>
+> >>--
+> >>1.7.12.1
+> >>
+> >
+> >_______________________________________________
+> >xfs mailing list
+> >xfs@oss.sgi.com
+> >http://oss.sgi.com/mailman/listinfo/xfs
+> >
 > 
-> Ratelimited printk will be useful in printing xfs messages which are otherwise
-> not required to be printed always due to their high rate (to prevent kernel ring
-> buffer from overflowing), while at the same time required to be printed.
+> Ben,
 > 
-> Signed-off-by: Raghavendra D Prabhu <rprabhu@wnohang.net>
+> When you have a chance can you pull this series in.  I have tested
+> it and it looks good.
 
-This is fine.
+No, not yet. It doesn't address the comments I made in a previous
+iteration.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Cheers,
 
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
