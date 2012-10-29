@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9SNkIrG084496 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 18:46:18 -0500
+	q9T09FIu088399 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 19:09:15 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	BYH1yq0kRlqZHD59 for <xfs@oss.sgi.com>;
-	Sun, 28 Oct 2012 16:48:04 -0700 (PDT)
-Date: Mon, 29 Oct 2012 10:48:02 +1100
+	mLpLzR8xSk5VeMWC for <xfs@oss.sgi.com>;
+	Sun, 28 Oct 2012 17:10:59 -0700 (PDT)
+Date: Mon, 29 Oct 2012 11:10:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
-	filestreams option toxic ?)
-Message-ID: <20121028234802.GE4353@dastard>
-References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
-	<508958FF.4000007@univ-nantes.fr> <20121025211047.GD29378@dastard>
-	<508A600C.1020109@univ-nantes.fr> <508B092E.6070209@univ-nantes.fr>
+Subject: Re: [PATCH v3] xfs_io: [v3] add the lseek() SEEK_DATA/SEEK_HOLE
+	support
+Message-ID: <20121029001036.GF4353@dastard>
+References: <20121022213759.033667921@sgi.com>
+	<20121022213804.616209844@sgi.com> <20121022232931.GD4291@dastard>
+	<20121023200144.515107339@sgi.com>
+	<20121025141450.995788000@sgi.com> <20121025222914.GE29378@dastard>
+	<508A909F.10305@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <508B092E.6070209@univ-nantes.fr>
+In-Reply-To: <508A909F.10305@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,102 +27,58 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Sat, Oct 27, 2012 at 12:05:34AM +0200, Yann Dupont wrote:
-> Le 26/10/2012 12:03, Yann Dupont a =E9crit :
-> >Le 25/10/2012 23:10, Dave Chinner a =E9crit :
+On Fri, Oct 26, 2012 at 08:31:11AM -0500, Mark Tinguely wrote:
+> On 10/25/12 17:29, Dave Chinner wrote:
+> >On Thu, Oct 25, 2012 at 09:14:44AM -0500, Mark Tinguely wrote:
+> >>Add the lseek SEEK_DATA/SEEK_HOLE support into xfs_io.
+> >>The result from the lseek() call will be printed to the output.
+> >>For example:
+> >>
+> >>xfs_io>  lseek -h 609k
+> >>Type	Offset
+> >>hole	630784
+> >>
+> >>v1 ->  v2 Add "-a" and "-r" options.
+> >>	 Simplify the output.
+> >>v2 ->  v3 Refactor for configure.in ->  configure.ac change.
+> >>	 SEEK_DATA with -1 offset behaves badly on older Linux.
+> >>	 Display error message as "ERR<errno>".
+> >....
+> >>+
+> >>+#include<linux/fs.h>
 > >
-> >I'll try now to reproduce this kind of behaviour on a verry little
-> >volume (10 GB for exemple) so I can confirm or inform the given
-> >scenario .
-> >
-> =
+> >I missed this first time around - why is this include necessary?
+> 
+> Take it out and you will find that it contains the
+> defines for SEEK_DATA/SEEK_HOLE.
 
-> This is reproductible. Here is how to do it :
-> =
+It was added in glibc 2.14, IIRC. All this means is that your
+userspace libraries are not current, while your kernel headers are.
 
-> - Started a 3.6.2 kernel.
-> =
+So, you shouldn't be including linux/fs.h directly, I think,
+especially as SEEK_DATA/SEEK_HOLE is functionality that is not linux
+specific. I suspect that you should do something more like:
 
-> - I created a fresh lvm volume on localdisk of 20 GB.
+#ifndef SEEK_DATA
+#define SEEK_DATA 3
+#define SEEK_HOLE 4
+#endif
 
-Can you reproduce the problem without LVM?
-
-> - mkfs.xfs on it, with default options
-> - mounted with default options
-> - launch something that hammers this volume. I launched compilebench
-> 0.6  on it
-> - wait some time to fill memory,buffers, and be sure your disks are
-> really busy. I waited some minutes after the initial 30 kernel
-> unpacking in compilebench
-> - hard reset the server (I'm using the Idrac of the server to
-> generate a power cycle)
-> - After some try, I finally had the impossibility to mount the xfs
-> volume, with the error reported in previous mails. So far this is
-> normal .
-
-So it doesn't happen every time, and it may be power cycle related.
-What is your "local disk"?
-
-> =
-
-> xfs_logprint don't say much :
-> =
-
-> xfs_logprint:
->     data device: 0xfe02
->     log device: 0xfe02 daddr: 10485792 length: 20480
-> =
-
-> Header 0x7c wanted 0xfeedbabe
-> **********************************************************************
-> * ERROR: header cycle=3D124         block=3D5414 *
-> **********************************************************************
-
-You didn't look past the initial error, did you? The file is only
-482280 lines long, and 482200 lines of that are decoded log data....
-:)
-
-> I tried xfs_logprint -c , it gaves a 22M file. You can grab it here :
-> http://filex.univ-nantes.fr/get?k=3DQnBXivz2J3LmzJ18uBV
-
-I really need the raw log data, not the parsed output. The logprint
-command to do that is "-C <file>", not "-c".
-
-> - Rebooted 3.4.15
-> - xfs_logprint gives the exact same result that with 3.6.2 (diff
-> tells no differences)
-
-Given that it's generated by the logprint application, I'd expect it
-to be identical.
-
-> but on 3.4.15, I can mount the volume without problem, log is
-> replayed.
-
-> for information here is xfs_info of the volume :
-> =
-
-> here is xfs_info output
-> =
-
-> root@label5:/mnt/debug# xfs_info /mnt/tempo
-> meta-data=3D/dev/mapper/LocalDisk-crashdisk isize=3D256    agcount=3D8,
-> agsize=3D655360 blks
-
-How did you get a default of 8 AGs? That seems wrong.  What version
-of mkfs.xfs are you using?
+Because the autoconf test passed, but the parameters are not defined
+correctly by userspace. That way it will still work on other
+platforms if they support this functionality....
 
 Cheers,
 
 Dave.
--- =
-
+-- 
 Dave Chinner
 david@fromorbit.com
 
