@@ -1,13 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9T89dGN144630 for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 03:09:39 -0500
+	q9T8FQTv145005 for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 03:15:26 -0500
 Received: from smtp-tls.univ-nantes.fr (smtptls1-loi.cpub.univ-nantes.fr
 	[193.52.103.112]) by cuda.sgi.com with ESMTP id
-	IVHLPoTqyEQOLsDU for <xfs@oss.sgi.com>;
-	Mon, 29 Oct 2012 01:11:27 -0700 (PDT)
-Message-ID: <508E3A2E.20901@univ-nantes.fr>
-Date: Mon, 29 Oct 2012 09:11:26 +0100
+	5V0BqCiH45pPDeox for <xfs@oss.sgi.com>;
+	Mon, 29 Oct 2012 01:17:14 -0700 (PDT)
+Received: from localhost (localhost [127.0.0.1])
+	by smtp-tls.univ-nantes.fr (Postfix) with ESMTP id 198E24016E4
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 09:17:14 +0100 (CET)
+Received: from smtp-tls.univ-nantes.fr ([127.0.0.1])
+	by localhost (smtptls1-loi.cpub.univ-nantes.fr [127.0.0.1])
+	(amavisd-new, port 10024)
+	with LMTP id 7Tjl2+we4sSq for <xfs@oss.sgi.com>;
+	Mon, 29 Oct 2012 09:17:14 +0100 (CET)
+Received: from [IPv6:2001:660:7220:0:1cf5:475e:2845:4f5e] (unknown
+	[IPv6:2001:660:7220:0:1cf5:475e:2845:4f5e])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by smtp-tls.univ-nantes.fr (Postfix) with ESMTPSA id DFCE24016E0
+	for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 09:17:13 +0100 (CET)
+Message-ID: <508E3B89.2070004@univ-nantes.fr>
+Date: Mon, 29 Oct 2012 09:17:13 +0100
 From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
 MIME-Version: 1.0
 Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
@@ -15,8 +29,8 @@ Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
 References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
 	<508958FF.4000007@univ-nantes.fr> <20121025211047.GD29378@dastard>
 	<508A600C.1020109@univ-nantes.fr> <508B092E.6070209@univ-nantes.fr>
-	<20121028234802.GE4353@dastard> <20121029012540.GO29378@dastard>
-In-Reply-To: <20121029012540.GO29378@dastard>
+	<20121028234802.GE4353@dastard> <508E3940.4080200@univ-nantes.fr>
+In-Reply-To: <508E3940.4080200@univ-nantes.fr>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,35 +43,24 @@ Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le 29/10/2012 02:25, Dave Chinner a =E9crit :
-> I can't reproduce this with a similar setup but using KVM (i.e. =
+Le 29/10/2012 09:07, Yann Dupont a =E9crit :
+>
+> Hello dave. That is THE question. My intent was to test with and =
 
-> killing the VM instead of power cycling) or forcing a shutdown of the =
+> without LVM. But right now I can't , because all my disks are consumed =
 
-> filesystem without flushing the log. The second case is very much the =
+> by lvm.
+> In fact my test setup hasn't even enough space to locally clone the =
 
-> same as power cycling, but without the potential "power failure caused =
+> volume where I have errors. I only have 146 sas disks on this machine.
+whoooops
+read 146 GB sas disks
 
-> partial IOs to be written" problem. The only thing I can see in the =
+If I really had 146 sas disks on that machine I shouldn't have disk =
 
-> logprint that I haven't seen so far in my testing is that your log =
-
-> print indicates a checkpoint that wraps the end of the log. I haven't =
-
-> yet hit that situation by chance, so I'll keep trying to see if that's =
-
-> the case that is causing the problem.... Cheers, Dave. =
-
-
-Ok, is your kvm guest was lvm enabled ?
-
-I'll try to recrash the FS, this time I'll make an image of it on =
-
-another machine for further testings. And I'll supply a usefull logprint
-
+space problems :)
 Cheers,
 
 -- =
