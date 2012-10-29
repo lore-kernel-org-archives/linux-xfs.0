@@ -1,18 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9TELYqa171781 for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 09:21:35 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id jKY59lbKLceG6p0I for
-	<xfs@oss.sgi.com>; Mon, 29 Oct 2012 07:23:23 -0700 (PDT)
-Date: Mon, 29 Oct 2012 12:23:18 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: Daily crash in xfs_cmn_err
-Message-ID: <20121029142318.GA4434@andromeda.usersys.redhat.com>
-References: <CADLDEKtkwaitKCsU21JnsesM70H5AwkEFQFcdmOHE0JU9Oa8nw@mail.gmail.com>
+	q9TEtSh5173944 for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 09:55:28 -0500
+Message-ID: <508E99B1.9060209@sgi.com>
+Date: Mon, 29 Oct 2012 09:58:57 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <CADLDEKtkwaitKCsU21JnsesM70H5AwkEFQFcdmOHE0JU9Oa8nw@mail.gmail.com>
+Subject: Re: xfstests 250: remove unwanted new line in 250.out
+References: <1350618284-11708-1-git-send-email-eguan@redhat.com>
+In-Reply-To: <1350618284-11708-1-git-send-email-eguan@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,225 +17,42 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Juerg Haefliger <juergh@gmail.com>
+To: Eryu Guan <eguan@redhat.com>
 Cc: xfs@oss.sgi.com
 
-Hi,
-> 
-> I have a node that used to crash every day at 6:25am in xfs_cmn_err
-> (Null pointer dereference). I'm running 2.6.38 (yes I know it's old)
-> and I'm not reporting a bug as I'm sure the problem has been fixed in
-> newer kernels :-) The crashes occurred daily when logrotate ran,
-> /var/log is a separate 100GB XFS volume. I finally took the node down
-> and ran xfs_check on the the /var/log volume and it did indeed report
-> some errors/warnings (see end of email). I then ran xfs_repair (see
-> end of email for output) and the node is stable ever since.
-> 
-> So my questions are:
-> 
-> 1) I was under the impression that during the mounting of an XFS
-> volume some sort of check/repair is performed. How does that differ
-> from running xfs_check and/or xfs_repair?
-> 
-AFAICT, there is no repair or check happening at mount time, only information
-needed to mount the filesystem are checked, everything else (like consistency of
-blocks and inodes) are not checked during mount time. Maybe you mean the journal
-replay that happens during mount time?
+On 10/18/2012 10:44 PM, Eryu Guan wrote:
+> Additional new line at the end of 250.out will fail the test, remove it.
+>
+> Signed-off-by: Eryu Guan <eguan@redhat.com>
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+>
+> ---
+> 250.out | 1 -
+>   1 file changed, 1 deletion(-)
+>
+> diff --git a/250.out b/250.out
+> index 2225d6e..acb042a 100644
+> --- a/250.out
+> +++ b/250.out
+> @@ -12,4 +12,3 @@ realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+>   *** unmount loop filesystem
+>   *** check loop filesystem
+>   *** done
+> -
+>
 
-> 2) Any ideas how the filesystem might have gotten into this state? I
-> don't have the history of that node but it's possible that it crashed
-> previously due to an unrelated problem. Could this have left the
-> filesystem is this state?
-> 
-> 3) What exactly does the ouput of the xfs_check mean? How serious is
-> it? Are those warning or errors? Will some of them get cleanup up
-> during the mounting of the filesystem?
-> 
-comments below
+Eryu,
 
-> 4) We have a whole bunch of production nodes running the same kernel.
-> I'm more than a little concerned that we might have a ticking timebomb
-> with some filesystems being in a state that might trigger a crash
-> eventually. Is there any way to perform a live check on a mounted
-> filesystem so that I can get an idea of how big of a problem we have
-> (if any)? i don't claim to know exactly what I'm doing but I picked a
-> node, froze the filesystem and then ran a modified xfs_check (which
-> bypasses the is_mounted check and ignores non-committed metadata) and
-> it did report some issues. At this point I believe those are false
-> positive. Do you have any suggestions short of rebooting the nodes and
-> running xfs_check on the unmounted filesystem?
-> 
-You must umount the filesystem before run xfs_repair/check, even with a freezed
-fs you may get inconsistent data wich may lead you to have more problems.
+This patch has been committed to git://oss.sgi.com/xfs/cmds/xfstests 
+master branch, commit d1ffc87.
 
-> Thanks
-> ....Juerg
-> 
-> 
-> (initramfs) xfs_check  /dev/mapper/vg0-varlog
-> block 0/3538 expected type unknown got free2
-> block 0/13862 expected type unknown got free2
-> block 0/13863 expected type unknown got free2
-> 
-> <SNIP>
-> 
-> block 0/16983 expected type unknown got free2
-> block 0/16984 expected type unknown got free2
-> block 0/21700 expected type unknown got data
-> block 0/21701 expected type unknown got data
-> 
-> <SNIP>
-> 
-> block 0/21826 expected type unknown got data
-> block 0/21827 expected type unknown got data
-> block 0/21700 claimed by inode 178, previous inum 148
-> block 0/21701 claimed by inode 178, previous inum 148
-> 
-> <SNIP>
-> 
-> block 0/21826 claimed by inode 178, previous inum 148
-> block 0/21827 claimed by inode 178, previous inum 148
-> block 0/1250 expected type unknown got data
-> block 0/1251 expected type unknown got data
-> 
-> <SNIP>
-> 
-> block 0/1264 expected type unknown got data
-> block 0/1265 expected type unknown got data
-> block 0/1250 claimed by inode 1706, previous inum 148
-> block 0/1251 claimed by inode 1706, previous inum 148
-> 
-> <SNIP>
-> 
-> block 0/1264 claimed by inode 1706, previous inum 148
-> block 0/1265 claimed by inode 1706, previous inum 148
-> block 0/16729 expected type unknown got data
-> block 0/16730 expected type unknown got data
-> 
-> <SNIP>
-> 
-> block 0/16889 expected type unknown got data
-> block 0/16890 expected type unknown got data
-> block 0/16729 claimed by inode 1710, previous inum 148
-> block 0/16730 claimed by inode 1710, previous inum 148
-> 
-> <SNIP>
-> 
-> block 0/16889 claimed by inode 1710, previous inum 148
-> block 0/16890 claimed by inode 1710, previous inum 148
-> block 0/3523 expected type unknown got data
-> block 0/3524 expected type unknown got data
-> 
-> <SNIP>
-> 
-> block 0/3536 expected type unknown got data
-> block 0/3537 expected type unknown got data
-> block 0/3523 claimed by inode 1994, previous inum 148
-> block 0/3524 claimed by inode 1994, previous inum 148
-> 
-> <SNIP>
-> 
-> block 0/3536 claimed by inode 1994, previous inum 148
-> block 0/3537 claimed by inode 1994, previous inum 148
-> block 0/510 type unknown not expected
-> block 0/511 type unknown not expected
-> block 0/512 type unknown not expected
-> 
-> <SNIP>
-> 
-> block 0/2341 type unknown not expected
-> block 0/2342 type unknown not expected
-> 
-> 
-> 
-> (initramfs) xfs_repair /dev/mapper/vg0-varlog
-> Phase 1 - find and verify superblock...
-> Phase 2 - using internal log
->         - zero log...
->         - scan filesystem freespace and inode maps...
->         - found root inode chunk
-> Phase 3 - for each AG...
->         - scan and clear agi unlinked lists...
->         - process known inodes and perform inode discovery...
->         - agno = 0
-> data fork in ino 148 claims free block 3538
-> data fork in ino 148 claims free block 13862
-> data fork in ino 148 claims free block 13863
-> data fork in ino 148 claims free block 16891
-> data fork in ino 148 claims free block 16892
-> data fork in regular inode 178 claims used block 21700
-> bad data fork in inode 178
-> cleared inode 178
-> data fork in regular inode 1706 claims used block 1250
-> bad data fork in inode 1706
-> cleared inode 1706
-> data fork in regular inode 1710 claims used block 16729
-> bad data fork in inode 1710
-> cleared inode 1710
-> data fork in regular inode 1994 claims used block 3523
-> bad data fork in inode 1994
-> cleared inode 1994
->         - agno = 1
->         - agno = 2
->         - agno = 3
->         - process newly discovered inodes...
-> Phase 4 - check for duplicate blocks...
->         - setting up duplicate extent list...
->         - check for inodes claiming duplicate blocks...
->         - agno = 0
->         - agno = 1
-> entry "syslog" at block 0 offset 2384 in directory inode 128
-> references free inode 178
->         - agno = 3
-> 	clearing inode number in entry at offset 2384...
->         - agno = 2
-> data fork in ino 148 claims dup extent, off - 0, start - 1250, cnt 16
-> bad data fork in inode 148
-> cleared inode 148
-> entry "nova-api.log" at block 0 offset 552 in directory inode 165
-> references free inode 1994
-> 	clearing inode number in entry at offset 552...
-> entry "nova-network.log.6" at block 0 offset 2608 in directory inode
-> 165 references free inode 1706
-> 	clearing inode number in entry at offset 2608...
-> entry "nova-api.log.6" at block 0 offset 4032 in directory inode 165
-> references free inode 1710
-> 	clearing inode number in entry at offset 4032...
-> Phase 5 - rebuild AG headers and trees...
->         - reset superblock...
-> Phase 6 - check inode connectivity...
->         - resetting contents of realtime bitmap and summary inodes
->         - traversing filesystem ...
-> entry "syslog.1" in directory inode 128 points to free inode 148
-> bad hash table for directory inode 128 (no data entry): rebuilding
-> rebuilding directory inode 128
-> bad hash table for directory inode 165 (no data entry): rebuilding
-> rebuilding directory inode 165
->         - traversal finished ...
->         - moving disconnected inodes to lost+found ...
-> Phase 7 - verify and correct link counts...
-> done
-> 
-
-Looking through these logs, I'd say that the system crashed before and was not
-using a kind of storage without a battery backed unit and some metadata has been
-lost during the crash, or, a xfs_repair were ran, or the filesystem mounted
-after drop the dirty logs into the filesystem (like run xfs_repair -L).
-
-These are my points of view though, some other people may give you more detailed
-answer.
-
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-
--- 
---Carlos
+Thanks
+--Rich
 
 _______________________________________________
 xfs mailing list
