@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9T1NvHi100224 for <xfs@oss.sgi.com>; Sun, 28 Oct 2012 20:23:57 -0500
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	HtQNxfUKMBXzXlFF for <xfs@oss.sgi.com>;
-	Sun, 28 Oct 2012 18:25:44 -0700 (PDT)
-Date: Mon, 29 Oct 2012 12:25:40 +1100
-From: Dave Chinner <david@fromorbit.com>
+	q9T85gvZ144372 for <xfs@oss.sgi.com>; Mon, 29 Oct 2012 03:05:43 -0500
+Received: from smtp-tls.univ-nantes.fr (smtptls1-loi.cpub.univ-nantes.fr
+	[193.52.103.112]) by cuda.sgi.com with ESMTP id
+	93wt3iRPpGWhgATC for <xfs@oss.sgi.com>;
+	Mon, 29 Oct 2012 01:07:30 -0700 (PDT)
+Message-ID: <508E3940.4080200@univ-nantes.fr>
+Date: Mon, 29 Oct 2012 09:07:28 +0100
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+MIME-Version: 1.0
 Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
 	filestreams option toxic ?)
-Message-ID: <20121029012540.GO29378@dastard>
 References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
 	<508958FF.4000007@univ-nantes.fr> <20121025211047.GD29378@dastard>
 	<508A600C.1020109@univ-nantes.fr> <508B092E.6070209@univ-nantes.fr>
 	<20121028234802.GE4353@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
 In-Reply-To: <20121028234802.GE4353@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -26,72 +25,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Yann Dupont <Yann.Dupont@univ-nantes.fr>
+To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Mon, Oct 29, 2012 at 10:48:02AM +1100, Dave Chinner wrote:
-> On Sat, Oct 27, 2012 at 12:05:34AM +0200, Yann Dupont wrote:
-> > Le 26/10/2012 12:03, Yann Dupont a =E9crit :
-> > >Le 25/10/2012 23:10, Dave Chinner a =E9crit :
-> > >
-> > >I'll try now to reproduce this kind of behaviour on a verry little
-> > >volume (10 GB for exemple) so I can confirm or inform the given
-> > >scenario .
-> > >
-> > =
-
-> > This is reproductible. Here is how to do it :
-> > =
-
-> > - Started a 3.6.2 kernel.
-> > =
-
-> > - I created a fresh lvm volume on localdisk of 20 GB.
-> =
-
+Le 29/10/2012 00:48, Dave Chinner a =E9crit :
+>
+> This is reproductible. Here is how to do it :
+>
+> - Started a 3.6.2 kernel.
+>
+> - I created a fresh lvm volume on localdisk of 20 GB.
 > Can you reproduce the problem without LVM?
-> =
 
-> > - mkfs.xfs on it, with default options
-> > - mounted with default options
-> > - launch something that hammers this volume. I launched compilebench
-> > 0.6  on it
-> > - wait some time to fill memory,buffers, and be sure your disks are
-> > really busy. I waited some minutes after the initial 30 kernel
-> > unpacking in compilebench
-> > - hard reset the server (I'm using the Idrac of the server to
-> > generate a power cycle)
-> > - After some try, I finally had the impossibility to mount the xfs
-> > volume, with the error reported in previous mails. So far this is
-> > normal .
-> =
+Hello dave. That is THE question. My intent was to test with and without =
 
+LVM. But right now I can't , because all my disks are consumed by lvm.
+In fact my test setup hasn't even enough space to locally clone the =
+
+volume where I have errors. I only have 146 sas disks on this machine.
+
+I have to setup another test platform, and as I'm currently traveling, =
+
+it won't be easy before  next week.
+
+What I want to try this week is to recrash a volume, possibly smaller,
+download this image on another machine with kvm
+see if I have the mounting problems inside this kvm
+begin to bisect the kernel .
+
+...
+>
+> - After some try, I finally had the impossibility to mount the xfs
+> volume, with the error reported in previous mails. So far this is
+> normal .
 > So it doesn't happen every time, and it may be power cycle related.
+
+Yes, during my tests, I had to to power cycle 3 or 4 times before having =
+
+the actual problem
+
 > What is your "local disk"?
 
-I can't reproduce this with a similar setup but using KVM (i.e.
-killing the VM instead of power cycling) or forcing a shutdown of
-the filesystem without flushing the log. The second case is very
-much the same as power cycling, but without the potential "power
-failure caused partial IOs to be written" problem.
+Raid 1 array (2 disks) with mptsas on this.
+>
+>> xfs_logprint don't say much :
+>>
+>> xfs_logprint:
+>>      data device: 0xfe02
+>>      log device: 0xfe02 daddr: 10485792 length: 20480
+>>
+>> Header 0x7c wanted 0xfeedbabe
+>> **********************************************************************
+>> * ERROR: header cycle=3D124         block=3D5414 *
+>> **********************************************************************
+> You didn't look past the initial error, did you? The file is only
+> 482280 lines long, and 482200 lines of that are decoded log data....
+> :)
+Well I'd tried with -c  but sorry, i didn't had experience with =
 
-The only thing I can see in the logprint that I haven't seen so far
-in my testing is that your log print indicates a checkpoint that
-wraps the end of the log. I haven't yet hit that situation by
-chance, so I'll keep trying to see if that's the case that is
-causing the problem....
+xfs_logprint so far.
+>
+>> I tried xfs_logprint -c , it gaves a 22M file. You can grab it here :
+>> http://filex.univ-nantes.fr/get?k=3DQnBXivz2J3LmzJ18uBV
+> I really need the raw log data, not the parsed output. The logprint
+> command to do that is "-C <file>", not "-c".
 
+Ok ... I should have read the man page more carefully. Time to restart a =
+
+crash session
+
+>> - Rebooted 3.4.15
+>> - xfs_logprint gives the exact same result that with 3.6.2 (diff
+>> tells no differences)
+> Given that it's generated by the logprint application, I'd expect it
+> to be identical.
+Me too, but I'd also expect the log replaying to be identical between =
+
+the 2 kernels
+
+>
+>> but on 3.4.15, I can mount the volume without problem, log is
+>> replayed.
+>> for information here is xfs_info of the volume :
+>>
+>> here is xfs_info output
+>>
+>> root@label5:/mnt/debug# xfs_info /mnt/tempo
+>> meta-data=3D/dev/mapper/LocalDisk-crashdisk isize=3D256    agcount=3D8,
+>> agsize=3D655360 blks
+> How did you get a default of 8 AGs? That seems wrong.  What version
+> of mkfs.xfs are you using?
+root@label5:~# mkfs.xfs -V
+mkfs.xfs version 3.1.7
+
+the volume was freshly formatted, with defaults options. Absolutely =
+
+nothing special on my side.
 Cheers,
 
-Dave.
 -- =
 
-Dave Chinner
-david@fromorbit.com
+Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
+Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
