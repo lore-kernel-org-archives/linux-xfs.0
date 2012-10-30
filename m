@@ -1,19 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UJ0pdQ066512 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 14:00:51 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id lBaIxXWRip6cJf5J for <xfs@oss.sgi.com>;
-	Tue, 30 Oct 2012 12:02:40 -0700 (PDT)
-Message-ID: <5090244F.7060900@sandeen.net>
-Date: Tue, 30 Oct 2012 14:02:39 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	q9UJ1pps066544 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 14:01:51 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	EKjxYDjQumiKt34l for <xfs@oss.sgi.com>;
+	Tue, 30 Oct 2012 12:03:40 -0700 (PDT)
+Date: Tue, 30 Oct 2012 11:45:46 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 03/25] xfs: make buffer read verication an IO completion
+	function
+Message-ID: <20121030004546.GW29378@dastard>
+References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
+	<1351146854-19343-4-git-send-email-david@fromorbit.com>
+	<20121030002916.GE30227@caliban.engr.sgi.com>
 MIME-Version: 1.0
-Subject: Re: Daily crash in xfs_cmn_err
-References: <CADLDEKtkwaitKCsU21JnsesM70H5AwkEFQFcdmOHE0JU9Oa8nw@mail.gmail.com>
-	<20121029125330.GS29378@dastard>
-	<CADLDEKv8Y0Z+4gfJYhxi=-CejkkdaGBjtx1og6n8G6z1o9xpSA@mail.gmail.com>
-In-Reply-To: <CADLDEKv8Y0Z+4gfJYhxi=-CejkkdaGBjtx1og6n8G6z1o9xpSA@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20121030002916.GE30227@caliban.engr.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,160 +29,53 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Juerg Haefliger <juergh@gmail.com>
+To: Phil White <pwhite@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On 10/30/12 3:58 AM, Juerg Haefliger wrote:
-> On Mon, Oct 29, 2012 at 1:53 PM, Dave Chinner <david@fromorbit.com> wrote:
->> On Mon, Oct 29, 2012 at 11:55:15AM +0100, Juerg Haefliger wrote:
->>> Hi,
->>>
->>> I have a node that used to crash every day at 6:25am in xfs_cmn_err
->>> (Null pointer dereference).
->>
->> Stack trace, please.
-> 
-> 
-> [128185.204521] BUG: unable to handle kernel NULL pointer dereference
-> at 00000000000000f8
+On Mon, Oct 29, 2012 at 05:29:17PM -0700, Phil White wrote:
+> On Thu, Oct 25, 2012 at 05:33:52PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Add a verifier function callback capability to the buffer read
+> > interfaces.  This will be used by the callers to supply a function
+> > that verifies the contents of the buffer when it is read from disk.
+> > This patch does not provide callback functions, but simply modifies
+> > the interfaces to allow them to be called.
+> > 
+> > The reason for adding this to the read interfaces is that it is very
+> > difficult to tell fom the outside is a buffer was just read from
+> > disk or whether we just pulled it out of cache. Supplying a callbck
+> > allows the buffer cache to use it's internal knowledge of the buffer
+> > to execute it only when the buffer is read from disk.
+> > 
+> > It is intended that the verifier functions will mark the buffer with
+> > an EFSCORRUPTED error when verification fails. This allows the
+> > reading context to distinguish a verification error from an IO
+> > error, and potentially take further actions on the buffer (e.g.
+> > attempt repair) based on the error reported.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+......
+> This is OK with me so far, but I have comments on some of the callbacks.
 
-...
+/me looks around, doesn't find anything...
 
-> 
-> mp passed to xfs_cmn_err was a Null pointer  and mp->m_fsname in the
-> printk line caused the crash (offset of m_fsname is 0xf8).
-> 
-> Error message extracted from the dump:
-> XFS internal error XFS_WANT_CORRUPTED_GOTO at line 1449 of file
-> fs/xfs/xfs_alloc.c.
-> 
-> And the comments in the source:
-> 1444 /*
-> 1445 * If this failure happens the request to free this
-> 1446 * space was invalid, it's (partly) already free.
-> 1447 * Very bad.
-> 1448 */
-> 1449 XFS_WANT_CORRUPTED_GOTO(gtbno >= bno + len, error0);
+The comments must be elsewhere. ;)
 
-and:
+BTW, Phil, can you trim away all the bits of the patch you aren't
+commenting on? Having to scroll through hundreds of lines of quoted
+email to find your replies is a little slow, and it's quite easy to
+miss comments when they are widely spread apart. Most people just
+quote the patch hunk they are making the comment about to avoid this
+problem....
 
-#define XFS_WANT_CORRUPTED_GOTO(x,l)    \
- ...
-                        XFS_ERROR_REPORT("XFS_WANT_CORRUPTED_GOTO", \
-                                         XFS_ERRLEVEL_LOW, NULL); \
+Cheers,
 
-so it explicitly passes a NULL to XFS_ERROR_REPORT(), which sends
-it down the xfs_error_report->xfs_cmn_err path and boom.
-
-So you have a persistent on-disk corruption, but it's causing
-this to blow up due to an old bug.
-
-I think it got fixed in 2.6.39, there it finds its way to
-__xfs_printk() which does:
-
-        if (mp && mp->m_fsname) {
-                printk("%sXFS (%s): %pV\n", level, mp->m_fsname, vaf);
-                return;
-        }
-
-and so handles the null mp situation.
-
-Anyway; I'd repair the fs; if you are paranoid, do:
-
-xfs_metadump -o /dev/blah metadumpfile
-xfs_mdrestore metadumpfile filesystem.img
-xfs_repair filesystem.img
-mount -o loop filesystem.img /some/place
-
-first, and you can see for sure what xfs_repair will do to the real
-device, and what the fs looks like when it's done (no data will be
-present in the metadumped image, just metadata)
-
--Eric
-
-> 
->>> 1) I was under the impression that during the mounting of an XFS
->>> volume some sort of check/repair is performed.  How does that differ
->>> from running xfs_check and/or xfs_repair?
->>
->> Journal recovery is performed at mount time, not a consistency
->> check.
->>
->> http://en.wikipedia.org/wiki/Filesystem_journaling
-> 
-> Ah OK. Thanks for the clarification.
-> 
-> 
->>> 2) Any ideas how the filesystem might have gotten into this state? I
->>> don't have the history of that node but it's possible that it crashed
->>> previously due to an unrelated problem. Could this have left the
->>> filesystem is this state?
->>
->> <shrug>
->>
->> How long is a piece of string?
->>
->>> 3) What exactly does the ouput of the xfs_check mean? How serious is
->>> it? Are those warning or errors? Will some of them get cleanup up
->>> during the mounting of the filesystem?
->>
->> xfs_check is deprecated.  The output of xfs_repair indicates
->> cross-linked extent indexes. Will only get properly detected and
->> fixed by xfs_repair. And "fixed" may mean corrupt files are removed
->> from the filesystem - repair does nto guarantee that your data is
->> preserved or consistent after it runs, just that the filesystem is
->> consistent and error free.
->>
->>> 4) We have a whole bunch of production nodes running the same kernel.
->>> I'm more than a little concerned that we might have a ticking timebomb
->>> with some filesystems being in a state that might trigger a crash
->>> eventually. Is there any way to perform a live check on a mounted
->>> filesystem so that I can get an idea of how big of a problem we have
->>> (if any)?
->>
->> Read the xfs_repair man page?
->>
->> -n     No modify mode. Specifies that xfs_repair should not
->>        modify the filesystem but should only scan the  filesystem
->>        and indicate what repairs would have been made.
->> .....
->>
->> -d     Repair dangerously. Allow xfs_repair to repair an XFS
->>        filesystem mounted read only. This is typically done on a
->>        root fileystem from single user mode, immediately followed by
->>        a reboot.
->>
->> So, remount read only, run xfs_repair -d -n will check the
->> filesystem as best as can be done online. If there are any problems,
->> then you can repair them and immediately reboot.
->>
->>> i don't claim to know exactly what I'm doing but I picked a
->>> node, froze the filesystem and then ran a modified xfs_check (which
->>> bypasses the is_mounted check and ignores non-committed metadata) and
->>> it did report some issues. At this point I believe those are false
->>> positive. Do you have any suggestions short of rebooting the nodes and
->>> running xfs_check on the unmounted filesystem?
->>
->> Don't bother with xfs_check. xfs_repair will detect all the same
->> errors (and more) and can fix them at the same time.
-> 
-> Thanks for the hints.
-> 
-> ...Juerg
-> 
-> 
->> Cheers,
->>
->> Dave.
->> --
->> Dave Chinner
->> david@fromorbit.com
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
