@@ -1,13 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UMBKIG076699 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 17:11:20 -0500
-Message-Id: <20121030221310.639135985@sgi.com>
-Date: Tue, 30 Oct 2012 17:12:52 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: [patch 2/2] [PATCH 6/6] xfstests: Update .gitignore
-References: <20121030221250.049661416@sgi.com>
-Content-Disposition: inline; filename=update-.gitignore.patch
+	q9UMENDb077037 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 17:14:23 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	PNmm8sTLmdx2DuzG for <xfs@oss.sgi.com>;
+	Tue, 30 Oct 2012 15:16:12 -0700 (PDT)
+Date: Wed, 31 Oct 2012 09:16:11 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 13/25] xfs: factor dir2 block read operations
+Message-ID: <20121030221611.GC29378@dastard>
+References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
+	<1351146854-19343-14-git-send-email-david@fromorbit.com>
+	<20121030032309.GP30227@caliban.engr.sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20121030032309.GP30227@caliban.engr.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,364 +24,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Engelhardt <jengelh@inai.de>, Rich Johnston <rjohnston@sgi.com>
+To: Phil White <pwhite@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Root entries to where they only can occur.
+On Mon, Oct 29, 2012 at 08:23:09PM -0700, Phil White wrote:
+> On Thu, Oct 25, 2012 at 05:34:02PM +1100, Dave Chinner wrote:
+> > +static void
+> > +xfs_dir2_block_need_space(
+> > ...
+> > +	/*
+> > +	 * If there are stale entries we'll use one for the leaf.
+> > +	 */
+> > +	if (btp->stale) {
+> > +		if (be16_to_cpu(bf[0].length) >= len) {
+> > +			/*
+> > +			 * The biggest entry enough to avoid compaction.
+> > +			 */
+> > +			dup = (xfs_dir2_data_unused_t *)
+> > +			      ((char *)hdr + be16_to_cpu(bf[0].offset));
+> > +			goto out;
+> > +		}
+> > +
+> > +		/*
+> > +		 * Will need to compact to make this work.
+> > +		 * Tag just before the first leaf entry.
+> > +		 */
+> > +		*compact = 1;
+> > +		tagp = (__be16 *)blp - 1;
+> > +
+> > +		/* Data object just before the first leaf entry.  */
+> > +		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
+> > +
+> > +		/*
+> > +		 * If it's not free then the data will go where the
+> > +		 * leaf data starts now, if it works at all.
+> > +		 */
+> > +		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+> > +			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
+> > +			    (uint)sizeof(*blp) < len)
+> > +				dup = NULL;
+> > +		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
+> > +			dup = NULL;
+> > +		else
+> > +			dup = (xfs_dir2_data_unused_t *)blp;
+> > +		goto out;
+> > +	}
+> > +
+> > +	/*
+> > +	 * no stale entries, so just use free space.
+> > +	 * Tag just before the first leaf entry.
+> > +	 */
+> > +	tagp = (__be16 *)blp - 1;
+> 
+> Shouldn't tagp just be set before this if statement rather than inside of it
+> and outside of it?
 
-Add patches/ and .pc/ for quilt.
+No, because there is a case where it isn't set.
 
-Add /src/seek_copy_test and /src/seek_sanity_test.
+In general, when factoring code it's not a good idea to change logic
+because that's where bugs most commonly creep in. At some point in
+the future this could probably do with a more robust cleanup (rather
+than just factoring), but right now that's out-of-scope for what I'm
+doing...
 
-Reported-by: Jan Engelhardt <jengelh@inai.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+Cheers,
 
----
- .gitignore |  326 +++++++++++++++++++++++++++++++------------------------------
- 1 file changed, 169 insertions(+), 157 deletions(-)
-
-Index: b/.gitignore
-===================================================================
---- a/.gitignore	2012-10-30 17:05:16.691322608 -0500
-+++ b/.gitignore	2012-10-30 17:05:29.851323120 -0500
-@@ -5,163 +5,175 @@
- .libs
- .ltdep
- 
--autom4te.cache
--configure
--config.log
--config.status
--include/builddefs
--include/config.h
--include/config.h.in
-+# autoconf generated files
-+/autom4te.cache
-+/configure
-+/config.log
-+/config.status
- 
--ltp/aio-stress
--ltp/doio
--ltp/fsstress
--ltp/fsx
--ltp/growfiles
--ltp/iogen
-+# build system
-+/include/builddefs
-+/include/config.h
-+/include/config.h.in
- 
--src/alloc
--src/append_reader
--src/append_writer
--src/bstat
--src/bulkstat_unlink_test
--src/bulkstat_unlink_test_modified
--src/devzero
--src/dirperf
--src/dirstress
--src/dmiperf
--src/fault
--src/feature
--src/fiemap-tester
--src/fill
--src/fill2
--src/fs_perms
--src/fstest
--src/ftrunc
--src/genhashnames
--src/getdevicesize
--src/getpagesize
--src/godown
--src/holes
--src/itrash
--src/locktest
--src/loggen
--src/looptest
--src/lstat64
--src/makeextents
--src/metaperf
--src/mmapcat
--src/multi_open_unlink
--src/nametest
--src/permname
--src/preallo_rw_pattern_reader
--src/preallo_rw_pattern_writer
--src/pwrite_mmap_blocked
--src/randholes
--src/rename
--src/resvtest
--src/runas
--src/stale_handle
--src/t_access_root
--src/t_dir_offset
--src/t_dir_offset2
--src/t_futimens
--src/t_holes
--src/t_immutable
--src/t_mmap_writev
--src/t_mtab
--src/t_stripealign
--src/testx
--src/trunc
--src/truncfile
--src/unwritten_mmap
--src/unwritten_sync
--src/usemem
--src/writemod
--src/xfsctl
--src/aio-dio-regress/aio-dio-extend-stat
--src/aio-dio-regress/aio-dio-hole-filling-race
--src/aio-dio-regress/aio-dio-invalidate-failure
--src/aio-dio-regress/aio-dio-invalidate-readahead
--src/aio-dio-regress/aio-dio-subblock-eof-read
--src/aio-dio-regress/aio-free-ring-with-bogus-nr-pages
--src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer
--src/aio-dio-regress/aiodio_sparse2
-+# quilt
-+/patches
-+/.pc
- 
--dmapi/src/common/cmd/read_invis
--dmapi/src/common/cmd/set_region
--dmapi/src/common/cmd/set_return_on_destroy
--dmapi/src/common/cmd/write_invis
--dmapi/src/sample_hsm/migfind
--dmapi/src/sample_hsm/migin
--dmapi/src/sample_hsm/migout
--dmapi/src/sample_hsm/mls
--dmapi/src/sample_hsm/mrmean
--dmapi/src/sample_hsm/wbee
--dmapi/src/simple/dm_create_session
--dmapi/src/simple/dm_destroy_session
--dmapi/src/simple/dm_find_eventmsg
--dmapi/src/simple/dm_getall_sessions
--dmapi/src/simple/dm_getall_tokens
--dmapi/src/simple/dm_query_session
--dmapi/src/suite1/cmd/create_userevent
--dmapi/src/suite1/cmd/dm_handle
--dmapi/src/suite1/cmd/downgrade_right
--dmapi/src/suite1/cmd/fd_to_handle
--dmapi/src/suite1/cmd/get_allocinfo
--dmapi/src/suite1/cmd/get_config_events
--dmapi/src/suite1/cmd/get_dirattrs
--dmapi/src/suite1/cmd/get_dmattr
--dmapi/src/suite1/cmd/get_eventlist
--dmapi/src/suite1/cmd/get_events
--dmapi/src/suite1/cmd/get_fileattr
--dmapi/src/suite1/cmd/get_mountinfo
--dmapi/src/suite1/cmd/get_region
--dmapi/src/suite1/cmd/getall_disp
--dmapi/src/suite1/cmd/getall_dmattr
--dmapi/src/suite1/cmd/handle_to_fshandle
--dmapi/src/suite1/cmd/handle_to_path
--dmapi/src/suite1/cmd/init_service
--dmapi/src/suite1/cmd/link_test
--dmapi/src/suite1/cmd/make_sparse
--dmapi/src/suite1/cmd/obj_ref_hold
--dmapi/src/suite1/cmd/obj_ref_query
--dmapi/src/suite1/cmd/obj_ref_rele
--dmapi/src/suite1/cmd/path_to_fshandle
--dmapi/src/suite1/cmd/path_to_handle
--dmapi/src/suite1/cmd/pending
--dmapi/src/suite1/cmd/print_event
--dmapi/src/suite1/cmd/print_fshandle
--dmapi/src/suite1/cmd/probe_hole
--dmapi/src/suite1/cmd/probe_punch_xfsctl_hole
--dmapi/src/suite1/cmd/punch_hole
--dmapi/src/suite1/cmd/query_right
--dmapi/src/suite1/cmd/randomize_file
--dmapi/src/suite1/cmd/release_right
--dmapi/src/suite1/cmd/remove_dmattr
--dmapi/src/suite1/cmd/request_right
--dmapi/src/suite1/cmd/respond_event
--dmapi/src/suite1/cmd/rwt
--dmapi/src/suite1/cmd/set_disp
--dmapi/src/suite1/cmd/set_dmattr
--dmapi/src/suite1/cmd/set_eventlist
--dmapi/src/suite1/cmd/set_fileattr
--dmapi/src/suite1/cmd/struct_test
--dmapi/src/suite1/cmd/sync_by_handle
--dmapi/src/suite1/cmd/test_assumption
--dmapi/src/suite1/cmd/upgrade_right
--dmapi/src/suite2/src/dm_test_daemon
--dmapi/src/suite2/src/invis_test
--dmapi/src/suite2/src/mmap
--dmapi/src/suite2/src/region_test
--dmapi/src/suite2/src/send_msg
--dmapi/src/suite2/src/test_bulkall
--dmapi/src/suite2/src/test_bulkattr
--dmapi/src/suite2/src/test_dmattr
--dmapi/src/suite2/src/test_efault
--dmapi/src/suite2/src/test_eventlist
--dmapi/src/suite2/src/test_fileattr
--dmapi/src/suite2/src/test_hole
--dmapi/src/suite2/src/test_invis
--dmapi/src/suite2/src/test_region
--dmapi/src/suite2/src/test_rights
-+# ltp/ binaries
-+/ltp/aio-stress
-+/ltp/doio
-+/ltp/fsstress
-+/ltp/fsx
-+/ltp/growfiles
-+/ltp/iogen
-+
-+# src/ binaries
-+/src/alloc
-+/src/append_reader
-+/src/append_writer
-+/src/bstat
-+/src/bulkstat_unlink_test
-+/src/bulkstat_unlink_test_modified
-+/src/devzero
-+/src/dirperf
-+/src/dirstress
-+/src/dmiperf
-+/src/fault
-+/src/feature
-+/src/fiemap-tester
-+/src/fill
-+/src/fill2
-+/src/fs_perms
-+/src/fstest
-+/src/ftrunc
-+/src/genhashnames
-+/src/getdevicesize
-+/src/getpagesize
-+/src/godown
-+/src/holes
-+/src/itrash
-+/src/locktest
-+/src/loggen
-+/src/looptest
-+/src/lstat64
-+/src/makeextents
-+/src/metaperf
-+/src/mmapcat
-+/src/multi_open_unlink
-+/src/nametest
-+/src/permname
-+/src/preallo_rw_pattern_reader
-+/src/preallo_rw_pattern_writer
-+/src/pwrite_mmap_blocked
-+/src/randholes
-+/src/rename
-+/src/resvtest
-+/src/runas
-+/src/seek_copy_test
-+/src/seek_sanity_test
-+/src/stale_handle
-+/src/t_access_root
-+/src/t_dir_offset
-+/src/t_dir_offset2
-+/src/t_futimens
-+/src/t_holes
-+/src/t_immutable
-+/src/t_mmap_writev
-+/src/t_mtab
-+/src/t_stripealign
-+/src/testx
-+/src/trunc
-+/src/truncfile
-+/src/unwritten_mmap
-+/src/unwritten_sync
-+/src/usemem
-+/src/writemod
-+/src/xfsctl
-+/src/aio-dio-regress/aio-dio-extend-stat
-+/src/aio-dio-regress/aio-dio-hole-filling-race
-+/src/aio-dio-regress/aio-dio-invalidate-failure
-+/src/aio-dio-regress/aio-dio-invalidate-readahead
-+/src/aio-dio-regress/aio-dio-subblock-eof-read
-+/src/aio-dio-regress/aio-free-ring-with-bogus-nr-pages
-+/src/aio-dio-regress/aio-io-setup-with-nonwritable-context-pointer
-+/src/aio-dio-regress/aiodio_sparse2
-+
-+# dmapi/ binaries
-+/dmapi/src/common/cmd/read_invis
-+/dmapi/src/common/cmd/set_region
-+/dmapi/src/common/cmd/set_return_on_destroy
-+/dmapi/src/common/cmd/write_invis
-+/dmapi/src/sample_hsm/migfind
-+/dmapi/src/sample_hsm/migin
-+/dmapi/src/sample_hsm/migout
-+/dmapi/src/sample_hsm/mls
-+/dmapi/src/sample_hsm/mrmean
-+/dmapi/src/sample_hsm/wbee
-+/dmapi/src/simple/dm_create_session
-+/dmapi/src/simple/dm_destroy_session
-+/dmapi/src/simple/dm_find_eventmsg
-+/dmapi/src/simple/dm_getall_sessions
-+/dmapi/src/simple/dm_getall_tokens
-+/dmapi/src/simple/dm_query_session
-+/dmapi/src/suite1/cmd/create_userevent
-+/dmapi/src/suite1/cmd/dm_handle
-+/dmapi/src/suite1/cmd/downgrade_right
-+/dmapi/src/suite1/cmd/fd_to_handle
-+/dmapi/src/suite1/cmd/get_allocinfo
-+/dmapi/src/suite1/cmd/get_config_events
-+/dmapi/src/suite1/cmd/get_dirattrs
-+/dmapi/src/suite1/cmd/get_dmattr
-+/dmapi/src/suite1/cmd/get_eventlist
-+/dmapi/src/suite1/cmd/get_events
-+/dmapi/src/suite1/cmd/get_fileattr
-+/dmapi/src/suite1/cmd/get_mountinfo
-+/dmapi/src/suite1/cmd/get_region
-+/dmapi/src/suite1/cmd/getall_disp
-+/dmapi/src/suite1/cmd/getall_dmattr
-+/dmapi/src/suite1/cmd/handle_to_fshandle
-+/dmapi/src/suite1/cmd/handle_to_path
-+/dmapi/src/suite1/cmd/init_service
-+/dmapi/src/suite1/cmd/link_test
-+/dmapi/src/suite1/cmd/make_sparse
-+/dmapi/src/suite1/cmd/obj_ref_hold
-+/dmapi/src/suite1/cmd/obj_ref_query
-+/dmapi/src/suite1/cmd/obj_ref_rele
-+/dmapi/src/suite1/cmd/path_to_fshandle
-+/dmapi/src/suite1/cmd/path_to_handle
-+/dmapi/src/suite1/cmd/pending
-+/dmapi/src/suite1/cmd/print_event
-+/dmapi/src/suite1/cmd/print_fshandle
-+/dmapi/src/suite1/cmd/probe_hole
-+/dmapi/src/suite1/cmd/probe_punch_xfsctl_hole
-+/dmapi/src/suite1/cmd/punch_hole
-+/dmapi/src/suite1/cmd/query_right
-+/dmapi/src/suite1/cmd/randomize_file
-+/dmapi/src/suite1/cmd/release_right
-+/dmapi/src/suite1/cmd/remove_dmattr
-+/dmapi/src/suite1/cmd/request_right
-+/dmapi/src/suite1/cmd/respond_event
-+/dmapi/src/suite1/cmd/rwt
-+/dmapi/src/suite1/cmd/set_disp
-+/dmapi/src/suite1/cmd/set_dmattr
-+/dmapi/src/suite1/cmd/set_eventlist
-+/dmapi/src/suite1/cmd/set_fileattr
-+/dmapi/src/suite1/cmd/struct_test
-+/dmapi/src/suite1/cmd/sync_by_handle
-+/dmapi/src/suite1/cmd/test_assumption
-+/dmapi/src/suite1/cmd/upgrade_right
-+/dmapi/src/suite2/src/dm_test_daemon
-+/dmapi/src/suite2/src/invis_test
-+/dmapi/src/suite2/src/mmap
-+/dmapi/src/suite2/src/region_test
-+/dmapi/src/suite2/src/send_msg
-+/dmapi/src/suite2/src/test_bulkall
-+/dmapi/src/suite2/src/test_bulkattr
-+/dmapi/src/suite2/src/test_dmattr
-+/dmapi/src/suite2/src/test_efault
-+/dmapi/src/suite2/src/test_eventlist
-+/dmapi/src/suite2/src/test_fileattr
-+/dmapi/src/suite2/src/test_hole
-+/dmapi/src/suite2/src/test_invis
-+/dmapi/src/suite2/src/test_region
-+/dmapi/src/suite2/src/test_rights
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
