@@ -1,13 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UMBMBk076719 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 17:11:23 -0500
-Message-Id: <20121030221310.436866758@sgi.com>
-Date: Tue, 30 Oct 2012 17:12:51 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: [patch 1/2] [PATCH 2/6] xfstests: build: use new autoconf constructs
-References: <20121030221250.049661416@sgi.com>
-Content-Disposition: inline; filename=build-use-new-autoconf-constructs-2.patch
+	q9UMBjTn076756 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 17:11:45 -0500
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	kNFdUFcJghGzAGIO for <xfs@oss.sgi.com>;
+	Tue, 30 Oct 2012 15:13:34 -0700 (PDT)
+Date: Wed, 31 Oct 2012 09:13:33 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 07/25] xfs: verify AGI blocks as they are read from disk
+Message-ID: <20121030221333.GB29378@dastard>
+References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
+	<1351146854-19343-8-git-send-email-david@fromorbit.com>
+	<20121030005321.GI30227@caliban.engr.sgi.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20121030005321.GI30227@caliban.engr.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,45 +24,79 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Engelhardt <jengelh@inai.de>, Rich Johnston <rjohnston@sgi.com>
+To: Phil White <pwhite@sgi.com>
+Cc: xfs@oss.sgi.com
 
-Looks like AC_CONFIG_FILES existed since 2.14 already.
+On Mon, Oct 29, 2012 at 05:53:22PM -0700, Phil White wrote:
+> On Thu, Oct 25, 2012 at 05:33:56PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Add an AGI block verify callback function and pass it into the
+> > buffer read functions. Remove the now redundant verification code
+> > that is currently in use.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_ialloc.c |   47 ++++++++++++++++++++++++++---------------------
+> >  1 file changed, 26 insertions(+), 21 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> > index 7c944e1..9311ae5 100644
+> > --- a/fs/xfs/xfs_ialloc.c
+> > +++ b/fs/xfs/xfs_ialloc.c
+> > @@ -1472,6 +1472,31 @@ xfs_check_agi_unlinked(
+> >  #define xfs_check_agi_unlinked(agi)
+> >  #endif
+> >  
+> > +static void
+> > +xfs_agi_read_verify(
+> > +	struct xfs_buf	*bp)
+> > +{
+> > +	struct xfs_mount *mp = bp->b_target->bt_mount;
+> > +	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
+> > +	int		agi_ok;
+> > +
+> > +	/*
+> > +	 * Validate the magic number of the agi block.
+> > +	 */
+> > +	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
+> > +		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
+> > +		be32_to_cpu(agi->agi_seqno) == bp->b_pag->pag_agno;
+> > +	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+> > +			XFS_RANDOM_IALLOC_READ_AGI))) {
+> > +		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
+> > +				     mp, agi);
+> > +		xfs_buf_ioerror(bp, EFSCORRUPTED);
+> > +	}
+> > +	xfs_check_agi_unlinked(agi);
+> > +	bp->b_iodone = NULL;
+> > +	xfs_buf_ioend(bp, 0);
+> > +}
+> > +
+> 
+> In like fashion, shouldn't this be XFS_CORRUPTION_ERROR("xfs_agi_read_verify",
+> ...)?  In principle, it might be called from somewhere else in the future.
 
-Signed-off-by: Jan Engelhardt <jengelh@inai.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+It should be converted to __func__. I thought I caught most of them,
+but I didn't. It's not immediately critical - if I need to repost
+the series, I'll fix them.
 
----
-v2: modified to apply to xfstests -bpm
+Most of these messages get revamped when CRC checking is enabled,
+anyway, because there are different errors and more useful
+information that is worth reporting. hence I haven't been too
+concerned about little things like this...
 
- configure.ac |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+Cheers,
 
-Index: xfstests/configure.ac
-===================================================================
---- xfstests.orig/configure.ac
-+++ xfstests/configure.ac
-@@ -1,5 +1,6 @@
--AC_INIT(src/xfsctl.c)
-+AC_INIT([xfstests], [1.1.0])
- AC_PREREQ(2.50)
-+AC_CONFIG_SRCDIR([src/xfsctl.c])
- AC_PACKAGE_GLOBALS(xfstests)
- AC_PACKAGE_UTILITIES(xfstests)
- 
-@@ -73,4 +74,5 @@ in
- esac
- 
- AC_CONFIG_HEADER(include/config.h)
--AC_OUTPUT(include/builddefs)
-+AC_CONFIG_FILES([include/builddefs])
-+AC_OUTPUT
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
