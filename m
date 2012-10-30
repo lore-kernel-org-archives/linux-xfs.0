@@ -1,17 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UHu6We061164 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 12:56:23 -0500
-Date: Mon, 29 Oct 2012 17:17:50 -0700
+	q9UHu6WA061164 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 12:56:11 -0500
+Date: Tue, 30 Oct 2012 06:14:20 -0700
 From: Phil White <pwhite@sgi.com>
-Subject: Re: [PATCH 01/25] xfs: growfs: don't read garbage for new secondary
-	superblocks
-Message-ID: <20121030001750.GC30227@caliban.engr.sgi.com>
+Subject: Re: [PATCH 15/25] xfs: factor dir2 free block reading
+Message-ID: <20121030131417.GA18595@caliban.engr.sgi.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
-	<1351146854-19343-2-git-send-email-david@fromorbit.com>
+	<1351146854-19343-16-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1351146854-19343-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1351146854-19343-16-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,22 +26,20 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 25, 2012 at 05:33:50PM +1100, Dave Chinner wrote:
+On Thu, Oct 25, 2012 at 05:34:04PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> When updating new secondary superblocks in a growfs operation, the
-> sueprblock buffer is read from the newly grown region of the
-> underlying device. This is not guaranteed to be zero, so violates
-> the underlying assumption that the unused parts of superblocks are
-> zero filled. Get a new buffer for these secondary superblocks to
-> ensure that the unused regions are zero filled correctly.
+> Also factor out the updating of the free block when removing entries
+> from leaf blocks, and add a verifier callback for reads.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
 > ---
-> [ snip ]
+>  fs/xfs/xfs_dir2_leaf.c |    3 +-
+>  fs/xfs/xfs_dir2_node.c |  218 +++++++++++++++++++++++++++++++-----------------
+>  fs/xfs/xfs_dir2_priv.h |    2 +
+>  3 files changed, 143 insertions(+), 80 deletions(-)
 
-Looks good to me too. 
+Looks like good work to me.
 
 Reviewed-by: Phil White <pwhite@sgi.com>
 
