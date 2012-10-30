@@ -1,21 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UJOlIC067539 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 14:24:47 -0500
-Received: from bombadil.infradead.org
-	(173-166-109-252-newengland.hfc.comcastbusiness.net
-	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	gwMqGv0iVkjs8hWE (version=TLSv1 cipher=AES256-SHA bits=256
-	verify=NO) for <xfs@oss.sgi.com>;
-	Tue, 30 Oct 2012 12:26:36 -0700 (PDT)
-Date: Tue, 30 Oct 2012 15:26:35 -0400
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix buffer shudown reference count mismatch
-Message-ID: <20121030192635.GA11560@infradead.org>
-References: <1351556454-29723-1-git-send-email-david@fromorbit.com>
+	q9UJfoBY068228 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 14:41:50 -0500
+Date: Tue, 30 Oct 2012 14:43:37 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: report projid32bit feature in geometry call
+Message-ID: <20121030194337.GC405@sgi.com>
+References: <507476F1.3080503@redhat.com>
+ <50760C80.3030105@sandeen.net>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1351556454-29723-1-git-send-email-david@fromorbit.com>
+In-Reply-To: <50760C80.3030105@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,18 +23,26 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-> Fix this by making sure we take the necessary IO reference before
-> starting IO completion processing on the stale buffer.
+On Wed, Oct 10, 2012 at 07:02:08PM -0500, Eric Sandeen wrote:
+> On 10/9/12 2:11 PM, Eric Sandeen wrote:
+> > When xfs gained the projid32bit feature, it was never added to
+> > the FSGEOMETRY ioctl feature flags, so it's not queryable without
+> > this patch.
+> > 
+> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 > 
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> SGI, can you please add a :
+> 
+> Cc: stable@vger.kernel.org
+> 
+> when this is committed?  New stuff will be depending on this and it'd be good to get it munged into stable kernels as well.
 
-Oops, that's my fault.
+Yep.  Will do so.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+-Ben
 
 _______________________________________________
 xfs mailing list
