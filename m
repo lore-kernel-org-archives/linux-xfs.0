@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UIaWI8065160 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 13:36:32 -0500
-Received: from whiskey.americas.sgi.com (eagdhcp-232-197.americas.sgi.com
-	[128.162.232.197])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id CA35230406A
-	for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 11:38:19 -0700 (PDT)
-Date: Tue, 30 Oct 2012 09:59:19 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH v3 0/3] Print when ENOSPC due to lack of inodes.
-Message-ID: <20121030145919.GJ31970@sgi.com>
-References: <cover.1348639531.git.rprabhu@wnohang.net>
-	<CAEtq3tN20oZ6NjT37tXo8XYW=N=AFTdsZxWTuD681RPbQeS_iw@mail.gmail.com>
-	<508A8DC3.3020500@sgi.com> <20121028220516.GA4353@dastard>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <20121028220516.GA4353@dastard>
+	q9UIbB58065263 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 13:37:11 -0500
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	lfZONm4OLY9mDUlP for <xfs@oss.sgi.com>;
+	Tue, 30 Oct 2012 11:39:00 -0700 (PDT)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TSzZe-0004Sg-Jo
+	for xfs@oss.sgi.com; Tue, 30 Oct 2012 11:20:54 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TSzZe-0007jx-9X
+	for xfs@oss.sgi.com; Tue, 30 Oct 2012 11:20:54 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: fix buffer shudown reference count mismatch
+Date: Tue, 30 Oct 2012 11:20:54 +1100
+Message-Id: <1351556454-29723-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,75 +24,73 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: Rich Johnston <rjohnston@sgi.com>, xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Hi Dave,
+From: Dave Chinner <dchinner@redhat.com>
 
-On Mon, Oct 29, 2012 at 09:05:16AM +1100, Dave Chinner wrote:
-> On Fri, Oct 26, 2012 at 08:18:59AM -0500, Rich Johnston wrote:
-> > On 10/24/2012 03:56 PM, Raghavendra Prabhu wrote:
-> > >Hi,
-> > >
-> > >Checking back on this, whether it has been reviewed and if so, any comments.
-> > >
-> > >On Wed, Sep 26, 2012 at 12:26 PM,  <raghu.prabhu13@gmail.com> wrote:
-> > >>From: Raghavendra D Prabhu <rprabhu@wnohang.net>
-> > >>
-> > >>Currently, when there are no free inodes left / free space to allocate them (usually
-> > >>without inode64), there is no indication anywhere of this case, making it harder
-> > >>to diagnose this case.
-> > >>
-> > >>Hence, this series prints the causes/reasons to kernel log in a ratelimited
-> > >>manner, when such a situation arises.
-> > >>
-> > >>Regarding why it is printed at callee location instead at caller, it gives
-> > >>greater granularity in expressing the precise reason and give more details, and
-> > >>also some along the path are not ENOSPC (such in xfs_ialloc where ialloc_context is not NULL but
-> > >>ino is) along with the fact that it (xfs_ialloc) is called at multiple sites, so to avoid duplication.
-> > >>
-> > >>Version 1: Initial series.
-> > >>Version 2: Added ratelimited printing to xfs_message and used that.
-> > >>Version 3: Kept the logic intact in few places, fixed the column requirement.
-> > >>
-> > >>Raghavendra D Prabhu (3):
-> > >>   xfs: Add ratelimited printk for different alert levels
-> > >>   xfs: Print error when xfs_ialloc_ag_select fails to find continuous
-> > >>     free space.
-> > >>   xfs: Print error when unable to allocate inodes or out of free
-> > >>     inodes.
-> > >>
-> > >>  fs/xfs/xfs_ialloc.c  | 31 ++++++++++++++++++++++++++++---
-> > >>  fs/xfs/xfs_linux.h   |  1 +
-> > >>  fs/xfs/xfs_message.h | 26 ++++++++++++++++++++++++++
-> > >>  3 files changed, 55 insertions(+), 3 deletions(-)
-> > >>
-> > >>--
-> > >>1.7.12.1
-> > >>
-> > >
-> > >_______________________________________________
-> > >xfs mailing list
-> > >xfs@oss.sgi.com
-> > >http://oss.sgi.com/mailman/listinfo/xfs
-> > >
-> > 
-> > Ben,
-> > 
-> > When you have a chance can you pull this series in.  I have tested
-> > it and it looks good.
-> 
-> No, not yet. It doesn't address the comments I made in a previous
-> iteration.
+When we shut down the filesystem, we have to unpin and free all the
+buffers currently active in the CIL. To do this we unpin and remove
+them in one operation as a result of a failed iclogbuf write. For
+buffers, we do this removal via a simultated IO completion of after
+marking the buffer stale.
 
-Ah, ok.  We'll wait for Ragavendra to address your comments.
+At the time we do this, we have two references to the buffer - the
+active LRU reference and the buf log item.  The LRU reference is
+removed by marking the buffer stale, and the active CIL reference is
+by the xfs_buf_iodone() callback that is run by
+xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
+callback).
 
-Regards,
-Ben
+However, ioend processing requires one more reference - that of the
+IO that it is completing. We don't have this reference, so we free
+the buffer prematurely and use it after it is freed. This leads to
+assert failures in xfs_buf_rele() on debug kernels because the
+b_hold count is zero.
+
+Fix this by making sure we take the necessary IO reference before
+starting IO completion processing on the stale buffer.
+
+Cc: <stable@vger.kernel.org>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf_item.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index a8d0ed9..b72fe88 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -526,7 +526,23 @@ xfs_buf_item_unpin(
+ 		}
+ 		xfs_buf_relse(bp);
+ 	} else if (freed && remove) {
++		/*
++		 * There are currently two references to the buffer - the active
++		 * LRU reference and the buf log item. What we are about to do
++		 * here - simulate a failed IO completion - requires 3
++		 * references.
++		 *
++		 * The LRU reference is removed by the xfs_buf_stale() call. The
++		 * buf item reference is removed by the xfs_buf_iodone()
++		 * callback that is run by xfs_buf_do_callbacks() during ioend
++		 * processing (via the bp->b_iodone callback), and then finally
++		 * the ioend processing drops the IO reference.
++		 *
++		 * Hence we need to take an additional reference here so that IO
++		 * completion processing doesn't free the buffer prematurely.
++		 */
+ 		xfs_buf_lock(bp);
++		xfs_buf_hold(bp);
+ 		xfs_buf_ioerror(bp, EIO);
+ 		XFS_BUF_UNDONE(bp);
+ 		xfs_buf_stale(bp);
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
