@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UMSRKd077849 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 17:28:27 -0500
+	q9UMWoVL078171 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 17:32:50 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	WttTnX8LajlGOtaE for <xfs@oss.sgi.com>;
-	Tue, 30 Oct 2012 15:30:16 -0700 (PDT)
-Date: Wed, 31 Oct 2012 09:30:15 +1100
+	ZlNYI8Zr3dA4DxyY for <xfs@oss.sgi.com>;
+	Tue, 30 Oct 2012 15:34:39 -0700 (PDT)
+Date: Wed, 31 Oct 2012 09:34:37 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 21/25] xfs: add buffer pre-write callback
-Message-ID: <20121030223015.GE29378@dastard>
+Subject: Re: [PATCH 23/25] xfs: connect up write verifiers to new buffers
+Message-ID: <20121030223437.GF29378@dastard>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
-	<1351146854-19343-22-git-send-email-david@fromorbit.com>
-	<20121026085014.GC3035@infradead.org>
+	<1351146854-19343-24-git-send-email-david@fromorbit.com>
+	<20121030133938.GI18595@caliban.engr.sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121026085014.GC3035@infradead.org>
+In-Reply-To: <20121030133938.GI18595@caliban.engr.sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,32 +28,81 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
+To: Phil White <pwhite@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Oct 26, 2012 at 04:50:14AM -0400, Christoph Hellwig wrote:
-> >  	/*
-> > +	 * run the pre-io callback function if it exists. If this function
-> > +	 * fails it will mark the buffer with an error and the IO should
-> > +	 * not be dispatched.
-> > +	 */
-> > +	if (bp->b_pre_io) {
-> > +		bp->b_pre_io(bp);
-> > +		if (bp->b_error) {
+On Tue, Oct 30, 2012 at 06:39:38AM -0700, Phil White wrote:
+> On Thu, Oct 25, 2012 at 05:34:12PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Metadata buffers that are read from disk have write verifiers
+> > already attached to them, but newly allocated buffers do not. Add
+> > appropriate write verifiers to all new metadata buffers.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_alloc.c        |    6 +--
+> >  fs/xfs/xfs_alloc.h        |    2 +
+> >  fs/xfs/xfs_alloc_btree.c  |    1 +
+> >  fs/xfs/xfs_attr_leaf.c    |    4 +-
+> >  fs/xfs/xfs_bmap.c         |    2 +
+> >  fs/xfs/xfs_bmap_btree.c   |    3 +-
+> >  fs/xfs/xfs_bmap_btree.h   |    1 +
+> >  fs/xfs/xfs_btree.c        |    1 +
+> >  fs/xfs/xfs_btree.h        |    2 +
+> >  fs/xfs/xfs_da_btree.c     |    3 ++
+> >  fs/xfs/xfs_dir2_block.c   |    2 +
+> >  fs/xfs/xfs_dir2_data.c    |   11 +++--
+> >  fs/xfs/xfs_dir2_leaf.c    |   19 ++++++---
+> >  fs/xfs/xfs_dir2_node.c    |   24 +++++++----
+> >  fs/xfs/xfs_dir2_priv.h    |    2 +
+> >  fs/xfs/xfs_dquot.c        |  104 ++++++++++++++++++++++-----------------------
+> >  fs/xfs/xfs_fsops.c        |    7 ++-
+> >  fs/xfs/xfs_ialloc.c       |    5 ++-
+> >  fs/xfs/xfs_ialloc.h       |    4 +-
+> >  fs/xfs/xfs_ialloc_btree.c |    1 +
+> >  fs/xfs/xfs_inode.c        |   14 +++++-
+> >  fs/xfs/xfs_inode.h        |    1 +
+> >  fs/xfs/xfs_mount.c        |    2 +-
+> >  fs/xfs/xfs_mount.h        |    1 +
+> >  24 files changed, 135 insertions(+), 87 deletions(-)
+> > 
 > 
-> Wouldn't it be a cleaner calling convention to return the erro from the
-> callback?
+> A few comments:
+> 
+> > diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+> > index bb96c55..5d56886 100644
+> > --- a/fs/xfs/xfs_attr_leaf.c
+> > +++ b/fs/xfs/xfs_attr_leaf.c
+> > @@ -923,7 +923,7 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
+> >  					    XFS_ATTR_FORK);
+> >  	if (error)
+> >  		goto out;
+> > -	ASSERT(bp2 != NULL);
+> > +	bp2->b_pre_io = bp1->b_pre_io;
+> >  	memcpy(bp2->b_addr, bp1->b_addr, XFS_LBSIZE(dp->i_mount));
+> >  	bp1 = NULL;
+> >  	xfs_trans_log_buf(args->trans, bp2, 0, XFS_LBSIZE(dp->i_mount) - 1);
+> > @@ -977,7 +977,7 @@ xfs_attr_leaf_create(
+> >  					    XFS_ATTR_FORK);
+> >  	if (error)
+> >  		return(error);
+> > -	ASSERT(bp != NULL);
+> > +	bp->b_pre_io = xfs_attr_leaf_write_verify;
+> >  	leaf = bp->b_addr;
+> >  	memset((char *)leaf, 0, XFS_LBSIZE(dp->i_mount));
+> >  	hdr = &leaf->hdr;
+> 
+> I'm unclear as to why you're removing the asserts here.  There must be
+> a reason that you think bp is guaranteed to be safe, but I haven't
+> grasped it here.
 
-Perhaps. I just wrote it in a manner consistent with the iodone
-function where errors are returned in bp->b_error. Other functions
-pass buffer errors like this, too - xfs_buf_ioapply_map(),
-xfs_buf_read_map(), and _xfs_buf_ioapply() - so it's not unusual,
-really..
+If bp is NULL then the code is going to oops immediately, anyway.
+Hence the assert is redundant.  Further, the function that returns
+bp either gives us a valid buffer or returns an error, so logically
+the assert is also redundant from that perspective.
 
-I can change it, but that involves changing every callback function
-as well and I don't see that as really necessary. i.e. they call
-xfs_buf_ioerror() already, so do we really need to have them return
-bp->b_error as well?
+Hence I killed them to clean up the code a little.
 
 Cheers,
 
