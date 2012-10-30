@@ -1,11 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9ULUGHr073914 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 16:30:16 -0500
-Message-Id: <20121030213150.696351829@sgi.com>
-Date: Tue, 30 Oct 2012 16:31:50 -0500
+	q9ULUKgj073943 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 16:30:20 -0500
+Message-Id: <20121030213207.185303353@sgi.com>
+Date: Tue, 30 Oct 2012 16:31:52 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch 0/2] xfsdump: build system revamp
+Subject: [patch 2/2] [PATCH 6/6] xfsdump: Update .gitignore
+References: <20121030213150.696351829@sgi.com>
+Content-Disposition: inline; filename=update-.gitignore.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,17 +24,270 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Engelhardt <jengelh@inai.de>, Rich Johnston <rjohnston@sgi.com>
 
-Hi,
+Root entries to where they only can occur.
 
-Here are Jan Engelhardt's patches originally posted here
-http://oss.sgi.com/archives/xfs/2012-05/msg00323.html
-as they apply to xfsdump.
+Reported-by: Jan Engelhardt <jengelh@inai.de>
+Signed-off-by: Ben Myers <bpm@sgi.com>
 
-Patch 2 applied without much modification, patch 3 was not necessary for
-xfsdump, and patch 6 did not apply at all so I implemented that.
+---
+ .gitignore |   82 ++++++++++++++++++++++++++++++------------------------------
+ 1 files changed, 41 insertions(+), 41 deletions(-)
 
-Regards,
-	Ben
+Index: xfsdump/.gitignore
+===================================================================
+--- xfsdump.orig/.gitignore
++++ xfsdump/.gitignore
+@@ -4,138 +4,138 @@
+ 
+ # build system
+ .census
+-include/config.h
+-include/builddefs
+-install-sh
++/include/config.h
++/include/builddefs
++/install-sh
+ 
+ # packaging
+-doc/CHANGES.gz
++/doc/CHANGES.gz
+ xfsdump-*
+ xfsdump_*
+ 
+ # autoconf generated files
+-aclocal.m4
+-m4/libtool.m4
+-m4/ltoptions.m4
+-m4/ltsugar.m4
+-m4/ltversion.m4
+-m4/lt~obsolete.m4
+-autom4te.cache/
+-config.guess
+-config.log
+-config.status
+-config.sub
+-configure
++/aclocal.m4
++/m4/libtool.m4
++/m4/ltoptions.m4
++/m4/ltsugar.m4
++/m4/ltversion.m4
++/m4/lt~obsolete.m4
++/autom4te.cache/
++/config.guess
++/config.log
++/config.status
++/config.sub
++/configure
+ 
+ # libtool
+-libtool
+-ltmain.sh
++/libtool
++/ltmain.sh
+ *.lo
+ *.la
+ .libs
+ .ltdep
+ 
+ # gettext
+-po/xfsdump.pot
+-po/*.mo
++/po/xfsdump.pot
++/po/*.mo
+ 
+ # cscope stuff
+ cscope.*
+ 
+ # quilt stuff
+-.pc/
+-patches/
++/.pc/
++/patches/
+ 
+ # binaries
+-dump/xfsdump
+-invutil/xfsinvutil
+-restore/xfsrestore
++/dump/xfsdump
++/invutil/xfsinvutil
++/restore/xfsrestore
+ 
+ # @%#% symlinked sourced files
+-dump/arch_xlate.[ch]
+-dump/cldmgr.[ch]
+-dump/content.h
+-dump/content_common.[ch]
+-dump/content_inode.h
+-dump/dlog.[ch]
+-dump/drive.[ch]
+-dump/drive_minrmt.c
+-dump/drive_scsitape.c
+-dump/drive_simple.c
+-dump/exit.h
+-dump/fs.[ch]
+-dump/getdents.[ch]
+-dump/global.[ch]
+-dump/hsmapi.[ch]
+-dump/inv_api.c
+-dump/inv_core.c
+-dump/inv_files.c
+-dump/inv_fstab.c
+-dump/inv_idx.c
+-dump/inv_mgr.c
+-dump/inv_priv.h
+-dump/inv_stobj.c
+-dump/inventory.h
+-dump/lock.[ch]
+-dump/main.c
+-dump/media.h
+-dump/mlog.[ch]
+-dump/openutil.[ch]
+-dump/path.[ch]
+-dump/qlock.[ch]
+-dump/rec_hdr.h
+-dump/ring.[ch]
+-dump/sproc.[ch]
+-dump/stream.[ch]
+-dump/timeutil.[ch]
+-dump/ts_mtio.h
+-dump/types.h
+-dump/util.[ch]
+-
+-invutil/global.h
+-invutil/inv_files.c
+-invutil/inv_priv.h
+-invutil/inventory.h
+-invutil/mlog.h
+-invutil/timeutil.[ch]
+-invutil/types.h
+-invutil/util.h
+-
+-restore/arch_xlate.[ch]
+-restore/cldmgr.[ch]
+-restore/content.h
+-restore/content_inode.h
+-restore/dlog.[ch]
+-restore/drive.[ch]
+-restore/drive_minrmt.c
+-restore/drive_scsitape.c
+-restore/drive_simple.c
+-restore/exit.h
+-restore/fs.[ch]
+-restore/getdents.[ch]
+-restore/global.[ch]
+-restore/hsmapi.[ch]
+-restore/inv_api.c
+-restore/inv_core.c
+-restore/inv_files.c
+-restore/inv_fstab.c
+-restore/inv_idx.c
+-restore/inv_mgr.c
+-restore/inv_priv.h
+-restore/inv_stobj.c
+-restore/inventory.h
+-restore/lock.[ch]
+-restore/main.c
+-restore/media.h
+-restore/mlog.[ch]
+-restore/openutil.[ch]
+-restore/path.[ch]
+-restore/qlock.[ch]
+-restore/rec_hdr.h
+-restore/ring.[ch]
+-restore/sproc.[ch]
+-restore/stream.[ch]
+-restore/timeutil.[ch]
+-restore/ts_mtio.h
+-restore/types.h
+-restore/util.[ch]
++/dump/arch_xlate.[ch]
++/dump/cldmgr.[ch]
++/dump/content.h
++/dump/content_common.[ch]
++/dump/content_inode.h
++/dump/dlog.[ch]
++/dump/drive.[ch]
++/dump/drive_minrmt.c
++/dump/drive_scsitape.c
++/dump/drive_simple.c
++/dump/exit.h
++/dump/fs.[ch]
++/dump/getdents.[ch]
++/dump/global.[ch]
++/dump/hsmapi.[ch]
++/dump/inv_api.c
++/dump/inv_core.c
++/dump/inv_files.c
++/dump/inv_fstab.c
++/dump/inv_idx.c
++/dump/inv_mgr.c
++/dump/inv_priv.h
++/dump/inv_stobj.c
++/dump/inventory.h
++/dump/lock.[ch]
++/dump/main.c
++/dump/media.h
++/dump/mlog.[ch]
++/dump/openutil.[ch]
++/dump/path.[ch]
++/dump/qlock.[ch]
++/dump/rec_hdr.h
++/dump/ring.[ch]
++/dump/sproc.[ch]
++/dump/stream.[ch]
++/dump/timeutil.[ch]
++/dump/ts_mtio.h
++/dump/types.h
++/dump/util.[ch]
++
++/invutil/global.h
++/invutil/inv_files.c
++/invutil/inv_priv.h
++/invutil/inventory.h
++/invutil/mlog.h
++/invutil/timeutil.[ch]
++/invutil/types.h
++/invutil/util.h
++
++/restore/arch_xlate.[ch]
++/restore/cldmgr.[ch]
++/restore/content.h
++/restore/content_inode.h
++/restore/dlog.[ch]
++/restore/drive.[ch]
++/restore/drive_minrmt.c
++/restore/drive_scsitape.c
++/restore/drive_simple.c
++/restore/exit.h
++/restore/fs.[ch]
++/restore/getdents.[ch]
++/restore/global.[ch]
++/restore/hsmapi.[ch]
++/restore/inv_api.c
++/restore/inv_core.c
++/restore/inv_files.c
++/restore/inv_fstab.c
++/restore/inv_idx.c
++/restore/inv_mgr.c
++/restore/inv_priv.h
++/restore/inv_stobj.c
++/restore/inventory.h
++/restore/lock.[ch]
++/restore/main.c
++/restore/media.h
++/restore/mlog.[ch]
++/restore/openutil.[ch]
++/restore/path.[ch]
++/restore/qlock.[ch]
++/restore/rec_hdr.h
++/restore/ring.[ch]
++/restore/sproc.[ch]
++/restore/stream.[ch]
++/restore/timeutil.[ch]
++/restore/ts_mtio.h
++/restore/types.h
++/restore/util.[ch]
 
 _______________________________________________
 xfs mailing list
