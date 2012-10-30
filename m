@@ -1,14 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UJqetw069024 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 14:52:41 -0500
-Message-ID: <50903075.6060600@redhat.com>
-Date: Tue, 30 Oct 2012 14:54:29 -0500
-From: Eric Sandeen <sandeen@redhat.com>
+	q9UK1nUA069555 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 15:01:49 -0500
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id VIYEFv1VYiWV565r for
+	<xfs@oss.sgi.com>; Tue, 30 Oct 2012 13:03:39 -0700 (PDT)
+Date: Tue, 30 Oct 2012 18:03:33 -0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: fix buffer shudown reference count mismatch
+Message-ID: <20121030200333.GA5899@andromeda.usersys.redhat.com>
+References: <1351556454-29723-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfsdump:fill in bs_forkoff
-References: <5080D0BD.3000304@redhat.com> <20121030194718.GD405@sgi.com>
-In-Reply-To: <20121030194718.GD405@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <1351556454-29723-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,41 +25,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On 10/30/12 2:47 PM, Ben Myers wrote:
-> Hey Eric,
+On Tue, Oct 30, 2012 at 11:20:54AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> On Thu, Oct 18, 2012 at 11:02:05PM -0500, Eric Sandeen wrote:
->> Upstream, the structure containing bs_forkoff is actually zeroed
->> prior to these functions, but when pulling the patch back to an
->> older xfsdump, we got checksum errors due to an uninitialized
->> bs_forkoff not matching in dump vs. restore.
->>
->> So even though forkoff won't be explicitly restored from
->> a dump, do explicitly set it in these routines to keep checksums
->> happy.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> When we shut down the filesystem, we have to unpin and free all the
+> buffers currently active in the CIL. To do this we unpin and remove
+> them in one operation as a result of a failed iclogbuf write. For
+> buffers, we do this removal via a simultated IO completion of after
+> marking the buffer stale.
 > 
-> Would you say that this is appropriate for the upcoming release?
-
-Hm.
-
-The zeroing isn't in a really obvious spot, IIRC, so explicitly
-filling in all members leaves nothing to chance.
-
-OTOH it's a member that (will/should) never get restored,
-so filling it in is a little confusing.  What do you think?
-
-I think it should be harmless to functionality either way.
-
--Eric
-
-> Thanks,
-> 	Ben
+> At the time we do this, we have two references to the buffer - the
+> active LRU reference and the buf log item.  The LRU reference is
+> removed by marking the buffer stale, and the active CIL reference is
+> by the xfs_buf_iodone() callback that is run by
+> xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
+> callback).
 > 
+> However, ioend processing requires one more reference - that of the
+> IO that it is completing. We don't have this reference, so we free
+> the buffer prematurely and use it after it is freed. This leads to
+> assert failures in xfs_buf_rele() on debug kernels because the
+> b_hold count is zero.
+> 
+> Fix this by making sure we take the necessary IO reference before
+> starting IO completion processing on the stale buffer.
+> 
+> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_buf_item.c |   16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index a8d0ed9..b72fe88 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -526,7 +526,23 @@ xfs_buf_item_unpin(
+>  		}
+>  		xfs_buf_relse(bp);
+>  	} else if (freed && remove) {
+> +		/*
+> +		 * There are currently two references to the buffer - the active
+> +		 * LRU reference and the buf log item. What we are about to do
+> +		 * here - simulate a failed IO completion - requires 3
+> +		 * references.
+> +		 *
+> +		 * The LRU reference is removed by the xfs_buf_stale() call. The
+> +		 * buf item reference is removed by the xfs_buf_iodone()
+> +		 * callback that is run by xfs_buf_do_callbacks() during ioend
+> +		 * processing (via the bp->b_iodone callback), and then finally
+> +		 * the ioend processing drops the IO reference.
+> +		 *
+> +		 * Hence we need to take an additional reference here so that IO
+> +		 * completion processing doesn't free the buffer prematurely.
+> +		 */
+>  		xfs_buf_lock(bp);
+> +		xfs_buf_hold(bp);
+>  		xfs_buf_ioerror(bp, EIO);
+>  		XFS_BUF_UNDONE(bp);
+>  		xfs_buf_stale(bp);
+> -- 
+> 1.7.10
+> 
+Looks good
+
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+-- 
+--Carlos
 
 _______________________________________________
 xfs mailing list
