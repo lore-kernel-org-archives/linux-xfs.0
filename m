@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UK1nUA069555 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 15:01:49 -0500
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id VIYEFv1VYiWV565r for
-	<xfs@oss.sgi.com>; Tue, 30 Oct 2012 13:03:39 -0700 (PDT)
-Date: Tue, 30 Oct 2012 18:03:33 -0200
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH] xfs: fix buffer shudown reference count mismatch
-Message-ID: <20121030200333.GA5899@andromeda.usersys.redhat.com>
-References: <1351556454-29723-1-git-send-email-david@fromorbit.com>
+	q9UKET8W070045 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 15:14:29 -0500
+Message-ID: <509035FB.2080402@sgi.com>
+Date: Tue, 30 Oct 2012 15:18:03 -0500
+From: Rich Johnston <rjohnston@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1351556454-29723-1-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 3/3] 289: Test that filesystem sends discard requests
+	only on free sectors
+References: <1350549946-17192-1-git-send-email-tracek@redhat.com>
+	<1350549946-17192-3-git-send-email-tracek@redhat.com>
+In-Reply-To: <1350549946-17192-3-git-send-email-tracek@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,80 +19,47 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Tomas Racek <tracek@redhat.com>
+Cc: lczerner@redhat.com, xfs@oss.sgi.com
 
-On Tue, Oct 30, 2012 at 11:20:54AM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When we shut down the filesystem, we have to unpin and free all the
-> buffers currently active in the CIL. To do this we unpin and remove
-> them in one operation as a result of a failed iclogbuf write. For
-> buffers, we do this removal via a simultated IO completion of after
-> marking the buffer stale.
-> 
-> At the time we do this, we have two references to the buffer - the
-> active LRU reference and the buf log item.  The LRU reference is
-> removed by marking the buffer stale, and the active CIL reference is
-> by the xfs_buf_iodone() callback that is run by
-> xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
-> callback).
-> 
-> However, ioend processing requires one more reference - that of the
-> IO that it is completing. We don't have this reference, so we free
-> the buffer prematurely and use it after it is freed. This leads to
-> assert failures in xfs_buf_rele() on debug kernels because the
-> b_hold count is zero.
-> 
-> Fix this by making sure we take the necessary IO reference before
-> starting IO completion processing on the stale buffer.
-> 
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On 10/18/2012 03:45 AM, Tomas Racek wrote:
+> This is done by comparing free sectors reported by some FS utility
+> (dumpe2fs/xfs_db) and actual discard commands sent to device obtained
+> via blk tracer in debugfs.
+>
+> Currently supported FS are ext[34], xfs; device with discard support is
+> not required, the test creates loop device for this purpose.
+>
+> Signed-off-by: Tomas Racek <tracek@redhat.com>
 > ---
->  fs/xfs/xfs_buf_item.c |   16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-> index a8d0ed9..b72fe88 100644
-> --- a/fs/xfs/xfs_buf_item.c
-> +++ b/fs/xfs/xfs_buf_item.c
-> @@ -526,7 +526,23 @@ xfs_buf_item_unpin(
->  		}
->  		xfs_buf_relse(bp);
->  	} else if (freed && remove) {
-> +		/*
-> +		 * There are currently two references to the buffer - the active
-> +		 * LRU reference and the buf log item. What we are about to do
-> +		 * here - simulate a failed IO completion - requires 3
-> +		 * references.
-> +		 *
-> +		 * The LRU reference is removed by the xfs_buf_stale() call. The
-> +		 * buf item reference is removed by the xfs_buf_iodone()
-> +		 * callback that is run by xfs_buf_do_callbacks() during ioend
-> +		 * processing (via the bp->b_iodone callback), and then finally
-> +		 * the ioend processing drops the IO reference.
-> +		 *
-> +		 * Hence we need to take an additional reference here so that IO
-> +		 * completion processing doesn't free the buffer prematurely.
-> +		 */
->  		xfs_buf_lock(bp);
-> +		xfs_buf_hold(bp);
->  		xfs_buf_ioerror(bp, EIO);
->  		XFS_BUF_UNDONE(bp);
->  		xfs_buf_stale(bp);
-> -- 
-> 1.7.10
-> 
-Looks good
+>   289     | 169 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   289.out |   5 ++
+>   group   |   1 +
+>   3 files changed, 175 insertions(+)
+>   create mode 100755 289
+>   create mode 100644 289.out
+>
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
--- 
---Carlos
+
+This will not work for 3.x kernels, but they 2.6 and 3.x both use the 
+same path.
+
+> +debugfs=$($MOUNT_PROG | grep debugfs | cut -d " " -f3)
+> +[ -n $debugfs ] || _notrun "This test requires mounted debugfs"
+
+As you use $debugfs quite a bit from here on, suggest doing something like:
+
+debugfs=/sys/kernel/debug
+if [ ! -d $debugfs ]; then
+    _notrun "This test requires mounted debugfs"
+fi
+
+Other than that it looks great.
+
 
 _______________________________________________
 xfs mailing list
