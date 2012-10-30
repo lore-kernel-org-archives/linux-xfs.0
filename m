@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UL0mGb072268 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 16:00:48 -0500
-Message-Id: <20121030210236.112514264@sgi.com>
-Date: Tue, 30 Oct 2012 16:01:53 -0500
+	q9UL0nZ9072281 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 16:00:49 -0500
+Message-Id: <20121030210236.326173337@sgi.com>
+Date: Tue, 30 Oct 2012 16:01:54 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch 1/2] [PATCH 2/6] dmapi: build: use new autoconf constructs
+Subject: [patch 2/2] [PATCH 6/6] dmapi: Update .gitignore
 References: <20121030210152.751573876@sgi.com>
-Content-Disposition: inline; filename=build-use-new-autoconf-constructs-2.patch
+Content-Disposition: inline; filename=update-.gitignore.patch
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,42 +24,85 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Jan Engelhardt <jengelh@inai.de>, Rich Johnston <rjohnston@sgi.com>
 
-From: Jan Engelhardt <jengelh@inai.de>
+Root entries to where they only can occur.
 
-Looks like AC_CONFIG_FILES existed since 2.14 already.
-
-Signed-off-by: Jan Engelhardt <jengelh@inai.de>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reported-by: Jan Engelhardt <jengelh@inai.de>
 Signed-off-by: Ben Myers <bpm@sgi.com>
 
 ---
-v2: slight modification for dmapi -bpm
 
- configure.ac |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
+ .gitignore |   82 ++++++++++++++++++++++++++++++------------------------------
+ 1 files changed, 41 insertions(+), 41 deletions(-)
 
-Index: dmapi/configure.ac
+Index: dmapi/.gitignore
 ===================================================================
---- dmapi.orig/configure.ac
-+++ dmapi/configure.ac
-@@ -1,7 +1,9 @@
--AC_INIT(include/dmapi.h)
-+AC_INIT([dmapi], [2.2.10])
+--- dmapi.orig/.gitignore
++++ dmapi/.gitignore
+@@ -2,38 +2,45 @@
+ *.o
+ 
+ # build system
+-.census
+-Logs/
+-include/builddefs
+-install-sh
++/.census
++/Logs/
++/include/builddefs
++/install-sh
+ 
+ # magic diretory symlinks
+-include/xfs
++/include/xfs
+ 
+ # Makepgs
+-build/src-manifest
+-build/dmapi-*.tar.gz
+-doc/CHANGES.gz
++/build/src-manifest
++/build/dmapi-*.tar.gz
++/doc/CHANGES.gz
+ dmapi-*
+ 
+ # autoconf generated files
+-aclocal.m4
+-autom4te.cache/
+-config.guess
+-config.log
+-config.status
+-config.sub
+-configure
++/aclocal.m4
++/autom4te.cache/
++/config.guess
++/config.log
++/config.status
++/config.sub
++/configure
+ 
+ # libtool
+-libtool
+-ltmain.sh
++/libtool
++/ltmain.sh
+ *.lo
+ *.la
+ .libs
+ 
+ # quilt stuff
+-.pc/
+-patches/
++/.pc/
++/patches/
+ 
+ # binaries
 +
- AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
- AC_CONFIG_MACRO_DIR([m4])
-+AC_CONFIG_SRCDIR([include/dmapi.h])
- AC_PREFIX_DEFAULT(/usr)
- 
- AC_PROG_LIBTOOL
-@@ -22,4 +24,5 @@ AC_PACKAGE_NEED_XFS_HANDLE_H
- AC_MANUAL_FORMAT
- AC_MULTILIB($enable_lib64)
- 
--AC_OUTPUT(include/builddefs)
-+AC_CONFIG_FILES([include/builddefs])
-+AC_OUTPUT
++# m4
++/m4/libtool.m4
++/m4/ltoptions.m4
++/m4/ltsugar.m4
++/m4/ltversion.m4
++/m4/lt~obsolete.m4
 
 _______________________________________________
 xfs mailing list
