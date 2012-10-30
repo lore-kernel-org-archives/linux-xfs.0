@@ -1,13 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9ULUKgj073943 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 16:30:20 -0500
-Message-Id: <20121030213207.185303353@sgi.com>
-Date: Tue, 30 Oct 2012 16:31:52 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: [patch 2/2] [PATCH 6/6] xfsdump: Update .gitignore
-References: <20121030213150.696351829@sgi.com>
-Content-Disposition: inline; filename=update-.gitignore.patch
+	q9ULivIV074979 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 16:44:57 -0500
+Received: from bombadil.infradead.org
+	(173-166-109-252-newengland.hfc.comcastbusiness.net
+	[173.166.109.252]) by cuda.sgi.com with ESMTP id
+	dVwrS1cm8gMjBwbS (version=TLSv1 cipher=AES256-SHA bits=256
+	verify=NO) for <xfs@oss.sgi.com>;
+	Tue, 30 Oct 2012 14:46:47 -0700 (PDT)
+Date: Tue, 30 Oct 2012 17:46:46 -0400
+From: Christoph Hellwig <hch@infradead.org>
+Subject: XFS status update for September 2012
+Message-ID: <20121030214646.GA12771@infradead.org>
+MIME-Version: 1.0
+Content-Disposition: inline
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,278 +22,28 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Jan Engelhardt <jengelh@inai.de>, Rich Johnston <rjohnston@sgi.com>
+To: xfs@oss.sgi.com, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Root entries to where they only can occur.
+September saw the release of Linux 3.6 which included a slightly smaller
+than usual XFS update:
 
-Reported-by: Jan Engelhardt <jengelh@inai.de>
-Signed-off-by: Ben Myers <bpm@sgi.com>
+ 51 files changed, 2607 insertions(+), 2455 deletions(-)
 
----
- .gitignore |   82 ++++++++++++++++++++++++++++++------------------------------
- 1 files changed, 41 insertions(+), 41 deletions(-)
+The bulk of the changes in Linux 3.6 is made up by native support for
+discontinuous buffers, with various minor bug fixes and cleanups making up
+the rest.  In the meantime the mailing list was busy with multiple revisions
+of the sync/unmount code rewrite, and the patch series to make the inode64
+mount option remountable and the default.
 
-Index: xfsdump/.gitignore
-===================================================================
---- xfsdump.orig/.gitignore
-+++ xfsdump/.gitignore
-@@ -4,138 +4,138 @@
- 
- # build system
- .census
--include/config.h
--include/builddefs
--install-sh
-+/include/config.h
-+/include/builddefs
-+/install-sh
- 
- # packaging
--doc/CHANGES.gz
-+/doc/CHANGES.gz
- xfsdump-*
- xfsdump_*
- 
- # autoconf generated files
--aclocal.m4
--m4/libtool.m4
--m4/ltoptions.m4
--m4/ltsugar.m4
--m4/ltversion.m4
--m4/lt~obsolete.m4
--autom4te.cache/
--config.guess
--config.log
--config.status
--config.sub
--configure
-+/aclocal.m4
-+/m4/libtool.m4
-+/m4/ltoptions.m4
-+/m4/ltsugar.m4
-+/m4/ltversion.m4
-+/m4/lt~obsolete.m4
-+/autom4te.cache/
-+/config.guess
-+/config.log
-+/config.status
-+/config.sub
-+/configure
- 
- # libtool
--libtool
--ltmain.sh
-+/libtool
-+/ltmain.sh
- *.lo
- *.la
- .libs
- .ltdep
- 
- # gettext
--po/xfsdump.pot
--po/*.mo
-+/po/xfsdump.pot
-+/po/*.mo
- 
- # cscope stuff
- cscope.*
- 
- # quilt stuff
--.pc/
--patches/
-+/.pc/
-+/patches/
- 
- # binaries
--dump/xfsdump
--invutil/xfsinvutil
--restore/xfsrestore
-+/dump/xfsdump
-+/invutil/xfsinvutil
-+/restore/xfsrestore
- 
- # @%#% symlinked sourced files
--dump/arch_xlate.[ch]
--dump/cldmgr.[ch]
--dump/content.h
--dump/content_common.[ch]
--dump/content_inode.h
--dump/dlog.[ch]
--dump/drive.[ch]
--dump/drive_minrmt.c
--dump/drive_scsitape.c
--dump/drive_simple.c
--dump/exit.h
--dump/fs.[ch]
--dump/getdents.[ch]
--dump/global.[ch]
--dump/hsmapi.[ch]
--dump/inv_api.c
--dump/inv_core.c
--dump/inv_files.c
--dump/inv_fstab.c
--dump/inv_idx.c
--dump/inv_mgr.c
--dump/inv_priv.h
--dump/inv_stobj.c
--dump/inventory.h
--dump/lock.[ch]
--dump/main.c
--dump/media.h
--dump/mlog.[ch]
--dump/openutil.[ch]
--dump/path.[ch]
--dump/qlock.[ch]
--dump/rec_hdr.h
--dump/ring.[ch]
--dump/sproc.[ch]
--dump/stream.[ch]
--dump/timeutil.[ch]
--dump/ts_mtio.h
--dump/types.h
--dump/util.[ch]
--
--invutil/global.h
--invutil/inv_files.c
--invutil/inv_priv.h
--invutil/inventory.h
--invutil/mlog.h
--invutil/timeutil.[ch]
--invutil/types.h
--invutil/util.h
--
--restore/arch_xlate.[ch]
--restore/cldmgr.[ch]
--restore/content.h
--restore/content_inode.h
--restore/dlog.[ch]
--restore/drive.[ch]
--restore/drive_minrmt.c
--restore/drive_scsitape.c
--restore/drive_simple.c
--restore/exit.h
--restore/fs.[ch]
--restore/getdents.[ch]
--restore/global.[ch]
--restore/hsmapi.[ch]
--restore/inv_api.c
--restore/inv_core.c
--restore/inv_files.c
--restore/inv_fstab.c
--restore/inv_idx.c
--restore/inv_mgr.c
--restore/inv_priv.h
--restore/inv_stobj.c
--restore/inventory.h
--restore/lock.[ch]
--restore/main.c
--restore/media.h
--restore/mlog.[ch]
--restore/openutil.[ch]
--restore/path.[ch]
--restore/qlock.[ch]
--restore/rec_hdr.h
--restore/ring.[ch]
--restore/sproc.[ch]
--restore/stream.[ch]
--restore/timeutil.[ch]
--restore/ts_mtio.h
--restore/types.h
--restore/util.[ch]
-+/dump/arch_xlate.[ch]
-+/dump/cldmgr.[ch]
-+/dump/content.h
-+/dump/content_common.[ch]
-+/dump/content_inode.h
-+/dump/dlog.[ch]
-+/dump/drive.[ch]
-+/dump/drive_minrmt.c
-+/dump/drive_scsitape.c
-+/dump/drive_simple.c
-+/dump/exit.h
-+/dump/fs.[ch]
-+/dump/getdents.[ch]
-+/dump/global.[ch]
-+/dump/hsmapi.[ch]
-+/dump/inv_api.c
-+/dump/inv_core.c
-+/dump/inv_files.c
-+/dump/inv_fstab.c
-+/dump/inv_idx.c
-+/dump/inv_mgr.c
-+/dump/inv_priv.h
-+/dump/inv_stobj.c
-+/dump/inventory.h
-+/dump/lock.[ch]
-+/dump/main.c
-+/dump/media.h
-+/dump/mlog.[ch]
-+/dump/openutil.[ch]
-+/dump/path.[ch]
-+/dump/qlock.[ch]
-+/dump/rec_hdr.h
-+/dump/ring.[ch]
-+/dump/sproc.[ch]
-+/dump/stream.[ch]
-+/dump/timeutil.[ch]
-+/dump/ts_mtio.h
-+/dump/types.h
-+/dump/util.[ch]
-+
-+/invutil/global.h
-+/invutil/inv_files.c
-+/invutil/inv_priv.h
-+/invutil/inventory.h
-+/invutil/mlog.h
-+/invutil/timeutil.[ch]
-+/invutil/types.h
-+/invutil/util.h
-+
-+/restore/arch_xlate.[ch]
-+/restore/cldmgr.[ch]
-+/restore/content.h
-+/restore/content_inode.h
-+/restore/dlog.[ch]
-+/restore/drive.[ch]
-+/restore/drive_minrmt.c
-+/restore/drive_scsitape.c
-+/restore/drive_simple.c
-+/restore/exit.h
-+/restore/fs.[ch]
-+/restore/getdents.[ch]
-+/restore/global.[ch]
-+/restore/hsmapi.[ch]
-+/restore/inv_api.c
-+/restore/inv_core.c
-+/restore/inv_files.c
-+/restore/inv_fstab.c
-+/restore/inv_idx.c
-+/restore/inv_mgr.c
-+/restore/inv_priv.h
-+/restore/inv_stobj.c
-+/restore/inventory.h
-+/restore/lock.[ch]
-+/restore/main.c
-+/restore/media.h
-+/restore/mlog.[ch]
-+/restore/openutil.[ch]
-+/restore/path.[ch]
-+/restore/qlock.[ch]
-+/restore/rec_hdr.h
-+/restore/ring.[ch]
-+/restore/sproc.[ch]
-+/restore/stream.[ch]
-+/restore/timeutil.[ch]
-+/restore/ts_mtio.h
-+/restore/types.h
-+/restore/util.[ch]
+On the user space side xfsprogs saw new support for the preadv, pwritev and
+sync_file_range system calls in xfs_io as well as minor fixes to libxcmd and
+mkfs.xfs, xfsdump grew support for dumping and restoring 32-bit project ids
+and and saw an update to the German translation.  Xfstests saw a large number
+of fixes, and a single new test case.
 
 _______________________________________________
 xfs mailing list
