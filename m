@@ -1,16 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cthulhu.engr.sgi.com (cthulhu.engr.sgi.com [150.166.39.100])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9UHu6WA061164 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 12:56:11 -0500
-Date: Tue, 30 Oct 2012 06:14:20 -0700
+	q9UHu6WO061164 for <xfs@oss.sgi.com>; Tue, 30 Oct 2012 12:56:17 -0500
+Date: Mon, 29 Oct 2012 18:06:42 -0700
 From: Phil White <pwhite@sgi.com>
-Subject: Re: [PATCH 15/25] xfs: factor dir2 free block reading
-Message-ID: <20121030131417.GA18595@caliban.engr.sgi.com>
+Subject: Re: [PATCH 09/25] xfs: verify inode buffers as they are read from disk
+Message-ID: <20121030010641.GL30227@caliban.engr.sgi.com>
 References: <1351146854-19343-1-git-send-email-david@fromorbit.com>
-	<1351146854-19343-16-git-send-email-david@fromorbit.com>
+	<1351146854-19343-10-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1351146854-19343-16-git-send-email-david@fromorbit.com>
+In-Reply-To: <1351146854-19343-10-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,20 +26,25 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Oct 25, 2012 at 05:34:04PM +1100, Dave Chinner wrote:
+On Thu, Oct 25, 2012 at 05:33:58PM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Also factor out the updating of the free block when removing entries
-> from leaf blocks, and add a verifier callback for reads.
+> Add an inode buffer verify callback function and pass it into the
+> buffer read functions. Inodes are special in that the verbose checks
+> will be done when reading the inode, but we still need to sanity
+> check the buffer when that is first read. Always verify the magic
+> numbers in all inodes in the buffer, rather than jus ton debug
+> kernels.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_dir2_leaf.c |    3 +-
->  fs/xfs/xfs_dir2_node.c |  218 +++++++++++++++++++++++++++++++-----------------
->  fs/xfs/xfs_dir2_priv.h |    2 +
->  3 files changed, 143 insertions(+), 80 deletions(-)
+>  fs/xfs/xfs_inode.c |  100 +++++++++++++++++++++++++++-------------------------
+>  1 file changed, 51 insertions(+), 49 deletions(-)
 
-Looks like good work to me.
+Hunky dory as it's essentially just lifting the same code into a
+function.  I wonder a bit if all those checks are strictly necessary vs.
+simply being belt-and-suspenders safe, but that thought's not related to
+your patch.
 
 Reviewed-by: Phil White <pwhite@sgi.com>
 
