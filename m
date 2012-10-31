@@ -1,17 +1,14 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9VJoNRc232683 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 14:50:23 -0500
-Received: from xmail.sgi.com (pv-excas3-dc21-nlb.corp.sgi.com [137.38.102.207])
-	by relay2.corp.sgi.com (Postfix) with ESMTP id AC49730408E
-	for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 12:52:14 -0700 (PDT)
-Message-ID: <50918147.7050400@sgi.com>
-Date: Wed, 31 Oct 2012 14:51:35 -0500
-From: Rich Johnston <rjohnston@sgi.com>
+	q9VKwgMZ235568 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 15:58:42 -0500
+Date: Wed, 31 Oct 2012 17:00:31 -0400 (EDT)
+From: Nathan Scott <nathans@debian.org>
+Message-ID: <1066591451.20029469.1351717231452.JavaMail.root@redhat.com>
+In-Reply-To: <20121031192545.662795881@sgi.com>
+Subject: Re: [patch 1/4] xfstests: update version and changelog
 MIME-Version: 1.0
-Subject: Re: [patch 0/4] xfs-userspace: update version and changelogs
-References: <20121031192521.163830089@sgi.com>
-In-Reply-To: <20121031192521.163830089@sgi.com>
+Reply-To: Nathan Scott <nathans@debian.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,29 +17,50 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Ben Myers <bpm@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On 10/31/2012 02:25 PM, Ben Myers wrote:
-> Hi,
->
-> This patch set updates versions and change logs for dmapi, xfsdump, xfsprogs,
-> and xfstests repos for our upcoming userspace release.
->
-> Regards,
-> 	Ben
->
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
->
-This series looks good to me.
+They all look good to me, thanks Ben.  One minor thought,
+for future updates...
 
-Reviewed-by: Rich Johnston <rjohnston@sgi.com>
+----- Original Message -----
+> ...
+> Index: b/VERSION
+> ===================================================================
+> --- a/VERSION	2012-10-31 13:44:44.931946786 -0500
+> +++ b/VERSION	2012-10-31 13:44:50.832006406 -0500
+> @@ -3,5 +3,5 @@
+>  #
+>  PKG_MAJOR=1
+>  PKG_MINOR=1
+> -PKG_REVISION=0
+> +PKG_REVISION=1
+>  PKG_BUILD=1
+> Index: b/configure.ac
+> ===================================================================
+> --- a/configure.ac	2012-10-31 13:45:41.661946816 -0500
+> +++ b/configure.ac	2012-10-31 13:45:48.072005921 -0500
+> @@ -1,4 +1,4 @@
+> -AC_INIT([xfstests], [1.1.0])
+> +AC_INIT([xfstests], [1.1.1])
+>  AC_PREREQ(2.50)
+>  AC_CONFIG_SRCDIR([src/xfsctl.c])
+>  AC_PACKAGE_GLOBALS(xfstests)
+
+I wonder if generating the VERSION file from configure makes
+sense, since we are duplicating that info nowadays?
+
+Oh, feel free to add Reviewed-by me for all of these patches,
+if you like.
+
+cheers.
+
+--
+Nathan
 
 _______________________________________________
 xfs mailing list
