@@ -1,16 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9VLBjSH236329 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 16:11:45 -0500
-Date: Wed, 31 Oct 2012 16:13:33 -0500
+	q9VMDoav240067 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 17:13:50 -0500
+Message-Id: <20121031221537.911583684@sgi.com>
+Date: Wed, 31 Oct 2012 17:15:14 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: Re: [patch 3/4] xfsdump: update version and changelog
-Message-ID: <20121031211333.GS31970@sgi.com>
-References: <20121031192546.066642460@sgi.com>
-	<125229458.20035186.1351717644017.JavaMail.root@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <125229458.20035186.1351717644017.JavaMail.root@redhat.com>
+Subject: [patch 1/1] xfsdump: enable gettext
+References: <20121031221513.348916389@sgi.com>
+Content-Disposition: inline; filename=xfsdump-enable-gettext
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,36 +16,37 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Nathan Scott <nathans@debian.org>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
+Cc: Phil White <pwhite@sgi.com>
 
-Hey Nathan,
+ENABLE_GETTEXT was not being defined when --enable-gettext
+was specified as a config option, neither the German or
+Polish translations were working.  Add this define to
+builddefs.in
 
-On Wed, Oct 31, 2012 at 05:07:24PM -0400, Nathan Scott wrote:
-> 
-> ----- Original Message -----
-> > Update the version and changelogs for xfsdump.
-> > ...
-> > Index: b/debian/changelog
-> > ===================================================================
-> > --- a/debian/changelog	2012-10-31 12:39:28.991322370 -0500
-> > +++ b/debian/changelog	2012-10-31 12:41:27.522005796 -0500
-> > @@ -1,3 +1,9 @@
-> > +xfsdump (3.1.1) unstable; urgency=low
-> > +
-> > +  * New upstream release
-> 
-> Actually, could you add the following line below the above please?
-> 
->   * Add German translation from Chris Leick (closes: #576257)
+See commit e84ec15d in xfsprogs.
 
-Yep, thanks!
-
--Ben
+Signed-off-by: Ben Myers <bpm@sgi.com>
+Index: xfsdump/include/builddefs.in
+===================================================================
+--- xfsdump.orig/include/builddefs.in
++++ xfsdump/include/builddefs.in
+@@ -95,6 +95,10 @@ GCFLAGS = $(OPTIMIZER) $(DEBUG) \
+ 	  -DVERSION=\"$(PKG_VERSION)\" -DLOCALEDIR=\"$(PKG_LOCALE_DIR)\"  \
+ 	  -DPACKAGE=\"$(PKG_NAME)\" -I$(TOPDIR)/include
+ 
++ifeq ($(ENABLE_GETTEXT),yes)
++GCFLAGS += -DENABLE_GETTEXT
++endif
++
+ # First, Global, Platform, Local CFLAGS
+ CFLAGS += $(FCFLAGS) $(GCFLAGS) $(PCFLAGS) $(LCFLAGS)
+ 
 
 _______________________________________________
 xfs mailing list
