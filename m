@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9VL5YLn236052 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 16:05:34 -0500
-Date: Wed, 31 Oct 2012 17:07:24 -0400 (EDT)
-From: Nathan Scott <nathans@debian.org>
-Message-ID: <125229458.20035186.1351717644017.JavaMail.root@redhat.com>
-In-Reply-To: <20121031192546.066642460@sgi.com>
+	q9VLBjSH236329 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 16:11:45 -0500
+Date: Wed, 31 Oct 2012 16:13:33 -0500
+From: Ben Myers <bpm@sgi.com>
 Subject: Re: [patch 3/4] xfsdump: update version and changelog
+Message-ID: <20121031211333.GS31970@sgi.com>
+References: <20121031192546.066642460@sgi.com>
+	<125229458.20035186.1351717644017.JavaMail.root@redhat.com>
 MIME-Version: 1.0
-Reply-To: Nathan Scott <nathans@debian.org>
+Content-Disposition: inline
+In-Reply-To: <125229458.20035186.1351717644017.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,31 +23,32 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
+To: Nathan Scott <nathans@debian.org>
 Cc: xfs@oss.sgi.com
 
+Hey Nathan,
 
------ Original Message -----
-> Update the version and changelogs for xfsdump.
-> ...
-> Index: b/debian/changelog
-> ===================================================================
-> --- a/debian/changelog	2012-10-31 12:39:28.991322370 -0500
-> +++ b/debian/changelog	2012-10-31 12:41:27.522005796 -0500
-> @@ -1,3 +1,9 @@
-> +xfsdump (3.1.1) unstable; urgency=low
-> +
-> +  * New upstream release
+On Wed, Oct 31, 2012 at 05:07:24PM -0400, Nathan Scott wrote:
+> 
+> ----- Original Message -----
+> > Update the version and changelogs for xfsdump.
+> > ...
+> > Index: b/debian/changelog
+> > ===================================================================
+> > --- a/debian/changelog	2012-10-31 12:39:28.991322370 -0500
+> > +++ b/debian/changelog	2012-10-31 12:41:27.522005796 -0500
+> > @@ -1,3 +1,9 @@
+> > +xfsdump (3.1.1) unstable; urgency=low
+> > +
+> > +  * New upstream release
+> 
+> Actually, could you add the following line below the above please?
+> 
+>   * Add German translation from Chris Leick (closes: #576257)
 
-Actually, could you add the following line below the above please?
+Yep, thanks!
 
-  * Add German translation from Chris Leick (closes: #576257)
-
-
-thanks!
-
---
-Nathan
+-Ben
 
 _______________________________________________
 xfs mailing list
