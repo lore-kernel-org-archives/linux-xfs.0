@@ -1,13 +1,13 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9VJNwPG231041 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 14:23:58 -0500
-Message-Id: <20121031192546.265330657@sgi.com>
-Date: Wed, 31 Oct 2012 14:25:25 -0500
+	q9VJNvqT231026 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 14:23:57 -0500
+Message-Id: <20121031192545.662795881@sgi.com>
+Date: Wed, 31 Oct 2012 14:25:22 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch 4/4] dmapi: update version and changelog
+Subject: [patch 1/4] xfstests: update version and changelog
 References: <20121031192521.163830089@sgi.com>
-Content-Disposition: inline; filename=dmapi-update-version
+Content-Disposition: inline; filename=xfstests-update-version
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,7 +24,7 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 Cc: Nathan Scott <nathans@debian.org>
 
-Update the version and changelog for dmapi.
+Update the version and changelog for xfstests.
 
 Signed-off-by: Ben Myers <bpm@sgi.com>
 
@@ -36,37 +36,37 @@ Signed-off-by: Ben Myers <bpm@sgi.com>
 
 Index: b/VERSION
 ===================================================================
---- a/VERSION	2012-10-31 13:42:58.481323425 -0500
-+++ b/VERSION	2012-10-31 13:43:04.282005911 -0500
+--- a/VERSION	2012-10-31 13:44:44.931946786 -0500
++++ b/VERSION	2012-10-31 13:44:50.832006406 -0500
 @@ -3,5 +3,5 @@
  #
- PKG_MAJOR=2
- PKG_MINOR=2
--PKG_REVISION=10
-+PKG_REVISION=11
+ PKG_MAJOR=1
+ PKG_MINOR=1
+-PKG_REVISION=0
++PKG_REVISION=1
  PKG_BUILD=1
 Index: b/configure.ac
 ===================================================================
---- a/configure.ac	2012-10-31 12:27:15.701360575 -0500
-+++ b/configure.ac	2012-10-31 12:27:25.491380911 -0500
+--- a/configure.ac	2012-10-31 13:45:41.661946816 -0500
++++ b/configure.ac	2012-10-31 13:45:48.072005921 -0500
 @@ -1,4 +1,4 @@
--AC_INIT([dmapi], [2.2.10])
-+AC_INIT([dmapi], [2.2.11])
- 
+-AC_INIT([xfstests], [1.1.0])
++AC_INIT([xfstests], [1.1.1])
  AC_PREREQ(2.50)
- AC_CONFIG_AUX_DIR([.])
+ AC_CONFIG_SRCDIR([src/xfsctl.c])
+ AC_PACKAGE_GLOBALS(xfstests)
 Index: b/doc/CHANGES
 ===================================================================
---- a/doc/CHANGES	2012-10-31 12:28:12.701946439 -0500
-+++ b/doc/CHANGES	2012-10-31 12:34:56.581401487 -0500
+--- a/doc/CHANGES	2012-10-31 13:45:16.061322021 -0500
++++ b/doc/CHANGES	2012-10-31 13:48:08.912026611 -0500
 @@ -1,3 +1,7 @@
-+dmapi-2.2.11 (31 Oct 2012)
-+	- Various build related fixes, thanks to Theodore Ts'o,
-+	  Mike Frysinger, and Jan Engelhardt
++xfstests-1.1.1 (31 October 2012)
++	- Many bugfixes for existing tests.
++	- Tests 264-289 have been added to the suite.
 +
- dmapi-2.2.10 (5 May 2009)
- 	- Update the Makepkgs script to generate proper source tarballs.
- 	- Small specfile improvements, thanks to Jan Engelhardt.
+ xfstests-1.1.0 (14 October 2011)
+ 	- This is the firsteversioned release recorded for the
+ 	  xfstests suite.  Tests 240-263 have been added to the
 
 _______________________________________________
 xfs mailing list
