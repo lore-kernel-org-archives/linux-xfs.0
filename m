@@ -1,13 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	q9VJNvqT231026 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 14:23:57 -0500
-Message-Id: <20121031192545.662795881@sgi.com>
-Date: Wed, 31 Oct 2012 14:25:22 -0500
+	q9VJj3k5232379 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 14:45:03 -0500
+Date: Wed, 31 Oct 2012 14:46:54 -0500
 From: Ben Myers <bpm@sgi.com>
-Subject: [patch 1/4] xfstests: update version and changelog
-References: <20121031192521.163830089@sgi.com>
-Content-Disposition: inline; filename=xfstests-update-version
+Subject: Re: [PATCH] xfsdump:fill in bs_forkoff
+Message-ID: <20121031194654.GB9783@sgi.com>
+References: <5080D0BD.3000304@redhat.com> <20121030194718.GD405@sgi.com>
+	<50903075.6060600@redhat.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <50903075.6060600@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -16,57 +19,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
-Cc: Nathan Scott <nathans@debian.org>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-Update the version and changelog for xfstests.
+Hi Eric,
 
-Signed-off-by: Ben Myers <bpm@sgi.com>
+On Tue, Oct 30, 2012 at 02:54:29PM -0500, Eric Sandeen wrote:
+> On 10/30/12 2:47 PM, Ben Myers wrote:
+> > Hey Eric,
+> > 
+> > On Thu, Oct 18, 2012 at 11:02:05PM -0500, Eric Sandeen wrote:
+> >> Upstream, the structure containing bs_forkoff is actually zeroed
+> >> prior to these functions, but when pulling the patch back to an
+> >> older xfsdump, we got checksum errors due to an uninitialized
+> >> bs_forkoff not matching in dump vs. restore.
+> >>
+> >> So even though forkoff won't be explicitly restored from
+> >> a dump, do explicitly set it in these routines to keep checksums
+> >> happy.
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > 
+> > Would you say that this is appropriate for the upcoming release?
+> 
+> Hm.
+> 
+> The zeroing isn't in a really obvious spot, IIRC, so explicitly
+> filling in all members leaves nothing to chance.
+> 
+> OTOH it's a member that (will/should) never get restored,
+> so filling it in is a little confusing.  What do you think?
+>
+> I think it should be harmless to functionality either way.
 
----
- VERSION      |    2 +-
- configure.ac |    2 +-
- doc/CHANGES  |    4 ++++
- 3 files changed, 6 insertions(+), 2 deletions(-)
+It seemed like it could be an important bugfix but I wasn't really sure so I
+asked.  Since it sounds like it's not a big deal, lets just hold off till after
+the release...
 
-Index: b/VERSION
-===================================================================
---- a/VERSION	2012-10-31 13:44:44.931946786 -0500
-+++ b/VERSION	2012-10-31 13:44:50.832006406 -0500
-@@ -3,5 +3,5 @@
- #
- PKG_MAJOR=1
- PKG_MINOR=1
--PKG_REVISION=0
-+PKG_REVISION=1
- PKG_BUILD=1
-Index: b/configure.ac
-===================================================================
---- a/configure.ac	2012-10-31 13:45:41.661946816 -0500
-+++ b/configure.ac	2012-10-31 13:45:48.072005921 -0500
-@@ -1,4 +1,4 @@
--AC_INIT([xfstests], [1.1.0])
-+AC_INIT([xfstests], [1.1.1])
- AC_PREREQ(2.50)
- AC_CONFIG_SRCDIR([src/xfsctl.c])
- AC_PACKAGE_GLOBALS(xfstests)
-Index: b/doc/CHANGES
-===================================================================
---- a/doc/CHANGES	2012-10-31 13:45:16.061322021 -0500
-+++ b/doc/CHANGES	2012-10-31 13:48:08.912026611 -0500
-@@ -1,3 +1,7 @@
-+xfstests-1.1.1 (31 October 2012)
-+	- Many bugfixes for existing tests.
-+	- Tests 264-289 have been added to the suite.
-+
- xfstests-1.1.0 (14 October 2011)
- 	- This is the firsteversioned release recorded for the
- 	  xfstests suite.  Tests 240-263 have been added to the
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
