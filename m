@@ -1,14 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA1D7CU4026463 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 08:07:12 -0500
-Message-ID: <5092746B.20805@sgi.com>
-Date: Thu, 01 Nov 2012 08:08:59 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	qA1GIRtv036962 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 11:18:27 -0500
+Date: Thu, 1 Nov 2012 11:20:16 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [patch 1/4] xfstests: update version and changelog
+Message-ID: <20121101162016.GC9783@sgi.com>
+References: <20121031192545.662795881@sgi.com>
+	<1066591451.20029469.1351717231452.JavaMail.root@redhat.com>
 MIME-Version: 1.0
-Subject: Re: xfstest 179 ASSERT
-References: <50916CBA.7050602@sgi.com> <20121101014910.GO29378@dastard>
-In-Reply-To: <20121101014910.GO29378@dastard>
+Content-Disposition: inline
+In-Reply-To: <1066591451.20029469.1351717231452.JavaMail.root@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -17,91 +19,57 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Nathan Scott <nathans@debian.org>
+Cc: xfs@oss.sgi.com
 
-On 10/31/12 20:49, Dave Chinner wrote:
-> On Wed, Oct 31, 2012 at 01:23:54PM -0500, Mark Tinguely wrote:
->> OSS sources with the xfs: fix buffer shudown reference count mismatch
->> patch and xfstest 179.
->>
->> xfstest 179 started to have various asserts starting with the "move the
->> workers" series, but mostly the b_hold count is zero assert.
->>
->> Now that the b_hold count is fixed, the asert is:
->>
->> XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
->> file: /root/xfs/fs/xfs/xfs_mount.c, line: 273
->
-> The only way you are going to track this down is through tracing
-> perag gets and puts, and finding the object that is missing a put.
-> There are already tracepoints for these and they tell you the caller
-> function, so that should be sufficient to find what function has a
-> get without a put...
->
-> The other possibility is that there are buffers that have not be
-> freed properly (or leaked), but IIRC this failure pre-exists
-> attaching the perag to buffers....
->
->> mount perag information:
->>    m_perag_tree = {
->>      height = 0x1,
->>      gfp_mask = 0x20,
->>      rnode = 0xffff8803124bb4b1
->>    },
->> crash>  radix_tree_node ffff8803124bb4b0
->> struct radix_tree_node {
->>    height = 0x1,
->>    count = 0x3,
->>    {
->>      parent = 0x0,
->>      callback_head = {
->>        next = 0x0,
->>        func = 0xffffffff812384b0<radix_tree_node_rcu_free>
->>      }
->>    },
->>    slots = {0x0, 0xffff88034fd6f540, 0xffff88034fd6f840,
->> 0xffff88034fd6f240, 0x0,
->>   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
->> 0x0, 0x0, 0x0,
->>   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
->> 0x0, 0x0, 0x0,
->>   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
->> 0x0, 0x0, 0x0,
->>   0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
->>    tags = {{0x0}, {0x0}, {0x0}}
->> }
->>
->> The inodes at 0xffff88034fd6f540, 0xffff88034fd6f840, 0xffff88034fd6f240
->> don't look valid.
->
-> Those aren't inodes based on the addresses - they are all in the
-> same page, so the size is at most 0x300 bytes (768 bytes). An XFS
-> inode is larger than this, but a radix tree node is smaller (560
-> bytes and fits 7 to a page on my x86_64 machines), so I'm not sure
-> what you have there. how big does /proc/slabinfo tell you a radix
-> tree node is?
->
-> Cheers,
->
-> Dave.
+Hey Nathan,
 
+On Wed, Oct 31, 2012 at 05:00:31PM -0400, Nathan Scott wrote:
+> They all look good to me, thanks Ben.  One minor thought,
+> for future updates...
+> 
+> ----- Original Message -----
+> > ...
+> > Index: b/VERSION
+> > ===================================================================
+> > --- a/VERSION	2012-10-31 13:44:44.931946786 -0500
+> > +++ b/VERSION	2012-10-31 13:44:50.832006406 -0500
+> > @@ -3,5 +3,5 @@
+> >  #
+> >  PKG_MAJOR=1
+> >  PKG_MINOR=1
+> > -PKG_REVISION=0
+> > +PKG_REVISION=1
+> >  PKG_BUILD=1
+> > Index: b/configure.ac
+> > ===================================================================
+> > --- a/configure.ac	2012-10-31 13:45:41.661946816 -0500
+> > +++ b/configure.ac	2012-10-31 13:45:48.072005921 -0500
+> > @@ -1,4 +1,4 @@
+> > -AC_INIT([xfstests], [1.1.0])
+> > +AC_INIT([xfstests], [1.1.1])
+> >  AC_PREREQ(2.50)
+> >  AC_CONFIG_SRCDIR([src/xfsctl.c])
+> >  AC_PACKAGE_GLOBALS(xfstests)
+> 
+> I wonder if generating the VERSION file from configure makes
+> sense, since we are duplicating that info nowadays?
 
-I have been spending too much time in earlier versions of XFS.
+I think it's a good idea.  There are a few other deps on PKG_* so maybe it
+would be better to just have configure.ac use PKG* instead of hard coding the
+version there.
 
-Last night, I had a good laugh at my mistake when I realized the perag
-was not in an array...duh me, this is the radix tree of the perag
-structures. I could not do a crash "kmem" command, that would have
-given me a clue.
+> Oh, feel free to add Reviewed-by me for all of these patches,
+> if you like.
 
-I *think* Ben is also seeing this assert on his 32 bit test machine.
-Thanks for the advice, I will do some investigation this weekend.
+Cool, thanks!
 
---Mark.
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
