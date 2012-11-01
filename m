@@ -1,26 +1,28 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA1GL4uM037121 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 11:21:04 -0500
+	qA1GOeqb037334 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 11:24:40 -0500
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id PFXPG3QJ140eZcQk for
-	<xfs@oss.sgi.com>; Thu, 01 Nov 2012 09:22:56 -0700 (PDT)
-Received: from int-mx12.intmail.prod.int.phx2.redhat.com
-	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA1GMtvx025971
+	cuda.sgi.com with ESMTP id 9MXUJEbR7YSGorYK for
+	<xfs@oss.sgi.com>; Thu, 01 Nov 2012 09:26:31 -0700 (PDT)
+Received: from int-mx11.intmail.prod.int.phx2.redhat.com
+	(int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA1GQVJu026287
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 12:22:55 -0400
+	for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 12:26:31 -0400
 Received: from liberator.sandeen.net (ovpn01.gateway.prod.ext.phx2.redhat.com
 	[10.5.9.1])
-	by int-mx12.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id qA1GMs6U011617
+	by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id qA1GQUJk007140
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-CAMELLIA256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 12:22:55 -0400
-Message-ID: <5092A1DE.10609@redhat.com>
-Date: Thu, 01 Nov 2012 11:22:54 -0500
+	for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 12:26:31 -0400
+Message-ID: <5092A2B6.2000907@redhat.com>
+Date: Thu, 01 Nov 2012 11:26:30 -0500
 From: Eric Sandeen <sandeen@redhat.com>
 MIME-Version: 1.0
-Subject: [PATCH 0/2] xfsdump: 2 fixes
+Subject: [PATCH 1/2] xfsdump: Handle multiply-logged inode fields
+References: <5092A1DE.10609@redhat.com>
+In-Reply-To: <5092A1DE.10609@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,9 +37,192 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs-oss <xfs@oss.sgi.com>
 
-I've run into a couple bugs running logprint, 2 patches follow to try to fix them up.
+As xlog_print_trans_inode() stands today, it will error
+out if more than one flag is set on f->ilf_fields:
 
--Eric
+	xlog_print_trans_inode: illegal inode type
+
+but this is a perfectly valid case, to have i.e. a data and
+an attr flag set.
+
+Following is a pretty big reworking of the function to
+handle more than one field type set.
+
+I've tested this by a simple test such as creating one
+file on an selinux box, so that data+attr is set, and
+logprinting; I've also tested by running logprint after
+subsequent xfstest runs (although we hit other bugs that
+way).
+
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
+
+diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+index e42e108..be2426e 100644
+--- a/logprint/log_misc.c
++++ b/logprint/log_misc.c
+@@ -657,97 +657,84 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
+ 
+     /* does anything come next */
+     op_head = (xlog_op_header_t *)*ptr;
+-    switch (f->ilf_fields & XFS_ILOG_NONCORE) {
+-	case XFS_ILOG_DEXT: {
+-	    ASSERT(f->ilf_size == 3);
+-	    (*i)++;
+-	    xlog_print_op_header(op_head, *i, ptr);
+-	    printf(_("EXTENTS inode data\n"));
+-	    *ptr += be32_to_cpu(op_head->oh_len);
+-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
+-		return 1;
+-	    }
+-	    break;
+-	}
+-	case XFS_ILOG_DBROOT: {
+-	    ASSERT(f->ilf_size == 3);
+-	    (*i)++;
+-	    xlog_print_op_header(op_head, *i, ptr);
+-	    printf(_("BTREE inode data\n"));
+-	    *ptr += be32_to_cpu(op_head->oh_len);
+-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
+-		return 1;
+-	    }
++
++    if (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
++	switch (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
++	case XFS_ILOG_DEV:
++	    printf(_("DEV inode: no extra region\n"));
+ 	    break;
+-	}
+-	case XFS_ILOG_DDATA: {
+-	    ASSERT(f->ilf_size == 3);
+-	    (*i)++;
+-	    xlog_print_op_header(op_head, *i, ptr);
+-	    printf(_("LOCAL inode data\n"));
+-	    if (mode == S_IFDIR) {
+-		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
+-	    }
+-	    *ptr += be32_to_cpu(op_head->oh_len);
+-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
+-		return 1;
+-	    }
++	case XFS_ILOG_UUID:
++	    printf(_("UUID inode: no extra region\n"));
+ 	    break;
++	case XFS_ILOG_DEXT:
++	case XFS_ILOG_DBROOT:
++	case XFS_ILOG_DDATA:
++	default:
++	    xlog_panic(_("xlog_print_trans_inode: illegal inode type 0x%x"),
++			f->ilf_fields);
+ 	}
+-	case XFS_ILOG_AEXT: {
+-	    ASSERT(f->ilf_size == 3);
++    }
++
++    if (f->ilf_fields & (XFS_ILOG_DFORK | XFS_ILOG_AFORK)) {
++	ASSERT(f->ilf_size <= 4);
++	ASSERT((f->ilf_size == 3) || (f->ilf_fields & XFS_ILOG_AFORK));
++	if (f->ilf_fields & XFS_ILOG_DFORK) {
+ 	    (*i)++;
+ 	    xlog_print_op_header(op_head, *i, ptr);
+-	    printf(_("EXTENTS inode attr\n"));
+-	    *ptr += be32_to_cpu(op_head->oh_len);
+-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
+-		return 1;
++
++	    switch (f->ilf_fields & XFS_ILOG_DFORK) {
++	    case XFS_ILOG_DEXT:
++		printf(_("EXTENTS inode data\n"));
++		break;
++	    case XFS_ILOG_DBROOT:
++		printf(_("BTREE inode data\n"));
++		break;
++	    case XFS_ILOG_DDATA:
++		printf(_("LOCAL inode data\n"));
++		if (mode == S_IFDIR)
++		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
++		break;
++	    case XFS_ILOG_DEV:
++	    case XFS_ILOG_UUID:
++	    default:
++		xlog_panic(_("xlog_print_trans_inode: illegal inode type 0x%x"),
++			   f->ilf_fields);
+ 	    }
+-	    break;
+-	}
+-	case XFS_ILOG_ABROOT: {
+-	    ASSERT(f->ilf_size == 3);
+-	    (*i)++;
+-	    xlog_print_op_header(op_head, *i, ptr);
+-	    printf(_("BTREE inode attr\n"));
++
+ 	    *ptr += be32_to_cpu(op_head->oh_len);
+-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
++	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+ 		return 1;
+-	    }
+-	    break;
++	    op_head = (xlog_op_header_t *)*ptr;
+ 	}
+-	case XFS_ILOG_ADATA: {
+-	    ASSERT(f->ilf_size == 3);
++
++	if (f->ilf_fields & XFS_ILOG_AFORK) {
+ 	    (*i)++;
+ 	    xlog_print_op_header(op_head, *i, ptr);
+-	    printf(_("LOCAL inode attr\n"));
+-	    if (mode == S_IFDIR) {
+-		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
++
++	    switch (f->ilf_fields & XFS_ILOG_AFORK) {
++	    case XFS_ILOG_AEXT:
++		printf(_("EXTENTS attr data\n"));
++		break;
++	    case XFS_ILOG_ABROOT:
++		printf(_("BTREE attr data\n"));
++		break;
++	    case XFS_ILOG_ADATA:
++		printf(_("LOCAL attr data\n"));
++		if (mode == S_IFDIR)
++		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
++		break;
++	    default:
++		xlog_panic(_("xlog_print_trans_inode: illegal inode type 0x%x"),
++			   f->ilf_fields);
+ 	    }
+ 	    *ptr += be32_to_cpu(op_head->oh_len);
+-	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
++	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
+ 		return 1;
+-	    }
+-	    break;
+-	}
+-	case XFS_ILOG_DEV: {
+-	    ASSERT(f->ilf_size == 2);
+-	    printf(_("DEV inode: no extra region\n"));
+-	    break;
+-	}
+-	case XFS_ILOG_UUID: {
+-	    ASSERT(f->ilf_size == 2);
+-	    printf(_("UUID inode: no extra region\n"));
+-	    break;
+-	}
+-	case 0: {
+-	    ASSERT(f->ilf_size == 2);
+-	    break;
++	    op_head = (xlog_op_header_t *)*ptr;
+ 	}
+-	default: {
+-	    xlog_panic(_("xlog_print_trans_inode: illegal inode type"));
+-	}
+-    }
++    } else	/* neither XFS_ILOG_DFORK nor XFS_ILOG_AFORK */
++	ASSERT(f->ilf_size == 2);
++
+     return 0;
+ }	/* xlog_print_trans_inode */
+ 
+
 
 _______________________________________________
 xfs mailing list
