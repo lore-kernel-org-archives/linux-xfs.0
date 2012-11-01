@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA11OpLL253257 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 20:24:51 -0500
+	qA11lOmS254749 for <xfs@oss.sgi.com>; Wed, 31 Oct 2012 20:47:24 -0500
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	aA13PWgHWlWSBvZ6 for <xfs@oss.sgi.com>;
-	Wed, 31 Oct 2012 18:26:41 -0700 (PDT)
-Date: Thu, 1 Nov 2012 12:26:38 +1100
+	tyDCEmLNX4FC5Ysi for <xfs@oss.sgi.com>;
+	Wed, 31 Oct 2012 18:49:14 -0700 (PDT)
+Date: Thu, 1 Nov 2012 12:49:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] xfs: fix buffer shudown reference count mismatch
-Message-ID: <20121101012638.GN29378@dastard>
-References: <1351556454-29723-1-git-send-email-david@fromorbit.com>
-	<50915B51.3050309@sgi.com>
+Subject: Re: xfstest 179 ASSERT
+Message-ID: <20121101014910.GO29378@dastard>
+References: <50916CBA.7050602@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <50915B51.3050309@sgi.com>
+In-Reply-To: <50916CBA.7050602@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,58 +27,72 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On Wed, Oct 31, 2012 at 12:09:37PM -0500, Mark Tinguely wrote:
-> On 10/29/12 19:20, Dave Chinner wrote:
-> >From: Dave Chinner<dchinner@redhat.com>
-> >
-> >When we shut down the filesystem, we have to unpin and free all the
-> >buffers currently active in the CIL. To do this we unpin and remove
-> >them in one operation as a result of a failed iclogbuf write. For
-> >buffers, we do this removal via a simultated IO completion of after
-> >marking the buffer stale.
-> >
-> >At the time we do this, we have two references to the buffer - the
-> >active LRU reference and the buf log item.  The LRU reference is
-> >removed by marking the buffer stale, and the active CIL reference is
-> >by the xfs_buf_iodone() callback that is run by
-> >xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
-> >callback).
-> >
-> >However, ioend processing requires one more reference - that of the
-> >IO that it is completing. We don't have this reference, so we free
-> >the buffer prematurely and use it after it is freed. This leads to
-> >assert failures in xfs_buf_rele() on debug kernels because the
-> >b_hold count is zero.
-> >
-> >Fix this by making sure we take the necessary IO reference before
-> >starting IO completion processing on the stale buffer.
-> >
-> >Cc:<stable@vger.kernel.org>
-> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
+On Wed, Oct 31, 2012 at 01:23:54PM -0500, Mark Tinguely wrote:
+> OSS sources with the xfs: fix buffer shudown reference count mismatch
+> patch and xfstest 179.
 > 
-> This seems to take care of one of the ASSERT that I experienced after
-> the worker move series.
+> xfstest 179 started to have various asserts starting with the "move the
+> workers" series, but mostly the b_hold count is zero assert.
+> 
+> Now that the b_hold count is fixed, the asert is:
+> 
+> XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0,
+> file: /root/xfs/fs/xfs/xfs_mount.c, line: 273
 
-It should - it's the shutdown failure you've reported for some time
-now ;)
+The only way you are going to track this down is through tracing
+perag gets and puts, and finding the object that is missing a put.
+There are already tracepoints for these and they tell you the caller
+function, so that should be sufficient to find what function has a
+get without a put...
 
-> With this patch applied, there is a new ASSERT that the perag is not
-> empty in filesystem unmount in test 179. I think this is related to
-> the worker move series and not this patch. I will send the information
-> in a different thread.
+The other possibility is that there are buffers that have not be
+freed properly (or leaked), but IIRC this failure pre-exists
+attaching the perag to buffers....
 
-That's been around for a long, long time. I've never been able to
-reproduce it reliably - I see it maybe once every couple of months -
-so I've never been able to get to the bottom of it....
+> mount perag information:
+>   m_perag_tree = {
+>     height = 0x1,
+>     gfp_mask = 0x20,
+>     rnode = 0xffff8803124bb4b1
+>   },
+> crash> radix_tree_node ffff8803124bb4b0
+> struct radix_tree_node {
+>   height = 0x1,
+>   count = 0x3,
+>   {
+>     parent = 0x0,
+>     callback_head = {
+>       next = 0x0,
+>       func = 0xffffffff812384b0 <radix_tree_node_rcu_free>
+>     }
+>   },
+>   slots = {0x0, 0xffff88034fd6f540, 0xffff88034fd6f840,
+> 0xffff88034fd6f240, 0x0,
+>  0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+> 0x0, 0x0, 0x0,
+>  0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+> 0x0, 0x0, 0x0,
+>  0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+> 0x0, 0x0, 0x0,
+>  0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0},
+>   tags = {{0x0}, {0x0}, {0x0}}
+> }
+> 
+> The inodes at 0xffff88034fd6f540, 0xffff88034fd6f840, 0xffff88034fd6f240
+> don't look valid.
 
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+Those aren't inodes based on the addresses - they are all in the
+same page, so the size is at most 0x300 bytes (768 bytes). An XFS
+inode is larger than this, but a radix tree node is smaller (560
+bytes and fits 7 to a page on my x86_64 machines), so I'm not sure
+what you have there. how big does /proc/slabinfo tell you a radix
+tree node is?
 
-Thanks,
+Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
