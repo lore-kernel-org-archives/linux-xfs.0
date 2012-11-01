@@ -1,23 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA1JSNVY049739 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 14:28:23 -0500
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id Khl4UzHGWWLg4dZI (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 01 Nov 2012 12:30:14 -0700 (PDT)
-Received: from telerig.nabble.com ([192.168.236.162])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1TU0Sz-0004YT-T8
-	for xfs@oss.sgi.com; Thu, 01 Nov 2012 12:30:13 -0700
-Message-ID: <34630253.post@talk.nabble.com>
-Date: Thu, 1 Nov 2012 12:30:13 -0700 (PDT)
-From: Kamal Dasu <kdasu.kdev@gmail.com>
-Subject: Re: xfs filesystem corruption with kernel 2.6.37
-In-Reply-To: <20121025224713.GF29378@dastard>
+	qA1LSOJS055218 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 16:28:24 -0500
+Date: Thu, 1 Nov 2012 16:30:10 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: Hang in XFS reclaim on 3.7.0-rc3
+Message-ID: <20121101213010.GD9783@sgi.com>
+References: <CAPVoSvSM9=hictqwT2rzZA-fU_XSwd-_FRzW_J+HQYj7iohTWQ@mail.gmail.com>
+	<20121029222613.GU29378@dastard>
 MIME-Version: 1.0
-References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
-	<20121025224713.GF29378@dastard>
+Content-Disposition: inline
+In-Reply-To: <20121029222613.GU29378@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,99 +23,76 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Torsten Kaiser <just.for.lkml@googlemail.com>, xfs@oss.sgi.com
 
+Hi Dave,
 
-Dave,
+On Tue, Oct 30, 2012 at 09:26:13AM +1100, Dave Chinner wrote:
+> On Mon, Oct 29, 2012 at 09:03:15PM +0100, Torsten Kaiser wrote:
+> > After experiencing a hang of all IO yesterday (
+> > http://marc.info/?l=linux-kernel&m=135142236520624&w=2 ), I turned on
+> > LOCKDEP after upgrading to -rc3.
+> > 
+> > I then tried to replicate the load that hung yesterday and got the
+> > following lockdep report, implicating XFS instead of by stacking swap
+> > onto dm-crypt and md.
+> > 
+> > [ 2844.971913]
+> > [ 2844.971920] =================================
+> > [ 2844.971921] [ INFO: inconsistent lock state ]
+> > [ 2844.971924] 3.7.0-rc3 #1 Not tainted
+> > [ 2844.971925] ---------------------------------
+> > [ 2844.971927] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
+> > [ 2844.971929] kswapd0/725 [HC0[0]:SC0[0]:HE1:SE1] takes:
+> > [ 2844.971931] (&(&ip->i_lock)->mr_lock){++++?.}, at: [<ffffffff811e7ef4>] xfs_ilock+0x84/0xb0
+> > [ 2844.971941] {RECLAIM_FS-ON-W} state was registered at:
+> > [ 2844.971942]   [<ffffffff8108137e>] mark_held_locks+0x7e/0x130
+> > [ 2844.971947]   [<ffffffff81081a63>] lockdep_trace_alloc+0x63/0xc0
+> > [ 2844.971949]   [<ffffffff810e9dd5>] kmem_cache_alloc+0x35/0xe0
+> > [ 2844.971952]   [<ffffffff810dba31>] vm_map_ram+0x271/0x770
+> > [ 2844.971955]   [<ffffffff811e10a6>] _xfs_buf_map_pages+0x46/0xe0
+> > [ 2844.971959]   [<ffffffff811e1fba>] xfs_buf_get_map+0x8a/0x130
+> > [ 2844.971961]   [<ffffffff81233849>] xfs_trans_get_buf_map+0xa9/0xd0
+> > [ 2844.971964]   [<ffffffff8121e339>] xfs_ifree_cluster+0x129/0x670
+> > [ 2844.971967]   [<ffffffff8121f959>] xfs_ifree+0xe9/0xf0
+> > [ 2844.971969]   [<ffffffff811f4abf>] xfs_inactive+0x2af/0x480
+> > [ 2844.971972]   [<ffffffff811efb90>] xfs_fs_evict_inode+0x70/0x80
+> > [ 2844.971974]   [<ffffffff8110cb8f>] evict+0xaf/0x1b0
+> > [ 2844.971977]   [<ffffffff8110cd95>] iput+0x105/0x210
+> > [ 2844.971979]   [<ffffffff811070d0>] dentry_iput+0xa0/0xe0
+> > [ 2844.971981]   [<ffffffff81108310>] dput+0x150/0x280
+> > [ 2844.971983]   [<ffffffff811020fb>] sys_renameat+0x21b/0x290
+> > [ 2844.971986]   [<ffffffff81102186>] sys_rename+0x16/0x20
+> > [ 2844.971988]   [<ffffffff816b2292>] system_call_fastpath+0x16/0x1b
+> 
+> We shouldn't be mapping pages there. See if the patch below fixes
+> it.
+> 
+> Fundamentally, though, the lockdep warning has come about because
+> vm_map_ram is doing a GFP_KERNEL allocation when we need it to be
+> doing GFP_NOFS - we are within a transaction here, so memory reclaim
+> is not allowed to recurse back into the filesystem.
+> 
+> mm-folk: can we please get this vmalloc/gfp_flags passing API
+> fixed once and for all? This is the fourth time in the last month or
+> so that I've seen XFS bug reports with silent hangs and associated
+> lockdep output that implicate GFP_KERNEL allocations from vm_map_ram
+> in GFP_NOFS conditions as the potential cause....
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: don't vmap inode cluster buffers during free
 
-Thanks for you reply.
+Could you write up a little more background for the commit message?
 
-I am trying to act on the hints you gave me but I still have a few
-questions.
-
-On Thu, Oct 25, 2012 at 6:47 PM, Dave Chinner <david@fromorbit.com> wrote:
-> On Thu, Oct 25, 2012 at 09:45:10AM -0400, Kamal Dasu wrote:
->> with  "CONFIG_XFS_DEBUG=y" I get the following assertion:
->>
->> Assertion failed: prev.br_state == XFS_EXT_NORM, file:
->> fs/xfs/xfs_bmap.c, line: 5192
->
-> Yup, that's pretty clear indication of a corrupted extent record.
->
-
-What is the best way to prevent  transactions that record bad
-extent length and block numbers.
-
->> would have cleared inode 6776
->>         - agno = 1
->> 771a3500: Badness in key lookup (length)
->> bp=(bno 16107312, len 16384 bytes) key=(bno 16107312, len 8192 bytes)
->>         - agno = 2
->> bad nblocks 5120 for inode 33701135, would reset to 4096
->> inode 34297761 - bad rt extent start block number 2392537303836672,
->                                                 0x88000001B6800
->
-> That's the open, unlinked file at the time the system crashed. That
-> may be where your problems are coming from. The RT is mostly
-> untested, and we sure as anything don't do any crash resiliency or
-> recovery testing on it, so there's a good chance there are bugs in
-> it that might show up in situations like this....
->
-> You need to detect extents with invalid lengths in them and trigger
-> a corruption-based filesystem shutdown.
->
-
-Looked at the log during one of the filesystem shutdown when the
-I/O error occurs. is this an indication of already corrupted log due to
-corrupted in-memory metadata structures?.
-===
-attempt to access beyond end of device
-sda2: rw=0, want=33792081130943048, limit=31471329
-I/O error in filesystem ("sda2") meta-data dev sda2 block
-0x780db80007f240       ("xfs_trans_read_buf") error 5 buf count 4096
-xfs_force_shutdown(sda2,0x1) called from line 395 of file
-fs/xfs/xfs_trans_buf.c.  Return address = 0x801f4f88
-Filesystem "sda2": I/O Error Detected.  Shutting down filesystem: sda2
-Please umount the filesystem, and rectify the problem(s)
-====
-
-However the log is already corrupted. So is there a check on a write
-to the log ?.
-
->> also if there is something that can be done to avoid this situation in
->> the first place.
->
-> Track down where those stray upper bits in the block numbers are
-> coming from, and you'll have your answer.
->
-
-Have not been able to track this down yet. But could it be a possible memory
-corruption, leading to the in-memory metadata to get corrupted.
-
-On a similar occurrence of this issue on recovery after a reboot seems
-to always go through the evict path
-
-Filesystem "sda2": XFS internal error xfs_trans_cancel at line 1815
-of file fs/xfs/xfs_trans.c.  Caller 0x801f8524
-
-Call Trace:
-[<80439d2c>] dump_stack+0x8/0x34
-[<801f3bec>] xfs_trans_cancel+0x10c/0x128
-[<801f8524>] xfs_inactive+0x2fc/0x450
-[<800dcd54>] evict+0x28/0xd0
-[<800dd300>] iput+0x19c/0x2d8
-[<801e5bcc>] xlog_recover_process_one_iunlink+0xec/0x130
-[<801e7b60>] xlog_recover_process_iunlinks.clone.25+0xa8/0x108
-[<801eb360>] xlog_recover_finish+0x40/0x100
-[<801eedd8>] xfs_mountfs+0x434/0x654
-..
-.
-Filesystem "sda2": Corruption of in-memory data detected.  Shutting
-down filesystem: sda2
-
--- 
-View this message in context: http://old.nabble.com/xfs-filesystem-corruption-with-kernel-2.6.37-tp34601185p34630253.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
