@@ -1,20 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA1MUigB058625 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 17:30:44 -0500
+	qA1Mvn4F059876 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 17:57:49 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	bThBwj8dZDtNCaHT for <xfs@oss.sgi.com>;
-	Thu, 01 Nov 2012 15:32:35 -0700 (PDT)
-Date: Fri, 2 Nov 2012 09:32:33 +1100
+	KmrI4NFB0c7bZiRR for <xfs@oss.sgi.com>;
+	Thu, 01 Nov 2012 15:59:39 -0700 (PDT)
+Date: Fri, 2 Nov 2012 09:59:38 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: Hang in XFS reclaim on 3.7.0-rc3
-Message-ID: <20121101223233.GR29378@dastard>
-References: <CAPVoSvSM9=hictqwT2rzZA-fU_XSwd-_FRzW_J+HQYj7iohTWQ@mail.gmail.com>
-	<20121029222613.GU29378@dastard> <20121101213010.GD9783@sgi.com>
+Subject: Re: XFS filesystem recovery from secondary superblocks
+Message-ID: <20121101225938.GS29378@dastard>
+References: <CABJyUz+h=pZ6+2rro1PjoB1ggTAoRw+bTzc_bU7Eaec0_AUKLA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121101213010.GD9783@sgi.com>
+In-Reply-To: <CABJyUz+h=pZ6+2rro1PjoB1ggTAoRw+bTzc_bU7Eaec0_AUKLA@mail.gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,69 +26,92 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: Linux Kernel <linux-kernel@vger.kernel.org>, Torsten Kaiser <just.for.lkml@googlemail.com>, xfs@oss.sgi.com
+To: Aaron Goulding <aarongldng@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Thu, Nov 01, 2012 at 04:30:10PM -0500, Ben Myers wrote:
-> Hi Dave,
+On Tue, Oct 30, 2012 at 10:02:28PM -0700, Aaron Goulding wrote:
+> Hello! So I have an XFS filesystem that isn't mounting, and quite a long
+> story as to why and what I've tried.
 > 
-> On Tue, Oct 30, 2012 at 09:26:13AM +1100, Dave Chinner wrote:
-> > On Mon, Oct 29, 2012 at 09:03:15PM +0100, Torsten Kaiser wrote:
-> > > After experiencing a hang of all IO yesterday (
-> > > http://marc.info/?l=linux-kernel&m=135142236520624&w=2 ), I turned on
-> > > LOCKDEP after upgrading to -rc3.
-> > > 
-> > > I then tried to replicate the load that hung yesterday and got the
-> > > following lockdep report, implicating XFS instead of by stacking swap
-> > > onto dm-crypt and md.
-> > > 
-> > > [ 2844.971913]
-> > > [ 2844.971920] =================================
-> > > [ 2844.971921] [ INFO: inconsistent lock state ]
-> > > [ 2844.971924] 3.7.0-rc3 #1 Not tainted
-> > > [ 2844.971925] ---------------------------------
-> > > [ 2844.971927] inconsistent {RECLAIM_FS-ON-W} -> {IN-RECLAIM_FS-W} usage.
-> > > [ 2844.971929] kswapd0/725 [HC0[0]:SC0[0]:HE1:SE1] takes:
-> > > [ 2844.971931] (&(&ip->i_lock)->mr_lock){++++?.}, at: [<ffffffff811e7ef4>] xfs_ilock+0x84/0xb0
-> > > [ 2844.971941] {RECLAIM_FS-ON-W} state was registered at:
-> > > [ 2844.971942]   [<ffffffff8108137e>] mark_held_locks+0x7e/0x130
-> > > [ 2844.971947]   [<ffffffff81081a63>] lockdep_trace_alloc+0x63/0xc0
-> > > [ 2844.971949]   [<ffffffff810e9dd5>] kmem_cache_alloc+0x35/0xe0
-> > > [ 2844.971952]   [<ffffffff810dba31>] vm_map_ram+0x271/0x770
-> > > [ 2844.971955]   [<ffffffff811e10a6>] _xfs_buf_map_pages+0x46/0xe0
-.....
-> > We shouldn't be mapping pages there. See if the patch below fixes
-> > it.
-> > 
-> > Fundamentally, though, the lockdep warning has come about because
-> > vm_map_ram is doing a GFP_KERNEL allocation when we need it to be
-> > doing GFP_NOFS - we are within a transaction here, so memory reclaim
-> > is not allowed to recurse back into the filesystem.
-> > 
-> > mm-folk: can we please get this vmalloc/gfp_flags passing API
-> > fixed once and for all? This is the fourth time in the last month or
-> > so that I've seen XFS bug reports with silent hangs and associated
-> > lockdep output that implicate GFP_KERNEL allocations from vm_map_ram
-> > in GFP_NOFS conditions as the potential cause....
-> > 
-> > xfs: don't vmap inode cluster buffers during free
+> And before you start, yes backups are the preferred method of restoration
+> at this point. Never trust your files to a single FS, etc.
+
+It's kind of assumed knowledge round here or that there are good
+reasons for not backing up the filesystem (e.g. it's hard to back up
+a 500TB filesystem).
+
+[snip raid horror story]
+
+> Once I had the file created, I tried xfs_clean -f /mnt/restore/md0.dat to
+> no luck. I used a hex editor to add XFSB to be beginning, hoping the
+
+That won't work - the magic number is just one of many checks on the
+superblock before it can be considered valid.
+
+> recovery would just clean around the LVM data with similar results. The
+> result looks like the following:
 > 
-> Could you write up a little more background for the commit message?
+> Phase 1 - find and verify superblock...
+> bad primary superblock - bad or unsupported version !!!
 
-Sure, that was just a test patch and often I don't bother putting a
-detailed description in them until I know they fix the problem. My
-current tree has:
+And that's the second check :/
 
-xfs: don't vmap inode cluster buffers during free
+> attempting to find secondary superblock...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> unable to verify superblock, continuing...
+> ....................................................................................................
+> Exiting now.
 
-Inode buffers do not need to be mapped as inodes are read or written
-directly from/to the pages underlying the buffer. This fixes a
-regression introduced by commit 611c994 ("xfs: make XBF_MAPPED the
-default behaviour").
+So, that means if found 10 potential secondary superblocks, but
+couldn't validate any of them. Can you find those superblocks and
+hexdump them? something like: 
+
+hexdump <dev or file> | grep -A 30 XFSB
+
+Also of interest would be to hexdump the subsequent sector as well,
+it should have a magic number of XAGF, and will also have a sequence
+number in it that should help tell us if you've got everything in
+order.
+
+> running xfs_db /mnt/restore/md0.dat would appear to run out of memory.
+
+No surprise there if the superblocks are toast.
+
+> Next I tried xfs_db /dev/md1 to see if anything would load. I get the
+> following:
+> 
+> root@jarvis:/mnt# xfs_db /dev/md1
+> Floating point exception
+> 
+> With the following in dmesg:
+> 
+> [1568395.691767] xfs_db[30966] trap divide error ip:41e4b5 sp:7fff5db8ab90
+> error:0 in xfs_db[400000+6a000]
+
+what version are you running?
 
 Cheers,
 
 Dave.
+
 -- 
 Dave Chinner
 david@fromorbit.com
