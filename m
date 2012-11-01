@@ -1,17 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA1GVvgP037730 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 11:31:58 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id iEAGHMgay8bxTNHW for <xfs@oss.sgi.com>;
-	Thu, 01 Nov 2012 09:33:47 -0700 (PDT)
-Message-ID: <5092A46A.8080909@sandeen.net>
-Date: Thu, 01 Nov 2012 11:33:46 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	qA1JSNVY049739 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 14:28:23 -0500
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id Khl4UzHGWWLg4dZI (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 01 Nov 2012 12:30:14 -0700 (PDT)
+Received: from telerig.nabble.com ([192.168.236.162])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1TU0Sz-0004YT-T8
+	for xfs@oss.sgi.com; Thu, 01 Nov 2012 12:30:13 -0700
+Message-ID: <34630253.post@talk.nabble.com>
+Date: Thu, 1 Nov 2012 12:30:13 -0700 (PDT)
+From: Kamal Dasu <kdasu.kdev@gmail.com>
+Subject: Re: xfs filesystem corruption with kernel 2.6.37
+In-Reply-To: <20121025224713.GF29378@dastard>
 MIME-Version: 1.0
-Subject: [PATCH 1/2 V2] xfs_logprint: Handle multiply-logged inode fields
-References: <5092A1DE.10609@redhat.com> <5092A2B6.2000907@redhat.com>
-In-Reply-To: <5092A2B6.2000907@redhat.com>
+References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
+	<20121025224713.GF29378@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,203 +30,99 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
-
-As xlog_print_trans_inode() stands today, it will error
-out if more than one flag is set on f->ilf_fields:
-
-	xlog_print_trans_inode: illegal inode type
-
-but this is a perfectly valid case, to have i.e. a data and
-an attr flag set.
-
-Following is a pretty big reworking of the function to
-handle more than one field type set.
-
-I've tested this by a simple test such as creating one
-file on an selinux box, so that data+attr is set, and
-logprinting; I've also tested by running logprint after
-subsequent xfstest runs (although we hit other bugs that
-way).
-
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-V2: Fix subject, sigh.
-
-diff --git a/logprint/log_misc.c b/logprint/log_misc.c
-index e42e108..be2426e 100644
---- a/logprint/log_misc.c
-+++ b/logprint/log_misc.c
-@@ -657,97 +657,84 @@ xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
- 
-     /* does anything come next */
-     op_head = (xlog_op_header_t *)*ptr;
--    switch (f->ilf_fields & XFS_ILOG_NONCORE) {
--	case XFS_ILOG_DEXT: {
--	    ASSERT(f->ilf_size == 3);
--	    (*i)++;
--	    xlog_print_op_header(op_head, *i, ptr);
--	    printf(_("EXTENTS inode data\n"));
--	    *ptr += be32_to_cpu(op_head->oh_len);
--	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
--		return 1;
--	    }
--	    break;
--	}
--	case XFS_ILOG_DBROOT: {
--	    ASSERT(f->ilf_size == 3);
--	    (*i)++;
--	    xlog_print_op_header(op_head, *i, ptr);
--	    printf(_("BTREE inode data\n"));
--	    *ptr += be32_to_cpu(op_head->oh_len);
--	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
--		return 1;
--	    }
-+
-+    if (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
-+	switch (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
-+	case XFS_ILOG_DEV:
-+	    printf(_("DEV inode: no extra region\n"));
- 	    break;
--	}
--	case XFS_ILOG_DDATA: {
--	    ASSERT(f->ilf_size == 3);
--	    (*i)++;
--	    xlog_print_op_header(op_head, *i, ptr);
--	    printf(_("LOCAL inode data\n"));
--	    if (mode == S_IFDIR) {
--		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
--	    }
--	    *ptr += be32_to_cpu(op_head->oh_len);
--	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
--		return 1;
--	    }
-+	case XFS_ILOG_UUID:
-+	    printf(_("UUID inode: no extra region\n"));
- 	    break;
-+	case XFS_ILOG_DEXT:
-+	case XFS_ILOG_DBROOT:
-+	case XFS_ILOG_DDATA:
-+	default:
-+	    xlog_panic(_("xlog_print_trans_inode: illegal inode type 0x%x"),
-+			f->ilf_fields);
- 	}
--	case XFS_ILOG_AEXT: {
--	    ASSERT(f->ilf_size == 3);
-+    }
-+
-+    if (f->ilf_fields & (XFS_ILOG_DFORK | XFS_ILOG_AFORK)) {
-+	ASSERT(f->ilf_size <= 4);
-+	ASSERT((f->ilf_size == 3) || (f->ilf_fields & XFS_ILOG_AFORK));
-+	if (f->ilf_fields & XFS_ILOG_DFORK) {
- 	    (*i)++;
- 	    xlog_print_op_header(op_head, *i, ptr);
--	    printf(_("EXTENTS inode attr\n"));
--	    *ptr += be32_to_cpu(op_head->oh_len);
--	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
--		return 1;
-+
-+	    switch (f->ilf_fields & XFS_ILOG_DFORK) {
-+	    case XFS_ILOG_DEXT:
-+		printf(_("EXTENTS inode data\n"));
-+		break;
-+	    case XFS_ILOG_DBROOT:
-+		printf(_("BTREE inode data\n"));
-+		break;
-+	    case XFS_ILOG_DDATA:
-+		printf(_("LOCAL inode data\n"));
-+		if (mode == S_IFDIR)
-+		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
-+		break;
-+	    case XFS_ILOG_DEV:
-+	    case XFS_ILOG_UUID:
-+	    default:
-+		xlog_panic(_("xlog_print_trans_inode: illegal inode type 0x%x"),
-+			   f->ilf_fields);
- 	    }
--	    break;
--	}
--	case XFS_ILOG_ABROOT: {
--	    ASSERT(f->ilf_size == 3);
--	    (*i)++;
--	    xlog_print_op_header(op_head, *i, ptr);
--	    printf(_("BTREE inode attr\n"));
-+
- 	    *ptr += be32_to_cpu(op_head->oh_len);
--	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))  {
-+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
- 		return 1;
--	    }
--	    break;
-+	    op_head = (xlog_op_header_t *)*ptr;
- 	}
--	case XFS_ILOG_ADATA: {
--	    ASSERT(f->ilf_size == 3);
-+
-+	if (f->ilf_fields & XFS_ILOG_AFORK) {
- 	    (*i)++;
- 	    xlog_print_op_header(op_head, *i, ptr);
--	    printf(_("LOCAL inode attr\n"));
--	    if (mode == S_IFDIR) {
--		xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
-+
-+	    switch (f->ilf_fields & XFS_ILOG_AFORK) {
-+	    case XFS_ILOG_AEXT:
-+		printf(_("EXTENTS attr data\n"));
-+		break;
-+	    case XFS_ILOG_ABROOT:
-+		printf(_("BTREE attr data\n"));
-+		break;
-+	    case XFS_ILOG_ADATA:
-+		printf(_("LOCAL attr data\n"));
-+		if (mode == S_IFDIR)
-+		    xlog_print_dir_sf((xfs_dir_shortform_t*)*ptr, size);
-+		break;
-+	    default:
-+		xlog_panic(_("xlog_print_trans_inode: illegal inode type 0x%x"),
-+			   f->ilf_fields);
- 	    }
- 	    *ptr += be32_to_cpu(op_head->oh_len);
--	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS)) {
-+	    if (XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS))
- 		return 1;
--	    }
--	    break;
--	}
--	case XFS_ILOG_DEV: {
--	    ASSERT(f->ilf_size == 2);
--	    printf(_("DEV inode: no extra region\n"));
--	    break;
--	}
--	case XFS_ILOG_UUID: {
--	    ASSERT(f->ilf_size == 2);
--	    printf(_("UUID inode: no extra region\n"));
--	    break;
--	}
--	case 0: {
--	    ASSERT(f->ilf_size == 2);
--	    break;
-+	    op_head = (xlog_op_header_t *)*ptr;
- 	}
--	default: {
--	    xlog_panic(_("xlog_print_trans_inode: illegal inode type"));
--	}
--    }
-+    } else	/* neither XFS_ILOG_DFORK nor XFS_ILOG_AFORK */
-+	ASSERT(f->ilf_size == 2);
-+
-     return 0;
- }	/* xlog_print_trans_inode */
- 
+To: xfs@oss.sgi.com
 
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Dave,
 
+Thanks for you reply.
+
+I am trying to act on the hints you gave me but I still have a few
+questions.
+
+On Thu, Oct 25, 2012 at 6:47 PM, Dave Chinner <david@fromorbit.com> wrote:
+> On Thu, Oct 25, 2012 at 09:45:10AM -0400, Kamal Dasu wrote:
+>> with  "CONFIG_XFS_DEBUG=y" I get the following assertion:
+>>
+>> Assertion failed: prev.br_state == XFS_EXT_NORM, file:
+>> fs/xfs/xfs_bmap.c, line: 5192
+>
+> Yup, that's pretty clear indication of a corrupted extent record.
+>
+
+What is the best way to prevent  transactions that record bad
+extent length and block numbers.
+
+>> would have cleared inode 6776
+>>         - agno = 1
+>> 771a3500: Badness in key lookup (length)
+>> bp=(bno 16107312, len 16384 bytes) key=(bno 16107312, len 8192 bytes)
+>>         - agno = 2
+>> bad nblocks 5120 for inode 33701135, would reset to 4096
+>> inode 34297761 - bad rt extent start block number 2392537303836672,
+>                                                 0x88000001B6800
+>
+> That's the open, unlinked file at the time the system crashed. That
+> may be where your problems are coming from. The RT is mostly
+> untested, and we sure as anything don't do any crash resiliency or
+> recovery testing on it, so there's a good chance there are bugs in
+> it that might show up in situations like this....
+>
+> You need to detect extents with invalid lengths in them and trigger
+> a corruption-based filesystem shutdown.
+>
+
+Looked at the log during one of the filesystem shutdown when the
+I/O error occurs. is this an indication of already corrupted log due to
+corrupted in-memory metadata structures?.
+===
+attempt to access beyond end of device
+sda2: rw=0, want=33792081130943048, limit=31471329
+I/O error in filesystem ("sda2") meta-data dev sda2 block
+0x780db80007f240       ("xfs_trans_read_buf") error 5 buf count 4096
+xfs_force_shutdown(sda2,0x1) called from line 395 of file
+fs/xfs/xfs_trans_buf.c.  Return address = 0x801f4f88
+Filesystem "sda2": I/O Error Detected.  Shutting down filesystem: sda2
+Please umount the filesystem, and rectify the problem(s)
+====
+
+However the log is already corrupted. So is there a check on a write
+to the log ?.
+
+>> also if there is something that can be done to avoid this situation in
+>> the first place.
+>
+> Track down where those stray upper bits in the block numbers are
+> coming from, and you'll have your answer.
+>
+
+Have not been able to track this down yet. But could it be a possible memory
+corruption, leading to the in-memory metadata to get corrupted.
+
+On a similar occurrence of this issue on recovery after a reboot seems
+to always go through the evict path
+
+Filesystem "sda2": XFS internal error xfs_trans_cancel at line 1815
+of file fs/xfs/xfs_trans.c.  Caller 0x801f8524
+
+Call Trace:
+[<80439d2c>] dump_stack+0x8/0x34
+[<801f3bec>] xfs_trans_cancel+0x10c/0x128
+[<801f8524>] xfs_inactive+0x2fc/0x450
+[<800dcd54>] evict+0x28/0xd0
+[<800dd300>] iput+0x19c/0x2d8
+[<801e5bcc>] xlog_recover_process_one_iunlink+0xec/0x130
+[<801e7b60>] xlog_recover_process_iunlinks.clone.25+0xa8/0x108
+[<801eb360>] xlog_recover_finish+0x40/0x100
+[<801eedd8>] xfs_mountfs+0x434/0x654
+..
+.
+Filesystem "sda2": Corruption of in-memory data detected.  Shutting
+down filesystem: sda2
+
+-- 
+View this message in context: http://old.nabble.com/xfs-filesystem-corruption-with-kernel-2.6.37-tp34601185p34630253.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
