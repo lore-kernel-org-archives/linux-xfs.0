@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2LLGxK185117 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 16:21:16 -0500
-Message-ID: <509439B6.9020906@sgi.com>
-Date: Fri, 02 Nov 2012 16:23:02 -0500
+	qA2LN0pP185401 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 16:23:00 -0500
+Message-ID: <50943A22.6070202@sgi.com>
+Date: Fri, 02 Nov 2012 16:24:50 -0500
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/6] xfs: silence uninitialised f.file warning.
+Subject: Re: [PATCH 6/6] xfs: fix reading of wrapped log data
 References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
-	<1351816724-3000-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1351816724-3000-2-git-send-email-david@fromorbit.com>
+	<1351816724-3000-7-git-send-email-david@fromorbit.com>
+In-Reply-To: <1351816724-3000-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,13 +28,20 @@ Cc: xfs@oss.sgi.com
 On 11/01/12 19:38, Dave Chinner wrote:
 > From: Dave Chinner<dchinner@redhat.com>
 >
-> Uninitialised variable build warning introduced by 2903ff0 ("switch
-> simple cases of fget_light to fdget"), gcc is not smart enough to
-> work out that the variable is not used uninitialised, and the commit
-> removed the initialisation at declaration that the old variable had.
+> Commit 4439647 ("xfs: reset buffer pointers before freeing them") in
+> 3.0-rc1 introduced a regression when recovering log buffers that
+> wrapped around the end of log. The second part of the log buffer at
+> the start of the physical log was being read into the header buffer
+> rather than the data buffer, and hence recovery was seeing garbage
+> in the data buffer when it got to the region of the log buffer that
+> was incorrectly read.
 >
+> Cc:<stable@vger.kernel.org>  # 3.0.x, 3.2.x, 3.4.x 3.6.x
+> Reported-by: Torsten Kaiser<just.for.lkml@googlemail.com>
 > Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
+
+
 Looks good.
 
 Reviewed-by: Mark Tinguely <tinguely@sgi.com>
