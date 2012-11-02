@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2Ec1sC139432 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 09:38:01 -0500
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id J89R1qkL3DVlhn0x for <xfs@oss.sgi.com>;
-	Fri, 02 Nov 2012 07:39:53 -0700 (PDT)
-Message-ID: <5093DB39.5020409@sandeen.net>
-Date: Fri, 02 Nov 2012 09:39:53 -0500
-From: Eric Sandeen <sandeen@sandeen.net>
+	qA2GWetR151844 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 11:32:40 -0500
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id vJU3sAmzNRx1UC9i (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 02 Nov 2012 09:34:32 -0700 (PDT)
+Received: from telerig.nabble.com ([192.168.236.162])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1TUKCW-00022s-1b
+	for xfs@oss.sgi.com; Fri, 02 Nov 2012 09:34:32 -0700
+Message-ID: <34633803.post@talk.nabble.com>
+Date: Fri, 2 Nov 2012 09:34:32 -0700 (PDT)
+From: Kamal Dasu <kdasu.kdev@gmail.com>
+Subject: Re: xfs filesystem corruption with kernel 2.6.37
+In-Reply-To: <20121102012728.GT29378@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2 V2] xfs_logprint: Handle multiply-logged inode fields
-References: <5092A1DE.10609@redhat.com> <5092A2B6.2000907@redhat.com>
-	<5092A46A.8080909@sandeen.net>
-	<20121102130132.GA12578@infradead.org>
-In-Reply-To: <20121102130132.GA12578@infradead.org>
+References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
+	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
+	<20121102012728.GT29378@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,46 +31,30 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 11/2/12 8:01 AM, Christoph Hellwig wrote:
->> I've tested this by a simple test such as creating one
->> file on an selinux box, so that data+attr is set, and
->> logprinting; I've also tested by running logprint after
->> subsequent xfstest runs (although we hit other bugs that
->> way).
-> 
-> Can you add this test to xfstests, please?
 
-Yeah that should be easy enough.
+Dave,
 
->> +
->> +    if (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
->> +	switch (f->ilf_fields & (XFS_ILOG_DEV | XFS_ILOG_UUID)) {
->> +	case XFS_ILOG_DEV:
->> +	    printf(_("DEV inode: no extra region\n"));
-> 
-> The if here looks odd, I think you should follow the style with
-> a switch on a masked value as it's done in xlog_recover_inode_pass2()
-> in the kernel.
+I see the following. On two different systems with the same want= value.
+Does not seem like a random corruption.
 
-Hm TBH I'm not sure why I left that if in there.
-For the DFORK/AFORK case I think the if made sense, but not for
-the DEV/UUID case I think.  I'll take another look.
+>attempt to access beyond end of device
+> sda2: rw=0, want=33792081130943048, limit=3147132
 
-> I also reall hate the indentation in this function, can you thrown in
-> a preparatory patch to change it to the normal one?
+> > Track down where those stray upper bits in the block numbers are
+> > coming from, and you'll have your answer. 
 
-to 8-char tabs?  Ok
+Where would be the best place to put this check. 
 
--Eric
+Also on a XFS DEBUG all the asserts seem to be in the unlink (delete path).
 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
+
+Kamal
+
+-- 
+View this message in context: http://old.nabble.com/xfs-filesystem-corruption-with-kernel-2.6.37-tp34601185p34633803.html
+Sent from the Xfs - General mailing list archive at Nabble.com.
 
 _______________________________________________
 xfs mailing list
