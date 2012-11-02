@@ -1,17 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2H8GTq156339 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 12:08:16 -0500
-Message-ID: <5093FE6A.2050703@sgi.com>
-Date: Fri, 02 Nov 2012 12:10:02 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	qA2HMc5I159134 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 12:22:38 -0500
+Date: Fri, 2 Nov 2012 12:24:27 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfsdump:fill in bs_forkoff
+Message-ID: <20121102172427.GF9783@sgi.com>
+References: <5080D0BD.3000304@redhat.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/6] xfs: fix buffer shudown reference count mismatch
-References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
-	<1351816724-3000-6-git-send-email-david@fromorbit.com>
-	<20121102024351.GU29378@dastard>
-	<20121102131326.GG12578@infradead.org>
-In-Reply-To: <20121102131326.GG12578@infradead.org>
+Content-Disposition: inline
+In-Reply-To: <5080D0BD.3000304@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,31 +18,26 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: xfs-oss <xfs@oss.sgi.com>
 
-On 11/02/12 08:13, Christoph Hellwig wrote:
-> I don't like this.  ioend processing is very different for synchrous
-> writes, with the most important difference being that synchronous
-> writes need to wake the submitter at I/O completion.  From all I can
-> see your v2 patch breaks that beahviour.  For 3.7-rc I'd suggest
-> taking the additional reference conditionally.
->
-> For 3.8 I'm going to look into simply acquiring an additional reference
-> for synchronous writes during I/O submission to kill these special cases
-> all over the buffer code.
+On Thu, Oct 18, 2012 at 11:02:05PM -0500, Eric Sandeen wrote:
+> Upstream, the structure containing bs_forkoff is actually zeroed
+> prior to these functions, but when pulling the patch back to an
+> older xfsdump, we got checksum errors due to an uninitialized
+> bs_forkoff not matching in dump vs. restore.
+> 
+> So even though forkoff won't be explicitly restored from
+> a dump, do explicitly set it in these routines to keep checksums
+> happy.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Testing shows that conditionally taking the additional reference does
-work at avoiding the b_bhold is zero assert without causing pag is not
-empty assert.
-
-Thanks,
-
---Mark Tinguely.
+committed to git://oss.sgi.com/xfs/cmds/xfsdump.git, master branch.
 
 _______________________________________________
 xfs mailing list
