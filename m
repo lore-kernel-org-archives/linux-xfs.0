@@ -1,16 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2DFjv5131626 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 08:15:45 -0500
-Message-ID: <5093C7EB.2090100@sgi.com>
-Date: Fri, 02 Nov 2012 08:17:31 -0500
-From: Mark Tinguely <tinguely@sgi.com>
+	qA2EXK0x138926 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 09:33:20 -0500
+Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
+	ESMTP id yuWZZCMnVx0dgrpO for <xfs@oss.sgi.com>;
+	Fri, 02 Nov 2012 07:35:12 -0700 (PDT)
+Message-ID: <5093DA1F.5080305@sandeen.net>
+Date: Fri, 02 Nov 2012 09:35:11 -0500
+From: Eric Sandeen <sandeen@sandeen.net>
 MIME-Version: 1.0
-Subject: Re: [PATCH 5/6 V2] xfs: fix buffer shudown reference count mismatch
-References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
-	<1351816724-3000-6-git-send-email-david@fromorbit.com>
-	<20121102024351.GU29378@dastard> <20121102032312.GW29378@dastard>
-In-Reply-To: <20121102032312.GW29378@dastard>
+Subject: Re: [PATCH 2/2] xfs_logprint: Handle continued inode transactions
+References: <5092A1DE.10609@redhat.com> <5092A430.8080109@redhat.com>
+	<20121102130425.GB12578@infradead.org>
+In-Reply-To: <20121102130425.GB12578@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -19,54 +21,60 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
 
-On 11/01/12 22:23, Dave Chinner wrote:
-> xfs: fix buffer shudown reference count mismatch
->
-> From: Dave Chinner<dchinner@redhat.com>
->
-> When we shut down the filesystem, we have to unpin and free all the
-> buffers currently active in the CIL. To do this we unpin and remove
-> them in one operation as a result of a failed iclogbuf write. For
-> buffers, we do this removal via a simultated IO completion of after
-> marking the buffer stale.
->
-> At the time we do this, we have two references to the buffer - the
-> active LRU reference and the buf log item.  The LRU reference is
-> removed by marking the buffer stale, and the active CIL reference is
-> by the xfs_buf_iodone() callback that is run by
-> xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
-> callback).
->
-> However, ioend processing requires one more reference - that of the
-> IO that it is completing. We don't have this reference, so we free
-> the buffer prematurely and use it after it is freed. For buffers
-> marked with XBF_ASYNC, this leads to assert failures in
-> xfs_buf_rele() on debug kernels because the b_hold count is zero.
->
-> Fix this by making sure we take the necessary IO reference before
-> starting IO completion processing on the stale buffer, and set the
-> XBF_ASYNC flag to ensure that IO completion processing removes all
-> the active references from the buffer to ensure it is fully torn
-> down.
->
-> Cc:<stable@vger.kernel.org>
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
-> V2 - add XBF_ASYNC to buffers so last reference is always removed.
->       Fixes shutdown assert failures due to references from buffers
->       remaining the perag structures at unmount.
+On 11/2/12 8:04 AM, Christoph Hellwig wrote:
+> On Thu, Nov 01, 2012 at 11:32:48AM -0500, Eric Sandeen wrote:
+>>
+>> Tested by running xfs_logprint of TEST_DEV in xfsprogs
+>> after sequential tests; without this change it gets off
+>> in the weeds eventually; with this fix, it lasts longer,
+>> until it hits some other yet-unfixed logprint bug...
+> 
+> Add this testcase to xfstests, please.
 
-Yes and thank-you. This eliminates both the b_hold and pag_ref
-asserts in xfstest 179.
+well, "this" isn't really a testcase; it's just running logprint
+after every test.  And in some cases, esp. if the log has wrapped,
+that just fails outright due to unrelated problems.
 
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+TBH I'm not sure how to generate a testcase for just this issue.
+Any ideas?
+
+>>  int
+>> -xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops)
+>> +xlog_print_trans_inode(xfs_caddr_t *ptr, int len, int *i, int num_ops, int continued)
+> 
+> Shouldn't this be a bool?
+
+sure
+
+>>  	xlog_print_op_header(op_head, i, &ptr);
+>> +	continued = (XLOG_SET(op_head->oh_flags, XLOG_WAS_CONT_TRANS) ||
+>> +		     XLOG_SET(op_head->oh_flags, XLOG_CONTINUE_TRANS));
+> 
+> I'd also really love to see another cleanup patch to kill the
+> XLOG_SET macro.  The XLOG_ flags are true flags so they can be replaced
+> by a simple op_head->oh_flags & XLOG_FLAG.
+
+hm, yeah, that is odd.
+
+                if (*last_was_partial_copy)
+                        ophdr->oh_flags |= (XLOG_END_TRANS|XLOG_WAS_CONT_TRANS);
+
+whereas XLOG_SET tests for one and only one.
+
+-Eric
+
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
+> 
 
 _______________________________________________
 xfs mailing list
