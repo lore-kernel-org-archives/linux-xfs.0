@@ -1,18 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2HmKXu163196 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 12:48:20 -0500
-Received: from cpsmtpb-ews02.kpnxchange.com (cpsmtpb-ews02.kpnxchange.com
-	[213.75.39.5]) by cuda.sgi.com with ESMTP id Bk4BiU55Tbnl1ZIm
-	for <xfs@oss.sgi.com>; Fri, 02 Nov 2012 10:50:12 -0700 (PDT)
-Message-ID: <1351878610.1597.31.camel@x61.thuisdomein>
-Subject: Re: [PATCH] xfs: silence GCC warning
-From: Paul Bolle <pebolle@tiscali.nl>
-Date: Fri, 02 Nov 2012 18:50:10 +0100
-In-Reply-To: <20121102130733.GF12578@infradead.org>
-References: <1351851021.1597.27.camel@x61.thuisdomein>
-	<20121102130733.GF12578@infradead.org>
-Mime-Version: 1.0
+	qA2IvX5H170681 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 13:57:33 -0500
+Date: Fri, 2 Nov 2012 13:59:23 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: status of userspace release
+Message-ID: <20121102185923.GG9783@sgi.com>
+References: <20121025151501.GV1377@sgi.com>
+ <20121102055102.GY29378@dastard>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <20121102055102.GY29378@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,17 +23,148 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Ingo Molnar <mingo@kernel.org>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, 2012-11-02 at 09:07 -0400, Christoph Hellwig wrote:
-> Looks good, Dave has actually sent it a tidbit earlier as part
-> of his series with fixes for 3.7-rc
+Hi Dave,
 
-I see, thanks.
+On Fri, Nov 02, 2012 at 04:51:02PM +1100, Dave Chinner wrote:
+> On Thu, Oct 25, 2012 at 10:15:01AM -0500, Ben Myers wrote:
+> > Hi Folks,
+> > 
+> > We're working toward a userspace release this month.  There are several patches
+> > that need to go in first, including backing out the xfsdump format version bump
+> > from Eric, fixes for the makefiles from Mike, and the Polish language update
+> > for xfsdump from Jakub.  If anyone knows of something else we need, now is the
+> > time to flame about it.  I will take a look around for other important patches
+> > too.
+> > 
+> > This time I'm going to tag an -rc1 (probably later today or tomorrow).  We'll
+> > give everyone a few working days to do a final test and/or pipe up if we have
+> > missed something important.  Then if all goes well we'll cut the release next
+> > Tuesday.
+> 
+> I think that dump/restore need more work/testing.
 
+Sounds good.  AFAIK there is no blazing hurry to release immediately.
 
-Paul Bolle
+> I've already pointed Eric to the header checksum failures (forkoff
+> patch being needed), and that fixes the failures I've been seeing on
+> normal xfstests runs.
+
+I've pulled that patch in.  Interesting that it doesn't reproduce on i586 but
+is so reliable on x86_64.  It's a good excuse to do some testing on a wider set
+of arches before the release.
+
+> Running some large filesystem testing, however, I see more problems.
+> I'm using a 17TB filesytsem and the --largefs patch series. This
+> results in a futex hang in 059 like so:
+> 
+> [ 4770.007858] xfsrestore      S ffff88021fc52d40  5504  3926   3487 0x00000000
+> [ 4770.007858]  ffff880212ea9c68 0000000000000082 ffff880207830140 ffff880212ea9fd8
+> [ 4770.007858]  ffff880212ea9fd8 ffff880212ea9fd8 ffff880216cec2c0 ffff880207830140
+> [ 4770.007858]  ffff880212ea9d08 ffff880212ea9d58 ffff880207830140 0000000000000000
+> [ 4770.007858] Call Trace:
+> [ 4770.007858]  [<ffffffff81b8a009>] schedule+0x29/0x70
+> [ 4770.007858]  [<ffffffff810db089>] futex_wait_queue_me+0xc9/0x100
+> [ 4770.007858]  [<ffffffff810db809>] futex_wait+0x189/0x290
+> [ 4770.007858]  [<ffffffff8113acf7>] ? __free_pages+0x47/0x70
+> [ 4770.007858]  [<ffffffff810dd41c>] do_futex+0x11c/0xa80
+> [ 4770.007858]  [<ffffffff810abbd5>] ? hrtimer_try_to_cancel+0x55/0x110
+> [ 4770.007858]  [<ffffffff810abcb2>] ? hrtimer_cancel+0x22/0x30
+> [ 4770.007858]  [<ffffffff81b88f44>] ? do_nanosleep+0xa4/0xd0
+> [ 4770.007858]  [<ffffffff810dde0d>] sys_futex+0x8d/0x1b0
+> [ 4770.007858]  [<ffffffff810ab6e0>] ? update_rmtp+0x80/0x80
+> [ 4770.007858]  [<ffffffff81b93a99>] system_call_fastpath+0x16/0x1b
+> [ 4770.007858] xfsrestore      S ffff88021fc52d40  5656  3927   3487 0x00000000
+> [ 4770.007858]  ffff880208f29c68 0000000000000082 ffff880208f84180 ffff880208f29fd8
+> [ 4770.007858]  ffff880208f29fd8 ffff880208f29fd8 ffff880216cec2c0 ffff880208f84180
+> [ 4770.007858]  ffff880208f29d08 ffff880208f29d58 ffff880208f84180 0000000000000000
+> [ 4770.007858] Call Trace:
+> [ 4770.007858]  [<ffffffff81b8a009>] schedule+0x29/0x70
+> [ 4770.007858]  [<ffffffff810db089>] futex_wait_queue_me+0xc9/0x100
+> [ 4770.007858]  [<ffffffff810db809>] futex_wait+0x189/0x290
+> [ 4770.007858]  [<ffffffff810dd41c>] do_futex+0x11c/0xa80
+> [ 4770.007858]  [<ffffffff810abbd5>] ? hrtimer_try_to_cancel+0x55/0x110
+> [ 4770.007858]  [<ffffffff810abcb2>] ? hrtimer_cancel+0x22/0x30
+> [ 4770.007858]  [<ffffffff81b88f44>] ? do_nanosleep+0xa4/0xd0
+> [ 4770.007858]  [<ffffffff810dde0d>] sys_futex+0x8d/0x1b0
+> [ 4770.007858]  [<ffffffff810ab6e0>] ? update_rmtp+0x80/0x80
+> [ 4770.007858]  [<ffffffff81b93a99>] system_call_fastpath+0x16/0x1b
+> [ 4770.007858] xfsrestore      S ffff88021fc92d40  5848  3928   3487 0x00000000
+> [ 4770.007858]  ffff880212d0dc68 0000000000000082 ffff880208e76240 ffff880212d0dfd8
+> [ 4770.007858]  ffff880212d0dfd8 ffff880212d0dfd8 ffff880216cf2300 ffff880208e76240
+> [ 4770.007858]  ffff880212d0dd08 ffff880212d0dd58 ffff880208e76240 0000000000000000
+> [ 4770.007858] Call Trace:
+> [ 4770.007858]  [<ffffffff81b8a009>] schedule+0x29/0x70
+> [ 4770.007858]  [<ffffffff810db089>] futex_wait_queue_me+0xc9/0x100
+> [ 4770.007858]  [<ffffffff810db809>] futex_wait+0x189/0x290
+> [ 4770.007858]  [<ffffffff810dd41c>] do_futex+0x11c/0xa80
+> [ 4770.007858]  [<ffffffff810abbd5>] ? hrtimer_try_to_cancel+0x55/0x110
+> [ 4770.007858]  [<ffffffff810abcb2>] ? hrtimer_cancel+0x22/0x30
+> [ 4770.007858]  [<ffffffff81b88f44>] ? do_nanosleep+0xa4/0xd0
+> [ 4770.007858]  [<ffffffff810dde0d>] sys_futex+0x8d/0x1b0
+> [ 4770.007858]  [<ffffffff810ab6e0>] ? update_rmtp+0x80/0x80
+> [ 4770.007858]  [<ffffffff81b93a99>] system_call_fastpath+0x16/0x1b
+> 
+> I can't reliably reproduce it at this point, but there does appear
+> to be some kind of locking problem in the multistream support.
+
+One of my machines hit this overnight without --largefs.  I wasn't able to get
+a dump though.  Just another data point.
+
+> Speaking of which, most large filesystems dump/restore tests are
+> failing because of this output:
+> 
+> 026 20s ... - output mismatch (see 026.out.bad)
+> --- 026.out     2012-10-05 11:37:51.000000000 +1000
+> +++ 026.out.bad 2012-11-02 16:20:17.000000000 +1100
+> @@ -20,6 +20,7 @@
+>  xfsdump: media file size NUM bytes
+>  xfsdump: dump size (non-dir files) : NUM bytes
+>  xfsdump: dump complete: SECS seconds elapsed
+> +xfsdump:   stream 0 DUMP_FILE OK (success)
+>  xfsdump: Dump Status: SUCCESS
+>  Restoring from file...
+>  xfsrestore  -f DUMP_FILE  -L stress_026 RESTORE_DIR
+> @@ -32,6 +33,7 @@
+>  xfsrestore: directory post-processing
+>  xfsrestore: restoring non-directory files
+>  xfsrestore: restore complete: SECS seconds elapsed
+> +xfsrestore:   stream 0 DUMP_FILE OK (success)
+>  xfsrestore: Restore Status: SUCCESS
+>  Comparing dump directory with restore directory
+>  Files DUMP_DIR/big and RESTORE_DIR/DUMP_SUBDIR/big are identical
+> 
+> Which looks like output from the multistream code. Why it is
+> emitting this for large filesystem testing and not for small
+> filesystems, I'm not sure yet. 
+> 
+> In fact, with --largefs, I see this for the dump group:
+> 
+> Failures: 026 028 046 047 056 059 060 061 063 064 065 066 266 281
+> 282 283
+> Failed 16 of 19 tests
+> 
+> And this for the normal sized (10GB) scratch device:
+> 
+> Passed all 18 tests
+> 
+> So there's something funky going on here....
+
+Rich also reported some golden output related changes with --largefs awhile
+back.  I don't think he saw this one though.
+
+The TODO list for userspace release currently stands at:
+
+1) fix the header checksum failures... which is resolved
+2) fix a futex hang in 059
+3) fix the golden output changes related to multistream support in xfsdump
+   and --largefs
+4) test on more platforms
+
+Regards,
+	Ben
 
 _______________________________________________
 xfs mailing list
