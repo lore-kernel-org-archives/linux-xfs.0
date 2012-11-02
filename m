@@ -1,24 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2GWetR151844 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 11:32:40 -0500
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id vJU3sAmzNRx1UC9i (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Nov 2012 09:34:32 -0700 (PDT)
-Received: from telerig.nabble.com ([192.168.236.162])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1TUKCW-00022s-1b
-	for xfs@oss.sgi.com; Fri, 02 Nov 2012 09:34:32 -0700
-Message-ID: <34633803.post@talk.nabble.com>
-Date: Fri, 2 Nov 2012 09:34:32 -0700 (PDT)
-From: Kamal Dasu <kdasu.kdev@gmail.com>
-Subject: Re: xfs filesystem corruption with kernel 2.6.37
-In-Reply-To: <20121102012728.GT29378@dastard>
+	qA2GjSFl153441 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 11:45:28 -0500
+Date: Fri, 2 Nov 2012 11:47:17 -0500
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfsdump:fill in bs_forkoff
+Message-ID: <20121102164717.GE9783@sgi.com>
+References: <5080D0BD.3000304@redhat.com> <20121030194718.GD405@sgi.com>
+	<50903075.6060600@redhat.com> <20121031194654.GB9783@sgi.com>
+	<50934DAA.8070207@sandeen.net>
 MIME-Version: 1.0
-References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
-	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
-	<20121102012728.GT29378@dastard>
+Content-Disposition: inline
+In-Reply-To: <50934DAA.8070207@sandeen.net>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,30 +24,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: xfs-oss <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
 
+Hey Eric,
 
-Dave,
+On Thu, Nov 01, 2012 at 11:35:54PM -0500, Eric Sandeen wrote:
+> On 10/31/12 2:46 PM, Ben Myers wrote:
+> > Hi Eric,
+> 
+> ...
+> 
+> > It seemed like it could be an important bugfix but I wasn't really sure so I
+> > asked.  Since it sounds like it's not a big deal, lets just hold off till after
+> > the release...
+> 
+> Well, I was wrong - at least at one point, I thought it was getting zeroed. (?!)
+> 
+> But Dave was running into trouble tonight ...
+> 
+> And as the git tree stands today, I'm getting checksum errors w/o this patch
+> too, and xfstests dump group is passing only with it added back in.
 
-I see the following. On two different systems with the same want= value.
-Does not seem like a random corruption.
+Interesting!  It works great as-is on i386.  ;)
 
->attempt to access beyond end of device
-> sda2: rw=0, want=33792081130943048, limit=3147132
+I gave it a spin on an x86_64 box and now I see the errors too.
 
-> > Track down where those stray upper bits in the block numbers are
-> > coming from, and you'll have your answer. 
+> So I think you'd better pull it in, maybe change the commit message a bit
+> though - it downplays the importance too much I guess.
 
-Where would be the best place to put this check. 
+I'll add something like:
 
-Also on a XFS DEBUG all the asserts seem to be in the unlink (delete path).
+This fixes 'bad header checksum' errors in xfsrestore, which were introduced by
+commit 1e309da7.
 
+> Sorry about that,
 
-Kamal
+No problem.  It worked out fine.  ;)
 
--- 
-View this message in context: http://old.nabble.com/xfs-filesystem-corruption-with-kernel-2.6.37-tp34601185p34633803.html
-Sent from the Xfs - General mailing list archive at Nabble.com.
+Thanks,
+	Ben
 
 _______________________________________________
 xfs mailing list
