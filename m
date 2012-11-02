@@ -1,23 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA20b9La064974 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 19:37:09 -0500
+	qA21Pdql068337 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 20:25:39 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	Hl1156PnsJtkQL1b for <xfs@oss.sgi.com>;
-	Thu, 01 Nov 2012 17:39:00 -0700 (PDT)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TU5Hl-0004WQ-Cq
-	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:57 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TU5Hl-0000nS-8B
-	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:57 +1100
+	Ti3A5nQQxyQtZdQG for <xfs@oss.sgi.com>;
+	Thu, 01 Nov 2012 18:27:30 -0700 (PDT)
+Date: Fri, 2 Nov 2012 12:27:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 4/6] xfs: don't vmap inode cluster buffers during free
-Date: Fri,  2 Nov 2012 11:38:42 +1100
-Message-Id: <1351816724-3000-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1351816724-3000-1-git-send-email-david@fromorbit.com>
-References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
+Subject: Re: xfs filesystem corruption with kernel 2.6.37
+Message-ID: <20121102012728.GT29378@dastard>
+References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
+	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <34630253.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,41 +23,116 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Kamal Dasu <kdasu.kdev@gmail.com>
+Cc: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+On Thu, Nov 01, 2012 at 12:30:13PM -0700, Kamal Dasu wrote:
+> 
+> Dave,
+> 
+> Thanks for you reply.
+> 
+> I am trying to act on the hints you gave me but I still have a few
+> questions.
+> 
+> On Thu, Oct 25, 2012 at 6:47 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > On Thu, Oct 25, 2012 at 09:45:10AM -0400, Kamal Dasu wrote:
+> >> with  "CONFIG_XFS_DEBUG=y" I get the following assertion:
+> >>
+> >> Assertion failed: prev.br_state == XFS_EXT_NORM, file:
+> >> fs/xfs/xfs_bmap.c, line: 5192
+> >
+> > Yup, that's pretty clear indication of a corrupted extent record.
+> >
+> 
+> What is the best way to prevent  transactions that record bad
+> extent length and block numbers.
 
-Inode buffers do not need to be mapped as inodes are read or written
-directly from/to the pages underlying the buffer. This fixes a
-regression introduced by commit 611c994 ("xfs: make XBF_MAPPED the
-default behaviour").
+That should never occur - there are already checks in place to
+prevent that. However, the log must be treated as potentially
+corrupt during recovery, so when freeing extents on recovered files
+we might be walking corrupt extents. xfs_bunmapi() is the place that
+should be checking that the extent being freed is of a sane length.
+(Just like xfs_bmapi checks to ensure the extent allocated is of
+sane length).
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_inode.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index bba8f37..6a0a710 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1760,7 +1760,8 @@ xfs_ifree_cluster(
- 		 * to mark all the active inodes on the buffer stale.
- 		 */
- 		bp = xfs_trans_get_buf(tp, mp->m_ddev_targp, blkno,
--					mp->m_bsize * blks_per_cluster, 0);
-+					mp->m_bsize * blks_per_cluster,
-+					XBF_UNMAPPED);
- 
- 		if (!bp)
- 			return ENOMEM;
+> > That's the open, unlinked file at the time the system crashed. That
+> > may be where your problems are coming from. The RT is mostly
+> > untested, and we sure as anything don't do any crash resiliency or
+> > recovery testing on it, so there's a good chance there are bugs in
+> > it that might show up in situations like this....
+> >
+> > You need to detect extents with invalid lengths in them and trigger
+> > a corruption-based filesystem shutdown.
+> 
+> Looked at the log during one of the filesystem shutdown when the
+> I/O error occurs. is this an indication of already corrupted log due to
+> corrupted in-memory metadata structures?.
+> ===
+> attempt to access beyond end of device
+> sda2: rw=0, want=33792081130943048, limit=31471329
+> I/O error in filesystem ("sda2") meta-data dev sda2 block
+> 0x780db80007f240       ("xfs_trans_read_buf") error 5 buf count 4096
+> xfs_force_shutdown(sda2,0x1) called from line 395 of file
+> fs/xfs/xfs_trans_buf.c.  Return address = 0x801f4f88
+> Filesystem "sda2": I/O Error Detected.  Shutting down filesystem: sda2
+> Please umount the filesystem, and rectify the problem(s)
+
+The I/O error is what triggered the shutdown. The transaction tried
+to read a metadata block beyond EOF.
+
+> However the log is already corrupted. So is there a check on a write
+> to the log ?.
+
+No, the above check caught the corruption as soon as it was found.
+You need to walk back from this event to find where the corruption
+was introduced.
+
+> >> also if there is something that can be done to avoid this situation in
+> >> the first place.
+> >
+> > Track down where those stray upper bits in the block numbers are
+> > coming from, and you'll have your answer.
+> >
+> 
+> Have not been able to track this down yet. But could it be a possible memory
+> corruption, leading to the in-memory metadata to get corrupted.
+
+Yes, that is a possible cause that lead to a bad block number being
+written to disk.
+
+> On a similar occurrence of this issue on recovery after a reboot seems
+> to always go through the evict path
+> 
+> Filesystem "sda2": XFS internal error xfs_trans_cancel at line 1815
+> of file fs/xfs/xfs_trans.c.  Caller 0x801f8524
+> 
+> Call Trace:
+> [<80439d2c>] dump_stack+0x8/0x34
+> [<801f3bec>] xfs_trans_cancel+0x10c/0x128
+> [<801f8524>] xfs_inactive+0x2fc/0x450
+> [<800dcd54>] evict+0x28/0xd0
+> [<800dd300>] iput+0x19c/0x2d8
+> [<801e5bcc>] xlog_recover_process_one_iunlink+0xec/0x130
+> [<801e7b60>] xlog_recover_process_iunlinks.clone.25+0xa8/0x108
+> [<801eb360>] xlog_recover_finish+0x40/0x100
+> [<801eedd8>] xfs_mountfs+0x434/0x654
+
+That's where it is processing files that were unlinked but still
+referenced at the time of the crash. We already know that these are
+the corrupted files...
+
+Cheers,
+
+Dave.
 -- 
-1.7.10
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
