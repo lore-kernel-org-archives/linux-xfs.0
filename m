@@ -1,17 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2MMmFt192159 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 17:22:48 -0500
-Date: Fri, 2 Nov 2012 17:24:41 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] mkfs: update manpage to match current inode allocation
-	behaviour
-Message-ID: <20121102222441.GJ9783@sgi.com>
-References: <1350574957-1044-1-git-send-email-cmaiolino@redhat.com>
-	<5094473B.5000801@sgi.com>
+	qA2MsCFn196653 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 17:54:12 -0500
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	E8AJ60oDTRG0gTNy for <xfs@oss.sgi.com>;
+	Fri, 02 Nov 2012 15:56:03 -0700 (PDT)
+Date: Sat, 3 Nov 2012 09:55:09 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs filesystem corruption with kernel 2.6.37
+Message-ID: <20121102225509.GZ29378@dastard>
+References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
+	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
+	<20121102012728.GT29378@dastard> <34633803.post@talk.nabble.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <5094473B.5000801@sgi.com>
+In-Reply-To: <34633803.post@talk.nabble.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,49 +28,47 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: Carlos Maiolino <cmaiolino@redhat.com>, xfs@oss.sgi.com
+To: Kamal Dasu <kdasu.kdev@gmail.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Nov 02, 2012 at 05:20:43PM -0500, Mark Tinguely wrote:
-> On 10/18/12 10:42, Carlos Maiolino wrote:
-> >Once inode64 is the default allocator, mkfs man page needs to be updated to
-> >match the current behaviour.
-> >
-> >Signed-off-by: Carlos Maiolino<cmaiolino@redhat.com>
-> >---
-> >  man/man8/mkfs.xfs.8 | 7 ++++---
-> >  1 file changed, 4 insertions(+), 3 deletions(-)
-> >
-> >diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> >index fa52152..c33cfb2 100644
-> >--- a/man/man8/mkfs.xfs.8
-> >+++ b/man/man8/mkfs.xfs.8
-> >@@ -309,16 +309,17 @@ can be allocated to inodes. The default
-> >  is 25% for filesystems under 1TB, 5% for filesystems under 50TB and 1%
-> >  for filesystems over 50TB.
-> >  .IP
-> >-In the default inode allocation mode, inode blocks are chosen such
-> >+In the inode32 inode allocation mode, inode blocks are chosen such
-> >  that inode numbers will not exceed 32 bits, which restricts the inode
-> >  blocks to the lower portion of the filesystem. The data block
-> >  allocator will avoid these low blocks to accommodate the specified
-> >  maxpct, so a high value may result in a filesystem with nothing but
-> >  inodes in a significant portion of the lower blocks of the filesystem.
-> >-(This restriction is not present when the filesystem is mounted with
-> >+(This restriction is not present in the default inode allocation mode,
-> >+i.e. when the filesystem is mounted with
-> >  the
-> >  .I "inode64"
-> >-option on 64-bit platforms).
-> >+option).
-> >  .IP
-> >  Setting the value to 0 means that essentially all of the filesystem
-> >  can become inode blocks, subject to inode32 restrictions.
+On Fri, Nov 02, 2012 at 09:34:32AM -0700, Kamal Dasu wrote:
 > 
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> Dave,
+> 
+> I see the following. On two different systems with the same want= value.
+> Does not seem like a random corruption.
+> 
+> >attempt to access beyond end of device
+> > sda2: rw=0, want=33792081130943048, limit=3147132
 
-Oh, wow.  That's a good candidate for the userspace release.  ;)
--Ben
+0x780dbd80007f248
+
+Once again it's corruption in the upper 32 bits of the 64 bit number.
+Those bits should be zero. Perhaps looking at all the trace events
+from recovery might give you a closer approximation of where the bad
+extent records is found....
+
+> > > Track down where those stray upper bits in the block numbers are
+> > > coming from, and you'll have your answer. 
+> 
+> Where would be the best place to put this check. 
+
+I don't know - you're just just going to have to put cheks
+everywhere - from when the extent record is first read from disk, to
+where it is modified to where it is backed back into disk format.
+
+> Also on a XFS DEBUG all the asserts seem to be in the unlink (delete path).
+
+No surprise, the failures found when removing open-but-unlinked
+files after a crash. i.e. during unlink in the final stage of
+recover.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
