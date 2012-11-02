@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA20bJFo065020 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 19:37:19 -0500
+	qA20bI6s065012 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 19:37:18 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	oDn8cGFJsGiRotY9 for <xfs@oss.sgi.com>;
-	Thu, 01 Nov 2012 17:39:10 -0700 (PDT)
+	j6vN1BQmnBMnbO6D for <xfs@oss.sgi.com>;
+	Thu, 01 Nov 2012 17:39:09 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TU5Hl-0004WU-DS
+	(envelope-from <dave@fromorbit.com>) id 1TU5Hl-0004WX-Ek
 	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:57 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TU5Hl-0000nZ-9O
+	(envelope-from <dave@disappointment.disaster>) id 1TU5Hl-0000nd-B7
 	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 5/6] xfs: fix buffer shudown reference count mismatch
-Date: Fri,  2 Nov 2012 11:38:43 +1100
-Message-Id: <1351816724-3000-6-git-send-email-david@fromorbit.com>
+Subject: [PATCH 6/6] xfs: fix reading of wrapped log data
+Date: Fri,  2 Nov 2012 11:38:44 +1100
+Message-Id: <1351816724-3000-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351816724-3000-1-git-send-email-david@fromorbit.com>
 References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,62 +35,34 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we shut down the filesystem, we have to unpin and free all the
-buffers currently active in the CIL. To do this we unpin and remove
-them in one operation as a result of a failed iclogbuf write. For
-buffers, we do this removal via a simultated IO completion of after
-marking the buffer stale.
+Commit 4439647 ("xfs: reset buffer pointers before freeing them") in
+3.0-rc1 introduced a regression when recovering log buffers that
+wrapped around the end of log. The second part of the log buffer at
+the start of the physical log was being read into the header buffer
+rather than the data buffer, and hence recovery was seeing garbage
+in the data buffer when it got to the region of the log buffer that
+was incorrectly read.
 
-At the time we do this, we have two references to the buffer - the
-active LRU reference and the buf log item.  The LRU reference is
-removed by marking the buffer stale, and the active CIL reference is
-by the xfs_buf_iodone() callback that is run by
-xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
-callback).
-
-However, ioend processing requires one more reference - that of the
-IO that it is completing. We don't have this reference, so we free
-the buffer prematurely and use it after it is freed. This leads to
-assert failures in xfs_buf_rele() on debug kernels because the
-b_hold count is zero.
-
-Fix this by making sure we take the necessary IO reference before
-starting IO completion processing on the stale buffer.
-
-Cc: <stable@vger.kernel.org>
+Cc: <stable@vger.kernel.org> # 3.0.x, 3.2.x, 3.4.x 3.6.x
+Reported-by: Torsten Kaiser <just.for.lkml@googlemail.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_buf_item.c |   16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
+ fs/xfs/xfs_log_recover.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
-index a8d0ed9..b72fe88 100644
---- a/fs/xfs/xfs_buf_item.c
-+++ b/fs/xfs/xfs_buf_item.c
-@@ -526,7 +526,23 @@ xfs_buf_item_unpin(
- 		}
- 		xfs_buf_relse(bp);
- 	} else if (freed && remove) {
-+		/*
-+		 * There are currently two references to the buffer - the active
-+		 * LRU reference and the buf log item. What we are about to do
-+		 * here - simulate a failed IO completion - requires 3
-+		 * references.
-+		 *
-+		 * The LRU reference is removed by the xfs_buf_stale() call. The
-+		 * buf item reference is removed by the xfs_buf_iodone()
-+		 * callback that is run by xfs_buf_do_callbacks() during ioend
-+		 * processing (via the bp->b_iodone callback), and then finally
-+		 * the ioend processing drops the IO reference.
-+		 *
-+		 * Hence we need to take an additional reference here so that IO
-+		 * completion processing doesn't free the buffer prematurely.
-+		 */
- 		xfs_buf_lock(bp);
-+		xfs_buf_hold(bp);
- 		xfs_buf_ioerror(bp, EIO);
- 		XFS_BUF_UNDONE(bp);
- 		xfs_buf_stale(bp);
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index 651c988..3e06333 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -3542,7 +3542,7 @@ xlog_do_recovery_pass(
+ 				 *   - order is important.
+ 				 */
+ 				error = xlog_bread_offset(log, 0,
+-						bblks - split_bblks, hbp,
++						bblks - split_bblks, dbp,
+ 						offset + BBTOB(split_bblks));
+ 				if (error)
+ 					goto bread_err2;
 -- 
 1.7.10
 
