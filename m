@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA20bH5H065001 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 19:37:17 -0500
+	qA20bJFo065020 for <xfs@oss.sgi.com>; Thu, 1 Nov 2012 19:37:19 -0500
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	NA35308KNkpKYodQ for <xfs@oss.sgi.com>;
-	Thu, 01 Nov 2012 17:39:08 -0700 (PDT)
+	oDn8cGFJsGiRotY9 for <xfs@oss.sgi.com>;
+	Thu, 01 Nov 2012 17:39:10 -0700 (PDT)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TU5Hb-0004WI-AX
-	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:47 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TU5Hl-0004WU-DS
+	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:57 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TU5Hb-0000nN-7J
-	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:47 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TU5Hl-0000nZ-9O
+	for xfs@oss.sgi.com; Fri, 02 Nov 2012 11:38:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 3/6] xfs: invalidate allocbt blocks moved to the free list
-Date: Fri,  2 Nov 2012 11:38:41 +1100
-Message-Id: <1351816724-3000-4-git-send-email-david@fromorbit.com>
+Subject: [PATCH 5/6] xfs: fix buffer shudown reference count mismatch
+Date: Fri,  2 Nov 2012 11:38:43 +1100
+Message-Id: <1351816724-3000-6-git-send-email-david@fromorbit.com>
 In-Reply-To: <1351816724-3000-1-git-send-email-david@fromorbit.com>
 References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,56 +35,62 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When we free a block from the alloc btree tree, we move it to the
-freelist held in the AGFL and mark it busy in the busy extent tree.
-This typically happens when we merge btree blocks.
+When we shut down the filesystem, we have to unpin and free all the
+buffers currently active in the CIL. To do this we unpin and remove
+them in one operation as a result of a failed iclogbuf write. For
+buffers, we do this removal via a simultated IO completion of after
+marking the buffer stale.
 
-Once the transaction is committed and checkpointed, the block can
-remain on the free list for an indefinite amount of time.  Now, this
-isn't the end of the world at this point - if the free list is
-shortened, the buffer is invalidated in the transaction that moves
-it back to free space. If the buffer is allocated as metadata from
-the free list, then all the modifications getted logged, and we have
-no issues, either. And if it gets allocated as userdata direct from
-the freelist, it gets invalidated and so will never get written.
+At the time we do this, we have two references to the buffer - the
+active LRU reference and the buf log item.  The LRU reference is
+removed by marking the buffer stale, and the active CIL reference is
+by the xfs_buf_iodone() callback that is run by
+xfs_buf_do_callbacks() during ioend processing (via the bp->b_iodone
+callback).
 
-However, during the time it sits on the free list, pressure on the
-log can cause the AIL to be pushed and the buffer that covers the
-block gets pushed for write. IOWs, we end up writing a freed
-metadata block to disk. Again, this isn't the end of the world
-because we know from the above we are only writing to free space.
+However, ioend processing requires one more reference - that of the
+IO that it is completing. We don't have this reference, so we free
+the buffer prematurely and use it after it is freed. This leads to
+assert failures in xfs_buf_rele() on debug kernels because the
+b_hold count is zero.
 
-The problem, however, is for validation callbacks. If the block was
-on old btree root block, then the level of the block is going to be
-higher than the current tree root, and so will fail validation.
-There may be other inconsistencies in the block as well, and
-currently we don't care because the block is in free space. Shutting
-down the filesystem because a freed block doesn't pass write
-validation, OTOH, is rather unfriendly.
+Fix this by making sure we take the necessary IO reference before
+starting IO completion processing on the stale buffer.
 
-So, make sure we always invalidate buffers as they move from the
-free space trees to the free list so that we guarantee they never
-get written to disk while on the free list.
-
+Cc: <stable@vger.kernel.org>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_alloc_btree.c |    2 ++
- 1 file changed, 2 insertions(+)
+ fs/xfs/xfs_buf_item.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
-index f1647ca..f7876c6 100644
---- a/fs/xfs/xfs_alloc_btree.c
-+++ b/fs/xfs/xfs_alloc_btree.c
-@@ -121,6 +121,8 @@ xfs_allocbt_free_block(
- 	xfs_extent_busy_insert(cur->bc_tp, be32_to_cpu(agf->agf_seqno), bno, 1,
- 			      XFS_EXTENT_BUSY_SKIP_DISCARD);
- 	xfs_trans_agbtree_delta(cur->bc_tp, -1);
-+
-+	xfs_trans_binval(cur->bc_tp, bp);
- 	return 0;
- }
- 
+diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+index a8d0ed9..b72fe88 100644
+--- a/fs/xfs/xfs_buf_item.c
++++ b/fs/xfs/xfs_buf_item.c
+@@ -526,7 +526,23 @@ xfs_buf_item_unpin(
+ 		}
+ 		xfs_buf_relse(bp);
+ 	} else if (freed && remove) {
++		/*
++		 * There are currently two references to the buffer - the active
++		 * LRU reference and the buf log item. What we are about to do
++		 * here - simulate a failed IO completion - requires 3
++		 * references.
++		 *
++		 * The LRU reference is removed by the xfs_buf_stale() call. The
++		 * buf item reference is removed by the xfs_buf_iodone()
++		 * callback that is run by xfs_buf_do_callbacks() during ioend
++		 * processing (via the bp->b_iodone callback), and then finally
++		 * the ioend processing drops the IO reference.
++		 *
++		 * Hence we need to take an additional reference here so that IO
++		 * completion processing doesn't free the buffer prematurely.
++		 */
+ 		xfs_buf_lock(bp);
++		xfs_buf_hold(bp);
+ 		xfs_buf_ioerror(bp, EIO);
+ 		XFS_BUF_UNDONE(bp);
+ 		xfs_buf_stale(bp);
 -- 
 1.7.10
 
