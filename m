@@ -1,17 +1,17 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2GjSFl153441 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 11:45:28 -0500
-Date: Fri, 2 Nov 2012 11:47:17 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfsdump:fill in bs_forkoff
-Message-ID: <20121102164717.GE9783@sgi.com>
-References: <5080D0BD.3000304@redhat.com> <20121030194718.GD405@sgi.com>
-	<50903075.6060600@redhat.com> <20121031194654.GB9783@sgi.com>
-	<50934DAA.8070207@sandeen.net>
+	qA2H8GTq156339 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 12:08:16 -0500
+Message-ID: <5093FE6A.2050703@sgi.com>
+Date: Fri, 02 Nov 2012 12:10:02 -0500
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50934DAA.8070207@sandeen.net>
+Subject: Re: [PATCH 5/6] xfs: fix buffer shudown reference count mismatch
+References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
+	<1351816724-3000-6-git-send-email-david@fromorbit.com>
+	<20121102024351.GU29378@dastard>
+	<20121102131326.GG12578@infradead.org>
+In-Reply-To: <20121102131326.GG12578@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -20,50 +20,31 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: xfs-oss <xfs@oss.sgi.com>, Dave Chinner <dchinner@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-Hey Eric,
+On 11/02/12 08:13, Christoph Hellwig wrote:
+> I don't like this.  ioend processing is very different for synchrous
+> writes, with the most important difference being that synchronous
+> writes need to wake the submitter at I/O completion.  From all I can
+> see your v2 patch breaks that beahviour.  For 3.7-rc I'd suggest
+> taking the additional reference conditionally.
+>
+> For 3.8 I'm going to look into simply acquiring an additional reference
+> for synchronous writes during I/O submission to kill these special cases
+> all over the buffer code.
 
-On Thu, Nov 01, 2012 at 11:35:54PM -0500, Eric Sandeen wrote:
-> On 10/31/12 2:46 PM, Ben Myers wrote:
-> > Hi Eric,
-> 
-> ...
-> 
-> > It seemed like it could be an important bugfix but I wasn't really sure so I
-> > asked.  Since it sounds like it's not a big deal, lets just hold off till after
-> > the release...
-> 
-> Well, I was wrong - at least at one point, I thought it was getting zeroed. (?!)
-> 
-> But Dave was running into trouble tonight ...
-> 
-> And as the git tree stands today, I'm getting checksum errors w/o this patch
-> too, and xfstests dump group is passing only with it added back in.
-
-Interesting!  It works great as-is on i386.  ;)
-
-I gave it a spin on an x86_64 box and now I see the errors too.
-
-> So I think you'd better pull it in, maybe change the commit message a bit
-> though - it downplays the importance too much I guess.
-
-I'll add something like:
-
-This fixes 'bad header checksum' errors in xfsrestore, which were introduced by
-commit 1e309da7.
-
-> Sorry about that,
-
-No problem.  It worked out fine.  ;)
+Testing shows that conditionally taking the additional reference does
+work at avoiding the b_bhold is zero assert without causing pag is not
+empty assert.
 
 Thanks,
-	Ben
+
+--Mark Tinguely.
 
 _______________________________________________
 xfs mailing list
