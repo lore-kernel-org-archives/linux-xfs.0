@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2D3I5j129893 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 08:03:18 -0500
+	qA2D593x130177 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 08:05:09 -0500
 Received: from bombadil.infradead.org
 	(173-166-109-252-newengland.hfc.comcastbusiness.net
 	[173.166.109.252]) by cuda.sgi.com with ESMTP id
-	P4AjaDPs6dTak84w (version=TLSv1 cipher=AES256-SHA bits=256
+	RK218JF9Oiwo00bQ (version=TLSv1 cipher=AES256-SHA bits=256
 	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 02 Nov 2012 06:05:10 -0700 (PDT)
-Date: Fri, 2 Nov 2012 09:05:10 -0400
+	Fri, 02 Nov 2012 06:07:01 -0700 (PDT)
+Date: Fri, 2 Nov 2012 09:07:00 -0400
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 4/6] xfs: don't vmap inode cluster buffers during free
-Message-ID: <20121102130509.GD12578@infradead.org>
+Subject: Re: [PATCH 6/6] xfs: fix reading of wrapped log data
+Message-ID: <20121102130700.GE12578@infradead.org>
 References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
-	<1351816724-3000-5-git-send-email-david@fromorbit.com>
+	<1351816724-3000-7-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1351816724-3000-5-git-send-email-david@fromorbit.com>
+In-Reply-To: <1351816724-3000-7-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -32,15 +32,23 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On Fri, Nov 02, 2012 at 11:38:42AM +1100, Dave Chinner wrote:
+On Fri, Nov 02, 2012 at 11:38:44AM +1100, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Inode buffers do not need to be mapped as inodes are read or written
-> directly from/to the pages underlying the buffer. This fixes a
-> regression introduced by commit 611c994 ("xfs: make XBF_MAPPED the
-> default behaviour").
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Commit 4439647 ("xfs: reset buffer pointers before freeing them") in
+> 3.0-rc1 introduced a regression when recovering log buffers that
+> wrapped around the end of log. The second part of the log buffer at
+> the start of the physical log was being read into the header buffer
+> rather than the data buffer, and hence recovery was seeing garbage
+> in the data buffer when it got to the region of the log buffer that
+> was incorrectly read.
+
+I think you mentioned earlier you found a reproducer for this, any
+chance it could be added to xfstests?
+
+>  				error = xlog_bread_offset(log, 0,
+> -						bblks - split_bblks, hbp,
+> +						bblks - split_bblks, dbp,
 
 Looks good,
 
