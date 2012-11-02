@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay3.corp.sgi.com [198.149.34.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA2HMc5I159134 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 12:22:38 -0500
-Date: Fri, 2 Nov 2012 12:24:27 -0500
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH] xfsdump:fill in bs_forkoff
-Message-ID: <20121102172427.GF9783@sgi.com>
-References: <5080D0BD.3000304@redhat.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <5080D0BD.3000304@redhat.com>
+	qA2HmKXu163196 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 12:48:20 -0500
+Received: from cpsmtpb-ews02.kpnxchange.com (cpsmtpb-ews02.kpnxchange.com
+	[213.75.39.5]) by cuda.sgi.com with ESMTP id Bk4BiU55Tbnl1ZIm
+	for <xfs@oss.sgi.com>; Fri, 02 Nov 2012 10:50:12 -0700 (PDT)
+Message-ID: <1351878610.1597.31.camel@x61.thuisdomein>
+Subject: Re: [PATCH] xfs: silence GCC warning
+From: Paul Bolle <pebolle@tiscali.nl>
+Date: Fri, 02 Nov 2012 18:50:10 +0100
+In-Reply-To: <20121102130733.GF12578@infradead.org>
+References: <1351851021.1597.27.camel@x61.thuisdomein>
+	<20121102130733.GF12578@infradead.org>
+Mime-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,22 +25,17 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: xfs-oss <xfs@oss.sgi.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, Ingo Molnar <mingo@kernel.org>, xfs@oss.sgi.com, linux-kernel@vger.kernel.org
 
-On Thu, Oct 18, 2012 at 11:02:05PM -0500, Eric Sandeen wrote:
-> Upstream, the structure containing bs_forkoff is actually zeroed
-> prior to these functions, but when pulling the patch back to an
-> older xfsdump, we got checksum errors due to an uninitialized
-> bs_forkoff not matching in dump vs. restore.
-> 
-> So even though forkoff won't be explicitly restored from
-> a dump, do explicitly set it in these routines to keep checksums
-> happy.
-> 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+On Fri, 2012-11-02 at 09:07 -0400, Christoph Hellwig wrote:
+> Looks good, Dave has actually sent it a tidbit earlier as part
+> of his series with fixes for 3.7-rc
 
-committed to git://oss.sgi.com/xfs/cmds/xfsdump.git, master branch.
+I see, thanks.
+
+
+Paul Bolle
 
 _______________________________________________
 xfs mailing list
