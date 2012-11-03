@@ -1,14 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA34QWeq241149 for <xfs@oss.sgi.com>; Fri, 2 Nov 2012 23:26:33 -0500
-Message-ID: <50949D60.9010709@oracle.com>
-Date: Sat, 03 Nov 2012 12:28:16 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	qA3MNTO3039222 for <xfs@oss.sgi.com>; Sat, 3 Nov 2012 17:23:29 -0500
+Received: from ipmail06.adl6.internode.on.net (ipmail06.adl6.internode.on.net
+	[150.101.137.145]) by cuda.sgi.com with ESMTP id
+	GLU89MV0XRODW5kO for <xfs@oss.sgi.com>;
+	Sat, 03 Nov 2012 15:25:22 -0700 (PDT)
+Date: Sun, 4 Nov 2012 09:25:18 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs filesystem corruption with kernel 2.6.37
+Message-ID: <20121103222518.GH29378@dastard>
+References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
+	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
+	<20121102012728.GT29378@dastard> <34633803.post@talk.nabble.com>
+	<20121102225509.GZ29378@dastard>
+	<37CBCD87-5B71-4B9C-8FAE-5BBF85804983@gmail.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH] xfs: Remove redundant return error from xfs_difree()
-References: <5088BFD5.8060906@oracle.com> <20121102210518.GH9783@sgi.com>
-In-Reply-To: <20121102210518.GH9783@sgi.com>
+Content-Disposition: inline
+In-Reply-To: <37CBCD87-5B71-4B9C-8FAE-5BBF85804983@gmail.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,70 +30,43 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Ben Myers <bpm@sgi.com>
-Cc: xfs@oss.sgi.com
+To: Kamal Dasu <kdasu.kdev@gmail.com>
+Cc: "xfs@oss.sgi.com" <xfs@oss.sgi.com>
 
-Hi Ben,
+On Fri, Nov 02, 2012 at 09:57:27PM -0400, Kamal Dasu wrote:
+> Dave,
+> 
+> 
+> > 
+> > 0x780dbd80007f248
+> > 
+> > Once again it's corruption in the upper 32 bits of the 64 bit number.
+> > Those bits should be zero. Perhaps looking at all the trace events
+> > from recovery might give you a closer approximation of where the bad
+> > extent records is found....
+> 
+> I have been trying to use the xfs_db xfs_logprint, how ever
+> xfs_logprint bails out when it finds an error.
 
-On 11/03/2012 05:05 AM, Ben Myers wrote:
-> Hey Jeff,
-> 
-> On Thu, Oct 25, 2012 at 12:28:05PM +0800, Jeff Liu wrote:
->> If we can not fetch the related a.g. info when freeing a disk inode, it mostly like a
->> fatal issue was occurred and with ASSERT(0) is fine, however, return XFS_ERROR(EINVAL)
->> does not make sense here.
->>
->> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
->>
->> ---
->>  fs/xfs/xfs_ialloc.c |    3 ---
->>  1 files changed, 0 insertions(+), 3 deletions(-)
->>
->> diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
->> index 445bf1a..b7ea965 100644
->> --- a/fs/xfs/xfs_ialloc.c
->> +++ b/fs/xfs/xfs_ialloc.c
->> @@ -1065,7 +1065,6 @@ xfs_difree(
->>  		xfs_warn(mp, "%s: agno >= mp->m_sb.sb_agcount (%d >= %d).",
->>  			__func__, agno, mp->m_sb.sb_agcount);
->>  		ASSERT(0);
->> -		return XFS_ERROR(EINVAL);
->>  	}
->>  	agino = XFS_INO_TO_AGINO(mp, inode);
->>  	if (inode != XFS_AGINO_TO_INO(mp, agno, agino))  {
->> @@ -1073,14 +1072,12 @@ xfs_difree(
->>  			__func__, (unsigned long long)inode,
->>  			(unsigned long long)XFS_AGINO_TO_INO(mp, agno, agino));
->>  		ASSERT(0);
->> -		return XFS_ERROR(EINVAL);
->>  	}
->>  	agbno = XFS_AGINO_TO_AGBNO(mp, agino);
->>  	if (agbno >= mp->m_sb.sb_agblocks)  {
->>  		xfs_warn(mp, "%s: agbno >= mp->m_sb.sb_agblocks (%d >= %d).",
->>  			__func__, agbno, mp->m_sb.sb_agblocks);
->>  		ASSERT(0);
->> -		return XFS_ERROR(EINVAL);
->>  	}
->>  	/*
->>  	 * Get the allocation group header.
-> 
-> Here the return of EINVAL is serving a useful purpose.  The ASSERT is only
-> activated when xfs debug is configured on, so there is a very real chance that
-> you might exercise this code.
-Ah, I haven't realized that the ASSERT in XFS is configurable..:(
-> 
-> My read on this is if you pass bad args to xfs_difree it will return EINVAL.
-> It's just a little defensive coding but it's worth keeping.  In this case it
-> will result in forced shutdown of the filesystem, which is much better than the
-> [unspecified] baddness that could happen later in xfs_difree if you have passed
-> in garbage args.
-Definitely.
-> 
-> There... I got my FUD in for the day.  ;)
-Sorry for my false alarm, and thanks your for your teaching!
+$ man xfs_logprint
+....
+	-c     Attempt to continue when an error is detected.
 
-Regards,
--Jeff
+> How do I look at
+> trace events ?.
+
+Documentation/trace/events.txt
+
+Or better yet, use trace-cmd as suggested in the FAQ:
+
+http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
