@@ -1,20 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA59srEj230240 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 03:54:53 -0600
-Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
-	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	Fve8eL3jKP93GEzs for <xfs@oss.sgi.com>;
-	Mon, 05 Nov 2012 01:56:46 -0800 (PST)
-Date: Mon, 5 Nov 2012 20:56:43 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfstests: optionally run all tests under quota
-Message-ID: <20121105095642.GL29378@dastard>
-References: <4B71B6E7.1000203@redhat.com>
- <508ABF0E.70800@sgi.com>
+	qA5DtuMX249001 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 07:55:57 -0600
+Received: from smtp-tls.univ-nantes.fr (smtptls1-cha.cpub.univ-nantes.fr
+	[193.52.103.113]) by cuda.sgi.com with ESMTP id
+	kjOLVGNDCcqDEwig for <xfs@oss.sgi.com>;
+	Mon, 05 Nov 2012 05:57:51 -0800 (PST)
+Message-ID: <5097C5DD.3090305@univ-nantes.fr>
+Date: Mon, 05 Nov 2012 14:57:49 +0100
+From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <508ABF0E.70800@sgi.com>
+Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
+	filestreams option toxic ?)
+References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
+	<508958FF.4000007@univ-nantes.fr> <20121025211047.GD29378@dastard>
+	<508A600C.1020109@univ-nantes.fr> <508B092E.6070209@univ-nantes.fr>
+	<20121028234802.GE4353@dastard> <20121029012540.GO29378@dastard>
+	<20121029121851.GQ29378@dastard> <508E79D4.5090507@univ-nantes.fr>
+	<20121030013309.GX29378@dastard>
+In-Reply-To: <20121030013309.GX29378@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -23,105 +27,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, ext4 development <linux-ext4@vger.kernel.org>, xfs-oss <xfs@oss.sgi.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Oct 26, 2012 at 11:49:18AM -0500, Rich Johnston wrote:
-> On 02/09/2010 01:26 PM, Eric Sandeen wrote:
-> >This patch might be a little heavy handed, but it seems to
-> >work; if you set USE_QUOTA=1 in your environment, all
-> >tests should be run with quota on and enabled.
-> >
-> >This will hopefully help shake out some of the ext4
-> >quota problems, although one needs to keep an eye
-> >on the console to see whether warnings scroll by.
-> >
-> >Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >
-> >---
-> >
-> >
-> >diff --git a/common.rc b/common.rc
-> >index 6424871..4fde921 100644
-> >--- a/common.rc
-> >+++ b/common.rc
-> 
-> Looks good
-> 
-> Reviewed-by: Rich Johnston <rjohnston@sgi.com>
-> 
-> Eric,
-> 
-> This patch has been committed to
-> git://oss.sgi.com/xfs/cmds/xfstests, master branch, commit ID
-> edd6bcf9.
+Le 30/10/2012 02:33, Dave Chinner a =E9crit :
+>
+> Not really a huge chase, just a simple matter of isolation. The
+> patch below should fix the problem.
 
-And here's the problem with committing 2 year old patches without
-review:
+Yes, it does.
+Thanks a lot for the fast answer and this one-letter-patch !
 
-$ grep "Can't initialize the DMAPI" [0-9]* | uniq
-142.out.bad:Can't initialize the DMAPI
-143.out.bad:Can't initialize the DMAPI
-144.out.bad:Can't initialize the DMAPI
-145.out.bad:Can't initialize the DMAPI
-146.out.bad:Can't initialize the DMAPI
-147.out.bad:Can't initialize the DMAPI
-150.out.bad:Can't initialize the DMAPI
-155.out.bad:Can't initialize the DMAPI
-156.out.bad:Can't initialize the DMAPI
-157.out.bad:Can't initialize the DMAPI
-158.out.bad:Can't initialize the DMAPI
-161.out.bad:Can't initialize the DMAPI
-168.out.bad:Can't initialize the DMAPI
-175.out.bad:Can't initialize the DMAPI
-176.out.bad:Can't initialize the DMAPI
-185.out.bad:Can't initialize the DMAPI
 
-This breaks the dmapi mount error detection, and hence whether dmapi
-is enabled or not in the kernel. The problem is this:
+> However, the fact that recovery succeeded on 3.4 means you may have
+> a corrupted filesystem. The bug has been present since 3.0-rc1
+> (which was a fix for vmap memory leaks), and recovery is trying to
+> replay stale items from the previous log buffer. As such, it is
+> possible that changes from a previous checkpoint to have overwritten
+> more recent changes in the current checkpoint. As such, you should
 
-@@ -251,6 +277,7 @@ _scratch_mount_options()
- _scratch_mount()
- {
-     _mount -t $FSTYP `_scratch_mount_options $*`
-+    _setup_quota $SCRATCH_MNT
- }
- 
+Ouch.
 
-means that callers no longer can check is the mount succeeded or not
-by looking at the return of _scratch_mount(). Hence this code:
+> probably run xfs_repair -n over the filesystems that you remounted
+> on 3.4 that failed on 3.6 just to make sure they are OK.
+Will do.
 
-_dmapi_scratch_mount () {
-    if [ `echo "$MOUNT_OPTIONS" | grep -c dmapi` -gt 0 -o \
-        `echo "$MOUNT_OPTIONS" | grep -c dmi` -gt 0 ] ; then
-        #already got dmapi options set
-        _scratch_mount
-        dmapi_mount_result=$?
-    else
-        _scratch_mount "-o dmapi,mtpt=$SCRATCH_MNT"
-        dmapi_mount_result=$?
-    fi
+As someone else pointed out, I think it should go to stable release.
+Thanks a lot for your time,
+Cheers
 
-    if [ $dmapi_mount_result -ne 0 ] ; then
-        _notrun "Assuming DMAPI modules are not loaded"
-    fi
-}
+-- =
 
-now fails to detect that mounts fail.
-
-Can we revert this commit for now? If we really need this
-functionality someone can fix the original patch and re-propose it...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
+Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
 
 _______________________________________________
 xfs mailing list
