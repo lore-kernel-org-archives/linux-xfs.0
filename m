@@ -1,26 +1,19 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA6EkwVH065725 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 08:46:58 -0600
+	qA6EpF63066521 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 08:51:15 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id KnzjzxEnNk1LWpfS for
-	<xfs@oss.sgi.com>; Tue, 06 Nov 2012 06:48:54 -0800 (PST)
-Received: from int-mx10.intmail.prod.int.phx2.redhat.com
-	(int-mx10.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA6Ems77024879
+	cuda.sgi.com with ESMTP id LiQ7bWW2rsd7MFj4 for
+	<xfs@oss.sgi.com>; Tue, 06 Nov 2012 06:53:11 -0800 (PST)
+Received: from int-mx12.intmail.prod.int.phx2.redhat.com
+	(int-mx12.intmail.prod.int.phx2.redhat.com [10.5.11.25])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA6ErB71006964
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:48:54 -0500
-Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx10.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
-	id qA6Emr4n032463
-	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:48:53 -0500
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:53:11 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v6 03/10] xfs: create helper to check whether to free
-	eofblocks on inode
-Date: Tue,  6 Nov 2012 09:50:40 -0500
-Message-Id: <1352213447-59791-4-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
-References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH RFC] xfs_spaceman: updated preallocation support (eofblocks v6)
+Date: Tue,  6 Nov 2012 09:55:04 -0500
+Message-Id: <1352213704-59959-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -35,120 +28,162 @@ Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
+Cc: dchinner@redhat.com
 
-This check is used in multiple places to determine whether we
-should check for (and potentially free) post EOF blocks on an
-inode. Add a helper to consolidate the check.
+This is an update to Dave's patch to xfs_spaceman to support
+preallocation trimming. The original patch is here:
 
-Note that when we remove an inode from the cache (xfs_inactive()),
-we are required to trim post-EOF blocks even if the inode is marked
-preallocated or append-only to maintain correct space accounting.
-The 'force' parameter to xfs_can_free_eofblocks() specifies whether
-we should ignore the prealloc/append-only status of the inode.
+http://oss.sgi.com/archives/xfs/2012-10/msg00418.html
+
+The code is updated as follows:
+
+- Update to latest struct xfs_eofblocks (supports v6 of the
+  speculative preallocation inode tracking set).
+- Support multiple id scan.
+- Fix the minimum argument count (no args means a trylock scan).
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Mark Tinguely<tinguely@sgi.com>
 ---
- fs/xfs/xfs_inode.c    |   37 +++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_inode.h    |    1 +
- fs/xfs/xfs_vnodeops.c |   19 +++++++------------
- 3 files changed, 45 insertions(+), 12 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 95f7a73..cc7468b 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3911,3 +3911,40 @@ xfs_iext_irec_update_extoffs(
- 		ifp->if_u1.if_ext_irec[i].er_extoff += ext_diff;
+Dave,
+
+I can also squash this into the original and post a new version if that is
+preferred.
+
+Brian
+
+ spaceman/prealloc.c |   68 +++++++++++++++++++++++++++-----------------------
+ 1 files changed, 37 insertions(+), 31 deletions(-)
+
+diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+index 8af30a6..ba6095d 100644
+--- a/spaceman/prealloc.c
++++ b/spaceman/prealloc.c
+@@ -31,23 +31,28 @@
+ struct xfs_eofblocks {
+ 	__u32		eof_version;
+ 	__u32		eof_flags;
+-	__u32		eof_q_id;
+-	__u32		eof_q_type;
+-	__u32		eof_min_file_size;
+-	unsigned char	pad[12];
++	uid_t		eof_uid;
++	gid_t		eof_gid;
++	__u32		eof_prid;
++	__u64		eof_min_file_size;
++	__u32		pad[25];
+ };
+ 
+ /* eof_flags values */
+-#define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
+-#define XFS_EOF_FLAGS_QUOTA		0x02	/* filter by quota id */
+-#define XFS_EOF_FLAGS_MINFILESIZE	0x04	/* filter by min file size */
++#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
++#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
++#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
++#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
++#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
+ #endif
+ 
+ int gflag;
+ int uflag;
+ int pflag;
+ int sflag;
+-int qid;
++int uid;
++int gid;
++int prid;
+ int minlen;
+ 
+ static cmdinfo_t prealloc_cmd;
+@@ -68,27 +73,23 @@ prealloc_f(
+ 	pflag = 0;
+ 	sflag = 0;
+ 	minlen = 0;
+-	qid = 0;
++	uid = 0;
++	gid = 0;
++	prid = 0;
+ 
+ 	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
+ 		switch (c) {
+ 		case 'g':
+-			if (uflag || pflag)
+-				return command_usage(&prealloc_cmd);
+ 			gflag = 1;
+-			qid = atoi(optarg);
++			gid = atoi(optarg);
+ 			break;
+ 		case 'u':
+-			if (gflag || pflag)
+-				return command_usage(&prealloc_cmd);
+ 			uflag = 1;
+-			qid = atoi(optarg);
++			uid = atoi(optarg);
+ 			break;
+ 		case 'p':
+-			if (uflag || gflag)
+-				return command_usage(&prealloc_cmd);
+ 			pflag = 1;
+-			qid = atoi(optarg);
++			prid = atoi(optarg);
+ 			break;
+ 		case 's':
+ 			sflag = 1;
+@@ -111,15 +112,20 @@ prealloc_f(
+ 		eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
+ 		eofb.eof_min_file_size = minlen;
  	}
- }
+-	if (uflag || gflag || pflag) {
+-		eofb.eof_flags |= XFS_EOF_FLAGS_QUOTA;
+-		eofb.eof_q_id = qid;
+-		if (uflag)
+-			eofb.eof_q_type = XQM_USRQUOTA;
+-		else if (gflag)
+-			eofb.eof_q_type = XQM_GRPQUOTA;
+-		else if (pflag)
+-			eofb.eof_q_type = XQM_PRJQUOTA;
 +
-+/*
-+ * Test whether it is appropriate to check an inode for and free post EOF
-+ * blocks. The 'force' parameter determines whether we should also consider
-+ * regular files that are marked preallocated or append-only.
-+ */
-+bool
-+xfs_can_free_eofblocks(struct xfs_inode *ip, bool force)
-+{
-+	/* prealloc/delalloc exists only on regular files */
-+	if (!S_ISREG(ip->i_d.di_mode))
-+		return false;
++	if (uflag) {
++		eofb.eof_flags |= XFS_EOF_FLAGS_UID;
++		eofb.eof_uid = uid;
++	}
 +
-+	/*
-+	 * Zero sized files with no cached pages and delalloc blocks will not
-+	 * have speculative prealloc/delalloc blocks to remove.
-+	 */
-+	if (VFS_I(ip)->i_size == 0 &&
-+	    VN_CACHED(VFS_I(ip)) == 0 &&
-+	    ip->i_delayed_blks == 0)
-+		return false;
++	if (gflag) {
++		eofb.eof_flags |= XFS_EOF_FLAGS_GID;
++		eofb.eof_gid = gid;
++	}
 +
-+	/* If we haven't read in the extent list, then don't do it now. */
-+	if (!(ip->i_df.if_flags & XFS_IFEXTENTS))
-+		return false;
-+
-+	/*
-+	 * Do not free real preallocated or append-only files unless the file
-+	 * has delalloc blocks and we are forced to remove them.
-+	 */
-+	if (ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND))
-+		if (!force || ip->i_delayed_blks == 0)
-+			return false;
-+
-+	return true;
-+}
-+
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 1fc2065..21b4de3 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -585,6 +585,7 @@ void		xfs_iext_irec_compact(xfs_ifork_t *);
- void		xfs_iext_irec_compact_pages(xfs_ifork_t *);
- void		xfs_iext_irec_compact_full(xfs_ifork_t *);
- void		xfs_iext_irec_update_extoffs(xfs_ifork_t *, int, int);
-+bool		xfs_can_free_eofblocks(struct xfs_inode *, bool);
++	if (pflag) {
++		eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
++		eofb.eof_prid = prid;
+ 	}
  
- #define xfs_ipincount(ip)	((unsigned int) atomic_read(&ip->i_pincount))
+ 	if (xfsctl(file->name, file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
+@@ -136,7 +142,7 @@ prealloc_help(void)
+ "\n"
+ "Control speculative preallocation\n"
+ "\n"
+-"Options: [-s] [-ugp id] [-m minlen]\n"
++"Options: [-s] [-u id] [-g id] [-p id] [-m minlen]\n"
+ "\n"
+ " -s -- synchronous flush - wait for flush to complete\n"
+ " -u id -- remove prealloc on files matching user quota id <id>\n"
+@@ -153,11 +159,11 @@ prealloc_init(void)
+ 	prealloc_cmd.name = "prealloc";
+ 	prealloc_cmd.altname = "prealloc";
+ 	prealloc_cmd.cfunc = prealloc_f;
+-	prealloc_cmd.argmin = 1;
++	prealloc_cmd.argmin = 0;
+ 	prealloc_cmd.argmax = -1;
+-	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
++	prealloc_cmd.args = "[-s] [-u id] [-g id] [-p id] [-m minlen]\n";
+ 	prealloc_cmd.flags = CMD_FLAG_GLOBAL;
+-	prealloc_cmd.oneline = _("Control specualtive preallocation");
++	prealloc_cmd.oneline = _("Control speculative preallocation");
+ 	prealloc_cmd.help = prealloc_help;
  
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index e6e1d11..c4c1539 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -436,11 +436,7 @@ xfs_release(
- 	if (ip->i_d.di_nlink == 0)
- 		return 0;
- 
--	if ((S_ISREG(ip->i_d.di_mode) &&
--	     (VFS_I(ip)->i_size > 0 ||
--	      (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
--	     (ip->i_df.if_flags & XFS_IFEXTENTS))  &&
--	    (!(ip->i_d.di_flags & (XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)))) {
-+	if (xfs_can_free_eofblocks(ip, false)) {
- 
- 		/*
- 		 * If we can't get the iolock just skip truncating the blocks
-@@ -516,13 +512,12 @@ xfs_inactive(
- 		goto out;
- 
- 	if (ip->i_d.di_nlink != 0) {
--		if ((S_ISREG(ip->i_d.di_mode) &&
--		    (VFS_I(ip)->i_size > 0 ||
--		     (VN_CACHED(VFS_I(ip)) > 0 || ip->i_delayed_blks > 0)) &&
--		    (ip->i_df.if_flags & XFS_IFEXTENTS) &&
--		    (!(ip->i_d.di_flags &
--				(XFS_DIFLAG_PREALLOC | XFS_DIFLAG_APPEND)) ||
--		     ip->i_delayed_blks != 0))) {
-+		/*
-+		 * force is true because we are evicting an inode from the
-+		 * cache. Post-eof blocks must be freed, lest we end up with
-+		 * broken free space accounting.
-+		 */
-+		if (xfs_can_free_eofblocks(ip, true)) {
- 			error = xfs_free_eofblocks(mp, ip, false);
- 			if (error)
- 				return VN_INACTIVE_CACHE;
+ 	add_command(&prealloc_cmd);
 -- 
 1.7.7.6
 
