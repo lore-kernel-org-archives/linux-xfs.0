@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA6Ekwuq065721 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 08:46:58 -0600
+	qA6Ekw1c065726 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 08:46:58 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id yhVrrMW5B08joDSn for
+	cuda.sgi.com with ESMTP id upjtpYGT2Nm7qNdc for
 	<xfs@oss.sgi.com>; Tue, 06 Nov 2012 06:48:54 -0800 (PST)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA6EmsGT025637
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA6EmsvG005551
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
 	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:48:54 -0500
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id qA6EmrTq002581
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id qA6Emr11025742
 	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:48:53 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v6 00/10] speculative preallocation inode tracking
-Date: Tue,  6 Nov 2012 09:50:37 -0500
-Message-Id: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v6 01/10] xfs: add EOFBLOCKS inode tagging/untagging
+Date: Tue,  6 Nov 2012 09:50:38 -0500
+Message-Id: <1352213447-59791-2-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
+References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,105 +35,213 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi all,
+Add the XFS_ICI_EOFBLOCKS_TAG inode tag to identify inodes with
+speculatively preallocated blocks beyond EOF. An inode is tagged
+when speculative preallocation occurs and untagged either via
+truncate down or when post-EOF blocks are freed via release or
+reclaim.
 
-Sorry for the delay. Here is v6 of the speculative prealloc tracking patchset.
-The first 5 patches are basically unchanged, the xfs_quota_type() patch is
-dropped and the subsequent patches have been reworked to gear the eofblocks
-ioctl() to filter based on inode ID's rather than being quota-centric, related to
-the following discussion:
+The tag management is intentionally not aggressive to prefer
+simplicity over the complexity of handling all the corner cases
+under which post-EOF blocks could be freed (i.e., forward
+truncation, fallocate, write error conditions, etc.). This means
+that a tagged inode may or may not have post-EOF blocks after a
+period of time. The tag is eventually cleared when the inode is
+released or reclaimed.
 
-http://oss.sgi.com/archives/xfs/2012-10/msg00439.html
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Mark Tinguely<tinguely@sgi.com>
+---
+ fs/xfs/xfs_ag.h       |    1 +
+ fs/xfs/xfs_icache.c   |   62 +++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_icache.h   |    3 ++
+ fs/xfs/xfs_iomap.c    |    8 ++++++
+ fs/xfs/xfs_iops.c     |    4 +++
+ fs/xfs/xfs_trace.h    |    5 ++++
+ fs/xfs/xfs_vnodeops.c |    2 +
+ 7 files changed, 85 insertions(+), 0 deletions(-)
 
-My initial intent was to leave the ability to filter on multiple ID's
-concurrently as a follow-on change, but it seemed relatively straightforward as I
-was hacking on this so I included it in this set (patch 8). It is included as a
-standalone patch so I can leave it or drop it if necessary.
-
-This set has been tested via xfstests with debug on and off with no obvious
-regressions and sanity tested via Dave's xfs_spaceman tool and the prealloc add-on
-(which I will post an update for as well).
-
-Brian
-
-v6:
-- Added reviewed-by's from Dave and Mark.
-- Pad struct xfs_eofblocks out to 128 bytes.
-- Replaced quota ID and quota type with specific inode ID fields and associated
-  control flags.
-- Minimum file size field to 64-bit.
-- Various style and ioctl() validation fixes.
-- Renamed background scanning control file and increased max interval to a 24H
-  timeframe.
-
-v5:
-- Rebased against the die-xfssyncd-die patchset.
-- Renamed xfs_inodes_free_eofblocks() to xfs_icache_free_eofblocks().
-- Migrated xfs_can_free_eofblocks() from static inline to xfs_inode.c.
-- Fixed xfs_eofblocks version field and added version check to ioctl().
-- Reworked quota filtering to use standard quota fields. Added patch 7 to
-  support.
-- Split min. file size filtering into a separate patch.
-- Reworked background scanning based on rebase. Created a new eofblocks
-  workqueue, renamed the tunable and based its value in seconds.
-
-v4:
-- Fix the broken need_iolock parameter to the xfs_free_eofblocks() call in
-  patch 5 (thanks to Ben M. for testing). This is a one line change. All
-  other patches equivalent to v3. This version survives an xfstests run (with
-  XFS_DEBUG enabled this time :P).
-
-v3:
-- Pushed dirty cache check up into patch 5 (minor clean up).
-- Reworked xfs_can_free_eofblocks() in patch 3 as per Dave C.'s review.
-- Rebased from linus' tree to the XFS tree.
-
-v2:
-- Remove unnecessary inode flag clear helper.
-- Condense eofblocks set/clear tag functions.
-- Move clear tag call into xfs_free_eofblocks().
-- Modify AG walk infrastructure to support tag-based walk and utilize this
-  functionality for the eofblocks scan (as opposed to the previous code
-  duplicated from reclaim scanning).
-- Improve ioctl functionality: new data structure fields/flags, validate quota
-  is enabled.
-- Increase default background scanning interval to 5 minutes, add tunable.
-
-Brian Foster (10):
-  xfs: add EOFBLOCKS inode tagging/untagging
-  xfs: support a tag-based inode_ag_iterator
-  xfs: create helper to check whether to free eofblocks on inode
-  xfs: make xfs_free_eofblocks() non-static, return EAGAIN on trylock
-    failure
-  xfs: create function to scan and clear EOFBLOCKS inodes
-  xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
-  xfs: add inode id filtering to eofblocks scan
-  xfs: support multiple inode id filtering in eofblocks scan
-  xfs: add minimum file size filtering to eofblocks scan
-  xfs: add background scanning to clear eofblocks inodes
-
- fs/xfs/xfs_ag.h          |    1 +
- fs/xfs/xfs_fs.h          |   26 ++++++
- fs/xfs/xfs_globals.c     |    4 +-
- fs/xfs/xfs_icache.c      |  225 ++++++++++++++++++++++++++++++++++++++++++++--
- fs/xfs/xfs_icache.h      |   12 ++-
- fs/xfs/xfs_inode.c       |   37 ++++++++
- fs/xfs/xfs_inode.h       |    1 +
- fs/xfs/xfs_ioctl.c       |   20 ++++
- fs/xfs/xfs_iomap.c       |    8 ++
- fs/xfs/xfs_iops.c        |    4 +
- fs/xfs/xfs_linux.h       |    1 +
- fs/xfs/xfs_mount.c       |    2 +
- fs/xfs/xfs_mount.h       |    3 +
- fs/xfs/xfs_qm_syscalls.c |    5 +-
- fs/xfs/xfs_super.c       |    9 ++
- fs/xfs/xfs_sysctl.c      |    9 ++
- fs/xfs/xfs_sysctl.h      |    1 +
- fs/xfs/xfs_trace.h       |    6 ++
- fs/xfs/xfs_vnodeops.c    |   27 +++---
- fs/xfs/xfs_vnodeops.h    |    1 +
- 20 files changed, 375 insertions(+), 27 deletions(-)
-
+diff --git a/fs/xfs/xfs_ag.h b/fs/xfs/xfs_ag.h
+index 44d65c1..22bd4db 100644
+--- a/fs/xfs/xfs_ag.h
++++ b/fs/xfs/xfs_ag.h
+@@ -233,6 +233,7 @@ typedef struct xfs_perag {
+ #define XFS_ICI_NO_TAG		(-1)	/* special flag for an untagged lookup
+ 					   in xfs_inode_ag_iterator */
+ #define XFS_ICI_RECLAIM_TAG	0	/* inode is to be reclaimed */
++#define XFS_ICI_EOFBLOCKS_TAG	1	/* inode has blocks beyond EOF */
+ 
+ #define	XFS_AG_MAXLEVELS(mp)		((mp)->m_ag_maxlevels)
+ #define	XFS_MIN_FREELIST_RAW(bl,cl,mp)	\
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 9c8703b..f9afc5f 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1128,3 +1128,65 @@ xfs_reclaim_inodes_count(
+ 	return reclaimable;
+ }
+ 
++void
++xfs_inode_set_eofblocks_tag(
++	xfs_inode_t	*ip)
++{
++	struct xfs_mount *mp = ip->i_mount;
++	struct xfs_perag *pag;
++	int tagged;
++
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++	spin_lock(&pag->pag_ici_lock);
++	trace_xfs_inode_set_eofblocks_tag(ip);
++
++	tagged = radix_tree_tagged(&pag->pag_ici_root,
++				   XFS_ICI_EOFBLOCKS_TAG);
++	radix_tree_tag_set(&pag->pag_ici_root,
++			   XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
++			   XFS_ICI_EOFBLOCKS_TAG);
++	if (!tagged) {
++		/* propagate the eofblocks tag up into the perag radix tree */
++		spin_lock(&ip->i_mount->m_perag_lock);
++		radix_tree_tag_set(&ip->i_mount->m_perag_tree,
++				   XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				   XFS_ICI_EOFBLOCKS_TAG);
++		spin_unlock(&ip->i_mount->m_perag_lock);
++
++		trace_xfs_perag_set_eofblocks(ip->i_mount, pag->pag_agno,
++					      -1, _RET_IP_);
++	}
++
++	spin_unlock(&pag->pag_ici_lock);
++	xfs_perag_put(pag);
++}
++
++void
++xfs_inode_clear_eofblocks_tag(
++	xfs_inode_t	*ip)
++{
++	struct xfs_mount *mp = ip->i_mount;
++	struct xfs_perag *pag;
++
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ip->i_ino));
++	spin_lock(&pag->pag_ici_lock);
++	trace_xfs_inode_clear_eofblocks_tag(ip);
++
++	radix_tree_tag_clear(&pag->pag_ici_root,
++			     XFS_INO_TO_AGINO(ip->i_mount, ip->i_ino),
++			     XFS_ICI_EOFBLOCKS_TAG);
++	if (!radix_tree_tagged(&pag->pag_ici_root, XFS_ICI_EOFBLOCKS_TAG)) {
++		/* clear the eofblocks tag from the perag radix tree */
++		spin_lock(&ip->i_mount->m_perag_lock);
++		radix_tree_tag_clear(&ip->i_mount->m_perag_tree,
++				     XFS_INO_TO_AGNO(ip->i_mount, ip->i_ino),
++				     XFS_ICI_EOFBLOCKS_TAG);
++		spin_unlock(&ip->i_mount->m_perag_lock);
++		trace_xfs_perag_clear_eofblocks(ip->i_mount, pag->pag_agno,
++					       -1, _RET_IP_);
++	}
++
++	spin_unlock(&pag->pag_ici_lock);
++	xfs_perag_put(pag);
++}
++
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 222e22f..db36130 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -35,6 +35,9 @@ void xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+ 
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
+ 
++void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
++void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
++
+ int xfs_sync_inode_grab(struct xfs_inode *ip);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+ 	int (*execute)(struct xfs_inode *ip, struct xfs_perag *pag, int flags),
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index a066cf1..add06b4 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -41,6 +41,7 @@
+ #include "xfs_utils.h"
+ #include "xfs_iomap.h"
+ #include "xfs_trace.h"
++#include "xfs_icache.h"
+ 
+ 
+ #define XFS_WRITEIO_ALIGN(mp,off)	(((off) >> mp->m_writeio_log) \
+@@ -450,6 +451,13 @@ retry:
+ 	if (!(imap[0].br_startblock || XFS_IS_REALTIME_INODE(ip)))
+ 		return xfs_alert_fsblock_zero(ip, &imap[0]);
+ 
++	/*
++	 * Tag the inode as speculatively preallocated so we can reclaim this
++	 * space on demand, if necessary.
++	 */
++	if (prealloc)
++		xfs_inode_set_eofblocks_tag(ip);
++
+ 	*ret_imap = imap[0];
+ 	return 0;
+ }
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 4e00cf0..81f5c49 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -38,6 +38,7 @@
+ #include "xfs_vnodeops.h"
+ #include "xfs_inode_item.h"
+ #include "xfs_trace.h"
++#include "xfs_icache.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/xattr.h>
+@@ -854,6 +855,9 @@ xfs_setattr_size(
+ 		 * and do not wait the usual (long) time for writeout.
+ 		 */
+ 		xfs_iflags_set(ip, XFS_ITRUNCATED);
++
++		/* A truncate down always removes post-EOF blocks. */
++		xfs_inode_clear_eofblocks_tag(ip);
+ 	}
+ 
+ 	if (mask & ATTR_CTIME) {
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 7d36ccf..6f46e03 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -130,6 +130,8 @@ DEFINE_PERAG_REF_EVENT(xfs_perag_get_tag);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_put);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_set_reclaim);
+ DEFINE_PERAG_REF_EVENT(xfs_perag_clear_reclaim);
++DEFINE_PERAG_REF_EVENT(xfs_perag_set_eofblocks);
++DEFINE_PERAG_REF_EVENT(xfs_perag_clear_eofblocks);
+ 
+ TRACE_EVENT(xfs_attr_list_node_descend,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx,
+@@ -585,6 +587,9 @@ DEFINE_INODE_EVENT(xfs_update_time);
+ DEFINE_INODE_EVENT(xfs_dquot_dqalloc);
+ DEFINE_INODE_EVENT(xfs_dquot_dqdetach);
+ 
++DEFINE_INODE_EVENT(xfs_inode_set_eofblocks_tag);
++DEFINE_INODE_EVENT(xfs_inode_clear_eofblocks_tag);
++
+ DECLARE_EVENT_CLASS(xfs_iref_class,
+ 	TP_PROTO(struct xfs_inode *ip, unsigned long caller_ip),
+ 	TP_ARGS(ip, caller_ip),
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index 2ee1f49..e6e1d11 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -238,6 +238,8 @@ xfs_free_eofblocks(
+ 		} else {
+ 			error = xfs_trans_commit(tp,
+ 						XFS_TRANS_RELEASE_LOG_RES);
++			if (!error)
++				xfs_inode_clear_eofblocks_tag(ip);
+ 		}
+ 
+ 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
 -- 
 1.7.7.6
 
