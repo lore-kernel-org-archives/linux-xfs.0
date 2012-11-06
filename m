@@ -1,24 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA5DtuMX249001 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 07:55:57 -0600
-Received: from smtp-tls.univ-nantes.fr (smtptls1-cha.cpub.univ-nantes.fr
-	[193.52.103.113]) by cuda.sgi.com with ESMTP id
-	kjOLVGNDCcqDEwig for <xfs@oss.sgi.com>;
-	Mon, 05 Nov 2012 05:57:51 -0800 (PST)
-Message-ID: <5097C5DD.3090305@univ-nantes.fr>
-Date: Mon, 05 Nov 2012 14:57:49 +0100
-From: Yann Dupont <Yann.Dupont@univ-nantes.fr>
-MIME-Version: 1.0
-Subject: Re: Problems with kernel 3.6.x (vm ?) (was : Is kernel 3.6.1 or
-	filestreams option toxic ?)
-References: <508554AF.5050005@univ-nantes.fr> <50865453.5080708@univ-nantes.fr>
-	<508958FF.4000007@univ-nantes.fr> <20121025211047.GD29378@dastard>
-	<508A600C.1020109@univ-nantes.fr> <508B092E.6070209@univ-nantes.fr>
-	<20121028234802.GE4353@dastard> <20121029012540.GO29378@dastard>
-	<20121029121851.GQ29378@dastard> <508E79D4.5090507@univ-nantes.fr>
-	<20121030013309.GX29378@dastard>
-In-Reply-To: <20121030013309.GX29378@dastard>
+	qA65BtxK029711 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:11:55 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	Ad0HFBcLOLHhY8VA for <xfs@oss.sgi.com>;
+	Mon, 05 Nov 2012 21:13:50 -0800 (PST)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TVbTu-0006RI-RH
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:46 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TVbTk-0004Wf-Ob
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:36 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 09/22] xfs: verify dquot blocks as they are read from disk
+Date: Tue,  6 Nov 2012 16:13:20 +1100
+Message-Id: <1352178813-17216-10-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352178813-17216-1-git-send-email-david@fromorbit.com>
+References: <1352178813-17216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,43 +27,178 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="iso-8859-1"; Format="flowed"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-Le 30/10/2012 02:33, Dave Chinner a =E9crit :
->
-> Not really a huge chase, just a simple matter of isolation. The
-> patch below should fix the problem.
+From: Dave Chinner <dchinner@redhat.com>
 
-Yes, it does.
-Thanks a lot for the fast answer and this one-letter-patch !
+Add a dquot buffer verify callback function and pass it into the
+buffer read functions. This checks all the dquots in a buffer, but
+cannot completely verify the dquot ids are correct. Also, errors
+cannot be repaired, so an additional function is added to repair bad
+dquots in the buffer if such an error is detected in a context where
+repair is allowed.
 
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Phil White <pwhite@sgi.com>
+---
+ fs/xfs/xfs_dquot.c |  117 ++++++++++++++++++++++++++++++++++++++++++----------
+ 1 file changed, 95 insertions(+), 22 deletions(-)
 
-> However, the fact that recovery succeeded on 3.4 means you may have
-> a corrupted filesystem. The bug has been present since 3.0-rc1
-> (which was a fix for vmap memory leaks), and recovery is trying to
-> replay stale items from the previous log buffer. As such, it is
-> possible that changes from a previous checkpoint to have overwritten
-> more recent changes in the current checkpoint. As such, you should
-
-Ouch.
-
-> probably run xfs_repair -n over the filesystems that you remounted
-> on 3.4 that failed on 3.6 just to make sure they are OK.
-Will do.
-
-As someone else pointed out, I think it should go to stable release.
-Thanks a lot for your time,
-Cheers
-
--- =
-
-Yann Dupont - Service IRTS, DSI Universit=E9 de Nantes
-Tel : 02.53.48.49.20 - Mail/Jabber : Yann.Dupont@univ-nantes.fr
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index e95f800..2e18382 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -360,6 +360,89 @@ xfs_qm_dqalloc(
+ 	return (error);
+ }
+ 
++STATIC void
++xfs_dquot_read_verify(
++	struct xfs_buf		*bp)
++{
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
++	struct xfs_disk_dquot	*ddq;
++	xfs_dqid_t		id = 0;
++	int			i;
++
++	/*
++	 * On the first read of the buffer, verify that each dquot is valid.
++	 * We don't know what the id of the dquot is supposed to be, just that
++	 * they should be increasing monotonically within the buffer. If the
++	 * first id is corrupt, then it will fail on the second dquot in the
++	 * buffer so corruptions could point to the wrong dquot in this case.
++	 */
++	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
++		int	error;
++
++		ddq = &d[i].dd_diskdq;
++
++		if (i == 0)
++			id = be32_to_cpu(ddq->d_id);
++
++		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
++					"xfs_dquot_read_verify");
++		if (error) {
++			XFS_CORRUPTION_ERROR("xfs_dquot_read_verify",
++					     XFS_ERRLEVEL_LOW, mp, d);
++			xfs_buf_ioerror(bp, EFSCORRUPTED);
++			break;
++		}
++	}
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
++}
++
++STATIC int
++xfs_qm_dqrepair(
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	struct xfs_dquot	*dqp,
++	xfs_dqid_t		firstid,
++	struct xfs_buf		**bpp)
++{
++	int			error;
++	struct xfs_disk_dquot	*ddq;
++	struct xfs_dqblk	*d;
++	int			i;
++
++	/*
++	 * Read the buffer without verification so we get the corrupted
++	 * buffer returned to us.
++	 */
++	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
++				   mp->m_quotainfo->qi_dqchunklen,
++				   0, bpp, NULL);
++
++	if (error) {
++		ASSERT(*bpp == NULL);
++		return XFS_ERROR(error);
++	}
++
++	ASSERT(xfs_buf_islocked(*bpp));
++	d = (struct xfs_dqblk *)(*bpp)->b_addr;
++
++	/* Do the actual repair of dquots in this buffer */
++	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
++		ddq = &d[i].dd_diskdq;
++		error = xfs_qm_dqcheck(mp, ddq, firstid + i,
++				       dqp->dq_flags & XFS_DQ_ALLTYPES,
++				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
++		if (error) {
++			/* repair failed, we're screwed */
++			xfs_trans_brelse(tp, *bpp);
++			return XFS_ERROR(EIO);
++		}
++	}
++
++	return 0;
++}
++
+ /*
+  * Maps a dquot to the buffer containing its on-disk version.
+  * This returns a ptr to the buffer containing the on-disk dquot
+@@ -378,7 +461,6 @@ xfs_qm_dqtobp(
+ 	xfs_buf_t	*bp;
+ 	xfs_inode_t	*quotip = XFS_DQ_TO_QIP(dqp);
+ 	xfs_mount_t	*mp = dqp->q_mount;
+-	xfs_disk_dquot_t *ddq;
+ 	xfs_dqid_t	id = be32_to_cpu(dqp->q_core.d_id);
+ 	xfs_trans_t	*tp = (tpp ? *tpp : NULL);
+ 
+@@ -439,33 +521,24 @@ xfs_qm_dqtobp(
+ 		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+ 					   dqp->q_blkno,
+ 					   mp->m_quotainfo->qi_dqchunklen,
+-					   0, &bp, NULL);
+-		if (error || !bp)
+-			return XFS_ERROR(error);
+-	}
++					   0, &bp, xfs_dquot_read_verify);
+ 
+-	ASSERT(xfs_buf_islocked(bp));
+-
+-	/*
+-	 * calculate the location of the dquot inside the buffer.
+-	 */
+-	ddq = bp->b_addr + dqp->q_bufoffset;
++		if (error == EFSCORRUPTED && (flags & XFS_QMOPT_DQREPAIR)) {
++			xfs_dqid_t firstid = (xfs_dqid_t)map.br_startoff *
++						mp->m_quotainfo->qi_dqperchunk;
++			ASSERT(bp == NULL);
++			error = xfs_qm_dqrepair(mp, tp, dqp, firstid, &bp);
++		}
+ 
+-	/*
+-	 * A simple sanity check in case we got a corrupted dquot...
+-	 */
+-	error = xfs_qm_dqcheck(mp, ddq, id, dqp->dq_flags & XFS_DQ_ALLTYPES,
+-			   flags & (XFS_QMOPT_DQREPAIR|XFS_QMOPT_DOWARN),
+-			   "dqtobp");
+-	if (error) {
+-		if (!(flags & XFS_QMOPT_DQREPAIR)) {
+-			xfs_trans_brelse(tp, bp);
+-			return XFS_ERROR(EIO);
++		if (error) {
++			ASSERT(bp == NULL);
++			return XFS_ERROR(error);
+ 		}
+ 	}
+ 
++	ASSERT(xfs_buf_islocked(bp));
+ 	*O_bpp = bp;
+-	*O_ddpp = ddq;
++	*O_ddpp = bp->b_addr + dqp->q_bufoffset;
+ 
+ 	return (0);
+ }
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
