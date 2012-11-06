@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA65CfMB029926 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:12:41 -0600
+	qA65C4JD029765 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:12:04 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	23fIcCa0zxi35Szl for <xfs@oss.sgi.com>;
-	Mon, 05 Nov 2012 21:14:36 -0800 (PST)
+	nZ7MW3vFdty9CT8i for <xfs@oss.sgi.com>;
+	Mon, 05 Nov 2012 21:13:58 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TVbU5-0006S6-3p
-	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:57 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TVbU4-0004XF-Uy
+	(envelope-from <dave@fromorbit.com>) id 1TVbU4-0006Rc-U3
 	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:56 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TVbTk-0004Wp-QT
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/22] xfs: factor and verify attr leaf reads
-Date: Tue,  6 Nov 2012 16:13:27 +1100
-Message-Id: <1352178813-17216-17-git-send-email-david@fromorbit.com>
+Subject: [PATCH 11/22] xfs: factor dir2 block read operations
+Date: Tue,  6 Nov 2012 16:13:22 +1100
+Message-Id: <1352178813-17216-12-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352178813-17216-1-git-send-email-david@fromorbit.com>
 References: <1352178813-17216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,337 +35,479 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Some reads are not converted yet because it isn't obvious ahead of
-time what the format of the block is going to be. Need to determine
-how to tell if the first block in the tree is a node or leaf format
-block. That will be done in later patches.
+In preparation for verifying dir2 block format buffers, factor
+the read operations out of the block operations (lookup, addname,
+getdents) and some of the additional logic to make it easier to
+understand an dmodify the code.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Phil White <pwhite@sgi.com>
 ---
- fs/xfs/xfs_attr.c      |   70 +++++++++++--------------------------------
- fs/xfs/xfs_attr_leaf.c |   78 ++++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_attr_leaf.h |    3 ++
- 3 files changed, 66 insertions(+), 85 deletions(-)
+ fs/xfs/xfs_dir2_block.c |  386 +++++++++++++++++++++++++----------------------
+ 1 file changed, 209 insertions(+), 177 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr.c b/fs/xfs/xfs_attr.c
-index 956c2ba..548e910 100644
---- a/fs/xfs/xfs_attr.c
-+++ b/fs/xfs/xfs_attr.c
-@@ -903,11 +903,9 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 	 */
- 	dp = args->dp;
- 	args->blkno = 0;
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
- 	if (error)
--		return(error);
--	ASSERT(bp != NULL);
-+		return error;
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 53666ca..25ce409 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -56,6 +56,178 @@ xfs_dir_startup(void)
+ 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
+ }
  
- 	/*
- 	 * Look up the given attribute in the leaf block.  Figure out if
-@@ -1031,12 +1029,12 @@ xfs_attr_leaf_addname(xfs_da_args_t *args)
- 		 * Read in the block containing the "old" attr, then
- 		 * remove the "old" attr from that block (neat, huh!)
- 		 */
--		error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1,
--						     &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno,
-+					   -1, &bp);
- 		if (error)
--			return(error);
--		ASSERT(bp != NULL);
--		(void)xfs_attr_leaf_remove(bp, args);
-+			return error;
-+
-+		xfs_attr_leaf_remove(bp, args);
- 
- 		/*
- 		 * If the result is small enough, shrink it all into the inode.
-@@ -1100,20 +1098,17 @@ xfs_attr_leaf_removename(xfs_da_args_t *args)
- 	 */
- 	dp = args->dp;
- 	args->blkno = 0;
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
--		return(error);
--	}
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-+	if (error)
-+		return error;
- 
--	ASSERT(bp != NULL);
- 	error = xfs_attr_leaf_lookup_int(bp, args);
- 	if (error == ENOATTR) {
- 		xfs_trans_brelse(args->trans, bp);
- 		return(error);
- 	}
- 
--	(void)xfs_attr_leaf_remove(bp, args);
-+	xfs_attr_leaf_remove(bp, args);
- 
- 	/*
- 	 * If the result is small enough, shrink it all into the inode.
-@@ -1156,11 +1151,9 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
- 	int error;
- 
- 	args->blkno = 0;
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
- 	if (error)
--		return(error);
--	ASSERT(bp != NULL);
-+		return error;
- 
- 	error = xfs_attr_leaf_lookup_int(bp, args);
- 	if (error != EEXIST)  {
-@@ -1181,23 +1174,13 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
- STATIC int
- xfs_attr_leaf_list(xfs_attr_list_context_t *context)
- {
--	xfs_attr_leafblock_t *leaf;
- 	int error;
- 	struct xfs_buf *bp;
- 
- 	context->cursor->blkno = 0;
--	error = xfs_da_read_buf(NULL, context->dp, 0, -1, &bp, XFS_ATTR_FORK,
--				NULL);
-+	error = xfs_attr_leaf_read(NULL, context->dp, 0, -1, &bp);
- 	if (error)
- 		return XFS_ERROR(error);
--	ASSERT(bp != NULL);
--	leaf = bp->b_addr;
--	if (unlikely(leaf->hdr.info.magic != cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
--		XFS_CORRUPTION_ERROR("xfs_attr_leaf_list", XFS_ERRLEVEL_LOW,
--				     context->dp->i_mount, leaf);
--		xfs_trans_brelse(NULL, bp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
- 
- 	error = xfs_attr_leaf_list_int(bp, context);
- 	xfs_trans_brelse(NULL, bp);
-@@ -1601,12 +1584,9 @@ xfs_attr_node_removename(xfs_da_args_t *args)
- 		ASSERT(state->path.blk[0].bp);
- 		state->path.blk[0].bp = NULL;
- 
--		error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp,
--						     XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp);
- 		if (error)
- 			goto out;
--		ASSERT((((xfs_attr_leafblock_t *)bp->b_addr)->hdr.info.magic) ==
--		       cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 
- 		if ((forkoff = xfs_attr_shortform_allfit(bp, dp))) {
- 			xfs_bmap_init(args->flist, args->firstblock);
-@@ -1908,14 +1888,6 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 	 */
- 	for (;;) {
- 		leaf = bp->b_addr;
--		if (unlikely(leaf->hdr.info.magic !=
--			     cpu_to_be16(XFS_ATTR_LEAF_MAGIC))) {
--			XFS_CORRUPTION_ERROR("xfs_attr_node_list(4)",
--					     XFS_ERRLEVEL_LOW,
--					     context->dp->i_mount, leaf);
--			xfs_trans_brelse(NULL, bp);
--			return(XFS_ERROR(EFSCORRUPTED));
--		}
- 		error = xfs_attr_leaf_list_int(bp, context);
- 		if (error) {
- 			xfs_trans_brelse(NULL, bp);
-@@ -1925,16 +1897,10 @@ xfs_attr_node_list(xfs_attr_list_context_t *context)
- 			break;
- 		cursor->blkno = be32_to_cpu(leaf->hdr.info.forw);
- 		xfs_trans_brelse(NULL, bp);
--		error = xfs_da_read_buf(NULL, context->dp, cursor->blkno, -1,
--					      &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(NULL, context->dp, cursor->blkno, -1,
-+					   &bp);
- 		if (error)
--			return(error);
--		if (unlikely((bp == NULL))) {
--			XFS_ERROR_REPORT("xfs_attr_node_list(5)",
--					 XFS_ERRLEVEL_LOW,
--					 context->dp->i_mount);
--			return(XFS_ERROR(EFSCORRUPTED));
--		}
-+			return error;
- 	}
- 	xfs_trans_brelse(NULL, bp);
- 	return(0);
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index f2b698e..7891d06 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -87,6 +87,36 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
- 					 xfs_mount_t *mp);
- STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
- 
-+static void
-+xfs_attr_leaf_verify(
-+	struct xfs_buf		*bp)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_attr_leaf_hdr *hdr = bp->b_addr;
-+	int			block_ok = 0;
-+
-+	block_ok = hdr->info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC);
-+	if (!block_ok) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
-+
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
-+}
-+
-+int
-+xfs_attr_leaf_read(
++static int
++xfs_dir2_block_read(
 +	struct xfs_trans	*tp,
 +	struct xfs_inode	*dp,
-+	xfs_dablk_t		bno,
-+	xfs_daddr_t		mappedbno,
 +	struct xfs_buf		**bpp)
 +{
-+	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
-+					XFS_ATTR_FORK, xfs_attr_leaf_verify);
++	struct xfs_mount	*mp = dp->i_mount;
++
++	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
++					XFS_DATA_FORK, NULL);
 +}
 +
- /*========================================================================
-  * Namespace helper routines
-  *========================================================================*/
-@@ -869,11 +899,10 @@ xfs_attr_leaf_to_node(xfs_da_args_t *args)
- 	error = xfs_da_grow_inode(args, &blkno);
- 	if (error)
- 		goto out;
--	error = xfs_da_read_buf(args->trans, args->dp, 0, -1, &bp1,
--					     XFS_ATTR_FORK, NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, 0, -1, &bp1);
- 	if (error)
- 		goto out;
--	ASSERT(bp1 != NULL);
++static void
++xfs_dir2_block_need_space(
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_block_tail	*btp,
++	struct xfs_dir2_leaf_entry	*blp,
++	__be16				**tagpp,
++	struct xfs_dir2_data_unused	**dupp,
++	struct xfs_dir2_data_unused	**enddupp,
++	int				*compact,
++	int				len)
++{
++	struct xfs_dir2_data_free	*bf;
++	__be16				*tagp = NULL;
++	struct xfs_dir2_data_unused	*dup = NULL;
++	struct xfs_dir2_data_unused	*enddup = NULL;
 +
- 	bp2 = NULL;
- 	error = xfs_da_get_buf(args->trans, args->dp, blkno, -1, &bp2,
- 					    XFS_ATTR_FORK);
-@@ -1620,18 +1649,16 @@ xfs_attr_leaf_toosmall(xfs_da_state_t *state, int *action)
- 			blkno = be32_to_cpu(info->back);
- 		if (blkno == 0)
- 			continue;
--		error = xfs_da_read_buf(state->args->trans, state->args->dp,
--					blkno, -1, &bp, XFS_ATTR_FORK, NULL);
-+		error = xfs_attr_leaf_read(state->args->trans, state->args->dp,
-+					blkno, -1, &bp);
- 		if (error)
- 			return(error);
--		ASSERT(bp != NULL);
- 
- 		leaf = (xfs_attr_leafblock_t *)info;
- 		count  = be16_to_cpu(leaf->hdr.count);
- 		bytes  = state->blocksize - (state->blocksize>>2);
- 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
- 		leaf = bp->b_addr;
--		ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 		count += be16_to_cpu(leaf->hdr.count);
- 		bytes -= be16_to_cpu(leaf->hdr.usedbytes);
- 		bytes -= count * sizeof(xfs_attr_leaf_entry_t);
-@@ -2495,15 +2522,11 @@ xfs_attr_leaf_clearflag(xfs_da_args_t *args)
- 	/*
- 	 * Set up the operation.
- 	 */
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-+	if (error)
- 		return(error);
--	}
--	ASSERT(bp != NULL);
- 
- 	leaf = bp->b_addr;
--	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
- 	ASSERT(args->index >= 0);
- 	entry = &leaf->entries[ args->index ];
-@@ -2560,15 +2583,11 @@ xfs_attr_leaf_setflag(xfs_da_args_t *args)
- 	/*
- 	 * Set up the operation.
- 	 */
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-+	if (error)
- 		return(error);
--	}
--	ASSERT(bp != NULL);
- 
- 	leaf = bp->b_addr;
--	ASSERT(leaf->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index < be16_to_cpu(leaf->hdr.count));
- 	ASSERT(args->index >= 0);
- 	entry = &leaf->entries[ args->index ];
-@@ -2617,35 +2636,28 @@ xfs_attr_leaf_flipflags(xfs_da_args_t *args)
- 	/*
- 	 * Read the block containing the "old" attr
- 	 */
--	error = xfs_da_read_buf(args->trans, args->dp, args->blkno, -1, &bp1,
--					     XFS_ATTR_FORK, NULL);
--	if (error) {
--		return(error);
--	}
--	ASSERT(bp1 != NULL);
-+	error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno, -1, &bp1);
-+	if (error)
-+		return error;
- 
- 	/*
- 	 * Read the block containing the "new" attr, if it is different
- 	 */
- 	if (args->blkno2 != args->blkno) {
--		error = xfs_da_read_buf(args->trans, args->dp, args->blkno2,
--					-1, &bp2, XFS_ATTR_FORK, NULL);
--		if (error) {
--			return(error);
--		}
--		ASSERT(bp2 != NULL);
-+		error = xfs_attr_leaf_read(args->trans, args->dp, args->blkno2,
-+					   -1, &bp2);
-+		if (error)
-+			return error;
- 	} else {
- 		bp2 = bp1;
- 	}
- 
- 	leaf1 = bp1->b_addr;
--	ASSERT(leaf1->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index < be16_to_cpu(leaf1->hdr.count));
- 	ASSERT(args->index >= 0);
- 	entry1 = &leaf1->entries[ args->index ];
- 
- 	leaf2 = bp2->b_addr;
--	ASSERT(leaf2->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(args->index2 < be16_to_cpu(leaf2->hdr.count));
- 	ASSERT(args->index2 >= 0);
- 	entry2 = &leaf2->entries[ args->index2 ];
-diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
-index dea1772..8f7ab98 100644
---- a/fs/xfs/xfs_attr_leaf.h
-+++ b/fs/xfs/xfs_attr_leaf.h
-@@ -227,6 +227,9 @@ int	xfs_attr_leaf_to_shortform(struct xfs_buf *bp,
- int	xfs_attr_leaf_clearflag(struct xfs_da_args *args);
- int	xfs_attr_leaf_setflag(struct xfs_da_args *args);
- int	xfs_attr_leaf_flipflags(xfs_da_args_t *args);
-+int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+			xfs_dablk_t bno, xfs_daddr_t mappedbno,
-+			struct xfs_buf **bpp);
- 
++	*compact = 0;
++	bf = hdr->bestfree;
++
++	/*
++	 * If there are stale entries we'll use one for the leaf.
++	 */
++	if (btp->stale) {
++		if (be16_to_cpu(bf[0].length) >= len) {
++			/*
++			 * The biggest entry enough to avoid compaction.
++			 */
++			dup = (xfs_dir2_data_unused_t *)
++			      ((char *)hdr + be16_to_cpu(bf[0].offset));
++			goto out;
++		}
++
++		/*
++		 * Will need to compact to make this work.
++		 * Tag just before the first leaf entry.
++		 */
++		*compact = 1;
++		tagp = (__be16 *)blp - 1;
++
++		/* Data object just before the first leaf entry.  */
++		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
++
++		/*
++		 * If it's not free then the data will go where the
++		 * leaf data starts now, if it works at all.
++		 */
++		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
++			    (uint)sizeof(*blp) < len)
++				dup = NULL;
++		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
++			dup = NULL;
++		else
++			dup = (xfs_dir2_data_unused_t *)blp;
++		goto out;
++	}
++
++	/*
++	 * no stale entries, so just use free space.
++	 * Tag just before the first leaf entry.
++	 */
++	tagp = (__be16 *)blp - 1;
++
++	/* Data object just before the first leaf entry.  */
++	enddup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
++
++	/*
++	 * If it's not free then can't do this add without cleaning up:
++	 * the space before the first leaf entry needs to be free so it
++	 * can be expanded to hold the pointer to the new entry.
++	 */
++	if (be16_to_cpu(enddup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
++		/*
++		 * Check out the biggest freespace and see if it's the same one.
++		 */
++		dup = (xfs_dir2_data_unused_t *)
++		      ((char *)hdr + be16_to_cpu(bf[0].offset));
++		if (dup != enddup) {
++			/*
++			 * Not the same free entry, just check its length.
++			 */
++			if (be16_to_cpu(dup->length) < len)
++				dup = NULL;
++			goto out;
++		}
++
++		/*
++		 * It is the biggest freespace, can it hold the leaf too?
++		 */
++		if (be16_to_cpu(dup->length) < len + (uint)sizeof(*blp)) {
++			/*
++			 * Yes, use the second-largest entry instead if it works.
++			 */
++			if (be16_to_cpu(bf[1].length) >= len)
++				dup = (xfs_dir2_data_unused_t *)
++				      ((char *)hdr + be16_to_cpu(bf[1].offset));
++			else
++				dup = NULL;
++		}
++	}
++out:
++	*tagpp = tagp;
++	*dupp = dup;
++	*enddupp = enddup;
++}
++
++/*
++ * compact the leaf entries.
++ * Leave the highest-numbered stale entry stale.
++ * XXX should be the one closest to mid but mid is not yet computed.
++ */
++static void
++xfs_dir2_block_compact(
++	struct xfs_trans		*tp,
++	struct xfs_buf			*bp,
++	struct xfs_dir2_data_hdr	*hdr,
++	struct xfs_dir2_block_tail	*btp,
++	struct xfs_dir2_leaf_entry	*blp,
++	int				*needlog,
++	int				*lfloghigh,
++	int				*lfloglow)
++{
++	int			fromidx;	/* source leaf index */
++	int			toidx;		/* target leaf index */
++	int			needscan = 0;
++	int			highstale;	/* high stale index */
++
++	fromidx = toidx = be32_to_cpu(btp->count) - 1;
++	highstale = *lfloghigh = -1;
++	for (; fromidx >= 0; fromidx--) {
++		if (blp[fromidx].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR)) {
++			if (highstale == -1)
++				highstale = toidx;
++			else {
++				if (*lfloghigh == -1)
++					*lfloghigh = toidx;
++				continue;
++			}
++		}
++		if (fromidx < toidx)
++			blp[toidx] = blp[fromidx];
++		toidx--;
++	}
++	*lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
++	*lfloghigh -= be32_to_cpu(btp->stale) - 1;
++	be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
++	xfs_dir2_data_make_free(tp, bp,
++		(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
++		(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
++		needlog, &needscan);
++	blp += be32_to_cpu(btp->stale) - 1;
++	btp->stale = cpu_to_be32(1);
++	/*
++	 * If we now need to rebuild the bestfree map, do so.
++	 * This needs to happen before the next call to use_free.
++	 */
++	if (needscan)
++		xfs_dir2_data_freescan(tp->t_mountp, hdr, needlog);
++}
++
  /*
-  * Routines used for growing the Btree.
+  * Add an entry to a block directory.
+  */
+@@ -63,7 +235,6 @@ int						/* error */
+ xfs_dir2_block_addname(
+ 	xfs_da_args_t		*args)		/* directory op arguments */
+ {
+-	xfs_dir2_data_free_t	*bf;		/* bestfree table in block */
+ 	xfs_dir2_data_hdr_t	*hdr;		/* block header */
+ 	xfs_dir2_leaf_entry_t	*blp;		/* block leaf entries */
+ 	struct xfs_buf		*bp;		/* buffer for block */
+@@ -94,134 +265,44 @@ xfs_dir2_block_addname(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the (one and only) directory block into dabuf bp.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, &bp,
+-				XFS_DATA_FORK, NULL);
++
++	/* Read the (one and only) directory block into bp. */
++	error = xfs_dir2_block_read(tp, dp, &bp);
+ 	if (error)
+ 		return error;
+-	ASSERT(bp != NULL);
+-	hdr = bp->b_addr;
+-	/*
+-	 * Check the magic number, corrupted if wrong.
+-	 */
+-	if (unlikely(hdr->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))) {
+-		XFS_CORRUPTION_ERROR("xfs_dir2_block_addname",
+-				     XFS_ERRLEVEL_LOW, mp, hdr);
+-		xfs_trans_brelse(tp, bp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
++
+ 	len = xfs_dir2_data_entsize(args->namelen);
++
+ 	/*
+ 	 * Set up pointers to parts of the block.
+ 	 */
+-	bf = hdr->bestfree;
++	hdr = bp->b_addr;
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
+ 	blp = xfs_dir2_block_leaf_p(btp);
++
+ 	/*
+-	 * No stale entries?  Need space for entry and new leaf.
+-	 */
+-	if (!btp->stale) {
+-		/*
+-		 * Tag just before the first leaf entry.
+-		 */
+-		tagp = (__be16 *)blp - 1;
+-		/*
+-		 * Data object just before the first leaf entry.
+-		 */
+-		enddup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
+-		/*
+-		 * If it's not free then can't do this add without cleaning up:
+-		 * the space before the first leaf entry needs to be free so it
+-		 * can be expanded to hold the pointer to the new entry.
+-		 */
+-		if (be16_to_cpu(enddup->freetag) != XFS_DIR2_DATA_FREE_TAG)
+-			dup = enddup = NULL;
+-		/*
+-		 * Check out the biggest freespace and see if it's the same one.
+-		 */
+-		else {
+-			dup = (xfs_dir2_data_unused_t *)
+-			      ((char *)hdr + be16_to_cpu(bf[0].offset));
+-			if (dup == enddup) {
+-				/*
+-				 * It is the biggest freespace, is it too small
+-				 * to hold the new leaf too?
+-				 */
+-				if (be16_to_cpu(dup->length) < len + (uint)sizeof(*blp)) {
+-					/*
+-					 * Yes, we use the second-largest
+-					 * entry instead if it works.
+-					 */
+-					if (be16_to_cpu(bf[1].length) >= len)
+-						dup = (xfs_dir2_data_unused_t *)
+-						      ((char *)hdr +
+-						       be16_to_cpu(bf[1].offset));
+-					else
+-						dup = NULL;
+-				}
+-			} else {
+-				/*
+-				 * Not the same free entry,
+-				 * just check its length.
+-				 */
+-				if (be16_to_cpu(dup->length) < len) {
+-					dup = NULL;
+-				}
+-			}
+-		}
+-		compact = 0;
+-	}
+-	/*
+-	 * If there are stale entries we'll use one for the leaf.
+-	 * Is the biggest entry enough to avoid compaction?
+-	 */
+-	else if (be16_to_cpu(bf[0].length) >= len) {
+-		dup = (xfs_dir2_data_unused_t *)
+-		      ((char *)hdr + be16_to_cpu(bf[0].offset));
+-		compact = 0;
+-	}
+-	/*
+-	 * Will need to compact to make this work.
++	 * Find out if we can reuse stale entries or whether we need extra
++	 * space for entry and new leaf.
+ 	 */
+-	else {
+-		/*
+-		 * Tag just before the first leaf entry.
+-		 */
+-		tagp = (__be16 *)blp - 1;
+-		/*
+-		 * Data object just before the first leaf entry.
+-		 */
+-		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
+-		/*
+-		 * If it's not free then the data will go where the
+-		 * leaf data starts now, if it works at all.
+-		 */
+-		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
+-			    (uint)sizeof(*blp) < len)
+-				dup = NULL;
+-		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
+-			dup = NULL;
+-		else
+-			dup = (xfs_dir2_data_unused_t *)blp;
+-		compact = 1;
+-	}
++	xfs_dir2_block_need_space(hdr, btp, blp, &tagp, &dup,
++				  &enddup, &compact, len);
++
+ 	/*
+-	 * If this isn't a real add, we're done with the buffer.
++	 * Done everything we need for a space check now.
+ 	 */
+-	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
++	if (args->op_flags & XFS_DA_OP_JUSTCHECK) {
+ 		xfs_trans_brelse(tp, bp);
++		if (!dup)
++			return XFS_ERROR(ENOSPC);
++		return 0;
++	}
++
+ 	/*
+ 	 * If we don't have space for the new entry & leaf ...
+ 	 */
+ 	if (!dup) {
+-		/*
+-		 * Not trying to actually do anything, or don't have
+-		 * a space reservation: return no-space.
+-		 */
+-		if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
++		/* Don't have a space reservation: return no-space.  */
++		if (args->total == 0)
+ 			return XFS_ERROR(ENOSPC);
+ 		/*
+ 		 * Convert to the next larger format.
+@@ -232,65 +313,24 @@ xfs_dir2_block_addname(
+ 			return error;
+ 		return xfs_dir2_leaf_addname(args);
+ 	}
+-	/*
+-	 * Just checking, and it would work, so say so.
+-	 */
+-	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
+-		return 0;
++
+ 	needlog = needscan = 0;
++
+ 	/*
+ 	 * If need to compact the leaf entries, do it now.
+-	 * Leave the highest-numbered stale entry stale.
+-	 * XXX should be the one closest to mid but mid is not yet computed.
+-	 */
+-	if (compact) {
+-		int	fromidx;		/* source leaf index */
+-		int	toidx;			/* target leaf index */
+-
+-		for (fromidx = toidx = be32_to_cpu(btp->count) - 1,
+-			highstale = lfloghigh = -1;
+-		     fromidx >= 0;
+-		     fromidx--) {
+-			if (blp[fromidx].address ==
+-			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR)) {
+-				if (highstale == -1)
+-					highstale = toidx;
+-				else {
+-					if (lfloghigh == -1)
+-						lfloghigh = toidx;
+-					continue;
+-				}
+-			}
+-			if (fromidx < toidx)
+-				blp[toidx] = blp[fromidx];
+-			toidx--;
+-		}
+-		lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
+-		lfloghigh -= be32_to_cpu(btp->stale) - 1;
+-		be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
+-		xfs_dir2_data_make_free(tp, bp,
+-			(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
+-			(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
+-			&needlog, &needscan);
+-		blp += be32_to_cpu(btp->stale) - 1;
+-		btp->stale = cpu_to_be32(1);
+-		/*
+-		 * If we now need to rebuild the bestfree map, do so.
+-		 * This needs to happen before the next call to use_free.
+-		 */
+-		if (needscan) {
+-			xfs_dir2_data_freescan(mp, hdr, &needlog);
+-			needscan = 0;
+-		}
+-	}
+-	/*
+-	 * Set leaf logging boundaries to impossible state.
+-	 * For the no-stale case they're set explicitly.
+ 	 */
++	if (compact)
++		xfs_dir2_block_compact(tp, bp, hdr, btp, blp, &needlog,
++				      &lfloghigh, &lfloglow);
+ 	else if (btp->stale) {
++		/*
++		 * Set leaf logging boundaries to impossible state.
++		 * For the no-stale case they're set explicitly.
++		 */
+ 		lfloglow = be32_to_cpu(btp->count);
+ 		lfloghigh = -1;
+ 	}
++
+ 	/*
+ 	 * Find the slot that's first lower than our hash value, -1 if none.
+ 	 */
+@@ -450,18 +490,13 @@ xfs_dir2_block_getdents(
+ 	/*
+ 	 * If the block number in the offset is out of range, we're done.
+ 	 */
+-	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk) {
++	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
+ 		return 0;
+-	}
+-	/*
+-	 * Can't read the block, give up, else get dabuf in bp.
+-	 */
+-	error = xfs_da_read_buf(NULL, dp, mp->m_dirdatablk, -1,
+-				&bp, XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_block_read(NULL, dp, &bp);
+ 	if (error)
+ 		return error;
+ 
+-	ASSERT(bp != NULL);
+ 	/*
+ 	 * Extract the byte offset we start at from the seek pointer.
+ 	 * We'll skip entries before this.
+@@ -637,14 +672,11 @@ xfs_dir2_block_lookup_int(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the buffer, return error if we can't get it.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, &bp,
+-				XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_block_read(tp, dp, &bp);
+ 	if (error)
+ 		return error;
+-	ASSERT(bp != NULL);
++
+ 	hdr = bp->b_addr;
+ 	xfs_dir2_data_check(dp, bp);
+ 	btp = xfs_dir2_block_tail_p(mp, hdr);
 -- 
 1.7.10
 
