@@ -1,19 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA6JLmGN083108 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 13:21:48 -0600
-Message-ID: <509963BC.3090801@sgi.com>
-Date: Tue, 06 Nov 2012 13:23:40 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	qA6JvmbA085142 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 13:57:48 -0600
+Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
+	[150.101.137.143]) by cuda.sgi.com with ESMTP id
+	4qzfmAbL6L9qNWC7 for <xfs@oss.sgi.com>;
+	Tue, 06 Nov 2012 11:59:44 -0800 (PST)
+Date: Wed, 7 Nov 2012 06:59:40 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 5/6] xfs: fix buffer shudown reference count mismatch
+Message-ID: <20121106195940.GA24575@dastard>
+References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
+	<1351816724-3000-6-git-send-email-david@fromorbit.com>
+	<20121102024351.GU29378@dastard>
+	<20121102131326.GG12578@infradead.org>
+	<20121102234741.GB29378@dastard>
+	<20121106125949.GA32329@infradead.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v6 09/10] xfs: add minimum file size filtering to eofblocks
-	scan
-References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
-	<1352213447-59791-10-git-send-email-bfoster@redhat.com>
-	<5099417E.3080509@sgi.com>
-	<1352221709.3179.9.camel@montana.filmlight.ltd.uk>
-	<50995028.8040205@redhat.com>
-In-Reply-To: <50995028.8040205@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <20121106125949.GA32329@infradead.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -22,91 +27,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: Roger Willcocks <roger@filmlight.ltd.uk>, xfs@oss.sgi.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: xfs@oss.sgi.com
 
-On 11/06/12 12:00, Brian Foster wrote:
-> On 11/06/2012 12:08 PM, Roger Willcocks wrote:
->>
->> On Tue, 2012-11-06 at 10:57 -0600, Mark Tinguely wrote:
->>> On 11/06/12 08:50, Brian Foster wrote:
->>>> Support minimum file size filtering in the eofblocks scan. The
->>>> caller must set the XFS_EOF_FLAGS_MINFILESIZE flags bit and minimum
->>>> file size value in bytes.
->>>>
->>>> Signed-off-by: Brian Foster<bfoster@redhat.com>
->>>> ---
->>>>    fs/xfs/xfs_fs.h     |    6 ++++--
->>>>    fs/xfs/xfs_icache.c |   11 +++++++++--
->>>>    2 files changed, 13 insertions(+), 4 deletions(-)
->>>>
->>>> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
->>>> index 88eb1bc..082b743 100644
->>>> --- a/fs/xfs/xfs_fs.h
->>>> +++ b/fs/xfs/xfs_fs.h
->>>> @@ -348,7 +348,8 @@ struct xfs_eofblocks {
->>>>    	uid_t		eof_uid;
->>>>    	gid_t		eof_gid;
->>>>    	prid_t		eof_prid;
->>>> -	__u32		pad[27];
->>>> +	__u64           eof_min_file_size;
->>>> +	__u32		pad[25]
->>>                               ^^
->>> Glad you bumped it to a unsigned 64 bit value.
->>> Are __u64 items 64 bits? if so, the pad would be 24
->>>
->>
->> It should probably be:
->>
->> __u32 pad_align_64;
->> __u64 eof_min_file_size;
->> __u32 pad[24];
->>
->
-> Doh... forgot about alignment. Thanks for catching that guys.
->
-> The new pad_align field means I have to fix up the padded zero check as
-> well, which makes me wonder if I should reorder things now or actually
-> split more of the padding space into two (__u32/__u64, rather than
-> mistakenly converting to a __u32 like I've done here) fields to support
-> extending the data structure with fields of either size without having
-> to update the version. E.g., we end up with something like the following:
->
-> struct xfs_eofblocks {
-> 	__u32	version;
-> 	__u32	flags;
-> 	uid_t	uid;
-> 	gid_t	gid;
-> 	prid_t	prid;
-> 	__u32	pad32[9];
-> 	__u64	minfilesize;
-> 	__u64	pad64[8];
-> };
->
-> Thoughts?
->
-> Brian
->
+On Tue, Nov 06, 2012 at 07:59:49AM -0500, Christoph Hellwig wrote:
+> On Sat, Nov 03, 2012 at 10:47:41AM +1100, Dave Chinner wrote:
+> > I think that's irrelevant here - there will *never* be an IO waiter
+> > at this point in time.  This processing is in log buffer IO
+> > completion context, so the buffers are still pinned in memory. Hence
+> > anyone trying to do IO on it will be waiting in xfs_buf_wait_unpin()
+> > and never get to xfs_buf_iowait(). And because xfs_buf_wait_unpin()
+> > is called with the buffer lock held, we'll never do the failure
+> > handling in xfs_buf_item_unpin until the buffer IO is completed and
+> > it is unlocked.
+> 
+> How do we manage to submit it synchronously then?
 
-I vote to keep the padding continuous at the end of the series
-and the padding check simple:
+I don't follow what problem you are talking about here.
+Fundamentally, races with IO are resolved like this regardless of
+whether the racing Io is sync or async
 
-struct xfs_eofblocks {
-	__u32	version;
-	__u32	flags;
-	__u64	minfilesize;
-	uid_t	uid;
-	gid_t	gid;
-	prid_t	prid;
-	__u32	pad32[25];
-}
+				xfs_buf_lock
+				make modifications
+				.....
+ xfs_buf_lock
+ .....
+				xfs_trans_commit
+				....
+				IOP_PIN()
+				IOP_UNLOCK()
+ 
+ xfs_buf_iorequest
+   xfs_buf_wait_unpin()
+.....
 
---Mark.
-	
+<shutdown, no new buffers can get to xfs_buf_iorequest>
+
+				IOP_UNPIN(remove)
+				xfs_buf_item_unpin(remove)
+				wake_up_all(pin waiters)
+				xfs_buf_lock()
+				.....
+ submit IO
+ ......
+ xfs_buf_ioend()
+   wakeup(b_iowait)
+ .....
+ xfs_buf_relse()
+ 				xfs_buf_hold
+ 				xfs_buf_stale
+				ASYNC
+				xfs_buf_ioend()
+				  bp->b_iodone()
+				    xfs_buf_rele
+				    xfs_buf_ioend()
+				      xfs_buf_rele
+				        xfs_buf_free
+
+
+What this also points out is that we shoul dbe checking for shutdown
+after xfs_buf_wait_unpin(), too, because otherwise we are submitting
+IO after the shutdown is initiated....
+
+> The inode and dquot
+> reclaim xfs_bwrite calls already wait for an unpin first, so I don't
+> think these are the problem.  The only other call on a live fs seems
+> to xfs_qm_shake -> xfs_buf_delwri_submit, but that one does wait
+> for the complete() call on b_iowait.  I suspect we are hitting that
+> and due to it skipping the wait if b_ioerror is set and waiting on
+> multiple buffers that complete together might hide the issue.
+
+We are in a shutdown situation. xfs_buf_delwri_submit() goes via
+xfs_bdstrat_cb() which will stop any new IOs from being submitted
+via this path. If it is blocked on the above case, then it is
+also resolved by the above case...
+
+> __xfs_buf_delwri_submit for the wait == true case also seems to be
+> the only place that actually skips the ispinned check.
+
+Sure, but that we're in a shutdown situation, so it doesn't matter -
+the buffer will never get to xfs_buf_wait_unpin() because of the
+shutdown check in xfs_bdstrat_cb().
+
+I still don't see the problem you are trying to explain to me. Maybe
+I'm just being dense....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
