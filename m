@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA65CfTh029921 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:12:41 -0600
+	qA65BtL6029712 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:11:55 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	mgLvHOJRkTYFTcNZ for <xfs@oss.sgi.com>;
-	Mon, 05 Nov 2012 21:14:36 -0800 (PST)
+	8MAoTFW6or438isz for <xfs@oss.sgi.com>;
+	Mon, 05 Nov 2012 21:13:50 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TVbU5-0006SB-71
-	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:57 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TVbTk-0006RF-Ph
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:36 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TVbU5-0004Xw-2q
-	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:57 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TVbTk-0004WR-La
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:36 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/22] xfs: add buffer pre-write callback
-Date: Tue,  6 Nov 2012 16:13:30 +1100
-Message-Id: <1352178813-17216-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 06/22] xfs: verify AGFL blocks as they are read from disk
+Date: Tue,  6 Nov 2012 16:13:17 +1100
+Message-Id: <1352178813-17216-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352178813-17216-1-git-send-email-david@fromorbit.com>
 References: <1352178813-17216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,73 +35,79 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a callback to the buffer write path to enable verification of
-the buffer and CRC calculation prior to issuing the write to the
-underlying storage.
+Add an AGFL block verify callback function and pass it into the
+buffer read functions.
 
-If the callback function detects some kind of failure or error
-condition, it must mark the buffer with an error so that the caller
-can take appropriate action. In the case of xfs_buf_ioapply(), a
-corrupt metadta buffer willt rigger a shutdown of the filesystem,
-because something is clearly wrong and we can't allow corrupt
-metadata to be written to disk.
+While this commit adds verification code to the AGFL, it cannot be
+used reliably until the CRC format change comes along as mkfs does
+not initialise the full AGFL. Hence it can be full of garbage at the
+first mount and will fail verification right now. CRC enabled
+filesystems won't have this problem, so leave the code that has
+already been written ifdef'd out until the proper time.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Phil White <pwhite@sgi.com>
 ---
- fs/xfs/xfs_buf.c |   16 ++++++++++++++++
- fs/xfs/xfs_buf.h |    3 +++
- 2 files changed, 19 insertions(+)
+ fs/xfs/xfs_alloc.c |   39 ++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 62b7e89..c073236 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -569,7 +569,9 @@ found:
- 	 */
- 	if (bp->b_flags & XBF_STALE) {
- 		ASSERT((bp->b_flags & _XBF_DELWRI_Q) == 0);
-+		ASSERT(bp->b_iodone == NULL);
- 		bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
-+		bp->b_pre_io = NULL;
- 	}
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index dbb32cc6..accb5b7 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -430,6 +430,43 @@ xfs_alloc_fixup_trees(
+ 	return 0;
+ }
  
- 	trace_xfs_buf_find(bp, flags, _RET_IP_);
-@@ -1314,6 +1316,20 @@ _xfs_buf_ioapply(
- 	rw |= REQ_META;
- 
- 	/*
-+	 * run the pre-io callback function if it exists. If this function
-+	 * fails it will mark the buffer with an error and the IO should
-+	 * not be dispatched.
++void
++xfs_agfl_read_verify(
++	struct xfs_buf	*bp)
++{
++#ifdef WHEN_CRCS_COME_ALONG
++	/*
++	 * we cannot actually do any verification of the AGFL because mkfs does
++	 * not initialise the AGFL to zero or NULL. Hence the only valid part of
++	 * the AGFL is what the AGF says is active. We can't get to the AGF, so
++	 * we can't verify just those entries are valid.
++	 *
++	 * This problem goes away when the CRC format change comes along as that
++	 * requires the AGFL to be initialised by mkfs. At that point, we can
++	 * verify the blocks in the agfl -active or not- lie within the bounds
++	 * of the AG. Until then, just leave this check ifdef'd out.
 +	 */
-+	if (bp->b_pre_io) {
-+		bp->b_pre_io(bp);
-+		if (bp->b_error) {
-+			xfs_force_shutdown(bp->b_target->bt_mount,
-+					   SHUTDOWN_CORRUPT_INCORE);
-+			return;
-+		}
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_agfl	*agfl = XFS_BUF_TO_AGFL(bp);
++	int		agfl_ok = 1;
++
++	int		i;
++
++	for (i = 0; i < XFS_AGFL_SIZE(mp); i++) {
++		if (be32_to_cpu(agfl->agfl_bno[i]) == NULLAGBLOCK ||
++		    be32_to_cpu(agfl->agfl_bno[i]) >= mp->m_sb.sb_agblocks)
++			agfl_ok = 0;
 +	}
 +
-+	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
- 	 * into the buffer and the desired IO size before we start -
- 	 * _xfs_buf_ioapply_vec() will modify them appropriately for each
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 677b1dc..51bc16a 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -155,6 +155,9 @@ typedef struct xfs_buf {
- 	unsigned int		b_offset;	/* page offset in first page */
- 	unsigned short		b_error;	/* error code on I/O */
- 
-+	void			(*b_pre_io)(struct xfs_buf *);
-+						/* pre-io callback function */
++	if (!agfl_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agfl);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++#endif
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
++}
 +
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
- #endif
+ /*
+  * Read in the allocation group free block array.
+  */
+@@ -447,7 +484,7 @@ xfs_alloc_read_agfl(
+ 	error = xfs_trans_read_buf(
+ 			mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
++			XFS_FSS_TO_BB(mp, 1), 0, &bp, xfs_agfl_read_verify);
+ 	if (error)
+ 		return error;
+ 	ASSERT(!xfs_buf_geterror(bp));
 -- 
 1.7.10
 
