@@ -1,18 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA6El1w0065821 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 08:47:02 -0600
-Received: from gulag1.americas.sgi.com (gulag1.americas.sgi.com
-	[128.162.236.41])
-	by relay1.corp.sgi.com (Postfix) with ESMTP id CBCD08F8049
-	for <xfs@oss.sgi.com>; Tue,  6 Nov 2012 06:48:55 -0800 (PST)
-Message-Id: <20121105150150.558785273@sgi.com>
-Date: Mon, 05 Nov 2012 09:01:34 -0600
-From: rjohnston@sgi.com
-Subject: [patch] xfstests: Revert commit edd6bc "optionally run all tests
-	under quota"
-References: <20121105150133.857716755@sgi.com>
-Content-Disposition: inline; filename=xfstests-revert-commit-edd6bc.patch
+	qA6EkwDu065736 for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 08:46:58 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id ogvzHIfWQGub7cCo for
+	<xfs@oss.sgi.com>; Tue, 06 Nov 2012 06:48:54 -0800 (PST)
+Received: from int-mx01.intmail.prod.int.phx2.redhat.com
+	(int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA6EmsK2024887
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:48:54 -0500
+Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
+	by int-mx01.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
+	id qA6Emsgq027040
+	for <xfs@oss.sgi.com>; Tue, 6 Nov 2012 09:48:54 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v6 06/10] xfs: add XFS_IOC_FREE_EOFBLOCKS ioctl
+Date: Tue,  6 Nov 2012 09:50:43 -0500
+Message-Id: <1352213447-59791-7-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
+References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,95 +35,129 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Revert commit edd6bc which causes the following tests to fail:
+The XFS_IOC_FREE_EOFBLOCKS ioctl allows users to invoke an EOFBLOCKS
+scan. The xfs_eofblocks structure is defined to support the command
+parameters (scan mode).
 
-142.out.bad:Can't initialize the DMAPI
-143.out.bad:Can't initialize the DMAPI
-144.out.bad:Can't initialize the DMAPI
-145.out.bad:Can't initialize the DMAPI
-146.out.bad:Can't initialize the DMAPI
-147.out.bad:Can't initialize the DMAPI
-150.out.bad:Can't initialize the DMAPI
-155.out.bad:Can't initialize the DMAPI
-156.out.bad:Can't initialize the DMAPI
-157.out.bad:Can't initialize the DMAPI
-158.out.bad:Can't initialize the DMAPI
-161.out.bad:Can't initialize the DMAPI
-168.out.bad:Can't initialize the DMAPI
-175.out.bad:Can't initialize the DMAPI
-176.out.bad:Can't initialize the DMAPI
-185.out.bad:Can't initialize the DMAPI
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/xfs_fs.h     |   17 +++++++++++++++++
+ fs/xfs/xfs_icache.c |   10 +++++++---
+ fs/xfs/xfs_icache.h |    2 +-
+ fs/xfs/xfs_ioctl.c  |   20 ++++++++++++++++++++
+ 4 files changed, 45 insertions(+), 4 deletions(-)
 
-Signed-off-by: Rich Johnston <rjohnston@sgi.com>
-
-Index: xfstests/common.rc
-===================================================================
---- xfstests.orig/common.rc
-+++ xfstests/common.rc
-@@ -100,9 +100,6 @@ _mount_opts()
-     *)
- 	;;
-     esac
--    if [ ! -z "$USE_QUOTA" ]; then
--	export MOUNT_OPTIONS="$MOUNT_OPTIONS -o usrquota,grpquota"
--    fi
- }
+diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+index c13fed8..26ff43a 100644
+--- a/fs/xfs/xfs_fs.h
++++ b/fs/xfs/xfs_fs.h
+@@ -339,6 +339,22 @@ typedef struct xfs_error_injection {
  
- _mkfs_opts()
-@@ -203,10 +200,6 @@ _test_options()
-     type=$1
-     TEST_OPTIONS=""
  
--    if [ ! -z "$USE_QUOTA" ]; then
--	TEST_OPTIONS="-o usrquota,grpquota"
--    fi
--
-     if [ "$FSTYP" != "xfs" ]; then
-         return
-     fi
-@@ -248,25 +241,6 @@ _mount_ops_filter()
+ /*
++ * Speculative preallocation trimming.
++ */
++#define XFS_EOFBLOCKS_VERSION		1
++struct xfs_eofblocks {
++	__u32		eof_version;
++	__u32		eof_flags;
++	__u64		pad[15];
++};
++
++/* eof_flags values */
++#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
++#define XFS_EOF_FLAGS_VALID	\
++	(XFS_EOF_FLAGS_SYNC)
++
++
++/*
+  * The user-level Handle Request interface structure.
+  */
+ typedef struct xfs_fsop_handlereq {
+@@ -456,6 +472,7 @@ typedef struct xfs_handle {
+ /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+ #define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
++#define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_eofblocks)
  
- }
- 
--_setup_quota()
--{
--    mountpoint=$1
--    if [ ! -z "$USE_QUOTA" ]; then
--	case $FSTYP in
--	xfs)
--	    ;;
--	ext*|reiserfs)
--	    quotaoff $mountpoint &>/dev/null
--	    quotacheck -u -g $mountpoint
--	    quotaon $mountpoint
--	    ;;
--	*)
--	    _fail "Don't know how to turn on quota on $FSTYP"
--	    ;;
--	esac
--    fi
--}
--
- _scratch_mount_options()
+ /*
+  * ioctl commands that replace IRIX syssgi()'s
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index b02a3df..d0d9273 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1206,11 +1206,15 @@ xfs_inode_free_eofblocks(
+ int
+ xfs_icache_free_eofblocks(
+ 	struct xfs_mount	*mp,
+-	int			flags)
++	struct xfs_eofblocks	*eofb)
  {
-     _scratch_options mount
-@@ -277,7 +251,6 @@ _scratch_mount_options()
- _scratch_mount()
- {
-     _mount -t $FSTYP `_scratch_mount_options $*`
--    _setup_quota $SCRATCH_MNT
+-	ASSERT((flags & ~(SYNC_TRYLOCK|SYNC_WAIT)) == 0);
++	int flags = SYNC_TRYLOCK;
++
++	if (eofb && eofb->eof_flags & XFS_EOF_FLAGS_SYNC)
++		flags = SYNC_WAIT;
++
+ 	return xfs_inode_ag_iterator_tag(mp, xfs_inode_free_eofblocks, flags,
+-					 NULL, XFS_ICI_EOFBLOCKS_TAG);
++					 eofb, XFS_ICI_EOFBLOCKS_TAG);
  }
  
- _scratch_unmount()
-@@ -295,7 +268,6 @@ _test_mount()
- {
-     _test_options mount
-     _mount -t $FSTYP $TEST_OPTIONS $TEST_FS_MOUNT_OPTS $SELINUX_MOUNT_OPTIONS $* $TEST_DEV $TEST_DIR
--    _setup_quota $TEST_DIR
- }
+ void
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index abca9fb..23e9bf3 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -37,7 +37,7 @@ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
  
- _scratch_mkfs_options()
-
+ void xfs_inode_set_eofblocks_tag(struct xfs_inode *ip);
+ void xfs_inode_clear_eofblocks_tag(struct xfs_inode *ip);
+-int xfs_icache_free_eofblocks(struct xfs_mount *, int);
++int xfs_icache_free_eofblocks(struct xfs_mount *, struct xfs_eofblocks *);
+ 
+ int xfs_sync_inode_grab(struct xfs_inode *ip);
+ int xfs_inode_ag_iterator(struct xfs_mount *mp,
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index c1df3c6..5b20ab0 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -42,6 +42,7 @@
+ #include "xfs_inode_item.h"
+ #include "xfs_export.h"
+ #include "xfs_trace.h"
++#include "xfs_icache.h"
+ 
+ #include <linux/capability.h>
+ #include <linux/dcache.h>
+@@ -1602,6 +1603,25 @@ xfs_file_ioctl(
+ 		error = xfs_errortag_clearall(mp, 1);
+ 		return -error;
+ 
++	case XFS_IOC_FREE_EOFBLOCKS: {
++		struct xfs_eofblocks eofb;
++
++		if (copy_from_user(&eofb, arg, sizeof(eofb)))
++			return -XFS_ERROR(EFAULT);
++
++		if (eofb.eof_version != XFS_EOFBLOCKS_VERSION)
++			return -XFS_ERROR(EINVAL);
++
++		if (eofb.eof_flags & ~XFS_EOF_FLAGS_VALID)
++			return -XFS_ERROR(EINVAL);
++
++		if (memchr_inv(eofb.pad, 0, sizeof(eofb.pad)))
++			return -XFS_ERROR(EINVAL);
++
++		error = xfs_icache_free_eofblocks(mp, &eofb);
++		return -error;
++	}
++
+ 	default:
+ 		return -ENOTTY;
+ 	}
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
