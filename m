@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA65BlaF029670 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:11:48 -0600
+	qA65Ch5j030018 for <xfs@oss.sgi.com>; Mon, 5 Nov 2012 23:12:43 -0600
 Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
 	[150.101.137.131]) by cuda.sgi.com with ESMTP id
-	csHxaJ2E6GG4ntq3 for <xfs@oss.sgi.com>;
-	Mon, 05 Nov 2012 21:13:42 -0800 (PST)
+	OcURJNmWT0TVTUe2 for <xfs@oss.sgi.com>;
+	Mon, 05 Nov 2012 21:14:37 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TVbTk-0006RA-Nq
-	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:36 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TVbU5-0006SD-87
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:57 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TVbTk-0004W1-Dj
-	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:36 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TVbU5-0004Y1-3l
+	for xfs@oss.sgi.com; Tue, 06 Nov 2012 16:13:57 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/22 V4] xfs: metadata verifiers
-Date: Tue,  6 Nov 2012 16:13:11 +1100
-Message-Id: <1352178813-17216-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/22] xfs: add pre-write metadata buffer verifier callbacks
+Date: Tue,  6 Nov 2012 16:13:31 +1100
+Message-Id: <1352178813-17216-21-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352178813-17216-1-git-send-email-david@fromorbit.com>
+References: <1352178813-17216-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,208 +33,771 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-Fourth version of the buffer verifier series. The read verifier
-infrastructure is described here:
+These verifiers are essentially the same code as the read verifiers,
+but do not require ioend processing. Hence factor the read verifier
+functions and add a new write verifier wrapper that is used as the
+callback.
 
-http://oss.sgi.com/archives/xfs/2012-10/msg00146.html
+This is done as one large patch for all verifiers rather than one
+patch per verifier as the change is largely mechanical. This
+includes hooking up the write verifier via the read verifier
+function.
 
-The second version with write verifiers is described here:
+Hooking up the write verifier for buffers obtained via
+xfs_trans_get_buf() will be done in a separate patch as that touches
+code in many different places rather than just the verifier
+functions.
 
-http://oss.sgi.com/archives/xfs/2012-10/msg00280.html
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_alloc.c        |   35 ++++++++++++++++++++++++++++++++---
+ fs/xfs/xfs_alloc_btree.c  |   21 +++++++++++++++++----
+ fs/xfs/xfs_attr_leaf.c    |   19 +++++++++++++++++--
+ fs/xfs/xfs_attr_leaf.h    |    2 +-
+ fs/xfs/xfs_bmap_btree.c   |   21 +++++++++++++++++----
+ fs/xfs/xfs_da_btree.c     |   30 ++++++++++++++++++------------
+ fs/xfs/xfs_dir2_block.c   |   16 +++++++++++++++-
+ fs/xfs/xfs_dir2_data.c    |   19 +++++++++++++++++--
+ fs/xfs/xfs_dir2_leaf.c    |   31 ++++++++++++++++++++++++-------
+ fs/xfs/xfs_dir2_node.c    |   17 ++++++++++++++++-
+ fs/xfs/xfs_dir2_priv.h    |    2 +-
+ fs/xfs/xfs_dquot.c        |   22 ++++++++++++++++++----
+ fs/xfs/xfs_ialloc.c       |   17 ++++++++++++++++-
+ fs/xfs/xfs_ialloc_btree.c |   19 ++++++++++++++++---
+ fs/xfs/xfs_inode.c        |   19 +++++++++++++++++--
+ fs/xfs/xfs_inode.h        |    2 +-
+ fs/xfs/xfs_itable.c       |    2 +-
+ fs/xfs/xfs_mount.c        |   19 +++++++++++++++++--
+ 18 files changed, 261 insertions(+), 52 deletions(-)
 
-This version add write verifiers to all buffers that aren't directly
-read (i.e. via xfs_buf_get*() interfaces), and drops the log
-recovery verifiers from the series as it really needs more buffer
-item format flags to do relaibly.
-
-The seris is just about ready to go - it passes all of xfstests here
-except for 070. With the addition of the getbuf write verifiers,
-this series is now detecting a corrupt xfs_da_node buffer being
-written to disk.  It appears to be a new symptom of known problem,
-as tracing indicates that the test is triggering the same double
-split/join pattern as described here:
-
-http://oss.sgi.com/archives/xfs/2012-03/msg00347.html
-
-There are signs that test 117 might also trigger the situation - it
-is hitting the double leaf split code as well, but not following it
-up with a join so it hasn't triggered the bad write (yet!).
-
-This is a pre-existing corruption, that the above post took 3 solid
-days of debugging to understand enough to write that description.
-I'm kind of glad I did right it now, because it was a great
-refresher.  However, it might take me another 3 days to did the
-problem out, and I'd really like to get this code into the dev tree
-ASAP.
-
-Cheers,
-
-Dave.
-
---
-
-Changes in version 4:
-- fixed function names in agf/agi verifier corruption output
-- fixed xfs_da_node verify function (use && instead of ||)
-- dropped log recovery verifier patch as the recovery of remote
-  symlink buffers cannot be distinguished from other metadata magic
-  numbers. Will be re-introduced when the CRC format change is made
-- added write verifiers for newly allocated buffers.
-- all the bug fixes have been moved to a separate series that needs
-  to be applied first (some are already in the dev tree).
-
-Changes in version 3:
-- update agfl verfier commit to mention debug checks are being done
-  unconditionally now.
-- fixed agfl verifier null point crash when invalid block numbers
-  are found
-- ifdef'd out agfl verifier checks as they are not reliable because
-  mkfs does not initialise the full AGFL to known values.
-- fixed quiet mount flag handling for superblock verification.
-- directorry -> directory
-- convert to struct buf_ops method of attaching verifiers to the
-  buffer. This provides a much cleaner abstraction and simpler
-  future expansion of operations on the buffer. It removes a great
-  deal of code that is repeated through all the verifiers, too, by
-  separating them from buffer IO completion processing.
-- add initial support for log write verifiers
-
-  Log write verifiers are, in general, identical to the existing
-  verifiers. There are only a small number of modifications
-  necessary, mainly due to log recovery occurring before certain
-  in-memory structures are initialised (e.g. the struct xfs_perag).
-  Write verifiers that need different checks during recovery do so
-  via detection of the XLOG_ACTIVE_RECOVERY flag on the log.
-
-  Log recovery does not do read verification of the buffers at this
-  point in time, mainly due to the fact we don't know what the
-  contents of the buffer is before we read it - the buffer logging
-  is generic and content unaware. However, almost all metadata has
-  magic numbers in it, so after the changes have been replayed into
-  the buffer we can snoop the magic number out of the buffer and
-  attach the appropriate verifier before it is written back. Hence
-  we should catch gross corruptions introduced by recovery errors.
-
-Changes in Version 2:
-
-- fixed use of xfs_dir2_db_t instead of xfs_dablk_t in directory and
-  attr read functions (found when testing xfstests --large-fs on a
-  500TB fs and attribute block numbers went beyond 32 bits). This
-  mistake was copy-n-pasted several times.
-- fixed use of "int map_type" instead of "xfs_daddr_t mappedbno" in
-  directory and attr read functions.
-- fixed incorrect logic in xfs_dir2_block_verify where a failed
-  block check would not clear the block_ok flag correctly
-- invalidate allocbt->freelist buffers so they don't get written
-  after being freed and while still on the freelist
-- added initial suppor for write verifiers.
-
-  Write verifiers are similar to read verifiers, the are simply
-  called just prior to issuing the IO on the buffer. The buffer is
-  locked at this point, so we are guaranteed an unchanging buffer
-  to work from.
-
-  The initial write verifiers are simply the same as the read
-  verifiers, except they don't have the ioend processing in them. A
-  failure of the write verifier will cause the filesystem to shut
-  down as writing invalid metadata to disk is a bad thing. The write
-  verifier for the alloc btree blocks was what discovered the
-  writing of freed allocbt blocks to disk from the free list.
-
-  Eventually, the metadata CRC will be calculated in the write
-  verifier after validating that the buffer contents are valid.
-
-This is the next step along the road to metadata CRC checking. What
-the series does is add an iodone callback to most metadata buffer
-read operations that is only executed when the buffer is physically
-read from disk.  Read operations that hit the cache do no trigger a
-verification, as CRCs only protect the on-disk metadata and the
-in-memory buffer can be changed at any time after it is read without
-recalculating the CRC of the buffer.
-
-Hence we need infrastructure that only triggers verification as a
-result of a physical read IO. We can do that easily enough via the
-existing b_iodone callback infrastructure. This callback is
-currently only used by writes, and callbacks clear themselves from
-the buffer b_iodone function pointer once they are run. By following
-this same usage pattern, we can attach a verifier callback to the
-buffer when it is first read from disk and clear it from the
-b_iodone callback once it has been executed, preserving the existing
-behaviour for buffers that are cached in memory.
-
-To do this, we nee dto add a verifier function to all the buffer
-read functions that can be attached to the buffer if we are going to
-execute a physical read to fill the buffer. The iodone callback is
-only passed the buffer, so the only context for verification we have
-is the function being called.
-
-Hence the initial verifier functions simply check the buffer for
-valid contents according to the type that is expected in the buffer.
-In future, more targetted verifiers could be implmented to verify
-that buffers are in certain states or with certain constraints, but
-that is not a focus of this patch set.
-
-If a verifier function detects an inconsistency or corruption, the
-only way it can pass that error to waiters is via placing an error
-on the buffer itself via xfs_buf_ioerror(). A validation error
-should set the error to EFSCORRUPTED, so that a validation error can
-be distinguished from an IO failure, which will result in an EIO
-being set on the buffer. Once processing is complete, the iodone
-function is cleared and the next stage of ioend processing is
-triggered by calling xfs_buf_ioend(). This is typically done like
-this:
-
-void verifier_fn(struct xfs_buf *bp)
-{
-	// check buffer
-
-	if (!buf_ok) {
-		xfs_error_report();
-		xfs_buf_ioerror(bp, EFSCORRUPTED);
-	}
-
-	bp->b_iodone = NULL;
-	xfs_buf_ioend(bp);
-}
-
-
-Hence callers that are returned a buffer need to check the buffer
-for a validation error before using it. If special error handling
-for a validation error is necessary, it needs to catch a
-EFSCORRUPTED error. In most cases (e.g.  xfs_trans_read_buf_map())
-this checking is already done, so there's relatively few places that
-need modifications to their error handling to handle this.
-
-
-The verifiers still emit error reports with stack traces, but they
-are probably less useful than they were because the stack trace will
-simply point to the IO completion stack. It is an open question as
-to whether the error report should be in the verifier or issued by
-the waiting context - I'm happy to have reports in the waiting
-context in the places where there isn't already an error report if
-necessary.
-
-The next step in this process (i.e. the next patch set) is to add a
-pre-write callback to verify the contents of the buffer just before
-it is issued to disk.  This will allow us to verify that detectable
-in-memory corruption is not being propagated to disk, and will use
-the same verifier function as the read code.  Once these verifiers
-are in place, the infrastructure for enabling CRC validation of
-metadata buffers will be in place.
-
-These write verifiers will initially be identical to these read
-verifiers, but once CRC verification and calculation is added, the
-callbacks will be different but the verifier identical.
-
-It should be noted that this patch set does not quite cover all
-metadata types - remote attribute and symlink blocks are not
-currently handled because there is no way to validate those buffers
-are good or bad because all they contain is user data. Verifiers for
-these types of metadata buffers will be added when CRC protection is
-added to these types.
-
+diff --git a/fs/xfs/xfs_alloc.c b/fs/xfs/xfs_alloc.c
+index accb5b7..1c53102 100644
+--- a/fs/xfs/xfs_alloc.c
++++ b/fs/xfs/xfs_alloc.c
+@@ -430,8 +430,8 @@ xfs_alloc_fixup_trees(
+ 	return 0;
+ }
+ 
+-void
+-xfs_agfl_read_verify(
++static void
++xfs_agfl_verify(
+ 	struct xfs_buf	*bp)
+ {
+ #ifdef WHEN_CRCS_COME_ALONG
+@@ -463,6 +463,21 @@ xfs_agfl_read_verify(
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
+ #endif
++}
++
++static void
++xfs_agfl_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_agfl_verify(bp);
++}
++
++void
++xfs_agfl_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_agfl_verify(bp);
++	bp->b_pre_io = xfs_agfl_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+@@ -2129,7 +2144,7 @@ xfs_alloc_put_freelist(
+ }
+ 
+ static void
+-xfs_agf_read_verify(
++xfs_agf_verify(
+ 	struct xfs_buf	*bp)
+  {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+@@ -2155,7 +2170,21 @@ xfs_agf_read_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agf);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
++
++static void
++xfs_agf_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_agf_verify(bp);
++}
+ 
++void
++xfs_agf_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_agf_verify(bp);
++	bp->b_pre_io = xfs_agf_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+diff --git a/fs/xfs/xfs_alloc_btree.c b/fs/xfs/xfs_alloc_btree.c
+index 4167e72..6fc432b 100644
+--- a/fs/xfs/xfs_alloc_btree.c
++++ b/fs/xfs/xfs_alloc_btree.c
+@@ -272,8 +272,8 @@ xfs_allocbt_key_diff(
+ 	return (__int64_t)be32_to_cpu(kp->ar_startblock) - rec->ar_startblock;
+ }
+ 
+-void
+-xfs_allocbt_read_verify(
++static void
++xfs_allocbt_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+@@ -311,11 +311,24 @@ xfs_allocbt_read_verify(
+ 
+ 	if (!sblock_ok) {
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR("xfs_allocbt_read_verify",
+-					XFS_ERRLEVEL_LOW, mp, block);
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, block);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
+ 
++static void
++xfs_allocbt_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_allocbt_verify(bp);
++}
++
++void
++xfs_allocbt_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_allocbt_verify(bp);
++	bp->b_pre_io = xfs_allocbt_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
+index 5ba92eb..bb96c55 100644
+--- a/fs/xfs/xfs_attr_leaf.c
++++ b/fs/xfs/xfs_attr_leaf.c
+@@ -87,7 +87,7 @@ STATIC void xfs_attr_leaf_moveents(xfs_attr_leafblock_t *src_leaf,
+ 					 xfs_mount_t *mp);
+ STATIC int xfs_attr_leaf_entsize(xfs_attr_leafblock_t *leaf, int index);
+ 
+-void
++static void
+ xfs_attr_leaf_verify(
+ 	struct xfs_buf		*bp)
+ {
+@@ -100,11 +100,26 @@ xfs_attr_leaf_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
++
++static void
++xfs_attr_leaf_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_attr_leaf_verify(bp);
++}
+ 
++void
++xfs_attr_leaf_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_attr_leaf_verify(bp);
++	bp->b_pre_io = xfs_attr_leaf_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+ 
++
+ int
+ xfs_attr_leaf_read(
+ 	struct xfs_trans	*tp,
+@@ -114,7 +129,7 @@ xfs_attr_leaf_read(
+ 	struct xfs_buf		**bpp)
+ {
+ 	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+-					XFS_ATTR_FORK, xfs_attr_leaf_verify);
++				XFS_ATTR_FORK, xfs_attr_leaf_read_verify);
+ }
+ 
+ /*========================================================================
+diff --git a/fs/xfs/xfs_attr_leaf.h b/fs/xfs/xfs_attr_leaf.h
+index 098e9a5..3bbf627 100644
+--- a/fs/xfs/xfs_attr_leaf.h
++++ b/fs/xfs/xfs_attr_leaf.h
+@@ -264,6 +264,6 @@ int	xfs_attr_leaf_newentsize(int namelen, int valuelen, int blocksize,
+ int	xfs_attr_leaf_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 			xfs_dablk_t bno, xfs_daddr_t mappedbno,
+ 			struct xfs_buf **bpp);
+-void	xfs_attr_leaf_verify(struct xfs_buf *bp);
++void	xfs_attr_leaf_read_verify(struct xfs_buf *bp);
+ 
+ #endif	/* __XFS_ATTR_LEAF_H__ */
+diff --git a/fs/xfs/xfs_bmap_btree.c b/fs/xfs/xfs_bmap_btree.c
+index bddca9b..17d7423 100644
+--- a/fs/xfs/xfs_bmap_btree.c
++++ b/fs/xfs/xfs_bmap_btree.c
+@@ -708,8 +708,8 @@ xfs_bmbt_key_diff(
+ 				      cur->bc_rec.b.br_startoff;
+ }
+ 
+-void
+-xfs_bmbt_read_verify(
++static void
++xfs_bmbt_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+@@ -744,11 +744,24 @@ xfs_bmbt_read_verify(
+ 
+ 	if (!lblock_ok) {
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR("xfs_bmbt_read_verify",
+-					XFS_ERRLEVEL_LOW, mp, block);
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, block);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
+ 
++static void
++xfs_bmbt_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_bmbt_verify(bp);
++}
++
++void
++xfs_bmbt_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_bmbt_verify(bp);
++	bp->b_pre_io = xfs_bmbt_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+diff --git a/fs/xfs/xfs_da_btree.c b/fs/xfs/xfs_da_btree.c
+index 6b5d6e7..fb6b7f6 100644
+--- a/fs/xfs/xfs_da_btree.c
++++ b/fs/xfs/xfs_da_btree.c
+@@ -92,7 +92,7 @@ STATIC int	xfs_da_blk_unlink(xfs_da_state_t *state,
+ STATIC void	xfs_da_state_kill_altpath(xfs_da_state_t *state);
+ 
+ static void
+-__xfs_da_node_verify(
++xfs_da_node_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+@@ -108,12 +108,17 @@ __xfs_da_node_verify(
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
+ 
+-	bp->b_iodone = NULL;
+-	xfs_buf_ioend(bp, 0);
+ }
+ 
+ static void
+-xfs_da_node_verify(
++xfs_da_node_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_da_node_verify(bp);
++}
++
++static void
++xfs_da_node_read_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+@@ -121,21 +126,22 @@ xfs_da_node_verify(
+ 
+ 	switch (be16_to_cpu(info->magic)) {
+ 		case XFS_DA_NODE_MAGIC:
+-			__xfs_da_node_verify(bp);
+-			return;
++			xfs_da_node_verify(bp);
++			break;
+ 		case XFS_ATTR_LEAF_MAGIC:
+-			xfs_attr_leaf_verify(bp);
++			xfs_attr_leaf_read_verify(bp);
+ 			return;
+ 		case XFS_DIR2_LEAFN_MAGIC:
+-			xfs_dir2_leafn_verify(bp);
++			xfs_dir2_leafn_read_verify(bp);
+ 			return;
+ 		default:
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW,
++					     mp, info);
++			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			break;
+ 	}
+ 
+-	XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, info);
+-	xfs_buf_ioerror(bp, EFSCORRUPTED);
+-
++	bp->b_pre_io = xfs_da_node_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+@@ -150,7 +156,7 @@ xfs_da_node_read(
+ 	int			which_fork)
+ {
+ 	return xfs_da_read_buf(tp, dp, bno, mappedbno, bpp,
+-					which_fork, xfs_da_node_verify);
++					which_fork, xfs_da_node_read_verify);
+ }
+ 
+ /*========================================================================
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index ca03b10..0f8793c 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -71,7 +71,21 @@ xfs_dir2_block_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
+ 
++static void
++xfs_dir2_block_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_block_verify(bp);
++}
++
++void
++xfs_dir2_block_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_block_verify(bp);
++	bp->b_pre_io = xfs_dir2_block_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+@@ -85,7 +99,7 @@ xfs_dir2_block_read(
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 
+ 	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
+-					XFS_DATA_FORK, xfs_dir2_block_verify);
++				XFS_DATA_FORK, xfs_dir2_block_read_verify);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 795cfdd..0af533b 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -200,11 +200,26 @@ xfs_dir2_data_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
++
++static void
++xfs_dir2_data_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_data_verify(bp);
++}
+ 
++void
++xfs_dir2_data_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_data_verify(bp);
++	bp->b_pre_io = xfs_dir2_data_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+ 
++
+ int
+ xfs_dir2_data_read(
+ 	struct xfs_trans	*tp,
+@@ -214,7 +229,7 @@ xfs_dir2_data_read(
+ 	struct xfs_buf		**bpp)
+ {
+ 	return xfs_da_read_buf(tp, dp, bno, mapped_bno, bpp,
+-					XFS_DATA_FORK, xfs_dir2_data_verify);
++				XFS_DATA_FORK, xfs_dir2_data_read_verify);
+ }
+ 
+ int
+@@ -225,7 +240,7 @@ xfs_dir2_data_readahead(
+ 	xfs_daddr_t		mapped_bno)
+ {
+ 	return xfs_da_reada_buf(tp, dp, bno, mapped_bno,
+-					XFS_DATA_FORK, xfs_dir2_data_verify);
++				XFS_DATA_FORK, xfs_dir2_data_read_verify);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 8a95547..5b3bcab 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -62,23 +62,40 @@ xfs_dir2_leaf_verify(
+ 		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
++
++static void
++xfs_dir2_leaf1_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
++}
+ 
++static void
++xfs_dir2_leaf1_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
++	bp->b_pre_io = xfs_dir2_leaf1_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+ 
+ static void
+-xfs_dir2_leaf1_verify(
+-	struct xfs_buf		*bp)
++xfs_dir2_leafn_write_verify(
++	struct xfs_buf	*bp)
+ {
+-	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAFN_MAGIC));
+ }
+ 
+ void
+-xfs_dir2_leafn_verify(
+-	struct xfs_buf		*bp)
++xfs_dir2_leafn_read_verify(
++	struct xfs_buf	*bp)
+ {
+ 	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAFN_MAGIC));
++	bp->b_pre_io = xfs_dir2_leafn_write_verify;
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
+ }
+ 
+ static int
+@@ -90,7 +107,7 @@ xfs_dir2_leaf_read(
+ 	struct xfs_buf		**bpp)
+ {
+ 	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+-					XFS_DATA_FORK, xfs_dir2_leaf1_verify);
++				XFS_DATA_FORK, xfs_dir2_leaf1_read_verify);
+ }
+ 
+ int
+@@ -102,7 +119,7 @@ xfs_dir2_leafn_read(
+ 	struct xfs_buf		**bpp)
+ {
+ 	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+-					XFS_DATA_FORK, xfs_dir2_leafn_verify);
++				XFS_DATA_FORK, xfs_dir2_leafn_read_verify);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 7c6f956..a58abe1 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -69,11 +69,26 @@ xfs_dir2_free_verify(
+ 				     XFS_ERRLEVEL_LOW, mp, hdr);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
++
++static void
++xfs_dir2_free_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_free_verify(bp);
++}
+ 
++void
++xfs_dir2_free_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dir2_free_verify(bp);
++	bp->b_pre_io = xfs_dir2_free_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+ 
++
+ static int
+ __xfs_dir2_free_read(
+ 	struct xfs_trans	*tp,
+@@ -83,7 +98,7 @@ __xfs_dir2_free_read(
+ 	struct xfs_buf		**bpp)
+ {
+ 	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
+-					XFS_DATA_FORK, xfs_dir2_free_verify);
++				XFS_DATA_FORK, xfs_dir2_free_read_verify);
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index aa06174..4aeef62 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -72,7 +72,7 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+ 
+ /* xfs_dir2_leaf.c */
+-extern void xfs_dir2_leafn_verify(struct xfs_buf *bp);
++extern void xfs_dir2_leafn_read_verify(struct xfs_buf *bp);
+ extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
+ 		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index 2e18382..eff7586 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -361,7 +361,7 @@ xfs_qm_dqalloc(
+ }
+ 
+ STATIC void
+-xfs_dquot_read_verify(
++xfs_dquot_buf_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+@@ -388,12 +388,26 @@ xfs_dquot_read_verify(
+ 		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
+ 					"xfs_dquot_read_verify");
+ 		if (error) {
+-			XFS_CORRUPTION_ERROR("xfs_dquot_read_verify",
+-					     XFS_ERRLEVEL_LOW, mp, d);
++			XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, d);
+ 			xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 			break;
+ 		}
+ 	}
++}
++
++static void
++xfs_dquot_buf_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dquot_buf_verify(bp);
++}
++
++static void
++xfs_dquot_buf_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_dquot_buf_verify(bp);
++	bp->b_pre_io = xfs_dquot_buf_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+@@ -521,7 +535,7 @@ xfs_qm_dqtobp(
+ 		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+ 					   dqp->q_blkno,
+ 					   mp->m_quotainfo->qi_dqchunklen,
+-					   0, &bp, xfs_dquot_read_verify);
++					   0, &bp, xfs_dquot_buf_read_verify);
+ 
+ 		if (error == EFSCORRUPTED && (flags & XFS_QMOPT_DQREPAIR)) {
+ 			xfs_dqid_t firstid = (xfs_dqid_t)map.br_startoff *
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index dd53858..d675cc5 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1473,7 +1473,7 @@ xfs_check_agi_unlinked(
+ #endif
+ 
+ static void
+-xfs_agi_read_verify(
++xfs_agi_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+@@ -1492,6 +1492,21 @@ xfs_agi_read_verify(
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
+ 	xfs_check_agi_unlinked(agi);
++}
++
++static void
++xfs_agi_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_agi_verify(bp);
++}
++
++void
++xfs_agi_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_agi_verify(bp);
++	bp->b_pre_io = xfs_agi_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+diff --git a/fs/xfs/xfs_ialloc_btree.c b/fs/xfs/xfs_ialloc_btree.c
+index 11306c6..15a79f8 100644
+--- a/fs/xfs/xfs_ialloc_btree.c
++++ b/fs/xfs/xfs_ialloc_btree.c
+@@ -183,7 +183,7 @@ xfs_inobt_key_diff(
+ }
+ 
+ void
+-xfs_inobt_read_verify(
++xfs_inobt_verify(
+ 	struct xfs_buf		*bp)
+ {
+ 	struct xfs_mount	*mp = bp->b_target->bt_mount;
+@@ -211,11 +211,24 @@ xfs_inobt_read_verify(
+ 
+ 	if (!sblock_ok) {
+ 		trace_xfs_btree_corrupt(bp, _RET_IP_);
+-		XFS_CORRUPTION_ERROR("xfs_inobt_read_verify",
+-					XFS_ERRLEVEL_LOW, mp, block);
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, block);
+ 		xfs_buf_ioerror(bp, EFSCORRUPTED);
+ 	}
++}
++
++static void
++xfs_inobt_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_inobt_verify(bp);
++}
+ 
++void
++xfs_inobt_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_inobt_verify(bp);
++	bp->b_pre_io = xfs_inobt_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index d1e4c9f..4a9bd9e 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -382,7 +382,7 @@ xfs_inobp_check(
+ }
+ #endif
+ 
+-void
++static void
+ xfs_inode_buf_verify(
+ 	struct xfs_buf	*bp)
+ {
+@@ -418,6 +418,21 @@ xfs_inode_buf_verify(
+ 		}
+ 	}
+ 	xfs_inobp_check(mp, bp);
++}
++
++static void
++xfs_inode_buf_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_inode_buf_verify(bp);
++}
++
++void
++xfs_inode_buf_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_inode_buf_verify(bp);
++	bp->b_pre_io = xfs_inode_buf_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+@@ -447,7 +462,7 @@ xfs_imap_to_bp(
+ 	buf_flags |= XBF_UNMAPPED;
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, imap->im_blkno,
+ 				   (int)imap->im_len, buf_flags, &bp,
+-				   xfs_inode_buf_verify);
++				   xfs_inode_buf_read_verify);
+ 	if (error) {
+ 		if (error == EAGAIN) {
+ 			ASSERT(buf_flags & XBF_TRYLOCK);
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 3c1d831..32b6d70 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -554,7 +554,7 @@ int		xfs_imap_to_bp(struct xfs_mount *, struct xfs_trans *,
+ 			       struct xfs_buf **, uint, uint);
+ int		xfs_iread(struct xfs_mount *, struct xfs_trans *,
+ 			  struct xfs_inode *, uint);
+-void		xfs_inode_buf_verify(struct xfs_buf *);
++void		xfs_inode_buf_read_verify(struct xfs_buf *);
+ void		xfs_dinode_to_disk(struct xfs_dinode *,
+ 				   struct xfs_icdinode *);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 0f18d41..7f86fda 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -397,7 +397,7 @@ xfs_bulkstat(
+ 							& ~r.ir_free)
+ 						xfs_btree_reada_bufs(mp, agno,
+ 							agbno, nbcluster,
+-							xfs_inode_buf_verify);
++							xfs_inode_buf_read_verify);
+ 				}
+ 				irbp->ir_startino = r.ir_startino;
+ 				irbp->ir_freecount = r.ir_freecount;
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 8699e5e..a622f6f 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -612,8 +612,8 @@ xfs_sb_to_disk(
+ 	}
+ }
+ 
+-void
+-xfs_sb_read_verify(
++static void
++xfs_sb_verify(
+ 	struct xfs_buf	*bp)
+ {
+ 	struct xfs_mount *mp = bp->b_target->bt_mount;
+@@ -629,6 +629,21 @@ xfs_sb_read_verify(
+ 	error = xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
+ 	if (error)
+ 		xfs_buf_ioerror(bp, error);
++}
++
++static void
++xfs_sb_write_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_sb_verify(bp);
++}
++
++void
++xfs_sb_read_verify(
++	struct xfs_buf	*bp)
++{
++	xfs_sb_verify(bp);
++	bp->b_pre_io = xfs_sb_write_verify;
+ 	bp->b_iodone = NULL;
+ 	xfs_buf_ioend(bp, 0);
+ }
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
