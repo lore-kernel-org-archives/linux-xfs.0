@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA7KTBYC177438 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 14:29:11 -0600
+	qA7KVcO0177637 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 14:31:38 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	0UM9yE1B0KlyodXo for <xfs@oss.sgi.com>;
-	Wed, 07 Nov 2012 12:31:07 -0800 (PST)
-Date: Thu, 8 Nov 2012 07:31:05 +1100
+	XdEcooc9St7swCF5 for <xfs@oss.sgi.com>;
+	Wed, 07 Nov 2012 12:33:35 -0800 (PST)
+Date: Thu, 8 Nov 2012 07:33:33 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
-Message-ID: <20121107203105.GE6434@dastard>
-References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
-	<1352295452-4726-2-git-send-email-david@fromorbit.com>
-	<m2ehk5qt88.fsf@firstfloor.org>
+Subject: Re: [PATCH v7 07/10] xfs: add inode id filtering to eofblocks scan
+Message-ID: <20121107203333.GF6434@dastard>
+References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
+	<1352308874-64562-1-git-send-email-bfoster@redhat.com>
+	<1352308874-64562-2-git-send-email-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <m2ehk5qt88.fsf@firstfloor.org>
+In-Reply-To: <1352308874-64562-2-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -28,41 +28,46 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Andi Kleen <andi@firstfloor.org>
+To: Brian Foster <bfoster@redhat.com>
 Cc: xfs@oss.sgi.com
 
-On Wed, Nov 07, 2012 at 08:21:27AM -0800, Andi Kleen wrote:
-> Dave Chinner <david@fromorbit.com> writes:
-> > + */
-> > +static inline __uint32_t
-> > +xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-> > +{
-> > +	__uint32_t zero = 0;
-> > +	__uint32_t crc;
-> > +
-> > +	/* Calculate CRC up to the checksum. */
-> > +	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
-> > +
-> > +	/* Skip checksum field */
-> > +	crc = crc32c(crc, &zero, sizeof(__u32));
-> > +
-> > +	/* Calculate the rest of the CRC. */
-> > +	return crc32c(crc, &buffer[cksum_offset + sizeof(__be32)],
-> > +		      length - (cksum_offset + sizeof(__be32)));
+On Wed, Nov 07, 2012 at 12:21:13PM -0500, Brian Foster wrote:
+> Support inode ID filtering in the eofblocks scan. The caller must
+> set the associated XFS_EOF_FLAGS_*ID bit and ID field.
 > 
-> Don't you need to remap a zero result to some other value, otherwise a
-> real zero checksum will never be checked?
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+> ---
+> 
+> v7:
+> - Separate padding into two fields to explicitly handle alignment requirements.
+> - Fix up style of flags defines.
+> 
+>  fs/xfs/xfs_fs.h     |   14 ++++++++++++--
+>  fs/xfs/xfs_icache.c |   22 ++++++++++++++++++++++
+>  fs/xfs/xfs_ioctl.c  |    3 ++-
+>  3 files changed, 36 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
+> index 26ff43a..7113564 100644
+> --- a/fs/xfs/xfs_fs.h
+> +++ b/fs/xfs/xfs_fs.h
+> @@ -345,13 +345,23 @@ typedef struct xfs_error_injection {
+>  struct xfs_eofblocks {
+>  	__u32		eof_version;
+>  	__u32		eof_flags;
+> -	__u64		pad[15];
+> +	uid_t		eof_uid;
+> +	gid_t		eof_gid;
+> +	prid_t		eof_prid;
+> +	__u32		pad32;
+> +	__u64		pad64[13];
+>  };
 
-Why would that be necessary? We never include the checksum field in
-the calculation when setting it or verifiying it, and the
-verification uses exactly the same method as the original
-calculation to check the CRC, so it doesn't matter if the CRC value
-is zero or not - if it matches (zero or otherwise), the validation
-passes....
+Looks good.
 
-Cheers,
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
