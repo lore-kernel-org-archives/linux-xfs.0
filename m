@@ -1,24 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA7HuYix166985 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 11:56:34 -0600
-Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id nHI7mfxSyNWI2LmA for
-	<xfs@oss.sgi.com>; Wed, 07 Nov 2012 09:58:32 -0800 (PST)
-Received: from int-mx02.intmail.prod.int.phx2.redhat.com
-	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA7HwVSA032134
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 12:58:31 -0500
-Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
-	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id qA7HwVIZ018207
-	for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 12:58:31 -0500
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v2 RFC] xfs_spaceman: updated preallocation support (eofblocks
-	v7)
-Date: Wed,  7 Nov 2012 13:00:23 -0500
-Message-Id: <1352311223-55321-1-git-send-email-bfoster@redhat.com>
+	qA7KTBYC177438 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 14:29:11 -0600
+Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
+	[150.101.137.141]) by cuda.sgi.com with ESMTP id
+	0UM9yE1B0KlyodXo for <xfs@oss.sgi.com>;
+	Wed, 07 Nov 2012 12:31:07 -0800 (PST)
+Date: Thu, 8 Nov 2012 07:31:05 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
+Message-ID: <20121107203105.GE6434@dastard>
+References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+	<1352295452-4726-2-git-send-email-david@fromorbit.com>
+	<m2ehk5qt88.fsf@firstfloor.org>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <m2ehk5qt88.fsf@firstfloor.org>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,186 +24,48 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Andi Kleen <andi@firstfloor.org>
+Cc: xfs@oss.sgi.com
 
-This is an update to Dave's patch to xfs_spaceman to support
-preallocation trimming. The original patch is here:
+On Wed, Nov 07, 2012 at 08:21:27AM -0800, Andi Kleen wrote:
+> Dave Chinner <david@fromorbit.com> writes:
+> > + */
+> > +static inline __uint32_t
+> > +xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+> > +{
+> > +	__uint32_t zero = 0;
+> > +	__uint32_t crc;
+> > +
+> > +	/* Calculate CRC up to the checksum. */
+> > +	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
+> > +
+> > +	/* Skip checksum field */
+> > +	crc = crc32c(crc, &zero, sizeof(__u32));
+> > +
+> > +	/* Calculate the rest of the CRC. */
+> > +	return crc32c(crc, &buffer[cksum_offset + sizeof(__be32)],
+> > +		      length - (cksum_offset + sizeof(__be32)));
+> 
+> Don't you need to remap a zero result to some other value, otherwise a
+> real zero checksum will never be checked?
 
-http://oss.sgi.com/archives/xfs/2012-10/msg00418.html
+Why would that be necessary? We never include the checksum field in
+the calculation when setting it or verifiying it, and the
+verification uses exactly the same method as the original
+calculation to check the CRC, so it doesn't matter if the CRC value
+is zero or not - if it matches (zero or otherwise), the validation
+passes....
 
-The code is updated as follows:
+Cheers,
 
-- Update to latest struct xfs_eofblocks (supports v7 of the
-  speculative preallocation inode tracking set).
-- Support multiple id scan.
-- Hack in the '-a' flag to support "async/trylock" scan.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
-
-Dave,
-
-This replaces the v6 version by matching the data structure corrected for
-alignment. I removed the argmin change and added the -a flag instead. When I read
-your last mail, I don't think this is exactly what you had in mind but your intent
-wasn't completely clear to me. I at least want to make sure this is up to date and
-functional, so feel free to adjust the -a flag as necessary.
-
-Brian
-
- spaceman/prealloc.c |   79 +++++++++++++++++++++++++++++++--------------------
- 1 files changed, 48 insertions(+), 31 deletions(-)
-
-diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-index 8af30a6..ed8ad0e 100644
---- a/spaceman/prealloc.c
-+++ b/spaceman/prealloc.c
-@@ -31,23 +31,30 @@
- struct xfs_eofblocks {
- 	__u32		eof_version;
- 	__u32		eof_flags;
--	__u32		eof_q_id;
--	__u32		eof_q_type;
--	__u32		eof_min_file_size;
--	unsigned char	pad[12];
-+	uid_t		eof_uid;
-+	gid_t		eof_gid;
-+	__u32		eof_prid;
-+	__u32		pad32;
-+	__u64		eof_min_file_size;
-+	__u64		pad64[12];
- };
- 
- /* eof_flags values */
--#define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
--#define XFS_EOF_FLAGS_QUOTA		0x02	/* filter by quota id */
--#define XFS_EOF_FLAGS_MINFILESIZE	0x04	/* filter by min file size */
-+#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
-+#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
-+#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
-+#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
-+#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
- #endif
- 
- int gflag;
- int uflag;
- int pflag;
-+int aflag;
- int sflag;
--int qid;
-+int uid;
-+int gid;
-+int prid;
- int minlen;
- 
- static cmdinfo_t prealloc_cmd;
-@@ -66,31 +73,35 @@ prealloc_f(
- 	uflag = 0;
- 	gflag = 0;
- 	pflag = 0;
-+	aflag = 0;
- 	sflag = 0;
- 	minlen = 0;
--	qid = 0;
-+	uid = 0;
-+	gid = 0;
-+	prid = 0;
- 
--	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
-+	while ((c = getopt(argc, argv, "g:m:p:asu:")) != EOF) {
- 		switch (c) {
- 		case 'g':
--			if (uflag || pflag)
--				return command_usage(&prealloc_cmd);
- 			gflag = 1;
--			qid = atoi(optarg);
-+			gid = atoi(optarg);
- 			break;
- 		case 'u':
--			if (gflag || pflag)
--				return command_usage(&prealloc_cmd);
- 			uflag = 1;
--			qid = atoi(optarg);
-+			uid = atoi(optarg);
- 			break;
- 		case 'p':
--			if (uflag || gflag)
--				return command_usage(&prealloc_cmd);
- 			pflag = 1;
--			qid = atoi(optarg);
-+			prid = atoi(optarg);
-+			break;
-+		case 'a':
-+			if (sflag)
-+				return command_usage(&prealloc_cmd);
-+			aflag = 1;
- 			break;
- 		case 's':
-+			if (aflag)
-+				return command_usage(&prealloc_cmd);
- 			sflag = 1;
- 			break;
- 		case 'm':
-@@ -111,15 +122,20 @@ prealloc_f(
- 		eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
- 		eofb.eof_min_file_size = minlen;
- 	}
--	if (uflag || gflag || pflag) {
--		eofb.eof_flags |= XFS_EOF_FLAGS_QUOTA;
--		eofb.eof_q_id = qid;
--		if (uflag)
--			eofb.eof_q_type = XQM_USRQUOTA;
--		else if (gflag)
--			eofb.eof_q_type = XQM_GRPQUOTA;
--		else if (pflag)
--			eofb.eof_q_type = XQM_PRJQUOTA;
-+
-+	if (uflag) {
-+		eofb.eof_flags |= XFS_EOF_FLAGS_UID;
-+		eofb.eof_uid = uid;
-+	}
-+
-+	if (gflag) {
-+		eofb.eof_flags |= XFS_EOF_FLAGS_GID;
-+		eofb.eof_gid = gid;
-+	}
-+
-+	if (pflag) {
-+		eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
-+		eofb.eof_prid = prid;
- 	}
- 
- 	if (xfsctl(file->name, file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-@@ -136,8 +152,9 @@ prealloc_help(void)
- "\n"
- "Control speculative preallocation\n"
- "\n"
--"Options: [-s] [-ugp id] [-m minlen]\n"
-+"Options: [-as] [-u id] [-g id] [-p id] [-m minlen]\n"
- "\n"
-+" -a -- asynchronous flush - skip locked or dirty inodes\n"
- " -s -- synchronous flush - wait for flush to complete\n"
- " -u id -- remove prealloc on files matching user quota id <id>\n"
- " -g id -- remove prealloc on files matching group quota id <id>\n"
-@@ -155,9 +172,9 @@ prealloc_init(void)
- 	prealloc_cmd.cfunc = prealloc_f;
- 	prealloc_cmd.argmin = 1;
- 	prealloc_cmd.argmax = -1;
--	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
-+	prealloc_cmd.args = "[-as] [-u id] [-g id] [-p id] [-m minlen]\n";
- 	prealloc_cmd.flags = CMD_FLAG_GLOBAL;
--	prealloc_cmd.oneline = _("Control specualtive preallocation");
-+	prealloc_cmd.oneline = _("Control speculative preallocation");
- 	prealloc_cmd.help = prealloc_help;
- 
- 	add_command(&prealloc_cmd);
+Dave.
 -- 
-1.7.7.6
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
