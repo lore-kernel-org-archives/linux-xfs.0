@@ -1,22 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA7KWSqD177740 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 14:32:29 -0600
+	qA7KsQs5179043 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 14:54:26 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	YQnYlkqm0PALZXI8 for <xfs@oss.sgi.com>;
-	Wed, 07 Nov 2012 12:34:25 -0800 (PST)
-Date: Thu, 8 Nov 2012 07:33:58 +1100
+	rdmBCXePL1VDfPVP for <xfs@oss.sgi.com>;
+	Wed, 07 Nov 2012 12:56:23 -0800 (PST)
+Received: from dave by dastard with local (Exim 4.76)
+	(envelope-from <david@fromorbit.com>) id 1TWCfd-0002VR-KN
+	for xfs@oss.sgi.com; Thu, 08 Nov 2012 07:56:21 +1100
+Date: Thu, 8 Nov 2012 07:56:21 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v7 09/10] xfs: add minimum file size filtering to
-	eofblocks scan
-Message-ID: <20121107203357.GG6434@dastard>
-References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
-	<1352308874-64562-1-git-send-email-bfoster@redhat.com>
-	<1352308874-64562-3-git-send-email-bfoster@redhat.com>
+Subject: Re: [PATCH 0/6] xfs: fixes for 3.7-rc3
+Message-ID: <20121107205621.GH6434@dastard>
+References: <1351816724-3000-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352308874-64562-3-git-send-email-bfoster@redhat.com>
+In-Reply-To: <1351816724-3000-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,43 +29,36 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Brian Foster <bfoster@redhat.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Wed, Nov 07, 2012 at 12:21:14PM -0500, Brian Foster wrote:
-> Support minimum file size filtering in the eofblocks scan. The
-> caller must set the XFS_EOF_FLAGS_MINFILESIZE flags bit and minimum
-> file size value in bytes.
+On Fri, Nov 02, 2012 at 11:38:38AM +1100, Dave Chinner wrote:
+> Hi Ben,
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
-> Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-> ---
-> 
-> v7:
-> - Add eof_min_file_size such that it is aligned.
-> - Updated flags style.
-> 
->  fs/xfs/xfs_fs.h     |    7 +++++--
->  fs/xfs/xfs_icache.c |   11 +++++++++--
->  2 files changed, 14 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-> index 7113564..8455c9c 100644
-> --- a/fs/xfs/xfs_fs.h
-> +++ b/fs/xfs/xfs_fs.h
-> @@ -349,7 +349,8 @@ struct xfs_eofblocks {
->  	gid_t		eof_gid;
->  	prid_t		eof_prid;
->  	__u32		pad32;
-> -	__u64		pad64[13];
-> +	__u64		eof_min_file_size;
-> +	__u64		pad64[12];
->  };
+> Here are my current outstanding fixes that are candidates for 3.7.
+> Patches 2 and 3 are the initial fixes from the verifier series (real
+> bugs) and the other are regressions that I've recently fixed. Some
+> need to be sent back to stable kernels as well and are tagged as
+> such.
 
-Looks good.
+Hi Ben,
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+What's the status with these? It's been almost a week since I posted
+them, and apart from patch 5, they are all good to go to Linus. IMO,
+patch 5 is also good to go as well, but I don't mind if that is not
+sent immediately as that one is not as critical as the others.
 
+I'm particularly concerned because of the bug that patch 6 fixes -
+it's a real corruption bug that users are hitting we need to get it
+upstream and back into the stable kernels ASAP. But this patch
+hasn't even been committed to the dev tree yet...
+
+Can you please get these upstream ASAP? If you don't have the time
+to do it today, let me know so I can send the patches straight to
+Linus and get them to the upstream and stable trees that way....
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
