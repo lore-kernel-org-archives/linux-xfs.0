@@ -1,26 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA7HHQw5163792 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 11:17:26 -0600
+	qA7HuYix166985 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 11:56:34 -0600
 Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
-	cuda.sgi.com with ESMTP id S0h2HpfnpKmupN7L for
-	<xfs@oss.sgi.com>; Wed, 07 Nov 2012 09:19:23 -0800 (PST)
+	cuda.sgi.com with ESMTP id nHI7mfxSyNWI2LmA for
+	<xfs@oss.sgi.com>; Wed, 07 Nov 2012 09:58:32 -0800 (PST)
 Received: from int-mx02.intmail.prod.int.phx2.redhat.com
 	(int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA7HJMR1007721
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA7HwVSA032134
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 12:19:23 -0500
+	for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 12:58:31 -0500
 Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
 	by int-mx02.intmail.prod.int.phx2.redhat.com (8.13.8/8.13.8) with ESMTP
-	id qA7HJMAK008728
-	for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 12:19:22 -0500
+	id qA7HwVIZ018207
+	for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 12:58:31 -0500
 From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v7 07/10] xfs: add inode id filtering to eofblocks scan
-Date: Wed,  7 Nov 2012 12:21:13 -0500
-Message-Id: <1352308874-64562-2-git-send-email-bfoster@redhat.com>
-In-Reply-To: <1352308874-64562-1-git-send-email-bfoster@redhat.com>
-References: <1352213447-59791-1-git-send-email-bfoster@redhat.com>
-	<1352308874-64562-1-git-send-email-bfoster@redhat.com>
+Subject: [PATCH v2 RFC] xfs_spaceman: updated preallocation support (eofblocks
+	v7)
+Date: Wed,  7 Nov 2012 13:00:23 -0500
+Message-Id: <1352311223-55321-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -36,113 +34,177 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Support inode ID filtering in the eofblocks scan. The caller must
-set the associated XFS_EOF_FLAGS_*ID bit and ID field.
+This is an update to Dave's patch to xfs_spaceman to support
+preallocation trimming. The original patch is here:
+
+http://oss.sgi.com/archives/xfs/2012-10/msg00418.html
+
+The code is updated as follows:
+
+- Update to latest struct xfs_eofblocks (supports v7 of the
+  speculative preallocation inode tracking set).
+- Support multiple id scan.
+- Hack in the '-a' flag to support "async/trylock" scan.
 
 Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 ---
 
-v7:
-- Separate padding into two fields to explicitly handle alignment requirements.
-- Fix up style of flags defines.
+Dave,
 
- fs/xfs/xfs_fs.h     |   14 ++++++++++++--
- fs/xfs/xfs_icache.c |   22 ++++++++++++++++++++++
- fs/xfs/xfs_ioctl.c  |    3 ++-
- 3 files changed, 36 insertions(+), 3 deletions(-)
+This replaces the v6 version by matching the data structure corrected for
+alignment. I removed the argmin change and added the -a flag instead. When I read
+your last mail, I don't think this is exactly what you had in mind but your intent
+wasn't completely clear to me. I at least want to make sure this is up to date and
+functional, so feel free to adjust the -a flag as necessary.
 
-diff --git a/fs/xfs/xfs_fs.h b/fs/xfs/xfs_fs.h
-index 26ff43a..7113564 100644
---- a/fs/xfs/xfs_fs.h
-+++ b/fs/xfs/xfs_fs.h
-@@ -345,13 +345,23 @@ typedef struct xfs_error_injection {
+Brian
+
+ spaceman/prealloc.c |   79 +++++++++++++++++++++++++++++++--------------------
+ 1 files changed, 48 insertions(+), 31 deletions(-)
+
+diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
+index 8af30a6..ed8ad0e 100644
+--- a/spaceman/prealloc.c
++++ b/spaceman/prealloc.c
+@@ -31,23 +31,30 @@
  struct xfs_eofblocks {
  	__u32		eof_version;
  	__u32		eof_flags;
--	__u64		pad[15];
+-	__u32		eof_q_id;
+-	__u32		eof_q_type;
+-	__u32		eof_min_file_size;
+-	unsigned char	pad[12];
 +	uid_t		eof_uid;
 +	gid_t		eof_gid;
-+	prid_t		eof_prid;
++	__u32		eof_prid;
 +	__u32		pad32;
-+	__u64		pad64[13];
++	__u64		eof_min_file_size;
++	__u64		pad64[12];
  };
  
  /* eof_flags values */
- #define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
+-#define XFS_EOF_FLAGS_SYNC		0x01	/* sync/wait mode scan */
+-#define XFS_EOF_FLAGS_QUOTA		0x02	/* filter by quota id */
+-#define XFS_EOF_FLAGS_MINFILESIZE	0x04	/* filter by min file size */
++#define XFS_EOF_FLAGS_SYNC		(1 << 0) /* sync/wait mode scan */
 +#define XFS_EOF_FLAGS_UID		(1 << 1) /* filter by uid */
 +#define XFS_EOF_FLAGS_GID		(1 << 2) /* filter by gid */
 +#define XFS_EOF_FLAGS_PRID		(1 << 3) /* filter by project id */
- #define XFS_EOF_FLAGS_VALID	\
--	(XFS_EOF_FLAGS_SYNC)
-+	(XFS_EOF_FLAGS_SYNC |	\
-+	 XFS_EOF_FLAGS_UID |	\
-+	 XFS_EOF_FLAGS_GID |	\
-+	 XFS_EOF_FLAGS_PRID)
++#define XFS_EOF_FLAGS_MINFILESIZE	(1 << 4) /* filter by min file size */
+ #endif
  
+ int gflag;
+ int uflag;
+ int pflag;
++int aflag;
+ int sflag;
+-int qid;
++int uid;
++int gid;
++int prid;
+ int minlen;
  
- /*
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index b79aebe..393cd36 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1171,6 +1171,21 @@ xfs_reclaim_inodes_count(
- }
+ static cmdinfo_t prealloc_cmd;
+@@ -66,31 +73,35 @@ prealloc_f(
+ 	uflag = 0;
+ 	gflag = 0;
+ 	pflag = 0;
++	aflag = 0;
+ 	sflag = 0;
+ 	minlen = 0;
+-	qid = 0;
++	uid = 0;
++	gid = 0;
++	prid = 0;
  
- STATIC int
-+xfs_inode_match_id(
-+	struct xfs_inode	*ip,
-+	struct xfs_eofblocks	*eofb)
-+{
-+	if (eofb->eof_flags & XFS_EOF_FLAGS_UID)
-+		return ip->i_d.di_uid == eofb->eof_uid;
-+	else if (eofb->eof_flags & XFS_EOF_FLAGS_GID)
-+		return ip->i_d.di_gid == eofb->eof_gid;
-+	else if (eofb->eof_flags & XFS_EOF_FLAGS_PRID)
-+		return xfs_get_projid(ip) == eofb->eof_prid;
+-	while ((c = getopt(argc, argv, "g:m:p:su:")) != EOF) {
++	while ((c = getopt(argc, argv, "g:m:p:asu:")) != EOF) {
+ 		switch (c) {
+ 		case 'g':
+-			if (uflag || pflag)
+-				return command_usage(&prealloc_cmd);
+ 			gflag = 1;
+-			qid = atoi(optarg);
++			gid = atoi(optarg);
+ 			break;
+ 		case 'u':
+-			if (gflag || pflag)
+-				return command_usage(&prealloc_cmd);
+ 			uflag = 1;
+-			qid = atoi(optarg);
++			uid = atoi(optarg);
+ 			break;
+ 		case 'p':
+-			if (uflag || gflag)
+-				return command_usage(&prealloc_cmd);
+ 			pflag = 1;
+-			qid = atoi(optarg);
++			prid = atoi(optarg);
++			break;
++		case 'a':
++			if (sflag)
++				return command_usage(&prealloc_cmd);
++			aflag = 1;
+ 			break;
+ 		case 's':
++			if (aflag)
++				return command_usage(&prealloc_cmd);
+ 			sflag = 1;
+ 			break;
+ 		case 'm':
+@@ -111,15 +122,20 @@ prealloc_f(
+ 		eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
+ 		eofb.eof_min_file_size = minlen;
+ 	}
+-	if (uflag || gflag || pflag) {
+-		eofb.eof_flags |= XFS_EOF_FLAGS_QUOTA;
+-		eofb.eof_q_id = qid;
+-		if (uflag)
+-			eofb.eof_q_type = XQM_USRQUOTA;
+-		else if (gflag)
+-			eofb.eof_q_type = XQM_GRPQUOTA;
+-		else if (pflag)
+-			eofb.eof_q_type = XQM_PRJQUOTA;
 +
-+	return 0;
-+}
++	if (uflag) {
++		eofb.eof_flags |= XFS_EOF_FLAGS_UID;
++		eofb.eof_uid = uid;
++	}
 +
-+STATIC int
- xfs_inode_free_eofblocks(
- 	struct xfs_inode	*ip,
- 	struct xfs_perag	*pag,
-@@ -1178,6 +1193,7 @@ xfs_inode_free_eofblocks(
- 	void			*args)
- {
- 	int ret;
-+	struct xfs_eofblocks *eofb = args;
- 
- 	if (!xfs_can_free_eofblocks(ip, false)) {
- 		/* inode could be preallocated or append-only */
-@@ -1194,6 +1210,12 @@ xfs_inode_free_eofblocks(
- 	    mapping_tagged(VFS_I(ip)->i_mapping, PAGECACHE_TAG_DIRTY))
- 		return 0;
- 
-+	if (eofb &&
-+	    (eofb->eof_flags & (XFS_EOF_FLAGS_UID|XFS_EOF_FLAGS_GID|
-+			       XFS_EOF_FLAGS_PRID)) &&
-+	    !xfs_inode_match_id(ip, eofb))
-+		return 0;
++	if (gflag) {
++		eofb.eof_flags |= XFS_EOF_FLAGS_GID;
++		eofb.eof_gid = gid;
++	}
 +
- 	ret = xfs_free_eofblocks(ip->i_mount, ip, true);
++	if (pflag) {
++		eofb.eof_flags |= XFS_EOF_FLAGS_PRID;
++		eofb.eof_prid = prid;
+ 	}
  
- 	/* don't revisit the inode if we're not waiting */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 5b20ab0..c1c3ef8 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1615,7 +1615,8 @@ xfs_file_ioctl(
- 		if (eofb.eof_flags & ~XFS_EOF_FLAGS_VALID)
- 			return -XFS_ERROR(EINVAL);
+ 	if (xfsctl(file->name, file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
+@@ -136,8 +152,9 @@ prealloc_help(void)
+ "\n"
+ "Control speculative preallocation\n"
+ "\n"
+-"Options: [-s] [-ugp id] [-m minlen]\n"
++"Options: [-as] [-u id] [-g id] [-p id] [-m minlen]\n"
+ "\n"
++" -a -- asynchronous flush - skip locked or dirty inodes\n"
+ " -s -- synchronous flush - wait for flush to complete\n"
+ " -u id -- remove prealloc on files matching user quota id <id>\n"
+ " -g id -- remove prealloc on files matching group quota id <id>\n"
+@@ -155,9 +172,9 @@ prealloc_init(void)
+ 	prealloc_cmd.cfunc = prealloc_f;
+ 	prealloc_cmd.argmin = 1;
+ 	prealloc_cmd.argmax = -1;
+-	prealloc_cmd.args = "[-s] [-ugp id] [-m minlen]\n";
++	prealloc_cmd.args = "[-as] [-u id] [-g id] [-p id] [-m minlen]\n";
+ 	prealloc_cmd.flags = CMD_FLAG_GLOBAL;
+-	prealloc_cmd.oneline = _("Control specualtive preallocation");
++	prealloc_cmd.oneline = _("Control speculative preallocation");
+ 	prealloc_cmd.help = prealloc_help;
  
--		if (memchr_inv(eofb.pad, 0, sizeof(eofb.pad)))
-+		if (memchr_inv(&eofb.pad32, 0, sizeof(eofb.pad32)) ||
-+		    memchr_inv(eofb.pad64, 0, sizeof(eofb.pad64)))
- 			return -XFS_ERROR(EINVAL);
- 
- 		error = xfs_icache_free_eofblocks(mp, &eofb);
+ 	add_command(&prealloc_cmd);
 -- 
 1.7.7.6
 
