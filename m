@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA7DawCu153911 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 07:36:58 -0600
+	qA7DauYL153903 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 07:36:56 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	AUH86jHEekttsAGM for <xfs@oss.sgi.com>;
-	Wed, 07 Nov 2012 05:38:54 -0800 (PST)
+	8PAnOy6nKv5uxafg for <xfs@oss.sgi.com>;
+	Wed, 07 Nov 2012 05:38:53 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TW5p1-0001dX-9q
+	(envelope-from <dave@fromorbit.com>) id 1TW5p1-0001dW-9I
 	for xfs@oss.sgi.com; Thu, 08 Nov 2012 00:37:35 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TW5p1-0001GU-5m
+	(envelope-from <dave@disappointment.disaster>) id 1TW5p1-0001GR-4v
 	for xfs@oss.sgi.com; Thu, 08 Nov 2012 00:37:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/2] xfs: add CRC infrastructure
-Date: Thu,  8 Nov 2012 00:37:31 +1100
-Message-Id: <1352295452-4726-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352295452-4726-1-git-send-email-david@fromorbit.com>
-References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 0/2] xfs: CRCs for log buffers
+Date: Thu,  8 Nov 2012 00:37:30 +1100
+Message-Id: <1352295452-4726-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,167 +31,56 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@lst.de>
+These patches introduce the first little piece of the CRC picture.
+The first patch introduces the calculation and checking functions,
+as well as the superblock feature bit for CRCs. The superblock bit
+is not set anywhere, not is it really needed for 3.8. There's no
+real harm in introducing it now, and doing so means that the log
+code can demonstrate how it will differentiate between advisory
+warnings and fatal errors on CRC mistmatches during recovery.
 
- - add a mount feature bit for CRC enabled filesystems
- - add some helpers for generating and verifying the CRCs
- - add a copy_uuid helper
+The second patch converts the log checksum code to use the CRCs and
+enables it for *all* filesystems. This can be done because the log
+header already has a CRC field in it, and for production kernels it
+is guaranteed to be zeroed. Hence for production kernels, only
+issuing a CRC mistmatch warning when the log header CRC field is non
+zero means that people can upgrade to a kernel with this
+functionality and not see any CRC mismatch warnings.
 
-The checksumming helpers are losely based on similar ones in sctp,
-all other bits come from Dave Chinner.
+Warnings look like:
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/Kconfig     |    1 +
- fs/xfs/uuid.h      |    6 +++++
- fs/xfs/xfs_cksum.h |   62 ++++++++++++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_linux.h |    1 +
- fs/xfs/xfs_sb.h    |   10 ++++++++-
- 5 files changed, 79 insertions(+), 1 deletion(-)
- create mode 100644 fs/xfs/xfs_cksum.h
+XFS (vda): log record CRC mismatch: found 0xa05866c2, expected 0xd9290110.
 
-diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
-index 6100ec0..5a7ffe5 100644
---- a/fs/xfs/Kconfig
-+++ b/fs/xfs/Kconfig
-@@ -2,6 +2,7 @@ config XFS_FS
- 	tristate "XFS filesystem support"
- 	depends on BLOCK
- 	select EXPORTFS
-+	select LIBCRC32C
- 	help
- 	  XFS is a high performance journaling filesystem which originated
- 	  on the SGI IRIX platform.  It is completely multi-threaded, can
-diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
-index 4732d71..104db0f 100644
---- a/fs/xfs/uuid.h
-+++ b/fs/xfs/uuid.h
-@@ -26,4 +26,10 @@ extern int uuid_is_nil(uuid_t *uuid);
- extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
- extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
- 
-+static inline void
-+uuid_copy(uuid_t *dst, uuid_t *src)
-+{
-+	memcpy(dst, src, sizeof(uuid_t));
-+}
-+
- #endif	/* __XFS_SUPPORT_UUID_H__ */
-diff --git a/fs/xfs/xfs_cksum.h b/fs/xfs/xfs_cksum.h
-new file mode 100644
-index 0000000..623dd7b
---- /dev/null
-+++ b/fs/xfs/xfs_cksum.h
-@@ -0,0 +1,62 @@
-+#ifndef _XFS_CKSUM_H
-+#define _XFS_CKSUM_H 1
-+
-+#define XFS_CRC_SEED	(~(__uint32_t)0)
-+
-+/*
-+ * Calculate the intermediate checksum for a buffer that has the CRC field
-+ * inside it.  The offset of the 32bit crc fields is passed as the
-+ * cksum_offset parameter.
-+ */
-+static inline __uint32_t
-+xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-+{
-+	__uint32_t zero = 0;
-+	__uint32_t crc;
-+
-+	/* Calculate CRC up to the checksum. */
-+	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
-+
-+	/* Skip checksum field */
-+	crc = crc32c(crc, &zero, sizeof(__u32));
-+
-+	/* Calculate the rest of the CRC. */
-+	return crc32c(crc, &buffer[cksum_offset + sizeof(__be32)],
-+		      length - (cksum_offset + sizeof(__be32)));
-+}
-+
-+/*
-+ * Convert the intermediate checksum to the final ondisk format.
-+ *
-+ * Note that crc32c is already endianess agnostic, so no additional
-+ * byte swap is needed.
-+ */
-+static inline __be32
-+xfs_end_cksum(__uint32_t crc)
-+{
-+	return (__force __be32)~crc;
-+}
-+
-+/*
-+ * Helper to generate the checksum for a buffer.
-+ */
-+static inline void
-+xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-+{
-+	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
-+
-+	*(__be32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
-+}
-+
-+/*
-+ * Helper to verify the checksum for a buffer.
-+ */
-+static inline int
-+xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-+{
-+	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
-+
-+	return *(__be32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
-+}
-+
-+#endif /* _XFS_CKSUM_H */
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index 828662f..6e288e4 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -44,6 +44,7 @@
- #include <linux/kernel.h>
- #include <linux/blkdev.h>
- #include <linux/slab.h>
-+#include <linux/crc32c.h>
- #include <linux/module.h>
- #include <linux/mutex.h>
- #include <linux/file.h>
-diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
-index f429d9d..666e89c 100644
---- a/fs/xfs/xfs_sb.h
-+++ b/fs/xfs/xfs_sb.h
-@@ -81,11 +81,13 @@ struct xfs_mount;
- #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
- #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
- #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
-+#define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
- 
- #define	XFS_SB_VERSION2_OKREALFBITS	\
- 	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
- 	 XFS_SB_VERSION2_ATTR2BIT	| \
--	 XFS_SB_VERSION2_PROJID32BIT)
-+	 XFS_SB_VERSION2_PROJID32BIT	| \
-+	 XFS_SB_VERSION2_CRCBIT)
- #define	XFS_SB_VERSION2_OKSASHFBITS	\
- 	(0)
- #define XFS_SB_VERSION2_OKREALBITS	\
-@@ -503,6 +505,12 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
- 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
- }
- 
-+static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
-+{
-+	return (xfs_sb_version_hasmorebits(sbp) &&
-+		(sbp->sb_features2 & XFS_SB_VERSION2_CRCBIT));
-+}
-+
- /*
-  * end of superblock version macros
-  */
--- 
-1.7.10
+ffffc90001088000: 00 00 00 14 00 00 00 00 69 01 00 00 6e 14 a5 3d  ........i...n..=
+ffffc90001088010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 00 00 00  ....i...NART*...
+
+
+The only issue with this is that filesystems that were not cleanly
+shut down on debug kernels will throw CRC mismatch warnings the
+first time the are recovered after mount. After the first mount on
+upgrade, the warnings won't happen again unless you downgrade to an
+older debug kernel. I don't see this as a major problem - debug
+kernels are not used in production, and anyone using a debug kernel
+should be following this mailing list. ;)
+
+Anyway, the overhead is negliable - I don't see any measurable
+impact on metadata heavy operations (cpu verhead or performance),
+and the benefits of even advisory warnings on production kernels are
+of significant benefit. e.g. the recent log buffer wrap recovery
+problem would have triggered a CRC mismatch warning long before
+the bad client id error was detected....
+
+As such, I'd really like to have this in the 3.8 kernel - it gets
+the initial CRC code more testing, and provides us with an immediate
+integrity benefit and important debug information when log recovery
+problems are reported (i.e. we know definitely that the log is or
+isn't corrupted). I think the risk is rather small that it will
+cause problems, and the worst it can cause is scary looking noise
+in the logs.
+
+Comments?
+
+Dave.
 
 _______________________________________________
 xfs mailing list
