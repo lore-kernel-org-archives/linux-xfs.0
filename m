@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA7DaxL3153919 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 07:36:59 -0600
+	qA7DawCu153911 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 07:36:58 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HlSPenEueymmmEDi for <xfs@oss.sgi.com>;
+	AUH86jHEekttsAGM for <xfs@oss.sgi.com>;
 	Wed, 07 Nov 2012 05:38:54 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TW5p1-0001dY-Am
+	(envelope-from <dave@fromorbit.com>) id 1TW5p1-0001dX-9q
 	for xfs@oss.sgi.com; Thu, 08 Nov 2012 00:37:35 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TW5p1-0001GZ-7Y
+	(envelope-from <dave@disappointment.disaster>) id 1TW5p1-0001GU-5m
 	for xfs@oss.sgi.com; Thu, 08 Nov 2012 00:37:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 2/2] xfs: add CRC checks to the log
-Date: Thu,  8 Nov 2012 00:37:32 +1100
-Message-Id: <1352295452-4726-3-git-send-email-david@fromorbit.com>
+Subject: [PATCH 1/2] xfs: add CRC infrastructure
+Date: Thu,  8 Nov 2012 00:37:31 +1100
+Message-Id: <1352295452-4726-2-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352295452-4726-1-git-send-email-david@fromorbit.com>
 References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,466 +35,163 @@ To: xfs@oss.sgi.com
 
 From: Christoph Hellwig <hch@lst.de>
 
-Implement CRCs for the log buffers.  We re-use a field in
-struct xlog_rec_header that was used for a weak checksum of the
-log buffer payload in debug builds before.
+ - add a mount feature bit for CRC enabled filesystems
+ - add some helpers for generating and verifying the CRCs
+ - add a copy_uuid helper
 
-The new checksumming uses the crc32c checksum we will use elsewhere
-in XFS, and also protects the record header and addition cycle data.
-
-Due to this there are some interesting changes in xlog_sync, as we
-need to do the cycle wrapping for the split buffer case much earlier,
-as we would touch the buffer after generating the checksum otherwise.
-
-The CRC calculation is always enabled, even for non-CRC filesystems,
-as adding this CRC does not change the log format. On non-CRC
-filesystems, only issue an alert if a CRC mismatch is found and
-allow recovery to continue - this will act as an indicator that
-log recovery problems are a result of log corruption. On CRC enabled
-filesystems, however, log recovery will fail.
-
-Note that existing debug kernels will write a simple checksum value
-to the log, so the first time this is run on a filesystem taht was
-last used on a debug kernel it will through CRC mismatch warning
-errors. These can be ignored.
-
-Initially based on a patch from Dave Chinner, then modified
-significantly by Christoph Hellwig.  Modified again by Dave Chinner
-to get to this version.
+The checksumming helpers are losely based on similar ones in sctp,
+all other bits come from Dave Chinner.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c         |  132 ++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_log_priv.h    |   11 ++--
- fs/xfs/xfs_log_recover.c |  132 ++++++++++++++++++++++------------------------
- 3 files changed, 176 insertions(+), 99 deletions(-)
+ fs/xfs/Kconfig     |    1 +
+ fs/xfs/uuid.h      |    6 +++++
+ fs/xfs/xfs_cksum.h |   62 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_linux.h |    1 +
+ fs/xfs/xfs_sb.h    |   10 ++++++++-
+ 5 files changed, 79 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/xfs_cksum.h
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 1d6d2ee..c6d6e13 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -35,6 +35,7 @@
- #include "xfs_inode.h"
- #include "xfs_trace.h"
- #include "xfs_fsops.h"
-+#include "xfs_cksum.h"
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 6100ec0..5a7ffe5 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -2,6 +2,7 @@ config XFS_FS
+ 	tristate "XFS filesystem support"
+ 	depends on BLOCK
+ 	select EXPORTFS
++	select LIBCRC32C
+ 	help
+ 	  XFS is a high performance journaling filesystem which originated
+ 	  on the SGI IRIX platform.  It is completely multi-threaded, can
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 4732d71..104db0f 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -26,4 +26,10 @@ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
  
- kmem_zone_t	*xfs_log_ticket_zone;
- 
-@@ -1490,6 +1491,84 @@ xlog_grant_push_ail(
- }
- 
- /*
-+ * Stamp cycle number in every block
-+ */
-+STATIC void
-+xlog_pack_data(
-+	struct xlog		*log,
-+	struct xlog_in_core	*iclog,
-+	int			roundoff)
++static inline void
++uuid_copy(uuid_t *dst, uuid_t *src)
 +{
-+	int			i, j, k;
-+	int			size = iclog->ic_offset + roundoff;
-+	__be32			cycle_lsn;
-+	xfs_caddr_t		dp;
++	memcpy(dst, src, sizeof(uuid_t));
++}
 +
-+	cycle_lsn = CYCLE_LSN_DISK(iclog->ic_header.h_lsn);
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_cksum.h b/fs/xfs/xfs_cksum.h
+new file mode 100644
+index 0000000..623dd7b
+--- /dev/null
++++ b/fs/xfs/xfs_cksum.h
+@@ -0,0 +1,62 @@
++#ifndef _XFS_CKSUM_H
++#define _XFS_CKSUM_H 1
 +
-+	dp = iclog->ic_datap;
-+	for (i = 0; i < BTOBB(size); i++) {
-+		if (i >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE))
-+			break;
-+		iclog->ic_header.h_cycle_data[i] = *(__be32 *)dp;
-+		*(__be32 *)dp = cycle_lsn;
-+		dp += BBSIZE;
-+	}
++#define XFS_CRC_SEED	(~(__uint32_t)0)
 +
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-+		xlog_in_core_2_t *xhdr = iclog->ic_data;
++/*
++ * Calculate the intermediate checksum for a buffer that has the CRC field
++ * inside it.  The offset of the 32bit crc fields is passed as the
++ * cksum_offset parameter.
++ */
++static inline __uint32_t
++xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t zero = 0;
++	__uint32_t crc;
 +
-+		for ( ; i < BTOBB(size); i++) {
-+			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-+			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-+			xhdr[j].hic_xheader.xh_cycle_data[k] = *(__be32 *)dp;
-+			*(__be32 *)dp = cycle_lsn;
-+			dp += BBSIZE;
-+		}
++	/* Calculate CRC up to the checksum. */
++	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
 +
-+		for (i = 1; i < log->l_iclog_heads; i++)
-+			xhdr[i].hic_xheader.xh_cycle = cycle_lsn;
-+	}
++	/* Skip checksum field */
++	crc = crc32c(crc, &zero, sizeof(__u32));
++
++	/* Calculate the rest of the CRC. */
++	return crc32c(crc, &buffer[cksum_offset + sizeof(__be32)],
++		      length - (cksum_offset + sizeof(__be32)));
 +}
 +
 +/*
-+ * Calculate the checksum for a log buffer.
++ * Convert the intermediate checksum to the final ondisk format.
 + *
-+ * This is a little more complicated than it should be because the various
-+ * headers and the actual data are non-contiguous.
++ * Note that crc32c is already endianess agnostic, so no additional
++ * byte swap is needed.
 + */
-+__be32
-+xlog_cksum(
-+	struct xlog		*log,
-+	struct xlog_rec_header	*rhead,
-+	char			*dp,
-+	int			size)
++static inline __be32
++xfs_end_cksum(__uint32_t crc)
 +{
-+	__uint32_t		crc;
-+
-+	/* first generate the crc for the record header ... */
-+	crc = xfs_start_cksum((char *)rhead,
-+			      sizeof(struct xlog_rec_header),
-+			      offsetof(struct xlog_rec_header, h_crc));
-+
-+	/* ... then for additional cycle data for v2 logs ... */
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-+		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
-+		int		i;
-+
-+		for (i = 1; i < log->l_iclog_heads; i++) {
-+			crc = crc32c(crc, &xhdr[i].hic_xheader,
-+				     sizeof(struct xlog_rec_ext_header));
-+		}
-+	}
-+
-+	/* ... and finally for the payload */
-+	crc = crc32c(crc, dp, size);
-+
-+	return xfs_end_cksum(crc);
++	return (__force __be32)~crc;
 +}
 +
 +/*
-  * The bdstrat callback function for log bufs. This gives us a central
-  * place to trap bufs in case we get hit by a log I/O error and need to
-  * shutdown. Actually, in practice, even when we didn't get a log error,
-@@ -1549,7 +1628,6 @@ xlog_sync(
- 	struct xlog		*log,
- 	struct xlog_in_core	*iclog)
- {
--	xfs_caddr_t	dptr;		/* pointer to byte sized element */
- 	xfs_buf_t	*bp;
- 	int		i;
- 	uint		count;		/* byte count of bwrite */
-@@ -1558,6 +1636,7 @@ xlog_sync(
- 	int		split = 0;	/* split write into two regions */
- 	int		error;
- 	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
-+	int		size;
- 
- 	XFS_STATS_INC(xs_log_writes);
- 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
-@@ -1588,13 +1667,10 @@ xlog_sync(
- 	xlog_pack_data(log, iclog, roundoff); 
- 
- 	/* real byte length */
--	if (v2) {
--		iclog->ic_header.h_len =
--			cpu_to_be32(iclog->ic_offset + roundoff);
--	} else {
--		iclog->ic_header.h_len =
--			cpu_to_be32(iclog->ic_offset);
--	}
-+	size = iclog->ic_offset;
-+	if (v2)
-+		size += roundoff;
-+	iclog->ic_header.h_len = cpu_to_be32(size);
- 
- 	bp = iclog->ic_bp;
- 	XFS_BUF_SET_ADDR(bp, BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn)));
-@@ -1603,12 +1679,36 @@ xlog_sync(
- 
- 	/* Do we need to split this write into 2 parts? */
- 	if (XFS_BUF_ADDR(bp) + BTOBB(count) > log->l_logBBsize) {
-+		char		*dptr;
++ * Helper to generate the checksum for a buffer.
++ */
++static inline void
++xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
 +
- 		split = count - (BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp)));
- 		count = BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp));
--		iclog->ic_bwritecnt = 2;	/* split into 2 writes */
-+		iclog->ic_bwritecnt = 2;
++	*(__be32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
++}
 +
-+		/*
-+		 * Bump the cycle numbers at the start of each block in the
-+		 * part of the iclog that ends up in the buffer that gets
-+		 * written to the start of the log.
-+		 *
-+		 * Watch out for the header magic number case, though.
-+		 */
-+		dptr = (char *)&iclog->ic_header + count;
-+		for (i = 0; i < split; i += BBSIZE) {
-+			__uint32_t cycle = be32_to_cpu(*(__be32 *)dptr);
-+			if (++cycle == XLOG_HEADER_MAGIC_NUM)
-+				cycle++;
-+			*(__be32 *)dptr = cpu_to_be32(cycle);
++/*
++ * Helper to verify the checksum for a buffer.
++ */
++static inline int
++xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
 +
-+			dptr += BBSIZE;
-+		}
- 	} else {
- 		iclog->ic_bwritecnt = 1;
- 	}
++	return *(__be32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
++}
 +
-+	/* calculcate the checksum */
-+	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
-+					    iclog->ic_datap, size);
-+
- 	bp->b_io_length = BTOBB(count);
- 	bp->b_fspriv = iclog;
- 	XFS_BUF_ZEROFLAGS(bp);
-@@ -1662,19 +1762,6 @@ xlog_sync(
- 		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 			bp->b_flags |= XBF_FUA;
--		dptr = bp->b_addr;
--		/*
--		 * Bump the cycle numbers at the start of each block
--		 * since this part of the buffer is at the start of
--		 * a new cycle.  Watch out for the header magic number
--		 * case, though.
--		 */
--		for (i = 0; i < split; i += BBSIZE) {
--			be32_add_cpu((__be32 *)dptr, 1);
--			if (be32_to_cpu(*(__be32 *)dptr) == XLOG_HEADER_MAGIC_NUM)
--				be32_add_cpu((__be32 *)dptr, 1);
--			dptr += BBSIZE;
--		}
++#endif /* _XFS_CKSUM_H */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 828662f..6e288e4 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -44,6 +44,7 @@
+ #include <linux/kernel.h>
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
++#include <linux/crc32c.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/file.h>
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index f429d9d..666e89c 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -81,11 +81,13 @@ struct xfs_mount;
+ #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
+ #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
+ #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
++#define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
  
- 		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
- 		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-@@ -1691,7 +1778,6 @@ xlog_sync(
- 	return 0;
- }	/* xlog_sync */
- 
--
- /*
-  * Deallocate a log structure
-  */
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 9a4e0e5..0c74e3f 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -139,7 +139,6 @@ static inline uint xlog_get_client_id(__be32 i)
- /*
-  * Flags for log structure
-  */
--#define XLOG_CHKSUM_MISMATCH	0x1	/* used only during recovery */
- #define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
- #define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
- #define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
-@@ -291,7 +290,7 @@ typedef struct xlog_rec_header {
- 	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
- 	__be64	  h_lsn;	/* lsn of this LR			:  8 */
- 	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
--	__be32	  h_chksum;	/* may not be used; non-zero if used	:  4 */
-+	__be32	  h_crc;	/* crc of log record                    :  4 */
- 	__be32	  h_prev_block; /* block number to previous LR		:  4 */
- 	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
- 	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
-@@ -555,11 +554,9 @@ xlog_recover(
- extern int
- xlog_recover_finish(
- 	struct xlog		*log);
--extern void
--xlog_pack_data(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	int);
-+
-+extern __be32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
-+			    char *dp, int size);
- 
- extern kmem_zone_t *xfs_log_ticket_zone;
- struct xlog_ticket *
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 931e8e2..9c3651c 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -41,6 +41,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_quota.h"
- #include "xfs_utils.h"
-+#include "xfs_cksum.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- 
-@@ -3216,80 +3217,58 @@ xlog_recover_process_iunlinks(
- 	mp->m_dmevmask = mp_dmevmask;
+ #define	XFS_SB_VERSION2_OKREALFBITS	\
+ 	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
+ 	 XFS_SB_VERSION2_ATTR2BIT	| \
+-	 XFS_SB_VERSION2_PROJID32BIT)
++	 XFS_SB_VERSION2_PROJID32BIT	| \
++	 XFS_SB_VERSION2_CRCBIT)
+ #define	XFS_SB_VERSION2_OKSASHFBITS	\
+ 	(0)
+ #define XFS_SB_VERSION2_OKREALBITS	\
+@@ -503,6 +505,12 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+ 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
  }
  
--
--#ifdef DEBUG
--STATIC void
--xlog_pack_data_checksum(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	int			size)
--{
--	int		i;
--	__be32		*up;
--	uint		chksum = 0;
--
--	up = (__be32 *)iclog->ic_datap;
--	/* divide length by 4 to get # words */
--	for (i = 0; i < (size >> 2); i++) {
--		chksum ^= be32_to_cpu(*up);
--		up++;
--	}
--	iclog->ic_header.h_chksum = cpu_to_be32(chksum);
--}
--#else
--#define xlog_pack_data_checksum(log, iclog, size)
--#endif
--
++static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
++{
++	return (xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_CRCBIT));
++}
++
  /*
-- * Stamp cycle number in every block
-+ * Upack the log buffer data and crc check it. If the check fails, issue a
-+ * warning if and only if the CRC in the header is non-zero. This makes the
-+ * check an advisory warning, and the zero CRC check will prevent failure
-+ * warnings from being emitted when upgrading the kernel from one that does not
-+ * add CRCs by default.
-+ *
-+ * When filesystems are CRC enabled, this CRC mismatch becomes a fatal log
-+ * corruption failure
+  * end of superblock version macros
   */
--void
--xlog_pack_data(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	int			roundoff)
-+STATIC int
-+xlog_unpack_data_crc(
-+	struct xlog_rec_header	*rhead,
-+	xfs_caddr_t		dp,
-+	struct xlog		*log)
- {
--	int			i, j, k;
--	int			size = iclog->ic_offset + roundoff;
--	__be32			cycle_lsn;
--	xfs_caddr_t		dp;
--
--	xlog_pack_data_checksum(log, iclog, size);
--
--	cycle_lsn = CYCLE_LSN_DISK(iclog->ic_header.h_lsn);
--
--	dp = iclog->ic_datap;
--	for (i = 0; i < BTOBB(size) &&
--		i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
--		iclog->ic_header.h_cycle_data[i] = *(__be32 *)dp;
--		*(__be32 *)dp = cycle_lsn;
--		dp += BBSIZE;
--	}
--
--	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		xlog_in_core_2_t *xhdr = iclog->ic_data;
--
--		for ( ; i < BTOBB(size); i++) {
--			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
--			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
--			xhdr[j].hic_xheader.xh_cycle_data[k] = *(__be32 *)dp;
--			*(__be32 *)dp = cycle_lsn;
--			dp += BBSIZE;
-+	__be32			crc;
-+
-+	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
-+	if (crc != rhead->h_crc) {
-+		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
-+			xfs_alert(log->l_mp,
-+		"log record CRC mismatch: found 0x%x, expected 0x%x.\n",
-+					be32_to_cpu(rhead->h_crc),
-+					be32_to_cpu(crc));
-+			xfs_hex_dump(dp, 32);
- 		}
- 
--		for (i = 1; i < log->l_iclog_heads; i++) {
--			xhdr[i].hic_xheader.xh_cycle = cycle_lsn;
--		}
-+		/*
-+		 * If we've detected a log record corruption, then we can't
-+		 * recover past this point. Abort recovery if we are enforcing
-+		 * CRC protection by punting an error back up the stack.
-+		 */
-+		if (xfs_sb_version_hascrc(&log->l_mp->m_sb))
-+			return EFSCORRUPTED;
- 	}
-+
-+	return 0;
- }
- 
--STATIC void
-+STATIC int
- xlog_unpack_data(
- 	struct xlog_rec_header	*rhead,
- 	xfs_caddr_t		dp,
- 	struct xlog		*log)
- {
- 	int			i, j, k;
-+	int			error;
-+
-+	error = xlog_unpack_data_crc(rhead, dp, log);
-+	if (error)
-+		return error;
- 
- 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
- 		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
-@@ -3306,6 +3285,8 @@ xlog_unpack_data(
- 			dp += BBSIZE;
- 		}
- 	}
-+
-+	return 0;
- }
- 
- STATIC int
-@@ -3437,9 +3418,13 @@ xlog_do_recovery_pass(
- 			if (error)
- 				goto bread_err2;
- 
--			xlog_unpack_data(rhead, offset, log);
--			if ((error = xlog_recover_process_data(log,
--						rhash, rhead, offset, pass)))
-+			error = xlog_unpack_data(rhead, offset, log);
-+			if (error)
-+				goto bread_err2;
-+
-+			error = xlog_recover_process_data(log,
-+						rhash, rhead, offset, pass);
-+			if (error)
- 				goto bread_err2;
- 			blk_no += bblks + hblks;
- 		}
-@@ -3549,9 +3534,14 @@ xlog_do_recovery_pass(
- 				if (error)
- 					goto bread_err2;
- 			}
--			xlog_unpack_data(rhead, offset, log);
--			if ((error = xlog_recover_process_data(log, rhash,
--							rhead, offset, pass)))
-+
-+			error = xlog_unpack_data(rhead, offset, log);
-+			if (error)
-+				goto bread_err2;
-+
-+			error = xlog_recover_process_data(log, rhash,
-+							rhead, offset, pass);
-+			if (error)
- 				goto bread_err2;
- 			blk_no += bblks;
- 		}
-@@ -3576,9 +3566,13 @@ xlog_do_recovery_pass(
- 			if (error)
- 				goto bread_err2;
- 
--			xlog_unpack_data(rhead, offset, log);
--			if ((error = xlog_recover_process_data(log, rhash,
--							rhead, offset, pass)))
-+			error = xlog_unpack_data(rhead, offset, log);
-+			if (error)
-+				goto bread_err2;
-+
-+			error = xlog_recover_process_data(log, rhash,
-+							rhead, offset, pass);
-+			if (error)
- 				goto bread_err2;
- 			blk_no += bblks + hblks;
- 		}
 -- 
 1.7.10
 
