@@ -1,22 +1,24 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA80JVnP196285 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 18:19:31 -0600
-Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
-	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	FFsJxHoocqKDMSXG for <xfs@oss.sgi.com>;
-	Wed, 07 Nov 2012 16:21:28 -0800 (PST)
-Received: from dave by dastard with local (Exim 4.76)
-	(envelope-from <david@fromorbit.com>) id 1TWFs6-0002r2-2M
-	for xfs@oss.sgi.com; Thu, 08 Nov 2012 11:21:26 +1100
-Date: Thu, 8 Nov 2012 11:21:26 +1100
+	qA85bjMn219466 for <xfs@oss.sgi.com>; Wed, 7 Nov 2012 23:37:45 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	zRMJzB2ZmBGE4OuB for <xfs@oss.sgi.com>;
+	Wed, 07 Nov 2012 21:39:39 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TWKq0-0003NA-2k
+	for xfs@oss.sgi.com; Thu, 08 Nov 2012 16:39:36 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TWKpz-0004v5-Ul
+	for xfs@oss.sgi.com; Thu, 08 Nov 2012 16:39:35 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 0/2] xfs: CRCs for log buffers
-Message-ID: <20121108002125.GJ6434@dastard>
-References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+Subject: =?UTF-8?q?=5BPATCH=201/3=5D=20xfs=3A=20use=20btree=20block=20initialisation=20functions=20in=20growfs?=
+Date: Thu,  8 Nov 2012 16:39:31 +1100
+Message-Id: <1352353173-18820-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352353173-18820-1-git-send-email-david@fromorbit.com>
+References: <1352353173-18820-1-git-send-email-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1352295452-4726-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,80 +27,111 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-On Thu, Nov 08, 2012 at 12:37:30AM +1100, Dave Chinner wrote:
-> These patches introduce the first little piece of the CRC picture.
-> The first patch introduces the calculation and checking functions,
-> as well as the superblock feature bit for CRCs. The superblock bit
-> is not set anywhere, not is it really needed for 3.8. There's no
-> real harm in introducing it now, and doing so means that the log
-> code can demonstrate how it will differentiate between advisory
-> warnings and fatal errors on CRC mistmatches during recovery.
-> 
-> The second patch converts the log checksum code to use the CRCs and
-> enables it for *all* filesystems. This can be done because the log
-> header already has a CRC field in it, and for production kernels it
-> is guaranteed to be zeroed. Hence for production kernels, only
-> issuing a CRC mistmatch warning when the log header CRC field is non
-> zero means that people can upgrade to a kernel with this
-> functionality and not see any CRC mismatch warnings.
-> 
-> Warnings look like:
-> 
-> XFS (vda): log record CRC mismatch: found 0xa05866c2, expected 0xd9290110.
-> 
-> ffffc90001088000: 00 00 00 14 00 00 00 00 69 01 00 00 6e 14 a5 3d  ........i...n..=
-> ffffc90001088010: 00 00 00 10 69 00 00 00 4e 41 52 54 2a 00 00 00  ....i...NART*...
-> 
-> 
-> The only issue with this is that filesystems that were not cleanly
-> shut down on debug kernels will throw CRC mismatch warnings the
-> first time the are recovered after mount. After the first mount on
-> upgrade, the warnings won't happen again unless you downgrade to an
-> older debug kernel. I don't see this as a major problem - debug
-> kernels are not used in production, and anyone using a debug kernel
-> should be following this mailing list. ;)
-> 
-> Anyway, the overhead is negliable - I don't see any measurable
-> impact on metadata heavy operations (cpu verhead or performance),
-> and the benefits of even advisory warnings on production kernels are
-> of significant benefit. e.g. the recent log buffer wrap recovery
-> problem would have triggered a CRC mismatch warning long before
-> the bad client id error was detected....
-
-FWIW, perf indicates that the CPU overhead of the CRC overhead when
-unlinking files at around 60,000/s - a log write rate of about
-15MB/s - is:
-
-0.25%  [kernel]  [k] __crc32c_le
-
-When creating files at around 90,000/s, the log write rate is
-~40-50MB/s, and the CPU overhead is:
-
-0.74%  [kernel]  [k] __crc32c_le
-
-So roughly linear scaling of about 0.15% of 8p per 10MB/s. On a
-single CPU, that would be 1% CPU overhead per 10MB/s of log
-throughput.
-
-This was measured inside a VM running on a 2.5 year old 2.26GHz
-Xeon. The VM does not assert the sse4_2 cpu feature, so can not use
-the special CPU instruction to calculate the CRC as efficiently as
-the hardware allows....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKRmFjdG9yIHhmc19idHJl
+ZV9pbml0X2Jsb2NrKCkgdG8gYmUgaW5kZXBlbmRlbnQgb2YgdGhlIGJ0cmVlIGN1cnNvciwKYW5k
+IHVzZSB0aGUgZnVuY3Rpb24gdG8gaW5pdGlhbGlzZSBidHJlZSBibG9ja3MgaW4gdGhlIGdyb3dm
+cyBjb2RlLgpUaGlzIG1ha2VzIGFkZGluZyBzdXBwb3J0IGZvciBkaWZmZXJlbnQgZm9ybWF0IGJ0
+cmVlIGJsb2NrcyBzaW1wbGUuCgpTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVy
+QHJlZGhhdC5jb20+Ci0tLQogZnMveGZzL3hmc19idHJlZS5jIHwgICAzMyArKysrKysrKysrKysr
+KysrKysrKysrKystLS0tLS0tLS0KIGZzL3hmcy94ZnNfYnRyZWUuaCB8ICAgMTEgKysrKysrKysr
+KysKIGZzL3hmcy94ZnNfZnNvcHMuYyB8ICAgMzcgKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLQogMyBmaWxlcyBjaGFuZ2VkLCA0OCBpbnNlcnRpb25zKCspLCAzMyBkZWxldGlv
+bnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2J0cmVlLmMgYi9mcy94ZnMveGZzX2J0cmVl
+LmMKaW5kZXggNzkwMzlmYS4uZGIwMTA0MCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19idHJlZS5j
+CisrKyBiL2ZzL3hmcy94ZnNfYnRyZWUuYwpAQCAtODYyLDE4ICs4NjIsMjIgQEAgeGZzX2J0cmVl
+X3NldF9zaWJsaW5nKAogCX0KIH0KIAotU1RBVElDIHZvaWQKK3ZvaWQKIHhmc19idHJlZV9pbml0
+X2Jsb2NrKAotCXN0cnVjdCB4ZnNfYnRyZWVfY3VyCSpjdXIsCi0JaW50CQkJbGV2ZWwsCi0JaW50
+CQkJbnVtcmVjcywKLQlzdHJ1Y3QgeGZzX2J0cmVlX2Jsb2NrCSpuZXcpCS8qIG5ldyBibG9jayAq
+LworCXN0cnVjdCB4ZnNfbW91bnQgKm1wLAorCXN0cnVjdCB4ZnNfYnVmCSpicCwKKwlfX3UzMgkJ
+bWFnaWMsCisJX191MTYJCWxldmVsLAorCV9fdTE2CQludW1yZWNzLAorCXVuc2lnbmVkIGludAlm
+bGFncykKIHsKLQluZXctPmJiX21hZ2ljID0gY3B1X3RvX2JlMzIoeGZzX21hZ2ljc1tjdXItPmJj
+X2J0bnVtXSk7CisJc3RydWN0IHhmc19idHJlZV9ibG9jawkqbmV3ID0gWEZTX0JVRl9UT19CTE9D
+SyhicCk7CisKKwluZXctPmJiX21hZ2ljID0gY3B1X3RvX2JlMzIobWFnaWMpOwogCW5ldy0+YmJf
+bGV2ZWwgPSBjcHVfdG9fYmUxNihsZXZlbCk7CiAJbmV3LT5iYl9udW1yZWNzID0gY3B1X3RvX2Jl
+MTYobnVtcmVjcyk7CiAKLQlpZiAoY3VyLT5iY19mbGFncyAmIFhGU19CVFJFRV9MT05HX1BUUlMp
+IHsKKwlpZiAoZmxhZ3MgJiBYRlNfQlRSRUVfTE9OR19QVFJTKSB7CiAJCW5ldy0+YmJfdS5sLmJi
+X2xlZnRzaWIgPSBjcHVfdG9fYmU2NChOVUxMREZTQk5PKTsKIAkJbmV3LT5iYl91LmwuYmJfcmln
+aHRzaWIgPSBjcHVfdG9fYmU2NChOVUxMREZTQk5PKTsKIAl9IGVsc2UgewpAQCAtODgyLDYgKzg4
+NiwxNyBAQCB4ZnNfYnRyZWVfaW5pdF9ibG9jaygKIAl9CiB9CiAKK1NUQVRJQyB2b2lkCit4ZnNf
+YnRyZWVfaW5pdF9ibG9ja19jdXIoCisJc3RydWN0IHhmc19idHJlZV9jdXIJKmN1ciwKKwlpbnQJ
+CQlsZXZlbCwKKwlpbnQJCQludW1yZWNzLAorCXN0cnVjdCB4ZnNfYnVmCQkqYnApCit7CisJeGZz
+X2J0cmVlX2luaXRfYmxvY2soY3VyLT5iY19tcCwgYnAsIHhmc19tYWdpY3NbY3VyLT5iY19idG51
+bV0sCisJCQkgICAgICAgbGV2ZWwsIG51bXJlY3MsIGN1ci0+YmNfZmxhZ3MpOworfQorCiAvKgog
+ICogUmV0dXJuIHRydWUgaWYgcHRyIGlzIHRoZSBsYXN0IHJlY29yZCBpbiB0aGUgYnRyZWUgYW5k
+CiAgKiB3ZSBuZWVkIHRvIHRyYWNrIHVwZGF0ZdGVIHRvIHRoaXMgcmVjb3JkLiAgVGhlIGRlY2lz
+aW9uCkBAIC0yMTg5LDcgKzIyMDQsNyBAQCB4ZnNfYnRyZWVfc3BsaXQoCiAJCWdvdG8gZXJyb3Iw
+OwogCiAJLyogRmlsbCBpbiB0aGUgYnRyZWUgaGVhZGVyIGZvciB0aGUgbmV3IHJpZ2h0IGJsb2Nr
+LiAqLwotCXhmc19idHJlZV9pbml0X2Jsb2NrKGN1ciwgeGZzX2J0cmVlX2dldF9sZXZlbChsZWZ0
+KSwgMCwgcmlnaHQpOworCXhmc19idHJlZV9pbml0X2Jsb2NrX2N1cihjdXIsIHhmc19idHJlZV9n
+ZXRfbGV2ZWwobGVmdCksIDAsIHJicCk7CiAKIAkvKgogCSAqIFNwbGl0IHRoZSBlbnRyaWVzIGJl
+dHdlZW4gdGhlIG9sZCBhbmQgdGhlIG5ldyBibG9jayBldmVubHkuCkBAIC0yNDk4LDcgKzI1MTMs
+NyBAQCB4ZnNfYnRyZWVfbmV3X3Jvb3QoCiAJCW5wdHIgPSAyOwogCX0KIAkvKiBGaWxsIGluIHRo
+ZSBuZXcgYmxvY2sncyBidHJlZSBoZWFkZXIgYW5kIGxvZyBpdC4gKi8KLQl4ZnNfYnRyZWVfaW5p
+dF9ibG9jayhjdXIsIGN1ci0+YmNfbmxldmVscywgMiwgbmV3KTsKKwl4ZnNfYnRyZWVfaW5pdF9i
+bG9ja19jdXIoY3VyLCBjdXItPmJjX25sZXZlbHMsIDIsIG5icCk7CiAJeGZzX2J0cmVlX2xvZ19i
+bG9jayhjdXIsIG5icCwgWEZTX0JCX0FMTF9CSVRTKTsKIAlBU1NFUlQoIXhmc19idHJlZV9wdHJf
+aXNfbnVsbChjdXIsICZscHRyKSAmJgogCQkJIXhmc19idHJlZV9wdHJfaXNfbnVsbChjdXIsICZy
+cHRyKSk7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2J0cmVlLmggYi9mcy94ZnMveGZzX2J0cmVl
+LmgKaW5kZXggYzdmMTg3YS4uZjkzMjg5NyAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19idHJlZS5o
+CisrKyBiL2ZzL3hmcy94ZnNfYnRyZWUuaApAQCAtMzgzLDYgKzM4MywxNyBAQCB4ZnNfYnRyZWVf
+cmVhZGFfYnVmcygKIAl4ZnNfZXh0bGVuX3QJCWNvdW50LAkvKiBjb3VudCBvZiBmaWxlc3lzdGVt
+IGJsb2NrcyAqLwogCWNvbnN0IHN0cnVjdCB4ZnNfYnVmX29wcyAqb3BzKTsKIAorLyoKKyAqIElu
+aXRpYWxpc2UgYSBuZXcgYnRyZWUgYmxvY2sgaGVhZGVyCisgKi8KK3ZvaWQKK3hmc19idHJlZV9p
+bml0X2Jsb2NrKAorCXN0cnVjdCB4ZnNfbW91bnQgKm1wLAorCXN0cnVjdCB4ZnNfYnVmCSpicCwK
+KwlfX3UzMgkJbWFnaWMsCisJX191MTYJCWxldmVsLAorCV9fdTE2CQludW1yZWNzLAorCXVuc2ln
+bmVkIGludAlmbGFncyk7CiAKIC8qCiAgKiBDb21tb24gYnRyZWUgY29yZSBlbnRyeSBwb2ludHMu
+CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2Zzb3BzLmMgYi9mcy94ZnMveGZzX2Zzb3BzLmMKaW5k
+ZXggZjQ3NzcyMy4uMDNhODAzNiAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19mc29wcy5jCisrKyBi
+L2ZzL3hmcy94ZnNfZnNvcHMuYwpAQCAtMTIzLDcgKzEyMyw2IEBAIHhmc19ncm93ZnNfZGF0YV9w
+cml2YXRlKAogCXhmc19leHRsZW5fdAkJYWdzaXplOwogCXhmc19leHRsZW5fdAkJdG1wc2l6ZTsK
+IAl4ZnNfYWxsb2NfcmVjX3QJCSphcmVjOwotCXN0cnVjdCB4ZnNfYnRyZWVfYmxvY2sJKmJsb2Nr
+OwogCXhmc19idWZfdAkJKmJwOwogCWludAkJCWJ1Y2tldDsKIAlpbnQJCQlkcGN0OwpAQCAtMjcz
+LDE3ICsyNzIsMTQgQEAgeGZzX2dyb3dmc19kYXRhX3ByaXZhdGUoCiAJCQllcnJvciA9IEVOT01F
+TTsKIAkJCWdvdG8gZXJyb3IwOwogCQl9Ci0JCWJsb2NrID0gWEZTX0JVRl9UT19CTE9DSyhicCk7
+Ci0JCW1lbXNldChibG9jaywgMCwgbXAtPm1fc2Iuc2JfYmxvY2tzaXplKTsKLQkJYmxvY2stPmJi
+X21hZ2ljID0gY3B1X3RvX2JlMzIoWEZTX0FCVEJfTUFHSUMpOwotCQlibG9jay0+YmJfbGV2ZWwg
+PSAwOwotCQlibG9jay0+YmJfbnVtcmVjcyA9IGNwdV90b19iZTE2KDEpOwotCQlibG9jay0+YmJf
+dS5zLmJiX2xlZnRzaWIgPSBjcHVfdG9fYmUzMihOVUxMQUdCTE9DSyk7Ci0JCWJsb2NrLT5iYl91
+LnMuYmJfcmlnaHRzaWIgPSBjcHVfdG9fYmUzMihOVUxMQUdCTE9DSyk7Ci0JCWFyZWMgPSBYRlNf
+QUxMT0NfUkVDX0FERFIobXAsIGJsb2NrLCAxKTsKKwkJeGZzX2J1Zl96ZXJvKGJwLCAwLCBCQlRP
+QihicC0+Yl9sZW5ndGgpKTsKKwkJeGZzX2J0cmVlX2luaXRfYmxvY2sobXAsIGJwLCBYRlNfQUJU
+Ql9NQUdJQywgMCwgMSwgMCk7CisKKwkJYXJlYyA9IFhGU19BTExPQ19SRUNfQUREUihtcCwgWEZT
+X0JVRl9UT19CTE9DSyhicCksIDEpOwogCQlhcmVjLT5hcl9zdGFydGJsb2NrID0gY3B1X3RvX2Jl
+MzIoWEZTX1BSRUFMTE9DX0JMT0NLUyhtcCkpOwogCQlhcmVjLT5hcl9ibG9ja2NvdW50ID0gY3B1
+X3RvX2JlMzIoCiAJCQlhZ3NpemUgLSBiZTMyX3RvX2NwdShhcmVjLT5hcl9zdGFydGJsb2NrKSk7
+CisKIAkJZXJyb3IgPSB4ZnNfYndyaXRlKGJwKTsKIAkJYnAtPmJfb3BzID0gJnhmc19hbGxvY2J0
+X2J1Zl9vcHM7CiAJCXhmc19idWZfcmVsc2UoYnApOwpAQCAtMzA1LDE4ICszMDEsMTUgQEAgeGZz
+X2dyb3dmc19kYXRhX3ByaXZhdGUoCiAJCQllcnJvciA9IEVOT01FTTsKIAkJCWdvdG8gZXJyb3Iw
+OwogCQl9Ci0JCWJsb2NrID0gWEZTX0JVRl9UT19CTE9DSyhicCk7Ci0JCW1lbXNldChibG9jaywg
+MCwgbXAtPm1fc2Iuc2JfYmxvY2tzaXplKTsKLQkJYmxvY2stPmJiX21hZ2ljID0gY3B1X3RvX2Jl
+MzIoWEZTX0FCVENfTUFHSUMpOwotCQlibG9jay0+YmJfbGV2ZWwgPSAwOwotCQlibG9jay0+YmJf
+bnVtcmVjcyA9IGNwdV90b19iZTE2KDEpOwotCQlibG9jay0+YmJfdS5zLmJiX2xlZnRzaWIgPSBj
+cHVfdG9fYmUzMihOVUxMQUdCTE9DSyk7Ci0JCWJsb2NrLT5iYl91LnMuYmJfcmlnaHRzaWIgPSBj
+cHVfdG9fYmUzMihOVUxMQUdCTE9DSyk7Ci0JCWFyZWMgPSBYRlNfQUxMT0NfUkVDX0FERFIobXAs
+IGJsb2NrLCAxKTsKKwkJeGZzX2J1Zl96ZXJvKGJwLCAwLCBCQlRPQihicC0+Yl9sZW5ndGgpKTsK
+KwkJeGZzX2J0cmVlX2luaXRfYmxvY2sobXAsIGJwLCBYRlNfQUJUQ19NQUdJQywgMCwgMSwgMCk7
+CisKKwkJYXJlYyA9IFhGU19BTExPQ19SRUNfQUREUihtcCwgWEZTX0JVRl9UT19CTE9DSyhicCks
+IDEpOwogCQlhcmVjLT5hcl9zdGFydGJsb2NrID0gY3B1X3RvX2JlMzIoWEZTX1BSRUFMTE9DX0JM
+T0NLUyhtcCkpOwogCQlhcmVjLT5hcl9ibG9ja2NvdW50ID0gY3B1X3RvX2JlMzIoCiAJCQlhZ3Np
+emUgLSBiZTMyX3RvX2NwdShhcmVjLT5hcl9zdGFydGJsb2NrKSk7CiAJCW5mcmVlICs9IGJlMzJf
+dG9fY3B1KGFyZWMtPmFyX2Jsb2NrY291bnQpOworCiAJCWVycm9yID0geGZzX2J3cml0ZShicCk7
+CiAJCWJwLT5iX29wcyA9ICZ4ZnNfYWxsb2NidF9idWZfb3BzOwogCQl4ZnNfYnVmX3JlbHNlKGJw
+KTsKQEAgLTMzOCwxMyArMzMxLDkgQEAgeGZzX2dyb3dmc19kYXRhX3ByaXZhdGUoCiAJCQllcnJv
+ciA9IEVOT01FTTsKIAkJCWdvdG8gZXJyb3IwOwogCQl9Ci0JCWJsb2NrID0gWEZTX0JVRl9UT19C
+TE9DSyhicCk7Ci0JCW1lbXNldChibG9jaywgMCwgbXAtPm1fc2Iuc2JfYmxvY2tzaXplKTsKLQkJ
+YmxvY2stPmJiX21hZ2ljID0gY3B1X3RvX2JlMzIoWEZTX0lCVF9NQUdJQyk7Ci0JCWJsb2NrLT5i
+Yl9sZXZlbCA9IDA7Ci0JCWJsb2NrLT5iYl9udW1yZWNzID0gMDsKLQkJYmxvY2stPmJiX3Uucy5i
+Yl9sZWZ0c2liID0gY3B1X3RvX2JlMzIoTlVMTEFHQkxPQ0spOwotCQlibG9jay0+YmJfdS5zLmJi
+X3JpZ2h0c2liID0gY3B1X3RvX2JlMzIoTlVMTEFHQkxPQ0spOworCQl4ZnNfYnVmX3plcm8oYnAs
+IDAsIEJCVE9CKGJwLT5iX2xlbmd0aCkpOworCQl4ZnNfYnRyZWVfaW5pdF9ibG9jayhtcCwgYnAs
+IFhGU19JQlRfTUFHSUMsIDAsIDAsIDApOworCiAJCWVycm9yID0geGZzX2J3cml0ZShicCk7CiAJ
+CWJwLT5iX29wcyA9ICZ4ZnNfaW5vYnRfYnVmX29wczsKIAkJeGZzX2J1Zl9yZWxzZShicCk7Ci0t
+IAoxLjcuMTAKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+CnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWls
+bWFuL2xpc3RpbmZvL3hmcwo=
