@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA8L0mQQ022712 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 15:00:48 -0600
+	qA8LKUVl023721 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 15:20:30 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	WwQo5jMDnQvPj8Bu for <xfs@oss.sgi.com>;
-	Thu, 08 Nov 2012 13:02:46 -0800 (PST)
-Date: Fri, 9 Nov 2012 08:02:10 +1100
+	pNK34SrKxUrHFnKI for <xfs@oss.sgi.com>;
+	Thu, 08 Nov 2012 13:22:28 -0800 (PST)
+Date: Fri, 9 Nov 2012 08:22:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: XFS filesystem recovery from secondary superblocks
-Message-ID: <20121108210210.GP6434@dastard>
-References: <CABJyUz+h=pZ6+2rro1PjoB1ggTAoRw+bTzc_bU7Eaec0_AUKLA@mail.gmail.com>
-	<20121101225938.GS29378@dastard>
-	<CABJyUz+VhUY=tVKpEeKXfQRoaL4s+gwNmRr4wNAnRX6zTt5xXg@mail.gmail.com>
-	<CABJyUz+r7yQSswqyBng_W=fAXxTz9heb88NeiKSeFU7j4ZD=Hw@mail.gmail.com>
+Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
+Message-ID: <20121108212226.GQ6434@dastard>
+References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+	<1352295452-4726-2-git-send-email-david@fromorbit.com>
+	<509BC4F0.1040304@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <CABJyUz+r7yQSswqyBng_W=fAXxTz9heb88NeiKSeFU7j4ZD=Hw@mail.gmail.com>
+In-Reply-To: <509BC4F0.1040304@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,26 +28,39 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Aaron Goulding <aarongldng@gmail.com>
+To: Mark Tinguely <tinguely@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 08, 2012 at 07:16:06AM -0800, Aaron Goulding wrote:
-> Well I found an error in my bgrep. I was searching for XFSB but in the
-> wrong order. Once fixed, I get almost 19,000 results, but I note most of
+On Thu, Nov 08, 2012 at 08:42:56AM -0600, Mark Tinguely wrote:
+> On 11/07/12 07:37, Dave Chinner wrote:
+> >+/*
+> >+ * Calculate the intermediate checksum for a buffer that has the CRC field
+> >+ * inside it.  The offset of the 32bit crc fields is passed as the
+> >+ * cksum_offset parameter.
+> >+ */
+> >+static inline __uint32_t
+> >+xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+> >+{
+> >+	__uint32_t zero = 0;
+> >+	__uint32_t crc;
+> >+
+> >+	/* Calculate CRC up to the checksum. */
+> >+	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
+> >+
+> >+	/* Skip checksum field */
+> >+	crc = crc32c(crc,&zero, sizeof(__u32));
+> >+
+> >+	/* Calculate the rest of the CRC. */
+> >+	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
+> >+		      length - (cksum_offset + sizeof(__be32)));
+> >+}
+> 
+> Why not zero the cksum field and then calculate the crc on the whole buffer?
 
-That seems like way too many to be filesystem metadata hits. I woul
-dhave expected the same number of hits as there are AGs in the
-filesytem. What you want is the XFSB string in the first 4
-bytes of a sector, with the next sector having XAGF as the first
-four bytes....
-
-
-> those results happen within one section on the drive. I've attached the
-> first 1MB from that point (4398047346688 bytes in) and I will grab the
-> other results as 1K blocks.
-
-I'm not going to look at 19000 potential hits. Narrow it down to
-likely candidates first whithe the sector location filter...
+Because we use the same calculation function for verification of the
+CRC and we do not want to zero the CRC field when verifying it. It
+would make subsequent verification calls on an unmodified buffer
+fail.
 
 Cheers,
 
