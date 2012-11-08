@@ -1,30 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA89OiwV234239 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 03:24:44 -0600
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
-	cuda.sgi.com with ESMTP id 35RXJDjkixHOF8iL (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Thu, 08 Nov 2012 01:26:41 -0800 (PST)
-Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
-	by aserp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
-	ESMTP id qA89QeQw005815
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
-	for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 09:26:41 GMT
-Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
-	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
-	qA89QdJa007497
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
-	for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 09:26:40 GMT
-Received: from abhmt118.oracle.com (abhmt118.oracle.com [141.146.116.70])
-	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
-	qA89Qd9d020650 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 03:26:39 -0600
-Message-ID: <509B7AC9.9080906@oracle.com>
-Date: Thu, 08 Nov 2012 17:26:33 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
-MIME-Version: 1.0
-Subject: [PATCH] xfs: fix comments at xfs_growfs_data_private(),
+	qA8A38SL236628 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 04:03:09 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	whBh9aO4KbJuXJTQ for <xfs@oss.sgi.com>;
+	Thu, 08 Nov 2012 02:05:06 -0800 (PST)
+Date: Thu, 8 Nov 2012 21:05:02 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: fix comments at xfs_growfs_data_private(),
 	s/freelist/freespace/
+Message-ID: <20121108100502.GN6434@dastard>
+References: <509B7AC9.9080906@oracle.com>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <509B7AC9.9080906@oracle.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -37,36 +27,28 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Jeff Liu <jeff.liu@oracle.com>
+Cc: xfs@oss.sgi.com
 
-Hello,
+On Thu, Nov 08, 2012 at 05:26:33PM +0800, Jeff Liu wrote:
+> Hello,
+> 
+> Growfs is trying to write a affected AGF header rather than AGFL, fix it IIUC.
+> 
+> Thanks,
+> -Jeff
+> 
+> Signed-off-by: Jie Liu <jeff.liu@oracle.com>
 
-Growfs is trying to write a affected AGF header rather than AGFL, fix it IIUC.
+I'll roll this into the patches I posted a few hours ago that touch
+this code...
 
-Thanks,
--Jeff
+Cheers,
 
-Signed-off-by: Jie Liu <jeff.liu@oracle.com>
-
----
- fs/xfs/xfs_fsops.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index c25b094..a4cd017 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -186,7 +186,7 @@ xfs_growfs_data_private(
- 	nfree = 0;
- 	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
- 		/*
--		 * AG freelist header block
-+		 * AG freespace header block
- 		 */
- 		bp = xfs_buf_get(mp->m_ddev_targp,
- 				 XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+Dave.
 -- 
-1.7.9.5
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
