@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA8Gmw3e007373 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 10:48:58 -0600
-Message-ID: <509BE2E9.1070702@sgi.com>
-Date: Thu, 08 Nov 2012 10:50:49 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	qA8HhC02011004 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 11:43:12 -0600
+Date: Thu, 8 Nov 2012 11:45:08 -0600
+From: Ben Myers <bpm@sgi.com>
+Subject: Re: [PATCH] xfs: Update inode alloc comments
+Message-ID: <20121108174508.GO9783@sgi.com>
+References: <1350742099-8397-1-git-send-email-cmaiolino@redhat.com>
+	<20121102221244.GI9783@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] fiemap: add freespace mapping to FS_IOC_FIEMAP
-References: <1350537079-16246-1-git-send-email-david@fromorbit.com>
-	<1350537079-16246-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1350537079-16246-2-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <20121102221244.GI9783@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,54 +19,59 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, xfs@oss.sgi.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: xfs@oss.sgi.com
 
-On 10/18/12 00:11, Dave Chinner wrote:
-> From: Dave Chinner<dchinner@redhat.com>
->
-> fiemap is used to map extents of used space on files. it's just an
-> array of extents, though, so there's no reason it can only index
-> *used*  space.
->
-> Ther eis need for getting freespace layout information into
-> userspace. For example, defragmentation programs would find it
-> useful to be able to map the free space in the filesystem to
-> work out where it is best to move data to defragment it.
-> Alternatively, knowing where free space is enables us to identify
-> extents that need to be moved to defragment free space.
->
-> Hence, extend fiemap with the FIEMAP_FLAG_FREESPACE to indicate that
-> the caller wants to map free space in the range fm_start bytes from
-> the start of the filesystem for fm_length bytes.
->
-> Because XFS can report extents in size order without needing to
-> sort, and this information is useful to xfs_fsr, also add
-> FIEMAP_FLAG_FREESPACE_SIZE to tell the filesystem to return a
-> freespace map ordered by extent size rather than offset. If there
-> are multiple extents of the same size, then they are ordered by
-> offset.
->
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
+On Fri, Nov 02, 2012 at 05:12:44PM -0500, Ben Myers wrote:
+> Hey Carlos,
+> 
+> On Sat, Oct 20, 2012 at 11:08:19AM -0300, Carlos Maiolino wrote:
+> > I found some out of date comments while studying the inode allocation code, so I
+> > believe it's worth to have these comments updated.
+> > 
+> > It basically rewrites the comment regarding to "call_again" variable, which is
+> > not used anymore, but instead, callers of xfs_ialloc() decides if it needs to be
+> > called again relying only if ialloc_context is NULL or not.
+> > 
+> > Also did some small changes in another comment that I thought to be pertinent
+> > to the current behaviour of these functions and some alignment on both comments.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  fs/xfs/xfs_ialloc.c |  6 +++---
+> >  fs/xfs/xfs_inode.c  | 18 +++++++++---------
+> >  2 files changed, 12 insertions(+), 12 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+> > index 445bf1a..f1a6046 100644
+> > --- a/fs/xfs/xfs_ialloc.c
+> > +++ b/fs/xfs/xfs_ialloc.c
+> > @@ -876,9 +876,9 @@ error0:
+> >   * This function is designed to be called twice if it has to do an allocation
+> >   * to make more free inodes.  On the first call, *IO_agbp should be set to NULL.
+> >   * If an inode is available without having to performn an allocation, an inode
+> > - * number is returned.  In this case, *IO_agbp would be NULL.  If an allocation
+> > - * needes to be done, xfs_dialloc would return the current AGI buffer in
+> > - * *IO_agbp.  The caller should then commit the current transaction, allocate a
+> > + * number is returned.  In this case, *IO_agbp is set to NULL.  If an allocation
+> > + * needes to be done, xfs_dialloc returns the current AGI buffer in *IO_agbp.
+>       needs
+> 
+> Since we're at it.
+> 
+> Looks fine.
+> 
+> Reviewed-by: Ben Myers <bpm@sgi.com>
 
-...
+Carlos,
 
->   --------------
-> diff --git a/include/linux/fiemap.h b/include/linux/fiemap.h
-> index d830747..f4fbb9f 100644
-> --- a/include/linux/fiemap.h
-> +++ b/include/linux/fiemap.h
+Committed this to git://oss.sgi.com/xfs/xfs.git, master & for-next on Nov 2.
 
-   include/uabi/linux/fiemap.h
-           ^^^^
-other than that, it looks good.
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+-Ben
 
 _______________________________________________
 xfs mailing list
