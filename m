@@ -1,10 +1,10 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA8MEcaQ026719 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 16:14:38 -0600
-Subject: [GIT PULL] XFS update for 3.2-rc2
-Message-Id: <20121108221633.BD8F24266DC@whiskey.americas.sgi.com>
-Date: Thu,  8 Nov 2012 16:16:33 -0600 (CST)
+	qA8MH3JO026957 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 16:17:03 -0600
+Subject: [GIT PULL] XFS update for 3.7-rc5
+Message-Id: <20121108221859.3FF8D4266DC@whiskey.americas.sgi.com>
+Date: Thu,  8 Nov 2012 16:18:59 -0600 (CST)
 From: bpm@sgi.com (Ben Myers)
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
@@ -27,6 +27,8 @@ Hi Linus,
    Please pull these 10 bug fixes for XFS.  They include a fix for deadlock on
    allocation group freelist buffers, a fix for corruption on log replay, a fix
    for growfs, and a few more to boot.
+
+   Erm... this is for 3.7-rc5, please.  Sorry for the dup.
 
 Thanks,
       Ben	
