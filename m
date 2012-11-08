@@ -1,20 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA8N5Lcs032206 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 17:05:21 -0600
+	qA8NR4AI033991 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 17:27:04 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	HLo51MtaErHOHvos for <xfs@oss.sgi.com>;
-	Thu, 08 Nov 2012 15:07:19 -0800 (PST)
-Date: Fri, 9 Nov 2012 10:06:49 +1100
+	0nywNgk4PW19fnMp for <xfs@oss.sgi.com>;
+	Thu, 08 Nov 2012 15:29:02 -0800 (PST)
+Date: Fri, 9 Nov 2012 10:27:26 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [patch 1/2] xfs: xfs_tosspages() bug
-Message-ID: <20121108230649.GU6434@dastard>
+Subject: Re: [patch 2/2] xfstests: xfs_tosspages() test addition
+Message-ID: <20121108232726.GV6434@dastard>
 References: <20121108222315.505370321@sgi.com>
-	<20121108222315.626928496@sgi.com>
+	<20121108222315.709683665@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <20121108222315.626928496@sgi.com>
+In-Reply-To: <20121108222315.709683665@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,96 +30,135 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Andrew Dahl <adahl@sgi.com>
 Cc: xfs@oss.sgi.com
 
-On Thu, Nov 08, 2012 at 04:23:16PM -0600, Andrew Dahl wrote:
-> xfs_tosspages() takes a closed interval as an argument, take 
-> this into account when rounding down to the last byte of the
-> last complete page. If the request consists of a single 
-> partial page, there will be nothing to toss. 
+On Thu, Nov 08, 2012 at 04:23:17PM -0600, Andrew Dahl wrote:
+> Tests xfs_tosspages() to ensure the expected output of tossing various 
+> ranges. It uses the XFS_IOC_ZERO_RANGE ioctl by way of "xfs_io zero"
 > 
+> The ranges tested are [0,4095], [0,4096], [4096,8192], [1024,5120]
+
+I'd add [0,1] [0,4097], [4095,8191] [4095,8192] and [4095,8193] as
+well for good measure, as they exercise other off-by-one corner
+cases not tested here.
+
 > Signed-off-by: Andrew Dahl <adahl@sgi.com>
 > 
-> ---
+> --- 
 > 
-> Index: xfs/fs/xfs/xfs_fs_subr.c
+> Index: xfstests/290
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_fs_subr.c
-> +++ xfs/fs/xfs/xfs_fs_subr.c
-> @@ -32,9 +32,17 @@ xfs_tosspages(
->  	xfs_off_t	last,
->  	int		fiopt)
->  {
-> -	/* can't toss partial tail pages, so mask them out */
-> -	last &= ~(PAGE_SIZE - 1);
-> -	truncate_inode_pages_range(VFS_I(ip)->i_mapping, first, last - 1);
-> +	/*
-> +	 * Can't toss partial tail pages, so mask them out.  If the only
-> +	 * page to toss was a partial tail, there will be nothing left
-> +	 * to do.
-> +	 */
-> +	if (last != -1) {
-> +	        last = ((last + 1) & PAGE_MASK) - 1;
-> +	        if (last < first)
-> +	                return;
-> +	}
-> +	truncate_inode_pages_range(VFS_I(ip)->i_mapping, first, last);
+> --- /dev/null
+> +++ xfstests/290
+> @@ -0,0 +1,86 @@
+> +#! /bin/bash
+> +# FS QA Test No. 290
+> +#
+> +# check xfs_tosspages to ensure it's tossing proper pages
 
-Ok, lets look at critical ranges:
+A better description about the corner cases it is test woul dbe
+helpful.
 
-		passed to truncate_inode_pages_range
-first,last	current		patched
-0,4095		0,0xffffffff	0,4095
-0,4096		0,4095		0,4095
-0,4097		0,4095		0,4095
+> +_cleanup()
+> +{
+> +    rm -f $TEST_DIR/290.*
+> +}
 
-Yup, that's needed.
+Leave them there - the test dir is supposed to grow and age over
+time. Also, removing them here means on a failure the files re
+removed and there is no corpse left to dissect. Besides, you are
+already using O_TRUNC for opening the files, so if they already
+exist the test handles it just fine.
 
-0,1		0,0xffffffff	aborts (0,0xffffffff)
+> +# get standard environment, filters and checks
+> +. ./common.rc
+> +. ./common.filter
+> +
+> +# real QA test starts here
+> +
+> +# Modify as appropriate.
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +_test_io_zero()
+> +{
+> +        $XFS_IO_PROG -c "zero help" 2>&1 | \
+> +                        grep 'command "zero" not found' > /dev/null
+> +        echo $?
+> +}
+> +
+> +[ $(_test_io_zero) -eq 0 ] && _notrun "zero command not supported"
 
-Big assumption: xfs_off_t is signed.
+You need to test whether the filesystem supports it. See, for
+example, _require_xfs_io_falloc. Also, moving it to common.rc and
+naming it _require_xfs_io_zero woul dbe a good idea.
 
-0xfffffffe	0xffffefff	0xfffeffff
-0xffffffff	0xffffefff	0xffffffff
+Yes, I know you copied this from test 242, and that was probably my
+fault in the first place, but rather than propagate something that
+is wrong, let's fix it properly before it becomes widespread....
 
-So the change is good.
 
-However, there's a bigger issue here. We've planned to remove these
-wrappers for a long time, just never got around to doing it. Seeing
-as there is a bug in this wrapper and it needs to be fixed, now
-seems like the right time to remove it.
+> +testfile=$TEST_DIR/290.$$
+> +
+> +$XFS_IO_PROG -F -f -t -c "pwrite -S 0x41 0 4096" \
+> +                      -c "pwrite -S 0x42 4096 4096" \
+> +                      -c "zero 0 4095" \
+> +                      -c "pread -v 0 8192" \
+> +                      $testfile | _filter_xfs_io_unique
 
-Hence I'd suggest that fixing this particular bug should just
-remove xfs_tosspages() and call truncate_inode_pages_range()
-directly. There are only two calls to this function, so it should be
-a simple conversion.  That can then be followed up with more patches
-to remove the other wrappers in xfs_fs_subr.c and hence remove the
-file completely...
+Nice! Someone's been listening to me about filtering. :)
 
->  int
-> Index: xfs/fs/xfs/xfs_vnodeops.c
+> +
+> +$XFS_IO_PROG -F -f -t -c "pwrite -S 0x41 0 4096" \
+> +                      -c "pwrite -S 0x42 4096 4096" \
+> +                      -c "zero 0 4096" \
+> +                      -c "pread -v 0 8192" \
+> +                      $testfile | _filter_xfs_io_unique
+> +
+> +$XFS_IO_PROG -F -f -t -c "pwrite -S 0x41 0 4096" \
+> +                      -c "pwrite -S 0x42 4096 4096" \
+> +                      -c "zero 4096 4096" \
+> +                      -c "pread -v 0 8192" \
+> +                      $testfile | _filter_xfs_io_unique
+> +
+> +$XFS_IO_PROG -F -f -t -c "pwrite -S 0x41 0 4096" \
+> +                      -c "pwrite -S 0x42 4096 4096" \
+> +                      -c "zero 1024 4096" \
+> +                      -c "pread -v 0 8192" \
+> +                      $testfile | _filter_xfs_io_unique
+
+A little wrapper function might be in order here - it makes it much
+easier to see what is being tested. i.e.:
+
+test_zero()
+{
+	zero_start=$1
+	zero_len=$2
+
+	$XFS_IO_PROG -F -f -t -c "pwrite -S 0x41 0 4096" \
+			      -c "pwrite -S 0x42 4096 4096" \
+			      -c "zero $zero_start $zero_end" \
+			      -c "pread -v 0 8192" \
+			      $testfile | _filter_xfs_io_unique
+}
+
+#	  Zero Range
+test_zero    0 4095
+test_zero    0 4096
+test_zero 4096 4096
+test_zero 1024 4096
+
+That also makes it much easier to add more ranges to be tested. :)
+
+> Index: xfstests/group
 > ===================================================================
-> --- xfs.orig/fs/xfs/xfs_vnodeops.c
-> +++ xfs/fs/xfs/xfs_vnodeops.c
-> @@ -2172,7 +2172,7 @@ xfs_change_file_space(
->  	switch (cmd) {
->  	case XFS_IOC_ZERO_RANGE:
->  		prealloc_type |= XFS_BMAPI_CONVERT;
-> -		xfs_tosspages(ip, startoffset, startoffset + bf->l_len, 0);
-> +		xfs_tosspages(ip, startoffset, bf->l_len ? startoffset + llen : -1, 0);
->  		/* FALLTHRU */
->  	case XFS_IOC_RESVSP:
->  	case XFS_IOC_RESVSP64:
+> --- xfstests.orig/group
+> +++ xfstests/group
+> @@ -408,3 +408,4 @@ deprecated
+>  287 auto dump quota quick
+>  288 auto quick ioctl trim
+>  289 auto quick
+> +290 auto quick ioctl
 
-What's this hunk for? Indeed, one of the first things that the
-xfs_alloc_file_space() checks is this:
-
-        if (len <= 0)
-		return XFS_ERROR(EINVAL);
-
-xfs_free_file_space() does the same check, so it is invalid to pass
-a bf_len <= 0 for any of these specific functions. Hence this change
-is wrong regardless of what the comment on the struct xfs_flock64_t
-says - preallocation and hole punch operations must have a positive
-length associated with them.
+prealloc and rw groups make sense, too.
 
 Cheers,
 
