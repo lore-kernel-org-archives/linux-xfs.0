@@ -1,15 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA95bHYg075263 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 23:37:17 -0600
-Message-ID: <509C96F0.3000606@oracle.com>
-Date: Fri, 09 Nov 2012 13:38:56 +0800
-From: Jeff Liu <jeff.liu@oracle.com>
+	qA95bosd075322 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 23:37:51 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	qTOh3CdgYo1RKtIa for <xfs@oss.sgi.com>;
+	Thu, 08 Nov 2012 21:39:48 -0800 (PST)
+Date: Fri, 9 Nov 2012 16:39:31 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs_quota -x -c 'report -u /dev/sde5' shows the duplicate result.
+Message-ID: <20121109053931.GA6434@dastard>
+References: <20121108222315.505370321@sgi.com>
+	<20121108222315.709683665@sgi.com> <509C5885.5060300@eisoo.com>
+	<20121109012405.GX6434@dastard> <509C7825.1080401@eisoo.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfstests: get return value in seek_sanity_test
-References: <1350825309-30733-1-git-send-email-wenqing.lz@taobao.com>
-	<20121109032551.GA28325@gmail.com>
-In-Reply-To: <20121109032551.GA28325@gmail.com>
+Content-Disposition: inline
+In-Reply-To: <509C7825.1080401@eisoo.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,73 +24,55 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Zheng Liu <gnehzuil.liu@gmail.com>
-Cc: hch@infradead.org, Zheng Liu <wenqing.lz@taobao.com>, tinguely@sgi.com, xfs@oss.sgi.com
+To: "yyq@eisoo.com" <yyq@eisoo.com>
+Cc: xfs@oss.sgi.com
 
-CC to Christoph and Mark.
-
-Thanks,
--Jeff
-On 11/09/2012 11:25 AM, Zheng Liu wrote:
-> On Sun, Oct 21, 2012 at 09:15:09PM +0800, wenqing.lz wrote:
-> 
-> ping?
-> 
-> Regards,
-> Zheng
-> 
->> From: Zheng Liu <wenqing.lz@taobao.com>
->>
->> In seek_sanity_test getting return value is missing.  Thus we couldn't get the
->> result unless someone read the log file (e.g. # 285).
->>
->> CC: Jeff Liu <jeff.liu@oracle.com>
->> Signed-off-by: Zheng Liu <wenqing.lz@taobao.com>
->> ---
->> v2 <- v1:
->> 	* put return value check below the run_test()
->>
->> Hi Jeff,
->>
->> Could you please review this patch again?  Thanks.
->>
->> Regards,
->> Zheng
->>
->>  src/seek_sanity_test.c | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/src/seek_sanity_test.c b/src/seek_sanity_test.c
->> index 34f5508..3897f02 100644
->> --- a/src/seek_sanity_test.c
->> +++ b/src/seek_sanity_test.c
->> @@ -674,9 +674,9 @@ int main(int argc, char **argv)
->>  		goto out;
->>  
->>  	for (i = 0; i < numtests; ++i) {
->> +		ret = run_test(&seek_tests[i]);
->>  		if (ret)
->> -			goto out;
->> -		run_test(&seek_tests[i]);
->> +			break;
->>  	}
->>  
->>  out:
->> -- 
->> 1.7.12.rc2.18.g61b472e
->>
-> 
-> _______________________________________________
-> xfs mailing list
-> xfs@oss.sgi.com
-> http://oss.sgi.com/mailman/listinfo/xfs
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+T24gRnJpLCBOb3YgMDksIDIwMTIgYXQgMTE6Mjc6MzNBTSArMDgwMCwgeXlxQGVpc29vLmNvbSB3
+cm90ZToKPiAKPiDkuo4gMjAxMi0xMS05IDk6MjQsIERhdmUgQ2hpbm5lciDlhpnpgZM6Cj4gPk9u
+IEZyaSwgTm92IDA5LCAyMDEyIGF0IDA5OjEyOjM3QU0gKzA4MDAsIHl5cUBlaXNvby5jb20gd3Jv
+dGU6Cj4gPj5IaSwKPiA+Pgo+ID4+ICAgICBXaGVuIEkgdXNlICJ4ZnNfcXVvdGEgLXggLWMgJ3Jl
+cG9ydCAtdSAvZGV2L3NkZTUnIiB0byBzaG93Cj4gPj4vZGV2L3NkZTUncyBxdW90YXMsIGFuZCB0
+aGUgcmVzdWx0IGhhdmUgdHdvIHNhbWUgYmxvY2sgYXMgYmVsb3c6Cj4gPldoYXQgdmVyc2lvbiBv
+ZiB4ZnNfcXVvdGEgYXJlIHlvdSB1c2luZz8gV2hhdCBpcyB0aGUgb3V0cHV0IG9mCj4gPi9wcm9j
+L21vdW50cyBhbmQgL2V0Yy9tdGFiIHNheT8KPiB4ZnNfcXVvdGEncyB2ZXJzaW9uIGlzIDMuMS4x
+IGFuZCBvdXRwdXQgb2YgL3Byb2MvbW91bnRzIGxpa2UgdGhpczoKPiAKPiAuLi4uLgo+IC9kZXYv
+c2RlMyAvcm9vdC9tbnRfcGF0aCB4ZnMgcncscmVsYXRpbWUsYXR0cjIsdXNycXVvdGEgMCAwCj4g
+L2Rldi9zZGU1IC9yb290L21udHBhdGgyIHhmcyBydyxyZWxhdGltZSxhdHRyMix1c3JxdW90YSAw
+IDAKPiAvZGV2L3NkZTcgL3Jvb3QvbW50cGF0aDMgeGZzIHJ3LHJlbGF0aW1lLGF0dHIyLHVzcnF1
+b3RhIDAgMAo+IAo+IC9ldGMvbXRhYjoKPiAKPiAuLi4uCj4gL2Rldi9zZGUzIC9yb290L21udF9w
+YXRoIHhmcyBydyx1cXVvdGEgMCAwCj4gL2Rldi9zZGU1IC9yb290L21udHBhdGgyIHhmcyBydyx1
+cXVvdGEgMCAwCj4gL2Rldi9zZGU3IC9yb290L21udHBhdGgzIHhmcyBydyx1cXVvdGEgMCAwCj4g
+Cj4gaW4gdGhlIG9yaWdpbmFsIHBvc3QgIi9kZXYvc2RlNSIgd2FzIHJlbW92ZWQgYW5kIHRyeSAi
+L2Rldi9zZGU3IiwKPiB0aGUgcmVtYWluIHRoZSBzYW1lIHByb2JsZW0uCj4gPgo+ID5BbmQgZG9l
+cyB0aGUgbGF0ZXN0IHZlcnNpb24gb2YgeGZzX3F1b3RhIGhhdmUgdGhlIHNhbWUgcHJvYmxlbT8K
+PiB2ZXJzaW9uIDMuMS44J3Mgb3V0cHV0IGhhdmUgdGhlIHNhbWUgcHJvYmxlbSxhbmQgZXZlbiB3
+b3JzZSwgdGhlcmUKPiBhcmUgdGhyZWUgc2FtZSBibG9ja3MgOgo+IAo+IFVzZXIgcXVvdGEgb24g
+L3Jvb3QvbW50cGF0aDMgKC9kZXYvc2RlNykKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgQmxvY2tzCj4gVXNlciBJRCAgICAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAgSGFyZCAg
+ICBXYXJuL0dyYWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLQo+IHJvb3QgICAgICAgICAgICAgICAgMCAgICAgICAgICAwICAg
+ICAgICAgIDAgICAgIDAwIFstLS0tLS0tLV0KPiB1c2VyMiAgICAgICAgICAgICAgIDAgICAgIDEw
+MjQwMCAgICAgNDA5NjAwICAgICAwMCBbLS0tLS0tLS1dCj4gdXNlcjMgICAgICAgICAgICAgICAw
+ICAgICAyMDQ4MDAgICAgIDUxMjAwMCAgICAgMDAgWy0tLS0tLS0tXQo+IAo+IFVzZXIgcXVvdGEg
+b24gL3Jvb3QvbW50cGF0aDMgKC9kZXYvc2RlNykKPiAgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgQmxvY2tzCj4gVXNlciBJRCAgICAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAgSGFy
+ZCAgICBXYXJuL0dyYWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+IHJvb3QgICAgICAgICAgICAgICAgMCAgICAgICAgICAw
+ICAgICAgICAgIDAgICAgIDAwIFstLS0tLS0tLV0KPiB1c2VyMiAgICAgICAgICAgICAgIDAgICAg
+IDEwMjQwMCAgICAgNDA5NjAwICAgICAwMCBbLS0tLS0tLS1dCj4gdXNlcjMgICAgICAgICAgICAg
+ICAwICAgICAyMDQ4MDAgICAgIDUxMjAwMCAgICAgMDAgWy0tLS0tLS0tXQo+IAo+IFVzZXIgcXVv
+dGEgb24gL3Jvb3QvbW50cGF0aDMgKC9kZXYvc2RlNykKPiAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgQmxvY2tzCj4gVXNlciBJRCAgICAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAg
+SGFyZCAgICBXYXJuL0dyYWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+IHJvb3QgICAgICAgICAgICAgICAgMCAgICAgICAg
+ICAwICAgICAgICAgIDAgICAgIDAwIFstLS0tLS0tLV0KPiB1c2VyMiAgICAgICAgICAgICAgIDAg
+ICAgIDEwMjQwMCAgICAgNDA5NjAwICAgICAwMCBbLS0tLS0tLS1dCj4gdXNlcjMgICAgICAgICAg
+ICAgICAwICAgICAyMDQ4MDAgICAgIDUxMjAwMCAgICAgMDAgWy0tLS0tLS0tXQoKQ2FuIHlvdSBh
+dHRhY2ggdGhlIHN0cmFjZSBvdXRwdXQgb2YgdGhlIGNvbW1hbmQ/CgpDaGVlcnMsCgpEYXZlLgot
+LSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
+Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
