@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9A8Dd0096635 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 04:08:13 -0600
+	qA9A8Ka0096659 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 04:08:20 -0600
 Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
 	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	B7xw59d7vZBrtxDs for <xfs@oss.sgi.com>;
-	Fri, 09 Nov 2012 02:10:11 -0800 (PST)
+	B7HRFD1py8B5w5VI for <xfs@oss.sgi.com>;
+	Fri, 09 Nov 2012 02:10:18 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TWlXL-0006UR-1s
-	for xfs@oss.sgi.com; Fri, 09 Nov 2012 21:10:07 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TWlXV-0006US-3O
+	for xfs@oss.sgi.com; Fri, 09 Nov 2012 21:10:17 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TWlXK-0004SF-U3
-	for xfs@oss.sgi.com; Fri, 09 Nov 2012 21:10:06 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TWlXL-0004SO-0S
+	for xfs@oss.sgi.com; Fri, 09 Nov 2012 21:10:07 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/4] xfs: remove xfs_tosspages
-Date: Fri,  9 Nov 2012 21:10:01 +1100
-Message-Id: <1352455804-17045-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/4] xfs: remove xfs_flush_pages
+Date: Fri,  9 Nov 2012 21:10:03 +1100
+Message-Id: <1352455804-17045-4-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352455804-17045-1-git-send-email-david@fromorbit.com>
 References: <1352455804-17045-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,130 +35,129 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-It's a buggy, unnecessary wrapper that is duplicating
-truncate_pagecache_range().
+It is a complex wrapper around VFS functions, but there are VFS
+functions that provide exactly the same functionality. Call the VFS
+functions directly and remove the unnecessary indirection and
+complexity.
 
-When replacing the call in xfs_change_file_space(), also ensure that
-the length being allocated/freed is always positive before making
-any changes. These checks are done in the lower extent manipulation
-functions, too, but we need to do them before any page cache
-operations.
+We don't need to care about clearing the XFS_ITRUNCATED flag, as
+that is done during .writepages. Hence is cleared by the VFS
+writeback path if there is anything to write back during the flush.
 
-Reported-by: Andrew Dahl <adahl@sgi.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dfrag.c    |    3 +--
- fs/xfs/xfs_fs_subr.c  |   12 ------------
- fs/xfs/xfs_vnodeops.c |   28 +++++++++++++++++++++++-----
+ fs/xfs/xfs_aops.c     |    2 +-
+ fs/xfs/xfs_bmap.c     |    2 +-
+ fs/xfs/xfs_fs_subr.c  |   24 ------------------------
+ fs/xfs/xfs_iops.c     |    4 ++--
+ fs/xfs/xfs_vnodeops.c |    7 +++++--
  fs/xfs/xfs_vnodeops.h |    2 --
- 4 files changed, 24 insertions(+), 21 deletions(-)
+ 6 files changed, 9 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index b9b8646..b2c63a2 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -315,8 +315,7 @@ xfs_swap_extents(
- 	 * are safe.  We don't really care if non-io related
- 	 * fields change.
- 	 */
--
--	xfs_tosspages(ip, 0, -1, FI_REMAPF);
-+	truncate_pagecache_range(VFS_I(ip), 0, -1);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e562dd4..42ef842 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1617,7 +1617,7 @@ xfs_vm_bmap(
  
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
- 	if ((error = xfs_trans_reserve(tp, 0,
+ 	trace_xfs_vm_bmap(XFS_I(inode));
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	xfs_flush_pages(ip, (xfs_off_t)0, -1, 0, FI_REMAPF);
++	filemap_write_and_wait(mapping);
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+ 	return generic_block_bmap(mapping, block, xfs_get_blocks);
+ }
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 83d0cf3..a60f3d1 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5599,7 +5599,7 @@ xfs_getbmap(
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+ 		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
+-			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
++			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 			if (error)
+ 				goto out_unlock_iolock;
+ 		}
 diff --git a/fs/xfs/xfs_fs_subr.c b/fs/xfs/xfs_fs_subr.c
-index 652b875..d49de3d 100644
+index 3365823..b538089 100644
 --- a/fs/xfs/xfs_fs_subr.c
 +++ b/fs/xfs/xfs_fs_subr.c
-@@ -25,18 +25,6 @@
-  * note: all filemap functions return negative error codes. These
-  * need to be inverted before returning to the xfs core functions.
-  */
--void
--xfs_tosspages(
+@@ -44,27 +44,3 @@ xfs_flushinval_pages(
+ 		truncate_inode_pages_range(mapping, first, last);
+ 	return -ret;
+ }
+-
+-int
+-xfs_flush_pages(
 -	xfs_inode_t	*ip,
 -	xfs_off_t	first,
 -	xfs_off_t	last,
+-	uint64_t	flags,
 -	int		fiopt)
 -{
--	/* can't toss partial tail pages, so mask them out */
--	last &= ~(PAGE_SIZE - 1);
--	truncate_inode_pages_range(VFS_I(ip)->i_mapping, first, last - 1);
--}
+-	struct address_space *mapping = VFS_I(ip)->i_mapping;
+-	int		ret = 0;
+-	int		ret2;
 -
- int
- xfs_flushinval_pages(
- 	xfs_inode_t	*ip,
+-	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+-	ret = -filemap_fdatawrite_range(mapping, first,
+-				last == -1 ? LLONG_MAX : last);
+-	if (flags & XBF_ASYNC)
+-		return ret;
+-	ret2 = -filemap_fdatawait_range(mapping, first,
+-				last == -1 ? XFS_ISIZE(ip) - 1 : last);
+-	if (!ret)
+-		ret = ret2;
+-	return ret;
+-}
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 81f5c49..d82efaa 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -780,8 +780,8 @@ xfs_setattr_size(
+ 	 * care about here.
+ 	 */
+ 	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
+-		error = xfs_flush_pages(ip, ip->i_d.di_size, newsize, 0,
+-					FI_NONE);
++		error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++						      ip->i_d.di_size, newsize);
+ 		if (error)
+ 			goto out_unlock;
+ 	}
 diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index c2ddd7a..f7de578 100644
+index f7de578..31de73e 100644
 --- a/fs/xfs/xfs_vnodeops.c
 +++ b/fs/xfs/xfs_vnodeops.c
-@@ -2118,7 +2118,6 @@ xfs_change_file_space(
- 	xfs_fsize_t	fsize;
- 	int		setprealloc;
- 	xfs_off_t	startoffset;
--	xfs_off_t	llen;
- 	xfs_trans_t	*tp;
- 	struct iattr	iattr;
- 	int		prealloc_type;
-@@ -2139,12 +2138,30 @@ xfs_change_file_space(
- 		return XFS_ERROR(EINVAL);
+@@ -428,8 +428,11 @@ xfs_release(
+ 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+ 		if (truncated) {
+ 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+-			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
+-				xfs_flush_pages(ip, 0, -1, XBF_ASYNC, FI_NONE);
++			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
++				error = -filemap_flush(VFS_I(ip)->i_mapping);
++				if (error)
++					return error;
++			}
+ 		}
  	}
  
--	llen = bf->l_len > 0 ? bf->l_len - 1 : bf->l_len;
-+	/*
-+	 * length of <= 0 for resv/unresv/zero is invalid.  length for
-+	 * alloc/free is ignored completely and we have no idea what userspace
-+	 * might have set it to, so set it to zero to allow range
-+	 * checks to pass.
-+	 */
-+	switch (cmd) {
-+	case XFS_IOC_ZERO_RANGE:
-+	case XFS_IOC_RESVSP:
-+	case XFS_IOC_RESVSP64:
-+	case XFS_IOC_UNRESVSP:
-+	case XFS_IOC_UNRESVSP64:
-+		if (bf->l_len <= 0)
-+			return XFS_ERROR(EINVAL);
-+		break;
-+	default:
-+		bf->l_len = 0;
-+		break;
-+	}
- 
- 	if (bf->l_start < 0 ||
- 	    bf->l_start > mp->m_super->s_maxbytes ||
--	    bf->l_start + llen < 0 ||
--	    bf->l_start + llen > mp->m_super->s_maxbytes)
-+	    bf->l_start + bf->l_len < 0 ||
-+	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes)
- 		return XFS_ERROR(EINVAL);
- 
- 	bf->l_whence = 0;
-@@ -2169,7 +2186,8 @@ xfs_change_file_space(
- 	switch (cmd) {
- 	case XFS_IOC_ZERO_RANGE:
- 		prealloc_type |= XFS_BMAPI_CONVERT;
--		xfs_tosspages(ip, startoffset, startoffset + bf->l_len, 0);
-+		truncate_pagecache_range(VFS_I(ip), startoffset,
-+			 round_down(startoffset + bf->l_len, PAGE_SIZE) - 1);
- 		/* FALLTHRU */
- 	case XFS_IOC_RESVSP:
- 	case XFS_IOC_RESVSP64:
 diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-index 52fafc4..d48141d 100644
+index c8ad48b..73cb3cb 100644
 --- a/fs/xfs/xfs_vnodeops.h
 +++ b/fs/xfs/xfs_vnodeops.h
-@@ -48,8 +48,6 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+@@ -50,8 +50,6 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
  		int flags, struct attrlist_cursor_kern *cursor);
--void xfs_tosspages(struct xfs_inode *inode, xfs_off_t first,
--		xfs_off_t last, int fiopt);
  int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
  		xfs_off_t last, int fiopt);
- int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
+-int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
+-		xfs_off_t last, uint64_t flags, int fiopt);
+ 
+ int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+ int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
 -- 
 1.7.10
 
