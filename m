@@ -1,15 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9Hc2I5132557 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 11:38:02 -0600
-Date: Fri, 9 Nov 2012 11:40:02 -0600
-From: Ben Myers <bpm@sgi.com>
-Subject: Re: [PATCH 0/4] xfs: fs/xfs/xfs_fs_subr.c die die die
-Message-ID: <20121109174001.GV9783@sgi.com>
-References: <1352455804-17045-1-git-send-email-david@fromorbit.com>
+	qA9Hp9ZA133153 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 11:51:09 -0600
+Message-ID: <509D42FC.8080204@sgi.com>
+Date: Fri, 09 Nov 2012 11:53:00 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <1352455804-17045-1-git-send-email-david@fromorbit.com>
+Subject: Re: NFS stalls when writing - linux 3.6.x
+References: <50957087.6050008@xinu.at> <20121107190724.GD7421@fieldses.org>
+	<509D2993.4050604@xinu.at> <20121109163658.GE6171@fieldses.org>
+	<20121109172014.GT9783@sgi.com> <509D3C9A.6040209@xinu.at>
+In-Reply-To: <509D3C9A.6040209@xinu.at>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,34 +19,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Florian Pritz <bluewind@xinu.at>
+Cc: "J. Bruce Fields" <bfields@fieldses.org>, Ben Myers <bpm@sgi.com>, Alex Elder <elder@kernel.org>, linux-nfs@vger.kernel.org, xfs@oss.sgi.com
 
-Hey Dave,
+On 11/09/12 11:25, Florian Pritz wrote:
+> On 09.11.2012 18:20, Ben Myers wrote:
+>> I took a brief look but there were no slam dunks.  This seems like it might be
+>> a candidate:
+>>
+>> 8375f922 - xfs: re-enable xfsaild idle mode and fix associated races
+>>
+>> The sysrq-trigger information would definately be helpful.  Meanwhile I'll see
+>> if I can reproduce the issue.
+>
+> No idea why it doesn't show up on gmane yet (the excerpt is from my mail
+> to the list), but I've uploaded it here[1]. The link will be valid for
+> 10 days.
+>
+> [1]: https://paste.xinu.at/koXRw/
+>
+>
+>
+>
+> _______________________________________________
+> xfs mailing list
+> xfs@oss.sgi.com
+> http://oss.sgi.com/mailman/listinfo/xfs
 
-On Fri, Nov 09, 2012 at 09:10:00PM +1100, Dave Chinner wrote:
-> This patch series replaces all the functions in fs/xfs/xfs_fs_subr.c
-> with direct calls to their VFS equivalents. This fixes bugs and
-> removes code at the same time.
-> 
-> I haven't bothered to change the ranges passed to the functions -
-> that requires a lot more scrutiny and testing - the ranges have now
-> may not be optimal but they are a known factor. The changes have
-> passed smoke testing on several different configurations and about 6
-> hours of continuous fsx testing, which is what I'd expect seeing as
-> I have changed the ranges at all.
+Thank-you for the task list. Could we get a dump of the hang?
 
-Thanks for the quick turnaround on this.  It looks like this will indeed be
-appropriate for -stable.  I'd like to have seen Andrew go through the whole
-process on this bug.  Maybe next time.  We still have the xfstest to do I
-guess.  Putting this series on the 3.8 queue.
+  # echo c >/proc/sysrq-trigger
 
-Regards,
-	Ben
+It requires kdump configured.
+
+--Mark.
 
 _______________________________________________
 xfs mailing list
