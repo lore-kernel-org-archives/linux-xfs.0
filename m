@@ -1,21 +1,29 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA95bosd075322 for <xfs@oss.sgi.com>; Thu, 8 Nov 2012 23:37:51 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	qTOh3CdgYo1RKtIa for <xfs@oss.sgi.com>;
-	Thu, 08 Nov 2012 21:39:48 -0800 (PST)
-Date: Fri, 9 Nov 2012 16:39:31 +1100
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs_quota -x -c 'report -u /dev/sde5' shows the duplicate result.
-Message-ID: <20121109053931.GA6434@dastard>
-References: <20121108222315.505370321@sgi.com>
-	<20121108222315.709683665@sgi.com> <509C5885.5060300@eisoo.com>
-	<20121109012405.GX6434@dastard> <509C7825.1080401@eisoo.com>
+	qA96jot8081772 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 00:45:50 -0600
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69]) by
+	cuda.sgi.com with ESMTP id stuMm8M06BSh8yfF (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Thu, 08 Nov 2012 22:47:48 -0800 (PST)
+Received: from ucsinet22.oracle.com (ucsinet22.oracle.com [156.151.31.94])
+	by aserp1040.oracle.com (Sentrion-MTA-4.2.2/Sentrion-MTA-4.2.2) with
+	ESMTP id qA96lki3010637
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 06:47:47 GMT
+Received: from acsmt356.oracle.com (acsmt356.oracle.com [141.146.40.156])
+	by ucsinet22.oracle.com (8.14.4+Sun/8.14.4) with ESMTP id
+	qA96lk83006112
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 06:47:46 GMT
+Received: from abhmt114.oracle.com (abhmt114.oracle.com [141.146.116.66])
+	by acsmt356.oracle.com (8.12.11.20060308/8.12.11) with ESMTP id
+	qA96ljHW027448 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 00:47:45 -0600
+Message-ID: <509CA70D.6000702@oracle.com>
+Date: Fri, 09 Nov 2012 14:47:41 +0800
+From: Jeff Liu <jeff.liu@oracle.com>
 MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <509C7825.1080401@eisoo.com>
+Subject: XFS AG disk layout described on official doc is wrong
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,55 +32,44 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: "yyq@eisoo.com" <yyq@eisoo.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-T24gRnJpLCBOb3YgMDksIDIwMTIgYXQgMTE6Mjc6MzNBTSArMDgwMCwgeXlxQGVpc29vLmNvbSB3
-cm90ZToKPiAKPiDkuo4gMjAxMi0xMS05IDk6MjQsIERhdmUgQ2hpbm5lciDlhpnpgZM6Cj4gPk9u
-IEZyaSwgTm92IDA5LCAyMDEyIGF0IDA5OjEyOjM3QU0gKzA4MDAsIHl5cUBlaXNvby5jb20gd3Jv
-dGU6Cj4gPj5IaSwKPiA+Pgo+ID4+ICAgICBXaGVuIEkgdXNlICJ4ZnNfcXVvdGEgLXggLWMgJ3Jl
-cG9ydCAtdSAvZGV2L3NkZTUnIiB0byBzaG93Cj4gPj4vZGV2L3NkZTUncyBxdW90YXMsIGFuZCB0
-aGUgcmVzdWx0IGhhdmUgdHdvIHNhbWUgYmxvY2sgYXMgYmVsb3c6Cj4gPldoYXQgdmVyc2lvbiBv
-ZiB4ZnNfcXVvdGEgYXJlIHlvdSB1c2luZz8gV2hhdCBpcyB0aGUgb3V0cHV0IG9mCj4gPi9wcm9j
-L21vdW50cyBhbmQgL2V0Yy9tdGFiIHNheT8KPiB4ZnNfcXVvdGEncyB2ZXJzaW9uIGlzIDMuMS4x
-IGFuZCBvdXRwdXQgb2YgL3Byb2MvbW91bnRzIGxpa2UgdGhpczoKPiAKPiAuLi4uLgo+IC9kZXYv
-c2RlMyAvcm9vdC9tbnRfcGF0aCB4ZnMgcncscmVsYXRpbWUsYXR0cjIsdXNycXVvdGEgMCAwCj4g
-L2Rldi9zZGU1IC9yb290L21udHBhdGgyIHhmcyBydyxyZWxhdGltZSxhdHRyMix1c3JxdW90YSAw
-IDAKPiAvZGV2L3NkZTcgL3Jvb3QvbW50cGF0aDMgeGZzIHJ3LHJlbGF0aW1lLGF0dHIyLHVzcnF1
-b3RhIDAgMAo+IAo+IC9ldGMvbXRhYjoKPiAKPiAuLi4uCj4gL2Rldi9zZGUzIC9yb290L21udF9w
-YXRoIHhmcyBydyx1cXVvdGEgMCAwCj4gL2Rldi9zZGU1IC9yb290L21udHBhdGgyIHhmcyBydyx1
-cXVvdGEgMCAwCj4gL2Rldi9zZGU3IC9yb290L21udHBhdGgzIHhmcyBydyx1cXVvdGEgMCAwCj4g
-Cj4gaW4gdGhlIG9yaWdpbmFsIHBvc3QgIi9kZXYvc2RlNSIgd2FzIHJlbW92ZWQgYW5kIHRyeSAi
-L2Rldi9zZGU3IiwKPiB0aGUgcmVtYWluIHRoZSBzYW1lIHByb2JsZW0uCj4gPgo+ID5BbmQgZG9l
-cyB0aGUgbGF0ZXN0IHZlcnNpb24gb2YgeGZzX3F1b3RhIGhhdmUgdGhlIHNhbWUgcHJvYmxlbT8K
-PiB2ZXJzaW9uIDMuMS44J3Mgb3V0cHV0IGhhdmUgdGhlIHNhbWUgcHJvYmxlbSxhbmQgZXZlbiB3
-b3JzZSwgdGhlcmUKPiBhcmUgdGhyZWUgc2FtZSBibG9ja3MgOgo+IAo+IFVzZXIgcXVvdGEgb24g
-L3Jvb3QvbW50cGF0aDMgKC9kZXYvc2RlNykKPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgQmxvY2tzCj4gVXNlciBJRCAgICAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAgSGFyZCAg
-ICBXYXJuL0dyYWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLQo+IHJvb3QgICAgICAgICAgICAgICAgMCAgICAgICAgICAwICAg
-ICAgICAgIDAgICAgIDAwIFstLS0tLS0tLV0KPiB1c2VyMiAgICAgICAgICAgICAgIDAgICAgIDEw
-MjQwMCAgICAgNDA5NjAwICAgICAwMCBbLS0tLS0tLS1dCj4gdXNlcjMgICAgICAgICAgICAgICAw
-ICAgICAyMDQ4MDAgICAgIDUxMjAwMCAgICAgMDAgWy0tLS0tLS0tXQo+IAo+IFVzZXIgcXVvdGEg
-b24gL3Jvb3QvbW50cGF0aDMgKC9kZXYvc2RlNykKPiAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgQmxvY2tzCj4gVXNlciBJRCAgICAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAgSGFy
-ZCAgICBXYXJuL0dyYWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+IHJvb3QgICAgICAgICAgICAgICAgMCAgICAgICAgICAw
-ICAgICAgICAgIDAgICAgIDAwIFstLS0tLS0tLV0KPiB1c2VyMiAgICAgICAgICAgICAgIDAgICAg
-IDEwMjQwMCAgICAgNDA5NjAwICAgICAwMCBbLS0tLS0tLS1dCj4gdXNlcjMgICAgICAgICAgICAg
-ICAwICAgICAyMDQ4MDAgICAgIDUxMjAwMCAgICAgMDAgWy0tLS0tLS0tXQo+IAo+IFVzZXIgcXVv
-dGEgb24gL3Jvb3QvbW50cGF0aDMgKC9kZXYvc2RlNykKPiAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgQmxvY2tzCj4gVXNlciBJRCAgICAgICAgICBVc2VkICAgICAgIFNvZnQgICAgICAg
-SGFyZCAgICBXYXJuL0dyYWNlCj4gLS0tLS0tLS0tLSAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQo+IHJvb3QgICAgICAgICAgICAgICAgMCAgICAgICAg
-ICAwICAgICAgICAgIDAgICAgIDAwIFstLS0tLS0tLV0KPiB1c2VyMiAgICAgICAgICAgICAgIDAg
-ICAgIDEwMjQwMCAgICAgNDA5NjAwICAgICAwMCBbLS0tLS0tLS1dCj4gdXNlcjMgICAgICAgICAg
-ICAgICAwICAgICAyMDQ4MDAgICAgIDUxMjAwMCAgICAgMDAgWy0tLS0tLS0tXQoKQ2FuIHlvdSBh
-dHRhY2ggdGhlIHN0cmFjZSBvdXRwdXQgb2YgdGhlIGNvbW1hbmQ/CgpDaGVlcnMsCgpEYXZlLgot
-LSAKRGF2ZSBDaGlubmVyCmRhdmlkQGZyb21vcmJpdC5jb20KCl9fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QKeGZzQG9zcy5zZ2ku
-Y29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+Hello,
+
+I observed that there is an issue on our official DOC for AG disk
+layout, which can be found at:
+http://xfs.org/docs/xfsdocs-xml-dev/XFS_Filesystem_Structure//tmp/en-US/html/Allocation_Groups.html
+
+It shows that the IBT block is followed by the block where AGFL sector
+resides.  However, it should be followed by the
+CNT block according to my debug, like below:
+
+-------------------------------
+superblock
+AG free block info
+AG inode B+tree info
+AG internal free list
+-------------------------------
+Root of free space B+tree
+  B+tree key is block number
+-------------------------------
+Root of free space B+tree
+  B+tree key is block count
+--------------------------------
+Root of inodes B+tree
+--------------------------------
+
+Maybe the DOC is old, or am I missing anything?  If not, can we correct it?
+
+
+Thanks,
+-Jeff
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
