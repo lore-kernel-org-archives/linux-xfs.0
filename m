@@ -1,18 +1,27 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9IUmFq136899 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 12:30:48 -0600
-Received: from sandeen.net (sandeen.net [63.231.237.45]) by cuda.sgi.com with
-	ESMTP id TWw12B2hyrTzPzh2 for <xfs@oss.sgi.com>;
-	Fri, 09 Nov 2012 10:32:47 -0800 (PST)
-Message-ID: <509D4C50.2020607@sandeen.net>
-Date: Fri, 09 Nov 2012 12:32:48 -0600
-From: Eric Sandeen <sandeen@sandeen.net>
+	qA9LGFnM158268 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 15:16:15 -0600
+Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
+	cuda.sgi.com with ESMTP id k4AP8UztBPrBaBA8 (version=TLSv1
+	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
+	Fri, 09 Nov 2012 13:18:13 -0800 (PST)
+Received: from telerig.nabble.com ([192.168.236.162])
+	by sam.nabble.com with esmtp (Exim 4.72)
+	(envelope-from <lists@nabble.com>) id 1TWvxt-0004M3-Bp
+	for xfs@oss.sgi.com; Fri, 09 Nov 2012 13:18:13 -0800
+Message-ID: <34662440.post@talk.nabble.com>
+Date: Fri, 9 Nov 2012 13:18:13 -0800 (PST)
+From: Kamal Dasu <kdasu.kdev@gmail.com>
+Subject: Re: xfs filesystem corruption with kernel 2.6.37
+In-Reply-To: <20121103222518.GH29378@dastard>
 MIME-Version: 1.0
-Subject: Re: [PATCH 2/3] xfsdump: default to V3, use V4 if projid32bit is set
-References: <50788C50.40600@redhat.com> <50788D9A.8080302@sandeen.net>
-	<509D4C12.6080800@sgi.com>
-In-Reply-To: <509D4C12.6080800@sgi.com>
+References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
+	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
+	<20121102012728.GT29378@dastard> <34633803.post@talk.nabble.com>
+	<20121102225509.GZ29378@dastard>
+	<37CBCD87-5B71-4B9C-8FAE-5BBF85804983@gmail.com>
+	<20121103222518.GH29378@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -21,93 +30,54 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Rich Johnston <rjohnston@sgi.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, xfs-oss <xfs@oss.sgi.com>
+To: xfs@oss.sgi.com
 
-On 11/9/12 12:31 PM, Rich Johnston wrote:
-> On 10/12/2012 04:37 PM, Eric Sandeen wrote:
->> Because 32-bit project ID is not default and semi-rare,
->> default to version 3 dumps unless dumping a filesystem
->> with the 32-bit project ID feature flag set.
->>
->> XFS_FSOP_GEOM_FLAGS_PROJID32 is a newish flag so I've
->> redefined it here just in caes as well.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> diff --git a/common/fs.h b/common/fs.h
->> index 878385b..7e63f8e 100644
->> --- a/common/fs.h
->> +++ b/common/fs.h
->> @@ -26,6 +26,10 @@
->>   #define FS_MAXNAMELEN_DEFAULT    256
->>   #define FS_MAXPATHLEN_DEFAULT    1024
->>
->> +#ifndef XFS_FSOP_GEOM_FLAGS_PROJID32
->> +#define XFS_FSOP_GEOM_FLAGS_PROJID32 0x0800
->> +#endif
->> +
->>   /* fs_info - decides if a source name describes a file system, and if
->>    * so returns useful information about that file system.
->>    *
->> diff --git a/common/global.h b/common/global.h
->> index 5138ed8..a847c5d 100644
->> --- a/common/global.h
->> +++ b/common/global.h
->> @@ -29,14 +29,14 @@
->>   #define GLOBAL_HDR_VERSION_2    2
->>   #define GLOBAL_HDR_VERSION_3    3
->>   #define GLOBAL_HDR_VERSION_4    4
-> Hmm looks a a patch from your previous version.
->> -    /* version 4 adds 32-bit projid (projid_hi)
->> +    /* version 4 adds 32-bit projid (projid_hi) only used if projid32 in place.
->>        * version 3 uses the full 32-bit inode generation number in direnthdr_t.
->>        * version 2 adds encoding of holes and a change to on-tape inventory format.
->>        * version 1 adds extended file attribute dumping.
->>        * version 0 xfsrestore can't handle media produced
->>        * by version 1 xfsdump.
->>        */
->> -#define GLOBAL_HDR_VERSION    GLOBAL_HDR_VERSION_4
->> +#define GLOBAL_HDR_VERSION    GLOBAL_HDR_VERSION_3
->>
->>   #define GLOBAL_HDR_STRING_SZ    0x100
->>   #define GLOBAL_HDR_TIME_SZ    4
-> 
-> I used the following for testing purposes.
-> 
-> Index: b/common/global.h
-> ===================================================================
-> --- a/common/global.h
-> +++ b/common/global.h
-> @@ -28,7 +28,9 @@
->  #define GLOBAL_HDR_VERSION_1    1
->  #define GLOBAL_HDR_VERSION_2    2
->  #define GLOBAL_HDR_VERSION_3    3
-> -    /* version 3 uses the full 32-bit inode generation number in direnthdr_t.
-> +#define GLOBAL_HDR_VERSION_4    4
-> +    /* version 4 adds 32-bit projid (projid_hi) only used if projid32 in place.
-> +     * version 3 uses the full 32-bit inode generation number in direnthdr_t.
->       * version 2 adds encoding of holes and a change to on-tape inventory format.
->       * version 1 adds extended file attribute dumping.
->       * version 0 xfsrestore can't handle media produced
-> 
-> 
-> Rest of the patch looks good.  Correct the common/global.h section and you can add a:
-
-Thanks, but I think we NAK'd this one (and the series) for now, and decided not to bump the version
-just for this.
-
--Eric
-
-> Reviewed-by Rich Johnston <rjohnston@sgi.com>
-> 
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+CkRhdmUsCgpPbiBtb3JlIGFuYWx5c2lzIG9mIHRoZSBjb3JydXB0IGRpc2tzIHNlZW1zIGV4aGli
+aXQgYSBwcm9ibGVtIHdpdGggZHVwbGljYXRlCnJ0IGlub2RlIGV4dGVudHMuCgpPbiBtb3VudCB0
+aGlzIHdvdWxkIGJlIHRoZSBhc3NlcnQ6CiBwcmV2LmJyX3N0YXRlID09IFhGU19FWFRfTk9STSBh
+c3NlcnQgd2l0aCBBbml0YSBkaXNrKQpTdGFydGluZyBYRlMgcmVjb3Zlcnkgb24gZmlsZXN5c3Rl
+bTogc2RhMiAobG9nZGV2OiBpbnRlcm5hbCkKQXNzZXJ0aW9uIGZhaWxlZDogZGVsLmJyX3N0YXJ0
+YmxvY2sgPT0gcHJldi5icl9zdGFydGJsb2NrICsKcHJldi5icl9ibG9ja2NvdW50LCBmaWxlOiBm
+cy94ZnMveGZzX2JtYXAuYywgbGluZTogNTIwMQoKIyB4ZnNfcmVwYWlyIOKAk24gL2Rldi9zZGEy
+IOKAk3IgL2Rldi9zZGEzCi4uCi4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKICAgICAg
+ICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KYWdpIHVubGlu
+a2VkIGJ1Y2tldCAzOCBpcyAxMzg3OTAgaW4gYWcgMyAoaW5vZGU9NTA0NzA0MzgpCi4uCi4uClBo
+YXNlIDQgLSBjaGVjayBmb3IgZHVwbGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gc2V0dGluZyB1
+cCBkdXBsaWNhdGUgZXh0ZW50IGxpc3QuLi4KICAgICAgICAtIGNoZWNrIGZvciBpbm9kZXMgY2xh
+aW1pbmcgZHVwbGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gYWdubyA9IDAKICAgICAgICAtIGFn
+bm8gPSAxCiAgICAgICAgLSBhZ25vID0gMgogICAgICAgIC0gYWdubyA9IDMKZGF0YSBmb3JrIGlu
+IHJ0IGlubyA1MDQ3MDQzOCBjbGFpbXMgZHVwIHJ0IGV4dGVudCxvZmYgLSAxMDI0LCBzdGFydCAt
+CjEyOTYzMDcyLCBjb3VudCAxNjAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA1MDQ3MDQzOAp3b3Vs
+ZCBoYXZlIGNsZWFyZWQgaW5vZGUgNTA0NzA0MzgKCnNoLTMuMSMgeGZzX2RiICAvZGV2L3NkYTIK
+eGZzX2RiPiBpbm9kZSA1MDQ3MDQzOAp4ZnNfZGI+IGJtYXAKZGF0YSBvZmZzZXQgMCBzdGFydGJs
+b2NrIDExMDI0Mzg0ICgxMC81Mzg2MjQpIGNvdW50IDI1NiBmbGFnIDAKZGF0YSBvZmZzZXQgMTAy
+NCBzdGFydGJsb2NrIDEyOTYzMDcyICgxMi8zODAxNjApIGNvdW50IDE2MCBmbGFnIDEKZGF0YSBv
+ZmZzZXQgMTE4NCBzdGFydGJsb2NrIDEyOTYzMjMyICgxMi8zODAzMjApIGNvdW50IDExMjAgZmxh
+ZyAwCmRhdGEgb2Zmc2V0IDIzMDQgc3RhcnRibG9jayAxMjk1MTgwOCAoMTIvMzY4ODk2KSBjb3Vu
+dCAxMDI0IGZsYWcgMApkYXRhIG9mZnNldCAzMzI4IHN0YXJ0YmxvY2sgMTI4MjQwNjQgKDEyLzI0
+MTE1MikgY291bnQgNzY4IGZsYWcgMApkYXRhIG9mZnNldCA2MzU2MDM0IHN0YXJ0YmxvY2sgMjM5
+MjUzNzMxNDk4OTU2OCAoMjI4MTcwMTM4OC8zNjYwODApIGNvdW50CjkyOCBmbGFnIDAKClNpbWls
+YXIgcHJvYmxlbSBpbiBjb250ZXh0IG9mIHhmc19yZXBhaXIgd2FzIHJlcG9ydGVkIHdpdGggcmVz
+cGVjdCB0bwpyZWFsdGltZSBleHRlbnRzIG9uIDIuNi4zNy4gU2VlbXMgbGlrZSB1bmFsaWduZWQg
+ZXh0ZW50IHNpemUgY2FuIGNhdXNlCnNoYXJpbmcgb2YgdGhlICB1bndyaXR0ZW4gZnJlZSBwYXJ0
+IG9mIGEgd3JpdHRlbiAgd2l0aCB0aGUgbmV4dCBhbGxvY2F0ZWQKdW53cml0dGVuIGFkamVjZW50
+IGV4dGVudCAuICBEdXJpbmcgcnVudGltZSAod2l0aCBYRlNfREVCVUcgZW5hYmxlZCkgd2UgZG8K
+bm90aWNlIHRoYXQgdGhlIHNhbWUgZXh0ZW50IGlzIGJlaW5nIHVubGlua2VkIG11bHRpcGxlIHRp
+bWVzIGFuZCBhbiBhc3NlcnQKZm9yLgoKQXNzZXJ0aW9uIGZhaWxlZDogZnNiICE9IE5VTExGU0JM
+T0NLLCBmaWxlOiBmcy94ZnMveGZzX3J0YWxsb2MuYywgbGluZTogODc1CiAKSSBhbSB3b25kZXJp
+bmcgaWYgdGhpcyBjYW4gY2F1c2UgY29ycnVwdGlvbiB3aGVuIGl0IGhhcHBlbnMgZHVyaW5nIHJ1
+bnRpbWUKd2l0aG91dCBYRlNfREVCVUcgYnVpbGQuCgpJIHdhcyBsb29raW5nIGF0IGEgc2ltaWxh
+ciB0aHJlYWQgd2hlcmUgeW91IGhhdmUgY29tbWVudGVkIHJlZ2FyZGluZyBhCnBvc3NpYmxlIGZp
+eCBpbiB0aGUga2VybmVsIGJ1ZyBkdXBsaWNhdGUgZXh0ZW50IHdoaWNoIG92ZXJsYXAgZHVlIHVu
+YWxpZ25lZApydCBleHRlbnQgc2l6ZSBjYWxjdWxhdGlvbi4KCmh0dHA6Ly9vc3Muc2dpLmNvbS9h
+cmNoaXZlcy94ZnMvMjAxMi0wOS9tc2cwMDI5Mi5odG1sCgpUaGFua3MKS2FtYWwKLS0gClZpZXcg
+dGhpcyBtZXNzYWdlIGluIGNvbnRleHQ6IGh0dHA6Ly9vbGQubmFiYmxlLmNvbS94ZnMtZmlsZXN5
+c3RlbS1jb3JydXB0aW9uLXdpdGgta2VybmVsLTIuNi4zNy10cDM0NjAxMTg1cDM0NjYyNDQwLmh0
+bWwKU2VudCBmcm9tIHRoZSBYZnMgLSBHZW5lcmFsIG1haWxpbmcgbGlzdCBhcmNoaXZlIGF0IE5h
+YmJsZS5jb20uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
+bG1hbi9saXN0aW5mby94ZnMK
