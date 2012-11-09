@@ -1,27 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9LGFnM158268 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 15:16:15 -0600
-Received: from sam.nabble.com (sam.nabble.com [216.139.236.26]) by
-	cuda.sgi.com with ESMTP id k4AP8UztBPrBaBA8 (version=TLSv1
-	cipher=AES256-SHA bits=256 verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 09 Nov 2012 13:18:13 -0800 (PST)
-Received: from telerig.nabble.com ([192.168.236.162])
-	by sam.nabble.com with esmtp (Exim 4.72)
-	(envelope-from <lists@nabble.com>) id 1TWvxt-0004M3-Bp
-	for xfs@oss.sgi.com; Fri, 09 Nov 2012 13:18:13 -0800
-Message-ID: <34662440.post@talk.nabble.com>
-Date: Fri, 9 Nov 2012 13:18:13 -0800 (PST)
-From: Kamal Dasu <kdasu.kdev@gmail.com>
-Subject: Re: xfs filesystem corruption with kernel 2.6.37
-In-Reply-To: <20121103222518.GH29378@dastard>
+	qA9M7fhW163469 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 16:07:41 -0600
+Message-ID: <509D7F1A.3090201@sgi.com>
+Date: Fri, 09 Nov 2012 16:09:30 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-References: <CAC=U0a2T_J9Y6WzvWyFfbBSDy__Pr7f4gfQBie2o0VhAm2jCaQ@mail.gmail.com>
-	<20121025224713.GF29378@dastard> <34630253.post@talk.nabble.com>
-	<20121102012728.GT29378@dastard> <34633803.post@talk.nabble.com>
-	<20121102225509.GZ29378@dastard>
-	<37CBCD87-5B71-4B9C-8FAE-5BBF85804983@gmail.com>
-	<20121103222518.GH29378@dastard>
+Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
+References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+	<1352295452-4726-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352295452-4726-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,54 +18,101 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-CkRhdmUsCgpPbiBtb3JlIGFuYWx5c2lzIG9mIHRoZSBjb3JydXB0IGRpc2tzIHNlZW1zIGV4aGli
-aXQgYSBwcm9ibGVtIHdpdGggZHVwbGljYXRlCnJ0IGlub2RlIGV4dGVudHMuCgpPbiBtb3VudCB0
-aGlzIHdvdWxkIGJlIHRoZSBhc3NlcnQ6CiBwcmV2LmJyX3N0YXRlID09IFhGU19FWFRfTk9STSBh
-c3NlcnQgd2l0aCBBbml0YSBkaXNrKQpTdGFydGluZyBYRlMgcmVjb3Zlcnkgb24gZmlsZXN5c3Rl
-bTogc2RhMiAobG9nZGV2OiBpbnRlcm5hbCkKQXNzZXJ0aW9uIGZhaWxlZDogZGVsLmJyX3N0YXJ0
-YmxvY2sgPT0gcHJldi5icl9zdGFydGJsb2NrICsKcHJldi5icl9ibG9ja2NvdW50LCBmaWxlOiBm
-cy94ZnMveGZzX2JtYXAuYywgbGluZTogNTIwMQoKIyB4ZnNfcmVwYWlyIOKAk24gL2Rldi9zZGEy
-IOKAk3IgL2Rldi9zZGEzCi4uCi4uClBoYXNlIDIgLSB1c2luZyBpbnRlcm5hbCBsb2cKICAgICAg
-ICAtIHNjYW4gZmlsZXN5c3RlbSBmcmVlc3BhY2UgYW5kIGlub2RlIG1hcHMuLi4KYWdpIHVubGlu
-a2VkIGJ1Y2tldCAzOCBpcyAxMzg3OTAgaW4gYWcgMyAoaW5vZGU9NTA0NzA0MzgpCi4uCi4uClBo
-YXNlIDQgLSBjaGVjayBmb3IgZHVwbGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gc2V0dGluZyB1
-cCBkdXBsaWNhdGUgZXh0ZW50IGxpc3QuLi4KICAgICAgICAtIGNoZWNrIGZvciBpbm9kZXMgY2xh
-aW1pbmcgZHVwbGljYXRlIGJsb2Nrcy4uLgogICAgICAgIC0gYWdubyA9IDAKICAgICAgICAtIGFn
-bm8gPSAxCiAgICAgICAgLSBhZ25vID0gMgogICAgICAgIC0gYWdubyA9IDMKZGF0YSBmb3JrIGlu
-IHJ0IGlubyA1MDQ3MDQzOCBjbGFpbXMgZHVwIHJ0IGV4dGVudCxvZmYgLSAxMDI0LCBzdGFydCAt
-CjEyOTYzMDcyLCBjb3VudCAxNjAKYmFkIGRhdGEgZm9yayBpbiBpbm9kZSA1MDQ3MDQzOAp3b3Vs
-ZCBoYXZlIGNsZWFyZWQgaW5vZGUgNTA0NzA0MzgKCnNoLTMuMSMgeGZzX2RiICAvZGV2L3NkYTIK
-eGZzX2RiPiBpbm9kZSA1MDQ3MDQzOAp4ZnNfZGI+IGJtYXAKZGF0YSBvZmZzZXQgMCBzdGFydGJs
-b2NrIDExMDI0Mzg0ICgxMC81Mzg2MjQpIGNvdW50IDI1NiBmbGFnIDAKZGF0YSBvZmZzZXQgMTAy
-NCBzdGFydGJsb2NrIDEyOTYzMDcyICgxMi8zODAxNjApIGNvdW50IDE2MCBmbGFnIDEKZGF0YSBv
-ZmZzZXQgMTE4NCBzdGFydGJsb2NrIDEyOTYzMjMyICgxMi8zODAzMjApIGNvdW50IDExMjAgZmxh
-ZyAwCmRhdGEgb2Zmc2V0IDIzMDQgc3RhcnRibG9jayAxMjk1MTgwOCAoMTIvMzY4ODk2KSBjb3Vu
-dCAxMDI0IGZsYWcgMApkYXRhIG9mZnNldCAzMzI4IHN0YXJ0YmxvY2sgMTI4MjQwNjQgKDEyLzI0
-MTE1MikgY291bnQgNzY4IGZsYWcgMApkYXRhIG9mZnNldCA2MzU2MDM0IHN0YXJ0YmxvY2sgMjM5
-MjUzNzMxNDk4OTU2OCAoMjI4MTcwMTM4OC8zNjYwODApIGNvdW50CjkyOCBmbGFnIDAKClNpbWls
-YXIgcHJvYmxlbSBpbiBjb250ZXh0IG9mIHhmc19yZXBhaXIgd2FzIHJlcG9ydGVkIHdpdGggcmVz
-cGVjdCB0bwpyZWFsdGltZSBleHRlbnRzIG9uIDIuNi4zNy4gU2VlbXMgbGlrZSB1bmFsaWduZWQg
-ZXh0ZW50IHNpemUgY2FuIGNhdXNlCnNoYXJpbmcgb2YgdGhlICB1bndyaXR0ZW4gZnJlZSBwYXJ0
-IG9mIGEgd3JpdHRlbiAgd2l0aCB0aGUgbmV4dCBhbGxvY2F0ZWQKdW53cml0dGVuIGFkamVjZW50
-IGV4dGVudCAuICBEdXJpbmcgcnVudGltZSAod2l0aCBYRlNfREVCVUcgZW5hYmxlZCkgd2UgZG8K
-bm90aWNlIHRoYXQgdGhlIHNhbWUgZXh0ZW50IGlzIGJlaW5nIHVubGlua2VkIG11bHRpcGxlIHRp
-bWVzIGFuZCBhbiBhc3NlcnQKZm9yLgoKQXNzZXJ0aW9uIGZhaWxlZDogZnNiICE9IE5VTExGU0JM
-T0NLLCBmaWxlOiBmcy94ZnMveGZzX3J0YWxsb2MuYywgbGluZTogODc1CiAKSSBhbSB3b25kZXJp
-bmcgaWYgdGhpcyBjYW4gY2F1c2UgY29ycnVwdGlvbiB3aGVuIGl0IGhhcHBlbnMgZHVyaW5nIHJ1
-bnRpbWUKd2l0aG91dCBYRlNfREVCVUcgYnVpbGQuCgpJIHdhcyBsb29raW5nIGF0IGEgc2ltaWxh
-ciB0aHJlYWQgd2hlcmUgeW91IGhhdmUgY29tbWVudGVkIHJlZ2FyZGluZyBhCnBvc3NpYmxlIGZp
-eCBpbiB0aGUga2VybmVsIGJ1ZyBkdXBsaWNhdGUgZXh0ZW50IHdoaWNoIG92ZXJsYXAgZHVlIHVu
-YWxpZ25lZApydCBleHRlbnQgc2l6ZSBjYWxjdWxhdGlvbi4KCmh0dHA6Ly9vc3Muc2dpLmNvbS9h
-cmNoaXZlcy94ZnMvMjAxMi0wOS9tc2cwMDI5Mi5odG1sCgpUaGFua3MKS2FtYWwKLS0gClZpZXcg
-dGhpcyBtZXNzYWdlIGluIGNvbnRleHQ6IGh0dHA6Ly9vbGQubmFiYmxlLmNvbS94ZnMtZmlsZXN5
-c3RlbS1jb3JydXB0aW9uLXdpdGgta2VybmVsLTIuNi4zNy10cDM0NjAxMTg1cDM0NjYyNDQwLmh0
-bWwKU2VudCBmcm9tIHRoZSBYZnMgLSBHZW5lcmFsIG1haWxpbmcgbGlzdCBhcmNoaXZlIGF0IE5h
-YmJsZS5jb20uCgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-Xwp4ZnMgbWFpbGluZyBsaXN0Cnhmc0Bvc3Muc2dpLmNvbQpodHRwOi8vb3NzLnNnaS5jb20vbWFp
-bG1hbi9saXN0aW5mby94ZnMK
+On 11/07/12 07:37, Dave Chinner wrote:
+> From: Christoph Hellwig<hch@lst.de>
+>
+>   - add a mount feature bit for CRC enabled filesystems
+>   - add some helpers for generating and verifying the CRCs
+>   - add a copy_uuid helper
+>
+> The checksumming helpers are losely based on similar ones in sctp,
+> all other bits come from Dave Chinner.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+> +/*
+> + * Calculate the intermediate checksum for a buffer that has the CRC field
+> + * inside it.  The offset of the 32bit crc fields is passed as the
+> + * cksum_offset parameter.
+> + */
+> +static inline __uint32_t
+> +xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+> +{
+> +	__uint32_t zero = 0;
+> +	__uint32_t crc;
+> +
+> +	/* Calculate CRC up to the checksum. */
+> +	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
+> +
+> +	/* Skip checksum field */
+> +	crc = crc32c(crc,&zero, sizeof(__u32));
+
+I know this came from sctp and I know I can't convince you to copy/null
+the *cksum_offset to make one block for those with hardware crc32c devices.
+
+Since the *cksum_offset value is never used in creating and verifying
+the checksum, the 4 bytes of zeros does not add any new information,
+why not just drop it from the cksum calculation?
+
+> +
+> +	/* Calculate the rest of the CRC. */
+> +	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
+> +		      length - (cksum_offset + sizeof(__be32)));
+> +}
+> +
+> +/*
+> + * Convert the intermediate checksum to the final ondisk format.
+> + *
+> + * Note that crc32c is already endianess agnostic, so no additional
+> + * byte swap is needed.
+> + */
+> +static inline __be32
+> +xfs_end_cksum(__uint32_t crc)
+> +{
+> +	return (__force __be32)~crc;
+> +}
+> +
+
+Wouldn't you have to cpu_to_le32() for big endian machines?
+
+commit 9c5ff5f75d0d0a1c7928ecfae3f38418b51a88e3
+Author: Vlad Yasevich <vladislav.yasevich@hp.com>
+Date:   Thu Jan 22 14:52:23 2009 -0800
+
+     sctp: Fix crc32c calculations on big-endian arhes.
+
+     crc32c algorithm provides a byteswaped result.  On little-endian
+     arches, the result ends up in big-endian/network byte order.
+     On big-endinan arches, the result ends up in little-endian
+     order and needs to be byte swapped again.  Thus calling cpu_to_le32
+     gives the right output.
+
+     Tested-by: Jukka Taimisto <jukka.taimisto@mail.suomi.net>
+     Signed-off-by: Vlad Yasevich <vladislav.yasevich@hp.com>
+     Signed-off-by: David S. Miller <davem@davemloft.net>
+
+diff --git a/include/net/sctp/checksum.h b/include/net/sctp/checksum.h
+index b799fb2..2fec3c3 100644
+--- a/include/net/sctp/checksum.h
++++ b/include/net/sctp/checksum.h
+@@ -79,5 +79,5 @@ static inline __be32 sctp_update_cksum(__u8 *buffer, 
+__u16 length, __be32 crc32)
+
+  static inline __be32 sctp_end_cksum(__be32 crc32)
+  {
+-       return ~crc32;
++       return (__force __be32)~cpu_to_le32((__force u32)crc32);
+  }
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
