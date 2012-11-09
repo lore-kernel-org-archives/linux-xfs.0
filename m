@@ -1,27 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9FK38j120595 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 09:20:03 -0600
-Received: from mail-vc0-f181.google.com (mail-vc0-f181.google.com
-	[209.85.220.181]) by cuda.sgi.com with ESMTP id
-	Mf7VzhZa3HZu1Hb2 (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Fri, 09 Nov 2012 07:22:02 -0800 (PST)
-Received: by mail-vc0-f181.google.com with SMTP id n11so4122992vch.26
-	for <xfs@oss.sgi.com>; Fri, 09 Nov 2012 07:22:02 -0800 (PST)
-MIME-Version: 1.0
-In-Reply-To: <20121109104839.GE6434@dastard>
-References: <CABJyUz+h=pZ6+2rro1PjoB1ggTAoRw+bTzc_bU7Eaec0_AUKLA@mail.gmail.com>
-	<20121101225938.GS29378@dastard>
-	<CABJyUz+VhUY=tVKpEeKXfQRoaL4s+gwNmRr4wNAnRX6zTt5xXg@mail.gmail.com>
-	<CABJyUz+r7yQSswqyBng_W=fAXxTz9heb88NeiKSeFU7j4ZD=Hw@mail.gmail.com>
-	<20121108210210.GP6434@dastard>
-	<CABJyUzKy4YXVZAj=awVNfPD69eWo2mKhM7a-xWF1Vy-PD989sg@mail.gmail.com>
-	<20121109104839.GE6434@dastard>
-Date: Fri, 9 Nov 2012 07:22:01 -0800
-Message-ID: <CABJyUzJVj-rpGW=i5QG=AZPvhuD-qdbujuwOdu_EdGbYGZ++Rg@mail.gmail.com>
-Subject: Re: XFS filesystem recovery from secondary superblocks
-From: Aaron Goulding <aarongldng@gmail.com>
+	qA9FcSmU122495 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 09:38:28 -0600
+Received: from mx1.redhat.com (mx1.redhat.com [209.132.183.28]) by
+	cuda.sgi.com with ESMTP id fqrVLeLgAVP9rGT2 for
+	<xfs@oss.sgi.com>; Fri, 09 Nov 2012 07:40:27 -0800 (PST)
+Received: from int-mx09.intmail.prod.int.phx2.redhat.com
+	(int-mx09.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+	by mx1.redhat.com (8.14.4/8.14.4) with ESMTP id qA9FeNAJ010637
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=OK)
+	for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 10:40:26 -0500
+Received: from bfoster.bfoster (dhcp-191-48.bos.redhat.com [10.16.191.48])
+	by int-mx09.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP
+	id qA9FeMnk022517
+	for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 10:40:23 -0500
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v2 RFC] xfstests: speculative preallocaction trimming test
+Date: Fri,  9 Nov 2012 10:42:12 -0500
+Message-Id: <1352475732-61384-1-git-send-email-bfoster@redhat.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,288 +26,489 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============4822755708599698815=="
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
---===============4822755708599698815==
-Content-Type: multipart/alternative; boundary=bcaec50166136c3f8d04ce1183e5
+The speculative preallocation trimming test verifies that files
+with post-EOF blocks are trimmed when the scan is invoked.
+Background scans and the various scan filters are tested as well.
 
---bcaec50166136c3f8d04ce1183e5
-Content-Type: text/plain; charset=ISO-8859-1
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
 
-On Fri, Nov 9, 2012 at 2:48 AM, Dave Chinner <david@fromorbit.com> wrote:
+v2:
+- Fix up comments, test description and style/output issues.
+- Replace _fail with appropriate filters.
+- Cleaned up the trim_prealloc and stat_files functions. I left the functions
+  around because I think they improve readability, but I'll open-code them if
+  there are objections to how things look in this version.
+- Added the test to the rw and ioctl groups. I wonder if the prealloc group also
+  makes sense?
 
-> On Thu, Nov 08, 2012 at 11:28:20PM -0800, Aaron Goulding wrote:
-> > On Thu, Nov 8, 2012 at 1:02 PM, Dave Chinner <david@fromorbit.com>
-> wrote:
-> >
-> > > That seems like way too many to be filesystem metadata hits. I woul
-> > > dhave expected the same number of hits as there are AGs in the
-> > > filesytem. What you want is the XFSB string in the first 4
-> > > bytes of a sector, with the next sector having XAGF as the first
-> > > four bytes....
-> > >
-> >
-> > Okay this proved helpful. I ran a check of the first 1024 bytes at each
-> of
-> > those 19000 results for XAGF, then limited that to results that occurred
-> at
-> > the 512 byte relative mark. This dropped the results down to  11. I then
-> > went and grabbed 8192 bytes starting at each of those 11 points, and
-> > attached them.
->
-> bad:
->
-> 4398367673432.dmp2 - has a headr followed by zeros, then parts of a
-> transaction headers, etc. just looks like random bits of filesystem
-> metadata record. It's probably the log.
->
-> 12094629761024.dmp2 - has the first part of a superblco, but the
-> empty part of the sb is not zeroed - looks like a utf8 string?
-> Perhaps directory structure? components.ini.new is the repeated
-> name... AGI, AGF AGF look intact. Has this fs been grown in the
-> past?
->
-> 13194139877376.dmp2 - Looks like an empty, pristine AG just freshly
-> allocated by mkfs. (AGFL contains only blocks 4,5,6 and 7, and the
-> AGF and ABTB block show a single large freespace extent covering the
-> entire AG (0x937a4 blocks in size).
->
-> So, judging by what I've got here, the file names are the block
-> offset of the data and that the offsets start at 0. That gives me
-> the headers for AGs 1, 3, 4, (the log in AG 4), 5, 6, 7, 9, 10, 11
-> and 12. Missing are 0, 2 and 8.
->
-> /me hugs xfs_db
->
-> $ xfs_db -c "sb 0" -c p -f 1099514834944.dmp2
-> <snip warnings>
-> magicnum = 0x58465342
-> blocksize = 4096
-> dblocks = 3375866880
-> rblocks = 0
-> rextents = 0
-> uuid = e36d4151-2bf0-4f0e-87e2-c21963022640
-> logstart = 1073741828
-> rootino = 128
-> rbmino = 129
-> rsumino = 130
-> rextsize = 1
-> agblocks = 268435455
-> agcount = 13
-> rbmblocks = 0
-> logblocks = 521728
-> versionnum = 0xb4b4
-> sectsize = 512
-> inodesize = 256
-> inopblock = 16
-> fname = "\000\000\000\000\000\000\000\000\000\000\000\000"
-> blocklog = 12
-> sectlog = 9
-> inodelog = 8
-> inopblog = 4
-> agblklog = 28
-> rextslog = 0
-> inprogress = 0
-> imax_pct = 5
-> icount = 3970688
-> ifree = 11
-> fdblocks = 260163907
-> frextents = 0
-> uquotino = 0
-> gquotino = 0
-> qflags = 0
-> flags = 0
-> shared_vn = 0
-> inoalignmt = 2
-> unit = 0
-> width = 0
-> dirblklog = 0
-> logsectlog = 0
-> logsectsize = 0
-> logsunit = 1
-> features2 = 0xa
-> bad_features2 = 0xa
->
-> So I now know that there are only 13 AGs (0-12), and you are only
-> missing 0, 2 and 8, and that the log starts at 4398046527490 which
-> matches with the chunk that I though was a log record. The AGFs
-> indicate the sequence numbers are in the correct order and match the
-> offsets, so AFAICT you've assembled the array in the right order.
->
-> I think the best thing you could do copy the first 512 bytes from
-> the 1099514834944.dmp2 to the first sector of the device you dumped
-> this from (i.e. offset zero), and then running xfs_repair -n on it
-> to see whether it validates it as correct. (save the sector contents
-> first, jsut in case).
->
-> root@jarvis:~/dump1# dd if=1099514834944.dmp2 of=/dev/md1 bs=512 count=1
-1+0 records in
-1+0 records out
-512 bytes (512 B) copied, 0.0649365 s, 7.9 kB/s
-root@jarvis:~/dump1# xfs_i
-xfs_info  xfs_io
-root@jarvis:~/dump1# xfs_repair -n /dev/md1
-Phase 1 - find and verify superblock...
-couldn't verify primary superblock - not enough secondary superblocks with
-matching geometry !!!
+ 290           |  158 ++++++++++++++++++++++++++++++++++++++
+ 290.out       |  235 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ common.config |    1 +
+ common.rc     |   10 +++
+ group         |    1 +
+ 5 files changed, 405 insertions(+), 0 deletions(-)
+ create mode 100755 290
+ create mode 100644 290.out
 
-attempting to find secondary superblock...
-......................................................................................................................
-
-Hrm I'm guessing that's not a good response, but I'll let it run. If that
-doesn't return good results, I'll try xfs_irecover.
-
--Aaron
-
---bcaec50166136c3f8d04ce1183e5
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-<br><div class=3D"gmail_extra"><br><br><div class=3D"gmail_quote">On Fri, N=
-ov 9, 2012 at 2:48 AM, Dave Chinner <span dir=3D"ltr">&lt;<a href=3D"mailto=
-:david@fromorbit.com" target=3D"_blank">david@fromorbit.com</a>&gt;</span> =
-wrote:<br>
-<blockquote class=3D"gmail_quote" style=3D"margin:0px 0px 0px 0.8ex;border-=
-left:1px solid rgb(204,204,204);padding-left:1ex"><div class=3D""><div clas=
-s=3D"h5">On Thu, Nov 08, 2012 at 11:28:20PM -0800, Aaron Goulding wrote:<br=
->
-&gt; On Thu, Nov 8, 2012 at 1:02 PM, Dave Chinner &lt;<a href=3D"mailto:dav=
-id@fromorbit.com">david@fromorbit.com</a>&gt; wrote:<br>
-&gt;<br>
-&gt; &gt; That seems like way too many to be filesystem metadata hits. I wo=
-ul<br>
-&gt; &gt; dhave expected the same number of hits as there are AGs in the<br=
->
-&gt; &gt; filesytem. What you want is the XFSB string in the first 4<br>
-&gt; &gt; bytes of a sector, with the next sector having XAGF as the first<=
-br>
-&gt; &gt; four bytes....<br>
-&gt; &gt;<br>
-&gt;<br>
-&gt; Okay this proved helpful. I ran a check of the first 1024 bytes at eac=
-h of<br>
-&gt; those 19000 results for XAGF, then limited that to results that occurr=
-ed at<br>
-&gt; the 512 byte relative mark. This dropped the results down to =A011. I =
-then<br>
-&gt; went and grabbed 8192 bytes starting at each of those 11 points, and<b=
-r>
-&gt; attached them.<br>
-<br>
-</div></div>bad:<br>
-<br>
-4398367673432.dmp2 - has a headr followed by zeros, then parts of a<br>
-transaction headers, etc. just looks like random bits of filesystem<br>
-metadata record. It&#39;s probably the log.<br>
-<br>
-12094629761024.dmp2 - has the first part of a superblco, but the<br>
-empty part of the sb is not zeroed - looks like a utf8 string?<br>
-Perhaps directory structure? components.ini.new is the repeated<br>
-name... AGI, AGF AGF look intact. Has this fs been grown in the<br>
-past?<br>
-<br>
-13194139877376.dmp2 - Looks like an empty, pristine AG just freshly<br>
-allocated by mkfs. (AGFL contains only blocks 4,5,6 and 7, and the<br>
-AGF and ABTB block show a single large freespace extent covering the<br>
-entire AG (0x937a4 blocks in size).<br>
-<br>
-So, judging by what I&#39;ve got here, the file names are the block<br>
-offset of the data and that the offsets start at 0. That gives me<br>
-the headers for AGs 1, 3, 4, (the log in AG 4), 5, 6, 7, 9, 10, 11<br>
-and 12. Missing are 0, 2 and 8.<br>
-<br>
-/me hugs xfs_db<br>
-<br>
-$ xfs_db -c &quot;sb 0&quot; -c p -f 1099514834944.dmp2<br>
-&lt;snip warnings&gt;<br>
-magicnum =3D 0x58465342<br>
-blocksize =3D 4096<br>
-dblocks =3D 3375866880<br>
-rblocks =3D 0<br>
-rextents =3D 0<br>
-uuid =3D e36d4151-2bf0-4f0e-87e2-c21963022640<br>
-logstart =3D 1073741828<br>
-rootino =3D 128<br>
-rbmino =3D 129<br>
-rsumino =3D 130<br>
-rextsize =3D 1<br>
-agblocks =3D 268435455<br>
-agcount =3D 13<br>
-rbmblocks =3D 0<br>
-logblocks =3D 521728<br>
-versionnum =3D 0xb4b4<br>
-sectsize =3D 512<br>
-inodesize =3D 256<br>
-inopblock =3D 16<br>
-fname =3D &quot;\000\000\000\000\000\000\000\000\000\000\000\000&quot;<br>
-blocklog =3D 12<br>
-sectlog =3D 9<br>
-inodelog =3D 8<br>
-inopblog =3D 4<br>
-agblklog =3D 28<br>
-rextslog =3D 0<br>
-inprogress =3D 0<br>
-imax_pct =3D 5<br>
-icount =3D 3970688<br>
-ifree =3D 11<br>
-fdblocks =3D 260163907<br>
-frextents =3D 0<br>
-uquotino =3D 0<br>
-gquotino =3D 0<br>
-qflags =3D 0<br>
-flags =3D 0<br>
-shared_vn =3D 0<br>
-inoalignmt =3D 2<br>
-unit =3D 0<br>
-width =3D 0<br>
-dirblklog =3D 0<br>
-logsectlog =3D 0<br>
-logsectsize =3D 0<br>
-logsunit =3D 1<br>
-features2 =3D 0xa<br>
-bad_features2 =3D 0xa<br>
-<br>
-So I now know that there are only 13 AGs (0-12), and you are only<br>
-missing 0, 2 and 8, and that the log starts at 4398046527490 which<br>
-matches with the chunk that I though was a log record. The AGFs<br>
-indicate the sequence numbers are in the correct order and match the<br>
-offsets, so AFAICT you&#39;ve assembled the array in the right order.<br>
-<br>
-I think the best thing you could do copy the first 512 bytes from<br>
-the 1099514834944.dmp2 to the first sector of the device you dumped<br>
-this from (i.e. offset zero), and then running xfs_repair -n on it<br>
-to see whether it validates it as correct. (save the sector contents<br>
-first, jsut in case).<br>
-<br></blockquote><div>root@jarvis:~/dump1# dd if=3D1099514834944.dmp2 of=3D=
-/dev/md1 bs=3D512 count=3D1<br>1+0 records in<br>1+0 records out<br>512 byt=
-es (512 B) copied, 0.0649365 s, 7.9 kB/s<br>root@jarvis:~/dump1# xfs_i<br>x=
-fs_info=A0 xfs_io<br>
-root@jarvis:~/dump1# xfs_repair -n /dev/md1<br>Phase 1 - find and verify su=
-perblock...<br>couldn&#39;t verify primary superblock - not enough secondar=
-y superblocks with matching geometry !!!<br><br>attempting to find secondar=
-y superblock...<br>
-...........................................................................=
-...........................................<br><br>Hrm I&#39;m guessing tha=
-t&#39;s not a good response, but I&#39;ll let it run. If that doesn&#39;t r=
-eturn good results, I&#39;ll try xfs_irecover.<br>
-</div></div><br>-Aaron<br></div>
-
---bcaec50166136c3f8d04ce1183e5--
-
-
---===============4822755708599698815==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+diff --git a/290 b/290
+new file mode 100755
+index 0000000..9d84366
+--- /dev/null
++++ b/290
+@@ -0,0 +1,158 @@
++#! /bin/bash
++# FS QA Test No. 290
++#
++# Verify speculative preallocation trimming functionality.
++#
++# XFS speculatively preallocates post-EOF blocks on sequential writes. Such space
++# is typically trimmed when a file is closed, but repeated open-write-close
++# patterns (i.e., NFS) cause this space to hang around until inodes are flushed.
++# The XFS-specific FREE_EOFBLOCKS command exists to scan preallocated files (with
++# various filtration parameters) and trim the excess space. A background scanner
++# also exists to prevent files with excess space from lingering too long. The
++# purpose of this test is to verify the functionality of the scan ioctl (via
++# xfs_spaceman), the various filters and the background scanner.
++#
++#-----------------------------------------------------------------------
++# Copyright (c) 2012 Red Hat, Inc. All Rights Reserved.
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU General Public License as
++# published by the Free Software Foundation.
++#
++# This program is distributed in the hope that it would be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++# GNU General Public License for more details.
++#
++# You should have received a copy of the GNU General Public License
++# along with this program; if not, write the Free Software Foundation,
++# Inc.,  51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++#-----------------------------------------------------------------------
++#
++# creator
++owner=bfoster@redhat.com
++
++seq=`basename $0`
++echo "QA output created by $seq"
++tmp=/tmp/$$
++here=`pwd`
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++rm -f $seq.full
++
++# get standard environment, filters and checks
++. ./common.rc
++. ./common.filter
++. ./common.quota
++
++_cleanup()
++{
++	cd /
++	umount $SCRATCH_MNT 2>/dev/null
++	rm -rf $tmp.*
++}
++
++# Write a file of specified size after sending a couple 1 byte writes. The
++# repeated writes triggers the open-write-close optimization that keeps post-EOF
++# preallocated space around.
++write_prealloc_file()
++{
++	file=$1
++	size=$2
++
++	for i in "1" "1" "$size"
++	do
++		$XFS_IO_PROG -f -c "pwrite -b 4k 0 $i" $file | _filter_xfs_io
++	done
++}
++
++trim_prealloc()
++{
++	args=$1
++
++	$XFS_SPACEMAN_PROG -c "prealloc $args" $SCRATCH_MNT
++}
++
++stat_files()
++{
++	echo $1
++	stat -c "%n %s bytes %b blocks" $SCRATCH_MNT/test.* | _filter_scratch
++}
++
++# Create a set of test.* files that fall under different filters for prealloc
++# scanning.
++create_files()
++{
++	rm -f $SCRATCH_MNT/test.*
++	
++	write_prealloc_file $SCRATCH_MNT/test.${qa_user} 6m
++	chown ${qa_user}:${qa_user} $SCRATCH_MNT/test.${qa_user}
++
++	write_prealloc_file $SCRATCH_MNT/test.${qa_user}.root 6m
++	chown ${qa_user}:root $SCRATCH_MNT/test.${qa_user}.root
++
++	write_prealloc_file $SCRATCH_MNT/test.prid.42 6m
++	$XFS_QUOTA_PROG -x -c "project -s -p $SCRATCH_MNT/test.prid.42 42" \
++		$SCRATCH_MNT | _filter_scratch
++
++	write_prealloc_file $SCRATCH_MNT/test.10m 10m
++
++	write_prealloc_file $SCRATCH_MNT/test.falloc 6m
++	$XFS_IO_PROG -c "falloc 0 1" $SCRATCH_MNT/test.falloc
++}
++
++# real QA test starts here
++_supported_fs xfs
++_require_xfs_spaceman_prealloc
++_require_scratch
++_require_user
++_require_xfs_quota
++
++_scratch_mkfs_sized 200m >> $seq.full 2>&1
++_scratch_mount
++
++# global scan (no filter)
++create_files
++stat_files "files"
++trim_prealloc "-s"
++stat_files "no filter"
++
++# filter by file size
++create_files
++trim_prealloc "-s -m $((1024*1024*10))"
++stat_files "10m size filter"
++
++# filter by project id
++create_files
++trim_prealloc "-s -p 42"
++stat_files "project id filter"
++
++# filter by uid
++create_files
++trim_prealloc "-s -u $(id -u $qa_user)"
++stat_files "uid filter"
++
++# filter by uid/gid
++create_files
++trim_prealloc "-s -u $(id -u $qa_user) -g $(id -g $qa_user)"
++stat_files "uid/gid filter"
++
++# To test the background scan, clean up (unmount), set the prealloc lifetime to 5s
++# and remount to ensure that the new lifetime kicks in immediately.
++_cleanup
++old_lifetime=`cat /proc/sys/fs/xfs/speculative_prealloc_lifetime`
++echo 5 > /proc/sys/fs/xfs/speculative_prealloc_lifetime
++
++# flush and wait for a few background scan intervals
++_scratch_mount
++create_files
++sync
++sleep 15
++stat_files "background scan"
++
++echo $old_lifetime > /proc/sys/fs/xfs/speculative_prealloc_lifetime
++
++status=0
++exit
++
+diff --git a/290.out b/290.out
+new file mode 100644
+index 0000000..0c040bd
+--- /dev/null
++++ b/290.out
+@@ -0,0 +1,235 @@
++QA output created by 290
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Setting up project 42 (path SCRATCH_MNT/test.prid.42)...
++Processed 1 (/etc/projects and cmdline) paths for project 42 with recursion depth infinite (-1).
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++files
++SCRATCH_MNT/test.10m 10485760 bytes 32768 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 16384 blocks
++no filter
++SCRATCH_MNT/test.10m 10485760 bytes 20480 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 12288 blocks
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Setting up project 42 (path SCRATCH_MNT/test.prid.42)...
++Processed 1 (/etc/projects and cmdline) paths for project 42 with recursion depth infinite (-1).
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++10m size filter
++SCRATCH_MNT/test.10m 10485760 bytes 20480 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 16384 blocks
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Setting up project 42 (path SCRATCH_MNT/test.prid.42)...
++Processed 1 (/etc/projects and cmdline) paths for project 42 with recursion depth infinite (-1).
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++project id filter
++SCRATCH_MNT/test.10m 10485760 bytes 32768 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 12288 blocks
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Setting up project 42 (path SCRATCH_MNT/test.prid.42)...
++Processed 1 (/etc/projects and cmdline) paths for project 42 with recursion depth infinite (-1).
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++uid filter
++SCRATCH_MNT/test.10m 10485760 bytes 32768 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 16384 blocks
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Setting up project 42 (path SCRATCH_MNT/test.prid.42)...
++Processed 1 (/etc/projects and cmdline) paths for project 42 with recursion depth infinite (-1).
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++uid/gid filter
++SCRATCH_MNT/test.10m 10485760 bytes 32768 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 16384 blocks
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++Setting up project 42 (path SCRATCH_MNT/test.prid.42)...
++Processed 1 (/etc/projects and cmdline) paths for project 42 with recursion depth infinite (-1).
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 10485760/10485760 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 1/1 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++wrote 6291456/6291456 bytes at offset 0
++XXX Bytes, X ops; XX:XX:XX.X (XXX YYY/sec and XXX ops/sec)
++background scan
++SCRATCH_MNT/test.10m 10485760 bytes 20480 blocks
++SCRATCH_MNT/test.falloc 6291456 bytes 16384 blocks
++SCRATCH_MNT/test.fsgqa 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.fsgqa.root 6291456 bytes 12288 blocks
++SCRATCH_MNT/test.prid.42 6291456 bytes 12288 blocks
+diff --git a/common.config b/common.config
+index 585b150..7d63067 100644
+--- a/common.config
++++ b/common.config
+@@ -159,6 +159,7 @@ export KILLALL_PROG="`set_prog_path killall`"
+ export INDENT_PROG="`set_prog_path indent`"
+ export XFS_COPY_PROG="`set_prog_path xfs_copy`"
+ export FSTRIM_PROG="`set_prog_path fstrim`"
++export XFS_SPACEMAN_PROG="`set_prog_path xfs_spaceman`"
+ 
+ # Generate a comparable xfsprogs version number in the form of
+ # major * 10000 + minor * 100 + release
+diff --git a/common.rc b/common.rc
+index f7c1688..e221599 100644
+--- a/common.rc
++++ b/common.rc
+@@ -998,6 +998,16 @@ _require_xfs_io_fiemap()
+ 		_notrun "xfs_io fiemap command failed (no fs support?)"
+ }
+ 
++# check that xfs_spaceman exists and supports the prealloc command
++_require_xfs_spaceman_prealloc()
++{
++	[ "$XFS_SPACEMAN_PROG" != "" ] || _notrun "xfs_spaceman not installed"
++
++	testio=`$XFS_SPACEMAN_PROG -c "prealloc -a" $TEST_DIR 2>&1`
++	echo $testio | grep -q "Inappropriate ioctl for device" && \
++		_notrun "xfs_spaceman prealloc command failed (no fs support?)"
++}
++
+ # Check that a fs has enough free space (in 1024b blocks)
+ #
+ _require_fs_space()
+diff --git a/group b/group
+index a846b60..790e3c6 100644
+--- a/group
++++ b/group
+@@ -408,3 +408,4 @@ deprecated
+ 287 auto dump quota quick
+ 288 auto quick ioctl trim
+ 289 auto quick
++290 auto quick rw ioctl
+-- 
+1.7.7.6
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============4822755708599698815==--
