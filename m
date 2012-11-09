@@ -1,15 +1,22 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9M7fhW163469 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 16:07:41 -0600
-Message-ID: <509D7F1A.3090201@sgi.com>
-Date: Fri, 09 Nov 2012 16:09:30 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	qA9NEG5h168617 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 17:14:17 -0600
+Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
+	[150.101.137.129]) by cuda.sgi.com with ESMTP id
+	LftzKBB7iIqrg4sq for <xfs@oss.sgi.com>;
+	Fri, 09 Nov 2012 15:16:15 -0800 (PST)
+Date: Sat, 10 Nov 2012 10:15:58 +1100
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: How to reserve disk space in XFS to make the blocks over many
+	files continuous?
+Message-ID: <20121109231558.GG6434@dastard>
+References: <CANS6a=D4SMMqhGJVMLbr-BWqLb-Z4L4LnofzfhqChBvE9dEtPQ@mail.gmail.com>
+	<20121107031952.GA6434@dastard>
+	<1352473401.3179.48.camel@montana.filmlight.ltd.uk>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
-References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
-	<1352295452-4726-2-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352295452-4726-2-git-send-email-david@fromorbit.com>
+Content-Disposition: inline
+In-Reply-To: <1352473401.3179.48.camel@montana.filmlight.ltd.uk>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,99 +25,49 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: Roger Willcocks <roger@filmlight.ltd.uk>
+Cc: huubby zhou <huubby1@gmail.com>, xfs@oss.sgi.com
 
-On 11/07/12 07:37, Dave Chinner wrote:
-> From: Christoph Hellwig<hch@lst.de>
->
->   - add a mount feature bit for CRC enabled filesystems
->   - add some helpers for generating and verifying the CRCs
->   - add a copy_uuid helper
->
-> The checksumming helpers are losely based on similar ones in sctp,
-> all other bits come from Dave Chinner.
->
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
-> +/*
-> + * Calculate the intermediate checksum for a buffer that has the CRC field
-> + * inside it.  The offset of the 32bit crc fields is passed as the
-> + * cksum_offset parameter.
-> + */
-> +static inline __uint32_t
-> +xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-> +{
-> +	__uint32_t zero = 0;
-> +	__uint32_t crc;
-> +
-> +	/* Calculate CRC up to the checksum. */
-> +	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
-> +
-> +	/* Skip checksum field */
-> +	crc = crc32c(crc,&zero, sizeof(__u32));
+On Fri, Nov 09, 2012 at 03:03:21PM +0000, Roger Willcocks wrote:
+> 
+> > > My question is, how can I guarantee the file system blocks over files
+> > > continuous? Thanks for your time and appreciate your answer.
+> > 
+> > You can't, directly. 
+> 
+> We needed to do this so I added code to swapext to support transferring
+> leading blocks from one (preallocated single extent) file to another
+> empty file. It's pretty straightforward but perhaps too special case for
+> general consumption.
 
-I know this came from sctp and I know I can't convince you to copy/null
-the *cksum_offset to make one block for those with hardware crc32c devices.
+Please post the patch - swapping arbitrary ranges between two inodes
+is something that is definitely useful. It is needed, for example,
+to do directory defragmentation, and I know that non-linear video
+editting apps would love ioctls to do similar things within the same
+file (e.g. punching ads out of a video stream without having to copy
+data around at all).
 
-Since the *cksum_offset value is never used in creating and verifying
-the checksum, the 4 bytes of zeros does not add any new information,
-why not just drop it from the cksum calculation?
+That's a note for anyone that has implemented stuff like this -
+regardless of whether you think it is useful or not, having the
+patches out in the open (not matter what the state of the code)
+makes it 100x more valuable than keeping it to yourself, and it
+allows people to build functionality off them rather than having to
+re-invent the wheel.
 
-> +
-> +	/* Calculate the rest of the CRC. */
-> +	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
-> +		      length - (cksum_offset + sizeof(__be32)));
-> +}
-> +
-> +/*
-> + * Convert the intermediate checksum to the final ondisk format.
-> + *
-> + * Note that crc32c is already endianess agnostic, so no additional
-> + * byte swap is needed.
-> + */
-> +static inline __be32
-> +xfs_end_cksum(__uint32_t crc)
-> +{
-> +	return (__force __be32)~crc;
-> +}
-> +
+And, of course, there is the possibility we add the functionality to
+the main tree, and you no longer have to maintain and test it
+yourself.... :)
 
-Wouldn't you have to cpu_to_le32() for big endian machines?
+Cheers,
 
-commit 9c5ff5f75d0d0a1c7928ecfae3f38418b51a88e3
-Author: Vlad Yasevich <vladislav.yasevich@hp.com>
-Date:   Thu Jan 22 14:52:23 2009 -0800
-
-     sctp: Fix crc32c calculations on big-endian arhes.
-
-     crc32c algorithm provides a byteswaped result.  On little-endian
-     arches, the result ends up in big-endian/network byte order.
-     On big-endinan arches, the result ends up in little-endian
-     order and needs to be byte swapped again.  Thus calling cpu_to_le32
-     gives the right output.
-
-     Tested-by: Jukka Taimisto <jukka.taimisto@mail.suomi.net>
-     Signed-off-by: Vlad Yasevich <vladislav.yasevich@hp.com>
-     Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/include/net/sctp/checksum.h b/include/net/sctp/checksum.h
-index b799fb2..2fec3c3 100644
---- a/include/net/sctp/checksum.h
-+++ b/include/net/sctp/checksum.h
-@@ -79,5 +79,5 @@ static inline __be32 sctp_update_cksum(__u8 *buffer, 
-__u16 length, __be32 crc32)
-
-  static inline __be32 sctp_end_cksum(__be32 crc32)
-  {
--       return ~crc32;
-+       return (__force __be32)~cpu_to_le32((__force u32)crc32);
-  }
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
