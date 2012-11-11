@@ -1,16 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qABJqfDX162155 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 13:52:41 -0600
-Message-ID: <50A00274.1080604@sgi.com>
-Date: Sun, 11 Nov 2012 13:54:28 -0600
+	qABJtofx162509 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 13:55:50 -0600
+Message-ID: <50A00334.2080808@sgi.com>
+Date: Sun, 11 Nov 2012 13:57:40 -0600
 From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
+Subject: Re: [PATCH 2/2] xfs: add CRC checks to the log
 References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
-	<1352295452-4726-2-git-send-email-david@fromorbit.com>
-	<509D7F1A.3090201@sgi.com> <20121111012643.GH6434@dastard>
-In-Reply-To: <20121111012643.GH6434@dastard>
+	<1352295452-4726-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352295452-4726-3-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,103 +25,43 @@ Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 11/10/12 19:26, Dave Chinner wrote:
-> On Fri, Nov 09, 2012 at 04:09:30PM -0600, Mark Tinguely wrote:
->> On 11/07/12 07:37, Dave Chinner wrote:
->>> From: Christoph Hellwig<hch@lst.de>
->>>
->>>   - add a mount feature bit for CRC enabled filesystems
->>>   - add some helpers for generating and verifying the CRCs
->>>   - add a copy_uuid helper
->>>
->>> The checksumming helpers are losely based on similar ones in sctp,
->>> all other bits come from Dave Chinner.
->>>
->>> Signed-off-by: Christoph Hellwig<hch@lst.de>
->>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
->>> ---
->>> +/*
->>> + * Calculate the intermediate checksum for a buffer that has the CRC field
->>> + * inside it.  The offset of the 32bit crc fields is passed as the
->>> + * cksum_offset parameter.
->>> + */
->>> +static inline __uint32_t
->>> +xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
->>> +{
->>> +	__uint32_t zero = 0;
->>> +	__uint32_t crc;
->>> +
->>> +	/* Calculate CRC up to the checksum. */
->>> +	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
->>> +
->>> +	/* Skip checksum field */
->>> +	crc = crc32c(crc,&zero, sizeof(__u32));
->>
->> I know this came from sctp and I know I can't convince you to copy/null
->> the *cksum_offset to make one block for those with hardware crc32c devices.
->>
->> Since the *cksum_offset value is never used in creating and verifying
->> the checksum, the 4 bytes of zeros does not add any new information,
->> why not just drop it from the cksum calculation?
+On 11/07/12 07:37, Dave Chinner wrote:
+> From: Christoph Hellwig<hch@lst.de>
 >
-> Because it gives a different CRC value. If we zero the CRC field,
-> and then do an entire block CRC ignoring the location of the CRC, we
-> get the same value as using the above algorithm. While we aren't
-> going to do this type of verification/calculation in the kernel
-> code, there are use cases for it, say in repair, where we don't have
-> to worry about multiple verifications of the object occurring.
+> Implement CRCs for the log buffers.  We re-use a field in
+> struct xlog_rec_header that was used for a weak checksum of the
+> log buffer payload in debug builds before.
 >
-> Hence by making sure we zero the CRC field during the calculation,
-> we retain the flexibility of doing faster, single pass calculation
-> and verification where it makes sense to use it.  If we optimise
-> away the zero block for the CRC, then we that flexibility when it
-> comes to implementing other tools that check and recalculate CRC
-> values.
-
-I was mostly thinking about down the road when crc32c offloading is
-common. The copy/null/checksum/replace model of the routine can be done
-anytime that it make sense to do so (as long as only one checksum can
-happen at one time).
-
+> The new checksumming uses the crc32c checksum we will use elsewhere
+> in XFS, and also protects the record header and addition cycle data.
 >
->>> +	/* Calculate the rest of the CRC. */
->>> +	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
->>> +		      length - (cksum_offset + sizeof(__be32)));
->>> +}
->>> +
->>> +/*
->>> + * Convert the intermediate checksum to the final ondisk format.
->>> + *
->>> + * Note that crc32c is already endianess agnostic, so no additional
->>> + * byte swap is needed.
->>> + */
->>> +static inline __be32
->>> +xfs_end_cksum(__uint32_t crc)
->>> +{
->>> +	return (__force __be32)~crc;
->>> +}
->>> +
->>
->> Wouldn't you have to cpu_to_le32() for big endian machines?
+> Due to this there are some interesting changes in xlog_sync, as we
+> need to do the cycle wrapping for the split buffer case much earlier,
+> as we would touch the buffer after generating the checksum otherwise.
 >
-> Good catch, I hadn't noticed that fix - it's been quite a while
-> since this particular patch was originally written. So, yeah, it
-> probably does need that fix.
+> The CRC calculation is always enabled, even for non-CRC filesystems,
+> as adding this CRC does not change the log format. On non-CRC
+> filesystems, only issue an alert if a CRC mismatch is found and
+> allow recovery to continue - this will act as an indicator that
+> log recovery problems are a result of log corruption. On CRC enabled
+> filesystems, however, log recovery will fail.
 >
-> FWIW, I don't have a big endian machine immediately handy to test
-> this. Do you?
-
-I am sure there is something in the pool. I will ask on Monday.
-Someone was going to do some testing on a big endian machine before the
-user space release anyway. I guess I just volunteered. A log recovery
-test from a different endian machine sounds interesting.
-
-> Cheers,
+> Note that existing debug kernels will write a simple checksum value
+> to the log, so the first time this is run on a filesystem taht was
+> last used on a debug kernel it will through CRC mismatch warning
+> errors. These can be ignored.
 >
-> Dave.
+> Initially based on a patch from Dave Chinner, then modified
+> significantly by Christoph Hellwig.  Modified again by Dave Chinner
+> to get to this version.
+>
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
 
+Looks good.
 
---Mark.
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
