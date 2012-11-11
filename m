@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qA9NEG5h168617 for <xfs@oss.sgi.com>; Fri, 9 Nov 2012 17:14:17 -0600
-Received: from ipmail06.adl2.internode.on.net (ipmail06.adl2.internode.on.net
-	[150.101.137.129]) by cuda.sgi.com with ESMTP id
-	LftzKBB7iIqrg4sq for <xfs@oss.sgi.com>;
-	Fri, 09 Nov 2012 15:16:15 -0800 (PST)
-Date: Sat, 10 Nov 2012 10:15:58 +1100
+	qAB1OlDh052103 for <xfs@oss.sgi.com>; Sat, 10 Nov 2012 19:24:47 -0600
+Received: from ipmail07.adl2.internode.on.net (ipmail07.adl2.internode.on.net
+	[150.101.137.131]) by cuda.sgi.com with ESMTP id
+	f6bQ9B3m2CgCffwg for <xfs@oss.sgi.com>;
+	Sat, 10 Nov 2012 17:26:46 -0800 (PST)
+Date: Sun, 11 Nov 2012 12:26:43 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: How to reserve disk space in XFS to make the blocks over many
-	files continuous?
-Message-ID: <20121109231558.GG6434@dastard>
-References: <CANS6a=D4SMMqhGJVMLbr-BWqLb-Z4L4LnofzfhqChBvE9dEtPQ@mail.gmail.com>
-	<20121107031952.GA6434@dastard>
-	<1352473401.3179.48.camel@montana.filmlight.ltd.uk>
+Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
+Message-ID: <20121111012643.GH6434@dastard>
+References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+	<1352295452-4726-2-git-send-email-david@fromorbit.com>
+	<509D7F1A.3090201@sgi.com>
 MIME-Version: 1.0
 Content-Disposition: inline
-In-Reply-To: <1352473401.3179.48.camel@montana.filmlight.ltd.uk>
+In-Reply-To: <509D7F1A.3090201@sgi.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -29,38 +28,87 @@ Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Roger Willcocks <roger@filmlight.ltd.uk>
-Cc: huubby zhou <huubby1@gmail.com>, xfs@oss.sgi.com
+To: Mark Tinguely <tinguely@sgi.com>
+Cc: xfs@oss.sgi.com
 
-On Fri, Nov 09, 2012 at 03:03:21PM +0000, Roger Willcocks wrote:
+On Fri, Nov 09, 2012 at 04:09:30PM -0600, Mark Tinguely wrote:
+> On 11/07/12 07:37, Dave Chinner wrote:
+> >From: Christoph Hellwig<hch@lst.de>
+> >
+> >  - add a mount feature bit for CRC enabled filesystems
+> >  - add some helpers for generating and verifying the CRCs
+> >  - add a copy_uuid helper
+> >
+> >The checksumming helpers are losely based on similar ones in sctp,
+> >all other bits come from Dave Chinner.
+> >
+> >Signed-off-by: Christoph Hellwig<hch@lst.de>
+> >Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> >---
+> >+/*
+> >+ * Calculate the intermediate checksum for a buffer that has the CRC field
+> >+ * inside it.  The offset of the 32bit crc fields is passed as the
+> >+ * cksum_offset parameter.
+> >+ */
+> >+static inline __uint32_t
+> >+xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+> >+{
+> >+	__uint32_t zero = 0;
+> >+	__uint32_t crc;
+> >+
+> >+	/* Calculate CRC up to the checksum. */
+> >+	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
+> >+
+> >+	/* Skip checksum field */
+> >+	crc = crc32c(crc,&zero, sizeof(__u32));
 > 
-> > > My question is, how can I guarantee the file system blocks over files
-> > > continuous? Thanks for your time and appreciate your answer.
-> > 
-> > You can't, directly. 
+> I know this came from sctp and I know I can't convince you to copy/null
+> the *cksum_offset to make one block for those with hardware crc32c devices.
 > 
-> We needed to do this so I added code to swapext to support transferring
-> leading blocks from one (preallocated single extent) file to another
-> empty file. It's pretty straightforward but perhaps too special case for
-> general consumption.
+> Since the *cksum_offset value is never used in creating and verifying
+> the checksum, the 4 bytes of zeros does not add any new information,
+> why not just drop it from the cksum calculation?
 
-Please post the patch - swapping arbitrary ranges between two inodes
-is something that is definitely useful. It is needed, for example,
-to do directory defragmentation, and I know that non-linear video
-editting apps would love ioctls to do similar things within the same
-file (e.g. punching ads out of a video stream without having to copy
-data around at all).
+Because it gives a different CRC value. If we zero the CRC field,
+and then do an entire block CRC ignoring the location of the CRC, we
+get the same value as using the above algorithm. While we aren't
+going to do this type of verification/calculation in the kernel
+code, there are use cases for it, say in repair, where we don't have
+to worry about multiple verifications of the object occurring.
 
-That's a note for anyone that has implemented stuff like this -
-regardless of whether you think it is useful or not, having the
-patches out in the open (not matter what the state of the code)
-makes it 100x more valuable than keeping it to yourself, and it
-allows people to build functionality off them rather than having to
-re-invent the wheel.
+Hence by making sure we zero the CRC field during the calculation,
+we retain the flexibility of doing faster, single pass calculation
+and verification where it makes sense to use it.  If we optimise
+away the zero block for the CRC, then we that flexibility when it
+comes to implementing other tools that check and recalculate CRC
+values.
 
-And, of course, there is the possibility we add the functionality to
-the main tree, and you no longer have to maintain and test it
-yourself.... :)
+> >+	/* Calculate the rest of the CRC. */
+> >+	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
+> >+		      length - (cksum_offset + sizeof(__be32)));
+> >+}
+> >+
+> >+/*
+> >+ * Convert the intermediate checksum to the final ondisk format.
+> >+ *
+> >+ * Note that crc32c is already endianess agnostic, so no additional
+> >+ * byte swap is needed.
+> >+ */
+> >+static inline __be32
+> >+xfs_end_cksum(__uint32_t crc)
+> >+{
+> >+	return (__force __be32)~crc;
+> >+}
+> >+
+> 
+> Wouldn't you have to cpu_to_le32() for big endian machines?
+
+Good catch, I hadn't noticed that fix - it's been quite a while
+since this particular patch was originally written. So, yeah, it
+probably does need that fix.
+
+FWIW, I don't have a big endian machine immediately handy to test
+this. Do you?
 
 Cheers,
 
