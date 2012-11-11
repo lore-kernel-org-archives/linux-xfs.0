@@ -1,27 +1,16 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qAB76NOJ098200 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 01:06:23 -0600
-Received: from mail-vb0-f53.google.com (mail-vb0-f53.google.com
-	[209.85.212.53]) by cuda.sgi.com with ESMTP id fhGUpxkZc6asyKQw
-	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
-	<xfs@oss.sgi.com>; Sat, 10 Nov 2012 23:08:24 -0800 (PST)
-Received: by mail-vb0-f53.google.com with SMTP id fc21so5550101vbb.26
-	for <xfs@oss.sgi.com>; Sat, 10 Nov 2012 23:08:23 -0800 (PST)
+	qABJqfDX162155 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 13:52:41 -0600
+Message-ID: <50A00274.1080604@sgi.com>
+Date: Sun, 11 Nov 2012 13:54:28 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-In-Reply-To: <CABJyUzJVj-rpGW=i5QG=AZPvhuD-qdbujuwOdu_EdGbYGZ++Rg@mail.gmail.com>
-References: <CABJyUz+h=pZ6+2rro1PjoB1ggTAoRw+bTzc_bU7Eaec0_AUKLA@mail.gmail.com>
-	<20121101225938.GS29378@dastard>
-	<CABJyUz+VhUY=tVKpEeKXfQRoaL4s+gwNmRr4wNAnRX6zTt5xXg@mail.gmail.com>
-	<CABJyUz+r7yQSswqyBng_W=fAXxTz9heb88NeiKSeFU7j4ZD=Hw@mail.gmail.com>
-	<20121108210210.GP6434@dastard>
-	<CABJyUzKy4YXVZAj=awVNfPD69eWo2mKhM7a-xWF1Vy-PD989sg@mail.gmail.com>
-	<20121109104839.GE6434@dastard>
-	<CABJyUzJVj-rpGW=i5QG=AZPvhuD-qdbujuwOdu_EdGbYGZ++Rg@mail.gmail.com>
-Date: Sat, 10 Nov 2012 23:08:23 -0800
-Message-ID: <CABJyUzJ7maOcj+aPkpCvBc1-P+Z-XPsft8rbsVnqgpfyVCs9xQ@mail.gmail.com>
-Subject: Re: XFS filesystem recovery from secondary superblocks
-From: Aaron Goulding <aarongldng@gmail.com>
+Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
+References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
+	<1352295452-4726-2-git-send-email-david@fromorbit.com>
+	<509D7F1A.3090201@sgi.com> <20121111012643.GH6434@dastard>
+In-Reply-To: <20121111012643.GH6434@dastard>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -30,51 +19,112 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: multipart/mixed; boundary="===============0764673018021863146=="
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
---===============0764673018021863146==
-Content-Type: multipart/alternative; boundary=bcaec54a377ab94fbd04ce32d9ed
+On 11/10/12 19:26, Dave Chinner wrote:
+> On Fri, Nov 09, 2012 at 04:09:30PM -0600, Mark Tinguely wrote:
+>> On 11/07/12 07:37, Dave Chinner wrote:
+>>> From: Christoph Hellwig<hch@lst.de>
+>>>
+>>>   - add a mount feature bit for CRC enabled filesystems
+>>>   - add some helpers for generating and verifying the CRCs
+>>>   - add a copy_uuid helper
+>>>
+>>> The checksumming helpers are losely based on similar ones in sctp,
+>>> all other bits come from Dave Chinner.
+>>>
+>>> Signed-off-by: Christoph Hellwig<hch@lst.de>
+>>> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+>>> ---
+>>> +/*
+>>> + * Calculate the intermediate checksum for a buffer that has the CRC field
+>>> + * inside it.  The offset of the 32bit crc fields is passed as the
+>>> + * cksum_offset parameter.
+>>> + */
+>>> +static inline __uint32_t
+>>> +xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
+>>> +{
+>>> +	__uint32_t zero = 0;
+>>> +	__uint32_t crc;
+>>> +
+>>> +	/* Calculate CRC up to the checksum. */
+>>> +	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
+>>> +
+>>> +	/* Skip checksum field */
+>>> +	crc = crc32c(crc,&zero, sizeof(__u32));
+>>
+>> I know this came from sctp and I know I can't convince you to copy/null
+>> the *cksum_offset to make one block for those with hardware crc32c devices.
+>>
+>> Since the *cksum_offset value is never used in creating and verifying
+>> the checksum, the 4 bytes of zeros does not add any new information,
+>> why not just drop it from the cksum calculation?
+>
+> Because it gives a different CRC value. If we zero the CRC field,
+> and then do an entire block CRC ignoring the location of the CRC, we
+> get the same value as using the above algorithm. While we aren't
+> going to do this type of verification/calculation in the kernel
+> code, there are use cases for it, say in repair, where we don't have
+> to worry about multiple verifications of the object occurring.
+>
+> Hence by making sure we zero the CRC field during the calculation,
+> we retain the flexibility of doing faster, single pass calculation
+> and verification where it makes sense to use it.  If we optimise
+> away the zero block for the CRC, then we that flexibility when it
+> comes to implementing other tools that check and recalculate CRC
+> values.
 
---bcaec54a377ab94fbd04ce32d9ed
-Content-Type: text/plain; charset=ISO-8859-1
+I was mostly thinking about down the road when crc32c offloading is
+common. The copy/null/checksum/replace model of the routine can be done
+anytime that it make sense to do so (as long as only one checksum can
+happen at one time).
 
-As I guessed, xfs_repair didn't work. xfs_db does now load with warnings,
-but I fear I don't know enough about that to properly use that tool. I've
-done a search for xfs_irepair but I'm finding very little from that. Where
-is that tool located? I'm understanding a full restore is very unlikely at
-this point, but if I can get anything, I'll consider this project a success
-and a learning experience. :)
+>
+>>> +	/* Calculate the rest of the CRC. */
+>>> +	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
+>>> +		      length - (cksum_offset + sizeof(__be32)));
+>>> +}
+>>> +
+>>> +/*
+>>> + * Convert the intermediate checksum to the final ondisk format.
+>>> + *
+>>> + * Note that crc32c is already endianess agnostic, so no additional
+>>> + * byte swap is needed.
+>>> + */
+>>> +static inline __be32
+>>> +xfs_end_cksum(__uint32_t crc)
+>>> +{
+>>> +	return (__force __be32)~crc;
+>>> +}
+>>> +
+>>
+>> Wouldn't you have to cpu_to_le32() for big endian machines?
+>
+> Good catch, I hadn't noticed that fix - it's been quite a while
+> since this particular patch was originally written. So, yeah, it
+> probably does need that fix.
+>
+> FWIW, I don't have a big endian machine immediately handy to test
+> this. Do you?
 
--Aaron
+I am sure there is something in the pool. I will ask on Monday.
+Someone was going to do some testing on a big endian machine before the
+user space release anyway. I guess I just volunteered. A log recovery
+test from a different endian machine sounds interesting.
 
---bcaec54a377ab94fbd04ce32d9ed
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
-
-As I guessed, xfs_repair didn&#39;t work. xfs_db does now load with warning=
-s, but I fear I don&#39;t know enough about that to properly use that tool.=
- I&#39;ve done a search for xfs_irepair but I&#39;m finding very little fro=
-m that. Where is that tool located? I&#39;m understanding a full restore is=
- very unlikely at this point, but if I can get anything, I&#39;ll consider =
-this project a success and a learning experience. :)<br>
-<br>-Aaron<br>
-
---bcaec54a377ab94fbd04ce32d9ed--
+> Cheers,
+>
+> Dave.
 
 
---===============0764673018021863146==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+--Mark.
 
 _______________________________________________
 xfs mailing list
 xfs@oss.sgi.com
 http://oss.sgi.com/mailman/listinfo/xfs
-
---===============0764673018021863146==--
