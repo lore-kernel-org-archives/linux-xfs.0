@@ -1,24 +1,20 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBs8IC218006 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:09 -0600
+	qACCUNP2220929 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 06:30:24 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	NrTTG0rJyKegF55C for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:56:08 -0800 (PST)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsc6-00055I-W4
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:39 +1100
-Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbw-00014U-U8
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:28 +1100
+	nJHMX5CY0exIJrEf for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 04:32:24 -0800 (PST)
+Date: Mon, 12 Nov 2012 23:32:22 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 32/32] xfs: add CRC checks to the log
-Date: Mon, 12 Nov 2012 22:54:24 +1100
-Message-Id: <1352721264-3700-33-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+Subject: Re: Slow performance after ~4.5TB
+Message-ID: <20121112123222.GT24575@dastard>
+References: <50A0AFD5.2020607@iv.lt> <20121112090448.GS24575@dastard>
+	<50A0C590.6020602@iv.lt>
+MIME-Version: 1.0
+Content-Disposition: inline
+In-Reply-To: <50A0C590.6020602@iv.lt>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -27,477 +23,121 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Linas Jankauskas <linas.j@iv.lt>
+Cc: xfs@oss.sgi.com
 
-From: Christoph Hellwig <hch@lst.de>
+On Mon, Nov 12, 2012 at 11:46:56AM +0200, Linas Jankauskas wrote:
+> 
+> Servers are HP dl180 g6
+> OS centos 6.3 x86_64
+>
+> CPU
+> 2x Intel(R) Xeon(R) CPU           L5630  @ 2.13GHz
+> 
+> uname -r
+> 2.6.32-279.5.2.el6.x86_64
+> 
+> xfs_repair -V
+> xfs_repair version 3.1.1
+> 
+> 
+> cat /proc/meminfo
+> MemTotal:       12187500 kB
+> MemFree:          153080 kB
+> Buffers:         6400308 kB
 
-Implement CRCs for the log buffers.  We re-use a field in
-struct xlog_rec_header that was used for a weak checksum of the
-log buffer payload in debug builds before.
+That looks strange - 6GB of buffers? That's block device cached
+pages, and XFS doesn't use the block device for caching. You don't
+have much in the way of ext4 filesystems, either, so i don't thik
+that is responsible.
 
-The new checksumming uses the crc32c checksum we will use elsewhere
-in XFS, and also protects the record header and addition cycle data.
+> cat /proc/mounts
+> rootfs / rootfs rw 0 0
+> proc /proc proc rw,relatime 0 0
+> sysfs /sys sysfs rw,relatime 0 0
+> devtmpfs /dev devtmpfs
+> rw,relatime,size=6084860k,nr_inodes=1521215,mode=755 0 0
 
-Due to this there are some interesting changes in xlog_sync, as we
-need to do the cycle wrapping for the split buffer case much earlier,
-as we would touch the buffer after generating the checksum otherwise.
+A 6GB devtmpfs? That seems unusual. What is the purpose of having a
+6GB ramdisk mounting on /dev?  I wonder if that is consuming all
+that buffer space....
 
-The CRC calculation is always enabled, even for non-CRC filesystems,
-as adding this CRC does not change the log format. On non-CRC
-filesystems, only issue an alert if a CRC mismatch is found and
-allow recovery to continue - this will act as an indicator that
-log recovery problems are a result of log corruption. On CRC enabled
-filesystems, however, log recovery will fail.
+>       logicaldrive 1 (20.0 TB, RAID 5, OK)
+> 
+>       physicaldrive 1I:1:1 (port 1I:box 1:bay 1, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:2 (port 1I:box 1:bay 2, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:3 (port 1I:box 1:bay 3, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:4 (port 1I:box 1:bay 4, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:5 (port 1I:box 1:bay 5, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:6 (port 1I:box 1:bay 6, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:7 (port 1I:box 1:bay 7, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:8 (port 1I:box 1:bay 8, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:9 (port 1I:box 1:bay 9, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:10 (port 1I:box 1:bay 10, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:11 (port 1I:box 1:bay 11, SATA, 2 TB, OK)
+>       physicaldrive 1I:1:12 (port 1I:box 1:bay 12, SATA, 2 TB, OK)
 
-Note that existing debug kernels will write a simple checksum value
-to the log, so the first time this is run on a filesystem taht was
-last used on a debug kernel it will through CRC mismatch warning
-errors. These can be ignored.
+OK, so RAID5, but it doesn't tell me the geometry of it.
 
-Initially based on a patch from Dave Chinner, then modified
-significantly by Christoph Hellwig.  Modified again by Dave Chinner
-to get to this version.
+> xfs_info /var
+> meta-data=/dev/sda5              isize=256    agcount=20,
+> agsize=268435455 blks
+>          =                       sectsz=512   attr=2
+> data     =                       bsize=4096   blocks=5368633873, imaxpct=5
+>          =                       sunit=0      swidth=0 blks
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c         |  132 ++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_log_priv.h    |   11 ++--
- fs/xfs/xfs_log_recover.c |  132 ++++++++++++++++++++++------------------------
- 3 files changed, 176 insertions(+), 99 deletions(-)
+And no geometry here, either.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 1d6d2ee..c6d6e13 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -35,6 +35,7 @@
- #include "xfs_inode.h"
- #include "xfs_trace.h"
- #include "xfs_fsops.h"
-+#include "xfs_cksum.h"
- 
- kmem_zone_t	*xfs_log_ticket_zone;
- 
-@@ -1490,6 +1491,84 @@ xlog_grant_push_ail(
- }
- 
- /*
-+ * Stamp cycle number in every block
-+ */
-+STATIC void
-+xlog_pack_data(
-+	struct xlog		*log,
-+	struct xlog_in_core	*iclog,
-+	int			roundoff)
-+{
-+	int			i, j, k;
-+	int			size = iclog->ic_offset + roundoff;
-+	__be32			cycle_lsn;
-+	xfs_caddr_t		dp;
-+
-+	cycle_lsn = CYCLE_LSN_DISK(iclog->ic_header.h_lsn);
-+
-+	dp = iclog->ic_datap;
-+	for (i = 0; i < BTOBB(size); i++) {
-+		if (i >= (XLOG_HEADER_CYCLE_SIZE / BBSIZE))
-+			break;
-+		iclog->ic_header.h_cycle_data[i] = *(__be32 *)dp;
-+		*(__be32 *)dp = cycle_lsn;
-+		dp += BBSIZE;
-+	}
-+
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-+		xlog_in_core_2_t *xhdr = iclog->ic_data;
-+
-+		for ( ; i < BTOBB(size); i++) {
-+			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-+			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
-+			xhdr[j].hic_xheader.xh_cycle_data[k] = *(__be32 *)dp;
-+			*(__be32 *)dp = cycle_lsn;
-+			dp += BBSIZE;
-+		}
-+
-+		for (i = 1; i < log->l_iclog_heads; i++)
-+			xhdr[i].hic_xheader.xh_cycle = cycle_lsn;
-+	}
-+}
-+
-+/*
-+ * Calculate the checksum for a log buffer.
-+ *
-+ * This is a little more complicated than it should be because the various
-+ * headers and the actual data are non-contiguous.
-+ */
-+__be32
-+xlog_cksum(
-+	struct xlog		*log,
-+	struct xlog_rec_header	*rhead,
-+	char			*dp,
-+	int			size)
-+{
-+	__uint32_t		crc;
-+
-+	/* first generate the crc for the record header ... */
-+	crc = xfs_start_cksum((char *)rhead,
-+			      sizeof(struct xlog_rec_header),
-+			      offsetof(struct xlog_rec_header, h_crc));
-+
-+	/* ... then for additional cycle data for v2 logs ... */
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
-+		union xlog_in_core2 *xhdr = (union xlog_in_core2 *)rhead;
-+		int		i;
-+
-+		for (i = 1; i < log->l_iclog_heads; i++) {
-+			crc = crc32c(crc, &xhdr[i].hic_xheader,
-+				     sizeof(struct xlog_rec_ext_header));
-+		}
-+	}
-+
-+	/* ... and finally for the payload */
-+	crc = crc32c(crc, dp, size);
-+
-+	return xfs_end_cksum(crc);
-+}
-+
-+/*
-  * The bdstrat callback function for log bufs. This gives us a central
-  * place to trap bufs in case we get hit by a log I/O error and need to
-  * shutdown. Actually, in practice, even when we didn't get a log error,
-@@ -1549,7 +1628,6 @@ xlog_sync(
- 	struct xlog		*log,
- 	struct xlog_in_core	*iclog)
- {
--	xfs_caddr_t	dptr;		/* pointer to byte sized element */
- 	xfs_buf_t	*bp;
- 	int		i;
- 	uint		count;		/* byte count of bwrite */
-@@ -1558,6 +1636,7 @@ xlog_sync(
- 	int		split = 0;	/* split write into two regions */
- 	int		error;
- 	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
-+	int		size;
- 
- 	XFS_STATS_INC(xs_log_writes);
- 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
-@@ -1588,13 +1667,10 @@ xlog_sync(
- 	xlog_pack_data(log, iclog, roundoff); 
- 
- 	/* real byte length */
--	if (v2) {
--		iclog->ic_header.h_len =
--			cpu_to_be32(iclog->ic_offset + roundoff);
--	} else {
--		iclog->ic_header.h_len =
--			cpu_to_be32(iclog->ic_offset);
--	}
-+	size = iclog->ic_offset;
-+	if (v2)
-+		size += roundoff;
-+	iclog->ic_header.h_len = cpu_to_be32(size);
- 
- 	bp = iclog->ic_bp;
- 	XFS_BUF_SET_ADDR(bp, BLOCK_LSN(be64_to_cpu(iclog->ic_header.h_lsn)));
-@@ -1603,12 +1679,36 @@ xlog_sync(
- 
- 	/* Do we need to split this write into 2 parts? */
- 	if (XFS_BUF_ADDR(bp) + BTOBB(count) > log->l_logBBsize) {
-+		char		*dptr;
-+
- 		split = count - (BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp)));
- 		count = BBTOB(log->l_logBBsize - XFS_BUF_ADDR(bp));
--		iclog->ic_bwritecnt = 2;	/* split into 2 writes */
-+		iclog->ic_bwritecnt = 2;
-+
-+		/*
-+		 * Bump the cycle numbers at the start of each block in the
-+		 * part of the iclog that ends up in the buffer that gets
-+		 * written to the start of the log.
-+		 *
-+		 * Watch out for the header magic number case, though.
-+		 */
-+		dptr = (char *)&iclog->ic_header + count;
-+		for (i = 0; i < split; i += BBSIZE) {
-+			__uint32_t cycle = be32_to_cpu(*(__be32 *)dptr);
-+			if (++cycle == XLOG_HEADER_MAGIC_NUM)
-+				cycle++;
-+			*(__be32 *)dptr = cpu_to_be32(cycle);
-+
-+			dptr += BBSIZE;
-+		}
- 	} else {
- 		iclog->ic_bwritecnt = 1;
- 	}
-+
-+	/* calculcate the checksum */
-+	iclog->ic_header.h_crc = xlog_cksum(log, &iclog->ic_header,
-+					    iclog->ic_datap, size);
-+
- 	bp->b_io_length = BTOBB(count);
- 	bp->b_fspriv = iclog;
- 	XFS_BUF_ZEROFLAGS(bp);
-@@ -1662,19 +1762,6 @@ xlog_sync(
- 		bp->b_flags |= XBF_SYNCIO;
- 		if (log->l_mp->m_flags & XFS_MOUNT_BARRIER)
- 			bp->b_flags |= XBF_FUA;
--		dptr = bp->b_addr;
--		/*
--		 * Bump the cycle numbers at the start of each block
--		 * since this part of the buffer is at the start of
--		 * a new cycle.  Watch out for the header magic number
--		 * case, though.
--		 */
--		for (i = 0; i < split; i += BBSIZE) {
--			be32_add_cpu((__be32 *)dptr, 1);
--			if (be32_to_cpu(*(__be32 *)dptr) == XLOG_HEADER_MAGIC_NUM)
--				be32_add_cpu((__be32 *)dptr, 1);
--			dptr += BBSIZE;
--		}
- 
- 		ASSERT(XFS_BUF_ADDR(bp) <= log->l_logBBsize-1);
- 		ASSERT(XFS_BUF_ADDR(bp) + BTOBB(count) <= log->l_logBBsize);
-@@ -1691,7 +1778,6 @@ xlog_sync(
- 	return 0;
- }	/* xlog_sync */
- 
--
- /*
-  * Deallocate a log structure
-  */
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 9a4e0e5..dc3498b 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -139,7 +139,6 @@ static inline uint xlog_get_client_id(__be32 i)
- /*
-  * Flags for log structure
-  */
--#define XLOG_CHKSUM_MISMATCH	0x1	/* used only during recovery */
- #define XLOG_ACTIVE_RECOVERY	0x2	/* in the middle of recovery */
- #define	XLOG_RECOVERY_NEEDED	0x4	/* log was recovered */
- #define XLOG_IO_ERROR		0x8	/* log hit an I/O error, and being
-@@ -291,7 +290,7 @@ typedef struct xlog_rec_header {
- 	__be32	  h_len;	/* len in bytes; should be 64-bit aligned: 4 */
- 	__be64	  h_lsn;	/* lsn of this LR			:  8 */
- 	__be64	  h_tail_lsn;	/* lsn of 1st LR w/ buffers not committed: 8 */
--	__be32	  h_chksum;	/* may not be used; non-zero if used	:  4 */
-+	__le32	  h_crc;	/* crc of log record                    :  4 */
- 	__be32	  h_prev_block; /* block number to previous LR		:  4 */
- 	__be32	  h_num_logops;	/* number of log operations in this LR	:  4 */
- 	__be32	  h_cycle_data[XLOG_HEADER_CYCLE_SIZE / BBSIZE];
-@@ -555,11 +554,9 @@ xlog_recover(
- extern int
- xlog_recover_finish(
- 	struct xlog		*log);
--extern void
--xlog_pack_data(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	int);
-+
-+extern __be32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
-+			    char *dp, int size);
- 
- extern kmem_zone_t *xfs_log_ticket_zone;
- struct xlog_ticket *
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index 931e8e2..9c3651c 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -41,6 +41,7 @@
- #include "xfs_trans_priv.h"
- #include "xfs_quota.h"
- #include "xfs_utils.h"
-+#include "xfs_cksum.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
- 
-@@ -3216,80 +3217,58 @@ xlog_recover_process_iunlinks(
- 	mp->m_dmevmask = mp_dmevmask;
- }
- 
--
--#ifdef DEBUG
--STATIC void
--xlog_pack_data_checksum(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	int			size)
--{
--	int		i;
--	__be32		*up;
--	uint		chksum = 0;
--
--	up = (__be32 *)iclog->ic_datap;
--	/* divide length by 4 to get # words */
--	for (i = 0; i < (size >> 2); i++) {
--		chksum ^= be32_to_cpu(*up);
--		up++;
--	}
--	iclog->ic_header.h_chksum = cpu_to_be32(chksum);
--}
--#else
--#define xlog_pack_data_checksum(log, iclog, size)
--#endif
--
- /*
-- * Stamp cycle number in every block
-+ * Upack the log buffer data and crc check it. If the check fails, issue a
-+ * warning if and only if the CRC in the header is non-zero. This makes the
-+ * check an advisory warning, and the zero CRC check will prevent failure
-+ * warnings from being emitted when upgrading the kernel from one that does not
-+ * add CRCs by default.
-+ *
-+ * When filesystems are CRC enabled, this CRC mismatch becomes a fatal log
-+ * corruption failure
-  */
--void
--xlog_pack_data(
--	struct xlog		*log,
--	struct xlog_in_core	*iclog,
--	int			roundoff)
-+STATIC int
-+xlog_unpack_data_crc(
-+	struct xlog_rec_header	*rhead,
-+	xfs_caddr_t		dp,
-+	struct xlog		*log)
- {
--	int			i, j, k;
--	int			size = iclog->ic_offset + roundoff;
--	__be32			cycle_lsn;
--	xfs_caddr_t		dp;
--
--	xlog_pack_data_checksum(log, iclog, size);
--
--	cycle_lsn = CYCLE_LSN_DISK(iclog->ic_header.h_lsn);
--
--	dp = iclog->ic_datap;
--	for (i = 0; i < BTOBB(size) &&
--		i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
--		iclog->ic_header.h_cycle_data[i] = *(__be32 *)dp;
--		*(__be32 *)dp = cycle_lsn;
--		dp += BBSIZE;
--	}
--
--	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb)) {
--		xlog_in_core_2_t *xhdr = iclog->ic_data;
--
--		for ( ; i < BTOBB(size); i++) {
--			j = i / (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
--			k = i % (XLOG_HEADER_CYCLE_SIZE / BBSIZE);
--			xhdr[j].hic_xheader.xh_cycle_data[k] = *(__be32 *)dp;
--			*(__be32 *)dp = cycle_lsn;
--			dp += BBSIZE;
-+	__be32			crc;
-+
-+	crc = xlog_cksum(log, rhead, dp, be32_to_cpu(rhead->h_len));
-+	if (crc != rhead->h_crc) {
-+		if (rhead->h_crc || xfs_sb_version_hascrc(&log->l_mp->m_sb)) {
-+			xfs_alert(log->l_mp,
-+		"log record CRC mismatch: found 0x%x, expected 0x%x.\n",
-+					be32_to_cpu(rhead->h_crc),
-+					be32_to_cpu(crc));
-+			xfs_hex_dump(dp, 32);
- 		}
- 
--		for (i = 1; i < log->l_iclog_heads; i++) {
--			xhdr[i].hic_xheader.xh_cycle = cycle_lsn;
--		}
-+		/*
-+		 * If we've detected a log record corruption, then we can't
-+		 * recover past this point. Abort recovery if we are enforcing
-+		 * CRC protection by punting an error back up the stack.
-+		 */
-+		if (xfs_sb_version_hascrc(&log->l_mp->m_sb))
-+			return EFSCORRUPTED;
- 	}
-+
-+	return 0;
- }
- 
--STATIC void
-+STATIC int
- xlog_unpack_data(
- 	struct xlog_rec_header	*rhead,
- 	xfs_caddr_t		dp,
- 	struct xlog		*log)
- {
- 	int			i, j, k;
-+	int			error;
-+
-+	error = xlog_unpack_data_crc(rhead, dp, log);
-+	if (error)
-+		return error;
- 
- 	for (i = 0; i < BTOBB(be32_to_cpu(rhead->h_len)) &&
- 		  i < (XLOG_HEADER_CYCLE_SIZE / BBSIZE); i++) {
-@@ -3306,6 +3285,8 @@ xlog_unpack_data(
- 			dp += BBSIZE;
- 		}
- 	}
-+
-+	return 0;
- }
- 
- STATIC int
-@@ -3437,9 +3418,13 @@ xlog_do_recovery_pass(
- 			if (error)
- 				goto bread_err2;
- 
--			xlog_unpack_data(rhead, offset, log);
--			if ((error = xlog_recover_process_data(log,
--						rhash, rhead, offset, pass)))
-+			error = xlog_unpack_data(rhead, offset, log);
-+			if (error)
-+				goto bread_err2;
-+
-+			error = xlog_recover_process_data(log,
-+						rhash, rhead, offset, pass);
-+			if (error)
- 				goto bread_err2;
- 			blk_no += bblks + hblks;
- 		}
-@@ -3549,9 +3534,14 @@ xlog_do_recovery_pass(
- 				if (error)
- 					goto bread_err2;
- 			}
--			xlog_unpack_data(rhead, offset, log);
--			if ((error = xlog_recover_process_data(log, rhash,
--							rhead, offset, pass)))
-+
-+			error = xlog_unpack_data(rhead, offset, log);
-+			if (error)
-+				goto bread_err2;
-+
-+			error = xlog_recover_process_data(log, rhash,
-+							rhead, offset, pass);
-+			if (error)
- 				goto bread_err2;
- 			blk_no += bblks;
- 		}
-@@ -3576,9 +3566,13 @@ xlog_do_recovery_pass(
- 			if (error)
- 				goto bread_err2;
- 
--			xlog_unpack_data(rhead, offset, log);
--			if ((error = xlog_recover_process_data(log, rhash,
--							rhead, offset, pass)))
-+			error = xlog_unpack_data(rhead, offset, log);
-+			if (error)
-+				goto bread_err2;
-+
-+			error = xlog_recover_process_data(log, rhash,
-+							rhead, offset, pass);
-+			if (error)
- 				goto bread_err2;
- 			blk_no += bblks + hblks;
- 		}
+> naming   =version 2              bsize=4096   ascii-ci=0
+> log      =internal               bsize=4096   blocks=521728, version=2
+>          =                       sectsz=512   sunit=0 blks, lazy-count=1
+> realtime =none                   extsz=4096   blocks=0, rtextents=0
+> 
+> No dmesg errors.
+> 
+> vmstat 5
+> procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+>  r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+>  1  0   2788 150808 6318232 2475332    0    0   836   185    2    4 1 11 87  1  0
+>  1  0   2788 150608 6318232 2475484    0    0     0    89 1094  126 0 12 88  0  0
+>  1  0   2788 150500 6318232 2475604    0    0     0    60 1109   99 0 12 88  0  0
+>  1  0   2788 150252 6318232 2475720    0    0     0    49 1046   79 0 12 88  0  0
+>  1  0   2788 150344 6318232 2475844    0    0     1   157 1046   82 0 12 88  0  0
+>  1  0   2788 149972 6318232 2475960    0    0     0   197 1086  144 0 12 88  0  0
+>  1  0   2788 150020 6318232 2476088    0    0     0    76 1115   99 0 12 88  0  0
+>  1  0   2788 150012 6318232 2476204    0    0     0    81 1131  132 0 12 88  0  0
+>  1  0   2788 149624 6318232 2476340    0    0     0    53 1074   95 0 12 88  0  0
+
+basically idle, but burning a CPu in system time.
+
+> iostat -x -d -m 5
+> Linux 2.6.32-279.5.2.el6.x86_64 (storage)     11/12/2012
+> _x86_64_  (8 CPU)
+> 
+> Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await  svctm  %util
+> sda             103.27     1.51   92.43   37.65     6.52     1.44   125.36     0.73    5.60   1.13  14.74
+> sda               0.00     0.20    2.40   19.80     0.01     0.09     9.08     0.13    5.79   2.25   5.00
+> sda               0.00     3.60    0.60   36.80     0.00     4.15   227.45     0.12    3.21   0.64   2.38
+> sda               0.00     0.40    1.20   36.80     0.00     8.01   431.83     0.11    3.00   1.05   4.00
+> sda               0.00     0.60    0.00   20.60     0.00     0.08     8.39     0.01    0.69   0.69   1.42
+> sda               0.00    38.40    4.20   27.40     0.02     0.27    18.34     0.25    8.06   2.63   8.32
+
+Again, pretty much idle.
+
+So, it's not doing IO, it's not thrashing caches, so what is burning
+cpu? Can you take a profile? maybe just run 'perf top' for 15s and
+then just paste the top 10 samples?
+
+Cheers,
+
+Dave.
 -- 
-1.7.10
+Dave Chinner
+david@fromorbit.com
 
 _______________________________________________
 xfs mailing list
