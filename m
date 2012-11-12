@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBs4Wb217946 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:04 -0600
+	qACBs3D3217926 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:03 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	fcE7hUPO0cnrEeUa for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:56:04 -0800 (PST)
+	Dag3wGQtmVDZC1bH for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:56:03 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsbc-00054O-Ih
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXsbw-00054l-MJ
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:28 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbc-00012y-Eh
+	(envelope-from <dave@disappointment.disaster>) id 1TXsbc-00013N-Hw
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 17/32] xfs: verify dquot blocks as they are read from disk
-Date: Mon, 12 Nov 2012 22:54:09 +1100
-Message-Id: <1352721264-3700-18-git-send-email-david@fromorbit.com>
+Subject: [PATCH 20/32] xfs: verify dir2 block format buffers
+Date: Mon, 12 Nov 2012 22:54:12 +1100
+Message-Id: <1352721264-3700-21-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,167 +35,238 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a dquot buffer verify callback function and pass it into the
-buffer read functions. This checks all the dquots in a buffer, but
-cannot completely verify the dquot ids are correct. Also, errors
-cannot be repaired, so an additional function is added to repair bad
-dquots in the buffer if such an error is detected in a context where
-repair is allowed.
+Add a dir2 block format read verifier. To fully verify every block
+when read, call xfs_dir2_data_check() on them. Change
+xfs_dir2_data_check() to do runtime checking, convert ASSERT()
+checks to XFS_WANT_CORRUPTED_RETURN(), which will trigger an ASSERT
+failure on debug kernels, but on production kernels will dump an
+error to dmesg and return EFSCORRUPTED to the caller.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Phil White <pwhite@sgi.com>
 ---
- fs/xfs/xfs_dquot.c |  117 ++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 95 insertions(+), 22 deletions(-)
+ fs/xfs/xfs_dir2_block.c |   22 +++++++++++++-
+ fs/xfs/xfs_dir2_data.c  |   73 ++++++++++++++++++++++++++++-------------------
+ fs/xfs/xfs_dir2_priv.h  |    4 ++-
+ 3 files changed, 68 insertions(+), 31 deletions(-)
 
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index e95f800..2e18382 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -360,6 +360,89 @@ xfs_qm_dqalloc(
- 	return (error);
+diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
+index 25ce409..57351b8 100644
+--- a/fs/xfs/xfs_dir2_block.c
++++ b/fs/xfs/xfs_dir2_block.c
+@@ -56,6 +56,26 @@ xfs_dir_startup(void)
+ 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
  }
  
-+STATIC void
-+xfs_dquot_read_verify(
++static void
++xfs_dir2_block_verify(
 +	struct xfs_buf		*bp)
 +{
 +	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
-+	struct xfs_disk_dquot	*ddq;
-+	xfs_dqid_t		id = 0;
-+	int			i;
++	struct xfs_dir2_data_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	/*
-+	 * On the first read of the buffer, verify that each dquot is valid.
-+	 * We don't know what the id of the dquot is supposed to be, just that
-+	 * they should be increasing monotonically within the buffer. If the
-+	 * first id is corrupt, then it will fail on the second dquot in the
-+	 * buffer so corruptions could point to the wrong dquot in this case.
-+	 */
-+	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
-+		int	error;
++	block_ok = hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC);
++	block_ok = block_ok && __xfs_dir2_data_check(NULL, bp) == 0;
 +
-+		ddq = &d[i].dd_diskdq;
-+
-+		if (i == 0)
-+			id = be32_to_cpu(ddq->d_id);
-+
-+		error = xfs_qm_dqcheck(mp, ddq, id + i, 0, XFS_QMOPT_DOWARN,
-+					"xfs_dquot_read_verify");
-+		if (error) {
-+			XFS_CORRUPTION_ERROR("xfs_dquot_read_verify",
-+					     XFS_ERRLEVEL_LOW, mp, d);
-+			xfs_buf_ioerror(bp, EFSCORRUPTED);
-+			break;
-+		}
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
-+STATIC int
-+xfs_qm_dqrepair(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	struct xfs_dquot	*dqp,
-+	xfs_dqid_t		firstid,
-+	struct xfs_buf		**bpp)
-+{
-+	int			error;
-+	struct xfs_disk_dquot	*ddq;
-+	struct xfs_dqblk	*d;
-+	int			i;
-+
-+	/*
-+	 * Read the buffer without verification so we get the corrupted
-+	 * buffer returned to us.
-+	 */
-+	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp, dqp->q_blkno,
-+				   mp->m_quotainfo->qi_dqchunklen,
-+				   0, bpp, NULL);
-+
-+	if (error) {
-+		ASSERT(*bpp == NULL);
-+		return XFS_ERROR(error);
-+	}
-+
-+	ASSERT(xfs_buf_islocked(*bpp));
-+	d = (struct xfs_dqblk *)(*bpp)->b_addr;
-+
-+	/* Do the actual repair of dquots in this buffer */
-+	for (i = 0; i < mp->m_quotainfo->qi_dqperchunk; i++) {
-+		ddq = &d[i].dd_diskdq;
-+		error = xfs_qm_dqcheck(mp, ddq, firstid + i,
-+				       dqp->dq_flags & XFS_DQ_ALLTYPES,
-+				       XFS_QMOPT_DQREPAIR, "xfs_qm_dqrepair");
-+		if (error) {
-+			/* repair failed, we're screwed */
-+			xfs_trans_brelse(tp, *bpp);
-+			return XFS_ERROR(EIO);
-+		}
-+	}
-+
-+	return 0;
-+}
-+
+ static int
+ xfs_dir2_block_read(
+ 	struct xfs_trans	*tp,
+@@ -65,7 +85,7 @@ xfs_dir2_block_read(
+ 	struct xfs_mount	*mp = dp->i_mount;
+ 
+ 	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
+-					XFS_DATA_FORK, NULL);
++					XFS_DATA_FORK, xfs_dir2_block_verify);
+ }
+ 
+ static void
+diff --git a/fs/xfs/xfs_dir2_data.c b/fs/xfs/xfs_dir2_data.c
+index 44ffd4d..cb11723 100644
+--- a/fs/xfs/xfs_dir2_data.c
++++ b/fs/xfs/xfs_dir2_data.c
+@@ -34,14 +34,13 @@
+ STATIC xfs_dir2_data_free_t *
+ xfs_dir2_data_freefind(xfs_dir2_data_hdr_t *hdr, xfs_dir2_data_unused_t *dup);
+ 
+-#ifdef DEBUG
  /*
-  * Maps a dquot to the buffer containing its on-disk version.
-  * This returns a ptr to the buffer containing the on-disk dquot
-@@ -378,7 +461,6 @@ xfs_qm_dqtobp(
- 	xfs_buf_t	*bp;
- 	xfs_inode_t	*quotip = XFS_DQ_TO_QIP(dqp);
- 	xfs_mount_t	*mp = dqp->q_mount;
--	xfs_disk_dquot_t *ddq;
- 	xfs_dqid_t	id = be32_to_cpu(dqp->q_core.d_id);
- 	xfs_trans_t	*tp = (tpp ? *tpp : NULL);
+  * Check the consistency of the data block.
+  * The input can also be a block-format directory.
+- * Pop an assert if we find anything bad.
++ * Return 0 is the buffer is good, otherwise an error.
+  */
+-void
+-xfs_dir2_data_check(
++int
++__xfs_dir2_data_check(
+ 	struct xfs_inode	*dp,		/* incore inode pointer */
+ 	struct xfs_buf		*bp)		/* data block's buffer */
+ {
+@@ -64,18 +63,23 @@ xfs_dir2_data_check(
+ 	int			stale;		/* count of stale leaves */
+ 	struct xfs_name		name;
  
-@@ -439,33 +521,24 @@ xfs_qm_dqtobp(
- 		error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 					   dqp->q_blkno,
- 					   mp->m_quotainfo->qi_dqchunklen,
--					   0, &bp, NULL);
--		if (error || !bp)
--			return XFS_ERROR(error);
--	}
-+					   0, &bp, xfs_dquot_read_verify);
+-	mp = dp->i_mount;
++	mp = bp->b_target->bt_mount;
+ 	hdr = bp->b_addr;
+ 	bf = hdr->bestfree;
+ 	p = (char *)(hdr + 1);
  
--	ASSERT(xfs_buf_islocked(bp));
--
--	/*
--	 * calculate the location of the dquot inside the buffer.
--	 */
--	ddq = bp->b_addr + dqp->q_bufoffset;
-+		if (error == EFSCORRUPTED && (flags & XFS_QMOPT_DQREPAIR)) {
-+			xfs_dqid_t firstid = (xfs_dqid_t)map.br_startoff *
-+						mp->m_quotainfo->qi_dqperchunk;
-+			ASSERT(bp == NULL);
-+			error = xfs_qm_dqrepair(mp, tp, dqp, firstid, &bp);
-+		}
- 
--	/*
--	 * A simple sanity check in case we got a corrupted dquot...
--	 */
--	error = xfs_qm_dqcheck(mp, ddq, id, dqp->dq_flags & XFS_DQ_ALLTYPES,
--			   flags & (XFS_QMOPT_DQREPAIR|XFS_QMOPT_DOWARN),
--			   "dqtobp");
--	if (error) {
--		if (!(flags & XFS_QMOPT_DQREPAIR)) {
--			xfs_trans_brelse(tp, bp);
--			return XFS_ERROR(EIO);
-+		if (error) {
-+			ASSERT(bp == NULL);
-+			return XFS_ERROR(error);
- 		}
+-	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
++	switch (hdr->magic) {
++	case cpu_to_be32(XFS_DIR2_BLOCK_MAGIC):
+ 		btp = xfs_dir2_block_tail_p(mp, hdr);
+ 		lep = xfs_dir2_block_leaf_p(btp);
+ 		endp = (char *)lep;
+-	} else {
+-		ASSERT(hdr->magic == cpu_to_be32(XFS_DIR2_DATA_MAGIC));
++		break;
++	case cpu_to_be32(XFS_DIR2_DATA_MAGIC):
+ 		endp = (char *)hdr + mp->m_dirblksize;
++		break;
++	default:
++		XFS_ERROR_REPORT("Bad Magic", XFS_ERRLEVEL_LOW, mp);
++		return EFSCORRUPTED;
  	}
  
-+	ASSERT(xfs_buf_islocked(bp));
- 	*O_bpp = bp;
--	*O_ddpp = ddq;
-+	*O_ddpp = bp->b_addr + dqp->q_bufoffset;
- 
- 	return (0);
+ 	count = lastfree = freeseen = 0;
+@@ -83,19 +87,22 @@ xfs_dir2_data_check(
+ 	 * Account for zero bestfree entries.
+ 	 */
+ 	if (!bf[0].length) {
+-		ASSERT(!bf[0].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[0].offset);
+ 		freeseen |= 1 << 0;
+ 	}
+ 	if (!bf[1].length) {
+-		ASSERT(!bf[1].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[1].offset);
+ 		freeseen |= 1 << 1;
+ 	}
+ 	if (!bf[2].length) {
+-		ASSERT(!bf[2].offset);
++		XFS_WANT_CORRUPTED_RETURN(!bf[2].offset);
+ 		freeseen |= 1 << 2;
+ 	}
+-	ASSERT(be16_to_cpu(bf[0].length) >= be16_to_cpu(bf[1].length));
+-	ASSERT(be16_to_cpu(bf[1].length) >= be16_to_cpu(bf[2].length));
++
++	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[0].length) >=
++						be16_to_cpu(bf[1].length));
++	XFS_WANT_CORRUPTED_RETURN(be16_to_cpu(bf[1].length) >=
++						be16_to_cpu(bf[2].length));
+ 	/*
+ 	 * Loop over the data/unused entries.
+ 	 */
+@@ -107,17 +114,20 @@ xfs_dir2_data_check(
+ 		 * doesn't need to be there.
+ 		 */
+ 		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
+-			ASSERT(lastfree == 0);
+-			ASSERT(be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
+-			       (char *)dup - (char *)hdr);
++			XFS_WANT_CORRUPTED_RETURN(lastfree == 0);
++			XFS_WANT_CORRUPTED_RETURN(
++				be16_to_cpu(*xfs_dir2_data_unused_tag_p(dup)) ==
++					       (char *)dup - (char *)hdr);
+ 			dfp = xfs_dir2_data_freefind(hdr, dup);
+ 			if (dfp) {
+ 				i = (int)(dfp - bf);
+-				ASSERT((freeseen & (1 << i)) == 0);
++				XFS_WANT_CORRUPTED_RETURN(
++					(freeseen & (1 << i)) == 0);
+ 				freeseen |= 1 << i;
+ 			} else {
+-				ASSERT(be16_to_cpu(dup->length) <=
+-				       be16_to_cpu(bf[2].length));
++				XFS_WANT_CORRUPTED_RETURN(
++					be16_to_cpu(dup->length) <=
++						be16_to_cpu(bf[2].length));
+ 			}
+ 			p += be16_to_cpu(dup->length);
+ 			lastfree = 1;
+@@ -130,10 +140,12 @@ xfs_dir2_data_check(
+ 		 * The linear search is crude but this is DEBUG code.
+ 		 */
+ 		dep = (xfs_dir2_data_entry_t *)p;
+-		ASSERT(dep->namelen != 0);
+-		ASSERT(xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)) == 0);
+-		ASSERT(be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
+-		       (char *)dep - (char *)hdr);
++		XFS_WANT_CORRUPTED_RETURN(dep->namelen != 0);
++		XFS_WANT_CORRUPTED_RETURN(
++			!xfs_dir_ino_validate(mp, be64_to_cpu(dep->inumber)));
++		XFS_WANT_CORRUPTED_RETURN(
++			be16_to_cpu(*xfs_dir2_data_entry_tag_p(dep)) ==
++					       (char *)dep - (char *)hdr);
+ 		count++;
+ 		lastfree = 0;
+ 		if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+@@ -148,27 +160,30 @@ xfs_dir2_data_check(
+ 				    be32_to_cpu(lep[i].hashval) == hash)
+ 					break;
+ 			}
+-			ASSERT(i < be32_to_cpu(btp->count));
++			XFS_WANT_CORRUPTED_RETURN(i < be32_to_cpu(btp->count));
+ 		}
+ 		p += xfs_dir2_data_entsize(dep->namelen);
+ 	}
+ 	/*
+ 	 * Need to have seen all the entries and all the bestfree slots.
+ 	 */
+-	ASSERT(freeseen == 7);
++	XFS_WANT_CORRUPTED_RETURN(freeseen == 7);
+ 	if (hdr->magic == cpu_to_be32(XFS_DIR2_BLOCK_MAGIC)) {
+ 		for (i = stale = 0; i < be32_to_cpu(btp->count); i++) {
+ 			if (lep[i].address ==
+ 			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR))
+ 				stale++;
+ 			if (i > 0)
+-				ASSERT(be32_to_cpu(lep[i].hashval) >= be32_to_cpu(lep[i - 1].hashval));
++				XFS_WANT_CORRUPTED_RETURN(
++					be32_to_cpu(lep[i].hashval) >=
++						be32_to_cpu(lep[i - 1].hashval));
+ 		}
+-		ASSERT(count == be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
+-		ASSERT(stale == be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(count ==
++			be32_to_cpu(btp->count) - be32_to_cpu(btp->stale));
++		XFS_WANT_CORRUPTED_RETURN(stale == be32_to_cpu(btp->stale));
+ 	}
++	return 0;
  }
+-#endif
+ 
+ /*
+  * Given a data block and an unused entry from that block,
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 3523d3e..93b8f66 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -41,10 +41,12 @@ extern int xfs_dir2_leaf_to_block(struct xfs_da_args *args,
+ 
+ /* xfs_dir2_data.c */
+ #ifdef DEBUG
+-extern void xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++#define	xfs_dir2_data_check(dp,bp) __xfs_dir2_data_check(dp, bp);
+ #else
+ #define	xfs_dir2_data_check(dp,bp)
+ #endif
++extern int __xfs_dir2_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
++
+ extern struct xfs_dir2_data_free *
+ xfs_dir2_data_freeinsert(struct xfs_dir2_data_hdr *hdr,
+ 		struct xfs_dir2_data_unused *dup, int *loghead);
 -- 
 1.7.10
 
