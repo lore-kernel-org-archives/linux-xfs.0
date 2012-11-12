@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACB7xmB214610 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:07:59 -0600
+	qACB80WQ214627 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:08:00 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	HtpuQ65GMLfY8cTb for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:10:00 -0800 (PST)
+	m9EDfvMxQW7vuFr3 for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:10:01 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXrtk-0004ya-Rm
+	(envelope-from <dave@fromorbit.com>) id 1TXrtk-0004yc-UB
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:09:48 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXrtk-0000wD-Mw
+	(envelope-from <dave@disappointment.disaster>) id 1TXrtk-0000wP-Qt
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:09:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 0/3] xfs: fixes for 3.7-rc6
-Date: Mon, 12 Nov 2012 22:09:43 +1100
-Message-Id: <1352718586-3538-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 3/3] xfs: drop buffer io reference when a bad bio is built
+Date: Mon, 12 Nov 2012 22:09:46 +1100
+Message-Id: <1352718586-3538-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352718586-3538-1-git-send-email-david@fromorbit.com>
+References: <1352718586-3538-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,21 +33,69 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-These are the remaining fixes I have in my tree for the 3.7 cycle.
-One is a corruption fix, the other two are problems I'm seeing
-during shutdown and recovery testing. That testing lasts 400-500
-cycles (3-4 hours) now before it fails with another, as yet unknown
-buffer/perag reference assert failure. Without these fixes, it lasts
-3-4 cycles before assert failing or triggering a BUG.
+Error handling in xfs_buf_ioapply_map() does not handle IO reference
+counts correctly. We increment the b_io_remaining count before
+building the bio, but then fail to decrement it in the failure case.
+This leads to the buffer never running IO completion and releasing
+the reference that the IO holds, so at unmount we can leak the
+buffer. This leak is captured by this assert failure during unmount:
 
-I'd like these fixes to be in the 3.7 cycle if at all possible, with
-both patch 1 and 2 being stable kernel candidates.
+XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/xfs_mount.c, line: 273
 
-Cheers,
+This is not a new bug - the b_io_remaining accounting has had this
+problem for a long, long time - it's just very hard to get a
+zero length bio being built by this code...
 
-Dave.
+Further, the buffer IO error can be overwritten on a multi-segment
+buffer by subsequent bio completions for partial sections of the
+buffer. Hence we should only set the buffer error status if the
+buffer is not already carrying an error status. This ensures that a
+partial IO error on a multi-segment buffer will not be lost. This
+part of the problem is a regression, however.
+
+cc: <stable@vger.kernel.org>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.c |   14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 933b793..4b0b8dd 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1197,9 +1197,14 @@ xfs_buf_bio_end_io(
+ {
+ 	xfs_buf_t		*bp = (xfs_buf_t *)bio->bi_private;
+ 
+-	xfs_buf_ioerror(bp, -error);
++	/*
++	 * don't overwrite existing errors - otherwise we can lose errors on
++	 * buffers that require multiple bios to complete.
++	 */
++	if (!bp->b_error)
++		xfs_buf_ioerror(bp, -error);
+ 
+-	if (!error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
++	if (!bp->b_error && xfs_buf_is_vmapped(bp) && (bp->b_flags & XBF_READ))
+ 		invalidate_kernel_vmap_range(bp->b_addr, xfs_buf_vmap_len(bp));
+ 
+ 	_xfs_buf_ioend(bp, 1);
+@@ -1279,6 +1284,11 @@ next_chunk:
+ 		if (size)
+ 			goto next_chunk;
+ 	} else {
++		/*
++		 * This is guaranteed not to be the last io reference count
++		 * because the caller (xfs_buf_iorequest) holds a count itself.
++		 */
++		atomic_dec(&bp->b_io_remaining);
+ 		xfs_buf_ioerror(bp, EIO);
+ 		bio_put(bio);
+ 	}
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
