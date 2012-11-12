@@ -1,23 +1,25 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBqXik217511 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:33 -0600
+	qACBs0M0217890 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:00 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	Kp8n7ZpMzGfSchZd for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:54:33 -0800 (PST)
-Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsay-00053M-0w
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:28 +1100
+	QrOt95Sf3LFQLdAm for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:56:00 -0800 (PST)
+Received: from [192.168.1.1] (helo=disappointment)
+	by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TXsbS-00053j-3j
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:58 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsax-00011i-U6
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:27 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TXsay-000123-1x
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 02/32] xfs: remove xfs_tosspages
-Date: Mon, 12 Nov 2012 22:53:54 +1100
-Message-Id: <1352721264-3700-3-git-send-email-david@fromorbit.com>
+Subject: =?UTF-8?q?=5BPATCH=2006/32=5D=20xfs=3A=20use=20btree=20block=20initialisation=20functions=20in=20growfs?=
+Date: Mon, 12 Nov 2012 22:53:58 +1100
+Message-Id: <1352721264-3700-7-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+MIME-Version: 1.0
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -26,143 +28,110 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
-
-It's a buggy, unnecessary wrapper that is duplicating
-truncate_pagecache_range().
-
-When replacing the call in xfs_change_file_space(), also ensure that
-the length being allocated/freed is always positive before making
-any changes. These checks are done in the lower extent manipulation
-functions, too, but we need to do them before any page cache
-operations.
-
-Reported-by: Andrew Dahl <adahl@sgi.com>
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_dfrag.c    |    3 +--
- fs/xfs/xfs_fs_subr.c  |   12 ------------
- fs/xfs/xfs_vnodeops.c |   28 +++++++++++++++++++++++-----
- fs/xfs/xfs_vnodeops.h |    2 --
- 4 files changed, 24 insertions(+), 21 deletions(-)
-
-diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
-index b9b8646..b2c63a2 100644
---- a/fs/xfs/xfs_dfrag.c
-+++ b/fs/xfs/xfs_dfrag.c
-@@ -315,8 +315,7 @@ xfs_swap_extents(
- 	 * are safe.  We don't really care if non-io related
- 	 * fields change.
- 	 */
--
--	xfs_tosspages(ip, 0, -1, FI_REMAPF);
-+	truncate_pagecache_range(VFS_I(ip), 0, -1);
- 
- 	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
- 	if ((error = xfs_trans_reserve(tp, 0,
-diff --git a/fs/xfs/xfs_fs_subr.c b/fs/xfs/xfs_fs_subr.c
-index 652b875..d49de3d 100644
---- a/fs/xfs/xfs_fs_subr.c
-+++ b/fs/xfs/xfs_fs_subr.c
-@@ -25,18 +25,6 @@
-  * note: all filemap functions return negative error codes. These
-  * need to be inverted before returning to the xfs core functions.
-  */
--void
--xfs_tosspages(
--	xfs_inode_t	*ip,
--	xfs_off_t	first,
--	xfs_off_t	last,
--	int		fiopt)
--{
--	/* can't toss partial tail pages, so mask them out */
--	last &= ~(PAGE_SIZE - 1);
--	truncate_inode_pages_range(VFS_I(ip)->i_mapping, first, last - 1);
--}
--
- int
- xfs_flushinval_pages(
- 	xfs_inode_t	*ip,
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index c2ddd7a..f7de578 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -2118,7 +2118,6 @@ xfs_change_file_space(
- 	xfs_fsize_t	fsize;
- 	int		setprealloc;
- 	xfs_off_t	startoffset;
--	xfs_off_t	llen;
- 	xfs_trans_t	*tp;
- 	struct iattr	iattr;
- 	int		prealloc_type;
-@@ -2139,12 +2138,30 @@ xfs_change_file_space(
- 		return XFS_ERROR(EINVAL);
- 	}
- 
--	llen = bf->l_len > 0 ? bf->l_len - 1 : bf->l_len;
-+	/*
-+	 * length of <= 0 for resv/unresv/zero is invalid.  length for
-+	 * alloc/free is ignored completely and we have no idea what userspace
-+	 * might have set it to, so set it to zero to allow range
-+	 * checks to pass.
-+	 */
-+	switch (cmd) {
-+	case XFS_IOC_ZERO_RANGE:
-+	case XFS_IOC_RESVSP:
-+	case XFS_IOC_RESVSP64:
-+	case XFS_IOC_UNRESVSP:
-+	case XFS_IOC_UNRESVSP64:
-+		if (bf->l_len <= 0)
-+			return XFS_ERROR(EINVAL);
-+		break;
-+	default:
-+		bf->l_len = 0;
-+		break;
-+	}
- 
- 	if (bf->l_start < 0 ||
- 	    bf->l_start > mp->m_super->s_maxbytes ||
--	    bf->l_start + llen < 0 ||
--	    bf->l_start + llen > mp->m_super->s_maxbytes)
-+	    bf->l_start + bf->l_len < 0 ||
-+	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes)
- 		return XFS_ERROR(EINVAL);
- 
- 	bf->l_whence = 0;
-@@ -2169,7 +2186,8 @@ xfs_change_file_space(
- 	switch (cmd) {
- 	case XFS_IOC_ZERO_RANGE:
- 		prealloc_type |= XFS_BMAPI_CONVERT;
--		xfs_tosspages(ip, startoffset, startoffset + bf->l_len, 0);
-+		truncate_pagecache_range(VFS_I(ip), startoffset,
-+			 round_down(startoffset + bf->l_len, PAGE_SIZE) - 1);
- 		/* FALLTHRU */
- 	case XFS_IOC_RESVSP:
- 	case XFS_IOC_RESVSP64:
-diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-index 52fafc4..d48141d 100644
---- a/fs/xfs/xfs_vnodeops.h
-+++ b/fs/xfs/xfs_vnodeops.h
-@@ -48,8 +48,6 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
- int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
- int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		int flags, struct attrlist_cursor_kern *cursor);
--void xfs_tosspages(struct xfs_inode *inode, xfs_off_t first,
--		xfs_off_t last, int fiopt);
- int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
- 		xfs_off_t last, int fiopt);
- int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
--- 
-1.7.10
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+RnJvbTogRGF2ZSBDaGlubmVyIDxkY2hpbm5lckByZWRoYXQuY29tPgoKRmFjdG9yIHhmc19idHJl
+ZV9pbml0X2Jsb2NrKCkgdG8gYmUgaW5kZXBlbmRlbnQgb2YgdGhlIGJ0cmVlIGN1cnNvciwKYW5k
+IHVzZSB0aGUgZnVuY3Rpb24gdG8gaW5pdGlhbGlzZSBidHJlZSBibG9ja3MgaW4gdGhlIGdyb3dm
+cyBjb2RlLgpUaGlzIG1ha2VzIGFkZGluZyBzdXBwb3J0IGZvciBkaWZmZXJlbnQgZm9ybWF0IGJ0
+cmVlIGJsb2NrcyBzaW1wbGUuCgpTaWduZWQtb2ZmLWJ5OiBEYXZlIENoaW5uZXIgPGRjaGlubmVy
+QHJlZGhhdC5jb20+Ci0tLQogZnMveGZzL3hmc19idHJlZS5jIHwgICAzMyArKysrKysrKysrKysr
+KysrKysrKysrKystLS0tLS0tLS0KIGZzL3hmcy94ZnNfYnRyZWUuaCB8ICAgMTEgKysrKysrKysr
+KysKIGZzL3hmcy94ZnNfZnNvcHMuYyB8ICAgMzcgKysrKysrKysrKysrKy0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLQogMyBmaWxlcyBjaGFuZ2VkLCA0OCBpbnNlcnRpb25zKCspLCAzMyBkZWxldGlv
+bnMoLSkKCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2J0cmVlLmMgYi9mcy94ZnMveGZzX2J0cmVl
+LmMKaW5kZXggZTUzZTMxNy4uMTIxZWE5OSAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19idHJlZS5j
+CisrKyBiL2ZzL3hmcy94ZnNfYnRyZWUuYwpAQCAtODUzLDE4ICs4NTMsMjIgQEAgeGZzX2J0cmVl
+X3NldF9zaWJsaW5nKAogCX0KIH0KIAotU1RBVElDIHZvaWQKK3ZvaWQKIHhmc19idHJlZV9pbml0
+X2Jsb2NrKAotCXN0cnVjdCB4ZnNfYnRyZWVfY3VyCSpjdXIsCi0JaW50CQkJbGV2ZWwsCi0JaW50
+CQkJbnVtcmVjcywKLQlzdHJ1Y3QgeGZzX2J0cmVlX2Jsb2NrCSpuZXcpCS8qIG5ldyBibG9jayAq
+LworCXN0cnVjdCB4ZnNfbW91bnQgKm1wLAorCXN0cnVjdCB4ZnNfYnVmCSpicCwKKwlfX3UzMgkJ
+bWFnaWMsCisJX191MTYJCWxldmVsLAorCV9fdTE2CQludW1yZWNzLAorCXVuc2lnbmVkIGludAlm
+bGFncykKIHsKLQluZXctPmJiX21hZ2ljID0gY3B1X3RvX2JlMzIoeGZzX21hZ2ljc1tjdXItPmJj
+X2J0bnVtXSk7CisJc3RydWN0IHhmc19idHJlZV9ibG9jawkqbmV3ID0gWEZTX0JVRl9UT19CTE9D
+SyhicCk7CisKKwluZXctPmJiX21hZ2ljID0gY3B1X3RvX2JlMzIobWFnaWMpOwogCW5ldy0+YmJf
+bGV2ZWwgPSBjcHVfdG9fYmUxNihsZXZlbCk7CiAJbmV3LT5iYl9udW1yZWNzID0gY3B1X3RvX2Jl
+MTYobnVtcmVjcyk7CiAKLQlpZiAoY3VyLT5iY19mbGFncyAmIFhGU19CVFJFRV9MT05HX1BUUlMp
+IHsKKwlpZiAoZmxhZ3MgJiBYRlNfQlRSRUVfTE9OR19QVFJTKSB7CiAJCW5ldy0+YmJfdS5sLmJi
+X2xlZnRzaWIgPSBjcHVfdG9fYmU2NChOVUxMREZTQk5PKTsKIAkJbmV3LT5iYl91LmwuYmJfcmln
+aHRzaWIgPSBjcHVfdG9fYmU2NChOVUxMREZTQk5PKTsKIAl9IGVsc2UgewpAQCAtODczLDYgKzg3
+NywxNyBAQCB4ZnNfYnRyZWVfaW5pdF9ibG9jaygKIAl9CiB9CiAKK1NUQVRJQyB2b2lkCit4ZnNf
+YnRyZWVfaW5pdF9ibG9ja19jdXIoCisJc3RydWN0IHhmc19idHJlZV9jdXIJKmN1ciwKKwlpbnQJ
+CQlsZXZlbCwKKwlpbnQJCQludW1yZWNzLAorCXN0cnVjdCB4ZnNfYnVmCQkqYnApCit7CisJeGZz
+X2J0cmVlX2luaXRfYmxvY2soY3VyLT5iY19tcCwgYnAsIHhmc19tYWdpY3NbY3VyLT5iY19idG51
+bV0sCisJCQkgICAgICAgbGV2ZWwsIG51bXJlY3MsIGN1ci0+YmNfZmxhZ3MpOworfQorCiAvKgog
+ICogUmV0dXJuIHRydWUgaWYgcHRyIGlzIHRoZSBsYXN0IHJlY29yZCBpbiB0aGUgYnRyZWUgYW5k
+CiAgKiB3ZSBuZWVkIHRvIHRyYWNrIHVwZGF0ZdGVIHRvIHRoaXMgcmVjb3JkLiAgVGhlIGRlY2lz
+aW9uCkBAIC0yMTgzLDcgKzIxOTgsNyBAQCB4ZnNfYnRyZWVfc3BsaXQoCiAJCWdvdG8gZXJyb3Iw
+OwogCiAJLyogRmlsbCBpbiB0aGUgYnRyZWUgaGVhZGVyIGZvciB0aGUgbmV3IHJpZ2h0IGJsb2Nr
+LiAqLwotCXhmc19idHJlZV9pbml0X2Jsb2NrKGN1ciwgeGZzX2J0cmVlX2dldF9sZXZlbChsZWZ0
+KSwgMCwgcmlnaHQpOworCXhmc19idHJlZV9pbml0X2Jsb2NrX2N1cihjdXIsIHhmc19idHJlZV9n
+ZXRfbGV2ZWwobGVmdCksIDAsIHJicCk7CiAKIAkvKgogCSAqIFNwbGl0IHRoZSBlbnRyaWVzIGJl
+dHdlZW4gdGhlIG9sZCBhbmQgdGhlIG5ldyBibG9jayBldmVubHkuCkBAIC0yNDkyLDcgKzI1MDcs
+NyBAQCB4ZnNfYnRyZWVfbmV3X3Jvb3QoCiAJCW5wdHIgPSAyOwogCX0KIAkvKiBGaWxsIGluIHRo
+ZSBuZXcgYmxvY2sncyBidHJlZSBoZWFkZXIgYW5kIGxvZyBpdC4gKi8KLQl4ZnNfYnRyZWVfaW5p
+dF9ibG9jayhjdXIsIGN1ci0+YmNfbmxldmVscywgMiwgbmV3KTsKKwl4ZnNfYnRyZWVfaW5pdF9i
+bG9ja19jdXIoY3VyLCBjdXItPmJjX25sZXZlbHMsIDIsIG5icCk7CiAJeGZzX2J0cmVlX2xvZ19i
+bG9jayhjdXIsIG5icCwgWEZTX0JCX0FMTF9CSVRTKTsKIAlBU1NFUlQoIXhmc19idHJlZV9wdHJf
+aXNfbnVsbChjdXIsICZscHRyKSAmJgogCQkJIXhmc19idHJlZV9wdHJfaXNfbnVsbChjdXIsICZy
+cHRyKSk7CmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2J0cmVlLmggYi9mcy94ZnMveGZzX2J0cmVl
+LmgKaW5kZXggNWIyNDBkZS4uYzljZjJkMCAxMDA2NDQKLS0tIGEvZnMveGZzL3hmc19idHJlZS5o
+CisrKyBiL2ZzL3hmcy94ZnNfYnRyZWUuaApAQCAtMzc4LDYgKzM3OCwxNyBAQCB4ZnNfYnRyZWVf
+cmVhZGFfYnVmcygKIAl4ZnNfYWdibG9ja190CQlhZ2JubywJLyogYWxsb2NhdGlvbiBncm91cCBi
+bG9jayBudW1iZXIgKi8KIAl4ZnNfZXh0bGVuX3QJCWNvdW50KTsJLyogY291bnQgb2YgZmlsZXN5
+c3RlbSBibG9ja3MgKi8KIAorLyoKKyAqIEluaXRpYWxpc2UgYSBuZXcgYnRyZWUgYmxvY2sgaGVh
+ZGVyCisgKi8KK3ZvaWQKK3hmc19idHJlZV9pbml0X2Jsb2NrKAorCXN0cnVjdCB4ZnNfbW91bnQg
+Km1wLAorCXN0cnVjdCB4ZnNfYnVmCSpicCwKKwlfX3UzMgkJbWFnaWMsCisJX191MTYJCWxldmVs
+LAorCV9fdTE2CQludW1yZWNzLAorCXVuc2lnbmVkIGludAlmbGFncyk7CiAKIC8qCiAgKiBDb21t
+b24gYnRyZWUgY29yZSBlbnRyeSBwb2ludHMuCmRpZmYgLS1naXQgYS9mcy94ZnMveGZzX2Zzb3Bz
+LmMgYi9mcy94ZnMveGZzX2Zzb3BzLmMKaW5kZXggN2IwYTk5Ny4uYTUwMzRhZiAxMDA2NDQKLS0t
+IGEvZnMveGZzL3hmc19mc29wcy5jCisrKyBiL2ZzL3hmcy94ZnNfZnNvcHMuYwpAQCAtMTI1LDcg
+KzEyNSw2IEBAIHhmc19ncm93ZnNfZGF0YV9wcml2YXRlKAogCXhmc19leHRsZW5fdAkJYWdzaXpl
+OwogCXhmc19leHRsZW5fdAkJdG1wc2l6ZTsKIAl4ZnNfYWxsb2NfcmVjX3QJCSphcmVjOwotCXN0
+cnVjdCB4ZnNfYnRyZWVfYmxvY2sJKmJsb2NrOwogCXhmc19idWZfdAkJKmJwOwogCWludAkJCWJ1
+Y2tldDsKIAlpbnQJCQlkcGN0OwpAQCAtMjYzLDE3ICsyNjIsMTQgQEAgeGZzX2dyb3dmc19kYXRh
+X3ByaXZhdGUoCiAJCQllcnJvciA9IEVOT01FTTsKIAkJCWdvdG8gZXJyb3IwOwogCQl9Ci0JCWJs
+b2NrID0gWEZTX0JVRl9UT19CTE9DSyhicCk7Ci0JCW1lbXNldChibG9jaywgMCwgbXAtPm1fc2Iu
+c2JfYmxvY2tzaXplKTsKLQkJYmxvY2stPmJiX21hZ2ljID0gY3B1X3RvX2JlMzIoWEZTX0FCVEJf
+TUFHSUMpOwotCQlibG9jay0+YmJfbGV2ZWwgPSAwOwotCQlibG9jay0+YmJfbnVtcmVjcyA9IGNw
+dV90b19iZTE2KDEpOwotCQlibG9jay0+YmJfdS5zLmJiX2xlZnRzaWIgPSBjcHVfdG9fYmUzMihO
+VUxMQUdCTE9DSyk7Ci0JCWJsb2NrLT5iYl91LnMuYmJfcmlnaHRzaWIgPSBjcHVfdG9fYmUzMihO
+VUxMQUdCTE9DSyk7Ci0JCWFyZWMgPSBYRlNfQUxMT0NfUkVDX0FERFIobXAsIGJsb2NrLCAxKTsK
+KwkJeGZzX2J1Zl96ZXJvKGJwLCAwLCBCQlRPQihicC0+Yl9sZW5ndGgpKTsKKwkJeGZzX2J0cmVl
+X2luaXRfYmxvY2sobXAsIGJwLCBYRlNfQUJUQl9NQUdJQywgMCwgMSwgMCk7CisKKwkJYXJlYyA9
+IFhGU19BTExPQ19SRUNfQUREUihtcCwgWEZTX0JVRl9UT19CTE9DSyhicCksIDEpOwogCQlhcmVj
+LT5hcl9zdGFydGJsb2NrID0gY3B1X3RvX2JlMzIoWEZTX1BSRUFMTE9DX0JMT0NLUyhtcCkpOwog
+CQlhcmVjLT5hcl9ibG9ja2NvdW50ID0gY3B1X3RvX2JlMzIoCiAJCQlhZ3NpemUgLSBiZTMyX3Rv
+X2NwdShhcmVjLT5hcl9zdGFydGJsb2NrKSk7CisKIAkJZXJyb3IgPSB4ZnNfYndyaXRlKGJwKTsK
+IAkJeGZzX2J1Zl9yZWxzZShicCk7CiAJCWlmIChlcnJvcikKQEAgLTI4OSwxOCArMjg1LDE1IEBA
+IHhmc19ncm93ZnNfZGF0YV9wcml2YXRlKAogCQkJZXJyb3IgPSBFTk9NRU07CiAJCQlnb3RvIGVy
+cm9yMDsKIAkJfQotCQlibG9jayA9IFhGU19CVUZfVE9fQkxPQ0soYnApOwotCQltZW1zZXQoYmxv
+Y2ssIDAsIG1wLT5tX3NiLnNiX2Jsb2Nrc2l6ZSk7Ci0JCWJsb2NrLT5iYl9tYWdpYyA9IGNwdV90
+b19iZTMyKFhGU19BQlRDX01BR0lDKTsKLQkJYmxvY2stPmJiX2xldmVsID0gMDsKLQkJYmxvY2st
+PmJiX251bXJlY3MgPSBjcHVfdG9fYmUxNigxKTsKLQkJYmxvY2stPmJiX3Uucy5iYl9sZWZ0c2li
+ID0gY3B1X3RvX2JlMzIoTlVMTEFHQkxPQ0spOwotCQlibG9jay0+YmJfdS5zLmJiX3JpZ2h0c2li
+ID0gY3B1X3RvX2JlMzIoTlVMTEFHQkxPQ0spOwotCQlhcmVjID0gWEZTX0FMTE9DX1JFQ19BRERS
+KG1wLCBibG9jaywgMSk7CisJCXhmc19idWZfemVybyhicCwgMCwgQkJUT0IoYnAtPmJfbGVuZ3Ro
+KSk7CisJCXhmc19idHJlZV9pbml0X2Jsb2NrKG1wLCBicCwgWEZTX0FCVENfTUFHSUMsIDAsIDEs
+IDApOworCisJCWFyZWMgPSBYRlNfQUxMT0NfUkVDX0FERFIobXAsIFhGU19CVUZfVE9fQkxPQ0so
+YnApLCAxKTsKIAkJYXJlYy0+YXJfc3RhcnRibG9jayA9IGNwdV90b19iZTMyKFhGU19QUkVBTExP
+Q19CTE9DS1MobXApKTsKIAkJYXJlYy0+YXJfYmxvY2tjb3VudCA9IGNwdV90b19iZTMyKAogCQkJ
+YWdzaXplIC0gYmUzMl90b19jcHUoYXJlYy0+YXJfc3RhcnRibG9jaykpOwogCQluZnJlZSArPSBi
+ZTMyX3RvX2NwdShhcmVjLT5hcl9ibG9ja2NvdW50KTsKKwogCQllcnJvciA9IHhmc19id3JpdGUo
+YnApOwogCQl4ZnNfYnVmX3JlbHNlKGJwKTsKIAkJaWYgKGVycm9yKQpAQCAtMzE2LDEzICszMDks
+OSBAQCB4ZnNfZ3Jvd2ZzX2RhdGFfcHJpdmF0ZSgKIAkJCWVycm9yID0gRU5PTUVNOwogCQkJZ290
+byBlcnJvcjA7CiAJCX0KLQkJYmxvY2sgPSBYRlNfQlVGX1RPX0JMT0NLKGJwKTsKLQkJbWVtc2V0
+KGJsb2NrLCAwLCBtcC0+bV9zYi5zYl9ibG9ja3NpemUpOwotCQlibG9jay0+YmJfbWFnaWMgPSBj
+cHVfdG9fYmUzMihYRlNfSUJUX01BR0lDKTsKLQkJYmxvY2stPmJiX2xldmVsID0gMDsKLQkJYmxv
+Y2stPmJiX251bXJlY3MgPSAwOwotCQlibG9jay0+YmJfdS5zLmJiX2xlZnRzaWIgPSBjcHVfdG9f
+YmUzMihOVUxMQUdCTE9DSyk7Ci0JCWJsb2NrLT5iYl91LnMuYmJfcmlnaHRzaWIgPSBjcHVfdG9f
+YmUzMihOVUxMQUdCTE9DSyk7CisJCXhmc19idWZfemVybyhicCwgMCwgQkJUT0IoYnAtPmJfbGVu
+Z3RoKSk7CisJCXhmc19idHJlZV9pbml0X2Jsb2NrKG1wLCBicCwgWEZTX0lCVF9NQUdJQywgMCwg
+MCwgMCk7CisKIAkJZXJyb3IgPSB4ZnNfYndyaXRlKGJwKTsKIAkJeGZzX2J1Zl9yZWxzZShicCk7
+CiAJCWlmIChlcnJvcikKLS0gCjEuNy4xMAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX18KeGZzIG1haWxpbmcgbGlzdAp4ZnNAb3NzLnNnaS5jb20KaHR0cDov
+L29zcy5zZ2kuY29tL21haWxtYW4vbGlzdGluZm8veGZzCg==
