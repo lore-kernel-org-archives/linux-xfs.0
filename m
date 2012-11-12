@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBs9D8218020 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:10 -0600
+	qACBs6YY217977 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:06 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	fHwqfjUQQ7O2vYXs for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:56:10 -0800 (PST)
-Received: from [192.168.1.1] (helo=disappointment)
-	by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsbm-00054S-JE
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:18 +1100
+	OP4CBLnIla3A1G7J for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:56:06 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TXsc2-00055D-7d
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:34 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbc-00013I-Gx
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TXsbw-00014Q-TC
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:28 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 19/32] xfs: factor dir2 block read operations
-Date: Mon, 12 Nov 2012 22:54:11 +1100
-Message-Id: <1352721264-3700-20-git-send-email-david@fromorbit.com>
+Subject: [PATCH 31/32] xfs: add CRC infrastructure
+Date: Mon, 12 Nov 2012 22:54:23 +1100
+Message-Id: <1352721264-3700-32-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -34,481 +33,166 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+From: Christoph Hellwig <hch@lst.de>
 
-In preparation for verifying dir2 block format buffers, factor
-the read operations out of the block operations (lookup, addname,
-getdents) and some of the additional logic to make it easier to
-understand an dmodify the code.
+ - add a mount feature bit for CRC enabled filesystems
+ - add some helpers for generating and verifying the CRCs
+ - add a copy_uuid helper
 
+The checksumming helpers are losely based on similar ones in sctp,
+all other bits come from Dave Chinner.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_dir2_block.c |  386 +++++++++++++++++++++++++----------------------
- 1 file changed, 209 insertions(+), 177 deletions(-)
+ fs/xfs/Kconfig     |    1 +
+ fs/xfs/uuid.h      |    6 +++++
+ fs/xfs/xfs_cksum.h |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_linux.h |    1 +
+ fs/xfs/xfs_sb.h    |   10 ++++++++-
+ 5 files changed, 80 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/xfs_cksum.h
 
-diff --git a/fs/xfs/xfs_dir2_block.c b/fs/xfs/xfs_dir2_block.c
-index 53666ca..25ce409 100644
---- a/fs/xfs/xfs_dir2_block.c
-+++ b/fs/xfs/xfs_dir2_block.c
-@@ -56,6 +56,178 @@ xfs_dir_startup(void)
- 	xfs_dir_hash_dotdot = xfs_da_hashname((unsigned char *)"..", 2);
- }
+diff --git a/fs/xfs/Kconfig b/fs/xfs/Kconfig
+index 6100ec0..5a7ffe5 100644
+--- a/fs/xfs/Kconfig
++++ b/fs/xfs/Kconfig
+@@ -2,6 +2,7 @@ config XFS_FS
+ 	tristate "XFS filesystem support"
+ 	depends on BLOCK
+ 	select EXPORTFS
++	select LIBCRC32C
+ 	help
+ 	  XFS is a high performance journaling filesystem which originated
+ 	  on the SGI IRIX platform.  It is completely multi-threaded, can
+diff --git a/fs/xfs/uuid.h b/fs/xfs/uuid.h
+index 4732d71..104db0f 100644
+--- a/fs/xfs/uuid.h
++++ b/fs/xfs/uuid.h
+@@ -26,4 +26,10 @@ extern int uuid_is_nil(uuid_t *uuid);
+ extern int uuid_equal(uuid_t *uuid1, uuid_t *uuid2);
+ extern void uuid_getnodeuniq(uuid_t *uuid, int fsid [2]);
  
-+static int
-+xfs_dir2_block_read(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	struct xfs_buf		**bpp)
++static inline void
++uuid_copy(uuid_t *dst, uuid_t *src)
 +{
-+	struct xfs_mount	*mp = dp->i_mount;
-+
-+	return xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, bpp,
-+					XFS_DATA_FORK, NULL);
++	memcpy(dst, src, sizeof(uuid_t));
 +}
 +
-+static void
-+xfs_dir2_block_need_space(
-+	struct xfs_dir2_data_hdr	*hdr,
-+	struct xfs_dir2_block_tail	*btp,
-+	struct xfs_dir2_leaf_entry	*blp,
-+	__be16				**tagpp,
-+	struct xfs_dir2_data_unused	**dupp,
-+	struct xfs_dir2_data_unused	**enddupp,
-+	int				*compact,
-+	int				len)
+ #endif	/* __XFS_SUPPORT_UUID_H__ */
+diff --git a/fs/xfs/xfs_cksum.h b/fs/xfs/xfs_cksum.h
+new file mode 100644
+index 0000000..fad1676
+--- /dev/null
++++ b/fs/xfs/xfs_cksum.h
+@@ -0,0 +1,63 @@
++#ifndef _XFS_CKSUM_H
++#define _XFS_CKSUM_H 1
++
++#define XFS_CRC_SEED	(~(__uint32_t)0)
++
++/*
++ * Calculate the intermediate checksum for a buffer that has the CRC field
++ * inside it.  The offset of the 32bit crc fields is passed as the
++ * cksum_offset parameter.
++ */
++static inline __uint32_t
++xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
 +{
-+	struct xfs_dir2_data_free	*bf;
-+	__be16				*tagp = NULL;
-+	struct xfs_dir2_data_unused	*dup = NULL;
-+	struct xfs_dir2_data_unused	*enddup = NULL;
++	__uint32_t zero = 0;
++	__uint32_t crc;
 +
-+	*compact = 0;
-+	bf = hdr->bestfree;
++	/* Calculate CRC up to the checksum. */
++	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
 +
-+	/*
-+	 * If there are stale entries we'll use one for the leaf.
-+	 */
-+	if (btp->stale) {
-+		if (be16_to_cpu(bf[0].length) >= len) {
-+			/*
-+			 * The biggest entry enough to avoid compaction.
-+			 */
-+			dup = (xfs_dir2_data_unused_t *)
-+			      ((char *)hdr + be16_to_cpu(bf[0].offset));
-+			goto out;
-+		}
++	/* Skip checksum field */
++	crc = crc32c(crc, &zero, sizeof(__u32));
 +
-+		/*
-+		 * Will need to compact to make this work.
-+		 * Tag just before the first leaf entry.
-+		 */
-+		*compact = 1;
-+		tagp = (__be16 *)blp - 1;
-+
-+		/* Data object just before the first leaf entry.  */
-+		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
-+
-+		/*
-+		 * If it's not free then the data will go where the
-+		 * leaf data starts now, if it works at all.
-+		 */
-+		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
-+			    (uint)sizeof(*blp) < len)
-+				dup = NULL;
-+		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
-+			dup = NULL;
-+		else
-+			dup = (xfs_dir2_data_unused_t *)blp;
-+		goto out;
-+	}
-+
-+	/*
-+	 * no stale entries, so just use free space.
-+	 * Tag just before the first leaf entry.
-+	 */
-+	tagp = (__be16 *)blp - 1;
-+
-+	/* Data object just before the first leaf entry.  */
-+	enddup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
-+
-+	/*
-+	 * If it's not free then can't do this add without cleaning up:
-+	 * the space before the first leaf entry needs to be free so it
-+	 * can be expanded to hold the pointer to the new entry.
-+	 */
-+	if (be16_to_cpu(enddup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
-+		/*
-+		 * Check out the biggest freespace and see if it's the same one.
-+		 */
-+		dup = (xfs_dir2_data_unused_t *)
-+		      ((char *)hdr + be16_to_cpu(bf[0].offset));
-+		if (dup != enddup) {
-+			/*
-+			 * Not the same free entry, just check its length.
-+			 */
-+			if (be16_to_cpu(dup->length) < len)
-+				dup = NULL;
-+			goto out;
-+		}
-+
-+		/*
-+		 * It is the biggest freespace, can it hold the leaf too?
-+		 */
-+		if (be16_to_cpu(dup->length) < len + (uint)sizeof(*blp)) {
-+			/*
-+			 * Yes, use the second-largest entry instead if it works.
-+			 */
-+			if (be16_to_cpu(bf[1].length) >= len)
-+				dup = (xfs_dir2_data_unused_t *)
-+				      ((char *)hdr + be16_to_cpu(bf[1].offset));
-+			else
-+				dup = NULL;
-+		}
-+	}
-+out:
-+	*tagpp = tagp;
-+	*dupp = dup;
-+	*enddupp = enddup;
++	/* Calculate the rest of the CRC. */
++	return crc32c(crc, &buffer[cksum_offset + sizeof(__be32)],
++		      length - (cksum_offset + sizeof(__be32)));
 +}
 +
 +/*
-+ * compact the leaf entries.
-+ * Leave the highest-numbered stale entry stale.
-+ * XXX should be the one closest to mid but mid is not yet computed.
++ * Convert the intermediate checksum to the final ondisk format.
++ *
++ * The CRC32c calculation uses LE format even on BE machines, but returns the
++ * result in host endian format. Hence we need to byte swap it back to LE format
++ * so that it is consistent on disk.
 + */
-+static void
-+xfs_dir2_block_compact(
-+	struct xfs_trans		*tp,
-+	struct xfs_buf			*bp,
-+	struct xfs_dir2_data_hdr	*hdr,
-+	struct xfs_dir2_block_tail	*btp,
-+	struct xfs_dir2_leaf_entry	*blp,
-+	int				*needlog,
-+	int				*lfloghigh,
-+	int				*lfloglow)
++static inline __le32
++xfs_end_cksum(__uint32_t crc)
 +{
-+	int			fromidx;	/* source leaf index */
-+	int			toidx;		/* target leaf index */
-+	int			needscan = 0;
-+	int			highstale;	/* high stale index */
++	return ~cpu_to_le32(crc);
++}
 +
-+	fromidx = toidx = be32_to_cpu(btp->count) - 1;
-+	highstale = *lfloghigh = -1;
-+	for (; fromidx >= 0; fromidx--) {
-+		if (blp[fromidx].address == cpu_to_be32(XFS_DIR2_NULL_DATAPTR)) {
-+			if (highstale == -1)
-+				highstale = toidx;
-+			else {
-+				if (*lfloghigh == -1)
-+					*lfloghigh = toidx;
-+				continue;
-+			}
-+		}
-+		if (fromidx < toidx)
-+			blp[toidx] = blp[fromidx];
-+		toidx--;
-+	}
-+	*lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
-+	*lfloghigh -= be32_to_cpu(btp->stale) - 1;
-+	be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
-+	xfs_dir2_data_make_free(tp, bp,
-+		(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
-+		(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
-+		needlog, &needscan);
-+	blp += be32_to_cpu(btp->stale) - 1;
-+	btp->stale = cpu_to_be32(1);
-+	/*
-+	 * If we now need to rebuild the bestfree map, do so.
-+	 * This needs to happen before the next call to use_free.
-+	 */
-+	if (needscan)
-+		xfs_dir2_data_freescan(tp->t_mountp, hdr, needlog);
++/*
++ * Helper to generate the checksum for a buffer.
++ */
++static inline void
++xfs_update_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++
++	*(__le32 *)(buffer + cksum_offset) = xfs_end_cksum(crc);
++}
++
++/*
++ * Helper to verify the checksum for a buffer.
++ */
++static inline int
++xfs_verify_cksum(char *buffer, size_t length, unsigned long cksum_offset)
++{
++	__uint32_t crc = xfs_start_cksum(buffer, length, cksum_offset);
++
++	return *(__le32 *)(buffer + cksum_offset) == xfs_end_cksum(crc);
++}
++
++#endif /* _XFS_CKSUM_H */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index 0a134ca..fe7e4df 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -44,6 +44,7 @@
+ #include <linux/kernel.h>
+ #include <linux/blkdev.h>
+ #include <linux/slab.h>
++#include <linux/crc32c.h>
+ #include <linux/module.h>
+ #include <linux/mutex.h>
+ #include <linux/file.h>
+diff --git a/fs/xfs/xfs_sb.h b/fs/xfs/xfs_sb.h
+index f429d9d..666e89c 100644
+--- a/fs/xfs/xfs_sb.h
++++ b/fs/xfs/xfs_sb.h
+@@ -81,11 +81,13 @@ struct xfs_mount;
+ #define XFS_SB_VERSION2_ATTR2BIT	0x00000008	/* Inline attr rework */
+ #define XFS_SB_VERSION2_PARENTBIT	0x00000010	/* parent pointers */
+ #define XFS_SB_VERSION2_PROJID32BIT	0x00000080	/* 32 bit project id */
++#define XFS_SB_VERSION2_CRCBIT		0x00000100	/* metadata CRCs */
+ 
+ #define	XFS_SB_VERSION2_OKREALFBITS	\
+ 	(XFS_SB_VERSION2_LAZYSBCOUNTBIT	| \
+ 	 XFS_SB_VERSION2_ATTR2BIT	| \
+-	 XFS_SB_VERSION2_PROJID32BIT)
++	 XFS_SB_VERSION2_PROJID32BIT	| \
++	 XFS_SB_VERSION2_CRCBIT)
+ #define	XFS_SB_VERSION2_OKSASHFBITS	\
+ 	(0)
+ #define XFS_SB_VERSION2_OKREALBITS	\
+@@ -503,6 +505,12 @@ static inline int xfs_sb_version_hasprojid32bit(xfs_sb_t *sbp)
+ 		(sbp->sb_features2 & XFS_SB_VERSION2_PROJID32BIT);
+ }
+ 
++static inline int xfs_sb_version_hascrc(xfs_sb_t *sbp)
++{
++	return (xfs_sb_version_hasmorebits(sbp) &&
++		(sbp->sb_features2 & XFS_SB_VERSION2_CRCBIT));
 +}
 +
  /*
-  * Add an entry to a block directory.
+  * end of superblock version macros
   */
-@@ -63,7 +235,6 @@ int						/* error */
- xfs_dir2_block_addname(
- 	xfs_da_args_t		*args)		/* directory op arguments */
- {
--	xfs_dir2_data_free_t	*bf;		/* bestfree table in block */
- 	xfs_dir2_data_hdr_t	*hdr;		/* block header */
- 	xfs_dir2_leaf_entry_t	*blp;		/* block leaf entries */
- 	struct xfs_buf		*bp;		/* buffer for block */
-@@ -94,134 +265,44 @@ xfs_dir2_block_addname(
- 	dp = args->dp;
- 	tp = args->trans;
- 	mp = dp->i_mount;
--	/*
--	 * Read the (one and only) directory block into dabuf bp.
--	 */
--	error = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, &bp,
--				XFS_DATA_FORK, NULL);
-+
-+	/* Read the (one and only) directory block into bp. */
-+	error = xfs_dir2_block_read(tp, dp, &bp);
- 	if (error)
- 		return error;
--	ASSERT(bp != NULL);
--	hdr = bp->b_addr;
--	/*
--	 * Check the magic number, corrupted if wrong.
--	 */
--	if (unlikely(hdr->magic != cpu_to_be32(XFS_DIR2_BLOCK_MAGIC))) {
--		XFS_CORRUPTION_ERROR("xfs_dir2_block_addname",
--				     XFS_ERRLEVEL_LOW, mp, hdr);
--		xfs_trans_brelse(tp, bp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
-+
- 	len = xfs_dir2_data_entsize(args->namelen);
-+
- 	/*
- 	 * Set up pointers to parts of the block.
- 	 */
--	bf = hdr->bestfree;
-+	hdr = bp->b_addr;
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
- 	blp = xfs_dir2_block_leaf_p(btp);
-+
- 	/*
--	 * No stale entries?  Need space for entry and new leaf.
--	 */
--	if (!btp->stale) {
--		/*
--		 * Tag just before the first leaf entry.
--		 */
--		tagp = (__be16 *)blp - 1;
--		/*
--		 * Data object just before the first leaf entry.
--		 */
--		enddup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
--		/*
--		 * If it's not free then can't do this add without cleaning up:
--		 * the space before the first leaf entry needs to be free so it
--		 * can be expanded to hold the pointer to the new entry.
--		 */
--		if (be16_to_cpu(enddup->freetag) != XFS_DIR2_DATA_FREE_TAG)
--			dup = enddup = NULL;
--		/*
--		 * Check out the biggest freespace and see if it's the same one.
--		 */
--		else {
--			dup = (xfs_dir2_data_unused_t *)
--			      ((char *)hdr + be16_to_cpu(bf[0].offset));
--			if (dup == enddup) {
--				/*
--				 * It is the biggest freespace, is it too small
--				 * to hold the new leaf too?
--				 */
--				if (be16_to_cpu(dup->length) < len + (uint)sizeof(*blp)) {
--					/*
--					 * Yes, we use the second-largest
--					 * entry instead if it works.
--					 */
--					if (be16_to_cpu(bf[1].length) >= len)
--						dup = (xfs_dir2_data_unused_t *)
--						      ((char *)hdr +
--						       be16_to_cpu(bf[1].offset));
--					else
--						dup = NULL;
--				}
--			} else {
--				/*
--				 * Not the same free entry,
--				 * just check its length.
--				 */
--				if (be16_to_cpu(dup->length) < len) {
--					dup = NULL;
--				}
--			}
--		}
--		compact = 0;
--	}
--	/*
--	 * If there are stale entries we'll use one for the leaf.
--	 * Is the biggest entry enough to avoid compaction?
--	 */
--	else if (be16_to_cpu(bf[0].length) >= len) {
--		dup = (xfs_dir2_data_unused_t *)
--		      ((char *)hdr + be16_to_cpu(bf[0].offset));
--		compact = 0;
--	}
--	/*
--	 * Will need to compact to make this work.
-+	 * Find out if we can reuse stale entries or whether we need extra
-+	 * space for entry and new leaf.
- 	 */
--	else {
--		/*
--		 * Tag just before the first leaf entry.
--		 */
--		tagp = (__be16 *)blp - 1;
--		/*
--		 * Data object just before the first leaf entry.
--		 */
--		dup = (xfs_dir2_data_unused_t *)((char *)hdr + be16_to_cpu(*tagp));
--		/*
--		 * If it's not free then the data will go where the
--		 * leaf data starts now, if it works at all.
--		 */
--		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
--			if (be16_to_cpu(dup->length) + (be32_to_cpu(btp->stale) - 1) *
--			    (uint)sizeof(*blp) < len)
--				dup = NULL;
--		} else if ((be32_to_cpu(btp->stale) - 1) * (uint)sizeof(*blp) < len)
--			dup = NULL;
--		else
--			dup = (xfs_dir2_data_unused_t *)blp;
--		compact = 1;
--	}
-+	xfs_dir2_block_need_space(hdr, btp, blp, &tagp, &dup,
-+				  &enddup, &compact, len);
-+
- 	/*
--	 * If this isn't a real add, we're done with the buffer.
-+	 * Done everything we need for a space check now.
- 	 */
--	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
-+	if (args->op_flags & XFS_DA_OP_JUSTCHECK) {
- 		xfs_trans_brelse(tp, bp);
-+		if (!dup)
-+			return XFS_ERROR(ENOSPC);
-+		return 0;
-+	}
-+
- 	/*
- 	 * If we don't have space for the new entry & leaf ...
- 	 */
- 	if (!dup) {
--		/*
--		 * Not trying to actually do anything, or don't have
--		 * a space reservation: return no-space.
--		 */
--		if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
-+		/* Don't have a space reservation: return no-space.  */
-+		if (args->total == 0)
- 			return XFS_ERROR(ENOSPC);
- 		/*
- 		 * Convert to the next larger format.
-@@ -232,65 +313,24 @@ xfs_dir2_block_addname(
- 			return error;
- 		return xfs_dir2_leaf_addname(args);
- 	}
--	/*
--	 * Just checking, and it would work, so say so.
--	 */
--	if (args->op_flags & XFS_DA_OP_JUSTCHECK)
--		return 0;
-+
- 	needlog = needscan = 0;
-+
- 	/*
- 	 * If need to compact the leaf entries, do it now.
--	 * Leave the highest-numbered stale entry stale.
--	 * XXX should be the one closest to mid but mid is not yet computed.
--	 */
--	if (compact) {
--		int	fromidx;		/* source leaf index */
--		int	toidx;			/* target leaf index */
--
--		for (fromidx = toidx = be32_to_cpu(btp->count) - 1,
--			highstale = lfloghigh = -1;
--		     fromidx >= 0;
--		     fromidx--) {
--			if (blp[fromidx].address ==
--			    cpu_to_be32(XFS_DIR2_NULL_DATAPTR)) {
--				if (highstale == -1)
--					highstale = toidx;
--				else {
--					if (lfloghigh == -1)
--						lfloghigh = toidx;
--					continue;
--				}
--			}
--			if (fromidx < toidx)
--				blp[toidx] = blp[fromidx];
--			toidx--;
--		}
--		lfloglow = toidx + 1 - (be32_to_cpu(btp->stale) - 1);
--		lfloghigh -= be32_to_cpu(btp->stale) - 1;
--		be32_add_cpu(&btp->count, -(be32_to_cpu(btp->stale) - 1));
--		xfs_dir2_data_make_free(tp, bp,
--			(xfs_dir2_data_aoff_t)((char *)blp - (char *)hdr),
--			(xfs_dir2_data_aoff_t)((be32_to_cpu(btp->stale) - 1) * sizeof(*blp)),
--			&needlog, &needscan);
--		blp += be32_to_cpu(btp->stale) - 1;
--		btp->stale = cpu_to_be32(1);
--		/*
--		 * If we now need to rebuild the bestfree map, do so.
--		 * This needs to happen before the next call to use_free.
--		 */
--		if (needscan) {
--			xfs_dir2_data_freescan(mp, hdr, &needlog);
--			needscan = 0;
--		}
--	}
--	/*
--	 * Set leaf logging boundaries to impossible state.
--	 * For the no-stale case they're set explicitly.
- 	 */
-+	if (compact)
-+		xfs_dir2_block_compact(tp, bp, hdr, btp, blp, &needlog,
-+				      &lfloghigh, &lfloglow);
- 	else if (btp->stale) {
-+		/*
-+		 * Set leaf logging boundaries to impossible state.
-+		 * For the no-stale case they're set explicitly.
-+		 */
- 		lfloglow = be32_to_cpu(btp->count);
- 		lfloghigh = -1;
- 	}
-+
- 	/*
- 	 * Find the slot that's first lower than our hash value, -1 if none.
- 	 */
-@@ -450,18 +490,13 @@ xfs_dir2_block_getdents(
- 	/*
- 	 * If the block number in the offset is out of range, we're done.
- 	 */
--	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk) {
-+	if (xfs_dir2_dataptr_to_db(mp, *offset) > mp->m_dirdatablk)
- 		return 0;
--	}
--	/*
--	 * Can't read the block, give up, else get dabuf in bp.
--	 */
--	error = xfs_da_read_buf(NULL, dp, mp->m_dirdatablk, -1,
--				&bp, XFS_DATA_FORK, NULL);
-+
-+	error = xfs_dir2_block_read(NULL, dp, &bp);
- 	if (error)
- 		return error;
- 
--	ASSERT(bp != NULL);
- 	/*
- 	 * Extract the byte offset we start at from the seek pointer.
- 	 * We'll skip entries before this.
-@@ -637,14 +672,11 @@ xfs_dir2_block_lookup_int(
- 	dp = args->dp;
- 	tp = args->trans;
- 	mp = dp->i_mount;
--	/*
--	 * Read the buffer, return error if we can't get it.
--	 */
--	error = xfs_da_read_buf(tp, dp, mp->m_dirdatablk, -1, &bp,
--				XFS_DATA_FORK, NULL);
-+
-+	error = xfs_dir2_block_read(tp, dp, &bp);
- 	if (error)
- 		return error;
--	ASSERT(bp != NULL);
-+
- 	hdr = bp->b_addr;
- 	xfs_dir2_data_check(dp, bp);
- 	btp = xfs_dir2_block_tail_p(mp, hdr);
 -- 
 1.7.10
 
