@@ -1,21 +1,23 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBqXCC217518 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:33 -0600
+	qACBqXik217511 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:33 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	KYjNkl8apUGcKZ3Y for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:54:34 -0800 (PST)
+	Kp8n7ZpMzGfSchZd for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:54:33 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsb3-00053K-5w
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:33 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXsay-00053M-0w
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:28 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsax-00011X-Pn
+	(envelope-from <dave@disappointment.disaster>) id 1TXsax-00011i-U6
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 00/32] xfs: current queue for 3.8
-Date: Mon, 12 Nov 2012 22:53:52 +1100
-Message-Id: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 02/32] xfs: remove xfs_tosspages
+Date: Mon, 12 Nov 2012 22:53:54 +1100
+Message-Id: <1352721264-3700-3-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -31,112 +33,134 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-Hi folks,
+From: Dave Chinner <dchinner@redhat.com>
 
-This is my current patch queue for the 3.8 merge window. We are now
-getting close to the window opening (at -rc5 now), so I'd really
-like to see this stuff into the dev tree ASAP so that there is some
-wider test coverage before the merge window comes along.
+It's a buggy, unnecessary wrapper that is duplicating
+truncate_pagecache_range().
 
-The bulk of this patch series has been reviewed and revised over the
-past month. The only new patch in this is the additional attribute
-trace points that I needed to track down the corruption problem I
-recently fixed.
+When replacing the call in xfs_change_file_space(), also ensure that
+the length being allocated/freed is always positive before making
+any changes. These checks are done in the lower extent manipulation
+functions, too, but we need to do them before any page cache
+operations.
 
-Other than that, I've reordered the patches to make growfs use
-uncached buffers ahead of the verifier series and rebased the
-verifier series on top of it. i also folded the fixes I had in
-additional patches back into the base patches in the verifier
-series.
+Reported-by: Andrew Dahl <adahl@sgi.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_dfrag.c    |    3 +--
+ fs/xfs/xfs_fs_subr.c  |   12 ------------
+ fs/xfs/xfs_vnodeops.c |   28 +++++++++++++++++++++++-----
+ fs/xfs/xfs_vnodeops.h |    2 --
+ 4 files changed, 24 insertions(+), 21 deletions(-)
 
-I'm not sure whether I have captured all the Reviewed-by tags that
-people have given - if necessary I can go back and search the lists
-for them all and add the ones I've missed....
-
-Diffstat for the series is:
-
-$ git diff --stat --summary -C -M 074dad5..f02d23b
- fs/xfs/Kconfig            |    1 +
- fs/xfs/Makefile           |    1 -
- fs/xfs/uuid.h             |    6 +
- fs/xfs/xfs_ag.h           |    4 +
- fs/xfs/xfs_alloc.c        |  141 ++++++++++++---
- fs/xfs/xfs_alloc.h        |    3 +
- fs/xfs/xfs_alloc_btree.c  |   77 +++++++++
- fs/xfs/xfs_alloc_btree.h  |    2 +
- fs/xfs/xfs_aops.c         |    2 +-
- fs/xfs/xfs_attr.c         |  103 +++++------
- fs/xfs/xfs_attr_leaf.c    |  143 ++++++++++------
- fs/xfs/xfs_attr_leaf.h    |    6 +
- fs/xfs/xfs_bmap.c         |   64 ++++---
- fs/xfs/xfs_bmap_btree.c   |   63 +++++++
- fs/xfs/xfs_bmap_btree.h   |    1 +
- fs/xfs/xfs_btree.c        |  111 +++++++-----
- fs/xfs/xfs_btree.h        |   22 ++-
- fs/xfs/xfs_buf.c          |   59 +++++--
- fs/xfs/xfs_buf.h          |   27 ++-
- fs/xfs/xfs_cksum.h        |   63 +++++++
- fs/xfs/xfs_da_btree.c     |  141 ++++++++++++---
- fs/xfs/xfs_da_btree.h     |   10 +-
- fs/xfs/xfs_dfrag.c        |   13 +-
- fs/xfs/xfs_dir2_block.c   |  436 +++++++++++++++++++++++++++--------------------
- fs/xfs/xfs_dir2_data.c    |  170 ++++++++++++++----
- fs/xfs/xfs_dir2_leaf.c    |  172 +++++++++++++------
- fs/xfs/xfs_dir2_node.c    |  288 ++++++++++++++++++++-----------
- fs/xfs/xfs_dir2_priv.h    |   19 ++-
- fs/xfs/xfs_dquot.c        |  135 ++++++++++++---
- fs/xfs/xfs_file.c         |   27 +--
- fs/xfs/xfs_fs_subr.c      |   96 -----------
- fs/xfs/xfs_fsops.c        |  137 ++++++++++-----
- fs/xfs/xfs_ialloc.c       |   74 +++++---
- fs/xfs/xfs_ialloc.h       |    4 +-
- fs/xfs/xfs_ialloc_btree.c |   55 ++++++
- fs/xfs/xfs_ialloc_btree.h |    2 +
- fs/xfs/xfs_inode.c        |  131 ++++++++------
- fs/xfs/xfs_inode.h        |    1 +
- fs/xfs/xfs_iops.c         |    4 +-
- fs/xfs/xfs_itable.c       |    3 +-
- fs/xfs/xfs_linux.h        |    1 +
- fs/xfs/xfs_log.c          |  135 ++++++++++++---
- fs/xfs/xfs_log_priv.h     |   11 +-
- fs/xfs/xfs_log_recover.c  |  145 ++++++++--------
- fs/xfs/xfs_mount.c        |  130 +++++++++-----
- fs/xfs/xfs_mount.h        |    4 +-
- fs/xfs/xfs_qm.c           |    5 +-
- fs/xfs/xfs_rtalloc.c      |   15 +-
- fs/xfs/xfs_sb.h           |   10 +-
- fs/xfs/xfs_trace.h        |   54 +++++-
- fs/xfs/xfs_trans.h        |   19 +--
- fs/xfs/xfs_trans_buf.c    |    9 +-
- fs/xfs/xfs_vnodeops.c     |   48 ++++--
- fs/xfs/xfs_vnodeops.h     |    7 -
- 54 files changed, 2327 insertions(+), 1083 deletions(-)
- create mode 100644 fs/xfs/xfs_cksum.h
- delete mode 100644 fs/xfs/xfs_fs_subr.c
-
-It seems pretty solid - all the bug fixes I've been pushing out
-recently have been found as a result of testing this patch series.
-They have started life at the end of the series, and once confirmed
-to fix the problem have been re-ordered to the start. Hence the
-series has been seeing all the testing I have been doing recently.
-
-I really do not want this stuff to miss the 3.8 window due
-to a repeat of the last cycle's misadventures. Given how quiet -rc5
-was, we might only be 2 weeks away from the 3.8 merge window
-opening. Which means that, realistically, this series need to be
-finalised by the end of the week so that it's got some soak time in
-linux-next before it moves into Linus' tree.
-
-The main reason I don't want this to miss 3.8 is that I'm planning
-on 3.9 for all the CRC metadata format changes and supporting code
-to be ready. There's a lot more code for coming for 3.9 than there
-is in this patch series (probably twice the size) and it's a lot
-more complex, so the less that ends up in 3.9 from this series the
-better...
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/xfs_dfrag.c b/fs/xfs/xfs_dfrag.c
+index b9b8646..b2c63a2 100644
+--- a/fs/xfs/xfs_dfrag.c
++++ b/fs/xfs/xfs_dfrag.c
+@@ -315,8 +315,7 @@ xfs_swap_extents(
+ 	 * are safe.  We don't really care if non-io related
+ 	 * fields change.
+ 	 */
+-
+-	xfs_tosspages(ip, 0, -1, FI_REMAPF);
++	truncate_pagecache_range(VFS_I(ip), 0, -1);
+ 
+ 	tp = xfs_trans_alloc(mp, XFS_TRANS_SWAPEXT);
+ 	if ((error = xfs_trans_reserve(tp, 0,
+diff --git a/fs/xfs/xfs_fs_subr.c b/fs/xfs/xfs_fs_subr.c
+index 652b875..d49de3d 100644
+--- a/fs/xfs/xfs_fs_subr.c
++++ b/fs/xfs/xfs_fs_subr.c
+@@ -25,18 +25,6 @@
+  * note: all filemap functions return negative error codes. These
+  * need to be inverted before returning to the xfs core functions.
+  */
+-void
+-xfs_tosspages(
+-	xfs_inode_t	*ip,
+-	xfs_off_t	first,
+-	xfs_off_t	last,
+-	int		fiopt)
+-{
+-	/* can't toss partial tail pages, so mask them out */
+-	last &= ~(PAGE_SIZE - 1);
+-	truncate_inode_pages_range(VFS_I(ip)->i_mapping, first, last - 1);
+-}
+-
+ int
+ xfs_flushinval_pages(
+ 	xfs_inode_t	*ip,
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index c2ddd7a..f7de578 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -2118,7 +2118,6 @@ xfs_change_file_space(
+ 	xfs_fsize_t	fsize;
+ 	int		setprealloc;
+ 	xfs_off_t	startoffset;
+-	xfs_off_t	llen;
+ 	xfs_trans_t	*tp;
+ 	struct iattr	iattr;
+ 	int		prealloc_type;
+@@ -2139,12 +2138,30 @@ xfs_change_file_space(
+ 		return XFS_ERROR(EINVAL);
+ 	}
+ 
+-	llen = bf->l_len > 0 ? bf->l_len - 1 : bf->l_len;
++	/*
++	 * length of <= 0 for resv/unresv/zero is invalid.  length for
++	 * alloc/free is ignored completely and we have no idea what userspace
++	 * might have set it to, so set it to zero to allow range
++	 * checks to pass.
++	 */
++	switch (cmd) {
++	case XFS_IOC_ZERO_RANGE:
++	case XFS_IOC_RESVSP:
++	case XFS_IOC_RESVSP64:
++	case XFS_IOC_UNRESVSP:
++	case XFS_IOC_UNRESVSP64:
++		if (bf->l_len <= 0)
++			return XFS_ERROR(EINVAL);
++		break;
++	default:
++		bf->l_len = 0;
++		break;
++	}
+ 
+ 	if (bf->l_start < 0 ||
+ 	    bf->l_start > mp->m_super->s_maxbytes ||
+-	    bf->l_start + llen < 0 ||
+-	    bf->l_start + llen > mp->m_super->s_maxbytes)
++	    bf->l_start + bf->l_len < 0 ||
++	    bf->l_start + bf->l_len >= mp->m_super->s_maxbytes)
+ 		return XFS_ERROR(EINVAL);
+ 
+ 	bf->l_whence = 0;
+@@ -2169,7 +2186,8 @@ xfs_change_file_space(
+ 	switch (cmd) {
+ 	case XFS_IOC_ZERO_RANGE:
+ 		prealloc_type |= XFS_BMAPI_CONVERT;
+-		xfs_tosspages(ip, startoffset, startoffset + bf->l_len, 0);
++		truncate_pagecache_range(VFS_I(ip), startoffset,
++			 round_down(startoffset + bf->l_len, PAGE_SIZE) - 1);
+ 		/* FALLTHRU */
+ 	case XFS_IOC_RESVSP:
+ 	case XFS_IOC_RESVSP64:
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index 52fafc4..d48141d 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -48,8 +48,6 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		int flags, struct attrlist_cursor_kern *cursor);
+-void xfs_tosspages(struct xfs_inode *inode, xfs_off_t first,
+-		xfs_off_t last, int fiopt);
+ int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
+ 		xfs_off_t last, int fiopt);
+ int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
