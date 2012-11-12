@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACB7pBB214593 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:07:51 -0600
+	qACB8FNS214651 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:08:15 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	lU9rqTrwOxkzKqE5 for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:09:52 -0800 (PST)
+	ZNDzYtEvoorHvvIx for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:10:10 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXrtk-0004yb-S8
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:09:48 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXrtu-0004ym-Ts
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:09:58 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXrtk-0000wG-O9
+	(envelope-from <dave@disappointment.disaster>) id 1TXrtk-0000wK-Pq
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:09:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 1/3] xfs: fix attr tree double split corruption
-Date: Mon, 12 Nov 2012 22:09:44 +1100
-Message-Id: <1352718586-3538-2-git-send-email-david@fromorbit.com>
+Subject: [PATCH 2/3] xfs: fix broken error handling in xfs_vm_writepage
+Date: Mon, 12 Nov 2012 22:09:45 +1100
+Message-Id: <1352718586-3538-3-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352718586-3538-1-git-send-email-david@fromorbit.com>
 References: <1352718586-3538-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,217 +35,132 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-In certain circumstances, a double split of an attribute tree is
-needed to insert or replace an attribute. In rare situations, this
-can go wrong, leaving the attribute tree corrupted. In this case,
-the attr being replaced is the last attr in a leaf node, and the
-replacement is larger so doesn't fit in the same leaf node.
-When we have the initial condition of a node format attribute
-btree with two leaves at index 1 and 2. Call them L1 and L2.  The
-leaf L1 is completely full, there is not a single byte of free space
-in it. L2 is mostly empty.  The attribute being replaced - call it X
-- is the last attribute in L1.
+When we shut down the filesystem, it might first be detected in
+writeback when we are allocating a inode size transaction. This
+happens after we have moved all the pages into the writeback state
+and unlocked them. Unfortunately, if we fail to set up the
+transaction we then abort writeback and try to invalidate the
+current page. This then triggers are BUG() in block_invalidatepage()
+because we are trying to invalidate an unlocked page.
 
-The way an attribute replace is executed is that the replacement
-attribute - call it Y - is first inserted into the tree, but has an
-INCOMPLETE flag set on it so that list traversals ignore it. Once
-this transaction is committed, a second transaction it run to
-atomically mark Y as COMPLETE and X as INCOMPLETE, so that a
-traversal will now find Y and skip X. Once that transaction is
-committed, attribute X is then removed.
+Fixing this is a bit of a chicken and egg problem - we can't
+allocate the transaction until we've clustered all the pages into
+the IO and we know the size of it (i.e. whether the last block of
+the IO is beyond the current EOF or not). However, we don't want to
+hold pages locked for long periods of time, especially while we lock
+other pages to cluster them into the write.
 
-So, the initial condition is:
+To fix this, we need to make a clear delineation in writeback where
+errors can only be handled by IO completion processing. That is,
+once we have marked a page for writeback and unlocked it, we have to
+report errors via IO completion because we've already started the
+IO. We may not have submitted any IO, but we've changed the page
+state to indicate that it is under IO so we must now use the IO
+completion path to report errors.
 
-     +--------+     +--------+
-     |   L1   |     |   L2   |
-     | fwd: 2 |---->| fwd: 0 |
-     | bwd: 0 |<----| bwd: 1 |
-     | fsp: 0 |     | fsp: N |
-     |--------|     |--------|
-     | attr A |     | attr 1 |
-     |--------|     |--------|
-     | attr B |     | attr 2 |
-     |--------|     |--------|
-     ..........     ..........
-     |--------|     |--------|
-     | attr X |     | attr n |
-     +--------+     +--------+
-
-
-So now we go to replace X, and see that L1:fsp = 0 - it is full so
-we can't insert Y in the same leaf. So we record the the location of
-attribute X so we can track it for later use, then we split L1 into
-L1 and L3 and reblance across the two leafs. We end with:
-
-
-     +--------+     +--------+     +--------+
-     |   L1   |     |   L3   |     |   L2   |
-     | fwd: 3 |---->| fwd: 2 |---->| fwd: 0 |
-     | bwd: 0 |<----| bwd: 1 |<----| bwd: 3 |
-     | fsp: M |     | fsp: J |     | fsp: N |
-     |--------|     |--------|     |--------|
-     | attr A |     | attr X |     | attr 1 |
-     |--------|     +--------+     |--------|
-     | attr B |                    | attr 2 |
-     |--------|                    |--------|
-     ..........                    ..........
-     |--------|                    |--------|
-     | attr W |                    | attr n |
-     +--------+                    +--------+
-
-
-And we track that the original attribute is now at L3:0.
-
-We then try to insert Y into L1 again, and find that there isn't
-enough room because the new attribute is larger than the old one.
-Hence we have to split again to make room for Y. We end up with
-this:
-
-
-     +--------+     +--------+     +--------+     +--------+
-     |   L1   |     |   L4   |     |   L3   |     |   L2   |
-     | fwd: 4 |---->| fwd: 3 |---->| fwd: 2 |---->| fwd: 0 |
-     | bwd: 0 |<----| bwd: 1 |<----| bwd: 4 |<----| bwd: 3 |
-     | fsp: M |     | fsp: J |     | fsp: J |     | fsp: N |
-     |--------|     |--------|     |--------|     |--------|
-     | attr A |     | attr Y |     | attr X |     | attr 1 |
-     |--------|     + INCOMP +     +--------+     |--------|
-     | attr B |     +--------+                    | attr 2 |
-     |--------|                                   |--------|
-     ..........                                   ..........
-     |--------|                                   |--------|
-     | attr W |                                   | attr n |
-     +--------+                                   +--------+
-
-And now we have the new (incomplete) attribute @ L4:0, and the
-original attribute at L3:0. At this point, the first transaction is
-committed, and we move to the flipping of the flags.
-
-This is where we are supposed to end up with this:
-
-     +--------+     +--------+     +--------+     +--------+
-     |   L1   |     |   L4   |     |   L3   |     |   L2   |
-     | fwd: 4 |---->| fwd: 3 |---->| fwd: 2 |---->| fwd: 0 |
-     | bwd: 0 |<----| bwd: 1 |<----| bwd: 4 |<----| bwd: 3 |
-     | fsp: M |     | fsp: J |     | fsp: J |     | fsp: N |
-     |--------|     |--------|     |--------|     |--------|
-     | attr A |     | attr Y |     | attr X |     | attr 1 |
-     |--------|     +--------+     + INCOMP +     |--------|
-     | attr B |                    +--------+     | attr 2 |
-     |--------|                                   |--------|
-     ..........                                   ..........
-     |--------|                                   |--------|
-     | attr W |                                   | attr n |
-     +--------+                                   +--------+
-
-But that doesn't happen properly - the attribute tracking indexes
-are not pointing to the right locations. What we end up with is both
-the old attribute to be removed pointing at L4:0 and the new
-attribute at L4:1.  On a debug kernel, this assert fails like so:
-
-XFS: Assertion failed: args->index2 < be16_to_cpu(leaf2->hdr.count), file: fs/xfs/xfs_attr_leaf.c, line: 2725
-
-because the new attribute location does not exist. On a production
-kernel, this goes unnoticed and the code proceeds ahead merrily and
-removes L4 because it thinks that is the block that is no longer
-needed. This leaves the hash index node pointing to entries
-L1, L4 and L2, but only blocks L1, L3 and L2 to exist. Further, the
-leaf level sibling list is L1 <-> L4 <-> L2, but L4 is now free
-space, and so everything is busted. This corruption is caused by the
-removal of the old attribute triggering a join - it joins everything
-correctly but then frees the wrong block.
-
-xfs_repair will report something like:
-
-bad sibling back pointer for block 4 in attribute fork for inode 131
-problem with attribute contents in inode 131
-would clear attr fork
-bad nblocks 8 for inode 131, would reset to 3
-bad anextents 4 for inode 131, would reset to 0
-
-The problem lies in the assignment of the old/new blocks for
-tracking purposes when the double leaf split occurs. The first split
-tries to place the new attribute inside the current leaf (i.e.
-"inleaf == true") and moves the old attribute (X) to the new block.
-This sets up the old block/index to L1:X, and newly allocated
-block to L3:0. It then moves attr X to the new block and tries to
-insert attr Y at the old index. That fails, so it splits again.
-
-With the second split, the rebalance ends up placing the new attr in
-the second new block - L4:0 - and this is where the code goes wrong.
-What is does is it sets both the new and old block index to the
-second new block. Hence it inserts attr Y at the right place (L4:0)
-but overwrites the current location of the attr to replace that is
-held in the new block index (currently L3:0). It over writes it with
-L4:1 - the index we later assert fail on.
-
-Hopefully this table will show this in a foramt that is a bit easier
-to understand:
-
-Split		old attr index		new attr index
-		vanilla	patched		vanilla	patched
-before 1st	L1:26	L1:26		N/A	N/A
-after 1st	L3:0	L3:0		L1:26	L1:26
-after 2nd	L4:0	L3:0		L4:1	L4:0
-                ^^^^			^^^^
-		wrong			wrong
-
-The fix is surprisingly simple, for all this analysis - just stop
-the rebalance on the out-of leaf case from overwriting the new attr
-index - it's already correct for the double split case.
+To do this, add an error field to xfs_submit_ioend() to pass it the
+error that occurred during the building on the ioend chain. When
+this is non-zero, mark each ioend with the error and call
+xfs_finish_ioend() directly rather than building bios. This will
+immediately push the ioends through completion processing with the
+error that has occurred.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_attr_leaf.c |   20 ++++++++++++++++++--
- 1 file changed, 18 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c |   54 ++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 39 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_leaf.c b/fs/xfs/xfs_attr_leaf.c
-index d330111..70eec18 100644
---- a/fs/xfs/xfs_attr_leaf.c
-+++ b/fs/xfs/xfs_attr_leaf.c
-@@ -1291,6 +1291,7 @@ xfs_attr_leaf_rebalance(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
- 	leaf2 = blk2->bp->b_addr;
- 	ASSERT(leaf1->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
- 	ASSERT(leaf2->hdr.info.magic == cpu_to_be16(XFS_ATTR_LEAF_MAGIC));
-+	ASSERT(leaf2->hdr.count == 0);
- 	args = state->args;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e562dd4..e57e2da 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -481,11 +481,17 @@ static inline int bio_add_buffer(struct bio *bio, struct buffer_head *bh)
+  *
+  * The fix is two passes across the ioend list - one to start writeback on the
+  * buffer_heads, and then submit them for I/O on the second pass.
++ *
++ * If @fail is non-zero, it means that we have a situation where some part of
++ * the submission process has failed after we have marked paged for writeback
++ * and unlocked them. In this situation, we need to fail the ioend chain rather
++ * than submit it to IO. This typically only happens on a filesystem shutdown.
+  */
+ STATIC void
+ xfs_submit_ioend(
+ 	struct writeback_control *wbc,
+-	xfs_ioend_t		*ioend)
++	xfs_ioend_t		*ioend,
++	int			fail)
+ {
+ 	xfs_ioend_t		*head = ioend;
+ 	xfs_ioend_t		*next;
+@@ -506,6 +512,18 @@ xfs_submit_ioend(
+ 		next = ioend->io_list;
+ 		bio = NULL;
  
- 	trace_xfs_attr_leaf_rebalance(args);
-@@ -1361,6 +1362,7 @@ xfs_attr_leaf_rebalance(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
- 		 * I assert that since all callers pass in an empty
- 		 * second buffer, this code should never execute.
- 		 */
-+		ASSERT(0);
++		/*
++		 * If we are failing the IO now, just mark the ioend with an
++		 * error and finish it. This will run IO completion immediately
++		 * as there is only one reference to the ioend at this point in
++		 * time.
++		 */
++		if (fail) {
++			ioend->io_error = -fail;
++			xfs_finish_ioend(ioend);
++			continue;
++		}
++
+ 		for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
  
- 		/*
- 		 * Figure the total bytes to be added to the destination leaf.
-@@ -1422,10 +1424,24 @@ xfs_attr_leaf_rebalance(xfs_da_state_t *state, xfs_da_state_blk_t *blk1,
- 			args->index2 = 0;
- 			args->blkno2 = blk2->blkno;
- 		} else {
-+			/*
-+			 * On a double leaf split, the original attr location
-+			 * is already stored in blkno2/index2, so don't
-+			 * overwrite it overwise we corrupt the tree.
-+			 */
- 			blk2->index = blk1->index
- 				    - be16_to_cpu(leaf1->hdr.count);
--			args->index = args->index2 = blk2->index;
--			args->blkno = args->blkno2 = blk2->blkno;
-+			args->index = blk2->index;
-+			args->blkno = blk2->blkno;
-+			if (!state->extravalid) {
-+				/*
-+				 * set the new attr location to match the old
-+				 * one and let the higher level split code
-+				 * decide where in the leaf to place it.
-+				 */
-+				args->index2 = blk2->index;
-+				args->blkno2 = blk2->blkno;
-+			}
- 		}
- 	} else {
- 		ASSERT(state->inleaf == 1);
+ 			if (!bio) {
+@@ -1060,7 +1078,18 @@ xfs_vm_writepage(
+ 
+ 	xfs_start_page_writeback(page, 1, count);
+ 
+-	if (ioend && imap_valid) {
++	/* if there is no IO to be submitted for this page, we are done */
++	if (!ioend)
++		return 0;
++
++	ASSERT(iohead);
++
++	/*
++	 * Any errors from this point onwards need tobe reported through the IO
++	 * completion path as we have marked the initial page as under writeback
++	 * and unlocked it.
++	 */
++	if (imap_valid) {
+ 		xfs_off_t		end_index;
+ 
+ 		end_index = imap.br_startoff + imap.br_blockcount;
+@@ -1079,20 +1108,15 @@ xfs_vm_writepage(
+ 				  wbc, end_index);
+ 	}
+ 
+-	if (iohead) {
+-		/*
+-		 * Reserve log space if we might write beyond the on-disk
+-		 * inode size.
+-		 */
+-		if (ioend->io_type != XFS_IO_UNWRITTEN &&
+-		    xfs_ioend_is_append(ioend)) {
+-			err = xfs_setfilesize_trans_alloc(ioend);
+-			if (err)
+-				goto error;
+-		}
+ 
+-		xfs_submit_ioend(wbc, iohead);
+-	}
++	/*
++	 * Reserve log space if we might write beyond the on-disk inode size.
++	 */
++	err = 0;
++	if (ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
++		err = xfs_setfilesize_trans_alloc(ioend);
++
++	xfs_submit_ioend(wbc, iohead, err);
+ 
+ 	return 0;
+ 
 -- 
 1.7.10
 
