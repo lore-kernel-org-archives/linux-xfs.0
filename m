@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBr1g9217691 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:53:01 -0600
+	qACBqcK6217572 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:38 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	f4bPkAEGipx9MD4F for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:55:01 -0800 (PST)
+	JbvavwzHok3C0FQn for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:54:39 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsbS-00053z-CJ
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:58 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXsb8-00053O-5C
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:38 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbS-00012V-8m
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:58 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TXsax-00011s-Vz
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/32] xfs: verify superblocks as they are read from disk
-Date: Mon, 12 Nov 2012 22:54:03 +1100
-Message-Id: <1352721264-3700-12-git-send-email-david@fromorbit.com>
+Subject: [PATCH 04/32] xfs: remove xfs_flush_pages
+Date: Mon, 12 Nov 2012 22:53:56 +1100
+Message-Id: <1352721264-3700-5-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,299 +35,129 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a superblock verify callback function and pass it into the
-buffer read functions. Remove the now redundant verification code
-that is currently in use.
+It is a complex wrapper around VFS functions, but there are VFS
+functions that provide exactly the same functionality. Call the VFS
+functions directly and remove the unnecessary indirection and
+complexity.
 
-Adding verification shows that secondary superblocks never have
-their "sb_inprogress" flag cleared by mkfs.xfs, so when validating
-the secondary superblocks during a grow operation we have to avoid
-checking this field. Even if we fix mkfs, we will still have to
-ignore this field for verification purposes unless a version of mkfs
-that does not have this bug was used.
+We don't need to care about clearing the XFS_ITRUNCATED flag, as
+that is done during .writepages. Hence is cleared by the VFS
+writeback path if there is anything to write back during the flush.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Phil White <pwhite@sgi.com>
 ---
- fs/xfs/xfs_fsops.c       |    4 +-
- fs/xfs/xfs_log_recover.c |    5 ++-
- fs/xfs/xfs_mount.c       |   98 +++++++++++++++++++++++++++++-----------------
- fs/xfs/xfs_mount.h       |    3 +-
- 4 files changed, 69 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_aops.c     |    2 +-
+ fs/xfs/xfs_bmap.c     |    2 +-
+ fs/xfs/xfs_fs_subr.c  |   24 ------------------------
+ fs/xfs/xfs_iops.c     |    4 ++--
+ fs/xfs/xfs_vnodeops.c |    7 +++++--
+ fs/xfs/xfs_vnodeops.h |    2 --
+ 6 files changed, 9 insertions(+), 32 deletions(-)
 
-diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
-index f35f8d7..cb65b06 100644
---- a/fs/xfs/xfs_fsops.c
-+++ b/fs/xfs/xfs_fsops.c
-@@ -444,7 +444,8 @@ xfs_growfs_data_private(
- 		if (agno < oagcount) {
- 			error = xfs_trans_read_buf(mp, NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
--				  XFS_FSS_TO_BB(mp, 1), 0, &bp, NULL);
-+				  XFS_FSS_TO_BB(mp, 1), 0, &bp,
-+				  xfs_sb_read_verify);
- 		} else {
- 			bp = xfs_trans_get_buf(NULL, mp->m_ddev_targp,
- 				  XFS_AGB_TO_DADDR(mp, agno, XFS_SB_BLOCK(mp)),
-@@ -462,6 +463,7 @@ xfs_growfs_data_private(
- 			break;
- 		}
- 		xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb, XFS_SB_ALL_BITS);
-+
- 		/*
- 		 * If we get an error writing out the alternate superblocks,
- 		 * just issue a warning and continue.  The real work is
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index eb1e29f..924a4bc 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -3692,13 +3692,14 @@ xlog_do_recover(
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index e57e2da..71361da 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1641,7 +1641,7 @@ xfs_vm_bmap(
  
- 	/*
- 	 * Now that we've finished replaying all buffer and inode
--	 * updates, re-read in the superblock.
-+	 * updates, re-read in the superblock and reverify it.
- 	 */
- 	bp = xfs_getsb(log->l_mp, 0);
- 	XFS_BUF_UNDONE(bp);
- 	ASSERT(!(XFS_BUF_ISWRITE(bp)));
- 	XFS_BUF_READ(bp);
- 	XFS_BUF_UNASYNC(bp);
-+	bp->b_iodone = xfs_sb_read_verify;
- 	xfsbdstrat(log->l_mp, bp);
- 	error = xfs_buf_iowait(bp);
- 	if (error) {
-@@ -3710,7 +3711,7 @@ xlog_do_recover(
- 
- 	/* Convert superblock from on-disk format */
- 	sbp = &log->l_mp->m_sb;
--	xfs_sb_from_disk(log->l_mp, XFS_BUF_TO_SBP(bp));
-+	xfs_sb_from_disk(sbp, XFS_BUF_TO_SBP(bp));
- 	ASSERT(sbp->sb_magicnum == XFS_SB_MAGIC);
- 	ASSERT(xfs_sb_good_version(sbp));
- 	xfs_buf_relse(bp);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index df6d0b2..bff18d7 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -304,9 +304,8 @@ STATIC int
- xfs_mount_validate_sb(
- 	xfs_mount_t	*mp,
- 	xfs_sb_t	*sbp,
--	int		flags)
-+	bool		check_inprogress)
- {
--	int		loud = !(flags & XFS_MFSI_QUIET);
- 
- 	/*
- 	 * If the log device and data device have the
-@@ -316,21 +315,18 @@ xfs_mount_validate_sb(
- 	 * a volume filesystem in a non-volume manner.
- 	 */
- 	if (sbp->sb_magicnum != XFS_SB_MAGIC) {
--		if (loud)
--			xfs_warn(mp, "bad magic number");
-+		xfs_warn(mp, "bad magic number");
- 		return XFS_ERROR(EWRONGFS);
- 	}
- 
- 	if (!xfs_sb_good_version(sbp)) {
--		if (loud)
--			xfs_warn(mp, "bad version");
-+		xfs_warn(mp, "bad version");
- 		return XFS_ERROR(EWRONGFS);
- 	}
- 
- 	if (unlikely(
- 	    sbp->sb_logstart == 0 && mp->m_logdev_targp == mp->m_ddev_targp)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"filesystem is marked as having an external log; "
- 		"specify logdev on the mount command line.");
- 		return XFS_ERROR(EINVAL);
-@@ -338,8 +334,7 @@ xfs_mount_validate_sb(
- 
- 	if (unlikely(
- 	    sbp->sb_logstart != 0 && mp->m_logdev_targp != mp->m_ddev_targp)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"filesystem is marked as having an internal log; "
- 		"do not specify logdev on the mount command line.");
- 		return XFS_ERROR(EINVAL);
-@@ -373,8 +368,7 @@ xfs_mount_validate_sb(
- 	    sbp->sb_dblocks == 0					||
- 	    sbp->sb_dblocks > XFS_MAX_DBLOCKS(sbp)			||
- 	    sbp->sb_dblocks < XFS_MIN_DBLOCKS(sbp))) {
--		if (loud)
--			XFS_CORRUPTION_ERROR("SB sanity check failed",
-+		XFS_CORRUPTION_ERROR("SB sanity check failed",
- 				XFS_ERRLEVEL_LOW, mp, sbp);
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
-@@ -383,12 +377,10 @@ xfs_mount_validate_sb(
- 	 * Until this is fixed only page-sized or smaller data blocks work.
- 	 */
- 	if (unlikely(sbp->sb_blocksize > PAGE_SIZE)) {
--		if (loud) {
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"File system with blocksize %d bytes. "
- 		"Only pagesize (%ld) or less will currently work.",
- 				sbp->sb_blocksize, PAGE_SIZE);
--		}
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
-@@ -402,23 +394,20 @@ xfs_mount_validate_sb(
- 	case 2048:
- 		break;
- 	default:
--		if (loud)
--			xfs_warn(mp, "inode size of %d bytes not supported",
-+		xfs_warn(mp, "inode size of %d bytes not supported",
- 				sbp->sb_inodesize);
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
- 	if (xfs_sb_validate_fsb_count(sbp, sbp->sb_dblocks) ||
- 	    xfs_sb_validate_fsb_count(sbp, sbp->sb_rblocks)) {
--		if (loud)
--			xfs_warn(mp,
-+		xfs_warn(mp,
- 		"file system too large to be mounted on this system.");
- 		return XFS_ERROR(EFBIG);
- 	}
- 
--	if (unlikely(sbp->sb_inprogress)) {
--		if (loud)
--			xfs_warn(mp, "file system busy");
-+	if (check_inprogress && sbp->sb_inprogress) {
-+		xfs_warn(mp, "Offline file system operation in progress!");
- 		return XFS_ERROR(EFSCORRUPTED);
- 	}
- 
-@@ -426,9 +415,7 @@ xfs_mount_validate_sb(
- 	 * Version 1 directory format has never worked on Linux.
- 	 */
- 	if (unlikely(!xfs_sb_version_hasdirv2(sbp))) {
--		if (loud)
--			xfs_warn(mp,
--				"file system using version 1 directory format");
-+		xfs_warn(mp, "file system using version 1 directory format");
- 		return XFS_ERROR(ENOSYS);
- 	}
- 
-@@ -521,11 +508,9 @@ out_unwind:
- 
- void
- xfs_sb_from_disk(
--	struct xfs_mount	*mp,
-+	struct xfs_sb	*to,
- 	xfs_dsb_t	*from)
- {
--	struct xfs_sb *to = &mp->m_sb;
--
- 	to->sb_magicnum = be32_to_cpu(from->sb_magicnum);
- 	to->sb_blocksize = be32_to_cpu(from->sb_blocksize);
- 	to->sb_dblocks = be64_to_cpu(from->sb_dblocks);
-@@ -627,6 +612,50 @@ xfs_sb_to_disk(
- 	}
+ 	trace_xfs_vm_bmap(XFS_I(inode));
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+-	xfs_flush_pages(ip, (xfs_off_t)0, -1, 0, FI_REMAPF);
++	filemap_write_and_wait(mapping);
+ 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+ 	return generic_block_bmap(mapping, block, xfs_get_blocks);
  }
- 
-+void
-+xfs_sb_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_sb	sb;
-+	int		error;
-+
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-+
-+	/*
-+	 * Only check the in progress field for the primary superblock as
-+	 * mkfs.xfs doesn't clear it from secondary superblocks.
-+	 */
-+	error = xfs_mount_validate_sb(mp, &sb, bp->b_bn == XFS_SB_DADDR);
-+	if (error)
-+		xfs_buf_ioerror(bp, error);
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
-+}
-+
-+/*
-+ * We may be probed for a filesystem match, so we may not want to emit
-+ * messages when the superblock buffer is not actually an XFS superblock.
-+ * If we find an XFS superblock, the run a normal, noisy mount because we are
-+ * really going to mount it and want to know about errors.
-+ */
-+void
-+xfs_sb_quiet_read_verify(
-+	struct xfs_buf	*bp)
-+{
-+	struct xfs_sb	sb;
-+
-+	xfs_sb_from_disk(&sb, XFS_BUF_TO_SBP(bp));
-+
-+	if (sb.sb_magicnum == XFS_SB_MAGIC) {
-+		/* XFS filesystem, verify noisily! */
-+		xfs_sb_read_verify(bp);
-+		return;
-+	}
-+	/* quietly fail */
-+	xfs_buf_ioerror(bp, EFSCORRUPTED);
-+}
-+
- /*
-  * xfs_readsb
-  *
-@@ -652,7 +681,9 @@ xfs_readsb(xfs_mount_t *mp, int flags)
- 
- reread:
- 	bp = xfs_buf_read_uncached(mp->m_ddev_targp, XFS_SB_DADDR,
--					BTOBB(sector_size), 0, NULL);
-+				   BTOBB(sector_size), 0,
-+				   loud ? xfs_sb_read_verify
-+				        : xfs_sb_quiet_read_verify);
- 	if (!bp) {
- 		if (loud)
- 			xfs_warn(mp, "SB buffer read failed");
-@@ -667,15 +698,8 @@ reread:
- 
- 	/*
- 	 * Initialize the mount structure from the superblock.
--	 * But first do some basic consistency checking.
+diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
+index 83d0cf3..a60f3d1 100644
+--- a/fs/xfs/xfs_bmap.c
++++ b/fs/xfs/xfs_bmap.c
+@@ -5599,7 +5599,7 @@ xfs_getbmap(
+ 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
+ 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
+ 		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
+-			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
++			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
+ 			if (error)
+ 				goto out_unlock_iolock;
+ 		}
+diff --git a/fs/xfs/xfs_fs_subr.c b/fs/xfs/xfs_fs_subr.c
+index 3365823..b538089 100644
+--- a/fs/xfs/xfs_fs_subr.c
++++ b/fs/xfs/xfs_fs_subr.c
+@@ -44,27 +44,3 @@ xfs_flushinval_pages(
+ 		truncate_inode_pages_range(mapping, first, last);
+ 	return -ret;
+ }
+-
+-int
+-xfs_flush_pages(
+-	xfs_inode_t	*ip,
+-	xfs_off_t	first,
+-	xfs_off_t	last,
+-	uint64_t	flags,
+-	int		fiopt)
+-{
+-	struct address_space *mapping = VFS_I(ip)->i_mapping;
+-	int		ret = 0;
+-	int		ret2;
+-
+-	xfs_iflags_clear(ip, XFS_ITRUNCATED);
+-	ret = -filemap_fdatawrite_range(mapping, first,
+-				last == -1 ? LLONG_MAX : last);
+-	if (flags & XBF_ASYNC)
+-		return ret;
+-	ret2 = -filemap_fdatawait_range(mapping, first,
+-				last == -1 ? XFS_ISIZE(ip) - 1 : last);
+-	if (!ret)
+-		ret = ret2;
+-	return ret;
+-}
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 81f5c49..d82efaa 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -780,8 +780,8 @@ xfs_setattr_size(
+ 	 * care about here.
  	 */
--	xfs_sb_from_disk(mp, XFS_BUF_TO_SBP(bp));
--	error = xfs_mount_validate_sb(mp, &(mp->m_sb), flags);
--	if (error) {
--		if (loud)
--			xfs_warn(mp, "SB validate failed");
--		goto release_buf;
--	}
-+	xfs_sb_from_disk(&mp->m_sb, XFS_BUF_TO_SBP(bp));
+ 	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
+-		error = xfs_flush_pages(ip, ip->i_d.di_size, newsize, 0,
+-					FI_NONE);
++		error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++						      ip->i_d.di_size, newsize);
+ 		if (error)
+ 			goto out_unlock;
+ 	}
+diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
+index f7de578..31de73e 100644
+--- a/fs/xfs/xfs_vnodeops.c
++++ b/fs/xfs/xfs_vnodeops.c
+@@ -428,8 +428,11 @@ xfs_release(
+ 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
+ 		if (truncated) {
+ 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
+-			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
+-				xfs_flush_pages(ip, 0, -1, XBF_ASYNC, FI_NONE);
++			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
++				error = -filemap_flush(VFS_I(ip)->i_mapping);
++				if (error)
++					return error;
++			}
+ 		}
+ 	}
  
- 	/*
- 	 * We must be able to do sector-sized and sector-aligned IO.
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index dc306a0..de9089a 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -385,10 +385,11 @@ extern void	xfs_set_low_space_thresholds(struct xfs_mount *);
+diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
+index c8ad48b..73cb3cb 100644
+--- a/fs/xfs/xfs_vnodeops.h
++++ b/fs/xfs/xfs_vnodeops.h
+@@ -50,8 +50,6 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		int flags, struct attrlist_cursor_kern *cursor);
+ int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
+ 		xfs_off_t last, int fiopt);
+-int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
+-		xfs_off_t last, uint64_t flags, int fiopt);
  
- #endif	/* __KERNEL__ */
- 
-+extern void	xfs_sb_read_verify(struct xfs_buf *);
- extern void	xfs_mod_sb(struct xfs_trans *, __int64_t);
- extern int	xfs_initialize_perag(struct xfs_mount *, xfs_agnumber_t,
- 					xfs_agnumber_t *);
--extern void	xfs_sb_from_disk(struct xfs_mount *, struct xfs_dsb *);
-+extern void	xfs_sb_from_disk(struct xfs_sb *, struct xfs_dsb *);
- extern void	xfs_sb_to_disk(struct xfs_dsb *, struct xfs_sb *, __int64_t);
- 
- #endif	/* __XFS_MOUNT_H__ */
+ int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
+ int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
 -- 
 1.7.10
 
