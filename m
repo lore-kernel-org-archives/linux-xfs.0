@@ -1,22 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qABMnwZT175819 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 16:49:58 -0600
+	qAC0lDqx183269 for <xfs@oss.sgi.com>; Sun, 11 Nov 2012 18:47:13 -0600
 Received: from ipmail04.adl6.internode.on.net (ipmail04.adl6.internode.on.net
 	[150.101.137.141]) by cuda.sgi.com with ESMTP id
-	115hnoJp5meCaIDQ for <xfs@oss.sgi.com>;
-	Sun, 11 Nov 2012 14:51:58 -0800 (PST)
-Date: Mon, 12 Nov 2012 09:51:57 +1100
+	dIkKDkHLsSN1mr0m for <xfs@oss.sgi.com>;
+	Sun, 11 Nov 2012 16:49:13 -0800 (PST)
+Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
+	(envelope-from <dave@fromorbit.com>) id 1TXiD8-0003zb-LC
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 11:49:10 +1100
+Received: from dave by disappointment with local (Exim 4.80)
+	(envelope-from <dave@disappointment.disaster>) id 1TXiD8-0007Qt-Go
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 11:49:10 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/2] xfs: add CRC infrastructure
-Message-ID: <20121111225157.GO24575@dastard>
-References: <1352295452-4726-1-git-send-email-david@fromorbit.com>
-	<1352295452-4726-2-git-send-email-david@fromorbit.com>
-	<509D7F1A.3090201@sgi.com> <20121111012643.GH6434@dastard>
-	<50A00274.1080604@sgi.com>
-MIME-Version: 1.0
-Content-Disposition: inline
-In-Reply-To: <50A00274.1080604@sgi.com>
+Subject: [PATCH] xfs: fix broken error handling in xfs_vm_writepage
+Date: Mon, 12 Nov 2012 11:49:10 +1100
+Message-Id: <1352681350-28541-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -25,214 +24,143 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+MIME-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Mark Tinguely <tinguely@sgi.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On Sun, Nov 11, 2012 at 01:54:28PM -0600, Mark Tinguely wrote:
-> On 11/10/12 19:26, Dave Chinner wrote:
-> >On Fri, Nov 09, 2012 at 04:09:30PM -0600, Mark Tinguely wrote:
-> >>On 11/07/12 07:37, Dave Chinner wrote:
-> >>>From: Christoph Hellwig<hch@lst.de>
-> >>>
-> >>>  - add a mount feature bit for CRC enabled filesystems
-> >>>  - add some helpers for generating and verifying the CRCs
-> >>>  - add a copy_uuid helper
-> >>>
-> >>>The checksumming helpers are losely based on similar ones in sctp,
-> >>>all other bits come from Dave Chinner.
-> >>>
-> >>>Signed-off-by: Christoph Hellwig<hch@lst.de>
-> >>>Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> >>>---
-> >>>+/*
-> >>>+ * Calculate the intermediate checksum for a buffer that has the CRC field
-> >>>+ * inside it.  The offset of the 32bit crc fields is passed as the
-> >>>+ * cksum_offset parameter.
-> >>>+ */
-> >>>+static inline __uint32_t
-> >>>+xfs_start_cksum(char *buffer, size_t length, unsigned long cksum_offset)
-> >>>+{
-> >>>+	__uint32_t zero = 0;
-> >>>+	__uint32_t crc;
-> >>>+
-> >>>+	/* Calculate CRC up to the checksum. */
-> >>>+	crc = crc32c(XFS_CRC_SEED, buffer, cksum_offset);
-> >>>+
-> >>>+	/* Skip checksum field */
-> >>>+	crc = crc32c(crc,&zero, sizeof(__u32));
-> >>
-> >>I know this came from sctp and I know I can't convince you to copy/null
-> >>the *cksum_offset to make one block for those with hardware crc32c devices.
-> >>
-> >>Since the *cksum_offset value is never used in creating and verifying
-> >>the checksum, the 4 bytes of zeros does not add any new information,
-> >>why not just drop it from the cksum calculation?
-> >
-> >Because it gives a different CRC value. If we zero the CRC field,
-> >and then do an entire block CRC ignoring the location of the CRC, we
-> >get the same value as using the above algorithm. While we aren't
-> >going to do this type of verification/calculation in the kernel
-> >code, there are use cases for it, say in repair, where we don't have
-> >to worry about multiple verifications of the object occurring.
-> >
-> >Hence by making sure we zero the CRC field during the calculation,
-> >we retain the flexibility of doing faster, single pass calculation
-> >and verification where it makes sense to use it.  If we optimise
-> >away the zero block for the CRC, then we that flexibility when it
-> >comes to implementing other tools that check and recalculate CRC
-> >values.
-> 
-> I was mostly thinking about down the road when crc32c offloading is
-> common. The copy/null/checksum/replace model of the routine can be done
-> anytime that it make sense to do so (as long as only one checksum can
-> happen at one time).
+From: Dave Chinner <dchinner@redhat.com>
 
-Sure, but it is already common - the crypto framework already has a
-module for offloading CRC32c to intel CPUs rather than using the
-generic implementation:
+When we shut down the filesystem, it might first be detected in
+writeback when we are allocating a inode size transaction. This
+happens after we have moved all the pages into the writeback state
+and unlocked them. Unfortunately, if we fail to set up the
+transaction we then abort writeback and try to invalidate the
+current page. This then triggers are BUG() in block_invalidatepage()
+because we are trying to invalidate an unlocked page.
 
-The guest:
+Fixing this is a bit of a chicken and egg problem - we can't
+allocate the transaction until we've clustered all the pages into
+the IO and we know the size of it (i.e. whether the last block of
+the IO is beyond the current EOF or not). However, we don't want to
+hold pages locked for long periods of time, especially while we lock
+other pages to cluster them into the write.
 
-$ grep -A 8 crc32c /proc/crypto
-name         : crc32c
-driver       : crc32c-generic
-module       : kernel
-priority     : 100
-refcnt       : 2
-selftest     : passed
-type         : shash
-blocksize    : 1
-digestsize   : 4
+To fix this, we need to make a clear delineation in writeback where
+errors can only be handled by IO completion processing. That is,
+once we have marked a page for writeback and unlocked it, we have to
+report errors via IO completion because we've already started the
+IO. We may not have submitted any IO, but we've changed the page
+state to indicate that it is under IO so we must now use the IO
+completion path to report errors.
 
-The host:
+To do this, add an error field to xfs_submit_ioend() to pass it the
+error that occurred during the building on the ioend chain. When
+this is non-zero, mark each ioend with the error and call
+xfs_finish_ioend() directly rather than building bios. This will
+immediately push the ioends through completion processing with the
+error that has occurred.
 
-$ $ grep -A 8 crc32c /proc/crypto
-name         : crc32c
-driver       : crc32c-intel
-module       : crc32c_intel
-priority     : 200
-refcnt       : 2
-selftest     : passed
-type         : shash
-blocksize    : 1
-digestsize   : 4
-
-If the hardware offload is to slow for small ranges, then that is up
-to the crypto driver to deal with (e.g. by not offloading it).
-
-> 
-> >
-> >>>+	/* Calculate the rest of the CRC. */
-> >>>+	return crc32c(crc,&buffer[cksum_offset + sizeof(__be32)],
-> >>>+		      length - (cksum_offset + sizeof(__be32)));
-> >>>+}
-> >>>+
-> >>>+/*
-> >>>+ * Convert the intermediate checksum to the final ondisk format.
-> >>>+ *
-> >>>+ * Note that crc32c is already endianess agnostic, so no additional
-> >>>+ * byte swap is needed.
-> >>>+ */
-> >>>+static inline __be32
-> >>>+xfs_end_cksum(__uint32_t crc)
-> >>>+{
-> >>>+	return (__force __be32)~crc;
-> >>>+}
-> >>>+
-> >>
-> >>Wouldn't you have to cpu_to_le32() for big endian machines?
-> >
-> >Good catch, I hadn't noticed that fix - it's been quite a while
-> >since this particular patch was originally written. So, yeah, it
-> >probably does need that fix.
-> >
-> >FWIW, I don't have a big endian machine immediately handy to test
-> >this. Do you?
-> 
-> I am sure there is something in the pool. I will ask on Monday.
-> Someone was going to do some testing on a big endian machine before the
-> user space release anyway. I guess I just volunteered. A log recovery
-> test from a different endian machine sounds interesting.
-
-Won't work. Log records are written in machine format, not endian
-neutral. Log recovery can only be done on a machine of the same
-endianness. Something like the patch below just to output the CRCs
-in host order will be sufficient to tell us whether they'll end up
-the same or different on disk without swapping will do the trick.
-(i.e. if both hosts output the same CRC value, then they'll have
-different endianess on disk...)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
-
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_super.c |   36 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 36 insertions(+)
+ fs/xfs/xfs_aops.c |   54 ++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 39 insertions(+), 15 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e0b6863..26bd864 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -51,6 +51,7 @@
- #include "xfs_inode_item.h"
- #include "xfs_icache.h"
- #include "xfs_trace.h"
-+#include "xfs_cksum.h"
- 
- #include <linux/namei.h>
- #include <linux/init.h>
-@@ -1504,6 +1505,35 @@ out_destroy_workqueues:
- 	goto out_free_sb;
- }
- 
-+static void
-+xfs_crc_test(void)
-+{
-+	static char	buf[512];
-+	int		i;
-+	__u32		crc;
-+	__u32		vcrc;
-+	__be32		ecrc;
-+	__be32		evcrc;
-+
-+	for (i = 0; i < 512; i++) {
-+		buf[i] = i & 0xff;
-+	}
-+
-+	crc = xfs_start_cksum(buf, 512, 64);
-+	ecrc = xfs_end_cksum(crc);
-+
-+	xfs_warn(NULL, "crc: normal val 0x%x/0x%x, verify = %s", crc, ecrc,
-+		 xfs_verify_cksum(buf, 512, 64) ? "good" : "bad");
-+
-+	crc = crc32c(XFS_CRC_SEED, buf, 64);
-+	crc = crc32c(crc, &buf[68], 512 - 68);
-+	ecrc = xfs_end_cksum(crc);
-+
-+	xfs_warn(NULL, "crc: skipped zero val 0x%x/0x%x, verify = %s", crc, ecrc,
-+		 xfs_verify_cksum(buf, 512, 64) ? "good" : "bad");
-+
-+}
-+
- STATIC struct dentry *
- xfs_fs_mount(
- 	struct file_system_type	*fs_type,
-@@ -1511,6 +1546,7 @@ xfs_fs_mount(
- 	const char		*dev_name,
- 	void			*data)
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 42ef842..71361da 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -481,11 +481,17 @@ static inline int bio_add_buffer(struct bio *bio, struct buffer_head *bh)
+  *
+  * The fix is two passes across the ioend list - one to start writeback on the
+  * buffer_heads, and then submit them for I/O on the second pass.
++ *
++ * If @fail is non-zero, it means that we have a situation where some part of
++ * the submission process has failed after we have marked paged for writeback
++ * and unlocked them. In this situation, we need to fail the ioend chain rather
++ * than submit it to IO. This typically only happens on a filesystem shutdown.
+  */
+ STATIC void
+ xfs_submit_ioend(
+ 	struct writeback_control *wbc,
+-	xfs_ioend_t		*ioend)
++	xfs_ioend_t		*ioend,
++	int			fail)
  {
-+	xfs_crc_test();
- 	return mount_bdev(fs_type, flags, dev_name, data, xfs_fs_fill_super);
- }
+ 	xfs_ioend_t		*head = ioend;
+ 	xfs_ioend_t		*next;
+@@ -506,6 +512,18 @@ xfs_submit_ioend(
+ 		next = ioend->io_list;
+ 		bio = NULL;
  
++		/*
++		 * If we are failing the IO now, just mark the ioend with an
++		 * error and finish it. This will run IO completion immediately
++		 * as there is only one reference to the ioend at this point in
++		 * time.
++		 */
++		if (fail) {
++			ioend->io_error = -fail;
++			xfs_finish_ioend(ioend);
++			continue;
++		}
++
+ 		for (bh = ioend->io_buffer_head; bh; bh = bh->b_private) {
+ 
+ 			if (!bio) {
+@@ -1060,7 +1078,18 @@ xfs_vm_writepage(
+ 
+ 	xfs_start_page_writeback(page, 1, count);
+ 
+-	if (ioend && imap_valid) {
++	/* if there is no IO to be submitted for this page, we are done */
++	if (!ioend)
++		return 0;
++
++	ASSERT(iohead);
++
++	/*
++	 * Any errors from this point onwards need tobe reported through the IO
++	 * completion path as we have marked the initial page as under writeback
++	 * and unlocked it.
++	 */
++	if (imap_valid) {
+ 		xfs_off_t		end_index;
+ 
+ 		end_index = imap.br_startoff + imap.br_blockcount;
+@@ -1079,20 +1108,15 @@ xfs_vm_writepage(
+ 				  wbc, end_index);
+ 	}
+ 
+-	if (iohead) {
+-		/*
+-		 * Reserve log space if we might write beyond the on-disk
+-		 * inode size.
+-		 */
+-		if (ioend->io_type != XFS_IO_UNWRITTEN &&
+-		    xfs_ioend_is_append(ioend)) {
+-			err = xfs_setfilesize_trans_alloc(ioend);
+-			if (err)
+-				goto error;
+-		}
+ 
+-		xfs_submit_ioend(wbc, iohead);
+-	}
++	/*
++	 * Reserve log space if we might write beyond the on-disk inode size.
++	 */
++	err = 0;
++	if (ioend->io_type != XFS_IO_UNWRITTEN && xfs_ioend_is_append(ioend))
++		err = xfs_setfilesize_trans_alloc(ioend);
++
++	xfs_submit_ioend(wbc, iohead, err);
+ 
+ 	return 0;
+ 
+-- 
+1.7.10
 
 _______________________________________________
 xfs mailing list
