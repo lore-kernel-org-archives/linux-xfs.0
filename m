@@ -1,23 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBqcK6217572 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:38 -0600
+	qACBqXCC217518 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:33 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	JbvavwzHok3C0FQn for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:54:39 -0800 (PST)
+	KYjNkl8apUGcKZ3Y for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:54:34 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsb8-00053O-5C
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:38 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXsb3-00053K-5w
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:33 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsax-00011s-Vz
+	(envelope-from <dave@disappointment.disaster>) id 1TXsax-00011X-Pn
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:27 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 04/32] xfs: remove xfs_flush_pages
-Date: Mon, 12 Nov 2012 22:53:56 +1100
-Message-Id: <1352721264-3700-5-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
+Subject: [PATCH 00/32] xfs: current queue for 3.8
+Date: Mon, 12 Nov 2012 22:53:52 +1100
+Message-Id: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -33,133 +31,112 @@ Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: xfs@oss.sgi.com
 
-From: Dave Chinner <dchinner@redhat.com>
+Hi folks,
 
-It is a complex wrapper around VFS functions, but there are VFS
-functions that provide exactly the same functionality. Call the VFS
-functions directly and remove the unnecessary indirection and
-complexity.
+This is my current patch queue for the 3.8 merge window. We are now
+getting close to the window opening (at -rc5 now), so I'd really
+like to see this stuff into the dev tree ASAP so that there is some
+wider test coverage before the merge window comes along.
 
-We don't need to care about clearing the XFS_ITRUNCATED flag, as
-that is done during .writepages. Hence is cleared by the VFS
-writeback path if there is anything to write back during the flush.
+The bulk of this patch series has been reviewed and revised over the
+past month. The only new patch in this is the additional attribute
+trace points that I needed to track down the corruption problem I
+recently fixed.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_aops.c     |    2 +-
- fs/xfs/xfs_bmap.c     |    2 +-
- fs/xfs/xfs_fs_subr.c  |   24 ------------------------
- fs/xfs/xfs_iops.c     |    4 ++--
- fs/xfs/xfs_vnodeops.c |    7 +++++--
- fs/xfs/xfs_vnodeops.h |    2 --
- 6 files changed, 9 insertions(+), 32 deletions(-)
+Other than that, I've reordered the patches to make growfs use
+uncached buffers ahead of the verifier series and rebased the
+verifier series on top of it. i also folded the fixes I had in
+additional patches back into the base patches in the verifier
+series.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index e57e2da..71361da 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1641,7 +1641,7 @@ xfs_vm_bmap(
- 
- 	trace_xfs_vm_bmap(XFS_I(inode));
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
--	xfs_flush_pages(ip, (xfs_off_t)0, -1, 0, FI_REMAPF);
-+	filemap_write_and_wait(mapping);
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 	return generic_block_bmap(mapping, block, xfs_get_blocks);
- }
-diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-index 83d0cf3..a60f3d1 100644
---- a/fs/xfs/xfs_bmap.c
-+++ b/fs/xfs/xfs_bmap.c
-@@ -5599,7 +5599,7 @@ xfs_getbmap(
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
- 	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
- 		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
--			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
-+			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
- 			if (error)
- 				goto out_unlock_iolock;
- 		}
-diff --git a/fs/xfs/xfs_fs_subr.c b/fs/xfs/xfs_fs_subr.c
-index 3365823..b538089 100644
---- a/fs/xfs/xfs_fs_subr.c
-+++ b/fs/xfs/xfs_fs_subr.c
-@@ -44,27 +44,3 @@ xfs_flushinval_pages(
- 		truncate_inode_pages_range(mapping, first, last);
- 	return -ret;
- }
--
--int
--xfs_flush_pages(
--	xfs_inode_t	*ip,
--	xfs_off_t	first,
--	xfs_off_t	last,
--	uint64_t	flags,
--	int		fiopt)
--{
--	struct address_space *mapping = VFS_I(ip)->i_mapping;
--	int		ret = 0;
--	int		ret2;
--
--	xfs_iflags_clear(ip, XFS_ITRUNCATED);
--	ret = -filemap_fdatawrite_range(mapping, first,
--				last == -1 ? LLONG_MAX : last);
--	if (flags & XBF_ASYNC)
--		return ret;
--	ret2 = -filemap_fdatawait_range(mapping, first,
--				last == -1 ? XFS_ISIZE(ip) - 1 : last);
--	if (!ret)
--		ret = ret2;
--	return ret;
--}
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 81f5c49..d82efaa 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -780,8 +780,8 @@ xfs_setattr_size(
- 	 * care about here.
- 	 */
- 	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
--		error = xfs_flush_pages(ip, ip->i_d.di_size, newsize, 0,
--					FI_NONE);
-+		error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-+						      ip->i_d.di_size, newsize);
- 		if (error)
- 			goto out_unlock;
- 	}
-diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-index f7de578..31de73e 100644
---- a/fs/xfs/xfs_vnodeops.c
-+++ b/fs/xfs/xfs_vnodeops.c
-@@ -428,8 +428,11 @@ xfs_release(
- 		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
- 		if (truncated) {
- 			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
--			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
--				xfs_flush_pages(ip, 0, -1, XBF_ASYNC, FI_NONE);
-+			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
-+				error = -filemap_flush(VFS_I(ip)->i_mapping);
-+				if (error)
-+					return error;
-+			}
- 		}
- 	}
- 
-diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-index c8ad48b..73cb3cb 100644
---- a/fs/xfs/xfs_vnodeops.h
-+++ b/fs/xfs/xfs_vnodeops.h
-@@ -50,8 +50,6 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
- 		int flags, struct attrlist_cursor_kern *cursor);
- int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
- 		xfs_off_t last, int fiopt);
--int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
--		xfs_off_t last, uint64_t flags, int fiopt);
- 
- int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
- int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
--- 
-1.7.10
+I'm not sure whether I have captured all the Reviewed-by tags that
+people have given - if necessary I can go back and search the lists
+for them all and add the ones I've missed....
+
+Diffstat for the series is:
+
+$ git diff --stat --summary -C -M 074dad5..f02d23b
+ fs/xfs/Kconfig            |    1 +
+ fs/xfs/Makefile           |    1 -
+ fs/xfs/uuid.h             |    6 +
+ fs/xfs/xfs_ag.h           |    4 +
+ fs/xfs/xfs_alloc.c        |  141 ++++++++++++---
+ fs/xfs/xfs_alloc.h        |    3 +
+ fs/xfs/xfs_alloc_btree.c  |   77 +++++++++
+ fs/xfs/xfs_alloc_btree.h  |    2 +
+ fs/xfs/xfs_aops.c         |    2 +-
+ fs/xfs/xfs_attr.c         |  103 +++++------
+ fs/xfs/xfs_attr_leaf.c    |  143 ++++++++++------
+ fs/xfs/xfs_attr_leaf.h    |    6 +
+ fs/xfs/xfs_bmap.c         |   64 ++++---
+ fs/xfs/xfs_bmap_btree.c   |   63 +++++++
+ fs/xfs/xfs_bmap_btree.h   |    1 +
+ fs/xfs/xfs_btree.c        |  111 +++++++-----
+ fs/xfs/xfs_btree.h        |   22 ++-
+ fs/xfs/xfs_buf.c          |   59 +++++--
+ fs/xfs/xfs_buf.h          |   27 ++-
+ fs/xfs/xfs_cksum.h        |   63 +++++++
+ fs/xfs/xfs_da_btree.c     |  141 ++++++++++++---
+ fs/xfs/xfs_da_btree.h     |   10 +-
+ fs/xfs/xfs_dfrag.c        |   13 +-
+ fs/xfs/xfs_dir2_block.c   |  436 +++++++++++++++++++++++++++--------------------
+ fs/xfs/xfs_dir2_data.c    |  170 ++++++++++++++----
+ fs/xfs/xfs_dir2_leaf.c    |  172 +++++++++++++------
+ fs/xfs/xfs_dir2_node.c    |  288 ++++++++++++++++++++-----------
+ fs/xfs/xfs_dir2_priv.h    |   19 ++-
+ fs/xfs/xfs_dquot.c        |  135 ++++++++++++---
+ fs/xfs/xfs_file.c         |   27 +--
+ fs/xfs/xfs_fs_subr.c      |   96 -----------
+ fs/xfs/xfs_fsops.c        |  137 ++++++++++-----
+ fs/xfs/xfs_ialloc.c       |   74 +++++---
+ fs/xfs/xfs_ialloc.h       |    4 +-
+ fs/xfs/xfs_ialloc_btree.c |   55 ++++++
+ fs/xfs/xfs_ialloc_btree.h |    2 +
+ fs/xfs/xfs_inode.c        |  131 ++++++++------
+ fs/xfs/xfs_inode.h        |    1 +
+ fs/xfs/xfs_iops.c         |    4 +-
+ fs/xfs/xfs_itable.c       |    3 +-
+ fs/xfs/xfs_linux.h        |    1 +
+ fs/xfs/xfs_log.c          |  135 ++++++++++++---
+ fs/xfs/xfs_log_priv.h     |   11 +-
+ fs/xfs/xfs_log_recover.c  |  145 ++++++++--------
+ fs/xfs/xfs_mount.c        |  130 +++++++++-----
+ fs/xfs/xfs_mount.h        |    4 +-
+ fs/xfs/xfs_qm.c           |    5 +-
+ fs/xfs/xfs_rtalloc.c      |   15 +-
+ fs/xfs/xfs_sb.h           |   10 +-
+ fs/xfs/xfs_trace.h        |   54 +++++-
+ fs/xfs/xfs_trans.h        |   19 +--
+ fs/xfs/xfs_trans_buf.c    |    9 +-
+ fs/xfs/xfs_vnodeops.c     |   48 ++++--
+ fs/xfs/xfs_vnodeops.h     |    7 -
+ 54 files changed, 2327 insertions(+), 1083 deletions(-)
+ create mode 100644 fs/xfs/xfs_cksum.h
+ delete mode 100644 fs/xfs/xfs_fs_subr.c
+
+It seems pretty solid - all the bug fixes I've been pushing out
+recently have been found as a result of testing this patch series.
+They have started life at the end of the series, and once confirmed
+to fix the problem have been re-ordered to the start. Hence the
+series has been seeing all the testing I have been doing recently.
+
+I really do not want this stuff to miss the 3.8 window due
+to a repeat of the last cycle's misadventures. Given how quiet -rc5
+was, we might only be 2 weeks away from the 3.8 merge window
+opening. Which means that, realistically, this series need to be
+finalised by the end of the week so that it's got some soak time in
+linux-next before it moves into Linus' tree.
+
+The main reason I don't want this to miss 3.8 is that I'm planning
+on 3.9 for all the CRC metadata format changes and supporting code
+to be ready. There's a lot more code for coming for 3.9 than there
+is in this patch series (probably twice the size) and it's a lot
+more complex, so the less that ends up in 3.9 from this series the
+better...
+
+Cheers,
+
+Dave.
 
 _______________________________________________
 xfs mailing list
