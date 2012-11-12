@@ -1,21 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
+Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACIceG3244712 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 12:38:40 -0600
-Received: from mail-ea0-f181.google.com (mail-ea0-f181.google.com
-	[209.85.215.181]) by cuda.sgi.com with ESMTP id
-	oeqBlSfHmCKmvVIx (version=TLSv1 cipher=RC4-SHA bits=128
-	verify=NO) for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 10:40:42 -0800 (PST)
-Received: by mail-ea0-f181.google.com with SMTP id a11so1238065eaa.26
-	for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 10:40:41 -0800 (PST)
-From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
-Subject: [PATCH v2]: Shell script for printing XFS quota project id for files.
-Date: Mon, 12 Nov 2012 19:40:28 +0100
-Message-Id: <1352745628-15451-1-git-send-email-arekm@maven.pl>
-In-Reply-To: <1352745235-14922-1-git-send-email-arekm@maven.pl>
-References: <1352745235-14922-1-git-send-email-arekm@maven.pl>
+	qACJ8c09246236 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 13:08:38 -0600
+Message-ID: <50A149AD.7000406@sgi.com>
+Date: Mon, 12 Nov 2012 13:10:37 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
+Subject: Re: [PATCH 1/3] xfs: fix attr tree double split corruption
+References: <1352718586-3538-1-git-send-email-david@fromorbit.com>
+	<1352718586-3538-2-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352718586-3538-2-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -24,48 +18,33 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: xfs@oss.sgi.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: xfs@oss.sgi.com
 
-U2ltcGxlIHNjcmlwdCB0aGF0IHByaW50cyBwcm9qZWN0IGlkIGZvciBmaWxlczoKCiQgc2ggcXVv
-dGEveGZzX2xzcHJvamlkLnNoIHF1b3RhL1tmbF0qCnF1b3RhL2ZyZWVic2QuYzogMjMyCnF1b3Rh
-L2ZyZWUuYzogMApxdW90YS9mcmVlLm86IDIyMgpxdW90YS9saW51eC5jOiAyMTM0NApxdW90YS9s
-aW51eC5vOiAwCgpTaWduZWQtb2ZmLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1h
-dmVuLnBsPgotLS0KClRoaXMgdGltZSBjb3JyZWN0IHZlcnNpb24gb2YgdGhlIHBhdGNoLgoKIG1h
-bi9tYW44L3hmc19sc3Byb2ppZC44IHwgIDkgKysrKysrKysrCiBxdW90YS9NYWtlZmlsZSAgICAg
-ICAgICB8ICA0ICsrKy0KIHF1b3RhL3hmc19sc3Byb2ppZC5zaCAgIHwgMTEgKysrKysrKysrKysK
-IDMgZmlsZXMgY2hhbmdlZCwgMjMgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigtKQogY3JlYXRl
-IG1vZGUgMTAwNjQ0IG1hbi9tYW44L3hmc19sc3Byb2ppZC44CiBjcmVhdGUgbW9kZSAxMDA2NDQg
-cXVvdGEveGZzX2xzcHJvamlkLnNoCgpkaWZmIC0tZ2l0IGEvbWFuL21hbjgveGZzX2xzcHJvamlk
-LjggYi9tYW4vbWFuOC94ZnNfbHNwcm9qaWQuOApuZXcgZmlsZSBtb2RlIDEwMDY0NAppbmRleCAw
-MDAwMDAwLi4zZWE3Y2U5Ci0tLSAvZGV2L251bGwKKysrIGIvbWFuL21hbjgveGZzX2xzcHJvamlk
-LjgKQEAgLTAsMCArMSw5IEBACisuVEggeGZzX2xzcHJvamlkIDgKKy5TSCBOQU1FCit4ZnNfbHNw
-cm9qaWQgXC0gcHJpbnQgWEZTIHByb2plY3QgaWQgZm9yIGZpbGVzCisuU0ggU1lOT1BTSVMKKy5C
-IHhmc19sc3Byb2ppZAorLklSIGZpbGVuYW1lICIgLi4uIgorLlNIIERFU0NSSVBUSU9OCisuQiB4
-ZnNfbHNwcm9qaWQKK2Rpc3BsYXlzIHF1b3RhIHByb2plY3QgaWQgZm9yIHNwZWNpZmllZCBmaWxl
-cy4KZGlmZiAtLWdpdCBhL3F1b3RhL01ha2VmaWxlIGIvcXVvdGEvTWFrZWZpbGUKaW5kZXggOWM2
-NDExZS4uZDgxMzAwNSAxMDA2NDQKLS0tIGEvcXVvdGEvTWFrZWZpbGUKKysrIGIvcXVvdGEvTWFr
-ZWZpbGUKQEAgLTEyLDcgKzEyLDggQEAgQ0ZJTEVTID0gaW5pdC5jIHV0aWwuYyBcCiAKIENGSUxF
-UyArPSAkKFBLR19QTEFURk9STSkuYwogUENGSUxFUyA9IGRhcndpbi5jIGZyZWVic2QuYyBpcml4
-LmMgbGludXguYwotTFNSQ0ZJTEVTID0gJChzaGVsbCBlY2hvICQoUENGSUxFUykgfCBzZWQgLWUg
-InMvJChQS0dfUExBVEZPUk0pLmMvL2ciKQorTFNSQ0ZJTEVTID0gJChzaGVsbCBlY2hvICQoUENG
-SUxFUykgfCBzZWQgLWUgInMvJChQS0dfUExBVEZPUk0pLmMvL2ciKSBcCisJeGZzX2xzcHJvamlk
-LnNoCiAKIExMRExJQlMgPSAkKExJQlhDTUQpCiBMVERFUEVOREVOQ0lFUyA9ICQoTElCWENNRCkK
-QEAgLTM1LDYgKzM2LDcgQEAgaW5jbHVkZSAkKEJVSUxEUlVMRVMpCiBpbnN0YWxsOiBkZWZhdWx0
-CiAJJChJTlNUQUxMKSAtbSA3NTUgLWQgJChQS0dfU0JJTl9ESVIpCiAJJChMVElOU1RBTEwpIC1t
-IDc1NSAkKExUQ09NTUFORCkgJChQS0dfU0JJTl9ESVIpCisJJChJTlNUQUxMKSAtbSA3NTUgeGZz
-X2xzcHJvamlkLnNoICQoUEtHX1NCSU5fRElSKS94ZnNfbHNwcm9qaWQKIGluc3RhbGwtZGV2Ogog
-CiAtaW5jbHVkZSAuZGVwCmRpZmYgLS1naXQgYS9xdW90YS94ZnNfbHNwcm9qaWQuc2ggYi9xdW90
-YS94ZnNfbHNwcm9qaWQuc2gKbmV3IGZpbGUgbW9kZSAxMDA2NDQKaW5kZXggMDAwMDAwMC4uMGRi
-Zjk1YwotLS0gL2Rldi9udWxsCisrKyBiL3F1b3RhL3hmc19sc3Byb2ppZC5zaApAQCAtMCwwICsx
-LDExIEBACisjIS9iaW4vc2gKKyMKKyMgQ29weXJpZ2h0IChjKSAyMDEyIEFya2FkaXVzeiBNacWb
-a2lld2ljei4KKyMKKworZm9yIGZpbGUgaW4gIiRAIjsgZG8KKyAgICAgICAgeGZzX2lvIC1wICIk
-MCIgLXIgLWMgInN0YXQiICIkZmlsZSIgfCBhd2sgJworICAgICAgICAvXmZkXC5wYXRoID0vIHsg
-cHJvamlkPSIiOyBnc3ViKC9eZmRcLnBhdGggPSBcIi8sICIiKTsgZ3N1YigvXCIkLywgIiIpOyBw
-YXRoPSQwIH0KKyAgICAgICAgL15mc3hhdHRyXC5wcm9qaWQgPS8geyBwcm9qaWQ9JDM7IHByaW50
-IHBhdGggIjogIiBwcm9qaWQ7IH0KKyAgICAgICAgJworZG9uZQotLSAKMS44LjAKCl9fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
-eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
+On 11/12/12 05:09, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> In certain circumstances, a double split of an attribute tree is
+> needed to insert or replace an attribute. In rare situations, this
+> can go wrong, leaving the attribute tree corrupted. In this case,
+> the attr being replaced is the last attr in a leaf node, and the
+> replacement is larger so doesn't fit in the same leaf node.
+
+
+...
+
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
+> ---
+
+Looks great.
+
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
