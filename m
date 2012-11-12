@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
+Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBs2Qd217918 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:02 -0600
+	qACBrw1C217874 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:53:58 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	BHXXkRSCSgfdkJlj for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:56:03 -0800 (PST)
+	yA6Cje3mJccR30sF for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:55:59 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsbm-00054x-Sc
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:18 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXsbc-00054L-Dd
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbm-000142-PU
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:18 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TXsbS-00012f-Ai
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:58 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 27/32] xfs: add buffer pre-write callback
-Date: Mon, 12 Nov 2012 22:54:19 +1100
-Message-Id: <1352721264-3700-28-git-send-email-david@fromorbit.com>
+Subject: [PATCH 13/32] xfs: verify AGI blocks as they are read from disk
+Date: Mon, 12 Nov 2012 22:54:05 +1100
+Message-Id: <1352721264-3700-14-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,73 +35,101 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add a callback to the buffer write path to enable verification of
-the buffer and CRC calculation prior to issuing the write to the
-underlying storage.
-
-If the callback function detects some kind of failure or error
-condition, it must mark the buffer with an error so that the caller
-can take appropriate action. In the case of xfs_buf_ioapply(), a
-corrupt metadta buffer willt rigger a shutdown of the filesystem,
-because something is clearly wrong and we can't allow corrupt
-metadata to be written to disk.
+Add an AGI block verify callback function and pass it into the
+buffer read functions. Remove the now redundant verification code
+that is currently in use.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Phil White <pwhite@sgi.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_buf.c |   16 ++++++++++++++++
- fs/xfs/xfs_buf.h |    3 +++
- 2 files changed, 19 insertions(+)
+ fs/xfs/xfs_ialloc.c |   56 ++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 35 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index fbc965f..bd1a948 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -569,7 +569,9 @@ found:
- 	 */
- 	if (bp->b_flags & XBF_STALE) {
- 		ASSERT((bp->b_flags & _XBF_DELWRI_Q) == 0);
-+		ASSERT(bp->b_iodone == NULL);
- 		bp->b_flags &= _XBF_KMEM | _XBF_PAGES;
-+		bp->b_pre_io = NULL;
- 	}
+diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
+index 12e3dea..5bd255e 100644
+--- a/fs/xfs/xfs_ialloc.c
++++ b/fs/xfs/xfs_ialloc.c
+@@ -1472,6 +1472,40 @@ xfs_check_agi_unlinked(
+ #define xfs_check_agi_unlinked(agi)
+ #endif
  
- 	trace_xfs_buf_find(bp, flags, _RET_IP_);
-@@ -1324,6 +1326,20 @@ _xfs_buf_ioapply(
- 	rw |= REQ_META;
- 
- 	/*
-+	 * run the pre-io callback function if it exists. If this function
-+	 * fails it will mark the buffer with an error and the IO should
-+	 * not be dispatched.
-+	 */
-+	if (bp->b_pre_io) {
-+		bp->b_pre_io(bp);
-+		if (bp->b_error) {
-+			xfs_force_shutdown(bp->b_target->bt_mount,
-+					   SHUTDOWN_CORRUPT_INCORE);
-+			return;
-+		}
-+	}
++static void
++xfs_agi_read_verify(
++	struct xfs_buf	*bp)
++{
++	struct xfs_mount *mp = bp->b_target->bt_mount;
++	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
++	int		agi_ok;
 +
 +	/*
- 	 * Walk all the vectors issuing IO on them. Set up the initial offset
- 	 * into the buffer and the desired IO size before we start -
- 	 * _xfs_buf_ioapply_vec() will modify them appropriately for each
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index 677b1dc..51bc16a 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -155,6 +155,9 @@ typedef struct xfs_buf {
- 	unsigned int		b_offset;	/* page offset in first page */
- 	unsigned short		b_error;	/* error code on I/O */
- 
-+	void			(*b_pre_io)(struct xfs_buf *);
-+						/* pre-io callback function */
++	 * Validate the magic number of the agi block.
++	 */
++	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
++		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
 +
- #ifdef XFS_BUF_LOCK_TRACKING
- 	int			b_last_holder;
- #endif
++	/*
++	 * during growfs operations, the perag is not fully initialised,
++	 * so we can't use it for any useful checking. growfs ensures we can't
++	 * use it by using uncached buffers that don't have the perag attached
++	 * so we can detect and avoid this problem.
++	 */
++	if (bp->b_pag)
++		agi_ok = agi_ok && be32_to_cpu(agi->agi_seqno) ==
++						bp->b_pag->pag_agno;
++
++	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
++			XFS_RANDOM_IALLOC_READ_AGI))) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agi);
++		xfs_buf_ioerror(bp, EFSCORRUPTED);
++	}
++	xfs_check_agi_unlinked(agi);
++	bp->b_iodone = NULL;
++	xfs_buf_ioend(bp, 0);
++}
++
+ /*
+  * Read in the allocation group header (inode allocation section)
+  */
+@@ -1482,38 +1516,18 @@ xfs_read_agi(
+ 	xfs_agnumber_t		agno,	/* allocation group number */
+ 	struct xfs_buf		**bpp)	/* allocation group hdr buf */
+ {
+-	struct xfs_agi		*agi;	/* allocation group header */
+-	int			agi_ok;	/* agi is consistent */
+ 	int			error;
+ 
+ 	ASSERT(agno != NULLAGNUMBER);
+ 
+ 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
+ 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1), 0, bpp, NULL);
++			XFS_FSS_TO_BB(mp, 1), 0, bpp, xfs_agi_read_verify);
+ 	if (error)
+ 		return error;
+ 
+ 	ASSERT(!xfs_buf_geterror(*bpp));
+-	agi = XFS_BUF_TO_AGI(*bpp);
+-
+-	/*
+-	 * Validate the magic number of the agi block.
+-	 */
+-	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
+-		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
+-		be32_to_cpu(agi->agi_seqno) == agno;
+-	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
+-			XFS_RANDOM_IALLOC_READ_AGI))) {
+-		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
+-				     mp, agi);
+-		xfs_trans_brelse(tp, *bpp);
+-		return XFS_ERROR(EFSCORRUPTED);
+-	}
+-
+ 	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
+-
+-	xfs_check_agi_unlinked(agi);
+ 	return 0;
+ }
+ 
 -- 
 1.7.10
 
