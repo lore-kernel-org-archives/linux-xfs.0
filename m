@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from cuda.sgi.com (cuda3.sgi.com [192.48.176.15])
+Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBrw1C217874 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:53:58 -0600
+	qACBs1i0217904 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:01 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	yA6Cje3mJccR30sF for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:55:59 -0800 (PST)
+	FUqR1VAQbki99d6c for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:56:02 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsbc-00054L-Dd
+	(envelope-from <dave@fromorbit.com>) id 1TXsbc-00054Z-Ol
 	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbS-00012f-Ai
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:58 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TXsbc-00013a-Li
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 13/32] xfs: verify AGI blocks as they are read from disk
-Date: Mon, 12 Nov 2012 22:54:05 +1100
-Message-Id: <1352721264-3700-14-git-send-email-david@fromorbit.com>
+Subject: [PATCH 23/32] xfs: factor dir2 leaf read
+Date: Mon, 12 Nov 2012 22:54:15 +1100
+Message-Id: <1352721264-3700-24-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,101 +35,148 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Add an AGI block verify callback function and pass it into the
-buffer read functions. Remove the now redundant verification code
-that is currently in use.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Phil White <pwhite@sgi.com>
 ---
- fs/xfs/xfs_ialloc.c |   56 ++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 35 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_dir2_leaf.c |   73 ++++++++++++++++++++++++++++++++++++++++--------
+ fs/xfs/xfs_dir2_node.c |    6 ++--
+ fs/xfs/xfs_dir2_priv.h |    2 ++
+ 3 files changed, 67 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_ialloc.c b/fs/xfs/xfs_ialloc.c
-index 12e3dea..5bd255e 100644
---- a/fs/xfs/xfs_ialloc.c
-+++ b/fs/xfs/xfs_ialloc.c
-@@ -1472,6 +1472,40 @@ xfs_check_agi_unlinked(
- #define xfs_check_agi_unlinked(agi)
- #endif
+diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
+index 0fdf765..97408e3 100644
+--- a/fs/xfs/xfs_dir2_leaf.c
++++ b/fs/xfs/xfs_dir2_leaf.c
+@@ -48,6 +48,62 @@ static void xfs_dir2_leaf_log_bests(struct xfs_trans *tp, struct xfs_buf *bp,
+ 				    int first, int last);
+ static void xfs_dir2_leaf_log_tail(struct xfs_trans *tp, struct xfs_buf *bp);
  
 +static void
-+xfs_agi_read_verify(
-+	struct xfs_buf	*bp)
++xfs_dir2_leaf_verify(
++	struct xfs_buf		*bp,
++	__be16			magic)
 +{
-+	struct xfs_mount *mp = bp->b_target->bt_mount;
-+	struct xfs_agi	*agi = XFS_BUF_TO_AGI(bp);
-+	int		agi_ok;
++	struct xfs_mount	*mp = bp->b_target->bt_mount;
++	struct xfs_dir2_leaf_hdr *hdr = bp->b_addr;
++	int			block_ok = 0;
 +
-+	/*
-+	 * Validate the magic number of the agi block.
-+	 */
-+	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
-+		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum));
-+
-+	/*
-+	 * during growfs operations, the perag is not fully initialised,
-+	 * so we can't use it for any useful checking. growfs ensures we can't
-+	 * use it by using uncached buffers that don't have the perag attached
-+	 * so we can detect and avoid this problem.
-+	 */
-+	if (bp->b_pag)
-+		agi_ok = agi_ok && be32_to_cpu(agi->agi_seqno) ==
-+						bp->b_pag->pag_agno;
-+
-+	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
-+			XFS_RANDOM_IALLOC_READ_AGI))) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, agi);
++	block_ok = hdr->info.magic == magic;
++	if (!block_ok) {
++		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
 +		xfs_buf_ioerror(bp, EFSCORRUPTED);
 +	}
-+	xfs_check_agi_unlinked(agi);
++
 +	bp->b_iodone = NULL;
 +	xfs_buf_ioend(bp, 0);
 +}
 +
++static void
++xfs_dir2_leaf1_verify(
++	struct xfs_buf		*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
++}
++
++static void
++xfs_dir2_leafn_verify(
++	struct xfs_buf		*bp)
++{
++	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAFN_MAGIC));
++}
++
++static int
++xfs_dir2_leaf_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		fbno,
++	xfs_daddr_t		mappedbno,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++					XFS_DATA_FORK, xfs_dir2_leaf1_verify);
++}
++
++int
++xfs_dir2_leafn_read(
++	struct xfs_trans	*tp,
++	struct xfs_inode	*dp,
++	xfs_dablk_t		fbno,
++	xfs_daddr_t		mappedbno,
++	struct xfs_buf		**bpp)
++{
++	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
++					XFS_DATA_FORK, xfs_dir2_leafn_verify);
++}
+ 
  /*
-  * Read in the allocation group header (inode allocation section)
-  */
-@@ -1482,38 +1516,18 @@ xfs_read_agi(
- 	xfs_agnumber_t		agno,	/* allocation group number */
- 	struct xfs_buf		**bpp)	/* allocation group hdr buf */
- {
--	struct xfs_agi		*agi;	/* allocation group header */
--	int			agi_ok;	/* agi is consistent */
- 	int			error;
- 
- 	ASSERT(agno != NULLAGNUMBER);
- 
- 	error = xfs_trans_read_buf(mp, tp, mp->m_ddev_targp,
- 			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1), 0, bpp, NULL);
-+			XFS_FSS_TO_BB(mp, 1), 0, bpp, xfs_agi_read_verify);
+  * Convert a block form directory to a leaf form directory.
+@@ -311,14 +367,11 @@ xfs_dir2_leaf_addname(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
+-	/*
+-	 * Read the leaf block.
+-	 */
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
+-				XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
  	if (error)
  		return error;
- 
- 	ASSERT(!xfs_buf_geterror(*bpp));
--	agi = XFS_BUF_TO_AGI(*bpp);
--
+-	ASSERT(lbp != NULL);
++
+ 	/*
+ 	 * Look up the entry by hash value and name.
+ 	 * We know it's not there, our caller has already done a lookup.
+@@ -1369,13 +1422,11 @@ xfs_dir2_leaf_lookup_int(
+ 	dp = args->dp;
+ 	tp = args->trans;
+ 	mp = dp->i_mount;
 -	/*
--	 * Validate the magic number of the agi block.
+-	 * Read the leaf block into the buffer.
 -	 */
--	agi_ok = agi->agi_magicnum == cpu_to_be32(XFS_AGI_MAGIC) &&
--		XFS_AGI_GOOD_VERSION(be32_to_cpu(agi->agi_versionnum)) &&
--		be32_to_cpu(agi->agi_seqno) == agno;
--	if (unlikely(XFS_TEST_ERROR(!agi_ok, mp, XFS_ERRTAG_IALLOC_READ_AGI,
--			XFS_RANDOM_IALLOC_READ_AGI))) {
--		XFS_CORRUPTION_ERROR("xfs_read_agi", XFS_ERRLEVEL_LOW,
--				     mp, agi);
--		xfs_trans_brelse(tp, *bpp);
--		return XFS_ERROR(EFSCORRUPTED);
--	}
--
- 	xfs_buf_set_ref(*bpp, XFS_AGI_REF);
--
--	xfs_check_agi_unlinked(agi);
- 	return 0;
- }
+-	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
+-							XFS_DATA_FORK, NULL);
++
++	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
+ 	if (error)
+ 		return error;
++
+ 	*lbpp = lbp;
+ 	leaf = lbp->b_addr;
+ 	xfs_dir2_leaf_check(dp, lbp);
+diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
+index 67b811c..7c6f956 100644
+--- a/fs/xfs/xfs_dir2_node.c
++++ b/fs/xfs/xfs_dir2_node.c
+@@ -1232,11 +1232,11 @@ xfs_dir2_leafn_toosmall(
+ 		/*
+ 		 * Read the sibling leaf block.
+ 		 */
+-		error = xfs_da_read_buf(state->args->trans, state->args->dp,
+-					blkno, -1, &bp, XFS_DATA_FORK, NULL);
++		error = xfs_dir2_leafn_read(state->args->trans, state->args->dp,
++					    blkno, -1, &bp);
+ 		if (error)
+ 			return error;
+-		ASSERT(bp != NULL);
++
+ 		/*
+ 		 * Count bytes in the two blocks combined.
+ 		 */
+diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
+index 71ec828..4560825 100644
+--- a/fs/xfs/xfs_dir2_priv.h
++++ b/fs/xfs/xfs_dir2_priv.h
+@@ -70,6 +70,8 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
+ 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
  
+ /* xfs_dir2_leaf.c */
++extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
++		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
+ extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
+ 		struct xfs_buf *dbp);
+ extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
 -- 
 1.7.10
 
