@@ -1,21 +1,21 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
 Received: from cuda.sgi.com (cuda1.sgi.com [192.48.157.11])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACBs1i0217904 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:54:01 -0600
+	qACBqmIu217604 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 05:52:48 -0600
 Received: from ipmail05.adl6.internode.on.net (ipmail05.adl6.internode.on.net
 	[150.101.137.143]) by cuda.sgi.com with ESMTP id
-	FUqR1VAQbki99d6c for <xfs@oss.sgi.com>;
-	Mon, 12 Nov 2012 03:56:02 -0800 (PST)
+	VCCnaHiJ0C7CFHAv for <xfs@oss.sgi.com>;
+	Mon, 12 Nov 2012 03:54:49 -0800 (PST)
 Received: from disappointment ([192.168.1.1]) by dastard with esmtp (Exim 4.76)
-	(envelope-from <dave@fromorbit.com>) id 1TXsbc-00054Z-Ol
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
+	(envelope-from <dave@fromorbit.com>) id 1TXsbI-00053k-7H
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:48 +1100
 Received: from dave by disappointment with local (Exim 4.80)
-	(envelope-from <dave@disappointment.disaster>) id 1TXsbc-00013a-Li
-	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:55:08 +1100
+	(envelope-from <dave@disappointment.disaster>) id 1TXsbI-00012E-3v
+	for xfs@oss.sgi.com; Mon, 12 Nov 2012 22:54:48 +1100
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 23/32] xfs: factor dir2 leaf read
-Date: Mon, 12 Nov 2012 22:54:15 +1100
-Message-Id: <1352721264-3700-24-git-send-email-david@fromorbit.com>
+Subject: [PATCH 08/32] xfs: make growfs initialise the AGFL header
+Date: Mon, 12 Nov 2012 22:54:00 +1100
+Message-Id: <1352721264-3700-9-git-send-email-david@fromorbit.com>
 In-Reply-To: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
@@ -35,148 +35,68 @@ To: xfs@oss.sgi.com
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Phil White <pwhite@sgi.com>
----
- fs/xfs/xfs_dir2_leaf.c |   73 ++++++++++++++++++++++++++++++++++++++++--------
- fs/xfs/xfs_dir2_node.c |    6 ++--
- fs/xfs/xfs_dir2_priv.h |    2 ++
- 3 files changed, 67 insertions(+), 14 deletions(-)
+For verification purposes, AGFLs need to be initialised to a known
+set of values. For upcoming CRC changes, they are also headers that
+need to be initialised. Currently, growfs does neither for the AGFLs
+- it ignores them completely. Add initialisation of the AGFL to be
+full of invalid block numbers (NULLAGBLOCK) to put the
+infrastructure in place needed for CRC support.
 
-diff --git a/fs/xfs/xfs_dir2_leaf.c b/fs/xfs/xfs_dir2_leaf.c
-index 0fdf765..97408e3 100644
---- a/fs/xfs/xfs_dir2_leaf.c
-+++ b/fs/xfs/xfs_dir2_leaf.c
-@@ -48,6 +48,62 @@ static void xfs_dir2_leaf_log_bests(struct xfs_trans *tp, struct xfs_buf *bp,
- 				    int first, int last);
- static void xfs_dir2_leaf_log_tail(struct xfs_trans *tp, struct xfs_buf *bp);
- 
-+static void
-+xfs_dir2_leaf_verify(
-+	struct xfs_buf		*bp,
-+	__be16			magic)
-+{
-+	struct xfs_mount	*mp = bp->b_target->bt_mount;
-+	struct xfs_dir2_leaf_hdr *hdr = bp->b_addr;
-+	int			block_ok = 0;
-+
-+	block_ok = hdr->info.magic == magic;
-+	if (!block_ok) {
-+		XFS_CORRUPTION_ERROR(__func__, XFS_ERRLEVEL_LOW, mp, hdr);
-+		xfs_buf_ioerror(bp, EFSCORRUPTED);
-+	}
-+
-+	bp->b_iodone = NULL;
-+	xfs_buf_ioend(bp, 0);
-+}
-+
-+static void
-+xfs_dir2_leaf1_verify(
-+	struct xfs_buf		*bp)
-+{
-+	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAF1_MAGIC));
-+}
-+
-+static void
-+xfs_dir2_leafn_verify(
-+	struct xfs_buf		*bp)
-+{
-+	xfs_dir2_leaf_verify(bp, cpu_to_be16(XFS_DIR2_LEAFN_MAGIC));
-+}
-+
-+static int
-+xfs_dir2_leaf_read(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dablk_t		fbno,
-+	xfs_daddr_t		mappedbno,
-+	struct xfs_buf		**bpp)
-+{
-+	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
-+					XFS_DATA_FORK, xfs_dir2_leaf1_verify);
-+}
-+
-+int
-+xfs_dir2_leafn_read(
-+	struct xfs_trans	*tp,
-+	struct xfs_inode	*dp,
-+	xfs_dablk_t		fbno,
-+	xfs_daddr_t		mappedbno,
-+	struct xfs_buf		**bpp)
-+{
-+	return xfs_da_read_buf(tp, dp, fbno, mappedbno, bpp,
-+					XFS_DATA_FORK, xfs_dir2_leafn_verify);
-+}
- 
- /*
-  * Convert a block form directory to a leaf form directory.
-@@ -311,14 +367,11 @@ xfs_dir2_leaf_addname(
- 	dp = args->dp;
- 	tp = args->trans;
- 	mp = dp->i_mount;
--	/*
--	 * Read the leaf block.
--	 */
--	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
--				XFS_DATA_FORK, NULL);
-+
-+	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
- 	if (error)
- 		return error;
--	ASSERT(lbp != NULL);
-+
- 	/*
- 	 * Look up the entry by hash value and name.
- 	 * We know it's not there, our caller has already done a lookup.
-@@ -1369,13 +1422,11 @@ xfs_dir2_leaf_lookup_int(
- 	dp = args->dp;
- 	tp = args->trans;
- 	mp = dp->i_mount;
--	/*
--	 * Read the leaf block into the buffer.
--	 */
--	error = xfs_da_read_buf(tp, dp, mp->m_dirleafblk, -1, &lbp,
--							XFS_DATA_FORK, NULL);
-+
-+	error = xfs_dir2_leaf_read(tp, dp, mp->m_dirleafblk, -1, &lbp);
- 	if (error)
- 		return error;
-+
- 	*lbpp = lbp;
- 	leaf = lbp->b_addr;
- 	xfs_dir2_leaf_check(dp, lbp);
-diff --git a/fs/xfs/xfs_dir2_node.c b/fs/xfs/xfs_dir2_node.c
-index 67b811c..7c6f956 100644
---- a/fs/xfs/xfs_dir2_node.c
-+++ b/fs/xfs/xfs_dir2_node.c
-@@ -1232,11 +1232,11 @@ xfs_dir2_leafn_toosmall(
+Includes a comment clarification from Jeff Liu.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_fsops.c |   23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_fsops.c b/fs/xfs/xfs_fsops.c
+index 2196830..bd9cb7f 100644
+--- a/fs/xfs/xfs_fsops.c
++++ b/fs/xfs/xfs_fsops.c
+@@ -140,6 +140,7 @@ xfs_growfs_data_private(
+ 	xfs_growfs_data_t	*in)		/* growfs data input struct */
+ {
+ 	xfs_agf_t		*agf;
++	struct xfs_agfl		*agfl;
+ 	xfs_agi_t		*agi;
+ 	xfs_agnumber_t		agno;
+ 	xfs_extlen_t		agsize;
+@@ -207,7 +208,7 @@ xfs_growfs_data_private(
+ 	nfree = 0;
+ 	for (agno = nagcount - 1; agno >= oagcount; agno--, new -= agsize) {
  		/*
- 		 * Read the sibling leaf block.
+-		 * AG freelist header block
++		 * AG freespace header block
  		 */
--		error = xfs_da_read_buf(state->args->trans, state->args->dp,
--					blkno, -1, &bp, XFS_DATA_FORK, NULL);
-+		error = xfs_dir2_leafn_read(state->args->trans, state->args->dp,
-+					    blkno, -1, &bp);
- 		if (error)
- 			return error;
--		ASSERT(bp != NULL);
-+
- 		/*
- 		 * Count bytes in the two blocks combined.
- 		 */
-diff --git a/fs/xfs/xfs_dir2_priv.h b/fs/xfs/xfs_dir2_priv.h
-index 71ec828..4560825 100644
---- a/fs/xfs/xfs_dir2_priv.h
-+++ b/fs/xfs/xfs_dir2_priv.h
-@@ -70,6 +70,8 @@ extern void xfs_dir2_data_use_free(struct xfs_trans *tp, struct xfs_buf *bp,
- 		xfs_dir2_data_aoff_t len, int *needlogp, int *needscanp);
+ 		bp = xfs_growfs_get_hdr_buf(mp,
+ 				XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+@@ -244,6 +245,26 @@ xfs_growfs_data_private(
+ 			goto error0;
  
- /* xfs_dir2_leaf.c */
-+extern int xfs_dir2_leafn_read(struct xfs_trans *tp, struct xfs_inode *dp,
-+		xfs_dablk_t fbno, xfs_daddr_t mappedbno, struct xfs_buf **bpp);
- extern int xfs_dir2_block_to_leaf(struct xfs_da_args *args,
- 		struct xfs_buf *dbp);
- extern int xfs_dir2_leaf_addname(struct xfs_da_args *args);
+ 		/*
++		 * AG freelist header block
++		 */
++		bp = xfs_growfs_get_hdr_buf(mp,
++				XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
++				XFS_FSS_TO_BB(mp, 1), 0);
++		if (!bp) {
++			error = ENOMEM;
++			goto error0;
++		}
++
++		agfl = XFS_BUF_TO_AGFL(bp);
++		for (bucket = 0; bucket < XFS_AGFL_SIZE(mp); bucket++)
++			agfl->agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
++
++		error = xfs_bwrite(bp);
++		xfs_buf_relse(bp);
++		if (error)
++			goto error0;
++
++		/*
+ 		 * AG inode header block
+ 		 */
+ 		bp = xfs_growfs_get_hdr_buf(mp,
 -- 
 1.7.10
 
