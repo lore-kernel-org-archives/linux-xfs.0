@@ -1,15 +1,15 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from relay.sgi.com (relay1.corp.sgi.com [137.38.102.111])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACKn0Mm251519 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 14:49:00 -0600
-Message-ID: <50A16133.6050809@sgi.com>
-Date: Mon, 12 Nov 2012 14:50:59 -0600
-From: Andrew Dahl <adahl@sgi.com>
+	qACKnfAc251613 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 14:49:41 -0600
+Message-ID: <50A1615F.10809@sgi.com>
+Date: Mon, 12 Nov 2012 14:51:43 -0600
+From: Mark Tinguely <tinguely@sgi.com>
 MIME-Version: 1.0
-Subject: Re: [PATCH 3/4] xfs: remove xfs_flush_pages
-References: <1352455804-17045-1-git-send-email-david@fromorbit.com>
-	<1352455804-17045-4-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352455804-17045-4-git-send-email-david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: drop buffer io reference when a bad bio is built
+References: <1352718586-3538-1-git-send-email-david@fromorbit.com>
+	<1352718586-3538-4-git-send-email-david@fromorbit.com>
+In-Reply-To: <1352718586-3538-4-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,144 +18,43 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
 To: Dave Chinner <david@fromorbit.com>
 Cc: xfs@oss.sgi.com
 
-On 11/09/2012 04:10 AM, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> It is a complex wrapper around VFS functions, but there are VFS
-> functions that provide exactly the same functionality. Call the VFS
-> functions directly and remove the unnecessary indirection and
-> complexity.
-> 
-> We don't need to care about clearing the XFS_ITRUNCATED flag, as
-> that is done during .writepages. Hence is cleared by the VFS
-> writeback path if there is anything to write back during the flush.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+On 11/12/12 05:09, Dave Chinner wrote:
+> From: Dave Chinner<dchinner@redhat.com>
+>
+> Error handling in xfs_buf_ioapply_map() does not handle IO reference
+> counts correctly. We increment the b_io_remaining count before
+> building the bio, but then fail to decrement it in the failure case.
+> This leads to the buffer never running IO completion and releasing
+> the reference that the IO holds, so at unmount we can leak the
+> buffer. This leak is captured by this assert failure during unmount:
+>
+> XFS: Assertion failed: atomic_read(&pag->pag_ref) == 0, file: fs/xfs/xfs_mount.c, line: 273
+>
+> This is not a new bug - the b_io_remaining accounting has had this
+> problem for a long, long time - it's just very hard to get a
+> zero length bio being built by this code...
+>
+> Further, the buffer IO error can be overwritten on a multi-segment
+> buffer by subsequent bio completions for partial sections of the
+> buffer. Hence we should only set the buffer error status if the
+> buffer is not already carrying an error status. This ensures that a
+> partial IO error on a multi-segment buffer will not be lost. This
+> part of the problem is a regression, however.
+>
+> cc:<stable@vger.kernel.org>
+> Signed-off-by: Dave Chinner<dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_aops.c     |    2 +-
->  fs/xfs/xfs_bmap.c     |    2 +-
->  fs/xfs/xfs_fs_subr.c  |   24 ------------------------
->  fs/xfs/xfs_iops.c     |    4 ++--
->  fs/xfs/xfs_vnodeops.c |    7 +++++--
->  fs/xfs/xfs_vnodeops.h |    2 --
->  6 files changed, 9 insertions(+), 32 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index e562dd4..42ef842 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -1617,7 +1617,7 @@ xfs_vm_bmap(
->  
->  	trace_xfs_vm_bmap(XFS_I(inode));
->  	xfs_ilock(ip, XFS_IOLOCK_SHARED);
-> -	xfs_flush_pages(ip, (xfs_off_t)0, -1, 0, FI_REMAPF);
-> +	filemap_write_and_wait(mapping);
->  	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
->  	return generic_block_bmap(mapping, block, xfs_get_blocks);
->  }
-> diff --git a/fs/xfs/xfs_bmap.c b/fs/xfs/xfs_bmap.c
-> index 83d0cf3..a60f3d1 100644
-> --- a/fs/xfs/xfs_bmap.c
-> +++ b/fs/xfs/xfs_bmap.c
-> @@ -5599,7 +5599,7 @@ xfs_getbmap(
->  	xfs_ilock(ip, XFS_IOLOCK_SHARED);
->  	if (whichfork == XFS_DATA_FORK && !(iflags & BMV_IF_DELALLOC)) {
->  		if (ip->i_delayed_blks || XFS_ISIZE(ip) > ip->i_d.di_size) {
-> -			error = xfs_flush_pages(ip, 0, -1, 0, FI_REMAPF);
-> +			error = -filemap_write_and_wait(VFS_I(ip)->i_mapping);
->  			if (error)
->  				goto out_unlock_iolock;
->  		}
-> diff --git a/fs/xfs/xfs_fs_subr.c b/fs/xfs/xfs_fs_subr.c
-> index 3365823..b538089 100644
-> --- a/fs/xfs/xfs_fs_subr.c
-> +++ b/fs/xfs/xfs_fs_subr.c
-> @@ -44,27 +44,3 @@ xfs_flushinval_pages(
->  		truncate_inode_pages_range(mapping, first, last);
->  	return -ret;
->  }
-> -
-> -int
-> -xfs_flush_pages(
-> -	xfs_inode_t	*ip,
-> -	xfs_off_t	first,
-> -	xfs_off_t	last,
-> -	uint64_t	flags,
-> -	int		fiopt)
-> -{
-> -	struct address_space *mapping = VFS_I(ip)->i_mapping;
-> -	int		ret = 0;
-> -	int		ret2;
-> -
-> -	xfs_iflags_clear(ip, XFS_ITRUNCATED);
-> -	ret = -filemap_fdatawrite_range(mapping, first,
-> -				last == -1 ? LLONG_MAX : last);
-> -	if (flags & XBF_ASYNC)
-> -		return ret;
-> -	ret2 = -filemap_fdatawait_range(mapping, first,
-> -				last == -1 ? XFS_ISIZE(ip) - 1 : last);
-> -	if (!ret)
-> -		ret = ret2;
-> -	return ret;
-> -}
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 81f5c49..d82efaa 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -780,8 +780,8 @@ xfs_setattr_size(
->  	 * care about here.
->  	 */
->  	if (oldsize != ip->i_d.di_size && newsize > ip->i_d.di_size) {
-> -		error = xfs_flush_pages(ip, ip->i_d.di_size, newsize, 0,
-> -					FI_NONE);
-> +		error = -filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
-> +						      ip->i_d.di_size, newsize);
->  		if (error)
->  			goto out_unlock;
->  	}
-> diff --git a/fs/xfs/xfs_vnodeops.c b/fs/xfs/xfs_vnodeops.c
-> index f7de578..31de73e 100644
-> --- a/fs/xfs/xfs_vnodeops.c
-> +++ b/fs/xfs/xfs_vnodeops.c
-> @@ -428,8 +428,11 @@ xfs_release(
->  		truncated = xfs_iflags_test_and_clear(ip, XFS_ITRUNCATED);
->  		if (truncated) {
->  			xfs_iflags_clear(ip, XFS_IDIRTY_RELEASE);
-> -			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0)
-> -				xfs_flush_pages(ip, 0, -1, XBF_ASYNC, FI_NONE);
-> +			if (VN_DIRTY(VFS_I(ip)) && ip->i_delayed_blks > 0) {
-> +				error = -filemap_flush(VFS_I(ip)->i_mapping);
-> +				if (error)
-> +					return error;
-> +			}
->  		}
->  	}
->  
-> diff --git a/fs/xfs/xfs_vnodeops.h b/fs/xfs/xfs_vnodeops.h
-> index c8ad48b..73cb3cb 100644
-> --- a/fs/xfs/xfs_vnodeops.h
-> +++ b/fs/xfs/xfs_vnodeops.h
-> @@ -50,8 +50,6 @@ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->  		int flags, struct attrlist_cursor_kern *cursor);
->  int xfs_flushinval_pages(struct xfs_inode *ip, xfs_off_t first,
->  		xfs_off_t last, int fiopt);
-> -int xfs_flush_pages(struct xfs_inode *ip, xfs_off_t first,
-> -		xfs_off_t last, uint64_t flags, int fiopt);
->  
->  int xfs_zero_eof(struct xfs_inode *, xfs_off_t, xfs_fsize_t);
->  int xfs_free_eofblocks(struct xfs_mount *, struct xfs_inode *, bool);
-> 
 
-Looks good!
+Looks good.
 
-Reviewed-by: Andrew Dahl <adahl@sgi.com>
+Reviewed-by: Mark Tinguely <tinguely@sgi.com>
 
 _______________________________________________
 xfs mailing list
