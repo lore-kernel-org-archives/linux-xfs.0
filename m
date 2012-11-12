@@ -1,15 +1,18 @@
 Return-Path: <xfs-bounces@oss.sgi.com>
-Received: from relay.sgi.com (relay2.corp.sgi.com [137.38.102.29])
+Received: from cuda.sgi.com (cuda2.sgi.com [192.48.176.25])
 	by oss.sgi.com (8.14.3/8.14.3/SuSE Linux 0.8) with ESMTP id
-	qACFZkGC233251 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 09:35:46 -0600
-Message-ID: <50A117CD.8040907@sgi.com>
-Date: Mon, 12 Nov 2012 09:37:49 -0600
-From: Mark Tinguely <tinguely@sgi.com>
+	qACIW1BL244407 for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 12:32:01 -0600
+Received: from mail-ee0-f53.google.com (mail-ee0-f53.google.com
+	[74.125.83.53]) by cuda.sgi.com with ESMTP id B8GjICL7sNXogbOJ
+	(version=TLSv1 cipher=RC4-SHA bits=128 verify=NO) for
+	<xfs@oss.sgi.com>; Mon, 12 Nov 2012 10:34:02 -0800 (PST)
+Received: by mail-ee0-f53.google.com with SMTP id e51so4085052eek.26
+	for <xfs@oss.sgi.com>; Mon, 12 Nov 2012 10:34:01 -0800 (PST)
+From: =?UTF-8?q?Arkadiusz=20Mi=C5=9Bkiewicz?= <arekm@maven.pl>
+Subject: [PATCH]: Shell script for printing XFS quota project id for files.
+Date: Mon, 12 Nov 2012 19:33:55 +0100
+Message-Id: <1352745235-14922-1-git-send-email-arekm@maven.pl>
 MIME-Version: 1.0
-Subject: Re: [PATCH 32/32] xfs: add CRC checks to the log
-References: <1352721264-3700-1-git-send-email-david@fromorbit.com>
-	<1352721264-3700-33-git-send-email-david@fromorbit.com>
-In-Reply-To: <1352721264-3700-33-git-send-email-david@fromorbit.com>
 List-Id: XFS Filesystem from SGI <xfs.oss.sgi.com>
 List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
@@ -18,51 +21,46 @@ List-Post: <mailto:xfs@oss.sgi.com>
 List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
 List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
 	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Sender: xfs-bounces@oss.sgi.com
 Errors-To: xfs-bounces@oss.sgi.com
-To: Dave Chinner <david@fromorbit.com>
-Cc: xfs@oss.sgi.com
+To: xfs@oss.sgi.com
 
-On 11/12/12 05:54, Dave Chinner wrote:
-> From: Christoph Hellwig<hch@lst.de>
->
-> Implement CRCs for the log buffers.  We re-use a field in
-> struct xlog_rec_header that was used for a weak checksum of the
-> log buffer payload in debug builds before.
->
-> The new checksumming uses the crc32c checksum we will use elsewhere
-> in XFS, and also protects the record header and addition cycle data.
->
-> Due to this there are some interesting changes in xlog_sync, as we
-> need to do the cycle wrapping for the split buffer case much earlier,
-> as we would touch the buffer after generating the checksum otherwise.
->
-> The CRC calculation is always enabled, even for non-CRC filesystems,
-> as adding this CRC does not change the log format. On non-CRC
-> filesystems, only issue an alert if a CRC mismatch is found and
-> allow recovery to continue - this will act as an indicator that
-> log recovery problems are a result of log corruption. On CRC enabled
-> filesystems, however, log recovery will fail.
->
-> Note that existing debug kernels will write a simple checksum value
-> to the log, so the first time this is run on a filesystem taht was
-> last used on a debug kernel it will through CRC mismatch warning
-> errors. These can be ignored.
->
-> Initially based on a patch from Dave Chinner, then modified
-> significantly by Christoph Hellwig.  Modified again by Dave Chinner
-> to get to this version.
->
-> Signed-off-by: Christoph Hellwig<hch@lst.de>
-> Signed-off-by: Dave Chinner<dchinner@redhat.com>
-> ---
-
-
-Reviewed-by: Mark Tinguely <tinguely@sgi.com>
-
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+U2ltcGxlIHNjcmlwdCB0aGF0IHByaW50cyBwcm9qZWN0IGlkIGZvciBmaWxlczoKCiQgc2ggcXVv
+dGEveGZzX2xzcHJvamlkLnNoIHF1b3RhL1tmbF0qCnF1b3RhL2ZyZWVic2QuYzogMjMyCnF1b3Rh
+L2ZyZWUuYzogMApxdW90YS9mcmVlLm86IDIyMgpxdW90YS9saW51eC5jOiAyMTM0NApxdW90YS9s
+aW51eC5vOiAwCgpTaWduZWQtb2ZmLWJ5OiBBcmthZGl1c3ogTWnFm2tpZXdpY3ogPGFyZWttQG1h
+dmVuLnBsPgotLS0KIG1hbi9tYW44L3hmc19sc3Byb2ppZC44IHwgOSArKysrKysrKysKIHF1b3Rh
+L01ha2VmaWxlICAgICAgICAgIHwgNCArKystCiBxdW90YS94ZnNfbHNwcm9qaWQuc2ggICB8IDkg
+KysrKysrKysrCiAzIGZpbGVzIGNoYW5nZWQsIDIxIGluc2VydGlvbnMoKyksIDEgZGVsZXRpb24o
+LSkKIGNyZWF0ZSBtb2RlIDEwMDY0NCBtYW4vbWFuOC94ZnNfbHNwcm9qaWQuOAogY3JlYXRlIG1v
+ZGUgMTAwNjQ0IHF1b3RhL3hmc19sc3Byb2ppZC5zaAoKZGlmZiAtLWdpdCBhL21hbi9tYW44L3hm
+c19sc3Byb2ppZC44IGIvbWFuL21hbjgveGZzX2xzcHJvamlkLjgKbmV3IGZpbGUgbW9kZSAxMDA2
+NDQKaW5kZXggMDAwMDAwMC4uM2VhN2NlOQotLS0gL2Rldi9udWxsCisrKyBiL21hbi9tYW44L3hm
+c19sc3Byb2ppZC44CkBAIC0wLDAgKzEsOSBAQAorLlRIIHhmc19sc3Byb2ppZCA4CisuU0ggTkFN
+RQoreGZzX2xzcHJvamlkIFwtIHByaW50IFhGUyBwcm9qZWN0IGlkIGZvciBmaWxlcworLlNIIFNZ
+Tk9QU0lTCisuQiB4ZnNfbHNwcm9qaWQKKy5JUiBmaWxlbmFtZSAiIC4uLiIKKy5TSCBERVNDUklQ
+VElPTgorLkIgeGZzX2xzcHJvamlkCitkaXNwbGF5cyBxdW90YSBwcm9qZWN0IGlkIGZvciBzcGVj
+aWZpZWQgZmlsZXMuCmRpZmYgLS1naXQgYS9xdW90YS9NYWtlZmlsZSBiL3F1b3RhL01ha2VmaWxl
+CmluZGV4IDljNjQxMWUuLmQ4MTMwMDUgMTAwNjQ0Ci0tLSBhL3F1b3RhL01ha2VmaWxlCisrKyBi
+L3F1b3RhL01ha2VmaWxlCkBAIC0xMiw3ICsxMiw4IEBAIENGSUxFUyA9IGluaXQuYyB1dGlsLmMg
+XAogCiBDRklMRVMgKz0gJChQS0dfUExBVEZPUk0pLmMKIFBDRklMRVMgPSBkYXJ3aW4uYyBmcmVl
+YnNkLmMgaXJpeC5jIGxpbnV4LmMKLUxTUkNGSUxFUyA9ICQoc2hlbGwgZWNobyAkKFBDRklMRVMp
+IHwgc2VkIC1lICJzLyQoUEtHX1BMQVRGT1JNKS5jLy9nIikKK0xTUkNGSUxFUyA9ICQoc2hlbGwg
+ZWNobyAkKFBDRklMRVMpIHwgc2VkIC1lICJzLyQoUEtHX1BMQVRGT1JNKS5jLy9nIikgXAorCXhm
+c19sc3Byb2ppZC5zaAogCiBMTERMSUJTID0gJChMSUJYQ01EKQogTFRERVBFTkRFTkNJRVMgPSAk
+KExJQlhDTUQpCkBAIC0zNSw2ICszNiw3IEBAIGluY2x1ZGUgJChCVUlMRFJVTEVTKQogaW5zdGFs
+bDogZGVmYXVsdAogCSQoSU5TVEFMTCkgLW0gNzU1IC1kICQoUEtHX1NCSU5fRElSKQogCSQoTFRJ
+TlNUQUxMKSAtbSA3NTUgJChMVENPTU1BTkQpICQoUEtHX1NCSU5fRElSKQorCSQoSU5TVEFMTCkg
+LW0gNzU1IHhmc19sc3Byb2ppZC5zaCAkKFBLR19TQklOX0RJUikveGZzX2xzcHJvamlkCiBpbnN0
+YWxsLWRldjoKIAogLWluY2x1ZGUgLmRlcApkaWZmIC0tZ2l0IGEvcXVvdGEveGZzX2xzcHJvamlk
+LnNoIGIvcXVvdGEveGZzX2xzcHJvamlkLnNoCm5ldyBmaWxlIG1vZGUgMTAwNjQ0CmluZGV4IDAw
+MDAwMDAuLjQ0MDRkZTUKLS0tIC9kZXYvbnVsbAorKysgYi9xdW90YS94ZnNfbHNwcm9qaWQuc2gK
+QEAgLTAsMCArMSw5IEBACisjIS9iaW4vc2gKKyMKKyMgQ29weXJpZ2h0IChjKSAyMDExIEFya2Fk
+aXVzeiBNacWba2lld2ljei4KKyMKKworeGZzX2lvIC1wICIkMCIgLWMgInN0YXQiICRAIHwgYXdr
+ICcKKy9eZmRcLnBhdGggPS8geyBwcm9qaWQ9IiI7IHBhdGg9JDM7IGdzdWIoL15cIi8sICIiLCBw
+YXRoKTsgZ3N1YigvXCIkLywgIiIsIHBhdGgpOyB9CisvXmZzeGF0dHJcLnByb2ppZCA9LyB7IHBy
+b2ppZD0kMzsgcHJpbnQgcGF0aCAiOiAiIHByb2ppZDsgfQorJwotLSAKMS44LjAKCl9fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCnhmcyBtYWlsaW5nIGxpc3QK
+eGZzQG9zcy5zZ2kuY29tCmh0dHA6Ly9vc3Muc2dpLmNvbS9tYWlsbWFuL2xpc3RpbmZvL3hmcwo=
